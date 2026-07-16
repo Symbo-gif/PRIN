@@ -1,0 +1,21 @@
+[package]
+name = "prin-tensor"
+description = "PRIN tensor decomposition: Tucker/HOSVD (PolyadicTensor) and CP/PARAFAC (ALS)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+ndarray.workspace = true
+rayon.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+approx.workspace = true
+criterion.workspace = true

@@ -1,0 +1,31 @@
+name: repro
+
+# Reproducibility pipeline check: figures/tables regenerate from stored JSON
+# artefacts and the SHA-256 manifest matches (requirement F4).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - "tools/**"
+      - "python/prin/reporting/**"
+      - "paper/**"
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build and install
+        run: |
+          pip install maturin
+          maturin develop -m crates/prin-py/Cargo.toml
+          pip install -e ".[dev]"
+      - name: Regenerate figures and tables, verify manifest
+        run: python tools/reproduce.py --verify-manifest

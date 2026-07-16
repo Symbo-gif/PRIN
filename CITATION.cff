@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use PRIN in your research, please cite it as below."
+title: "PRIN: Phase-Resonance Interference Network"
+type: software
+version: 0.1.0
+license: MIT
+repository-code: "https://github.com/Symbo-gif/PRIN"
+authors:
+  - family-names: Maillet
+    given-names: Michael
+    email: therealmichaelmaillet@gmail.com
+  - family-names: Davison
+    given-names: Damien
+  - family-names: Davison
+    given-names: Sacha
+keywords:
+  - oscillatory-binding
+  - neural-networks
+  - kuramoto
+  - phase-dynamics
+  - temporal-binding
+  - chimera-states
+abstract: >-
+  PRIN is a scientific ML framework built on coupled-oscillator dynamics
+  (Kuramoto, Stuart-Landau, Hopf), hierarchical delta/theta/gamma band networks
+  with phase-amplitude coupling, polyadic tensor decomposition, and
+  PyTorch-compatible trainable layers for temporal object binding and
+  multi-object tracking. It is the from-scratch Rust + Python rebuild of
+  PRINet 3.0.

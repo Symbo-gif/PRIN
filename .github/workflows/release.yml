@@ -1,0 +1,89 @@
+name: release
+
+# Wheel matrix + sdist, published to PyPI via OIDC trusted publishing;
+# Rust crates published to crates.io.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  wheels:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64
+            manylinux: "2014"
+          - os: ubuntu-latest
+            target: aarch64
+            manylinux: "2014"
+          - os: windows-latest
+            target: x86_64
+          - os: macos-latest
+            target: universal2-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: build
+          args: --release -m crates/prin-py/Cargo.toml --out dist
+          target: ${{ matrix.target }}
+          manylinux: ${{ matrix.manylinux || 'auto' }}
+      - name: Wheel smoke test
+        if: matrix.target == 'x86_64'
+        run: |
+          pip install dist/*.whl
+          python -c "import prin; print(prin.core_version())"
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}-${{ matrix.target }}
+          path: dist
+
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: -m crates/prin-py/Cargo.toml --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist
+
+  publish-pypi:
+    needs: [wheels, sdist]
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write  # OIDC trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+
+  publish-crates:
+    needs: [wheels]
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish workspace crates (dependency order)
+        run: |
+          for crate in prin-dynamics prin-metrics prin-tensor prin-kernels prin-sim prin-train prin-daemon; do
+            cargo publish -p "$crate" --token "${{ secrets.CARGO_REGISTRY_TOKEN }}"
+          done

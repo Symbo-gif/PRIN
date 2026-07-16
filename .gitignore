@@ -1,0 +1,81 @@
+# Rust
+target/
+# Cargo.lock is tracked (library crate — lock for CI reproducibility;
+# will be re-evaluated at 1.0.0 release)
+*.rs.bk
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+
+# Distribution / packaging
+build/
+dist/
+wheels/
+*.egg-info/
+.eggs/
+MANIFEST
+.pypirc
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Unit test / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+.hypothesis/
+.pytest_cache/
+.benchmarks/
+
+# Jupyter
+.ipynb_checkpoints
+
+# mypy / ruff
+.mypy_cache/
+.ruff_cache/
+
+# IDEs
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+*.lnk
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.toc
+paper/_build/
+
+# Model weights (large files)
+*.onnx
+*.pt
+*.pth
+!models/subconscious_controller.onnx
+
+# Docs build
+DOCS/sphinx/_build/
+
+# Generated benchmark reports/artefacts (canonical artefacts live in benchmarks/results/)
+DOCS/test_and_benchmark_results/
+
+# Archived reference material is tracked but never imported at runtime
+# (DOCS/archive and reference from PRINet 3.0/ is reference-only)

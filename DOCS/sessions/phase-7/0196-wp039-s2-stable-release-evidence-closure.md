@@ -1,0 +1,62 @@
+# Session 0196 — WP-039 S2: Comprehensive audit — Stable-release evidence closure
+
+**Status:** PLANNED  
+**Roadmap phase:** 7 — Experimentation campaign and stable release  
+**Execution unit:** WP-039  
+**Session type:** S2 — Comprehensive audit  
+**Predecessor:** [0195 — Coding](0195-wp039-s1-stable-release-evidence-closure.md)  
+**Successor:** [0197 — Remediation](0197-wp039-s3-stable-release-evidence-closure.md)  
+**Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+
+> This is a prospective execution contract, not completion evidence. Status and
+> results belong in Audit Reports, Project State Reports, and experiment artefacts.
+
+## Mission
+
+Implement only final release metadata/verification automation, conduct the comprehensive Definition-of-Done audit, remediate every finding, publish final documentation/state evidence, and execute the approved 1.0.0 release ceremony.
+
+## Contract
+
+- **Acceptance:** All twelve Definition-of-Done items pass; deviation ledger is empty; campaign and Parity Reports are published; signed/checksummed 1.0.0 artefacts install on supported platforms.
+- **Non-goals:** New features, unregistered science, or unresolved findings.
+
+## Required reading
+
+- `DOCS/PRIN_Project_Plan.md`
+- `DOCS/standards/Development_Workflow_and_Audit_Standards.md`
+- The latest `DOCS/reports/NNN-project-state.md` and cumulative deviation ledger
+- This session brief and its immediate predecessor's closure evidence
+- `DOCS/audits/TEMPLATE_Audit_Report.md`
+- Coding/Testing/Documentation security and coverage gates
+
+## Entry conditions
+
+- S1 has claimed its exit gate and supplied an evidence map.
+- The repository and S1 commit range are fixed for inspection.
+
+## Expected audit (read-only with respect to source)
+
+1. Create `DOCS/audits/039-wp039-audit.md` from the audit template.
+2. Execute A1–A10: scope, architecture, tests-in-tandem/coverage, parity,
+   quality, security, documentation, hygiene, CI/regressions, artefact trail.
+3. Independently reproduce the WP-specific acceptance evidence: All twelve Definition-of-Done items pass; deviation ledger is empty; campaign and Parity Reports are published; signed/checksummed 1.0.0 artefacts install on supported platforms.
+4. Inspect diffs for weakened tests, tolerance drift, new dependencies,
+   unapproved unsafe/code generation, Python numerics, and undocumented exports.
+5. Give each finding `WP039-Fn`, severity D1–D4, exact evidence,
+   violated clause, and proposed remedy. Assign PASS / PASS-WITH-FINDINGS / FAIL.
+
+## Required outputs
+
+- Committed evidence-backed Audit Report at `DOCS/audits/039-wp039-audit.md`.
+- Updated deviation-ledger delta and an ordered S3 action list.
+- Maintainer acknowledgment of the verdict.
+
+## Prohibited
+
+No source fix, plan rewrite, finding suppression, or evidence-free assertion in
+S2. Discovery and correction remain separate for audit independence.
+
+## Exit gate
+
+Audit Report and verdict are committed. Hand off to S3 **even with zero
+findings**; a zero-finding S3 records no-change closure and delta verification.

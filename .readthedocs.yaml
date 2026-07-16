@@ -1,0 +1,15 @@
+version: 2
+
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.12"
+    rust: "latest"
+
+sphinx:
+  configuration: DOCS/sphinx/conf.py
+  fail_on_warning: false
+
+python:
+  install:
+    - requirements: DOCS/sphinx/requirements.txt

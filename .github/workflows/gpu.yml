@@ -1,0 +1,28 @@
+name: gpu
+
+# Opt-in GPU job on a self-hosted CUDA runner. Triggered by a `[gpu]` tag in
+# the commit message (mirrors the PRINet 3.0 convention).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gpu:
+    if: contains(github.event.head_commit.message, '[gpu]')
+    runs-on: [self-hosted, gpu]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Rust kernel-equivalence tests (CUDA)
+        run: cargo test --workspace --features cuda
+      - name: Build extension with CUDA and install
+        run: |
+          pip install maturin
+          maturin develop -m crates/prin-py/Cargo.toml --features cuda
+          pip install -e ".[dev]"
+      - name: Python GPU tests
+        run: pytest tests/ -v -m gpu
+      - name: Kernel performance regression gates
+        run: cargo bench --workspace --features cuda -- --save-baseline ci

@@ -1,0 +1,63 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/prin-dynamics",
+    "crates/prin-metrics",
+    "crates/prin-tensor",
+    "crates/prin-kernels",
+    "crates/prin-sim",
+    "crates/prin-train",
+    "crates/prin-daemon",
+    "crates/prin-py",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.78"
+license = "MIT"
+authors = [
+    "Michael Maillet <therealmichaelmaillet@gmail.com>",
+    "Damien Davison",
+    "Sacha Davison",
+]
+repository = "https://github.com/Symbo-gif/PRIN"
+description = "PRIN — Phase-Resonance Interference Network (Rust core)"
+
+[workspace.dependencies]
+# Intra-workspace crates
+prin-dynamics = { path = "crates/prin-dynamics" }
+prin-metrics = { path = "crates/prin-metrics" }
+prin-tensor = { path = "crates/prin-tensor" }
+prin-kernels = { path = "crates/prin-kernels" }
+prin-sim = { path = "crates/prin-sim" }
+prin-train = { path = "crates/prin-train" }
+prin-daemon = { path = "crates/prin-daemon" }
+
+# Numerics
+ndarray = "0.16"
+sprs = "0.11"
+rayon = "1.10"
+num-complex = "0.4"
+rand = "0.8"
+rand_pcg = "0.3"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Errors / logging
+thiserror = "1"
+tracing = "0.1"
+
+# Testing
+proptest = "1"
+approx = "0.5"
+criterion = "0.5"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+[profile.bench]
+debug = true

@@ -1,0 +1,27 @@
+[package]
+name = "prin-daemon"
+description = "PRIN subconscious controller: state/control buffers, native daemon thread, ONNX inference (ort) with NPU/DirectML/CPU backend detection"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+# ONNX Runtime bindings (`ort` crate, DirectML/VitisAI EPs) are added in
+# Phase 5 behind the `npu` feature; if EP coverage lags, the fallback is the
+# Python onnxruntime path (risk register #4 in DOCS/PRIN_Project_Plan.md).
+
+[dev-dependencies]
+proptest.workspace = true
+approx.workspace = true
+
+[features]
+default = []
+npu = []

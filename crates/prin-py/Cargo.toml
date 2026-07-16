@@ -1,0 +1,32 @@
+[package]
+name = "prin-py"
+description = "PyO3 extension crate exposing the PRIN Rust core to Python (the only crate that links Python)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+name = "_prin_core"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+prin-dynamics.workspace = true
+prin-metrics.workspace = true
+prin-tensor.workspace = true
+prin-kernels.workspace = true
+prin-sim.workspace = true
+prin-train.workspace = true
+prin-daemon.workspace = true
+pyo3 = { version = "0.22", features = ["abi3-py311"] }
+numpy = "0.22"
+thiserror.workspace = true
+tracing.workspace = true
+
+[features]
+default = []
+cuda = ["prin-kernels/cuda"]
+wgpu = ["prin-kernels/wgpu"]
+npu = ["prin-daemon/npu"]

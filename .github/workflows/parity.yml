@@ -1,0 +1,42 @@
+name: parity
+
+# Differential testing against prinet==3.0.0 on the golden-trajectory corpus
+# plus hypothesis-generated random cases (project plan §7.3).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - "crates/**"
+      - "python/**"
+      - "parity/**"
+
+jobs:
+  detect_corpus:
+    runs-on: ubuntu-latest
+    outputs:
+      has_cases: ${{ steps.detect.outputs.has_cases }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        run: echo "has_cases=${{ hashFiles('parity/**/*.py') != '' }}" >> "$GITHUB_OUTPUT"
+
+  parity:
+    needs: detect_corpus
+    if: needs.detect_corpus.outputs.has_cases == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install new build + reference PRINet 3.0.0 in one venv
+        run: |
+          pip install maturin
+          maturin develop -m crates/prin-py/Cargo.toml
+          pip install -e ".[dev,parity]"
+      - name: Run differential parity suite
+        run: pytest parity/ -v -m parity
