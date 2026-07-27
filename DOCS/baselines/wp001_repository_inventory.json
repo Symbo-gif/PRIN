@@ -1,0 +1,262 @@
+{
+  "active_repository": {
+    "file_count": 323,
+    "files_by_suffix": {
+      ".cff": 1,
+      ".json": 1,
+      ".lock": 1,
+      ".md": 257,
+      ".py": 12,
+      ".pyi": 1,
+      ".rs": 15,
+      ".rst": 12,
+      ".toml": 11,
+      ".txt": 1,
+      ".typed": 1,
+      ".yaml": 1,
+      ".yml": 6,
+      "<none>": 3
+    },
+    "files_by_top_level": {
+      ".gitattributes": 1,
+      ".github": 6,
+      ".gitignore": 1,
+      ".readthedocs.yaml": 1,
+      ".windsurf": 5,
+      "CHANGELOG.md": 1,
+      "CITATION.cff": 1,
+      "CODE_OF_CONDUCT.md": 1,
+      "CONTRIBUTING.md": 1,
+      "Cargo.lock": 1,
+      "Cargo.toml": 1,
+      "DOCS": 244,
+      "LICENSE": 1,
+      "README.md": 1,
+      "SECURITY.md": 1,
+      "benchmarks": 1,
+      "crates": 32,
+      "models": 1,
+      "notebooks": 1,
+      "paper": 1,
+      "parity": 1,
+      "pyproject.toml": 1,
+      "python": 9,
+      "rust-toolchain.toml": 1,
+      "tests": 3,
+      "tools": 5
+    },
+    "text_file_count": 321,
+    "text_line_count": 18176,
+    "total_bytes": 901665
+  },
+  "archive": {
+    "file_count": 451,
+    "python_line_count": 25530,
+    "python_modules": 43,
+    "total_bytes": 23774267
+  },
+  "ci": {
+    "workflow_count": 6,
+    "workflows": [
+      "gpu.yml",
+      "parity.yml",
+      "python.yml",
+      "release.yml",
+      "repro.yml",
+      "rust.yml"
+    ]
+  },
+  "excluded_directories": [
+    ".benchmarks",
+    ".git",
+    ".hypothesis",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "target",
+    "venv"
+  ],
+  "excluded_files": [
+    ".coverage",
+    "coverage.xml"
+  ],
+  "excluded_paths": [
+    "DOCS/baselines"
+  ],
+  "project": {
+    "license": "MIT",
+    "name": "prin",
+    "requires_python": ">=3.11",
+    "rust_channel": "stable",
+    "version": "0.1.0"
+  },
+  "python": {
+    "module_count": 6,
+    "modules": [
+      "python/prin/__init__.py",
+      "python/prin/datasets.py",
+      "python/prin/eval/__init__.py",
+      "python/prin/experiments/__init__.py",
+      "python/prin/nn/__init__.py",
+      "python/prin/reporting/__init__.py"
+    ]
+  },
+  "schema_version": 1,
+  "scope": "Active PRIN files excluding build/cache/VCS directories; archived PRINet 3.0 is measured separately and never executed.",
+  "session_plan": {
+    "first": "0001",
+    "last": "0198",
+    "numbered_briefs": 198
+  },
+  "tests": {
+    "pytest_file_count": 2,
+    "pytest_files": [
+      "tests/test_scaffold.py",
+      "tests/test_wp001_baseline.py"
+    ]
+  },
+  "workspace": {
+    "member_count": 8,
+    "members": [
+      {
+        "dependencies": [
+          "ndarray",
+          "num-complex",
+          "rand",
+          "rand_pcg",
+          "rayon",
+          "serde",
+          "thiserror",
+          "tracing"
+        ],
+        "features": [
+          "default",
+          "strict-checks"
+        ],
+        "package": "prin-dynamics",
+        "path": "crates/prin-dynamics"
+      },
+      {
+        "dependencies": [
+          "ndarray",
+          "num-complex",
+          "prin-dynamics",
+          "rayon",
+          "serde",
+          "thiserror",
+          "tracing"
+        ],
+        "features": [],
+        "package": "prin-metrics",
+        "path": "crates/prin-metrics"
+      },
+      {
+        "dependencies": [
+          "ndarray",
+          "rayon",
+          "serde",
+          "thiserror",
+          "tracing"
+        ],
+        "features": [],
+        "package": "prin-tensor",
+        "path": "crates/prin-tensor"
+      },
+      {
+        "dependencies": [
+          "ndarray",
+          "prin-dynamics",
+          "rayon",
+          "thiserror",
+          "tracing"
+        ],
+        "features": [
+          "cuda",
+          "default",
+          "wgpu"
+        ],
+        "package": "prin-kernels",
+        "path": "crates/prin-kernels"
+      },
+      {
+        "dependencies": [
+          "ndarray",
+          "prin-dynamics",
+          "prin-kernels",
+          "prin-metrics",
+          "rand",
+          "rand_pcg",
+          "rayon",
+          "serde",
+          "serde_json",
+          "sprs",
+          "thiserror",
+          "tracing"
+        ],
+        "features": [],
+        "package": "prin-sim",
+        "path": "crates/prin-sim"
+      },
+      {
+        "dependencies": [
+          "ndarray",
+          "num-complex",
+          "prin-dynamics",
+          "prin-kernels",
+          "prin-metrics",
+          "rand",
+          "rand_pcg",
+          "rayon",
+          "serde",
+          "thiserror",
+          "tracing"
+        ],
+        "features": [],
+        "package": "prin-train",
+        "path": "crates/prin-train"
+      },
+      {
+        "dependencies": [
+          "serde",
+          "serde_json",
+          "thiserror",
+          "tracing"
+        ],
+        "features": [
+          "default",
+          "npu"
+        ],
+        "package": "prin-daemon",
+        "path": "crates/prin-daemon"
+      },
+      {
+        "dependencies": [
+          "numpy",
+          "prin-daemon",
+          "prin-dynamics",
+          "prin-kernels",
+          "prin-metrics",
+          "prin-sim",
+          "prin-tensor",
+          "prin-train",
+          "pyo3",
+          "thiserror",
+          "tracing"
+        ],
+        "features": [
+          "cuda",
+          "default",
+          "npu",
+          "wgpu"
+        ],
+        "package": "prin-py",
+        "path": "crates/prin-py"
+      }
+    ]
+  }
+}

@@ -1,0 +1,359 @@
+{
+  "schema_version": 1,
+  "modules": {
+    "prinet": {
+      "future_wp": "WP-036",
+      "basis": "Top-level compatibility exports and API freeze are owned by WP-036."
+    },
+    "prinet._deprecation": {
+      "future_wp": "WP-036",
+      "basis": "Deprecation and frozen-API machinery are owned by WP-036."
+    },
+    "prinet.core": {
+      "future_wp": "WP-036",
+      "basis": "Core compatibility exports are completed and accepted by WP-036."
+    },
+    "prinet.core.decomposition": {
+      "future_wp": "WP-014",
+      "basis": "Tucker/HOSVD and CP/PARAFAC are implemented by WP-014."
+    },
+    "prinet.core.measurement": {
+      "future_wp": "WP-010",
+      "basis": "Phase, coherence, sparse, and chimera metrics are implemented by WP-010."
+    },
+    "prinet.core.propagation": {
+      "future_wp": "WP-036",
+      "basis": "Propagation compatibility exports are completed and accepted by WP-036."
+    },
+    "prinet.core.propagation.coupling": {
+      "future_wp": "WP-009",
+      "basis": "PAC and coupling semantics are implemented by WP-009."
+    },
+    "prinet.core.propagation.inhibition": {
+      "future_wp": "WP-023",
+      "basis": "Inhibition and phase-to-rate trainable behavior are implemented by WP-023."
+    },
+    "prinet.core.propagation.integrators": {
+      "future_wp": "WP-012",
+      "basis": "Exponential and multi-rate integration are implemented by WP-012."
+    },
+    "prinet.core.propagation.networks": {
+      "future_wp": "WP-013",
+      "basis": "Continuous hierarchical band networks are implemented by WP-013."
+    },
+    "prinet.core.propagation.oscillator_models": {
+      "future_wp": "WP-007",
+      "basis": "Kuramoto, Stuart-Landau, and Hopf models are implemented by WP-007."
+    },
+    "prinet.core.propagation.oscillator_state": {
+      "future_wp": "WP-006",
+      "basis": "Oscillator state, errors, guards, and seed authority are implemented by WP-006."
+    },
+    "prinet.core.propagation.sweep_utils": {
+      "future_wp": "WP-016",
+      "basis": "Parameter sweeps and Phase 2 CPU integration are implemented by WP-016."
+    },
+    "prinet.core.propagation.temporal": {
+      "future_wp": "WP-013",
+      "basis": "Complex-phasor temporal propagation is implemented by WP-013."
+    },
+    "prinet.core.subconscious": {
+      "future_wp": "WP-028",
+      "basis": "Controller state/control types and backend contracts are implemented by WP-028."
+    },
+    "prinet.core.subconscious_daemon": {
+      "future_wp": "WP-029",
+      "basis": "Native daemon lifecycle and control buffering are implemented by WP-029."
+    },
+    "prinet.nn": {
+      "future_wp": "WP-036",
+      "basis": "Trainable compatibility exports are completed and accepted by WP-036."
+    },
+    "prinet.nn.ablation_variants": {
+      "future_wp": "WP-026",
+      "basis": "Model baselines and ablation variants are implemented by WP-026."
+    },
+    "prinet.nn.activations": {
+      "future_wp": "WP-023",
+      "basis": "Complex and phase activations are implemented by WP-023."
+    },
+    "prinet.nn.adaptive_allocation": {
+      "future_wp": "WP-026",
+      "basis": "Adaptive oscillator allocation and model integration are implemented by WP-026."
+    },
+    "prinet.nn.hep": {
+      "future_wp": "WP-023",
+      "basis": "Holomorphic energy and equilibrium propagation are implemented by WP-023."
+    },
+    "prinet.nn.hybrid": {
+      "future_wp": "WP-026",
+      "basis": "HybridPRINet and PhaseTracker model families are implemented by WP-026."
+    },
+    "prinet.nn.layers": {
+      "future_wp": "WP-022",
+      "basis": "Trainable band and resonance primitives are implemented by WP-022."
+    },
+    "prinet.nn.mot_evaluation": {
+      "future_wp": "WP-030",
+      "basis": "MOT metrics and deterministic synthetic sequences are implemented by WP-030."
+    },
+    "prinet.nn.optimizers": {
+      "future_wp": "WP-024",
+      "basis": "Oscillator-aware optimizers are implemented by WP-024."
+    },
+    "prinet.nn.slot_attention": {
+      "future_wp": "WP-026",
+      "basis": "Slot Attention comparison baselines are implemented by WP-026."
+    },
+    "prinet.nn.subconscious_model": {
+      "future_wp": "WP-028",
+      "basis": "Controller model and provider-facing behavior are implemented by WP-028."
+    },
+    "prinet.nn.training_hooks": {
+      "future_wp": "WP-030",
+      "basis": "Training telemetry, hooks, and daemon integration are implemented by WP-030."
+    },
+    "prinet.utils": {
+      "future_wp": "WP-036",
+      "basis": "Utility compatibility exports are completed and accepted by WP-036."
+    },
+    "prinet.utils.adversarial_tools": {
+      "future_wp": "WP-031",
+      "basis": "FGSM/PGD orchestration is implemented by WP-031."
+    },
+    "prinet.utils.benchmark_reporting": {
+      "future_wp": "WP-034",
+      "basis": "Benchmark reports and leaderboards are implemented by WP-034."
+    },
+    "prinet.utils.cuda_kernels": {
+      "future_wp": "WP-008",
+      "basis": "Legacy solver behavior is first implemented as guarded CPU integrators by WP-008."
+    },
+    "prinet.utils.datasets": {
+      "future_wp": "WP-011",
+      "basis": "Thin Python datasets and Phase 1 API integration are owned by WP-011."
+    },
+    "prinet.utils.figure_generation": {
+      "future_wp": "WP-034",
+      "basis": "All publication figure generation is implemented by WP-034."
+    },
+    "prinet.utils.fused_kernels": {
+      "future_wp": "WP-020",
+      "basis": "The legacy fused-kernel module is primarily replaced by WP-020."
+    },
+    "prinet.utils.npu_backend": {
+      "future_wp": "WP-028",
+      "basis": "ONNX provider selection and deterministic fallback are implemented by WP-028."
+    },
+    "prinet.utils.oscillosim": {
+      "future_wp": "WP-015",
+      "basis": "OscilloSim and large-system orchestration are implemented by WP-015."
+    },
+    "prinet.utils.profiler": {
+      "future_wp": "WP-034",
+      "basis": "Torch/Rust profiling integration is implemented by WP-034."
+    },
+    "prinet.utils.table_generation": {
+      "future_wp": "WP-034",
+      "basis": "All publication table generation is implemented by WP-034."
+    },
+    "prinet.utils.temporal_metrics": {
+      "future_wp": "WP-031",
+      "basis": "Temporal experiment metrics are implemented by WP-031."
+    },
+    "prinet.utils.temporal_training": {
+      "future_wp": "WP-031",
+      "basis": "Fair temporal training and multi-seed tooling are implemented by WP-031."
+    },
+    "prinet.utils.triton_kernels": {
+      "future_wp": "WP-020",
+      "basis": "Legacy Triton behavior is split across the approved WP-017 through WP-020 kernel sequence."
+    },
+    "prinet.utils.y4q1_tools": {
+      "future_wp": "WP-031",
+      "basis": "The legacy experiment grab-bag is primarily replaced by coherent WP-031 tooling."
+    }
+  },
+  "symbols": {
+    "prinet.core.propagation.networks.DiscreteDeltaThetaGamma": {
+      "future_wp": "WP-022",
+      "basis": "The trainable discrete three-band network is explicitly owned by WP-022."
+    },
+    "prinet.core.propagation.sweep_utils.phase_to_rate": {
+      "future_wp": "WP-023",
+      "basis": "Phase-to-rate conversion belongs with inhibition and trainable activations in WP-023."
+    },
+    "prinet.nn.hybrid.AlternatingOptimizer": {
+      "future_wp": "WP-024",
+      "basis": "Alternating optimization is part of the optimizer family owned by WP-024."
+    },
+    "prinet.nn.layers.PRINetModel": {
+      "future_wp": "WP-026",
+      "basis": "The complete model API is owned by WP-026."
+    },
+    "prinet.nn.layers.compile_model": {
+      "future_wp": "WP-026",
+      "basis": "Model compilation is accepted with the complete model stack in WP-026."
+    },
+    "prinet.nn.layers.oscillatory_weight_init": {
+      "future_wp": "WP-026",
+      "basis": "Model initialization is accepted with model/checkpoint compatibility in WP-026."
+    },
+    "prinet.nn.layers.DGLayer": {
+      "future_wp": "WP-023",
+      "basis": "Dentate-gyrus inhibition behavior is owned by WP-023."
+    },
+    "prinet.nn.layers.PhaseToRateAutoencoder": {
+      "future_wp": "WP-026",
+      "basis": "Comparison model integration is owned by WP-026."
+    },
+    "prinet.nn.layers.DenseAutoencoder": {
+      "future_wp": "WP-026",
+      "basis": "Comparison model integration is owned by WP-026."
+    },
+    "prinet.utils.cuda_kernels.sparse_coupling_matrix": {
+      "future_wp": "WP-009",
+      "basis": "Sparse coupling topology construction is owned by WP-009."
+    },
+    "prinet.utils.cuda_kernels.gradient_checkpoint_integration": {
+      "future_wp": "WP-025",
+      "basis": "Checkpoint support at the Torch/Rust boundary is owned by WP-025."
+    },
+    "prinet.utils.fused_kernels.MixedPrecisionTrainer": {
+      "future_wp": "WP-027",
+      "basis": "Mixed-precision trainable-stack integration is accepted by WP-027."
+    },
+    "prinet.utils.fused_kernels.sparse_coupling_matrix_csr": {
+      "future_wp": "WP-019",
+      "basis": "CSR/index kernel interoperability is owned by WP-019."
+    },
+    "prinet.utils.fused_kernels.csr_coupling_step": {
+      "future_wp": "WP-019",
+      "basis": "CSR coupling kernels are owned by WP-019."
+    },
+    "prinet.utils.fused_kernels.build_knn_neighbors": {
+      "future_wp": "WP-019",
+      "basis": "Sparse neighbor kernel interoperability is owned by WP-019."
+    },
+    "prinet.utils.fused_kernels.sparse_knn_coupling_step": {
+      "future_wp": "WP-019",
+      "basis": "Sparse k-NN coupling kernels are owned by WP-019."
+    },
+    "prinet.utils.fused_kernels.LargeScaleOscillatorSystem": {
+      "future_wp": "WP-015",
+      "basis": "Large-system simulation orchestration is owned by WP-015."
+    },
+    "prinet.utils.fused_kernels.AsyncCPUGPUPipeline": {
+      "future_wp": "WP-021",
+      "basis": "CPU/GPU dispatch integration and fallback are accepted by WP-021."
+    },
+    "prinet.utils.fused_kernels.OscillatorPruner": {
+      "future_wp": "WP-015",
+      "basis": "Simulation-engine pruning is owned by WP-015."
+    },
+    "prinet.utils.oscillosim.ring_topology": {
+      "future_wp": "WP-009",
+      "basis": "Ring topology construction is owned by WP-009."
+    },
+    "prinet.utils.oscillosim.small_world_topology": {
+      "future_wp": "WP-009",
+      "basis": "Small-world topology construction is owned by WP-009."
+    },
+    "prinet.utils.oscillosim.cosine_coupling_kernel": {
+      "future_wp": "WP-009",
+      "basis": "Coupling semantics are owned by WP-009."
+    },
+    "prinet.utils.oscillosim.conduction_delay_matrix": {
+      "future_wp": "WP-009",
+      "basis": "Conduction-delay topology construction is owned by WP-009."
+    },
+    "prinet.utils.oscillosim.community_topology": {
+      "future_wp": "WP-009",
+      "basis": "Community topology construction is owned by WP-009."
+    },
+    "prinet.utils.oscillosim.hierarchical_topology": {
+      "future_wp": "WP-009",
+      "basis": "Hierarchical topology construction is owned by WP-009."
+    },
+    "prinet.utils.oscillosim.evolutionary_coupling_update": {
+      "future_wp": "WP-009",
+      "basis": "Coupling update semantics are owned by WP-009."
+    },
+    "prinet.utils.oscillosim.directed_weighted_topology": {
+      "future_wp": "WP-009",
+      "basis": "Directed weighted topology construction is owned by WP-009."
+    },
+    "prinet.utils.oscillosim.local_order_parameter": {
+      "future_wp": "WP-010",
+      "basis": "Local synchronization metrics are owned by WP-010."
+    },
+    "prinet.utils.oscillosim.bimodality_index": {
+      "future_wp": "WP-010",
+      "basis": "Chimera metrics are owned by WP-010."
+    },
+    "prinet.utils.oscillosim.strength_of_incoherence": {
+      "future_wp": "WP-010",
+      "basis": "Chimera metrics are owned by WP-010."
+    },
+    "prinet.utils.oscillosim.discontinuity_measure": {
+      "future_wp": "WP-010",
+      "basis": "Chimera metrics are owned by WP-010."
+    },
+    "prinet.utils.oscillosim.chimera_index": {
+      "future_wp": "WP-010",
+      "basis": "Chimera metrics are owned by WP-010."
+    },
+    "prinet.utils.oscillosim.strength_of_incoherence_temporal": {
+      "future_wp": "WP-010",
+      "basis": "Temporal chimera metrics are owned by WP-010."
+    },
+    "prinet.utils.triton_kernels.triton_available": {
+      "future_wp": "WP-017",
+      "basis": "Backend capability and dispatch are established by WP-017."
+    },
+    "prinet.utils.triton_kernels.triton_fused_mean_field_rk4_step": {
+      "future_wp": "WP-018",
+      "basis": "Fused mean-field RK4 is owned by WP-018."
+    },
+    "prinet.utils.triton_kernels.pytorch_mean_field_rk4_step": {
+      "future_wp": "WP-018",
+      "basis": "The authoritative mean-field RK4 reference is owned by WP-018."
+    },
+    "prinet.utils.triton_kernels.triton_sparse_knn_coupling": {
+      "future_wp": "WP-019",
+      "basis": "Sparse k-NN coupling kernels are owned by WP-019."
+    },
+    "prinet.utils.triton_kernels.pytorch_sparse_knn_coupling": {
+      "future_wp": "WP-019",
+      "basis": "The sparse k-NN coupling reference is owned by WP-019."
+    },
+    "prinet.utils.triton_kernels.triton_pac_modulation": {
+      "future_wp": "WP-019",
+      "basis": "PAC modulation kernels are owned by WP-019."
+    },
+    "prinet.utils.triton_kernels.pytorch_pac_modulation": {
+      "future_wp": "WP-019",
+      "basis": "The PAC modulation reference is owned by WP-019."
+    },
+    "prinet.utils.y4q1_tools.AblationConfig": {
+      "future_wp": "WP-026",
+      "basis": "Ablation model contracts are owned by WP-026."
+    },
+    "prinet.utils.y4q1_tools.AblationHybridPRINetV2": {
+      "future_wp": "WP-026",
+      "basis": "Ablation model variants are owned by WP-026."
+    },
+    "prinet.utils.y4q1_tools.create_ablation_model": {
+      "future_wp": "WP-026",
+      "basis": "Ablation model construction is owned by WP-026."
+    },
+    "prinet.utils.y4q1_tools.PhaseTrackerLarge": {
+      "future_wp": "WP-026",
+      "basis": "PhaseTracker model variants are owned by WP-026."
+    },
+    "prinet.utils.y4q1_tools.per_community_order_parameter": {
+      "future_wp": "WP-010",
+      "basis": "Community order parameters are synchronization metrics owned by WP-010."
+    }
+  }
+}
