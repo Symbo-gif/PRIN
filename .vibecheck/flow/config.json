@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "projectName": "PRIN",
+  "userName": "developer",
+  "skillLevel": "intermediate",
+  "outputFolder": ".vibecheck/flow",
+  "planningArtifacts": ".vibecheck\\flow\\planning-artifacts",
+  "implementationArtifacts": ".vibecheck\\flow\\implementation-artifacts",
+  "installedAt": "2026-07-17T07:21:47.159Z",
+  "ide": [
+    "windsurf"
+  ]
+}
