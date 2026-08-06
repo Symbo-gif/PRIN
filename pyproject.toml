@@ -68,7 +68,8 @@ onnx = [
     "onnxruntime-directml>=1.16; sys_platform == 'win32'",
 ]
 parity = [
-    "prinet==3.0.0",
+    # PRINet 3.0.0 is installed from the archived source tree
+    # in DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main.
 ]
 all = [
     "prin[dev,mot,onnx]",
@@ -123,6 +124,8 @@ convention = "google"
 "tests/**" = ["S", "D"]
 "benchmarks/**" = ["S", "D"]
 "**/_prin_core.pyi" = ["D"]
+"tests/test_generate_corpus.py" = ["E402", "I001"]
+"parity/test_parity_differential.py" = ["E402", "I001"]
 
 [tool.interrogate]
 # Documentation Standards §2.2: 100% public symbols (ruff D), ≥95% overall.
@@ -138,6 +141,6 @@ exclude_dirs = ["tests", "benchmarks", ".venv", "target"]
 
 [tool.mypy]
 strict = true
-python_version = "3.11"
+python_version = "3.12"
 mypy_path = "python"
 ignore_missing_imports = true
