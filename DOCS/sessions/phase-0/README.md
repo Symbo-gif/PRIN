@@ -15,11 +15,11 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0006 | WP-002 | S2 — Audit | [Golden corpus and differential harness](0006-wp002-s2-golden-corpus-and-differential-harness.md) | COMPLETE |
 | 0007 | WP-002 | S3 — Remediation | [Golden corpus and differential harness](0007-wp002-s3-golden-corpus-and-differential-harness.md) | COMPLETE |
 | 0008 | WP-002 | S4 — Documentation | [Golden corpus and differential harness](0008-wp002-s4-golden-corpus-and-differential-harness.md) | COMPLETE |
-| 0009 | WP-003 | S1 — Coding | [PyO3 and DLPack bridge spike](0009-wp003-s1-pyo3-and-dlpack-bridge-spike.md) | READY |
-| 0010 | WP-003 | S2 — Audit | [PyO3 and DLPack bridge spike](0010-wp003-s2-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
-| 0011 | WP-003 | S3 — Remediation | [PyO3 and DLPack bridge spike](0011-wp003-s3-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
-| 0012 | WP-003 | S4 — Documentation | [PyO3 and DLPack bridge spike](0012-wp003-s4-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
-| 0013 | WP-004 | S1 — Coding | [CubeCL fused RK4 spike](0013-wp004-s1-cubecl-fused-rk4-spike.md) | PLANNED |
+| 0009 | WP-003 | S1 — Coding | [PyO3 and DLPack bridge spike](0009-wp003-s1-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0010 | WP-003 | S2 — Audit | [PyO3 and DLPack bridge spike](0010-wp003-s2-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0011 | WP-003 | S3 — Remediation | [PyO3 and DLPack bridge spike](0011-wp003-s3-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0012 | WP-003 | S4 — Documentation | [PyO3 and DLPack bridge spike](0012-wp003-s4-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0013 | WP-004 | S1 — Coding | [CubeCL fused RK4 spike](0013-wp004-s1-cubecl-fused-rk4-spike.md) | READY |
 | 0014 | WP-004 | S2 — Audit | [CubeCL fused RK4 spike](0014-wp004-s2-cubecl-fused-rk4-spike.md) | PLANNED |
 | 0015 | WP-004 | S3 — Remediation | [CubeCL fused RK4 spike](0015-wp004-s3-cubecl-fused-rk4-spike.md) | PLANNED |
 | 0016 | WP-004 | S4 — Documentation | [CubeCL fused RK4 spike](0016-wp004-s4-cubecl-fused-rk4-spike.md) | PLANNED |

@@ -24,8 +24,8 @@ the next numbered session; planned numbers do not change.
 | 0009 | 0 | WP-003 | S1 — Coding | [PyO3 and DLPack bridge spike](phase-0/0009-wp003-s1-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
 | 0010 | 0 | WP-003 | S2 — Audit | [PyO3 and DLPack bridge spike](phase-0/0010-wp003-s2-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
 | 0011 | 0 | WP-003 | S3 — Remediation | [PyO3 and DLPack bridge spike](phase-0/0011-wp003-s3-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
-| 0012 | 0 | WP-003 | S4 — Documentation | [PyO3 and DLPack bridge spike](phase-0/0012-wp003-s4-pyo3-and-dlpack-bridge-spike.md) | READY |
-| 0013 | 0 | WP-004 | S1 — Coding | [CubeCL fused RK4 spike](phase-0/0013-wp004-s1-cubecl-fused-rk4-spike.md) | PLANNED |
+| 0012 | 0 | WP-003 | S4 — Documentation | [PyO3 and DLPack bridge spike](phase-0/0012-wp003-s4-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0013 | 0 | WP-004 | S1 — Coding | [CubeCL fused RK4 spike](phase-0/0013-wp004-s1-cubecl-fused-rk4-spike.md) | READY |
 | 0014 | 0 | WP-004 | S2 — Audit | [CubeCL fused RK4 spike](phase-0/0014-wp004-s2-cubecl-fused-rk4-spike.md) | PLANNED |
 | 0015 | 0 | WP-004 | S3 — Remediation | [CubeCL fused RK4 spike](phase-0/0015-wp004-s3-cubecl-fused-rk4-spike.md) | PLANNED |
 | 0016 | 0 | WP-004 | S4 — Documentation | [CubeCL fused RK4 spike](phase-0/0016-wp004-s4-cubecl-fused-rk4-spike.md) | PLANNED |

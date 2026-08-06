@@ -311,6 +311,8 @@ Ordered S3 action list:
 1. `WP003-F2` (D2): add non-negative shape-dimension validation in `crates/prin-py/src/dlpack.rs`, add a typed `BridgeError` variant, and add Rust and Python regression tests. Re-run `cargo test --workspace`, `pytest tests/test_dlpack_bridge.py -v`, and Snyk Code.
 2. `WP003-F1` (D2): either (a) draft and obtain maintainer approval for a `Coding Standards §2.1/§6.1` amendment authorizing the audited `prin-py` Python-FFI `dlpack` module, or (b) relocate the `unsafe` to `prin-kernels` with an architecture amendment. The recommended path is (a).
 3. `WP003-F3` (D3): record an approved plan amendment for WP-003/Phase 0 documenting the go/no-go: CPU DLPack path validated; CUDA round-trip and <5% training-step overhead target deferred to Phase 4 GPU work.
+4. `WP003-F4` (D4): update `python/prin/__init__.py` package docstring to include `prin.dlpack`.
+5. `WP003-F5` (D4): add `__all__` to `python/prin/dlpack.py` and re-run `ruff check python/` and `python tools/wp001_baseline.py check`.
 
 ---
 
@@ -375,19 +377,3 @@ WP-003/Phase 0 work remains within declared scope. The `prin-py` DLPack bridge
 is authorized as an audited Python-FFI exception, shape dimensions are validated
 before any `std::slice::from_raw_parts`, and the WP-003 go/no-go is recorded as
 an approved plan amendment. The S4 documentation session is cleared to start.
-4. `WP003-F4` (D4): update `python/prin/__init__.py` package docstring to include `prin.dlpack`.
-5. `WP003-F5` (D4): add `__all__` to `python/prin/dlpack.py` and re-run `ruff check python/` and `python tools/wp001_baseline.py check`.
-
----
-
-## 7. Closure table (appended by S3 remediation)
-
-| ID | Resolution | Commit / amendment | Delta re-audit evidence |
-|---|---|---|---|
-| WP003-F1 | | | |
-| WP003-F2 | | | |
-| WP003-F3 | | | |
-| WP003-F4 | | | |
-| WP003-F5 | | | |
-
-**Delta re-audit date:** YYYY-MM-DD — **Result:**
