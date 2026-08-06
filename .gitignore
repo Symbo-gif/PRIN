@@ -34,6 +34,8 @@ htmlcov/
 coverage.xml
 .hypothesis/
 .pytest_cache/
+.pytest_basetemp/
+.pytest_tmp/
 .benchmarks/
 
 # Jupyter
