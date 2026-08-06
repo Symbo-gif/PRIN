@@ -1,8 +1,11 @@
 //! DLPack bridge for zero-copy Torch↔Rust tensor exchange.
 //!
-//! This module is the **audited Python-FFI boundary** for WP-003. It uses
-//! `unsafe` only inside this module, with every `unsafe` block carrying a
-//! `// SAFETY:` justification. The rest of `prin-py` remains `unsafe`-free.
+//! This module is the **audited Python-FFI boundary** for WP-003. It is
+//! permitted to use `unsafe` under Project Plan amendment #6 / Coding
+//! Standards §2.1 and §6.1: the `unsafe` is confined to this module, every
+//! `unsafe` block carries a `// SAFETY:` justification, and the crate uses
+//! `#![deny(unsafe_code)]` with this module-level `#![allow(unsafe_code)]`
+//! because `#![forbid]` cannot be scoped to a single module.
 //!
 //! The bridge deliberately implements the DLPack C ABI directly with `pyo3`
 //! `PyCapsule` methods rather than duplicating numerics in Python. The only
@@ -38,6 +41,8 @@ enum BridgeError {
     NullData { len: usize },
     #[error("negative ndim ({ndim}) is not a valid DLPack tensor")]
     NegativeNdim { ndim: i32 },
+    #[error("negative shape dimension {dim} at index {index}")]
+    NegativeDim { dim: i64, index: usize },
     #[error("non-zero byte_offset ({offset}) is not supported by this bridge")]
     NonZeroByteOffset { offset: u64 },
 }
@@ -205,8 +210,21 @@ fn contiguous_strides(shape: &[i64]) -> Vec<i64> {
 }
 
 /// Number of elements in a tensor with `shape`.
+///
+/// Callers must ensure all dimensions are non-negative; this function is used
+/// only after `validate_shape` has run.
 fn element_count(shape: &[i64]) -> usize {
     shape.iter().product::<i64>() as usize
+}
+
+/// Validate that every dimension in `shape` is non-negative.
+fn validate_shape(shape: &[i64]) -> Result<(), BridgeError> {
+    for (index, &dim) in shape.iter().enumerate() {
+        if dim < 0 {
+            return Err(BridgeError::NegativeDim { dim, index });
+        }
+    }
+    Ok(())
 }
 
 /// Obtain the `dltensor` capsule from `obj`, which may be a `torch.Tensor`
@@ -278,6 +296,9 @@ fn read_and_negate(obj: &Bound<'_, PyAny>) -> PyResult<NonNull<c_void>> {
         unsafe { std::slice::from_raw_parts(tensor.shape, ndim) }.to_vec()
     };
 
+    // Every dimension must be non-negative before we compute strides or lengths.
+    validate_shape(&shape)?;
+
     // Stride validation: require C-contiguous layout.
     let expected = contiguous_strides(&shape);
     let actual: Vec<i64> = if ndim == 0 {
@@ -306,7 +327,9 @@ fn read_and_negate(obj: &Bound<'_, PyAny>) -> PyResult<NonNull<c_void>> {
     }
 
     // SAFETY: `tensor.data` is non-null and points to `len` elements of the
-    // validated dtype. We borrow it only for the duration of the copy.
+    // validated dtype. `validate_shape` ensures dimensions are non-negative,
+    // so `len` cannot wrap, and `contiguous_strides` confirms a C-contiguous
+    // layout. We borrow the slice only for the duration of the copy.
     let output = unsafe {
         match storage {
             TensorStorage::F32(_) => {
@@ -445,6 +468,9 @@ fn read_and_clone(obj: &Bound<'_, PyAny>) -> PyResult<NonNull<c_void>> {
         unsafe { std::slice::from_raw_parts(tensor.shape, ndim) }.to_vec()
     };
 
+    // Every dimension must be non-negative before we compute strides or lengths.
+    validate_shape(&shape)?;
+
     let expected = contiguous_strides(&shape);
     let actual: Vec<i64> = if ndim == 0 {
         Vec::new()
@@ -470,7 +496,9 @@ fn read_and_clone(obj: &Bound<'_, PyAny>) -> PyResult<NonNull<c_void>> {
         return Err(BridgeError::NullData { len }.into());
     }
 
-    // SAFETY: see `read_and_negate`.
+    // SAFETY: `tensor.data` is non-null, `validate_shape` guarantees
+    // non-negative dimensions and therefore a well-defined `len`, and the
+    // layout has been verified C-contiguous. See `read_and_negate`.
     let output = unsafe {
         match storage {
             TensorStorage::F32(_) => {
@@ -513,5 +541,26 @@ mod tests {
         // deleter should drop it exactly once and not leak.
         let mt = ptr.as_ptr() as *mut ManagedTensor;
         dlpack_destructor(mt);
+    }
+
+    #[test]
+    fn validate_shape_accepts_non_negative_dimensions() {
+        assert!(validate_shape(&[2, 3, 4]).is_ok());
+        assert!(validate_shape(&[0, 5]).is_ok());
+        assert!(validate_shape(&[]).is_ok());
+    }
+
+    #[test]
+    fn validate_shape_rejects_negative_dimensions() {
+        let err = validate_shape(&[2, -1, 4]).unwrap_err();
+        assert!(format!("{err}").contains("negative shape dimension -1 at index 1"));
+    }
+
+    #[test]
+    fn negative_shape_dimension_does_not_wrap_element_count() {
+        // Once validated, `element_count` is never called with negative
+        // dimensions; this guards against the wrap that would otherwise happen
+        // if a malformed capsule were accepted.
+        assert!(validate_shape(&[-1_i64]).is_err());
     }
 }

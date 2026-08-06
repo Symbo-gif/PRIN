@@ -2,10 +2,79 @@
 
 from __future__ import annotations
 
+import ctypes
+
 import prin._prin_core as core
 import prin.dlpack as dlpack
 import pytest
 import torch
+
+
+class _DLContext(ctypes.Structure):
+    _fields_ = [("device_type", ctypes.c_int32), ("device_id", ctypes.c_int32)]
+
+
+class _DLDataType(ctypes.Structure):
+    _fields_ = [
+        ("code", ctypes.c_uint8),
+        ("bits", ctypes.c_uint8),
+        ("lanes", ctypes.c_uint16),
+    ]
+
+
+class _DLTensor(ctypes.Structure):
+    _fields_ = [
+        ("data", ctypes.c_void_p),
+        ("ctx", _DLContext),
+        ("ndim", ctypes.c_int32),
+        ("dtype", _DLDataType),
+        ("shape", ctypes.POINTER(ctypes.c_int64)),
+        ("strides", ctypes.POINTER(ctypes.c_int64)),
+        ("byte_offset", ctypes.c_uint64),
+    ]
+
+
+class _DLManagedTensor(ctypes.Structure):
+    _fields_ = [
+        ("dl_tensor", _DLTensor),
+        ("manager_ctx", ctypes.c_void_p),
+        ("deleter", ctypes.c_void_p),
+    ]
+
+
+def _dlpack_capsule_with_negative_shape() -> tuple[object, tuple[ctypes._CData, ...]]:
+    """Return a raw ``dltensor`` PyCapsule whose single dimension is negative.
+
+    The caller must keep the returned backing objects alive for as long as the
+    capsule is used; otherwise the C pointers inside the DLPack descriptor may
+    be freed before the bridge reads them.
+    """
+    data = (ctypes.c_float * 1)(1.0)
+    shape = (ctypes.c_int64 * 1)(-1)
+    strides = (ctypes.c_int64 * 1)(1)
+    dtype = _DLDataType(code=2, bits=32, lanes=1)
+    ctx = _DLContext(device_type=1, device_id=0)
+    tensor = _DLTensor(
+        data=ctypes.cast(data, ctypes.c_void_p),
+        ctx=ctx,
+        ndim=1,
+        dtype=dtype,
+        shape=shape,
+        strides=strides,
+        byte_offset=0,
+    )
+    managed = _DLManagedTensor(
+        dl_tensor=tensor,
+        manager_ctx=None,
+        deleter=None,
+    )
+
+    py_capsule_new = ctypes.pythonapi.PyCapsule_New
+    py_capsule_new.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p]
+    py_capsule_new.restype = ctypes.py_object
+    cap = py_capsule_new(ctypes.byref(managed), b"dltensor", None)
+    # Keep the managed tensor and its arrays alive for the lifetime of the test.
+    return cap, (managed, data, shape, strides)
 
 
 @pytest.fixture(
@@ -85,6 +154,11 @@ class TestDlpackErrors:
         bad = object()
         with pytest.raises((TypeError, ValueError, AttributeError)):
             core.dlpack_negate(bad)
+
+    def test_negative_shape_dimension_rejected(self) -> None:
+        cap, _refs = _dlpack_capsule_with_negative_shape()
+        with pytest.raises(ValueError, match=r"negative shape dimension -1 at index 0"):
+            core.dlpack_negate(cap)
 
 
 @pytest.mark.slow

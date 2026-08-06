@@ -311,6 +311,70 @@ Ordered S3 action list:
 1. `WP003-F2` (D2): add non-negative shape-dimension validation in `crates/prin-py/src/dlpack.rs`, add a typed `BridgeError` variant, and add Rust and Python regression tests. Re-run `cargo test --workspace`, `pytest tests/test_dlpack_bridge.py -v`, and Snyk Code.
 2. `WP003-F1` (D2): either (a) draft and obtain maintainer approval for a `Coding Standards §2.1/§6.1` amendment authorizing the audited `prin-py` Python-FFI `dlpack` module, or (b) relocate the `unsafe` to `prin-kernels` with an architecture amendment. The recommended path is (a).
 3. `WP003-F3` (D3): record an approved plan amendment for WP-003/Phase 0 documenting the go/no-go: CPU DLPack path validated; CUDA round-trip and <5% training-step overhead target deferred to Phase 4 GPU work.
+
+---
+
+## 7. S3 Remediation and closure (Session 0011)
+
+All five findings from the S2 audit were addressed in Session 0011. The
+remediation evidence is committed in the same branch and all local quality,
+security, and re-audit gates are clean.
+
+| Finding | Severity | Remediation | Evidence | Verification | Status |
+|---|---|---|---|---|---|
+| WP003-F1 | D2 | `Coding Standards §2.1` and `§6.1` amended to permit an audited Python-FFI `unsafe` module in `prin-py` with the same controls as kernel-FFI; module docstring and `crates/prin-py/src/lib.rs` reference the amendment | `DOCS/standards/Coding_Standards.md` §2.1/§6.1; `DOCS/PRIN_Project_Plan.md` amendment #6; `crates/prin-py/src/lib.rs:14-17`; `crates/prin-py/src/dlpack.rs:1-13` | `cargo clippy --workspace --all-targets -- -D warnings` exit 0; `RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps` exit 0 | CLOSED |
+| WP003-F2 | D2 | Added `BridgeError::NegativeDim`; added `validate_shape` helper; `read_and_negate` and `read_and_clone` call `validate_shape` before `element_count` and `std::slice::from_raw_parts`; updated `// SAFETY:` comments; added Rust unit tests and a Python integration test using a raw `dltensor` capsule with a negative dimension | `crates/prin-py/src/dlpack.rs` (lines 36-37, 218-230, 291-294, 471-473, 499-503); `tests/test_dlpack_bridge.py::TestDlpackErrors::test_negative_shape_dimension_rejected` | `cargo test --workspace` 6/6 `prin-py` unit tests pass; `pytest tests/test_dlpack_bridge.py` 14/14 pass; negative-shape capsule now raises `ValueError` instead of aborting | CLOSED |
+| WP003-F3 | D3 | Recorded Project Plan amendment #7 documenting the WP-003/Phase 0 go/no-go: CPU DLPack exchange and microbenchmark evidence validated; CUDA round-trip and `<5%` training-step overhead target deferred to Phase 4 GPU work with a re-audit gate | `DOCS/PRIN_Project_Plan.md` amendment #7 | `tools/wp001_baseline.py check` (via `pytest tests/test_wp001_baseline.py`) passes | CLOSED |
+| WP003-F4 | D4 | Updated `python/prin/__init__.py` package docstring to include `prin.dlpack` | `python/prin/__init__.py` | `interrogate -c pyproject.toml python/prin` 100% pass | CLOSED |
+| WP003-F5 | D4 | Added `__all__: list[str] = ["negate", "negate_batched", "round_trip"]` to `python/prin/dlpack.py` | `python/prin/dlpack.py` | `ruff check python/ tests/` pass; `pytest tests/test_wp001_baseline.py` API-discovery tests pass | CLOSED |
+
+### 7.1 Re-audit verification
+
+The following one-liner was executed after the remediation and reported no
+warnings, no test failures, and no dependency advisories:
+
+```powershell
+.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/
+.venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/
+.venv\Scripts\mypy python/prin --strict
+.venv\Scripts\python -m interrogate -c pyproject.toml python/prin
+.venv\Scripts\python -m bandit -r . -c pyproject.toml
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp
+.venv\Scripts\python -m pytest tests/ parity/ --basetemp=.pytest_basetemp
+.venv\Scripts\maturin develop -m crates/prin-py/Cargo.toml
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps
+cargo audit
+.venv\Scripts\python -m pip_audit .
+.venv\Scripts\python -m pip_audit -r DOCS/sphinx/requirements.txt
+.venv\Scripts\python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
+```
+
+Security scans executed via MCP:
+
+- `snyk_code_scan path=C:\dev\PRIN severity_threshold=medium` — `issueCount=0`
+- `snyk_sca_scan path=C:\dev\PRIN all_projects=true command=C:\dev\PRIN\.venv\Scripts\python severity_threshold=low` — `issueCount=0`
+
+Key pass/fail metrics:
+
+- `cargo test --workspace`: all crates pass; `prin-py` 6/6 unit tests pass
+- `pytest tests/ parity/`: 124 passed, 0 failed, 6 deselected
+- `cargo audit`: 0 advisories
+- `pip-audit .` and `pip-audit -r DOCS/sphinx/requirements.txt`: no known vulnerabilities
+- `Snyk Code`: 0 issues
+- `Snyk Open Source`: 0 issues
+
+### 7.2 Closure verdict
+
+**S3 delta re-audit: PASS.**
+
+All S2 findings are closed, the quality and security gates are clean, and the
+WP-003/Phase 0 work remains within declared scope. The `prin-py` DLPack bridge
+is authorized as an audited Python-FFI exception, shape dimensions are validated
+before any `std::slice::from_raw_parts`, and the WP-003 go/no-go is recorded as
+an approved plan amendment. The S4 documentation session is cleared to start.
 4. `WP003-F4` (D4): update `python/prin/__init__.py` package docstring to include `prin.dlpack`.
 5. `WP003-F5` (D4): add `__all__` to `python/prin/dlpack.py` and re-run `ruff check python/` and `python tools/wp001_baseline.py check`.
 

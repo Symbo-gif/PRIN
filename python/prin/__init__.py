@@ -7,6 +7,8 @@ only (no numerics -- see the Target Architecture design rules in
 ``DOCS/PRIN_Project_Plan.md``).
 
 Subpackages:
+    prin.dlpack: zero-copy DLPack tensor exchange between PyTorch and the
+        PRIN Rust core.
     prin.nn: torch.nn.Module wrappers, autograd.Function bridges, baselines.
     prin.eval: MOT evaluation and temporal metrics.
     prin.experiments: ablation, stats, adversarial, and training frameworks.

@@ -13,7 +13,8 @@
 
 // Deny `unsafe_code` crate-wide and allow it only in the audited `dlpack`
 // module (which uses `#![allow(unsafe_code)]`). `forbid` is not used because
-// it cannot be scoped to a single module.
+// it cannot be scoped to a single module. This arrangement is approved via
+// Project Plan amendment #6 / Coding Standards §2.1 Python-FFI exception.
 #![deny(unsafe_code)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![warn(missing_docs)]

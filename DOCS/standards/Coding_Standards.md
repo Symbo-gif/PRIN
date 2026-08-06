@@ -30,10 +30,19 @@
   workspace (`rust-version`) and only raised in minor releases.
 - `cargo fmt` (default style) and `cargo clippy --workspace --all-targets
   -- -D warnings` must be clean.
-- Every crate carries `#![forbid(unsafe_code)]`. Exception: audited kernel-FFI
-  modules inside `prin-kernels` (Phase 3+) may use `unsafe` in dedicated
-  modules with `#![deny(unsafe_op_in_unsafe_fn)]`, a `// SAFETY:` comment on
-  every unsafe block, and mandatory second-reviewer sign-off.
+- Every crate carries `#![forbid(unsafe_code)]`. Exceptions:
+  1. Audited kernel-FFI modules inside `prin-kernels` (Phase 3+) may use
+     `unsafe` in dedicated modules with `#![deny(unsafe_op_in_unsafe_fn)]`,
+     a `// SAFETY:` comment on every unsafe block, and mandatory
+     second-reviewer sign-off.
+  2. Audited Python-FFI modules inside `prin-py` may use `unsafe` to call the
+     Python C API and DLPack C ABI under the same controls: dedicated module
+     (`crates/prin-py/src/dlpack.rs`), `#![deny(unsafe_op_in_unsafe_fn)]`, a
+     `// SAFETY:` comment on every unsafe block, and mandatory second-reviewer
+     sign-off. Because `#![forbid(unsafe_code)]` cannot be scoped to a single
+     module, `prin-py` uses crate-level `#![deny(unsafe_code)]` with a
+     module-level `#![allow(unsafe_code)]` in `dlpack.rs` (Project Plan
+     amendment #6).
 - `#![warn(missing_docs)]` on every crate — combined with CI's
   `RUSTFLAGS="-D warnings"` this makes **100% public-item documentation a
   build requirement**. `cargo doc --no-deps` must also be clean under
@@ -154,9 +163,10 @@ threshold**:
   `eval`/`exec`/`compile` of dynamic strings, no runtime nvcc/MSVC JIT, no
   `pickle.load` of untrusted data (use JSON/NPZ with validation).
 - **`unsafe` Rust** is forbidden (`#![forbid(unsafe_code)]`) except in
-  audited kernel-FFI modules inside `prin-kernels`: dedicated module,
-  `#![deny(unsafe_op_in_unsafe_fn)]`, a `// SAFETY:` justification per block,
-  and mandatory second-reviewer sign-off recorded in the PR.
+  audited kernel-FFI modules inside `prin-kernels` and audited Python-FFI
+  modules inside `prin-py`: dedicated module, `#![deny(unsafe_op_in_unsafe_fn)]`,
+  a `// SAFETY:` justification per block, and mandatory second-reviewer sign-off
+  recorded in the PR.
 - **Input validation at every public boundary** (shapes, dtypes, ranges,
   finiteness) with typed errors; validation failures must be unreachable from
   memory-unsafe paths.
