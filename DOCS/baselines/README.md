@@ -9,19 +9,23 @@ Reports.
 
 - `wp001_repository_inventory.json` — deterministic active/archive repository
   inventory.
-- `wp001_api_traceability.md` — complete PRINet 3.0 module and public-symbol
-  ownership matrix.
+- `wp001_api_traceability.md` — complete ownership matrix for 43 PRINet 3.0
+  modules, 657 module-symbol rows, and 172 canonical top-level exports.
 - `wp001_baseline_report.md` — quality, security, CI, packaging, governance, and
   gap measurements.
 - `wp001_s1_handoff.md` — S1 acceptance-to-evidence map and mandatory S2 handoff.
 
-Regenerate machine-derived artefacts from the repository root:
+Validate the current repository and render comparison artefacts from its root:
 
 ```bash
-python tools/wp001_baseline.py inventory > DOCS/baselines/wp001_repository_inventory.json
-python tools/wp001_baseline.py traceability > DOCS/baselines/wp001_api_traceability.md
 python tools/wp001_baseline.py check
+python tools/wp001_baseline.py inventory > <temporary-inventory.json>
+python tools/wp001_baseline.py traceability > <temporary-traceability.md>
 ```
+
+The committed WP-001 files preserve the S1 measurement point and are not
+regenerated during later sessions. Compare temporary output rather than
+rewriting baseline history.
 
 `DOCS/baselines/` is excluded from its own active-file counts to prevent
 self-referential inventory drift. Archived PRINet 3.0 files are measured

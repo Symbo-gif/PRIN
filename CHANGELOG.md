@@ -28,6 +28,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stable-release closure; includes a master status register, requirement/risk/
   DoD traceability matrix, phase indexes, and conditional D1/D2 correction
   templates (plan amendment #2).
+- WP-001 foundation baseline automation: deterministic repository inventory,
+  complete ownership traceability for 43 PRINet 3.0 modules and 657 public-symbol
+  rows (172 canonical top-level exports), fail-closed metadata/session validation,
+  44 focused tests, and cycle audit/state evidence.
+- Additive Snyk Code/Open Source and full-history Gitleaks CI, with matching
+  repository-agent/editor secure-development guidance.
+
+### Changed
+
+- Repository-native plans, standards, code, configuration, Audit Reports, and
+  Project State Reports replace retired VibeCheck state as current authority
+  (plan amendments #3 and #4).
+- Native GitHub secret scanning remains mandatory when available; while GitHub
+  reports it unavailable for this private repository, amendment #5 requires a
+  protected PR-only `main` and blocking full-history Gitleaks on every change.
+
+### Security
+
+- Upgraded PyO3 and rust-numpy to 0.29.0, removing the audited RustSec advisory
+  chain, and aligned the workspace MSRV to Rust 1.83.
+- Enforced project/docs Pip Audit and Snyk dependency gates, removed long-lived
+  crates.io token use, protected `main`, and added an approved single-fingerprint
+  exception for an archived SHA-256 checksum misclassified as an API key.
 
 ### Fixed
 

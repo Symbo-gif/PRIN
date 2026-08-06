@@ -3,9 +3,10 @@
 PyO3 extension crate for PRIN — the only crate that links Python. Built with
 maturin into the `prin._prin_core` extension module inside the `prin` wheel.
 
-- Zero-copy tensor exchange with PyTorch via DLPack.
-- Rust forward/backward exposed for `torch.autograd.Function` bridges.
-- Generated type stubs: `python/prin/_prin_core.pyi`.
+The Phase 0 scaffold currently exposes version metadata only. WP-001 upgraded
+the compatible PyO3/rust-numpy pair to 0.29.0 and set the workspace MSRV to
+Rust 1.83. DLPack exchange, Rust-backed forward/backward bridges, and generated
+extension stubs land in their registered future work packages.
 
 Build for development:
 

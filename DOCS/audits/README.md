@@ -10,3 +10,8 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   the S3 closure table.
 - Verdicts: `PASS` / `PASS-WITH-FINDINGS` / `FAIL` (any D1 finding ⇒ `FAIL`;
   feature work freezes until remediation clears it).
+
+## Current reports
+
+- [`001-wp001-audit.md`](001-wp001-audit.md) — WP-001 audit and CLEAN S3
+  closure; eleven findings resolved (ten fixed, one approved amendment).

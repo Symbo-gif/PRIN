@@ -13,11 +13,11 @@ the next numbered session; planned numbers do not change.
 
 | Seq | Phase | Unit | Type | Session brief | Current status |
 |---:|---:|---|---|---|---|
-| 0001 | 0 | WP-001 | S1 — Coding | [Foundation baseline and traceability](phase-0/0001-wp001-s1-foundation-baseline-and-traceability.md) | READY |
-| 0002 | 0 | WP-001 | S2 — Audit | [Foundation baseline and traceability](phase-0/0002-wp001-s2-foundation-baseline-and-traceability.md) | PLANNED |
-| 0003 | 0 | WP-001 | S3 — Remediation | [Foundation baseline and traceability](phase-0/0003-wp001-s3-foundation-baseline-and-traceability.md) | PLANNED |
-| 0004 | 0 | WP-001 | S4 — Documentation | [Foundation baseline and traceability](phase-0/0004-wp001-s4-foundation-baseline-and-traceability.md) | PLANNED |
-| 0005 | 0 | WP-002 | S1 — Coding | [Golden corpus and differential harness](phase-0/0005-wp002-s1-golden-corpus-and-differential-harness.md) | PLANNED |
+| 0001 | 0 | WP-001 | S1 — Coding | [Foundation baseline and traceability](phase-0/0001-wp001-s1-foundation-baseline-and-traceability.md) | COMPLETE |
+| 0002 | 0 | WP-001 | S2 — Audit | [Foundation baseline and traceability](phase-0/0002-wp001-s2-foundation-baseline-and-traceability.md) | COMPLETE |
+| 0003 | 0 | WP-001 | S3 — Remediation | [Foundation baseline and traceability](phase-0/0003-wp001-s3-foundation-baseline-and-traceability.md) | COMPLETE |
+| 0004 | 0 | WP-001 | S4 — Documentation | [Foundation baseline and traceability](phase-0/0004-wp001-s4-foundation-baseline-and-traceability.md) | COMPLETE |
+| 0005 | 0 | WP-002 | S1 — Coding | [Golden corpus and differential harness](phase-0/0005-wp002-s1-golden-corpus-and-differential-harness.md) | READY |
 | 0006 | 0 | WP-002 | S2 — Audit | [Golden corpus and differential harness](phase-0/0006-wp002-s2-golden-corpus-and-differential-harness.md) | PLANNED |
 | 0007 | 0 | WP-002 | S3 — Remediation | [Golden corpus and differential harness](phase-0/0007-wp002-s3-golden-corpus-and-differential-harness.md) | PLANNED |
 | 0008 | 0 | WP-002 | S4 — Documentation | [Golden corpus and differential harness](phase-0/0008-wp002-s4-golden-corpus-and-differential-harness.md) | PLANNED |

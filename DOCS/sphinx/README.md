@@ -26,8 +26,12 @@ separately to docs.rs and linked from here.
 
 ```bash
 pip install -r DOCS/sphinx/requirements.txt
-sphinx-build -b html DOCS/sphinx DOCS/sphinx/_build/html
+pip install .
+sphinx-build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
 ```
+
+WP-001 verified the warning-as-error build against an installed wheel. The
+project README is intentionally excluded from the Sphinx source toctree.
 
 ## Conventions
 

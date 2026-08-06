@@ -601,7 +601,7 @@ def test_session_plan_validator_reports_metadata_and_link_drift(
     first.write_text(
         first.read_text(encoding="utf-8")
         .replace("# Session 0001", "# Session 9999", 1)
-        .replace("**Status:** READY", "**Status:** BLOCKED", 1)
+        .replace("**Status:** COMPLETE", "**Status:** BLOCKED", 1)
         .replace("**Execution unit:** WP-001", "**Execution unit:** WP-999", 1)
         .replace("**Session type:** S1 — Coding", "**Session type:** S2 — Audit", 1)
         .replace(
