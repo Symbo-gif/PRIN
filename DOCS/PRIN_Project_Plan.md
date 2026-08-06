@@ -189,6 +189,9 @@ Unexpected D1/D2 work uses the complete conditional correction cycle in
 |---|---|---|---|---|
 | 1 | 2026-07-10 | §6, §8, §9 | Added Session Cycle methodology, Phase 7 campaign, workflow/experimentation standards, DoD items 10–12 | maintainer |
 | 2 | 2026-07-12 | §6.1, §8.2–§8.3 | Added the 198-session execution ledger, WP-001 declaration, complete requirement traceability, and conditional correction-session protocol | maintainer request |
+| 3 | 2026-07-27 | Coding Standards §6.2, §6.4 | Replaced the unavailable repository-local VibeCheck truthpack/badge convention with repository-native sources of truth and additive Snyk Code/Open Source controls across agentic, IDE, and CI workflows; retained ecosystem audits and GitHub hosted secret controls as mandatory independent gates | maintainer request |
+| 4 | 2026-07-27 | Coding Standards §6.2 | Required full visibility, threat assessment, compensating controls, maintainer approval, and per-cycle recheck for advisories with no upstream fix; permitted Snyk `--fail-on=all` so all findings remain reported while any available upgrade or patch blocks CI. Applied to six all-version Torch advisories discovered during WP-001 S3 | maintainer approval |
+| 5 | 2026-08-06 | Coding Standards §6.2 | Added a temporary, fail-closed substitute only when GitHub reports native secret scanning unavailable: required full-history secret scanning CI, protected PR-only `main`, and per-cycle availability rechecks until native secret scanning and push protection can be enabled | maintainer approval |
 
 ## 9. Definition of Done
 

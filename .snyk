@@ -1,0 +1,5 @@
+# Snyk policy for active PRIN source
+---
+exclude:
+  global:
+    - DOCS/archive/**
