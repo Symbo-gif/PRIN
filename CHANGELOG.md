@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   44 focused tests, and cycle audit/state evidence.
 - Additive Snyk Code/Open Source and full-history Gitleaks CI, with matching
   repository-agent/editor secure-development guidance.
+- WP-002 golden-trajectory corpus and differential harness: 504 seeded
+  float64 cases covering every model (kuramoto, hopf, stuart_landau) ×
+  coupling (full, mean_field, sparse_knn) × basic integrator (euler, rk4),
+  versioned `CorpusManifest` with SHA-256 per-case digests, schema/manifest
+  validators, `CorpusLoader`, differential pytest harness, and Hypothesis
+  strategies in `python/prin/parity/` and `parity/`.
 
 ### Changed
 
@@ -43,6 +49,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Native GitHub secret scanning remains mandatory when available; while GitHub
   reports it unavailable for this private repository, amendment #5 requires a
   protected PR-only `main` and blocking full-history Gitleaks on every change.
+- `pyproject.toml` and `.github/workflows/parity.yml` updated to install
+  PRINet 3.0.0 from the archived source tree, add the `parity` optional-dependency
+  group, and exclude `parity/` and the archive from `bandit` scans.
+- `DOCS/sphinx/requirements.txt` now pins patched transitive minimums so that
+  `pip-audit` and Snyk Open Source both report zero findings.
 
 ### Security
 

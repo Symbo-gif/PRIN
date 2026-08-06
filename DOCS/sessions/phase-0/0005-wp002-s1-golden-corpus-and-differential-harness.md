@@ -1,6 +1,6 @@
 # Session 0005 — WP-002 S1: Coding — Golden corpus and differential harness
 
-**Status:** READY  
+**Status:** COMPLETE  
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-002  
 **Session type:** S1 — Coding  

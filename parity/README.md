@@ -21,6 +21,23 @@ Numerical parity against PRINet 3.0 is the highest-risk area of this rebuild
 | Chaotic regimes | statistical comparison (order-parameter time series) beyond the shadowing horizon, not pointwise |
 | Metrics / decompositions (float64) | `rtol=1e-10` |
 
+## Public API
+
+The Python implementation of the differential harness lives in `prin.parity`
+(`python/prin/parity/`). Import it for manifest/loader access, case comparison,
+and Hypothesis-driven fuzzing.
+
+## Corpus summary
+
+| Attribute | Value |
+|---|---|
+| Cases | 504 |
+| Models | kuramoto (216), hopf (216), stuart_landau (72) |
+| Couplings | full (216), mean_field (144), sparse_knn (144) |
+| Integrators | euler (252), rk4 (252) |
+| Steps stored | 20 |
+| Array format | `.npz` with JSON manifest and per-file SHA-256 |
+
 ## Corpus generation
 
 The reference implementation is installed from the archived source tree, not

@@ -4,7 +4,7 @@
 |---|---|
 | `rust.yml` | Formatting, Clippy, cross-platform tests, rustdoc, and Cargo Audit |
 | `python.yml` | Lint/type/doc/security gates and Python 3.11–3.13 Linux/Windows tests |
-| `parity.yml` | Differential corpus gate; safely skips before WP-002 defines cases |
+| `parity.yml` | Differential corpus gate; runs when `parity/` cases are present |
 | `gpu.yml` | Opt-in self-hosted GPU validation |
 | `repro.yml` | Explicitly guarded until WP-035 owns executable reproduction |
 | `release.yml` | Wheel/sdist release path; crate publication guarded until WP-005 |

@@ -1,6 +1,6 @@
 # Session 0009 — WP-003 S1: Coding — PyO3 and DLPack bridge spike
 
-**Status:** PLANNED  
+**Status:** READY  
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-003  
 **Session type:** S1 — Coding  

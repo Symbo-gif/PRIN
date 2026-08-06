@@ -8,3 +8,9 @@ starts by reading it (Development Workflow Standards §6).
 - Template: [`TEMPLATE_Project_State_Report.md`](TEMPLATE_Project_State_Report.md)
 - Contains the cumulative **deviation ledger** and the **next WP declaration**.
 - Reports are append-only history; corrections go in the next report.
+
+## Current reports
+
+- [`001-project-state.md`](001-project-state.md) — WP-001 S4 closure.
+- [`002-project-state.md`](002-project-state.md) — latest report; WP-002 S4
+  closure and WP-003 declaration.

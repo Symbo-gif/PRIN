@@ -8,6 +8,7 @@ math lives in the Rust core, reached through the `prin._prin_core` extension
 | Module | Contents | Phase |
 |---|---|---|
 | `__init__.py` | Public API (PRINet-3.0-compatible symbols) | 1–6 |
+| `parity/` | Golden-trajectory corpus, manifest, loader, and differential harness | 0 |
 | `nn/` | torch wrappers, `autograd.Function` bridges, SlotAttention baselines | 4 |
 | `eval/` | MOT evaluation, temporal metrics | 5 |
 | `experiments/` | ablation, stats, adversarial, fair-training frameworks | 5 |

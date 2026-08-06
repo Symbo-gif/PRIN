@@ -15,3 +15,6 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
 
 - [`001-wp001-audit.md`](001-wp001-audit.md) — WP-001 audit and CLEAN S3
   closure; eleven findings resolved (ten fixed, one approved amendment).
+- [`002-wp002-audit.md`](002-wp002-audit.md) — WP-002 "Golden corpus and
+  differential harness" audit (`PASS-WITH-FINDINGS`); four findings (F1–F4)
+  resolved in S3 with a CLEAN delta re-audit.

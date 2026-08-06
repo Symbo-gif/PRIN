@@ -18,9 +18,10 @@ separately to docs.rs and linked from here.
 - **Migration Guide (PRINet 3.0 → PRIN)** — symbol-by-symbol mapping table and
   tolerance notes.
 - **Kernel Architecture** — the single-source CubeCL kernel design.
-- **Parity Report** — published results of the numerical parity program.
-- **API Reference** (`api/`) — autodoc for `prin`, `prin.nn`, `prin.eval`,
-  `prin.experiments`, `prin.reporting`.
+- **Parity Report** — published results of the numerical parity program
+  (placeholder until Phase 6; the WP-002 golden corpus is in `parity/`).
+- **API Reference** (`api/`) — autodoc for `prin`, `prin.parity`, `prin.nn`,
+  `prin.eval`, `prin.experiments`, `prin.reporting`.
 
 ## Build
 
