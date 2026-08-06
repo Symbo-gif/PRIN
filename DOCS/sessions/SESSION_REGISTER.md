@@ -21,7 +21,7 @@ the next numbered session; planned numbers do not change.
 | 0006 | 0 | WP-002 | S2 — Audit | [Golden corpus and differential harness](phase-0/0006-wp002-s2-golden-corpus-and-differential-harness.md) | COMPLETE |
 | 0007 | 0 | WP-002 | S3 — Remediation | [Golden corpus and differential harness](phase-0/0007-wp002-s3-golden-corpus-and-differential-harness.md) | COMPLETE |
 | 0008 | 0 | WP-002 | S4 — Documentation | [Golden corpus and differential harness](phase-0/0008-wp002-s4-golden-corpus-and-differential-harness.md) | COMPLETE |
-| 0009 | 0 | WP-003 | S1 — Coding | [PyO3 and DLPack bridge spike](phase-0/0009-wp003-s1-pyo3-and-dlpack-bridge-spike.md) | READY |
+| 0009 | 0 | WP-003 | S1 — Coding | [PyO3 and DLPack bridge spike](phase-0/0009-wp003-s1-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
 | 0010 | 0 | WP-003 | S2 — Audit | [PyO3 and DLPack bridge spike](phase-0/0010-wp003-s2-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
 | 0011 | 0 | WP-003 | S3 — Remediation | [PyO3 and DLPack bridge spike](phase-0/0011-wp003-s3-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
 | 0012 | 0 | WP-003 | S4 — Documentation | [PyO3 and DLPack bridge spike](phase-0/0012-wp003-s4-pyo3-and-dlpack-bridge-spike.md) | PLANNED |

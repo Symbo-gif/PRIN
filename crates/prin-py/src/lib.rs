@@ -11,9 +11,16 @@
 //!
 //! Type stubs are generated to `python/prin/_prin_core.pyi`.
 
+// Deny `unsafe_code` crate-wide and allow it only in the audited `dlpack`
+// module (which uses `#![allow(unsafe_code)]`). `forbid` is not used because
+// it cannot be scoped to a single module.
+#![deny(unsafe_code)]
+#![deny(unsafe_op_in_unsafe_fn)]
 #![warn(missing_docs)]
 
 use pyo3::prelude::*;
+
+mod dlpack;
 
 /// Version string of the compiled PRIN core.
 #[pyfunction]
@@ -25,6 +32,9 @@ fn core_version() -> &'static str {
 #[pymodule]
 fn _prin_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(core_version, m)?)?;
+    m.add_function(wrap_pyfunction!(dlpack::dlpack_negate, m)?)?;
+    m.add_function(wrap_pyfunction!(dlpack::dlpack_negate_batched, m)?)?;
+    m.add_function(wrap_pyfunction!(dlpack::dlpack_round_trip, m)?)?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     Ok(())
 }

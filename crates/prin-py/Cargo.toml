@@ -22,6 +22,7 @@ prin-train.workspace = true
 prin-daemon.workspace = true
 pyo3 = { version = "0.29.0", features = ["abi3-py311"] }
 numpy = "0.29.0"
+dlpack.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 
