@@ -577,6 +577,7 @@ def test_secret_scan_is_blocking_and_covers_full_history() -> None:
     workflow = (ROOT / ".github/workflows/snyk.yml").read_text(encoding="utf-8")
     secret_job = workflow.split("  secret-scan:\n", maxsplit=1)[1]
 
+    assert "pull-requests: read" in workflow
     assert "fetch-depth: 0" in secret_job
     assert "gitleaks/gitleaks-action@v2" in secret_job
     assert "continue-on-error" not in secret_job
