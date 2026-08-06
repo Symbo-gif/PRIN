@@ -190,3 +190,86 @@ def test_case_spec_schema_version_default() -> None:
     }
     spec = CaseSpec.from_dict(payload)
     assert spec.schema_version == CORPUS_SCHEMA_VERSION
+
+
+def test_case_spec_from_dict_rejects_non_dict() -> None:
+    """``CaseSpec.from_dict`` fails closed on non-dictionaries."""
+    with pytest.raises(CorpusValidationError, match="must be a dictionary"):
+        CaseSpec.from_dict("not-a-dict")  # type: ignore[arg-type]
+
+
+def test_case_spec_from_dict_rejects_non_dict_parameters() -> None:
+    """``CaseSpec.from_dict`` rejects a non-dictionary ``parameters`` field."""
+    with pytest.raises(CorpusValidationError, match=r"parameters.*dictionary"):
+        CaseSpec.from_dict(
+            {
+                "case_id": "c",
+                "model": "kuramoto",
+                "coupling": "full",
+                "integrator": "euler",
+                "n_oscillators": 4,
+                "n_steps": 2,
+                "dt": 0.01,
+                "seed": 1,
+                "parameters": [1.0],
+            }
+        )
+
+
+def test_case_spec_from_dict_rejects_bool_integer() -> None:
+    """Boolean values are rejected for integer fields."""
+    payload = {
+        "case_id": "c",
+        "model": "kuramoto",
+        "coupling": "full",
+        "integrator": "euler",
+        "n_oscillators": 4,
+        "n_steps": True,
+        "dt": 0.01,
+        "seed": 1,
+        "parameters": {},
+    }
+    with pytest.raises(CorpusValidationError, match="n_steps must be an integer"):
+        CaseSpec.from_dict(payload)
+
+
+def test_case_spec_from_dict_accepts_integer_dt() -> None:
+    """Integer ``dt`` values are coerced to ``float`` as expected."""
+    payload = {
+        "case_id": "c",
+        "model": "kuramoto",
+        "coupling": "full",
+        "integrator": "euler",
+        "n_oscillators": 4,
+        "n_steps": 2,
+        "dt": 1,
+        "seed": 1,
+        "parameters": {},
+    }
+    spec = CaseSpec.from_dict(payload)
+    assert spec.dt == 1.0
+
+
+def test_case_spec_from_dict_rejects_non_numeric_dt() -> None:
+    """Non-numeric ``dt`` values are rejected."""
+    payload = {
+        "case_id": "c",
+        "model": "kuramoto",
+        "coupling": "full",
+        "integrator": "euler",
+        "n_oscillators": 4,
+        "n_steps": 2,
+        "dt": "bad",
+        "seed": 1,
+        "parameters": {},
+    }
+    with pytest.raises(CorpusValidationError, match="dt must be a number"):
+        CaseSpec.from_dict(payload)
+
+
+def test_require_f64_rejects_non_ndarray() -> None:
+    """``_require_f64`` rejects values that are not NumPy arrays."""
+    from prin.parity.schema import _require_f64
+
+    with pytest.raises(CorpusValidationError, match="must be a NumPy array"):
+        _require_f64([1.0, 2.0], "phase_init")  # type: ignore[arg-type]

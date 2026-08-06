@@ -115,3 +115,35 @@ def test_loader_rejects_duplicate_ids(tmp_path: Path) -> None:
     bad_manifest.to_json(corpus_dir / "manifest.json")
     with pytest.raises(CorpusValidationError, match="duplicate case IDs"):
         CorpusLoader(corpus_dir)
+
+
+def test_loader_rejects_missing_manifest(tmp_path: Path) -> None:
+    """A corpus directory without ``manifest.json`` fails closed."""
+    with pytest.raises(CorpusValidationError, match="manifest not found"):
+        CorpusLoader(tmp_path)
+
+
+def test_loader_corpus_dir_property(tmp_path: Path) -> None:
+    """``corpus_dir`` returns the resolved input path."""
+    corpus_dir = _make_corpus(tmp_path)
+    loader = CorpusLoader(corpus_dir)
+    assert loader.corpus_dir == corpus_dir.resolve()
+
+
+def test_loader_rejects_missing_case_file(tmp_path: Path) -> None:
+    """A missing ``.npz`` case file fails closed at load time."""
+    corpus_dir = _make_corpus(tmp_path)
+    loader = CorpusLoader(corpus_dir)
+    (corpus_dir / "cases" / "case_000.npz").unlink()
+    with pytest.raises(CorpusValidationError, match="case file missing"):
+        loader.load("case_000")
+
+
+def test_get_record_returns_record_and_rejects_unknown(tmp_path: Path) -> None:
+    """``get_record`` returns a record by ID and fails closed for unknown IDs."""
+    corpus_dir = _make_corpus(tmp_path)
+    loader = CorpusLoader(corpus_dir)
+    record = loader.get_record("case_001")
+    assert record.case_id == "case_001"
+    with pytest.raises(CorpusValidationError, match="not found"):
+        loader.get_record("missing")

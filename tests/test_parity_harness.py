@@ -9,9 +9,17 @@ from prin.parity.harness import (
     assert_parity,
     compare_arrays,
     compare_case,
+    compare_loaded_case,
     plant_deviation,
 )
-from prin.parity.schema import CaseArrays, Quantity
+from prin.parity.schema import (
+    CaseArrays,
+    CaseSpec,
+    Coupling,
+    Integrator,
+    Model,
+    Quantity,
+)
 
 
 def _make_arrays(n: int = 4, steps: int = 2) -> CaseArrays:
@@ -114,3 +122,43 @@ def test_harness_uses_metric_tolerances_for_order_parameters() -> None:
     )
     assert not result.within_tolerance
     assert result.quantity == Quantity.METRIC
+
+
+def test_comparison_result_to_dict() -> None:
+    """``ComparisonResult.to_dict`` serializes every field."""
+    arrays = _make_arrays()
+    result = compare_arrays(
+        arrays.phase_final, arrays.phase_final, "phase_final", "kuramoto"
+    )
+    payload = result.to_dict()
+    assert payload["array_name"] == "phase_final"
+    assert payload["quantity"] == "trajectory"
+    assert payload["within_tolerance"] is True
+    assert payload["failed_count"] == 0
+
+
+def test_compare_loaded_case_uses_spec_model() -> None:
+    """``compare_loaded_case`` compares against the loaded spec's model."""
+    from prin.parity.loader import LoadedCase
+
+    arrays = _make_arrays()
+    spec = CaseSpec(
+        case_id="test",
+        model=Model.KURAMOTO.value,
+        coupling=Coupling.FULL.value,
+        integrator=Integrator.RK4.value,
+        n_oscillators=4,
+        n_steps=2,
+        dt=0.01,
+        seed=0,
+        parameters={},
+    )
+    loaded = LoadedCase(spec=spec, arrays=arrays)
+    results = compare_loaded_case(loaded, arrays)
+    assert all_within_tolerance(results)
+
+
+def test_assert_parity_passes_for_equal_arrays() -> None:
+    """``assert_parity`` returns without raising for identical arrays."""
+    arrays = _make_arrays()
+    assert_parity(arrays, arrays, "kuramoto")

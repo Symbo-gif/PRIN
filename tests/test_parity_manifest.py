@@ -151,3 +151,82 @@ def test_manifest_record_from_dict_validates() -> None:
                 "parameters": {"coupling_strength": 1.0},
             }
         )
+
+
+def test_manifest_record_from_dict_rejects_non_dict() -> None:
+    """``ManifestRecord.from_dict`` fails closed on non-dictionaries."""
+    with pytest.raises(CorpusValidationError, match="must be a dictionary"):
+        ManifestRecord.from_dict("not-a-dict")  # type: ignore[arg-type]
+
+
+def test_manifest_record_from_dict_rejects_non_dict_parameters() -> None:
+    """``ManifestRecord.from_dict`` rejects non-dictionary parameters."""
+    with pytest.raises(CorpusValidationError, match=r"parameters.*dictionary"):
+        ManifestRecord.from_dict(
+            {
+                "case_id": "c",
+                "file": "cases/c.npz",
+                "sha256": "a" * 64,
+                "model": "kuramoto",
+                "coupling": "full",
+                "integrator": "rk4",
+                "n_oscillators": 8,
+                "n_steps": 2,
+                "dt": 0.01,
+                "seed": 0,
+                "parameters": [1.0],
+            }
+        )
+
+
+def test_manifest_record_from_dict_rejects_non_integer() -> None:
+    """``ManifestRecord.from_dict`` rejects non-integer integer fields."""
+    with pytest.raises(CorpusValidationError, match="n_oscillators must be an integer"):
+        ManifestRecord.from_dict(
+            {
+                "case_id": "c",
+                "file": "cases/c.npz",
+                "sha256": "a" * 64,
+                "model": "kuramoto",
+                "coupling": "full",
+                "integrator": "rk4",
+                "n_oscillators": "8",
+                "n_steps": 2,
+                "dt": 0.01,
+                "seed": 0,
+                "parameters": {},
+            }
+        )
+
+
+def test_corpus_manifest_from_dict_rejects_non_dict() -> None:
+    """``CorpusManifest.from_dict`` fails closed on non-dictionaries."""
+    with pytest.raises(CorpusValidationError, match="must be a dictionary"):
+        CorpusManifest.from_dict("not-a-dict")  # type: ignore[arg-type]
+
+
+def test_corpus_manifest_from_dict_rejects_non_list_cases() -> None:
+    """``CorpusManifest.from_dict`` rejects a non-list ``cases`` field."""
+    with pytest.raises(CorpusValidationError, match=r"cases.*list"):
+        CorpusManifest.from_dict({"cases": "not-a-list"})
+
+
+def test_corpus_manifest_from_json_rejects_count_mismatch(tmp_path: Path) -> None:
+    """``CorpusManifest.from_json`` detects an ``n_cases`` mismatch."""
+    import json as _json
+
+    specs = _write_corpus(tmp_path)
+    cases = [(spec, tmp_path / "cases" / f"{spec.case_id}.npz") for spec in specs]
+    create_manifest(
+        corpus_dir=tmp_path,
+        cases=cases,
+        generator="test",
+        generator_version="0.0.0",
+        prin_version="0.1.0",
+        reference_source="synthetic",
+    )
+    payload = _json.loads((tmp_path / "manifest.json").read_text())
+    payload["n_cases"] = 99
+    (tmp_path / "manifest.json").write_text(_json.dumps(payload))
+    with pytest.raises(CorpusValidationError, match="claims 99 cases"):
+        CorpusManifest.from_json(tmp_path / "manifest.json")
