@@ -2,20 +2,20 @@
 
 **Date:** 2026-08-06  
 **Cycle:** 002 (WP-002 "Golden corpus and differential harness")  
-**Completed sessions:** 0005–0007  
+**Completed sessions:** 0005–0008  
 **Author:** Devin (AI pair)  
 **Maintainer approval:** pending  
-**Git state:** `feat/wp001-foundation-baseline` @ `4da34da` (S3 closure)
+**Git state:** `feat/wp001-foundation-baseline` @ `46ef744` (S4 closure)
 
 ---
 
 ## 1. Current position on the planned trajectory
 
 - **Roadmap phase:** 0 — Foundation (2 of 5 phase-0 WPs complete).
-- **This cycle delivered:** The versioned PRINet 3.0 golden-trajectory corpus (504 deterministic cases), schema/manifest validators, corpus loader, hypothesis strategies, and a differential pytest harness with tolerances for trajectory and metric comparison.
+- **This cycle delivered:** The versioned PRINet 3.0 golden-trajectory corpus (504 deterministic cases), schema/manifest validators, corpus loader, hypothesis strategies, and a differential pytest harness with tolerances for trajectory and metric comparison. WP-002 S4 closed the cycle with a README sweep of all touched directories, `CHANGELOG.md` entry, new `DOCS/sphinx/api/parity.rst` and migration-guide notes, updated session briefs and `SESSION_REGISTER.md`, and the `002-project-state.md` report below.
 - **Plan conformance:** ON TRAJECTORY WITH AMENDMENTS — the five approved governance/authority amendments from cycle 001 remain in force. No numerical implementation or archived reference output changes were introduced.
 - **Audit:** `DOCS/audits/002-wp002-audit.md` — S2 verdict `PASS-WITH-FINDINGS` (four findings: F1–F2 D2, F3–F4 D4); S3 delta re-audit **CLEAN**, all findings resolved.
-- **Session Register:** 0005 (S1), 0006 (S2), 0007 (S3) marked **COMPLETE**; 0008 (WP-002 S4) marked **READY**.
+- **Session Register:** 0005 (S1), 0006 (S2), 0007 (S3), 0008 (S4) marked **COMPLETE**; 0009 (WP-003 S1) marked **READY**.
 
 ## 2. Metric trends
 
@@ -54,6 +54,10 @@ cargo audit
 # snyk_code_scan path=C:\dev\PRIN severity_threshold=medium
 # snyk_sca_scan path=C:\dev\PRIN severity_threshold=low all_projects=true
 ```
+
+S4 re-ran the same one-liner after the documentation edits (including the new
+`DOCS/sphinx/api/parity.rst` page and `prin.parity` autodoc). All quality,
+coverage, documentation, security, and parity gates remain green.
 
 ## 3. Deviation ledger (cumulative)
 
@@ -94,7 +98,7 @@ No new plan amendments introduced in WP-002. The five approved amendments from c
 - **Phase 0 spike go/no-go:** WP-002 golden corpus is complete. The next WPs (WP-003 PyO3/DLPack, WP-004 CubeCL, WP-005 ORT) are ready to start.
 - **GitHub native secret scanning:** Remains unavailable for this private repository. Amendment #5's substitute is in force; availability must be rechecked each cycle.
 - **Windows pytest temp directory:** Default `%TEMP%` cleanup can fail with `PermissionError [WinError 5]`. Use `--basetemp=.pytest_basetemp` (or another in-repo path) on Windows; the directory is ignored by `.gitignore`.
-- **No current blockers** for starting WP-002 S4 or WP-003 S1.
+- **No current blockers** for starting WP-003 S1.
 
 ## 6. Next work package declaration — WP-003
 
