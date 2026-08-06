@@ -1,7 +1,8 @@
 name: parity
 
-# Differential testing against prinet==3.0.0 on the golden-trajectory corpus
-# plus hypothesis-generated random cases (project plan §7.3).
+# Differential testing against the archived PRINet 3.0.0 source on the
+# golden-trajectory corpus plus hypothesis-generated random cases
+# (project plan §7.3).
 
 on:
   push:

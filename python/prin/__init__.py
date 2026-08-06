@@ -10,6 +10,8 @@ Subpackages:
     prin.nn: torch.nn.Module wrappers, autograd.Function bridges, baselines.
     prin.eval: MOT evaluation and temporal metrics.
     prin.experiments: ablation, stats, adversarial, and training frameworks.
+    prin.parity: golden-trajectory corpus, manifest/loader, and differential
+        harness for numerical parity against PRINet 3.0.
     prin.reporting: benchmark JSON reports, figures, tables, profiler.
 """
 
