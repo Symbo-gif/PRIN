@@ -255,9 +255,9 @@ Ordered S3 action list:
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP002-F1 |  |  |  |
-| WP002-F2 |  |  |  |
-| WP002-F3 |  |  |  |
-| WP002-F4 |  |  |  |
+| WP002-F1 | Resolved | `c7d8a25` — add fast-suite regression tests for `prin.parity` error branches | `pytest tests/ -m "not slow and not gpu" --cov=prin.parity --cov-report=term-missing`: 98 passed, `prin.parity` 100% coverage |
+| WP002-F2 | Resolved | `d6037b8` — add transitive minimum bounds to `DOCS/sphinx/requirements.txt` | `pip-audit .`: 0 findings; `pip-audit -r DOCS/sphinx/requirements.txt`: 0 findings; `snyk_sca_scan path=C:\dev\PRIN severity_threshold=low all_projects=true`: issueCount=0 |
+| WP002-F3 | Resolved | `d0b7207` — update `python/prin/__init__.py` docstring, `parity/README.md`, `pyproject.toml` parity marker, `.github/workflows/parity.yml` header | All stale `prinet==3.0.0` / `100 steps` references removed; `interrogate python/prin`: 100% docstring coverage; Sphinx build `-W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html`: succeeded |
+| WP002-F4 | Resolved | `4da34da` — add `parity/` and archive to `tool.bandit.exclude_dirs` | `bandit -r . -c pyproject.toml`: No issues identified (0 low/medium/high) |
 
-**Delta re-audit date:** — **Result:**
+**Delta re-audit date:** 2026-08-06 **Result:** **CLEAN — all WP-002 S2 findings closed.**
