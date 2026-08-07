@@ -28,6 +28,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stable-release closure; includes a master status register, requirement/risk/
   DoD traceability matrix, phase indexes, and conditional D1/D2 correction
   templates (plan amendment #2).
+- WP-001 foundation baseline automation: deterministic repository inventory,
+  complete ownership traceability for 43 PRINet 3.0 modules and 657 public-symbol
+  rows (172 canonical top-level exports), fail-closed metadata/session validation,
+  44 focused tests, and cycle audit/state evidence.
+- Additive Snyk Code/Open Source and full-history Gitleaks CI, with matching
+  repository-agent/editor secure-development guidance.
+- WP-002 golden-trajectory corpus and differential harness: 504 seeded
+  float64 cases covering every model (kuramoto, hopf, stuart_landau) ×
+  coupling (full, mean_field, sparse_knn) × basic integrator (euler, rk4),
+  versioned `CorpusManifest` with SHA-256 per-case digests, schema/manifest
+  validators, `CorpusLoader`, differential pytest harness, and Hypothesis
+  strategies in `python/prin/parity/` and `parity/`.
+- WP-003 PyO3/DLPack bridge spike: zero-copy Torch↔Rust tensor exchange via
+  `prin.dlpack` (`negate`, `negate_batched`, `round_trip`) backed by the
+  `prin._prin_core` extension (`dlpack_negate`, `dlpack_negate_batched`,
+  `dlpack_round_trip`); CPU round-trip, batched boundary calls, dtype/device
+  validation, ownership/lifetime handling, and `pytest-benchmark` latency
+  instrumentation in `tests/test_dlpack_bridge.py`; representative element-wise
+  CPU kernels (`negate_f32`, `negate_f64`) in `prin-kernels::ops`.
+
+### Changed
+
+- Repository-native plans, standards, code, configuration, Audit Reports, and
+  Project State Reports replace retired VibeCheck state as current authority
+  (plan amendments #3 and #4).
+- Native GitHub secret scanning remains mandatory when available; while GitHub
+  reports it unavailable for this private repository, amendment #5 requires a
+  protected PR-only `main` and blocking full-history Gitleaks on every change.
+- `pyproject.toml` and `.github/workflows/parity.yml` updated to install
+  PRINet 3.0.0 from the archived source tree, add the `parity` optional-dependency
+  group, and exclude `parity/` and the archive from `bandit` scans.
+- `DOCS/sphinx/requirements.txt` now pins patched transitive minimums so that
+  `pip-audit` and Snyk Open Source both report zero findings.
+- Coding Standards §2.1 and §6.1 amended (plan amendment #6) to permit an
+  audited Python-FFI `unsafe` module in `prin-py/src/dlpack.rs` under the same
+  controls as kernel-FFI modules: dedicated module,
+  `#![deny(unsafe_op_in_unsafe_fn)]`, `// SAFETY:` comments on every `unsafe`
+  block, and second-reviewer sign-off. `prin-py` uses crate-level
+  `#![deny(unsafe_code)]` with module-level `#![allow(unsafe_code)]` because
+  `#![forbid]` cannot be scoped to a single module.
+- Project Plan §6 amended (plan amendment #7) documenting the WP-003/Phase 0
+  go/no-go: the CPU DLPack exchange and `pytest-benchmark` round-trip/batched
+  evidence are validated; the CUDA round-trip and the `<5%` training-step
+  overhead target are deferred to the Phase 4 trainable-stack work with a
+  re-audit gate.
+
+### Security
+
+- Upgraded PyO3 and rust-numpy to 0.29.0, removing the audited RustSec advisory
+  chain, and aligned the workspace MSRV to Rust 1.83.
+- Enforced project/docs Pip Audit and Snyk dependency gates, removed long-lived
+  crates.io token use, protected `main`, and added an approved single-fingerprint
+  exception for an archived SHA-256 checksum misclassified as an API key.
+- WP-003 S3: added `BridgeError::NegativeDim` and `validate_shape` to the
+  DLPack bridge so `read_and_negate`/`read_and_clone` reject negative shape
+  dimensions before `element_count` and `std::slice::from_raw_parts`, closing
+  the over-read path from a malformed capsule (audit finding WP003-F2).
 
 ### Fixed
 

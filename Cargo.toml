@@ -14,7 +14,7 @@ members = [
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.78"
+rust-version = "1.83"
 license = "MIT"
 authors = [
     "Michael Maillet <therealmichaelmaillet@gmail.com>",
@@ -46,6 +46,9 @@ rand_pcg = "0.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
+# DLPack C ABI for zero-copy tensor exchange (PyTorch / JAX / CuPy)
+dlpack = "0.2.0"
+
 # Errors / logging
 thiserror = "1"
 tracing = "0.1"
@@ -54,6 +57,9 @@ tracing = "0.1"
 proptest = "1"
 approx = "0.5"
 criterion = "0.5"
+
+# GPU compute language (CubeCL) — Phase 0 spike; runtime selected via crate features.
+cubecl = { version = "0.10.0", default-features = false, features = ["std"] }
 
 [profile.release]
 lto = "thin"

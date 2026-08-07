@@ -1,7 +1,8 @@
 name: parity
 
-# Differential testing against prinet==3.0.0 on the golden-trajectory corpus
-# plus hypothesis-generated random cases (project plan §7.3).
+# Differential testing against the archived PRINet 3.0.0 source on the
+# golden-trajectory corpus plus hypothesis-generated random cases
+# (project plan §7.3).
 
 on:
   push:
@@ -37,6 +38,7 @@ jobs:
         run: |
           pip install maturin
           maturin develop -m crates/prin-py/Cargo.toml
-          pip install -e ".[dev,parity]"
+          pip install -e ".[dev]"
+          pip install -e "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main"
       - name: Run differential parity suite
         run: pytest parity/ -v -m parity

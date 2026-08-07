@@ -17,8 +17,15 @@ PRIN is a **two-layer system**:
 
 ## Status
 
-Pre-alpha scaffold. See [`DOCS/PRIN_Project_Plan.md`](DOCS/PRIN_Project_Plan.md) for the
-official project plan and phased roadmap.
+Phase 0 pre-alpha foundation. WP-001 established a deterministic repository
+inventory, complete PRINet 3.0 API-to-work-package traceability, metadata
+validation, and measured quality/security baselines. WP-002 delivered the
+versioned golden-trajectory corpus (504 cases) and differential parity harness.
+WP-003 prototyped the PyO3/DLPack zero-copy Torch↔Rust bridge with batched
+boundary calls, ownership/lifetime handling, dtype/device validation, and
+microbenchmark instrumentation. See the latest
+[Project State Report](DOCS/reports/README.md) for the authoritative active
+session and trajectory.
 
 ## Installation (development)
 
@@ -41,13 +48,13 @@ PRIN/
 ├── python/prin/          # pure-Python layer (public API, torch bridges, reporting)
 ├── parity/               # golden-trajectory corpus + differential tests vs PRINet 3.0
 ├── benchmarks/           # 9 category packages + benchrunner CLI
-├── tests/                # pytest acceptance suite (ported from PRINet 3.0)
-├── tools/reproduce.py    # reproducibility pipeline (figures + tables)
+├── tests/                # pytest acceptance and repository-control tests
+├── tools/                # baseline/traceability tooling; guarded reproduction
 ├── models/               # subconscious_controller.onnx
 ├── notebooks/            # tutorial notebooks
 ├── paper/                # NeurIPS paper artefacts
-├── DOCS/                 # official plan, standards, Sphinx site (DOCS/sphinx/)
-└── .github/workflows/    # rust, python, parity, gpu, repro, release CI
+├── DOCS/                 # plan, standards, baselines, audits, reports, Sphinx
+└── .github/workflows/    # quality, security, parity, repro, GPU, release CI
 ```
 
 ## Governance documents

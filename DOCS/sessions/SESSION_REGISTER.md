@@ -13,21 +13,21 @@ the next numbered session; planned numbers do not change.
 
 | Seq | Phase | Unit | Type | Session brief | Current status |
 |---:|---:|---|---|---|---|
-| 0001 | 0 | WP-001 | S1 — Coding | [Foundation baseline and traceability](phase-0/0001-wp001-s1-foundation-baseline-and-traceability.md) | READY |
-| 0002 | 0 | WP-001 | S2 — Audit | [Foundation baseline and traceability](phase-0/0002-wp001-s2-foundation-baseline-and-traceability.md) | PLANNED |
-| 0003 | 0 | WP-001 | S3 — Remediation | [Foundation baseline and traceability](phase-0/0003-wp001-s3-foundation-baseline-and-traceability.md) | PLANNED |
-| 0004 | 0 | WP-001 | S4 — Documentation | [Foundation baseline and traceability](phase-0/0004-wp001-s4-foundation-baseline-and-traceability.md) | PLANNED |
-| 0005 | 0 | WP-002 | S1 — Coding | [Golden corpus and differential harness](phase-0/0005-wp002-s1-golden-corpus-and-differential-harness.md) | PLANNED |
-| 0006 | 0 | WP-002 | S2 — Audit | [Golden corpus and differential harness](phase-0/0006-wp002-s2-golden-corpus-and-differential-harness.md) | PLANNED |
-| 0007 | 0 | WP-002 | S3 — Remediation | [Golden corpus and differential harness](phase-0/0007-wp002-s3-golden-corpus-and-differential-harness.md) | PLANNED |
-| 0008 | 0 | WP-002 | S4 — Documentation | [Golden corpus and differential harness](phase-0/0008-wp002-s4-golden-corpus-and-differential-harness.md) | PLANNED |
-| 0009 | 0 | WP-003 | S1 — Coding | [PyO3 and DLPack bridge spike](phase-0/0009-wp003-s1-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
-| 0010 | 0 | WP-003 | S2 — Audit | [PyO3 and DLPack bridge spike](phase-0/0010-wp003-s2-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
-| 0011 | 0 | WP-003 | S3 — Remediation | [PyO3 and DLPack bridge spike](phase-0/0011-wp003-s3-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
-| 0012 | 0 | WP-003 | S4 — Documentation | [PyO3 and DLPack bridge spike](phase-0/0012-wp003-s4-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
-| 0013 | 0 | WP-004 | S1 — Coding | [CubeCL fused RK4 spike](phase-0/0013-wp004-s1-cubecl-fused-rk4-spike.md) | PLANNED |
-| 0014 | 0 | WP-004 | S2 — Audit | [CubeCL fused RK4 spike](phase-0/0014-wp004-s2-cubecl-fused-rk4-spike.md) | PLANNED |
-| 0015 | 0 | WP-004 | S3 — Remediation | [CubeCL fused RK4 spike](phase-0/0015-wp004-s3-cubecl-fused-rk4-spike.md) | PLANNED |
+| 0001 | 0 | WP-001 | S1 — Coding | [Foundation baseline and traceability](phase-0/0001-wp001-s1-foundation-baseline-and-traceability.md) | COMPLETE |
+| 0002 | 0 | WP-001 | S2 — Audit | [Foundation baseline and traceability](phase-0/0002-wp001-s2-foundation-baseline-and-traceability.md) | COMPLETE |
+| 0003 | 0 | WP-001 | S3 — Remediation | [Foundation baseline and traceability](phase-0/0003-wp001-s3-foundation-baseline-and-traceability.md) | COMPLETE |
+| 0004 | 0 | WP-001 | S4 — Documentation | [Foundation baseline and traceability](phase-0/0004-wp001-s4-foundation-baseline-and-traceability.md) | COMPLETE |
+| 0005 | 0 | WP-002 | S1 — Coding | [Golden corpus and differential harness](phase-0/0005-wp002-s1-golden-corpus-and-differential-harness.md) | COMPLETE |
+| 0006 | 0 | WP-002 | S2 — Audit | [Golden corpus and differential harness](phase-0/0006-wp002-s2-golden-corpus-and-differential-harness.md) | COMPLETE |
+| 0007 | 0 | WP-002 | S3 — Remediation | [Golden corpus and differential harness](phase-0/0007-wp002-s3-golden-corpus-and-differential-harness.md) | COMPLETE |
+| 0008 | 0 | WP-002 | S4 — Documentation | [Golden corpus and differential harness](phase-0/0008-wp002-s4-golden-corpus-and-differential-harness.md) | COMPLETE |
+| 0009 | 0 | WP-003 | S1 — Coding | [PyO3 and DLPack bridge spike](phase-0/0009-wp003-s1-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0010 | 0 | WP-003 | S2 — Audit | [PyO3 and DLPack bridge spike](phase-0/0010-wp003-s2-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0011 | 0 | WP-003 | S3 — Remediation | [PyO3 and DLPack bridge spike](phase-0/0011-wp003-s3-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0012 | 0 | WP-003 | S4 — Documentation | [PyO3 and DLPack bridge spike](phase-0/0012-wp003-s4-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0013 | 0 | WP-004 | S1 — Coding | [CubeCL fused RK4 spike](phase-0/0013-wp004-s1-cubecl-fused-rk4-spike.md) | READY |
+| 0014 | 0 | WP-004 | S2 — Audit | [CubeCL fused RK4 spike](phase-0/0014-wp004-s2-cubecl-fused-rk4-spike.md) | COMPLETE |
+| 0015 | 0 | WP-004 | S3 — Remediation | [CubeCL fused RK4 spike](phase-0/0015-wp004-s3-cubecl-fused-rk4-spike.md) | COMPLETE |
 | 0016 | 0 | WP-004 | S4 — Documentation | [CubeCL fused RK4 spike](phase-0/0016-wp004-s4-cubecl-fused-rk4-spike.md) | PLANNED |
 | 0017 | 0 | WP-005 | S1 — Coding | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0017-wp005-s1-ort-backends-wheel-matrix-and-phase-0-gate.md) | PLANNED |
 | 0018 | 0 | WP-005 | S2 — Audit | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0018-wp005-s2-ort-backends-wheel-matrix-and-phase-0-gate.md) | PLANNED |

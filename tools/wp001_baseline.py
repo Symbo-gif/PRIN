@@ -585,18 +585,32 @@ def validate_metadata(root: Path) -> list[str]:
     if toolchain.get("channel") != "stable":
         errors.append("rust-toolchain.toml channel must equal 'stable'")
     components = set(toolchain.get("components", []))
-    if components != {"rustfmt", "clippy"}:
-        errors.append("rust-toolchain.toml components must equal rustfmt and clippy")
+    required = {"rustfmt", "clippy"}
+    allowed = {"rustfmt", "clippy", "llvm-tools", "llvm-tools-preview"}
+    if not required.issubset(components) or not components.issubset(allowed):
+        errors.append(
+            "rust-toolchain.toml components must include rustfmt and clippy; "
+            "optional llvm-tools or llvm-tools-preview"
+        )
     return errors
 
 
-def _numbered_briefs(sessions: Path) -> dict[str, Path]:
+def _numbered_briefs(
+    sessions: Path,
+) -> tuple[dict[str, Path], list[str], int]:
     briefs: dict[str, Path] = {}
+    duplicates: list[str] = []
+    physical_count = 0
     for path in sessions.glob("phase-*/*.md"):
         match = re.match(r"^(\d{4})-", path.name)
         if match:
-            briefs[match.group(1)] = path
-    return briefs
+            physical_count += 1
+            sequence = match.group(1)
+            if sequence in briefs:
+                duplicates.append(sequence)
+            else:
+                briefs[sequence] = path
+    return briefs, duplicates, physical_count
 
 
 def _normalize_unit(value: str) -> str:
@@ -629,9 +643,19 @@ def validate_session_plan(root: Path) -> list[str]:
         errors.append(
             "session register sequence must be unique and gap-free 0001..0198"
         )
-    briefs = _numbered_briefs(sessions)
+    briefs, duplicate_sequences, physical_count = _numbered_briefs(sessions)
+    if duplicate_sequences:
+        errors.append(
+            "duplicate session brief sequence IDs: "
+            + ", ".join(sorted(set(duplicate_sequences)))
+        )
+    if physical_count != 198:
+        errors.append(
+            "expected 198 numbered session briefs, found "
+            f"{physical_count} physical numbered session briefs"
+        )
     if len(briefs) != 198:
-        errors.append(f"expected 198 numbered session briefs, found {len(briefs)}")
+        errors.append(f"expected 198 unique session brief IDs, found {len(briefs)}")
     allowed_statuses = {"PLANNED", "READY", "IN_PROGRESS", "BLOCKED", "COMPLETE"}
     for index, row in enumerate(rows):
         sequence = row["sequence"]
@@ -780,7 +804,7 @@ def collect_repository_inventory(root: Path) -> dict[str, Any]:
     test_files = sorted(
         path.relative_to(root).as_posix() for path in (root / "tests").glob("test_*.py")
     )
-    session_briefs = _numbered_briefs(root / "DOCS/sessions")
+    session_briefs, _, physical_brief_count = _numbered_briefs(root / "DOCS/sessions")
     project = pyproject.get("project", {})
     return {
         "schema_version": 1,
@@ -826,7 +850,8 @@ def collect_repository_inventory(root: Path) -> dict[str, Any]:
             "workflows": workflows,
         },
         "session_plan": {
-            "numbered_briefs": len(session_briefs),
+            "numbered_briefs": physical_brief_count,
+            "unique_sequence_ids": len(session_briefs),
             "first": min(session_briefs) if session_briefs else None,
             "last": max(session_briefs) if session_briefs else None,
         },
@@ -922,6 +947,11 @@ def validate_baseline(
             errors.append(
                 "archived top-level API contract changed: expected 172, found "
                 f"{traceability['top_level_public_symbol_count']}"
+            )
+        if traceability["symbol_count"] != 657:
+            errors.append(
+                "archived module-symbol contract changed: expected 657, found "
+                f"{traceability['symbol_count']}"
             )
     return sorted(set(errors))
 

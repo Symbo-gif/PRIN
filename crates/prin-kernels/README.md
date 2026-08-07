@@ -8,5 +8,16 @@ Kernels: fused mean-field RK4, sparse k-NN coupling, PAC modulation, fused
 discrete step, hierarchical order-parameter reduction. All precompiled at
 wheel-build time — no runtime nvcc/MSVC JIT.
 
-Feature flags: `cuda`, `wgpu`. Kernel-equivalence tests compare every GPU kernel
-against the CPU reference across shapes and dtypes.
+Feature flags: `cpu` (CubeCL CPU runtime), `cuda`, `wgpu`. Kernel-equivalence
+tests compare every GPU/CPU kernel against the CPU reference across shapes and
+dtypes.
+
+## Phase 0 status
+
+`src/ops.rs` provides simple element-wise CPU kernels (`negate_f32`,
+`negate_f64`) used by the WP-003 PyO3/DLPack bridge spike to demonstrate that
+the Rust core owns the numerics while the Python layer only marshals tensors.
+`src/mean_field_rk4.rs` and `src/mean_field_rk4/cubecl.rs` are the WP-004 Phase 0
+fused mean-field RK4 spike: a CPU reference plus single-source CubeCL kernels for
+`cpu`, `wgpu`, and `cuda` runtimes, validated at N=1M against the CPU reference.
+The production fused-kernel suite lands in Phase 3 (WP-017…WP-021).

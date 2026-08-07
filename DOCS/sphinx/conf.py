@@ -33,7 +33,12 @@ intersphinx_mapping = {
 }
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "test_and_benchmark_results"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "README.md",
+    "test_and_benchmark_results",
+]
 
 html_theme = "furo"
-html_static_path = ["_static"]

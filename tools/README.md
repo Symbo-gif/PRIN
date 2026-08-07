@@ -6,8 +6,9 @@ or execute archived reference code.
 
 ## Current tools
 
-- `wp001_baseline.py` statically validates project metadata, the complete session
-  ledger, and PRINet 3.0 API ownership; it also emits deterministic repository
+- `wp001_baseline.py` statically validates project metadata, all 198 physical
+  and uniquely numbered session briefs, and the exact 43-module/657-symbol/172-
+  export PRINet 3.0 ownership contract; it also emits deterministic repository
   inventory JSON and API traceability Markdown.
 - `wp001_ownership.json` is the declarative module/symbol-to-future-WP ownership
   source consumed by the baseline validator.

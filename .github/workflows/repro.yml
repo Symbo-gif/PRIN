@@ -12,6 +12,10 @@ on:
       - "python/prin/reporting/**"
       - "paper/**"
 
+
+env:
+  PRIN_REPRO_ENABLED: "false"
+
 jobs:
   reproduce:
     runs-on: ubuntu-latest
@@ -22,10 +26,18 @@ jobs:
           python-version: "3.12"
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Pre-WP-035 guard
+        if: env.PRIN_REPRO_ENABLED != 'true'
+        run: echo "Reproducibility execution remains guarded until WP-035."
       - name: Build and install
+        if: env.PRIN_REPRO_ENABLED == 'true'
         run: |
-          pip install maturin
+          python -m venv .venv
+          source .venv/bin/activate
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          python -m pip install maturin
           maturin develop -m crates/prin-py/Cargo.toml
-          pip install -e ".[dev]"
+          python -m pip install -e ".[dev]"
       - name: Regenerate figures and tables, verify manifest
+        if: env.PRIN_REPRO_ENABLED == 'true'
         run: python tools/reproduce.py --verify-manifest

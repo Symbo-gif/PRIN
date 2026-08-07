@@ -68,7 +68,8 @@ onnx = [
     "onnxruntime-directml>=1.16; sys_platform == 'win32'",
 ]
 parity = [
-    "prinet==3.0.0",
+    # PRINet 3.0.0 is installed from the archived source tree
+    # in DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main.
 ]
 all = [
     "prin[dev,mot,onnx]",
@@ -93,7 +94,7 @@ addopts = "-v --tb=short"
 markers = [
     "gpu: tests that require CUDA GPU",
     "slow: tests that take >5s (training convergence, benchmarks)",
-    "parity: differential tests against prinet==3.0.0",
+    "parity: differential tests against the archived PRINet 3.0.0 source",
 ]
 
 [tool.coverage.run]
@@ -123,6 +124,8 @@ convention = "google"
 "tests/**" = ["S", "D"]
 "benchmarks/**" = ["S", "D"]
 "**/_prin_core.pyi" = ["D"]
+"tests/test_generate_corpus.py" = ["E402", "I001"]
+"parity/test_parity_differential.py" = ["E402", "I001"]
 
 [tool.interrogate]
 # Documentation Standards §2.2: 100% public symbols (ruff D), ≥95% overall.
@@ -134,10 +137,10 @@ exclude = ["python/prin/_prin_core.pyi"]
 verbose = 1
 
 [tool.bandit]
-exclude_dirs = ["tests", "benchmarks", ".venv", "target"]
+exclude_dirs = ["tests", "benchmarks", ".venv", "target", "parity", "archive and reference from PRINet 3.0"]
 
 [tool.mypy]
 strict = true
-python_version = "3.11"
+python_version = "3.12"
 mypy_path = "python"
 ignore_missing_imports = true
