@@ -209,13 +209,17 @@ def _check_spike_decisions(root: Path) -> dict[str, Any]:
         return _json_status(False, error="project plan missing")
 
     text = plan.read_text(encoding="utf-8")
+    evidence = root / "EVIDENCE" / "0017-wp005-s1-ort-probe.json"
     amendments = {
         "amendment_7_dlpack": "| 7 |" in text and "DLPack" in text,
         "amendment_11_cubecl": "| 11 |" in text and "CubeCL" in text,
+        "amendment_13_ort": (
+            "| 13 |" in text
+            and ("ORT" in text or "ONNX" in text)
+            and "VitisAI" in text
+            and evidence.is_file()
+        ),
     }
-
-    evidence = root / "EVIDENCE" / "0017-wp005-s1-ort-probe.json"
-    amendments["amendment_13_ort"] = evidence.is_file()
 
     ok = all(amendments.values())
     return _json_status(

@@ -133,7 +133,10 @@ class TestCheckSpikeDecisions:
         docs = tmp_path / "DOCS"
         docs.mkdir(parents=True, exist_ok=True)
         plan = docs / "PRIN_Project_Plan.md"
-        plan.write_text("| 7 | DLPack\n| 11 | CubeCL\n", encoding="utf-8")
+        plan.write_text(
+            "| 7 | DLPack\n| 11 | CubeCL\n| 13 | ORT ONNX VitisAI\n",
+            encoding="utf-8",
+        )
         evidence = tmp_path / "EVIDENCE" / "0017-wp005-s1-ort-probe.json"
         evidence.parent.mkdir(parents=True, exist_ok=True)
         evidence.write_text("{}", encoding="utf-8")
@@ -144,9 +147,25 @@ class TestCheckSpikeDecisions:
         docs = tmp_path / "DOCS"
         docs.mkdir(parents=True, exist_ok=True)
         plan = docs / "PRIN_Project_Plan.md"
-        plan.write_text("| 7 | DLPack\n| 11 | CubeCL\n", encoding="utf-8")
+        plan.write_text(
+            "| 7 | DLPack\n| 11 | CubeCL\n| 13 | ORT ONNX VitisAI\n",
+            encoding="utf-8",
+        )
         result = _check_spike_decisions(tmp_path)
         assert result["status"] == "fail"
+
+    def test_missing_ort_amendment_in_plan(self, tmp_path: Path) -> None:
+        """Regression for WP005-F1: gate must fail when amendment 13 is absent."""
+        docs = tmp_path / "DOCS"
+        docs.mkdir(parents=True, exist_ok=True)
+        plan = docs / "PRIN_Project_Plan.md"
+        plan.write_text("| 7 | DLPack\n| 11 | CubeCL\n", encoding="utf-8")
+        evidence = tmp_path / "EVIDENCE" / "0017-wp005-s1-ort-probe.json"
+        evidence.parent.mkdir(parents=True, exist_ok=True)
+        evidence.write_text("{}", encoding="utf-8")
+        result = _check_spike_decisions(tmp_path)
+        assert result["status"] == "fail"
+        assert "amendment_13_ort" in result["errors"][0]
 
 
 class TestPhase0GateReport:
@@ -200,7 +219,8 @@ class TestPhase0GateReport:
         docs = tmp_path / "DOCS"
         docs.mkdir(parents=True, exist_ok=True)
         (docs / "PRIN_Project_Plan.md").write_text(
-            "| 7 | DLPack\n| 11 | CubeCL\n", encoding="utf-8"
+            "| 7 | DLPack\n| 11 | CubeCL\n| 13 | ORT ONNX VitisAI\n",
+            encoding="utf-8",
         )
 
         report = phase0_gate_report(tmp_path)
