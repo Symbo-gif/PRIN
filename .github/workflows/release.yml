@@ -37,9 +37,9 @@ jobs:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
       - name: Wheel smoke test
-        if: matrix.target == 'x86_64'
+        if: matrix.target != 'aarch64'
         run: |
-          pip install dist/*.whl
+          python -m pip install dist/*.whl
           python -c "import prin; print(prin.core_version())"
         shell: bash
       - uses: actions/upload-artifact@v4

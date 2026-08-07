@@ -64,7 +64,7 @@ mot = [
 ]
 onnx = [
     "onnx>=1.15",
-    "onnxruntime>=1.16",
+    "onnxruntime>=1.16; sys_platform != 'win32'",
     "onnxruntime-directml>=1.16; sys_platform == 'win32'",
 ]
 parity = [

@@ -73,6 +73,7 @@ paper/_build/
 *.pt
 *.pth
 !models/subconscious_controller.onnx
+!models/subconscious_controller.onnx.data
 
 # Docs build
 DOCS/sphinx/_build/

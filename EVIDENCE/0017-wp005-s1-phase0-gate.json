@@ -1,0 +1,57 @@
+{
+  "checks": {
+    "corpus": {
+      "cases_match": true,
+      "error": null,
+      "expected_cases": 504,
+      "manifest_path": "C:\\dev\\PRIN\\parity\\corpus\\manifest.json",
+      "n_cases": 504,
+      "status": "ok"
+    },
+    "ort": {
+      "active_providers": [
+        "CPUExecutionProvider"
+      ],
+      "available_providers": [
+        "DmlExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "error": null,
+      "evidence_path": "C:\\dev\\PRIN\\EVIDENCE\\0017-wp005-s1-ort-probe.json",
+      "output_shape": [
+        1,
+        8
+      ],
+      "selected_backend": "directml",
+      "status": "ok"
+    },
+    "spike_decisions": {
+      "amendments": {
+        "amendment_11_cubecl": true,
+        "amendment_13_ort": true,
+        "amendment_7_dlpack": true
+      },
+      "errors": [],
+      "status": "ok"
+    },
+    "wheel_matrix": {
+      "errors": [],
+      "findings": {
+        "macos_universal2": true,
+        "os_independent_classifier": true,
+        "pyo3_abi3": true,
+        "targets": [
+          "x86_64",
+          "aarch64",
+          "x86_64",
+          "universal2-apple-darwin"
+        ],
+        "three_os_matrix": true,
+        "wheel_smoke_step": true
+      },
+      "status": "ok"
+    }
+  },
+  "ready": true,
+  "timestamp": "2026-08-07T02:56:49.141258+00:00"
+}

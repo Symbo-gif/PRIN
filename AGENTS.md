@@ -22,8 +22,8 @@ The `.pytest_basetemp/` directory is ignored in `.gitignore`.
 .venv\Scripts\mypy python/prin --strict
 .venv\Scripts\python -m interrogate -c pyproject.toml python/prin
 .venv\Scripts\python -m bandit -r . -c pyproject.toml
-.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin.parity --cov-report=term-missing --basetemp=.pytest_basetemp
-.venv\Scripts\python -m pytest tests/ parity/ --cov=prin.parity --cov-report=term-missing --basetemp=.pytest_basetemp
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp
+.venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
