@@ -27,7 +27,7 @@ the next numbered session; planned numbers do not change.
 | 0012 | 0 | WP-003 | S4 — Documentation | [PyO3 and DLPack bridge spike](phase-0/0012-wp003-s4-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
 | 0013 | 0 | WP-004 | S1 — Coding | [CubeCL fused RK4 spike](phase-0/0013-wp004-s1-cubecl-fused-rk4-spike.md) | READY |
 | 0014 | 0 | WP-004 | S2 — Audit | [CubeCL fused RK4 spike](phase-0/0014-wp004-s2-cubecl-fused-rk4-spike.md) | COMPLETE |
-| 0015 | 0 | WP-004 | S3 — Remediation | [CubeCL fused RK4 spike](phase-0/0015-wp004-s3-cubecl-fused-rk4-spike.md) | IN_PROGRESS |
+| 0015 | 0 | WP-004 | S3 — Remediation | [CubeCL fused RK4 spike](phase-0/0015-wp004-s3-cubecl-fused-rk4-spike.md) | COMPLETE |
 | 0016 | 0 | WP-004 | S4 — Documentation | [CubeCL fused RK4 spike](phase-0/0016-wp004-s4-cubecl-fused-rk4-spike.md) | PLANNED |
 | 0017 | 0 | WP-005 | S1 — Coding | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0017-wp005-s1-ort-backends-wheel-matrix-and-phase-0-gate.md) | PLANNED |
 | 0018 | 0 | WP-005 | S2 — Audit | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0018-wp005-s2-ort-backends-wheel-matrix-and-phase-0-gate.md) | PLANNED |

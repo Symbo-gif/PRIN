@@ -26,7 +26,11 @@ pub type StepCubeclOutput = (super::MeanFieldRk4Output, StepReport);
 pub struct StepReport {
     /// Backend runtime name, e.g. `"wgpu<wgsl>"` or `"cuda"`.
     pub backend_name: String,
-    /// Wall-clock time for the whole step, including host reductions.
+    /// Host wall-clock time for the whole step, including host reductions.
+    ///
+    /// This is a prototype measurement; device-side event timing is planned
+    /// for Phase 3. Do not publish performance claims from this wall-clock
+    /// prototype.
     pub wall_time_seconds: f64,
     /// Number of launches dispatched (4 stage kernels + 1 finalize kernel).
     pub launch_count: u32,
@@ -409,8 +413,12 @@ pub fn try_step_wgpu(
     params: &MeanFieldRk4Params,
 ) -> Result<StepCubeclOutput, MeanFieldRk4Error> {
     use cubecl::wgpu::{WgpuDevice, WgpuRuntime};
-    let device = WgpuDevice::DefaultDevice;
-    let client = WgpuRuntime::client(&device);
+    use std::panic::{catch_unwind, AssertUnwindSafe};
+    let client = catch_unwind(AssertUnwindSafe(|| {
+        let device = WgpuDevice::DefaultDevice;
+        WgpuRuntime::client(&device)
+    }))
+    .map_err(|_| MeanFieldRk4Error::BackendUnavailable { name: "wgpu" })?;
     step_cubecl(&client, phase, amplitude, frequency, params)
 }
 
@@ -423,8 +431,12 @@ pub fn try_step_cpu(
     params: &MeanFieldRk4Params,
 ) -> Result<StepCubeclOutput, MeanFieldRk4Error> {
     use cubecl::cpu::{CpuDevice, CpuRuntime};
-    let device = CpuDevice;
-    let client = CpuRuntime::client(&device);
+    use std::panic::{catch_unwind, AssertUnwindSafe};
+    let client = catch_unwind(AssertUnwindSafe(|| {
+        let device = CpuDevice;
+        CpuRuntime::client(&device)
+    }))
+    .map_err(|_| MeanFieldRk4Error::BackendUnavailable { name: "cpu" })?;
     step_cubecl(&client, phase, amplitude, frequency, params)
 }
 
@@ -437,8 +449,12 @@ pub fn try_step_cuda(
     params: &MeanFieldRk4Params,
 ) -> Result<StepCubeclOutput, MeanFieldRk4Error> {
     use cubecl::cuda::{CudaDevice, CudaRuntime};
-    let device = CudaDevice::default();
-    let client = CudaRuntime::client(&device);
+    use std::panic::{catch_unwind, AssertUnwindSafe};
+    let client = catch_unwind(AssertUnwindSafe(|| {
+        let device = CudaDevice::default();
+        CudaRuntime::client(&device)
+    }))
+    .map_err(|_| MeanFieldRk4Error::BackendUnavailable { name: "cuda" })?;
     step_cubecl(&client, phase, amplitude, frequency, params)
 }
 
@@ -474,7 +490,7 @@ mod tests {
             try_step_wgpu(&phase, &amplitude, &frequency, &params).unwrap();
 
         assert_eq!(report.backend_name, "wgpu<wgsl>");
-        eprintln!("N=1M wgpu step report: {report:?}");
+        eprintln!("N={n} wgpu step report: {report:?}");
         assert_allclose(&gpu_p, &cpu_p, 1e-5, 1e-6);
         assert_allclose(&gpu_a, &cpu_a, 1e-5, 1e-6);
         assert_allclose(&gpu_f, &cpu_f, 1e-5, 1e-6);
@@ -564,6 +580,23 @@ mod tests {
             err,
             MeanFieldRk4Error::InvalidParameter { name: "dt", .. }
         ));
+    }
+
+    #[test]
+    fn wgpu_returns_typed_error_when_backend_unavailable() {
+        let phase = vec![0.0_f32; 8];
+        let amplitude = vec![1.0_f32; 8];
+        let frequency = vec![0.0_f32; 8];
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+        match try_step_wgpu(&phase, &amplitude, &frequency, &params) {
+            Ok(_) | Err(MeanFieldRk4Error::BackendUnavailable { .. }) => {}
+            Err(e) => panic!("unexpected wgpu error: {e}"),
+        }
     }
 }
 

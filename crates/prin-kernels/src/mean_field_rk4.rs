@@ -65,6 +65,12 @@ pub enum MeanFieldRk4Error {
     /// Device backend read-back failed.
     #[error("device backend read-back failed")]
     BackendReadError,
+    /// The requested compute backend (wgpu/CUDA) is not available on this host.
+    #[error("backend unavailable: {name}")]
+    BackendUnavailable {
+        /// Backend name.
+        name: &'static str,
+    },
 }
 
 /// Wrap `phase` to `[0, 2 * pi)` using Euclidean remainder.
@@ -338,5 +344,141 @@ mod tests {
         let (out_p, _, _) = step_cpu(&phase, &amp, &freq, &DEFAULT_PARAMS).unwrap();
         assert!(out_p[0] >= 0.0);
         assert!(out_p[0] < core::f32::consts::TAU);
+    }
+
+    #[test]
+    fn cpu_rk4_amplitude_error_scales_like_dt_to_the_fifth() {
+        // For the k=0 exponential decay ODE, the explicit RK4 update has local
+        // truncation error O(dt^5). Halving the step should shrink the error by
+        // roughly 2^5 = 32.
+        let decay = 1.0_f32;
+        let phase = vec![0.0_f32];
+        let amplitude = vec![1.0_f32];
+        let frequency = vec![0.0_f32];
+
+        let run = |dt: f32| {
+            let params = MeanFieldRk4Params {
+                k: 0.0,
+                decay,
+                gamma: 0.0,
+                dt,
+            };
+            let (_, out_a, _) = step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
+            let exact = (-decay * dt).exp();
+            (out_a[0] - exact).abs()
+        };
+
+        let e_coarse = run(0.2);
+        let e_fine = run(0.1);
+        assert!(e_coarse > 0.0 && e_fine > 0.0);
+        let ratio = e_coarse / e_fine;
+        assert!(
+            ratio > 15.0 && ratio < 60.0,
+            "expected RK4 local error ratio ~32, got {ratio}"
+        );
+    }
+}
+
+#[cfg(test)]
+mod proptests {
+    use super::*;
+    use proptest::prelude::*;
+
+    const TAU: f32 = core::f32::consts::TAU;
+
+    fn any_params() -> impl Strategy<Value = MeanFieldRk4Params> {
+        (
+            0.0_f32..=2.0_f32,
+            0.0_f32..=0.5_f32,
+            -0.1_f32..=0.1_f32,
+            0.001_f32..=0.05_f32,
+        )
+            .prop_map(|(k, decay, gamma, dt)| MeanFieldRk4Params {
+                k,
+                decay,
+                gamma,
+                dt,
+            })
+    }
+
+    fn any_state(n: usize) -> impl Strategy<Value = (Vec<f32>, Vec<f32>, Vec<f32>)> {
+        (
+            proptest::collection::vec(0.0_f32..TAU, n),
+            proptest::collection::vec(0.0_f32..=1.0_f32, n),
+            proptest::collection::vec(-1.0_f32..=1.0_f32, n),
+        )
+            .prop_map(|(phase, amp, freq)| (phase, amp, freq))
+    }
+
+    fn zero_coupling_params(mut params: MeanFieldRk4Params) -> MeanFieldRk4Params {
+        params.k = 0.0;
+        params
+    }
+
+    #[test]
+    fn phase_and_amplitude_invariants_are_preserved() {
+        let config = ProptestConfig::with_cases(64);
+        proptest!(config, |(n in 1usize..=64, params in any_params(), state in any_state(64))| {
+            // `state` is length 64; truncate to `n`.
+            let (phase, amplitude, frequency) = state;
+            let phase = phase[..n].to_vec();
+            let amplitude = amplitude[..n].to_vec();
+            let frequency = frequency[..n].to_vec();
+
+            let (out_p, out_a, out_f) = step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
+
+            for p in &out_p {
+                prop_assert!(*p >= 0.0);
+                prop_assert!(*p < TAU);
+            }
+            for a in &out_a {
+                prop_assert!(*a >= 0.0);
+                prop_assert!(a.is_finite());
+            }
+            for f in &out_f {
+                prop_assert!(f.is_finite());
+            }
+        });
+    }
+
+    #[test]
+    fn zero_coupling_is_free_run() {
+        let config = ProptestConfig::with_cases(64);
+        proptest!(config, |(n in 2usize..=32, params in any_params().prop_map(zero_coupling_params), state in any_state(32))| {
+            let (phase, amplitude, frequency) = state;
+            let phase = phase[..n].to_vec();
+            let amplitude = amplitude[..n].to_vec();
+            let frequency = frequency[..n].to_vec();
+
+            let (out_p, out_a, out_f) = step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
+
+            for i in 0..n {
+                let expected_p = wrap_phase(phase[i] + params.dt * frequency[i]);
+                let x = params.decay * params.dt;
+                let expected_a = amplitude[i] * (-x).exp();
+                let expected_f = frequency[i];
+
+                prop_assert!((out_p[i] - expected_p).abs() < 1e-5, "phase mismatch at {}", i);
+                prop_assert!((out_a[i] - expected_a).abs() < 1e-5, "amplitude mismatch at {}", i);
+                prop_assert!((out_f[i] - expected_f).abs() < 1e-6, "frequency mismatch at {}", i);
+            }
+        });
+    }
+
+    #[test]
+    fn order_parameter_magnitude_is_bounded() {
+        let config = ProptestConfig::with_cases(64);
+        proptest!(config, |(n in 2usize..=32, state in any_state(32))| {
+            let (phase, amplitude, _frequency) = state;
+            let phase = phase[..n].to_vec();
+            let amplitude = amplitude[..n].to_vec();
+            let n_inv = 1.0 / n as f32;
+
+            let (zx, zy) = order_param(&phase, &amplitude, n_inv);
+            let mean_amp = amplitude.iter().sum::<f32>() * n_inv;
+            let z_norm_sq = zx * zx + zy * zy;
+
+            prop_assert!(z_norm_sq <= mean_amp * mean_amp + 1e-6);
+        });
     }
 }

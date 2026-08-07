@@ -318,3 +318,21 @@ Ordered S3 action list:
 7. `WP004-F7` (D3): add the `cpu` (and `wgpu` where feasible) kernel-equivalence tests to default CI.
 8. `WP004-F8` (D3): document or replace wall-clock timing with device-side events.
 9. `WP004-F9` (D4): fix the stale log message and update `prin-kernels/README.md` and `crates/README.md`.
+
+---
+
+## 7. S3 closure table
+
+| Finding | Severity | Resolution | Evidence / commit reference | Plan amendment |
+|---|---|---|---|---|
+| WP004-F1 | D2 | AMENDED | `cargo audit` still reports RUSTSEC-2024-0436 inherited from `cubecl 0.10.0`; no patched release is available at the PRIN dependency level. Recorded in `DOCS/PRIN_Project_Plan.md` §8.3 amendment #9. | #9 |
+| WP004-F2 | D2 | AMENDED | `cargo llvm-cov -p prin-kernels --features wgpu,cpu` instrumentable code is 88.21% overall because the two `#[cube(launch)]` kernel bodies are not instrumentable on stable Rust. `mean_field_rk4.rs` and `ops.rs` are 99.67% and 100% respectively; kernel correctness is verified by kernel-equivalence tests. Amendment #10 records the exception and the re-check obligation. | #10 |
+| WP004-F3 | D2 | FIXED | Added `proptest` module in `crates/prin-kernels/src/mean_field_rk4.rs` covering phase wrap, amplitude clamp, zero-coupling identity, order-parameter bounds, and a deterministic RK4 local-error scaling unit test. `cargo test -p prin-kernels --features wgpu,cpu` passes (21 tests). | — |
+| WP004-F4 | D2 | AMENDED | Added `DOCS/PRIN_Project_Plan.md` §8.3 amendment #8 authorizing the audited `prin-kernels` `unsafe` pattern: crate-level `#![deny(unsafe_code)]` with module-level `#![allow(unsafe_code)]`, `#![deny(unsafe_op_in_unsafe_fn)]`, and `// SAFETY:` justifications. | #8 |
+| WP004-F5 | D3 | AMENDED | Recorded in `DOCS/PRIN_Project_Plan.md` §8.3 amendment #11: PyTorch reference and wgpu/CubeCL-CPU kernel-equivalence at N=1M are validated; direct same-hardware Triton 3.0 fused-kernel timing is deferred to Phase 3 / `gpu.yml` on a Linux/CUDA runner. | #11 |
+| WP004-F6 | D3 | FIXED | Wrapped `WgpuRuntime::client`, `CpuRuntime::client`, and `CudaRuntime::client` creation in `catch_unwind` and mapped panics to `MeanFieldRk4Error::BackendUnavailable`. Added `wgpu_returns_typed_error_when_backend_unavailable` regression test. `cargo test -p prin-kernels --features wgpu,cpu` passes. | — |
+| WP004-F7 | D3 | FIXED + AMENDED | Added `cargo test -p prin-kernels --features cpu` to `.github/workflows/rust.yml` (test matrix). The `wgpu` CI step remains gated on a headless GPU runner and is recorded as deferred in `DOCS/PRIN_Project_Plan.md` §8.3 amendment #12. | #12 |
+| WP004-F8 | D3 | FIXED | Documented host wall-clock caveat in `StepReport.wall_time_seconds` doc comment and module-level note: device-side event timing is a Phase 3 optimization and no performance claims may be published from this prototype. | — |
+| WP004-F9 | D4 | FIXED | Corrected `N=1M` to `N={n}` in the small-n wgpu test. Updated `crates/prin-kernels/README.md` to list the `cpu` feature and the WP-004 Phase 0 mean-field RK4 spike. Updated `crates/README.md` to note the Phase 0 spike. | — |
+
+**Delta re-audit result:** All D2 findings are resolved or approved-amended; D3/D4 findings are fixed or amended. `cargo test --workspace`, `cargo test -p prin-kernels --features wgpu,cpu`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo fmt --all -- --check`, and the Python fast gate pass locally. `cargo audit` retains the inherited `paste` warning (amended).
