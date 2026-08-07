@@ -26,3 +26,6 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   RK4 spike" audit (`PASS-WITH-FINDINGS`); nine findings (F1–F4 D2, F5–F8 D3,
   F9 D4) resolved in S3 with a CLEAN delta re-audit; closure table and plan
   amendments #8–#12 are on file.
+- [`005-wp005-audit.md`](005-wp005-audit.md) — WP-005 "ORT backends, wheel
+  matrix, and Phase 0 gate" audit (`PASS-WITH-FINDINGS`); four findings
+  (F1–F2 D3, F3–F4 D4) awaiting S3 remediation.
