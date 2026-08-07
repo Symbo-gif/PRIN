@@ -5,6 +5,8 @@
 //! - [`state`] — oscillator state (struct-of-arrays), phase wrapping to `[0, 2π)`,
 //!   atan2-safe phase differences, NaN/Inf guards, derivative/amplitude clamps,
 //!   sort-based k-NN phase index.
+//! - [`seed`] — deterministic counter-based [`Seed`] authority for all stochastic
+//!   entry points (Philox/PCG64).
 //! - [`models`] — Kuramoto (mean-field, pairwise, sparse k-NN), Stuart–Landau, and
 //!   Hopf dynamics behind the `Dynamics` trait.
 //! - [`integrate`] — Euler, RK4, adaptive RK45, exponential (direct + Krylov), and
@@ -28,5 +30,9 @@ pub mod coupling;
 pub mod integrate;
 pub mod models;
 pub mod pac;
+pub mod seed;
 pub mod state;
 pub mod temporal;
+
+pub use seed::{Seed, SeedError};
+pub use state::{OscillatorState, StateError};
