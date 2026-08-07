@@ -36,6 +36,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 .pytest_basetemp/
+.pytest_basetemp*/
 .pytest_tmp/
 .benchmarks/
 

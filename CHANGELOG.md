@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Executive Audit Governance and Session 001 (EA-001)**:
+  - Normative governance and methodology document `DOCS/standards/Executive_Audit_Governance_and_Methodology.md` establishing project-level multi-domain audit criteria (E1–E10), deviation severities (D1–D4), remediation protocols, and reporting requirements.
+  - Executive Audit Report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_001.md` evaluating mathematics, architecture, test/parity suite, security, docs, evidence, governance, performance, CI/CD, and roadmap (`PASS-WITH-REMEDIATION`).
+  - Operational workflow recipes `workflows/executive-audit.md` and `.windsurf/workflows/executive-audit.md`.
+  - Executive audit report template `DOCS/audits/TEMPLATE_Executive_Audit_Report.md`.
+  - Subpackage README index files added in `python/prin/eval/README.md`, `python/prin/experiments/README.md`, `python/prin/nn/README.md`, `python/prin/reporting/README.md`.
 - WP-006 Oscillator state, errors, and deterministic seed in `prin-dynamics`:
   - Struct-of-arrays `OscillatorState` (`phase`, `amplitude`, `frequency`, optional `freq_band`) with `new`, `create_random`, `create_synchronized`, `n_oscillators`, and `n_bands`.
   - Counter-based deterministic `Seed` authority on `rand_pcg::Pcg64` with `(counter, key)` stream identity, `jump`, bounded `next_f64_range`, `RngCore` integration, and serde round-trip.
@@ -18,7 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- (nothing yet)
+- Updated `DOCS/sessions/SESSION_REGISTER.md` and `DOCS/sessions/TRACEABILITY.md` to register Global Session 0025 as `EA-001 Executive Audit Session 001`, with `[RETROACTIVE UPDATE - Executive Audit 001]` notes on historical cycle closures.
+- Advanced WP-007 S1 global session mapping to Session 0026.
 
 ### Security
 
