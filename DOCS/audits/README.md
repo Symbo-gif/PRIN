@@ -30,3 +30,6 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   matrix, and Phase 0 gate" audit (`PASS-WITH-FINDINGS`); four findings
   (F1–F2 D3, F3–F4 D4) resolved in S3 with a CLEAN delta re-audit; closure
   table and plan amendment #13 are on file.
+- [`006-wp006-audit.md`](006-wp006-audit.md) — WP-006 "Oscillator state,
+  errors, and deterministic seed" audit (`PASS-WITH-FINDINGS`); three findings
+  (F1 D2, F2 D3, F3 D4) pending S3 remediation.
