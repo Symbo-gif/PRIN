@@ -39,7 +39,7 @@ the next numbered session; planned numbers do not change.
 | 0024 | 1 | WP-006 | S4 — Documentation | [Oscillator state, errors, and deterministic seed](phase-1/0024-wp006-s4-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
 | 0025 | 1 | WP-007 | S1 — Coding | [Oscillator dynamics models](phase-1/0025-wp007-s1-oscillator-dynamics-models.md) | READY |
 | 0026 | 1 | WP-007 | S2 — Audit | [Oscillator dynamics models](phase-1/0026-wp007-s2-oscillator-dynamics-models.md) | PLANNED |
-| 0027 | 1 | WP-007 | S3 — Remediation | [Oscillator dynamics models](phase-1/0027-wp007-s3-oscillator-dynamics-models.md) | PLANNED |
+| 0027 | 1 | WP-007 | S3 — Remediation | [Oscillator dynamics models](phase-1/0027-wp007-s3-oscillator-dynamics-models.md) | COMPLETE |
 | 0028 | 1 | WP-007 | S4 — Documentation | [Oscillator dynamics models](phase-1/0028-wp007-s4-oscillator-dynamics-models.md) | PLANNED |
 | 0029 | 1 | WP-008 | S1 — Coding | [Basic integrators](phase-1/0029-wp008-s1-basic-integrators.md) | PLANNED |
 | 0030 | 1 | WP-008 | S2 — Audit | [Basic integrators](phase-1/0030-wp008-s2-basic-integrators.md) | PLANNED |
