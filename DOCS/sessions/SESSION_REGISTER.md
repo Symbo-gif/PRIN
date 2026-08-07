@@ -33,11 +33,11 @@ the next numbered session; planned numbers do not change.
 | 0018 | 0 | WP-005 | S2 — Audit | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0018-wp005-s2-ort-backends-wheel-matrix-and-phase-0-gate.md) | COMPLETE |
 | 0019 | 0 | WP-005 | S3 — Remediation | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0019-wp005-s3-ort-backends-wheel-matrix-and-phase-0-gate.md) | COMPLETE |
 | 0020 | 0 | WP-005 | S4 — Documentation | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0020-wp005-s4-ort-backends-wheel-matrix-and-phase-0-gate.md) | COMPLETE |
-| 0021 | 1 | WP-006 | S1 — Coding | [Oscillator state, errors, and deterministic seed](phase-1/0021-wp006-s1-oscillator-state-errors-and-deterministic-seed.md) | READY |
-| 0022 | 1 | WP-006 | S2 — Audit | [Oscillator state, errors, and deterministic seed](phase-1/0022-wp006-s2-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
-| 0023 | 1 | WP-006 | S3 — Remediation | [Oscillator state, errors, and deterministic seed](phase-1/0023-wp006-s3-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
-| 0024 | 1 | WP-006 | S4 — Documentation | [Oscillator state, errors, and deterministic seed](phase-1/0024-wp006-s4-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
-| 0025 | 1 | WP-007 | S1 — Coding | [Oscillator dynamics models](phase-1/0025-wp007-s1-oscillator-dynamics-models.md) | PLANNED |
+| 0021 | 1 | WP-006 | S1 — Coding | [Oscillator state, errors, and deterministic seed](phase-1/0021-wp006-s1-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
+| 0022 | 1 | WP-006 | S2 — Audit | [Oscillator state, errors, and deterministic seed](phase-1/0022-wp006-s2-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
+| 0023 | 1 | WP-006 | S3 — Remediation | [Oscillator state, errors, and deterministic seed](phase-1/0023-wp006-s3-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
+| 0024 | 1 | WP-006 | S4 — Documentation | [Oscillator state, errors, and deterministic seed](phase-1/0024-wp006-s4-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
+| 0025 | 1 | WP-007 | S1 — Coding | [Oscillator dynamics models](phase-1/0025-wp007-s1-oscillator-dynamics-models.md) | READY |
 | 0026 | 1 | WP-007 | S2 — Audit | [Oscillator dynamics models](phase-1/0026-wp007-s2-oscillator-dynamics-models.md) | PLANNED |
 | 0027 | 1 | WP-007 | S3 — Remediation | [Oscillator dynamics models](phase-1/0027-wp007-s3-oscillator-dynamics-models.md) | PLANNED |
 | 0028 | 1 | WP-007 | S4 — Documentation | [Oscillator dynamics models](phase-1/0028-wp007-s4-oscillator-dynamics-models.md) | PLANNED |

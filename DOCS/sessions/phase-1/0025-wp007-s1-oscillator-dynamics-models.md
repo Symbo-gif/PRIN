@@ -1,6 +1,6 @@
 # Session 0025 — WP-007 S1: Coding — Oscillator dynamics models
 
-**Status:** PLANNED  
+**Status:** READY  
 **Roadmap phase:** 1 — Dynamics core  
 **Execution unit:** WP-007  
 **Session type:** S1 — Coding  

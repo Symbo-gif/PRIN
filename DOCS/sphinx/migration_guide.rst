@@ -37,3 +37,9 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   and the recorded go/no-go decisions before the Phase 0 pre-release tag. This
   is an internal module (underscore prefix) not re-exported from
   ``prin.__all__``.
+- ``prin-dynamics`` oscillator state and seed (WP-006) — Rust struct-of-arrays
+  ``OscillatorState``, deterministic counter-based ``Seed`` authority on
+  ``Pcg64``, typed ``StateError``/``SeedError``, numerical guards/clamps
+  (phase wrap to ``[0, 2π)``, ``atan2``-safe phase differences, amplitude clamp
+  ``[1e-6, 10]``, derivative clamp ``±1e4``), and sort-based phase k-NN index.
+  Replaces PRINet 3.0's Python oscillator state in ``core/propagation/oscillator_state.py``.

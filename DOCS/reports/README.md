@@ -18,5 +18,5 @@ starts by reading it (Development Workflow Standards §6).
   WP-004 declaration.
 - [`004-project-state.md`](004-project-state.md) — WP-004 S4 closure and
   WP-005 declaration.
-- [`005-project-state.md`](005-project-state.md) — latest report; WP-005 S4
-  closure, Phase 0 exit-gate verdict (GREEN), and WP-006 declaration.
+- [`005-project-state.md`](005-project-state.md) — WP-005 S4 closure, Phase 0 exit-gate verdict (GREEN), and WP-006 declaration.
+- [`006-project-state.md`](006-project-state.md) — latest report; WP-006 S4 closure and WP-007 declaration.

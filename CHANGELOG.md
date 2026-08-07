@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- (nothing yet)
+- WP-006 Oscillator state, errors, and deterministic seed in `prin-dynamics`:
+  - Struct-of-arrays `OscillatorState` (`phase`, `amplitude`, `frequency`, optional `freq_band`) with `new`, `create_random`, `create_synchronized`, `n_oscillators`, and `n_bands`.
+  - Counter-based deterministic `Seed` authority on `rand_pcg::Pcg64` with `(counter, key)` stream identity, `jump`, bounded `next_f64_range`, `RngCore` integration, and serde round-trip.
+  - Phase and amplitude numerical guards: `% 2π` phase wrap (`wrap_phase`, `wrap_phases`), `atan2`-safe phase differences (`safe_phase_diff`, `safe_phase_diffs`), amplitude clamps `[1e-6, 10]` (`clamp_amplitude`, `guard_amplitude`), derivative clamps `±1e4` (`clamp_derivative`, `guard_derivative`), and sort-based phase k-NN index (`build_phase_knn_index`).
+  - Typed error enumerations `StateError` and `SeedError` built with `thiserror`.
+  - Opt-in `strict-checks` feature flag for strict guard validation versus default clamping/repair.
 
 ### Changed
 
