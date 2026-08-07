@@ -15,6 +15,15 @@ Additional PRIN-specific suites (per the Testing Standards):
 - `test_dlpack_bridge.py` — CPU round-trip, batched boundary, dtype/device
   validation, ownership/error-path, and `pytest-benchmark` latency tests for
   the WP-003 PyO3/DLPack bridge (marker `slow` for the benchmark cases).
+- `test_ort_backends.py` — 31 tests for the ONNX Runtime provider probe
+  (`prin._ort`): provider selection, provider-list construction (including
+  VitisAI firmware resolution), session creation with CPU fallback, error
+  paths, and the real subconscious-controller model load (skipped when
+  `onnxruntime` is not installed).
+- `test_phase0_gate.py` — 28 tests for the Phase 0 exit-gate consolidation
+  (`prin._phase0`): corpus, wheel-matrix, spike-decision (including a
+  regression test that the ORT amendment #13 is present in the plan text),
+  ORT-evidence, and aggregate gate-report checks.
 - `test_gradcheck_*.py` — `torch.autograd.gradcheck` (float64) for every
   `autograd.Function` bridge.
 - `test_gpu_*.py` — GPU integration tests, marker `gpu` (opt-in, self-hosted

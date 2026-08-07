@@ -1,6 +1,6 @@
 # Session 0020 — WP-005 S4: Documentation — ORT backends, wheel matrix, and Phase 0 gate
 
-**Status:** PLANNED  
+**Status:** COMPLETE
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-005  
 **Session type:** S4 — Documentation  

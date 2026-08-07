@@ -29,11 +29,11 @@ the next numbered session; planned numbers do not change.
 | 0014 | 0 | WP-004 | S2 — Audit | [CubeCL fused RK4 spike](phase-0/0014-wp004-s2-cubecl-fused-rk4-spike.md) | COMPLETE |
 | 0015 | 0 | WP-004 | S3 — Remediation | [CubeCL fused RK4 spike](phase-0/0015-wp004-s3-cubecl-fused-rk4-spike.md) | COMPLETE |
 | 0016 | 0 | WP-004 | S4 — Documentation | [CubeCL fused RK4 spike](phase-0/0016-wp004-s4-cubecl-fused-rk4-spike.md) | COMPLETE |
-| 0017 | 0 | WP-005 | S1 — Coding | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0017-wp005-s1-ort-backends-wheel-matrix-and-phase-0-gate.md) | READY |
+| 0017 | 0 | WP-005 | S1 — Coding | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0017-wp005-s1-ort-backends-wheel-matrix-and-phase-0-gate.md) | COMPLETE |
 | 0018 | 0 | WP-005 | S2 — Audit | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0018-wp005-s2-ort-backends-wheel-matrix-and-phase-0-gate.md) | COMPLETE |
 | 0019 | 0 | WP-005 | S3 — Remediation | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0019-wp005-s3-ort-backends-wheel-matrix-and-phase-0-gate.md) | COMPLETE |
-| 0020 | 0 | WP-005 | S4 — Documentation | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0020-wp005-s4-ort-backends-wheel-matrix-and-phase-0-gate.md) | PLANNED |
-| 0021 | 1 | WP-006 | S1 — Coding | [Oscillator state, errors, and deterministic seed](phase-1/0021-wp006-s1-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
+| 0020 | 0 | WP-005 | S4 — Documentation | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0020-wp005-s4-ort-backends-wheel-matrix-and-phase-0-gate.md) | COMPLETE |
+| 0021 | 1 | WP-006 | S1 — Coding | [Oscillator state, errors, and deterministic seed](phase-1/0021-wp006-s1-oscillator-state-errors-and-deterministic-seed.md) | READY |
 | 0022 | 1 | WP-006 | S2 — Audit | [Oscillator state, errors, and deterministic seed](phase-1/0022-wp006-s2-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
 | 0023 | 1 | WP-006 | S3 — Remediation | [Oscillator state, errors, and deterministic seed](phase-1/0023-wp006-s3-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
 | 0024 | 1 | WP-006 | S4 — Documentation | [Oscillator state, errors, and deterministic seed](phase-1/0024-wp006-s4-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |

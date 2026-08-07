@@ -26,6 +26,8 @@ at the top level until they are folded into the final campaign archive in Phase 
   the S2 audit for the CubeCL fused mean-field RK4 spike.
 - [`0013-wp004-s1-coverage.md`](0013-wp004-s1-coverage.md) — `cargo-llvm-cov`
   report and caveat for the non-instrumentable `#[cube(launch)]` kernel stubs.
+- [`0017-wp005-s1-handoff.md`](0017-wp005-s1-handoff.md) — WP-005 S1 handoff to
+  the S2 audit for the ORT backends, abi3 wheel matrix, and Phase 0 gate.
 
 ## Rules (summary)
 

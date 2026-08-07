@@ -54,6 +54,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wall-clock timing, and kernel-equivalence tests at N=64 and N=1M against the
   CPU reference; `proptest` coverage for phase wrap, amplitude clamp,
   zero-coupling identity, RK4 local-error scaling, and order-parameter bounds.
+- WP-005 ONNX Runtime provider probe (`prin._ort`): detects available execution
+  providers (VitisAI → DirectML → CPU priority), builds the provider list with
+  VitisAI firmware/xclbin resolution, creates sessions with graceful CPU
+  fallback when an accelerator cannot execute the graph, and proves the
+  pre-trained subconscious controller loads and runs with output shape `(1, 8)`.
+  Includes `OrtProbeReport`, `select_best_backend`, `build_provider_list`,
+  `try_create_session`, `probe_model`, and `available_providers`.
+- WP-005 Phase 0 exit-gate consolidation (`prin._phase0`): validates the three
+  foundation spikes (DLPack, CubeCL, ORT), the 504-case golden-trajectory
+  corpus, the three-OS abi3 wheel smoke matrix, and the recorded go/no-go
+  decisions (plan amendments #7, #11, #13) before the Phase 0 pre-release tag.
+  Includes `Phase0GateReport` and `phase0_gate_report`.
+- WP-005 three-OS abi3 wheel matrix: `release.yml` covers `ubuntu-latest`,
+  `windows-latest`, `macos-latest` plus `x86_64`, `aarch64`,
+  `universal2-apple-darwin`; `prin-py/Cargo.toml` uses `abi3-py311`;
+  `pyproject.toml` declares `Operating System :: OS Independent`; all
+  non-`aarch64` wheels are smoke-tested with `python -m pip install`.
+- WP-005 committed the pre-trained subconscious controller ONNX model
+  (`models/subconscious_controller.onnx` + `.onnx.data`, ~104 KB total) and
+  evidence files (`EVIDENCE/0017-wp005-s1-ort-probe.json`,
+  `EVIDENCE/0017-wp005-s1-phase0-gate.json`).
+- WP-005 CLI tools: `tools/wp005_ort_probe.py` (ORT provider probe) and
+  `tools/wp005_phase0_gate.py` (Phase 0 gate checker with `--refresh-ort`).
 
 ### Changed
 
@@ -104,6 +127,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `prin-kernels` coverage.
 - `.github/workflows/rust.yml` now runs the CubeCL CPU kernel-equivalence tests
   (`cargo test -p prin-kernels --features cpu`) on every platform.
+- `.github/workflows/python.yml` now installs the `onnx` extra (`-e ".[dev,onnx]"`)
+  on every test matrix cell so the real ORT model probe runs cross-platform
+  instead of being skipped on Linux and non-3.12 Windows cells.
+- `.github/workflows/release.yml` now smoke-tests all non-`aarch64` wheels with
+  `python -m pip install` and covers the three-OS abi3 matrix.
+- Project Plan §6 amended (plan amendment #13) documenting the WP-005/Phase 0
+  ORT go/no-go: the CPU fallback for the subconscious controller is proven on
+  all CI platforms; DirectML graph execution falls back to CPU on the current
+  Windows host; the VitisAI NPU runtime and DirectML parity are unavailable in
+  Phase 0 and deferred to WP-028 (Phase 5 daemon) with a re-audit gate.
+- `models/README.md` and `tools/README.md` updated to describe the split ONNX
+  model files and the two new WP-005 CLI tools (S3 fixes WP005-F3, WP005-F4).
 
 ### Security
 

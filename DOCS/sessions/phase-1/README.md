@@ -7,7 +7,7 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 
 | Seq | Unit | Type | Session brief | Current status |
 |---:|---|---|---|---|
-| 0021 | WP-006 | S1 — Coding | [Oscillator state, errors, and deterministic seed](0021-wp006-s1-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
+| 0021 | WP-006 | S1 — Coding | [Oscillator state, errors, and deterministic seed](0021-wp006-s1-oscillator-state-errors-and-deterministic-seed.md) | READY |
 | 0022 | WP-006 | S2 — Audit | [Oscillator state, errors, and deterministic seed](0022-wp006-s2-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
 | 0023 | WP-006 | S3 — Remediation | [Oscillator state, errors, and deterministic seed](0023-wp006-s3-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
 | 0024 | WP-006 | S4 — Documentation | [Oscillator state, errors, and deterministic seed](0024-wp006-s4-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |

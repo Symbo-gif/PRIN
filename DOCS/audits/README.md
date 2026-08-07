@@ -28,4 +28,5 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   amendments #8–#12 are on file.
 - [`005-wp005-audit.md`](005-wp005-audit.md) — WP-005 "ORT backends, wheel
   matrix, and Phase 0 gate" audit (`PASS-WITH-FINDINGS`); four findings
-  (F1–F2 D3, F3–F4 D4) awaiting S3 remediation.
+  (F1–F2 D3, F3–F4 D4) resolved in S3 with a CLEAN delta re-audit; closure
+  table and plan amendment #13 are on file.

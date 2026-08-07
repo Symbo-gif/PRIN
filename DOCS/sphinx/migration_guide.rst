@@ -26,3 +26,14 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   Triton/CUDA/PyTorch-fallback kernel files; PRIN collapses them into one
   Rust/CubeCL implementation (Phase 0 spike, production suite in Phase 3). The
   Rust public API has no direct PRINet 3.0 Python equivalent at this phase.
+- ``prin._ort`` — ONNX Runtime execution-provider probe for the subconscious
+  controller (CPU/DirectML/VitisAI with graceful fallback). PRINet 3.0 ran the
+  controller in-process with no provider abstraction; PRIN introduces backend
+  selection and fallback as a Phase 0 spike, with the full daemon runtime owned
+  by WP-028. This is an internal module (underscore prefix) not re-exported from
+  ``prin.__all__``.
+- ``prin._phase0`` — Phase 0 exit-gate evidence consolidation. Validates the
+  three foundation spikes, the golden-trajectory corpus, the abi3 wheel matrix,
+  and the recorded go/no-go decisions before the Phase 0 pre-release tag. This
+  is an internal module (underscore prefix) not re-exported from
+  ``prin.__all__``.

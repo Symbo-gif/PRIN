@@ -1,6 +1,6 @@
 # Session 0021 — WP-006 S1: Coding — Oscillator state, errors, and deterministic seed
 
-**Status:** PLANNED  
+**Status:** READY
 **Roadmap phase:** 1 — Dynamics core  
 **Execution unit:** WP-006  
 **Session type:** S1 — Coding  
