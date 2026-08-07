@@ -358,6 +358,81 @@ pub fn guard_derivative(d: f64) -> Result<f64, StateError> {
     guard_derivative_value(d, 0, "derivative")
 }
 
+/// Validate and, if non-strict, repair a slice of derivative values.
+///
+/// With `strict-checks` enabled, non-finite or out-of-range values return a
+/// typed [`StateError`]. Otherwise the values are clamped and repaired.
+pub fn guard_derivatives(derivatives: &[f64], name: &'static str) -> Result<Vec<f64>, StateError> {
+    derivatives
+        .iter()
+        .enumerate()
+        .map(|(i, &d)| guard_derivative_value(d, i, name))
+        .collect()
+}
+
+/// Container for oscillator state time derivatives: `dphase/dt`, `damplitude/dt`, `dfrequency/dt`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct StateDerivatives {
+    /// Time derivative of phase (`dφ/dt`) for each oscillator.
+    pub dphase: Vec<f64>,
+
+    /// Time derivative of amplitude (`dr/dt`) for each oscillator.
+    pub damplitude: Vec<f64>,
+
+    /// Time derivative of frequency (`dω/dt`) for each oscillator.
+    pub dfrequency: Vec<f64>,
+}
+
+impl StateDerivatives {
+    /// Construct a new derivatives container after validating lengths and numerical guards.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`StateError`] if:
+    /// - `dphase` is empty,
+    /// - `damplitude` or `dfrequency` does not match `dphase` length,
+    /// - with `strict-checks` enabled, a value is non-finite or outside `[-1e4, 1e4]`.
+    pub fn new(
+        dphase: Vec<f64>,
+        damplitude: Vec<f64>,
+        dfrequency: Vec<f64>,
+    ) -> Result<Self, StateError> {
+        let n = dphase.len();
+        if n == 0 {
+            return Err(StateError::EmptyPopulation);
+        }
+        if damplitude.len() != n {
+            return Err(StateError::LengthMismatch {
+                name: "damplitude",
+                expected: n,
+                got: damplitude.len(),
+            });
+        }
+        if dfrequency.len() != n {
+            return Err(StateError::LengthMismatch {
+                name: "dfrequency",
+                expected: n,
+                got: dfrequency.len(),
+            });
+        }
+
+        let dphase = guard_derivatives(&dphase, "dphase")?;
+        let damplitude = guard_derivatives(&damplitude, "damplitude")?;
+        let dfrequency = guard_derivatives(&dfrequency, "dfrequency")?;
+
+        Ok(Self {
+            dphase,
+            damplitude,
+            dfrequency,
+        })
+    }
+
+    /// Number of oscillators in the system.
+    pub fn n_oscillators(&self) -> usize {
+        self.dphase.len()
+    }
+}
+
 /// Build the k-nearest-phase-neighbour index on the phase circle.
 ///
 /// Uses a sort-based `O(N log N)` algorithm: sort phases, then for each

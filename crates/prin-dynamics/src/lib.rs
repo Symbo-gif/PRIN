@@ -34,5 +34,7 @@ pub mod seed;
 pub mod state;
 pub mod temporal;
 
+pub use coupling::CouplingMode;
+pub use models::{Dynamics, HopfOscillator, KuramotoOscillator, StuartLandauOscillator};
 pub use seed::{Seed, SeedError};
-pub use state::{OscillatorState, StateError};
+pub use state::{OscillatorState, StateDerivatives, StateError};
