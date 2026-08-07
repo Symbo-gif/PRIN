@@ -7,7 +7,9 @@ with imports adapted (`prinet` → `prin`) and assertions otherwise unchanged.
 Additional PRIN-specific suites (per the Testing Standards):
 
 - `test_wp001_baseline.py` — 44 fail-closed metadata, session-ledger,
-  traceability, CI, release-guard, and security-control tests.
+  traceability, CI, release-guard, and security-control tests. Validates that
+  `rust-toolchain.toml` includes `rustfmt` and `clippy`, optionally `llvm-tools`
+  for `cargo-llvm-cov`.
 - `test_parity_*.py` — fast unit tests for `prin.parity` schema, loader,
   manifest, harness, and Hypothesis strategies.
 - `test_dlpack_bridge.py` — CPU round-trip, batched boundary, dtype/device

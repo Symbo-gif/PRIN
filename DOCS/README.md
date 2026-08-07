@@ -25,6 +25,13 @@ Documentation Standards §3).
 | `archive and reference from PRINet 3.0/` | **Archived PRINet 3.0.0 — reference and planning material only.** Nothing in it is imported, executed, or built by PRIN |
 | `test_and_benchmark_results/` | Generated benchmark reports (gitignored; canonical artefacts in `benchmarks/results/`) |
 
+## Current state
+
+- Latest Project State Report: [`004-project-state.md`](reports/004-project-state.md) —
+  WP-004 S4 closure and WP-005 declaration.
+- Latest Audit Report: [`004-wp004-audit.md`](audits/004-wp004-audit.md) —
+  `PASS-WITH-FINDINGS`, S3 delta re-audit **CLEAN**.
+
 Operational checklists mirroring the Session Cycle live in
 `.windsurf/workflows/` (`/coding-session`, `/audit-session`,
 `/remediation-session`, `/documentation-session`, `/experiment-session`);

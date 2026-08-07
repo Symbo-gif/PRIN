@@ -1,6 +1,6 @@
 # Session 0016 — WP-004 S4: Documentation — CubeCL fused RK4 spike
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-004  
 **Session type:** S4 — Documentation  

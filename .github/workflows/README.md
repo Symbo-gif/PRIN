@@ -2,7 +2,7 @@
 
 | Workflow | Current role |
 |---|---|
-| `rust.yml` | Formatting, Clippy, cross-platform tests, rustdoc, and Cargo Audit |
+| `rust.yml` | Formatting, Clippy, cross-platform tests, rustdoc, Cargo Audit, and CubeCL CPU kernel-equivalence tests (`cargo test -p prin-kernels --features cpu`) |
 | `python.yml` | Lint/type/doc/security gates and Python 3.11–3.13 Linux/Windows tests |
 | `parity.yml` | Differential corpus gate; runs when `parity/` cases are present |
 | `gpu.yml` | Opt-in self-hosted GPU validation |

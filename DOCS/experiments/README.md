@@ -17,6 +17,16 @@ experiments/
 Raw run artefacts live under `benchmarks/results/EXP-NNN/` (JSON, tracked);
 figures/tables regenerate from them via `prin.reporting`.
 
+## Spike handoff and coverage records
+
+Phase 0 foundation spikes also emit intermediate handoff and coverage artefacts
+at the top level until they are folded into the final campaign archive in Phase 6:
+
+- [`0013-wp004-s1-handoff.md`](0013-wp004-s1-handoff.md) — WP-004 S1 handoff to
+  the S2 audit for the CubeCL fused mean-field RK4 spike.
+- [`0013-wp004-s1-coverage.md`](0013-wp004-s1-coverage.md) — `cargo-llvm-cov`
+  report and caveat for the non-instrumentable `#[cube(launch)]` kernel stubs.
+
 ## Rules (summary)
 
 - **No execution without a committed, approved pre-registration** including

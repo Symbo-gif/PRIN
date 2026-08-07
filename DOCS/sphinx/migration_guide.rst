@@ -21,3 +21,8 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   CPU round-trip and batched boundary paths are validated in WP-003; the CUDA
   round-trip and ``<5%`` training-step overhead target are deferred to the
   Phase 4 trainable-stack work (project plan amendment #7).
+- ``prin-kernels::mean_field_rk4`` — single-source CubeCL fused mean-field RK4
+  kernel set with CPU/wgpu/cuda dispatch. PRINet 3.0 kept separate
+  Triton/CUDA/PyTorch-fallback kernel files; PRIN collapses them into one
+  Rust/CubeCL implementation (Phase 0 spike, production suite in Phase 3). The
+  Rust public API has no direct PRINet 3.0 Python equivalent at this phase.

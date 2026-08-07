@@ -18,7 +18,9 @@
 //! audited kernel-FFI modules use `#![allow(unsafe_code)]` and
 //! `#![deny(unsafe_op_in_unsafe_fn)]` per Coding Standards §2.1.
 //!
-//! Implementation lands in Phase 3 (see `DOCS/PRIN_Project_Plan.md`).
+//! Implementation lands in Phase 3 (see `DOCS/PRIN_Project_Plan.md`); the
+//! Phase 0 mean-field RK4 spike is already active in
+//! [`mean_field_rk4`].
 
 #![deny(unsafe_code)]
 #![deny(unsafe_op_in_unsafe_fn)]

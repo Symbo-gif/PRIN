@@ -1,6 +1,6 @@
 # Session 0013 — WP-004 S1: Coding — CubeCL fused RK4 spike
 
-**Status:** READY  
+**Status:** COMPLETE  
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-004  
 **Session type:** S1 — Coding  

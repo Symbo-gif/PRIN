@@ -7,9 +7,11 @@ or execute archived reference code.
 ## Current tools
 
 - `wp001_baseline.py` statically validates project metadata, all 198 physical
-  and uniquely numbered session briefs, and the exact 43-module/657-symbol/172-
-  export PRINet 3.0 ownership contract; it also emits deterministic repository
-  inventory JSON and API traceability Markdown.
+  and uniquely numbered session briefs, the exact 43-module/657-symbol/172-
+  export PRINet 3.0 ownership contract, and the `rust-toolchain.toml` profile
+  (`rustfmt`/`clippy` required; `llvm-tools` optional for `cargo-llvm-cov`); it
+  also emits deterministic repository inventory JSON and API traceability
+  Markdown.
 - `wp001_ownership.json` is the declarative module/symbol-to-future-WP ownership
   source consumed by the baseline validator.
 - `reproduce.py` is the Phase 6 reproducibility-pipeline placeholder owned by

@@ -1,6 +1,6 @@
 # Session 0017 — WP-005 S1: Coding — ORT backends, wheel matrix, and Phase 0 gate
 
-**Status:** PLANNED  
+**Status:** READY  
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-005  
 **Session type:** S1 — Coding  

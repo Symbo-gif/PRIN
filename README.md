@@ -23,7 +23,11 @@ validation, and measured quality/security baselines. WP-002 delivered the
 versioned golden-trajectory corpus (504 cases) and differential parity harness.
 WP-003 prototyped the PyO3/DLPack zero-copy Torch↔Rust bridge with batched
 boundary calls, ownership/lifetime handling, dtype/device validation, and
-microbenchmark instrumentation. See the latest
+microbenchmark instrumentation. WP-004 prototyped the first single-source
+CubeCL fused mean-field RK4 kernel in `crates/prin-kernels` (`step_cpu`,
+`try_step_wgpu`/`try_step_cpu`/`try_step_cuda`), with a CPU reference, wgpu
+kernel-equivalence validation at N=1M, and a typed `MeanFieldRk4Error`
+fallback. See the latest
 [Project State Report](DOCS/reports/README.md) for the authoritative active
 session and trajectory.
 
@@ -72,6 +76,7 @@ PRIN/
 | [`DOCS/standards/Experimentation_Standards.md`](DOCS/standards/Experimentation_Standards.md) | Pre-registered scientific experimentation standards |
 | [`DOCS/standards/Versioning_and_Release_Standards.md`](DOCS/standards/Versioning_and_Release_Standards.md) | Versioning, CI/CD, and release standards |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution workflow |
+| [`AGENTS.md`](AGENTS.md) | Agent/IDE notes and local verification commands (kept in sync with CI) |
 
 ## License
 

@@ -47,6 +47,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   validation, ownership/lifetime handling, and `pytest-benchmark` latency
   instrumentation in `tests/test_dlpack_bridge.py`; representative element-wise
   CPU kernels (`negate_f32`, `negate_f64`) in `prin-kernels::ops`.
+- WP-004 CubeCL fused mean-field RK4 spike in `prin-kernels::mean_field_rk4`:
+  CPU reference `step_cpu`, single-source CubeCL kernels for `cpu`/`wgpu`/`cuda`
+  runtimes via `try_step_cpu`, `try_step_wgpu`, and `try_step_cuda`, typed
+  `MeanFieldRk4Error` (including `BackendUnavailable`), `StepReport` with host
+  wall-clock timing, and kernel-equivalence tests at N=64 and N=1M against the
+  CPU reference; `proptest` coverage for phase wrap, amplitude clamp,
+  zero-coupling identity, RK4 local-error scaling, and order-parameter bounds.
 
 ### Changed
 
@@ -73,6 +80,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   evidence are validated; the CUDA round-trip and the `<5%` training-step
   overhead target are deferred to the Phase 4 trainable-stack work with a
   re-audit gate.
+- Coding Standards §2.1/§6.1 amended (plan amendment #8) to authorize the same
+  audited kernel-FFI `unsafe` pattern for `prin-kernels` already used for
+  `prin-py`: crate-level `#![deny(unsafe_code)]` with module-level
+  `#![allow(unsafe_code)]`, `#![deny(unsafe_op_in_unsafe_fn)]`, and `// SAFETY:`
+  justifications.
+- Project Plan §6 / Coding Standards §6.2 amended (plan amendment #9) to accept
+  the inherited `paste` RUSTSEC-2024-0436 warning via `cubecl` 0.10.0 while
+  rechecking every cycle and upgrading when a patched release is available.
+- Testing Standards §4 amended (plan amendment #10) documenting that
+  `#[cube(launch)]` kernel bodies are not instrumentable by `cargo-llvm-cov` on
+  stable Rust; kernel correctness is verified by kernel-equivalence tests and
+  the instrumented surrounding code stays at ≥95% line coverage.
+- Project Plan §3.2 N1 / WP-004 acceptance criterion amended (plan amendment
+  #11): the PRINet 3.0 PyTorch reference and wgpu/CubeCL-CPU kernel-equivalence
+  at N=1M are validated; the direct same-hardware Triton 3.0 fused-kernel timing
+  is deferred to Phase 3 / the `gpu.yml` workflow.
+- Testing Standards §2 / Development Workflow and Audit Standards A9 amended
+  (plan amendment #12): added `cargo test -p prin-kernels --features cpu` to the
+  default `rust.yml` matrix; the `wgpu` step stays in the opt-in `gpu.yml` /
+  local validation path until a headless GPU runner is available.
+- `rust-toolchain.toml` now includes `llvm-tools` so `cargo-llvm-cov` can measure
+  `prin-kernels` coverage.
+- `.github/workflows/rust.yml` now runs the CubeCL CPU kernel-equivalence tests
+  (`cargo test -p prin-kernels --features cpu`) on every platform.
 
 ### Security
 
