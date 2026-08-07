@@ -16,6 +16,13 @@ or execute archived reference code.
   source consumed by the baseline validator.
 - `reproduce.py` is the Phase 6 reproducibility-pipeline placeholder owned by
   WP-035.
+- `wp005_ort_probe.py` runs the ONNX Runtime provider probe against
+  `models/subconscious_controller.onnx` and writes the evidence to
+  `EVIDENCE/0017-wp005-s1-ort-probe.json`.
+- `wp005_phase0_gate.py` refreshes the ORT evidence (with `--refresh-ort`),
+  validates the golden corpus, wheel matrix, and recorded spike decisions,
+  and writes the consolidated gate report to
+  `EVIDENCE/0017-wp005-s1-phase0-gate.json`.
 
 Run the WP-001 validator from the repository root:
 
