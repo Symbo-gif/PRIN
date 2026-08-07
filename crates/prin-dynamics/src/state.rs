@@ -230,7 +230,12 @@ impl OscillatorState {
 
         let phase: Vec<_> = (0..n).map(|_| TAU * seed.next_f64()).collect();
         let amplitude = vec![1.0; n];
-        let frequency: Vec<_> = (0..n).map(|_| seed.next_f64_range(lo, hi)).collect();
+        let frequency: Vec<_> = (0..n)
+            .map(|_| {
+                seed.next_f64_range(lo, hi)
+                    .map_err(|_| StateError::InvalidFrequencyRange { lo, hi })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
 
         Self::new(phase, amplitude, frequency, None)
     }

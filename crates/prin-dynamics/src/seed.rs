@@ -18,6 +18,15 @@ pub enum SeedError {
     /// The seed's output counter would overflow `u128`.
     #[error("seed counter overflow")]
     CounterOverflow,
+
+    /// The requested range is not valid for a uniform `f64` draw.
+    #[error("invalid range for f64 draw: [{lo}, {hi}]")]
+    InvalidRange {
+        /// Lower bound.
+        lo: f64,
+        /// Upper bound.
+        hi: f64,
+    },
 }
 
 /// Snapshot used only for `Serialize`/`Deserialize` so the internal `Pcg64`
@@ -84,14 +93,36 @@ impl Seed {
         ((v >> 11) as f64) * SCALE
     }
 
-    /// Draw the next `f64` uniformly in `[lo, hi)`.
+    /// Draw the next `f64` uniformly in the half-open interval `[lo, hi)`.
     ///
-    /// # Panics
+    /// The result is guaranteed to be strictly less than `hi`, even when the
+    /// naive affine transform would round up to `hi` for the maximum 53-bit draw.
     ///
-    /// The debug build may assert `lo < hi` and both finite; callers should
-    /// validate the range before drawing.
-    pub fn next_f64_range(&mut self, lo: f64, hi: f64) -> f64 {
-        lo + self.next_f64() * (hi - lo)
+    /// # Errors
+    ///
+    /// Returns [`SeedError::InvalidRange`] if `lo` or `hi` is not finite, or if
+    /// `lo >= hi`.
+    pub fn next_f64_range(&mut self, lo: f64, hi: f64) -> Result<f64, SeedError> {
+        if !(lo.is_finite() && hi.is_finite() && lo < hi) {
+            return Err(SeedError::InvalidRange { lo, hi });
+        }
+
+        let mut scale = hi - lo;
+        if !scale.is_finite() {
+            return Err(SeedError::InvalidRange { lo, hi });
+        }
+
+        // Largest value that `next_f64()` can return: `(2^53 - 1) / 2^53`.
+        const MAX_DRAW: f64 = 1.0 - 1.0 / ((1u64 << 53) as f64);
+
+        // Decrease `scale` by one ulp until the maximum possible draw cannot
+        // round up to `hi`. This preserves the half-open contract without
+        // rejecting draws or changing the number of `u64` values consumed.
+        while scale * MAX_DRAW + lo >= hi {
+            scale = f64::from_bits(scale.to_bits() - 1);
+        }
+
+        Ok(lo + self.next_f64() * scale)
     }
 }
 
@@ -205,10 +236,70 @@ mod tests {
     fn next_f64_range_honours_bounds() {
         let mut s = Seed::new(0, 0);
         for _ in 0..1000 {
-            let v = s.next_f64_range(0.1, 10.0);
+            let v = s.next_f64_range(0.1, 10.0).unwrap();
             assert!(v >= 0.1);
             assert!(v < 10.0);
         }
+    }
+
+    #[test]
+    fn next_f64_range_rejects_invalid_range() {
+        let mut s = Seed::new(0, 0);
+        assert!(matches!(
+            s.next_f64_range(1.0, 1.0),
+            Err(SeedError::InvalidRange { lo: 1.0, hi: 1.0 })
+        ));
+        assert!(matches!(
+            s.next_f64_range(2.0, 1.0),
+            Err(SeedError::InvalidRange { lo: 2.0, hi: 1.0 })
+        ));
+        assert!(matches!(
+            s.next_f64_range(f64::NAN, 1.0),
+            Err(SeedError::InvalidRange { .. })
+        ));
+        assert!(matches!(
+            s.next_f64_range(0.0, f64::INFINITY),
+            Err(SeedError::InvalidRange { .. })
+        ));
+    }
+
+    #[test]
+    fn next_f64_range_0_1_matches_next_f64() {
+        let mut a = Seed::new(42, 7);
+        let mut b = Seed::new(42, 7);
+        for _ in 0..1000 {
+            let expected = a.next_f64();
+            let got = b.next_f64_range(0.0, 1.0).unwrap();
+            assert_eq!(expected, got);
+        }
+    }
+
+    #[test]
+    fn next_f64_range_max_draw_stays_strictly_below_hi() {
+        // The maximum value `next_f64()` can return. The naive affine transform
+        // `lo + max_draw * (hi - lo)` can round to exactly `hi` for ranges such
+        // as `[1.0, 2.0)`; this is the regression case from WP006-F1.
+        let max_draw = ((1u64 << 53) - 1) as f64 / (1u64 << 53) as f64;
+        let lo = 1.0;
+        let hi = 2.0;
+        let naive = lo + max_draw * (hi - lo);
+        assert!(naive >= hi, "naive affine transform rounds up to hi");
+
+        // Run many draws to guard the actual implementation.
+        let mut s = Seed::new(0, 0);
+        for _ in 0..10_000 {
+            let v = s.next_f64_range(lo, hi).unwrap();
+            assert!(v >= lo && v < hi);
+        }
+
+        // Verify the internal scale-decrease logic directly: the maximum possible
+        // scaled value must stay below `hi`.
+        let mut scale = hi - lo;
+        while scale * max_draw + lo >= hi {
+            scale = f64::from_bits(scale.to_bits() - 1);
+        }
+        let max_scaled = lo + max_draw * scale;
+        assert!(max_scaled < hi);
     }
 
     #[test]
