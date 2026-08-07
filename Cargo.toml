@@ -58,6 +58,9 @@ proptest = "1"
 approx = "0.5"
 criterion = "0.5"
 
+# GPU compute language (CubeCL) — Phase 0 spike; runtime selected via crate features.
+cubecl = { version = "0.10.0", default-features = false, features = ["std"] }
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

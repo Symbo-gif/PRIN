@@ -15,6 +15,10 @@ rayon.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 
+# CubeCL single-source GPU/CPU compute kernels (Phase 0 spike).
+# Runtime selection is gated by the cuda/wgpu features below.
+cubecl.workspace = true
+
 # GPU backends are introduced in Phase 3 behind feature flags:
 #   cuda -> cubecl-cuda (fallback: cudarc for hand-written kernels)
 #   wgpu -> cubecl-wgpu (Vulkan/Metal/DX12)
@@ -27,5 +31,5 @@ criterion.workspace = true
 
 [features]
 default = []
-cuda = []
-wgpu = []
+cuda = ["cubecl/cuda"]
+wgpu = ["cubecl/wgpu"]
