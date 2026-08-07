@@ -262,13 +262,53 @@ After these fixes, run the full local one-liner, regenerate `EVIDENCE/0017-wp005
 
 ---
 
-## 7. Closure table (appended by S3 remediation)
+## 7. Delta re-audit (S3)
+
+**Date:** 2026-08-07
+**Scope:** F1–F4 corrections plus the WP-005 acceptance evidence
+**Result:** **CLEAN**
+
+### Re-run commands
+
+| Check | Command | Result |
+|---|---|---|
+| ruff lint | `.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/` | All checks passed |
+| ruff format | `.venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/` | 40 files already formatted |
+| mypy strict | `.venv\Scripts\mypy python/prin --strict` | Success: no issues found in 16 source files |
+| docstring coverage | `.venv\Scripts\python -m interrogate -c pyproject.toml python/prin` | 100.0% (min 95.0%) |
+| bandit | `.venv\Scripts\python -m bandit -r . -c pyproject.toml` | No issues identified |
+| Python fast tests | `.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp` | 184 passed |
+| Python full tests | `.venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp` | 184 passed, coverage `prin._ort` 100%, `prin._phase0` 100%, total 99% |
+| Rust fmt | `cargo fmt --all -- --check` | exit 0 |
+| Rust clippy (workspace, wgpu+cpu, cuda) | `cargo clippy --workspace --all-targets -- -D warnings`; `cargo clippy -p prin-kernels --features wgpu,cpu --all-targets -- -D warnings`; `cargo clippy -p prin-kernels --features cuda --all-targets -- -D warnings` | 0 warnings |
+| Rust tests | `cargo test --workspace`; `cargo test -p prin-kernels --features cpu`; `cargo test -p prin-kernels --features wgpu,cpu` | 19, 14, 21 tests passed respectively |
+| Rust doc | `$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps` | 0 warnings |
+| Rust coverage | `cargo llvm-cov -p prin-kernels --features wgpu,cpu` | 21 passed; `cubecl.rs` 80.42% line coverage remains governed by amendment #10 |
+| Dependency audits | `cargo audit`; `.venv\Scripts\python -m pip_audit .`; `.venv\Scripts\python -m pip_audit -r DOCS/sphinx/requirements.txt` | `cargo audit`: 0 vulns, 1 inherited `paste` (RUSTSEC-2024-0436) warning under amendment #9; pip-audit: no known vulnerabilities |
+| Snyk Code | `snyk_code_scan path=C:\dev\PRIN severity_threshold=medium` | issueCount=0 |
+| Snyk Open Source | `snyk_sca_scan path=C:\dev\PRIN all_projects=true severity_threshold=low command=C:\dev\PRIN\.venv\Scripts\python` | issueCount=0 |
+| Sphinx build | `.venv\Scripts\python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html` | build succeeded |
+| WP-001 baseline | `.venv\Scripts\python tools/wp001_baseline.py check` | WP-001 baseline validation passed |
+| ORT probe | `.venv\Scripts\python tools/wp005_ort_probe.py` | selected=directml, active=['CPUExecutionProvider'], can_run=True, output_shape=(1, 8) |
+| Phase 0 gate | `.venv\Scripts\python tools/wp005_phase0_gate.py --refresh-ort` | ready=True, all checks ok, evidence at `EVIDENCE/0017-wp005-s1-phase0-gate.json` |
+
+### Other corrections discovered during S3
+
+- `DOCS/sessions/SESSION_REGISTER.md` row for session 0018 was updated from `PLANNED` to `COMPLETE` to match the S2 brief status and satisfy the WP-001 baseline validator. This was an S2 closure oversight, not a new WP-005 finding.
+
+### Maintainer acknowledgment
+
+WP-005 S3 remediation and delta re-audit accepted; no open D1/D2 findings remain.
+
+---
+
+## 8. Closure table
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP005-F1 | | | |
-| WP005-F2 | | | |
-| WP005-F3 | | | |
-| WP005-F4 | | | |
+| WP005-F1 | FIXED | Plan amendment #13; commit `fe5dc8b` (`fix(WP005-F1): record ORT go/no-go as plan amendment #13 and strengthen gate check`) | `_check_spike_decisions` requires `\| 13 \|`, ORT/ONNX, and VitisAI in `DOCS/PRIN_Project_Plan.md`; regression `test_missing_ort_amendment_in_plan` passes; `spike_decisions` gate ok in refreshed Phase 0 gate evidence |
+| WP005-F2 | FIXED | Commit `82db761` (`fix(WP005-F2): install onnx extra in all python.yml test matrix cells`) | `.github/workflows/python.yml` now installs `-e ".[dev,onnx]"` on every test matrix cell; the real `test_probe_real_subconscious_model` is no longer conditionally skipped in CI |
+| WP005-F3 | FIXED | Commit `b5fc211` (`fix(WP005-F3): document the split subconscious_controller ONNX model files`) | `models/README.md` describes both `.onnx` (18 KB) and `.onnx.data` (86 KB) files, their combined size, and the gitignore exemption |
+| WP005-F4 | FIXED | Commit `39cef38` (`fix(WP005-F4): list the WP-005 ORT and Phase 0 gate CLI tools`) | `tools/README.md` lists `wp005_ort_probe.py` and `wp005_phase0_gate.py` with descriptions and output paths |
 
-**Delta re-audit date:** YYYY-MM-DD — **Result:**
+**Delta re-audit date:** 2026-08-07 — **Result:** **CLEAN**
