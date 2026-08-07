@@ -22,3 +22,6 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   spike" audit (`PASS-WITH-FINDINGS`); five findings (F1–F5) resolved in S3
   with a CLEAN delta re-audit (two approved plan/standard amendments #6 and
   #7).
+- [`004-wp004-audit.md`](004-wp004-audit.md) — WP-004 "CubeCL fused mean-field
+  RK4 spike" audit (`PASS-WITH-FINDINGS`); nine findings (F1–F4 D2, F5–F8 D3,
+  F9 D4); S3 remediation pending.
