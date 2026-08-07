@@ -8,7 +8,7 @@
 
 use thiserror::Error;
 
-#[cfg(any(feature = "cuda", feature = "wgpu"))]
+#[cfg(any(feature = "cpu", feature = "cuda", feature = "wgpu"))]
 pub mod cubecl;
 
 /// Parameters for the mean-field Kuramoto step.

@@ -414,6 +414,20 @@ pub fn try_step_wgpu(
     step_cubecl(&client, phase, amplitude, frequency, params)
 }
 
+#[cfg(feature = "cpu")]
+/// Run the mean-field RK4 step on the CubeCL CPU runtime.
+pub fn try_step_cpu(
+    phase: &[f32],
+    amplitude: &[f32],
+    frequency: &[f32],
+    params: &MeanFieldRk4Params,
+) -> Result<StepCubeclOutput, MeanFieldRk4Error> {
+    use cubecl::cpu::{CpuDevice, CpuRuntime};
+    let device = CpuDevice;
+    let client = CpuRuntime::client(&device);
+    step_cubecl(&client, phase, amplitude, frequency, params)
+}
+
 #[cfg(feature = "cuda")]
 /// Run the mean-field RK4 step on the CUDA runtime.
 pub fn try_step_cuda(
@@ -488,5 +502,106 @@ mod tests {
         assert_allclose(&gpu_p, &cpu_p, 1e-5, 1e-6);
         assert_allclose(&gpu_a, &cpu_a, 1e-5, 1e-6);
         assert_allclose(&gpu_f, &cpu_f, 1e-5, 1e-6);
+    }
+
+    #[test]
+    fn wgpu_rejects_mismatched_lengths() {
+        let phase = vec![0.0_f32; 4];
+        let amp = vec![1.0_f32; 5];
+        let freq = vec![0.0_f32; 4];
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+        let err = try_step_wgpu(&phase, &amp, &freq, &params).unwrap_err();
+        assert!(matches!(err, MeanFieldRk4Error::LengthMismatch { .. }));
+    }
+
+    #[test]
+    fn wgpu_rejects_empty_population() {
+        let phase: Vec<f32> = vec![];
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+        let err = try_step_wgpu(&phase, &phase, &phase, &params).unwrap_err();
+        assert!(matches!(err, MeanFieldRk4Error::EmptyPopulation));
+    }
+
+    #[test]
+    fn wgpu_rejects_non_finite_dt() {
+        let mut params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+        params.dt = f32::NAN;
+        let phase = vec![0.0_f32];
+        let err = try_step_wgpu(&phase, &phase, &phase, &params).unwrap_err();
+        assert!(matches!(
+            err,
+            MeanFieldRk4Error::NonFiniteParameter { name: "dt", .. }
+        ));
+    }
+
+    #[test]
+    fn wgpu_rejects_negative_dt() {
+        let mut params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+        params.dt = -0.01;
+        let phase = vec![0.0_f32];
+        let err = try_step_wgpu(&phase, &phase, &phase, &params).unwrap_err();
+        assert!(matches!(
+            err,
+            MeanFieldRk4Error::InvalidParameter { name: "dt", .. }
+        ));
+    }
+}
+
+#[cfg(all(test, feature = "cpu"))]
+mod tests_cpu {
+    use super::*;
+    use crate::mean_field_rk4::{step_cpu, MeanFieldRk4Params};
+
+    fn assert_allclose(actual: &[f32], expected: &[f32], rtol: f32, atol: f32) {
+        for (a, e) in actual.iter().zip(expected) {
+            assert!(
+                (a - e).abs() <= atol + rtol * e.abs(),
+                "mismatch: actual {a}, expected {e}"
+            );
+        }
+    }
+
+    #[test]
+    fn cpu_matches_cpu_reference_for_small_n() {
+        let n = 64;
+        let phase: Vec<_> = (0..n).map(|i| 0.1 * i as f32).collect();
+        let amplitude: Vec<_> = (0..n).map(|_| 1.0_f32).collect();
+        let frequency: Vec<_> = (0..n).map(|i| 0.05 * (i as f32 - n as f32 / 2.0)).collect();
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+
+        let (cpu_p, cpu_a, cpu_f) = step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
+        let ((out_p, out_a, out_f), report) =
+            try_step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
+
+        assert_eq!(report.backend_name, "cpu");
+        eprintln!("N={n} cpu step report: {report:?}");
+        assert_allclose(&out_p, &cpu_p, 1e-5, 1e-6);
+        assert_allclose(&out_a, &cpu_a, 1e-5, 1e-6);
+        assert_allclose(&out_f, &cpu_f, 1e-5, 1e-6);
     }
 }

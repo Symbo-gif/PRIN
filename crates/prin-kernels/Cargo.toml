@@ -31,5 +31,6 @@ criterion.workspace = true
 
 [features]
 default = []
+cpu = ["cubecl/cpu"]
 cuda = ["cubecl/cuda"]
 wgpu = ["cubecl/wgpu"]
