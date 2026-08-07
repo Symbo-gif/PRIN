@@ -706,4 +706,4 @@ def test_cli_reports_invalid_root(capsys: pytest.CaptureFixture[str]) -> None:
 
     captured = capsys.readouterr()
     assert exit_code == 1
-    assert "archive package is missing" in captured.err
+    assert "root is not a directory" in captured.err
