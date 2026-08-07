@@ -10,6 +10,9 @@ Additional PRIN-specific suites (per the Testing Standards):
   traceability, CI, release-guard, and security-control tests.
 - `test_parity_*.py` — fast unit tests for `prin.parity` schema, loader,
   manifest, harness, and Hypothesis strategies.
+- `test_dlpack_bridge.py` — CPU round-trip, batched boundary, dtype/device
+  validation, ownership/error-path, and `pytest-benchmark` latency tests for
+  the WP-003 PyO3/DLPack bridge (marker `slow` for the benchmark cases).
 - `test_gradcheck_*.py` — `torch.autograd.gradcheck` (float64) for every
   `autograd.Function` bridge.
 - `test_gpu_*.py` — GPU integration tests, marker `gpu` (opt-in, self-hosted

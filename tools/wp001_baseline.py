@@ -585,8 +585,13 @@ def validate_metadata(root: Path) -> list[str]:
     if toolchain.get("channel") != "stable":
         errors.append("rust-toolchain.toml channel must equal 'stable'")
     components = set(toolchain.get("components", []))
-    if components != {"rustfmt", "clippy"}:
-        errors.append("rust-toolchain.toml components must equal rustfmt and clippy")
+    required = {"rustfmt", "clippy"}
+    allowed = {"rustfmt", "clippy", "llvm-tools", "llvm-tools-preview"}
+    if not required.issubset(components) or not components.issubset(allowed):
+        errors.append(
+            "rust-toolchain.toml components must include rustfmt and clippy; "
+            "optional llvm-tools or llvm-tools-preview"
+        )
     return errors
 
 

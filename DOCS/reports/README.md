@@ -12,5 +12,7 @@ starts by reading it (Development Workflow Standards §6).
 ## Current reports
 
 - [`001-project-state.md`](001-project-state.md) — WP-001 S4 closure.
-- [`002-project-state.md`](002-project-state.md) — latest report; WP-002 S4
-  closure and WP-003 declaration.
+- [`002-project-state.md`](002-project-state.md) — WP-002 S4 closure and
+  WP-003 declaration.
+- [`003-project-state.md`](003-project-state.md) — latest report; WP-003 S4
+  closure and WP-004 declaration.

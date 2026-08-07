@@ -20,8 +20,8 @@ separately to docs.rs and linked from here.
 - **Kernel Architecture** — the single-source CubeCL kernel design.
 - **Parity Report** — published results of the numerical parity program
   (placeholder until Phase 6; the WP-002 golden corpus is in `parity/`).
-- **API Reference** (`api/`) — autodoc for `prin`, `prin.parity`, `prin.nn`,
-  `prin.eval`, `prin.experiments`, `prin.reporting`.
+- **API Reference** (`api/`) — autodoc for `prin`, `prin.dlpack`, `prin.parity`,
+  `prin.nn`, `prin.eval`, `prin.experiments`, `prin.reporting`.
 
 ## Build
 

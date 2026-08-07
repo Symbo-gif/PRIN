@@ -40,6 +40,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace
+      - name: CubeCL CPU kernel-equivalence tests
+        run: cargo test -p prin-kernels --features cpu
 
   docs:
     runs-on: ubuntu-latest

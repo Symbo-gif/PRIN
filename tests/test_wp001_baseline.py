@@ -520,7 +520,7 @@ def test_metadata_validator_reports_comprehensive_drift(tmp_path: Path) -> None:
         "test matrix",
         "required CI workflow",
         "channel must equal",
-        "components must equal",
+        "components must include",
     ]
     for fragment in expected_fragments:
         assert any(fragment in error for error in errors), fragment

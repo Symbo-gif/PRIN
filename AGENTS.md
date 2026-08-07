@@ -27,6 +27,7 @@ The `.pytest_basetemp/` directory is ignored in `.gitignore`.
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
+cargo llvm-cov -p prin-kernels --features wgpu,cpu
 $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps
 cargo audit
 .venv\Scripts\python -m pip_audit .
