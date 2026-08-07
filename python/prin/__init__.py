@@ -19,7 +19,7 @@ Subpackages:
 
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "0.1.0-alpha.1"
 
 try:
     from prin._prin_core import core_version

@@ -97,7 +97,7 @@ def test_metadata_validator_detects_version_drift(tmp_path: Path) -> None:
     pyproject = tmp_path / "pyproject.toml"
     pyproject.write_text(
         pyproject.read_text(encoding="utf-8").replace(
-            'version = "0.1.0"', 'version = "0.2.0"', 1
+            'version = "0.1.0-alpha.1"', 'version = "0.2.0"', 1
         ),
         encoding="utf-8",
     )
@@ -239,7 +239,7 @@ def test_repository_inventory_is_deterministic_and_separates_archive() -> None:
 
     assert first == second
     assert first["project"]["name"] == "prin"
-    assert first["project"]["version"] == "0.1.0"
+    assert first["project"]["version"] == "0.1.0-alpha.1"
     assert len(first["workspace"]["members"]) == 8
     assert len(first["ci"]["workflows"]) == 7
     assert "snyk.yml" in first["ci"]["workflows"]

@@ -8,6 +8,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+- (nothing yet)
+
+### Changed
+
+- (nothing yet)
+
+### Security
+
+- (nothing yet)
+
+### Fixed
+
+- (nothing yet)
+
+## [0.1.0-alpha.1] - 2026-08-07
+
+Phase 0 (Foundation) pre-release. All three foundation spikes (DLPack,
+CubeCL, ORT) meet their go/no-go criteria with approved amendments. The
+golden-trajectory corpus (504 cases) is committed. The three-OS abi3 wheel
+matrix is configured. See `DOCS/reports/005-project-state.md` for the
+Phase 0 exit-gate verdict.
+
+### Added
 - Initial repository scaffold: Cargo workspace (8 crates), Python package layer,
   parity/benchmark/test/docs directories, CI workflow skeletons, and governance
   documents (`DOCS/`), per the official project plan
