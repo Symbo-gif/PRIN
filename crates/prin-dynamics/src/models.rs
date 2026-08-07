@@ -353,9 +353,24 @@ impl Dynamics for KuramotoOscillator {
 
 /// Stuart–Landau coupled oscillator model (Hopf normal form).
 ///
-/// Implements complex amplitude dynamics:
+/// Implements complex-amplitude dynamics:
 /// `dz_i/dt = (μ + i ω_i) z_i - |z_i|² z_i + C_i`
-/// where `z_i = r_i exp(i φ_i)`.
+/// where `z_i = r_i exp(i φ_i)` and `C_i` is the per-mode coupling term.
+///
+/// Coupling term `C_i` for each [`CouplingMode`]:
+/// - `MeanField`: `C_i = K (Z - z_i)` where `Z = (1/N) Σ_j z_j` is the mean
+///   complex phasor.
+/// - `Full { matrix }`: `C_i = Σ_j K_{ij} (z_j - z_i)`. When no matrix is
+///   supplied the equivalent uniform mean-field form is used (the diagonal
+///   contribution to this sum is zero, so `K/N` on or off the diagonal gives
+///   the same result for Stuart–Landau).
+/// - `SparseKnn { k }`: `C_i = (K/k) Σ_{j ∈ NN_k(i)} (z_j - z_i)` where
+///   `NN_k(i)` are the `k` nearest phase neighbours; `k` defaults to
+///   `max(1, ceil(log2 N))`.
+///
+/// The polar derivatives are extracted as
+/// `dr_i/dt = Re(dz_i/dt · exp(-i φ_i))` and
+/// `dφ_i/dt = Im(dz_i/dt · exp(-i φ_i)) / r_i` (with `r_i` clamped at `1e-8`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct StuartLandauOscillator {
     n_oscillators: usize,
@@ -607,9 +622,19 @@ impl Dynamics for StuartLandauOscillator {
 /// Hopf bifurcation oscillator with explicit polar amplitude-phase dynamics.
 ///
 /// Implements supercritical Hopf bifurcation dynamics:
-/// - `dr_i/dt = μ r_i - r_i³ + Σ_j K_ij cos(φ_j - φ_i) r_j`
-/// - `dφ_i/dt = ω_i + Σ_j K_ij sin(φ_j - φ_i) r_j / r_i`
-/// - `dω_i/dt = (γ / N) Σ_j K_ij sin(φ_j - φ_i) r_j`
+/// - `dr_i/dt = μ r_i - r_i³ + C_i^cos`
+/// - `dφ_i/dt = ω_i + C_i^sin / r_i` (with `r_i` clamped at `1e-8`)
+/// - `dω_i/dt = (γ / N) C_i^sin`
+///
+/// The per-mode coupling sums are:
+/// - `MeanField`: `C_i^sin = K R sin(ψ - φ_i)` and `C_i^cos = K R cos(ψ - φ_i)`
+///   where `R e^{i ψ} = (1/N) Σ_j r_j e^{i φ_j}` is the complex order parameter.
+/// - `Full { matrix }`: `C_i^sin = Σ_j K_{ij} sin(φ_j - φ_i) r_j` and
+///   `C_i^cos = Σ_j K_{ij} cos(φ_j - φ_i) r_j`. When no matrix is supplied,
+///   `K_{ij} = K/N` for `i ≠ j` and `0` on the diagonal.
+/// - `SparseKnn { k }`: `C_i^sin = (K/k) Σ_{j ∈ NN_k(i)} sin(φ_j - φ_i) r_j` and
+///   `C_i^cos = (K/k) Σ_{j ∈ NN_k(i)} cos(φ_j - φ_i) r_j` where `NN_k(i)` are the
+///   `k` nearest phase neighbours; `k` defaults to `max(1, ceil(log2 N))`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct HopfOscillator {
     n_oscillators: usize,
@@ -1439,6 +1464,176 @@ mod tests {
         assert_eq!(super::resolve_sparse_k(None, 4), 2); // ceil(log2(4)) = 2
         assert_eq!(super::resolve_sparse_k(None, 2), 1); // ceil(log2(2)) = 1, N-1 = 1
         assert_eq!(super::resolve_sparse_k(None, 1), 0); // N-1 = 0
+    }
+
+    fn assert_derivs_close(
+        deriv: &StateDerivatives,
+        dphase: &[f64],
+        damplitude: &[f64],
+        dfrequency: &[f64],
+        epsilon: f64,
+    ) {
+        assert_eq!(deriv.n_oscillators(), dphase.len());
+        for (a, e) in deriv.dphase.iter().zip(dphase.iter()) {
+            assert_relative_eq!(*a, *e, epsilon = epsilon, max_relative = epsilon);
+        }
+        for (a, e) in deriv.damplitude.iter().zip(damplitude.iter()) {
+            assert_relative_eq!(*a, *e, epsilon = epsilon, max_relative = epsilon);
+        }
+        for (a, e) in deriv.dfrequency.iter().zip(dfrequency.iter()) {
+            assert_relative_eq!(*a, *e, epsilon = epsilon, max_relative = epsilon);
+        }
+    }
+
+    #[test]
+    fn test_stuart_landau_coupled_reference_values() {
+        // Full pairwise (default all-to-all K/N, equivalent to mean field for SL).
+        let state =
+            OscillatorState::new(vec![0.0, 0.2], vec![1.0, 1.0], vec![1.0, 1.0], None).unwrap();
+        let model =
+            StuartLandauOscillator::new(2, 1.0, 1.0, CouplingMode::Full { matrix: None }).unwrap();
+        let deriv = model.compute_derivatives(&state).unwrap();
+        assert_derivs_close(
+            &deriv,
+            &[1.0993346646428108, 0.9006653732161427],
+            &[-0.00996670126914978, -0.009966720198626544],
+            &[0.0, 0.0],
+            1e-6,
+        );
+
+        // Mean-field with a non-trivial order parameter.
+        let state = OscillatorState::new(
+            vec![0.0, 0.2, 0.7],
+            vec![1.0, 1.2, 0.9],
+            vec![1.0, 1.5, 2.0],
+            None,
+        )
+        .unwrap();
+        let model = StuartLandauOscillator::new(3, 1.0, 1.0, CouplingMode::MeanField).unwrap();
+        let deriv = model.compute_derivatives(&state).unwrap();
+        assert_derivs_close(
+            &deriv,
+            &[1.2727330327033997, 1.5646705146166249, 1.5483228811260992],
+            &[
+                -0.045187364021937015,
+                -0.7380364740471499,
+                0.17698043388305695,
+            ],
+            &[0.0, 0.0, 0.0],
+            1e-6,
+        );
+
+        // Sparse k-NN with k=2.
+        let state = OscillatorState::new(
+            vec![0.0, 0.1, 1.0, 1.1],
+            vec![1.0, 1.0, 1.0, 1.0],
+            vec![1.0, 1.0, 1.0, 1.0],
+            None,
+        )
+        .unwrap();
+        let model =
+            StuartLandauOscillator::new(4, 1.0, 1.0, CouplingMode::SparseKnn { k: Some(2) })
+                .unwrap();
+        let deriv = model.compute_derivatives(&state).unwrap();
+        assert_derivs_close(
+            &deriv,
+            &[
+                1.4955203756690025,
+                1.341746764035639,
+                0.658253171381233,
+                0.5044795869875003,
+            ],
+            &[
+                -0.2756998538970947,
+                -0.19169296418641601,
+                -0.1916928987346953,
+                -0.2756998440121947,
+            ],
+            &[0.0, 0.0, 0.0, 0.0],
+            1e-6,
+        );
+    }
+
+    #[test]
+    fn test_hopf_coupled_reference_values() {
+        // Full pairwise.
+        let state = OscillatorState::new(
+            vec![0.0, 0.2, 1.0],
+            vec![1.0, 1.0, 1.0],
+            vec![1.0, 1.0, 1.0],
+            None,
+        )
+        .unwrap();
+        let model =
+            HopfOscillator::new(3, 1.5, 1.0, 0.01, CouplingMode::Full { matrix: None }).unwrap();
+        let deriv = model.compute_derivatives(&state).unwrap();
+        assert_derivs_close(
+            &deriv,
+            &[1.5200701578014788, 1.259343380052231, 0.2205864621462903],
+            &[0.7601844418546907, 0.8383866435942036, 0.6185045076076525],
+            &[
+                0.001733567192671596,
+                0.000864477933507436,
+                -0.0025980451261790323,
+            ],
+            1e-12,
+        );
+
+        // Mean field.
+        let state = OscillatorState::new(
+            vec![0.1, 0.5, 1.0],
+            vec![1.5, 0.5, 1.0],
+            vec![1.0, 2.0, 1.5],
+            None,
+        )
+        .unwrap();
+        let model = HopfOscillator::new(3, 1.0, 1.0, 0.01, CouplingMode::MeanField).unwrap();
+        let deriv = model.compute_derivatives(&state).unwrap();
+        assert_derivs_close(
+            &deriv,
+            &[1.2173413382538607, 1.9301986572827874, 1.0284322865210977],
+            &[-1.0142865242388244, 1.2947246650232098, 0.7904020546010853],
+            &[
+                0.0010867066912693042,
+                -0.00011633557119535445,
+                -0.0015718923782630076,
+            ],
+            1e-6,
+        );
+
+        // Sparse k-NN.
+        let state = OscillatorState::new(
+            vec![0.0, 0.1, 1.0, 1.1],
+            vec![1.0, 1.0, 1.0, 1.0],
+            vec![1.0, 1.0, 1.0, 1.0],
+            None,
+        )
+        .unwrap();
+        let model =
+            HopfOscillator::new(4, 1.0, 1.0, 0.01, CouplingMode::SparseKnn { k: Some(2) }).unwrap();
+        let deriv = model.compute_derivatives(&state).unwrap();
+        assert_derivs_close(
+            &deriv,
+            &[
+                1.4955203883541317,
+                1.3417467464903277,
+                0.6582532535096723,
+                0.5044796116458682,
+            ],
+            &[
+                0.7243001433518016,
+                0.808307066774345,
+                0.808307066774345,
+                0.7243001433518015,
+            ],
+            &[
+                0.0024776019417706587,
+                0.0017087337324516382,
+                -0.001708733732451638,
+                -0.002477601941770659,
+            ],
+            1e-12,
+        );
     }
 
     proptest! {
