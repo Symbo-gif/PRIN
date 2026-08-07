@@ -297,10 +297,27 @@ After these fixes, re-run the full local one-liner and perform a delta re-audit.
 
 ## 7. Closure table (appended by S3 remediation)
 
+**Delta re-audit date:** 2026-08-07 **Result:** CLEAN
+
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP006-F1 | | | |
-| WP006-F2 | | | |
-| WP006-F3 | | | |
+| WP006-F1 | FIXED — `Seed::next_f64_range` now returns `Result<f64, SeedError>`, validates finite `lo < hi`, and uses a one-ulp scale-decrease loop so the maximum 53-bit draw can never round to `hi`; docstring corrected; regression tests added for the `lo = 1.0, hi = 2.0` boundary and `[0, 1)` equivalence. | `4f80491` | `cargo fmt`, `cargo clippy` (default + `--features strict-checks`), `cargo test --workspace` (57 passed in `prin-dynamics`), `cargo test --workspace --features strict-checks` (58 passed). `cargo llvm-cov -p prin-dynamics` reports 97.45% region / 99.50% line coverage for `seed.rs` in both builds. `next_f64_range_max_draw_stays_strictly_below_hi` and `next_f64_range_rejects_invalid_range` pass. |
+| WP006-F2 | FIXED — `.github/workflows/rust.yml` now includes `clippy-strict` and `test-strict` jobs that exercise `--features strict-checks`, so feature-gated guard paths are covered by CI. | `5f78c3e` | `cargo clippy --workspace --all-targets --features strict-checks -- -D warnings` and `cargo test --workspace --features strict-checks` both pass locally. Workflow syntax validated via GitHub Actions schema. |
+| WP006-F3 | FIXED — post-S1 hotfix `9153c7c` (`tools/wp001_baseline.py` path validation) recorded as a WP-001 retroactive hotfix; disposition confirmed to remain on `feat/wp006-oscillator-state` for S4 consolidation. Delta re-audit of the hotfix and full baseline are green. | `9153c7c` (hotfix); S3 closure table | `tools/wp001_baseline.py check` passes. Full local one-liner re-run: ruff, mypy, interrogate, bandit, pytest fast (172 passed) and full (184 passed), cargo fmt/clippy/test (default + strict), cargo doc, cargo audit, pip-audit, Sphinx build, Snyk Code (medium+), and Snyk Open Source (low+) all clean. |
 
-**Delta re-audit date:** — **Result:**
+### S3 delta re-audit summary
+
+The S3 remediation touched `crates/prin-dynamics/src/seed.rs`, `crates/prin-dynamics/src/state.rs`, and `.github/workflows/rust.yml`. Re-running the A1–A10 checklist against the changed areas:
+
+- **A1 scope:** Only the declared WP-006 findings were addressed; no new features or scope creep.
+- **A2 plan conformance:** `Seed::next_f64_range` now satisfies the half-open contract and preserves deterministic counter-based seeding.
+- **A3 tests in tandem:** F1 and F2 fixes include regression tests in the same commit.
+- **A4 numerical parity / invariants:** `create_random` frequency invariants pass; the `lo = 1.0, hi = 2.0` max-draw rounding case is now impossible.
+- **A5 quality gates:** All ruff, mypy, clippy (default + strict), fmt, and doc gates pass.
+- **A6 security:** Snyk Code (medium+) and Snyk Open Source (low+) report 0 issues; `cargo audit` retains only the inherited `paste` RUSTSEC-2024-0436 warning.
+- **A7 docs:** Rustdoc and Sphinx build clean; public API docstrings updated.
+- **A8 hygiene:** No new TODO/FIXME/stubs; commits reference finding IDs.
+- **A9 CI:** `rust.yml` now exercises `strict-checks` in CI.
+- **A10 artefact trail:** WP-001 hotfix recorded and delta re-audited; this closure table committed.
+
+The WP-006 S2 verdict is upgraded to **CLEAN** for S3 hand-off.
