@@ -77,7 +77,7 @@ Summarized from the archived plan §7 (normative):
 3. **Differential CI** (`.github/workflows/parity.yml`): old + new installed in one venv; golden corpus + hypothesis fuzzing.
 4. **Benchmark-result parity:** full re-run of the benchmark suite; scientific conclusions unchanged; deviations documented in the Parity Report.
 5. **Bit-level reproducibility:** all RNG behind the single `Seed` type; exact reproducibility across CPU/GPU and across runs.
-6. **Preserved numerical hazards:** phase wrap `% 2π`; amplitude clamp `[1e-6, 10]`; derivative clamp `±1e4`; coupling normalization `1/N` vs `1/k`; φ₁(λ)→1 limit handling; STE forward-hard/backward-soft identity.
+6. **Preserved numerical hazards:** phase wrap `% 2π`; amplitude clamp `[1e-6, 10]`; derivative clamp `±1e4`; coupling normalization `1/N` vs `1/k`; φ₁(λ)→1 limit handling; STE forward-hard/backward-soft identity; **PRINet 3.0 `torch.complex64` (f32) internal arithmetic for mean-field order parameters and Stuart–Landau complex amplitudes, which produces up to ~1e-7 per-step drift from a fully f64 reference and is therefore accepted as a reference-implementation numerical hazard (see Parity Report and `crates/prin-dynamics/tests/parity_models.rs` for the documented derivative-level tolerance of `1e-6`).
 
 ## 6. Phased roadmap
 
@@ -200,6 +200,7 @@ Unexpected D1/D2 work uses the complete conditional correction cycle in
 | 11 | 2026-08-07 | Project Plan §3.2 N1 / WP-004 acceptance criterion | Recorded the WP-004/Phase 0 go/no-go: the PRINet 3.0 PyTorch reference and the wgpu/CubeCL-CPU kernel-equivalence at N=1M are validated; the direct same-hardware Triton 3.0 fused-kernel comparison is deferred to a Linux/CUDA runner in Phase 3 or the `gpu.yml` workflow with evidence | maintainer approval |
 | 12 | 2026-08-07 | Testing Standards §2 / Development Workflow and Audit Standards A9 | Added `cargo test -p prin-kernels --features cpu` to the default `rust.yml` matrix; the `wgpu` kernel-equivalence CI step is gated by availability of a headless GPU runner and remains in the opt-in `gpu.yml` / local validation path until such a runner is available | maintainer approval |
 | 13 | 2026-08-07 | Project Plan §6 (WP-005/Phase 0) | Recorded the WP-005/Phase 0 ORT go/no-go: the CPU fallback for the subconscious controller is proven on all CI platforms; DirectML graph execution falls back to CPU on the current Windows host; the VitisAI NPU runtime and DirectML parity are unavailable in Phase 0 and deferred to WP-028 (Phase 5 daemon) with a re-audit gate | maintainer approval |
+| 14 | 2026-08-07 | Project Plan §5 (numerical parity program / preserved numerical hazards) | Documented that PRINet 3.0 uses `torch.complex64` (f32) internally for mean-field order parameters and Stuart–Landau complex amplitudes, producing up to ~1e-7 per-step drift from a fully f64 reference; accepted as a preserved numerical hazard with derivative-level parity tolerance `1e-6` for affected model/coupling paths, pending maintainer sign-off | S3 (WP-007); maintainer approval pending |
 
 ## 9. Definition of Done
 
