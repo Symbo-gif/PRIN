@@ -309,14 +309,33 @@ def _validate_owner(
     return future_wp, basis
 
 
+def _validate_root_path(path: Path) -> Path:
+    """Resolve a repository root and ensure it is an existing directory."""
+    resolved = path.resolve()
+    if not resolved.is_dir():
+        raise BaselineValidationError(f"root is not a directory: {resolved}")
+    return resolved
+
+
+def _validate_ownership_path(path: Path) -> Path:
+    """Resolve an alternate ownership file and ensure it exists."""
+    resolved = path.resolve()
+    if not resolved.is_file():
+        raise BaselineValidationError(f"ownership file not found: {resolved}")
+    return resolved
+
+
 def collect_api_traceability(
     root: Path,
     ownership_path: Path | None = None,
 ) -> dict[str, Any]:
     """Collect complete static module and public-symbol ownership traceability."""
-    root = root.resolve()
+    root = _validate_root_path(root)
     records = _discover_api(root)
-    ownership_file = ownership_path or root / _DEFAULT_OWNERSHIP
+    if ownership_path is not None:
+        ownership_file = _validate_ownership_path(ownership_path)
+    else:
+        ownership_file = root / _DEFAULT_OWNERSHIP
     ownership = _load_ownership(ownership_file)
     module_owners: dict[str, object] = ownership["modules"]
     symbol_owners: dict[str, object] = ownership["symbols"]
@@ -441,7 +460,7 @@ def _workflow_python_versions(path: Path) -> set[str]:
 
 def validate_metadata(root: Path) -> list[str]:
     """Validate cross-file project, packaging, toolchain, and CI metadata."""
-    root = root.resolve()
+    root = _validate_root_path(root)
     errors: list[str] = []
     required = [
         "Cargo.toml",
@@ -624,7 +643,7 @@ def _linked_target(line: str, brief: Path) -> Path | None:
 
 def validate_session_plan(root: Path) -> list[str]:
     """Validate the complete numbered session register and link structure."""
-    root = root.resolve()
+    root = _validate_root_path(root)
     sessions = root / "DOCS/sessions"
     register_path = sessions / "SESSION_REGISTER.md"
     if not register_path.is_file():
@@ -777,7 +796,7 @@ def _file_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
 
 def collect_repository_inventory(root: Path) -> dict[str, Any]:
     """Collect a deterministic, archive-separated repository-state inventory."""
-    root = root.resolve()
+    root = _validate_root_path(root)
     cargo = _read_toml(root / "Cargo.toml")
     pyproject = _read_toml(root / "pyproject.toml")
     active_files = _active_project_files(root)
@@ -980,11 +999,11 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     """Run WP-001 baseline validation or emit deterministic evidence."""
     arguments = _parser().parse_args(argv)
-    root = arguments.root.resolve()
-    ownership = arguments.ownership
-    if ownership is not None:
-        ownership = ownership.resolve()
     try:
+        root = _validate_root_path(arguments.root)
+        ownership = None
+        if arguments.ownership is not None:
+            ownership = _validate_ownership_path(arguments.ownership)
         if arguments.command == "check":
             errors = validate_baseline(root, ownership)
             if errors:
