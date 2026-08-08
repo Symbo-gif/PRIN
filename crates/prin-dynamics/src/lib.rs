@@ -34,11 +34,12 @@ pub mod seed;
 pub mod state;
 pub mod temporal;
 
-pub use coupling::CouplingMode;
+pub use coupling::{CouplingError, CouplingMode, Topology};
 pub use integrate::{
     integrate_fixed, AdaptiveResult, EulerIntegrator, IntegrateError, Integrator, RK45Integrator,
     RK4Integrator,
 };
 pub use models::{Dynamics, HopfOscillator, KuramotoOscillator, StuartLandauOscillator};
+pub use pac::{PacError, PhaseAmplitudeCoupling};
 pub use seed::{Seed, SeedError};
 pub use state::{OscillatorState, StateDerivatives, StateError};
