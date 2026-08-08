@@ -205,10 +205,57 @@ The FSAL cache bug (WP008-F1, D2) is a correctness issue in a new numerical capa
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP008-F1 | _pending S3_ | | |
-| WP008-F2 | _pending S3_ | | |
-| WP008-F3 | _pending S3_ | | |
-| WP008-F4 | _pending S3_ | | |
-| WP008-F5 | _pending S3_ | | |
+| WP008-F1 | FIXED | `f97ba5c` | Added `fsal_valid: bool` flag to `RK45Integrator`, invalidated at the start of each `integrate_adaptive` call and on rejected steps, set `true` after each accepted step. Regression test `rk45_fsal_cache_invalidated_on_reuse` passes (reused vs fresh integrators produce bit-identical results across two calls with different states). `cargo test -p prin-dynamics --features strict-checks` 111+16+9 = 136 passed. |
+| WP008-F2 | FIXED | `f97ba5c` | Added `NanDynamics` test helper (cfg-gated to `strict-checks`) that returns `f64::NAN` derivatives bypassing `StateDerivatives::new` guards. Tests `strict_check_non_finite_value_error` (Euler) and `strict_check_non_finite_value_rk4` (RK4) assert `IntegrateError::NonFiniteValue { field: "phase", index: 0, .. }`. Coverage on `integrate.rs` rose from 96.66% → 97.48% line (lines 184–208 now covered). |
+| WP008-F3 | FIXED | `f97ba5c` | Corrected `check_finite` doc comment to state that under non-strict only amplitude is repaired (via `clamp_amplitude`); non-finite phase/frequency pass through silently and are only caught under `strict-checks`. `cargo doc -D warnings` passes with 0 warnings. |
+| WP008-F4 | FIXED | `f97ba5c` | Updated `lib.rs` `integrate` module doc to list only implemented integrators (Euler, RK4, adaptive RK45/Dormand–Prince); removed stale "exponential (direct + Krylov), and multi-rate sub-stepped RK4" text from the pre-S1 stub. `cargo doc -D warnings` passes with 0 warnings. |
+| WP008-F5 | FIXED | `f97ba5c` | Added `IntegrateError::InvalidTolerance { param, value }` variant; `RK45Integrator::new` now returns `InvalidTolerance { param: "rtol"/"atol", .. }` instead of reusing `InvalidTimestep`. Updated `rk45_rejects_invalid_tolerances` to assert the specific variant (`param: "rtol", value: 0.0` and `param: "atol"` for NaN/negative) plus `ZeroSteps` for `max_steps=0`. Test passes under both default and `--features strict-checks`. |
 
-**Delta re-audit date:** _pending S3_ — **Result:** _pending_
+**Delta re-audit date:** 2026-08-07 — **Result:** CLEAN
+
+### Delta re-audit methodology (S3)
+
+All fixes were applied in a single S3 commit `f97ba5c` on branch
+`feat/wp006-oscillator-state`. The delta re-audit re-ran every A1–A10 check
+that touched the remediated areas (A3 coverage, A4 numerical parity, A5
+quality gates, A6 security, A7 documentation) plus the WP acceptance evidence.
+
+```powershell
+# Quality gates (all PASS)
+cargo fmt --all -- --check                          # PASS
+cargo clippy --workspace --all-targets -- -D warnings  # PASS
+cargo clippy --workspace --all-targets --features strict-checks -- -D warnings  # PASS
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps  # PASS, 0 warnings
+
+# Tests (all green)
+cargo test -p prin-dynamics                          # 108 unit + 16 parity_integrators + 9 parity_models = 133 passed
+cargo test -p prin-dynamics --features strict-checks # 111 unit + 16 + 9 = 136 passed (adds F1 + F2 tests)
+cargo test --workspace                               # 152 passed total
+
+# Coverage (improved)
+cargo llvm-cov -p prin-dynamics --features strict-checks --summary-only
+#   integrate.rs: 991 lines, 25 missed, 97.48% line coverage (was 96.66%; NonFiniteValue path now covered)
+#   TOTAL:        2856 lines, 59 missed, 97.93% line coverage
+
+# Security
+cargo audit                                          # 1 inherited paste RUSTSEC-2024-0436 (amendment #9); no new findings
+# Snyk Code (MCP):
+#   snyk_code_scan path=C:\dev\PRIN\crates\prin-dynamics\src\integrate.rs severity_threshold=low → 0 issues
+#   snyk_code_scan path=C:\dev\PRIN\crates\prin-dynamics\src\lib.rs severity_threshold=low        → 0 issues
+# Snyk Open Source / pip-audit: N/A (no dependency manifest changes in this S3)
+
+# WP acceptance evidence re-verified
+#   Golden trajectories: 16 parity tests pass at rtol=1e-6/atol=1e-8 (and tighter for f64 paths) ✅
+#   RK4 order h^4: rk4_order_h4_convergence + parity_rk4_order_h4_on_amplitude_decay pass ✅
+#   RK45 tolerance property: rk45_tolerance_property + parity_rk45_tolerance_property_on_amplitude_decay pass ✅
+#   Failure paths typed: IntegrateError now has 7 variants (added InvalidTolerance) ✅
+```
+
+### Delta findings
+
+No new findings introduced. The diff is limited to the five remediated
+findings; no feature work, no opportunistic refactors, no new dependencies,
+no `unsafe`, no tolerance drift, no weakened tests. The FSAL regression test
+asserts bit-identical equality (`epsilon = 0.0`) between reused and fresh
+integrators, which is stricter than the parity tolerances. All five findings
+are closed; the cycle is ready for S4.
