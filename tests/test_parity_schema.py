@@ -25,7 +25,7 @@ from prin.parity.schema import (
 def test_tolerances_match_parity_program() -> None:
     """The documented tolerances are exposed exactly."""
     assert TOLERANCES[Quantity.TRAJECTORY] == (1e-6, 1e-8)
-    assert TOLERANCES[Quantity.METRIC] == (1e-10, 1e-12)
+    assert TOLERANCES[Quantity.METRIC] == (1e-8, 1e-12)
 
 
 def test_get_tolerances_rejects_chaotic() -> None:

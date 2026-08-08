@@ -22,7 +22,11 @@ CORPUS_SCHEMA_VERSION: int = 1
 # Tolerances from the parity program (project plan §5).
 TRAJECTORY_RTOL: float = 1e-6
 TRAJECTORY_ATOL: float = 1e-8
-METRIC_RTOL: float = 1e-10
+# Cross-platform PRINet/torch regeneration of the derived metric arrays
+# (order parameter, mean phase coherence) exhibits reduction-order noise up to
+# ~1e-9 relative between OS/torch builds; the corpus was authored on Windows
+# torch and CI regenerates on Linux/macOS torch (plan amendment #16).
+METRIC_RTOL: float = 1e-8
 METRIC_ATOL: float = 1e-12
 
 

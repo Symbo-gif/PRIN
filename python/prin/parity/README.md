@@ -18,7 +18,7 @@ Tolerances are defined in `DOCS/standards/Testing_Standards.md` §3:
 | Quantity | Tolerance |
 |---|---|
 | Trajectories (float64 reference) | `rtol=1e-6`, `atol=1e-8` |
-| Metrics / decompositions (float64) | `rtol=1e-10`, `atol=1e-12` |
+| Metrics / decompositions (float64) | `rtol=1e-8`, `atol=1e-12` (amendment #16: cross-platform torch regeneration noise; single-runtime verification targets `rtol=1e-10`) |
 
 See `parity/README.md` for the on-disk corpus layout and the archive-based
 reference install.

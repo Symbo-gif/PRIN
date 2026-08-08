@@ -19,7 +19,7 @@ Numerical parity against PRINet 3.0 is the highest-risk area of this rebuild
 |---|---|
 | Trajectories (float64 reference) | `rtol=1e-6`, `atol=1e-8` |
 | Chaotic regimes | statistical comparison (order-parameter time series) beyond the shadowing horizon, not pointwise |
-| Metrics / decompositions (float64) | `rtol=1e-10` |
+| Metrics / decompositions (float64) | `rtol=1e-8` (amendment #16: cross-platform torch regeneration noise up to ~1e-9 relative; single-runtime verification targets `rtol=1e-10`) |
 
 ## Public API
 

@@ -84,3 +84,29 @@ The ``K / degree`` normalization invariant (total coupling energy per oscillator
 = ``K``) is asserted for the odd-clamp case in both ``Ring`` and ``SmallWorld``
 builders via ``topology_ring_odd_clamp_preserves_k_over_degree_invariant`` and
 ``topology_small_world_odd_clamp_preserves_edge_count_and_energy``.
+
+EA-002 — Cross-platform torch reduction noise in derived corpus metrics
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The golden corpus stores two derived metric arrays per case
+(``order_parameter_traj``, ``mean_phase_coherence_traj``) computed by PRINet
+3.0's own measurement functions (``prinet.core.measurement``) on torch CPU
+tensors. The corpus was authored on a Windows torch build; the ``parity.yml``
+differential job regenerates cases on Linux runners. Torch CPU reductions of
+the underlying complex-exponential sums are deterministic per platform but
+differ between OS/torch builds at the reduction-order level.
+
+Measured on CI (ubuntu, Python 3.12, EA-002): the two ``kuramoto_mean_field_euler``
+representative cases diverged from the committed Windows-authored arrays by up
+to ``max_abs_diff ≈ 7.0e-11`` / ``max_rel_diff ≈ 1.27e-9`` on exactly the two
+derived metric arrays; all trajectory arrays (the integrated dynamics) passed
+the ``rtol=1e-6, atol=1e-8`` trajectory tolerances on every platform.
+
+Disposition: accepted as a preserved reference-implementation numerical hazard
+(Project Plan §5, amendment #16). The corpus differential-harness METRIC
+tolerance is set to ``rtol=1e-8`` (covers the observed ~1.27e-9 noise floor
+with margin, and future macOS regeneration) while remaining two orders of
+magnitude tighter than the trajectory tier. The corpus itself is immutable and
+unchanged; trajectory tolerances are unchanged; single-runtime metric
+verification (WP-010/WP-014 acceptance criteria) still targets ``rtol=1e-10``
+because those comparisons do not cross torch builds.
