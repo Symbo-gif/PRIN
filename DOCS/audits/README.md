@@ -41,3 +41,17 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
 - [`008-wp008-audit.md`](008-wp008-audit.md) — WP-008 "Basic integrators"
   audit (`PASS-WITH-FINDINGS`); five findings (F1 D2, F2 D3, F3–F5 D4) resolved
   in S3 with a CLEAN delta re-audit; closure table is on file.
+- [`009-wp009-audit.md`](009-wp009-audit.md) — WP-009 "PAC, coupling
+  topologies, and phase k-NN" audit (`PASS-WITH-FINDINGS`); seven findings
+  (F1–F2 D2, F3–F4 D3, F5–F7 D4) resolved in S3 with a CLEAN delta re-audit;
+  closure table is on file. `[RETROACTIVE UPDATE - Executive Audit 002]`
+  index entry added.
+- [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
+  project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
+  five findings (E-F1–E-F5) remediated in-session.
+  `[RETROACTIVE UPDATE - Executive Audit 002]` index entry added; see the
+  correction note at the foot of the report for two claims amended by EA-002.
+- [`EXECUTIVE_AUDIT_REPORT_002.md`](EXECUTIVE_AUDIT_REPORT_002.md) — Second
+  project-level executive audit (EA-002, 2026-08-08), `PASS-WITH-REMEDIATION`;
+  thirteen findings (E-F1–E-F13: two D2, four D3, seven D4) remediated
+  in-session or passed forward with owners.

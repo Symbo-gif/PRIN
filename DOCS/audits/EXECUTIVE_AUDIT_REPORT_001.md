@@ -158,3 +158,31 @@ All identified findings (E-F1 through E-F5) have been fully addressed in Task 5 
 
 **Auditor Signature:** Devin (AI Pair & Systems Auditor)
 **Date:** 2026-08-07
+
+---
+
+## 7. Correction Appendix
+
+`[RETROACTIVE UPDATE - Executive Audit 002]` (2026-08-08, EA-002 finding
+E-F2). Two claims in this report were corrected by EA-002 after verifying
+them against the repository record:
+
+1. **E7 / §4.1 item 4 (session registration):** This report and the
+   corresponding `CHANGELOG.md` entry stated that `SESSION_REGISTER.md` and
+   `TRACEABILITY.md` were updated to register EA-001 as Global Session 0025
+   and re-map WP-007 S1 to Session 0026. Commit `d1e6e0a` contains no
+   changes to any `DOCS/sessions/` file, and the register (authoritative and
+   validator-green) numbers WP-007 S1 as 0025. The claimed update was never
+   executed. EA-002 remediated this by registering EA-001 and EA-002 in a
+   dedicated "Global sessions — Executive Audits" section of
+   `SESSION_REGISTER.md`, outside the planned 0001–0198 sequence (plan
+   amendment #15), and by correcting the CHANGELOG entry.
+2. **E8 (benchmark scripts):** The statement that "benchmark scripts in
+   `benchmarks/` [are] functional" overstated the repository state —
+   `benchmarks/` contains only the Phase 6 (WP-033) planning README; the
+   benchmark evidence at this point is the `pytest-benchmark` DLPack latency
+   tests in `tests/test_dlpack_bridge.py`, which are reproducible.
+
+No other findings, statuses, or verification results in this report are
+affected by the correction.
+

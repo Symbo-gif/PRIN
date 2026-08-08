@@ -4,7 +4,11 @@
 **Cycle:** 009 (WP-009 "PAC, coupling topologies, and phase k-NN")
 **Completed sessions:** 0033–0036
 **Author:** Devin (AI pair)
-**Maintainer approval:** pending
+**Maintainer approval:** granted in EA-002, 2026-08-08 (EA-002 finding E-F6)
+**Executive audit cross-reference:** Cycle 009 (Sessions 0033–0036) was
+re-verified by Executive Audit EA-002 on 2026-08-08
+(`DOCS/audits/EXECUTIVE_AUDIT_REPORT_002.md`); no cycle-009 deviations were
+found beyond the EA-level findings remediated in that session.
 **Git state:** `feat/wp006-oscillator-state` @ `3be0ad5` (pre-S4 documentation baseline)
 
 ---
@@ -160,4 +164,4 @@ Amendments #1–14 from cycles 001–007 remain in force.
   - Relevant golden corpus cases match reference at registered tolerances.
 - **Non-goals:** Tensor decompositions or report generation.
 - **First session brief:** `DOCS/sessions/phase-1/0037-wp010-s1-phase-metrics-and-chimera-measures.md`
-- **Maintainer approval:** pending
+- **Maintainer approval:** granted in EA-002, 2026-08-08 (EA-002 finding E-F6)

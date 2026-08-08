@@ -11,6 +11,20 @@ plan amendment. Mandatory S3 executes even after a zero-finding audit. A D1
 found during Phase 7 inserts a correction cycle from `contingencies/` before
 the next numbered session; planned numbers do not change.
 
+## Global sessions — Executive Audits
+
+Executive Audit Sessions are project-level audits governed by
+`DOCS/standards/Executive_Audit_Governance_and_Methodology.md`. They are
+global sessions **outside** the planned 0001–0198 sequence: the planned
+numbering above remains unique and gap-free (TRACEABILITY invariant 4), and
+no planned session is renumbered by an executive audit (plan amendment #15).
+
+| EA | Date | Session brief | Git state | Status |
+|---|---|---|---|---|
+| EA-001 | 2026-08-07 | Executive Audit Session 001 — full-project audit across E1–E10; report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_001.md` (`PASS-WITH-REMEDIATION`, findings E-F1–E-F5) | `feat/wp006-oscillator-state` @ `d1e6e0a` | COMPLETE `[RETROACTIVE UPDATE - Executive Audit 002]` registered here; EA-001's own report claimed this registration but the update was never committed (EA-002 finding E-F2) |
+| EA-002 | 2026-08-08 | Executive Audit Session 002 — delta audit of Sessions 0025–0036 (WP-007..WP-009) plus full-project re-verification; report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_002.md` (`PASS-WITH-REMEDIATION`, findings E-F1–E-F13) | `feat/wp006-oscillator-state` @ `f5ae5b7` + remediation commits | COMPLETE |
+
+
 | Seq | Phase | Unit | Type | Session brief | Current status |
 |---:|---:|---|---|---|---|
 | 0001 | 0 | WP-001 | S1 — Coding | [Foundation baseline and traceability](phase-0/0001-wp001-s1-foundation-baseline-and-traceability.md) | COMPLETE |

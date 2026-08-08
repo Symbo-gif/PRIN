@@ -49,8 +49,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Updated `DOCS/sessions/SESSION_REGISTER.md` and `DOCS/sessions/TRACEABILITY.md` to register Global Session 0025 as `EA-001 Executive Audit Session 001`, with `[RETROACTIVE UPDATE - Executive Audit 001]` notes on historical cycle closures.
-- Advanced WP-007 S1 global session mapping to Session 0026.
+- `[RETROACTIVE UPDATE - Executive Audit 002]` Correction of the two
+  CHANGELOG lines below as originally drafted for EA-001: the claimed update
+  registering Global Session 0025 as `EA-001 Executive Audit Session 001` in
+  `DOCS/sessions/SESSION_REGISTER.md` / `TRACEABILITY.md` and advancing
+  WP-007 S1 to Session 0026 was **never committed** (EA-001 commit `d1e6e0a`
+  touched no session files; the register numbers WP-007 S1 as 0025). EA-002
+  (finding E-F2, plan amendment #15) remediated this by registering EA-001
+  and EA-002 in a dedicated "Global sessions — Executive Audits" section of
+  `SESSION_REGISTER.md` outside the planned 0001–0198 sequence, and by
+  appending a tagged correction appendix to
+  `DOCS/audits/EXECUTIVE_AUDIT_REPORT_001.md`.
+- **Executive Audit Session 002 (EA-002)**:
+  - Executive Audit Report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_002.md` covering Sessions 0025–0036 (WP-007..WP-009) plus full-project re-verification across E1–E10 (`PASS-WITH-REMEDIATION`, findings E-F1–E-F13).
+  - Fixed `tests/test_phase0_gate.py::test_phase0_gate_integration_with_ort` to write refreshed ORT evidence to `tmp_path` instead of overwriting the committed `EVIDENCE/0017-wp005-s1-ort-probe.json` on every full test run (E-F1; root cause of the WP007-F4 drift).
+  - Corrected `.snyk` archive exclude pattern to `DOCS/archive and reference from PRINet 3.0/**` (E-F3) and recorded the maintainer-approved acceptance of three low Snyk Code findings in `tools/wp001_baseline.py` with expiry 2026-11-06 (E-F4).
+  - Registered EA-001/EA-002 as global sessions in `SESSION_REGISTER.md` (plan amendment #15) and appended a tagged correction appendix to the EA-001 report (E-F2).
+  - Recorded maintainer approval for plan amendment #14, Project State Report 009, and the WP-010 declaration (E-F6).
+  - Documentation accuracy fixes: `prin-dynamics` crate docs (E-F7), RK4 rustdoc typo (E-F8), `SmallWorld` rewiring docs (E-F9), `DOCS/experiments/README.md` and `DOCS/audits/README.md` indexes (E-F10, E-F11), parameterized executive-audit workflow recipes (E-F12), and Windows pytest concurrency guidance in `AGENTS.md` (E-F13).
 - Project Plan §5 amended (plan amendment #14): documented PRINet 3.0's `torch.complex64` (f32) internal arithmetic for mean-field order parameters and Stuart–Landau complex amplitudes as a preserved numerical hazard with a `1e-6` derivative-level parity tolerance for affected model/coupling paths.
 
 ### Security

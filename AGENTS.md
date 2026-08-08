@@ -14,6 +14,12 @@ If you hit this, run pytest with an in-repo basetemp:
 
 The `.pytest_basetemp/` directory is ignored in `.gitignore`.
 
+Do not run pytest concurrently with cargo (or two pytest invocations
+back-to-back) on Windows: antivirus/file-handle contention during `tmp_path`
+cleanup can surface as `PermissionError: [WinError 32]` fixture-setup errors.
+Run the suites sequentially; if lock errors appear, re-run the suite in
+isolation (EA-002 E-F13).
+
 ## Local verification one-liner (Python + Rust + security)
 
 ```powershell
@@ -23,7 +29,7 @@ The `.pytest_basetemp/` directory is ignored in `.gitignore`.
 .venv\Scripts\python -m interrogate -c pyproject.toml python/prin
 .venv\Scripts\python -m bandit -r . -c pyproject.toml
 .venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp
-.venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp
+.venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp-full
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
