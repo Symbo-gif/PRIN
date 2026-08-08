@@ -15,8 +15,8 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0026 | WP-007 | S2 — Audit | [Oscillator dynamics models](0026-wp007-s2-oscillator-dynamics-models.md) | COMPLETE |
 | 0027 | WP-007 | S3 — Remediation | [Oscillator dynamics models](0027-wp007-s3-oscillator-dynamics-models.md) | COMPLETE |
 | 0028 | WP-007 | S4 — Documentation | [Oscillator dynamics models](0028-wp007-s4-oscillator-dynamics-models.md) | COMPLETE |
-| 0029 | WP-008 | S1 — Coding | [Basic integrators](0029-wp008-s1-basic-integrators.md) | READY |
-| 0030 | WP-008 | S2 — Audit | [Basic integrators](0030-wp008-s2-basic-integrators.md) | PLANNED |
+| 0029 | WP-008 | S1 — Coding | [Basic integrators](0029-wp008-s1-basic-integrators.md) | COMPLETE |
+| 0030 | WP-008 | S2 — Audit | [Basic integrators](0030-wp008-s2-basic-integrators.md) | COMPLETE |
 | 0031 | WP-008 | S3 — Remediation | [Basic integrators](0031-wp008-s3-basic-integrators.md) | PLANNED |
 | 0032 | WP-008 | S4 — Documentation | [Basic integrators](0032-wp008-s4-basic-integrators.md) | PLANNED |
 | 0033 | WP-009 | S1 — Coding | [PAC, coupling topologies, and phase k-NN](0033-wp009-s1-pac-coupling-topologies-and-phase-k-nn.md) | PLANNED |
