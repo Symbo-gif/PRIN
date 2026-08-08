@@ -29,6 +29,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `CouplingMode` enum (`MeanField`, `Full { matrix }`, `SparseKnn { k }`) with enum-dispatched coupling semantics (no string dispatch); `Default` is `Full { matrix: None }`.
   - `StateDerivatives` struct-of-arrays (`dphase`, `damplitude`, `dfrequency`) with length validation and derivative guards honoring `strict-checks`.
   - Rust-vs-PRINet 3.0 derivative parity tests in `crates/prin-dynamics/tests/parity_models.rs` covering all three models and all coupling modes (`1e-12` for pure float64 paths, `1e-6` for f32-complex-affected paths).
+- WP-008 Basic integrators in `prin-dynamics`:
+  - `Integrator` trait (`step(&mut self, model, state, dt) -> Result<OscillatorState, IntegrateError>`) as the uniform interface for time integrators of oscillator dynamics.
+  - `EulerIntegrator` — first-order explicit Euler with reusable derivative buffer.
+  - `RK4Integrator` — classic fourth-order Runge–Kutta (order `h^4`) with explicit `k1`–`k4` reusable buffers.
+  - `RK45Integrator` — adaptive Dormand–Prince RK45 with FSAL (First Same As Last) caching, PI step-size control (`clamp(SAFETY · err_norm^(-1/5), MIN_FACTOR, MAX_FACTOR)`), typed tolerance/step-budget errors, and `fsal_valid` invalidation on reuse/rejected steps.
+  - `AdaptiveResult` struct (`final_state`, `accepted_steps`, `rejected_steps`, `final_dt`) returned by `RK45Integrator::integrate_adaptive`.
+  - `integrate_fixed` free function for multi-step fixed-step integration with any `Integrator`.
+  - `IntegrateError` enum with seven typed variants: `InvalidTimestep`, `InvalidTolerance`, `ZeroSteps`, `Dynamics`, `ToleranceNotMet`, `StepSizeUnderflow`, `NonFiniteValue` (the latter under `strict-checks`).
+  - Rust-vs-PRINet 3.0 trajectory parity tests in `crates/prin-dynamics/tests/parity_integrators.rs` (16 golden-trajectory cases) comparing Euler and RK4 against `torch.float64` reference values at `rtol=1e-6, atol=1e-8` (and tighter for pure f64 paths); RK4 order-`h^4` convergence and RK45 tolerance-property parity tests.
 
 ### Changed
 
@@ -42,7 +51,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- (nothing yet)
+- WP-008 S3 remediation (audit findings WP008-F1–F5, commit `f97ba5c`):
+  - WP008-F1: Fixed FSAL cache invalidation in `RK45Integrator::integrate_adaptive` — added `fsal_valid: bool` flag invalidated at the start of each call and on rejected steps; regression test `rk45_fsal_cache_invalidated_on_reuse` asserts bit-identical results for reused vs fresh integrators.
+  - WP008-F2: Added `NonFiniteValue` error-path test coverage under `strict-checks` (Euler and RK4) via a `NanDynamics` test helper; `integrate.rs` line coverage rose from 96.66% to 97.48%.
+  - WP008-F3: Corrected `check_finite` doc comment to accurately describe non-strict behavior (amplitude repaired via `clamp_amplitude`; non-finite phase/frequency pass through silently and are only caught under `strict-checks`).
+  - WP008-F4: Updated `lib.rs` `integrate` module doc to list only implemented integrators (Euler, RK4, adaptive RK45/Dormand–Prince); removed stale "exponential (direct + Krylov), and multi-rate sub-stepped RK4" text from the pre-S1 stub.
+  - WP008-F5: Added `IntegrateError::InvalidTolerance { param, value }` variant; `RK45Integrator::new` now returns `InvalidTolerance` instead of reusing `InvalidTimestep` for tolerance validation; updated `rk45_rejects_invalid_tolerances` to assert the specific variant.
 
 ## [0.1.0-alpha.1] - 2026-08-07
 

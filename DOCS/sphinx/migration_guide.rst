@@ -56,3 +56,14 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   parity tests use a ``1e-6`` tolerance for affected paths and ``1e-12`` for pure
   float64 paths (see the Parity Report). Python bindings for these models are
   deferred to WP-011 (Phase 1 Python API and dynamics integration).
+- ``prin-dynamics`` basic integrators (WP-008) — Rust ``Integrator`` trait and
+  ``EulerIntegrator``, ``RK4Integrator``, and ``RK45Integrator`` (adaptive
+  Dormand–Prince) with explicit reusable buffers, numerical guards, and typed
+  ``IntegrateError`` (seven variants). Replaces PRINet 3.0's Python integrators
+  in ``core/propagation/integrators.py``. The Rust implementation uses ``f64``
+  arithmetic throughout; PRINet 3.0's ``torch.float64`` trajectory reference is
+  matched at ``rtol=1e-6, atol=1e-8`` (and tighter for pure f64 paths) via 16
+  golden-trajectory parity cases in ``crates/prin-dynamics/tests/parity_integrators.rs``.
+  RK4 order-``h^4`` convergence and RK45 tolerance properties are asserted in
+  both unit and parity tests. Exponential and multi-rate integrators are
+  Phase 2 (WP-012) non-goals. Python bindings are deferred to WP-011.

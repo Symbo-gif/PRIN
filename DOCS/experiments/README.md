@@ -28,6 +28,8 @@ at the top level until they are folded into the final campaign archive in Phase 
   report and caveat for the non-instrumentable `#[cube(launch)]` kernel stubs.
 - [`0017-wp005-s1-handoff.md`](0017-wp005-s1-handoff.md) — WP-005 S1 handoff to
   the S2 audit for the ORT backends, abi3 wheel matrix, and Phase 0 gate.
+- [`0029-wp008-s1-handoff.md`](0029-wp008-s1-handoff.md) — WP-008 S1 handoff to
+  the S2 audit for the Euler, RK4, and adaptive RK45 integrators.
 
 ## Rules (summary)
 

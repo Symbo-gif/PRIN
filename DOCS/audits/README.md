@@ -38,3 +38,6 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   models" audit (`PASS-WITH-FINDINGS`); five findings (F1–F2 D2, F3 D3, F4–F5
   D4) resolved in S3 with a CLEAN delta re-audit; closure table and plan
   amendment #14 (f64/f32 complex numerical hazard) are on file.
+- [`008-wp008-audit.md`](008-wp008-audit.md) — WP-008 "Basic integrators"
+  audit (`PASS-WITH-FINDINGS`); five findings (F1 D2, F2 D3, F3–F5 D4) resolved
+  in S3 with a CLEAN delta re-audit; closure table is on file.

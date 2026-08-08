@@ -1,6 +1,6 @@
 # Session 0033 — WP-009 S1: Coding — PAC, coupling topologies, and phase k-NN
 
-**Status:** PLANNED  
+**Status:** READY  
 **Roadmap phase:** 1 — Dynamics core  
 **Execution unit:** WP-009  
 **Session type:** S1 — Coding  
