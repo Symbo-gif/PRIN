@@ -11,11 +11,11 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0022 | WP-006 | S2 — Audit | [Oscillator state, errors, and deterministic seed](0022-wp006-s2-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
 | 0023 | WP-006 | S3 — Remediation | [Oscillator state, errors, and deterministic seed](0023-wp006-s3-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
 | 0024 | WP-006 | S4 — Documentation | [Oscillator state, errors, and deterministic seed](0024-wp006-s4-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
-| 0025 | WP-007 | S1 — Coding | [Oscillator dynamics models](0025-wp007-s1-oscillator-dynamics-models.md) | READY |
-| 0026 | WP-007 | S2 — Audit | [Oscillator dynamics models](0026-wp007-s2-oscillator-dynamics-models.md) | PLANNED |
-| 0027 | WP-007 | S3 — Remediation | [Oscillator dynamics models](0027-wp007-s3-oscillator-dynamics-models.md) | PLANNED |
-| 0028 | WP-007 | S4 — Documentation | [Oscillator dynamics models](0028-wp007-s4-oscillator-dynamics-models.md) | PLANNED |
-| 0029 | WP-008 | S1 — Coding | [Basic integrators](0029-wp008-s1-basic-integrators.md) | PLANNED |
+| 0025 | WP-007 | S1 — Coding | [Oscillator dynamics models](0025-wp007-s1-oscillator-dynamics-models.md) | COMPLETE |
+| 0026 | WP-007 | S2 — Audit | [Oscillator dynamics models](0026-wp007-s2-oscillator-dynamics-models.md) | COMPLETE |
+| 0027 | WP-007 | S3 — Remediation | [Oscillator dynamics models](0027-wp007-s3-oscillator-dynamics-models.md) | COMPLETE |
+| 0028 | WP-007 | S4 — Documentation | [Oscillator dynamics models](0028-wp007-s4-oscillator-dynamics-models.md) | COMPLETE |
+| 0029 | WP-008 | S1 — Coding | [Basic integrators](0029-wp008-s1-basic-integrators.md) | READY |
 | 0030 | WP-008 | S2 — Audit | [Basic integrators](0030-wp008-s2-basic-integrators.md) | PLANNED |
 | 0031 | WP-008 | S3 — Remediation | [Basic integrators](0031-wp008-s3-basic-integrators.md) | PLANNED |
 | 0032 | WP-008 | S4 — Documentation | [Basic integrators](0032-wp008-s4-basic-integrators.md) | PLANNED |

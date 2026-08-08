@@ -33,4 +33,8 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   table and plan amendment #13 are on file.
 - [`006-wp006-audit.md`](006-wp006-audit.md) — WP-006 "Oscillator state,
   errors, and deterministic seed" audit (`PASS-WITH-FINDINGS`); three findings
-  (F1 D2, F2 D3, F3 D4) pending S3 remediation.
+  (F1 D2, F2 D3, F3 D4) resolved in S3 with a CLEAN delta re-audit.
+- [`007-wp007-audit.md`](007-wp007-audit.md) — WP-007 "Oscillator dynamics
+  models" audit (`PASS-WITH-FINDINGS`); five findings (F1–F2 D2, F3 D3, F4–F5
+  D4) resolved in S3 with a CLEAN delta re-audit; closure table and plan
+  amendment #14 (f64/f32 complex numerical hazard) are on file.

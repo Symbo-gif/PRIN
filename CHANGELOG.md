@@ -21,11 +21,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Phase and amplitude numerical guards: `% 2π` phase wrap (`wrap_phase`, `wrap_phases`), `atan2`-safe phase differences (`safe_phase_diff`, `safe_phase_diffs`), amplitude clamps `[1e-6, 10]` (`clamp_amplitude`, `guard_amplitude`), derivative clamps `±1e4` (`clamp_derivative`, `guard_derivative`), and sort-based phase k-NN index (`build_phase_knn_index`).
   - Typed error enumerations `StateError` and `SeedError` built with `thiserror`.
   - Opt-in `strict-checks` feature flag for strict guard validation versus default clamping/repair.
+- WP-007 Oscillator dynamics models in `prin-dynamics`:
+  - `Dynamics` trait with `compute_derivatives(&self, &OscillatorState) -> Result<StateDerivatives, StateError>` as the uniform interface for all oscillator models.
+  - `KuramotoOscillator` — extended Kuramoto with amplitude decay and frequency adaptation; mean-field `O(N)` (complex order parameter `Z = R e^{iψ}`), full pairwise `O(N²)` (custom `N×N` matrix or uniform `K/N` with zero diagonal), and sparse k-NN `O(N·k)` coupling.
+  - `StuartLandauOscillator` — complex-amplitude Hopf normal form with mean-field, full, and sparse k-NN coupling.
+  - `HopfOscillator` — supercritical Hopf bifurcation in polar coordinates with `limit_cycle_amplitude = sqrt(μ)`; mean-field, full, and sparse k-NN coupling.
+  - `CouplingMode` enum (`MeanField`, `Full { matrix }`, `SparseKnn { k }`) with enum-dispatched coupling semantics (no string dispatch); `Default` is `Full { matrix: None }`.
+  - `StateDerivatives` struct-of-arrays (`dphase`, `damplitude`, `dfrequency`) with length validation and derivative guards honoring `strict-checks`.
+  - Rust-vs-PRINet 3.0 derivative parity tests in `crates/prin-dynamics/tests/parity_models.rs` covering all three models and all coupling modes (`1e-12` for pure float64 paths, `1e-6` for f32-complex-affected paths).
 
 ### Changed
 
 - Updated `DOCS/sessions/SESSION_REGISTER.md` and `DOCS/sessions/TRACEABILITY.md` to register Global Session 0025 as `EA-001 Executive Audit Session 001`, with `[RETROACTIVE UPDATE - Executive Audit 001]` notes on historical cycle closures.
 - Advanced WP-007 S1 global session mapping to Session 0026.
+- Project Plan §5 amended (plan amendment #14): documented PRINet 3.0's `torch.complex64` (f32) internal arithmetic for mean-field order parameters and Stuart–Landau complex amplitudes as a preserved numerical hazard with a `1e-6` derivative-level parity tolerance for affected model/coupling paths.
 
 ### Security
 

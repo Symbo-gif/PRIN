@@ -37,11 +37,11 @@ the next numbered session; planned numbers do not change.
 | 0022 | 1 | WP-006 | S2 — Audit | [Oscillator state, errors, and deterministic seed](phase-1/0022-wp006-s2-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
 | 0023 | 1 | WP-006 | S3 — Remediation | [Oscillator state, errors, and deterministic seed](phase-1/0023-wp006-s3-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
 | 0024 | 1 | WP-006 | S4 — Documentation | [Oscillator state, errors, and deterministic seed](phase-1/0024-wp006-s4-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
-| 0025 | 1 | WP-007 | S1 — Coding | [Oscillator dynamics models](phase-1/0025-wp007-s1-oscillator-dynamics-models.md) | READY |
-| 0026 | 1 | WP-007 | S2 — Audit | [Oscillator dynamics models](phase-1/0026-wp007-s2-oscillator-dynamics-models.md) | PLANNED |
+| 0025 | 1 | WP-007 | S1 — Coding | [Oscillator dynamics models](phase-1/0025-wp007-s1-oscillator-dynamics-models.md) | COMPLETE |
+| 0026 | 1 | WP-007 | S2 — Audit | [Oscillator dynamics models](phase-1/0026-wp007-s2-oscillator-dynamics-models.md) | COMPLETE |
 | 0027 | 1 | WP-007 | S3 — Remediation | [Oscillator dynamics models](phase-1/0027-wp007-s3-oscillator-dynamics-models.md) | COMPLETE |
-| 0028 | 1 | WP-007 | S4 — Documentation | [Oscillator dynamics models](phase-1/0028-wp007-s4-oscillator-dynamics-models.md) | PLANNED |
-| 0029 | 1 | WP-008 | S1 — Coding | [Basic integrators](phase-1/0029-wp008-s1-basic-integrators.md) | PLANNED |
+| 0028 | 1 | WP-007 | S4 — Documentation | [Oscillator dynamics models](phase-1/0028-wp007-s4-oscillator-dynamics-models.md) | COMPLETE |
+| 0029 | 1 | WP-008 | S1 — Coding | [Basic integrators](phase-1/0029-wp008-s1-basic-integrators.md) | READY |
 | 0030 | 1 | WP-008 | S2 — Audit | [Basic integrators](phase-1/0030-wp008-s2-basic-integrators.md) | PLANNED |
 | 0031 | 1 | WP-008 | S3 — Remediation | [Basic integrators](phase-1/0031-wp008-s3-basic-integrators.md) | PLANNED |
 | 0032 | 1 | WP-008 | S4 — Documentation | [Basic integrators](phase-1/0032-wp008-s4-basic-integrators.md) | PLANNED |

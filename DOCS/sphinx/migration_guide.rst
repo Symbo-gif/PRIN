@@ -43,3 +43,16 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   (phase wrap to ``[0, 2π)``, ``atan2``-safe phase differences, amplitude clamp
   ``[1e-6, 10]``, derivative clamp ``±1e4``), and sort-based phase k-NN index.
   Replaces PRINet 3.0's Python oscillator state in ``core/propagation/oscillator_state.py``.
+- ``prin-dynamics`` oscillator models (WP-007) — Rust ``Dynamics`` trait and
+  ``KuramotoOscillator``, ``StuartLandauOscillator``, and ``HopfOscillator``
+  models with enum-dispatched ``CouplingMode`` (``MeanField``, ``Full``,
+  ``SparseKnn``) and ``StateDerivatives`` (``dphase``/``damplitude``/``dfrequency``).
+  Replaces PRINet 3.0's Python models in
+  ``core/propagation/oscillator_models.py``. The Rust implementation uses ``f64``
+  real and ``Complex64`` arithmetic; PRINet 3.0 uses ``torch.complex64`` (f32)
+  internally for mean-field order parameters and Stuart–Landau complex amplitudes,
+  producing up to ~``1e-7`` per-step drift on the affected paths. This is accepted
+  as a preserved numerical hazard (Project Plan §5, amendment #14); derivative
+  parity tests use a ``1e-6`` tolerance for affected paths and ``1e-12`` for pure
+  float64 paths (see the Parity Report). Python bindings for these models are
+  deferred to WP-011 (Phase 1 Python API and dynamics integration).
