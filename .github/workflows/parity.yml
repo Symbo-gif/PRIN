@@ -50,4 +50,4 @@ jobs:
           pip install -e ".[dev]"
           pip install -e "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main"
       - name: Run differential parity suite
-        run: pytest parity/ -v -m parity
+        run: python -m pytest parity/ -v -m parity
