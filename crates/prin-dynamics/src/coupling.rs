@@ -109,20 +109,28 @@ pub enum Topology {
     /// (`k_ring/2` on each side, wrapping around).
     ///
     /// Each edge weight is `K / k_ring`. Requires `k_ring >= 2` and even
-    /// (so that neighbours are symmetric on each side); `k_ring` is clamped
-    /// to `N - 1` if it exceeds the population.
+    /// (so that neighbours are symmetric on each side). If `k_ring` exceeds
+    /// `N - 1`, it is clamped to the largest even number `<= N - 1` so the
+    /// per-node degree equals `k_ring` and the `K / degree` normalization
+    /// invariant (total coupling energy per oscillator = `K`) is preserved.
     Ring {
         /// Number of neighbours per node (must be `>= 2` and even).
         k_ring: usize,
     },
 
-    /// Watts–Strogatz small-world network.
+    /// Watts–Strogatz small-world network (directed variant).
     ///
     /// Starts from a [`Topology::Ring`] lattice with `k_ring` neighbours and
-    /// rewires each edge to a random target with probability `rewire_prob`.
-    /// Rewiring uses the supplied [`Seed`] for deterministic reproducibility.
-    /// Edge weights remain `K / k_ring`; self-loops and duplicate edges are
-    /// avoided. The diagonal is always zero.
+    /// rewires each **outgoing** edge to a random target with probability
+    /// `rewire_prob`. Rewiring uses the supplied [`Seed`] for deterministic
+    /// reproducibility. Edge weights remain `K / k_ring` (with `k_ring`
+    /// clamped to the largest even number `<= N - 1`); self-loops and
+    /// duplicate outgoing edges are avoided. The diagonal is always zero.
+    ///
+    /// The resulting adjacency is **directed**: only the outgoing edge
+    /// `mat[i, j]` is rewired, so `mat[i, j]` and `mat[j, i]` are not
+    /// guaranteed to be equal after rewiring. Per-node out-degree and total
+    /// edge count are preserved from the base ring lattice.
     SmallWorld {
         /// Number of neighbours per node in the base ring lattice.
         k_ring: usize,
@@ -191,10 +199,31 @@ fn build_all_to_all(n: usize, k: f64) -> Result<Vec<f64>, CouplingError> {
     Ok(mat)
 }
 
+/// Clamp `k_ring` to the largest even number `<= n - 1`.
+///
+/// The ring lattice places `k_ring/2` neighbours on each side of every node,
+/// so the per-node degree is exactly `2 * (k_ring/2) = k_ring` only when
+/// `k_ring` is even. Clamping to an even value preserves the
+/// `K / degree`-per-edge normalization invariant (total coupling energy per
+/// oscillator equals `K`): with an odd clamped value, `half = k_ring/2` would
+/// drop one edge while the weight still used `K / k_ring`, leaking energy.
+/// Returns `0` when the clamped value would be below `2` (caller falls back
+/// to all-to-all).
+fn clamp_ring_k(k_ring: usize, n: usize) -> usize {
+    let clamped = k_ring.min(n.saturating_sub(1));
+    if clamped % 2 != 0 {
+        clamped - 1
+    } else {
+        clamped
+    }
+}
+
 /// Build a ring lattice coupling matrix.
 ///
 /// Each node `i` connects to `k_ring/2` neighbours on each side (wrapping).
-/// Edge weight is `K / k_ring`. The diagonal is zero.
+/// Edge weight is `K / k_ring`. The diagonal is zero. `k_ring` is clamped to
+/// the largest even number `<= N - 1` so the per-node degree equals `k_ring`
+/// and the `K / degree` normalization invariant holds.
 fn build_ring(n: usize, k_ring: usize, k: f64) -> Result<Vec<f64>, CouplingError> {
     if k_ring < 2 {
         return Err(CouplingError::InvalidParameter {
@@ -210,8 +239,9 @@ fn build_ring(n: usize, k_ring: usize, k: f64) -> Result<Vec<f64>, CouplingError
             n,
         });
     }
-    // Clamp k_ring to N-1 (must leave at least the diagonal empty).
-    let k_ring = k_ring.min(n - 1);
+    // Clamp k_ring to the largest even number <= N-1 (must leave at least the
+    // diagonal empty and keep the degree == k_ring normalization invariant).
+    let k_ring = clamp_ring_k(k_ring, n);
     if k_ring < 2 {
         // N too small for a ring with k_ring >= 2; fall back to all-to-all.
         return build_all_to_all(n, k);
@@ -233,9 +263,19 @@ fn build_ring(n: usize, k_ring: usize, k: f64) -> Result<Vec<f64>, CouplingError
 
 /// Build a Watts–Strogatz small-world coupling matrix.
 ///
-/// Starts from a ring lattice, then rewires each edge `i → j` to a random
-/// target `j'` with probability `rewire_prob`. Self-loops and duplicate edges
-/// are avoided. Edge weights remain `K / k_ring`.
+/// Starts from a ring lattice, then rewires each **outgoing** edge `i → j`
+/// to a random target `j'` with probability `rewire_prob`. Self-loops and
+/// duplicate outgoing edges are avoided. Edge weights remain
+/// `K / k_ring` (with `k_ring` clamped to the largest even number `<= N - 1`,
+/// matching [`build_ring`]).
+///
+/// **Directed interpretation:** the resulting adjacency is *directed* — only
+/// the row entry `mat[i, j]` (the outgoing edge from `i`) is rewired, so
+/// `mat[i, j]` and `mat[j, i]` are no longer guaranteed to be equal after
+/// rewiring. This preserves the per-node out-degree and total edge count of
+/// the base ring lattice but does not maintain the symmetric (undirected)
+/// Watts–Strogatz construction. Consumers that require an undirected
+/// topology should post-symmetrize the matrix or use [`Topology::Ring`].
 fn build_small_world(
     n: usize,
     k_ring: usize,
@@ -252,8 +292,15 @@ fn build_small_world(
     }
     // Start from the ring lattice.
     let mut mat = build_ring(n, k_ring, k)?;
-    let half = (k_ring.min(n - 1)) / 2;
-    let weight = k / (k_ring.min(n - 1) as f64);
+    // Use the same even-clamped degree as build_ring so the per-edge weight
+    // and the rewired-edge count stay consistent with the K/degree invariant.
+    let effective_k = clamp_ring_k(k_ring, n);
+    if effective_k < 2 {
+        // Ring fell back to all-to-all; nothing to rewire.
+        return Ok(mat);
+    }
+    let half = effective_k / 2;
+    let weight = k / (effective_k as f64);
 
     // Rewire: for each node i, consider each right-neighbour edge (i, i+d)
     // and rewire to a random target with probability rewire_prob.
@@ -338,7 +385,8 @@ mod tests {
         // N=6, k_ring=4 → each node connects to 2 left + 2 right.
         let mat = Topology::Ring { k_ring: 4 }.build_matrix(6, 1.0).unwrap();
         validate_coupling_matrix(&mat, 6).unwrap();
-        let weight = 1.0 / 4.0; // K / k_ring
+        // Edge weight is K / k_ring = 1.0 / 4.0.
+        let weight = 1.0 / 4.0;
         // Node 0: neighbours are 5, 4 (left) and 1, 2 (right).
         assert!((mat[1] - weight).abs() < 1e-12);
         assert!((mat[2] - weight).abs() < 1e-12);
@@ -372,16 +420,28 @@ mod tests {
 
     #[test]
     fn topology_ring_clamps_k_to_n_minus_1() {
-        // k_ring=10 with N=6 → clamped to 5 (but 5 is odd, clamped to 4).
-        // Actually k_ring.min(n-1) = 5, which is odd → but we clamp before the odd check.
-        // The build_ring clamps k_ring to n-1=5, then checks if k_ring < 2 (no),
-        // then uses half = 5/2 = 2. So effectively k_ring=4 edges.
+        // k_ring=10 with N=6 → n-1=5 (odd) → clamped to the largest even
+        // number <= 5, which is 4. The odd check runs before clamping on the
+        // *input* k_ring (10 is even, so it passes); clamp_ring_k then makes
+        // the effective degree 4 so the K/degree normalization invariant
+        // holds (degree == 2*half == 4, weight == K/4, total == K).
         let mat = Topology::Ring { k_ring: 10 }.build_matrix(6, 1.0).unwrap();
         validate_coupling_matrix(&mat, 6).unwrap();
-        // Each row should have at most 4 non-zero entries (2 left + 2 right).
+        // Each row should have exactly 4 non-zero entries (2 left + 2 right).
+        let weight = 1.0 / 4.0; // K / effective_degree
         for i in 0..6 {
             let nonzero = (0..6).filter(|&j| mat[i * 6 + j] != 0.0).count();
-            assert!(nonzero <= 4, "row {i} has {nonzero} nonzeros");
+            assert_eq!(nonzero, 4, "row {i} has {nonzero} nonzeros, expected 4");
+            for j in 0..6 {
+                if mat[i * 6 + j] != 0.0 {
+                    assert!((mat[i * 6 + j] - weight).abs() < 1e-12);
+                }
+            }
+        }
+        // Total coupling energy per oscillator == K == 1.0 (4 edges * K/4).
+        for i in 0..6 {
+            let row_sum: f64 = (0..6).map(|j| mat[i * 6 + j]).sum();
+            assert!((row_sum - 1.0).abs() < 1e-12);
         }
     }
 
@@ -463,6 +523,59 @@ mod tests {
         let sw_edges: usize = mat.iter().filter(|&&v| v != 0.0).count();
         let ring_edges: usize = ring.iter().filter(|&&v| v != 0.0).count();
         assert_eq!(sw_edges, ring_edges);
+    }
+
+    #[test]
+    fn topology_ring_odd_clamp_preserves_k_over_degree_invariant() {
+        // Regression for WP009-F3: when k_ring > n-1 and n-1 is odd, the
+        // effective degree must be the largest even number <= n-1 so that
+        // degree == 2*half and total coupling energy per node == K.
+        // n=7 → n-1=6 (even) is fine, so use n=6 → n-1=5 (odd) → effective 4.
+        let mat = Topology::Ring { k_ring: 10 }.build_matrix(6, 2.0).unwrap();
+        let weight = 2.0 / 4.0; // K / effective_degree (4, not 5)
+        for i in 0..6 {
+            let nonzero = (0..6).filter(|&j| mat[i * 6 + j] != 0.0).count();
+            assert_eq!(nonzero, 4, "row {i} degree {nonzero} != 4");
+            for j in 0..6 {
+                if mat[i * 6 + j] != 0.0 {
+                    assert!((mat[i * 6 + j] - weight).abs() < 1e-12);
+                }
+            }
+            let row_sum: f64 = (0..6).map(|j| mat[i * 6 + j]).sum();
+            assert!(
+                (row_sum - 2.0).abs() < 1e-12,
+                "row {i} energy {row_sum} != K"
+            );
+        }
+    }
+
+    #[test]
+    fn topology_small_world_odd_clamp_preserves_edge_count_and_energy() {
+        // Regression for WP009-F3 (small-world path): k_ring=10, n=6 →
+        // effective degree 4. Rewiring must preserve the per-node out-degree
+        // and total edge count of the clamped ring, and the per-edge weight
+        // must be K / 4 (not K / 5).
+        let seed = Seed::new(0, 7);
+        let sw = Topology::SmallWorld {
+            k_ring: 10,
+            rewire_prob: 0.5,
+            seed,
+        };
+        let mat = sw.build_matrix(6, 1.0).unwrap();
+        let ring = Topology::Ring { k_ring: 10 }.build_matrix(6, 1.0).unwrap();
+        let sw_edges: usize = mat.iter().filter(|&&v| v != 0.0).count();
+        let ring_edges: usize = ring.iter().filter(|&&v| v != 0.0).count();
+        assert_eq!(sw_edges, ring_edges);
+        let weight = 1.0 / 4.0; // K / effective_degree
+        for i in 0..6 {
+            let nonzero = (0..6).filter(|&j| mat[i * 6 + j] != 0.0).count();
+            assert_eq!(nonzero, 4, "row {i} out-degree {nonzero} != 4");
+            for j in 0..6 {
+                if mat[i * 6 + j] != 0.0 {
+                    assert!((mat[i * 6 + j] - weight).abs() < 1e-12);
+                }
+            }
+        }
     }
 
     #[test]

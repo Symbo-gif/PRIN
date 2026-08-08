@@ -48,6 +48,15 @@ pub enum PacError {
         /// Offending phase offset.
         value: f64,
     },
+
+    /// The amplitude clamp range is invalid (non-finite bounds or `amp_min > amp_max`).
+    #[error("invalid clamp range: amp_min={amp_min}, amp_max={amp_max} (require finite amp_min <= amp_max)")]
+    InvalidClampRange {
+        /// Offending clamp minimum.
+        amp_min: f64,
+        /// Offending clamp maximum.
+        amp_max: f64,
+    },
 }
 
 /// Phase–amplitude coupling between oscillator bands.
@@ -101,12 +110,17 @@ impl PhaseAmplitudeCoupling {
     /// # Errors
     ///
     /// Returns [`PacError::InvalidModulationDepth`] if `modulation_depth`
-    /// is not finite or outside `[0, 1]`.
+    /// is not finite or outside `[0, 1]`. Returns [`PacError::InvalidClampRange`]
+    /// if `amp_min` or `amp_max` is not finite, or if `amp_min > amp_max`
+    /// (the downstream `f64::clamp` would panic on an inverted range).
     pub fn with_clamp(modulation_depth: f64, amp_min: f64, amp_max: f64) -> Result<Self, PacError> {
         if !modulation_depth.is_finite() || !(0.0..=1.0).contains(&modulation_depth) {
             return Err(PacError::InvalidModulationDepth {
                 value: modulation_depth,
             });
+        }
+        if !amp_min.is_finite() || !amp_max.is_finite() || amp_min > amp_max {
+            return Err(PacError::InvalidClampRange { amp_min, amp_max });
         }
         Ok(Self {
             modulation_depth,
@@ -460,6 +474,33 @@ mod tests {
         assert_relative_eq!(out[0], 5.0, epsilon = 1e-12);
         let out2 = pac.modulate(&[0.0], &[0.001], 0.0).unwrap();
         assert_relative_eq!(out2[0], 0.01, epsilon = 1e-12);
+    }
+
+    #[test]
+    fn with_clamp_rejects_inverted_range() {
+        // Regression for WP009-F4: amp_min > amp_max must error, not panic
+        // (f64::clamp panics on min > max).
+        let err = PhaseAmplitudeCoupling::with_clamp(0.5, 5.0, 0.01).unwrap_err();
+        assert!(matches!(err, PacError::InvalidClampRange { .. }));
+    }
+
+    #[test]
+    fn with_clamp_rejects_non_finite_bounds() {
+        // Regression for WP009-F4: non-finite clamp bounds must error.
+        let err = PhaseAmplitudeCoupling::with_clamp(0.5, f64::NAN, 1.0).unwrap_err();
+        assert!(matches!(err, PacError::InvalidClampRange { .. }));
+        let err = PhaseAmplitudeCoupling::with_clamp(0.5, 0.0, f64::INFINITY).unwrap_err();
+        assert!(matches!(err, PacError::InvalidClampRange { .. }));
+        let err = PhaseAmplitudeCoupling::with_clamp(0.5, f64::NEG_INFINITY, 1.0).unwrap_err();
+        assert!(matches!(err, PacError::InvalidClampRange { .. }));
+    }
+
+    #[test]
+    fn with_clamp_allows_equal_bounds() {
+        // amp_min == amp_max is valid (degenerate clamp to a single value).
+        let pac = PhaseAmplitudeCoupling::with_clamp(0.5, 2.0, 2.0).unwrap();
+        let out = pac.modulate(&[0.0], &[100.0], 0.0).unwrap();
+        assert_relative_eq!(out[0], 2.0, epsilon = 1e-12);
     }
 
     #[test]

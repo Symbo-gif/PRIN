@@ -1784,49 +1784,83 @@ mod tests {
 
     #[test]
     fn normalization_one_over_k_explicit_in_sparse() {
-        // 1/k normalization: sparse k-NN uses K/k per edge.
-        // Verify: with k=2 vs k=3, the coupling term scales by 2/3
-        // (for the same K and same neighbor configuration).
+        // 1/k normalization: sparse k-NN uses K/k per edge (not K/N).
+        // Verify explicitly: for each oscillator, the dphase coupling term
+        // equals (K/k) * Σ_{j ∈ NN_k(i)} sin(φ_j - φ_i) * r_j, computed from
+        // the actual k-NN neighbour set. This distinguishes 1/k from 1/N
+        // (which would divide by N=5 instead of k).
+        let phase = vec![0.0, 0.1, 0.2, 0.3, 0.4];
         let state = OscillatorState::new(
-            vec![0.0, 0.1, 0.2, 0.3, 0.4],
+            phase.clone(),
             vec![1.0, 1.0, 1.0, 1.0, 1.0],
             vec![1.0, 1.0, 1.0, 1.0, 1.0],
             None,
         )
         .unwrap();
+        let n = 5;
+        let k_strength = 1.0_f64;
 
-        let model_k2 =
-            KuramotoOscillator::new(5, 1.0, 0.1, 0.01, CouplingMode::SparseKnn { k: Some(2) })
-                .unwrap();
-        let model_k3 =
-            KuramotoOscillator::new(5, 1.0, 0.1, 0.01, CouplingMode::SparseKnn { k: Some(3) })
-                .unwrap();
+        for k in [2_usize, 3] {
+            let model = KuramotoOscillator::new(
+                n,
+                k_strength,
+                0.1,
+                0.01,
+                CouplingMode::SparseKnn { k: Some(k) },
+            )
+            .unwrap();
+            let d = model.compute_derivatives(&state).unwrap();
+            let nbrs = build_phase_knn_index(&phase, k).unwrap();
+            // Per-edge weight is K/k (the 1/k normalization under test).
+            let per_edge = k_strength / (k as f64);
+            for i in 0..n {
+                let mut expected_coupling = 0.0_f64;
+                for &j in &nbrs[i] {
+                    expected_coupling +=
+                        per_edge * (phase[j] - phase[i]).sin() * state.amplitude[j];
+                }
+                let expected_dphase = state.frequency[i] + expected_coupling;
+                assert_relative_eq!(d.dphase[i], expected_dphase, epsilon = 1e-12);
 
-        let d_k2 = model_k2.compute_derivatives(&state).unwrap();
-        let d_k3 = model_k3.compute_derivatives(&state).unwrap();
-
-        // The coupling per edge is K/k. For k=2: K/2, for k=3: K/3.
-        // The total coupling sum depends on the neighbors, but the
-        // per-edge normalization is explicit: K/k.
-        // We verify the dfrequency uses 1/k:
-        // dfrequency = gamma * sin_sum / k
-        // So dfrequency_k3 / dfrequency_k2 should reflect the 1/k factor
-        // plus different neighbor sets. Just verify both are finite and
-        // the 1/k normalization is applied (not 1/N).
-        for i in 0..5 {
-            assert!(d_k2.dfrequency[i].is_finite());
-            assert!(d_k3.dfrequency[i].is_finite());
+                // Sanity: the 1/k result must differ from the 1/N result
+                // (k < N), proving the normalization is 1/k, not 1/N.
+                let per_edge_n = k_strength / (n as f64);
+                let mut n_coupling = 0.0_f64;
+                for &j in &nbrs[i] {
+                    n_coupling += per_edge_n * (phase[j] - phase[i]).sin() * state.amplitude[j];
+                }
+                if expected_coupling.abs() > 1e-10 {
+                    assert!(
+                        (expected_coupling - n_coupling).abs() > 1e-10,
+                        "osc {i} k={k}: 1/k coupling {expected_coupling} == 1/N coupling {n_coupling}"
+                    );
+                }
+            }
         }
 
-        // Explicit check: for k=2, K_eff = K/2 = 0.5; for k=3, K_eff = K/3 ≈ 0.333.
-        // The sparse code uses coupling_strength / k_eff for the per-edge weight.
-        // Verify by checking the dphase coupling term magnitude is consistent
-        // with K/k normalization (not K/N).
-        let k2_coupling = d_k2.dphase[0] - state.frequency[0];
-        let k3_coupling = d_k3.dphase[0] - state.frequency[0];
-        // Both should be non-zero (there is coupling) and finite.
-        assert!(k2_coupling.is_finite());
-        assert!(k3_coupling.is_finite());
+        // Explicit ratio check on oscillator 0: the k=2 and k=3 neighbour
+        // sets share two neighbours, so the per-edge weight ratio K/2 vs K/3
+        // = 3/2 shows up directly in the shared-neighbour contribution.
+        let nbrs2 = build_phase_knn_index(&phase, 2).unwrap();
+        let nbrs3 = build_phase_knn_index(&phase, 3).unwrap();
+        let shared: Vec<usize> = nbrs2[0]
+            .iter()
+            .filter(|j| nbrs3[0].contains(j))
+            .copied()
+            .collect();
+        let k2_shared: f64 = shared
+            .iter()
+            .map(|&j| (phase[j] - phase[0]).sin())
+            .sum::<f64>()
+            * (k_strength / 2.0);
+        let k3_shared: f64 = shared
+            .iter()
+            .map(|&j| (phase[j] - phase[0]).sin())
+            .sum::<f64>()
+            * (k_strength / 3.0);
+        if k2_shared.abs() > 1e-10 {
+            assert_relative_eq!(k2_shared / k3_shared, 3.0 / 2.0, epsilon = 1e-10);
+        }
     }
 
     #[test]
