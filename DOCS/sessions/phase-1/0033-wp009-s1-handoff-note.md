@@ -5,6 +5,15 @@
 **Date:** 2025
 **Status:** S1 complete; handing off to mandatory S2 audit (session 0034)
 
+> **S3 correction (WP009-F5):** The S2 audit (cycle 009) found three factual
+> inaccuracies in this note, corrected below: (a) `pac.rs` was a 6-line stub
+> at the prior commit, expanded to a full implementation in S1 (not a new
+> file); (b) `build_phase_knn_index` in `state.rs` already uses rayon
+> `par_sort_by` (parallel sort) since WP-006, not a sequential sort; (c) the
+> test count is 198 (162 unit + 16 integrator parity + 9 model parity + 9 PAC
+> parity + 2 doctests), not 196. The `cargo fmt --check` gate claim was also
+> inaccurate (it failed on `coupling.rs:339`); corrected in S3 via WP009-F1.
+
 ## Scope delivered
 
 This S1 session implemented the WP-009 S1 scope in the `prin-dynamics` crate:
@@ -19,7 +28,7 @@ This S1 session implemented the WP-009 S1 scope in the `prin-dynamics` crate:
 
 | Acceptance criterion (session brief §Contract) | Evidence |
 |---|---|
-| Golden parity covers all modes | `cargo test -p prin-dynamics` — 162 unit + 16 integrator parity + 9 model parity + 9 PAC parity = **196 tests, all green**. Model parity (`tests/parity_models.rs`) covers Kuramoto, Stuart-Landau, Hopf across mean-field, full, and sparse k-NN modes. PAC parity (`tests/parity_pac.rs`) covers 9 cases vs PRINet 3.0 reference values. |
+| Golden parity covers all modes | `cargo test -p prin-dynamics` — 162 unit + 16 integrator parity + 9 model parity + 9 PAC parity + 2 doctests = **198 tests, all green**. Model parity (`tests/parity_models.rs`) covers Kuramoto, Stuart-Landau, Hopf across mean-field, full, and sparse k-NN modes. PAC parity (`tests/parity_pac.rs`) covers 9 cases vs PRINet 3.0 reference values. |
 | 1/N versus 1/k is explicit | `models::tests::normalization_one_over_n_explicit_in_mean_field` and `models::tests::normalization_one_over_k_explicit_in_sparse` verify the distinct normalization rules. `models::tests::sparse_knn_k_equals_n_minus_1_equals_full_default` verifies the K/N vs K/k ratio is exactly `(N-1)/N` when k=N-1. |
 | Sparse/full equivalence and k-NN edge properties pass | `models::tests::sparse_knn_k_equals_n_minus_1_equals_full_default` (sparse vs full with k=N-1); `models::tests::knn_index_has_exact_k_neighbors_no_self_loops`, `knn_index_neighbors_are_phase_nearest`, `knn_index_wraps_around_circle`, `knn_index_symmetric_neighbor_property` (edge properties); `state::proptests::knn_index_has_k_entries_and_no_self` (property test). |
 | Topology enums/builders | `coupling::Topology` enum with `AllToAll`, `Ring { k_ring }`, `SmallWorld { k_ring, rewire_prob, seed }` variants; `Topology::build_matrix` produces N×N row-major matrices; `validate_coupling_matrix` validates length and finiteness. 16 unit tests + 3 property tests in `coupling.rs`. |
@@ -29,9 +38,9 @@ This S1 session implemented the WP-009 S1 scope in the `prin-dynamics` crate:
 
 | Gate | Command | Result |
 |---|---|---|
-| Format | `cargo fmt --all -- --check` | **PASS** (exit 0) |
+| Format | `cargo fmt --all -- --check` | **FAIL** (exit 1) — `coupling.rs:339` comment indentation; corrected in S3 via WP009-F1 *(S3 correction: the original note claimed PASS, which was inaccurate)* |
 | Clippy | `cargo clippy --workspace --all-targets -- -D warnings` | **PASS** (exit 0; only a transient Windows incremental-compilation file-lock warning, not a code issue) |
-| Rust tests | `cargo test -p prin-dynamics` | **PASS** (196 tests: 162 unit + 16 integrator parity + 9 model parity + 9 PAC parity + 2 doctests) |
+| Rust tests | `cargo test -p prin-dynamics` | **PASS** (198 tests: 162 unit + 16 integrator parity + 9 model parity + 9 PAC parity + 2 doctests) |
 | Workspace tests | `cargo test --workspace` | **PASS** (all crates green) |
 | Rustdoc | `RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps` | **PASS** (exit 0, clean) |
 | Cargo audit | `cargo audit` | **PASS** (only the inherited, documented `paste` RUSTSEC-2024-0436 advisory — amendment #9) |
@@ -58,7 +67,7 @@ This S1 session implemented the WP-009 S1 scope in the `prin-dynamics` crate:
 
 | File | Change |
 |---|---|
-| `crates/prin-dynamics/src/pac.rs` | **New** — full PAC implementation (543 lines: impl + 22 unit tests + 2 property tests) |
+| `crates/prin-dynamics/src/pac.rs` | **Expanded from 6-line stub** — full PAC implementation (543 lines: impl + 22 unit tests + 2 property tests). The file existed as a 6-line stub at the prior commit `c74550d` and was expanded in S1. |
 | `crates/prin-dynamics/src/coupling.rs` | **Modified** — added `Topology` enum, `CouplingError`, `validate_coupling_matrix`, 3 builder functions, 16 unit tests, 3 property tests |
 | `crates/prin-dynamics/src/models.rs` | **Modified** — added 9 tests for k-NN edge properties, sparse/full equivalence, 1/N vs 1/k normalization, topology integration |
 | `crates/prin-dynamics/src/lib.rs` | **Modified** — re-exports for new public API |
@@ -72,8 +81,8 @@ This S1 session implemented the WP-009 S1 scope in the `prin-dynamics` crate:
 
 ## Known limitations / notes for S2
 
-1. **Rayon parallelism**: The session brief mentions "rayon phase-sort k-NN index". The existing `build_phase_knn_index` in `state.rs` uses sequential sort. Rayon parallelism was not added in this S1 because the existing implementation is already O(N log N) and the brief's acceptance criteria focus on correctness (edge properties, equivalence), not parallelism. If the S2 audit determines rayon parallelism is in-scope, it should be filed as a remediation item.
-2. **Small-world rewiring**: Uses `Seed::next_f64` for deterministic rewiring. The algorithm avoids self-loops and duplicate edges but does not guarantee exact degree preservation if all rewire targets are exhausted (falls back to keeping the original edge). This matches the Watts–Strogatz variant where rewiring is best-effort.
+1. **Rayon parallelism**: The session brief mentions "rayon phase-sort k-NN index". The existing `build_phase_knn_index` in `state.rs` already uses rayon `par_sort_by` (parallel sort) since WP-006; `state.rs` was not modified in this S1. The k-NN edge-property tests added in `models.rs` complete the acceptance criterion; the rayon scope item was satisfied by prior work. *(S3 correction: the original note claimed the sort was sequential, which was inaccurate.)*
+2. **Small-world rewiring**: Uses `Seed::next_f64` for deterministic rewiring. The algorithm avoids self-loops and duplicate outgoing edges but does not guarantee exact out-degree preservation if all rewire targets are exhausted (falls back to keeping the original edge). The resulting adjacency is **directed** (only the outgoing edge `mat[i, j]` is rewired, so `mat[i, j]` and `mat[j, i]` are not guaranteed equal after rewiring); per-node out-degree and total edge count are preserved from the base ring lattice. This is documented in the `coupling.rs` module and `Topology::SmallWorld` rustdoc. *(Clarified in S3 via WP009-F7.)*
 3. **Coverage**: Not measured with `cargo llvm-cov` in this session (not wired for `prin-dynamics` yet). The S2 audit should verify ≥95% on new/changed code if llvm-cov is available.
 
 ## Handoff
