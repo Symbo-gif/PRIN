@@ -67,6 +67,7 @@ Documentation-accuracy findings only (E-F7, E-F8, E-F9); no mathematical or guar
   - 3 in `tools/wp001_baseline.py` (lines 339, 402, 759): operator-supplied CLI root argument flowing into path operations. The tool already validates the root (`_validate_root_path`); as a local, operator-invoked audit CLI the input is trusted by design. Accepted via `.snyk` policy exception with justification and expiry (E-F4), consistent with the amendment-#4 exception pattern.
   - CI gate unaffected: `snyk.yml` enforces the medium threshold (these are low).
 - **Snyk SCA**: the MCP-based `snyk_sca_scan` used by prior sessions is not configured in this session; CLI equivalents failed (`SNYK-CLI-0000` with `--command`, `SNYK-OS-0001` for `pyproject.toml`, `SNYK-OS-PYTHON-0013` for a freeze file). SCA coverage for this audit therefore rests on fresh `pip-audit` + `cargo audit` runs (both clean) plus the `python.yml` security job, which executes the project's Snyk SCA recipe (`uv pip compile` → `snyk test --file … --fail-on=all`, low threshold) on the push performed in Task 7 (E-F5).
+- **Dependabot posture (default branch)**: the Task 7 push surfaced 6 open GitHub Dependabot alerts — three pyo3 GHSAs (`GHSA-chgr-c6px-7xpp`, `GHSA-36hh-v3qg-5jq4`, patched in 0.29.0; `GHSA-pph8-gcv7-4qj5`, patched in 0.24.1) each reported against `Cargo.lock` and `crates/prin-py/Cargo.toml`. These are **not** findings against the audited branch, which pins `pyo3 0.29.0` (the WP-001-F1 remediation; `cargo audit` clean): Dependabot scans the default branch `main`, which still carries `pyo3 0.22` because no work package since WP-001 has been merged. The alerts will auto-close when this branch merges. Recorded as a pass-forward risk (see §4.2) rather than a deviation.
 
 ### E5: Standards & Documentation Adherence
 
@@ -144,6 +145,7 @@ Documentation-accuracy findings only (E-F7, E-F8, E-F9); no mathematical or guar
 ### 4.2 Pass-Forward Items (Scheduled for Future WPs/Sessions)
 
 - **E-F5 (environment):** Restore the Snyk MCP server configuration for local agent sessions so `snyk_sca_scan` is available outside CI. Owner: next session with MCP configuration access; interim gate = pip-audit + cargo audit + `python.yml` Snyk SCA job.
+- **Dependabot alerts on `main` (security posture):** 6 open pyo3 alerts exist because the default branch predates the WP-001-F1 pyo3 0.29.0 upgrade; the audited branch is not affected. Resolution path: merge the phase work into `main` per the project's phase cadence (alerts auto-close), or maintainer-directed dismissal with reason. Owner: maintainer, at the next merge decision.
 - **WP-010 (Sessions 0037–0040):** Phase metrics and chimera measures (`prin-metrics`). Brief READY; approval recorded in EA-002.
 - **WP-011 (Sessions 0041–0044):** Phase 1 Python API and dynamics integration — also owns the currently-stub Python sub-packages (`prin.datasets`, `prin.eval`, `prin.nn`, `prin.experiments`, `prin.reporting`).
 - **WP-012..WP-016 (Phase 2):** exponential/multi-rate integrators (`integrate.rs` stub scope), continuous band networks (`bands.rs`), temporal propagation (`temporal.rs`), sweeps + Phase 2 gate.
