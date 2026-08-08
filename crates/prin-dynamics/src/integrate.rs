@@ -51,6 +51,15 @@ pub enum IntegrateError {
         dt: f64,
     },
 
+    /// The relative or absolute tolerance is non-finite or non-positive.
+    #[error("invalid tolerance: {param}={value}")]
+    InvalidTolerance {
+        /// Name of the offending tolerance parameter (`"rtol"` or `"atol"`).
+        param: &'static str,
+        /// The offending tolerance value.
+        value: f64,
+    },
+
     /// The number of integration steps is zero.
     #[error("number of steps must be positive, got 0")]
     ZeroSteps,
@@ -173,9 +182,9 @@ fn make_final_state(
 }
 
 /// Under `strict-checks`, verify every state component is finite and return
-/// a typed error if not. Under non-strict, silently repair (the clamps above
-/// already handle non-finite amplitude; phase wrap of `NaN` yields `NaN` which
-/// is repaired to `0.0` here).
+/// a typed error if not. Under non-strict, only amplitude is repaired (via
+/// `clamp_amplitude` in `make_final_state`); non-finite phase or frequency
+/// values pass through silently and are only caught under `strict-checks`.
 fn check_finite(state: &OscillatorState) -> Result<(), IntegrateError> {
     #[cfg(feature = "strict-checks")]
     {
@@ -514,6 +523,11 @@ pub struct RK45Integrator {
     err_buf: Vec<f64>,
     /// Reusable `3N` fifth-order solution buffer.
     y5_buf: Vec<f64>,
+    /// Whether `ks[0]` holds a valid FSAL cache (k7 from the previous accepted
+    /// step within the *current* `integrate_adaptive` call). Invalidated at the
+    /// start of each call so that a reused integrator recomputes k1 for the new
+    /// initial state.
+    fsal_valid: bool,
 }
 
 impl RK45Integrator {
@@ -525,10 +539,16 @@ impl RK45Integrator {
     /// non-positive, or if `max_steps` is zero.
     pub fn new(rtol: f64, atol: f64, max_steps: usize) -> Result<Self, IntegrateError> {
         if !rtol.is_finite() || rtol <= 0.0 {
-            return Err(IntegrateError::InvalidTimestep { dt: rtol });
+            return Err(IntegrateError::InvalidTolerance {
+                param: "rtol",
+                value: rtol,
+            });
         }
         if !atol.is_finite() || atol < 0.0 {
-            return Err(IntegrateError::InvalidTimestep { dt: atol });
+            return Err(IntegrateError::InvalidTolerance {
+                param: "atol",
+                value: atol,
+            });
         }
         if max_steps == 0 {
             return Err(IntegrateError::ZeroSteps);
@@ -543,6 +563,7 @@ impl RK45Integrator {
             freq_buf: Vec::new(),
             err_buf: Vec::new(),
             y5_buf: Vec::new(),
+            fsal_valid: false,
         })
     }
 
@@ -645,6 +666,9 @@ impl RK45Integrator {
         if !t_span.is_finite() || t_span <= 0.0 {
             return Err(IntegrateError::InvalidTimestep { dt: t_span });
         }
+        // Invalidate FSAL cache at the start of each integration so a reused
+        // integrator recomputes k1 for the new initial state (WP008-F1).
+        self.fsal_valid = false;
         let n = state.phase.len();
         let mut current = state.clone();
         let mut t = 0.0_f64;
@@ -712,8 +736,8 @@ impl RK45Integrator {
                 v
             };
 
-            // k1 = f(y_n) — FSAL: reuse k7 from previous accepted step when possible.
-            if self.ks[0].len() != 3 * n {
+            // k1 = f(y_n) — FSAL: reuse k7 from previous accepted step when valid.
+            if !self.fsal_valid || self.ks[0].len() != 3 * n {
                 let d1 = model.compute_derivatives(&current)?;
                 self.flatten_into(&d1, n, 0);
             }
@@ -884,6 +908,7 @@ impl RK45Integrator {
                 current = make_final_state(&current, phase, amplitude, frequency)?;
                 // FSAL: k1 for next step = k7 of this step.
                 self.ks[0] = self.ks[6].clone();
+                self.fsal_valid = true;
                 if let Some(ref mut traj) = trajectory {
                     traj.push(current.clone());
                 }
@@ -905,6 +930,7 @@ impl RK45Integrator {
                 dt = (dt * factor).max(MIN_DT);
                 // Invalidate FSAL cache — k1 must be recomputed.
                 self.ks[0].clear();
+                self.fsal_valid = false;
             }
         }
 
@@ -1348,9 +1374,27 @@ mod tests {
 
     #[test]
     fn rk45_rejects_invalid_tolerances() {
-        assert!(RK45Integrator::new(0.0, 1e-8, 100).is_err());
-        assert!(RK45Integrator::new(1e-6, f64::NAN, 100).is_err());
-        assert!(RK45Integrator::new(1e-6, 1e-8, 0).is_err());
+        // WP008-F5: assert the specific InvalidTolerance variant, not just is_err().
+        assert!(matches!(
+            RK45Integrator::new(0.0, 1e-8, 100).unwrap_err(),
+            IntegrateError::InvalidTolerance {
+                param: "rtol",
+                value: 0.0
+            }
+        ));
+        assert!(matches!(
+            RK45Integrator::new(1e-6, f64::NAN, 100).unwrap_err(),
+            IntegrateError::InvalidTolerance { param: "atol", .. }
+        ));
+        assert!(matches!(
+            RK45Integrator::new(1e-6, 1e-8, 0).unwrap_err(),
+            IntegrateError::ZeroSteps
+        ));
+        // Negative atol is also invalid.
+        assert!(matches!(
+            RK45Integrator::new(1e-6, -1e-8, 100).unwrap_err(),
+            IntegrateError::InvalidTolerance { param: "atol", .. }
+        ));
     }
 
     #[test]
@@ -1361,6 +1405,146 @@ mod tests {
         let mut rk45 = RK45Integrator::new(1e-12, 1e-14, 5).unwrap();
         let err = rk45.integrate_adaptive(&model, &state, 1.0, 0.001, false);
         assert!(matches!(err, Err(IntegrateError::ToleranceNotMet { .. })));
+    }
+
+    // ------------------------------------------------------------------
+    // WP008-F1: FSAL cache invalidation on integrator reuse
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn rk45_fsal_cache_invalidated_on_reuse() {
+        // Reusing an RK45Integrator across two integrate_adaptive calls with
+        // different initial states (same n) must produce identical results to
+        // fresh integrators. Before the fix, the stale k7 from the first call
+        // was used as k1 for the first step of the second call.
+        let model =
+            KuramotoOscillator::new(2, 1.0, 0.1, 0.01, crate::coupling::CouplingMode::MeanField)
+                .unwrap();
+        let state_a =
+            OscillatorState::new(vec![0.1, 0.5], vec![1.0, 1.2], vec![1.0, 2.0], None).unwrap();
+        let state_b =
+            OscillatorState::new(vec![1.2, 0.3], vec![0.9, 1.5], vec![2.0, 1.0], None).unwrap();
+        let t_span = 0.05_f64;
+        let dt_init = 0.01_f64;
+
+        // Reused integrator: two sequential calls with different states.
+        let mut reused = RK45Integrator::new(1e-8, 1e-10, 10_000).unwrap();
+        let res_reused_a = reused
+            .integrate_adaptive(&model, &state_a, t_span, dt_init, false)
+            .unwrap();
+        let res_reused_b = reused
+            .integrate_adaptive(&model, &state_b, t_span, dt_init, false)
+            .unwrap();
+
+        // Fresh integrators: one per call.
+        let mut fresh_a = RK45Integrator::new(1e-8, 1e-10, 10_000).unwrap();
+        let res_fresh_a = fresh_a
+            .integrate_adaptive(&model, &state_a, t_span, dt_init, false)
+            .unwrap();
+        let mut fresh_b = RK45Integrator::new(1e-8, 1e-10, 10_000).unwrap();
+        let res_fresh_b = fresh_b
+            .integrate_adaptive(&model, &state_b, t_span, dt_init, false)
+            .unwrap();
+
+        // Reused results must match fresh results bit-for-bit.
+        for i in 0..2 {
+            assert_relative_eq!(
+                res_reused_a.final_state.phase[i],
+                res_fresh_a.final_state.phase[i],
+                epsilon = 0.0
+            );
+            assert_relative_eq!(
+                res_reused_a.final_state.amplitude[i],
+                res_fresh_a.final_state.amplitude[i],
+                epsilon = 0.0
+            );
+            assert_relative_eq!(
+                res_reused_a.final_state.frequency[i],
+                res_fresh_a.final_state.frequency[i],
+                epsilon = 0.0
+            );
+            assert_relative_eq!(
+                res_reused_b.final_state.phase[i],
+                res_fresh_b.final_state.phase[i],
+                epsilon = 0.0
+            );
+            assert_relative_eq!(
+                res_reused_b.final_state.amplitude[i],
+                res_fresh_b.final_state.amplitude[i],
+                epsilon = 0.0
+            );
+            assert_relative_eq!(
+                res_reused_b.final_state.frequency[i],
+                res_fresh_b.final_state.frequency[i],
+                epsilon = 0.0
+            );
+        }
+        assert_eq!(res_reused_b.accepted_steps, res_fresh_b.accepted_steps);
+        assert_eq!(res_reused_b.rejected_steps, res_fresh_b.rejected_steps);
+    }
+
+    // ------------------------------------------------------------------
+    // WP008-F2: NonFiniteValue error path under strict-checks
+    // ------------------------------------------------------------------
+
+    /// A dynamics model that returns non-finite derivatives, bypassing
+    /// `StateDerivatives::new` guards by constructing the struct directly.
+    /// Used to exercise the `IntegrateError::NonFiniteValue` path in
+    /// `check_finite` under `strict-checks`.
+    #[cfg(feature = "strict-checks")]
+    struct NanDynamics;
+
+    #[cfg(feature = "strict-checks")]
+    impl Dynamics for NanDynamics {
+        fn compute_derivatives(
+            &self,
+            state: &OscillatorState,
+        ) -> Result<StateDerivatives, StateError> {
+            let n = state.phase.len();
+            Ok(StateDerivatives {
+                dphase: vec![f64::NAN; n],
+                damplitude: vec![0.0; n],
+                dfrequency: vec![0.0; n],
+            })
+        }
+    }
+
+    #[cfg(feature = "strict-checks")]
+    #[test]
+    fn strict_check_non_finite_value_error() {
+        // WP008-F2: under strict-checks, a non-finite phase produced by the
+        // integrator must be caught by check_finite and returned as
+        // IntegrateError::NonFiniteValue.
+        let model = NanDynamics;
+        let state = make_state(1, 0.0, 1.0, 1.0);
+        let mut euler = EulerIntegrator::new();
+        let err = euler.step(&model, &state, 0.01).unwrap_err();
+        assert!(matches!(
+            err,
+            IntegrateError::NonFiniteValue {
+                field: "phase",
+                index: 0,
+                ..
+            }
+        ));
+    }
+
+    #[cfg(feature = "strict-checks")]
+    #[test]
+    fn strict_check_non_finite_value_rk4() {
+        // WP008-F2: same path via RK4.
+        let model = NanDynamics;
+        let state = make_state(1, 0.0, 1.0, 1.0);
+        let mut rk4 = RK4Integrator::new();
+        let err = rk4.step(&model, &state, 0.01).unwrap_err();
+        assert!(matches!(
+            err,
+            IntegrateError::NonFiniteValue {
+                field: "phase",
+                index: 0,
+                ..
+            }
+        ));
     }
 
     // ------------------------------------------------------------------

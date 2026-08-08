@@ -9,8 +9,8 @@
 //!   entry points (Philox/PCG64).
 //! - [`models`] — Kuramoto (mean-field, pairwise, sparse k-NN), Stuart–Landau, and
 //!   Hopf dynamics behind the `Dynamics` trait.
-//! - [`integrate`] — Euler, RK4, adaptive RK45, exponential (direct + Krylov), and
-//!   multi-rate sub-stepped RK4 integrators behind the `Integrator` trait.
+//! - [`integrate`] — Euler, RK4, and adaptive RK45 (Dormand–Prince) integrators
+//!   behind the `Integrator` trait.
 //! - [`pac`] — phase–amplitude coupling: `A_fast = A₀·[1 + m·cos(φ_slow + offset)]`.
 //! - [`coupling`] — mean-field, ring, small-world, sparse k-NN, delayed,
 //!   directed/weighted coupling topologies (enum-dispatched).
