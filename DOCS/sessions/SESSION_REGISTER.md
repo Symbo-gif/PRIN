@@ -43,7 +43,7 @@ the next numbered session; planned numbers do not change.
 | 0028 | 1 | WP-007 | S4 — Documentation | [Oscillator dynamics models](phase-1/0028-wp007-s4-oscillator-dynamics-models.md) | COMPLETE |
 | 0029 | 1 | WP-008 | S1 — Coding | [Basic integrators](phase-1/0029-wp008-s1-basic-integrators.md) | COMPLETE |
 | 0030 | 1 | WP-008 | S2 — Audit | [Basic integrators](phase-1/0030-wp008-s2-basic-integrators.md) | COMPLETE |
-| 0031 | 1 | WP-008 | S3 — Remediation | [Basic integrators](phase-1/0031-wp008-s3-basic-integrators.md) | PLANNED |
+| 0031 | 1 | WP-008 | S3 — Remediation | [Basic integrators](phase-1/0031-wp008-s3-basic-integrators.md) | COMPLETE |
 | 0032 | 1 | WP-008 | S4 — Documentation | [Basic integrators](phase-1/0032-wp008-s4-basic-integrators.md) | PLANNED |
 | 0033 | 1 | WP-009 | S1 — Coding | [PAC, coupling topologies, and phase k-NN](phase-1/0033-wp009-s1-pac-coupling-topologies-and-phase-k-nn.md) | PLANNED |
 | 0034 | 1 | WP-009 | S2 — Audit | [PAC, coupling topologies, and phase k-NN](phase-1/0034-wp009-s2-pac-coupling-topologies-and-phase-k-nn.md) | PLANNED |
