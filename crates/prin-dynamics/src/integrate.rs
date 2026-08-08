@@ -308,7 +308,7 @@ impl Integrator for EulerIntegrator {
 /// ```
 ///
 /// Intermediate stages are built without phase wrapping (matching PRINet's
-/// `_make_state`); all model phase operations are `2π`-periodal so this is
+/// `_make_state`); all model phase operations are `2π`-periodic so this is
 /// exact. The four derivative evaluations and intermediate state arrays use
 /// explicit reusable buffers.
 #[derive(Clone, Debug)]

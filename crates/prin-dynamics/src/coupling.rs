@@ -121,11 +121,12 @@ pub enum Topology {
     /// Watts–Strogatz small-world network (directed variant).
     ///
     /// Starts from a [`Topology::Ring`] lattice with `k_ring` neighbours and
-    /// rewires each **outgoing** edge to a random target with probability
-    /// `rewire_prob`. Rewiring uses the supplied [`Seed`] for deterministic
-    /// reproducibility. Edge weights remain `K / k_ring` (with `k_ring`
-    /// clamped to the largest even number `<= N - 1`); self-loops and
-    /// duplicate outgoing edges are avoided. The diagonal is always zero.
+    /// rewires each node's **forward** (right-neighbour) outgoing edges to a
+    /// random target with probability `rewire_prob`; the left-neighbour
+    /// outgoing edges are retained. Rewiring uses the supplied [`Seed`] for
+    /// deterministic reproducibility. Edge weights remain `K / k_ring` (with
+    /// `k_ring` clamped to the largest even number `<= N - 1`); self-loops
+    /// and duplicate outgoing edges are avoided. The diagonal is always zero.
     ///
     /// The resulting adjacency is **directed**: only the outgoing edge
     /// `mat[i, j]` is rewired, so `mat[i, j]` and `mat[j, i]` are not
@@ -263,9 +264,10 @@ fn build_ring(n: usize, k_ring: usize, k: f64) -> Result<Vec<f64>, CouplingError
 
 /// Build a Watts–Strogatz small-world coupling matrix.
 ///
-/// Starts from a ring lattice, then rewires each **outgoing** edge `i → j`
-/// to a random target `j'` with probability `rewire_prob`. Self-loops and
-/// duplicate outgoing edges are avoided. Edge weights remain
+/// Starts from a ring lattice, then rewires each node's **forward**
+/// (right-neighbour) outgoing edges `i → (i + d)` to a random target with
+/// probability `rewire_prob`; left-neighbour outgoing edges are retained.
+/// Self-loops and duplicate outgoing edges are avoided. Edge weights remain
 /// `K / k_ring` (with `k_ring` clamped to the largest even number `<= N - 1`,
 /// matching [`build_ring`]).
 ///
