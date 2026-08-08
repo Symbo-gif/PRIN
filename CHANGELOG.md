@@ -75,6 +75,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- PR #6 CI remediation (first full execution of the pull-request gates, which had never run on the feature branch):
+  - `python.yml` lint job now installs `hypothesis` so `mypy --strict` type-checks `prin.parity.strategies` against the real `st.composite` types; without it, CI saw an untyped decorator (`untyped-decorator` at `strategies.py:107`) while local venv runs always had hypothesis present.
+  - `test_npu` in `tests/test_ort_backends.py` now uses `tmp_path` for the ORT cache directory instead of a hardcoded `/fake/cache` path that cannot be created at the filesystem root on Linux runners (`PermissionError`); the ubuntu test-matrix failures are fixed without changing Windows/macOS behavior.
+  - `parity.yml` now creates an explicit virtual environment before `maturin develop` (mirroring `python.yml`); the job had been skipped by the corpus guard until PR #6, and its first real run failed because `maturin develop` requires a venv.
 - WP-008 S3 remediation (audit findings WP008-F1–F5, commit `f97ba5c`):
   - WP008-F1: Fixed FSAL cache invalidation in `RK45Integrator::integrate_adaptive` — added `fsal_valid: bool` flag invalidated at the start of each call and on rejected steps; regression test `rk45_fsal_cache_invalidated_on_reuse` asserts bit-identical results for reused vs fresh integrators.
   - WP008-F2: Added `NonFiniteValue` error-path test coverage under `strict-checks` (Euler and RK4) via a `NanDynamics` test helper; `integrate.rs` line coverage rose from 96.66% to 97.48%.

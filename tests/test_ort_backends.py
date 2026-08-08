@@ -135,12 +135,12 @@ class TestBuildProviderList:
         assert providers == ["DmlExecutionProvider", "CPUExecutionProvider"]
         assert options == [{}, {}]
 
-    def test_npu(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_npu(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         def _fake_firmware() -> Path:
-            return Path("/fake/firmware.xclbin")
+            return tmp_path / "firmware.xclbin"
 
         monkeypatch.setattr("prin._ort._resolve_firmware_path", _fake_firmware)
-        monkeypatch.setattr("prin._ort._CACHE_DIR", Path("/fake/cache"))
+        monkeypatch.setattr("prin._ort._CACHE_DIR", tmp_path / "cache")
         providers, options = build_provider_list("npu")
         assert providers == ["VitisAIExecutionProvider", "CPUExecutionProvider"]
         assert Path(options[0]["xclbin"]).name == "firmware.xclbin"
