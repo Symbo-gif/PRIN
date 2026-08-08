@@ -1,6 +1,6 @@
 # Session 0035 — WP-009 S3: Remediation — PAC, coupling topologies, and phase k-NN
 
-**Status:** PLANNED  
+**Status:** COMPLETE
 **Roadmap phase:** 1 — Dynamics core  
 **Execution unit:** WP-009  
 **Session type:** S3 — Remediation  
