@@ -23,6 +23,7 @@ _EVIDENCE_OUTPUT = Path("DOCS/baselines")
 _EXCLUDED_FILES = frozenset({".coverage", "coverage.xml"})
 _EXCLUDED_DIRECTORIES = frozenset(
     {
+        ".aicb",
         ".benchmarks",
         ".git",
         ".hypothesis",

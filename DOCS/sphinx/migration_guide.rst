@@ -67,3 +67,18 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   RK4 order-``h^4`` convergence and RK45 tolerance properties are asserted in
   both unit and parity tests. Exponential and multi-rate integrators are
   Phase 2 (WP-012) non-goals. Python bindings are deferred to WP-011.
+- ``prin-dynamics`` phase–amplitude coupling and coupling topologies (WP-009) —
+  Rust ``PhaseAmplitudeCoupling`` struct implementing cross-frequency PAC
+  ``A_fast = A_0·[1 + m·cos(φ_slow + offset)]`` with mean slow-band phase,
+  broadcast modulation, and amplitude clamp ``[1e-6, 10]``. Replaces PRINet 3.0's
+  Python ``PhaseAmplitudeCoupling`` in ``core/propagation/coupling.py``. The Rust
+  implementation uses ``f64`` arithmetic; PRINet 3.0's ``torch.complex64`` (f32)
+  internal arithmetic produces up to ~``1e-7`` drift on the modulation path, so
+  PAC parity tests use a ``1e-6`` tolerance (amendment #14). Also adds the
+  ``Topology`` enum (``AllToAll``, ``Ring``, ``SmallWorld``) with ``build_matrix``
+  builders producing ``N × N`` coupling matrices with ``K / degree`` per-edge
+  normalization, the ``CouplingError`` and ``PacError`` typed error enums, and the
+  ``validate_coupling_matrix`` helper. The ``SmallWorld`` variant is a **directed**
+  Watts–Strogatz rewiring (outgoing edges only); ``k_ring`` is clamped to the
+  largest even number ``≤ N - 1`` to preserve the ``K / degree`` energy invariant.
+  Python bindings are deferred to WP-011.

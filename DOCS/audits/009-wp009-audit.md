@@ -244,7 +244,7 @@ validate.
 - WP-008 Project State Report: `DOCS/reports/008-project-state.md` — exists, declares
   WP-009. ✓
 - Session register: 0033 (S1) marked READY, 0034 (S2) marked PLANNED. ✓
-- S1 handoff note: `DOCS/sessions/phase-1/0033-wp009-s1-handoff-note.md` — committed. ✓
+- S1 handoff note: `DOCS/sessions/phase-1/wp009-s1-handoff-note.md` — committed. ✓
 
 **Finding WP009-F5 (D4):** The S1 handoff note contains three factual inaccuracies:
 (a) `pac.rs` is described as "**New** — full PAC implementation" when it was actually
@@ -263,7 +263,7 @@ criteria but violate the evidence-based-claims principle (§1.4).
 | WP009-F2 | D2 | `crates/prin-dynamics/src/models.rs:1756–1780` | `normalization_one_over_k_explicit_in_sparse` only asserts `is_finite()` — does not verify the 1/k normalization despite its name | S1 brief prohibited list ("weakened assertions"); Testing Standards | Add explicit ratio assertion (e.g., `d_k2_coupling / d_k3_coupling ≈ 3/2` for K/2 vs K/3) or assert specific derivative values |
 | WP009-F3 | D3 | `crates/prin-dynamics/src/coupling.rs:214–220` (`build_ring`), `coupling.rs:256–257` (`build_small_world`) | When `k_ring` is clamped to an odd `n-1`, weight uses `K/k_ring` (odd) but only `2*(k_ring/2)` edges are created — violates "K/degree per edge" normalization | Plan §4 (architecture rules — normalization invariants); coupling.rs module docs | Clamp `k_ring` to the nearest even number ≤ `n-1`, or use `2*half` as the weight denominator |
 | WP009-F4 | D3 | `crates/prin-dynamics/src/pac.rs:105–116` (`with_clamp`) | `with_clamp` does not validate `amp_min <= amp_max` or finiteness — `f64::clamp` panics if `min > max` | Coding Standards (public API input validation) | Add validation: `amp_min.is_finite() && amp_max.is_finite() && amp_min <= amp_max`; return a new `PacError::InvalidClampRange` variant; add regression test |
-| WP009-F5 | D4 | `DOCS/sessions/phase-1/0033-wp009-s1-handoff-note.md` | Three factual errors: pac.rs was a stub (not "New"), k-NN uses rayon (not "sequential sort"), test count is 198 (not 196) | Development Workflow Standards §1.4 (evidence-based claims) | Correct the handoff note: pac.rs "expanded from stub", k-NN "already uses rayon `par_sort_by`", test count "198" |
+| WP009-F5 | D4 | `DOCS/sessions/phase-1/wp009-s1-handoff-note.md` | Three factual errors: pac.rs was a stub (not "New"), k-NN uses rayon (not "sequential sort"), test count is 198 (not 196) | Development Workflow Standards §1.4 (evidence-based claims) | Correct the handoff note: pac.rs "expanded from stub", k-NN "already uses rayon `par_sort_by`", test count "198" |
 | WP009-F6 | D4 | `crates/prin-dynamics/src/coupling.rs:376–379` | `topology_ring_clamps_k_to_n_minus_1` test comment says "we clamp before the odd check" but the code checks oddness *before* clamping; test only checks edge count, not weight | Testing Standards (test accuracy) | Fix comment to "odd check is before clamp"; add weight assertion to catch WP009-F3 |
 | WP009-F7 | D4 | `crates/prin-dynamics/src/coupling.rs:240–280` (`build_small_world`) | Rewiring only rewires right-neighbour edges, producing a directed graph; standard Watts–Strogatz is undirected; module docs don't clarify | Documentation Standards (module docs should match standard algorithm) | Either maintain symmetry by rewiring both (i,j) and (j,i), or document that the topology is directed in the module rustdoc |
 

@@ -50,6 +50,7 @@ coverage.xml
 # IDEs
 .idea/
 .vscode/
+.aicb/
 
 # OS
 .DS_Store

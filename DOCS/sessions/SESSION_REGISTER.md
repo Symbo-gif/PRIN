@@ -48,8 +48,8 @@ the next numbered session; planned numbers do not change.
 | 0033 | 1 | WP-009 | S1 — Coding | [PAC, coupling topologies, and phase k-NN](phase-1/0033-wp009-s1-pac-coupling-topologies-and-phase-k-nn.md) | COMPLETE |
 | 0034 | 1 | WP-009 | S2 — Audit | [PAC, coupling topologies, and phase k-NN](phase-1/0034-wp009-s2-pac-coupling-topologies-and-phase-k-nn.md) | COMPLETE |
 | 0035 | 1 | WP-009 | S3 — Remediation | [PAC, coupling topologies, and phase k-NN](phase-1/0035-wp009-s3-pac-coupling-topologies-and-phase-k-nn.md) | COMPLETE |
-| 0036 | 1 | WP-009 | S4 — Documentation | [PAC, coupling topologies, and phase k-NN](phase-1/0036-wp009-s4-pac-coupling-topologies-and-phase-k-nn.md) | PLANNED |
-| 0037 | 1 | WP-010 | S1 — Coding | [Phase metrics and chimera measures](phase-1/0037-wp010-s1-phase-metrics-and-chimera-measures.md) | PLANNED |
+| 0036 | 1 | WP-009 | S4 — Documentation | [PAC, coupling topologies, and phase k-NN](phase-1/0036-wp009-s4-pac-coupling-topologies-and-phase-k-nn.md) | COMPLETE |
+| 0037 | 1 | WP-010 | S1 — Coding | [Phase metrics and chimera measures](phase-1/0037-wp010-s1-phase-metrics-and-chimera-measures.md) | READY |
 | 0038 | 1 | WP-010 | S2 — Audit | [Phase metrics and chimera measures](phase-1/0038-wp010-s2-phase-metrics-and-chimera-measures.md) | PLANNED |
 | 0039 | 1 | WP-010 | S3 — Remediation | [Phase metrics and chimera measures](phase-1/0039-wp010-s3-phase-metrics-and-chimera-measures.md) | PLANNED |
 | 0040 | 1 | WP-010 | S4 — Documentation | [Phase metrics and chimera measures](phase-1/0040-wp010-s4-phase-metrics-and-chimera-measures.md) | PLANNED |

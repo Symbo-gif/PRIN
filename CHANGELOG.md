@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `integrate_fixed` free function for multi-step fixed-step integration with any `Integrator`.
   - `IntegrateError` enum with seven typed variants: `InvalidTimestep`, `InvalidTolerance`, `ZeroSteps`, `Dynamics`, `ToleranceNotMet`, `StepSizeUnderflow`, `NonFiniteValue` (the latter under `strict-checks`).
   - Rust-vs-PRINet 3.0 trajectory parity tests in `crates/prin-dynamics/tests/parity_integrators.rs` (16 golden-trajectory cases) comparing Euler and RK4 against `torch.float64` reference values at `rtol=1e-6, atol=1e-8` (and tighter for pure f64 paths); RK4 order-`h^4` convergence and RK45 tolerance-property parity tests.
+- WP-009 PAC, coupling topologies, and phase k-NN in `prin-dynamics`:
+  - `PhaseAmplitudeCoupling` struct implementing cross-frequency phase–amplitude coupling `A_fast = A₀·[1 + m·cos(φ_slow + offset)]` with mean slow-band phase, broadcast modulation, and amplitude clamp `[AMPLITUDE_MIN, AMPLITUDE_MAX]`; `new` / `with_clamp` constructors validate modulation depth `m ∈ [0, 1]` and clamp range finiteness/ordering.
+  - `PacError` typed error enum with five variants: `InvalidModulationDepth`, `EmptyInput`, `NonFiniteValue`, `InvalidPhaseOffset`, `InvalidClampRange`.
+  - `Topology` enum (`AllToAll`, `Ring { k_ring }`, `SmallWorld { k_ring, rewire_prob, seed }`) with `build_matrix` builders that produce `N × N` coupling matrices with `K / degree` per-edge normalization; `SmallWorld` is a directed Watts–Strogatz rewiring variant (outgoing edges only, deterministic `Seed`).
+  - `CouplingError` typed error enum and `validate_coupling_matrix` helper for matrix length/finiteness validation.
+  - `k_ring` clamped to the largest even number `≤ N - 1` in `Ring` and `SmallWorld` builders to preserve the `K / degree` energy invariant (total coupling energy per oscillator = `K`).
+  - Explicit 1/N versus 1/k normalization tests (`sparse_knn_k_equals_n_minus_1_equals_full_default`, `normalization_one_over_n_explicit_in_mean_field`, `normalization_one_over_k_explicit_in_sparse`), sparse/full equivalence, and k-NN edge-property tests (5 edge-property tests + 1 proptest + topology equivalence).
+  - Rust-vs-PRINet 3.0 PAC parity tests in `crates/prin-dynamics/tests/parity_pac.rs` (9 golden cases) comparing `PhaseAmplitudeCoupling::modulate` against hard-coded PRINet 3.0 reference values at `epsilon = 1e-6` (amendment #14 f32-truncation tolerance).
 
 ### Changed
 
@@ -57,6 +65,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - WP008-F3: Corrected `check_finite` doc comment to accurately describe non-strict behavior (amplitude repaired via `clamp_amplitude`; non-finite phase/frequency pass through silently and are only caught under `strict-checks`).
   - WP008-F4: Updated `lib.rs` `integrate` module doc to list only implemented integrators (Euler, RK4, adaptive RK45/Dormand–Prince); removed stale "exponential (direct + Krylov), and multi-rate sub-stepped RK4" text from the pre-S1 stub.
   - WP008-F5: Added `IntegrateError::InvalidTolerance { param, value }` variant; `RK45Integrator::new` now returns `InvalidTolerance` instead of reusing `InvalidTimestep` for tolerance validation; updated `rk45_rejects_invalid_tolerances` to assert the specific variant.
+- WP-009 S3 remediation (audit findings WP009-F1–F7, commits `b4749ba`, `bf46cee`):
+  - WP009-F1: Fixed `cargo fmt` failure on `coupling.rs` test comment indentation by restructuring the `topology_ring_basic` trailing comment.
+  - WP009-F2: Strengthened `normalization_one_over_k_explicit_in_sparse` to assert the explicit `K/k` per-edge weight against the actual k-NN neighbour set (distinguishing 1/k from 1/N via a 1/N divergence check) plus a shared-neighbour `K/2` vs `K/3` = 3/2 ratio check, replacing the prior `is_finite()`-only assertions.
+  - WP009-F3: Fixed `build_ring`/`build_small_world` odd-clamp normalization by clamping `k_ring` to the largest even number `≤ n-1` (new `clamp_ring_k` helper) so per-node degree == `k_ring` and the `K/degree`-per-edge energy invariant (total == `K`) holds; added regression tests for both builders.
+  - WP009-F4: Added `amp_min`/`amp_max` finiteness and `amp_min <= amp_max` validation to `PhaseAmplitudeCoupling::with_clamp` via a new `PacError::InvalidClampRange` variant (prevents `f64::clamp` panic on inverted range); added inverted/non-finite/equal-bound regression tests.
+  - WP009-F5: Corrected S1 handoff note factual errors (`pac.rs` expanded from stub, k-NN uses rayon `par_sort_by`, test count 198).
+  - WP009-F6: Corrected `topology_ring_clamps_k_to_n_minus_1` test comment and added exact degree + per-edge weight + total-energy assertions.
+  - WP009-F7: Documented the directed-rewiring interpretation of `build_small_world` in the module rustdoc and `Topology::SmallWorld` variant doc (outgoing-edge rewiring preserves out-degree and total edge count but not symmetry).
 
 ## [0.1.0-alpha.1] - 2026-08-07
 

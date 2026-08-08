@@ -52,3 +52,35 @@ and RK45 tolerance-property (tighter tolerance → smaller error) are asserted i
 both unit and parity tests. The adaptive RK45 (Dormand–Prince) integrator is
 validated by property and unit tests rather than direct PRINet trajectory
 parity, since PRINet 3.0 did not ship an adaptive RK45 reference path.
+
+WP-009 — PAC and coupling topology parity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Rust ``PhaseAmplitudeCoupling::modulate`` is compared against hard-coded PRINet
+3.0 reference values in ``crates/prin-dynamics/tests/parity_pac.rs`` (9 golden
+cases covering basic modulation, default/max/zero depth, single oscillator,
+different sizes, phase offset, and amplitude clamping at both the lower and
+upper bounds). The modulation formula
+``A_out = A_in · [1 + m · cos(mean(φ_slow) + offset)]`` is verified by
+hand-computation to full ``f64`` precision against the reference values; the
+parity tolerance is ``1e-6`` (amendment #14 f32-truncation tolerance, since
+PRINet 3.0's internal ``torch.complex64`` arithmetic introduces up to ~``1e-7``
+drift on the modulation path).
+
+The ``1/N`` versus ``1/k`` normalization distinction is asserted by three
+tests: ``sparse_knn_k_equals_n_minus_1_equals_full_default`` verifies the exact
+``(N-1)/N`` ratio between sparse (``K/k`` with ``k=N-1``) and full (``K/N``)
+coupling; ``normalization_one_over_n_explicit_in_mean_field`` verifies specific
+derivative values for the synchronized state under mean-field coupling; and
+``normalization_one_over_k_explicit_in_sparse`` asserts the explicit ``K/k``
+per-edge weight against the actual ``build_phase_knn_index`` neighbour set for
+``k=2`` and ``k=3`` (distinguishing ``1/k`` from ``1/N`` via a ``1/N`` divergence
+check) plus a shared-neighbour ``K/2`` vs ``K/3`` = ``3/2`` ratio check.
+
+Sparse/full equivalence and k-NN edge properties are covered by 5 edge-property
+tests (exact ``k`` neighbours, no self-loops, phase-nearest ordering, symmetric
+neighbour property, wrap-around), 1 proptest, and a topology equivalence test.
+The ``K / degree`` normalization invariant (total coupling energy per oscillator
+= ``K``) is asserted for the odd-clamp case in both ``Ring`` and ``SmallWorld``
+builders via ``topology_ring_odd_clamp_preserves_k_over_degree_invariant`` and
+``topology_small_world_odd_clamp_preserves_edge_count_and_energy``.
