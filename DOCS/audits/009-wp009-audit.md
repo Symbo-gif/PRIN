@@ -320,12 +320,86 @@ The WP-009 acceptance criteria are met:
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP009-F1 | | | |
-| WP009-F2 | | | |
-| WP009-F3 | | | |
-| WP009-F4 | | | |
-| WP009-F5 | | | |
-| WP009-F6 | | | |
-| WP009-F7 | | | |
+| WP009-F1 | FIXED | `b4749ba` | `cargo fmt --all -- --check` → exit 0 (no diff). Restructured `topology_ring_basic` trailing comment so rustfmt produces clean output. |
+| WP009-F2 | FIXED | `b4749ba` | `normalization_one_over_k_explicit_in_sparse` now asserts the explicit `K/k` per-edge weight against the actual `build_phase_knn_index` neighbour set for k=2 and k=3 (distinguishing 1/k from 1/N via a 1/N divergence check), plus a shared-neighbour `K/2` vs `K/3` = 3/2 ratio check. Replaces the prior `is_finite()`-only assertions. Test passes (`cargo test -p prin-dynamics --lib normalization`). |
+| WP009-F3 | FIXED | `b4749ba` | New `clamp_ring_k` helper clamps `k_ring` to the largest even number `<= n-1`; `build_ring` and `build_small_world` use it so per-node degree == `k_ring` and the `K/degree`-per-edge energy invariant (row sum == K) holds. Regression tests `topology_ring_odd_clamp_preserves_k_over_degree_invariant` (n=6, k_ring=10 → effective 4, weight K/4, row sum K) and `topology_small_world_odd_clamp_preserves_edge_count_and_energy` (same clamp via the small-world path) pass. |
+| WP009-F4 | FIXED | `b4749ba` | `PhaseAmplitudeCoupling::with_clamp` now validates `amp_min.is_finite() && amp_max.is_finite() && amp_min <= amp_max` and returns a new `PacError::InvalidClampRange { amp_min, amp_max }` variant (prevents the `f64::clamp` panic on inverted range). Regression tests `with_clamp_rejects_inverted_range`, `with_clamp_rejects_non_finite_bounds`, `with_clamp_allows_equal_bounds` pass. |
+| WP009-F5 | FIXED | `bf46cee` | S1 handoff note corrected: `pac.rs` described as "expanded from 6-line stub" (not "New"); k-NN note states `build_phase_knn_index` "already uses rayon `par_sort_by` (parallel sort) since WP-006" (not "sequential sort"); test count corrected to 198 (not 196); `cargo fmt --check` gate row corrected from PASS to FAIL (fixed via WP009-F1). Correction banner added at note top. |
+| WP009-F6 | FIXED | `b4749ba` | `topology_ring_clamps_k_to_n_minus_1` test comment corrected ("odd check is before clamp on the *input* k_ring; `clamp_ring_k` then makes the effective degree 4") and strengthened with exact degree (4), per-edge weight (K/4), and total-energy (row sum == K) assertions. |
+| WP009-F7 | FIXED | `b4749ba` | `build_small_world` documented as a **directed** variant in both the function rustdoc and the `Topology::SmallWorld` variant doc: only the outgoing edge `mat[i, j]` is rewired, so `mat[i, j]` and `mat[j, i]` are not guaranteed equal after rewiring; per-node out-degree and total edge count are preserved. S1 handoff note #2 clarified to match. |
 
-**Delta re-audit date:** YYYY-MM-DD — **Result:** CLEAN / findings remain
+**Delta re-audit date:** 2026-08-08 — **Result:** CLEAN
+
+### Delta re-audit methodology (S3)
+
+All commands executed 2026-08-08 on `feat/wp006-oscillator-state` @ `bf46cee`
+after the two remediation commits (`b4749ba`, `bf46cee`):
+
+```powershell
+# Quality gates (all green)
+cargo fmt --all -- --check                            # PASS (exit 0, no diff)
+cargo clippy --workspace --all-targets -- -D warnings # PASS (exit 0)
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps  # PASS (exit 0)
+
+# Tests (default + strict-checks + workspace)
+cargo test -p prin-dynamics                            # 167 unit + 16 + 9 + 9 + 2 doctests = 203 passed
+cargo test -p prin-dynamics --features strict-checks   # 170 unit + 16 + 9 + 9 = 204 passed
+cargo test --workspace                                 # all green
+
+# Coverage on changed code (>=95% gate)
+cargo llvm-cov -p prin-dynamics --features strict-checks --summary-only
+#   coupling.rs  99.40% lines / 98.26% regions  (was 100% / 98.75%; new clamp_ring_k + tests)
+#   pac.rs      100.00% lines / 99.03% regions  (was 100% / 99.79%; new InvalidClampRange path covered)
+#   models.rs    98.24% lines / 97.70% regions  (was 98.34% / 97.98%; strengthened F2 test)
+#   TOTAL        98.26% lines / 97.85% regions
+
+# Python gates (no Python changed; full suite for regression)
+.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/   # PASS
+.venv\Scripts\python -m bandit -r . -c pyproject.toml                # PASS (0 issues)
+
+# Security
+cargo audit                            # PASS (only inherited paste RUSTSEC-2024-0436, amendment #9)
+.venv\Scripts\python -m pip_audit .    # PASS (no vulnerabilities)
+# Snyk MCP (authenticated, executed):
+#   snyk_code_scan path=C:\dev\PRIN\crates\prin-dynamics\src severity_threshold=low  → 0 issues
+#   snyk_sca_scan  path=C:\dev\PRIN all_projects=true severity_threshold=low
+#                  command=C:\dev\PRIN\.venv\Scripts\python                            → 0 findings
+```
+
+### Delta re-audit verdict
+
+- **A1 scope:** Remediation touched only declared WP-009 files
+  (`coupling.rs`, `pac.rs`, `models.rs`) plus the S1 handoff note. No
+  undeclared files, no new dependencies. ✓
+- **A2 plan/architecture:** `#![forbid(unsafe_code)]` preserved; no `unsafe`
+  added; f64 numerics; no Python numerics; deterministic `Seed` for
+  small-world rewiring unchanged. ✓
+- **A3 tests/coverage:** 5 new regression tests added (F3 ×2, F4 ×3 counting
+  the equal-bound positive case); all changed code ≥95% lines. ✓
+- **A4 parity/invariants:** 9 PAC parity + 9 model parity + 16 integrator
+  parity all green; 1/N vs 1/k now explicitly asserted with the actual k-NN
+  neighbour set (F2); K/degree energy invariant now asserted for the
+  odd-clamp case (F3). ✓
+- **A5 quality:** `cargo fmt --check`, clippy `-D warnings`, rustdoc
+  `-D warnings` all exit 0. ✓
+- **A6 security:** Snyk Code 0 issues; Snyk SCA 0 findings; `cargo audit`
+  only inherited `paste` (amendment #9); `pip-audit` clean; no `unsafe`;
+  no secrets. ✓
+- **A7 docs:** Rustdoc 100% public, 0 warnings; new `PacError::InvalidClampRange`
+  variant and `clamp_ring_k` documented; `Topology::SmallWorld` directed
+  interpretation documented. ✓
+- **A8 hygiene:** No TODO/FIXME/stub markers added; no orphan files. ✓
+- **A9 CI:** Not yet pushed; local equivalents of all `rust` workflow gates
+  green. Push after S4 to let CI validate. ✓ (pending push)
+- **A10 artefact trail:** This closure table and the corrected handoff note
+  complete the S3 artefact set. ✓
+
+**All seven findings FIXED. No findings carried. Delta re-audit: CLEAN.**
+
+WP-009 acceptance criteria remain met:
+- ✅ Golden parity covers all modes (9 PAC + 9 model + 16 integrator parity).
+- ✅ 1/N versus 1/k is explicit (F2 now asserts the explicit K/k weight and
+  the 1/k-vs-1/N divergence on the actual neighbour set).
+- ✅ Sparse/full equivalence and k-NN edge properties pass (5 edge-property
+  tests + 1 proptest + topology equivalence test).
+- ✅ K/degree normalization invariant now holds for the odd-clamp case (F3).
