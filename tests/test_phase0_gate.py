@@ -468,8 +468,15 @@ class TestPhase0EdgeCases:
         assert result["status"] == "fail"
 
 
-def test_phase0_gate_integration_with_ort() -> None:
-    """Run the real Phase 0 gate, refreshing ORT evidence if onnxruntime is present."""
+def test_phase0_gate_integration_with_ort(tmp_path: Path) -> None:
+    """Run the real Phase 0 gate, refreshing ORT evidence if onnxruntime is present.
+
+    The refreshed evidence is written to ``tmp_path`` so the committed
+    ``EVIDENCE/0017-wp005-s1-ort-probe.json`` artefact is never mutated by a
+    test run (EA-002 E-F1; EVIDENCE files are immutable committed artefacts).
+    """
     pytest.importorskip("onnxruntime")
-    report = phase0_gate_report(refresh_ort=True)
+    evidence = tmp_path / "0017-wp005-s1-ort-probe.json"
+    report = phase0_gate_report(refresh_ort=True, evidence_path=evidence)
     assert report.ready is True
+    assert evidence.is_file()
