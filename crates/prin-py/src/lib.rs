@@ -1,6 +1,6 @@
 //! # prin-py
 //!
-//! The PyO3 binding crate for PRIN — the **only** crate that links against
+//! PyO3 binding crate for PRIN — the **only** crate that links against
 //! Python. Exposes the Rust core (`prin-dynamics`, `prin-metrics`,
 //! `prin-tensor`, `prin-kernels`, `prin-sim`, `prin-train`, `prin-daemon`)
 //! as the `prin._prin_core` extension module.
@@ -21,6 +21,7 @@
 
 use pyo3::prelude::*;
 
+mod bindings;
 mod dlpack;
 
 /// Version string of the compiled PRIN core.
@@ -37,5 +38,15 @@ fn _prin_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(dlpack::dlpack_negate_batched, m)?)?;
     m.add_function(wrap_pyfunction!(dlpack::dlpack_round_trip, m)?)?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
+    // Dynamics: state, seed, coupling, PAC, models, integrators
+    bindings::state::register(m)?;
+    bindings::coupling::register(m)?;
+    bindings::models::register(m)?;
+    bindings::integrators::register(m)?;
+
+    // Metrics
+    bindings::metrics::register(m)?;
+
     Ok(())
 }

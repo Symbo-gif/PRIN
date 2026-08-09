@@ -2545,6 +2545,7 @@ dependencies = [
  "prin-tensor",
  "prin-train",
  "pyo3",
+ "rand 0.8.6",
  "thiserror 1.0.69",
  "tracing",
 ]

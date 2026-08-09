@@ -25,6 +25,7 @@ numpy = "0.29.0"
 dlpack.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
+rand.workspace = true
 
 [features]
 default = []
