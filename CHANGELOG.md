@@ -58,6 +58,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `k_ring` clamped to the largest even number `≤ N - 1` in `Ring` and `SmallWorld` builders to preserve the `K / degree` energy invariant (total coupling energy per oscillator = `K`).
   - Explicit 1/N versus 1/k normalization tests (`sparse_knn_k_equals_n_minus_1_equals_full_default`, `normalization_one_over_n_explicit_in_mean_field`, `normalization_one_over_k_explicit_in_sparse`), sparse/full equivalence, and k-NN edge-property tests (5 edge-property tests + 1 proptest + topology equivalence).
   - Rust-vs-PRINet 3.0 PAC parity tests in `crates/prin-dynamics/tests/parity_pac.rs` (9 golden cases) comparing `PhaseAmplitudeCoupling::modulate` against hard-coded PRINet 3.0 reference values at `epsilon = 1e-6` (amendment #14 f32-truncation tolerance).
+- WP-011 Phase 1 Python API and dynamics integration:
+  - `prin-py` PyO3 bindings for the complete Phase 1 dynamics and metrics surface: `bindings/state.rs` (`PyOscillatorState`, `PyStateDerivatives`, `PySeed`, constants), `bindings/models.rs` (`PyKuramotoOscillator`, `PyStuartLandauOscillator`, `PyHopfOscillator`), `bindings/integrators.rs` (`PyEulerIntegrator`, `PyRK4Integrator`, `PyRK45Integrator`, `PyAdaptiveResult`), `bindings/coupling.rs` (`PyCouplingMode`, `PyTopology`, `PyPhaseAmplitudeCoupling`), and `bindings/metrics.rs` (22 `#[pyfunction]`s covering the full `prin-metrics` surface).
+  - `python/prin/dynamics.py` re-export module (20 symbols + `__all__`) and `python/prin/metrics.py` re-export module (22 symbols + `__all__`) — pure re-exports, no Python numerics.
+  - Complete type stubs in `python/prin/_prin_core.pyi` for all new dynamics and metrics symbols.
+  - `numpy = "0.29.0"` dependency added to `prin-py/Cargo.toml` for PyO3 numpy array integration (matches PyO3 version).
+  - 69 new Python acceptance tests in `tests/test_dynamics_bindings.py` across 13 test classes (constants, Seed, OscillatorState, StateDerivatives, CouplingMode, Topology, Models, Integrators, PAC, Metrics, module re-exports).
+  - All WP-011 acceptance criteria met: no Python numerics; 42 mapped PRINet 3.0 symbols resolve through the Python API; 253 Python tests pass (including parity); 370 Rust tests pass; Phase 1 tag gate passes.
 
 ### Changed
 
@@ -107,6 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - WP009-F5: Corrected S1 handoff note factual errors (`pac.rs` expanded from stub, k-NN uses rayon `par_sort_by`, test count 198).
   - WP009-F6: Corrected `topology_ring_clamps_k_to_n_minus_1` test comment and added exact degree + per-edge weight + total-energy assertions.
   - WP009-F7: Documented the directed-rewiring interpretation of `build_small_world` in the module rustdoc and `Topology::SmallWorld` variant doc (outgoing-edge rewiring preserves out-degree and total edge count but not symmetry).
+- WP-011 S3 remediation (audit finding WP011-F1, commit `cd20b1a`):
+  - WP011-F1: Removed unnecessary `#![allow(unsafe_code)]` from `crates/prin-py/src/bindings/state.rs` — no `unsafe` code exists in the module; the attribute could mask future unsafe additions under the crate-level `#![deny(unsafe_code)]`.
 
 ## [0.1.0-alpha.1] - 2026-08-07
 

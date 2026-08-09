@@ -10,6 +10,13 @@ Additional PRIN-specific suites (per the Testing Standards):
   traceability, CI, release-guard, and security-control tests. Validates that
   `rust-toolchain.toml` includes `rustfmt` and `clippy`, optionally `llvm-tools`
   for `cargo-llvm-cov`.
+- `test_dynamics_bindings.py` — 69 tests across 13 test classes covering the
+  WP-011 PyO3 bindings for dynamics and metrics: constants (4), Seed (6),
+  OscillatorState (8), StateDerivatives (1), CouplingMode (5), Topology (3),
+  Models (6: all 3 models × mean_field/full/sparse), Integrators (10: step,
+  integrate_fixed, adaptive, trajectory, all models, error, repr), PAC (2),
+  Metrics (22: order 6, coherence 3, spectral 2, energy 2, chimera 7,
+  metastability 1, k-NN 1), and module re-exports (2).
 - `test_parity_*.py` — fast unit tests for `prin.parity` schema, loader,
   manifest, harness, and Hypothesis strategies.
 - `test_dlpack_bridge.py` — CPU round-trip, batched boundary, dtype/device

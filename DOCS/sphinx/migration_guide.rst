@@ -54,8 +54,8 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   producing up to ~``1e-7`` per-step drift on the affected paths. This is accepted
   as a preserved numerical hazard (Project Plan §5, amendment #14); derivative
   parity tests use a ``1e-6`` tolerance for affected paths and ``1e-12`` for pure
-  float64 paths (see the Parity Report). Python bindings for these models are
-  deferred to WP-011 (Phase 1 Python API and dynamics integration).
+  float64 paths (see the Parity Report). Python bindings are provided via
+  ``prin.dynamics`` (WP-011).
 - ``prin-dynamics`` basic integrators (WP-008) — Rust ``Integrator`` trait and
   ``EulerIntegrator``, ``RK4Integrator``, and ``RK45Integrator`` (adaptive
   Dormand–Prince) with explicit reusable buffers, numerical guards, and typed
@@ -66,7 +66,8 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   golden-trajectory parity cases in ``crates/prin-dynamics/tests/parity_integrators.rs``.
   RK4 order-``h^4`` convergence and RK45 tolerance properties are asserted in
   both unit and parity tests. Exponential and multi-rate integrators are
-  Phase 2 (WP-012) non-goals. Python bindings are deferred to WP-011.
+  Phase 2 (WP-012) non-goals. Python bindings are provided via ``prin.dynamics``
+  (WP-011).
 - ``prin-dynamics`` phase–amplitude coupling and coupling topologies (WP-009) —
   Rust ``PhaseAmplitudeCoupling`` struct implementing cross-frequency PAC
   ``A_fast = A_0·[1 + m·cos(φ_slow + offset)]`` with mean slow-band phase,
@@ -81,7 +82,7 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   ``validate_coupling_matrix`` helper. The ``SmallWorld`` variant is a **directed**
   Watts–Strogatz rewiring (outgoing edges only); ``k_ring`` is clamped to the
   largest even number ``≤ N - 1`` to preserve the ``K / degree`` energy invariant.
-  Python bindings are deferred to WP-011.
+  Python bindings are provided via ``prin.dynamics`` (WP-011).
 - ``prin-metrics`` phase metrics and chimera measures (WP-010) — Rust
   synchronization metrics rebuilding PRINet 3.0 ``core/measurement.py`` and
   the chimera utilities in ``utils/oscillosim.py``. Public API:
@@ -101,4 +102,17 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   tolerance (amendment #14). ``metastability`` is a PRIN extension with no
   PRINet 3.0 counterpart (population standard deviation of the per-snapshot
   order parameter, bounded by ``[0, 0.5]``). ``rustfft 6.4.1`` is a new
-  workspace dependency for the PSD. Python bindings are deferred to WP-011.
+  workspace dependency for the PSD. Python bindings are provided via
+  ``prin.metrics`` (WP-011).
+- ``prin-py`` Phase 1 Python API (WP-011) — PyO3 bindings for the complete
+  Phase 1 dynamics and metrics surface, accessible through ``prin.dynamics``
+  (20 symbols: ``OscillatorState``, ``Seed``, ``StateDerivatives``,
+  ``KuramotoOscillator``, ``StuartLandauOscillator``, ``HopfOscillator``,
+  ``CouplingMode``, ``Topology``, ``PhaseAmplitudeCoupling``,
+  ``EulerIntegrator``, ``RK4Integrator``, ``RK45Integrator``,
+  ``AdaptiveResult``, and numeric constants) and ``prin.metrics`` (22 symbols:
+  all order, coherence, spectral, energy, chimera, metastability, and k-NN
+  functions). Both modules are pure re-exports from ``prin._prin_core`` — no
+  Python numerics; all numerical authority remains in Rust. Complete type stubs
+  in ``_prin_core.pyi``. 69 Python acceptance tests in
+  ``tests/test_dynamics_bindings.py`` exercise all binding paths.
