@@ -22,17 +22,7 @@ CORPUS_SCHEMA_VERSION: int = 1
 # Tolerances from the parity program (project plan §5).
 TRAJECTORY_RTOL: float = 1e-6
 TRAJECTORY_ATOL: float = 1e-8
-# Cross-platform PRINet/torch regeneration of the derived metric arrays
-# (order parameter, mean phase coherence) exhibits noise up to ~1e-6 relative
-# between OS/torch builds; the corpus was authored on Windows torch and CI
-# regenerates on Linux/macOS torch.  The dominant source is PRINet 3.0's
-# torch.complex64 (f32) internal arithmetic for mean-field order parameters
-# (preserved numerical hazard, plan amendment #14), which compounds across the
-# N-oscillator reduction; cross-platform f32 differences reach ~1.1e-6 in
-# practice.  Trajectory tolerances are unchanged.  Single-runtime metric
-# verification (WP-010/WP-014) still targets rtol=1e-10 (plan amendments
-# #16, #17).
-METRIC_RTOL: float = 2e-6
+METRIC_RTOL: float = 1e-8
 METRIC_ATOL: float = 1e-12
 
 
