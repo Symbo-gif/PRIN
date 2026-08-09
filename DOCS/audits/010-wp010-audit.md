@@ -424,4 +424,50 @@ the artefact trail are conforming. Zero findings.
 |---|---|---|---|
 | — | — | — | — |
 
-**Delta re-audit date:** YYYY-MM-DD — **Result:** pending S3
+**Delta re-audit date:** 2026-08-08 — **Result:** CLEAN
+
+### Delta re-audit methodology (S3)
+
+No-change closure. S2 returned zero findings (PASS); no source edits,
+no new commits, no amendments required. The tree at `8e63879` is
+byte-identical to the audited state (S1 commit `0909691` plus the
+audit-report commit `8e63879`).
+
+All commands executed 2026-08-08 on `feat/wp006-oscillator-state` @ `8e63879`:
+
+```powershell
+# Working tree status
+git status --short                                     # clean (no output)
+git log -n 3 --oneline                                 # HEAD = 8e63879
+
+# Quality gates (all green)
+cargo fmt --all -- --check                             # PASS (exit 0, no diff)
+cargo clippy --workspace --all-targets -- -D warnings  # PASS (exit 0)
+
+# Tests (prin-metrics suite)
+cargo test -p prin-metrics                             # 104 unit + 4 corpus + 6 parity_chimera
+                                                       # + 12 parity_metrics + 19 doctests = 145 passed
+
+# Baseline validation
+.venv\Scripts\python tools/wp001_baseline.py check     # WP-001 baseline validation passed
+```
+
+### Delta re-audit verdict
+
+- **A1 scope:** No changes since S2 audit. ✓
+- **A2 plan/architecture:** No changes. ✓
+- **A3 tests/coverage:** 145/145 prin-metrics tests pass (104 unit/property + 22 parity/corpus + 19 doctests). ✓
+- **A4 parity/invariants:** All parity and corpus tests green; no tolerance drift. ✓
+- **A5 quality:** `cargo fmt --check` and clippy `-D warnings` exit 0. ✓
+- **A6 security:** No new code introduced. ✓
+- **A7 docs:** No changes. ✓
+- **A8 hygiene:** Working tree clean; baseline validation passes. ✓
+- **A9 CI:** Not re-run (no code changes since audited SHA `0909691` where all workflows were green). ✓
+- **A10 artefact trail:** This closure table completes the S3 artefact set. ✓
+
+**Zero findings. No findings carried. Delta re-audit: CLEAN.**
+
+WP-010 acceptance criteria remain met:
+- ✅ Metrics/decompositions tolerance target rtol=1e-10 met.
+- ✅ R ∈ [0,1] on all corpus snapshots and property tests.
+- ✅ Sparse/full variants agree where equivalent.
