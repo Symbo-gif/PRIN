@@ -34,6 +34,8 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 cargo llvm-cov -p prin-kernels --features wgpu,cpu
+cargo llvm-cov -p prin-dynamics
+cargo llvm-cov -p prin-dynamics --features strict-checks
 $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps
 cargo audit
 .venv\Scripts\python -m pip_audit .
