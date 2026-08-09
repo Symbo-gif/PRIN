@@ -63,11 +63,11 @@ no planned session is renumbered by an executive audit (plan amendment #15).
 | 0034 | 1 | WP-009 | S2 — Audit | [PAC, coupling topologies, and phase k-NN](phase-1/0034-wp009-s2-pac-coupling-topologies-and-phase-k-nn.md) | COMPLETE |
 | 0035 | 1 | WP-009 | S3 — Remediation | [PAC, coupling topologies, and phase k-NN](phase-1/0035-wp009-s3-pac-coupling-topologies-and-phase-k-nn.md) | COMPLETE |
 | 0036 | 1 | WP-009 | S4 — Documentation | [PAC, coupling topologies, and phase k-NN](phase-1/0036-wp009-s4-pac-coupling-topologies-and-phase-k-nn.md) | COMPLETE |
-| 0037 | 1 | WP-010 | S1 — Coding | [Phase metrics and chimera measures](phase-1/0037-wp010-s1-phase-metrics-and-chimera-measures.md) | READY |
-| 0038 | 1 | WP-010 | S2 — Audit | [Phase metrics and chimera measures](phase-1/0038-wp010-s2-phase-metrics-and-chimera-measures.md) | PLANNED |
-| 0039 | 1 | WP-010 | S3 — Remediation | [Phase metrics and chimera measures](phase-1/0039-wp010-s3-phase-metrics-and-chimera-measures.md) | PLANNED |
-| 0040 | 1 | WP-010 | S4 — Documentation | [Phase metrics and chimera measures](phase-1/0040-wp010-s4-phase-metrics-and-chimera-measures.md) | PLANNED |
-| 0041 | 1 | WP-011 | S1 — Coding | [Phase 1 Python API and dynamics integration](phase-1/0041-wp011-s1-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
+| 0037 | 1 | WP-010 | S1 — Coding | [Phase metrics and chimera measures](phase-1/0037-wp010-s1-phase-metrics-and-chimera-measures.md) | COMPLETE |
+| 0038 | 1 | WP-010 | S2 — Audit | [Phase metrics and chimera measures](phase-1/0038-wp010-s2-phase-metrics-and-chimera-measures.md) | COMPLETE |
+| 0039 | 1 | WP-010 | S3 — Remediation | [Phase metrics and chimera measures](phase-1/0039-wp010-s3-phase-metrics-and-chimera-measures.md) | COMPLETE |
+| 0040 | 1 | WP-010 | S4 — Documentation | [Phase metrics and chimera measures](phase-1/0040-wp010-s4-phase-metrics-and-chimera-measures.md) | COMPLETE |
+| 0041 | 1 | WP-011 | S1 — Coding | [Phase 1 Python API and dynamics integration](phase-1/0041-wp011-s1-phase-1-python-api-and-dynamics-integration.md) | READY |
 | 0042 | 1 | WP-011 | S2 — Audit | [Phase 1 Python API and dynamics integration](phase-1/0042-wp011-s2-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
 | 0043 | 1 | WP-011 | S3 — Remediation | [Phase 1 Python API and dynamics integration](phase-1/0043-wp011-s3-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
 | 0044 | 1 | WP-011 | S4 — Documentation | [Phase 1 Python API and dynamics integration](phase-1/0044-wp011-s4-phase-1-python-api-and-dynamics-integration.md) | PLANNED |

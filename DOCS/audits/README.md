@@ -46,6 +46,9 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   (F1–F2 D2, F3–F4 D3, F5–F7 D4) resolved in S3 with a CLEAN delta re-audit;
   closure table is on file. `[RETROACTIVE UPDATE - Executive Audit 002]`
   index entry added.
+- [`010-wp010-audit.md`](010-wp010-audit.md) — WP-010 "Phase metrics and
+  chimera measures" audit (`PASS`); zero findings; S3 no-change closure with
+  CLEAN delta re-audit.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

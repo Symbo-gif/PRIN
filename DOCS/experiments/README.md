@@ -37,6 +37,9 @@ at the top level until they are folded into the final campaign archive in Phase 
 - [`0029-wp008-s1-handoff.md`](0029-wp008-s1-handoff.md) — WP-008 S1 handoff to
   the S2 audit for the Euler, RK4, and adaptive RK45 integrators.
 
+- [`0037-wp010-s1-handoff.md`](0037-wp010-s1-handoff.md) — WP-010 S1 handoff
+  to the S2 audit for phase metrics and chimera measures.
+
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
 [`../sessions/phase-1/wp009-s1-handoff-note.md`](../sessions/phase-1/wp009-s1-handoff-note.md)
 because its original `0033-` sequence prefix collided with the session brief

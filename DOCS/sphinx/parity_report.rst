@@ -85,6 +85,45 @@ The ``K / degree`` normalization invariant (total coupling energy per oscillator
 builders via ``topology_ring_odd_clamp_preserves_k_over_degree_invariant`` and
 ``topology_small_world_odd_clamp_preserves_edge_count_and_energy``.
 
+WP-010 — Phase metrics and chimera measure parity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Rust ``prin-metrics`` implements the full PRINet 3.0 measurement surface
+(``core/measurement.py`` and ``utils/oscillosim.py`` chimera utilities) in
+``f64``. Parity is verified at three tolerance tiers:
+
+- **f64 single-runtime paths** at ``rtol=1e-10, atol=1e-12``: order
+  parameter, complex order parameter, mean phase coherence, coherence matrix,
+  synchronization energy (default + explicit matrix), sparse coherence/energy
+  (k=3, k=11), inter-frame correlation. Measured worst-case drift
+  **8.58e-16** (~2× machine epsilon, five orders of magnitude inside
+  target). 12 parity tests in ``crates/prin-metrics/tests/parity_metrics.rs``.
+- **Corpus golden cases** at the registered METRIC tolerance ``rtol=1e-8,
+  atol=1e-12`` (amendment #16): 6 cases × 21 snapshots = 126 snapshots
+  compared against PRINet-authored golden-corpus arrays. Measured worst-case
+  drift **2.75e-15**. 4 corpus tests in
+  ``crates/prin-metrics/tests/corpus_metrics.rs``. The
+  ``C = (N r² − 1)/(N − 1)`` identity is cross-checked on all corpus data.
+- **PSD/chimera f32-hazard paths** at ``1e-6`` (amendment #14 pattern):
+  PRINet 3.0 evaluates the PSD resonance signal through a ``complex64``
+  intermediate and the chimera utilities in ``torch.float32``; PRIN keeps
+  the pure-f64 path. Measured worst-case drift **9.99e-7**. 6 parity tests
+  in ``crates/prin-metrics/tests/parity_chimera.rs``. The discrete outputs
+  (discontinuity mask, η) match PRINet exactly.
+
+**Invariants verified:** ``R ∈ [0, 1]`` on all 126 corpus snapshots and in
+property tests; ``C ∈ [−1, 1]`` likewise; sparse/full coherence both equal
+exactly 1 for synchronized phases; sparse energy at ``k=N−1`` equals dense
+energy × ``N/(N−1)`` (the ``1/N`` vs ``1/k`` normalization invariant).
+
+**New dependency:** ``rustfft 6.4.1`` (pure-Rust FFT for PSD); ``cargo
+audit`` clean, no advisories.
+
+**Metastability** is a PRIN extension (population standard deviation of the
+per-snapshot order parameter, bounded by ``[0, 0.5]``) with no PRINet 3.0
+analogue; confirmed acceptable under the WP-010 declaration's "metastability"
+scope item by the S2 audit.
+
 EA-002 — Cross-platform torch reduction noise in derived corpus metrics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

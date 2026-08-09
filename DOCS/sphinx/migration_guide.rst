@@ -82,3 +82,23 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   Watts–Strogatz rewiring (outgoing edges only); ``k_ring`` is clamped to the
   largest even number ``≤ N - 1`` to preserve the ``K / degree`` energy invariant.
   Python bindings are deferred to WP-011.
+- ``prin-metrics`` phase metrics and chimera measures (WP-010) — Rust
+  synchronization metrics rebuilding PRINet 3.0 ``core/measurement.py`` and
+  the chimera utilities in ``utils/oscillosim.py``. Public API:
+  ``kuramoto_order_parameter``, ``kuramoto_order_parameter_complex``,
+  ``inter_frame_phase_correlation``, ``order_parameter_series``,
+  ``mean_phase_coherence``, ``phase_coherence_matrix``,
+  ``sparse_mean_phase_coherence``, ``power_spectral_density``,
+  ``extract_concept_probabilities``, ``synchronization_energy``,
+  ``sparse_synchronization_energy``, ``local_order_parameter``,
+  ``bimodality_index``, ``strength_of_incoherence``,
+  ``discontinuity_measure``, ``chimera_index``,
+  ``strength_of_incoherence_temporal``, ``metastability``,
+  ``build_phase_knn``, and ``MetricError`` (9 variants). All metrics run in
+  ``f64``; single-runtime parity targets ``rtol=1e-10`` (measured ≤ 8.58e-16
+  on f64 paths). PSD and chimera paths affected by PRINet 3.0's
+  ``complex64``/``float32`` internal arithmetic use the documented ``1e-6``
+  tolerance (amendment #14). ``metastability`` is a PRIN extension with no
+  PRINet 3.0 counterpart (population standard deviation of the per-snapshot
+  order parameter, bounded by ``[0, 0.5]``). ``rustfft 6.4.1`` is a new
+  workspace dependency for the PSD. Python bindings are deferred to WP-011.

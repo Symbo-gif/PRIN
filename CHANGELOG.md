@@ -38,6 +38,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `integrate_fixed` free function for multi-step fixed-step integration with any `Integrator`.
   - `IntegrateError` enum with seven typed variants: `InvalidTimestep`, `InvalidTolerance`, `ZeroSteps`, `Dynamics`, `ToleranceNotMet`, `StepSizeUnderflow`, `NonFiniteValue` (the latter under `strict-checks`).
   - Rust-vs-PRINet 3.0 trajectory parity tests in `crates/prin-dynamics/tests/parity_integrators.rs` (16 golden-trajectory cases) comparing Euler and RK4 against `torch.float64` reference values at `rtol=1e-6, atol=1e-8` (and tighter for pure f64 paths); RK4 order-`h^4` convergence and RK45 tolerance-property parity tests.
+- WP-010 Phase metrics and chimera measures in `prin-metrics`:
+  - `kuramoto_order_parameter`, `kuramoto_order_parameter_complex`, `inter_frame_phase_correlation`, `order_parameter_series` — order parameters in f64 matching PRINet 3.0 `torch.float64` reference paths.
+  - `mean_phase_coherence`, `phase_coherence_matrix`, `sparse_mean_phase_coherence` — full and sparse k-NN phase coherence.
+  - `power_spectral_density`, `extract_concept_probabilities` — rustfft-backed PSD and concept-probability extraction.
+  - `synchronization_energy`, `sparse_synchronization_energy` — dense and sparse synchronization energy.
+  - `local_order_parameter`, `bimodality_index`, `strength_of_incoherence`, `discontinuity_measure`, `chimera_index`, `strength_of_incoherence_temporal`, `BIMODALITY_CHIMERA_THRESHOLD`, `DEFAULT_CHIMERA_THRESHOLD` — full chimera metric set.
+  - `metastability` — temporal standard deviation of the order parameter (PRIN extension, no PRINet analogue).
+  - `build_phase_knn` — measurement-facing k-NN wrapper delegating to `prin-dynamics` (one algorithm, one implementation).
+  - `MetricError` typed error enum (9 variants) with boundary validation on all public metrics.
+  - `rustfft = "6.2"` (resolved 6.4.1) added to `[workspace.dependencies]` for PSD (pure-Rust, no advisories).
+  - 145 new tests (104 unit/property + 22 parity/corpus + 19 doctests); coverage lines 99.53%, regions 96.28%, functions 100%.
+  - Rust-vs-PRINet 3.0 parity at `rtol=1e-10` (f64 paths, measured ≤ 8.58e-16), `rtol=1e-8` (corpus, amendment #16), and `1e-6` (PSD/chimera f32-hazard paths, amendment #14).
 - WP-009 PAC, coupling topologies, and phase k-NN in `prin-dynamics`:
   - `PhaseAmplitudeCoupling` struct implementing cross-frequency phase–amplitude coupling `A_fast = A₀·[1 + m·cos(φ_slow + offset)]` with mean slow-band phase, broadcast modulation, and amplitude clamp `[AMPLITUDE_MIN, AMPLITUDE_MAX]`; `new` / `with_clamp` constructors validate modulation depth `m ∈ [0, 1]` and clamp range finiteness/ordering.
   - `PacError` typed error enum with five variants: `InvalidModulationDepth`, `EmptyInput`, `NonFiniteValue`, `InvalidPhaseOffset`, `InvalidClampRange`.
