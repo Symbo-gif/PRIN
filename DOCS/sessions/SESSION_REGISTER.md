@@ -67,9 +67,9 @@ no planned session is renumbered by an executive audit (plan amendment #15).
 | 0038 | 1 | WP-010 | S2 — Audit | [Phase metrics and chimera measures](phase-1/0038-wp010-s2-phase-metrics-and-chimera-measures.md) | COMPLETE |
 | 0039 | 1 | WP-010 | S3 — Remediation | [Phase metrics and chimera measures](phase-1/0039-wp010-s3-phase-metrics-and-chimera-measures.md) | COMPLETE |
 | 0040 | 1 | WP-010 | S4 — Documentation | [Phase metrics and chimera measures](phase-1/0040-wp010-s4-phase-metrics-and-chimera-measures.md) | COMPLETE |
-| 0041 | 1 | WP-011 | S1 — Coding | [Phase 1 Python API and dynamics integration](phase-1/0041-wp011-s1-phase-1-python-api-and-dynamics-integration.md) | READY |
-| 0042 | 1 | WP-011 | S2 — Audit | [Phase 1 Python API and dynamics integration](phase-1/0042-wp011-s2-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
-| 0043 | 1 | WP-011 | S3 — Remediation | [Phase 1 Python API and dynamics integration](phase-1/0043-wp011-s3-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
+| 0041 | 1 | WP-011 | S1 — Coding | [Phase 1 Python API and dynamics integration](phase-1/0041-wp011-s1-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
+| 0042 | 1 | WP-011 | S2 — Audit | [Phase 1 Python API and dynamics integration](phase-1/0042-wp011-s2-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
+| 0043 | 1 | WP-011 | S3 — Remediation | [Phase 1 Python API and dynamics integration](phase-1/0043-wp011-s3-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
 | 0044 | 1 | WP-011 | S4 — Documentation | [Phase 1 Python API and dynamics integration](phase-1/0044-wp011-s4-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
 | 0045 | 2 | WP-012 | S1 — Coding | [Exponential and multi-rate integrators](phase-2/0045-wp012-s1-exponential-and-multi-rate-integrators.md) | PLANNED |
 | 0046 | 2 | WP-012 | S2 — Audit | [Exponential and multi-rate integrators](phase-2/0046-wp012-s2-exponential-and-multi-rate-integrators.md) | PLANNED |

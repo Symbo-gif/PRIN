@@ -194,6 +194,27 @@ The single D4 finding (WP011-F1: unnecessary `#![allow(unsafe_code)]`) is cosmet
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(pending S3)* | | | |
+| WP011-F1 | FIXED | `cd20b1a` — removed `#![allow(unsafe_code)]` from `state.rs` | `cargo clippy --workspace --all-targets -- -D warnings` exit 0; `cargo clippy --features strict-checks -D warnings` exit 0; `cargo test --workspace` 370/370 pass; `cargo test --features strict-checks` 373/373 pass; no `unsafe` blocks exist in `state.rs`; crate-level `#![deny(unsafe_code)]` enforced without override |
 
-**Delta re-audit date:** *(pending S3)* — **Result:** *(pending)*
+**Delta re-audit date:** 2026-08-09 — **Result:** CLEAN. All A1–A10 checks re-run post-fix; no regressions introduced. Full gate summary:
+
+| Gate | Result |
+|---|---|
+| `cargo fmt --check` | exit 0 |
+| `cargo clippy -D warnings` | exit 0 |
+| `cargo clippy --features strict-checks -D warnings` | exit 0 |
+| `cargo test --workspace` | 370/370 pass |
+| `cargo test --features strict-checks` | 373/373 pass |
+| `cargo doc -D warnings` | 0 warnings |
+| `cargo audit` | 1 inherited `paste` advisory (amendment #9) |
+| `ruff check` | All checks passed |
+| `ruff format --check` | 47 files already formatted |
+| `mypy --strict` | Success: no issues in 18 files |
+| `interrogate` | 100.0% (106/106) |
+| `bandit` | No issues identified |
+| `pytest` (fast) | 241 passed, 6 deselected |
+| `pytest` (full + parity) | 253 passed |
+| `pip-audit .` | No known vulnerabilities |
+| `pip-audit` (sphinx reqs) | No known vulnerabilities |
+| Sphinx `-W --keep-going` | build succeeded, 0 warnings |
+| `tools/wp001_baseline.py check` | exit 0 (clean) |

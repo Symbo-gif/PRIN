@@ -27,8 +27,8 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0038 | WP-010 | S2 — Audit | [Phase metrics and chimera measures](0038-wp010-s2-phase-metrics-and-chimera-measures.md) | PLANNED |
 | 0039 | WP-010 | S3 — Remediation | [Phase metrics and chimera measures](0039-wp010-s3-phase-metrics-and-chimera-measures.md) | PLANNED |
 | 0040 | WP-010 | S4 — Documentation | [Phase metrics and chimera measures](0040-wp010-s4-phase-metrics-and-chimera-measures.md) | PLANNED |
-| 0041 | WP-011 | S1 — Coding | [Phase 1 Python API and dynamics integration](0041-wp011-s1-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
-| 0042 | WP-011 | S2 — Audit | [Phase 1 Python API and dynamics integration](0042-wp011-s2-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
-| 0043 | WP-011 | S3 — Remediation | [Phase 1 Python API and dynamics integration](0043-wp011-s3-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
+| 0041 | WP-011 | S1 — Coding | [Phase 1 Python API and dynamics integration](0041-wp011-s1-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
+| 0042 | WP-011 | S2 — Audit | [Phase 1 Python API and dynamics integration](0042-wp011-s2-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
+| 0043 | WP-011 | S3 — Remediation | [Phase 1 Python API and dynamics integration](0043-wp011-s3-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
 | 0044 | WP-011 | S4 — Documentation | [Phase 1 Python API and dynamics integration](0044-wp011-s4-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
 
