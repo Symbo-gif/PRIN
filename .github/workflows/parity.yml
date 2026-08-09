@@ -3,6 +3,9 @@ name: parity
 # Differential testing against the archived PRINet 3.0.0 source on the
 # golden-trajectory corpus plus hypothesis-generated random cases
 # (project plan §7.3).
+#
+# Runs the exhaustive 504-case differential parity suite using pytest-xdist
+# for parallel execution (Phase 1 recommendation R8).
 
 on:
   push:
@@ -48,6 +51,7 @@ jobs:
           pip install maturin
           maturin develop -m crates/prin-py/Cargo.toml
           pip install -e ".[dev]"
+          pip install pytest-xdist
           pip install -e "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main"
-      - name: Run differential parity suite
-        run: python -m pytest parity/ -v -m parity
+      - name: Run exhaustive differential parity suite (504 cases)
+        run: python -m pytest parity/ -v -m parity -n auto
