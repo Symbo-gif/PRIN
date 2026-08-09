@@ -1,7 +1,5 @@
 //! PyO3 bindings for `prin_dynamics::state` and `prin_dynamics::seed`.
 
-#![allow(unsafe_code)]
-
 use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
