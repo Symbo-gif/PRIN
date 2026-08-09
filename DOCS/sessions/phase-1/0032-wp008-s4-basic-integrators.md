@@ -1,6 +1,6 @@
 # Session 0032 — WP-008 S4: Documentation — Basic integrators
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 1 — Dynamics core  
 **Execution unit:** WP-008  
 **Session type:** S4 — Documentation  

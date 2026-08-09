@@ -1,6 +1,6 @@
 # Session 0009 — WP-003 S1: Coding — PyO3 and DLPack bridge spike
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-003  
 **Session type:** S1 — Coding  
@@ -59,3 +59,74 @@ Prototype zero-copy Torch↔Rust DLPack exchange, batched boundary calls, owners
 
 All S1 gates are green and every acceptance criterion is evidence-mapped. Hand
 off to the mandatory S2 audit; S1 may not self-certify completion.
+
+## S1 handoff
+
+### Acceptance-criterion → evidence mapping
+
+| # | Criterion | Evidence | Command / result |
+|---|-----------|----------|------------------|
+| 1 | CPU round trips are correct | `dlpack_negate` and `dlpack_round_trip` produce `torch.Tensor` values equal to the expected negation / copy for `float32` and `float64`, 1-D and 2-D. | `pytest tests/test_dlpack_bridge.py -v` — 17 passed. |
+| 2 | Batched boundary calls work | `dlpack_negate_batched` accepts a list of tensors and returns a list of new capsules; `prin.dlpack.negate_batched` wraps this as a list of `torch.Tensor`. | `TestDlpackNegate::test_negate_batched` (both dtypes). |
+| 3 | Ownership and error paths are tested | Owned `DLManagedTensor` carries a DLPack `deleter` and a PyCapsule destructor; the capsule is freed exactly once whether consumed by `torch.from_dlpack` or GC'd. Error paths cover non-contiguous tensors, unsupported dtypes, and non-DLPack objects. | Rust unit `dlpack::tests::owned_dlpack_tensor_can_be_built_and_dropped`; Python `test_non_contiguous_rejected`, `test_integer_dtype_rejected`, `test_rejects_versioned_or_bad_capsule`. |
+| 4 | dtype/device validation | The bridge validates CPU device (`device_type == kDLCPU`), `float32`/`float64` dtype, `lanes == 1`, C-contiguous strides, and `byte_offset == 0`. | `tests/test_dlpack_bridge.py`. |
+| 5 | Measured boundary overhead | `pytest-benchmark` fixtures in `TestDlpackBenchmarks` report round-trip and batched latency. | See benchmark results below. |
+| 6 | Rust owns the numerics | The actual element-wise negate is `prin_kernels::ops::negate_f32` / `negate_f64`. `python/prin/dlpack.py` contains only capsule conversion and no math. | `crates/prin-kernels/src/ops.rs` and `crates/prin-py/src/dlpack.rs`. |
+| 7 | Quality gates green | `cargo fmt`, `cargo clippy -D warnings`, `cargo test --workspace`, `mypy`, `ruff`, `interrogate`, `bandit`, `pip-audit`, `cargo audit`, `cargo doc -D warnings`, and `sphinx -W` all pass. | See verification table. |
+
+### Verification table
+
+| Gate | Result |
+|------|--------|
+| `cargo fmt --all -- --check` | OK |
+| `cargo clippy --workspace --all-targets -- -D warnings` | OK |
+| `cargo test --workspace` | 6 Rust tests passed (3 `prin-kernels` + 3 `prin-py` dlpack unit) |
+| `$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps` | OK |
+| `cargo audit` | 0 findings |
+| `.venv\Scripts\mypy python/prin --strict` | OK (14 files) |
+| `.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/` | OK |
+| `.venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/` | OK |
+| `.venv\Scripts\python -m interrogate -c pyproject.toml python/prin` | 100% |
+| `.venv\Scripts\python -m bandit -r . -c pyproject.toml` | 0 findings |
+| `.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin.parity --cov-report=term-missing` | 111 passed |
+| `.venv\Scripts\python -m pytest tests/ parity/ --cov=prin.parity --cov-report=term-missing` | 123 passed |
+| `.venv\Scripts\python -m pytest tests/test_dlpack_bridge.py -m "not slow and not gpu" --cov=prin.dlpack` | `prin.dlpack` 100% covered |
+| `.venv\Scripts\python -m pip_audit .` | 0 findings |
+| `.venv\Scripts\python -m pip_audit -r DOCS/sphinx/requirements.txt` | 0 findings |
+| `.venv\Scripts\python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html` | OK |
+| Snyk Code (`severity_threshold=medium`) | 0 findings |
+| Snyk Open Source (`severity_threshold=low`, `all_projects=true`) | 0 findings |
+
+### Microbenchmark results (pytest-benchmark)
+
+- `test_negate_round_trip_latency[float64]`: mean ~108.7 µs for 16 384 elements (≈ 6.6 GB/s).
+- `test_negate_round_trip_latency[float32]`: mean ~115.4 µs for 16 384 elements.
+- `test_negate_batched_latency[float64]`: mean ~247.7 µs for 8 × 4096 elements.
+- `test_negate_batched_latency[float32]`: mean ~255.7 µs for 8 × 4096 elements.
+
+These numbers measure the full `torch.Tensor → PyCapsule → Rust → PyCapsule → torch.Tensor` path for a trivial kernel. The overhead is dominated by the two Python crossings and the DLPack capsule construction; the actual data copy inside the Rust `negate` kernel is a single contiguous pass. No training-step fraction claim is made from this pilot.
+
+### CUDA status
+
+The environment under test uses a CPU-only `torch` build (`2.13.0+cpu`). CUDA device tensors are detected and rejected at the bridge (non-CPU device error). A CUDA round trip is a Phase 0 spike go/no-go item; a documented go/no-go amendment is in order if CUDA hardware is unavailable before WP-003 closes.
+
+### Files introduced or modified
+
+- `crates/prin-kernels/src/ops.rs` (new): `negate_f32` / `negate_f64` representative kernel.
+- `crates/prin-kernels/src/lib.rs`: expose `ops` module.
+- `crates/prin-py/src/dlpack.rs` (new): audited PyO3/DLPack bridge (`dlpack_negate`, `dlpack_negate_batched`, `dlpack_round_trip`).
+- `crates/prin-py/src/lib.rs`: register DLPack functions.
+- `crates/prin-py/Cargo.toml`: add `dlpack` workspace dependency.
+- `Cargo.toml`: add `dlpack = "0.2.0"` to workspace dependencies.
+- `python/prin/dlpack.py` (new): thin wrapper returning `torch.Tensor`.
+- `python/prin/_prin_core.pyi`: stubs for the new PyO3 functions.
+- `tests/test_dlpack_bridge.py` (new): integration, error-path, and benchmark tests.
+
+### D4 item for S2 audit
+
+`crates/prin-py/src/dlpack.rs` contains audited `unsafe` for the Python C API and DLPack C ABI. The Coding Standards state that `prin-kernels` is the crate permitted to contain audited `unsafe`. Two defensible positions exist:
+
+1. **Accept `prin-py` as the Python-FFI boundary.** The `unsafe` is isolated to a single module with `#![allow(unsafe_code)]`, `#![deny(unsafe_op_in_unsafe_fn)]`, and `// SAFETY:` comments on every `unsafe` block. The rest of `prin-py` remains `unsafe`-free (`#![deny(unsafe_code)]`).
+2. **Relocate the `unsafe` to `prin-kernels`.** This would require adding a `pyo3` dependency to `prin-kernels` (also a layer deviation) so that the capsule construction can live in the kernel crate.
+
+The current implementation chooses option 1 because the DLPack exchange is inherently a Python-FFI concern and the `prin-py` crate is already the workspace's Python-linking extension crate. S2 should either approve this deviation, move the `unsafe`, or amend the standard to explicitly permit a scoped `prin-py` DLPack FFI module.

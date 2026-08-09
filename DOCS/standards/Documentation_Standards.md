@@ -120,6 +120,17 @@ may close:
 7. **Consistency sweep.** Cross-references (plan ↔ standards ↔ session briefs
    ↔ READMEs ↔ workflows) affected by the cycle are updated; stale statements
    found later are D4 audit findings (D2 if they could authorize wrong work).
+8. **Documentation accuracy sweep.** Explicit verification that all
+   documentation in touched areas matches the current code state:
+   (a) every README in a directory whose source code changed in S1–S3
+   accurately describes the current module contents, public API, and usage;
+   (b) every rustdoc code example in touched crates compiles (verified via
+   `cargo test --doc` on touched crates or the full workspace);
+   (c) every index/README file in `DOCS/` subdirectories (`DOCS/audits/`,
+   `DOCS/reports/`, `DOCS/sessions/`, `DOCS/ANALYTICS/`) lists all current
+   files and is free of stale entries. Stale documentation found by the
+   next cycle's audit is a D4 finding (D2 if it could authorize incorrect
+   work), per the consistency-sweep rule in item 7.
 
 S4 produces no functional code changes. If a documentation task exposes a code
 defect, it is logged for the next cycle (or triggers a hotfix per Workflow

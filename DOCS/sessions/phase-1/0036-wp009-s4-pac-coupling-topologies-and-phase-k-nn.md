@@ -1,6 +1,6 @@
 # Session 0036 — WP-009 S4: Documentation — PAC, coupling topologies, and phase k-NN
 
-**Status:** PLANNED  
+**Status:** COMPLETE
 **Roadmap phase:** 1 — Dynamics core  
 **Execution unit:** WP-009  
 **Session type:** S4 — Documentation  

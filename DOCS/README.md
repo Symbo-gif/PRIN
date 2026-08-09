@@ -16,13 +16,24 @@ Documentation Standards §3).
 | [`standards/Benchmarking_and_Reproducibility_Standards.md`](standards/Benchmarking_and_Reproducibility_Standards.md) | Normative benchmarking and reproducibility standards |
 | [`standards/Experimentation_Standards.md`](standards/Experimentation_Standards.md) | Normative scientific experimentation standards — pre-registration (expected results + failure conditions before execution), campaign rules, integrity rules |
 | [`standards/Versioning_and_Release_Standards.md`](standards/Versioning_and_Release_Standards.md) | Normative versioning, CI/CD, and release standards |
-| [`audits/`](audits/README.md) | Per-cycle Audit Reports (S2) + template |
+| [`audits/`](audits/README.md) | Per-cycle Audit Reports (S2) and S3 closure evidence |
+| [`baselines/`](baselines/README.md) | Immutable measured repository/API baseline artefacts |
 | [`reports/`](reports/README.md) | Per-cycle Project State Reports (S4) + template — the latest report is the authoritative trajectory position |
 | [`experiments/`](experiments/README.md) | Experiment pre-registrations, execution logs, and reports + template |
 | [`sessions/`](sessions/README.md) | **Complete Session Execution Plan** — 198 individually addressable briefs from WP-001 through stable `1.0.0`, master register, traceability matrix, and conditional correction templates |
-| `sphinx/` | The Sphinx documentation site (ReadTheDocs) |
+| [`ANALYTICS/`](ANALYTICS/README.md) | Phase-level analytics sessions — comprehensive, scientifically rigorous retrospective assessment of each completed roadmap phase (methodology, dimension scores, evidence index, recommendations) |
+| [`sphinx/`](sphinx/README.md) | The Sphinx documentation site (ReadTheDocs) |
 | `archive and reference from PRINet 3.0/` | **Archived PRINet 3.0.0 — reference and planning material only.** Nothing in it is imported, executed, or built by PRIN |
 | `test_and_benchmark_results/` | Generated benchmark reports (gitignored; canonical artefacts in `benchmarks/results/`) |
+
+## Current state
+
+- Latest Project State Report: [`005-project-state.md`](reports/005-project-state.md) —
+  WP-005 S4 closure, Phase 0 exit gate GREEN, WP-006 declaration.
+- Latest Audit Report: [`005-wp005-audit.md`](audits/005-wp005-audit.md) —
+  `PASS-WITH-FINDINGS`, S3 delta re-audit **CLEAN**.
+- Latest Phase Analytics: [`ANALYTICS/phase-0/phase-0-analytics-report.md`](ANALYTICS/phase-0/phase-0-analytics-report.md) —
+  Phase 0 **PASS — EXCELLENT** (all dimensions ≥ 4).
 
 Operational checklists mirroring the Session Cycle live in
 `.windsurf/workflows/` (`/coding-session`, `/audit-session`,

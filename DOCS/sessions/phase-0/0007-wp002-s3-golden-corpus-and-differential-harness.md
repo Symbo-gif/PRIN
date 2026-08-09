@@ -1,6 +1,6 @@
 # Session 0007 — WP-002 S3: Remediation — Golden corpus and differential harness
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-002  
 **Session type:** S3 — Remediation  

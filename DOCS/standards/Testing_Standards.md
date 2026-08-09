@@ -39,7 +39,7 @@
 |---|---|
 | Trajectories (vs float64 reference) | `rtol=1e-6`, `atol=1e-8` |
 | Chaotic regimes | Statistical comparison (order-parameter time series) beyond the shadowing horizon — never pointwise |
-| Metrics / tensor decompositions (float64) | `rtol=1e-10` |
+| Metrics / tensor decompositions (float64) | `rtol=2e-6`, `atol=1e-12` for cross-platform corpus-regeneration comparisons (amendments #16, #17); single-runtime verification targets `rtol=1e-10` where achievable |
 | GPU kernel vs CPU reference (f32) | Documented per kernel; default `rtol=1e-5`, `atol=1e-6` |
 
 Tolerance loosening requires a PR note, reviewer sign-off, and a Parity Report

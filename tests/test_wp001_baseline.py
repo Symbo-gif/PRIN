@@ -97,7 +97,7 @@ def test_metadata_validator_detects_version_drift(tmp_path: Path) -> None:
     pyproject = tmp_path / "pyproject.toml"
     pyproject.write_text(
         pyproject.read_text(encoding="utf-8").replace(
-            'version = "0.1.0"', 'version = "0.2.0"', 1
+            'version = "0.1.0-alpha.1"', 'version = "0.2.0"', 1
         ),
         encoding="utf-8",
     )
@@ -132,6 +132,24 @@ def test_session_plan_validator_detects_missing_brief(tmp_path: Path) -> None:
     assert any("register target does not exist" in error for error in errors)
 
 
+def test_session_plan_validator_detects_duplicate_sequence_ids(
+    tmp_path: Path,
+) -> None:
+    sessions = tmp_path / "DOCS" / "sessions"
+    shutil.copytree(ROOT / "DOCS" / "sessions", sessions)
+    source = (
+        sessions / "phase-0" / "0002-wp001-s2-foundation-baseline-and-traceability.md"
+    )
+    shutil.copy2(source, sessions / "phase-0" / "0002-duplicate.md")
+
+    errors = validate_session_plan(tmp_path)
+
+    assert any(
+        "duplicate session brief sequence IDs: 0002" in error for error in errors
+    )
+    assert any("199 physical numbered session briefs" in error for error in errors)
+
+
 def test_api_traceability_covers_archive_without_importing_it(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -156,11 +174,28 @@ def test_api_traceability_covers_archive_without_importing_it(
     assert traceability["top_level_public_symbol_count"] == 172
     assert traceability["frozen_public_symbol_count"] == 98
     assert traceability["top_level_symbols_not_frozen"] == 74
-    assert traceability["symbol_count"] >= 652
+    assert traceability["symbol_count"] == 657
     assert len(traceability["modules"]) == traceability["module_count"]
     assert len(traceability["symbols"]) == traceability["symbol_count"]
     assert all(row["future_wp"].startswith("WP-") for row in traceability["modules"])
     assert all(row["future_wp"].startswith("WP-") for row in traceability["symbols"])
+
+
+def test_baseline_validator_enforces_exact_module_symbol_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    traceability = collect_api_traceability(ROOT)
+    traceability["symbol_count"] = 656
+    traceability["symbols"] = traceability["symbols"][:-1]
+    monkeypatch.setattr(
+        wp001_baseline,
+        "collect_api_traceability",
+        lambda root, ownership_path=None: traceability,
+    )
+
+    errors = validate_baseline(ROOT)
+
+    assert any("expected 657, found 656" in error for error in errors)
 
 
 def test_api_traceability_is_deterministic() -> None:
@@ -204,9 +239,10 @@ def test_repository_inventory_is_deterministic_and_separates_archive() -> None:
 
     assert first == second
     assert first["project"]["name"] == "prin"
-    assert first["project"]["version"] == "0.1.0"
+    assert first["project"]["version"] == "0.1.0-alpha.1"
     assert len(first["workspace"]["members"]) == 8
-    assert len(first["ci"]["workflows"]) == 6
+    assert len(first["ci"]["workflows"]) == 7
+    assert "snyk.yml" in first["ci"]["workflows"]
     assert first["session_plan"]["numbered_briefs"] == 198
     assert first["archive"]["python_modules"] == 43
     assert "target" in first["excluded_directories"]
@@ -484,7 +520,7 @@ def test_metadata_validator_reports_comprehensive_drift(tmp_path: Path) -> None:
         "test matrix",
         "required CI workflow",
         "channel must equal",
-        "components must equal",
+        "components must include",
     ]
     for fragment in expected_fragments:
         assert any(fragment in error for error in errors), fragment
@@ -499,6 +535,63 @@ def test_metadata_validator_reports_missing_required_file(tmp_path: Path) -> Non
     ]
 
 
+def test_python_dependency_audits_are_complete_and_gating() -> None:
+    workflow = (ROOT / ".github/workflows/python.yml").read_text(encoding="utf-8")
+    security_job = workflow.split("  security:\n", maxsplit=1)[1]
+
+    assert "pip-audit ." in security_job
+    assert "pip-audit -r DOCS/sphinx/requirements.txt" in security_job
+    assert security_job.count("--fail-on=all") == 2
+    assert "continue-on-error" not in security_job
+    assert "|| true" not in security_job
+
+
+def test_release_workflow_guards_unready_workspace_crates() -> None:
+    workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+    publish_job = workflow.split("  publish-crates:\n", maxsplit=1)[1]
+
+    assert "WP-005" in publish_job
+    assert "cargo publish" not in publish_job
+    assert "CARGO_REGISTRY_TOKEN" not in publish_job
+
+
+def test_repro_workflow_has_explicit_pre_wp035_guard() -> None:
+    workflow = (ROOT / ".github/workflows/repro.yml").read_text(encoding="utf-8")
+
+    assert 'PRIN_REPRO_ENABLED: "false"' in workflow
+    assert "Pre-WP-035 guard" in workflow
+    assert workflow.count("env.PRIN_REPRO_ENABLED == 'true'") == 2
+
+
+def test_python_ci_builds_inside_explicit_virtual_environments() -> None:
+    for relative in [
+        ".github/workflows/python.yml",
+        ".github/workflows/repro.yml",
+    ]:
+        workflow = (ROOT / relative).read_text(encoding="utf-8")
+        assert "python -m venv .venv" in workflow
+        assert 'echo "$PWD/.venv/bin" >> "$GITHUB_PATH"' in workflow
+
+
+def test_secret_scan_is_blocking_and_covers_full_history() -> None:
+    workflow = (ROOT / ".github/workflows/snyk.yml").read_text(encoding="utf-8")
+    secret_job = workflow.split("  secret-scan:\n", maxsplit=1)[1]
+
+    assert "pull-requests: read" in workflow
+    assert "fetch-depth: 0" in secret_job
+    assert "gitleaks/gitleaks-action@v2" in secret_job
+    assert "continue-on-error" not in secret_job
+    assert "|| true" not in secret_job
+    ignored = [
+        line
+        for line in (ROOT / ".gitleaksignore").read_text(encoding="utf-8").splitlines()
+        if line and not line.startswith("#")
+    ]
+    assert len(ignored) == 1
+    assert ":generic-api-key:68" in ignored[0]
+    assert "sha256_manifest.json" in ignored[0]
+
+
 def test_session_plan_validator_reports_metadata_and_link_drift(
     tmp_path: Path,
 ) -> None:
@@ -508,7 +601,7 @@ def test_session_plan_validator_reports_metadata_and_link_drift(
     first.write_text(
         first.read_text(encoding="utf-8")
         .replace("# Session 0001", "# Session 9999", 1)
-        .replace("**Status:** READY", "**Status:** BLOCKED", 1)
+        .replace("**Status:** COMPLETE", "**Status:** BLOCKED", 1)
         .replace("**Execution unit:** WP-001", "**Execution unit:** WP-999", 1)
         .replace("**Session type:** S1 — Coding", "**Session type:** S2 — Audit", 1)
         .replace(
@@ -613,4 +706,4 @@ def test_cli_reports_invalid_root(capsys: pytest.CaptureFixture[str]) -> None:
 
     captured = capsys.readouterr()
     assert exit_code == 1
-    assert "archive package is missing" in captured.err
+    assert "root is not a directory" in captured.err

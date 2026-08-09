@@ -1,6 +1,6 @@
 # Session 0045 — WP-012 S1: Coding — Exponential and multi-rate integrators
 
-**Status:** PLANNED  
+**Status:** READY  
 **Roadmap phase:** 2 — Advanced numerics and simulation  
 **Execution unit:** WP-012  
 **Session type:** S1 — Coding  
