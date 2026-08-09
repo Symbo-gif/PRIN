@@ -24,6 +24,7 @@ analytics session (the first analytics session for this project). It defines:
 | Phase | Report | Verdict | Date |
 |---|---|---|---|
 | 0 — Foundation | [`phase-0/phase-0-analytics-report.md`](phase-0/phase-0-analytics-report.md) | **PASS — EXCELLENT** | 2026-08-07 |
+| 1 — Dynamics core | [`phase-1/phase-1-analytics-report.md`](phase-1/phase-1-analytics-report.md) | **PASS — EXCELLENT** | 2026-08-09 |
 
 ## Companion files
 
