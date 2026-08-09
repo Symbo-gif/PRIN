@@ -107,12 +107,12 @@ def test_harness_detects_planted_deviation_at_tolerance() -> None:
 
 
 def test_harness_uses_metric_tolerances_for_order_parameters() -> None:
-    """Order parameters use the stricter metric tolerance."""
+    """Order parameters use the documented metric tolerance tier."""
     arrays = _make_arrays()
     perturbed = dict(
         (name, getattr(arrays, name).copy()) for name in CaseArrays._ARRAY_NAMES
     )
-    perturbed["order_parameter_traj"][1] += 1e-7
+    perturbed["order_parameter_traj"][1] += 5e-7
     test = CaseArrays(**perturbed)
     result = compare_arrays(
         arrays.order_parameter_traj,
