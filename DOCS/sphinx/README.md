@@ -18,16 +18,21 @@ separately to docs.rs and linked from here.
 - **Migration Guide (PRINet 3.0 → PRIN)** — symbol-by-symbol mapping table and
   tolerance notes.
 - **Kernel Architecture** — the single-source CubeCL kernel design.
-- **Parity Report** — published results of the numerical parity program.
-- **API Reference** (`api/`) — autodoc for `prin`, `prin.nn`, `prin.eval`,
-  `prin.experiments`, `prin.reporting`.
+- **Parity Report** — published results of the numerical parity program
+  (placeholder until Phase 6; the WP-002 golden corpus is in `parity/`).
+- **API Reference** (`api/`) — autodoc for `prin`, `prin.dlpack`, `prin.parity`,
+  `prin.nn`, `prin.eval`, `prin.experiments`, `prin.reporting`.
 
 ## Build
 
 ```bash
 pip install -r DOCS/sphinx/requirements.txt
-sphinx-build -b html DOCS/sphinx DOCS/sphinx/_build/html
+pip install .
+sphinx-build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
 ```
+
+WP-001 verified the warning-as-error build against an installed wheel. The
+project README is intentionally excluded from the Sphinx source toctree.
 
 ## Conventions
 

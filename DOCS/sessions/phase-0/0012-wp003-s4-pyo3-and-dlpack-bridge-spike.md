@@ -1,6 +1,6 @@
 # Session 0012 — WP-003 S4: Documentation — PyO3 and DLPack bridge spike
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-003  
 **Session type:** S4 — Documentation  

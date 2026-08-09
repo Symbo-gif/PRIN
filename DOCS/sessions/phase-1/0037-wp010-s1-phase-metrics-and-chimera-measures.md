@@ -1,10 +1,10 @@
 # Session 0037 — WP-010 S1: Coding — Phase metrics and chimera measures
 
-**Status:** PLANNED  
-**Roadmap phase:** 1 — Dynamics core  
-**Execution unit:** WP-010  
-**Session type:** S1 — Coding  
-**Predecessor:** [0036 — Documentation](0036-wp009-s4-pac-coupling-topologies-and-phase-k-nn.md)  
+**Status:** COMPLETE
+**Roadmap phase:** 1 — Dynamics core
+**Execution unit:** WP-010
+**Session type:** S1 — Coding
+**Predecessor:** [0036 — Documentation](0036-wp009-s4-pac-coupling-topologies-and-phase-k-nn.md)
 **Successor:** [0038 — Audit](0038-wp010-s2-phase-metrics-and-chimera-measures.md)  
 **Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 

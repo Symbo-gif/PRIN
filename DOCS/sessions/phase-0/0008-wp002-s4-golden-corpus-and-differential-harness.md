@@ -1,6 +1,6 @@
 # Session 0008 — WP-002 S4: Documentation — Golden corpus and differential harness
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-002  
 **Session type:** S4 — Documentation  

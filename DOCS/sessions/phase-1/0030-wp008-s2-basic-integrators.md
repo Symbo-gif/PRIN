@@ -1,6 +1,6 @@
 # Session 0030 — WP-008 S2: Audit — Basic integrators
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 1 — Dynamics core  
 **Execution unit:** WP-008  
 **Session type:** S2 — Audit  

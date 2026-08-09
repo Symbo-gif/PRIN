@@ -1,6 +1,6 @@
 # Session 0001 — WP-001 S1: Coding — Foundation baseline and traceability
 
-**Status:** READY (bootstrap approval: Project Plan amendment #2)  
+**Status:** COMPLETE  
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-001  
 **Session type:** S1 — Coding  

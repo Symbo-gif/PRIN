@@ -1,7 +1,11 @@
 name: parity
 
-# Differential testing against prinet==3.0.0 on the golden-trajectory corpus
-# plus hypothesis-generated random cases (project plan §7.3).
+# Differential testing against the archived PRINet 3.0.0 source on the
+# golden-trajectory corpus plus hypothesis-generated random cases
+# (project plan §7.3).
+#
+# Runs the exhaustive 504-case differential parity suite using pytest-xdist
+# for parallel execution (Phase 1 recommendation R8).
 
 on:
   push:
@@ -33,10 +37,21 @@ jobs:
           python-version: "3.12"
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Create virtual environment
+        shell: bash
+        run: |
+          python -m venv .venv
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            echo "$PWD/.venv/Scripts" >> "$GITHUB_PATH"
+          else
+            echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          fi
       - name: Install new build + reference PRINet 3.0.0 in one venv
         run: |
           pip install maturin
           maturin develop -m crates/prin-py/Cargo.toml
-          pip install -e ".[dev,parity]"
-      - name: Run differential parity suite
-        run: pytest parity/ -v -m parity
+          pip install -e ".[dev]"
+          pip install pytest-xdist
+          pip install -e "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main"
+      - name: Run exhaustive differential parity suite (504 cases)
+        run: python -m pytest parity/ -v -m parity -n auto

@@ -3,6 +3,297 @@
 Regenerated as the Rust API grows; keep in sync with ``crates/prin-py``.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+from numpy.typing import NDArray
+
 __version__: str
 
+# --- DLPack ---
 def core_version() -> str: ...
+def dlpack_negate(obj: object) -> object: ...
+def dlpack_negate_batched(tensors: list[object]) -> list[object]: ...
+def dlpack_round_trip(obj: object) -> object: ...
+
+# --- Constants ---
+TAU: float
+AMPLITUDE_MIN: float
+AMPLITUDE_MAX: float
+DERIV_CLAMP: float
+SPARSE_EPS: float
+
+# --- Seed ---
+class Seed:
+    def __init__(self, counter: int, key: int) -> None: ...
+    @property
+    def counter(self) -> int: ...
+    @property
+    def key(self) -> int: ...
+    def jump(self, delta: int) -> None: ...
+    def next_f64(self) -> float: ...
+    def next_f64_range(self, lo: float, hi: float) -> float: ...
+    def next_u64(self) -> int: ...
+
+# --- OscillatorState ---
+class OscillatorState:
+    def __init__(
+        self,
+        phase: NDArray[np.float64],
+        amplitude: NDArray[np.float64],
+        frequency: NDArray[np.float64],
+        freq_band: NDArray[np.uint32] | None = None,
+    ) -> None: ...
+    @property
+    def n_oscillators(self) -> int: ...
+    @property
+    def n_bands(self) -> int: ...
+    @property
+    def phase(self) -> NDArray[np.float64]: ...
+    @property
+    def amplitude(self) -> NDArray[np.float64]: ...
+    @property
+    def frequency(self) -> NDArray[np.float64]: ...
+    @property
+    def freq_band(self) -> NDArray[np.uint32] | None: ...
+    @staticmethod
+    def create_random(
+        n: int, freq_range: tuple[float, float], seed: Seed
+    ) -> OscillatorState: ...
+    @staticmethod
+    def create_synchronized(n: int, base_frequency: float) -> OscillatorState: ...
+    def phase_knn_index(self, k: int) -> list[NDArray[np.int64]]: ...
+    def __len__(self) -> int: ...
+
+# --- StateDerivatives ---
+class StateDerivatives:
+    @property
+    def dphase(self) -> NDArray[np.float64]: ...
+    @property
+    def damplitude(self) -> NDArray[np.float64]: ...
+    @property
+    def dfrequency(self) -> NDArray[np.float64]: ...
+
+# --- CouplingMode ---
+class CouplingMode:
+    @staticmethod
+    def mean_field() -> CouplingMode: ...
+    @staticmethod
+    def full(matrix: NDArray[np.float64] | None = None) -> CouplingMode: ...
+    @staticmethod
+    def sparse_knn(k: int | None = None) -> CouplingMode: ...
+    def variant(self) -> str: ...
+
+# --- Topology ---
+class Topology:
+    @staticmethod
+    def all_to_all() -> Topology: ...
+    @staticmethod
+    def ring(k_ring: int) -> Topology: ...
+    @staticmethod
+    def small_world(k_ring: int, rewire_prob: float, seed: Seed) -> Topology: ...
+    def build_matrix(self, n: int, coupling_strength: float) -> NDArray[np.float64]: ...
+
+# --- PhaseAmplitudeCoupling ---
+class PhaseAmplitudeCoupling:
+    def __init__(self, modulation_depth: float) -> None: ...
+    @property
+    def modulation_depth(self) -> float: ...
+    def modulate(
+        self,
+        slow_phase: NDArray[np.float64],
+        fast_amplitude: NDArray[np.float64],
+        offset: float,
+    ) -> NDArray[np.float64]: ...
+
+# --- Models ---
+class KuramotoOscillator:
+    def __init__(
+        self,
+        n_oscillators: int,
+        coupling_strength: float,
+        decay_rate: float,
+        freq_adaptation_rate: float,
+        coupling_mode: CouplingMode,
+    ) -> None: ...
+    @property
+    def n_oscillators(self) -> int: ...
+    @property
+    def coupling_strength(self) -> float: ...
+    @property
+    def decay_rate(self) -> float: ...
+    @property
+    def freq_adaptation_rate(self) -> float: ...
+    def compute_derivatives(self, state: OscillatorState) -> StateDerivatives: ...
+
+class StuartLandauOscillator:
+    def __init__(
+        self,
+        n_oscillators: int,
+        coupling_strength: float,
+        bifurcation_param: float,
+        coupling_mode: CouplingMode,
+    ) -> None: ...
+    @property
+    def n_oscillators(self) -> int: ...
+    @property
+    def coupling_strength(self) -> float: ...
+    @property
+    def bifurcation_param(self) -> float: ...
+    def compute_derivatives(self, state: OscillatorState) -> StateDerivatives: ...
+
+class HopfOscillator:
+    def __init__(
+        self,
+        n_oscillators: int,
+        coupling_strength: float,
+        bifurcation_param: float,
+        freq_adaptation_rate: float,
+        coupling_mode: CouplingMode,
+    ) -> None: ...
+    @property
+    def n_oscillators(self) -> int: ...
+    @property
+    def coupling_strength(self) -> float: ...
+    @property
+    def bifurcation_param(self) -> float: ...
+    @property
+    def freq_adaptation_rate(self) -> float: ...
+    def compute_derivatives(self, state: OscillatorState) -> StateDerivatives: ...
+
+# --- Integrators ---
+class EulerIntegrator:
+    def __init__(self) -> None: ...
+    def step(
+        self, model: Any, state: OscillatorState, dt: float
+    ) -> OscillatorState: ...
+    def integrate_fixed(
+        self,
+        model: Any,
+        state: OscillatorState,
+        n_steps: int,
+        dt: float,
+        record_trajectory: bool = False,
+    ) -> tuple[OscillatorState, list[OscillatorState] | None]: ...
+
+class RK4Integrator:
+    def __init__(self) -> None: ...
+    def step(
+        self, model: Any, state: OscillatorState, dt: float
+    ) -> OscillatorState: ...
+    def integrate_fixed(
+        self,
+        model: Any,
+        state: OscillatorState,
+        n_steps: int,
+        dt: float,
+        record_trajectory: bool = False,
+    ) -> tuple[OscillatorState, list[OscillatorState] | None]: ...
+
+class RK45Integrator:
+    def __init__(
+        self, rtol: float = 1e-6, atol: float = 1e-8, max_steps: int = 100_000
+    ) -> None: ...
+    def step(
+        self, model: Any, state: OscillatorState, dt: float
+    ) -> OscillatorState: ...
+    def integrate_adaptive(
+        self,
+        model: Any,
+        state: OscillatorState,
+        t_span: float,
+        dt_init: float,
+        record_trajectory: bool = False,
+    ) -> AdaptiveResult: ...
+    def integrate_fixed(
+        self,
+        model: Any,
+        state: OscillatorState,
+        n_steps: int,
+        dt: float,
+        record_trajectory: bool = False,
+    ) -> tuple[OscillatorState, list[OscillatorState] | None]: ...
+
+class AdaptiveResult:
+    @property
+    def final_state(self) -> OscillatorState: ...
+    @property
+    def accepted_steps(self) -> int: ...
+    @property
+    def rejected_steps(self) -> int: ...
+    @property
+    def final_dt(self) -> float: ...
+    @property
+    def trajectory(self) -> list[OscillatorState] | None: ...
+
+# --- Metrics: Order ---
+def kuramoto_order_parameter(phase: NDArray[np.float64]) -> float: ...
+def kuramoto_order_parameter_complex(
+    phase: NDArray[np.float64],
+) -> tuple[float, float]: ...
+def inter_frame_phase_correlation(
+    phase_t: NDArray[np.float64], phase_t_prev: NDArray[np.float64]
+) -> float: ...
+def order_parameter_series(
+    trajectory: NDArray[np.float64], n: int
+) -> NDArray[np.float64]: ...
+
+# --- Metrics: Coherence ---
+def mean_phase_coherence(phase: NDArray[np.float64]) -> float: ...
+def phase_coherence_matrix(phase: NDArray[np.float64]) -> NDArray[np.float64]: ...
+def sparse_mean_phase_coherence(
+    phase: NDArray[np.float64], neighbors: list[list[int]]
+) -> float: ...
+
+# --- Metrics: Spectral ---
+def power_spectral_density(
+    amplitude: NDArray[np.float64],
+    phase: NDArray[np.float64],
+    n_freq_bins: int | None = None,
+) -> NDArray[np.float64]: ...
+def extract_concept_probabilities(
+    amplitude: NDArray[np.float64],
+    phase: NDArray[np.float64],
+    concept_frequencies: NDArray[np.float64],
+    concept_bandwidths: NDArray[np.float64],
+    n_freq_bins: int | None = None,
+) -> NDArray[np.float64]: ...
+
+# --- Metrics: Energy ---
+def synchronization_energy(
+    phase: NDArray[np.float64],
+    amplitude: NDArray[np.float64],
+    coupling_matrix: NDArray[np.float64] | None = None,
+) -> float: ...
+def sparse_synchronization_energy(
+    phase: NDArray[np.float64],
+    amplitude: NDArray[np.float64],
+    neighbors: list[list[int]],
+    coupling_strength: float,
+) -> float: ...
+
+# --- Metrics: Chimera ---
+def local_order_parameter(
+    phase: NDArray[np.float64], neighbors: list[list[int]]
+) -> NDArray[np.float64]: ...
+def bimodality_index(values: NDArray[np.float64]) -> float: ...
+def strength_of_incoherence(phase: NDArray[np.float64], window_size: int) -> float: ...
+def discontinuity_measure(
+    phase: NDArray[np.float64], threshold_ratio: float
+) -> tuple[list[bool], int]: ...
+def chimera_index(
+    phase: NDArray[np.float64], neighbors: list[list[int]], threshold: float
+) -> float: ...
+def strength_of_incoherence_temporal(
+    trajectory: list[list[float]], window_size: int, discard_transient: int
+) -> float: ...
+def bimodality_chimera_threshold() -> float: ...
+def default_chimera_threshold() -> float: ...
+
+# --- Metrics: Metastability ---
+def metastability(trajectory: NDArray[np.float64], n: int) -> float: ...
+
+# --- Metrics: k-NN ---
+def build_phase_knn(phase: NDArray[np.float64], k: int) -> list[NDArray[np.int64]]: ...
