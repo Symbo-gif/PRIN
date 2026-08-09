@@ -1,6 +1,6 @@
 # Session 0028 — WP-007 S4: Documentation — Oscillator dynamics models
 
-**Status:** PLANNED  
+**Status:** COMPLETE
 **Roadmap phase:** 1 — Dynamics core  
 **Execution unit:** WP-007  
 **Session type:** S4 — Documentation  

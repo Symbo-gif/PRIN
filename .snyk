@@ -1,0 +1,29 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+exclude:
+  global:
+    - DOCS/archive and reference from PRINet 3.0/**
+# ignores vulnerabilities until expiry date; change duration by modifying expiry date
+ignore:
+  42730d25-f3e1-4fd0-865b-f41bc34f502e:
+    - '*':
+        reason: >-
+          EA-002 E-F4: operator-trusted CLI root in local audit tool; maintainer
+          approval 2026-08-08
+        expires: 2026-11-06T00:00:00.000Z
+        created: 2026-08-08T06:42:35.325Z
+  d9d38c5c-991a-4ebf-ad24-69336d50c8f6:
+    - '*':
+        reason: >-
+          EA-002 E-F4: operator-trusted CLI root in local audit tool; maintainer
+          approval 2026-08-08
+        expires: 2026-11-06T00:00:00.000Z
+        created: 2026-08-08T06:42:47.735Z
+  bd40dfa4-9142-4e3b-b7f2-4cca599cbd88:
+    - '*':
+        reason: >-
+          EA-002 E-F4: operator-trusted CLI root in local audit tool; maintainer
+          approval 2026-08-08
+        expires: 2026-11-06T00:00:00.000Z
+        created: 2026-08-08T06:42:50.801Z
+version: v1.25.1
+patch: {}

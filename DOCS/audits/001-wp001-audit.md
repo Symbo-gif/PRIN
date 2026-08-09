@@ -648,16 +648,23 @@ committed. After that commit, hand off to session 0003; do not begin WP-002.
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP001-F1 | PENDING | — | — |
-| WP001-F2 | PENDING | — | — |
-| WP001-F3 | PENDING | — | — |
-| WP001-F4 | PENDING | — | — |
-| WP001-F5 | PENDING | — | — |
-| WP001-F6 | PENDING | — | — |
-| WP001-F7 | PENDING | — | — |
-| WP001-F8 | PENDING | — | — |
-| WP001-F9 | PENDING | — | — |
-| WP001-F10 | PENDING | — | — |
-| WP001-F11 | PENDING | — | — |
+| WP001-F1 | FIXED | `13eac9e` | PyO3/rust-numpy 0.29.0; Cargo Audit clean; workspace, strict-checks, wheel, and rustdoc gates pass |
+| WP001-F2 | FIXED | `510e0c9` | Project/docs Pip Audit and Snyk Open Source report zero findings; hosted `security` passes in run `31102170623` |
+| WP001-F3 | FIXED | `510e0c9` | Long-lived token path removed; explicit pre-WP-005 publication guard and regression assertion pass |
+| WP001-F4 | FIXED | `510e0c9` | Exact 657-row contract enforced; 656-row mutation regression fails closed; 44/44 focused tests pass |
+| WP001-F5 | FIXED | `510e0c9` | Physical brief count and duplicate IDs fail closed; duplicate-0002 regression passes |
+| WP001-F6 | FIXED | `510e0c9` | Explicit pre-WP-035 repro guard is tested; hosted `reproduce` passes in run `31102171145` |
+| WP001-F7 | FIXED | `510e0c9` | Unready crate publication is explicitly guarded until WP-005; no package/publish claim remains active |
+| WP001-F8 | AMENDED | Plan amendment #5; `510e0c9`, `71e55dd` | GitHub returned HTTP 422 unavailable; approved substitute is active: protected PR-only `main`, required full-history Gitleaks, one checksum fingerprint exception, zero findings; `Secret Scan` passes in run `31102170531` |
+| WP001-F9 | FIXED | `510e0c9` | Missing static path removed, README explicitly excluded, and wheel-backed Sphinx 9.1.0 succeeds under `-W --keep-going` |
+| WP001-F10 | FIXED | Hosted setting, 2026-08-06 | Authenticated API verifies strict required checks, one fresh approving review, admin enforcement, conversation resolution, linear history, and force-push/deletion denial on `main` |
+| WP001-F11 | FIXED | `510e0c9` | Explicit virtual environments added and tested; all Linux/Windows Python 3.11–3.13 jobs pass in run `31102170623` |
 
-**Delta re-audit date:** PENDING — **Result:** findings remain
+**Delta re-audit date:** 2026-08-06 — **Result:** **CLEAN**
+
+The delta re-audit covered all eleven findings, the complete local gate, Cargo
+Audit, project and documentation Pip Audit, Snyk Code and Open Source, full-history
+and staged-diff Gitleaks, wheel-backed Sphinx, and PR #3 hosted checks at
+`71e55dd`. Focused automation coverage is 491/515 statements (95.34%); all 45
+repository tests pass. No numerical/source-package feature, parity corpus,
+performance conclusion, or golden data was introduced. No finding is carried.

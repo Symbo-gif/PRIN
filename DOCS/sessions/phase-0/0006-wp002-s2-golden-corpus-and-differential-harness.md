@@ -1,6 +1,6 @@
 # Session 0006 — WP-002 S2: Audit — Golden corpus and differential harness
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-002  
 **Session type:** S2 — Audit  

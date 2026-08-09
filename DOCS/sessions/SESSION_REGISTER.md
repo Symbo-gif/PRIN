@@ -11,53 +11,67 @@ plan amendment. Mandatory S3 executes even after a zero-finding audit. A D1
 found during Phase 7 inserts a correction cycle from `contingencies/` before
 the next numbered session; planned numbers do not change.
 
+## Global sessions — Executive Audits
+
+Executive Audit Sessions are project-level audits governed by
+`DOCS/standards/Executive_Audit_Governance_and_Methodology.md`. They are
+global sessions **outside** the planned 0001–0198 sequence: the planned
+numbering above remains unique and gap-free (TRACEABILITY invariant 4), and
+no planned session is renumbered by an executive audit (plan amendment #15).
+
+| EA | Date | Session brief | Git state | Status |
+|---|---|---|---|---|
+| EA-001 | 2026-08-07 | Executive Audit Session 001 — full-project audit across E1–E10; report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_001.md` (`PASS-WITH-REMEDIATION`, findings E-F1–E-F5) | `feat/wp006-oscillator-state` @ `d1e6e0a` | COMPLETE `[RETROACTIVE UPDATE - Executive Audit 002]` registered here; EA-001's own report claimed this registration but the update was never committed (EA-002 finding E-F2) |
+| EA-002 | 2026-08-08 | Executive Audit Session 002 — delta audit of Sessions 0025–0036 (WP-007..WP-009) plus full-project re-verification; report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_002.md` (`PASS-WITH-REMEDIATION`, findings E-F1–E-F13) | `feat/wp006-oscillator-state` @ `f5ae5b7` + remediation commits | COMPLETE |
+
+
 | Seq | Phase | Unit | Type | Session brief | Current status |
 |---:|---:|---|---|---|---|
-| 0001 | 0 | WP-001 | S1 — Coding | [Foundation baseline and traceability](phase-0/0001-wp001-s1-foundation-baseline-and-traceability.md) | READY |
-| 0002 | 0 | WP-001 | S2 — Audit | [Foundation baseline and traceability](phase-0/0002-wp001-s2-foundation-baseline-and-traceability.md) | PLANNED |
-| 0003 | 0 | WP-001 | S3 — Remediation | [Foundation baseline and traceability](phase-0/0003-wp001-s3-foundation-baseline-and-traceability.md) | PLANNED |
-| 0004 | 0 | WP-001 | S4 — Documentation | [Foundation baseline and traceability](phase-0/0004-wp001-s4-foundation-baseline-and-traceability.md) | PLANNED |
-| 0005 | 0 | WP-002 | S1 — Coding | [Golden corpus and differential harness](phase-0/0005-wp002-s1-golden-corpus-and-differential-harness.md) | PLANNED |
-| 0006 | 0 | WP-002 | S2 — Audit | [Golden corpus and differential harness](phase-0/0006-wp002-s2-golden-corpus-and-differential-harness.md) | PLANNED |
-| 0007 | 0 | WP-002 | S3 — Remediation | [Golden corpus and differential harness](phase-0/0007-wp002-s3-golden-corpus-and-differential-harness.md) | PLANNED |
-| 0008 | 0 | WP-002 | S4 — Documentation | [Golden corpus and differential harness](phase-0/0008-wp002-s4-golden-corpus-and-differential-harness.md) | PLANNED |
-| 0009 | 0 | WP-003 | S1 — Coding | [PyO3 and DLPack bridge spike](phase-0/0009-wp003-s1-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
-| 0010 | 0 | WP-003 | S2 — Audit | [PyO3 and DLPack bridge spike](phase-0/0010-wp003-s2-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
-| 0011 | 0 | WP-003 | S3 — Remediation | [PyO3 and DLPack bridge spike](phase-0/0011-wp003-s3-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
-| 0012 | 0 | WP-003 | S4 — Documentation | [PyO3 and DLPack bridge spike](phase-0/0012-wp003-s4-pyo3-and-dlpack-bridge-spike.md) | PLANNED |
-| 0013 | 0 | WP-004 | S1 — Coding | [CubeCL fused RK4 spike](phase-0/0013-wp004-s1-cubecl-fused-rk4-spike.md) | PLANNED |
-| 0014 | 0 | WP-004 | S2 — Audit | [CubeCL fused RK4 spike](phase-0/0014-wp004-s2-cubecl-fused-rk4-spike.md) | PLANNED |
-| 0015 | 0 | WP-004 | S3 — Remediation | [CubeCL fused RK4 spike](phase-0/0015-wp004-s3-cubecl-fused-rk4-spike.md) | PLANNED |
-| 0016 | 0 | WP-004 | S4 — Documentation | [CubeCL fused RK4 spike](phase-0/0016-wp004-s4-cubecl-fused-rk4-spike.md) | PLANNED |
-| 0017 | 0 | WP-005 | S1 — Coding | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0017-wp005-s1-ort-backends-wheel-matrix-and-phase-0-gate.md) | PLANNED |
-| 0018 | 0 | WP-005 | S2 — Audit | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0018-wp005-s2-ort-backends-wheel-matrix-and-phase-0-gate.md) | PLANNED |
-| 0019 | 0 | WP-005 | S3 — Remediation | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0019-wp005-s3-ort-backends-wheel-matrix-and-phase-0-gate.md) | PLANNED |
-| 0020 | 0 | WP-005 | S4 — Documentation | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0020-wp005-s4-ort-backends-wheel-matrix-and-phase-0-gate.md) | PLANNED |
-| 0021 | 1 | WP-006 | S1 — Coding | [Oscillator state, errors, and deterministic seed](phase-1/0021-wp006-s1-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
-| 0022 | 1 | WP-006 | S2 — Audit | [Oscillator state, errors, and deterministic seed](phase-1/0022-wp006-s2-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
-| 0023 | 1 | WP-006 | S3 — Remediation | [Oscillator state, errors, and deterministic seed](phase-1/0023-wp006-s3-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
-| 0024 | 1 | WP-006 | S4 — Documentation | [Oscillator state, errors, and deterministic seed](phase-1/0024-wp006-s4-oscillator-state-errors-and-deterministic-seed.md) | PLANNED |
-| 0025 | 1 | WP-007 | S1 — Coding | [Oscillator dynamics models](phase-1/0025-wp007-s1-oscillator-dynamics-models.md) | PLANNED |
-| 0026 | 1 | WP-007 | S2 — Audit | [Oscillator dynamics models](phase-1/0026-wp007-s2-oscillator-dynamics-models.md) | PLANNED |
-| 0027 | 1 | WP-007 | S3 — Remediation | [Oscillator dynamics models](phase-1/0027-wp007-s3-oscillator-dynamics-models.md) | PLANNED |
-| 0028 | 1 | WP-007 | S4 — Documentation | [Oscillator dynamics models](phase-1/0028-wp007-s4-oscillator-dynamics-models.md) | PLANNED |
-| 0029 | 1 | WP-008 | S1 — Coding | [Basic integrators](phase-1/0029-wp008-s1-basic-integrators.md) | PLANNED |
-| 0030 | 1 | WP-008 | S2 — Audit | [Basic integrators](phase-1/0030-wp008-s2-basic-integrators.md) | PLANNED |
-| 0031 | 1 | WP-008 | S3 — Remediation | [Basic integrators](phase-1/0031-wp008-s3-basic-integrators.md) | PLANNED |
-| 0032 | 1 | WP-008 | S4 — Documentation | [Basic integrators](phase-1/0032-wp008-s4-basic-integrators.md) | PLANNED |
-| 0033 | 1 | WP-009 | S1 — Coding | [PAC, coupling topologies, and phase k-NN](phase-1/0033-wp009-s1-pac-coupling-topologies-and-phase-k-nn.md) | PLANNED |
-| 0034 | 1 | WP-009 | S2 — Audit | [PAC, coupling topologies, and phase k-NN](phase-1/0034-wp009-s2-pac-coupling-topologies-and-phase-k-nn.md) | PLANNED |
-| 0035 | 1 | WP-009 | S3 — Remediation | [PAC, coupling topologies, and phase k-NN](phase-1/0035-wp009-s3-pac-coupling-topologies-and-phase-k-nn.md) | PLANNED |
-| 0036 | 1 | WP-009 | S4 — Documentation | [PAC, coupling topologies, and phase k-NN](phase-1/0036-wp009-s4-pac-coupling-topologies-and-phase-k-nn.md) | PLANNED |
-| 0037 | 1 | WP-010 | S1 — Coding | [Phase metrics and chimera measures](phase-1/0037-wp010-s1-phase-metrics-and-chimera-measures.md) | PLANNED |
-| 0038 | 1 | WP-010 | S2 — Audit | [Phase metrics and chimera measures](phase-1/0038-wp010-s2-phase-metrics-and-chimera-measures.md) | PLANNED |
-| 0039 | 1 | WP-010 | S3 — Remediation | [Phase metrics and chimera measures](phase-1/0039-wp010-s3-phase-metrics-and-chimera-measures.md) | PLANNED |
-| 0040 | 1 | WP-010 | S4 — Documentation | [Phase metrics and chimera measures](phase-1/0040-wp010-s4-phase-metrics-and-chimera-measures.md) | PLANNED |
-| 0041 | 1 | WP-011 | S1 — Coding | [Phase 1 Python API and dynamics integration](phase-1/0041-wp011-s1-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
-| 0042 | 1 | WP-011 | S2 — Audit | [Phase 1 Python API and dynamics integration](phase-1/0042-wp011-s2-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
-| 0043 | 1 | WP-011 | S3 — Remediation | [Phase 1 Python API and dynamics integration](phase-1/0043-wp011-s3-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
-| 0044 | 1 | WP-011 | S4 — Documentation | [Phase 1 Python API and dynamics integration](phase-1/0044-wp011-s4-phase-1-python-api-and-dynamics-integration.md) | PLANNED |
-| 0045 | 2 | WP-012 | S1 — Coding | [Exponential and multi-rate integrators](phase-2/0045-wp012-s1-exponential-and-multi-rate-integrators.md) | PLANNED |
+| 0001 | 0 | WP-001 | S1 — Coding | [Foundation baseline and traceability](phase-0/0001-wp001-s1-foundation-baseline-and-traceability.md) | COMPLETE |
+| 0002 | 0 | WP-001 | S2 — Audit | [Foundation baseline and traceability](phase-0/0002-wp001-s2-foundation-baseline-and-traceability.md) | COMPLETE |
+| 0003 | 0 | WP-001 | S3 — Remediation | [Foundation baseline and traceability](phase-0/0003-wp001-s3-foundation-baseline-and-traceability.md) | COMPLETE |
+| 0004 | 0 | WP-001 | S4 — Documentation | [Foundation baseline and traceability](phase-0/0004-wp001-s4-foundation-baseline-and-traceability.md) | COMPLETE |
+| 0005 | 0 | WP-002 | S1 — Coding | [Golden corpus and differential harness](phase-0/0005-wp002-s1-golden-corpus-and-differential-harness.md) | COMPLETE |
+| 0006 | 0 | WP-002 | S2 — Audit | [Golden corpus and differential harness](phase-0/0006-wp002-s2-golden-corpus-and-differential-harness.md) | COMPLETE |
+| 0007 | 0 | WP-002 | S3 — Remediation | [Golden corpus and differential harness](phase-0/0007-wp002-s3-golden-corpus-and-differential-harness.md) | COMPLETE |
+| 0008 | 0 | WP-002 | S4 — Documentation | [Golden corpus and differential harness](phase-0/0008-wp002-s4-golden-corpus-and-differential-harness.md) | COMPLETE |
+| 0009 | 0 | WP-003 | S1 — Coding | [PyO3 and DLPack bridge spike](phase-0/0009-wp003-s1-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0010 | 0 | WP-003 | S2 — Audit | [PyO3 and DLPack bridge spike](phase-0/0010-wp003-s2-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0011 | 0 | WP-003 | S3 — Remediation | [PyO3 and DLPack bridge spike](phase-0/0011-wp003-s3-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0012 | 0 | WP-003 | S4 — Documentation | [PyO3 and DLPack bridge spike](phase-0/0012-wp003-s4-pyo3-and-dlpack-bridge-spike.md) | COMPLETE |
+| 0013 | 0 | WP-004 | S1 — Coding | [CubeCL fused RK4 spike](phase-0/0013-wp004-s1-cubecl-fused-rk4-spike.md) | COMPLETE |
+| 0014 | 0 | WP-004 | S2 — Audit | [CubeCL fused RK4 spike](phase-0/0014-wp004-s2-cubecl-fused-rk4-spike.md) | COMPLETE |
+| 0015 | 0 | WP-004 | S3 — Remediation | [CubeCL fused RK4 spike](phase-0/0015-wp004-s3-cubecl-fused-rk4-spike.md) | COMPLETE |
+| 0016 | 0 | WP-004 | S4 — Documentation | [CubeCL fused RK4 spike](phase-0/0016-wp004-s4-cubecl-fused-rk4-spike.md) | COMPLETE |
+| 0017 | 0 | WP-005 | S1 — Coding | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0017-wp005-s1-ort-backends-wheel-matrix-and-phase-0-gate.md) | COMPLETE |
+| 0018 | 0 | WP-005 | S2 — Audit | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0018-wp005-s2-ort-backends-wheel-matrix-and-phase-0-gate.md) | COMPLETE |
+| 0019 | 0 | WP-005 | S3 — Remediation | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0019-wp005-s3-ort-backends-wheel-matrix-and-phase-0-gate.md) | COMPLETE |
+| 0020 | 0 | WP-005 | S4 — Documentation | [ORT backends, wheel matrix, and Phase 0 gate](phase-0/0020-wp005-s4-ort-backends-wheel-matrix-and-phase-0-gate.md) | COMPLETE |
+| 0021 | 1 | WP-006 | S1 — Coding | [Oscillator state, errors, and deterministic seed](phase-1/0021-wp006-s1-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
+| 0022 | 1 | WP-006 | S2 — Audit | [Oscillator state, errors, and deterministic seed](phase-1/0022-wp006-s2-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
+| 0023 | 1 | WP-006 | S3 — Remediation | [Oscillator state, errors, and deterministic seed](phase-1/0023-wp006-s3-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
+| 0024 | 1 | WP-006 | S4 — Documentation | [Oscillator state, errors, and deterministic seed](phase-1/0024-wp006-s4-oscillator-state-errors-and-deterministic-seed.md) | COMPLETE |
+| 0025 | 1 | WP-007 | S1 — Coding | [Oscillator dynamics models](phase-1/0025-wp007-s1-oscillator-dynamics-models.md) | COMPLETE |
+| 0026 | 1 | WP-007 | S2 — Audit | [Oscillator dynamics models](phase-1/0026-wp007-s2-oscillator-dynamics-models.md) | COMPLETE |
+| 0027 | 1 | WP-007 | S3 — Remediation | [Oscillator dynamics models](phase-1/0027-wp007-s3-oscillator-dynamics-models.md) | COMPLETE |
+| 0028 | 1 | WP-007 | S4 — Documentation | [Oscillator dynamics models](phase-1/0028-wp007-s4-oscillator-dynamics-models.md) | COMPLETE |
+| 0029 | 1 | WP-008 | S1 — Coding | [Basic integrators](phase-1/0029-wp008-s1-basic-integrators.md) | COMPLETE |
+| 0030 | 1 | WP-008 | S2 — Audit | [Basic integrators](phase-1/0030-wp008-s2-basic-integrators.md) | COMPLETE |
+| 0031 | 1 | WP-008 | S3 — Remediation | [Basic integrators](phase-1/0031-wp008-s3-basic-integrators.md) | COMPLETE |
+| 0032 | 1 | WP-008 | S4 — Documentation | [Basic integrators](phase-1/0032-wp008-s4-basic-integrators.md) | COMPLETE |
+| 0033 | 1 | WP-009 | S1 — Coding | [PAC, coupling topologies, and phase k-NN](phase-1/0033-wp009-s1-pac-coupling-topologies-and-phase-k-nn.md) | COMPLETE |
+| 0034 | 1 | WP-009 | S2 — Audit | [PAC, coupling topologies, and phase k-NN](phase-1/0034-wp009-s2-pac-coupling-topologies-and-phase-k-nn.md) | COMPLETE |
+| 0035 | 1 | WP-009 | S3 — Remediation | [PAC, coupling topologies, and phase k-NN](phase-1/0035-wp009-s3-pac-coupling-topologies-and-phase-k-nn.md) | COMPLETE |
+| 0036 | 1 | WP-009 | S4 — Documentation | [PAC, coupling topologies, and phase k-NN](phase-1/0036-wp009-s4-pac-coupling-topologies-and-phase-k-nn.md) | COMPLETE |
+| 0037 | 1 | WP-010 | S1 — Coding | [Phase metrics and chimera measures](phase-1/0037-wp010-s1-phase-metrics-and-chimera-measures.md) | COMPLETE |
+| 0038 | 1 | WP-010 | S2 — Audit | [Phase metrics and chimera measures](phase-1/0038-wp010-s2-phase-metrics-and-chimera-measures.md) | COMPLETE |
+| 0039 | 1 | WP-010 | S3 — Remediation | [Phase metrics and chimera measures](phase-1/0039-wp010-s3-phase-metrics-and-chimera-measures.md) | COMPLETE |
+| 0040 | 1 | WP-010 | S4 — Documentation | [Phase metrics and chimera measures](phase-1/0040-wp010-s4-phase-metrics-and-chimera-measures.md) | COMPLETE |
+| 0041 | 1 | WP-011 | S1 — Coding | [Phase 1 Python API and dynamics integration](phase-1/0041-wp011-s1-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
+| 0042 | 1 | WP-011 | S2 — Audit | [Phase 1 Python API and dynamics integration](phase-1/0042-wp011-s2-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
+| 0043 | 1 | WP-011 | S3 — Remediation | [Phase 1 Python API and dynamics integration](phase-1/0043-wp011-s3-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
+| 0044 | 1 | WP-011 | S4 — Documentation | [Phase 1 Python API and dynamics integration](phase-1/0044-wp011-s4-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
+| 0045 | 2 | WP-012 | S1 — Coding | [Exponential and multi-rate integrators](phase-2/0045-wp012-s1-exponential-and-multi-rate-integrators.md) | READY |
 | 0046 | 2 | WP-012 | S2 — Audit | [Exponential and multi-rate integrators](phase-2/0046-wp012-s2-exponential-and-multi-rate-integrators.md) | PLANNED |
 | 0047 | 2 | WP-012 | S3 — Remediation | [Exponential and multi-rate integrators](phase-2/0047-wp012-s3-exponential-and-multi-rate-integrators.md) | PLANNED |
 | 0048 | 2 | WP-012 | S4 — Documentation | [Exponential and multi-rate integrators](phase-2/0048-wp012-s4-exponential-and-multi-rate-integrators.md) | PLANNED |

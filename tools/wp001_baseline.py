@@ -23,6 +23,7 @@ _EVIDENCE_OUTPUT = Path("DOCS/baselines")
 _EXCLUDED_FILES = frozenset({".coverage", "coverage.xml"})
 _EXCLUDED_DIRECTORIES = frozenset(
     {
+        ".aicb",
         ".benchmarks",
         ".git",
         ".hypothesis",
@@ -309,14 +310,33 @@ def _validate_owner(
     return future_wp, basis
 
 
+def _validate_root_path(path: Path) -> Path:
+    """Resolve a repository root and ensure it is an existing directory."""
+    resolved = path.resolve()
+    if not resolved.is_dir():
+        raise BaselineValidationError(f"root is not a directory: {resolved}")
+    return resolved
+
+
+def _validate_ownership_path(path: Path) -> Path:
+    """Resolve an alternate ownership file and ensure it exists."""
+    resolved = path.resolve()
+    if not resolved.is_file():
+        raise BaselineValidationError(f"ownership file not found: {resolved}")
+    return resolved
+
+
 def collect_api_traceability(
     root: Path,
     ownership_path: Path | None = None,
 ) -> dict[str, Any]:
     """Collect complete static module and public-symbol ownership traceability."""
-    root = root.resolve()
+    root = _validate_root_path(root)
     records = _discover_api(root)
-    ownership_file = ownership_path or root / _DEFAULT_OWNERSHIP
+    if ownership_path is not None:
+        ownership_file = _validate_ownership_path(ownership_path)
+    else:
+        ownership_file = root / _DEFAULT_OWNERSHIP
     ownership = _load_ownership(ownership_file)
     module_owners: dict[str, object] = ownership["modules"]
     symbol_owners: dict[str, object] = ownership["symbols"]
@@ -441,7 +461,7 @@ def _workflow_python_versions(path: Path) -> set[str]:
 
 def validate_metadata(root: Path) -> list[str]:
     """Validate cross-file project, packaging, toolchain, and CI metadata."""
-    root = root.resolve()
+    root = _validate_root_path(root)
     errors: list[str] = []
     required = [
         "Cargo.toml",
@@ -585,18 +605,32 @@ def validate_metadata(root: Path) -> list[str]:
     if toolchain.get("channel") != "stable":
         errors.append("rust-toolchain.toml channel must equal 'stable'")
     components = set(toolchain.get("components", []))
-    if components != {"rustfmt", "clippy"}:
-        errors.append("rust-toolchain.toml components must equal rustfmt and clippy")
+    required = {"rustfmt", "clippy"}
+    allowed = {"rustfmt", "clippy", "llvm-tools", "llvm-tools-preview"}
+    if not required.issubset(components) or not components.issubset(allowed):
+        errors.append(
+            "rust-toolchain.toml components must include rustfmt and clippy; "
+            "optional llvm-tools or llvm-tools-preview"
+        )
     return errors
 
 
-def _numbered_briefs(sessions: Path) -> dict[str, Path]:
+def _numbered_briefs(
+    sessions: Path,
+) -> tuple[dict[str, Path], list[str], int]:
     briefs: dict[str, Path] = {}
+    duplicates: list[str] = []
+    physical_count = 0
     for path in sessions.glob("phase-*/*.md"):
         match = re.match(r"^(\d{4})-", path.name)
         if match:
-            briefs[match.group(1)] = path
-    return briefs
+            physical_count += 1
+            sequence = match.group(1)
+            if sequence in briefs:
+                duplicates.append(sequence)
+            else:
+                briefs[sequence] = path
+    return briefs, duplicates, physical_count
 
 
 def _normalize_unit(value: str) -> str:
@@ -610,7 +644,7 @@ def _linked_target(line: str, brief: Path) -> Path | None:
 
 def validate_session_plan(root: Path) -> list[str]:
     """Validate the complete numbered session register and link structure."""
-    root = root.resolve()
+    root = _validate_root_path(root)
     sessions = root / "DOCS/sessions"
     register_path = sessions / "SESSION_REGISTER.md"
     if not register_path.is_file():
@@ -629,9 +663,19 @@ def validate_session_plan(root: Path) -> list[str]:
         errors.append(
             "session register sequence must be unique and gap-free 0001..0198"
         )
-    briefs = _numbered_briefs(sessions)
+    briefs, duplicate_sequences, physical_count = _numbered_briefs(sessions)
+    if duplicate_sequences:
+        errors.append(
+            "duplicate session brief sequence IDs: "
+            + ", ".join(sorted(set(duplicate_sequences)))
+        )
+    if physical_count != 198:
+        errors.append(
+            "expected 198 numbered session briefs, found "
+            f"{physical_count} physical numbered session briefs"
+        )
     if len(briefs) != 198:
-        errors.append(f"expected 198 numbered session briefs, found {len(briefs)}")
+        errors.append(f"expected 198 unique session brief IDs, found {len(briefs)}")
     allowed_statuses = {"PLANNED", "READY", "IN_PROGRESS", "BLOCKED", "COMPLETE"}
     for index, row in enumerate(rows):
         sequence = row["sequence"]
@@ -753,7 +797,7 @@ def _file_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
 
 def collect_repository_inventory(root: Path) -> dict[str, Any]:
     """Collect a deterministic, archive-separated repository-state inventory."""
-    root = root.resolve()
+    root = _validate_root_path(root)
     cargo = _read_toml(root / "Cargo.toml")
     pyproject = _read_toml(root / "pyproject.toml")
     active_files = _active_project_files(root)
@@ -780,7 +824,7 @@ def collect_repository_inventory(root: Path) -> dict[str, Any]:
     test_files = sorted(
         path.relative_to(root).as_posix() for path in (root / "tests").glob("test_*.py")
     )
-    session_briefs = _numbered_briefs(root / "DOCS/sessions")
+    session_briefs, _, physical_brief_count = _numbered_briefs(root / "DOCS/sessions")
     project = pyproject.get("project", {})
     return {
         "schema_version": 1,
@@ -826,7 +870,8 @@ def collect_repository_inventory(root: Path) -> dict[str, Any]:
             "workflows": workflows,
         },
         "session_plan": {
-            "numbered_briefs": len(session_briefs),
+            "numbered_briefs": physical_brief_count,
+            "unique_sequence_ids": len(session_briefs),
             "first": min(session_briefs) if session_briefs else None,
             "last": max(session_briefs) if session_briefs else None,
         },
@@ -923,6 +968,11 @@ def validate_baseline(
                 "archived top-level API contract changed: expected 172, found "
                 f"{traceability['top_level_public_symbol_count']}"
             )
+        if traceability["symbol_count"] != 657:
+            errors.append(
+                "archived module-symbol contract changed: expected 657, found "
+                f"{traceability['symbol_count']}"
+            )
     return sorted(set(errors))
 
 
@@ -950,11 +1000,11 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     """Run WP-001 baseline validation or emit deterministic evidence."""
     arguments = _parser().parse_args(argv)
-    root = arguments.root.resolve()
-    ownership = arguments.ownership
-    if ownership is not None:
-        ownership = ownership.resolve()
     try:
+        root = _validate_root_path(arguments.root)
+        ownership = None
+        if arguments.ownership is not None:
+            ownership = _validate_ownership_path(arguments.ownership)
         if arguments.command == "check":
             errors = validate_baseline(root, ownership)
             if errors:

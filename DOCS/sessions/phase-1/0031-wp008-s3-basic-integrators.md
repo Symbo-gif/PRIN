@@ -1,6 +1,6 @@
 # Session 0031 — WP-008 S3: Remediation — Basic integrators
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 1 — Dynamics core  
 **Execution unit:** WP-008  
 **Session type:** S3 — Remediation  

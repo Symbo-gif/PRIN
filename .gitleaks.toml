@@ -1,0 +1,4 @@
+title = "PRIN secret-scanning configuration"
+
+[extend]
+useDefault = true

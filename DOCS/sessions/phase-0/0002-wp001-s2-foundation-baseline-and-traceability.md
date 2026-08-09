@@ -1,6 +1,6 @@
 # Session 0002 — WP-001 S2: Audit — Foundation baseline and traceability
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 0 — Foundation  
 **Execution unit:** WP-001  
 **Session type:** S2 — Audit  

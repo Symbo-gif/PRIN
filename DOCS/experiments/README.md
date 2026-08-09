@@ -17,6 +17,35 @@ experiments/
 Raw run artefacts live under `benchmarks/results/EXP-NNN/` (JSON, tracked);
 figures/tables regenerate from them via `prin.reporting`.
 
+## Spike handoff and coverage records
+
+Phase 0 foundation spikes also emit intermediate handoff and coverage artefacts
+at the top level until they are folded into the final campaign archive in Phase 6:
+
+- [`0013-wp004-s1-handoff.md`](0013-wp004-s1-handoff.md) — WP-004 S1 handoff to
+  the S2 audit for the CubeCL fused mean-field RK4 spike.
+- [`0013-wp004-s1-coverage.md`](0013-wp004-s1-coverage.md) — `cargo-llvm-cov`
+  report and caveat for the non-instrumentable `#[cube(launch)]` kernel stubs.
+- [`0017-wp005-s1-handoff.md`](0017-wp005-s1-handoff.md) — WP-005 S1 handoff to
+  the S2 audit for the ORT backends, abi3 wheel matrix, and Phase 0 gate.
+- [`0021-wp006-s1-handoff.md`](0021-wp006-s1-handoff.md) — WP-006 S1 handoff to
+  the S2 audit for oscillator state, errors, and the deterministic seed.
+  `[RETROACTIVE UPDATE - Executive Audit 002]` index entry added.
+- [`0025-wp007-s1-handoff.md`](0025-wp007-s1-handoff.md) — WP-007 S1 handoff to
+  the S2 audit for the oscillator dynamics models.
+  `[RETROACTIVE UPDATE - Executive Audit 002]` index entry added.
+- [`0029-wp008-s1-handoff.md`](0029-wp008-s1-handoff.md) — WP-008 S1 handoff to
+  the S2 audit for the Euler, RK4, and adaptive RK45 integrators.
+
+- [`0037-wp010-s1-handoff.md`](0037-wp010-s1-handoff.md) — WP-010 S1 handoff
+  to the S2 audit for phase metrics and chimera measures.
+
+Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
+[`../sessions/phase-1/wp009-s1-handoff-note.md`](../sessions/phase-1/wp009-s1-handoff-note.md)
+because its original `0033-` sequence prefix collided with the session brief
+ID in this directory layout (WP009-F5). S1 handoff notes belong here under
+their session sequence prefix; the WP-009 rename is the documented exception.
+
 ## Rules (summary)
 
 - **No execution without a committed, approved pre-registration** including

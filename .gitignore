@@ -10,6 +10,7 @@ __pycache__/
 *$py.class
 *.so
 *.pyd
+*.pdb
 
 # Distribution / packaging
 build/
@@ -34,6 +35,9 @@ htmlcov/
 coverage.xml
 .hypothesis/
 .pytest_cache/
+.pytest_basetemp/
+.pytest_basetemp*/
+.pytest_tmp/
 .benchmarks/
 
 # Jupyter
@@ -46,6 +50,7 @@ coverage.xml
 # IDEs
 .idea/
 .vscode/
+.aicb/
 
 # OS
 .DS_Store
@@ -70,6 +75,7 @@ paper/_build/
 *.pt
 *.pth
 !models/subconscious_controller.onnx
+!models/subconscious_controller.onnx.data
 
 # Docs build
 DOCS/sphinx/_build/

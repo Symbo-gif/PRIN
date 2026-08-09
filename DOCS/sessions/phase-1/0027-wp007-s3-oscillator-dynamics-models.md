@@ -1,6 +1,6 @@
 # Session 0027 — WP-007 S3: Remediation — Oscillator dynamics models
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 1 — Dynamics core  
 **Execution unit:** WP-007  
 **Session type:** S3 — Remediation  

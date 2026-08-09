@@ -5,13 +5,16 @@
 //! - [`state`] — oscillator state (struct-of-arrays), phase wrapping to `[0, 2π)`,
 //!   atan2-safe phase differences, NaN/Inf guards, derivative/amplitude clamps,
 //!   sort-based k-NN phase index.
+//! - [`seed`] — deterministic counter-based [`Seed`] authority for all stochastic
+//!   entry points (`Pcg64`; forward-compatible with counter-mode generators).
 //! - [`models`] — Kuramoto (mean-field, pairwise, sparse k-NN), Stuart–Landau, and
 //!   Hopf dynamics behind the `Dynamics` trait.
-//! - [`integrate`] — Euler, RK4, adaptive RK45, exponential (direct + Krylov), and
-//!   multi-rate sub-stepped RK4 integrators behind the `Integrator` trait.
+//! - [`integrate`] — Euler, RK4, and adaptive RK45 (Dormand–Prince) integrators
+//!   behind the `Integrator` trait.
 //! - [`pac`] — phase–amplitude coupling: `A_fast = A₀·[1 + m·cos(φ_slow + offset)]`.
-//! - [`coupling`] — mean-field, ring, small-world, sparse k-NN, delayed,
-//!   directed/weighted coupling topologies (enum-dispatched).
+//! - [`coupling`] — coupling modes (mean-field, full matrix, sparse k-NN) and
+//!   topology builders (all-to-all, ring, directed Watts–Strogatz small-world),
+//!   all enum-dispatched.
 //! - [`bands`] — continuous hierarchical band networks (ThetaGamma,
 //!   DeltaThetaGamma). Trainable discrete variants live in `prin-train`.
 //! - [`temporal`] — complex-phasor phase blending + EMA amplitude blending.
@@ -28,5 +31,16 @@ pub mod coupling;
 pub mod integrate;
 pub mod models;
 pub mod pac;
+pub mod seed;
 pub mod state;
 pub mod temporal;
+
+pub use coupling::{CouplingError, CouplingMode, Topology};
+pub use integrate::{
+    integrate_fixed, AdaptiveResult, EulerIntegrator, IntegrateError, Integrator, RK45Integrator,
+    RK4Integrator,
+};
+pub use models::{Dynamics, HopfOscillator, KuramotoOscillator, StuartLandauOscillator};
+pub use pac::{PacError, PhaseAmplitudeCoupling};
+pub use seed::{Seed, SeedError};
+pub use state::{OscillatorState, StateDerivatives, StateError};

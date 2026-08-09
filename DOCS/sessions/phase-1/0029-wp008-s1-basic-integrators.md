@@ -1,6 +1,6 @@
 # Session 0029 — WP-008 S1: Coding — Basic integrators
 
-**Status:** PLANNED  
+**Status:** COMPLETE
 **Roadmap phase:** 1 — Dynamics core  
 **Execution unit:** WP-008  
 **Session type:** S1 — Coding  

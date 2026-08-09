@@ -1,0 +1,39 @@
+{
+  "active_providers": [
+    "CPUExecutionProvider"
+  ],
+  "available_providers": [
+    "DmlExecutionProvider",
+    "CPUExecutionProvider"
+  ],
+  "can_run": true,
+  "error": null,
+  "input_metadata": [
+    {
+      "name": "state_vector",
+      "shape": [
+        "batch",
+        32
+      ],
+      "type": "tensor(float)"
+    }
+  ],
+  "model_path": "C:\\dev\\PRIN\\models\\subconscious_controller.onnx",
+  "model_sha256": "3396bfdd433afcfbf865363ff5113e2b068096dbdfabfbc2c9e976b4f07d4102",
+  "output_metadata": [
+    {
+      "name": "control_signals",
+      "shape": [
+        "batch",
+        8
+      ],
+      "type": "tensor(float)"
+    }
+  ],
+  "output_shape": [
+    1,
+    8
+  ],
+  "selected_backend": "directml",
+  "timestamp": "2026-08-07T05:30:11.813558+00:00"
+}
