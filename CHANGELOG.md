@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Phase 1 recommendation implementation** (inter-phase process improvement):
+  - Exhaustive 504-case differential parity test (`test_corpus_exhaustive_differential_parity`) parametrized from the corpus manifest, validating the full Python → Rust → reference pipeline for all golden-trajectory cases (R8).
+  - `pytest-xdist` parallel execution in `parity.yml` CI workflow (`-n auto`) for exhaustive corpus runs (R8).
+  - Deferred Validation Register (`DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`) consolidating all deferred items with re-audit gates, governing amendments, and closure tracking (R9).
+  - Phase 1 recommendation implementation governance document (`DOCS/ANALYTICS/phase-1/phase-1-recommendation-implementation-governance.md`) (R7–R13).
+- **Documentation accuracy sweep** added to S4 checklist in `Documentation_Standards.md` §7 item 8: explicit verification of README accuracy, rustdoc example compilation, and DOCS/ index currency (R7).
+- **Strict-checks coverage reporting** added to `AGENTS.md` verification one-liner: separate `cargo llvm-cov -p prin-dynamics` runs for default and `strict-checks` feature builds (R12).
 - **Executive Audit Governance and Session 001 (EA-001)**:
   - Normative governance and methodology document `DOCS/standards/Executive_Audit_Governance_and_Methodology.md` establishing project-level multi-domain audit criteria (E1–E10), deviation severities (D1–D4), remediation protocols, and reporting requirements.
   - Executive Audit Report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_001.md` evaluating mathematics, architecture, test/parity suite, security, docs, evidence, governance, performance, CI/CD, and roadmap (`PASS-WITH-REMEDIATION`).
