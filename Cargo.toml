@@ -41,6 +41,10 @@ rayon = "1.10"
 num-complex = "0.4"
 rand = "0.8"
 rand_pcg = "0.3"
+# FFT for prin-metrics power spectral density (pure Rust, no unsafe at the
+# public API boundary; added in WP-010 S1 for the PSD rebuild of PRINet 3.0
+# `power_spectral_density`).
+rustfft = "6.2"
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
