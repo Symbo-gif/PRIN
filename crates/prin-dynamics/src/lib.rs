@@ -36,6 +36,10 @@ pub mod seed;
 pub mod state;
 pub mod temporal;
 
+pub use bands::{
+    create_band_state, delta_theta_gamma_network, theta_gamma_network, BandError, BandNetwork,
+    BandParams, PacPair,
+};
 pub use coupling::{CouplingError, CouplingMode, Topology};
 pub use integrate::{
     integrate_fixed, AdaptiveResult, EulerIntegrator, ExponentialIntegrator, IntegrateError,
@@ -45,3 +49,4 @@ pub use models::{Dynamics, HopfOscillator, KuramotoOscillator, StuartLandauOscil
 pub use pac::{PacError, PhaseAmplitudeCoupling};
 pub use seed::{Seed, SeedError};
 pub use state::{OscillatorState, StateDerivatives, StateError};
+pub use temporal::{ComplexPhasorBlender, EmaAmplitudeBlender, TemporalError, TemporalPropagator};

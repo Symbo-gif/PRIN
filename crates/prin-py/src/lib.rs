@@ -39,11 +39,13 @@ fn _prin_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(dlpack::dlpack_round_trip, m)?)?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
-    // Dynamics: state, seed, coupling, PAC, models, integrators
+    // Dynamics: state, seed, coupling, PAC, models, integrators, bands, temporal
     bindings::state::register(m)?;
     bindings::coupling::register(m)?;
     bindings::models::register(m)?;
     bindings::integrators::register(m)?;
+    bindings::bands::register(m)?;
+    bindings::temporal::register(m)?;
 
     // Metrics
     bindings::metrics::register(m)?;

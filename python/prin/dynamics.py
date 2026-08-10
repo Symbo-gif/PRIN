@@ -1,4 +1,4 @@
-"""Oscillator dynamics: state, models, integrators, coupling, and PAC.
+"""Oscillator dynamics: state, models, integrators, coupling, PAC, bands, temporal.
 
 All numerical authority lives in the compiled Rust core (``prin._prin_core``).
 This module re-exports the Rust-backed types for ergonomic Python access.
@@ -13,20 +13,27 @@ from prin._prin_core import (
     SPARSE_EPS,
     TAU,
     AdaptiveResult,
+    BandNetwork,
+    BandParams,
+    ComplexPhasorBlender,
     CouplingMode,
+    EmaAmplitudeBlender,
     EulerIntegrator,
     ExponentialIntegrator,
     HopfOscillator,
     KuramotoOscillator,
     MultiRateIntegrator,
     OscillatorState,
+    PacPair,
     PhaseAmplitudeCoupling,
     RK4Integrator,
     RK45Integrator,
     Seed,
     StateDerivatives,
     StuartLandauOscillator,
+    TemporalPropagator,
     Topology,
+    create_band_state_py,
 )
 
 __all__ = [
@@ -36,18 +43,25 @@ __all__ = [
     "SPARSE_EPS",
     "TAU",
     "AdaptiveResult",
+    "BandNetwork",
+    "BandParams",
+    "ComplexPhasorBlender",
     "CouplingMode",
+    "EmaAmplitudeBlender",
     "EulerIntegrator",
     "ExponentialIntegrator",
     "HopfOscillator",
     "KuramotoOscillator",
     "MultiRateIntegrator",
     "OscillatorState",
+    "PacPair",
     "PhaseAmplitudeCoupling",
     "RK4Integrator",
     "RK45Integrator",
     "Seed",
     "StateDerivatives",
     "StuartLandauOscillator",
+    "TemporalPropagator",
     "Topology",
+    "create_band_state_py",
 ]
