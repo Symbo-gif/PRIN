@@ -813,6 +813,52 @@ mod tests {
     }
 
     #[test]
+    fn pac_pair_out_of_range_slow_band_rejected() {
+        let err = BandNetwork::new(
+            vec![4, 8],
+            vec![
+                BandParams::new(1.0, 0.1).unwrap(),
+                BandParams::new(0.5, 0.1).unwrap(),
+            ],
+            vec![PacPair::new(7, 9, PhaseAmplitudeCoupling::new(0.3).unwrap(), 0.0).unwrap()],
+        )
+        .unwrap_err();
+        assert!(matches!(err, BandError::InvalidPacBand { band: 7, .. }));
+    }
+
+    #[test]
+    fn compute_derivatives_without_band_labels_is_a_typed_error() {
+        let net = make_tg_network();
+        let state =
+            OscillatorState::new(vec![0.0; 12], vec![1.0; 12], vec![6.0; 12], None).unwrap();
+        let err = net.compute_derivatives(&state).unwrap_err();
+        assert!(matches!(
+            err,
+            StateError::NonFiniteValue {
+                name: "band_partition",
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn compute_derivatives_population_mismatch_is_a_typed_error() {
+        let net = make_tg_network();
+        let state =
+            OscillatorState::new(vec![0.0; 5], vec![1.0; 5], vec![6.0; 5], Some(vec![0; 5]))
+                .unwrap();
+        let err = net.compute_derivatives(&state).unwrap_err();
+        match err {
+            StateError::NonFiniteValue { name, value, .. } => {
+                assert_eq!(name, "band_partition");
+                // The mapped value carries the expected population (12).
+                assert_relative_eq!(value, 12.0, epsilon = 1e-12);
+            }
+            other => panic!("unexpected error: {other:?}"),
+        }
+    }
+
+    #[test]
     fn pac_pair_slow_ge_fast_rejected() {
         let err = BandNetwork::new(
             vec![4, 8],
