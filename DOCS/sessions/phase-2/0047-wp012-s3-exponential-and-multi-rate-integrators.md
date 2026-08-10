@@ -1,6 +1,6 @@
 # Session 0047 — WP-012 S3: Remediation — Exponential and multi-rate integrators
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 2 — Advanced numerics and simulation  
 **Execution unit:** WP-012  
 **Session type:** S3 — Remediation  
