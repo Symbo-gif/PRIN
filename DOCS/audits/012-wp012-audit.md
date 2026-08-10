@@ -222,10 +222,35 @@ After all D1–D2 findings are addressed, re-run the full A1–A10 checklist and
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP012-F1 | | | |
-| WP012-F2 | | | |
-| WP012-F3 | | | |
-| WP012-F4 | | | |
-| WP012-F5 | | | |
+| WP012-F1 | FIXED | `62deb43` — added `PyExponentialIntegrator` and `PyMultiRateIntegrator` to `bindings/integrators.rs`; updated `dynamics.py` `__all__`, `_prin_core.pyi` stubs; 21 new Python acceptance tests | 90/90 Python binding tests pass; `mypy --strict` clean; `interrogate` 100% |
+| WP012-F2 | FIXED | `e4e7772` — added 7 Rust-vs-PRINet 3.0.0 parity tests (4 ExponentialIntegrator, 3 MultiRateIntegrator) with hard-coded reference trajectories from `prinet==3.0.0` `torch.float64` | 23/23 parity tests pass (16 pre-existing + 7 new) |
+| WP012-F3 | FIXED | `2dc641e` — `matrix_exp`, `phi1_matrix`, `krylov_exp_vec`, `krylov_phi1_vec` now return `Result` and propagate `IntegrateError::LinearSolveFailed`; regression test `matrix_exp_singular_denominator_returns_typed_error` | 194/194 `prin-dynamics` unit tests pass; `cargo clippy -D warnings` clean |
+| WP012-F4 | AMENDED | `850a99b` — Plan amendment #18: clarified WP-012 "multi-rate" as uniform sub-stepping matching PRINet 3.0; band-aware scheduling deferred | Amendment #18 recorded in `DOCS/PRIN_Project_Plan.md` §8.3 |
+| WP012-F5 | FIXED | `2dc641e` — `ExponentialIntegrator::step` and `::integrate` validate `3 * state.phase.len() == self.dim`; regression tests `exp_integrator_dim_mismatch_returns_typed_error`, `exp_integrator_integrate_dim_mismatch_returns_typed_error` | 194/194 `prin-dynamics` unit tests pass |
 
-**Delta re-audit date:** TBD — **Result:** TBD
+**Delta re-audit date:** 2026-08-10 — **Result:** CLEAN
+
+### Delta re-audit summary
+
+All five findings closed. Full local gate re-verification:
+
+| Gate | Result |
+|---|---|
+| `cargo fmt --check` | exit 0 |
+| `cargo clippy --workspace --all-targets -- -D warnings` | exit 0 |
+| `cargo test --workspace` | all pass (393+ tests) |
+| `cargo doc -D warnings` | 0 warnings |
+| `cargo audit` | 1 inherited `paste` advisory (amendment #9) |
+| `ruff check` | All checks passed |
+| `ruff format --check` | 47 files already formatted |
+| `mypy --strict` | Success: no issues in 18 source files |
+| `interrogate` | 100.0% (106/106) |
+| `bandit` | No issues identified |
+| `pip-audit .` | No known vulnerabilities |
+| `pip-audit -r DOCS/sphinx/requirements.txt` | No known vulnerabilities |
+| `Sphinx -W --keep-going` | build succeeded, 0 warnings |
+| `tools/wp001_baseline.py check` | WP-001 baseline validation passed |
+| Python tests (`tests/`, fast) | 262 passed, 6 deselected |
+| Rust parity tests (`parity_integrators.rs`) | 23 passed |
+
+No newly introduced deviations. WP-012 S3 is complete; hand off to S4 (session 0048).
