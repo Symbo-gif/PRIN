@@ -1829,13 +1829,15 @@ pub enum MultiRateMethod {
 
 /// Multi-rate ODE integrator for hierarchical oscillator systems.
 ///
-/// Different frequency bands require different timestep sizes for numerical
-/// stability. This integrator takes `sub_steps` inner RK4 (or Euler) steps
-/// for each outer step, allowing fast oscillators (Gamma) to be integrated
-/// with finer time resolution than slow oscillators (Delta/Theta).
+/// Implements **uniform sub-stepping**: the outer timestep `dt` is divided
+/// into `sub_steps` inner RK4 (or Euler) steps of size `dt / sub_steps`,
+/// applied to every oscillator in the state (matching the PRINet 3.0
+/// reference implementation). This resolves the fastest-varying partition
+/// without the outer step accumulating excess error on slower components.
 ///
-/// The outer timestep `dt` is divided into `sub_steps` inner steps of size
-/// `dt / sub_steps`.
+/// Band-aware scheduling (different sub-step counts per `freq_band`) is a
+/// deferred capability, not implemented here — see Project Plan §8.3
+/// amendment #18.
 #[derive(Clone, Debug)]
 pub struct MultiRateIntegrator {
     /// Number of sub-steps per outer step.

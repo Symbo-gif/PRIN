@@ -71,11 +71,11 @@ no planned session is renumbered by an executive audit (plan amendment #15).
 | 0042 | 1 | WP-011 | S2 — Audit | [Phase 1 Python API and dynamics integration](phase-1/0042-wp011-s2-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
 | 0043 | 1 | WP-011 | S3 — Remediation | [Phase 1 Python API and dynamics integration](phase-1/0043-wp011-s3-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
 | 0044 | 1 | WP-011 | S4 — Documentation | [Phase 1 Python API and dynamics integration](phase-1/0044-wp011-s4-phase-1-python-api-and-dynamics-integration.md) | COMPLETE |
-| 0045 | 2 | WP-012 | S1 — Coding | [Exponential and multi-rate integrators](phase-2/0045-wp012-s1-exponential-and-multi-rate-integrators.md) | READY |
-| 0046 | 2 | WP-012 | S2 — Audit | [Exponential and multi-rate integrators](phase-2/0046-wp012-s2-exponential-and-multi-rate-integrators.md) | PLANNED |
-| 0047 | 2 | WP-012 | S3 — Remediation | [Exponential and multi-rate integrators](phase-2/0047-wp012-s3-exponential-and-multi-rate-integrators.md) | PLANNED |
-| 0048 | 2 | WP-012 | S4 — Documentation | [Exponential and multi-rate integrators](phase-2/0048-wp012-s4-exponential-and-multi-rate-integrators.md) | PLANNED |
-| 0049 | 2 | WP-013 | S1 — Coding | [Continuous band networks and temporal propagation](phase-2/0049-wp013-s1-continuous-band-networks-and-temporal-propagation.md) | PLANNED |
+| 0045 | 2 | WP-012 | S1 — Coding | [Exponential and multi-rate integrators](phase-2/0045-wp012-s1-exponential-and-multi-rate-integrators.md) | COMPLETE |
+| 0046 | 2 | WP-012 | S2 — Audit | [Exponential and multi-rate integrators](phase-2/0046-wp012-s2-exponential-and-multi-rate-integrators.md) | COMPLETE |
+| 0047 | 2 | WP-012 | S3 — Remediation | [Exponential and multi-rate integrators](phase-2/0047-wp012-s3-exponential-and-multi-rate-integrators.md) | COMPLETE |
+| 0048 | 2 | WP-012 | S4 — Documentation | [Exponential and multi-rate integrators](phase-2/0048-wp012-s4-exponential-and-multi-rate-integrators.md) | COMPLETE |
+| 0049 | 2 | WP-013 | S1 — Coding | [Continuous band networks and temporal propagation](phase-2/0049-wp013-s1-continuous-band-networks-and-temporal-propagation.md) | READY |
 | 0050 | 2 | WP-013 | S2 — Audit | [Continuous band networks and temporal propagation](phase-2/0050-wp013-s2-continuous-band-networks-and-temporal-propagation.md) | PLANNED |
 | 0051 | 2 | WP-013 | S3 — Remediation | [Continuous band networks and temporal propagation](phase-2/0051-wp013-s3-continuous-band-networks-and-temporal-propagation.md) | PLANNED |
 | 0052 | 2 | WP-013 | S4 — Documentation | [Continuous band networks and temporal propagation](phase-2/0052-wp013-s4-continuous-band-networks-and-temporal-propagation.md) | PLANNED |

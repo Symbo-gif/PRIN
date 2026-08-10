@@ -8,7 +8,7 @@ math lives in the Rust core, reached through the `prin._prin_core` extension
 | Module | Contents | Phase |
 |---|---|---|
 | `__init__.py` | Public API (PRINet-3.0-compatible symbols) | 1–6 |
-| `dynamics.py` | Re-export module for oscillator state, models, integrators, coupling, and PAC (20 symbols from `prin._prin_core`) | 1 |
+| `dynamics.py` | Re-export module for oscillator state, models, integrators (incl. exponential/multi-rate, WP-012), coupling, and PAC (20 symbols from `prin._prin_core`) | 1, 2 |
 | `metrics.py` | Re-export module for synchronization, coherence, spectral, energy, and chimera metrics (22 symbols from `prin._prin_core`) | 1 |
 | `dlpack.py` | Zero-copy DLPack tensor exchange between PyTorch and the Rust core | 0 |
 | `parity/` | Golden-trajectory corpus, manifest, loader, and differential harness | 0 |

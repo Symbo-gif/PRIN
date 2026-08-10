@@ -7,11 +7,11 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 
 | Seq | Unit | Type | Session brief | Current status |
 |---:|---|---|---|---|
-| 0045 | WP-012 | S1 — Coding | [Exponential and multi-rate integrators](0045-wp012-s1-exponential-and-multi-rate-integrators.md) | PLANNED |
-| 0046 | WP-012 | S2 — Audit | [Exponential and multi-rate integrators](0046-wp012-s2-exponential-and-multi-rate-integrators.md) | PLANNED |
-| 0047 | WP-012 | S3 — Remediation | [Exponential and multi-rate integrators](0047-wp012-s3-exponential-and-multi-rate-integrators.md) | PLANNED |
-| 0048 | WP-012 | S4 — Documentation | [Exponential and multi-rate integrators](0048-wp012-s4-exponential-and-multi-rate-integrators.md) | PLANNED |
-| 0049 | WP-013 | S1 — Coding | [Continuous band networks and temporal propagation](0049-wp013-s1-continuous-band-networks-and-temporal-propagation.md) | PLANNED |
+| 0045 | WP-012 | S1 — Coding | [Exponential and multi-rate integrators](0045-wp012-s1-exponential-and-multi-rate-integrators.md) | COMPLETE |
+| 0046 | WP-012 | S2 — Audit | [Exponential and multi-rate integrators](0046-wp012-s2-exponential-and-multi-rate-integrators.md) | COMPLETE |
+| 0047 | WP-012 | S3 — Remediation | [Exponential and multi-rate integrators](0047-wp012-s3-exponential-and-multi-rate-integrators.md) | COMPLETE |
+| 0048 | WP-012 | S4 — Documentation | [Exponential and multi-rate integrators](0048-wp012-s4-exponential-and-multi-rate-integrators.md) | COMPLETE |
+| 0049 | WP-013 | S1 — Coding | [Continuous band networks and temporal propagation](0049-wp013-s1-continuous-band-networks-and-temporal-propagation.md) | READY |
 | 0050 | WP-013 | S2 — Audit | [Continuous band networks and temporal propagation](0050-wp013-s2-continuous-band-networks-and-temporal-propagation.md) | PLANNED |
 | 0051 | WP-013 | S3 — Remediation | [Continuous band networks and temporal propagation](0051-wp013-s3-continuous-band-networks-and-temporal-propagation.md) | PLANNED |
 | 0052 | WP-013 | S4 — Documentation | [Continuous band networks and temporal propagation](0052-wp013-s4-continuous-band-networks-and-temporal-propagation.md) | PLANNED |

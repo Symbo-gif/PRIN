@@ -31,10 +31,21 @@ the complete Phase 1 dynamics and metrics surface:
 
 All bindings are pure delegation — no Python numerics; numerical authority
 remains in `prin-dynamics` and `prin-metrics`. The Python re-export modules
-`python/prin/dynamics.py` (20 symbols) and `python/prin/metrics.py` (22 symbols)
+`python/prin/dynamics.py` (18 symbols) and `python/prin/metrics.py` (22 symbols)
 provide ergonomic access. Type stubs at `python/prin/_prin_core.pyi` cover all
 new symbols. 69 Python acceptance tests in `tests/test_dynamics_bindings.py`
 exercise all binding paths.
+
+WP-012 (Exponential and multi-rate integrators) extended `bindings/integrators.rs`
+with `PyExponentialIntegrator` (direct/Krylov exponential Euler; constructor
+validates `dim`/`krylov_rank` and raises `ValueError` on `IntegrateError`) and
+`PyMultiRateIntegrator` (uniform RK4/Euler sub-stepping; the inner
+`MultiRateMethod` is exposed as a `"rk4"` / `"euler"` string argument rather
+than a separate `#[pyclass]`). `python/prin/dynamics.py` `__all__` grew from 18
+to 20 symbols; `python/prin/_prin_core.pyi` stubs and 21 new Python acceptance
+tests in `tests/test_dynamics_bindings.py` (`TestExponentialIntegrator`,
+`TestMultiRateIntegrator`) landed in the same S3 remediation commit
+(`62deb43`, finding WP012-F1).
 
 Type stubs are maintained at `python/prin/_prin_core.pyi` and regenerated
 whenever the extension API changes.

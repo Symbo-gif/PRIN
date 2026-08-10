@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- WP-012 Exponential and multi-rate integrators in `prin-dynamics` (Phase 2, first WP):
+  - `ExponentialIntegrator` — exponential Euler (`y_{n+1} = exp(hA) y_n + h·φ₁(hA)·g(y_n)`) via direct Padé(13) scaling-and-squaring (`dim ≤ max_direct_dim`) or Krylov–Arnoldi subspace approximation with modified Gram-Schmidt (`dim > max_direct_dim` or `stiff_mode`, adaptive rank from the estimated Jacobian 1-norm condition number).
+  - `MultiRateIntegrator` — uniform sub-stepping: divides the outer timestep into `sub_steps` equal inner `MultiRateMethod::RK4`/`Euler` steps applied to all oscillators, matching the PRINet 3.0 reference implementation.
+  - `IntegrateError::InvalidDim`, `InvalidKrylovRank`, and `LinearSolveFailed` variants (ten total, up from seven at WP-008).
+  - `prin-py` PyO3 bindings `PyExponentialIntegrator` and `PyMultiRateIntegrator` in `bindings/integrators.rs`; `python/prin/dynamics.py` `__all__` grew from 18 to 20 symbols; `python/prin/_prin_core.pyi` stubs regenerated; 21 new Python acceptance tests in `tests/test_dynamics_bindings.py` (`TestExponentialIntegrator`, `TestMultiRateIntegrator`).
+  - 7 new Rust-vs-PRINet 3.0.0 trajectory parity tests in `crates/prin-dynamics/tests/parity_integrators.rs` (4 `ExponentialIntegrator`, 3 `MultiRateIntegrator`) with hard-coded `torch.float64` reference values, bringing the file to 23 parity tests.
+  - All WP-012 acceptance criteria met: golden and convergence tests pass including λ→0 (`phi1_zero_is_identity`); stability (Krylov vs. direct agreement) and typed-failure cases (`InvalidDim`, `InvalidKrylovRank`, `LinearSolveFailed`) are demonstrated; `integrate.rs` coverage 98.24% lines / 98.46% functions (default), 97.74% lines / 98.50% functions (`strict-checks`).
 - **Phase 1 recommendation implementation** (inter-phase process improvement):
   - Exhaustive 504-case differential parity test (`test_corpus_exhaustive_differential_parity`) parametrized from the corpus manifest, validating the full Python → Rust → reference pipeline for all golden-trajectory cases (R8).
   - `pytest-xdist` parallel execution in `parity.yml` CI workflow (`-n auto`) for exhaustive corpus runs (R8).
@@ -67,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Rust-vs-PRINet 3.0 PAC parity tests in `crates/prin-dynamics/tests/parity_pac.rs` (9 golden cases) comparing `PhaseAmplitudeCoupling::modulate` against hard-coded PRINet 3.0 reference values at `epsilon = 1e-6` (amendment #14 f32-truncation tolerance).
 - WP-011 Phase 1 Python API and dynamics integration:
   - `prin-py` PyO3 bindings for the complete Phase 1 dynamics and metrics surface: `bindings/state.rs` (`PyOscillatorState`, `PyStateDerivatives`, `PySeed`, constants), `bindings/models.rs` (`PyKuramotoOscillator`, `PyStuartLandauOscillator`, `PyHopfOscillator`), `bindings/integrators.rs` (`PyEulerIntegrator`, `PyRK4Integrator`, `PyRK45Integrator`, `PyAdaptiveResult`), `bindings/coupling.rs` (`PyCouplingMode`, `PyTopology`, `PyPhaseAmplitudeCoupling`), and `bindings/metrics.rs` (22 `#[pyfunction]`s covering the full `prin-metrics` surface).
-  - `python/prin/dynamics.py` re-export module (20 symbols + `__all__`) and `python/prin/metrics.py` re-export module (22 symbols + `__all__`) — pure re-exports, no Python numerics.
+  - `python/prin/dynamics.py` re-export module (18 symbols + `__all__`, grown to 20 by WP-012) and `python/prin/metrics.py` re-export module (22 symbols + `__all__`) — pure re-exports, no Python numerics.
   - Complete type stubs in `python/prin/_prin_core.pyi` for all new dynamics and metrics symbols.
   - `numpy = "0.29.0"` dependency added to `prin-py/Cargo.toml` for PyO3 numpy array integration (matches PyO3 version).
   - 69 new Python acceptance tests in `tests/test_dynamics_bindings.py` across 13 test classes (constants, Seed, OscillatorState, StateDerivatives, CouplingMode, Topology, Models, Integrators, PAC, Metrics, module re-exports).
@@ -94,6 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Recorded maintainer approval for plan amendment #14, Project State Report 009, and the WP-010 declaration (E-F6).
   - Documentation accuracy fixes: `prin-dynamics` crate docs (E-F7), RK4 rustdoc typo (E-F8), `SmallWorld` rewiring docs (E-F9), `DOCS/experiments/README.md` and `DOCS/audits/README.md` indexes (E-F10, E-F11), parameterized executive-audit workflow recipes (E-F12), and Windows pytest concurrency guidance in `AGENTS.md` (E-F13).
 - Project Plan §5 amended (plan amendment #14): documented PRINet 3.0's `torch.complex64` (f32) internal arithmetic for mean-field order parameters and Stuart–Landau complex amplitudes as a preserved numerical hazard with a `1e-6` derivative-level parity tolerance for affected model/coupling paths.
+- Project Plan §6 amended (plan amendment #18, WP012-F4): clarified that `MultiRateIntegrator` implements uniform sub-stepping (dividing the outer timestep into `sub_steps` equal inner RK4/Euler steps applied to all oscillators), matching the PRINet 3.0 reference implementation, rather than band-aware per-`freq_band` scheduling. The latter is a deferred capability, not part of WP-012. Updated the `MultiRateIntegrator` rustdoc to match (previously implied band-differentiated scheduling that was never implemented).
 
 ### Security
 
@@ -123,6 +131,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - WP009-F7: Documented the directed-rewiring interpretation of `build_small_world` in the module rustdoc and `Topology::SmallWorld` variant doc (outgoing-edge rewiring preserves out-degree and total edge count but not symmetry).
 - WP-011 S3 remediation (audit finding WP011-F1, commit `cd20b1a`):
   - WP011-F1: Removed unnecessary `#![allow(unsafe_code)]` from `crates/prin-py/src/bindings/state.rs` — no `unsafe` code exists in the module; the attribute could mask future unsafe additions under the crate-level `#![deny(unsafe_code)]`.
+- WP-012 S3 remediation (audit findings WP012-F1–F5, commits `62deb43`, `e4e7772`, `2dc641e`, `850a99b`):
+  - WP012-F1 (D1): Added `PyExponentialIntegrator`/`PyMultiRateIntegrator` PyO3 bindings, `python/prin/dynamics.py` re-exports, `_prin_core.pyi` stubs, and 21 Python acceptance tests — WP-012's declared scope included Python bindings through `prin-py`, which the S1 commit had omitted.
+  - WP012-F2 (D1): Added 7 Rust-vs-PRINet 3.0.0 golden-trajectory parity tests for `ExponentialIntegrator`/`MultiRateIntegrator` — the S1 commit had unit-level invariants but no differential parity evidence against the reference implementation.
+  - WP012-F3 (D1): Fixed `matrix_exp`/`phi1_matrix`/Krylov solve paths to propagate `IntegrateError::LinearSolveFailed` on a singular Padé LU denominator instead of silently returning the identity matrix, which could produce a wrong trajectory with no error signal; added regression test `matrix_exp_singular_denominator_returns_typed_error`.
+  - WP012-F4 (D3, amendment #18): Clarified the WP-012 "multi-rate" scope as uniform sub-stepping matching PRINet 3.0, rather than the band-aware scheduling implied by the WP text; see the Changed section.
+  - WP012-F5 (D4): Added `3 * state.phase.len() == self.dim` validation to `ExponentialIntegrator::step`/`::integrate`, returning `IntegrateError::InvalidDim` on mismatch instead of silently using a stale stored `dim` for the direct/Krylov path decision.
+  - Delta re-audit (`DOCS/audits/012-wp012-audit.md`): CLEAN — all five findings closed, no newly introduced deviation.
 
 ## [0.1.0-alpha.1] - 2026-08-07
 

@@ -1,6 +1,6 @@
 # Session 0046 — WP-012 S2: Audit — Exponential and multi-rate integrators
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 2 — Advanced numerics and simulation  
 **Execution unit:** WP-012  
 **Session type:** S2 — Audit  

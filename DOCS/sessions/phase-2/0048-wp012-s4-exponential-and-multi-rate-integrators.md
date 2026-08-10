@@ -1,6 +1,6 @@
 # Session 0048 — WP-012 S4: Documentation — Exponential and multi-rate integrators
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 2 — Advanced numerics and simulation  
 **Execution unit:** WP-012  
 **Session type:** S4 — Documentation  

@@ -124,6 +124,51 @@ per-snapshot order parameter, bounded by ``[0, 0.5]``) with no PRINet 3.0
 analogue; confirmed acceptable under the WP-010 declaration's "metastability"
 scope item by the S2 audit.
 
+WP-012 — Exponential and multi-rate integrator parity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Rust ``ExponentialIntegrator`` (direct Padé(13) scaling-and-squaring or
+Krylov–Arnoldi exponential Euler) and ``MultiRateIntegrator`` (uniform
+RK4/Euler sub-stepping) are compared against PRINet 3.0 ``torch.float64``
+reference trajectories in ``crates/prin-dynamics/tests/parity_integrators.rs``
+(7 golden-trajectory cases: 4 ``ExponentialIntegrator`` covering Kuramoto
+mean-field/full and Stuart–Landau full for 1/5-step integrations, 3
+``MultiRateIntegrator`` covering Kuramoto mean-field/full with RK4 and Euler
+inner methods for 5-step integrations). Tolerances follow the same tiers as
+the WP-008 integrator parity: ``rtol=1e-6, atol=1e-8`` for f32-hazard paths
+(amendment #14) and tighter for pure f64 paths.
+
+Two numerical-hazard findings from the S2 audit (``DOCS/audits/012-wp012-audit.md``,
+findings WP012-F3 and WP012-F5) were closed in S3 remediation (commit
+``2dc641e``):
+
+- ``matrix_exp``, ``phi1_matrix``, and the Krylov solve paths previously
+  returned the identity matrix silently when the Padé denominator LU solve
+  was singular or near-singular, which could produce a wrong trajectory
+  without any error signal. They now propagate
+  ``IntegrateError::LinearSolveFailed``, verified by the regression test
+  ``matrix_exp_singular_denominator_returns_typed_error``.
+- ``ExponentialIntegrator::step``/``::integrate`` did not validate that the
+  constructed ``dim`` matched the state size (``3 · state.phase.len()``); a
+  mismatch could silently desynchronize the direct/Krylov path decision from
+  the actual Jacobian size. They now return
+  ``IntegrateError::InvalidDim``, verified by
+  ``exp_integrator_dim_mismatch_returns_typed_error`` and
+  ``exp_integrator_integrate_dim_mismatch_returns_typed_error``.
+
+**Multi-rate scope clarification (finding WP012-F4, D3, plan amendment #18):**
+the S2 audit found that ``MultiRateIntegrator`` applies uniform sub-stepping
+to every oscillator rather than band-aware scheduling keyed on
+``OscillatorState::freq_band``. This is a justified match to the PRINet 3.0
+reference implementation (which also sub-steps uniformly), so it was resolved
+by amending the Project Plan §6 WP-012 declaration text rather than by
+changing the implementation. Band-aware per-``freq_band`` scheduling remains a
+deferred capability.
+
+**No new dependency.** Both integrators reuse ``ndarray`` (already a
+workspace dependency for ``matrix_exp``/Arnoldi linear algebra); ``cargo
+audit`` and Snyk Open Source report no new advisories.
+
 EA-002 — Cross-platform torch reduction noise in derived corpus metrics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

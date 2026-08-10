@@ -59,15 +59,36 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
 - ``prin-dynamics`` basic integrators (WP-008) — Rust ``Integrator`` trait and
   ``EulerIntegrator``, ``RK4Integrator``, and ``RK45Integrator`` (adaptive
   Dormand–Prince) with explicit reusable buffers, numerical guards, and typed
-  ``IntegrateError`` (seven variants). Replaces PRINet 3.0's Python integrators
+  ``IntegrateError`` (seven variants at WP-008; ten after WP-012 below).
+  Replaces PRINet 3.0's Python integrators
   in ``core/propagation/integrators.py``. The Rust implementation uses ``f64``
   arithmetic throughout; PRINet 3.0's ``torch.float64`` trajectory reference is
   matched at ``rtol=1e-6, atol=1e-8`` (and tighter for pure f64 paths) via 16
   golden-trajectory parity cases in ``crates/prin-dynamics/tests/parity_integrators.rs``.
   RK4 order-``h^4`` convergence and RK45 tolerance properties are asserted in
-  both unit and parity tests. Exponential and multi-rate integrators are
-  Phase 2 (WP-012) non-goals. Python bindings are provided via ``prin.dynamics``
+  both unit and parity tests. Python bindings are provided via ``prin.dynamics``
   (WP-011).
+- ``prin-dynamics`` exponential and multi-rate integrators (WP-012) — Rust
+  ``ExponentialIntegrator`` (exponential Euler, ``y_{n+1} = exp(hA) y_n +
+  h·φ₁(hA)·g(y_n)``, direct Padé(13) scaling-and-squaring or Krylov–Arnoldi
+  with adaptive stiff-mode rank) and ``MultiRateIntegrator`` (uniform
+  sub-stepping: the outer timestep is divided into ``sub_steps`` equal inner
+  RK4/Euler steps applied to all oscillators, matching the PRINet 3.0
+  reference implementation — Project Plan amendment #18; band-aware
+  per-``freq_band`` scheduling is a deferred capability). Replaces PRINet
+  3.0's exponential/multi-rate integrators in
+  ``core/propagation/integrators.py``. Adds ``IntegrateError::InvalidDim``,
+  ``InvalidKrylovRank``, and ``LinearSolveFailed`` (matrix-exponential/Krylov
+  linear-solve failures propagate as typed errors rather than silently
+  returning the identity matrix). Verified against PRINet 3.0
+  ``torch.float64`` reference trajectories at ``rtol=1e-6, atol=1e-8`` via 7
+  golden-trajectory parity cases (4 ``ExponentialIntegrator``, 3
+  ``MultiRateIntegrator``) in ``crates/prin-dynamics/tests/parity_integrators.rs``.
+  Python bindings ``ExponentialIntegrator`` and ``MultiRateIntegrator`` are
+  provided via ``prin.dynamics`` (``python/prin/dynamics.py`` grew from 18 to
+  20 symbols); the inner ``MultiRateMethod`` is exposed as a ``"rk4"`` /
+  ``"euler"`` string constructor argument rather than a separate Python class.
+  21 new Python acceptance tests in ``tests/test_dynamics_bindings.py``.
 - ``prin-dynamics`` phase–amplitude coupling and coupling topologies (WP-009) —
   Rust ``PhaseAmplitudeCoupling`` struct implementing cross-frequency PAC
   ``A_fast = A_0·[1 + m·cos(φ_slow + offset)]`` with mean slow-band phase,
@@ -106,7 +127,8 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   ``prin.metrics`` (WP-011).
 - ``prin-py`` Phase 1 Python API (WP-011) — PyO3 bindings for the complete
   Phase 1 dynamics and metrics surface, accessible through ``prin.dynamics``
-  (20 symbols: ``OscillatorState``, ``Seed``, ``StateDerivatives``,
+  (18 symbols at WP-011, grown to 20 by WP-012 below:
+  ``OscillatorState``, ``Seed``, ``StateDerivatives``,
   ``KuramotoOscillator``, ``StuartLandauOscillator``, ``HopfOscillator``,
   ``CouplingMode``, ``Topology``, ``PhaseAmplitudeCoupling``,
   ``EulerIntegrator``, ``RK4Integrator``, ``RK45Integrator``,
