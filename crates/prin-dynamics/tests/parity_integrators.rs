@@ -1,7 +1,8 @@
 //! Rust-vs-PRINet 3.0.0 trajectory parity tests for the basic integrators.
 //!
-//! These tests compare `EulerIntegrator::step` and `RK4Integrator::step`
-//! against hard-coded reference trajectories produced by `prinet==3.0.0` using
+//! These tests compare `EulerIntegrator::step`, `RK4Integrator::step`,
+//! `ExponentialIntegrator::step`, and `MultiRateIntegrator::step` against
+//! hard-coded reference trajectories produced by `prinet==3.0.0` using
 //! `torch.float64` for the same initial state, parameters, and timestep.
 //!
 //! Reference values were produced by an ad-hoc Python helper using
@@ -21,8 +22,9 @@
 
 use approx::assert_relative_eq;
 use prin_dynamics::{
-    integrate_fixed, CouplingMode, EulerIntegrator, HopfOscillator, Integrator, KuramotoOscillator,
-    OscillatorState, RK4Integrator, StuartLandauOscillator,
+    integrate_fixed, CouplingMode, EulerIntegrator, ExponentialIntegrator, HopfOscillator,
+    Integrator, KuramotoOscillator, MultiRateIntegrator, MultiRateMethod, OscillatorState,
+    RK4Integrator, StuartLandauOscillator,
 };
 
 /// Assert each element of `actual` is close to `expected` within `rtol`/`atol`.
@@ -341,4 +343,127 @@ fn parity_integrate_fixed_zero_steps_returns_typed_error() {
         integrate_fixed(&mut euler, &model, &state, 0, 0.01, false).unwrap_err(),
         prin_dynamics::IntegrateError::ZeroSteps
     ));
+}
+
+// ==================================================================
+// WP-012: ExponentialIntegrator parity vs PRINet 3.0.0
+// ==================================================================
+
+fn case_kuramoto_mf_for_exp() -> (KuramotoOscillator, OscillatorState) {
+    let model = KuramotoOscillator::new(2, 1.0, 0.1, 0.01, CouplingMode::MeanField).unwrap();
+    let state = OscillatorState::new(vec![0.1, 0.5], vec![1.0, 1.2], vec![1.0, 2.0], None).unwrap();
+    (model, state)
+}
+
+#[test]
+fn parity_exp_kuramoto_mean_field_1_step() {
+    let (model, state) = case_kuramoto_mf_for_exp();
+    let mut ei = ExponentialIntegrator::new(6, 4, 150).unwrap();
+    let result = ei.step(&model, &state, 0.01).unwrap();
+    let expected_phase = vec![0.1123614563710735, 0.5180304727094445];
+    let expected_amp = vec![1.0095605339629692, 1.2094406162685183];
+    let expected_freq = vec![1.0000118069873754, 1.999990152609116];
+    assert_trajectory_close(&result.phase, &expected_phase, 1e-6, 1e-8);
+    assert_trajectory_close(&result.amplitude, &expected_amp, 1e-6, 1e-8);
+    assert_trajectory_close(&result.frequency, &expected_freq, 1e-6, 1e-8);
+}
+
+#[test]
+fn parity_exp_kuramoto_mean_field_5_steps() {
+    let (model, state) = case_kuramoto_mf_for_exp();
+    let mut ei = ExponentialIntegrator::new(6, 4, 150).unwrap();
+    let (result, _) = ei.integrate(&model, &state, 5, 0.01, false, 1).unwrap();
+    let expected_phase = vec![0.16230802206296405, 0.5897000931033627];
+    let expected_amp = vec![1.0484921814758712, 1.2479153303817119];
+    let expected_freq = vec![1.0000615325487825, 1.9999485067846072];
+    assert_trajectory_close(&result.phase, &expected_phase, 1e-5, 1e-7);
+    assert_trajectory_close(&result.amplitude, &expected_amp, 1e-5, 1e-7);
+    assert_trajectory_close(&result.frequency, &expected_freq, 1e-5, 1e-7);
+}
+
+#[test]
+fn parity_exp_kuramoto_full_5_steps() {
+    let model =
+        KuramotoOscillator::new(3, 1.5, 0.1, 0.01, CouplingMode::Full { matrix: None }).unwrap();
+    let state = OscillatorState::new(
+        vec![0.0, 0.2, 1.0],
+        vec![1.0, 1.0, 1.0],
+        vec![1.0, 1.0, 1.0],
+        None,
+    )
+    .unwrap();
+    let mut ei = ExponentialIntegrator::new(9, 4, 150).unwrap();
+    let (result, _) = ei.integrate(&model, &state, 5, 0.01, false, 1).unwrap();
+    let expected_phase = vec![0.0757618647166277, 0.2628232302141883, 1.01126193466922];
+    let expected_amp = vec![1.0342827649264426, 1.0379714646016833, 1.027566371273261];
+    let expected_freq = vec![1.0000858657021392, 1.0000427405269947, 0.999870883896527];
+    assert_trajectory_close(&result.phase, &expected_phase, 1e-5, 1e-7);
+    assert_trajectory_close(&result.amplitude, &expected_amp, 1e-5, 1e-7);
+    assert_trajectory_close(&result.frequency, &expected_freq, 1e-5, 1e-7);
+}
+
+#[test]
+fn parity_exp_stuart_landau_full_5_steps() {
+    let model =
+        StuartLandauOscillator::new(2, 1.0, 1.0, CouplingMode::Full { matrix: None }).unwrap();
+    let state = OscillatorState::new(vec![0.0, 0.2], vec![1.0, 1.0], vec![1.0, 1.0], None).unwrap();
+    let mut ei = ExponentialIntegrator::new(6, 4, 150).unwrap();
+    let (result, _) = ei.integrate(&model, &state, 5, 0.01, false, 1).unwrap();
+    let expected_phase = vec![0.05484693055280044, 0.2451530703440706];
+    let expected_amp = vec![0.9995489798993623, 0.9995489800585777];
+    let expected_freq = vec![1.0, 1.0];
+    assert_trajectory_close(&result.phase, &expected_phase, 1e-5, 1e-7);
+    assert_trajectory_close(&result.amplitude, &expected_amp, 1e-5, 1e-7);
+    assert_trajectory_close(&result.frequency, &expected_freq, 1e-10, 1e-12);
+}
+
+// ==================================================================
+// WP-012: MultiRateIntegrator parity vs PRINet 3.0.0
+// ==================================================================
+
+#[test]
+fn parity_multirate_kuramoto_mean_field_5_steps_rk4() {
+    let (model, state) = case_kuramoto_mf_for_exp();
+    let mut mi = MultiRateIntegrator::with_method(4, MultiRateMethod::RK4).unwrap();
+    let (result, _) = mi.integrate(&model, &state, 5, 0.01, false).unwrap();
+    let expected_phase = vec![0.16230835145259007, 0.5896997465036282];
+    let expected_amp = vec![1.0484918645021268, 1.247915033427541];
+    let expected_freq = vec![1.000061534193982, 1.9999485050530703];
+    assert_trajectory_close(&result.phase, &expected_phase, 1e-5, 1e-7);
+    assert_trajectory_close(&result.amplitude, &expected_amp, 1e-5, 1e-7);
+    assert_trajectory_close(&result.frequency, &expected_freq, 1e-5, 1e-7);
+}
+
+#[test]
+fn parity_multirate_kuramoto_full_5_steps_rk4() {
+    let model =
+        KuramotoOscillator::new(3, 1.5, 0.1, 0.01, CouplingMode::Full { matrix: None }).unwrap();
+    let state = OscillatorState::new(
+        vec![0.0, 0.2, 1.0],
+        vec![1.0, 1.0, 1.0],
+        vec![1.0, 1.0, 1.0],
+        None,
+    )
+    .unwrap();
+    let mut mi = MultiRateIntegrator::with_method(4, MultiRateMethod::RK4).unwrap();
+    let (result, _) = mi.integrate(&model, &state, 5, 0.01, false).unwrap();
+    let expected_phase = vec![0.07576081304710153, 0.2628227432450522, 1.0112636748536774];
+    let expected_amp = vec![1.0342828343621113, 1.0379714608235764, 1.0275666718659542];
+    let expected_freq = vec![1.0000858621984707, 1.000042738902277, 0.999870889698516];
+    assert_trajectory_close(&result.phase, &expected_phase, 1e-5, 1e-7);
+    assert_trajectory_close(&result.amplitude, &expected_amp, 1e-5, 1e-7);
+    assert_trajectory_close(&result.frequency, &expected_freq, 1e-5, 1e-7);
+}
+
+#[test]
+fn parity_multirate_kuramoto_mean_field_5_steps_euler() {
+    let (model, state) = case_kuramoto_mf_for_exp();
+    let mut mi = MultiRateIntegrator::with_method(4, MultiRateMethod::Euler).unwrap();
+    let (result, _) = mi.integrate(&model, &state, 5, 0.01, false).unwrap();
+    let expected_phase = vec![0.16227761726256204, 0.5897276003795787];
+    let expected_amp = vec![1.048447380214596, 1.2478691912329178];
+    let expected_freq = vec![1.0000613809258747, 1.999948643984125];
+    assert_trajectory_close(&result.phase, &expected_phase, 1e-5, 1e-7);
+    assert_trajectory_close(&result.amplitude, &expected_amp, 1e-5, 1e-7);
+    assert_trajectory_close(&result.frequency, &expected_freq, 1e-5, 1e-7);
 }
