@@ -9,6 +9,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- WP-013 Continuous band networks and temporal propagation in `prin-dynamics`
+  (Phase 2, second WP):
+  - `BandParams` — per-band `KuramotoOscillator` configuration (frequency,
+    coupling `K`, amplitude decay `λ`, frequency adaptation `γ`,
+    `freq_adaptation_rate`, and per-band `CouplingMode` via `with_coupling`;
+    the PRINet 3.0 reference uses `sparse_knn`).
+  - `PacPair` — declares a slow→fast cross-frequency PAC link (any strictly
+    slow→fast pair is permitted, including the non-adjacent delta→gamma
+    cascade).
+  - `BandNetwork` — single continuous ODE right-hand side over the
+    concatenated state, implementing `Dynamics` so it composes with every PRIN
+    `Integrator` rather than embedding one. Intra-band derivatives are
+    evaluated by the crate's `KuramotoOscillator` on each band's sub-state (one
+    algorithm, one implementation), so every `CouplingMode` is available per
+    band. Cross-band PAC enters `dA_fast/dt` as the relaxation term
+    `λ_fast·(A_target − A_fast)` toward the reference's modulation target
+    (the continuous-time analogue of PRINet 3.0's discrete assignment; Project
+    Plan amendment #19).
+  - `theta_gamma_network` / `delta_theta_gamma_network` factories (2- and
+    3-band hierarchies), `theoretical_capacity` (`floor(f_fast / f_slow)`,
+    ~7 for typical θ/γ frequencies; the Lisman–Jensen working-memory capacity
+    model), `create_band_state` helper.
+  - `BandError` typed enum (`NoBands`, `EmptyBand`, `InvalidBandIndex`,
+    `InvalidCouplingMode`, `MissingBandLabels`, `InvalidCapacity`,
+    `Partition`).
+  - `ComplexPhasorBlender`, `EmaAmplitudeBlender`, `TemporalPropagator` —
+    frame-to-frame temporal propagation via complex-phasor phase blending +
+    EMA amplitude blending. PRIN's `alpha` weights the new frame; PRINet 3.0's
+    `carry_strength`/`amplitude_decay` weight the carried frame, so
+    `alpha = 1 − carry_strength` / `alpha = 1 − amplitude_decay` (the
+    conventions are complements, not synonyms — documented on every type and
+    enforced by `parity_temporal::parity_reversed_convention_does_not_match`).
+  - `TemporalError` typed enum (`InvalidBlendingFactor`, `EmptyInput`,
+    `LengthMismatch`, `NonFiniteValue`).
+  - `prin-py` PyO3 bindings `PyBandParams`, `PyPacPair`, `PyBandNetwork`,
+    `create_band_state_py`, `PyComplexPhasorBlender`,
+    `PyEmaAmplitudeBlender`, `PyTemporalPropagator` in `bindings/bands.rs`
+    and `bindings/temporal.rs`; `python/prin/dynamics.py` `__all__` grew
+    from 20 to 27 symbols; `python/prin/_prin_core.pyi` stubs regenerated;
+    44 Python acceptance tests in `tests/test_wp013_bands_temporal.py`.
+  - 18 new Rust-vs-PRINet 3.0.0 parity tests: 12 in
+    `crates/prin-dynamics/tests/parity_bands.rs` (per-mode intra-band
+    derivatives, composed 2-band/3-band right-hand sides, RK4 golden
+    trajectories at `n = 1` and `n = 10` for `mean_field` and `sparse_knn`,
+    `theoretical_capacity` vs the reference `MultiRateIntegrator` sub-step
+    count) and 6 in `crates/prin-dynamics/tests/parity_temporal.rs` (single
+    blend, chained 5-frame sequence, wrap-around, clamp saturation, parameter-
+    mapping directional guard). Measured worst-case drift: `2.22e-16`
+    (sparse k-NN, the reference mode), `2.74e-9` (full), `1.19e-7` (mean-field,
+    amendment #14 hazard), `~1 ulp` (temporal, fully `f64` on both sides).
+  - All WP-013 acceptance criteria met: band/temporal golden trajectories
+    pass; capacity invariants and phase continuity are property-tested; PAC
+    interactions are exercised; `bands.rs` 98.97% lines / 98.68% functions,
+    `temporal.rs` 99.79% lines / 100% functions (identical under
+    `--features strict-checks`).
+  - Integrator stage states now carry `freq_band` labels from the base state,
+    so a `BandNetwork` can be driven by RK4/RK45/exponential integrators
+    (previously stage 2+ lost the band labels and the dynamics failed with
+    `MissingBandLabels`); numerically exact since the labels are fixed.
 - WP-012 Exponential and multi-rate integrators in `prin-dynamics` (Phase 2, first WP):
   - `ExponentialIntegrator` — exponential Euler (`y_{n+1} = exp(hA) y_n + h·φ₁(hA)·g(y_n)`) via direct Padé(13) scaling-and-squaring (`dim ≤ max_direct_dim`) or Krylov–Arnoldi subspace approximation with modified Gram-Schmidt (`dim > max_direct_dim` or `stiff_mode`, adaptive rank from the estimated Jacobian 1-norm condition number).
   - `MultiRateIntegrator` — uniform sub-stepping: divides the outer timestep into `sub_steps` equal inner `MultiRateMethod::RK4`/`Euler` steps applied to all oscillators, matching the PRINet 3.0 reference implementation.

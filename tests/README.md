@@ -20,6 +20,17 @@ Additional PRIN-specific suites (per the Testing Standards):
   sub-stepping, trajectory recording, and typed-error propagation), PAC (2),
   Metrics (22: order 6, coherence 3, spectral 2, energy 2, chimera 7,
   metastability 1, k-NN 1), and module re-exports (2).
+- `test_wp013_bands_temporal.py` — 44 tests covering the WP-013 PyO3 bindings
+  for continuous hierarchical band networks and temporal propagation:
+  `BandParams`/`with_coupling` (per-band coupling modes incl. the PRINet 3.0
+  reference's `sparse_knn`), `PacPair` (incl. non-adjacent delta→gamma cascade),
+  `BandNetwork` construction/validation/state partitioning/`Dynamics`
+  derivatives/capacity/PAC identity, `create_band_state_py`, the
+  `BandError::NoBands` distinct message, RK4 + `MultiRateIntegrator`
+  integration of a `BandNetwork`, `ComplexPhasorBlender`/`EmaAmplitudeBlender`/
+  `TemporalPropagator` construction/blending/wrap-around/clamp saturation, and
+  the `alpha = 1 − carry_strength` parameter mapping (36 from S1, 8 from S3
+  covering the coupling-mode surface).
 - `test_parity_*.py` — fast unit tests for `prin.parity` schema, loader,
   manifest, harness, and Hypothesis strategies.
 - `test_dlpack_bridge.py` — CPU round-trip, batched boundary, dtype/device

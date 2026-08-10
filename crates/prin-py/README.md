@@ -47,6 +47,30 @@ tests in `tests/test_dynamics_bindings.py` (`TestExponentialIntegrator`,
 `TestMultiRateIntegrator`) landed in the same S3 remediation commit
 (`62deb43`, finding WP012-F1).
 
+WP-013 (Continuous band networks and temporal propagation) added two new
+binding modules:
+
+- **`bindings/bands.rs`** — `PyBandParams` (per-band Kuramoto configuration,
+  including the `with_coupling` constructor that exposes the PRINet 3.0
+  reference's `sparse_knn` mode), `PyPacPair` (slow→fast cross-frequency PAC
+  link; any strictly slow→fast pair is permitted, including the delta→gamma
+  cascade), `PyBandNetwork` (single continuous ODE right-hand side implementing
+  the dynamics trait, so it composes with every PRIN integrator rather than
+  embedding one — Project Plan amendment #19), and the `create_band_state_py`
+  free function. `PyBandError` maps `BandError` variants to `ValueError`.
+- **`bindings/temporal.rs`** — `PyComplexPhasorBlender`,
+  `PyEmaAmplitudeBlender`, and `PyTemporalPropagator`, with the
+  `alpha = 1 − carry_strength` / `alpha = 1 − amplitude_decay` mapping to the
+  PRINet 3.0 reference documented on each PyO3 class and applied in
+  `crates/prin-dynamics/tests/parity_temporal.rs` (finding WP013-F6).
+
+`python/prin/dynamics.py` `__all__` grew from 20 to 27 symbols (adding
+`BandNetwork`, `BandParams`, `PacPair`, `create_band_state_py`,
+`ComplexPhasorBlender`, `EmaAmplitudeBlender`, and `TemporalPropagator`);
+`python/prin/_prin_core.pyi` stubs and 44 Python acceptance tests in
+`tests/test_wp013_bands_temporal.py` cover all binding paths (36 from S1, 8
+from S3 covering the coupling-mode surface).
+
 Type stubs are maintained at `python/prin/_prin_core.pyi` and regenerated
 whenever the extension API changes.
 

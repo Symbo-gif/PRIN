@@ -25,7 +25,7 @@ remediated in session 0051
 | `crates/prin-dynamics/src/lib.rs` | Re-exports for the new public symbols |
 | `crates/prin-py/src/bindings/bands.rs` | New — `PyBandParams`, `PyPacPair`, `PyBandNetwork`, `create_band_state_py` |
 | `crates/prin-py/src/bindings/temporal.rs` | New — `PyComplexPhasorBlender`, `PyEmaAmplitudeBlender`, `PyTemporalPropagator` |
-| `python/prin/_prin_core.pyi`, `python/prin/dynamics.py` | Stubs and re-exports (`__all__` 20 → 26 symbols) |
+| `python/prin/_prin_core.pyi`, `python/prin/dynamics.py` | Stubs and re-exports (`__all__` 20 → 27 symbols) |
 | `tests/test_wp013_bands_temporal.py` | New — 36 Python acceptance tests |
 
 ## Acceptance criteria → evidence map

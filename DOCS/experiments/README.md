@@ -39,6 +39,11 @@ at the top level until they are folded into the final campaign archive in Phase 
 
 - [`0037-wp010-s1-handoff.md`](0037-wp010-s1-handoff.md) — WP-010 S1 handoff
   to the S2 audit for phase metrics and chimera measures.
+- [`0049-wp013-s1-handoff.md`](0049-wp013-s1-handoff.md) — WP-013 S1 handoff
+  to the S2 audit for continuous band networks and temporal propagation.
+  Written retrospectively in S3 (session 0051) as the remedy for finding
+  WP013-F3 (D3); carries a provenance caveat stating it does not alter the
+  S2 verdict.
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
 [`../sessions/phase-1/wp009-s1-handoff-note.md`](../sessions/phase-1/wp009-s1-handoff-note.md)

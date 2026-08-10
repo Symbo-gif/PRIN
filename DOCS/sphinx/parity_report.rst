@@ -169,6 +169,104 @@ deferred capability.
 workspace dependency for ``matrix_exp``/Arnoldi linear algebra); ``cargo
 audit`` and Snyk Open Source report no new advisories.
 
+WP-013 — Continuous band network and temporal-propagation parity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Rust ``BandNetwork`` (continuous ODE right-hand side), its
+``theta_gamma_network`` / ``delta_theta_gamma_network`` factories, and the
+``TemporalPropagator`` (complex-phasor phase blending + EMA amplitude
+blending) are compared against PRINet 3.0 ``prinet==3.0.0``
+``ThetaGammaNetwork``, ``DeltaThetaGammaNetwork``, and
+``TemporalPhasePropagator`` in two new parity files added in WP-013.
+
+**Band-network parity** (``crates/prin-dynamics/tests/parity_bands.rs``, 12
+golden cases):
+
+- Per-mode intra-band derivatives against
+  ``prinet ... KuramotoOscillator.compute_derivatives`` for ``mean_field``,
+  ``full``, and the reference's ``sparse_knn`` (the mode the reference band
+  networks actually use).
+- The composed 2-band (``theta_gamma``) and 3-band (``delta_theta_gamma``)
+  right-hand sides, including the reference PAC target
+  ``A_fast·[1 + m·cos(mean(φ_slow) + offset)]``.
+- RK4 golden trajectories at ``n = 1`` and ``n = 10`` steps, ``dt = 0.01``,
+  for both ``mean_field`` and the reference networks' ``sparse_knn``.
+- ``theoretical_capacity`` vs the reference ``MultiRateIntegrator`` sub-step
+  count (``sub_steps = max(1, int(f_fast / f_slow))``) for four frequency
+  pairs.
+
+Measured worst-case drift: ``2.22e-16`` (sparse k-NN, the reference mode —
+~1 ulp), ``2.74e-9`` (full), ``1.19e-7`` (mean-field, the amendment #14
+f32-complex hazard on the order-parameter reduction). Tolerances follow the
+same tiers as the WP-007/WP-008 parity: ``1e-12`` for pure f64 paths
+(sparse/full), ``1e-6`` relative / ``5e-7`` absolute for the mean-field
+f32-complex path.
+
+**Temporal-propagation parity** (``crates/prin-dynamics/tests/parity_temporal.rs``,
+6 golden cases):
+
+- A single blend against ``prinet ... TemporalPhasePropagator.propagate``.
+- A chained 5-frame golden sequence.
+- ``0`` / ``2π`` wrap-around.
+- Amplitude-clamp saturation at the lower and upper bounds.
+- A directional guard (``parity_reversed_convention_does_not_match``) that
+  fails if the ``alpha = 1 − carry_strength`` mapping is read in the reversed
+  direction.
+
+Both sides are fully ``f64`` (PRIN's blenders use ``f64`` real and
+``Complex64``; PRINet's reference uses ``torch.float64`` and
+``torch.complex64`` only where the order-parameter reduction requires it, which
+the temporal paths do not). Comparisons are at ``1e-12``; measured drift is
+~1 ulp.
+
+**Composition decision (finding WP013-F2 D2, plan amendment #19):** PRINet
+3.0's band networks are *steppers* — a per-band ``KuramotoOscillator``, PAC
+applied as an instantaneous amplitude assignment between band steps, and a
+per-band ``MultiRateIntegrator`` with ``sub_steps = floor(f_fast / f_slow)``
+embedded in the network. PRIN's ``BandNetwork`` is instead a single continuous
+ODE right-hand side over the concatenated state, so it composes with every
+PRIN ``Integrator`` rather than embedding one. Three consequences are accepted
+as the intended trajectory and parity-verified: (a) intra-band terms are
+identical to the reference for the configured ``CouplingMode``; (b) PAC enters
+``dA_fast/dt`` as the relaxation term ``λ_fast·(A_target − A_fast)`` toward the
+reference's modulation target (the continuous-time analogue of the reference's
+discrete assignment); (c) per-band sub-stepping is supplied by driving the
+network with ``MultiRateIntegrator``, with the reference's sub-step count
+exposed as ``BandNetwork::theoretical_capacity``. **Whole-network step-for-step
+trajectory parity with the reference stepper is therefore not claimed and is
+not a WP-013 acceptance criterion**; band/temporal golden-trajectory
+acceptance is evidenced by ``parity_bands.rs`` and ``parity_temporal.rs``.
+
+**Blending-convention complement (finding WP013-F6 D4):** PRIN's
+``ComplexPhasorBlender::alpha`` and ``EmaAmplitudeBlender::alpha`` weight the
+**new** frame; PRINet's ``TemporalPhasePropagator.carry_strength`` /
+``amplitude_decay`` weight the **carried** frame. The mapping is
+``alpha = 1 − carry_strength`` and ``alpha = 1 − amplitude_decay`` (the
+conventions are complements, not synonyms). The parity tests run PRIN with
+``alpha = 0.8`` / ``0.7`` against PRINet references generated with
+``carry_strength = 0.2`` / ``amplitude_decay = 0.3`` and verify the
+complement; the directional guard fails the test if the mapping is read
+reversed.
+
+**Integrator-stage defect found and fixed while producing parity evidence
+(audit §7.1):** generating band-network golden trajectories required
+integrating a ``BandNetwork``, which surfaced a defect not raised in S2:
+``make_intermediate_state`` and the DOPRI5 ``stage_state`` in
+``crates/prin-dynamics/src/integrate.rs`` set ``freq_band: None`` on every
+stage state, so a ``BandNetwork`` could not be driven by RK4/RK45/exponential
+integrators at all — stages 2+ lost the band labels and ``compute_derivatives``
+failed with ``MissingBandLabels``, contradicting the ``bands`` module
+documentation. Both sites now carry ``freq_band`` from the base state; the
+labels are fixed rather than evolving, so this is numerically exact and no
+existing parity value changed (``parity_integrators.rs``,
+``parity_models.rs``, and the 510 corpus cases are unchanged and green).
+Regression tests: ``bands::tests::band_network_integrates_with_rk4`` and
+``band_network_integrates_with_multi_rate``.
+
+**No new dependency.** The band-network and temporal modules reuse
+``KuramotoOscillator`` and ``PhaseAmplitudeCoupling`` from earlier WPs;
+``cargo audit``, ``pip-audit``, and Snyk Open Source report no new advisories.
+
 EA-002 — Cross-platform torch reduction noise in derived corpus metrics
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -26,5 +26,7 @@ starts by reading it (Development Workflow Standards §6).
 - [`010-project-state.md`](010-project-state.md) — WP-010 S4 closure and WP-011 declaration.
 - [`011-project-state.md`](011-project-state.md) — WP-011 S4 closure, Phase 1
   exit-gate verdict (COMPLETE), and WP-012 declaration.
-- [`012-project-state.md`](012-project-state.md) — latest report; WP-012 S4
-  closure and WP-013 declaration.
+- [`012-project-state.md`](012-project-state.md) — WP-012 S4 closure and
+  WP-013 declaration.
+- [`013-project-state.md`](013-project-state.md) — latest report; WP-013 S4
+  closure and WP-014 declaration.

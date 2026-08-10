@@ -89,6 +89,60 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   20 symbols); the inner ``MultiRateMethod`` is exposed as a ``"rk4"`` /
   ``"euler"`` string constructor argument rather than a separate Python class.
   21 new Python acceptance tests in ``tests/test_dynamics_bindings.py``.
+- ``prin-dynamics`` continuous hierarchical band networks and temporal
+  propagation (WP-013) — Rust ``BandParams``, ``PacPair``, ``BandNetwork``
+  (implementing ``Dynamics``), ``theta_gamma_network`` /
+  ``delta_theta_gamma_network`` factories, ``theoretical_capacity`` (the
+  Lisman–Jensen ``floor(f_fast / f_slow)`` working-memory capacity, ~7 for
+  typical θ/γ frequencies), ``create_band_state``, and ``BandError`` in
+  ``src/bands.rs``; and ``ComplexPhasorBlender``, ``EmaAmplitudeBlender``,
+  ``TemporalPropagator``, and ``TemporalError`` in ``src/temporal.rs``.
+  Replaces PRINet 3.0's Python ``ThetaGammaNetwork`` /
+  ``DeltaThetaGammaNetwork`` in ``core/propagation/networks.py`` and
+  ``TemporalPhasePropagator`` in ``core/propagation/temporal.py``.
+
+  **Composition decision (Project Plan amendment #19, finding WP013-F2 D2):**
+  PRINet 3.0's band networks are *steppers* — a per-band ``KuramotoOscillator``
+  (``coupling_mode="sparse_knn"``), PAC applied as an instantaneous amplitude
+  assignment between band steps, and a per-band ``MultiRateIntegrator`` with
+  ``sub_steps = floor(f_fast / f_slow)`` embedded in the network. PRIN's
+  ``BandNetwork`` is instead a single continuous ODE right-hand side over the
+  concatenated state, so it composes with every PRIN ``Integrator`` (RK4, RK45,
+  exponential, multi-rate) rather than embedding one. Three consequences are
+  accepted as the intended trajectory: (a) intra-band terms are the identical
+  Kuramoto equations for the configured ``CouplingMode``, including the
+  reference's ``sparse_knn``, and are parity-verified per mode against
+  ``prinet==3.0.0`` in ``crates/prin-dynamics/tests/parity_bands.rs``;
+  (b) PAC enters ``dA_fast/dt`` as the relaxation term
+  ``λ_fast·(A_target − A_fast)`` toward the reference's modulation target
+  ``A_fast·[1 + m·cos(mean(φ_slow) + offset)]``, which is the continuous-time
+  analogue of the reference's discrete assignment and is parity-verified
+  against the reference's ``PhaseAmplitudeCoupling.modulate`` target;
+  (c) per-band sub-stepping is supplied by driving the network with
+  ``MultiRateIntegrator``, with the reference's sub-step count exposed as
+  ``BandNetwork::theoretical_capacity``. Whole-network step-for-step trajectory
+  parity with the reference stepper is therefore not claimed and is not a
+  WP-013 acceptance criterion; band/temporal golden-trajectory acceptance is
+  evidenced by ``parity_bands.rs`` and ``parity_temporal.rs``.
+
+  **Blending-convention complement (finding WP013-F6 D4):** PRIN's
+  ``ComplexPhasorBlender::alpha`` and ``EmaAmplitudeBlender::alpha`` weight the
+  **new** frame, while PRINet's ``TemporalPhasePropagator.carry_strength`` /
+  ``amplitude_decay`` weight the **carried** (previous) frame. The mapping is
+  ``alpha = 1 − carry_strength`` and ``alpha = 1 − amplitude_decay`` (the
+  conventions are complements, not synonyms). PRIN's "α near 1" means fast
+  adaptation to the new frame; PRINet's "carry_strength near 1" means strong
+  temporal inertia. The mapping is documented on every type and PyO3 class and
+  enforced by ``parity_temporal::parity_reversed_convention_does_not_match``.
+
+  Python bindings ``BandNetwork``, ``BandParams``, ``PacPair``,
+  ``create_band_state_py``, ``ComplexPhasorBlender``,
+  ``EmaAmplitudeBlender``, and ``TemporalPropagator`` are provided via
+  ``prin.dynamics`` (``python/prin/dynamics.py`` grew from 20 to 27 symbols);
+  the inner ``BandParams::with_coupling`` exposes the per-band ``CouplingMode``
+  rather than a separate Python class. 44 Python acceptance tests in
+  ``tests/test_wp013_bands_temporal.py`` cover all binding paths.
+- ``prin-dynamics`` phase–amplitude coupling and coupling topologies (WP-009) —
 - ``prin-dynamics`` phase–amplitude coupling and coupling topologies (WP-009) —
   Rust ``PhaseAmplitudeCoupling`` struct implementing cross-frequency PAC
   ``A_fast = A_0·[1 + m·cos(φ_slow + offset)]`` with mean slow-band phase,

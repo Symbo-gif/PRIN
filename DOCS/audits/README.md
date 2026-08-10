@@ -56,6 +56,11 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   multi-rate integrators" audit (`FAIL`); five findings (F1–F3 D1, F4 D3, F5
   D4) resolved in S3 (four fixed, one approved amendment #18) with a CLEAN
   delta re-audit.
+- [`013-wp013-audit.md`](013-wp013-audit.md) — WP-013 "Continuous band networks
+  and temporal propagation" audit (`FAIL`); six findings (F1 D1, F2 D2, F3 D3,
+  F4–F6 D4) resolved in S3 (five fixed, one approved amendment #19) with a
+  CLEAN delta re-audit. One additional integrator-stage defect found while
+  producing the F1 parity evidence was fixed in the same remediation.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.
