@@ -349,11 +349,21 @@ def build_phase_knn(phase: NDArray[np.float64], k: int) -> list[NDArray[np.int64
 
 # --- Band Networks ---
 class BandParams:
-    def __init__(self, coupling_strength: float, decay_rate: float) -> None: ...
+    def __init__(
+        self,
+        coupling_strength: float,
+        decay_rate: float,
+        freq_adaptation_rate: float = 0.0,
+        coupling_mode: CouplingMode | None = None,
+    ) -> None: ...
     @property
     def coupling_strength(self) -> float: ...
     @property
     def decay_rate(self) -> float: ...
+    @property
+    def freq_adaptation_rate(self) -> float: ...
+    @property
+    def coupling_mode(self) -> CouplingMode: ...
 
 class PacPair:
     def __init__(

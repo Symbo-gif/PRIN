@@ -16,6 +16,10 @@ fn temporal_err_to_py(err: TemporalError) -> PyErr {
 ///
 /// Blends two phase arrays by converting to unit phasors, taking a weighted
 /// complex average, and extracting the resultant phase via `atan2`.
+///
+/// `alpha` weights the **new** frame. PRINet 3.0's
+/// `TemporalPhasePropagator.carry_strength` weights the **carried** frame, so
+/// `alpha = 1 - carry_strength`.
 #[pyclass(
     name = "ComplexPhasorBlender",
     module = "prin._prin_core",
@@ -74,6 +78,10 @@ impl PyComplexPhasorBlender {
 /// Exponential moving average (EMA) amplitude blender.
 ///
 /// `A_blend = α·A_new + (1-α)·A_old`, clamped to `[1e-6, 10]`.
+///
+/// `alpha` weights the **new** frame. PRINet 3.0's
+/// `TemporalPhasePropagator.amplitude_decay` weights the **carried** frame, so
+/// `alpha = 1 - amplitude_decay`.
 #[pyclass(
     name = "EmaAmplitudeBlender",
     module = "prin._prin_core",
@@ -135,6 +143,11 @@ impl PyEmaAmplitudeBlender {
 
 /// Temporal propagator: combines complex-phasor phase blending with EMA
 /// amplitude blending, maintaining a running state across frames.
+///
+/// The running state corresponds to PRINet 3.0's `prev_phase`/`prev_amplitude`
+/// and the `propagate` argument to its `input_phase`/`input_amplitude`, with
+/// `alpha = 1 - carry_strength` (phase) and `alpha = 1 - amplitude_decay`
+/// (amplitude).
 #[pyclass(
     name = "TemporalPropagator",
     module = "prin._prin_core",

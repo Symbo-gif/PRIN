@@ -8,8 +8,35 @@
 //!
 //! Both produce a [`BandNetwork`] that implements the [`Dynamics`] trait so they
 //! can be driven by any [`Integrator`](crate::integrate::Integrator). Intra-band
-//! dynamics follow Kuramoto mean-field coupling; cross-band interactions use
-//! [`PhaseAmplitudeCoupling`].
+//! dynamics are evaluated by [`KuramotoOscillator`] on the band's sub-state, so
+//! every [`CouplingMode`] (mean-field, full pairwise, sparse k-NN) is available
+//! per band; cross-band interactions use [`PhaseAmplitudeCoupling`].
+//!
+//! # Correspondence to the PRINet 3.0 reference
+//!
+//! PRINet 3.0's `ThetaGammaNetwork` / `DeltaThetaGammaNetwork` are *steppers*:
+//! they hold one `KuramotoOscillator` (`coupling_mode="sparse_knn"`) per band,
+//! step the slow band, overwrite the fast band's amplitudes with the PAC-
+//! modulated values, and then advance the fast band with a `MultiRateIntegrator`
+//! whose `sub_steps` is `floor(f_fast / f_slow)`.
+//!
+//! [`BandNetwork`] instead exposes the hierarchy as a single continuous ODE
+//! right-hand side over the concatenated state, so it composes with every PRIN
+//! [`Integrator`](crate::integrate::Integrator) rather than embedding one. The
+//! consequences, recorded as Project Plan amendment #19, are:
+//!
+//! - **Intra-band terms are identical** to the reference for the configured
+//!   [`CouplingMode`] (verified in `tests/parity_bands.rs` against
+//!   `prinet==3.0.0`).
+//! - **PAC is a relaxation term, not an assignment.** The reference replaces
+//!   `A_fast` with `A_fast·[1 + m·cos(mean(φ_slow) + offset)]` between band
+//!   steps; the continuous form adds `λ_fast·(A_target − A_fast)` to
+//!   `dA_fast/dt`, which relaxes toward the same target on the band's own
+//!   amplitude timescale.
+//! - **Sub-stepping is the integrator's job.** The reference's per-band
+//!   `sub_steps` is reproduced by driving a `BandNetwork` with
+//!   [`MultiRateIntegrator`](crate::integrate::MultiRateIntegrator); the ratio
+//!   itself is available as [`BandNetwork::theoretical_capacity`].
 //!
 //! The trainable discrete-time variant (`DiscreteDeltaThetaGamma`) lives in
 //! `prin-train::bands` (Phase 4) because it requires autodiff.
@@ -17,13 +44,18 @@
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::models::Dynamics;
+use crate::coupling::CouplingMode;
+use crate::models::{Dynamics, KuramotoOscillator};
 use crate::pac::PhaseAmplitudeCoupling;
 use crate::state::{clamp_derivative, OscillatorState, StateDerivatives, StateError};
 
 /// Errors raised by band-network construction and evaluation.
 #[derive(Debug, Error)]
 pub enum BandError {
+    /// The band list itself is empty (no bands were configured).
+    #[error("band network requires at least one band, got an empty band list")]
+    NoBands,
+
     /// A band size is zero.
     #[error("band {band} has zero oscillators")]
     EmptyBand {
@@ -102,25 +134,57 @@ pub enum BandError {
 
 /// Per-band dynamical parameters.
 ///
-/// Each band is a population of Kuramoto oscillators with mean-field coupling.
-/// The `coupling_strength` controls intra-band synchrony; the `decay_rate`
-/// controls amplitude relaxation toward the limit cycle.
+/// Each band is a population of [`KuramotoOscillator`]s. The
+/// `coupling_strength` controls intra-band synchrony, `decay_rate` controls
+/// amplitude relaxation toward the limit cycle, `freq_adaptation_rate` is the
+/// Kuramoto frequency-adaptation rate `γ`, and `coupling_mode` selects how the
+/// intra-band coupling term is evaluated.
+///
+/// [`BandParams::new`] keeps the PRIN default of mean-field coupling with
+/// `γ = 0` (frozen natural frequencies); [`BandParams::with_coupling`] exposes
+/// the full [`KuramotoOscillator`] parameterisation, including the
+/// `sparse_knn` mode used by the PRINet 3.0 reference networks.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BandParams {
     /// Intra-band Kuramoto coupling strength `K`.
     pub coupling_strength: f64,
     /// Amplitude decay rate `λ` (Stuart–Landau radial relaxation).
     pub decay_rate: f64,
+    /// Kuramoto frequency-adaptation rate `γ`.
+    pub freq_adaptation_rate: f64,
+    /// Intra-band coupling evaluation mode.
+    pub coupling_mode: CouplingMode,
 }
 
 impl BandParams {
-    /// Create validated band parameters.
+    /// Create validated band parameters with mean-field coupling and no
+    /// frequency adaptation (`γ = 0`).
     ///
     /// # Errors
     ///
     /// Returns [`BandError::NonFiniteParameter`] if either parameter is
     /// non-finite.
     pub fn new(coupling_strength: f64, decay_rate: f64) -> Result<Self, BandError> {
+        Self::with_coupling(coupling_strength, decay_rate, 0.0, CouplingMode::MeanField)
+    }
+
+    /// Create validated band parameters with an explicit frequency-adaptation
+    /// rate and [`CouplingMode`].
+    ///
+    /// Use `CouplingMode::SparseKnn { k }` to match the PRINet 3.0
+    /// `ThetaGammaNetwork` / `DeltaThetaGammaNetwork` reference configuration.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BandError::NonFiniteParameter`] if any parameter is
+    /// non-finite. The `coupling_mode` is validated against the band's
+    /// oscillator count when the [`BandNetwork`] is constructed.
+    pub fn with_coupling(
+        coupling_strength: f64,
+        decay_rate: f64,
+        freq_adaptation_rate: f64,
+        coupling_mode: CouplingMode,
+    ) -> Result<Self, BandError> {
         if !coupling_strength.is_finite() {
             return Err(BandError::NonFiniteParameter {
                 name: "coupling_strength",
@@ -133,17 +197,46 @@ impl BandParams {
                 value: decay_rate,
             });
         }
+        if !freq_adaptation_rate.is_finite() {
+            return Err(BandError::NonFiniteParameter {
+                name: "freq_adaptation_rate",
+                value: freq_adaptation_rate,
+            });
+        }
         Ok(Self {
             coupling_strength,
             decay_rate,
+            freq_adaptation_rate,
+            coupling_mode,
         })
+    }
+
+    /// Build the [`KuramotoOscillator`] that evaluates this band's intra-band
+    /// dynamics for a population of `n` oscillators.
+    ///
+    /// The model is a plain value type (five scalars plus the coupling mode),
+    /// so constructing it per derivative evaluation costs `O(1)` for
+    /// `MeanField`/`SparseKnn` and `O(n²)` for an explicit
+    /// `Full { matrix: Some(..) }` — the same order as evaluating that mode.
+    fn model(&self, n: usize) -> Result<KuramotoOscillator, StateError> {
+        KuramotoOscillator::new(
+            n,
+            self.coupling_strength,
+            self.decay_rate,
+            self.freq_adaptation_rate,
+            self.coupling_mode.clone(),
+        )
     }
 }
 
-/// A slow→fast PAC coupling pair between adjacent bands.
+/// A slow→fast PAC coupling pair.
 ///
 /// The phase of the slow band modulates the amplitude of the fast band via
-/// [`PhaseAmplitudeCoupling`].
+/// [`PhaseAmplitudeCoupling`]. Adjacent pairs (delta→theta, theta→gamma) are
+/// the standard hierarchy and the only ones the PRINet 3.0 reference networks
+/// build, but any strictly slow→fast pair (`slow_band < fast_band`) is
+/// permitted so that non-adjacent couplings such as delta→gamma can be
+/// studied; [`BandNetwork::new`] rejects `slow_band >= fast_band`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PacPair {
     /// Index of the slow (modulating) band.
@@ -227,9 +320,12 @@ impl BandNetwork {
     /// # Errors
     ///
     /// Returns [`BandError`] if:
-    /// - `band_sizes` is empty or any entry is zero,
+    /// - `band_sizes` is empty ([`BandError::NoBands`]) or any entry is zero
+    ///   ([`BandError::EmptyBand`]),
     /// - `band_params` length does not match `band_sizes`,
-    /// - a PAC pair references an out-of-range band.
+    /// - a band's [`CouplingMode`] is invalid for that band's oscillator count,
+    /// - a PAC pair references an out-of-range band or is not strictly
+    ///   slow→fast.
     pub fn new(
         band_sizes: Vec<usize>,
         band_params: Vec<BandParams>,
@@ -237,7 +333,7 @@ impl BandNetwork {
     ) -> Result<Self, BandError> {
         let n_bands = band_sizes.len();
         if n_bands == 0 {
-            return Err(BandError::EmptyBand { band: 0 });
+            return Err(BandError::NoBands);
         }
         if band_params.len() != n_bands {
             return Err(BandError::WrongBandCount {
@@ -249,6 +345,9 @@ impl BandNetwork {
             if sz == 0 {
                 return Err(BandError::EmptyBand { band: i });
             }
+            // Reject an unusable coupling mode (e.g. sparse k ≥ band size) at
+            // construction time rather than at the first derivative evaluation.
+            band_params[i].model(sz)?;
         }
         for pair in &pac_pairs {
             if pair.slow_band >= n_bands {
@@ -378,52 +477,37 @@ impl BandNetwork {
         Ok(indices)
     }
 
-    /// Compute intra-band Kuramoto mean-field derivatives for one band.
+    /// Compute the intra-band Kuramoto derivatives for one band.
     ///
-    /// Returns `(dphase, damplitude)` contributions for the band's oscillators.
+    /// The band's oscillators are lifted into a standalone [`OscillatorState`]
+    /// and handed to a [`KuramotoOscillator`] configured from the band's
+    /// [`BandParams`], so the band dynamics are the crate's single Kuramoto
+    /// implementation evaluated on `N_b` oscillators — not a second copy of it.
     fn compute_band_derivatives(
         &self,
         state: &OscillatorState,
         band_indices: &[usize],
         band_idx: usize,
-    ) -> (Vec<f64>, Vec<f64>) {
+    ) -> Result<StateDerivatives, StateError> {
         let params = &self.band_params[band_idx];
-        let k = params.coupling_strength;
-        let n_b = band_indices.len();
-        let inv_n = 1.0 / (n_b as f64);
+        let sub = band_sub_state(state, band_indices);
+        params.model(band_indices.len())?.compute_derivatives(&sub)
+    }
+}
 
-        // Complex order parameter Z = (1/N_b) Σ r_j e^{iφ_j}
-        let mut z_r = 0.0;
-        let mut z_i = 0.0;
-        for &j in band_indices {
-            let r = state.amplitude[j];
-            let phi = state.phase[j];
-            z_r += r * phi.cos();
-            z_i += r * phi.sin();
-        }
-        z_r *= inv_n;
-        z_i *= inv_n;
-
-        let big_r = (z_r * z_r + z_i * z_i).sqrt();
-        let psi = z_i.atan2(z_r);
-        let k_r = k * big_r;
-
-        let mut dphase = Vec::with_capacity(n_b);
-        let mut damplitude = Vec::with_capacity(n_b);
-
-        for &j in band_indices {
-            let phi = state.phase[j];
-            let r = state.amplitude[j];
-            let omega = state.frequency[j];
-            let sin_diff = (psi - phi).sin();
-            let cos_diff = (psi - phi).cos();
-
-            // Kuramoto phase + Stuart-Landau radial relaxation
-            dphase.push(omega + k_r * sin_diff);
-            damplitude.push(-params.decay_rate * r + k_r * cos_diff);
-        }
-
-        (dphase, damplitude)
+/// Lift a band's oscillators into a standalone [`OscillatorState`].
+///
+/// Built by direct field construction rather than [`OscillatorState::new`] so
+/// the band model sees exactly the values the caller supplied: integrator stage
+/// states deliberately carry unwrapped phases (see `make_intermediate_state` in
+/// [`crate::integrate`]), and re-wrapping here would change the phase sort order
+/// that `CouplingMode::SparseKnn` uses to pick neighbours.
+fn band_sub_state(state: &OscillatorState, band_indices: &[usize]) -> OscillatorState {
+    OscillatorState {
+        phase: band_indices.iter().map(|&j| state.phase[j]).collect(),
+        amplitude: band_indices.iter().map(|&j| state.amplitude[j]).collect(),
+        frequency: band_indices.iter().map(|&j| state.frequency[j]).collect(),
+        freq_band: None,
     }
 }
 
@@ -444,14 +528,15 @@ impl Dynamics for BandNetwork {
 
         let mut dphase = vec![0.0; n];
         let mut damplitude = vec![0.0; n];
-        let dfrequency = vec![0.0; n];
+        let mut dfrequency = vec![0.0; n];
 
-        // 1. Intra-band Kuramoto mean-field derivatives
+        // 1. Intra-band Kuramoto derivatives (per-band CouplingMode)
         for (b, band_idx) in indices.iter().enumerate() {
-            let (dp, da) = self.compute_band_derivatives(state, band_idx, b);
+            let d = self.compute_band_derivatives(state, band_idx, b)?;
             for (k, &j) in band_idx.iter().enumerate() {
-                dphase[j] = dp[k];
-                damplitude[j] = da[k];
+                dphase[j] = d.dphase[k];
+                damplitude[j] = d.damplitude[k];
+                dfrequency[j] = d.dfrequency[k];
             }
         }
 
@@ -489,6 +574,7 @@ impl Dynamics for BandNetwork {
         for i in 0..n {
             dphase[i] = clamp_derivative(dphase[i]);
             damplitude[i] = clamp_derivative(damplitude[i]);
+            dfrequency[i] = clamp_derivative(dfrequency[i]);
         }
 
         StateDerivatives::new(dphase, damplitude, dfrequency)
@@ -680,6 +766,17 @@ mod tests {
     }
 
     #[test]
+    fn no_bands_rejected_with_dedicated_variant() {
+        // WP013-F5: an empty band *list* is not "band 0 has zero oscillators".
+        let err = BandNetwork::new(vec![], vec![], vec![]).unwrap_err();
+        assert!(matches!(err, BandError::NoBands));
+        assert_eq!(
+            err.to_string(),
+            "band network requires at least one band, got an empty band list"
+        );
+    }
+
+    #[test]
     fn empty_band_rejected() {
         let err = BandNetwork::new(
             vec![0, 4],
@@ -730,9 +827,211 @@ mod tests {
     }
 
     #[test]
+    fn non_adjacent_pac_pair_accepted() {
+        // WP013-F5: adjacency is the standard hierarchy, not a constraint.
+        // A delta→gamma (0→2) pair skipping theta is a valid configuration.
+        let net = BandNetwork::new(
+            vec![2, 4, 8],
+            vec![
+                BandParams::new(0.8, 0.1).unwrap(),
+                BandParams::new(1.0, 0.1).unwrap(),
+                BandParams::new(0.5, 0.1).unwrap(),
+            ],
+            vec![PacPair::new(0, 2, PhaseAmplitudeCoupling::new(0.3).unwrap(), 0.0).unwrap()],
+        )
+        .unwrap();
+        assert_eq!(net.pac_pairs().len(), 1);
+        assert_eq!(net.pac_pairs()[0].slow_band, 0);
+        assert_eq!(net.pac_pairs()[0].fast_band, 2);
+
+        let mut seed = crate::seed::Seed::new(7, 0);
+        let state =
+            create_band_state(&net, &[(1.0, 3.0), (5.0, 7.0), (35.0, 45.0)], &mut seed).unwrap();
+        let deriv = net.compute_derivatives(&state).unwrap();
+        for i in 0..14 {
+            assert!(deriv.damplitude[i].is_finite());
+        }
+    }
+
+    #[test]
     fn non_finite_band_params_rejected() {
         assert!(BandParams::new(f64::NAN, 0.1).is_err());
         assert!(BandParams::new(1.0, f64::INFINITY).is_err());
+        assert!(
+            BandParams::with_coupling(1.0, 0.1, f64::NAN, CouplingMode::MeanField).is_err(),
+            "non-finite freq_adaptation_rate must be rejected"
+        );
+    }
+
+    // --- Coupling-mode dispatch (WP013-F2) ---
+
+    #[test]
+    fn band_params_defaults_to_mean_field_without_frequency_adaptation() {
+        let p = BandParams::new(1.0, 0.1).unwrap();
+        assert_eq!(p.coupling_mode, CouplingMode::MeanField);
+        assert_relative_eq!(p.freq_adaptation_rate, 0.0, epsilon = 1e-15);
+    }
+
+    #[test]
+    fn band_derivatives_match_standalone_kuramoto_per_mode() {
+        // The band model is the crate's Kuramoto implementation restricted to
+        // the band's oscillators: with PAC depth 0 the composed derivatives
+        // must equal a standalone KuramotoOscillator on each band sub-state.
+        for mode in [
+            CouplingMode::MeanField,
+            CouplingMode::Full { matrix: None },
+            CouplingMode::SparseKnn { k: Some(2) },
+        ] {
+            let theta = BandParams::with_coupling(2.0, 0.1, 0.01, mode.clone()).unwrap();
+            let gamma = BandParams::with_coupling(2.0, 0.1, 0.01, mode.clone()).unwrap();
+            let net = theta_gamma_network(
+                4,
+                8,
+                theta.clone(),
+                gamma.clone(),
+                PhaseAmplitudeCoupling::new(0.0).unwrap(),
+                0.0,
+            )
+            .unwrap();
+
+            let mut seed = crate::seed::Seed::new(2024, 0);
+            let state = create_band_state(&net, &[(5.0, 7.0), (35.0, 45.0)], &mut seed).unwrap();
+            let composed = net.compute_derivatives(&state).unwrap();
+
+            for (band, params) in [(0usize, &theta), (1usize, &gamma)] {
+                let indices: Vec<usize> = (0..state.n_oscillators())
+                    .filter(|&i| state.freq_band.as_ref().unwrap()[i] as usize == band)
+                    .collect();
+                let sub = band_sub_state(&state, &indices);
+                let model = KuramotoOscillator::new(
+                    indices.len(),
+                    params.coupling_strength,
+                    params.decay_rate,
+                    params.freq_adaptation_rate,
+                    params.coupling_mode.clone(),
+                )
+                .unwrap();
+                let expected = model.compute_derivatives(&sub).unwrap();
+                for (k, &j) in indices.iter().enumerate() {
+                    assert_relative_eq!(composed.dphase[j], expected.dphase[k], epsilon = 1e-14);
+                    assert_relative_eq!(
+                        composed.damplitude[j],
+                        expected.damplitude[k],
+                        epsilon = 1e-14
+                    );
+                    assert_relative_eq!(
+                        composed.dfrequency[j],
+                        expected.dfrequency[k],
+                        epsilon = 1e-14
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn coupling_modes_produce_different_dynamics() {
+        // A regression guard that the mode is actually dispatched, not ignored.
+        let build = |mode: CouplingMode| {
+            theta_gamma_network(
+                4,
+                8,
+                BandParams::with_coupling(2.0, 0.1, 0.0, mode.clone()).unwrap(),
+                BandParams::with_coupling(2.0, 0.1, 0.0, mode).unwrap(),
+                PhaseAmplitudeCoupling::new(0.3).unwrap(),
+                0.0,
+            )
+            .unwrap()
+        };
+        let mean_field = build(CouplingMode::MeanField);
+        let sparse = build(CouplingMode::SparseKnn { k: Some(2) });
+
+        let mut seed = crate::seed::Seed::new(31, 0);
+        let state = create_band_state(&mean_field, &[(5.0, 7.0), (35.0, 45.0)], &mut seed).unwrap();
+        let d_mf = mean_field.compute_derivatives(&state).unwrap();
+        let d_sk = sparse.compute_derivatives(&state).unwrap();
+
+        let max_diff = d_mf
+            .dphase
+            .iter()
+            .zip(d_sk.dphase.iter())
+            .map(|(a, b)| (a - b).abs())
+            .fold(0.0_f64, f64::max);
+        assert!(
+            max_diff > 1e-6,
+            "mean-field and sparse k-NN gave identical derivatives (max diff {max_diff})"
+        );
+    }
+
+    #[test]
+    fn frequency_adaptation_propagates_to_dfrequency() {
+        let net = theta_gamma_network(
+            4,
+            8,
+            BandParams::with_coupling(2.0, 0.1, 0.05, CouplingMode::MeanField).unwrap(),
+            BandParams::with_coupling(2.0, 0.1, 0.05, CouplingMode::MeanField).unwrap(),
+            PhaseAmplitudeCoupling::new(0.3).unwrap(),
+            0.0,
+        )
+        .unwrap();
+        let mut seed = crate::seed::Seed::new(11, 0);
+        let state = create_band_state(&net, &[(5.0, 7.0), (35.0, 45.0)], &mut seed).unwrap();
+        let deriv = net.compute_derivatives(&state).unwrap();
+        assert!(
+            deriv.dfrequency.iter().any(|d| d.abs() > 1e-12),
+            "γ > 0 must produce non-zero dfrequency"
+        );
+
+        // γ = 0 (the BandParams::new default) keeps frequencies frozen.
+        let frozen = make_tg_network();
+        let d0 = frozen.compute_derivatives(&state).unwrap();
+        for d in &d0.dfrequency {
+            assert_relative_eq!(*d, 0.0, epsilon = 1e-15);
+        }
+    }
+
+    #[test]
+    fn invalid_sparse_k_rejected_at_construction() {
+        // k must be < band size; band 0 has 4 oscillators.
+        let err = BandNetwork::new(
+            vec![4, 8],
+            vec![
+                BandParams::with_coupling(1.0, 0.1, 0.0, CouplingMode::SparseKnn { k: Some(9) })
+                    .unwrap(),
+                BandParams::new(0.5, 0.1).unwrap(),
+            ],
+            vec![],
+        )
+        .unwrap_err();
+        assert!(matches!(err, BandError::State(_)), "got {err:?}");
+    }
+
+    #[test]
+    fn single_oscillator_band_has_no_self_coupling() {
+        // Delegating to KuramotoOscillator adopts its N ≤ 1 contract:
+        // dφ = ω, dr = −λr, dω = 0 (an isolated oscillator does not couple
+        // to itself through the order parameter).
+        let net = theta_gamma_network(
+            1,
+            1,
+            BandParams::new(2.0, 0.25).unwrap(),
+            BandParams::new(2.0, 0.25).unwrap(),
+            PhaseAmplitudeCoupling::new(0.0).unwrap(),
+            0.0,
+        )
+        .unwrap();
+        let state = OscillatorState::new(
+            vec![0.3, 1.7],
+            vec![1.5, 2.5],
+            vec![6.0, 40.0],
+            Some(vec![0, 1]),
+        )
+        .unwrap();
+        let d = net.compute_derivatives(&state).unwrap();
+        assert_relative_eq!(d.dphase[0], 6.0, epsilon = 1e-12);
+        assert_relative_eq!(d.dphase[1], 40.0, epsilon = 1e-12);
+        assert_relative_eq!(d.damplitude[0], -0.25 * 1.5, epsilon = 1e-12);
+        assert_relative_eq!(d.damplitude[1], -0.25 * 2.5, epsilon = 1e-12);
     }
 
     #[test]
@@ -911,6 +1210,79 @@ mod tests {
         let capacity = net.theoretical_capacity(&state).unwrap();
         // Delta 1-3 Hz, gamma 35-45 Hz → ratio ~12-45
         assert!(capacity >= 5);
+    }
+
+    #[test]
+    fn capacity_zero_for_non_positive_slow_frequency() {
+        let net = make_tg_network();
+        let state = OscillatorState::new(
+            vec![0.0; 12],
+            vec![1.0; 12],
+            {
+                let mut f = vec![0.0; 4]; // slow band mean frequency = 0
+                f.extend(vec![40.0; 8]);
+                f
+            },
+            Some(vec![0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1]),
+        )
+        .unwrap();
+        assert_eq!(net.theoretical_capacity(&state).unwrap(), 0);
+    }
+
+    #[test]
+    fn mean_frequency_of_empty_index_set_is_zero() {
+        let net = make_tg_network();
+        let state = make_tg_state(&net);
+        assert_relative_eq!(mean_frequency(&state, &[]), 0.0, epsilon = 1e-15);
+    }
+
+    #[test]
+    fn accessors_expose_configuration() {
+        let net = make_dtg_network();
+        assert_eq!(net.band_params().len(), 3);
+        assert_relative_eq!(net.band_params()[0].coupling_strength, 0.8, epsilon = 1e-12);
+        assert_relative_eq!(net.band_params()[2].decay_rate, 0.1, epsilon = 1e-12);
+        assert_eq!(net.pac_pairs().len(), 2);
+        assert_eq!(net.pac_pairs()[0].slow_band, 0);
+        assert_eq!(net.pac_pairs()[1].fast_band, 2);
+        assert_eq!(net.band_sizes(), &[2, 4, 8]);
+    }
+
+    // --- Integration (requires freq_band on every stage state) ---
+
+    #[test]
+    fn band_network_integrates_with_rk4() {
+        use crate::integrate::{integrate_fixed, RK4Integrator};
+
+        let net = make_tg_network();
+        let state = make_tg_state(&net);
+        let mut rk4 = RK4Integrator::new();
+        let (result, _) = integrate_fixed(&mut rk4, &net, &state, 5, 0.01, false).unwrap();
+        assert_eq!(result.n_oscillators(), 12);
+        assert_eq!(result.freq_band, state.freq_band);
+        for i in 0..12 {
+            assert!(result.phase[i].is_finite());
+            assert!(result.amplitude[i].is_finite());
+        }
+    }
+
+    #[test]
+    fn band_network_integrates_with_multi_rate() {
+        use crate::integrate::MultiRateIntegrator;
+
+        let net = make_tg_network();
+        let state = make_tg_state(&net);
+        // sub_steps mirrors the PRINet reference's floor(f_fast / f_slow).
+        let sub_steps = net.theoretical_capacity(&state).unwrap().max(1);
+        let mut integrator = MultiRateIntegrator::new(sub_steps).unwrap();
+        let result = {
+            use crate::integrate::Integrator;
+            integrator.step(&net, &state, 0.01).unwrap()
+        };
+        assert_eq!(result.freq_band, state.freq_band);
+        for i in 0..12 {
+            assert!(result.phase[i].is_finite());
+        }
     }
 
     #[test]

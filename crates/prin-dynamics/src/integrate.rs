@@ -155,7 +155,9 @@ fn validate_dt(dt: f64) -> Result<(), IntegrateError> {
 /// Phase is **not** wrapped (matching PRINet 3.0 `_make_state`); all
 /// phase-dependent model operations are `2π`-periodic so this is exact.
 /// Amplitude is clamped to `[AMPLITUDE_MIN, AMPLITUDE_MAX]`. `freq_band` is
-/// omitted from intermediate states (it does not enter the dynamics).
+/// carried from the base state: it is a fixed label, not an evolving quantity,
+/// and band-partitioned dynamics such as
+/// [`BandNetwork`](crate::bands::BandNetwork) require it on every stage state.
 #[allow(clippy::too_many_arguments)]
 fn make_intermediate_state(
     base: &OscillatorState,
@@ -183,7 +185,7 @@ fn make_intermediate_state(
         phase: phase_buf.clone(),
         amplitude: amp_buf.clone(),
         frequency: freq_buf.clone(),
-        freq_band: None,
+        freq_band: base.freq_band.clone(),
     }
 }
 
@@ -657,7 +659,7 @@ impl RK45Integrator {
             phase: phase_buf.clone(),
             amplitude: amp_buf.clone(),
             frequency: freq_buf.clone(),
-            freq_band: None,
+            freq_band: base.freq_band.clone(),
         }
     }
 

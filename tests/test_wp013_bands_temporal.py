@@ -12,7 +12,10 @@ from prin._prin_core import (
     BandNetwork,
     BandParams,
     ComplexPhasorBlender,
+    CouplingMode,
     EmaAmplitudeBlender,
+    KuramotoOscillator,
+    OscillatorState,
     PacPair,
     Seed,
     TemporalPropagator,
@@ -42,6 +45,21 @@ class TestBandParams:
     def test_repr(self) -> None:
         bp = BandParams(1.0, 0.1)
         assert "BandParams" in repr(bp)
+
+    def test_defaults_are_mean_field_without_frequency_adaptation(self) -> None:
+        bp = BandParams(1.0, 0.1)
+        assert bp.freq_adaptation_rate == pytest.approx(0.0)
+        assert bp.coupling_mode.variant() == "mean_field"
+
+    def test_explicit_coupling_mode_and_adaptation(self) -> None:
+        bp = BandParams(2.0, 0.1, 0.05, CouplingMode.sparse_knn(3))
+        assert bp.freq_adaptation_rate == pytest.approx(0.05)
+        assert bp.coupling_mode.variant() == "sparse_knn"
+        assert "sparse_knn" in repr(bp)
+
+    def test_non_finite_adaptation_rejected(self) -> None:
+        with pytest.raises(ValueError):
+            BandParams(1.0, 0.1, float("nan"))
 
 
 # ---------------------------------------------------------------------------
@@ -99,6 +117,76 @@ class TestBandNetwork:
     def test_empty_band_rejected(self) -> None:
         with pytest.raises(ValueError):
             BandNetwork([0, 4], [BandParams(1.0, 0.1), BandParams(0.5, 0.1)], [])
+
+    def test_no_bands_rejected_with_distinct_message(self) -> None:
+        with pytest.raises(ValueError, match="at least one band"):
+            BandNetwork([], [], [])
+
+    def test_non_adjacent_pac_pair_accepted(self) -> None:
+        params = [BandParams(0.8, 0.1), BandParams(1.0, 0.1), BandParams(0.5, 0.1)]
+        net = BandNetwork([2, 4, 8], params, [PacPair(0, 2, 0.3, 0.0)])
+        seed = Seed(7, 0)
+        state = create_band_state_py(net, [(1.0, 3.0), (5.0, 7.0), (35.0, 45.0)], seed)
+        _, da, _ = net.compute_derivatives(state)
+        assert np.all(np.isfinite(da))
+
+    def test_invalid_sparse_k_rejected_at_construction(self) -> None:
+        params = [
+            BandParams(1.0, 0.1, 0.0, CouplingMode.sparse_knn(9)),
+            BandParams(0.5, 0.1),
+        ]
+        with pytest.raises(ValueError):
+            BandNetwork([4, 8], params, [])
+
+    def test_band_derivatives_match_standalone_kuramoto(self) -> None:
+        """Intra-band terms are the crate's Kuramoto model on the band sub-state."""
+        mode = CouplingMode.sparse_knn(2)
+        tp = BandParams(2.0, 0.1, 0.01, mode)
+        gp = BandParams(2.0, 0.1, 0.01, CouplingMode.sparse_knn(2))
+        # PAC depth 0 leaves the intra-band terms untouched.
+        net = BandNetwork.theta_gamma(4, 8, tp, gp, 0.0)
+        seed = Seed(2024, 0)
+        state = create_band_state_py(net, [(5.0, 7.0), (35.0, 45.0)], seed)
+        dp, da, df = net.compute_derivatives(state)
+
+        phase = state.phase
+        amplitude = state.amplitude
+        frequency = state.frequency
+        bands = state.freq_band
+        assert bands is not None
+
+        for band, size in ((0, 4), (1, 8)):
+            idx = np.flatnonzero(bands == band)
+            assert idx.size == size
+            sub = OscillatorState(
+                phase[idx].copy(), amplitude[idx].copy(), frequency[idx].copy(), None
+            )
+            model = KuramotoOscillator(
+                idx.size, 2.0, 0.1, 0.01, CouplingMode.sparse_knn(2)
+            )
+            expected = model.compute_derivatives(sub)
+            np.testing.assert_allclose(dp[idx], expected.dphase, rtol=0, atol=1e-14)
+            np.testing.assert_allclose(da[idx], expected.damplitude, rtol=0, atol=1e-14)
+            np.testing.assert_allclose(df[idx], expected.dfrequency, rtol=0, atol=1e-14)
+        assert mode.variant() == "sparse_knn"
+
+    def test_coupling_mode_changes_dynamics(self) -> None:
+        def build(mode: CouplingMode) -> BandNetwork:
+            return BandNetwork.theta_gamma(
+                4,
+                8,
+                BandParams(2.0, 0.1, 0.0, mode),
+                BandParams(2.0, 0.1, 0.0, mode),
+                0.3,
+            )
+
+        mean_field = build(CouplingMode.mean_field())
+        sparse = build(CouplingMode.sparse_knn(2))
+        seed = Seed(31, 0)
+        state = create_band_state_py(mean_field, [(5.0, 7.0), (35.0, 45.0)], seed)
+        dp_mf, _, _ = mean_field.compute_derivatives(state)
+        dp_sk, _, _ = sparse.compute_derivatives(state)
+        assert np.max(np.abs(dp_mf - dp_sk)) > 1e-6
 
     def test_compute_derivatives(self) -> None:
         tp = BandParams(1.0, 0.1)

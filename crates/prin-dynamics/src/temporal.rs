@@ -9,7 +9,35 @@
 //! - [`TemporalPropagator`]: combines both, maintaining a running blended
 //!   state across frames.
 //!
-//! Implementation lands in Phase 2 (see `DOCS/PRIN_Project_Plan.md`).
+//! # Parameter mapping to the PRINet 3.0 reference
+//!
+//! PRINet 3.0's `TemporalPhasePropagator` weights the **carried** (previous)
+//! frame, whereas PRIN's blenders weight the **new** frame:
+//!
+//! ```text
+//! PRINet:  φ_out = angle( α_prinet·e^{iφ_prev} + (1 − α_prinet)·e^{iφ_input} )
+//! PRIN:    φ_out = angle( α_prin·e^{iφ_new}    + (1 − α_prin)·e^{iφ_old}    )
+//!
+//! PRINet:  A_out = β_prinet·A_prev + (1 − β_prinet)·A_input
+//! PRIN:    A_out = α_prin·A_new    + (1 − α_prin)·A_old
+//! ```
+//!
+//! With `φ_old = φ_prev` and `φ_new = φ_input`, the two agree exactly under
+//!
+//! ```text
+//! ComplexPhasorBlender::alpha  =  1 − TemporalPhasePropagator.carry_strength
+//! EmaAmplitudeBlender::alpha   =  1 − TemporalPhasePropagator.amplitude_decay
+//! ```
+//!
+//! so PRIN's default-style "α near 1" means *fast* adaptation to the new frame,
+//! while PRINet's "`carry_strength` near 1" means *strong* temporal inertia.
+//! The two conventions are complements of one another, not synonyms. This
+//! mapping is applied in `tests/parity_temporal.rs`, which checks PRIN's output
+//! against `prinet==3.0.0` reference values generated with the complementary
+//! parameter.
+//!
+//! Both sides clamp blended amplitudes to `[1e-6, 10.0]`
+//! ([`AMPLITUDE_MIN`], [`AMPLITUDE_MAX`]) and wrap blended phases to `[0, 2π)`.
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -85,6 +113,9 @@ pub enum TemporalError {
 ///
 /// This correctly handles circular phase averaging (e.g. blending phases near
 /// 0 and 2π yields a result near 0, not near π).
+///
+/// `alpha` weights the **new** frame; PRINet 3.0's `carry_strength` weights the
+/// **carried** frame, so `alpha = 1 − carry_strength` (see the module docs).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ComplexPhasorBlender {
     /// Blending factor α ∈ (0, 1]. Higher = more weight on the new frame.
@@ -217,6 +248,9 @@ impl ComplexPhasorBlender {
 /// `A_blend = α·A_new + (1-α)·A_old`
 ///
 /// Output amplitudes are clamped to `[AMPLITUDE_MIN, AMPLITUDE_MAX]`.
+///
+/// `alpha` weights the **new** frame; PRINet 3.0's `amplitude_decay` weights
+/// the **carried** frame, so `alpha = 1 − amplitude_decay` (module docs).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct EmaAmplitudeBlender {
     /// Blending factor α ∈ (0, 1].
@@ -350,6 +384,12 @@ impl EmaAmplitudeBlender {
 ///    with the previous blended state.
 /// 3. Access the current blended state via [`current_phases`] and
 ///    [`current_amplitudes`].
+///
+/// The running state plays the role of PRINet 3.0's `prev_phase`/`prev_amplitude`
+/// and the argument of [`propagate`](TemporalPropagator::propagate) plays the
+/// role of its `input_phase`/`input_amplitude`, with
+/// `alpha = 1 − carry_strength` (phase) and `alpha = 1 − amplitude_decay`
+/// (amplitude) — see the module docs.
 ///
 /// [`current_phases`]: TemporalPropagator::current_phases
 /// [`current_amplitudes`]: TemporalPropagator::current_amplitudes
@@ -681,6 +721,32 @@ mod tests {
     fn ema_blender_rejects_invalid_alpha() {
         assert!(EmaAmplitudeBlender::new(0.0).is_err());
         assert!(EmaAmplitudeBlender::new(1.1).is_err());
+    }
+
+    #[test]
+    fn ema_blender_set_alpha_validates() {
+        let mut b = EmaAmplitudeBlender::new(0.5).unwrap();
+        assert!(b.set_alpha(0.25).is_ok());
+        assert_relative_eq!(b.alpha(), 0.25, epsilon = 1e-12);
+        assert!(b.set_alpha(0.0).is_err());
+        assert!(b.set_alpha(1.5).is_err());
+        assert!(b.set_alpha(f64::NAN).is_err());
+        // A rejected update must not mutate the blender.
+        assert_relative_eq!(b.alpha(), 0.25, epsilon = 1e-12);
+        // The new factor is the one actually used: 0.25*8 + 0.75*4 = 5.0
+        let out = b.blend(&[8.0], &[4.0]).unwrap();
+        assert_relative_eq!(out[0], 5.0, epsilon = 1e-12);
+    }
+
+    #[test]
+    fn ema_blender_exposes_clamp_range() {
+        let default = EmaAmplitudeBlender::new(0.5).unwrap();
+        assert_relative_eq!(default.amp_min(), AMPLITUDE_MIN, epsilon = 1e-15);
+        assert_relative_eq!(default.amp_max(), AMPLITUDE_MAX, epsilon = 1e-15);
+
+        let custom = EmaAmplitudeBlender::with_clamp(0.5, 0.25, 4.0).unwrap();
+        assert_relative_eq!(custom.amp_min(), 0.25, epsilon = 1e-15);
+        assert_relative_eq!(custom.amp_max(), 4.0, epsilon = 1e-15);
     }
 
     #[test]

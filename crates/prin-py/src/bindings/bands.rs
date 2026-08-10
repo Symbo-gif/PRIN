@@ -8,9 +8,11 @@ use prin_dynamics::bands::{
     create_band_state, delta_theta_gamma_network, theta_gamma_network, BandError, BandNetwork,
     BandParams, PacPair,
 };
+use prin_dynamics::coupling::CouplingMode;
 use prin_dynamics::models::Dynamics;
 use prin_dynamics::pac::PhaseAmplitudeCoupling;
 
+use super::coupling::PyCouplingMode;
 use super::state::PySeed;
 
 fn band_err_to_py(err: BandError) -> PyErr {
@@ -18,6 +20,11 @@ fn band_err_to_py(err: BandError) -> PyErr {
 }
 
 /// Per-band dynamical parameters for a hierarchical band network.
+///
+/// `freq_adaptation_rate` defaults to `0.0` (frozen natural frequencies) and
+/// `coupling_mode` defaults to mean-field. Pass
+/// `CouplingMode.sparse_knn(k=...)` to match the PRINet 3.0 reference band
+/// networks.
 #[pyclass(name = "BandParams", module = "prin._prin_core", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyBandParams {
@@ -27,9 +34,24 @@ pub struct PyBandParams {
 #[pymethods]
 impl PyBandParams {
     #[new]
-    fn py_new(coupling_strength: f64, decay_rate: f64) -> PyResult<Self> {
+    #[pyo3(signature = (coupling_strength, decay_rate, freq_adaptation_rate=0.0, coupling_mode=None))]
+    fn py_new(
+        coupling_strength: f64,
+        decay_rate: f64,
+        freq_adaptation_rate: f64,
+        coupling_mode: Option<&PyCouplingMode>,
+    ) -> PyResult<Self> {
+        let mode = coupling_mode
+            .map(|m| m.inner.clone())
+            .unwrap_or(CouplingMode::MeanField);
         Ok(Self {
-            inner: BandParams::new(coupling_strength, decay_rate).map_err(band_err_to_py)?,
+            inner: BandParams::with_coupling(
+                coupling_strength,
+                decay_rate,
+                freq_adaptation_rate,
+                mode,
+            )
+            .map_err(band_err_to_py)?,
         })
     }
 
@@ -43,15 +65,37 @@ impl PyBandParams {
         self.inner.decay_rate
     }
 
+    #[getter]
+    fn freq_adaptation_rate(&self) -> f64 {
+        self.inner.freq_adaptation_rate
+    }
+
+    #[getter]
+    fn coupling_mode(&self) -> PyCouplingMode {
+        PyCouplingMode {
+            inner: self.inner.coupling_mode.clone(),
+        }
+    }
+
     fn __repr__(&self) -> String {
         format!(
-            "BandParams(coupling_strength={}, decay_rate={})",
-            self.inner.coupling_strength, self.inner.decay_rate
+            "BandParams(coupling_strength={}, decay_rate={}, freq_adaptation_rate={}, coupling_mode={})",
+            self.inner.coupling_strength,
+            self.inner.decay_rate,
+            self.inner.freq_adaptation_rate,
+            match &self.inner.coupling_mode {
+                CouplingMode::MeanField => "mean_field",
+                CouplingMode::Full { .. } => "full",
+                CouplingMode::SparseKnn { .. } => "sparse_knn",
+            }
         )
     }
 }
 
-/// A slow→fast PAC coupling pair between adjacent bands.
+/// A slow→fast PAC coupling pair.
+///
+/// Adjacent pairs (delta→theta, theta→gamma) are the standard hierarchy, but
+/// any strictly slow→fast pair (`slow_band < fast_band`) is permitted.
 #[pyclass(name = "PacPair", module = "prin._prin_core", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyPacPair {
@@ -108,8 +152,9 @@ impl PyPacPair {
 /// Continuous hierarchical band network.
 ///
 /// Oscillators are partitioned into frequency bands (labelled 0, 1, …, B−1
-/// from slowest to fastest). Intra-band dynamics are Kuramoto mean-field;
-/// cross-band interactions are PAC (slow phase → fast amplitude).
+/// from slowest to fastest). Intra-band dynamics are Kuramoto with the
+/// per-band `CouplingMode` from `BandParams`; cross-band interactions are PAC
+/// (slow phase → fast amplitude).
 #[pyclass(name = "BandNetwork", module = "prin._prin_core", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyBandNetwork {
