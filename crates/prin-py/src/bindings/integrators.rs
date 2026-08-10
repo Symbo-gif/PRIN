@@ -401,6 +401,7 @@ impl PyExponentialIntegrator {
 
     /// Integrate for n_steps with optional Jacobian caching.
     #[pyo3(signature = (model, state, n_steps, dt, record_trajectory=false, recompute_jacobian_every=1))]
+    #[allow(clippy::too_many_arguments)]
     fn integrate(
         &mut self,
         py: Python<'_>,
@@ -492,8 +493,7 @@ impl PyMultiRateIntegrator {
                 )));
             }
         };
-        let inner =
-            MultiRateIntegrator::with_method(sub_steps, m).map_err(integrate_err_to_py)?;
+        let inner = MultiRateIntegrator::with_method(sub_steps, m).map_err(integrate_err_to_py)?;
         Ok(Self { inner })
     }
 

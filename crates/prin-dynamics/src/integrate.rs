@@ -2964,7 +2964,10 @@ mod tests {
                     (e[[i, j]] - expected).abs() < 1e-10
                 })
             });
-            assert!(!is_identity, "matrix_exp must not silently return identity on singular input");
+            assert!(
+                !is_identity,
+                "matrix_exp must not silently return identity on singular input"
+            );
         }
         // If Err, it should be LinearSolveFailed.
         if let Err(ref e) = result {

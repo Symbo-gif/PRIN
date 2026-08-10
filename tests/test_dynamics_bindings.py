@@ -416,7 +416,8 @@ class TestExponentialIntegrator:
 
     def test_dim_mismatch_raises(self) -> None:
         model, state = self._make_problem(n=2)
-        ei = ExponentialIntegrator(dim=9, krylov_rank=4)  # dim=9 but state has 2 osc (3*2=6)
+        # dim=9 but state has 2 oscillators (3*2=6)
+        ei = ExponentialIntegrator(dim=9, krylov_rank=4)
         with pytest.raises(ValueError):
             ei.step(model, state, 0.01)
 
