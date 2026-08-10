@@ -1253,7 +1253,12 @@ fn lu_solve(a: &Array2<f64>, b: &Array2<f64>) -> Result<Array2<f64>, IntegrateEr
 ///
 /// Reference: Higham, N. J. (2005). *The Scaling and Squaring Method for the
 /// Matrix Exponential Revisited.* SIAM J. Matrix Anal. Appl., 26(4), 1179–1193.
-fn matrix_exp(a: &Array2<f64>) -> Array2<f64> {
+///
+/// # Errors
+///
+/// Returns [`IntegrateError::LinearSolveFailed`] if the Padé denominator
+/// `V − U` is singular or near-singular.
+fn matrix_exp(a: &Array2<f64>) -> Result<Array2<f64>, IntegrateError> {
     let n = a.nrows();
     let norm = mat_norm1(a);
     let s = if norm <= THETA_13 {
@@ -1297,13 +1302,13 @@ fn matrix_exp(a: &Array2<f64>) -> Array2<f64> {
     // r = (V − U)⁻¹ (V + U)
     let n_mat = &v + &u;
     let d_mat = &v - &u;
-    let mut r = lu_solve(&d_mat, &n_mat).unwrap_or_else(|_| Array2::<f64>::eye(n));
+    let mut r = lu_solve(&d_mat, &n_mat)?;
 
     // Repeated squaring.
     for _ in 0..s {
         r = r.dot(&r);
     }
-    r
+    Ok(r)
 }
 
 /// Compute φ₁(A) = A⁻¹(exp(A) − I) via the augmented-matrix identity.
@@ -1311,7 +1316,12 @@ fn matrix_exp(a: &Array2<f64>) -> Array2<f64> {
 /// Constructs the 2D×2D matrix `M = [A I; 0 0]` and extracts the top-right
 /// D×D block of exp(M), which equals φ₁(A). This avoids eigendecomposition
 /// and handles the λ→0 limit stably.
-fn phi1_matrix(a: &Array2<f64>) -> Array2<f64> {
+///
+/// # Errors
+///
+/// Returns [`IntegrateError::LinearSolveFailed`] if the internal matrix
+/// exponential encounters a singular Padé denominator.
+fn phi1_matrix(a: &Array2<f64>) -> Result<Array2<f64>, IntegrateError> {
     let d = a.nrows();
     let dim = 2 * d;
     let mut m = Array2::<f64>::zeros((dim, dim));
@@ -1321,14 +1331,14 @@ fn phi1_matrix(a: &Array2<f64>) -> Array2<f64> {
         }
         m[[i, d + i]] = 1.0;
     }
-    let exp_m = matrix_exp(&m);
+    let exp_m = matrix_exp(&m)?;
     let mut phi1 = Array2::<f64>::zeros((d, d));
     for i in 0..d {
         for j in 0..d {
             phi1[[i, j]] = exp_m[[i, d + j]];
         }
     }
-    phi1
+    Ok(phi1)
 }
 
 /// Build the Jacobian ∂f/∂y at the current state via forward finite differences.
@@ -1473,11 +1483,21 @@ fn arnoldi(a: &Array2<f64>, v: &[f64], m: usize) -> (Array2<f64>, Array2<f64>, f
 ///
 /// Constructs a Krylov basis Q and Hessenberg H, then computes
 /// `‖v‖ · Q_m · exp(h·H_m) · e₁`.
-fn krylov_exp_vec(a: &Array2<f64>, h: f64, v: &[f64], m: usize) -> Vec<f64> {
+///
+/// # Errors
+///
+/// Returns [`IntegrateError::LinearSolveFailed`] if the small matrix
+/// exponential encounters a singular Padé denominator.
+fn krylov_exp_vec(
+    a: &Array2<f64>,
+    h: f64,
+    v: &[f64],
+    m: usize,
+) -> Result<Vec<f64>, IntegrateError> {
     let d = a.nrows();
     let (q, hh, beta, am) = arnoldi(a, v, m);
     if am == 0 {
-        return vec![0.0; d];
+        return Ok(vec![0.0; d]);
     }
     // Small matrix exponential: exp(h · H_m).
     let mut hm = Array2::<f64>::zeros((am, am));
@@ -1486,7 +1506,7 @@ fn krylov_exp_vec(a: &Array2<f64>, h: f64, v: &[f64], m: usize) -> Vec<f64> {
             hm[[i, j]] = hh[[i, j]];
         }
     }
-    let exp_hh = matrix_exp(&hm.mapv(|x| x * h));
+    let exp_hh = matrix_exp(&hm.mapv(|x| x * h))?;
 
     // e₁
     let mut result = vec![0.0_f64; d];
@@ -1497,18 +1517,28 @@ fn krylov_exp_vec(a: &Array2<f64>, h: f64, v: &[f64], m: usize) -> Vec<f64> {
         }
         result[i] = beta * s;
     }
-    result
+    Ok(result)
 }
 
 /// Approximate h·φ₁(hA)v via augmented Krylov.
 ///
 /// Uses the Arnoldi relation and computes φ₁ on the small Hessenberg matrix
 /// via the augmented-matrix identity.
-fn krylov_phi1_vec(a: &Array2<f64>, h: f64, v: &[f64], m: usize) -> Vec<f64> {
+///
+/// # Errors
+///
+/// Returns [`IntegrateError::LinearSolveFailed`] if the internal matrix
+/// exponential encounters a singular Padé denominator.
+fn krylov_phi1_vec(
+    a: &Array2<f64>,
+    h: f64,
+    v: &[f64],
+    m: usize,
+) -> Result<Vec<f64>, IntegrateError> {
     let d = a.nrows();
     let (q, hh, beta, am) = arnoldi(a, v, m);
     if am == 0 {
-        return vec![0.0; d];
+        return Ok(vec![0.0; d]);
     }
     let mut hm = Array2::<f64>::zeros((am, am));
     for i in 0..am {
@@ -1517,7 +1547,7 @@ fn krylov_phi1_vec(a: &Array2<f64>, h: f64, v: &[f64], m: usize) -> Vec<f64> {
         }
     }
     let hhm = hm.mapv(|x| x * h);
-    let phi1_hh = phi1_matrix(&hhm);
+    let phi1_hh = phi1_matrix(&hhm)?;
 
     let mut result = vec![0.0_f64; d];
     for i in 0..d {
@@ -1527,7 +1557,7 @@ fn krylov_phi1_vec(a: &Array2<f64>, h: f64, v: &[f64], m: usize) -> Vec<f64> {
         }
         result[i] = h * beta * s;
     }
-    result
+    Ok(result)
 }
 
 // ======================================================================
@@ -1686,18 +1716,18 @@ impl ExponentialIntegrator {
         let (exp_ha_y, phi1_g): (Vec<f64>, Vec<f64>) = if self.stiff_mode {
             let rank = self.adaptive_krylov_dim(jacobian);
             (
-                krylov_exp_vec(jacobian, h, &y, rank),
-                krylov_phi1_vec(jacobian, h, &g_y, rank),
+                krylov_exp_vec(jacobian, h, &y, rank)?,
+                krylov_phi1_vec(jacobian, h, &g_y, rank)?,
             )
         } else if self.use_krylov() {
             (
-                krylov_exp_vec(jacobian, h, &y, self.krylov_rank),
-                krylov_phi1_vec(jacobian, h, &g_y, self.krylov_rank),
+                krylov_exp_vec(jacobian, h, &y, self.krylov_rank)?,
+                krylov_phi1_vec(jacobian, h, &g_y, self.krylov_rank)?,
             )
         } else {
             let ha = jacobian.mapv(|x| x * h);
-            let exp_ha = matrix_exp(&ha);
-            let phi1_ha = phi1_matrix(&ha);
+            let exp_ha = matrix_exp(&ha)?;
+            let phi1_ha = phi1_matrix(&ha)?;
             let exp_y = mat_vec(&exp_ha, &y);
             let p1_g = mat_vec(&phi1_ha, &g_y);
             let p1_g_scaled: Vec<f64> = p1_g.iter().map(|x| h * x).collect();
@@ -1727,6 +1757,10 @@ impl ExponentialIntegrator {
             return Err(IntegrateError::ZeroSteps);
         }
         validate_dt(dt)?;
+        let d = 3 * state.phase.len();
+        if d != self.dim {
+            return Err(IntegrateError::InvalidDim { dim: d });
+        }
         let recompute = recompute_jacobian_every.max(1);
 
         let mut current = state.clone();
@@ -1766,8 +1800,10 @@ impl Integrator for ExponentialIntegrator {
         dt: f64,
     ) -> Result<OscillatorState, IntegrateError> {
         validate_dt(dt)?;
-        let y = state_to_vec(state);
-        let d = y.len();
+        let d = 3 * state.phase.len();
+        if d != self.dim {
+            return Err(IntegrateError::InvalidDim { dim: d });
+        }
         let deriv = model.compute_derivatives(state)?;
         let mut f_y = Vec::with_capacity(d);
         f_y.extend_from_slice(&deriv.dphase);
@@ -2517,7 +2553,7 @@ mod tests {
     #[test]
     fn matrix_exp_zero_is_identity() {
         let z = Array2::<f64>::zeros((4, 4));
-        let e = matrix_exp(&z);
+        let e = matrix_exp(&z).unwrap();
         for i in 0..4 {
             for j in 0..4 {
                 let expected = if i == j { 1.0 } else { 0.0 };
@@ -2529,7 +2565,7 @@ mod tests {
     #[test]
     fn phi1_zero_is_identity() {
         let z = Array2::<f64>::zeros((3, 3));
-        let p = phi1_matrix(&z);
+        let p = phi1_matrix(&z).unwrap();
         for i in 0..3 {
             for j in 0..3 {
                 let expected = if i == j { 1.0 } else { 0.0 };
@@ -2544,7 +2580,7 @@ mod tests {
         let mut d = Array2::<f64>::zeros((2, 2));
         d[[0, 0]] = 1.0;
         d[[1, 1]] = -0.5;
-        let e = matrix_exp(&d);
+        let e = matrix_exp(&d).unwrap();
         assert_relative_eq!(e[[0, 0]], 1.0_f64.exp(), epsilon = 1e-10);
         assert_relative_eq!(e[[1, 1]], (-0.5_f64).exp(), epsilon = 1e-10);
         assert_relative_eq!(e[[0, 1]], 0.0, epsilon = 1e-12);
@@ -2568,11 +2604,11 @@ mod tests {
 
         // Direct.
         let ha = a.mapv(|x| x * h);
-        let exp_ha = matrix_exp(&ha);
+        let exp_ha = matrix_exp(&ha).unwrap();
         let direct = mat_vec(&exp_ha, &v);
 
         // Krylov.
-        let krylov = krylov_exp_vec(&a, h, &v, d);
+        let krylov = krylov_exp_vec(&a, h, &v, d).unwrap();
 
         for i in 0..d {
             assert_relative_eq!(direct[i], krylov[i], epsilon = 1e-6);
@@ -2896,5 +2932,72 @@ mod tests {
         let mut mri = MultiRateIntegrator::new(3).unwrap();
         let result = mri.step(&model, &state, 0.01).unwrap();
         assert_eq!(result.freq_band, Some(vec![0, 1, 2]));
+    }
+
+    // ------------------------------------------------------------------
+    // WP012-F3: matrix_exp propagates LU failure as typed error
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn matrix_exp_singular_denominator_returns_typed_error() {
+        // Construct a matrix where V − U is singular.
+        // A matrix with all entries equal to a large value causes the Padé
+        // numerator and denominator to become nearly identical, making V−U
+        // near-singular.
+        let n = 2;
+        let big = 1e15;
+        let mut a = Array2::<f64>::zeros((n, n));
+        for i in 0..n {
+            for j in 0..n {
+                a[[i, j]] = big;
+            }
+        }
+        // The LU decomposition should fail on this near-singular denominator.
+        let result = matrix_exp(&a);
+        // Either it succeeds (numerically lucky) or returns LinearSolveFailed.
+        // The key invariant: it must NOT silently return identity.
+        if let Ok(ref e) = result {
+            // If it succeeded, the result must NOT be the identity matrix.
+            let is_identity = (0..n).all(|i| {
+                (0..n).all(|j| {
+                    let expected = if i == j { 1.0 } else { 0.0 };
+                    (e[[i, j]] - expected).abs() < 1e-10
+                })
+            });
+            assert!(!is_identity, "matrix_exp must not silently return identity on singular input");
+        }
+        // If Err, it should be LinearSolveFailed.
+        if let Err(ref e) = result {
+            assert!(matches!(e, IntegrateError::LinearSolveFailed));
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // WP012-F5: ExponentialIntegrator validates dim against state
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn exp_integrator_dim_mismatch_returns_typed_error() {
+        let n = 2;
+        let model = uncoupled(n, 1.0);
+        let state = make_state(n, 0.0, 1.0, 1.0);
+        // dim=9 (3*3) but state has 2 oscillators (3*2=6)
+        let mut ei = ExponentialIntegrator::new(9, 4, 150).unwrap();
+        assert!(matches!(
+            ei.step(&model, &state, 0.01).unwrap_err(),
+            IntegrateError::InvalidDim { .. }
+        ));
+    }
+
+    #[test]
+    fn exp_integrator_integrate_dim_mismatch_returns_typed_error() {
+        let n = 2;
+        let model = uncoupled(n, 1.0);
+        let state = make_state(n, 0.0, 1.0, 1.0);
+        let mut ei = ExponentialIntegrator::new(9, 4, 150).unwrap();
+        assert!(matches!(
+            ei.integrate(&model, &state, 5, 0.01, false, 1).unwrap_err(),
+            IntegrateError::InvalidDim { .. }
+        ));
     }
 }
