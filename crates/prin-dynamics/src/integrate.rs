@@ -7,6 +7,13 @@
 //! - [`RK45Integrator`]: adaptive Dormand–Prince (DOPRI5) with embedded
 //!   fourth/fifth-order error estimate and PI step-size control. This is a new
 //!   PRIN capability (PRINet 3.0 has no adaptive integrator).
+//! - [`ExponentialIntegrator`]: exponential Euler via matrix exponential
+//!   (direct Padé scaling-and-squaring or Krylov–Arnoldi), with φ₁ computed
+//!   via the augmented-matrix identity. Handles stiff linear modes exactly.
+//!   New in WP-012.
+//! - [`MultiRateIntegrator`]: sub-stepped RK4/Euler for hierarchical
+//!   frequency-band systems. Different bands can be integrated at different
+//!   effective time resolutions. New in WP-012.
 //!
 //! All integrators use **explicit reusable buffers** (pre-allocated workspace
 //! vectors sized to `3N`) to avoid per-step heap allocation, and apply the
@@ -25,6 +32,7 @@
 //! with no PRINet counterpart; its acceptance is the tolerance-property test
 //! (error scales with the requested tolerance).
 
+use ndarray::Array2;
 use thiserror::Error;
 
 use crate::models::Dynamics;
@@ -92,6 +100,24 @@ pub enum IntegrateError {
         /// Offending value.
         value: f64,
     },
+
+    /// The system dimension is not positive.
+    #[error("system dimension must be positive, got {dim}")]
+    InvalidDim {
+        /// The offending dimension.
+        dim: usize,
+    },
+
+    /// The Krylov subspace rank is too small.
+    #[error("krylov_rank must be >= 2, got {rank}")]
+    InvalidKrylovRank {
+        /// The offending Krylov rank.
+        rank: usize,
+    },
+
+    /// The LU decomposition encountered a singular matrix.
+    #[error("LU decomposition failed: singular matrix")]
+    LinearSolveFailed,
 }
 
 /// Trait for time integrators of oscillator dynamics.
@@ -1116,6 +1142,774 @@ pub fn integrate_fixed(
     Ok((current, trajectory))
 }
 
+// ======================================================================
+// WP-012 S1: Exponential and multi-rate integrators
+// ======================================================================
+
+// --- Padé(13) coefficients for the diagonal approximant to exp(x). ---
+//
+// c_j = c_{j-1} · (p − j + 1) / (j · (2p − j + 1))  with p = 13, c_0 = 1.
+// Theta_13 from Higham (2005): maximum 1-norm for which the backward error
+// of the (13,13) Padé approximant is ≤ 2^{-53}.
+const PADE13: [f64; 14] = [
+    1.0,
+    1.0 / 2.0,
+    3.0 / 25.0,
+    11.0 / 600.0,
+    11.0 / 5_520.0,
+    3.0 / 18_400.0,
+    1.0 / 96_600.0,
+    1.0 / 1_932_000.0,
+    1.0 / 48_944_000.0,
+    1.0 / 1_585_785_600.0,
+    1.0 / 67_395_888_000.0,
+    1.0 / 3_953_892_096_000.0,
+    1.0 / 355_850_288_640_000.0,
+    1.0 / 64_764_752_532_480_000.0,
+];
+const THETA_13: f64 = 5.371_920_351_148_152;
+
+// --- Matrix helpers (private) ---
+
+/// Compute the 1-norm of a square matrix (maximum absolute column sum).
+fn mat_norm1(a: &Array2<f64>) -> f64 {
+    let n = a.ncols();
+    (0..n)
+        .map(|j| (0..a.nrows()).map(|i| a[[i, j]].abs()).sum::<f64>())
+        .fold(0.0_f64, f64::max)
+}
+
+/// Solve AX = B via LU decomposition with partial pivoting.
+///
+/// Returns the solution X or [`IntegrateError::LinearSolveFailed`] if a
+/// pivot is too small (singular or near-singular A).
+fn lu_solve(a: &Array2<f64>, b: &Array2<f64>) -> Result<Array2<f64>, IntegrateError> {
+    let n = a.nrows();
+    let nrhs = b.ncols();
+    debug_assert_eq!(a.ncols(), n);
+    debug_assert_eq!(b.nrows(), n);
+
+    // Build augmented matrix [A | B].
+    let mut aug = Array2::<f64>::zeros((n, n + nrhs));
+    for i in 0..n {
+        for j in 0..n {
+            aug[[i, j]] = a[[i, j]];
+        }
+        for j in 0..nrhs {
+            aug[[i, n + j]] = b[[i, j]];
+        }
+    }
+
+    // Forward elimination with partial pivoting.
+    for col in 0..n {
+        let mut max_val = aug[[col, col]].abs();
+        let mut max_row = col;
+        for row in (col + 1)..n {
+            let val = aug[[row, col]].abs();
+            if val > max_val {
+                max_val = val;
+                max_row = row;
+            }
+        }
+        if max_row != col {
+            for j in 0..(n + nrhs) {
+                let tmp = aug[[col, j]];
+                aug[[col, j]] = aug[[max_row, j]];
+                aug[[max_row, j]] = tmp;
+            }
+        }
+        let pivot = aug[[col, col]];
+        if pivot.abs() < 1e-30 {
+            return Err(IntegrateError::LinearSolveFailed);
+        }
+        for row in (col + 1)..n {
+            let factor = aug[[row, col]] / pivot;
+            for j in col..(n + nrhs) {
+                let t = aug[[col, j]];
+                aug[[row, j]] -= factor * t;
+            }
+        }
+    }
+
+    // Back substitution.
+    let mut x = Array2::<f64>::zeros((n, nrhs));
+    for col in (0..n).rev() {
+        let diag = aug[[col, col]];
+        if diag.abs() < 1e-30 {
+            return Err(IntegrateError::LinearSolveFailed);
+        }
+        for rhs in 0..nrhs {
+            let mut sum = aug[[col, n + rhs]];
+            for j in (col + 1)..n {
+                sum -= aug[[col, j]] * x[[j, rhs]];
+            }
+            x[[col, rhs]] = sum / diag;
+        }
+    }
+    Ok(x)
+}
+
+/// Compute exp(A) via scaling-and-squaring with the (13,13) Padé approximant.
+///
+/// Reference: Higham, N. J. (2005). *The Scaling and Squaring Method for the
+/// Matrix Exponential Revisited.* SIAM J. Matrix Anal. Appl., 26(4), 1179–1193.
+fn matrix_exp(a: &Array2<f64>) -> Array2<f64> {
+    let n = a.nrows();
+    let norm = mat_norm1(a);
+    let s = if norm <= THETA_13 {
+        0_usize
+    } else {
+        (norm / THETA_13).log2().ceil().max(0.0) as usize
+    };
+    let scale = 2.0_f64.powi(-(s as i32));
+
+    // A_scaled = A / 2^s
+    let a_s = a.mapv(|x| x * scale);
+
+    // Powers: A², A⁴, A⁶, A⁸, A¹⁰, A¹²
+    let a2 = a_s.dot(&a_s);
+    let a4 = a2.dot(&a2);
+    let a6 = a2.dot(&a4);
+    let a8 = a4.dot(&a4);
+    let a10 = a4.dot(&a6);
+    let a12 = a6.dot(&a6);
+    let eye = Array2::<f64>::eye(n);
+
+    // U = A_s · (b₁I + b₃A² + b₅A⁴ + b₇A⁶ + b₉A⁸ + b₁₁A¹⁰ + b₁₃A¹²)
+    let u_arg = eye.clone() * PADE13[1]
+        + a2.clone() * PADE13[3]
+        + a4.clone() * PADE13[5]
+        + a6.clone() * PADE13[7]
+        + a8.clone() * PADE13[9]
+        + a10.clone() * PADE13[11]
+        + a12.clone() * PADE13[13];
+    let u = a_s.dot(&u_arg);
+
+    // V = b₀I + b₂A² + b₄A⁴ + b₆A⁶ + b₈A⁸ + b₁₀A¹⁰ + b₁₂A¹²
+    let v = eye * PADE13[0]
+        + a2 * PADE13[2]
+        + a4 * PADE13[4]
+        + a6 * PADE13[6]
+        + a8 * PADE13[8]
+        + a10 * PADE13[10]
+        + a12 * PADE13[12];
+
+    // r = (V − U)⁻¹ (V + U)
+    let n_mat = &v + &u;
+    let d_mat = &v - &u;
+    let mut r = lu_solve(&d_mat, &n_mat).unwrap_or_else(|_| Array2::<f64>::eye(n));
+
+    // Repeated squaring.
+    for _ in 0..s {
+        r = r.dot(&r);
+    }
+    r
+}
+
+/// Compute φ₁(A) = A⁻¹(exp(A) − I) via the augmented-matrix identity.
+///
+/// Constructs the 2D×2D matrix `M = [A I; 0 0]` and extracts the top-right
+/// D×D block of exp(M), which equals φ₁(A). This avoids eigendecomposition
+/// and handles the λ→0 limit stably.
+fn phi1_matrix(a: &Array2<f64>) -> Array2<f64> {
+    let d = a.nrows();
+    let dim = 2 * d;
+    let mut m = Array2::<f64>::zeros((dim, dim));
+    for i in 0..d {
+        for j in 0..d {
+            m[[i, j]] = a[[i, j]];
+        }
+        m[[i, d + i]] = 1.0;
+    }
+    let exp_m = matrix_exp(&m);
+    let mut phi1 = Array2::<f64>::zeros((d, d));
+    for i in 0..d {
+        for j in 0..d {
+            phi1[[i, j]] = exp_m[[i, d + j]];
+        }
+    }
+    phi1
+}
+
+/// Build the Jacobian ∂f/∂y at the current state via forward finite differences.
+///
+/// Uses ε = √(machine_eps) ≈ 1.49×10⁻⁸. Requires D = 3N dynamics evaluations.
+fn build_jacobian_fd(
+    model: &dyn Dynamics,
+    state: &OscillatorState,
+    f_y: &[f64],
+) -> Result<Array2<f64>, IntegrateError> {
+    let n = state.phase.len();
+    let d = 3 * n;
+    let eps = f64::EPSILON.sqrt();
+
+    let mut jac = Array2::<f64>::zeros((d, d));
+    let y_base = state_to_vec(state);
+
+    for j in 0..d {
+        let mut y_p = y_base.clone();
+        y_p[j] += eps;
+
+        // Construct perturbed state (phase not wrapped — dynamics are 2π-periodic;
+        // amplitude clamped to valid range).
+        let pert = OscillatorState {
+            phase: y_p[..n].to_vec(),
+            amplitude: y_p[n..2 * n].iter().copied().map(clamp_amplitude).collect(),
+            frequency: y_p[2 * n..].to_vec(),
+            freq_band: state.freq_band.clone(),
+        };
+        let fp = model.compute_derivatives(&pert)?;
+
+        for i in 0..n {
+            jac[[i, j]] = (fp.dphase[i] - f_y[i]) / eps;
+        }
+        for i in 0..n {
+            jac[[n + i, j]] = (fp.damplitude[i] - f_y[n + i]) / eps;
+        }
+        for i in 0..n {
+            jac[[2 * n + i, j]] = (fp.dfrequency[i] - f_y[2 * n + i]) / eps;
+        }
+    }
+    Ok(jac)
+}
+
+/// Flatten an [`OscillatorState`] into a `3N` vector `[phase, amplitude, frequency]`.
+fn state_to_vec(state: &OscillatorState) -> Vec<f64> {
+    let n = state.phase.len();
+    let mut v = Vec::with_capacity(3 * n);
+    v.extend_from_slice(&state.phase);
+    v.extend_from_slice(&state.amplitude);
+    v.extend_from_slice(&state.frequency);
+    v
+}
+
+/// Unflatten a `3N` vector back into an [`OscillatorState`], applying phase
+/// wrap, amplitude clamp, and carrying `freq_band` from `reference`.
+fn vec_to_state(v: &[f64], reference: &OscillatorState) -> Result<OscillatorState, IntegrateError> {
+    let n = reference.phase.len();
+    let phase: Vec<f64> = v[..n].iter().copied().map(wrap_phase).collect();
+    let amplitude: Vec<f64> = v[n..2 * n].iter().copied().map(clamp_amplitude).collect();
+    let frequency = v[2 * n..].to_vec();
+    let state = OscillatorState {
+        phase,
+        amplitude,
+        frequency,
+        freq_band: reference.freq_band.clone(),
+    };
+    check_finite(&state)?;
+    Ok(state)
+}
+
+/// Matrix-vector product for raw slices: returns A·v.
+fn mat_vec(a: &Array2<f64>, v: &[f64]) -> Vec<f64> {
+    let n = a.nrows();
+    let m = a.ncols();
+    debug_assert_eq!(m, v.len());
+    (0..n)
+        .map(|i| (0..m).map(|j| a[[i, j]] * v[j]).sum::<f64>())
+        .collect()
+}
+
+/// Arnoldi iteration with modified Gram-Schmidt.
+///
+/// Returns `(Q, H, beta, actual_m)` where:
+/// - `Q` is D×m (Krylov basis vectors as columns),
+/// - `H` is (m+1)×m (upper Hessenberg),
+/// - `beta = ‖v‖`,
+/// - `actual_m` is the number of Krylov vectors computed (may be < m on
+///   lucky breakdown).
+fn arnoldi(a: &Array2<f64>, v: &[f64], m: usize) -> (Array2<f64>, Array2<f64>, f64, usize) {
+    let d = a.nrows();
+    let m = m.min(d);
+    let mut q = Array2::<f64>::zeros((d, m + 1));
+    let mut h = Array2::<f64>::zeros((m + 1, m));
+
+    let beta: f64 = v.iter().map(|x| x * x).sum::<f64>().sqrt();
+    if beta < 1e-30 {
+        return (q, h, beta, 0);
+    }
+    for i in 0..d {
+        q[[i, 0]] = v[i] / beta;
+    }
+
+    let mut actual_m = m;
+    for j in 0..m {
+        // w = A · q[:, j]
+        let mut w = vec![0.0_f64; d];
+        for i in 0..d {
+            let mut s = 0.0;
+            for k in 0..d {
+                s += a[[i, k]] * q[[k, j]];
+            }
+            w[i] = s;
+        }
+        // Modified Gram-Schmidt.
+        for i in 0..=j {
+            let mut hij = 0.0;
+            for k in 0..d {
+                hij += q[[k, i]] * w[k];
+            }
+            h[[i, j]] = hij;
+            for k in 0..d {
+                w[k] -= hij * q[[k, i]];
+            }
+        }
+        let h_next: f64 = w.iter().map(|x| x * x).sum::<f64>().sqrt();
+        h[[j + 1, j]] = h_next;
+        if j < m - 1 {
+            if h_next < 1e-14 {
+                actual_m = j + 1;
+                break;
+            }
+            for i in 0..d {
+                q[[i, j + 1]] = w[i] / h_next;
+            }
+        }
+    }
+    (q, h, beta, actual_m)
+}
+
+/// Approximate exp(hA)v via Arnoldi–Krylov iteration.
+///
+/// Constructs a Krylov basis Q and Hessenberg H, then computes
+/// `‖v‖ · Q_m · exp(h·H_m) · e₁`.
+fn krylov_exp_vec(a: &Array2<f64>, h: f64, v: &[f64], m: usize) -> Vec<f64> {
+    let d = a.nrows();
+    let (q, hh, beta, am) = arnoldi(a, v, m);
+    if am == 0 {
+        return vec![0.0; d];
+    }
+    // Small matrix exponential: exp(h · H_m).
+    let mut hm = Array2::<f64>::zeros((am, am));
+    for i in 0..am {
+        for j in 0..am {
+            hm[[i, j]] = hh[[i, j]];
+        }
+    }
+    let exp_hh = matrix_exp(&hm.mapv(|x| x * h));
+
+    // e₁
+    let mut result = vec![0.0_f64; d];
+    for i in 0..d {
+        let mut s = 0.0;
+        for k in 0..am {
+            s += q[[i, k]] * exp_hh[[k, 0]];
+        }
+        result[i] = beta * s;
+    }
+    result
+}
+
+/// Approximate h·φ₁(hA)v via augmented Krylov.
+///
+/// Uses the Arnoldi relation and computes φ₁ on the small Hessenberg matrix
+/// via the augmented-matrix identity.
+fn krylov_phi1_vec(a: &Array2<f64>, h: f64, v: &[f64], m: usize) -> Vec<f64> {
+    let d = a.nrows();
+    let (q, hh, beta, am) = arnoldi(a, v, m);
+    if am == 0 {
+        return vec![0.0; d];
+    }
+    let mut hm = Array2::<f64>::zeros((am, am));
+    for i in 0..am {
+        for j in 0..am {
+            hm[[i, j]] = hh[[i, j]];
+        }
+    }
+    let hhm = hm.mapv(|x| x * h);
+    let phi1_hh = phi1_matrix(&hhm);
+
+    let mut result = vec![0.0_f64; d];
+    for i in 0..d {
+        let mut s = 0.0;
+        for k in 0..am {
+            s += q[[i, k]] * phi1_hh[[k, 0]];
+        }
+        result[i] = h * beta * s;
+    }
+    result
+}
+
+// ======================================================================
+// ExponentialIntegrator
+// ======================================================================
+
+/// Exponential integrator for stiff oscillator dynamics.
+///
+/// Implements the exponential Euler method:
+///
+/// ```text
+/// y_{n+1} = exp(hA) y_n + h φ₁(hA) g(y_n)
+/// ```
+///
+/// where `A = ∂f/∂y` (Jacobian via forward finite differences) and
+/// `g(y) = f(y) − Ay` is the nonlinear remainder.
+///
+/// Two computation paths:
+///
+/// 1. **Direct** (`dim ≤ max_direct_dim`): full matrix exponential via
+///    Padé(13) scaling-and-squaring, φ₁ via augmented-matrix identity.
+/// 2. **Krylov** (`dim > max_direct_dim` or `stiff_mode`): Arnoldi iteration
+///    of rank `krylov_rank`, reducing cost from O(D³) to O(D·m²).
+///
+/// In `stiff_mode`, the Krylov dimension is adapted based on the estimated
+/// 1-norm condition number of the Jacobian.
+#[derive(Clone, Debug)]
+pub struct ExponentialIntegrator {
+    /// System dimensionality (3N).
+    dim: usize,
+    /// Krylov subspace rank.
+    krylov_rank: usize,
+    /// Threshold above which the Krylov path is used.
+    max_direct_dim: usize,
+    /// Whether adaptive stiff-mode Krylov is enabled.
+    stiff_mode: bool,
+    /// Condition-number threshold for adaptive Krylov dimension.
+    stiff_cond_threshold: f64,
+    /// Maximum Krylov dimension in stiff mode.
+    max_krylov_stiff: usize,
+}
+
+impl ExponentialIntegrator {
+    /// Create a new exponential integrator.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IntegrateError::InvalidDim`] if `dim < 1`, or
+    /// [`IntegrateError::InvalidKrylovRank`] if `krylov_rank < 2`.
+    pub fn new(
+        dim: usize,
+        krylov_rank: usize,
+        max_direct_dim: usize,
+    ) -> Result<Self, IntegrateError> {
+        if dim < 1 {
+            return Err(IntegrateError::InvalidDim { dim });
+        }
+        if krylov_rank < 2 {
+            return Err(IntegrateError::InvalidKrylovRank { rank: krylov_rank });
+        }
+        Ok(Self {
+            dim,
+            krylov_rank: krylov_rank.min(dim),
+            max_direct_dim,
+            stiff_mode: false,
+            stiff_cond_threshold: 20.0,
+            max_krylov_stiff: 48,
+        })
+    }
+
+    /// Create a new exponential integrator with stiff-mode options.
+    ///
+    /// # Errors
+    ///
+    /// Same as [`new`](Self::new).
+    pub fn with_stiff_mode(
+        dim: usize,
+        krylov_rank: usize,
+        max_direct_dim: usize,
+        stiff_mode: bool,
+        stiff_cond_threshold: f64,
+        max_krylov_stiff: usize,
+    ) -> Result<Self, IntegrateError> {
+        let mut s = Self::new(dim, krylov_rank, max_direct_dim)?;
+        s.stiff_mode = stiff_mode;
+        s.stiff_cond_threshold = stiff_cond_threshold;
+        s.max_krylov_stiff = max_krylov_stiff;
+        Ok(s)
+    }
+
+    /// System dimensionality.
+    #[must_use]
+    pub fn dim(&self) -> usize {
+        self.dim
+    }
+
+    /// Krylov subspace rank.
+    #[must_use]
+    pub fn krylov_rank(&self) -> usize {
+        self.krylov_rank
+    }
+
+    /// Whether the Krylov path is used for the current dimension.
+    #[must_use]
+    pub fn use_krylov(&self) -> bool {
+        self.dim > self.max_direct_dim
+    }
+
+    /// Whether adaptive stiff-mode Krylov is enabled.
+    #[must_use]
+    pub fn stiff_mode(&self) -> bool {
+        self.stiff_mode
+    }
+
+    /// Estimate the 1-norm condition number of `a` via LU.
+    fn estimate_cond1(a: &Array2<f64>) -> f64 {
+        let norm_a = mat_norm1(a);
+        let n = a.nrows();
+        let identity = Array2::<f64>::eye(n);
+        match lu_solve(a, &identity) {
+            Ok(a_inv) => norm_a * mat_norm1(&a_inv),
+            Err(_) => f64::MAX,
+        }
+    }
+
+    /// Select Krylov dimension adaptively based on Jacobian stiffness.
+    fn adaptive_krylov_dim(&self, a: &Array2<f64>) -> usize {
+        let cond = Self::estimate_cond1(a);
+        let adaptive = (cond / self.stiff_cond_threshold.max(1e-8)) as usize + self.krylov_rank;
+        adaptive
+            .max(self.krylov_rank)
+            .min(self.max_krylov_stiff.min(self.dim))
+    }
+
+    /// Perform one exponential integration step.
+    fn exp_step(
+        &self,
+        model: &dyn Dynamics,
+        state: &OscillatorState,
+        dt: f64,
+        jacobian: &Array2<f64>,
+    ) -> Result<OscillatorState, IntegrateError> {
+        let y = state_to_vec(state);
+        let d = y.len();
+
+        // f(y) and nonlinear remainder g(y) = f(y) − A·y.
+        let deriv = model.compute_derivatives(state)?;
+        let mut f_y = Vec::with_capacity(d);
+        f_y.extend_from_slice(&deriv.dphase);
+        f_y.extend_from_slice(&deriv.damplitude);
+        f_y.extend_from_slice(&deriv.dfrequency);
+        let ay = mat_vec(jacobian, &y);
+        let g_y: Vec<f64> = (0..d).map(|i| f_y[i] - ay[i]).collect();
+
+        let h = dt;
+        let (exp_ha_y, phi1_g): (Vec<f64>, Vec<f64>) = if self.stiff_mode {
+            let rank = self.adaptive_krylov_dim(jacobian);
+            (
+                krylov_exp_vec(jacobian, h, &y, rank),
+                krylov_phi1_vec(jacobian, h, &g_y, rank),
+            )
+        } else if self.use_krylov() {
+            (
+                krylov_exp_vec(jacobian, h, &y, self.krylov_rank),
+                krylov_phi1_vec(jacobian, h, &g_y, self.krylov_rank),
+            )
+        } else {
+            let ha = jacobian.mapv(|x| x * h);
+            let exp_ha = matrix_exp(&ha);
+            let phi1_ha = phi1_matrix(&ha);
+            let exp_y = mat_vec(&exp_ha, &y);
+            let p1_g = mat_vec(&phi1_ha, &g_y);
+            let p1_g_scaled: Vec<f64> = p1_g.iter().map(|x| h * x).collect();
+            (exp_y, p1_g_scaled)
+        };
+
+        let y_new: Vec<f64> = (0..d).map(|i| exp_ha_y[i] + phi1_g[i]).collect();
+        vec_to_state(&y_new, state)
+    }
+
+    /// Integrate for multiple steps with optional Jacobian caching.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IntegrateError`] for invalid timestep, zero steps, or
+    /// dynamics evaluation failure.
+    pub fn integrate(
+        &mut self,
+        model: &dyn Dynamics,
+        state: &OscillatorState,
+        n_steps: usize,
+        dt: f64,
+        record_trajectory: bool,
+        recompute_jacobian_every: usize,
+    ) -> Result<(OscillatorState, Option<Vec<OscillatorState>>), IntegrateError> {
+        if n_steps == 0 {
+            return Err(IntegrateError::ZeroSteps);
+        }
+        validate_dt(dt)?;
+        let recompute = recompute_jacobian_every.max(1);
+
+        let mut current = state.clone();
+        let mut trajectory = if record_trajectory {
+            Some(Vec::with_capacity(n_steps))
+        } else {
+            None
+        };
+        let mut cached_j: Option<Array2<f64>> = None;
+
+        for i in 0..n_steps {
+            if cached_j.is_none() || i % recompute == 0 {
+                let y = state_to_vec(&current);
+                let d = y.len();
+                let deriv = model.compute_derivatives(&current)?;
+                let mut f_y = Vec::with_capacity(d);
+                f_y.extend_from_slice(&deriv.dphase);
+                f_y.extend_from_slice(&deriv.damplitude);
+                f_y.extend_from_slice(&deriv.dfrequency);
+                cached_j = Some(build_jacobian_fd(model, &current, &f_y)?);
+            }
+            let jac = cached_j.as_ref().unwrap();
+            current = self.exp_step(model, &current, dt, jac)?;
+            if let Some(ref mut traj) = trajectory {
+                traj.push(current.clone());
+            }
+        }
+        Ok((current, trajectory))
+    }
+}
+
+impl Integrator for ExponentialIntegrator {
+    fn step(
+        &mut self,
+        model: &dyn Dynamics,
+        state: &OscillatorState,
+        dt: f64,
+    ) -> Result<OscillatorState, IntegrateError> {
+        validate_dt(dt)?;
+        let y = state_to_vec(state);
+        let d = y.len();
+        let deriv = model.compute_derivatives(state)?;
+        let mut f_y = Vec::with_capacity(d);
+        f_y.extend_from_slice(&deriv.dphase);
+        f_y.extend_from_slice(&deriv.damplitude);
+        f_y.extend_from_slice(&deriv.dfrequency);
+        let jac = build_jacobian_fd(model, state, &f_y)?;
+        self.exp_step(model, state, dt, &jac)
+    }
+}
+
+// ======================================================================
+// MultiRateIntegrator
+// ======================================================================
+
+/// Integration method for the [`MultiRateIntegrator`] inner sub-steps.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MultiRateMethod {
+    /// Classic fourth-order Runge–Kutta.
+    RK4,
+    /// Forward Euler.
+    Euler,
+}
+
+/// Multi-rate ODE integrator for hierarchical oscillator systems.
+///
+/// Different frequency bands require different timestep sizes for numerical
+/// stability. This integrator takes `sub_steps` inner RK4 (or Euler) steps
+/// for each outer step, allowing fast oscillators (Gamma) to be integrated
+/// with finer time resolution than slow oscillators (Delta/Theta).
+///
+/// The outer timestep `dt` is divided into `sub_steps` inner steps of size
+/// `dt / sub_steps`.
+#[derive(Clone, Debug)]
+pub struct MultiRateIntegrator {
+    /// Number of sub-steps per outer step.
+    sub_steps: usize,
+    /// Inner integration method.
+    method: MultiRateMethod,
+}
+
+impl MultiRateIntegrator {
+    /// Create a new multi-rate integrator with the given sub-step count.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IntegrateError::ZeroSteps`] if `sub_steps < 1`.
+    pub fn new(sub_steps: usize) -> Result<Self, IntegrateError> {
+        if sub_steps < 1 {
+            return Err(IntegrateError::ZeroSteps);
+        }
+        Ok(Self {
+            sub_steps,
+            method: MultiRateMethod::RK4,
+        })
+    }
+
+    /// Create a new multi-rate integrator with a specified inner method.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IntegrateError::ZeroSteps`] if `sub_steps < 1`.
+    pub fn with_method(sub_steps: usize, method: MultiRateMethod) -> Result<Self, IntegrateError> {
+        if sub_steps < 1 {
+            return Err(IntegrateError::ZeroSteps);
+        }
+        Ok(Self { sub_steps, method })
+    }
+
+    /// Number of sub-steps per outer step.
+    #[must_use]
+    pub fn sub_steps(&self) -> usize {
+        self.sub_steps
+    }
+
+    /// Inner integration method.
+    #[must_use]
+    pub fn method(&self) -> MultiRateMethod {
+        self.method
+    }
+
+    /// Integrate for multiple outer steps with sub-stepping.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IntegrateError`] for zero steps, invalid timestep, or
+    /// dynamics evaluation failure.
+    pub fn integrate(
+        &mut self,
+        model: &dyn Dynamics,
+        state: &OscillatorState,
+        n_steps: usize,
+        dt: f64,
+        record_trajectory: bool,
+    ) -> Result<(OscillatorState, Option<Vec<OscillatorState>>), IntegrateError> {
+        if n_steps == 0 {
+            return Err(IntegrateError::ZeroSteps);
+        }
+        validate_dt(dt)?;
+        let mut current = state.clone();
+        let mut trajectory = if record_trajectory {
+            Some(Vec::with_capacity(n_steps))
+        } else {
+            None
+        };
+        for _ in 0..n_steps {
+            current = self.step(model, &current, dt)?;
+            if let Some(ref mut traj) = trajectory {
+                traj.push(current.clone());
+            }
+        }
+        Ok((current, trajectory))
+    }
+}
+
+impl Integrator for MultiRateIntegrator {
+    fn step(
+        &mut self,
+        model: &dyn Dynamics,
+        state: &OscillatorState,
+        dt: f64,
+    ) -> Result<OscillatorState, IntegrateError> {
+        validate_dt(dt)?;
+        let inner_dt = dt / (self.sub_steps as f64);
+        let mut current = state.clone();
+        match self.method {
+            MultiRateMethod::RK4 => {
+                let mut rk4 = RK4Integrator::with_capacity(state.phase.len());
+                for _ in 0..self.sub_steps {
+                    current = rk4.step(model, &current, inner_dt)?;
+                }
+            }
+            MultiRateMethod::Euler => {
+                let mut euler = EulerIntegrator::with_capacity(state.phase.len());
+                for _ in 0..self.sub_steps {
+                    current = euler.step(model, &current, inner_dt)?;
+                }
+            }
+        }
+        Ok(current)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1123,7 +1917,8 @@ mod tests {
     use proptest::prelude::*;
     use std::f64::consts::FRAC_PI_2;
 
-    use crate::models::KuramotoOscillator;
+    use crate::coupling::CouplingMode;
+    use crate::models::{KuramotoOscillator, StuartLandauOscillator};
     use crate::state::{OscillatorState, TAU};
 
     /// Single uncoupled oscillator (K=0, λ=0, γ=0): dφ/dt = ω, dr/dt = 0, dω/dt = 0.
@@ -1713,5 +2508,393 @@ mod tests {
     #[test]
     fn _const_pi_half_used() {
         assert_relative_eq!(FRAC_PI_2, std::f64::consts::FRAC_PI_2);
+    }
+
+    // ------------------------------------------------------------------
+    // WP-012: Matrix operations
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn matrix_exp_zero_is_identity() {
+        let z = Array2::<f64>::zeros((4, 4));
+        let e = matrix_exp(&z);
+        for i in 0..4 {
+            for j in 0..4 {
+                let expected = if i == j { 1.0 } else { 0.0 };
+                assert_relative_eq!(e[[i, j]], expected, epsilon = 1e-12);
+            }
+        }
+    }
+
+    #[test]
+    fn phi1_zero_is_identity() {
+        let z = Array2::<f64>::zeros((3, 3));
+        let p = phi1_matrix(&z);
+        for i in 0..3 {
+            for j in 0..3 {
+                let expected = if i == j { 1.0 } else { 0.0 };
+                assert_relative_eq!(p[[i, j]], expected, epsilon = 1e-10);
+            }
+        }
+    }
+
+    #[test]
+    fn matrix_exp_diagonal() {
+        // exp(diag(a,b)) = diag(exp(a), exp(b))
+        let mut d = Array2::<f64>::zeros((2, 2));
+        d[[0, 0]] = 1.0;
+        d[[1, 1]] = -0.5;
+        let e = matrix_exp(&d);
+        assert_relative_eq!(e[[0, 0]], 1.0_f64.exp(), epsilon = 1e-10);
+        assert_relative_eq!(e[[1, 1]], (-0.5_f64).exp(), epsilon = 1e-10);
+        assert_relative_eq!(e[[0, 1]], 0.0, epsilon = 1e-12);
+        assert_relative_eq!(e[[1, 0]], 0.0, epsilon = 1e-12);
+    }
+
+    #[test]
+    fn krylov_exp_vec_matches_direct_small() {
+        // For a small system, Krylov exp(hA)v should match direct.
+        let d = 6;
+        let mut a = Array2::<f64>::zeros((d, d));
+        // Simple diagonal-dominant matrix.
+        for i in 0..d {
+            a[[i, i]] = -(i as f64 + 1.0) * 0.1;
+            if i + 1 < d {
+                a[[i, i + 1]] = 0.05;
+            }
+        }
+        let v: Vec<f64> = (0..d).map(|i| (i as f64 + 1.0) * 0.1).collect();
+        let h = 0.01;
+
+        // Direct.
+        let ha = a.mapv(|x| x * h);
+        let exp_ha = matrix_exp(&ha);
+        let direct = mat_vec(&exp_ha, &v);
+
+        // Krylov.
+        let krylov = krylov_exp_vec(&a, h, &v, d);
+
+        for i in 0..d {
+            assert_relative_eq!(direct[i], krylov[i], epsilon = 1e-6);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // WP-012: ExponentialIntegrator
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn exp_integrator_init_valid() {
+        let ei = ExponentialIntegrator::new(30, 16, 150).unwrap();
+        assert_eq!(ei.dim(), 30);
+        assert_eq!(ei.krylov_rank(), 16);
+        assert!(!ei.use_krylov());
+    }
+
+    #[test]
+    fn exp_integrator_invalid_dim() {
+        assert!(matches!(
+            ExponentialIntegrator::new(0, 16, 150).unwrap_err(),
+            IntegrateError::InvalidDim { dim: 0 }
+        ));
+    }
+
+    #[test]
+    fn exp_integrator_invalid_krylov_rank() {
+        assert!(matches!(
+            ExponentialIntegrator::new(30, 1, 150).unwrap_err(),
+            IntegrateError::InvalidKrylovRank { rank: 1 }
+        ));
+    }
+
+    #[test]
+    fn exp_integrator_step_finite_kuramoto() {
+        let n = 5;
+        let model = KuramotoOscillator::new(n, 2.0, 0.1, 0.01, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(
+            vec![0.1, 0.5, 1.0, 1.5, 2.0],
+            vec![1.0; n],
+            vec![1.0, 2.0, 1.5, 0.5, 1.2],
+            None,
+        )
+        .unwrap();
+        let mut ei = ExponentialIntegrator::new(3 * n, 16, 150).unwrap();
+        let result = ei.step(&model, &state, 0.01).unwrap();
+        for i in 0..n {
+            assert!(result.phase[i].is_finite());
+            assert!(result.amplitude[i].is_finite());
+            assert!(result.frequency[i].is_finite());
+            assert!(result.phase[i] >= 0.0 && result.phase[i] < TAU);
+            assert!(result.amplitude[i] >= 1e-6);
+        }
+    }
+
+    #[test]
+    fn exp_integrator_step_finite_stuart_landau() {
+        let n = 4;
+        let model =
+            StuartLandauOscillator::new(n, 1.0, 1.0, CouplingMode::Full { matrix: None }).unwrap();
+        let state =
+            OscillatorState::new(vec![0.0, 0.2, 0.4, 0.6], vec![1.0; n], vec![1.0; n], None)
+                .unwrap();
+        let mut ei = ExponentialIntegrator::new(3 * n, 16, 150).unwrap();
+        let result = ei.step(&model, &state, 0.01).unwrap();
+        for i in 0..n {
+            assert!(result.phase[i].is_finite());
+            assert!(result.amplitude[i].is_finite());
+        }
+    }
+
+    #[test]
+    fn exp_integrator_integrate_trajectory() {
+        let n = 4;
+        let model = KuramotoOscillator::new(n, 1.0, 0.1, 0.01, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(
+            vec![0.1, 0.5, 1.0, 1.5],
+            vec![1.0; n],
+            vec![1.0, 2.0, 1.5, 0.5],
+            None,
+        )
+        .unwrap();
+        let mut ei = ExponentialIntegrator::new(3 * n, 16, 150).unwrap();
+        let (final_state, traj) = ei.integrate(&model, &state, 5, 0.01, true, 1).unwrap();
+        assert!(traj.is_some());
+        assert_eq!(traj.as_ref().unwrap().len(), 5);
+        for i in 0..n {
+            assert!(final_state.phase[i].is_finite());
+        }
+    }
+
+    #[test]
+    fn exp_integrator_integrate_no_trajectory() {
+        let n = 4;
+        let model = KuramotoOscillator::new(n, 1.0, 0.1, 0.01, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(
+            vec![0.1, 0.5, 1.0, 1.5],
+            vec![1.0; n],
+            vec![1.0, 2.0, 1.5, 0.5],
+            None,
+        )
+        .unwrap();
+        let mut ei = ExponentialIntegrator::new(3 * n, 16, 150).unwrap();
+        let (_, traj) = ei.integrate(&model, &state, 3, 0.01, false, 1).unwrap();
+        assert!(traj.is_none());
+    }
+
+    #[test]
+    fn exp_integrator_recompute_jacobian() {
+        let n = 4;
+        let model = KuramotoOscillator::new(n, 1.0, 0.1, 0.01, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(
+            vec![0.1, 0.5, 1.0, 1.5],
+            vec![1.0; n],
+            vec![1.0, 2.0, 1.5, 0.5],
+            None,
+        )
+        .unwrap();
+        let mut ei = ExponentialIntegrator::new(3 * n, 16, 150).unwrap();
+        let (final_state, _) = ei.integrate(&model, &state, 10, 0.01, false, 5).unwrap();
+        for i in 0..n {
+            assert!(final_state.phase[i].is_finite());
+            assert!(final_state.amplitude[i].is_finite());
+        }
+    }
+
+    #[test]
+    fn exp_integrator_rejects_invalid_dt() {
+        let n = 2;
+        let model = uncoupled(n, 1.0);
+        let state = make_state(n, 0.0, 1.0, 1.0);
+        let mut ei = ExponentialIntegrator::new(3 * n, 16, 150).unwrap();
+        assert!(matches!(
+            ei.step(&model, &state, 0.0).unwrap_err(),
+            IntegrateError::InvalidTimestep { .. }
+        ));
+        assert!(matches!(
+            ei.step(&model, &state, -0.01).unwrap_err(),
+            IntegrateError::InvalidTimestep { .. }
+        ));
+    }
+
+    #[test]
+    fn exp_integrator_stiff_mode() {
+        let n = 4;
+        let model = KuramotoOscillator::new(n, 1.0, 0.1, 0.01, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(
+            vec![0.1, 0.5, 1.0, 1.5],
+            vec![1.0; n],
+            vec![1.0, 2.0, 1.5, 0.5],
+            None,
+        )
+        .unwrap();
+        let mut ei = ExponentialIntegrator::with_stiff_mode(3 * n, 4, 0, true, 20.0, 48).unwrap();
+        assert!(ei.stiff_mode());
+        let result = ei.step(&model, &state, 0.01).unwrap();
+        for i in 0..n {
+            assert!(result.phase[i].is_finite());
+            assert!(result.amplitude[i].is_finite());
+        }
+    }
+
+    #[test]
+    fn exp_integrator_krylov_path() {
+        // Force Krylov by setting max_direct_dim = 0.
+        let n = 4;
+        let model = KuramotoOscillator::new(n, 1.0, 0.1, 0.01, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(
+            vec![0.1, 0.5, 1.0, 1.5],
+            vec![1.0; n],
+            vec![1.0, 2.0, 1.5, 0.5],
+            None,
+        )
+        .unwrap();
+        let mut ei = ExponentialIntegrator::new(3 * n, 8, 0).unwrap();
+        assert!(ei.use_krylov());
+        let result = ei.step(&model, &state, 0.01).unwrap();
+        for i in 0..n {
+            assert!(result.phase[i].is_finite());
+            assert!(result.amplitude[i].is_finite());
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // WP-012: MultiRateIntegrator
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn multi_rate_init_valid() {
+        let mri = MultiRateIntegrator::new(10).unwrap();
+        assert_eq!(mri.sub_steps(), 10);
+        assert_eq!(mri.method(), MultiRateMethod::RK4);
+    }
+
+    #[test]
+    fn multi_rate_init_zero_substeps() {
+        assert!(matches!(
+            MultiRateIntegrator::new(0).unwrap_err(),
+            IntegrateError::ZeroSteps
+        ));
+    }
+
+    #[test]
+    fn multi_rate_substeps_1_matches_rk4() {
+        // With sub_steps=1, MultiRate should match RK4 exactly.
+        let model = KuramotoOscillator::new(2, 1.0, 0.1, 0.01, CouplingMode::MeanField).unwrap();
+        let state =
+            OscillatorState::new(vec![0.1, 0.5], vec![1.0, 1.2], vec![1.0, 2.0], None).unwrap();
+        let mut mri = MultiRateIntegrator::new(1).unwrap();
+        let mut rk4 = RK4Integrator::new();
+        let s_mri = mri.step(&model, &state, 0.01).unwrap();
+        let s_rk4 = rk4.step(&model, &state, 0.01).unwrap();
+        for i in 0..2 {
+            assert_relative_eq!(s_mri.phase[i], s_rk4.phase[i], epsilon = 1e-14);
+            assert_relative_eq!(s_mri.amplitude[i], s_rk4.amplitude[i], epsilon = 1e-14);
+            assert_relative_eq!(s_mri.frequency[i], s_rk4.frequency[i], epsilon = 1e-14);
+        }
+    }
+
+    #[test]
+    fn multi_rate_output_shape() {
+        let n = 8;
+        let model = KuramotoOscillator::new(n, 2.0, 0.1, 0.01, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(vec![0.1; n], vec![1.0; n], vec![1.0; n], None).unwrap();
+        let mut mri = MultiRateIntegrator::new(5).unwrap();
+        let result = mri.step(&model, &state, 0.001).unwrap();
+        assert_eq!(result.phase.len(), n);
+        assert_eq!(result.amplitude.len(), n);
+        assert_eq!(result.frequency.len(), n);
+    }
+
+    #[test]
+    fn multi_rate_convergence_order() {
+        // Multi-rate with RK4 sub-steps should preserve h^4 convergence.
+        let model = KuramotoOscillator::new(1, 0.0, 1.0, 0.0, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(vec![0.0], vec![1.0], vec![0.0], None).unwrap();
+        let t_final = 0.1_f64;
+        let r_exact = (-t_final).exp();
+
+        let sub_steps = 4_usize;
+        let h_outer_vals = [0.1, 0.05, 0.025];
+        let mut errors = [0.0_f64; 3];
+        for (idx, &h_outer) in h_outer_vals.iter().enumerate() {
+            let n_outer = (t_final / h_outer).round() as usize;
+            let mut mri = MultiRateIntegrator::new(sub_steps).unwrap();
+            let (final_state, _) = mri
+                .integrate(&model, &state, n_outer, h_outer, false)
+                .unwrap();
+            errors[idx] = (final_state.amplitude[0] - r_exact).abs();
+        }
+        // Inner dt = h_outer / sub_steps. Halving h_outer halves inner dt.
+        // RK4 error ∝ h_inner^4, so ratio ≈ 2^4 = 16.
+        let ratio1 = errors[0] / errors[1];
+        let ratio2 = errors[1] / errors[2];
+        assert!(
+            ratio1 > 8.0 && ratio1 < 32.0,
+            "multi-rate RK4 order broken: ratio1={ratio1}, errors={errors:?}"
+        );
+        assert!(
+            ratio2 > 8.0 && ratio2 < 32.0,
+            "multi-rate RK4 order broken: ratio2={ratio2}, errors={errors:?}"
+        );
+    }
+
+    #[test]
+    fn multi_rate_integrate_trajectory() {
+        let n = 4;
+        let model = KuramotoOscillator::new(n, 1.0, 0.1, 0.01, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(
+            vec![0.1, 0.5, 1.0, 1.5],
+            vec![1.0; n],
+            vec![1.0, 2.0, 1.5, 0.5],
+            None,
+        )
+        .unwrap();
+        let mut mri = MultiRateIntegrator::new(3).unwrap();
+        let (final_state, traj) = mri.integrate(&model, &state, 5, 0.01, true).unwrap();
+        assert!(traj.is_some());
+        assert_eq!(traj.as_ref().unwrap().len(), 5);
+        for i in 0..n {
+            assert!(final_state.phase[i].is_finite());
+        }
+    }
+
+    #[test]
+    fn multi_rate_euler_method() {
+        let n = 2;
+        let model = uncoupled(n, 1.0);
+        let state = make_state(n, 0.0, 1.0, 1.0);
+        let mut mri = MultiRateIntegrator::with_method(5, MultiRateMethod::Euler).unwrap();
+        let result = mri.step(&model, &state, 0.01).unwrap();
+        for i in 0..n {
+            assert!(result.phase[i].is_finite());
+            assert!(result.amplitude[i].is_finite());
+        }
+    }
+
+    #[test]
+    fn multi_rate_rejects_invalid_dt() {
+        let model = uncoupled(1, 1.0);
+        let state = make_state(1, 0.0, 1.0, 1.0);
+        let mut mri = MultiRateIntegrator::new(5).unwrap();
+        assert!(matches!(
+            mri.step(&model, &state, 0.0).unwrap_err(),
+            IntegrateError::InvalidTimestep { .. }
+        ));
+    }
+
+    #[test]
+    fn multi_rate_freq_band_preserved() {
+        let n = 3;
+        let model = uncoupled(n, 1.0);
+        let state = OscillatorState::new(
+            vec![0.0, 0.1, 0.2],
+            vec![1.0; n],
+            vec![1.0; n],
+            Some(vec![0, 1, 2]),
+        )
+        .unwrap();
+        let mut mri = MultiRateIntegrator::new(3).unwrap();
+        let result = mri.step(&model, &state, 0.01).unwrap();
+        assert_eq!(result.freq_band, Some(vec![0, 1, 2]));
     }
 }

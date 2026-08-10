@@ -9,8 +9,9 @@
 //!   entry points (`Pcg64`; forward-compatible with counter-mode generators).
 //! - [`models`] — Kuramoto (mean-field, pairwise, sparse k-NN), Stuart–Landau, and
 //!   Hopf dynamics behind the `Dynamics` trait.
-//! - [`integrate`] — Euler, RK4, and adaptive RK45 (Dormand–Prince) integrators
-//!   behind the `Integrator` trait.
+//! - [`integrate`] — Euler, RK4, adaptive RK45 (Dormand–Prince), exponential
+//!   (direct/Krylov), and multi-rate sub-stepped integrators behind the
+//!   `Integrator` trait.
 //! - [`pac`] — phase–amplitude coupling: `A_fast = A₀·[1 + m·cos(φ_slow + offset)]`.
 //! - [`coupling`] — coupling modes (mean-field, full matrix, sparse k-NN) and
 //!   topology builders (all-to-all, ring, directed Watts–Strogatz small-world),
@@ -37,8 +38,8 @@ pub mod temporal;
 
 pub use coupling::{CouplingError, CouplingMode, Topology};
 pub use integrate::{
-    integrate_fixed, AdaptiveResult, EulerIntegrator, IntegrateError, Integrator, RK45Integrator,
-    RK4Integrator,
+    integrate_fixed, AdaptiveResult, EulerIntegrator, ExponentialIntegrator, IntegrateError,
+    Integrator, MultiRateIntegrator, MultiRateMethod, RK45Integrator, RK4Integrator,
 };
 pub use models::{Dynamics, HopfOscillator, KuramotoOscillator, StuartLandauOscillator};
 pub use pac::{PacError, PhaseAmplitudeCoupling};
