@@ -1,6 +1,6 @@
 # Session 0052 — WP-013 S4: Documentation — Continuous band networks and temporal propagation
 
-**Status:** PLANNED  
+**Status:** READY  
 **Roadmap phase:** 2 — Advanced numerics and simulation  
 **Execution unit:** WP-013  
 **Session type:** S4 — Documentation  

@@ -75,10 +75,10 @@ no planned session is renumbered by an executive audit (plan amendment #15).
 | 0046 | 2 | WP-012 | S2 — Audit | [Exponential and multi-rate integrators](phase-2/0046-wp012-s2-exponential-and-multi-rate-integrators.md) | COMPLETE |
 | 0047 | 2 | WP-012 | S3 — Remediation | [Exponential and multi-rate integrators](phase-2/0047-wp012-s3-exponential-and-multi-rate-integrators.md) | COMPLETE |
 | 0048 | 2 | WP-012 | S4 — Documentation | [Exponential and multi-rate integrators](phase-2/0048-wp012-s4-exponential-and-multi-rate-integrators.md) | COMPLETE |
-| 0049 | 2 | WP-013 | S1 — Coding | [Continuous band networks and temporal propagation](phase-2/0049-wp013-s1-continuous-band-networks-and-temporal-propagation.md) | READY |
-| 0050 | 2 | WP-013 | S2 — Audit | [Continuous band networks and temporal propagation](phase-2/0050-wp013-s2-continuous-band-networks-and-temporal-propagation.md) | PLANNED |
-| 0051 | 2 | WP-013 | S3 — Remediation | [Continuous band networks and temporal propagation](phase-2/0051-wp013-s3-continuous-band-networks-and-temporal-propagation.md) | PLANNED |
-| 0052 | 2 | WP-013 | S4 — Documentation | [Continuous band networks and temporal propagation](phase-2/0052-wp013-s4-continuous-band-networks-and-temporal-propagation.md) | PLANNED |
+| 0049 | 2 | WP-013 | S1 — Coding | [Continuous band networks and temporal propagation](phase-2/0049-wp013-s1-continuous-band-networks-and-temporal-propagation.md) | COMPLETE |
+| 0050 | 2 | WP-013 | S2 — Audit | [Continuous band networks and temporal propagation](phase-2/0050-wp013-s2-continuous-band-networks-and-temporal-propagation.md) | COMPLETE |
+| 0051 | 2 | WP-013 | S3 — Remediation | [Continuous band networks and temporal propagation](phase-2/0051-wp013-s3-continuous-band-networks-and-temporal-propagation.md) | COMPLETE |
+| 0052 | 2 | WP-013 | S4 — Documentation | [Continuous band networks and temporal propagation](phase-2/0052-wp013-s4-continuous-band-networks-and-temporal-propagation.md) | READY |
 | 0053 | 2 | WP-014 | S1 — Coding | [Tensor decompositions](phase-2/0053-wp014-s1-tensor-decompositions.md) | PLANNED |
 | 0054 | 2 | WP-014 | S2 — Audit | [Tensor decompositions](phase-2/0054-wp014-s2-tensor-decompositions.md) | PLANNED |
 | 0055 | 2 | WP-014 | S3 — Remediation | [Tensor decompositions](phase-2/0055-wp014-s3-tensor-decompositions.md) | PLANNED |

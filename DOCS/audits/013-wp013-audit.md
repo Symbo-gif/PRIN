@@ -222,13 +222,96 @@ After all D1–D3 findings are addressed, re-run the full A1–A10 checklist and
 
 ## 7. Closure table (appended by S3 remediation)
 
+**S3 session:** 0051 (`DOCS/sessions/phase-2/0051-wp013-s3-continuous-band-networks-and-temporal-propagation.md`)
+**S3 date:** 2026-08-10 **Remediator:** Claude Opus 5 (AI pair)
+
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP013-F1 | | | |
-| WP013-F2 | | | |
-| WP013-F3 | | | |
-| WP013-F4 | | | |
-| WP013-F5 | | | |
-| WP013-F6 | | | |
+| WP013-F1 | FIXED | `d2c1f1c` | `crates/prin-dynamics/tests/parity_bands.rs` (12 cases) and `crates/prin-dynamics/tests/parity_temporal.rs` (6 cases), all green. Band cases cover per-mode intra-band derivatives vs `prinet ... KuramotoOscillator.compute_derivatives`, the composed 2-band and 3-band right-hand sides including the reference PAC target, RK4 golden trajectories at `n = 1` and `n = 10` for `mean_field` and `sparse_knn`, and `theoretical_capacity` vs the reference `MultiRateIntegrator` sub-step count. Temporal cases cover a single blend, a chained 5-frame golden sequence, wrap-around, clamp saturation, and a mapping-direction guard, vs `prinet ... TemporalPhasePropagator.propagate`. Measured worst-case drift: `2.22e-16` (sparse k-NN, the reference mode), `2.74e-9` (full), `1.19e-7` (mean-field — amendment #14 hazard), `~1 ulp` (temporal). |
+| WP013-F2 | FIXED + AMENDED | `20673c4`; plan amendment #19 (`5e0c602`) | **Fixed:** `BandParams::with_coupling` adds `freq_adaptation_rate` and `coupling_mode`, so a band can use the reference's `sparse_knn` mode; intra-band derivatives are now computed by the crate's `KuramotoOscillator` on the band sub-state rather than a band-local copy of the mean-field equations. Parity per mode is verified in `parity_bands.rs`; `bands::tests::band_derivatives_match_standalone_kuramoto_per_mode` and `coupling_modes_produce_different_dynamics` guard the dispatch. **Amended:** the residual structural difference (continuous unified ODE, PAC as a relaxation term, sub-stepping delegated to the integrator) is recorded as plan amendment #19 with the parity evidence required for each consequence. |
+| WP013-F3 | FIXED | `62843d4` | `DOCS/experiments/0049-wp013-s1-handoff.md` maps all twelve WP-013 acceptance criteria to their evidence, attributing each row to S1 or S3, and carries a provenance caveat stating it was written in S3 and does not alter the S2 verdict. |
+| WP013-F4 | FIXED | `20673c4`, `62843d4` | `cargo llvm-cov -p prin-dynamics --summary-only` (identical with `--features strict-checks`): `bands.rs` 98.97% lines / 98.68% functions (was 95.96% / 92.00%); `temporal.rs` 99.79% lines / 100.00% functions (was 96.91% / 94.64%). Both gates ≥95%. New tests cover the `EmaAmplitudeBlender` accessors (`set_alpha`, `amp_min`, `amp_max`), `BandNetwork::band_params`/`pac_pairs`, the `mean_frequency` empty path, the non-positive slow-frequency capacity branch, the out-of-range `slow_band` arm, and both partition error mappings. |
+| WP013-F5 | FIXED | `20673c4` | `BandError::NoBands` added; `BandNetwork::new(vec![], …)` now reports "band network requires at least one band, got an empty band list" instead of `EmptyBand { band: 0 }` (`bands::tests::no_bands_rejected_with_dedicated_variant`, Python `test_no_bands_rejected_with_distinct_message`). PAC adjacency resolved as documentation: any strictly slow→fast pair is intentional and permitted; `PacPair` rustdoc and the Python binding docstring corrected, with `non_adjacent_pac_pair_accepted` covering a delta→gamma pair in both languages. |
+| WP013-F6 | FIXED | `20673c4`, `d2c1f1c` | The mapping `ComplexPhasorBlender::alpha = 1 − carry_strength` and `EmaAmplitudeBlender::alpha = 1 − amplitude_decay` is documented in the `temporal` module docs, on all three types, and on the three PyO3 classes. It is applied in `parity_temporal.rs` (references generated with `carry_strength = 0.2`, `amplitude_decay = 0.3`; tests run at `alpha = 0.8 / 0.7`) and guarded against the reversed reading by `parity_reversed_convention_does_not_match`. |
 
-**Delta re-audit date:** — **Result:**
+### 7.1 Additional defect found and fixed while producing WP013-F1 evidence
+
+Producing golden trajectories required integrating a `BandNetwork`, which
+surfaced a defect not raised in S2: `make_intermediate_state` and the DOPRI5
+`stage_state` in `crates/prin-dynamics/src/integrate.rs` set `freq_band: None`
+on every stage state. A `BandNetwork` therefore could not be driven by RK4,
+RK45, or the exponential integrator at all — stages 2 and later lost the band
+labels and `compute_derivatives` failed with `MissingBandLabels`, contradicting
+the `bands` module documentation. Both sites now carry `freq_band` from the base
+state; the labels are fixed rather than evolving, so this is numerically exact
+and no existing parity value changed (`parity_integrators.rs`,
+`parity_models.rs`, and the 510 corpus cases are unchanged and green).
+Regression tests: `bands::tests::band_network_integrates_with_rk4` and
+`band_network_integrates_with_multi_rate`. Fixed in `20673c4` as part of the
+WP013-F1/F2 remediation rather than deferred, because the WP-013 acceptance
+criterion "band golden trajectories pass" is unreachable without it.
+
+### 7.2 Behaviour changes introduced by remediation
+
+1. `dfrequency` is now propagated from the band model instead of forced to
+   zero. Identical while `γ = 0`, which `BandParams::new` still sets.
+2. A single-oscillator band follows the `KuramotoOscillator` `N ≤ 1` contract
+   (`dφ = ω`, `dr = −λr`, `dω = 0`) instead of coupling to itself through its
+   own order parameter (`bands::tests::single_oscillator_band_has_no_self_coupling`).
+3. An invalid per-band coupling mode (e.g. sparse `k ≥ N_b`) is rejected at
+   `BandNetwork::new` rather than at the first derivative evaluation.
+4. `BandParams` gained two serialised fields; the round-trip test still passes
+   and no committed artefact contains a serialised `BandParams`.
+
+### 7.3 Delta re-audit (A1–A10)
+
+| # | Dimension | Result | Evidence |
+|---|---|---|---|
+| A1 | WP scope conformance | ✅ | All declared WP-013 scope present; parity evidence and the S1 handoff note, previously missing, are now committed. No undeclared scope shipped — every change traces to a finding ID. |
+| A2 | Plan/architecture conformance | ✅ | No Python numerics (`python/prin/dynamics.py` remains re-exports only). Crate layering unchanged. "One algorithm, one implementation" now holds for the band dynamics: the duplicated mean-field Kuramoto block is gone. The coupling-mode mismatch is resolved in code, with the residual composition difference governed by amendment #19. |
+| A3 | Tests in tandem + coverage | ✅ | 24 new Rust tests (13 unit + 3 error-path + 12 parity band + 6 parity temporal, minus overlap) and 8 new Python acceptance tests, each committed with the code it covers. `bands.rs` 98.97%/98.68%, `temporal.rs` 99.79%/100%. |
+| A4 | Numerical parity + invariants | ✅ | 18 new parity cases green at documented tolerances (§7 WP013-F1 row). Pre-existing parity unchanged: `cargo test --workspace` 501 passing (504 with `strict-checks`); `pytest parity/ -m parity` 510 passing. |
+| A5 | Quality gates | ✅ | `cargo fmt --check` exit 0; `cargo clippy --workspace --all-targets -- -D warnings` exit 0, also with `--features strict-checks`; ruff check + format clean (48 files); `mypy --strict` clean (18 files); interrogate 100% (106/106); bandit 0 issues; Sphinx `-W --keep-going` 0 warnings. |
+| A6 | Security | ✅/⚠️ | Snyk Code (CLI 1.1306.2, org `symbo-gif`, threshold low) on `crates/prin-dynamics/src` and `crates/prin-py/src`: **0 issues**. Whole-repository Snyk Code: 3 Low path-traversal findings, all pre-existing in `tools/wp001_baseline.py`, unchanged from S2 and outside WP-013 scope. `cargo audit`: only the inherited `paste` RUSTSEC-2024-0436 (amendment #9). `pip-audit` clean on both manifests. Snyk Open Source: the npm sub-project tested clean (30 dependencies, 0 issues); the Python manifests and `Cargo.lock` could not be resolved by the CLI (the documented SNYK-CLI-0000 limitation, EA-002), and the org has hit its monthly private-test limit — reported as **partially blocked locally, not passed**. No dependency manifest changed in this session (`git diff 0c24b64..HEAD` touches no `Cargo.toml`, `Cargo.lock`, `pyproject.toml`, or `requirements.txt`), and CI's `snyk.yml` remains the authoritative gate. |
+| A7 | Docstring/doc coverage | ✅ | `RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps` exit 0; all new public items (`BandParams::with_coupling`, `BandError::NoBands`, the two new fields and getters) documented; `cargo test --doc --workspace` 22 doctests passing; interrogate 100%. |
+| A8 | Repository hygiene | ✅ | No TODO/FIXME/stub markers in changed code. `__all__` and `.pyi` stubs updated for the new `BandParams` signature and getters. The reference generator lives under the gitignored `DOCS/test_and_benchmark_results/` (WP-009/WP-010 precedent) and is not committed tooling. |
+| A9 | CI status | ✅ | All CI-equivalent gates reproduced locally and green, including the `strict-checks` clippy and test jobs. No benchmark regression gates are defined for `prin-dynamics`. |
+| A10 | Artefact trail | ✅ | S1 handoff note committed (`62843d4`); this closure table appended; plan amendment #19 recorded in Project Plan §8.3; session register updated to mark 0049/0050 COMPLETE and 0051 COMPLETE. |
+
+**Verification commands (S3):**
+
+```powershell
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo clippy --workspace --all-targets --features strict-checks -- -D warnings
+cargo test --workspace                               # 501 passing
+cargo test --workspace --features strict-checks      # 504 passing
+cargo test --doc --workspace                         # 22 doctests
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps
+cargo llvm-cov -p prin-dynamics --summary-only
+cargo llvm-cov -p prin-dynamics --features strict-checks --summary-only
+cargo audit
+.venv\Scripts\python -m ruff check python/ tests/ benchmarks/ tools/ parity/
+.venv\Scripts\python -m ruff format --check python/ tests/ benchmarks/ tools/ parity/
+.venv\Scripts\python -m mypy python/prin --strict
+.venv\Scripts\python -m interrogate -c pyproject.toml python/prin
+.venv\Scripts\python -m bandit -r . -c pyproject.toml
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp   # 306 passed, 6 deselected
+.venv\Scripts\python -m pytest parity/ -m parity --basetemp=.pytest_basetemp                                                      # 510 passed
+.venv\Scripts\python -m pip_audit .
+.venv\Scripts\python -m pip_audit -r DOCS/sphinx/requirements.txt
+.venv\Scripts\python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
+.venv\Scripts\python tools\wp001_baseline.py check
+snyk code test --severity-threshold=low crates\prin-dynamics\src
+snyk code test --severity-threshold=low crates\prin-py\src
+snyk code test --severity-threshold=low .
+snyk test --all-projects --severity-threshold=low --command=.venv\Scripts\python.exe
+```
+
+**Delta re-audit date:** 2026-08-10 — **Result: CLEAN**
+
+All six S2 findings are closed (five FIXED, one FIXED + AMENDED via plan
+amendment #19). One additional defect found while producing the F1 evidence was
+fixed in the same remediation and is recorded in §7.1. No new deviation was
+introduced. Snyk Open Source is reported as partially blocked locally per
+Coding Standards §6, not as passing. WP-013 may proceed to S4 (session 0052).

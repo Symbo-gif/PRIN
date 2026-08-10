@@ -1,6 +1,6 @@
 # Session 0051 — WP-013 S3: Remediation — Continuous band networks and temporal propagation
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 2 — Advanced numerics and simulation  
 **Execution unit:** WP-013  
 **Session type:** S3 — Remediation  

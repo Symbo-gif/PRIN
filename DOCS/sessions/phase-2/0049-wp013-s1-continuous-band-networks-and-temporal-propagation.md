@@ -1,6 +1,6 @@
 # Session 0049 — WP-013 S1: Coding — Continuous band networks and temporal propagation
 
-**Status:** READY  
+**Status:** COMPLETE  
 **Roadmap phase:** 2 — Advanced numerics and simulation  
 **Execution unit:** WP-013  
 **Session type:** S1 — Coding  
