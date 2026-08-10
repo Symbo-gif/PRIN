@@ -15,8 +15,10 @@ from prin._prin_core import (
     AdaptiveResult,
     CouplingMode,
     EulerIntegrator,
+    ExponentialIntegrator,
     HopfOscillator,
     KuramotoOscillator,
+    MultiRateIntegrator,
     OscillatorState,
     PhaseAmplitudeCoupling,
     RK4Integrator,
@@ -356,6 +358,151 @@ class TestIntegrators:
         assert "EulerIntegrator" in repr(EulerIntegrator())
         assert "RK4Integrator" in repr(RK4Integrator())
         assert "RK45Integrator" in repr(RK45Integrator())
+
+
+# ---------------------------------------------------------------------------
+# WP-012: ExponentialIntegrator bindings
+# ---------------------------------------------------------------------------
+
+
+class TestExponentialIntegrator:
+    def _make_problem(self, n: int = 4):
+        model = KuramotoOscillator(n, 1.0, 0.1, 0.01, CouplingMode.mean_field())
+        state = OscillatorState(
+            np.array([0.1, 0.5, 1.0, 1.5][:n]),
+            np.ones(n),
+            np.array([1.0, 2.0, 1.5, 0.5][:n]),
+        )
+        return model, state
+
+    def test_init_valid(self) -> None:
+        ei = ExponentialIntegrator(dim=12, krylov_rank=8)
+        assert ei.dim == 12
+        assert ei.krylov_rank == 8
+        assert not ei.use_krylov
+        assert not ei.stiff_mode
+
+    def test_init_stiff_mode(self) -> None:
+        ei = ExponentialIntegrator(dim=12, krylov_rank=4, stiff_mode=True)
+        assert ei.stiff_mode
+
+    def test_init_invalid_dim(self) -> None:
+        with pytest.raises(ValueError):
+            ExponentialIntegrator(dim=0)
+
+    def test_init_invalid_krylov_rank(self) -> None:
+        with pytest.raises(ValueError):
+            ExponentialIntegrator(dim=12, krylov_rank=1)
+
+    def test_step(self) -> None:
+        model, state = self._make_problem()
+        ei = ExponentialIntegrator(dim=12, krylov_rank=8)
+        result = ei.step(model, state, 0.01)
+        assert result.n_oscillators == 4
+        assert all(np.isfinite(result.phase))
+
+    def test_integrate(self) -> None:
+        model, state = self._make_problem()
+        ei = ExponentialIntegrator(dim=12, krylov_rank=8)
+        final, traj = ei.integrate(model, state, 5, 0.01)
+        assert final.n_oscillators == 4
+        assert traj is None
+
+    def test_integrate_with_trajectory(self) -> None:
+        model, state = self._make_problem()
+        ei = ExponentialIntegrator(dim=12, krylov_rank=8)
+        _, traj = ei.integrate(model, state, 5, 0.01, record_trajectory=True)
+        assert len(traj) == 5
+
+    def test_dim_mismatch_raises(self) -> None:
+        model, state = self._make_problem(n=2)
+        ei = ExponentialIntegrator(dim=9, krylov_rank=4)  # dim=9 but state has 2 osc (3*2=6)
+        with pytest.raises(ValueError):
+            ei.step(model, state, 0.01)
+
+    def test_invalid_dt_raises(self) -> None:
+        model, state = self._make_problem()
+        ei = ExponentialIntegrator(dim=12, krylov_rank=8)
+        with pytest.raises(ValueError):
+            ei.step(model, state, -0.01)
+
+    def test_repr(self) -> None:
+        ei = ExponentialIntegrator(dim=12, krylov_rank=8)
+        assert "ExponentialIntegrator" in repr(ei)
+
+
+# ---------------------------------------------------------------------------
+# WP-012: MultiRateIntegrator bindings
+# ---------------------------------------------------------------------------
+
+
+class TestMultiRateIntegrator:
+    def _make_problem(self):
+        model = KuramotoOscillator(4, 1.0, 0.1, 0.0, CouplingMode.mean_field())
+        state = OscillatorState.create_synchronized(4, 1.0)
+        return model, state
+
+    def test_init_defaults(self) -> None:
+        mi = MultiRateIntegrator()
+        assert mi.sub_steps == 10
+        assert mi.method == "rk4"
+
+    def test_init_custom(self) -> None:
+        mi = MultiRateIntegrator(sub_steps=5, method="euler")
+        assert mi.sub_steps == 5
+        assert mi.method == "euler"
+
+    def test_init_invalid_method(self) -> None:
+        with pytest.raises(ValueError):
+            MultiRateIntegrator(method="invalid")
+
+    def test_init_zero_substeps(self) -> None:
+        with pytest.raises(ValueError):
+            MultiRateIntegrator(sub_steps=0)
+
+    def test_step(self) -> None:
+        model, state = self._make_problem()
+        mi = MultiRateIntegrator(sub_steps=4)
+        result = mi.step(model, state, 0.01)
+        assert result.n_oscillators == 4
+
+    def test_integrate(self) -> None:
+        model, state = self._make_problem()
+        mi = MultiRateIntegrator(sub_steps=4)
+        final, traj = mi.integrate(model, state, 5, 0.01)
+        assert final.n_oscillators == 4
+        assert traj is None
+
+    def test_integrate_with_trajectory(self) -> None:
+        model, state = self._make_problem()
+        mi = MultiRateIntegrator(sub_steps=4)
+        _, traj = mi.integrate(model, state, 5, 0.01, record_trajectory=True)
+        assert len(traj) == 5
+
+    def test_substeps_1_matches_rk4(self) -> None:
+        model, state = self._make_problem()
+        mi = MultiRateIntegrator(sub_steps=1)
+        rk4 = RK4Integrator()
+        s_mi = mi.step(model, state, 0.01)
+        s_rk4 = rk4.step(model, state, 0.01)
+        np.testing.assert_allclose(s_mi.phase, s_rk4.phase, atol=1e-14)
+        np.testing.assert_allclose(s_mi.amplitude, s_rk4.amplitude, atol=1e-14)
+
+    def test_euler_method(self) -> None:
+        model, state = self._make_problem()
+        mi = MultiRateIntegrator(sub_steps=5, method="euler")
+        result = mi.step(model, state, 0.01)
+        assert result.n_oscillators == 4
+
+    def test_invalid_dt_raises(self) -> None:
+        model, state = self._make_problem()
+        mi = MultiRateIntegrator(sub_steps=4)
+        with pytest.raises(ValueError):
+            mi.step(model, state, 0.0)
+
+    def test_repr(self) -> None:
+        mi = MultiRateIntegrator(sub_steps=5)
+        assert "MultiRateIntegrator" in repr(mi)
 
 
 # ---------------------------------------------------------------------------

@@ -1,12 +1,13 @@
-//! PyO3 bindings for `prin_dynamics::integrate` (Euler, RK4, RK45 integrators).
+//! PyO3 bindings for `prin_dynamics::integrate` (Euler, RK4, RK45, Exponential,
+//! MultiRate integrators).
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
 use prin_dynamics::integrate::{
-    integrate_fixed, AdaptiveResult, EulerIntegrator, IntegrateError, Integrator, RK45Integrator,
-    RK4Integrator,
+    integrate_fixed, AdaptiveResult, EulerIntegrator, ExponentialIntegrator, IntegrateError,
+    Integrator, MultiRateIntegrator, MultiRateMethod, RK45Integrator, RK4Integrator,
 };
 use prin_dynamics::models::Dynamics;
 
@@ -341,11 +342,236 @@ impl PyRK45Integrator {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Exponential integrator
+// ---------------------------------------------------------------------------
+
+/// Exponential integrator for stiff oscillator dynamics.
+///
+/// Uses the exponential Euler method with Jacobian computed via forward
+/// finite differences. Supports direct Padé(13) scaling-and-squaring for
+/// small systems and Krylov–Arnoldi approximation for larger ones.
+#[pyclass(name = "ExponentialIntegrator", module = "prin._prin_core")]
+pub struct PyExponentialIntegrator {
+    inner: ExponentialIntegrator,
+}
+
+#[pymethods]
+impl PyExponentialIntegrator {
+    #[new]
+    #[pyo3(signature = (dim, krylov_rank=16, max_direct_dim=150, stiff_mode=false, stiff_cond_threshold=20.0, max_krylov_stiff=48))]
+    fn py_new(
+        dim: usize,
+        krylov_rank: usize,
+        max_direct_dim: usize,
+        stiff_mode: bool,
+        stiff_cond_threshold: f64,
+        max_krylov_stiff: usize,
+    ) -> PyResult<Self> {
+        let inner = if stiff_mode {
+            ExponentialIntegrator::with_stiff_mode(
+                dim,
+                krylov_rank,
+                max_direct_dim,
+                true,
+                stiff_cond_threshold,
+                max_krylov_stiff,
+            )
+        } else {
+            ExponentialIntegrator::new(dim, krylov_rank, max_direct_dim)
+        }
+        .map_err(integrate_err_to_py)?;
+        Ok(Self { inner })
+    }
+
+    /// Advance state by one timestep dt.
+    fn step(
+        &mut self,
+        model: &Bound<'_, PyAny>,
+        state: &PyOscillatorState,
+        dt: f64,
+    ) -> PyResult<PyOscillatorState> {
+        let dyn_model = extract_dynamics(model)?;
+        let new_state = self
+            .inner
+            .step(dyn_model.as_ref(), &state.inner, dt)
+            .map_err(integrate_err_to_py)?;
+        Ok(PyOscillatorState { inner: new_state })
+    }
+
+    /// Integrate for n_steps with optional Jacobian caching.
+    #[pyo3(signature = (model, state, n_steps, dt, record_trajectory=false, recompute_jacobian_every=1))]
+    fn integrate(
+        &mut self,
+        py: Python<'_>,
+        model: &Bound<'_, PyAny>,
+        state: &PyOscillatorState,
+        n_steps: usize,
+        dt: f64,
+        record_trajectory: bool,
+        recompute_jacobian_every: usize,
+    ) -> PyResult<(PyOscillatorState, Option<Py<PyList>>)> {
+        let dyn_model = extract_dynamics(model)?;
+        let (final_state, trajectory) = self
+            .inner
+            .integrate(
+                dyn_model.as_ref(),
+                &state.inner,
+                n_steps,
+                dt,
+                record_trajectory,
+                recompute_jacobian_every,
+            )
+            .map_err(integrate_err_to_py)?;
+        let traj_objs = match trajectory {
+            Some(traj) => Some(state_list_to_py(py, traj)?),
+            None => None,
+        };
+        Ok((PyOscillatorState { inner: final_state }, traj_objs))
+    }
+
+    /// System dimensionality (3N).
+    #[getter]
+    fn dim(&self) -> usize {
+        self.inner.dim()
+    }
+
+    /// Krylov subspace rank.
+    #[getter]
+    fn krylov_rank(&self) -> usize {
+        self.inner.krylov_rank()
+    }
+
+    /// Whether the Krylov path is used for the current dimension.
+    #[getter]
+    fn use_krylov(&self) -> bool {
+        self.inner.use_krylov()
+    }
+
+    /// Whether adaptive stiff-mode Krylov is enabled.
+    #[getter]
+    fn stiff_mode(&self) -> bool {
+        self.inner.stiff_mode()
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "ExponentialIntegrator(dim={}, krylov_rank={}, use_krylov={}, stiff_mode={})",
+            self.inner.dim(),
+            self.inner.krylov_rank(),
+            self.inner.use_krylov(),
+            self.inner.stiff_mode(),
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Multi-rate integrator
+// ---------------------------------------------------------------------------
+
+/// Multi-rate ODE integrator for hierarchical oscillator systems.
+///
+/// Divides each outer timestep into ``sub_steps`` inner RK4 or Euler steps,
+/// allowing fast oscillators to be integrated with finer time resolution.
+#[pyclass(name = "MultiRateIntegrator", module = "prin._prin_core")]
+pub struct PyMultiRateIntegrator {
+    inner: MultiRateIntegrator,
+}
+
+#[pymethods]
+impl PyMultiRateIntegrator {
+    #[new]
+    #[pyo3(signature = (sub_steps=10, method="rk4"))]
+    fn py_new(sub_steps: usize, method: &str) -> PyResult<Self> {
+        let m = match method.to_lowercase().as_str() {
+            "rk4" => MultiRateMethod::RK4,
+            "euler" => MultiRateMethod::Euler,
+            _ => {
+                return Err(PyValueError::new_err(format!(
+                    "method must be 'rk4' or 'euler', got '{method}'"
+                )));
+            }
+        };
+        let inner =
+            MultiRateIntegrator::with_method(sub_steps, m).map_err(integrate_err_to_py)?;
+        Ok(Self { inner })
+    }
+
+    /// Advance state by one timestep dt (with sub-stepping).
+    fn step(
+        &mut self,
+        model: &Bound<'_, PyAny>,
+        state: &PyOscillatorState,
+        dt: f64,
+    ) -> PyResult<PyOscillatorState> {
+        let dyn_model = extract_dynamics(model)?;
+        let new_state = self
+            .inner
+            .step(dyn_model.as_ref(), &state.inner, dt)
+            .map_err(integrate_err_to_py)?;
+        Ok(PyOscillatorState { inner: new_state })
+    }
+
+    /// Integrate for n_steps outer steps with sub-stepping.
+    #[pyo3(signature = (model, state, n_steps, dt, record_trajectory=false))]
+    fn integrate(
+        &mut self,
+        py: Python<'_>,
+        model: &Bound<'_, PyAny>,
+        state: &PyOscillatorState,
+        n_steps: usize,
+        dt: f64,
+        record_trajectory: bool,
+    ) -> PyResult<(PyOscillatorState, Option<Py<PyList>>)> {
+        let dyn_model = extract_dynamics(model)?;
+        let (final_state, trajectory) = self
+            .inner
+            .integrate(
+                dyn_model.as_ref(),
+                &state.inner,
+                n_steps,
+                dt,
+                record_trajectory,
+            )
+            .map_err(integrate_err_to_py)?;
+        let traj_objs = match trajectory {
+            Some(traj) => Some(state_list_to_py(py, traj)?),
+            None => None,
+        };
+        Ok((PyOscillatorState { inner: final_state }, traj_objs))
+    }
+
+    /// Number of sub-steps per outer step.
+    #[getter]
+    fn sub_steps(&self) -> usize {
+        self.inner.sub_steps()
+    }
+
+    /// Inner integration method (``"rk4"`` or ``"euler"``).
+    #[getter]
+    fn method(&self) -> &'static str {
+        match self.inner.method() {
+            MultiRateMethod::RK4 => "rk4",
+            MultiRateMethod::Euler => "euler",
+        }
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "MultiRateIntegrator(sub_steps={}, method={:?})",
+            self.inner.sub_steps(),
+            self.inner.method(),
+        )
+    }
+}
+
 /// Register integrator types into a module.
 pub(crate) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyEulerIntegrator>()?;
     m.add_class::<PyRK4Integrator>()?;
     m.add_class::<PyRK45Integrator>()?;
     m.add_class::<PyAdaptiveResult>()?;
+    m.add_class::<PyExponentialIntegrator>()?;
+    m.add_class::<PyMultiRateIntegrator>()?;
     Ok(())
 }

@@ -228,6 +228,57 @@ class AdaptiveResult:
     @property
     def trajectory(self) -> list[OscillatorState] | None: ...
 
+class ExponentialIntegrator:
+    def __init__(
+        self,
+        dim: int,
+        krylov_rank: int = 16,
+        max_direct_dim: int = 150,
+        stiff_mode: bool = False,
+        stiff_cond_threshold: float = 20.0,
+        max_krylov_stiff: int = 48,
+    ) -> None: ...
+    def step(
+        self, model: Any, state: OscillatorState, dt: float
+    ) -> OscillatorState: ...
+    def integrate(
+        self,
+        model: Any,
+        state: OscillatorState,
+        n_steps: int,
+        dt: float,
+        record_trajectory: bool = False,
+        recompute_jacobian_every: int = 1,
+    ) -> tuple[OscillatorState, list[OscillatorState] | None]: ...
+    @property
+    def dim(self) -> int: ...
+    @property
+    def krylov_rank(self) -> int: ...
+    @property
+    def use_krylov(self) -> bool: ...
+    @property
+    def stiff_mode(self) -> bool: ...
+
+class MultiRateIntegrator:
+    def __init__(
+        self, sub_steps: int = 10, method: str = "rk4"
+    ) -> None: ...
+    def step(
+        self, model: Any, state: OscillatorState, dt: float
+    ) -> OscillatorState: ...
+    def integrate(
+        self,
+        model: Any,
+        state: OscillatorState,
+        n_steps: int,
+        dt: float,
+        record_trajectory: bool = False,
+    ) -> tuple[OscillatorState, list[OscillatorState] | None]: ...
+    @property
+    def sub_steps(self) -> int: ...
+    @property
+    def method(self) -> str: ...
+
 # --- Metrics: Order ---
 def kuramoto_order_parameter(phase: NDArray[np.float64]) -> float: ...
 def kuramoto_order_parameter_complex(
