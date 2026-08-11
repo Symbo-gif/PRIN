@@ -9,7 +9,9 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
+prin-dynamics.workspace = true
 ndarray.workspace = true
+faer.workspace = true
 rayon.workspace = true
 serde.workspace = true
 thiserror.workspace = true

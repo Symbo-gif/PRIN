@@ -35,7 +35,8 @@ prin-train = { path = "crates/prin-train" }
 prin-daemon = { path = "crates/prin-daemon" }
 
 # Numerics
-ndarray = "0.16"
+ndarray = { version = "0.16", features = ["serde"] }
+faer = "0.20"
 sprs = "0.11"
 rayon = "1.10"
 num-complex = "0.4"

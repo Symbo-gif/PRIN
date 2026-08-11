@@ -1,6 +1,6 @@
 # Session 0053 — WP-014 S1: Coding — Tensor decompositions
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 2 — Advanced numerics and simulation  
 **Execution unit:** WP-014  
 **Session type:** S1 — Coding  
