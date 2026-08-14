@@ -101,6 +101,22 @@ All quality, coverage, documentation, parity, and security gates are green.
 
 | ID | Raised (cycle) | Severity | Summary | Status | Reference |
 |---|---|---|---|---|---|
+`[RETROACTIVE UPDATE - Executive Audit 003]` The WP001-F1..WP013-F6 rows below
+were restored from the verified `DOCS/reports/013-project-state.md` §3 table
+(last known-good) after EA-003 (finding E-F1, D1) discovered that this table
+had been silently corrupted starting with commit `234a20d` (WP-014 S4):
+descriptions were rewritten and every commit hash after `WP001-F9` was
+replaced with a fabricated, sequentially-patterned hash (`7f8a1c2`,
+`a1b2c3d` .. `k1f2g3h`) that does not exist in this repository
+(`git cat-file -t <hash>` fails for all of them). A fictitious `WP010-F1`
+finding was also invented; the real WP-010 S2 audit verdict was **PASS with
+zero findings** (`DOCS/audits/010-wp010-audit.md:9`). The corruption
+propagated unnoticed through the WP-015 and WP-016 S2 audits. See
+`DOCS/audits/EXECUTIVE_AUDIT_REPORT_003.md` finding E-F1 for the full
+analysis; `DOCS/reports/014-project-state.md` and
+`DOCS/reports/015-project-state.md` carry the same corrupted table and a
+pointer to this correction rather than a full in-place rewrite.
+
 | WP001-F1 | 001 | D1 | PyO3 dependency carried two RustSec advisories | FIXED | `13eac9e`; PyO3/rust-numpy 0.29.0 |
 | WP001-F2 | 001 | D1 | `python.yml` did not audit all dependencies and suppressed failures | FIXED | `510e0c9`; project/docs Pip Audit gating |
 | WP001-F3 | 001 | D1 | Long-lived crates.io token in `release.yml` | FIXED | `510e0c9`; pre-WP-005 guard |
@@ -109,65 +125,70 @@ All quality, coverage, documentation, parity, and security gates are green.
 | WP001-F6 | 001 | D2 | Repro CI path was not explicitly guarded | FIXED | `510e0c9`; pre-WP-035 guard |
 | WP001-F7 | 001 | D2 | Unready workspace crate publication was possible | FIXED | `510e0c9`; publication guard |
 | WP001-F8 | 001 | D1 | GitHub secret scanning/push protection unavailable | AMENDED | Plan amendment #5; Gitleaks + branch-protection substitute |
-| WP001-F9 | 001 | D3 | `public_datasets/` was missing a documented retention boundary | AMENDED | Plan amendment #6; `DOCS/standards/Data_Retention_Policy.md` |
-| WP001-F10 | 001 | D4 | `README.md` did not mention Windows case-sensitivity | FIXED | `510e0c9`; README + naming decision |
-| WP002-F1 | 002 | D2 | Corpus cases did not cover amplitude/frequency transients | FIXED | `7f8a1c2`; 24 new golden cases |
-| WP002-F2 | 002 | D2 | Differential harness tolerance was hard-coded to `1e-6` | FIXED | `7f8a1c2`; per-case tolerance model |
-| WP002-F3 | 002 | D3 | Manifest schema did not enforce `f64` dtype for saved trajectories | FIXED | `7f8a1c2`; schema + loader validation |
-| WP002-F4 | 002 | D4 | `parity/` README did not define the tolerance model | FIXED | `7f8a1c2`; parity README |
-| WP003-F1 | 003 | D2 | DLPack bridge did not validate device/type before borrowing | FIXED | `a1b2c3d`; `validate_tensor` guard |
-| WP003-F2 | 003 | D2 | Negative shape dimension could cause an over-read | FIXED | `a1b2c3d`; `BridgeError::NegativeDim` |
-| WP003-F3 | 003 | D3 | `from_dlpack` accepted non-contiguous input silently | FIXED | `a1b2c3d`; non-contiguous rejection + test |
-| WP003-F4 | 003 | D4 | PyO3 stub generation was not exercised in CI | FIXED | `a1b2c3d`; stub-diff job |
-| WP003-F5 | 003 | D4 | Phase-0 spike exit note lacked a coverage caveat | FIXED | `a1b2c3d`; handoff note caveat |
-| WP004-F1 | 004 | D2 | CubeCL kernel compile error on CPU path | FIXED | `b2c3d4e`; kernel split + unit test |
-| WP004-F2 | 004 | D2 | Mean-field RK4 phase wrap introduced 1 ulp drift vs reference | AMENDED | Plan amendment #8; `wrap_phase` parity tolerance |
-| WP004-F3 | 004 | D3 | `wgpu` feature did not build on macOS | FIXED | `b2c3d4e`; feature gating |
-| WP004-F4 | 004 | D4 | Spike coverage report was missing a missing-lines table | FIXED | `b2c3d4e`; coverage report handoff |
-| WP005-F1 | 005 | D3 | ORT DirectML execution provider not available on Linux | AMENDED | Plan amendment #13; CPU fallback documented |
-| WP005-F2 | 005 | D3 | VitisAI NPU runtime not available in CI | AMENDED | Plan amendment #13; deferred to WP-028 |
-| WP005-F3 | 005 | D2 | Release workflow used a long-lived crates.io token | FIXED | `c3d4e5f`; short-lived token + secret workflow |
-| WP005-F4 | 005 | D2 | Release workflow did not smoke-test all wheels | FIXED | `c3d4e5f`; per-OS wheel smoke test |
-| WP006-F1 | 006 | D2 | `OscillatorState` accepted mismatched `freq_band` length | FIXED | `d4e5f6a`; typed `StateError::BandMismatch` |
-| WP006-F2 | 006 | D3 | `Seed::jump` did not advance the counter stream | FIXED | `d4e5f6a`; jump test + deterministic offset |
-| WP006-F3 | 006 | D4 | `StateError` display strings used inconsistent terminology | FIXED | `d4e5f6a`; error message normalization |
-| WP007-F1 | 007 | D2 | `KuramotoOscillator` `sparse_knn` coupling normalization drift | AMENDED | Plan amendment #14; `K / degree` parity tolerance |
-| WP007-F2 | 007 | D2 | Stuart–Landau complex amplitude f32 hazard | AMENDED | Plan amendment #14; `1e-6` derivative tolerance |
-| WP007-F3 | 007 | D3 | `HopfOscillator` frequency adaptation term omitted a clamp | FIXED | `e5f6a7b`; `clamp_derivative` |
-| WP007-F4 | 007 | D4 | `Dynamics` trait rustdoc did not mention the numerical hazard | FIXED | `e5f6a7b`; trait-level docs |
-| WP007-F5 | 007 | D4 | `CouplingMode` match arm order differed from PRINet 3.0 | FIXED | `e5f6a7b`; match order + parity test |
-| WP008-F1 | 008 | D2 | RK45 adaptive step rejected a valid zero-crossing | FIXED | `f6a7b8c`; event detection + test |
-| WP008-F2 | 008 | D3 | `IntegrateError` variants did not cover buffer reuse failure | FIXED | `f6a7b8c`; `BufferReuse` variant |
-| WP008-F3 | 008 | D4 | `EulerIntegrator` rustdoc example used an unsupported shape | FIXED | `f6a7b8c`; doctest fix |
-| WP008-F4 | 008 | D4 | `Integrator` trait table omitted `ExponentialIntegrator` placeholder | FIXED | `f6a7b8c`; trait docs |
-| WP008-F5 | 008 | D4 | `integrate_fixed` trajectory storage was not parity-tested | FIXED | `f6a7b8c`; trajectory parity test |
-| WP009-F1 | 009 | D2 | `Topology::SmallWorld` rewired self-loops on odd N | FIXED | `g7b8c9d`; self-loop guard |
-| WP009-F2 | 009 | D2 | `PhaseAmplitudeCoupling` depth clamp was applied after offset | FIXED | `g7b8c9d`; clamp ordering |
-| WP009-F3 | 009 | D3 | `build_phase_knn_index` did not reject `k >= N` | FIXED | `g7b8c9d`; `k < N` validation |
-| WP009-F4 | 009 | D3 | `CouplingError` and `PacError` shared a discriminant | FIXED | `g7b8c9d`; distinct variants |
-| WP009-F5 | 009 | D4 | WP-009 S1 handoff note had a sequence-ID collision | FIXED | `g7b8c9d`; renamed to `wp009-s1-handoff-note.md` |
-| WP009-F6 | 009 | D4 | `pac.rs` doctest used a non-canonical shape | FIXED | `g7b8c9d`; doctest fix |
-| WP009-F7 | 009 | D4 | `Topology` README did not mention the directed rewiring semantics | FIXED | `g7b8c9d`; README |
-| WP010-F1 | 010 | D4 | `chimera_index` rustdoc threshold default was undocumented | FIXED | `h8c9d0e`; rustdoc note |
-| WP011-F1 | 011 | D4 | `_prin_core.pyi` was not regenerated after WP-010 | FIXED | `i9d0e1f`; stub regeneration + CI check |
-| WP012-F1 | 012 | D1 | Exponential integrator did not produce PRINet 3.0 parity cases | FIXED | `j0e1f2g`; 4 parity cases + trajectory evidence |
-| WP012-F2 | 012 | D1 | Multi-rate integrator did not produce PRINet 3.0 parity cases | FIXED | `j0e1f2g`; 3 parity cases |
-| WP012-F3 | 012 | D1 | Krylov path diverged from direct path for stiff large systems | AMENDED | Plan amendment #18; Krylov rank bound |
-| WP012-F4 | 012 | D3 | `IntegrateError::LinearSolveFailed` was never exercised | FIXED | `j0e1f2g`; degenerate Jacobian test |
-| WP012-F5 | 012 | D4 | `integrate.rs` coverage missed the `InvalidKrylovRank` path | FIXED | `j0e1f2g`; regression test |
-| WP013-F1 | 013 | D1 | Band/temporal PRINet 3.0 parity cases missing | FIXED | `k1f2g3h`; 18 parity tests |
-| WP013-F2 | 013 | D2 | `BandNetwork` coupling mode differed from PRINet 3.0 stepper | AMENDED | Plan amendment #19; continuous ODE RHS |
-| WP013-F3 | 013 | D3 | WP-013 S1 handoff note missing | FIXED | `k1f2g3h`; `0049-wp013-s1-handoff.md` |
-| WP013-F4 | 013 | D4 | `bands.rs` / `temporal.rs` coverage below 95% in places | FIXED | `k1f2g3h`; additional tests |
-| WP013-F5 | 013 | D4 | `BandError::EmptyBand` semantics and PAC adjacency unclear | FIXED | `k1f2g3h`; variant docs + tests |
-| WP013-F6 | 013 | D4 | Blend-parameter mapping to PRINet 3.0 was undocumented | FIXED | `k1f2g3h`; rustdoc + Migration Guide |
-| WP014-F1 | 014 | D1 | No Rust-vs-PRINet 3.0 parity tests for tensor decompositions | FIXED | `0a2c95d`; `crates/prin-tensor/tests/parity_decomposition.rs` |
+| WP001-F9 | 001 | D4 | Sphinx had two warnings and a misattribution | FIXED | `510e0c9`; warning-free wheel-backed build |
+| WP001-F10 | 001 | D2 | `main` was unprotected | FIXED | Hosted setting, 2026-08-06 |
+| WP001-F11 | 001 | D2 | Linux Python/Repro jobs did not create explicit venvs | FIXED | `510e0c9`; explicit venvs in `python.yml`/`repro.yml` |
+| WP002-F1 | 002 | D2 | Fast `tests/` suite was below 95% coverage on `prin.parity` | FIXED | `c7d8a25`; fast-suite regression tests, `prin.parity` 100% |
+| WP002-F2 | 002 | D2 | Snyk Open Source reported 12 docs-dependency advisories | FIXED | `d6037b8`; pinned transitive minimums, Snyk/pip-audit 0 |
+| WP002-F3 | 002 | D4 | Stale docstrings/PyPI references for `prin.parity` | FIXED | `d0b7207`; docstring, README, markers updated |
+| WP002-F4 | 002 | D4 | `bandit -r parity/` flagged test `assert` | FIXED | `4da34da`; `parity/` and archive in `bandit` exclusions |
+| WP003-F1 | 003 | D2 | `unsafe` in `prin-py` outside the `prin-kernels` exception | AMENDED | Plan amendment #6; Coding Standards §2.1/§6.1 Python-FFI exception |
+| WP003-F2 | 003 | D2 | Missing shape-dimension sign validation before `std::slice::from_raw_parts` | FIXED | `b481078`; `BridgeError::NegativeDim`, `validate_shape`, Rust + Python regression tests |
+| WP003-F3 | 003 | D3 | WP-003/Phase 0 go/no-go amendment not recorded | AMENDED | Plan amendment #7; CPU path validated, CUDA + `<5%` deferred to Phase 4 |
+| WP003-F4 | 003 | D4 | Package docstring omits the new `prin.dlpack` module | FIXED | `b481078`; `python/prin/__init__.py` updated |
+| WP003-F5 | 003 | D4 | `python/prin/dlpack.py` lacks `__all__` | FIXED | `b481078`; `__all__` added, ruff + baseline check pass |
+| WP004-F1 | 004 | D2 | `paste` RUSTSEC-2024-0436 inherited from `cubecl` 0.10.0 | AMENDED | Plan amendment #9; re-check every cycle, upgrade when fixed upstream |
+| WP004-F2 | 004 | D2 | `cargo-llvm-cov` line coverage 86.36% due to non-instrumentable `#[cube(launch)]` bodies | AMENDED | Plan amendment #10; instrumentable code ≥95%, kernel equivalence validates correctness |
+| WP004-F3 | 004 | D2 | Missing `proptest` invariants for `step_cpu` | FIXED | Added proptest module + deterministic RK4 scaling test; `cargo test -p prin-kernels --features wgpu,cpu` passes 21 tests |
+| WP004-F4 | 004 | D2 | `prin-kernels` crate-level unsafe lint relaxed without plan amendment | AMENDED | Plan amendment #8; `#![deny(unsafe_code)]` + module `#![allow(unsafe_code)]`, `#![deny(unsafe_op_in_unsafe_fn)]`, `// SAFETY:` justifications |
+| WP004-F5 | 004 | D3 | Direct same-hardware Triton 3.0 fused-kernel comparison blocked on Windows Python 3.14 | AMENDED | Plan amendment #11; PyTorch reference + wgpu/CPU equivalence validated, Triton timing deferred to Phase 3 / `gpu.yml` |
+| WP004-F6 | 004 | D3 | `try_step_wgpu`/`try_step_cuda` could panic on missing backend | FIXED | `catch_unwind` + `MeanFieldRk4Error::BackendUnavailable` + regression test |
+| WP004-F7 | 004 | D3 | Default CI did not run `cpu`/`wgpu` kernel-equivalence tests | FIXED + AMENDED | `rust.yml` runs `--features cpu`; `wgpu` deferred to headless GPU runner (amendment #12) |
+| WP004-F8 | 004 | D3 | `StepReport.wall_time_seconds` used host wall-clock, not device events | FIXED | Documented prototype caveat in rustdoc; device-event timing is Phase 3 |
+| WP004-F9 | 004 | D4 | Stale log message and READMEs omit `cpu`/WP-004 spike | FIXED | Corrected log label, updated `crates/prin-kernels/README.md` and `crates/README.md` |
+| WP005-F1 | 005 | D3 | ORT go/no-go not recorded as plan amendment #13; gate check did not validate plan text | FIXED | Plan amendment #13; commit `fe5dc8b`; `_check_spike_decisions` requires `\| 13 \|` and ORT/ONNX/VitisAI in plan text; regression `test_missing_ort_amendment_in_plan` |
+| WP005-F2 | 005 | D3 | Real ORT model probe only exercised on one CI matrix cell | FIXED | Commit `82db761`; `python.yml` installs `-e ".[dev,onnx]"` on every test matrix cell |
+| WP005-F3 | 005 | D4 | `models/README.md` did not describe the split ONNX model files | FIXED | Commit `b5fc211`; README describes both `.onnx` and `.onnx.data` files and gitignore exemption |
+| WP005-F4 | 005 | D4 | `tools/README.md` did not list the WP-005 CLI tools | FIXED | Commit `39cef38`; README lists `wp005_ort_probe.py` and `wp005_phase0_gate.py` |
+| WP006-F1 | 006 | D2 | `Seed::next_f64_range` half-open interval contract rounding to upper bound `hi` | FIXED | Commit `4f80491`; `Seed::next_f64_range` returns `Result<f64, SeedError>`, validates `lo < hi` and finiteness, uses scale-decrease loop so max draw cannot round to `hi`, added regression tests |
+| WP006-F2 | 006 | D3 | `strict-checks` feature not exercised in `.github/workflows/rust.yml` CI | FIXED | Commit `5f78c3e`; added `clippy-strict` and `test-strict` jobs to `rust.yml` |
+| WP006-F3 | 006 | D4 | Post-S1 baseline tool hardening commit `9153c7c` outside declared S1 range | FIXED | Commit `9153c7c`; recorded as retroactive WP-001 hotfix; disposition confirmed on branch for S4 consolidation; `tools/wp001_baseline.py check` passes |
+| WP007-F1 | 007 | D2 | Coupled Stuart–Landau and Hopf derivative outputs not asserted against closed-form/PRINet reference values | FIXED | Commit `d030fff`; added `test_stuart_landau_coupled_reference_values` and `test_hopf_coupled_reference_values` unit tests for Full/MeanField/SparseKnn modes |
+| WP007-F2 | 007 | D2 | No committed Rust-vs-PRINet derivative parity test for the new `Dynamics` implementation | FIXED | Commit `d030fff`; added `crates/prin-dynamics/tests/parity_models.rs` with 9 parity cases covering all models and coupling modes |
+| WP007-F3 | 007 | D3 | Rust f64 implementations diverge from PRINet 3.0 reference due to PRINet's internal `torch.complex64` (f32) arithmetic; not listed among preserved numerical hazards | AMENDED | Plan amendment #14; preserved numerical hazard documented in Project Plan §5 and `DOCS/sphinx/parity_report.rst`; `1e-6` derivative parity tolerance for affected paths |
+| WP007-F4 | 007 | D4 | `EVIDENCE/0017-wp005-s1-ort-probe.json` had uncommitted timestamp drift and CRLF→LF warning | FIXED | Restored committed version; `git status` clean against `HEAD` |
+| WP007-F5 | 007 | D4 | Stuart–Landau and Hopf rustdoc did not spell out per-`CouplingMode` coupling-term formulas | FIXED | Commit `d030fff`; expanded rustdoc with explicit `C_i` (SL) and `C_i^sin`/`C_i^cos` (Hopf) per-mode formulas |
+| WP008-F1 | 008 | D2 | FSAL cache in `RK45Integrator::integrate_adaptive` not invalidated at start of new integration; reuse across calls produces silently incorrect results | FIXED | Commit `f97ba5c`; added `fsal_valid: bool` flag invalidated on entry/rejected steps; regression test `rk45_fsal_cache_invalidated_on_reuse` |
+| WP008-F2 | 008 | D3 | `IntegrateError::NonFiniteValue` error path (strict-checks) not exercised by any test | FIXED | Commit `f97ba5c`; added `NanDynamics` test helper + `strict_check_non_finite_value_error`/`strict_check_non_finite_value_rk4` tests; coverage 96.66% → 97.48% |
+| WP008-F3 | 008 | D4 | `check_finite` doc comment inaccurate about non-strict NaN repair behavior | FIXED | Commit `f97ba5c`; corrected doc comment to state amplitude-only repair in non-strict mode |
+| WP008-F4 | 008 | D4 | `lib.rs` module doc listed exponential/Krylov/multi-rate integrators (WP-008 non-goals) | FIXED | Commit `f97ba5c`; updated to list only Euler, RK4, adaptive RK45/Dormand–Prince |
+| WP008-F5 | 008 | D4 | `RK45Integrator::new` reused `InvalidTimestep` for tolerance validation; test only checked `is_err()` | FIXED | Commit `f97ba5c`; added `IntegrateError::InvalidTolerance { param, value }` variant; updated test to assert specific variant |
+| WP009-F1 | 009 | D2 | `cargo fmt --check` fails on `coupling.rs:339` test comment indentation | FIXED | Commit `b4749ba`; restructured `topology_ring_basic` trailing comment; `cargo fmt --check` exit 0 |
+| WP009-F2 | 009 | D2 | `normalization_one_over_k_explicit_in_sparse` only asserts `is_finite()` — does not verify the 1/k normalization | FIXED | Commit `b4749ba`; strengthened to assert explicit `K/k` per-edge weight + shared-neighbour 3/2 ratio check |
+| WP009-F3 | 009 | D3 | `build_ring`/`build_small_world` odd-clamp normalization violates `K/degree` energy invariant | FIXED | Commit `b4749ba`; new `clamp_ring_k` helper clamps to largest even `≤ n-1`; regression tests for both builders |
+| WP009-F4 | 009 | D3 | `with_clamp` does not validate `amp_min <= amp_max` or finiteness — `f64::clamp` panics on inverted range | FIXED | Commit `b4749ba`; added `PacError::InvalidClampRange` variant + finiteness/ordering validation + regression tests |
+| WP009-F5 | 009 | D4 | S1 handoff note factual errors (pac.rs stub→full, rayon sort, test count 198) | FIXED | Commit `bf46cee`; handoff note corrected |
+| WP009-F6 | 009 | D4 | `topology_ring_clamps_k_to_n_minus_1` test comment inaccurate; no weight assertion | FIXED | Commit `b4749ba`; comment corrected + degree/weight/energy assertions added |
+| WP009-F7 | 009 | D4 | `build_small_world` rewiring is directed; module docs don't clarify | FIXED | Commit `b4749ba`; directed interpretation documented in rustdoc + `Topology::SmallWorld` variant doc |
+| WP011-F1 | 011 | D4 | `#![allow(unsafe_code)]` unnecessary in `state.rs` — no `unsafe` code exists | FIXED | Commit `cd20b1a`; attribute removed; `cargo clippy -D warnings` clean under crate-level `#![deny(unsafe_code)]` |
+| WP012-F1 | 012 | D1 | S1 commit omitted the declared `prin-py` Python bindings for `ExponentialIntegrator`/`MultiRateIntegrator` | FIXED | `62deb43`; `PyExponentialIntegrator`/`PyMultiRateIntegrator`, `dynamics.py` re-exports, `.pyi` stubs, 21 new Python acceptance tests |
+| WP012-F2 | 012 | D1 | No Rust-vs-PRINet 3.0 parity evidence for the new integrators | FIXED | `e4e7772`; 7 new golden-trajectory parity tests (4 Exponential, 3 MultiRate) in `parity_integrators.rs` |
+| WP012-F3 | 012 | D1 | `matrix_exp` silently returned identity on a singular Padé LU denominator instead of a typed error | FIXED | `2dc641e`; `matrix_exp`/`phi1_matrix`/Krylov solves propagate `IntegrateError::LinearSolveFailed`; regression test `matrix_exp_singular_denominator_returns_typed_error` |
+| WP012-F4 | 012 | D3 | WP-012 text implied band-aware multi-rate scheduling; implementation is uniform sub-stepping (matches PRINet 3.0 reference) | AMENDED | Plan amendment #18; Project Plan §6 WP-012 declaration clarified; `MultiRateIntegrator` rustdoc corrected in S4 to match |
+| WP012-F5 | 012 | D4 | `ExponentialIntegrator::step`/`::integrate` did not validate the stored `dim` against the state size | FIXED | `2dc641e`; `IntegrateError::InvalidDim` on mismatch; regression tests `exp_integrator_dim_mismatch_returns_typed_error`, `exp_integrator_integrate_dim_mismatch_returns_typed_error` |
+| WP013-F1 | 013 | D1 | No Rust-vs-PRINet 3.0 parity evidence for `BandNetwork`, `theta_gamma_network`, `delta_theta_gamma_network`, `ComplexPhasorBlender`, `EmaAmplitudeBlender`, or `TemporalPropagator` | FIXED | `d2c1f1c`; 12 cases in `parity_bands.rs` + 6 in `parity_temporal.rs`, all green at documented tolerances |
+| WP013-F2 | 013 | D2 | `BandNetwork` hard-coded mean-field intra-band coupling; PRINet 3.0 reference uses `sparse_knn` with per-band `MultiRateIntegrator` sub-stepping | FIXED + AMENDED | `20673c4`; plan amendment #19 (`5e0c602`); per-band `CouplingMode` dispatch via `BandParams::with_coupling`; residual composition difference (continuous ODE vs. stepper) governed by amendment #19 with parity evidence |
+| WP013-F3 | 013 | D3 | No S1 handoff note / acceptance-criterion evidence map was committed | FIXED | `62843d4`; `DOCS/experiments/0049-wp013-s1-handoff.md` maps all twelve acceptance criteria to evidence |
+| WP013-F4 | 013 | D4 | Function coverage below 95% on `bands.rs` (92.00%) and `temporal.rs` (94.64%) | FIXED | `20673c4`, `62843d4`; `bands.rs` 98.68% functions, `temporal.rs` 100% functions |
+| WP013-F5 | 013 | D4 | `BandNetwork::new` returned `EmptyBand { band: 0 }` for an empty band list; non-adjacent PAC pairs allowed despite "adjacent" docstring | FIXED | `20673c4`; `BandError::NoBands` added; `PacPair` rustdoc/docstring corrected — any strictly slow→fast pair is intentional |
+| WP013-F6 | 013 | D4 | `TemporalPropagator` blend convention opposite to PRINet's `TemporalPhasePropagator`; mapping undocumented | FIXED | `20673c4`, `d2c1f1c`; `alpha = 1 − carry_strength` / `alpha = 1 − amplitude_decay` documented on all types and PyO3 classes; enforced by `parity_reversed_convention_does_not_match` |
+| WP014-F1 | 014 | D1 | No Rust-vs-PRINet 3.0 parity tests for tensor decompositions | FIXED | `0a2c95d`; `crates/prin-tensor/tests/parity_decomposition.rs` — `[RETROACTIVE UPDATE - Executive Audit 003]` the `0a2c95d` suite verified mathematical invariants only (reconstruction error, orthonormality), not genuine cross-implementation output; EA-003 finding E-F1 (D2) added a true differential HOSVD-vs-PRINet-3.0 reconstruction comparison (`data/prinet_reference_hosvd.json`, generated from the archived reference) closing the residual gap — CP-ALS remains invariant-only by design (PRINet/PRIN use independent RNG streams, so raw factor comparison is not meaningful for a stochastic ALS fit) |
 | WP014-F2 | 014 | D2 | S1 marked complete with change set uncommitted | FIXED | `039ee7b`; committed mid-audit, delta re-audit verified |
 | WP014-F3 | 014 | D2 | `hosvd` panicked on contract-valid rank > unfolding bound | FIXED | `72898f9`; rank validation + regression tests |
 | WP014-F4 | 014 | D2 | `cp.rs` coverage below 95% | FIXED | `f72d6d1`; 8 new unit tests, 96.23% lines |
 | WP014-F5 | 014 | D3 | `cp_als` convergence/normalization diverged from PRINet 3.0 | FIXED | `d377836`; error-based convergence, all-factor normalization |
 | WP014-F6 | 014 | D4 | Documentation/hygiene: inaccurate convergence text, dead code, duplicated helper, misused error variants, handoff miscount | FIXED | `ca52af6`; README/lib.rs, remove dead code, deduplicate `flat_to_multi`, add `InvalidMaxIter`/`InvalidMode`, fix handoff |
-| WP014-F7 | 014 | D3 | GitHub Actions billing block made the merge gate inoperative | FIXED | Billing resolved; CI green on `039ee7b` and `ceaca5c` |
+| WP014-F7 | 014 | D3 | GitHub Actions billing block made the merge gate inoperative | FIXED | Billing resolved; CI green on `039ee7b` and `ceaca5c` — `[RETROACTIVE UPDATE - Executive Audit 003]` "CI green on `039ee7b`" originally meant only its `rust` job; EA-003 live-reran the remaining `python`/`parity`/`snyk`/`repro` jobs on `039ee7b` (now all green) and all 5 jobs on the WP-013 S4 commit `4a4de26` (4 of 5 now green; `python` surfaced a real, transient, already-self-corrected `session 0053` status mismatch — see `EXECUTIVE_AUDIT_REPORT_003.md` E-F2/E-F4) |
 | WP015-F1 | 015 | D1 | 4 strict-checks test failures in `prin-sim` due to amplitude boundaries | FIXED | `f138476`; `engine.rs` / `pruning.rs` test bounds updated |
 | WP015-F2 | 015 | D2 | Commit `bfc2417` mislabeled as `docs` instead of `feat` | AMENDED | Closure record in `DOCS/audits/015-wp015-audit.md` |
 | WP015-F3 | 015 | D2 | Lossy error mapping in `compute_derivatives` | FIXED | `f138476`; replaced unreachable error mapping with `.expect()` |

@@ -99,6 +99,16 @@ All quality, coverage, documentation, parity, and security gates are green.
 
 ## 3. Deviation ledger (cumulative)
 
+`[RETROACTIVE UPDATE - Executive Audit 003]` The WP001-F1..WP013-F6 rows in
+the table below were corrupted when this document was authored (descriptions
+rewritten, commit hashes after `WP001-F9` replaced with fabricated,
+non-existent hashes; a fictitious `WP010-F1` finding invented — the real
+WP-010 verdict was PASS with zero findings). This table is left as originally
+authored for the historical record; the verified table (restored from
+`DOCS/reports/013-project-state.md`, the last known-good cumulative ledger) is
+in `DOCS/reports/016-project-state.md` §3. See
+`DOCS/audits/EXECUTIVE_AUDIT_REPORT_003.md` finding E-F1.
+
 | ID | Raised (cycle) | Severity | Summary | Status | Reference |
 |---|---|---|---|---|---|
 | WP001-F1 | 001 | D1 | PyO3 dependency carried two RustSec advisories | FIXED | `13eac9e`; PyO3/rust-numpy 0.29.0 |
