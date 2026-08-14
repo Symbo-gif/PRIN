@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Executive Audit Session 003 (EA-003)** — full-project audit across E1–E10 covering the delta
+  since EA-002 (WP-010 through WP-016, Phase 1 and Phase 2 close); report
+  `DOCS/audits/EXECUTIVE_AUDIT_REPORT_003.md` (`PASS-WITH-REMEDIATION`, findings E-F1–E-F14):
+  - **E-F1 (D1):** restored the WP001-F1..WP013-F6 cumulative deviation-ledger rows in
+    `DOCS/reports/016-project-state.md` §3, corrupted since commit `234a20d` (fabricated commit
+    hashes, rewritten descriptions, one invented finding) and undetected through two subsequent
+    S2 audits. Restored from the verified `013-project-state.md` table; correction notes added
+    to `014-` and `015-project-state.md`.
+  - **E-F2/E-F4 (D1/D2):** live-reran all 9 previously-unverified GitHub Actions workflow runs on
+    commits `039ee7b` (WP-014 S1) and `4a4de26` (WP-013 S4), left in a billing-block failure
+    state and never remediated; `039ee7b` is now green on all 5 gated workflows, `4a4de26` on 4
+    of 5 (its `python` run surfaced a real, transient, already-self-corrected historical
+    inconsistency rather than a rerun artifact — documented, not erased). Corrected the
+    WP014-F7 ledger entry's overstated verification claim.
+  - **E-F3 (D2):** fixed `python/prin/__init__.py` version drift (`0.1.0-alpha.1` vs.
+    `0.3.0-alpha.1` elsewhere) that broke `tools/wp001_baseline.py check` and 4 `pytest` tests on
+    the `v0.3.0-alpha.1` release commit; fixed two related hardcoded-literal fragility bugs in
+    `tests/test_wp001_baseline.py`.
+  - **E-F5 (D2):** added a genuine Rust-vs-PRINet-3.0 differential parity test for HOSVD
+    (`crates/prin-tensor/tests/data/prinet_reference_hosvd.json`, generated from the archived
+    PRINet 3.0 reference), closing the gap between the WP-014 audit's parity-closure claim and
+    the invariant-only tests it actually shipped.
+  - **E-F6 (D2):** logged plan amendment #22 — the Phase 1 `v0.2.0-alpha.1` pre-release tag was
+    never cut and no tag has ever been pushed to `origin`; `v0.3.0-alpha.1` retroactively covers
+    both phase-exit tagging obligations. Maintainer directed that actual tag creation/push
+    (triggers a real PyPI/crates.io publish) be deferred to a separate, later action.
+  - **E-F7 (D3):** identified 6 open Snyk Open Source advisories in `torch@2.13.0` (5 medium, 1
+    high, no fix available in any version per Snyk's own database). Investigated for a genuine
+    fix per maintainer direction before accepting risk: a repository-wide grep confirms none of
+    the 6 vulnerable APIs is called anywhere in PRIN's live codebase. Risk accepted and
+    documented in `.snyk` with maintainer approval and a 2026-11-14 recheck.
+  - **E-F8–E-F13 (D3/D4):** documentation/hygiene fixes — Phase-1 analytics report test-count
+    inconsistency, `EVIDENCE/README.md` clarification, duplicated Migration Guide line,
+    `prin-tensor` `strict-checks` documentation, and Project Plan §6 phase-table/amendment sync.
+  - **E-F9 (D3):** added a `bench-smoke` CI job (`rust.yml`) exercising
+    `cargo bench -p prin-sim --bench sweep_bench -- --test`, closing the gap where the Phase-2
+    exit-gate performance claims were never CI-verified even to compile/run.
+  - **E-F14 (D2):** the audited `HEAD` and its 4 predecessor commits had never been pushed to
+    `origin` and had zero CI runs; resolved by this session's push.
+
 ## [0.3.0-alpha.1] — Phase 2 exit (Advanced numerics and simulation)
 
 ### Added
