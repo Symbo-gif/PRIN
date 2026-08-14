@@ -282,6 +282,8 @@ After all D1–D2 findings are addressed (and F5/F7 resolved by code, amendment,
 
 **Maintainer acknowledgment of verdict:** **FAIL acknowledged** — MichaelMaillet, 2026-08-11. Directive: resolve the GitHub Actions billing block (WP014-F7) first so the S3 delta re-audit has green CI evidence, then proceed with S3 remediation (session 0055) in severity order.
 
+**WP014-F7 restoration evidence (2026-08-14):** The GitHub Actions billing block is resolved. The audit-report head `ceaca5c` was pushed and all gated workflows ran and passed: `rust` 31793277257 (13m49s; all 9 jobs incl. test matrix ubuntu/macos/windows, test-strict, clippy, clippy-strict, fmt, audit, docs), `python` 31793277288 (security + lint + test matrix 3.11/3.12/3.13 × ubuntu/windows), `parity` 31793277278 (7m33s), `snyk` 31793277349 (38s), `repro` 31793277332 (29s); `gpu` skipped (no `[gpu]` tag), consistent with prior cycles. The S1 commit `039ee7b`'s previously blocked `rust` run (31468346660) also re-ran green (15m54s), retroactively CI-verifying the audited tree. The authoritative merge gate (Coding Standards §6.2) is operative again; formal F7 closure is recorded by the S3 delta re-audit in §7.
+
 ---
 
 ## 7. Closure table (appended by S3 remediation)
