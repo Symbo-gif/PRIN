@@ -37,7 +37,7 @@ Acceptance criteria from session 0053 brief:
 | Format | `cargo fmt --all -- --check` | PASS |
 | Clippy | `cargo clippy -p prin-tensor --all-targets -- -D warnings` | PASS |
 | Workspace clippy | `cargo clippy --workspace --all-targets -- -D warnings` | PASS |
-| Workspace tests | `cargo test --workspace` | PASS — 540 tests (39 new in prin-tensor) |
+| Workspace tests | `cargo test --workspace` | PASS — 542 tests (41 new in prin-tensor, incl. 2 doctests) |
 | Rustdoc | `RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps` | PASS — 0 warnings |
 | Ruff | `ruff check python/ tests/ benchmarks/ tools/ parity/` | PASS |
 | Ruff format | `ruff format --check python/ tests/ benchmarks/ tools/ parity/` | PASS |
@@ -48,6 +48,7 @@ Acceptance criteria from session 0053 brief:
 
 ## Out-of-scope discoveries
 
-- No PRINet 3.0 `core/decomposition.py` reference code was found in the repository for direct parity comparison. CP-ALS and HOSVD are implemented from standard numerical linear algebra references. Rust-vs-PRINet 3.0 parity tests should be added in a future WP when the reference decomposition code is available or when golden corpus data is generated.
+- The PRINet 3.0 `core/decomposition.py` reference code is present in the repository archive (`DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/core/decomposition.py`) and was used to generate parity evidence in S3 (session 0055). The S1 claim that "no reference code was found" was incorrect; this was identified by the S2 audit (WP014-F1) and corrected during S3 remediation. Parity tests now live in `crates/prin-tensor/tests/parity_decomposition.rs`.
 - The CP-ALS uses a hand-written Gauss-Jordan matrix inverse for the normal equations. For large component counts, a faer-backed least-squares solver would be more numerically stable. This is a candidate for a future WP.
 - No PyO3 bindings for the tensor decompositions were added. Python bindings are a candidate for a future WP.
+- **API difference vs PRINet 3.0:** The 3.0 `PolyadicTensor` takes a single `rank` clamped to `min(shape)` for all modes; PRIN `hosvd` takes per-mode ranks clamped to `min(I_n, ∏_{k≠n} I_k)`. Document for the S4 Migration Guide.
