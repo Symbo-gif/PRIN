@@ -1,19 +1,76 @@
 //! Parity tests for tensor decompositions against PRINet 3.0.0 reference.
 //!
-//! These tests verify that the Rust implementation produces results consistent
-//! with the mathematical invariants of the PRINet 3.0 `PolyadicTensor` (HOSVD)
-//! and `CPDecomposition` (CP-ALS) at float64 precision.
+//! HOSVD is deterministic given its input (per-mode truncated SVD has no
+//! randomness), so `data/prinet_reference_hosvd.json` holds genuine
+//! cross-implementation reference output — the *reconstructed tensor* itself
+//! (not raw factors/core, which are sign-ambiguous per singular vector) —
+//! captured by running the archived PRINet 3.0 `PolyadicTensor` directly
+//! (`DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/core/decomposition.py`,
+//! torch float64) and diffed against the Rust `hosvd` reconstruction below
+//! (EA-003 E1-F1 remediation).
+//!
+//! CP-ALS is a stochastic iterative fit: PRINet initializes factors from
+//! `torch.randn` and PRIN from the project's own `Seed` (PCG64) stream, so
+//! the two implementations do not share an RNG and cannot be expected to
+//! land on the same local optimum's factor values for a general input.
+//! Genuine parity for CP-ALS is therefore verified via the mathematical
+//! invariants both implementations must satisfy regardless of RNG stream —
+//! reconstruction error, factor normalization, and seed reproducibility —
+//! not bit-exact factor comparison.
 //!
 //! The PRINet 3.0 reference uses a single rank clamped to `min(shape)` for all
 //! modes, while PRIN uses per-mode ranks clamped to `min(I_n, ∏_{k≠n} I_k)`.
-//! Parity is verified via reconstruction error, factor orthonormality, and
-//! normalization conventions rather than bit-exact factor comparison.
 //!
 //! Reference: `DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/core/decomposition.py`
 
 use ndarray::{ArrayD, IxDyn};
 use prin_dynamics::Seed;
 use prin_tensor::{cp_als, hosvd, CPDecomposition, PolyadicTensor};
+use serde_json::Value;
+
+const HOSVD_FIXTURE: &str = include_str!("data/prinet_reference_hosvd.json");
+
+/// Genuine Rust-vs-PRINet-3.0 differential parity: HOSVD reconstruction of
+/// the same fixed input tensor against the archived PRINet 3.0 `torch`
+/// reference, at ranks 2 (near-exact) and 1 (truncated, ~8.3e-2 error).
+#[test]
+fn parity_hosvd_matches_prinet_reference_reconstruction() {
+    let fixture: Value = serde_json::from_str(HOSVD_FIXTURE).expect("fixture parses");
+    let input_data: Vec<f64> = fixture["input_data"]
+        .as_array()
+        .expect("input_data array")
+        .iter()
+        .map(|v| v.as_f64().expect("f64"))
+        .collect();
+    let tensor = ArrayD::from_shape_vec(IxDyn(&[3, 4, 2]), input_data).unwrap();
+
+    for case in fixture["cases"].as_array().expect("cases array") {
+        let rank = case["rank"].as_u64().expect("rank") as usize;
+        let prinet_reconstructed: Vec<f64> = case["reconstructed"]
+            .as_array()
+            .expect("reconstructed array")
+            .iter()
+            .map(|v| v.as_f64().expect("f64"))
+            .collect();
+
+        // PRINet 3.0 clamps one scalar rank to min(shape) and applies it to
+        // every mode (`decomposition.py::PolyadicTensor.decompose`).
+        let tucker = hosvd(&tensor, Some(&[rank, rank, rank])).unwrap();
+        let rust_reconstructed = tucker.reconstruct();
+
+        for (i, (&prinet_val, &rust_val)) in prinet_reconstructed
+            .iter()
+            .zip(rust_reconstructed.iter())
+            .enumerate()
+        {
+            let diff = (prinet_val - rust_val).abs();
+            assert!(
+                diff < 1e-8,
+                "rank={rank} element {i}: PRINet 3.0={prinet_val:e}, PRIN={rust_val:e}, diff={diff:e} exceeds atol=1e-8"
+            );
+        }
+    }
+}
 
 /// HOSVD full-rank reconstruction is exact at rtol=1e-10.
 ///

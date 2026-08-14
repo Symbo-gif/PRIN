@@ -21,6 +21,12 @@
 //! Tucker reconstruction is exact when all mode ranks equal the mode dimensions
 //! (full-rank HOSVD). CP-ALS convergence is monitored via relative change in
 //! the reconstruction error `‖X − X̂‖_F`; non-convergence returns a typed error.
+//!
+//! This crate defines no `strict-checks`-gated code of its own: `hosvd` and
+//! `cp_als` validate finiteness of their inputs unconditionally (stricter by
+//! default) rather than behind an opt-in feature flag, so there is no
+//! `strict-checks` feature to declare here (contrast `prin-sim`, which
+//! forwards the flag to `prin-dynamics`).
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
