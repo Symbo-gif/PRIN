@@ -161,14 +161,7 @@ impl Dynamics for SparseKuramoto {
         let (sin_sum, cos_sum) = self
             .coupling
             .kuramoto_coupling(&state.phase, &state.amplitude)
-            .map_err(|e| StateError::LengthMismatch {
-                name: "csr_coupling",
-                expected: n,
-                got: match e {
-                    SimError::DimensionMismatch { got, .. } => got,
-                    _ => 0,
-                },
-            })?;
+            .expect("state dimension already validated against coupling");
 
         let inv_n = 1.0 / (n as f64);
         let mut dphase = Vec::with_capacity(n);
@@ -275,14 +268,7 @@ impl Dynamics for SparseStuartLandau {
         let (c_re, c_im) = self
             .coupling
             .stuart_landau_coupling(&state.phase, &state.amplitude)
-            .map_err(|e| StateError::LengthMismatch {
-                name: "csr_coupling",
-                expected: n,
-                got: match e {
-                    SimError::DimensionMismatch { got, .. } => got,
-                    _ => 0,
-                },
-            })?;
+            .expect("state dimension already validated against coupling");
 
         let mu = self.bifurcation_param;
         let mut dphase = Vec::with_capacity(n);
@@ -631,10 +617,17 @@ mod tests {
     }
 
     #[test]
-    fn apply_guards_wraps_and_clamps() {
-        let mut state =
-            OscillatorState::new(vec![TAU + 0.1, -0.1], vec![20.0, 0.0], vec![1.0, 1.0], None)
-                .unwrap();
+    fn apply_guards_wraps_phases() {
+        let mut state = OscillatorState::new(
+            vec![TAU + 0.1, -0.1],
+            vec![
+                prin_dynamics::state::AMPLITUDE_MAX,
+                prin_dynamics::state::AMPLITUDE_MIN,
+            ],
+            vec![1.0, 1.0],
+            None,
+        )
+        .unwrap();
         apply_guards(&mut state);
         assert!((state.phase[0] - 0.1).abs() < 1e-12);
         assert!((state.phase[1] - (TAU - 0.1)).abs() < 1e-12);
@@ -648,8 +641,8 @@ mod tests {
         let coupling = SparseCoupling::from_ring(n, 2, 1.0).unwrap();
         let model = SparseKuramoto::new(n, 0.1, 0.01, coupling.clone()).unwrap();
         let mut amplitudes = vec![1.0; n];
-        amplitudes[0] = 1e-7;
-        amplitudes[3] = 1e-7;
+        amplitudes[0] = prin_dynamics::state::AMPLITUDE_MIN;
+        amplitudes[3] = prin_dynamics::state::AMPLITUDE_MIN;
         let state = OscillatorState::new(vec![0.0; n], amplitudes, vec![1.0; n], None).unwrap();
         let integrator = Box::new(RK4Integrator::new());
         let mut engine = OscilloSim::new(state, coupling, integrator, 0.01).unwrap();

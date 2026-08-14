@@ -254,7 +254,9 @@ mod tests {
         assert_eq!(reduced.n_oscillators(), 2);
         assert_eq!(reduced.amplitude, vec![1.0, 2.0]);
 
-        let restored = result.restore(&reduced, &state, 0.0).unwrap();
+        let restored = result
+            .restore(&reduced, &state, prin_dynamics::state::AMPLITUDE_MIN)
+            .unwrap();
         assert_eq!(restored.n_oscillators(), 4);
         assert!((restored.amplitude[0] - prin_dynamics::state::AMPLITUDE_MIN).abs() < 1e-12);
         assert_eq!(restored.amplitude[1], 1.0);
@@ -384,7 +386,9 @@ mod tests {
         let strategy = PruningStrategy::AmplitudeThreshold(0.01);
         let result = strategy.select(&state).unwrap();
         let reduced = result.apply(&state).unwrap();
-        let restored = result.restore(&reduced, &state, 0.0).unwrap();
+        let restored = result
+            .restore(&reduced, &state, prin_dynamics::state::AMPLITUDE_MIN)
+            .unwrap();
         assert_eq!(restored.n_oscillators(), 4);
         assert!(restored.freq_band.is_some());
         assert_eq!(restored.freq_band.as_ref().unwrap(), &vec![10, 20, 30, 40]);

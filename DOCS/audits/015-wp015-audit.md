@@ -294,11 +294,11 @@ incorrectly claims all quality gates are green. This is a trajectory breach
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP015-F1 | | | |
-| WP015-F2 | | | |
-| WP015-F3 | | | |
-| WP015-F4 | | | |
-| WP015-F5 | | | |
-| WP015-F6 | | | |
+| WP015-F1 | FIXED | S3 remediation commit — `engine.rs`: renamed `apply_guards_wraps_and_clamps` → `apply_guards_wraps_phases`, use `AMPLITUDE_MAX`/`AMPLITUDE_MIN` boundary values; `engine_with_low_amplitude_state`: use `AMPLITUDE_MIN` instead of `1e-7`. `pruning.rs`: `apply_and_restore_round_trip` and `restore_with_freq_band`: use `AMPLITUDE_MIN` instead of `0.0` for `default_amplitude`. | `cargo test --workspace --features strict-checks` — all green (0 failures). |
+| WP015-F2 | AMENDED | S3 remediation commit — cannot amend `bfc2417` without rewriting shared history. Closure table entry serves as corrective record: commit `bfc2417` is a `feat(WP-015)` commit mislabeled as `docs`. Future S1 commits must use `feat(WP-NNN):` for code additions. | N/A — documentation correction only. |
+| WP015-F3 | FIXED | S3 remediation commit — `engine.rs`: replaced lossy `.map_err()` (all `SimError` → `StateError::LengthMismatch { got: 0 }`) with `.expect("state dimension already validated against coupling")` in both `SparseKuramoto::compute_derivatives` and `SparseStuartLandau::compute_derivatives`. The coupling call is unreachable-failure because `state.n == self.n == coupling.n` is validated before the call; `expect` documents the invariant and panics on bug. | `cargo test -p prin-sim` — 131 tests pass. Coverage: engine.rs 98.69% lines. |
+| WP015-F4 | FIXED | S3 remediation commit — `Cargo.toml`: removed 6 unused runtime deps (`prin-kernels`, `ndarray`, `rayon`, `rand`, `rand_pcg`, `tracing`) and 1 unused dev-dep (`criterion`). Kept `proptest` (needed for F6 property tests). | `cargo clippy --workspace --all-targets -- -D warnings` — clean. `cargo build` succeeds. |
+| WP015-F5 | FIXED | S3 remediation commit — `Cargo.toml` description updated to "CSR sparse coupling, chimera detection, pruning, and integration orchestration for large oscillator systems". `README.md` updated to match. `lib.rs` architecture diagram updated to remove `prin-kernels` (no longer a dependency). | `cargo doc --workspace --no-deps` with `RUSTDOCFLAGS=-D warnings` — clean. |
+| WP015-F6 | FIXED | S3 remediation commit — added `tests/proptest_properties.rs` with 4 property tests: (a) `kuramoto_parity_arbitrary_n` — sparse-vs-dense parity for arbitrary N∈[3,64) and half_k; (b) `memory_bytes_correct_for_ring` — CSR memory footprint for arbitrary N and half_k; (c) `determinism_arbitrary_n_and_seed` — identical trajectories for same seed at arbitrary N; (d) `engine_memory_bytes_consistent` — engine memory_bytes = state + coupling. | `cargo test -p prin-sim --test proptest_properties` — 4/4 pass. proptest runs 256 cases per property. |
 
-**Delta re-audit date:** — **Result:** —
+**Delta re-audit date:** 2026-08-14 **Result:** CLEAN

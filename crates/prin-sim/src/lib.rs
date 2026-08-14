@@ -19,8 +19,7 @@
 //! ```text
 //! prin-sim
 //! ├── prin-dynamics  (state, models, integrators, seed)
-//! ├── prin-metrics   (chimera, order, coherence)
-//! └── prin-kernels   (future GPU dispatch)
+//! └── prin-metrics   (chimera, order, coherence)
 //! ```
 //!
 //! The engine reuses `OscillatorState`, `StateDerivatives`, `Dynamics`,

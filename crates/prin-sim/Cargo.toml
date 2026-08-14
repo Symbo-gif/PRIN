@@ -1,6 +1,6 @@
 [package]
 name = "prin-sim"
-description = "PRIN OscilloSim engine: 1M+ oscillators, CSR sparse coupling, chimera detection, pruning, async pipelines, parallel parameter sweeps"
+description = "PRIN OscilloSim engine: CSR sparse coupling, chimera detection, pruning, and integration orchestration for large oscillator systems"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,18 +11,11 @@ repository.workspace = true
 [dependencies]
 prin-dynamics.workspace = true
 prin-metrics.workspace = true
-prin-kernels.workspace = true
-ndarray.workspace = true
 sprs.workspace = true
-rayon.workspace = true
-rand.workspace = true
-rand_pcg.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-tracing.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true
 approx.workspace = true
-criterion.workspace = true
