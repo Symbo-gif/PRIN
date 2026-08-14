@@ -11,6 +11,9 @@
 //!   mapping for dynamic system-size reduction.
 //! - [`chimera`] — chimera-state detection metrics integrated with the CSR
 //!   sparsity pattern as the spatial neighbor structure.
+//! - [`sweep`] — rayon-parallel parameter sweeps over coupling strength,
+//!   decay rate, and other axes with deterministic seeding and oscillation
+//!   detection.
 //!
 //! ## Architecture
 //!
@@ -47,9 +50,11 @@ pub mod csr_coupling;
 pub mod engine;
 pub mod error;
 pub mod pruning;
+pub mod sweep;
 
 pub use chimera::{compute_chimera_metrics, trajectory_chimera_metrics, ChimeraMetrics};
 pub use csr_coupling::SparseCoupling;
 pub use engine::{apply_guards, OscilloSim, SparseKuramoto, SparseStuartLandau, Trajectory};
 pub use error::SimError;
 pub use pruning::{PruningResult, PruningStrategy};
+pub use sweep::{detect_oscillation, run_sweep, SweepAxis, SweepConfig, SweepModel, SweepResult};

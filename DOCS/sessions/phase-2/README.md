@@ -23,7 +23,7 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0058 | WP-015 | S2 — Audit | [OscilloSim sparse simulation engine](0058-wp015-s2-oscillosim-sparse-simulation-engine.md) | COMPLETE |
 | 0059 | WP-015 | S3 — Remediation | [OscilloSim sparse simulation engine](0059-wp015-s3-oscillosim-sparse-simulation-engine.md) | COMPLETE |
 | 0060 | WP-015 | S4 — Documentation | [OscilloSim sparse simulation engine](0060-wp015-s4-oscillosim-sparse-simulation-engine.md) | COMPLETE |
-| 0061 | WP-016 | S1 — Coding | [Parallel sweeps, CPU optimization, and Phase 2 gate](0061-wp016-s1-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | READY |
+| 0061 | WP-016 | S1 — Coding | [Parallel sweeps, CPU optimization, and Phase 2 gate](0061-wp016-s1-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | COMPLETE |
 | 0062 | WP-016 | S2 — Audit | [Parallel sweeps, CPU optimization, and Phase 2 gate](0062-wp016-s2-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | PLANNED |
 | 0063 | WP-016 | S3 — Remediation | [Parallel sweeps, CPU optimization, and Phase 2 gate](0063-wp016-s3-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | PLANNED |
 | 0064 | WP-016 | S4 — Documentation | [Parallel sweeps, CPU optimization, and Phase 2 gate](0064-wp016-s4-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | PLANNED |

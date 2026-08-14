@@ -31,6 +31,7 @@ use prin_dynamics::state::{
     clamp_amplitude, wrap_phase, OscillatorState, StateDerivatives, StateError,
 };
 use prin_dynamics::Integrator;
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::csr_coupling::SparseCoupling;
@@ -164,15 +165,22 @@ impl Dynamics for SparseKuramoto {
             .expect("state dimension already validated against coupling");
 
         let inv_n = 1.0 / (n as f64);
-        let mut dphase = Vec::with_capacity(n);
-        let mut damplitude = Vec::with_capacity(n);
-        let mut dfrequency = Vec::with_capacity(n);
-
-        for i in 0..n {
-            dphase.push(state.frequency[i] + sin_sum[i]);
-            damplitude.push(-self.decay_rate * state.amplitude[i] + cos_sum[i]);
-            dfrequency.push(self.freq_adaptation_rate * sin_sum[i] * inv_n);
-        }
+        let dphase: Vec<f64> = state
+            .frequency
+            .par_iter()
+            .zip(sin_sum.par_iter())
+            .map(|(&f, &s)| f + s)
+            .collect();
+        let damplitude: Vec<f64> = state
+            .amplitude
+            .par_iter()
+            .zip(cos_sum.par_iter())
+            .map(|(&a, &c)| -self.decay_rate * a + c)
+            .collect();
+        let dfrequency: Vec<f64> = sin_sum
+            .par_iter()
+            .map(|&s| self.freq_adaptation_rate * s * inv_n)
+            .collect();
 
         StateDerivatives::new(dphase, damplitude, dfrequency)
     }
@@ -271,33 +279,35 @@ impl Dynamics for SparseStuartLandau {
             .expect("state dimension already validated against coupling");
 
         let mu = self.bifurcation_param;
-        let mut dphase = Vec::with_capacity(n);
-        let mut damplitude = Vec::with_capacity(n);
         let dfrequency = vec![0.0; n];
 
-        for i in 0..n {
-            let r_i = state.amplitude[i];
-            let phi_i = state.phase[i];
-            let omega_i = state.frequency[i];
+        let results: Vec<(f64, f64)> = (0..n)
+            .into_par_iter()
+            .map(|i| {
+                let r_i = state.amplitude[i];
+                let phi_i = state.phase[i];
+                let omega_i = state.frequency[i];
 
-            let z_re = r_i * phi_i.cos();
-            let z_im = r_i * phi_i.sin();
+                let z_re = r_i * phi_i.cos();
+                let z_im = r_i * phi_i.sin();
 
-            let dz_re = mu * z_re - omega_i * z_im - (r_i * r_i) * z_re + c_re[i];
-            let dz_im = mu * z_im + omega_i * z_re - (r_i * r_i) * z_im + c_im[i];
+                let dz_re = mu * z_re - omega_i * z_im - (r_i * r_i) * z_re + c_re[i];
+                let dz_im = mu * z_im + omega_i * z_re - (r_i * r_i) * z_im + c_im[i];
 
-            let rot_re = phi_i.cos();
-            let rot_im = -phi_i.sin();
-            let w_re = dz_re * rot_re - dz_im * rot_im;
-            let w_im = dz_re * rot_im + dz_im * rot_re;
+                let rot_re = phi_i.cos();
+                let rot_im = -phi_i.sin();
+                let w_re = dz_re * rot_re - dz_im * rot_im;
+                let w_im = dz_re * rot_im + dz_im * rot_re;
 
-            let dr = w_re;
-            let safe_r = r_i.max(1e-8);
-            let dphi = w_im / safe_r;
+                let dr = w_re;
+                let safe_r = r_i.max(1e-8);
+                let dphi = w_im / safe_r;
+                (dphi, dr)
+            })
+            .collect();
 
-            dphase.push(dphi);
-            damplitude.push(dr);
-        }
+        let dphase: Vec<f64> = results.par_iter().map(|&(dp, _)| dp).collect();
+        let damplitude: Vec<f64> = results.par_iter().map(|&(_, dr)| dr).collect();
 
         StateDerivatives::new(dphase, damplitude, dfrequency)
     }

@@ -27,6 +27,7 @@
 //!
 //! This is the key performance advantage: O(nnz) per step instead of O(N²).
 
+use rayon::prelude::*;
 use sprs::{CsMat, TriMat};
 
 use crate::error::SimError;
@@ -340,24 +341,44 @@ impl SparseCoupling {
             });
         }
 
-        let mut u = vec![0.0_f64; n];
-        let mut v = vec![0.0_f64; n];
-        for i in 0..n {
-            let (s, c) = phases[i].sin_cos();
-            u[i] = amplitudes[i] * s;
-            v[i] = amplitudes[i] * c;
-        }
+        let u: Vec<f64> = phases
+            .par_iter()
+            .zip(amplitudes.par_iter())
+            .map(|(&p, &a)| {
+                let (s, _c) = p.sin_cos();
+                a * s
+            })
+            .collect();
+        let v: Vec<f64> = phases
+            .par_iter()
+            .zip(amplitudes.par_iter())
+            .map(|(&p, &a)| {
+                let (_s, c) = p.sin_cos();
+                a * c
+            })
+            .collect();
 
-        let a = spmv(&self.matrix, &u);
-        let b = spmv(&self.matrix, &v);
+        let a_vec = spmv(&self.matrix, &u);
+        let b_vec = spmv(&self.matrix, &v);
 
-        let mut sin_sum = vec![0.0_f64; n];
-        let mut cos_sum = vec![0.0_f64; n];
-        for i in 0..n {
-            let (si, ci) = phases[i].sin_cos();
-            sin_sum[i] = ci * a[i] - si * b[i];
-            cos_sum[i] = ci * b[i] + si * a[i];
-        }
+        let sin_sum: Vec<f64> = phases
+            .par_iter()
+            .zip(a_vec.par_iter())
+            .zip(b_vec.par_iter())
+            .map(|((&phi, &a_val), &b_val)| {
+                let (si, ci) = phi.sin_cos();
+                ci * a_val - si * b_val
+            })
+            .collect();
+        let cos_sum: Vec<f64> = phases
+            .par_iter()
+            .zip(a_vec.par_iter())
+            .zip(b_vec.par_iter())
+            .map(|((&phi, &a_val), &b_val)| {
+                let (si, ci) = phi.sin_cos();
+                ci * b_val + si * a_val
+            })
+            .collect();
         Ok((sin_sum, cos_sum))
     }
 
@@ -395,25 +416,40 @@ impl SparseCoupling {
             });
         }
 
-        let mut z_re = vec![0.0_f64; n];
-        let mut z_im = vec![0.0_f64; n];
-        for i in 0..n {
-            let (s, c) = phases[i].sin_cos();
-            z_re[i] = amplitudes[i] * c;
-            z_im[i] = amplitudes[i] * s;
-        }
+        let z_re: Vec<f64> = phases
+            .par_iter()
+            .zip(amplitudes.par_iter())
+            .map(|(&p, &a)| {
+                let (_s, c) = p.sin_cos();
+                a * c
+            })
+            .collect();
+        let z_im: Vec<f64> = phases
+            .par_iter()
+            .zip(amplitudes.par_iter())
+            .map(|(&p, &a)| {
+                let (s, _c) = p.sin_cos();
+                a * s
+            })
+            .collect();
 
         let kz_re = spmv(&self.matrix, &z_re);
         let kz_im = spmv(&self.matrix, &z_im);
 
         let row_sums = row_sum(&self.matrix);
 
-        let mut c_re = vec![0.0_f64; n];
-        let mut c_im = vec![0.0_f64; n];
-        for i in 0..n {
-            c_re[i] = kz_re[i] - row_sums[i] * z_re[i];
-            c_im[i] = kz_im[i] - row_sums[i] * z_im[i];
-        }
+        let c_re: Vec<f64> = kz_re
+            .par_iter()
+            .zip(row_sums.par_iter())
+            .zip(z_re.par_iter())
+            .map(|((&kz, &rs), &zr)| kz - rs * zr)
+            .collect();
+        let c_im: Vec<f64> = kz_im
+            .par_iter()
+            .zip(row_sums.par_iter())
+            .zip(z_im.par_iter())
+            .map(|((&kz, &rs), &zi)| kz - rs * zi)
+            .collect();
         Ok((c_re, c_im))
     }
 
@@ -486,28 +522,45 @@ impl SparseCoupling {
 
 /// Sparse matrix–vector product `y = A · x` for a CSR matrix.
 ///
-/// Manual implementation to avoid importing `sprs::CsVec` and to keep the
-/// inner loop allocation-free.
+/// Uses rayon to parallelize the outer row loop via `par_bridge()` on the
+/// CSR outer iterator. Each row's dot product is independent. Results are
+/// placed by index to preserve ordering.
 fn spmv(mat: &CsMat<f64>, x: &[f64]) -> Vec<f64> {
     let n = mat.rows();
     let mut y = vec![0.0_f64; n];
-    for (i, row) in mat.outer_iterator().enumerate() {
-        let mut acc = 0.0;
-        for (j, &val) in row.iter() {
-            acc += val * x[j];
-        }
-        y[i] = acc;
-        let _ = i;
+    let rows: Vec<_> = mat
+        .outer_iterator()
+        .enumerate()
+        .par_bridge()
+        .map(|(i, row)| {
+            let mut acc = 0.0;
+            for (j, &val) in row.iter() {
+                acc += val * x[j];
+            }
+            (i, acc)
+        })
+        .collect();
+    for (i, val) in rows {
+        y[i] = val;
     }
     y
 }
 
 /// Compute the row-sum vector of a CSR matrix.
+///
+/// Uses rayon to parallelize the outer row loop via `par_bridge()`.
+/// Results are placed by index to preserve ordering.
 fn row_sum(mat: &CsMat<f64>) -> Vec<f64> {
     let n = mat.rows();
     let mut sums = vec![0.0_f64; n];
-    for (i, row) in mat.outer_iterator().enumerate() {
-        sums[i] = row.iter().map(|(_, &v)| v).sum();
+    let rows: Vec<_> = mat
+        .outer_iterator()
+        .enumerate()
+        .par_bridge()
+        .map(|(i, row)| (i, row.iter().map(|(_, &v)| v).sum()))
+        .collect();
+    for (i, val) in rows {
+        sums[i] = val;
     }
     sums
 }

@@ -2961,9 +2961,11 @@ name = "prin-sim"
 version = "0.1.0-alpha.1"
 dependencies = [
  "approx 0.5.1",
+ "criterion",
  "prin-dynamics",
  "prin-metrics",
  "proptest",
+ "rayon",
  "serde",
  "serde_json",
  "sprs",

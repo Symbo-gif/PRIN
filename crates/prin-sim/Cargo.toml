@@ -12,6 +12,7 @@ repository.workspace = true
 prin-dynamics.workspace = true
 prin-metrics.workspace = true
 sprs.workspace = true
+rayon.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
@@ -19,3 +20,8 @@ thiserror.workspace = true
 [dev-dependencies]
 proptest.workspace = true
 approx.workspace = true
+criterion.workspace = true
+
+[[bench]]
+name = "sweep_bench"
+harness = false
