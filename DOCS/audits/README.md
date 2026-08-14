@@ -69,6 +69,9 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   simulation engine" audit (`FAIL`); six findings (F1 D1, F2–F3 D2, F4–F6 D3)
   resolved in S3 (five fixed, one amended #WP015-F2) with a CLEAN delta
   re-audit.
+- [`016-wp016-audit.md`](016-wp016-audit.md) — WP-016 "Parallel sweeps, CPU
+  optimization, and Phase 2 gate" audit (`FAIL`); one D1 finding (F1), three
+  D2 findings (F2–F4), and three D3 findings (F5–F7); S3 remediation in progress.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.
