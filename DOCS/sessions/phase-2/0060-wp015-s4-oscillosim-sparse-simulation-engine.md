@@ -1,6 +1,6 @@
 # Session 0060 — WP-015 S4: Documentation — OscilloSim sparse simulation engine
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 2 — Advanced numerics and simulation  
 **Execution unit:** WP-015  
 **Session type:** S4 — Documentation  

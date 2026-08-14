@@ -65,6 +65,10 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   audit (`FAIL`); seven findings (F1 D1, F2–F4 D2, F5/F7 D3, F6 D4) resolved
   in S3 with a CLEAN delta re-audit. Includes the GitHub Actions billing-block
   restoration evidence recorded in F7.
+- [`015-wp015-audit.md`](015-wp015-audit.md) — WP-015 "OscilloSim sparse
+  simulation engine" audit (`FAIL`); six findings (F1 D1, F2–F3 D2, F4–F6 D3)
+  resolved in S3 (five fixed, one amended #WP015-F2) with a CLEAN delta
+  re-audit.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

@@ -48,6 +48,9 @@ at the top level until they are folded into the final campaign archive in Phase 
   to the S2 audit for Tucker/HOSVD and CP/PARAFAC tensor decompositions.
   Updated in S3 to correct the reference-code claim and to record the
   single-rank vs per-mode-rank API mapping for the S4 Migration Guide.
+- [`0057-wp015-s1-handoff.md`](0057-wp015-s1-handoff.md) — WP-015 S1 handoff
+  to the S2 audit for the OscilloSim sparse simulation engine (`prin-sim`, CSR
+  coupling, pruning, chimera integration, parity).
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
 [`../sessions/phase-1/wp009-s1-handoff-note.md`](../sessions/phase-1/wp009-s1-handoff-note.md)

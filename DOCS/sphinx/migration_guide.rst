@@ -209,3 +209,33 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   orthonormality, shapes, normalization, seed reproducibility, and round-trip at
   ``rtol = 1e-10`` (float64, single-runtime). No Python bindings are exposed
   yet.
+- ``prin-sim`` OscilloSim sparse simulation engine (WP-015) — Rust
+  ``SparseCoupling``, ``OscilloSim``, ``SparseKuramoto``, ``SparseStuartLandau``,
+  ``PruningStrategy``, ``PruningResult``, and ``ChimeraMetrics`` rebuilding PRINet
+  3.0 ``utils/oscillosim.py`` and ``core/propagation/sweep_utils.py``. All sparse
+  coupling and engine numerics run in ``f64``.
+
+  **Sparse matrix representation:** PRIN uses a strict Compressed Sparse Row
+  (CSR) storage format (``SparseCoupling``) with :math:`O(\mathrm{nnz})` SpMV
+  evaluation, eliminating dense :math:`N \times N` matrix allocations. Kuramoto
+  coupling exploits trigonometric decomposition :math:`\sin(\theta_j - \theta_i)
+  = \sin\theta_j \cos\theta_i - \cos\theta_j \sin\theta_i`, computing coupling
+  torques in two sparse matrix-vector products.
+
+  **Dynamic pruning:** Dynamic system-size reduction is implemented via
+  ``PruningStrategy`` (amplitude thresholding) and ``PruningResult``, which tracks
+  explicit bidirectional index mappings (``pruned_to_original``,
+  ``original_to_pruned``) and supports lossless and sub-network state restoration
+  with configurable ``default_amplitude``.
+
+  **Parity and invariants:** Verified against dense dynamics models
+  (``KuramotoOscillator``, ``StuartLandauOscillator``) at :math:`N \in \{8, 64, 256\}`
+  for Kuramoto and :math:`N \in \{8, 16\}` for Stuart–Landau at tolerances
+  ``rtol = 1e-10`` to ``1e-12`` (21 parity integration tests in
+  ``crates/prin-sim/tests/parity_sparse_vs_dense.rs``). Property-tested across
+  arbitrary :math:`N \in [3, 64)` and seed combinations via ``proptest`` (4
+  property tests in ``crates/prin-sim/tests/proptest_properties.rs``). Memory
+  scaling is measured and bounded (:math:`<5\,\mathrm{MB}` for :math:`N = 10{,}000`,
+  :math:`\mathrm{nnz} = 200{,}000`). Python bindings and parallel parameter sweeps
+  are deferred to WP-016.
+

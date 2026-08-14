@@ -9,6 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- WP-015 OscilloSim sparse simulation engine in `prin-sim` (Phase 2, fourth WP):
+  - `SparseCoupling` — Compressed Sparse Row (CSR) matrix storage format for
+    sparse coupling topologies (`AllToAll`, `Ring`, `SmallWorld`) with $K/\mathrm{degree}$
+    normalization, input dimension/finite checks, and memory footprint tracking
+    (`memory_bytes()`).
+  - `SparseKuramoto` and `SparseStuartLandau` — sparse dynamics models implementing
+    `Dynamics` via $O(\mathrm{nnz})$ SpMV. Kuramoto coupling uses trigonometric
+    decomposition ($\sin(\theta_j - \theta_i) = \sin\theta_j \cos\theta_i - \cos\theta_j \sin\theta_i$)
+    to compute coupling in two SpMV products; Stuart–Landau uses diffusive SpMV.
+  - `OscilloSim` — simulation engine coordinating `OscillatorState`, sparse dynamics,
+    reusable buffer management, numerical guards (`apply_guards`), single-stepping
+    (`step()`), fixed-step integration (`integrate_fixed`), and trajectory recording.
+  - `PruningStrategy` and `PruningResult` — amplitude-threshold dynamic oscillator
+    pruning with bidirectional index mappings (`pruned_to_original`,
+    `original_to_pruned`) and state restoration (`restore()`) with configurable
+    `default_amplitude`.
+  - `ChimeraMetrics`, `compute_chimera_metrics`, and `trajectory_chimera_metrics` —
+    chimera-state analysis integrated with the CSR sparsity pattern as spatial
+    neighborhoods.
+  - `SimError` typed enum (`DimensionMismatch`, `IndexOutOfBounds`, `EmptySystem`,
+    `InvalidParameter`, `NonFiniteValue`, `InvalidTolerance`, `StepFailed`,
+    `PruningFailed`, `InvalidKnn`, `StateError`).
+  - 21 Rust-native parity integration tests in
+    `crates/prin-sim/tests/parity_sparse_vs_dense.rs` comparing sparse vs dense
+    Kuramoto and Stuart–Landau models at $N \in \{8, 16, 64, 256\}$ at
+    $\mathrm{rtol} = 10^{-10}$ to $10^{-12}$, plus large-$N$ memory scaling tests
+    ($N = 10{,}000$, $\mathrm{nnz} = 200{,}000$, memory $< 5\,\mathrm{MB}$).
+  - 4 property tests in `crates/prin-sim/tests/proptest_properties.rs` verifying
+    sparse-vs-dense Kuramoto parity for arbitrary $N \in [3, 64)$ and ring degree,
+    memory byte calculation correctness, seed-based determinism, and engine memory
+    accounting.
+  - S3 fixes for audit findings WP015-F1 (D1) through WP015-F6 (D3), achieving 0
+    failures under `--features strict-checks`, clean dependencies, accurate crate
+    metadata, and property test verification.
+  - No Python bindings in this WP; PyO3 exposure and parallel sweeps are in WP-016.
 - WP-014 Tensor decompositions in `prin-tensor` (Phase 2, third WP):
   - `PolyadicTensor`, `hosvd()` — Tucker/HOSVD via `faer` SVD with per-mode
     rank truncation. Factor matrices are left singular vectors of mode-n

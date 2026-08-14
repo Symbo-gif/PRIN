@@ -30,5 +30,7 @@ starts by reading it (Development Workflow Standards §6).
   WP-013 declaration.
 - [`013-project-state.md`](013-project-state.md) — WP-013 S4 closure and
   WP-014 declaration.
-- [`014-project-state.md`](014-project-state.md) — latest report; WP-014 S4
-  closure and WP-015 declaration.
+- [`014-project-state.md`](014-project-state.md) — WP-014 S4 closure and
+  WP-015 declaration.
+- [`015-project-state.md`](015-project-state.md) — latest report; WP-015 S4
+  closure and WP-016 declaration.
