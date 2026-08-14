@@ -280,12 +280,7 @@ pub fn cp_als(
         weights = vec![1.0_f64; r];
         for factor in factors.iter_mut() {
             for col in 0..r {
-                let norm: f64 = factor
-                    .column(col)
-                    .iter()
-                    .map(|x| x * x)
-                    .sum::<f64>()
-                    .sqrt();
+                let norm: f64 = factor.column(col).iter().map(|x| x * x).sum::<f64>().sqrt();
                 let clamped = norm.max(1e-12);
                 weights[col] *= clamped;
                 for row in 0..factor.nrows() {
@@ -611,10 +606,7 @@ mod tests {
     #[test]
     fn cp_decomposition_accessors() {
         let weights = vec![1.0, 2.0, 3.0];
-        let factors = vec![
-            ndarray::Array2::ones((4, 3)),
-            ndarray::Array2::ones((5, 3)),
-        ];
+        let factors = vec![ndarray::Array2::ones((4, 3)), ndarray::Array2::ones((5, 3))];
         let cp = CPDecomposition::new(weights, factors).unwrap();
         assert_eq!(cp.n_components(), 3);
         assert_eq!(cp.ndim(), 2);

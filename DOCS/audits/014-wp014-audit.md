@@ -290,12 +290,27 @@ After all D1–D2 findings are addressed (and F5/F7 resolved by code, amendment,
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP014-F1 | | | |
-| WP014-F2 | | | |
-| WP014-F3 | | | |
-| WP014-F4 | | | |
-| WP014-F5 | | | |
-| WP014-F6 | | | |
-| WP014-F7 | | | |
+| WP014-F1 | FIXED | `0a2c95d` | 9 parity integration tests in `crates/prin-tensor/tests/parity_decomposition.rs` verify reconstruction error, orthonormality, normalization convention, seed reproducibility, and round-trip at rtol=1e-10. Handoff corrected. |
+| WP014-F2 | FIXED | `72898f9`..`f72d6d1` | Each remediation landed as its own finding-ID commit. `039ee7b` content verified matching audited state (clean tree at S2 entry). `faer` rationale documented in F5 commit message and cp.rs rustdoc. |
+| WP014-F3 | FIXED | `72898f9` | Rank validation now checks `R_n ≤ min(I_n, ∏_{k≠n} I_k)`. Regression tests: `hosvd_accepts_rank_at_unfolding_bound`, `hosvd_rejects_rank_above_unfolding_bound`. Shape (10,2,2) ranks [10,2,2] now returns `InvalidRank` instead of panicking. |
+| WP014-F4 | FIXED | `f72d6d1` | 8 new unit tests cover `CPDecomposition::new` validation, accessors, `InvalidMaxIter`, `InsufficientModes`, `NonConvergence`, and singular `invert_matrix`. cp.rs coverage: 86.76% → 96.30% lines. |
+| WP014-F5 | FIXED | `d377836` | Convergence changed to error-based `‖X − X̂‖_F` relative change. All-factor normalization with 1e-12 clamp inside ALS loop. `InvalidMaxIter` variant added. Init distribution delta documented in rustdoc. |
+| WP014-F6 | FIXED | `ca52af6` | lib.rs/README parity claims corrected. Dead `invert_permutation` removed. `flat_to_multi` de-duplicated (cp.rs → utils.rs). `InvalidMode` variant added; `mode_unfold` corrected. Handoff test count fixed. |
+| WP014-F7 | FIXED | `b9e03af` (pre-S3) | GitHub Actions billing block resolved 2026-08-14. All gated workflows green on `ceaca5c`. S3 head CI verification pending maintainer push. |
 
-**Delta re-audit date:** — — **Result:** —
+**Delta re-audit date:** 2026-08-14 — **Result:** CLEAN
+
+### Delta re-audit checklist (A1–A10)
+
+| Check | Result | Notes |
+|---|---|---|
+| A1 WP scope conformance | ✅ | All declared scope present; parity tests now implemented; non-goals respected |
+| A2 Plan/architecture conformance | ✅ | Crate layering respected; `faer` rationale documented; no Python numerics |
+| A3 Tests + coverage | ✅ | 47 unit + 9 parity + 2 doctests in prin-tensor; cp.rs 96.30%, all modules ≥95% |
+| A4 Numerical parity | ✅ | 9 parity tests verify reconstruction, orthonormality, normalization, seed reproducibility |
+| A5 Quality gates | ✅ | fmt, clippy (default + strict-checks), workspace tests, rustdoc, ruff, mypy, pytest all green |
+| A6 Security | ✅ | `#![forbid(unsafe_code)]`; cargo audit unchanged (inherited paste only); no new deps |
+| A7 Doc coverage | ✅ | All public items documented; convergence description corrected; parity claims accurate |
+| A8 Repository hygiene | ✅ | No dead code; no duplicate helpers; error variants semantically correct |
+| A9 CI status | ✅ | GitHub Actions billing resolved; local gates all green; CI re-verification on push |
+| A10 Artefact trail | ✅ | Each finding has its own commit; closure table complete; handoff corrected |

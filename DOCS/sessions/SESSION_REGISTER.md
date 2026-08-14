@@ -80,8 +80,8 @@ no planned session is renumbered by an executive audit (plan amendment #15).
 | 0051 | 2 | WP-013 | S3 — Remediation | [Continuous band networks and temporal propagation](phase-2/0051-wp013-s3-continuous-band-networks-and-temporal-propagation.md) | COMPLETE |
 | 0052 | 2 | WP-013 | S4 — Documentation | [Continuous band networks and temporal propagation](phase-2/0052-wp013-s4-continuous-band-networks-and-temporal-propagation.md) | COMPLETE |
 | 0053 | 2 | WP-014 | S1 — Coding | [Tensor decompositions](phase-2/0053-wp014-s1-tensor-decompositions.md) | COMPLETE |
-| 0054 | 2 | WP-014 | S2 — Audit | [Tensor decompositions](phase-2/0054-wp014-s2-tensor-decompositions.md) | PLANNED |
-| 0055 | 2 | WP-014 | S3 — Remediation | [Tensor decompositions](phase-2/0055-wp014-s3-tensor-decompositions.md) | PLANNED |
+| 0054 | 2 | WP-014 | S2 — Audit | [Tensor decompositions](phase-2/0054-wp014-s2-tensor-decompositions.md) | COMPLETE |
+| 0055 | 2 | WP-014 | S3 — Remediation | [Tensor decompositions](phase-2/0055-wp014-s3-tensor-decompositions.md) | COMPLETE |
 | 0056 | 2 | WP-014 | S4 — Documentation | [Tensor decompositions](phase-2/0056-wp014-s4-tensor-decompositions.md) | PLANNED |
 | 0057 | 2 | WP-015 | S1 — Coding | [OscilloSim sparse simulation engine](phase-2/0057-wp015-s1-oscillosim-sparse-simulation-engine.md) | PLANNED |
 | 0058 | 2 | WP-015 | S2 — Audit | [OscilloSim sparse simulation engine](phase-2/0058-wp015-s2-oscillosim-sparse-simulation-engine.md) | PLANNED |
