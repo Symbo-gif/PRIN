@@ -26,15 +26,17 @@
 //! # }
 //! ```
 
+use std::sync::Arc;
+
 use prin_dynamics::models::Dynamics;
 use prin_dynamics::state::{
     clamp_amplitude, wrap_phase, OscillatorState, StateDerivatives, StateError,
 };
 use prin_dynamics::Integrator;
-use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::csr_coupling::SparseCoupling;
+use crate::dispatch::{map_dispatch, zip_map_dispatch};
 use crate::error::SimError;
 
 /// Validate that `dt` is finite and positive.
@@ -68,11 +70,16 @@ pub struct SparseKuramoto {
     n: usize,
     decay_rate: f64,
     freq_adaptation_rate: f64,
-    coupling: SparseCoupling,
+    coupling: Arc<SparseCoupling>,
 }
 
 impl SparseKuramoto {
     /// Create a sparse Kuramoto model.
+    ///
+    /// `coupling` accepts either an owned [`SparseCoupling`] or an
+    /// `Arc<SparseCoupling>`; passing the same `Arc` used by an [`OscilloSim`]
+    /// (e.g. via [`OscilloSim::coupling_arc`]) shares the CSR storage instead
+    /// of deep-cloning it (WP016-F7).
     ///
     /// # Errors
     ///
@@ -82,8 +89,9 @@ impl SparseKuramoto {
         n: usize,
         decay_rate: f64,
         freq_adaptation_rate: f64,
-        coupling: SparseCoupling,
+        coupling: impl Into<Arc<SparseCoupling>>,
     ) -> Result<Self, SimError> {
+        let coupling = coupling.into();
         if n == 0 {
             return Err(SimError::EmptyPopulation { n: 0 });
         }
@@ -165,22 +173,12 @@ impl Dynamics for SparseKuramoto {
             .expect("state dimension already validated against coupling");
 
         let inv_n = 1.0 / (n as f64);
-        let dphase: Vec<f64> = state
-            .frequency
-            .par_iter()
-            .zip(sin_sum.par_iter())
-            .map(|(&f, &s)| f + s)
-            .collect();
-        let damplitude: Vec<f64> = state
-            .amplitude
-            .par_iter()
-            .zip(cos_sum.par_iter())
-            .map(|(&a, &c)| -self.decay_rate * a + c)
-            .collect();
-        let dfrequency: Vec<f64> = sin_sum
-            .par_iter()
-            .map(|&s| self.freq_adaptation_rate * s * inv_n)
-            .collect();
+        let dphase: Vec<f64> = zip_map_dispatch(&state.frequency, &sin_sum, |&f, &s| f + s);
+        let damplitude: Vec<f64> = zip_map_dispatch(&state.amplitude, &cos_sum, |&a, &c| {
+            -self.decay_rate * a + c
+        });
+        let dfrequency: Vec<f64> =
+            map_dispatch(&sin_sum, |&s| self.freq_adaptation_rate * s * inv_n);
 
         StateDerivatives::new(dphase, damplitude, dfrequency)
     }
@@ -195,11 +193,16 @@ impl Dynamics for SparseKuramoto {
 pub struct SparseStuartLandau {
     n: usize,
     bifurcation_param: f64,
-    coupling: SparseCoupling,
+    coupling: Arc<SparseCoupling>,
 }
 
 impl SparseStuartLandau {
     /// Create a sparse Stuart–Landau model.
+    ///
+    /// `coupling` accepts either an owned [`SparseCoupling`] or an
+    /// `Arc<SparseCoupling>`; passing the same `Arc` used by an [`OscilloSim`]
+    /// (e.g. via [`OscilloSim::coupling_arc`]) shares the CSR storage instead
+    /// of deep-cloning it (WP016-F7).
     ///
     /// # Errors
     ///
@@ -208,8 +211,9 @@ impl SparseStuartLandau {
     pub fn new(
         n: usize,
         bifurcation_param: f64,
-        coupling: SparseCoupling,
+        coupling: impl Into<Arc<SparseCoupling>>,
     ) -> Result<Self, SimError> {
+        let coupling = coupling.into();
         if n == 0 {
             return Err(SimError::EmptyPopulation { n: 0 });
         }
@@ -281,33 +285,35 @@ impl Dynamics for SparseStuartLandau {
         let mu = self.bifurcation_param;
         let dfrequency = vec![0.0; n];
 
-        let results: Vec<(f64, f64)> = (0..n)
-            .into_par_iter()
-            .map(|i| {
-                let r_i = state.amplitude[i];
-                let phi_i = state.phase[i];
-                let omega_i = state.frequency[i];
-
-                let z_re = r_i * phi_i.cos();
-                let z_im = r_i * phi_i.sin();
-
-                let dz_re = mu * z_re - omega_i * z_im - (r_i * r_i) * z_re + c_re[i];
-                let dz_im = mu * z_im + omega_i * z_re - (r_i * r_i) * z_im + c_im[i];
-
-                let rot_re = phi_i.cos();
-                let rot_im = -phi_i.sin();
-                let w_re = dz_re * rot_re - dz_im * rot_im;
-                let w_im = dz_re * rot_im + dz_im * rot_re;
-
-                let dr = w_re;
-                let safe_r = r_i.max(1e-8);
-                let dphi = w_im / safe_r;
-                (dphi, dr)
-            })
+        let inputs: Vec<(f64, f64, f64, f64, f64)> = state
+            .amplitude
+            .iter()
+            .zip(state.phase.iter())
+            .zip(state.frequency.iter())
+            .zip(c_re.iter())
+            .zip(c_im.iter())
+            .map(|((((&r, &phi), &omega), &cr), &ci)| (r, phi, omega, cr, ci))
             .collect();
 
-        let dphase: Vec<f64> = results.par_iter().map(|&(dp, _)| dp).collect();
-        let damplitude: Vec<f64> = results.par_iter().map(|&(_, dr)| dr).collect();
+        let results: Vec<(f64, f64)> = map_dispatch(&inputs, |&(r_i, phi_i, omega_i, cr, ci)| {
+            let z_re = r_i * phi_i.cos();
+            let z_im = r_i * phi_i.sin();
+
+            let dz_re = mu * z_re - omega_i * z_im - (r_i * r_i) * z_re + cr;
+            let dz_im = mu * z_im + omega_i * z_re - (r_i * r_i) * z_im + ci;
+
+            let rot_re = phi_i.cos();
+            let rot_im = -phi_i.sin();
+            let w_re = dz_re * rot_re - dz_im * rot_im;
+            let w_im = dz_re * rot_im + dz_im * rot_re;
+
+            let dr = w_re;
+            let safe_r = r_i.max(1e-8);
+            let dphi = w_im / safe_r;
+            (dphi, dr)
+        });
+
+        let (dphase, damplitude): (Vec<f64>, Vec<f64>) = results.into_iter().unzip();
 
         StateDerivatives::new(dphase, damplitude, dfrequency)
     }
@@ -378,7 +384,7 @@ impl Trajectory {
 /// no hidden randomness.
 pub struct OscilloSim {
     state: OscillatorState,
-    coupling: SparseCoupling,
+    coupling: Arc<SparseCoupling>,
     integrator: Box<dyn Integrator>,
     dt: f64,
 }
@@ -386,16 +392,24 @@ pub struct OscilloSim {
 impl OscilloSim {
     /// Create a new simulation engine.
     ///
+    /// `coupling` accepts either an owned [`SparseCoupling`] or an
+    /// `Arc<SparseCoupling>`. To share the same coupling matrix with a
+    /// [`SparseKuramoto`]/[`SparseStuartLandau`] model without deep-cloning
+    /// the CSR storage (WP016-F7), construct an `Arc<SparseCoupling>` once,
+    /// pass it here, and pass [`OscilloSim::coupling_arc`] (or another
+    /// `Arc::clone` of the same value) to the model constructor.
+    ///
     /// # Errors
     ///
     /// Returns [`SimError`] for an invalid timestep, empty population, or
     /// pruning validation failure.
     pub fn new(
         state: OscillatorState,
-        coupling: SparseCoupling,
+        coupling: impl Into<Arc<SparseCoupling>>,
         integrator: Box<dyn Integrator>,
         dt: f64,
     ) -> Result<Self, SimError> {
+        let coupling = coupling.into();
         if state.n_oscillators() == 0 {
             return Err(SimError::EmptyPopulation { n: 0 });
         }
@@ -440,6 +454,13 @@ impl OscilloSim {
     /// Borrow the coupling matrix.
     pub fn coupling(&self) -> &SparseCoupling {
         &self.coupling
+    }
+
+    /// Clone the shared coupling handle (O(1) refcount bump, no CSR data
+    /// copy) for passing to a [`SparseKuramoto`]/[`SparseStuartLandau`]
+    /// model constructor (WP016-F7).
+    pub fn coupling_arc(&self) -> Arc<SparseCoupling> {
+        Arc::clone(&self.coupling)
     }
 
     /// Advance the simulation by one timestep.

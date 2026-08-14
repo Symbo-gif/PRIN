@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
 
 use prin_dynamics::state::OscillatorState;
 use prin_dynamics::{Integrator, RK4Integrator, Seed};
+use prin_metrics::order::kuramoto_order_parameter;
 
 use crate::csr_coupling::SparseCoupling;
 use crate::engine::{OscilloSim, SparseKuramoto, SparseStuartLandau};
@@ -184,7 +185,12 @@ pub struct SweepResult {
 ///
 /// Computes the windowed variance of the last `window` values. If the variance
 /// exceeds `threshold`, oscillation is flagged. Matches PRINet 3.0
-/// `detect_oscillation`.
+/// `core/propagation/sweep_utils.py::detect_oscillation` (parity-tested in
+/// `tests/parity_detect_oscillation.rs`), with one intentional divergence:
+/// PRINet 3.0's `r_history[-window:]` slices the *entire* list when
+/// `window == 0` (Python's `-0 == 0` footgun), whereas this implementation
+/// treats "inspect zero recent values" as "no data to inspect" and returns
+/// `false`. `window == 0` is never used by any call site in this crate.
 ///
 /// # Arguments
 ///
@@ -211,18 +217,6 @@ pub fn detect_oscillation(r_history: &[f64], window: usize, threshold: f64) -> b
     let mean = recent.iter().sum::<f64>() / recent.len() as f64;
     let var = recent.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / recent.len() as f64;
     var > threshold
-}
-
-/// Compute the Kuramoto order parameter for a phase slice.
-fn order_parameter(phase: &[f64]) -> f64 {
-    let n_inv = 1.0 / phase.len() as f64;
-    let (sum_sin, sum_cos) = phase.iter().fold((0.0_f64, 0.0_f64), |(ss, sc), &p| {
-        let (s, c) = p.sin_cos();
-        (ss + s, sc + c)
-    });
-    let z_re = sum_cos * n_inv;
-    let z_im = sum_sin * n_inv;
-    (z_re * z_re + z_im * z_im).sqrt().min(1.0)
 }
 
 /// Expand the Cartesian product of axis values at a given flat index.
@@ -312,32 +306,33 @@ fn run_single_config(config: &SweepConfig, config_idx: usize) -> Result<SweepRes
 
     let mut engine = OscilloSim::new(state, coupling, integrator, config.dt)?;
 
+    // Share the CSR coupling storage between the engine and the model via
+    // `Arc::clone` (O(1)) instead of deep-cloning the matrix (WP016-F7).
     let model_result = match config.model {
         SweepModel::Kuramoto => {
             let decay = get_param(&params, "decay_rate", 0.1);
             let gamma = get_param(&params, "freq_adaptation_rate", 0.01);
-            let model = SparseKuramoto::new(
-                config.n_oscillators,
-                decay,
-                gamma,
-                engine.coupling().clone(),
-            )?;
+            let model =
+                SparseKuramoto::new(config.n_oscillators, decay, gamma, engine.coupling_arc())?;
             engine.run(&model, config.n_steps, config.record_trajectory)
         }
         SweepModel::StuartLandau => {
             let mu = get_param(&params, "bifurcation_param", 1.0);
-            let model =
-                SparseStuartLandau::new(config.n_oscillators, mu, engine.coupling().clone())?;
+            let model = SparseStuartLandau::new(config.n_oscillators, mu, engine.coupling_arc())?;
             engine.run(&model, config.n_steps, config.record_trajectory)
         }
     };
 
     let (final_state, trajectory) = model_result?;
 
-    let final_r = order_parameter(&final_state.phase);
+    let final_r = kuramoto_order_parameter(&final_state.phase)?;
 
     let (mean_r, osc_detected) = if let Some(ref traj) = trajectory {
-        let r_series: Vec<f64> = traj.phases.iter().map(|p| order_parameter(p)).collect();
+        let r_series: Vec<f64> = traj
+            .phases
+            .iter()
+            .map(|p| kuramoto_order_parameter(p))
+            .collect::<Result<Vec<f64>, _>>()?;
         let mean = r_series.iter().sum::<f64>() / r_series.len() as f64;
         let osc = detect_oscillation(&r_series, 20, 0.01);
         (Some(mean), osc)
@@ -588,23 +583,6 @@ mod tests {
         let v3 = expand_config(&axes, 3);
         assert!((v3[0] - 1.0).abs() < 1e-12);
         assert!((v3[1] - 0.1).abs() < 1e-12);
-    }
-
-    #[test]
-    fn order_parameter_synchronized() {
-        let phase = vec![0.5_f64; 100];
-        let r = order_parameter(&phase);
-        assert!((r - 1.0).abs() < 1e-12);
-    }
-
-    #[test]
-    fn order_parameter_uniform_spread() {
-        let n = 1000;
-        let phase: Vec<f64> = (0..n)
-            .map(|i| 2.0 * std::f64::consts::PI * i as f64 / n as f64)
-            .collect();
-        let r = order_parameter(&phase);
-        assert!(r < 0.01, "uniform spread should have r ≈ 0, got {r}");
     }
 
     #[test]

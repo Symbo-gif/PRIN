@@ -37,16 +37,31 @@
 //! inherited from `prin-dynamics`. The deterministic `Seed` flow is preserved:
 //! no hidden RNG enters the simulation.
 //!
+//! ## CPU dispatch
+//!
+//! The hot loops in [`csr_coupling`] and [`engine`] (SpMV, row-sum, and
+//! per-element derivative combination) run through the private `dispatch`
+//! module's size-gated helpers: a sequential CPU reference path below a
+//! tuned element-count threshold, and a `rayon`-parallel path at or above
+//! it. `SparseKuramoto`, `SparseStuartLandau`, and `OscilloSim` share their
+//! `SparseCoupling` via `Arc` rather than deep-cloning the CSR storage
+//! (see `OscilloSim::coupling_arc`).
+//!
 //! ## Non-goals (this work package)
 //!
-//! Parameter sweeps, GPU dispatch, and final 1M-oscillator performance claims
-//! are deferred to later work packages.
+//! GPU dispatch (Phase 3) and final scientific-campaign conclusions
+//! (Phase 7) remain out of scope. `crates/prin-py` sweep/engine bindings and
+//! `crates/prin-kernels` CPU-reference work, originally listed in the
+//! WP-016 declaration, are moved to a future WP by plan amendment #20
+//! (`DOCS/PRIN_Project_Plan.md` §8.3): WP-016 is scoped to `crates/prin-sim`
+//! only.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
 pub mod chimera;
 pub mod csr_coupling;
+mod dispatch;
 pub mod engine;
 pub mod error;
 pub mod pruning;

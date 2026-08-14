@@ -27,9 +27,9 @@
 //!
 //! This is the key performance advantage: O(nnz) per step instead of O(N²).
 
-use rayon::prelude::*;
 use sprs::{CsMat, TriMat};
 
+use crate::dispatch::{map_dispatch, zip_map_dispatch, PARALLEL_LEN_THRESHOLD};
 use crate::error::SimError;
 
 /// CSR sparse coupling matrix for oscillator systems.
@@ -341,44 +341,23 @@ impl SparseCoupling {
             });
         }
 
-        let u: Vec<f64> = phases
-            .par_iter()
-            .zip(amplitudes.par_iter())
-            .map(|(&p, &a)| {
-                let (s, _c) = p.sin_cos();
-                a * s
-            })
-            .collect();
-        let v: Vec<f64> = phases
-            .par_iter()
-            .zip(amplitudes.par_iter())
-            .map(|(&p, &a)| {
-                let (_s, c) = p.sin_cos();
-                a * c
-            })
-            .collect();
+        // Each sin_cos() call yields both trig values at once, so a single
+        // dispatch pass computes (u, v) instead of two redundant passes.
+        let uv: Vec<(f64, f64)> = zip_map_dispatch(phases, amplitudes, |&p, &a| {
+            let (s, c) = p.sin_cos();
+            (a * s, a * c)
+        });
+        let (u, v): (Vec<f64>, Vec<f64>) = uv.into_iter().unzip();
 
         let a_vec = spmv(&self.matrix, &u);
         let b_vec = spmv(&self.matrix, &v);
 
-        let sin_sum: Vec<f64> = phases
-            .par_iter()
-            .zip(a_vec.par_iter())
-            .zip(b_vec.par_iter())
-            .map(|((&phi, &a_val), &b_val)| {
-                let (si, ci) = phi.sin_cos();
-                ci * a_val - si * b_val
-            })
-            .collect();
-        let cos_sum: Vec<f64> = phases
-            .par_iter()
-            .zip(a_vec.par_iter())
-            .zip(b_vec.par_iter())
-            .map(|((&phi, &a_val), &b_val)| {
-                let (si, ci) = phi.sin_cos();
-                ci * b_val + si * a_val
-            })
-            .collect();
+        let ab: Vec<(f64, f64)> = a_vec.into_iter().zip(b_vec).collect();
+        let sums: Vec<(f64, f64)> = zip_map_dispatch(phases, &ab, |&phi, &(a_val, b_val)| {
+            let (si, ci) = phi.sin_cos();
+            (ci * a_val - si * b_val, ci * b_val + si * a_val)
+        });
+        let (sin_sum, cos_sum) = sums.into_iter().unzip();
         Ok((sin_sum, cos_sum))
     }
 
@@ -416,40 +395,42 @@ impl SparseCoupling {
             });
         }
 
-        let z_re: Vec<f64> = phases
-            .par_iter()
-            .zip(amplitudes.par_iter())
-            .map(|(&p, &a)| {
-                let (_s, c) = p.sin_cos();
-                a * c
-            })
-            .collect();
-        let z_im: Vec<f64> = phases
-            .par_iter()
-            .zip(amplitudes.par_iter())
-            .map(|(&p, &a)| {
-                let (s, _c) = p.sin_cos();
-                a * s
-            })
-            .collect();
+        let zvals: Vec<(f64, f64)> = zip_map_dispatch(phases, amplitudes, |&p, &a| {
+            let (s, c) = p.sin_cos();
+            (a * c, a * s)
+        });
+        let (z_re, z_im): (Vec<f64>, Vec<f64>) = zvals.into_iter().unzip();
 
         let kz_re = spmv(&self.matrix, &z_re);
         let kz_im = spmv(&self.matrix, &z_im);
 
         let row_sums = row_sum(&self.matrix);
 
-        let c_re: Vec<f64> = kz_re
-            .par_iter()
-            .zip(row_sums.par_iter())
-            .zip(z_re.par_iter())
-            .map(|((&kz, &rs), &zr)| kz - rs * zr)
-            .collect();
-        let c_im: Vec<f64> = kz_im
-            .par_iter()
-            .zip(row_sums.par_iter())
-            .zip(z_im.par_iter())
-            .map(|((&kz, &rs), &zi)| kz - rs * zi)
-            .collect();
+        // Five inputs (kz_re, kz_im, row_sums, z_re, z_im) collapse to two
+        // outputs in one pass; dispatch threshold applied inline since
+        // `zip_map_dispatch` only covers the 2-slice case used elsewhere.
+        let n = phases.len();
+        let c_pairs: Vec<(f64, f64)> = if n < PARALLEL_LEN_THRESHOLD {
+            kz_re
+                .iter()
+                .zip(kz_im.iter())
+                .zip(row_sums.iter())
+                .zip(z_re.iter())
+                .zip(z_im.iter())
+                .map(|((((&kzr, &kzi), &rs), &zr), &zi)| (kzr - rs * zr, kzi - rs * zi))
+                .collect()
+        } else {
+            use rayon::prelude::*;
+            kz_re
+                .par_iter()
+                .zip(kz_im.par_iter())
+                .zip(row_sums.par_iter())
+                .zip(z_re.par_iter())
+                .zip(z_im.par_iter())
+                .map(|((((&kzr, &kzi), &rs), &zr), &zi)| (kzr - rs * zr, kzi - rs * zi))
+                .collect()
+        };
+        let (c_re, c_im) = c_pairs.into_iter().unzip();
         Ok((c_re, c_im))
     }
 
@@ -522,47 +503,28 @@ impl SparseCoupling {
 
 /// Sparse matrix–vector product `y = A · x` for a CSR matrix.
 ///
-/// Uses rayon to parallelize the outer row loop via `par_bridge()` on the
-/// CSR outer iterator. Each row's dot product is independent. Results are
-/// placed by index to preserve ordering.
+/// Row views are collected once (cheap: index/data slice pointers only,
+/// O(n) with no data copy) and then dispatched via [`map_dispatch`], which
+/// runs the sequential CPU reference path below
+/// [`PARALLEL_LEN_THRESHOLD`](crate::dispatch::PARALLEL_LEN_THRESHOLD) rows
+/// and the rayon-parallel path at or above it. This replaces the S1
+/// `par_bridge()` implementation (WP016-F1): bridging a sequential iterator
+/// into a parallel one serializes row production through a single channel,
+/// which for small per-row dot products (ring-topology degree 8) cost more
+/// than the work it parallelized.
 fn spmv(mat: &CsMat<f64>, x: &[f64]) -> Vec<f64> {
-    let n = mat.rows();
-    let mut y = vec![0.0_f64; n];
-    let rows: Vec<_> = mat
-        .outer_iterator()
-        .enumerate()
-        .par_bridge()
-        .map(|(i, row)| {
-            let mut acc = 0.0;
-            for (j, &val) in row.iter() {
-                acc += val * x[j];
-            }
-            (i, acc)
-        })
-        .collect();
-    for (i, val) in rows {
-        y[i] = val;
-    }
-    y
+    let rows: Vec<_> = mat.outer_iterator().collect();
+    map_dispatch(&rows, |row| {
+        row.iter().fold(0.0_f64, |acc, (j, &val)| acc + val * x[j])
+    })
 }
 
 /// Compute the row-sum vector of a CSR matrix.
 ///
-/// Uses rayon to parallelize the outer row loop via `par_bridge()`.
-/// Results are placed by index to preserve ordering.
+/// See [`spmv`] for the dispatch rationale.
 fn row_sum(mat: &CsMat<f64>) -> Vec<f64> {
-    let n = mat.rows();
-    let mut sums = vec![0.0_f64; n];
-    let rows: Vec<_> = mat
-        .outer_iterator()
-        .enumerate()
-        .par_bridge()
-        .map(|(i, row)| (i, row.iter().map(|(_, &v)| v).sum()))
-        .collect();
-    for (i, val) in rows {
-        sums[i] = val;
-    }
-    sums
+    let rows: Vec<_> = mat.outer_iterator().collect();
+    map_dispatch(&rows, |row| row.iter().map(|(_, &v)| v).sum())
 }
 
 #[cfg(test)]
@@ -657,6 +619,22 @@ mod tests {
         for i in 0..n {
             assert!(c_re[i].abs() < 1e-12, "c_re[{i}] = {}", c_re[i]);
             assert!(c_im[i].abs() < 1e-12, "c_im[{i}] = {}", c_im[i]);
+        }
+    }
+
+    /// Exercises the `stuart_landau_coupling` rayon-parallel dispatch branch
+    /// (`n >= PARALLEL_LEN_THRESHOLD`), which the N ≤ 16 tests above never
+    /// reach.
+    #[test]
+    fn stuart_landau_coupling_synchronized_at_parallel_threshold() {
+        let n = PARALLEL_LEN_THRESHOLD;
+        let c = ring_matrix(n, 2, 1.0);
+        let phases = vec![0.0; n];
+        let amplitudes = vec![1.0; n];
+        let (c_re, c_im) = c.stuart_landau_coupling(&phases, &amplitudes).unwrap();
+        for i in 0..n {
+            assert!(c_re[i].abs() < 1e-9, "c_re[{i}] = {}", c_re[i]);
+            assert!(c_im[i].abs() < 1e-9, "c_im[{i}] = {}", c_im[i]);
         }
     }
 

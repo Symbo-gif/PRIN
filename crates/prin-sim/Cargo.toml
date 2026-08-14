@@ -22,6 +22,13 @@ proptest.workspace = true
 approx.workspace = true
 criterion.workspace = true
 
+[features]
+default = []
+# Forwards to prin-dynamics: NaN/Inf guards and clamp assertions at runtime
+# for the Integrator/Dynamics machinery prin-sim builds on (WP016-F6). This
+# crate defines no strict-checks-gated code of its own.
+strict-checks = ["prin-dynamics/strict-checks"]
+
 [[bench]]
 name = "sweep_bench"
 harness = false
