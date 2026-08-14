@@ -79,3 +79,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo install cargo-audit --locked
       - run: cargo audit
+
+  bench-smoke:
+    # Shared GitHub-hosted runners have variable/throttled CPU allocation and
+    # are not the reference hardware behind the Phase 2 exit-gate speedup
+    # figures (PSR-016 §5: 8 physical / 16 SMT cores) — this job proves the
+    # Criterion harness compiles and executes end-to-end (EA-003 finding
+    # E-F9), it does not reproduce or gate on the documented speedup ratios.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo bench -p prin-sim --bench sweep_bench -- --test

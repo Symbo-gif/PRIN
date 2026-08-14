@@ -25,5 +25,70 @@ ignore:
           approval 2026-08-08
         expires: 2026-11-06T00:00:00.000Z
         created: 2026-08-08T06:42:50.801Z
+  SNYK-PYTHON-TORCH-10332643:
+    - '*':
+        reason: >-
+          EA-003 E-F7: torch has no fixed version for this advisory
+          (semver range [0,), fixedIn: []) so no upgrade or downgrade avoids
+          it; local-attack-vector only (CVSS AV:L) via torch.cuda.nccl.reduce,
+          which PRIN never calls (repo-wide grep across python/, tests/,
+          benchmarks/, tools/, parity/ confirms zero references); maintainer
+          approval 2026-08-14, recheck by 2026-11-14
+        expires: 2026-11-14T00:00:00.000Z
+        created: 2026-08-14T00:00:00.000Z
+  SNYK-PYTHON-TORCH-10337825:
+    - '*':
+        reason: >-
+          EA-003 E-F7: no fixed version exists (semver range [0,)); local
+          attack vector only via torch.cuda.memory.caching_allocator_delete,
+          which PRIN never calls (repo-wide grep confirms zero references);
+          maintainer approval 2026-08-14, recheck by 2026-11-14
+        expires: 2026-11-14T00:00:00.000Z
+        created: 2026-08-14T00:00:00.000Z
+  SNYK-PYTHON-TORCH-10337826:
+    - '*':
+        reason: >-
+          EA-003 E-F7: no fixed version exists (semver range [0,)); local
+          attack vector only via @torch.jit.script, which PRIN never uses
+          (repo-wide grep confirms zero references); maintainer approval
+          2026-08-14, recheck by 2026-11-14
+        expires: 2026-11-14T00:00:00.000Z
+        created: 2026-08-14T00:00:00.000Z
+  SNYK-PYTHON-TORCH-10337834:
+    - '*':
+        reason: >-
+          EA-003 E-F7: no fixed version exists (semver range [0,)); local
+          attack vector only via torch.jit.jit_module_from_flatbuffer, which
+          PRIN never calls (repo-wide grep confirms zero references);
+          maintainer approval 2026-08-14, recheck by 2026-11-14
+        expires: 2026-11-14T00:00:00.000Z
+        created: 2026-08-14T00:00:00.000Z
+  SNYK-PYTHON-TORCH-13052969:
+    - '*':
+        reason: >-
+          EA-003 E-F7: no fixed version exists (semver range [0,)); requires
+          torch.nan_to_num() chained with .long() on float("inf") in eager
+          mode, which PRIN never calls (repo-wide grep confirms zero
+          references to nan_to_num); maintainer approval 2026-08-14, recheck
+          by 2026-11-14
+        expires: 2026-11-14T00:00:00.000Z
+        created: 2026-08-14T00:00:00.000Z
+  SNYK-PYTHON-TORCH-15746467:
+    - '*':
+        reason: >-
+          EA-003 E-F7 (high severity): no fixed version exists (semver range
+          [0,)); vulnerability is in deserializing untrusted .pt2 files via
+          torch.export load handlers even under weights_only=True. PRIN never
+          calls torch.load, torch.export.load, or any .pt2 handler anywhere
+          in python/, tests/, benchmarks/, tools/, or parity/ (repo-wide grep
+          confirms zero references; the only deserialization in the codebase
+          is np.load on committed, trusted golden-corpus fixtures in
+          python/prin/parity/schema.py, unrelated to torch or untrusted
+          input) -- the vulnerable code path is unreachable in this project's
+          current usage. Re-evaluate before this project ever adds torch
+          checkpoint loading. Maintainer approval 2026-08-14, recheck by
+          2026-11-14
+        expires: 2026-11-14T00:00:00.000Z
+        created: 2026-08-14T00:00:00.000Z
 version: v1.25.1
 patch: {}
