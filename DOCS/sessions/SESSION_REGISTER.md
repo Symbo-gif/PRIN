@@ -88,7 +88,7 @@ no planned session is renumbered by an executive audit (plan amendment #15).
 | 0059 | 2 | WP-015 | S3 — Remediation | [OscilloSim sparse simulation engine](phase-2/0059-wp015-s3-oscillosim-sparse-simulation-engine.md) | COMPLETE |
 | 0060 | 2 | WP-015 | S4 — Documentation | [OscilloSim sparse simulation engine](phase-2/0060-wp015-s4-oscillosim-sparse-simulation-engine.md) | COMPLETE |
 | 0061 | 2 | WP-016 | S1 — Coding | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0061-wp016-s1-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | COMPLETE |
-| 0062 | 2 | WP-016 | S2 — Audit | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0062-wp016-s2-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | PLANNED |
+| 0062 | 2 | WP-016 | S2 — Audit | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0062-wp016-s2-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | COMPLETE |
 | 0063 | 2 | WP-016 | S3 — Remediation | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0063-wp016-s3-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | PLANNED |
 | 0064 | 2 | WP-016 | S4 — Documentation | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0064-wp016-s4-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | PLANNED |
 | 0065 | 3 | WP-017 | S1 — Coding | [Kernel architecture and CPU references](phase-3/0065-wp017-s1-kernel-architecture-and-cpu-references.md) | PLANNED |
