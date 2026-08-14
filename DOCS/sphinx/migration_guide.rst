@@ -143,7 +143,6 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   rather than a separate Python class. 44 Python acceptance tests in
   ``tests/test_wp013_bands_temporal.py`` cover all binding paths.
 - ``prin-dynamics`` phase–amplitude coupling and coupling topologies (WP-009) —
-- ``prin-dynamics`` phase–amplitude coupling and coupling topologies (WP-009) —
   Rust ``PhaseAmplitudeCoupling`` struct implementing cross-frequency PAC
   ``A_fast = A_0·[1 + m·cos(φ_slow + offset)]`` with mean slow-band phase,
   broadcast modulation, and amplitude clamp ``[1e-6, 10]``. Replaces PRINet 3.0's

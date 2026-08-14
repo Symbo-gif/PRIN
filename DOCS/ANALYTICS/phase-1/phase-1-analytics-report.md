@@ -14,6 +14,20 @@
 
 ---
 
+`[RETROACTIVE UPDATE - Executive Audit 003]` This report's Rust test-count
+claim is internally inconsistent — the executive summary and §P3 state
+"396 Rust tests" (line 36, line 92) while this document's own gate table
+(§5.2 and the verification log) records `cargo test --workspace → 351
+passed` (line 62, line 402, line 496). `DOCS/reports/011-project-state.md`
+§2, the authoritative Phase 1 exit-gate Project State Report, records a
+third figure: "370/370 default workspace" Rust tests. Per the Development
+Workflow and Audit Standards, the PSR is the position-of-record; treat this
+analytics report's test-count figures as informational/superseded rather
+than authoritative (EA-003 finding E-F8, D3). No other figures in this
+report were re-derived or disputed by EA-003.
+
+---
+
 ## Executive summary
 
 Phase 1 — Oscillator Dynamics and Metrics is **complete**. All six work

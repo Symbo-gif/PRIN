@@ -18,6 +18,13 @@ session that produced it.
 
 ## Rules
 
+- This directory holds machine-checkable probe/gate artefacts specifically —
+  hardware/runtime capability probes, exit-gate readiness snapshots — not a
+  mandatory per-WP deliverable. Most work packages verify claims through
+  their audit report, Project State Report, and the test/parity/benchmark
+  suites themselves; a WP with no hardware probe or gate check of its own
+  legitimately adds nothing here (EA-003 finding E-F11, D4 — clarified after
+  WP-010..016 added no new files here, which is expected, not a gap).
 - Evidence files are committed artefacts; they are not regenerated silently.
 - S2 audit reproductions may write fresh evidence with a new timestamp, then
   restore the original S1 baseline to preserve the evidence chain.
