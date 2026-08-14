@@ -1,6 +1,6 @@
 # Session 0058 — WP-015 S2: Audit — OscilloSim sparse simulation engine
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 2 — Advanced numerics and simulation  
 **Execution unit:** WP-015  
 **Session type:** S2 — Audit  
