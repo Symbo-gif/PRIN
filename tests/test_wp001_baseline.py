@@ -3,6 +3,7 @@ from __future__ import annotations
 import builtins
 import importlib.util
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -95,10 +96,10 @@ def test_current_baseline_automation_is_green() -> None:
 def test_metadata_validator_detects_version_drift(tmp_path: Path) -> None:
     _copy_metadata_fixture(tmp_path)
     pyproject = tmp_path / "pyproject.toml"
+    original = pyproject.read_text(encoding="utf-8")
+    current_version = re.search(r'version = "([^"]+)"', original).group(1)  # type: ignore[union-attr]
     pyproject.write_text(
-        pyproject.read_text(encoding="utf-8").replace(
-            'version = "0.1.0-alpha.1"', 'version = "0.2.0"', 1
-        ),
+        original.replace(f'version = "{current_version}"', 'version = "0.2.0"', 1),
         encoding="utf-8",
     )
 
@@ -239,7 +240,7 @@ def test_repository_inventory_is_deterministic_and_separates_archive() -> None:
 
     assert first == second
     assert first["project"]["name"] == "prin"
-    assert first["project"]["version"] == "0.1.0-alpha.1"
+    assert first["project"]["version"] == "0.3.0-alpha.1"
     assert len(first["workspace"]["members"]) == 8
     assert len(first["ci"]["workflows"]) == 7
     assert "snyk.yml" in first["ci"]["workflows"]
