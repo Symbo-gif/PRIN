@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- WP-014 Tensor decompositions in `prin-tensor` (Phase 2, third WP):
+  - `PolyadicTensor`, `hosvd()` — Tucker/HOSVD via `faer` SVD with per-mode
+    rank truncation. Factor matrices are left singular vectors of mode-n
+    unfoldings; full-rank HOSVD is an exact reconstruction.
+  - `CPDecomposition`, `cp_als()`, `CPResult` — CP/PARAFAC via alternating
+    least squares with deterministic `Seed`-based initialization and
+    convergence diagnostics (`iterations`, `final_relative_change`,
+    `converged`).
+  - `TensorError` typed enum (`EmptyInput`, `NonFiniteValue`, `ZeroDimension`,
+    `InvalidRank`, `InvalidComponents`, `ShapeMismatch`, `NonConvergence`,
+    `InvalidTolerance`, `InvalidMaxIter`, `InvalidMode`, `LinearAlgebraFailed`,
+    `ModeProductDimMismatch`, `InsufficientModes`).
+  - `mode_unfold`, `mode_n_product`, `frobenius_norm`, `refold` in
+    `prin-tensor::utils`; Khatri-Rao product and Gauss-Jordan matrix inverse
+    in `prin-tensor::cp`.
+  - `serde` derives on `PolyadicTensor` and `CPDecomposition`.
+  - 9 Rust-vs-PRINet 3.0.0 parity tests in
+    `crates/prin-tensor/tests/parity_decomposition.rs` (reconstruction,
+    factor orthonormality, truncated ranks, CP rank-1, all-factor
+    normalization, weights, seed reproducibility, round-trip) at `rtol=1e-10`
+    (float64, single-runtime).
+  - `cp.rs` coverage raised from 92.55% to 96.30% lines in S3 remediation; all
+    new `prin-tensor` modules meet the ≥95% gate.
+  - S3 fixes for audit findings WP014-F1 (D1) through WP014-F7 (D3), including
+    the GitHub Actions billing-block restoration recorded in the audit report.
+  - No Python bindings in this WP; PyO3 exposure is a future WP.
 - WP-013 Continuous band networks and temporal propagation in `prin-dynamics`
   (Phase 2, second WP):
   - `BandParams` — per-band `KuramotoOscillator` configuration (frequency,

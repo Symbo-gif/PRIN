@@ -61,6 +61,10 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   F4–F6 D4) resolved in S3 (five fixed, one approved amendment #19) with a
   CLEAN delta re-audit. One additional integrator-stage defect found while
   producing the F1 parity evidence was fixed in the same remediation.
+- [`014-wp014-audit.md`](014-wp014-audit.md) — WP-014 "Tensor decompositions"
+  audit (`FAIL`); seven findings (F1 D1, F2–F4 D2, F5/F7 D3, F6 D4) resolved
+  in S3 with a CLEAN delta re-audit. Includes the GitHub Actions billing-block
+  restoration evidence recorded in F7.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

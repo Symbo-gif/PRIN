@@ -44,6 +44,10 @@ at the top level until they are folded into the final campaign archive in Phase 
   Written retrospectively in S3 (session 0051) as the remedy for finding
   WP013-F3 (D3); carries a provenance caveat stating it does not alter the
   S2 verdict.
+- [`0053-wp014-s1-handoff.md`](0053-wp014-s1-handoff.md) — WP-014 S1 handoff
+  to the S2 audit for Tucker/HOSVD and CP/PARAFAC tensor decompositions.
+  Updated in S3 to correct the reference-code claim and to record the
+  single-rank vs per-mode-rank API mapping for the S4 Migration Guide.
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
 [`../sessions/phase-1/wp009-s1-handoff-note.md`](../sessions/phase-1/wp009-s1-handoff-note.md)

@@ -192,3 +192,20 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   Python numerics; all numerical authority remains in Rust. Complete type stubs
   in ``_prin_core.pyi``. 69 Python acceptance tests in
   ``tests/test_dynamics_bindings.py`` exercise all binding paths.
+- ``prin-tensor`` tensor decompositions (WP-014) — Rust
+  ``PolyadicTensor``, ``hosvd()``, ``CPDecomposition``, ``cp_als()``, and
+  ``CPResult`` rebuilding PRINet 3.0 ``core/decomposition.py``. All arithmetic
+  is ``f64``; SVD is via ``faer``. Replaces the reference's
+  ``PolyadicTensor``/``CPDecomposition`` classes. **API differences:** the
+  reference ``PolyadicTensor`` takes a single rank clamped to ``min(shape)`` for
+  all modes, while PRIN ``hosvd`` takes per-mode ranks clamped to
+  ``min(I_n, prod_{k != n} I_k)``; the reference ``CPDecomposition`` uses
+  ``torch.randn`` initialization and all-factor normalization (column norms
+  clamped at ``1e-12``), while PRIN uses a deterministic ``Seed`` authority
+  (uniform ``[0, 1)``) and the same all-factor normalization. CP-ALS
+  convergence is monitored via the relative change in reconstruction error
+  ``||X - X_hat||_F``. 9 Rust-vs-PRINet 3.0.0 parity tests in
+  ``crates/prin-tensor/tests/parity_decomposition.rs`` verify reconstruction,
+  orthonormality, shapes, normalization, seed reproducibility, and round-trip at
+  ``rtol = 1e-10`` (float64, single-runtime). No Python bindings are exposed
+  yet.

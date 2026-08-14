@@ -82,8 +82,8 @@ no planned session is renumbered by an executive audit (plan amendment #15).
 | 0053 | 2 | WP-014 | S1 — Coding | [Tensor decompositions](phase-2/0053-wp014-s1-tensor-decompositions.md) | COMPLETE |
 | 0054 | 2 | WP-014 | S2 — Audit | [Tensor decompositions](phase-2/0054-wp014-s2-tensor-decompositions.md) | COMPLETE |
 | 0055 | 2 | WP-014 | S3 — Remediation | [Tensor decompositions](phase-2/0055-wp014-s3-tensor-decompositions.md) | COMPLETE |
-| 0056 | 2 | WP-014 | S4 — Documentation | [Tensor decompositions](phase-2/0056-wp014-s4-tensor-decompositions.md) | PLANNED |
-| 0057 | 2 | WP-015 | S1 — Coding | [OscilloSim sparse simulation engine](phase-2/0057-wp015-s1-oscillosim-sparse-simulation-engine.md) | PLANNED |
+| 0056 | 2 | WP-014 | S4 — Documentation | [Tensor decompositions](phase-2/0056-wp014-s4-tensor-decompositions.md) | COMPLETE |
+| 0057 | 2 | WP-015 | S1 — Coding | [OscilloSim sparse simulation engine](phase-2/0057-wp015-s1-oscillosim-sparse-simulation-engine.md) | READY |
 | 0058 | 2 | WP-015 | S2 — Audit | [OscilloSim sparse simulation engine](phase-2/0058-wp015-s2-oscillosim-sparse-simulation-engine.md) | PLANNED |
 | 0059 | 2 | WP-015 | S3 — Remediation | [OscilloSim sparse simulation engine](phase-2/0059-wp015-s3-oscillosim-sparse-simulation-engine.md) | PLANNED |
 | 0060 | 2 | WP-015 | S4 — Documentation | [OscilloSim sparse simulation engine](phase-2/0060-wp015-s4-oscillosim-sparse-simulation-engine.md) | PLANNED |
