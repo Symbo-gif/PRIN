@@ -119,14 +119,16 @@ impl PolyadicTensor {
 ///
 /// * `tensor` — The input tensor of shape `(I_0, I_1, ..., I_{N-1})`.
 /// * `ranks` — Optional multilinear ranks `(R_0, ..., R_{N-1})`. Each `R_n`
-///   must satisfy `1 ≤ R_n ≤ I_n`. If `None`, full ranks are used.
+///   must satisfy `1 ≤ R_n ≤ min(I_n, ∏_{k≠n} I_k)`. If `None`, full ranks
+///   are used (each clamped to the unfolding rank).
 ///
 /// # Errors
 ///
 /// - [`TensorError::EmptyInput`] if the tensor has zero elements.
 /// - [`TensorError::NonFiniteValue`] if any element is NaN or infinite.
 /// - [`TensorError::ZeroDimension`] if any mode has dimension 0.
-/// - [`TensorError::InvalidRank`] if any rank is 0 or exceeds the mode dimension.
+/// - [`TensorError::InvalidRank`] if any rank is 0 or exceeds the unfolding
+///   rank `min(I_n, ∏_{k≠n} I_k)`.
 /// - [`TensorError::InsufficientModes`] if the tensor has fewer than 2 modes.
 ///
 /// # Examples
@@ -185,12 +187,19 @@ pub fn hosvd(tensor: &ArrayD<f64>, ranks: Option<&[usize]>) -> Result<PolyadicTe
                 });
             }
             for (mode, (&rank, &dim)) in r.iter().zip(shape.iter()).enumerate() {
-                if rank == 0 || rank > dim {
+                let product_of_others: usize = shape
+                    .iter()
+                    .enumerate()
+                    .filter(|&(k, _)| k != mode)
+                    .map(|(_, s)| *s)
+                    .product();
+                let max_rank = dim.min(product_of_others);
+                if rank == 0 || rank > max_rank {
                     return Err(TensorError::InvalidRank {
                         op,
                         mode,
                         rank,
-                        dim,
+                        dim: max_rank,
                     });
                 }
             }
@@ -329,6 +338,25 @@ mod tests {
         assert!(matches!(err, TensorError::InvalidRank { .. }));
         let err = hosvd(&t, Some(&[4, 4, 2])).unwrap_err();
         assert!(matches!(err, TensorError::InvalidRank { .. }));
+    }
+
+    #[test]
+    fn hosvd_accepts_rank_at_unfolding_bound() {
+        // Shape (10, 2, 2): mode-0 unfolding is (10, 4), so max rank at mode 0
+        // is min(10, 4) = 4.
+        let data: Vec<f64> = (0..40).map(|i| i as f64).collect();
+        let t = ArrayD::from_shape_vec(IxDyn(&[10, 2, 2]), data).unwrap();
+        let tucker = hosvd(&t, Some(&[4, 2, 2])).unwrap();
+        assert_eq!(tucker.ranks(), vec![4, 2, 2]);
+    }
+
+    #[test]
+    fn hosvd_rejects_rank_above_unfolding_bound() {
+        // Shape (10, 2, 2): mode-0 max rank is min(10, 4) = 4; rank 5 must fail.
+        let data: Vec<f64> = (0..40).map(|i| i as f64).collect();
+        let t = ArrayD::from_shape_vec(IxDyn(&[10, 2, 2]), data).unwrap();
+        let err = hosvd(&t, Some(&[5, 2, 2])).unwrap_err();
+        assert!(matches!(err, TensorError::InvalidRank { mode: 0, .. }));
     }
 
     #[test]
