@@ -1,6 +1,6 @@
 # Session 0057 — WP-015 S1: Coding — OscilloSim sparse simulation engine
 
-**Status:** READY  
+**Status:** COMPLETE  
 **Roadmap phase:** 2 — Advanced numerics and simulation  
 **Execution unit:** WP-015  
 **Session type:** S1 — Coding  
