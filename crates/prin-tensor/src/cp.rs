@@ -588,4 +588,69 @@ mod tests {
             assert!((w1 - w2).abs() < 1e-14);
         }
     }
+
+    #[test]
+    fn cp_decomposition_new_rejects_empty_weights() {
+        let err = CPDecomposition::new(vec![], vec![]).unwrap_err();
+        assert!(matches!(err, TensorError::InvalidComponents { .. }));
+    }
+
+    #[test]
+    fn cp_decomposition_new_rejects_empty_factors() {
+        let err = CPDecomposition::new(vec![1.0], vec![]).unwrap_err();
+        assert!(matches!(err, TensorError::InsufficientModes { .. }));
+    }
+
+    #[test]
+    fn cp_decomposition_new_rejects_column_mismatch() {
+        let factors = vec![ndarray::Array2::zeros((3, 2))];
+        let err = CPDecomposition::new(vec![1.0, 2.0, 3.0], factors).unwrap_err();
+        assert!(matches!(err, TensorError::ShapeMismatch { .. }));
+    }
+
+    #[test]
+    fn cp_decomposition_accessors() {
+        let weights = vec![1.0, 2.0, 3.0];
+        let factors = vec![
+            ndarray::Array2::ones((4, 3)),
+            ndarray::Array2::ones((5, 3)),
+        ];
+        let cp = CPDecomposition::new(weights, factors).unwrap();
+        assert_eq!(cp.n_components(), 3);
+        assert_eq!(cp.ndim(), 2);
+        assert_eq!(cp.shape(), vec![4, 5]);
+    }
+
+    #[test]
+    fn cp_als_rejects_zero_max_iter() {
+        let data: Vec<f64> = (0..24).map(|i| i as f64).collect();
+        let t = ArrayD::from_shape_vec(IxDyn(&[3, 4, 2]), data).unwrap();
+        let seed = Seed::new(0, 0);
+        let err = cp_als(&t, 2, &seed, 0, 1e-10).unwrap_err();
+        assert!(matches!(err, TensorError::InvalidMaxIter { .. }));
+    }
+
+    #[test]
+    fn cp_als_rejects_1d_tensor() {
+        let t = ArrayD::from_shape_vec(IxDyn(&[5]), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
+        let seed = Seed::new(0, 0);
+        let err = cp_als(&t, 2, &seed, 100, 1e-10).unwrap_err();
+        assert!(matches!(err, TensorError::InsufficientModes { .. }));
+    }
+
+    #[test]
+    fn cp_als_non_convergence_with_tiny_max_iter() {
+        let data: Vec<f64> = (0..24).map(|i| i as f64).collect();
+        let t = ArrayD::from_shape_vec(IxDyn(&[3, 4, 2]), data).unwrap();
+        let seed = Seed::new(42, 0);
+        let err = cp_als(&t, 3, &seed, 1, 1e-14).unwrap_err();
+        assert!(matches!(err, TensorError::NonConvergence { .. }));
+    }
+
+    #[test]
+    fn invert_matrix_rejects_singular() {
+        let singular = ndarray::Array2::zeros((3, 3));
+        let err = invert_matrix(&singular).unwrap_err();
+        assert!(matches!(err, TensorError::LinearAlgebraFailed { .. }));
+    }
 }
