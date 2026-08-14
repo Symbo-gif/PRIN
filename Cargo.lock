@@ -2876,7 +2876,7 @@ dependencies = [
 
 [[package]]
 name = "prin-daemon"
-version = "0.1.0-alpha.1"
+version = "0.3.0-alpha.1"
 dependencies = [
  "approx 0.5.1",
  "proptest",
@@ -2888,7 +2888,7 @@ dependencies = [
 
 [[package]]
 name = "prin-dynamics"
-version = "0.1.0-alpha.1"
+version = "0.3.0-alpha.1"
 dependencies = [
  "approx 0.5.1",
  "criterion",
@@ -2906,7 +2906,7 @@ dependencies = [
 
 [[package]]
 name = "prin-kernels"
-version = "0.1.0-alpha.1"
+version = "0.3.0-alpha.1"
 dependencies = [
  "approx 0.5.1",
  "criterion",
@@ -2921,7 +2921,7 @@ dependencies = [
 
 [[package]]
 name = "prin-metrics"
-version = "0.1.0-alpha.1"
+version = "0.3.0-alpha.1"
 dependencies = [
  "approx 0.5.1",
  "criterion",
@@ -2939,7 +2939,7 @@ dependencies = [
 
 [[package]]
 name = "prin-py"
-version = "0.1.0-alpha.1"
+version = "0.3.0-alpha.1"
 dependencies = [
  "dlpack",
  "numpy",
@@ -2958,7 +2958,7 @@ dependencies = [
 
 [[package]]
 name = "prin-sim"
-version = "0.1.0-alpha.1"
+version = "0.3.0-alpha.1"
 dependencies = [
  "approx 0.5.1",
  "criterion",
@@ -2974,7 +2974,7 @@ dependencies = [
 
 [[package]]
 name = "prin-tensor"
-version = "0.1.0-alpha.1"
+version = "0.3.0-alpha.1"
 dependencies = [
  "approx 0.5.1",
  "criterion",
@@ -2990,7 +2990,7 @@ dependencies = [
 
 [[package]]
 name = "prin-train"
-version = "0.1.0-alpha.1"
+version = "0.3.0-alpha.1"
 dependencies = [
  "approx 0.5.1",
  "criterion",
