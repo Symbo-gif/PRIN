@@ -92,6 +92,15 @@ pub enum TensorError {
         value: f64,
     },
 
+    /// The maximum iteration count is invalid (zero).
+    #[error("tensor operation `{op}` requires max_iter >= 1, got {max_iter}")]
+    InvalidMaxIter {
+        /// Name of the operation.
+        op: &'static str,
+        /// Offending value.
+        max_iter: usize,
+    },
+
     /// A linear algebra operation failed (e.g., SVD did not converge).
     #[error("tensor operation `{op}` linear algebra failure: {message}")]
     LinearAlgebraFailed {

@@ -20,7 +20,7 @@ use prin_dynamics::Seed;
 use serde::{Deserialize, Serialize};
 
 use crate::error::TensorError;
-use crate::utils::{frobenius_norm, mode_unfold, require_finite, require_positive_dims};
+use crate::utils::{mode_unfold, require_finite, require_positive_dims};
 
 /// Result of a CP-ALS decomposition.
 #[derive(Debug, Clone)]
@@ -29,9 +29,10 @@ pub struct CPResult {
     pub decomposition: CPDecomposition,
     /// Number of ALS iterations performed.
     pub iterations: usize,
-    /// Final relative change in the reconstruction (convergence diagnostic).
+    /// Final relative change in the reconstruction error `‖X − X̂‖_F`
+    /// between the last two iterations (convergence diagnostic).
     pub final_relative_change: f64,
-    /// Whether the algorithm converged (relative change below tolerance).
+    /// Whether the algorithm converged (relative error change below tolerance).
     pub converged: bool,
 }
 
@@ -149,13 +150,28 @@ fn flat_to_multi(mut flat: usize, shape: &[usize]) -> Vec<usize> {
 
 /// Compute the CP decomposition via Alternating Least Squares (ALS).
 ///
+/// # Convergence
+///
+/// After each ALS sweep, all factor matrices are normalized (column norms
+/// clamped at `1e-12`) and the weights absorb the product of all per-mode
+/// column norms. Convergence is monitored via the relative change in the
+/// reconstruction error `‖X − X̂‖_F` between successive iterations.
+///
+/// # Initialization
+///
+/// Factor matrices are initialized from [`prin_dynamics::Seed`] (uniform
+/// `[0, 1)`). This is a deliberate PRIN design choice: the `Seed` authority
+/// provides deterministic reproducibility across all PRIN numerics. The
+/// PRINet 3.0 reference uses `torch.randn` (standard normal); the uniform
+/// distribution is algebraically equivalent for ALS convergence.
+///
 /// # Arguments
 ///
 /// * `tensor` — The input tensor of shape `(I_0, I_1, ..., I_{N-1})`.
 /// * `n_components` — The number of components (CP rank) `R`.
 /// * `seed` — Deterministic seed for factor initialization.
 /// * `max_iter` — Maximum number of ALS iterations.
-/// * `tol` — Convergence tolerance on relative change.
+/// * `tol` — Convergence tolerance on relative change in reconstruction error.
 ///
 /// # Errors
 ///
@@ -164,6 +180,7 @@ fn flat_to_multi(mut flat: usize, shape: &[usize]) -> Vec<usize> {
 /// - [`TensorError::ZeroDimension`] if any mode has dimension 0.
 /// - [`TensorError::InvalidComponents`] if `n_components == 0`.
 /// - [`TensorError::InvalidTolerance`] if `tol` is negative or NaN.
+/// - [`TensorError::InvalidMaxIter`] if `max_iter == 0`.
 /// - [`TensorError::NonConvergence`] if ALS does not converge within `max_iter`.
 ///
 /// # Examples
@@ -224,16 +241,12 @@ pub fn cp_als(
         });
     }
     if max_iter == 0 {
-        return Err(TensorError::InvalidTolerance {
-            op,
-            name: "max_iter",
-            value: 0.0,
-        });
+        return Err(TensorError::InvalidMaxIter { op, max_iter: 0 });
     }
 
     let r = n_components;
 
-    // Initialize factor matrices randomly using the seed.
+    // Initialize factor matrices from the Seed (uniform [0,1)).
     let mut local_seed = seed.clone();
     let mut factors: Vec<ndarray::Array2<f64>> = Vec::with_capacity(ndim);
     for &dim in shape.iter() {
@@ -247,49 +260,60 @@ pub fn cp_als(
         factors.push(factor);
     }
 
-    let mut prev_norm = 0.0_f64;
+    let mut prev_error = f64::INFINITY;
     let mut iterations = 0;
     let mut converged = false;
     let mut final_change = f64::INFINITY;
+    let mut weights = vec![1.0_f64; r];
 
     for iter in 0..max_iter {
         iterations = iter + 1;
 
-        // Update each factor matrix.
+        // Update each factor matrix via ALS.
         for mode in 0..ndim {
-            // Compute the Khatri-Rao product of all other factors.
             let other_modes: Vec<usize> = (0..ndim).filter(|&m| m != mode).collect();
             let kr = khatri_rao_product(&factors, &other_modes);
 
-            // Compute the Gram matrices product (element-wise / Hadamard).
             let mut gram_product = ndarray::Array2::eye(r);
             for &m in &other_modes {
                 let gram = factors[m].t().dot(&factors[m]);
                 gram_product *= &gram;
             }
 
-            // Unfold the tensor along this mode.
             let unfolded = mode_unfold(tensor, mode)?;
-            // unfolded: (I_mode, product_of_others)
-            // kr: (product_of_others, r)
-            // Solve: factor_mode @ gram_product = unfolded @ kr
-
             let ut_kr = unfolded.dot(&kr);
             let gram_inv = invert_matrix(&gram_product)?;
-            let new_factor = ut_kr.dot(&gram_inv);
-
-            factors[mode] = new_factor;
+            factors[mode] = ut_kr.dot(&gram_inv);
         }
 
-        // Compute reconstruction norm for convergence check.
-        let recon = reconstruct_from_factors(&factors, shape);
-        let recon_norm = frobenius_norm(&recon);
-        let change = if prev_norm > 0.0 {
-            (recon_norm - prev_norm).abs() / prev_norm
+        // Normalize ALL factors (column norms clamped at 1e-12) and
+        // accumulate weights as the product of all per-mode column norms.
+        weights = vec![1.0_f64; r];
+        for factor in factors.iter_mut() {
+            for col in 0..r {
+                let norm: f64 = factor
+                    .column(col)
+                    .iter()
+                    .map(|x| x * x)
+                    .sum::<f64>()
+                    .sqrt();
+                let clamped = norm.max(1e-12);
+                weights[col] *= clamped;
+                for row in 0..factor.nrows() {
+                    factor[[row, col]] /= clamped;
+                }
+            }
+        }
+
+        // Convergence: relative change in reconstruction error ‖X − X̂‖_F.
+        let recon = reconstruct_weighted(&weights, &factors, shape);
+        let error = frobenius_norm_diff(tensor, &recon);
+        let change = if prev_error.is_finite() {
+            (prev_error - error).abs() / prev_error.max(1e-12)
         } else {
             1.0
         };
-        prev_norm = recon_norm;
+        prev_error = error;
         final_change = change;
 
         if change < tol && iter > 0 {
@@ -304,23 +328,6 @@ pub fn cp_als(
             iterations,
             final_change,
         });
-    }
-
-    // Extract weights (column norms of first factor) and normalize.
-    let mut weights = vec![1.0_f64; r];
-    for col in 0..r {
-        let norm: f64 = factors[0]
-            .column(col)
-            .iter()
-            .map(|x| x * x)
-            .sum::<f64>()
-            .sqrt();
-        weights[col] = norm;
-        if norm > 0.0 {
-            for row in 0..factors[0].nrows() {
-                factors[0][[row, col]] /= norm;
-            }
-        }
     }
 
     let decomposition = CPDecomposition::new(weights, factors)?;
@@ -366,9 +373,13 @@ fn khatri_rao_product(factors: &[ndarray::Array2<f64>], modes: &[usize]) -> ndar
     result
 }
 
-/// Reconstruct a tensor from factor matrices (without weights).
-fn reconstruct_from_factors(factors: &[ndarray::Array2<f64>], shape: &[usize]) -> ArrayD<f64> {
-    let r = factors[0].ncols();
+/// Reconstruct a tensor from weights and normalized factor matrices.
+fn reconstruct_weighted(
+    weights: &[f64],
+    factors: &[ndarray::Array2<f64>],
+    shape: &[usize],
+) -> ArrayD<f64> {
+    let r = weights.len();
     let total: usize = shape.iter().product();
     let mut result = vec![0.0_f64; total];
 
@@ -376,7 +387,7 @@ fn reconstruct_from_factors(factors: &[ndarray::Array2<f64>], shape: &[usize]) -
         #[allow(clippy::needless_range_loop)]
         for idx in 0..total {
             let multi = flat_to_multi(idx, shape);
-            let mut val = 1.0_f64;
+            let mut val = weights[comp];
             for (mode, factor) in factors.iter().enumerate() {
                 val *= factor[[multi[mode], comp]];
             }
@@ -385,6 +396,15 @@ fn reconstruct_from_factors(factors: &[ndarray::Array2<f64>], shape: &[usize]) -
     }
 
     ArrayD::from_shape_vec(IxDyn(shape), result).expect("shape is consistent")
+}
+
+/// Compute the Frobenius norm of the difference of two tensors.
+fn frobenius_norm_diff(a: &ArrayD<f64>, b: &ArrayD<f64>) -> f64 {
+    a.iter()
+        .zip(b.iter())
+        .map(|(&x, &y)| (x - y) * (x - y))
+        .sum::<f64>()
+        .sqrt()
 }
 
 /// Invert a small matrix using Gauss-Jordan elimination with partial pivoting.
