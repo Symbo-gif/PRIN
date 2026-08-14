@@ -7,8 +7,8 @@
 //! - [`cp`] — CP/PARAFAC decomposition via alternating least squares.
 //! - [`utils`] — mode-n unfolding, mode-n product, and tensor arithmetic.
 //!
-//! Parity tolerance: `rtol = 1e-10` at float64 against the PRINet 3.0 golden
-//! corpus (single-runtime verification).
+//! Parity with the PRINet 3.0 reference is verified by integration tests in
+//! `tests/parity_decomposition.rs` at `rtol = 1e-10` (float64, single-runtime).
 //!
 //! ## Numerics
 //!
@@ -20,7 +20,7 @@
 //!
 //! Tucker reconstruction is exact when all mode ranks equal the mode dimensions
 //! (full-rank HOSVD). CP-ALS convergence is monitored via relative change in
-//! the factor matrices; non-convergence returns a typed error.
+//! the reconstruction error `‖X − X̂‖_F`; non-convergence returns a typed error.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]

@@ -21,8 +21,9 @@ Rebuild target for PRINet 3.0 `core/decomposition.py`.
 ## Numerics
 
 All decomposition paths run in f64. SVD is computed via `faer` (pure Rust,
-no system dependencies). Parity tolerance: `rtol = 1e-10` at float64 for
-single-runtime verification.
+no system dependencies). Parity with the PRINet 3.0 reference is verified by
+integration tests (`tests/parity_decomposition.rs`) at `rtol = 1e-10` (float64,
+single-runtime).
 
 ## Dependencies
 

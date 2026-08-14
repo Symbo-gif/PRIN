@@ -20,7 +20,7 @@ use prin_dynamics::Seed;
 use serde::{Deserialize, Serialize};
 
 use crate::error::TensorError;
-use crate::utils::{mode_unfold, require_finite, require_positive_dims};
+use crate::utils::{flat_to_multi, mode_unfold, require_finite, require_positive_dims};
 
 /// Result of a CP-ALS decomposition.
 #[derive(Debug, Clone)]
@@ -135,17 +135,6 @@ impl CPDecomposition {
 
         ArrayD::from_shape_vec(IxDyn(&shape), result).expect("shape is consistent")
     }
-}
-
-/// Convert a flat index to a multi-index given a shape (row-major / C order).
-fn flat_to_multi(mut flat: usize, shape: &[usize]) -> Vec<usize> {
-    let ndim = shape.len();
-    let mut multi = vec![0; ndim];
-    for d in (0..ndim).rev() {
-        multi[d] = flat % shape[d];
-        flat /= shape[d];
-    }
-    multi
 }
 
 /// Compute the CP decomposition via Alternating Least Squares (ALS).
@@ -577,15 +566,6 @@ mod tests {
                 assert!((inv[[i, j]] - expected).abs() < 1e-14);
             }
         }
-    }
-
-    #[test]
-    fn flat_to_multi_correct() {
-        let shape = vec![3, 4, 2];
-        assert_eq!(flat_to_multi(0, &shape), vec![0, 0, 0]);
-        assert_eq!(flat_to_multi(1, &shape), vec![0, 0, 1]);
-        assert_eq!(flat_to_multi(2, &shape), vec![0, 1, 0]);
-        assert_eq!(flat_to_multi(23, &shape), vec![2, 3, 1]);
     }
 
     #[test]

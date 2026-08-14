@@ -15,14 +15,14 @@ use crate::error::{self, TensorError};
 ///
 /// # Errors
 ///
-/// Returns [`TensorError::ZeroDimension`] if `mode >= tensor.ndim()`.
+/// Returns [`TensorError::InvalidMode`] if `mode >= tensor.ndim()`.
 pub fn mode_unfold(tensor: &ArrayD<f64>, mode: usize) -> Result<ndarray::Array2<f64>, TensorError> {
     let ndim = tensor.ndim();
     if mode >= ndim {
-        return Err(TensorError::ZeroDimension {
+        return Err(TensorError::InvalidMode {
             op: "mode_unfold",
             mode,
-            size: ndim,
+            ndim,
         });
     }
 
@@ -133,7 +133,7 @@ pub fn refold(
 }
 
 /// Convert a flat index to a multi-index (row-major / C order).
-fn flat_to_multi(mut flat: usize, shape: &[usize]) -> Vec<usize> {
+pub(crate) fn flat_to_multi(mut flat: usize, shape: &[usize]) -> Vec<usize> {
     let ndim = shape.len();
     let mut multi = vec![0; ndim];
     for d in (0..ndim).rev() {
@@ -176,16 +176,6 @@ fn multi_to_flat_excluding(multi: &[usize], shape: &[usize], exclude: usize) -> 
         reduced_idx += 1;
     }
     flat
-}
-
-/// Invert a permutation: if `perm[i] = j`, then `inv[j] = i`.
-#[allow(dead_code)]
-pub(crate) fn invert_permutation(perm: &[usize]) -> Vec<usize> {
-    let mut inv = vec![0; perm.len()];
-    for (i, &p) in perm.iter().enumerate() {
-        inv[p] = i;
-    }
-    inv
 }
 
 /// Convert an [`ndarray::Array2<f64>`] to a [`faer::Mat<f64>`].
@@ -309,14 +299,6 @@ mod tests {
         let ncols = faer_mat.ncols();
         let back = faer_mat_to_ndarray(nrows, ncols, |r, c| faer_mat.read(r, c));
         assert_eq!(matrix, back);
-    }
-
-    #[test]
-    fn invert_permutation_is_involution() {
-        let perm = vec![2, 0, 3, 1];
-        let inv = invert_permutation(&perm);
-        let double_inv = invert_permutation(&inv);
-        assert_eq!(perm, double_inv);
     }
 
     #[test]

@@ -101,6 +101,17 @@ pub enum TensorError {
         max_iter: usize,
     },
 
+    /// A mode index is out of range for the tensor.
+    #[error("tensor operation `{op}` mode {mode} is out of range for tensor with {ndim} modes")]
+    InvalidMode {
+        /// Name of the operation.
+        op: &'static str,
+        /// Offending mode index.
+        mode: usize,
+        /// Number of modes in the tensor.
+        ndim: usize,
+    },
+
     /// A linear algebra operation failed (e.g., SVD did not converge).
     #[error("tensor operation `{op}` linear algebra failure: {message}")]
     LinearAlgebraFailed {
