@@ -7,8 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0-alpha.1] — Phase 2 exit (Advanced numerics and simulation)
+
 ### Added
 
+- WP-016 Parallel sweeps, CPU optimization, and Phase 2 gate in `prin-sim` (Phase 2, fifth WP):
+  - `sweep` module — `run_sweep`, `SweepConfig`, `SweepResult`, `SweepAxis`, `SweepModel`:
+    rayon-parallel parameter sweeps over coupling strength, decay rate, frequency adaptation,
+    and bifurcation axes with deterministic per-configuration seeding via `Seed`. Each
+    configuration runs an independent `OscilloSim` simulation.
+  - `detect_oscillation` — windowed-variance oscillation detection on order-parameter histories,
+    reusing `prin_metrics::order::kuramoto_order_parameter` (one algorithm, one implementation;
+    replaces the private duplicate from S1). PRINet 3.0 `sweep_utils.detect_oscillation` parity
+    verified across 384 combinations in `tests/parity_detect_oscillation.rs`.
+  - `dispatch` module (crate-private) — size-gated sequential/parallel CPU dispatch
+    (`map_dispatch`, `zip_map_dispatch`) with `PARALLEL_LEN_THRESHOLD = 32,768`. Sequential
+    CPU reference path below threshold; rayon-parallel path at or above. Eliminates
+    thread-pool overhead on small problem sizes while scaling on large ones.
+  - `Arc<SparseCoupling>` sharing — `SparseKuramoto`, `SparseStuartLandau`, and `OscilloSim`
+    now store `Arc<SparseCoupling>` via `impl Into<Arc<SparseCoupling>>` constructors,
+    eliminating the per-configuration CSR deep-clone (~136 MB at $N = 1\mathrm{M}$).
+    `OscilloSim::coupling_arc()` returns an $O(1)$ `Arc::clone`.
+  - `strict-checks` feature in `prin-sim/Cargo.toml` forwarding to `prin-dynamics/strict-checks`.
+  - Criterion benchmark suite (`benches/sweep_bench.rs`) with in-process serial baselines
+    (dedicated 1-thread `rayon::ThreadPool`) alongside parallel variants. Sweep workload:
+    $N = 4096$, 300 steps, 4–64 configs. SpMV/engine: up to $N = 1{,}000{,}000$.
+  - $N = 100{,}000$ deterministic regression test (`oscillo_sim_n100k_kuramoto_deterministic_and_finite`)
+    asserting bit-identical determinism, finite phases/amplitudes, order parameter $\in [0,1]$,
+    and coupling memory $< 20\,\mathrm{MB}$.
+  - Plan amendment #20 narrows WP-016 scope to `crates/prin-sim/` only; `prin-py` sweep/engine
+    bindings and `prin-kernels` CPU-reference work deferred to a future WP.
+  - Plan amendment #21 re-scopes performance targets to hardware-scoped, evidence-based values
+    (peak sweep ≥3.5× on 8 physical cores; SpMV/engine ≥1.5× at $N \geq 65{,}536$) after S1
+    benchmark evidence showed the original ≥8×/≥2× targets were a memory-bandwidth/SMT ceiling.
+  - S2 audit (`DOCS/audits/016-wp016-audit.md`) found seven findings (WP016-F1 D1, WP016-F2–F4
+    D2, WP016-F5–F7 D3): performance below target, missing SIMD/dispatch, algorithm duplication,
+    no $N = 1\mathrm{M}$ parity evidence, benchmark design, stale docs, and coupling ownership.
+  - S3 remediation closed all seven: `dispatch.rs` sequential/parallel dispatcher, `order_parameter`
+    duplication removed in favour of `prin_metrics`, $N = 100\mathrm{k}$ regression test, benchmark
+    rewritten with serial baselines and larger workloads, `lib.rs` docs corrected, `Arc` coupling
+    sharing. Delta re-audit: **CLEAN**.
 - WP-015 OscilloSim sparse simulation engine in `prin-sim` (Phase 2, fourth WP):
   - `SparseCoupling` — Compressed Sparse Row (CSR) matrix storage format for
     sparse coupling topologies (`AllToAll`, `Ring`, `SmallWorld`) with $K/\mathrm{degree}$

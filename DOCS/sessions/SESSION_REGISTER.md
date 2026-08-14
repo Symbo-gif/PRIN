@@ -90,7 +90,7 @@ no planned session is renumbered by an executive audit (plan amendment #15).
 | 0061 | 2 | WP-016 | S1 — Coding | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0061-wp016-s1-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | COMPLETE |
 | 0062 | 2 | WP-016 | S2 — Audit | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0062-wp016-s2-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | COMPLETE |
 | 0063 | 2 | WP-016 | S3 — Remediation | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0063-wp016-s3-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | COMPLETE |
-| 0064 | 2 | WP-016 | S4 — Documentation | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0064-wp016-s4-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | PLANNED |
+| 0064 | 2 | WP-016 | S4 — Documentation | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0064-wp016-s4-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | COMPLETE |
 | 0065 | 3 | WP-017 | S1 — Coding | [Kernel architecture and CPU references](phase-3/0065-wp017-s1-kernel-architecture-and-cpu-references.md) | PLANNED |
 | 0066 | 3 | WP-017 | S2 — Audit | [Kernel architecture and CPU references](phase-3/0066-wp017-s2-kernel-architecture-and-cpu-references.md) | PLANNED |
 | 0067 | 3 | WP-017 | S3 — Remediation | [Kernel architecture and CPU references](phase-3/0067-wp017-s3-kernel-architecture-and-cpu-references.md) | PLANNED |

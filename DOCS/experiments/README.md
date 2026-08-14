@@ -51,6 +51,9 @@ at the top level until they are folded into the final campaign archive in Phase 
 - [`0057-wp015-s1-handoff.md`](0057-wp015-s1-handoff.md) — WP-015 S1 handoff
   to the S2 audit for the OscilloSim sparse simulation engine (`prin-sim`, CSR
   coupling, pruning, chimera integration, parity).
+- [`0061-wp016-s1-handoff.md`](0061-wp016-s1-handoff.md) — WP-016 S1 handoff
+  to the S2 audit for parallel parameter sweeps, CPU optimization, and Phase 2
+  gate (`prin-sim`, sweep module, dispatch, benchmarks).
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
 [`../sessions/phase-1/wp009-s1-handoff-note.md`](../sessions/phase-1/wp009-s1-handoff-note.md)

@@ -236,6 +236,37 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   arbitrary :math:`N \in [3, 64)` and seed combinations via ``proptest`` (4
   property tests in ``crates/prin-sim/tests/proptest_properties.rs``). Memory
   scaling is measured and bounded (:math:`<5\,\mathrm{MB}` for :math:`N = 10{,}000`,
-  :math:`\mathrm{nnz} = 200{,}000`). Python bindings and parallel parameter sweeps
-  are deferred to WP-016.
+  :math:`\mathrm{nnz} = 200{,}000`).
+- ``prin-sim`` parallel parameter sweeps and CPU dispatch (WP-016) — Rust
+  ``run_sweep``, ``SweepConfig``, ``SweepResult``, ``SweepAxis``, ``SweepModel``,
+  and ``detect_oscillation`` rebuilding PRINet 3.0
+  ``core/propagation/sweep_utils.py`` (``sweep_coupling_params`` and
+  ``detect_oscillation``).
+
+  **Parallel sweeps:** ``run_sweep`` executes a Cartesian-product grid of parameter
+  configurations in parallel via rayon, each an independent ``OscilloSim`` simulation
+  with deterministic per-configuration ``Seed`` derivation. Sweep axes: coupling
+  strength, decay rate, frequency adaptation rate, and bifurcation parameter.
+
+  **Oscillation detection:** ``detect_oscillation`` flags destabilizing oscillations
+  in order-parameter histories via windowed variance, reusing
+  ``prin_metrics::order::kuramoto_order_parameter`` (one algorithm, one
+  implementation). PRINet 3.0 parity verified across 384 combinations in
+  ``tests/parity_detect_oscillation.rs``. One intentional divergence: Python's
+  ``r_history[-0:]`` slices the whole list for ``window=0``; Rust returns ``false``.
+  No call site uses ``window=0``.
+
+  **CPU dispatch:** Size-gated sequential/parallel dispatch (``dispatch`` module,
+  ``PARALLEL_LEN_THRESHOLD = 32{,}768``) replaces the unconditional ``par_bridge()``
+  / ``par_iter()`` calls from S1. Sequential reference path below threshold;
+  rayon-parallel at or above. Peak sweep speedup: ~3.9× at 8 configs on 8 physical
+  cores (plan amendment #21).
+
+  **Arc-based coupling sharing:** ``SparseKuramoto``, ``SparseStuartLandau``, and
+  ``OscilloSim`` store ``Arc<SparseCoupling>`` (constructors accept
+  ``impl Into<Arc<SparseCoupling>>``), eliminating the per-configuration CSR
+  deep-clone.
+
+  Python bindings (``prin-py`` sweep/engine exposure) are deferred to a future WP
+  (plan amendment #20).
 
