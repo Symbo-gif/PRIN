@@ -1,0 +1,56 @@
+{
+  "variables": [
+    {
+      "name": "z0",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "z1",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "z2",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "z3",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "numer",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "denom",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "numer == (Abs((z2+z3)/2) + Abs((z3+z0)/2) + Abs((z0+z1)/2) + Abs((z1+z2)/2))/4",
+    "denom == (Abs(z0)+Abs(z1)+Abs(z2)+Abs(z3))/4"
+  ],
+  "queries": [
+    {
+      "query_id": "si-numerator-le-denominator",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "numer <= denom"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 15000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

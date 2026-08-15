@@ -1,0 +1,342 @@
+[
+  {
+    "audit_id": "audit-73abbcfd735d",
+    "parent_audit_id": null,
+    "request_id": "req-14fdcb16062f",
+    "claim_id": "TEN-01",
+    "tool_name": "audit_tensor_contract",
+    "adapter_name": "none",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "Contraction compatibility, output signature, and 1 symmetry claim(s) all checked out.",
+    "detailed_reasoning": "Validated 0 contraction pair(s) across 1 shape trial(s); output rank matched output_signature. Symmetry checks: W.symmetric['i', 'j']: held on provided sample_values.",
+    "normalized_inputs": {
+      "expression": "W_ij = ring coupling weight between oscillators i and j (build_ring output, N=6, k_ring=4, K=1.0)",
+      "tensors": [
+        {
+          "name": "W",
+          "rank": 2,
+          "variance": [],
+          "named_axes": [
+            "i",
+            "j"
+          ],
+          "dimensions": {
+            "i": 6,
+            "j": 6
+          },
+          "dtype": "float64",
+          "expected_symmetries": [],
+          "basis": null,
+          "sample_values": [
+            [
+              0.0,
+              0.25,
+              0.25,
+              0.0,
+              0.25,
+              0.25
+            ],
+            [
+              0.25,
+              0.0,
+              0.25,
+              0.25,
+              0.0,
+              0.25
+            ],
+            [
+              0.25,
+              0.25,
+              0.0,
+              0.25,
+              0.25,
+              0.0
+            ],
+            [
+              0.0,
+              0.25,
+              0.25,
+              0.0,
+              0.25,
+              0.25
+            ],
+            [
+              0.25,
+              0.0,
+              0.25,
+              0.25,
+              0.0,
+              0.25
+            ],
+            [
+              0.25,
+              0.25,
+              0.0,
+              0.25,
+              0.25,
+              0.0
+            ]
+          ]
+        }
+      ],
+      "output_signature": {
+        "rank": 2,
+        "named_axes": [
+          "i",
+          "j"
+        ]
+      },
+      "contraction_pairs": [],
+      "index_conventions": {
+        "summation_convention": "explicit",
+        "index_order_matters": true
+      },
+      "required_symmetries": [
+        {
+          "tensor_name": "W",
+          "kind": "symmetric",
+          "axes": [
+            "i",
+            "j"
+          ]
+        }
+      ],
+      "test_shapes": [],
+      "random_seed": 0,
+      "numeric_trials": 1
+    },
+    "assumptions": [],
+    "limitations": [
+      "Contraction/output-signature checks without sample_values use synthetic random trial tensors (they validate shape/einsum plumbing, not real code output).",
+      "The `expression` field is documentation only and was not evaluated."
+    ],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
+    "random_seed": 0,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-08-15T02:30:09.427Z",
+    "finished_at_utc": "2026-08-15T02:30:09.427Z",
+    "duration_ms": 0,
+    "warnings": [],
+    "metrics": [
+      {
+        "name": "contraction_trials_executed",
+        "value": 1.0,
+        "unit": null
+      }
+    ],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:e30509324cc18ab57f7c428d68dbc3dced8e76f7645b1c9e15055cc2e26fbac3",
+    "output_content_hash": "sha256:eab8eb365a6e9aa84837d0d24b9417524586a3e830eab1660924fb81e63d0a1f"
+  },
+  {
+    "audit_id": "audit-16c82def202e",
+    "parent_audit_id": null,
+    "request_id": "req-14fdcb16062f",
+    "claim_id": "TEN-02",
+    "tool_name": "audit_tensor_contract",
+    "adapter_name": "none",
+    "status": "PASS",
+    "severity": "medium",
+    "summary": "Contraction compatibility, output signature, and 1 symmetry claim(s) all checked out.",
+    "detailed_reasoning": "Validated 0 contraction pair(s) across 1 shape trial(s); output rank matched output_signature. Symmetry checks: W.symmetric['i', 'j']: held on provided sample_values.",
+    "normalized_inputs": {
+      "expression": "W_ij = all-to-all coupling weight between oscillators i and j (build_all_to_all output, N=4, K=1.0)",
+      "tensors": [
+        {
+          "name": "W",
+          "rank": 2,
+          "variance": [],
+          "named_axes": [
+            "i",
+            "j"
+          ],
+          "dimensions": {
+            "i": 4,
+            "j": 4
+          },
+          "dtype": "float64",
+          "expected_symmetries": [],
+          "basis": null,
+          "sample_values": [
+            [
+              0.0,
+              0.25,
+              0.25,
+              0.25
+            ],
+            [
+              0.25,
+              0.0,
+              0.25,
+              0.25
+            ],
+            [
+              0.25,
+              0.25,
+              0.0,
+              0.25
+            ],
+            [
+              0.25,
+              0.25,
+              0.25,
+              0.0
+            ]
+          ]
+        }
+      ],
+      "output_signature": {
+        "rank": 2,
+        "named_axes": [
+          "i",
+          "j"
+        ]
+      },
+      "contraction_pairs": [],
+      "index_conventions": {
+        "summation_convention": "explicit",
+        "index_order_matters": true
+      },
+      "required_symmetries": [
+        {
+          "tensor_name": "W",
+          "kind": "symmetric",
+          "axes": [
+            "i",
+            "j"
+          ]
+        }
+      ],
+      "test_shapes": [],
+      "random_seed": 0,
+      "numeric_trials": 1
+    },
+    "assumptions": [],
+    "limitations": [
+      "Contraction/output-signature checks without sample_values use synthetic random trial tensors (they validate shape/einsum plumbing, not real code output).",
+      "The `expression` field is documentation only and was not evaluated."
+    ],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
+    "random_seed": 0,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-08-15T02:30:09.438Z",
+    "finished_at_utc": "2026-08-15T02:30:09.438Z",
+    "duration_ms": 0,
+    "warnings": [],
+    "metrics": [
+      {
+        "name": "contraction_trials_executed",
+        "value": 1.0,
+        "unit": null
+      }
+    ],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:1a4d42bfa60eff92c916517cf0ea6768e77814199ede01e63211632a9f62b819",
+    "output_content_hash": "sha256:f04d18dde47845b08405a5cb0d4460c053aad82645911c2b7868ed784b1dc32d"
+  },
+  {
+    "audit_id": "audit-1dc7509a220d",
+    "parent_audit_id": null,
+    "request_id": "req-14fdcb16062f",
+    "claim_id": "TEN-01-LEAN",
+    "tool_name": "verify_lean_claim",
+    "adapter_name": "lean",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "Lean elaborated successfully; expected_outcome='proves'.",
+    "detailed_reasoning": "Ran `C:\\Users\\there\\.elan\\bin\\lean.EXE C:\\dev\\PRIN\\EVIDENCE\\math-audit\\scratch\\lean\\tmpo8c6v4s3.lean`. Elaboration succeeded. See lean-diagnostics.txt artifact for full sanitized output.",
+    "normalized_inputs": {
+      "project_path": ".",
+      "theorem_name": null,
+      "code_snippet": "-- Formal (kernel-checked, decide-based) verification of TEN-01:\n-- build_ring(N=6, k_ring=4, K=1.0)'s weighted coupling matrix (weight\n-- K/k_ring = 0.25 between connected pairs, 0 elsewhere) is symmetric.\n-- Represented as 4*W over Nat (0 or 1) to keep `decide` inside kernel-checked\n-- Nat arithmetic (Rat's GCD-normalising ops get stuck under plain `decide`);\n-- symmetry of 4*W over Nat is equivalent to symmetry of W since scaling by\n-- the positive constant 4 is injective. Literal values match\n-- tools/math_audit_claims/prin-dynamics-tensor-contracts.json (sample_values\n-- divided by the common weight 0.25).\n\ndef WScaledRows : List (List Nat) :=\n  [[0, 1, 1, 0, 1, 1],\n   [1, 0, 1, 1, 0, 1],\n   [1, 1, 0, 1, 1, 0],\n   [0, 1, 1, 0, 1, 1],\n   [1, 0, 1, 1, 0, 1],\n   [1, 1, 0, 1, 1, 0]]\n\ndef WScaled (i j : Fin 6) : Nat :=\n  ((WScaledRows.getD i.val []).getD j.val 0)\n\nexample : \u2200 i j : Fin 6, WScaled i j = WScaled j i := by decide\n\n#eval \"TEN-01 lean claim: weight matrix symmetry -- decided\"\n",
+      "expected_outcome": "proves",
+      "timeout_seconds": 60.0
+    },
+    "assumptions": [],
+    "limitations": [
+      "This adapter drives the Lean CLI and inspects exit status/diagnostics; it does not perform interactive elaboration introspection (a Lean LSP bridge is a documented future extension)."
+    ],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 60.0,
+    "started_at_utc": "2026-08-15T02:30:09.448Z",
+    "finished_at_utc": "2026-08-15T02:30:10.770Z",
+    "duration_ms": 1322,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [
+      {
+        "artifact_id": "art-e8e249e0769c",
+        "artifact_type": "text",
+        "relative_path": "artifacts/lean-diagnostics.txt",
+        "content_hash": "sha256:596b3a82b1d006020f35176dd7c765b605a34af552445f066053db58d3de5400",
+        "content_type": "text/plain",
+        "description": "Sanitized Lean/lake stdout+stderr",
+        "created_at_utc": "2026-08-15T02:30:10.770Z"
+      }
+    ],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:f31248f3a37d84b9ce4d1903b3bc95ad9d4d4aaa52ed533c2834847c3a867e27",
+    "output_content_hash": "sha256:1344d7ee3529ce7005133e0c76f1d845382472cb95b4afbcdc460d2989f09b0e"
+  }
+]

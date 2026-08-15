@@ -2,33 +2,33 @@
   "gate_pass": false,
   "ledgers": [
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-1bc6b2b6fb3b",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-861cee2f1497",
       "ledger": "prin-dynamics-graph-topology.json",
       "overall_status": "REQUIRES_HUMAN_REVIEW"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-9959a6a5614f",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-fb622d38e89a",
       "ledger": "prin-dynamics-ode-properties.json",
       "overall_status": "REQUIRES_HUMAN_REVIEW"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-ab06dfc313bf",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-10fe39316503",
       "ledger": "prin-dynamics-symbolic-identities.json",
       "overall_status": "PASS"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-ff65397f2cac",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-492de710aafb",
       "ledger": "prin-dynamics-tensor-contracts.json",
       "overall_status": "REQUIRES_HUMAN_REVIEW"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-b4c81ad2ebaf",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-83cd0a683ec1",
       "ledger": "prin-dynamics-z3-invariants.json",
-      "overall_status": "FAIL"
+      "overall_status": "PASS"
     }
   ],
   "output_root": "C:\\dev\\PRIN\\EVIDENCE\\math-audit",
   "policy_path": "C:\\dev\\PRIN\\tools\\math_audit_policy.yaml",
-  "policy_snapshot_hash": "sha256:0e1c329642e07f0b71a7f250a60815d3fc9f6ac4f86dda4f3865149ed6c07608",
+  "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
   "tool_version": "0.1.0"
 }

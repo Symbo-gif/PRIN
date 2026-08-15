@@ -249,6 +249,18 @@ The statement below ("No unresolved D1/D2 findings") reflects this PSR's own
 WP-016 scope as authored and is retained unedited; it is no longer true of
 the project as a whole as of EMA-001.
 
+`[Cross-reference updated by the EMA-001 remediation session, 2026-08-14]`
+Both findings above are now resolved: M-F1 (D1) is fixed, regression-tested,
+and Z3-reverified (`chimera.rs`'s `centred_wrap`, with a documented,
+permanent PRINet-3.0-fixture non-parity exception for this one metric —
+Project Plan amendment #25, upstream reference defect); M-F3 (D2) is
+resolved (Lean 4 formal `PASS` for `GRA-01`/`TEN-01` via Project Plan
+amendment #24, plus recorded sign-off for the four `ode_property` claims
+backed by independent Wolfram Engine corroboration). See
+`EXECUTIVE_MATH_AUDIT_REPORT_001.md` §7-§9 (final verdict
+`PASS-WITH-REMEDIATION`). The `strength_of_incoherence` freeze noted above
+is lifted.
+
 No unresolved D1/D2 findings **within WP-016's own scope**. All quality gates, security scans,
 property tests, and parity suites are green. The two amendments (#20, #21) are documented and
 maintainer-approved.

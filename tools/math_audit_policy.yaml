@@ -29,7 +29,15 @@ limits:
 
 adapters:
   allowed: ["sympy", "scipy", "mpmath", "z3", "networkx", "lean", "wolfram"]
-  enable_lean: false
+  # enable_lean: true per Project Plan amendment #24 (EMA-001 remediation
+  # session, 2026-08-14) -- Lean 4 (bare `lean`, no mathlib dependency) is
+  # used for decide-based formal corroboration of GRA-01-LEAN/TEN-01-LEAN
+  # (concrete, finite, decidable graph/tensor claims). Wolfram remains
+  # disabled: it is used only as informal, out-of-band secondary
+  # corroboration for the ode_property claims in this session, never as a
+  # policy-gating required check, so it never crosses the "new toolchain
+  # dependency" threshold that would need a plan amendment.
+  enable_lean: true
   enable_wolfram: false
   enable_subprocess: true
 

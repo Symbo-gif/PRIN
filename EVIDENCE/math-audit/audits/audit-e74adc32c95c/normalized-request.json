@@ -1,0 +1,9 @@
+{
+  "expression": "(im(((mu + I*w)*(r*exp(I*p)) - r**2*(r*exp(I*p)))*exp(-I*p))/r) - (w)",
+  "task_type": "simplify",
+  "assumptions": [
+    "r > 0"
+  ],
+  "timeout_seconds": 20.0,
+  "precision_digits": 30
+}

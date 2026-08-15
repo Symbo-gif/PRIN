@@ -1,0 +1,64 @@
+{
+  "audit_id": "audit-9344c890d572",
+  "parent_audit_id": null,
+  "request_id": "req-fdb7dc4aceba",
+  "claim_id": "TEN-01-LEAN",
+  "tool_name": "verify_lean_claim",
+  "adapter_name": "lean",
+  "status": "PASS",
+  "severity": "high",
+  "summary": "Lean elaborated successfully; expected_outcome='proves'.",
+  "detailed_reasoning": "Ran `C:\\Users\\there\\.elan\\bin\\lean.EXE C:\\dev\\PRIN\\EVIDENCE\\math-audit\\scratch\\lean\\tmpub5ypbxm.lean`. Elaboration succeeded. See lean-diagnostics.txt artifact for full sanitized output.",
+  "normalized_inputs": {
+    "project_path": ".",
+    "theorem_name": null,
+    "code_snippet": "-- Formal (kernel-checked, decide-based) verification of TEN-01:\n-- build_ring(N=6, k_ring=4, K=1.0)'s weighted coupling matrix (weight\n-- K/k_ring = 0.25 between connected pairs, 0 elsewhere) is symmetric.\n-- Represented as 4*W over Nat (0 or 1) to keep `decide` inside kernel-checked\n-- Nat arithmetic (Rat's GCD-normalising ops get stuck under plain `decide`);\n-- symmetry of 4*W over Nat is equivalent to symmetry of W since scaling by\n-- the positive constant 4 is injective. Literal values match\n-- tools/math_audit_claims/prin-dynamics-tensor-contracts.json (sample_values\n-- divided by the common weight 0.25).\n\ndef WScaledRows : List (List Nat) :=\n  [[0, 1, 1, 0, 1, 1],\n   [1, 0, 1, 1, 0, 1],\n   [1, 1, 0, 1, 1, 0],\n   [0, 1, 1, 0, 1, 1],\n   [1, 0, 1, 1, 0, 1],\n   [1, 1, 0, 1, 1, 0]]\n\ndef WScaled (i j : Fin 6) : Nat :=\n  ((WScaledRows.getD i.val []).getD j.val 0)\n\nexample : ∀ i j : Fin 6, WScaled i j = WScaled j i := by decide\n\n#eval \"TEN-01 lean claim: weight matrix symmetry -- decided\"\n",
+    "expected_outcome": "proves",
+    "timeout_seconds": 60.0
+  },
+  "assumptions": [],
+  "limitations": [
+    "This adapter drives the Lean CLI and inspects exit status/diagnostics; it does not perform interactive elaboration introspection (a Lean LSP bridge is a documented future extension)."
+  ],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 60.0,
+  "started_at_utc": "2026-08-15T02:29:26.184Z",
+  "finished_at_utc": "2026-08-15T02:29:27.526Z",
+  "duration_ms": 1342,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [
+    {
+      "artifact_id": "art-c50660d5c80c",
+      "artifact_type": "text",
+      "relative_path": "artifacts/lean-diagnostics.txt",
+      "content_hash": "sha256:596b3a82b1d006020f35176dd7c765b605a34af552445f066053db58d3de5400",
+      "content_type": "text/plain",
+      "description": "Sanitized Lean/lake stdout+stderr",
+      "created_at_utc": "2026-08-15T02:29:27.526Z"
+    }
+  ],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:f31248f3a37d84b9ce4d1903b3bc95ad9d4d4aaa52ed533c2834847c3a867e27",
+  "output_content_hash": "sha256:cf5fc8a482e7cfa1b5c58402bcf358c486bed9472095bd37139f77ef773fed29"
+}

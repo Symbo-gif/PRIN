@@ -1,0 +1,54 @@
+{
+  "audit_id": "audit-ea24b65e6017",
+  "parent_audit_id": null,
+  "request_id": "req-8657d76832c1",
+  "claim_id": "PD-01-SIN",
+  "tool_name": "wolfram_crosscheck",
+  "adapter_name": "wolfram",
+  "status": "SKIPPED_BY_POLICY",
+  "severity": "high",
+  "summary": "Wolfram adapter unavailable or disabled by policy.",
+  "detailed_reasoning": "Wolfram adapter disabled by policy (adapters.enable_wolfram=false)",
+  "normalized_inputs": {
+    "expression": "(sin(atan2(sin(a - b), cos(a - b)))) - (sin(a - b))",
+    "task_type": "simplify",
+    "assumptions": [],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  "assumptions": [],
+  "limitations": [
+    "No Wolfram evaluation was attempted. This is never treated as a PASS."
+  ],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 20.0,
+  "started_at_utc": "2026-08-15T02:29:24.545Z",
+  "finished_at_utc": "2026-08-15T02:29:24.545Z",
+  "duration_ms": 0,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:443e03490196e173d6f94df39be70a10653ece2b872c19b88528950c529e3cd1",
+  "output_content_hash": "sha256:ba2c17d33d415352201ab2f43f683c8dfb9d5e78bcf410b3262fc4a201b06ddb"
+}

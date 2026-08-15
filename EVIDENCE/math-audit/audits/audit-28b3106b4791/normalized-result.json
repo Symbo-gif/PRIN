@@ -1,0 +1,64 @@
+{
+  "audit_id": "audit-28b3106b4791",
+  "parent_audit_id": null,
+  "request_id": "req-4beb078a3e6a",
+  "claim_id": "GRA-01-LEAN",
+  "tool_name": "verify_lean_claim",
+  "adapter_name": "lean",
+  "status": "PASS",
+  "severity": "high",
+  "summary": "Lean elaborated successfully; expected_outcome='proves'.",
+  "detailed_reasoning": "Ran `C:\\Users\\there\\.elan\\bin\\lean.EXE C:\\dev\\PRIN\\EVIDENCE\\math-audit\\scratch\\lean\\tmp980qsr5b.lean`. Elaboration succeeded. See lean-diagnostics.txt artifact for full sanitized output.",
+  "normalized_inputs": {
+    "project_path": ".",
+    "theorem_name": null,
+    "code_snippet": "-- Formal (kernel-checked, decide-based) verification of GRA-01:\n-- build_ring(N=6, k_ring=4) is 4-regular, has no self-loops, has exactly 12\n-- undirected edges, and is connected.\n\ndef ringNbrs (i : Fin 6) : List (Fin 6) :=\n  [i + 1, i - 1, i + 2, i - 2]\n\ndef dedup' [DecidableEq α] : List α → List α\n  | [] => []\n  | x :: xs => let rest := dedup' xs\n               if rest.contains x then rest else x :: rest\n\n-- 1. 4-regularity: every node has exactly 4 *distinct* neighbours.\ndef noDup [DecidableEq α] : List α → Bool\n  | [] => true\n  | x :: xs => !xs.contains x && noDup xs\n\nexample : ∀ i : Fin 6, (ringNbrs i).length = 4 := by decide\nexample : ∀ i : Fin 6, noDup (ringNbrs i) = true := by decide\n\n-- 2. No self-loops.\nexample : ∀ i : Fin 6, !(ringNbrs i).contains i := by decide\n\n-- 3. Exactly 12 undirected edges: canonicalize each directed pair (i, j) as\n-- (min i j, max i j), collect over all i and its neighbours, dedup, count.\ndef canon (p : Fin 6 × Fin 6) : Fin 6 × Fin 6 :=\n  if p.1.val ≤ p.2.val then p else (p.2, p.1)\n\ndef allNodes : List (Fin 6) := [0, 1, 2, 3, 4, 5]\n\ndef allDirectedEdges : List (Fin 6 × Fin 6) :=\n  allNodes.flatMap (fun i => (ringNbrs i).map (fun j => (i, j)))\n\ndef canonEdges : List (Fin 6 × Fin 6) :=\n  dedup' (allDirectedEdges.map canon)\n\nexample : canonEdges.length = 12 := by decide\n\n-- 4. Connectivity: every node is reachable from node 0 via repeated\n-- neighbour steps (bounded BFS closure, decidable over a finite type).\ndef stepClosure (visited : List (Fin 6)) : List (Fin 6) :=\n  dedup' (visited ++ visited.flatMap ringNbrs)\n\ndef closureN : Nat → List (Fin 6) → List (Fin 6)\n  | 0, v => v\n  | n + 1, v => closureN n (stepClosure v)\n\nexample : allNodes.all (fun j => (closureN 6 [0]).contains j) = true := by decide\n\n#eval \"GRA-01 lean claim: 4-regular, no self-loops, 12 edges, connected -- all decided\"\n",
+    "expected_outcome": "proves",
+    "timeout_seconds": 60.0
+  },
+  "assumptions": [],
+  "limitations": [
+    "This adapter drives the Lean CLI and inspects exit status/diagnostics; it does not perform interactive elaboration introspection (a Lean LSP bridge is a documented future extension)."
+  ],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 60.0,
+  "started_at_utc": "2026-08-15T02:30:06.718Z",
+  "finished_at_utc": "2026-08-15T02:30:07.550Z",
+  "duration_ms": 832,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [
+    {
+      "artifact_id": "art-4722be511f3b",
+      "artifact_type": "text",
+      "relative_path": "artifacts/lean-diagnostics.txt",
+      "content_hash": "sha256:081f250f1ad164665ecc88cdcec8ca433c5bbb5b741cf4dbb2d3c355cdbf9d5c",
+      "content_type": "text/plain",
+      "description": "Sanitized Lean/lake stdout+stderr",
+      "created_at_utc": "2026-08-15T02:30:07.550Z"
+    }
+  ],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:22c3f8829ed5dcadc0ccad320ad660aa385f293e6b918b08bea4682c0fb6897e",
+  "output_content_hash": "sha256:bed273a1200e44cceb0acdd622ab3cc058b071de33c872acdc82c306f08821ed"
+}

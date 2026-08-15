@@ -1,0 +1,50 @@
+EMA-001 remediation session (2026-08-14) -- manual, out-of-band secondary
+corroboration. Not routed through math-audit-mcp's governed evidence chain
+(policy.adapters.enable_wolfram stays false; see tools/math_audit_policy.yaml
+and Project Plan amendment #24's scope note). Produced by running
+ema-001-remediation-wolfram-ode-corroboration.wls with `wolframscript -file`
+from this directory. Cited in EXECUTIVE_MATH_AUDIT_REPORT_001.md's
+remediation session addendum (M-F3) as informal, advisory evidence
+supporting the maintainer/agent sign-off of INT-01/INT-02/HOPF-01/KUR-01,
+which remain REQUIRES_HUMAN_REVIEW at the governed ledger level by policy
+design (see M-F3's own finding: this is a policy-severity-gate interaction
+for ode_property claims, not a code defect, and not cleanly resolvable by
+attaching a second tool to an existing single-tool-routed claim -- see
+orchestration/claim_router.py's "one canonical tool per claim" convention in
+the math-audit-mcp source).
+
+=== INT-01: Euler, y'=-2y, h=0.05, y(0)=1, t in [0,1] ===
+stability factor R = 0.9 (|R|<1 => decaying, matches exact decay)
+max |euler - exact| over 20 steps = 0.019201001071442347 (tol 0.02)
+monotone decreasing (R in (0,1)): True
+stays in [0,1]: True
+Taylor order check: Series[Exp[z]-(1+z),{z,0,2}] = SeriesData[z, 0, {1/2}, 2, 3, 1]  (z^1 term vanishes, z^2 term = 1/2 =/= 0 => exactly order 1)
+
+=== INT-02: RK4, y'=-2y, h=0.1, y(0)=1, t in [0,1] ===
+stability factor R4(h*lambda) = 0.8187333333333333
+max |rk4 - exact| over 10 steps = 5.79695385960477*^-6 (tol 0.0001)
+monotone decreasing: True
+stays in [0,1]: True
+Taylor order check: Series[Exp[z]-R4[z],{z,0,5}] = SeriesData[z, 0, {1/120}, 5, 6, 1]  (z^1..z^4 vanish, z^5 term =/= 0 => exactly order 4)
+
+=== HOPF-01: dr/dt = 4r - r^3, r(0)=1/2, exact closed form via u=1/r^2 ===
+u(t) = 1/r(t)^2 solves linear ODE u' = -8u+2, u(0)=4 => u(t) = 1/4 + 15/(4*E^(8*t))
+r(t) = 1/Sqrt[u(t)]  =>  r(t) = 2/Sqrt[1 + 15/E^(8*t)]
+r(0) = 2/Sqrt[(15 + E^(8*t))/E^(8*t)]  (expect 0.5)
+Limit r(t) as t->Infinity = 2  (expect 2)
+u'(t) = -30/E^(8*t)  (u decreases monotonically from 4 to 1/4 on t>=0, so r=1/Sqrt[u] increases monotonically, no overshoot)
+r(10) numeric = 2.`10./Sqrt[(15.`10. + 2.71828182845904523531974789074538989553`10.^(8.`10.903089986991944*t))/2.71828182845904523531974789074538989553`10.^(8.`10.903089986991944*t)]  (near equilibrium 2, matches HOPF-01's t in [0,10])
+r monotone non-decreasing over [0,10] (sampled): True
+r stays within [0.5, 2.0]: True
+
+=== KUR-01: dDelta/dt = 1 - 2 Sin[Delta], Delta(0)=0.1, t in [0,20] ===
+Delta* = ArcSin[1/2] = Pi/6 = 0.5235987755982988 (expect pi/6 = 0.5235987755982988)
+
+NDSolve::precw: The precision of the differential equation ({{d'[t] == 1 - 2 Sin[d[t]], d[0] == 0.1}, {}, {}, {}, {}}) is less than WorkingPrecision (30.).
+Delta(20) (independent Wolfram NDSolve, WorkingPrecision 30) = 0.52359877559829853215704627202906482372`15.
+monotone non-decreasing: True
+never exceeds Delta* (no overshoot): True
+within tol 0.0001 of Delta* at t=20: True
+
+=== Summary: all four claims independently corroborated by Wolfram Engine ===
+WolframScript 1.14.0 for Microsoft Windows (64-bit)

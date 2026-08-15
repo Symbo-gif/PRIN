@@ -1,0 +1,16 @@
+{
+  "lhs": "(a0*cos(p0) + a1*cos(p1))**2 + (a0*sin(p0) + a1*sin(p1))**2 + (a0*cos(p0) - a1*cos(p1))**2 + (a0*sin(p0) - a1*sin(p1))**2",
+  "rhs": "2*(a0**2 + a1**2)",
+  "assumptions": [],
+  "variables": [
+    "a0",
+    "a1",
+    "p0",
+    "p1"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 60,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

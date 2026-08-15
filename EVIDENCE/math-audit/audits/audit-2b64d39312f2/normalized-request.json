@@ -1,0 +1,32 @@
+{
+  "variables": [
+    {
+      "name": "m",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "r",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "m >= 0",
+    "r == If(m > 1.0, 1.0, m)"
+  ],
+  "queries": [
+    {
+      "query_id": "order-parameter-bounded",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "And(r >= 0, r <= 1.0)"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

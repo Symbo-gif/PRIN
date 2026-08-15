@@ -1,0 +1,309 @@
+[
+  {
+    "variables": [
+      {
+        "name": "kd",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "w1",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "w2",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "w1 >= 0",
+      "w1 < 6.283185307179586",
+      "w2 >= 0",
+      "w2 < 6.283185307179586",
+      "w1 - w2 == kd*6.283185307179586"
+    ],
+    "queries": [
+      {
+        "query_id": "wrap-phase-unique",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "w1 == w2"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "variables": [
+      {
+        "name": "d",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "k",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "w",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "z",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "w == d - k*6.283185307179586",
+      "w >= 0",
+      "w < 6.283185307179586",
+      "z == w - 3.141592653589793"
+    ],
+    "queries": [
+      {
+        "query_id": "si-wrap-centred-at-zero",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "Implies(d == 0, z == 0)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "variables": [
+      {
+        "name": "a1",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "a2",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "o1",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "o2",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "o1 == If(a1 < 0.000001, 0.000001, If(a1 > 10.0, 10.0, a1))",
+      "o2 == If(a2 < 0.000001, 0.000001, If(a2 > 10.0, 10.0, a2))",
+      "a1 <= a2"
+    ],
+    "queries": [
+      {
+        "query_id": "amp-clamp-bounded-monotone",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(o1 >= 0.000001, o1 <= 10.0, o1 <= o2)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "variables": [
+      {
+        "name": "d",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "o",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "o == If(d < -10000.0, -10000.0, If(d > 10000.0, 10000.0, d))"
+    ],
+    "queries": [
+      {
+        "query_id": "deriv-clamp-bounded-sign-preserving",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(Abs(o) <= 10000.0, Implies(d >= 0, o >= 0), Implies(d <= 0, o <= 0))"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "variables": [
+      {
+        "name": "m",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "r",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "m >= 0",
+      "r == If(m > 1.0, 1.0, m)"
+    ],
+    "queries": [
+      {
+        "query_id": "order-parameter-bounded",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(r >= 0, r <= 1.0)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "variables": [
+      {
+        "name": "z0",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "z1",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "z2",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "z3",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "numer",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "denom",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "numer == (Abs((z2+z3)/2) + Abs((z3+z0)/2) + Abs((z0+z1)/2) + Abs((z1+z2)/2))/4",
+      "denom == (Abs(z0)+Abs(z1)+Abs(z2)+Abs(z3))/4"
+    ],
+    "queries": [
+      {
+        "query_id": "si-numerator-le-denominator",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "numer <= denom"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 15000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "variables": [
+      {
+        "name": "A",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "m",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "c",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "raw",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "out",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "A >= 0.000001",
+      "A <= 10.0",
+      "m >= 0",
+      "m <= 1.0",
+      "c >= -1.0",
+      "c <= 1.0",
+      "raw == A*(1 + m*c)",
+      "out == If(raw < 0.000001, 0.000001, If(raw > 10.0, 10.0, raw))"
+    ],
+    "queries": [
+      {
+        "query_id": "pac-modulation-bounded",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(raw >= 0, raw <= 2*A, out >= 0.000001, out <= 10.0)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  }
+]

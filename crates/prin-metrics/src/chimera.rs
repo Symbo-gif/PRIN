@@ -16,6 +16,17 @@ use std::f64::consts::{PI, TAU};
 
 use crate::error::{require_finite, validate_neighbors, MetricError};
 
+/// Wrap a raw phase difference to `[−π, π)`, centred on zero: `d = 0` maps to
+/// `0`, not `−π`. Shifting by `+π` before reducing mod `2π` is required for
+/// this centring — reducing mod `2π` alone (without the shift) yields a
+/// `[0, 2π)`-valued representative whose zero point is offset by `π`
+/// (EMA-001 M-F1: Z3-confirmed counterexample `d=0 -> z=-pi` under the
+/// unshifted formula, which inverted the coherent/incoherent magnitude
+/// relationship for any non-uniform field).
+fn centred_wrap(diff: f64) -> f64 {
+    (diff + PI).rem_euclid(TAU) - PI
+}
+
 /// Compute the local Kuramoto order parameter for each oscillator.
 ///
 /// For each oscillator `i`,
@@ -167,7 +178,7 @@ pub fn strength_of_incoherence(phase: &[f64], window_size: usize) -> Result<f64,
 
     // Wrapped finite difference on the ring, centred to [−π, π).
     let z: Vec<f64> = (0..n)
-        .map(|m| (phase[m] - phase[(m + 1) % n]).rem_euclid(TAU) - PI)
+        .map(|m| centred_wrap(phase[m] - phase[(m + 1) % n]))
         .collect();
 
     let denom = z.iter().map(|v| v.abs()).sum::<f64>() / (n as f64);
@@ -448,15 +459,61 @@ mod tests {
     }
 
     #[test]
+    fn centred_wrap_maps_zero_to_zero() {
+        // EMA-001 M-F1 regression: an exactly in-phase pair (raw diff 0)
+        // must wrap to z = 0, not z = -pi.
+        assert_eq!(centred_wrap(0.0), 0.0);
+        assert!((centred_wrap(TAU) - 0.0).abs() < 1e-12);
+        // The half-period is the wrap boundary: PI itself wraps to -PI.
+        assert!((centred_wrap(PI) - (-PI)).abs() < 1e-12);
+    }
+
+    #[test]
+    fn strength_of_incoherence_local_coherence_not_inverted() {
+        // EMA-001 M-F1 regression: a field with one tightly in-phase local
+        // cluster (raw diff ~0) embedded in an otherwise scattered ring must
+        // not report that cluster as *more* incoherent than the scattered
+        // background -- the pre-fix formula's constant -pi offset on every
+        // z_m was invisible on a perfectly uniform field (the one case the
+        // pre-existing doctest exercised) but inverted the coherence
+        // magnitude relationship on any field with local structure.
+        let n = 16;
+        let mut phase: Vec<f64> = vec![0.0; n];
+        // Scattered background so the field is not uniform.
+        for (i, p) in phase.iter_mut().enumerate() {
+            *p = ((i as f64) * 2.399 + 0.7 * (i as f64) * (i as f64)).rem_euclid(TAU);
+        }
+        // Force one exactly in-phase neighbouring pair (raw diff = 0).
+        phase[0] = 1.23456;
+        phase[1] = 1.23456;
+
+        // Direct check on the wrap primitive: the in-phase pair's wrapped
+        // difference must itself be (near) zero, not (near) +-pi.
+        let z_in_phase = centred_wrap(phase[0] - phase[1]);
+        assert!(
+            z_in_phase.abs() < 1e-9,
+            "in-phase pair wrapped to {z_in_phase}, expected ~0"
+        );
+
+        let si = strength_of_incoherence(&phase, 4).unwrap();
+        assert!((0.0..=1.0).contains(&si), "{si}");
+    }
+
+    #[test]
     fn strength_of_incoherence_coherent_is_zero() {
         // Constant phase → z constant → smoothing leaves |z̄| = |z| → SI = 0
         // (up to floating-point accumulation noise).
         let si = strength_of_incoherence(&[2.0; 16], 4).unwrap();
         assert!(si < 1e-9, "{si}");
-        // Linear ramp: SI stays small (one wrap discontinuity per ring).
+        // Linear ramp: SI stays bounded away from 1 (one wrap discontinuity
+        // per ring). EMA-001 M-F1: the correct centred wrap yields si ~ 0.2
+        // here; the pre-fix formula's constant -pi offset on every z_m
+        // happened to leave this particular case's numer/denom ratio in
+        // [0, 0.1), which is why that (now-corrected) bound previously read
+        // as passing.
         let ramp: Vec<f64> = (0..16).map(|i| 0.2 * (i as f64)).collect();
         let si = strength_of_incoherence(&ramp, 4).unwrap();
-        assert!((0.0..0.1).contains(&si), "{si}");
+        assert!((0.0..0.25).contains(&si), "{si}");
     }
 
     #[test]

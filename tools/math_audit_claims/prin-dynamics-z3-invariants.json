@@ -6,23 +6,20 @@
     {
       "claim_id": "PW-01",
       "claim_type": "z3_invariant",
-      "statement": "wrap_phase(x) = x.rem_euclid(2*pi), which wraps into [0, 2*pi) (not (-pi, pi]; see integrate.rs:20-21 module doc), has a unique representative: any two integer-multiple-of-2*pi-shifted values of x that both land in [0, 2*pi) must be equal.",
+      "statement": "wrap_phase(x) = x.rem_euclid(2*pi), which wraps into [0, 2*pi) (not (-pi, pi]; see integrate.rs:20-21 module doc), has a unique representative: restated without an explicit integer witness tied to x (EMA-001 M-F2 re-encoding after the original 3-free-variable/x-linked encoding timed out) as -- any two reals w1, w2 both lying in [0, 2*pi) whose difference is an integer multiple of 2*pi must be equal. This is a strictly more general statement that implies the original (any x's wrap_phase(x) is the unique representative of x's residue class in [0, 2*pi)), using a single Int witness for the multiple rather than two Ints tied through a shared free Real x.",
       "code_refs": ["crates/prin-dynamics/src/state.rs:274-277", "crates/prin-dynamics/src/state.rs:21"],
       "assumptions": {
         "variables": [
-          {"name": "x", "sort": "Real"},
-          {"name": "k1", "sort": "Int"},
-          {"name": "k2", "sort": "Int"},
+          {"name": "kd", "sort": "Int"},
           {"name": "w1", "sort": "Real"},
           {"name": "w2", "sort": "Real"}
         ],
         "constraints": [
-          "w1 == x - k1*6.283185307179586",
-          "w2 == x - k2*6.283185307179586",
           "w1 >= 0",
           "w1 < 6.283185307179586",
           "w2 >= 0",
-          "w2 < 6.283185307179586"
+          "w2 < 6.283185307179586",
+          "w1 - w2 == kd*6.283185307179586"
         ],
         "queries": [
           {"query_id": "wrap-phase-unique", "kind": "invariant_holds", "invariant": "w1 == w2"}
@@ -38,8 +35,8 @@
     {
       "claim_id": "PW-02",
       "claim_type": "z3_invariant",
-      "statement": "chimera.rs's strength-of-incoherence phase-difference wrap is centred on zero: two neighbouring phases that are exactly in phase (raw difference d=0) must produce a wrapped difference z=0, as required for a difference measure whose baseline is perfect coherence (chimera.rs:129-131 documents a centred definition).",
-      "code_refs": ["crates/prin-metrics/src/chimera.rs:169-171", "crates/prin-metrics/src/chimera.rs:129-131"],
+      "statement": "chimera.rs's strength-of-incoherence phase-difference wrap is centred on zero: two neighbouring phases that are exactly in phase (raw difference d=0) must produce a wrapped difference z=0, as required for a difference measure whose baseline is perfect coherence (chimera.rs:129-131 documents a centred definition). EMA-001 M-F1 remediation: this claim's constraints now model the corrected formula `((d + pi).rem_euclid(2*pi)) - pi` (chimera.rs's private `centred_wrap` helper post-fix), replacing the pre-fix `d.rem_euclid(2*pi) - pi` this claim originally (correctly) refuted -- see EXECUTIVE_MATH_AUDIT_REPORT_001.md M-F1 for the original Z3-confirmed counterexample (d=0, k=0, w=0, z=-pi) against the unfixed formula.",
+      "code_refs": ["crates/prin-metrics/src/chimera.rs:169-176", "crates/prin-metrics/src/chimera.rs:129-131"],
       "assumptions": {
         "variables": [
           {"name": "d", "sort": "Real"},
@@ -48,7 +45,7 @@
           {"name": "z", "sort": "Real"}
         ],
         "constraints": [
-          "w == d - k*6.283185307179586",
+          "w == (d + 3.141592653589793) - k*6.283185307179586",
           "w >= 0",
           "w < 6.283185307179586",
           "z == w - 3.141592653589793"

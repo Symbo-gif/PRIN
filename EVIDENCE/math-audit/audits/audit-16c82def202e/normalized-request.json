@@ -1,0 +1,72 @@
+{
+  "expression": "W_ij = all-to-all coupling weight between oscillators i and j (build_all_to_all output, N=4, K=1.0)",
+  "tensors": [
+    {
+      "name": "W",
+      "rank": 2,
+      "variance": [],
+      "named_axes": [
+        "i",
+        "j"
+      ],
+      "dimensions": {
+        "i": 4,
+        "j": 4
+      },
+      "dtype": "float64",
+      "expected_symmetries": [],
+      "basis": null,
+      "sample_values": [
+        [
+          0.0,
+          0.25,
+          0.25,
+          0.25
+        ],
+        [
+          0.25,
+          0.0,
+          0.25,
+          0.25
+        ],
+        [
+          0.25,
+          0.25,
+          0.0,
+          0.25
+        ],
+        [
+          0.25,
+          0.25,
+          0.25,
+          0.0
+        ]
+      ]
+    }
+  ],
+  "output_signature": {
+    "rank": 2,
+    "named_axes": [
+      "i",
+      "j"
+    ]
+  },
+  "contraction_pairs": [],
+  "index_conventions": {
+    "summation_convention": "explicit",
+    "index_order_matters": true
+  },
+  "required_symmetries": [
+    {
+      "tensor_name": "W",
+      "kind": "symmetric",
+      "axes": [
+        "i",
+        "j"
+      ]
+    }
+  ],
+  "test_shapes": [],
+  "random_seed": 0,
+  "numeric_trials": 1
+}
