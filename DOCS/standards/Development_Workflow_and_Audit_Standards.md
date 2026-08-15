@@ -68,6 +68,16 @@ S1 Coding ──► S2 Audit ──► S3 Remediation ──► S4 Documentation
 - New/changed code at ≥95% coverage; gradcheck/parity/property tests included
   where the Testing Standards require them.
 - WP acceptance criteria met to the author's knowledge.
+- **Parity-evidence disposition stated** (Phase 2 analytics R15): for every new
+  numerical primitive in the WP, the handoff note states whether a directly
+  comparable PRINet 3.0 reference exists, backed by a stated grep/import
+  check against the archived reference — never an unverified assertion that
+  "no reference exists." If a reference exists, either parity evidence is
+  included in this S1 commit, or its deferral is stated with a reason
+  reviewable at S2. This closes the root cause behind WP-012/WP-013/WP-014's
+  recurring D1 pattern (Testing Standards §1.3 already requires parity cases
+  be written or identified before the algorithm lands; this item makes the
+  check itself, not just the tests, an explicit exit gate).
 
 ### S2 — Audit session
 
