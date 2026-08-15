@@ -1,0 +1,152 @@
+{
+  "ledger_id": "ledger-prin-dynamics-symbolic-identities-001",
+  "repository_root": ".",
+  "commit_ref": "f1204ed",
+  "claims": [
+    {
+      "claim_id": "PD-01-SIN",
+      "claim_type": "symbolic_identity",
+      "statement": "safe_phase_diff(a,b) = atan2(sin(a-b), cos(a-b)) preserves sin(a-b) exactly, which is the load-bearing property integrate.rs:26-31 relies on to skip wrapping phase differences at RK stages.",
+      "code_refs": ["crates/prin-dynamics/src/state.rs:284-291", "crates/prin-dynamics/src/integrate.rs:26-31"],
+      "assumptions": {
+        "lhs": "sin(atan2(sin(a - b), cos(a - b)))",
+        "rhs": "sin(a - b)",
+        "variables": ["a", "b"],
+        "domain": "real",
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 40,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "high",
+      "crosscheck_required": true
+    },
+    {
+      "claim_id": "PD-01-COS",
+      "claim_type": "symbolic_identity",
+      "statement": "safe_phase_diff(a,b) = atan2(sin(a-b), cos(a-b)) preserves cos(a-b) exactly, the companion identity to PD-01-SIN.",
+      "code_refs": ["crates/prin-dynamics/src/state.rs:284-291", "crates/prin-dynamics/src/integrate.rs:26-31"],
+      "assumptions": {
+        "lhs": "cos(atan2(sin(a - b), cos(a - b)))",
+        "rhs": "cos(a - b)",
+        "variables": ["a", "b"],
+        "domain": "real",
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 40,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "high",
+      "crosscheck_required": true
+    },
+    {
+      "claim_id": "MF-01-PHASE",
+      "claim_type": "symbolic_identity",
+      "statement": "For N=2, the mean-field Kuramoto phase-velocity term K*R*sin(psi-phi0) (with R*e^{i*psi} the complex order parameter over BOTH oscillators, i.e. including the self term) equals the full-matrix form K/2 * sum_j r_j*sin(phi_j - phi0) with self-coupling included.",
+      "code_refs": ["crates/prin-dynamics/src/models.rs:191-231", "crates/prin-dynamics/src/models.rs:233-281"],
+      "assumptions": {
+        "lhs": "K*sqrt(((r0*cos(p0) + r1*cos(p1))/2)**2 + ((r0*sin(p0) + r1*sin(p1))/2)**2)*sin(atan2((r0*sin(p0) + r1*sin(p1))/2, (r0*cos(p0) + r1*cos(p1))/2) - p0)",
+        "rhs": "K*(r0*sin(p0 - p0) + r1*sin(p1 - p0))/2",
+        "variables": ["r0", "r1", "p0", "p1", "K"],
+        "domain": "real",
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 60,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "critical",
+      "crosscheck_required": true
+    },
+    {
+      "claim_id": "MF-01-AMPLITUDE",
+      "claim_type": "symbolic_identity",
+      "statement": "The companion amplitude-channel identity to MF-01-PHASE: K*R*cos(psi-phi0) equals K/2 * sum_j r_j*cos(phi_j - phi0) with self-coupling included. Because cos(0)=1 (unlike sin(0)=0), the self term contributes non-trivially here -- this is the channel where prin-dynamics::coupling's zero-diagonal build_all_to_all matrix would NOT reproduce mean-field coupling if fed through CouplingMode::Full (see finding MF-DIAG in the audit report).",
+      "code_refs": ["crates/prin-dynamics/src/models.rs:191-231", "crates/prin-dynamics/src/models.rs:226", "crates/prin-dynamics/src/coupling.rs:193-201"],
+      "assumptions": {
+        "lhs": "K*sqrt(((r0*cos(p0) + r1*cos(p1))/2)**2 + ((r0*sin(p0) + r1*sin(p1))/2)**2)*cos(atan2((r0*sin(p0) + r1*sin(p1))/2, (r0*cos(p0) + r1*cos(p1))/2) - p0)",
+        "rhs": "K*(r0*cos(p0 - p0) + r1*cos(p1 - p0))/2",
+        "variables": ["r0", "r1", "p0", "p1", "K"],
+        "domain": "real",
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 60,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "critical",
+      "crosscheck_required": true
+    },
+    {
+      "claim_id": "SL-01-RADIAL",
+      "claim_type": "symbolic_identity",
+      "statement": "For z = r*e^{i*phi} and dz/dt = (mu + i*omega)*z - |z|^2*z, the radial component dr/dt = Re(dz * e^{-i*phi}) reduces exactly to mu*r - r^3.",
+      "code_refs": ["crates/prin-dynamics/src/models.rs:473-480", "crates/prin-dynamics/src/models.rs:371-373"],
+      "assumptions": {
+        "lhs": "re(((mu + I*w)*(r*exp(I*p)) - r**2*(r*exp(I*p)))*exp(-I*p))",
+        "rhs": "mu*r - r**3",
+        "variables": ["mu", "w", "p", "r"],
+        "domain": "real",
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 60,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "critical",
+      "crosscheck_required": true
+    },
+    {
+      "claim_id": "SL-01-ANGULAR",
+      "claim_type": "symbolic_identity",
+      "statement": "For the same Stuart-Landau flow, the angular component dphi/dt = Im(dz * e^{-i*phi}) / r reduces exactly to omega (constant, independent of r), for r > 0.",
+      "code_refs": ["crates/prin-dynamics/src/models.rs:473-480", "crates/prin-dynamics/src/models.rs:602-611"],
+      "assumptions": {
+        "lhs": "im(((mu + I*w)*(r*exp(I*p)) - r**2*(r*exp(I*p)))*exp(-I*p))/r",
+        "rhs": "w",
+        "variables": ["mu", "w", "p", "r"],
+        "domain": "real",
+        "strategy": "symbolic_then_numeric",
+        "assumptions": ["r > 0"],
+        "numeric_samples": 60,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "critical",
+      "crosscheck_required": true
+    },
+    {
+      "claim_id": "MPC-01",
+      "claim_type": "symbolic_identity",
+      "statement": "Mean phase coherence MPC = mean over pairs i<j of cos(phi_i - phi_j) equals (N*R^2 - 1)/(N - 1) for N=3, an exact algebraic consistency constraint between coherence.rs's O(N^2) pairwise sum and order.rs's order parameter R.",
+      "code_refs": ["crates/prin-metrics/src/coherence.rs:39-57", "crates/prin-metrics/src/order.rs:59-71"],
+      "assumptions": {
+        "lhs": "(cos(p0 - p1) + cos(p0 - p2) + cos(p1 - p2))/3",
+        "rhs": "(3*(((cos(p0) + cos(p1) + cos(p2))/3)**2 + ((sin(p0) + sin(p1) + sin(p2))/3)**2) - 1)/2",
+        "variables": ["p0", "p1", "p2"],
+        "domain": "real",
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 60,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "high",
+      "crosscheck_required": true
+    },
+    {
+      "claim_id": "PSD-01",
+      "claim_type": "symbolic_identity",
+      "statement": "Parseval's theorem for the unnormalized 2-point DFT periodogram used by spectral.rs: sum_k |X[k]|^2 = M * sum_n A_n^2 for x_n = A_n*e^{i*phi_n}, instantiated at N=M=2.",
+      "code_refs": ["crates/prin-metrics/src/spectral.rs:24-27", "crates/prin-metrics/src/spectral.rs:48-92"],
+      "assumptions": {
+        "lhs": "(a0*cos(p0) + a1*cos(p1))**2 + (a0*sin(p0) + a1*sin(p1))**2 + (a0*cos(p0) - a1*cos(p1))**2 + (a0*sin(p0) - a1*sin(p1))**2",
+        "rhs": "2*(a0**2 + a1**2)",
+        "variables": ["a0", "a1", "p0", "p1"],
+        "domain": "real",
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 60,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "medium",
+      "crosscheck_required": false
+    }
+  ]
+}

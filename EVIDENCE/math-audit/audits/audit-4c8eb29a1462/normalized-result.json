@@ -1,0 +1,101 @@
+{
+  "audit_id": "audit-4c8eb29a1462",
+  "parent_audit_id": null,
+  "request_id": "req-375cf5e5aa50",
+  "claim_id": "PW-02",
+  "tool_name": "check_constraint_model",
+  "adapter_name": "z3",
+  "status": "FAIL",
+  "severity": "high",
+  "summary": "1 of 1 quer(y/ies) failed: si-wrap-centred-at-zero: fail - found a model satisfying assumptions AND NOT(invariant): the invariant is violated.",
+  "detailed_reasoning": "si-wrap-centred-at-zero: found a model satisfying assumptions AND NOT(invariant): the invariant is violated.",
+  "normalized_inputs": {
+    "variables": [
+      {
+        "name": "d",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "k",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "w",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "z",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "w == d - k*6.283185307179586",
+      "w >= 0",
+      "w < 6.283185307179586",
+      "z == w - 3.141592653589793"
+    ],
+    "queries": [
+      {
+        "query_id": "si-wrap-centred-at-zero",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "Implies(d == 0, z == 0)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  "assumptions": [],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:0e1c329642e07f0b71a7f250a60815d3fc9f6ac4f86dda4f3865149ed6c07608",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 10.0,
+  "started_at_utc": "2026-08-14T23:45:55.467Z",
+  "finished_at_utc": "2026-08-14T23:45:55.471Z",
+  "duration_ms": 3,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [
+    {
+      "description": "counterexample for query si-wrap-centred-at-zero",
+      "data": {
+        "k": "0",
+        "z": "-3141592653589793/1000000000000000",
+        "d": "0",
+        "w": "0"
+      }
+    }
+  ],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:e97786a29116eac3ee93390e7faa0f687e082a0585683d17b43c32a7635d6042",
+  "output_content_hash": "sha256:20a901179da11020c2189c9ec5da362d67614d4f72b08b9a0a82c2c4e081e1aa"
+}

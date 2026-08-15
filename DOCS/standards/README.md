@@ -4,6 +4,7 @@ All contributions are governed by these documents:
 
 - `Development_Workflow_and_Audit_Standards.md` — Session Cycle and deviations.
 - `Executive_Audit_Governance_and_Methodology.md` — Executive Audit Session governance, multi-domain methodology, and remediation protocols.
+- `Executive_Mathematical_Audit_Governance_and_Methodology.md` — Executive Mathematical Audit (EMA) Session governance: independent, tool-executed re-verification of PRIN's mathematical claims via `math-audit-mcp`.
 - `Coding_Standards.md` — Rust/Python design, quality, and security controls.
 - `Testing_Standards.md` — test layers, tolerances, and coverage.
 - `Documentation_Standards.md` — API/project documentation and S4 closure.

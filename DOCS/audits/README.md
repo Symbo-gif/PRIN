@@ -7,6 +7,7 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
 
 - Template: [`TEMPLATE_Audit_Report.md`](TEMPLATE_Audit_Report.md)
 - Executive Audit Template: [`TEMPLATE_Executive_Audit_Report.md`](TEMPLATE_Executive_Audit_Report.md)
+- Executive Mathematical Audit Template: [`TEMPLATE_Executive_Math_Audit_Report.md`](TEMPLATE_Executive_Math_Audit_Report.md)
 - Audits are append-only history: never edit a committed audit except to add
   the S3 closure table.
 - Verdicts: `PASS` / `PASS-WITH-FINDINGS` / `FAIL` (any D1 finding ⇒ `FAIL`;
@@ -82,3 +83,19 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   project-level executive audit (EA-002, 2026-08-08), `PASS-WITH-REMEDIATION`;
   thirteen findings (E-F1–E-F13: two D2, four D3, seven D4) remediated
   in-session or passed forward with owners.
+- [`EXECUTIVE_AUDIT_REPORT_003.md`](EXECUTIVE_AUDIT_REPORT_003.md) — Third
+  project-level executive audit (EA-003, 2026-08-14), `PASS-WITH-REMEDIATION`;
+  fourteen findings (E-F1–E-F14) remediated in-session (E-F7 risk-accepted,
+  E-F6 tag/publish deliberately deferred by maintainer directive). `[Index
+  entry added retroactively by EMA-001, 2026-08-14 — never added by EA-003
+  itself.]`
+- [`EXECUTIVE_MATH_AUDIT_REPORT_001.md`](EXECUTIVE_MATH_AUDIT_REPORT_001.md) —
+  First Executive Mathematical Audit (EMA-001, 2026-08-14), `FAIL`; introduces
+  `math-audit-mcp` independent tool-executed re-verification (SymPy/SciPy/
+  Z3/NetworkX) as a new audit type (plan amendment #23). 23 claims audited
+  across `prin-dynamics`/`prin-metrics`; one open D1 finding (M-F1: a
+  Z3-confirmed phase-wrap defect in `prin-metrics::chimera::
+  strength_of_incoherence`), one D3 evidentiary gap (M-F2), and a discovered
+  D2 policy-design interaction (M-F3). Remediation deliberately deferred to a
+  follow-up EMA-001 remediation session (this session's mandate was audit and
+  reporting only).

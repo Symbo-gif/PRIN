@@ -1,0 +1,54 @@
+{
+  "variables": [
+    {
+      "name": "x",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "k1",
+      "sort": "Int",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "k2",
+      "sort": "Int",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "w1",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "w2",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "w1 == x - k1*6.283185307179586",
+    "w2 == x - k2*6.283185307179586",
+    "w1 >= 0",
+    "w1 < 6.283185307179586",
+    "w2 >= 0",
+    "w2 < 6.283185307179586"
+  ],
+  "queries": [
+    {
+      "query_id": "wrap-phase-unique",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "w1 == w2"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

@@ -1,0 +1,33 @@
+{
+  "bundle_id": "bundle-1bc6b2b6fb3b",
+  "ledger_id": "ledger-prin-dynamics-graph-topology-001",
+  "request_id": "req-ebeef512a3b1",
+  "created_at_utc": "2026-08-14T23:45:43.576Z",
+  "overall_status": "REQUIRES_HUMAN_REVIEW",
+  "claim_verdicts": [
+    {
+      "claim_id": "GRA-01",
+      "status": "REQUIRES_HUMAN_REVIEW",
+      "contributing_audit_ids": [
+        "audit-ac2d4ae95526"
+      ],
+      "reason": "high/critical-severity claim passed only numerically; policy requires symbolic or formal (SymPy/Z3/Lean) corroboration before a PASS verdict"
+    },
+    {
+      "claim_id": "GRA-02",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-0fe2acbe0268"
+      ],
+      "reason": "all required checks passed"
+    }
+  ],
+  "audit_ids": [
+    "audit-ac2d4ae95526",
+    "audit-0fe2acbe0268"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:0e1c329642e07f0b71a7f250a60815d3fc9f6ac4f86dda4f3865149ed6c07608",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:82c2313f74932cdb71f5245cc641f8e0ce3dfe48afaab8d748133cd165b986ea"
+}

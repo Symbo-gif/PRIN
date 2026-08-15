@@ -7,6 +7,15 @@ session that produced it.
 
 ## Current contents
 
+- [`math-audit/`](math-audit/) — Executive Mathematical Audit evidence:
+  every `math-audit-mcp` `AuditResult` (`audits/<audit_id>/normalized-result.json`),
+  evidence bundle (`audits/bundle-<id>/manifest.json` + `report.md`), the
+  append-only `logs/audit-trace.jsonl`, and the consolidated
+  `ema-run-summary.json` from `tools/math_audit_run.py`. Append-only per
+  `Executive_Mathematical_Audit_Governance_and_Methodology.md` §6; a re-run
+  writes fresh evidence with new `audit_id`s rather than overwriting prior
+  runs.
+
 - [`0005-wp002-s1-handoff.md`](0005-wp002-s1-handoff.md) — WP-002 S1 handoff
   to the S2 audit for the golden-trajectory corpus and differential harness.
 - [`0017-wp005-s1-ort-probe.json`](0017-wp005-s1-ort-probe.json) — WP-005 S1

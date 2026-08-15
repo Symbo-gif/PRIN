@@ -23,6 +23,18 @@ or execute archived reference code.
   validates the golden corpus, wheel matrix, and recorded spike decisions,
   and writes the consolidated gate report to
   `EVIDENCE/0017-wp005-s1-phase0-gate.json`.
+- `math_audit_run.py` runs every claim ledger under `math_audit_claims/`
+  through the external `math-audit-mcp` tool's `audit_claim_ledger`, using
+  `math_audit_policy.yaml`, and writes a consolidated report to
+  `EVIDENCE/math-audit/ema-run-summary.json`. See
+  `DOCS/standards/Executive_Mathematical_Audit_Governance_and_Methodology.md`.
+  Requires `MATH_AUDIT_MCP_HOME` set to the tool's repository root (defaults
+  to the maintainer workstation path recorded in that governance doc).
+- `math_audit_policy.yaml` is PRIN's strict-derived policy profile for
+  `math-audit-mcp`.
+- `math_audit_claims/*.json` are the committed claim ledgers: independent
+  formal restatements of PRIN mathematical claims, audited (not authored) by
+  `math-audit-mcp`.
 
 Run the WP-001 validator from the repository root:
 
@@ -30,4 +42,11 @@ Run the WP-001 validator from the repository root:
 python tools/wp001_baseline.py check
 python tools/wp001_baseline.py inventory
 python tools/wp001_baseline.py traceability
+```
+
+Run the Executive Mathematical Audit gate (requires `math-audit-mcp`
+installed separately; see the governance doc):
+
+```bash
+MATH_AUDIT_MCP_HOME="C:\dev\--DEV\Math Audit MCP" python tools/math_audit_run.py
 ```

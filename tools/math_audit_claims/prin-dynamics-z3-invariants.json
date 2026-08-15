@@ -1,0 +1,208 @@
+{
+  "ledger_id": "ledger-prin-dynamics-z3-invariants-001",
+  "repository_root": ".",
+  "commit_ref": "f1204ed",
+  "claims": [
+    {
+      "claim_id": "PW-01",
+      "claim_type": "z3_invariant",
+      "statement": "wrap_phase(x) = x.rem_euclid(2*pi), which wraps into [0, 2*pi) (not (-pi, pi]; see integrate.rs:20-21 module doc), has a unique representative: any two integer-multiple-of-2*pi-shifted values of x that both land in [0, 2*pi) must be equal.",
+      "code_refs": ["crates/prin-dynamics/src/state.rs:274-277", "crates/prin-dynamics/src/state.rs:21"],
+      "assumptions": {
+        "variables": [
+          {"name": "x", "sort": "Real"},
+          {"name": "k1", "sort": "Int"},
+          {"name": "k2", "sort": "Int"},
+          {"name": "w1", "sort": "Real"},
+          {"name": "w2", "sort": "Real"}
+        ],
+        "constraints": [
+          "w1 == x - k1*6.283185307179586",
+          "w2 == x - k2*6.283185307179586",
+          "w1 >= 0",
+          "w1 < 6.283185307179586",
+          "w2 >= 0",
+          "w2 < 6.283185307179586"
+        ],
+        "queries": [
+          {"query_id": "wrap-phase-unique", "kind": "invariant_holds", "invariant": "w1 == w2"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "high",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "PW-02",
+      "claim_type": "z3_invariant",
+      "statement": "chimera.rs's strength-of-incoherence phase-difference wrap is centred on zero: two neighbouring phases that are exactly in phase (raw difference d=0) must produce a wrapped difference z=0, as required for a difference measure whose baseline is perfect coherence (chimera.rs:129-131 documents a centred definition).",
+      "code_refs": ["crates/prin-metrics/src/chimera.rs:169-171", "crates/prin-metrics/src/chimera.rs:129-131"],
+      "assumptions": {
+        "variables": [
+          {"name": "d", "sort": "Real"},
+          {"name": "k", "sort": "Int"},
+          {"name": "w", "sort": "Real"},
+          {"name": "z", "sort": "Real"}
+        ],
+        "constraints": [
+          "w == d - k*6.283185307179586",
+          "w >= 0",
+          "w < 6.283185307179586",
+          "z == w - 3.141592653589793"
+        ],
+        "queries": [
+          {"query_id": "si-wrap-centred-at-zero", "kind": "invariant_holds", "invariant": "Implies(d == 0, z == 0)"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "high",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "CL-01",
+      "claim_type": "z3_invariant",
+      "statement": "clamp_amplitude bounds any input to [1e-6, 10.0] and is non-decreasing (order-preserving), so it cannot reorder two amplitude values relative to each other during RK-stage clamping.",
+      "code_refs": ["crates/prin-dynamics/src/state.rs:312-329", "crates/prin-dynamics/src/state.rs:24-27"],
+      "assumptions": {
+        "variables": [
+          {"name": "a1", "sort": "Real"},
+          {"name": "a2", "sort": "Real"},
+          {"name": "o1", "sort": "Real"},
+          {"name": "o2", "sort": "Real"}
+        ],
+        "constraints": [
+          "o1 == If(a1 < 0.000001, 0.000001, If(a1 > 10.0, 10.0, a1))",
+          "o2 == If(a2 < 0.000001, 0.000001, If(a2 > 10.0, 10.0, a2))",
+          "a1 <= a2"
+        ],
+        "queries": [
+          {"query_id": "amp-clamp-bounded-monotone", "kind": "invariant_holds", "invariant": "And(o1 >= 0.000001, o1 <= 10.0, o1 <= o2)"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "high",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "CL-02",
+      "claim_type": "z3_invariant",
+      "statement": "clamp_derivative bounds any input to |d| <= 1e4 and never flips its sign (a sign flip would reverse the integration direction).",
+      "code_refs": ["crates/prin-dynamics/src/state.rs:331-343", "crates/prin-dynamics/src/state.rs:30"],
+      "assumptions": {
+        "variables": [
+          {"name": "d", "sort": "Real"},
+          {"name": "o", "sort": "Real"}
+        ],
+        "constraints": [
+          "o == If(d < -10000.0, -10000.0, If(d > 10000.0, 10000.0, d))"
+        ],
+        "queries": [
+          {"query_id": "deriv-clamp-bounded-sign-preserving", "kind": "invariant_holds", "invariant": "And(Abs(o) <= 10000.0, Implies(d >= 0, o >= 0), Implies(d <= 0, o <= 0))"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "high",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "OP-01",
+      "claim_type": "z3_invariant",
+      "statement": "The Kuramoto order parameter magnitude r = min(|Z|, 1) is bounded in [0, 1] for any non-negative |Z|, including floating-point overshoot above 1 (WP-010 acceptance invariant).",
+      "code_refs": ["crates/prin-metrics/src/order.rs:33-36", "crates/prin-metrics/src/order.rs:123"],
+      "assumptions": {
+        "variables": [
+          {"name": "m", "sort": "Real"},
+          {"name": "r", "sort": "Real"}
+        ],
+        "constraints": [
+          "m >= 0",
+          "r == If(m > 1.0, 1.0, m)"
+        ],
+        "queries": [
+          {"query_id": "order-parameter-bounded", "kind": "invariant_holds", "invariant": "And(r >= 0, r <= 1.0)"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "critical",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "SI-01",
+      "claim_type": "z3_invariant",
+      "statement": "For chimera.rs's strength-of-incoherence over a 4-node windowed field, the windowed numerator (mean of |window-averaged z|) never exceeds the unwindowed denominator (mean of |z|), by the triangle inequality -- which is required for SI = 1 - numer/denom to stay in [0, 1].",
+      "code_refs": ["crates/prin-metrics/src/chimera.rs:173-199"],
+      "assumptions": {
+        "variables": [
+          {"name": "z0", "sort": "Real"},
+          {"name": "z1", "sort": "Real"},
+          {"name": "z2", "sort": "Real"},
+          {"name": "z3", "sort": "Real"},
+          {"name": "numer", "sort": "Real"},
+          {"name": "denom", "sort": "Real"}
+        ],
+        "constraints": [
+          "numer == (Abs((z2+z3)/2) + Abs((z3+z0)/2) + Abs((z0+z1)/2) + Abs((z1+z2)/2))/4",
+          "denom == (Abs(z0)+Abs(z1)+Abs(z2)+Abs(z3))/4"
+        ],
+        "queries": [
+          {"query_id": "si-numerator-le-denominator", "kind": "invariant_holds", "invariant": "numer <= denom"}
+        ],
+        "timeout_ms": 15000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "PAC-01",
+      "claim_type": "z3_invariant",
+      "statement": "Phase-amplitude coupling's pre-clamp modulation A*(1 + m*cos(theta)) stays non-negative and at most 2*A for any modulation depth m in [0,1] and any cosine value, and the post-clamp result stays within the amplitude bounds [1e-6, 10.0].",
+      "code_refs": ["crates/prin-dynamics/src/pac.rs:216", "crates/prin-dynamics/src/pac.rs:228-229", "crates/prin-dynamics/src/pac.rs:161-169"],
+      "assumptions": {
+        "variables": [
+          {"name": "A", "sort": "Real"},
+          {"name": "m", "sort": "Real"},
+          {"name": "c", "sort": "Real"},
+          {"name": "raw", "sort": "Real"},
+          {"name": "out", "sort": "Real"}
+        ],
+        "constraints": [
+          "A >= 0.000001",
+          "A <= 10.0",
+          "m >= 0",
+          "m <= 1.0",
+          "c >= -1.0",
+          "c <= 1.0",
+          "raw == A*(1 + m*c)",
+          "out == If(raw < 0.000001, 0.000001, If(raw > 10.0, 10.0, raw))"
+        ],
+        "queries": [
+          {"query_id": "pac-modulation-bounded", "kind": "invariant_holds", "invariant": "And(raw >= 0, raw <= 2*A, out >= 0.000001, out <= 10.0)"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "medium",
+      "crosscheck_required": false
+    }
+  ]
+}

@@ -25,6 +25,20 @@ no planned session is renumbered by an executive audit (plan amendment #15).
 | EA-002 | 2026-08-08 | Executive Audit Session 002 — delta audit of Sessions 0025–0036 (WP-007..WP-009) plus full-project re-verification; report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_002.md` (`PASS-WITH-REMEDIATION`, findings E-F1–E-F13) | `feat/wp006-oscillator-state` @ `f5ae5b7` + remediation commits | COMPLETE |
 | EA-003 | 2026-08-14 | Executive Audit Session 003 — delta audit of Sessions 0037–0064 (WP-010..WP-016, Phase 1 and Phase 2 close) plus full-project re-verification; report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_003.md` (`PASS-WITH-REMEDIATION`, findings E-F1–E-F14) | `main` @ `fbe1c92` + remediation commits | COMPLETE — E-F7 investigated and risk-accepted (maintainer approval); E-F6 tag/publish deliberately deferred (maintainer directive, not executed this session) |
 
+## Global sessions — Executive Mathematical Audits
+
+Executive Mathematical Audit (EMA) Sessions are project-level audits governed
+by `DOCS/standards/Executive_Mathematical_Audit_Governance_and_Methodology.md`,
+introduced by plan amendment #23. Like EA sessions, they are global sessions
+**outside** the planned 0001–0198 sequence (plan amendment #15's registration
+precedent, extended to this second audit type): the planned numbering above
+remains unique and gap-free (TRACEABILITY invariant 4), and no planned session
+is renumbered by an executive mathematical audit.
+
+| EMA | Date | Session brief | Git state | Status |
+|---|---|---|---|---|
+| EMA-001 | 2026-08-14 | Executive Mathematical Audit Session 001 — first integration of `math-audit-mcp` into PRIN; governance/methodology definition, independent claim-ledger audit (23 claims) of `prin-dynamics`/`prin-metrics`; report `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_001.md` (`FAIL`; one open D1 finding M-F1) | `main` @ `f1204ed` + session commits | COMPLETE (audit + report only) — M-F1 (D1, Z3-confirmed `chimera.rs` phase-wrap defect) is open and explicitly deferred to a follow-up EMA-001 remediation session, not fixed in this session by scope decision |
+
 
 | Seq | Phase | Unit | Type | Session brief | Current status |
 |---:|---:|---|---|---|---|

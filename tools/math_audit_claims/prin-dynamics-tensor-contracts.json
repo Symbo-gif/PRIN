@@ -1,0 +1,75 @@
+{
+  "ledger_id": "ledger-prin-dynamics-tensor-contracts-001",
+  "repository_root": ".",
+  "commit_ref": "f1204ed",
+  "claims": [
+    {
+      "claim_id": "TEN-01",
+      "claim_type": "tensor_contract",
+      "statement": "build_ring's weighted coupling matrix for N=6, k_ring=4, K=1.0 (each node connected to its +-1 and +-2 neighbours mod N, weight K/k_ring=0.25) is symmetric, as required for the undirected coupling topologies coupling.rs documents (Note: audit_tensor_contract only verifies shape/contraction compatibility and symmetry against these literal sample_values -- it does not execute coupling.rs itself.)",
+      "code_refs": ["crates/prin-dynamics/src/coupling.rs:222-263", "crates/prin-dynamics/src/coupling.rs:203-220"],
+      "assumptions": {
+        "expression": "W_ij = ring coupling weight between oscillators i and j (build_ring output, N=6, k_ring=4, K=1.0)",
+        "tensors": [
+          {
+            "name": "W",
+            "rank": 2,
+            "named_axes": ["i", "j"],
+            "dimensions": {"i": 6, "j": 6},
+            "sample_values": [
+              [0.0, 0.25, 0.25, 0.0, 0.25, 0.25],
+              [0.25, 0.0, 0.25, 0.25, 0.0, 0.25],
+              [0.25, 0.25, 0.0, 0.25, 0.25, 0.0],
+              [0.0, 0.25, 0.25, 0.0, 0.25, 0.25],
+              [0.25, 0.0, 0.25, 0.25, 0.0, 0.25],
+              [0.25, 0.25, 0.0, 0.25, 0.25, 0.0]
+            ]
+          }
+        ],
+        "output_signature": {"rank": 2, "named_axes": ["i", "j"]},
+        "contraction_pairs": [],
+        "required_symmetries": [
+          {"tensor_name": "W", "kind": "symmetric", "axes": ["i", "j"]}
+        ],
+        "random_seed": 0,
+        "numeric_trials": 1
+      },
+      "required_checks": ["audit_tensor_contract"],
+      "severity": "high",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "TEN-02",
+      "claim_type": "tensor_contract",
+      "statement": "build_all_to_all's weighted coupling matrix for N=4, K=1.0 (weight K/N=0.25 off-diagonal, zero diagonal, per coupling.rs:193-201) is symmetric, an independent second confirmation across topologies that the coupling term sum_j W_ij*sin(phi_j-phi_i) uses an undirected weight matrix.",
+      "code_refs": ["crates/prin-dynamics/src/coupling.rs:193-201"],
+      "assumptions": {
+        "expression": "W_ij = all-to-all coupling weight between oscillators i and j (build_all_to_all output, N=4, K=1.0)",
+        "tensors": [
+          {
+            "name": "W",
+            "rank": 2,
+            "named_axes": ["i", "j"],
+            "dimensions": {"i": 4, "j": 4},
+            "sample_values": [
+              [0.0, 0.25, 0.25, 0.25],
+              [0.25, 0.0, 0.25, 0.25],
+              [0.25, 0.25, 0.0, 0.25],
+              [0.25, 0.25, 0.25, 0.0]
+            ]
+          }
+        ],
+        "output_signature": {"rank": 2, "named_axes": ["i", "j"]},
+        "contraction_pairs": [],
+        "required_symmetries": [
+          {"tensor_name": "W", "kind": "symmetric", "axes": ["i", "j"]}
+        ],
+        "random_seed": 0,
+        "numeric_trials": 1
+      },
+      "required_checks": ["audit_tensor_contract"],
+      "severity": "medium",
+      "crosscheck_required": false
+    }
+  ]
+}

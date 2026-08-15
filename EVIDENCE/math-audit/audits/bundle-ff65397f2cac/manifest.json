@@ -1,0 +1,33 @@
+{
+  "bundle_id": "bundle-ff65397f2cac",
+  "ledger_id": "ledger-prin-dynamics-tensor-contracts-001",
+  "request_id": "req-1ebb30efea04",
+  "created_at_utc": "2026-08-14T23:45:45.398Z",
+  "overall_status": "REQUIRES_HUMAN_REVIEW",
+  "claim_verdicts": [
+    {
+      "claim_id": "TEN-01",
+      "status": "REQUIRES_HUMAN_REVIEW",
+      "contributing_audit_ids": [
+        "audit-086df1d32463"
+      ],
+      "reason": "high/critical-severity claim passed only numerically; policy requires symbolic or formal (SymPy/Z3/Lean) corroboration before a PASS verdict"
+    },
+    {
+      "claim_id": "TEN-02",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-2262d913c407"
+      ],
+      "reason": "all required checks passed"
+    }
+  ],
+  "audit_ids": [
+    "audit-086df1d32463",
+    "audit-2262d913c407"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:0e1c329642e07f0b71a7f250a60815d3fc9f6ac4f86dda4f3865149ed6c07608",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:05ce30516bbefad015893c1e2f09888d1690e019d1ba69c5c76d569329e7fe8d"
+}

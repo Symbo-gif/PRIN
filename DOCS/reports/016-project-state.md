@@ -236,8 +236,22 @@ Phase 2 exit criteria (Project Plan §6):
 
 ## 6. Risks and blockers
 
-No unresolved D1/D2 findings. All quality gates, security scans, property tests, and parity
-suites are green. The two amendments (#20, #21) are documented and maintainer-approved.
+`[Cross-reference added by EMA-001, 2026-08-14]` As of EMA-001
+(`DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_001.md`), there are now two
+unresolved findings discovered by independent tool-executed mathematical
+audit, outside this PSR's WP-016 scope: **M-F1 (D1)**, a Z3-confirmed
+phase-wrap defect in `prin-metrics::chimera::strength_of_incoherence`
+(`chimera.rs:169-171`) predating WP-016, and **M-F3 (D2)**, a policy-design
+interaction awaiting a maintainer decision. Both are deferred to a follow-up
+EMA-001 remediation session per that report's explicit scope; feature work
+touching `strength_of_incoherence` should be treated as frozen until then.
+The statement below ("No unresolved D1/D2 findings") reflects this PSR's own
+WP-016 scope as authored and is retained unedited; it is no longer true of
+the project as a whole as of EMA-001.
+
+No unresolved D1/D2 findings **within WP-016's own scope**. All quality gates, security scans,
+property tests, and parity suites are green. The two amendments (#20, #21) are documented and
+maintainer-approved.
 
 **Carried scope:** `prin-py` sweep/engine PyO3 bindings and `prin-kernels` CPU-reference work
 (original WP-016 scope) are deferred to future WPs by amendment #20. These are not blockers

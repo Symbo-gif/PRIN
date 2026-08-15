@@ -1,0 +1,120 @@
+{
+  "ledger_id": "ledger-prin-dynamics-ode-properties-001",
+  "repository_root": ".",
+  "commit_ref": "f1204ed",
+  "claims": [
+    {
+      "claim_id": "INT-01",
+      "claim_type": "ode_property",
+      "statement": "The forward-Euler integrator (integrate.rs:293-324) is first-order accurate, stays positive, monotone-decreasing, and bounded in [0,1] on the linear test equation y'=-2y, h=0.05, over [0,1].",
+      "code_refs": ["crates/prin-dynamics/src/integrate.rs:293-324", "crates/prin-dynamics/src/integrate.rs:256-262"],
+      "assumptions": {
+        "rhs_expression": "-2*y",
+        "state_variables": ["y"],
+        "independent_variable": "t",
+        "initial_conditions": {"y": 1.0},
+        "interval": [0.0, 1.0],
+        "candidate_method": "euler",
+        "candidate_step_size": 0.05,
+        "reference_methods": ["RK45"],
+        "tolerances": {"y": 0.02},
+        "expected_properties": [
+          {"property_type": "positivity", "state_variable": "y"},
+          {"property_type": "monotonicity", "state_variable": "y"},
+          {"property_type": "boundedness", "state_variable": "y", "lower_bound": 0.0, "upper_bound": 1.0}
+        ],
+        "refinement_levels": 4,
+        "stiffness_check": false,
+        "generate_artifacts": true
+      },
+      "required_checks": ["audit_ode"],
+      "severity": "high",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "INT-02",
+      "claim_type": "ode_property",
+      "statement": "The RK4 integrator (integrate.rs:406-503, tableau at :330-335) is fourth-order accurate, stays positive, monotone-decreasing, and bounded in [0,1] on the same linear test equation y'=-2y, h=0.1, over [0,1].",
+      "code_refs": ["crates/prin-dynamics/src/integrate.rs:406-503", "crates/prin-dynamics/src/integrate.rs:330-335"],
+      "assumptions": {
+        "rhs_expression": "-2*y",
+        "state_variables": ["y"],
+        "independent_variable": "t",
+        "initial_conditions": {"y": 1.0},
+        "interval": [0.0, 1.0],
+        "candidate_method": "rk4",
+        "candidate_step_size": 0.1,
+        "reference_methods": ["RK45"],
+        "tolerances": {"y": 0.0001},
+        "expected_properties": [
+          {"property_type": "positivity", "state_variable": "y"},
+          {"property_type": "monotonicity", "state_variable": "y"},
+          {"property_type": "boundedness", "state_variable": "y", "lower_bound": 0.0, "upper_bound": 1.0}
+        ],
+        "refinement_levels": 4,
+        "stiffness_check": false,
+        "generate_artifacts": true
+      },
+      "required_checks": ["audit_ode"],
+      "severity": "critical",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "HOPF-01",
+      "claim_type": "ode_property",
+      "statement": "The Stuart-Landau/Hopf radial flow dr/dt = mu*r - r^3 (limit_cycle_amplitude contract at models.rs:730-737) converges monotonically from below to the stable equilibrium r*=sqrt(mu), instantiated at mu=4 so r*=2.0, without overshoot, staying within [0.5, 2.0] starting from r(0)=0.5.",
+      "code_refs": ["crates/prin-dynamics/src/models.rs:730-737", "crates/prin-dynamics/src/models.rs:777"],
+      "assumptions": {
+        "rhs_expression": "4*y - y**3",
+        "state_variables": ["y"],
+        "independent_variable": "t",
+        "initial_conditions": {"y": 0.5},
+        "interval": [0.0, 10.0],
+        "candidate_method": "rk4",
+        "candidate_step_size": 0.01,
+        "reference_methods": ["RK45"],
+        "tolerances": {},
+        "expected_properties": [
+          {"property_type": "positivity", "state_variable": "y"},
+          {"property_type": "monotonicity", "state_variable": "y"},
+          {"property_type": "boundedness", "state_variable": "y", "lower_bound": 0.5, "upper_bound": 2.0, "tolerance": 0.001},
+          {"property_type": "equilibrium", "state_variable": "y", "equilibrium_value": 2.0, "tolerance": 0.0001}
+        ],
+        "refinement_levels": 4,
+        "stiffness_check": false,
+        "generate_artifacts": true
+      },
+      "required_checks": ["audit_ode"],
+      "severity": "critical",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "KUR-01",
+      "claim_type": "ode_property",
+      "statement": "For a 2-oscillator Kuramoto pair with frequency mismatch delta_omega=1 and coupling K=2 (locking regime |delta_omega|<=K), the phase-difference reduction dDelta/dt = delta_omega - K*sin(Delta) converges monotonically to the locked offset Delta*=asin(delta_omega/K)=pi/6, starting from Delta(0)=0.1, without exceeding Delta*.",
+      "code_refs": ["crates/prin-dynamics/src/models.rs:246-281"],
+      "assumptions": {
+        "rhs_expression": "1 - 2*sin(y)",
+        "state_variables": ["y"],
+        "independent_variable": "t",
+        "initial_conditions": {"y": 0.1},
+        "interval": [0.0, 20.0],
+        "candidate_method": "rk4",
+        "candidate_step_size": 0.01,
+        "reference_methods": ["RK45"],
+        "tolerances": {},
+        "expected_properties": [
+          {"property_type": "monotonicity", "state_variable": "y"},
+          {"property_type": "boundedness", "state_variable": "y", "lower_bound": 0.1, "upper_bound": 0.5235987755982988, "tolerance": 0.001},
+          {"property_type": "equilibrium", "state_variable": "y", "equilibrium_value": 0.5235987755982988, "tolerance": 0.0001}
+        ],
+        "refinement_levels": 4,
+        "stiffness_check": false,
+        "generate_artifacts": true
+      },
+      "required_checks": ["audit_ode"],
+      "severity": "critical",
+      "crosscheck_required": false
+    }
+  ]
+}
