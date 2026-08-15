@@ -246,7 +246,7 @@ sessions.
 
 | ID | Deferred to | Rationale |
 |---|---|---|
-| R17 | Phase 3 / WP-017 S4 (session 0068) | Process/governance tooling, not WP-017's own kernel-architecture deliverable |
+| R17 | Phase 3 / WP-017 S4 (session 0068) — **IMPLEMENTED** | Process/governance tooling: `tools/check_deviation_ledger.py`; not WP-017's own kernel-architecture deliverable |
 | R19 | WP-017 declaration (session 0065) or Phase 3 exit-gate PSR (session 0084) | Plan-amendment-class WP-scope decision requiring maintainer approval at declaration time |
 | R20 | Next EMA session (unnumbered) | No EMA-002 declared yet; standing precedent recorded in `DEFERRED_VALIDATION_REGISTER.md` for when it is |
 

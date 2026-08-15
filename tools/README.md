@@ -44,9 +44,22 @@ python tools/wp001_baseline.py inventory
 python tools/wp001_baseline.py traceability
 ```
 
+- `check_deviation_ledger.py` validates the cumulative deviation-ledger
+  tables in `DOCS/reports/NNN-project-state.md`. It checks that every commit
+  hash resolves and that a finding's summary does not change between two
+  consecutive reports without a new finding ID (Phase 2 analytics
+  recommendation R17).
+
 Run the Executive Mathematical Audit gate (requires `math-audit-mcp`
 installed separately; see the governance doc):
 
 ```bash
 MATH_AUDIT_MCP_HOME="C:\dev\--DEV\Math Audit MCP" python tools/math_audit_run.py
+```
+
+Run the deviation-ledger consistency check:
+
+```bash
+python tools/check_deviation_ledger.py DOCS/reports/016-project-state.md
+python tools/check_deviation_ledger.py DOCS/reports/016-project-state.md DOCS/reports/017-project-state.md
 ```

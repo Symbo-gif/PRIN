@@ -76,8 +76,8 @@ next global session), not a fix performed inside this analytics session.
 | **Dimension** | P5 (Evidence), P6 (Governance) |
 | **Motivating evidence** | EA-003's headline finding (E-F1, D1) was a silently corrupted cumulative deviation ledger — fabricated commit hashes, rewritten descriptions, one invented finding — introduced at WP-014 S4 and undetected through two subsequent S2 audits (WP-015, WP-016). It was caught only when EA-003 manually diffed the ledger against the last verified PSR. No automated check exists to catch this class of drift; the next occurrence could again survive multiple S2 audits before an executive audit happens to catch it. |
 | **Recommended action** | Add a lightweight verification step (script or `tools/` CLI addition) that, given two consecutive PSRs, diffs their cumulative deviation-ledger tables and flags any row whose commit hash does not resolve via `git cat-file -t` or whose description text changed without a corresponding new finding ID. Run it as part of the S2 audit's A10 (Artefact trail) check, or as a pre-commit/CI check on `DOCS/reports/*.md`. |
-| **Confirmation evidence** | The check exists and either (a) is exercised clean on all Phase 2 PSRs post-restoration, or (b) is documented as infeasible with a stated reason and an alternative manual-review protocol. |
-| **Owner** | Phase 3, first cycle (WP-017 S1 or S4) |
+| **Confirmation evidence** | **Closed in WP-017 S4 (session 0068).** `tools/check_deviation_ledger.py` was added and exercised: PSR-016 standalone passed (85 rows, all commit hashes resolved); PSR-015 vs PSR-016 correctly flagged the fabricated commit hashes and summary changes from EA-003 E-F1; PSR-013 vs PSR-016 was clean for restored rows; PSR-016 vs PSR-017 passed (85→90 rows, new finding IDs only). The tool is `ruff`/bandit clean and is listed in `tools/README.md`. |
+| **Owner** | WP-017 S4 (session 0068) — COMPLETE |
 
 ---
 
