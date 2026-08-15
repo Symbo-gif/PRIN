@@ -62,13 +62,22 @@ def main(argv: list[str] | None = None) -> int:
 
     _load_mcp_home()
 
-    from math_audit_mcp import __version__ as tool_version  # type: ignore[import-not-found]
-    from math_audit_mcp.config import RuntimeConfig, load_policy  # type: ignore[import-not-found]
-    from math_audit_mcp.policies.engine import PolicyEngine  # type: ignore[import-not-found]
+    from math_audit_mcp import (
+        __version__ as tool_version,  # type: ignore[import-not-found]
+    )
+    from math_audit_mcp.config import (  # type: ignore[import-not-found]
+        RuntimeConfig,
+        load_policy,
+    )
+    from math_audit_mcp.policies.engine import (
+        PolicyEngine,  # type: ignore[import-not-found]
+    )
     from math_audit_mcp.schemas.requests import (  # type: ignore[import-not-found]
         AuditClaimLedgerRequest,
     )
-    from math_audit_mcp.tools import audit_claim_ledger  # type: ignore[import-not-found]
+    from math_audit_mcp.tools import (
+        audit_claim_ledger,  # type: ignore[import-not-found]
+    )
 
     output_root = _REPO_ROOT / "EVIDENCE" / "math-audit"
     output_root.mkdir(parents=True, exist_ok=True)
@@ -103,7 +112,9 @@ def main(argv: list[str] | None = None) -> int:
             )
         except Exception as exc:  # pragma: no cover -- gate script, fail loud
             status = f"ERROR: {exc}"
-            results.append({"ledger": path.name, "overall_status": status, "bundle_path": None})
+            results.append(
+                {"ledger": path.name, "overall_status": status, "bundle_path": None}
+            )
         if status != "PASS":
             any_non_pass = True
         print(f"{path.name}: {status}")
@@ -117,7 +128,9 @@ def main(argv: list[str] | None = None) -> int:
         "gate_pass": not any_non_pass,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+    args.output.write_text(
+        json.dumps(report, indent=2, sort_keys=True), encoding="utf-8"
+    )
     print(f"Consolidated report written to: {args.output}")
     return 0 if not any_non_pass else 1
 
