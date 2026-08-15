@@ -34,5 +34,7 @@ starts by reading it (Development Workflow Standards §6).
   WP-015 declaration.
 - [`015-project-state.md`](015-project-state.md) — WP-015 S4 closure and
   WP-016 declaration.
-- [`016-project-state.md`](016-project-state.md) — latest report; WP-016 S4
-  closure, Phase 2 exit-gate verdict, and WP-017 declaration.
+- [`016-project-state.md`](016-project-state.md) — WP-016 S4 closure, Phase 2
+  exit-gate verdict, and WP-017 declaration.
+- [`017-project-state.md`](017-project-state.md) — latest report; WP-017 S4
+  closure and WP-018 declaration.

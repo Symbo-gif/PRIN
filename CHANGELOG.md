@@ -98,6 +98,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - R17 (automated cumulative-deviation-ledger consistency check) and R19 (assign a WP/phase to
     the carried `prin-py`/`prin-kernels` scope) deferred with explicit future-session assignments
     per `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`; R20 deferred to the next EMA session.
+- **WP-017 Kernel architecture and CPU references** (`prin-kernels`, Phase 3 first WP):
+  - `backend` module — `Device` enum, `BackendError`, `backend_priority`,
+    `auto_detect_order`; preference decoupled from availability.
+  - `buffers` module — `MeanFieldRk4Buffers` (CPU `Vec<f32>` pool) and
+    `CubeclBufferPool<R: Runtime>` (GPU device-handle pool), both with
+    `capacity()` accessors and size-validation guards.
+  - `mean_field_rk4` module — CPU reference `step_cpu` and pooled
+    `step_cpu_with_pool`; single authoritative `order_param` implementation;
+    `MeanFieldRk4Params`, `MeanFieldRk4Error`, `MeanFieldRk4Output`.
+  - `mean_field_rk4::cubecl` module — single-source CubeCL kernels;
+    `step_cubecl`, `step_cubecl_with_pool`, `try_step_wgpu`, `try_step_cpu`,
+    `try_step_cuda`, and automatic `step_auto` dispatch with graceful fallback
+    to the native CPU reference. `StepReport` records backend, host wall-clock,
+    and launch count (device-event timing remains a Phase 3 optimization,
+    DV-003).
+  - `equivalence` module — `EquivalenceHarness`, `EquivalenceCase`, and
+    `assert_allclose` for cross-backend kernel-equivalence testing.
+  - S3 remediation added `MeanFieldRk4Error::PoolSizeMismatch` and explicit
+    pool/call-size checks in `step_cpu_with_pool` and
+    `step_cubecl_with_pool`, with regression tests. Removed dead
+    `CubeclBufferPool` accessor methods and raised `buffers.rs`/`equivalence.rs`
+    coverage above the 95% gate.
 
 ## [0.3.0-alpha.1] — Phase 2 exit (Advanced numerics and simulation)
 

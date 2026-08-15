@@ -74,6 +74,11 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   optimization, and Phase 2 gate" audit (`FAIL`); seven findings (F1 D1, F2–F4
   D2, F5–F7 D3) resolved in S3 (six fixed, one fixed + amended #21) with a
   CLEAN delta re-audit.
+- [`017-wp017-audit.md`](017-wp017-audit.md) — WP-017 "Kernel architecture and
+  CPU references" audit (`FAIL`); five findings (F1 D1, F2–F4 D2, F5 D4)
+  resolved in S3 (four fixed, one fixed + amended) with a CLEAN delta re-audit.
+  `DV-012` `prin-kernels` half closed; `prin-py` sweep/engine bindings remain
+  deferred.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

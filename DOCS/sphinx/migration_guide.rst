@@ -22,10 +22,26 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   round-trip and ``<5%`` training-step overhead target are deferred to the
   Phase 4 trainable-stack work (project plan amendment #7).
 - ``prin-kernels::mean_field_rk4`` — single-source CubeCL fused mean-field RK4
-  kernel set with CPU/wgpu/cuda dispatch. PRINet 3.0 kept separate
-  Triton/CUDA/PyTorch-fallback kernel files; PRIN collapses them into one
-  Rust/CubeCL implementation (Phase 0 spike, production suite in Phase 3). The
-  Rust public API has no direct PRINet 3.0 Python equivalent at this phase.
+  kernel set with CPU/wgpu/cuda dispatch and automatic ``step_auto`` fallback
+  (tries wgpu → CUDA → CubeCL CPU, finally native ``step_cpu``). PRINet 3.0
+  kept separate Triton/CUDA/PyTorch-fallback kernel files; PRIN collapses them
+  into one Rust/CubeCL implementation. The Rust public API has no direct
+  PRINet 3.0 Python equivalent at this phase.
+- ``prin-kernels::backend`` — ``Device`` enum (CUDA, wgpu, CPU),
+  ``backend_priority``, and ``auto_detect_order``. Decouples backend
+  *preference* from *availability* so unsupported devices fall back safely.
+  PRINet 3.0 selected kernels by module path; PRIN exposes a typed
+  ``BackendError`` and priority list.
+- ``prin-kernels::buffers`` — preallocated buffer pools
+  ``MeanFieldRk4Buffers`` (CPU ``Vec<f32>``) and
+  ``CubeclBufferPool<R: Runtime>`` (CubeCL device handles). Both eliminate
+  per-step allocations and expose ``capacity()``; ``step_cpu_with_pool`` and
+  ``step_cubecl_with_pool`` reject reuse at a mismatched oscillator count with
+  ``MeanFieldRk4Error::PoolSizeMismatch``.
+- ``prin-kernels::equivalence`` — ``EquivalenceHarness``, ``EquivalenceCase``,
+  and ``assert_allclose`` for cross-backend testing. The CPU reference is the
+  numerical authority; GPU backends are compared at ``rtol=1e-5,
+  atol=1e-6``. PRINet 3.0 had no equivalent cross-backend validation harness.
 - ``prin._ort`` — ONNX Runtime execution-provider probe for the subconscious
   controller (CPU/DirectML/VitisAI with graceful fallback). PRINet 3.0 ran the
   controller in-process with no provider abstraction; PRIN introduces backend
