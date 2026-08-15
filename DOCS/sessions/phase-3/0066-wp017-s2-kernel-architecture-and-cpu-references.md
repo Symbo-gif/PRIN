@@ -1,6 +1,6 @@
 # Session 0066 — WP-017 S2: Audit — Kernel architecture and CPU references
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-017  
 **Session type:** S2 — Audit  
