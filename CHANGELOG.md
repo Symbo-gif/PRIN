@@ -48,6 +48,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     exit-gate performance claims were never CI-verified even to compile/run.
   - **E-F14 (D2):** the audited `HEAD` and its 4 predecessor commits had never been pushed to
     `origin` and had zero CI runs; resolved by this session's push.
+- **Executive Mathematical Audit Session 001 (EMA-001) and remediation (EMA-001R)** — first
+  integration of `math-audit-mcp` into PRIN: independent, tool-executed recomputation of
+  `prin-dynamics`/`prin-metrics` mathematical claims (23 claims), governed by the new
+  `DOCS/standards/Executive_Mathematical_Audit_Governance_and_Methodology.md` (Project Plan
+  amendment #23); report `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_001.md`
+  (`PASS-WITH-REMEDIATION`, findings M-F1–M-F3):
+  - **M-F1 (D1):** Z3-confirmed phase-wrap defect in
+    `prin_metrics::chimera::strength_of_incoherence`/`strength_of_incoherence_temporal`
+    (`chimera.rs:169-171`, mapping an in-phase pair to `-pi` instead of `0`). Fixed with a
+    corrected `centred_wrap`, regression coverage, and Z3 re-verification. Investigating the
+    fix's parity-test breakage found the identical defect in PRINet 3.0's own reference
+    (`oscillosim.py:876-878`) — an upstream bug, not a legitimate convention difference — so
+    PRIN's corrected implementation is deliberately, permanently non-parity with the PRINet 3.0
+    fixture for these two metrics specifically (Project Plan amendment #25).
+  - **M-F2 (D3):** re-encoded and Z3-reverified `PW-01`/`PW-02` phase-wrap invariant claims.
+  - **M-F3 (D2):** resolved for `GRA-01`/`TEN-01` via two new Lean 4 `decide`-based formal
+    claims (`GRA-01-LEAN`, `TEN-01-LEAN`, Project Plan amendment #24) reaching a genuine ledger
+    `PASS`; resolved for `INT-01`/`INT-02`/`HOPF-01`/`KUR-01` via independent Wolfram Engine
+    secondary corroboration (`EVIDENCE/math-audit/manual/`) plus a recorded maintainer/agent
+    sign-off — these four remain `REQUIRES_HUMAN_REVIEW` at the governed ledger level by policy
+    design (high/critical-severity `ode_property` claims require symbolic/formal evidence to
+    reach `PASS`), tracked as `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-013.
+  - `tools/math_audit_run.py`, `tools/math_audit_policy.yaml`, `tools/math_audit_claims/*.json`
+    runner/policy/claim-ledger integration; `EVIDENCE/math-audit/` evidence trail (append-only
+    `AuditResult`s, evidence bundles, `audit-trace.jsonl`).
+
+### Added
+
+- **Phase 2 recommendation implementation** (inter-phase process improvement, R14–R20 disposition
+  in `DOCS/ANALYTICS/phase-2/phase-2-recommendation-implementation-governance.md`):
+  - Fixed PA2-F1: `tools/math_audit_run.py` `ruff check`/`ruff format` violations (import
+    sorting, two `E501` long lines) (R14a).
+  - This EMA-001/EMA-001R `CHANGELOG.md` entry, closing PA2-F2 (R14b).
+  - S1 exit-gate parity-evidence disposition requirement added to
+    `Development_Workflow_and_Audit_Standards.md` §3: before an S1 session is marked COMPLETE,
+    the author states whether a directly comparable PRINet 3.0 reference exists for the new
+    primitive (verified by a stated grep/import check, not an unverified assertion), and if so,
+    either includes parity evidence in the S1 commit or explicitly defers it with a reviewable
+    reason (R15).
+  - EA/EMA session closing checklist added to `Executive_Audit_Governance_and_Methodology.md` §5
+    and `Executive_Mathematical_Audit_Governance_and_Methodology.md` §8: every global session
+    that modifies or adds files must update `CHANGELOG.md` `[Unreleased]` and run the relevant
+    quality gates on newly committed files before the session closes (R16).
+  - Snyk MCP availability standing check added to `ANALYTICS_METHODOLOGY.md` §5.1 and
+    `Executive_Audit_Governance_and_Methodology.md` §2: explicitly verify Snyk MCP tool
+    availability at the start of each future phase-analytics/EA session, citing a dated
+    carry-forward result when unavailable (R18).
+  - R17 (automated cumulative-deviation-ledger consistency check) and R19 (assign a WP/phase to
+    the carried `prin-py`/`prin-kernels` scope) deferred with explicit future-session assignments
+    per `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`; R20 deferred to the next EMA session.
 
 ## [0.3.0-alpha.1] — Phase 2 exit (Advanced numerics and simulation)
 
