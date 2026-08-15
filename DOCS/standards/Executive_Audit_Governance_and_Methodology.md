@@ -34,6 +34,7 @@ The Executive Audit evaluates compliance across 10 core audit dimensions:
 3. **Mandatory Remediation:** All actionable findings must either be fixed immediately in the session or formally passed forward to explicit future Work Packages with documented placeholders.
 4. **Retroactive Documentation Authority:** For initial executive audits, retroactive documentation updates to past session logs, READMEs, or CHANGELOG entries are permitted to correct omissions from historical sessions, provided they are clearly tagged as `[RETROACTIVE UPDATE - Executive Audit NNN]`.
 5. **Clean Verification Gate:** An executive audit cannot close until all required verification commands pass cleanly without unapproved errors or warnings.
+6. **Snyk MCP availability check (Phase 2 analytics R18):** At the start of every Executive Audit session, explicitly check Snyk MCP tool availability before relying on any Snyk result. If unavailable, state the limitation and cite the most recent verified result with its date and commit, rather than re-asserting a prior session's finding as if freshly run. If Snyk MCP is unavailable across 2+ consecutive Executive Audit or phase-analytics sessions, escalate to the maintainer as a tooling-access gap.
 
 ---
 
@@ -84,3 +85,13 @@ Task 7: Final Documentation, Session Logging, Git Commit & Push
 2. **Remediation Plan:** Embedded in the Executive Audit Report or saved alongside it if extensive.
 3. **Session Register & Traceability:** Updated in `DOCS/sessions/SESSION_REGISTER.md` and `DOCS/sessions/TRACEABILITY.md`.
 4. **Project State Report:** Cross-referenced or updated to reflect executive audit conclusions.
+5. **Closing checklist (Phase 2 analytics R16):** As a global session outside every WP-N S4
+   checklist, an Executive Audit session's own file changes are not otherwise swept by R7's
+   documentation-accuracy net (Documentation Standards §7). Before this session closes, it must
+   therefore itself: (a) add or update a `CHANGELOG.md` `[Unreleased]` entry for every user-visible
+   change the session makes (fix, governance document, tooling), and (b) run the relevant quality
+   gates (`ruff check`/`ruff format --check`/`mypy --strict` for Python; `cargo fmt --check`/
+   `cargo clippy -- -D warnings` for Rust) on every file it newly commits, before Task 7 (Final
+   Documentation, Session Logging, Git Commit & Push). This closes the gap PA2-F2 traced to
+   EMA-001 (a global session whose `CHANGELOG.md` entry was omitted because no WP-N S4 checklist
+   ever ran against it).

@@ -123,6 +123,15 @@ cited evidence points.
 8. All evidence files (`EVIDENCE/`).
 9. The actual repository state (code, tests, configs, CI workflows).
 10. The CHANGELOG for the phase's release entries.
+11. **Snyk MCP tool availability, checked explicitly** (Phase 2 analytics R18):
+    before relying on any Snyk Code/Snyk Open Source result, confirm whether
+    the Snyk MCP tool is available in this session's environment. If
+    unavailable, state the limitation explicitly and cite the most recent
+    verified result with its date and commit as the position of record,
+    rather than silently reusing it. If unavailable across 2+ consecutive
+    analytics or executive-audit sessions, escalate to the maintainer as a
+    tooling-access gap — repeated unstated reliance on a stale result erodes
+    the independent-verification principle (§2.3).
 
 ### 5.2 Execution
 

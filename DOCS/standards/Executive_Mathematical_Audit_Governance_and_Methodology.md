@@ -274,3 +274,17 @@ independent-recomputation context):
    model, integrator, metric, or decomposition), and at minimum once per
    Executive Audit cycle thereafter, so the two audit types' cadences stay
    aligned without one silently lapsing.
+6. **Closing checklist (Phase 2 analytics R16):** As a global session outside
+   every WP-N S4 checklist, an EMA session's own file changes (runner/policy/
+   claim-ledger code, `tools/`, governance documents) are not otherwise swept
+   by R7's documentation-accuracy net (Documentation Standards §7). Before
+   this session closes, it must therefore itself: (a) add or update a
+   `CHANGELOG.md` `[Unreleased]` entry for every user-visible change the
+   session makes, and (b) run the relevant quality gates (`ruff check`/
+   `ruff format --check`/`mypy --strict`) on every Python file it newly
+   commits, before Task 7 (Final Documentation, Session Register/
+   Traceability, Git Commit). This is the direct fix for PA2-F1/PA2-F2:
+   EMA-001 (commit `630c5d6`) added `tools/math_audit_run.py` without a
+   passing `ruff check`/`ruff format` gate and without a `CHANGELOG.md`
+   entry, and no existing checklist caught either omission until the Phase 2
+   analytics session's independent re-verification.
