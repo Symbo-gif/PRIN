@@ -1,6 +1,6 @@
 # Session 0065 — WP-017 S1: Coding — Kernel architecture and CPU references
 
-**Status:** PLANNED  
+**Status:** S1 DELIVERED  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-017  
 **Session type:** S1 — Coding  

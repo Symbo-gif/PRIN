@@ -10,21 +10,34 @@
 //!   launch) — no runtime JIT, precompiled at wheel-build time.
 //! - Hierarchical order-parameter reductions.
 //!
+//! ## Architecture
+//!
+//! - [`backend`] — [`Device`](backend::Device) enum and priority-based
+//!   fallback selection. Decouples *what* backends exist from *how* they are
+//!   instantiated.
+//! - [`buffers`] — Preallocated buffer pools (`MeanFieldRk4Buffers` for CPU,
+//!   `CubeclBufferPool` for GPU) that eliminate per-step heap/device
+//!   allocations.
+//! - [`mean_field_rk4`] — CPU reference (numerical authority) and CubeCL
+//!   single-source GPU kernels (the `cubecl` submodule requires the `cpu`,
+//!   `cuda`, or `wgpu` feature).
+//! - [`equivalence`] — Cross-backend equivalence testing harness.
+//! - [`ops`] — Element-wise utility kernels (DLPack bridge spike).
+//!
 //! Design rule: **one algorithm, one implementation.** Backend dispatch
-//! (CPU SIMD + rayon / CUDA / wgpu via CubeCL) happens inside this crate, never
-//! by duplicating math at call sites.
+//! (CPU SIMD + rayon / CUDA / wgpu via CubeCL) happens inside this crate,
+//! never by duplicating math at call sites.
 //!
 //! This is the only crate permitted to contain audited `unsafe` (kernel FFI);
 //! audited kernel-FFI modules use `#![allow(unsafe_code)]` and
 //! `#![deny(unsafe_op_in_unsafe_fn)]` per Coding Standards §2.1.
-//!
-//! Implementation lands in Phase 3 (see `DOCS/PRIN_Project_Plan.md`); the
-//! Phase 0 mean-field RK4 spike is already active in
-//! [`mean_field_rk4`].
 
 #![deny(unsafe_code)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![warn(missing_docs)]
 
+pub mod backend;
+pub mod buffers;
+pub mod equivalence;
 pub mod mean_field_rk4;
 pub mod ops;

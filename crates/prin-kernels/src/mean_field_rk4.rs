@@ -1,12 +1,21 @@
 //! Mean-field Kuramoto RK4 step: a CPU reference and a single-source CubeCL
 //! kernel set for CUDA, wgpu, and CPU-SIMD backends.
 //!
-//! The CPU implementation in [`step_cpu`] is the numerical authority. The CubeCL
-//! path in [`cubecl`] (enabled by the `cuda` or `wgpu` features) uses the same
-//! algorithm and is checked against the CPU reference in kernel-equivalence
-//! tests.
+//! The CPU implementation in [`step_cpu`] is the numerical authority. The
+//! CubeCL path in [`cubecl`] (enabled by the `cuda` or `wgpu` features) uses
+//! the same algorithm and is checked against the CPU reference in
+//! kernel-equivalence tests.
+//!
+//! # Buffer management
+//!
+//! Both paths support preallocated buffer pools (`MeanFieldRk4Buffers` for
+//! CPU, `CubeclBufferPool` for GPU) that eliminate per-step heap/device
+//! allocations. Use [`step_cpu_with_pool`] / `step_cubecl_with_pool` (in the
+//! `cubecl` submodule) for repeated stepping.
 
 use thiserror::Error;
+
+use crate::buffers::MeanFieldRk4Buffers;
 
 #[cfg(any(feature = "cpu", feature = "cuda", feature = "wgpu"))]
 pub mod cubecl;
@@ -122,7 +131,11 @@ fn validate_param(
 ///
 /// Returns `(Re(Z), Im(Z))` without using an explicit `atan2`, matching the
 /// algebraic identity in PRINet 3.0's Triton kernel.
-fn order_param(phase: &[f32], amplitude: &[f32], n_inv: f32) -> (f32, f32) {
+///
+/// This is the single authoritative implementation used by both the CPU
+/// reference path and the CubeCL host-side order-parameter computation
+/// (one algorithm, one implementation).
+pub(crate) fn order_param(phase: &[f32], amplitude: &[f32], n_inv: f32) -> (f32, f32) {
     let mut z_real = 0.0_f32;
     let mut z_imag = 0.0_f32;
     for (p, a) in phase.iter().zip(amplitude) {
@@ -133,37 +146,29 @@ fn order_param(phase: &[f32], amplitude: &[f32], n_inv: f32) -> (f32, f32) {
     (z_real * n_inv, z_imag * n_inv)
 }
 
-/// Compute the mean-field Kuramoto derivatives at the given state.
-///
-/// The output is `(dphi, dr, domega)`.
-fn mean_field_derivatives(
+/// Compute the mean-field Kuramoto derivatives, pushing results into the
+/// provided output `Vec`s (which must be empty on entry).
+#[allow(clippy::too_many_arguments)]
+fn mean_field_derivatives_into(
     phase: &[f32],
     amplitude: &[f32],
     frequency: &[f32],
     params: &MeanFieldRk4Params,
     n_inv: f32,
-) -> (Vec<f32>, Vec<f32>, Vec<f32>) {
+    dphi: &mut Vec<f32>,
+    dr: &mut Vec<f32>,
+    domega: &mut Vec<f32>,
+) {
     let (zx, zy) = order_param(phase, amplitude, n_inv);
 
-    let mut dphi = Vec::with_capacity(phase.len());
-    let mut dr = Vec::with_capacity(phase.len());
-    let mut domega = Vec::with_capacity(phase.len());
-
-    for (p, a, f) in phase
-        .iter()
-        .zip(amplitude.iter())
-        .zip(frequency.iter())
-        .map(|((p, a), f)| (p, a, f))
-    {
+    for ((p, a), f) in phase.iter().zip(amplitude).zip(frequency) {
         let (s, c) = p.sin_cos();
         let r_sin = zy * c - zx * s;
         let r_cos = zx * c + zy * s;
         dphi.push(f + params.k * r_sin);
-        dr.push(-params.decay * a + params.k * r_cos);
+        dr.push(-params.decay * *a + params.k * r_cos);
         domega.push(params.gamma * params.k * r_sin * n_inv);
     }
-
-    (dphi, dr, domega)
 }
 
 /// One fourth-order Runge-Kutta step for the mean-field Kuramoto model.
@@ -171,6 +176,9 @@ fn mean_field_derivatives(
 /// This is the CPU reference path. It matches the PRINet 3.0 PyTorch fallback
 /// `pytorch_mean_field_rk4_step` (phase wrap to `[0, 2pi)` and amplitude clamp
 /// `>= 0` at each RK stage and the final weighted sum).
+///
+/// For repeated stepping, prefer [`step_cpu_with_pool`] which reuses
+/// preallocated buffers and avoids per-step heap allocations.
 ///
 /// # Arguments
 ///
@@ -198,63 +206,165 @@ pub fn step_cpu(
     validate_param("gamma", params.gamma, false)?;
     validate_param("dt", params.dt, true)?;
 
+    let mut pool = MeanFieldRk4Buffers::new(n);
+    step_cpu_with_pool(phase, amplitude, frequency, params, &mut pool)
+}
+
+/// One fourth-order Runge-Kutta step using preallocated CPU buffers.
+///
+/// Identical to [`step_cpu`] but reuses the caller-provided
+/// [`MeanFieldRk4Buffers`] to avoid per-step heap allocations. The pool's
+/// buffers are cleared and refilled on each call; the allocated capacity is
+/// preserved across calls.
+///
+/// # Errors
+///
+/// Returns [`MeanFieldRk4Error`] on invalid inputs or parameters.
+pub fn step_cpu_with_pool(
+    phase: &[f32],
+    amplitude: &[f32],
+    frequency: &[f32],
+    params: &MeanFieldRk4Params,
+    pool: &mut MeanFieldRk4Buffers,
+) -> Result<MeanFieldRk4Output, MeanFieldRk4Error> {
+    let n = validate_state(phase, amplitude, frequency)?;
+    validate_param("k", params.k, false)?;
+    validate_param("decay", params.decay, false)?;
+    validate_param("gamma", params.gamma, false)?;
+    validate_param("dt", params.dt, true)?;
+
+    pool.clear();
+
     let n_inv = 1.0 / n as f32;
     let half_dt = params.dt * 0.5;
     let sixth_dt = params.dt / 6.0;
 
     // k1 = f(state)
-    let (k1_p, k1_a, k1_f) = mean_field_derivatives(phase, amplitude, frequency, params, n_inv);
+    mean_field_derivatives_into(
+        phase,
+        amplitude,
+        frequency,
+        params,
+        n_inv,
+        &mut pool.k1_phase,
+        &mut pool.k1_amp,
+        &mut pool.k1_freq,
+    );
 
-    // k2 = f(state + 0.5 * dt * k1)
-    let mut s2_p = Vec::with_capacity(n);
-    let mut s2_a = Vec::with_capacity(n);
-    let mut s2_f = Vec::with_capacity(n);
+    // Build stage-2 state into the pool stage buffers: base + 0.5*dt*k1.
     for i in 0..n {
-        s2_p.push(wrap_phase(phase[i] + half_dt * k1_p[i]));
-        s2_a.push(clamp_amp(amplitude[i] + half_dt * k1_a[i]));
-        s2_f.push(frequency[i] + half_dt * k1_f[i]);
+        pool.stage_phase
+            .push(wrap_phase(phase[i] + half_dt * pool.k1_phase[i]));
+        pool.stage_amp
+            .push(clamp_amp(amplitude[i] + half_dt * pool.k1_amp[i]));
+        pool.stage_freq
+            .push(frequency[i] + half_dt * pool.k1_freq[i]);
     }
-    let (k2_p, k2_a, k2_f) = mean_field_derivatives(&s2_p, &s2_a, &s2_f, params, n_inv);
 
-    // k3 = f(state + 0.5 * dt * k2)
-    let mut s3_p = Vec::with_capacity(n);
-    let mut s3_a = Vec::with_capacity(n);
-    let mut s3_f = Vec::with_capacity(n);
+    // k2 = f(stage-2 state)
+    mean_field_derivatives_into(
+        &pool.stage_phase,
+        &pool.stage_amp,
+        &pool.stage_freq,
+        params,
+        n_inv,
+        &mut pool.k2_phase,
+        &mut pool.k2_amp,
+        &mut pool.k2_freq,
+    );
+
+    // Build stage-3 state: base + 0.5*dt*k2.
+    // We need a temporary because we read stage_* (k1-based) and write
+    // stage_* (k2-based) — can't do both on the same Vec.
+    let mut tmp_phase = Vec::with_capacity(n);
+    let mut tmp_amp = Vec::with_capacity(n);
+    let mut tmp_freq = Vec::with_capacity(n);
     for i in 0..n {
-        s3_p.push(wrap_phase(phase[i] + half_dt * k2_p[i]));
-        s3_a.push(clamp_amp(amplitude[i] + half_dt * k2_a[i]));
-        s3_f.push(frequency[i] + half_dt * k2_f[i]);
+        tmp_phase.push(wrap_phase(phase[i] + half_dt * pool.k2_phase[i]));
+        tmp_amp.push(clamp_amp(amplitude[i] + half_dt * pool.k2_amp[i]));
+        tmp_freq.push(frequency[i] + half_dt * pool.k2_freq[i]);
     }
-    let (k3_p, k3_a, k3_f) = mean_field_derivatives(&s3_p, &s3_a, &s3_f, params, n_inv);
+    pool.stage_phase.clear();
+    pool.stage_amp.clear();
+    pool.stage_freq.clear();
+    pool.stage_phase.extend_from_slice(&tmp_phase);
+    pool.stage_amp.extend_from_slice(&tmp_amp);
+    pool.stage_freq.extend_from_slice(&tmp_freq);
 
-    // k4 = f(state + dt * k3)
-    let mut s4_p = Vec::with_capacity(n);
-    let mut s4_a = Vec::with_capacity(n);
-    let mut s4_f = Vec::with_capacity(n);
+    // k3 = f(stage-3 state)
+    mean_field_derivatives_into(
+        &pool.stage_phase,
+        &pool.stage_amp,
+        &pool.stage_freq,
+        params,
+        n_inv,
+        &mut pool.k3_phase,
+        &mut pool.k3_amp,
+        &mut pool.k3_freq,
+    );
+
+    // Build stage-4 state: base + dt*k3.
+    tmp_phase.clear();
+    tmp_amp.clear();
+    tmp_freq.clear();
     for i in 0..n {
-        s4_p.push(wrap_phase(phase[i] + params.dt * k3_p[i]));
-        s4_a.push(clamp_amp(amplitude[i] + params.dt * k3_a[i]));
-        s4_f.push(frequency[i] + params.dt * k3_f[i]);
+        tmp_phase.push(wrap_phase(phase[i] + params.dt * pool.k3_phase[i]));
+        tmp_amp.push(clamp_amp(amplitude[i] + params.dt * pool.k3_amp[i]));
+        tmp_freq.push(frequency[i] + params.dt * pool.k3_freq[i]);
     }
-    let (k4_p, k4_a, k4_f) = mean_field_derivatives(&s4_p, &s4_a, &s4_f, params, n_inv);
+    pool.stage_phase.clear();
+    pool.stage_amp.clear();
+    pool.stage_freq.clear();
+    pool.stage_phase.extend_from_slice(&tmp_phase);
+    pool.stage_amp.extend_from_slice(&tmp_amp);
+    pool.stage_freq.extend_from_slice(&tmp_freq);
 
-    // Final weighted sum.
-    let mut out_p = Vec::with_capacity(n);
-    let mut out_a = Vec::with_capacity(n);
-    let mut out_f = Vec::with_capacity(n);
+    // k4 = f(stage-4 state)
+    mean_field_derivatives_into(
+        &pool.stage_phase,
+        &pool.stage_amp,
+        &pool.stage_freq,
+        params,
+        n_inv,
+        &mut pool.k4_phase,
+        &mut pool.k4_amp,
+        &mut pool.k4_freq,
+    );
+
+    // Final weighted sum: base + dt/6 * (k1 + 2*k2 + 2*k3 + k4).
     for i in 0..n {
-        let new_p =
-            wrap_phase(phase[i] + sixth_dt * (k1_p[i] + 2.0 * k2_p[i] + 2.0 * k3_p[i] + k4_p[i]));
-        let new_a = clamp_amp(
-            amplitude[i] + sixth_dt * (k1_a[i] + 2.0 * k2_a[i] + 2.0 * k3_a[i] + k4_a[i]),
+        let new_p = wrap_phase(
+            phase[i]
+                + sixth_dt
+                    * (pool.k1_phase[i]
+                        + 2.0 * pool.k2_phase[i]
+                        + 2.0 * pool.k3_phase[i]
+                        + pool.k4_phase[i]),
         );
-        let new_f = frequency[i] + sixth_dt * (k1_f[i] + 2.0 * k2_f[i] + 2.0 * k3_f[i] + k4_f[i]);
-        out_p.push(new_p);
-        out_a.push(new_a);
-        out_f.push(new_f);
+        let new_a = clamp_amp(
+            amplitude[i]
+                + sixth_dt
+                    * (pool.k1_amp[i]
+                        + 2.0 * pool.k2_amp[i]
+                        + 2.0 * pool.k3_amp[i]
+                        + pool.k4_amp[i]),
+        );
+        let new_f = frequency[i]
+            + sixth_dt
+                * (pool.k1_freq[i]
+                    + 2.0 * pool.k2_freq[i]
+                    + 2.0 * pool.k3_freq[i]
+                    + pool.k4_freq[i]);
+        pool.out_phase.push(new_p);
+        pool.out_amp.push(new_a);
+        pool.out_freq.push(new_f);
     }
 
-    Ok((out_p, out_a, out_f))
+    Ok((
+        pool.out_phase.clone(),
+        pool.out_amp.clone(),
+        pool.out_freq.clone(),
+    ))
 }
 
 #[cfg(test)]
@@ -337,7 +447,6 @@ mod tests {
 
     #[test]
     fn cpu_step_phase_wrap_keeps_small_dt_stable() {
-        // Starting just below 2pi with a positive derivative should wrap back.
         let phase = vec![core::f32::consts::TAU - 0.001];
         let amp = vec![1.0];
         let freq = vec![1.0];
@@ -348,9 +457,6 @@ mod tests {
 
     #[test]
     fn cpu_rk4_amplitude_error_scales_like_dt_to_the_fifth() {
-        // For the k=0 exponential decay ODE, the explicit RK4 update has local
-        // truncation error O(dt^5). Halving the step should shrink the error by
-        // roughly 2^5 = 32.
         let decay = 1.0_f32;
         let phase = vec![0.0_f32];
         let amplitude = vec![1.0_f32];
@@ -376,6 +482,67 @@ mod tests {
             ratio > 15.0 && ratio < 60.0,
             "expected RK4 local error ratio ~32, got {ratio}"
         );
+    }
+
+    #[test]
+    fn step_cpu_with_pool_matches_step_cpu() {
+        let n = 64;
+        let phase: Vec<_> = (0..n).map(|i| 0.1 * i as f32).collect();
+        let amp: Vec<_> = (0..n).map(|_| 1.0_f32).collect();
+        let freq: Vec<_> = (0..n).map(|i| 0.05 * (i as f32 - n as f32 / 2.0)).collect();
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+
+        let (ref_p, ref_a, ref_f) = step_cpu(&phase, &amp, &freq, &params).unwrap();
+
+        let mut pool = MeanFieldRk4Buffers::new(n);
+        let (pool_p, pool_a, pool_f) =
+            step_cpu_with_pool(&phase, &amp, &freq, &params, &mut pool).unwrap();
+
+        assert_eq!(ref_p, pool_p);
+        assert_eq!(ref_a, pool_a);
+        assert_eq!(ref_f, pool_f);
+    }
+
+    #[test]
+    fn step_cpu_with_pool_reuse_across_steps() {
+        let n = 32;
+        let phase: Vec<_> = (0..n).map(|i| 0.1 * i as f32).collect();
+        let amp = vec![1.0_f32; n];
+        let freq: Vec<_> = (0..n).map(|i| 0.05 * (i as f32 - n as f32 / 2.0)).collect();
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+
+        let mut pool = MeanFieldRk4Buffers::new(n);
+
+        let mut cur_p = phase;
+        let mut cur_a = amp;
+        let mut cur_f = freq;
+        for _ in 0..10 {
+            let (new_p, new_a, new_f) =
+                step_cpu_with_pool(&cur_p, &cur_a, &cur_f, &params, &mut pool).unwrap();
+            cur_p = new_p;
+            cur_a = new_a;
+            cur_f = new_f;
+        }
+
+        for p in &cur_p {
+            assert!(*p >= 0.0 && *p < core::f32::consts::TAU);
+        }
+        for a in &cur_a {
+            assert!(*a >= 0.0 && a.is_finite());
+        }
+        for f in &cur_f {
+            assert!(f.is_finite());
+        }
     }
 }
 
@@ -419,7 +586,6 @@ mod proptests {
     fn phase_and_amplitude_invariants_are_preserved() {
         let config = ProptestConfig::with_cases(64);
         proptest!(config, |(n in 1usize..=64, params in any_params(), state in any_state(64))| {
-            // `state` is length 64; truncate to `n`.
             let (phase, amplitude, frequency) = state;
             let phase = phase[..n].to_vec();
             let amplitude = amplitude[..n].to_vec();
@@ -479,6 +645,26 @@ mod proptests {
             let z_norm_sq = zx * zx + zy * zy;
 
             prop_assert!(z_norm_sq <= mean_amp * mean_amp + 1e-6);
+        });
+    }
+
+    #[test]
+    fn pool_matches_fresh_allocation_across_random_inputs() {
+        let config = ProptestConfig::with_cases(32);
+        proptest!(config, |(n in 1usize..=64, params in any_params(), state in any_state(64))| {
+            let (phase, amplitude, frequency) = state;
+            let phase = phase[..n].to_vec();
+            let amplitude = amplitude[..n].to_vec();
+            let frequency = frequency[..n].to_vec();
+
+            let (ref_p, ref_a, ref_f) = step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
+            let mut pool = MeanFieldRk4Buffers::new(n);
+            let (pool_p, pool_a, pool_f) =
+                step_cpu_with_pool(&phase, &amplitude, &frequency, &params, &mut pool).unwrap();
+
+            prop_assert!(ref_p == pool_p);
+            prop_assert!(ref_a == pool_a);
+            prop_assert!(ref_f == pool_f);
         });
     }
 }

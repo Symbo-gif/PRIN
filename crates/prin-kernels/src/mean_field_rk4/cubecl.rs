@@ -5,6 +5,15 @@
 //! [`super::step_cpu`] remains the numerical authority; this path is checked
 //! against it in the kernel-equivalence tests.
 //!
+//! ## Buffer management
+//!
+//! [`step_cubecl_with_pool`] reuses preallocated device [`Handle`]s from a
+//! [`CubeclBufferPool`](crate::buffers::CubeclBufferPool), eliminating 15
+//! per-step `client.empty()` calls. Only the 4 input handles (base state +
+//! k-zero) are created fresh each step via `client.create_from_slice` because
+//! they carry host data. The original [`step_cubecl`] allocates all handles
+//! per step and is retained for one-shot use.
+//!
 //! SAFETY: All `unsafe` blocks are confined to `ArrayArg::from_raw_parts` with
 //! handles whose lengths are exactly `N * size_of::<f32>()` bytes. Those
 //! handles are created by `ComputeClient::create` or `ComputeClient::empty`,
@@ -17,6 +26,7 @@ use cubecl::prelude::*;
 use cubecl::server::Handle;
 
 use super::{validate_param, validate_state, MeanFieldRk4Error, MeanFieldRk4Params};
+use crate::buffers::CubeclBufferPool;
 
 /// Full CubeCL step output: `(phase, amplitude, frequency)` plus a report.
 pub type StepCubeclOutput = (super::MeanFieldRk4Output, StepReport);
@@ -174,24 +184,64 @@ fn read_state<R: Runtime>(
     ))
 }
 
-/// Compute the order parameter on the host.
-///
-/// This is a temporary stand-in for a device-side reduction (see WP-018).
-fn order_param_host(phase: &[f32], amplitude: &[f32], n_inv: f32) -> (f32, f32) {
-    let mut z_real = 0.0_f32;
-    let mut z_imag = 0.0_f32;
-    for (p, a) in phase.iter().zip(amplitude) {
-        let (s, c) = p.sin_cos();
-        z_real += *a * c;
-        z_imag += *a * s;
-    }
-    (z_real * n_inv, z_imag * n_inv)
+/// Launch one RK4 stage kernel.
+#[allow(clippy::too_many_arguments)]
+fn launch_stage<R: Runtime>(
+    client: &ComputeClient<R>,
+    cube_count: &CubeCount,
+    cube_dim: CubeDim,
+    base_phase_h: &Handle,
+    base_amp_h: &Handle,
+    base_freq_h: &Handle,
+    k_prev_phase_h: &Handle,
+    k_prev_amp_h: &Handle,
+    k_prev_freq_h: &Handle,
+    dt_scale: f32,
+    next_dt_scale: f32,
+    zr: f32,
+    zi: f32,
+    params: &MeanFieldRk4Params,
+    n_inv: f32,
+    k_phase_h: &Handle,
+    k_amp_h: &Handle,
+    k_freq_h: &Handle,
+    s_next_phase_h: &Handle,
+    s_next_amp_h: &Handle,
+    s_next_freq_h: &Handle,
+    n: usize,
+) {
+    mean_field_rk4_stage::launch::<f32, R>(
+        client,
+        cube_count.clone(),
+        cube_dim,
+        array_arg(base_phase_h, n),
+        array_arg(base_amp_h, n),
+        array_arg(base_freq_h, n),
+        array_arg(k_prev_phase_h, n),
+        array_arg(k_prev_amp_h, n),
+        array_arg(k_prev_freq_h, n),
+        dt_scale,
+        next_dt_scale,
+        zr,
+        zi,
+        params.k,
+        params.decay,
+        params.gamma,
+        n_inv,
+        array_arg(k_phase_h, n),
+        array_arg(k_amp_h, n),
+        array_arg(k_freq_h, n),
+        array_arg(s_next_phase_h, n),
+        array_arg(s_next_amp_h, n),
+        array_arg(s_next_freq_h, n),
+    );
 }
 
-/// Execute one mean-field RK4 step on a CubeCL runtime.
+/// Execute one mean-field RK4 step on a CubeCL runtime, allocating all device
+/// handles fresh.
 ///
-/// The implementation is generic over `R: Runtime`; concrete entry points
-/// are provided by `try_step_wgpu` and `try_step_cuda`.
+/// For repeated stepping, prefer [`step_cubecl_with_pool`] which reuses
+/// preallocated device handles.
 pub fn step_cubecl<R: Runtime>(
     client: &ComputeClient<R>,
     phase: &[f32],
@@ -205,42 +255,37 @@ pub fn step_cubecl<R: Runtime>(
     validate_param("gamma", params.gamma, false)?;
     validate_param("dt", params.dt, true)?;
 
+    let pool = CubeclBufferPool::<R>::new(client, n);
+    step_cubecl_with_pool(client, phase, amplitude, frequency, params, &pool)
+}
+
+/// Execute one mean-field RK4 step using preallocated device buffers.
+///
+/// Reuses the 15 working + output [`Handle`]s from the [`CubeclBufferPool`],
+/// eliminating per-step `client.empty()` calls. Only the 4 input handles
+/// (base state + k-zero) are created fresh via `client.create_from_slice`.
+pub fn step_cubecl_with_pool<R: Runtime>(
+    client: &ComputeClient<R>,
+    phase: &[f32],
+    amplitude: &[f32],
+    frequency: &[f32],
+    params: &MeanFieldRk4Params,
+    pool: &CubeclBufferPool<R>,
+) -> Result<StepCubeclOutput, MeanFieldRk4Error> {
+    let n = validate_state(phase, amplitude, frequency)?;
+    validate_param("k", params.k, false)?;
+    validate_param("decay", params.decay, false)?;
+    validate_param("gamma", params.gamma, false)?;
+    validate_param("dt", params.dt, true)?;
+
     let n_inv = 1.0_f32 / n as f32;
     let half_dt = params.dt * 0.5;
-    let byte_len = n * core::mem::size_of::<f32>();
 
-    // Helper to create an output handle of the right size.
-    let empty = || client.empty(byte_len);
-
-    // Device handles.
+    // Input handles: created fresh each step (carry host data).
     let base_phase_h = client.create_from_slice(f32::as_bytes(phase));
     let base_amp_h = client.create_from_slice(f32::as_bytes(amplitude));
     let base_freq_h = client.create_from_slice(f32::as_bytes(frequency));
     let k_zero_h = client.create_from_slice(f32::as_bytes(&vec![0.0_f32; n]));
-
-    let k1_phase_h = empty();
-    let k1_amp_h = empty();
-    let k1_freq_h = empty();
-
-    let k2_phase_h = empty();
-    let k2_amp_h = empty();
-    let k2_freq_h = empty();
-
-    let k3_phase_h = empty();
-    let k3_amp_h = empty();
-    let k3_freq_h = empty();
-
-    let k4_phase_h = empty();
-    let k4_amp_h = empty();
-    let k4_freq_h = empty();
-
-    let s_next_phase_h = empty();
-    let s_next_amp_h = empty();
-    let s_next_freq_h = empty();
-
-    let out_phase_h = empty();
-    let out_amp_h = empty();
-    let out_freq_h = empty();
 
     let cube_dim = CubeDim::new_1d(256);
     let cube_count = CubeCount::Static(n.div_ceil(256).max(1) as u32, 1, 1);
@@ -248,147 +293,158 @@ pub fn step_cubecl<R: Runtime>(
     let start = std::time::Instant::now();
 
     // Stage 1: dt_scale = 0, next_dt_scale = 0.5*dt.
-    let (zr, zi) = order_param_host(phase, amplitude, n_inv);
-    mean_field_rk4_stage::launch::<f32, R>(
+    let (zr, zi) = super::order_param(phase, amplitude, n_inv);
+    launch_stage::<R>(
         client,
-        cube_count.clone(),
+        &cube_count,
         cube_dim,
-        array_arg(&base_phase_h, n),
-        array_arg(&base_amp_h, n),
-        array_arg(&base_freq_h, n),
-        array_arg(&k_zero_h, n),
-        array_arg(&k_zero_h, n),
-        array_arg(&k_zero_h, n),
-        0.0_f32,
+        &base_phase_h,
+        &base_amp_h,
+        &base_freq_h,
+        &k_zero_h,
+        &k_zero_h,
+        &k_zero_h,
+        0.0,
         half_dt,
         zr,
         zi,
-        params.k,
-        params.decay,
-        params.gamma,
+        params,
         n_inv,
-        array_arg(&k1_phase_h, n),
-        array_arg(&k1_amp_h, n),
-        array_arg(&k1_freq_h, n),
-        array_arg(&s_next_phase_h, n),
-        array_arg(&s_next_amp_h, n),
-        array_arg(&s_next_freq_h, n),
+        &pool.k1_phase,
+        &pool.k1_amp,
+        &pool.k1_freq,
+        &pool.stage_phase,
+        &pool.stage_amp,
+        &pool.stage_freq,
+        n,
     );
 
     // Stage 2.
-    let (s2_p, s2_a, _s2_f) =
-        read_state(client, &s_next_phase_h, &s_next_amp_h, &s_next_freq_h, n)?;
-    let (zr, zi) = order_param_host(&s2_p, &s2_a, n_inv);
-    mean_field_rk4_stage::launch::<f32, R>(
+    let (s2_p, s2_a, _s2_f) = read_state(
         client,
-        cube_count.clone(),
+        &pool.stage_phase,
+        &pool.stage_amp,
+        &pool.stage_freq,
+        n,
+    )?;
+    let (zr, zi) = super::order_param(&s2_p, &s2_a, n_inv);
+    launch_stage::<R>(
+        client,
+        &cube_count,
         cube_dim,
-        array_arg(&base_phase_h, n),
-        array_arg(&base_amp_h, n),
-        array_arg(&base_freq_h, n),
-        array_arg(&k1_phase_h, n),
-        array_arg(&k1_amp_h, n),
-        array_arg(&k1_freq_h, n),
+        &base_phase_h,
+        &base_amp_h,
+        &base_freq_h,
+        &pool.k1_phase,
+        &pool.k1_amp,
+        &pool.k1_freq,
         half_dt,
         half_dt,
         zr,
         zi,
-        params.k,
-        params.decay,
-        params.gamma,
+        params,
         n_inv,
-        array_arg(&k2_phase_h, n),
-        array_arg(&k2_amp_h, n),
-        array_arg(&k2_freq_h, n),
-        array_arg(&s_next_phase_h, n),
-        array_arg(&s_next_amp_h, n),
-        array_arg(&s_next_freq_h, n),
+        &pool.k2_phase,
+        &pool.k2_amp,
+        &pool.k2_freq,
+        &pool.stage_phase,
+        &pool.stage_amp,
+        &pool.stage_freq,
+        n,
     );
 
     // Stage 3.
-    let (s3_p, s3_a, _s3_f) =
-        read_state(client, &s_next_phase_h, &s_next_amp_h, &s_next_freq_h, n)?;
-    let (zr, zi) = order_param_host(&s3_p, &s3_a, n_inv);
-    mean_field_rk4_stage::launch::<f32, R>(
+    let (s3_p, s3_a, _s3_f) = read_state(
         client,
-        cube_count.clone(),
+        &pool.stage_phase,
+        &pool.stage_amp,
+        &pool.stage_freq,
+        n,
+    )?;
+    let (zr, zi) = super::order_param(&s3_p, &s3_a, n_inv);
+    launch_stage::<R>(
+        client,
+        &cube_count,
         cube_dim,
-        array_arg(&base_phase_h, n),
-        array_arg(&base_amp_h, n),
-        array_arg(&base_freq_h, n),
-        array_arg(&k2_phase_h, n),
-        array_arg(&k2_amp_h, n),
-        array_arg(&k2_freq_h, n),
+        &base_phase_h,
+        &base_amp_h,
+        &base_freq_h,
+        &pool.k2_phase,
+        &pool.k2_amp,
+        &pool.k2_freq,
         half_dt,
         params.dt,
         zr,
         zi,
-        params.k,
-        params.decay,
-        params.gamma,
+        params,
         n_inv,
-        array_arg(&k3_phase_h, n),
-        array_arg(&k3_amp_h, n),
-        array_arg(&k3_freq_h, n),
-        array_arg(&s_next_phase_h, n),
-        array_arg(&s_next_amp_h, n),
-        array_arg(&s_next_freq_h, n),
+        &pool.k3_phase,
+        &pool.k3_amp,
+        &pool.k3_freq,
+        &pool.stage_phase,
+        &pool.stage_amp,
+        &pool.stage_freq,
+        n,
     );
 
     // Stage 4.
-    let (s4_p, s4_a, _s4_f) =
-        read_state(client, &s_next_phase_h, &s_next_amp_h, &s_next_freq_h, n)?;
-    let (zr, zi) = order_param_host(&s4_p, &s4_a, n_inv);
-    mean_field_rk4_stage::launch::<f32, R>(
+    let (s4_p, s4_a, _s4_f) = read_state(
         client,
-        cube_count.clone(),
+        &pool.stage_phase,
+        &pool.stage_amp,
+        &pool.stage_freq,
+        n,
+    )?;
+    let (zr, zi) = super::order_param(&s4_p, &s4_a, n_inv);
+    launch_stage::<R>(
+        client,
+        &cube_count,
         cube_dim,
-        array_arg(&base_phase_h, n),
-        array_arg(&base_amp_h, n),
-        array_arg(&base_freq_h, n),
-        array_arg(&k3_phase_h, n),
-        array_arg(&k3_amp_h, n),
-        array_arg(&k3_freq_h, n),
+        &base_phase_h,
+        &base_amp_h,
+        &base_freq_h,
+        &pool.k3_phase,
+        &pool.k3_amp,
+        &pool.k3_freq,
         params.dt,
-        0.0_f32,
+        0.0,
         zr,
         zi,
-        params.k,
-        params.decay,
-        params.gamma,
+        params,
         n_inv,
-        array_arg(&k4_phase_h, n),
-        array_arg(&k4_amp_h, n),
-        array_arg(&k4_freq_h, n),
-        array_arg(&s_next_phase_h, n),
-        array_arg(&s_next_amp_h, n),
-        array_arg(&s_next_freq_h, n),
+        &pool.k4_phase,
+        &pool.k4_amp,
+        &pool.k4_freq,
+        &pool.stage_phase,
+        &pool.stage_amp,
+        &pool.stage_freq,
+        n,
     );
 
     // Final weighted sum.
     mean_field_rk4_finalize::launch::<f32, R>(
         client,
-        cube_count.clone(),
+        cube_count,
         cube_dim,
         array_arg(&base_phase_h, n),
         array_arg(&base_amp_h, n),
         array_arg(&base_freq_h, n),
-        array_arg(&k1_phase_h, n),
-        array_arg(&k2_phase_h, n),
-        array_arg(&k3_phase_h, n),
-        array_arg(&k4_phase_h, n),
-        array_arg(&k1_amp_h, n),
-        array_arg(&k2_amp_h, n),
-        array_arg(&k3_amp_h, n),
-        array_arg(&k4_amp_h, n),
-        array_arg(&k1_freq_h, n),
-        array_arg(&k2_freq_h, n),
-        array_arg(&k3_freq_h, n),
-        array_arg(&k4_freq_h, n),
+        array_arg(&pool.k1_phase, n),
+        array_arg(&pool.k2_phase, n),
+        array_arg(&pool.k3_phase, n),
+        array_arg(&pool.k4_phase, n),
+        array_arg(&pool.k1_amp, n),
+        array_arg(&pool.k2_amp, n),
+        array_arg(&pool.k3_amp, n),
+        array_arg(&pool.k4_amp, n),
+        array_arg(&pool.k1_freq, n),
+        array_arg(&pool.k2_freq, n),
+        array_arg(&pool.k3_freq, n),
+        array_arg(&pool.k4_freq, n),
         params.dt,
-        array_arg(&out_phase_h, n),
-        array_arg(&out_amp_h, n),
-        array_arg(&out_freq_h, n),
+        array_arg(&pool.out_phase, n),
+        array_arg(&pool.out_amp, n),
+        array_arg(&pool.out_freq, n),
     );
 
     let report = StepReport {
@@ -397,9 +453,9 @@ pub fn step_cubecl<R: Runtime>(
         launch_count: 5,
     };
 
-    let out_phase = read_f32s(client, &out_phase_h, n)?;
-    let out_amp = read_f32s(client, &out_amp_h, n)?;
-    let out_freq = read_f32s(client, &out_freq_h, n)?;
+    let out_phase = read_f32s(client, &pool.out_phase, n)?;
+    let out_amp = read_f32s(client, &pool.out_amp, n)?;
+    let out_freq = read_f32s(client, &pool.out_freq, n)?;
 
     Ok(((out_phase, out_amp, out_freq), report))
 }
