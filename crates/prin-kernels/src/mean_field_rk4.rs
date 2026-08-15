@@ -80,6 +80,14 @@ pub enum MeanFieldRk4Error {
         /// Backend name.
         name: &'static str,
     },
+    /// Preallocated buffer pool was sized for a different oscillator count.
+    #[error("buffer pool capacity ({capacity}) does not match oscillator count ({actual})")]
+    PoolSizeMismatch {
+        /// Oscillator count the pool was allocated for.
+        capacity: usize,
+        /// Oscillator count derived from the input slices.
+        actual: usize,
+    },
 }
 
 /// Wrap `phase` to `[0, 2 * pi)` using Euclidean remainder.
@@ -232,6 +240,13 @@ pub fn step_cpu_with_pool(
     validate_param("decay", params.decay, false)?;
     validate_param("gamma", params.gamma, false)?;
     validate_param("dt", params.dt, true)?;
+
+    if pool.capacity() != n {
+        return Err(MeanFieldRk4Error::PoolSizeMismatch {
+            capacity: pool.capacity(),
+            actual: n,
+        });
+    }
 
     pool.clear();
 
@@ -543,6 +558,24 @@ mod tests {
         for f in &cur_f {
             assert!(f.is_finite());
         }
+    }
+
+    #[test]
+    fn step_cpu_with_pool_rejects_size_mismatch() {
+        let pool_n = 4;
+        let call_n = 64;
+        let phase = vec![0.1_f32; call_n];
+        let amp = vec![1.0_f32; call_n];
+        let freq = vec![0.0_f32; call_n];
+        let mut pool = MeanFieldRk4Buffers::new(pool_n);
+        let err = step_cpu_with_pool(&phase, &amp, &freq, &DEFAULT_PARAMS, &mut pool).unwrap_err();
+        assert!(matches!(
+            err,
+            MeanFieldRk4Error::PoolSizeMismatch {
+                capacity: 4,
+                actual: 64,
+            }
+        ));
     }
 }
 

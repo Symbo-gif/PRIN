@@ -107,9 +107,9 @@ is renumbered by an executive mathematical audit.
 | 0062 | 2 | WP-016 | S2 — Audit | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0062-wp016-s2-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | COMPLETE |
 | 0063 | 2 | WP-016 | S3 — Remediation | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0063-wp016-s3-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | COMPLETE |
 | 0064 | 2 | WP-016 | S4 — Documentation | [Parallel sweeps, CPU optimization, and Phase 2 gate](phase-2/0064-wp016-s4-parallel-sweeps-cpu-optimization-and-phase-2-gate.md) | COMPLETE |
-| 0065 | 3 | WP-017 | S1 — Coding | [Kernel architecture and CPU references](phase-3/0065-wp017-s1-kernel-architecture-and-cpu-references.md) | PLANNED |
+| 0065 | 3 | WP-017 | S1 — Coding | [Kernel architecture and CPU references](phase-3/0065-wp017-s1-kernel-architecture-and-cpu-references.md) | COMPLETE |
 | 0066 | 3 | WP-017 | S2 — Audit | [Kernel architecture and CPU references](phase-3/0066-wp017-s2-kernel-architecture-and-cpu-references.md) | COMPLETE |
-| 0067 | 3 | WP-017 | S3 — Remediation | [Kernel architecture and CPU references](phase-3/0067-wp017-s3-kernel-architecture-and-cpu-references.md) | PLANNED |
+| 0067 | 3 | WP-017 | S3 — Remediation | [Kernel architecture and CPU references](phase-3/0067-wp017-s3-kernel-architecture-and-cpu-references.md) | COMPLETE |
 | 0068 | 3 | WP-017 | S4 — Documentation | [Kernel architecture and CPU references](phase-3/0068-wp017-s4-kernel-architecture-and-cpu-references.md) | PLANNED |
 | 0069 | 3 | WP-018 | S1 — Coding | [Fused mean-field RK4 kernel](phase-3/0069-wp018-s1-fused-mean-field-rk4-kernel.md) | PLANNED |
 | 0070 | 3 | WP-018 | S2 — Audit | [Fused mean-field RK4 kernel](phase-3/0070-wp018-s2-fused-mean-field-rk4-kernel.md) | PLANNED |

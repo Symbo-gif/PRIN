@@ -25,7 +25,7 @@
 use cubecl::prelude::*;
 use cubecl::server::Handle;
 
-use super::{validate_param, validate_state, MeanFieldRk4Error, MeanFieldRk4Params};
+use super::{step_cpu, validate_param, validate_state, MeanFieldRk4Error, MeanFieldRk4Params};
 use crate::buffers::CubeclBufferPool;
 
 /// Full CubeCL step output: `(phase, amplitude, frequency)` plus a report.
@@ -151,7 +151,9 @@ fn mean_field_rk4_finalize<F: Float + CubeElement>(
 ///
 /// `handle` must refer to a device allocation of at least `n * size_of::<f32>()`
 /// bytes. All handles in this module come from `client.create_from_slice` or
-/// `client.empty(byte_len)`, so the invariant holds.
+/// `client.empty(byte_len)`, so the invariant holds. Callers of
+/// `step_cubecl_with_pool` are protected by an explicit `pool.capacity() == n`
+/// check that runs before any `array_arg` call.
 fn array_arg<R: Runtime>(handle: &Handle, n: usize) -> ArrayArg<R> {
     // SAFETY: see function-level safety note.
     unsafe { ArrayArg::from_raw_parts(handle.clone(), n) }
@@ -277,6 +279,13 @@ pub fn step_cubecl_with_pool<R: Runtime>(
     validate_param("decay", params.decay, false)?;
     validate_param("gamma", params.gamma, false)?;
     validate_param("dt", params.dt, true)?;
+
+    if pool.capacity() != n {
+        return Err(MeanFieldRk4Error::PoolSizeMismatch {
+            capacity: pool.capacity(),
+            actual: n,
+        });
+    }
 
     let n_inv = 1.0_f32 / n as f32;
     let half_dt = params.dt * 0.5;
@@ -514,6 +523,46 @@ pub fn try_step_cuda(
     step_cubecl(&client, phase, amplitude, frequency, params)
 }
 
+/// Automatically select the best available backend and execute one RK4 step.
+///
+/// Tries each backend from [`auto_detect_order`] in priority order
+/// (CUDA → wgpu → CPU). The first backend that initialises successfully
+/// is used. If no CubeCL backend is available (none compiled in, or all
+/// failed at runtime), falls back to the native CPU reference [`step_cpu`],
+/// which is always available.
+///
+/// This is the main entry point for callers that want automatic backend
+/// selection without manually managing the priority list.
+pub fn step_auto(
+    phase: &[f32],
+    amplitude: &[f32],
+    frequency: &[f32],
+    params: &MeanFieldRk4Params,
+) -> Result<StepCubeclOutput, MeanFieldRk4Error> {
+    #[cfg(feature = "wgpu")]
+    if let Ok(output) = try_step_wgpu(phase, amplitude, frequency, params) {
+        return Ok(output);
+    }
+
+    #[cfg(feature = "cuda")]
+    if let Ok(output) = try_step_cuda(phase, amplitude, frequency, params) {
+        return Ok(output);
+    }
+
+    #[cfg(feature = "cpu")]
+    if let Ok(output) = try_step_cpu(phase, amplitude, frequency, params) {
+        return Ok(output);
+    }
+
+    let out = step_cpu(phase, amplitude, frequency, params)?;
+    let report = StepReport {
+        backend_name: "cpu-native".to_string(),
+        wall_time_seconds: 0.0,
+        launch_count: 0,
+    };
+    Ok((out, report))
+}
+
 #[cfg(all(test, feature = "wgpu"))]
 mod tests {
     use super::*;
@@ -692,5 +741,59 @@ mod tests_cpu {
         assert_allclose(&out_p, &cpu_p, 1e-5, 1e-6);
         assert_allclose(&out_a, &cpu_a, 1e-5, 1e-6);
         assert_allclose(&out_f, &cpu_f, 1e-5, 1e-6);
+    }
+
+    #[test]
+    fn cubecl_pool_rejects_size_mismatch() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        let device = CpuDevice;
+        let client = CpuRuntime::client(&device);
+
+        let pool_n = 4;
+        let call_n = 4096;
+        let pool = CubeclBufferPool::<CpuRuntime>::new(&client, pool_n);
+        assert_eq!(pool.capacity(), pool_n);
+
+        let phase = vec![0.1_f32; call_n];
+        let amp = vec![1.0_f32; call_n];
+        let freq = vec![0.0_f32; call_n];
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+
+        let err = step_cubecl_with_pool(&client, &phase, &amp, &freq, &params, &pool).unwrap_err();
+        assert!(matches!(
+            err,
+            MeanFieldRk4Error::PoolSizeMismatch {
+                capacity: 4,
+                actual: 4096,
+            }
+        ));
+    }
+
+    #[test]
+    fn step_auto_falls_back_to_available_backend() {
+        let n = 32;
+        let phase: Vec<_> = (0..n).map(|i| 0.1 * i as f32).collect();
+        let amplitude: Vec<_> = (0..n).map(|_| 1.0_f32).collect();
+        let frequency: Vec<_> = (0..n).map(|i| 0.05 * (i as f32 - n as f32 / 2.0)).collect();
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+
+        let (ref_p, ref_a, ref_f) = step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
+        let ((auto_p, auto_a, auto_f), report) =
+            step_auto(&phase, &amplitude, &frequency, &params).unwrap();
+
+        assert_allclose(&auto_p, &ref_p, 1e-5, 1e-6);
+        assert_allclose(&auto_a, &ref_a, 1e-5, 1e-6);
+        assert_allclose(&auto_f, &ref_f, 1e-5, 1e-6);
+        assert!(!report.backend_name.is_empty());
     }
 }

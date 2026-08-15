@@ -359,4 +359,86 @@ mod tests {
         });
         assert!(result.is_ok());
     }
+
+    #[test]
+    fn harness_default_impl() {
+        let harness = EquivalenceHarness::default();
+        assert!(!harness.cases().is_empty());
+        assert_eq!(
+            harness.cases().len(),
+            EquivalenceHarness::new().cases().len()
+        );
+    }
+
+    #[test]
+    fn verify_detects_genuine_backend_mismatch() {
+        let harness = EquivalenceHarness::with_cases(vec![EquivalenceCase {
+            label: "mismatch_amp".into(),
+            phase: vec![0.5],
+            amplitude: vec![1.0],
+            frequency: vec![0.0],
+            params: MeanFieldRk4Params {
+                k: 1.0,
+                decay: 0.0,
+                gamma: 0.0,
+                dt: 0.01,
+            },
+        }]);
+        let phase_ok_amp_wrong =
+            |p: &[f32], _a: &[f32], f: &[f32], _params: &MeanFieldRk4Params| {
+                let (ref_p, _ref_a, ref_f) = step_cpu(p, &[1.0], f, _params).unwrap();
+                Ok((ref_p, vec![99.0], ref_f))
+            };
+        let result = harness.verify_against_reference("fake-amp", phase_ok_amp_wrong);
+        assert!(result.is_err());
+        let msg = result.unwrap_err();
+        assert!(
+            msg.contains("fake-amp"),
+            "error should name the backend: {msg}"
+        );
+        assert!(
+            msg.contains("amplitude"),
+            "error should name amplitude: {msg}"
+        );
+
+        let phase_ok_freq_wrong =
+            |p: &[f32], a: &[f32], _f: &[f32], _params: &MeanFieldRk4Params| {
+                let (ref_p, ref_a, _ref_f) = step_cpu(p, a, &[0.0], _params).unwrap();
+                Ok((ref_p, ref_a, vec![99.0]))
+            };
+        let result2 = harness.verify_against_reference("fake-freq", phase_ok_freq_wrong);
+        assert!(result2.is_err());
+        let msg2 = result2.unwrap_err();
+        assert!(
+            msg2.contains("frequency"),
+            "error should name frequency: {msg2}"
+        );
+    }
+
+    #[test]
+    fn verify_with_tolerance_propagates_backend_error() {
+        let harness = EquivalenceHarness::with_cases(vec![EquivalenceCase {
+            label: "tiny".into(),
+            phase: vec![0.5],
+            amplitude: vec![1.0],
+            frequency: vec![0.0],
+            params: MeanFieldRk4Params {
+                k: 1.0,
+                decay: 0.0,
+                gamma: 0.0,
+                dt: 0.01,
+            },
+        }]);
+        let failing_backend = |_p: &[f32], _a: &[f32], _f: &[f32], _params: &MeanFieldRk4Params| {
+            Err("backend exploded".to_string())
+        };
+        let result = harness.verify_against_reference_with_tolerance(
+            "bad-backend",
+            failing_backend,
+            DEFAULT_RTOL,
+            DEFAULT_ATOL,
+        );
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("backend exploded"));
+    }
 }

@@ -1,6 +1,6 @@
 # Session 0067 — WP-017 S3: Remediation — Kernel architecture and CPU references
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-017  
 **Session type:** S3 — Remediation  

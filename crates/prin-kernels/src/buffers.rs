@@ -136,6 +136,8 @@ impl MeanFieldRk4Buffers {
 /// when constructing `ArrayArg` from these handles.
 #[cfg(any(feature = "cpu", feature = "cuda", feature = "wgpu"))]
 pub struct CubeclBufferPool<R: Runtime> {
+    /// Oscillator count this pool was sized for.
+    n: usize,
     // k1 intermediates
     pub(crate) k1_phase: Handle,
     pub(crate) k1_amp: Handle,
@@ -173,6 +175,7 @@ impl<R: Runtime> CubeclBufferPool<R> {
         let byte_len = n * core::mem::size_of::<f32>();
         let empty = || client.empty(byte_len);
         Self {
+            n,
             k1_phase: empty(),
             k1_amp: empty(),
             k1_freq: empty(),
@@ -195,24 +198,9 @@ impl<R: Runtime> CubeclBufferPool<R> {
         }
     }
 
-    /// Return a reference to the k1 phase handle.
-    pub fn k1_phase(&self) -> &Handle {
-        &self.k1_phase
-    }
-
-    /// Return a reference to the output phase handle.
-    pub fn out_phase(&self) -> &Handle {
-        &self.out_phase
-    }
-
-    /// Return a reference to the output amplitude handle.
-    pub fn out_amp(&self) -> &Handle {
-        &self.out_amp
-    }
-
-    /// Return a reference to the output frequency handle.
-    pub fn out_freq(&self) -> &Handle {
-        &self.out_freq
+    /// The oscillator count this pool was sized for.
+    pub fn capacity(&self) -> usize {
+        self.n
     }
 }
 
