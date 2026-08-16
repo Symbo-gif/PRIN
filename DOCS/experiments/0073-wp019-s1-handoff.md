@@ -95,7 +95,7 @@ suspected high-degree hub as the cause.
 | `sparse_knn.rs` | 98.08% | 98.08% |
 | `pac.rs` | 98.60% | 98.60% |
 | `sparse_knn/cubecl.rs` (raw) | 77.46% | 85.86% |
-| `pac/cubecl.rs` (raw) | — (not compiled without a GPU feature) | 82.93% |
+| `pac/cubecl.rs` (raw) | 77.50% | 82.93% |
 
 The pure CPU-reference files (`sparse_knn.rs`, `pac.rs`) are both above the
 ≥95% gate. The two `cubecl.rs` files' raw figures are below 95% for the same,
