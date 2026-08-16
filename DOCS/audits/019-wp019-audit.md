@@ -224,3 +224,8 @@ The sole finding (WP019-F1) is a D4 documentation/evidentiary inaccuracy in the 
 3. Independent delta verification: confirm the corrected cell matches a fresh `cargo llvm-cov -p prin-kernels --features cpu` run, and that no other gate regressed.
 4. Append the closure table to this Audit Report (§7).
 5. Hand off to S4 (next session) for documentation closure: README updates, CHANGELOG entry, DV-004 register update (two additional non-instrumentable kernel bodies), and PSR-019.
+
+**Maintainer acknowledgment:** MichaelMaillet, 2026-08-16 — verdict
+PASS-WITH-FINDINGS acknowledged; S3 remediation deferred to a subsequent
+session (Development Workflow and Audit Standards §6: "Approval is recorded
+in the artefact itself").
