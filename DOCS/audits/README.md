@@ -90,6 +90,12 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   reductions" audit (`PASS`); zero S2 findings; one self-discovered D4
   finding (WP020-F1, `cargo test --features cpu` count transcription error
   in this report's own §2) resolved in S3 with a CLEAN delta re-audit.
+- [`021-wp021-audit.md`](021-wp021-audit.md) — WP-021 "GPU integration and
+  Phase 3 gate" audit (`PASS-WITH-FINDINGS`); one D4 finding (WP021-F1,
+  session register status mismatch for session 0081) resolved in S3, plus
+  self-discovered stale bookkeeping (session 0082's own status/register
+  entries never flipped to `COMPLETE` when S2 closed), with a CLEAN delta
+  re-audit.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

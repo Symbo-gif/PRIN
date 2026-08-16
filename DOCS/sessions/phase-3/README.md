@@ -23,8 +23,8 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0078 | WP-020 | S2 — Audit | [Fused discrete step and reductions](0078-wp020-s2-fused-discrete-step-and-reductions.md) | COMPLETE |
 | 0079 | WP-020 | S3 — Remediation | [Fused discrete step and reductions](0079-wp020-s3-fused-discrete-step-and-reductions.md) | COMPLETE |
 | 0080 | WP-020 | S4 — Documentation | [Fused discrete step and reductions](0080-wp020-s4-fused-discrete-step-and-reductions.md) | COMPLETE |
-| 0081 | WP-021 | S1 — Coding | [GPU integration and Phase 3 gate](0081-wp021-s1-gpu-integration-and-phase-3-gate.md) | PLANNED |
-| 0082 | WP-021 | S2 — Audit | [GPU integration and Phase 3 gate](0082-wp021-s2-gpu-integration-and-phase-3-gate.md) | PLANNED |
-| 0083 | WP-021 | S3 — Remediation | [GPU integration and Phase 3 gate](0083-wp021-s3-gpu-integration-and-phase-3-gate.md) | PLANNED |
+| 0081 | WP-021 | S1 — Coding | [GPU integration and Phase 3 gate](0081-wp021-s1-gpu-integration-and-phase-3-gate.md) | COMPLETE |
+| 0082 | WP-021 | S2 — Audit | [GPU integration and Phase 3 gate](0082-wp021-s2-gpu-integration-and-phase-3-gate.md) | COMPLETE |
+| 0083 | WP-021 | S3 — Remediation | [GPU integration and Phase 3 gate](0083-wp021-s3-gpu-integration-and-phase-3-gate.md) | COMPLETE |
 | 0084 | WP-021 | S4 — Documentation | [GPU integration and Phase 3 gate](0084-wp021-s4-gpu-integration-and-phase-3-gate.md) | PLANNED |
 

@@ -243,4 +243,37 @@ One D4 finding (WP021-F1: session register not updated). No D1/D2/D3 findings. A
 
 ## 7. Closure table (appended by S3 remediation)
 
-_(To be completed by S3 — session 0083)_
+| ID | Resolution | Commit / amendment | Delta re-audit evidence |
+|---|---|---|---|
+| WP021-F1 | FIXED | (this closure commit) — `DOCS/sessions/SESSION_REGISTER.md` row 0081 `PLANNED` → `COMPLETE`, matching the S1 brief's own `COMPLETE` status field, and the mirrored `DOCS/sessions/phase-3/README.md` row 0081 corrected the same way | See independent re-execution table below; `tools/wp001_baseline.py check` now passes and `test_wp001_baseline.py::test_current_baseline_automation_is_green` / `test_cli_check_reports_success` now pass |
+
+**Stale bookkeeping also closed this session (discovered while acknowledging the S2 entry condition, same class as the WP019-F1/WP017-F5 precedent):** session 0082's own `Status` header and its `SESSION_REGISTER.md`/`DOCS/sessions/phase-3/README.md` rows were never flipped from `PLANNED` to `COMPLETE` when S2 closed (commit `97490bf` added only the audit report, unlike the WP-020 S2 precedent commit `4fefc6e` which flipped its own session's bookkeeping in the same commit). `DOCS/audits/README.md` was also missing its index entry for `021-wp021-audit.md`. Fixed alongside session 0081's `SESSION_REGISTER.md`/README correction and session 0083's own `COMPLETE` marking, all in this same closure commit.
+
+### Independent delta re-execution (session 0083, git state: working tree atop `97490bf`)
+
+The fix touches only session/audit bookkeeping documentation — `git status` confirms the changed files are limited to `DOCS/audits/README.md`, `DOCS/sessions/SESSION_REGISTER.md`, `DOCS/sessions/phase-3/0082-wp021-s2-gpu-integration-and-phase-3-gate.md`, and `DOCS/sessions/phase-3/README.md`. No file under `crates/`, `python/`, `tests/`, `tools/`, `parity/`, or `benchmarks/` changed, so every numerical, security, and quality gate is re-run purely to confirm no regression was introduced:
+
+| Gate | Command | Result | vs. S2 audit (§2–§3) |
+|---|---|---|---|
+| Session/baseline validation (the fixed gate) | `python tools/wp001_baseline.py check` | `WP-001 baseline validation passed.` | Was `ERROR: session 0081: brief/register status mismatch` in S2; now clean |
+| `test_wp001_baseline.py` (targeted) | `pytest tests/test_wp001_baseline.py -k "test_current_baseline_automation_is_green or test_cli_check_reports_success"` | 2 passed | Both were failing in S2 (§2, A4 python-test row); now pass |
+| `test_wp001_baseline.py` (full file) | `pytest tests/test_wp001_baseline.py --basetemp=.pytest_basetemp` | 44 passed | All green |
+| Rust format | `cargo fmt --all -- --check` | PASS (exit 0) | Unchanged |
+| Clippy (workspace) | `cargo clippy --workspace --all-targets -- -D warnings` | PASS (exit 0) | Unchanged |
+| Rustdoc (workspace) | `RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps` | PASS, 0 warnings | Unchanged |
+| Workspace tests | `cargo test --workspace` | PASS, all suites `ok`, 0 failed | Unchanged |
+| `prin-kernels` (`cuda`) | `cargo test -p prin-kernels --features cuda` | 113 unit + 1 doctest passed | Exact match |
+| `prin-sim` (`cuda`) | `cargo test -p prin-sim --features cuda -- --test-threads=1` | 153 unit + 3 doctests passed | Exact match |
+| `ruff check` | `ruff check python/ tests/ benchmarks/ tools/ parity/` | All checks passed! | Unchanged |
+| `ruff format --check` | `ruff format --check python/ tests/ benchmarks/ tools/ parity/` | 50 files already formatted | Unchanged |
+| `mypy --strict` | `mypy python/prin --strict` | Success: no issues found in 18 source files | Unchanged |
+| `bandit` | `bandit -r . -c pyproject.toml` | No issues identified | Unchanged |
+| `interrogate` | `interrogate -c pyproject.toml python/prin` | 100.0% (106/106) PASSED | Unchanged |
+| `cargo audit` | `cargo audit` | 1 allowed warning — `paste` RUSTSEC-2024-0436 (DV-008), no new advisory | Unchanged |
+| `pytest` (full, not slow/gpu) | `pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp` | 306 passed, 6 deselected | Was 304 passed, **2 failed**, 6 deselected in S2 — the 2 failures (`test_wp001_baseline.py`) now pass, joining the passed count; 312 collected total both times |
+
+No newly introduced deviation. No regression below any coverage, quality, security, or parity gate. The only changes in the tree across this S3 cycle are the four documentation/bookkeeping corrections listed above.
+
+**Delta re-audit result: CLEAN.** Hand off to S4 (session 0084).
+
+**Delta re-audit date:** 2026-08-16
