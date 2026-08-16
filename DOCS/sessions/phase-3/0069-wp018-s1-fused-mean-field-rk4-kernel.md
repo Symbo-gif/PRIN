@@ -1,6 +1,6 @@
 # Session 0069 — WP-018 S1: Coding — Fused mean-field RK4 kernel
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-018  
 **Session type:** S1 — Coding  
