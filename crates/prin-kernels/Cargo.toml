@@ -34,3 +34,7 @@ default = []
 cpu = ["cubecl/cpu"]
 cuda = ["cubecl/cuda"]
 wgpu = ["cubecl/wgpu"]
+
+[[bench]]
+name = "mean_field_rk4_bench"
+harness = false

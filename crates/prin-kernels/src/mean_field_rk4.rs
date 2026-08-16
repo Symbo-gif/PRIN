@@ -88,6 +88,12 @@ pub enum MeanFieldRk4Error {
         /// Oscillator count derived from the input slices.
         actual: usize,
     },
+    /// Device-event profiling of a kernel launch sequence failed.
+    #[error("device profiling failed: {message}")]
+    ProfilingFailed {
+        /// Underlying `cubecl` profiling error message.
+        message: String,
+    },
 }
 
 /// Wrap `phase` to `[0, 2 * pi)` using Euclidean remainder.
@@ -140,18 +146,26 @@ fn validate_param(
 /// Returns `(Re(Z), Im(Z))` without using an explicit `atan2`, matching the
 /// algebraic identity in PRINet 3.0's Triton kernel.
 ///
-/// This is the single authoritative implementation used by both the CPU
-/// reference path and the CubeCL host-side order-parameter computation
-/// (one algorithm, one implementation).
+/// The per-term products are accumulated in `f64` (Coding Standards §2.2:
+/// "f64 for reference paths and accumulations of reductions") before the
+/// final `n_inv` normalization and downcast to `f32`, so this reference stays
+/// accurate at large `N` where a naive `f32` running sum loses precision. The
+/// GPU path's [`cubecl::order_param_block_reduce`](super::mean_field_rk4::cubecl)
+/// kernel implements the same algorithm hierarchically: each cube block
+/// computes an `f32` partial sum in shared memory, and the host finishes the
+/// reduction over the (small) per-block partials in `f64` — this is the
+/// single authoritative order-parameter algorithm used by both the CPU
+/// reference path and every GPU backend (one algorithm, one implementation).
 pub(crate) fn order_param(phase: &[f32], amplitude: &[f32], n_inv: f32) -> (f32, f32) {
-    let mut z_real = 0.0_f32;
-    let mut z_imag = 0.0_f32;
+    let mut z_real = 0.0_f64;
+    let mut z_imag = 0.0_f64;
     for (p, a) in phase.iter().zip(amplitude) {
         let (s, c) = p.sin_cos();
-        z_real += *a * c;
-        z_imag += *a * s;
+        z_real += f64::from(*a) * f64::from(c);
+        z_imag += f64::from(*a) * f64::from(s);
     }
-    (z_real * n_inv, z_imag * n_inv)
+    let n_inv = f64::from(n_inv);
+    ((z_real * n_inv) as f32, (z_imag * n_inv) as f32)
 }
 
 /// Compute the mean-field Kuramoto derivatives, pushing results into the

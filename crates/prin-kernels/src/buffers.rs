@@ -8,7 +8,10 @@
 //!   stage states, output buffers, and derivative temporaries).
 //! - `CubeclBufferPool` — GPU-side CubeCL `Handle`s for working and output
 //!   buffers. Eliminates 15 per-step `client.empty()` calls; only the 4 input
-//!   handles (which carry fresh host data) are created per step.
+//!   handles (which carry fresh host data) are created per step. Also holds
+//!   the `block_real`/`block_imag` partial-sum buffers used by the device-side
+//!   hierarchical order-parameter reduction (one `f32` pair per 256-thread
+//!   cube block), sized to `ceil(n / 256)` rather than `n`.
 //!
 //! Both pools grow to the required size on first use and reuse their capacity
 //! for all subsequent steps with the same or smaller oscillator count.
@@ -122,22 +125,41 @@ impl MeanFieldRk4Buffers {
 
 // ── CubeCL GPU buffer pool ───────────────────────────────────────────────
 
+/// Number of threads per cube (block) used by every mean-field RK4 kernel
+/// launch, including the hierarchical order-parameter reduction. Must match
+/// the `CubeDim::new_1d(...)` value used at launch sites in
+/// `mean_field_rk4::cubecl`.
+#[cfg(any(feature = "cpu", feature = "cuda", feature = "wgpu"))]
+pub(crate) const BLOCK_SIZE: usize = 256;
+
+/// Number of 256-thread cube blocks needed to cover `n` elements (at least 1).
+#[cfg(any(feature = "cpu", feature = "cuda", feature = "wgpu"))]
+pub(crate) fn num_blocks_for(n: usize) -> usize {
+    n.div_ceil(BLOCK_SIZE).max(1)
+}
+
 /// Preallocated CubeCL device handles for the mean-field RK4 step.
 ///
 /// Holds the 15 working + output device [`Handle`]s that would otherwise be
-/// created via `client.empty()` on every step. Only the 4 input handles
-/// (base_phase, base_amp, base_freq, k_zero) are created fresh each step
-/// because they carry host data via `client.create_from_slice`.
+/// created via `client.empty()` on every step, plus the `block_real`/
+/// `block_imag` partial-sum buffers used by the device-side hierarchical
+/// order-parameter reduction. Only the 4 input handles (base_phase, base_amp,
+/// base_freq, k_zero) are created fresh each step because they carry host
+/// data via `client.create_from_slice`.
 ///
 /// # Safety
 ///
-/// All handles are allocated with `byte_len = n * size_of::<f32>()` bytes.
-/// The caller must ensure that kernel launches use `n` as the element count
-/// when constructing `ArrayArg` from these handles.
+/// The 15 working/output handles are allocated with `byte_len = n *
+/// size_of::<f32>()` bytes; `block_real`/`block_imag` are allocated with
+/// `byte_len = num_blocks(n) * size_of::<f32>()` bytes. The caller must
+/// ensure that kernel launches use the matching element count when
+/// constructing `ArrayArg` from these handles.
 #[cfg(any(feature = "cpu", feature = "cuda", feature = "wgpu"))]
 pub struct CubeclBufferPool<R: Runtime> {
     /// Oscillator count this pool was sized for.
     n: usize,
+    /// Number of 256-thread cube blocks needed to cover `n` elements.
+    num_blocks: usize,
     // k1 intermediates
     pub(crate) k1_phase: Handle,
     pub(crate) k1_amp: Handle,
@@ -162,20 +184,28 @@ pub struct CubeclBufferPool<R: Runtime> {
     pub(crate) out_phase: Handle,
     pub(crate) out_amp: Handle,
     pub(crate) out_freq: Handle,
+    // Hierarchical order-parameter reduction: one partial sum per cube block.
+    pub(crate) block_real: Handle,
+    pub(crate) block_imag: Handle,
     /// Marker for the runtime type.
     _runtime: core::marker::PhantomData<R>,
 }
 
 #[cfg(any(feature = "cpu", feature = "cuda", feature = "wgpu"))]
 impl<R: Runtime> CubeclBufferPool<R> {
-    /// Allocate all 18 working + output device handles.
+    /// Allocate all 20 working + output device handles.
     ///
-    /// Each handle has `n * size_of::<f32>()` bytes.
+    /// The 18 per-oscillator handles have `n * size_of::<f32>()` bytes each;
+    /// `block_real`/`block_imag` have `num_blocks(n) * size_of::<f32>()`
+    /// bytes each.
     pub fn new(client: &ComputeClient<R>, n: usize) -> Self {
         let byte_len = n * core::mem::size_of::<f32>();
         let empty = || client.empty(byte_len);
+        let num_blocks = num_blocks_for(n);
+        let block_byte_len = num_blocks * core::mem::size_of::<f32>();
         Self {
             n,
+            num_blocks,
             k1_phase: empty(),
             k1_amp: empty(),
             k1_freq: empty(),
@@ -194,6 +224,8 @@ impl<R: Runtime> CubeclBufferPool<R> {
             out_phase: empty(),
             out_amp: empty(),
             out_freq: empty(),
+            block_real: client.empty(block_byte_len),
+            block_imag: client.empty(block_byte_len),
             _runtime: core::marker::PhantomData,
         }
     }
@@ -201,6 +233,12 @@ impl<R: Runtime> CubeclBufferPool<R> {
     /// The oscillator count this pool was sized for.
     pub fn capacity(&self) -> usize {
         self.n
+    }
+
+    /// The number of 256-thread cube blocks the reduction buffers were sized
+    /// for (`ceil(capacity() / 256)`, at least 1).
+    pub(crate) fn num_blocks(&self) -> usize {
+        self.num_blocks
     }
 }
 
@@ -251,6 +289,42 @@ mod tests {
     fn cpu_pool_zero_sized() {
         let pool = MeanFieldRk4Buffers::new(0);
         assert_eq!(pool.capacity(), 0);
+    }
+
+    #[cfg(any(feature = "cpu", feature = "cuda", feature = "wgpu"))]
+    #[test]
+    fn num_blocks_for_matches_ceil_div_256() {
+        assert_eq!(num_blocks_for(0), 1);
+        assert_eq!(num_blocks_for(1), 1);
+        assert_eq!(num_blocks_for(256), 1);
+        assert_eq!(num_blocks_for(257), 2);
+        assert_eq!(num_blocks_for(1_000_000), 3907);
+    }
+
+    #[cfg(feature = "cpu")]
+    #[test]
+    fn cubecl_pool_sizes_reduction_buffers_by_num_blocks() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+
+        let device = CpuDevice;
+        let client = CpuRuntime::client(&device);
+
+        let pool = CubeclBufferPool::<CpuRuntime>::new(&client, 1000);
+        assert_eq!(pool.capacity(), 1000);
+        assert_eq!(pool.num_blocks(), num_blocks_for(1000));
+        assert_eq!(pool.num_blocks(), 4);
+    }
+
+    #[cfg(feature = "cpu")]
+    #[test]
+    fn cubecl_pool_num_blocks_is_at_least_one_for_tiny_n() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+
+        let device = CpuDevice;
+        let client = CpuRuntime::client(&device);
+
+        let pool = CubeclBufferPool::<CpuRuntime>::new(&client, 1);
+        assert_eq!(pool.num_blocks(), 1);
     }
 
     #[test]
