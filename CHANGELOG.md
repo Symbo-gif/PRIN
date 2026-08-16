@@ -140,6 +140,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     against `prin_dynamics` references at `1e-4` absolute tolerance.
   - S2 audit found one D4 finding (WP019-F1, factual inaccuracy in S1 handoff note coverage
     table); S3 fixed it with a CLEAN delta re-audit.
+- **WP-020 Fused discrete step and reductions** (`prin-kernels`, Phase 3 fourth WP; sessions
+  0077–0080; audit `DOCS/audits/020-wp020-audit.md`, verdict `PASS`, zero S2 findings; one
+  self-discovered D4 WP020-F1 FIXED in S3):
+  - `discrete_step::discrete_step_cpu` — CPU reference (numerical authority) for the fused
+    three-band (delta/theta/gamma) discrete-time stepper. Reproduces the PRINet 3.0
+    `DeltaThetaGammaNetwork` discrete-time stepper semantics: step delta via one Euler evaluation,
+    gate theta's amplitude with the PAC modulation factor computed from delta's just-stepped mean
+    phase, step theta, gate gamma from theta's just-stepped mean phase, step gamma. Reuses
+    `mean_field_rk4::mean_field_derivatives_into`/`wrap_phase`/`clamp_amp` (promoted from private
+    to `pub(crate)` this session) for the per-band Kuramoto/Stuart–Landau derivative and Euler
+    update (Coding Standards §1, "one algorithm, one implementation").
+  - `discrete_step::cubecl::discrete_step_cubecl` — four `#[cube(launch)]` kernels
+    (`complex_order_reduce`, `real_sum_reduce`, `band_euler_step`, `pac_gate`) completing the
+    10-launch fused path. Host dispatch (`try_*_wgpu`/`_cpu`/`_cuda`, `discrete_step_auto`)
+    mirrors `mean_field_rk4::cubecl`'s pattern with `StepReport` device-event timing.
+  - `mean_field_rk4::wrap_phase`/`clamp_amp`/`mean_field_derivatives_into` — promoted from
+    private to `pub(crate)` with doc comments explaining the reuse; no behavior change.
+  - New criterion benchmark (`benches/discrete_step_bench.rs`) at band sizes `[4096, 16384, 65536]`
+    (N=86,016): `fused_cpu_native` ~2.1 ms vs. `unfused_cpu_native` ~7.9 ms (~3.7–3.8× speedup).
+    Pilot benchmark, not a regression gate (Benchmarking Standards §2.2).
+  - 29 new tests (15 CPU unit/error-path + 2 proptests + 12 CubeCL) in S1. Kernel-equivalence at
+    small N (`[8,16,32]`), non-block-aligned bands (`[300,777,513]`), and large N (`[2048,16384,
+    65536]`, N=84,992) pass at `rtol=1e-5, atol=1e-6`. CubeCL-CPU multi-block equivalence and
+    5-repeat determinism regression test pass.
+  - S2 audit found zero findings (`PASS`); S3 recorded a no-change closure with one
+    self-discovered D4 finding (WP020-F1, `cargo test --features cpu` count transcription error
+    in the audit report's own §2) FIXED with a CLEAN delta re-audit.
 - **Phase 2 recommendation implementation** (inter-phase process improvement, R14–R20 disposition
   in `DOCS/ANALYTICS/phase-2/phase-2-recommendation-implementation-governance.md`):
   - Fixed PA2-F1: `tools/math_audit_run.py` `ruff check`/`ruff format` violations (import

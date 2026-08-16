@@ -136,12 +136,55 @@ WP-019 added the sparse phase-neighbor coupling and PAC modulation kernels:
 Evidence: `DOCS/audits/019-wp019-audit.md` (verdict `PASS-WITH-FINDINGS`,
 one D4 finding, FIXED in S3); `DOCS/experiments/0073-wp019-s1-handoff.md`.
 
+## Phase 3 — WP-020: Fused discrete step and reductions
+
+WP-020 added the fused three-band (delta/theta/gamma) discrete-time step
+kernel and reusable hierarchical order-parameter reductions:
+
+- **Fused discrete step CPU reference**
+  ([`src/discrete_step.rs`](src/discrete_step.rs)):
+  `discrete_step_cpu` — the CPU reference (numerical authority) for the
+  fused three-band discrete-time stepper. Reproduces the PRINet 3.0
+  `DeltaThetaGammaNetwork` discrete-time stepper semantics: step delta
+  via one Euler evaluation, gate theta's amplitude with the PAC modulation
+  factor computed from delta's just-stepped mean phase, step theta, gate
+  gamma from theta's just-stepped mean phase, step gamma. Reuses
+  `mean_field_rk4::mean_field_derivatives_into`/`wrap_phase`/`clamp_amp`
+  (promoted from private to `pub(crate)`) for the per-band
+  Kuramoto/Stuart–Landau derivative and Euler update (Coding Standards §1,
+  "one algorithm, one implementation").
+- **Fused discrete step CubeCL kernel**
+  ([`src/discrete_step/cubecl.rs`](src/discrete_step/cubecl.rs)):
+  Four `#[cube(launch)]` kernels — `complex_order_reduce` (hierarchical
+  block-reduce of a band's order parameter, called 3× — once per band),
+  `real_sum_reduce` (hierarchical block-reduce for a PAC pair's slow-phase
+  mean, called 2× — once per PAC pair), `band_euler_step` (fused
+  per-oscillator phase-advance + Stuart–Landau amplitude update, called
+  3×), and `pac_gate` (elementwise PAC broadcast+clamp, called 2×) —
+  complete the 10-launch fused path. Host dispatch
+  (`discrete_step_cubecl`, `try_*_wgpu`/`_cpu`/`_cuda`,
+  `discrete_step_auto`) mirrors `mean_field_rk4::cubecl`'s pattern with
+  `StepReport` device-event timing.
+- **Benchmark**
+  ([`benches/discrete_step_bench.rs`](benches/discrete_step_bench.rs)):
+  criterion benchmark comparing the fused step against a hand-composed
+  unfused baseline at band sizes `[4096, 16384, 65536]` (N=86,016).
+  Observed ~3.7–3.8× speedup (fused ~2.1 ms vs. unfused ~7.9 ms on CPU
+  native).
+- 29 new tests (15 CPU unit/error-path + 2 proptests + 12 CubeCL) in S1.
+  Kernel-equivalence at small N, non-block-aligned bands, and large N
+  (65,536-oscillator gamma band, N=84,992 total) pass at `rtol=1e-5,
+  atol=1e-6`.
+
+Evidence: `DOCS/audits/020-wp020-audit.md` (verdict `PASS`, zero S2
+findings; one self-discovered D4 WP020-F1 FIXED in S3);
+`DOCS/experiments/0077-wp020-s1-handoff.md`.
+
 ## Future work
 
-The full production suite continues in WP-020..WP-021:
+The Phase 3 work continues in WP-021:
 
-- Fused discrete step (phase advance + PAC gating + Stuart–Landau in one
-  launch).
+- GPU integration and Phase 3 gate.
 
 Rust API reference for `prin-kernels` is published on
 [docs.rs](https://docs.rs/prin-kernels/latest/prin_kernels/).

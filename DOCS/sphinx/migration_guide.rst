@@ -64,6 +64,34 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   amp_max)``) with a two-stage CubeCL kernel (``pac_phase_sum_block_reduce``
   + ``pac_modulate``) and ``f64``-accumulated mean, matching
   ``prin_dynamics::pac::PhaseAmplitudeCoupling::modulate``.
+- ``prin-kernels::discrete_step`` — ``discrete_step_cpu`` /
+  ``discrete_step_cubecl`` — fused three-band (delta/theta/gamma)
+  discrete-time step kernel combining phase advance, PAC gating, and
+  Stuart–Landau amplitude dynamics in one 10-launch sequence.
+  ``BandStepParams`` / ``PacGateParams`` / ``DiscreteStepParams`` /
+  ``DiscreteStepOutput`` / ``DiscreteStepError`` / ``StepReport``. The CPU
+  reference reuses ``mean_field_rk4::mean_field_derivatives_into`` /
+  ``wrap_phase`` / ``clamp_amp`` (promoted to ``pub(crate)``) for per-band
+  Kuramoto/Stuart–Landau derivatives (Coding Standards §1). The CubeCL path
+  provides four ``#[cube(launch)]`` kernels (``complex_order_reduce``,
+  ``real_sum_reduce``, ``band_euler_step``, ``pac_gate``) with host dispatch
+  mirroring ``mean_field_rk4::cubecl``'s pattern. PRINet 3.0 implemented
+  the discrete-time stepper in ``DeltaThetaGammaNetwork`` (Python); PRIN
+  moves it to a single-source CubeCL kernel with ``f64``-accumulated
+  reductions matching the CPU reference exactly.
+
+  **WP-020 additions:** reusable hierarchical order-parameter reductions
+  (``complex_order_reduce`` called 3× — once per band, ``real_sum_reduce``
+  called 2× — once per PAC pair) are ``discrete_step``-local
+  implementations structurally identical to ``mean_field_rk4``'s
+  ``order_param_block_reduce`` and ``pac``'s ``pac_phase_sum_block_reduce``
+  (deliberately separate, not a cross-WP refactor — matching WP-019's
+  precedent). ``mean_field_rk4::wrap_phase`` / ``clamp_amp`` /
+  ``mean_field_derivatives_into`` promoted from private to ``pub(crate)``
+  with doc comments; no behavior change. New criterion benchmark
+  (``benches/discrete_step_bench.rs``) at band sizes ``[4096, 16384,
+  65536]`` (N=86,016): fused ~3.7–3.8× faster than hand-composed unfused
+  baseline.
 - ``prin-kernels::backend`` — ``Device`` enum (CUDA, wgpu, CPU),
   ``backend_priority``, and ``auto_detect_order``. Decouples backend
   *preference* from *availability* so unsupported devices fall back safely.

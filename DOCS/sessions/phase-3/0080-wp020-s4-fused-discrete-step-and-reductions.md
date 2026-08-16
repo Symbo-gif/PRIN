@@ -1,6 +1,6 @@
 # Session 0080 — WP-020 S4: Documentation — Fused discrete step and reductions
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-020  
 **Session type:** S4 — Documentation  
