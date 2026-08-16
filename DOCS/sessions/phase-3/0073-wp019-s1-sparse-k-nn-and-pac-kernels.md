@@ -1,6 +1,6 @@
 # Session 0073 — WP-019 S1: Coding — Sparse k-NN and PAC kernels
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-019  
 **Session type:** S1 — Coding  

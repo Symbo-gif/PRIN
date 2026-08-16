@@ -21,6 +21,10 @@
 //! - [`mean_field_rk4`] — CPU reference (numerical authority) and CubeCL
 //!   single-source GPU kernels (the `cubecl` submodule requires the `cpu`,
 //!   `cuda`, or `wgpu` feature).
+//! - [`sparse_knn`] — CSR sparse phase-neighbor coupling: CPU reference and
+//!   CubeCL gather kernel (same feature gating).
+//! - [`pac`] — Phase–amplitude coupling modulation: CPU reference and CubeCL
+//!   reduce + broadcast kernels (same feature gating).
 //! - [`equivalence`] — Cross-backend equivalence testing harness.
 //! - [`ops`] — Element-wise utility kernels (DLPack bridge spike).
 //!
@@ -41,3 +45,5 @@ pub mod buffers;
 pub mod equivalence;
 pub mod mean_field_rk4;
 pub mod ops;
+pub mod pac;
+pub mod sparse_knn;

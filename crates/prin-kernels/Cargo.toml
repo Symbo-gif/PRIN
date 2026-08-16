@@ -38,3 +38,7 @@ wgpu = ["cubecl/wgpu"]
 [[bench]]
 name = "mean_field_rk4_bench"
 harness = false
+
+[[bench]]
+name = "sparse_knn_bench"
+harness = false
