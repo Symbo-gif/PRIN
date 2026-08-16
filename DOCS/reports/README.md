@@ -36,5 +36,7 @@ starts by reading it (Development Workflow Standards §6).
   WP-016 declaration.
 - [`016-project-state.md`](016-project-state.md) — WP-016 S4 closure, Phase 2
   exit-gate verdict, and WP-017 declaration.
-- [`017-project-state.md`](017-project-state.md) — latest report; WP-017 S4
-  closure and WP-018 declaration.
+- [`017-project-state.md`](017-project-state.md) — WP-017 S4 closure and
+  WP-018 declaration.
+- [`018-project-state.md`](018-project-state.md) — latest report; WP-018 S4
+  closure and WP-019 declaration.

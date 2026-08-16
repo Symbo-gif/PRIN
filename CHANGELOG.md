@@ -76,6 +76,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WP-018 Fused mean-field RK4 kernel** (`prin-kernels`, Phase 3 second WP; sessions 0069–0072;
+  audit `DOCS/audits/018-wp018-audit.md`, verdict `PASS`, zero findings):
+  - `mean_field_rk4::cubecl::order_param_block_reduce` — new `#[cube(launch)]` kernel: each
+    256-thread cube block reduces its slice of `amp[i]*e^{i*phase[i]}` into one `(real, imag)`
+    partial via shared memory, replacing the pre-WP-018 prototype's `O(N)` full-state host
+    read-back with an `O(N/256)` partial read-back.
+  - `mean_field_rk4::cubecl::order_param_device` — host helper finishing the hierarchical
+    reduction over `ceil(N/256)` partials with an `f64` accumulator (Coding Standards §2.2).
+  - `buffers::CubeclBufferPool` — new `block_real`/`block_imag` device handles sized to
+    `num_blocks_for(n) = ceil(n/256).max(1)`, and a `num_blocks()` accessor.
+  - `mean_field_rk4::order_param` (the single authoritative CPU/GPU-shared algorithm) now
+    accumulates in `f64` before the final `n_inv` normalization and `f32` downcast, matching the
+    GPU path's level-2 host accumulator — a precision improvement over the pre-WP-018 `f32`
+    accumulation.
+  - `TimingMethod` enum (`Device`/`System`) and `StepReport::timing_method` — `step_cubecl_with_pool`
+    now wraps the 8-launch sequence in `ComputeClient::profile`, reporting real hardware
+    device-event timestamps on wgpu (`Device`) or a host wall-clock fallback on the CubeCL-CPU
+    runtime (`System`), replacing the WP-004/WP-017 unconditional wall-clock prototype (partially
+    closes DV-003 — see `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`).
+  - `MeanFieldRk4Error::ProfilingFailed` — new typed error variant for `ComputeClient::profile`
+    failures.
+  - New criterion benchmark (`benches/mean_field_rk4_bench.rs`) at $N = 1{,}000{,}000$:
+    `cpu_native` and `wgpu_device_dispatch` (the latter printing one untimed `StepReport` as
+    device-event evidence). Observed on the local wgpu/DX12 host: device-event kernel time
+    388 µs; criterion wall-clock (10 samples) 24.18–25.51 ms (host dispatch/sync overhead across
+    8 launches dominates); CPU-native 115.36–119.80 ms. Reported as observed evidence, not a
+    scientific conclusion (Benchmarking Standards §2.2); the Triton same-hardware comparison
+    remains blocked on a Linux/CUDA runner (DV-001).
+  - A genuine CubeCL CPU-backend data race in the first `order_param_block_reduce` draft (a
+    missing second `sync_cube()` barrier let idle worker threads race into the next cube block's
+    shared-memory buffer) was found and fixed during S1, with a regression test
+    (`order_param_device_matches_host_per_block_sums_for_multi_block_n`, 5 repeated calls at
+    `N=300`).
+  - 6 new tests in S1; kernel-equivalence tests extended to `N=1000` (non-block-aligned, wgpu) and
+    `N=300` (non-block-aligned, CubeCL-CPU) in addition to the existing `N=64`/`N=1,000,000` cases,
+    all at `rtol=1e-5, atol=1e-6`.
+  - S2 audit found zero findings (`PASS`); S3 recorded a no-change closure with a CLEAN
+    independent delta re-audit.
 - **Phase 2 recommendation implementation** (inter-phase process improvement, R14–R20 disposition
   in `DOCS/ANALYTICS/phase-2/phase-2-recommendation-implementation-governance.md`):
   - Fixed PA2-F1: `tools/math_audit_run.py` `ruff check`/`ruff format` violations (import

@@ -79,6 +79,9 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   resolved in S3 (four fixed, one fixed + amended) with a CLEAN delta re-audit.
   `DV-012` `prin-kernels` half closed; `prin-py` sweep/engine bindings remain
   deferred.
+- [`018-wp018-audit.md`](018-wp018-audit.md) — WP-018 "Fused mean-field RK4
+  kernel" audit (`PASS`); zero findings; S3 no-change closure with CLEAN
+  delta re-audit.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

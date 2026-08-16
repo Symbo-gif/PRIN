@@ -59,6 +59,10 @@ at the top level until they are folded into the final campaign archive in Phase 
   device/dtype dispatch, preallocated buffers, and authoritative CPU references
   (`backend.rs`, `buffers.rs`, `equivalence.rs`, `mean_field_rk4.rs`,
   `mean_field_rk4/cubecl.rs`).
+- [`0069-wp018-s1-handoff.md`](0069-wp018-s1-handoff.md) — WP-018 S1 handoff
+  to the S2 audit for the hierarchical device-side order-parameter reduction,
+  device-event timing (`TimingMethod`), and the `f64`-accumulation precision
+  fix in `mean_field_rk4::cubecl`.
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
 [`../sessions/phase-1/wp009-s1-handoff-note.md`](../sessions/phase-1/wp009-s1-handoff-note.md)

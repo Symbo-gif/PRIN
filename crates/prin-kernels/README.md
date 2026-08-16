@@ -55,6 +55,35 @@ Design rule: **one algorithm, one implementation.** Backend dispatch
 (CPU native / CubeCL CPU / wgpu / CUDA) happens inside this crate, never by
 duplicating math at call sites.
 
+## Phase 3 — WP-018: Fused mean-field RK4 kernel
+
+WP-018 productionized the mean-field RK4 kernel with hierarchical device-side
+reductions and real device-event timing:
+
+- **Hierarchical device-side order-parameter reduction** — a new
+  `order_param_block_reduce` `#[cube(launch)]` kernel reduces each 256-thread
+  cube block's slice of `amp[i]*e^{i*phase[i]}` into one `(real, imag)`
+  partial via shared memory; `order_param_device` finishes the reduction over
+  `ceil(N/256)` partials on the host with an `f64` accumulator. This replaces
+  the prior `O(N)` full-state host read-back with an `O(N/256)` partial
+  read-back. `CubeclBufferPool` gained `block_real`/`block_imag` handles sized
+  to `num_blocks_for(n)` and a `num_blocks()` accessor.
+- **`order_param` f64 accumulation** — the single authoritative CPU/GPU-shared
+  reduction now accumulates in `f64` before normalization (Coding Standards
+  §2.2), matching the GPU path's host-side combine.
+- **Device-event timing** — `step_cubecl_with_pool` wraps its 8-launch
+  sequence in `ComputeClient::profile`. The new `TimingMethod` enum
+  (`Device`/`System`) and `StepReport::timing_method` field report whether the
+  measurement is real hardware device timestamps (wgpu) or a host wall-clock
+  fallback (CubeCL-CPU), replacing the WP-004/WP-017 wall-clock-only
+  prototype.
+- A CubeCL CPU-backend data race (missing second `sync_cube()` barrier,
+  letting idle worker threads race into the next cube block's shared memory)
+  was found and fixed during S1, with a regression test.
+
+Evidence: `DOCS/audits/018-wp018-audit.md` (verdict `PASS`, zero findings);
+`DOCS/experiments/0069-wp018-s1-handoff.md`.
+
 ## Validation
 
 - `cargo test -p prin-kernels --features cpu` runs CPU reference, buffer-pool,
@@ -74,10 +103,8 @@ duplicating math at call sites.
 
 ## Future work
 
-The full production suite continues in WP-018..WP-021:
+The full production suite continues in WP-019..WP-021:
 
-- Hierarchical device-side order-parameter reductions (replacing the host
-  reductions used in the current mean-field RK4 implementation).
 - Sparse k-NN coupling kernel.
 - PAC modulation kernel.
 - Fused discrete step (phase advance + PAC gating + Stuart–Landau in one

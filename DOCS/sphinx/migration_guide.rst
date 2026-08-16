@@ -27,6 +27,26 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   kept separate Triton/CUDA/PyTorch-fallback kernel files; PRIN collapses them
   into one Rust/CubeCL implementation. The Rust public API has no direct
   PRINet 3.0 Python equivalent at this phase.
+
+  **WP-018 additions:** ``order_param_block_reduce`` (a new
+  ``#[cube(launch)]`` kernel) and ``order_param_device`` (host helper)
+  implement a hierarchical device-side reduction — each 256-thread cube
+  block reduces its slice on-device, and the host finishes over
+  ``ceil(N/256)`` partials with an ``f64`` accumulator — replacing the prior
+  ``O(N)`` full-state host read-back with an ``O(N/256)`` partial read-back.
+  The single authoritative ``order_param`` CPU reference now also accumulates
+  in ``f64``. ``step_cubecl_with_pool`` wraps its 8-launch sequence in
+  ``ComputeClient::profile``; the new ``TimingMethod`` enum
+  (``Device``/``System``) and ``StepReport::timing_method`` field report
+  whether the reported time is a real hardware device-event timestamp (wgpu)
+  or a host wall-clock fallback (CubeCL-CPU), replacing the WP-004/WP-017
+  wall-clock-only prototype. PRINet 3.0's Triton kernel performs the
+  equivalent two-level reduction (per-block partial, then a device-side
+  ``f32`` atomic accumulate); PRIN's one deliberate, documented divergence is
+  a host-side ``f64`` final combine, chosen because ``f64`` accumulation of
+  reductions is a Coding Standards §2.2 requirement and the local wgpu (DX12)
+  backend has no portable device-side ``f64``. New
+  ``MeanFieldRk4Error::ProfilingFailed`` error variant.
 - ``prin-kernels::backend`` — ``Device`` enum (CUDA, wgpu, CPU),
   ``backend_priority``, and ``auto_detect_order``. Decouples backend
   *preference* from *availability* so unsupported devices fall back safely.

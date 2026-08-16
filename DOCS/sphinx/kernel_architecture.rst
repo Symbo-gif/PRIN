@@ -60,14 +60,47 @@ Validation
   non-instrumentable on stable Rust (plan amendment #10 / DV-004); the
   surrounding instrumentable code is at or above the 95% gate.
 
-Future work (WP-018..WP-021)
+WP-018 — fused mean-field RK4 kernel
+-------------------------------------
+
+WP-018 productionized the mean-field RK4 kernel with a hierarchical
+device-side reduction and real device-event timing:
+
+- **Hierarchical device-side order-parameter reduction**
+  (`crates/prin-kernels/src/mean_field_rk4/cubecl.rs`): a new
+  `order_param_block_reduce` `#[cube(launch)]` kernel reduces each
+  256-thread cube block's slice of ``amp[i]*e^{i*phase[i]}`` into one
+  ``(real, imag)`` partial via shared memory; the host-side
+  `order_param_device` helper finishes the reduction over
+  ``ceil(N/256)`` partials with an ``f64`` accumulator. This replaces
+  the prior ``O(N)`` full-state host read-back with an ``O(N/256)``
+  partial read-back. `CubeclBufferPool` gained `block_real`/`block_imag`
+  device handles sized to `num_blocks_for(n)` and a `num_blocks()`
+  accessor.
+- **`order_param` f64 accumulation**: the single authoritative
+  CPU/GPU-shared reduction in `mean_field_rk4.rs` now accumulates in
+  ``f64`` before the final normalization and ``f32`` downcast, matching
+  the GPU path's host-side combine (Coding Standards §2.2).
+- **Device-event timing**: `step_cubecl_with_pool` wraps its 8-launch
+  sequence in `ComputeClient::profile`. The new `TimingMethod` enum
+  (`Device`/`System`) and `StepReport::timing_method` field report
+  whether the measurement is real hardware device timestamps (wgpu) or
+  a host wall-clock fallback (CubeCL-CPU), replacing the WP-004/WP-017
+  wall-clock-only prototype (partially closes DV-003).
+- A CubeCL CPU-backend data race in an early `order_param_block_reduce`
+  draft (missing second ``sync_cube()`` barrier) was found and fixed
+  during S1, with a regression test.
+
+Evidence: `DOCS/audits/018-wp018-audit.md` (verdict PASS, zero
+findings); N=1,000,000 kernel-equivalence and benchmark evidence in
+`DOCS/experiments/0069-wp018-s1-handoff.md`.
+
+Future work (WP-019..WP-021)
 ----------------------------
 
 The mean-field RK4 pattern is extended in the remaining Phase 3 work
 packages:
 
-- Hierarchical device-side order-parameter reductions (replacing the host
-  reductions used in the current implementation).
 - Sparse k-NN coupling.
 - PAC modulation.
 - Fused discrete step (phase advance + PAC gating + Stuart–Landau in one

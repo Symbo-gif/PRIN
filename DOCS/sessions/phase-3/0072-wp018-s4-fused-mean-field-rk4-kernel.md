@@ -1,6 +1,6 @@
 # Session 0072 — WP-018 S4: Documentation — Fused mean-field RK4 kernel
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-018  
 **Session type:** S4 — Documentation  
