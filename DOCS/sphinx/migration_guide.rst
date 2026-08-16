@@ -47,6 +47,23 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   reductions is a Coding Standards §2.2 requirement and the local wgpu (DX12)
   backend has no portable device-side ``f64``. New
   ``MeanFieldRk4Error::ProfilingFailed`` error variant.
+- ``prin-kernels::sparse_knn`` — ``SparseKnnGraph`` (CSR sparse phase-neighbor
+  graph with ``from_csr`` / ``from_phase_knn`` constructors),
+  ``sparse_knn_derivatives_cpu`` (CPU reference for Kuramoto-style sparse
+  coupling with per-row ``K/degree(i)`` normalization and ``f64``-accumulated
+  sums), ``sparse_knn_coupling_cubecl`` / ``try_*`` / ``_auto`` (single-source
+  CubeCL gather kernel, one GPU thread per oscillator walking its own CSR row).
+  PRINet 3.0 computed sparse k-NN coupling in Python via
+  ``oscillator_models.py``'s ``CouplingMode.SparseKnn``; PRIN moves it to a
+  single-source CubeCL kernel with the same per-row ``K/degree(i)``
+  normalization convention.
+
+  **WP-019 additions:** ``pac::PacParams`` / ``pac::PacError`` /
+  ``pac_modulate_cpu`` / ``pac_modulate_cubecl`` — PAC modulation kernel set
+  (``A_out = clamp(A_fast · [1 + m·cos(mean(φ_slow) + offset)], amp_min,
+  amp_max)``) with a two-stage CubeCL kernel (``pac_phase_sum_block_reduce``
+  + ``pac_modulate``) and ``f64``-accumulated mean, matching
+  ``prin_dynamics::pac::PhaseAmplitudeCoupling::modulate``.
 - ``prin-kernels::backend`` — ``Device`` enum (CUDA, wgpu, CPU),
   ``backend_priority``, and ``auto_detect_order``. Decouples backend
   *preference* from *availability* so unsupported devices fall back safely.

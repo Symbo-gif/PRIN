@@ -101,12 +101,45 @@ Evidence: `DOCS/audits/018-wp018-audit.md` (verdict `PASS`, zero findings);
   stable Rust (plan amendment #10 / DV-004); the surrounding instrumentable
   code is ≥95% covered.
 
+## Phase 3 — WP-019: Sparse k-NN and PAC kernels
+
+WP-019 added the sparse phase-neighbor coupling and PAC modulation kernels:
+
+- **Sparse k-NN coupling** ([`src/sparse_knn.rs`](src/sparse_knn.rs)):
+  `SparseKnnGraph` — a CSR (`indptr`/`indices`, both `u32`) sparse
+  phase-neighbor graph with two constructors: `from_csr` (accepts an
+  externally built CSR structure — CSR/index interoperability) and
+  `from_phase_knn` (builds from a phase array and `k`, reusing
+  `prin_dynamics::state::build_phase_knn_index`'s sort-based neighbor
+  search). `sparse_knn_derivatives_cpu` — the CPU reference computing
+  the Kuramoto-style sparse coupling derivative per row via the
+  angle-difference trig identity, with per-row edge weight `K/degree(i)`
+  and `f64`-accumulated sums.
+- **Sparse k-NN CubeCL kernel** ([`src/sparse_knn/cubecl.rs`](src/sparse_knn/cubecl.rs)):
+  `sparse_knn_coupling` — a single `#[cube(launch)]` gather kernel, one
+  GPU thread per oscillator, walking its own CSR row directly. Host
+  dispatch (`sparse_knn_coupling_cubecl`, `try_*_wgpu`/`_cpu`/`_cuda`,
+  `sparse_knn_coupling_auto`) mirrors `mean_field_rk4::cubecl`'s pattern.
+- **PAC modulation** ([`src/pac.rs`](src/pac.rs)):
+  `PacParams`, `PacError`, `pac_modulate_cpu` — the `f32` CPU reference
+  for PAC modulation (`A_out = clamp(A_fast · [1 + m·cos(mean(φ_slow) +
+  offset)], amp_min, amp_max)`), matching `prin_dynamics::pac` with
+  `f64`-accumulated mean before downcasting.
+- **PAC CubeCL kernel** ([`src/pac/cubecl.rs`](src/pac/cubecl.rs)):
+  Two-stage kernel: `pac_phase_sum_block_reduce` (hierarchical
+  device-side reduction of `slow_phase`, structurally identical to
+  `order_param_block_reduce`'s proven two-barrier design) finished on
+  the host in `f64`, then `pac_modulate` (elementwise broadcast + clamp).
+- **Benchmark** ([`benches/sparse_knn_bench.rs`](benches/sparse_knn_bench.rs)):
+  criterion benchmark at the `N=16,000, k=14` acceptance-target shape.
+
+Evidence: `DOCS/audits/019-wp019-audit.md` (verdict `PASS-WITH-FINDINGS`,
+one D4 finding, FIXED in S3); `DOCS/experiments/0073-wp019-s1-handoff.md`.
+
 ## Future work
 
-The full production suite continues in WP-019..WP-021:
+The full production suite continues in WP-020..WP-021:
 
-- Sparse k-NN coupling kernel.
-- PAC modulation kernel.
 - Fused discrete step (phase advance + PAC gating + Stuart–Landau in one
   launch).
 

@@ -82,6 +82,10 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
 - [`018-wp018-audit.md`](018-wp018-audit.md) — WP-018 "Fused mean-field RK4
   kernel" audit (`PASS`); zero findings; S3 no-change closure with CLEAN
   delta re-audit.
+- [`019-wp019-audit.md`](019-wp019-audit.md) — WP-019 "Sparse k-NN and PAC
+  kernels" audit (`PASS-WITH-FINDINGS`); one D4 finding (WP019-F1, factual
+  inaccuracy in S1 handoff note coverage table) resolved in S3 with a CLEAN
+  delta re-audit.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

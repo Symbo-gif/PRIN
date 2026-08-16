@@ -95,14 +95,56 @@ Evidence: `DOCS/audits/018-wp018-audit.md` (verdict PASS, zero
 findings); N=1,000,000 kernel-equivalence and benchmark evidence in
 `DOCS/experiments/0069-wp018-s1-handoff.md`.
 
-Future work (WP-019..WP-021)
+WP-019 — sparse k-NN and PAC kernels
+--------------------------------------
+
+WP-019 added the sparse phase-neighbor coupling and PAC modulation
+kernels, continuing the WP-017/WP-018 single-source CubeCL architecture:
+
+- **Sparse k-NN coupling**
+  (`crates/prin-kernels/src/sparse_knn.rs`): ``SparseKnnGraph`` — a CSR
+  (``indptr``/``indices``, both ``u32``) sparse phase-neighbor graph
+  with ``from_csr`` (accepts an externally built CSR structure —
+  CSR/index interoperability) and ``from_phase_knn`` (builds from a
+  phase array and ``k``, reusing
+  ``prin_dynamics::state::build_phase_knn_index``'s sort-based neighbor
+  search). ``sparse_knn_derivatives_cpu`` — the CPU reference computing
+  the Kuramoto-style sparse coupling derivative per row via the
+  angle-difference trig identity, with per-row edge weight
+  ``K/degree(i)`` and ``f64``-accumulated sums.
+- **Sparse k-NN CubeCL kernel**
+  (`crates/prin-kernels/src/sparse_knn/cubecl.rs`):
+  ``sparse_knn_coupling`` — a single ``#[cube(launch)]`` gather kernel,
+  one GPU thread per oscillator, walking its own CSR row directly
+  rather than the two-SpMV decomposition ``prin_sim::csr_coupling``
+  uses (a deliberate design choice for the ``N=16K, k=14`` target
+  shape). Host dispatch mirrors ``mean_field_rk4::cubecl``'s pattern.
+- **PAC modulation**
+  (`crates/prin-kernels/src/pac.rs`): ``PacParams``, ``PacError``,
+  ``pac_modulate_cpu`` — the ``f32`` CPU reference for PAC modulation
+  (``A_out = clamp(A_fast · [1 + m·cos(mean(φ_slow) + offset)],
+  amp_min, amp_max)``), matching ``prin_dynamics::pac`` with
+  ``f64``-accumulated mean before downcasting.
+- **PAC CubeCL kernel**
+  (`crates/prin-kernels/src/pac/cubecl.rs`): two-stage kernel —
+  ``pac_phase_sum_block_reduce`` (hierarchical device-side reduction of
+  ``slow_phase``, structurally identical to
+  ``order_param_block_reduce``'s proven two-barrier design) finished on
+  the host in ``f64``, then ``pac_modulate`` (elementwise broadcast +
+  clamp).
+- **Benchmark**
+  (`crates/prin-kernels/benches/sparse_knn_bench.rs`): criterion
+  benchmark at the ``N=16,000, k=14`` acceptance-target shape.
+
+Evidence: `DOCS/audits/019-wp019-audit.md` (verdict PASS-WITH-FINDINGS,
+one D4 finding FIXED in S3); N=16K/k=14 equivalence and benchmark
+evidence in `DOCS/experiments/0073-wp019-s1-handoff.md`.
+
+Future work (WP-020..WP-021)
 ----------------------------
 
-The mean-field RK4 pattern is extended in the remaining Phase 3 work
-packages:
+The Phase 3 work continues with:
 
-- Sparse k-NN coupling.
-- PAC modulation.
 - Fused discrete step (phase advance + PAC gating + Stuart–Landau in one
   launch).
 

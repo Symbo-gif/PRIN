@@ -63,6 +63,11 @@ at the top level until they are folded into the final campaign archive in Phase 
   to the S2 audit for the hierarchical device-side order-parameter reduction,
   device-event timing (`TimingMethod`), and the `f64`-accumulation precision
   fix in `mean_field_rk4::cubecl`.
+- [`0073-wp019-s1-handoff.md`](0073-wp019-s1-handoff.md) — WP-019 S1 handoff
+  to the S2 audit for sparse k-NN coupling (`SparseKnnGraph`,
+  `sparse_knn_derivatives_cpu`, `sparse_knn_coupling_cubecl`) and PAC
+  modulation (`PacParams`, `pac_modulate_cpu`, `pac_modulate_cubecl`) kernels
+  with CSR/index interoperability.
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
 [`../sessions/phase-1/wp009-s1-handoff-note.md`](../sessions/phase-1/wp009-s1-handoff-note.md)

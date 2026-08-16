@@ -114,6 +114,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     all at `rtol=1e-5, atol=1e-6`.
   - S2 audit found zero findings (`PASS`); S3 recorded a no-change closure with a CLEAN
     independent delta re-audit.
+- **WP-019 Sparse k-NN and PAC kernels** (`prin-kernels`, Phase 3 third WP; sessions 0073–0076;
+  audit `DOCS/audits/019-wp019-audit.md`, verdict `PASS-WITH-FINDINGS`, one D4 finding FIXED):
+  - `sparse_knn::SparseKnnGraph` — CSR (`indptr`/`indices`, both `u32`) sparse phase-neighbor
+    graph with `from_csr` (external CSR interop) and `from_phase_knn` (builds from phase array
+    and `k` via `prin_dynamics::state::build_phase_knn_index`) constructors.
+  - `sparse_knn::sparse_knn_derivatives_cpu` — CPU reference computing Kuramoto-style sparse
+    coupling derivatives per row with per-row `K/degree(i)` edge weight and `f64`-accumulated
+    sums.
+  - `sparse_knn::cubecl::sparse_knn_coupling` — single `#[cube(launch)]` gather kernel, one GPU
+    thread per oscillator walking its own CSR row; host dispatch
+    (`sparse_knn_coupling_cubecl`/`try_*`/`_auto`) mirrors `mean_field_rk4::cubecl`.
+  - `pac::PacParams` / `pac::PacError` / `pac::pac_modulate_cpu` — `f32` CPU reference for PAC
+    modulation (`A_out = clamp(A_fast · [1 + m·cos(mean(φ_slow) + offset)], amp_min, amp_max)`)
+    with `f64`-accumulated mean, matching `prin_dynamics::pac::PhaseAmplitudeCoupling::modulate`.
+  - `pac::cubecl::pac_modulate_cubecl` — two-stage kernel: `pac_phase_sum_block_reduce`
+    (hierarchical device-side reduction of `slow_phase`) finished on the host in `f64`, then
+    `pac_modulate` (elementwise broadcast + clamp).
+  - New criterion benchmark (`benches/sparse_knn_bench.rs`) at `N=16,000, k=14`: `cpu_native`
+    and `wgpu_device_dispatch`. Observed on local wgpu/DX12: `cpu_native` 1.84–1.87 ms
+    (8.57–8.70 Melem/s); `wgpu_device_dispatch` 1.87–1.95 ms (8.21–8.58 Melem/s). Pilot
+    benchmark, not a regression gate (Benchmarking Standards §2.2).
+  - 61 new tests + 4 proptest suites in S1. Kernel-equivalence at `N=16,000, k=14` (acceptance
+    shape) and `N=100,000` (PAC) pass at `rtol=1e-5, atol=1e-6`. Cross-crate parity tests
+    against `prin_dynamics` references at `1e-4` absolute tolerance.
+  - S2 audit found one D4 finding (WP019-F1, factual inaccuracy in S1 handoff note coverage
+    table); S3 fixed it with a CLEAN delta re-audit.
 - **Phase 2 recommendation implementation** (inter-phase process improvement, R14–R20 disposition
   in `DOCS/ANALYTICS/phase-2/phase-2-recommendation-implementation-governance.md`):
   - Fixed PA2-F1: `tools/math_audit_run.py` `ruff check`/`ruff format` violations (import

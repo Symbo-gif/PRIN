@@ -118,7 +118,7 @@ is renumbered by an executive mathematical audit.
 | 0073 | 3 | WP-019 | S1 — Coding | [Sparse k-NN and PAC kernels](phase-3/0073-wp019-s1-sparse-k-nn-and-pac-kernels.md) | COMPLETE |
 | 0074 | 3 | WP-019 | S2 — Audit | [Sparse k-NN and PAC kernels](phase-3/0074-wp019-s2-sparse-k-nn-and-pac-kernels.md) | COMPLETE |
 | 0075 | 3 | WP-019 | S3 — Remediation | [Sparse k-NN and PAC kernels](phase-3/0075-wp019-s3-sparse-k-nn-and-pac-kernels.md) | COMPLETE |
-| 0076 | 3 | WP-019 | S4 — Documentation | [Sparse k-NN and PAC kernels](phase-3/0076-wp019-s4-sparse-k-nn-and-pac-kernels.md) | PLANNED |
+| 0076 | 3 | WP-019 | S4 — Documentation | [Sparse k-NN and PAC kernels](phase-3/0076-wp019-s4-sparse-k-nn-and-pac-kernels.md) | COMPLETE |
 | 0077 | 3 | WP-020 | S1 — Coding | [Fused discrete step and reductions](phase-3/0077-wp020-s1-fused-discrete-step-and-reductions.md) | PLANNED |
 | 0078 | 3 | WP-020 | S2 — Audit | [Fused discrete step and reductions](phase-3/0078-wp020-s2-fused-discrete-step-and-reductions.md) | PLANNED |
 | 0079 | 3 | WP-020 | S3 — Remediation | [Fused discrete step and reductions](phase-3/0079-wp020-s3-fused-discrete-step-and-reductions.md) | PLANNED |

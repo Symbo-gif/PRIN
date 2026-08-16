@@ -38,5 +38,7 @@ starts by reading it (Development Workflow Standards §6).
   exit-gate verdict, and WP-017 declaration.
 - [`017-project-state.md`](017-project-state.md) — WP-017 S4 closure and
   WP-018 declaration.
-- [`018-project-state.md`](018-project-state.md) — latest report; WP-018 S4
-  closure and WP-019 declaration.
+- [`018-project-state.md`](018-project-state.md) — WP-018 S4 closure and
+  WP-019 declaration.
+- [`019-project-state.md`](019-project-state.md) — latest report; WP-019 S4
+  closure and WP-020 declaration.
