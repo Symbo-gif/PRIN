@@ -180,11 +180,34 @@ Evidence: `DOCS/audits/020-wp020-audit.md` (verdict `PASS`, zero S2
 findings; one self-discovered D4 WP020-F1 FIXED in S3);
 `DOCS/experiments/0077-wp020-s1-handoff.md`.
 
-## Future work
+## Phase 3 — WP-021: GPU integration and Phase 3 gate
 
-The Phase 3 work continues in WP-021:
+WP-021 completed the GPU kernel suite, integrated kernel dispatch into `prin-sim`,
+and locked regression baselines:
 
-- GPU integration and Phase 3 gate.
+- **Dispatch-priority bug fix** — Corrected `*_auto` functions (`mean_field_rk4`,
+  `discrete_step`, `pac`, `sparse_knn`) to try CUDA before wgpu, aligning runtime
+  priority with `backend::auto_detect_order()` and documented priority order (CUDA → wgpu → CPU).
+  Added priority regression tests.
+- **Hardware CUDA execution and kernel equivalence** — Exercised real CUDA hardware
+  (NVIDIA GeForce RTX 4060, CUDA 13.2) across all four kernel families. 113 `prin-kernels`
+  CUDA tests pass at `rtol=1e-5, atol=1e-6` against CPU references:
+  - Mean-field RK4 at $N=64$ and $N=1{,}000{,}000$.
+  - Discrete step at multi-block $[600, 600, 600]$.
+  - PAC modulation at $N=600$.
+  - Sparse k-NN coupling at $N=300, k=6$.
+- **Simulation layer integration** — Integrated with `prin-sim::gpu` (`GpuSparseKuramoto`,
+  `GpuMeanFieldEngine`, `GpuBandStepper`).
+- **Phase 3 Exit Gate** — All 5 Phase 3 work packages (WP-017 through WP-021) are
+  complete with clean audits.
+
+Evidence: `DOCS/audits/021-wp021-audit.md` (verdict `PASS-WITH-FINDINGS`, one D4 finding
+WP021-F1 FIXED in S3); `DOCS/experiments/0081-wp021-s1-handoff.md`.
+
+## Roadmap Progression
+
+Phase 3 (GPU kernels) is complete. Phase 4 begins with WP-022:
+- Trainable bands and resonance primitives (`prin-train`, Burn-based differentiable layers).
 
 Rust API reference for `prin-kernels` is published on
 [docs.rs](https://docs.rs/prin-kernels/latest/prin_kernels/).

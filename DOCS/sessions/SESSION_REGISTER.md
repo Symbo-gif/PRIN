@@ -126,7 +126,7 @@ is renumbered by an executive mathematical audit.
 | 0081 | 3 | WP-021 | S1 — Coding | [GPU integration and Phase 3 gate](phase-3/0081-wp021-s1-gpu-integration-and-phase-3-gate.md) | COMPLETE |
 | 0082 | 3 | WP-021 | S2 — Audit | [GPU integration and Phase 3 gate](phase-3/0082-wp021-s2-gpu-integration-and-phase-3-gate.md) | COMPLETE |
 | 0083 | 3 | WP-021 | S3 — Remediation | [GPU integration and Phase 3 gate](phase-3/0083-wp021-s3-gpu-integration-and-phase-3-gate.md) | COMPLETE |
-| 0084 | 3 | WP-021 | S4 — Documentation | [GPU integration and Phase 3 gate](phase-3/0084-wp021-s4-gpu-integration-and-phase-3-gate.md) | PLANNED |
+| 0084 | 3 | WP-021 | S4 — Documentation | [GPU integration and Phase 3 gate](phase-3/0084-wp021-s4-gpu-integration-and-phase-3-gate.md) | COMPLETE |
 | 0085 | 4 | WP-022 | S1 — Coding | [Trainable bands and resonance primitives](phase-4/0085-wp022-s1-trainable-bands-and-resonance-primitives.md) | PLANNED |
 | 0086 | 4 | WP-022 | S2 — Audit | [Trainable bands and resonance primitives](phase-4/0086-wp022-s2-trainable-bands-and-resonance-primitives.md) | PLANNED |
 | 0087 | 4 | WP-022 | S3 — Remediation | [Trainable bands and resonance primitives](phase-4/0087-wp022-s3-trainable-bands-and-resonance-primitives.md) | PLANNED |

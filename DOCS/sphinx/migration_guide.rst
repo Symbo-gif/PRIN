@@ -347,6 +347,26 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   ``impl Into<Arc<SparseCoupling>>``), eliminating the per-configuration CSR
   deep-clone.
 
-  Python bindings (``prin-py`` sweep/engine exposure) are deferred to a future WP
+  Python bindings (``prin-py`` sweep/engine exposure) are deferred to Phase 6 WP-036
   (plan amendment #20).
+- ``prin-sim::gpu`` GPU kernel simulation integration (WP-021) — Rust
+  ``GpuSparseKuramoto``, ``GpuMeanFieldEngine``, and ``GpuBandStepper``
+  integrating ``prin-kernels`` single-source CubeCL dispatch directly into
+  simulation workflows:
+
+  **Simulation integration:** ``GpuSparseKuramoto`` implements the ``Dynamics``
+  trait, delegating sparse coupling derivative evaluations to
+  ``prin_kernels::sparse_knn::cubecl::sparse_knn_coupling_auto`` while reusing
+  the CSR topology of ``SparseCoupling``. ``GpuMeanFieldEngine`` executes
+  fused dense RK4 steps via ``prin_kernels::mean_field_rk4::cubecl::step_auto``,
+  recording trajectories into ``engine::Trajectory``. ``GpuBandStepper`` executes
+  fused three-band discrete steps via ``prin_kernels::discrete_step::cubecl::discrete_step_auto``.
+
+  **Precision boundary:** Conversions between ``f64`` (the simulation layer authority)
+  and ``f32`` (device kernel precision) are performed explicitly at call boundaries
+  (``to_f32``/``to_f64`` helpers), consistent with the kernel-equivalence convention.
+
+  **Dispatch-priority fix:** All four kernel auto-dispatch entry points in ``prin-kernels``
+  were aligned to try CUDA before wgpu (CUDA → wgpu → CPU), validated by priority
+  regression tests and hardware CUDA kernel-equivalence runs.
 

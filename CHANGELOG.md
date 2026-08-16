@@ -76,6 +76,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WP-021 GPU integration and Phase 3 gate** (`prin-sim`, `prin-kernels`, Phase 3 fifth and final WP; sessions 0081–0084; audit `DOCS/audits/021-wp021-audit.md`, verdict `PASS-WITH-FINDINGS`, one D4 finding WP021-F1 FIXED in S3):
+  - `prin-sim::gpu` module (`crates/prin-sim/src/gpu.rs`) integrating `prin-kernels` CubeCL dispatch into simulation:
+    - `GpuSparseKuramoto` — `Dynamics` implementation dispatching sparse Kuramoto coupling derivatives through `prin_kernels::sparse_knn::cubecl::sparse_knn_coupling_auto` while reusing `SparseCoupling` CSR topology and validating uniform `K/degree` weights at construction time.
+    - `GpuMeanFieldEngine` — dense all-to-all RK4 stepper wrapping `prin_kernels::mean_field_rk4::cubecl::step_auto` with `engine::Trajectory` recording.
+    - `GpuBandStepper` — three-band (delta/theta/gamma) discrete-time stepper wrapping `prin_kernels::discrete_step::cubecl::discrete_step_auto`.
+    - Precision boundary handling: explicit `to_f32`/`to_f64` conversions between `f64` (simulation/dynamics authority) and `f32` (device kernels).
+  - `prin-sim::error` — new `SimError` variants (`MeanFieldKernel`, `DiscreteStepKernel`, `SparseKnnKernel`) wrapping `prin-kernels` error types.
+  - `prin-kernels` dispatch-priority bug fix — corrected `mean_field_rk4`, `discrete_step`, `pac`, and `sparse_knn` `*_auto` functions to try CUDA before wgpu (CUDA → wgpu → CPU), matching `backend::auto_detect_order()` and documented priority. Added priority regression tests (`step_auto_prefers_cuda_over_wgpu_when_both_available`, `discrete_step_auto_prefers_cuda_over_wgpu_when_both_available`).
+  - Hardware CUDA kernel equivalence — first execution on physical NVIDIA hardware (GeForce RTX 4060, driver 595.95 / CUDA 13.2) in project history: 113 `prin-kernels` CUDA tests pass at `rtol=1e-5, atol=1e-6` across mean-field RK4 ($N=64, N=1\mathrm{M}$), discrete step ($[600, 600, 600]$), PAC ($N=600$), and sparse k-NN ($N=300, k=6$).
+  - New criterion benchmark (`crates/prin-sim/benches/gpu_bench.rs`) at §N1 target sizes: `GpuMeanFieldEngine` achieves ~5.9× speedup over CPU dynamics at $N=1{,}000{,}000$ (~32 ms vs ~192 ms).
+  - CI: added `cargo test -p prin-sim --features cpu -- --test-threads=1` to `.github/workflows/rust.yml`.
+  - S2 audit found one D4 finding (WP021-F1: session 0081 status mismatch in `SESSION_REGISTER.md`); S3 fixed it with a CLEAN delta re-audit.
+  - Phase 3 Exit Gate: all 5 Phase 3 work packages (WP-017 through WP-021) are complete with clean audits; Phase 3 pre-release gate verified.
 - **WP-018 Fused mean-field RK4 kernel** (`prin-kernels`, Phase 3 second WP; sessions 0069–0072;
   audit `DOCS/audits/018-wp018-audit.md`, verdict `PASS`, zero findings):
   - `mean_field_rk4::cubecl::order_param_block_reduce` — new `#[cube(launch)]` kernel: each

@@ -184,12 +184,50 @@ Evidence: ``DOCS/audits/020-wp020-audit.md`` (verdict PASS, zero S2
 findings; one self-discovered D4 WP020-F1 FIXED in S3);
 ``DOCS/experiments/0077-wp020-s1-handoff.md``.
 
-Future work (WP-021)
---------------------
+WP-021 — GPU integration and Phase 3 gate
+-----------------------------------------
 
-The Phase 3 work continues with:
+WP-021 completed the GPU kernel integration into the simulation layer,
+corrected dispatch priority across all kernels, and validated execution on
+hardware CUDA:
 
-- GPU integration and Phase 3 gate.
+- **Dispatch-priority alignment**: Corrected all four ``*_auto`` entry points
+  (``mean_field_rk4``, ``discrete_step``, ``pac``, ``sparse_knn``) to test
+  CUDA before wgpu, bringing dispatch in line with ``backend::auto_detect_order()``
+  and documented priority (CUDA → wgpu → CPU). Added priority regression tests.
+- **Hardware CUDA kernel equivalence**: Validated execution on local NVIDIA
+  hardware (RTX 4060, CUDA 13.2) across all four kernel families at
+  ``rtol=1e-5, atol=1e-6`` against CPU references:
+
+  - Mean-field RK4 at ``N=64`` and ``N=1,000,000``
+  - Discrete step at multi-block ``[600, 600, 600]``
+  - PAC modulation at ``N=600``
+  - Sparse k-NN coupling at ``N=300, k=6``
+
+- **Simulation layer integration** (``crates/prin-sim/src/gpu.rs``):
+
+  - ``GpuSparseKuramoto`` — ``Dynamics`` implementation dispatching sparse
+    coupling to ``sparse_knn_coupling_auto`` while preserving CSR storage.
+  - ``GpuMeanFieldEngine`` — Fused dense RK4 stepper wrapping ``step_auto``
+    with trajectory recording.
+  - ``GpuBandStepper`` — Fused three-band discrete stepper wrapping
+    ``discrete_step_auto``.
+- **Simulation GPU benchmarks** (``crates/prin-sim/benches/gpu_bench.rs``):
+  Mean-field RK4 at ``N=1,000,000`` measures ~32 ms (CUDA) vs ~192 ms (CPU
+  reference), achieving ~5.9× speedup.
+- **Phase 3 Exit Gate**: All Phase 3 work packages (WP-017 through WP-021)
+  are COMPLETE with clean audits.
+
+Evidence: ``DOCS/audits/021-wp021-audit.md`` (verdict PASS-WITH-FINDINGS,
+one D4 finding WP021-F1 FIXED in S3);
+``DOCS/experiments/0081-wp021-s1-handoff.md``.
+
+Phase 3 Exit and Next Phase
+---------------------------
+
+Phase 3 (GPU kernels) is complete. Phase 4 begins with WP-022:
+
+- Trainable bands and resonance primitives (``prin-train``).
 
 Rust API reference for `prin-kernels` is published on `docs.rs
 <https://docs.rs/prin-kernels/latest/prin_kernels/>`_.

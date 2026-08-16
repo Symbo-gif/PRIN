@@ -26,5 +26,5 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0081 | WP-021 | S1 — Coding | [GPU integration and Phase 3 gate](0081-wp021-s1-gpu-integration-and-phase-3-gate.md) | COMPLETE |
 | 0082 | WP-021 | S2 — Audit | [GPU integration and Phase 3 gate](0082-wp021-s2-gpu-integration-and-phase-3-gate.md) | COMPLETE |
 | 0083 | WP-021 | S3 — Remediation | [GPU integration and Phase 3 gate](0083-wp021-s3-gpu-integration-and-phase-3-gate.md) | COMPLETE |
-| 0084 | WP-021 | S4 — Documentation | [GPU integration and Phase 3 gate](0084-wp021-s4-gpu-integration-and-phase-3-gate.md) | PLANNED |
+| 0084 | WP-021 | S4 — Documentation | [GPU integration and Phase 3 gate](0084-wp021-s4-gpu-integration-and-phase-3-gate.md) | COMPLETE |
 
