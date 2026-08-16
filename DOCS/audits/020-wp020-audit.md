@@ -45,7 +45,7 @@ set RUSTDOCFLAGS=-D warnings && cargo doc --workspace --no-deps           # exit
 
 # A3 — Tests
 cargo test --workspace                                                    # all crates green, 0 failed
-cargo test -p prin-kernels --features cpu                                 # 102 unit + 1 doctest passed
+cargo test -p prin-kernels --features cpu                                 # 121 unit + 1 doctest passed
 cargo test -p prin-kernels --features wgpu,cpu                            # 149 unit + 1 doctest passed
 
 # A3 — Coverage
@@ -229,10 +229,71 @@ The `discrete_step/cubecl.rs` raw coverage (79.32%) is below the 95% gate for th
 
 ## 7. Closure table (appended by S3 remediation)
 
+**S2 verdict (§6) recorded zero findings** — the issues table in §4 is empty
+and no D1–D4 items exist to process. Per `Development_Workflow_and_Audit_Standards.md`
+§3 ("S3 remains mandatory when S2 finds zero deviations: it records a
+no-change closure and independent delta verification") and session brief
+0079 item 6, this closure records a no-change delta verification.
+
+Independent reproduction of §2's methodology commands surfaced one
+evidentiary inaccuracy in the audit report itself (not a source defect):
+the `cargo test -p prin-kernels --features cpu` cell in §2 read "102 unit +
+1 doctest passed", but the S1 handoff note (`DOCS/experiments/0077-wp020-s1-handoff.md`,
+line 50) recorded "121 unit + 1 doctest" for the identical command, and two
+independent re-runs this session reproduce 121 exactly (§3.5's claim that
+S2 "match[ed] S1's own claims exactly" was therefore false for this one
+cell). This is assigned **WP020-F1** (D4 — cosmetic/evidentiary, no
+verdict impact: both figures are "all green", the crate's actual test
+count is unaffected) and corrected in §2 of this report as part of this
+closure, per the WP019-F1 precedent (`DOCS/audits/019-wp019-audit.md` §7).
+
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(no findings)* | — | — | — |
+| WP020-F1 | FIXED | S3 commit (session 0079) — corrects §2's `cargo test -p prin-kernels --features cpu` comment from "102 unit + 1 doctest" to "121 unit + 1 doctest", matching the S1 handoff note and two independent re-runs this session | See "`prin-kernels` (`cpu`)" row below |
+| *(no other findings — S2 recorded none)* | NO-CHANGE | S3 commit (session 0079) — no source, test, or dependency edits; `git diff 9af9ce0..HEAD -- crates/ python/ tests/ tools/ parity/ benchmarks/` is empty | See independent re-execution table below |
 
-**Delta re-audit date:** _(pending S3)_
+### Independent delta re-execution (session 0079, git state unchanged at `9af9ce0`; audit-report-only edit on top of `4fefc6e`)
 
-**Result:** _(pending S3)_
+All commands re-run from a clean working tree (`git status` clean, 2 commits
+ahead of `origin/main` at the start of this session; `git diff 9af9ce0..HEAD`
+restricted to `crates/ python/ tests/ tools/ parity/ benchmarks/` is empty —
+confirms the source tree audited at S2 is byte-for-byte unchanged):
+
+| Gate | Command | Result | vs. S2 audit (§2–§3) |
+|---|---|---|---|
+| Rust format | `cargo fmt --all -- --check` | PASS (exit 0) | Unchanged |
+| Clippy (default) | `cargo clippy --workspace --all-targets -- -D warnings` | PASS (exit 0) | Unchanged |
+| Clippy (strict-checks) | `cargo clippy --workspace --all-targets --features strict-checks -- -D warnings` | PASS (exit 0) | Unchanged (not in S2's own command list; included here for parity with the WP-018/WP-019 S3 pattern) |
+| Clippy (`cpu`) | `cargo clippy -p prin-kernels --all-targets --features cpu -- -D warnings` | PASS (exit 0) | Unchanged |
+| Clippy (`wgpu,cpu`) | `cargo clippy -p prin-kernels --all-targets --features wgpu,cpu -- -D warnings` | PASS (exit 0) | Unchanged |
+| CUDA (compile-only) | `cargo build -p prin-kernels --features cuda --lib` | PASS (exit 0) | Unchanged (DV-002 still open, pre-existing) |
+| Rustdoc (workspace) | `RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps` | PASS, 0 warnings | Unchanged |
+| Rustdoc (`prin-kernels`, cpu / wgpu,cpu / cuda) | `cargo doc -p prin-kernels --no-deps --features <cpu\|wgpu,cpu\|cuda>` | PASS, 0 warnings, all three combinations | Unchanged |
+| Workspace tests | `cargo test --workspace` | PASS, exit 0, all suites `ok` (0 failed) | Unchanged |
+| `prin-kernels` (`cpu`) | `cargo test -p prin-kernels --features cpu` | PASS — **121** unit + 1 doctest | Corrects WP020-F1 (S2's §2 cell read 102); exact match to the S1 handoff note and two independent re-runs this session |
+| `prin-kernels` (`wgpu,cpu`) | `cargo test -p prin-kernels --features wgpu,cpu -- --test-threads=1` | PASS — 149 unit + 1 doctest | Exact match |
+| Coverage (`wgpu,cpu`) | `cargo llvm-cov -p prin-kernels --features wgpu,cpu` | `discrete_step.rs` 97.65% lines (468/11 missed); `discrete_step/cubecl.rs` raw 79.32% lines (590/122 missed); `mean_field_rk4/cubecl.rs` 80.76%, `pac/cubecl.rs` raw 82.93%, `sparse_knn/cubecl.rs` raw 85.86% | Exact match to §3.3/§3.4's figures and the DV-004 baseline table |
+| `cargo audit` | `cargo audit` | 1 allowed warning — `paste` RUSTSEC-2024-0436 (DV-008), no new advisory | Unchanged |
+| Snyk Code | `snyk code test crates/prin-kernels/src` | PASS — 0 issues (org `symbo-gif`) | Supplements S2, which (unlike WP-018/WP-019's S2/S3) did not independently re-run Snyk Code — this closure adds that evidence |
+| Snyk Open Source | Not re-run — no dependency/manifest changes since `9af9ce0` (Coding Standards §6.2 gates dependency changes; none occurred, `Cargo.lock` unchanged) | N/A | Unchanged (no trigger), matching S2's §3.6 disposition |
+| `ruff check` | `ruff check python/ tests/ benchmarks/ tools/ parity/` | PASS — all checks passed | Unchanged |
+| `ruff format --check` | `ruff format --check python/ tests/ benchmarks/ tools/ parity/` | PASS — 50 files already formatted | Unchanged |
+| `mypy --strict` | `mypy python/prin --strict` | PASS — 0 issues, 18 files | Unchanged |
+| `bandit` | `bandit -r . -c pyproject.toml` | PASS — 0 issues | Unchanged |
+| `interrogate` | `interrogate -c pyproject.toml python/prin` | PASS — 100.0% (106/106) | Unchanged |
+| `pytest` | `pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp` | PASS — 306 passed, 6 deselected | Exact match |
+| WP acceptance (`discrete_step_bench`, `--features wgpu`) | `cargo bench -p prin-kernels --bench discrete_step_bench --features wgpu` | `fused_cpu_native` 2.256–2.332 ms (36.9–38.1 Melem/s) vs. `unfused_cpu_native` 8.56–8.78 ms (9.79–10.05 Melem/s) — fused ~3.7× faster; wgpu `StepReport` (untimed evidence): `backend_name: "wgpu<wgsl>"`, `wall_time_seconds: 9.216e-6`, `timing_method: Device`, `launch_count: 10` | Consistent with the S1 handoff's reported range (2.043–2.060 ms / 7.85–7.93 ms / ~3.8×) and launch-count target; the absolute-time increase is normal run-to-run machine-load variance for a non-gating pilot benchmark (Benchmarking Standards §2.2), not a code change — confirmed by the empty `git diff` above. `launch_count: 10` and `timing_method: Device` reproduce exactly. |
+
+No newly introduced deviation. No regression below any coverage, quality,
+security, or parity gate. The only change in the tree across this S3 cycle
+is the one-cell documentation correction (WP020-F1) in this audit report's
+own §2, plus the closure content appended here.
+
+**Delta re-audit date:** 2026-08-16
+
+**Result:** CLEAN — the sole finding (WP020-F1, self-discovered during this
+session's independent reproduction) is FIXED in this closure commit;
+independent re-execution of every A1–A10 gate and the WP-020 acceptance
+evidence (forward equivalence, no runtime JIT, 10-launch reduction/launch-count
+target) reproduces the S2 audit's PASS verdict exactly, with no newly
+introduced deviation. Hand off to S4 (session 0080).

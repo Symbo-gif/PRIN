@@ -1,6 +1,6 @@
 # Session 0079 — WP-020 S3: Remediation — Fused discrete step and reductions
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-020  
 **Session type:** S3 — Remediation  
