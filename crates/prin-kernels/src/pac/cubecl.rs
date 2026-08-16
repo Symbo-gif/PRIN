@@ -222,13 +222,13 @@ pub fn pac_modulate_auto(
     fast_amplitude: &[f32],
     params: &PacParams,
 ) -> Result<Vec<f32>, PacError> {
-    #[cfg(feature = "wgpu")]
-    if let Ok(output) = try_pac_modulate_wgpu(slow_phase, fast_amplitude, params) {
+    #[cfg(feature = "cuda")]
+    if let Ok(output) = try_pac_modulate_cuda(slow_phase, fast_amplitude, params) {
         return Ok(output);
     }
 
-    #[cfg(feature = "cuda")]
-    if let Ok(output) = try_pac_modulate_cuda(slow_phase, fast_amplitude, params) {
+    #[cfg(feature = "wgpu")]
+    if let Ok(output) = try_pac_modulate_wgpu(slow_phase, fast_amplitude, params) {
         return Ok(output);
     }
 
@@ -401,5 +401,48 @@ mod tests_cpu {
         let auto_out = pac_modulate_auto(&slow, &fast, &params).unwrap();
 
         assert_allclose(&auto_out, &ref_out, 1e-5, 1e-6);
+    }
+}
+
+#[cfg(all(test, feature = "cuda"))]
+mod tests_cuda {
+    use super::*;
+    use crate::pac::pac_modulate_cpu;
+
+    fn assert_allclose(actual: &[f32], expected: &[f32], rtol: f32, atol: f32) {
+        for (a, e) in actual.iter().zip(expected) {
+            assert!(
+                (a - e).abs() <= atol + rtol * e.abs(),
+                "mismatch: actual {a}, expected {e}"
+            );
+        }
+    }
+
+    /// First CUDA kernel-equivalence evidence for PAC modulation (WP-021):
+    /// previously this backend was compile-only (DV-001/DV-005 — no CUDA
+    /// hardware on the CI/dev hosts of record). This host has a working CUDA
+    /// device, so this closes the equivalence gap for real.
+    #[test]
+    fn cuda_backend_matches_cpu_reference_multi_block() {
+        let n = 600;
+        let slow: Vec<_> = (0..n).map(|i| 0.01 * i as f32).collect();
+        let fast: Vec<_> = (0..n).map(|i| 0.3 + 0.002 * i as f32).collect();
+        let params = PacParams {
+            modulation_depth: 0.4,
+            phase_offset: 0.1,
+            amp_min: 1e-6,
+            amp_max: 10.0,
+        };
+
+        let cpu_out = pac_modulate_cpu(&slow, &fast, &params).unwrap();
+        let out = try_pac_modulate_cuda(&slow, &fast, &params).unwrap();
+
+        assert_allclose(&out, &cpu_out, 1e-5, 1e-6);
+    }
+
+    #[test]
+    fn cuda_backend_rejects_empty_slow_phase() {
+        let err = try_pac_modulate_cuda(&[], &[1.0], &PacParams::new(0.4)).unwrap_err();
+        assert!(matches!(err, PacError::EmptySlowPhase));
     }
 }

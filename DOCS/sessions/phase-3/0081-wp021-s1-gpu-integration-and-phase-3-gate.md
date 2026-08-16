@@ -1,6 +1,6 @@
 # Session 0081 — WP-021 S1: Coding — GPU integration and Phase 3 gate
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-021  
 **Session type:** S1 — Coding  

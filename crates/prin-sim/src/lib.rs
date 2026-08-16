@@ -47,14 +47,23 @@
 //! `SparseCoupling` via `Arc` rather than deep-cloning the CSR storage
 //! (see `OscilloSim::coupling_arc`).
 //!
+//! ## GPU dispatch (WP-021)
+//!
+//! The `gpu` module (requires the `cpu`, `cuda`, or `wgpu` feature — absent
+//! from this build's documentation if none is enabled) wires `prin-kernels`'
+//! CUDA/wgpu/CPU-SIMD kernel dispatch into the simulation layer:
+//! `GpuSparseKuramoto` (a `Dynamics` impl that drops into the existing
+//! [`OscilloSim`]/`Integrator` machinery), `GpuMeanFieldEngine` (dense
+//! fused-RK4), and `GpuBandStepper` (fused three-band discrete step).
+//!
 //! ## Non-goals (this work package)
 //!
-//! GPU dispatch (Phase 3) and final scientific-campaign conclusions
-//! (Phase 7) remain out of scope. `crates/prin-py` sweep/engine bindings and
-//! `crates/prin-kernels` CPU-reference work, originally listed in the
-//! WP-016 declaration, are moved to a future WP by plan amendment #20
-//! (`DOCS/PRIN_Project_Plan.md` §8.3): WP-016 is scoped to `crates/prin-sim`
-//! only.
+//! Final scientific-campaign conclusions (Phase 7) remain out of scope.
+//! `crates/prin-py` sweep/engine PyO3 bindings, originally listed in the
+//! WP-016 declaration and moved to a future WP by plan amendment #20
+//! (`DOCS/PRIN_Project_Plan.md` §8.3), remain open (DV-012/R19) — the GPU
+//! dispatch integration this WP performs is a `crates/prin-sim`
+//! (Rust-internal) change, not a Python binding.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -64,6 +73,8 @@ pub mod csr_coupling;
 mod dispatch;
 pub mod engine;
 pub mod error;
+#[cfg(any(feature = "cpu", feature = "cuda", feature = "wgpu"))]
+pub mod gpu;
 pub mod pruning;
 pub mod sweep;
 

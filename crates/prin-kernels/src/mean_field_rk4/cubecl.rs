@@ -725,13 +725,13 @@ pub fn step_auto(
     frequency: &[f32],
     params: &MeanFieldRk4Params,
 ) -> Result<StepCubeclOutput, MeanFieldRk4Error> {
-    #[cfg(feature = "wgpu")]
-    if let Ok(output) = try_step_wgpu(phase, amplitude, frequency, params) {
+    #[cfg(feature = "cuda")]
+    if let Ok(output) = try_step_cuda(phase, amplitude, frequency, params) {
         return Ok(output);
     }
 
-    #[cfg(feature = "cuda")]
-    if let Ok(output) = try_step_cuda(phase, amplitude, frequency, params) {
+    #[cfg(feature = "wgpu")]
+    if let Ok(output) = try_step_wgpu(phase, amplitude, frequency, params) {
         return Ok(output);
     }
 
@@ -1107,5 +1107,120 @@ mod tests_cpu {
         assert_allclose(&auto_f, &ref_f, 1e-5, 1e-6);
         assert!(!report.backend_name.is_empty());
         assert!(report.wall_time_seconds >= 0.0);
+    }
+}
+
+#[cfg(all(test, feature = "cuda"))]
+mod tests_cuda {
+    use super::*;
+    use crate::mean_field_rk4::{step_cpu, MeanFieldRk4Params};
+
+    fn assert_allclose(actual: &[f32], expected: &[f32], rtol: f32, atol: f32) {
+        for (a, e) in actual.iter().zip(expected) {
+            assert!(
+                (a - e).abs() <= atol + rtol * e.abs(),
+                "mismatch: actual {a}, expected {e}"
+            );
+        }
+    }
+
+    /// First CUDA kernel-equivalence evidence for the fused mean-field RK4
+    /// step (WP-021): previously this backend was compile-only (DV-001/DV-005
+    /// — no CUDA hardware on the CI/dev hosts of record). This host has a
+    /// working CUDA device, so this closes the equivalence gap for real.
+    #[test]
+    fn cuda_matches_cpu_reference_for_small_n() {
+        let n = 64;
+        let phase: Vec<_> = (0..n).map(|i| 0.1 * i as f32).collect();
+        let amplitude: Vec<_> = (0..n).map(|_| 1.0_f32).collect();
+        let frequency: Vec<_> = (0..n).map(|i| 0.05 * (i as f32 - n as f32 / 2.0)).collect();
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+
+        let (cpu_p, cpu_a, cpu_f) = step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
+        let ((gpu_p, gpu_a, gpu_f), report) =
+            try_step_cuda(&phase, &amplitude, &frequency, &params).unwrap();
+
+        assert_eq!(report.backend_name, "cuda");
+        assert_eq!(report.launch_count, 8);
+        eprintln!("N={n} cuda step report: {report:?}");
+        assert_allclose(&gpu_p, &cpu_p, 1e-5, 1e-6);
+        assert_allclose(&gpu_a, &cpu_a, 1e-5, 1e-6);
+        assert_allclose(&gpu_f, &cpu_f, 1e-5, 1e-6);
+    }
+
+    #[test]
+    fn cuda_matches_cpu_reference_at_one_million() {
+        let n = 1_000_000_usize;
+        let phase: Vec<_> = (0..n).map(|i| 0.1 * (i % 64) as f32).collect();
+        let amplitude: Vec<_> = (0..n).map(|_| 1.0_f32).collect();
+        let frequency: Vec<_> = (0..n).map(|i| 0.05 * ((i % 64) as f32 - 32.0)).collect();
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+
+        let (cpu_p, cpu_a, cpu_f) = step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
+        let ((gpu_p, gpu_a, gpu_f), report) =
+            try_step_cuda(&phase, &amplitude, &frequency, &params).unwrap();
+
+        assert_eq!(report.backend_name, "cuda");
+        eprintln!("N=1M cuda step report: {report:?}");
+        assert_allclose(&gpu_p, &cpu_p, 1e-5, 1e-6);
+        assert_allclose(&gpu_a, &cpu_a, 1e-5, 1e-6);
+        assert_allclose(&gpu_f, &cpu_f, 1e-5, 1e-6);
+    }
+
+    #[test]
+    fn cuda_rejects_mismatched_lengths() {
+        let phase = vec![0.0_f32; 4];
+        let amp = vec![1.0_f32; 5];
+        let freq = vec![0.0_f32; 4];
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+        let err = try_step_cuda(&phase, &amp, &freq, &params).unwrap_err();
+        assert!(matches!(err, MeanFieldRk4Error::LengthMismatch { .. }));
+    }
+}
+
+#[cfg(all(test, feature = "cuda", feature = "wgpu"))]
+mod tests_priority {
+    use super::*;
+    use crate::mean_field_rk4::MeanFieldRk4Params;
+
+    /// Regression test for the WP-021 dispatch-priority fix: `step_auto` must
+    /// select CUDA before wgpu when both backends are available and compiled
+    /// in, matching `backend::auto_detect_order()`'s documented CUDA > wgpu >
+    /// CPU preference (previously `step_auto` tried wgpu first, so CUDA was
+    /// silently unreachable through the auto-dispatch entry point on any host
+    /// where both backends initialise successfully).
+    #[test]
+    fn step_auto_prefers_cuda_over_wgpu_when_both_available() {
+        let n = 32;
+        let phase: Vec<_> = (0..n).map(|i| 0.1 * i as f32).collect();
+        let amplitude: Vec<_> = (0..n).map(|_| 1.0_f32).collect();
+        let frequency: Vec<_> = (0..n).map(|i| 0.05 * (i as f32 - n as f32 / 2.0)).collect();
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+
+        try_step_cuda(&phase, &amplitude, &frequency, &params)
+            .expect("this test requires a working CUDA backend on the host");
+
+        let (_, report) = step_auto(&phase, &amplitude, &frequency, &params).unwrap();
+        assert_eq!(report.backend_name, "cuda");
     }
 }

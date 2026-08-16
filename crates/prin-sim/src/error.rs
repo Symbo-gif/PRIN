@@ -82,4 +82,19 @@ pub enum SimError {
         /// Description of the failure.
         reason: String,
     },
+
+    /// An error from the fused mean-field RK4 kernel dispatch layer
+    /// (`prin_kernels::mean_field_rk4`).
+    #[error("mean-field kernel error: {0}")]
+    MeanFieldKernel(#[from] prin_kernels::mean_field_rk4::MeanFieldRk4Error),
+
+    /// An error from the fused discrete-step kernel dispatch layer
+    /// (`prin_kernels::discrete_step`).
+    #[error("discrete-step kernel error: {0}")]
+    DiscreteStepKernel(#[from] prin_kernels::discrete_step::DiscreteStepError),
+
+    /// An error from the sparse k-NN coupling kernel dispatch layer
+    /// (`prin_kernels::sparse_knn`).
+    #[error("sparse k-NN kernel error: {0}")]
+    SparseKnnKernel(#[from] prin_kernels::sparse_knn::SparseKnnError),
 }

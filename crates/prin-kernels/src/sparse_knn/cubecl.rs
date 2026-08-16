@@ -267,13 +267,13 @@ pub fn sparse_knn_coupling_auto(
     graph: &SparseKnnGraph,
     params: &SparseKnnParams,
 ) -> Result<SparseKnnCubeclOutput, SparseKnnError> {
-    #[cfg(feature = "wgpu")]
-    if let Ok(output) = try_sparse_knn_coupling_wgpu(phase, amplitude, frequency, graph, params) {
+    #[cfg(feature = "cuda")]
+    if let Ok(output) = try_sparse_knn_coupling_cuda(phase, amplitude, frequency, graph, params) {
         return Ok(output);
     }
 
-    #[cfg(feature = "cuda")]
-    if let Ok(output) = try_sparse_knn_coupling_cuda(phase, amplitude, frequency, graph, params) {
+    #[cfg(feature = "wgpu")]
+    if let Ok(output) = try_sparse_knn_coupling_wgpu(phase, amplitude, frequency, graph, params) {
         return Ok(output);
     }
 
@@ -567,5 +567,79 @@ mod tests_cpu {
         assert_allclose(&auto_p, &ref_p, 1e-5, 1e-6);
         assert_allclose(&auto_a, &ref_a, 1e-5, 1e-6);
         assert_allclose(&auto_f, &ref_f, 1e-5, 1e-6);
+    }
+}
+
+#[cfg(all(test, feature = "cuda"))]
+mod tests_cuda {
+    use super::*;
+    use crate::sparse_knn::sparse_knn_derivatives_cpu;
+
+    fn assert_allclose(actual: &[f32], expected: &[f32], rtol: f32, atol: f32) {
+        for (a, e) in actual.iter().zip(expected) {
+            assert!(
+                (a - e).abs() <= atol + rtol * e.abs(),
+                "mismatch: actual {a}, expected {e}"
+            );
+        }
+    }
+
+    fn ring_graph(n: usize, half_k: usize) -> SparseKnnGraph {
+        let mut indptr = Vec::with_capacity(n + 1);
+        let mut indices = Vec::new();
+        indptr.push(0u32);
+        for i in 0..n {
+            for d in 1..=half_k {
+                indices.push(((i + n - d) % n) as u32);
+                indices.push(((i + d) % n) as u32);
+            }
+            indptr.push(indices.len() as u32);
+        }
+        SparseKnnGraph::from_csr(n, indptr, indices).unwrap()
+    }
+
+    /// First CUDA kernel-equivalence evidence for the sparse k-NN coupling
+    /// derivative (WP-021): previously this backend was compile-only
+    /// (DV-001/DV-005 — no CUDA hardware on the CI/dev hosts of record). This
+    /// host has a working CUDA device, so this closes the equivalence gap for
+    /// real.
+    #[test]
+    fn cuda_backend_matches_cpu_reference() {
+        let n = 300;
+        let graph = ring_graph(n, 3);
+        let phase: Vec<_> = (0..n).map(|i| 0.03 * i as f32).collect();
+        let amplitude: Vec<_> = (0..n).map(|i| 0.2 + 0.001 * i as f32).collect();
+        let frequency: Vec<_> = (0..n).map(|i| 0.01 * (i as f32 - n as f32 / 2.0)).collect();
+        let params = SparseKnnParams {
+            k: 0.8,
+            decay: 0.15,
+            gamma: 0.005,
+        };
+
+        let (cpu_p, cpu_a, cpu_f) =
+            sparse_knn_derivatives_cpu(&phase, &amplitude, &frequency, &graph, &params).unwrap();
+        let (out_p, out_a, out_f) =
+            try_sparse_knn_coupling_cuda(&phase, &amplitude, &frequency, &graph, &params).unwrap();
+
+        assert_allclose(&out_p, &cpu_p, 1e-5, 1e-6);
+        assert_allclose(&out_a, &cpu_a, 1e-5, 1e-6);
+        assert_allclose(&out_f, &cpu_f, 1e-5, 1e-6);
+    }
+
+    #[test]
+    fn cuda_backend_rejects_mismatched_lengths() {
+        let n = 8;
+        let graph = ring_graph(n, 1);
+        let phase = vec![0.0_f32; n];
+        let amplitude = vec![1.0_f32; n + 1];
+        let frequency = vec![0.0_f32; n];
+        let params = SparseKnnParams {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+        };
+        let err = try_sparse_knn_coupling_cuda(&phase, &amplitude, &frequency, &graph, &params)
+            .unwrap_err();
+        assert!(matches!(err, SparseKnnError::LengthMismatch { .. }));
     }
 }

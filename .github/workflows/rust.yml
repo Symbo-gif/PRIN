@@ -52,6 +52,8 @@ jobs:
       - run: cargo test --workspace
       - name: CubeCL CPU kernel-equivalence tests
         run: cargo test -p prin-kernels --features cpu
+      - name: GPU-dispatch simulation integration tests (CPU backend)
+        run: cargo test -p prin-sim --features cpu -- --test-threads=1
 
   test-strict:
     runs-on: ubuntu-latest

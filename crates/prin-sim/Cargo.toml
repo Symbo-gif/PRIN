@@ -10,6 +10,7 @@ repository.workspace = true
 
 [dependencies]
 prin-dynamics.workspace = true
+prin-kernels.workspace = true
 prin-metrics.workspace = true
 sprs.workspace = true
 rayon.workspace = true
@@ -28,7 +29,18 @@ default = []
 # for the Integrator/Dynamics machinery prin-sim builds on (WP016-F6). This
 # crate defines no strict-checks-gated code of its own.
 strict-checks = ["prin-dynamics/strict-checks"]
+# GPU/backend dispatch (WP-021): forwards to prin-kernels' CubeCL backends.
+# Enabling any one of these compiles the `gpu` module, which wires
+# `prin-kernels` kernel dispatch into the simulation engine (`GpuSparseKuramoto`,
+# `GpuMeanFieldEngine`, `GpuBandStepper`).
+cpu = ["prin-kernels/cpu"]
+cuda = ["prin-kernels/cuda"]
+wgpu = ["prin-kernels/wgpu"]
 
 [[bench]]
 name = "sweep_bench"
+harness = false
+
+[[bench]]
+name = "gpu_bench"
 harness = false

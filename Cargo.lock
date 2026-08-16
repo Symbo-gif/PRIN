@@ -2963,6 +2963,7 @@ dependencies = [
  "approx 0.5.1",
  "criterion",
  "prin-dynamics",
+ "prin-kernels",
  "prin-metrics",
  "proptest",
  "rayon",

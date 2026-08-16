@@ -549,13 +549,13 @@ pub fn discrete_step_auto(
     band_sizes: [usize; 3],
     params: &DiscreteStepParams,
 ) -> Result<StepCubeclOutput, DiscreteStepError> {
-    #[cfg(feature = "wgpu")]
-    if let Ok(output) = try_discrete_step_wgpu(phase, amplitude, frequency, band_sizes, params) {
+    #[cfg(feature = "cuda")]
+    if let Ok(output) = try_discrete_step_cuda(phase, amplitude, frequency, band_sizes, params) {
         return Ok(output);
     }
 
-    #[cfg(feature = "cuda")]
-    if let Ok(output) = try_discrete_step_cuda(phase, amplitude, frequency, band_sizes, params) {
+    #[cfg(feature = "wgpu")]
+    if let Ok(output) = try_discrete_step_wgpu(phase, amplitude, frequency, band_sizes, params) {
         return Ok(output);
     }
 
@@ -871,5 +871,164 @@ mod tests_cpu {
                 got: 9
             }
         ));
+    }
+}
+
+#[cfg(all(test, feature = "cuda"))]
+mod tests_cuda {
+    use super::*;
+    use crate::discrete_step::{discrete_step_cpu, BandStepParams, PacGateParams};
+
+    fn assert_allclose(actual: &[f32], expected: &[f32], rtol: f32, atol: f32) {
+        for (a, e) in actual.iter().zip(expected) {
+            assert!(
+                (a - e).abs() <= atol + rtol * e.abs(),
+                "mismatch: actual {a}, expected {e}"
+            );
+        }
+    }
+
+    fn default_params() -> DiscreteStepParams {
+        DiscreteStepParams {
+            bands: [
+                BandStepParams {
+                    k: 1.0,
+                    decay: 0.1,
+                    gamma: 0.01,
+                },
+                BandStepParams {
+                    k: 1.5,
+                    decay: 0.15,
+                    gamma: 0.005,
+                },
+                BandStepParams {
+                    k: 0.5,
+                    decay: 0.2,
+                    gamma: 0.0,
+                },
+            ],
+            pac: [
+                PacGateParams {
+                    modulation_depth: 0.3,
+                    phase_offset: 0.0,
+                },
+                PacGateParams {
+                    modulation_depth: 0.4,
+                    phase_offset: 0.2,
+                },
+            ],
+            amp_min: 1e-6,
+            amp_max: 10.0,
+            dt: 0.01,
+        }
+    }
+
+    fn make_state(band_sizes: [usize; 3]) -> (Vec<f32>, Vec<f32>, Vec<f32>) {
+        let n: usize = band_sizes.iter().sum();
+        let phase: Vec<_> = (0..n)
+            .map(|i| (0.05 * i as f32).rem_euclid(core::f32::consts::TAU))
+            .collect();
+        let amplitude: Vec<_> = (0..n).map(|i| 0.5 + 0.5 * (i as f32 / n as f32)).collect();
+        let frequency: Vec<_> = (0..n).map(|i| 0.02 * (i as f32 - n as f32 / 2.0)).collect();
+        (phase, amplitude, frequency)
+    }
+
+    /// First CUDA kernel-equivalence evidence for the fused discrete step
+    /// (WP-021): previously this backend was compile-only (DV-001/DV-005 —
+    /// no CUDA hardware on the CI/dev hosts of record). This host has a
+    /// working CUDA device, so this closes the equivalence gap for real.
+    #[test]
+    fn cuda_backend_matches_cpu_reference_multi_block() {
+        let band_sizes = [600usize, 600, 600];
+        let (phase, amp, freq) = make_state(band_sizes);
+        let params = default_params();
+
+        let (cpu_p, cpu_a, cpu_f) =
+            discrete_step_cpu(&phase, &amp, &freq, band_sizes, &params).unwrap();
+        let ((out_p, out_a, out_f), report) =
+            try_discrete_step_cuda(&phase, &amp, &freq, band_sizes, &params).unwrap();
+
+        assert_eq!(report.backend_name, "cuda");
+        assert_eq!(report.launch_count, 10);
+        eprintln!("N={} cuda discrete-step report: {report:?}", phase.len());
+        assert_allclose(&out_p, &cpu_p, 1e-5, 1e-6);
+        assert_allclose(&out_a, &cpu_a, 1e-5, 1e-6);
+        assert_allclose(&out_f, &cpu_f, 1e-5, 1e-6);
+    }
+
+    #[test]
+    fn cuda_backend_rejects_population_mismatch() {
+        let (phase, amp, freq) = make_state([2, 3, 4]);
+        let err =
+            try_discrete_step_cuda(&phase, &amp, &freq, [2, 3, 5], &default_params()).unwrap_err();
+        assert!(matches!(
+            err,
+            DiscreteStepError::PopulationMismatch {
+                expected: 10,
+                got: 9
+            }
+        ));
+    }
+}
+
+#[cfg(all(test, feature = "cuda", feature = "wgpu"))]
+mod tests_priority {
+    use super::*;
+    use crate::discrete_step::{BandStepParams, PacGateParams};
+
+    fn default_params() -> DiscreteStepParams {
+        DiscreteStepParams {
+            bands: [
+                BandStepParams {
+                    k: 1.0,
+                    decay: 0.1,
+                    gamma: 0.01,
+                },
+                BandStepParams {
+                    k: 1.5,
+                    decay: 0.15,
+                    gamma: 0.005,
+                },
+                BandStepParams {
+                    k: 0.5,
+                    decay: 0.2,
+                    gamma: 0.0,
+                },
+            ],
+            pac: [
+                PacGateParams {
+                    modulation_depth: 0.3,
+                    phase_offset: 0.0,
+                },
+                PacGateParams {
+                    modulation_depth: 0.4,
+                    phase_offset: 0.2,
+                },
+            ],
+            amp_min: 1e-6,
+            amp_max: 10.0,
+            dt: 0.01,
+        }
+    }
+
+    /// Regression test for the WP-021 dispatch-priority fix: `discrete_step_auto`
+    /// must select CUDA before wgpu when both are available, matching
+    /// `backend::auto_detect_order()`'s documented CUDA > wgpu > CPU priority
+    /// (previously the function tried wgpu first, so CUDA was silently
+    /// unreachable through auto-dispatch on any host with both backends).
+    #[test]
+    fn discrete_step_auto_prefers_cuda_over_wgpu_when_both_available() {
+        let band_sizes = [8usize, 8, 8];
+        let n: usize = band_sizes.iter().sum();
+        let phase: Vec<_> = (0..n).map(|i| 0.05 * i as f32).collect();
+        let amp: Vec<_> = (0..n).map(|_| 1.0_f32).collect();
+        let freq: Vec<_> = (0..n).map(|i| 0.01 * (i as f32 - n as f32 / 2.0)).collect();
+        let params = default_params();
+
+        try_discrete_step_cuda(&phase, &amp, &freq, band_sizes, &params)
+            .expect("this test requires a working CUDA backend on the host");
+
+        let (_, report) = discrete_step_auto(&phase, &amp, &freq, band_sizes, &params).unwrap();
+        assert_eq!(report.backend_name, "cuda");
     }
 }
