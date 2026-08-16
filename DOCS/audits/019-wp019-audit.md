@@ -229,3 +229,49 @@ The sole finding (WP019-F1) is a D4 documentation/evidentiary inaccuracy in the 
 PASS-WITH-FINDINGS acknowledged; S3 remediation deferred to a subsequent
 session (Development Workflow and Audit Standards §6: "Approval is recorded
 in the artefact itself").
+
+---
+
+## 7. Closure table (appended by S3 remediation)
+
+| ID | Resolution | Commit / amendment | Delta re-audit evidence |
+|---|---|---|---|
+| WP019-F1 | FIXED | `cdc01e6` — corrects `DOCS/experiments/0073-wp019-s1-handoff.md`'s `pac/cubecl.rs` / `cpu` coverage-table cell from "— (not compiled without a GPU feature)" to `77.50%`, removing the incorrect "not compiled" claim | See independent re-execution table below |
+
+### Independent delta re-execution (session 0075, git state `cdc01e6`)
+
+All commands re-run from a clean working tree (`git status` clean, 4 commits ahead of `origin/main`) after the finding fix, against the unchanged source tree (the fix touches only the S1 handoff note — `git diff dea8c9f..cdc01e6 -- crates/ python/ tests/ tools/ parity/ benchmarks/` is empty):
+
+| Gate | Command | Result | vs. S2 audit (§2–§3) |
+|---|---|---|---|
+| Coverage cell under finding (`cpu`) | `cargo llvm-cov -p prin-kernels --features cpu --summary-only` | `pac/cubecl.rs` raw **77.50%** lines (321 regions/9 missed → 97.20% pac.rs; `pac/cubecl.rs` 288 regions/54 missed, 160 lines/36 missed = 77.50%) | Exact match to the corrected cell and to this audit's §3.3 independently re-measured figure |
+| Coverage (`cpu`), other files | same run | `sparse_knn.rs` 98.08%, `pac.rs` 98.60%, `sparse_knn/cubecl.rs` raw 77.46% | Exact match |
+| Coverage (`wgpu,cpu`) | `cargo llvm-cov -p prin-kernels --features wgpu,cpu --summary-only` | `sparse_knn.rs` 98.08%, `pac.rs` 98.60%, `sparse_knn/cubecl.rs` raw 85.86%, `pac/cubecl.rs` raw 82.93% | Exact match |
+| Rust format | `cargo fmt --all -- --check` | PASS (exit 0) | Unchanged |
+| Clippy (default) | `cargo clippy --workspace --all-targets -- -D warnings` | PASS (exit 0) | Unchanged |
+| Clippy (strict-checks) | `cargo clippy --workspace --all-targets --features strict-checks -- -D warnings` | PASS (exit 0) | Unchanged |
+| Clippy (`cpu`) | `cargo clippy -p prin-kernels --all-targets --features cpu -- -D warnings` | PASS (exit 0) | Unchanged |
+| Clippy (`wgpu,cpu`) | `cargo clippy -p prin-kernels --all-targets --features wgpu,cpu -- -D warnings` | PASS (exit 0) | Unchanged |
+| CUDA (compile-only) | `cargo build -p prin-kernels --features cuda --lib` | PASS (exit 0) | Unchanged (DV-002 still open, pre-existing) |
+| Rustdoc (workspace) | `RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps` | PASS, 0 warnings | Unchanged |
+| Rustdoc (`prin-kernels`, cpu / wgpu,cpu / cuda) | `cargo doc -p prin-kernels --no-deps --features <cpu\|wgpu,cpu\|cuda>` | PASS, 0 warnings, all three combinations | Unchanged |
+| Workspace tests | `cargo test --workspace` | PASS, exit 0, all suites `ok` (0 failed) | Unchanged |
+| `prin-kernels` (`cpu`) | `cargo test -p prin-kernels --features cpu` | PASS — 100 unit + 1 doctest | Exact match |
+| `prin-kernels` (`wgpu,cpu`) | `cargo test -p prin-kernels --features wgpu,cpu -- --test-threads=1` | PASS — 121 unit + 1 doctest (incl. `wgpu_matches_cpu_reference_at_n_16k_k_14`) | Exact match |
+| `cargo audit` | `cargo audit` | 1 allowed warning — `paste` RUSTSEC-2024-0436 (DV-008), no new advisory | Unchanged |
+| Snyk Code | `snyk code test crates/prin-kernels/src` | PASS — 0 issues (org `symbo-gif`) | Unchanged |
+| `ruff check` | `ruff check python/ tests/ benchmarks/ tools/ parity/` | PASS — all checks passed | Unchanged |
+| `ruff format --check` | `ruff format --check python/ tests/ benchmarks/ tools/ parity/` | PASS — 50 files already formatted | Unchanged |
+| `mypy --strict` | `mypy python/prin --strict` | PASS — 0 issues, 18 files | Unchanged |
+| `bandit` | `bandit -r . -c pyproject.toml` | PASS — 0 issues | Unchanged |
+| `interrogate` | `interrogate -c pyproject.toml python/prin` | PASS — 100.0% (106/106) | Unchanged |
+| `pytest` | `pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp` | PASS — 306 passed, 6 deselected | Exact match |
+| WP acceptance (N=16K,k=14 benchmark) | `cargo bench -p prin-kernels --bench sparse_knn_bench --features wgpu` | `cpu_native` 1.839–1.867 ms (8.57–8.70 Melem/s); `wgpu_device_dispatch` 1.865–1.949 ms (8.21–8.58 Melem/s) | Consistent with the S1/S2 reported ranges (1.823–1.986 ms), normal run-to-run variance; no regression |
+
+No newly introduced deviation. No regression below any coverage, quality, security, or parity gate. The only change in the tree across this S3 cycle is the one-cell documentation correction in the S1 handoff note.
+
+**Stale bookkeeping also closed this session (discovered while acknowledging the S2 entry condition, same class as the WP017-F5 precedent applied in WP-018's S3):** session 0074's own `Status` header and its `SESSION_REGISTER.md` row were never flipped to `COMPLETE` when S2 closed (commits `dea8c9f`/`e63e868`). Fixed alongside session 0075's own `COMPLETE` marking in the same closure commit as this table.
+
+**Delta re-audit date:** 2026-08-16
+
+**Result:** CLEAN — the sole finding (WP019-F1) is FIXED with a real commit reference; independent re-execution of every A1–A10 gate and the WP-019 acceptance evidence reproduces the S2 audit's figures exactly (or within documented benchmark variance), with no newly introduced deviation. Hand off to S4 (session 0076).

@@ -1,6 +1,6 @@
 # Session 0074 — WP-019 S2: Audit — Sparse k-NN and PAC kernels
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-019  
 **Session type:** S2 — Audit  

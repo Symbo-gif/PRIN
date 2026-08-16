@@ -1,6 +1,6 @@
 # Session 0075 — WP-019 S3: Remediation — Sparse k-NN and PAC kernels
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-019  
 **Session type:** S3 — Remediation  
