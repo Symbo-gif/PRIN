@@ -1,9 +1,9 @@
 # Session 0078 — WP-020 S2: Audit — Fused discrete step and reductions
 
-**Status:** PLANNED  
-**Roadmap phase:** 3 — GPU kernels  
-**Execution unit:** WP-020  
-**Session type:** S2 — Audit  
+**Status:** COMPLETE
+**Roadmap phase:** 3 — GPU kernels
+**Execution unit:** WP-020
+**Session type:** S2 — Audit
 **Predecessor:** [0077 — Coding](0077-wp020-s1-fused-discrete-step-and-reductions.md)  
 **Successor:** [0079 — Remediation](0079-wp020-s3-fused-discrete-step-and-reductions.md)  
 **Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.

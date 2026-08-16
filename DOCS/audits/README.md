@@ -86,6 +86,8 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   kernels" audit (`PASS-WITH-FINDINGS`); one D4 finding (WP019-F1, factual
   inaccuracy in S1 handoff note coverage table) resolved in S3 with a CLEAN
   delta re-audit.
+- [`020-wp020-audit.md`](020-wp020-audit.md) — WP-020 "Fused discrete step and
+  reductions" audit (`PASS`); zero findings; S3 no-change closure pending.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

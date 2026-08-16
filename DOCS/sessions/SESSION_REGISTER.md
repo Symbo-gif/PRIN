@@ -120,7 +120,7 @@ is renumbered by an executive mathematical audit.
 | 0075 | 3 | WP-019 | S3 — Remediation | [Sparse k-NN and PAC kernels](phase-3/0075-wp019-s3-sparse-k-nn-and-pac-kernels.md) | COMPLETE |
 | 0076 | 3 | WP-019 | S4 — Documentation | [Sparse k-NN and PAC kernels](phase-3/0076-wp019-s4-sparse-k-nn-and-pac-kernels.md) | COMPLETE |
 | 0077 | 3 | WP-020 | S1 — Coding | [Fused discrete step and reductions](phase-3/0077-wp020-s1-fused-discrete-step-and-reductions.md) | COMPLETE |
-| 0078 | 3 | WP-020 | S2 — Audit | [Fused discrete step and reductions](phase-3/0078-wp020-s2-fused-discrete-step-and-reductions.md) | PLANNED |
+| 0078 | 3 | WP-020 | S2 — Audit | [Fused discrete step and reductions](phase-3/0078-wp020-s2-fused-discrete-step-and-reductions.md) | COMPLETE |
 | 0079 | 3 | WP-020 | S3 — Remediation | [Fused discrete step and reductions](phase-3/0079-wp020-s3-fused-discrete-step-and-reductions.md) | PLANNED |
 | 0080 | 3 | WP-020 | S4 — Documentation | [Fused discrete step and reductions](phase-3/0080-wp020-s4-fused-discrete-step-and-reductions.md) | PLANNED |
 | 0081 | 3 | WP-021 | S1 — Coding | [GPU integration and Phase 3 gate](phase-3/0081-wp021-s1-gpu-integration-and-phase-3-gate.md) | PLANNED |
