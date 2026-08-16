@@ -241,10 +241,52 @@ All ten audit dimensions pass. The S1 delivery is evidence-backed, well-tested, 
 
 ## 7. Closure table (appended by S3 remediation)
 
+**S2 verdict (§6) recorded zero findings** — the issues table in §4 is empty
+and no D1–D4 items exist to process. Per `Development_Workflow_and_Audit_Standards.md`
+§3 ("S3 remains mandatory when S2 finds zero deviations: it records a
+no-change closure and independent delta verification") and session brief
+0071 item 6, this closure records a no-change delta verification rather than
+a findings table.
+
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(no findings — zero-finding closure)* | — | — | — |
+| *(no findings — zero-finding closure)* | NO-CHANGE | S3 commit (session 0071) — no source, test, or dependency edits; `git diff 80978f9..HEAD -- crates/ python/ tests/ tools/ parity/ benchmarks/` is empty | See independent re-execution table below |
 
-**Delta re-audit date:** *pending S3*
+### Independent delta re-execution (session 0071, git state unchanged at `80978f9`)
 
-**Result:** *pending S3*
+All commands re-run from a clean working tree (`git status` clean, 3 commits ahead of `origin/main`, no diff against the audited commit `80978f9`):
+
+| Gate | Command | Result | vs. S2 audit (§2–§3) |
+|---|---|---|---|
+| Rust format | `cargo fmt --all -- --check` | PASS (exit 0) | Unchanged |
+| Clippy (default) | `cargo clippy --workspace --all-targets -- -D warnings` | PASS (exit 0) | Unchanged |
+| Clippy (strict-checks) | `cargo clippy --workspace --all-targets --features strict-checks -- -D warnings` | PASS (exit 0) | Unchanged |
+| Clippy (`cpu`) | `cargo clippy -p prin-kernels --all-targets --features cpu -- -D warnings` | PASS (exit 0) | Unchanged |
+| Clippy (`wgpu,cpu`) | `cargo clippy -p prin-kernels --all-targets --features wgpu,cpu -- -D warnings` | PASS (exit 0) | Unchanged |
+| Rustdoc | `RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps` | PASS, 0 warnings | Unchanged |
+| Workspace tests | `cargo test --workspace` | PASS, exit 0, all suites `ok` (0 failed) | Unchanged (728+) |
+| `prin-kernels` (`cpu`) | `cargo test -p prin-kernels --features cpu` | PASS — 52 unit + 1 doctest | Exact match |
+| `prin-kernels` (`wgpu,cpu`) | `cargo test -p prin-kernels --features wgpu,cpu -- --test-threads=1` | PASS — 60 unit + 1 doctest | Exact match |
+| Coverage (`cpu`) | `cargo llvm-cov -p prin-kernels --features cpu` | `buffers.rs` 100%, `equivalence.rs` 95.81%, `mean_field_rk4.rs` 99.56% (line), `cubecl.rs` raw 76.73% | All ≥95% gate (`cubecl.rs` per DV-004 carve-out, instrumentable code ≥95%); raw `cubecl.rs` figure exact match (76.73%); `mean_field_rk4.rs` +0.21pp vs. S2's 99.35% — consistent with proptest random-input path variance across independent runs (Testing Standards' property tests are not fixed-seed), not a code change (tree unchanged) |
+| Coverage (`wgpu,cpu`) | `cargo llvm-cov -p prin-kernels --features wgpu,cpu` | `buffers.rs` 100%, `equivalence.rs` 95.81%, `mean_field_rk4.rs` 99.78% (line), `cubecl.rs` raw 80.76% | `cubecl.rs` raw exact match (80.76%); `equivalence.rs`/`buffers.rs` exact match; `mean_field_rk4.rs` +0.21pp, same proptest-variance explanation |
+| `ruff check` | `ruff check python/ tests/ benchmarks/ tools/ parity/` | PASS — all checks passed | Unchanged |
+| `ruff format --check` | `ruff format --check python/ tests/ benchmarks/ tools/ parity/` | PASS — 50 files already formatted | Unchanged |
+| `mypy --strict` | `mypy python/prin --strict` | PASS — 0 issues, 18 files | Unchanged |
+| `bandit` | `bandit -r . -c pyproject.toml` | PASS — 0 issues, 3168 lines scanned | Unchanged |
+| `interrogate` | `interrogate -c pyproject.toml python/prin` | PASS — 100.0% (106/106) | Unchanged |
+| `cargo audit` | `cargo audit` | 1 allowed warning — `paste` RUSTSEC-2024-0436 (DV-008), no new advisory | Unchanged |
+| `pytest` | `pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp` | PASS — 306 passed, 6 deselected | Exact match |
+| Snyk Code | `snyk code test crates/prin-kernels` | PASS — 0 issues (fresh re-scan; org `symbo-gif`) | Confirms S1's clean result independently in S3 (S2 did not re-run it) |
+| Snyk Open Source | Not re-run — no dependency/manifest changes since `80978f9` (Coding Standards §6.2 gates dependency changes; none occurred) | N/A | Unchanged (no trigger) |
+
+No newly introduced deviation. No regression below any coverage, quality, or
+security gate. The two sub-1-percentage-point coverage deltas in
+`mean_field_rk4.rs` are both *increases* attributable to `proptest`'s
+non-fixed-seed random case generation across the four property tests in that
+file, not to any source edit — confirmed by the empty `git diff` above.
+
+**Delta re-audit date:** 2026-08-16
+
+**Result:** CLEAN — zero findings to close; independent re-execution of every
+A1–A10 gate and the WP-018 acceptance evidence reproduces the S2 audit's PASS
+verdict with no newly introduced deviation. Hand off to S4 (session 0072).

@@ -1,6 +1,6 @@
 # Session 0071 — WP-018 S3: Remediation — Fused mean-field RK4 kernel
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-018  
 **Session type:** S3 — Remediation  
