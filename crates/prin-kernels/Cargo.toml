@@ -42,3 +42,7 @@ harness = false
 [[bench]]
 name = "sparse_knn_bench"
 harness = false
+
+[[bench]]
+name = "discrete_step_bench"
+harness = false

@@ -253,5 +253,6 @@ force.
 - **Non-goals:** Trainable-band integration (WP-022+); Python bindings for
   the fused step.
 - **First session brief:** `DOCS/sessions/phase-3/0077-wp020-s1-fused-discrete-step-and-reductions.md`
-- **Maintainer approval:** Pending — declared here per the Documentation
-  Standards §7 item 5; maintainer approval required before S1 begins.
+- **Maintainer approval:** MichaelMaillet, 2026-08-16 — approved as declared
+  (title, scope, acceptance criteria, non-goals unchanged from the
+  declaration above).

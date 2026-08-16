@@ -97,12 +97,18 @@ pub enum MeanFieldRk4Error {
 }
 
 /// Wrap `phase` to `[0, 2 * pi)` using Euclidean remainder.
-fn wrap_phase(phase: f32) -> f32 {
+///
+/// `pub(crate)` so [`crate::discrete_step`] can reuse the same phase-wrap
+/// convention for its per-band Euler update rather than duplicating it.
+pub(crate) fn wrap_phase(phase: f32) -> f32 {
     phase.rem_euclid(core::f32::consts::TAU)
 }
 
 /// Clamp amplitude to `>= 0.0`.
-fn clamp_amp(amp: f32) -> f32 {
+///
+/// `pub(crate)` so [`crate::discrete_step`] can reuse the same non-negativity
+/// guard for its per-band Euler update rather than duplicating it.
+pub(crate) fn clamp_amp(amp: f32) -> f32 {
     amp.max(0.0)
 }
 
@@ -170,8 +176,13 @@ pub(crate) fn order_param(phase: &[f32], amplitude: &[f32], n_inv: f32) -> (f32,
 
 /// Compute the mean-field Kuramoto derivatives, pushing results into the
 /// provided output `Vec`s (which must be empty on entry).
+///
+/// `pub(crate)` so [`crate::discrete_step`] can reuse this single-source
+/// derivative evaluation (order parameter of the passed-in slice, then the
+/// per-oscillator Kuramoto/Stuart–Landau formula) for its per-band Euler
+/// step instead of re-deriving the same math (Coding Standards §1).
 #[allow(clippy::too_many_arguments)]
-fn mean_field_derivatives_into(
+pub(crate) fn mean_field_derivatives_into(
     phase: &[f32],
     amplitude: &[f32],
     frequency: &[f32],

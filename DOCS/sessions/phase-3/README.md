@@ -19,7 +19,7 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0074 | WP-019 | S2 — Audit | [Sparse k-NN and PAC kernels](0074-wp019-s2-sparse-k-nn-and-pac-kernels.md) | COMPLETE |
 | 0075 | WP-019 | S3 — Remediation | [Sparse k-NN and PAC kernels](0075-wp019-s3-sparse-k-nn-and-pac-kernels.md) | COMPLETE |
 | 0076 | WP-019 | S4 — Documentation | [Sparse k-NN and PAC kernels](0076-wp019-s4-sparse-k-nn-and-pac-kernels.md) | COMPLETE |
-| 0077 | WP-020 | S1 — Coding | [Fused discrete step and reductions](0077-wp020-s1-fused-discrete-step-and-reductions.md) | PLANNED |
+| 0077 | WP-020 | S1 — Coding | [Fused discrete step and reductions](0077-wp020-s1-fused-discrete-step-and-reductions.md) | COMPLETE |
 | 0078 | WP-020 | S2 — Audit | [Fused discrete step and reductions](0078-wp020-s2-fused-discrete-step-and-reductions.md) | PLANNED |
 | 0079 | WP-020 | S3 — Remediation | [Fused discrete step and reductions](0079-wp020-s3-fused-discrete-step-and-reductions.md) | PLANNED |
 | 0080 | WP-020 | S4 — Documentation | [Fused discrete step and reductions](0080-wp020-s4-fused-discrete-step-and-reductions.md) | PLANNED |

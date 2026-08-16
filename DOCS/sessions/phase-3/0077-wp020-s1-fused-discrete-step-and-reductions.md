@@ -1,6 +1,6 @@
 # Session 0077 — WP-020 S1: Coding — Fused discrete step and reductions
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 3 — GPU kernels  
 **Execution unit:** WP-020  
 **Session type:** S1 — Coding  

@@ -6,9 +6,10 @@
 //! - Fused mean-field RK4 (target: ≥ Triton parity at N = 1M).
 //! - Sparse k-NN coupling (target: ≥ 3× torch at N = 16K, k = 14).
 //! - PAC modulation.
-//! - Fused discrete step (phase advance + PAC gating + Stuart–Landau in one
-//!   launch) — no runtime JIT, precompiled at wheel-build time.
-//! - Hierarchical order-parameter reductions.
+//! - Fused discrete step (three-band phase advance + PAC gating +
+//!   Stuart–Landau amplitude dynamics, reusable hierarchical
+//!   order-parameter reductions) — no runtime JIT, precompiled at
+//!   wheel-build time.
 //!
 //! ## Architecture
 //!
@@ -25,6 +26,10 @@
 //!   CubeCL gather kernel (same feature gating).
 //! - [`pac`] — Phase–amplitude coupling modulation: CPU reference and CubeCL
 //!   reduce + broadcast kernels (same feature gating).
+//! - [`discrete_step`] — Fused three-band (delta/theta/gamma) discrete-time
+//!   step: CPU reference and CubeCL kernels reusing hierarchical
+//!   order-parameter/mean-phase reductions across bands (same feature
+//!   gating).
 //! - [`equivalence`] — Cross-backend equivalence testing harness.
 //! - [`ops`] — Element-wise utility kernels (DLPack bridge spike).
 //!
@@ -42,6 +47,7 @@
 
 pub mod backend;
 pub mod buffers;
+pub mod discrete_step;
 pub mod equivalence;
 pub mod mean_field_rk4;
 pub mod ops;
