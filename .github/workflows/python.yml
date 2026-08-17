@@ -21,6 +21,32 @@ jobs:
         run: interrogate -c pyproject.toml python/prin
       - name: Security SAST (bandit)
         run: bandit -r python/prin -c pyproject.toml
+      - name: Deviation-ledger consistency (R17, EA-004 E-F2 enforcement)
+        shell: bash
+        run: |
+          mapfile -t reports < <(ls DOCS/reports/*-project-state.md | sort)
+          count=${#reports[@]}
+          if [ "$count" -ge 2 ]; then
+            prev="${reports[$((count-2))]}"
+            curr="${reports[$((count-1))]}"
+            prev_num=$(basename "$prev" | grep -oE '^[0-9]+')
+            # PSR-020 -> PSR-021 is a known, documented, one-time retroactive
+            # correction (EA-004 E-F2: PSR-020 introduced fabricated commit
+            # hashes/descriptions for WP015-F6, WP016-F1..F7, WP017-F1..F5;
+            # PSR-021 restores the verified content without rewriting
+            # PSR-020's own historical table, which still carries the
+            # fabricated hashes on disk as the historical record). Skip
+            # PSR-020 entirely in this transitional window and validate only
+            # the corrected PSR-021; full enforcement (hash + drift) resumes
+            # at PSR-022 onward.
+            if [ "$prev_num" = "020" ]; then
+              python tools/check_deviation_ledger.py "$curr"
+            else
+              python tools/check_deviation_ledger.py "$prev" "$curr"
+            fi
+          elif [ "$count" -eq 1 ]; then
+            python tools/check_deviation_ledger.py "${reports[0]}"
+          fi
 
   test:
     strategy:

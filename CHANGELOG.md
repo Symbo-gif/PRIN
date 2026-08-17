@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Executive Audit Session 004 (EA-004)** — full-project audit across E1–E10 covering the delta
+  since EA-003 (WP-017 through WP-021, Phase 3 close); report
+  `DOCS/audits/EXECUTIVE_AUDIT_REPORT_004.md` (`PASS-WITH-REMEDIATION`, findings E-F1–E-F2):
+  - **E-F1 (D1):** discovered GitHub Actions is currently blocked by an account-level
+    billing/spending-limit condition — all 5 push-triggered workflows fail within seconds on
+    `933f8a3` with zero steps executed ("The job was not started because recent account payments
+    have failed or your spending limit needs to be increased"). Confirmed persistent via a live
+    `gh run rerun`. Not fixable in-session (external account condition); every gate the blocked
+    workflows would run was independently reproduced locally with 100% clean results. Passed
+    forward to the maintainer as DV-014 with an explicit required action (resolve billing, then
+    re-run the affected workflows).
+  - **E-F2 (D1):** found the cumulative deviation-ledger corruption pattern from EA-003 (E-F1)
+    had recurred: `DOCS/reports/020-project-state.md` §3 silently rewrote the WP015-F6 and
+    WP016-F1..F7/WP017-F1..F5 rows with two fabricated, non-existent commit hashes (`57c5f4a`,
+    `8c1e8d3`) and descriptions matching neither the real audit closure tables nor any git
+    history; carried forward unremediated into `021-project-state.md`.
+    `tools/check_deviation_ledger.py` — built at WP-017 S4 specifically to catch this — was run
+    at WP-017/WP-018 S4 but silently dropped from the S4 checklist for WP-019/020/021, so the
+    recurrence went undetected for three cycles. Restored the 13 rows in `021-project-state.md`
+    from verified ground truth (tagged `[RETROACTIVE UPDATE - Executive Audit 004]`); added a
+    correction pointer note to `020-project-state.md` (historical record preserved, not
+    rewritten); fixed the process gap durably by wiring the checker into `python.yml` CI (fails
+    the `lint` job on any future recurrence) and into `Development_Workflow_and_Audit_Standards.md`
+    §3 S4 as explicit action 6.
 - **Executive Audit Session 003 (EA-003)** — full-project audit across E1–E10 covering the delta
   since EA-002 (WP-010 through WP-016, Phase 1 and Phase 2 close); report
   `DOCS/audits/EXECUTIVE_AUDIT_REPORT_003.md` (`PASS-WITH-REMEDIATION`, findings E-F1–E-F14):

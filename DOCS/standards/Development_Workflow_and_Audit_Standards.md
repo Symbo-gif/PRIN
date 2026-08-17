@@ -138,6 +138,18 @@ skipped merely because it requires no corrective source edit.
    (template: `DOCS/reports/TEMPLATE_Project_State_Report.md`): plan position,
    deviation ledger status, metric trends (tests/coverage/parity/benchmarks),
    risks, and the **declaration of the next WP**.
+6. Run `tools/check_deviation_ledger.py <previous-PSR> <this-PSR>` and include
+   its result in the S4 verification commands before committing. This is not
+   optional or memory-dependent: `python.yml`'s `lint` job runs it on every
+   push/PR against the two most-recently-modified `DOCS/reports/*-project-state.md`
+   files, so a corrupted cumulative ledger table (fabricated commit hash, or a
+   finding's summary changed without a new finding ID) fails CI. EA-004
+   finding E-F2 found this check built at WP-017 S4 specifically to prevent a
+   recurrence of EA-003 finding E-F1, then silently dropped from the S4
+   checklist for three subsequent cycles (WP-019/WP-020/WP-021) — during
+   which the exact corruption it targets recurred, undetected, at WP-020 S4.
+   Relying on the checklist alone was insufficient; the CI gate is the
+   durable fix.
 
 **Exit criteria:** all four artefact classes committed; CI fully green. The
 cycle is then **closed** and the next WP may begin S1.

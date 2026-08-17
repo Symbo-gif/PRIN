@@ -111,6 +111,11 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   E-F6 tag/publish deliberately deferred by maintainer directive). `[Index
   entry added retroactively by EMA-001, 2026-08-14 — never added by EA-003
   itself.]`
+- [`EXECUTIVE_AUDIT_REPORT_004.md`](EXECUTIVE_AUDIT_REPORT_004.md) — Fourth
+  project-level executive audit (EA-004, 2026-08-17), `PASS-WITH-REMEDIATION`;
+  two D1 findings (E-F1: live GitHub Actions billing block, passed forward as
+  DV-014; E-F2: cumulative deviation-ledger corruption recurrence at WP-020
+  S4, restored with durable CI enforcement closing DV-015).
 - [`EXECUTIVE_MATH_AUDIT_REPORT_001.md`](EXECUTIVE_MATH_AUDIT_REPORT_001.md) —
   First Executive Mathematical Audit (EMA-001, 2026-08-14), `FAIL`; introduces
   `math-audit-mcp` independent tool-executed re-verification (SymPy/SciPy/

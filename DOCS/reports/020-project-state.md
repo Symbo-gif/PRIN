@@ -120,6 +120,19 @@ One new finding was raised and closed this cycle: WP020-F1 (D4, `cargo test
 FIXED in S3. The cumulative table below carries forward all rows from
 `DOCS/reports/019-project-state.md` §3 with the new WP020-F1 row appended.
 
+**`[RETROACTIVE UPDATE - Executive Audit 004]`:** the WP015-F6 and
+WP016-F1..F7/WP017-F1..F5 rows in the table below (as originally written in
+this report) were found by EA-004 to contain fabricated commit hashes
+(`57c5f4a`, `8c1e8d3` — neither resolves via `git cat-file -t`) and finding
+descriptions that do not match `DOCS/audits/015-wp015-audit.md`,
+`016-wp016-audit.md`, or `017-wp017-audit.md` — the same corruption class as
+EA-003 finding E-F1. This report's own table is left as originally written
+(preserves the historical record of what was claimed at the time); the
+corrected, verified content lives in `DOCS/reports/021-project-state.md` §3
+and `DOCS/audits/EXECUTIVE_AUDIT_REPORT_004.md` E-F2. Every PSR from this one
+through `022-project-state.md` onward should be read against the corrected
+table, not this one, for those 13 rows.
+
 | ID | Raised (cycle) | Severity | Summary | Status | Reference |
 |---|---|---|---|---|---|
 | WP001-F1 | 001 | D1 | PyO3 dependency carried two RustSec advisories | FIXED | `13eac9e`; PyO3/rust-numpy 0.29.0 |
