@@ -226,3 +226,18 @@ No mathematical, architectural, or crate-layering defects were found in the WP-0
 
 **Auditor Signature:** Claude Code (AI Pair & Systems Auditor)
 **Date:** 2026-08-17
+
+---
+
+## 7. Addendum — E-F1 / DV-014 resolution (same-day, 2026-08-17)
+
+The maintainer resolved the GitHub Actions billing/spending-limit condition later the same day. Live-verified via `gh run rerun` and fresh pushes:
+
+1. **Re-ran the 5 originally-blocked workflows** on `933f8a3`'s immediate successor commit `36e8d0d` (the commit that recorded this report — itself pushed while the block was still active, so it inherited the same 5 failures). `parity`, `repro`, and `snyk` came back genuinely green; `rust` and `python` initially did not:
+   - `python`'s `lint` job failed for a **new, genuine reason**: the "Deviation-ledger consistency" CI step added in this same session's remediation (§4.1 item 2) failed on the runner with *every* historical commit hash unresolvable — not just the two genuinely fabricated ones from E-F2. Root cause: `actions/checkout@v4` defaults to a shallow clone (`fetch-depth: 1`), so the runner never has the historical git objects to resolve against, unlike the full local clone this session validated the check against. Fixed by adding `fetch-depth: 0` to the `lint` job's checkout step (commit `1bce918`); re-verified live — `python` now genuinely green.
+   - `rust`'s `test (windows-latest)` leg took **~77 minutes total** to complete (vs. a few minutes for `ubuntu-latest`/`macos-latest` in the same run) — specifically its two CubeCL-CPU-heavy steps ran ~14.6× and ~10.2× slower than identical commands on local hardware. It eventually completed with `conclusion: success` (not a hang/deadlock), but the workflow's `test` job had no `timeout-minutes`, so a genuine hang would have silently consumed Actions minutes for up to GitHub's 6-hour default. Recorded as DV-016 (non-blocking observation, root cause not yet investigated) and hardened with `timeout-minutes: 120` on `rust.yml`'s `test` job (commit alongside DV-016's documentation).
+2. **Re-verified `1bce918`** (the fetch-depth fix): all 5 workflows — `rust`, `python`, `parity`, `repro`, `snyk` — `conclusion: success`.
+
+DV-014 is closed with this evidence. Two new items were opened and disposed of in the same remediation pass: the fetch-depth bug (folded into DV-015's closure, since it was discovered validating that exact fix) and DV-016 (left open as a non-blocking future investigation, with an immediate `timeout-minutes` safety net applied).
+
+This addendum itself practices the audit's own standard: the resolution was verified by live re-execution of the actual CI workflows, not by taking "billing is fixed" as self-evidently sufficient — which is exactly how the fetch-depth bug and the Windows runtime anomaly were caught rather than assumed away.

@@ -33,6 +33,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     rewritten); fixed the process gap durably by wiring the checker into `python.yml` CI (fails
     the `lint` job on any future recurrence) and into `Development_Workflow_and_Audit_Standards.md`
     §3 S4 as explicit action 6.
+  - **Same-day addendum (2026-08-17):** maintainer resolved the GitHub Actions billing condition;
+    live re-verification (`gh run rerun` + fresh pushes) closed DV-014 with evidence. Surfaced and
+    fixed a genuine bug in the new deviation-ledger CI step itself: `actions/checkout@v4`'s default
+    shallow clone made *every* historical commit hash unresolvable on the runner, not just the
+    fabricated ones — fixed with `fetch-depth: 0` (`1bce918`). Also discovered (non-blocking) that
+    `windows-latest` CI is ~10-15× slower than local hardware for two CubeCL-CPU test steps
+    (~77 min total job time, eventually green, not a hang); recorded as DV-016 and hardened with
+    `timeout-minutes: 120` on `rust.yml`'s `test` job as a safety net pending root-cause investigation.
 - **Executive Audit Session 003 (EA-003)** — full-project audit across E1–E10 covering the delta
   since EA-002 (WP-010 through WP-016, Phase 1 and Phase 2 close); report
   `DOCS/audits/EXECUTIVE_AUDIT_REPORT_003.md` (`PASS-WITH-REMEDIATION`, findings E-F1–E-F14):
