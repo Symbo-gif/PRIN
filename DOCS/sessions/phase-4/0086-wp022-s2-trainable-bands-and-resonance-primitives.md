@@ -1,6 +1,6 @@
 # Session 0086 — WP-022 S2: Audit — Trainable bands and resonance primitives
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 4 — Trainable stack and Torch bridge  
 **Execution unit:** WP-022  
 **Session type:** S2 — Audit  
