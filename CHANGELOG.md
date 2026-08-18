@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Phase 3 recommendation implementation** (inter-phase process improvement, R21–R25
+  disposition in `DOCS/ANALYTICS/phase-3/phase-3-recommendation-implementation-governance.md`):
+  - Fixed PA3-F1/PA3-F2: `DOCS/PRIN_Project_Plan.md` §6's Phase 3 roadmap row now carries
+    `✅ COMPLETE`; `DOCS/experiments/README.md`'s file index now lists
+    `0081-wp021-s1-handoff.md` (R21, P0).
+  - Phase-closing cross-cutting document currency added to `Documentation_Standards.md` §7
+    (new item 9): at every phase-closing S4, explicitly verify and update the Project Plan §6
+    roadmap table, `DOCS/experiments/README.md`'s index, and `SESSION_REGISTER.md`'s Global
+    Sessions section — not just the CHANGELOG entries R16 already covers (R22, P1).
+  - Maintainer decision (2026-08-18): the Snyk-CLI-only posture is intentional and permanent
+    after Snyk MCP was unavailable across 4 consecutive Executive Audit sessions with the CLI
+    serving as a fully effective compensating control throughout. `ANALYTICS_METHODOLOGY.md`
+    §5.1 item 11 and `Executive_Audit_Governance_and_Methodology.md` §2 principle 6 updated to
+    record the decision and retire the standing escalation (R23, P1).
+  - R24 (consolidate the DV-001/DV-002/DV-005 GPU CI runner strategy gap) deferred to WP-022 S1
+    (session 0085) with its three DV register entries narrowed to that single re-audit gate; R25
+    (investigate the `windows-latest` CubeCL-CPU slowdown, DV-016) recorded as opportunistic and
+    explicitly not WP-gated, per `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`.
+
 - **Executive Mathematical Audit Session 002 (EMA-002)** — Phase 3 close
   mathematical audit; report `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_002.md`
   (`PASS-WITH-REMEDIATION`, finding M-F7 carried forward from M-F3).
