@@ -354,6 +354,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `CubeclBufferPool` accessor methods and raised `buffers.rs`/`equivalence.rs`
     coverage above the 95% gate.
 
+### Security
+
+- **WP-022 `h2` RUSTSEC-2026-0258 hotfix (post-S4):** the CI `rust` workflow
+  `audit` job discovered a new low-severity DoS vulnerability (unbounded empty
+  DATA frames) in `h2` 0.4.15, a transitive build-time dependency of `cubecl-cpu`
+  via `tracel-llvm-bundler` → `reqwest` → `hyper`. Bumped `h2` to 0.4.16 in
+  `Cargo.lock` (commit `1b7a8e9`); `cargo audit` is clean at the governed
+  threshold. Recorded as WP022-F3 and closed same day.
+
 ## [0.3.0-alpha.1] — Phase 2 exit (Advanced numerics and simulation)
 
 ### Added

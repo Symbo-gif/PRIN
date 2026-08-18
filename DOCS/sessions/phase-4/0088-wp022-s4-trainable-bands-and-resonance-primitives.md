@@ -1,6 +1,6 @@
 # Session 0088 — WP-022 S4: Documentation — Trainable bands and resonance primitives
 
-**Status:** COMPLETE  
+**Status:** IN_PROGRESS (S4.1 hotfix committed; final `rust` workflow re-verification in progress)  
 **Roadmap phase:** 4 — Trainable stack and Torch bridge  
 **Execution unit:** WP-022  
 **Session type:** S4 — Documentation  
@@ -55,6 +55,22 @@ Implement Burn DiscreteDeltaThetaGamma, ResonanceLayer, parameter/state contract
 
 Functional feature work. A code defect discovered here becomes a governed
 hotfix/correction cycle; it is not silently repaired during documentation.
+
+## S4.1 Post-commit security finding and hotfix
+
+After the S4 documentation commit was pushed to `main`, the CI `rust` workflow
+`audit` job discovered a new, ungoverned `h2` RUSTSEC-2026-0258 vulnerability
+(low-severity DoS: unbounded empty DATA frames). The affected path is
+`cubecl-cpu` → `tracel-llvm` → `tracel-mlir-rs` → `tracel-mlir-rs-macros` →
+`tracel-llvm-bundler` → `reqwest` → `hyper` → `h2`, a build-time dependency of
+the Burn/CubeCL stack introduced with WP-022.
+
+Remediation (commit `1b7a8e9`): `cargo update -p h2 --precise 0.4.16` in
+`Cargo.lock`; local re-verification (`cargo audit`, `cargo clippy` default and
+`strict-checks`, `cargo doc`, `cargo test -p prin-train` default and
+`strict-checks`, `cargo fmt`) is clean. The S4 exit gate is not closed until the
+`rust` workflow is fully green; this brief will be marked `COMPLETE` once that
+is verified.
 
 ## Exit gate
 

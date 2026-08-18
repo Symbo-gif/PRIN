@@ -4,7 +4,7 @@
 **Cycle:** 022 (WP-022 "Trainable bands and resonance primitives")  
 **Completed sessions:** 0085–0088  
 **Author:** Devin (AI pair), approved by maintainer  
-**Git state:** `main` @ `1fbc1f5` (post-S3 baseline); S4 documentation commit follows  
+**Git state:** `main` @ `f3aaba4` (S4 documentation closure); post-S4 `h2` RUSTSEC-2026-0258 hotfix commit `1b7a8e9` follows  
 
 ---
 
@@ -57,14 +57,24 @@
     `DOCS/reports/README.md`, `DOCS/audits/README.md`, `DOCS/README.md`,
     `DOCS/sessions/SESSION_REGISTER.md`, `DOCS/sessions/phase-4/README.md`; wrote this
     report; declared WP-023.
+  - **S4.1 post-commit security hotfix:** the CI `rust` workflow's `audit` job
+    discovered a new, ungoverned `h2` RUSTSEC-2026-0258 vulnerability (low-severity
+    DoS, unbounded empty DATA frames) in the advisory DB after the S4 documentation
+    commit. The affected path is `cubecl-cpu` → `tracel-llvm` → `tracel-mlir-rs`
+    → `tracel-mlir-rs-macros` → `tracel-llvm-bundler` → `reqwest` → `hyper`
+    → `h2` (build-time dependency of the Burn/CubeCL stack). Bumped `h2`
+    0.4.15 → 0.4.16 in `Cargo.lock` (commit `1b7a8e9`); `cargo audit` is clean
+    at the governed threshold.
 - **Plan conformance:** ON TRAJECTORY WITH AMENDMENTS — amendments #26 and #27 were
   approved and recorded this cycle (both are recorded decisions, not drift);
   amendments #1–#25 remain in force.
 - **Audit:** `DOCS/audits/022-wp022-audit.md` — S2 verdict `PASS-WITH-FINDINGS`,
   two D4 findings, both closed in S3 (1 FIXED, 1 AMENDED); CLEAN delta re-audit.
-  No unresolved D1/D2 finding exists.
-- **Session Register:** 0085 (S1), 0086 (S2), 0087 (S3), 0088 (S4) marked
-  **COMPLETE**; 0089 (WP-023 S1) is the registered successor.
+  A new D1 finding (WP022-F3) was raised post-commit and fixed in the S4.1 hotfix
+  (commit `1b7a8e9`). No unresolved D1/D2 finding exists.
+- **Session Register:** 0085 (S1), 0086 (S2), 0087 (S3) marked **COMPLETE**;
+  0088 (S4) is **IN_PROGRESS** pending the final `rust` workflow re-verification;
+  0089 (WP-023 S1) is the registered successor.
 - **S4 consistency-sweep corrections (disclosed for the next S2 auditor):** at S4
   entry, the `SESSION_REGISTER.md` and `DOCS/sessions/phase-4/README.md` rows for
   sessions 0086/0087 still read `PLANNED` while both briefs were committed as
@@ -88,7 +98,7 @@
 | Coverage (changed code) | `crates/prin-sim/src/gpu.rs` 99.67% lines (604/606), 98.41% functions | `crates/prin-train/src/bands.rs` **99.26%** lines (537/541) / 100% functions (48/48); `layers.rs` **99.32%** lines (437/440) / 100% functions (45/45); `support.rs` **98.31%** lines (58/59) / 88.89% functions (8/9 — the one uncovered function is the `#[cfg(not(feature = "strict-checks"))]` no-op variant of `check_finite`, never compiled into the strict-checks coverage run; same non-instrumentable-under-one-configuration class as DV-004). `error.rs`/`lib.rs` have zero instrumentable regions | ≥95% on instrumentable changed code |
 | Docstring coverage (interrogate) | 100% public (106/106) | 100% public (106/106) — unchanged, no Python files touched; Rust `#![warn(missing_docs)]` clean under `RUSTDOCFLAGS=-D warnings` (100% public-item rustdoc) | ≥95% overall, 100% public |
 | Parity cases passing / total defined | 510 parity-marked Python tests; hardware CUDA kernel-equivalence across all four kernel families | 510 parity-marked Python tests (unchanged); **+2 new `prin-train` golden-value parity tests** vs. PRINet 3.0 (`tests/parity_bands.rs` `rtol=1e-7, atol=5e-8`, measured worst case `1.65e-8` — Burn `matmul`/`sum_dim` reduction order vs. torch's, same discrepancy class as `prin-dynamics`' `parity_bands.rs`; `tests/parity_layers.rs` `rtol=1e-10, atol=1e-12`), both green; gradient correctness via autodiff-vs.-central-finite-difference (`eps=1e-6`, float64, `<1e-3`) | 100% at tolerance |
-| Clippy/ruff/mypy/bandit/audit findings | 0; `cargo audit` 1 allowed `paste` advisory (DV-008) | 0 across fmt/clippy (default + strict-checks)/rustdoc/ruff/mypy/bandit; `cargo audit` exit 0 with **2 allowed warnings**, both amendment-governed (`paste` RUSTSEC-2024-0436 — DV-008/amendment #9; `bincode` RUSTSEC-2025-0141 — DV-017/amendment #27); `pip_audit` clean for project and docs requirements | 0 at gate threshold, allowed advisories documented |
+| Clippy/ruff/mypy/bandit/audit findings | 0; `cargo audit` 1 allowed `paste` advisory (DV-008) | 0 across fmt/clippy (default + strict-checks)/rustdoc/ruff/mypy/bandit; `cargo audit` exit 0 with **2 allowed warnings**, both amendment-governed (`paste` RUSTSEC-2024-0436 — DV-008/amendment #9; `bincode` RUSTSEC-2025-0141 — DV-017/amendment #27). A new `h2` RUSTSEC-2026-0258 vulnerability was raised by the CI advisory DB after the S4 commit and remediated by bumping `h2` 0.4.15 → 0.4.16 in `Cargo.lock` (commit `1b7a8e9`); no unresolved vulnerability remains. `pip_audit` clean for project and docs requirements | 0 at gate threshold, allowed advisories documented |
 | Sphinx warning-as-error build | 0 warnings | 0 warnings (`migration_guide.rst` extended with the WP-022 `prin-train` entry, rebuilt clean under `-W --keep-going`) | 0 warnings |
 | Snyk Code / Snyk Open Source | Snyk Code: 0 issues; Snyk Open Source: clean | Snyk Code: CI `snyk` workflow green on `8bce1a2` (covers all S1 source/manifests); **local Snyk re-scan BLOCKED** — Snyk MCP and CLI both report unauthenticated on this machine (reported as blocked per Coding Standards §6; not claimed as passed; CI remains the authoritative gate and the S3 source delta — a 2-line re-export plus a compile-only test — is scanned on push). Snyk Open Source: N/A for Cargo (unsupported package manager, R23/`SNYK-CLI-0008`); `cargo audit` is the authoritative ecosystem-native gate for the `burn` dependency change and is clean at the governed threshold | 0 at gate threshold |
 | Benchmark regression gates | none defined for `prin-kernels`; none tripped | none defined for `prin-train`; none tripped | none tripped |
@@ -121,15 +131,28 @@ cargo audit                                                             # exit 0
 gh api repos/:owner/:repo --jq '{secret_scanning: ..., push_protection: ...}'                 # DV-009 re-check: both null (unavailable on this private repo), amendment #5 substitute remains in force
 ```
 
-All quality, coverage, documentation, parity, and security gates are green. The
-CI `snyk`, `python`, `parity`, and `repro` workflows are green on `8bce1a2`
-(WP-022 S1, which contains all of this cycle's source and dependency manifests);
-`gpu` is skipped by design (requires the `[gpu]` tag and a registered
-`[self-hosted, gpu]` runner — DV-001/DV-002); `rust` was still in progress at
-check time owing to the known `windows-latest` CubeCL-CPU runner slowdown
-(DV-016, ~10–15× vs. local hardware, with the `timeout-minutes: 120` safety net
-in place). The S2/S3/S4 commits are pushed with this report and full CI
-verification on the final commit is recorded in the session log.
+**Post-S4 `h2` RUSTSEC-2026-0258 hotfix re-verification (2026-08-18):**
+
+```powershell
+cargo update -p h2 --precise 0.4.16                                        # Cargo.lock updated
+cargo fmt --all -- --check                                                 # clean
+cargo clippy --workspace --all-targets -- -D warnings                      # clean (exit 0)
+cargo clippy --workspace --all-targets --features strict-checks -- -D warnings # clean (exit 0)
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps           # 0 warnings
+cargo test -p prin-train                                                   # 36 + 2 doctests passed
+cargo test -p prin-train --features strict-checks                          # 38 + 2 doctests passed
+cargo audit                                                                # exit 0; 2 allowed warnings (amendments #9, #27)
+```
+
+All quality, coverage, documentation, parity, and security gates are green after
+local re-verification of the S4.1 hotfix. The CI `snyk`, `python`, `parity`, and
+`repro` workflows are green on `8bce1a2` (WP-022 S1). After the S4 documentation
+commit was pushed, the CI `rust` workflow's `audit` job discovered the newly
+published `h2` RUSTSEC-2026-0258 vulnerability in `h2` 0.4.15. The same-day S4.1
+hotfix (commit `1b7a8e9`) bumped `h2` to 0.4.16. The post-hotfix local
+verification commands above are clean; the final `rust` workflow re-run is
+recorded in the session log and the brief will be marked `COMPLETE` once it is
+fully green.
 
 ---
 
@@ -252,6 +275,7 @@ claimed, per the EA-003 E-F1 precedent).
 | WP021-F1 | 021 | D4 | Session 0081 row in `SESSION_REGISTER.md` was `PLANNED` while brief was `COMPLETE` | FIXED | Commit `00c636f`; `SESSION_REGISTER.md` and `phase-3/README.md` row 0081 updated to `COMPLETE` |
 | WP022-F1 | 022 | D4 | `bincode` RUSTSEC-2025-0141 ("unmaintained") advisory flagged in DV-017 without a governing plan amendment | AMENDED | Plan amendment #27; commit `c3ae5c8`; Coding Standards §6.2 threat assessment recorded; same disposition class and per-cycle `cargo audit` recheck cadence as amendment #9 (DV-008) |
 | WP022-F2 | 022 | D4 | `DiscreteDeltaThetaGammaParams`/`ResonanceLayerParams` not re-exported at the `prin-train` crate root | FIXED | Commit `a5458ef`; crate-root `pub use` re-exports in `lib.rs` + compile-time regression test `crates/prin-train/tests/public_api.rs` |
+|| WP022-F3 | 022 | D1 | `h2` RUSTSEC-2026-0258 DoS vulnerability (unbounded empty DATA frames) in transitive build-time dependency via `cubecl-cpu`/`tracel-llvm-bundler`/`reqwest` | FIXED | Commit `1b7a8e9`; `h2` 0.4.15 → 0.4.16 in `Cargo.lock`; `cargo audit` clean at governed threshold |
 
 ---
 
@@ -360,11 +384,14 @@ parameter/state contracts, and differentiable forward references — with forwar
 and gradient reference tests, serialization, shape, dtype, and numerical guards
 all covered and green; the contract's non-goals (inhibition, HEP, optimizers, full
 models) were untouched. Two D4 audit findings were closed in S3 (one FIXED, one
-AMENDED via amendment #27) with a CLEAN delta re-audit; two maintainer-approved
-plan amendments (#26, #27) were recorded openly. No unresolved D1/D2 finding
-exists and no finding is carried. The successor WP-023 (Inhibition, activations,
-and HEP, Phase 4, sessions 0089–0092) is registered and approved below. All
-quality, coverage, documentation, parity, and security gates are green.
+AMENDED via amendment #27) with a CLEAN delta re-audit; a new D1 finding
+(WP022-F3, `h2` RUSTSEC-2026-0258) was raised post-commit and fixed in the S4.1
+hotfix (commit `1b7a8e9`). Two maintainer-approved plan amendments (#26, #27)
+were recorded openly. No unresolved D1/D2 finding exists and no finding is
+carried. The successor WP-023 (Inhibition, activations, and HEP, Phase 4,
+sessions 0089–0092) is registered and approved below. All local quality,
+coverage, documentation, parity, and security gates are green; the final `rust`
+workflow re-run is recorded in the session log.
 
 ---
 
