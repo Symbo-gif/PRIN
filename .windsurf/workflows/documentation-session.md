@@ -30,6 +30,8 @@ Authoritative definition: `DOCS/standards/Documentation_Standards.md` §7 and `D
     exact listed successor READY after maintainer approval.
 11. Run the consistency sweep over plan ↔ standards ↔ session briefs/register
     ↔ READMEs ↔ workflows for anything the cycle changed.
-12. Commit all artefacts (`docs: close cycle NNN (WP-NNN)`), verify CI is
-    fully green. The cycle is closed; begin only the successor named by the
-    active brief.
+12. Commit all artefacts (`docs: close cycle NNN (WP-NNN)`), then **push the
+    full S1–S4 commit range to `origin/main`** — this is the cycle's only
+    push (Push and CI cadence, Development Workflow and Audit Standards §3,
+    Plan amendment #28) — and verify CI is fully green on that push. The
+    cycle is closed; begin only the successor named by the active brief.

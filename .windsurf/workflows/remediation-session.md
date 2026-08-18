@@ -24,4 +24,6 @@ Authoritative definition: `DOCS/standards/Development_Workflow_and_Audit_Standar
 // turbo
 8. Re-run the full local gate to confirm nothing regressed:
    `cargo test --workspace; pytest tests/ -v -m "not slow and not gpu"`
-9. Hand off to `/documentation-session`.
+9. **Commit only — do not push** (S3 is not the cycle's push point; see the
+   Push and CI cadence, Development Workflow and Audit Standards §3, Plan
+   amendment #28). Hand off to `/documentation-session`.

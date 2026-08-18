@@ -135,6 +135,12 @@ def compute_binding_strength(
 - `[gpu]` in a commit message triggers the self-hosted GPU CI job.
 - PRs: small and focused; all CI green; ≥1 maintainer review (2 for `unsafe`,
   numerics-affecting, or release changes); no force-pushes to `main`.
+- **Push/CI cadence (Plan amendment #28):** S1, S2, and S3 sessions commit
+  locally only — they never push. Only the S4 commit that closes a cycle is
+  pushed, carrying the full S1–S4 range for that WP in one push; that push is
+  the sole point at which CI runs for the cycle. See Development Workflow and
+  Audit Standards §3 ("Push and CI cadence") for the full rule and its
+  hotfix exception.
 
 ## 5. Local gate (must pass before pushing)
 

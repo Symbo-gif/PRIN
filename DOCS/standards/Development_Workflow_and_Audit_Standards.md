@@ -48,7 +48,28 @@ workflow that produced PRINet 3.0 (per-milestone build → full repository audit
 S1 Coding ──► S2 Audit ──► S3 Remediation ──► S4 Documentation ──► next WP
  (code+tests    (state vs      (fix all           (READMEs, changelog,
   in tandem)     plan)          findings)          project state report)
+ commit only    commit only    commit only         commit AND push (CI runs)
 ```
+
+### Push and CI cadence (Plan amendment #28)
+
+Every session **commits** locally at its own exit gate. Only the **S4**
+commit that closes a cycle is **pushed** to `origin/main`, carrying the
+entire S1–S4 commit range for that WP in a single push — this is the sole
+point at which CI runs for the cycle. S1, S2, and S3 exit gates are
+satisfied by the **local** gate (Coding Standards §5) and locally reproduced
+ecosystem-native security/quality tool output; they do not push and their
+exit does not depend on a CI run. A WP's CI/`origin` state is therefore
+evaluated once, at S4, over the whole cycle's diff — not once per session.
+
+This changes how audit checklist item A9 (§4) is evaluated during S2/S3:
+nothing has been pushed yet, so A9 cannot check a live CI run at those
+sessions and instead relies on local gate reproduction; A9 is checked
+against a real, fully green CI run only once the S4 push has happened.
+
+The existing hotfix exception (§7) is unaffected: a broken `main` or a live
+security finding may still be pushed immediately, outside this cadence, and
+is retro-audited at the next S2.
 
 ### S1 — Coding session
 
@@ -65,6 +86,8 @@ S1 Coding ──► S2 Audit ──► S3 Remediation ──► S4 Documentation
 
 **Exit criteria (all required):**
 - Local gate green (Coding Standards §5).
+- Commit locally; do **not** push (see "Push and CI cadence" above — only
+  the S4 commit for this cycle pushes).
 - New/changed code at ≥95% coverage; gradcheck/parity/property tests included
   where the Testing Standards require them.
 - WP acceptance criteria met to the author's knowledge.
@@ -90,6 +113,10 @@ S1 Coding ──► S2 Audit ──► S3 Remediation ──► S4 Documentation
   checklist** (§4), which is derived mechanically from the plan and standards.
 - Every finding gets an ID (`WPNNN-FN`), a severity (§5), evidence, and the
   violated plan/standard clause.
+- Commit the Audit Report locally; do **not** push (see "Push and CI
+  cadence" above). Checklist item A9 is verified against local gate
+  reproduction at this session, not a live CI run — nothing has been pushed
+  yet this cycle.
 
 **Output:** an Audit Report at `DOCS/audits/NNN-wpNNN-audit.md` following
 `DOCS/audits/TEMPLATE_Audit_Report.md` (the PRINet 3.0 assessment-report
@@ -121,7 +148,9 @@ where applicable) or `AMENDED` (with an approved amendment reference); a
 table to the Audit Report. Cycles repeat S3 ↔ delta re-audit until clean.
 **S3 remains mandatory when S2 finds zero deviations:** it records a no-change
 closure and independent delta verification. Exact order means no session is
-skipped merely because it requires no corrective source edit.
+skipped merely because it requires no corrective source edit. Commit all S3
+fixes and the delta re-audit locally; do **not** push (see "Push and CI
+cadence" above).
 
 ### S4 — Documentation session
 
@@ -151,8 +180,10 @@ skipped merely because it requires no corrective source edit.
    Relying on the checklist alone was insufficient; the CI gate is the
    durable fix.
 
-**Exit criteria:** all four artefact classes committed; CI fully green. The
-cycle is then **closed** and the next WP may begin S1.
+**Exit criteria:** all four artefact classes committed; the S4 commit — the
+cycle's sole push, carrying the full S1–S4 commit range (see "Push and CI
+cadence" above) — is pushed to `origin/main`; CI is fully green on that push.
+The cycle is then **closed** and the next WP may begin S1.
 
 ### Campaign trigger
 
@@ -178,7 +209,7 @@ lives in the template and is version-controlled with it):
 | A6 | Security: no `unsafe` outside audited modules, bandit/ruff-S clean, `cargo audit` + `pip-audit` clean, no secrets, no runtime codegen | Coding Standards §6 |
 | A7 | Docstring/doc coverage at threshold (Rust 100% public; Python 100% public, ≥95% overall) | Documentation Standards §2 |
 | A8 | Repository hygiene: no TODO/FIXME/stub markers outside declared placeholders, `__all__` consistent, no orphan files, gitignore respected | 3.0 audit methodology |
-| A9 | CI: all workflows green on the WP branch; benchmark regression gates not tripped | Versioning Standards §3 |
+| A9 | CI: at S2/S3, local gate reproduction stands in (nothing pushed yet this cycle, per the Push and CI cadence above); at S4, all workflows green on `origin/main` for the pushed S1–S4 range; benchmark regression gates not tripped | Versioning Standards §3 |
 | A10 | Artefact trail: prior cycle's audit/report artefacts exist and are consistent | This document §5 |
 
 ## 5. Deviation classification and ledger
@@ -223,6 +254,10 @@ that collaboration auditable:
   split the WP (new declaration) or descope. Auditors treat scope creep as D3.
 - Hotfixes (broken `main`, security) may bypass S1 ordering but must be
   retro-audited in the next S2 and recorded in the deviation ledger.
+- Hotfixes are also the sole exception to the Push and CI cadence (§3): they
+  may push and trigger CI immediately, outside the S4-only push point,
+  precisely because they address a `main` that is already live and possibly
+  broken or insecure.
 
 ## 8. Prospective Session Execution Plan
 

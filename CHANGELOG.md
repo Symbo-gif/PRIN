@@ -363,6 +363,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Cargo.lock` (commit `1b7a8e9`); `cargo audit` is clean at the governed
   threshold. Recorded as WP022-F3 and closed same day.
 
+### Changed
+
+- **Push/CI cadence (Project Plan amendment #28):** S1, S2, and S3 sessions
+  now commit locally only and never push; only the S4 commit that closes a
+  cycle is pushed to `origin/main`, carrying the full S1–S4 commit range for
+  that WP in one push — the sole point at which CI runs for the cycle.
+  Previously each session pushed and triggered its own CI run. Hotfixes
+  (broken `main`, live security findings) remain the sole exception and may
+  still push immediately, outside this cadence. See Development Workflow and
+  Audit Standards §3 ("Push and CI cadence") and Coding Standards §4.
+
 ## [0.3.0-alpha.1] — Phase 2 exit (Advanced numerics and simulation)
 
 ### Added

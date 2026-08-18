@@ -1,6 +1,6 @@
 # Session 0088 — WP-022 S4: Documentation — Trainable bands and resonance primitives
 
-**Status:** IN_PROGRESS (S4.1 hotfix committed; final `rust` workflow re-verification in progress)  
+**Status:** COMPLETE  
 **Roadmap phase:** 4 — Trainable stack and Torch bridge  
 **Execution unit:** WP-022  
 **Session type:** S4 — Documentation  
@@ -68,9 +68,11 @@ the Burn/CubeCL stack introduced with WP-022.
 Remediation (commit `1b7a8e9`): `cargo update -p h2 --precise 0.4.16` in
 `Cargo.lock`; local re-verification (`cargo audit`, `cargo clippy` default and
 `strict-checks`, `cargo doc`, `cargo test -p prin-train` default and
-`strict-checks`, `cargo fmt`) is clean. The S4 exit gate is not closed until the
-`rust` workflow is fully green; this brief will be marked `COMPLETE` once that
-is verified.
+`strict-checks`, `cargo fmt`) is clean. Final CI re-verification (commit
+`2fa9d0f`, `rust` workflow run `32169272050`, 2026-08-18): all 10 jobs green,
+including `audit`. All other push-triggered workflows (`parity`, `snyk`,
+`repro`, `python`; `gpu` skipped by design) are also green on the same commit.
+The S4 exit gate is closed; this brief is `COMPLETE`.
 
 ## Exit gate
 

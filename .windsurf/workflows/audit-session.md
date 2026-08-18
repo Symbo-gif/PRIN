@@ -21,13 +21,16 @@ Authoritative definition: `DOCS/standards/Development_Workflow_and_Audit_Standar
      secret scan.
    - A7 docs coverage: interrogate + cargo doc -D warnings.
    - A8 hygiene: TODO/FIXME/stub scan, `__all__` consistency.
-   - A9 CI status on the branch.
+   - A9 CI status: nothing has been pushed yet this cycle (Push and CI
+     cadence, Development Workflow and Audit Standards §3, Plan amendment
+     #28) — verify via local gate reproduction instead of a live CI run.
    - A10 artefact trail from the previous cycle.
 5. Record every finding with ID `WPNNN-Fn`, severity D1–D4, evidence, and the
    violated clause.
 6. Assign the verdict (PASS / PASS-WITH-FINDINGS / FAIL; any D1 ⇒ FAIL) and
    obtain maintainer acknowledgment.
-7. Commit the Audit Report (`docs: WP-NNN audit report, verdict <V>`), then
-   hand off to `/remediation-session` **even if there are zero findings**. A
+7. Commit the Audit Report (`docs: WP-NNN audit report, verdict <V>`).
+   **Commit only — do not push** (S2 is not the cycle's push point). Hand off
+   to `/remediation-session` **even if there are zero findings**. A
    zero-finding S3 records no-change closure and delta verification; exact
    S1→S2→S3→S4 order permits no skipped session.

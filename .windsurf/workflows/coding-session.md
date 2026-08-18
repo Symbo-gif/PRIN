@@ -23,7 +23,10 @@ Authoritative definition: `DOCS/standards/Development_Workflow_and_Audit_Standar
 7. `cargo fmt --all -- --check; cargo clippy --workspace --all-targets -- -D warnings; cargo test --workspace`
 8. `ruff check python/ tests/ benchmarks/ tools/; mypy python/prin --strict; interrogate -c pyproject.toml python/prin; bandit -r python/prin -c pyproject.toml; pytest tests/ -v -m "not slow and not gpu"`
 9. Commit with Conventional Commits referencing the WP
-   (`feat(WP-012): sparse k-NN coupling with parity cases`).
+   (`feat(WP-012): sparse k-NN coupling with parity cases`). **Commit only —
+   do not push.** Per the Push and CI cadence (Development Workflow and Audit
+   Standards §3, Plan amendment #28), only the S4 commit that closes this
+   cycle pushes to `origin/main`; CI does not run per session.
 10. Confirm the active brief's S1 exit gate (local gate green, coverage ≥95%
     on new code, acceptance evidence mapped) and hand off only to its listed
     S2 successor via `/audit-session`.

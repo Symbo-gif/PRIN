@@ -4,7 +4,7 @@
 **Cycle:** 022 (WP-022 "Trainable bands and resonance primitives")  
 **Completed sessions:** 0085–0088  
 **Author:** Devin (AI pair), approved by maintainer  
-**Git state:** `main` @ `f3aaba4` (S4 documentation closure); post-S4 `h2` RUSTSEC-2026-0258 hotfix commit `1b7a8e9` follows  
+**Git state:** `main` @ `f3aaba4` (S4 documentation closure); post-S4 `h2` RUSTSEC-2026-0258 hotfix commit `1b7a8e9`, closure documentation commit `2fa9d0f` (final `rust` workflow green, session 0088 COMPLETE) follow  
 
 ---
 
@@ -72,8 +72,9 @@
   two D4 findings, both closed in S3 (1 FIXED, 1 AMENDED); CLEAN delta re-audit.
   A new D1 finding (WP022-F3) was raised post-commit and fixed in the S4.1 hotfix
   (commit `1b7a8e9`). No unresolved D1/D2 finding exists.
-- **Session Register:** 0085 (S1), 0086 (S2), 0087 (S3) marked **COMPLETE**;
-  0088 (S4) is **IN_PROGRESS** pending the final `rust` workflow re-verification;
+- **Session Register:** 0085 (S1), 0086 (S2), 0087 (S3), 0088 (S4) all marked
+  **COMPLETE** (0088 closed 2026-08-18 on the final `rust` workflow
+  re-verification, run `32169272050`, commit `2fa9d0f`, all 10 jobs green);
   0089 (WP-023 S1) is the registered successor.
 - **S4 consistency-sweep corrections (disclosed for the next S2 auditor):** at S4
   entry, the `SESSION_REGISTER.md` and `DOCS/sessions/phase-4/README.md` rows for
@@ -150,9 +151,11 @@ local re-verification of the S4.1 hotfix. The CI `snyk`, `python`, `parity`, and
 commit was pushed, the CI `rust` workflow's `audit` job discovered the newly
 published `h2` RUSTSEC-2026-0258 vulnerability in `h2` 0.4.15. The same-day S4.1
 hotfix (commit `1b7a8e9`) bumped `h2` to 0.4.16. The post-hotfix local
-verification commands above are clean; the final `rust` workflow re-run is
-recorded in the session log and the brief will be marked `COMPLETE` once it is
-fully green.
+verification commands above are clean; the final `rust` workflow re-run
+(commit `2fa9d0f`, run `32169272050`, 2026-08-18) is fully green across all 10
+jobs (`clippy`, `docs`, `test` × 3 OS, `fmt`, `bench-smoke`, `test-strict`,
+`audit`, `clippy-strict`), as are the same-commit `parity`, `snyk`, `repro`,
+and `python` workflows (`gpu` skipped by design). Session 0088 is `COMPLETE`.
 
 ---
 
