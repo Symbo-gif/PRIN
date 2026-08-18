@@ -96,6 +96,12 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   self-discovered stale bookkeeping (session 0082's own status/register
   entries never flipped to `COMPLETE` when S2 closed), with a CLEAN delta
   re-audit.
+- [`022-wp022-audit.md`](022-wp022-audit.md) — WP-022 "Trainable bands and
+  resonance primitives" audit (`PASS-WITH-FINDINGS`); two D4 findings
+  (WP022-F1: `bincode` RUSTSEC-2025-0141 advisory governance gap, AMENDED via
+  Project Plan amendment #27; WP022-F2: `Params` structs not re-exported at
+  the `prin-train` crate root, FIXED with a compile-time regression test)
+  resolved in S3 with a CLEAN delta re-audit.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.
@@ -126,3 +132,15 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   D2 policy-design interaction (M-F3). Remediation deliberately deferred to a
   follow-up EMA-001 remediation session (this session's mandate was audit and
   reporting only).
+- [`EXECUTIVE_MATH_AUDIT_PREPARATION_002.md`](EXECUTIVE_MATH_AUDIT_PREPARATION_002.md) —
+  EMA-002 pre-audit preparation (2026-08-17): EMA-001 methodology review,
+  scope analysis, and claim-ledger plan for the Phase 3 close mathematical
+  audit.
+- [`EXECUTIVE_MATH_AUDIT_REPORT_002.md`](EXECUTIVE_MATH_AUDIT_REPORT_002.md) —
+  Second Executive Mathematical Audit (EMA-002, 2026-08-17), Phase 3 close,
+  `PASS-WITH-REMEDIATION`; re-verified all 25 EMA-001 claims against
+  `1604bd6` (zero regressions) and added 3 new `prin-kernels` GPU kernel
+  claims (GPU-RK4-01, GPU-RED-01, GPU-KNN-01), all reaching genuine SymPy
+  symbolic proof `PASS`. 28 total claims across 6 ledgers; 21 PASS, 7
+  `REQUIRES_HUMAN_REVIEW` carried under the M-F3/DV-013 sign-off precedent
+  (zero new findings).

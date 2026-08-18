@@ -40,5 +40,16 @@ starts by reading it (Development Workflow Standards §6).
   WP-018 declaration.
 - [`018-project-state.md`](018-project-state.md) — WP-018 S4 closure and
   WP-019 declaration.
-- [`019-project-state.md`](019-project-state.md) — latest report; WP-019 S4
-  closure and WP-020 declaration.
+- [`019-project-state.md`](019-project-state.md) — WP-019 S4 closure and
+  WP-020 declaration.
+- [`020-project-state.md`](020-project-state.md) — WP-020 S4 closure and
+  WP-021 declaration. §3 carries a pointer note for the deviation-ledger
+  corruption restored in `021-project-state.md` (EA-004 finding E-F2).
+- [`021-project-state.md`](021-project-state.md) — WP-021 S4 closure, Phase 3
+  exit-gate verdict (GREEN), and WP-022 declaration.
+- [`022-project-state.md`](022-project-state.md) — latest report; WP-022 S4
+  closure and WP-023 declaration.
+
+The [`DEFERRED_VALIDATION_REGISTER.md`](DEFERRED_VALIDATION_REGISTER.md)
+consolidates all formally deferred validation items (DV-NNN) and analytics
+recommendation dispositions; maintained by each cycle's S3/S4 session.

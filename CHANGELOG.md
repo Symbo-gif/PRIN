@@ -9,8 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **WP-022 S1 — trainable bands and resonance primitives** (`crates/prin-train/`,
-  session 0085): first `prin-train` implementation, built on the Burn autodiff
+- **WP-022 Trainable bands and resonance primitives** (`crates/prin-train/`,
+  Phase 4 first WP; sessions 0085–0088; audit
+  `DOCS/audits/022-wp022-audit.md`, verdict `PASS-WITH-FINDINGS`, two D4
+  findings: WP022-F1 AMENDED via Project Plan amendment #27, WP022-F2 FIXED
+  in S3): first `prin-train` implementation, built on the Burn autodiff
   backend (`burn` 0.16, `std`/`ndarray`/`autodiff` features — first use of Burn
   in this repository).
   - `bands::DiscreteDeltaThetaGamma` — trainable discrete-time multi-rate
@@ -41,12 +44,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     action) as the sole remaining step. DV-005 re-audited and confirmed
     unaffected (this session's Burn primitives are CPU-only `NdArray`, no
     DLPack touched).
-  - **New discovered risk (DV-017):** `bincode` 2.0.1 (transitive via
-    `burn-core`'s record/serialization path) carries RUSTSEC-2025-0141
-    ("unmaintained"); `cargo audit` reports it as a warning, exit code 0.
-    Not yet a governed advisory — flagged for S2/maintainer disposition,
-    same class and cadence as the existing accepted `paste` advisory
-    (DV-008, amendment #9).
+  - **Inherited `bincode` advisory (DV-017), governed by Project Plan
+    amendment #27:** `bincode` 2.0.1 (transitive via `burn-core`'s
+    record/serialization path) carries RUSTSEC-2025-0141 ("unmaintained",
+    informational — no CVE, no patched version, no affected-API disclosure).
+    S3 recorded the Coding Standards §6.2 threat assessment and maintainer
+    acceptance with the same per-cycle `cargo audit` re-check cadence as the
+    existing accepted `paste` advisory (DV-008, amendment #9); compensating
+    control is the existing record-roundtrip regression coverage on both
+    modules. Closes audit finding WP022-F1 as AMENDED.
+  - **S3 audit remediation (WP022-F2):** `DiscreteDeltaThetaGammaParams` and
+    `ResonanceLayerParams` are now re-exported at the `prin-train` crate
+    root (alongside the existing `TrainError` re-export) so callers can name
+    them in explicit type annotations without reaching into submodule paths;
+    compile-guarded by the new `crates/prin-train/tests/public_api.rs`
+    regression test.
+  - **S4 documentation closure (session 0088):** Migration Guide gained the
+    WP-022 `prin-train` symbol entry (contracts, dynamics, the deliberate
+    FFT→real-valued init deviation, parity tolerances); `crates/prin-train`/
+    `crates/` READMEs updated; stale indexes corrected
+    (`DOCS/reports/README.md` 020/021/022 entries + DV-register pointer,
+    `DOCS/audits/README.md` 022 + EMA-002 artefacts, `DOCS/README.md`
+    current-state pointers); session 0086/0087 register rows corrected to
+    `COMPLETE` from committed evidence; Project State Report
+    `DOCS/reports/022-project-state.md` issued, declaring WP-023
+    (Inhibition, activations, and HEP) with maintainer approval.
 
 - **Phase 3 recommendation implementation** (inter-phase process improvement, R21–R25
   disposition in `DOCS/ANALYTICS/phase-3/phase-3-recommendation-implementation-governance.md`):

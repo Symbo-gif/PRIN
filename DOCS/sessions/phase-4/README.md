@@ -8,9 +8,9 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | Seq | Unit | Type | Session brief | Current status |
 |---:|---|---|---|---|
 | 0085 | WP-022 | S1 — Coding | [Trainable bands and resonance primitives](0085-wp022-s1-trainable-bands-and-resonance-primitives.md) | COMPLETE |
-| 0086 | WP-022 | S2 — Audit | [Trainable bands and resonance primitives](0086-wp022-s2-trainable-bands-and-resonance-primitives.md) | PLANNED |
-| 0087 | WP-022 | S3 — Remediation | [Trainable bands and resonance primitives](0087-wp022-s3-trainable-bands-and-resonance-primitives.md) | PLANNED |
-| 0088 | WP-022 | S4 — Documentation | [Trainable bands and resonance primitives](0088-wp022-s4-trainable-bands-and-resonance-primitives.md) | PLANNED |
+| 0086 | WP-022 | S2 — Audit | [Trainable bands and resonance primitives](0086-wp022-s2-trainable-bands-and-resonance-primitives.md) | COMPLETE |
+| 0087 | WP-022 | S3 — Remediation | [Trainable bands and resonance primitives](0087-wp022-s3-trainable-bands-and-resonance-primitives.md) | COMPLETE |
+| 0088 | WP-022 | S4 — Documentation | [Trainable bands and resonance primitives](0088-wp022-s4-trainable-bands-and-resonance-primitives.md) | COMPLETE |
 | 0089 | WP-023 | S1 — Coding | [Inhibition, activations, and HEP](0089-wp023-s1-inhibition-activations-and-hep.md) | PLANNED |
 | 0090 | WP-023 | S2 — Audit | [Inhibition, activations, and HEP](0090-wp023-s2-inhibition-activations-and-hep.md) | PLANNED |
 | 0091 | WP-023 | S3 — Remediation | [Inhibition, activations, and HEP](0091-wp023-s3-inhibition-activations-and-hep.md) | PLANNED |

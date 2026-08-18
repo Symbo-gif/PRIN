@@ -369,4 +369,54 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   **Dispatch-priority fix:** All four kernel auto-dispatch entry points in ``prin-kernels``
   were aligned to try CUDA before wgpu (CUDA → wgpu → CPU), validated by priority
   regression tests and hardware CUDA kernel-equivalence runs.
+- ``prin-train`` trainable bands and resonance primitives (WP-022) — the first
+  implementation of the Burn-based (``burn`` 0.16, ``std``/``ndarray``/``autodiff``)
+  trainable layer stack: ``bands::DiscreteDeltaThetaGamma`` rebuilding PRINet 3.0
+  ``core.propagation.networks.DiscreteDeltaThetaGamma`` and
+  ``layers::ResonanceLayer`` rebuilding PRINet 3.0 ``nn.layers.ResonanceLayer``,
+  plus the typed ``TrainError`` enum (``EmptyBand``, ``ShapeMismatch``,
+  ``NonFiniteParameter``, ``InvalidTimestep``, ``NonFiniteState``).
+
+  **Contracts:** Both are ``#[derive(Module)]`` Burn modules generic over
+  ``B: Backend``, exposing a validated ``Config``
+  (``DiscreteDeltaThetaGammaConfig`` / ``ResonanceLayerConfig``) with seeded-random
+  (``init``, drawing from the project's deterministic ``prin_dynamics::Seed``) and
+  explicit-parameter (``init_from_params``) initializers, a ``Params`` struct for
+  golden-reference tests and non-``burn::record`` checkpoint paths
+  (``DiscreteDeltaThetaGammaParams`` / ``ResonanceLayerParams``, re-exported at the
+  crate root), and a validated ``State`` contract (``DiscreteBandState`` /
+  ``ResonanceState``). ``step``/``integrate`` return ``Result<State, TrainError>``;
+  shape mismatches and (under the ``strict-checks`` feature) non-finite outputs are
+  typed errors, not panics.
+
+  **Dynamics:** ``DiscreteDeltaThetaGamma::step`` is a line-for-line Burn port of the
+  reference's discrete step: phase advance with learned intra-band coupling,
+  delta→theta/theta→gamma PAC gating (multiplicative, sigmoid-gated), and
+  Stuart–Landau amplitude update with learned per-band growth rate — a discrete-time
+  counterpart to ``prin_dynamics::bands::BandNetwork``'s continuous ODE (WP-013).
+  ``ResonanceLayer::step`` ports the core Kuramoto loop of the reference's
+  ``forward`` (coupling, decay, frequency modulation, evaluated from pre-step state).
+
+  **Deliberate deviation:** ``ResonanceLayer::init_state`` substitutes a real-valued,
+  fully differentiable input→initial-state projection for PRINet 3.0's FFT-based
+  initializer (Burn has no complex-tensor autodiff); the step dynamics are unaffected
+  and golden-tested. The reference's diagnostic helpers (``get_order_parameter``,
+  ``order_parameters``, ``pac_index``) are measurement utilities, not part of the
+  forward/gradient contract, and are not ported.
+
+  **Parity and gradients:** Golden-value parity against formulas transcribed from the
+  PRINet 3.0 source and evaluated independently in ``torch==2.13.0+cpu`` float64:
+  ``tests/parity_bands.rs`` at ``rtol=1e-7, atol=5e-8`` (measured worst case
+  ``1.65e-8`` — Burn ``matmul``/``sum_dim`` reduction order vs. torch's, the same
+  discrepancy class as ``prin-dynamics``' ``parity_bands.rs``) and
+  ``tests/parity_layers.rs`` at ``rtol=1e-10, atol=1e-12``. Gradient correctness is
+  verified by autodiff-vs.-central-finite-difference tests (``eps=1e-6``, float64,
+  agreement ``<1e-3``) and every-parameter gradient-flow tests. Phase wrap
+  ``[0, 2π)`` and amplitude clamp ``[1e-6, 10]`` invariants are unit- and
+  property-tested; ``burn::record`` serialization round-trips preserve parameters
+  exactly (float64 ``DoublePrecisionSettings``).
+
+  Python bindings (``prin.nn``) are not exposed yet — the production
+  ``torch.autograd.Function`` bridge is WP-025's scope, and GPU-backed Burn backends
+  (``wgpu``/``cuda``) are deferred to the same WP per the Project Plan risk register.
 
