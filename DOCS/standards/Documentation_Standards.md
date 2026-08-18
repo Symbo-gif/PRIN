@@ -131,6 +131,25 @@ may close:
    files and is free of stale entries. Stale documentation found by the
    next cycle's audit is a D4 finding (D2 if it could authorize incorrect
    work), per the consistency-sweep rule in item 7.
+9. **Phase-closing cross-cutting document currency (Phase 3 analytics R22).**
+   At every phase-closing S4 — the WP-N session whose Project State Report
+   declares the phase exit gate — explicitly verify and, if stale, update:
+   (a) `DOCS/PRIN_Project_Plan.md` §6's roadmap-table completion marker for
+   the closing phase; (b) `DOCS/experiments/README.md`'s file index against
+   the actual directory listing; (c) `DOCS/sessions/SESSION_REGISTER.md`'s
+   Global Sessions section against the actual Executive Audit/Executive
+   Mathematical Audit report list. These three documents summarize *across*
+   WP-N cycles and global sessions, so neither item 8 above (scoped to a
+   single WP-N cycle's touched areas) nor the EA/EMA closing checklist
+   (`Executive_Audit_Governance_and_Methodology.md` §5,
+   `Executive_Mathematical_Audit_Governance_and_Methodology.md` §8, which
+   are scoped to the global session's own touched files) is positioned to
+   own their currency — the structural gap that produced PA2-F1/PA2-F2
+   (Phase 2 analytics) and PA3-F1/PA3-F2 (Phase 3 analytics). This item
+   applies only at phase-closing S4, not every WP-N S4, so it is not
+   re-litigated every cycle. Stale entries found by a later session are a
+   D3 finding on the Project Plan (D4 on the other two), per the
+   consistency-sweep rule in item 7.
 
 S4 produces no functional code changes. If a documentation task exposes a code
 defect, it is logged for the next cycle (or triggers a hotfix per Workflow
