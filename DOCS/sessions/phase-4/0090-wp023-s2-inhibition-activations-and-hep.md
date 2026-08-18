@@ -1,6 +1,6 @@
 # Session 0090 — WP-023 S2: Audit — Inhibition, activations, and HEP
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 4 — Trainable stack and Torch bridge  
 **Execution unit:** WP-023  
 **Session type:** S2 — Audit  
