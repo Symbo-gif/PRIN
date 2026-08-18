@@ -84,6 +84,11 @@ at the top level until they are folded into the final campaign archive in Phase 
   strategy decision (Project Plan amendment #26).
   `[RETROACTIVE UPDATE - Phase 3 recommendation implementation session,
   R21/PA3-F1]` index entry added.
+- [`0089-wp023-s1-handoff.md`](0089-wp023-s1-handoff.md) — WP-023 S1 handoff
+  to the S2 audit for `prin-train` inhibition, activations, energy functions,
+  and HEP trainer (`inhibition.rs`, `activations.rs`, `energy.rs`, `hep.rs`,
+  5 parity suites, DV-018/DV-019 observations).
+
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
 [`../sessions/phase-1/wp009-s1-handoff-note.md`](../sessions/phase-1/wp009-s1-handoff-note.md)

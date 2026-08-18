@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WP-023 Inhibition, activations, and HEP** (`crates/prin-train/`,
+  Phase 4 second WP; sessions 0089–0092; audit
+  `DOCS/audits/023-wp023-audit.md`, verdict `PASS-WITH-FINDINGS`, one D4
+  finding: WP023-F1 FIXED in S3): second `prin-train` increment, implementing
+  competitive inhibition, complex/phase activation functions, holomorphic energy
+  evaluation, and Equilibrium Propagation training.
+  - `inhibition::FeedbackInhibition` — feedback lateral inhibition with straight-through
+    estimator (STE): hard top-$k$ forward competitive selection and soft
+    temperature-scaled sigmoid backward gradients, with optional fractional target sparsity.
+  - `activations` — `d_silu` (analytic SiLU derivative), `ComplexTensor` (real/imaginary
+    pair representation), `HolomorphicActivation` (split-complex $\tanh$), `phase_activation`
+    (periodic $[-\pi, \pi)$ wrapping), and `GatedPhaseActivation` (trainable gate bias
+    module).
+  - `energy::HolomorphicEnergy` — holomorphic scalar energy decomposition ($E_{\text{coup}}$,
+    $E_{\text{self}}$ unit-amplitude penalty, and $\beta$-weighted task loss).
+  - `hep::HolomorphicEp` — Holomorphic Equilibrium Propagation trainer orchestrating free
+    and $\pm\beta$ nudged phases with closed-form contrastive coupling gradients.
+  - `error::TrainError` — extended with `InvalidK`, `DivisionByZero`, `StepLimitExceeded`,
+    and `BetaTooSmall` variants.
+  - 93 unit/property tests, 5 new golden-value parity tests against PRINet 3.0, 6 doctests;
+    98.4–99.6% line coverage across all 7 `prin-train` source files.
+  - **Preserved third-party behavior and test observation:** DV-018 recorded `burn-tensor`'s
+    internal `f32` downcast in default `sigmoid` (precision floor ~1e-7, accommodated via
+    `rtol=1e-6`/`eps=1e-4` gradchecks); DV-019 recorded intermittent thread contention in
+    WP-022 `bands::tests::gradients_flow_to_every_parameter`.
+  - **S3 audit remediation (WP023-F1):** extended `crates/prin-train/tests/public_api.rs`
+    with compile-time check for crate-root `GatedPhaseActivationParams` re-export (commit `11821c0`).
+  - **S4 documentation closure (session 0092):** Migration Guide updated with WP-023 symbol
+    entries; `crates/prin-train/` and `crates/` READMEs updated; `DOCS/experiments/`,
+    `DOCS/audits/`, `DOCS/reports/`, `DOCS/README.md` updated; Project State Report
+    `DOCS/reports/023-project-state.md` issued, declaring WP-024 (Oscillator-aware optimizers)
+    with maintainer approval.
+
 - **WP-022 Trainable bands and resonance primitives** (`crates/prin-train/`,
   Phase 4 first WP; sessions 0085–0088; audit
   `DOCS/audits/022-wp022-audit.md`, verdict `PASS-WITH-FINDINGS`, two D4

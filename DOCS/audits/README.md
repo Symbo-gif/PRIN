@@ -102,6 +102,11 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   Project Plan amendment #27; WP022-F2: `Params` structs not re-exported at
   the `prin-train` crate root, FIXED with a compile-time regression test)
   resolved in S3 with a CLEAN delta re-audit.
+- [`023-wp023-audit.md`](023-wp023-audit.md) — WP-023 "Inhibition, activations,
+  and HEP" audit (`PASS-WITH-FINDINGS`); one D4 finding (WP023-F1: `public_api.rs`
+  regression test missing `GatedPhaseActivationParams` coverage, FIXED in S3
+  with extended compile-time check) resolved in S3 with a CLEAN delta re-audit.
+
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

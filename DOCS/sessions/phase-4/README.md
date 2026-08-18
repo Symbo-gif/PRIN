@@ -13,8 +13,8 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0088 | WP-022 | S4 — Documentation | [Trainable bands and resonance primitives](0088-wp022-s4-trainable-bands-and-resonance-primitives.md) | COMPLETE |
 | 0089 | WP-023 | S1 — Coding | [Inhibition, activations, and HEP](0089-wp023-s1-inhibition-activations-and-hep.md) | COMPLETE |
 | 0090 | WP-023 | S2 — Audit | [Inhibition, activations, and HEP](0090-wp023-s2-inhibition-activations-and-hep.md) | COMPLETE |
-| 0091 | WP-023 | S3 — Remediation | [Inhibition, activations, and HEP](0091-wp023-s3-inhibition-activations-and-hep.md) | PLANNED |
-| 0092 | WP-023 | S4 — Documentation | [Inhibition, activations, and HEP](0092-wp023-s4-inhibition-activations-and-hep.md) | PLANNED |
+| 0091 | WP-023 | S3 — Remediation | [Inhibition, activations, and HEP](0091-wp023-s3-inhibition-activations-and-hep.md) | COMPLETE |
+| 0092 | WP-023 | S4 — Documentation | [Inhibition, activations, and HEP](0092-wp023-s4-inhibition-activations-and-hep.md) | COMPLETE |
 | 0093 | WP-024 | S1 — Coding | [Oscillator-aware optimizers](0093-wp024-s1-oscillator-aware-optimizers.md) | PLANNED |
 | 0094 | WP-024 | S2 — Audit | [Oscillator-aware optimizers](0094-wp024-s2-oscillator-aware-optimizers.md) | PLANNED |
 | 0095 | WP-024 | S3 — Remediation | [Oscillator-aware optimizers](0095-wp024-s3-oscillator-aware-optimizers.md) | PLANNED |

@@ -416,7 +416,62 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   property-tested; ``burn::record`` serialization round-trips preserve parameters
   exactly (float64 ``DoublePrecisionSettings``).
 
+- ``prin-train`` inhibition, activations, energy functions, and HEP (WP-023) —
+  the second increment of the Burn-based trainable stack:
+  ``inhibition::FeedbackInhibition`` rebuilding the trainable half of PRINet 3.0
+  ``core.propagation.inhibition.FeedbackInhibition``,
+  ``activations`` (``d_silu``, ``ComplexTensor``, ``HolomorphicActivation``,
+  ``phase_activation``, ``GatedPhaseActivation``) rebuilding PRINet 3.0
+  ``nn.activations``,
+  ``energy::HolomorphicEnergy`` rebuilding PRINet 3.0 ``nn.hep.HolomorphicEnergy``,
+  and ``hep::HolomorphicEp`` rebuilding PRINet 3.0
+  ``nn.hep.HolomorphicEquilibriumPropagation``.
+
+  **Contracts and Primitives:**
+
+  - ``FeedbackInhibition`` provides competitive k-WTA lateral inhibition with a
+    straight-through estimator (STE): hard top-:math:`k` selection in the forward
+    pass and soft temperature-scaled sigmoid gradients in backward propagation,
+    parameterized either by explicit :math:`k` or fractional sparsity
+    (:math:`k = \lfloor (1 - s) \cdot N \rfloor`).
+  - ``activations`` provides ``d_silu`` (closed-form derivative :math:`\sigma(x) \cdot (1 + x \cdot (1 - \sigma(x)))`),
+    ``ComplexTensor`` (real and imaginary tensor pair), ``HolomorphicActivation``
+    (split-complex :math:`\tanh` activation), ``phase_activation`` (:math:`2\pi`-modular
+    periodic phase wrapping to :math:`[-\pi, \pi)`), and ``GatedPhaseActivation``
+    (trainable module with learned gate bias, initialized to zero giving initial gate
+    values of :math:`0.5`).
+  - ``HolomorphicEnergy`` evaluates the holomorphic scalar energy of complex states:
+    coupling energy :math:`E_{\text{coup}} = -\frac{1}{2} \text{Re}(z^\dagger W z)`,
+    self-energy :math:`E_{\text{self}} = \sum_i (|z_i| - 1)^2`, and supervised task loss
+    weighted by :math:`\beta`.
+  - ``HolomorphicEp`` manages Equilibrium Propagation training across free and nudged
+    (:math:`+\beta, -\beta`) phases, computing contrastive coupling gradients via the
+    symmetric difference formula :math:`\frac{1}{2\beta} (z_{+\beta} z_{+\beta}^\dagger - z_{-\beta} z_{-\beta}^\dagger)`.
+
+  **Deliberate deviations and hazards:**
+
+  - *Split-complex holomorphic activation:* Burn does not support complex autodiff;
+    PRIN implements the :math:`\text{holomorphic}=\text{False}` split-complex path
+    (:math:`f(u + iv) = \tanh(u) + i \tanh(v)`).
+  - *Zero-phase complex state in HEP:* Matching PRINet 3.0, HEP operates on real-valued
+    oscillator states embedded into complex form via ``ComplexTensor::from_real(z, zero)``.
+  - *Burn sigmoid precision floor (DV-018):* ``burn-tensor`` 0.16.1's default ``sigmoid``
+    trait implementation downcasts through ``f32`` internally. Parity and gradcheck
+    tolerances for sigmoid-dependent paths use :math:`\text{rtol}=10^{-6}` and
+    :math:`\epsilon=10^{-4}`.
+  - *Feedforward inhibition and dentate gyrus exclusions:* PRINet 3.0's parameter-free
+    ``FeedforwardInhibition`` and ``DentateGyrusConverter`` have no trainable parameters or
+    differentiability concerns and are excluded from ``prin-train``.
+
+  **Parity and validation:**
+  Golden-value parity tests against PRINet 3.0 (evaluated in ``torch==2.13.0+cpu`` float64):
+  ``tests/parity_inhibition.rs`` (:math:`\text{rtol}=10^{-10}, \text{atol}=10^{-12}`),
+  ``tests/parity_activations.rs`` (:math:`\text{rtol}=10^{-6}` due to DV-018), and
+  ``tests/parity_energy.rs`` (:math:`\text{rtol}=10^{-10}, \text{atol}=10^{-12}`).
+  Closed-form HEP coupling gradients cross-checked against central finite differences
+  (:math:`<10^{-3}`), Burn autodiff (:math:`<10^{-8}`), and independent manual
+  outer-product derivation (:math:`<10^{-9}`).
+
   Python bindings (``prin.nn``) are not exposed yet — the production
   ``torch.autograd.Function`` bridge is WP-025's scope, and GPU-backed Burn backends
   (``wgpu``/``cuda``) are deferred to the same WP per the Project Plan risk register.
-

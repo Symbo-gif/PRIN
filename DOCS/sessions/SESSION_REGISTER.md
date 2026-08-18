@@ -135,8 +135,8 @@ is renumbered by an executive mathematical audit.
 | 0088 | 4 | WP-022 | S4 — Documentation | [Trainable bands and resonance primitives](phase-4/0088-wp022-s4-trainable-bands-and-resonance-primitives.md) | COMPLETE |
 | 0089 | 4 | WP-023 | S1 — Coding | [Inhibition, activations, and HEP](phase-4/0089-wp023-s1-inhibition-activations-and-hep.md) | COMPLETE |
 | 0090 | 4 | WP-023 | S2 — Audit | [Inhibition, activations, and HEP](phase-4/0090-wp023-s2-inhibition-activations-and-hep.md) | COMPLETE |
-| 0091 | 4 | WP-023 | S3 — Remediation | [Inhibition, activations, and HEP](phase-4/0091-wp023-s3-inhibition-activations-and-hep.md) | PLANNED |
-| 0092 | 4 | WP-023 | S4 — Documentation | [Inhibition, activations, and HEP](phase-4/0092-wp023-s4-inhibition-activations-and-hep.md) | PLANNED |
+| 0091 | 4 | WP-023 | S3 — Remediation | [Inhibition, activations, and HEP](phase-4/0091-wp023-s3-inhibition-activations-and-hep.md) | COMPLETE |
+| 0092 | 4 | WP-023 | S4 — Documentation | [Inhibition, activations, and HEP](phase-4/0092-wp023-s4-inhibition-activations-and-hep.md) | COMPLETE |
 | 0093 | 4 | WP-024 | S1 — Coding | [Oscillator-aware optimizers](phase-4/0093-wp024-s1-oscillator-aware-optimizers.md) | PLANNED |
 | 0094 | 4 | WP-024 | S2 — Audit | [Oscillator-aware optimizers](phase-4/0094-wp024-s2-oscillator-aware-optimizers.md) | PLANNED |
 | 0095 | 4 | WP-024 | S3 — Remediation | [Oscillator-aware optimizers](phase-4/0095-wp024-s3-oscillator-aware-optimizers.md) | PLANNED |

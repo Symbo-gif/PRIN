@@ -28,11 +28,11 @@ Documentation Standards §3).
 
 ## Current state
 
-- Latest Project State Report: [`022-project-state.md`](reports/022-project-state.md) —
-  WP-022 S4 closure (Phase 4 first WP: trainable bands and resonance
-  primitives), WP-023 declaration.
-- Latest Audit Report: [`022-wp022-audit.md`](audits/022-wp022-audit.md) —
-  `PASS-WITH-FINDINGS` (two D4 findings), S3 delta re-audit **CLEAN**.
+- Latest Project State Report: [`023-project-state.md`](reports/023-project-state.md) —
+  WP-023 S4 closure (Phase 4 second WP: inhibition, activations, and HEP),
+  WP-024 declaration.
+- Latest Audit Report: [`023-wp023-audit.md`](audits/023-wp023-audit.md) —
+  `PASS-WITH-FINDINGS` (one D4 finding), S3 delta re-audit **CLEAN**.
 - Latest Phase Analytics: [`ANALYTICS/phase-3/phase-3-analytics-report.md`](ANALYTICS/phase-3/phase-3-analytics-report.md) —
   Phase 3 **PASS — SATISFACTORY**.
 
