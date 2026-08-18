@@ -123,15 +123,22 @@ cited evidence points.
 8. All evidence files (`EVIDENCE/`).
 9. The actual repository state (code, tests, configs, CI workflows).
 10. The CHANGELOG for the phase's release entries.
-11. **Snyk MCP tool availability, checked explicitly** (Phase 2 analytics R18):
-    before relying on any Snyk Code/Snyk Open Source result, confirm whether
-    the Snyk MCP tool is available in this session's environment. If
-    unavailable, state the limitation explicitly and cite the most recent
-    verified result with its date and commit as the position of record,
-    rather than silently reusing it. If unavailable across 2+ consecutive
-    analytics or executive-audit sessions, escalate to the maintainer as a
-    tooling-access gap — repeated unstated reliance on a stale result erodes
-    the independent-verification principle (§2.3).
+11. **Snyk verification channel, checked explicitly** (Phase 2 analytics R18;
+    resolved by Phase 3 recommendation R23): before relying on any Snyk
+    Code/Snyk Open Source result, confirm whether the Snyk MCP tool is
+    available in this session's environment. **Maintainer decision (R23,
+    Phase 3 recommendation implementation, 2026-08-18):** Snyk MCP was
+    unavailable across 4 consecutive Executive Audit sessions and 2
+    consecutive phase-analytics sessions, with the Snyk CLI serving as a
+    fully effective compensating control throughout (consistent, evidence-
+    backed results in every one of those sessions); the maintainer confirmed
+    the Snyk-CLI-only posture is intentional and permanent. This is
+    therefore no longer a standing tooling-access-gap escalation: if Snyk
+    MCP happens to be available in a given session, prefer it and record
+    that fact; otherwise run the Snyk CLI directly and cite its version,
+    date, and command output as the position of record. State the channel
+    actually used (MCP or CLI) explicitly in the session's evidence table
+    either way.
 
 ### 5.2 Execution
 
