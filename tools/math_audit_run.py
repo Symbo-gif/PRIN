@@ -62,22 +62,11 @@ def main(argv: list[str] | None = None) -> int:
 
     _load_mcp_home()
 
-    from math_audit_mcp import (
-        __version__ as tool_version,  # type: ignore[import-not-found]
-    )
-    from math_audit_mcp.config import (  # type: ignore[import-not-found]
-        RuntimeConfig,
-        load_policy,
-    )
-    from math_audit_mcp.policies.engine import (
-        PolicyEngine,  # type: ignore[import-not-found]
-    )
-    from math_audit_mcp.schemas.requests import (  # type: ignore[import-not-found]
-        AuditClaimLedgerRequest,
-    )
-    from math_audit_mcp.tools import (
-        audit_claim_ledger,  # type: ignore[import-not-found]
-    )
+    from math_audit_mcp import __version__ as tool_version
+    from math_audit_mcp.config import RuntimeConfig, load_policy
+    from math_audit_mcp.policies.engine import PolicyEngine
+    from math_audit_mcp.schemas.requests import AuditClaimLedgerRequest
+    from math_audit_mcp.tools import audit_claim_ledger
 
     output_root = _REPO_ROOT / "EVIDENCE" / "math-audit"
     output_root.mkdir(parents=True, exist_ok=True)

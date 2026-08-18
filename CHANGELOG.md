@@ -7,7 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Executive Mathematical Audit Session 002 (EMA-002)** — Phase 3 close
+  mathematical audit; report `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_002.md`
+  (`PASS-WITH-REMEDIATION`, finding M-F7 carried forward from M-F3).
+  Re-verified all 25 existing claims against `1604bd6` (zero regressions);
+  added 3 new GPU kernel claims (`prin-kernels-gpu-properties.json`):
+  GPU-RK4-01 (RK4 Butcher tableau, SymPy symbolic proof), GPU-RED-01
+  (hierarchical reduction associativity, SymPy symbolic proof), GPU-KNN-01
+  (sparse k-NN coupling normalization, SymPy symbolic proof). All 3 new
+  claims reached genuine `PASS`. 28 total claims across 6 ledgers; 21 PASS,
+  7 REQUIRES_HUMAN_REVIEW (same M-F3 policy-gate interaction as EMA-001R,
+  resolved by documented sign-off per DV-013/R20).
+
 ### Fixed
+
+- **EMA-002 tooling:** removed 5 stale `type: ignore[import-not-found]`
+  comments from `tools/math_audit_run.py` (mypy `--strict` now clean).
 
 - **Executive Audit Session 004 (EA-004)** — full-project audit across E1–E10 covering the delta
   since EA-003 (WP-017 through WP-021, Phase 3 close); report

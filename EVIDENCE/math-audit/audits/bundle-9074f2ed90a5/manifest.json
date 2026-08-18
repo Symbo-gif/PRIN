@@ -1,0 +1,52 @@
+{
+  "bundle_id": "bundle-9074f2ed90a5",
+  "ledger_id": "ledger-prin-dynamics-graph-topology-001",
+  "request_id": "req-31eb26031976",
+  "created_at_utc": "2026-08-18T03:16:55.766Z",
+  "overall_status": "REQUIRES_HUMAN_REVIEW",
+  "claim_verdicts": [
+    {
+      "claim_id": "GRA-01",
+      "status": "REQUIRES_HUMAN_REVIEW",
+      "contributing_audit_ids": [
+        "audit-1b9c74beaab4"
+      ],
+      "reason": "high/critical-severity claim passed only numerically; policy requires symbolic or formal (SymPy/Z3/Lean) corroboration before a PASS verdict"
+    },
+    {
+      "claim_id": "GRA-02",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-9ea25c63f260"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "GRA-01-LEAN",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-34337d264365"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    }
+  ],
+  "audit_ids": [
+    "audit-1b9c74beaab4",
+    "audit-9ea25c63f260",
+    "audit-34337d264365"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
+  "artifacts": [
+    {
+      "artifact_id": "art-d4674110c8bb",
+      "artifact_type": "text",
+      "relative_path": "artifacts/audit-34337d264365__lean-diagnostics.txt",
+      "content_hash": "sha256:081f250f1ad164665ecc88cdcec8ca433c5bbb5b741cf4dbb2d3c355cdbf9d5c",
+      "content_type": "text/plain",
+      "description": "Sanitized Lean/lake stdout+stderr",
+      "created_at_utc": "2026-08-18T03:16:55.756Z"
+    }
+  ],
+  "bundle_content_hash": "sha256:aaa1bab2d4de53787b5dc8d5c71a27af7d4f9d97c11f4dbf358701eca7694a60"
+}

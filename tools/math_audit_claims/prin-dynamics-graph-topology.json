@@ -1,7 +1,7 @@
 {
   "ledger_id": "ledger-prin-dynamics-graph-topology-001",
   "repository_root": ".",
-  "commit_ref": "f1204ed",
+  "commit_ref": "1604bd6",
   "claims": [
     {
       "claim_id": "GRA-01",

@@ -1,0 +1,20 @@
+{
+  "lhs": "a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7",
+  "rhs": "(a0 + a1 + a2 + a3) + (a4 + a5 + a6 + a7)",
+  "assumptions": [],
+  "variables": [
+    "a0",
+    "a1",
+    "a2",
+    "a3",
+    "a4",
+    "a5",
+    "a6",
+    "a7"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 40,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}
