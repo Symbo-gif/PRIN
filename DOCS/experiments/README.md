@@ -72,6 +72,13 @@ at the top level until they are folded into the final campaign archive in Phase 
   to the S2 audit for the fused three-band (delta/theta/gamma) discrete-time
   step (`discrete_step_cpu`, `discrete_step_cubecl`) and its reusable
   hierarchical order-parameter/mean-phase reduction kernels.
+- [`0081-wp021-s1-handoff.md`](0081-wp021-s1-handoff.md) — WP-021 S1 handoff
+  to the S2 audit for GPU integration into simulation (`prin-sim::gpu`:
+  `GpuSparseKuramoto`, `GpuMeanFieldEngine`, `GpuBandStepper`), the
+  CUDA-before-wgpu dispatch-priority fix applied to all four kernel
+  families' `*_auto` functions, and the Phase 3 exit gate.
+  `[RETROACTIVE UPDATE - Phase 3 recommendation implementation session,
+  R21/PA3-F1]` index entry added.
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
 [`../sessions/phase-1/wp009-s1-handoff-note.md`](../sessions/phase-1/wp009-s1-handoff-note.md)
