@@ -204,8 +204,31 @@ DV-018 and DV-019 are new deferred validation items, not audit findings — both
 
 ## 7. Closure table (appended by S3 remediation)
 
+**Session:** 0091 (WP-023 S3) — **Date:** 2026-08-18 — **Executor:** Claude Sonnet 5 (AI pair)
+
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(pending S3)* | | | |
+| WP023-F1 | **FIXED** — Extended `crates/prin-train/tests/public_api.rs` with a third zero-sized acceptor function, `accepts_gated_phase_activation_params(_: GatedPhaseActivationParams<TestBackend>)`, alongside the existing WP-022 pair, plus a module-doc note recording the WP023-F1 origin. The test fails to *compile* (not just fail at runtime) if the `GatedPhaseActivationParams` crate-root re-export is ever removed, matching the regression class established for WP022-F2. | commit `11821c0` | `cargo test -p prin-train --test public_api`: 1 passed, 0 failed. Full re-run: `cargo test --workspace`: all crates green, 0 failed (275 `prin-train` unit tests + 7 parity + 1 `public_api` + 6 doctests, plus all other workspace crates). `cargo fmt --all -- --check`: clean. `cargo clippy --workspace --all-targets -- -D warnings` and `--features prin-train/strict-checks -- -D warnings`: both clean. `RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps`: clean, 0 warnings. `cargo audit`: exit 0, same 2 pre-existing allowed warnings (`paste` RUSTSEC-2024-0436/amendment #9, `bincode` RUSTSEC-2025-0141/amendment #27) — no new advisory. |
 
-**Delta re-audit date:** *(pending S3)* — **Result:** *(pending S3)*
+**Delta re-audit commands (re-run against `11821c0`):**
+
+```powershell
+cargo fmt --all -- --check                                                              # exit 0, clean
+cargo clippy --workspace --all-targets -- -D warnings                                   # exit 0, clean
+cargo clippy --workspace --all-targets --features prin-train/strict-checks -- -D warnings  # exit 0, clean
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps                        # exit 0, 0 warnings
+cargo test --workspace                                                                  # exit 0, all crates green, 0 failed
+cargo test -p prin-train --test public_api                                              # 1 passed, 0 failed
+cargo audit                                                                             # exit 0, 2 allowed warnings (both amendment-governed)
+```
+
+No new deviation was introduced by the fix: WP023-F1 is a purely additive,
+type-level regression-test extension (no source/dependency/API change beyond
+the test file itself). A1–A10 are unaffected outside A8 (hygiene —
+`public_api.rs` now covers every `Params` re-export introduced through
+WP-023, closing the coverage gap the finding identified).
+
+**Delta re-audit date:** 2026-08-18 — **Result:** **CLEAN**. The sole finding
+(WP023-F1, D4) is closed FIXED; no D1/D2/D3 findings; no carried D4; local
+gate fully green with no newly introduced deviation. WP-023 S3 exit gate met
+— hand off to S4 (session 0092).
