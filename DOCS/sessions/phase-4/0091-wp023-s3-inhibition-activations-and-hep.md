@@ -1,6 +1,6 @@
 # Session 0091 — WP-023 S3: Remediation — Inhibition, activations, and HEP
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 4 — Trainable stack and Torch bridge  
 **Execution unit:** WP-023  
 **Session type:** S3 — Remediation  
