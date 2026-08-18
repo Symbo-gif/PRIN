@@ -133,7 +133,7 @@ is renumbered by an executive mathematical audit.
 | 0086 | 4 | WP-022 | S2 — Audit | [Trainable bands and resonance primitives](phase-4/0086-wp022-s2-trainable-bands-and-resonance-primitives.md) | COMPLETE |
 | 0087 | 4 | WP-022 | S3 — Remediation | [Trainable bands and resonance primitives](phase-4/0087-wp022-s3-trainable-bands-and-resonance-primitives.md) | COMPLETE |
 | 0088 | 4 | WP-022 | S4 — Documentation | [Trainable bands and resonance primitives](phase-4/0088-wp022-s4-trainable-bands-and-resonance-primitives.md) | COMPLETE |
-| 0089 | 4 | WP-023 | S1 — Coding | [Inhibition, activations, and HEP](phase-4/0089-wp023-s1-inhibition-activations-and-hep.md) | PLANNED |
+| 0089 | 4 | WP-023 | S1 — Coding | [Inhibition, activations, and HEP](phase-4/0089-wp023-s1-inhibition-activations-and-hep.md) | COMPLETE |
 | 0090 | 4 | WP-023 | S2 — Audit | [Inhibition, activations, and HEP](phase-4/0090-wp023-s2-inhibition-activations-and-hep.md) | PLANNED |
 | 0091 | 4 | WP-023 | S3 — Remediation | [Inhibition, activations, and HEP](phase-4/0091-wp023-s3-inhibition-activations-and-hep.md) | PLANNED |
 | 0092 | 4 | WP-023 | S4 — Documentation | [Inhibition, activations, and HEP](phase-4/0092-wp023-s4-inhibition-activations-and-hep.md) | PLANNED |

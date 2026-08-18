@@ -1,6 +1,6 @@
 # Session 0089 — WP-023 S1: Coding — Inhibition, activations, and HEP
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 4 — Trainable stack and Torch bridge  
 **Execution unit:** WP-023  
 **Session type:** S1 — Coding  

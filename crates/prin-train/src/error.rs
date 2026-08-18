@@ -46,4 +46,35 @@ pub enum TrainError {
         /// Name of the offending tensor.
         name: &'static str,
     },
+
+    /// A feedback-inhibition top-`k` winner count was zero.
+    #[error("k must be >= 1, got {k}")]
+    InvalidTopK {
+        /// Offending value.
+        k: usize,
+    },
+
+    /// A sparsity fraction fell outside `(0, 1]`.
+    #[error("sparsity must be in (0, 1], got {value}")]
+    InvalidSparsity {
+        /// Offending value.
+        value: f64,
+    },
+
+    /// A Holomorphic Equilibrium Propagation nudge strength `beta` was
+    /// non-positive or non-finite.
+    #[error("beta must be finite and > 0, got {value}")]
+    InvalidBeta {
+        /// Offending value.
+        value: f64,
+    },
+
+    /// An integration step count was zero.
+    #[error("{name} must be >= 1, got {value}")]
+    InvalidStepCount {
+        /// Name of the offending parameter.
+        name: &'static str,
+        /// Offending value.
+        value: usize,
+    },
 }

@@ -38,6 +38,26 @@ pub(crate) fn xavier_bound(fan_in: usize, fan_out: usize, gain: f64) -> f64 {
     gain * (6.0 / (fan_in + fan_out) as f64).sqrt()
 }
 
+/// Wrap `z` into `[0, modulus)` using floored (non-negative) modulo — Python
+/// `%` semantics.
+///
+/// Burn's [`Tensor::remainder_scalar`] returns a *signed* remainder (Rust/C
+/// `%` semantics: result has the same sign as the dividend, magnitude less
+/// than the modulus), which differs from Python's always-non-negative `%`
+/// for a negative dividend (e.g. `-0.3 % TAU` is `-0.3` under signed
+/// remainder but `TAU - 0.3` under Python/floored modulo). [`crate::layers`]
+/// only ever wraps sums of non-negative frequencies so the distinction does
+/// not arise there; [`crate::activations::phase_activation`] wraps a
+/// `dSiLU` output that can be slightly negative, so it uses this helper
+/// instead. The standard `((n % m) + m) % m` trick folds a signed remainder
+/// (magnitude already `< modulus`) back into `[0, modulus)`.
+pub(crate) fn wrap_floor<B: Backend, const D: usize>(
+    z: Tensor<B, D>,
+    modulus: f64,
+) -> Tensor<B, D> {
+    (z.remainder_scalar(modulus) + modulus).remainder_scalar(modulus)
+}
+
 /// Validate that `dims` matches `expected`, or return a typed
 /// [`TrainError::ShapeMismatch`].
 pub(crate) fn check_dims<const D: usize>(
