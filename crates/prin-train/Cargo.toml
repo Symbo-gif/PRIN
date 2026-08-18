@@ -8,10 +8,16 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 
+[features]
+# Numerical guard validation returns typed errors instead of silently
+# repairing out-of-range/non-finite values (Coding Standards §2.2).
+strict-checks = []
+
 [dependencies]
 prin-dynamics.workspace = true
 prin-metrics.workspace = true
 prin-kernels.workspace = true
+burn.workspace = true
 ndarray.workspace = true
 num-complex.workspace = true
 rayon.workspace = true
@@ -20,9 +26,6 @@ rand_pcg.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
-
-# Autodiff backend (Burn) is added in Phase 4; version pinned after the
-# Phase 0 spike (see DOCS/PRIN_Project_Plan.md §4.3 and risk register #5).
 
 [dev-dependencies]
 proptest.workspace = true

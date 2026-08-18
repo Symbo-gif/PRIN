@@ -66,6 +66,12 @@ criterion = "0.5"
 # GPU compute language (CubeCL) — Phase 0 spike; runtime selected via crate features.
 cubecl = { version = "0.10.0", default-features = false, features = ["std"] }
 
+# Autodiff/training backend (Burn) — Phase 4 trainable stack (WP-022). `ndarray`
+# is the CPU reference backend; `autodiff` wraps it for gradient computation.
+# GPU-backed Burn backends (wgpu/cuda) are deferred to the Torch-bridge work
+# (WP-025) per Project Plan §4.3 risk register #5.
+burn = { version = "0.16", default-features = false, features = ["std", "ndarray", "autodiff"] }
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

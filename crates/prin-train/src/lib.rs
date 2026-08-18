@@ -1,22 +1,36 @@
 //! # prin-train
 //!
-//! Trainable components for PRIN (rebuild of PRINet 3.0 `nn/` internals), built
-//! on the Burn autodiff backend and exposed to PyTorch via `prin-py` bridges:
+//! Trainable components for PRIN (rebuild of PRINet 3.0 `nn/` internals),
+//! built on the Burn autodiff backend and exposed to PyTorch via `prin-py`
+//! bridges (Phase 4, WP-025).
 //!
-//! - `bands` — DiscreteDeltaThetaGamma: trainable discrete-time network with
-//!   learnable coupling matrices, PAC depths, and frequency offsets.
-//! - `layers` — ResonanceLayer, HierarchicalResonanceLayer, OscillatoryAttention,
-//!   PhaseToRateConverter (soft/hard/annealed).
-//! - `inhibition` — feedforward inhibition; feedback winner-take-all top-k with a
-//!   custom straight-through-estimator backward (forward-hard/backward-soft).
-//! - `activations` — dSiLU, HolomorphicActivation (complex tanh), PhaseActivation,
-//!   GatedPhaseActivation.
-//! - `hep` — Holomorphic Equilibrium Propagation: free + ±β nudge phases,
-//!   gradient ≈ (1/2β)(E⁺ − E⁻), no BPTT.
-//! - `optim` — SynchronizedGradientDescent, SCALR, RIP, AlternatingOptimizer
-//!   (order-parameter feedback computed here; thin Python optimizer classes wrap).
+//! Implemented so far (WP-022 S1):
 //!
-//! Implementation lands in Phase 4 (see `DOCS/PRIN_Project_Plan.md`).
+//! - [`bands`] — [`bands::DiscreteDeltaThetaGamma`]: trainable discrete-time
+//!   multi-rate hierarchical oscillator network with learnable intra-band
+//!   coupling, PAC gating, and Stuart–Landau amplitude dynamics.
+//! - [`layers`] — [`layers::ResonanceLayer`]: trainable single-layer
+//!   extended-Kuramoto resonance primitive with learnable coupling, decay,
+//!   input projection, and frequency modulation.
+//!
+//! Both modules expose a `Config` (validated hyperparameters), a `Params`
+//! struct (explicit parameter tensors, for golden-reference tests and
+//! checkpoint restoration outside [`burn::record`]), and a validated `State`
+//! contract for the tensors `step`/`integrate` operate on.
+//!
+//! Not yet implemented (later Phase 4 work packages): feedforward/feedback
+//! inhibition and the straight-through estimator (WP-023), phase
+//! activations and Holomorphic Equilibrium Propagation (WP-023),
+//! resonance-aware optimizers (WP-024), and the production PyTorch
+//! `torch.autograd.Function` bridge (WP-025).
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
+
+pub mod bands;
+pub mod error;
+pub mod layers;
+
+mod support;
+
+pub use error::TrainError;

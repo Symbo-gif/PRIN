@@ -1,7 +1,14 @@
 name: gpu
 
-# Opt-in GPU job on a self-hosted CUDA runner. Triggered by a `[gpu]` tag in
-# the commit message (mirrors the PRINet 3.0 convention).
+# Opt-in GPU job on a self-hosted GPU runner (Project Plan amendment #26,
+# confirming the self-hosted strategy for DV-001/DV-002). Triggered by a
+# `[gpu]` tag in the commit message (mirrors the PRINet 3.0 convention).
+#
+# Requires a GitHub Actions self-hosted runner registered with the
+# `[self-hosted, gpu]` labels (GitHub Settings -> Actions -> Runners); no
+# such runner is registered yet, so this workflow does not execute until one
+# is. Closing DV-001's Triton comparison additionally requires that runner
+# to be Linux (Triton has no Windows support).
 
 on:
   push:
@@ -9,7 +16,7 @@ on:
   pull_request:
 
 jobs:
-  gpu:
+  gpu-cuda:
     if: contains(github.event.head_commit.message, '[gpu]')
     runs-on: [self-hosted, gpu]
     steps:
@@ -26,3 +33,14 @@ jobs:
         run: pytest tests/ -v -m gpu
       - name: Kernel performance regression gates
         run: cargo bench --workspace --features cuda -- --save-baseline ci
+
+  gpu-wgpu:
+    # Closes DV-002: wgpu kernel-equivalence tests deferred from the default
+    # CI matrix (amendment #12) to this self-hosted GPU runner.
+    if: contains(github.event.head_commit.message, '[gpu]')
+    runs-on: [self-hosted, gpu]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Rust kernel-equivalence tests (wgpu)
+        run: cargo test --workspace --features wgpu -- --test-threads=1

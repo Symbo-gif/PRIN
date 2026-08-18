@@ -9,6 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WP-022 S1 — trainable bands and resonance primitives** (`crates/prin-train/`,
+  session 0085): first `prin-train` implementation, built on the Burn autodiff
+  backend (`burn` 0.16, `std`/`ndarray`/`autodiff` features — first use of Burn
+  in this repository).
+  - `bands::DiscreteDeltaThetaGamma` — trainable discrete-time multi-rate
+    hierarchical oscillator network (Burn `Module` rebuild of PRINet 3.0's
+    `core.propagation.networks.DiscreteDeltaThetaGamma`): learned intra-band
+    coupling, delta→theta/theta→gamma PAC gating, Stuart–Landau amplitude
+    dynamics.
+  - `layers::ResonanceLayer` — trainable single-layer extended-Kuramoto
+    resonance primitive (Burn `Module` rebuild of PRINet 3.0's
+    `nn.layers.ResonanceLayer`): learned coupling, decay, input projection,
+    frequency modulation. Documents one deliberate deviation from the
+    reference: a real-valued, fully differentiable initial-state projection
+    in place of PRINet 3.0's FFT-based initializer (the Kuramoto step
+    dynamics themselves are bit-faithful and parity-tested).
+  - Both expose validated `Config`/`Params`/`State` contracts (typed
+    `TrainError` on shape/dtype/finiteness violations), a `strict-checks`
+    feature for typed non-finite-output guards, unit/property/gradient
+    (autodiff-vs.-central-finite-difference)/serialization
+    (`burn::record`)/golden-value-parity (`torch==2.13.0+cpu` float64,
+    `DOCS/test_and_benchmark_results/wp022_generate_prinet_references.py`)
+    tests, and two runnable rustdoc examples. 37 new tests; 98–99% line
+    coverage on all three new source files.
+  - **GPU CI runner strategy decided (Project Plan amendment #26):**
+    self-hosted GPU runner, confirming and extending `gpu.yml`'s existing
+    `[self-hosted, gpu]` design with a new `gpu-wgpu` job. Closes R24 (Phase
+    3 analytics) at its assigned checkpoint; DV-001/DV-002 updated to record
+    the decision with runner registration (an out-of-band GitHub Settings
+    action) as the sole remaining step. DV-005 re-audited and confirmed
+    unaffected (this session's Burn primitives are CPU-only `NdArray`, no
+    DLPack touched).
+  - **New discovered risk (DV-017):** `bincode` 2.0.1 (transitive via
+    `burn-core`'s record/serialization path) carries RUSTSEC-2025-0141
+    ("unmaintained"); `cargo audit` reports it as a warning, exit code 0.
+    Not yet a governed advisory — flagged for S2/maintainer disposition,
+    same class and cadence as the existing accepted `paste` advisory
+    (DV-008, amendment #9).
+
 - **Phase 3 recommendation implementation** (inter-phase process improvement, R21–R25
   disposition in `DOCS/ANALYTICS/phase-3/phase-3-recommendation-implementation-governance.md`):
   - Fixed PA3-F1/PA3-F2: `DOCS/PRIN_Project_Plan.md` §6's Phase 3 roadmap row now carries

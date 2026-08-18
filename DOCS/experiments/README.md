@@ -77,6 +77,11 @@ at the top level until they are folded into the final campaign archive in Phase 
   `GpuSparseKuramoto`, `GpuMeanFieldEngine`, `GpuBandStepper`), the
   CUDA-before-wgpu dispatch-priority fix applied to all four kernel
   families' `*_auto` functions, and the Phase 3 exit gate.
+- [`0085-wp022-s1-handoff.md`](0085-wp022-s1-handoff.md) — WP-022 S1 handoff
+  to the S2 audit for `prin-train`'s first implementation (Burn autodiff
+  backend): `bands::DiscreteDeltaThetaGamma` and `layers::ResonanceLayer`,
+  their `Config`/`Params`/`State` contracts, and the R24 GPU CI runner
+  strategy decision (Project Plan amendment #26).
   `[RETROACTIVE UPDATE - Phase 3 recommendation implementation session,
   R21/PA3-F1]` index entry added.
 
