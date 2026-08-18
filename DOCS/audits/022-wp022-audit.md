@@ -243,8 +243,27 @@ WP-022 S1 delivered a high-quality, well-documented, well-tested implementation 
 
 ## 7. Closure table (appended by S3 remediation)
 
+**Session:** 0087 (WP-022 S3) — **Date:** 2026-08-18 — **Executor:** Claude Sonnet 5 (AI pair)
+
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(pending S3)* | | | |
+| WP022-F1 | **AMENDED** — Plan amendment #27 (`DOCS/PRIN_Project_Plan.md` §8.3) formally accepts the `bincode` RUSTSEC-2025-0141 advisory with a Coding Standards §6.2 threat assessment (advisory is `informational = "unmaintained"`, no patched version, no exploit/affected-API disclosure; dependency path `bincode 2.0.1 ← burn-core 0.16.1 ← burn 0.16.1 ← prin-train` confirmed via `cargo tree -p prin-train -i bincode`; no newer 2.x release per `cargo update -p bincode --dry-run`; compensating control is the existing `record_roundtrip_preserves_parameters` regression coverage on both `bands.rs`/`layers.rs`), same disposition class and per-cycle recheck cadence as amendment #9/DV-008 (`paste`). Maintainer approval granted (MichaelMaillet, 2026-08-18). `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-017's "Governing amendment" and "Current status" columns updated to reference amendment #27. | commit `c3ae5c8`; Project Plan amendment #27 | `cargo audit` re-run post-commit: still exactly 2 allowed warnings (`paste` RUSTSEC-2024-0436, `bincode` RUSTSEC-2025-0141), exit code 0 — both now governed by an approved amendment (#9, #27 respectively). No new advisories introduced. |
+| WP022-F2 | **FIXED** — Added `pub use bands::DiscreteDeltaThetaGammaParams;` and `pub use layers::ResonanceLayerParams;` to `crates/prin-train/src/lib.rs`, alongside the existing `pub use error::TrainError;`, so both `Params` types are nameable via the crate root in explicit type annotations. Regression test added: `crates/prin-train/tests/public_api.rs::params_are_nameable_at_crate_root` — two zero-sized functions that take `DiscreteDeltaThetaGammaParams<NdArray<f64>>`/`ResonanceLayerParams<NdArray<f64>>` by crate-root path; the test fails to *compile* (not just fail at runtime) if either re-export is ever removed, which is the correct regression class for a purely type-level ergonomics fix. | commit `a5458ef` | `cargo test -p prin-train --test public_api`: 1 passed, 0 failed. Full re-run: `cargo test --workspace` — all crates green, 0 failed (275+ tests across the workspace including the 38 `prin-train` tests: 33 unit + 1 new `public_api` + 2 parity + 2 doctests). `cargo fmt --all -- --check`: clean. `cargo clippy --workspace --all-targets -- -D warnings` and `--features strict-checks`: both clean. `RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps`: clean, 0 warnings (re-exported items inherit their original items' doc comments, so `#![warn(missing_docs)]` raises nothing new). |
 
-**Delta re-audit date:** *(pending S3)* — **Result:** *(pending)*
+**Delta re-audit commands (re-run against `c3ae5c8`):**
+
+```powershell
+cargo fmt --all -- --check                                                     # exit 0, clean
+cargo clippy --workspace --all-targets -- -D warnings                          # exit 0, clean
+cargo clippy --workspace --all-targets --features strict-checks -- -D warnings # exit 0, clean
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps               # exit 0, 0 warnings
+cargo test --workspace                                                         # exit 0, all crates green, 0 failed
+cargo test -p prin-train --test public_api                                     # 1 passed, 0 failed
+cargo audit                                                                    # exit 0, 2 allowed warnings (both amendment-governed)
+cargo tree -p prin-train -i bincode                                            # confirms burn-core → burn → prin-train path
+cargo update -p bincode --dry-run                                              # confirms already-latest, no fix available
+```
+
+No new deviation was introduced by either fix: WP022-F2 is a purely additive, type-level re-export with a compile-time regression test; WP022-F1 is a documentation-only governance action (no source/dependency change). A1–A10 are unaffected outside A6 (security — now fully governed, no open advisory-governance gap) and A8 (hygiene — `Params` re-export ergonomics now consistent with `TrainError`'s existing pattern).
+
+**Delta re-audit date:** 2026-08-18 — **Result:** **CLEAN**. Both findings closed (1 FIXED, 1 AMENDED); no D1/D2/D3 findings; no second carry of any D4; local gate fully green with no newly introduced deviation. WP-022 S3 exit gate met — hand off to S4 (session 0088).
