@@ -33,4 +33,6 @@ pub mod layers;
 
 mod support;
 
+pub use bands::DiscreteDeltaThetaGammaParams;
 pub use error::TrainError;
+pub use layers::ResonanceLayerParams;
