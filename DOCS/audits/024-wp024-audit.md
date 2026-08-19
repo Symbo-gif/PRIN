@@ -228,6 +228,8 @@ One D3 finding (WP024-F1): PSR-023 §7's WP-024 declaration named classes that d
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(to be filled by S3)* | | | |
+| WP024-F1 | AMENDED | Plan amendment #29 (`DOCS/PRIN_Project_Plan.md` §8.3), maintainer approval MichaelMaillet 2026-08-19; session 0095 commit (this cycle) | PSR-023 §7's `PhaseAdam`/`KuramotoOptimizer`/`phase_adam.rs`/`kuramoto_optimizer.rs` declaration text is now formally read, per amendment #29, as `SCALR`/`RIP`/`SyncGD`/`scalr.rs`/`rip.rs`/`sync_gd.rs` — the delivered, PRINet-3.0-verified scope, matching the session brief and the Rebuild Planning Document. `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-020 updated to CLOSED with the amendment reference. No source code was touched (the finding was governance-text drift, not a code defect), so no regression test applies. `cargo fmt --all -- --check` (exit 0), `cargo clippy --workspace --all-targets -- -D warnings` (exit 0), `cargo test -p prin-train` (all unit/integration/doctests pass, including the 5 `parity_optimizers.rs` golden-value tests and 2 `public_api.rs` regression tests, re-run clean post-amendment) confirm no newly introduced deviation. |
 
-**Delta re-audit date:** YYYY-MM-DD — **Result:** CLEAN / findings remain
+**S3 remediation summary:** One finding (WP024-F1, D3) was processed; no D1/D2 findings existed to fix. No feature work performed, per the S3 mandate. DV-019 (pre-existing WP-022 `bands.rs` flake, re-confirmed OPEN and non-blocking at S1/S2, unaffected by this cycle's docs-only remediation) carries forward unchanged — it is WP-022's frozen scope, not a WP-024 finding, and is not subject to S3's "no D1/D2 unresolved" gate.
+
+**Delta re-audit date:** 2026-08-19 — **Result:** CLEAN — WP024-F1 closed as AMENDED (plan amendment #29); no other findings; local gate (fmt/clippy/tests) fully green; no newly introduced deviation.
