@@ -88,8 +88,20 @@ fn device() -> <BridgeBackend as burn::tensor::backend::Backend>::Device {
     Default::default()
 }
 
-/// Decode a 2-D `float64` DLPack tensor as a gradient-tracked leaf tensor.
-fn tensor2_from_dlpack(obj: &Bound<'_, PyAny>) -> PyResult<Tensor<BridgeBackend, 2>> {
+/// Decode a 2-D `float64` DLPack tensor as a gradient-tracked leaf tensor,
+/// also returning the plain `(dims, data)` pair used to rebuild the leaf
+/// inside `backward()`.
+///
+/// Forward callers need both the `Tensor` (for the immediate forward pass)
+/// and a plain copy of the same values (saved in the `*Ctx` for the
+/// recompute-on-backward design — see the module docs). Reading the DLPack
+/// capsule once and cloning the resulting `Vec<f64>` here (DV-021 S3-exec
+/// remediation) avoids the previous `tensor.clone().into_data().to_vec()`
+/// round-trip, which re-extracted the same values through the autodiff
+/// backend's data-conversion path after the tensor had already been built.
+fn tensor2_from_dlpack_with_data(
+    obj: &Bound<'_, PyAny>,
+) -> PyResult<(Tensor<BridgeBackend, 2>, Vec<usize>, Vec<f64>)> {
     let (shape, data) = read_dlpack_f64(obj)?;
     if shape.len() != 2 {
         return Err(PyValueError::new_err(format!(
@@ -97,7 +109,9 @@ fn tensor2_from_dlpack(obj: &Bound<'_, PyAny>) -> PyResult<Tensor<BridgeBackend,
         )));
     }
     let dims: Vec<usize> = shape.iter().map(|&d| d as usize).collect();
-    Ok(Tensor::from_data(TensorData::new(data, dims), &device()).require_grad())
+    let data_copy = data.clone();
+    let tensor = Tensor::from_data(TensorData::new(data, dims.clone()), &device()).require_grad();
+    Ok((tensor, dims, data_copy))
 }
 
 /// Decode a 2-D `float64` DLPack tensor without gradient tracking (used for
@@ -254,20 +268,13 @@ impl PyResonanceLayerBridge {
         py: Python<'_>,
         x: &Bound<'_, PyAny>,
     ) -> PyResult<(Py<PyAny>, Py<PyResonanceLayerCtx>)> {
-        let x = tensor2_from_dlpack(x)?;
-        if x.dims()[1] != self.n_dims {
+        let (x, x_shape, x_data) = tensor2_from_dlpack_with_data(x)?;
+        if x_shape[1] != self.n_dims {
             return Err(PyValueError::new_err(format!(
                 "expected x shape [batch, {}], got {:?}",
-                self.n_dims,
-                x.dims()
+                self.n_dims, x_shape
             )));
         }
-        let x_shape = x.dims().to_vec();
-        let x_data = x
-            .clone()
-            .into_data()
-            .to_vec::<f64>()
-            .map_err(|e| PyValueError::new_err(format!("failed to read tensor data: {e:?}")))?;
         let output = self.layer.forward(x).map_err(train_err_to_py)?;
         let out_shape = output.dims();
         let out_capsule = export_tensor2(py, output.inner())?;
@@ -448,20 +455,14 @@ impl PyGatedPhaseActivationBridge {
         py: Python<'_>,
         z: &Bound<'_, PyAny>,
     ) -> PyResult<(Py<PyAny>, Py<PyGatedPhaseActivationCtx>)> {
-        let z = tensor2_from_dlpack(z)?;
-        if z.dims()[1] != self.layer.n_dims() {
+        let (z, z_shape, z_data) = tensor2_from_dlpack_with_data(z)?;
+        if z_shape[1] != self.layer.n_dims() {
             return Err(PyValueError::new_err(format!(
                 "expected z shape [batch, {}], got {:?}",
                 self.layer.n_dims(),
-                z.dims()
+                z_shape
             )));
         }
-        let z_shape = z.dims().to_vec();
-        let z_data = z
-            .clone()
-            .into_data()
-            .to_vec::<f64>()
-            .map_err(|e| PyValueError::new_err(format!("failed to read tensor data: {e:?}")))?;
         let output = self.layer.forward(z).map_err(train_err_to_py)?;
         let out_shape = output.dims();
         let out_capsule = export_tensor2(py, output.inner())?;
