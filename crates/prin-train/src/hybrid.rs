@@ -20,6 +20,7 @@
 //!     h          = h + OscillatoryAttention(norm1(h), phase=token_φ)
 //!     h          = h + FFN(norm2(h))
 //! logits     = classifier(pool_norm(mean_tokens(h))).clamp(±50)
+//!            // where classifier = Linear → ReLU → Dropout → Linear
 //! out        = log_softmax(logits)
 //! ```
 //!
@@ -64,15 +65,20 @@
 //! assert_eq!(log_probs.dims(), [8, 10]);
 //! ```
 
-use burn::module::Module;
+use burn::module::{Module, Param};
 use burn::nn::{Dropout, DropoutConfig, LayerNorm, LayerNormConfig, Linear};
-use burn::tensor::activation::{gelu, log_softmax};
+use burn::tensor::activation::{gelu, log_softmax, relu};
 use burn::tensor::backend::Backend;
 use burn::tensor::Tensor;
 use prin_dynamics::Seed;
 
-use crate::attention::{OscillatoryAttention, OscillatoryAttentionConfig};
-use crate::bands::{DiscreteBandState, DiscreteDeltaThetaGamma, DiscreteDeltaThetaGammaConfig};
+use crate::attention::{
+    OscillatoryAttention, OscillatoryAttentionConfig, OscillatoryAttentionParams,
+};
+use crate::bands::{
+    DiscreteBandState, DiscreteDeltaThetaGamma, DiscreteDeltaThetaGammaConfig,
+    DiscreteDeltaThetaGammaParams,
+};
 use crate::error::TrainError;
 use crate::support::{check_dims, seeded_linear};
 
@@ -260,6 +266,235 @@ impl HybridPRINetV2Config {
             n_discrete_steps: self.n_discrete_steps,
         }
     }
+
+    /// Build a [`HybridPRINetV2`] from explicit parameter tensors.
+    ///
+    /// Used by golden-reference parity tests (`tests/parity_hybrid.rs`).
+    /// Every weight uses Burn's `[d_input, d_output]` layout (PyTorch's
+    /// `nn.Linear` stores `[d_output, d_input]` — transpose when
+    /// transcribing).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] if any tensor's shape does not
+    /// match this config's hyperparameters, or if a sub-component's
+    /// `init_from_params` rejects its inputs.
+    pub fn init_from_params<B: Backend>(
+        &self,
+        params: HybridPRINetV2Params<B>,
+    ) -> Result<HybridPRINetV2<B>, TrainError> {
+        let (n_in, n_out, d, h, n_tok) = (
+            self.n_input,
+            self.n_classes,
+            self.d_model,
+            self.n_heads,
+            self.n_tokens(),
+        );
+
+        // input_proj
+        check_dims(
+            "input_proj.weight",
+            params.input_proj_weight.dims(),
+            [n_in, n_tok * d],
+        )?;
+        check_dims(
+            "input_proj.bias",
+            params.input_proj_bias.dims(),
+            [n_tok * d],
+        )?;
+        let input_proj = linear_from_tensors(params.input_proj_weight, params.input_proj_bias);
+
+        // phase_init
+        check_dims(
+            "phase_init.weight",
+            params.phase_init_weight.dims(),
+            [n_in, n_tok * h],
+        )?;
+        check_dims(
+            "phase_init.bias",
+            params.phase_init_bias.dims(),
+            [n_tok * h],
+        )?;
+        let phase_init = linear_from_tensors(params.phase_init_weight, params.phase_init_bias);
+
+        // dynamics
+        let dynamics = DiscreteDeltaThetaGammaConfig::with_params(
+            self.n_delta,
+            self.n_theta,
+            self.n_gamma,
+            self.coupling_strength,
+            self.pac_depth,
+            2.0,
+            6.0,
+            40.0,
+        )
+        .expect("already validated")
+        .init_from_params(params.dynamics)?;
+
+        // Per-layer components
+        if params.attn_params.len() != self.n_layers {
+            return Err(TrainError::ShapeMismatch {
+                name: "attn_params",
+                expected: vec![self.n_layers],
+                got: vec![params.attn_params.len()],
+            });
+        }
+        let attn_cfg = OscillatoryAttentionConfig::with_params(d, h, self.dropout)?;
+        let attn_layers: Vec<OscillatoryAttention<B>> = params
+            .attn_params
+            .into_iter()
+            .map(|p| attn_cfg.init_from_params(p))
+            .collect::<Result<_, _>>()?;
+
+        if params.ffn_weights.len() != self.n_layers {
+            return Err(TrainError::ShapeMismatch {
+                name: "ffn_weights",
+                expected: vec![self.n_layers],
+                got: vec![params.ffn_weights.len()],
+            });
+        }
+        let mut ffn_layers = Vec::with_capacity(self.n_layers);
+        for (w1, b1, w2, b2) in params.ffn_weights {
+            check_dims("ffn[i][0].weight", w1.dims(), [d, d * 4])?;
+            check_dims("ffn[i][0].bias", b1.dims(), [d * 4])?;
+            check_dims("ffn[i][1].weight", w2.dims(), [d * 4, d])?;
+            check_dims("ffn[i][1].bias", b2.dims(), [d])?;
+            ffn_layers.push([linear_from_tensors(w1, b1), linear_from_tensors(w2, b2)]);
+        }
+
+        if params.norm1_params.len() != self.n_layers {
+            return Err(TrainError::ShapeMismatch {
+                name: "norm1_params",
+                expected: vec![self.n_layers],
+                got: vec![params.norm1_params.len()],
+            });
+        }
+        let norm1_layers: Result<Vec<LayerNorm<B>>, TrainError> = params
+            .norm1_params
+            .into_iter()
+            .map(|(g, b)| layernorm_from_tensors(g, b, d))
+            .collect();
+        let norm1_layers = norm1_layers?;
+
+        if params.norm2_params.len() != self.n_layers {
+            return Err(TrainError::ShapeMismatch {
+                name: "norm2_params",
+                expected: vec![self.n_layers],
+                got: vec![params.norm2_params.len()],
+            });
+        }
+        let norm2_layers: Result<Vec<LayerNorm<B>>, TrainError> = params
+            .norm2_params
+            .into_iter()
+            .map(|(g, b)| layernorm_from_tensors(g, b, d))
+            .collect();
+        let norm2_layers = norm2_layers?;
+
+        // pool_norm
+        let pool_norm = layernorm_from_tensors(params.pool_norm_gamma, params.pool_norm_beta, d)?;
+
+        // classifier
+        check_dims("classifier[0].weight", params.cls0_weight.dims(), [d, d])?;
+        check_dims("classifier[0].bias", params.cls0_bias.dims(), [d])?;
+        check_dims(
+            "classifier[1].weight",
+            params.cls1_weight.dims(),
+            [d, n_out],
+        )?;
+        check_dims("classifier[1].bias", params.cls1_bias.dims(), [n_out])?;
+        let classifier = [
+            linear_from_tensors(params.cls0_weight, params.cls0_bias),
+            linear_from_tensors(params.cls1_weight, params.cls1_bias),
+        ];
+
+        let dropout = DropoutConfig::new(self.dropout).init();
+
+        Ok(HybridPRINetV2 {
+            input_proj,
+            phase_init,
+            dynamics,
+            attn_layers,
+            ffn_layers,
+            norm1_layers,
+            norm2_layers,
+            pool_norm,
+            classifier,
+            dropout,
+            n_input: n_in,
+            n_classes: n_out,
+            d_model: d,
+            n_heads: h,
+            n_layers: self.n_layers,
+            n_tokens: n_tok,
+            n_discrete_steps: self.n_discrete_steps,
+        })
+    }
+}
+
+/// Construct a [`Linear`] from explicit weight/bias tensors.
+fn linear_from_tensors<B: Backend>(weight: Tensor<B, 2>, bias: Tensor<B, 1>) -> Linear<B> {
+    Linear {
+        weight: Param::initialized(Default::default(), weight.require_grad()),
+        bias: Some(Param::initialized(Default::default(), bias.require_grad())),
+    }
+}
+
+/// Construct a [`LayerNorm`] from explicit gamma/beta tensors by creating a
+/// default instance and overriding via its record (Burn's `LayerNorm` has a
+/// private `epsilon` field that prevents direct struct-literal construction).
+fn layernorm_from_tensors<B: Backend>(
+    gamma: Tensor<B, 1>,
+    beta: Tensor<B, 1>,
+    d: usize,
+) -> Result<LayerNorm<B>, TrainError> {
+    check_dims("ln.gamma", gamma.dims(), [d])?;
+    check_dims("ln.beta", beta.dims(), [d])?;
+    let default_ln = LayerNormConfig::new(d).init::<B>(&gamma.device());
+    let mut record = default_ln.into_record();
+    record.gamma = Param::initialized(Default::default(), gamma);
+    record.beta = Param::initialized(Default::default(), beta);
+    Ok(LayerNormConfig::new(d)
+        .init::<B>(&record.gamma.val().device())
+        .load_record(record))
+}
+
+/// Explicit parameter tensors for [`HybridPRINetV2`] construction.
+///
+/// Used by golden-reference parity tests (`tests/parity_hybrid.rs`). Every
+/// `Linear` weight uses Burn's `[d_input, d_output]` layout (PyTorch's
+/// `nn.Linear` stores `[d_output, d_input]` — transpose when transcribing).
+pub struct HybridPRINetV2Params<B: Backend> {
+    /// Input projection weight, shape `[n_input, n_tokens * d_model]`.
+    pub input_proj_weight: Tensor<B, 2>,
+    /// Input projection bias, shape `[n_tokens * d_model]`.
+    pub input_proj_bias: Tensor<B, 1>,
+    /// Phase init weight, shape `[n_input, n_tokens * n_heads]`.
+    pub phase_init_weight: Tensor<B, 2>,
+    /// Phase init bias, shape `[n_tokens * n_heads]`.
+    pub phase_init_bias: Tensor<B, 1>,
+    /// Dynamics parameters.
+    pub dynamics: DiscreteDeltaThetaGammaParams<B>,
+    /// Per-layer attention parameters.
+    pub attn_params: Vec<OscillatoryAttentionParams<B>>,
+    /// Per-layer FFN weights: `(w1, b1, w2, b2)` per layer.
+    #[allow(clippy::type_complexity)]
+    pub ffn_weights: Vec<(Tensor<B, 2>, Tensor<B, 1>, Tensor<B, 2>, Tensor<B, 1>)>,
+    /// Per-layer norm1 (gamma, beta).
+    pub norm1_params: Vec<(Tensor<B, 1>, Tensor<B, 1>)>,
+    /// Per-layer norm2 (gamma, beta).
+    pub norm2_params: Vec<(Tensor<B, 1>, Tensor<B, 1>)>,
+    /// Pool norm gamma, shape `[d_model]`.
+    pub pool_norm_gamma: Tensor<B, 1>,
+    /// Pool norm beta, shape `[d_model]`.
+    pub pool_norm_beta: Tensor<B, 1>,
+    /// Classifier first linear weight, shape `[d_model, d_model]`.
+    pub cls0_weight: Tensor<B, 2>,
+    /// Classifier first linear bias, shape `[d_model]`.
+    pub cls0_bias: Tensor<B, 1>,
+    /// Classifier second linear weight, shape `[d_model, n_classes]`.
+    pub cls1_weight: Tensor<B, 2>,
+    /// Classifier second linear bias, shape `[n_classes]`.
+    pub cls1_bias: Tensor<B, 1>,
 }
 
 /// Hybrid oscillator + attention architecture (PRIN's canonical
@@ -415,7 +650,10 @@ impl<B: Backend> HybridPRINetV2<B> {
         }
 
         let pooled = self.pool_norm.forward(h.mean_dim(1).squeeze::<2>(1));
-        let logits = self.classifier[1].forward(self.classifier[0].forward(pooled));
+        let logits = self.classifier[1].forward(
+            self.dropout
+                .forward(relu(self.classifier[0].forward(pooled))),
+        );
         let logits = logits.clamp(-LOGIT_CLAMP, LOGIT_CLAMP);
         Ok(log_softmax(logits, 1))
     }

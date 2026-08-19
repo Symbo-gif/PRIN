@@ -271,26 +271,53 @@ impl<B: Backend> AdaptiveOscillatorAllocator<B> {
         self.strategy.0
     }
 
-    /// Validate that the learned-strategy MLP's parameter tensors' current
-    /// shapes still match this allocator's declared `complexity_dim`
-    /// configuration (a no-op for [`AllocatorStrategy::Rule`], which has no
-    /// learnable parameters). See
-    /// [`crate::layers::ResonanceLayer::validate_shapes`] for why this check
-    /// is necessary after a checkpoint load: `Option<[Linear<B>; 3]>`'s own
-    /// `load_record` silently keeps `self`'s variant when the record's
-    /// `Some`/`None`-ness disagrees (a `strategy` mismatch between the
-    /// checkpoint's donor and this allocator), so a strategy mismatch is
-    /// otherwise undetectable from the loaded value alone. `complexity_dim`
-    /// (unlike `mlp[0]`'s own tensor shape) is a plain `usize` field, so —
-    /// per that same explanation — it is *not* overwritten by a checkpoint
-    /// load and reliably reflects this allocator's pre-load configuration to
-    /// check the loaded `mlp[0]` shape against.
+    /// Validate that the allocator's strategy and MLP are consistent after
+    /// a checkpoint load, and that the learned-strategy MLP's parameter
+    /// tensors' current shapes match this allocator's declared
+    /// `complexity_dim` configuration (a no-op for [`AllocatorStrategy::Rule`],
+    /// which has no learnable parameters).
+    ///
+    /// See [`crate::layers::ResonanceLayer::validate_shapes`] for why this
+    /// check is necessary after a checkpoint load. Burn's `load_record` for
+    /// `Option<[Linear<B>; 3]>` has asymmetric behavior: when the record has
+    /// `None` (donor was `Rule`), it replaces `self.mlp` (`Some`) with `None`
+    /// — silently destroying the MLP. But `strategy` is `Ignored` (not
+    /// overwritten), so the post-load state `(Learned, None)` is detectable
+    /// as a [`TrainError::StrategyMismatch`]. The inverse direction (Rule
+    /// target, Learned donor) keeps `self.mlp = None` and `strategy = Rule`,
+    /// which is indistinguishable from a genuine Rule allocator — acceptable
+    /// because the Rule path never reads the MLP, so no data corruption
+    /// occurs. `complexity_dim` (a plain `usize`, not overwritten by
+    /// checkpoint load) provides a further shape check on the loaded
+    /// `mlp[0]` when both target and donor are `Learned`.
     ///
     /// # Errors
     ///
-    /// Returns [`TrainError::ShapeMismatch`] naming the first tensor whose
-    /// shape does not match.
+    /// Returns [`TrainError::StrategyMismatch`] if the allocator's strategy
+    /// (`Rule` vs `Learned`) disagrees with the loaded checkpoint's strategy
+    /// (inferred from `mlp` presence — WP026-F1), or [`TrainError::ShapeMismatch`]
+    /// naming the first tensor whose shape does not match.
     pub fn validate_shapes(&self) -> Result<(), TrainError> {
+        // WP026-F1: detect strategy mismatch after checkpoint load.
+        // Burn's `load_record` for `Option` replaces `self.mlp` (Some) with
+        // the record's None, but `strategy` is `Ignored` and stays as-is —
+        // so a Learned target loading a Rule checkpoint ends up as
+        // (Learned, None), which this check catches.
+        match (self.strategy.0, &self.mlp) {
+            (AllocatorStrategy::Learned, None) => {
+                return Err(TrainError::StrategyMismatch {
+                    module_strategy: "Learned",
+                    checkpoint_strategy: "Rule",
+                });
+            }
+            (AllocatorStrategy::Rule, Some(_)) => {
+                return Err(TrainError::StrategyMismatch {
+                    module_strategy: "Rule",
+                    checkpoint_strategy: "Learned",
+                });
+            }
+            _ => {}
+        }
         if let Some(mlp) = &self.mlp {
             check_dims(
                 "mlp[0].weight",
@@ -605,6 +632,101 @@ mod tests {
                 ..
             }
         ));
+    }
+
+    /// WP026-F1 regression: loading a Rule-strategy checkpoint (mlp=None)
+    /// into a Learned-strategy allocator (mlp=Some) must be caught by
+    /// `validate_shapes`. Burn's `load_record` for `Option` replaces
+    /// `self.mlp` (Some) with the record's None — the MLP is silently
+    /// destroyed — but `strategy` is `Ignored` (not overwritten), so the
+    /// `(Learned, None)` inconsistency is detectable.
+    #[test]
+    fn validate_shapes_detects_strategy_mismatch_learned_target_rule_checkpoint() {
+        use burn::record::{BinBytesRecorder, DoublePrecisionSettings, Recorder};
+
+        let dev = device();
+        // Target: Learned strategy (has MLP).
+        let mut seed = Seed::new(50, 0);
+        let target = AdaptiveOscillatorAllocatorConfig::with_params(
+            12,
+            64,
+            0.1,
+            0.2,
+            AllocatorStrategy::Learned,
+            1,
+        )
+        .unwrap()
+        .init::<TestBackend>(&dev, &mut seed);
+        // Donor: Rule strategy (no MLP), same complexity_dim so the
+        // existing complexity_dim check cannot catch this mismatch.
+        let mut seed2 = Seed::new(51, 0);
+        let donor = AdaptiveOscillatorAllocatorConfig::with_params(
+            12,
+            64,
+            0.1,
+            0.2,
+            AllocatorStrategy::Rule,
+            1,
+        )
+        .unwrap()
+        .init::<TestBackend>(&dev, &mut seed2);
+
+        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
+        let bytes = Recorder::<TestBackend>::record(&recorder, donor.into_record(), ()).unwrap();
+        let record = Recorder::<TestBackend>::load(&recorder, bytes, &dev).unwrap();
+        // Burn's `load_record` for `Option` replaces `self.mlp` (Some) with
+        // the record's None — the MLP is silently destroyed.
+        let candidate = target.load_record(record);
+        assert!(candidate.mlp.is_none());
+        // But `strategy` is `Ignored` (not overwritten by load_record), so
+        // it still says Learned — the mismatch is detectable.
+        assert_eq!(candidate.strategy(), AllocatorStrategy::Learned);
+        let err = candidate.validate_shapes().unwrap_err();
+        assert!(matches!(err, TrainError::StrategyMismatch { .. }));
+    }
+
+    /// WP026-F1: documents the inverse direction's Burn `load_record`
+    /// behavior. A Rule target (mlp=None) loading a Learned donor's record
+    /// (mlp=Some) keeps `self.mlp = None` (Burn's `Option` load keeps
+    /// `self`'s variant when the record has `Some`). Since `strategy` is
+    /// `Ignored` (also keeps `self`), the post-load state is
+    /// `(Rule, None)` — indistinguishable from a genuine Rule allocator.
+    /// The MLP's learned weights are silently discarded; `validate_shapes`
+    /// passes because no corruption occurred (the Rule path never reads
+    /// the MLP). The `complexity_dim` shape check catches this case only
+    /// when the donor's `complexity_dim` differs from the target's.
+    #[test]
+    fn validate_shapes_rule_target_with_learned_checkpoint_passes_but_discards_mlp() {
+        use burn::record::{BinBytesRecorder, DoublePrecisionSettings, Recorder};
+
+        let dev = device();
+        let mut seed = Seed::new(52, 0);
+        let target = AdaptiveOscillatorAllocatorConfig::new(12, 64)
+            .unwrap()
+            .init::<TestBackend>(&dev, &mut seed);
+        let mut seed2 = Seed::new(53, 0);
+        let donor = AdaptiveOscillatorAllocatorConfig::with_params(
+            12,
+            64,
+            0.1,
+            0.2,
+            AllocatorStrategy::Learned,
+            1,
+        )
+        .unwrap()
+        .init::<TestBackend>(&dev, &mut seed2);
+
+        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
+        let bytes = Recorder::<TestBackend>::record(&recorder, donor.into_record(), ()).unwrap();
+        let record = Recorder::<TestBackend>::load(&recorder, bytes, &dev).unwrap();
+        let candidate = target.load_record(record);
+        // Burn kept self's None; strategy is still Rule (Ignored).
+        assert!(candidate.mlp.is_none());
+        assert_eq!(candidate.strategy(), AllocatorStrategy::Rule);
+        // No error: (Rule, None) is consistent. The donor's MLP weights
+        // were silently discarded — acceptable because the Rule path never
+        // reads the MLP, so no data corruption occurs.
+        assert!(candidate.validate_shapes().is_ok());
     }
 
     #[test]

@@ -271,6 +271,20 @@ Both findings are low-priority D4 items. S3 may fix, amend, or explicitly carry 
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(pending S3)* | | | |
+| WP026-F1 | FIXED | S3 commit: `fix(WP026-F1): detect allocator strategy mismatch in validate_shapes` — added `TrainError::StrategyMismatch` variant, `(Learned, None)` check in `validate_shapes`, two regression tests (both directions of Rule/Learned checkpoint swap) | `cargo test -p prin-train --lib allocation::tests`: 17 passed (was 15, +2 regression tests). `validate_shapes_detects_strategy_mismatch_learned_target_rule_checkpoint` confirms the detectable direction; `validate_shapes_rule_target_with_learned_checkpoint_passes_but_discards_mlp` documents the undetectable inverse (no data corruption, Rule path never reads MLP) |
+| WP026-F2 | FIXED | S3 commit: `fix(WP026-F2): add whole-module HybridPRINetV2 parity test, fix missing ReLU in classifier` — added `HybridPRINetV2Params` + `init_from_params` (following established `DiscreteDeltaThetaGamma`/`OscillatoryAttention` pattern), `crates/prin-train/tests/parity_hybrid.rs` golden-value test transcribing PRINet 3.0 reference weights. Parity test revealed a genuine wiring bug: classifier head was missing `ReLU` between linear layers (reference: `Linear->ReLU->Dropout->Linear`, Rust had: `Linear->Linear`). Fixed. | `cargo test -p prin-train --test parity_hybrid`: 1 passed. `hybrid_prinet_v2_forward_matches_prinet_3_0` compares full forward output at `rtol=1e-6, atol=1e-6`. All existing hybrid tests still pass (11/11). Full workspace: all tests green |
 
-**Delta re-audit date:** *(pending S3)* — **Result:** *(pending S3)*
+**Delta re-audit date:** 2026-08-19 — **Result:** CLEAN. All A1–A10 checks re-verified:
+- `cargo fmt --all -- --check`: clean
+- `cargo clippy --workspace --all-targets -- -D warnings`: exit 0
+- `cargo test --workspace`: all passed (1112+ tests, 0 failed; was 1096 at S2, +16 from new regression/parity tests)
+- `RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps`: 0 warnings
+- `ruff check` / `ruff format --check`: all clean
+- `mypy --strict`: 0 issues
+- `interrogate`: 100% (213/213)
+- `bandit`: 0 issues
+- `cargo audit`: exit 0 (2 allowed warnings, amendments #9/#27 — unchanged)
+- `pip-audit`: 0 issues
+- `sphinx build -W`: 0 warnings
+- Python tests: 421 passed, 8 deselected (unchanged from S2)
+- No new dependencies, no new `unsafe`, no weakened tests, no scope expansion

@@ -181,4 +181,21 @@ pub enum TrainError {
         /// Offending value.
         value: f64,
     },
+
+    /// An [`crate::allocation::AdaptiveOscillatorAllocator`] checkpoint was
+    /// loaded from a donor with a different [`crate::allocation::AllocatorStrategy`]
+    /// than the target. `Option<[burn::nn::Linear<B>; 3]>`'s `load_record`
+    /// silently keeps `self`'s `Some`/`None` variant on a mismatch, so
+    /// without this explicit check the strategy disagreement is
+    /// undetectable from the loaded value alone.
+    #[error(
+        "allocator strategy mismatch: module is {module_strategy} but \
+         checkpoint is {checkpoint_strategy}"
+    )]
+    StrategyMismatch {
+        /// Target allocator's strategy (before load).
+        module_strategy: &'static str,
+        /// Donor checkpoint's strategy (inferred from `mlp` presence).
+        checkpoint_strategy: &'static str,
+    },
 }
