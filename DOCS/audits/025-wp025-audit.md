@@ -154,9 +154,40 @@ A delta re-audit of the touched areas (primarily `crates/prin-py/src/bindings/tr
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP025-F1 | *(pending S3)* | | |
-| WP025-F2 | *(pending S3)* | | |
-| WP025-F3 | *(pending S3)* | | |
-| WP025-F4 | *(pending S3)* | | |
+| WP025-F1 | FIXED | `7b49e4e` — adds `ResonanceLayer::validate_shapes`/`GatedPhaseActivation::validate_shapes` (`crates/prin-train/src/layers.rs`/`activations.rs`) and rewires both bridges' `load_state_dict` (`crates/prin-py/src/bindings/train.rs`) to load into a clone, validate the result's shapes, and commit only on success | See independent re-execution table below. Manually reproduced both original panic/confusing-error scenarios (`GatedPhaseActivation(3)`→`(5)`, `ResonanceLayer(4,3)`→`(6,3)`): both now raise a typed `ValueError` naming the expected-vs-actual configuration, never panic, and the target layer's forward output is bit-identical before and after the failed load (`test_load_shape_mismatched_checkpoint_raises_value_error` in both Python checkpoint test classes; `validate_shapes_detects_mismatch_after_loading_a_differently_configured_record` in both `prin-train` unit-test modules — 4 new regression tests total). |
+| WP025-F2 | FIXED (evidentiary rigor); underlying gap tracked as **DV-021** | `2a41195` — adds a 5-run, process-level median-of-medians re-measurement as an "S3 correction" addendum in `DOCS/experiments/0097-wp025-s1-handoff.md`; new item DV-021 in `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` | The specific violated clause (Benchmarking Standards §2.2: report median across ≥10 measured iterations, not satisfied across repeated *invocations*) is now satisfied: 5 independent `cargo bench`/`pytest --benchmark-only` process invocations per shape, both raw command outputs and computed median-of-medians/spread recorded in the S1 handoff addendum. The resulting rigorous measurement shows the `<5%` boundary-overhead acceptance criterion is **not met** (small shape +39.8%, moderate shape +5.3%) — this is a new, honestly-reported discovery, not a re-statement of WP025-F2 itself (which was about evidence quality, not the number's value). Presented to the maintainer (2026-08-19); directed to defer to a future WP for boundary-crossing optimization rather than amend the acceptance target this session. Recorded as DV-021 (OPEN, non-blocking for WP-025's own closure — `gradcheck` and zero-copy claims are unaffected; this is a performance-target gap in already-correct bridges) rather than silently left unresolved. |
+| WP025-F3 | FIXED (closed as a byproduct of WP025-F1) | `7b49e4e` — the WP025-F1 regression tests assert `resonance_layer.n_oscillators`/`n_dims` and `target.n_dims` (the three previously-uncovered getters) | `pytest tests/test_train_bridge.py --cov=prin.nn --cov-report=term-missing -m "not slow"` → `python/prin/nn/__init__.py` **100%** (63/63 statements), was 95% (60/63, missing lines 143/148/254) at S2. No separate commit was needed; noted in `7b49e4e`'s body per the same-fix-closes-two-findings precedent (cf. WP-024 S2/S3). |
+| WP025-F4 | FIXED | `2a41195` — corrects `DOCS/experiments/0097-wp025-s1-handoff.md`'s "Python fast suite" row (7→8 deselected) and "Scope delivered" `tests/test_train_bridge.py` row (28 total, one deselected → 29 total, two deselected) | `pytest tests/test_train_bridge.py --collect-only -q` → **31** total this session (29 at S1/S2 baseline + 2 new WP025-F1 regression tests, both fast); `pytest tests/ -m "not slow and not gpu"` → **335 passed, 8 deselected** this session (333 at S1/S2 baseline + 2 new fast tests; deselected count unchanged at 8, confirming the corrected S1 figure). |
 
-**Delta re-audit date:** *(pending)* — **Result:** *(pending)*
+**S3 remediation summary:** all four findings processed in severity order (D2 → D3 → D4 → D4). No new feature work performed. WP025-F1 (D2, the sole security-relevant finding) is fully fixed with regression tests at both the `prin-train` unit-test level and the Python integration-test level. WP025-F2 (D3) is fixed in the sense the standard's violated clause required (rigorous multi-run evidence now exists and is documented), but the rigorous measurement it produced reveals a genuine, new acceptance-criterion gap; per Development Workflow and Audit Standards §3 this would normally require a plan amendment, but the maintainer explicitly declined one and directed deferral to a future WP instead — recorded transparently as DV-021 rather than either silently passed or blocking this cycle. WP025-F3/F4 (D4) are both fully closed.
+
+### Independent delta re-execution (session 0099, git state `2a41195`)
+
+All commands re-run from a clean working tree after both S3 commits, against the full touched surface (`crates/prin-train/src/layers.rs`, `crates/prin-train/src/activations.rs`, `crates/prin-py/src/bindings/train.rs`, `tests/test_train_bridge.py`, plus the two docs-only files):
+
+| Gate | Command | Result | vs. S2 audit (§2) |
+|---|---|---|---|
+| Rust format | `cargo fmt --all -- --check` | PASS (exit 0) | Unchanged |
+| Clippy (workspace) | `cargo clippy --workspace --all-targets -- -D warnings` | PASS (exit 0), 0 non-cache warnings | Unchanged |
+| `cargo audit` | `cargo audit` | exit 0; same 2 pre-existing allowed advisories (`paste`/amendment #9, `bincode`/amendment #27); no new advisory, no new dependency | Unchanged |
+| Rustdoc (workspace) | `RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps` | PASS, 0 warnings | Unchanged |
+| Workspace tests | `cargo test --workspace` | PASS, 0 failed (no FAILED/panicked lines in full log) | Unchanged |
+| `prin-train` unit tests | `cargo test -p prin-train --lib` | PASS — **154** (was 150 at S2; +4 new `validate_shapes` regression tests) | +4 new, 0 regressed |
+| `prin-train` coverage (touched files) | `cargo llvm-cov -p prin-train --summary-only` | `layers.rs` **97.81%** region / 100% function (was 94.75%/97.78% before the new unit tests), `activations.rs` **98.93%** region / 100% function (was 96.84%/97.73%) | Both above the 95% floor, was `layers.rs` briefly below it after adding `validate_shapes` (fixed by the new unit tests in the same commit) |
+| `ruff check` | `ruff check python/ tests/ benchmarks/ tools/ parity/` | PASS — all checks passed | Unchanged |
+| `ruff format --check` | `ruff format --check python/ tests/ benchmarks/ tools/ parity/` | PASS — 51 files already formatted | Unchanged |
+| `mypy --strict` | `mypy python/prin --strict` | PASS — 0 issues, 18 files | Unchanged |
+| `interrogate` | `interrogate -c pyproject.toml python/prin` | PASS — 100.0% | Unchanged |
+| `bandit` | `bandit -r . -c pyproject.toml` | PASS — 0 issues | Unchanged |
+| `pip_audit` | `pip_audit .` | PASS — no known vulnerabilities | Unchanged |
+| Python fast suite | `pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -q` | PASS — **335 passed, 8 deselected** (was 333/8 at S2; +2 new WP025-F1 regression tests) | +2 new, 0 regressed; deselected count confirms WP025-F4's correction |
+| `test_train_bridge.py` collection | `pytest tests/test_train_bridge.py --collect-only -q` | **31** total (was 29 at S2) | +2 new (WP025-F1 regression tests) |
+| `test_train_bridge.py` coverage | `pytest tests/test_train_bridge.py --cov=prin.nn --cov-report=term-missing -m "not slow" -q` | `nn/__init__.py` **100%** (63/63), was 95% (60/63) at S2 | WP025-F3 closed |
+| Doctests | `pytest --doctest-modules python/prin/nn/__init__.py -v` | PASS — 2/2 | Unchanged |
+| Checkpoint shape-mismatch regression (Python) | `pytest tests/test_train_bridge.py -k Checkpoint -v` | PASS — 6/6, including the 2 new WP025-F1 tests | New, both pass |
+| WP-025 boundary-overhead re-measurement | 5× `cargo bench -p prin-train --bench resonance_layer_bridge` + 5× `pytest tests/test_train_bridge.py -m slow --benchmark-only --benchmark-json=...` | See WP025-F2 row above and the S1 handoff's "S3 correction" addendum | New rigorous evidence; superseded S1's single-pilot-run claim |
+| Snyk Code / Snyk Open Source | `snyk auth status` | **BLOCKED** — unauthenticated on this machine, unchanged standing condition since WP-001 (R23); not run | Unchanged (not a new deviation) |
+
+No newly introduced deviation. No regression below any coverage, quality, security, or parity gate. `git diff 4efa2aa..2a41195 --stat` touches exactly the six files listed above (four source/test files in `7b49e4e`, two docs files in `2a41195`) plus this audit report's own closure table — no other file changed.
+
+**Delta re-audit date:** 2026-08-19 — **Result:** CLEAN — WP025-F1 FIXED (D2, security), WP025-F3/F4 FIXED (D4), WP025-F2 FIXED at the evidentiary level it required with the resulting acceptance-criterion gap transparently recorded as DV-021 (open, non-blocking, maintainer-directed deferral to a future WP) rather than silently passed or left blocking; local gate fully green; no newly introduced deviation. Hand off to S4 (session 0100).
