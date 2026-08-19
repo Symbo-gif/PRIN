@@ -296,14 +296,29 @@ impl PyResonanceLayerBridge {
 
     /// Restore parameters previously produced by [`Self::state_dict`].
     ///
+    /// Loads into a clone of the current layer and validates the result's
+    /// parameter shapes against this layer's `n_oscillators`/`n_dims`
+    /// (WP025-F1) before committing; on failure `self` is left completely
+    /// unchanged (`Module::load_record` does not mutate the layer it was
+    /// called on — it consumes an owned clone and returns a new value, so a
+    /// rejected candidate is simply dropped).
+    ///
     /// # Errors
     ///
     /// Raises `ValueError` if `bytes` does not decode to a record with this
     /// layer's parameter shapes.
     fn load_state_dict(&mut self, bytes: &[u8]) -> PyResult<()> {
         let record = load_checkpoint_record::<ResonanceLayer<BridgeBackend>>(bytes)?;
-        let placeholder = placeholder_resonance_layer();
-        self.layer = std::mem::replace(&mut self.layer, placeholder).load_record(record);
+        let candidate = self.layer.clone().load_record(record);
+        candidate.validate_shapes().map_err(|e| {
+            PyValueError::new_err(format!(
+                "checkpoint shape mismatch: this layer is configured for \
+                 n_oscillators={}, n_dims={} ({e})",
+                self.layer.n_oscillators(),
+                self.layer.n_dims(),
+            ))
+        })?;
+        self.layer = candidate;
         Ok(())
     }
 }
@@ -342,20 +357,6 @@ fn load_checkpoint_record<M: Module<BridgeBackend>>(bytes: &[u8]) -> PyResult<M:
             PyValueError::new_err("checkpoint deserialization failed: malformed record bytes")
         })?
         .map_err(|e| PyValueError::new_err(format!("checkpoint deserialization failed: {e}")))
-}
-
-/// `load_state_dict` needs to move `self.layer` by value into
-/// `Module::load_record`; this constructs a throwaway, cheap-to-build
-/// placeholder purely to satisfy `mem::replace` without requiring
-/// `ResonanceLayer: Default`. It is immediately overwritten and never
-/// observed. No `unsafe` code is involved — `prin-py` denies it crate-wide
-/// outside the audited `dlpack` module (Project Plan amendment #6).
-fn placeholder_resonance_layer() -> ResonanceLayer<BridgeBackend> {
-    // A 1x1 layer is the cheapest valid configuration; it is never used.
-    let mut seed = Seed::new(0, 0);
-    ResonanceLayerConfig::new(1, 1)
-        .expect("1x1 is always a valid ResonanceLayerConfig")
-        .init::<BridgeBackend>(&device(), &mut seed)
 }
 
 // --- GatedPhaseActivation bridge --------------------------------------------
@@ -486,14 +487,19 @@ impl PyGatedPhaseActivationBridge {
     }
 
     /// Restore parameters previously produced by [`Self::state_dict`]. See
-    /// [`PyResonanceLayerBridge::load_state_dict`].
+    /// [`PyResonanceLayerBridge::load_state_dict`] for the shape-validated,
+    /// rollback-safe load contract (WP025-F1).
     fn load_state_dict(&mut self, bytes: &[u8]) -> PyResult<()> {
         let record = load_checkpoint_record::<GatedPhaseActivation<BridgeBackend>>(bytes)?;
-        let n_dims = self.layer.n_dims();
-        let placeholder = GatedPhaseActivationConfig::new(n_dims)
-            .expect("n_dims was already validated by an earlier construction")
-            .init::<BridgeBackend>(&device());
-        self.layer = std::mem::replace(&mut self.layer, placeholder).load_record(record);
+        let candidate = self.layer.clone().load_record(record);
+        candidate.validate_shapes().map_err(|e| {
+            PyValueError::new_err(format!(
+                "checkpoint shape mismatch: this layer is configured for \
+                 n_dims={} ({e})",
+                self.layer.n_dims(),
+            ))
+        })?;
+        self.layer = candidate;
         Ok(())
     }
 }

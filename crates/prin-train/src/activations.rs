@@ -282,6 +282,23 @@ impl<B: Backend> GatedPhaseActivation<B> {
         self.n_dims
     }
 
+    /// Validate that the gate weight/bias tensors' current shapes still
+    /// match this layer's declared `n_dims` configuration.
+    ///
+    /// See [`crate::layers::ResonanceLayer::validate_shapes`] for why this
+    /// check is necessary after `Module::load_record` (checkpoint restore).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] naming the first tensor whose
+    /// shape does not match.
+    pub fn validate_shapes(&self) -> Result<(), TrainError> {
+        let n = self.n_dims;
+        check_dims("gate_weight", self.gate_weight.val().dims(), [n])?;
+        check_dims("gate_bias", self.gate_bias.val().dims(), [n])?;
+        Ok(())
+    }
+
     /// Apply the gated phase activation.
     ///
     /// # Errors
@@ -493,6 +510,46 @@ mod tests {
             .unwrap()
             .init::<TestBackend>(&dev);
         assert_eq!(act.n_dims(), 7);
+    }
+
+    #[test]
+    fn validate_shapes_passes_for_freshly_initialized_layer() {
+        let dev = device();
+        let act = GatedPhaseActivationConfig::new(5)
+            .unwrap()
+            .init::<TestBackend>(&dev);
+        assert!(act.validate_shapes().is_ok());
+    }
+
+    /// WP025-F1 regression (prin-train level): loading a well-formed record
+    /// from a differently-configured layer must be caught by
+    /// `validate_shapes`, mirroring exactly the checkpoint-load path
+    /// `crates/prin-py/src/bindings/train.rs`'s `load_state_dict` guards.
+    #[test]
+    fn validate_shapes_detects_mismatch_after_loading_a_differently_configured_record() {
+        use burn::record::{BinBytesRecorder, DoublePrecisionSettings, Recorder};
+
+        let dev = device();
+        let target = GatedPhaseActivationConfig::new(3)
+            .unwrap()
+            .init::<TestBackend>(&dev);
+        let donor = GatedPhaseActivationConfig::new(5)
+            .unwrap()
+            .init::<TestBackend>(&dev);
+
+        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
+        let bytes = Recorder::<TestBackend>::record(&recorder, donor.into_record(), ()).unwrap();
+        let record = Recorder::<TestBackend>::load(&recorder, bytes, &dev).unwrap();
+        let candidate = target.load_record(record);
+
+        let err = candidate.validate_shapes().unwrap_err();
+        assert!(matches!(
+            err,
+            TrainError::ShapeMismatch {
+                name: "gate_weight",
+                ..
+            }
+        ));
     }
 
     #[test]

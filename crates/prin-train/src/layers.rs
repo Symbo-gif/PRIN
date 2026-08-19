@@ -322,6 +322,35 @@ impl<B: Backend> ResonanceLayer<B> {
         self.n_dims
     }
 
+    /// Validate that every parameter tensor's current shape still matches
+    /// this layer's declared `n_oscillators`/`n_dims` configuration.
+    ///
+    /// `n_oscillators`/`n_dims` are plain `usize` fields, not `Param`
+    /// tensors, so `Module::load_record` (checkpoint restore) does not
+    /// touch them — it overwrites each `Param` tensor with whatever shape
+    /// the record contains, without validating it against these fields.
+    /// A well-formed record produced by a differently-configured layer
+    /// therefore loads without error, leaving the tensors and the declared
+    /// configuration silently inconsistent unless a caller checks
+    /// explicitly. Checkpoint-loading callers (e.g. `prin-py`'s
+    /// `train.rs`) must call this after `load_record` and before
+    /// committing the result.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] naming the first tensor whose
+    /// shape does not match.
+    pub fn validate_shapes(&self) -> Result<(), TrainError> {
+        let n = self.n_oscillators;
+        let d = self.n_dims;
+        check_dims("coupling", self.coupling.val().dims(), [n, n])?;
+        check_dims("decay", self.decay.val().dims(), [n])?;
+        check_dims("input_proj", self.input_proj.val().dims(), [d, n])?;
+        check_dims("modulation", self.modulation.val().dims(), [n, n])?;
+        check_dims("base_frequency", self.base_frequency.val().dims(), [n])?;
+        Ok(())
+    }
+
     /// Number of Kuramoto steps per forward pass.
     pub fn n_steps(&self) -> usize {
         self.n_steps
@@ -783,6 +812,43 @@ mod tests {
         assert_eq!(before, after);
         assert_eq!(restored.n_oscillators(), 4);
         assert_eq!(restored.n_dims(), 6);
+    }
+
+    #[test]
+    fn validate_shapes_passes_for_freshly_initialized_layer() {
+        let dev = device();
+        let layer = seeded_layer::<TestBackend>(&dev);
+        assert!(layer.validate_shapes().is_ok());
+    }
+
+    /// WP025-F1 regression (prin-train level): loading a well-formed record
+    /// from a differently-configured layer must be caught by
+    /// `validate_shapes`, mirroring exactly the checkpoint-load path
+    /// `crates/prin-py/src/bindings/train.rs`'s `load_state_dict` guards.
+    #[test]
+    fn validate_shapes_detects_mismatch_after_loading_a_differently_configured_record() {
+        use burn::record::{BinBytesRecorder, DoublePrecisionSettings, Recorder};
+
+        let dev = device();
+        let target = seeded_layer::<TestBackend>(&dev); // small_config: 4 oscillators, 6 dims
+        let mut seed = Seed::new(77, 0);
+        let donor = ResonanceLayerConfig::new(9, 6)
+            .unwrap()
+            .init::<TestBackend>(&dev, &mut seed);
+
+        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
+        let bytes = Recorder::<TestBackend>::record(&recorder, donor.into_record(), ()).unwrap();
+        let record = Recorder::<TestBackend>::load(&recorder, bytes, &dev).unwrap();
+        let candidate = target.load_record(record);
+
+        let err = candidate.validate_shapes().unwrap_err();
+        assert!(matches!(
+            err,
+            TrainError::ShapeMismatch {
+                name: "coupling",
+                ..
+            }
+        ));
     }
 }
 

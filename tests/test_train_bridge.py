@@ -155,6 +155,27 @@ class TestResonanceLayerCheckpoint:
         with pytest.raises(ValueError, match="checkpoint deserialization failed"):
             resonance_layer.load_rust_state_dict(b"not a valid record")
 
+    def test_load_shape_mismatched_checkpoint_raises_value_error(
+        self, resonance_layer: ResonanceLayer
+    ) -> None:
+        """WP025-F1 regression: a well-formed checkpoint from a
+        differently-configured layer (different `n_oscillators`) must raise
+        a typed `ValueError` naming the mismatch, never panic, and must
+        leave the target layer's parameters unchanged.
+        """
+        donor = ResonanceLayer(6, 3, seed_counter=42)
+        state = donor.rust_state_dict()
+
+        x = torch.randn(2, 3, dtype=torch.float64)
+        before = resonance_layer(x)
+
+        with pytest.raises(ValueError, match="checkpoint shape mismatch"):
+            resonance_layer.load_rust_state_dict(state)
+
+        assert resonance_layer.n_oscillators == 4
+        assert resonance_layer.n_dims == 3
+        torch.testing.assert_close(resonance_layer(x), before)
+
 
 class TestResonanceLayerErrors:
     """Typed-error boundaries: dtype/shape validation."""
@@ -261,6 +282,26 @@ class TestGatedPhaseActivationCheckpoint:
         state = a.rust_state_dict()
         b.load_rust_state_dict(state)
         torch.testing.assert_close(a(z), b(z))
+
+    def test_load_shape_mismatched_checkpoint_raises_value_error(self) -> None:
+        """WP025-F1 regression: a well-formed checkpoint from a
+        differently-configured layer (different `n_dims`) must raise a
+        typed `ValueError` naming the mismatch, never panic (this is the
+        path that panicked uncaught before the WP025-F1 fix), and must
+        leave the target layer's parameters unchanged.
+        """
+        donor = GatedPhaseActivation(5)
+        state = donor.rust_state_dict()
+
+        target = GatedPhaseActivation(3)
+        z = torch.randn(2, 3, dtype=torch.float64)
+        before = target(z)
+
+        with pytest.raises(ValueError, match="checkpoint shape mismatch"):
+            target.load_rust_state_dict(state)
+
+        assert target.n_dims == 3
+        torch.testing.assert_close(target(z), before)
 
 
 class TestGatedPhaseActivationErrors:
