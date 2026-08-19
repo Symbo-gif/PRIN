@@ -97,12 +97,30 @@ tests (autodiff vs. central finite difference) and `burn::record` serialization
 round-trips are in each module's unit tests. The `bincode` 2.0.1 transitive
 advisory (RUSTSEC-2025-0141) is governed by Project Plan amendment #27.
 
+### WP-025: Production Torch autograd bridge (sessions 0097–0100)
+
+- **`crates/prin-py/src/bindings/train.rs`** — PyO3/DLPack `torch.autograd.Function`
+  bridges: `PyResonanceLayerBridge` / `PyGatedPhaseActivationBridge` with
+  `*Ctx` backward contexts. Each bridge reads a DLPack capsule, runs the
+  `prin-train` Rust forward (multi-step Kuramoto integration or gated phase
+  activation), and returns a DLPack capsule plus a Rust context whose
+  `backward` runs the Rust backward pass. Forward and backward each cross
+  the boundary exactly once per call. Checkpoint loading validates decoded
+  record shapes against the layer's configuration (WP025-F1 fix).
+- **`python/prin/nn/__init__.py`** — `ResonanceLayer` and `GatedPhaseActivation`
+  `torch.nn.Module` wrappers with `rust_state_dict` / `load_rust_state_dict`
+  checkpoint methods. 31 Python tests, all passing `torch.autograd.gradcheck`
+  in float64.
+- **DV-021 recorded:** boundary overhead at small shapes exceeds the `<5%`
+  acceptance target (+40.6% at 32-oscillator/16-dim/8-batch); moderate shape
+  is within tolerance (+4.5% at 128-oscillator/64-dim/32-batch). Deferred to
+  a future WP for boundary-crossing optimization.
+
 ## Not yet implemented
 
-Later Phase 4 work packages: the production PyTorch `torch.autograd.Function`
-bridge exposing these primitives to Python training loops (WP-025); PhaseTracker,
-Hybrid model, baselines, and resource allocation (WP-026); trainable-stack
-integration and Phase 4 gate (WP-027).
+Later Phase 4 work packages: PhaseTracker, Hybrid model, baselines, and
+resource allocation (WP-026); trainable-stack integration and Phase 4 gate
+(WP-027).
 
 Rebuild target for PRINet 3.0 `nn/{layers,optimizers,activations,hep}.py`
 and the trainable half of `core/propagation/{networks,inhibition}.py`.

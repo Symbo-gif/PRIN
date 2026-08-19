@@ -1,6 +1,6 @@
 # Session 0099 — WP-025 S3: Remediation — Production Torch autograd bridge
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 4 — Trainable stack and Torch bridge  
 **Execution unit:** WP-025  
 **Session type:** S3 — Remediation  

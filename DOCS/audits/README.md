@@ -111,6 +111,14 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   WP-024 declaration named non-existent classes, AMENDED via plan amendment #29)
   resolved in S3 with a CLEAN delta re-audit.
 
+- [`025-wp025-audit.md`](025-wp025-audit.md) — WP-025 "Production Torch
+  autograd bridge" audit (`PASS-WITH-FINDINGS`); four findings (WP025-F1 D2:
+  checkpoint shape validation gap, FIXED; WP025-F2 D3: single-pilot-run
+  boundary-overhead evidence, FIXED at evidentiary level with DV-021
+  recorded; WP025-F3/F4 D4: coverage margin and test-count transcription
+  errors, both FIXED) resolved in S3 with a CLEAN delta re-audit. S3-exec
+  addendum: DV-021 performance investigation (redundant copy elimination)
+  and register-wide deferred-item review.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

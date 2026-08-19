@@ -472,9 +472,20 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   (:math:`<10^{-3}`), Burn autodiff (:math:`<10^{-8}`), and independent manual
   outer-product derivation (:math:`<10^{-9}`).
 
-  Python bindings (``prin.nn``) are not exposed yet — the production
-  ``torch.autograd.Function`` bridge is WP-025's scope, and GPU-backed Burn backends
-  (``wgpu``/``cuda``) are deferred to the same WP per the Project Plan risk register.
+  **WP-025 Python bridge (``prin.nn``):** the production ``torch.autograd.Function``
+  bridge is now delivered. ``prin.nn.ResonanceLayer`` and
+  ``prin.nn.GatedPhaseActivation`` are ``torch.nn.Module`` wrappers whose
+  ``forward``/``backward`` call into the Rust core via DLPack zero-copy
+  tensor exchange (``crates/prin-py/src/bindings/train.rs``). Trainable
+  parameters remain owned by the Rust bridge (not ``torch.nn.Parameter``);
+  train them with ``prin-train`` oscillator-aware optimizers
+  (``SyncGd``/``Rip``/``Scalr``). Checkpointing uses
+  ``rust_state_dict``/``load_rust_state_dict`` (Rust-native ``burn::record``
+  bytes), with shape validation at load time (WP025-F1 fix). Every bridge
+  requires ``float64`` CPU, contiguous input. 31 Python tests pass
+  ``torch.autograd.gradcheck`` in float64. GPU-backed Burn backends
+  (``wgpu``/``cuda``) remain unbridged (DV-005; no Burn CUDA backend in
+  workspace).
 
 - ``prin-train`` oscillator-aware optimizers (WP-024) —
   the third increment of the Burn-based trainable stack, rebuilding PRINet 3.0

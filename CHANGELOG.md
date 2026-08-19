@@ -9,6 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WP-025 Production Torch autograd bridge** (`crates/prin-py/`,
+  `python/prin/nn/`, Phase 4 fourth WP; sessions 0097–0100; audit
+  `DOCS/audits/025-wp025-audit.md`, verdict `PASS-WITH-FINDINGS`, four
+  findings: WP025-F1 FIXED, WP025-F2 FIXED (evidentiary rigor; underlying
+  gap tracked as DV-021), WP025-F3/F4 FIXED): PyO3/DLPack
+  `torch.autograd.Function` bridges exposing `prin-train`'s Rust
+  forward/backward to Python training loops.
+  - `prin.nn.ResonanceLayer` — trainable single-layer Kuramoto resonance
+    primitive as a `torch.nn.Module`, bridged to Rust via DLPack zero-copy
+    tensor exchange. Forward runs the full `n_steps`-step Kuramoto
+    integration inside a single Rust call; backward recomputes the forward
+    pass (Burn's autodiff graph has no `retain_graph` equivalent).
+  - `prin.nn.GatedPhaseActivation` — trainable gated phase activation
+    (`y = sigmoid(w_g*z + b_g) * phase_activation(z)`) as a
+    `torch.nn.Module`, bridged identically.
+  - `crates/prin-py/src/bindings/train.rs` — `PyResonanceLayerBridge` /
+    `PyGatedPhaseActivationBridge` PyO3 classes with `*Ctx` backward
+    contexts; `read_dlpack_f64` / `export_dlpack_f64` additive DLPack
+    helpers; `tensor2_from_dlpack_with_data` eliminating a redundant
+    Tensor→data→Vec round trip (DV-021 S3-exec optimization).
+  - Checkpoint shape validation: `load_state_dict` loads into a clone,
+    validates shapes via `ResonanceLayer::validate_shapes` /
+    `GatedPhaseActivation::validate_shapes`, and commits only on success —
+    a shape-mismatched checkpoint raises a typed `ValueError` and leaves
+    the target layer untouched (WP025-F1 fix).
+  - 31 Python tests in `tests/test_train_bridge.py` (27 fast + 2 slow + 2
+    shape-mismatch regression); all bridges pass `torch.autograd.gradcheck`
+    in float64. `python/prin/nn/__init__.py` at 100% line coverage.
+  - **DV-021 recorded:** boundary overhead at small shapes (+40.6%) exceeds
+    the `<5%` acceptance target; moderate shape is within tolerance
+    (+4.5%). Deferred to a future WP for boundary-crossing optimization.
+  - **DV-005 re-audited:** CPU-path bridge delivered and validated; CUDA
+    remains unbridged (no Burn CUDA backend in workspace), recorded as an
+    explicit out-of-scope discovery.
+  - **S3-exec addendum:** register-wide deferred-item review; DV-003
+    disposition updated (opportunistic, not gated); DV-019 third flaky
+    recurrence documented with two candidate mitigations.
+
 - **WP-024 Oscillator-aware optimizers** (`crates/prin-train/`,
   Phase 4 third WP; sessions 0093–0096; audit
   `DOCS/audits/024-wp024-audit.md`, verdict `PASS-WITH-FINDINGS`, one D3

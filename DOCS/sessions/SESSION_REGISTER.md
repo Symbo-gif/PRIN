@@ -141,10 +141,10 @@ is renumbered by an executive mathematical audit.
 | 0094 | 4 | WP-024 | S2 — Audit | [Oscillator-aware optimizers](phase-4/0094-wp024-s2-oscillator-aware-optimizers.md) | COMPLETE |
 | 0095 | 4 | WP-024 | S3 — Remediation | [Oscillator-aware optimizers](phase-4/0095-wp024-s3-oscillator-aware-optimizers.md) | COMPLETE |
 | 0096 | 4 | WP-024 | S4 — Documentation | [Oscillator-aware optimizers](phase-4/0096-wp024-s4-oscillator-aware-optimizers.md) | COMPLETE |
-| 0097 | 4 | WP-025 | S1 — Coding | [Production Torch autograd bridge](phase-4/0097-wp025-s1-production-torch-autograd-bridge.md) | PLANNED |
-| 0098 | 4 | WP-025 | S2 — Audit | [Production Torch autograd bridge](phase-4/0098-wp025-s2-production-torch-autograd-bridge.md) | PLANNED |
-| 0099 | 4 | WP-025 | S3 — Remediation | [Production Torch autograd bridge](phase-4/0099-wp025-s3-production-torch-autograd-bridge.md) | PLANNED |
-| 0100 | 4 | WP-025 | S4 — Documentation | [Production Torch autograd bridge](phase-4/0100-wp025-s4-production-torch-autograd-bridge.md) | PLANNED |
+| 0097 | 4 | WP-025 | S1 — Coding | [Production Torch autograd bridge](phase-4/0097-wp025-s1-production-torch-autograd-bridge.md) | COMPLETE |
+| 0098 | 4 | WP-025 | S2 — Audit | [Production Torch autograd bridge](phase-4/0098-wp025-s2-production-torch-autograd-bridge.md) | COMPLETE |
+| 0099 | 4 | WP-025 | S3 — Remediation | [Production Torch autograd bridge](phase-4/0099-wp025-s3-production-torch-autograd-bridge.md) | COMPLETE |
+| 0100 | 4 | WP-025 | S4 — Documentation | [Production Torch autograd bridge](phase-4/0100-wp025-s4-production-torch-autograd-bridge.md) | COMPLETE |
 | 0101 | 4 | WP-026 | S1 — Coding | [PhaseTracker, Hybrid, baselines, and allocation](phase-4/0101-wp026-s1-phasetracker-hybrid-baselines-and-allocation.md) | PLANNED |
 | 0102 | 4 | WP-026 | S2 — Audit | [PhaseTracker, Hybrid, baselines, and allocation](phase-4/0102-wp026-s2-phasetracker-hybrid-baselines-and-allocation.md) | PLANNED |
 | 0103 | 4 | WP-026 | S3 — Remediation | [PhaseTracker, Hybrid, baselines, and allocation](phase-4/0103-wp026-s3-phasetracker-hybrid-baselines-and-allocation.md) | PLANNED |

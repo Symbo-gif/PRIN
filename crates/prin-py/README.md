@@ -36,6 +36,30 @@ provide ergonomic access. Type stubs at `python/prin/_prin_core.pyi` cover all
 new symbols. 69 Python acceptance tests in `tests/test_dynamics_bindings.py`
 exercise all binding paths.
 
+WP-025 (Production Torch autograd bridge) added `bindings/train.rs`, the
+differentiable PyO3/DLPack bridge exposing `prin-train`'s Rust forward/backward
+to Python via `torch.autograd.Function`:
+
+- **`bindings/train.rs`** — `PyResonanceLayerBridge` / `PyGatedPhaseActivationBridge`
+  (and their `*Ctx` backward contexts): each bridge reads a DLPack capsule,
+  runs the `prin-train` Rust forward (multi-step Kuramoto integration or
+  gated phase activation), and returns a DLPack capsule plus a Rust context
+  whose `backward` runs the Rust backward pass. Forward and backward each
+  cross the boundary exactly once per call (Coding Standards §3.2). Checkpoint
+  loading (`load_state_dict`) validates the decoded record's shapes against
+  the current layer's configuration and raises a typed `ValueError` on
+  mismatch, never panicking (WP025-F1 fix).
+- **`dlpack.rs`** — two additive helpers (`read_dlpack_f64` / `export_dlpack_f64`)
+  reusing the validated-shape → `contiguous_strides` → `element_count` →
+  `std::slice::from_raw_parts` pattern from the WP-003 functions; no new
+  `unsafe` blocks.
+- **`python/prin/nn/__init__.py`** — `ResonanceLayer` and `GatedPhaseActivation`
+  `torch.nn.Module` wrappers (the user-facing API), with `rust_state_dict` /
+  `load_rust_state_dict` checkpoint methods. 31 Python tests in
+  `tests/test_train_bridge.py` (27 fast + 2 slow-marked benchmarks + 2
+  shape-mismatch regression tests), all passing `torch.autograd.gradcheck`
+  in float64. Type stubs in `python/prin/_prin_core.pyi` cover all new symbols.
+
 WP-012 (Exponential and multi-rate integrators) extended `bindings/integrators.rs`
 with `PyExponentialIntegrator` (direct/Krylov exponential Euler; constructor
 validates `dim`/`krylov_rank` and raises `ValueError` on `IntegrateError`) and

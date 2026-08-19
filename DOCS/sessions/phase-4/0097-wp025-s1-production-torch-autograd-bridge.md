@@ -1,8 +1,8 @@
 # Session 0097 — WP-025 S1: Coding — Production Torch autograd bridge
 
-**Status:** PLANNED  
-**Roadmap phase:** 4 — Trainable stack and Torch bridge  
-**Execution unit:** WP-025  
+**Status:** COMPLETE
+**Roadmap phase:** 4 — Trainable stack and Torch bridge
+**Execution unit:** WP-025
 **Session type:** S1 — Coding  
 **Predecessor:** [0096 — Documentation](0096-wp024-s4-oscillator-aware-optimizers.md)  
 **Successor:** [0098 — Audit](0098-wp025-s2-production-torch-autograd-bridge.md)  

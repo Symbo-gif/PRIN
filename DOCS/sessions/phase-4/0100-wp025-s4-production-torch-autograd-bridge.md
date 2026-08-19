@@ -1,6 +1,6 @@
 # Session 0100 — WP-025 S4: Documentation — Production Torch autograd bridge
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 4 — Trainable stack and Torch bridge  
 **Execution unit:** WP-025  
 **Session type:** S4 — Documentation  
