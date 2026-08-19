@@ -377,6 +377,15 @@ impl<B: Backend> DiscreteDeltaThetaGamma<B> {
         self.n_delta + self.n_theta + self.n_gamma
     }
 
+    /// Whether `w_delta` currently requires grad — crate-internal
+    /// introspection for [`crate::ablation::PhaseTrackerFrozen`]'s
+    /// regression test (confirms [`burn::module::Module::no_grad`]
+    /// actually froze the coupling weights it wraps).
+    #[cfg(test)]
+    pub(crate) fn w_delta_requires_grad(&self) -> bool {
+        self.w_delta.val().is_require_grad()
+    }
+
     /// Advance all three bands by one discrete macro step.
     ///
     /// # Errors

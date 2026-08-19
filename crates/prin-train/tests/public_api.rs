@@ -11,11 +11,14 @@
 //! `sync_gd`/`rip`/`scalr`/`feedback` re-exports (`SyncGd`, `Rip`, `Scalr`,
 //! `OrderParameter`, `OscillatorOptimizer`, `StepFeedback`) — nameable and
 //! usable via the crate root, not only via their submodule paths.
+//!
+//! Extended again for WP-026: `OscillatoryAttentionParams`.
 
 use burn::backend::NdArray;
 use prin_train::{
     DiscreteDeltaThetaGammaParams, GatedPhaseActivationParams, OrderParameter, OscillatorOptimizer,
-    ResonanceLayerParams, Rip, RipConfig, Scalr, ScalrConfig, StepFeedback, SyncGd, SyncGdConfig,
+    OscillatoryAttentionParams, ResonanceLayerParams, Rip, RipConfig, Scalr, ScalrConfig,
+    StepFeedback, SyncGd, SyncGdConfig,
 };
 
 type TestBackend = NdArray<f64>;
@@ -25,10 +28,12 @@ fn params_are_nameable_at_crate_root() {
     fn accepts_bands_params(_: DiscreteDeltaThetaGammaParams<TestBackend>) {}
     fn accepts_layers_params(_: ResonanceLayerParams<TestBackend>) {}
     fn accepts_gated_phase_activation_params(_: GatedPhaseActivationParams<TestBackend>) {}
+    fn accepts_attention_params(_: OscillatoryAttentionParams<TestBackend>) {}
 
     let _ = accepts_bands_params;
     let _ = accepts_layers_params;
     let _ = accepts_gated_phase_activation_params;
+    let _ = accepts_attention_params;
 }
 
 #[test]

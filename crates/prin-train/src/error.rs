@@ -134,4 +134,51 @@ pub enum TrainError {
         /// Offending value.
         value: f64,
     },
+
+    /// A multi-head attention `d_model` was not evenly divisible by
+    /// `n_heads`.
+    #[error("d_model ({d_model}) must be divisible by n_heads ({n_heads})")]
+    IndivisibleHeads {
+        /// Model dimension.
+        d_model: usize,
+        /// Number of attention heads.
+        n_heads: usize,
+    },
+
+    /// A dropout probability fell outside `[0, 1)`.
+    #[error("dropout must be in [0, 1), got {value}")]
+    InvalidDropout {
+        /// Offending value.
+        value: f64,
+    },
+
+    /// A named fraction/ratio hyperparameter fell outside `[0, 1]` or was
+    /// non-finite.
+    #[error("{name} must be finite and in [0, 1], got {value}")]
+    InvalidRatio {
+        /// Name of the offending hyperparameter.
+        name: &'static str,
+        /// Offending value.
+        value: f64,
+    },
+
+    /// An [`crate::allocation::AdaptiveOscillatorAllocator`] total-oscillator
+    /// range was invalid: `min_total < 3` or `max_total < min_total`.
+    #[error(
+        "invalid allocator range: min_total={min_total} (must be >= 3), \
+         max_total={max_total} (must be >= min_total)"
+    )]
+    InvalidAllocatorRange {
+        /// Configured minimum total oscillator count.
+        min_total: usize,
+        /// Configured maximum total oscillator count.
+        max_total: usize,
+    },
+
+    /// A match/similarity threshold hyperparameter was non-finite.
+    #[error("match_threshold must be finite, got {value}")]
+    InvalidMatchThreshold {
+        /// Offending value.
+        value: f64,
+    },
 }

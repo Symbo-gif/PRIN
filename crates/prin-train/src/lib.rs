@@ -38,41 +38,74 @@
 //! - [`scalr`] — [`scalr::Scalr`] (WP-024): Synchronization-Coupled
 //!   Adaptive Learning Rate, including oscillation-aware decay, adaptive
 //!   `r_min`, and per-frequency lr scaling (PRINet 3.0 `SCALROptimizer`).
+//! - [`attention`] — [`attention::OscillatoryAttention`] (WP-026): multi-head
+//!   attention with an additive oscillatory phase-coherence bias.
+//! - [`phase_tracker`] — [`phase_tracker::PhaseTracker`] (WP-026): PRIN's
+//!   primary contribution — a phase-based multi-object tracker built on
+//!   [`bands::DiscreteDeltaThetaGamma`] dynamics and phase-coherence
+//!   similarity matching.
+//! - [`hybrid`] — [`hybrid::HybridPRINetV2`] (WP-026): the canonical hybrid
+//!   oscillator + attention classification architecture, composing
+//!   [`bands::DiscreteDeltaThetaGamma`] and [`attention::OscillatoryAttention`].
+//! - [`slot_attention`] — [`slot_attention::SlotAttentionModule`],
+//!   [`slot_attention::TemporalSlotAttentionMOT`] (WP-026): the non-oscillatory
+//!   Slot Attention (Locatello et al. 2020) comparison baseline, the latter a
+//!   direct head-to-head tracking baseline against [`phase_tracker::PhaseTracker`].
+//! - [`ablation`] — [`ablation::PhaseTrackerFrozen`],
+//!   [`ablation::PhaseTrackerStatic`], [`ablation::SlotAttentionNoGRU`],
+//!   [`ablation::SlotAttentionFrozen`] (WP-026): structural ablation variants
+//!   isolating which components drive temporal binding.
+//! - [`allocation`] — [`allocation::AdaptiveOscillatorAllocator`],
+//!   [`allocation::DynamicPhaseTracker`] (WP-026): task-complexity-driven
+//!   adaptive oscillator-count allocation.
 //!
 //! `bands`/`layers` (Burn `Module`s) expose a `Config` (validated
 //! hyperparameters), a `Params` struct (explicit parameter tensors, for
 //! golden-reference tests and checkpoint restoration outside
 //! [`burn::record`]), and a validated `State` contract for the tensors
-//! `step`/`integrate` operate on; `activations::GatedPhaseActivation`
-//! follows the same pattern. `inhibition`/`energy`/`hep` have no learnable
-//! parameters of their own (see their module docs for what "trainable"
-//! means for each) and so expose only a `Config`. `sync_gd`/`rip`/`scalr`
-//! are not `Module`s (they *consume* gradients rather than holding
-//! trainable parameters of their own); each exposes a `Config` and a
-//! serializable `State` snapshot for deterministic resume, per
-//! [`feedback::OscillatorOptimizer`]'s docs.
+//! `step`/`integrate` operate on; `activations::GatedPhaseActivation` and
+//! `attention::OscillatoryAttention` follow the same pattern.
+//! `inhibition`/`energy`/`hep` have no learnable parameters of their own
+//! (see their module docs for what "trainable" means for each) and so
+//! expose only a `Config`. `sync_gd`/`rip`/`scalr` are not `Module`s (they
+//! *consume* gradients rather than holding trainable parameters of their
+//! own); each exposes a `Config` and a serializable `State` snapshot for
+//! deterministic resume, per [`feedback::OscillatorOptimizer`]'s docs.
+//! [`allocation::DynamicPhaseTracker`] is deliberately not a `Module` either
+//! (see its own module docs for why).
 //!
-//! Not yet implemented (later Phase 4 work packages): the production
-//! PyTorch `torch.autograd.Function` bridge (WP-025).
+//! WP-025 delivered the production PyTorch `torch.autograd.Function` bridge
+//! for [`layers::ResonanceLayer`]/[`activations::GatedPhaseActivation`]
+//! (`crates/prin-py/src/bindings/train.rs`). The WP-026 symbols above have
+//! **no PyO3/Python bridge yet** — an explicit, evidence-backed carried-scope
+//! item for a future WP/session, not a silent gap; see the WP-026 S1 handoff
+//! note (`DOCS/experiments/`) for the full rationale.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod ablation;
 pub mod activations;
+pub mod allocation;
+pub mod attention;
 pub mod bands;
 pub mod energy;
 pub mod error;
 pub mod feedback;
 pub mod hep;
+pub mod hybrid;
 pub mod inhibition;
 pub mod layers;
+pub mod phase_tracker;
 pub mod rip;
 pub mod scalr;
+pub mod slot_attention;
 pub mod sync_gd;
 
 mod support;
 
 pub use activations::GatedPhaseActivationParams;
+pub use attention::OscillatoryAttentionParams;
 pub use bands::DiscreteDeltaThetaGammaParams;
 pub use error::TrainError;
 pub use feedback::{OrderParameter, OscillatorOptimizer, StepFeedback};

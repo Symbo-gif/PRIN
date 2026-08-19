@@ -116,11 +116,98 @@ advisory (RUSTSEC-2025-0141) is governed by Project Plan amendment #27.
   is within tolerance (+4.5% at 128-oscillator/64-dim/32-batch). Deferred to
   a future WP for boundary-crossing optimization.
 
+### WP-026: PhaseTracker, Hybrid, baselines, and allocation (session 0101)
+
+- **`attention::OscillatoryAttention`** — multi-head attention with an
+  additive oscillatory coherence bias (rebuild of PRINet 3.0
+  `nn.layers.OscillatoryAttention`): standard scaled dot-product attention
+  plus a learnable per-head bias toward phase-aligned tokens,
+  `score = QKᵀ/√d_k + α·cos(φ_i − φ_j)`. Masked-attention support (unused by
+  any caller in this WP) is not ported.
+- **`phase_tracker::PhaseTracker`** — PRIN's primary contribution: a
+  phase-based multi-object tracker (rebuild of PRINet 3.0
+  `nn.hybrid.PhaseTracker`). Encodes detections to phase/amplitude via an
+  MLP, evolves them through `bands::DiscreteDeltaThetaGamma`, and matches
+  frames by phase-coherence similarity (a real-valued reformulation of the
+  reference's `torch.complex64` cosine similarity — Burn has no
+  complex-tensor autodiff) with greedy descending-similarity assignment.
+- **`hybrid::HybridPRINetV2`** — the canonical hybrid oscillator + attention
+  classification architecture (rebuild of PRINet 3.0
+  `nn.hybrid.HybridPRINetV2`): input → token projection → adaptive
+  oscillator phase (`DiscreteDeltaThetaGamma`) interleaved with
+  `OscillatoryAttention` + FFN blocks → pool → classify. The optional CNN
+  stem for image inputs (`use_conv_stem`) is not ported — out of this WP's
+  oscillatory-binding scope, no exercising caller.
+- **`slot_attention::SlotAttentionModule`/`TemporalSlotAttentionMOT`** — the
+  non-oscillatory Slot Attention (Locatello et al. 2020) comparison
+  baseline (rebuild of PRINet 3.0 `nn.slot_attention`); the latter is the
+  direct head-to-head tracking comparison against `PhaseTracker`. Slot
+  initialization draws fresh noise every `forward` call (a genuine
+  per-call stochastic entry point, unlike every other `forward` in this
+  crate), so `forward`/`process_frame` take `&mut Seed` directly.
+  `SlotAttentionCLEVRN` (a CLEVR-N classification adapter, not a tracking
+  comparison) is not ported — out of scope per this WP's non-goals.
+- **`ablation`** — structural ablation variants (rebuild of PRINet 3.0
+  `nn.ablation_variants`): `PhaseTrackerFrozen` (frozen dynamics, trainable
+  encoder), `PhaseTrackerStatic` (no coupling, fixed frequencies),
+  `SlotAttentionNoGRU` (no temporal carry-over), `SlotAttentionFrozen`
+  (fully frozen). The reference's string-keyed `create_ablation_tracker`
+  factory is not ported (the six variants' `forward` signatures genuinely
+  differ in Rust's static type system); callers construct the specific
+  variant type directly.
+- **`allocation::AdaptiveOscillatorAllocator`/`DynamicPhaseTracker`** —
+  task-complexity-driven adaptive oscillator-count allocation (rebuild of
+  PRINet 3.0 `nn.adaptive_allocation`): rule-based (piecewise-linear) and
+  learned (MLP-predicted band fractions) strategies, `estimate_complexity`,
+  and a lazily-caching per-budget `PhaseTracker` factory.
+  `DynamicPhaseTracker` is deliberately not a Burn `Module` — see its module
+  docs.
+
+New shared helpers in `support.rs`: `seeded_linear`/`seeded_gru` (build
+`burn::nn::Linear`/`Gru` from this crate's `Seed` rather than
+`Config::init`'s backend-global RNG — a `static Mutex` shared across
+parallel test threads, discovered while gradchecking `OscillatoryAttention`),
+`seeded_standard_normal` (Box–Muller, for `SlotAttentionModule`'s per-call
+noise), `python_round` (round-half-to-even, for `allocation`'s
+`round(...)`-derived formulas), `phase_coherence_similarity` (shared by
+`PhaseTracker`/`PhaseTrackerStatic`), and `greedy_match_by_similarity`
+(shared by every tracker variant's frame-to-frame assignment).
+
+Golden-value parity tests against the actual PRINet 3.0 reference classes
+(`torch==2.13.0+cpu`, float64) added: `tests/parity_phase_tracker.rs`
+(`phase_similarity`), `tests/parity_attention.rs`
+(`OscillatoryAttention.forward`, explicit extracted weights). `bands`-level
+composition (`DiscreteDeltaThetaGamma`) is already parity-tested;
+`HybridPRINetV2`'s own novel contribution is wiring three already
+component-parity-tested primitives together, verified by shape/gradient/
+log-softmax-normalization tests rather than a fourth full end-to-end weight
+transcription (same "component parity, not whole-network parity" precedent
+as Project Plan amendment #19).
+
+**Not delivered this session — PyO3 bindings and Python wrappers.**
+`crates/prin-py/` PyO3 bindings and `python/prin/nn/` thin wrappers were
+declared in WP-026's scope (`DOCS/reports/025-project-state.md` §6) but are
+not implemented here: WP-025's own production bridge for two materially
+simpler modules (`ResonanceLayer`, `GatedPhaseActivation` — each a single
+flat parameter set) required ~514 lines of custom Rust
+`torch.autograd.Function`-bridge code, a hand-written backward pass working
+around Burn's lack of retain-graph (recomputing the forward pass inside
+every `backward()` call), and 27 dedicated Python tests, and was itself a
+full four-session work package (S1–S4). Replicating that bridge depth for
+five architecturally larger, multi-sub-module compositions — one with a
+non-differentiable greedy-matching post-processing step
+(`PhaseTracker`/all trackers) and one with a genuinely per-forward-call
+stochastic entry point (`SlotAttentionModule`) — is out of proportion to a
+single S1 session and risks exactly the kind of under-tested bridge code
+WP-025's own audit found (WP025-F1, WP025-F2). Recorded as an explicit,
+evidence-backed carried-scope item (see the WP-026 S1 handoff note in
+`DOCS/experiments/`), not a silently dropped requirement.
+
 ## Not yet implemented
 
-Later Phase 4 work packages: PhaseTracker, Hybrid model, baselines, and
-resource allocation (WP-026); trainable-stack integration and Phase 4 gate
-(WP-027).
+`crates/prin-py`/`python/prin/nn` bindings for the WP-026 symbols above (see
+that section); trainable-stack integration and Phase 4 gate (WP-027).
 
-Rebuild target for PRINet 3.0 `nn/{layers,optimizers,activations,hep}.py`
-and the trainable half of `core/propagation/{networks,inhibition}.py`.
+Rebuild target for PRINet 3.0 `nn/{layers,optimizers,activations,hep,hybrid,
+slot_attention,ablation_variants,adaptive_allocation}.py` and the trainable
+half of `core/propagation/{networks,inhibition}.py`.

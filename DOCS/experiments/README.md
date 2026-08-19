@@ -103,6 +103,15 @@ at the top level until they are folded into the final campaign archive in Phase 
   benchmark evidence (criterion vs. `pytest-benchmark`, both <5%), and the
   DV-005 re-audit (CPU path delivered; CUDA Burn backend recorded
   out-of-scope, not silently dropped).
+- [`0101-wp026-s1-handoff.md`](0101-wp026-s1-handoff.md) — WP-026 S1 handoff
+  to the S2 audit for `prin-train`'s `PhaseTracker` (primary contribution),
+  `HybridPRINetV2`, `OscillatoryAttention`, the `SlotAttentionModule`/
+  `TemporalSlotAttentionMOT` comparison baseline, four structural ablation
+  variants, and `AdaptiveOscillatorAllocator`/`DynamicPhaseTracker`; 2 new
+  golden-value parity tests, a discovered-and-fixed `Backend::seed`
+  shared-global-RNG test-parallelism hazard, and the explicit
+  carried-scope disposition for `crates/prin-py`/`python/prin/nn` PyO3
+  bindings (not delivered this session — see the handoff note).
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
