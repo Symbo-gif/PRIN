@@ -88,6 +88,12 @@ at the top level until they are folded into the final campaign archive in Phase 
   to the S2 audit for `prin-train` inhibition, activations, energy functions,
   and HEP trainer (`inhibition.rs`, `activations.rs`, `energy.rs`, `hep.rs`,
   5 parity suites, DV-018/DV-019 observations).
+- [`0093-wp024-s1-handoff.md`](0093-wp024-s1-handoff.md) — WP-024 S1 handoff
+  to the S2 audit for `prin-train`'s oscillator-aware optimizers
+  (`sync_gd::SyncGd`, `rip::Rip`, `scalr::Scalr`, the shared
+  `feedback::OscillatorOptimizer` contract), 5 parity tests against the
+  actual PRINet 3.0 optimizer classes, and the DV-020 naming-discrepancy
+  disposition (session brief vs. PSR-023's WP-024 declaration).
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at

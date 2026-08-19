@@ -91,6 +91,41 @@ pub(crate) fn validate_finite(name: &'static str, value: f64) -> Result<(), Trai
     Ok(())
 }
 
+/// Apply one heavy-ball-momentum SGD update, PyTorch `torch.optim.SGD`
+/// semantics: `d_p = grad (+ weight_decay·param)`; with momentum, `buf =
+/// buf·momentum + d_p·(1 − dampening)` (or `d_p` verbatim on the first
+/// update) and `d_p = buf`; finally `param − lr·d_p`.
+///
+/// Shared by [`crate::sync_gd::SyncGd`] and [`crate::scalr::Scalr`], whose
+/// PRINet 3.0 references (`SynchronizedGradientDescent.step`,
+/// `SCALROptimizer.step`) apply this identical core, differing only in how
+/// `lr` is derived from oscillator feedback. SCALR's reference has no
+/// `dampening` parameter (its momentum buffer update is `buf·momentum +
+/// d_p`, i.e. `alpha=1.0`); callers without dampening pass `0.0`.
+pub(crate) fn sgd_update<B: Backend, const D: usize>(
+    param: Tensor<B, D>,
+    grad: Tensor<B, D>,
+    weight_decay: f64,
+    momentum: f64,
+    dampening: f64,
+    momentum_buffer: &mut Option<Tensor<B, D>>,
+    lr: f64,
+) -> Tensor<B, D> {
+    let mut d_p = grad;
+    if weight_decay != 0.0 {
+        d_p = d_p + param.clone().mul_scalar(weight_decay);
+    }
+    if momentum != 0.0 {
+        let buf = match momentum_buffer.take() {
+            None => d_p.clone(),
+            Some(prev) => prev.mul_scalar(momentum) + d_p.clone().mul_scalar(1.0 - dampening),
+        };
+        *momentum_buffer = Some(buf.clone());
+        d_p = buf;
+    }
+    param - d_p.mul_scalar(lr)
+}
+
 /// Under `strict-checks`, verify every element of `tensor` is finite and
 /// return a typed [`TrainError::NonFiniteState`] otherwise.
 ///
