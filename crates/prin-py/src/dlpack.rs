@@ -515,6 +515,131 @@ fn read_and_clone(obj: &Bound<'_, PyAny>) -> PyResult<NonNull<c_void>> {
     Ok(OwnedDlpackTensor::from_storage(shape, output))
 }
 
+/// Read a CPU, contiguous, `float64` DLPack tensor into an owned `(shape,
+/// data)` pair, with no numeric transform applied.
+///
+/// This is the WP-025 torch-bridge reader: unlike [`read_and_negate`] /
+/// [`read_and_clone`] (which accept `float32` or `float64`), the production
+/// autograd bridge requires `float64` end to end so that
+/// `torch.autograd.gradcheck`'s double-precision finite-difference check is
+/// exact (Testing Standards §2, "Gradient checks... float64"). `float32`
+/// bridge support is a deliberately deferred future-WP item, not silently
+/// dropped: see the WP-025 S1 handoff.
+///
+/// # Errors
+///
+/// Returns a [`BridgeError`] (as a `PyErr`) for a non-CPU device, a
+/// non-`float64` dtype, a non-contiguous layout, a non-zero `byte_offset`, or
+/// a null data pointer with a non-zero element count.
+pub(crate) fn read_dlpack_f64(obj: &Bound<'_, PyAny>) -> PyResult<(Vec<i64>, Vec<f64>)> {
+    let capsule = get_dlpack_capsule(obj)?;
+    let ptr = capsule
+        .pointer_checked(Some(NAME_DLTENSOR))?
+        .cast::<Tensor>();
+
+    // SAFETY: `pointer_checked` returned a non-null, `dltensor`-named capsule
+    // pointer; the first field of a `ManagedTensor` is a `Tensor`, so reading
+    // it does not touch the `deleter`/`manager_ctx` fields.
+    let tensor: Tensor = unsafe { ptr.as_ptr().read() };
+
+    if tensor.ctx.device_type != device_type_codes::CPU {
+        return Err(BridgeError::NonCpuDevice {
+            device_type: tensor.ctx.device_type,
+            device_id: tensor.ctx.device_id,
+        }
+        .into());
+    }
+
+    let is_f64 = tensor.dtype.code == data_type_codes::FLOAT
+        && tensor.dtype.bits == 64
+        && tensor.dtype.lanes == 1;
+    if !is_f64 {
+        return Err(BridgeError::UnsupportedDtype {
+            code: tensor.dtype.code,
+            bits: tensor.dtype.bits,
+            lanes: tensor.dtype.lanes,
+        }
+        .into());
+    }
+
+    if tensor.ndim < 0 {
+        return Err(BridgeError::NegativeNdim { ndim: tensor.ndim }.into());
+    }
+    let ndim = tensor.ndim as usize;
+    let shape: Vec<i64> = if ndim == 0 {
+        Vec::new()
+    } else if tensor.shape.is_null() {
+        return Err(BridgeError::NegativeNdim { ndim: tensor.ndim }.into());
+    } else {
+        // SAFETY: `shape` is non-null and there are `ndim` elements.
+        unsafe { std::slice::from_raw_parts(tensor.shape, ndim) }.to_vec()
+    };
+    validate_shape(&shape)?;
+
+    let expected = contiguous_strides(&shape);
+    let actual: Vec<i64> = if ndim == 0 {
+        Vec::new()
+    } else if tensor.strides.is_null() {
+        expected.clone()
+    } else {
+        // SAFETY: `strides` is non-null and there are `ndim` elements.
+        unsafe { std::slice::from_raw_parts(tensor.strides, ndim) }.to_vec()
+    };
+    if actual != expected {
+        return Err(BridgeError::NonContiguous.into());
+    }
+
+    if tensor.byte_offset != 0 {
+        return Err(BridgeError::NonZeroByteOffset {
+            offset: tensor.byte_offset,
+        }
+        .into());
+    }
+
+    let len = element_count(&shape);
+    if len != 0 && tensor.data.is_null() {
+        return Err(BridgeError::NullData { len }.into());
+    }
+
+    // SAFETY: `tensor.data` is non-null (or `len == 0`), `validate_shape`
+    // guarantees non-negative dimensions, and the layout has been verified
+    // C-contiguous. The slice borrow lives only for the duration of the copy
+    // into the owned `Vec` this function returns.
+    let data = unsafe { std::slice::from_raw_parts(tensor.data as *const f64, len) }.to_vec();
+
+    Ok((shape, data))
+}
+
+/// Export an owned `(shape, data)` pair as a new `dltensor` `PyCapsule`
+/// (`float64`, CPU), the WP-025 torch-bridge writer counterpart to
+/// [`read_dlpack_f64`].
+///
+/// Ownership transfers to Python exactly as in [`dlpack_negate`] /
+/// [`dlpack_round_trip`]: the returned capsule is zero-copy from Rust's
+/// perspective onward (no further serialization step), and
+/// `torch.utils.dlpack.from_dlpack` takes ownership without copying.
+pub(crate) fn export_dlpack_f64(
+    py: Python<'_>,
+    shape: Vec<i64>,
+    data: Vec<f64>,
+) -> PyResult<Py<PyAny>> {
+    let ptr = OwnedDlpackTensor::from_storage(shape, TensorStorage::F64(data));
+
+    // SAFETY: identical justification to `dlpack_negate`/`dlpack_round_trip`:
+    // `ptr` is a non-null, heap-allocated `OwnedDlpackTensor` whose first
+    // three fields form a valid `ManagedTensor`; `py_capsule_destructor`
+    // frees it exactly once, whether or not a consumer renames the capsule.
+    let capsule = unsafe {
+        PyCapsule::new_with_pointer_and_destructor(
+            py,
+            ptr,
+            NAME_DLTENSOR,
+            Some(py_capsule_destructor),
+        )?
+    };
+    Ok(capsule.into_any().unbind())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

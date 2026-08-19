@@ -94,6 +94,15 @@ at the top level until they are folded into the final campaign archive in Phase 
   `feedback::OscillatorOptimizer` contract), 5 parity tests against the
   actual PRINet 3.0 optimizer classes, and the DV-020 naming-discrepancy
   disposition (session brief vs. PSR-023's WP-024 declaration).
+- [`0097-wp025-s1-handoff.md`](0097-wp025-s1-handoff.md) — WP-025 S1 handoff
+  to the S2 audit for the production PyO3/DLPack `torch.autograd.Function`
+  bridge: `ResonanceLayerBridge`/`GatedPhaseActivationBridge` (Rust
+  forward/backward, recompute-on-backward design correction found via a
+  failing `gradcheck`, panic-safe checkpoint loading), the
+  `crates/prin-py/src/bindings/train.rs` architecture, boundary-overhead
+  benchmark evidence (criterion vs. `pytest-benchmark`, both <5%), and the
+  DV-005 re-audit (CPU path delivered; CUDA Burn backend recorded
+  out-of-scope, not silently dropped).
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
