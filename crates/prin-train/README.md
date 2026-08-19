@@ -176,13 +176,21 @@ noise), `python_round` (round-half-to-even, for `allocation`'s
 Golden-value parity tests against the actual PRINet 3.0 reference classes
 (`torch==2.13.0+cpu`, float64) added: `tests/parity_phase_tracker.rs`
 (`phase_similarity`), `tests/parity_attention.rs`
-(`OscillatoryAttention.forward`, explicit extracted weights). `bands`-level
-composition (`DiscreteDeltaThetaGamma`) is already parity-tested;
-`HybridPRINetV2`'s own novel contribution is wiring three already
-component-parity-tested primitives together, verified by shape/gradient/
-log-softmax-normalization tests rather than a fourth full end-to-end weight
-transcription (same "component parity, not whole-network parity" precedent
-as Project Plan amendment #19).
+(`OscillatoryAttention.forward`, explicit extracted weights),
+`tests/parity_hybrid.rs` (`HybridPRINetV2.forward`, full weight transcription
+via `HybridPRINetV2Params`/`init_from_params` — added in S3 remediation,
+which also found and fixed a missing ReLU in the classifier head). `bands`-level
+composition (`DiscreteDeltaThetaGamma`) is already parity-tested.
+
+**S3 remediation (session 0103):** two D4 findings closed. WP026-F1 (FIXED):
+added `TrainError::StrategyMismatch` variant and a strategy-variant check in
+`AdaptiveOscillatorAllocator::validate_shapes` detecting `(Learned, None)`
+checkpoint mismatches. WP026-F2 (FIXED): added `HybridPRINetV2Params` /
+`init_from_params` (following the established `DiscreteDeltaThetaGamma`/
+`OscillatoryAttention` pattern) and `tests/parity_hybrid.rs` whole-module
+golden-value parity test; the parity test revealed a genuine wiring bug
+(classifier head missing ReLU between linear layers), fixed in the same
+commit. Delta re-audit CLEAN.
 
 **Not delivered in WP-026 S1 — PyO3 bindings and Python wrappers.**
 `crates/prin-py/` PyO3 bindings and `python/prin/nn/` thin wrappers were

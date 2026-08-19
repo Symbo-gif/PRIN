@@ -112,6 +112,12 @@ at the top level until they are folded into the final campaign archive in Phase 
   shared-global-RNG test-parallelism hazard, and the explicit
   carried-scope disposition for `crates/prin-py`/`python/prin/nn` PyO3
   bindings (not delivered this session — see the handoff note).
+- [`0101-exec-wp026-s1-handoff.md`](0101-exec-wp026-s1-handoff.md) —
+  Exec-WP-026 S1 (executive secondary session) handoff to the S2 audit for
+  the PyO3 bindings and Python wrappers carried forward from session 0101:
+  six new bridge modules, generic `apply_rust_bridge` helper, `validate_shapes`
+  on all six new types (a real checkpoint-corruption bug found and fixed),
+  86 new Python tests at 100% coverage.
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at

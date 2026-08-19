@@ -24,9 +24,9 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0099 | WP-025 | S3 — Remediation | [Production Torch autograd bridge](0099-wp025-s3-production-torch-autograd-bridge.md) | COMPLETE |
 | 0100 | WP-025 | S4 — Documentation | [Production Torch autograd bridge](0100-wp025-s4-production-torch-autograd-bridge.md) | COMPLETE |
 | 0101 | WP-026 | S1 — Coding | [PhaseTracker, Hybrid, baselines, and allocation](0101-wp026-s1-phasetracker-hybrid-baselines-and-allocation.md) | COMPLETE |
-| 0102 | WP-026 | S2 — Audit | [PhaseTracker, Hybrid, baselines, and allocation](0102-wp026-s2-phasetracker-hybrid-baselines-and-allocation.md) | PLANNED |
-| 0103 | WP-026 | S3 — Remediation | [PhaseTracker, Hybrid, baselines, and allocation](0103-wp026-s3-phasetracker-hybrid-baselines-and-allocation.md) | PLANNED |
-| 0104 | WP-026 | S4 — Documentation | [PhaseTracker, Hybrid, baselines, and allocation](0104-wp026-s4-phasetracker-hybrid-baselines-and-allocation.md) | PLANNED |
+| 0102 | WP-026 | S2 — Audit | [PhaseTracker, Hybrid, baselines, and allocation](0102-wp026-s2-phasetracker-hybrid-baselines-and-allocation.md) | COMPLETE |
+| 0103 | WP-026 | S3 — Remediation | [PhaseTracker, Hybrid, baselines, and allocation](0103-wp026-s3-phasetracker-hybrid-baselines-and-allocation.md) | COMPLETE |
+| 0104 | WP-026 | S4 — Documentation | [PhaseTracker, Hybrid, baselines, and allocation](0104-wp026-s4-phasetracker-hybrid-baselines-and-allocation.md) | COMPLETE |
 | 0105 | WP-027 | S1 — Coding | [Trainable-stack integration and Phase 4 gate](0105-wp027-s1-trainable-stack-integration-and-phase-4-gate.md) | PLANNED |
 | 0106 | WP-027 | S2 — Audit | [Trainable-stack integration and Phase 4 gate](0106-wp027-s2-trainable-stack-integration-and-phase-4-gate.md) | PLANNED |
 | 0107 | WP-027 | S3 — Remediation | [Trainable-stack integration and Phase 4 gate](0107-wp027-s3-trainable-stack-integration-and-phase-4-gate.md) | PLANNED |

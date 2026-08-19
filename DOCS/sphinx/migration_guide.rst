@@ -487,6 +487,96 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   (``wgpu``/``cuda``) remain unbridged (DV-005; no Burn CUDA backend in
   workspace).
 
+- ``prin-train`` PhaseTracker, Hybrid, baselines, and allocation (WP-026) —
+  the fifth increment of the Burn-based trainable stack, rebuilding PRINet 3.0
+  ``nn/{layers,hybrid,slot_attention,ablation_variants,adaptive_allocation}.py``:
+
+  - ``attention::OscillatoryAttention`` rebuilding PRINet 3.0
+    ``nn.layers.OscillatoryAttention``: multi-head attention with additive
+    oscillatory coherence bias
+    (:math:`\text{score} = QK^T/\sqrt{d_k} + \alpha \cdot \cos(\varphi_i - \varphi_j)`).
+    Masked-attention support not ported (no exercising caller in this WP).
+  - ``phase_tracker::PhaseTracker`` rebuilding PRINet 3.0
+    ``nn.hybrid.PhaseTracker``: PRIN's primary contribution — phase-based
+    multi-object tracker. Encodes detections to phase/amplitude via MLP,
+    evolves through ``DiscreteDeltaThetaGamma``, matches frames by
+    phase-coherence similarity (real-valued reformulation of PRINet 3.0's
+    ``torch.complex64`` cosine similarity — Burn has no complex-tensor
+    autodiff) with greedy descending-similarity assignment.
+  - ``hybrid::HybridPRINetV2`` rebuilding PRINet 3.0
+    ``nn.hybrid.HybridPRINetV2``: canonical hybrid oscillator + attention
+    classifier: input → token projection → adaptive oscillator phase
+    (``DiscreteDeltaThetaGamma``) interleaved with ``OscillatoryAttention``
+    + FFN blocks → pool → classify. CNN stem (``use_conv_stem``) not ported
+    (out of scope, no exercising caller).
+  - ``slot_attention::{SlotAttentionModule, TemporalSlotAttentionMOT}``
+    rebuilding PRINet 3.0 ``nn.slot_attention``: non-oscillatory Slot
+    Attention (Locatello et al. 2020) comparison baseline. Both draw fresh
+    per-call stochastic noise from ``&mut Seed`` (a genuine per-call
+    stochastic entry point). ``SlotAttentionCLEVRN`` not ported (out of
+    scope).
+  - ``ablation::{PhaseTrackerFrozen, PhaseTrackerStatic,
+    SlotAttentionNoGRU, SlotAttentionFrozen}`` rebuilding PRINet 3.0
+    ``nn.ablation_variants``. The reference's string-keyed
+    ``create_ablation_tracker`` factory not ported (variants' ``forward``
+    signatures genuinely differ in Rust's static type system).
+  - ``allocation::{AdaptiveOscillatorAllocator, DynamicPhaseTracker}``
+    rebuilding PRINet 3.0 ``nn.adaptive_allocation``: rule-based and learned
+    (MLP) strategies, ``estimate_complexity``, lazily-caching per-budget
+    ``PhaseTracker`` factory.
+
+  **Symbol mapping:**
+
+  - ``prinet.nn.layers.OscillatoryAttention`` → ``prin_train::attention::OscillatoryAttention``
+  - ``prinet.nn.hybrid.PhaseTracker`` → ``prin_train::phase_tracker::PhaseTracker``
+  - ``prinet.nn.hybrid.HybridPRINetV2`` → ``prin_train::hybrid::HybridPRINetV2``
+  - ``prinet.nn.slot_attention.SlotAttentionModule`` → ``prin_train::slot_attention::SlotAttentionModule``
+  - ``prinet.nn.slot_attention.TemporalSlotAttentionMOT`` → ``prin_train::slot_attention::TemporalSlotAttentionMOT``
+  - ``prinet.nn.ablation_variants.*`` → ``prin_train::ablation::{PhaseTrackerFrozen, PhaseTrackerStatic, SlotAttentionNoGRU, SlotAttentionFrozen}``
+  - ``prinet.nn.adaptive_allocation.AdaptiveOscillatorAllocator`` → ``prin_train::allocation::AdaptiveOscillatorAllocator``
+  - ``prinet.nn.adaptive_allocation.DynamicPhaseTracker`` → ``prin_train::allocation::DynamicPhaseTracker``
+
+  **Deliberate deviations:**
+
+  - *PhaseTracker phase-coherence similarity:* PRINet 3.0 uses
+    ``torch.complex64`` cosine similarity; PRIN uses a real-valued
+    reformulation (``cos(φ_i − φ_j)`` weighted by amplitudes) because Burn
+    has no complex-tensor autodiff. Same numerical result at ``float64``.
+  - *HybridPRINetV2 CNN stem:* ``use_conv_stem`` path not ported — out of
+    this WP's oscillatory-binding scope, no exercising caller.
+  - *Allocation strategy mismatch:* ``AdaptiveOscillatorAllocator::validate_shapes``
+    detects ``Rule``↔``Learned`` strategy mismatches at checkpoint load
+    (``TrainError::StrategyMismatch``); the inverse direction (``Rule``
+    target with ``Learned`` checkpoint) silently discards the MLP load
+    without error, documented as an accepted limitation (``Rule`` path
+    never reads MLP weights, no data corruption).
+
+  **Parity and validation:**
+  Golden-value parity tests against the actual PRINet 3.0 reference classes
+  (``torch==2.13.0+cpu`` float64): ``tests/parity_attention.rs``
+  (:math:`\text{rtol}=10^{-6}, \text{atol}=10^{-6}`),
+  ``tests/parity_phase_tracker.rs``
+  (:math:`\text{rtol}=10^{-6}, \text{atol}=10^{-6}`),
+  ``tests/parity_hybrid.rs``
+  (:math:`\text{rtol}=10^{-6}, \text{atol}=10^{-6}`).
+  ``HybridPRINetV2`` composes already-parity-tested primitives
+  (``DiscreteDeltaThetaGamma`` + ``OscillatoryAttention`` + standard Burn
+  layers); the whole-module parity test transcribes the full weight set via
+  ``HybridPRINetV2Params``/``init_from_params``. S3 remediation found and
+  fixed a missing ReLU in the classifier head during this test's creation.
+
+  **WP-026 Python bridge (``prin.nn``):** PyO3/DLPack bridges for all six
+  new modules. ``prin.nn.{OscillatoryAttention, PhaseTracker,
+  HybridPRINetV2, SlotAttentionModule, TemporalSlotAttentionMOT}`` are
+  ``torch.nn.Module`` wrappers; ``{PhaseTrackerFrozen, PhaseTrackerStatic,
+  SlotAttentionNoGRU, SlotAttentionFrozen}`` are ablation wrappers;
+  ``{AdaptiveOscillatorAllocator, DynamicPhaseTracker}`` are entirely
+  non-differentiable (discrete outputs). Differentiable methods use the
+  generic ``apply_rust_bridge`` in ``_bridge.py``; non-differentiable
+  methods are plain PyO3 calls. 86 new Python tests; 100% coverage on all
+  ``python/prin/nn/`` files (372/372 statements). Every differentiable
+  entry point passes ``torch.autograd.gradcheck`` in float64.
+
 - ``prin-train`` oscillator-aware optimizers (WP-024) —
   the third increment of the Burn-based trainable stack, rebuilding PRINet 3.0
   ``nn/optimizers.py``:

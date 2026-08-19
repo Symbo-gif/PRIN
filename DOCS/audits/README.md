@@ -119,6 +119,12 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   errors, both FIXED) resolved in S3 with a CLEAN delta re-audit. S3-exec
   addendum: DV-021 performance investigation (redundant copy elimination)
   and register-wide deferred-item review.
+- [`026-wp026-audit.md`](026-wp026-audit.md) — WP-026 "PhaseTracker, Hybrid,
+  baselines, and allocation" audit (`PASS-WITH-FINDINGS`); two D4 findings
+  (WP026-F1: allocator strategy-mismatch detection gap, FIXED; WP026-F2: no
+  whole-module HybridPRINetV2 parity test, FIXED — parity test revealed and
+  fixed missing ReLU in classifier head) resolved in S3 with a CLEAN delta
+  re-audit.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

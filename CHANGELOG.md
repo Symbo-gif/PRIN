@@ -9,6 +9,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WP-026 PhaseTracker, Hybrid, baselines, and allocation**
+  (`crates/prin-train/`, `crates/prin-py/`, `python/prin/nn/`, Phase 4 fifth
+  WP; sessions 0101–0104 plus Exec-WP-026 S1 executive secondary session;
+  audit `DOCS/audits/026-wp026-audit.md`, verdict `PASS-WITH-FINDINGS`, two
+  D4 findings: WP026-F1 FIXED, WP026-F2 FIXED): six new trainable modules
+  rebuilding PRINet 3.0 `nn/{layers,hybrid,slot_attention,ablation_variants,
+  adaptive_allocation}.py` with full PyO3 bridges and Python wrappers.
+  - `prin-train::attention::OscillatoryAttention` — multi-head attention with
+    additive oscillatory coherence bias (`score = QKᵀ/√d_k + α·cos(φ_i − φ_j)`).
+  - `prin-train::phase_tracker::PhaseTracker` — PRIN's primary contribution:
+    phase-based multi-object tracker encoding detections to phase/amplitude
+    via MLP, evolving through `DiscreteDeltaThetaGamma`, matching frames by
+    phase-coherence similarity with greedy assignment.
+  - `prin-train::hybrid::HybridPRINetV2` — canonical hybrid oscillator +
+    attention classification architecture: input → token projection →
+    adaptive oscillator phase interleaved with oscillatory attention + FFN
+    blocks → pool → classify.
+  - `prin-train::slot_attention::{SlotAttentionModule,
+    TemporalSlotAttentionMOT}` — non-oscillatory Slot Attention comparison
+    baseline; both draw fresh per-call stochastic noise from `&mut Seed`.
+  - `prin-train::ablation` — four structural ablation variants:
+    `PhaseTrackerFrozen`, `PhaseTrackerStatic`, `SlotAttentionNoGRU`,
+    `SlotAttentionFrozen`.
+  - `prin-train::allocation::{AdaptiveOscillatorAllocator,
+    DynamicPhaseTracker}` — task-complexity-driven adaptive oscillator-count
+    allocation with rule-based and learned (MLP) strategies.
+  - Shared helpers in `support.rs`: `seeded_linear`/`seeded_gru` (avoid
+    `Backend::seed` shared-global-RNG hazard), `seeded_standard_normal`,
+    `python_round`, `phase_coherence_similarity`, `greedy_match_by_similarity`.
+  - `validate_shapes()` added to all six new `Module` types (checkpoint
+    shape validation mirroring WP025-F1 precedent); a real
+    checkpoint-corruption bug found and fixed (Burn's `Module::load_record`
+    silently ignores plain `usize` fields).
+  - PyO3 bridges (`crates/prin-py/src/bindings/{attention,phase_tracker,
+    hybrid,slot_attention,ablation,allocation}.rs`) and thin
+    `torch.nn.Module` wrappers (`python/prin/nn/{attention,phase_tracker,
+    hybrid,slot_attention,ablation,allocation}.py`); generic
+    `apply_rust_bridge` in `_bridge.py`; 344 lines of new `.pyi` stubs.
+  - 3 new golden-value parity test files (`parity_attention.rs`,
+    `parity_phase_tracker.rs`, `parity_hybrid.rs`); 92 new Rust unit tests
+    + 15 `validate_shapes` regression tests; 86 new Python tests across 6
+    files; 100% Python `nn/` coverage (372/372 statements); all new Rust
+    files ≥95% on every coverage metric.
+  - S3 remediation: WP026-F1 FIXED (strategy-mismatch detection in
+    `AdaptiveOscillatorAllocator::validate_shapes`, `TrainError::StrategyMismatch`
+    variant); WP026-F2 FIXED (whole-module `HybridPRINetV2` parity test
+    revealed and fixed missing ReLU in classifier head, `HybridPRINetV2Params`
+    / `init_from_params` added). CLEAN delta re-audit.
+
 - **WP-025 Production Torch autograd bridge** (`crates/prin-py/`,
   `python/prin/nn/`, Phase 4 fourth WP; sessions 0097–0100; audit
   `DOCS/audits/025-wp025-audit.md`, verdict `PASS-WITH-FINDINGS`, four

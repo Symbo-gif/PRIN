@@ -28,11 +28,11 @@ Documentation Standards §3).
 
 ## Current state
 
-- Latest Project State Report: [`025-project-state.md`](reports/025-project-state.md) —
-  WP-025 S4 closure (Phase 4 fourth WP: production Torch autograd bridge),
-  WP-026 declaration.
-- Latest Audit Report: [`025-wp025-audit.md`](audits/025-wp025-audit.md) —
-  `PASS-WITH-FINDINGS` (one D2, one D3, two D4, all FIXED), S3 delta re-audit **CLEAN**.
+- Latest Project State Report: [`026-project-state.md`](reports/026-project-state.md) —
+  WP-026 S4 closure (Phase 4 fifth WP: PhaseTracker, Hybrid, baselines, and allocation),
+  WP-027 declaration.
+- Latest Audit Report: [`026-wp026-audit.md`](audits/026-wp026-audit.md) —
+  `PASS-WITH-FINDINGS` (two D4, both FIXED), S3 delta re-audit **CLEAN**.
 - Latest Phase Analytics: [`ANALYTICS/phase-3/phase-3-analytics-report.md`](ANALYTICS/phase-3/phase-3-analytics-report.md) —
   Phase 3 **PASS — SATISFACTORY**.
 
