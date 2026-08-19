@@ -57,7 +57,7 @@ decide silently.
 | `crates/prin-train/benches/resonance_layer_bridge.rs` | **New.** Pure-Rust forward+recompute-backward baseline at two named shapes, mirroring exactly what the bridge does (see "Boundary overhead" below). |
 | `python/prin/nn/__init__.py` | **Rewritten from an empty placeholder.** `ResonanceLayer`/`GatedPhaseActivation` `torch.nn.Module`s, each backed by a private `torch.autograd.Function` (`_ResonanceLayerFunction`/`_GatedPhaseActivationFunction`) whose `forward`/`backward` call the Rust bridge. |
 | `python/prin/_prin_core.pyi` | Stubs for `ResonanceLayerBridge`/`ResonanceLayerCtx`/`GatedPhaseActivationBridge`/`GatedPhaseActivationCtx`. |
-| `tests/test_train_bridge.py` | **New.** 27 correctness/gradient/checkpoint/error tests + 2 `slow`-marked `pytest-benchmark` cases (28 total, one deselected by default). |
+| `tests/test_train_bridge.py` | **New.** 27 correctness/gradient/checkpoint/error tests + 2 `slow`-marked `pytest-benchmark` cases (29 total, two deselected by default — corrected per WP025-F4). |
 
 ## Architecture
 
@@ -129,7 +129,7 @@ is the regression test.
 |---|---|---|
 | **Every bridge passes `torch.autograd.gradcheck` in float64** | **GREEN** | `TestResonanceLayerGradients::test_gradcheck_float64` (batch=3, `eps=1e-6, atol=1e-4`) plus two edge cases (`N=1` oscillator — no coupling partner; `n_steps=1` — minimal integration). `TestGatedPhaseActivationGradients::test_gradcheck_float64` passes at `eps=1e-4, atol=1e-3` — the default `eps=1e-6` fails (Jacobian mismatch ~0.001–0.009 relative), traced to the pre-existing, documented **DV-018** finding (`burn-tensor`'s default `sigmoid` downcasts through f32 internally, an ~1e-7-relative precision floor `GatedPhaseActivation`'s forward inherits); `activations.rs::gate_bias_gradient_matches_central_finite_difference` established the identical `eps=1e-4` adjustment for the same reason at the `prin-train` level, so this is the established disposition, not a new tolerance loosening. |
 | **Zero-copy paths are proven** | **GREEN (same bar as the WP-003 precedent)** | Every marshalling step uses the DLPack `PyCapsule` protocol exclusively (`__dlpack__`/`from_dlpack`) — no `numpy()`/pickle/Python-level array copy anywhere in `python/prin/nn/__init__.py` or `bindings/train.rs`. On the *output* path this is genuinely zero-copy at the FFI boundary: `export_dlpack_f64` hands a Rust-owned `Vec<f64>` directly into a new DLPack capsule via the existing WP-003 `OwnedDlpackTensor` mechanism, and `torch.from_dlpack` wraps that pointer without copying. On the *input* path, one internal copy is unavoidable and was already true of the WP-003 spike: Burn's `Tensor::from_data` requires an owned buffer, so `read_dlpack_f64` copies the raw DLPack-pointed memory into a `Vec<f64>` once (no additional Python-level round trip) — this is the same "zero-copy at the Python/Rust FFI boundary, one internal Rust-owned copy for the compute backend" bar the WP-003 spike established and amendment #7 accepted for the CPU path. |
-| **Boundary overhead <5%** | **GREEN, with measurement-noise caveat** | See "Boundary overhead" below: ≈2.7% at the small shape, ≈−5.3% (i.e. statistically indistinguishable from zero, Python measured *below* the Rust median) at the moderate shape, both on a paired same-session measurement. Single-run pilot evidence per the session brief's own framing ("no scientific conclusion claims from pilots"), not a multi-seed bootstrap CI — flagged for S2 to judge whether this bar is sufficient or a repeated/averaged measurement is warranted. |
+| **Boundary overhead <5%** | **SUPERSEDED — see "S3 correction" below** | S1's single-pilot-run pair (≈+2.7%/−5.3%, both apparently under target) is superseded by WP025-F2's S3 multi-run remediation: a 5-run, process-level measurement shows the target is genuinely **not** met at the small shape (+39.8%) and marginally exceeded at the moderate shape (+5.3%). The original GREEN verdict was an artifact of single-pilot-run noise, not a stable property of the code — see "S3 correction (WP025-F2)" below and **DV-021**. |
 | **Python contains no duplicated math** | **GREEN** | `python/prin/nn/__init__.py` contains zero arithmetic: `_ResonanceLayerFunction`/`_GatedPhaseActivationFunction` only marshal DLPack capsules and store/retrieve the Rust `ctx` object on `FunctionCtx`; `ResonanceLayer`/`GatedPhaseActivation` only construct the bridge and delegate every call. `grep -n "np\.\|math\.\|torch\.(sin|cos|exp|sigmoid|tanh)"` against the file returns nothing (the one `math.tau` reference is in the *test* file, for a range assertion, not production code). |
 | **Lifetime safety** | **GREEN** | No new `unsafe` code anywhere in this session's diff (`crates/prin-py/src/bindings/train.rs` has zero `unsafe` blocks; `#![deny(unsafe_code)]` at the crate root enforces this at compile time for every file outside `dlpack.rs`). The two new `dlpack.rs` helpers reuse the already-audited `unsafe` capsule-construction code verbatim (Project Plan amendment #6) rather than adding new `unsafe` blocks. `ctx` objects hold only owned, safe Rust values (a cloned `Module`, `Vec<f64>`, `Vec<usize>`) whose lifetime is exactly the Python-side object's reference count — no raw pointers, no manual `Box`/`PyCapsule` bookkeeping for anything beyond the pre-existing DLPack tensor path. |
 | **Stubs** | **GREEN** | `python/prin/_prin_core.pyi` updated with full signatures for all four new PyO3 classes; `mypy --strict` on `python/prin` is 0 issues (confirms the stubs type-check the actual usage in `python/prin/nn/__init__.py`, including the two `.forward()` call sites and the `state_dict()`/`load_state_dict()` checkpoint methods). |
@@ -165,6 +165,41 @@ before/after evidence for performance work; no scientific conclusion claims
 from pilots") — flagged for S2/S3 to decide whether a multi-run
 median-of-medians measurement should be added as a hardening follow-up
 before Phase 4's exit-gate PSR restates this figure as settled.
+
+### S3 correction (WP025-F2, session 0099, 2026-08-19)
+
+S2 (`DOCS/audits/025-wp025-audit.md`, WP025-F2, D3) confirmed the above
+single-pilot-run pair was noise-contaminated (a repeated small-shape
+criterion run swung ~25% from system noise alone — see the caveat above) and
+required either a multi-run measurement or a plan amendment before this
+figure could be relied upon. S3 added a 5-run, process-level measurement
+(five independent `cargo bench`/`pytest --benchmark-only` invocations, not
+just criterion's/pytest-benchmark's own in-process sampling):
+
+| Shape | Rust median-of-medians (5 runs) | Rust spread | Python median-of-medians (5 runs) | Python spread | Overhead |
+|---|---|---|---|---|---|
+| `small_32osc_16dims_8batch` | 7.2633 ms | 6.8136–7.5515 ms (~10%) | 10.1516 ms | 10.0369–10.2275 ms (~2%) | **+39.8%** |
+| `moderate_128osc_64dims_32batch` | 412.94 ms | 394.12–420.14 ms (~6%) | 434.8869 ms | 423.6864–444.9074 ms (~5%) | **+5.3%** |
+
+The `<5%` target is **not met** at either shape under this more rigorous
+methodology. This is not measurement noise: the Python side's own run-to-run
+spread is tight (~2% at the small shape) — far tighter than the ~25% Windows
+system-noise swing the original caveat described — so a stable, reproducible
+~40% overhead at the small shape is a real effect, not an artifact. The
+pattern (large relative overhead at the small shape, shrinking to just over
+target at the moderate shape) is consistent with a largely fixed per-call
+PyO3/DLPack/`torch.autograd.Function` dispatch cost (on the order of ~3 ms)
+that dominates at small absolute compute time. This does not indicate a
+correctness or security defect — `gradcheck` and the zero-copy claims are
+unaffected — it is a performance-target gap.
+
+Presented to the maintainer for disposition (2026-08-19): rather than a plan
+amendment to the `<5%` target, the maintainer directed this be deferred to a
+future WP for boundary-crossing optimization, since closing the gap requires
+performance-engineering work outside S3's scope ("no new feature work").
+Recorded as **DV-021** in `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`
+(OPEN, non-blocking for WP-025's own closure — the bridges themselves remain
+correct and are not re-scoped by this finding).
 
 ## New/re-audited risk: DV-005 (CUDA DLPack)
 
@@ -208,7 +243,7 @@ WP-025 regression.
 | interrogate | `python -m interrogate -c pyproject.toml python/prin` | PASS — 100.0% (`nn/__init__.py`: 18/18) |
 | bandit | `python -m bandit -r . -c pyproject.toml` | PASS — 0 issues |
 | doctests | `pytest --doctest-modules python/prin/nn/__init__.py` | PASS — 2/2 (`ResonanceLayer`, `GatedPhaseActivation` module-doc examples) |
-| Python fast suite | `pytest tests/ -m "not slow and not gpu"` | PASS — 333 passed, 7 deselected (was 306/6 at PSR-024; +27 new, all in `test_train_bridge.py`) |
+| Python fast suite | `pytest tests/ -m "not slow and not gpu"` | PASS — 333 passed, 8 deselected (was 306/6 at PSR-024; +27 new fast tests and +2 new slow-deselected tests, all in `test_train_bridge.py`; corrected per WP025-F4 — this row originally misstated 7 deselected) |
 | Snyk Code | `snyk auth status` (pre-flight) | **BLOCKED** — unauthenticated on this machine, same standing condition as every prior cycle (R23: maintainer-confirmed permanent Snyk-CLI-only posture). CI `snyk` workflow is the authoritative gate and will scan this session's source once pushed at S4 (amendment #28 push/CI cadence). |
 | Snyk Open Source | Not run | Cargo/pip are not Snyk-supported for local CLI scanning in this posture (R23); `cargo audit`/`pip_audit` are the authoritative ecosystem-native gates |
 | `pip_audit` | Not re-run this session | No `pyproject.toml`/dependency changes this session (only source files); last clean at PSR-024 |
