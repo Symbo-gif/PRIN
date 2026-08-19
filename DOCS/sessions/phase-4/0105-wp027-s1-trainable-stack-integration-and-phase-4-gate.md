@@ -27,6 +27,21 @@ Run controlled temporal CLEVR-N integration, full gradcheck, bridge profiling, s
 - The latest `DOCS/reports/NNN-project-state.md` and cumulative deviation ledger
 - This session brief and its immediate predecessor's closure evidence
 - Coding, Testing, Documentation, Benchmarking/Reproducibility, and Security provisions relevant to this scope
+- **DV-021 and DV-005** (`DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`) — both
+  concretely checkpointed to this session (WP-025 S3-exec register review,
+  2026-08-19) rather than left as an unassigned "future WP": DV-021 is the
+  WP-025 Torch-bridge boundary-overhead gap this session's own acceptance
+  criterion ("bridge overhead <5%") and mission text ("bridge profiling")
+  already cover — a verified, evidence-backed performance investigation
+  (`crates/prin-py/src/bindings/train.rs` commit `e720a24`) ruled out a
+  Rust-side glue-code fix and narrowed the gap to
+  `torch.autograd.Function.apply()`/`from_dlpack()` fixed dispatch cost, so
+  this session's profiling should start from that evidence rather than
+  re-deriving it. DV-005 is the CUDA Burn backend scope decision (no
+  `cuda`/`wgpu` Burn feature exists in the workspace as of that review) —
+  this Phase 4 gate is the natural point to decide whether it enters Phase 5
+  scope, same consolidation pattern R24 used for the GPU CI runner strategy
+  at WP-022 S1.
 
 ## Entry conditions
 

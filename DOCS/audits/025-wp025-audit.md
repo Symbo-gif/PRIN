@@ -191,3 +191,123 @@ All commands re-run from a clean working tree after both S3 commits, against the
 No newly introduced deviation. No regression below any coverage, quality, security, or parity gate. `git diff 4efa2aa..2a41195 --stat` touches exactly the six files listed above (four source/test files in `7b49e4e`, two docs files in `2a41195`) plus this audit report's own closure table — no other file changed.
 
 **Delta re-audit date:** 2026-08-19 — **Result:** CLEAN — WP025-F1 FIXED (D2, security), WP025-F3/F4 FIXED (D4), WP025-F2 FIXED at the evidentiary level it required with the resulting acceptance-criterion gap transparently recorded as DV-021 (open, non-blocking, maintainer-directed deferral to a future WP) rather than silently passed or left blocking; local gate fully green; no newly introduced deviation. Hand off to S4 (session 0100).
+
+---
+
+## 8. WP-025 S3-exec addendum (executive remediation session, 2026-08-19)
+
+**Status:** additive. This section documents a maintainer-directed executive
+session performed after S3's closure (above) and before S4 (session 0100,
+unaffected by this addendum). It does not reopen or alter §7's CLEAN
+delta-re-audit record; per Executive Audit Governance and Methodology §2
+principle 4 (retroactive/additive documentation authority), findings and
+evidence are appended, not rewritten.
+
+**Scope and authorization:** this session was chartered to (a) remediate
+WP-025's own outstanding deferred item (DV-021) with explicit authorization
+to attempt boundary-crossing performance engineering — superseding, for this
+session only, S3's own scope prohibition on performance-engineering work —
+and (b) perform a register-wide review of `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`,
+addressing what could be legitimately addressed now and concretely
+reassigning the rest. No new feature work was performed; no plan amendment
+was required (no trajectory, requirement, or architecture rule changed).
+
+### 8.1 DV-021 performance investigation
+
+Diagnosed `crates/prin-py/src/bindings/train.rs::forward()` for both bridges:
+each read a DLPack capsule into a `Vec<f64>`, built a `Tensor`, then
+re-extracted the same values via `tensor.clone().into_data().to_vec()` to
+save for the backward-context recompute — a redundant Tensor→`TensorData`→
+`Vec` round trip through the autodiff backend's data-conversion path.
+Replaced with `tensor2_from_dlpack_with_data`, which captures the plain
+`(dims, data)` pair once, before the `Tensor` exists. Commit `e720a24`.
+
+**Independent verification (re-run this session, git state `e720a24`):**
+
+| Gate | Command | Result |
+|---|---|---|
+| Build | `cargo build -p prin-py --release` | PASS, 1m 12s, no warnings |
+| Format | `cargo fmt --all -- --check` | PASS (exit 0) |
+| Clippy | `cargo clippy --workspace --all-targets -- -D warnings` | PASS (exit 0); 4 lines of Windows incremental-compilation filesystem-lock noise, 0 code warnings |
+| Workspace tests | `cargo test --workspace` | 1 transient failure (`bands::tests::gradients_flow_to_every_parameter`, the pre-existing DV-019 flake — unrelated file, not touched by this commit); immediate re-run PASS, 0 failed |
+| PyO3 extension rebuild | `python -m maturin develop --release -m crates/prin-py/Cargo.toml` | PASS |
+| Python fast suite | `pytest tests/ -m "not slow and not gpu" -q` | **335 passed, 8 deselected** — unchanged from the S3 closure table |
+| Gradcheck | `pytest tests/test_train_bridge.py -k gradcheck -m "not slow" -v` | 4/4 PASS (both bridges, float64) |
+
+**Rigorous re-measurement** (5-run process-level median-of-medians, identical
+protocol to the S3 closure table's WP025-F2 remediation):
+
+| Shape | Rust median (spread) | Python median (spread) | Overhead | S3 baseline overhead |
+|---|---|---|---|---|
+| `small_32osc_16dims_8batch` | 6.6025 ms (6.3684–6.7662 ms) | 9.2853 ms (9.1270–9.4573 ms) | +40.6% | +39.8% |
+| `moderate_128osc_64dims_32batch` | 364.90 ms (358.29–370.43 ms) | 381.2303 ms (377.12–389.54 ms) | +4.5% | +5.3% |
+
+Both deltas are within this host's already-documented noise band (DV-016;
+S3's own small-shape Rust-side spread was ~10%). **Conclusion: the fix is
+real and kept (verified zero-behavior-change, genuine redundant-copy
+elimination) but does not measurably close DV-021.** This is expected, not a
+failed optimization attempt: the Rust criterion baseline
+(`crates/prin-train/benches/resonance_layer_bridge.rs`) calls
+`prin_train::layers::ResonanceLayer::forward` directly and never touches
+`train.rs`/DLPack, so the redundant copy removed here was invisible to that
+baseline by construction — the fix's effect can only appear on the
+Python-measured side, where it is real but small relative to the dominant
+fixed cost. This positively rules out "an unfixed oversight in the Rust glue
+code" as DV-021's explanation and confirms the gap is architectural:
+`torch.autograd.Function.apply()` node-construction/bookkeeping and
+`torch.utils.dlpack.from_dlpack()` are Python/C++-side costs inherent to the
+bridge architecture WP-025's acceptance criteria mandate, not reachable from
+the Rust side without abandoning `torch.autograd.Function` (out of scope) or
+batching multiple bridge calls at a higher level (an application-level
+decision for WP-026/WP-027's consumers, not the bridge itself).
+
+DV-021 is reassigned from an unspecified "future WP" to **WP-027 S1**, whose
+own mission text already names "bridge profiling" and restates the `<5%`
+bridge-overhead acceptance bar verbatim — see the cross-reference note added
+to `DOCS/sessions/phase-4/0105-wp027-s1-trainable-stack-integration-and-phase-4-gate.md`.
+
+### 8.2 Register-wide deferred-item review
+
+Performed the register's own stated "S4 reviews this register" update
+protocol early, under this session's added scope, covering every item in
+`DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`:
+
+- **Re-checked and confirmed unchanged:** DV-008/DV-017 (`cargo audit`, exit
+  0, two pre-existing allowed advisories `paste`/`bincode`, no new
+  advisory); DV-009 (`gh api repos/Symbo-gif/PRIN/secret-scanning/alerts` →
+  `404 "Secret scanning is disabled on this repository"`, unchanged).
+- **Concretely reassigned from "a future WP" to WP-027 S1:** DV-021 (§8.1
+  above) and DV-005 (CUDA Burn backend scope decision — confirmed no
+  `cuda`/`wgpu` Burn feature exists anywhere in the workspace; WP-027 is the
+  Phase 4 gate, the natural point to decide Phase 5 scope, same
+  consolidation pattern R24 used for the GPU CI runner strategy at WP-022 S1).
+- **Given the explicit "opportunistic, not WP-gated" disposition** (matching
+  the DV-016/R25 precedent, rather than left ambiguous): DV-003 (remaining
+  GPU-kernel device-timing optimization has no natural Phase 4/5 WP home)
+  and reconfirmed for DV-016 itself (this host has no access to the actual
+  `windows-latest` GitHub-hosted runner, so no root-cause investigation was
+  attempted, to avoid an unverifiable claim).
+- **DV-019 recurred a third time** during this session's own
+  `cargo test --workspace` run (see the table in §8.1) — immediately re-run
+  clean, consistent with the established non-regression pattern. Read
+  `crates/prin-train/src/bands.rs:756-808` and narrowed the root cause to
+  the `w_gamma` gradient-presence assertion at line 801 (the test's own
+  comments already document this parameter's gradient as "on a knife-edge").
+  Two concrete candidate fixes recorded in the register for the dedicated
+  future hotfix/correction session `bands.rs`'s frozen-scope status requires
+  per Development Workflow and Audit Standards §3, rather than attempted
+  here as a drive-by patch to an unrelated module.
+- **Reviewed, no change needed:** DV-001, DV-002, DV-006, DV-007, DV-011,
+  DV-012, DV-013, DV-014, DV-015, DV-018, DV-020 (hardware/maintainer/
+  infra-blocked, not-yet-due, already closed, or open-by-design — see the
+  register's own text for each).
+- **Flagged back to the maintainer, not executed:** DV-010 (the pending
+  `v0.1.0-alpha.1`/`v0.3.0-alpha.1` pre-release tag push) — this session's
+  authorization covered deferred-item remediation and performance
+  investigation, not triggering a real PyPI/crates.io publish, which
+  requires its own explicit maintainer confirmation per DV-010's existing
+  disposition.
+
+No plan amendment was required. Full evidence and disposition text for every
+item above is in `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`'s review log
+entry dated 2026-08-19 ("WP-025 S3-exec").

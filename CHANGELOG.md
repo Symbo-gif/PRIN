@@ -173,6 +173,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **WP-025 S3-exec (executive remediation session, 2026-08-19):** deferred-item
+  remediation session tied to WP-025, performed after the normal S3 cycle's
+  closure (session 0099) with maintainer-authorized added scope. Fixed a
+  redundant Tensor→data round-trip in `crates/prin-py/src/bindings/train.rs`'s
+  `PyResonanceLayerBridge::forward`/`PyGatedPhaseActivationBridge::forward`
+  (`tensor2_from_dlpack_with_data` replaces a separate DLPack read followed by
+  `tensor.clone().into_data().to_vec()`); verified zero behavior change and
+  rigorously re-measured the DV-021 boundary-overhead evidence (5-run
+  process-level median-of-medians, same protocol as the S3 closure table).
+  The fix is real but does not close DV-021 — the gap is dominated by
+  Python-side `torch.autograd.Function.apply()`/`from_dlpack()` fixed
+  dispatch cost, not the Rust glue this commit touches. DV-021 and DV-005
+  reassigned from an unspecified "future WP" to the concrete WP-027 S1 Phase
+  4 gate checkpoint. Reviewed every item in
+  `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`: re-confirmed DV-008/DV-009/
+  DV-017 unchanged (`cargo audit`, GitHub secret-scanning availability);
+  gave DV-003/DV-016 an explicit opportunistic/not-WP-gated disposition; DV-019
+  recurred a third time (immediately re-run clean) with its root cause
+  narrowed to `bands.rs:801`'s `w_gamma` gradient-presence assertion and two
+  candidate fixes recorded for a dedicated future hotfix session. See
+  `DOCS/audits/025-wp025-audit.md` §8 and the register's 2026-08-19 review
+  log entry for full evidence.
+
 - **EMA-002 tooling:** removed 5 stale `type: ignore[import-not-found]`
   comments from `tools/math_audit_run.py` (mypy `--strict` now clean).
 
