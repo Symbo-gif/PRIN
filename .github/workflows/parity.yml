@@ -50,8 +50,9 @@ jobs:
         run: |
           pip install --no-cache-dir maturin
           maturin develop -m crates/prin-py/Cargo.toml
-          pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -e ".[dev]"
+          pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
+          pip install --no-cache-dir -e ".[dev]"
           pip install --no-cache-dir pytest-xdist
-          pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -e "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main"
+          pip install --no-cache-dir -e "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main"
       - name: Run exhaustive differential parity suite (504 cases)
         run: python -m pytest parity/ -v -m parity -n auto
