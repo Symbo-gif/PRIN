@@ -5,10 +5,12 @@ name: gpu
 # `[gpu]` tag in the commit message (mirrors the PRINet 3.0 convention).
 #
 # Requires a GitHub Actions self-hosted runner registered with the
-# `[self-hosted, gpu]` labels (GitHub Settings -> Actions -> Runners); no
-# such runner is registered yet, so this workflow does not execute until one
-# is. Closing DV-001's Triton comparison additionally requires that runner
-# to be Linux (Triton has no Windows support).
+# `[self-hosted, gpu]` labels (GitHub Settings -> Actions -> Runners).
+# `PRIN-GPU-Runner` (Windows, online, `[self-hosted, Windows, X64, gpu]`)
+# is registered and available. Jobs are opt-in via `[gpu]` in the commit
+# message. Closing DV-001's Triton comparison additionally requires a
+# Linux runner (Triton has no Windows support); the current Windows runner
+# closes DV-002 (wgpu) but not DV-001's Triton-specific requirement.
 
 on:
   push:
