@@ -95,6 +95,68 @@ binding modules:
 `tests/test_wp013_bands_temporal.py` cover all binding paths (36 from S1, 8
 from S3 covering the coupling-mode surface).
 
+Exec-WP-026 S1 (executive secondary session addressing WP-026 S1's own
+deliberate scope deferral — see `DOCS/experiments/0101-exec-wp026-s1-handoff.md`)
+added PyO3/DLPack bridges for the six new `prin-train` modules WP-026 S1
+delivered without their Python-facing surface:
+
+- **`bindings/train_support.rs`** (new) — generalizes WP-025's rank-2-specific
+  DLPack decode/encode/checkpoint helpers to arbitrary tensor rank `D` via
+  const generics, so every bridge module below (and `train.rs`'s own two
+  WP-025 bridges, refactored to call these) reuses one implementation instead
+  of re-deriving the pattern per module.
+- **`bindings/attention.rs`**, **`bindings/hybrid.rs`** — `OscillatoryAttentionBridge`,
+  `HybridPRINetV2Bridge`: single differentiable `forward`, following the
+  WP-025 `train.rs` pattern exactly. Both constructors reject a non-zero
+  `dropout`: `burn::nn::Dropout` draws from an unseeded backend RNG under
+  autodiff, which breaks `torch.autograd.gradcheck` determinism and the
+  recompute-on-backward contract (discovered and documented this session).
+- **`bindings/phase_tracker.rs`** — `PhaseTrackerBridge`: `encode`/`evolve`/
+  `phase_similarity` are differentiable (multi-output vector-Jacobian-product,
+  generalizing the single-output case); `match_frames` (renamed from `forward`)
+  and `track_sequence` are non-differentiable evaluation utilities (greedy
+  frame-to-frame matching has no gradient) exposed as plain PyO3 methods, not
+  `torch.autograd.Function`s.
+- **`bindings/slot_attention.rs`** — `SlotAttentionModuleBridge`,
+  `TemporalSlotAttentionMOTBridge`: both draw fresh stochastic noise from a
+  caller-supplied `Seed` on every call (not just at construction); each `*Ctx`
+  snapshots a clone of the `Seed` value from immediately before the original
+  forward call and re-clones that snapshot for every `backward()` recompute,
+  reproducing bit-identical noise (`Seed` is deterministic and `Clone`).
+- **`bindings/ablation.rs`** — `PhaseTrackerFrozenBridge`/`SlotAttentionFrozenBridge`
+  expose an `.inner` accessor returning a fresh `PhaseTrackerBridge`/
+  `TemporalSlotAttentionMOTBridge` over a clone of the wrapped tracker, reusing
+  every differentiable method those types already implement rather than
+  re-deriving them; `PhaseTrackerStaticBridge`/`SlotAttentionNoGRUBridge`
+  fully reimplement their own differentiable methods (their Rust types don't
+  wrap the base type either).
+- **`bindings/allocation.rs`** — `AdaptiveOscillatorAllocatorBridge`,
+  `DynamicPhaseTrackerBridge`, `OscillatorBudget`, `estimate_complexity`: all
+  non-differentiable (oscillator counts are discrete `floor`/`round` outputs).
+
+A real correctness bug was found and fixed during this session:
+`Module::load_record`'s `constant!` macro (Burn) leaves plain `usize` fields
+(e.g. `n_osc`, `d_model`) **completely untouched** by a checkpoint load — only
+`Param<Tensor>` fields take on the record's values. The initial
+`load_state_dict` implementations compared a post-load field to itself (an
+unconditional pass), so a shape-mismatched checkpoint would corrupt a
+module's `Param` tensors silently. Fixed by adding `validate_shapes()` to
+each affected `prin-train` type (mirroring WP025-F1's precedent exactly) and
+having every `load_state_dict` call it before committing; caught by this
+session's own checkpoint-mismatch-rejection tests, not by inspection.
+
+`python/prin/nn/_bridge.py` (new) provides one generic
+`torch.autograd.Function`-backed `apply_rust_bridge` helper covering
+arbitrary tensor input/output arity, so the Python wrapper classes in
+`python/prin/nn/{attention,phase_tracker,hybrid,slot_attention,ablation,
+allocation}.py` (new) are each a few lines of glue per differentiable method
+instead of a bespoke `torch.autograd.Function` subclass. `python/prin/_prin_core.pyi`
+stubs and 86 new Python tests across six new `tests/test_train_bridge_*.py`
+files (100% coverage on every new `python/prin/nn` file) cover all binding
+paths, including `torch.autograd.gradcheck` (float64) for every differentiable
+entry point and checkpoint round-trip/shape-mismatch-rejection for every
+`Module`-backed bridge.
+
 Type stubs are maintained at `python/prin/_prin_core.pyi` and regenerated
 whenever the extension API changes.
 

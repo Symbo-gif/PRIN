@@ -12,10 +12,10 @@
 //!   through (Coding Standards §3.2: "boundary crossings are batched — one
 //!   call per integration, not per step").
 //! - `forward(x)` decodes `x` from a DLPack capsule (`float64` CPU,
-//!   [`super::super::dlpack::read_dlpack_f64`]), runs the *entire* Rust
-//!   forward pass in one call (`ResonanceLayer::forward` already loops
-//!   `n_steps` internally in Rust — no per-step Python↔Rust crossing), and
-//!   returns `(output_capsule, ctx)`.
+//!   [`super::train_support::tensor_from_dlpack_with_data`]), runs the
+//!   *entire* Rust forward pass in one call (`ResonanceLayer::forward`
+//!   already loops `n_steps` internally in Rust — no per-step Python↔Rust
+//!   crossing), and returns `(output_capsule, ctx)`.
 //! - `ctx` is a `*Ctx` `#[pyclass]` holding what `backward(grad_output)`
 //!   needs: a cloned handle to the layer (cheap — Burn `Module` parameters
 //!   are `Rc`-shared) and the plain (non-graph-tracked) input values. Burn's
@@ -58,88 +58,30 @@
 //! `inhibition::FeedbackInhibition`) is an explicit out-of-scope discovery
 //! for a future WP (see the WP-025 S1 handoff) — this module establishes the
 //! reusable pattern, not an exhaustive port.
+//!
+//! The DLPack decode/encode/checkpoint helpers this module originally
+//! defined inline were generalized to arbitrary tensor rank and moved to
+//! [`super::train_support`] during Exec-WP-026 S1, so the six new bridge
+//! modules in this crate (`attention`, `phase_tracker`, `hybrid`,
+//! `slot_attention`, `ablation`, `allocation`) could reuse them instead of
+//! re-deriving this module's ~150 lines of boilerplate per module. This is a
+//! behavior-preserving refactor: every function body below is unchanged
+//! except for calling the shared, rank-generic helpers at `D = 2`.
 
-use burn::backend::{Autodiff, NdArray};
 use burn::module::Module;
-use burn::record::{BinBytesRecorder, DoublePrecisionSettings, Recorder};
-use burn::tensor::{Tensor, TensorData};
+use burn::tensor::Tensor;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
 use prin_dynamics::Seed;
 use prin_train::activations::{GatedPhaseActivation, GatedPhaseActivationConfig};
-use prin_train::error::TrainError;
 use prin_train::layers::{ResonanceLayer, ResonanceLayerConfig};
 
-use super::super::dlpack::{export_dlpack_f64, read_dlpack_f64};
-
-/// CPU autodiff backend every WP-025 bridge uses: `NdArray<f64>` matches
-/// `torch.autograd.gradcheck`'s float64 requirement exactly, and is the same
-/// backend `prin-train`'s own gradient tests already validate against
-/// (`TestAutodiffBackend` in `bands.rs`/`layers.rs`/`activations.rs`).
-type BridgeBackend = Autodiff<NdArray<f64>>;
-
-fn train_err_to_py(err: TrainError) -> PyErr {
-    PyValueError::new_err(err.to_string())
-}
-
-fn device() -> <BridgeBackend as burn::tensor::backend::Backend>::Device {
-    Default::default()
-}
-
-/// Decode a 2-D `float64` DLPack tensor as a gradient-tracked leaf tensor,
-/// also returning the plain `(dims, data)` pair used to rebuild the leaf
-/// inside `backward()`.
-///
-/// Forward callers need both the `Tensor` (for the immediate forward pass)
-/// and a plain copy of the same values (saved in the `*Ctx` for the
-/// recompute-on-backward design — see the module docs). Reading the DLPack
-/// capsule once and cloning the resulting `Vec<f64>` here (DV-021 S3-exec
-/// remediation) avoids the previous `tensor.clone().into_data().to_vec()`
-/// round-trip, which re-extracted the same values through the autodiff
-/// backend's data-conversion path after the tensor had already been built.
-fn tensor2_from_dlpack_with_data(
-    obj: &Bound<'_, PyAny>,
-) -> PyResult<(Tensor<BridgeBackend, 2>, Vec<usize>, Vec<f64>)> {
-    let (shape, data) = read_dlpack_f64(obj)?;
-    if shape.len() != 2 {
-        return Err(PyValueError::new_err(format!(
-            "expected a 2-D tensor [batch, features], got shape {shape:?}"
-        )));
-    }
-    let dims: Vec<usize> = shape.iter().map(|&d| d as usize).collect();
-    let data_copy = data.clone();
-    let tensor = Tensor::from_data(TensorData::new(data, dims.clone()), &device()).require_grad();
-    Ok((tensor, dims, data_copy))
-}
-
-/// Decode a 2-D `float64` DLPack tensor without gradient tracking (used for
-/// the incoming `grad_output` cotangent, which must not itself carry a
-/// graph).
-fn plain_tensor2_from_dlpack(
-    obj: &Bound<'_, PyAny>,
-    expected: [usize; 2],
-) -> PyResult<Tensor<BridgeBackend, 2>> {
-    let (shape, data) = read_dlpack_f64(obj)?;
-    let dims: Vec<usize> = shape.iter().map(|&d| d as usize).collect();
-    if dims.as_slice() != expected {
-        return Err(PyValueError::new_err(format!(
-            "grad_output shape {dims:?} does not match the forward output shape {expected:?}"
-        )));
-    }
-    Ok(Tensor::from_data(TensorData::new(data, dims), &device()))
-}
-
-/// Export a 2-D inner-backend (non-autodiff) tensor as a new DLPack capsule.
-fn export_tensor2(py: Python<'_>, tensor: Tensor<NdArray<f64>, 2>) -> PyResult<Py<PyAny>> {
-    let shape: Vec<i64> = tensor.dims().iter().map(|&d| d as i64).collect();
-    let data = tensor
-        .into_data()
-        .to_vec::<f64>()
-        .map_err(|e| PyValueError::new_err(format!("failed to read tensor data: {e:?}")))?;
-    export_dlpack_f64(py, shape, data)
-}
+use super::train_support::{
+    device, export_tensor, load_checkpoint_record, plain_tensor_from_dlpack, record_to_bytes,
+    tensor_from_dlpack_with_data, train_err_to_py, BridgeBackend,
+};
 
 // --- ResonanceLayer bridge -------------------------------------------------
 
@@ -173,10 +115,10 @@ impl PyResonanceLayerCtx {
     /// or if the gradient graph unexpectedly has no entry for `x` (would
     /// indicate an internal bridge defect, not a user error).
     fn backward(&self, py: Python<'_>, grad_output: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
-        let grad_output = plain_tensor2_from_dlpack(grad_output, self.out_shape)?;
+        let grad_output = plain_tensor_from_dlpack::<2>(grad_output, self.out_shape)?;
 
         let x = Tensor::from_data(
-            TensorData::new(self.x_data.clone(), self.x_shape.clone()),
+            burn::tensor::TensorData::new(self.x_data.clone(), self.x_shape.clone()),
             &device(),
         )
         .require_grad();
@@ -191,7 +133,7 @@ impl PyResonanceLayerCtx {
         let grad_x = x.grad(&grads).ok_or_else(|| {
             PyValueError::new_err("internal error: no gradient recorded for the bridge input")
         })?;
-        export_tensor2(py, grad_x)
+        export_tensor::<2>(py, grad_x)
     }
 }
 
@@ -268,7 +210,7 @@ impl PyResonanceLayerBridge {
         py: Python<'_>,
         x: &Bound<'_, PyAny>,
     ) -> PyResult<(Py<PyAny>, Py<PyResonanceLayerCtx>)> {
-        let (x, x_shape, x_data) = tensor2_from_dlpack_with_data(x)?;
+        let (x, x_shape, x_data) = tensor_from_dlpack_with_data::<2>(x)?;
         if x_shape[1] != self.n_dims {
             return Err(PyValueError::new_err(format!(
                 "expected x shape [batch, {}], got {:?}",
@@ -277,7 +219,7 @@ impl PyResonanceLayerBridge {
         }
         let output = self.layer.forward(x).map_err(train_err_to_py)?;
         let out_shape = output.dims();
-        let out_capsule = export_tensor2(py, output.inner())?;
+        let out_capsule = export_tensor::<2>(py, output.inner())?;
         let ctx = PyResonanceLayerCtx {
             layer: self.layer.clone(),
             out_shape,
@@ -292,12 +234,7 @@ impl PyResonanceLayerBridge {
     /// the same mechanism `layers.rs`'s
     /// `record_roundtrip_preserves_parameters` test already validates).
     fn state_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyBytes>> {
-        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
-        let bytes =
-            Recorder::<BridgeBackend>::record(&recorder, self.layer.clone().into_record(), ())
-                .map_err(|e| {
-                    PyValueError::new_err(format!("checkpoint serialization failed: {e}"))
-                })?;
+        let bytes = record_to_bytes(&self.layer)?;
         Ok(PyBytes::new(py, &bytes))
     }
 
@@ -330,42 +267,6 @@ impl PyResonanceLayerBridge {
     }
 }
 
-/// Deserialize checkpoint bytes into a Burn record, converting both a
-/// structured `RecorderError` and an internal `burn-core` panic on malformed
-/// bytes into a typed `ValueError`.
-///
-/// `bytes` is untrusted public-boundary input (Coding Standards §2.2):
-/// `burn-core`'s `BinBytesRecorder` decoder panics (rather than returning
-/// `Err`) on some malformed inputs (confirmed empirically during S1 —
-/// `UnexpectedEnd` from `bincode`), so this wraps the call in
-/// `catch_unwind` to guarantee a clean `PyResult` at this FFI boundary
-/// instead of an uncaught panic propagating into Python.
-fn load_checkpoint_record<M: Module<BridgeBackend>>(bytes: &[u8]) -> PyResult<M::Record> {
-    let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
-    let owned = bytes.to_vec();
-    let dev = device();
-
-    // Malformed-checkpoint panics are an expected, user-triggerable error
-    // path here (not a bug), so the default panic hook's "thread panicked"
-    // stderr noise is suppressed for the duration of this call. This briefly
-    // touches the process-wide panic hook; `prin-py` does not spawn
-    // background threads of its own, so the window where an unrelated
-    // thread's panic message could be swallowed is not exercised in
-    // practice.
-    let previous_hook = std::panic::take_hook();
-    std::panic::set_hook(Box::new(|_| {}));
-    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        Recorder::<BridgeBackend>::load(&recorder, owned, &dev)
-    }));
-    std::panic::set_hook(previous_hook);
-
-    result
-        .map_err(|_| {
-            PyValueError::new_err("checkpoint deserialization failed: malformed record bytes")
-        })?
-        .map_err(|e| PyValueError::new_err(format!("checkpoint deserialization failed: {e}")))
-}
-
 // --- GatedPhaseActivation bridge --------------------------------------------
 
 /// Backward context for one [`PyGatedPhaseActivationBridge::forward`] call.
@@ -387,10 +288,10 @@ impl PyGatedPhaseActivationCtx {
     /// Run the Rust backward pass for the saved forward call. See
     /// [`PyResonanceLayerCtx::backward`] for the general contract.
     fn backward(&self, py: Python<'_>, grad_output: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
-        let grad_output = plain_tensor2_from_dlpack(grad_output, self.out_shape)?;
+        let grad_output = plain_tensor_from_dlpack::<2>(grad_output, self.out_shape)?;
 
         let z = Tensor::from_data(
-            TensorData::new(self.z_data.clone(), self.z_shape.clone()),
+            burn::tensor::TensorData::new(self.z_data.clone(), self.z_shape.clone()),
             &device(),
         )
         .require_grad();
@@ -405,7 +306,7 @@ impl PyGatedPhaseActivationCtx {
         let grad_z = z.grad(&grads).ok_or_else(|| {
             PyValueError::new_err("internal error: no gradient recorded for the bridge input")
         })?;
-        export_tensor2(py, grad_z)
+        export_tensor::<2>(py, grad_z)
     }
 }
 
@@ -455,7 +356,7 @@ impl PyGatedPhaseActivationBridge {
         py: Python<'_>,
         z: &Bound<'_, PyAny>,
     ) -> PyResult<(Py<PyAny>, Py<PyGatedPhaseActivationCtx>)> {
-        let (z, z_shape, z_data) = tensor2_from_dlpack_with_data(z)?;
+        let (z, z_shape, z_data) = tensor_from_dlpack_with_data::<2>(z)?;
         if z_shape[1] != self.layer.n_dims() {
             return Err(PyValueError::new_err(format!(
                 "expected z shape [batch, {}], got {:?}",
@@ -465,7 +366,7 @@ impl PyGatedPhaseActivationBridge {
         }
         let output = self.layer.forward(z).map_err(train_err_to_py)?;
         let out_shape = output.dims();
-        let out_capsule = export_tensor2(py, output.inner())?;
+        let out_capsule = export_tensor::<2>(py, output.inner())?;
         let ctx = PyGatedPhaseActivationCtx {
             layer: self.layer.clone(),
             out_shape,
@@ -478,12 +379,7 @@ impl PyGatedPhaseActivationBridge {
     /// Serialize gate parameters to checkpoint bytes. See
     /// [`PyResonanceLayerBridge::state_dict`].
     fn state_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyBytes>> {
-        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
-        let bytes =
-            Recorder::<BridgeBackend>::record(&recorder, self.layer.clone().into_record(), ())
-                .map_err(|e| {
-                    PyValueError::new_err(format!("checkpoint serialization failed: {e}"))
-                })?;
+        let bytes = record_to_bytes(&self.layer)?;
         Ok(PyBytes::new(py, &bytes))
     }
 

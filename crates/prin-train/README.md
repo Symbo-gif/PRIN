@@ -184,29 +184,45 @@ log-softmax-normalization tests rather than a fourth full end-to-end weight
 transcription (same "component parity, not whole-network parity" precedent
 as Project Plan amendment #19).
 
-**Not delivered this session — PyO3 bindings and Python wrappers.**
+**Not delivered in WP-026 S1 — PyO3 bindings and Python wrappers.**
 `crates/prin-py/` PyO3 bindings and `python/prin/nn/` thin wrappers were
-declared in WP-026's scope (`DOCS/reports/025-project-state.md` §6) but are
-not implemented here: WP-025's own production bridge for two materially
-simpler modules (`ResonanceLayer`, `GatedPhaseActivation` — each a single
-flat parameter set) required ~514 lines of custom Rust
-`torch.autograd.Function`-bridge code, a hand-written backward pass working
-around Burn's lack of retain-graph (recomputing the forward pass inside
-every `backward()` call), and 27 dedicated Python tests, and was itself a
-full four-session work package (S1–S4). Replicating that bridge depth for
-five architecturally larger, multi-sub-module compositions — one with a
-non-differentiable greedy-matching post-processing step
-(`PhaseTracker`/all trackers) and one with a genuinely per-forward-call
-stochastic entry point (`SlotAttentionModule`) — is out of proportion to a
-single S1 session and risks exactly the kind of under-tested bridge code
-WP-025's own audit found (WP025-F1, WP025-F2). Recorded as an explicit,
-evidence-backed carried-scope item (see the WP-026 S1 handoff note in
-`DOCS/experiments/`), not a silently dropped requirement.
+declared in WP-026's scope (`DOCS/reports/025-project-state.md` §6) but were
+not implemented in session 0101: WP-025's own production bridge for two
+materially simpler modules (`ResonanceLayer`, `GatedPhaseActivation` — each a
+single flat parameter set) required ~514 lines of custom Rust
+`torch.autograd.Function`-bridge code and was itself a full four-session work
+package (S1–S4); replicating that depth for six larger modules in one S1
+session budget risked exactly the kind of under-tested bridge code WP-025's
+own audit found (WP025-F1, WP025-F2). Recorded as an explicit, evidence-backed
+carried-scope item in the WP-026 S1 handoff note
+(`DOCS/experiments/0101-wp026-s1-handoff.md`) — **closed by the
+Exec-WP-026 S1 executive session below**, not left unassigned.
+
+### Exec-WP-026 S1: PyO3 bindings and Python wrappers for WP-026
+
+Delivered the carried-scope item above: `crates/prin-py/src/bindings/
+{attention,phase_tracker,hybrid,slot_attention,ablation,allocation}.rs` and
+`python/prin/nn/{attention,phase_tracker,hybrid,slot_attention,ablation,
+allocation}.py` — see `crates/prin-py/README.md` for the full bridge-design
+breakdown (differentiable vs. non-differentiable method split, the
+stochastic-recompute and dropout-determinism hazards, and the checkpoint
+shape-validation bug found and fixed). This session also added
+`validate_shapes()` to `OscillatoryAttention`, `PhaseTracker`,
+`HybridPRINetV2`, `SlotAttentionModule`, `TemporalSlotAttentionMOT`,
+`PhaseTrackerStatic`, `SlotAttentionNoGRU`, and
+`AdaptiveOscillatorAllocator` (mirroring `ResonanceLayer`/
+`GatedPhaseActivation`'s WP025-F1 precedent), with regression tests for each;
+`prin-train` full-suite coverage on the six touched files is ≥96%/97.5%/96.5%
+(region/function/line) or better. See
+`DOCS/experiments/0101-exec-wp026-s1-handoff.md` for the full
+acceptance-criteria → evidence map. Full session is subject to the
+already-registered WP-026 S2/S3/S4 audit cycle (sessions 0102–0104).
 
 ## Not yet implemented
 
-`crates/prin-py`/`python/prin/nn` bindings for the WP-026 symbols above (see
-that section); trainable-stack integration and Phase 4 gate (WP-027).
+Trainable-stack integration and Phase 4 gate (WP-027); a
+`torch.optim.Optimizer` wrapper over `SyncGd`/`Rip`/`Scalr`; CUDA DLPack path
+(DV-005, checkpointed to WP-027 S1).
 
 Rebuild target for PRINet 3.0 `nn/{layers,optimizers,activations,hep,hybrid,
 slot_attention,ablation_variants,adaptive_allocation}.py` and the trainable

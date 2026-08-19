@@ -172,6 +172,32 @@ impl<B: Backend> PhaseTrackerStatic<B> {
         self.n_osc
     }
 
+    /// Validate that the detection-encoder and `frequencies` parameter
+    /// tensors' current shapes still match this tracker's declared `n_osc`
+    /// configuration. See
+    /// [`crate::layers::ResonanceLayer::validate_shapes`] for why this check
+    /// is necessary after a checkpoint load.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] naming the first tensor whose
+    /// shape does not match.
+    pub fn validate_shapes(&self) -> Result<(), TrainError> {
+        let n = self.n_osc;
+        check_dims(
+            "det_to_phase[1].weight",
+            self.det_to_phase[1].weight.val().dims(),
+            [crate::phase_tracker::DET_HIDDEN, n],
+        )?;
+        check_dims(
+            "det_to_amp[1].weight",
+            self.det_to_amp[1].weight.val().dims(),
+            [crate::phase_tracker::DET_HIDDEN, n],
+        )?;
+        check_dims("frequencies", self.frequencies.val().dims(), [n])?;
+        Ok(())
+    }
+
     /// Encode detections into `(phase, amplitude)`, identical formula to
     /// [`PhaseTracker::encode`].
     ///
@@ -366,6 +392,28 @@ impl<B: Backend> SlotAttentionNoGRU<B> {
             num_slots: cfg.num_slots,
             match_threshold: cfg.match_threshold,
         }
+    }
+
+    /// Validate that the detection-encoder tensors' shapes and the nested
+    /// [`crate::slot_attention::SlotAttentionModule`]'s own parameters still
+    /// match this tracker's declared configuration. See
+    /// [`crate::layers::ResonanceLayer::validate_shapes`] for why this check
+    /// is necessary after a checkpoint load.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] naming the first tensor whose
+    /// shape does not match.
+    pub fn validate_shapes(&self) -> Result<(), TrainError> {
+        check_dims(
+            "det_encoder[1].weight",
+            self.det_encoder[1].weight.val().dims(),
+            [
+                self.det_encoder[0].weight.val().dims()[1],
+                self.slot_attention.slot_dim(),
+            ],
+        )?;
+        self.slot_attention.validate_shapes()
     }
 
     /// Process a frame, always ignoring `prev_slots` (fresh slots every
@@ -565,6 +613,39 @@ mod tests {
     // --- PhaseTrackerStatic ---
 
     #[test]
+    fn phase_tracker_static_validate_shapes_passes_for_freshly_initialized_tracker() {
+        let dev = device();
+        let cfg = PhaseTrackerConfig::with_params(4, 1, 1, 1, 1, 0.3).unwrap();
+        let mut seed = Seed::new(30, 0);
+        let tracker = PhaseTrackerStatic::<TestBackend>::new(&cfg, &dev, &mut seed);
+        assert!(tracker.validate_shapes().is_ok());
+    }
+
+    /// WP025-F1 regression (prin-train level): loading a well-formed record
+    /// from a differently-configured tracker must be caught by
+    /// `validate_shapes`.
+    #[test]
+    fn phase_tracker_static_validate_shapes_detects_mismatch_after_loading_a_differently_configured_record(
+    ) {
+        use burn::record::{BinBytesRecorder, DoublePrecisionSettings, Recorder};
+
+        let dev = device();
+        let cfg = PhaseTrackerConfig::with_params(4, 1, 1, 1, 1, 0.3).unwrap();
+        let mut seed = Seed::new(31, 0);
+        let target = PhaseTrackerStatic::<TestBackend>::new(&cfg, &dev, &mut seed);
+        let donor_cfg = PhaseTrackerConfig::with_params(4, 1, 1, 3, 1, 0.3).unwrap();
+        let mut seed2 = Seed::new(32, 0);
+        let donor = PhaseTrackerStatic::<TestBackend>::new(&donor_cfg, &dev, &mut seed2);
+
+        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
+        let bytes = Recorder::<TestBackend>::record(&recorder, donor.into_record(), ()).unwrap();
+        let record = Recorder::<TestBackend>::load(&recorder, bytes, &dev).unwrap();
+        let candidate = target.load_record(record);
+
+        assert!(candidate.validate_shapes().is_err());
+    }
+
+    #[test]
     fn phase_tracker_static_evolve_advances_by_fixed_frequency_only() {
         let dev = device();
         let cfg = PhaseTrackerConfig::with_params(4, 1, 1, 1, 1, 0.3).unwrap();
@@ -632,6 +713,39 @@ mod tests {
     }
 
     // --- SlotAttentionNoGRU ---
+
+    #[test]
+    fn slot_attention_no_gru_validate_shapes_passes_for_freshly_initialized_tracker() {
+        let dev = device();
+        let cfg = TemporalSlotAttentionMOTConfig::with_params(4, 3, 8, 2, 0.3).unwrap();
+        let mut seed = Seed::new(60, 0);
+        let tracker = SlotAttentionNoGRU::<TestBackend>::new(&cfg, &dev, &mut seed);
+        assert!(tracker.validate_shapes().is_ok());
+    }
+
+    /// WP025-F1 regression (prin-train level): loading a well-formed record
+    /// from a differently-configured tracker must be caught by
+    /// `validate_shapes`.
+    #[test]
+    fn slot_attention_no_gru_validate_shapes_detects_mismatch_after_loading_a_differently_configured_record(
+    ) {
+        use burn::record::{BinBytesRecorder, DoublePrecisionSettings, Recorder};
+
+        let dev = device();
+        let cfg = TemporalSlotAttentionMOTConfig::with_params(4, 3, 8, 2, 0.3).unwrap();
+        let mut seed = Seed::new(61, 0);
+        let target = SlotAttentionNoGRU::<TestBackend>::new(&cfg, &dev, &mut seed);
+        let donor_cfg = TemporalSlotAttentionMOTConfig::with_params(4, 3, 12, 2, 0.3).unwrap();
+        let mut seed2 = Seed::new(62, 0);
+        let donor = SlotAttentionNoGRU::<TestBackend>::new(&donor_cfg, &dev, &mut seed2);
+
+        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
+        let bytes = Recorder::<TestBackend>::record(&recorder, donor.into_record(), ()).unwrap();
+        let record = Recorder::<TestBackend>::load(&recorder, bytes, &dev).unwrap();
+        let candidate = target.load_record(record);
+
+        assert!(candidate.validate_shapes().is_err());
+    }
 
     #[test]
     fn slot_attention_no_gru_ignores_prev_slots() {

@@ -304,6 +304,58 @@ impl<B: Backend> HybridPRINetV2<B> {
         self.n_tokens
     }
 
+    /// Validate that the input/phase-init/classifier/FFN parameter tensors'
+    /// current shapes still match this network's declared configuration
+    /// (delegating each attention layer's own check to
+    /// [`crate::attention::OscillatoryAttention::validate_shapes`]). See
+    /// [`crate::layers::ResonanceLayer::validate_shapes`] for why this check
+    /// is necessary after a checkpoint load.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] naming the first tensor whose
+    /// shape does not match.
+    pub fn validate_shapes(&self) -> Result<(), TrainError> {
+        let (n_in, n_out, d, h, n_tok) = (
+            self.n_input,
+            self.n_classes,
+            self.d_model,
+            self.n_heads,
+            self.n_tokens,
+        );
+        check_dims(
+            "input_proj.weight",
+            self.input_proj.weight.val().dims(),
+            [n_in, n_tok * d],
+        )?;
+        check_dims(
+            "phase_init.weight",
+            self.phase_init.weight.val().dims(),
+            [n_in, n_tok * h],
+        )?;
+        check_dims(
+            "classifier[0].weight",
+            self.classifier[0].weight.val().dims(),
+            [d, d],
+        )?;
+        check_dims(
+            "classifier[1].weight",
+            self.classifier[1].weight.val().dims(),
+            [d, n_out],
+        )?;
+        for ffn in &self.ffn_layers {
+            check_dims(
+                "ffn_layers[i][0].weight",
+                ffn[0].weight.val().dims(),
+                [d, d * 4],
+            )?;
+        }
+        for attn in &self.attn_layers {
+            attn.validate_shapes()?;
+        }
+        Ok(())
+    }
+
     fn ffn_forward(&self, layer: usize, x: Tensor<B, 3>) -> Tensor<B, 3> {
         let [w1, w2] = &self.ffn_layers[layer];
         let h = self.dropout.forward(gelu(w1.forward(x)));
@@ -426,6 +478,42 @@ mod tests {
         assert_eq!(model.n_input(), 8);
         assert_eq!(model.n_classes(), 3);
         assert_eq!(model.n_tokens(), 4);
+    }
+
+    #[test]
+    fn validate_shapes_passes_for_freshly_initialized_model() {
+        let model = seeded_model::<TestBackend>(&device());
+        assert!(model.validate_shapes().is_ok());
+    }
+
+    /// WP025-F1 regression (prin-train level): loading a well-formed record
+    /// from a differently-configured network must be caught by
+    /// `validate_shapes`, mirroring exactly the checkpoint-load path
+    /// `crates/prin-py/src/bindings/hybrid.rs`'s `load_state_dict` guards.
+    #[test]
+    fn validate_shapes_detects_mismatch_after_loading_a_differently_configured_record() {
+        use burn::record::{BinBytesRecorder, DoublePrecisionSettings, Recorder};
+
+        let dev = device();
+        let target = seeded_model::<TestBackend>(&dev);
+        let mut seed = Seed::new(22, 0);
+        let donor = HybridPRINetV2Config::with_params(8, 3, 16, 2, 2, 0.0, 1, 1, 2, 2, 2.0, 0.3)
+            .unwrap()
+            .init::<TestBackend>(&dev, &mut seed);
+
+        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
+        let bytes = Recorder::<TestBackend>::record(&recorder, donor.into_record(), ()).unwrap();
+        let record = Recorder::<TestBackend>::load(&recorder, bytes, &dev).unwrap();
+        let candidate = target.load_record(record);
+
+        let err = candidate.validate_shapes().unwrap_err();
+        assert!(matches!(
+            err,
+            TrainError::ShapeMismatch {
+                name: "input_proj.weight",
+                ..
+            }
+        ));
     }
 
     #[test]

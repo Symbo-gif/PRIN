@@ -207,6 +207,49 @@ impl<B: Backend> SlotAttentionModule<B> {
         self.slot_dim
     }
 
+    /// Validate that this module's directly-owned parameter tensors' current
+    /// shapes still match its declared `num_slots`/`slot_dim`/`input_dim`
+    /// configuration (not the nested `gru`'s internal gate weights — see
+    /// [`crate::layers::ResonanceLayer::validate_shapes`] for why this check
+    /// is necessary after a checkpoint load, and
+    /// [`crate::hybrid::HybridPRINetV2::validate_shapes`] for the same
+    /// "directly-owned fields only" scoping precedent).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] naming the first tensor whose
+    /// shape does not match.
+    pub fn validate_shapes(&self) -> Result<(), TrainError> {
+        let sd = self.slot_dim;
+        check_dims("slot_mu", self.slot_mu.val().dims(), [1, 1, sd])?;
+        check_dims(
+            "slot_log_sigma",
+            self.slot_log_sigma.val().dims(),
+            [1, 1, sd],
+        )?;
+        check_dims(
+            "project_k.weight",
+            self.project_k.weight.val().dims(),
+            [self.input_dim, sd],
+        )?;
+        check_dims(
+            "project_v.weight",
+            self.project_v.weight.val().dims(),
+            [self.input_dim, sd],
+        )?;
+        check_dims(
+            "project_q.weight",
+            self.project_q.weight.val().dims(),
+            [sd, sd],
+        )?;
+        check_dims(
+            "mlp[1].weight",
+            self.mlp[1].weight.val().dims(),
+            [self.mlp[0].weight.val().dims()[1], sd],
+        )?;
+        Ok(())
+    }
+
     /// Run Slot Attention on input features.
     ///
     /// `inputs` has shape `[batch, n, input_dim]`; returns slots
@@ -411,6 +454,24 @@ impl<B: Backend> TemporalSlotAttentionMOT<B> {
         self.match_threshold
     }
 
+    /// Validate that the detection-encoder tensors' shapes and the nested
+    /// [`SlotAttentionModule`]'s own parameters still match this tracker's
+    /// declared configuration (delegating to
+    /// [`SlotAttentionModule::validate_shapes`]).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] naming the first tensor whose
+    /// shape does not match.
+    pub fn validate_shapes(&self) -> Result<(), TrainError> {
+        check_dims(
+            "det_encoder[1].weight",
+            self.det_encoder[1].weight.val().dims(),
+            [self.det_encoder[0].weight.val().dims()[1], self.slot_dim],
+        )?;
+        self.slot_attention.validate_shapes()
+    }
+
     /// Whether the inner `SlotAttentionModule`'s `project_k` weight
     /// currently requires grad — crate-internal introspection for
     /// [`crate::ablation::SlotAttentionFrozen`]'s regression test (confirms
@@ -593,6 +654,46 @@ mod tests {
     }
 
     #[test]
+    fn slot_attention_validate_shapes_passes_for_freshly_initialized_module() {
+        let mut seed = Seed::new(1, 0);
+        let sa = small_sa_config().init::<TestBackend>(&device(), &mut seed);
+        assert!(sa.validate_shapes().is_ok());
+    }
+
+    /// WP025-F1 regression (prin-train level): loading a well-formed record
+    /// from a differently-configured module must be caught by
+    /// `validate_shapes`, mirroring exactly the checkpoint-load path
+    /// `crates/prin-py/src/bindings/slot_attention.rs`'s `load_state_dict`
+    /// guards.
+    #[test]
+    fn slot_attention_validate_shapes_detects_mismatch_after_loading_a_differently_configured_record(
+    ) {
+        use burn::record::{BinBytesRecorder, DoublePrecisionSettings, Recorder};
+
+        let dev = device();
+        let mut seed = Seed::new(2, 0);
+        let target = small_sa_config().init::<TestBackend>(&dev, &mut seed);
+        let mut seed2 = Seed::new(3, 0);
+        let donor = SlotAttentionModuleConfig::with_params(3, 12, 5, 2, 16, 1e-8)
+            .unwrap()
+            .init::<TestBackend>(&dev, &mut seed2);
+
+        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
+        let bytes = Recorder::<TestBackend>::record(&recorder, donor.into_record(), ()).unwrap();
+        let record = Recorder::<TestBackend>::load(&recorder, bytes, &dev).unwrap();
+        let candidate = target.load_record(record);
+
+        let err = candidate.validate_shapes().unwrap_err();
+        assert!(matches!(
+            err,
+            TrainError::ShapeMismatch {
+                name: "slot_mu",
+                ..
+            }
+        ));
+    }
+
+    #[test]
     fn slot_attention_accessors_report_configured_sizes() {
         let mut seed = Seed::new(0, 0);
         let sa = small_sa_config().init::<TestBackend>(&device(), &mut seed);
@@ -744,6 +845,36 @@ mod tests {
 
     fn small_mot_config() -> TemporalSlotAttentionMOTConfig {
         TemporalSlotAttentionMOTConfig::with_params(4, 3, 8, 2, 0.3).unwrap()
+    }
+
+    #[test]
+    fn mot_validate_shapes_passes_for_freshly_initialized_tracker() {
+        let mut seed = Seed::new(4, 0);
+        let mot = small_mot_config().init::<TestBackend>(&device(), &mut seed);
+        assert!(mot.validate_shapes().is_ok());
+    }
+
+    /// WP025-F1 regression (prin-train level): loading a well-formed record
+    /// from a differently-configured tracker must be caught by
+    /// `validate_shapes`.
+    #[test]
+    fn mot_validate_shapes_detects_mismatch_after_loading_a_differently_configured_record() {
+        use burn::record::{BinBytesRecorder, DoublePrecisionSettings, Recorder};
+
+        let dev = device();
+        let mut seed = Seed::new(41, 0);
+        let target = small_mot_config().init::<TestBackend>(&dev, &mut seed);
+        let mut seed2 = Seed::new(42, 0);
+        let donor = TemporalSlotAttentionMOTConfig::with_params(4, 3, 12, 2, 0.3)
+            .unwrap()
+            .init::<TestBackend>(&dev, &mut seed2);
+
+        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
+        let bytes = Recorder::<TestBackend>::record(&recorder, donor.into_record(), ()).unwrap();
+        let record = Recorder::<TestBackend>::load(&recorder, bytes, &dev).unwrap();
+        let candidate = target.load_record(record);
+
+        assert!(candidate.validate_shapes().is_err());
     }
 
     #[test]

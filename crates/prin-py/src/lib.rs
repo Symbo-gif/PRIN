@@ -53,5 +53,13 @@ fn _prin_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Trainable stack Torch bridges (WP-025)
     bindings::train::register(m)?;
 
+    // Trainable stack Torch bridges (WP-026 / Exec-WP-026 S1)
+    bindings::attention::register(m)?;
+    bindings::phase_tracker::register(m)?;
+    bindings::hybrid::register(m)?;
+    bindings::slot_attention::register(m)?;
+    bindings::ablation::register(m)?;
+    bindings::allocation::register(m)?;
+
     Ok(())
 }

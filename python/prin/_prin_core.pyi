@@ -53,6 +53,350 @@ class GatedPhaseActivationBridge:
     def state_dict(self) -> bytes: ...
     def load_state_dict(self, state: bytes) -> None: ...
 
+# --- Torch bridges (WP-026 / Exec-WP-026 S1) ---
+class OscillatoryAttentionCtx:
+    def backward(self, grad_output: object) -> tuple[object, object | None]: ...
+
+class OscillatoryAttentionBridge:
+    def __init__(
+        self,
+        d_model: int,
+        n_heads: int,
+        dropout: float = 0.0,
+        seed_counter: int = 0,
+        seed_key: int = 0,
+    ) -> None: ...
+    @property
+    def d_model(self) -> int: ...
+    @property
+    def n_heads(self) -> int: ...
+    def forward(
+        self, x: object, phase: object | None = None
+    ) -> tuple[object, OscillatoryAttentionCtx]: ...
+    def state_dict(self) -> bytes: ...
+    def load_state_dict(self, state: bytes) -> None: ...
+
+class PhaseTrackerEncodeCtx:
+    def backward(self, grad_phase: object, grad_amp: object) -> object: ...
+
+class PhaseTrackerEvolveCtx:
+    def backward(
+        self, grad_phase_out: object, grad_amp_out: object
+    ) -> tuple[object, object]: ...
+
+class PhaseTrackerSimilarityCtx:
+    def backward(self, grad_output: object) -> tuple[object, object]: ...
+
+class TrackingResult:
+    @property
+    def phase_history(self) -> list[object]: ...
+    @property
+    def identity_matches(self) -> list[list[int]]: ...
+    @property
+    def identity_preservation(self) -> float: ...
+    @property
+    def per_frame_similarity(self) -> list[float]: ...
+    @property
+    def per_frame_phase_correlation(self) -> list[float]: ...
+
+class PhaseTrackerBridge:
+    def __init__(
+        self,
+        detection_dim: int,
+        n_delta: int = 4,
+        n_theta: int = 8,
+        n_gamma: int = 16,
+        n_discrete_steps: int = 5,
+        match_threshold: float = 0.3,
+        seed_counter: int = 0,
+        seed_key: int = 0,
+    ) -> None: ...
+    @property
+    def n_osc(self) -> int: ...
+    @property
+    def match_threshold(self) -> float: ...
+    def encode(
+        self, detections: object
+    ) -> tuple[object, object, PhaseTrackerEncodeCtx]: ...
+    def evolve(
+        self, phase: object, amplitude: object
+    ) -> tuple[object, object, PhaseTrackerEvolveCtx]: ...
+    def phase_similarity(
+        self, phase_a: object, phase_b: object
+    ) -> tuple[object, PhaseTrackerSimilarityCtx]: ...
+    def match_frames(
+        self, detections_t: object, detections_t1: object
+    ) -> tuple[list[int], object]: ...
+    def track_sequence(self, frame_detections: list[object]) -> TrackingResult: ...
+    def state_dict(self) -> bytes: ...
+    def load_state_dict(self, state: bytes) -> None: ...
+
+class HybridPRINetV2Ctx:
+    def backward(self, grad_output: object) -> object: ...
+
+class HybridPRINetV2Bridge:
+    def __init__(
+        self,
+        n_input: int,
+        n_classes: int,
+        d_model: int = 64,
+        n_heads: int = 4,
+        n_layers: int = 2,
+        n_delta: int = 4,
+        n_theta: int = 8,
+        n_gamma: int = 32,
+        n_discrete_steps: int = 5,
+        coupling_strength: float = 2.0,
+        pac_depth: float = 0.3,
+        dropout: float = 0.0,
+        seed_counter: int = 0,
+        seed_key: int = 0,
+    ) -> None: ...
+    @property
+    def n_input(self) -> int: ...
+    @property
+    def n_classes(self) -> int: ...
+    @property
+    def n_tokens(self) -> int: ...
+    def forward(self, x: object) -> tuple[object, HybridPRINetV2Ctx]: ...
+    def state_dict(self) -> bytes: ...
+    def load_state_dict(self, state: bytes) -> None: ...
+
+class SlotAttentionModuleCtx:
+    def backward(self, grad_output: object) -> object: ...
+
+class SlotAttentionModuleBridge:
+    def __init__(
+        self,
+        num_slots: int,
+        slot_dim: int,
+        input_dim: int,
+        num_iterations: int = 3,
+        hidden_dim: int | None = None,
+        eps: float = 1e-8,
+        seed_counter: int = 0,
+        seed_key: int = 0,
+    ) -> None: ...
+    @property
+    def num_slots(self) -> int: ...
+    @property
+    def slot_dim(self) -> int: ...
+    def forward(
+        self, inputs: object, seed: Seed
+    ) -> tuple[object, SlotAttentionModuleCtx]: ...
+    def state_dict(self) -> bytes: ...
+    def load_state_dict(self, state: bytes) -> None: ...
+
+class TemporalSlotAttentionMOTProcessFrameCtx:
+    def backward(self, grad_output: object) -> tuple[object, object | None]: ...
+
+class TemporalSlotAttentionMOTSimilarityCtx:
+    def backward(self, grad_output: object) -> tuple[object, object]: ...
+
+class TemporalSlotAttentionMOTBridge:
+    def __init__(
+        self,
+        detection_dim: int,
+        num_slots: int = 8,
+        slot_dim: int = 64,
+        num_iterations: int = 3,
+        match_threshold: float = 0.3,
+        seed_counter: int = 0,
+        seed_key: int = 0,
+    ) -> None: ...
+    @property
+    def num_slots(self) -> int: ...
+    @property
+    def slot_dim(self) -> int: ...
+    @property
+    def match_threshold(self) -> float: ...
+    def process_frame(
+        self, detections: object, seed: Seed, prev_slots: object | None = None
+    ) -> tuple[object, TemporalSlotAttentionMOTProcessFrameCtx]: ...
+    def slot_similarity(
+        self, slots_a: object, slots_b: object
+    ) -> tuple[object, TemporalSlotAttentionMOTSimilarityCtx]: ...
+    def match_frames(
+        self, detections_t: object, detections_t1: object, seed: Seed
+    ) -> tuple[list[int], object]: ...
+    def track_sequence(
+        self, frame_detections: list[object], seed: Seed
+    ) -> tuple[list[object], list[list[int]], float, list[float]]: ...
+    def state_dict(self) -> bytes: ...
+    def load_state_dict(self, state: bytes) -> None: ...
+
+class PhaseTrackerFrozenBridge:
+    def __init__(
+        self,
+        detection_dim: int,
+        n_delta: int = 4,
+        n_theta: int = 8,
+        n_gamma: int = 16,
+        n_discrete_steps: int = 5,
+        match_threshold: float = 0.3,
+        seed_counter: int = 0,
+        seed_key: int = 0,
+    ) -> None: ...
+    @property
+    def inner(self) -> PhaseTrackerBridge: ...
+    def match_frames(
+        self, detections_t: object, detections_t1: object
+    ) -> tuple[list[int], object]: ...
+    def track_sequence(self, frame_detections: list[object]) -> TrackingResult: ...
+    def state_dict(self) -> bytes: ...
+    def load_state_dict(self, state: bytes) -> None: ...
+
+class PhaseTrackerStaticEncodeCtx:
+    def backward(self, grad_phase: object, grad_amp: object) -> object: ...
+
+class PhaseTrackerStaticEvolveCtx:
+    def backward(
+        self, grad_phase_out: object, grad_amp_out: object
+    ) -> tuple[object, object]: ...
+
+class PhaseTrackerStaticSimilarityCtx:
+    def backward(self, grad_output: object) -> tuple[object, object]: ...
+
+class PhaseTrackerStaticBridge:
+    def __init__(
+        self,
+        detection_dim: int,
+        n_delta: int = 4,
+        n_theta: int = 8,
+        n_gamma: int = 16,
+        n_discrete_steps: int = 5,
+        match_threshold: float = 0.3,
+        seed_counter: int = 0,
+        seed_key: int = 0,
+    ) -> None: ...
+    @property
+    def n_osc(self) -> int: ...
+    def encode(
+        self, detections: object
+    ) -> tuple[object, object, PhaseTrackerStaticEncodeCtx]: ...
+    def evolve(
+        self, phase: object, amplitude: object
+    ) -> tuple[object, object, PhaseTrackerStaticEvolveCtx]: ...
+    def phase_similarity(
+        self, phase_a: object, phase_b: object
+    ) -> tuple[object, PhaseTrackerStaticSimilarityCtx]: ...
+    def match_frames(
+        self, detections_t: object, detections_t1: object
+    ) -> tuple[list[int], object]: ...
+    def track_sequence(self, frame_detections: list[object]) -> TrackingResult: ...
+    def state_dict(self) -> bytes: ...
+    def load_state_dict(self, state: bytes) -> None: ...
+
+class SlotAttentionNoGRUProcessFrameCtx:
+    def backward(self, grad_output: object) -> object: ...
+
+class SlotAttentionNoGRUSimilarityCtx:
+    def backward(self, grad_output: object) -> tuple[object, object]: ...
+
+class SlotAttentionNoGRUBridge:
+    def __init__(
+        self,
+        detection_dim: int,
+        num_slots: int = 8,
+        slot_dim: int = 64,
+        num_iterations: int = 3,
+        match_threshold: float = 0.3,
+        seed_counter: int = 0,
+        seed_key: int = 0,
+    ) -> None: ...
+    def process_frame(
+        self, detections: object, seed: Seed
+    ) -> tuple[object, SlotAttentionNoGRUProcessFrameCtx]: ...
+    def slot_similarity(
+        self, slots_a: object, slots_b: object
+    ) -> tuple[object, SlotAttentionNoGRUSimilarityCtx]: ...
+    def match_frames(
+        self, detections_t: object, detections_t1: object, seed: Seed
+    ) -> tuple[list[int], object]: ...
+    def track_sequence(
+        self, frame_detections: list[object], seed: Seed
+    ) -> tuple[list[object], list[list[int]], float, list[float]]: ...
+    def state_dict(self) -> bytes: ...
+    def load_state_dict(self, state: bytes) -> None: ...
+
+class SlotAttentionFrozenBridge:
+    def __init__(
+        self,
+        detection_dim: int,
+        num_slots: int = 8,
+        slot_dim: int = 64,
+        num_iterations: int = 3,
+        match_threshold: float = 0.3,
+        seed_counter: int = 0,
+        seed_key: int = 0,
+    ) -> None: ...
+    @property
+    def inner(self) -> TemporalSlotAttentionMOTBridge: ...
+    def match_frames(
+        self, detections_t: object, detections_t1: object, seed: Seed
+    ) -> tuple[list[int], object]: ...
+    def track_sequence(
+        self, frame_detections: list[object], seed: Seed
+    ) -> tuple[list[object], list[list[int]], float, list[float]]: ...
+    def state_dict(self) -> bytes: ...
+    def load_state_dict(self, state: bytes) -> None: ...
+
+class OscillatorBudget:
+    @property
+    def n_delta(self) -> int: ...
+    @property
+    def n_theta(self) -> int: ...
+    @property
+    def n_gamma(self) -> int: ...
+    @property
+    def complexity(self) -> float: ...
+    def total(self) -> int: ...
+
+def estimate_complexity(
+    detections: object,
+    spatial_weight: float = 0.5,
+    count_weight: float = 0.5,
+    max_objects: int = 50,
+) -> float: ...
+
+class AdaptiveOscillatorAllocatorBridge:
+    def __init__(
+        self,
+        min_total: int,
+        max_total: int,
+        delta_ratio: float = 0.1,
+        theta_ratio: float = 0.2,
+        strategy: str = "rule",
+        complexity_dim: int = 1,
+        seed_counter: int = 0,
+        seed_key: int = 0,
+    ) -> None: ...
+    @property
+    def strategy(self) -> str: ...
+    def allocate(
+        self, complexity: float, features: object | None = None
+    ) -> OscillatorBudget: ...
+    def sweep_complexity(self, steps: int) -> list[OscillatorBudget]: ...
+    def state_dict(self) -> bytes: ...
+    def load_state_dict(self, state: bytes) -> None: ...
+
+class DynamicPhaseTrackerBridge:
+    def __init__(
+        self,
+        detection_dim: int,
+        min_total: int,
+        max_total: int,
+        n_discrete_steps: int = 5,
+        match_threshold: float = 0.3,
+        allocator_strategy: str = "rule",
+        max_objects: int = 50,
+        seed_counter: int = 0,
+        seed_key: int = 0,
+    ) -> None: ...
+    def forward(
+        self, detections_t: object, detections_t1: object, seed: Seed
+    ) -> tuple[list[int], object, OscillatorBudget]: ...
+
 # --- Constants ---
 TAU: float
 AMPLITUDE_MIN: float

@@ -249,6 +249,35 @@ impl<B: Backend> OscillatoryAttention<B> {
         self.n_heads
     }
 
+    /// Validate that every parameter tensor's current shape still matches
+    /// this layer's declared `d_model`/`n_heads` configuration.
+    ///
+    /// `d_model`/`n_heads`/`d_k` are plain `usize` fields, not `Param`
+    /// tensors, so `Module::load_record` (checkpoint restore) does not touch
+    /// them — see [`crate::layers::ResonanceLayer::validate_shapes`] for the
+    /// full explanation of why this check is necessary after a checkpoint
+    /// load. Checkpoint-loading callers (`prin-py`'s `attention.rs`) must
+    /// call this after `load_record` and before committing the result.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] naming the first tensor whose
+    /// shape does not match.
+    pub fn validate_shapes(&self) -> Result<(), TrainError> {
+        let (d, h) = (self.d_model, self.n_heads);
+        check_dims("w_q.weight", self.w_q.weight.val().dims(), [d, d])?;
+        check_dims("w_k.weight", self.w_k.weight.val().dims(), [d, d])?;
+        check_dims("w_v.weight", self.w_v.weight.val().dims(), [d, d])?;
+        check_dims("w_o.weight", self.w_o.weight.val().dims(), [d, d])?;
+        check_dims(
+            "phase_proj.weight",
+            self.phase_proj.weight.val().dims(),
+            [d, h],
+        )?;
+        check_dims("alpha", self.alpha.val().dims(), [h])?;
+        Ok(())
+    }
+
     /// Forward pass with an oscillatory coherence bias.
     ///
     /// `phase`, when supplied, must have shape `[batch, seq, n_heads]`; when
@@ -334,6 +363,48 @@ mod tests {
             .init::<TestBackend>(&device(), &mut seed);
         assert_eq!(attn.d_model(), 16);
         assert_eq!(attn.n_heads(), 4);
+    }
+
+    #[test]
+    fn validate_shapes_passes_for_freshly_initialized_layer() {
+        let mut seed = Seed::new(1, 0);
+        let attn = OscillatoryAttentionConfig::new(16, 4)
+            .unwrap()
+            .init::<TestBackend>(&device(), &mut seed);
+        assert!(attn.validate_shapes().is_ok());
+    }
+
+    /// WP025-F1 regression (prin-train level): loading a well-formed record
+    /// from a differently-configured layer must be caught by
+    /// `validate_shapes`, mirroring exactly the checkpoint-load path
+    /// `crates/prin-py/src/bindings/attention.rs`'s `load_state_dict` guards.
+    #[test]
+    fn validate_shapes_detects_mismatch_after_loading_a_differently_configured_record() {
+        use burn::record::{BinBytesRecorder, DoublePrecisionSettings, Recorder};
+
+        let dev = device();
+        let mut seed = Seed::new(2, 0);
+        let target = OscillatoryAttentionConfig::new(16, 4)
+            .unwrap()
+            .init::<TestBackend>(&dev, &mut seed);
+        let mut seed2 = Seed::new(3, 0);
+        let donor = OscillatoryAttentionConfig::new(24, 4)
+            .unwrap()
+            .init::<TestBackend>(&dev, &mut seed2);
+
+        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
+        let bytes = Recorder::<TestBackend>::record(&recorder, donor.into_record(), ()).unwrap();
+        let record = Recorder::<TestBackend>::load(&recorder, bytes, &dev).unwrap();
+        let candidate = target.load_record(record);
+
+        let err = candidate.validate_shapes().unwrap_err();
+        assert!(matches!(
+            err,
+            TrainError::ShapeMismatch {
+                name: "w_q.weight",
+                ..
+            }
+        ));
     }
 
     #[test]

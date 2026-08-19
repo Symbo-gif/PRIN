@@ -2,7 +2,8 @@
 
 ``torch.nn.Module`` wrappers around ``torch.autograd.Function`` bridges whose
 forward and backward call into the Rust core (``prin-train``) via DLPack
-zero-copy tensor exchange (WP-025). Every bridge follows the same contract:
+zero-copy tensor exchange (WP-025, WP-026, Exec-WP-026 S1). Every
+differentiable bridge follows the same contract:
 
 - Forward and backward each cross the Rust/Python boundary exactly once per
   call (Coding Standards §3.2: "boundary crossings are batched — one call per
@@ -14,32 +15,78 @@ zero-copy tensor exchange (WP-025). Every bridge follows the same contract:
   oscillator-aware optimizers (``SyncGd``/``Rip``/``Scalr``), not
   ``torch.optim``; these modules only make the *input*/*output* boundary
   differentiable so a larger PyTorch model can chain gradients through them.
-  Checkpointing uses :meth:`ResonanceLayer.rust_state_dict`/
-  :meth:`ResonanceLayer.load_rust_state_dict` (Rust-native ``burn::record``
-  bytes), not ``torch.nn.Module.state_dict``.
+  Checkpointing uses ``rust_state_dict``/``load_rust_state_dict`` (Rust-native
+  ``burn::record`` bytes), not ``torch.nn.Module.state_dict``.
 - Every bridge requires ``float64`` CPU, contiguous input, matching
   ``torch.autograd.gradcheck``'s double-precision requirement (Testing
   Standards §2).
 
-Planned symbols (Phase 4, PRINet-3.0 compatible), most not yet bridged:
-PRINetModel, HierarchicalResonanceLayer, OscillatoryAttention,
-PhaseToRateConverter, HybridPRINet, HybridPRINetV2, PhaseTracker,
-SlotAttentionModule, TemporalSlotAttentionMOT, optimizers (SyncGD, SCALR,
-RIP, Alternating — Rust implementations exist in ``prin-train``; a thin
-``torch.optim.Optimizer`` wrapper is future WP-025+ scope), the remaining
-activations (HolomorphicActivation), and the HEP trainer.
+Some WP-026 entry points are **non-differentiable** evaluation utilities
+(greedy frame-to-frame matching, oscillator-count allocation) rather than
+trainable ops — see :mod:`prin.nn.phase_tracker`'s module docs for the split
+rationale and the `forward` → `match_frames` naming adaptation.
+
+Symbols, by submodule: :mod:`prin.nn.attention` (`OscillatoryAttention`),
+:mod:`prin.nn.phase_tracker` (`PhaseTracker`, `TrackingResult`),
+:mod:`prin.nn.hybrid` (`HybridPRINetV2`), :mod:`prin.nn.slot_attention`
+(`SlotAttentionModule`, `TemporalSlotAttentionMOT`), :mod:`prin.nn.ablation`
+(`PhaseTrackerFrozen`, `PhaseTrackerStatic`, `SlotAttentionNoGRU`,
+`SlotAttentionFrozen`), :mod:`prin.nn.allocation`
+(`AdaptiveOscillatorAllocator`, `DynamicPhaseTracker`, `OscillatorBudget`,
+`estimate_complexity`) — all re-exported here.
+
+Remaining planned symbols (Phase 4, PRINet-3.0 compatible), not yet bridged:
+`PRINetModel`, `HierarchicalResonanceLayer`, `PhaseToRateConverter`,
+`HybridPRINet` (v1), optimizers (`SyncGD`, `SCALR`, `RIP`, `Alternating` —
+Rust implementations exist in ``prin-train``; a thin
+``torch.optim.Optimizer`` wrapper is future-WP scope), the remaining
+activations (`HolomorphicActivation`), and the HEP trainer.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-__all__: list[str] = ["GatedPhaseActivation", "ResonanceLayer"]
-
 import torch
 from torch.utils.dlpack import from_dlpack
 
 from prin._prin_core import GatedPhaseActivationBridge, ResonanceLayerBridge
+
+from .ablation import (
+    PhaseTrackerFrozen,
+    PhaseTrackerStatic,
+    SlotAttentionFrozen,
+    SlotAttentionNoGRU,
+)
+from .allocation import (
+    AdaptiveOscillatorAllocator,
+    DynamicPhaseTracker,
+    OscillatorBudget,
+    estimate_complexity,
+)
+from .attention import OscillatoryAttention
+from .hybrid import HybridPRINetV2
+from .phase_tracker import PhaseTracker, TrackingResult
+from .slot_attention import SlotAttentionModule, TemporalSlotAttentionMOT
+
+__all__: list[str] = [
+    "AdaptiveOscillatorAllocator",
+    "DynamicPhaseTracker",
+    "GatedPhaseActivation",
+    "HybridPRINetV2",
+    "OscillatorBudget",
+    "OscillatoryAttention",
+    "PhaseTracker",
+    "PhaseTrackerFrozen",
+    "PhaseTrackerStatic",
+    "ResonanceLayer",
+    "SlotAttentionFrozen",
+    "SlotAttentionModule",
+    "SlotAttentionNoGRU",
+    "TemporalSlotAttentionMOT",
+    "TrackingResult",
+    "estimate_complexity",
+]
 
 if TYPE_CHECKING:
     from prin._prin_core import GatedPhaseActivationCtx, ResonanceLayerCtx

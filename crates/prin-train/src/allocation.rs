@@ -71,7 +71,7 @@ use prin_dynamics::Seed;
 
 use crate::error::TrainError;
 use crate::phase_tracker::{PhaseTracker, PhaseTrackerConfig};
-use crate::support::{python_round, seeded_linear, to_f64_vec};
+use crate::support::{check_dims, python_round, seeded_linear, to_f64_vec};
 
 /// Allocated oscillator counts per frequency band.
 ///
@@ -240,6 +240,7 @@ impl AdaptiveOscillatorAllocatorConfig {
             delta_ratio: self.delta_ratio,
             theta_ratio: self.theta_ratio,
             strategy: Ignored(self.strategy),
+            complexity_dim: self.complexity_dim,
         }
     }
 }
@@ -257,12 +258,49 @@ pub struct AdaptiveOscillatorAllocator<B: Backend> {
     delta_ratio: f64,
     theta_ratio: f64,
     strategy: Ignored<AllocatorStrategy>,
+    /// The learned strategy's input feature dimension (unused, `0` for the
+    /// rule strategy). Stored so [`Self::validate_shapes`] has a
+    /// checkpoint-load-invariant reference to check the loaded `mlp[0]`
+    /// shape against (see that method's docs).
+    complexity_dim: usize,
 }
 
 impl<B: Backend> AdaptiveOscillatorAllocator<B> {
     /// The configured allocation strategy.
     pub fn strategy(&self) -> AllocatorStrategy {
         self.strategy.0
+    }
+
+    /// Validate that the learned-strategy MLP's parameter tensors' current
+    /// shapes still match this allocator's declared `complexity_dim`
+    /// configuration (a no-op for [`AllocatorStrategy::Rule`], which has no
+    /// learnable parameters). See
+    /// [`crate::layers::ResonanceLayer::validate_shapes`] for why this check
+    /// is necessary after a checkpoint load: `Option<[Linear<B>; 3]>`'s own
+    /// `load_record` silently keeps `self`'s variant when the record's
+    /// `Some`/`None`-ness disagrees (a `strategy` mismatch between the
+    /// checkpoint's donor and this allocator), so a strategy mismatch is
+    /// otherwise undetectable from the loaded value alone. `complexity_dim`
+    /// (unlike `mlp[0]`'s own tensor shape) is a plain `usize` field, so —
+    /// per that same explanation — it is *not* overwritten by a checkpoint
+    /// load and reliably reflects this allocator's pre-load configuration to
+    /// check the loaded `mlp[0]` shape against.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] naming the first tensor whose
+    /// shape does not match.
+    pub fn validate_shapes(&self) -> Result<(), TrainError> {
+        if let Some(mlp) = &self.mlp {
+            check_dims(
+                "mlp[0].weight",
+                mlp[0].weight.val().dims(),
+                [self.complexity_dim, 64],
+            )?;
+            check_dims("mlp[1].weight", mlp[1].weight.val().dims(), [64, 32])?;
+            check_dims("mlp[2].weight", mlp[2].weight.val().dims(), [32, 3])?;
+        }
+        Ok(())
     }
 
     /// Compute an oscillator budget for `complexity` (clamped to `[0, 1]`).
@@ -491,6 +529,81 @@ mod tests {
         assert!(matches!(
             AdaptiveOscillatorAllocatorConfig::new(64, 12).unwrap_err(),
             TrainError::InvalidAllocatorRange { .. }
+        ));
+    }
+
+    #[test]
+    fn validate_shapes_passes_for_rule_strategy_no_mlp() {
+        let mut seed = Seed::new(1, 0);
+        let allocator = AdaptiveOscillatorAllocatorConfig::new(12, 64)
+            .unwrap()
+            .init::<TestBackend>(&device(), &mut seed);
+        assert!(allocator.validate_shapes().is_ok());
+    }
+
+    #[test]
+    fn validate_shapes_passes_for_freshly_initialized_learned_strategy() {
+        let mut seed = Seed::new(2, 0);
+        let allocator = AdaptiveOscillatorAllocatorConfig::with_params(
+            12,
+            64,
+            0.1,
+            0.2,
+            AllocatorStrategy::Learned,
+            1,
+        )
+        .unwrap()
+        .init::<TestBackend>(&device(), &mut seed);
+        assert!(allocator.validate_shapes().is_ok());
+    }
+
+    /// WP025-F1 regression (prin-train level): loading a well-formed
+    /// learned-strategy record from a differently-configured
+    /// `complexity_dim` must be caught by `validate_shapes`, mirroring
+    /// exactly the checkpoint-load path
+    /// `crates/prin-py/src/bindings/allocation.rs`'s `load_state_dict`
+    /// guards.
+    #[test]
+    fn validate_shapes_detects_complexity_dim_mismatch_after_loading_a_differently_configured_record(
+    ) {
+        use burn::record::{BinBytesRecorder, DoublePrecisionSettings, Recorder};
+
+        let dev = device();
+        let mut seed = Seed::new(3, 0);
+        let target = AdaptiveOscillatorAllocatorConfig::with_params(
+            12,
+            64,
+            0.1,
+            0.2,
+            AllocatorStrategy::Learned,
+            1,
+        )
+        .unwrap()
+        .init::<TestBackend>(&dev, &mut seed);
+        let mut seed2 = Seed::new(4, 0);
+        let donor = AdaptiveOscillatorAllocatorConfig::with_params(
+            12,
+            64,
+            0.1,
+            0.2,
+            AllocatorStrategy::Learned,
+            3,
+        )
+        .unwrap()
+        .init::<TestBackend>(&dev, &mut seed2);
+
+        let recorder = BinBytesRecorder::<DoublePrecisionSettings>::default();
+        let bytes = Recorder::<TestBackend>::record(&recorder, donor.into_record(), ()).unwrap();
+        let record = Recorder::<TestBackend>::load(&recorder, bytes, &dev).unwrap();
+        let candidate = target.load_record(record);
+
+        let err = candidate.validate_shapes().unwrap_err();
+        assert!(matches!(
+            err,
+            TrainError::ShapeMismatch {
+                name: "mlp[0].weight",
+                ..
+            }
         ));
     }
 

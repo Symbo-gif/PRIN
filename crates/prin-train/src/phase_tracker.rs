@@ -231,6 +231,40 @@ impl<B: Backend> PhaseTracker<B> {
         self.match_threshold
     }
 
+    /// Validate that the detection-encoder parameter tensors' current shapes
+    /// still match this tracker's declared `n_osc` configuration.
+    ///
+    /// `n_osc` is a plain `usize` field, not a `Param` tensor, so
+    /// `Module::load_record` (checkpoint restore) does not touch it — see
+    /// [`crate::layers::ResonanceLayer::validate_shapes`] for the full
+    /// explanation of why this check is necessary after a checkpoint load.
+    /// Only the detection encoder's own directly-owned tensors are checked
+    /// here (not the nested `dynamics` submodule's internal parameters,
+    /// WP-022's frozen scope) — a mismatched `n_osc` already surfaces
+    /// through `det_to_phase[1]`/`det_to_amp[1]`'s output width, since both
+    /// are sized `n_osc`. Checkpoint-loading callers (`prin-py`'s
+    /// `phase_tracker.rs`) must call this after `load_record` and before
+    /// committing the result.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] naming the first tensor whose
+    /// shape does not match.
+    pub fn validate_shapes(&self) -> Result<(), TrainError> {
+        let n = self.n_osc;
+        check_dims(
+            "det_to_phase[1].weight",
+            self.det_to_phase[1].weight.val().dims(),
+            [DET_HIDDEN, n],
+        )?;
+        check_dims(
+            "det_to_amp[1].weight",
+            self.det_to_amp[1].weight.val().dims(),
+            [DET_HIDDEN, n],
+        )?;
+        Ok(())
+    }
+
     /// The dynamics module's own trainable [`DiscreteDeltaThetaGamma`],
     /// exposed so ablation variants ([`crate::ablation::PhaseTrackerFrozen`])
     /// can build a frozen-dynamics copy via [`Self::with_dynamics`].

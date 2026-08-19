@@ -4,11 +4,18 @@
 //! All numerical authority remains in Rust — these bindings are thin
 //! wrappers that convert between Python and Rust types.
 
+pub(crate) mod ablation;
+pub(crate) mod allocation;
+pub(crate) mod attention;
 pub(crate) mod bands;
 pub(crate) mod coupling;
+pub(crate) mod hybrid;
 pub(crate) mod integrators;
 pub(crate) mod metrics;
 pub(crate) mod models;
+pub(crate) mod phase_tracker;
+pub(crate) mod slot_attention;
 pub(crate) mod state;
 pub(crate) mod temporal;
 pub(crate) mod train;
+pub(crate) mod train_support;
