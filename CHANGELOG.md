@@ -9,6 +9,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WP-024 Oscillator-aware optimizers** (`crates/prin-train/`,
+  Phase 4 third WP; sessions 0093–0096; audit
+  `DOCS/audits/024-wp024-audit.md`, verdict `PASS-WITH-FINDINGS`, one D3
+  finding: WP024-F1 AMENDED via plan amendment #29): oscillator-aware
+  optimizer implementations rebuilding PRINet 3.0 `nn/optimizers.py`.
+  - `feedback::OrderParameter` — global-or-per-group order parameter with
+    Q3 dict resolution (SCALR's `Union[float, Dict[str, float]]` input).
+  - `feedback::StepFeedback` — per-step input (order parameter, phase,
+    amplitude).
+  - `feedback::OscillatorOptimizer` — uniform `step`/`state_dict`/
+    `load_state_dict` trait; the seam WP-025's thin `torch.optim.Optimizer`
+    wrapper bridges to.
+  - `sync_gd::SyncGd` — synchronized gradient descent with momentum and
+    synchronization-barrier penalty (`penalty = λ·max(0, K_c − K)²`).
+  - `rip::Rip` — Hebbian coupling-matrix update
+    (`ΔK[i,j] = η·cos(φ[i] − φ[j])·|r[j]|·(r_target − r[i])`), diagonal
+    zeroed, additive with plain gradient descent. Documented deviation:
+    fixes `n_oscillators` at construction (PRINet 3.0 silently skips
+    non-square-matching parameters).
+  - `scalr::Scalr` — adaptive learning-rate optimizer with oscillation-aware
+    decay, adaptive `r_min` via EMA, and per-group lr scaling entry point.
+  - `error::TrainError` — extended with 8 new typed variants
+    (`InvalidLearningRate`, `InvalidMomentum`, `InvalidWeightDecay`,
+    `InvalidSyncPenalty`, `InvalidCriticalOrder`, `InvalidTargetAmplitude`,
+    `InvalidRMin`, `InvalidAlpha`).
+  - 57 new unit tests, 5 golden-value parity tests against actual PRINet 3.0
+    optimizer classes at `rtol=1e-9, atol=1e-12`, 1 public-API regression
+    test, 3 doctests; 97.9–100% region / 99.7–100% line coverage across all
+    four new source files.
+  - Deterministic resume via serde `State` snapshots with `load_state_dict`
+    re-validation through original constructors.
+  - **Plan amendment #29:** PSR-023 §7's WP-024 declaration named
+    `PhaseAdam`/`KuramotoOptimizer` (non-existent in PRINet 3.0); formally
+    read as `SCALR`/`RIP`/`SyncGD`/`scalr.rs`/`rip.rs`/`sync_gd.rs`
+    (the delivered, reference-verified scope).
+  - **DV-020 closed** (naming discrepancy resolved by amendment #29).
+
 - **WP-023 Inhibition, activations, and HEP** (`crates/prin-train/`,
   Phase 4 second WP; sessions 0089–0092; audit
   `DOCS/audits/023-wp023-audit.md`, verdict `PASS-WITH-FINDINGS`, one D4

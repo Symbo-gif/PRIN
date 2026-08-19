@@ -15,10 +15,10 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0090 | WP-023 | S2 — Audit | [Inhibition, activations, and HEP](0090-wp023-s2-inhibition-activations-and-hep.md) | COMPLETE |
 | 0091 | WP-023 | S3 — Remediation | [Inhibition, activations, and HEP](0091-wp023-s3-inhibition-activations-and-hep.md) | COMPLETE |
 | 0092 | WP-023 | S4 — Documentation | [Inhibition, activations, and HEP](0092-wp023-s4-inhibition-activations-and-hep.md) | COMPLETE |
-| 0093 | WP-024 | S1 — Coding | [Oscillator-aware optimizers](0093-wp024-s1-oscillator-aware-optimizers.md) | PLANNED |
-| 0094 | WP-024 | S2 — Audit | [Oscillator-aware optimizers](0094-wp024-s2-oscillator-aware-optimizers.md) | PLANNED |
-| 0095 | WP-024 | S3 — Remediation | [Oscillator-aware optimizers](0095-wp024-s3-oscillator-aware-optimizers.md) | PLANNED |
-| 0096 | WP-024 | S4 — Documentation | [Oscillator-aware optimizers](0096-wp024-s4-oscillator-aware-optimizers.md) | PLANNED |
+| 0093 | WP-024 | S1 — Coding | [Oscillator-aware optimizers](0093-wp024-s1-oscillator-aware-optimizers.md) | COMPLETE |
+| 0094 | WP-024 | S2 — Audit | [Oscillator-aware optimizers](0094-wp024-s2-oscillator-aware-optimizers.md) | COMPLETE |
+| 0095 | WP-024 | S3 — Remediation | [Oscillator-aware optimizers](0095-wp024-s3-oscillator-aware-optimizers.md) | COMPLETE |
+| 0096 | WP-024 | S4 — Documentation | [Oscillator-aware optimizers](0096-wp024-s4-oscillator-aware-optimizers.md) | COMPLETE |
 | 0097 | WP-025 | S1 — Coding | [Production Torch autograd bridge](0097-wp025-s1-production-torch-autograd-bridge.md) | PLANNED |
 | 0098 | WP-025 | S2 — Audit | [Production Torch autograd bridge](0098-wp025-s2-production-torch-autograd-bridge.md) | PLANNED |
 | 0099 | WP-025 | S3 — Remediation | [Production Torch autograd bridge](0099-wp025-s3-production-torch-autograd-bridge.md) | PLANNED |

@@ -106,6 +106,10 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   and HEP" audit (`PASS-WITH-FINDINGS`); one D4 finding (WP023-F1: `public_api.rs`
   regression test missing `GatedPhaseActivationParams` coverage, FIXED in S3
   with extended compile-time check) resolved in S3 with a CLEAN delta re-audit.
+- [`024-wp024-audit.md`](024-wp024-audit.md) — WP-024 "Oscillator-aware
+  optimizers" audit (`PASS-WITH-FINDINGS`); one D3 finding (WP024-F1: PSR-023 §7
+  WP-024 declaration named non-existent classes, AMENDED via plan amendment #29)
+  resolved in S3 with a CLEAN delta re-audit.
 
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;

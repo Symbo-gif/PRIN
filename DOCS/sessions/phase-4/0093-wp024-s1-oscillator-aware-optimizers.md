@@ -1,11 +1,11 @@
 # Session 0093 — WP-024 S1: Coding — Oscillator-aware optimizers
 
-**Status:** PLANNED  
-**Roadmap phase:** 4 — Trainable stack and Torch bridge  
-**Execution unit:** WP-024  
-**Session type:** S1 — Coding  
-**Predecessor:** [0092 — Documentation](0092-wp023-s4-inhibition-activations-and-hep.md)  
-**Successor:** [0094 — Audit](0094-wp024-s2-oscillator-aware-optimizers.md)  
+**Status:** COMPLETE
+**Roadmap phase:** 4 — Trainable stack and Torch bridge
+**Execution unit:** WP-024
+**Session type:** S1 — Coding
+**Predecessor:** [0092 — Documentation](0092-wp023-s4-inhibition-activations-and-hep.md)
+**Successor:** [0094 — Audit](0094-wp024-s2-oscillator-aware-optimizers.md)
 **Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and

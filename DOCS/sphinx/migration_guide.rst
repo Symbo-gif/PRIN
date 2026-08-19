@@ -475,3 +475,36 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   Python bindings (``prin.nn``) are not exposed yet — the production
   ``torch.autograd.Function`` bridge is WP-025's scope, and GPU-backed Burn backends
   (``wgpu``/``cuda``) are deferred to the same WP per the Project Plan risk register.
+
+- ``prin-train`` oscillator-aware optimizers (WP-024) —
+  the third increment of the Burn-based trainable stack, rebuilding PRINet 3.0
+  ``nn/optimizers.py``:
+  ``feedback::OrderParameter`` (global-or-per-group order parameter with Q3 dict
+  resolution), ``feedback::StepFeedback`` (per-step input),
+  ``feedback::OscillatorOptimizer`` (uniform step/state_dict/load_state_dict trait),
+  ``sync_gd::SyncGd`` rebuilding PRINet 3.0 ``SynchronizedGradientDescent``,
+  ``rip::Rip`` rebuilding PRINet 3.0 ``RIPOptimizer``,
+  and ``scalr::Scalr`` rebuilding PRINet 3.0 ``SCALROptimizer``.
+
+  **Symbol mapping:**
+
+  - ``prinet.nn.optimizers.SynchronizedGradientDescent`` → ``prin_train::sync_gd::SyncGd``
+  - ``prinet.nn.optimizers.RIPOptimizer`` → ``prin_train::rip::Rip``
+  - ``prinet.nn.optimizers.SCALROptimizer`` → ``prin_train::scalr::Scalr``
+
+  **Deliberate deviations:**
+
+  - *Rip fixed square shape:* PRINet 3.0's ``RIPOptimizer`` silently skips the
+    Hebbian term for non-square-matching parameters; ``Rip`` fixes ``n_oscillators``
+    at construction and returns ``TrainError::ShapeMismatch`` on mismatch, per
+    Coding Standards §2.2 (validate public inputs at every public boundary).
+
+  **Parity and validation:**
+  Golden-value parity tests against the actual PRINet 3.0 optimizer classes
+  (``torch==2.13.0+cpu`` float64): ``tests/parity_optimizers.rs`` at
+  :math:`\text{rtol}=10^{-9}, \text{atol}=10^{-12}` (5 cases: SyncGD 2-step,
+  RIP combined gradient+Hebbian, SCALR basic 3-step, SCALR oscillation+adaptive
+  r_min 5-step, Q3 dict resolution). Deterministic resume verified (step N
+  uninterrupted vs. step k → snapshot → restore → step N−k,
+  :math:`<10^{-12}` final parameters). ``load_state_dict`` re-validates
+  every hyperparameter through the original constructor.
