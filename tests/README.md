@@ -47,6 +47,12 @@ Additional PRIN-specific suites (per the Testing Standards):
   ORT-evidence, and aggregate gate-report checks.
 - `test_gradcheck_*.py` — `torch.autograd.gradcheck` (float64) for every
   `autograd.Function` bridge.
+- `test_train_bridge_optim.py` — 13 tests for the WP-027 optimizer bridges
+  (`SyncGd`/`Scalr`/`Rip` correctness, state-dict round trip, error boundaries).
+- `test_train_pipeline.py` — 4 tests for the WP-027 training pipeline
+  (`prin.train.train_phase_tracker` end-to-end, reproducibility, error handling).
+- `test_train_bridge_phase_tracker.py` — extended with composed "full gradcheck"
+  (`encode → evolve → phase_similarity`) and benchmark class (WP-027).
 - `test_gpu_*.py` — GPU integration tests, marker `gpu` (opt-in, self-hosted
   runner, `[gpu]` commit-message trigger).
 - Differential parity tests live in `../parity/`.

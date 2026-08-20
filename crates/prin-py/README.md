@@ -157,6 +157,20 @@ paths, including `torch.autograd.gradcheck` (float64) for every differentiable
 entry point and checkpoint round-trip/shape-mismatch-rejection for every
 `Module`-backed bridge.
 
+### WP-027: Optimizer bridges and trainer entry (sessions 0105–0108)
+
+- **`bindings/optim.rs`** — `SyncGdBridge`, `ScalrBridge`, `RipBridge`:
+  non-differentiable optimizer-step bridges wrapping `prin-train`'s
+  `sync_gd_step`/`scalr_step`/`rip_step`. State dict round-trips via JSON.
+- **`bindings/trainer.rs`** — `train_phase_tracker` PyO3 entry point running
+  the Rust-native trainer end to end; `TrainingResult` pyclass.
+- **`python/prin/nn/optimizers.py`** — `SyncGd`/`Scalr`/`Rip`
+  `torch.optim.Optimizer` subclasses (13 tests).
+- **`python/prin/train.py`** — thin Python entry point for the Rust-native
+  trainer (4 tests).
+- **`python/prin/_prin_core.pyi`** — +103 lines of stubs for `TrainingResult`,
+  `train_phase_tracker`, `SyncGdBridge`, `ScalrBridge`, `RipBridge`.
+
 Type stubs are maintained at `python/prin/_prin_core.pyi` and regenerated
 whenever the extension API changes.
 

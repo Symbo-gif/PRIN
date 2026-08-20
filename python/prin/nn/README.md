@@ -37,10 +37,12 @@ differentiable bridge crosses the Rust/Python boundary exactly once per call
 `_bridge.py` provides the shared `apply_rust_bridge` generic
 `torch.autograd.Function` glue every differentiable entry point above uses.
 
+- **`SyncGd`, `Scalr`, `Rip`** (`optimizers.py`, WP-027) —
+  `torch.optim.Optimizer` subclasses wrapping the Rust optimizer-step bridges
+  (`SyncGdBridge`/`ScalrBridge`/`RipBridge` in `crates/prin-py/src/bindings/optim.rs`).
+
 ## Not yet implemented
 
 `PRINetModel`, `HierarchicalResonanceLayer`, `PhaseToRateConverter`,
-`HybridPRINet` (v1); optimizers (`SyncGD`, `SCALR`, `RIP`, `Alternating` —
-Rust implementations exist in `prin-train`; a thin `torch.optim.Optimizer`
-wrapper is future-WP scope); the remaining activations
+`HybridPRINet` (v1); the remaining activations
 (`HolomorphicActivation`); the HEP trainer.
