@@ -226,12 +226,55 @@ shape-validation bug found and fixed). This session also added
 acceptance-criteria → evidence map. Full session is subject to the
 already-registered WP-026 S2/S3/S4 audit cycle (sessions 0102–0104).
 
+### WP-027: Trainable-stack integration and Phase 4 gate (sessions 0105–0108)
+
+- **`dataset::SequenceData`/`TemporalClevrNConfig`/`generate_temporal_clevr_n`/
+  `generate_dataset`** — structural port of PRINet 3.0's temporal CLEVR-N
+  sequence generator (`temporal_training.py:68-253`): constant-velocity motion
+  with elastic boundary bounce, occlusion zeroing, appearance-feature swap,
+  velocity reversal, additive noise. Uses the project's counter-based `Seed`
+  (Project Plan §4 rule 3) instead of PRINet 3.0's per-perturbation
+  `torch.Generator(seed + offset)` streams.
+- **`losses::hungarian_similarity_loss`/`temporal_smoothness_loss`** — direct
+  ports of the reference training losses
+  (`temporal_training.py:261-336`). Hand-computed parity tests verify perfect
+  diagonal → near-zero loss, uniform similarity → `ln(2)`, and MSE between
+  known matrices.
+- **`trainer::TemporalTrainerConfig`/`TrainingResult`/`ValMetrics`/
+  `train_phase_tracker`/`evaluate_phase_tracker`** — the Rust-native training
+  loop (Burn `Adam` + warmup/cosine LR + gradient clipping + early stopping
+  with best-checkpoint restore), porting PRINet 3.0's `TemporalTrainer`
+  (`temporal_training.py:454-869`). Two documented deviations: per-tensor
+  gradient clipping (Burn's `GradientClippingConfig::Norm`) vs. PyTorch's
+  global `clip_grad_norm_`; directly-computed scalar cosine LR formula vs.
+  PyTorch's `CosineAnnealingLR` step-count state.
+- **`benches/phase_tracker_bridge.rs`** — Criterion baseline for
+  `PhaseTracker::forward`/`match_frames`, extending DV-021's `ResonanceLayer`
+  bench to a second module.
+- **`tests/integration_temporal_clevr_n.rs`** — acceptance-criterion validation
+  run (3 seeds, canonical protocol), `#[ignore]`d by default (~115s in
+  `--release`). Mean IP = 1.00000 ≥ registered 0.99868 threshold.
+- **`tests/integration_checkpoint_resume.rs`** — serialization acceptance:
+  trains PhaseTracker for 4 epochs, checkpoints the *trained* model via
+  `BinBytesRecorder<DoublePrecisionSettings>`, reloads into a fresh instance
+  from a *different* seed, confirms bit-identical evaluation metrics.
+- **`crates/prin-py/src/bindings/optim.rs`** — `SyncGdBridge`/`ScalrBridge`/
+  `RipBridge` non-differentiable optimizer-step bridges.
+- **`crates/prin-py/src/bindings/trainer.rs`** — `train_phase_tracker` PyO3
+  entry point running the Rust trainer end to end; `TrainingResult` pyclass.
+- **`python/prin/nn/optimizers.py`** — `SyncGd`/`Scalr`/`Rip`
+  `torch.optim.Optimizer` subclasses.
+- **`python/prin/train.py`** — thin Python entry point for the Rust-native
+  trainer (`train_phase_tracker`/`TrainingResult`).
+
+S2 audit: PASS, zero findings. S3: no-change closure (zero findings to
+remediate), delta re-audit CLEAN.
+
 ## Not yet implemented
 
-Trainable-stack integration and Phase 4 gate (WP-027); a
-`torch.optim.Optimizer` wrapper over `SyncGd`/`Rip`/`Scalr`; CUDA DLPack path
-(DV-005, checkpointed to WP-027 S1).
+CUDA DLPack path (DV-005).
 
 Rebuild target for PRINet 3.0 `nn/{layers,optimizers,activations,hep,hybrid,
 slot_attention,ablation_variants,adaptive_allocation}.py` and the trainable
-half of `core/propagation/{networks,inhibition}.py`.
+half of `core/propagation/{networks,inhibition}.py` — **complete through
+WP-027** (all modules ported; optimizer wrappers delivered).

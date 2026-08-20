@@ -30,5 +30,5 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0105 | WP-027 | S1 — Coding | [Trainable-stack integration and Phase 4 gate](0105-wp027-s1-trainable-stack-integration-and-phase-4-gate.md) | COMPLETE |
 | 0106 | WP-027 | S2 — Audit | [Trainable-stack integration and Phase 4 gate](0106-wp027-s2-trainable-stack-integration-and-phase-4-gate.md) | COMPLETE |
 | 0107 | WP-027 | S3 — Remediation | [Trainable-stack integration and Phase 4 gate](0107-wp027-s3-trainable-stack-integration-and-phase-4-gate.md) | COMPLETE |
-| 0108 | WP-027 | S4 — Documentation | [Trainable-stack integration and Phase 4 gate](0108-wp027-s4-trainable-stack-integration-and-phase-4-gate.md) | PLANNED |
+| 0108 | WP-027 | S4 — Documentation | [Trainable-stack integration and Phase 4 gate](0108-wp027-s4-trainable-stack-integration-and-phase-4-gate.md) | COMPLETE |
 

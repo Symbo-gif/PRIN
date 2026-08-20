@@ -9,6 +9,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WP-027 Trainable-stack integration and Phase 4 gate**
+  (`crates/prin-train/`, `crates/prin-py/`, `python/prin/nn/`, `python/prin/`,
+  Phase 4 sixth and final WP; sessions 0105–0108; audit
+  `DOCS/audits/027-wp027-audit.md`, verdict `PASS`, zero findings):
+  temporal CLEVR-N dataset generator, training losses, Rust-native training
+  loop, optimizer bridges, and Phase 4 acceptance-criterion validation.
+  - `prin-train::dataset` — `SequenceData`, `TemporalClevrNConfig`,
+    `generate_temporal_clevr_n`, `generate_dataset`: structural port of
+    PRINet 3.0's temporal CLEVR-N sequence generator using the project's
+    counter-based `Seed`.
+  - `prin-train::losses` — `hungarian_similarity_loss`,
+    `temporal_smoothness_loss`: direct ports of the reference training losses.
+  - `prin-train::trainer` — `TemporalTrainerConfig`, `TrainingResult`,
+    `ValMetrics`, `train_phase_tracker`, `evaluate_phase_tracker`: Rust-native
+    training loop (Burn Adam + warmup/cosine LR + gradient clipping + early
+    stopping). Two documented deviations from PyTorch reference (per-tensor
+    gradient clipping, scalar cosine LR formula).
+  - `prin-train::benches/phase_tracker_bridge.rs` — Criterion baseline for
+    `PhaseTracker::forward`/`match_frames`.
+  - `prin-py::bindings::optim` — `SyncGdBridge`/`ScalrBridge`/`RipBridge`
+    non-differentiable optimizer-step bridges.
+  - `prin-py::bindings::trainer` — `train_phase_tracker` PyO3 entry +
+    `TrainingResult` pyclass.
+  - `python/prin/nn/optimizers.py` — `SyncGd`/`Scalr`/`Rip`
+    `torch.optim.Optimizer` subclasses.
+  - `python/prin/train.py` — thin Python entry point for the Rust-native
+    trainer.
+  - Acceptance criteria: PhaseTracker mean IP = 1.00000 ≥ registered 0.99868
+    threshold; gradchecks green (including composed "full gradcheck");
+    serialization round-trip on trained model validated. DV-021 bridge
+    overhead independently re-corroborated (+37.8%/+6.5% vs. DV-021's
+    +39.8%/+5.3%). DV-005 CUDA Burn backend recommendation recorded: do not
+    pull into near-term Phase 5 scope.
+
+- **Executive Audit Session 005 (EA-005)** — Phase 4 close executive audit;
+  report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_005.md`
+  (`PASS-WITH-REMEDIATION`, findings E-F1–E-F5). E-F1 (D2, mypy lint failure)
+  FIXED; E-F2 (D3, ubuntu runner disk exhaustion, DV-022) and E-F3 (D3,
+  windows-latest CubeCL timeout, DV-023) passed forward as external
+  infrastructure conditions; E-F4 (D4, phase-4 README status mismatch) FIXED;
+  E-F5 (D4, CHANGELOG missing WP-027) FIXED.
+
 - **Self-hosted Windows runner for CI** (EA-005 follow-up, DV-016/DV-022/DV-023
   remediation): `rust.yml`, `python.yml`, and `release.yml` now route all
   `windows-latest` matrix jobs to the self-hosted `PRIN-GPU-Runner`

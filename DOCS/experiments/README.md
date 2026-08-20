@@ -118,6 +118,15 @@ at the top level until they are folded into the final campaign archive in Phase 
   six new bridge modules, generic `apply_rust_bridge` helper, `validate_shapes`
   on all six new types (a real checkpoint-corruption bug found and fixed),
   86 new Python tests at 100% coverage.
+- [`0105-wp027-s1-handoff.md`](0105-wp027-s1-handoff.md) — WP-027 S1 handoff
+  to the S2 audit for trainable-stack integration and Phase 4 gate:
+  `dataset.rs` (temporal CLEVR-N generator), `losses.rs` (Hungarian similarity
+  + temporal smoothness), `trainer.rs` (Rust-native training loop), optimizer
+  bridges (`SyncGd`/`Scalr`/`Rip`), bridge profiling, serialization
+  acceptance, and the IP-threshold validation run (mean IP 1.00000 ≥ 0.99868).
+- [`0105-wp027-temporal-clevr-n-validation.json`](0105-wp027-temporal-clevr-n-validation.json) —
+  Raw evidence for the Phase 4 gate IP-threshold acceptance criterion
+  (3 seeds, canonical protocol, per-seed IP = 1.0).
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at

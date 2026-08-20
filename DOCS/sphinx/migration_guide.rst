@@ -609,3 +609,56 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   uninterrupted vs. step k → snapshot → restore → step N−k,
   :math:`<10^{-12}` final parameters). ``load_state_dict`` re-validates
   every hyperparameter through the original constructor.
+
+- ``prin-train`` trainable-stack integration and Phase 4 gate (WP-027) —
+  the final increment of the Phase 4 trainable stack: temporal CLEVR-N dataset
+  generator, training losses, Rust-native training loop, optimizer bridges,
+  and Phase 4 acceptance-criterion validation.
+
+  **New modules:**
+
+  - ``prin_train::dataset`` — ``SequenceData``, ``TemporalClevrNConfig``,
+    ``generate_temporal_clevr_n``, ``generate_dataset``: structural port of
+    PRINet 3.0 ``utils/temporal_training.py:68-253`` (constant-velocity motion
+    with elastic boundary bounce, occlusion zeroing, appearance-feature swap,
+    velocity reversal, additive noise). Uses the project's counter-based
+    ``Seed`` instead of PRINet 3.0's per-perturbation ``torch.Generator``
+    streams.
+  - ``prin_train::losses`` — ``hungarian_similarity_loss``,
+    ``temporal_smoothness_loss``: direct ports of PRINet 3.0
+    ``utils/temporal_training.py:261-336``.
+  - ``prin_train::trainer`` — ``TemporalTrainerConfig``, ``TrainingResult``,
+    ``ValMetrics``, ``train_phase_tracker``, ``evaluate_phase_tracker``:
+    Rust-native training loop (Burn Adam + warmup/cosine LR + gradient
+    clipping + early stopping), porting PRINet 3.0 ``TemporalTrainer``
+    (``temporal_training.py:454-869``).
+
+  **Symbol mapping:**
+
+  - ``prinet.utils.temporal_training.generate_temporal_clevr_n`` → ``prin_train::dataset::generate_temporal_clevr_n``
+  - ``prinet.utils.temporal_training.generate_dataset`` → ``prin_train::dataset::generate_dataset``
+  - ``prinet.utils.temporal_training.hungarian_similarity_loss`` → ``prin_train::losses::hungarian_similarity_loss``
+  - ``prinet.utils.temporal_training.temporal_smoothness_loss`` → ``prin_train::losses::temporal_smoothness_loss``
+  - ``prinet.utils.temporal_training.TemporalTrainer`` → ``prin_train::trainer::train_phase_tracker`` (function, not class)
+
+  **Deliberate deviations:**
+
+  - *Gradient clipping:* Burn's per-tensor ``GradientClippingConfig::Norm``
+    vs. PyTorch's global ``clip_grad_norm_``. Both bound gradient magnitude;
+    distinction does not affect the IP-threshold acceptance criterion.
+  - *LR schedule:* directly-computed scalar cosine formula vs. PyTorch's
+    ``CosineAnnealingLR`` step-count state. Same schedule shape, up-to-one-
+    epoch cosmetic phase difference.
+
+  **WP-027 Python bridge (``prin.nn``/``prin.train``):**
+  ``prin.nn.{SyncGd, Scalr, Rip}`` are ``torch.optim.Optimizer`` subclasses
+  wrapping the Rust optimizer-step bridges. ``prin.train.train_phase_tracker``
+  is a thin Python entry point for the Rust-native trainer, returning a
+  ``TrainingResult`` dataclass. 17 new Python tests (13 optimizer, 4 pipeline).
+
+  **Phase 4 gate acceptance:**
+  PhaseTracker mean IP = 1.00000 ≥ registered 0.99868 threshold across seeds
+  (42, 123, 456) on the canonical temporal CLEVR-N protocol. Composed
+  "full gradcheck" (``encode → evolve → phase_similarity``) green. Trained-
+  state serialization round-trip validated. DV-021 bridge overhead
+  independently re-corroborated (+37.8%/+6.5%).
