@@ -33,14 +33,13 @@ Symbols, by submodule: :mod:`prin.nn.attention` (`OscillatoryAttention`),
 (`PhaseTrackerFrozen`, `PhaseTrackerStatic`, `SlotAttentionNoGRU`,
 `SlotAttentionFrozen`), :mod:`prin.nn.allocation`
 (`AdaptiveOscillatorAllocator`, `DynamicPhaseTracker`, `OscillatorBudget`,
-`estimate_complexity`) — all re-exported here.
+`estimate_complexity`), :mod:`prin.nn.optimizers` (`SyncGd`, `Scalr`, `Rip`
+— WP-027 `torch.optim.Optimizer` wrappers) — all re-exported here.
 
 Remaining planned symbols (Phase 4, PRINet-3.0 compatible), not yet bridged:
 `PRINetModel`, `HierarchicalResonanceLayer`, `PhaseToRateConverter`,
-`HybridPRINet` (v1), optimizers (`SyncGD`, `SCALR`, `RIP`, `Alternating` —
-Rust implementations exist in ``prin-train``; a thin
-``torch.optim.Optimizer`` wrapper is future-WP scope), the remaining
-activations (`HolomorphicActivation`), and the HEP trainer.
+`HybridPRINet` (v1), `AlternatingOptimizer`, the remaining activations
+(`HolomorphicActivation`), and the HEP trainer.
 """
 
 from __future__ import annotations
@@ -66,6 +65,7 @@ from .allocation import (
 )
 from .attention import OscillatoryAttention
 from .hybrid import HybridPRINetV2
+from .optimizers import Rip, Scalr, SyncGd
 from .phase_tracker import PhaseTracker, TrackingResult
 from .slot_attention import SlotAttentionModule, TemporalSlotAttentionMOT
 
@@ -80,9 +80,12 @@ __all__: list[str] = [
     "PhaseTrackerFrozen",
     "PhaseTrackerStatic",
     "ResonanceLayer",
+    "Rip",
+    "Scalr",
     "SlotAttentionFrozen",
     "SlotAttentionModule",
     "SlotAttentionNoGRU",
+    "SyncGd",
     "TemporalSlotAttentionMOT",
     "TrackingResult",
     "estimate_complexity",

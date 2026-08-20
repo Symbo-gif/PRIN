@@ -36,3 +36,7 @@ serde_json.workspace = true
 [[bench]]
 name = "resonance_layer_bridge"
 harness = false
+
+[[bench]]
+name = "phase_tracker_bridge"
+harness = false

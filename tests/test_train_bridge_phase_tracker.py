@@ -79,6 +79,32 @@ class TestPhaseTrackerGradients:
             lambda x, y: tracker.phase_similarity(x, y), (a, b), eps=1e-6, atol=1e-4
         )
 
+    def test_composed_encode_evolve_similarity_gradcheck(
+        self, tracker: PhaseTracker
+    ) -> None:
+        """WP-027 "full gradcheck": each of `encode`/`evolve`/
+        `phase_similarity` is gradchecked in isolation above; this chains all
+        three into a single composed graph — `encode(dets_t) -> evolve ->
+        phase_similarity(evolved, encode(dets_t1))` — the same composition
+        `crates/prin-train/src/trainer.rs::train_step_pt` and
+        `PhaseTracker::forward` (Rust) exercise for training, verifying
+        gradients are correct end to end through the composed bridge calls,
+        not just through each bridged method independently.
+        """
+        gen = torch.Generator().manual_seed(0)
+        dets_t = torch.rand(2, 4, dtype=torch.float64, generator=gen).requires_grad_()
+        dets_t1 = torch.rand(3, 4, dtype=torch.float64, generator=gen).requires_grad_()
+
+        def composed(dt: torch.Tensor, dt1: torch.Tensor) -> torch.Tensor:
+            phase_t, amp_t = tracker.encode(dt)
+            phase_t1, _amp_t1 = tracker.encode(dt1)
+            evolved_phase, _evolved_amp = tracker.evolve(phase_t, amp_t)
+            return tracker.phase_similarity(evolved_phase, phase_t1)
+
+        assert torch.autograd.gradcheck(
+            composed, (dets_t, dets_t1), eps=1e-4, atol=3e-3
+        )
+
 
 class TestPhaseTrackerNonDifferentiable:
     """`match_frames`/`track_sequence`: non-differentiable evaluation
@@ -133,3 +159,49 @@ class TestPhaseTrackerCheckpoint:
         with pytest.raises(ValueError, match="shape mismatch"):
             target.load_rust_state_dict(state)
         assert target.n_osc == 10
+
+
+class TestPhaseTrackerBenchmarks:
+    """Microbenchmarks: WP-027's bridge-profiling acceptance criterion,
+    extending DV-021's `ResonanceLayer` evidence
+    (`TestTrainBridgeBenchmarks` in `test_train_bridge.py`) to
+    `PhaseTracker`'s composed `match_frames` (encode -> evolve ->
+    phase_similarity) training-step path. Compares against the Rust-only
+    baseline in `crates/prin-train/benches/phase_tracker_bridge.rs` (same
+    two named shapes — keep both files' shapes in sync). This test records
+    the Python-side number; it does not itself assert a cross-process
+    overhead bound (Benchmarking Standards §2.3: no scientific conclusion
+    claims from pilot evidence without a stored, multi-run baseline — see
+    the WP-027 S1 handoff for the 5-run process-level median-of-medians
+    protocol applied to these numbers).
+    """
+
+    def test_match_frames_round_trip_latency_small(
+        self, benchmark: pytest.Fixture
+    ) -> None:
+        """Shape `small_4obj_28osc` (canonical temporal CLEVR-N protocol)."""
+        tracker = PhaseTracker(4, seed_counter=1)  # n_delta=4,n_theta=8,n_gamma=16
+        dets_t = torch.rand(4, 4, dtype=torch.float64)
+        dets_t1 = torch.rand(4, 4, dtype=torch.float64)
+
+        def round_trip() -> tuple[list[int], torch.Tensor]:
+            return tracker.match_frames(dets_t, dets_t1)
+
+        matches, sim = benchmark(round_trip)
+        assert sim.shape == (4, 4)
+        assert len(matches) == 4
+
+    def test_match_frames_round_trip_latency_moderate(
+        self, benchmark: pytest.Fixture
+    ) -> None:
+        """Shape `moderate_32obj_28osc`."""
+        tracker = PhaseTracker(4, seed_counter=1)
+        dets_t = torch.rand(32, 4, dtype=torch.float64)
+        dets_t1 = torch.rand(32, 4, dtype=torch.float64)
+
+        def round_trip() -> tuple[list[int], torch.Tensor]:
+            return tracker.match_frames(dets_t, dets_t1)
+
+        matches, sim = benchmark(round_trip)
+        assert sim.shape == (32, 32)
+        assert len(matches) == 32

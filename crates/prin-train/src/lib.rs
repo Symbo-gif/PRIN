@@ -58,6 +58,16 @@
 //! - [`allocation`] — [`allocation::AdaptiveOscillatorAllocator`],
 //!   [`allocation::DynamicPhaseTracker`] (WP-026): task-complexity-driven
 //!   adaptive oscillator-count allocation.
+//! - [`dataset`] — [`dataset::generate_temporal_clevr_n`],
+//!   [`dataset::generate_dataset`] (WP-027): deterministic temporal
+//!   CLEVR-N synthetic sequence generator.
+//! - [`losses`] — [`losses::hungarian_similarity_loss`],
+//!   [`losses::temporal_smoothness_loss`] (WP-027): differentiable
+//!   tracking-training losses over similarity matrices.
+//! - [`trainer`] — [`trainer::train_phase_tracker`] (WP-027): the
+//!   Rust-native training pipeline (Adam + warmup/cosine LR + gradient
+//!   clipping + early stopping) driving [`phase_tracker::PhaseTracker`] on
+//!   [`dataset::SequenceData`].
 //!
 //! `bands`/`layers` (Burn `Module`s) expose a `Config` (validated
 //! hyperparameters), a `Params` struct (explicit parameter tensors, for
@@ -76,10 +86,13 @@
 //!
 //! WP-025 delivered the production PyTorch `torch.autograd.Function` bridge
 //! for [`layers::ResonanceLayer`]/[`activations::GatedPhaseActivation`]
-//! (`crates/prin-py/src/bindings/train.rs`). The WP-026 symbols above have
-//! **no PyO3/Python bridge yet** — an explicit, evidence-backed carried-scope
-//! item for a future WP/session, not a silent gap; see the WP-026 S1 handoff
-//! note (`DOCS/experiments/`) for the full rationale.
+//! (`crates/prin-py/src/bindings/train.rs`). The Exec-WP-026 S1 executive
+//! session delivered the same for every WP-026 symbol above
+//! (`crates/prin-py/src/bindings/{attention,phase_tracker,hybrid,
+//! slot_attention,ablation,allocation}.rs`, thin wrappers in
+//! `python/prin/nn/`). WP-027 adds the Rust-native [`trainer`] pipeline's own
+//! PyO3 orchestration entry point plus `torch.optim.Optimizer` wrappers over
+//! [`sync_gd::SyncGd`]/[`rip::Rip`]/[`scalr::Scalr`].
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -89,6 +102,7 @@ pub mod activations;
 pub mod allocation;
 pub mod attention;
 pub mod bands;
+pub mod dataset;
 pub mod energy;
 pub mod error;
 pub mod feedback;
@@ -96,11 +110,13 @@ pub mod hep;
 pub mod hybrid;
 pub mod inhibition;
 pub mod layers;
+pub mod losses;
 pub mod phase_tracker;
 pub mod rip;
 pub mod scalr;
 pub mod slot_attention;
 pub mod sync_gd;
+pub mod trainer;
 
 mod support;
 

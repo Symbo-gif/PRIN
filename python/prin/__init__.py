@@ -13,6 +13,8 @@ Subpackages:
     prin.metrics: synchronization, coherence, spectral, energy, and chimera
         metrics.
     prin.nn: torch.nn.Module wrappers, autograd.Function bridges, baselines.
+    prin.train: Rust-native trainable-stack orchestration entry points
+        (temporal CLEVR-N training pipeline).
     prin.eval: MOT evaluation and temporal metrics.
     prin.experiments: ablation, stats, adversarial, and training frameworks.
     prin.parity: golden-trajectory corpus, manifest/loader, and differential

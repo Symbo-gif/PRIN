@@ -397,6 +397,109 @@ class DynamicPhaseTrackerBridge:
         self, detections_t: object, detections_t1: object, seed: Seed
     ) -> tuple[list[int], object, OscillatorBudget]: ...
 
+# --- Trainable-stack integration and Phase 4 gate (WP-027) ---
+class TrainingResult:
+    @property
+    def final_train_loss(self) -> float: ...
+    @property
+    def final_val_loss(self) -> float: ...
+    @property
+    def final_val_ip(self) -> float: ...
+    @property
+    def best_val_loss(self) -> float: ...
+    @property
+    def best_epoch(self) -> int: ...
+    @property
+    def total_epochs(self) -> int: ...
+    @property
+    def train_losses(self) -> list[float]: ...
+    @property
+    def val_losses(self) -> list[float]: ...
+    @property
+    def val_ips(self) -> list[float]: ...
+
+def train_phase_tracker(
+    detection_dim: int,
+    n_delta: int = 4,
+    n_theta: int = 8,
+    n_gamma: int = 16,
+    n_discrete_steps: int = 5,
+    match_threshold: float = 0.3,
+    n_objects: int = 4,
+    n_frames: int = 20,
+    det_dim: int = 4,
+    train_seqs: int = 50,
+    val_seqs: int = 10,
+    dataset_seed: int = 42,
+    lr: float = 3e-4,
+    weight_decay: float = 0.0,
+    max_epochs: int = 100,
+    patience: int = 10,
+    smoothing_window: int = 5,
+    warmup_epochs: int = 5,
+    grad_clip: float = 1.0,
+    model_seed: int = 0,
+) -> tuple[PhaseTrackerBridge, TrainingResult]: ...
+
+class SyncGdBridge:
+    def __init__(
+        self,
+        lr: float = 0.01,
+        momentum: float = 0.0,
+        weight_decay: float = 0.0,
+        sync_penalty: float = 0.1,
+        critical_order: float = 0.5,
+        dampening: float = 0.0,
+    ) -> None: ...
+    def step(
+        self,
+        param: object,
+        grad: object | None = None,
+        order_parameter: float | None = None,
+    ) -> object: ...
+    def state_dict(self) -> str: ...
+    def load_state_dict(self, state: str) -> None: ...
+
+class ScalrBridge:
+    def __init__(
+        self,
+        lr: float = 0.01,
+        momentum: float = 0.0,
+        weight_decay: float = 0.0,
+        r_min: float = 0.1,
+        alpha: float = 1.0,
+        warmup_steps: int = 0,
+        oscillation_window: int = 20,
+        oscillation_threshold: float = 0.01,
+        oscillation_decay: float = 0.95,
+        adaptive_r_min: bool = False,
+        r_min_ema_alpha: float = 0.1,
+    ) -> None: ...
+    def step(
+        self,
+        param: object,
+        grad: object | None = None,
+        order_parameter: float | None = None,
+    ) -> object: ...
+    def state_dict(self) -> str: ...
+    def load_state_dict(self, state: str) -> None: ...
+
+class RipBridge:
+    def __init__(
+        self, n_oscillators: int, lr: float = 0.01, target_amplitude: float = 1.0
+    ) -> None: ...
+    @property
+    def n_oscillators(self) -> int: ...
+    def step(
+        self,
+        coupling: object,
+        grad: object | None = None,
+        phase: object | None = None,
+        amplitude: object | None = None,
+    ) -> object: ...
+    def state_dict(self) -> str: ...
+    def load_state_dict(self, state: str) -> None: ...
+
 # --- Constants ---
 TAU: float
 AMPLITUDE_MIN: float

@@ -61,5 +61,9 @@ fn _prin_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     bindings::ablation::register(m)?;
     bindings::allocation::register(m)?;
 
+    // Trainable-stack integration and Phase 4 gate (WP-027)
+    bindings::trainer::register(m)?;
+    bindings::optim::register(m)?;
+
     Ok(())
 }

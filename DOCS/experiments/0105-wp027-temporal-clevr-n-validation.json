@@ -1,0 +1,53 @@
+{
+  "session": "0105-wp027-s1",
+  "date": "2026-08-19",
+  "purpose": "WP-027 S1 Phase-4-gate validation run for the acceptance criterion 'PhaseTracker reaches at least the registered 3.0 IP threshold in validation runs'. This is validation evidence for the Phase 4 gate, NOT Phase 7 campaign evidence and NOT a pre-registered scientific comparison (no effect sizes/confidence intervals against SlotAttention are claimed here) -- see DOCS/sessions/phase-7/0179-exp006-e1-temporal-binding-phasetracker-and-ablation-replication.md for that future work.",
+  "registered_threshold": {
+    "source": "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/benchmarks/results/y4q1_7_statistical_summary.json",
+    "description": "The only PRINet 3.0 artifact using real generate_dataset/generate_temporal_clevr_n sequences with actually-trained (not random-weight) models, tied to a preregistration hash (y4q1_7_preregistration_hash.json).",
+    "protocol": {
+      "train_seqs": 50,
+      "val_seqs": 10,
+      "n_objects": 4,
+      "n_frames": 20,
+      "max_epochs": 20,
+      "patience": 5,
+      "match_threshold": 0.1,
+      "seeds": [42, 123, 456]
+    },
+    "phase_tracker_mean_ip": 0.99868,
+    "phase_tracker_per_seed_ip": [1.0, 1.0, 0.99605]
+  },
+  "prin_result": {
+    "test": "crates/prin-train/tests/integration_temporal_clevr_n.rs::phase_tracker_reaches_registered_temporal_clevr_n_ip_threshold",
+    "command": "cargo test --release -p prin-train --test integration_temporal_clevr_n -- --ignored --nocapture",
+    "protocol": {
+      "train_seqs": 50,
+      "val_seqs": 10,
+      "n_objects": 4,
+      "n_frames": 20,
+      "det_dim": 4,
+      "n_delta": 4,
+      "n_theta": 8,
+      "n_gamma": 16,
+      "n_discrete_steps": 5,
+      "match_threshold": 0.1,
+      "max_epochs": 20,
+      "patience": 5,
+      "warmup_epochs": 5,
+      "smoothing_window": 5,
+      "lr": 0.0003,
+      "weight_decay": 0.0,
+      "grad_clip": 1.0,
+      "seeds": [42, 123, 456]
+    },
+    "per_seed": [
+      {"seed": 42, "final_val_ip": 1.0, "total_epochs": 20, "final_val_loss": 0.07025},
+      {"seed": 123, "final_val_ip": 1.0, "total_epochs": 20, "final_val_loss": 0.04355},
+      {"seed": 456, "final_val_ip": 1.0, "total_epochs": 20, "final_val_loss": 0.09332}
+    ],
+    "mean_val_ip": 1.0,
+    "wall_time_s": 115.62,
+    "verdict": "PASS: mean_val_ip (1.00000) >= registered_threshold (0.99868)"
+  }
+}
