@@ -43,11 +43,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    # DV-016: windows-latest observed at ~77 min total (CubeCL-CPU steps
-    # ~10-15x slower than local); bound worst case rather than risk the
-    # default 360-minute job timeout silently burning Actions minutes.
+        include:
+          - os: ubuntu-latest
+            runner: ubuntu-latest
+          - os: windows-latest
+            # EA-005 E-F3 / DV-016/DV-023: GitHub-hosted windows-latest is
+            # ~14x slower than local hardware for CubeCL-CPU workloads and
+            # now times out. Route to the self-hosted PRIN-GPU- runner
+            # ([self-hosted, Windows, X64, gpu]) which runs these in ~3.5 min.
+            runner: [self-hosted, Windows, X64]
+          - os: macos-latest
+            runner: macos-latest
+    runs-on: ${{ matrix.runner }}
+    # DV-016: bound worst case rather than risk the default 360-minute job
+    # timeout silently burning Actions minutes.
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4

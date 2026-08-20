@@ -29,6 +29,10 @@ jobs:
   parity:
     needs: detect_corpus
     if: needs.detect_corpus.outputs.has_cases == 'true'
+    # EA-005 E-F2 / DV-022: GitHub-hosted ubuntu-latest hit "No space left on
+    # device" during maturin build. If this recurs, route to a self-hosted
+    # Linux runner (e.g. WSL2 on the PRIN-GPU-Runner host with labels
+    # [self-hosted, Linux, X64]) by changing runs-on below.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

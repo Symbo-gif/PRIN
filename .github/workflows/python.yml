@@ -56,7 +56,15 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: ["3.11", "3.12", "3.13"]
-    runs-on: ${{ matrix.os }}
+        include:
+          - os: ubuntu-latest
+            runner: ubuntu-latest
+          - os: windows-latest
+            # EA-005 E-F3 / DV-016/DV-023: route windows jobs to the
+            # self-hosted PRIN-GPU-Runner (~14x faster than GitHub-hosted
+            # windows-latest for CubeCL-CPU workloads).
+            runner: [self-hosted, Windows, X64]
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

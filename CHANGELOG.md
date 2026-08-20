@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Self-hosted Windows runner for CI** (EA-005 follow-up, DV-016/DV-022/DV-023
+  remediation): `rust.yml`, `python.yml`, and `release.yml` now route all
+  `windows-latest` matrix jobs to the self-hosted `PRIN-GPU-Runner`
+  (`[self-hosted, Windows, X64]`) instead of GitHub-hosted `windows-latest`.
+  The GitHub-hosted runner was ~14× slower than local hardware for
+  CubeCL-CPU workloads (DV-016) and now times out (DV-023). `parity.yml`
+  retains `ubuntu-latest` with a documented fallback comment for routing to
+  a self-hosted Linux runner (WSL2) if the disk-exhaustion issue (DV-022)
+  recurs.
+
 - **Executive Mathematical Audit Session 004 (EMA-004)** — tool remediation
   session; report `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_004.md`
   (`PASS-WITH-REMEDIATION`, M-F8/M-F5/M-F6 closed, M-F7 unchanged
