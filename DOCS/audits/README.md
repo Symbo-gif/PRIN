@@ -172,3 +172,28 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   symbolic proof `PASS`. 28 total claims across 6 ledgers; 21 PASS, 7
   `REQUIRES_HUMAN_REVIEW` carried under the M-F3/DV-013 sign-off precedent
   (zero new findings).
+- [`EXECUTIVE_MATH_AUDIT_REPORT_003.md`](EXECUTIVE_MATH_AUDIT_REPORT_003.md) —
+  Third Executive Mathematical Audit (EMA-003, 2026-08-19), Phase 4 close,
+  `PASS-WITH-REMEDIATION`; re-verified all 28 existing claims against
+  `6e33ca5` (zero regressions) and added 10 new `prin-train`
+  trainable-stack claims (first EMA coverage of Phase 4's mathematical
+  surface) — 9/10 genuine SymPy/Z3 `PASS`; one new D3 finding (M-F8:
+  SCALR-LR-02 `INCONCLUSIVE`, closed by EMA-004). 38 total claims across 7
+  ledgers; 30 PASS, 1 INCONCLUSIVE, 7 `REQUIRES_HUMAN_REVIEW` (same M-F3/M-F7
+  policy-gate, re-confirmed under DV-013/R20). `[Index entry, plus this
+  session's SESSION_REGISTER.md/DEFERRED_VALIDATION_REGISTER.md/CHANGELOG.md
+  entries, added retroactively by EMA-004, 2026-08-20 — never added by
+  EMA-003 itself; same governance §8.6 gap class as EA-003's own omission
+  above.]`
+- [`EXECUTIVE_MATH_AUDIT_REPORT_004.md`](EXECUTIVE_MATH_AUDIT_REPORT_004.md) —
+  Fourth Executive Mathematical Audit (EMA-004, 2026-08-20), **tool
+  remediation session**, `PASS-WITH-REMEDIATION`. Fixed M-F8 (root cause in
+  `math-audit-mcp`'s `verify_identity`, not a SymPy limitation as previously
+  characterized) and M-F5 (added numeric reconstruction-value comparison to
+  `audit_tensor_contract`, closing a gap open since EMA-001, demonstrated
+  against real PRINet-3.0 HOSVD reference data). Added a new optional PySAT
+  adapter/tool (independent CNF-cardinality/CDCL-SAT solver family) and gave
+  `math-audit-mcp` its first-ever git history (M-F6, also open since
+  EMA-001). M-F7 unchanged, resolved-by-design. 40 total claims across 8
+  ledgers (2 new); zero regressions, 33 PASS, 0 FAIL, 0 INCONCLUSIVE, 7
+  `REQUIRES_HUMAN_REVIEW`.

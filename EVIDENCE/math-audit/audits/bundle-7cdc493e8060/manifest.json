@@ -1,0 +1,52 @@
+{
+  "bundle_id": "bundle-7cdc493e8060",
+  "ledger_id": "ledger-prin-dynamics-tensor-contracts-001",
+  "request_id": "req-699d84811598",
+  "created_at_utc": "2026-08-20T04:30:50.206Z",
+  "overall_status": "REQUIRES_HUMAN_REVIEW",
+  "claim_verdicts": [
+    {
+      "claim_id": "TEN-01",
+      "status": "REQUIRES_HUMAN_REVIEW",
+      "contributing_audit_ids": [
+        "audit-cd11344b05e8"
+      ],
+      "reason": "high/critical-severity claim passed only numerically; policy requires symbolic or formal (SymPy/Z3/Lean) corroboration before a PASS verdict"
+    },
+    {
+      "claim_id": "TEN-02",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-9dcfb78d7a3a"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "TEN-01-LEAN",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-f2730b8bd5f1"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    }
+  ],
+  "audit_ids": [
+    "audit-cd11344b05e8",
+    "audit-9dcfb78d7a3a",
+    "audit-f2730b8bd5f1"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [
+    {
+      "artifact_id": "art-63a3179f835d",
+      "artifact_type": "text",
+      "relative_path": "artifacts/audit-f2730b8bd5f1__lean-diagnostics.txt",
+      "content_hash": "sha256:596b3a82b1d006020f35176dd7c765b605a34af552445f066053db58d3de5400",
+      "content_type": "text/plain",
+      "description": "Sanitized Lean/lake stdout+stderr",
+      "created_at_utc": "2026-08-20T04:30:50.175Z"
+    }
+  ],
+  "bundle_content_hash": "sha256:6bacb3bed55d2a9685b5154f24fca4db67506910b206a1a25d299af99ab9a61b"
+}

@@ -1,0 +1,163 @@
+{
+  "ledger_id": "ledger-prin-tensor-hosvd-reconstruction-001",
+  "repository_root": ".",
+  "commit_ref": "cb2d83c",
+  "claims": [
+    {
+      "claim_id": "TCK-01",
+      "claim_type": "tensor_contract",
+      "statement": "HOSVD (Tucker) reconstruction at full multilinear rank 2=[3, 4, 2] on PRIN's hosvd() (crates/prin-tensor/src/tucker.rs) reproduces the original tensor within 1e-10 absolute tolerance, using the SAME reference fixture already captured as genuine differential parity evidence against PRINet 3.0's PolyadicTensor (EA-003 finding E-F5 remediation, crates/prin-tensor/tests/data/prinet_reference_hosvd.json, crates/prin-tensor/tests/parity_decomposition.rs). math-audit-mcp's own reported relative_error field in that fixture is NOT trusted as evidence -- this claim independently re-derives the residual via audit_tensor_contract's expected_output comparison (NumPy elementwise diff of the two captured arrays), executed by the audit tool itself, not read from the fixture's self-reported metadata. EMA-004: first EMA coverage of prin-tensor / closes M-F5 (audit_tensor_contract previously could not verify HOSVD reconstruction values at all).",
+      "code_refs": [
+        "crates/prin-tensor/src/tucker.rs",
+        "crates/prin-tensor/tests/data/prinet_reference_hosvd.json",
+        "crates/prin-tensor/tests/parity_decomposition.rs"
+      ],
+      "assumptions": {
+        "expression": "R_ijk = R_ijk (identity contraction; the tool's genuine work is the expected_output numeric comparison, not this trivial einsum)",
+        "tensors": [
+          {
+            "name": "R",
+            "rank": 3,
+            "named_axes": [
+              "i",
+              "j",
+              "k"
+            ],
+            "dimensions": {
+              "i": 3,
+              "j": 4,
+              "k": 2
+            },
+            "sample_values": [
+              [
+                [
+                  -2.942091015256665e-15,
+                  0.9999999999999964
+                ],
+                [
+                  2.000000000000001,
+                  3.000000000000001
+                ],
+                [
+                  3.999999999999999,
+                  4.999999999999999
+                ],
+                [
+                  6.0,
+                  7.0
+                ]
+              ],
+              [
+                [
+                  7.999999999999997,
+                  8.999999999999996
+                ],
+                [
+                  10.000000000000002,
+                  11.0
+                ],
+                [
+                  11.999999999999998,
+                  12.999999999999998
+                ],
+                [
+                  13.999999999999996,
+                  14.999999999999996
+                ]
+              ],
+              [
+                [
+                  16.000000000000004,
+                  17.0
+                ],
+                [
+                  18.000000000000004,
+                  19.000000000000007
+                ],
+                [
+                  20.0,
+                  21.0
+                ],
+                [
+                  22.000000000000004,
+                  23.000000000000004
+                ]
+              ]
+            ]
+          }
+        ],
+        "output_signature": {
+          "rank": 3,
+          "named_axes": [
+            "i",
+            "j",
+            "k"
+          ]
+        },
+        "contraction_pairs": [],
+        "expected_output": [
+          [
+            [
+              0.0,
+              1.0
+            ],
+            [
+              2.0,
+              3.0
+            ],
+            [
+              4.0,
+              5.0
+            ],
+            [
+              6.0,
+              7.0
+            ]
+          ],
+          [
+            [
+              8.0,
+              9.0
+            ],
+            [
+              10.0,
+              11.0
+            ],
+            [
+              12.0,
+              13.0
+            ],
+            [
+              14.0,
+              15.0
+            ]
+          ],
+          [
+            [
+              16.0,
+              17.0
+            ],
+            [
+              18.0,
+              19.0
+            ],
+            [
+              20.0,
+              21.0
+            ],
+            [
+              22.0,
+              23.0
+            ]
+          ]
+        ],
+        "output_tolerance": 1e-10
+      },
+      "required_checks": [
+        "audit_tensor_contract"
+      ],
+      "severity": "high",
+      "crosscheck_required": false
+    }
+  ]
+}

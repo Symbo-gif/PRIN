@@ -1,7 +1,7 @@
 {
   "ledger_id": "ledger-prin-dynamics-graph-topology-001",
   "repository_root": ".",
-  "commit_ref": "1604bd6",
+  "commit_ref": "cb2d83c",
   "claims": [
     {
       "claim_id": "GRA-01",
@@ -158,6 +158,83 @@
         "verify_lean_claim"
       ],
       "severity": "high",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "GRA-01-SAT",
+      "claim_type": "graph_regularity_sat",
+      "statement": "PySAT corroboration of GRA-01's regularity component: build_ring(N=6, k_ring=4)'s declared edge set is exactly 4-regular. Verified via a CNF cardinality (Sinz sequential-counter) encoding over each node's incident-edge atoms, checked by an independent CDCL SAT solver (glucose3) -- a different implementation stack from GRA-01's NetworkX degree counting and GRA-01-LEAN's Lean kernel `decide`. EMA-004: added as additional crosscheck evidence for the M-F7 REQUIRES_HUMAN_REVIEW policy gate on GRA-01 (does not itself change GRA-01's gated status, which remains resolved-by-design per DV-013/R20; this is supplementary evidence, not a replacement).",
+      "code_refs": [
+        "crates/prin-dynamics/src/coupling.rs:222-263",
+        "crates/prin-dynamics/src/coupling.rs:203-220"
+      ],
+      "assumptions": {
+        "nodes": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "edges": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            5,
+            0
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            5,
+            1
+          ]
+        ],
+        "expected_degree": 4,
+        "graph_kind": "undirected",
+        "allow_self_loops": false
+      },
+      "required_checks": [
+        "audit_graph_regularity_sat"
+      ],
+      "severity": "medium",
       "crosscheck_required": false
     }
   ]

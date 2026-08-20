@@ -1,0 +1,95 @@
+{
+  "bundle_id": "bundle-8070fd2b0d46",
+  "ledger_id": "ledger-prin-dynamics-symbolic-identities-001",
+  "request_id": "req-cce4a97f1f16",
+  "created_at_utc": "2026-08-20T04:30:48.785Z",
+  "overall_status": "PASS",
+  "claim_verdicts": [
+    {
+      "claim_id": "PD-01-SIN",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-5f14dade54dc"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "PD-01-COS",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-072c49c9d878"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "MF-01-PHASE",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-9f0444966e4d"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "MF-01-AMPLITUDE",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-c655e87e7df8"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "SL-01-RADIAL",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-9aa10f568098"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "SL-01-ANGULAR",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-c3338e942ce5"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "MPC-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-5d61ec394c1a"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "PSD-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-df60e1b72044"
+      ],
+      "reason": "all required checks passed"
+    }
+  ],
+  "audit_ids": [
+    "audit-5f14dade54dc",
+    "audit-d013a3d91c71",
+    "audit-072c49c9d878",
+    "audit-ec2bd75b1f96",
+    "audit-9f0444966e4d",
+    "audit-d73e01c12d6d",
+    "audit-c655e87e7df8",
+    "audit-7cc9aa42f16e",
+    "audit-9aa10f568098",
+    "audit-c171333c79eb",
+    "audit-c3338e942ce5",
+    "audit-5f6a8439ec47",
+    "audit-5d61ec394c1a",
+    "audit-0f24b26acb82",
+    "audit-df60e1b72044",
+    "audit-89619f4d0dc8"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:b13fb069be6f4cbb70a57c485b571d8f9ff387045e114aaa1c1845840e60a226"
+}

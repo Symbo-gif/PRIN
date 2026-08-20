@@ -64,15 +64,22 @@ only its own policy configuration, claim ledgers, and evidence — the same
 separation of concerns already used for Snyk, `cargo-audit`, and `pip-audit`
 (Coding Standards §6), none of which are vendored either.
 
-**Provenance caveat (recorded, not remediated by this session):** the
-`math-audit-mcp` source tree has no git history of its own (`git -C
-"<tool path>" rev-parse HEAD` fails — not a git repository). There is
-therefore no commit hash to cite as the audited tool version. EMA sessions
-compensate by recording, as evidence, the installed package version
-(`pip show math-audit-mcp`), the resolved dependency versions (SymPy, SciPy,
-Z3, NetworkX, mpmath), and a SHA-256 content hash of the `src/math_audit_mcp/`
-tree at audit time (§6). Vendoring the tool as a pinned git submodule or a
-version-pinned PyPI dependency is logged as a pass-forward item (§7).
+**Provenance (fixed in EMA-004, 2026-08-20):** the `math-audit-mcp` source
+tree previously had no git history of its own (`git -C "<tool path>"
+rev-parse HEAD` failed), so EMA-001 through EMA-003 could only cite a
+SHA-256 content hash of the `src/math_audit_mcp/` tree, which changed
+unattributably between sessions. EMA-004 (`DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_004.md`
+§2.5, finding M-F6) ran `git init` in the tool's own directory (a separate,
+non-PRIN repository) and committed its then-current state. EMA sessions from
+EMA-004 onward record, as evidence, the installed package version
+(`pip show math-audit-mcp` / `math_audit_mcp.__version__`), the resolved
+dependency versions (SymPy, SciPy, Z3, NetworkX, mpmath, and — since EMA-004
+— PySAT), and the tool's own git commit hash (`git -C "<tool path>"
+rev-parse HEAD`), which is now meaningful. Vendoring the tool as a pinned git
+submodule or a version-pinned PyPI dependency remains a distinct,
+not-yet-taken architectural step, logged as a pass-forward item (§7) —
+smaller now that the tool has real history to pin against, but still
+requiring its own plan amendment if pursued.
 
 ### 2.2 PRIN-side integration artifacts
 
@@ -138,12 +145,24 @@ same evidentiary weight as an EA finding:
   resolved to `EVIDENCE/math-audit` at runtime by `tools/math_audit_run.py`
   (absolute path, set via `MATH_AUDIT_OUTPUT_ROOT`, never inside
   `allowed_roots`' own source tree per the tool's own security model).
-- Optional adapters (`lean`, `wolfram`) remain disabled by default, matching
+- Optional adapters `lean` and `wolfram` remain disabled by default, matching
   Project Plan §4/§8: no new external toolchain dependency is introduced
   without a separate plan amendment. A claim that would otherwise want Lean
   escalation is instead scoped to what SymPy/Z3/SciPy can decide, and any
   residual gap is recorded as `INCONCLUSIVE` → a D3 finding, not silently
   dropped.
+- Optional adapter `pysat` (added EMA-004, §4, D3 finding M-F7 evidentiary-
+  strength remediation) is **enabled** (`enable_pysat: true`), unlike `lean`
+  and `wolfram`: it is a version-pinned pip dependency of `math-audit-mcp`
+  itself (`python-sat`, a prebuilt-wheel package with no separate binary
+  install or license), so it does not cross the "new external toolchain"
+  threshold the `lean`/`wolfram` default-disabled posture exists to guard.
+  It backs the `audit_graph_regularity_sat` tool and the `graph_regularity_sat`
+  claim_type — a CNF cardinality-encoding + CDCL SAT solver corroboration for
+  finite/decidable graph-structural claims, independent of the NetworkX/Z3
+  tools already used for the same claim class. It is never a *required*
+  check on any pre-existing claim's verdict; it is used only via new,
+  additive claims authored specifically to exercise it (e.g. `GRA-01-SAT`).
 
 ## 4. Claim taxonomy — mapping PRIN mathematics to `math-audit-mcp` claim types
 
@@ -155,6 +174,8 @@ same evidentiary weight as an EA finding:
 | `prin-dynamics::state` (phase wrap `% 2π`, amplitude clamp `[1e-6, 10]`, derivative clamp `±1e4`) | The stated clamp/wrap guard holds for every real input, not just tested samples | `z3_invariant` | `check_constraint_model` (Z3) |
 | `prin-tensor::tucker` (HOSVD) | Reconstruction/orthonormality-type contraction identities on a concrete small tensor | `tensor_contract` | `audit_tensor_contract` (NumPy einsum vs. supplied sample values) |
 | `prin-dynamics::coupling` (ring/topology construction) | A constructed coupling topology has the declared graph-theoretic shape (e.g. every node at the declared degree, single connected component) | `graph_topology` | `audit_graph_topology` (NetworkX) |
+| `prin-dynamics::coupling` (ring/topology construction, corroborating) | The same construction's regularity independently re-derived via a different solver family (added EMA-004) | `graph_regularity_sat` | `audit_graph_regularity_sat` (PySAT: CNF cardinality encoding + CDCL SAT) |
+| `prin-tensor::tucker` (HOSVD reconstruction values, added EMA-004) | A decomposition's reconstructed tensor matches an expected/reference tensor within tolerance (not just contraction shape) | `tensor_contract` | `audit_tensor_contract` (NumPy einsum + `expected_output`/`output_tolerance` numeric comparison) |
 
 Each claim in `tools/math_audit_claims/*.json` cites the exact `code_refs`
 (`file:line-range`) of the PRIN source it restates. **The claim's `assumptions`

@@ -9,6 +9,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Executive Mathematical Audit Session 004 (EMA-004)** — tool remediation
+  session; report `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_004.md`
+  (`PASS-WITH-REMEDIATION`, M-F8/M-F5/M-F6 closed, M-F7 unchanged
+  resolved-by-design). Fixed EMA-003's M-F8 at root cause in
+  `math-audit-mcp`'s `verify_identity` (promote declared `"symbol > 0"`-style
+  assumptions into SymPy `Symbol`-level kwargs so `Pow(0, x)` auto-evaluation
+  fires — the gap was in the tool, not a SymPy limitation as previously
+  characterized; SCALR-LR-02 now genuine symbolic `PASS`). Fixed EMA-001's
+  M-F5 by adding `expected_output`/`output_tolerance` numeric-reconstruction
+  comparison to `audit_tensor_contract` (pure NumPy, no PyTorch/JAX backend
+  needed as previously scoped) and authored a new claim (TCK-01,
+  `prin-tensor-hosvd-reconstruction.json`, first EMA coverage of
+  `prin-tensor`) against the existing PRINet-3.0 HOSVD reference fixture
+  (residual `7.1e-15` at `1e-10` tolerance). Added a new optional adapter/tool
+  (PySAT: CNF cardinality-encoding + CDCL SAT solver corroboration of graph
+  k-regularity, independent solver family from the existing NetworkX/Z3
+  checks) and a new corroborating claim (GRA-01-SAT). Fixed EMA-001's M-F6 by
+  `git init`-ing `math-audit-mcp`'s own, separate, non-PRIN repository for
+  the first time (it previously had none). Evaluated and deferred `z3_mcp`
+  (redundant), `OpenLogic` (reference corpus, not a callable tool), MiniZinc
+  MCP and SageMath (not installed, no concrete claim needs them yet). Re-ran
+  the full audit: 40 claims across 8 ledgers (was 38/7), zero regressions,
+  33 PASS / 0 FAIL / 0 INCONCLUSIVE / 7 REQUIRES_HUMAN_REVIEW. Also
+  retroactively added EMA-003's own missing
+  `SESSION_REGISTER.md`/`DEFERRED_VALIDATION_REGISTER.md`/`CHANGELOG.md`
+  entries (a governance §8.6 closing-checklist gap discovered this session).
+
+- **Executive Mathematical Audit Session 003 (EMA-003)** — Phase 4 close
+  mathematical audit, first EMA coverage of the trainable stack; report
+  `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_003.md` (`PASS-WITH-REMEDIATION`,
+  new finding M-F8, closed by EMA-004 above). Re-verified all 28 existing
+  claims against `6e33ca5` (zero regressions); authored and executed 10 new
+  `prin-train-trainable-stack-properties.json` claims covering the Hungarian
+  similarity loss entropy identity, dSiLU derivative formula, Scalr lr-scale
+  boundary behaviors, RIP Hebbian equilibrium, SyncGd penalty gradient
+  formula, and four Z3-proved bound/non-negativity/diagonal invariants — 9/10
+  reached genuine SymPy/Z3 `PASS`; SCALR-LR-02 reached `INCONCLUSIVE`
+  (recorded as M-F8). 38 total claims across 7 ledgers; 30 PASS, 1
+  INCONCLUSIVE, 7 REQUIRES_HUMAN_REVIEW (same M-F3/M-F7 policy-gate,
+  re-confirmed under DV-013/R20 precedent). Direct redundant SymPy+Z3
+  cross-verification performed for all new claims. This entry was added
+  retroactively by EMA-004 (the session's own closing checklist omitted it).
+
 - **WP-026 PhaseTracker, Hybrid, baselines, and allocation**
   (`crates/prin-train/`, `crates/prin-py/`, `python/prin/nn/`, Phase 4 fifth
   WP; sessions 0101–0104 plus Exec-WP-026 S1 executive secondary session;

@@ -1,0 +1,51 @@
+{
+  "variables": [
+    {
+      "name": "lam",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "K_c",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "K",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "deficit",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "penalty",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "lam >= 0",
+    "deficit == If(K_c - K > 0, K_c - K, 0)",
+    "penalty == lam * deficit * deficit"
+  ],
+  "queries": [
+    {
+      "query_id": "penalty-non-negative",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "penalty >= 0"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

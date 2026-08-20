@@ -1,0 +1,124 @@
+{
+  "bundle_id": "bundle-9c020df28f84",
+  "ledger_id": "ledger-prin-dynamics-ode-properties-001",
+  "request_id": "req-d129066bf323",
+  "created_at_utc": "2026-08-20T04:30:47.639Z",
+  "overall_status": "REQUIRES_HUMAN_REVIEW",
+  "claim_verdicts": [
+    {
+      "claim_id": "INT-01",
+      "status": "REQUIRES_HUMAN_REVIEW",
+      "contributing_audit_ids": [
+        "audit-35cfd6bdcd77"
+      ],
+      "reason": "high/critical-severity claim passed only numerically; policy requires symbolic or formal (SymPy/Z3/Lean) corroboration before a PASS verdict"
+    },
+    {
+      "claim_id": "INT-02",
+      "status": "REQUIRES_HUMAN_REVIEW",
+      "contributing_audit_ids": [
+        "audit-d592f35c5abd"
+      ],
+      "reason": "high/critical-severity claim passed only numerically; policy requires symbolic or formal (SymPy/Z3/Lean) corroboration before a PASS verdict"
+    },
+    {
+      "claim_id": "HOPF-01",
+      "status": "REQUIRES_HUMAN_REVIEW",
+      "contributing_audit_ids": [
+        "audit-de902b638b6c"
+      ],
+      "reason": "high/critical-severity claim passed only numerically; policy requires symbolic or formal (SymPy/Z3/Lean) corroboration before a PASS verdict"
+    },
+    {
+      "claim_id": "KUR-01",
+      "status": "REQUIRES_HUMAN_REVIEW",
+      "contributing_audit_ids": [
+        "audit-95ac171efb80"
+      ],
+      "reason": "high/critical-severity claim passed only numerically; policy requires symbolic or formal (SymPy/Z3/Lean) corroboration before a PASS verdict"
+    }
+  ],
+  "audit_ids": [
+    "audit-35cfd6bdcd77",
+    "audit-d592f35c5abd",
+    "audit-de902b638b6c",
+    "audit-95ac171efb80"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [
+    {
+      "artifact_id": "art-54d5c2be03e0",
+      "artifact_type": "csv",
+      "relative_path": "artifacts/audit-35cfd6bdcd77__convergence.csv",
+      "content_hash": "sha256:9cc342c6fb1ea2b8f572332e6b9c172d1789426f70b42f60128314171b16dc68",
+      "content_type": "text/csv",
+      "description": "Refinement-level global error vs step size",
+      "created_at_utc": "2026-08-20T04:30:46.873Z"
+    },
+    {
+      "artifact_id": "art-fa88f57eff41",
+      "artifact_type": "csv",
+      "relative_path": "artifacts/audit-35cfd6bdcd77__trajectory.csv",
+      "content_hash": "sha256:8d77b28b9608dc3815536129c2beecf16fbe7a471eaa19f6d6ff2092e63bbd3e",
+      "content_type": "text/csv",
+      "description": "Candidate trajectory (primary run)",
+      "created_at_utc": "2026-08-20T04:30:46.873Z"
+    },
+    {
+      "artifact_id": "art-10e9e47c1f50",
+      "artifact_type": "csv",
+      "relative_path": "artifacts/audit-d592f35c5abd__convergence.csv",
+      "content_hash": "sha256:e2bbcb33aa738b1d51124ad697fd843b234cf67c90ed3c338ad0f37081b4d690",
+      "content_type": "text/csv",
+      "description": "Refinement-level global error vs step size",
+      "created_at_utc": "2026-08-20T04:30:46.893Z"
+    },
+    {
+      "artifact_id": "art-de5d8c43e81a",
+      "artifact_type": "csv",
+      "relative_path": "artifacts/audit-d592f35c5abd__trajectory.csv",
+      "content_hash": "sha256:0add69c6078279c2afe42d727b166ce6308978a182e11755d3b690b4465d12e7",
+      "content_type": "text/csv",
+      "description": "Candidate trajectory (primary run)",
+      "created_at_utc": "2026-08-20T04:30:46.893Z"
+    },
+    {
+      "artifact_id": "art-17aedc86a322",
+      "artifact_type": "csv",
+      "relative_path": "artifacts/audit-de902b638b6c__convergence.csv",
+      "content_hash": "sha256:7fad39e8f1a2332261bef941db1deb18cd099aa883196ebd55d5c5a72eb35f68",
+      "content_type": "text/csv",
+      "description": "Refinement-level global error vs step size",
+      "created_at_utc": "2026-08-20T04:30:47.143Z"
+    },
+    {
+      "artifact_id": "art-5906ab757a07",
+      "artifact_type": "csv",
+      "relative_path": "artifacts/audit-de902b638b6c__trajectory.csv",
+      "content_hash": "sha256:4b71e4885417db7a25bf1fa67be95fa4be90e5fdf0f42cea77706f066b88393b",
+      "content_type": "text/csv",
+      "description": "Candidate trajectory (primary run)",
+      "created_at_utc": "2026-08-20T04:30:47.145Z"
+    },
+    {
+      "artifact_id": "art-e83b105d0520",
+      "artifact_type": "csv",
+      "relative_path": "artifacts/audit-95ac171efb80__convergence.csv",
+      "content_hash": "sha256:2060409544329b6c9994707c08d65f932e81de5a7f0f568afbad4387f3ed9de7",
+      "content_type": "text/csv",
+      "description": "Refinement-level global error vs step size",
+      "created_at_utc": "2026-08-20T04:30:47.618Z"
+    },
+    {
+      "artifact_id": "art-57e9fafc3115",
+      "artifact_type": "csv",
+      "relative_path": "artifacts/audit-95ac171efb80__trajectory.csv",
+      "content_hash": "sha256:4298a355d6e158b1b50d654c1c08c947979547a25844602d476fb4f6d8eb4b4f",
+      "content_type": "text/csv",
+      "description": "Candidate trajectory (primary run)",
+      "created_at_utc": "2026-08-20T04:30:47.622Z"
+    }
+  ],
+  "bundle_content_hash": "sha256:9c1198b043eb1f239e332d45823854ab54cfb478fe0c3f71fd63f7b72c663131"
+}

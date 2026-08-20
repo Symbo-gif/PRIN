@@ -1,0 +1,17 @@
+{
+  "lhs": "K*sqrt(((r0*cos(p0) + r1*cos(p1))/2)**2 + ((r0*sin(p0) + r1*sin(p1))/2)**2)*sin(atan2((r0*sin(p0) + r1*sin(p1))/2, (r0*cos(p0) + r1*cos(p1))/2) - p0)",
+  "rhs": "K*(r0*sin(p0 - p0) + r1*sin(p1 - p0))/2",
+  "assumptions": [],
+  "variables": [
+    "r0",
+    "r1",
+    "p0",
+    "p1",
+    "K"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 60,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

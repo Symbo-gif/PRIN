@@ -28,7 +28,7 @@ limits:
   default_timeout_seconds: 15
 
 adapters:
-  allowed: ["sympy", "scipy", "mpmath", "z3", "networkx", "lean", "wolfram"]
+  allowed: ["sympy", "scipy", "mpmath", "z3", "networkx", "lean", "wolfram", "pysat"]
   # enable_lean: true per Project Plan amendment #24 (EMA-001 remediation
   # session, 2026-08-14) -- Lean 4 (bare `lean`, no mathlib dependency) is
   # used for decide-based formal corroboration of GRA-01-LEAN/TEN-01-LEAN
@@ -39,6 +39,16 @@ adapters:
   # dependency" threshold that would need a plan amendment.
   enable_lean: true
   enable_wolfram: false
+  # enable_pysat: true, added EMA-004 (M-F7 evidentiary-strength gap
+  # remediation). Unlike Lean/Wolfram, PySAT is a version-pinned pip
+  # dependency of math-audit-mcp itself (python-sat>=1.8) -- no separate
+  # binary install, license, or external toolchain, so it does not cross the
+  # "new external toolchain dependency" threshold the Lean/Wolfram note above
+  # is guarding against. Used only for graph_regularity_sat claims (a new,
+  # additive claim_type -- see GRA-01-SAT in
+  # prin-dynamics-graph-topology.json), never as a required check on any
+  # existing claim's verdict.
+  enable_pysat: true
   enable_subprocess: true
 
 symbolic:
@@ -51,6 +61,7 @@ verdict_rules:
     numerical_convergence: ["audit_ode"]
     tensor_contract: ["audit_tensor_contract"]
     graph_topology: ["audit_graph_topology"]
+    graph_regularity_sat: ["audit_graph_regularity_sat"]
     z3_invariant: ["check_constraint_model"]
     lean_theorem: ["verify_lean_claim"]
     code_contract: ["check_constraint_model"]
