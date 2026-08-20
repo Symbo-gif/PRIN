@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install ruff mypy "interrogate>=1.7" "bandit[toml]>=1.7" hypothesis
+      - run: pip install ruff mypy "interrogate>=1.7" "bandit[toml]>=1.7" hypothesis torch
       - run: ruff check python/ tests/ benchmarks/ tools/
       - run: ruff format --check python/ tests/ benchmarks/ tools/
       - run: mypy python/prin --strict

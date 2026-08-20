@@ -150,6 +150,13 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   two D1 findings (E-F1: live GitHub Actions billing block, passed forward as
   DV-014; E-F2: cumulative deviation-ledger corruption recurrence at WP-020
   S4, restored with durable CI enforcement closing DV-015).
+- [`EXECUTIVE_AUDIT_REPORT_005.md`](EXECUTIVE_AUDIT_REPORT_005.md) — Fifth
+  project-level executive audit (EA-005, 2026-08-20), `PASS-WITH-REMEDIATION`;
+  delta audit of Phase 4 (WP-022..WP-027, sessions 0085–0108) plus EMA-003/
+  EMA-004. Five findings: E-F1 (D2, mypy lint failure — torch missing in CI,
+  FIXED), E-F2 (D3, ubuntu runner disk exhaustion, DV-022), E-F3 (D3,
+  windows-latest CubeCL timeout, DV-023), E-F4 (D4, phase-4 README status
+  mismatch, FIXED), E-F5 (D4, CHANGELOG missing WP-027, FIXED).
 - [`EXECUTIVE_MATH_AUDIT_REPORT_001.md`](EXECUTIVE_MATH_AUDIT_REPORT_001.md) —
   First Executive Mathematical Audit (EMA-001, 2026-08-14), `FAIL`; introduces
   `math-audit-mcp` independent tool-executed re-verification (SymPy/SciPy/

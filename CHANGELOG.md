@@ -105,6 +105,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     revealed and fixed missing ReLU in classifier head, `HybridPRINetV2Params`
     / `init_from_params` added). CLEAN delta re-audit.
 
+- **WP-027 Trainable-stack integration and Phase 4 gate**
+  (`crates/prin-train/`, `crates/prin-py/`, `python/prin/nn/`,
+  `python/prin/train.py`, Phase 4 sixth and final WP; sessions 0105–0107;
+  audit `DOCS/audits/027-wp027-audit.md`, verdict `PASS`, zero findings):
+  trainable-stack integration layer — dataset, losses, trainer modules in
+  Rust; PyO3 bridges for optimizers (`SyncGd`, `Scalr`, `Rip`) and
+  `train_phase_tracker` pipeline entry point; Python `train.py` orchestration
+  module. PhaseTracker reaches registered IP threshold in validation.
+  Serialization round-trip on trained model. Bridge overhead re-corroborates
+  DV-021 figures (+37.8%/+6.5%). No new D1–D4 finding raised.
+
 - **WP-025 Production Torch autograd bridge** (`crates/prin-py/`,
   `python/prin/nn/`, Phase 4 fourth WP; sessions 0097–0100; audit
   `DOCS/audits/025-wp025-audit.md`, verdict `PASS-WITH-FINDINGS`, four
