@@ -1,6 +1,6 @@
 # Session 0105 — WP-027 S1: Coding — Trainable-stack integration and Phase 4 gate
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 4 — Trainable stack and Torch bridge  
 **Execution unit:** WP-027  
 **Session type:** S1 — Coding  
