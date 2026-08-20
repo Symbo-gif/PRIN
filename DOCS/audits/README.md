@@ -196,4 +196,5 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   `math-audit-mcp` its first-ever git history (M-F6, also open since
   EMA-001). M-F7 unchanged, resolved-by-design. 40 total claims across 8
   ledgers (2 new); zero regressions, 33 PASS, 0 FAIL, 0 INCONCLUSIVE, 7
-  `REQUIRES_HUMAN_REVIEW`.
+  `REQUIRES_HUMAN_REVIEW` — all 7 signed off by the maintainer this session
+  (report §8), per the DV-013 recorded-sign-off precedent.

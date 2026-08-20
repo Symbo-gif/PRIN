@@ -7,7 +7,7 @@
 **Git Branch/State:** `main` @ `cb2d83c733c4ad6c8378af0f3e9209e506ca74fc`
 **Governing methodology:** `DOCS/standards/Executive_Mathematical_Audit_Governance_and_Methodology.md`
 **Prior session:** EMA-003 (`EXECUTIVE_MATH_AUDIT_REPORT_003.md`, verdict `PASS-WITH-REMEDIATION`, 2026-08-19)
-**Verdict:** **PASS-WITH-REMEDIATION** — zero new D1/D2 findings; M-F8 CLOSED (fixed); M-F5 CLOSED (fixed, new capability demonstrated); M-F6 CLOSED (tool now has git history); M-F7 unchanged, resolved-by-design, with additional PySAT corroborating evidence.
+**Verdict:** **PASS-WITH-REMEDIATION** — zero new D1/D2 findings; M-F8 CLOSED (fixed); M-F5 CLOSED (fixed, new capability demonstrated); M-F6 CLOSED (tool now has git history); M-F7 unchanged, resolved-by-design, with additional PySAT corroborating evidence and maintainer sign-off (§8) granted for all 7 REQUIRES_HUMAN_REVIEW claims (INT-01, INT-02, HOPF-01, KUR-01, GRA-01, TEN-01, TCK-01).
 
 ---
 
@@ -219,23 +219,23 @@ every claim not listed individually below.
 | `prin-dynamics-symbolic-identities.json` | 8 | ✅ PASS | Identical to EMA-003 |
 | `prin-dynamics-z3-invariants.json` | 7 | ✅ PASS | Identical to EMA-003 |
 | `prin-kernels-gpu-properties.json` | 3 | ✅ PASS | Identical to EMA-003 |
-| `prin-dynamics-ode-properties.json` | 4 | ⚠️ REQUIRES_HUMAN_REVIEW | Identical to EMA-003 (M-F7, unchanged) |
-| `prin-dynamics-tensor-contracts.json` | TEN-01, TEN-02, TEN-01-LEAN — 3 | ⚠️ REQUIRES_HUMAN_REVIEW | Identical to EMA-003 (TEN-01 gated by M-F7; TEN-02/TEN-01-LEAN PASS) |
+| `prin-dynamics-ode-properties.json` | 4 | ⚠️ REQUIRES_HUMAN_REVIEW → ✅ **signed off** | Identical to EMA-003 (M-F7, unchanged); human sign-off granted §8 |
+| `prin-dynamics-tensor-contracts.json` | TEN-01, TEN-02, TEN-01-LEAN — 3 | ⚠️ REQUIRES_HUMAN_REVIEW → ✅ **signed off** | Identical to EMA-003 (TEN-01 gated by M-F7; TEN-02/TEN-01-LEAN PASS); human sign-off granted §8 |
 
 ### Ledger: `prin-dynamics-graph-topology.json` (verdict: REQUIRES_HUMAN_REVIEW — GRA-01-SAT new)
 
-| Claim ID | Statement (short) | Tool | Raw status | Ledger-resolved status | Note |
-|---|---|---|---|---|---|
-| GRA-01 | `build_ring(N=6,k=4)` weight matrix 4-regular | `audit_graph_topology` | PASS | REQUIRES_HUMAN_REVIEW | Unchanged (M-F7 gate) |
-| GRA-02 | `build_all_to_all(N=4)` 3-regular | `audit_graph_topology` | PASS | PASS | Unchanged |
-| GRA-01-LEAN | Lean formal corroboration of GRA-01 | `verify_lean_claim` | PASS | PASS | Unchanged |
-| **GRA-01-SAT** | **PySAT cardinality-encoding corroboration of GRA-01's 4-regularity** | `audit_graph_regularity_sat` | **PASS** | **PASS** | **NEW (§2.3)** |
+| Claim ID | Statement (short) | Tool | Raw status | Ledger-resolved status | Human sign-off | Note |
+|---|---|---|---|---|---|---|
+| GRA-01 | `build_ring(N=6,k=4)` weight matrix 4-regular | `audit_graph_topology` | PASS | REQUIRES_HUMAN_REVIEW | ✅ **GRANTED** (§8) | Unchanged (M-F7 gate) |
+| GRA-02 | `build_all_to_all(N=4)` 3-regular | `audit_graph_topology` | PASS | PASS | — (not gated) | Unchanged |
+| GRA-01-LEAN | Lean formal corroboration of GRA-01 | `verify_lean_claim` | PASS | PASS | — (not gated) | Unchanged |
+| **GRA-01-SAT** | **PySAT cardinality-encoding corroboration of GRA-01's 4-regularity** | `audit_graph_regularity_sat` | **PASS** | **PASS** | — (not gated) | **NEW (§2.3)** |
 
 ### Ledger: `prin-tensor-hosvd-reconstruction.json` (NEW ledger, verdict: REQUIRES_HUMAN_REVIEW)
 
-| Claim ID | Statement (short) | Tool | Raw status | Ledger-resolved status | Result |
-|---|---|---|---|---|---|
-| **TCK-01** | **HOSVD full-rank reconstruction of a `(3,4,2)` tensor matches PRINet-3.0 reference within `1e-10`** | `audit_tensor_contract` | **PASS** | REQUIRES_HUMAN_REVIEW (high severity, M-F7-class gate) | `reconstruction_max_abs_residual = 7.105427357601002e-15` |
+| Claim ID | Statement (short) | Tool | Raw status | Ledger-resolved status | Human sign-off | Result |
+|---|---|---|---|---|---|---|
+| **TCK-01** | **HOSVD full-rank reconstruction of a `(3,4,2)` tensor matches PRINet-3.0 reference within `1e-10`** | `audit_tensor_contract` | **PASS** | REQUIRES_HUMAN_REVIEW (high severity, M-F7-class gate) | ✅ **GRANTED** (§8, first sign-off — new claim) | `reconstruction_max_abs_residual = 7.105427357601002e-15` |
 
 **First EMA coverage of `prin-tensor`** (§2.2). M-F5 is closed: the tool can
 now independently verify a decomposition's reconstruction *values*, not just
@@ -263,7 +263,7 @@ its contraction shape.
 
 **40/40 claims produced genuine independent evidence** (33 PASS, 0 FAIL, 0
 INCONCLUSIVE, 0 TOOL_ERROR, 7 REQUIRES_HUMAN_REVIEW-by-policy-gate-only on
-otherwise-passing evidence).
+otherwise-passing evidence — **all 7 signed off this session, §8**).
 
 ---
 
@@ -274,7 +274,7 @@ otherwise-passing evidence).
 | **M-F8** | D3 | SCALR-LR-02 | `verify_identity.py` (`math-audit-mcp`) | Carried from EMA-003. Root cause: declared `"alpha > 0"` assumptions were only used via `sympy.refine`, which has no `Pow`-at-zero-base handler; the tool never promoted them into `Symbol`-level kwargs SymPy's own auto-evaluation can use. | **FIXED** (§2.1) |
 | **M-F5** | D3 | (tool coverage) | `audit_tensor_contract.py` (`math-audit-mcp`) | Carried from EMA-001. Tool validated contraction shape/symmetry only, never a contraction's numeric values against an expected result. | **FIXED** (§2.2), demonstrated by new claim TCK-01 |
 | **M-F6** | D4 | (tool provenance) | `math-audit-mcp` source tree | Carried from EMA-001. No git history of its own; only a SHA-256 content hash, which changed unattributably every session. | **FIXED** (§2.5) — `git init` + 3 commits; `ef1c200...` is this session's evidence-producing commit |
-| **M-F7** | D3 | INT-01, INT-02, HOPF-01, KUR-01, GRA-01, TEN-01, TCK-01 | `tools/math_audit_policy.yaml` | Carried from EMA-001 M-F3, unchanged. Policy-design interaction between `high_severity_requires_symbolic_or_formal` and non-symbolic-tool claim types. TCK-01 (new) joins this same class for the same honest reason. | **RESOLVED (by design)** — unchanged; DV-013/R20 precedent; new PySAT corroboration (GRA-01-SAT) adds evidentiary weight without changing disposition |
+| **M-F7** | D3 | INT-01, INT-02, HOPF-01, KUR-01, GRA-01, TEN-01, TCK-01 | `tools/math_audit_policy.yaml` | Carried from EMA-001 M-F3, unchanged. Policy-design interaction between `high_severity_requires_symbolic_or_formal` and non-symbolic-tool claim types. TCK-01 (new) joins this same class for the same honest reason. | **RESOLVED (by design)** — unchanged; DV-013/R20 precedent; new PySAT corroboration (GRA-01-SAT) adds evidentiary weight without changing disposition; **human sign-off GRANTED for all 7 claims this session, §8** |
 
 **No new D1 or D2 findings.** Zero regressions from EMA-003 (confirmed
 claim-by-claim, §3). Zero tool errors.
@@ -347,7 +347,10 @@ the newly-closed HOSVD reconstruction-value capability was demonstrated
 against real, already-collected reference data (TCK-01). M-F7 — the one
 finding class that is correctly *not* a defect — remains unchanged,
 resolved-by-design, per DV-013/R20 precedent, now with one additional
-independent corroborating claim (GRA-01-SAT) alongside GRA-01-LEAN.
+independent corroborating claim (GRA-01-SAT) alongside GRA-01-LEAN, and
+with maintainer sign-off (§8) freshly re-granted for the full current set
+of 7 `REQUIRES_HUMAN_REVIEW` claims, including a first-time sign-off for
+the new TCK-01 claim.
 
 Per `Executive_Mathematical_Audit_Governance_and_Methodology.md` §7's
 governance principle 4 ("an EMA session cannot close until every D1/D2
@@ -360,7 +363,45 @@ inherited D3/D4 findings as well.
 
 ---
 
-## 8. Delta from EMA-003
+## 8. Human Review Sign-off (Maintainer Approval)
+
+Per the DV-013/R20 resolution precedent (established EMA-001R, applied
+consistently in EMA-002 and EMA-003), a `REQUIRES_HUMAN_REVIEW` verdict is
+never silently rewritten to `PASS` — the tool's `AuditResult` status
+faithfully reflects that only non-symbolic/non-formal evidence backs a
+high/critical-severity claim, which PRIN's policy correctly does not accept
+alone. What closes the *review* the status name refers to is a human (the
+maintainer) examining that evidence and recording explicit sign-off.
+
+**Sign-off granted 2026-08-20 by the maintainer (MichaelMaillet)** for all 7
+claims currently at `REQUIRES_HUMAN_REVIEW`:
+
+| Claim ID | Evidence reviewed | Sign-off |
+|---|---|---|
+| INT-01 | SciPy Euler re-integration vs. `y'=-2y` closed-form, `h=0.05` | ✅ GRANTED |
+| INT-02 | SciPy RK4 re-integration vs. `y'=-2y` closed-form, `h=0.1` | ✅ GRANTED |
+| HOPF-01 | SciPy RK4 re-integration, `y'=4y-y^3`, `y(0)=0.5` | ✅ GRANTED |
+| KUR-01 | SciPy RK4 re-integration, `y'=1-2sin(y)`, `y(0)=0.1` | ✅ GRANTED |
+| GRA-01 | NetworkX 4-regularity/connectivity check, `build_ring(N=6,k=4)`, **plus** independent Lean 4 (`GRA-01-LEAN`) and PySAT (`GRA-01-SAT`, new this session) formal corroboration | ✅ GRANTED |
+| TEN-01 | NumPy symmetry check on `build_ring(N=6,k=4)`'s weight matrix, **plus** independent Lean 4 (`TEN-01-LEAN`) formal corroboration | ✅ GRANTED |
+| **TCK-01** (new) | NumPy `audit_tensor_contract` reconstruction-value check, HOSVD vs. PRINet-3.0 reference, residual `7.105427e-15` at `1e-10` tolerance | ✅ GRANTED (first sign-off for this claim) |
+
+This sign-off resolves each claim's review under the same evidentiary basis
+already documented per-claim in §3 and per-tool in
+`DOCS/standards/Executive_Mathematical_Audit_Governance_and_Methodology.md`
+§4 — it does not substitute for or alter the underlying tool-executed
+evidence, and does not change any `AuditResult.status` value on disk (those
+remain the authoritative, unmodified record of what each tool actually
+computed). Per DV-013's own disposition, this is not a permanent closure:
+`REQUIRES_HUMAN_REVIEW` is architecturally permanent for this claim class
+(policy design, §2.4), so **each future EMA session must re-grant sign-off
+for whatever claim set is then current** — this is not a standing blanket
+approval for claims not yet authored. Recorded in
+`DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-013.
+
+---
+
+## 9. Delta from EMA-003
 
 | Dimension | EMA-003 | EMA-004 | Change |
 |---|---|---|---|

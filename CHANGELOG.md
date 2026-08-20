@@ -31,7 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (redundant), `OpenLogic` (reference corpus, not a callable tool), MiniZinc
   MCP and SageMath (not installed, no concrete claim needs them yet). Re-ran
   the full audit: 40 claims across 8 ledgers (was 38/7), zero regressions,
-  33 PASS / 0 FAIL / 0 INCONCLUSIVE / 7 REQUIRES_HUMAN_REVIEW. Also
+  33 PASS / 0 FAIL / 0 INCONCLUSIVE / 7 REQUIRES_HUMAN_REVIEW. Maintainer
+  sign-off (MichaelMaillet, 2026-08-20) re-granted for the full current
+  REQUIRES_HUMAN_REVIEW set (INT-01, INT-02, HOPF-01, KUR-01, GRA-01,
+  TEN-01, and first-time sign-off for the new TCK-01), per DV-013's
+  recorded-sign-off resolution pattern. Also
   retroactively added EMA-003's own missing
   `SESSION_REGISTER.md`/`DEFERRED_VALIDATION_REGISTER.md`/`CHANGELOG.md`
   entries (a governance §8.6 closing-checklist gap discovered this session).
