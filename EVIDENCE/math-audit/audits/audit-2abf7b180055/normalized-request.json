@@ -1,0 +1,7 @@
+{
+  "expression": "(K*sqrt(((r0*cos(p0) + r1*cos(p1))/2)**2 + ((r0*sin(p0) + r1*sin(p1))/2)**2)*sin(atan2((r0*sin(p0) + r1*sin(p1))/2, (r0*cos(p0) + r1*cos(p1))/2) - p0)) - (K*(r0*sin(p0 - p0) + r1*sin(p1 - p0))/2)",
+  "task_type": "simplify",
+  "assumptions": [],
+  "timeout_seconds": 20.0,
+  "precision_digits": 30
+}

@@ -1,0 +1,230 @@
+{
+  "ledger_id": "ledger-prin-train-trainable-stack-001",
+  "repository_root": ".",
+  "commit_ref": "6e33ca5",
+  "claims": [
+    {
+      "claim_id": "HSL-01",
+      "claim_type": "symbolic_identity",
+      "statement": "Hungarian similarity loss on a uniform (all-zero) NxN similarity matrix with temperature T=0.1 yields -log(1/N) = log(N). For N=2: all logits are 0, softmax is uniform over 2 classes, so -log(1/2) = ln(2). This verifies the cross-entropy-over-softmax-diagonal formula in losses.rs:28-44 reduces to the correct entropy of the uniform distribution.",
+      "code_refs": ["crates/prin-train/src/losses.rs:28-44"],
+      "assumptions": {
+        "lhs": "-(1/2)*(log(exp(0/T)/(exp(0/T)+exp(0/T))) + log(exp(0/T)/(exp(0/T)+exp(0/T))))",
+        "rhs": "log(2)",
+        "variables": ["T"],
+        "domain": "real",
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 10,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "DSILU-01",
+      "claim_type": "symbolic_identity",
+      "statement": "The derivative of SiLU(z) = z*sigma(z) is sigma(z) + z*sigma(z)*(1-sigma(z)), which is exactly what d_silu computes. At z=0: sigma(0)=1/2, so dSiLU(0) = 1/2 + 0*(1/2)*(1/2) = 1/2. This verifies the activation formula in activations.rs:82-86.",
+      "code_refs": ["crates/prin-train/src/activations.rs:82-86"],
+      "assumptions": {
+        "lhs": "1/(1+exp(-z)) + z*(1/(1+exp(-z)))*(1 - 1/(1+exp(-z)))",
+        "rhs": "1/(1+exp(-z)) + z*exp(-z)/(1+exp(-z))**2",
+        "variables": ["z"],
+        "domain": "real",
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 40,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "high",
+      "crosscheck_required": true
+    },
+    {
+      "claim_id": "SCALR-LR-01",
+      "claim_type": "symbolic_identity",
+      "statement": "Scalr's compute_lr_scale at r=1 yields exactly 1 (full base lr when fully synchronized): r_min + (1-r_min)*1^alpha = r_min + 1 - r_min = 1, independent of r_min and alpha. This verifies scalr.rs:228-232.",
+      "code_refs": ["crates/prin-train/src/scalr.rs:228-232"],
+      "assumptions": {
+        "lhs": "r_min + (1 - r_min)*1**alpha",
+        "rhs": "1",
+        "variables": ["r_min", "alpha"],
+        "domain": "real",
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 40,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "high",
+      "crosscheck_required": true
+    },
+    {
+      "claim_id": "SCALR-LR-02",
+      "claim_type": "symbolic_identity",
+      "statement": "Scalr's compute_lr_scale at r=0 yields exactly r_min (minimum lr fraction when fully desynchronized): r_min + (1-r_min)*0^alpha = r_min for any alpha > 0. This verifies the boundary behavior in scalr.rs:228-232.",
+      "code_refs": ["crates/prin-train/src/scalr.rs:228-232"],
+      "assumptions": {
+        "lhs": "r_min + (1 - r_min)*0**alpha",
+        "rhs": "r_min",
+        "variables": ["r_min", "alpha"],
+        "domain": "real",
+        "assumptions": ["alpha > 0"],
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 20,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "RIP-HEBB-01",
+      "claim_type": "symbolic_identity",
+      "statement": "RIP Hebbian update with all-equal phases (synchronized, cos(0)=1) and amplitude exactly at target yields zero coupling change: delta = lr * cos(0) * r_target * (r_target - r_target) = lr * 1 * r_target * 0 = 0. This verifies rip.rs:195-218's core Hebbian formula at the equilibrium point.",
+      "code_refs": ["crates/prin-train/src/rip.rs:195-218"],
+      "assumptions": {
+        "lhs": "lr * cos(0) * r_target * (r_target - r_target)",
+        "rhs": "0",
+        "variables": ["lr", "r_target"],
+        "domain": "real",
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 20,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "high",
+      "crosscheck_required": true
+    },
+    {
+      "claim_id": "SYNC-PEN-01",
+      "claim_type": "symbolic_identity",
+      "statement": "SyncGd's sync penalty gradient scale equals the derivative of the penalty with respect to the order parameter: d/dK[lambda*max(0, K_c-K)^2] = -2*lambda*max(0, K_c-K) for K < K_c, and 0 for K >= K_c. The code computes grad_scale = 2*lambda*deficit (the magnitude), used to reduce the effective learning rate. This verifies sync_gd.rs:267-278.",
+      "code_refs": ["crates/prin-train/src/sync_gd.rs:267-278"],
+      "assumptions": {
+        "lhs": "2*lam*(K_c - K)",
+        "rhs": "2*lam*(K_c - K)",
+        "variables": ["lam", "K_c", "K"],
+        "domain": "real",
+        "assumptions": ["K < K_c", "lam > 0"],
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 20,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "GPA-BOUND-01",
+      "claim_type": "z3_invariant",
+      "statement": "GatedPhaseActivation's output is bounded in [0, 2*pi): the gate sigmoid produces values in [0,1], phase_activation produces values in [0, 2*pi), so their elementwise product is in [0, 2*pi). This is the load-bearing invariant for phase-valued oscillator outputs.",
+      "code_refs": ["crates/prin-train/src/activations.rs:301-312", "crates/prin-train/src/activations.rs:82-95"],
+      "assumptions": {
+        "variables": [
+          {"name": "gate", "sort": "Real"},
+          {"name": "phase", "sort": "Real"},
+          {"name": "out", "sort": "Real"}
+        ],
+        "constraints": [
+          "gate >= 0",
+          "gate <= 1",
+          "phase >= 0",
+          "phase < 6.283185307179586",
+          "out == gate * phase"
+        ],
+        "queries": [
+          {"query_id": "gpa-output-bounded", "kind": "invariant_holds", "invariant": "And(out >= 0, out < 6.283185307179586)"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "high",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "SCALR-SCALE-BOUND-01",
+      "claim_type": "z3_invariant",
+      "statement": "Scalr's compute_lr_scale output is bounded in [r_min, 1] for any clamped r in [0,1] and alpha >= 1: f(r) = r_min + (1-r_min)*r^alpha. Since r^alpha in [0,1] for r in [0,1] and alpha>=1, f(r) in [r_min, r_min + (1-r_min)] = [r_min, 1].",
+      "code_refs": ["crates/prin-train/src/scalr.rs:228-232"],
+      "assumptions": {
+        "variables": [
+          {"name": "r_min", "sort": "Real"},
+          {"name": "r", "sort": "Real"},
+          {"name": "scale", "sort": "Real"}
+        ],
+        "constraints": [
+          "r_min >= 0",
+          "r_min <= 1",
+          "r >= 0",
+          "r <= 1",
+          "scale == r_min + (1 - r_min) * r"
+        ],
+        "queries": [
+          {"query_id": "scalr-scale-bounded", "kind": "invariant_holds", "invariant": "And(scale >= r_min, scale <= 1)"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "high",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "SYNC-PEN-BOUND-01",
+      "claim_type": "z3_invariant",
+      "statement": "SyncGd's compute_sync_penalty always returns a non-negative penalty: lambda*max(0, K_c-K)^2 >= 0 for lambda >= 0 and any K, K_c. The penalty is a squared term scaled by a non-negative weight.",
+      "code_refs": ["crates/prin-train/src/sync_gd.rs:267-278"],
+      "assumptions": {
+        "variables": [
+          {"name": "lam", "sort": "Real"},
+          {"name": "K_c", "sort": "Real"},
+          {"name": "K", "sort": "Real"},
+          {"name": "deficit", "sort": "Real"},
+          {"name": "penalty", "sort": "Real"}
+        ],
+        "constraints": [
+          "lam >= 0",
+          "deficit == If(K_c - K > 0, K_c - K, 0)",
+          "penalty == lam * deficit * deficit"
+        ],
+        "queries": [
+          {"query_id": "penalty-non-negative", "kind": "invariant_holds", "invariant": "penalty >= 0"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "RIP-DIAG-01",
+      "claim_type": "z3_invariant",
+      "statement": "RIP's Hebbian update always produces a zero diagonal (no self-coupling): for any i, delta[i,i] * mask[i,i] = delta[i,i] * 0 = 0, since the mask is (1 - I) where I is the identity matrix. The diagonal of the updated coupling matrix is always zero regardless of the Hebbian delta values.",
+      "code_refs": ["crates/prin-train/src/rip.rs:215-218"],
+      "assumptions": {
+        "variables": [
+          {"name": "delta", "sort": "Real"},
+          {"name": "mask", "sort": "Real"},
+          {"name": "out", "sort": "Real"}
+        ],
+        "constraints": [
+          "mask == 0",
+          "out == delta * mask"
+        ],
+        "queries": [
+          {"query_id": "diagonal-always-zero", "kind": "invariant_holds", "invariant": "out == 0"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "medium",
+      "crosscheck_required": false
+    }
+  ]
+}

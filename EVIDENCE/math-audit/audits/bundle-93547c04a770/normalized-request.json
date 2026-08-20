@@ -1,0 +1,75 @@
+[
+  {
+    "lhs": "y + (dt/6)*(k1 + 2*(k2 + k3) + k4)",
+    "rhs": "y + (dt/6)*k1 + (dt/3)*k2 + (dt/3)*k3 + (dt/6)*k4",
+    "assumptions": [],
+    "variables": [
+      "y",
+      "dt",
+      "k1",
+      "k2",
+      "k3",
+      "k4"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 40,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "(y + (dt/6)*(k1 + 2*(k2 + k3) + k4)) - (y + (dt/6)*k1 + (dt/3)*k2 + (dt/3)*k3 + (dt/6)*k4)",
+    "task_type": "simplify",
+    "assumptions": [],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  {
+    "lhs": "a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7",
+    "rhs": "(a0 + a1 + a2 + a3) + (a4 + a5 + a6 + a7)",
+    "assumptions": [],
+    "variables": [
+      "a0",
+      "a1",
+      "a2",
+      "a3",
+      "a4",
+      "a5",
+      "a6",
+      "a7"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 40,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "(a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7) - ((a0 + a1 + a2 + a3) + (a4 + a5 + a6 + a7))",
+    "task_type": "simplify",
+    "assumptions": [],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  {
+    "lhs": "(K/d)*sin(0 - 0) + (K/d)*sin(0 - 0) + (K/d)*sin(0 - 0)",
+    "rhs": "0",
+    "assumptions": [],
+    "variables": [
+      "K",
+      "d"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 20,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "((K/d)*sin(0 - 0) + (K/d)*sin(0 - 0) + (K/d)*sin(0 - 0)) - (0)",
+    "task_type": "simplify",
+    "assumptions": [],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  }
+]

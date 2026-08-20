@@ -1,0 +1,41 @@
+{
+  "variables": [
+    {
+      "name": "r_min",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "r",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "scale",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "r_min >= 0",
+    "r_min <= 1",
+    "r >= 0",
+    "r <= 1",
+    "scale == r_min + (1 - r_min) * r"
+  ],
+  "queries": [
+    {
+      "query_id": "scalr-scale-bounded",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "And(scale >= r_min, scale <= 1)"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

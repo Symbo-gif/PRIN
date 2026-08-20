@@ -1,0 +1,15 @@
+{
+  "lhs": "(cos(p0 - p1) + cos(p0 - p2) + cos(p1 - p2))/3",
+  "rhs": "(3*(((cos(p0) + cos(p1) + cos(p2))/3)**2 + ((sin(p0) + sin(p1) + sin(p2))/3)**2) - 1)/2",
+  "assumptions": [],
+  "variables": [
+    "p0",
+    "p1",
+    "p2"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 60,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

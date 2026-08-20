@@ -1,0 +1,7 @@
+{
+  "expression": "((K/d)*sin(0 - 0) + (K/d)*sin(0 - 0) + (K/d)*sin(0 - 0)) - (0)",
+  "task_type": "simplify",
+  "assumptions": [],
+  "timeout_seconds": 20.0,
+  "precision_digits": 30
+}

@@ -2,34 +2,39 @@
   "gate_pass": false,
   "ledgers": [
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-9074f2ed90a5",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-0af66b08fcb6",
       "ledger": "prin-dynamics-graph-topology.json",
       "overall_status": "REQUIRES_HUMAN_REVIEW"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-fb54a1cb10e9",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-b29c307618f4",
       "ledger": "prin-dynamics-ode-properties.json",
       "overall_status": "REQUIRES_HUMAN_REVIEW"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-331fecddbdb4",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-8a0835de7c70",
       "ledger": "prin-dynamics-symbolic-identities.json",
       "overall_status": "PASS"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-ff702d55af43",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-ed171ebc32be",
       "ledger": "prin-dynamics-tensor-contracts.json",
       "overall_status": "REQUIRES_HUMAN_REVIEW"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-f2466d90ad80",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-6e079bce2f2a",
       "ledger": "prin-dynamics-z3-invariants.json",
       "overall_status": "PASS"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-46c95f84bb4e",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-93547c04a770",
       "ledger": "prin-kernels-gpu-properties.json",
       "overall_status": "PASS"
+    },
+    {
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-184ec90b735d",
+      "ledger": "prin-train-trainable-stack-properties.json",
+      "overall_status": "FAIL"
     }
   ],
   "output_root": "C:\\dev\\PRIN\\EVIDENCE\\math-audit",

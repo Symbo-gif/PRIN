@@ -1,0 +1,119 @@
+[
+  {
+    "nodes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        5,
+        1
+      ]
+    ],
+    "graph_kind": "undirected",
+    "topology_intent": "k_regular",
+    "requested_properties": [
+      "connected"
+    ],
+    "expected_degree": 4,
+    "allow_parallel_edges": false,
+    "allow_self_loops": false
+  },
+  {
+    "nodes": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        2,
+        3
+      ]
+    ],
+    "graph_kind": "undirected",
+    "topology_intent": "k_regular",
+    "requested_properties": [
+      "connected"
+    ],
+    "expected_degree": 3,
+    "allow_parallel_edges": false,
+    "allow_self_loops": false
+  },
+  {
+    "project_path": ".",
+    "theorem_name": null,
+    "code_snippet": "-- Formal (kernel-checked, decide-based) verification of GRA-01:\n-- build_ring(N=6, k_ring=4) is 4-regular, has no self-loops, has exactly 12\n-- undirected edges, and is connected.\n\ndef ringNbrs (i : Fin 6) : List (Fin 6) :=\n  [i + 1, i - 1, i + 2, i - 2]\n\ndef dedup' [DecidableEq \u03b1] : List \u03b1 \u2192 List \u03b1\n  | [] => []\n  | x :: xs => let rest := dedup' xs\n               if rest.contains x then rest else x :: rest\n\n-- 1. 4-regularity: every node has exactly 4 *distinct* neighbours.\ndef noDup [DecidableEq \u03b1] : List \u03b1 \u2192 Bool\n  | [] => true\n  | x :: xs => !xs.contains x && noDup xs\n\nexample : \u2200 i : Fin 6, (ringNbrs i).length = 4 := by decide\nexample : \u2200 i : Fin 6, noDup (ringNbrs i) = true := by decide\n\n-- 2. No self-loops.\nexample : \u2200 i : Fin 6, !(ringNbrs i).contains i := by decide\n\n-- 3. Exactly 12 undirected edges: canonicalize each directed pair (i, j) as\n-- (min i j, max i j), collect over all i and its neighbours, dedup, count.\ndef canon (p : Fin 6 \u00d7 Fin 6) : Fin 6 \u00d7 Fin 6 :=\n  if p.1.val \u2264 p.2.val then p else (p.2, p.1)\n\ndef allNodes : List (Fin 6) := [0, 1, 2, 3, 4, 5]\n\ndef allDirectedEdges : List (Fin 6 \u00d7 Fin 6) :=\n  allNodes.flatMap (fun i => (ringNbrs i).map (fun j => (i, j)))\n\ndef canonEdges : List (Fin 6 \u00d7 Fin 6) :=\n  dedup' (allDirectedEdges.map canon)\n\nexample : canonEdges.length = 12 := by decide\n\n-- 4. Connectivity: every node is reachable from node 0 via repeated\n-- neighbour steps (bounded BFS closure, decidable over a finite type).\ndef stepClosure (visited : List (Fin 6)) : List (Fin 6) :=\n  dedup' (visited ++ visited.flatMap ringNbrs)\n\ndef closureN : Nat \u2192 List (Fin 6) \u2192 List (Fin 6)\n  | 0, v => v\n  | n + 1, v => closureN n (stepClosure v)\n\nexample : allNodes.all (fun j => (closureN 6 [0]).contains j) = true := by decide\n\n#eval \"GRA-01 lean claim: 4-regular, no self-loops, 12 edges, connected -- all decided\"\n",
+    "expected_outcome": "proves",
+    "timeout_seconds": 60.0
+  }
+]

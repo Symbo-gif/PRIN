@@ -1,0 +1,177 @@
+[
+  {
+    "expression": "W_ij = ring coupling weight between oscillators i and j (build_ring output, N=6, k_ring=4, K=1.0)",
+    "tensors": [
+      {
+        "name": "W",
+        "rank": 2,
+        "variance": [],
+        "named_axes": [
+          "i",
+          "j"
+        ],
+        "dimensions": {
+          "i": 6,
+          "j": 6
+        },
+        "dtype": "float64",
+        "expected_symmetries": [],
+        "basis": null,
+        "sample_values": [
+          [
+            0.0,
+            0.25,
+            0.25,
+            0.0,
+            0.25,
+            0.25
+          ],
+          [
+            0.25,
+            0.0,
+            0.25,
+            0.25,
+            0.0,
+            0.25
+          ],
+          [
+            0.25,
+            0.25,
+            0.0,
+            0.25,
+            0.25,
+            0.0
+          ],
+          [
+            0.0,
+            0.25,
+            0.25,
+            0.0,
+            0.25,
+            0.25
+          ],
+          [
+            0.25,
+            0.0,
+            0.25,
+            0.25,
+            0.0,
+            0.25
+          ],
+          [
+            0.25,
+            0.25,
+            0.0,
+            0.25,
+            0.25,
+            0.0
+          ]
+        ]
+      }
+    ],
+    "output_signature": {
+      "rank": 2,
+      "named_axes": [
+        "i",
+        "j"
+      ]
+    },
+    "contraction_pairs": [],
+    "index_conventions": {
+      "summation_convention": "explicit",
+      "index_order_matters": true
+    },
+    "required_symmetries": [
+      {
+        "tensor_name": "W",
+        "kind": "symmetric",
+        "axes": [
+          "i",
+          "j"
+        ]
+      }
+    ],
+    "test_shapes": [],
+    "random_seed": 0,
+    "numeric_trials": 1
+  },
+  {
+    "expression": "W_ij = all-to-all coupling weight between oscillators i and j (build_all_to_all output, N=4, K=1.0)",
+    "tensors": [
+      {
+        "name": "W",
+        "rank": 2,
+        "variance": [],
+        "named_axes": [
+          "i",
+          "j"
+        ],
+        "dimensions": {
+          "i": 4,
+          "j": 4
+        },
+        "dtype": "float64",
+        "expected_symmetries": [],
+        "basis": null,
+        "sample_values": [
+          [
+            0.0,
+            0.25,
+            0.25,
+            0.25
+          ],
+          [
+            0.25,
+            0.0,
+            0.25,
+            0.25
+          ],
+          [
+            0.25,
+            0.25,
+            0.0,
+            0.25
+          ],
+          [
+            0.25,
+            0.25,
+            0.25,
+            0.0
+          ]
+        ]
+      }
+    ],
+    "output_signature": {
+      "rank": 2,
+      "named_axes": [
+        "i",
+        "j"
+      ]
+    },
+    "contraction_pairs": [],
+    "index_conventions": {
+      "summation_convention": "explicit",
+      "index_order_matters": true
+    },
+    "required_symmetries": [
+      {
+        "tensor_name": "W",
+        "kind": "symmetric",
+        "axes": [
+          "i",
+          "j"
+        ]
+      }
+    ],
+    "test_shapes": [],
+    "random_seed": 0,
+    "numeric_trials": 1
+  },
+  {
+    "project_path": ".",
+    "theorem_name": null,
+    "code_snippet": "-- Formal (kernel-checked, decide-based) verification of TEN-01:\n-- build_ring(N=6, k_ring=4, K=1.0)'s weighted coupling matrix (weight\n-- K/k_ring = 0.25 between connected pairs, 0 elsewhere) is symmetric.\n-- Represented as 4*W over Nat (0 or 1) to keep `decide` inside kernel-checked\n-- Nat arithmetic (Rat's GCD-normalising ops get stuck under plain `decide`);\n-- symmetry of 4*W over Nat is equivalent to symmetry of W since scaling by\n-- the positive constant 4 is injective. Literal values match\n-- tools/math_audit_claims/prin-dynamics-tensor-contracts.json (sample_values\n-- divided by the common weight 0.25).\n\ndef WScaledRows : List (List Nat) :=\n  [[0, 1, 1, 0, 1, 1],\n   [1, 0, 1, 1, 0, 1],\n   [1, 1, 0, 1, 1, 0],\n   [0, 1, 1, 0, 1, 1],\n   [1, 0, 1, 1, 0, 1],\n   [1, 1, 0, 1, 1, 0]]\n\ndef WScaled (i j : Fin 6) : Nat :=\n  ((WScaledRows.getD i.val []).getD j.val 0)\n\nexample : \u2200 i j : Fin 6, WScaled i j = WScaled j i := by decide\n\n#eval \"TEN-01 lean claim: weight matrix symmetry -- decided\"\n",
+    "expected_outcome": "proves",
+    "timeout_seconds": 60.0
+  }
+]

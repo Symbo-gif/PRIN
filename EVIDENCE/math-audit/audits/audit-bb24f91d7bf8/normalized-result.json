@@ -1,0 +1,86 @@
+{
+  "audit_id": "audit-bb24f91d7bf8",
+  "parent_audit_id": null,
+  "request_id": "req-1ee31985c55c",
+  "claim_id": "GPA-BOUND-01",
+  "tool_name": "check_constraint_model",
+  "adapter_name": "z3",
+  "status": "PASS",
+  "severity": "high",
+  "summary": "All 1 quer(y/ies) held: gpa-output-bounded: pass",
+  "detailed_reasoning": "gpa-output-bounded: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+  "normalized_inputs": {
+    "variables": [
+      {
+        "name": "gate",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "phase",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "out",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "gate >= 0",
+      "gate <= 1",
+      "phase >= 0",
+      "phase < 6.283185307179586",
+      "out == gate * phase"
+    ],
+    "queries": [
+      {
+        "query_id": "gpa-output-bounded",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(out >= 0, out < 6.283185307179586)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  "assumptions": [],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 10.0,
+  "started_at_utc": "2026-08-20T02:40:30.017Z",
+  "finished_at_utc": "2026-08-20T02:40:30.025Z",
+  "duration_ms": 8,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:947ec564234f48949b64cceb8a5c527de776578fdd57e2ddc4c484027e385003",
+  "output_content_hash": "sha256:6c2bffa646ffb27633aa0d92880aa6a01a4c2fbf196aa5648ac52c19c6444c00"
+}

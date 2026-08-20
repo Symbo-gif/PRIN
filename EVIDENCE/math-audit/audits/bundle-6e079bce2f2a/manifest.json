@@ -1,0 +1,78 @@
+{
+  "bundle_id": "bundle-6e079bce2f2a",
+  "ledger_id": "ledger-prin-dynamics-z3-invariants-001",
+  "request_id": "req-dfca3ca8b68e",
+  "created_at_utc": "2026-08-20T02:40:29.044Z",
+  "overall_status": "PASS",
+  "claim_verdicts": [
+    {
+      "claim_id": "PW-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-1afe4ba7f22b"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "PW-02",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-c1bba09658f7"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "CL-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-218814e51560"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "CL-02",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-ab083aa3a92e"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "OP-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-bba2de46eaff"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "SI-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-7c56deba4efc"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "PAC-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-4a99b2313a9a"
+      ],
+      "reason": "all required checks passed"
+    }
+  ],
+  "audit_ids": [
+    "audit-1afe4ba7f22b",
+    "audit-c1bba09658f7",
+    "audit-218814e51560",
+    "audit-ab083aa3a92e",
+    "audit-bba2de46eaff",
+    "audit-7c56deba4efc",
+    "audit-4a99b2313a9a"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:d1b843155a08dc6cf2e59defcf12591241abc3b936b5cf467ec67d295e21ba9c"
+}

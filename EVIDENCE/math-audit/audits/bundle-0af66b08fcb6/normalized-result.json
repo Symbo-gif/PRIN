@@ -1,0 +1,338 @@
+[
+  {
+    "audit_id": "audit-19cc39b2f0a5",
+    "parent_audit_id": null,
+    "request_id": "req-20946e4f3464",
+    "claim_id": "GRA-01",
+    "tool_name": "audit_graph_topology",
+    "adapter_name": "networkx",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "Graph is confirmed 4-regular.",
+    "detailed_reasoning": "All 6 nodes have degree 4. Additional properties: connected=True.",
+    "normalized_inputs": {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          1
+        ]
+      ],
+      "graph_kind": "undirected",
+      "topology_intent": "k_regular",
+      "requested_properties": [
+        "connected"
+      ],
+      "expected_degree": 4,
+      "allow_parallel_edges": false,
+      "allow_self_loops": false
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-08-20T02:40:21.987Z",
+    "finished_at_utc": "2026-08-20T02:40:22.003Z",
+    "duration_ms": 15,
+    "warnings": [],
+    "metrics": [
+      {
+        "name": "num_nodes",
+        "value": 6.0,
+        "unit": null
+      },
+      {
+        "name": "num_edges",
+        "value": 12.0,
+        "unit": null
+      },
+      {
+        "name": "num_connected_components",
+        "value": 1.0,
+        "unit": null
+      },
+      {
+        "name": "cycle_basis_size",
+        "value": 7.0,
+        "unit": null
+      },
+      {
+        "name": "diameter",
+        "value": 2.0,
+        "unit": null
+      },
+      {
+        "name": "average_shortest_path_length",
+        "value": 1.2,
+        "unit": null
+      },
+      {
+        "name": "algebraic_connectivity",
+        "value": 3.9999999999999996,
+        "unit": null
+      }
+    ],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:5c40abf3df2a3892a6b1a8b048d78b38bba3bd8616aa02da864474bd1182de8c",
+    "output_content_hash": "sha256:4888aae431f75d4b1ba1e0b262013ea8212a7202ddf77920b2fc22736079f099"
+  },
+  {
+    "audit_id": "audit-5a0683e4d911",
+    "parent_audit_id": null,
+    "request_id": "req-20946e4f3464",
+    "claim_id": "GRA-02",
+    "tool_name": "audit_graph_topology",
+    "adapter_name": "networkx",
+    "status": "PASS",
+    "severity": "medium",
+    "summary": "Graph is confirmed 3-regular.",
+    "detailed_reasoning": "All 4 nodes have degree 3. Additional properties: connected=True.",
+    "normalized_inputs": {
+      "nodes": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "edges": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "graph_kind": "undirected",
+      "topology_intent": "k_regular",
+      "requested_properties": [
+        "connected"
+      ],
+      "expected_degree": 3,
+      "allow_parallel_edges": false,
+      "allow_self_loops": false
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-08-20T02:40:22.039Z",
+    "finished_at_utc": "2026-08-20T02:40:22.040Z",
+    "duration_ms": 1,
+    "warnings": [],
+    "metrics": [
+      {
+        "name": "num_nodes",
+        "value": 4.0,
+        "unit": null
+      },
+      {
+        "name": "num_edges",
+        "value": 6.0,
+        "unit": null
+      },
+      {
+        "name": "num_connected_components",
+        "value": 1.0,
+        "unit": null
+      },
+      {
+        "name": "cycle_basis_size",
+        "value": 3.0,
+        "unit": null
+      },
+      {
+        "name": "diameter",
+        "value": 1.0,
+        "unit": null
+      },
+      {
+        "name": "average_shortest_path_length",
+        "value": 1.0,
+        "unit": null
+      },
+      {
+        "name": "algebraic_connectivity",
+        "value": 3.9999999999999996,
+        "unit": null
+      }
+    ],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:c570a62760ea4f883d3c2a6d887a830f42efda13c7bd5f040910e137ed71d152",
+    "output_content_hash": "sha256:cfdbbd0eb122ce5f0aa92dfce88e0eec3ed7289ce5199028828000ac5e203f4b"
+  },
+  {
+    "audit_id": "audit-fe884b6a6493",
+    "parent_audit_id": null,
+    "request_id": "req-20946e4f3464",
+    "claim_id": "GRA-01-LEAN",
+    "tool_name": "verify_lean_claim",
+    "adapter_name": "lean",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "Lean elaborated successfully; expected_outcome='proves'.",
+    "detailed_reasoning": "Ran `C:\\Users\\there\\.elan\\bin\\lean.EXE C:\\dev\\PRIN\\EVIDENCE\\math-audit\\scratch\\lean\\tmpe2d5tl4v.lean`. Elaboration succeeded. See lean-diagnostics.txt artifact for full sanitized output.",
+    "normalized_inputs": {
+      "project_path": ".",
+      "theorem_name": null,
+      "code_snippet": "-- Formal (kernel-checked, decide-based) verification of GRA-01:\n-- build_ring(N=6, k_ring=4) is 4-regular, has no self-loops, has exactly 12\n-- undirected edges, and is connected.\n\ndef ringNbrs (i : Fin 6) : List (Fin 6) :=\n  [i + 1, i - 1, i + 2, i - 2]\n\ndef dedup' [DecidableEq \u03b1] : List \u03b1 \u2192 List \u03b1\n  | [] => []\n  | x :: xs => let rest := dedup' xs\n               if rest.contains x then rest else x :: rest\n\n-- 1. 4-regularity: every node has exactly 4 *distinct* neighbours.\ndef noDup [DecidableEq \u03b1] : List \u03b1 \u2192 Bool\n  | [] => true\n  | x :: xs => !xs.contains x && noDup xs\n\nexample : \u2200 i : Fin 6, (ringNbrs i).length = 4 := by decide\nexample : \u2200 i : Fin 6, noDup (ringNbrs i) = true := by decide\n\n-- 2. No self-loops.\nexample : \u2200 i : Fin 6, !(ringNbrs i).contains i := by decide\n\n-- 3. Exactly 12 undirected edges: canonicalize each directed pair (i, j) as\n-- (min i j, max i j), collect over all i and its neighbours, dedup, count.\ndef canon (p : Fin 6 \u00d7 Fin 6) : Fin 6 \u00d7 Fin 6 :=\n  if p.1.val \u2264 p.2.val then p else (p.2, p.1)\n\ndef allNodes : List (Fin 6) := [0, 1, 2, 3, 4, 5]\n\ndef allDirectedEdges : List (Fin 6 \u00d7 Fin 6) :=\n  allNodes.flatMap (fun i => (ringNbrs i).map (fun j => (i, j)))\n\ndef canonEdges : List (Fin 6 \u00d7 Fin 6) :=\n  dedup' (allDirectedEdges.map canon)\n\nexample : canonEdges.length = 12 := by decide\n\n-- 4. Connectivity: every node is reachable from node 0 via repeated\n-- neighbour steps (bounded BFS closure, decidable over a finite type).\ndef stepClosure (visited : List (Fin 6)) : List (Fin 6) :=\n  dedup' (visited ++ visited.flatMap ringNbrs)\n\ndef closureN : Nat \u2192 List (Fin 6) \u2192 List (Fin 6)\n  | 0, v => v\n  | n + 1, v => closureN n (stepClosure v)\n\nexample : allNodes.all (fun j => (closureN 6 [0]).contains j) = true := by decide\n\n#eval \"GRA-01 lean claim: 4-regular, no self-loops, 12 edges, connected -- all decided\"\n",
+      "expected_outcome": "proves",
+      "timeout_seconds": 60.0
+    },
+    "assumptions": [],
+    "limitations": [
+      "This adapter drives the Lean CLI and inspects exit status/diagnostics; it does not perform interactive elaboration introspection (a Lean LSP bridge is a documented future extension)."
+    ],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:d19a23a4dff2c96be27ed82c26cd51cfb61bd3161583fce8b8f50aec39219053",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 60.0,
+    "started_at_utc": "2026-08-20T02:40:22.049Z",
+    "finished_at_utc": "2026-08-20T02:40:25.368Z",
+    "duration_ms": 3319,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [
+      {
+        "artifact_id": "art-80ce781a9197",
+        "artifact_type": "text",
+        "relative_path": "artifacts/lean-diagnostics.txt",
+        "content_hash": "sha256:081f250f1ad164665ecc88cdcec8ca433c5bbb5b741cf4dbb2d3c355cdbf9d5c",
+        "content_type": "text/plain",
+        "description": "Sanitized Lean/lake stdout+stderr",
+        "created_at_utc": "2026-08-20T02:40:25.368Z"
+      }
+    ],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:22c3f8829ed5dcadc0ccad320ad660aa385f293e6b918b08bea4682c0fb6897e",
+    "output_content_hash": "sha256:6a7967b515ab680f29bb70ccd5863f65f108bf0837dcc473dba3bc8228d896f4"
+  }
+]

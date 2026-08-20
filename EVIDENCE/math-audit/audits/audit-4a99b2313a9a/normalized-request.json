@@ -1,0 +1,56 @@
+{
+  "variables": [
+    {
+      "name": "A",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "m",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "c",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "raw",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "out",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "A >= 0.000001",
+    "A <= 10.0",
+    "m >= 0",
+    "m <= 1.0",
+    "c >= -1.0",
+    "c <= 1.0",
+    "raw == A*(1 + m*c)",
+    "out == If(raw < 0.000001, 0.000001, If(raw > 10.0, 10.0, raw))"
+  ],
+  "queries": [
+    {
+      "query_id": "pac-modulation-bounded",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "And(raw >= 0, raw <= 2*A, out >= 0.000001, out <= 10.0)"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}
