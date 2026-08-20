@@ -125,6 +125,11 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   whole-module HybridPRINetV2 parity test, FIXED — parity test revealed and
   fixed missing ReLU in classifier head) resolved in S3 with a CLEAN delta
   re-audit.
+- [`027-wp027-audit.md`](027-wp027-audit.md) — WP-027 "Trainable-stack
+  integration and Phase 4 gate" audit (`PASS`); zero findings. DV-021
+  bridge-overhead gap independently re-corroborated; DV-019 new recurrence
+  evidence recorded; DV-005 CUDA Burn backend recommendation recorded for
+  S4 register-review.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.
