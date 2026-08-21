@@ -8,5 +8,13 @@ Pre-trained model artefacts.
 - `subconscious_controller.onnx.data` (86 KB) — external tensor data
   companion for the above graph. The two files together total ~104 KB.
 
-Both files are exempt from the `*.onnx` and `*.onnx.data` gitignore rules and
-are validated against the SHA-256 manifest by `tools/reproduce.py`.
+- `manifest.json` — the SHA-256 + size manifest covering both files
+  (WP-028). It is the authority for the integrity check that
+  `prin_daemon::model::ModelManifest::verify` and
+  `prin.daemon.verify_model_artefacts` run before any ONNX session is created,
+  and `prin.daemon.SubconsciousController` looks its expected digest up here
+  automatically.
+
+Both model files are exempt from the `*.onnx` and `*.onnx.data` gitignore
+rules. `tools/reproduce.py` will consume the same manifest when the Phase 6
+reproducibility pipeline lands.

@@ -15,6 +15,8 @@ Subpackages:
     prin.nn: torch.nn.Module wrappers, autograd.Function bridges, baselines.
     prin.train: Rust-native trainable-stack orchestration entry points
     (temporal CLEVR-N training pipeline).
+    prin.daemon: subconscious controller -- ONNX inference, execution-provider
+    selection (VitisAI -> DirectML -> CPU), and model validation.
     prin.eval: MOT evaluation and temporal metrics.
     prin.experiments: ablation, stats, adversarial, and training frameworks.
     prin.parity: golden-trajectory corpus, manifest/loader, and differential

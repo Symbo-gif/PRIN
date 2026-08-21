@@ -9,6 +9,7 @@ pub(crate) mod allocation;
 pub(crate) mod attention;
 pub(crate) mod bands;
 pub(crate) mod coupling;
+pub(crate) mod daemon;
 pub(crate) mod hybrid;
 pub(crate) mod integrators;
 pub(crate) mod metrics;

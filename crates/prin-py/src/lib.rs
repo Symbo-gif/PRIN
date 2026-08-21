@@ -65,5 +65,9 @@ fn _prin_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     bindings::trainer::register(m)?;
     bindings::optim::register(m)?;
 
+    // Subconscious controller: state/control types, backend selection,
+    // ONNX model validation (WP-028)
+    bindings::daemon::register(m)?;
+
     Ok(())
 }

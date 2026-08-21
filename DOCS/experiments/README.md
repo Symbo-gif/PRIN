@@ -127,6 +127,15 @@ at the top level until they are folded into the final campaign archive in Phase 
 - [`0105-wp027-temporal-clevr-n-validation.json`](0105-wp027-temporal-clevr-n-validation.json) —
   Raw evidence for the Phase 4 gate IP-threshold acceptance criterion
   (3 seeds, canonical protocol, per-seed IP = 1.0).
+- [`0109-wp028-s1-handoff.md`](0109-wp028-s1-handoff.md) — WP-028 S1 handoff
+  to the S2 audit for the ONNX controller and backend selection: the
+  `prin-daemon` state/control types (bit-exact parity with PRINet 3.0), the
+  VitisAI -> DirectML -> CPU selection policy and its deterministic fallback
+  ladder, the runtime-independent ONNX graph reader, SHA-256 manifest
+  verification, and the Python `prin.daemon` inference layer. Also records the
+  three maintainer decisions taken in-session (WP-028 scope approval, the
+  Project Plan risk-register-#4 invocation, and the R31/DV-005 Phase 5
+  scoping disposition).
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at

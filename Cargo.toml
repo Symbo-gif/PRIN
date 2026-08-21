@@ -58,10 +58,19 @@ dlpack = "0.2.0"
 thiserror = "1"
 tracing = "0.1"
 
+# Cryptographic hashing for model-artefact integrity verification
+# (WP-028: `prin-daemon` verifies the subconscious controller's SHA-256
+# manifest before an ONNX session is created). Already present in the
+# lock file as a transitive dependency; promoted to a direct workspace
+# dependency here.
+sha2 = "0.10"
+
 # Testing
 proptest = "1"
 approx = "0.5"
 criterion = "0.5"
+# Scratch directories for filesystem-touching unit tests (dev-only).
+tempfile = "3"
 
 # GPU compute language (CubeCL) — Phase 0 spike; runtime selected via crate features.
 cubecl = { version = "0.10.0", default-features = false, features = ["std"] }

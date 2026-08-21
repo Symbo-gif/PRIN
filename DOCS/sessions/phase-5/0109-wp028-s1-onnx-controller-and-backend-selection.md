@@ -1,6 +1,6 @@
 # Session 0109 — WP-028 S1: Coding — ONNX controller and backend selection
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S1 gates green; handoff note `DOCS/experiments/0109-wp028-s1-handoff.md`; mandatory S2 audit pending (session 0110)  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-028  
 **Session type:** S1 — Coding  

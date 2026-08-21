@@ -5,6 +5,7 @@ Regenerated as the Rust API grows; keep in sync with ``crates/prin-py``.
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 import numpy as np
@@ -958,3 +959,137 @@ class TemporalPropagator:
         amplitudes: NDArray[np.float64],
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]: ...
     def reset(self) -> None: ...
+
+# --- Subconscious controller (WP-028) ---
+STATE_DIM: int
+CONTROL_DIM: int
+CONTROLLER_INPUT_NAME: str
+CONTROLLER_OUTPUT_NAME: str
+MODEL_MANIFEST_FILE_NAME: str
+DEFAULT_NPU_TARGET: str
+DEFAULT_NPU_CACHE_KEY: str
+DEFAULT_NPU_XCLBIN: str
+
+class SubconsciousState:
+    def __init__(
+        self,
+        r_per_band: list[float] | None = None,
+        r_global: float = 0.0,
+        loss_ema: float = 0.0,
+        loss_variance: float = 0.0,
+        grad_norm_ema: float = 0.0,
+        lr_current: float = 1e-3,
+        scalr_alpha: float = 1.0,
+        gpu_temp: float = 0.0,
+        gpu_util: float = 0.0,
+        vram_pct: float = 0.0,
+        cpu_util: float = 0.0,
+        step_latency_p50: float = 0.0,
+        step_latency_p95: float = 0.0,
+        throughput: float = 0.0,
+        epoch: int = 0,
+        regime: str = "mean_field",
+        timestamp: float = 0.0,
+    ) -> None: ...
+    r_per_band: list[float]
+    r_global: float
+    loss_ema: float
+    loss_variance: float
+    grad_norm_ema: float
+    lr_current: float
+    scalr_alpha: float
+    gpu_temp: float
+    gpu_util: float
+    vram_pct: float
+    cpu_util: float
+    step_latency_p50: float
+    step_latency_p95: float
+    throughput: float
+    epoch: int
+    regime: str
+    timestamp: float
+    @property
+    def timestamp_fraction(self) -> float: ...
+    def to_tensor(self) -> NDArray[np.float32]: ...
+    def clone_state(self) -> SubconsciousState: ...
+
+class ControlSignals:
+    def __init__(
+        self,
+        suggested_K_min: float = 0.5,
+        suggested_K_max: float = 5.0,
+        lr_multiplier: float = 1.0,
+        regime_mf_weight: float = 0.33,
+        regime_sk_weight: float = 0.33,
+        regime_full_weight: float = 0.34,
+        alert_level: float = 0.0,
+        coupling_mode_suggestion: float = 0.0,
+    ) -> None: ...
+    @staticmethod
+    def from_tensor(values: NDArray[np.float64]) -> ControlSignals: ...
+    @property
+    def suggested_K_min(self) -> float: ...
+    @property
+    def suggested_K_max(self) -> float: ...
+    @property
+    def lr_multiplier(self) -> float: ...
+    @property
+    def regime_mf_weight(self) -> float: ...
+    @property
+    def regime_sk_weight(self) -> float: ...
+    @property
+    def regime_full_weight(self) -> float: ...
+    @property
+    def alert_level(self) -> float: ...
+    @property
+    def coupling_mode_suggestion(self) -> float: ...
+    @property
+    def preferred_regime(self) -> str: ...
+    def is_finite(self) -> bool: ...
+    def to_tensor(self) -> NDArray[np.float32]: ...
+
+class BackendSelection:
+    @property
+    def backend(self) -> Any: ...
+    @property
+    def reason(self) -> str: ...
+    @property
+    def requested(self) -> str | None: ...
+    @property
+    def attempt_order(self) -> list[Any]: ...
+    @property
+    def available_providers(self) -> list[str]: ...
+    @property
+    def is_degraded(self) -> bool: ...
+    def provider_names(self, backend: str) -> list[str]: ...
+
+def select_execution_backend(
+    available: list[str], requested: str | None = None
+) -> BackendSelection: ...
+def backend_provider_names(backend: str) -> list[str]: ...
+def backend_priority() -> list[str]: ...
+def backend_provider_options(
+    backend: str,
+    sdk_root: str | os.PathLike[str] | None = None,
+    firmware: str | os.PathLike[str] | None = None,
+    cache_dir: str | os.PathLike[str] | None = None,
+    target: str | None = None,
+) -> list[dict[str, str]]: ...
+def npu_firmware_candidates(
+    env_override: str | None,
+    sdk_root: str | os.PathLike[str],
+    xclbin: str | None = None,
+) -> list[str]: ...
+def resolve_npu_firmware(
+    env_override: str | None,
+    sdk_root: str | os.PathLike[str],
+    xclbin: str | None = None,
+) -> str: ...
+def model_sha256(path: str | os.PathLike[str]) -> str: ...
+def inspect_onnx_model(path: str | os.PathLike[str]) -> dict[str, Any]: ...
+def verify_model_manifest(
+    models_dir: str | os.PathLike[str],
+) -> list[dict[str, Any]]: ...
+def validate_controller_model(
+    path: str | os.PathLike[str], expected_sha256: str | None = None
+) -> dict[str, Any]: ...

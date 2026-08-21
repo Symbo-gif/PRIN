@@ -11,17 +11,25 @@ repository.workspace = true
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 
-# ONNX Runtime bindings (`ort` crate, DirectML/VitisAI EPs) are added in
-# Phase 5 behind the `npu` feature; if EP coverage lags, the fallback is the
-# Python onnxruntime path (risk register #4 in DOCS/PRIN_Project_Plan.md).
+# ONNX Runtime bindings (`ort` crate, DirectML/VitisAI EPs) remain reserved
+# behind the `npu` feature. WP-028 S1 recorded the evidence that EP coverage
+# lags — `ort` is a 2.0.0-rc pre-release whose downloadable binaries carry
+# neither the DirectML nor the VitisAI provider, and the Ryzen AI SDK ships
+# VitisAI only as a CPython-tagged wheel — so session creation runs on the
+# Python `onnxruntime` path (risk register #4 in DOCS/PRIN_Project_Plan.md).
 
 [dev-dependencies]
 proptest.workspace = true
 approx.workspace = true
+tempfile.workspace = true
 
 [features]
 default = []
 npu = []
+# Numerical guard validation returns typed errors instead of packing
+# non-finite telemetry unchanged (Coding Standards §2.2).
+strict-checks = []

@@ -24,6 +24,12 @@ session that produced it.
 - [`0017-wp005-s1-phase0-gate.json`](0017-wp005-s1-phase0-gate.json) — WP-005
   S1 Phase 0 exit-gate evidence (corpus, wheel matrix, spike decisions, ORT
   probe, aggregate readiness).
+- [`0109-wp028-s1-controller-provider-report.json`](0109-wp028-s1-controller-provider-report.json)
+  — WP-028 S1 subconscious-controller evidence: model manifest verification and
+  graph contract, the selection policy over every provider subset, real session
+  attempts and their resolved backends on this host, cross-provider output
+  agreement, differential parity against PRINet 3.0.0, and the measured
+  batch-size sensitivity of the float32 GEMM path.
 
 ## Rules
 

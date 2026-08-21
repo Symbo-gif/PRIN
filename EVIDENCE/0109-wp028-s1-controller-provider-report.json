@@ -1,0 +1,375 @@
+{
+  "backend_info": {
+    "attempt_order": [
+      "directml",
+      "cpu"
+    ],
+    "available_providers": [
+      "DmlExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "best_backend": "directml",
+    "cache_dir": "C:\\Users\\there\\AppData\\Local\\prin\\vitisai_cache",
+    "directml_available": true,
+    "npu_available": false,
+    "npu_firmware_candidates": [
+      "C:\\Program Files\\RyzenAI\\1.7.0\\voe-4.0-win_amd64\\xclbins\\phoenix\\1x4.xclbin"
+    ],
+    "npu_firmware_found": true,
+    "npu_firmware_path": "C:\\Program Files\\RyzenAI\\1.7.0\\voe-4.0-win_amd64\\xclbins\\phoenix\\1x4.xclbin",
+    "npu_target": "X1",
+    "ort_available": true,
+    "ort_version": "1.24.4",
+    "sdk_install_dir": "C:\\Program Files\\RyzenAI\\1.7.0",
+    "selection_reason": "auto_detected"
+  },
+  "batch_size_sensitivity_max_abs_diff_vs_full_batch": {
+    "1": 1.1920928955078125e-07,
+    "16": 0.0,
+    "2": 0.0,
+    "24": 0.0,
+    "4": 0.0,
+    "8": 0.0
+  },
+  "cross_provider_agreement": [
+    {
+      "backend": "cpu",
+      "bit_identical_vs_cpu": true,
+      "max_abs_diff_vs_cpu": 0.0
+    }
+  ],
+  "environment": {
+    "numpy": "2.5.1",
+    "onnxruntime": "1.24.4",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+    "python": "3.14.0"
+  },
+  "executable_backends": [
+    "cpu"
+  ],
+  "manifest": [
+    {
+      "bytes": 18270,
+      "path": "subconscious_controller.onnx",
+      "sha256": "3396bfdd433afcfbf865363ff5113e2b068096dbdfabfbc2c9e976b4f07d4102"
+    },
+    {
+      "bytes": 86016,
+      "path": "subconscious_controller.onnx.data",
+      "sha256": "35e7eb0985180e928baca8ef08be8ae8d2257e15f9f7c3720c672bb7696d2597"
+    }
+  ],
+  "model": {
+    "external_data": [
+      "subconscious_controller.onnx.data"
+    ],
+    "graph_name": "main_graph",
+    "inputs": [
+      {
+        "elem_type": 1,
+        "has_shape": true,
+        "name": "state_vector",
+        "shape": [
+          "batch",
+          32
+        ]
+      }
+    ],
+    "ir_version": 10,
+    "op_types": [
+      "Gemm",
+      "Relu",
+      "Gemm",
+      "Relu",
+      "Gemm",
+      "Slice",
+      "Softplus",
+      "Greater",
+      "Where",
+      "Slice",
+      "Softplus",
+      "Greater",
+      "Where",
+      "Slice",
+      "Softmax",
+      "Slice",
+      "Sigmoid",
+      "Slice",
+      "Concat"
+    ],
+    "opset": 18,
+    "outputs": [
+      {
+        "elem_type": 1,
+        "has_shape": true,
+        "name": "control_signals",
+        "shape": [
+          "batch",
+          8
+        ]
+      }
+    ],
+    "path": "subconscious_controller.onnx",
+    "producer": "pytorch 2.10.0+cu128",
+    "sha256": "3396bfdd433afcfbf865363ff5113e2b068096dbdfabfbc2c9e976b4f07d4102"
+  },
+  "reference_parity": {
+    "cases": 24,
+    "max_abs_output_diff_vs_reference": 0.0,
+    "reference_active_providers": [
+      "CPUExecutionProvider"
+    ],
+    "reference_importable": true,
+    "state_vectors_bit_identical": true
+  },
+  "selection_policy": [
+    {
+      "attempt_order": [
+        "npu",
+        "directml",
+        "cpu"
+      ],
+      "available": [
+        "VitisAIExecutionProvider",
+        "DmlExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "backend": "npu",
+      "degraded": false,
+      "reason": "auto_detected",
+      "requested": null
+    },
+    {
+      "attempt_order": [
+        "npu",
+        "directml",
+        "cpu"
+      ],
+      "available": [
+        "VitisAIExecutionProvider",
+        "DmlExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "backend": "npu",
+      "degraded": false,
+      "reason": "requested",
+      "requested": "npu"
+    },
+    {
+      "attempt_order": [
+        "directml",
+        "cpu"
+      ],
+      "available": [
+        "VitisAIExecutionProvider",
+        "DmlExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "backend": "directml",
+      "degraded": false,
+      "reason": "requested",
+      "requested": "directml"
+    },
+    {
+      "attempt_order": [
+        "cpu"
+      ],
+      "available": [
+        "VitisAIExecutionProvider",
+        "DmlExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "backend": "cpu",
+      "degraded": false,
+      "reason": "requested",
+      "requested": "cpu"
+    },
+    {
+      "attempt_order": [
+        "npu",
+        "cpu"
+      ],
+      "available": [
+        "VitisAIExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "backend": "npu",
+      "degraded": false,
+      "reason": "auto_detected",
+      "requested": null
+    },
+    {
+      "attempt_order": [
+        "npu",
+        "cpu"
+      ],
+      "available": [
+        "VitisAIExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "backend": "npu",
+      "degraded": false,
+      "reason": "requested",
+      "requested": "npu"
+    },
+    {
+      "attempt_order": [
+        "npu",
+        "cpu"
+      ],
+      "available": [
+        "VitisAIExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "backend": "npu",
+      "degraded": true,
+      "reason": "requested_unavailable",
+      "requested": "directml"
+    },
+    {
+      "attempt_order": [
+        "cpu"
+      ],
+      "available": [
+        "VitisAIExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "backend": "cpu",
+      "degraded": false,
+      "reason": "requested",
+      "requested": "cpu"
+    },
+    {
+      "attempt_order": [
+        "directml",
+        "cpu"
+      ],
+      "available": [
+        "DmlExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "backend": "directml",
+      "degraded": false,
+      "reason": "auto_detected",
+      "requested": null
+    },
+    {
+      "attempt_order": [
+        "directml",
+        "cpu"
+      ],
+      "available": [
+        "DmlExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "backend": "directml",
+      "degraded": true,
+      "reason": "requested_unavailable",
+      "requested": "npu"
+    },
+    {
+      "attempt_order": [
+        "directml",
+        "cpu"
+      ],
+      "available": [
+        "DmlExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "backend": "directml",
+      "degraded": false,
+      "reason": "requested",
+      "requested": "directml"
+    },
+    {
+      "attempt_order": [
+        "cpu"
+      ],
+      "available": [
+        "DmlExecutionProvider",
+        "CPUExecutionProvider"
+      ],
+      "backend": "cpu",
+      "degraded": false,
+      "reason": "requested",
+      "requested": "cpu"
+    },
+    {
+      "attempt_order": [
+        "cpu"
+      ],
+      "available": [
+        "CPUExecutionProvider"
+      ],
+      "backend": "cpu",
+      "degraded": false,
+      "reason": "auto_detected",
+      "requested": null
+    },
+    {
+      "attempt_order": [
+        "cpu"
+      ],
+      "available": [
+        "CPUExecutionProvider"
+      ],
+      "backend": "cpu",
+      "degraded": true,
+      "reason": "requested_unavailable",
+      "requested": "npu"
+    },
+    {
+      "attempt_order": [
+        "cpu"
+      ],
+      "available": [
+        "CPUExecutionProvider"
+      ],
+      "backend": "cpu",
+      "degraded": true,
+      "reason": "requested_unavailable",
+      "requested": "directml"
+    },
+    {
+      "attempt_order": [
+        "cpu"
+      ],
+      "available": [
+        "CPUExecutionProvider"
+      ],
+      "backend": "cpu",
+      "degraded": false,
+      "reason": "requested",
+      "requested": "cpu"
+    }
+  ],
+  "session": "0109 \u2014 WP-028 S1",
+  "session_attempts": [
+    {
+      "active_providers": [
+        "CPUExecutionProvider"
+      ],
+      "error": null,
+      "requested": "npu",
+      "resolved_backend": "cpu"
+    },
+    {
+      "active_providers": [
+        "CPUExecutionProvider"
+      ],
+      "error": null,
+      "requested": "directml",
+      "resolved_backend": "cpu"
+    },
+    {
+      "active_providers": [
+        "CPUExecutionProvider"
+      ],
+      "error": null,
+      "requested": "cpu",
+      "resolved_backend": "cpu"
+    }
+  ],
+  "timestamp": "2026-08-21T18:27:13.945012+00:00"
+}
