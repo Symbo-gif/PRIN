@@ -39,24 +39,25 @@ class TrackingResult:
     """Python-facing mirror of :class:`prin._prin_core.TrackingResult`.
 
     The result of :meth:`PhaseTracker.track_sequence`.
-
-    Attributes:
-        phase_history: Per-frame phase tensors, one per input frame, each
-            ``(N_det, n_osc)``. Detached — no gradient graph.
-        identity_matches: Per-transition match indices (frame `t` → frame
-            `t+1`), ``-1`` if unmatched.
-        identity_preservation: Fraction of matchable detections successfully
-            matched across the whole sequence, in ``[0, 1]``.
-        per_frame_similarity: Per-transition mean best-match similarity.
-        per_frame_phase_correlation: Per-transition mean circular phase
-            correlation.
     """
 
     phase_history: list[torch.Tensor]
+    """Per-frame phase tensors, one per input frame, each ``(N_det, n_osc)``.
+    Detached — no gradient graph."""
+
     identity_matches: list[list[int]]
+    """Per-transition match indices (frame `t` → frame `t+1`), ``-1`` if
+    unmatched."""
+
     identity_preservation: float
+    """Fraction of matchable detections successfully matched across the
+    whole sequence, in ``[0, 1]``."""
+
     per_frame_similarity: list[float]
+    """Per-transition mean best-match similarity."""
+
     per_frame_phase_correlation: list[float]
+    """Per-transition mean circular phase correlation."""
 
     @staticmethod
     def _from_rust(result: _RustTrackingResult) -> TrackingResult:
