@@ -27,6 +27,7 @@ analytics session (the first analytics session for this project). It defines:
 | 1 — Dynamics core | [`phase-1/phase-1-analytics-report.md`](phase-1/phase-1-analytics-report.md) | **PASS — EXCELLENT** | 2026-08-09 |
 | 2 — Advanced numerics and simulation | [`phase-2/phase-2-analytics-report.md`](phase-2/phase-2-analytics-report.md) | **PASS — SATISFACTORY** | 2026-08-15 |
 | 3 — GPU kernels | [`phase-3/phase-3-analytics-report.md`](phase-3/phase-3-analytics-report.md) | **PASS — SATISFACTORY** | 2026-08-18 |
+| 4 — Trainable stack and Torch bridge | [`phase-4/phase-4-analytics-report.md`](phase-4/phase-4-analytics-report.md) | **PASS — SATISFACTORY** | 2026-08-21 |
 
 ## Companion files
 
