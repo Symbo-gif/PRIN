@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Phase 4 recommendation implementation** (inter-phase process improvement, R26–R32
+  disposition in `DOCS/ANALYTICS/phase-4/phase-4-recommendation-implementation-governance.md`):
+  - Fixed PA4-F1/PA4-F2: `DOCS/PRIN_Project_Plan.md` §6's Phase 4 roadmap row now carries
+    `✅ COMPLETE`; fixed all 12 genuine Sphinx warnings — `python/prin/__init__.py`'s
+    `Subpackages:` docstring indentation corrected, `python/prin/nn/phase_tracker.py`'s
+    `TrackingResult` dataclass restructured to per-field attribute docstrings (removing an
+    autodoc/napoleon duplicate-object-description collision) — independently re-verified with
+    two fresh-directory Sphinx builds: 0 warnings (R26, P0).
+  - `Documentation_Standards.md` §7 item 9 (and, by cross-reference, the EA/EMA closing
+    checklists in `Executive_Audit_Governance_and_Methodology.md` §5 and
+    `Executive_Mathematical_Audit_Governance_and_Methodology.md` §8) now require an explicit,
+    recorded rationale whenever a closing-checklist item identifies a genuine gap and the
+    session defers rather than fixes it (R27, P1).
+  - Maintainer decision (2026-08-21, obtained live in-session): DV-021's bridge-overhead gap
+    resolved via Plan amendment #30, revising the Phase 4 exit criterion to scope `<5%` to
+    moderate/large batch and shape sizes (small shapes carry a measured, architecturally fixed
+    ~38–41% dispatch overhead), following the amendment #21 precedent exactly. DV-021 closed as
+    AMENDED (R29, P1).
+  - `AGENTS.md`'s verification one-liner and `Documentation_Standards.md` §7 item 3 now require
+    deleting/recreating `DOCS/sphinx/_build` immediately before every Sphinx build, closing the
+    incremental-cache mechanism that let PA4-F2's false "0 warnings" claim stand across the
+    entire phase (R30, P1).
+  - `Documentation_Standards.md` §7 item 5 now requires Project State Report next-WP
+    declarations to quote their governing normative source (session brief or Rebuild Planning
+    Document) directly rather than paraphrase from memory (R32, P3).
+  - R28 (dedicated hotfix/correction session for DV-019's now-five-times-recurring flaky test)
+    deferred to a session before session 0109 (WP-028 S1) begins, no session number assigned per
+    this project's ad hoc-session-naming convention; R31 (DV-005 CUDA Burn backend Phase 5
+    scoping decision) deferred to WP-028 S1 (session 0109) — both per
+    `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`.
+
 - **WP-027 Trainable-stack integration and Phase 4 gate**
   (`crates/prin-train/`, `crates/prin-py/`, `python/prin/nn/`, `python/prin/`,
   Phase 4 sixth and final WP; sessions 0105–0108; audit
