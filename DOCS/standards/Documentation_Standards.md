@@ -105,14 +105,32 @@ may close:
 2. **CHANGELOG.** All user-visible changes of the cycle are recorded under
    `[Unreleased]`, Keep-a-Changelog categories.
 3. **API docs.** Docstrings/rustdoc complete for all new/changed symbols;
-   coverage gates pass (§2); Sphinx builds clean; new symbols appear in the
-   correct `DOCS/sphinx/api/` page; Migration Guide updated for any
-   PRINet 3.0-visible change.
+   coverage gates pass (§2); Sphinx builds clean **against a freshly deleted
+   or newly created `DOCS/sphinx/_build` output directory** (Phase 4
+   analytics R30/PA4-F2 — Sphinx's incremental build does not detect an
+   `automodule`-sourced docstring change underneath an unmodified `.rst`
+   page, so a reused build directory can silently mask a genuine warning;
+   see `AGENTS.md`'s verification one-liner for the clean-build command);
+   new symbols appear in the correct `DOCS/sphinx/api/` page; Migration
+   Guide updated for any PRINet 3.0-visible change.
 4. **Executable examples.** New doctest/`Examples` blocks run; affected
    notebooks re-execute (or are explicitly marked stale with an issue).
 5. **Project State Report.** Written to `DOCS/reports/NNN-project-state.md`
    per the template: trajectory position, metric trends, cumulative deviation
-   ledger, amendments, risks, and the next WP declaration.
+   ledger, amendments, risks, and the next WP declaration. **Quote, do not
+   paraphrase (Phase 4 analytics R32).** When the next-WP declaration names
+   specific symbols, classes, or file paths, quote them directly from their
+   governing normative source — the next session's own brief
+   (`DOCS/sessions/`) mission text, or the Rebuild Planning Document's
+   symbol-mapping table row (Project Plan §1) — rather than restating them
+   from memory. Four consecutive-phase recurrences of the same declaration-
+   text-drift pattern (amendments #18–#20, #29) were all caught and
+   correctly resolved by a later session's `grep` against the archived
+   PRINet 3.0 reference tree; quoting the source directly at authoring time
+   avoids the drift instead of relying on a later audit to catch it. If
+   direct quoting is impractical for a declaration that necessarily
+   previews not-yet-written work, at minimum `grep` the archived PRINet 3.0
+   reference tree for any named class before including it.
 6. **Session-plan status.** Update the completed briefs and
    `DOCS/sessions/SESSION_REGISTER.md` only from committed evidence; activate
    the approved successor; amend future briefs/traceability if the trajectory
@@ -150,6 +168,26 @@ may close:
    re-litigated every cycle. Stale entries found by a later session are a
    D3 finding on the Project Plan (D4 on the other two), per the
    consistency-sweep rule in item 7.
+
+   **Deferral requires a recorded rationale (Phase 4 analytics R27).** When
+   this item's verification finds a genuine, stale gap, the session must
+   either fix it before closing or record an explicit, reviewable rationale
+   for deferring it instead — a bare "recommended for next cycle" note is
+   not a rationale and does not satisfy this item. A one-line documentation
+   edit with no code risk defaults to "fix now," matching the disposition
+   already established for the identical situation by Phase 3's R21. This
+   item's own imperative text ("explicitly verify and, if stale, update")
+   is not satisfied by identifying a gap and then not acting on it in the
+   same session without recording why: a later session finding an item
+   deferred without a recorded rationale treats it as a repeat of the
+   original finding class (this item failing to close its own gap), not as
+   a new, lesser finding. The same rule applies, by cross-reference, to the
+   EA/EMA closing checklists (`Executive_Audit_Governance_and_Methodology.md`
+   §5, `Executive_Mathematical_Audit_Governance_and_Methodology.md` §8):
+   any global-session closing-checklist item that identifies a genuine gap
+   in that session's own required artefacts must be fixed before the
+   session closes, or deferred only with an explicit, reviewable rationale
+   recorded in the session's report.
 
 S4 produces no functional code changes. If a documentation task exposes a code
 defect, it is logged for the next cycle (or triggers a hotfix per Workflow

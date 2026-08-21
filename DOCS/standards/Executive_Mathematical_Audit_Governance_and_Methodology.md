@@ -309,3 +309,11 @@ independent-recomputation context):
    passing `ruff check`/`ruff format` gate and without a `CHANGELOG.md`
    entry, and no existing checklist caught either omission until the Phase 2
    analytics session's independent re-verification.
+7. **Deferral requires a recorded rationale (Phase 4 analytics R27).** If
+   this checklist (or any other part of the session's own closing review)
+   identifies a genuine gap in this session's required artefacts, the
+   session must fix it before closing or record an explicit, reviewable
+   rationale for deferring it — a bare "recommended for next session" note
+   is not sufficient. Same rule and rationale as Documentation Standards §7
+   item 9's phase-closing requirement, applied here to this session type's
+   own closing checklist.

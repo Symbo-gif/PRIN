@@ -40,8 +40,19 @@ $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps
 cargo audit
 .venv\Scripts\python -m pip_audit .
 .venv\Scripts\python -m pip_audit -r DOCS/sphinx/requirements.txt
+Remove-Item -Recurse -Force DOCS/sphinx/_build -ErrorAction SilentlyContinue
 .venv\Scripts\python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
 ```
+
+**Clean-build discipline (Phase 4 analytics R30/PA4-F2):** Sphinx's
+incremental build tracks only `.rst`/`.md` source-file timestamps — it does
+not detect that an `automodule`-sourced Python docstring changed underneath
+an unmodified `.rst` page, so a reused, gitignored `DOCS/sphinx/_build/html`
+directory can silently mask a genuine `autodoc`-sourced warning for an
+arbitrary number of subsequent sessions. Always delete
+`DOCS/sphinx/_build` (or build to a freshly created output directory)
+immediately before running the build command above; never report a Sphinx
+"0 warnings" result from a reused output directory.
 
 ## Snyk MCP scanning
 
