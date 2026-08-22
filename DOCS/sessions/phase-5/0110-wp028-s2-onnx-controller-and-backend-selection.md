@@ -1,6 +1,6 @@
 # Session 0110 — WP-028 S2: Audit — ONNX controller and backend selection
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-028  
 **Session type:** S2 — Audit  
