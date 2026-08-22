@@ -10,7 +10,7 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0109 | WP-028 | S1 — Coding | [ONNX controller and backend selection](0109-wp028-s1-onnx-controller-and-backend-selection.md) | COMPLETE |
 | 0110 | WP-028 | S2 — Audit | [ONNX controller and backend selection](0110-wp028-s2-onnx-controller-and-backend-selection.md) | COMPLETE |
 | 0111 | WP-028 | S3 — Remediation | [ONNX controller and backend selection](0111-wp028-s3-onnx-controller-and-backend-selection.md) | COMPLETE |
-| 0112 | WP-028 | S4 — Documentation | [ONNX controller and backend selection](0112-wp028-s4-onnx-controller-and-backend-selection.md) | PLANNED |
+| 0112 | WP-028 | S4 — Documentation | [ONNX controller and backend selection](0112-wp028-s4-onnx-controller-and-backend-selection.md) | COMPLETE |
 | 0113 | WP-029 | S1 — Coding | [Daemon runtime and lock-free control buffer](0113-wp029-s1-daemon-runtime-and-lock-free-control-buffer.md) | PLANNED |
 | 0114 | WP-029 | S2 — Audit | [Daemon runtime and lock-free control buffer](0114-wp029-s2-daemon-runtime-and-lock-free-control-buffer.md) | PLANNED |
 | 0115 | WP-029 | S3 — Remediation | [Daemon runtime and lock-free control buffer](0115-wp029-s3-daemon-runtime-and-lock-free-control-buffer.md) | PLANNED |

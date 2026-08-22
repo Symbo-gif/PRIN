@@ -57,8 +57,10 @@ starts by reading it (Development Workflow Standards §6).
   closure and WP-026 declaration.
 - [`026-project-state.md`](026-project-state.md) — WP-026 S4
   closure and WP-027 declaration.
-- [`027-project-state.md`](027-project-state.md) — latest report; WP-027 S4
+- [`027-project-state.md`](027-project-state.md) — WP-027 S4
   closure, Phase 4 exit-gate verdict (GREEN), and WP-028 declaration.
+- [`028-project-state.md`](028-project-state.md) — WP-028 S4
+  closure and WP-029 declaration.
 
 
 The [`DEFERRED_VALIDATION_REGISTER.md`](DEFERRED_VALIDATION_REGISTER.md)

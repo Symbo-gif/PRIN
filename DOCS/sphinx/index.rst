@@ -23,6 +23,7 @@ PRINet 3.0.
    :caption: API Reference
 
    api/core
+   api/daemon
    api/dlpack
    api/parity
    api/nn

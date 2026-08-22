@@ -662,3 +662,68 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   "full gradcheck" (``encode → evolve → phase_similarity``) green. Trained-
   state serialization round-trip validated. DV-021 bridge overhead
   independently re-corroborated (+37.8%/+6.5%).
+
+- ``prin-daemon`` ONNX controller and backend selection (WP-028) —
+  subconscious controller state/control types, hand-written ONNX model
+  validation, execution-provider detection (VitisAI→DirectML→CPU), and
+  deterministic CPU-terminated fallback. Rebuilds PRINet 3.0
+  ``core/subconscious.py`` and ``utils/npu_backend.py``.
+
+  **New modules:**
+
+  - ``prin_daemon::state`` — ``SubconsciousState``, ``ControlSignals``,
+    ``Regime``, ``STATE_DIM = 32``, ``CONTROL_DIM = 8``: PRINet 3.0's exact
+    float32 packing, normalisation, and clamping semantics (bit-exact parity).
+  - ``prin_daemon::backend`` — ``Backend``, ``BackendSelection``,
+    ``SelectionReason``, ``select_backend``, ``provider_options``,
+    ``VitisAiConfig``, ``firmware_candidates``, ``resolve_firmware``:
+    VitisAI→DirectML→CPU priority policy and deterministic fallback ladder.
+  - ``prin_daemon::onnx`` — ``OnnxModelInfo``, ``TensorSpec``, ``Dim``,
+    ``OpsetId``, ``InitializerSpec``, ``inspect_onnx_bytes``,
+    ``inspect_onnx_file``: bounded, total ONNX ``ModelProto`` reader
+    (hand-written, no ``protoc`` dependency).
+  - ``prin_daemon::model`` — ``ModelManifest``, ``sha256_file``,
+    ``verify_sha256``, ``ControllerModel::validate``,
+    ``validate_controller_contract``: SHA-256 integrity verification against
+    ``models/manifest.json``.
+  - ``prin.daemon`` — ``SubconsciousController``, ``create_session``,
+    ``select_backend``, ``detect_best_backend``, ``backend_info``,
+    ``verify_model_artefacts``, ``OrtUnavailableError``: Python orchestration
+    layer (no numerics; ONNX Runtime session creation stays in Python per
+    risk register #4).
+
+  **Symbol mapping:**
+
+  - ``prinet.core.subconscious.SubconsciousState`` → ``prin_daemon::state::SubconsciousState``
+  - ``prinet.core.subconscious.ControlSignals`` → ``prin_daemon::state::ControlSignals``
+  - ``prinet.utils.npu_backend.detect_best_backend`` → ``prin.daemon.detect_best_backend``
+  - ``prinet.utils.npu_backend.create_session`` → ``prin.daemon.create_session``
+  - ``prinet.nn.subconscious_model.SubconsciousController`` (inference half) → ``prin.daemon.SubconsciousController``
+
+  **Deliberate deviations:**
+
+  - *Fallback ladder:* PRINet 3.0's ``create_session`` has no fallback — an
+    unexecutable provider propagates the ORT error, and an unregistered
+    provider silently yields a CPU session still labelled ``npu``. PRIN
+    computes the ladder in Rust from the provider list alone (pure,
+    reproducible, strictly descending, CPU-terminating) and reports the
+    backend actually landed on plus a ``SelectionReason``.
+  - *``clone_state`` vs. ``clone``:* PRINet 3.0's ``SubconsciousState`` uses
+    the name ``clone`` for its copy method; PRIN uses ``clone_state`` to avoid
+    shadowing Rust's ``Clone`` trait convention.
+  - *``create_session`` return shape:* returns a
+    ``(session, backend_selection)`` tuple rather than a bare session, so
+    callers can inspect which backend was actually selected and why.
+  - *NumPy NEP 50 clipping:* ``np.clip(flat[2], 0.1, 10.0)`` on a
+    ``float32`` operand keeps ``float32`` in the reference; the Rust port
+    clips in ``f32`` to match, not ``f64``.
+  - *Python modulo:* ``timestamp % 86400.0`` takes the sign of the divisor in
+    Python; the Rust port uses ``f64::rem_euclid`` to match.
+
+  **Deferred to later WPs:**
+
+  - ``ControlSignalBuffer`` (thread-safe ring buffer) → **WP-029** (daemon
+    runtime and lock-free control buffer).
+  - ``SubconsciousController.export_to_onnx`` / ``.quantize_onnx`` →
+    **WP-030** (training hooks).
+  - ``retrain_controller`` → **WP-030** (training hooks).

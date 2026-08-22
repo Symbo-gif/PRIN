@@ -174,6 +174,25 @@ entry point and checkpoint round-trip/shape-mismatch-rejection for every
 Type stubs are maintained at `python/prin/_prin_core.pyi` and regenerated
 whenever the extension API changes.
 
+### WP-028: Daemon bindings (sessions 0109–0112)
+
+- **`bindings/daemon.rs`** — PyO3 surface for the `prin-daemon` crate:
+  `SubconsciousState`, `ControlSignals`, `BackendSelection`,
+  `select_execution_backend`, `backend_provider_names`, `backend_priority`,
+  `backend_provider_options`, `npu_firmware_candidates`, `resolve_npu_firmware`,
+  `model_sha256`, `inspect_onnx_model`, `verify_model_manifest`,
+  `validate_controller_model`, and eight module constants (`STATE_DIM`,
+  `CONTROL_DIM`, etc.).
+- **`python/prin/daemon.py`** — `SubconsciousController` (ONNX inference),
+  `create_session` (fallback ladder), `select_backend`, `detect_best_backend`,
+  `npu_available`, `directml_available`, `backend_info`,
+  `verify_model_artefacts`, `default_model_path`, `OrtUnavailableError`.
+- **`python/prin/_prin_core.pyi`** — +135 lines of stubs for every new class,
+  function, and constant.
+- 106 new Python tests (`tests/test_daemon_backend.py`,
+  `tests/test_daemon_controller.py`) and 82 differential parity tests
+  (`parity/test_parity_subconscious.py`).
+
 Build for development:
 
 ```bash

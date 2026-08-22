@@ -9,6 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WP-028 ONNX controller and backend selection** (`crates/prin-daemon/`,
+  `crates/prin-py/`, `python/prin/daemon.py`, Phase 5 first WP; sessions
+  0109–0112; audit `DOCS/audits/028-wp028-audit.md`, verdict `PASS`, zero
+  findings): subconscious controller state/control types, hand-written ONNX
+  model validation, provider detection (VitisAI→DirectML→CPU), and
+  deterministic CPU-terminated fallback.
+  - `prin_daemon::state` — `SubconsciousState`, `ControlSignals`, `Regime`,
+    `STATE_DIM = 32`, `CONTROL_DIM = 8`: PRINet 3.0's exact float32 packing,
+    normalisation, and clamping semantics (bit-exact parity, 8 Rust parity
+    tests + 82 differential Python tests against `prinet==3.0.0`).
+  - `prin_daemon::backend` — `Backend`, `BackendSelection`, `SelectionReason`,
+    `select_backend`, `provider_options`, `VitisAiConfig`,
+    `firmware_candidates`, `resolve_firmware`: VitisAI→DirectML→CPU priority
+    policy, deterministic fallback ladder (pure, property-tested over
+    arbitrary provider subsets).
+  - `prin_daemon::onnx` — `OnnxModelInfo`, `TensorSpec`, `inspect_onnx_bytes`,
+    `inspect_onnx_file`: bounded, total ONNX `ModelProto` reader (hand-written,
+    no `protoc` dependency; proptest-fuzzed on arbitrary bytes, never panics).
+  - `prin_daemon::model` — `ModelManifest`, `sha256_file`, `verify_sha256`,
+    `ControllerModel::validate`: SHA-256 integrity verification against
+    `models/manifest.json`, external-data completeness, graph-contract
+    validation.
+  - `prin.daemon` — `SubconsciousController`, `create_session`,
+    `select_backend`, `detect_best_backend`, `backend_info`,
+    `verify_model_artefacts`, `OrtUnavailableError`: Python orchestration
+    layer (no numerics; ONNX Runtime session creation stays in Python per
+    risk register #4).
+  - `models/manifest.json` — SHA-256 + size manifest for the two committed
+    controller artefacts.
+  - Acceptance criteria: outputs match 3.0 references across available
+    providers (bit-identical on CPU, 48 differential cases); missing-provider
+    paths fall back safely (property-tested); model SHA-256 verified before
+    graph parse. Coverage ≥95% on every new file; 122 new Rust tests, 106 new
+    Python tests.
+
 - **Phase 4 recommendation implementation** (inter-phase process improvement, R26–R32
   disposition in `DOCS/ANALYTICS/phase-4/phase-4-recommendation-implementation-governance.md`):
   - Fixed PA4-F1/PA4-F2: `DOCS/PRIN_Project_Plan.md` §6's Phase 4 roadmap row now carries

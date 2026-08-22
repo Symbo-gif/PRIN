@@ -1,6 +1,6 @@
 # Session 0112 — WP-028 S4: Documentation — ONNX controller and backend selection
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S4 documentation closure; all artefacts committed, CI green, WP-029 declared.  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-028  
 **Session type:** S4 — Documentation  
