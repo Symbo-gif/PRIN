@@ -1,6 +1,6 @@
 # Session 0111 — WP-028 S3: Remediation — ONNX controller and backend selection
 
-**Status:** PLANNED  
+**Status:** COMPLETE — no-change closure (S2 recorded zero findings); delta re-audit CLEAN, see `DOCS/audits/028-wp028-audit.md` §7.  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-028  
 **Session type:** S3 — Remediation  

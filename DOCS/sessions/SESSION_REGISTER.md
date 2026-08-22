@@ -158,7 +158,7 @@ is renumbered by an executive mathematical audit.
 | 0108 | 4 | WP-027 | S4 — Documentation | [Trainable-stack integration and Phase 4 gate](phase-4/0108-wp027-s4-trainable-stack-integration-and-phase-4-gate.md) | COMPLETE |
 | 0109 | 5 | WP-028 | S1 — Coding | [ONNX controller and backend selection](phase-5/0109-wp028-s1-onnx-controller-and-backend-selection.md) | COMPLETE |
 | 0110 | 5 | WP-028 | S2 — Audit | [ONNX controller and backend selection](phase-5/0110-wp028-s2-onnx-controller-and-backend-selection.md) | COMPLETE |
-| 0111 | 5 | WP-028 | S3 — Remediation | [ONNX controller and backend selection](phase-5/0111-wp028-s3-onnx-controller-and-backend-selection.md) | PLANNED |
+| 0111 | 5 | WP-028 | S3 — Remediation | [ONNX controller and backend selection](phase-5/0111-wp028-s3-onnx-controller-and-backend-selection.md) | COMPLETE |
 | 0112 | 5 | WP-028 | S4 — Documentation | [ONNX controller and backend selection](phase-5/0112-wp028-s4-onnx-controller-and-backend-selection.md) | PLANNED |
 | 0113 | 5 | WP-029 | S1 — Coding | [Daemon runtime and lock-free control buffer](phase-5/0113-wp029-s1-daemon-runtime-and-lock-free-control-buffer.md) | PLANNED |
 | 0114 | 5 | WP-029 | S2 — Audit | [Daemon runtime and lock-free control buffer](phase-5/0114-wp029-s2-daemon-runtime-and-lock-free-control-buffer.md) | PLANNED |

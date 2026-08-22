@@ -131,11 +131,13 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   evidence recorded; DV-005 CUDA Burn backend recommendation recorded for
   S4 register-review.
 - [`028-wp028-audit.md`](028-wp028-audit.md) — WP-028 "ONNX controller and
-  backend selection" audit (`PASS`); zero findings. Independently regenerated
-  every bit-exact parity golden value from the live `prinet==3.0.0` reference,
-  re-derived the ONNX field-number table from the installed `onnx` package,
-  and re-verified the model SHA-256 digests from disk — all matched exactly.
-  DV-005/DV-006 re-audits confirmed consistent with the register.
+  backend selection" audit (`PASS`); zero findings; S3 no-change closure with
+  CLEAN delta re-audit (full gate suite re-run against a byte-for-byte
+  unchanged source tree). Independently regenerated every bit-exact parity
+  golden value from the live `prinet==3.0.0` reference, re-derived the ONNX
+  field-number table from the installed `onnx` package, and re-verified the
+  model SHA-256 digests from disk — all matched exactly. DV-005/DV-006
+  re-audits confirmed consistent with the register.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

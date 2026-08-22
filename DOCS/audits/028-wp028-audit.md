@@ -272,10 +272,54 @@ Per Development Workflow and Audit Standards §3 ("S3 remains mandatory when S2 
 
 ## 7. Closure table (appended by S3 remediation)
 
-*(to be completed at session 0111)*
+Per Development Workflow and Audit Standards §3 ("S3 remains mandatory when
+S2 finds zero deviations: it records a no-change closure and independent
+delta verification"), session 0111 (S3) performed a no-change closure: no
+finding existed to fix (§4 recorded none), so no source edit was made or was
+permitted. The full gate suite was independently re-run against the
+unmodified S1/S2 source tree to verify no regression occurred between the S2
+audit (2026-08-22, `0e7d797`) and this S3 closure (2026-08-22).
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(no findings — S2 recorded none)* | | | |
+| *(no findings — S2 recorded none)* | NO-CHANGE CLOSURE — no source fix applicable or performed | this session's closure commit (docs-only; source tree untouched) | §7 delta re-audit below |
 
-**Delta re-audit date:** *(pending)* — **Result:** *(pending)*
+### Delta re-audit
+
+**Source-tree identity check.** `git diff --stat 3588aa6 HEAD -- crates/ python/ tests/ parity/ Cargo.toml pyproject.toml models/` returns empty: zero source/config/model changes across the full S1→S2→S3 range. `git show --stat 0e7d797` (the S2 commit) confirms it touched only `DOCS/audits/028-wp028-audit.md`, `DOCS/audits/README.md`, `DOCS/sessions/SESSION_REGISTER.md`, and the S2 session-brief status line — no source file. The source tree audited at S2 is therefore byte-for-byte identical to the tree re-verified at S3.
+
+**Full gate suite, independently re-run at S3 (2026-08-22, same host/toolchain as §2):**
+
+```powershell
+cargo fmt --all -- --check                                                     # exit 0, clean
+cargo clippy --workspace --all-targets -- -D warnings                          # exit 0, clean
+cargo clippy --workspace --all-targets --features strict-checks -- -D warnings # exit 0, clean
+cargo test --workspace -- --test-threads=1                                     # exit 0; prin-daemon: 81 unit + 7 integration + 8 parity + 11 property + 15 doctest = 122; zero FAILED anywhere in the workspace log
+cargo test --workspace --features strict-checks                                # exit 0, 0 failures
+cargo llvm-cov -p prin-daemon --show-missing-lines
+# backend.rs 99.50%/100.00%/100.00%; model.rs 96.52%/97.78%/99.53%;
+# onnx.rs 95.16%/95.45%/99.38%; state.rs 99.05%/100.00%/100.00%
+# — exact match to S2's own re-measured figures (§3.3), including the
+# proptest-variance-affected onnx.rs region figure (95.16%, not the S1
+# handoff's 95.49%); still clears >=95% on every metric.
+cargo audit                                                                     # exit 0; same 2 allowed advisories (paste/DV-008, bincode/DV-017)
+.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/              # All checks passed!
+.venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/     # 72 files already formatted
+.venv\Scripts\mypy python/prin --strict                                        # Success: no issues found in 28 source files
+.venv\Scripts\python -m interrogate -c pyproject.toml python/prin              # 100.0% (262/262)
+.venv\Scripts\python -m bandit -r python/prin -c pyproject.toml                # 0 issues (3405 lines)
+.venv\Scripts\python -m pip_audit .                                            # No known vulnerabilities found
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu"                # 547 passed, 8 deselected
+.venv\Scripts\python -m pytest tests/ parity/                                  # 1147 passed
+.venv\Scripts\python -m pytest tests/test_daemon_backend.py tests/test_daemon_controller.py --cov=prin.daemon --cov-report=term-missing
+# python/prin/daemon.py: 204/204 statements, 100%
+rm -rf DOCS/sphinx/_build
+.venv\Scripts\python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html  # build succeeded, no warnings reported
+.venv\Scripts\python tools/wp001_baseline.py check                             # WP-001 baseline validation passed
+certutil -hashfile models/subconscious_controller.onnx SHA256                  # 3396bfdd...4102 — unchanged, matches manifest.json
+certutil -hashfile models/subconscious_controller.onnx.data SHA256             # 35e7eb09...d2597 — unchanged, matches manifest.json
+```
+
+Every figure reproduces exactly against the S2 audit's own independently-measured values (§2/§3.3), with zero new findings, zero regressions, and zero drift beyond the already-explained, immaterial proptest-driven `onnx.rs` region-coverage variance (which reproduced at the *same* value S2 measured, 95.16%, on this run). AC1–AC3 evidence (cross-provider agreement, fallback-ladder purity, model SHA-256) is unchanged from §3.4.
+
+**Delta re-audit date:** 2026-08-22 — **Result:** CLEAN (no-change closure; zero findings to close; zero regressions introduced; source tree byte-for-byte identical to the S2-audited tree)
