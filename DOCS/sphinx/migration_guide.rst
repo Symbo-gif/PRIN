@@ -720,10 +720,54 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   - *Python modulo:* ``timestamp % 86400.0`` takes the sign of the divisor in
     Python; the Rust port uses ``f64::rem_euclid`` to match.
 
+- ``prin-daemon`` daemon runtime and lock-free control buffer (WP-029) —
+  native background thread, lock-free control-signal ring buffer, pluggable
+  inference seam, dead-letter queue, escalation callbacks, and bounded
+  shutdown. Rebuilds PRINet 3.0
+  ``core/subconscious_daemon.py`` (daemon lifecycle) and the
+  ``ControlSignalBuffer`` class in ``core/subconscious.py`` (thread-safe
+  ring buffer).
+
+  **New module:**
+
+  - ``prin_daemon::daemon`` — ``SubconsciousDaemon`` (native background
+    thread with bounded ``stop()`` returning ``bool``),
+    ``ControlSignalBuffer`` (lock-free, ``ArcSwap``-backed replacement for
+    PRINet 3.0's ``threading.Lock``-guarded buffer), ``InferenceBackend``
+    (pluggable inference seam with blanket closure impl), ``DaemonConfig``,
+    ``DaemonStats``, ``DeadLetterEntry``, ``EscalationEvent``,
+    ``EscalationCallback``: the full daemon lifecycle with dead-letter
+    queue, escalation callbacks, non-finite control-signal fallback, and
+    warm-up failure tolerance.
+
+  **Symbol mapping:**
+
+  - ``prinet.core.subconscious_daemon.SubconsciousDaemon`` → ``prin_daemon::daemon::SubconsciousDaemon``
+  - ``prinet.core.subconscious.ControlSignalBuffer`` → ``prin_daemon::daemon::ControlSignalBuffer``
+
+  **Deliberate deviations:**
+
+  - *Lock-free buffer:* PRINet 3.0's ``ControlSignalBuffer`` uses
+    ``threading.Lock``; PRIN's uses ``ArcSwap`` (atomic pointer swap, no
+    lock). Lock-free p95 latency is 13–20× lower than a same-language
+    ``Mutex`` re-implementation of the 3.0 design (see
+    ``EVIDENCE/0113-wp029-s1-control-buffer-pilot.json``).
+  - *Bounded shutdown with result:* PRINet 3.0's ``stop()`` takes a timeout
+    and logs a warning on timeout but never tells the caller whether it
+    succeeded. PRIN's ``SubconsciousDaemon::stop`` returns ``bool`` —
+    ``true`` if the backend thread exited within the timeout, ``false``
+    otherwise.
+  - *PyO3 binding not yet delivered:* ``InferenceBackend`` is the pluggable
+    seam a Python-backed ``SubconsciousController`` session wires through,
+    but the PyO3 binding (whose background thread calls back into Python
+    under the GIL) is not delivered this WP. The follow-up session must
+    implement ``Drop`` for the PyO3 wrapper type as
+    ``Python::with_gil(|py| py.allow_threads(|| { /* stop */ }))`` to avoid
+    GIL deadlock. See ``DOCS/experiments/0113-wp029-s1-handoff.md`` for the
+    full scope decision and GIL-release design.
+
   **Deferred to later WPs:**
 
-  - ``ControlSignalBuffer`` (thread-safe ring buffer) → **WP-029** (daemon
-    runtime and lock-free control buffer).
   - ``SubconsciousController.export_to_onnx`` / ``.quantize_onnx`` →
     **WP-030** (training hooks).
   - ``retrain_controller`` → **WP-030** (training hooks).

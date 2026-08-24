@@ -44,6 +44,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     graph parse. Coverage ≥95% on every new file; 122 new Rust tests, 106 new
     Python tests.
 
+- **WP-029 Daemon runtime and lock-free control buffer**
+  (`crates/prin-daemon/`, Phase 5 second WP; sessions 0113–0116; audit
+  `DOCS/audits/029-wp029-audit.md`, verdict `PASS`, zero findings): native
+  daemon lifecycle, lock-free control-signal ring buffer, telemetry, bounded
+  shutdown, and concurrency safety.
+  - `prin_daemon::daemon` — `SubconsciousDaemon` (native background thread
+    with bounded `stop()` returning `bool`), `ControlSignalBuffer`
+    (lock-free, `ArcSwap`-backed replacement for PRINet 3.0's
+    `threading.Lock`-guarded buffer), `InferenceBackend` (pluggable inference
+    seam with blanket closure impl), `DaemonConfig`, `DaemonStats`,
+    `DeadLetterEntry`, `EscalationEvent`/`EscalationCallback`: the full
+    daemon lifecycle with dead-letter queue, escalation callbacks, and
+    non-finite control-signal fallback.
+  - `prin_daemon::error` — `DaemonError::ThreadSpawn` variant for native
+    thread creation failures.
+  - `crates/prin-daemon/tests/daemon_concurrency.rs` — 4 stress/race/lifecycle
+    tests: concurrent multi-producer/multi-consumer access, single-writer
+    monotonic ordering under the lock-free buffer, repeated start/stop
+    cycles, and a slow-backend bounded-`stop()` test.
+  - `crates/prin-daemon/benches/control_buffer.rs` — Criterion comparison:
+    lock-free `ControlSignalBuffer` vs. `Mutex`-guarded PRINet 3.0 design
+    re-implementation, under 0/1/4 writer-thread contention.
+  - `crates/prin-daemon/examples/control_buffer_pilot.rs` and
+    `tools/wp029_control_buffer_pilot.py` — p50/p95/max latency pilots
+    (Rust and actual PRINet 3.0 Python reference).
+  - `EVIDENCE/0113-wp029-s1-control-buffer-pilot.json` — combined pilot
+    evidence: 5 Rust + 5 Python runs with methodology and environment
+    capture. Lock-free p95 is 13–20× lower than the mutex-guarded
+    re-implementation of the reference design.
+  - New dependency: `arc-swap = "1.7"` (resolves to 1.9.2; zero runtime
+    transitive dependencies; justified per Coding Standards §2.2 — avoids
+    hand-rolled `UnsafeCell`/`AtomicPtr` hazard-pointer reclamation).
+  - Acceptance criteria: 24 unit + 4 concurrency stress + 12 property tests
+    pass; no deadlocks/data races (`#![forbid(unsafe_code)]` unchanged,
+    structural lock-ordering argument + empirical stress tests); p50/p95
+    instrumentation valid and latency pilot improves on 3.0. Coverage
+    ≥95% on `daemon.rs` (97.16% regions, 97.28% lines). 42 new tests.
+
 - **Phase 4 recommendation implementation** (inter-phase process improvement, R26–R32
   disposition in `DOCS/ANALYTICS/phase-4/phase-4-recommendation-implementation-governance.md`):
   - Fixed PA4-F1/PA4-F2: `DOCS/PRIN_Project_Plan.md` §6's Phase 4 roadmap row now carries
