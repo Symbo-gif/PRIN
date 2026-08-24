@@ -1,6 +1,6 @@
 # Session 0114 — WP-029 S2: Audit — Daemon runtime and lock-free control buffer
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S2 gates green; audit report `DOCS/audits/029-wp029-audit.md`; verdict PASS, zero findings; mandatory S3 no-change closure pending (session 0115)  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-029  
 **Session type:** S2 — Audit  
