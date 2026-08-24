@@ -138,6 +138,10 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   field-number table from the installed `onnx` package, and re-verified the
   model SHA-256 digests from disk — all matched exactly. DV-005/DV-006
   re-audits confirmed consistent with the register.
+- [`029-wp029-audit.md`](029-wp029-audit.md) — WP-029 "Daemon runtime and
+  lock-free control buffer" audit (`PASS`); zero findings; S3 no-change
+  closure with CLEAN delta re-audit (full gate suite re-run against a
+  byte-for-byte unchanged source tree, with S2 bookkeeping synchronization).
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

@@ -1,6 +1,6 @@
 # Session 0115 — WP-029 S3: Remediation — Daemon runtime and lock-free control buffer
 
-**Status:** PLANNED  
+**Status:** COMPLETE — no-change closure (S2 recorded zero findings); delta re-audit CLEAN, see `DOCS/audits/029-wp029-audit.md` §7.  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-029  
 **Session type:** S3 — Remediation  
