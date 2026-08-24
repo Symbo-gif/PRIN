@@ -136,6 +136,18 @@ at the top level until they are folded into the final campaign archive in Phase 
   three maintainer decisions taken in-session (WP-028 scope approval, the
   Project Plan risk-register-#4 invocation, and the R31/DV-005 Phase 5
   scoping disposition).
+- [`0113-wp029-s1-handoff.md`](0113-wp029-s1-handoff.md) — WP-029 S1 handoff
+  to the S2 audit for the daemon runtime and lock-free control buffer:
+  `prin-daemon::daemon`'s `SubconsciousDaemon` (native background thread,
+  bounded drop-oldest state queue, dead-letter queue, error escalation,
+  bounded shutdown) and `ControlSignalBuffer` (lock-free, `ArcSwap`-backed
+  replacement for PRINet 3.0's `threading.Lock`-guarded buffer), with a
+  concurrency-safety argument backed by dedicated stress/race/lifecycle
+  tests. Records the scope decision to defer the PyO3/Python daemon binding
+  (GIL-release design hazard) to a future session, and the latency pilot
+  comparing the lock-free buffer against both a same-language `Mutex`
+  re-implementation and the actual PRINet 3.0 reference
+  (`EVIDENCE/0113-wp029-s1-control-buffer-pilot.json`).
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at

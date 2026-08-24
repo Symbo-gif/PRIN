@@ -2,9 +2,10 @@
 //!
 //! Rebuild of PRINet 3.0 `prinet/core/subconscious.py`
 //! ([`SubconsciousState`], [`ControlSignals`]). The thread-safe
-//! `ControlSignalBuffer` of the reference module is deliberately **not** part
-//! of this work package — the daemon runtime and its lock-free control buffer
-//! are WP-029 scope (session 0113).
+//! `ControlSignalBuffer` of the reference module lives at
+//! [`crate::daemon::ControlSignalBuffer`] instead of here: WP-029 rebuilt it
+//! as a lock-free structure alongside the native daemon thread that uses it,
+//! rather than as a plain data type in this module.
 //!
 //! # Numerical contract
 //!

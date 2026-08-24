@@ -19,6 +19,7 @@ use prin_daemon::backend::{
     select_backend, Backend, SelectionReason, BACKEND_PRIORITY, PROVIDER_CPU, PROVIDER_DIRECTML,
     PROVIDER_VITISAI,
 };
+use prin_daemon::daemon::ControlSignalBuffer;
 use prin_daemon::onnx::inspect_onnx_bytes;
 use prin_daemon::state::{
     ControlSignals, Regime, SubconsciousState, ALERT_LEVEL_MAX, ALERT_LEVEL_MIN, CONTROL_DIM,
@@ -81,6 +82,30 @@ prop_compose! {
             epoch,
             regime,
             timestamp,
+        }
+    }
+}
+
+prop_compose! {
+    fn arb_control_signals()(
+        suggested_k_min in finite(),
+        suggested_k_max in finite(),
+        lr_multiplier in finite(),
+        regime_mf_weight in finite(),
+        regime_sk_weight in finite(),
+        regime_full_weight in finite(),
+        alert_level in finite(),
+        coupling_mode_suggestion in finite(),
+    ) -> ControlSignals {
+        ControlSignals {
+            suggested_k_min,
+            suggested_k_max,
+            lr_multiplier,
+            regime_mf_weight,
+            regime_sk_weight,
+            regime_full_weight,
+            alert_level,
+            coupling_mode_suggestion,
         }
     }
 }
@@ -262,5 +287,26 @@ proptest! {
         ];
         let end = cut.min(full.len());
         let _ = inspect_onnx_bytes(&full[..end]);
+    }
+
+    #[test]
+    fn control_signal_buffer_always_reads_back_the_last_published_value(
+        updates in prop::collection::vec(arb_control_signals(), 1..30)
+    ) {
+        // Sequential (single-threaded) updates: `latest()` must equal exactly
+        // the most recent `update()`, never a stale or spliced value — the
+        // baseline correctness property the lock-free swap must preserve
+        // before any concurrency is layered on top (concurrent-access safety
+        // is covered by `tests/daemon_concurrency.rs`).
+        let buffer = ControlSignalBuffer::new();
+        prop_assert_eq!(buffer.latest(), ControlSignals::default());
+        let mut last = None;
+        for signals in updates {
+            buffer.update(signals.clone());
+            last = Some(signals);
+        }
+        if let Some(expected) = last {
+            prop_assert_eq!(buffer.latest(), expected);
+        }
     }
 }

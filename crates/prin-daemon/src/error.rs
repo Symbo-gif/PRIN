@@ -173,6 +173,14 @@ pub enum DaemonError {
         got: usize,
     },
 
+    /// The daemon's background inference thread could not be spawned.
+    #[error("failed to spawn the subconscious-daemon thread: {source}")]
+    ThreadSpawn {
+        /// Underlying OS error.
+        #[source]
+        source: std::io::Error,
+    },
+
     /// An ONNX graph input/output dimension did not match the contract.
     #[error("ONNX {kind} `{name}` dimension {index} is {got}; expected {expected}")]
     GraphDim {

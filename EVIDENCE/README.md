@@ -30,6 +30,12 @@ session that produced it.
   attempts and their resolved backends on this host, cross-provider output
   agreement, differential parity against PRINet 3.0.0, and the measured
   batch-size sensitivity of the float32 GEMM path.
+- [`0113-wp029-s1-control-buffer-pilot.json`](0113-wp029-s1-control-buffer-pilot.json)
+  — WP-029 S1 latency pilot evidence: p50/p95/max read latency of the
+  lock-free `ControlSignalBuffer` vs. a same-language `Mutex`-guarded
+  re-implementation of PRINet 3.0's design (5 runs each) and the actual
+  archived PRINet 3.0 `ControlSignalBuffer` measured directly (5 runs),
+  methodology, and environment capture.
 
 ## Rules
 

@@ -65,6 +65,15 @@ tracing = "0.1"
 # dependency here.
 sha2 = "0.10"
 
+# Lock-free, wait-free-read "latest value" cell (WP-029: `prin-daemon`'s
+# `ControlSignalBuffer`, replacing PRINet 3.0's `threading.Lock`-guarded
+# buffer). `ArcSwap` is a widely audited, MSRV-friendly primitive (used by
+# hyper/tokio-adjacent crates); its safe public API keeps `prin-daemon` under
+# `#![forbid(unsafe_code)]` — the atomic-pointer/hazard-pointer bookkeeping
+# that makes a hand-rolled equivalent correct lives inside the dependency,
+# not in first-party code.
+arc-swap = "1.7"
+
 # Testing
 proptest = "1"
 approx = "0.5"

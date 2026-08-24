@@ -9,6 +9,7 @@ authors.workspace = true
 repository.workspace = true
 
 [dependencies]
+arc-swap.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
@@ -26,6 +27,7 @@ tracing.workspace = true
 proptest.workspace = true
 approx.workspace = true
 tempfile.workspace = true
+criterion.workspace = true
 
 [features]
 default = []
@@ -33,3 +35,7 @@ npu = []
 # Numerical guard validation returns typed errors instead of packing
 # non-finite telemetry unchanged (Coding Standards §2.2).
 strict-checks = []
+
+[[bench]]
+name = "control_buffer"
+harness = false

@@ -18,20 +18,27 @@
 //!   `models/manifest.json`, external-data completeness, and the controller
 //!   graph contract.
 //!
+//! Delivered in WP-029 (Phase 5):
+//!
+//! - [`daemon`] — [`daemon::SubconsciousDaemon`], the native background
+//!   thread that drains submitted [`state::SubconsciousState`] snapshots
+//!   through a pluggable [`daemon::InferenceBackend`] and publishes
+//!   [`state::ControlSignals`] through the lock-free
+//!   [`daemon::ControlSignalBuffer`] — the WP-029 rebuild of PRINet 3.0's
+//!   `subconscious_daemon.py` and `ControlSignalBuffer`.
+//!
 //! # Scope boundaries
 //!
-//! * **Inference execution** runs through the Python `onnxruntime` bindings
-//!   (`prin.daemon`), per Project Plan §7 risk register #4: the VitisAI
-//!   execution provider ships only inside the Ryzen AI SDK's custom ONNX
-//!   Runtime Python wheel, and DirectML only as a platform-specific wheel, so
-//!   neither is reachable from the `ort` crate's prebuilt binaries. This crate
-//!   therefore owns every decision and every numeric transformation around
-//!   that call, but does not link an inference runtime; the `npu` cargo
-//!   feature stays reserved for a future native binding.
-//! * **The daemon runtime** — the OS thread, its lifecycle, and the lock-free
-//!   control-signal ring buffer (PRINet 3.0's `ControlSignalBuffer` and
-//!   `subconscious_daemon.py`) — is WP-029 scope and is deliberately absent
-//!   here.
+//! **Inference execution** runs through the Python `onnxruntime` bindings
+//! (`prin.daemon`), per Project Plan §7 risk register #4: the VitisAI
+//! execution provider ships only inside the Ryzen AI SDK's custom ONNX
+//! Runtime Python wheel, and DirectML only as a platform-specific wheel, so
+//! neither is reachable from the `ort` crate's prebuilt binaries. This crate
+//! therefore owns every decision and every numeric transformation around that
+//! call — including the whole [`daemon`] runtime — but does not link an
+//! inference runtime itself; the `npu` cargo feature stays reserved for a
+//! future native binding, and [`daemon::InferenceBackend`] is the seam a
+//! Python-backed session is wired in through.
 //!
 //! # Example
 //!
@@ -64,6 +71,7 @@
 #![warn(missing_docs)]
 
 pub mod backend;
+pub mod daemon;
 pub mod error;
 pub mod model;
 pub mod onnx;
@@ -71,6 +79,10 @@ pub mod state;
 
 pub use backend::{
     provider_options, select_backend, Backend, BackendSelection, SelectionReason, VitisAiConfig,
+};
+pub use daemon::{
+    ControlSignalBuffer, DaemonConfig, DaemonStats, DeadLetterEntry, EscalationCallback,
+    EscalationEvent, InferenceBackend, SubconsciousDaemon,
 };
 pub use error::DaemonError;
 pub use model::{
