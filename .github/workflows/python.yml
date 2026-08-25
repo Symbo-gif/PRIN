@@ -60,10 +60,9 @@ jobs:
           - os: ubuntu-latest
             runner: ubuntu-latest
           - os: windows-latest
-            # EA-005 E-F3 / DV-016/DV-023: route windows jobs to the
-            # self-hosted PRIN-GPU-Runner (~14x faster than GitHub-hosted
-            # windows-latest for CubeCL-CPU workloads).
-            runner: [self-hosted, Windows, X64]
+            # DV-024: self-hosted PRIN-GPU-Runner is offline (2026-08-24).
+            # Reverted to GitHub-hosted windows-latest.
+            runner: windows-latest
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
