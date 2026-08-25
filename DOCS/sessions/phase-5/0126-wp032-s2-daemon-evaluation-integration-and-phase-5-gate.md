@@ -1,6 +1,6 @@
 # Session 0126 — WP-032 S2: Audit — Daemon/evaluation integration and Phase 5 gate
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S2 audit committed at `a3cb6c0`; verdict PASS with zero findings, see `DOCS/audits/032-wp032-audit.md`.  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-032  
 **Session type:** S2 — Audit  

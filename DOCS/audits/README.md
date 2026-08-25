@@ -152,6 +152,12 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   no-change closure with CLEAN delta re-audit (full gate suite re-run against
   an unchanged source tree); Welch parity, attack bounds, deterministic seeds,
   and ≥95% touched-file coverage independently re-verified.
+- [`032-wp032-audit.md`](032-wp032-audit.md) — WP-032 "Daemon/evaluation
+  integration and Phase 5 gate" audit (`PASS`); zero findings; S3 no-change
+  closure with CLEAN delta re-audit (full gate suite re-run against a
+  byte-for-byte unchanged source tree); MOT equivalence and daemon
+  latency/provider acceptance re-confirmed on unchanged evidence; Snyk Code
+  0 findings across all four touched scopes.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

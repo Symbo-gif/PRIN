@@ -23,8 +23,8 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0122 | WP-031 | S2 — Audit | [Temporal experiments, statistics, and adversarial tooling](0122-wp031-s2-temporal-experiments-statistics-and-adversarial-tooling.md) | COMPLETE |
 | 0123 | WP-031 | S3 — Remediation | [Temporal experiments, statistics, and adversarial tooling](0123-wp031-s3-temporal-experiments-statistics-and-adversarial-tooling.md) | COMPLETE |
 | 0124 | WP-031 | S4 — Documentation | [Temporal experiments, statistics, and adversarial tooling](0124-wp031-s4-temporal-experiments-statistics-and-adversarial-tooling.md) | COMPLETE |
-| 0125 | WP-032 | S1 — Coding | [Daemon/evaluation integration and Phase 5 gate](0125-wp032-s1-daemon-evaluation-integration-and-phase-5-gate.md) | PLANNED |
-| 0126 | WP-032 | S2 — Audit | [Daemon/evaluation integration and Phase 5 gate](0126-wp032-s2-daemon-evaluation-integration-and-phase-5-gate.md) | PLANNED |
-| 0127 | WP-032 | S3 — Remediation | [Daemon/evaluation integration and Phase 5 gate](0127-wp032-s3-daemon-evaluation-integration-and-phase-5-gate.md) | PLANNED |
+| 0125 | WP-032 | S1 — Coding | [Daemon/evaluation integration and Phase 5 gate](0125-wp032-s1-daemon-evaluation-integration-and-phase-5-gate.md) | COMPLETE |
+| 0126 | WP-032 | S2 — Audit | [Daemon/evaluation integration and Phase 5 gate](0126-wp032-s2-daemon-evaluation-integration-and-phase-5-gate.md) | COMPLETE |
+| 0127 | WP-032 | S3 — Remediation | [Daemon/evaluation integration and Phase 5 gate](0127-wp032-s3-daemon-evaluation-integration-and-phase-5-gate.md) | COMPLETE |
 | 0128 | WP-032 | S4 — Documentation | [Daemon/evaluation integration and Phase 5 gate](0128-wp032-s4-daemon-evaluation-integration-and-phase-5-gate.md) | PLANNED |
 

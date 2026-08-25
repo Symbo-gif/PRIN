@@ -274,8 +274,101 @@ No new findings added to the ledger. No carried findings re-inspected (the cumul
 
 ## 7. Closure table (appended by S3 remediation)
 
+Per Development Workflow and Audit Standards §3, session 0127 performed the
+mandatory no-change closure. S2 recorded no D1–D4 finding, so no source fix was
+applicable or permitted. The S1 source tree was independently re-verified
+before this documentation-only closure.
+
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(no findings — S3 records no-change closure)* | — | — | — |
+| *(no findings — S2 recorded none)* | NO-CHANGE CLOSURE — no source fix applicable or performed | this session's closure commit (documentation only) | §7 delta re-audit below |
 
-**Delta re-audit date:** YYYY-MM-DD — **Result:** PENDING S3
+### Delta re-audit
+
+**Source-tree identity.** `git diff --stat 8d6d6f4 HEAD` returns only
+`DOCS/audits/032-wp032-audit.md` (281 insertions, the S2 audit report itself);
+`git diff --stat 8d6d6f4 HEAD -- crates/ python/ tests/ parity/ Cargo.toml
+Cargo.lock pyproject.toml models/ tools/` is empty. The source, dependency,
+configuration, model, and `EVIDENCE/0125-wp032-s1-{daemon-latency,provider-
+acceptance}.json` trees therefore remain byte-for-byte identical to the
+S2-audited S1 state (`8d6d6f4`).
+
+**Independent S3 verification (2026-08-25, Windows 11 / Rust 1.92.0 / Python
+3.14.0):**
+
+```powershell
+cargo fmt --all -- --check                                                     # exit 0
+cargo clippy --workspace --all-targets -- -D warnings                          # exit 0 (one filesystem incremental-dir warning, non-code)
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps               # exit 0, 0 warnings
+.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/             # All checks passed!
+.venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/    # 76 files already formatted
+.venv\Scripts\mypy python/prin --strict                                       # Success: 28 files, 0 issues
+.venv\Scripts\python -m interrogate -c pyproject.toml python/prin             # 100.0% (266/266)
+.venv\Scripts\python -m bandit -r . -c pyproject.toml                         # 0 issues (2 explicit #nosec skips only)
+cargo audit                                                                    # exit 0; 2 allowed warnings (DV-008 paste, DV-017 bincode)
+.venv\Scripts\python -m pip_audit .                                           # 0 vulnerabilities
+.venv\Scripts\python -m pip_audit -r DOCS/sphinx/requirements.txt             # 0 vulnerabilities
+.venv\Scripts\python tools/wp001_baseline.py check                            # WP-001 baseline validation passed
+cargo test -p prin-daemon -- --test-threads=1 -q                              # 219 passed, 0 failed (163 lib + 56 integration/parity/proptest/doctest)
+cargo test -p prin-train -- --test-threads=1 -q                               # 407 passed, 0 failed, 1 ignored (375 lib + 32 integration/parity/doctest)
+cargo test -p prin-daemon --test parity_mot -- --test-threads=1               # 2 passed — MOT parity reproduced
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" -q            # 555 passed, 8 deselected
+.venv\Scripts\python -m pytest tests/ parity/ -q                              # 1155 passed
+rmdir /s /q DOCS\sphinx\_build_s3; python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build_s3/html  # build succeeded, 0 warnings
+```
+
+`prin-daemon` reproduced S2's 219-passed figure exactly. `prin-train`
+reproduced 0 failures and 1 ignored, but this session's binary-by-binary sum is
+**407 passed** (375 lib + 19 integration/parity + 13 doctest), three more than
+S2's prose total of "404 passed ... (375 lib + 29 integration/parity/doctest)".
+Because the source-tree identity check above shows zero diff for `crates/`,
+`Cargo.lock`, or any test file between the S1 commit and this delta re-audit,
+and this S3 run used the identical command (`cargo test -p prin-train --
+--test-threads=1`) against that unchanged tree, the discrepancy is not source
+drift — it is an arithmetic slip in S2's prose summation (S2's own listed
+binaries, re-added, total 407 not 404). S2's finding table is immutable and is
+not altered by this note; this closure records the accurate re-count for the
+audit trail. All 407 passed, 0 failed in both S2 and this re-audit.
+
+**Acceptance evidence re-confirmed (unchanged, byte-identical files, same
+host):**
+- `EVIDENCE/0125-wp032-s1-daemon-latency.json`: `acceptance.target.result =
+  "PASS"` — lock-free p95 200 ns vs. mutex-baseline 2700–3000 ns
+  (13.5×–15× lower); direct-reference median p95 200 ns vs. PRINet 3.0's
+  250 ns across the ten registered trials.
+- `EVIDENCE/0125-wp032-s1-provider-acceptance.json`:
+  `acceptance.result = "PASS_WITH_JUSTIFIED_OPTIONAL_HARDWARE_SKIPS"` — CPU
+  passes; DirectML registered but graph-incompatible (amendment #13,
+  DV-006); VitisAI absent (no XDNA NPU on this host, DV-006).
+- `cargo test -p prin-daemon --test parity_mot`: 2/2 passed, independently
+  reproducing MOT equivalence at S3.
+
+**Security delta:**
+
+- Snyk Code, `crates/prin-py`, threshold `low`: 0 issues.
+- Snyk Code, `crates/prin-daemon`, threshold `low`: 0 issues.
+- Snyk Code, `python/prin`, threshold `low`: 0 issues.
+- Snyk Code, `tests/test_phase5_integration.py`, threshold `low`: 0 issues.
+- Snyk Open Source, `--all-projects`, threshold `low`: 2/3 detected manifests
+  tested clean (`.kilo/package-lock.json` — 30 dependencies, 0 vulnerable
+  paths; `DOCS/sphinx/requirements.txt` — 34 dependencies, 0 vulnerable
+  paths); the third candidate (`DOCS/archive .../requirements.txt`, retired
+  and non-authoritative per repository policy) failed dependency resolution
+  and the org's monthly private-test quota was reached before a Rust/Cargo
+  project scan ran. No manifest changed in WP-032 (A6, unchanged), so no
+  Snyk Open Source scan is change-attributable here; `cargo audit` and
+  `pip-audit` (§ above), the ecosystem-native and authoritative gates per
+  Coding Standards §6.2, are both clean.
+- GitHub secret-scanning alerts API still returns HTTP 404, "Secret scanning
+  is disabled on this repository" — the unchanged DV-009 condition; its
+  approved Gitleaks/branch-protection substitute remains authoritative and
+  was not altered this session.
+
+No source, configuration, model, or evidence-file drift was found. Every
+governed gate is clean, MOT equivalence and daemon latency/provider acceptance
+hold on the unchanged evidence, and the sole discrepancy identified (S2's
+prose test-count arithmetic) does not affect any pass/fail verdict.
+
+**Delta re-audit date:** 2026-08-25 — **Result:** CLEAN (mandatory no-change
+closure; zero findings to close; zero source changes; all governed gates
+green)

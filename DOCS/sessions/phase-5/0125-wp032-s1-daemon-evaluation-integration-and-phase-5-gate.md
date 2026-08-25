@@ -1,6 +1,6 @@
 # Session 0125 — WP-032 S1: Coding — Daemon/evaluation integration and Phase 5 gate
 
-**Status:** PLANNED  
+**Status:** COMPLETE — implementation committed at `8d6d6f4`; acceptance evidence in `DOCS/experiments/0125-wp032-s1-handoff.md`.  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-032  
 **Session type:** S1 — Coding  
