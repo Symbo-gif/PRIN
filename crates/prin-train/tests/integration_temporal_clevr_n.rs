@@ -80,8 +80,16 @@ fn run_one_seed(seed_val: u128) -> f64 {
         ..TemporalTrainerConfig::default()
     };
 
-    let (_trained, result) =
-        train_phase_tracker(model, &trainer_config, &train_data, &val_data, &device).unwrap();
+    let mut train_seed = Seed::new(seed_val, 2);
+    let (_trained, result) = train_phase_tracker(
+        model,
+        &trainer_config,
+        &train_data,
+        &val_data,
+        &device,
+        &mut train_seed,
+    )
+    .unwrap();
 
     println!(
         "seed {seed_val}: final_val_ip={:.5} total_epochs={} final_val_loss={:.5}",

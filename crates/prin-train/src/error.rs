@@ -198,4 +198,42 @@ pub enum TrainError {
         /// Donor checkpoint's strategy (inferred from `mlp` presence).
         checkpoint_strategy: &'static str,
     },
+
+    /// A [`crate::stats`] routine received fewer than the minimum number of
+    /// samples its formula requires (e.g. Welch's t-test needs at least 2
+    /// observations per group to estimate a variance).
+    #[error("{name} requires at least {min} samples, got {got}")]
+    InsufficientSamples {
+        /// Name of the offending input.
+        name: &'static str,
+        /// Minimum required sample count.
+        min: usize,
+        /// Actual sample count.
+        got: usize,
+    },
+
+    /// A [`crate::stats::bootstrap_ci`] significance level was not in the
+    /// open interval `(0, 1)`.
+    #[error("alpha must be finite and in (0, 1), got {value}")]
+    InvalidSignificanceLevel {
+        /// Offending value.
+        value: f64,
+    },
+
+    /// A [`crate::stats::bootstrap_ci`] resample count was zero.
+    #[error("n_bootstrap must be >= 1, got {value}")]
+    InvalidBootstrapCount {
+        /// Offending value.
+        value: usize,
+    },
+
+    /// A [`crate::adversarial`] perturbation budget (`epsilon`) or step size
+    /// (`alpha`) was non-positive or non-finite.
+    #[error("{name} must be finite and > 0, got {value}")]
+    InvalidPerturbationBudget {
+        /// Name of the offending hyperparameter (`epsilon` or `alpha`).
+        name: &'static str,
+        /// Offending value.
+        value: f64,
+    },
 }

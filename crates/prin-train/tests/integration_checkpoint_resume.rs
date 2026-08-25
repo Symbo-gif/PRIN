@@ -38,8 +38,16 @@ fn checkpoint_after_training_round_trips_and_reproduces_validation_behavior() {
         ..TemporalTrainerConfig::default()
     };
 
-    let (trained, _result) =
-        train_phase_tracker(model, &trainer_config, &train_data, &val_data, &device).unwrap();
+    let mut train_seed = Seed::new(42, 2);
+    let (trained, _result) = train_phase_tracker(
+        model,
+        &trainer_config,
+        &train_data,
+        &val_data,
+        &device,
+        &mut train_seed,
+    )
+    .unwrap();
     let trained_inner = trained.valid();
 
     // Checkpoint the trained (not freshly-initialized) model.

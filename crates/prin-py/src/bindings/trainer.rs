@@ -149,11 +149,19 @@ fn py_train_phase_tracker(
         smoothing_window,
         warmup_epochs,
         grad_clip,
+        ..TemporalTrainerConfig::default()
     };
 
-    let (trained, result) =
-        run_temporal_trainer(model, &trainer_config, &train_data, &val_data, &device())
-            .map_err(train_err_to_py)?;
+    let mut train_seed = Seed::new(model_seed as u128, 2);
+    let (trained, result) = run_temporal_trainer(
+        model,
+        &trainer_config,
+        &train_data,
+        &val_data,
+        &device(),
+        &mut train_seed,
+    )
+    .map_err(train_err_to_py)?;
 
     let bridge = PyPhaseTrackerBridge::from_tracker(trained);
     Ok((Py::new(py, bridge)?, PyTrainingResult::from(result)))

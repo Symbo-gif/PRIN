@@ -64,10 +64,29 @@
 //! - [`losses`] — [`losses::hungarian_similarity_loss`],
 //!   [`losses::temporal_smoothness_loss`] (WP-027): differentiable
 //!   tracking-training losses over similarity matrices.
-//! - [`trainer`] — [`trainer::train_phase_tracker`] (WP-027): the
-//!   Rust-native training pipeline (Adam + warmup/cosine LR + gradient
-//!   clipping + early stopping) driving [`phase_tracker::PhaseTracker`] on
-//!   [`dataset::SequenceData`].
+//! - [`trainer`] — [`trainer::train_phase_tracker`],
+//!   [`trainer::train_temporal_slot_attention_mot`] (WP-027, extended
+//!   WP-031): the Rust-native training pipeline (Adam + warmup/cosine LR +
+//!   gradient clipping + early stopping) driving
+//!   [`phase_tracker::PhaseTracker`]/
+//!   [`slot_attention::TemporalSlotAttentionMOT`] on
+//!   [`dataset::SequenceData`] — the fair PT-vs-SA comparison framework
+//!   (identical loss/optimizer/schedule/parameter-budget accounting via
+//!   [`trainer::count_parameters`]), plus [`trainer::train_multi_seed`] for
+//!   multi-seed statistical reliability.
+//! - [`temporal_metrics`] (WP-031): tracking-quality metrics beyond identity
+//!   preservation — identity switches, track fragmentation, mostly-tracked/
+//!   mostly-lost, track-duration statistics, occlusion recovery speed, and
+//!   binding robustness.
+//! - [`stats`] (WP-031): [`stats::bootstrap_ci`], [`stats::welch_t_test`],
+//!   [`stats::cohens_d`] — statistical utilities for rigorous multi-seed
+//!   benchmarking.
+//! - [`flops`] (WP-031): [`flops::count_flops`], [`flops::measure_wall_time`]
+//!   — FLOPs estimation and wall-time measurement for efficiency comparison.
+//! - [`adversarial`] (WP-031): [`adversarial::fgsm_attack`],
+//!   [`adversarial::pgd_attack`], and per-tracker adversarial-evaluation
+//!   orchestration — FGSM/PGD robustness testing for
+//!   [`phase_tracker::PhaseTracker`]/[`slot_attention::TemporalSlotAttentionMOT`].
 //!
 //! `bands`/`layers` (Burn `Module`s) expose a `Config` (validated
 //! hyperparameters), a `Params` struct (explicit parameter tensors, for
@@ -99,6 +118,7 @@
 
 pub mod ablation;
 pub mod activations;
+pub mod adversarial;
 pub mod allocation;
 pub mod attention;
 pub mod bands;
@@ -106,6 +126,7 @@ pub mod dataset;
 pub mod energy;
 pub mod error;
 pub mod feedback;
+pub mod flops;
 pub mod hep;
 pub mod hybrid;
 pub mod inhibition;
@@ -115,7 +136,9 @@ pub mod phase_tracker;
 pub mod rip;
 pub mod scalr;
 pub mod slot_attention;
+pub mod stats;
 pub mod sync_gd;
+pub mod temporal_metrics;
 pub mod trainer;
 
 mod support;
