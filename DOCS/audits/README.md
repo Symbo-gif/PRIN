@@ -143,9 +143,10 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   closure with CLEAN delta re-audit (full gate suite re-run against a
   byte-for-byte unchanged source tree, with S2 bookkeeping synchronization).
 - [`030-wp030-audit.md`](030-wp030-audit.md) — WP-030 "Training hooks and
-  MOT evaluation" audit (`PASS`); zero findings across all ten checklist
-  dimensions; 10/10 MOT scenarios match real `motmetrics` 1.4.0; coverage
-  ≥98% on all three new modules.
+  MOT evaluation" audit (`PASS`); zero findings; S3 no-change closure with
+  CLEAN delta re-audit (full gate suite re-run against a byte-for-byte
+  unchanged source tree); 10/10 MOT scenarios match real `motmetrics` 1.4.0;
+  coverage ≥98% on all three new modules.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

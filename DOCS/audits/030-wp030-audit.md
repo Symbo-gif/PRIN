@@ -217,8 +217,61 @@ S3 is mandatory even with zero findings (Development Workflow Standards §3: "S3
 
 ## 7. Closure table (appended by S3 remediation)
 
+Per Development Workflow and Audit Standards §3 ("S3 remains mandatory when
+S2 finds zero deviations: it records a no-change closure and independent
+delta verification"), session 0119 (S3) performed a no-change closure: no
+finding existed to fix (§4 recorded none), so no source edit was made or was
+permitted. The full gate suite was independently re-run against the
+unmodified S1/S2 source tree to verify no regression occurred between the S2
+audit (2026-08-25, `ae9c9fa` / `dc2ee6d`) and this S3 closure (2026-08-25).
+
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(no findings — S2 recorded none)* | | | |
+| *(no findings — S2 recorded none)* | NO-CHANGE CLOSURE — no source fix applicable or performed | this session's closure commit (docs-only; source tree untouched) | §7 delta re-audit below |
 
-**Delta re-audit date:** YYYY-MM-DD — **Result:** CLEAN / findings remain
+### Delta re-audit
+
+**Source-tree identity check.** `git diff --stat 61ef87a HEAD -- crates/ python/ tests/ parity/ Cargo.toml pyproject.toml models/` returns empty: zero source/config/model changes across the full S1→S2→S3 range. `git show --stat ae9c9fa` and `git show --stat dc2ee6d` (the S2 commits) confirm they touched only `DOCS/audits/030-wp030-audit.md` and the S2 session-brief status line — no source file. The source tree audited at S2 is therefore byte-for-byte identical to the tree re-verified at S3.
+
+**Full gate suite, independently re-run at S3 (2026-08-25, same host/toolchain as §2):**
+
+```powershell
+cargo fmt --all -- --check                                                     # exit 0, clean
+cargo clippy --workspace --all-targets -- -D warnings                          # exit 0, clean
+cargo clippy --workspace --all-targets --features strict-checks -- -D warnings # exit 0, clean
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps               # exit 0, 0 warnings
+cargo test --workspace -- --test-threads=1                                     # exit 0, 0 failures; all suites passed
+cargo test --workspace --features strict-checks -- --test-threads=1            # exit 0, 0 failures
+cargo llvm-cov -p prin-kernels --features wgpu,cpu                             # exit 0; 149 passed
+cargo llvm-cov -p prin-dynamics                                                # exit 0; 275 passed
+cargo llvm-cov -p prin-dynamics --features strict-checks                       # exit 0; 276 passed
+cargo llvm-cov -p prin-daemon --features strict-checks                         # assignment.rs 98.89%/100.00%/98.18%; backend.rs 99.50%/100.00%/100.00%; daemon.rs 97.16%/94.74%/97.28%; hooks.rs 99.75%/100.00%/99.61%; model.rs 96.52%/97.78%/99.53%; mot.rs 99.72%/100.00%/100.00%; onnx.rs 95.16%/95.45%/99.38%; state.rs 99.29%/100.00%/100.00%
+cargo audit                                                                     # exit 0; 2 allowed advisories (paste/DV-008, bincode/DV-017)
+.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/              # All checks passed!
+.venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/     # 74 files already formatted
+.venv\Scripts\mypy python/prin --strict                                        # Success: no issues found in 28 source files
+.venv\Scripts\mypy tools/wp030_mot_fixture.py --strict                         # Success: no issues found in 1 source file
+.venv\Scripts\python -m interrogate -c pyproject.toml python/prin              # 100.0% (262/262)
+.venv\Scripts\python -m interrogate -c pyproject.toml tools/wp030_mot_fixture.py  # 100.0% (9/9)
+.venv\Scripts\python -m bandit -r . -c pyproject.toml                          # 0 issues (7897 lines scanned)
+.venv\Scripts\python -m pip_audit .                                            # No known vulnerabilities found
+.venv\Scripts\python -m pip_audit -r DOCS/sphinx/requirements.txt             # No known vulnerabilities found
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp  # 547 passed, 8 deselected
+.venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp-full  # 1147 passed
+Remove-Item -Recurse -Force DOCS/sphinx/_build -ErrorAction SilentlyContinue
+.venv\Scripts\python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html  # build succeeded, 0 warnings
+.venv\Scripts\python tools/wp001_baseline.py check                             # WP-001 baseline validation passed.
+.venv\Scripts\python tools/wp030_mot_fixture.py crates/prin-daemon/tests/data/mot_reference_cases_regenerated.json # Wrote 10 scenarios
+cmd /c fc /B crates\prin-daemon\tests\data\mot_reference_cases.json crates\prin-daemon\tests\data\mot_reference_cases_regenerated.json # FC: no differences encountered
+certutil -hashfile models/subconscious_controller.onnx SHA256                  # 3396bfdd...4102 — unchanged, matches manifest.json
+certutil -hashfile models/subconscious_controller.onnx.data SHA256             # 35e7eb09...d2597 — unchanged, matches manifest.json
+```
+
+**Snyk MCP scans executed at S3:**
+- `snyk_code_scan` on `crates/prin-daemon`: `{"success": true, "issueCount": 0, "issues": null}` (clean)
+- `snyk_code_scan` on `python/prin`: `{"success": true, "issueCount": 0, "issues": null}` (clean)
+- `snyk_sca_scan` (all projects): `{"success": true, "issueCount": 0, "issues": null}` (clean)
+
+Every figure reproduces against the S2 audit's independently-measured values (§2/§3.3), with zero findings, zero regressions, and zero drift.
+
+**Delta re-audit date:** 2026-08-25 — **Result:** CLEAN (no-change closure; zero findings to close; zero regressions introduced; source tree byte-for-byte identical to the S2-audited tree)

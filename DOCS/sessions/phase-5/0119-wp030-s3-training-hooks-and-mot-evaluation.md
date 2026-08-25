@@ -1,6 +1,6 @@
 # Session 0119 — WP-030 S3: Remediation — Training hooks and MOT evaluation
 
-**Status:** PLANNED  
+**Status:** COMPLETE — no-change closure (S2 recorded zero findings); delta re-audit CLEAN, see `DOCS/audits/030-wp030-audit.md` §7.  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-030  
 **Session type:** S3 — Remediation  
