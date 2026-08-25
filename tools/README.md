@@ -35,6 +35,14 @@ or execute archived reference code.
 - `math_audit_claims/*.json` are the committed claim ledgers: independent
   formal restatements of PRIN mathematical claims, audited (not authored) by
   `math-audit-mcp`.
+- `wp029_control_buffer_pilot.py` measures the archived PRINet 3.0
+  `ControlSignalBuffer`'s read latency under contention, for the WP-029
+  daemon-latency pilot (`EVIDENCE/0113-wp029-s1-control-buffer-pilot.json`).
+- `wp030_mot_fixture.py` replays fixed oid/hid/distance sequences through the
+  real `motmetrics` package (`mot` extra) and writes
+  `crates/prin-daemon/tests/data/mot_reference_cases.json`, the golden
+  fixture `crates/prin-daemon/tests/parity_mot.rs` validates
+  `prin_daemon::mot::MotAccumulator` against.
 
 Run the WP-001 validator from the repository root:
 

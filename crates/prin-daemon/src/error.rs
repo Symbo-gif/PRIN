@@ -195,4 +195,35 @@ pub enum DaemonError {
         /// Dimension found in the graph.
         got: Dim,
     },
+
+    /// A constructor or configuration parameter was outside its valid range.
+    ///
+    /// Shared by [`crate::hooks::TrainingHooks::new`] (EMA smoothing factor,
+    /// latency window) and the synthetic MOT sequence generators in
+    /// [`crate::mot`] (object/frame counts, rates, noise scale).
+    #[error("invalid value for `{param}`: {value}")]
+    InvalidParameter {
+        /// Name of the offending parameter.
+        param: &'static str,
+        /// Rejected value (integer parameters are widened to `f64`).
+        value: f64,
+    },
+
+    /// A [`crate::mot::MotAccumulator::update`] distance matrix did not have
+    /// exactly `oids.len()` rows of `hids.len()` columns each.
+    #[error(
+        "MOT distance matrix shape mismatch: {oids} object id(s), {hids} \
+         hypothesis id(s), but matrix is {rows}x{cols}"
+    )]
+    MotShapeMismatch {
+        /// Number of object ids supplied.
+        oids: usize,
+        /// Number of hypothesis ids supplied.
+        hids: usize,
+        /// Row count the distance matrix actually had.
+        rows: usize,
+        /// Column count the distance matrix's first row actually had (`0`
+        /// when ragged).
+        cols: usize,
+    },
 }

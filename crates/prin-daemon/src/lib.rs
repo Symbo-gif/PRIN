@@ -27,6 +27,21 @@
 //!   [`daemon::ControlSignalBuffer`] — the WP-029 rebuild of PRINet 3.0's
 //!   `subconscious_daemon.py` and `ControlSignalBuffer`.
 //!
+//! Delivered in WP-030 (Phase 5):
+//!
+//! - [`hooks`] — [`hooks::TrainingHooks`], the WP-030 rebuild of PRINet
+//!   3.0's `prinet.nn.training_hooks.StateCollector`: loss EMA/variance,
+//!   gradient-norm EMA, and step-latency percentiles, packaged into a
+//!   [`state::SubconsciousState`] for submission to a
+//!   [`daemon::SubconsciousDaemon`].
+//! - [`mot`] — [`mot::MotAccumulator`], the WP-030 rebuild of the CLEAR-MOT/
+//!   IDF1 core of PRINet 3.0's `prinet.nn.mot_evaluation`: MOTA/MOTP/IDF1
+//!   and identity-switch accounting validated against `py-motmetrics`, IoU
+//!   distance computation, and deterministic synthetic sequence generators.
+//! - `assignment` — the rectangular Hungarian/Kuhn–Munkres solver
+//!   [`mot::MotAccumulator`] uses for per-frame and global identity
+//!   assignment (crate-private; an implementation detail of [`mot`]).
+//!
 //! # Scope boundaries
 //!
 //! **Inference execution** runs through the Python `onnxruntime` bindings
@@ -70,10 +85,13 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+mod assignment;
 pub mod backend;
 pub mod daemon;
 pub mod error;
+pub mod hooks;
 pub mod model;
+pub mod mot;
 pub mod onnx;
 pub mod state;
 
@@ -85,8 +103,10 @@ pub use daemon::{
     EscalationEvent, InferenceBackend, SubconsciousDaemon,
 };
 pub use error::DaemonError;
+pub use hooks::TrainingHooks;
 pub use model::{
     sha256_file, validate_controller_contract, ControllerModel, ManifestEntry, ModelManifest,
 };
+pub use mot::{iou_distance_matrix, BBox, Detection, HypId, MotAccumulator, MotSummary, ObjId};
 pub use onnx::{inspect_onnx_file, Dim, OnnxModelInfo, TensorSpec};
 pub use state::{ControlSignals, Regime, SubconsciousState, CONTROL_DIM, STATE_DIM};

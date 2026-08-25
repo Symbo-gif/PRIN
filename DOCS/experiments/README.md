@@ -148,6 +148,18 @@ at the top level until they are folded into the final campaign archive in Phase 
   comparing the lock-free buffer against both a same-language `Mutex`
   re-implementation and the actual PRINet 3.0 reference
   (`EVIDENCE/0113-wp029-s1-control-buffer-pilot.json`).
+- [`0117-wp030-s1-handoff.md`](0117-wp030-s1-handoff.md) — WP-030 S1 handoff
+  to the S2 audit for training hooks and MOT evaluation:
+  `prin-daemon::hooks::TrainingHooks` (loss EMA/variance, gradient-norm EMA,
+  step-latency percentiles feeding `SubconsciousState`, proven wired into a
+  running `SubconsciousDaemon`) and `prin-daemon::mot::MotAccumulator`
+  (CLEAR-MOT/IDF1 metrics validated against real `py-motmetrics` 1.4.0
+  output on 10 fixed scenarios, backed by a from-scratch rectangular
+  Hungarian solver). Records the scope decision to keep both deliverables in
+  `prin-daemon` rather than a new crate, defer `PhaseTracker`
+  tracker-wiring to a future `prin-py`/`python/prin/eval` session, and a
+  same-session fix for an unrelated newly-published `cargo audit` finding
+  (`RUSTSEC-2026-0267`, `stable-vec`).
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at

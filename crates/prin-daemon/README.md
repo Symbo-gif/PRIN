@@ -32,6 +32,21 @@ under the GIL) is **not yet delivered**; see the WP-029 S1 handoff note
 (`DOCS/experiments/0113-wp029-s1-handoff.md`) for the scope decision and the
 GIL-release design the follow-up needs.
 
+## Delivered (WP-030)
+
+| Module | Contents |
+|---|---|
+| `hooks` | `TrainingHooks` — the WP-030 rebuild of PRINet 3.0's `prinet.nn.training_hooks.StateCollector`: loss EMA/variance, gradient-norm EMA (from caller-supplied per-parameter L2 norms), and step-latency p50/p95/throughput, packaged into a `SubconsciousState` for `daemon.submit_state(hooks.on_epoch_end(...))` |
+| `mot` | `MotAccumulator`, `MotSummary`, `BBox`/`iou_distance_matrix`, `generate_linear_sequence`/`generate_crowded_sequence` — the CLEAR-MOT/IDF1 core of PRINet 3.0's `prinet.nn.mot_evaluation`, validated against real `py-motmetrics` output (`tests/parity_mot.rs`); deterministic synthetic sequence generators built on `prin_dynamics::Seed` |
+| `assignment` (private) | Rectangular Hungarian/Kuhn–Munkres assignment solver `mot::MotAccumulator` uses for per-frame and global (IDF1) identity matching |
+
+`mot` deliberately does not reproduce the reference module's end-to-end
+`evaluate_tracking(sequence, tracker, ...)` loop: `crates/README.md`'s
+layering places `prin-train` (where `PhaseTracker` lives) and `prin-daemon`
+at the same tier, so wiring a real tracker's hypotheses into this
+accumulator is a Python orchestration concern (`python/prin/eval`), not a
+Rust one — see `DOCS/experiments/0117-wp030-s1-handoff.md`.
+
 ## Features
 
 | Feature | Effect |
@@ -47,3 +62,5 @@ GIL-release design the follow-up needs.
 | `examples/control_buffer_pilot.rs` | Manual p50/p95/max latency pilot for the same two implementations (`cargo run --release --example control_buffer_pilot -p prin-daemon`) |
 | `tools/wp029_control_buffer_pilot.py` (repo root) | The same protocol run against the actual archived PRINet 3.0 `ControlSignalBuffer`, for a genuine cross-language "before" data point |
 | `EVIDENCE/0113-wp029-s1-control-buffer-pilot.json` | Combined pilot evidence with methodology and environment capture |
+| `benches/training_hooks.rs` | `criterion` per-call cost of `TrainingHooks::on_step_end_with_elapsed`/`on_epoch_end`; `hooks.rs`'s `step_accumulation_overhead_is_bounded` unit test is the actual overhead bound (100k calls under 2s), this bench is pilot evidence only |
+| `tools/wp030_mot_fixture.py` (repo root) | Generates `tests/data/mot_reference_cases.json` by replaying fixed oid/hid/distance sequences through the real `py-motmetrics` package |

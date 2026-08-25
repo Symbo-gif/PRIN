@@ -164,7 +164,7 @@ is renumbered by an executive mathematical audit.
 | 0114 | 5 | WP-029 | S2 — Audit | [Daemon runtime and lock-free control buffer](phase-5/0114-wp029-s2-daemon-runtime-and-lock-free-control-buffer.md) | COMPLETE |
 | 0115 | 5 | WP-029 | S3 — Remediation | [Daemon runtime and lock-free control buffer](phase-5/0115-wp029-s3-daemon-runtime-and-lock-free-control-buffer.md) | COMPLETE |
 | 0116 | 5 | WP-029 | S4 — Documentation | [Daemon runtime and lock-free control buffer](phase-5/0116-wp029-s4-daemon-runtime-and-lock-free-control-buffer.md) | COMPLETE |
-| 0117 | 5 | WP-030 | S1 — Coding | [Training hooks and MOT evaluation](phase-5/0117-wp030-s1-training-hooks-and-mot-evaluation.md) | PLANNED |
+| 0117 | 5 | WP-030 | S1 — Coding | [Training hooks and MOT evaluation](phase-5/0117-wp030-s1-training-hooks-and-mot-evaluation.md) | COMPLETE |
 | 0118 | 5 | WP-030 | S2 — Audit | [Training hooks and MOT evaluation](phase-5/0118-wp030-s2-training-hooks-and-mot-evaluation.md) | PLANNED |
 | 0119 | 5 | WP-030 | S3 — Remediation | [Training hooks and MOT evaluation](phase-5/0119-wp030-s3-training-hooks-and-mot-evaluation.md) | PLANNED |
 | 0120 | 5 | WP-030 | S4 — Documentation | [Training hooks and MOT evaluation](phase-5/0120-wp030-s4-training-hooks-and-mot-evaluation.md) | PLANNED |

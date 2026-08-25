@@ -1,0 +1,679 @@
+{
+  "scenarios": [
+    {
+      "expected": {
+        "idf1": 1.0,
+        "mota": 1.0,
+        "motp": 0.10000000000000003,
+        "num_false_positives": 0,
+        "num_misses": 0,
+        "num_switches": 0
+      },
+      "frames": [
+        {
+          "dists": [
+            [
+              0.1,
+              null,
+              null
+            ],
+            [
+              null,
+              0.1,
+              null
+            ],
+            [
+              null,
+              null,
+              0.1
+            ]
+          ],
+          "hids": [
+            1,
+            2,
+            3
+          ],
+          "oids": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "dists": [
+            [
+              0.1,
+              null,
+              null
+            ],
+            [
+              null,
+              0.1,
+              null
+            ],
+            [
+              null,
+              null,
+              0.1
+            ]
+          ],
+          "hids": [
+            1,
+            2,
+            3
+          ],
+          "oids": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "dists": [
+            [
+              0.1,
+              null,
+              null
+            ],
+            [
+              null,
+              0.1,
+              null
+            ],
+            [
+              null,
+              null,
+              0.1
+            ]
+          ],
+          "hids": [
+            1,
+            2,
+            3
+          ],
+          "oids": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "dists": [
+            [
+              0.1,
+              null,
+              null
+            ],
+            [
+              null,
+              0.1,
+              null
+            ],
+            [
+              null,
+              null,
+              0.1
+            ]
+          ],
+          "hids": [
+            1,
+            2,
+            3
+          ],
+          "oids": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "dists": [
+            [
+              0.1,
+              null,
+              null
+            ],
+            [
+              null,
+              0.1,
+              null
+            ],
+            [
+              null,
+              null,
+              0.1
+            ]
+          ],
+          "hids": [
+            1,
+            2,
+            3
+          ],
+          "oids": [
+            1,
+            2,
+            3
+          ]
+        }
+      ],
+      "max_switch_time": null,
+      "name": "perfect_tracking"
+    },
+    {
+      "expected": {
+        "idf1": 0.9090909090909091,
+        "mota": 0.8333333333333334,
+        "motp": 0.1,
+        "num_false_positives": 0,
+        "num_misses": 1,
+        "num_switches": 0
+      },
+      "frames": [
+        {
+          "dists": [
+            [
+              0.1,
+              null
+            ],
+            [
+              null,
+              0.1
+            ]
+          ],
+          "hids": [
+            1,
+            2
+          ],
+          "oids": [
+            1,
+            2
+          ]
+        },
+        {
+          "dists": [
+            [
+              0.1
+            ],
+            [
+              null
+            ]
+          ],
+          "hids": [
+            1
+          ],
+          "oids": [
+            1,
+            2
+          ]
+        },
+        {
+          "dists": [
+            [
+              0.1,
+              null
+            ],
+            [
+              null,
+              0.1
+            ]
+          ],
+          "hids": [
+            1,
+            2
+          ],
+          "oids": [
+            1,
+            2
+          ]
+        }
+      ],
+      "max_switch_time": null,
+      "name": "with_misses"
+    },
+    {
+      "expected": {
+        "idf1": 0.6666666666666666,
+        "mota": 0.0,
+        "motp": 0.10000000000000002,
+        "num_false_positives": 3,
+        "num_misses": 0,
+        "num_switches": 0
+      },
+      "frames": [
+        {
+          "dists": [
+            [
+              0.1,
+              null
+            ]
+          ],
+          "hids": [
+            1,
+            99
+          ],
+          "oids": [
+            1
+          ]
+        },
+        {
+          "dists": [
+            [
+              0.1,
+              null
+            ]
+          ],
+          "hids": [
+            1,
+            99
+          ],
+          "oids": [
+            1
+          ]
+        },
+        {
+          "dists": [
+            [
+              0.1,
+              null
+            ]
+          ],
+          "hids": [
+            1,
+            99
+          ],
+          "oids": [
+            1
+          ]
+        }
+      ],
+      "max_switch_time": null,
+      "name": "with_false_positives"
+    },
+    {
+      "expected": {
+        "idf1": 0.5,
+        "mota": 0.5,
+        "motp": 0.1,
+        "num_false_positives": 0,
+        "num_misses": 0,
+        "num_switches": 2
+      },
+      "frames": [
+        {
+          "dists": [
+            [
+              0.1,
+              null
+            ],
+            [
+              null,
+              0.1
+            ]
+          ],
+          "hids": [
+            1,
+            2
+          ],
+          "oids": [
+            1,
+            2
+          ]
+        },
+        {
+          "dists": [
+            [
+              null,
+              0.1
+            ],
+            [
+              0.1,
+              null
+            ]
+          ],
+          "hids": [
+            1,
+            2
+          ],
+          "oids": [
+            1,
+            2
+          ]
+        }
+      ],
+      "max_switch_time": null,
+      "name": "with_identity_switch"
+    },
+    {
+      "expected": {
+        "idf1": 1.0,
+        "mota": 1.0,
+        "motp": 0.1,
+        "num_false_positives": 0,
+        "num_misses": 0,
+        "num_switches": 0
+      },
+      "frames": [
+        {
+          "dists": [
+            [
+              0.1
+            ]
+          ],
+          "hids": [
+            1
+          ],
+          "oids": [
+            1
+          ]
+        },
+        {
+          "dists": [],
+          "hids": [],
+          "oids": []
+        },
+        {
+          "dists": [],
+          "hids": [],
+          "oids": []
+        },
+        {
+          "dists": [
+            [
+              0.1
+            ]
+          ],
+          "hids": [
+            1
+          ],
+          "oids": [
+            1
+          ]
+        }
+      ],
+      "max_switch_time": null,
+      "name": "occlusion_reappearance_same_id"
+    },
+    {
+      "expected": {
+        "idf1": 0.5,
+        "mota": 1.0,
+        "motp": 0.1,
+        "num_false_positives": 0,
+        "num_misses": 0,
+        "num_switches": 0
+      },
+      "frames": [
+        {
+          "dists": [
+            [
+              0.1,
+              null
+            ],
+            [
+              null,
+              0.1
+            ]
+          ],
+          "hids": [
+            1,
+            2
+          ],
+          "oids": [
+            1,
+            2
+          ]
+        },
+        {
+          "dists": [],
+          "hids": [],
+          "oids": []
+        },
+        {
+          "dists": [],
+          "hids": [],
+          "oids": []
+        },
+        {
+          "dists": [
+            [
+              null,
+              0.1
+            ],
+            [
+              0.1,
+              null
+            ]
+          ],
+          "hids": [
+            1,
+            2
+          ],
+          "oids": [
+            1,
+            2
+          ]
+        }
+      ],
+      "max_switch_time": 1,
+      "name": "max_switch_time_bounded"
+    },
+    {
+      "expected": {
+        "idf1": 0.5714285714285714,
+        "mota": 0.1428571428571429,
+        "motp": 0.1,
+        "num_false_positives": 3,
+        "num_misses": 3,
+        "num_switches": 0
+      },
+      "frames": [
+        {
+          "dists": [
+            [
+              0.1,
+              null
+            ],
+            [
+              null,
+              0.1
+            ],
+            [
+              null,
+              null
+            ],
+            [
+              null,
+              null
+            ],
+            [
+              null,
+              null
+            ]
+          ],
+          "hids": [
+            1,
+            2
+          ],
+          "oids": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "dists": [
+            [
+              0.1,
+              null,
+              null,
+              null,
+              null
+            ],
+            [
+              null,
+              0.1,
+              null,
+              null,
+              null
+            ]
+          ],
+          "hids": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "oids": [
+            1,
+            2
+          ]
+        }
+      ],
+      "max_switch_time": null,
+      "name": "rectangular_stress"
+    },
+    {
+      "expected": {
+        "idf1": 1.0,
+        "mota": 1.0,
+        "motp": 0.1,
+        "num_false_positives": 0,
+        "num_misses": 0,
+        "num_switches": 0
+      },
+      "frames": [
+        {
+          "dists": [
+            [
+              0.1
+            ]
+          ],
+          "hids": [
+            1
+          ],
+          "oids": [
+            1
+          ]
+        },
+        {
+          "dists": [],
+          "hids": [],
+          "oids": []
+        },
+        {
+          "dists": [
+            [
+              0.1
+            ]
+          ],
+          "hids": [
+            1
+          ],
+          "oids": [
+            1
+          ]
+        }
+      ],
+      "max_switch_time": null,
+      "name": "empty_frame"
+    },
+    {
+      "expected": {
+        "idf1": 0.0,
+        "mota": -1.0,
+        "motp": "NaN",
+        "num_false_positives": 2,
+        "num_misses": 2,
+        "num_switches": 0
+      },
+      "frames": [
+        {
+          "dists": [
+            [
+              null
+            ]
+          ],
+          "hids": [
+            99
+          ],
+          "oids": [
+            1
+          ]
+        },
+        {
+          "dists": [
+            [
+              null
+            ]
+          ],
+          "hids": [
+            99
+          ],
+          "oids": [
+            1
+          ]
+        }
+      ],
+      "max_switch_time": null,
+      "name": "all_forbidden_frame"
+    },
+    {
+      "expected": {
+        "idf1": 0.75,
+        "mota": 0.5,
+        "motp": 0.22627415016534655,
+        "num_false_positives": 1,
+        "num_misses": 1,
+        "num_switches": 0
+      },
+      "frames": [
+        {
+          "dists": [
+            [
+              0.17767653758542157,
+              null
+            ],
+            [
+              null,
+              0.3193277310924362
+            ]
+          ],
+          "hids": [
+            1,
+            2
+          ],
+          "oids": [
+            1,
+            2
+          ]
+        },
+        {
+          "dists": [
+            [
+              0.18181818181818188,
+              null
+            ],
+            [
+              null,
+              null
+            ]
+          ],
+          "hids": [
+            1,
+            2
+          ],
+          "oids": [
+            1,
+            2
+          ]
+        }
+      ],
+      "max_switch_time": null,
+      "name": "iou_based"
+    }
+  ],
+  "schema": "wp030-mot-reference-cases-v1"
+}

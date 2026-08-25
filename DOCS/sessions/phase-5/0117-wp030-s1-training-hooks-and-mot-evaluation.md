@@ -1,6 +1,6 @@
 # Session 0117 — WP-030 S1: Coding — Training hooks and MOT evaluation
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S1 gates green; handoff note `DOCS/experiments/0117-wp030-s1-handoff.md`; mandatory S2 audit pending (session 0118)  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-030  
 **Session type:** S1 — Coding  
