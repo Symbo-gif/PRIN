@@ -54,6 +54,12 @@
   marked **COMPLETE**; 0121 (WP-031 S1) is the registered successor
   (already present in `SESSION_REGISTER.md`/`DOCS/sessions/phase-5/` as
   `PLANNED`).
+- **CI:** the S4 push (commit `b91dfdf`, carrying the full S1–S4 range) is
+  **fully green** on `origin/main` — `rust` (10m05s), `python` (17m55s, all
+  8 jobs including all 3 Windows-hosted legs), `parity` (7m02s), `snyk`
+  (59s), `repro` (37s) all `success`; `gpu` `skipped` as expected (no
+  `[gpu]` tag). Satisfies the S4 exit criterion in full — see §5 for the
+  DV-024 context.
 
 ---
 
@@ -279,15 +285,27 @@ so no roadmap text was ever wrong; only the WP-028-era ownership override was.
   this cycle. WP-030 touches no `prin-py` bridge code.
 - **DV-022 (ubuntu runner disk exhaustion):** external infrastructure
   condition. Status: OPEN, unchanged.
-- **DV-024 (self-hosted runner offline):** re-checked live at this session's
-  push preparation (`gh api repos/Symbo-gif/PRIN/actions/runners`, 2026-08-25):
-  `PRIN-GPU-Runner` is still `"status":"offline"`. Status: OPEN, unchanged.
-  This means the `rust`/`python` workflows' Windows matrix leg (migrated to
-  this runner by DV-016/DV-023) will not execute on this cycle's push; the
-  Linux/macOS legs and every hosted-runner workflow (`snyk`, `repro`,
-  `parity`) are unaffected. Local gate reproduction (§2) substitutes for the
-  currently-unavailable Windows CI confirmation, per the evidentiary
-  standard DV-014 established.
+- **DV-024 (self-hosted runner offline):** re-checked live
+  (`gh api repos/Symbo-gif/PRIN/actions/runners`, 2026-08-25):
+  `PRIN-GPU-Runner` is still `"status":"offline"`. Status: OPEN, unchanged —
+  but its practical impact on this cycle's push turned out smaller than
+  initially assumed while drafting this report. The immediately preceding
+  commit (`d9116f4`, predecessor of this WP's S1) had already dropped
+  Windows entirely from `rust.yml`'s matrix (comment: "DV-024: Windows test
+  job requires the self-hosted `PRIN-GPU-Runner`... GitHub-hosted
+  `windows-latest` times out at 120 min... Re-enable when the self-hosted
+  runner is back online"), and `python.yml`'s Windows legs had been reverted
+  from the self-hosted runner back to GitHub-hosted `windows-latest` for the
+  same reason. Neither workflow is blocked by the offline runner this
+  cycle: **the actual push (`b91dfdf`) came back fully green in all six
+  workflows** — `rust` (10m05s, ubuntu+macos only, no Windows leg), `python`
+  (17m55s, all 8 jobs including all 3 Windows-hosted legs), `parity` (7m02s),
+  `snyk` (59s), `repro` (37s), `gpu` (skipped, no `[gpu]` tag, expected).
+  This satisfies Development Workflow and Audit Standards §3's S4 exit
+  criterion in full: "the S4 commit... is pushed to `origin/main`; CI is
+  fully green on that push." DV-024 remains open only because the runner
+  itself is still offline (affecting `gpu.yml` and any future workflow that
+  still targets it), not because this cycle's CI was blocked.
 - **DV-010 (Phase 1/2 pre-release tag):** unchanged — pending explicit
   maintainer tag-push action.
 - **DV-025 (new this cycle):** `SubconsciousController.export_to_onnx`/
