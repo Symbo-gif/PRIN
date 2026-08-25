@@ -272,6 +272,10 @@ impl PyPhaseTrackerBridge {
     pub(crate) fn from_tracker(tracker: PhaseTracker<BridgeBackend>) -> Self {
         Self { tracker }
     }
+
+    pub(crate) fn tracker(&self) -> &PhaseTracker<BridgeBackend> {
+        &self.tracker
+    }
 }
 
 #[pymethods]

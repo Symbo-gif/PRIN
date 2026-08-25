@@ -364,6 +364,10 @@ impl PyTemporalSlotAttentionMOTBridge {
     pub(crate) fn from_tracker(tracker: TemporalSlotAttentionMOT<BridgeBackend>) -> Self {
         Self { tracker }
     }
+
+    pub(crate) fn tracker(&self) -> &TemporalSlotAttentionMOT<BridgeBackend> {
+        &self.tracker
+    }
 }
 
 #[pymethods]

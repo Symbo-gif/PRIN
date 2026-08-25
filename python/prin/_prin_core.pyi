@@ -6,6 +6,7 @@ Regenerated as the Rust API grows; keep in sync with ``crates/prin-py``.
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from typing import Any
 
 import numpy as np
@@ -1093,3 +1094,174 @@ def verify_model_manifest(
 def validate_controller_model(
     path: str | os.PathLike[str], expected_sha256: str | None = None
 ) -> dict[str, Any]: ...
+
+# --- Phase 5 integration (WP-032) ---
+class SubconsciousDaemon:
+    def __init__(
+        self,
+        callback: Callable[[NDArray[np.float32]], NDArray[np.float32]],
+        interval_ms: int = 15_000,
+        queue_size: int = 100,
+        warmup: bool = True,
+        dlq_maxlen: int = 100,
+        max_errors_before_escalation: int = 10,
+    ) -> None: ...
+    def submit_state(self, state: SubconsciousState) -> None: ...
+    def get_control(self) -> ControlSignals: ...
+    def stop(self, timeout_ms: int = 5_000) -> bool: ...
+    @property
+    def inference_count(self) -> int: ...
+    @property
+    def error_count(self) -> int: ...
+    @property
+    def pending_states(self) -> int: ...
+
+class TrainingHooks:
+    def __init__(
+        self, loss_ema_alpha: float = 0.1, latency_window: int = 100
+    ) -> None: ...
+    def on_step_end(
+        self,
+        elapsed_ms: float,
+        loss: float,
+        grad_norms: list[float] | None = None,
+    ) -> None: ...
+    def on_epoch_end(
+        self,
+        epoch: int,
+        loss: float | None = None,
+        r_per_band: list[float] | None = None,
+        r_global: float | None = None,
+        lr_current: float = 1e-3,
+        scalr_alpha: float = 1.0,
+        regime: str = "mean_field",
+        timestamp: float = 0.0,
+    ) -> SubconsciousState: ...
+    @property
+    def loss_ema(self) -> float: ...
+    @property
+    def grad_norm_ema(self) -> float: ...
+    @property
+    def step_count(self) -> int: ...
+
+class MotSummary:
+    mota: float
+    motp: float
+    idf1: float
+    num_matches: int
+    num_switches: int
+    num_misses: int
+    num_false_positives: int
+    num_objects: int
+
+class MotAccumulator:
+    def __init__(self, max_switch_time: int | None = None) -> None: ...
+    def update(
+        self,
+        frame_id: int,
+        object_ids: list[int],
+        hypothesis_ids: list[int],
+        distances: list[list[float]],
+    ) -> None: ...
+    def summary(self) -> MotSummary: ...
+
+def iou_distance_matrix(
+    objects: list[tuple[float, float, float, float]],
+    hypotheses: list[tuple[float, float, float, float]],
+    max_iou_distance: float = 0.5,
+) -> list[list[float]]: ...
+
+class TemporalMetrics:
+    ip: float
+    idsw: int
+    temporal_smoothness: float
+    track_fragmentation_rate: float
+    identity_overcount: float
+    mostly_tracked: float
+    mostly_lost: float
+    mean_track_duration: float
+    median_track_duration: float
+    recovery_speed: float
+    binding_robustness: float
+
+def py_compute_full_temporal_metrics(
+    matches_history: list[list[int]],
+    n_objects: int,
+    positions: list[list[tuple[float, float]]] | None = None,
+    occlusion_mask: list[list[bool]] | None = None,
+    ip_baseline: float | None = None,
+) -> TemporalMetrics: ...
+def identity_switches(matches_history: list[list[int]], n_objects: int) -> int: ...
+def track_fragmentation_rate(
+    matches_history: list[list[int]], n_objects: int
+) -> float: ...
+def identity_overcount(matches_history: list[list[int]], n_objects: int) -> float: ...
+def mostly_tracked_lost(
+    matches_history: list[list[int]],
+    n_objects: int,
+    tracked_threshold: float = 0.8,
+    lost_threshold: float = 0.2,
+) -> tuple[float, float]: ...
+def track_duration_stats(
+    matches_history: list[list[int]], n_objects: int
+) -> tuple[float, float]: ...
+def recovery_speed(
+    matches_history: list[list[int]],
+    occlusion_mask: list[list[bool]],
+    n_objects: int,
+) -> float: ...
+def temporal_smoothness(positions: list[list[tuple[float, float]]]) -> float: ...
+def binding_robustness_score(ip_perturbed: float, ip_baseline: float) -> float: ...
+
+class BootstrapCi:
+    mean: float
+    ci_lower: float
+    ci_upper: float
+    ci_width: float
+    se: float
+
+class WelchTTest:
+    t_stat: float
+    p_value: float
+    cohens_d: float
+    mean_diff: float
+
+class AdversarialEvalResult:
+    clean_ip: float
+    adv_ip: float
+    degradation: float
+    per_seq_clean: list[float]
+    per_seq_adv: list[float]
+
+def py_bootstrap_ci(
+    values: list[float],
+    n_bootstrap: int = 10_000,
+    alpha: float = 0.05,
+    seed_counter: int = 0,
+    seed_key: int = 0,
+) -> BootstrapCi: ...
+def py_welch_t_test(group_a: list[float], group_b: list[float]) -> WelchTTest: ...
+def cohens_d(group_a: list[float], group_b: list[float]) -> float: ...
+def compute_p_value(group_a: list[float], group_b: list[float]) -> float: ...
+def py_adversarial_evaluate_phase_tracker(
+    tracker: PhaseTrackerBridge,
+    epsilon: float,
+    attack: str = "fgsm",
+    pgd_steps: int = 20,
+    n_sequences: int = 4,
+    n_objects: int = 4,
+    n_frames: int = 20,
+    detection_dim: int = 4,
+    seed: int = 0,
+) -> AdversarialEvalResult: ...
+def py_adversarial_evaluate_slot_attention(
+    tracker: TemporalSlotAttentionMOTBridge,
+    epsilon: float,
+    attack: str = "fgsm",
+    pgd_steps: int = 20,
+    n_sequences: int = 4,
+    n_objects: int = 4,
+    n_frames: int = 20,
+    detection_dim: int = 4,
+    seed: int = 0,
+) -> AdversarialEvalResult: ...

@@ -17,8 +17,9 @@
 //! that supplies the same inputs always gets the same answer.
 
 use std::path::PathBuf;
+use std::time::Duration;
 
-use numpy::{PyArray1, PyReadonlyArray1};
+use numpy::{PyArray1, PyArrayMethods, PyReadonlyArray1};
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
@@ -28,6 +29,8 @@ use prin_daemon::backend::{
     BackendSelection, SelectionReason, VitisAiConfig, BACKEND_PRIORITY, DEFAULT_CACHE_KEY,
     DEFAULT_NPU_TARGET, DEFAULT_XCLBIN,
 };
+use prin_daemon::daemon::{DaemonConfig, InferenceBackend, SubconsciousDaemon};
+use prin_daemon::hooks::TrainingHooks;
 use prin_daemon::model::{
     sha256_file, ControllerModel, ModelManifest, CONTROLLER_INPUT_NAME, CONTROLLER_OUTPUT_NAME,
     MANIFEST_FILE_NAME,
@@ -41,7 +44,7 @@ use prin_daemon::DaemonError;
 /// I/O failures become `OSError` so that callers can use the usual
 /// filesystem-error handling; everything else is a `ValueError`, matching the
 /// convention used by the other binding modules.
-fn daemon_err_to_py(err: DaemonError) -> PyErr {
+pub(crate) fn daemon_err_to_py(err: DaemonError) -> PyErr {
     match err {
         DaemonError::Io { ref path, .. } => {
             PyErr::new::<pyo3::exceptions::PyOSError, _>(format!("{path}: {err}"))
@@ -498,6 +501,252 @@ impl PyControlSignals {
 }
 
 // ---------------------------------------------------------------------------
+// Native daemon and training hooks
+// ---------------------------------------------------------------------------
+
+struct PythonInferenceBackend {
+    callback: Py<PyAny>,
+}
+
+impl InferenceBackend for PythonInferenceBackend {
+    fn infer(&mut self, input: &[f32; STATE_DIM]) -> Result<[f32; CONTROL_DIM], DaemonError> {
+        Python::attach(|py| {
+            let input = PyArray1::from_slice(py, input);
+            let result =
+                self.callback
+                    .call1(py, (input,))
+                    .map_err(|error| DaemonError::Inference {
+                        message: error.to_string(),
+                    })?;
+            let array = result.bind(py).cast::<PyArray1<f32>>().map_err(|error| {
+                DaemonError::Inference {
+                    message: format!("callback must return a contiguous float32 vector: {error}"),
+                }
+            })?;
+            let readonly = array.readonly();
+            let values = readonly
+                .as_slice()
+                .map_err(|error| DaemonError::Inference {
+                    message: format!("callback result must be contiguous: {error}"),
+                })?;
+            values.try_into().map_err(|_| DaemonError::Inference {
+                message: format!(
+                    "callback must return exactly {CONTROL_DIM} values, got {}",
+                    values.len()
+                ),
+            })
+        })
+    }
+}
+
+/// Rust-native subconscious daemon backed by a Python inference callback.
+#[pyclass(name = "SubconsciousDaemon", module = "prin._prin_core")]
+pub struct PySubconsciousDaemon {
+    inner: Option<SubconsciousDaemon>,
+}
+
+#[pymethods]
+impl PySubconsciousDaemon {
+    /// Spawn the daemon and begin accepting telemetry states.
+    #[new]
+    #[pyo3(signature = (
+        callback,
+        interval_ms=15_000,
+        queue_size=100,
+        warmup=true,
+        dlq_maxlen=100,
+        max_errors_before_escalation=10,
+    ))]
+    fn new(
+        callback: Py<PyAny>,
+        interval_ms: u64,
+        queue_size: usize,
+        warmup: bool,
+        dlq_maxlen: usize,
+        max_errors_before_escalation: u64,
+    ) -> PyResult<Self> {
+        if queue_size == 0 {
+            return Err(PyValueError::new_err("queue_size must be positive"));
+        }
+        let config = DaemonConfig {
+            interval: Duration::from_millis(interval_ms),
+            queue_size,
+            warmup,
+            dlq_maxlen,
+            max_errors_before_escalation,
+        };
+        let backend = PythonInferenceBackend { callback };
+        let daemon =
+            SubconsciousDaemon::spawn(Box::new(backend), config, None).map_err(daemon_err_to_py)?;
+        Ok(Self {
+            inner: Some(daemon),
+        })
+    }
+
+    /// Submit a telemetry state without blocking.
+    fn submit_state(&self, state: &PySubconsciousState) -> PyResult<()> {
+        self.running()?.submit_state(state.inner.clone());
+        Ok(())
+    }
+
+    /// Return the latest published control signals.
+    fn get_control(&self) -> PyResult<PyControlSignals> {
+        Ok(PyControlSignals {
+            inner: self.running()?.get_control(),
+        })
+    }
+
+    /// Stop the daemon, releasing the interpreter while waiting.
+    #[pyo3(signature = (timeout_ms=5_000))]
+    fn stop(&mut self, py: Python<'_>, timeout_ms: u64) -> bool {
+        let Some(daemon) = self.inner.as_mut() else {
+            return true;
+        };
+        let stopped = py.detach(|| daemon.stop(Duration::from_millis(timeout_ms)));
+        if stopped {
+            self.inner = None;
+        }
+        stopped
+    }
+
+    /// Number of successful callback inferences.
+    #[getter]
+    fn inference_count(&self) -> u64 {
+        self.inner
+            .as_ref()
+            .map_or(0, SubconsciousDaemon::inference_count)
+    }
+
+    /// Number of callback or state-packing failures.
+    #[getter]
+    fn error_count(&self) -> u64 {
+        self.inner
+            .as_ref()
+            .map_or(0, SubconsciousDaemon::error_count)
+    }
+
+    /// Number of queued states not yet processed.
+    #[getter]
+    fn pending_states(&self) -> usize {
+        self.inner
+            .as_ref()
+            .map_or(0, SubconsciousDaemon::pending_states)
+    }
+}
+
+impl PySubconsciousDaemon {
+    fn running(&self) -> PyResult<&SubconsciousDaemon> {
+        self.inner
+            .as_ref()
+            .ok_or_else(|| PyValueError::new_err("daemon has already stopped"))
+    }
+}
+
+impl Drop for PySubconsciousDaemon {
+    fn drop(&mut self) {
+        if let Some(daemon) = self.inner.take() {
+            let _ = std::thread::Builder::new()
+                .name("prin-python-daemon-cleanup".to_string())
+                .spawn(move || drop(daemon));
+        }
+    }
+}
+
+/// Python-facing training telemetry collector.
+#[pyclass(name = "TrainingHooks", module = "prin._prin_core")]
+pub struct PyTrainingHooks {
+    inner: TrainingHooks,
+}
+
+#[pymethods]
+impl PyTrainingHooks {
+    /// Construct a collector with the reference defaults.
+    #[new]
+    #[pyo3(signature = (loss_ema_alpha=0.1, latency_window=100))]
+    fn new(loss_ema_alpha: f64, latency_window: usize) -> PyResult<Self> {
+        Ok(Self {
+            inner: TrainingHooks::new(loss_ema_alpha, latency_window).map_err(daemon_err_to_py)?,
+        })
+    }
+
+    /// Accumulate one step using an explicit elapsed duration in milliseconds.
+    #[pyo3(signature = (elapsed_ms, loss, grad_norms=None))]
+    fn on_step_end(
+        &mut self,
+        elapsed_ms: f64,
+        loss: f64,
+        grad_norms: Option<Vec<f64>>,
+    ) -> PyResult<()> {
+        if !elapsed_ms.is_finite() || elapsed_ms < 0.0 {
+            return Err(PyValueError::new_err(
+                "elapsed_ms must be finite and non-negative",
+            ));
+        }
+        self.inner.on_step_end_with_elapsed(
+            Duration::from_secs_f64(elapsed_ms / 1_000.0),
+            loss,
+            grad_norms.as_deref(),
+        );
+        Ok(())
+    }
+
+    /// Package accumulated telemetry into a controller state.
+    #[pyo3(signature = (
+        epoch,
+        loss=None,
+        r_per_band=None,
+        r_global=None,
+        lr_current=1e-3,
+        scalr_alpha=1.0,
+        regime="mean_field",
+        timestamp=0.0,
+    ))]
+    #[allow(clippy::too_many_arguments)]
+    fn on_epoch_end(
+        &mut self,
+        epoch: i64,
+        loss: Option<f64>,
+        r_per_band: Option<Vec<f64>>,
+        r_global: Option<f64>,
+        lr_current: f64,
+        scalr_alpha: f64,
+        regime: &str,
+        timestamp: f64,
+    ) -> PySubconsciousState {
+        PySubconsciousState {
+            inner: self.inner.on_epoch_end(
+                epoch,
+                loss,
+                r_per_band.unwrap_or_default(),
+                r_global,
+                lr_current,
+                scalr_alpha,
+                Regime::from_name_or_default(regime),
+                timestamp,
+            ),
+        }
+    }
+
+    /// Current loss exponential moving average.
+    #[getter]
+    fn loss_ema(&self) -> f64 {
+        self.inner.loss_ema()
+    }
+
+    /// Current gradient-norm exponential moving average.
+    #[getter]
+    fn grad_norm_ema(&self) -> f64 {
+        self.inner.grad_norm_ema()
+    }
+
+    /// Total recorded step count.
+    #[getter]
+    fn step_count(&self) -> u64 {
+        self.inner.step_count()
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Backend selection
 // ---------------------------------------------------------------------------
 
@@ -808,6 +1057,8 @@ fn validate_controller_model<'py>(
 pub(crate) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PySubconsciousState>()?;
     m.add_class::<PyControlSignals>()?;
+    m.add_class::<PySubconsciousDaemon>()?;
+    m.add_class::<PyTrainingHooks>()?;
     m.add_class::<PyBackendSelection>()?;
     m.add_function(wrap_pyfunction!(select_execution_backend, m)?)?;
     m.add_function(wrap_pyfunction!(backend_provider_names, m)?)?;

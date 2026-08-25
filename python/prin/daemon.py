@@ -59,7 +59,9 @@ from prin._prin_core import (
     STATE_DIM,
     BackendSelection,
     ControlSignals,
+    SubconsciousDaemon,
     SubconsciousState,
+    TrainingHooks,
     backend_priority,
     backend_provider_names,
     backend_provider_options,
@@ -126,7 +128,9 @@ __all__: list[str] = [
     "ControlSignals",
     "OrtUnavailableError",
     "SubconsciousController",
+    "SubconsciousDaemon",
     "SubconsciousState",
+    "TrainingHooks",
     "available_providers",
     "backend_info",
     "backend_priority",
@@ -686,6 +690,39 @@ class SubconsciousController:
         return [
             ControlSignals.from_tensor(np.asarray(row, dtype=np.float64)) for row in raw
         ]
+
+    def spawn_daemon(
+        self,
+        *,
+        interval_ms: int = 15_000,
+        queue_size: int = 100,
+        warmup: bool = True,
+    ) -> SubconsciousDaemon:
+        """Run this controller behind the Rust-native daemon thread.
+
+        Args:
+            interval_ms: Maximum wait between shutdown checks.
+            queue_size: Maximum pending telemetry snapshots; overflow drops the
+                oldest snapshot.
+            warmup: Whether to execute one sentinel inference during startup.
+
+        Returns:
+            A running native daemon whose callback invokes this controller's
+            ONNX Runtime session.
+        """
+
+        def infer(packed: NDArray[np.float32]) -> NDArray[np.float32]:
+            """Evaluate one packed state vector through the ONNX session."""
+            batch = packed.reshape(1, STATE_DIM)
+            result: NDArray[np.float32] = self.run(batch)[0]
+            return result
+
+        return SubconsciousDaemon(
+            infer,
+            interval_ms=interval_ms,
+            queue_size=queue_size,
+            warmup=warmup,
+        )
 
     def close(self) -> None:
         """Release the underlying ONNX Runtime session."""

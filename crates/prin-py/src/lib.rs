@@ -69,5 +69,8 @@ fn _prin_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // ONNX model validation (WP-028)
     bindings::daemon::register(m)?;
 
+    // Daemon/evaluation integration and Phase 5 gate (WP-032)
+    bindings::phase5::register(m)?;
+
     Ok(())
 }

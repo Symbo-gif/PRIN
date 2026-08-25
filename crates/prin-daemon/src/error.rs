@@ -181,6 +181,13 @@ pub enum DaemonError {
         source: std::io::Error,
     },
 
+    /// A Python-backed or native inference callback failed.
+    #[error("controller inference failed: {message}")]
+    Inference {
+        /// Callback diagnostic.
+        message: String,
+    },
+
     /// An ONNX graph input/output dimension did not match the contract.
     #[error("ONNX {kind} `{name}` dimension {index} is {got}; expected {expected}")]
     GraphDim {

@@ -1,0 +1,55 @@
+{
+  "session": "0125-wp032-s1-daemon-evaluation-integration-and-phase-5-gate",
+  "date": "2026-08-25",
+  "purpose": "DV-006 provider acceptance and optional-hardware disposition at the Phase 5 gate.",
+  "environment": {
+    "git_commit_before_s1": "49f7af4",
+    "prin_version": "0.3.0-alpha.1",
+    "python": "3.14.0",
+    "onnxruntime": "1.24.4",
+    "numpy": "2.5.1",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+    "controller_model": "models/subconscious_controller.onnx"
+  },
+  "available_providers": [
+    "DmlExecutionProvider",
+    "CPUExecutionProvider"
+  ],
+  "executable_backends": [
+    "cpu"
+  ],
+  "fallback_attempts": [
+    {"requested": "npu", "resolved": "cpu", "active_providers": ["CPUExecutionProvider"], "error": null},
+    {"requested": "directml", "resolved": "cpu", "active_providers": ["CPUExecutionProvider"], "error": null},
+    {"requested": "cpu", "resolved": "cpu", "active_providers": ["CPUExecutionProvider"], "error": null}
+  ],
+  "directml_probe": {
+    "status": "JUSTIFIED_SKIP",
+    "registered": true,
+    "executable_for_controller_graph": false,
+    "error": "INVALID_GRAPH: DmlFusedGemm input size 2 not in range [min=3, max=3] for fused node_Gemm_144 + node_relu",
+    "governance": "Project Plan amendment #13 and DV-006; EVIDENCE/0109-wp028-s1-controller-provider-report.json records that the archived PRINet 3.0 graph fails identically, establishing a runtime/export graph condition rather than a PRIN integration defect."
+  },
+  "vitisai_probe": {
+    "status": "JUSTIFIED_SKIP",
+    "registered": false,
+    "hardware_available": false,
+    "reason": "The host Ryzen 7 8700F has no XDNA NPU. Ryzen AI SDK 1.7.0 supplies a CPython 3.12 VitisAI wheel, while the project environment is Python 3.14.",
+    "governance": "DV-006 optional-hardware condition; no software-only probe can execute an absent provider on absent hardware."
+  },
+  "cpu_probe": {
+    "status": "PASS",
+    "registered": true,
+    "executable_for_controller_graph": true,
+    "active_providers": ["CPUExecutionProvider"],
+    "tests": [
+      "tests/test_daemon_controller.py::TestCrossProviderAgreement",
+      "tests/test_phase5_integration.py::test_controller_runs_behind_the_native_daemon"
+    ]
+  },
+  "acceptance": {
+    "result": "PASS_WITH_JUSTIFIED_OPTIONAL_HARDWARE_SKIPS",
+    "statement": "Every provider available to execute on this host was exercised. CPU passes. DirectML is registered but cannot compile this graph for the governed amendment-#13 reason and falls back deterministically. VitisAI is neither registered nor backed by compatible hardware/runtime on this host. The existing runtime-probing tests automatically widen coverage when either accelerator becomes executable."
+  }
+}

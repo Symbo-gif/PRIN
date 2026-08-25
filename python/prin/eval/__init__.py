@@ -1,11 +1,43 @@
-"""Evaluation utilities: MOT metrics and temporal metrics.
+"""Rust-backed multi-object tracking and temporal evaluation utilities.
 
-Ports of PRINet 3.0 ``nn/mot_evaluation.py`` and ``utils/temporal_metrics.py``:
-MOTA/MOTP/IDF1, identity switches, identity preservation, synthetic sequence
-generators. Orchestration lives here; hot inner metric loops call the Rust
-core. Implemented during Phase 5.
+The orchestration surface combines ``prin-daemon`` CLEAR-MOT/IDF1 metrics with
+``prin-train`` temporal identity metrics without introducing a dependency
+between those sibling Rust crates. All numerical work remains in
+``prin._prin_core``.
 """
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from prin._prin_core import (
+    MotAccumulator,
+    MotSummary,
+    TemporalMetrics,
+    binding_robustness_score,
+    identity_overcount,
+    identity_switches,
+    iou_distance_matrix,
+    mostly_tracked_lost,
+    recovery_speed,
+    temporal_smoothness,
+    track_duration_stats,
+    track_fragmentation_rate,
+)
+from prin._prin_core import (
+    py_compute_full_temporal_metrics as compute_full_temporal_metrics,
+)
+
+__all__: list[str] = [
+    "MotAccumulator",
+    "MotSummary",
+    "TemporalMetrics",
+    "binding_robustness_score",
+    "compute_full_temporal_metrics",
+    "identity_overcount",
+    "identity_switches",
+    "iou_distance_matrix",
+    "mostly_tracked_lost",
+    "recovery_speed",
+    "temporal_smoothness",
+    "track_duration_stats",
+    "track_fragmentation_rate",
+]
