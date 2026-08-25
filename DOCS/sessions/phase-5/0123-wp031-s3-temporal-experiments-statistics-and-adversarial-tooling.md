@@ -1,6 +1,6 @@
 # Session 0123 — WP-031 S3: Remediation — Temporal experiments, statistics, and adversarial tooling
 
-**Status:** PLANNED  
+**Status:** COMPLETE — mandatory no-change closure (S2 recorded zero findings); delta re-audit CLEAN, see `DOCS/audits/031-wp031-audit.md` §7.
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-031  
 **Session type:** S3 — Remediation  

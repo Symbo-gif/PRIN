@@ -147,6 +147,11 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   CLEAN delta re-audit (full gate suite re-run against a byte-for-byte
   unchanged source tree); 10/10 MOT scenarios match real `motmetrics` 1.4.0;
   coverage ≥98% on all three new modules.
+- [`031-wp031-audit.md`](031-wp031-audit.md) — WP-031 "Temporal experiments,
+  statistics, and adversarial tooling" audit (`PASS`); zero findings; S3
+  no-change closure with CLEAN delta re-audit (full gate suite re-run against
+  an unchanged source tree); Welch parity, attack bounds, deterministic seeds,
+  and ≥95% touched-file coverage independently re-verified.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

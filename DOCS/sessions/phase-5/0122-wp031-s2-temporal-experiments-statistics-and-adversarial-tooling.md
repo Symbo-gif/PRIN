@@ -1,6 +1,6 @@
 # Session 0122 — WP-031 S2: Audit — Temporal experiments, statistics, and adversarial tooling
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S2 audit committed at `8792089`; verdict PASS with zero findings, see `DOCS/audits/031-wp031-audit.md`.
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-031  
 **Session type:** S2 — Audit  

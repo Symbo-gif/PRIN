@@ -168,9 +168,9 @@ is renumbered by an executive mathematical audit.
 | 0118 | 5 | WP-030 | S2 — Audit | [Training hooks and MOT evaluation](phase-5/0118-wp030-s2-training-hooks-and-mot-evaluation.md) | COMPLETE |
 | 0119 | 5 | WP-030 | S3 — Remediation | [Training hooks and MOT evaluation](phase-5/0119-wp030-s3-training-hooks-and-mot-evaluation.md) | COMPLETE |
 | 0120 | 5 | WP-030 | S4 — Documentation | [Training hooks and MOT evaluation](phase-5/0120-wp030-s4-training-hooks-and-mot-evaluation.md) | COMPLETE |
-| 0121 | 5 | WP-031 | S1 — Coding | [Temporal experiments, statistics, and adversarial tooling](phase-5/0121-wp031-s1-temporal-experiments-statistics-and-adversarial-tooling.md) | PLANNED |
-| 0122 | 5 | WP-031 | S2 — Audit | [Temporal experiments, statistics, and adversarial tooling](phase-5/0122-wp031-s2-temporal-experiments-statistics-and-adversarial-tooling.md) | PLANNED |
-| 0123 | 5 | WP-031 | S3 — Remediation | [Temporal experiments, statistics, and adversarial tooling](phase-5/0123-wp031-s3-temporal-experiments-statistics-and-adversarial-tooling.md) | PLANNED |
+| 0121 | 5 | WP-031 | S1 — Coding | [Temporal experiments, statistics, and adversarial tooling](phase-5/0121-wp031-s1-temporal-experiments-statistics-and-adversarial-tooling.md) | COMPLETE |
+| 0122 | 5 | WP-031 | S2 — Audit | [Temporal experiments, statistics, and adversarial tooling](phase-5/0122-wp031-s2-temporal-experiments-statistics-and-adversarial-tooling.md) | COMPLETE |
+| 0123 | 5 | WP-031 | S3 — Remediation | [Temporal experiments, statistics, and adversarial tooling](phase-5/0123-wp031-s3-temporal-experiments-statistics-and-adversarial-tooling.md) | COMPLETE |
 | 0124 | 5 | WP-031 | S4 — Documentation | [Temporal experiments, statistics, and adversarial tooling](phase-5/0124-wp031-s4-temporal-experiments-statistics-and-adversarial-tooling.md) | PLANNED |
 | 0125 | 5 | WP-032 | S1 — Coding | [Daemon/evaluation integration and Phase 5 gate](phase-5/0125-wp032-s1-daemon-evaluation-integration-and-phase-5-gate.md) | PLANNED |
 | 0126 | 5 | WP-032 | S2 — Audit | [Daemon/evaluation integration and Phase 5 gate](phase-5/0126-wp032-s2-daemon-evaluation-integration-and-phase-5-gate.md) | PLANNED |

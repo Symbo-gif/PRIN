@@ -336,8 +336,76 @@ to confirm the committed state matches this audit's evidence.
 
 ## 7. Closure table (appended by S3 remediation)
 
+Per Development Workflow and Audit Standards §3, session 0123 performed the
+mandatory no-change closure. S2 recorded no D1–D4 finding, so no source fix was
+applicable or permitted. The S1 source tree was independently re-verified before
+this documentation-only closure.
+
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(no findings)* | — | — | — |
+| *(no findings — S2 recorded none)* | NO-CHANGE CLOSURE — no source fix applicable or performed | this session's closure commit (documentation only) | §7 delta re-audit below |
 
-**Delta re-audit date:** YYYY-MM-DD — **Result:** CLEAN / findings remain
+### Delta re-audit
+
+**Source-tree identity.** `git diff --stat c8ef833 HEAD -- crates/ python/
+tests/ parity/ Cargo.toml Cargo.lock pyproject.toml models/
+tools/wp031_stats_fixture.py` returned empty before this closure: S2 changed
+only this audit report. The source, dependency, configuration, model, and WP-031
+fixture trees therefore remained identical to the S2-audited S1 state.
+
+**Independent S3 verification (2026-08-25):**
+
+```powershell
+cargo fmt --all -- --check                                                     # exit 0
+cargo clippy --workspace --all-targets -- -D warnings                          # exit 0, no code findings
+$env:CARGO_INCREMENTAL='0'; cargo clippy --workspace --all-targets --features strict-checks -- -D warnings # exit 0, no warnings
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps               # exit 0, 0 warnings
+cargo test --workspace -- --test-threads=1                                     # exit 0, 0 failures
+cargo test --workspace --features strict-checks -- --test-threads=1            # exit 0, 0 failures
+cargo llvm-cov -p prin-train --features strict-checks -- --test-threads=1      # 377 passed; touched files all >=95% lines
+cargo audit                                                                     # exit 0; DV-008/DV-017 only
+.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/             # all checks passed
+.venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/    # 75 files formatted
+.venv\Scripts\mypy python/prin --strict                                       # 28 files, 0 issues
+.venv\Scripts\mypy tools/wp031_stats_fixture.py --strict                      # 1 file, 0 issues
+.venv\Scripts\python -m interrogate -c pyproject.toml python/prin             # 100.0% (262/262)
+.venv\Scripts\python -m interrogate -c pyproject.toml tools/wp031_stats_fixture.py # 100.0% (4/4)
+.venv\Scripts\python -m bandit -r . -c pyproject.toml                         # 0 issues
+.venv\Scripts\python -m pip_audit .                                           # 0 vulnerabilities
+.venv\Scripts\python -m pip_audit -r DOCS/sphinx/requirements.txt             # 0 vulnerabilities
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp # 547 passed, 8 deselected; 99%
+.venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp-full # 1147 passed; 99%
+.venv\Scripts\python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build_s3_0123/html # fresh output; 0 warnings
+.venv\Scripts\python tools/wp001_baseline.py check                            # passed
+.venv\Scripts\python tools/wp031_stats_fixture.py                             # 8 scenarios; committed fixture byte-identical
+```
+
+The serial coverage rerun measured `temporal_metrics.rs` 95.04%, `stats.rs`
+96.77%, `flops.rs` 96.53%, `adversarial.rs` 95.83%, and `trainer.rs` 98.04%
+line coverage. Every touched file remains above the 95% gate. The initial
+parallel coverage attempt encountered the existing order-sensitive
+`bands::tests::gradients_flow_to_every_parameter` assertion; that test passed
+in both serial workspace suites and in the serial coverage rerun, which then
+completed with 377/377 tests green.
+
+**Security delta:**
+
+- Snyk Code, `crates/prin-train`, threshold `low`: 0 issues.
+- Snyk Code, `crates/prin-py`, threshold `low`: 0 issues.
+- Snyk Code, `tools/wp031_stats_fixture.py`, governed threshold `medium`: 0
+  issues. A diagnostic scan at `low` reported one low-severity path-traversal
+  diagnostic on the explicit operator-supplied output-file argument; it is
+  below Coding Standards §6.2's zero-medium+ gate and was neither suppressed
+  nor represented as absent.
+- Snyk Open Source, whole repository (`all_projects=true`, project `.venv`
+  Python), threshold `low`: 0 issues.
+- GitHub's secret-scanning alerts API still reports HTTP 404, "Secret scanning
+  is disabled on this repository"; this is the unchanged DV-009 condition and
+  its approved Gitleaks/branch-protection substitute remains authoritative.
+
+The Welch fixture regenerated byte-identically, Welch parity remained green,
+attack-bound and deterministic-seed tests passed in both workspace modes, and
+no source/configuration/model drift or new governed deviation was found.
+
+**Delta re-audit date:** 2026-08-25 — **Result:** CLEAN (mandatory no-change
+closure; zero findings to close; zero source changes; all governed gates green)

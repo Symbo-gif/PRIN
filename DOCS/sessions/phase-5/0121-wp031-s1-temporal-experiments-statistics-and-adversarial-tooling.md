@@ -1,6 +1,6 @@
 # Session 0121 — WP-031 S1: Coding — Temporal experiments, statistics, and adversarial tooling
 
-**Status:** PLANNED  
+**Status:** COMPLETE — implementation committed at `c8ef833`; acceptance evidence in `DOCS/experiments/0121-wp031-s1-handoff.md`.
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-031  
 **Session type:** S1 — Coding  
