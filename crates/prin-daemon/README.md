@@ -47,6 +47,20 @@ at the same tier, so wiring a real tracker's hypotheses into this
 accumulator is a Python orchestration concern (`python/prin/eval`), not a
 Rust one — see `DOCS/experiments/0117-wp030-s1-handoff.md`.
 
+## Delivered (WP-032)
+
+WP-032 is an integration WP whose Python-facing surface lives in `prin-py`
+(`crates/prin-py/src/bindings/{daemon,phase5}.rs`). The only `prin-daemon`
+change was a single new error variant:
+
+| Module | Contents |
+|---|---|
+| `error` | `DaemonError::Inference` — typed error for Python callback failures during native daemon inference |
+
+The PyO3 bindings in `prin-py` wrap `SubconsciousDaemon` and `TrainingHooks`
+with GIL-safe stop/drop semantics and callback validation. See
+`DOCS/experiments/0125-wp032-s1-handoff.md` for the full integration scope.
+
 ## Features
 
 | Feature | Effect |

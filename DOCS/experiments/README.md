@@ -160,6 +160,16 @@ at the top level until they are folded into the final campaign archive in Phase 
   tracker-wiring to a future `prin-py`/`python/prin/eval` session, and a
   same-session fix for an unrelated newly-published `cargo audit` finding
   (`RUSTSEC-2026-0267`, `stable-vec`).
+- [`0121-wp031-s1-handoff.md`](0121-wp031-s1-handoff.md) — WP-031 S1 handoff
+  to the S2 audit for temporal experiments, statistics, and adversarial
+  tooling: fair PT-vs-SA training framework, temporal tracking-quality
+  metrics, statistical utilities, FLOPs estimation, and FGSM/PGD adversarial
+  robustness evaluation.
+- [`0125-wp032-s1-handoff.md`](0125-wp032-s1-handoff.md) — WP-032 S1 handoff
+  to the S2 audit for daemon/evaluation integration and Phase 5 gate:
+  cross-crate PyO3 bindings for daemon, hooks, MOT, temporal, stats, and
+  adversarial APIs; GIL-safe native daemon lifecycle; provider and latency
+  acceptance evidence.
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at

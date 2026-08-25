@@ -26,5 +26,5 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0125 | WP-032 | S1 — Coding | [Daemon/evaluation integration and Phase 5 gate](0125-wp032-s1-daemon-evaluation-integration-and-phase-5-gate.md) | COMPLETE |
 | 0126 | WP-032 | S2 — Audit | [Daemon/evaluation integration and Phase 5 gate](0126-wp032-s2-daemon-evaluation-integration-and-phase-5-gate.md) | COMPLETE |
 | 0127 | WP-032 | S3 — Remediation | [Daemon/evaluation integration and Phase 5 gate](0127-wp032-s3-daemon-evaluation-integration-and-phase-5-gate.md) | COMPLETE |
-| 0128 | WP-032 | S4 — Documentation | [Daemon/evaluation integration and Phase 5 gate](0128-wp032-s4-daemon-evaluation-integration-and-phase-5-gate.md) | PLANNED |
+| 0128 | WP-032 | S4 — Documentation | [Daemon/evaluation integration and Phase 5 gate](0128-wp032-s4-daemon-evaluation-integration-and-phase-5-gate.md) | COMPLETE |
 

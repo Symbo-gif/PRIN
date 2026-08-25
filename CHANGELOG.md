@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WP-032 Daemon/evaluation integration and Phase 5 gate**
+  (`crates/prin-py/`, `crates/prin-daemon/`, `python/prin/`, Phase 5 fifth
+  and final WP; sessions 0125–0128; audit
+  `DOCS/audits/032-wp032-audit.md`, verdict `PASS`, zero findings):
+  cross-crate integration of the WP-028..WP-031 daemon and experiment-tooling
+  modules into a cohesive evaluation pipeline, with provider and latency
+  acceptance.
+  - `crates/prin-py::bindings::daemon` — native `SubconsciousDaemon` and
+    `TrainingHooks` PyO3 bindings; GIL-safe stop/drop (background thread
+    detaches Python while waiting); callback shape/dtype/contiguity
+    validation.
+  - `crates/prin-py::bindings::phase5` — MOT, temporal metrics, bootstrap
+    CI / Welch t-test / Cohen's d, and adversarial evaluation PyO3 bindings;
+    all delegate to already-parity-dispositioned Rust primitives (no new
+    numerics).
+  - `python/prin/daemon.py` — `SubconsciousController.spawn_daemon()` and
+    public daemon/hooks exports.
+  - `python/prin/eval/__init__.py` — cohesive MOT and temporal evaluation
+    facade (`MotAccumulator`, `compute_full_temporal_metrics`, etc.).
+  - `python/prin/experiments/__init__.py` — statistical
+    (`bootstrap_ci`, `welch_t_test`, `cohens_d`) and public-model
+    adversarial (`adversarial_evaluate_*`) facade.
+  - `python/prin/_prin_core.pyi` — complete type stubs for the added
+    extension surface (8 new Phase 5 types).
+  - `tests/test_phase5_integration.py` — eight end-to-end integration tests
+    covering full pipeline, GIL safety, MOT/temporal, bootstrap/Welch/
+    adversarial, validation, and both tracker families.
+  - `EVIDENCE/0125-wp032-s1-daemon-latency.json` — five-trial lock-free/
+    mutex pilot (p95 200 ns vs. 2700–3000 ns, 13.5×–15× lower) plus
+    direct-reference acceptance.
+  - `EVIDENCE/0125-wp032-s1-provider-acceptance.json` — live provider probe
+    (CPU pass; DirectML graph-incompatible per amendment #13/DV-006;
+    VitisAI absent per DV-006).
+  - Acceptance criteria: daemon latency target met (lock-free p95 200 ns);
+    MOT equivalence 2/2; provider acceptance with justified optional-
+    hardware skips; Phase 5 tag gate green locally. Coverage ≥95% on every
+    changed file (`phase5.rs` 99.62% lines, `daemon.rs` new code 100%,
+    Python 100%). 8 new integration tests.
+  - **Phase 5 exit gate: GREEN** — 5/5 Phase 5 WPs complete (WP-028,
+    WP-029, WP-030, WP-031, WP-032).
+
 - **WP-028 ONNX controller and backend selection** (`crates/prin-daemon/`,
   `crates/prin-py/`, `python/prin/daemon.py`, Phase 5 first WP; sessions
   0109–0112; audit `DOCS/audits/028-wp028-audit.md`, verdict `PASS`, zero

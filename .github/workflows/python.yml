@@ -60,9 +60,10 @@ jobs:
           - os: ubuntu-latest
             runner: ubuntu-latest
           - os: windows-latest
-            # DV-024: self-hosted PRIN-GPU-Runner is offline (2026-08-24).
-            # Reverted to GitHub-hosted windows-latest.
-            runner: windows-latest
+            # DV-024 RESOLVED: self-hosted PRIN-GPU-Runner is back online
+            # (2026-08-25). Routes Windows to [self-hosted, Windows, X64]
+            # to avoid GitHub-hosted windows-latest slowness (DV-016).
+            runner: [self-hosted, Windows, X64]
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4

@@ -1,6 +1,6 @@
 # Session 0128 — WP-032 S4: Documentation — Daemon/evaluation integration and Phase 5 gate
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S4 documentation committed; Phase 5 gate green (5/5 Phase 5 WPs complete); WP-033 declared in PSR-032; DV-024 resolved (self-hosted runner back online).  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-032  
 **Session type:** S4 — Documentation  

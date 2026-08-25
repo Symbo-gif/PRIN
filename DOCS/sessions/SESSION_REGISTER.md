@@ -175,7 +175,7 @@ is renumbered by an executive mathematical audit.
 | 0125 | 5 | WP-032 | S1 — Coding | [Daemon/evaluation integration and Phase 5 gate](phase-5/0125-wp032-s1-daemon-evaluation-integration-and-phase-5-gate.md) | COMPLETE |
 | 0126 | 5 | WP-032 | S2 — Audit | [Daemon/evaluation integration and Phase 5 gate](phase-5/0126-wp032-s2-daemon-evaluation-integration-and-phase-5-gate.md) | COMPLETE |
 | 0127 | 5 | WP-032 | S3 — Remediation | [Daemon/evaluation integration and Phase 5 gate](phase-5/0127-wp032-s3-daemon-evaluation-integration-and-phase-5-gate.md) | COMPLETE |
-| 0128 | 5 | WP-032 | S4 — Documentation | [Daemon/evaluation integration and Phase 5 gate](phase-5/0128-wp032-s4-daemon-evaluation-integration-and-phase-5-gate.md) | PLANNED |
+| 0128 | 5 | WP-032 | S4 — Documentation | [Daemon/evaluation integration and Phase 5 gate](phase-5/0128-wp032-s4-daemon-evaluation-integration-and-phase-5-gate.md) | COMPLETE |
 | 0129 | 6 | WP-033 | S1 — Coding | [Unified benchmark runner and category migration](phase-6/0129-wp033-s1-unified-benchmark-runner-and-category-migration.md) | PLANNED |
 | 0130 | 6 | WP-033 | S2 — Audit | [Unified benchmark runner and category migration](phase-6/0130-wp033-s2-unified-benchmark-runner-and-category-migration.md) | PLANNED |
 | 0131 | 6 | WP-033 | S3 — Remediation | [Unified benchmark runner and category migration](phase-6/0131-wp033-s3-unified-benchmark-runner-and-category-migration.md) | PLANNED |

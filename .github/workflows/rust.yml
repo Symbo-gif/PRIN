@@ -46,11 +46,11 @@ jobs:
         include:
           - os: ubuntu-latest
             runner: ubuntu-latest
-          # DV-024: Windows test job requires the self-hosted PRIN-GPU-Runner
-          # ([self-hosted, Windows, X64]). GitHub-hosted windows-latest times
-          # out at 120 min on the full workspace compile (EA-005 E-F3: ~14x
-          # slower than local hardware for CubeCL-CPU workloads). Re-enable
-          # when the self-hosted runner is back online.
+          - os: windows-latest
+            # DV-024 RESOLVED: self-hosted PRIN-GPU-Runner is back online
+            # (2026-08-25). Routes Windows to [self-hosted, Windows, X64]
+            # to avoid GitHub-hosted windows-latest timeout (DV-016).
+            runner: [self-hosted, Windows, X64]
           - os: macos-latest
             runner: macos-latest
     runs-on: ${{ matrix.runner }}

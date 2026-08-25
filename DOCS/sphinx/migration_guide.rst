@@ -895,3 +895,45 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
     omissions:* the reference defines fields that are never populated by any
     caller; PRIN omits them (documented in rustdoc, model example of
     "document deviations rather than silently absorb").
+
+- ``prin-py`` / ``python/prin`` daemon, evaluation, and experiment
+  integration (WP-032) — cross-crate PyO3 bindings and Python facades that
+  wire the WP-028..WP-031 daemon and experiment-tooling modules into a
+  cohesive evaluation pipeline. All numerics remain in Rust; the Python
+  layer only selects and composes.
+
+  **New PyO3 bindings (``crates/prin-py/src/bindings/``):**
+
+  - ``daemon.rs`` — native ``SubconsciousDaemon`` and ``TrainingHooks``
+    PyO3 classes; GIL-safe stop/drop (background thread detaches Python
+    while waiting for the daemon to join); callback shape/dtype/contiguity
+    validation.
+  - ``phase5.rs`` — ``MotAccumulator``, ``compute_full_temporal_metrics``,
+    ``py_bootstrap_ci``, ``py_welch_t_test``, ``py_cohens_d``,
+    ``adversarial_evaluate_phase_tracker``,
+    ``adversarial_evaluate_slot_attention``.
+
+  **New Python modules:**
+
+  - ``prin.daemon`` — ``SubconsciousController.spawn_daemon()`` and public
+    daemon/hooks exports.
+  - ``prin.eval`` — cohesive MOT and temporal evaluation facade
+    (``MotAccumulator``, ``compute_full_temporal_metrics``, etc.).
+  - ``prin.experiments`` — statistical (``bootstrap_ci``, ``welch_t_test``,
+    ``cohens_d``) and public-model adversarial
+    (``adversarial_evaluate_*``) facade.
+  - ``prin._prin_core`` type stubs — 8 new Phase 5 types:
+    ``SubconsciousDaemon``, ``TrainingHooks``, ``MotSummary``,
+    ``MotAccumulator``, ``TemporalMetrics``, ``BootstrapCi``,
+    ``WelchTTest``, ``AdversarialEvalResult``.
+
+  **Symbol mapping:**
+
+  - ``prinet.nn.subconscious_model.SubconsciousController`` daemon spawn →
+    ``prin.daemon.SubconsciousController.spawn_daemon()``
+  - ``prinet.nn.mot_evaluation.evaluate_tracking`` →
+    ``prin.eval.MotAccumulator`` (metrics core only; tracker-wiring is a
+    Python orchestration concern)
+  - ``prinet.utils.temporal_metrics.*`` → ``prin.eval.compute_full_temporal_metrics``
+  - ``prinet.utils.statistics.*`` → ``prin.experiments.{bootstrap_ci, welch_t_test, cohens_d}``
+  - ``prinet.utils.adversarial.*`` → ``prin.experiments.adversarial_evaluate_*``
