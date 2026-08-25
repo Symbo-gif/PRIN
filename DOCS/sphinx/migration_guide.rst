@@ -832,3 +832,66 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
     those running counters, independently verified against real
     ``motmetrics`` output rather than the reference's internal dataframe
     representation.
+
+- ``prin-train`` temporal experiments, statistics, and adversarial tooling
+  (WP-031) — fair PT-vs-SA training framework, temporal tracking-quality
+  metrics, statistical utilities, FLOPs estimation, and FGSM/PGD adversarial
+  robustness evaluation. All in Rust (``prin-train``); no Python numerics.
+
+  **New modules:**
+
+  - ``prin_train::temporal_metrics`` — ``identity_switches``,
+    ``track_fragmentation``, ``mostly_tracked_mostly_lost``,
+    ``track_duration_stats``, ``recovery_speed``, ``binding_robustness``,
+    ``temporal_smoothness``, ``TemporalMetrics`` aggregate. Direct port of
+    PRINet 3.0 ``utils/temporal_metrics.py``.
+  - ``prin_train::stats`` — ``bootstrap_ci`` (percentile-method bootstrap
+    confidence intervals), ``welch_t_test``/``compute_p_value`` (Welch's
+    t-test with hand-rolled Student's-t p-value via log-gamma),
+    ``cohens_d`` (effect size). Validated against real
+    ``scipy.stats.ttest_ind`` 1.18.0 (8/8 scenarios at ``rtol=1e-9,
+    atol=1e-12``).
+  - ``prin_train::flops`` — ``LayerSpec``/``count_flops``/``FlopsReport``
+    (per-layer FLOPs for Linear, Conv2d, GRU, LayerNorm, BatchNorm2d,
+    Embedding, MultiHeadAttention), ``measure_wall_time``/``WallTimeStats``.
+  - ``prin_train::adversarial`` — ``fgsm_attack``/``pgd_attack``
+    (L-infinity-bounded adversarial perturbation), per-tracker
+    ``adversarial_evaluate_pt``/``adversarial_evaluate_sa`` orchestration,
+    ``adversarial_comparison`` (head-to-head PT-vs-SA robustness).
+
+  **Trainer extensions:**
+
+  - ``train_temporal_slot_attention_mot``/
+    ``evaluate_temporal_slot_attention_mot`` — SA-side counterpart to the
+    existing PT trainer, sharing identical ``TemporalTrainerConfig`` for a
+    fair matched-budget comparison.
+  - ``count_parameters`` — generic over any ``Module`` via
+    ``ModuleVisitor``; verified equal between PT and SA shapes.
+  - ``TrainingSnapshot`` — per-epoch training state snapshot.
+  - ``train_multi_seed`` — multi-seed statistical reliability aggregation
+    (mean/std of loss/metrics across seeds).
+  - ``train_phase_tracker`` now threads ``&mut Seed`` explicitly (Project
+    Plan §4 rule 3).
+
+  **Symbol mapping:**
+
+  - ``prinet.utils.temporal_metrics.*`` → ``prin_train::temporal_metrics::*``
+  - ``prinet.utils.statistics.*`` (bootstrap, Welch, Cohen's d) → ``prin_train::stats::*``
+  - ``prinet.utils.flops.*`` → ``prin_train::flops::*``
+  - ``prinet.utils.adversarial.*`` (FGSM, PGD) → ``prin_train::adversarial::*``
+  - ``prinet.nn.temporal_training.TemporalTrainer`` → ``prin_train::trainer::{train_phase_tracker, train_temporal_slot_attention_mot}``
+
+  **Deliberate deviations:**
+
+  - *Python bindings deferred:* ``prin-py`` PyO3 bindings for the four new
+    modules and ``python/prin/eval``/``experiments`` population are deferred
+    to a future WP (consistent with WP-030's identical deferral for
+    ``hooks.rs``/``mot.rs``). The Rust implementations are complete and
+    tested; only the Python orchestration layer is outstanding.
+  - *Conv2d FLOPs reference discrepancy:* the reference's Conv2d docstring
+    and implementation disagree; PRIN reproduces the reference's *executed*
+    behavior (documented in ``flops.rs`` rustdoc).
+  - *``TrainingSnapshot::slot_entropy`` and ``MultiSeedResult`` dead-field
+    omissions:* the reference defines fields that are never populated by any
+    caller; PRIN omits them (documented in rustdoc, model example of
+    "document deviations rather than silently absorb").

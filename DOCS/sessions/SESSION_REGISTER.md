@@ -171,7 +171,7 @@ is renumbered by an executive mathematical audit.
 | 0121 | 5 | WP-031 | S1 — Coding | [Temporal experiments, statistics, and adversarial tooling](phase-5/0121-wp031-s1-temporal-experiments-statistics-and-adversarial-tooling.md) | COMPLETE |
 | 0122 | 5 | WP-031 | S2 — Audit | [Temporal experiments, statistics, and adversarial tooling](phase-5/0122-wp031-s2-temporal-experiments-statistics-and-adversarial-tooling.md) | COMPLETE |
 | 0123 | 5 | WP-031 | S3 — Remediation | [Temporal experiments, statistics, and adversarial tooling](phase-5/0123-wp031-s3-temporal-experiments-statistics-and-adversarial-tooling.md) | COMPLETE |
-| 0124 | 5 | WP-031 | S4 — Documentation | [Temporal experiments, statistics, and adversarial tooling](phase-5/0124-wp031-s4-temporal-experiments-statistics-and-adversarial-tooling.md) | PLANNED |
+| 0124 | 5 | WP-031 | S4 — Documentation | [Temporal experiments, statistics, and adversarial tooling](phase-5/0124-wp031-s4-temporal-experiments-statistics-and-adversarial-tooling.md) | COMPLETE |
 | 0125 | 5 | WP-032 | S1 — Coding | [Daemon/evaluation integration and Phase 5 gate](phase-5/0125-wp032-s1-daemon-evaluation-integration-and-phase-5-gate.md) | PLANNED |
 | 0126 | 5 | WP-032 | S2 — Audit | [Daemon/evaluation integration and Phase 5 gate](phase-5/0126-wp032-s2-daemon-evaluation-integration-and-phase-5-gate.md) | PLANNED |
 | 0127 | 5 | WP-032 | S3 — Remediation | [Daemon/evaluation integration and Phase 5 gate](phase-5/0127-wp032-s3-daemon-evaluation-integration-and-phase-5-gate.md) | PLANNED |

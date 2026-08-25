@@ -43,6 +43,13 @@ or execute archived reference code.
   `crates/prin-daemon/tests/data/mot_reference_cases.json`, the golden
   fixture `crates/prin-daemon/tests/parity_mot.rs` validates
   `prin_daemon::mot::MotAccumulator` against.
+- `wp031_stats_fixture.py` calls real `scipy.stats.ttest_ind` (1.18.0,
+  `equal_var=False`) to generate
+  `crates/prin-train/tests/data/welch_t_test_reference_cases.json`, the
+  golden fixture `crates/prin-train/tests/parity_stats.rs` validates
+  `prin_train::stats::welch_t_test` against (8 scenarios, `rtol=1e-9,
+  atol=1e-12`). Calls only scipy — never implements any numerical algorithm
+  (per `tools/` policy).
 
 Run the WP-001 validator from the repository root:
 

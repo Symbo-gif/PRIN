@@ -1,6 +1,8 @@
 # Session 0124 — WP-031 S4: Documentation — Temporal experiments, statistics, and adversarial tooling
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S4 gates green; documentation closure committed; Project
+State Report `DOCS/reports/031-project-state.md`; WP-032 declared, sessions
+0125–0128 registered `PLANNED`.  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-031  
 **Session type:** S4 — Documentation  

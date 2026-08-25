@@ -131,6 +131,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Migration Guide; see `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`
     DV-025.
 
+- **WP-031 Temporal experiments, statistics, and adversarial tooling**
+  (`crates/prin-train/`, `tools/wp031_stats_fixture.py`, Phase 5 fourth WP;
+  sessions 0121–0124; audit `DOCS/audits/031-wp031-audit.md`, verdict
+  `PASS`, zero findings): fair PT-vs-SA training framework, temporal
+  tracking-quality metrics, statistical utilities, FLOPs estimation, and
+  FGSM/PGD adversarial robustness evaluation.
+  - `prin_train::trainer` extensions — `train_temporal_slot_attention_mot`/
+    `evaluate_temporal_slot_attention_mot` (SA-side counterpart to the
+    existing PT trainer, sharing identical `TemporalTrainerConfig` for a
+    fair matched-budget comparison), `count_parameters` (generic over any
+    `Module` via `ModuleVisitor`), `TrainingSnapshot`, `train_multi_seed`
+    (multi-seed statistical reliability). `train_phase_tracker` now threads
+    `&mut Seed` explicitly (Project Plan §4 rule 3). PyO3 binding extended
+    with `Seed` parameter and `snapshot_epochs`.
+  - `prin_train::temporal_metrics` — `identity_switches`,
+    `track_fragmentation`, `mostly_tracked_mostly_lost`,
+    `track_duration_stats`, `recovery_speed`, `binding_robustness`,
+    `temporal_smoothness`, `TemporalMetrics` aggregate. Direct port of
+    PRINet 3.0 `utils/temporal_metrics.py`.
+  - `prin_train::stats` — `bootstrap_ci` (percentile-method bootstrap CIs),
+    `welch_t_test`/`compute_p_value` (Welch's t-test with hand-rolled
+    Student's-t p-value), `cohens_d` (effect size). Validated against real
+    `scipy.stats.ttest_ind` 1.18.0: 8/8 scenarios at `rtol=1e-9,
+    atol=1e-12` (`tests/parity_stats.rs`).
+  - `prin_train::flops` — `LayerSpec`/`count_flops`/`FlopsReport` (per-layer
+    FLOPs for Linear, Conv2d, GRU, LayerNorm, BatchNorm2d, Embedding,
+    MultiHeadAttention), `measure_wall_time`/`WallTimeStats`.
+  - `prin_train::adversarial` — `fgsm_attack`/`pgd_attack` (L-infinity
+    bounded), per-tracker `adversarial_evaluate_pt`/
+    `adversarial_evaluate_sa`, `adversarial_comparison`. Reuses
+    `hungarian_similarity_loss` directly (Coding Standards §1.1).
+  - `prin_train::error` — `InvalidBootstrapSamples`, `InvalidBootstrapCi`,
+    `EmptySample`, `InvalidAttackEpsilon` variants.
+  - `tools/wp031_stats_fixture.py`,
+    `crates/prin-train/tests/data/welch_t_test_reference_cases.json`,
+    `crates/prin-train/tests/parity_stats.rs` — 8 scenarios replayed
+    through real `scipy.stats.ttest_ind` and PRIN's `welch_t_test`,
+    agreeing at `rtol=1e-9, atol=1e-12`; fixture independently regenerated
+    byte-for-byte identical.
+  - Acceptance criteria: statistical routines match trusted references
+    (Welch 8/8 at `rtol=1e-9`); matched-budget controls enforced
+    (`count_parameters` generic, shared `TemporalTrainerConfig`); attack
+    bounds (L-infinity ball) and deterministic multi-seed behavior tested.
+    Coverage ≥95% on every new/changed file. 375 lib tests + 1 parity test.
+
 - **Phase 4 recommendation implementation** (inter-phase process improvement, R26–R32
   disposition in `DOCS/ANALYTICS/phase-4/phase-4-recommendation-implementation-governance.md`):
   - Fixed PA4-F1/PA4-F2: `DOCS/PRIN_Project_Plan.md` §6's Phase 4 roadmap row now carries
