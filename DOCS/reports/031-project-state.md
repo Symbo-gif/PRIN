@@ -129,10 +129,7 @@ since.
 
 ## 3. Deviation ledger (cumulative)
 
-No new findings were raised this cycle. S2 recorded zero findings; S3
-performed the mandatory no-change closure. The cumulative table below
-carries forward every row from `DOCS/reports/030-project-state.md` §3
-unchanged and appends the one new no-finding row.
+No new findings were raised this cycle. S2 recorded zero findings; S3 performed the mandatory no-change closure. The cumulative table below carries forward every row from `DOCS/reports/030-project-state.md` §3 unchanged (verified by `tools/check_deviation_ledger.py`, run in two-report mode against this report) and appends the one new no-finding row.
 
 | ID | Raised (cycle) | Severity | Summary | Status | Reference |
 |---|---|---|---|---|---|
