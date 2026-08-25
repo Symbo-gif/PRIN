@@ -1,8 +1,8 @@
 # Session 0125 — WP-032 S1 handoff
 
-**Date:** 2026-08-25  
-**Session:** 0125 — WP-032 S1  
-**Status:** S1 delivered; handoff to mandatory S2 audit (session 0126)  
+**Date:** 2026-08-25
+**Session:** 0125 — WP-032 S1
+**Status:** S1 delivered; handoff to mandatory S2 audit (session 0126)
 **Predecessor:** WP-031 S4 at `49f7af4`
 
 ## Mission and entry conditions
