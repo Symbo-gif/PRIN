@@ -1,6 +1,6 @@
 # Session 0118 — WP-030 S2: Audit — Training hooks and MOT evaluation
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S2 gates green; audit report `DOCS/audits/030-wp030-audit.md`; verdict PASS, zero findings; mandatory S3 remediation pending (session 0119)  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-030  
 **Session type:** S2 — Audit  
