@@ -769,5 +769,66 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   **Deferred to later WPs:**
 
   - ``SubconsciousController.export_to_onnx`` / ``.quantize_onnx`` →
-    **WP-030** (training hooks).
-  - ``retrain_controller`` → **WP-030** (training hooks).
+    **WP-036** (re-targeted at WP-030 S4 from an original WP-030 estimate;
+    WP-030's actual maintainer-approved scope — training hooks and MOT
+    evaluation — never named these symbols, and neither does the Project
+    Plan §6 Phase 5 roadmap row; see
+    `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-025).
+  - ``retrain_controller`` → **WP-036** (same re-targeting; see DV-025).
+
+- ``prin-daemon`` training hooks and MOT evaluation (WP-030) — loss
+  EMA/variance, gradient-norm EMA, and step-latency percentile hooks feeding
+  ``SubconsciousState``; CLEAR-MOT/IDF1 evaluation core validated against
+  real ``py-motmetrics``; deterministic synthetic MOT sequence generators.
+  Rebuilds PRINet 3.0 ``prinet.nn.training_hooks`` (``StateCollector``) and
+  the metrics core of ``prinet.nn.mot_evaluation``.
+
+  **New modules:**
+
+  - ``prin_daemon::hooks`` — ``TrainingHooks``: loss EMA/variance
+    (``StateCollector.loss_ema``/``loss_var`` recurrences, ported exactly),
+    gradient-norm EMA from caller-supplied per-parameter L2 norms, and
+    step-latency window/p50/p95/throughput. ``on_step_start``/
+    ``on_step_end``/``on_step_end_with_elapsed``/``on_epoch_end`` build a
+    ``SubconsciousState`` for ``SubconsciousDaemon::submit_state``.
+  - ``prin_daemon::mot`` — ``MotAccumulator``/``MotSummary`` (MOTA, MOTP,
+    IDF1, identity switches, misses, false positives), ``BBox``/
+    ``iou_distance_matrix``, ``Detection``, ``generate_linear_sequence``/
+    ``generate_crowded_sequence`` (``prin_dynamics::Seed``-driven,
+    deterministic).
+  - ``assignment`` (crate-private) — rectangular Hungarian/Kuhn–Munkres
+    assignment solver with ``motmetrics``-style NaN/Inf "do-not-pair"
+    handling, used by ``MotAccumulator`` for per-frame and global (IDF1)
+    identity matching.
+
+  **Symbol mapping:**
+
+  - ``prinet.nn.training_hooks.StateCollector`` → ``prin_daemon::hooks::TrainingHooks``
+  - ``prinet.nn.mot_evaluation.MOTAccumulator`` (metrics core) → ``prin_daemon::mot::MotAccumulator``
+
+  **Deliberate deviations:**
+
+  - *``on_epoch_end`` returns instead of submitting:* PRINet 3.0's
+    ``StateCollector`` owns the daemon and calls ``submit_state`` itself;
+    ``TrainingHooks::on_epoch_end`` returns the built ``SubconsciousState``
+    and leaves submission to the caller, keeping unit tests free of thread
+    spawning. Daemon integration is proven end-to-end by
+    ``tests/hooks_daemon_integration.rs``.
+  - *No hidden ``r_per_band`` default:* PRINet 3.0 defaults to
+    ``[0.5, 0.5, 0.5]`` when band ratios are unavailable; PRIN requires an
+    explicit ``Vec<f64>`` (empty when unavailable), which
+    ``SubconsciousState::band()`` zero-fills — no silent defaulting.
+  - *``evaluate_tracking``'s tracker-wiring loop is not reproduced:*
+    ``crates/README.md``'s layering places `prin-train` (where
+    ``PhaseTracker`` lives) at the same tier as ``prin-daemon``, so wiring a
+    real tracker's per-frame hypotheses into ``MotAccumulator`` is a Python
+    orchestration concern (``python/prin/eval``), not yet delivered — see
+    `DOCS/experiments/0117-wp030-s1-handoff.md` out-of-scope discovery #1.
+  - *``TRANSFER``/``ASCEND``/``MIGRATE`` event subtypes and the full
+    per-event ``RAW`` log are not reproduced:* the four target metrics
+    (MOTA, MOTP, IDF1, identity switches) only ever consume
+    ``MATCH``/``SWITCH``/``MISS``/``FP`` counts, a running distance sum, and
+    (for IDF1) three frame-presence counters — ``MotAccumulator`` keeps only
+    those running counters, independently verified against real
+    ``motmetrics`` output rather than the reference's internal dataframe
+    representation.

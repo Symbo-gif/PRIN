@@ -211,6 +211,10 @@
       "future_wp": "WP-026",
       "basis": "Comparison model integration is owned by WP-026."
     },
+    "prinet.nn.subconscious_model.retrain_controller": {
+      "future_wp": "WP-036",
+      "basis": "Supervised retraining from telemetry, along with SubconsciousController.export_to_onnx/.quantize_onnx (both class methods, not separately tracked rows), was approved-deferred from WP-028 to WP-030 (WP028-audit A1, DOCS/experiments/0109-wp028-s1-handoff.md). WP-030's actual declared scope (PSR-029 Sec.6: 'loss EMA/gradient/latency hooks, daemon integration, MOTA/MOTP/IDF1/identity switches, and synthetic MOT sequences') and delivered work (DOCS/experiments/0117-wp030-s1-handoff.md) never named these symbols -- neither did the Project Plan Sec.6 Phase 5 roadmap row. Re-targeted to WP-036 ('Finish 175+ symbol mapping') at WP-030 S4, the same Phase-5-to-Phase-6 catch basin already used for DV-005/DV-012's comparable no-textual-home gaps; see DOCS/reports/DEFERRED_VALIDATION_REGISTER.md DV-025."
+    },
     "prinet.utils.cuda_kernels.sparse_coupling_matrix": {
       "future_wp": "WP-009",
       "basis": "Sparse coupling topology construction is owned by WP-009."

@@ -82,6 +82,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     instrumentation valid and latency pilot improves on 3.0. Coverage
     ≥95% on `daemon.rs` (97.16% regions, 97.28% lines). 42 new tests.
 
+- **WP-030 Training hooks and MOT evaluation** (`crates/prin-daemon/`,
+  `tools/wp030_mot_fixture.py`, Phase 5 third WP; sessions 0117–0120; audit
+  `DOCS/audits/030-wp030-audit.md`, verdict `PASS`, zero findings): loss
+  EMA/gradient/latency training hooks, daemon integration, and a CLEAR-MOT/
+  IDF1 evaluation core validated against real `py-motmetrics`.
+  - `prin_daemon::hooks` — `TrainingHooks`: loss EMA/variance,
+    gradient-norm EMA (from caller-supplied per-parameter L2 norms), and
+    step-latency window/p50/p95/throughput, packaged into a
+    `SubconsciousState` for `daemon.submit_state(hooks.on_epoch_end(...))`.
+    Rebuilds PRINet 3.0's `prinet.nn.training_hooks.StateCollector`.
+  - `prin_daemon::mot` — `MotAccumulator`/`MotSummary` (MOTA/MOTP/IDF1/
+    identity switches/misses/false positives), `BBox`/`iou_distance_matrix`,
+    `Detection`, `generate_linear_sequence`/`generate_crowded_sequence`
+    (`prin_dynamics::Seed`-driven, deterministic). Rebuilds the metrics core
+    of PRINet 3.0's `prinet.nn.mot_evaluation`.
+  - `crates/prin-daemon/src/assignment.rs` (crate-private) — rectangular
+    Hungarian/Kuhn–Munkres assignment solver reproducing
+    `motmetrics.lap.add_expensive_edges`'s NaN/Inf "do-not-pair" recipe, used
+    for per-frame and global (IDF1) identity matching.
+  - `crates/prin-daemon/tests/parity_mot.rs`,
+    `crates/prin-daemon/tests/data/mot_reference_cases.json`,
+    `tools/wp030_mot_fixture.py` — 10 scenarios replayed through real
+    `py-motmetrics` 1.4.0 and PRIN's `MotAccumulator`, agreeing at
+    `rtol=1e-9, atol=1e-12`; fixture independently regenerated
+    byte-for-byte identical.
+  - `crates/prin-daemon/tests/hooks_daemon_integration.rs`,
+    `crates/prin-daemon/benches/training_hooks.rs` — end-to-end
+    `TrainingHooks` → `SubconsciousState` → `SubconsciousDaemon` proof and
+    per-call overhead bound/pilot evidence (100k calls well under a 2s
+    ceiling; 4.69 ns–425 ns per call).
+  - Security hygiene: `stable-vec` 0.4.2 → 0.4.3 (`RUSTSEC-2026-0267`
+    double-free/use-after-free fix), a one-line lockfile bump unrelated to
+    this WP's own scope.
+  - Acceptance criteria: metrics match the `motmetrics` reference (10/10
+    scenarios); hook overhead/bounds are tested (bound + property test);
+    deterministic sequence fixtures cover identity edge cases (identity
+    switch, occlusion reappearance, `max_switch_time` boundary). Coverage
+    ≥95% on all three new files (`hooks.rs` 99.75%, `mot.rs` 99.72%,
+    `assignment.rs` 98.89% regions); 54 new tests.
+  - Documentation correction (WP030-F1, D4, this S4): the WP-028-approved
+    deferral of `SubconsciousController.export_to_onnx`/`.quantize_onnx`/
+    `retrain_controller` to "WP-030" was never reflected in WP-030's actual
+    declared scope (PSR-029 §6) or delivered work — those three symbols are
+    training-stack export/retraining behavior, not training-telemetry hooks
+    or MOT evaluation. Re-targeted to WP-036 in `tools/wp001_ownership.json`
+    (regenerating `DOCS/baselines/wp001_api_traceability.md`) and the
+    Migration Guide; see `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`
+    DV-025.
+
 - **Phase 4 recommendation implementation** (inter-phase process improvement, R26–R32
   disposition in `DOCS/ANALYTICS/phase-4/phase-4-recommendation-implementation-governance.md`):
   - Fixed PA4-F1/PA4-F2: `DOCS/PRIN_Project_Plan.md` §6's Phase 4 roadmap row now carries

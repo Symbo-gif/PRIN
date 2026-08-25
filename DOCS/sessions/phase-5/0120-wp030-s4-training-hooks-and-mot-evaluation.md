@@ -1,6 +1,8 @@
 # Session 0120 — WP-030 S4: Documentation — Training hooks and MOT evaluation
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S4 gates green; documentation closure committed; Project
+State Report `DOCS/reports/030-project-state.md`; WP-031 declared, sessions
+0121–0124 registered `PLANNED`.  
 **Roadmap phase:** 5 — Daemon and experiment tooling  
 **Execution unit:** WP-030  
 **Session type:** S4 — Documentation  
