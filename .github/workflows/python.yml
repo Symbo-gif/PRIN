@@ -63,7 +63,10 @@ jobs:
             # DV-024 RESOLVED: self-hosted PRIN-GPU-Runner is back online
             # (2026-08-25). Routes Windows to [self-hosted, Windows, X64]
             # to avoid GitHub-hosted windows-latest slowness (DV-016).
+            # self_hosted: true — Rust is pre-installed; skip dtolnay/rust-toolchain
+            # (requires WSL bash, unavailable on this runner) and rust-cache.
             runner: [self-hosted, Windows, X64]
+            self_hosted: true
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -71,7 +74,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - uses: dtolnay/rust-toolchain@stable
+        if: ${{ !matrix.self_hosted }}
       - uses: Swatinem/rust-cache@v2
+        if: ${{ !matrix.self_hosted }}
       - name: Create virtual environment
         shell: bash
         run: |
