@@ -1,0 +1,86 @@
+{
+  "audit_id": "audit-faae47ccfcb0",
+  "parent_audit_id": null,
+  "request_id": "req-3e3de24f6832",
+  "claim_id": "PW-01",
+  "tool_name": "check_constraint_model",
+  "adapter_name": "z3",
+  "status": "PASS",
+  "severity": "high",
+  "summary": "All 1 quer(y/ies) held: wrap-phase-unique: pass",
+  "detailed_reasoning": "wrap-phase-unique: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+  "normalized_inputs": {
+    "variables": [
+      {
+        "name": "kd",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "w1",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "w2",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "w1 >= 0",
+      "w1 < 6.283185307179586",
+      "w2 >= 0",
+      "w2 < 6.283185307179586",
+      "w1 - w2 == kd*6.283185307179586"
+    ],
+    "queries": [
+      {
+        "query_id": "wrap-phase-unique",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "w1 == w2"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  "assumptions": [],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 10.0,
+  "started_at_utc": "2026-08-26T05:11:22.670Z",
+  "finished_at_utc": "2026-08-26T05:11:22.678Z",
+  "duration_ms": 8,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:2b5be0592472c424501015882d4b377969e6814a59b1bf8db9e0d4c630ab6aea",
+  "output_content_hash": "sha256:0d068e61211a33fbc43642cd3e610f59f62cc3f83383cbf0450f496592aeb599"
+}

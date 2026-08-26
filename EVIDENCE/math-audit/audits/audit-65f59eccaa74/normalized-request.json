@@ -1,0 +1,41 @@
+{
+  "variables": [
+    {
+      "name": "gate",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "phase",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "out",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "gate >= 0",
+    "gate <= 1",
+    "phase >= 0",
+    "phase < 6.283185307179586",
+    "out == gate * phase"
+  ],
+  "queries": [
+    {
+      "query_id": "gpa-output-bounded",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "And(out >= 0, out < 6.283185307179586)"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

@@ -1,0 +1,14 @@
+{
+  "lhs": "lr * cos(0) * r_target * (r_target - r_target)",
+  "rhs": "0",
+  "assumptions": [],
+  "variables": [
+    "lr",
+    "r_target"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 20,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

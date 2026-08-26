@@ -1,0 +1,73 @@
+{
+  "bundle_id": "bundle-9d3beddf8c10",
+  "ledger_id": "ledger-prin-daemon-phase5-properties-001",
+  "request_id": "req-a0a2921a6ca1",
+  "created_at_utc": "2026-08-26T04:47:08.317Z",
+  "overall_status": "FAIL",
+  "claim_verdicts": [
+    {
+      "claim_id": "HUN-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-3960d27486fc"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "IOU-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-6c58d9e04ff1"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "COHEN-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-4f34c764309e"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "WELCH-DF-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-4d8600968ea5"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "GAMMA-REFLECT-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-f92b774926ca"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "BETA-SYM-01",
+      "status": "FAIL",
+      "contributing_audit_ids": [
+        "audit-48f864c6e0fb"
+      ],
+      "reason": "a required check failed to execute (TOOL_ERROR); a missing/errored tool is never treated as PASS"
+    }
+  ],
+  "audit_ids": [
+    "audit-3960d27486fc",
+    "audit-6c58d9e04ff1",
+    "audit-4f34c764309e",
+    "audit-d5e4e93fafc2",
+    "audit-4d8600968ea5",
+    "audit-4a70bc015e0b",
+    "audit-f92b774926ca",
+    "audit-4152dc7e1623",
+    "audit-48f864c6e0fb",
+    "audit-8492f871ed4a"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:d704d3e15d8205b2c6ce40027d2b03fea5f448fa3804809ca8b64a5a260d075b"
+}

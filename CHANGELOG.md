@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Executive Mathematical Audit Session 005 (EMA-005)** — Phase 5 close
+  mathematical audit; report
+  `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_005.md`
+  (`PASS-WITH-REMEDIATION`, findings M-F9–M-F11). Re-verified all 40 existing
+  claims against `79cf971` with zero regressions, including under an
+  unplanned Lean 4.33.0→4.33.1 toolchain auto-upgrade. Independently
+  investigated Phase 5 (`crates/prin-daemon/src/{assignment,mot}.rs`,
+  `crates/prin-train/src/{stats,adversarial}.rs`) for new mathematical
+  content beyond EA-006's source-review disposition and authored a new
+  ledger, `tools/math_audit_claims/prin-daemon-phase5-properties.json`
+  (6 claims: Hungarian-assignment optimality via Z3, IoU-distance
+  boundedness, Cohen's d and Welch-Satterthwaite special-case reductions,
+  Gamma-reflection and Beta-integral identities behind the Student's-t
+  p-value) — all 6 reached genuine SymPy/Z3 `PASS`. Cross-validated every
+  result via independent, out-of-band Wolfram Engine computation
+  (`EVIDENCE/math-audit/manual/ema-005-wolfram-corroboration.{wls,txt}`).
+  M-F9 (D4, `math-audit-mcp`'s `verify_identity` allowlist has no
+  Beta-function support) discovered and worked around with a stronger
+  first-principles derivation. 46 total claims across 9 ledgers; maintainer
+  sign-off requested for the unchanged 7-claim `REQUIRES_HUMAN_REVIEW` set
+  (`DEFERRED_VALIDATION_REGISTER.md` DV-013).
+
 - **Executive Audit Session 006 (EA-006)** — Phase 5 close executive audit;
   report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_006.md`
   (`PASS-WITH-REMEDIATION`, findings E-F1–E-F2). Delta audit of Sessions

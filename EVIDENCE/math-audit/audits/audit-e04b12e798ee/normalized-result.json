@@ -1,0 +1,59 @@
+{
+  "audit_id": "audit-e04b12e798ee",
+  "parent_audit_id": null,
+  "request_id": "req-00e73745c3c0",
+  "claim_id": "SCALR-LR-01",
+  "tool_name": "verify_identity",
+  "adapter_name": "sympy",
+  "status": "PASS",
+  "severity": "high",
+  "summary": "Symbolic proof established: r_min + (1 - r_min)*1**alpha == 1.",
+  "detailed_reasoning": "SymPy reduced (lhs - rhs) to 0 via simplification/assumption refinement. This is a genuine symbolic equivalence proof, not a numeric approximation.",
+  "normalized_inputs": {
+    "lhs": "r_min + (1 - r_min)*1**alpha",
+    "rhs": "1",
+    "assumptions": [],
+    "variables": [
+      "r_min",
+      "alpha"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 40,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  "assumptions": [],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 15.0,
+  "started_at_utc": "2026-08-26T05:11:23.621Z",
+  "finished_at_utc": "2026-08-26T05:11:23.623Z",
+  "duration_ms": 2,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:44dbf603d42a52d982ca96059647d4f691393e1fcd16b7aaedaccac561b0523c",
+  "output_content_hash": "sha256:5fb8106f5532d71f0eb936e6d5c51afaf6c34705b515b691c6036799c4e45029"
+}

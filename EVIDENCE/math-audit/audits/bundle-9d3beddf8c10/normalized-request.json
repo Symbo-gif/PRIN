@@ -1,0 +1,272 @@
+[
+  {
+    "variables": [
+      {
+        "name": "x00",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x01",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x02",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x10",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x11",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x12",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x20",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x21",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x22",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "cost",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "x00 >= 0",
+      "x00 <= 1",
+      "x01 >= 0",
+      "x01 <= 1",
+      "x02 >= 0",
+      "x02 <= 1",
+      "x10 >= 0",
+      "x10 <= 1",
+      "x11 >= 0",
+      "x11 <= 1",
+      "x12 >= 0",
+      "x12 <= 1",
+      "x20 >= 0",
+      "x20 <= 1",
+      "x21 >= 0",
+      "x21 <= 1",
+      "x22 >= 0",
+      "x22 <= 1",
+      "x00 + x01 + x02 == 1",
+      "x10 + x11 + x12 == 1",
+      "x20 + x21 + x22 == 1",
+      "x00 + x10 + x20 == 1",
+      "x01 + x11 + x21 == 1",
+      "x02 + x12 + x22 == 1",
+      "cost == 4*x00 + 1*x01 + 3*x02 + 2*x10 + 0*x11 + 5*x12 + 3*x20 + 2*x21 + 2*x22"
+    ],
+    "queries": [
+      {
+        "query_id": "hungarian-3x3-lower-bound-5",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "cost >= 5"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 15000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "variables": [
+      {
+        "name": "a_vol",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "b_vol",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "i_vol",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "u_vol",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "iou",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "a_vol >= 0",
+      "b_vol >= 0",
+      "i_vol > 0",
+      "i_vol <= a_vol",
+      "i_vol <= b_vol",
+      "u_vol == a_vol + b_vol - i_vol",
+      "iou == i_vol / u_vol"
+    ],
+    "queries": [
+      {
+        "query_id": "iou-bounded-unit-interval",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(iou >= 0, iou <= 1)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "lhs": "sqrt(((n-1)*v + (n-1)*v)/(n+n-2))",
+    "rhs": "sqrt(v)",
+    "assumptions": [
+      "n > 1",
+      "v > 0"
+    ],
+    "variables": [
+      "n",
+      "v"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 30,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "(sqrt(((n-1)*v + (n-1)*v)/(n+n-2))) - (sqrt(v))",
+    "task_type": "simplify",
+    "assumptions": [
+      "n > 1",
+      "v > 0"
+    ],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  {
+    "lhs": "(t + t)**2 / (t**2/(n-1) + t**2/(n-1))",
+    "rhs": "2*(n-1)",
+    "assumptions": [
+      "n > 1",
+      "t > 0"
+    ],
+    "variables": [
+      "t",
+      "n"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 30,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "((t + t)**2 / (t**2/(n-1) + t**2/(n-1))) - (2*(n-1))",
+    "task_type": "simplify",
+    "assumptions": [
+      "n > 1",
+      "t > 0"
+    ],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  {
+    "lhs": "gamma(x)*gamma(1-x)",
+    "rhs": "pi/sin(pi*x)",
+    "assumptions": [
+      "x > 0",
+      "x < 1"
+    ],
+    "variables": [
+      "x"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 30,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "(gamma(x)*gamma(1-x)) - (pi/sin(pi*x))",
+    "task_type": "simplify",
+    "assumptions": [
+      "x > 0",
+      "x < 1"
+    ],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  {
+    "lhs": "betainc_regularized(a, b, 0, x) + betainc_regularized(b, a, 0, 1-x)",
+    "rhs": "1",
+    "assumptions": [
+      "a > 0",
+      "b > 0",
+      "x > 0",
+      "x < 1"
+    ],
+    "variables": [
+      "a",
+      "b",
+      "x"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 40,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "(betainc_regularized(a, b, 0, x) + betainc_regularized(b, a, 0, 1-x)) - (1)",
+    "task_type": "simplify",
+    "assumptions": [
+      "a > 0",
+      "b > 0",
+      "x > 0",
+      "x < 1"
+    ],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  }
+]

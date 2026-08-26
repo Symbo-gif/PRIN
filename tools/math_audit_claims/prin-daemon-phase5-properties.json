@@ -1,0 +1,148 @@
+{
+  "ledger_id": "ledger-prin-daemon-phase5-properties-001",
+  "repository_root": ".",
+  "commit_ref": "79cf971",
+  "claims": [
+    {
+      "claim_id": "HUN-01",
+      "claim_type": "z3_invariant",
+      "statement": "The Hungarian/Kuhn-Munkres assignment solver in assignment.rs's solve_assignment claims optimal cost 5 for the concrete 3x3 cost matrix [[4,1,3],[2,0,5],[3,2,2]] (per the Rust test square_matrix_matches_known_optimum's brute-force check). This claim independently re-derives the same lower bound from scratch via Z3: over the full integer-programming assignment polytope (row-sum=1, col-sum=1, 0/1 entries) for this exact matrix, no feasible assignment achieves a total cost below 5. This is a from-scratch combinatorial-optimization re-derivation, not a re-execution of the Rust brute-force test or the Rust solver itself.",
+      "code_refs": ["crates/prin-daemon/src/assignment.rs:141-209", "crates/prin-daemon/src/assignment.rs:281-296"],
+      "assumptions": {
+        "variables": [
+          {"name": "x00", "sort": "Int"}, {"name": "x01", "sort": "Int"}, {"name": "x02", "sort": "Int"},
+          {"name": "x10", "sort": "Int"}, {"name": "x11", "sort": "Int"}, {"name": "x12", "sort": "Int"},
+          {"name": "x20", "sort": "Int"}, {"name": "x21", "sort": "Int"}, {"name": "x22", "sort": "Int"},
+          {"name": "cost", "sort": "Int"}
+        ],
+        "constraints": [
+          "x00 >= 0", "x00 <= 1", "x01 >= 0", "x01 <= 1", "x02 >= 0", "x02 <= 1",
+          "x10 >= 0", "x10 <= 1", "x11 >= 0", "x11 <= 1", "x12 >= 0", "x12 <= 1",
+          "x20 >= 0", "x20 <= 1", "x21 >= 0", "x21 <= 1", "x22 >= 0", "x22 <= 1",
+          "x00 + x01 + x02 == 1",
+          "x10 + x11 + x12 == 1",
+          "x20 + x21 + x22 == 1",
+          "x00 + x10 + x20 == 1",
+          "x01 + x11 + x21 == 1",
+          "x02 + x12 + x22 == 1",
+          "cost == 4*x00 + 1*x01 + 3*x02 + 2*x10 + 0*x11 + 5*x12 + 3*x20 + 2*x21 + 2*x22"
+        ],
+        "queries": [
+          {"query_id": "hungarian-3x3-lower-bound-5", "kind": "invariant_holds", "invariant": "cost >= 5"}
+        ],
+        "timeout_ms": 15000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "high",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "IOU-01",
+      "claim_type": "z3_invariant",
+      "statement": "BBox::iou's non-degenerate branch (i_vol > 0) computes intersection/union, which is bounded in [0,1] whenever the intersection area does not exceed either box's own area (i_vol <= a_vol, i_vol <= b_vol) -- the geometric fact that makes 1-IoU a valid distance in mot.rs's iou_distance_matrix.",
+      "code_refs": ["crates/prin-daemon/src/mot.rs:72-94", "crates/prin-daemon/src/mot.rs:103-121"],
+      "assumptions": {
+        "variables": [
+          {"name": "a_vol", "sort": "Real"},
+          {"name": "b_vol", "sort": "Real"},
+          {"name": "i_vol", "sort": "Real"},
+          {"name": "u_vol", "sort": "Real"},
+          {"name": "iou", "sort": "Real"}
+        ],
+        "constraints": [
+          "a_vol >= 0", "b_vol >= 0", "i_vol > 0",
+          "i_vol <= a_vol", "i_vol <= b_vol",
+          "u_vol == a_vol + b_vol - i_vol",
+          "iou == i_vol / u_vol"
+        ],
+        "queries": [
+          {"query_id": "iou-bounded-unit-interval", "kind": "invariant_holds", "invariant": "And(iou >= 0, iou <= 1)"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "COHEN-01",
+      "claim_type": "symbolic_identity",
+      "statement": "cohens_d's pooled-standard-deviation formula sqrt(((n_A-1)*var_A + (n_B-1)*var_B)/(n_A+n_B-2)) (stats.rs:169-182) reduces, in the equal-sample-size/equal-variance special case (n_A=n_B=n, var_A=var_B=v), to exactly sqrt(v) -- the textbook single-group standard deviation, corroborating the pooling formula is not mis-weighted.",
+      "code_refs": ["crates/prin-train/src/stats.rs:156-182"],
+      "assumptions": {
+        "lhs": "sqrt(((n-1)*v + (n-1)*v)/(n+n-2))",
+        "rhs": "sqrt(v)",
+        "variables": ["n", "v"],
+        "domain": "real",
+        "assumptions": ["n > 1", "v > 0"],
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 30,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "WELCH-DF-01",
+      "claim_type": "symbolic_identity",
+      "statement": "welch_t_test's Welch-Satterthwaite degrees-of-freedom formula (a_term+b_term)^2 / (a_term^2/(n_A-1) + b_term^2/(n_B-1)) (stats.rs:237-241), in the equal-variance/equal-sample-size special case (a_term=b_term=t, n_A=n_B=n), reduces to exactly 2*(n-1) -- the standard pooled degrees of freedom n_A+n_B-2 in that limit, corroborating the Satterthwaite formula is encoded correctly rather than transposed or mis-squared.",
+      "code_refs": ["crates/prin-train/src/stats.rs:208-250"],
+      "assumptions": {
+        "lhs": "(t + t)**2 / (t**2/(n-1) + t**2/(n-1))",
+        "rhs": "2*(n-1)",
+        "variables": ["t", "n"],
+        "domain": "real",
+        "assumptions": ["n > 1", "t > 0"],
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 30,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "GAMMA-REFLECT-01",
+      "claim_type": "symbolic_identity",
+      "statement": "log_gamma's reflection-formula branch (stats.rs:294-296, used for x < 0.5) relies on Euler's reflection formula Gamma(x)*Gamma(1-x) = pi/sin(pi*x); this claim independently re-derives that identity via SymPy, corroborating the mathematical fact the branch depends on (not a re-execution of the Lanczos-approximation code itself).",
+      "code_refs": ["crates/prin-train/src/stats.rs:282-307"],
+      "assumptions": {
+        "lhs": "gamma(x)*gamma(1-x)",
+        "rhs": "pi/sin(pi*x)",
+        "variables": ["x"],
+        "domain": "real",
+        "assumptions": ["x > 0", "x < 1"],
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 30,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "medium",
+      "crosscheck_required": true
+    },
+    {
+      "claim_id": "BETA-SYM-01",
+      "claim_type": "symbolic_identity",
+      "statement": "student_t_two_tailed_p_value's regularized_incomplete_beta (stats.rs:365-379) normalizes by the complete Beta function B(a,b) = Gamma(a)*Gamma(b)/Gamma(a+b), computed via the log_gamma/exp identity at stats.rs:372-373 (`log_gamma(a+b) - log_gamma(a) - log_gamma(b)`). This claim independently re-derives that normalization from Euler's Beta-integral definition B(a,b) = Integral_0^1 t^(a-1)*(1-t)^(b-1) dt, verifying it equals the Gamma-ratio closed form via SymPy's own (independent) symbolic integration -- not a re-execution of this crate's Lanczos/continued-fraction port.",
+      "code_refs": ["crates/prin-train/src/stats.rs:365-379"],
+      "assumptions": {
+        "lhs": "integrate(t**(a-1)*(1-t)**(b-1), (t, 0, 1))",
+        "rhs": "gamma(a)*gamma(b)/gamma(a+b)",
+        "variables": ["a", "b", "t"],
+        "domain": "real",
+        "assumptions": ["a > 0", "b > 0"],
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 15,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "high",
+      "crosscheck_required": true
+    }
+  ]
+}

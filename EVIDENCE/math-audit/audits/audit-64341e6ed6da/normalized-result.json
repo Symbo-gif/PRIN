@@ -1,0 +1,100 @@
+{
+  "audit_id": "audit-64341e6ed6da",
+  "parent_audit_id": null,
+  "request_id": "req-ceffa49e7f45",
+  "claim_id": "IOU-01",
+  "tool_name": "check_constraint_model",
+  "adapter_name": "z3",
+  "status": "PASS",
+  "severity": "medium",
+  "summary": "All 1 quer(y/ies) held: iou-bounded-unit-interval: pass",
+  "detailed_reasoning": "iou-bounded-unit-interval: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+  "normalized_inputs": {
+    "variables": [
+      {
+        "name": "a_vol",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "b_vol",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "i_vol",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "u_vol",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "iou",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "a_vol >= 0",
+      "b_vol >= 0",
+      "i_vol > 0",
+      "i_vol <= a_vol",
+      "i_vol <= b_vol",
+      "u_vol == a_vol + b_vol - i_vol",
+      "iou == i_vol / u_vol"
+    ],
+    "queries": [
+      {
+        "query_id": "iou-bounded-unit-interval",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(iou >= 0, iou <= 1)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  "assumptions": [],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 10.0,
+  "started_at_utc": "2026-08-26T05:07:39.409Z",
+  "finished_at_utc": "2026-08-26T05:07:39.413Z",
+  "duration_ms": 5,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:8dbee2f8d815cae37e1b9d4cdfff61945b34fe0d2b9276b4d36ce7754cde2053",
+  "output_content_hash": "sha256:ab8e224a606fbf28349a4f224f045d22cbad47553bc79b212fc159ae044656e4"
+}

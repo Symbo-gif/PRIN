@@ -1,0 +1,212 @@
+{
+  "audit_id": "audit-c4758920f616",
+  "parent_audit_id": null,
+  "request_id": "req-e8087afc195f",
+  "claim_id": "TCK-01",
+  "tool_name": "audit_tensor_contract",
+  "adapter_name": "none",
+  "status": "PASS",
+  "severity": "high",
+  "summary": "Contraction compatibility, output signature, and 0 symmetry claim(s) all checked out. Reconstruction: reconstruction matched expected_output (max abs residual 7.11e-15 <= tolerance 1.0e-10).",
+  "detailed_reasoning": "Validated 0 contraction pair(s) across 1 shape trial(s); output rank matched output_signature. Symmetry checks: none requested. reconstruction matched expected_output (max abs residual 7.11e-15 <= tolerance 1.0e-10).",
+  "normalized_inputs": {
+    "expression": "R_ijk = R_ijk (identity contraction; the tool's genuine work is the expected_output numeric comparison, not this trivial einsum)",
+    "tensors": [
+      {
+        "name": "R",
+        "rank": 3,
+        "variance": [],
+        "named_axes": [
+          "i",
+          "j",
+          "k"
+        ],
+        "dimensions": {
+          "i": 3,
+          "j": 4,
+          "k": 2
+        },
+        "dtype": "float64",
+        "expected_symmetries": [],
+        "basis": null,
+        "sample_values": [
+          [
+            [
+              -2.942091015256665e-15,
+              0.9999999999999964
+            ],
+            [
+              2.000000000000001,
+              3.000000000000001
+            ],
+            [
+              3.999999999999999,
+              4.999999999999999
+            ],
+            [
+              6.0,
+              7.0
+            ]
+          ],
+          [
+            [
+              7.999999999999997,
+              8.999999999999996
+            ],
+            [
+              10.000000000000002,
+              11.0
+            ],
+            [
+              11.999999999999998,
+              12.999999999999998
+            ],
+            [
+              13.999999999999996,
+              14.999999999999996
+            ]
+          ],
+          [
+            [
+              16.000000000000004,
+              17.0
+            ],
+            [
+              18.000000000000004,
+              19.000000000000007
+            ],
+            [
+              20.0,
+              21.0
+            ],
+            [
+              22.000000000000004,
+              23.000000000000004
+            ]
+          ]
+        ]
+      }
+    ],
+    "output_signature": {
+      "rank": 3,
+      "named_axes": [
+        "i",
+        "j",
+        "k"
+      ]
+    },
+    "contraction_pairs": [],
+    "index_conventions": {
+      "summation_convention": "explicit",
+      "index_order_matters": true
+    },
+    "required_symmetries": [],
+    "test_shapes": [],
+    "random_seed": 0,
+    "numeric_trials": 8,
+    "expected_output": [
+      [
+        [
+          0.0,
+          1.0
+        ],
+        [
+          2.0,
+          3.0
+        ],
+        [
+          4.0,
+          5.0
+        ],
+        [
+          6.0,
+          7.0
+        ]
+      ],
+      [
+        [
+          8.0,
+          9.0
+        ],
+        [
+          10.0,
+          11.0
+        ],
+        [
+          12.0,
+          13.0
+        ],
+        [
+          14.0,
+          15.0
+        ]
+      ],
+      [
+        [
+          16.0,
+          17.0
+        ],
+        [
+          18.0,
+          19.0
+        ],
+        [
+          20.0,
+          21.0
+        ],
+        [
+          22.0,
+          23.0
+        ]
+      ]
+    ],
+    "output_tolerance": 1e-10
+  },
+  "assumptions": [],
+  "limitations": [
+    "Contraction/output-signature checks without sample_values use synthetic random trial tensors (they validate shape/einsum plumbing, not real code output).",
+    "The `expression` field is documentation only and was not evaluated."
+  ],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": 0,
+  "precision": null,
+  "timeout_seconds": 15.0,
+  "started_at_utc": "2026-08-26T05:06:49.384Z",
+  "finished_at_utc": "2026-08-26T05:06:49.385Z",
+  "duration_ms": 1,
+  "warnings": [],
+  "metrics": [
+    {
+      "name": "reconstruction_max_abs_residual",
+      "value": 7.105427357601002e-15,
+      "unit": null
+    },
+    {
+      "name": "contraction_trials_executed",
+      "value": 1.0,
+      "unit": null
+    }
+  ],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:b0e791bccdf135444b054f935c601684074b301b43b1fff095422b1125d35542",
+  "output_content_hash": "sha256:b3271217015594f8239afa286e1e464bba666e587f32c80417a75a9d2119240f"
+}

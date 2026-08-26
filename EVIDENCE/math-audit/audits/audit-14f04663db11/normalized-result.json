@@ -1,0 +1,77 @@
+{
+  "audit_id": "audit-14f04663db11",
+  "parent_audit_id": null,
+  "request_id": "req-2b1a2ba3cc75",
+  "claim_id": "OP-01",
+  "tool_name": "check_constraint_model",
+  "adapter_name": "z3",
+  "status": "PASS",
+  "severity": "critical",
+  "summary": "All 1 quer(y/ies) held: order-parameter-bounded: pass",
+  "detailed_reasoning": "order-parameter-bounded: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+  "normalized_inputs": {
+    "variables": [
+      {
+        "name": "m",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "r",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "m >= 0",
+      "r == If(m > 1.0, 1.0, m)"
+    ],
+    "queries": [
+      {
+        "query_id": "order-parameter-bounded",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(r >= 0, r <= 1.0)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  "assumptions": [],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 10.0,
+  "started_at_utc": "2026-08-26T05:07:43.870Z",
+  "finished_at_utc": "2026-08-26T05:07:43.872Z",
+  "duration_ms": 3,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:7211a196406edb9557cc1f9a7d15b4610519c5b376b796840a3da0f8fb1a1613",
+  "output_content_hash": "sha256:485af7616cad3444430e30bcb726b65f6ab341bce1cf642c911d626a7d499999"
+}

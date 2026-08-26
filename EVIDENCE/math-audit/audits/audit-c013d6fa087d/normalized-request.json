@@ -1,0 +1,17 @@
+{
+  "lhs": "integrate(t**(a-1)*(1-t)**(b-1), (t, 0, 1))",
+  "rhs": "gamma(a)*gamma(b)/gamma(a+b)",
+  "assumptions": [
+    "a > 0",
+    "b > 0"
+  ],
+  "variables": [
+    "a",
+    "b"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 15,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

@@ -1,0 +1,16 @@
+{
+  "lhs": "r_min + (1 - r_min)*0**alpha",
+  "rhs": "r_min",
+  "assumptions": [
+    "alpha > 0"
+  ],
+  "variables": [
+    "r_min",
+    "alpha"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 20,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

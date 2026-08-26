@@ -1,0 +1,18 @@
+{
+  "lhs": "2*lam*(K_c - K)",
+  "rhs": "2*lam*(K_c - K)",
+  "assumptions": [
+    "K < K_c",
+    "lam > 0"
+  ],
+  "variables": [
+    "lam",
+    "K_c",
+    "K"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 20,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

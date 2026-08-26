@@ -1,0 +1,65 @@
+{
+  "audit_id": "audit-3d3cb4bb0f94",
+  "parent_audit_id": null,
+  "request_id": "req-ceffa49e7f45",
+  "claim_id": "COHEN-01",
+  "tool_name": "verify_identity",
+  "adapter_name": "sympy",
+  "status": "PASS",
+  "severity": "medium",
+  "summary": "Symbolic proof established: sqrt(((n-1)*v + (n-1)*v)/(n+n-2)) == sqrt(v).",
+  "detailed_reasoning": "SymPy reduced (lhs - rhs) to 0 via simplification/assumption refinement. This is a genuine symbolic equivalence proof, not a numeric approximation.",
+  "normalized_inputs": {
+    "lhs": "sqrt(((n-1)*v + (n-1)*v)/(n+n-2))",
+    "rhs": "sqrt(v)",
+    "assumptions": [
+      "n > 1",
+      "v > 0"
+    ],
+    "variables": [
+      "n",
+      "v"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 30,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  "assumptions": [
+    "n > 1",
+    "v > 0"
+  ],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 15.0,
+  "started_at_utc": "2026-08-26T05:07:39.424Z",
+  "finished_at_utc": "2026-08-26T05:07:39.518Z",
+  "duration_ms": 93,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:807d327957188d9a24458afa91424707e879635b453aa65453ca937a47cb1b79",
+  "output_content_hash": "sha256:912123a32f72cbfc1dd66e3f1b592cf6518f1f500a9b8442e3174f14bc7ff6ca"
+}

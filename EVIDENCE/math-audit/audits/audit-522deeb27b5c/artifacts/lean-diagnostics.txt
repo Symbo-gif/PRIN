@@ -1,0 +1,3 @@
+"GRA-01 lean claim: 4-regular, no self-loops, 12 edges, connected -- all decided"
+
+warning: failed to query latest release, using existing version 'leanprover/lean4:v4.33.1'

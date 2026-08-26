@@ -1,0 +1,20 @@
+{
+  "lhs": "betainc_regularized(a, b, 0, x) + betainc_regularized(b, a, 0, 1-x)",
+  "rhs": "1",
+  "assumptions": [
+    "a > 0",
+    "b > 0",
+    "x > 0",
+    "x < 1"
+  ],
+  "variables": [
+    "a",
+    "b",
+    "x"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 40,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

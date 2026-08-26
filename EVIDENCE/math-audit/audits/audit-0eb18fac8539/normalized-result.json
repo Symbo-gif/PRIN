@@ -1,0 +1,54 @@
+{
+  "audit_id": "audit-0eb18fac8539",
+  "parent_audit_id": null,
+  "request_id": "req-6f5d6ba5dd28",
+  "claim_id": "GPU-KNN-01",
+  "tool_name": "wolfram_crosscheck",
+  "adapter_name": "wolfram",
+  "status": "SKIPPED_BY_POLICY",
+  "severity": "high",
+  "summary": "Wolfram adapter unavailable or disabled by policy.",
+  "detailed_reasoning": "Wolfram adapter disabled by policy (adapters.enable_wolfram=false)",
+  "normalized_inputs": {
+    "expression": "((K/d)*sin(0 - 0) + (K/d)*sin(0 - 0) + (K/d)*sin(0 - 0)) - (0)",
+    "task_type": "simplify",
+    "assumptions": [],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  "assumptions": [],
+  "limitations": [
+    "No Wolfram evaluation was attempted. This is never treated as a PASS."
+  ],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 20.0,
+  "started_at_utc": "2026-08-26T05:07:44.115Z",
+  "finished_at_utc": "2026-08-26T05:07:44.115Z",
+  "duration_ms": 0,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:8752c904cf65ff3948816013d5a674f0d274a858a28af435a6ae8ca6c4adf4b2",
+  "output_content_hash": "sha256:1389ee680984a1722943977d4acde8ba7971f3be71a261657a3e66fbd16efe79"
+}

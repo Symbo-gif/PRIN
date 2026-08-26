@@ -1,0 +1,38 @@
+{
+  "variables": [
+    {
+      "name": "delta",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "mask",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "out",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "mask == 0",
+    "out == delta * mask"
+  ],
+  "queries": [
+    {
+      "query_id": "diagonal-always-zero",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "out == 0"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

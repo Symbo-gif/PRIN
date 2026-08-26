@@ -1,0 +1,73 @@
+{
+  "bundle_id": "bundle-9095c291f5d9",
+  "ledger_id": "ledger-prin-daemon-phase5-properties-001",
+  "request_id": "req-ceffa49e7f45",
+  "created_at_utc": "2026-08-26T05:07:39.647Z",
+  "overall_status": "FAIL",
+  "claim_verdicts": [
+    {
+      "claim_id": "HUN-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-b83ec3f48bf2"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "IOU-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-64341e6ed6da"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "COHEN-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-3d3cb4bb0f94"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "WELCH-DF-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-7197618c0c6b"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "GAMMA-REFLECT-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-2d039e395902"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "BETA-SYM-01",
+      "status": "FAIL",
+      "contributing_audit_ids": [
+        "audit-dd2174d4ea6c"
+      ],
+      "reason": "a required check failed to execute (TOOL_ERROR); a missing/errored tool is never treated as PASS"
+    }
+  ],
+  "audit_ids": [
+    "audit-b83ec3f48bf2",
+    "audit-64341e6ed6da",
+    "audit-3d3cb4bb0f94",
+    "audit-e413985abe39",
+    "audit-7197618c0c6b",
+    "audit-217547b15414",
+    "audit-2d039e395902",
+    "audit-9303345dae37",
+    "audit-dd2174d4ea6c",
+    "audit-2baa7f14c1ef"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:68e4b88813c6d91a06a85a61e39cd6b5cc593e78d731bc521b59f76706f9c7a7"
+}

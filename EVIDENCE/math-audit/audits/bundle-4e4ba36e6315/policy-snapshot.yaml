@@ -1,0 +1,72 @@
+policy_name: prin-ema
+description: 'PRIN Executive Mathematical Audit policy: symbolic/formal evidence required
+  for high/critical claims, no probabilistic-numeric PASS at any severity, tool errors
+  and inconclusive results both escalate rather than defaulting to human review, optional
+  runtimes (Lean, Wolfram) disabled pending a separate plan amendment.
+
+  '
+repository:
+  allowed_roots:
+  - C:\dev\PRIN
+  output_root: C:\dev\PRIN\EVIDENCE\math-audit
+limits:
+  max_expression_length: 800
+  max_expression_depth: 32
+  max_graph_nodes: 1000
+  max_graph_edges: 4000
+  max_tensor_dimension: 16
+  max_tensor_elements: 200000
+  max_numeric_trials: 500
+  max_ode_evaluations: 500000
+  max_artifact_bytes: 2000000
+  default_timeout_seconds: 15.0
+adapters:
+  allowed:
+  - sympy
+  - scipy
+  - mpmath
+  - z3
+  - networkx
+  - lean
+  - wolfram
+  - pysat
+  enable_lean: true
+  enable_wolfram: false
+  enable_pysat: true
+  enable_subprocess: true
+symbolic:
+  enable_symbolic_evaluation: true
+verdict_rules:
+  claim_type_required_checks:
+    symbolic_identity:
+    - verify_identity
+    ode_property:
+    - audit_ode
+    numerical_convergence:
+    - audit_ode
+    tensor_contract:
+    - audit_tensor_contract
+    graph_topology:
+    - audit_graph_topology
+    graph_regularity_sat:
+    - audit_graph_regularity_sat
+    z3_invariant:
+    - check_constraint_model
+    lean_theorem:
+    - verify_lean_claim
+    code_contract:
+    - check_constraint_model
+    workflow_safety:
+    - check_constraint_model
+  severities_requiring_crosscheck:
+  - medium
+  - high
+  - critical
+  tool_error_treatment: fail
+  inconclusive_treatment: fail
+  allow_probabilistic_numeric_pass: false
+  high_severity_requires_symbolic_or_formal: true
+evidence:
+  retain_raw_logs: true
+  redact_secrets: true
+  bundle_mode: complete

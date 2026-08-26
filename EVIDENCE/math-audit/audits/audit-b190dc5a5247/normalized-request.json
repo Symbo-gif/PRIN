@@ -1,0 +1,7 @@
+{
+  "project_path": ".",
+  "theorem_name": null,
+  "code_snippet": "-- Formal (kernel-checked, decide-based) verification of TEN-01:\n-- build_ring(N=6, k_ring=4, K=1.0)'s weighted coupling matrix (weight\n-- K/k_ring = 0.25 between connected pairs, 0 elsewhere) is symmetric.\n-- Represented as 4*W over Nat (0 or 1) to keep `decide` inside kernel-checked\n-- Nat arithmetic (Rat's GCD-normalising ops get stuck under plain `decide`);\n-- symmetry of 4*W over Nat is equivalent to symmetry of W since scaling by\n-- the positive constant 4 is injective. Literal values match\n-- tools/math_audit_claims/prin-dynamics-tensor-contracts.json (sample_values\n-- divided by the common weight 0.25).\n\ndef WScaledRows : List (List Nat) :=\n  [[0, 1, 1, 0, 1, 1],\n   [1, 0, 1, 1, 0, 1],\n   [1, 1, 0, 1, 1, 0],\n   [0, 1, 1, 0, 1, 1],\n   [1, 0, 1, 1, 0, 1],\n   [1, 1, 0, 1, 1, 0]]\n\ndef WScaled (i j : Fin 6) : Nat :=\n  ((WScaledRows.getD i.val []).getD j.val 0)\n\nexample : \u2200 i j : Fin 6, WScaled i j = WScaled j i := by decide\n\n#eval \"TEN-01 lean claim: weight matrix symmetry -- decided\"\n",
+  "expected_outcome": "proves",
+  "timeout_seconds": 60.0
+}

@@ -1,0 +1,14 @@
+{
+  "lhs": "sin(atan2(sin(a - b), cos(a - b)))",
+  "rhs": "sin(a - b)",
+  "assumptions": [],
+  "variables": [
+    "a",
+    "b"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 40,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

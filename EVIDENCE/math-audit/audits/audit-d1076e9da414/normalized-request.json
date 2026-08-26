@@ -1,0 +1,31 @@
+{
+  "variables": [
+    {
+      "name": "d",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "o",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "o == If(d < -10000.0, -10000.0, If(d > 10000.0, 10000.0, d))"
+  ],
+  "queries": [
+    {
+      "query_id": "deriv-clamp-bounded-sign-preserving",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "And(Abs(o) <= 10000.0, Implies(d >= 0, o >= 0), Implies(d <= 0, o <= 0))"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}
