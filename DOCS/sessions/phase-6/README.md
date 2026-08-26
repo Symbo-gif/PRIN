@@ -9,7 +9,7 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 |---:|---|---|---|---|
 | 0129 | WP-033 | S1 — Coding | [Unified benchmark runner and category migration](0129-wp033-s1-unified-benchmark-runner-and-category-migration.md) | PLANNED |
 | 0130 | WP-033 | S2 — Audit | [Unified benchmark runner and category migration](0130-wp033-s2-unified-benchmark-runner-and-category-migration.md) | PLANNED |
-| 0131 | WP-033 | S3 — Remediation | [Unified benchmark runner and category migration](0131-wp033-s3-unified-benchmark-runner-and-category-migration.md) | PLANNED |
+| 0131 | WP-033 | S3 — Remediation | [Unified benchmark runner and category migration](0131-wp033-s3-unified-benchmark-runner-and-category-migration.md) | COMPLETE |
 | 0132 | WP-033 | S4 — Documentation | [Unified benchmark runner and category migration](0132-wp033-s4-unified-benchmark-runner-and-category-migration.md) | PLANNED |
 | 0133 | WP-034 | S1 — Coding | [Reporting, figures, tables, and profiling](0133-wp034-s1-reporting-figures-tables-and-profiling.md) | PLANNED |
 | 0134 | WP-034 | S2 — Audit | [Reporting, figures, tables, and profiling](0134-wp034-s2-reporting-figures-tables-and-profiling.md) | PLANNED |

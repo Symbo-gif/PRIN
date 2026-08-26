@@ -209,6 +209,62 @@ One D2 finding (WP033-F1): two tests fail under the project's documented Windows
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(pending S3)* | | | |
+| WP033-F1 | FIXED | `6eb4e8b` | Both affected tests pass with the default pytest temp root and `--basetemp=.pytest_basetemp`; the full fast suite passes under the governed in-repository basetemp. Production `_ALLOWED_ROOTS` is unchanged. |
 
-**Delta re-audit date:** *(pending S3)* — **Result:** *(pending)*
+### Delta re-audit
+
+Session 0131 changed only the two tests identified by WP033-F1. Each test now
+monkeypatches `_ALLOWED_ROOTS` to its own resolved `tmp_path`, making the test's
+write root explicit without broadening the production writer's confinement
+policy.
+
+| Check | Result |
+|---|---|
+| A1 — scope | PASS — only WP033-F1's two affected tests changed; no feature or production-source change |
+| A2/A4 — architecture and parity | PASS — no numerical or production implementation changed |
+| A3 — tests and coverage | PASS — targeted tests pass in both temp modes; WP suite 49 passed / 1 slow deselected; `benchmarks/` 99% line coverage |
+| A5 — quality | PASS — Ruff check/format, mypy strict, interrogate, cargo fmt, clippy, and rustdoc gates clean |
+| A6 — security | PASS — production output confinement unchanged; Snyk Code 0 issues on the modified test; native audits clean at governed thresholds |
+| A7/A8 — documentation and hygiene | PASS — 100% governed Python docstring coverage; `git diff --check` clean; no generated result artefacts tracked |
+| A9 — local regression gate | PASS — 624 passed / 9 deselected under `--basetemp=.pytest_basetemp`; full Python/parity suite 1225 passed; all `cargo test --workspace` binaries and doctests passed (one established expensive test ignored) |
+| A10 — artefact trail | PASS — finding-specific commit, closure table, session brief, and session-register status recorded |
+
+**Independent S3 verification (2026-08-26, Windows 11 / Rust 1.92.0 / Python
+3.14.0):**
+
+```powershell
+.venv\Scripts\python -m pytest tests/test_benchrunner.py::TestWriteResult::test_writes_inside_results_dir tests/test_benchrunner.py::TestBenchrunnerCli::test_runs_one_named_benchmark_and_writes_json --basetemp=.pytest_basetemp -q  # 2 passed
+.venv\Scripts\python -m pytest tests/test_benchrunner.py::TestWriteResult::test_writes_inside_results_dir tests/test_benchrunner.py::TestBenchrunnerCli::test_runs_one_named_benchmark_and_writes_json -q  # 2 passed
+.venv\Scripts\python -m pytest tests/test_benchrunner.py -m "not slow and not gpu" --cov=benchmarks --cov-report=term-missing --basetemp=.pytest_basetemp -q  # 49 passed, 1 deselected; 99%
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp  # 624 passed, 9 deselected; 99%
+.venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp-full -q  # 1225 passed; 99%
+.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/             # clean
+.venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/    # 119 files already formatted
+.venv\Scripts\mypy python/prin --strict                                       # 28 files, 0 issues
+.venv\Scripts\python -m interrogate -c pyproject.toml python/prin             # 100.0% (266/266)
+.venv\Scripts\python -m bandit -r python/prin -c pyproject.toml               # 0 issues
+cargo fmt --all -- --check                                                     # clean
+$env:CARGO_INCREMENTAL='0'; cargo clippy --workspace --all-targets -- -D warnings  # clean
+cargo test --workspace                                                        # all binaries/doctests passed; 1 established expensive test ignored
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps               # clean
+cargo audit                                                                    # exit 0; DV-008/DV-017 allowed warnings only
+.venv\Scripts\python -m pip_audit .                                           # 0 vulnerabilities
+.venv\Scripts\python -m pip_audit -r DOCS/sphinx/requirements.txt             # 0 vulnerabilities
+.venv\Scripts\python tools/wp001_baseline.py check                            # passed
+.venv\Scripts\python tools/check_dv_register_gates.py                         # passed; 29 rows / 198 sessions
+.venv\Scripts\python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build_s3_0131/html  # fresh output; 0 warnings
+```
+
+The defense-in-depth whole-repository Bandit scan also found only the two
+pre-existing Low-severity `assert` uses in
+`EVIDENCE/math-audit/manual/mf9-beta-allowlist-verification.py`; neither file nor
+finding is attributable to WP033-F1. No dependency manifest changed, so no
+change-attributable Snyk Open Source scan was required. Snyk Code scanned
+`tests/test_benchrunner.py` at the Low threshold and returned 0 issues.
+
+The WP acceptance evidence remains intact: all 58 verified legacy scripts retain
+traceability rows, all registered replacements execute in the WP suite, schema
+compatibility tests pass, and the minimum-ten-iteration tests pass. No final
+measurements or scientific conclusions were produced.
+
+**Delta re-audit date:** 2026-08-26 — **Result: CLEAN. WP033-F1 closed; no newly introduced deviation.**

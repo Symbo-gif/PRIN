@@ -197,7 +197,7 @@ introduction and are not retroactively added here; this table starts with
 | 0128 | 5 | WP-032 | S4 — Documentation | [Daemon/evaluation integration and Phase 5 gate](phase-5/0128-wp032-s4-daemon-evaluation-integration-and-phase-5-gate.md) | COMPLETE |
 | 0129 | 6 | WP-033 | S1 — Coding | [Unified benchmark runner and category migration](phase-6/0129-wp033-s1-unified-benchmark-runner-and-category-migration.md) | PLANNED |
 | 0130 | 6 | WP-033 | S2 — Audit | [Unified benchmark runner and category migration](phase-6/0130-wp033-s2-unified-benchmark-runner-and-category-migration.md) | PLANNED |
-| 0131 | 6 | WP-033 | S3 — Remediation | [Unified benchmark runner and category migration](phase-6/0131-wp033-s3-unified-benchmark-runner-and-category-migration.md) | PLANNED |
+| 0131 | 6 | WP-033 | S3 — Remediation | [Unified benchmark runner and category migration](phase-6/0131-wp033-s3-unified-benchmark-runner-and-category-migration.md) | COMPLETE |
 | 0132 | 6 | WP-033 | S4 — Documentation | [Unified benchmark runner and category migration](phase-6/0132-wp033-s4-unified-benchmark-runner-and-category-migration.md) | PLANNED |
 | 0133 | 6 | WP-034 | S1 — Coding | [Reporting, figures, tables, and profiling](phase-6/0133-wp034-s1-reporting-figures-tables-and-profiling.md) | PLANNED |
 | 0134 | 6 | WP-034 | S2 — Audit | [Reporting, figures, tables, and profiling](phase-6/0134-wp034-s2-reporting-figures-tables-and-profiling.md) | PLANNED |

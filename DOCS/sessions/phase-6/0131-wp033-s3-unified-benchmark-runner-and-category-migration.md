@@ -1,6 +1,6 @@
 # Session 0131 — WP-033 S3: Remediation — Unified benchmark runner and category migration
 
-**Status:** PLANNED  
+**Status:** COMPLETE — WP033-F1 FIXED (`6eb4e8b`); delta re-audit CLEAN, see `DOCS/audits/033-wp033-audit.md` §7.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-033  
 **Session type:** S3 — Remediation  
