@@ -81,7 +81,19 @@ jobs:
           }
           exit $LASTEXITCODE
       - name: Kernel performance regression gates
-        run: cargo bench --workspace --features cuda -- --save-baseline ci
+        # `cargo bench --workspace -- <criterion-args>` forwards those args
+        # to *every* bench-profile binary it builds, including each crate's
+        # own implicit lib target (Cargo defaults `bench = true` on `[lib]`
+        # unless a crate opts out) -- not just the `[[bench]]`-declared
+        # criterion targets. prin-daemon's plain `#[cfg(test)]` unit tests
+        # (compiled as `Running unittests src\lib.rs`) don't understand
+        # criterion's `--save-baseline`, so the whole invocation failed
+        # before any real bench ever ran -- this gate had never once
+        # succeeded in gpu.yml's history prior to this fix. Listing every
+        # `[[bench]]` target explicitly (`--bench <name>`, one per crate's
+        # Cargo.toml declaration) restricts the run to real criterion
+        # benches only, verified locally against this exact command shape.
+        run: cargo bench --workspace --features cuda --bench control_buffer --bench training_hooks --bench mean_field_rk4_bench --bench sparse_knn_bench --bench discrete_step_bench --bench sweep_bench --bench gpu_bench --bench resonance_layer_bridge --bench phase_tracker_bridge -- --save-baseline ci
 
   gpu-wgpu:
     # Closes DV-002: wgpu kernel-equivalence tests deferred from the default
