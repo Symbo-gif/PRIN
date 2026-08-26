@@ -185,6 +185,15 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   FIXED), E-F2 (D3, ubuntu runner disk exhaustion, DV-022), E-F3 (D3,
   windows-latest CubeCL timeout, DV-023), E-F4 (D4, phase-4 README status
   mismatch, FIXED), E-F5 (D4, CHANGELOG missing WP-027, FIXED).
+- [`EXECUTIVE_AUDIT_REPORT_006.md`](EXECUTIVE_AUDIT_REPORT_006.md) — Sixth
+  project-level executive audit (EA-006, 2026-08-26), `PASS-WITH-REMEDIATION`;
+  delta audit of Phase 5 close (WP-028..WP-032, sessions 0109–0128) plus two
+  post-close CI hotfix commits (`cb5660b`, `5d90427`). Two findings: E-F1
+  (D3, hotfix commits never recorded in the deviation ledger, DV-024 left
+  stale, FIXED), E-F2 (D3, Phase 4 recommendation R28's precondition — a
+  dedicated hotfix/correction session for flaky-test DV-019 before WP-028 S1
+  — was never honored and Phase 5 closed anyway; remediated at the
+  governance level with a hard entry-condition gate now on WP-033 S1).
 - [`EXECUTIVE_MATH_AUDIT_REPORT_001.md`](EXECUTIVE_MATH_AUDIT_REPORT_001.md) —
   First Executive Mathematical Audit (EMA-001, 2026-08-14), `FAIL`; introduces
   `math-audit-mcp` independent tool-executed re-verification (SymPy/SciPy/

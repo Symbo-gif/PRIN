@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Executive Audit Session 006 (EA-006)** — Phase 5 close executive audit;
+  report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_006.md`
+  (`PASS-WITH-REMEDIATION`, findings E-F1–E-F2). Delta audit of Sessions
+  0109–0128 (WP-028..WP-032, Phase 5 close) plus two post-close CI hotfix
+  commits, plus full-project re-verification (1441+122+3 Rust tests, 1155
+  Python/parity tests, all clean quality/security/docs gates, live CI
+  6/6 non-skip workflows `success`). E-F1 (D3, hotfix commits
+  `cb5660b`/`5d90427` never recorded in the deviation ledger, leaving DV-024
+  stale) FIXED. E-F2 (D3, Phase 4 recommendation R28's precondition — a
+  dedicated hotfix/correction session for DV-019 before WP-028 S1 — was
+  never honored, and Phase 5 closed anyway) remediated at the governance
+  level: compliance gap recorded, and WP-033 S1's session brief now carries
+  a hard entry-condition gate so it cannot silently recur.
+
 - **WP-032 Daemon/evaluation integration and Phase 5 gate**
   (`crates/prin-py/`, `crates/prin-daemon/`, `python/prin/`, Phase 5 fifth
   and final WP; sessions 0125–0128; audit
@@ -608,6 +622,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolved by documented sign-off per DV-013/R20).
 
 ### Fixed
+
+- **Post-Phase-5 CI hotfixes (2026-08-25, commits `cb5660b`/`5d90427`; recorded
+  retroactively by EA-006, `[RETROACTIVE UPDATE - Executive Audit 006]`):**
+  two maintainer-authored hotfix commits landed on `main` immediately after
+  WP-032 S4 (`a19dbfe`) closed Phase 5, legitimately bypassing S1 ordering
+  under Development Workflow and Audit Standards §7 (the `python` workflow
+  was failing live on `main`) but never recorded in the deviation ledger or
+  this changelog at the time, per §7's own requirement. `cb5660b` skips
+  `dtolnay/rust-toolchain`/`Swatinem/rust-cache` on the self-hosted Windows
+  matrix leg in `rust.yml`/`python.yml` (WSL bash, required by the action,
+  is unavailable on `PRIN-GPU-Runner`; Rust is pre-installed there anyway).
+  `5d90427` re-routes `python.yml`'s Windows Python tests back to
+  GitHub-hosted `windows-latest` (the self-hosted runner lacks registry
+  permissions for `actions/setup-python` to install Python 3.11/3.12/3.13
+  side by side); `rust.yml`'s Windows leg stays on the self-hosted runner.
+  Live-verified on HEAD (`5d90427`): all 6 non-skip workflows `success`.
+  See `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-024 for the
+  corrected final CI topology and `DOCS/audits/EXECUTIVE_AUDIT_REPORT_006.md`
+  finding E-F1 for the full audit narrative. The §7-required retro-audit is
+  due at WP-033 S2 (not yet run).
 
 - **WP-025 S3-exec (executive remediation session, 2026-08-19):** deferred-item
   remediation session tied to WP-025, performed after the normal S3 cycle's
