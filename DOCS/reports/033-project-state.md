@@ -94,8 +94,9 @@ Sphinx clean-dir build -W --keep-going -b html                                # 
 
 One new finding this cycle: WP033-F1 (D2, basetemp confinement), FIXED in
 S3 (`6eb4e8b`). The cumulative table below carries forward every row from
-`DOCS/reports/032-project-state.md` §3 unchanged and appends the WP033
-finding row.
+`DOCS/reports/032-project-state.md` §3 unchanged (verified by
+`tools/check_deviation_ledger.py`, run in two-report mode against this report)
+and appends the WP033-F1 finding row.
 
 | ID | Raised (cycle) | Severity | Summary | Status | Reference |
 |---|---|---|---|---|---|
@@ -155,7 +156,7 @@ finding row.
 | WP010-F1 | 010 | — | *(no findings — S2 PASS, zero findings)* | — | — |
 | WP011-F1 | 011 | D4 | `#![allow(unsafe_code)]` unnecessary in `state.rs` — no `unsafe` code exists | FIXED | Commit `cd20b1a`; attribute removed; `cargo clippy -D warnings` clean under crate-level `#![deny(unsafe_code)]` |
 | WP012-F1 | 012 | D1 | S1 commit omitted the declared `prin-py` Python bindings for `ExponentialIntegrator`/`MultiRateIntegrator` | FIXED | `62deb43`; `PyExponentialIntegrator`/`PyMultiRateIntegrator`, `dynamics.py` re-exports, `.pyi` stubs, 21 new Python acceptance tests |
-| WP012-F2 | 012 | D1 | No Rust-vs-PRINet 3.0 parity evidence for the new integrators | FIXED | `e4e7772`; 7 new golden-value parity tests (4 Exponential, 3 MultiRate) in `parity_integrators.rs` |
+| WP012-F2 | 012 | D1 | No Rust-vs-PRINet 3.0 parity evidence for the new integrators | FIXED | `e4e7772`; 7 new golden-trajectory parity tests (4 Exponential, 3 MultiRate) in `parity_integrators.rs` |
 | WP012-F3 | 012 | D1 | `matrix_exp` silently returned identity on a singular Padé LU denominator instead of a typed error | FIXED | `2dc641e`; `matrix_exp`/`phi1_matrix`/Krylov solves propagate `IntegrateError::LinearSolveFailed`; regression test `matrix_exp_singular_denominator_returns_typed_error` |
 | WP012-F4 | 012 | D3 | WP-012 text implied band-aware multi-rate scheduling; implementation is uniform sub-stepping (matches PRINet 3.0 reference) | AMENDED | Plan amendment #18; Project Plan §6 WP-012 declaration clarified; `MultiRateIntegrator` rustdoc corrected in S4 to match |
 | WP012-F5 | 012 | D4 | `ExponentialIntegrator::step`/`::integrate` did not validate the stored `dim` against the state size | FIXED | `2dc641e`; `IntegrateError::InvalidDim` on mismatch; regression tests `exp_integrator_dim_mismatch_returns_typed_error`, `exp_integrator_integrate_dim_mismatch_returns_typed_error` |
@@ -178,22 +179,28 @@ finding row.
 | WP015-F4 | 015 | D3 | 6 unused runtime deps and 1 unused dev dep in `prin-sim` | FIXED | `f138476`; removed unused deps from `Cargo.toml` |
 | WP015-F5 | 015 | D3 | Misleading crate description and README | FIXED | `f138476`; updated description and README |
 | WP015-F6 | 015 | D3 | Missing property tests (`proptest`) for the sparse simulation engine | FIXED | `f138476`; added `tests/proptest_properties.rs` with 4 property test suites `[RETROACTIVE UPDATE - Executive Audit 004]` |
-| WP016-F1 | 016 | D1 | 16-core sweep wall-time target missed (7.4× vs. ≤2.1×) | FIXED + AMENDED | Plan amendment #21; `dispatch.rs` parallel speedup 7.4× at 16 threads (hardware-evidenced figure) |
-| WP016-F2 | 016 | D2 | S1 did not run `cargo fmt --check` before declaring complete | FIXED | `ceaca5c`; `cargo fmt --check` clean |
-| WP017-F1 | 017 | D2 | `cargo fmt --check` fails on `equivalence.rs` comment indentation | FIXED | Commit `3b49e7e`; comment re-indented |
-| WP017-F2 | 017 | D4 | `equivalence.rs` rustdoc does not document the `step_auto` fallback chain | FIXED | Commit `3b49e7e`; fallback chain documented |
-| WP018-F1 | 018 | D2 | `order_param_block_reduce` coverage below 95% (93.75%) | FIXED | Commit `8d1f4a2`; 3 new unit tests, 100% coverage |
-| WP018-F2 | 018 | D4 | `TimingMethod` rustdoc does not explain why host wall-clock is a fallback | FIXED | Commit `8d1f4a2`; rustdoc expanded |
-| WP019-F1 | 019 | D2 | `sparse_knn_coupling_cubecl` panics on empty CSR (zero-row graph) | FIXED | Commit `a5b0794`; early-return on empty input; regression test |
-| WP019-F2 | 019 | D4 | `PacParams` rustdoc does not document the amplitude-modulation convention | FIXED | Commit `a5b0794`; convention documented |
-| WP020-F1 | 020 | D2 | `discrete_step_cubecl` launch grid used `N` threads instead of `ceil(N/256)` blocks | FIXED | Commit `b9c2e1f`; grid corrected; regression test |
-| WP020-F2 | 020 | D4 | `hierarchical_order_param` rustdoc does not document the two-level reduction | FIXED | Commit `b9c2e1f`; rustdoc expanded |
-| WP021-F1 | 021 | — | *(no findings — S2 PASS, zero findings)* | — | — |
-| WP022-F1 | 022 | D2 | `DiscreteDeltaThetaGamma` Burn rebuild diverges from PRINet 3.0 reference in intra-band coupling mode | AMENDED | Plan amendment #27; documented deliberate deviation (learned intra-band coupling) |
-| WP022-F2 | 022 | D4 | `ResonanceLayer` missing `#![cfg(test)]` gate on test-only import | FIXED | Commit `e2c7d1a`; import gated |
-| WP023-F1 | 023 | D4 | `GatedPhaseActivationParams` not re-exported from `prin-train` crate root | FIXED | Commit `11821c0`; re-export added; compile-time check in `public_api.rs` |
-| WP024-F1 | 024 | — | *(no findings — S2 PASS, zero findings)* | — | — |
-| WP025-F1 | 025 | D2 | `ResonanceLayerBridge` used recompute-on-backward design that failed `gradcheck` | FIXED | Commit `2a41195`; explicit-save backward; `gradcheck` passes |
+| WP016-F1 | 016 | D1 | 16-core CPU optimization below performance targets | FIXED + AMENDED | `35dbb3e`; new `dispatch.rs` sequential/parallel dispatcher; plan amendment #21 re-scopes targets `[RETROACTIVE UPDATE - Executive Audit 004]` |
+| WP016-F2 | 016 | D2 | Missing SIMD/reference dispatch | FIXED | `35dbb3e`; `dispatch.rs` `map_dispatch`/`zip_map_dispatch` `[RETROACTIVE UPDATE - Executive Audit 004]` |
+| WP016-F3 | 016 | D2 | Algorithm duplication: private `order_parameter` instead of reusing `prin_metrics` | FIXED | `35dbb3e`; removed private function, calls `prin_metrics::order::kuramoto_order_parameter` `[RETROACTIVE UPDATE - Executive Audit 004]` |
+| WP016-F4 | 016 | D2 | No N=1M `OscilloSim` parity/scale evidence | FIXED | `35dbb3e`; N=100k determinism/memory regression tes... `[RETROACTIVE UPDATE - Executive Audit 004]` |
+| WP016-F5 | 016 | D3 | Benchmark regression test absent | FIXED | `35dbb3e`; Criterion regression test at N=100k `[RETROACTIVE UPDATE - Executive Audit 004]` |
+| WP016-F6 | 016 | D3 | Stale `lib.rs` docs; WP declaration scope mismatch; missing `strict-checks` feature | FIXED + AMENDED | `35dbb3e`; `lib.rs` docs corrected; plan amendment #20 `[RETROACTIVE UPDATE - Executive Audit 004]` |
+| WP016-F7 | 016 | D3 | Unnecessary full `SparseCoupling` clone per sweep (~136 MB at N=1M) | FIXED | `35dbb3e`; `Arc<SparseCoupling>` sharing via `coupling_arc()` `[RETROACTIVE UPDATE - Executive Audit 004]` |
+| WP017-F1 | 017 | D1 | `step_cubecl_with_pool` did not validate oscillator count against `CubeclBufferPool` size | FIXED | `2bf872d`; `MeanFieldRk4Error::PoolSizeMismatch`; `CubeclBufferPool::capacity()`; regression tests `[RETROACTIVE UPDATE - Executive Audit 004]` |
+| WP017-F2 | 017 | D2 | `buffers.rs` and `equivalence.rs` below 95% coverage | FIXED | `2bf872d`; removed dead accessors, added tests; both ≥95% `[RETROACTIVE UPDATE - Executive Audit 004]` |
+| WP017-F3 | 017 | D2 | `prin-kernels` provided backend priority but no end-to-end device/dtype dispatch | FIXED | `2bf872d`; `step_auto` dispatcher `[RETROACTIVE UPDATE - Executive Audit 004]` |
+| WP017-F4 | 017 | D2 | S1 commit typed `docs(WP-017)` despite 1,349 lines of source | AMENDED / RECORDED | `4e507bc` retains historical type; closure table records correct `feat(WP-017)` `[RETROACTIVE UPDATE - Executive Audit 004]` |
+| WP017-F5 | 017 | D4 | `SESSION_REGISTER.md` row 0065 still `PLANNED` after S1 delivery | FIXED | `2bf872d`; register and brief updated `[RETROACTIVE UPDATE - Executive Audit 004]` |
+| WP018-F1 | 018 | — | *(no findings — S2 PASS, zero findings)* | — | — |
+| WP019-F1 | 019 | D4 | Factual inaccuracy in S1 handoff note coverage table | FIXED | Commit `cdc01e6`; coverage cell corrected |
+| WP020-F1 | 020 | D4 | `cargo test -p prin-kernels --features cpu` count transcription error in S2 audit report §2 | FIXED | S3 commit (session 0079); §2 corrected to "121 unit + 1 doctest" |
+| WP021-F1 | 021 | D4 | Session 0081 row in `SESSION_REGISTER.md` was `PLANNED` while brief was `COMPLETE` | FIXED | Commit `00c636f`; register and phase-3 README updated |
+| WP022-F1 | 022 | D4 | `bincode` RUSTSEC-2025-0141 advisory flagged without governing plan amendment | AMENDED | Plan amendment #27; commit `c3ae5c8` |
+| WP022-F2 | 022 | D4 | `DiscreteDeltaThetaGammaParams`/`ResonanceLayerParams` not re-exported at crate root | FIXED | Commit `a5458ef`; crate-root `pub use` + compile-time regression test |
+| WP022-F3 | 022 | D1 | `h2` RUSTSEC-2026-0258 DoS vulnerability in transitive build-time dependency | FIXED | Commit `1b7a8e9`; `h2` 0.4.15 → 0.4.16 in `Cargo.lock` |
+| WP023-F1 | 023 | D4 | `public_api.rs` regression test did not cover `GatedPhaseActivationParams` re-export | FIXED | Commit `11821c0`; extended compile-time regression check |
+| WP024-F1 | 024 | D3 | PSR-023 §7 WP-024 declaration named non-existent classes | AMENDED | Plan amendment #29 (session 0095); declaration text formally read as `SCALR`/`RIP`/`SyncGD` |
+| WP025-F1 | 025 | D2 | `load_state_dict` did not guard against well-formed record with wrong tensor shape | FIXED | Commit `7b49e4e`; `validate_shapes`; load-into-clone-validate-commit pattern; 4 regression tests |
 | WP025-F2 | 025 | D3 | `<5%` boundary-overhead evidence was a single unrepeated pilot | FIXED (evidence); gap tracked as DV-021 | Commit `2a41195`; 5-run median-of-medians measurement |
 | WP025-F3 | 025 | D4 | `python/prin/nn/__init__.py` coverage was exactly 95% with zero margin | FIXED | Closed as byproduct of WP025-F1 fix; coverage now 100% |
 | WP025-F4 | 025 | D4 | S1 handoff note cited wrong test counts | FIXED | Commit `2a41195`; both counts corrected |
@@ -202,7 +209,7 @@ finding row.
 | WP027-F1 | 027 | — | *(no findings — S2 PASS, zero findings)* | — | — |
 | WP028-F1 | 028 | — | *(no findings — S2 PASS, zero findings)* | — | — |
 | WP029-F1 | 029 | — | *(no findings — S2 PASS, zero findings)* | — | — |
-| WP030-F1 | 030 | D4 | `SubconsciousController.export_to_onnx`/`.quantize_onnx`/`.retrain_controller`: WP-028's approved deferral to "WP-030" was never reflected in WP-030's actual declared scope | FIXED | This session (WP-030 S4); `tools/wp001_ownership.json` symbol override; `DOCS/baselines/wp001_api_traceability.md` regenerated; DV-025 |
+| WP030-F1 | 030 | D4 | `SubconsciousController.export_to_onnx`/`.quantize_onnx`/`retrain_controller`: WP-028's approved deferral to "WP-030" (audit `028-wp028-audit.md` A1) was never reflected in WP-030's actual declared scope (PSR-029 §6) or delivered work; the committed `DOCS/baselines/wp001_api_traceability.md` had also drifted out of sync with its own generator (`tools/wp001_ownership.json` was never given the symbol-level override the WP-028 S4 hand-edit implied) | FIXED | This session (WP-030 S4, session 0120); `tools/wp001_ownership.json` symbol override on `prinet.nn.subconscious_model.retrain_controller` → WP-036; `DOCS/baselines/wp001_api_traceability.md` regenerated; `DOCS/sphinx/migration_guide.rst` corrected; see `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-025 |
 | WP031-F1 | 031 | — | *(no findings — S2 PASS, zero findings)* | — | — |
 | WP032-F1 | 032 | — | *(no findings — S2 PASS, zero findings)* | — | — |
 | WP033-F1 | 033 | D2 | Two tests fail under `--basetemp=.pytest_basetemp` (AGENTS.md-documented Windows pytest workaround) — `_ALLOWED_ROOTS` did not cover the in-repo basetemp path | FIXED | `6eb4e8b`; monkeypatched `_ALLOWED_ROOTS` in the two affected tests; production confinement unchanged; delta re-audit CLEAN |
