@@ -689,10 +689,33 @@ mod tests {
 
     #[test]
     fn gradients_flow_to_encoder_and_dynamics_parameters() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let mut seed = Seed::new(21, 0);
         let tracker = small_config().init::<TestAutodiffBackend>(&dev, &mut seed);
-        let dets = Tensor::<TestAutodiffBackend, 2>::ones([2, 4], &dev).require_grad();
+        // DV-019 hotfix/correction session: a fully-symmetric detection input
+        // (every batch row and every feature identical) makes several
+        // internal Jacobian paths (phase differences fed through `sin`,
+        // PAC-gate logit differences) structurally degenerate, leaving at
+        // least one parameter's gradient on a knife-edge close enough to
+        // `0.0` that a rayon-thread-count-dependent floating-point
+        // summation order occasionally rounds it to bit-exact zero, which
+        // Burn's autodiff graph then prunes entirely (`.grad()` returns
+        // `None` instead of `Some(≈0.0)`) — see
+        // `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-019. A
+        // distinct-per-batch-row, distinct-per-feature input (the same
+        // fixture-design principle `bands.rs`'s own gradient test already
+        // applies to its phase/amplitude state) removes the structural
+        // degeneracy rather than merely tolerating it.
+        let mut det_seed = Seed::new(4, 0);
+        let dets = crate::support::seeded_uniform::<TestAutodiffBackend, 2>(
+            [2, 4],
+            -1.0,
+            1.0,
+            &dev,
+            &mut det_seed,
+        )
+        .require_grad();
 
         let (phase, amp) = tracker.encode(dets).unwrap();
         let (evolved_phase, evolved_amp) = tracker.evolve(phase, amp).unwrap();

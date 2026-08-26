@@ -310,6 +310,7 @@ mod tests {
 
     #[test]
     fn coupling_energy_gradient_matches_closed_form_outer_product() {
+        let _guard = crate::support::autodiff_test_guard();
         // ∂E_coupling/∂K[i,j] = -mean_batch(Re(z_i*) z_j); for real z
         // (im=0) this reduces to -mean_batch(re_i * re_j), the exact
         // outer-product formula `crate::hep` uses directly. Gradcheck it two

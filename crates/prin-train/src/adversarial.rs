@@ -560,6 +560,7 @@ mod tests {
 
     #[test]
     fn fgsm_attack_perturbation_is_within_epsilon_ball() {
+        let _guard = crate::support::autodiff_test_guard();
         let t = tracker();
         let dets_t = dets(3, 4, 0.1);
         let dets_t1 = dets(3, 4, 0.15);
@@ -578,6 +579,7 @@ mod tests {
 
     #[test]
     fn fgsm_attack_actually_perturbs_when_gradient_exists() {
+        let _guard = crate::support::autodiff_test_guard();
         let t = tracker();
         let dets_t = varied_dets(3, 4, 0.1);
         let dets_t1 = varied_dets(3, 4, 0.9);
@@ -590,6 +592,7 @@ mod tests {
 
     #[test]
     fn fgsm_attack_rejects_invalid_epsilon() {
+        let _guard = crate::support::autodiff_test_guard();
         let t = tracker();
         let dets_t = dets(3, 4, 0.1);
         let dets_t1 = dets_t.clone();
@@ -606,6 +609,7 @@ mod tests {
 
     #[test]
     fn fgsm_attack_zero_objects_returns_input_unperturbed() {
+        let _guard = crate::support::autodiff_test_guard();
         let t = tracker();
         let dets_t = dets(3, 4, 0.1);
         let dets_t1 = dets_t.clone();
@@ -620,6 +624,7 @@ mod tests {
 
     #[test]
     fn pgd_attack_perturbation_is_within_epsilon_ball() {
+        let _guard = crate::support::autodiff_test_guard();
         let t = tracker();
         let dets_t = dets(3, 4, 0.1);
         let dets_t1 = dets(3, 4, 0.15);
@@ -639,6 +644,7 @@ mod tests {
 
     #[test]
     fn pgd_attack_is_deterministic_for_same_seed() {
+        let _guard = crate::support::autodiff_test_guard();
         let t = tracker();
         let dets_t = dets(3, 4, 0.1);
         let dets_t1 = dets(3, 4, 0.2);
@@ -660,6 +666,7 @@ mod tests {
 
     #[test]
     fn pgd_attack_different_seeds_give_different_perturbations() {
+        let _guard = crate::support::autodiff_test_guard();
         let t = tracker();
         let dets_t = dets(3, 4, 0.1);
         let dets_t1 = dets(3, 4, 0.2);
@@ -681,6 +688,7 @@ mod tests {
 
     #[test]
     fn pgd_attack_default_alpha_is_epsilon_over_four() {
+        let _guard = crate::support::autodiff_test_guard();
         // Indirect check: a single-step PGD without random start moves by
         // exactly alpha (clamped to epsilon), matching FGSM's epsilon-step
         // only when alpha == epsilon; here we just confirm it runs and stays
@@ -703,6 +711,7 @@ mod tests {
 
     #[test]
     fn pgd_attack_rejects_zero_steps() {
+        let _guard = crate::support::autodiff_test_guard();
         let dets_t = dets(3, 4, 0.1);
         let mut seed = Seed::new(1, 0);
         // The closure is unreachable: `steps == 0` is rejected before any
@@ -722,6 +731,7 @@ mod tests {
 
     #[test]
     fn pgd_attack_rejects_invalid_alpha() {
+        let _guard = crate::support::autodiff_test_guard();
         let dets_t = dets(3, 4, 0.1);
         let mut seed = Seed::new(1, 0);
         // Unreachable for the same reason as `pgd_attack_rejects_zero_steps`:
@@ -740,6 +750,7 @@ mod tests {
 
     #[test]
     fn adversarial_evaluate_phase_tracker_ip_is_in_unit_interval() {
+        let _guard = crate::support::autodiff_test_guard();
         let t = tracker();
         let cfg = TemporalClevrNConfig::new(3, 5).unwrap();
         let dataset = generate_dataset(2, &cfg, 100);
@@ -755,6 +766,7 @@ mod tests {
 
     #[test]
     fn adversarial_evaluate_phase_tracker_pgd_is_deterministic_for_same_seed() {
+        let _guard = crate::support::autodiff_test_guard();
         let t = tracker();
         let cfg = TemporalClevrNConfig::new(3, 4).unwrap();
         let dataset = generate_dataset(2, &cfg, 200);
@@ -783,6 +795,7 @@ mod tests {
 
     #[test]
     fn adversarial_evaluate_slot_attention_ip_is_in_unit_interval() {
+        let _guard = crate::support::autodiff_test_guard();
         let t = sa_tracker();
         let cfg = TemporalClevrNConfig::new(3, 4).unwrap();
         let dataset = generate_dataset(2, &cfg, 300);
@@ -803,6 +816,7 @@ mod tests {
 
     #[test]
     fn adversarial_comparison_covers_full_grid() {
+        let _guard = crate::support::autodiff_test_guard();
         let pt = tracker();
         let sa = sa_tracker();
         let cfg = TemporalClevrNConfig::new(3, 4).unwrap();

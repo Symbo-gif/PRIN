@@ -606,6 +606,7 @@ mod tests {
 
     #[test]
     fn gated_phase_activation_gradients_flow_to_every_parameter() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let act = GatedPhaseActivationConfig::new(3)
             .unwrap()
@@ -642,6 +643,7 @@ mod tests {
 
     #[test]
     fn gate_bias_gradient_matches_central_finite_difference() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestBackend as Backend>::Device = Default::default();
         let z_data = vec![0.6_f64, -0.9, 1.7];
         let z = || {

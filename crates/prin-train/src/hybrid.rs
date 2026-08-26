@@ -807,10 +807,32 @@ mod tests {
 
     #[test]
     fn gradients_flow_to_every_layer_class() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let mut seed = Seed::new(21, 0);
         let model = small_config().init::<TestAutodiffBackend>(&dev, &mut seed);
-        let x = Tensor::<TestAutodiffBackend, 2>::ones([2, 8], &dev).require_grad() * 0.3;
+        // DV-019 hotfix/correction session: a fully-symmetric input (every
+        // batch row and every feature identical) makes several internal
+        // Jacobian paths (attention logit differences, phase differences fed
+        // through `sin`) structurally degenerate, leaving at least one
+        // layer's gradient on a knife-edge close enough to `0.0` that a
+        // rayon-thread-count-dependent floating-point summation order
+        // occasionally rounds it to bit-exact zero, which Burn's autodiff
+        // graph then prunes entirely (`.grad()` returns `None` instead of
+        // `Some(≈0.0)`) — see `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`
+        // DV-019. A distinct-per-batch-row, distinct-per-feature input (the
+        // same fixture-design principle `bands.rs`'s own gradient test
+        // already applies to its phase/amplitude state) removes the
+        // structural degeneracy rather than merely tolerating it.
+        let mut input_seed = Seed::new(3, 0);
+        let x = crate::support::seeded_uniform::<TestAutodiffBackend, 2>(
+            [2, 8],
+            -1.0,
+            1.0,
+            &dev,
+            &mut input_seed,
+        )
+        .require_grad();
 
         let out = model.forward(x).unwrap();
         let loss = out.sum();

@@ -513,6 +513,7 @@ mod tests {
 
     #[test]
     fn gradients_flow_to_every_parameter() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let mut seed = Seed::new(21, 0);
         let attn = OscillatoryAttentionConfig::new(8, 2)
@@ -552,6 +553,7 @@ mod tests {
 
     #[test]
     fn alpha_gradient_matches_central_finite_difference() {
+        let _guard = crate::support::autodiff_test_guard();
         // Burn's `Dropout::forward` is a no-op unless both `B::ad_enabled()`
         // and `prob > 0`, so a nonzero dropout probability would make the
         // autodiff-backend forward pass stochastic (masking draws) while the

@@ -803,6 +803,7 @@ mod tests {
 
     #[test]
     fn slot_attention_gradients_flow_to_every_parameter() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let mut seed = Seed::new(21, 0);
         let sa = small_sa_config().init::<TestAutodiffBackend>(&dev, &mut seed);

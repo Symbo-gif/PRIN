@@ -378,6 +378,61 @@ pub(crate) fn greedy_match_by_similarity<B: Backend>(
     matches
 }
 
+/// DV-019 hotfix/correction session: `burn-autodiff` 0.16.1's default
+/// (non-`async`) runtime (`burn-autodiff/src/runtime/mutex.rs`) backs every
+/// `Autodiff<B>` graph in the process with **one shared global
+/// `AutodiffServer`** (`static SERVER: spin::Mutex<Option<AutodiffServer>>`),
+/// keyed by `NodeID`, with its own reference-counting memory-management pass
+/// run inside every `backward()` call. Individual `register`/`backward`
+/// calls are mutex-serialized (no data race on the map itself), but the
+/// server has no concept of "which nodes belong to which independent
+/// graph" — so when two `#[test]` functions on two different OS threads
+/// build unrelated autodiff graphs concurrently (Rust's default test
+/// harness runs `#[test]`s on a thread per core), one test's `backward()`
+/// call can trigger a memory-management sweep that frees nodes still
+/// in-flight in the *other* test's not-yet-backpropagated graph. Confirmed
+/// by direct reproduction in this session: `cargo test -p prin-train --lib`
+/// at default (multi-threaded) test concurrency failed a rotating set of
+/// unrelated gradient tests (`bands::tests::gradients_flow_to_every_parameter`,
+/// `bands::tests::gradient_matches_central_finite_difference`,
+/// `hybrid::tests::gradients_flow_to_every_layer_class`,
+/// `phase_tracker::tests::gradients_flow_to_encoder_and_dynamics_parameters`,
+/// `trainer::tests::phase_tracker_training_runs_and_produces_valid_metrics`)
+/// in 9 of 12 consecutive runs, including a panic *inside*
+/// `burn-autodiff`'s own `runtime/server.rs:30` ("Node should have a step
+/// registered") — not merely a near-zero-gradient assertion in our own test
+/// code — while `-- --test-threads=1` (which serializes `#[test]` execution
+/// entirely) was clean across every run. See
+/// `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-019 for the full
+/// history; this narrows the root cause from "a rayon summation-order
+/// artifact in a specific test's fixture" (the leading hypothesis DV-019
+/// carried into this session, itself an evidence-backed step from prior
+/// sessions but not directly confirmed by reproduction) to a confirmed
+/// cross-thread graph-server interaction in the third-party autodiff
+/// runtime shared by every `TestAutodiffBackend` test in this crate.
+///
+/// Reconfiguring `burn-autodiff`'s runtime (e.g. building it with the
+/// `async` feature, which routes every graph through one dedicated
+/// background thread) is out of this session's bounded scope — it is a
+/// project-wide dependency-feature change affecting every crate that
+/// depends on `burn-autodiff`, not a `prin-train`-local test fix, and its
+/// `mspc` client still shares one global `AutodiffServer` instance so it is
+/// not obviously immune to the same cross-graph memory-management
+/// interaction, only to lock contention. Instead, every `prin-train` unit
+/// test that builds a `TestAutodiffBackend` graph and calls `.backward()`
+/// acquires this shared, test-only mutex for the duration of its
+/// forward/backward/gradient-inspection sequence, so that no two such
+/// tests in this crate's test binary are ever concurrently in-flight
+/// against the shared autodiff server, without limiting parallelism for
+/// the crate's (large majority of) non-autodiff tests and without
+/// touching rayon's process-wide thread pool at all.
+#[cfg(test)]
+pub(crate) fn autodiff_test_guard() -> std::sync::MutexGuard<'static, ()> {
+    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    LOCK.lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

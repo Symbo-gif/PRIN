@@ -869,6 +869,7 @@ mod tests {
 
     #[test]
     fn learned_mlp_gradients_are_finite() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let mut seed = Seed::new(9, 0);
         let allocator = AdaptiveOscillatorAllocatorConfig::with_params(

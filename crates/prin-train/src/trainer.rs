@@ -1112,6 +1112,7 @@ mod tests {
 
     #[test]
     fn count_parameters_totals_are_consistent() {
+        let _guard = crate::support::autodiff_test_guard();
         let mut seed = Seed::new(1, 0);
         let model = PhaseTrackerConfig::with_params(4, 2, 3, 4, 2, 0.1)
             .unwrap()
@@ -1125,6 +1126,7 @@ mod tests {
 
     #[test]
     fn compute_param_norm_is_positive_and_finite() {
+        let _guard = crate::support::autodiff_test_guard();
         let mut seed = Seed::new(2, 0);
         let model = PhaseTrackerConfig::with_params(4, 2, 3, 4, 2, 0.1)
             .unwrap()
@@ -1136,6 +1138,7 @@ mod tests {
 
     #[test]
     fn count_parameters_matches_between_pt_and_sa_shapes() {
+        let _guard = crate::support::autodiff_test_guard();
         let mut seed = Seed::new(3, 0);
         let pt = PhaseTrackerConfig::with_params(4, 2, 3, 4, 2, 0.1)
             .unwrap()
@@ -1157,6 +1160,7 @@ mod tests {
 
     #[test]
     fn phase_tracker_training_runs_and_produces_valid_metrics() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev = device();
         let mut seed = Seed::new(1, 0);
         let model = PhaseTrackerConfig::with_params(4, 2, 3, 4, 2, 0.1)
@@ -1198,6 +1202,7 @@ mod tests {
 
     #[test]
     fn invalid_config_is_rejected_before_training() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev = device();
         let mut seed = Seed::new(2, 0);
         let model = PhaseTrackerConfig::with_params(4, 2, 3, 4, 2, 0.1)
@@ -1240,6 +1245,7 @@ mod tests {
 
     #[test]
     fn slot_attention_training_runs_and_produces_valid_metrics() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev = device();
         let mut seed = Seed::new(5, 0);
         let model = TemporalSlotAttentionMOTConfig::with_params(4, 3, 8, 2, 0.3)
@@ -1296,6 +1302,7 @@ mod tests {
 
     #[test]
     fn train_multi_seed_aggregates_across_seeds() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev = device();
         let train_data = small_dataset(3, 3000);
         let val_data = small_dataset(2, 7000);
@@ -1335,6 +1342,7 @@ mod tests {
 
     #[test]
     fn train_multi_seed_propagates_errors() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev = device();
         let cfg = TemporalTrainerConfig {
             lr: -1.0,
@@ -1360,6 +1368,7 @@ mod tests {
 
     #[test]
     fn train_multi_seed_single_seed_has_zero_std() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev = device();
         let train_data = small_dataset(2, 4000);
         let val_data = small_dataset(1, 9500);

@@ -141,6 +141,7 @@ mod tests {
 
     #[test]
     fn gradients_flow_through_similarity_matrix() {
+        let _guard = crate::support::autodiff_test_guard();
         use burn::backend::Autodiff;
         type AutodiffBackend = Autodiff<TestBackend>;
         let dev: <AutodiffBackend as Backend>::Device = Default::default();

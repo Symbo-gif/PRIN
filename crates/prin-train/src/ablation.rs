@@ -575,6 +575,7 @@ mod tests {
 
     #[test]
     fn phase_tracker_frozen_dynamics_does_not_require_grad() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let cfg = PhaseTrackerConfig::with_params(4, 2, 3, 4, 2, 0.3).unwrap();
         let mut seed = Seed::new(1, 0);
@@ -692,6 +693,7 @@ mod tests {
 
     #[test]
     fn phase_tracker_static_gradients_flow_to_encoder_only() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let cfg = PhaseTrackerConfig::with_params(4, 1, 1, 1, 1, 0.3).unwrap();
         let mut seed = Seed::new(5, 0);
@@ -808,6 +810,7 @@ mod tests {
 
     #[test]
     fn slot_attention_frozen_does_not_require_grad() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let cfg = TemporalSlotAttentionMOTConfig::with_params(4, 3, 8, 2, 0.3).unwrap();
         let mut seed = Seed::new(9, 0);

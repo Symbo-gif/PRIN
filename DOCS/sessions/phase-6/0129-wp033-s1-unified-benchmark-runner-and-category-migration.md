@@ -33,18 +33,26 @@ Implement benchrunner CLI, shared configuration/environment capture, and migrate
 - The preceding S4 (or campaign synthesis for WP-039) is closed and committed.
 - WP-033 scope, acceptance criteria, and non-goals have maintainer approval.
 - No unresolved D1/D2 finding exists; any carried D4 is explicitly in this scope.
-- **`[RETROACTIVE UPDATE - Executive Audit 006]` Hard gate:** a dedicated,
-  governed hotfix/correction session for DV-019 (the flaky
+- **`[RETROACTIVE UPDATE - Executive Audit 006]` Hard gate — SATISFIED
+  (2026-08-26, `Hotfix-DV019`):** a dedicated, governed hotfix/correction
+  session for DV-019 (the flaky
   `gradients_flow_to_every_parameter`/`gradients_flow_to_every_layer_class`
   gradient-presence test, `crates/prin-train/src/{bands,hybrid,phase_tracker}.rs`)
-  must be opened and closed **before this session begins**. Phase 4
+  had to be opened and closed **before this session begins**. Phase 4
   recommendation R28 originally set this precondition against session 0109
   (WP-028 S1); EA-006 (`DOCS/audits/EXECUTIVE_AUDIT_REPORT_006.md`, finding
   E-F2) discovered it was never honored — session 0109 began, and all of
-  Phase 5 (WP-028 through WP-032) executed and closed, without it. This line
-  exists so that gap cannot recur a second time against WP-033. See
+  Phase 5 (WP-028 through WP-032) executed and closed, without it. Phase 5
+  analytics recommendation R33 (P0) then re-mandated it; the `Hotfix-DV019`
+  session (2026-08-26, `DOCS/experiments/hotfix-dv019-handoff.md`) opened
+  and closed it, correcting the root-cause diagnosis in the process (a
+  confirmed `burn-autodiff` shared-global-graph-server thread-safety
+  limitation, not a rayon summation-order artifact in these three modules'
+  fixtures alone) and fixing it crate-wide (42 autodiff-graph-touching
+  tests across 14 files, `crate::support::autodiff_test_guard`). DV-019 is
+  `CLOSED`. This session (WP-033 S1) may now begin. See
   `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-019/R28 for the full
-  root-cause narrative and the two candidate mitigations already on record.
+  history and closure evidence.
 
 ## Expected work
 

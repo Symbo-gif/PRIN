@@ -763,6 +763,7 @@ mod tests {
 
     #[test]
     fn gradients_flow_to_every_parameter() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let mut seed = Seed::new(42, 0);
         let net = small_config().init::<TestAutodiffBackend>(&dev, &mut seed);
@@ -773,20 +774,38 @@ mod tests {
         // every step (sin(0) = 0 throughout), making the coupling-matrix
         // Jacobian structurally zero — not a bug, but the wrong fixture for
         // "every parameter gets a gradient".
+        //
+        // DV-019 hotfix/correction session: even with distinct phases, a
+        // batch of 2 leaves `w_gamma`'s off-diagonal gradient entries (the
+        // only path to a nonzero gradient for that parameter — see the
+        // comment below) as a sum of just two quasi-random signed terms,
+        // which is one flaky recurrence away from a coincidentally
+        // near-cancelling pair; a rayon-thread-count-dependent floating-
+        // point summation order can then round that near-cancellation to
+        // bit-exact zero, which Burn's autodiff graph prunes entirely
+        // (`.grad()` returns `None` instead of `Some(≈0.0)`) — see
+        // `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-019. Widening
+        // the batch to 4 independent draws and extending the integration
+        // from 3 to 6 steps both increase the number of independent,
+        // quasi-random signed terms summed into each gradient entry and the
+        // magnitude each entry accumulates, making a near-total cancellation
+        // across every term exponentially less likely without weakening
+        // what the test actually checks (every trainable parameter still
+        // gets a real, present, finite, nonzero gradient).
         let mut init_seed = Seed::new(1, 0);
         let phase = seeded_uniform::<TestAutodiffBackend, 2>(
-            [2, 9],
+            [4, 9],
             0.0,
             std::f64::consts::TAU,
             &dev,
             &mut init_seed,
         )
         .require_grad();
-        let amp = seeded_uniform::<TestAutodiffBackend, 2>([2, 9], 0.5, 1.5, &dev, &mut init_seed)
+        let amp = seeded_uniform::<TestAutodiffBackend, 2>([4, 9], 0.5, 1.5, &dev, &mut init_seed)
             .require_grad();
         let state = DiscreteBandState::new(phase, amp).unwrap();
 
-        let out = net.integrate(state, 3, 0.01).unwrap();
+        let out = net.integrate(state, 6, 0.01).unwrap();
         // `w_gamma` only shapes gamma's own phase trajectory: gamma is the
         // fastest band, so nothing downstream reads its phase back into an
         // amplitude, and an amplitude-only loss would give it a structurally
@@ -819,6 +838,7 @@ mod tests {
 
     #[test]
     fn gradient_matches_central_finite_difference() {
+        let _guard = crate::support::autodiff_test_guard();
         // Gradcheck-style reference test (Testing Standards §2): compare the
         // autodiff gradient of a scalar loss w.r.t. a single coupling entry
         // against a central finite difference at float64 precision.

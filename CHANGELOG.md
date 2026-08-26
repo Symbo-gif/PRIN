@@ -672,6 +672,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`Hotfix-DV019` (2026-08-26, dedicated governed hotfix/correction
+  session; handoff note `DOCS/experiments/hotfix-dv019-handoff.md`):**
+  closed DV-019, the flaky `gradients_flow_to_every_parameter`-class
+  gradient-presence test recurring across `bands.rs`/`hybrid.rs`/
+  `phase_tracker.rs` since WP-023, executing Phase 5 analytics
+  recommendation R33 (P0) and satisfying the hard entry-condition gate
+  EA-006 added to WP-033 S1. Obtained the first on-demand local
+  reproduction of the flake (`cargo test -p prin-train --lib` at default
+  concurrency: 9 of 12 runs failed pre-fix, 0 of 12 with
+  `--test-threads=1`), which corrected the leading root-cause hypothesis:
+  not a rayon summation-order artifact in three specific tests' fixtures,
+  but a confirmed thread-safety limitation in `burn-autodiff` 0.16.1's
+  default runtime — every `Autodiff<B>` graph in the process shares one
+  global `AutodiffServer` (`runtime/mutex.rs`) whose `backward()`-triggered
+  memory-management sweep has no per-graph isolation, so concurrently
+  running tests on different OS threads (Rust's default test harness) can
+  free each other's in-flight graph nodes. Fixed via a `prin-train`-private,
+  `#[cfg(test)]`-gated serialization mutex
+  (`crate::support::autodiff_test_guard`) applied to all 42
+  autodiff-graph-touching tests across 14 files (not only the 3
+  originally-named modules — reproduction showed the defect was not
+  confined to them). Kept fixture hardening attempted first (`bands.rs`
+  batch 2→4/steps 3→6; `hybrid.rs`/`phase_tracker.rs` symmetric
+  `Tensor::ones` inputs replaced with distinct seeded draws) as
+  independently-justified defense in depth, having directly confirmed it
+  alone does not close the defect. Verified with 51 consecutive clean
+  `cargo test -p prin-train --lib`-class runs plus 10/10 clean under the
+  exact concurrent-process scenario that reproduced the pre-fix defect;
+  `cargo fmt`/clippy/`cargo doc`/`cargo audit`/Snyk Code all clean; the
+  Python-side DV-019 sub-item re-confirmed clean (15/15 isolated runs).
+
 - **Post-Phase-5 CI hotfixes (2026-08-25, commits `cb5660b`/`5d90427`; recorded
   retroactively by EA-006, `[RETROACTIVE UPDATE - Executive Audit 006]`):**
   two maintainer-authored hotfix commits landed on `main` immediately after

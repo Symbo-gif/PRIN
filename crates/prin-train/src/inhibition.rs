@@ -391,6 +391,7 @@ mod tests {
 
     #[test]
     fn compete_gradients_are_finite_and_flow_through_rates() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let fbi = FeedbackInhibitionConfig::with_params(6, Some(2), 0.1, 1.0)
             .unwrap()
@@ -419,6 +420,7 @@ mod tests {
 
     #[test]
     fn compete_gradient_matches_central_finite_difference() {
+        let _guard = crate::support::autodiff_test_guard();
         // `hard_mask` is piecewise-constant (a step function of `rates`), so
         // the *raw* `compete` output has zero true derivative almost
         // everywhere at a non-winning index — finite-differencing it

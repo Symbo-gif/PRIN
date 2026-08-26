@@ -688,6 +688,7 @@ mod tests {
 
     #[test]
     fn gradients_flow_to_every_parameter() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let mut seed = Seed::new(21, 0);
         let layer = small_config().init::<TestAutodiffBackend>(&dev, &mut seed);
@@ -748,6 +749,7 @@ mod tests {
 
     #[test]
     fn gradient_matches_central_finite_difference() {
+        let _guard = crate::support::autodiff_test_guard();
         let dev: <TestAutodiffBackend as Backend>::Device = Default::default();
         let cfg = ResonanceLayerConfig::new(3, 2).unwrap();
 
