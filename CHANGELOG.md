@@ -31,6 +31,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sign-off requested for the unchanged 7-claim `REQUIRES_HUMAN_REVIEW` set
   (`DEFERRED_VALIDATION_REGISTER.md` DV-013).
 
+- **EMA-005 remediation session** (2026-08-26, process/documentation-only
+  follow-up, no new EMA/WP identifier) — dispositioned all four of EMA-005
+  §6.2's pass-forward items. M-F9 and M-F7 were already correctly tracked
+  (`DEFERRED_VALIDATION_REGISTER.md` DV-026/DV-013) with no action required;
+  confirmed unchanged. Added **DV-027** (M-F11, `math-audit-mcp`'s stale
+  editable-install `dist-info` — non-blocking, gated to the tool's next
+  `.venv` touch) and **DV-028** (vendoring `math-audit-mcp` into PRIN —
+  consolidates the recurring EMA-004/EMA-005 architectural-decision mention
+  into one tracked register row). Corrected a documentation drift found
+  during this review: `DOCS/sessions/SESSION_REGISTER.md`'s EMA-005 row
+  still read "maintainer sign-off pending" despite the report and DV-013
+  both already recording sign-off granted 2026-08-26. No code, claim-ledger,
+  or policy changes — `math-audit-mcp` itself was not modified, consistent
+  with both findings being explicitly scoped to a future dedicated
+  tool-remediation session.
+
 - **Executive Audit Session 006 (EA-006)** — Phase 5 close executive audit;
   report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_006.md`
   (`PASS-WITH-REMEDIATION`, findings E-F1–E-F2). Delta audit of Sessions
