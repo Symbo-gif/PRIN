@@ -55,10 +55,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   outcome since this project has zero `@pytest.mark.gpu` tests yet — the
   step now catches exit 5 explicitly as success while any other nonzero
   code still fails it. Verified against an exact local reproduction of the
-  CI package set; live-CI confirmation is currently blocked by an
-  unrelated, external GitHub Actions account-level condition matching this
-  project's own `DV-014` precedent (billing/spending-limit block) — see
-  DV-029 for full detail.
+  CI package set.
+
+- **DV-029 fully closed** — once the account-level block above cleared and
+  the queued fix ran, a fourth real bug surfaced: `cargo bench --workspace
+  -- --save-baseline ci` forwards criterion CLI args to every crate's
+  implicit `[lib]` bench target (Cargo's `bench = true` default), not just
+  `[[bench]]`-declared targets, so `prin-daemon`'s plain unit tests rejected
+  the unrecognized option — this gate had never once succeeded in
+  `gpu.yml`'s history. Fixed by listing all 9 `[[bench]]` targets
+  explicitly. Live-verified: `gpu-cuda` and `gpu-wgpu` both **success** —
+  the first fully green `gpu.yml` run ever recorded for this project.
 
 - **Executive Mathematical Audit Session 005 (EMA-005)** — Phase 5 close
   mathematical audit; report

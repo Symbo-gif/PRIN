@@ -459,6 +459,28 @@ forward to the maintainer rather than worked around by further pushes.
 **OPEN** — not because the root cause is unknown (it no longer is) but
 because CI itself is currently unavailable to prove the fix live.
 
+**Update — DV-029 closed.** The maintainer confirmed the billing/
+spending-limit condition resolved; the queued fix push (`8f45a5b`, folded
+into `dd9979c` below) ran immediately and cleanly. Once "Python GPU tests"
+passed for the first time, the job reached a step never exercised before —
+"Kernel performance regression gates" (`cargo bench --workspace --features
+cuda -- --save-baseline ci`) — and hit a **fourth** real bug: `cargo bench
+--workspace` forwards criterion-specific CLI args to every bench-profile
+binary it builds, including each crate's own implicit `[lib]` target
+(`bench = true` is Cargo's default unless a crate opts out), not just
+`[[bench]]`-declared criterion targets — `prin-daemon`'s plain unit tests
+don't understand `--save-baseline`, so this gate had apparently never once
+succeeded in this workflow's history. Fixed (`dd9979c`) by listing all 9
+`[[bench]]` targets explicitly (one `--bench <name>` per crate's Cargo.toml
+declaration across `prin-daemon`/`prin-kernels`/`prin-sim`/`prin-train`),
+verified locally (all 9 run clean via criterion's `--test` smoke mode)
+before the live push. **Live result (run `32995941536`): `gpu-cuda` and
+`gpu-wgpu` both `success`** — the first fully green `gpu.yml` run ever
+recorded for this project. `DEFERRED_VALIDATION_REGISTER.md` DV-029 is now
+**CLOSED**. Four real, distinct, CI-configuration-only bugs were found and
+fixed across this investigation (`55ba62b`, `f03da04`, `8f45a5b`,
+`dd9979c`) — none required any Cargo.toml or source-code change.
+
 ---
 
 ## 6. Sign-off
