@@ -60,7 +60,26 @@ jobs:
           .venv\Scripts\python.exe -m maturin develop -m crates/prin-py/Cargo.toml --features cuda
           .venv\Scripts\python.exe -m pip install --no-cache-dir -e ".[dev]"
       - name: Python GPU tests
-        run: .venv\Scripts\python.exe -m pytest tests/ -v -m gpu -rs
+        # DV-029 root cause (confirmed via a local venv reproducing the
+        # exact CI package set): pytest's own exit code here is 5 ("no
+        # tests collected"), not a real failure -- zero tests in this
+        # project carry `@pytest.mark.gpu` yet, so `-m gpu` structurally
+        # selects 0 every time until a future WP authors the project's
+        # first GPU-marked Python test. GitHub Actions' pwsh step wrapper
+        # reports any nonzero `$LASTEXITCODE` as a job failure regardless
+        # of the specific code, so exit 5 must be caught explicitly here
+        # -- any *other* nonzero code (an actual test failure) still fails
+        # the step. `-rs` prints skip reasons for visibility (the two
+        # module-level `pytest.importorskip` skips this job's minimal
+        # `.[dev]` install triggers -- `onnxruntime`/`prinet` -- both
+        # expected and harmless here).
+        run: |
+          .venv\Scripts\python.exe -m pytest tests/ -v -m gpu -rs
+          if ($LASTEXITCODE -eq 5) {
+            Write-Host "No @pytest.mark.gpu tests exist yet (pytest exit 5); not a failure."
+            exit 0
+          }
+          exit $LASTEXITCODE
       - name: Kernel performance regression gates
         run: cargo bench --workspace --features cuda -- --save-baseline ci
 
