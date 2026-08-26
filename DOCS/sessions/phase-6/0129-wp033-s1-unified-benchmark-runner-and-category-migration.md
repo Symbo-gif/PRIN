@@ -1,8 +1,8 @@
 # Session 0129 — WP-033 S1: Coding — Unified benchmark runner and category migration
 
-**Status:** PLANNED  
-**Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
-**Execution unit:** WP-033  
+**Status:** COMPLETE
+**Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
+**Execution unit:** WP-033
 **Session type:** S1 — Coding  
 **Predecessor:** [0128 — Documentation](../phase-5/0128-wp032-s4-daemon-evaluation-integration-and-phase-5-gate.md)  
 **Successor:** [0130 — Audit](0130-wp033-s2-unified-benchmark-runner-and-category-migration.md)  

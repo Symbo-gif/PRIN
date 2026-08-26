@@ -937,3 +937,49 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   - ``prinet.utils.temporal_metrics.*`` → ``prin.eval.compute_full_temporal_metrics``
   - ``prinet.utils.statistics.*`` → ``prin.experiments.{bootstrap_ci, welch_t_test, cohens_d}``
   - ``prinet.utils.adversarial.*`` → ``prin.experiments.adversarial_evaluate_*``
+
+- ``benchmarks/`` unified benchmark runner and category migration (WP-033)
+  — the legacy PRINet 3.0 quarterly benchmark scripts (y2q/y3q/y4q naming,
+  58 verified present) are reorganised into nine topic category packages
+  executed through a single ``benchrunner`` CLI. No numerical computation
+  lives in the suite; every measured quantity comes from Rust.
+
+  **Category packages:**
+
+  - ``benchmarks.scaling`` — oscillator-count scaling, sweep throughput
+    (``oscillator_count``, ``coupling_complexity``).
+  - ``benchmarks.chimera`` — chimera phase diagrams and metrics
+    (``phase_diagram``).
+  - ``benchmarks.mot`` — multi-object tracking: PhaseTracker vs
+    SlotAttention (``tracker_comparison``).
+  - ``benchmarks.ablations`` — ablation variants: frozen/static/no-GRU,
+    adaptive allocation (``variant_comparison``).
+  - ``benchmarks.kernels`` — fused-kernel performance via ``cargo bench``
+    criterion subprocess bridge (``criterion_suite``).
+  - ``benchmarks.integrators`` — integrator accuracy/cost: RK45,
+    exponential, multi-rate (``accuracy_cost``).
+  - ``benchmarks.training`` — training throughput (``throughput``).
+  - ``benchmarks.daemon`` — subconscious controller latency p50/p95
+    (``control_latency``).
+  - ``benchmarks.adversarial`` — FGSM/PGD robustness evaluation
+    (``robustness``).
+
+  **Shared infrastructure (``benchmarks._common``):**
+
+  - ``BenchmarkConfig`` — iterations, warmup, seed counter/key.
+  - ``capture_environment`` — Rust/Python/hardware snapshot.
+  - ``timed_run`` — ≥10-iteration timing rule, warmup exclusion, median/p95.
+  - ``BenchmarkRegistry`` — category/name dispatch.
+  - ``write_result`` — JSON writer with output-path confinement.
+
+  **CLI usage:**
+
+  .. code-block:: bash
+
+     python -m benchmarks.benchrunner --list
+     python -m benchmarks.benchrunner --category scaling --out benchmarks/results/
+     python -m benchmarks.benchrunner --category scaling --name oscillator_count --iterations 20
+
+  **Legacy mapping:** see
+  ``DOCS/baselines/wp033_benchmark_traceability.md``
+  for the complete 58-row traceability table.

@@ -1,11 +1,11 @@
 # Session 0132 — WP-033 S4: Documentation — Unified benchmark runner and category migration
 
-**Status:** PLANNED  
-**Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
-**Execution unit:** WP-033  
-**Session type:** S4 — Documentation  
-**Predecessor:** [0131 — Remediation](0131-wp033-s3-unified-benchmark-runner-and-category-migration.md)  
-**Successor:** [0133 — Coding](0133-wp034-s1-reporting-figures-tables-and-profiling.md)  
+**Status:** COMPLETE — S4 documentation committed; WP-034 declared in PSR-033.
+**Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
+**Execution unit:** WP-033
+**Session type:** S4 — Documentation
+**Predecessor:** [0131 — Remediation](0131-wp033-s3-unified-benchmark-runner-and-category-migration.md)
+**Successor:** [0133 — Coding](0133-wp034-s1-reporting-figures-tables-and-profiling.md)
 **Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and

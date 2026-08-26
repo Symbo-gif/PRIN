@@ -130,6 +130,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   level: compliance gap recorded, and WP-033 S1's session brief now carries
   a hard entry-condition gate so it cannot silently recur.
 
+- **WP-033 Unified benchmark runner and category migration**
+  (`benchmarks/`, `tests/test_benchrunner.py`, Phase 6 first WP; sessions
+  0129–0132; audit `DOCS/audits/033-wp033-audit.md`, verdict
+  `PASS-WITH-FINDINGS`, one D2 finding WP033-F1 FIXED in S3): unified
+  `benchrunner` CLI, shared configuration/environment-capture/timing/
+  registry/result-writer infrastructure, and migration of all 58 verified
+  legacy PRINet 3.0 benchmark scripts into nine topic category packages.
+  - `benchmarks/_common/` — shared `BenchmarkConfig`, `capture_environment`,
+    `timed_run` (≥10-iteration timing rule, warmup exclusion, median/p95),
+    `BenchmarkRegistry` (category/name dispatch), `write_result` (output-path
+    confinement to 3 allowed roots).
+  - `benchmarks/benchrunner/` — CLI (`python -m benchmarks.benchrunner`)
+    with `--list`, `--category`, `--name`, `--iterations`, `--out` dispatch.
+  - Nine category packages: `scaling/` (2 benchmarks), `chimera/`, `mot/`,
+    `ablations/`, `kernels/` (criterion subprocess bridge), `integrators/`,
+    `training/`, `daemon/`, `adversarial/` — all delegate to already-parity-
+    dispositioned Rust APIs; no new numerics in Python.
+  - `tests/test_benchrunner.py` — 50 tests (49 fast + 1 slow) covering
+    config validation, timing rule, registry, environment capture, result
+    writing, schema compatibility, CLI dispatch, criterion bridge parsing,
+    and all remaining categories. 99% coverage on `benchmarks/`.
+  - `DOCS/baselines/wp033_benchmark_traceability.md` — 58-row traceability
+    table mapping every verified legacy script to its category and module.
+  - **WP033-F1 (D2) FIXED** in S3 (`6eb4e8b`): two tests failed under the
+    project's documented `--basetemp=.pytest_basetemp` Windows pytest
+    invocation; monkeypatched `_ALLOWED_ROOTS` in the affected tests.
+  - **S4 documentation closure (session 0132):** Migration Guide updated
+    with WP-033 benchrunner section; `benchmarks/README.md` and category
+    READMEs updated; `DOCS/reports/`, `DOCS/experiments/`,
+    `DOCS/baselines/`, `DOCS/sessions/` indexes updated; Project State
+    Report `DOCS/reports/033-project-state.md` issued, declaring WP-034
+    (Reporting, figures, tables, and profiling).
+
 - **WP-032 Daemon/evaluation integration and Phase 5 gate**
   (`crates/prin-py/`, `crates/prin-daemon/`, `python/prin/`, Phase 5 fifth
   and final WP; sessions 0125–0128; audit

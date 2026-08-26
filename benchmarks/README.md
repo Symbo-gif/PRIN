@@ -41,11 +41,16 @@ to `DOCS/test_and_benchmark_results/` (gitignored) by reporting
 tools. Regression gates: `criterion` (Rust) and `pytest-benchmark` (Python)
 fail CI on >10% regressions.
 
-## Status (WP-033 S1)
+## Status (WP-033 S4 — cycle complete)
 
 The CLI, shared infrastructure, and all nine category modules are
 implemented and tested (`tests/test_benchrunner.py`) at small, fast,
 characterization-scale parameters — this validates the *machinery* (schema
 compatibility, the ≥10-iteration timing rule, CLI dispatch), not final
 scientific conclusions (a WP-033 non-goal). Production-scale campaign runs
-and the Parity Report comparing legacy vs. new numbers are future work.
+and the Parity Report comparing legacy vs. new numbers are future work
+(WP-034 reporting figures/tables, Phase 7 campaign execution).
+
+Audit: `DOCS/audits/033-wp033-audit.md` — verdict `PASS-WITH-FINDINGS`,
+one D2 finding (WP033-F1, basetemp confinement) FIXED in S3. Delta
+re-audit CLEAN. Project State Report: `DOCS/reports/033-project-state.md`.
