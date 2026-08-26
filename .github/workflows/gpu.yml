@@ -60,7 +60,7 @@ jobs:
           .venv\Scripts\python.exe -m maturin develop -m crates/prin-py/Cargo.toml --features cuda
           .venv\Scripts\python.exe -m pip install --no-cache-dir -e ".[dev]"
       - name: Python GPU tests
-        run: .venv\Scripts\python.exe -m pytest tests/ -v -m gpu
+        run: .venv\Scripts\python.exe -m pytest tests/ -v -m gpu -rs
       - name: Kernel performance regression gates
         run: cargo bench --workspace --features cuda -- --save-baseline ci
 
