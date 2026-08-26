@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Phase 5 recommendation implementation** (2026-08-26, inter-phase, before
+  session 0129/WP-033 S1) — implemented all four Phase 5 analytics
+  recommendations (`DOCS/ANALYTICS/phase-5/phase-5-recommendations.md`).
+  R33 (P0, schedule the DV-019 hotfix/correction session) was found already
+  satisfied before this session began (`Hotfix-DV019`, commit `7376437`,
+  predates the commit that recorded R33 itself); re-verified with 10/10
+  clean `cargo test -p prin-train --lib` runs rather than re-implementing an
+  already-closed fix. Closed R34 (P1): new `tools/check_dv_register_gates.py`
+  mechanically detects Deferred Validation Register items whose named
+  "before session NNNN" precondition session has completed while the item
+  remains open — the class of gap Executive Audit 006 (E-F2) caught by hand
+  for DV-019/session 0109. 20 tests, 100% line coverage
+  (`tests/test_check_dv_register_gates.py`), exercised against the real
+  historical pre-fix repository state; wired into `python.yml`'s `lint` job.
+  Closed R35 (P3): `DEFERRED_VALIDATION_REGISTER.md` DV-004 given an
+  explicit disposition (kernel-equivalence tests are the accepted, permanent
+  coverage mechanism for `#[cube(launch)]` bodies) after 5 phases of
+  unchanged carry-forward. Closed R36 (P3): DV-028 given a recorded
+  vendoring evaluation and decision (do not vendor `math-audit-mcp` at this
+  time — no CI-reachable remote exists for the tool). See
+  `DOCS/ANALYTICS/phase-5/phase-5-recommendation-implementation-governance.md`.
+
 - **Executive Mathematical Audit Session 005 (EMA-005)** — Phase 5 close
   mathematical audit; report
   `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_005.md`
