@@ -31,6 +31,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   time — no CI-reachable remote exists for the tool). See
   `DOCS/ANALYTICS/phase-5/phase-5-recommendation-implementation-governance.md`.
 
+### Fixed
+
+- **`gpu.yml`'s `dtolnay/rust-toolchain` step on the self-hosted GPU
+  runner** — same DV-024 root cause already fixed for `rust.yml`/
+  `python.yml` (commit `cb5660b`) but never applied to `gpu.yml`, which has
+  no hosted-runner leg to make the step conditional against; removed the
+  step outright since Rust is pre-installed on `PRIN-GPU-Runner`. Verified
+  live: `gpu-wgpu` now passes end-to-end; `gpu-cuda`'s Rust CUDA
+  kernel-equivalence tests and CUDA extension build both pass live on real
+  GPU hardware for the first time in this project's CI history. Its final
+  Python-test step surfaces a separate, narrower, non-blocking gap tracked
+  as new `DEFERRED_VALIDATION_REGISTER.md` item **DV-029**.
+
 - **Executive Mathematical Audit Session 005 (EMA-005)** — Phase 5 close
   mathematical audit; report
   `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_005.md`

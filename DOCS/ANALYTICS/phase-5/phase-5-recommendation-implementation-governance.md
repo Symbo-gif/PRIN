@@ -350,6 +350,54 @@ avoid scope creep into an unrelated evidence artefact (Coding Standards §1,
 Development Workflow Standards §2's WP scope-discipline principle applied
 by analogy to this inter-phase session's own declared scope, §3.1 above).
 
+### 5.6 Push, CI, and GPU verification
+
+Pushed to `origin/main` in three commits (`e927d8f` R34; `774ac7d` R33/R35/
+R36 + register; `75e6aa5` this governance document, tagged `[gpu]` per this
+task's explicit "make sure GPU tasks are run" instruction). Live CI on that
+push (`75e6aa5`, run set starting `32948083...`):
+
+| Workflow | Result |
+|---|---|
+| `repro` | success |
+| `snyk` | success |
+| `parity` | success |
+| `python` | success |
+| `rust` | success |
+| `gpu` | **failure** — both `gpu-cuda`/`gpu-wgpu` failed at `dtolnay/rust-toolchain@stable` (WSL bash unavailable on the self-hosted runner) |
+
+5/6 green; `gpu` failed at a step unrelated to R33–R36's own changes — the
+same DV-024 root cause already fixed for `rust.yml`/`python.yml`'s
+self-hosted legs (commit `cb5660b`) but never applied to `gpu.yml`. Since
+this was this project's first `[gpu]`-tagged push since `cb5660b` landed,
+the gap had never surfaced before. Fixed as a Development Workflow
+Standards §7 hotfix (broken CI): `gpu.yml` commit `6c608cb` removes the
+step outright (no hosted-runner leg exists to make it conditional against;
+Rust is pre-installed on `PRIN-GPU-Runner`).
+
+Re-verified live on the hotfix push (`6c608cb`, run set starting
+`32949...`):
+
+| Workflow | Result |
+|---|---|
+| `repro`, `snyk`, `parity`, `python`, `rust` | success (unchanged) |
+| `gpu` → `gpu-wgpu` | **success** — full end-to-end pass |
+| `gpu` → `gpu-cuda` | **failure**, but substantially further than ever before: `Rust kernel-equivalence tests (CUDA)` and `Build extension with CUDA and install` both pass live on real GPU hardware; only the final `Python GPU tests` step fails (`pytest tests/ -v -m gpu` selects 0 tests, exit 1, no test failures shown) |
+
+The remaining `gpu-cuda` gap is recorded as new `DEFERRED_VALIDATION_REGISTER.md`
+item **DV-029** with two candidate root causes (neither confirmed without
+live runner access: a missing `onnx` pip extra in the CUDA build step, or a
+`pwsh`-wrapped stderr/exit-code quirk) and disposed opportunistic/
+not-WP-gated, matching the DV-016/DV-022/DV-023 precedent for this class of
+CI-infrastructure gap — investigating further requires either live
+self-hosted-runner access or authoring this project's first
+`@pytest.mark.gpu` Python test, both out of scope for this documentation/
+tooling recommendation-implementation session. This is a genuine,
+substantial improvement over the prior state (where `gpu.yml` had never
+successfully executed a single step past the toolchain setup on any push),
+not a full closure of every GPU CI gap — recorded honestly rather than
+either claimed as complete or left undiagnosed.
+
 ---
 
 ## 6. Sign-off
