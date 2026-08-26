@@ -162,7 +162,12 @@ class TestCaptureEnvironment:
 
 
 class TestWriteResult:
-    def test_writes_inside_results_dir(self, tmp_path: Path) -> None:
+    def test_writes_inside_results_dir(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import benchmarks._common.result as result_module
+
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
         out = tmp_path / "artefact.json"
         written = write_result(
             out,
@@ -291,7 +296,12 @@ class TestBenchrunnerCli:
     def test_iterations_below_minimum_is_an_error(self) -> None:
         assert main(["--category", "scaling", "--iterations", "3"]) == 2
 
-    def test_runs_one_named_benchmark_and_writes_json(self, tmp_path: Path) -> None:
+    def test_runs_one_named_benchmark_and_writes_json(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import benchmarks._common.result as result_module
+
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
         exit_code = main(
             [
                 "--category",
