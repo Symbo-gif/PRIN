@@ -30,13 +30,18 @@ jobs:
       # removed outright rather than made conditional).
       - name: Rust kernel-equivalence tests (CUDA)
         run: cargo test --workspace --features cuda
+      - name: Create virtual environment
+        shell: bash
+        run: |
+          python -m venv .venv
+          echo "$PWD/.venv/Scripts" >> "$GITHUB_PATH"
       - name: Build extension with CUDA and install
         run: |
-          pip install maturin
+          python -m pip install --no-cache-dir maturin
           maturin develop -m crates/prin-py/Cargo.toml --features cuda
-          pip install -e ".[dev]"
+          python -m pip install --no-cache-dir -e ".[dev]"
       - name: Python GPU tests
-        run: pytest tests/ -v -m gpu
+        run: python -m pytest tests/ -v -m gpu
       - name: Kernel performance regression gates
         run: cargo bench --workspace --features cuda -- --save-baseline ci
 
