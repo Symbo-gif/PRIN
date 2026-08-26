@@ -40,16 +40,27 @@ jobs:
         # ever runs on the GitHub-hosted windows-latest image (which has
         # WSL); this job has no such hosted leg. Default shell on a
         # Windows runner is already PowerShell.
-        run: |
-          python -m venv .venv
-          Add-Content -Path $env:GITHUB_PATH -Value "$PWD\.venv\Scripts"
+        run: python -m venv .venv
       - name: Build extension with CUDA and install
+        # Invoke the venv's own python.exe by absolute path rather than
+        # relying on `$GITHUB_PATH` PATH-prepending: on this self-hosted
+        # runner a bare `python`/`pip` still resolved to the shared global
+        # Miniforge install (`pip install maturin` reported "already
+        # satisfied ... in C:\Users\there\miniforge3\Lib\site-packages")
+        # even after the PATH-prepend step, which is how DV-029's original
+        # "Python GPU tests" failure picked up that environment's unrelated
+        # extra plugins (pytest-xdist/anyio/asyncio/timeout, an
+        # unregistered "hypothesis profile 'ci'") instead of this project's
+        # own isolated `.venv`. maturin also targets whatever interpreter
+        # invokes it, so running it via `.venv\Scripts\python.exe -m
+        # maturin` (rather than the bare `maturin` executable) keeps it
+        # pinned to the same venv.
         run: |
-          python -m pip install --no-cache-dir maturin
-          maturin develop -m crates/prin-py/Cargo.toml --features cuda
-          python -m pip install --no-cache-dir -e ".[dev]"
+          .venv\Scripts\python.exe -m pip install --no-cache-dir maturin
+          .venv\Scripts\python.exe -m maturin develop -m crates/prin-py/Cargo.toml --features cuda
+          .venv\Scripts\python.exe -m pip install --no-cache-dir -e ".[dev]"
       - name: Python GPU tests
-        run: python -m pytest tests/ -v -m gpu
+        run: .venv\Scripts\python.exe -m pytest tests/ -v -m gpu
       - name: Kernel performance regression gates
         run: cargo bench --workspace --features cuda -- --save-baseline ci
 
