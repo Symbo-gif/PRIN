@@ -398,6 +398,67 @@ successfully executed a single step past the toolchain setup on any push),
 not a full closure of every GPU CI gap — recorded honestly rather than
 either claimed as complete or left undiagnosed.
 
+### 5.7 DV-029 deep-dive (continuation, at user request)
+
+The user asked to continue investigating DV-029 rather than leave it as an
+opportunistic unknown. This section's dispositions above (§5.6, "neither
+confirmed without live runner access") are superseded by this deeper
+investigation, which fully root-caused and fixed all three real bugs behind
+`gpu-cuda`'s remaining failure:
+
+1. **`shell: bash` on the venv-creation step (`55ba62b`)** — copied from
+   `python.yml` verbatim, but `gpu.yml` has no hosted-runner leg to safely
+   inherit that from; requires WSL, unavailable on `PRIN-GPU-Runner`. Same
+   failure class as the already-fixed `dtolnay/rust-toolchain` step. Fixed
+   by switching to PowerShell (this job's actual default shell).
+2. **`$GITHUB_PATH` prepending not taking effect (`f03da04`)** — even after
+   venv creation, a bare `python`/`pip` in the next step still resolved to
+   the shared global Miniforge install (live evidence: `pip install
+   maturin` reported "already satisfied ... in
+   C:\Users\there\miniforge3\Lib\site-packages", and the pytest header
+   showed unrelated extra plugins — `xdist`/`anyio`/`asyncio`/`timeout` —
+   this project depends on none of). Fixed by invoking
+   `.venv\Scripts\python.exe` by absolute path for every command. Verified
+   live: the next run's pytest header showed the correct isolated
+   interpreter path and a clean plugin list for the first time.
+3. **Zero `@pytest.mark.gpu` tests exist in this codebase (`8f45a5b`)** —
+   even fully isolated, the step still failed with the same "0 selected"
+   pattern plus 1–2 items skipped at collection. Added `-rs` (`da61d72`) to
+   reveal skip reasons directly: two harmless, expected
+   `pytest.importorskip` guards (`onnxruntime`, `prinet`) firing because
+   this job's minimal `.[dev]` install never installs those optional
+   extras. Reproduced the *exact* CI package set in a local venv and ran
+   the identical command directly (not through a masking shell pipe, which
+   had given a misleading "exit 0" reading on a first local attempt):
+   **pytest's real exit code is 5** ("no tests collected") — not a bug,
+   the structurally correct outcome, since `grep`-confirmed zero tests
+   anywhere in this codebase carry `@pytest.mark.gpu` (the marker is
+   registered in `pyproject.toml` but never applied — authoring the
+   project's first GPU-marked Python test is a real future feature, not a
+   CI defect). GitHub Actions' `pwsh` step wrapper reports any nonzero
+   `$LASTEXITCODE` as a failure regardless of the specific code, which is
+   why CI showed "exit code 1" rather than 5. Fixed: the step now catches
+   exit 5 explicitly and treats it as success; any other nonzero code
+   (a genuine test failure) still fails the step.
+
+**Verification status — blocked, not failed.** This fix (`8f45a5b`, current
+`main` HEAD) is derived from an exact local reproduction of the failure,
+not a guess, and is believed correct. It has not yet been confirmed by a
+live CI run: the push landed inside a run where `rust`/`python`/`parity`/
+`snyk` all show `startup_failure`/`failure` with jobs permanently stuck
+`queued` (`conclusion: failure`, zero steps executed, no job logs — `gh run
+view --log` returns "log not found") and `gpu.yml` never registered a run
+at all for that commit — unchanged after a 5-minute recheck. This exactly
+matches this register's own `DV-014` precedent (a GitHub Actions
+billing/spending-limit block): the immediately prior push (`da61d72`) ran
+cleanly end-to-end minutes earlier, ruling out the `gpu.yml` changes
+themselves as the cause. Per `DV-014`'s own disposition, this is an
+external, account-level condition outside this session's control, passed
+forward to the maintainer rather than worked around by further pushes.
+`DEFERRED_VALIDATION_REGISTER.md` DV-029 is updated accordingly and stays
+**OPEN** — not because the root cause is unknown (it no longer is) but
+because CI itself is currently unavailable to prove the fix live.
+
 ---
 
 ## 6. Sign-off

@@ -44,6 +44,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Python-test step surfaces a separate, narrower, non-blocking gap tracked
   as new `DEFERRED_VALIDATION_REGISTER.md` item **DV-029**.
 
+- **`gpu.yml`'s `gpu-cuda` "Python GPU tests" step (DV-029), fully
+  root-caused in three iterations:** (1) its venv-creation step used
+  `shell: bash`, requiring WSL (unavailable on this self-hosted runner) —
+  switched to PowerShell; (2) even after venv creation, `python`/`pip`
+  still resolved to the shared global Miniforge install rather than the
+  isolated venv — switched every invocation to `.venv\Scripts\python.exe`
+  by absolute path; (3) pytest's real exit code for "0 tests selected
+  under `-m gpu`" is 5 ("no tests collected"), the structurally correct
+  outcome since this project has zero `@pytest.mark.gpu` tests yet — the
+  step now catches exit 5 explicitly as success while any other nonzero
+  code still fails it. Verified against an exact local reproduction of the
+  CI package set; live-CI confirmation is currently blocked by an
+  unrelated, external GitHub Actions account-level condition matching this
+  project's own `DV-014` precedent (billing/spending-limit block) — see
+  DV-029 for full detail.
+
 - **Executive Mathematical Audit Session 005 (EMA-005)** — Phase 5 close
   mathematical audit; report
   `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_005.md`
