@@ -47,6 +47,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with both findings being explicitly scoped to a future dedicated
   tool-remediation session.
 
+- **M-F9 / DV-026 remediation** (2026-08-26, `math-audit-mcp` tool-
+  remediation session) — added `beta`/`betainc`/`betainc_regularized` to
+  `math-audit-mcp`'s `ALLOWED_MATH_FUNCTIONS` security allowlist (tool
+  commit `d69d9f8`), closing the Beta-function coverage gap discovered
+  during EMA-005 BETA-SYM-01 claim authoring. Expression guard verified
+  to accept all three functions; `beta(a,b)==gamma(a)*gamma(b)/gamma(a+b)`
+  reduces to 0 symbolically; `betainc_regularized` symmetry identity
+  confirmed numerically; all 120 existing tool tests pass. Verification
+  evidence: `EVIDENCE/math-audit/manual/mf9-beta-allowlist-verification.py`.
+  DV-026 closed.
+
 - **Executive Audit Session 006 (EA-006)** — Phase 5 close executive audit;
   report `DOCS/audits/EXECUTIVE_AUDIT_REPORT_006.md`
   (`PASS-WITH-REMEDIATION`, findings E-F1–E-F2). Delta audit of Sessions
