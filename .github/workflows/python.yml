@@ -49,6 +49,8 @@ jobs:
           elif [ "$count" -eq 1 ]; then
             python tools/check_deviation_ledger.py "${reports[0]}"
           fi
+      - name: DV-register gate enforcement (R34, EA-006 E-F2 remediation)
+        run: python tools/check_dv_register_gates.py
 
   test:
     strategy:

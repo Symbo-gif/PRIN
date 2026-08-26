@@ -64,6 +64,13 @@ python tools/wp001_baseline.py traceability
   hash resolves and that a finding's summary does not change between two
   consecutive reports without a new finding ID (Phase 2 analytics
   recommendation R17).
+- `check_dv_register_gates.py` parses `DEFERRED_VALIDATION_REGISTER.md` for
+  items whose text names an explicit "before session NNNN"/"before WP-0NN
+  S1" precondition, cross-references `SESSION_REGISTER.md` for that
+  session's status, and fails if the named session is `COMPLETE` while the
+  item is not `CLOSED`/`SATISFIED` (Phase 5 analytics recommendation R34,
+  EA-006 finding E-F2 remediation — mechanizes the check that would have
+  caught R28's DV-019 precondition going unenforced through all of Phase 5).
 
 Run the Executive Mathematical Audit gate (requires `math-audit-mcp`
 installed separately; see the governance doc):
@@ -77,4 +84,10 @@ Run the deviation-ledger consistency check:
 ```bash
 python tools/check_deviation_ledger.py DOCS/reports/016-project-state.md
 python tools/check_deviation_ledger.py DOCS/reports/016-project-state.md DOCS/reports/017-project-state.md
+```
+
+Run the DV-register gate-enforcement check (no arguments needed):
+
+```bash
+python tools/check_dv_register_gates.py
 ```

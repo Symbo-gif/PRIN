@@ -179,6 +179,21 @@ cadence" above).
    which the exact corruption it targets recurred, undetected, at WP-020 S4.
    Relying on the checklist alone was insufficient; the CI gate is the
    durable fix.
+7. Run `tools/check_dv_register_gates.py` (no arguments needed; it defaults
+   to the repository's own `DEFERRED_VALIDATION_REGISTER.md` and
+   `SESSION_REGISTER.md`) and include its result in the S4 verification
+   commands before committing. Phase 5 analytics R34 (EA-006 finding E-F2)
+   found that a Deferred Validation Register precondition naming a specific
+   blocking session (e.g. "a dedicated hotfix/correction session must run
+   before session 0109 (WP-028 S1) begins") was documented in three separate
+   places but never mechanically checked — Phase 5 fully executed and closed
+   with the precondition unsatisfied, caught only in retrospect by an
+   Executive Audit. This tool generalizes that check: it fails (exit 1) when
+   any DV register item names a "before session NNNN"/"before WP-0NN S1"
+   precondition whose target session is `COMPLETE` in `SESSION_REGISTER.md`
+   while the item's own Current status is not `CLOSED`/`SATISFIED`.
+   `python.yml`'s `lint` job runs it on every push/PR, immediately after the
+   deviation-ledger consistency step.
 
 **Exit criteria:** all four artefact classes committed; the S4 commit — the
 cycle's sole push, carrying the full S1–S4 commit range (see "Push and CI
