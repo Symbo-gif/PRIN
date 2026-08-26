@@ -27,6 +27,13 @@ The committed WP-001 files preserve the S1 measurement point and are not
 regenerated during later sessions. Compare temporary output rather than
 rewriting baseline history.
 
+## WP-033 artefacts
+
+- `wp033_benchmark_traceability.md` — maps every verified legacy PRINet 3.0
+  benchmark script (58, not the session brief's quoted 62 — see the file's
+  own "Verified script count" section) to its `benchrunner` topic category
+  and new module.
+
 `DOCS/baselines/` is excluded from its own active-file counts to prevent
 self-referential inventory drift. Archived PRINet 3.0 files are measured
 separately and are never imported or executed.

@@ -55,6 +55,13 @@ Additional PRIN-specific suites (per the Testing Standards):
   (`encode → evolve → phase_similarity`) and benchmark class (WP-027).
 - `test_gpu_*.py` — GPU integration tests, marker `gpu` (opt-in, self-hosted
   runner, `[gpu]` commit-message trigger).
+- `test_benchrunner.py` — WP-033 tests for the unified `benchrunner` CLI and
+  its nine category packages (`../benchmarks/`): shared config/timing/
+  registry/result-writer infrastructure, the ≥10-measured-iteration timing
+  rule (Benchmarking and Reproducibility Standards §2.2), JSON schema
+  compatibility with legacy PRINet 3.0 field names, and CLI dispatch. One
+  `slow`-marked test runs the real `cargo bench -p prin-kernels` subprocess
+  end to end.
 - Differential parity tests live in `../parity/`.
 - Rust unit/property tests live next to each crate (`cargo test`).
 

@@ -170,6 +170,12 @@ at the top level until they are folded into the final campaign archive in Phase 
   cross-crate PyO3 bindings for daemon, hooks, MOT, temporal, stats, and
   adversarial APIs; GIL-safe native daemon lifecycle; provider and latency
   acceptance evidence.
+- [`0129-wp033-s1-handoff.md`](0129-wp033-s1-handoff.md) — WP-033 S1 handoff
+  to the S2 audit for the unified `benchrunner` CLI, shared config/
+  environment-capture/timing infrastructure, and the nine topic category
+  packages: the verified 58-vs-62 legacy-script-count correction, the
+  `kernels/` `criterion`-subprocess-orchestration design (no PyO3 binding
+  exists for `prin-kernels`), and the full legacy-script traceability table.
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
