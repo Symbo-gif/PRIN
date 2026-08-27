@@ -20,6 +20,7 @@ from .benchmark_reporting import (
 from .figure_generation import (
     ArtifactNotFoundError,
     ArtifactSchemaError,
+    NormalizationError,
     OutputPathError,
     PublicationGenerationError,
     configure_neurips_style,
@@ -65,6 +66,7 @@ from .table_generation import (
 __all__ = [
     "ArtifactNotFoundError",
     "ArtifactSchemaError",
+    "NormalizationError",
     "OutputPathError",
     "PRINetProfiler",
     "ProfileReport",

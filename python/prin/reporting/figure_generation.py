@@ -58,6 +58,16 @@ ALLOWED_OUTPUT_ROOTS = (
 _FIXED_DATE = datetime(2000, 1, 1, tzinfo=UTC)
 
 
+class NormalizationError(PublicationGenerationError, ValueError):
+    """Report matplotlib output that cannot be normalized for comparison.
+
+    Examples:
+        >>> error = NormalizationError("unsupported matplotlib format: .svg")
+        >>> isinstance(error, PublicationGenerationError)
+        True
+    """
+
+
 def _dirs(results_dir: Path | None, output_dir: Path | None) -> tuple[Path, Path]:
     results = Path(results_dir) if results_dir is not None else DEFAULT_RESULTS_DIR
     output = Path(output_dir) if output_dir is not None else DEFAULT_OUTPUT_DIR
@@ -145,7 +155,8 @@ def normalize_matplotlib_output(path: Path) -> bytes:
         Normalized bytes suitable for hashing or byte comparison.
 
     Raises:
-        ValueError: If the path suffix is unsupported or the PNG is malformed.
+        NormalizationError: If the path suffix is unsupported or the PNG is
+            malformed.
 
     Examples:
         >>> with tempfile.TemporaryDirectory() as directory:
@@ -167,19 +178,19 @@ def normalize_matplotlib_output(path: Path) -> bytes:
         )
         return payload
     if suffix != ".png":
-        raise ValueError(f"unsupported matplotlib format: {suffix}")
+        raise NormalizationError(f"unsupported matplotlib format: {suffix}")
     if not payload.startswith(b"\x89PNG\r\n\x1a\n"):
-        raise ValueError(f"malformed PNG file: {path}")
+        raise NormalizationError(f"malformed PNG file: {path}")
     result = bytearray(payload[:8])
     offset = 8
     while offset < len(payload):
         if offset + 12 > len(payload):
-            raise ValueError(f"malformed PNG file: {path}")
+            raise NormalizationError(f"malformed PNG file: {path}")
         length = int.from_bytes(payload[offset : offset + 4], "big")
         end = offset + 12 + length
         chunk = payload[offset + 4 : offset + 8]
         if end > len(payload):
-            raise ValueError(f"malformed PNG file: {path}")
+            raise NormalizationError(f"malformed PNG file: {path}")
         if chunk in {b"IHDR", b"PLTE", b"tRNS", b"IDAT", b"IEND"}:
             result.extend(payload[offset:end])
         offset = end
@@ -1104,6 +1115,7 @@ __all__ = [
     "FIGURE_GENERATORS",
     "ArtifactNotFoundError",
     "ArtifactSchemaError",
+    "NormalizationError",
     "OutputPathError",
     "PublicationGenerationError",
     "ReportingError",

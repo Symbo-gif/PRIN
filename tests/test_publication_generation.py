@@ -424,12 +424,14 @@ def test_optional_phase_one_tables_and_throughput_formats(
 def test_normalizer_rejects_unsupported_and_malformed_formats(tmp_path: Path) -> None:
     text = tmp_path / "figure.svg"
     text.write_bytes(b"svg")
-    with pytest.raises(ValueError, match="unsupported"):
+    with pytest.raises(figures.NormalizationError, match="unsupported") as unsupported:
         figures.normalize_matplotlib_output(text)
+    assert isinstance(unsupported.value, figures.PublicationGenerationError)
     png = tmp_path / "figure.png"
     png.write_bytes(b"not png")
-    with pytest.raises(ValueError, match="malformed"):
+    with pytest.raises(figures.NormalizationError, match="malformed") as malformed:
         figures.normalize_matplotlib_output(png)
+    assert isinstance(malformed.value, ValueError)
 
 
 def test_json_loading_is_shared_not_privately_cross_imported() -> None:
@@ -442,6 +444,7 @@ def test_all_reporting_errors_share_one_root() -> None:
     error_types = (
         figures.ArtifactNotFoundError,
         figures.ArtifactSchemaError,
+        figures.NormalizationError,
         figures.OutputPathError,
         figures.PublicationGenerationError,
         tables.ArtifactNotFoundError,
