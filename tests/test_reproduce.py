@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import ast
 import json
 from pathlib import Path
 
+import prin.reporting
 import pytest
 
 from tools import reproduce
@@ -29,6 +31,28 @@ def _write_manifest(root: Path, files: dict[str, bytes]) -> Path:
     path = root / "manifest.json"
     path.write_text(json.dumps(manifest), encoding="utf-8")
     return path
+
+
+def test_reproduce_imports_only_public_reporting_surface() -> None:
+    """WP035-F1: the pipeline must not reach into ``prin.reporting`` private modules.
+
+    ``ReportingError`` is re-exported through ``prin.reporting.__init__`` and
+    listed in its ``__all__``; importing it from ``prin.reporting._artifacts``
+    (or any other ``prin.reporting._*`` module) is a private cross-module
+    import identical in kind to the WP034-F4 pattern.
+    """
+    source = Path(reproduce.__file__).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    private_reporting_imports = [
+        node.module
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+        and node.module is not None
+        and node.module.startswith("prin.reporting.")
+        and node.module.rsplit(".", 1)[1].startswith("_")
+    ]
+    assert private_reporting_imports == []
+    assert reproduce.ReportingError is prin.reporting.ReportingError
 
 
 def test_repository_manifest_matches_all_stored_json_artefacts() -> None:

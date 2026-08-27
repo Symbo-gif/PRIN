@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from prin.reporting._artifacts import ReportingError
+from prin.reporting import ReportingError
 from prin.reporting.figure_generation import generate_all_figures
 from prin.reporting.table_generation import generate_all_tables
 
