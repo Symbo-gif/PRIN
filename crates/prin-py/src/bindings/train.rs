@@ -152,6 +152,15 @@ pub struct PyResonanceLayerBridge {
     n_dims: usize,
 }
 
+impl PyResonanceLayerBridge {
+    /// The owned Rust layer, for in-crate consumers that drive its dynamics
+    /// directly (e.g. the `train_layers` HEP gradient estimator). Not exposed
+    /// to Python.
+    pub(crate) fn layer(&self) -> &ResonanceLayer<BridgeBackend> {
+        &self.layer
+    }
+}
+
 #[pymethods]
 impl PyResonanceLayerBridge {
     /// Construct with seeded-random parameters (see

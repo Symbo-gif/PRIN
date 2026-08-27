@@ -53,6 +53,11 @@ fn _prin_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Trainable stack Torch bridges (WP-025)
     bindings::train::register(m)?;
 
+    // Tensor decomposition owners + WP-023 trainable primitives, exposed as
+    // the PRINet-3.0-compatible surface (WP-036 S1 sub-pass 0141B)
+    bindings::tensor::register(m)?;
+    bindings::train_layers::register(m)?;
+
     // Trainable stack Torch bridges (WP-026 / Exec-WP-026 S1)
     bindings::attention::register(m)?;
     bindings::phase_tracker::register(m)?;

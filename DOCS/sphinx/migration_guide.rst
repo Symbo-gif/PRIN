@@ -1164,3 +1164,52 @@ name inventory; removals are detected by ``verify_api_surface``.
    "cuda_fused_kernel_available", "prin.cuda_fused_kernel_available", "predicate; always false"
    "fused_discrete_step_cuda", "prin.fused_discrete_step_cuda", "typed unavailable stub"
    "BackendUnavailableError", "prin.BackendUnavailableError", "shared typed migration error"
+
+WP-036 compatibility surface (sub-pass 0141B)
+--------------------------------------------
+
+The second WP-036 coding sub-pass binds the already-implemented ``prin-tensor``
+(WP-014) and ``prin-train`` (WP-023) numerics to Python as thin PyO3 bridges
+(no numerics added in ``prin-py`` — Coding Standards §2.1). Every trainable
+binding exposed as a ``torch.autograd.Function`` has a float64
+``torch.autograd.gradcheck`` test; ``FeedbackInhibition`` is a
+straight-through estimator (forward and backward compute deliberately
+different functions), so its gradient contract is verified against the
+closed-form soft-term VJP instead, matching
+``crates/prin-train/src/inhibition.rs``'s own gradient test.
+
+Namespace: ``PolyadicTensor`` / ``CPDecomposition`` land in a new
+``prin.tensor`` submodule (PRINet 3.0's ``core/decomposition.py`` has no
+existing PRIN home); the five activation/inhibition/energy symbols land in
+``prin.nn`` alongside ``ResonanceLayer`` / ``GatedPhaseActivation``. All eight
+also resolve from the top-level ``prin`` namespace (the frozen RC1 contract).
+
+.. csv-table:: 0141B symbol dispositions — bindings
+   :header: "PRINet 3.0 symbol", "PRIN symbol", "Disposition"
+   :widths: 30, 34, 36
+
+   "PolyadicTensor", "prin.PolyadicTensor / prin.tensor.PolyadicTensor", "PyO3 binding over ``prin_tensor::hosvd`` (Tucker/HOSVD)"
+   "CPDecomposition", "prin.CPDecomposition / prin.tensor.CPDecomposition", "PyO3 binding over ``prin_tensor::cp_als`` (CP/PARAFAC ALS)"
+   "dSiLU", "prin.dSiLU / prin.nn.dSiLU", "``torch.autograd.Function`` over ``prin_train::activations::d_silu``; gradcheck at DV-018 epsilon"
+   "PhaseActivation", "prin.PhaseActivation / prin.nn.PhaseActivation", "``torch.autograd.Function`` over ``prin_train::activations::phase_activation``; custom inner activation raises ``NotImplementedError`` (WP-036B/C parity)"
+   "HolomorphicActivation", "prin.HolomorphicActivation / prin.nn.HolomorphicActivation", "``torch.autograd.Function`` over ``prin_train::activations::HolomorphicActivation`` (split-complex only; ``holomorphic=True`` raises — permanent Burn-autodiff deviation)"
+   "FeedbackInhibition", "prin.FeedbackInhibition / prin.nn.FeedbackInhibition", "``torch.autograd.Function`` over ``prin_train::inhibition::FeedbackInhibition`` (hard-forward / soft-backward STE); ``delay_steps`` accepted but inert; 2-D ``rates`` only (arbitrary batch dims are WP-036B/C)"
+   "HolomorphicEnergy", "prin.HolomorphicEnergy / prin.nn.HolomorphicEnergy", "``torch.autograd.Function`` over ``prin_train::energy::HolomorphicEnergy``; takes a precomputed ``task_loss`` ``(B,1)`` rather than ``target_logits``/``target_labels`` (the ``concept_proj`` head is WP-027)"
+   "HolomorphicEPTrainer", "prin.HolomorphicEPTrainer / prin.nn.HolomorphicEPTrainer", "±β equilibrium-propagation *estimator* over ``prin_train::hep::HolomorphicEp``; exposes ``coupling_gradient`` / ``free_energy`` / ``beta``. ``train_step`` (SGD update) and ``loss_history`` / ``grad_norm_history`` population are WP-024 / WP-027"
+
+.. csv-table:: 0141B symbol dispositions — deferred rebuild (no Rust owner)
+   :header: "PRINet 3.0 symbol", "PRIN symbol", "Disposition"
+   :widths: 30, 20, 50
+
+   "FeedforwardInhibition", "(deferred)", "Parameter-free phase-delay gate; deliberately excluded from the WP-023 Rust rebuild (023 audit §Non-goals). Needs a ``prin-dynamics``/``prin-train`` rebuild — deferred to a future WP; see ``DOCS/experiments/0141-wp036-s1-dd-dispositions.md``"
+   "DentateGyrusConverter", "(deferred)", "FFI→integration→FBI pipeline; deliberately excluded from the WP-023 rebuild (023 audit §Non-goals). Deferred rebuild"
+   "DGLayer", "(deferred)", "Trainable ``nn.Module`` wrapper over ``DentateGyrusConverter``; no Rust owner. Deferred rebuild"
+   "oscillatory_weight_init", "(deferred)", "Weight-initialization helper (``nn/layers.py``); no Rust owner. Deferred rebuild"
+   "PhaseToRateConverter", "(deferred)", "Trainable ``nn.Module`` (``nn/layers.py``); no Rust owner. Deferred rebuild"
+   "PhaseToRateAutoencoder", "(deferred)", "Trainable ``nn.Module`` (``nn/layers.py``); no Rust owner. Deferred rebuild"
+   "DenseAutoencoder", "(deferred)", "Trainable ``nn.Module`` (``nn/layers.py``); no Rust owner. Deferred rebuild"
+   "SparsityRegularizationLoss", "(deferred)", "Trainable-loss ``nn.Module`` (``nn/layers.py``); no Rust owner. Deferred rebuild"
+   "HierarchicalResonanceLayer", "(deferred)", "Trainable ``nn.Module`` over ``DeltaThetaGammaNetwork`` with learnable projections/PAC depths; no Rust owner. Deferred rebuild"
+   "PhaseAmplitudeCouplingLayer", "(deferred)", "Trainable ``nn.Module`` over ``PhaseAmplitudeCoupling`` with a learnable modulation depth; no Rust owner. Deferred rebuild"
+   "PRINetModel", "(deferred)", "Top-level trainable model (``nn/layers.py``); no Rust owner. Deferred rebuild"
+   "compile_model", "(deferred)", "``torch.compile`` helper (``nn/layers.py``); no Rust owner. Deferred rebuild"

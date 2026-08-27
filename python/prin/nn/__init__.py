@@ -36,10 +36,17 @@ Symbols, by submodule: :mod:`prin.nn.attention` (`OscillatoryAttention`),
 `estimate_complexity`), :mod:`prin.nn.optimizers` (`SyncGd`, `Scalr`, `Rip`
 — WP-027 `torch.optim.Optimizer` wrappers) — all re-exported here.
 
+WP-036 S1 sub-pass 0141B adds the WP-023 trainable primitives as the
+PRINet-3.0-compatible surface: :mod:`prin.nn.activations` (`dSiLU`,
+`PhaseActivation`, `HolomorphicActivation`), :mod:`prin.nn.inhibition`
+(`FeedbackInhibition`), and :mod:`prin.nn.energy` (`HolomorphicEnergy`,
+`HolomorphicEPTrainer`) — all re-exported here.
+
 Remaining planned symbols (Phase 4, PRINet-3.0 compatible), not yet bridged:
 `PRINetModel`, `HierarchicalResonanceLayer`, `PhaseToRateConverter`,
-`HybridPRINet` (v1), `AlternatingOptimizer`, the remaining activations
-(`HolomorphicActivation`), and the HEP trainer.
+`HybridPRINet` (v1), `AlternatingOptimizer` — tracked by the WP-036 S1
+disposition register (these have no Rust owner and need a trainable-layer
+rebuild).
 """
 
 from __future__ import annotations
@@ -57,6 +64,7 @@ from .ablation import (
     SlotAttentionFrozen,
     SlotAttentionNoGRU,
 )
+from .activations import HolomorphicActivation, PhaseActivation, dSiLU
 from .allocation import (
     AdaptiveOscillatorAllocator,
     DynamicPhaseTracker,
@@ -64,7 +72,9 @@ from .allocation import (
     estimate_complexity,
 )
 from .attention import OscillatoryAttention
+from .energy import HolomorphicEnergy, HolomorphicEPTrainer
 from .hybrid import HybridPRINetV2
+from .inhibition import FeedbackInhibition
 from .optimizers import Rip, Scalr, SyncGd
 from .phase_tracker import PhaseTracker, TrackingResult
 from .slot_attention import SlotAttentionModule, TemporalSlotAttentionMOT
@@ -72,10 +82,15 @@ from .slot_attention import SlotAttentionModule, TemporalSlotAttentionMOT
 __all__: list[str] = [
     "AdaptiveOscillatorAllocator",
     "DynamicPhaseTracker",
+    "FeedbackInhibition",
     "GatedPhaseActivation",
+    "HolomorphicActivation",
+    "HolomorphicEPTrainer",
+    "HolomorphicEnergy",
     "HybridPRINetV2",
     "OscillatorBudget",
     "OscillatoryAttention",
+    "PhaseActivation",
     "PhaseTracker",
     "PhaseTrackerFrozen",
     "PhaseTrackerStatic",
@@ -88,6 +103,7 @@ __all__: list[str] = [
     "SyncGd",
     "TemporalSlotAttentionMOT",
     "TrackingResult",
+    "dSiLU",
     "estimate_complexity",
 ]
 

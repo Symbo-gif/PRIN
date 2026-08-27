@@ -64,9 +64,14 @@ from prin.metrics import sparse_mean_phase_coherence as sparse_mean_phase_cohere
 from prin.metrics import (
     sparse_synchronization_energy as sparse_synchronization_energy,
 )
+from prin.nn import FeedbackInhibition as FeedbackInhibition
 from prin.nn import GatedPhaseActivation as GatedPhaseActivation
+from prin.nn import HolomorphicActivation as HolomorphicActivation
+from prin.nn import HolomorphicEnergy as HolomorphicEnergy
+from prin.nn import HolomorphicEPTrainer as HolomorphicEPTrainer
 from prin.nn import HybridPRINetV2 as HybridPRINetV2
 from prin.nn import OscillatoryAttention as OscillatoryAttention
+from prin.nn import PhaseActivation as PhaseActivation
 from prin.nn import PhaseTracker as PhaseTracker
 from prin.nn import PhaseTrackerFrozen as PhaseTrackerFrozen
 from prin.nn import PhaseTrackerStatic as PhaseTrackerStatic
@@ -75,6 +80,7 @@ from prin.nn import SlotAttentionFrozen as SlotAttentionFrozen
 from prin.nn import SlotAttentionModule as SlotAttentionModule
 from prin.nn import SlotAttentionNoGRU as SlotAttentionNoGRU
 from prin.nn import TemporalSlotAttentionMOT as TemporalSlotAttentionMOT
+from prin.nn import dSiLU as dSiLU
 from prin.reporting import configure_neurips_style as configure_neurips_style
 from prin.reporting import fig_ablation_results as fig_ablation_results
 from prin.reporting import fig_chimera_heatmap as fig_chimera_heatmap
@@ -104,6 +110,8 @@ from prin.reporting import (
     table_parameter_efficiency as table_parameter_efficiency,
 )
 from prin.reporting import table_statistical_summary as table_statistical_summary
+from prin.tensor import CPDecomposition as CPDecomposition
+from prin.tensor import PolyadicTensor as PolyadicTensor
 from prin.train import TrainingResult as TrainingResult
 
 __version__: str

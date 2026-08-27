@@ -20,6 +20,8 @@ pub(crate) mod phase_tracker;
 pub(crate) mod slot_attention;
 pub(crate) mod state;
 pub(crate) mod temporal;
+pub(crate) mod tensor;
 pub(crate) mod train;
+pub(crate) mod train_layers;
 pub(crate) mod train_support;
 pub(crate) mod trainer;

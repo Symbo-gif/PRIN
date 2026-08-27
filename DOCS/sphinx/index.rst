@@ -27,6 +27,7 @@ PRINet 3.0.
    api/dlpack
    api/parity
    api/nn
+   api/tensor
    api/eval
    api/experiments
    api/reporting

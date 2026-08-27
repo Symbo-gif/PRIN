@@ -97,4 +97,14 @@ RC1_PUBLIC_API: tuple[str, ...] = (
     "triton_fused_discrete_step",
     "cuda_fused_kernel_available",
     "fused_discrete_step_cuda",
+    # WP-036 S1 sub-pass 0141B — prin-tensor (WP-014) + prin-train (WP-023)
+    # bindings.
+    "PolyadicTensor",
+    "CPDecomposition",
+    "dSiLU",
+    "PhaseActivation",
+    "HolomorphicActivation",
+    "FeedbackInhibition",
+    "HolomorphicEnergy",
+    "HolomorphicEPTrainer",
 )

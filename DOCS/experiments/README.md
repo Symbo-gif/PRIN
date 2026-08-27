@@ -186,11 +186,14 @@ at the top level until they are folded into the final campaign archive in Phase 
   SHA-256 artefact manifest, fail-closed tamper handling, all 39 generated
   figure/table files, and enabled `repro.yml` execution.
 - [`0141-wp036-s1-handoff.md`](0141-wp036-s1-handoff.md) — running WP-036 S1
-  handoff, initialized by sub-pass 0141A with API-freeze, direct re-export,
-  compatibility-alias, and unavailable-backend evidence.
+  handoff: sub-pass 0141A (API-freeze, direct re-export, compatibility-alias,
+  unavailable-backend evidence) and sub-pass 0141B (`prin-tensor` /
+  `prin-train` PyO3 bindings for the eight owned Bucket D/E symbols, with the
+  twelve-symbol Bucket E descope recorded).
 - [`0141-wp036-s1-dd-dispositions.md`](0141-wp036-s1-dd-dispositions.md) —
-  30-row D-D symbol disposition appendix, subject to the session-0142 S2 audit
-  veto.
+  D-D symbol disposition appendix: 30 GPU/Triton/no-CPU-analogue rows (0141A)
+  plus 12 deferred trainable-layer-rebuild rows (0141B), subject to the
+  session-0142 S2 audit veto.
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at

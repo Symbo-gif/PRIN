@@ -92,9 +92,14 @@ from prin.metrics import (
     sparse_synchronization_energy,
 )
 from prin.nn import (
+    FeedbackInhibition,
     GatedPhaseActivation,
+    HolomorphicActivation,
+    HolomorphicEnergy,
+    HolomorphicEPTrainer,
     HybridPRINetV2,
     OscillatoryAttention,
+    PhaseActivation,
     PhaseTracker,
     PhaseTrackerFrozen,
     PhaseTrackerStatic,
@@ -103,6 +108,7 @@ from prin.nn import (
     SlotAttentionModule,
     SlotAttentionNoGRU,
     TemporalSlotAttentionMOT,
+    dSiLU,
 )
 from prin.reporting import (
     configure_neurips_style,
@@ -127,6 +133,7 @@ from prin.reporting import (
     table_parameter_efficiency,
     table_statistical_summary,
 )
+from prin.tensor import CPDecomposition, PolyadicTensor
 from prin.train import TrainingResult
 
 __version__ = "0.3.0-alpha.1"
@@ -144,10 +151,15 @@ __all__ = [
     "STATE_DIM",
     "BackendType",
     "BackendUnavailableError",
+    "CPDecomposition",
     "ControlSignals",
     "DeltaThetaGammaNetwork",
     "ExponentialIntegrator",
+    "FeedbackInhibition",
     "GatedPhaseActivation",
+    "HolomorphicActivation",
+    "HolomorphicEPTrainer",
+    "HolomorphicEnergy",
     "HopfOscillator",
     "HybridPRINetV2",
     "KuramotoOscillator",
@@ -155,10 +167,12 @@ __all__ = [
     "OscillatorModel",
     "OscillatorState",
     "OscillatoryAttention",
+    "PhaseActivation",
     "PhaseAmplitudeCoupling",
     "PhaseTracker",
     "PhaseTrackerFrozen",
     "PhaseTrackerStatic",
+    "PolyadicTensor",
     "RIPOptimizer",
     "ResonanceLayer",
     "SCALROptimizer",
@@ -186,6 +200,7 @@ __all__ = [
     "core_version",
     "create_session",
     "cuda_fused_kernel_available",
+    "dSiLU",
     "detect_best_backend",
     "directml_available",
     "fig_ablation_results",

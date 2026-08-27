@@ -3961,6 +3961,7 @@ version = "0.3.0-alpha.1"
 dependencies = [
  "burn",
  "dlpack",
+ "ndarray 0.16.1",
  "numpy",
  "prin-daemon",
  "prin-dynamics",
