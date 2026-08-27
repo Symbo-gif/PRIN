@@ -130,6 +130,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   level: compliance gap recorded, and WP-033 S1's session brief now carries
   a hard entry-condition gate so it cannot silently recur.
 
+- **WP-034 Reporting, figures, tables, and profiling**
+  (`python/prin/reporting/`, `tests/test_reporting_profiler.py`,
+  `tests/test_publication_generation.py`; Phase 6 second WP; sessions
+  0133–0136; audit `DOCS/audits/034-wp034-audit.md`, verdict
+  `PASS-WITH-FINDINGS`, four D4 findings — three FIXED in S3, one
+  documentation-only correction closed here in S4): near-verbatim ports of the
+  PRINet 3.0 `utils/{benchmark_reporting,figure_generation,table_generation,
+  profiler}.py` reporting tools, rebuilt with typed public-boundary errors,
+  deterministic output, and output-path confinement.
+  - `prin.reporting.benchmark_reporting` — `generate_benchmark_report`,
+    `generate_leaderboard`, `generate_scalr_metrics_report`: deterministic
+    Markdown from stored benchmark JSON. The implicit wall-clock timestamp of
+    the 3.0 reference is removed; `generated_at` is caller-supplied and
+    normalized to UTC minute precision, so unchanged inputs produce byte-stable
+    output. Markdown escaping and confined writes throughout.
+  - `prin.reporting.figure_generation` — **14** stored-artefact figure
+    generators (`fig_ablation_results` … `fig_training_curves`), the headless
+    300-DPI NeurIPS style (`configure_neurips_style`), `generate_all_figures`
+    master entry, and `normalize_matplotlib_output` for deterministic
+    PDF/PNG byte comparison (fixed dates/producer metadata; ancillary chunks
+    discarded).
+  - `prin.reporting.table_generation` — **11** byte-comparable LaTeX fragment
+    generators (`table_ablation_variants` … `table_supercritical_regime`) and
+    `generate_all_tables`. Every fragment regenerates bytes-identical to its
+    stored PRINet 3.0 `paper/tables/` counterpart (LF-normalized).
+  - `prin.reporting.profiler` — `PRINetProfiler` (typed `torch.profiler`
+    wrapper), the legacy `ProfileReport` shape and Chrome-trace name,
+    `profile_training_loop`, and `PRINetProfiler.record_function(label)` as the
+    explicit boundary that makes Rust-backed operations visible in torch
+    traces. No model numerics; RNG state is never mutated.
+  - `prin.reporting._artifacts` — internal shared module: the single home for
+    stored-artefact JSON loading/schema validation and the typed error
+    hierarchy. Every reporting error subclasses the new `ReportingError`
+    root while keeping its original stdlib base (`ValueError`/`RuntimeError`/
+    `FileNotFoundError`) for backward-compatible `isinstance` catches.
+  - No numerics in Python, no new dependencies, no crate changes: the package
+    only renders and profiles values that already live in stored JSON or in
+    the Rust core. Stored-artefact byte comparison and deterministic
+    PDF/PNG normalization are the applicable parity evidence (no numerical
+    primitive is introduced).
+  - `tests/test_reporting_profiler.py` (59) and
+    `tests/test_publication_generation.py` (13) — 72 tests; `prin.reporting`
+    99% line coverage. Covers report/leaderboard/SCALR determinism, schema and
+    output-confinement errors, profiler lifecycle/state validation, Rust-call
+    labels, Chrome-trace export, all 14 figure generators, all 11 table
+    generators, exact LaTeX bytes, and deterministic normalized PDF/PNG.
+  - **Figure count — factual correction (WP034-F1, D4, carried to S4):** the
+    WP-034 session briefs and the WP-035 brief quote "15 figures". The verified
+    PRINet 3.0 reference (`utils/figure_generation.py`, stored `paper/figures/`)
+    contains **14** generated figures, numbered `fig2`–`fig15`; no `fig1`
+    implementation or stored output has ever existed. PRIN ports all 14
+    verifiable generators. This is a factual correction to the brief text, not
+    a plan amendment and not a dropped deliverable.
+  - **WP034-F2 (D4) FIXED** in S3 (`11a97cb`): `normalize_matplotlib_output`
+    now raises the typed `NormalizationError` (a
+    `PublicationGenerationError`/`ValueError` subclass) instead of a bare
+    `ValueError`.
+  - **WP034-F3 (D4) FIXED** in S3 (`8dbf55d`): reporting errors unified under
+    the shared `ReportingError` root.
+  - **WP034-F4 (D4) FIXED** in S3 (`8dbf55d`): stored-artefact JSON loading
+    moved into `prin.reporting._artifacts`; the private cross-module import
+    between `table_generation` and `figure_generation` is gone.
+  - **S4 documentation closure (session 0136):** `prin.reporting` and `tests/`
+    READMEs expanded; Migration Guide gains a WP-034 symbol-mapping section;
+    `DOCS/audits/`, `DOCS/reports/`, `DOCS/sessions/` indexes updated; Project
+    State Report `DOCS/reports/034-project-state.md` issued, declaring WP-035
+    (Reproduction pipeline and manifest).
+
 - **WP-033 Unified benchmark runner and category migration**
   (`benchmarks/`, `tests/test_benchrunner.py`, Phase 6 first WP; sessions
   0129–0132; audit `DOCS/audits/033-wp033-audit.md`, verdict

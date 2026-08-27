@@ -62,6 +62,19 @@ Additional PRIN-specific suites (per the Testing Standards):
   compatibility with legacy PRINet 3.0 field names, and CLI dispatch. One
   `slow`-marked test runs the real `cargo bench -p prin-kernels` subprocess
   end to end.
+- `test_reporting_profiler.py` — 59 WP-034 tests for `prin.reporting`
+  benchmark reports/leaderboards/SCALR summaries and the `PRINetProfiler`:
+  deterministic Markdown (caller-supplied UTC timestamp, byte-stable output),
+  legacy schema preservation, Markdown escaping, output-path confinement,
+  leaderboard ranking/tie-breaking, malformed-JSON isolation, profiler
+  lifecycle/state validation, explicit Rust-backed operation labels, Chrome
+  trace export, and `profile_training_loop` forward/backward without RNG
+  mutation.
+- `test_publication_generation.py` — 13 WP-034 tests covering all 14 figure
+  generators, all 11 LaTeX table generators, regeneration from the stored
+  PRINet 3.0 JSON artefacts, exact LaTeX byte comparison, deterministic
+  normalized PNG/PDF bytes, schema/missing-artefact errors, and output-path
+  confinement.
 - Differential parity tests live in `../parity/`.
 - Rust unit/property tests live next to each crate (`cargo test`).
 

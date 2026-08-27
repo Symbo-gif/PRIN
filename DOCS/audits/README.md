@@ -158,6 +158,19 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   byte-for-byte unchanged source tree); MOT equivalence and daemon
   latency/provider acceptance re-confirmed on unchanged evidence; Snyk Code
   0 findings across all four touched scopes.
+- [`033-wp033-audit.md`](033-wp033-audit.md) — WP-033 "Unified benchmark runner
+  and category migration" audit (`PASS-WITH-FINDINGS`); one D2 finding
+  (WP033-F1: two tests failed under the documented `--basetemp` Windows pytest
+  invocation, FIXED in S3 `6eb4e8b`) resolved with a CLEAN delta re-audit.
+  (Index entry backfilled at WP-034 S4.)
+- [`034-wp034-audit.md`](034-wp034-audit.md) — WP-034 "Reporting, figures,
+  tables, and profiling" audit (`PASS-WITH-FINDINGS`); four D4 findings
+  (WP034-F1: session-brief 15-vs-14 figure-count discrepancy, documentation
+  correction carried to S4; WP034-F2: bare `ValueError` in
+  `normalize_matplotlib_output`, FIXED `11a97cb`; WP034-F3: inconsistent
+  reporting error hierarchy, FIXED `8dbf55d`; WP034-F4: private cross-module
+  import between `table_generation` and `figure_generation`, FIXED `8dbf55d`)
+  resolved in S3 with a CLEAN delta re-audit.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.

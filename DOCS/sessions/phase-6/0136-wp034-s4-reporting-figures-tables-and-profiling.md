@@ -1,6 +1,6 @@
 # Session 0136 — WP-034 S4: Documentation — Reporting, figures, tables, and profiling
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S4 documentation committed and pushed; WP-035 declared in PSR-034.  
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-034  
 **Session type:** S4 — Documentation  

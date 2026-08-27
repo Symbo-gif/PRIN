@@ -983,3 +983,48 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   **Legacy mapping:** see
   ``DOCS/baselines/wp033_benchmark_traceability.md``
   for the complete 58-row traceability table.
+
+- ``prin.reporting`` publication reporting, figures, tables, and profiling
+  (WP-034) — near-verbatim ports of the PRINet 3.0 ``utils/`` reporting tools.
+  All numerics stay in stored JSON or the Rust core; this package only renders
+  and profiles. Reports carry no implicit wall-clock timestamp, so unchanged
+  inputs produce byte-stable output; figures normalize to deterministic
+  PDF/PNG bytes; the 11 LaTeX fragments regenerate bytes-identical to the
+  stored ``paper/tables/`` files.
+
+  **Module mapping:**
+
+  - ``prinet.utils.benchmark_reporting.{generate_benchmark_report,
+    generate_leaderboard,generate_scalr_metrics_report}`` →
+    ``prin.reporting.benchmark_reporting.*`` (same names). The 3.0 implicit
+    ``datetime.now()`` timestamp is replaced by a caller-supplied
+    ``generated_at`` normalized to UTC minute precision.
+  - ``prinet.utils.figure_generation`` → ``prin.reporting.figure_generation``
+    — 14 generators ``fig_ablation_results`` … ``fig_training_curves``
+    (historical ``fig2``–``fig15``), plus ``configure_neurips_style``,
+    ``generate_all_figures``, and the new ``normalize_matplotlib_output``
+    helper for deterministic byte comparison.
+  - ``prinet.utils.table_generation`` → ``prin.reporting.table_generation``
+    — 11 generators ``table_ablation_variants`` … ``table_supercritical_regime``
+    and ``generate_all_tables``.
+  - ``prinet.utils.profiler`` → ``prin.reporting.profiler`` —
+    ``PRINetProfiler``, ``ProfileReport`` (legacy shape/trace name preserved),
+    ``profile_training_loop``, and ``PRINetProfiler.record_function(label)``
+    as the explicit boundary that surfaces Rust-backed operations in
+    ``torch.profiler`` key averages and Chrome traces.
+
+  **Behavioural notes:**
+
+  - **Figure count is 14, not 15.** The reference implementation numbers its
+    figures ``fig2``–``fig15``; there is no ``fig1``. Session briefs quoting
+    "15 figures" are factually corrected in
+    ``DOCS/reports/034-project-state.md`` (finding WP034-F1).
+  - **Typed errors.** All public functions raise from the ``ReportingError``
+    hierarchy (``prin.reporting.ReportingError`` root; each subtype keeps its
+    original stdlib base such as ``ValueError``/``RuntimeError``/
+    ``FileNotFoundError`` for backward-compatible ``isinstance`` catches).
+  - **Output-path confinement.** Writers reject any target outside
+    ``benchmarks/results/``, ``DOCS/test_and_benchmark_results/``, or the OS
+    temp tree. Historical ``paper/`` paths are read-only parity references.
+  - The end-to-end reproduction CLI (``tools/reproduce.py``) and the checked
+    SHA-256 output manifest are WP-035, not part of ``prin.reporting``.
