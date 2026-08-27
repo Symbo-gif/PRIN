@@ -201,7 +201,7 @@ introduction and are not retroactively added here; this table starts with
 | 0132 | 6 | WP-033 | S4 — Documentation | [Unified benchmark runner and category migration](phase-6/0132-wp033-s4-unified-benchmark-runner-and-category-migration.md) | COMPLETE |
 | 0133 | 6 | WP-034 | S1 — Coding | [Reporting, figures, tables, and profiling](phase-6/0133-wp034-s1-reporting-figures-tables-and-profiling.md) | COMPLETE |
 | 0134 | 6 | WP-034 | S2 — Audit | [Reporting, figures, tables, and profiling](phase-6/0134-wp034-s2-reporting-figures-tables-and-profiling.md) | COMPLETE |
-| 0135 | 6 | WP-034 | S3 — Remediation | [Reporting, figures, tables, and profiling](phase-6/0135-wp034-s3-reporting-figures-tables-and-profiling.md) | PLANNED |
+| 0135 | 6 | WP-034 | S3 — Remediation | [Reporting, figures, tables, and profiling](phase-6/0135-wp034-s3-reporting-figures-tables-and-profiling.md) | COMPLETE |
 | 0136 | 6 | WP-034 | S4 — Documentation | [Reporting, figures, tables, and profiling](phase-6/0136-wp034-s4-reporting-figures-tables-and-profiling.md) | PLANNED |
 | 0137 | 6 | WP-035 | S1 — Coding | [Reproduction pipeline and manifest](phase-6/0137-wp035-s1-reproduction-pipeline-and-manifest.md) | PLANNED |
 | 0138 | 6 | WP-035 | S2 — Audit | [Reproduction pipeline and manifest](phase-6/0138-wp035-s2-reproduction-pipeline-and-manifest.md) | PLANNED |

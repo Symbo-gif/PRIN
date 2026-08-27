@@ -13,7 +13,7 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0132 | WP-033 | S4 — Documentation | [Unified benchmark runner and category migration](0132-wp033-s4-unified-benchmark-runner-and-category-migration.md) | COMPLETE |
 | 0133 | WP-034 | S1 — Coding | [Reporting, figures, tables, and profiling](0133-wp034-s1-reporting-figures-tables-and-profiling.md) | COMPLETE |
 | 0134 | WP-034 | S2 — Audit | [Reporting, figures, tables, and profiling](0134-wp034-s2-reporting-figures-tables-and-profiling.md) | COMPLETE |
-| 0135 | WP-034 | S3 — Remediation | [Reporting, figures, tables, and profiling](0135-wp034-s3-reporting-figures-tables-and-profiling.md) | PLANNED |
+| 0135 | WP-034 | S3 — Remediation | [Reporting, figures, tables, and profiling](0135-wp034-s3-reporting-figures-tables-and-profiling.md) | COMPLETE |
 | 0136 | WP-034 | S4 — Documentation | [Reporting, figures, tables, and profiling](0136-wp034-s4-reporting-figures-tables-and-profiling.md) | PLANNED |
 | 0137 | WP-035 | S1 — Coding | [Reproduction pipeline and manifest](0137-wp035-s1-reproduction-pipeline-and-manifest.md) | PLANNED |
 | 0138 | WP-035 | S2 — Audit | [Reproduction pipeline and manifest](0138-wp035-s2-reproduction-pipeline-and-manifest.md) | PLANNED |

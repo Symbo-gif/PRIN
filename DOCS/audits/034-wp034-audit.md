@@ -215,6 +215,86 @@ Four D4 findings: one session-brief factual discrepancy (14 vs. 15 figures), one
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| | | | |
+| WP034-F2 | FIXED | `11a97cb` — `normalize_matplotlib_output` now raises `NormalizationError(PublicationGenerationError, ValueError)`; docstring `Raises` section and regression test updated to assert on the typed error while confirming it remains a `ValueError` | §8 below: targeted + full test suites pass; ruff/mypy/interrogate/doctest/bandit clean |
+| WP034-F3 | FIXED | `8dbf55d` — every reporting error (`PublicationGenerationError`, `ReportInputError`, `ReportOutputError`, `ProfilerConfigurationError`, `ProfilerStateError`, and their subclasses) now also subclasses a new shared `ReportingError(Exception)` root in `prin.reporting._artifacts`, while retaining each type's original stdlib base (`ValueError`/`RuntimeError`/`FileNotFoundError`) for backward-compatible `isinstance` catches | §8 below: new `test_all_reporting_errors_share_one_root` regression test passes; full suite green |
+| WP034-F4 | FIXED | `8dbf55d` — `_load_json` (and its `_checked`/`_CheckedDict`/`_CheckedList` schema-validation machinery) moved out of `figure_generation.py` into new shared module `prin.reporting._artifacts`; `table_generation.py` now imports the loader from that shared module instead of reaching into `figure_generation`'s private name | §8 below: new `test_json_loading_is_shared_not_privately_cross_imported` regression test passes; full suite green |
+| WP034-F1 | CARRIED(1) → WP-034 S4 (session 0136) | n/a — documentation-only correction; the audit's own remedy assigns the PSR/CHANGELOG factual correction ("14 figures, not 15") to S4, which is this cycle's documentation session, not a future WP. Recorded here as the single permitted D4 carry per Development Workflow and Audit Standards §5 | S4 must record the 14-vs-15 correction in PSR-034 and `CHANGELOG.md`; no source change required |
 
-**Delta re-audit date:** — **Result:** —
+**Delta re-audit date:** 2026-08-27 **Result:** CLEAN
+
+### 7.1 Delta re-audit method
+
+Independent re-verification after the F2/F3/F4 commits, scoped to the touched
+files and the WP-034 acceptance evidence:
+
+- Read `python/prin/reporting/_artifacts.py` (new), and the diffs to
+  `figure_generation.py`, `table_generation.py`, `benchmark_reporting.py`,
+  `profiler.py`, `__init__.py`, and `tests/test_publication_generation.py`.
+- Confirmed `figures.PublicationGenerationError is tables.PublicationGenerationError`
+  and `figures.ArtifactSchemaError is tables.ArtifactSchemaError` still hold
+  (shared identity preserved through the new common module), so no caller-visible
+  behavior changed.
+- Confirmed `_load_json` has exactly one definition in the package
+  (`prin.reporting._artifacts`) and zero remaining private cross-module imports
+  between `figure_generation.py` and `table_generation.py`.
+- Confirmed every reporting error type is a subclass of the new `ReportingError`
+  root while still satisfying every pre-existing `pytest.raises(ValueError, ...)`
+  / `pytest.raises(RuntimeError, ...)` / `pytest.raises(FileNotFoundError, ...)`
+  assertion in the existing test suite (no test weakened or skipped).
+- Re-ran the full local gate (§8) and the WP-034-specific acceptance evidence
+  (stored 3.0 byte-comparable artefact regeneration); all green with no new
+  deviation introduced.
+
+No new findings surfaced during the delta re-audit. WP034-F1 is the sole open
+item, explicitly carried to S4 as documented above (first and only carry).
+
+## 8. Delta re-audit command evidence
+
+Commands executed on Windows 11 / Rust 1.92.0 / Python 3.14.0 after commits
+`8dbf55d` (WP034-F3, WP034-F4) and `11a97cb` (WP034-F2):
+
+```powershell
+# WP-034 targeted tests + coverage
+.venv\Scripts\python -m pytest tests/test_reporting_profiler.py tests/test_publication_generation.py --cov=prin.reporting --cov-report=term-missing --basetemp=.pytest_basetemp-wp034s3-final -q
+                                                                               # 72 passed; prin.reporting 99% (1053 stmts, 13 miss)
+
+# Full fast test suite
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp-full -q
+                                                                               # 696 passed, 9 deselected (was 694 before; +2 new regression tests)
+
+# Python quality gates
+.venv\Scripts\ruff check python/prin/reporting/ tests/test_publication_generation.py tests/test_reporting_profiler.py
+                                                                               # All checks passed
+.venv\Scripts\ruff format --check python/prin/reporting/ tests/test_publication_generation.py tests/test_reporting_profiler.py
+                                                                               # 9 files already formatted
+.venv\Scripts\mypy python/prin --strict                                      # 33 files, 0 issues
+.venv\Scripts\python -m interrogate -c pyproject.toml python/prin            # 95.6% (351/367), PASS
+
+# Doctests (including the new shared module)
+.venv\Scripts\python -m doctest python/prin/reporting/_artifacts.py python/prin/reporting/figure_generation.py python/prin/reporting/table_generation.py
+                                                                               # exit 0
+
+# Security
+.venv\Scripts\python -m bandit -r python/prin/reporting -c pyproject.toml    # 0 issues
+.venv\Scripts\python -m pip_audit .                                          # 0 vulnerabilities
+snyk code test python/prin/reporting/                                        # 0 issues
+git diff daaafd9..HEAD -- pyproject.toml Cargo.toml Cargo.lock               # empty — no dependency changes (Snyk Open Source not applicable)
+
+# Sphinx documentation
+Remove-Item -Recurse -Force DOCS/sphinx/_build -ErrorAction SilentlyContinue
+.venv\Scripts\python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
+                                                                               # build succeeded, 0 warnings
+
+# Rust quality gates (no Rust source touched this cycle)
+cargo fmt --all -- --check                                                    # exit 0
+cargo clippy --workspace --all-targets -- -D warnings                        # exit 0
+cargo audit                                                                   # exit 0; 2 allowed warnings (DV-008/DV-017), unchanged
+
+# Governance tools
+.venv\Scripts\python tools/check_dv_register_gates.py                        # 29 rows / 198 sessions, passed
+.venv\Scripts\python tools/wp001_baseline.py check                           # passed
+```
+
+All gates green with no newly introduced deviation. Full local gate reproduction
+stands in for CI per the Push and CI cadence (S1–S3 commit locally only; the S4
+commit is this cycle's sole push).
