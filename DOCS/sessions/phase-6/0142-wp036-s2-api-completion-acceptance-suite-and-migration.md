@@ -4,7 +4,7 @@
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-036  
 **Session type:** S2 — Audit  
-**Predecessor:** [0141 — Coding](0141-wp036-s1-api-completion-acceptance-suite-and-migration.md)  
+**Predecessor:** [0141E — Coding sub-pass 5/5](0141E-wp036-s1e-consolidation-and-handoff.md) (WP-036 S1 executed as `0141A`–`0141E` per amendment #32; this S2 audits the contiguous `0141`+`0141A`–`0141E` commit range)  
 **Successor:** [0143 — Remediation](0143-wp036-s3-api-completion-acceptance-suite-and-migration.md)  
 **Authority:** Project Plan §6/§8 and **amendment #31**; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 

@@ -74,15 +74,27 @@ _SESSION_ROW = re.compile(
 )
 _WP_ID = re.compile(r"^WP-(\d{3})$")
 
-# Plan amendment #31: WP-036 was split into WP-036 / WP-036B / WP-036C. The
-# eight WP-036B/WP-036C sessions are planned sub-sessions inserted between
-# planned integer sessions 0144 and 0145 with two-part identifiers, without
+# Plan amendments #31 and #32 add planned two-part sub-sessions inserted
+# between existing integer sessions with two-part identifiers, without
 # renumbering the gap-free 0001..0198 integer sequence (TRACEABILITY invariant
 # 4 is preserved). This is the same additive-by-amendment principle already
 # used for the EA/EMA global sessions, applied inside the phase order.
+#   #32: WP-036 S1 executed as five coding sub-passes 0141A..0141E.
+#   #31: WP-036 split into WP-036 / WP-036B / WP-036C; WP-036B/WP-036C occupy
+#        eight mini-cycle sub-sessions 0144A..0144H.
 _PLANNED_INTEGER_COUNT = 198
-_SUBSESSION_AFTER = "0144"
-_SUBSESSION_SEQUENCES = tuple(f"0144{letter}" for letter in "ABCDEFGH")
+# Each block is (anchor_integer_session, ordered_two_part_sub_session_ids). The
+# block's rows appear in the register contiguously immediately after the anchor
+# row. Blocks are listed in register order.
+#   #32: WP-036 S1 executed as five coding sub-passes 0141A..0141E.
+#   #31: WP-036B/WP-036C occupy eight mini-cycle sub-sessions 0144A..0144H.
+_SUBSESSION_BLOCKS = (
+    ("0141", tuple(f"0141{letter}" for letter in "ABCDE")),
+    ("0144", tuple(f"0144{letter}" for letter in "ABCDEFGH")),
+)
+_SUBSESSION_SEQUENCES = tuple(
+    sequence for _, block in _SUBSESSION_BLOCKS for sequence in block
+)
 _PLANNED_SESSION_COUNT = _PLANNED_INTEGER_COUNT + len(_SUBSESSION_SEQUENCES)
 
 
@@ -676,7 +688,7 @@ def validate_session_plan(root: Path) -> list[str]:
         errors.append(
             f"session register must contain {_PLANNED_SESSION_COUNT} rows "
             f"({_PLANNED_INTEGER_COUNT} integer + {len(_SUBSESSION_SEQUENCES)} "
-            f"amendment-#31 sub-sessions), found {len(rows)}"
+            f"amendment-inserted sub-sessions), found {len(rows)}"
         )
     if integer_sequences != expected_integer_sequences:
         errors.append(
@@ -685,20 +697,21 @@ def validate_session_plan(root: Path) -> list[str]:
         )
     if subsession_sequences != list(_SUBSESSION_SEQUENCES):
         errors.append(
-            "amendment-#31 sub-sessions must be exactly "
+            "amendment-inserted sub-sessions must be exactly "
             f"{', '.join(_SUBSESSION_SEQUENCES)} in order"
         )
     else:
-        split = expected_integer_sequences.index(_SUBSESSION_AFTER) + 1
-        expected_row_order = (
-            expected_integer_sequences[:split]
-            + list(_SUBSESSION_SEQUENCES)
-            + expected_integer_sequences[split:]
-        )
+        expected_row_order: list[str] = []
+        for sequence in expected_integer_sequences:
+            expected_row_order.append(sequence)
+            for anchor, block in _SUBSESSION_BLOCKS:
+                if sequence == anchor:
+                    expected_row_order.extend(block)
         if row_sequences != expected_row_order:
+            anchors = ", ".join(anchor for anchor, _ in _SUBSESSION_BLOCKS)
             errors.append(
-                "amendment-#31 sub-sessions must appear contiguously right "
-                f"after session {_SUBSESSION_AFTER}"
+                "amendment-inserted sub-sessions must appear contiguously "
+                f"right after their anchor session ({anchors})"
             )
     briefs, duplicate_sequences, physical_count = _numbered_briefs(sessions)
     if duplicate_sequences:

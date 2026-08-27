@@ -5,11 +5,18 @@
 **Execution unit:** WP-036  
 **Session type:** S1 — Coding  
 **Predecessor:** [0140 — Documentation](0140-wp035-s4-reproduction-pipeline-and-manifest.md)  
-**Successor:** [0142 — Audit](0142-wp036-s2-api-completion-acceptance-suite-and-migration.md)  
-**Authority:** Project Plan §6/§8 and **amendment #31**; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Successor:** [0141A — sub-pass 1/5](0141A-wp036-s1a-freeze-machinery-and-reexport-surface.md)  
+**Authority:** Project Plan §6/§8 and **amendments #31 and #32**; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and
 > results belong in Audit Reports, Project State Reports, and experiment artefacts.
+
+> **Decomposition (amendment #32):** WP-036 S1 is executed as five sequential
+> S1 coding sub-passes `0141A`–`0141E` (dependency-ordered), all feeding the
+> single S2 audit `0142`. This brief remains the governing WP-036 S1 contract;
+> its acceptance criteria are satisfied in aggregate across the sub-passes and
+> verified whole at `0141E`. See
+> [`WP-036-S1-execution-plan-and-decomposition.md`](WP-036-S1-execution-plan-and-decomposition.md).
 
 > **Scope note (amendment #31):** WP-036 was split into WP-036 / WP-036B /
 > WP-036C. This session delivers the **compatibility surface, freeze

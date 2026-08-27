@@ -10,6 +10,11 @@ eight sub-sessions `0144A`–`0144H` between planned integer sessions 0144 and
 0145; the 0145–0152 integer numbers are unchanged. See
 [`WP-036-execution-plan-and-decomposition.md`](WP-036-execution-plan-and-decomposition.md).
 
+Plan amendment #32 further decomposes **WP-036 S1 (session 0141)** into five
+sequential S1 coding sub-passes `0141A`–`0141E`, inserted between integer
+sessions 0141 and 0142, all feeding the single S2 audit 0142. See
+[`WP-036-S1-execution-plan-and-decomposition.md`](WP-036-S1-execution-plan-and-decomposition.md).
+
 | Seq | Unit | Type | Session brief | Current status |
 |---:|---|---|---|---|
 | 0129 | WP-033 | S1 — Coding | [Unified benchmark runner and category migration](0129-wp033-s1-unified-benchmark-runner-and-category-migration.md) | COMPLETE |
@@ -25,6 +30,11 @@ eight sub-sessions `0144A`–`0144H` between planned integer sessions 0144 and
 | 0139 | WP-035 | S3 — Remediation | [Reproduction pipeline and manifest](0139-wp035-s3-reproduction-pipeline-and-manifest.md) | COMPLETE |
 | 0140 | WP-035 | S4 — Documentation | [Reproduction pipeline and manifest](0140-wp035-s4-reproduction-pipeline-and-manifest.md) | COMPLETE |
 | 0141 | WP-036 | S1 — Coding | [API completion, acceptance suite, and migration](0141-wp036-s1-api-completion-acceptance-suite-and-migration.md) | PLANNED |
+| 0141A | WP-036 | S1 — Coding | [Freeze machinery, re-export surface, aliases, D-D stubs](0141A-wp036-s1a-freeze-machinery-and-reexport-surface.md) | PLANNED |
+| 0141B | WP-036 | S1 — Coding | [prin-tensor and prin-train Python bindings](0141B-wp036-s1b-tensor-and-train-bindings.md) | PLANNED |
+| 0141C | WP-036 | S1 — Coding | [prin-kernels reference-fn bindings and DV-012 sweep bindings](0141C-wp036-s1c-kernels-bindings-and-dv012.md) | PLANNED |
+| 0141D | WP-036 | S1 — Coding | [Net-new Python compatibility surface](0141D-wp036-s1d-net-new-python-surface.md) | PLANNED |
+| 0141E | WP-036 | S1 — Coding | [Consolidation — Migration Guide table, smoke matrix, traceability, handoff](0141E-wp036-s1e-consolidation-and-handoff.md) | PLANNED |
 | 0142 | WP-036 | S2 — Audit | [API completion, acceptance suite, and migration](0142-wp036-s2-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0143 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0144 | WP-036 | S4 — Documentation | [API completion, acceptance suite, and migration](0144-wp036-s4-api-completion-acceptance-suite-and-migration.md) | PLANNED |

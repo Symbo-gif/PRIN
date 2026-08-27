@@ -1,7 +1,7 @@
 # PRIN Master Session Register
 
-**Register version:** 1.1  
-**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) = 206  
+**Register version:** 1.2  
+**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 5 sub-sessions (`0141A`–`0141E`, plan amendment #32) = 211  
 **Current entry point:** Session 0001  
 **Status authority:** the latest approved Project State Report; this register
 is updated during S4 only from committed evidence.
@@ -19,6 +19,16 @@ and 0145. They do **not** renumber the 0001–0198 integer sequence
 same additive-by-amendment precedent as the EA/EMA global sessions
 (amendments #15, #23) but inside the phase sequence. Their Audit Reports and
 Project State Reports are numbered `036b`/`036c`.
+
+**Amendment-inserted sub-sessions (plan amendment #32):** WP-036 S1
+(session 0141) is executed as five sequential S1 coding sub-passes
+`0141A`–`0141E`, inserted between planned integer sessions 0141 and 0142
+(see `DOCS/sessions/phase-6/WP-036-S1-execution-plan-and-decomposition.md`). They
+do **not** renumber the integer sequence (0142's predecessor becomes
+`0141E`). All five commit at their own green local gate and feed the single
+S2 audit 0142; the contiguous `0141`+`0141A`–`0141E` range is pushed once
+with 0142 (amendment #28). `0141D` may split `0141D1`/`0141D2` under
+Development Workflow §7 if that pass alone exceeds a reviewable range.
 
 ## Global sessions — Executive Audits
 
@@ -217,6 +227,11 @@ introduction and are not retroactively added here; this table starts with
 | 0139 | 6 | WP-035 | S3 — Remediation | [Reproduction pipeline and manifest](phase-6/0139-wp035-s3-reproduction-pipeline-and-manifest.md) | COMPLETE |
 | 0140 | 6 | WP-035 | S4 — Documentation | [Reproduction pipeline and manifest](phase-6/0140-wp035-s4-reproduction-pipeline-and-manifest.md) | COMPLETE |
 | 0141 | 6 | WP-036 | S1 — Coding | [API completion, acceptance suite, and migration](phase-6/0141-wp036-s1-api-completion-acceptance-suite-and-migration.md) | PLANNED |
+| 0141A | 6 | WP-036 | S1 — Coding | [Freeze machinery, re-export surface, aliases, D-D stubs](phase-6/0141A-wp036-s1a-freeze-machinery-and-reexport-surface.md) | PLANNED |
+| 0141B | 6 | WP-036 | S1 — Coding | [prin-tensor and prin-train Python bindings](phase-6/0141B-wp036-s1b-tensor-and-train-bindings.md) | PLANNED |
+| 0141C | 6 | WP-036 | S1 — Coding | [prin-kernels reference-fn bindings and DV-012 sweep bindings](phase-6/0141C-wp036-s1c-kernels-bindings-and-dv012.md) | PLANNED |
+| 0141D | 6 | WP-036 | S1 — Coding | [Net-new Python compatibility surface](phase-6/0141D-wp036-s1d-net-new-python-surface.md) | PLANNED |
+| 0141E | 6 | WP-036 | S1 — Coding | [Consolidation — Migration Guide table, smoke matrix, traceability, handoff](phase-6/0141E-wp036-s1e-consolidation-and-handoff.md) | PLANNED |
 | 0142 | 6 | WP-036 | S2 — Audit | [API completion, acceptance suite, and migration](phase-6/0142-wp036-s2-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0143 | 6 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](phase-6/0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0144 | 6 | WP-036 | S4 — Documentation | [API completion, acceptance suite, and migration](phase-6/0144-wp036-s4-api-completion-acceptance-suite-and-migration.md) | PLANNED |

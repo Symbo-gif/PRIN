@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **WP-036 S1 (session 0141) decomposed into five coding sub-passes
+  `0141A`–`0141E`** (2026-08-27, plan amendment #32, at WP-036 S1 start).
+  Repository verification at S1 start found that even the amendment-#31-narrowed
+  WP-036 S1 exceeds one reviewable commit range: 101 of 172 `prinet.__all__`
+  symbols do not resolve from `prin` (`prin.__all__` has 2 entries), ~55 need
+  new PyO3 bindings / thin wrappers across `prin-tensor`/`prin-train`/
+  `prin-kernels`/`prin-sim`/`prin-py` plus a maturin rebuild, and ~45 are
+  net-new Python surface. The five sub-passes are `0141A` (freeze machinery +
+  71 re-exports + ~8 aliases + ~10 GPU/Triton D-D stubs + `verify_api_surface`
+  + D-D disposition appendix), `0141B` (`prin-tensor`/`prin-train` bindings,
+  ~20, float64 gradcheck), `0141C` (`prin-kernels` `pytorch_*` reference-fn
+  bindings + DV-012 sweep bindings, ~18), `0141D` (net-new Python surface, ~45;
+  may split `0141D1`/`0141D2`), `0141E` (consolidation: 172-row Migration Guide
+  table machine-checked against `wp001_api_traceability.md`, full smoke matrix,
+  traceability regeneration, S1 handoff). Each commits at its own green local
+  gate; the contiguous `0141`+`0141A`–`0141E` range feeds the single S2 audit
+  0142 and is pushed once with it. Same additive-sub-session register
+  convention as amendment #31; the 0001–0198 integer sequence is unchanged
+  (0142's predecessor becomes `0141E`). Planned session count 206 → 211.
+  Strategic dispositions: Bucket-G net-new symbols get a real construct/callable
+  implementation with no numerics + unit tests (behavioral parity stays a
+  WP-036B/C obligation); symbols with no faithful non-numeric implementation
+  get a documented stub + Migration-Guide row (S2 veto); the D-D dispositions
+  (`pytorch_*` → real CPU bindings, `triton_*`/`*_cuda` → documented
+  `BackendUnavailableError` stubs, solver classes → real integrator wrappers)
+  are recorded in `DOCS/experiments/0141-wp036-s1-dd-dispositions.md`.
+  Rationale and full symbol inventory:
+  `DOCS/sessions/phase-6/WP-036-S1-execution-plan-and-decomposition.md`.
 - **WP-036 split into WP-036 / WP-036B / WP-036C** (2026-08-27, plan
   amendment #31, before session 0141/WP-036 S1). The single WP-036 declaration
   (172-symbol `prin` compatibility surface + `_deprecation` freeze machinery +

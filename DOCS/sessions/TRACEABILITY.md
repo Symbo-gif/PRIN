@@ -9,7 +9,7 @@ completion; completion evidence is cited by Audit and Project State Reports.
 
 | Requirement | Primary implementation sessions | Independent confirmation |
 |---|---|---|
-| **F1 — 175+ symbol feature parity** | WP-001 inventory (0001–0004); incremental WPs 006–036; WP-036 compatibility surface + freeze machinery + Migration Guide table (0141–0144); WP-036B/WP-036C acceptance-suite port (`0144A`–`0144H`, amdt #31) | EXP-002 E1–E5 (0159–0163); WP-039 audit (0196) |
+| **F1 — 175+ symbol feature parity** | WP-001 inventory (0001–0004); incremental WPs 006–036; WP-036 compatibility surface + freeze machinery + Migration Guide table (0141 + coding sub-passes `0141A`–`0141E`, amdt #32; audit/remediation/docs 0142–0144); WP-036B/WP-036C acceptance-suite port (`0144A`–`0144H`, amdt #31) | EXP-002 E1–E5 (0159–0163); WP-039 audit (0196) |
 | **F2 — numerical/result parity** | WP-002 corpus (0005–0008); all numerical WPs 006–032; WP-037 Parity draft | EXP-001 (0154–0158), EXP-002 (0159–0163), EXP-005–007 (0174–0188); synthesis 0194 |
 | **F3 — differentiability/PyTorch interop** | WP-003 spike (0009–0012); WP-022–027 (0085–0108) | EXP-004 (0169–0173), EXP-006 (0179–0183); WP-039 audit |
 | **F4 — byte-comparable reproduction** | WP-034–035 (0133–0140), WP-037 (0145–0148) | EXP-002 (0159–0163); synthesis 0194 |
@@ -96,9 +96,13 @@ The Session Plan is structurally complete only if all remain true:
 1. Exactly 39 WPs exist, each with exactly one ordered S1/S2/S3/S4 brief.
 2. Exactly eight campaign experiments exist, each with E1/E2/E3/E4/E5.
 3. Campaign E0 precedes every experiment; E6 follows every experiment.
-4. Global sequence is unique and gap-free from 0001 through 0198.
+4. Global sequence is unique and gap-free from 0001 through 0198. Amendment
+   #31 (`0144A`–`0144H`) and amendment #32 (`0141A`–`0141E`) add planned
+   two-part sub-sessions between existing integers; the integer sequence
+   0001–0198 remains unique and gap-free.
 5. Every predecessor/successor link resolves; only 0001 lacks a file
-   predecessor and only 0198 lacks a file successor.
+   predecessor and only 0198 lacks a file successor. Sub-session chains link
+   internally: `0141` → `0141A` → … → `0141E` → `0142`.
 6. Every Project Plan F/N requirement, roadmap phase, risk, parity hazard, and
    Definition-of-Done item has at least one implementation owner and one
    independent confirmation point.

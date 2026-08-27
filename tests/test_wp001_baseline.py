@@ -129,7 +129,7 @@ def test_session_plan_validator_detects_missing_brief(tmp_path: Path) -> None:
 
     errors = validate_session_plan(tmp_path)
 
-    assert any("206 numbered session briefs" in error for error in errors)
+    assert any("211 numbered session briefs" in error for error in errors)
     assert any("register target does not exist" in error for error in errors)
 
 
@@ -148,11 +148,12 @@ def test_session_plan_validator_detects_duplicate_sequence_ids(
     assert any(
         "duplicate session brief sequence IDs: 0002" in error for error in errors
     )
-    assert any("207 physical numbered session briefs" in error for error in errors)
+    assert any("212 physical numbered session briefs" in error for error in errors)
 
 
 def test_session_plan_validator_accepts_amendment_31_subsessions() -> None:
-    """The real register carries the 0144A-0144H sub-session block cleanly."""
+    """The real register carries the 0141A-0141E (amdt #32) and 0144A-0144H
+    (amdt #31) sub-session blocks cleanly."""
     assert validate_session_plan(ROOT) == []
 
 
@@ -171,7 +172,9 @@ def test_session_plan_validator_rejects_misplaced_subsession(tmp_path: Path) -> 
 
     errors = validate_session_plan(tmp_path)
 
-    assert any("contiguously right after session 0144" in error for error in errors)
+    assert any(
+        "contiguously right after their anchor session" in error for error in errors
+    )
 
 
 def test_api_traceability_covers_archive_without_importing_it(
@@ -267,7 +270,7 @@ def test_repository_inventory_is_deterministic_and_separates_archive() -> None:
     assert len(first["workspace"]["members"]) == 8
     assert len(first["ci"]["workflows"]) == 7
     assert "snyk.yml" in first["ci"]["workflows"]
-    assert first["session_plan"]["numbered_briefs"] == 206
+    assert first["session_plan"]["numbered_briefs"] == 211
     assert first["archive"]["python_modules"] == 43
     assert "target" in first["excluded_directories"]
     assert ".git" in first["excluded_directories"]
