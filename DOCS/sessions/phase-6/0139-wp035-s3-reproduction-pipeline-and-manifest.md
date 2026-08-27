@@ -1,6 +1,6 @@
 # Session 0139 — WP-035 S3: Remediation — Reproduction pipeline and manifest
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-035  
 **Session type:** S3 — Remediation  

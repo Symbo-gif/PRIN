@@ -199,8 +199,32 @@ The reproduction pipeline is functionally complete, secure, and well-tested. All
 
 ## 7. Closure table (appended by S3 remediation)
 
-| ID | Resolution | Commit / amendment | Delta re-audit evidence |
-|---|---|---|---|
-| *(pending S3)* | | | |
+**Session:** 0139 (WP-035 S3) — **Git state at entry:** `main` @ `34e1a74` —
+**Remediation commit:** `cbbbbb3`
 
-**Delta re-audit date:** *(pending S3)* — **Result:** *(pending S3)*
+| ID | Severity | Resolution | Commit / amendment | Delta re-audit evidence |
+|---|---|---|---|---|
+| WP035-F1 | D4 | **FIXED** | `cbbbbb3` — `tools/reproduce.py:25` changed from `from prin.reporting._artifacts import ReportingError` to `from prin.reporting import ReportingError`; regression test `test_reproduce_imports_only_public_reporting_surface` added to `tests/test_reproduce.py` (AST-parses the module, fails on any `prin.reporting._*` import, and asserts `reproduce.ReportingError is prin.reporting.ReportingError`). | A8 re-check: `grep -n "prin\.reporting\._" tools/reproduce.py` → no matches; only import is `from prin.reporting import ReportingError` (line 25). `ReportingError` still used at lines 325 (docstring) and 408 (`except` clause). New regression test passes. See §7.1. |
+
+### 7.1 Delta re-audit (touched checklist rows)
+
+Commands executed on Windows 11 / Rust 1.92.0 / Python 3.14.0 at `main` @ `cbbbbb3`:
+
+| Row | Check | Result |
+|---|---|---|
+| A2 — Plan/architecture | `prin.reporting` imports are public-surface only; no private `_*` module reached from `tools/`. `ReportingError` resolves to the identical class object exported in `prin.reporting.__all__`. | ✅ |
+| A3 — Tests in tandem + coverage | `pytest tests/test_reproduce.py --cov=tools.reproduce --cov-report=term-missing` → **23 passed**; `tools/reproduce.py` **100%** (161 statements, 0 miss). Regression test committed in the same commit as the fix. | ✅ |
+| A3 — Fast suite | `pytest tests/ -m "not slow and not gpu"` → **719 passed**, 9 deselected (was 718; +1 = the new regression test). | ✅ |
+| A3 — WP-001 baseline | `pytest tests/test_wp001_baseline.py` → **44 passed**. | ✅ |
+| A4 — Acceptance evidence | `python tools/reproduce.py --verify-manifest` → `Verified 172 stored JSON artefacts.` / `Generated 39 files.` (14 PDF + 14 PNG figures + 11 LaTeX tables), exit 0. Tamper tests (`missing` / `corrupt` / `extra` mutation modes) still fail closed with `ManifestMismatchError`. | ✅ |
+| A5 — Quality gates | `ruff check python/ tests/ benchmarks/ tools/ parity/` → All checks passed. `ruff format --check` → 127 files already formatted. `mypy tools/reproduce.py --strict` → 0 issues; `mypy python/prin --strict` → 33 files, 0 issues. `cargo fmt --all -- --check` → exit 0. `cargo clippy --workspace --all-targets -- -D warnings` → exit 0. `cargo test --workspace` → all pass. | ✅ |
+| A6 — Security | `bandit -r tools/reproduce.py -c pyproject.toml` → 0 issues. `pip-audit .` → No known vulnerabilities. `cargo audit` → exit 0; only governed DV-008 (`paste`) / DV-017 (`bincode`) allowed warnings. No dependency changes (`pyproject.toml`, `Cargo.toml`, `Cargo.lock` untouched). | ✅ |
+| A7 — Docs | `interrogate -c pyproject.toml python/prin` → 95.6% (351/367), PASS. `sphinx-build -W --keep-going -b html DOCS/sphinx …` → build succeeded, 0 warnings. | ✅ |
+| A8 — Hygiene | Private cross-module import removed (the sole finding). No TODO/FIXME/STUB markers introduced. Diff confined to `tools/reproduce.py` (1 line) and `tests/test_reproduce.py` (+24 lines). | ✅ |
+| A9 — CI (local gate) | Per the Push and CI cadence, nothing pushed this cycle; local gate reproduced green above. `check_deviation_ledger.py 033→034` → passed (113 vs 117 rows). `check_dv_register_gates.py` → passed (29 rows / 198 sessions). | ✅ |
+| A10 — Artefact trail | This closure table appended; no register/PSR changes required at S3 (deviation-ledger update belongs to S4 per Development Workflow §3). | ✅ |
+
+**Delta re-audit date:** 2026-08-27 — **Result:** **CLEAN**. The single D4
+finding (WP035-F1) is **FIXED** with a regression test in the same commit
+(`cbbbbb3`). No D1/D2/D3 findings existed. No new deviation introduced; no D4
+carried. Full local gate green. Exit gate satisfied — hand off to S4 (0140).
