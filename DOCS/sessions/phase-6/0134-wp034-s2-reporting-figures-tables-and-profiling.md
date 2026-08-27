@@ -1,6 +1,6 @@
 # Session 0134 — WP-034 S2: Audit — Reporting, figures, tables, and profiling
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-034  
 **Session type:** S2 — Audit  
