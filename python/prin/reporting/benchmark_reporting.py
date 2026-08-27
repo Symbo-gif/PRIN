@@ -18,6 +18,8 @@ from numbers import Real
 from pathlib import Path
 from typing import Any
 
+from prin.reporting._artifacts import ReportingError
+
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _ALLOWED_OUTPUT_ROOTS = (
     (_REPO_ROOT / "benchmarks" / "results").resolve(),
@@ -28,21 +30,22 @@ _ALLOWED_OUTPUT_ROOTS = (
 __all__ = [
     "ReportInputError",
     "ReportOutputError",
+    "ReportingError",
     "generate_benchmark_report",
     "generate_leaderboard",
     "generate_scalr_metrics_report",
 ]
 
 
-class ReportInputError(ValueError):
+class ReportInputError(ReportingError, ValueError):
     """Raised when a public reporting input is invalid."""
 
 
-class ReportOutputError(ValueError):
+class ReportOutputError(ReportingError, ValueError):
     """Raised when a report destination escapes the declared output roots."""
 
 
-class _ArtifactError(ValueError):
+class _ArtifactError(ReportingError, ValueError):
     """Raised when one benchmark artefact has an unsupported structure."""
 
 

@@ -8,8 +8,10 @@ from typing import Any
 
 import matplotlib
 import pytest
+from prin.reporting import benchmark_reporting, profiler
 from prin.reporting import figure_generation as figures
 from prin.reporting import table_generation as tables
+from prin.reporting._artifacts import ReportingError
 
 EXPECTED_FIGURES = {
     "fig2_clevr_n_capacity",
@@ -428,3 +430,28 @@ def test_normalizer_rejects_unsupported_and_malformed_formats(tmp_path: Path) ->
     png.write_bytes(b"not png")
     with pytest.raises(ValueError, match="malformed"):
         figures.normalize_matplotlib_output(png)
+
+
+def test_json_loading_is_shared_not_privately_cross_imported() -> None:
+    """WP034-F4: figure/table generation share one loader, not a private import."""
+    assert figures._load_json is tables._load_json  # type: ignore[attr-defined]
+
+
+def test_all_reporting_errors_share_one_root() -> None:
+    """WP034-F3: every reporting module's typed errors share one common root."""
+    error_types = (
+        figures.ArtifactNotFoundError,
+        figures.ArtifactSchemaError,
+        figures.OutputPathError,
+        figures.PublicationGenerationError,
+        tables.ArtifactNotFoundError,
+        tables.ArtifactSchemaError,
+        tables.OutputPathError,
+        tables.PublicationGenerationError,
+        benchmark_reporting.ReportInputError,
+        benchmark_reporting.ReportOutputError,
+        profiler.ProfilerConfigurationError,
+        profiler.ProfilerStateError,
+    )
+    for error_type in error_types:
+        assert issubclass(error_type, ReportingError)

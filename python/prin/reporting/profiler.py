@@ -21,6 +21,8 @@ from typing import Any, Protocol, cast
 import torch
 from torch import Tensor, nn
 
+from prin.reporting._artifacts import ReportingError
+
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _ALLOWED_OUTPUT_ROOTS = (
     (_REPO_ROOT / "benchmarks" / "results").resolve(),
@@ -33,15 +35,16 @@ __all__ = [
     "ProfileReport",
     "ProfilerConfigurationError",
     "ProfilerStateError",
+    "ReportingError",
     "profile_training_loop",
 ]
 
 
-class ProfilerConfigurationError(ValueError):
+class ProfilerConfigurationError(ReportingError, ValueError):
     """Raised when profiler configuration or training input is invalid."""
 
 
-class ProfilerStateError(RuntimeError):
+class ProfilerStateError(ReportingError, RuntimeError):
     """Raised when a profiler operation is invalid in its current lifecycle."""
 
 

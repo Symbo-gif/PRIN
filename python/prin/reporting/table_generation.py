@@ -7,11 +7,12 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from prin.reporting.figure_generation import (
+from prin.reporting._artifacts import (
     ArtifactNotFoundError,
     ArtifactSchemaError,
     OutputPathError,
     PublicationGenerationError,
+    ReportingError,
     _load_json,
 )
 
@@ -793,6 +794,7 @@ __all__ = [
     "ArtifactSchemaError",
     "OutputPathError",
     "PublicationGenerationError",
+    "ReportingError",
     "generate_all_tables",
     "table_ablation_variants",
     "table_binding_breakdown",

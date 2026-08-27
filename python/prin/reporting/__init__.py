@@ -9,6 +9,7 @@ and labels Rust-backed call boundaries. Implemented during Phases 1 and 6.
 
 from __future__ import annotations
 
+from ._artifacts import ReportingError
 from .benchmark_reporting import (
     ReportInputError,
     ReportOutputError,
@@ -72,6 +73,7 @@ __all__ = [
     "PublicationGenerationError",
     "ReportInputError",
     "ReportOutputError",
+    "ReportingError",
     "configure_neurips_style",
     "fig_ablation_results",
     "fig_chimera_heatmap",
