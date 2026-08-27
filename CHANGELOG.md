@@ -86,6 +86,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   time — no CI-reachable remote exists for the tool). See
   `DOCS/ANALYTICS/phase-5/phase-5-recommendation-implementation-governance.md`.
 
+- **WP-036 S1 sub-pass 0141C — `prin-kernels` CPU reference bindings and
+  DV-012 sweep bindings** — bound all 18 required symbols (15 `pytorch_*`
+  CPU reference family plus `build_knn_neighbors`, `sparse_coupling_matrix`,
+  `sparse_coupling_matrix_csr`, `csr_coupling_step`, `sparse_knn_coupling_step`;
+  `sweep_coupling_params`, `detect_oscillation`, `phase_to_rate`) over audited
+  `prin-kernels`/`prin-sim` Rust owners. Added thin `python/prin/kernels`
+  tensor-marshalling wrappers, top-level `prin` re-exports, `.pyi` stubs, and
+  kernel-equivalence/sweep unit tests. Closed `prin-py` half of **DV-012**.
+  Addressed adversarial review findings D1 (mean-field f32 vs PRINet 3.0
+  complex64 intermediate rounding), D2 (k-NN `prin.Seed` vs `torch.Generator`
+  determinism boundary), D3 (mismatched batch dimension validation), and D4
+  (docstring completeness). Updated `DOCS/sphinx/migration_guide.rst` with
+  the 0141C disposition table and preserved-hazard notes.
+
 ### Fixed
 
 - **`gpu.yml`'s `dtolnay/rust-toolchain` step on the self-hosted GPU

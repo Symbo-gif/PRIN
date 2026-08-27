@@ -53,6 +53,32 @@ from prin.eval import temporal_smoothness as temporal_smoothness
 from prin.eval import track_duration_stats as track_duration_stats
 from prin.eval import track_fragmentation_rate as track_fragmentation_rate
 from prin.experiments import compute_p_value as compute_p_value
+from prin.kernels import build_knn_neighbors as build_knn_neighbors
+from prin.kernels import csr_coupling_step as csr_coupling_step
+from prin.kernels import detect_oscillation as detect_oscillation
+from prin.kernels import phase_to_rate as phase_to_rate
+from prin.kernels import pytorch_cross_band_coupling as pytorch_cross_band_coupling
+from prin.kernels import pytorch_fused_discrete_step as pytorch_fused_discrete_step
+from prin.kernels import (
+    pytorch_fused_discrete_step_full as pytorch_fused_discrete_step_full,
+)
+from prin.kernels import pytorch_fused_sub_step_rk4 as pytorch_fused_sub_step_rk4
+from prin.kernels import (
+    pytorch_hierarchical_order_param as pytorch_hierarchical_order_param,
+)
+from prin.kernels import (
+    pytorch_mean_field_rk4_step as pytorch_mean_field_rk4_step,
+)
+from prin.kernels import (
+    pytorch_multi_rate_derivatives as pytorch_multi_rate_derivatives,
+)
+from prin.kernels import pytorch_multi_rate_rk4_step as pytorch_multi_rate_rk4_step
+from prin.kernels import pytorch_pac_modulation as pytorch_pac_modulation
+from prin.kernels import pytorch_sparse_knn_coupling as pytorch_sparse_knn_coupling
+from prin.kernels import sparse_coupling_matrix as sparse_coupling_matrix
+from prin.kernels import sparse_coupling_matrix_csr as sparse_coupling_matrix_csr
+from prin.kernels import sparse_knn_coupling_step as sparse_knn_coupling_step
+from prin.kernels import sweep_coupling_params as sweep_coupling_params
 from prin.metrics import bimodality_index as bimodality_index
 from prin.metrics import build_phase_knn as build_phase_knn
 from prin.metrics import inter_frame_phase_correlation as inter_frame_phase_correlation

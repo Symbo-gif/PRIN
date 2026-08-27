@@ -1166,7 +1166,8 @@ name inventory; removals are detected by ``verify_api_surface``.
    "BackendUnavailableError", "prin.BackendUnavailableError", "shared typed migration error"
 
 WP-036 compatibility surface (sub-pass 0141B)
---------------------------------------------
+---------------------------------------------
+
 
 The second WP-036 coding sub-pass binds the already-implemented ``prin-tensor``
 (WP-014) and ``prin-train`` (WP-023) numerics to Python as thin PyO3 bridges
@@ -1213,3 +1214,52 @@ also resolve from the top-level ``prin`` namespace (the frozen RC1 contract).
    "PhaseAmplitudeCouplingLayer", "(deferred)", "Trainable ``nn.Module`` over ``PhaseAmplitudeCoupling`` with a learnable modulation depth; no Rust owner. Deferred rebuild"
    "PRINetModel", "(deferred)", "Top-level trainable model (``nn/layers.py``); no Rust owner. Deferred rebuild"
    "compile_model", "(deferred)", "``torch.compile`` helper (``nn/layers.py``); no Rust owner. Deferred rebuild"
+
+WP-036 compatibility surface (sub-pass 0141C)
+---------------------------------------------
+
+The third WP-036 coding sub-pass binds the ``prin-kernels`` CPU-reference
+compatibility family (the ``pytorch_*`` kernel set, sparse-coupling helpers,
+and the ``prin-sim`` sweep/engine surface) to Python. All numerics remain in
+Rust; ``prin.kernels`` only marshals tensors and restores tensor placement.
+This sub-pass closes the ``prin-py`` half of DV-012.
+
+.. csv-table:: 0141C symbol dispositions — real bindings
+   :header: "PRINet 3.0 symbol", "PRIN symbol", "Disposition"
+   :widths: 36, 34, 30
+
+   "pytorch_mean_field_rk4_step", "prin.pytorch_mean_field_rk4_step / prin.kernels.pytorch_mean_field_rk4_step", "PyO3 binding over ``prin_kernels::mean_field_rk4::step_cpu``"
+   "pytorch_sparse_knn_coupling", "prin.pytorch_sparse_knn_coupling / prin.kernels.pytorch_sparse_knn_coupling", "PyO3 binding over ``prin_kernels::sparse_knn::sparse_knn_derivatives_cpu``"
+   "pytorch_pac_modulation", "prin.pytorch_pac_modulation / prin.kernels.pytorch_pac_modulation", "PyO3 binding over ``prin_kernels::pac::pac_modulate_cpu``"
+   "pytorch_hierarchical_order_param", "prin.pytorch_hierarchical_order_param / prin.kernels.pytorch_hierarchical_order_param", "PyO3 binding over ``prin_kernels::compat::hierarchical_order_parameter_cpu``"
+   "pytorch_multi_rate_rk4_step", "prin.pytorch_multi_rate_rk4_step / prin.kernels.pytorch_multi_rate_rk4_step", "PyO3 binding over ``prin_kernels::compat::multi_rate_rk4_step_cpu``"
+   "pytorch_multi_rate_derivatives", "prin.pytorch_multi_rate_derivatives / prin.kernels.pytorch_multi_rate_derivatives", "PyO3 binding over ``prin_kernels::compat::multi_rate_derivatives_cpu``"
+   "pytorch_fused_sub_step_rk4", "prin.pytorch_fused_sub_step_rk4 / prin.kernels.pytorch_fused_sub_step_rk4", "PyO3 binding over ``prin_kernels::compat::fused_sub_step_rk4_cpu``"
+   "pytorch_cross_band_coupling", "prin.pytorch_cross_band_coupling / prin.kernels.pytorch_cross_band_coupling", "PyO3 binding over ``prin_kernels::compat::cross_band_coupling_cpu``"
+   "pytorch_fused_discrete_step", "prin.pytorch_fused_discrete_step / prin.kernels.pytorch_fused_discrete_step", "PyO3 binding over ``prin_kernels::compat::fused_discrete_step_cpu``"
+   "pytorch_fused_discrete_step_full", "prin.pytorch_fused_discrete_step_full / prin.kernels.pytorch_fused_discrete_step_full", "PyO3 binding over ``prin_kernels::compat::fused_discrete_step_full_cpu``"
+   "build_knn_neighbors", "prin.build_knn_neighbors / prin.kernels.build_knn_neighbors", "PyO3 binding over ``prin_sim::compat::build_knn_neighbors``"
+   "sparse_coupling_matrix", "prin.sparse_coupling_matrix / prin.kernels.sparse_coupling_matrix", "PyO3 binding over ``prin_sim::compat::sparse_coupling_matrix``"
+   "sparse_coupling_matrix_csr", "prin.sparse_coupling_matrix_csr / prin.kernels.sparse_coupling_matrix_csr", "PyO3 binding over ``prin_sim::compat::sparse_coupling_matrix`` + CSR conversion"
+   "csr_coupling_step", "prin.csr_coupling_step / prin.kernels.csr_coupling_step", "PyO3 binding over ``prin_sim::compat::csr_coupling_step``"
+   "sparse_knn_coupling_step", "prin.sparse_knn_coupling_step / prin.kernels.sparse_knn_coupling_step", "PyO3 binding over ``prin_sim::compat::sparse_knn_coupling_step``"
+   "sweep_coupling_params", "prin.sweep_coupling_params / prin.kernels.sweep_coupling_params", "PyO3 binding over ``prin_sim::compat::sweep_coupling_params``"
+   "detect_oscillation", "prin.detect_oscillation / prin.kernels.detect_oscillation", "PyO3 binding over ``prin_sim::detect_oscillation``"
+   "phase_to_rate", "prin.phase_to_rate / prin.kernels.phase_to_rate", "PyO3 binding over ``prin_sim::compat::phase_to_rate``"
+
+**Deliberate deviations and preserved hazards:**
+
+- *Mean-field order-parameter precision (D1):* PRINet 3.0 computed the
+  mean-field order parameter with ``torch.complex64`` (f32 complex)
+  intermediates. PRIN accumulates the same real and imaginary components in
+  ``f64`` and stores the final state in ``f32``; this can introduce ~1e-7
+  per-step rounding differences on the affected path. Parity tests use
+  ``rtol=1e-5, atol=1e-6`` (Project Plan amendment #14 / DV-007).
+- *k-NN seed determinism (D2):* ``build_knn_neighbors`` is deterministic for a
+  given ``prin.Seed`` or integer counter, but the sampling order differs from
+  PRINet 3.0's ``torch.Generator`` streams. The same scalar seed value does not
+  guarantee the same neighbor table across implementations; compare topologies
+  through the same PRIN call path.
+- *Batch-dimension validation (D3):* The public ``pytorch_mean_field_rk4_step``
+  wrapper explicitly validates that ``phase``, ``amplitude``, and ``frequency``
+  have identical shape before dispatching any batch row to the Rust owner.

@@ -69,6 +69,7 @@
 #![warn(missing_docs)]
 
 pub mod chimera;
+pub mod compat;
 pub mod csr_coupling;
 mod dispatch;
 pub mod engine;

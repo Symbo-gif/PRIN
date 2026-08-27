@@ -227,9 +227,9 @@ introduction and are not retroactively added here; this table starts with
 | 0139 | 6 | WP-035 | S3 — Remediation | [Reproduction pipeline and manifest](phase-6/0139-wp035-s3-reproduction-pipeline-and-manifest.md) | COMPLETE |
 | 0140 | 6 | WP-035 | S4 — Documentation | [Reproduction pipeline and manifest](phase-6/0140-wp035-s4-reproduction-pipeline-and-manifest.md) | COMPLETE |
 | 0141 | 6 | WP-036 | S1 — Coding | [API completion, acceptance suite, and migration](phase-6/0141-wp036-s1-api-completion-acceptance-suite-and-migration.md) | PLANNED |
-| 0141A | 6 | WP-036 | S1 — Coding | [Freeze machinery, re-export surface, aliases, D-D stubs](phase-6/0141A-wp036-s1a-freeze-machinery-and-reexport-surface.md) | PLANNED |
-| 0141B | 6 | WP-036 | S1 — Coding | [prin-tensor and prin-train Python bindings](phase-6/0141B-wp036-s1b-tensor-and-train-bindings.md) | PLANNED |
-| 0141C | 6 | WP-036 | S1 — Coding | [prin-kernels reference-fn bindings and DV-012 sweep bindings](phase-6/0141C-wp036-s1c-kernels-bindings-and-dv012.md) | PLANNED |
+| 0141A | 6 | WP-036 | S1 — Coding | [Freeze machinery, re-export surface, aliases, D-D stubs](phase-6/0141A-wp036-s1a-freeze-machinery-and-reexport-surface.md) | COMPLETE |
+| 0141B | 6 | WP-036 | S1 — Coding | [prin-tensor and prin-train Python bindings](phase-6/0141B-wp036-s1b-tensor-and-train-bindings.md) | COMPLETE |
+| 0141C | 6 | WP-036 | S1 — Coding | [prin-kernels reference-fn bindings and DV-012 sweep bindings](phase-6/0141C-wp036-s1c-kernels-bindings-and-dv012.md) | COMPLETE |
 | 0141D | 6 | WP-036 | S1 — Coding | [Net-new Python compatibility surface](phase-6/0141D-wp036-s1d-net-new-python-surface.md) | PLANNED |
 | 0141E | 6 | WP-036 | S1 — Coding | [Consolidation — Migration Guide table, smoke matrix, traceability, handoff](phase-6/0141E-wp036-s1e-consolidation-and-handoff.md) | PLANNED |
 | 0142 | 6 | WP-036 | S2 — Audit | [API completion, acceptance suite, and migration](phase-6/0142-wp036-s2-api-completion-acceptance-suite-and-migration.md) | PLANNED |

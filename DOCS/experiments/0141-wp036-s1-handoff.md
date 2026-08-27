@@ -1,7 +1,7 @@
 # Session 0141 / WP-036 S1 running handoff
 
 **Date:** 2026-08-27  
-**Current sub-pass:** 0141B of 0141A–0141E  
+**Current sub-pass:** 0141C of 0141A–0141E  
 **Status:** Running S1 evidence draft; final acceptance is recorded by 0141E
 
 ## 0141A scope delivered
@@ -228,3 +228,102 @@ Commands executed on Windows / Python 3.14 / Rust 1.92:
 - `PhaseActivation` custom inner activation and `HolomorphicActivation`
   `holomorphic=True`: no Rust owner; `NotImplementedError` with a migration
   message. WP-036B/C / future-WP.
+
+---
+
+## 0141C — `prin-kernels` reference-fn bindings and DV-012 sweep bindings
+  (Buckets C, F)
+
+**Scope delivered:** 18 PRINet-3.0-compatible symbols bound as thin PyO3
+bridges over the audited `prin-kernels` CPU references and `prin-sim` sweep
+engine; no numerics added in `prin-py` or Python.
+
+- Bucket C (15): `pytorch_mean_field_rk4_step`,
+  `pytorch_sparse_knn_coupling`, `pytorch_pac_modulation`,
+  `pytorch_hierarchical_order_param`, `pytorch_multi_rate_rk4_step`,
+  `pytorch_multi_rate_derivatives`, `pytorch_fused_sub_step_rk4`,
+  `pytorch_cross_band_coupling`, `pytorch_fused_discrete_step`,
+  `pytorch_fused_discrete_step_full`, `csr_coupling_step`,
+  `sparse_knn_coupling_step`, `build_knn_neighbors`,
+  `sparse_coupling_matrix`, `sparse_coupling_matrix_csr`.
+- Bucket F (3): `sweep_coupling_params`, `detect_oscillation`, `phase_to_rate`.
+- All 18 resolve from the top-level `prin` namespace; `prin.kernels` and
+  `prin.__all__` were extended (`verify_api_surface` clean).
+- `DEFERRED_VALIDATION_REGISTER.md` DV-012 `prin-py` half closed.
+
+### Acceptance evidence map
+
+| 0141C criterion | Evidence |
+|---|---|
+| 18 PyO3 bindings over existing `prin-kernels`/`prin-sim` owners; no numerics in `prin-py` | `crates/prin-py/src/bindings/kernels.rs`, `crates/prin-py/src/bindings/sweep.rs`; every function delegates to a `prin_kernels::*` / `prin_sim::compat::*` owner; `#![deny(unsafe_code)]` unchanged; Snyk Code 0 issues |
+| Every covered symbol resolves from `prin` + construct/callable smoke; added to `prin.kernels.__all__` and `prin.__all__` | `tests/test_kernel_bindings.py::test_kernel_symbols_resolve_and_are_callable`, `tests/test_sweep_bindings.py::test_sweep_symbols_resolve_everywhere`; `python/prin/kernels.py` `__all__`; `python/prin/_public_api.py` |
+| Kernel-equivalence unit tests match CPU references | `test_mean_field_core_wrapper_equivalence_and_batch`, `test_sparse_knn_family_equivalence`, `test_pac_and_hierarchical_equivalence`, `test_multi_rate_family_equivalence`, `test_cross_band_equivalence`, `test_discrete_family_core_wrapper_equivalence`, `test_sparse_matrix_invariants_and_csr_step`, `test_neighbor_invariants_and_seed_object_flow` |
+| DV-012 `prin-py` half closed | `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-012 row updated to `CLOSED`; `tests/test_sweep_bindings.py` sweep/determinism/order-parameter tests; `tests/test_kernel_bindings.py` mismatch/boundary tests |
+| `.pyi` stubs updated; `mypy --strict` clean | `python/prin/_prin_core.pyi`, `python/prin/__init__.pyi`; `mypy python/prin --strict` 41 files, zero issues |
+| Rust gates green | `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets -- -D warnings`; `cargo test --workspace`; `RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps`; all exit 0 |
+| Adversarial review findings D1–D4 addressed | Rust docstrings added to all `sweep.rs` `#[pyfunction]` (D4); expanded `prin.kernels` docstrings for mean-field (D1), k-NN (D2), sweep (D4); new `test_mean_field_rejects_mismatched_batch_dimensions` (D3); Migration Guide preserved-hazard notes for D1/D2/D3 |
+| Migration Guide rows for every covered symbol | `DOCS/sphinx/migration_guide.rst` "WP-036 compatibility surface (sub-pass 0141C)" section with 18 binding rows and D1/D2/D3 preserved-hazard notes; Sphinx `-W --keep-going` build clean |
+
+### Parity-evidence disposition (Development Workflow S1 exit)
+
+Numerical parity is owned by `prin-kernels` and `prin-sim`; the `prin-py`
+bindings only marshal tensors and restore placement. Kernel-equivalence tests
+compare each `prin.kernels.pytorch_*` call against the corresponding
+`prin._prin_core.pytorch_*` CPU reference at the registered
+`rtol=1e-5, atol=1e-6` tolerance.
+
+- **D1 — Mean-field order-parameter precision:** PRINet 3.0 used
+  `torch.complex64` (f32 complex) intermediates for the order parameter.
+  PRIN accumulates the same real and imaginary components in f64 and stores
+  the final state in f32, so ~1e-7 per-step rounding differences may appear.
+  Parity tests use `rtol=1e-5, atol=1e-6` (DV-007); this is a documented,
+  preserved hazard in the wrapper docstring and Migration Guide.
+- **D2 — k-NN seed determinism:** `build_knn_neighbors` is deterministic for
+  a given `prin.Seed` or integer counter, but the shuffle-sampling order is not
+  the same as PRINet 3.0's `torch.Generator` streams. Same seed value does not
+  guarantee same topology across implementations; compare through the same PRIN
+  call path. Documented in rustdoc, Python docstring, and Migration Guide.
+- **D3 — Batch-dimension validation:** `pytorch_mean_field_rk4_step` now
+  validates that `phase`, `amplitude`, and `frequency` share the exact shape
+  before dispatching any batch row; a dedicated regression test exercises
+  mismatched `amplitude` and `frequency` shapes.
+- **D4 — Docstring completeness:** all `sweep.rs` `#[pyfunction]` functions
+  have rustdoc comments (exposed as Python docstrings); public `prin.kernels`
+  functions have expanded Args/Returns/Raises/Notes/Examples docstrings;
+  `prin.kernels` interrogate coverage is 100%.
+
+### Verification record (0141C)
+
+Commands executed on Windows / Python 3.14 / Rust 1.92:
+
+- `maturin develop -m crates/prin-py/Cargo.toml`: builds; extension imports;
+  all 18 symbols resolve from `prin` and `prin.kernels`.
+- `cargo fmt --all -- --check`: clean.
+- `cargo clippy --workspace --all-targets -- -D warnings`: exit 0.
+- `cargo test --workspace`: all green (1 ignored).
+- `RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps`: exit 0.
+- Targeted pytest (`tests/test_kernel_bindings.py`, `tests/test_sweep_bindings.py`):
+  **28 passed**.
+- Fast suite: `pytest tests/ -m "not slow and not gpu" --cov=prin
+  --cov-report=term-missing --basetemp=.pytest_basetemp-cov`: **795 passed,
+  9 deselected**, 99% line coverage (`python/prin/kernels.py` 95%).
+- `ruff check` + `ruff format --check`: clean.
+- `mypy python/prin --strict`: 41 files, zero issues.
+- `interrogate -c pyproject.toml python/prin`: pass (96.5% overall;
+  `prin.kernels` 100%).
+- `bandit -r python/prin -c pyproject.toml`: zero findings.
+- `pip-audit .` and `pip-audit -r DOCS/sphinx/requirements.txt`: zero
+  vulnerabilities.
+- `cargo audit`: exit 0 (only the governed DV-008/DV-017 allowed warnings).
+- `Snyk Code` and `Snyk SCA` (`snyk_code_scan`, `snyk_sca_scan` on
+  `C:\dev\PRIN`): **0 issues**.
+- Sphinx `-W --keep-going` HTML build: clean.
+
+### Out-of-scope discoveries (0141C)
+
+- `pytorch_mean_field_rk4_step` and other `pytorch_*` bindings currently use
+  the CPU reference only; GPU dispatch via `step_auto` is a WP-036B/C
+  parity/performance item, not this sub-pass.
+- Full `prin.kernels` parity against the PRINet 3.0 reference (numerical
+  behavior over the 172-symbol suite) is a WP-036B/C acceptance-suite
+  obligation, not this binding pass.

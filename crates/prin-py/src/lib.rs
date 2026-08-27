@@ -47,6 +47,10 @@ fn _prin_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     bindings::bands::register(m)?;
     bindings::temporal::register(m)?;
 
+    // CPU-reference kernels, sparse coupling, and deterministic sweeps (0141C)
+    bindings::kernels::register(m)?;
+    bindings::sweep::register(m)?;
+
     // Metrics
     bindings::metrics::register(m)?;
 

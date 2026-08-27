@@ -1379,3 +1379,161 @@ class HolomorphicEpTrainer:
     def free_energy(
         self, layer: ResonanceLayerBridge, x: object, coupling: object
     ) -> object: ...
+
+# --- CPU compatibility kernels and sweeps (WP-036 / 0141C) ---
+def pytorch_mean_field_rk4_step(
+    phase: list[float],
+    amplitude: list[float],
+    frequency: list[float],
+    k: float,
+    decay: float,
+    gamma: float,
+    dt: float,
+) -> tuple[list[float], list[float], list[float]]: ...
+def pytorch_sparse_knn_coupling(
+    phase: list[float],
+    amplitude: list[float],
+    frequency: list[float],
+    neighbors: list[int],
+    k: float,
+    decay: float,
+    gamma: float,
+) -> tuple[list[float], list[float], list[float]]: ...
+def pytorch_pac_modulation(
+    slow_phase: list[float],
+    fast_amplitude: list[float],
+    modulation_depth: float,
+    amp_min: float = 1e-6,
+    amp_max: float = 10.0,
+) -> list[float]: ...
+def pytorch_hierarchical_order_param(
+    phase: list[float], band_sizes: list[int]
+) -> list[float]: ...
+def pytorch_multi_rate_rk4_step(
+    phase: list[float],
+    amplitude: list[float],
+    frequency: list[float],
+    k: float,
+    decay: float,
+    gamma: float,
+    dt: float,
+    sub_steps: int,
+    mean_field: bool = True,
+) -> tuple[list[float], list[float], list[float]]: ...
+def pytorch_multi_rate_derivatives(
+    phase: list[float],
+    amplitude: list[float],
+    frequency: list[float],
+    freq_band: list[int],
+    k: float,
+    decay: float,
+    gamma: float,
+    band_frequencies: list[float] | None = None,
+) -> tuple[list[float], list[float], list[float]]: ...
+def pytorch_fused_sub_step_rk4(
+    phase: list[float],
+    amplitude: list[float],
+    frequency: list[float],
+    freq_band: list[int],
+    k: float,
+    decay: float,
+    gamma: float,
+    dt: float,
+    sub_steps_per_band: list[int] | None = None,
+) -> tuple[list[float], list[float], list[float]]: ...
+def pytorch_cross_band_coupling(
+    slow_phase: list[float],
+    fast_phase: list[float],
+    fast_amplitude: list[float],
+    parent_idx: list[int],
+    modulation_depth: float = 0.3,
+    epsilon: float = 1e-6,
+) -> tuple[list[float], list[float]]: ...
+def pytorch_fused_discrete_step(
+    phase: list[float],
+    amplitude: list[float],
+    freq_delta: list[float],
+    freq_theta: list[float],
+    freq_gamma: list[float],
+    w_delta: list[float],
+    w_theta: list[float],
+    w_gamma: list[float],
+    mu_delta: float,
+    mu_theta: float,
+    mu_gamma: float,
+    n_delta: int,
+    n_theta: int,
+    n_gamma: int,
+    dt: float = 0.01,
+) -> tuple[list[float], list[float]]: ...
+def pytorch_fused_discrete_step_full(
+    phase: list[float],
+    amplitude: list[float],
+    freq_delta: list[float],
+    freq_theta: list[float],
+    freq_gamma: list[float],
+    w_delta: list[float],
+    w_theta: list[float],
+    w_gamma: list[float],
+    w_pac_dt_weight: list[float],
+    w_pac_dt_bias: list[float],
+    w_pac_tg_weight: list[float],
+    w_pac_tg_bias: list[float],
+    mu_delta: float,
+    mu_theta: float,
+    mu_gamma: float,
+    dt: float = 0.01,
+    n_delta: int = 4,
+    n_theta: int = 8,
+    n_gamma: int = 32,
+) -> tuple[list[float], list[float]]: ...
+def build_knn_neighbors(
+    n_oscillators: int, k: int = 8, seed_counter: int = 0, seed_key: int = 0
+) -> list[int]: ...
+def sparse_coupling_matrix(
+    n_oscillators: int,
+    sparsity: float = 0.9,
+    coupling_strength: float = 1.0,
+    symmetric: bool = True,
+    seed_counter: int = 0,
+    seed_key: int = 0,
+) -> list[float]: ...
+def sparse_coupling_matrix_csr(
+    n_oscillators: int,
+    sparsity: float = 0.95,
+    coupling_strength: float = 1.0,
+    symmetric: bool = True,
+    seed_counter: int = 0,
+    seed_key: int = 0,
+) -> tuple[list[int], list[int], list[float]]: ...
+def csr_coupling_step(
+    phase: list[float],
+    crow_indices: list[int],
+    col_indices: list[int],
+    values: list[float],
+) -> list[float]: ...
+def sparse_knn_coupling_step(
+    phase: list[float],
+    amplitude: list[float],
+    neighbors: list[int],
+    coupling_strength: float = 2.0,
+) -> list[float]: ...
+def sweep_coupling_params(
+    n_oscillators: int = 64,
+    k_values: list[float] | None = None,
+    m_values: list[float] | None = None,
+    n_steps: int = 100,
+    dt: float = 0.01,
+    seed_counter: int = 0,
+    seed_key: int = 0,
+) -> list[dict[str, float]]: ...
+def detect_oscillation(
+    r_history: list[float], window: int = 20, threshold: float = 0.01
+) -> bool: ...
+def phase_to_rate(
+    phase: list[float],
+    amplitude: list[float],
+    mode: str = "soft",
+    sparsity: float = 0.1,
+    temperature: float = 1.0,
+) -> list[float]: ...

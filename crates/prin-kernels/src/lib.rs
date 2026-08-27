@@ -19,6 +19,7 @@
 //! - [`buffers`] — Preallocated buffer pools (`MeanFieldRk4Buffers` for CPU,
 //!   `CubeclBufferPool` for GPU) that eliminate per-step heap/device
 //!   allocations.
+//! - [`compat`] — Validated PRINet 3.0 CPU-reference compatibility functions.
 //! - [`mean_field_rk4`] — CPU reference (numerical authority) and CubeCL
 //!   single-source GPU kernels (the `cubecl` submodule requires the `cpu`,
 //!   `cuda`, or `wgpu` feature).
@@ -47,6 +48,7 @@
 
 pub mod backend;
 pub mod buffers;
+pub mod compat;
 pub mod discrete_step;
 pub mod equivalence;
 pub mod mean_field_rk4;

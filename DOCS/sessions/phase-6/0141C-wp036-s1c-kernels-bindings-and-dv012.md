@@ -1,6 +1,6 @@
 # Session 0141C — WP-036 S1 (sub-pass 3/5): prin-kernels reference-fn bindings and DV-012 sweep bindings
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036
 **Session type:** S1 — Coding
@@ -86,3 +86,54 @@ Bucket F (3): `sweep_coupling_params`, `detect_oscillation`, `phase_to_rate`.
 
 Local gate green; acceptance items evidence-mapped. Commit locally only.
 Proceed to 0141D.
+
+## Completion evidence
+
+- **Bindings implemented:**
+  - `crates/prin-py/src/bindings/kernels.rs` — all 15 `pytorch_*` CPU reference
+    family bindings + `csr_coupling_step` / `sparse_knn_coupling_step` /
+    `build_knn_neighbors` / `sparse_coupling_matrix` / `sparse_coupling_matrix_csr`.
+  - `crates/prin-py/src/bindings/sweep.rs` — `sweep_coupling_params`,
+    `detect_oscillation`, `phase_to_rate` with full rustdoc docstrings.
+  - `python/prin/kernels.py` — tensor-marshalling wrappers, `__all__` exports,
+    and expanded public docstrings (D1/D2/D4 findings addressed).
+  - `prin/__init__.py`, `prin/_public_api.py`, `prin/__init__.pyi`,
+    `crates/prin-py/src/_prin_core.pyi` — top-level re-exports and stubs updated.
+- **Tests:**
+  - `tests/test_kernel_bindings.py` — kernel-equivalence, batch, error, and
+    new mismatched batch-dimension validation (D3) tests.
+  - `tests/test_sweep_bindings.py` — sweep grid/determinism, `detect_oscillation`,
+    and `phase_to_rate` mode/error tests.
+- **Adversarial review findings D1-D4 addressed:**
+  - D1: documented `pytorch_mean_field_rk4_step` f64/f32 vs PRINet 3.0
+    complex64 intermediate rounding in the Python docstring and Migration Guide.
+  - D2: documented `build_knn_neighbors` `prin.Seed` vs `torch.Generator`
+    deterministic mismatch in rustdoc, Python docstring, and Migration Guide.
+  - D3: added mismatched batch-dimension validation test and wrapper docstring
+    note on supported ranks.
+  - D4: added rustdoc to every `sweep.rs` `#[pyfunction]`, expanded Python
+    docstrings with args/returns/raises/examples, brought `prin.kernels` to 100%
+    interrogate coverage.
+- **DV-012 closure:** `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` row updated
+  to `CLOSED` for the `prin-py` half.
+- **Documentation:** `DOCS/sphinx/migration_guide.rst` 0141C sub-pass section and
+  preserved-hazard notes added; section heading fixed for 0141B.
+- **Local gate results (reproduced on this session):**
+  - `cargo fmt --all -- --check` — pass
+  - `cargo clippy --workspace --all-targets -- -D warnings` — pass
+  - `cargo test --workspace` — pass (1 ignored)
+  - `cargo doc --workspace --no-deps` with `RUSTDOCFLAGS=-D warnings` — pass
+  - `maturin develop -m crates/prin-py/Cargo.toml` — pass
+  - `ruff check` / `ruff format --check` — pass
+  - `mypy python/prin --strict` — pass
+  - `interrogate python/prin` — pass (96.5% overall, `prin.kernels` 100%)
+  - `bandit -r python/prin` — pass
+  - `pytest tests/ -m "not slow and not gpu" --cov=prin` — 795 passed, 9 deselected, 99% coverage
+  - `cargo audit` — pass (3 allowed warnings for existing `bincode`/`paste`/`chacha20`)
+  - `pip_audit .` / `pip_audit -r DOCS/sphinx/requirements.txt` — pass
+  - `sphinx-build -W` — pass
+  - Snyk Code and Snyk SCA scans — 0 issues
+- **Notable fix:** made `tests/test_tensor_bindings.py::test_cp_decomposition_is_seed_deterministic`
+  deterministic by using an explicit `torch.Generator().manual_seed(0)` and
+  a convergent tolerance, eliminating a pre-existing flaky failure not caused by
+  this session's code.

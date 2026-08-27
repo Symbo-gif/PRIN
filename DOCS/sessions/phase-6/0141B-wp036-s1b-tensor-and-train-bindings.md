@@ -1,6 +1,6 @@
 # Session 0141B — WP-036 S1 (sub-pass 2/5): prin-tensor and prin-train Python bindings
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036
 **Session type:** S1 — Coding

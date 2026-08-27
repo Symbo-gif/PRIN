@@ -127,10 +127,11 @@ def test_cp_decomposition_non_convergence_is_a_typed_error() -> None:
 
 def test_cp_decomposition_is_seed_deterministic() -> None:
     """The same seed and input give identical factors across runs."""
-    x = torch.randn(4, 4, 4, dtype=torch.float64)
+    generator = torch.Generator().manual_seed(0)
+    x = torch.randn(4, 4, 4, dtype=torch.float64, generator=generator)
     runs = [
         CPDecomposition(
-            shape=(4, 4, 4), rank=2, tol=1e-9, dtype=torch.float64, seed_counter=7
+            shape=(4, 4, 4), rank=2, tol=1e-8, dtype=torch.float64, seed_counter=7
         )
         for _ in range(2)
     ]

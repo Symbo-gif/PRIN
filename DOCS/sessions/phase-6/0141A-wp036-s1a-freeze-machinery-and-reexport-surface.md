@@ -1,6 +1,6 @@
 # Session 0141A — WP-036 S1 (sub-pass 1/5): Freeze machinery, re-export surface, aliases, D-D stubs
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036
 **Session type:** S1 — Coding
