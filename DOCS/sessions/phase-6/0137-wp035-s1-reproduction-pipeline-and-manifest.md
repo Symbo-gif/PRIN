@@ -1,6 +1,6 @@
 # Session 0137 — WP-035 S1: Coding — Reproduction pipeline and manifest
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S1 delivered; handoff to mandatory S2 audit (session 0138).
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-035  
 **Session type:** S1 — Coding  

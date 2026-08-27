@@ -15,7 +15,7 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0134 | WP-034 | S2 — Audit | [Reporting, figures, tables, and profiling](0134-wp034-s2-reporting-figures-tables-and-profiling.md) | COMPLETE |
 | 0135 | WP-034 | S3 — Remediation | [Reporting, figures, tables, and profiling](0135-wp034-s3-reporting-figures-tables-and-profiling.md) | COMPLETE |
 | 0136 | WP-034 | S4 — Documentation | [Reporting, figures, tables, and profiling](0136-wp034-s4-reporting-figures-tables-and-profiling.md) | COMPLETE |
-| 0137 | WP-035 | S1 — Coding | [Reproduction pipeline and manifest](0137-wp035-s1-reproduction-pipeline-and-manifest.md) | PLANNED |
+| 0137 | WP-035 | S1 — Coding | [Reproduction pipeline and manifest](0137-wp035-s1-reproduction-pipeline-and-manifest.md) | COMPLETE |
 | 0138 | WP-035 | S2 — Audit | [Reproduction pipeline and manifest](0138-wp035-s2-reproduction-pipeline-and-manifest.md) | PLANNED |
 | 0139 | WP-035 | S3 — Remediation | [Reproduction pipeline and manifest](0139-wp035-s3-reproduction-pipeline-and-manifest.md) | PLANNED |
 | 0140 | WP-035 | S4 — Documentation | [Reproduction pipeline and manifest](0140-wp035-s4-reproduction-pipeline-and-manifest.md) | PLANNED |

@@ -181,6 +181,10 @@ at the top level until they are folded into the final campaign archive in Phase 
   verifiable stored-artefact figure generators, all 11 byte-comparable LaTeX
   fragments, and torch/Rust-call profiling integration; records the brief's
   15-vs-14 figure-count discrepancy for audit disposition.
+- [`0137-wp035-s1-handoff.md`](0137-wp035-s1-handoff.md) — WP-035 S1 handoff
+  to the S2 audit for the active reproduction CLI, append-only 172-record
+  SHA-256 artefact manifest, fail-closed tamper handling, all 39 generated
+  figure/table files, and enabled `repro.yml` execution.
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at

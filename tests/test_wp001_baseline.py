@@ -556,12 +556,13 @@ def test_release_workflow_guards_unready_workspace_crates() -> None:
     assert "CARGO_REGISTRY_TOKEN" not in publish_job
 
 
-def test_repro_workflow_has_explicit_pre_wp035_guard() -> None:
+def test_repro_workflow_runs_wp035_pipeline_and_tamper_tests() -> None:
     workflow = (ROOT / ".github/workflows/repro.yml").read_text(encoding="utf-8")
 
-    assert 'PRIN_REPRO_ENABLED: "false"' in workflow
-    assert "Pre-WP-035 guard" in workflow
-    assert workflow.count("env.PRIN_REPRO_ENABLED == 'true'") == 2
+    assert "PRIN_REPRO_ENABLED" not in workflow
+    assert "Pre-WP-035 guard" not in workflow
+    assert "python -m pytest tests/test_reproduce.py -q" in workflow
+    assert "python tools/reproduce.py --verify-manifest" in workflow
 
 
 def test_python_ci_builds_inside_explicit_virtual_environments() -> None:
