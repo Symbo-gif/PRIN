@@ -1,6 +1,6 @@
 # Session 0140 — WP-035 S4: Documentation — Reproduction pipeline and manifest
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S4 documentation committed; WP-036 declared in PSR-035.  
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-035  
 **Session type:** S4 — Documentation  

@@ -14,8 +14,21 @@ or execute archived reference code.
   Markdown.
 - `wp001_ownership.json` is the declarative module/symbol-to-future-WP ownership
   source consumed by the baseline validator.
-- `reproduce.py` is the Phase 6 reproducibility-pipeline placeholder owned by
-  WP-035.
+- `reproduce.py` is the Phase 6 reproducibility pipeline (WP-035). It
+  regenerates all 14 verifiable historical figures (`fig2`–`fig15`) and 11
+  LaTeX tables from the immutable stored JSON artefacts in
+  `benchmarks/results/` without GPU execution, training, or random sampling.
+  The governed SHA-256 manifest (`paper/artefact_manifest.json`, 172 records)
+  guarantees byte-comparable output and fails closed on missing, modified, or
+  unmanifested files. Append-only manifest semantics prevent silent mutation
+  of accepted artefacts.
+
+  ```bash
+  python tools/reproduce.py --verify-manifest          # full pipeline + manifest check
+  python tools/reproduce.py --figures-only             # skip tables
+  python tools/reproduce.py --tables-only              # skip figures
+  python tools/reproduce.py --append-manifest          # add new artefacts after verifying existing
+  ```
 - `wp005_ort_probe.py` runs the ONNX Runtime provider probe against
   `models/subconscious_controller.onnx` and writes the evidence to
   `EVIDENCE/0017-wp005-s1-ort-probe.json`.

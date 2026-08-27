@@ -206,7 +206,7 @@ introduction and are not retroactively added here; this table starts with
 | 0137 | 6 | WP-035 | S1 — Coding | [Reproduction pipeline and manifest](phase-6/0137-wp035-s1-reproduction-pipeline-and-manifest.md) | COMPLETE |
 | 0138 | 6 | WP-035 | S2 — Audit | [Reproduction pipeline and manifest](phase-6/0138-wp035-s2-reproduction-pipeline-and-manifest.md) | COMPLETE |
 | 0139 | 6 | WP-035 | S3 — Remediation | [Reproduction pipeline and manifest](phase-6/0139-wp035-s3-reproduction-pipeline-and-manifest.md) | COMPLETE |
-| 0140 | 6 | WP-035 | S4 — Documentation | [Reproduction pipeline and manifest](phase-6/0140-wp035-s4-reproduction-pipeline-and-manifest.md) | PLANNED |
+| 0140 | 6 | WP-035 | S4 — Documentation | [Reproduction pipeline and manifest](phase-6/0140-wp035-s4-reproduction-pipeline-and-manifest.md) | COMPLETE |
 | 0141 | 6 | WP-036 | S1 — Coding | [API completion, acceptance suite, and migration](phase-6/0141-wp036-s1-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0142 | 6 | WP-036 | S2 — Audit | [API completion, acceptance suite, and migration](phase-6/0142-wp036-s2-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0143 | 6 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](phase-6/0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | PLANNED |

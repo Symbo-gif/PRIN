@@ -73,6 +73,8 @@ starts by reading it (Development Workflow Standards §6).
   closure and WP-034 declaration.
 - [`034-project-state.md`](034-project-state.md) — WP-034 S4
   closure and WP-035 declaration.
+- [`035-project-state.md`](035-project-state.md) — WP-035 S4
+  closure and WP-036 declaration.
 
 
 The [`DEFERRED_VALIDATION_REGISTER.md`](DEFERRED_VALIDATION_REGISTER.md)

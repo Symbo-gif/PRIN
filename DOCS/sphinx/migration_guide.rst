@@ -1028,3 +1028,38 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
     temp tree. Historical ``paper/`` paths are read-only parity references.
   - The end-to-end reproduction CLI (``tools/reproduce.py``) and the checked
     SHA-256 output manifest are WP-035, not part of ``prin.reporting``.
+
+- ``tools/reproduce.py`` reproduction pipeline and
+  ``paper/artefact_manifest.json`` SHA-256 manifest (WP-035) — deterministic
+  end-to-end regeneration of all 14 figures and 11 LaTeX tables from the
+  immutable stored JSON artefacts, without GPU execution, training, or
+  random sampling.
+
+  **CLI usage:**
+
+  .. code-block:: bash
+
+     python tools/reproduce.py --verify-manifest     # full pipeline + manifest check
+     python tools/reproduce.py --figures-only        # skip tables
+     python tools/reproduce.py --tables-only         # skip figures
+     python tools/reproduce.py --append-manifest     # add new artefacts after verifying existing
+
+  **Key properties:**
+
+  - **Append-only manifest.** ``paper/artefact_manifest.json`` (schema
+    version 1, 172 records) covers every stored JSON artefact with plain
+    filename, exact byte size, and lowercase SHA-256 digest. Existing
+    records are verified before new ones are added; mutation or removal of
+    an accepted artefact is a hard failure (``ManifestMismatchError``).
+  - **Tamper detection.** Missing, corrupted (same-size content change), or
+    unmanifested artefacts all fail closed before any rendering occurs.
+  - **Output confinement.** The manifest destination is restricted to
+    ``paper/``, ``benchmarks/results/``, or the OS temp directory. Manifest
+    record paths are validated as plain filenames (no path separators or
+    parent references).
+  - **No archived code imported.** The pipeline reads JSON data from the
+    archived ``benchmarks/results/`` directory but imports only current
+    ``prin.reporting`` generators — exactly as ``tools/`` policy requires.
+  - **Typed errors.** ``ReproductionError`` (base), ``ReproductionConfigurationError``,
+    ``ManifestFormatError``, and ``ManifestMismatchError`` provide specific
+    failure modes for CLI and API consumers.

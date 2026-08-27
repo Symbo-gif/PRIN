@@ -130,6 +130,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   level: compliance gap recorded, and WP-033 S1's session brief now carries
   a hard entry-condition gate so it cannot silently recur.
 
+- **WP-035 Reproduction pipeline and manifest** (`tools/reproduce.py`,
+  `paper/artefact_manifest.json`, `tests/test_reproduce.py`,
+  `.github/workflows/repro.yml`; Phase 6 third WP; sessions 0137–0140; audit
+  `DOCS/audits/035-wp035-audit.md`, verdict `PASS-WITH-FINDINGS`, one D4
+  finding WP035-F1 FIXED in S3): end-to-end deterministic reproduction
+  pipeline that regenerates all 14 verifiable historical figures
+  (`fig2`–`fig15`) and 11 LaTeX tables from the immutable stored JSON
+  artefacts in `benchmarks/results/` without GPU execution, training, or
+  random sampling.
+  - `tools/reproduce.py` — typed CLI and API: `compute_sha256`,
+    `load_manifest`, `append_manifest` (append-only semantics — existing
+    records verified before new ones added), `verify_manifest` (strict
+    inventory/digest check), `run_reproduction` (orchestrates figure and
+    table generation via `prin.reporting`), and `main` CLI with
+    `--figures-only`/`--tables-only`/`--verify-manifest`/`--append-manifest`
+    modes. Manifest destination confined to allowed roots
+    (`paper/`, `benchmarks/results/`, OS temp); path-traversal and
+    duplicate-name checks on manifest records.
+  - `paper/artefact_manifest.json` — governed SHA-256 manifest (schema
+    version 1, 172 records) covering every stored JSON artefact. Each record
+    contains the plain filename, exact byte size, and lowercase SHA-256
+    digest. Append-only: mutation or removal of an accepted artefact is a
+    hard failure.
+  - `tests/test_reproduce.py` — 23 tests covering manifest validation (172
+    records), append-only semantics (add/modify/delete/resize), three tamper
+    mutation modes (missing/corrupt/extra), size-before-hash optimization,
+    8 malformed-manifest parametric cases, output mode selection,
+    conflicting-mode rejection, verify-before-generation ordering, CLI
+    success/failure paths, deterministic checksum output, and public-surface
+    import regression. `tools/reproduce.py` **100%** line coverage.
+  - `.github/workflows/repro.yml` — `PRIN_REPRO_ENABLED` guard removed;
+    runs tamper tests then verified regeneration on every push/PR.
+  - No numerics in Python, no new dependencies, no crate changes: the
+    pipeline imports only `prin.reporting` generators and reads archived
+    JSON data without importing or executing archived code.
+  - **WP035-F1 (D4) FIXED** in S3 (`cbbbbb3`): `tools/reproduce.py` imported
+    `ReportingError` from the private `prin.reporting._artifacts` module;
+    changed to the public `prin.reporting` surface. Regression test
+    (`test_reproduce_imports_only_public_reporting_surface`, AST-based)
+    committed in the same fix.
+  - **S4 documentation closure (session 0140):** `tools/` and `paper/`
+    READMEs expanded; Migration Guide gains a WP-035 section; Project State
+    Report `DOCS/reports/035-project-state.md` issued, declaring WP-036
+    (API completion, acceptance suite, and migration).
+
 - **WP-034 Reporting, figures, tables, and profiling**
   (`python/prin/reporting/`, `tests/test_reporting_profiler.py`,
   `tests/test_publication_generation.py`; Phase 6 second WP; sessions
