@@ -67,12 +67,23 @@ _TEXT_SUFFIXES = frozenset(
     }
 )
 _SESSION_ROW = re.compile(
-    r"^\|\s*(?P<sequence>\d{4})\s*\|\s*(?P<phase>\d+)\s*\|"
+    r"^\|\s*(?P<sequence>\d{4}[A-H]?)\s*\|\s*(?P<phase>\d+)\s*\|"
     r"\s*(?P<unit>[^|]+?)\s*\|\s*(?P<type>[^|]+?)\s*\|"
     r"\s*\[[^]]+\]\((?P<target>[^)]+)\)\s*\|"
     r"\s*(?P<status>[^|]+?)\s*\|$"
 )
 _WP_ID = re.compile(r"^WP-(\d{3})$")
+
+# Plan amendment #31: WP-036 was split into WP-036 / WP-036B / WP-036C. The
+# eight WP-036B/WP-036C sessions are planned sub-sessions inserted between
+# planned integer sessions 0144 and 0145 with two-part identifiers, without
+# renumbering the gap-free 0001..0198 integer sequence (TRACEABILITY invariant
+# 4 is preserved). This is the same additive-by-amendment principle already
+# used for the EA/EMA global sessions, applied inside the phase order.
+_PLANNED_INTEGER_COUNT = 198
+_SUBSESSION_AFTER = "0144"
+_SUBSESSION_SEQUENCES = tuple(f"0144{letter}" for letter in "ABCDEFGH")
+_PLANNED_SESSION_COUNT = _PLANNED_INTEGER_COUNT + len(_SUBSESSION_SEQUENCES)
 
 
 class BaselineValidationError(ValueError):
@@ -622,7 +633,7 @@ def _numbered_briefs(
     duplicates: list[str] = []
     physical_count = 0
     for path in sessions.glob("phase-*/*.md"):
-        match = re.match(r"^(\d{4})-", path.name)
+        match = re.match(r"^(\d{4}[A-H]?)-", path.name)
         if match:
             physical_count += 1
             sequence = match.group(1)
@@ -655,27 +666,56 @@ def validate_session_plan(root: Path) -> list[str]:
         if match:
             rows.append(match.groupdict())
     errors: list[str] = []
-    expected_sequences = [f"{number:04d}" for number in range(1, 199)]
+    expected_integer_sequences = [
+        f"{number:04d}" for number in range(1, _PLANNED_INTEGER_COUNT + 1)
+    ]
     row_sequences = [row["sequence"] for row in rows]
-    if len(rows) != 198:
-        errors.append(f"session register must contain 198 rows, found {len(rows)}")
-    if row_sequences != expected_sequences:
+    integer_sequences = [seq for seq in row_sequences if seq.isdigit()]
+    subsession_sequences = [seq for seq in row_sequences if not seq.isdigit()]
+    if len(rows) != _PLANNED_SESSION_COUNT:
         errors.append(
-            "session register sequence must be unique and gap-free 0001..0198"
+            f"session register must contain {_PLANNED_SESSION_COUNT} rows "
+            f"({_PLANNED_INTEGER_COUNT} integer + {len(_SUBSESSION_SEQUENCES)} "
+            f"amendment-#31 sub-sessions), found {len(rows)}"
         )
+    if integer_sequences != expected_integer_sequences:
+        errors.append(
+            "session register integer sequence must be unique and gap-free "
+            f"0001..{_PLANNED_INTEGER_COUNT:04d}"
+        )
+    if subsession_sequences != list(_SUBSESSION_SEQUENCES):
+        errors.append(
+            "amendment-#31 sub-sessions must be exactly "
+            f"{', '.join(_SUBSESSION_SEQUENCES)} in order"
+        )
+    else:
+        split = expected_integer_sequences.index(_SUBSESSION_AFTER) + 1
+        expected_row_order = (
+            expected_integer_sequences[:split]
+            + list(_SUBSESSION_SEQUENCES)
+            + expected_integer_sequences[split:]
+        )
+        if row_sequences != expected_row_order:
+            errors.append(
+                "amendment-#31 sub-sessions must appear contiguously right "
+                f"after session {_SUBSESSION_AFTER}"
+            )
     briefs, duplicate_sequences, physical_count = _numbered_briefs(sessions)
     if duplicate_sequences:
         errors.append(
             "duplicate session brief sequence IDs: "
             + ", ".join(sorted(set(duplicate_sequences)))
         )
-    if physical_count != 198:
+    if physical_count != _PLANNED_SESSION_COUNT:
         errors.append(
-            "expected 198 numbered session briefs, found "
+            f"expected {_PLANNED_SESSION_COUNT} numbered session briefs, found "
             f"{physical_count} physical numbered session briefs"
         )
-    if len(briefs) != 198:
-        errors.append(f"expected 198 unique session brief IDs, found {len(briefs)}")
+    if len(briefs) != _PLANNED_SESSION_COUNT:
+        errors.append(
+            f"expected {_PLANNED_SESSION_COUNT} unique session brief IDs, "
+            f"found {len(briefs)}"
+        )
     allowed_statuses = {"PLANNED", "READY", "IN_PROGRESS", "BLOCKED", "COMPLETE"}
     for index, row in enumerate(rows):
         sequence = row["sequence"]

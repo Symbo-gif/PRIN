@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **WP-036 split into WP-036 / WP-036B / WP-036C** (2026-08-27, plan
+  amendment #31, before session 0141/WP-036 S1). The single WP-036 declaration
+  (172-symbol `prin` compatibility surface + `_deprecation` freeze machinery +
+  `.pyi` stubs + DV-012 sweep bindings + Migration Guide symbol table + the
+  ~1,670-test acceptance-suite port) is the largest coding session in the
+  ledger; executing it as one S1 would force scope creep past any reviewable
+  commit range or deferred tests, both prohibited. WP-036 now delivers the
+  compatibility surface, freeze machinery, stubs, bindings, and Migration
+  Guide table only (sessions 0141–0144); WP-036B ports reference test clusters
+  `test_core`…`test_subconscious` (~805 functions, sessions `0144A`–`0144D`);
+  WP-036C ports the integration/y-series/kernel clusters (~790 functions) and
+  resolves DV-025 (sessions `0144E`–`0144H`). The eight sub-sessions are
+  inserted between planned integers 0144 and 0145 without renumbering the
+  0001–0198 integer sequence — a new register convention for
+  amendment-inserted planned sub-sessions, following the additive-by-amendment
+  precedent of the EA/EMA global sessions. Planned session count 198 → 206
+  (198 integer + 8 sub-sessions). Strategic dispositions recorded in the same
+  amendment: acceptance assertions failing only on the documented f32/f64
+  preserved hazards get per-test tolerance annotations + Parity Report entries
+  (never deletion/skip); the surface is `prin`-native (no `prinet` shim);
+  DV-005 (CUDA Burn backend) stays a scoping decision, not implementation;
+  the per-symbol disposition of the ~30 GPU/Triton-only symbols is delegated to
+  WP-036 S1 under S2 audit veto. Rationale and symbol inventory:
+  `DOCS/sessions/phase-6/WP-036-execution-plan-and-decomposition.md`.
+
 ### Added
 
 - **Phase 5 recommendation implementation** (2026-08-26, inter-phase, before

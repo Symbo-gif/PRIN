@@ -6,19 +6,39 @@
 **Session type:** S1 — Coding  
 **Predecessor:** [0140 — Documentation](0140-wp035-s4-reproduction-pipeline-and-manifest.md)  
 **Successor:** [0142 — Audit](0142-wp036-s2-api-completion-acceptance-suite-and-migration.md)  
-**Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Authority:** Project Plan §6/§8 and **amendment #31**; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and
 > results belong in Audit Reports, Project State Reports, and experiment artefacts.
 
+> **Scope note (amendment #31):** WP-036 was split into WP-036 / WP-036B /
+> WP-036C. This session delivers the **compatibility surface, freeze
+> machinery, stubs, DV-012 bindings, and Migration Guide symbol table only**.
+> The ~1,670-test acceptance-suite port is WP-036B (`0144A`–`0144D`) and
+> WP-036C (`0144E`–`0144H`). See
+> [`WP-036-execution-plan-and-decomposition.md`](WP-036-execution-plan-and-decomposition.md).
+
 ## Mission
 
-Finish 175+ symbol mapping, port ~1,670 acceptance tests, API-freeze/deprecation machinery, stubs, and symbol-by-symbol Migration Guide data.
+Deliver the `prin` PRINet-3.0-compatible symbol surface (all 172
+`prinet.__all__` symbols resolve from `prin`), `prin._deprecation` freeze and
+deprecation machinery, `.pyi` stubs, the DV-012 `prin-py` sweep/engine PyO3
+bindings, and the consolidated symbol-by-symbol Migration Guide table.
+New-symbol unit/property/gradient tests only — no acceptance-suite port.
 
 ## Contract
 
-- **Acceptance:** Every mapped symbol resolves and behaves compatibly; full CPU acceptance matrix is green; no silent removals or Python numerics.
-- **Non-goals:** Final documentation prose or release publishing.
+- **Acceptance:** Every one of the 172 `prinet.__all__` symbols resolves from
+  `prin` and passes a construct/callable smoke check; `verify_api_surface`
+  regression test green against PRIN's RC1 `__all__`; the Migration Guide table
+  is machine-checked against `DOCS/baselines/wp001_api_traceability.md`; no
+  silent removals; no Python numerics (Coding Standards §2.1 — thin wrappers
+  over Rust owners only). D-D (per-symbol disposition of the ~30 inherently
+  GPU/Triton/CUDA symbols) is decided here subject to S2 audit veto.
+- **Non-goals:** The acceptance-suite port (WP-036B/C); behavioral parity
+  beyond smoke checks (that is proven by the ported suite); final documentation
+  prose or release publishing; a CUDA Burn backend (DV-005 stays a scoping
+  decision in the PSR).
 
 ## Required reading
 

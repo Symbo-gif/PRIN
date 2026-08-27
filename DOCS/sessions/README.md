@@ -2,7 +2,7 @@
 
 **Status:** Normative execution ledger  
 **Coverage:** Project execution start through stable `1.0.0` completion  
-**Planned numbered sessions:** **198**  
+**Planned sessions:** **198** integer + **8** sub-sessions `0144A`–`0144H` (plan amendment #31) = **206**  
 **Current entry point:** [Session 0001](phase-0/0001-wp001-s1-foundation-baseline-and-traceability.md)  
 **Master order/status register:** [`SESSION_REGISTER.md`](SESSION_REGISTER.md)
 
@@ -38,7 +38,7 @@ never change a brief silently to hide code drift.**
 | Phase 3 — GPU kernels | WP-017…WP-021 | 0065–0084 | S1 → S2 → S3 → S4 per WP |
 | Phase 4 — Trainable stack/bridge | WP-022…WP-027 | 0085–0108 | S1 → S2 → S3 → S4 per WP |
 | Phase 5 — Daemon/experiment tooling | WP-028…WP-032 | 0109–0128 | S1 → S2 → S3 → S4 per WP |
-| Phase 6 — Benchmarks/repro/docs/RC1 | WP-033…WP-038 | 0129–0152 | S1 → S2 → S3 → S4 per WP |
+| Phase 6 — Benchmarks/repro/docs/RC1 | WP-033…WP-038 (WP-036 split into WP-036/036B/036C, amdt #31) | 0129–0152 + `0144A`–`0144H` | S1 → S2 → S3 → S4 per WP |
 | Phase 7 campaign planning | Campaign E0 | 0153 | Approval before science |
 | Phase 7 confirmatory campaign | EXP-001…EXP-008 | 0154–0193 | E1 → E2 → E3 → E4 → E5 per experiment |
 | Campaign synthesis | Campaign E6 | 0194 | Evidence reconciliation |
@@ -114,7 +114,11 @@ NNNN-wpNNN-sK-title.md
 NNNN-expNNN-eK-title.md
 ```
 
-- `NNNN`: immutable global sequence.
+- `NNNN`: immutable global sequence. Plan amendment #31 additionally permits a
+  two-part `NNNNX` form (`0144A`–`0144H`) for planned sub-sessions inserted
+  between two integer sessions by an approved amendment, without renumbering
+  the 0001–0198 integer sequence — the same additive-by-amendment principle as
+  the EA/EMA global sessions, applied inside the phase order.
 - `WP-NNN`: development work package; four consecutive S1–S4 files.
 - `EXP-NNN`: campaign experiment; five consecutive E1–E5 files.
 - Each brief specifies predecessor, successor, mission, acceptance criteria,

@@ -6,19 +6,25 @@
 **Session type:** S3 — Remediation  
 **Predecessor:** [0142 — Audit](0142-wp036-s2-api-completion-acceptance-suite-and-migration.md)  
 **Successor:** [0144 — Documentation](0144-wp036-s4-api-completion-acceptance-suite-and-migration.md)  
-**Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Authority:** Project Plan §6/§8 and **amendment #31**; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and
 > results belong in Audit Reports, Project State Reports, and experiment artefacts.
 
+> **Scope note (amendment #31):** WP-036 covers the compatibility surface,
+> freeze machinery, stubs, DV-012 bindings, and Migration Guide symbol table.
+
 ## Mission
 
-Finish 175+ symbol mapping, port ~1,670 acceptance tests, API-freeze/deprecation machinery, stubs, and symbol-by-symbol Migration Guide data.
+Remediate every finding in `DOCS/audits/036-wp036-audit.md` against the WP-036
+compatibility-surface scope; no feature work.
 
 ## Contract
 
-- **Acceptance:** Every mapped symbol resolves and behaves compatibly; full CPU acceptance matrix is green; no silent removals or Python numerics.
-- **Non-goals:** Final documentation prose or release publishing.
+- **Acceptance:** Every finding ends FIXED or AMENDED; CLEAN delta re-audit;
+  the 172-symbol resolve/smoke check and `verify_api_surface` stay green.
+- **Non-goals:** The acceptance-suite port; final documentation prose or
+  release publishing.
 
 ## Required reading
 

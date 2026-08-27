@@ -9,7 +9,7 @@ completion; completion evidence is cited by Audit and Project State Reports.
 
 | Requirement | Primary implementation sessions | Independent confirmation |
 |---|---|---|
-| **F1 — 175+ symbol feature parity** | WP-001 inventory (0001–0004); incremental WPs 006–036; WP-036 API completion (0141–0144) | EXP-002 E1–E5 (0159–0163); WP-039 audit (0196) |
+| **F1 — 175+ symbol feature parity** | WP-001 inventory (0001–0004); incremental WPs 006–036; WP-036 compatibility surface + freeze machinery + Migration Guide table (0141–0144); WP-036B/WP-036C acceptance-suite port (`0144A`–`0144H`, amdt #31) | EXP-002 E1–E5 (0159–0163); WP-039 audit (0196) |
 | **F2 — numerical/result parity** | WP-002 corpus (0005–0008); all numerical WPs 006–032; WP-037 Parity draft | EXP-001 (0154–0158), EXP-002 (0159–0163), EXP-005–007 (0174–0188); synthesis 0194 |
 | **F3 — differentiability/PyTorch interop** | WP-003 spike (0009–0012); WP-022–027 (0085–0108) | EXP-004 (0169–0173), EXP-006 (0179–0183); WP-039 audit |
 | **F4 — byte-comparable reproduction** | WP-034–035 (0133–0140), WP-037 (0145–0148) | EXP-002 (0159–0163); synthesis 0194 |
@@ -76,8 +76,8 @@ completion; completion evidence is cited by Audit and Project State Reports.
 
 | DoD item | Final evidence session(s) |
 |---:|---|
-| 1. Public API complete | WP-036; EXP-002; 0196 |
-| 2. Acceptance suite cross-platform | WP-036/WP-038; 0196 |
+| 1. Public API complete | WP-036 (compatibility surface + freeze machinery); EXP-002; 0196 |
+| 2. Acceptance suite cross-platform | WP-036B/WP-036C (`0144A`–`0144H`, port); WP-038; 0196 |
 | 3. Parity suite + Report | EXP-001/002; 0194; 0196 |
 | 4. Performance targets/regression gates | EXP-003/004/007; 0194; 0196 |
 | 5. Reproduction manifest | WP-035; EXP-002; 0196 |

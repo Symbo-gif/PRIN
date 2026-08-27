@@ -129,7 +129,7 @@ def test_session_plan_validator_detects_missing_brief(tmp_path: Path) -> None:
 
     errors = validate_session_plan(tmp_path)
 
-    assert any("198 numbered session briefs" in error for error in errors)
+    assert any("206 numbered session briefs" in error for error in errors)
     assert any("register target does not exist" in error for error in errors)
 
 
@@ -148,7 +148,30 @@ def test_session_plan_validator_detects_duplicate_sequence_ids(
     assert any(
         "duplicate session brief sequence IDs: 0002" in error for error in errors
     )
-    assert any("199 physical numbered session briefs" in error for error in errors)
+    assert any("207 physical numbered session briefs" in error for error in errors)
+
+
+def test_session_plan_validator_accepts_amendment_31_subsessions() -> None:
+    """The real register carries the 0144A-0144H sub-session block cleanly."""
+    assert validate_session_plan(ROOT) == []
+
+
+def test_session_plan_validator_rejects_misplaced_subsession(tmp_path: Path) -> None:
+    sessions = tmp_path / "DOCS" / "sessions"
+    shutil.copytree(ROOT / "DOCS" / "sessions", sessions)
+    register = sessions / "SESSION_REGISTER.md"
+    text = register.read_text(encoding="utf-8")
+    # Pull session 0145's row up between 0144 and the 0144A sub-session block,
+    # so the block no longer sits immediately after 0144 (integer gap-freeness
+    # and the in-order sub-session set are both still intact).
+    row = next(line for line in text.splitlines() if line.startswith("| 0145 |"))
+    text = text.replace(row + "\n", "", 1)
+    text = text.replace("| 0144A |", row + "\n| 0144A |", 1)
+    register.write_text(text, encoding="utf-8")
+
+    errors = validate_session_plan(tmp_path)
+
+    assert any("contiguously right after session 0144" in error for error in errors)
 
 
 def test_api_traceability_covers_archive_without_importing_it(
@@ -244,7 +267,7 @@ def test_repository_inventory_is_deterministic_and_separates_archive() -> None:
     assert len(first["workspace"]["members"]) == 8
     assert len(first["ci"]["workflows"]) == 7
     assert "snyk.yml" in first["ci"]["workflows"]
-    assert first["session_plan"]["numbered_briefs"] == 198
+    assert first["session_plan"]["numbered_briefs"] == 206
     assert first["archive"]["python_modules"] == 43
     assert "target" in first["excluded_directories"]
     assert ".git" in first["excluded_directories"]

@@ -6,19 +6,30 @@
 **Session type:** S2 — Audit  
 **Predecessor:** [0141 — Coding](0141-wp036-s1-api-completion-acceptance-suite-and-migration.md)  
 **Successor:** [0143 — Remediation](0143-wp036-s3-api-completion-acceptance-suite-and-migration.md)  
-**Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Authority:** Project Plan §6/§8 and **amendment #31**; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and
 > results belong in Audit Reports, Project State Reports, and experiment artefacts.
 
+> **Scope note (amendment #31):** WP-036 covers the compatibility surface,
+> freeze machinery, stubs, DV-012 bindings, and Migration Guide symbol table.
+> The acceptance-suite port is audited under WP-036B/WP-036C.
+
 ## Mission
 
-Finish 175+ symbol mapping, port ~1,670 acceptance tests, API-freeze/deprecation machinery, stubs, and symbol-by-symbol Migration Guide data.
+Audit WP-036 S1: the `prin` compatibility symbol surface, `prin._deprecation`
+machinery, `.pyi` stubs, DV-012 sweep/engine bindings, and the Migration Guide
+symbol table.
 
 ## Contract
 
-- **Acceptance:** Every mapped symbol resolves and behaves compatibly; full CPU acceptance matrix is green; no silent removals or Python numerics.
-- **Non-goals:** Final documentation prose or release publishing.
+- **Acceptance:** Every one of the 172 `prinet.__all__` symbols resolves from
+  `prin` and passes a construct/callable smoke check; `verify_api_surface`
+  green; the Migration Guide table is machine-checked; no silent removals; no
+  Python numerics; the D-D per-symbol GPU/Triton dispositions are sound (S2
+  veto right).
+- **Non-goals:** The acceptance-suite port; final documentation prose or
+  release publishing.
 
 ## Required reading
 
@@ -39,7 +50,7 @@ Finish 175+ symbol mapping, port ~1,670 acceptance tests, API-freeze/deprecation
 1. Create `DOCS/audits/036-wp036-audit.md` from the audit template.
 2. Execute A1–A10: scope, architecture, tests-in-tandem/coverage, parity,
    quality, security, documentation, hygiene, CI/regressions, artefact trail.
-3. Independently reproduce the WP-specific acceptance evidence: Every mapped symbol resolves and behaves compatibly; full CPU acceptance matrix is green; no silent removals or Python numerics.
+3. Independently reproduce the WP-specific acceptance evidence: every one of the 172 `prinet.__all__` symbols resolves from `prin` and smoke-checks; `verify_api_surface` green; Migration Guide table machine-checked; no silent removals or Python numerics.
 4. Inspect diffs for weakened tests, tolerance drift, new dependencies,
    unapproved unsafe/code generation, Python numerics, and undocumented exports.
 5. Give each finding `WP036-Fn`, severity D1–D4, exact evidence,

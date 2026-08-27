@@ -5,20 +5,30 @@
 **Execution unit:** WP-036  
 **Session type:** S4 — Documentation  
 **Predecessor:** [0143 — Remediation](0143-wp036-s3-api-completion-acceptance-suite-and-migration.md)  
-**Successor:** [0145 — Coding](0145-wp037-s1-documentation-notebooks-paper-and-parity-report-draft.md)  
-**Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Successor:** [0144A — Coding](0144A-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md)  
+**Authority:** Project Plan §6/§8 and **amendment #31**; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and
 > results belong in Audit Reports, Project State Reports, and experiment artefacts.
 
+> **Scope note (amendment #31):** WP-036 covers the compatibility surface,
+> freeze machinery, stubs, DV-012 bindings, and Migration Guide symbol table.
+> Its registered successor is WP-036B S1 (session `0144A`), not WP-037.
+
 ## Mission
 
-Finish 175+ symbol mapping, port ~1,670 acceptance tests, API-freeze/deprecation machinery, stubs, and symbol-by-symbol Migration Guide data.
+Document the WP-036 compatibility surface, `prin._deprecation` machinery,
+stubs, DV-012 bindings, and Migration Guide symbol table; issue the WP-036
+Project State Report; activate WP-036B.
 
 ## Contract
 
-- **Acceptance:** Every mapped symbol resolves and behaves compatibly; full CPU acceptance matrix is green; no silent removals or Python numerics.
-- **Non-goals:** Final documentation prose or release publishing.
+- **Acceptance:** Every touched directory README updated; CHANGELOG, stubs,
+  Sphinx API pages, and Migration Guide current; docs gates green; PSR
+  `DOCS/reports/036-project-state.md` issued and declaring WP-036B; DV-005
+  recorded as a scoping decision; DV-012 closed.
+- **Non-goals:** The acceptance-suite port; final documentation prose or
+  release publishing.
 
 ## Required reading
 
@@ -41,7 +51,7 @@ Finish 175+ symbol mapping, port ~1,670 acceptance tests, API-freeze/deprecation
 3. Run documentation, example, link, quality, security, and relevant full-suite gates.
 4. Write `DOCS/reports/036-project-state.md` with measured metric trends, cumulative deviation ledger,
    amendments, risks, and trajectory verdict.
-5. Declare the next sequential WP from the Session Register; record maintainer approval before its S1 begins.
+5. Declare WP-036B (session `0144A`) from the Session Register; record maintainer approval before its S1 begins.
 6. Update this session's status and the master register only from verified evidence.
 
 ## Required outputs

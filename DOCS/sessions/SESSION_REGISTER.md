@@ -1,7 +1,7 @@
 # PRIN Master Session Register
 
-**Register version:** 1.0  
-**Planned sessions:** 198  
+**Register version:** 1.1  
+**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) = 206  
 **Current entry point:** Session 0001  
 **Status authority:** the latest approved Project State Report; this register
 is updated during S4 only from committed evidence.
@@ -10,6 +10,15 @@ No listed session may be skipped, merged, or reordered without an approved
 plan amendment. Mandatory S3 executes even after a zero-finding audit. A D1
 found during Phase 7 inserts a correction cycle from `contingencies/` before
 the next numbered session; planned numbers do not change.
+
+**Amendment-inserted sub-sessions (plan amendment #31):** WP-036 was split
+into WP-036 / WP-036B / WP-036C. WP-036B and WP-036C occupy eight planned
+sub-sessions `0144A`–`0144H`, inserted between planned integer sessions 0144
+and 0145. They do **not** renumber the 0001–0198 integer sequence
+(TRACEABILITY invariant 4 — gap-free integer numbering — is preserved), the
+same additive-by-amendment precedent as the EA/EMA global sessions
+(amendments #15, #23) but inside the phase sequence. Their Audit Reports and
+Project State Reports are numbered `036b`/`036c`.
 
 ## Global sessions — Executive Audits
 
@@ -211,6 +220,14 @@ introduction and are not retroactively added here; this table starts with
 | 0142 | 6 | WP-036 | S2 — Audit | [API completion, acceptance suite, and migration](phase-6/0142-wp036-s2-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0143 | 6 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](phase-6/0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0144 | 6 | WP-036 | S4 — Documentation | [API completion, acceptance suite, and migration](phase-6/0144-wp036-s4-api-completion-acceptance-suite-and-migration.md) | PLANNED |
+| 0144A | 6 | WP-036B | S1 — Coding | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144A-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
+| 0144B | 6 | WP-036B | S2 — Audit | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144B-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
+| 0144C | 6 | WP-036B | S3 — Remediation | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144C-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
+| 0144D | 6 | WP-036B | S4 — Documentation | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144D-wp036b-s4-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
+| 0144E | 6 | WP-036C | S1 — Coding | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144E-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
+| 0144F | 6 | WP-036C | S2 — Audit | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144F-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
+| 0144G | 6 | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144G-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
+| 0144H | 6 | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144H-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0145 | 6 | WP-037 | S1 — Coding | [Documentation, notebooks, paper, and Parity Report draft](phase-6/0145-wp037-s1-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
 | 0146 | 6 | WP-037 | S2 — Audit | [Documentation, notebooks, paper, and Parity Report draft](phase-6/0146-wp037-s2-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
 | 0147 | 6 | WP-037 | S3 — Remediation | [Documentation, notebooks, paper, and Parity Report draft](phase-6/0147-wp037-s3-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
