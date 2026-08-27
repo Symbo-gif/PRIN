@@ -1,6 +1,6 @@
 # Session 0133 — WP-034 S1: Coding — Reporting, figures, tables, and profiling
 
-**Status:** PLANNED  
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-034  
 **Session type:** S1 — Coding  

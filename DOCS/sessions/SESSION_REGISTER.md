@@ -199,7 +199,7 @@ introduction and are not retroactively added here; this table starts with
 | 0130 | 6 | WP-033 | S2 — Audit | [Unified benchmark runner and category migration](phase-6/0130-wp033-s2-unified-benchmark-runner-and-category-migration.md) | COMPLETE |
 | 0131 | 6 | WP-033 | S3 — Remediation | [Unified benchmark runner and category migration](phase-6/0131-wp033-s3-unified-benchmark-runner-and-category-migration.md) | COMPLETE |
 | 0132 | 6 | WP-033 | S4 — Documentation | [Unified benchmark runner and category migration](phase-6/0132-wp033-s4-unified-benchmark-runner-and-category-migration.md) | COMPLETE |
-| 0133 | 6 | WP-034 | S1 — Coding | [Reporting, figures, tables, and profiling](phase-6/0133-wp034-s1-reporting-figures-tables-and-profiling.md) | PLANNED |
+| 0133 | 6 | WP-034 | S1 — Coding | [Reporting, figures, tables, and profiling](phase-6/0133-wp034-s1-reporting-figures-tables-and-profiling.md) | COMPLETE |
 | 0134 | 6 | WP-034 | S2 — Audit | [Reporting, figures, tables, and profiling](phase-6/0134-wp034-s2-reporting-figures-tables-and-profiling.md) | PLANNED |
 | 0135 | 6 | WP-034 | S3 — Remediation | [Reporting, figures, tables, and profiling](phase-6/0135-wp034-s3-reporting-figures-tables-and-profiling.md) | PLANNED |
 | 0136 | 6 | WP-034 | S4 — Documentation | [Reporting, figures, tables, and profiling](phase-6/0136-wp034-s4-reporting-figures-tables-and-profiling.md) | PLANNED |

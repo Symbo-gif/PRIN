@@ -176,6 +176,11 @@ at the top level until they are folded into the final campaign archive in Phase 
   packages: the verified 58-vs-62 legacy-script-count correction, the
   `kernels/` `criterion`-subprocess-orchestration design (no PyO3 binding
   exists for `prin-kernels`), and the full legacy-script traceability table.
+- [`0133-wp034-s1-handoff.md`](0133-wp034-s1-handoff.md) — WP-034 S1 handoff
+  to the S2 audit for deterministic benchmark reports/leaderboards, all 14
+  verifiable stored-artefact figure generators, all 11 byte-comparable LaTeX
+  fragments, and torch/Rust-call profiling integration; records the brief's
+  15-vs-14 figure-count discrepancy for audit disposition.
 
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
