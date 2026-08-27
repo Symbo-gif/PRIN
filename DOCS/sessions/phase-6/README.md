@@ -14,6 +14,8 @@ Plan amendment #32 further decomposes **WP-036 S1 (session 0141)** into five
 sequential S1 coding sub-passes `0141A`–`0141E`, inserted between integer
 sessions 0141 and 0142, all feeding the single S2 audit 0142. See
 [`WP-036-S1-execution-plan-and-decomposition.md`](WP-036-S1-execution-plan-and-decomposition.md).
+`0141D` was split into `0141D1` / `0141D2` under Development Workflow §7
+(2026-08-27), as the 0141D brief pre-authorised.
 
 | Seq | Unit | Type | Session brief | Current status |
 |---:|---|---|---|---|
@@ -33,7 +35,9 @@ sessions 0141 and 0142, all feeding the single S2 audit 0142. See
 | 0141A | WP-036 | S1 — Coding | [Freeze machinery, re-export surface, aliases, D-D stubs](0141A-wp036-s1a-freeze-machinery-and-reexport-surface.md) | PLANNED |
 | 0141B | WP-036 | S1 — Coding | [prin-tensor and prin-train Python bindings](0141B-wp036-s1b-tensor-and-train-bindings.md) | PLANNED |
 | 0141C | WP-036 | S1 — Coding | [prin-kernels reference-fn bindings and DV-012 sweep bindings](0141C-wp036-s1c-kernels-bindings-and-dv012.md) | PLANNED |
-| 0141D | WP-036 | S1 — Coding | [Net-new Python compatibility surface](0141D-wp036-s1d-net-new-python-surface.md) | PLANNED |
+| 0141D | WP-036 | S1 — Coding | [Net-new Python compatibility surface](0141D-wp036-s1d-net-new-python-surface.md) | SPLIT → 0141D1 / 0141D2 |
+| 0141D1 | WP-036 | S1 — Coding | [Net-new Python surface, part 1 — Bucket G solver family](0141D1-wp036-s1d1-net-new-python-surface-solver-family.md) | PLANNED |
+| 0141D2 | WP-036 | S1 — Coding | [Net-new Python surface, part 2 — Bucket G remainder](0141D2-wp036-s1d2-net-new-python-surface-remainder.md) | PLANNED |
 | 0141E | WP-036 | S1 — Coding | [Consolidation — Migration Guide table, smoke matrix, traceability, handoff](0141E-wp036-s1e-consolidation-and-handoff.md) | PLANNED |
 | 0142 | WP-036 | S2 — Audit | [API completion, acceptance suite, and migration](0142-wp036-s2-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0143 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | PLANNED |

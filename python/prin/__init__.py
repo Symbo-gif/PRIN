@@ -153,8 +153,15 @@ from prin.reporting import (
     table_parameter_efficiency,
     table_statistical_summary,
 )
+from prin.solvers import (
+    BatchedRK45Solver,
+    FixedStepRK4Solver,
+    SolverResult,
+    gradient_checkpoint_integration,
+)
 from prin.tensor import CPDecomposition, PolyadicTensor
 from prin.train import TrainingResult
+from prin.training_hooks import TelemetryLogger
 
 __version__ = "0.3.0-alpha.1"
 
@@ -171,11 +178,13 @@ __all__ = [
     "STATE_DIM",
     "BackendType",
     "BackendUnavailableError",
+    "BatchedRK45Solver",
     "CPDecomposition",
     "ControlSignals",
     "DeltaThetaGammaNetwork",
     "ExponentialIntegrator",
     "FeedbackInhibition",
+    "FixedStepRK4Solver",
     "GatedPhaseActivation",
     "HolomorphicActivation",
     "HolomorphicEPTrainer",
@@ -199,11 +208,13 @@ __all__ = [
     "SlotAttentionFrozen",
     "SlotAttentionModule",
     "SlotAttentionNoGRU",
+    "SolverResult",
     "StuartLandauOscillator",
     "SubconsciousController",
     "SubconsciousDaemon",
     "SubconsciousState",
     "SynchronizedGradientDescent",
+    "TelemetryLogger",
     "TemporalMetrics",
     "TemporalPhasePropagator",
     "TemporalSlotAttentionMOT",
@@ -241,6 +252,7 @@ __all__ = [
     "generate_benchmark_report",
     "generate_leaderboard",
     "generate_scalr_metrics_report",
+    "gradient_checkpoint_integration",
     "identity_overcount",
     "identity_switches",
     "inter_frame_phase_correlation",

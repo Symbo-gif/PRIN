@@ -27,7 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gate; the contiguous `0141`+`0141A`–`0141E` range feeds the single S2 audit
   0142 and is pushed once with it. Same additive-sub-session register
   convention as amendment #31; the 0001–0198 integer sequence is unchanged
-  (0142's predecessor becomes `0141E`). Planned session count 206 → 211.
+  (0142's predecessor becomes `0141E`). Planned session count 206 → 211
+  (→ 212 once `0141D` split into `0141D1`/`0141D2` on 2026-08-27; see the
+  0141D1 entry under Added).
   Strategic dispositions: Bucket-G net-new symbols get a real construct/callable
   implementation with no numerics + unit tests (behavioral parity stays a
   WP-036B/C obligation); symbols with no faithful non-numeric implementation
@@ -99,6 +101,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   determinism boundary), D3 (mismatched batch dimension validation), and D4
   (docstring completeness). Updated `DOCS/sphinx/migration_guide.rst` with
   the 0141C disposition table and preserved-hazard notes.
+
+- **WP-036 S1 sub-pass 0141D1 — net-new Python surface, part 1 (Bucket G
+  solver family)** — `0141D` split into `0141D1`/`0141D2` under Development
+  Workflow §7 (the 0141D brief pre-authorised it). 0141D1 delivers five
+  PRINet-3.0-compatible symbols as thin orchestration over existing PRIN
+  owners with zero Python numerics: `prin.solvers` (new) —
+  `SolverResult` (faithful dataclass), `BatchedRK45Solver` /
+  `FixedStepRK4Solver` (thin wrappers over
+  `prin.dynamics.RK45Integrator` / `RK4Integrator`),
+  `gradient_checkpoint_integration` (segmented fixed-step RK4; checkpointing
+  inert — documented deviation); `prin.training_hooks` (new) —
+  `TelemetryLogger` (non-numeric record buffer). Top-level re-exports, `.pyi`,
+  and `tests/test_solver_surface.py` (11 tests, 100% new-module coverage).
+  Migration Guide "sub-pass 0141D1" section (deviations D1–D4); D-D appendix
+  rows 27–30 marked delivered-real plus a per-group 0141D2 disposition
+  analysis. The ~40 remaining Bucket G symbols and the hybrid-family /
+  `prin-sim`-binding / DV-025 decisions move to `0141D2`
+  (`DOCS/sessions/phase-6/0141D2-wp036-s1d2-net-new-python-surface-remainder.md`).
 
 ### Fixed
 

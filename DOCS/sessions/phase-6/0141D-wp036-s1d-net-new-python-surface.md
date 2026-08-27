@@ -1,6 +1,15 @@
 # Session 0141D — WP-036 S1 (sub-pass 4/5): Net-new Python compatibility surface
 
-**Status:** PLANNED
+**Status:** SPLIT (2026-08-27) → [0141D1](0141D1-wp036-s1d1-net-new-python-surface-solver-family.md)
+(Bucket G solver family + `TelemetryLogger`, COMPLETE) and
+[0141D2](0141D2-wp036-s1d2-net-new-python-surface-remainder.md)
+(the ~40-symbol Bucket G remainder, PLANNED), under Development Workflow §7 —
+this brief's "Expected work" item 3 pre-authorised the split and the
+decomposition plan §4 flagged it in advance. This file is retained as the
+parent contract; the two sub-briefs govern execution. 0141E's predecessor
+becomes 0141D2.
+
+**Original status:** PLANNED
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036
 **Session type:** S1 — Coding

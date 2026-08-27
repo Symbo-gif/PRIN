@@ -1,7 +1,7 @@
 # PRIN Master Session Register
 
 **Register version:** 1.2  
-**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 5 sub-sessions (`0141A`–`0141E`, plan amendment #32) = 211  
+**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 6 sub-sessions (`0141A`–`0141C`, `0141D1`, `0141D2`, `0141E`, plan amendment #32 — `0141D` split into `0141D1`/`0141D2` under Development Workflow §7, 2026-08-27) = 212  
 **Current entry point:** Session 0001  
 **Status authority:** the latest approved Project State Report; this register
 is updated during S4 only from committed evidence.
@@ -27,8 +27,11 @@ Project State Reports are numbered `036b`/`036c`.
 do **not** renumber the integer sequence (0142's predecessor becomes
 `0141E`). All five commit at their own green local gate and feed the single
 S2 audit 0142; the contiguous `0141`+`0141A`–`0141E` range is pushed once
-with 0142 (amendment #28). `0141D` may split `0141D1`/`0141D2` under
-Development Workflow §7 if that pass alone exceeds a reviewable range.
+with 0142 (amendment #28). `0141D` **was split** into `0141D1` (Bucket G
+solver family + `TelemetryLogger` — delivered) and `0141D2` (the ~40-symbol
+Bucket G remainder) under Development Workflow §7, 2026-08-27, as the 0141D
+brief "Expected work" item 3 pre-authorised; both feed 0142 and 0141E's
+predecessor is unchanged (`0141D` bucket → last sub-pass `0141D2`).
 
 ## Global sessions — Executive Audits
 
@@ -230,7 +233,9 @@ introduction and are not retroactively added here; this table starts with
 | 0141A | 6 | WP-036 | S1 — Coding | [Freeze machinery, re-export surface, aliases, D-D stubs](phase-6/0141A-wp036-s1a-freeze-machinery-and-reexport-surface.md) | COMPLETE |
 | 0141B | 6 | WP-036 | S1 — Coding | [prin-tensor and prin-train Python bindings](phase-6/0141B-wp036-s1b-tensor-and-train-bindings.md) | COMPLETE |
 | 0141C | 6 | WP-036 | S1 — Coding | [prin-kernels reference-fn bindings and DV-012 sweep bindings](phase-6/0141C-wp036-s1c-kernels-bindings-and-dv012.md) | COMPLETE |
-| 0141D | 6 | WP-036 | S1 — Coding | [Net-new Python compatibility surface](phase-6/0141D-wp036-s1d-net-new-python-surface.md) | PLANNED |
+| 0141D | 6 | WP-036 | S1 — Coding | [Net-new Python compatibility surface](phase-6/0141D-wp036-s1d-net-new-python-surface.md) | SPLIT → 0141D1 / 0141D2 (Development Workflow §7, 2026-08-27) |
+| 0141D1 | 6 | WP-036 | S1 — Coding | [Net-new Python surface, part 1 — Bucket G solver family](phase-6/0141D1-wp036-s1d1-net-new-python-surface-solver-family.md) | COMPLETE |
+| 0141D2 | 6 | WP-036 | S1 — Coding | [Net-new Python surface, part 2 — Bucket G remainder](phase-6/0141D2-wp036-s1d2-net-new-python-surface-remainder.md) | PLANNED |
 | 0141E | 6 | WP-036 | S1 — Coding | [Consolidation — Migration Guide table, smoke matrix, traceability, handoff](phase-6/0141E-wp036-s1e-consolidation-and-handoff.md) | PLANNED |
 | 0142 | 6 | WP-036 | S2 — Audit | [API completion, acceptance suite, and migration](phase-6/0142-wp036-s2-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0143 | 6 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](phase-6/0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | PLANNED |

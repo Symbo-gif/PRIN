@@ -136,9 +136,16 @@ from prin.reporting import (
     table_parameter_efficiency as table_parameter_efficiency,
 )
 from prin.reporting import table_statistical_summary as table_statistical_summary
+from prin.solvers import BatchedRK45Solver as BatchedRK45Solver
+from prin.solvers import FixedStepRK4Solver as FixedStepRK4Solver
+from prin.solvers import SolverResult as SolverResult
+from prin.solvers import (
+    gradient_checkpoint_integration as gradient_checkpoint_integration,
+)
 from prin.tensor import CPDecomposition as CPDecomposition
 from prin.tensor import PolyadicTensor as PolyadicTensor
 from prin.train import TrainingResult as TrainingResult
+from prin.training_hooks import TelemetryLogger as TelemetryLogger
 
 __version__: str
 __all__: list[str]

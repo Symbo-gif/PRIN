@@ -1263,3 +1263,62 @@ This sub-pass closes the ``prin-py`` half of DV-012.
 - *Batch-dimension validation (D3):* The public ``pytorch_mean_field_rk4_step``
   wrapper explicitly validates that ``phase``, ``amplitude``, and ``frequency``
   have identical shape before dispatching any batch row to the Rust owner.
+
+WP-036 compatibility surface (sub-pass 0141D1)
+----------------------------------------------
+
+The first of the two net-new-Python-surface sub-passes (Bucket G). It delivers
+the PRINet 3.0 ``prinet.utils.cuda_kernels`` solver family and the
+self-contained ``TelemetryLogger`` observation hook as thin orchestration over
+existing PRIN owners -- no Python numerics (Coding Standards §1.2). The
+integrator math is owned by ``prin.dynamics.RK45Integrator`` /
+``prin.dynamics.RK4Integrator`` (Rust). The remaining ~40 Bucket G symbols
+(``OscilloSim`` family, hybrid-model family, ``temporal_training`` /
+``y4q1_tools`` grab-bags, active-control family, ``ring_topology`` /
+``small_world_topology``, ``LargeScaleOscillatorSystem``, ``OscillatorPruner``)
+are carried to sub-pass 0141D2, whose brief records the per-symbol
+real-wrapper-vs-disposition decision.
+
+Namespace: ``SolverResult`` / ``BatchedRK45Solver`` / ``FixedStepRK4Solver`` /
+``gradient_checkpoint_integration`` land in a new ``prin.solvers`` submodule
+(PRINet 3.0's ``utils/cuda_kernels.py`` has no existing PRIN home);
+``TelemetryLogger`` lands in a new ``prin.training_hooks`` submodule. All five
+also resolve from the top-level ``prin`` namespace (the frozen RC1 contract).
+
+.. csv-table:: 0141D1 symbol dispositions
+   :header: "PRINet 3.0 symbol", "PRIN symbol", "Disposition"
+   :widths: 30, 30, 40
+
+   "SolverResult", "prin.SolverResult / prin.solvers.SolverResult", "Faithful ``@dataclass`` port (no numerics)"
+   "BatchedRK45Solver", "prin.BatchedRK45Solver / prin.solvers.BatchedRK45Solver", "Thin wrapper over ``prin.dynamics.RK45Integrator.integrate_adaptive`` (Rust Dormand-Prince). ``min_dt`` / ``safety_factor`` / ``max_step_increase`` accepted but advisory (Rust owns step control); ``compiled`` accepted but inert"
+   "FixedStepRK4Solver", "prin.FixedStepRK4Solver / prin.solvers.FixedStepRK4Solver", "Thin wrapper over ``prin.dynamics.RK4Integrator.integrate_fixed``. ``compiled`` accepted but inert"
+   "gradient_checkpoint_integration", "prin.gradient_checkpoint_integration / prin.solvers.gradient_checkpoint_integration", "Segmented fixed-step RK4 over the Rust integrator; final state is bit-identical to an un-segmented call. See the checkpointing-is-inert deviation below"
+   "TelemetryLogger", "prin.TelemetryLogger / prin.training_hooks.TelemetryLogger", "Faithful non-numeric port (bounded ``deque`` of records + JSON serialisation)"
+
+**Deliberate deviations and preserved hazards:**
+
+- *Adaptive-solver diagnostics (D1):* PRINet 3.0's ``BatchedRK45Solver``
+  returned an exact ``n_function_evals`` counter from its Python RK45 loop.
+  PRIN's ``RK45Integrator`` does not surface one, so ``SolverResult`` reports a
+  stage estimate: ``6 * (accepted_steps + rejected_steps)`` for RK45,
+  ``4 * n_steps`` for RK4. ``n_steps_taken`` is the count of *accepted* steps.
+- *Solver step-control parameters (D2):* ``min_dt``, ``max_dt``,
+  ``safety_factor`` and ``max_step_increase`` are accepted for signature
+  compatibility but the Rust Dormand-Prince controller owns step-size
+  adaptation with its own constants; only ``max_dt`` influences the seeded
+  initial step. A non-convergence ``ValueError`` from the Rust integrator is
+  re-raised as the PRINet 3.0 ``prin.solvers.SolverError``.
+- *``compiled`` flag (D3):* ``BatchedRK45Solver`` / ``FixedStepRK4Solver``
+  accept ``compiled=True`` for signature compatibility. It is inert -- PRIN
+  dispatches through Rust, not ``torch.compile``.
+- *Gradient checkpointing is inert (D4):* PRINet 3.0's
+  ``gradient_checkpoint_integration`` wrapped each segment in
+  ``torch.utils.checkpoint`` to bound autograd memory during training. PRIN's
+  compatibility integrator surface operates on NumPy-backed
+  ``OscillatorState`` and is not a ``torch.autograd.Function``, so there is no
+  autograd graph to checkpoint; the segmentation only bounds Python-side peak
+  state retention and the final state is unchanged. For gradient-carrying
+  oscillator integration use the ``prin.nn.ResonanceLayer`` autograd bridge.
+- *Behavioural parity:* not established in this sub-pass. Numerical parity of
+  the solver outputs against PRINet 3.0 is a WP-036B/WP-036C acceptance-suite
+  obligation.

@@ -126,4 +126,11 @@ RC1_PUBLIC_API: tuple[str, ...] = (
     "sweep_coupling_params",
     "detect_oscillation",
     "phase_to_rate",
+    # WP-036 S1 sub-pass 0141D1 — net-new Python surface (Bucket G): solver
+    # family over the Rust integrator owners + telemetry observation hook.
+    "SolverResult",
+    "BatchedRK45Solver",
+    "FixedStepRK4Solver",
+    "gradient_checkpoint_integration",
+    "TelemetryLogger",
 )

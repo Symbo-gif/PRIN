@@ -1,7 +1,7 @@
 # Session 0141 / WP-036 S1 running handoff
 
 **Date:** 2026-08-27  
-**Current sub-pass:** 0141C of 0141A–0141E  
+**Current sub-pass:** 0141D1 of 0141A–0141E (0141D split into 0141D1 / 0141D2)  
 **Status:** Running S1 evidence draft; final acceptance is recorded by 0141E
 
 ## 0141A scope delivered
@@ -327,3 +327,139 @@ Commands executed on Windows / Python 3.14 / Rust 1.92:
 - Full `prin.kernels` parity against the PRINet 3.0 reference (numerical
   behavior over the 172-symbol suite) is a WP-036B/C acceptance-suite
   obligation, not this binding pass.
+
+---
+
+## 0141D1 -- Net-new Python surface, part 1 of 2 (Bucket G solver family)
+
+**Scope delivered:** five PRINet-3.0-compatible symbols implemented as thin
+orchestration over existing PRIN owners; **zero Python numerics** (Coding
+Standards Sec. 1.2). 0141D is split into `0141D1` (this pass) and `0141D2` (the
+~40-symbol remainder) per the 0141D brief "Expected work" item 3 and
+Development Workflow Sec. 7 -- flagged in advance in the decomposition plan Sec. 4.
+
+- `prin.solvers` (new submodule): `SolverResult` (faithful `@dataclass`
+  port), `BatchedRK45Solver` (thin wrapper over
+  `prin.dynamics.RK45Integrator.integrate_adaptive`), `FixedStepRK4Solver`
+  (thin wrapper over `prin.dynamics.RK4Integrator.integrate_fixed`),
+  `gradient_checkpoint_integration` (segmented fixed-step RK4;
+  checkpointing inert -- documented deviation D4). `SolverError` stays
+  module-scoped (not a PRINet 3.0 top-level export).
+- `prin.training_hooks` (new submodule): `TelemetryLogger` -- faithful
+  non-numeric port (bounded `deque` of records + JSON serialisation).
+- All five resolve from the top-level `prin` namespace;
+  `python/prin/_public_api.py::RC1_PUBLIC_API` and `prin.__all__` extended
+  together (`verify_api_surface(prin.__all__) == (set(), set())`).
+- No Rust source, Cargo manifest, Python dependency manifest, or compiled
+  PyO3 surface changed. `.pyi`: `python/prin/__init__.pyi` re-exports added
+  (module-level `.pyi` not used -- matches the `prin.kernels` precedent from
+  0141C; the modules are fully inline-typed and `mypy --strict` clean).
+
+### Acceptance evidence map
+
+| 0141D criterion (this pass's slice) | Evidence |
+|---|---|
+| Every covered symbol resolves from `prin`, is in the appropriate `__all__`, passes a construct/callable smoke check | `tests/test_solver_surface.py::test_symbols_resolve_from_prin_and_are_listed` + per-symbol construct/solve tests; `python/prin/solvers.py::__all__`, `python/prin/training_hooks.py::__all__`, `prin.__all__`, `python/prin/_public_api.py` |
+| Real implementation with no numerics (composition over `prin.dynamics` / 0141B-C surface) | `python/prin/solvers.py` delegates every step to `prin.dynamics.RK45Integrator` / `RK4Integrator`; `python/prin/training_hooks.py` is pure bookkeeping. `test_fixed_step_solver_delegates_to_rk4_integrator` and `test_gradient_checkpoint_integration_matches_unsegmented_rk4` assert bit-exact agreement with the Rust owner |
+| Documented deviations for every non-faithful behaviour | Migration Guide "sub-pass 0141D1" section, deviations D1-D4 (diagnostics estimate, advisory step-control params, inert `compiled`, inert gradient checkpointing) + behavioural-parity note; D-D appendix rows 27-30 updated to "Delivered (real)" |
+| New-symbol unit tests for every symbol; >=95% coverage on new code | `tests/test_solver_surface.py` -- 11 tests; `python/prin/solvers.py` 100% line coverage, `python/prin/training_hooks.py` 100% (fast-suite `--cov=prin` run) |
+| `mypy --strict` clean; `interrogate` 100% public | `mypy python/prin --strict` -- 43 files, 0 issues; `interrogate` 96.6% overall, `solvers.py`/`training_hooks.py` 100% |
+| `retrain_controller` (DV-025) | **Not in this pass.** `retrain_controller` is carried to 0141D2. Note the conflict: DV-025's register row (re-targeted 2026-08-27, amendment #31) assigns it to **WP-036C S1 (session 0144E)**, while the 0141D brief line 51 asks for a surface here. 0141D2's brief must resolve this before 0141E. |
+| Migration Guide rows for every covered symbol | `DOCS/sphinx/migration_guide.rst` "sub-pass 0141D1" csv-table (5 rows) + D1-D4 deviations; Sphinx `-W --keep-going` build succeeded |
+
+### Parity-evidence disposition (Development Workflow S1 exit)
+
+Grep/import check against
+`DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet`:
+
+- **`SolverResult`** (`utils/cuda_kernels.py:48`): fields reproduced verbatim
+  (`final_state`, `n_steps_taken`, `n_function_evals`, `final_dt`,
+  `wall_time_seconds`, `trajectory`). PRINet 3.0's Python RK45 loop produced an
+  exact `n_function_evals`; PRIN's `RK45Integrator` does not surface one, so the
+  wrapper reports a stage estimate (documented D1).
+- **`BatchedRK45Solver`** (`utils/cuda_kernels.py:69`): PRINet 3.0 re-implemented
+  the Dormand-Prince Butcher tableau in PyTorch. PRIN delegates to the audited
+  Rust `RK45Integrator` (WP-015). `min_dt`/`safety_factor`/`max_step_increase`
+  are advisory (Rust owns step control); `compiled` is inert. Non-convergence
+  `ValueError` re-raised as `SolverError` for contract compatibility.
+- **`FixedStepRK4Solver`** (`utils/cuda_kernels.py:406`): PRINet 3.0 called
+  `model.integrate(state, n_steps, dt, method="rk4", ...)`. PRIN calls
+  `RK4Integrator().integrate_fixed(model, state, n_steps, dt, record_trajectory)`
+  -- the integrator, not the model, owns the loop. `n_function_evals = 4 *
+  n_steps` (unchanged from the reference).
+- **`gradient_checkpoint_integration`** (`utils/cuda_kernels.py:535`): the
+  reference wrapped each segment in `torch.utils.checkpoint` for autograd-memory
+  savings during training. PRIN's compat integrator surface is NumPy-backed and
+  not a `torch.autograd.Function`, so checkpointing is inert; the segmentation
+  only bounds Python-side peak state retention and the final state is
+  bit-identical to `RK4Integrator().integrate_fixed` (test-verified). The
+  square-root budget heuristic is preserved with the GPU-memory ratio term
+  (unavailable on CPU) treated as 1. For gradient-carrying integration use
+  `prin.nn.ResonanceLayer`.
+- **`TelemetryLogger`** (`nn/training_hooks.py:333`): line-for-line port of the
+  `record` / `to_json` / `records` / `__len__` surface; the bounded `deque`,
+  the `r_per_band` default `[0.0, 0.0, 0.0]`, and the `getattr`-based control
+  field extraction are all preserved. Added: a positive-`capacity` guard
+  (fail-loud, Coding Standards Sec. 1.4).
+
+New golden numerical / behavioural-parity evidence is a WP-036B/WP-036C
+acceptance-suite obligation (0141 brief non-goal), not this pass.
+
+### Verification record (0141D1)
+
+Commands executed on Windows / Python 3.14:
+
+- `ruff check python/prin/ tests/test_solver_surface.py` -- clean;
+  `ruff format --check` on the new files -- clean.
+- `mypy python/prin --strict` -- 43 source files, zero issues.
+- `interrogate -c pyproject.toml python/prin` -- 96.6% overall (>=95 gate);
+  `solvers.py` / `training_hooks.py` 100% (14/14 objects).
+- `bandit -r python/prin -c pyproject.toml` -- no issues identified.
+- `pytest tests/ -m "not slow and not gpu" -p no:randomly --cov=prin
+  --cov-report=term-missing` -- **806 passed, 9 deselected**, 99% overall line
+  coverage; `python/prin/solvers.py` 100%, `python/prin/training_hooks.py` 100%.
+- `pytest --doctest-modules python/prin/solvers.py python/prin/training_hooks.py`
+  -- 4 passed.
+- `pip-audit .` -- no known vulnerabilities.
+- `cargo audit` -- exit 0 (3 governed allowed warnings: `bincode`/`paste`
+  yanked, `chacha20` yanked -- DV-008/DV-017, unchanged; no manifest changed).
+- `snyk code test` at `--severity-threshold=low` on `python/prin/solvers.py`,
+  `python/prin/training_hooks.py`, `tests/test_solver_surface.py` -- **0 issues**
+  each (Snyk CLI 1.1306.2, org `symbo-gif`). No dependency input changed for a
+  supported Snyk ecosystem, so Snyk Open Source is not applicable.
+- `sphinx-build -W --keep-going -b html` -- build succeeded.
+- `python tools/wp001_baseline.py check` -- passed.
+- `python tools/check_dv_register_gates.py` -- passed (29 rows vs 198 entries).
+- `python -c "import prin; from prin._deprecation import verify_api_surface;
+  print(verify_api_surface(prin.__all__))"` -- `(set(), set())`.
+
+No Rust source, Cargo/Python manifest, or PyO3 surface changed, so `cargo fmt`,
+`clippy`, `cargo test`, rustdoc, and `maturin develop` are not applicable to
+this sub-pass; `cargo audit` was rerun regardless as the mandatory ecosystem
+security control.
+
+### Out-of-scope discoveries (0141D1)
+
+- **DV-025 target conflict.** The 0141D brief (line 51) asks for a
+  `retrain_controller` construct/callable surface "here"; the
+  `DEFERRED_VALIDATION_REGISTER.md` DV-025 row re-targets the symbol to
+  WP-036C S1 (session 0144E). 0141D2's brief must reconcile this (either
+  deliver the surface in 0141D2 and note the register is satisfied early, or
+  descope to 0144E with an amendment note) before 0141E closes S1.
+- **`ring_topology` / `small_world_topology` representation mismatch.**
+  `prin.dynamics.Topology.{ring,small_world}` return an `(N,N)` weight matrix;
+  the PRINet 3.0 functions return an `(N,k)` neighbour-index tensor and own a
+  `torch.Generator` RNG stream. 0141D2 must record the adaptation and the
+  seed-determinism hazard (same class as 0141C's D2).
+- **`prin_sim::OscilloSim` / `prin_sim::pruning` are unbound.** Real
+  `OscilloSim` / `LargeScaleOscillatorSystem` / `OscillatorPruner` need either
+  a maintainer decision to add thin PyO3 bindings (maturin rebuild, moves the
+  work toward an 0141B/C-style bindings pass) or a D-2.2 stub citing the
+  unbound owner. 0141D2 brief to obtain the decision.
+- **`temporal_smoothness_loss` has no faithful owner.**
+  `prin.eval.temporal_smoothness` takes position trajectories
+  (`list[list[tuple[float, float]]]`), not the reference's similarity-matrix
+  sequence -- it is a different metric. This symbol is D-2.2 in 0141D2.
+- The 12 deferred trainable-layer symbols (dispositions rows 31-42) and
+  `DiscreteDeltaThetaGamma`/`DiscreteDeltaThetaGammaLayer` still need a
+  maintainer-declared owning WP before 0141E closes S1.

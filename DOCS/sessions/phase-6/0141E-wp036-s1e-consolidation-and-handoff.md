@@ -4,7 +4,7 @@
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036
 **Session type:** S1 — Coding
-**Predecessor:** [0141D — net-new Python surface](0141D-wp036-s1d-net-new-python-surface.md)
+**Predecessor:** [0141D2 — net-new Python surface, part 2](0141D2-wp036-s1d2-net-new-python-surface-remainder.md) (0141D split into 0141D1/0141D2, 2026-08-27)
 **Successor:** [0142 — WP-036 S2 Audit](0142-wp036-s2-api-completion-acceptance-suite-and-migration.md)
 **Authority:** Project Plan §6/§8, amendments #31/#32, the decomposition plan
 [`WP-036-S1-execution-plan-and-decomposition.md`](WP-036-S1-execution-plan-and-decomposition.md). Standard wins on conflict.
@@ -41,7 +41,7 @@ and write the S1 handoff note mapping every acceptance criterion to evidence.
 
 ## Required reading
 
-- The running S1 handoff draft accumulated across 0141A–0141D
+- The running S1 handoff draft accumulated across 0141A–0141D2
 - `DOCS/standards/Documentation_Standards.md` §7; `DOCS/standards/Development_Workflow_and_Audit_Standards.md` §S1 exit
 - `DOCS/baselines/wp001_api_traceability.md` and `tools/wp001_ownership.json`
 - `DOCS/sphinx/migration_guide.rst`
@@ -49,7 +49,7 @@ and write the S1 handoff note mapping every acceptance criterion to evidence.
 
 ## Entry conditions
 
-- 0141A–0141D committed; all covered symbols importable.
+- 0141A–0141D2 committed; all covered symbols importable.
 - No unresolved D1/D2 finding exists.
 
 ## Expected work
