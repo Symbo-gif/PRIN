@@ -1322,3 +1322,83 @@ also resolve from the top-level ``prin`` namespace (the frozen RC1 contract).
 - *Behavioural parity:* not established in this sub-pass. Numerical parity of
   the solver outputs against PRINet 3.0 is a WP-036B/WP-036C acceptance-suite
   obligation.
+
+WP-036 compatibility surface (sub-pass 0141D2)
+----------------------------------------------
+
+The second of the two net-new-Python-surface sub-passes (Bucket G remainder).
+It delivers the remaining ~37 ``prinet.__all__`` symbols as real
+construct/callable implementations (thin orchestration over existing PRIN
+owners, faithful dataclasses, and profiling utilities) or documented D-2.2
+stubs raising ``NotImplementedError`` with a Migration-Guide row. No Python
+numerics are introduced (Coding Standards §1.2).
+
+Namespace: ``OscilloSim`` / ``SimulationResult`` / ``quick_simulate`` /
+``LargeScaleOscillatorSystem`` / ``OscillatorPruner`` land in a new
+``prin.simulation`` submodule. ``ring_topology`` / ``small_world_topology``
+land in a new ``prin.topology`` submodule. The ``temporal_training`` grab-bag
+lands in ``prin.temporal_training``. The ``y4q1_tools`` grab-bag lands in
+``prin.y4q1_tools``. The hybrid-model family lands in ``prin.nn.hybrid_compat``.
+``SlotAttentionCLEVRN`` lands in ``prin.nn.slot_attention``. The
+active-control family extends ``prin.training_hooks``. All symbols also
+resolve from the top-level ``prin`` namespace.
+
+.. csv-table:: 0141D2 symbol dispositions
+   :header: "PRINet 3.0 symbol", "PRIN symbol", "Disposition"
+   :widths: 30, 30, 40
+
+   "OscilloSim", "prin.OscilloSim / prin.simulation.OscilloSim", "Real orchestration over ``prin.dynamics`` integrators + ``prin.metrics``"
+   "SimulationResult", "prin.SimulationResult / prin.simulation.SimulationResult", "Faithful ``@dataclass`` port (NumPy-backed)"
+   "quick_simulate", "prin.quick_simulate / prin.simulation.quick_simulate", "Real convenience wrapper over ``OscilloSim``"
+   "LargeScaleOscillatorSystem", "prin.LargeScaleOscillatorSystem", "D-2.2 stub; ``prin_sim`` engine unbound"
+   "OscillatorPruner", "prin.OscillatorPruner", "D-2.2 stub; ``prin_sim`` pruning unbound"
+   "ring_topology", "prin.ring_topology / prin.topology.ring_topology", "Real deterministic ring-lattice builder"
+   "small_world_topology", "prin.small_world_topology / prin.topology.small_world_topology", "Real Watts-Strogatz builder; RNG-seed hazard (D2)"
+   "SequenceData", "prin.SequenceData / prin.temporal_training.SequenceData", "Faithful ``@dataclass`` port"
+   "TrainingSnapshot", "prin.TrainingSnapshot / prin.temporal_training.TrainingSnapshot", "Faithful ``@dataclass`` port"
+   "MultiSeedResult", "prin.MultiSeedResult / prin.temporal_training.MultiSeedResult", "Faithful ``@dataclass`` port"
+   "count_parameters", "prin.count_parameters / prin.temporal_training.count_parameters", "Real introspection utility"
+   "generate_temporal_clevr_n", "prin.generate_temporal_clevr_n", "D-2.2 stub; data generator requires PyTorch RNG"
+   "generate_dataset", "prin.generate_dataset", "D-2.2 stub; delegates to ``generate_temporal_clevr_n``"
+   "hungarian_similarity_loss", "prin.hungarian_similarity_loss", "D-2.2 stub; numeric loss (cross-entropy)"
+   "temporal_smoothness_loss", "prin.temporal_smoothness_loss", "D-2.2 stub; no faithful ``prin.eval`` owner"
+   "TemporalTrainer", "prin.TemporalTrainer", "D-2.2 stub; training loop"
+   "train_multi_seed", "prin.train_multi_seed", "D-2.2 stub; multi-seed training"
+   "AblationConfig", "prin.AblationConfig / prin.y4q1_tools.AblationConfig", "Faithful ``@dataclass`` port"
+   "ExtendedTrainingResult", "prin.ExtendedTrainingResult / prin.y4q1_tools.ExtendedTrainingResult", "Faithful ``@dataclass`` port"
+   "count_flops", "prin.count_flops / prin.y4q1_tools.count_flops", "Real profiling utility"
+   "measure_wall_time", "prin.measure_wall_time / prin.y4q1_tools.measure_wall_time", "Real profiling utility"
+   "AblationHybridPRINetV2", "prin.AblationHybridPRINetV2", "D-2.2 stub; trainable ``nn.Module``"
+   "create_ablation_model", "prin.create_ablation_model", "D-2.2 stub; constructs trainable modules"
+   "train_clevr_n_single_seed", "prin.train_clevr_n_single_seed", "D-2.2 stub; training loop"
+   "train_clevr_n_extended", "prin.train_clevr_n_extended", "D-2.2 stub; multi-seed training"
+   "HybridPRINet", "prin.HybridPRINet / prin.nn.HybridPRINet", "D-2.2 stub; trainable ``nn.Module``"
+   "HybridCLEVRN", "prin.HybridCLEVRN / prin.nn.HybridCLEVRN", "D-2.2 stub; trainable ``nn.Module``"
+   "HybridPRINetV2CLEVRN", "prin.HybridPRINetV2CLEVRN / prin.nn.HybridPRINetV2CLEVRN", "D-2.2 stub; trainable ``nn.Module``"
+   "InterleavedHybridPRINet", "prin.InterleavedHybridPRINet / prin.nn.InterleavedHybridPRINet", "D-2.2 stub; trainable ``nn.Module``"
+   "TemporalHybridPRINet", "prin.TemporalHybridPRINet / prin.nn.TemporalHybridPRINet", "D-2.2 stub; trainable ``nn.Module``"
+   "AlternatingOptimizer", "prin.AlternatingOptimizer / prin.nn.AlternatingOptimizer", "D-2.2 stub; trainable parameter management"
+   "ControlSignalBuffer", "prin.ControlSignalBuffer / prin.training_hooks.ControlSignalBuffer", "Real thread-safe buffer (``threading.Lock``)"
+   "ActiveControlTrainer", "prin.ActiveControlTrainer / prin.training_hooks.ActiveControlTrainer", "D-2.2 stub; training loop with control policies"
+   "StateCollector", "prin.StateCollector / prin.training_hooks.StateCollector", "D-2.2 stub; loss EMA / gradient norms"
+   "create_ablation_tracker", "prin.create_ablation_tracker / prin.training_hooks.create_ablation_tracker", "D-2.2 stub; constructs trainable trackers"
+   "collect_system_state", "prin.collect_system_state / prin.training_hooks.collect_system_state", "D-2.2 stub; GPU telemetry + SubconsciousState"
+   "SlotAttentionCLEVRN", "prin.SlotAttentionCLEVRN / prin.nn.SlotAttentionCLEVRN", "D-2.2 stub; trainable ``nn.Module``"
+
+**Deliberate deviations and preserved hazards:**
+
+- *Topology representation (D1):* PRINet 3.0's ``ring_topology`` /
+  ``small_world_topology`` returned an ``(N, k)`` ``torch.Tensor``. PRIN
+  returns a flat Python list of ``N * k`` indices in row-major order, matching
+  ``prin.kernels.build_knn_neighbors``. Callers that need a tensor can wrap
+  the result in ``torch.tensor(...)``.
+- *RNG-seed hazard (D2):* ``small_world_topology`` uses Python's ``random``
+  module; PRINet 3.0 used ``torch.Generator``. The same scalar seed does
+  **not** guarantee the same rewiring across implementations.
+- *``SimulationResult`` backing (D3):* PRINet 3.0's ``SimulationResult`` held
+  ``torch.Tensor`` fields. PRIN's uses ``numpy.ndarray`` because the Rust
+  integrators return NumPy-backed ``OscillatorState``.
+- *``retrain_controller`` (DV-025):* descoped to WP-036C S1 (session 0144E)
+  per the DV-025 register row. Not delivered in this sub-pass.
+- *Behavioural parity:* not established in this sub-pass. Numerical parity is
+  a WP-036B/WP-036C acceptance-suite obligation.

@@ -74,20 +74,37 @@ from .allocation import (
 from .attention import OscillatoryAttention
 from .energy import HolomorphicEnergy, HolomorphicEPTrainer
 from .hybrid import HybridPRINetV2
+from .hybrid_compat import (
+    AlternatingOptimizer,
+    HybridCLEVRN,
+    HybridPRINet,
+    HybridPRINetV2CLEVRN,
+    InterleavedHybridPRINet,
+    TemporalHybridPRINet,
+)
 from .inhibition import FeedbackInhibition
 from .optimizers import Rip, Scalr, SyncGd
 from .phase_tracker import PhaseTracker, TrackingResult
-from .slot_attention import SlotAttentionModule, TemporalSlotAttentionMOT
+from .slot_attention import (
+    SlotAttentionCLEVRN,
+    SlotAttentionModule,
+    TemporalSlotAttentionMOT,
+)
 
 __all__: list[str] = [
     "AdaptiveOscillatorAllocator",
+    "AlternatingOptimizer",
     "DynamicPhaseTracker",
     "FeedbackInhibition",
     "GatedPhaseActivation",
     "HolomorphicActivation",
     "HolomorphicEPTrainer",
     "HolomorphicEnergy",
+    "HybridCLEVRN",
+    "HybridPRINet",
     "HybridPRINetV2",
+    "HybridPRINetV2CLEVRN",
+    "InterleavedHybridPRINet",
     "OscillatorBudget",
     "OscillatoryAttention",
     "PhaseActivation",
@@ -97,10 +114,12 @@ __all__: list[str] = [
     "ResonanceLayer",
     "Rip",
     "Scalr",
+    "SlotAttentionCLEVRN",
     "SlotAttentionFrozen",
     "SlotAttentionModule",
     "SlotAttentionNoGRU",
     "SyncGd",
+    "TemporalHybridPRINet",
     "TemporalSlotAttentionMOT",
     "TrackingResult",
     "dSiLU",

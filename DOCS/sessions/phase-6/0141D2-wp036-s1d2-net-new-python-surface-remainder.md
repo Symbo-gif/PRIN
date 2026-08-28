@@ -1,6 +1,6 @@
 # Session 0141D2 — WP-036 S1 (sub-pass 4b/5): Net-new Python surface, part 2 — Bucket G remainder
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036
 **Session type:** S1 — Coding

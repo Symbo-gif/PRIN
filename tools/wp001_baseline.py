@@ -89,7 +89,7 @@ _PLANNED_INTEGER_COUNT = 198
 #   #32: WP-036 S1 executed as five coding sub-passes 0141A..0141E.
 #   #31: WP-036B/WP-036C occupy eight mini-cycle sub-sessions 0144A..0144H.
 _SUBSESSION_BLOCKS = (
-    ("0141", tuple(f"0141{letter}" for letter in "ABCDE")),
+    ("0141", ("0141A", "0141B", "0141C", "0141D1", "0141D2", "0141E")),
     ("0144", tuple(f"0144{letter}" for letter in "ABCDEFGH")),
 )
 _SUBSESSION_SEQUENCES = tuple(

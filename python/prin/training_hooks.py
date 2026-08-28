@@ -1,24 +1,36 @@
-"""PRINet 3.0-compatible training-observation hooks (non-numeric orchestration).
+"""PRINet 3.0-compatible training-observation and active-control hooks.
 
 This module is the thin Python compatibility layer for the PRINet 3.0
-``prinet.nn.training_hooks`` observation surface. It performs bookkeeping only
--- accumulating telemetry records and serialising them -- and contains no
+``prinet.nn.training_hooks`` and ``prinet.core.subconscious`` observation /
+control surface. It performs bookkeeping only -- accumulating telemetry
+records, buffering control signals, and serialising them -- and contains no
 numerics (Coding Standards Sec. 1.2).
 
-Sub-pass 0141D1 delivers :class:`TelemetryLogger` (self-contained, no model or
-daemon dependency). The active-control family (``StateCollector``,
-``ActiveControlTrainer``, ``create_ablation_tracker``) is carried to sub-pass
-0141D2.
+Sub-pass 0141D1 delivered :class:`TelemetryLogger`. Sub-pass 0141D2 adds
+:class:`ControlSignalBuffer` (real, non-numeric) and the D-2.2 stubs for
+the active-control family (``StateCollector``, ``ActiveControlTrainer``,
+``create_ablation_tracker``, ``collect_system_state``). ``retrain_controller``
+(DV-025) is descoped to WP-036C S1 (session 0144E).
 """
 
 from __future__ import annotations
 
 import json
+import threading
 import time
 from collections import deque
-from typing import Any
+from typing import Any, NoReturn
 
-__all__ = ["TelemetryLogger"]
+from prin.daemon import ControlSignals
+
+__all__ = [
+    "ActiveControlTrainer",
+    "ControlSignalBuffer",
+    "StateCollector",
+    "TelemetryLogger",
+    "collect_system_state",
+    "create_ablation_tracker",
+]
 
 
 class TelemetryLogger:
@@ -117,3 +129,113 @@ class TelemetryLogger:
     def __len__(self) -> int:
         """Return the number of buffered records."""
         return len(self._records)
+
+
+class ControlSignalBuffer:
+    """Thread-safe buffer for storing the latest control signals.
+
+    Faithful non-numeric port of the PRINet 3.0
+    ``prinet.core.subconscious.ControlSignalBuffer``. The daemon writes via
+    :meth:`update` and the main training loop reads via :meth:`latest`. Both
+    operations acquire a :class:`threading.Lock` and are safe from data races.
+
+    Example:
+        >>> buf = ControlSignalBuffer()
+        >>> buf.latest().alert_level
+        0.0
+    """
+
+    def __init__(self) -> None:
+        """Create the buffer with default control signals."""
+        self._lock = threading.Lock()
+        self._signals: ControlSignals = ControlSignals()
+
+    def update(self, signals: ControlSignals) -> None:
+        """Atomically replace the stored control signals.
+
+        Args:
+            signals: New control signals to store.
+        """
+        with self._lock:
+            self._signals = signals
+
+    def latest(self) -> ControlSignals:
+        """Read the most recent control signals.
+
+        Returns:
+            The latest ``ControlSignals`` (safe defaults if never updated).
+        """
+        with self._lock:
+            return self._signals
+
+
+def _raise_disposition(symbol: str, detail: str) -> NoReturn:
+    """Raise the typed D-2.2 disposition error."""
+    raise NotImplementedError(
+        f"{symbol} is a deferred-rebuild symbol (WP-036 D-2.2). {detail} "
+        "See the Migration Guide for the disposition and the owning WP."
+    )
+
+
+class StateCollector:
+    """Deferred-rebuild stub for the training-loop daemon bridge.
+
+    PRINet 3.0 ``nn.training_hooks.StateCollector``: collects training
+    metrics (loss EMA, gradient norms, latency percentiles) and submits
+    a packed ``SubconsciousState`` to the daemon. Computes loss EMA /
+    variance (Python numerics).
+
+    Raises:
+        NotImplementedError: Always on construction.
+    """
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+        """Raise the D-2.2 disposition."""
+        _raise_disposition(
+            "StateCollector",
+            "Computes loss EMA / gradient norms (Python numerics).",
+        )
+
+
+class ActiveControlTrainer:
+    """Deferred-rebuild stub for the active subconscious control trainer.
+
+    PRINet 3.0 ``nn.training_hooks.ActiveControlTrainer``: integrates
+    control policies (lr adjustment, K-range narrowing, regime bias) into
+    a training loop. Requires a running model + optimizer (Python numerics).
+
+    Raises:
+        NotImplementedError: Always on construction.
+    """
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+        """Raise the D-2.2 disposition."""
+        _raise_disposition(
+            "ActiveControlTrainer",
+            "Training loop with control policies (Python numerics).",
+        )
+
+
+def create_ablation_tracker(*_args: Any, **_kwargs: Any) -> NoReturn:
+    """Reject calls to the deferred ablation tracker factory.
+
+    Raises:
+        NotImplementedError: Always. Constructs trainable tracker modules.
+    """
+    _raise_disposition(
+        "create_ablation_tracker",
+        "Constructs trainable tracker modules.",
+    )
+
+
+def collect_system_state(*_args: Any, **_kwargs: Any) -> NoReturn:
+    """Reject calls to the deferred system-state collector.
+
+    Raises:
+        NotImplementedError: Always. Reads GPU telemetry via pynvml /
+            torch.cuda and constructs a SubconsciousState (Python numerics).
+    """
+    _raise_disposition(
+        "collect_system_state",
+        "Reads GPU telemetry and constructs SubconsciousState (Python numerics).",
+    )

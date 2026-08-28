@@ -99,25 +99,23 @@ and is split:
   self-contained `TelemetryLogger` observation hook (faithful non-numeric port,
   no disposition needed). New submodules `prin.solvers` and
   `prin.training_hooks`; all five also resolve top-level. Zero Python numerics.
-- **0141D2 (pending, brief `0141D2-wp036-s1d2-net-new-python-surface-remainder.md`):**
-  the ~40 remaining Bucket G symbols. Each needs a per-symbol
-  real-wrapper-vs-D-2.2 decision that either (a) depends on a maintainer
-  decision the 0141D2 brief must obtain, or (b) is inherently a D-2.2 stub
-  because the PRINet 3.0 symbol is a trainable `nn.Module` / numeric loss /
-  data-generator with no faithful non-numeric implementation:
+- **0141D2 (COMPLETE):** the ~37 remaining Bucket G symbols delivered. Per-symbol
+  decisions confirmed:
 
-  | Group | Symbols | Provisional disposition (0141D2 to confirm) |
+  | Group | Symbols | Final disposition |
   |---|---|---|
-  | OscilloSim family | `OscilloSim`, `SimulationResult`, `quick_simulate` | Real orchestration over `prin.dynamics.KuramotoOscillator` + integrators + `prin.metrics` OR thin `prin_sim::OscilloSim` PyO3 binding — maintainer decision (pure-Python composition vs new binding) |
-  | Topology builders | `ring_topology`, `small_world_topology` | Real, but output-representation adaptation required (PRINet returns an `(N,k)` neighbour-index tensor; `prin.dynamics.Topology` returns an `(N,N)` weight matrix) — record adaptation + RNG-seed hazard |
-  | Large-scale / pruning | `LargeScaleOscillatorSystem`, `OscillatorPruner` | Rust owners exist (`prin_sim::engine`, `prin_sim::pruning`) but are unbound; either a thin PyO3 binding (maturin) or a D-2.2 stub citing the unbound owner |
-  | Solver adjuncts | `MixedPrecisionTrainer`, `AsyncCPUGPUPipeline` | D-2.2 (rows 24–25) — CPU no-op shim if faithful, else typed disposition |
-  | Hybrid-model family | `HybridPRINet`, `HybridCLEVRN`, `HybridPRINetV2CLEVRN`, `InterleavedHybridPRINet`, `TemporalHybridPRINet`, `AlternatingOptimizer` | Maintainer deferred the disposition to the 0141D2 brief (2026-08-27). Trainable `nn.Module`s with `nn.Linear` projections; `python/prin/nn/__init__.py` already declares `HybridPRINet`/`AlternatingOptimizer` as "no Rust owner, needs a trainable-layer rebuild" — provisionally D-2.2 |
-  | `temporal_training` grab-bag | `SequenceData`, `TrainingSnapshot`, `MultiSeedResult`, `count_parameters`, `generate_temporal_clevr_n`, `generate_dataset`, `hungarian_similarity_loss`, `temporal_smoothness_loss`, `TemporalTrainer`, `train_multi_seed` | Dataclasses + `count_parameters` real; `temporal_smoothness_loss` has **no** faithful owner (`prin.eval.temporal_smoothness` takes position trajectories, not similarity-matrix sequences); `hungarian_similarity_loss` is a numeric loss (D-2.2); data-generators and `TemporalTrainer` are numeric/training loops (D-2.2 or real orchestration TBD) |
-  | `y4q1_tools` grab-bag | `AblationConfig`, `AblationHybridPRINetV2`, `create_ablation_model`, `ExtendedTrainingResult`, `train_clevr_n_single_seed`, `train_clevr_n_extended`, `count_flops`, `measure_wall_time` | `AblationConfig`/`ExtendedTrainingResult` dataclasses real; `AblationHybridPRINetV2` is a trainable `nn.Module` (tied to the hybrid family); `count_flops`/`measure_wall_time` profiling utilities (mostly non-numeric); training loops D-2.2 |
-  | Active-control family | `ActiveControlTrainer`, `StateCollector`, `create_ablation_tracker`, `ControlSignalBuffer`, `collect_system_state`, `retrain_controller` (DV-025) | `ControlSignalBuffer`/`TelemetryLogger`(done) non-numeric; `StateCollector` computes loss EMA/variance (numeric — D-2.2 or delegate); `retrain_controller` per DV-025 register row is re-targeted to **WP-036C S1 (0144E)**, which conflicts with the 0141D brief line 51 — 0141D2 brief must resolve |
-  | Slot-attention adapter | `SlotAttentionCLEVRN` | Composition over `prin.nn.SlotAttentionModule` (model wiring) — real orchestration TBD |
-  | `DiscreteDeltaThetaGamma` / `DiscreteDeltaThetaGammaLayer` | (missing from `prin.__all__`; disposition doc §0141B says WP-023 rebuilt `DiscreteDeltaThetaGamma`) | Out of Bucket G strictly, but 0141E surface accounting must resolve — flagged for 0141D2/0141E |
+  | OscilloSim family | `OscilloSim`, `SimulationResult`, `quick_simulate` | **Real** — pure-Python orchestration over `prin.dynamics` integrators + `prin.metrics.kuramoto_order_parameter`. No new PyO3 binding (D2-b decision: composition over binding). |
+  | Topology builders | `ring_topology`, `small_world_topology` | **Real** — deterministic ring-lattice and Watts-Strogatz builders returning flat Python lists. Representation adaptation (D1) and RNG-seed hazard (D2) recorded in Migration Guide. |
+  | Large-scale / pruning | `LargeScaleOscillatorSystem`, `OscillatorPruner` | **D-2.2 stub** — `prin_sim` Rust owners exist but are unbound; future WP will add bindings. |
+  | Hybrid-model family | `HybridPRINet`, `HybridCLEVRN`, `HybridPRINetV2CLEVRN`, `InterleavedHybridPRINet`, `TemporalHybridPRINet`, `AlternatingOptimizer` | **D-2.2 stubs** — trainable `nn.Module`s with `nn.Linear` projections; consistent with 0141B rows 31–42 precedent. |
+  | `temporal_training` grab-bag | `SequenceData`, `TrainingSnapshot`, `MultiSeedResult`, `count_parameters` | **Real** — dataclasses + introspection utility. |
+  | `temporal_training` grab-bag | `generate_temporal_clevr_n`, `generate_dataset`, `hungarian_similarity_loss`, `temporal_smoothness_loss`, `TemporalTrainer`, `train_multi_seed` | **D-2.2 stubs** — data generators and training loops require Python numerics. |
+  | `y4q1_tools` grab-bag | `AblationConfig`, `ExtendedTrainingResult`, `count_flops`, `measure_wall_time` | **Real** — dataclasses + profiling utilities. |
+  | `y4q1_tools` grab-bag | `AblationHybridPRINetV2`, `create_ablation_model`, `train_clevr_n_single_seed`, `train_clevr_n_extended` | **D-2.2 stubs** — trainable modules and training loops. |
+  | Active-control family | `ControlSignalBuffer` | **Real** — thread-safe buffer over `prin.daemon.ControlSignals`. |
+  | Active-control family | `ActiveControlTrainer`, `StateCollector`, `create_ablation_tracker`, `collect_system_state` | **D-2.2 stubs** — training loops and GPU telemetry. |
+  | Active-control family | `retrain_controller` (DV-025) | **Descoped** to WP-036C S1 (session 0144E) per DV-025 register row. |
+  | Slot-attention adapter | `SlotAttentionCLEVRN` | **D-2.2 stub** — trainable `nn.Module` with `nn.Linear` projections. |
 
 ## S2 veto questions
 

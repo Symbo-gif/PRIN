@@ -16,7 +16,7 @@ Rust bridge reproduces bit-identical noise on backward recompute). Pass a
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import torch
 from torch.utils.dlpack import from_dlpack
@@ -31,7 +31,11 @@ if TYPE_CHECKING:
         TemporalSlotAttentionMOTBridge as _RustTemporalSlotAttentionMOTBridge,
     )
 
-__all__: list[str] = ["SlotAttentionModule", "TemporalSlotAttentionMOT"]
+__all__: list[str] = [
+    "SlotAttentionCLEVRN",
+    "SlotAttentionModule",
+    "TemporalSlotAttentionMOT",
+]
 
 
 class SlotAttentionModule(torch.nn.Module):
@@ -290,3 +294,29 @@ class TemporalSlotAttentionMOT(torch.nn.Module):
                 tracker's `num_slots`/`slot_dim`.
         """
         self._bridge.load_state_dict(state)
+
+
+class SlotAttentionCLEVRN:
+    """Deferred-rebuild stub for the Slot Attention CLEVR-N adapter.
+
+    PRINet 3.0 ``nn.slot_attention.SlotAttentionCLEVRN``: adapter wrapping
+    :class:`SlotAttentionModule` for CLEVR-N scene + query binary
+    classification. Contains trainable ``nn.Linear`` projections (scene
+    projection, query projection, classifier MLP).
+
+    A faithful implementation requires net-new trainable Rust numerics +
+    autodiff, which WP-036 prohibits. Consistent with the hybrid-model
+    family D-2.2 disposition (0141B rows 31-42 precedent).
+
+    Raises:
+        NotImplementedError: Always on construction.
+    """
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+        """Raise the D-2.2 disposition."""
+        raise NotImplementedError(
+            "SlotAttentionCLEVRN is a deferred-rebuild symbol (WP-036 D-2.2). "
+            "Trainable nn.Module with nn.Linear projections; needs a "
+            "trainable-layer rebuild in a future WP. "
+            "See the Migration Guide for the disposition."
+        )

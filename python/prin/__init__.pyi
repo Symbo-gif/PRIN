@@ -95,18 +95,25 @@ from prin.nn import GatedPhaseActivation as GatedPhaseActivation
 from prin.nn import HolomorphicActivation as HolomorphicActivation
 from prin.nn import HolomorphicEnergy as HolomorphicEnergy
 from prin.nn import HolomorphicEPTrainer as HolomorphicEPTrainer
+from prin.nn import HybridCLEVRN as HybridCLEVRN
+from prin.nn import HybridPRINet as HybridPRINet
 from prin.nn import HybridPRINetV2 as HybridPRINetV2
+from prin.nn import HybridPRINetV2CLEVRN as HybridPRINetV2CLEVRN
+from prin.nn import InterleavedHybridPRINet as InterleavedHybridPRINet
 from prin.nn import OscillatoryAttention as OscillatoryAttention
 from prin.nn import PhaseActivation as PhaseActivation
 from prin.nn import PhaseTracker as PhaseTracker
 from prin.nn import PhaseTrackerFrozen as PhaseTrackerFrozen
 from prin.nn import PhaseTrackerStatic as PhaseTrackerStatic
 from prin.nn import ResonanceLayer as ResonanceLayer
+from prin.nn import SlotAttentionCLEVRN as SlotAttentionCLEVRN
 from prin.nn import SlotAttentionFrozen as SlotAttentionFrozen
 from prin.nn import SlotAttentionModule as SlotAttentionModule
 from prin.nn import SlotAttentionNoGRU as SlotAttentionNoGRU
+from prin.nn import TemporalHybridPRINet as TemporalHybridPRINet
 from prin.nn import TemporalSlotAttentionMOT as TemporalSlotAttentionMOT
 from prin.nn import dSiLU as dSiLU
+from prin.nn import AlternatingOptimizer as AlternatingOptimizer
 from prin.reporting import configure_neurips_style as configure_neurips_style
 from prin.reporting import fig_ablation_results as fig_ablation_results
 from prin.reporting import fig_chimera_heatmap as fig_chimera_heatmap
@@ -142,10 +149,50 @@ from prin.solvers import SolverResult as SolverResult
 from prin.solvers import (
     gradient_checkpoint_integration as gradient_checkpoint_integration,
 )
+from prin.simulation import LargeScaleOscillatorSystem as LargeScaleOscillatorSystem
+from prin.simulation import OscilloSim as OscilloSim
+from prin.simulation import OscillatorPruner as OscillatorPruner
+from prin.simulation import SimulationResult as SimulationResult
+from prin.simulation import quick_simulate as quick_simulate
 from prin.tensor import CPDecomposition as CPDecomposition
 from prin.tensor import PolyadicTensor as PolyadicTensor
+from prin.topology import ring_topology as ring_topology
+from prin.topology import small_world_topology as small_world_topology
 from prin.train import TrainingResult as TrainingResult
+from prin.temporal_training import MultiSeedResult as MultiSeedResult
+from prin.temporal_training import SequenceData as SequenceData
+from prin.temporal_training import TemporalTrainer as TemporalTrainer
+from prin.temporal_training import TrainingSnapshot as TrainingSnapshot
+from prin.temporal_training import count_parameters as count_parameters
+from prin.temporal_training import generate_dataset as generate_dataset
+from prin.temporal_training import (
+    generate_temporal_clevr_n as generate_temporal_clevr_n,
+)
+from prin.temporal_training import (
+    hungarian_similarity_loss as hungarian_similarity_loss,
+)
+from prin.temporal_training import (
+    temporal_smoothness_loss as temporal_smoothness_loss,
+)
+from prin.temporal_training import train_multi_seed as train_multi_seed
+from prin.training_hooks import ActiveControlTrainer as ActiveControlTrainer
+from prin.training_hooks import ControlSignalBuffer as ControlSignalBuffer
+from prin.training_hooks import StateCollector as StateCollector
 from prin.training_hooks import TelemetryLogger as TelemetryLogger
+from prin.training_hooks import collect_system_state as collect_system_state
+from prin.training_hooks import create_ablation_tracker as create_ablation_tracker
+from prin.y4q1_tools import AblationConfig as AblationConfig
+from prin.y4q1_tools import AblationHybridPRINetV2 as AblationHybridPRINetV2
+from prin.y4q1_tools import ExtendedTrainingResult as ExtendedTrainingResult
+from prin.y4q1_tools import count_flops as count_flops
+from prin.y4q1_tools import create_ablation_model as create_ablation_model
+from prin.y4q1_tools import measure_wall_time as measure_wall_time
+from prin.y4q1_tools import (
+    train_clevr_n_extended as train_clevr_n_extended,
+)
+from prin.y4q1_tools import (
+    train_clevr_n_single_seed as train_clevr_n_single_seed,
+)
 
 __version__: str
 __all__: list[str]
