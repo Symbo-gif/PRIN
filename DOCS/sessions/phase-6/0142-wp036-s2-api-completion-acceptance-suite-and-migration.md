@@ -1,11 +1,12 @@
 # Session 0142 — WP-036 S2: Audit — API completion, acceptance suite, and migration
 
-**Status:** PLANNED  
-**Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
-**Execution unit:** WP-036  
-**Session type:** S2 — Audit  
-**Predecessor:** [0141E — Coding sub-pass 5/5](0141E-wp036-s1e-consolidation-and-handoff.md) (WP-036 S1 executed as `0141A`–`0141E` per amendment #32; this S2 audits the contiguous `0141`+`0141A`–`0141E` commit range)  
-**Successor:** [0143 — Remediation](0143-wp036-s3-api-completion-acceptance-suite-and-migration.md)  
+**Status:** COMPLETE
+**Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
+**Execution unit:** WP-036
+**Session type:** S2 — Audit
+**Predecessor:** [0141E — Coding sub-pass 5/5](0141E-wp036-s1e-consolidation-and-handoff.md) (WP-036 S1 executed as `0141A`–`0141E` per amendment #32; this S2 audits the contiguous `0141`+`0141A`–`0141E` commit range)
+**Successor:** [0143 — Remediation](0143-wp036-s3-api-completion-acceptance-suite-and-migration.md)
+**Verdict:** PASS-WITH-FINDINGS (2 D4: WP036-F1 per-module coverage gaps in D-2.2 stubs, WP036-F2 handoff drafting process deviation). Audit report: `DOCS/audits/036-wp036-audit.md`.
 **Authority:** Project Plan §6/§8 and **amendment #31**; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and
