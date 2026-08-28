@@ -66,8 +66,13 @@ _TEXT_SUFFIXES = frozenset(
         ".yaml",
     }
 )
+# A session sequence id is four digits, optionally followed by a sub-session
+# suffix. Plan amendment #31 used a single letter (`0144A`); amendment #32's
+# `0141D` split under Development Workflow §7 introduced a two-character suffix
+# (`0141D1`/`0141D2`), so the optional letter may be followed by one digit.
+_SEQUENCE_RE = r"\d{4}(?:[A-H]\d?)?"
 _SESSION_ROW = re.compile(
-    r"^\|\s*(?P<sequence>\d{4}[A-H]?)\s*\|\s*(?P<phase>\d+)\s*\|"
+    r"^\|\s*(?P<sequence>" + _SEQUENCE_RE + r")\s*\|\s*(?P<phase>\d+)\s*\|"
     r"\s*(?P<unit>[^|]+?)\s*\|\s*(?P<type>[^|]+?)\s*\|"
     r"\s*\[[^]]+\]\((?P<target>[^)]+)\)\s*\|"
     r"\s*(?P<status>[^|]+?)\s*\|$"
@@ -644,15 +649,27 @@ def _numbered_briefs(
     briefs: dict[str, Path] = {}
     duplicates: list[str] = []
     physical_count = 0
+    planned = set(_SUBSESSION_SEQUENCES)
     for path in sessions.glob("phase-*/*.md"):
-        match = re.match(r"^(\d{4}[A-H]?)-", path.name)
-        if match:
-            physical_count += 1
-            sequence = match.group(1)
-            if sequence in briefs:
-                duplicates.append(sequence)
-            else:
-                briefs[sequence] = path
+        match = re.match(r"^(" + _SEQUENCE_RE + r")-", path.name)
+        if match is None:
+            continue
+        sequence = match.group(1)
+        # A retained *parent* contract (e.g. `0141D`, kept for reference after
+        # its Development Workflow §7 split into `0141D1`/`0141D2`) matches the
+        # sequence shape but is not itself a planned numbered session — it has
+        # no register row. Count only planned integer sessions and the
+        # amendment-inserted sub-sessions.
+        is_planned_integer = sequence.isdigit() and (
+            1 <= int(sequence) <= _PLANNED_INTEGER_COUNT
+        )
+        if not (is_planned_integer or sequence in planned):
+            continue
+        physical_count += 1
+        if sequence in briefs:
+            duplicates.append(sequence)
+        else:
+            briefs[sequence] = path
     return briefs, duplicates, physical_count
 
 

@@ -173,4 +173,27 @@ RC1_PUBLIC_API: tuple[str, ...] = (
     "create_ablation_tracker",
     "collect_system_state",
     "SlotAttentionCLEVRN",
+    # WP-036 S1 sub-pass 0141E — consolidation: the remaining deferred
+    # trainable-layer / training-loop symbols, delivered as importable D-2.2
+    # dispositions so every prinet.__all__ symbol resolves from prin. The
+    # trainable-layer rebuild is owned by a future WP; retrain_controller's
+    # real implementation is WP-036C S1 (session 0144E) per DV-025. S2
+    # (session 0142) retains veto over every disposition.
+    "FeedforwardInhibition",
+    "DentateGyrusConverter",
+    "DGLayer",
+    "oscillatory_weight_init",
+    "PhaseToRateConverter",
+    "PhaseToRateAutoencoder",
+    "DenseAutoencoder",
+    "SparsityRegularizationLoss",
+    "HierarchicalResonanceLayer",
+    "PhaseAmplitudeCouplingLayer",
+    "PRINetModel",
+    "compile_model",
+    "DiscreteDeltaThetaGamma",
+    "DiscreteDeltaThetaGammaLayer",
+    "AsyncCPUGPUPipeline",
+    "MixedPrecisionTrainer",
+    "retrain_controller",
 )

@@ -9,8 +9,15 @@ numerics (Coding Standards Sec. 1.2).
 Sub-pass 0141D1 delivered :class:`TelemetryLogger`. Sub-pass 0141D2 adds
 :class:`ControlSignalBuffer` (real, non-numeric) and the D-2.2 stubs for
 the active-control family (``StateCollector``, ``ActiveControlTrainer``,
-``create_ablation_tracker``, ``collect_system_state``). ``retrain_controller``
-(DV-025) is descoped to WP-036C S1 (session 0144E).
+``create_ablation_tracker``, ``collect_system_state``).
+
+Sub-pass 0141E completes the 172-symbol surface with three further D-2.2
+stubs: :class:`MixedPrecisionTrainer` and :class:`AsyncCPUGPUPipeline`
+(``torch.amp`` training-step wrappers — training loops, Python numerics) and
+:func:`retrain_controller`. ``retrain_controller`` (DV-025) has its real
+telemetry-supervised implementation owned by WP-036C S1 (session 0144E); the
+stub here keeps the symbol resolvable so the WP-036 S1 surface is complete
+(register row unchanged; S2 veto retained).
 """
 
 from __future__ import annotations
@@ -25,11 +32,14 @@ from prin.daemon import ControlSignals
 
 __all__ = [
     "ActiveControlTrainer",
+    "AsyncCPUGPUPipeline",
     "ControlSignalBuffer",
+    "MixedPrecisionTrainer",
     "StateCollector",
     "TelemetryLogger",
     "collect_system_state",
     "create_ablation_tracker",
+    "retrain_controller",
 ]
 
 
@@ -238,4 +248,68 @@ def collect_system_state(*_args: Any, **_kwargs: Any) -> NoReturn:
     _raise_disposition(
         "collect_system_state",
         "Reads GPU telemetry and constructs SubconsciousState (Python numerics).",
+    )
+
+
+class MixedPrecisionTrainer:
+    """Deferred-rebuild stub for the mixed-precision training wrapper.
+
+    PRINet 3.0 ``utils.fused_kernels.MixedPrecisionTrainer``: wraps a model +
+    optimizer training step in ``torch.amp.autocast`` / ``GradScaler``. It is a
+    training-loop wrapper (``loss.backward()`` / ``optimizer.step()`` /
+    gradient scaling), the same category as the 0141D2 ``TemporalTrainer`` /
+    ``train_multi_seed`` stubs; delivering it faithfully requires exercising a
+    trainable model (Python numerics), out of scope for WP-036 S1.
+
+    Raises:
+        NotImplementedError: Always on construction.
+    """
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+        """Raise the D-2.2 disposition."""
+        _raise_disposition(
+            "MixedPrecisionTrainer",
+            "torch.amp training-step wrapper (training loop, Python numerics).",
+        )
+
+
+class AsyncCPUGPUPipeline:
+    """Deferred-rebuild stub for the overlapped CPU/GPU training pipeline.
+
+    PRINet 3.0 ``utils.fused_kernels.AsyncCPUGPUPipeline``: runs the
+    ``SubconsciousDaemon`` ONNX inference on a CPU thread while a GPU training
+    loop proceeds concurrently, with double-buffered state passing. It is a
+    training-loop wrapper (``loss.backward()`` / ``optimizer.step()``), the
+    same category as :class:`MixedPrecisionTrainer`; a CPU-synchronous shim
+    would still have to drive a trainable model, out of scope for WP-036 S1.
+
+    Raises:
+        NotImplementedError: Always on construction.
+    """
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+        """Raise the D-2.2 disposition."""
+        _raise_disposition(
+            "AsyncCPUGPUPipeline",
+            "Async CPU/GPU training-loop wrapper (Python numerics).",
+        )
+
+
+def retrain_controller(*_args: Any, **_kwargs: Any) -> NoReturn:
+    """Reject calls to the deferred telemetry-supervised controller retrainer.
+
+    PRINet 3.0 ``nn.subconscious_model.retrain_controller``: fits the
+    subconscious controller network from a logged telemetry dataset (a
+    supervised training loop). DV-025 assigns the real implementation to
+    WP-036C S1 (session 0144E), which also owns the reference
+    ``test_subconscious`` / y-series retraining tests; this stub keeps the
+    symbol resolvable at WP-036 S1 close. The DV-025 register row is unchanged.
+
+    Raises:
+        NotImplementedError: Always.
+    """
+    _raise_disposition(
+        "retrain_controller",
+        "Telemetry-supervised controller retraining loop; real implementation "
+        "owned by WP-036C S1 (session 0144E) per DV-025.",
     )

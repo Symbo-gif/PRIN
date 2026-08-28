@@ -1402,3 +1402,262 @@ resolve from the top-level ``prin`` namespace.
   per the DV-025 register row. Not delivered in this sub-pass.
 - *Behavioural parity:* not established in this sub-pass. Numerical parity is
   a WP-036B/WP-036C acceptance-suite obligation.
+
+WP-036 compatibility surface (sub-pass 0141E)
+---------------------------------------------
+
+The consolidation sub-pass. It closes the 172-symbol surface, adds the
+machine-checked consolidated index below, and finalises the disposition
+appendix and the S1 handoff note.
+
+**Surface completion (17 symbols).** The deferred trainable-layer symbols
+(``FeedforwardInhibition``, ``DentateGyrusConverter``, ``DGLayer``,
+``oscillatory_weight_init``, ``PhaseToRateConverter``,
+``PhaseToRateAutoencoder``, ``DenseAutoencoder``,
+``SparsityRegularizationLoss``, ``HierarchicalResonanceLayer``,
+``PhaseAmplitudeCouplingLayer``, ``PRINetModel``, ``compile_model``,
+``DiscreteDeltaThetaGamma``, ``DiscreteDeltaThetaGammaLayer``) and the
+training-loop wrappers (``MixedPrecisionTrainer``, ``AsyncCPUGPUPipeline``,
+``retrain_controller``) are delivered as **importable D-2.2 dispositions**:
+each resolves from ``prin`` (and ``prin.nn`` / ``prin.training_hooks``) and
+raises a typed ``NotImplementedError`` on construction/call. This makes every
+``prinet.__all__`` symbol resolvable and construct/callable-checkable while the
+trainable-layer rebuild is carried by a future work package. Session 0142 (S2)
+retains veto over every disposition (``DOCS/experiments/0141-wp036-s1-dd-dispositions.md``).
+
+Namespace: the fourteen trainable-layer symbols land in
+:mod:`prin.nn.deferred_layers` (re-exported from :mod:`prin.nn`);
+``MixedPrecisionTrainer`` / ``AsyncCPUGPUPipeline`` / ``retrain_controller``
+extend :mod:`prin.training_hooks`. All seventeen also resolve from the
+top-level ``prin`` namespace.
+
+.. csv-table:: 0141E symbol dispositions
+   :header: "PRINet 3.0 symbol", "PRIN symbol", "Disposition"
+   :widths: 28, 30, 42
+
+   "FeedforwardInhibition", "prin.FeedforwardInhibition / prin.nn.FeedforwardInhibition", "D-2.2 stub; parameter-free gate, excluded from the WP-023 rebuild, no Rust owner"
+   "DentateGyrusConverter", "prin.DentateGyrusConverter / prin.nn.DentateGyrusConverter", "D-2.2 stub; FFI->integration->FBI pipeline, no Rust owner"
+   "DGLayer", "prin.DGLayer / prin.nn.DGLayer", "D-2.2 stub; trainable wrapper over ``DentateGyrusConverter``"
+   "oscillatory_weight_init", "prin.oscillatory_weight_init / prin.nn.oscillatory_weight_init", "D-2.2 stub; oscillatory weight-init helper (Python numerics)"
+   "PhaseToRateConverter", "prin.PhaseToRateConverter / prin.nn.PhaseToRateConverter", "D-2.2 stub; trainable phase-to-rate ``nn.Module``, no Rust owner"
+   "PhaseToRateAutoencoder", "prin.PhaseToRateAutoencoder / prin.nn.PhaseToRateAutoencoder", "D-2.2 stub; trainable autoencoder comparison model"
+   "DenseAutoencoder", "prin.DenseAutoencoder / prin.nn.DenseAutoencoder", "D-2.2 stub; trainable dense-MLP baseline"
+   "SparsityRegularizationLoss", "prin.SparsityRegularizationLoss / prin.nn.SparsityRegularizationLoss", "D-2.2 stub; trainable-loss ``nn.Module`` (Python numerics)"
+   "HierarchicalResonanceLayer", "prin.HierarchicalResonanceLayer / prin.nn.HierarchicalResonanceLayer", "D-2.2 stub; trainable ``nn.Module`` with learnable projections + PAC depths"
+   "PhaseAmplitudeCouplingLayer", "prin.PhaseAmplitudeCouplingLayer / prin.nn.PhaseAmplitudeCouplingLayer", "D-2.2 stub; trainable ``nn.Module`` with a learnable modulation depth"
+   "PRINetModel", "prin.PRINetModel / prin.nn.PRINetModel", "D-2.2 stub; top-level trainable model, no Rust owner"
+   "compile_model", "prin.compile_model / prin.nn.compile_model", "D-2.2 stub; ``torch.compile`` helper for the trainable model stack"
+   "DiscreteDeltaThetaGamma", "prin.DiscreteDeltaThetaGamma / prin.nn.DiscreteDeltaThetaGamma", "D-2.2 stub; audited Rust owner (``prin_train::bands``, WP-022) exists but is unbound - the PyO3 bridge is a recorded out-of-scope discovery (WP-025)"
+   "DiscreteDeltaThetaGammaLayer", "prin.DiscreteDeltaThetaGammaLayer / prin.nn.DiscreteDeltaThetaGammaLayer", "D-2.2 stub; trainable ``nn.Module`` over the unbound core plus net-new projections with no Rust owner"
+   "MixedPrecisionTrainer", "prin.MixedPrecisionTrainer / prin.training_hooks.MixedPrecisionTrainer", "D-2.2 stub; ``torch.amp`` training-step wrapper (training loop, Python numerics)"
+   "AsyncCPUGPUPipeline", "prin.AsyncCPUGPUPipeline / prin.training_hooks.AsyncCPUGPUPipeline", "D-2.2 stub; async CPU/GPU training-loop wrapper (Python numerics)"
+   "retrain_controller", "prin.retrain_controller / prin.training_hooks.retrain_controller", "D-2.2 stub; real telemetry-supervised implementation owned by WP-036C S1 (session 0144E) per DV-025 (register row unchanged)"
+
+**Deliberate deviations and preserved hazards:**
+
+- *``retrain_controller`` (DV-025) - reconciliation.* The 0141D2 section noted
+  ``retrain_controller`` as "descoped to WP-036C S1"; the 0141 brief Contract
+  nevertheless requires every ``prinet.__all__`` symbol to resolve from ``prin``
+  at S1 close. 0141E ships an importable D-2.2 stub so the surface is complete;
+  the DV-025 register row is unchanged (the real implementation remains owned by
+  WP-036C S1 / session 0144E, which also owns the reference retraining tests).
+- *No Python numerics.* Every 0141E symbol is a stub that raises before any
+  computation. Coding Standards Sec. 1.2 is preserved across the whole
+  0141A-0141E range, evidenced by ``tools/check_no_python_numerics.py``.
+- *Behavioural parity:* not established in WP-036 S1 for any disposition symbol.
+  Numerical parity is a WP-036B / WP-036C acceptance-suite obligation.
+
+Consolidated 172-symbol disposition index
+-----------------------------------------
+
+Every ``prinet.__all__`` symbol, its top-level ``prin`` resolution, its
+disposition class, and the sub-pass that delivered it. Generated and verified
+by ``tools/wp036_migration_table.py`` (``check``), which cross-checks the table
+against ``prinet.__all__`` (exactly 172 names), live resolution from ``prin``,
+and the ``prinet`` ownership rows in
+``DOCS/baselines/wp001_api_traceability.md`` (no silent removals). The
+``tests/test_migration_guide_consolidated.py`` regression runs the same check.
+
+
+
+.. wp036-consolidated-table-begin
+
+.. csv-table:: WP-036 S1 consolidated 172-symbol disposition index
+   :header: "PRINet 3.0 symbol", "Resolves from", "Disposition", "Sub-pass"
+   :widths: 30, 24, 34, 12
+
+   "AblationConfig", "prin.AblationConfig", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "AblationHybridPRINetV2", "prin.AblationHybridPRINetV2", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "ActiveControlTrainer", "prin.ActiveControlTrainer", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "AlternatingOptimizer", "prin.AlternatingOptimizer", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "AsyncCPUGPUPipeline", "prin.AsyncCPUGPUPipeline", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "BackendType", "prin.BackendType", "real - direct re-export", "0141A"
+   "BatchedRK45Solver", "prin.BatchedRK45Solver", "real - non-numeric orchestration (0141D1)", "0141D1"
+   "CONTROL_DIM", "prin.CONTROL_DIM", "real - direct re-export", "0141A"
+   "CPDecomposition", "prin.CPDecomposition", "real - Rust PyO3 binding (0141B)", "0141B"
+   "ControlSignalBuffer", "prin.ControlSignalBuffer", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "ControlSignals", "prin.ControlSignals", "real - direct re-export", "0141A"
+   "DGLayer", "prin.DGLayer", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "DeltaThetaGammaNetwork", "prin.DeltaThetaGammaNetwork", "real - rename alias", "0141A"
+   "DenseAutoencoder", "prin.DenseAutoencoder", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "DentateGyrusConverter", "prin.DentateGyrusConverter", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "DiscreteDeltaThetaGamma", "prin.DiscreteDeltaThetaGamma", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "DiscreteDeltaThetaGammaLayer", "prin.DiscreteDeltaThetaGammaLayer", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "ExponentialIntegrator", "prin.ExponentialIntegrator", "real - direct re-export", "0141A"
+   "ExtendedTrainingResult", "prin.ExtendedTrainingResult", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "FeedbackInhibition", "prin.FeedbackInhibition", "real - Rust PyO3 binding (0141B)", "0141B"
+   "FeedforwardInhibition", "prin.FeedforwardInhibition", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "FixedStepRK4Solver", "prin.FixedStepRK4Solver", "real - non-numeric orchestration (0141D1)", "0141D1"
+   "GatedPhaseActivation", "prin.GatedPhaseActivation", "real - direct re-export", "0141A"
+   "HierarchicalResonanceLayer", "prin.HierarchicalResonanceLayer", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "HolomorphicActivation", "prin.HolomorphicActivation", "real - Rust PyO3 binding (0141B)", "0141B"
+   "HolomorphicEPTrainer", "prin.HolomorphicEPTrainer", "real - Rust PyO3 binding (0141B)", "0141B"
+   "HolomorphicEnergy", "prin.HolomorphicEnergy", "real - Rust PyO3 binding (0141B)", "0141B"
+   "HopfOscillator", "prin.HopfOscillator", "real - direct re-export", "0141A"
+   "HybridCLEVRN", "prin.HybridCLEVRN", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "HybridPRINet", "prin.HybridPRINet", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "HybridPRINetV2", "prin.HybridPRINetV2", "real - direct re-export", "0141A"
+   "HybridPRINetV2CLEVRN", "prin.HybridPRINetV2CLEVRN", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "InterleavedHybridPRINet", "prin.InterleavedHybridPRINet", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "KuramotoOscillator", "prin.KuramotoOscillator", "real - direct re-export", "0141A"
+   "LargeScaleOscillatorSystem", "prin.LargeScaleOscillatorSystem", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "MixedPrecisionTrainer", "prin.MixedPrecisionTrainer", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "MultiRateIntegrator", "prin.MultiRateIntegrator", "real - direct re-export", "0141A"
+   "MultiSeedResult", "prin.MultiSeedResult", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "OscillatorModel", "prin.OscillatorModel", "real - rename alias", "0141A"
+   "OscillatorPruner", "prin.OscillatorPruner", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "OscillatorState", "prin.OscillatorState", "real - direct re-export", "0141A"
+   "OscillatoryAttention", "prin.OscillatoryAttention", "real - direct re-export", "0141A"
+   "OscilloSim", "prin.OscilloSim", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "PRINetModel", "prin.PRINetModel", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "PhaseActivation", "prin.PhaseActivation", "real - Rust PyO3 binding (0141B)", "0141B"
+   "PhaseAmplitudeCoupling", "prin.PhaseAmplitudeCoupling", "real - direct re-export", "0141A"
+   "PhaseAmplitudeCouplingLayer", "prin.PhaseAmplitudeCouplingLayer", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "PhaseToRateAutoencoder", "prin.PhaseToRateAutoencoder", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "PhaseToRateConverter", "prin.PhaseToRateConverter", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "PhaseTracker", "prin.PhaseTracker", "real - direct re-export", "0141A"
+   "PhaseTrackerFrozen", "prin.PhaseTrackerFrozen", "real - direct re-export", "0141A"
+   "PhaseTrackerStatic", "prin.PhaseTrackerStatic", "real - direct re-export", "0141A"
+   "PolyadicTensor", "prin.PolyadicTensor", "real - Rust PyO3 binding (0141B)", "0141B"
+   "RIPOptimizer", "prin.RIPOptimizer", "real - rename alias", "0141A"
+   "ResonanceLayer", "prin.ResonanceLayer", "real - direct re-export", "0141A"
+   "SCALROptimizer", "prin.SCALROptimizer", "real - rename alias", "0141A"
+   "STATE_DIM", "prin.STATE_DIM", "real - direct re-export", "0141A"
+   "SequenceData", "prin.SequenceData", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "SimulationResult", "prin.SimulationResult", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "SlotAttentionCLEVRN", "prin.SlotAttentionCLEVRN", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "SlotAttentionFrozen", "prin.SlotAttentionFrozen", "real - direct re-export", "0141A"
+   "SlotAttentionModule", "prin.SlotAttentionModule", "real - direct re-export", "0141A"
+   "SlotAttentionNoGRU", "prin.SlotAttentionNoGRU", "real - direct re-export", "0141A"
+   "SolverResult", "prin.SolverResult", "real - non-numeric orchestration (0141D1)", "0141D1"
+   "SparsityRegularizationLoss", "prin.SparsityRegularizationLoss", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "StateCollector", "prin.StateCollector", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "StuartLandauOscillator", "prin.StuartLandauOscillator", "real - direct re-export", "0141A"
+   "SubconsciousController", "prin.SubconsciousController", "real - direct re-export", "0141A"
+   "SubconsciousDaemon", "prin.SubconsciousDaemon", "real - direct re-export", "0141A"
+   "SubconsciousState", "prin.SubconsciousState", "real - direct re-export", "0141A"
+   "SynchronizedGradientDescent", "prin.SynchronizedGradientDescent", "real - rename alias", "0141A"
+   "TelemetryLogger", "prin.TelemetryLogger", "real - non-numeric orchestration (0141D1)", "0141D1"
+   "TemporalHybridPRINet", "prin.TemporalHybridPRINet", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "TemporalMetrics", "prin.TemporalMetrics", "real - direct re-export", "0141A"
+   "TemporalPhasePropagator", "prin.TemporalPhasePropagator", "real - rename alias", "0141A"
+   "TemporalSlotAttentionMOT", "prin.TemporalSlotAttentionMOT", "real - direct re-export", "0141A"
+   "TemporalTrainer", "prin.TemporalTrainer", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "ThetaGammaNetwork", "prin.ThetaGammaNetwork", "real - rename alias", "0141A"
+   "TrainingResult", "prin.TrainingResult", "real - direct re-export", "0141A"
+   "TrainingSnapshot", "prin.TrainingSnapshot", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "backend_info", "prin.backend_info", "real - direct re-export", "0141A"
+   "bimodality_index", "prin.bimodality_index", "real - direct re-export", "0141A"
+   "binding_robustness_score", "prin.binding_robustness_score", "real - direct re-export", "0141A"
+   "build_knn_neighbors", "prin.build_knn_neighbors", "real - Rust PyO3 binding (0141C)", "0141C"
+   "build_phase_knn", "prin.build_phase_knn", "real - direct re-export", "0141A"
+   "collect_system_state", "prin.collect_system_state", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "compile_model", "prin.compile_model", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "compute_full_temporal_metrics", "prin.compute_full_temporal_metrics", "real - direct re-export", "0141A"
+   "compute_p_value", "prin.compute_p_value", "real - direct re-export", "0141A"
+   "configure_neurips_style", "prin.configure_neurips_style", "real - direct re-export", "0141A"
+   "count_flops", "prin.count_flops", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "count_parameters", "prin.count_parameters", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "create_ablation_model", "prin.create_ablation_model", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "create_ablation_tracker", "prin.create_ablation_tracker", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "create_session", "prin.create_session", "real - direct re-export", "0141A"
+   "csr_coupling_step", "prin.csr_coupling_step", "real - Rust PyO3 binding (0141C)", "0141C"
+   "cuda_fused_kernel_available", "prin.cuda_fused_kernel_available", "real - direct re-export", "0141A"
+   "dSiLU", "prin.dSiLU", "real - Rust PyO3 binding (0141B)", "0141B"
+   "detect_best_backend", "prin.detect_best_backend", "real - direct re-export", "0141A"
+   "detect_oscillation", "prin.detect_oscillation", "real - Rust PyO3 binding (0141C)", "0141C"
+   "directml_available", "prin.directml_available", "real - direct re-export", "0141A"
+   "fig_ablation_results", "prin.fig_ablation_results", "real - direct re-export", "0141A"
+   "fig_chimera_heatmap", "prin.fig_chimera_heatmap", "real - direct re-export", "0141A"
+   "fig_clevr_n_capacity", "prin.fig_clevr_n_capacity", "real - direct re-export", "0141A"
+   "fig_gold_standard_chimera", "prin.fig_gold_standard_chimera", "real - direct re-export", "0141A"
+   "fig_mot_identity_preservation", "prin.fig_mot_identity_preservation", "real - direct re-export", "0141A"
+   "fig_oscillosim_scaling", "prin.fig_oscillosim_scaling", "real - direct re-export", "0141A"
+   "fig_parameter_efficiency", "prin.fig_parameter_efficiency", "real - direct re-export", "0141A"
+   "fig_statistical_summary", "prin.fig_statistical_summary", "real - direct re-export", "0141A"
+   "fig_training_curves", "prin.fig_training_curves", "real - direct re-export", "0141A"
+   "fused_discrete_step_cuda", "prin.fused_discrete_step_cuda", "GPU-only stub (typed BackendUnavailableError)", "0141A"
+   "generate_all_figures", "prin.generate_all_figures", "real - direct re-export", "0141A"
+   "generate_all_tables", "prin.generate_all_tables", "real - direct re-export", "0141A"
+   "generate_benchmark_report", "prin.generate_benchmark_report", "real - direct re-export", "0141A"
+   "generate_dataset", "prin.generate_dataset", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "generate_leaderboard", "prin.generate_leaderboard", "real - direct re-export", "0141A"
+   "generate_scalr_metrics_report", "prin.generate_scalr_metrics_report", "real - direct re-export", "0141A"
+   "generate_temporal_clevr_n", "prin.generate_temporal_clevr_n", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "gradient_checkpoint_integration", "prin.gradient_checkpoint_integration", "real - non-numeric orchestration (0141D1)", "0141D1"
+   "hungarian_similarity_loss", "prin.hungarian_similarity_loss", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "identity_overcount", "prin.identity_overcount", "real - direct re-export", "0141A"
+   "identity_switches", "prin.identity_switches", "real - direct re-export", "0141A"
+   "inter_frame_phase_correlation", "prin.inter_frame_phase_correlation", "real - direct re-export", "0141A"
+   "kuramoto_order_parameter", "prin.kuramoto_order_parameter", "real - direct re-export", "0141A"
+   "local_order_parameter", "prin.local_order_parameter", "real - direct re-export", "0141A"
+   "mean_phase_coherence", "prin.mean_phase_coherence", "real - direct re-export", "0141A"
+   "measure_wall_time", "prin.measure_wall_time", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "mostly_tracked_lost", "prin.mostly_tracked_lost", "real - direct re-export", "0141A"
+   "npu_available", "prin.npu_available", "real - direct re-export", "0141A"
+   "oscillatory_weight_init", "prin.oscillatory_weight_init", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "phase_coherence_matrix", "prin.phase_coherence_matrix", "real - direct re-export", "0141A"
+   "phase_to_rate", "prin.phase_to_rate", "real - Rust PyO3 binding (0141C)", "0141C"
+   "pytorch_cross_band_coupling", "prin.pytorch_cross_band_coupling", "real - Rust PyO3 binding (0141C)", "0141C"
+   "pytorch_fused_discrete_step", "prin.pytorch_fused_discrete_step", "real - Rust PyO3 binding (0141C)", "0141C"
+   "pytorch_fused_discrete_step_full", "prin.pytorch_fused_discrete_step_full", "real - Rust PyO3 binding (0141C)", "0141C"
+   "pytorch_fused_sub_step_rk4", "prin.pytorch_fused_sub_step_rk4", "real - Rust PyO3 binding (0141C)", "0141C"
+   "pytorch_hierarchical_order_param", "prin.pytorch_hierarchical_order_param", "real - Rust PyO3 binding (0141C)", "0141C"
+   "pytorch_mean_field_rk4_step", "prin.pytorch_mean_field_rk4_step", "real - Rust PyO3 binding (0141C)", "0141C"
+   "pytorch_multi_rate_derivatives", "prin.pytorch_multi_rate_derivatives", "real - Rust PyO3 binding (0141C)", "0141C"
+   "pytorch_multi_rate_rk4_step", "prin.pytorch_multi_rate_rk4_step", "real - Rust PyO3 binding (0141C)", "0141C"
+   "pytorch_pac_modulation", "prin.pytorch_pac_modulation", "real - Rust PyO3 binding (0141C)", "0141C"
+   "pytorch_sparse_knn_coupling", "prin.pytorch_sparse_knn_coupling", "real - Rust PyO3 binding (0141C)", "0141C"
+   "quick_simulate", "prin.quick_simulate", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "retrain_controller", "prin.retrain_controller", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "ring_topology", "prin.ring_topology", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "small_world_topology", "prin.small_world_topology", "real - non-numeric orchestration (0141D2)", "0141D2"
+   "sparse_coupling_matrix", "prin.sparse_coupling_matrix", "real - Rust PyO3 binding (0141C)", "0141C"
+   "sparse_coupling_matrix_csr", "prin.sparse_coupling_matrix_csr", "real - Rust PyO3 binding (0141C)", "0141C"
+   "sparse_knn_coupling_step", "prin.sparse_knn_coupling_step", "real - Rust PyO3 binding (0141C)", "0141C"
+   "sparse_mean_phase_coherence", "prin.sparse_mean_phase_coherence", "real - direct re-export", "0141A"
+   "sparse_synchronization_energy", "prin.sparse_synchronization_energy", "real - direct re-export", "0141A"
+   "sweep_coupling_params", "prin.sweep_coupling_params", "real - Rust PyO3 binding (0141C)", "0141C"
+   "table_ablation_variants", "prin.table_ablation_variants", "real - direct re-export", "0141A"
+   "table_chimera_gold_standard", "prin.table_chimera_gold_standard", "real - direct re-export", "0141A"
+   "table_occlusion_sweep", "prin.table_occlusion_sweep", "real - direct re-export", "0141A"
+   "table_oscillosim_scaling", "prin.table_oscillosim_scaling", "real - direct re-export", "0141A"
+   "table_parameter_efficiency", "prin.table_parameter_efficiency", "real - direct re-export", "0141A"
+   "table_statistical_summary", "prin.table_statistical_summary", "real - direct re-export", "0141A"
+   "temporal_recovery_speed", "prin.temporal_recovery_speed", "real - rename alias", "0141A"
+   "temporal_smoothness", "prin.temporal_smoothness", "real - direct re-export", "0141A"
+   "temporal_smoothness_loss", "prin.temporal_smoothness_loss", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "track_duration_stats", "prin.track_duration_stats", "real - direct re-export", "0141A"
+   "track_fragmentation_rate", "prin.track_fragmentation_rate", "real - direct re-export", "0141A"
+   "train_clevr_n_extended", "prin.train_clevr_n_extended", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "train_clevr_n_single_seed", "prin.train_clevr_n_single_seed", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "train_multi_seed", "prin.train_multi_seed", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "triton_available", "prin.triton_available", "real - direct re-export", "0141A"
+   "triton_fused_discrete_step", "prin.triton_fused_discrete_step", "GPU-only stub (typed BackendUnavailableError)", "0141A"
+   "triton_fused_mean_field_rk4_step", "prin.triton_fused_mean_field_rk4_step", "GPU-only stub (typed BackendUnavailableError)", "0141A"
+   "triton_hierarchical_order_param", "prin.triton_hierarchical_order_param", "GPU-only stub (typed BackendUnavailableError)", "0141A"
+   "triton_pac_modulation", "prin.triton_pac_modulation", "GPU-only stub (typed BackendUnavailableError)", "0141A"
+   "triton_sparse_knn_coupling", "prin.triton_sparse_knn_coupling", "GPU-only stub (typed BackendUnavailableError)", "0141A"
+
+.. wp036-consolidated-table-end
+

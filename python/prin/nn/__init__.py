@@ -42,11 +42,16 @@ PRINet-3.0-compatible surface: :mod:`prin.nn.activations` (`dSiLU`,
 (`FeedbackInhibition`), and :mod:`prin.nn.energy` (`HolomorphicEnergy`,
 `HolomorphicEPTrainer`) — all re-exported here.
 
-Remaining planned symbols (Phase 4, PRINet-3.0 compatible), not yet bridged:
-`PRINetModel`, `HierarchicalResonanceLayer`, `PhaseToRateConverter`,
-`HybridPRINet` (v1), `AlternatingOptimizer` — tracked by the WP-036 S1
-disposition register (these have no Rust owner and need a trainable-layer
-rebuild).
+WP-036 S1 sub-pass 0141E completes the 172-symbol surface: the deferred
+trainable-layer symbols with no faithful non-numeric PRIN build
+(`PRINetModel`, `HierarchicalResonanceLayer`, `PhaseToRateConverter`,
+`PhaseToRateAutoencoder`, `DenseAutoencoder`, `SparsityRegularizationLoss`,
+`PhaseAmplitudeCouplingLayer`, `DGLayer`, `DentateGyrusConverter`,
+`FeedforwardInhibition`, `oscillatory_weight_init`, `compile_model`,
+`DiscreteDeltaThetaGamma`, `DiscreteDeltaThetaGammaLayer`) are re-exported
+from :mod:`prin.nn.deferred_layers` as **importable D-2.2 stubs** that raise a
+typed ``NotImplementedError`` on use. The trainable-layer rebuild is owned by a
+future work package; session 0142 (S2) retains veto over every disposition.
 """
 
 from __future__ import annotations
@@ -72,6 +77,22 @@ from .allocation import (
     estimate_complexity,
 )
 from .attention import OscillatoryAttention
+from .deferred_layers import (
+    DenseAutoencoder,
+    DentateGyrusConverter,
+    DGLayer,
+    DiscreteDeltaThetaGamma,
+    DiscreteDeltaThetaGammaLayer,
+    FeedforwardInhibition,
+    HierarchicalResonanceLayer,
+    PhaseAmplitudeCouplingLayer,
+    PhaseToRateAutoencoder,
+    PhaseToRateConverter,
+    PRINetModel,
+    SparsityRegularizationLoss,
+    compile_model,
+    oscillatory_weight_init,
+)
 from .energy import HolomorphicEnergy, HolomorphicEPTrainer
 from .hybrid import HybridPRINetV2
 from .hybrid_compat import (
@@ -94,9 +115,16 @@ from .slot_attention import (
 __all__: list[str] = [
     "AdaptiveOscillatorAllocator",
     "AlternatingOptimizer",
+    "DGLayer",
+    "DenseAutoencoder",
+    "DentateGyrusConverter",
+    "DiscreteDeltaThetaGamma",
+    "DiscreteDeltaThetaGammaLayer",
     "DynamicPhaseTracker",
     "FeedbackInhibition",
+    "FeedforwardInhibition",
     "GatedPhaseActivation",
+    "HierarchicalResonanceLayer",
     "HolomorphicActivation",
     "HolomorphicEPTrainer",
     "HolomorphicEnergy",
@@ -107,7 +135,11 @@ __all__: list[str] = [
     "InterleavedHybridPRINet",
     "OscillatorBudget",
     "OscillatoryAttention",
+    "PRINetModel",
     "PhaseActivation",
+    "PhaseAmplitudeCouplingLayer",
+    "PhaseToRateAutoencoder",
+    "PhaseToRateConverter",
     "PhaseTracker",
     "PhaseTrackerFrozen",
     "PhaseTrackerStatic",
@@ -118,12 +150,15 @@ __all__: list[str] = [
     "SlotAttentionFrozen",
     "SlotAttentionModule",
     "SlotAttentionNoGRU",
+    "SparsityRegularizationLoss",
     "SyncGd",
     "TemporalHybridPRINet",
     "TemporalSlotAttentionMOT",
     "TrackingResult",
+    "compile_model",
     "dSiLU",
     "estimate_complexity",
+    "oscillatory_weight_init",
 ]
 
 if TYPE_CHECKING:

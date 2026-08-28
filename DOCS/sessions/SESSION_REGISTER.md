@@ -235,7 +235,7 @@ introduction and are not retroactively added here; this table starts with
 | 0141C | 6 | WP-036 | S1 — Coding | [prin-kernels reference-fn bindings and DV-012 sweep bindings](phase-6/0141C-wp036-s1c-kernels-bindings-and-dv012.md) | COMPLETE |
 | 0141D1 | 6 | WP-036 | S1 — Coding | [Net-new Python surface, part 1 — Bucket G solver family](phase-6/0141D1-wp036-s1d1-net-new-python-surface-solver-family.md) | COMPLETE |
 | 0141D2 | 6 | WP-036 | S1 — Coding | [Net-new Python surface, part 2 — Bucket G remainder](phase-6/0141D2-wp036-s1d2-net-new-python-surface-remainder.md) | COMPLETE |
-| 0141E | 6 | WP-036 | S1 — Coding | [Consolidation — Migration Guide table, smoke matrix, traceability, handoff](phase-6/0141E-wp036-s1e-consolidation-and-handoff.md) | PLANNED |
+| 0141E | 6 | WP-036 | S1 — Coding | [Consolidation — Migration Guide table, smoke matrix, traceability, handoff](phase-6/0141E-wp036-s1e-consolidation-and-handoff.md) | COMPLETE |
 | 0142 | 6 | WP-036 | S2 — Audit | [API completion, acceptance suite, and migration](phase-6/0142-wp036-s2-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0143 | 6 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](phase-6/0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0144 | 6 | WP-036 | S4 — Documentation | [API completion, acceptance suite, and migration](phase-6/0144-wp036-s4-api-completion-acceptance-suite-and-migration.md) | PLANNED |

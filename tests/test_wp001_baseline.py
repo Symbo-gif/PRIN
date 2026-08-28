@@ -129,7 +129,9 @@ def test_session_plan_validator_detects_missing_brief(tmp_path: Path) -> None:
 
     errors = validate_session_plan(tmp_path)
 
-    assert any("211 numbered session briefs" in error for error in errors)
+    assert any(
+        "found 211 physical numbered session briefs" in error for error in errors
+    )
     assert any("register target does not exist" in error for error in errors)
 
 
@@ -148,7 +150,7 @@ def test_session_plan_validator_detects_duplicate_sequence_ids(
     assert any(
         "duplicate session brief sequence IDs: 0002" in error for error in errors
     )
-    assert any("212 physical numbered session briefs" in error for error in errors)
+    assert any("213 physical numbered session briefs" in error for error in errors)
 
 
 def test_session_plan_validator_accepts_amendment_31_subsessions() -> None:
@@ -270,7 +272,7 @@ def test_repository_inventory_is_deterministic_and_separates_archive() -> None:
     assert len(first["workspace"]["members"]) == 8
     assert len(first["ci"]["workflows"]) == 7
     assert "snyk.yml" in first["ci"]["workflows"]
-    assert first["session_plan"]["numbered_briefs"] == 211
+    assert first["session_plan"]["numbered_briefs"] == 212
     assert first["archive"]["python_modules"] == 43
     assert "target" in first["excluded_directories"]
     assert ".git" in first["excluded_directories"]

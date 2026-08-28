@@ -1,6 +1,6 @@
 # Session 0141E — WP-036 S1 (sub-pass 5/5): Consolidation — Migration Guide table, smoke matrix, traceability, handoff
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036
 **Session type:** S1 — Coding

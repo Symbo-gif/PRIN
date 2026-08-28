@@ -1,8 +1,10 @@
 # Session 0141 / WP-036 S1 running handoff
 
 **Date:** 2026-08-27  
-**Current sub-pass:** 0141D1 of 0141A–0141E (0141D split into 0141D1 / 0141D2)  
-**Status:** Running S1 evidence draft; final acceptance is recorded by 0141E
+**Current sub-pass:** 0141E of 0141A–0141E — **FINAL** (0141D split into 0141D1 / 0141D2)  
+**Status:** S1 complete pending the mandatory session-0142 S2 audit. S1 may not
+self-certify. This note maps every WP-036 S1 acceptance criterion to evidence
+(master map at the end).
 
 ## 0141A scope delivered
 
@@ -463,3 +465,238 @@ security control.
 - The 12 deferred trainable-layer symbols (dispositions rows 31-42) and
   `DiscreteDeltaThetaGamma`/`DiscreteDeltaThetaGammaLayer` still need a
   maintainer-declared owning WP before 0141E closes S1.
+
+---
+
+## 0141D2 — Net-new Python surface, part 2 of 2 (Bucket G remainder)
+
+> **Process note.** Sub-pass 0141D2 (commit `a92261c`) did not append its own
+> section to this running draft, though its brief "Required evidence" asked for
+> it. This section is compiled at 0141E from the committed 0141D2 artefacts
+> (`DOCS/sphinx/migration_guide.rst` "sub-pass 0141D2" section, the D-D
+> appendix "0141D split" table, `tests/test_bucket_g_remainder.py`, and the
+> `a92261c` diff). Flagged for the S2 auditor.
+
+**Scope delivered:** the ~37 remaining Bucket G symbols — 19 as real,
+importable, no-numerics implementations and 18 as documented D-2.2 stubs.
+Zero Python numerics (Coding Standards Sec. 1.2). No Rust source, Cargo
+manifest, Python dependency manifest, or compiled PyO3 surface changed.
+
+- **`prin.simulation`** (new): `OscilloSim` (pure-Python orchestration over
+  `prin.dynamics` integrators + `prin.metrics.kuramoto_order_parameter`),
+  `SimulationResult` (NumPy-backed `@dataclass`), `quick_simulate`. D-2.2
+  stubs: `LargeScaleOscillatorSystem`, `OscillatorPruner` (`prin_sim` engine /
+  pruning owners exist but are unbound).
+- **`prin.topology`** (new): `ring_topology`, `small_world_topology` —
+  deterministic ring-lattice / Watts-Strogatz builders returning flat Python
+  index lists (representation adaptation D1; RNG-seed hazard D2, both in the
+  Migration Guide).
+- **`prin.temporal_training`** (new): real `SequenceData`, `TrainingSnapshot`,
+  `MultiSeedResult` (`@dataclass`), `count_parameters` (introspection). D-2.2
+  stubs: `generate_temporal_clevr_n`, `generate_dataset`,
+  `hungarian_similarity_loss`, `temporal_smoothness_loss`, `TemporalTrainer`,
+  `train_multi_seed`.
+- **`prin.y4q1_tools`** (new): real `AblationConfig`, `ExtendedTrainingResult`
+  (`@dataclass`), `count_flops`, `measure_wall_time` (profiling). D-2.2 stubs:
+  `AblationHybridPRINetV2`, `create_ablation_model`, `train_clevr_n_single_seed`,
+  `train_clevr_n_extended`.
+- **`prin.nn.hybrid_compat`** (new): D-2.2 stubs for the six-symbol
+  hybrid-model family (`HybridPRINet`, `HybridCLEVRN`, `HybridPRINetV2CLEVRN`,
+  `InterleavedHybridPRINet`, `TemporalHybridPRINet`, `AlternatingOptimizer`) —
+  trainable `nn.Module`s with `nn.Linear` projections, D2-a decision (i).
+- **`prin.training_hooks`** extended: real `ControlSignalBuffer` (thread-safe
+  buffer over `prin.daemon.ControlSignals`). D-2.2 stubs: `ActiveControlTrainer`,
+  `StateCollector`, `create_ablation_tracker`, `collect_system_state`.
+- **`prin.nn.slot_attention`** extended: `SlotAttentionCLEVRN` D-2.2 stub.
+
+**Maintainer decisions resolved in-pass (recorded in the D-D appendix
+"0141D split" table):** D2-a (hybrid family to D-2.2 stubs, option (i));
+D2-b (composition over new bindings for `OscilloSim`/`quick_simulate`; D-2.2
+stubs for `LargeScaleOscillatorSystem`/`OscillatorPruner`); D2-c
+(`retrain_controller` descoped to WP-036C S1 / 0144E — later reconciled at
+0141E, see below).
+
+### Acceptance evidence map (0141D2)
+
+| 0141D2 criterion | Evidence |
+|---|---|
+| Every covered symbol resolves from `prin`, in the right `__all__`, construct/callable smoke | `tests/test_bucket_g_remainder.py::test_all_new_symbols_resolve_from_prin_and_are_listed` (37 names) + per-symbol construct / stub-raises tests |
+| Real no-numerics implementation, or a documented D-2.2 stub + Migration-Guide row | `python/prin/{simulation,topology,temporal_training,y4q1_tools}.py`, `nn/hybrid_compat.py`; Migration Guide "sub-pass 0141D2" (37 rows); D-D appendix "0141D split" table |
+| New-symbol unit tests; >=95% coverage on new code | `tests/test_bucket_g_remainder.py` (46 tests at 0141E); new modules at/near 100% at commit time |
+| `.pyi` re-exports; `mypy --strict` clean; `interrogate` 100% on new modules | `python/prin/__init__.pyi` (+47 lines in `a92261c`); `mypy python/prin --strict` clean |
+| Migration Guide rows for every covered symbol | Migration Guide "sub-pass 0141D2" section + D1-D3 deviations |
+| Every 0141D1 out-of-scope discovery actioned; D2-a/D2-b/D2-c resolved | D-D appendix "0141D split" table; Migration Guide D1/D2/D3/`retrain_controller` notes |
+
+### Out-of-scope discoveries carried to 0141E (from 0141D2)
+
+- The trainable-layer family (D-D rows 31-42), `DiscreteDeltaThetaGamma` /
+  `DiscreteDeltaThetaGammaLayer`, `AsyncCPUGPUPipeline`, `MixedPrecisionTrainer`,
+  and `retrain_controller` still did not resolve from `prin` — 17 of 172. The
+  0141 brief Contract requires all 172 to resolve at S1 close. **0141E must
+  close this** (done — see below).
+- `tools/wp001_baseline.py`: the `0141D` to `0141D1`/`0141D2` split updated the
+  `_SUBSESSION_BLOCKS` constant but not the two sequence regexes
+  (`_SESSION_ROW`, `_numbered_briefs`), so `wp001_baseline.py check` and 6
+  `tests/test_wp001_baseline.py` cases regressed on `main` after `a92261c`.
+  Not noticed at D2. **0141E fixes this** (see below).
+
+---
+
+## 0141E — Consolidation, surface completion, and handoff
+
+**Scope delivered.**
+
+1. **Surface completion (17 symbols).** The last 17 unresolved
+   `prinet.__all__` symbols now resolve from `prin` as importable D-2.2
+   dispositions (typed `NotImplementedError` on use):
+   - `python/prin/nn/deferred_layers.py` (new): the 12 trainable `nn/layers.py`
+     / `inhibition.py` symbols (D-D rows 31-42) plus `DiscreteDeltaThetaGamma`
+     and `DiscreteDeltaThetaGammaLayer` (rows 43-44).
+   - `python/prin/training_hooks.py` (extended): `MixedPrecisionTrainer`,
+     `AsyncCPUGPUPipeline` (rows 24/25, revised to training-loop stubs),
+     `retrain_controller` (row 45 — stub now, real implementation owned by
+     WP-036C S1 / session 0144E per DV-025; register row unchanged).
+   - `RC1_PUBLIC_API` and `prin.__all__` extended together (+17 -> 175 names,
+     172 of them `prinet.__all__`); `verify_api_surface(prin.__all__) ==
+     (set(), set())`. `.pyi` re-exports added; `mypy --strict` clean.
+2. **Consolidated 172-row Migration Guide table** — `DOCS/sphinx/migration_guide.rst`
+   "Consolidated 172-symbol disposition index" (guard-marked), generated and
+   machine-checked by `tools/wp036_migration_table.py`.
+3. **Machine-check test** — `tests/test_migration_guide_consolidated.py`: the
+   table has exactly the 172 `prinet.__all__` names, each resolves from `prin`,
+   each has a `prinet` ownership row in `DOCS/baselines/wp001_api_traceability.md`
+   (no silent removals), and each row's disposition class matches runtime
+   behaviour.
+4. **Full 172-symbol construct/callable smoke matrix** —
+   `tests/test_api_surface_matrix.py`: parametrized over every
+   `prinet.__all__` name; each resolves and terminates a no-argument
+   construct/call in a typed, expected way (success / needs-args / needs-input /
+   documented disposition — never `AttributeError`/`ImportError`).
+5. **No-Python-numerics AST check** — `tools/check_no_python_numerics.py` +
+   `tests/test_no_python_numerics.py`: AST scan over the 13 net-new
+   WP-036 S1 compat modules for `@`, linear-algebra / spectral / NN numeric
+   helpers, forbidden imports, and new `nn.Module`/`autograd.Function`
+   subclasses. Clean.
+6. **`tools/wp001_baseline.py` regression fixed** — a shared `_SEQUENCE_RE`
+   (`\d{4}(?:[A-H]\d?)?`) now matches the `0141D1`/`0141D2` sub-session ids in
+   both `_SESSION_ROW` and `_numbered_briefs`; `_numbered_briefs` counts only
+   planned sequences so the retained `0141D` *parent* contract is not
+   miscounted. `0141C`'s successor link corrected to `0141D1`.
+   `tests/test_wp001_baseline.py` count expectations updated (211 -> 212 planned
+   sessions). `python tools/wp001_baseline.py check` passes; traceability
+   matrix regenerated (byte-identical — the matrix content was already
+   current, only the checker was broken).
+7. **D-D appendix finalised** (`0141-wp036-s1-dd-dispositions.md` "0141E
+   finalisation" section, status FINAL-for-S1) and this handoff note.
+
+No Rust source, Cargo manifest, or Python dependency manifest changed in 0141E.
+
+### Acceptance evidence map (0141E scope)
+
+| 0141E criterion | Evidence |
+|---|---|
+| The 172-row table + machine-check test in this commit | `DOCS/sphinx/migration_guide.rst` consolidated index; `tools/wp036_migration_table.py check`; `tests/test_migration_guide_consolidated.py` (9 tests) |
+| Full 172-symbol smoke matrix test | `tests/test_api_surface_matrix.py` — 346 params + 2 guards, all green |
+| No-Python-numerics AST/grep check for the touched tree | `tools/check_no_python_numerics.py` (`main() == 0`); `tests/test_no_python_numerics.py` (4 tests) |
+| Traceability regenerated; `tools/check_*` gates pass | `python tools/wp001_baseline.py traceability` (no diff); `wp001_baseline.py check`, `check_deviation_ledger.py`, `check_dv_register_gates.py` all exit 0 |
+| D-D appendix complete and final (S2 veto) | `0141-wp036-s1-dd-dispositions.md` status **FINAL**; rows 1-45 + the owning-WP open item |
+| S1 handoff note: every acceptance criterion -> evidence | The **Master acceptance map** below |
+| >=95% coverage on new/changed code | `nn/deferred_layers.py` 100%, `training_hooks.py` 100% (full suite), `_public_api.py` 100%, `tools/check_no_python_numerics.py` 100%, `tools/wp036_migration_table.py` 96% |
+| Sphinx `-W` build clean with the new table rendered | `python -m sphinx -W --keep-going -b html DOCS/sphinx <out>` — build succeeded; `migration_guide` + `prin.nn.deferred_layers` rendered |
+
+### Parity-evidence disposition (0141E)
+
+Every 0141E symbol is an importable D-2.2 stub that raises before any
+computation — there is no numerical primitive, no Rust owner is invoked, and no
+golden / property / gradient / kernel-equivalence evidence is applicable.
+`DiscreteDeltaThetaGamma` has an audited but unbound Rust owner
+(`prin_train::bands`); its behavioural parity is a future-WP obligation, not
+this pass's. Behavioural parity for every disposition symbol is a WP-036B /
+WP-036C acceptance-suite obligation (0141 brief non-goal).
+
+### Verification record (0141E)
+
+Commands executed on Windows / Python 3.14 / Rust 1.92:
+
+- `ruff check python/prin tools tests` — All checks passed.
+  `ruff format --check` — clean.
+- `mypy python/prin --strict` — 49 source files, zero issues.
+- `interrogate -c pyproject.toml python/prin` — 97.1% (>=95 gate);
+  `nn/deferred_layers.py` 100%.
+- `bandit -c pyproject.toml -r python/prin tools` — 0 issues.
+- `pytest tests/ -m "not slow and not gpu" -p no:randomly --cov=prin` —
+  **1204 passed, 9 deselected**, 98% total line coverage.
+- `pytest tests/test_api_surface_matrix.py tests/test_migration_guide_consolidated.py
+  tests/test_no_python_numerics.py tests/test_api_surface.py
+  tests/test_bucket_g_remainder.py tests/test_wp001_baseline.py` — **458 passed**.
+- `python tools/wp036_migration_table.py check` — OK (172 symbols).
+- `python tools/check_no_python_numerics.py` — clean (13 modules).
+- `python tools/wp001_baseline.py check` — passed.
+- `python tools/check_deviation_ledger.py DOCS/reports/034-project-state.md
+  DOCS/reports/035-project-state.md` — passed.
+- `python tools/check_dv_register_gates.py` — passed (29 rows vs 198 entries).
+- `python -c "import prin; from prin._deprecation import verify_api_surface;
+  print(verify_api_surface(prin.__all__))"` — `(set(), set())`.
+- `cargo fmt --all -- --check` — clean.
+  `CARGO_INCREMENTAL=0 cargo clippy --workspace --all-targets -- -D warnings` — exit 0.
+  `cargo test --workspace` — all green (1 ignored).
+  `RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps` — exit 0.
+- `cargo audit` — exit 0 (3 governed allowed warnings: `paste` unmaintained,
+  `bincode`/`chacha20` yanked — DV-008/DV-017, unchanged; no manifest changed).
+- `pip-audit` — 3 pre-existing `pip 25.2` advisories (environment tooling,
+  fixed by `pip>=26.1`); **not attributable** — no Python dependency manifest
+  changed. `pip-audit -r DOCS/sphinx/requirements.txt` — clean.
+- `snyk code test --severity-threshold=low` (Snyk CLI 1.1306.2, org
+  `symbo-gif`): **0 issues** in every new/modified 0141E first-party file
+  (`python/prin/nn/deferred_layers.py`, `python/prin/training_hooks.py`,
+  `python/prin/_public_api.py`, `python/prin/__init__.py`,
+  `python/prin/nn/__init__.py`, `tools/wp036_migration_table.py`,
+  `tools/check_no_python_numerics.py`, `tools/wp001_baseline.py`, and the three
+  new test files). The whole-repo scan reports 5 pre-existing **LOW**
+  "Path Traversal" findings in dev-only tooling — `tools/wp001_baseline.py`
+  lines 367/430/829 (`root` from the `--root` CLI arg flowing into
+  `pathlib.Path`, in functions 0141E did not modify), `tools/wp030_mot_fixture.py`,
+  `tools/wp031_stats_fixture.py` — **none attributable to 0141E** (unchanged
+  code paths; local build/test tools). No dependency input changed for a
+  supported Snyk ecosystem, so Snyk Open Source is not applicable.
+- `sphinx-build -W --keep-going -b html` — build succeeded.
+
+### Out-of-scope discoveries (0141E)
+
+- **Owning WP for the trainable-layer / discrete-network rebuild** (D-D rows
+  31-44): a maintainer decision 0141E deliberately did not make. Recorded as an
+  open item for session 0142 (S2) and PSR-036. `tools/wp001_ownership.json`'s
+  per-symbol `future_wp` values are WP-001 traceability attributions to closed
+  WPs, not the rebuild home.
+- `DiscreteDeltaThetaGamma` PyO3 binding: the audited `prin_train::bands`
+  owner is unbound (recorded since WP-025). A future bindings pass, not S1.
+- The `0141D` parent brief remains as a retained parent contract (not a
+  numbered session); `_numbered_briefs` now excludes it by design.
+
+---
+
+## Master acceptance map — WP-036 S1 (0141 brief Contract, verified whole at 0141E)
+
+| WP-036 S1 acceptance criterion (0141 / 0141E brief) | Status | Evidence |
+|---|---|---|
+| Every one of the 172 `prinet.__all__` symbols resolves from `prin` and passes a construct/callable smoke check (full parametrized matrix) | **MET** | `tests/test_api_surface_matrix.py` (172-symbol parametrized matrix, green); `verify_api_surface` returns `(set(), set())` |
+| `verify_api_surface` regression test green against PRIN's RC1 `__all__` | **MET** | `tests/test_api_surface.py::test_frozen_surface_matches_prin_rc1_surface`; `FROZEN_PUBLIC_API` = `frozenset(RC1_PUBLIC_API)` (175 names) |
+| Migration Guide table (all 172 rows) machine-checked against `wp001_api_traceability.md` by a committed test — no silent removals | **MET** | `DOCS/sphinx/migration_guide.rst` consolidated index (172 rows); `tools/wp036_migration_table.py check`; `tests/test_migration_guide_consolidated.py::test_no_silent_removals_against_wp001_baseline` |
+| No Python numerics anywhere in the 0141A-0141E range (Coding Standards Sec. 2.1) — AST/grep check | **MET** | `tools/check_no_python_numerics.py` (13 compat modules, clean); `tests/test_no_python_numerics.py`; 0141B/0141C bindings delegate every op to `_prin_core` (per-pass parity dispositions) |
+| Traceability matrix regenerated (`tools/wp001_*`); `tools/check_*` gates pass | **MET** | `wp001_baseline.py traceability` regenerated (no diff — matrix was current; checker regex fixed); `wp001_baseline.py check`, `check_deviation_ledger.py`, `check_dv_register_gates.py` all pass |
+| The D-D per-symbol disposition appendix is complete and final (S2 veto) | **MET** | `DOCS/experiments/0141-wp036-s1-dd-dispositions.md` — status **FINAL**, rows 1-45, S2 veto questions 1-5, owning-WP open item |
+| S1 handoff note: every acceptance criterion -> evidence, plus the parity-evidence disposition for every new binding | **MET** | this document — per-sub-pass acceptance maps (0141A-0141E) + parity-evidence dispositions + this master map |
+| >=95% coverage on new/changed code (each sub-pass) | **MET** | recorded per sub-pass; 0141E: new modules 100%, tools 96-100% |
+| Full local gate (Rust + Python) reproduced for the whole range | **MET** | 0141E verification record above (Rust fmt/clippy/test/doc regression + full Python gate) |
+| Sphinx `-W` build clean with the new Migration Guide table rendered | **MET** | `sphinx-build -W --keep-going` — build succeeded |
+| No S1 self-certification of completion | **HELD** | S1 hands off to the mandatory S2 audit (session 0142); this note is evidence, not certification |
+
+**Non-goals confirmed untouched:** the ~1,670-test acceptance-suite port
+(WP-036B `0144A`-`0144D`, WP-036C `0144E`-`0144H`); behavioural parity beyond
+smoke checks; final documentation prose (WP-037); release publishing; a CUDA
+Burn backend (DV-005 stays a PSR scoping decision).
+
+**Deferred / carried to S2 or a future WP:** the owning-WP decision for the
+trainable-layer rebuild (D-D rows 31-44); the `DiscreteDeltaThetaGamma` PyO3
+bridge; `retrain_controller`'s real implementation (WP-036C S1 / 0144E,
+DV-025 unchanged).

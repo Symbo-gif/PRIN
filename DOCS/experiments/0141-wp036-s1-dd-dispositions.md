@@ -1,7 +1,7 @@
 # WP-036 S1 D-D per-symbol dispositions
 
-**Date:** 2026-08-27 (extended by sub-passes 0141B, 0141D1)  
-**Status:** Proposed in S1 under mandatory session-0142 S2 audit veto  
+**Date:** 2026-08-27 (extended by sub-passes 0141B, 0141D1; finalised at 0141E)  
+**Status:** FINAL for S1 — proposed under mandatory session-0142 S2 audit veto  
 **Authority:** Plan amendments #31/#32 and
 `WP-036-S1-execution-plan-and-decomposition.md` §3.2; the 0141B descope
 decision (maintainer-approved, 2026-08-27) recorded in
@@ -117,6 +117,52 @@ and is split:
   | Active-control family | `retrain_controller` (DV-025) | **Descoped** to WP-036C S1 (session 0144E) per DV-025 register row. |
   | Slot-attention adapter | `SlotAttentionCLEVRN` | **D-2.2 stub** — trainable `nn.Module` with `nn.Linear` projections. |
 
+## 0141E finalisation — the remaining 17 symbols
+
+Sub-pass 0141E closes the 172-symbol surface. Every symbol below now **resolves
+from `prin`** as an importable D-2.2 disposition (raises a typed
+`NotImplementedError` on construction/call) with a Migration-Guide row (the
+"sub-pass 0141E" section) and a consolidated-index row. `prin.__all__` and
+`RC1_PUBLIC_API` gained all 17 together (`verify_api_surface(prin.__all__) ==
+(set(), set())`). This satisfies the 0141 brief Contract ("every one of the 172
+`prinet.__all__` symbols resolves from `prin` and passes a construct/callable
+smoke check") without introducing Python numerics. S2 retains veto.
+
+| # | PRINet 3.0 symbol | Namespace | WP-036 disposition | Delivery pass |
+|---:|---|---|---|---|
+| 31 | `FeedforwardInhibition` | `prin.nn.deferred_layers` | Importable D-2.2 stub (was "deferred", now resolvable). Rebuild owned by a future WP. | 0141E |
+| 32 | `DentateGyrusConverter` | `prin.nn.deferred_layers` | Importable D-2.2 stub. | 0141E |
+| 33 | `DGLayer` | `prin.nn.deferred_layers` | Importable D-2.2 stub. | 0141E |
+| 34 | `oscillatory_weight_init` | `prin.nn.deferred_layers` | Importable D-2.2 stub. | 0141E |
+| 35 | `PhaseToRateConverter` | `prin.nn.deferred_layers` | Importable D-2.2 stub. | 0141E |
+| 36 | `PhaseToRateAutoencoder` | `prin.nn.deferred_layers` | Importable D-2.2 stub. | 0141E |
+| 37 | `DenseAutoencoder` | `prin.nn.deferred_layers` | Importable D-2.2 stub. | 0141E |
+| 38 | `SparsityRegularizationLoss` | `prin.nn.deferred_layers` | Importable D-2.2 stub. | 0141E |
+| 39 | `HierarchicalResonanceLayer` | `prin.nn.deferred_layers` | Importable D-2.2 stub. | 0141E |
+| 40 | `PhaseAmplitudeCouplingLayer` | `prin.nn.deferred_layers` | Importable D-2.2 stub. | 0141E |
+| 41 | `PRINetModel` | `prin.nn.deferred_layers` | Importable D-2.2 stub. | 0141E |
+| 42 | `compile_model` | `prin.nn.deferred_layers` | Importable D-2.2 stub. | 0141E |
+| 43 | `DiscreteDeltaThetaGamma` | `prin.nn.deferred_layers` | Importable D-2.2 stub. Audited Rust owner (`prin_train::bands::DiscreteDeltaThetaGamma`, WP-022) exists but is **unbound** — the PyO3 bridge is a recorded out-of-scope discovery carried since WP-025 (`crates/prin-py/src/bindings/train.rs` module docs). Binding it is owned by the trainable-layer rebuild WP. **This is a transparent, long-recorded deferral, not a stub masking an unknown owner** — S2 should confirm the bridge is genuinely future-WP scope. | 0141E |
+| 44 | `DiscreteDeltaThetaGammaLayer` | `prin.nn.deferred_layers` | Importable D-2.2 stub. Trainable `nn.Module` over the unbound `DiscreteDeltaThetaGamma` core plus net-new `proj_phase`/`proj_amplitude` projections with no Rust owner. | 0141E |
+| 24 (rev.) | `AsyncCPUGPUPipeline` | `prin.training_hooks` | Importable D-2.2 stub. Training-step wrapper (`loss.backward()` / `optimizer.step()`); same category as the 0141D2 `TemporalTrainer` / `train_multi_seed` stubs. The "CPU-synchronous shim" option from row 24 was not taken — a shim still has to drive a trainable model (Python numerics). | 0141E |
+| 25 (rev.) | `MixedPrecisionTrainer` | `prin.training_hooks` | Importable D-2.2 stub. `torch.amp` training-step wrapper; training loop, same category as row 24. | 0141E |
+| 45 | `retrain_controller` (DV-025) | `prin.training_hooks` | Importable D-2.2 stub. The **real** telemetry-supervised implementation is owned by **WP-036C S1 (session 0144E)** per the DV-025 register row (unchanged). 0141E ships the stub only so the 172-symbol surface resolves at S1 close; 0144E replaces it. Reconciles the 0141D1/0141D2 "descoped" note against the 0141 brief's 172-resolve Contract. | 0141E |
+
+### Owning WP for the trainable-layer / discrete-network rebuild
+
+Rows 31–44 (the trainable `nn/layers.py` family, `DiscreteDeltaThetaGamma`
+core binding, and `DiscreteDeltaThetaGammaLayer`) need a maintainer-declared
+owning WP before this work is done. The D-D appendix flagged this at 0141B;
+0141E records it as an **open maintainer-decision item for session 0142 (S2)
+and PSR-036** rather than inventing a WP. `tools/wp001_ownership.json` already
+carries per-symbol `future_wp` attributions (WP-022/023/024/026/027) for
+WP-001 traceability, but those WPs are closed and did not rebuild these
+symbols; the actual rebuild home is a governance call. The amendment-#31
+acceptance-suite port (WP-036B / WP-036C, sessions 0144A–0144H) is the
+plausible catch basin — each ported reference test that exercises one of these
+symbols forces its rebuild — but that is for the maintainer to confirm or
+redirect.
+
 ## S2 veto questions
 
 Session 0142 must independently confirm that each “real binding” row names an
@@ -124,6 +170,26 @@ existing Rust numerical owner, that no stub masks an available faithful owner,
 and that the 0141D conditional rows resolve to either a tested orchestration
 implementation or an explicit Migration Guide disposition before WP-036 S1
 closes. For the 0141B additions (rows 31–42), 0142 must confirm no `prin-train`
-owner was overlooked, that the deferral is faithful to the WP-023 audit's
-exclusion of `FeedforwardInhibition`/`DentateGyrusConverter`, and that a WP is
-declared to own the trainable-layer rebuild before WP-036 S1 closes at 0141E.
+owner was overlooked, and that the deferral is faithful to the WP-023 audit's
+exclusion of `FeedforwardInhibition`/`DentateGyrusConverter`.
+
+For the 0141E finalisation, 0142 must additionally confirm:
+
+1. All 172 `prinet.__all__` symbols resolve from `prin` and pass the
+   construct/callable smoke matrix (`tests/test_api_surface_matrix.py`);
+   `verify_api_surface(prin.__all__) == (set(), set())`.
+2. `DiscreteDeltaThetaGamma`'s stub (row 43) is an acceptable deferral: the
+   `prin_train::bands` owner is audited but genuinely unbound, and adding the
+   PyO3 bridge in the 0141E *consolidation* pass would have been scope creep
+   against the decomposition plan §4 (0141E = consolidation, bindings were
+   0141B/0141C). Confirm the bridge belongs to a future WP, not to S1.
+3. Rows 24/25 (`AsyncCPUGPUPipeline` / `MixedPrecisionTrainer`) are correctly
+   classed as training-loop stubs (consistent with the 0141D2 precedent) and
+   not forced into a faithful CPU shim.
+4. `retrain_controller`'s stub-now / real-in-0144E split (row 45) is the right
+   reconciliation of the 0141 brief's 172-resolve Contract with the DV-025
+   register row (which is unchanged).
+5. **The owning WP for the trainable-layer / discrete-network rebuild (rows
+   31–44) is a maintainer decision that 0141E deliberately did not make.** 0142
+   / PSR-036 must record the maintainer's call (a new WP, or WP-036B/C absorbs
+   it per ported-test need).
