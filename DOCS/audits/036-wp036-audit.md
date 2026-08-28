@@ -428,7 +428,7 @@ convention (WP036-F2).
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP036-F1 | PENDING | — | — |
-| WP036-F2 | PENDING | — | — |
+| WP036-F1 | FIXED | S3 commit (this session) | 5 new tests in `tests/test_bucket_g_remainder.py` exercise the Stuart-Landau path, topology alias modes, RK45 integrator, `Conv2d`, and `GRUCell` branches. `simulation.py` 90%→**100%**, `y4q1_tools.py` 89%→**100%**. Full suite 1214 passed, 99% overall coverage. |
+| WP036-F2 | AMENDED | S3 commit (this session) | Process deviation acknowledged. No code change applicable. Future decomposed sessions will enforce the per-sub-pass handoff-append convention in the exit gate check. |
 
-**Delta re-audit date:** YYYY-MM-DD — **Result:** PENDING
+**Delta re-audit date:** 2026-08-28 — **Result:** CLEAN

@@ -237,7 +237,7 @@ introduction and are not retroactively added here; this table starts with
 | 0141D2 | 6 | WP-036 | S1 — Coding | [Net-new Python surface, part 2 — Bucket G remainder](phase-6/0141D2-wp036-s1d2-net-new-python-surface-remainder.md) | COMPLETE |
 | 0141E | 6 | WP-036 | S1 — Coding | [Consolidation — Migration Guide table, smoke matrix, traceability, handoff](phase-6/0141E-wp036-s1e-consolidation-and-handoff.md) | COMPLETE |
 | 0142 | 6 | WP-036 | S2 — Audit | [API completion, acceptance suite, and migration](phase-6/0142-wp036-s2-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
-| 0143 | 6 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](phase-6/0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | PLANNED |
+| 0143 | 6 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](phase-6/0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
 | 0144 | 6 | WP-036 | S4 — Documentation | [API completion, acceptance suite, and migration](phase-6/0144-wp036-s4-api-completion-acceptance-suite-and-migration.md) | PLANNED |
 | 0144A | 6 | WP-036B | S1 — Coding | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144A-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
 | 0144B | 6 | WP-036B | S2 — Audit | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144B-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |

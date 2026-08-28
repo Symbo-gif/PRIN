@@ -472,3 +472,60 @@ def test_slot_attention_clevrn_is_d22_stub() -> None:
     """``SlotAttentionCLEVRN`` raises the D-2.2 disposition."""
     with pytest.raises(NotImplementedError, match=r"D-2\.2"):
         SlotAttentionCLEVRN()
+
+
+# ── Coverage: OscilloSim branch paths (WP036-F1) ────────────────────────
+
+
+def test_oscillosim_stuart_landau_path() -> None:
+    """``OscilloSim`` with nonzero ``mu`` builds a StuartLandauOscillator."""
+    sim = OscilloSim(
+        16,
+        coupling_strength=1.0,
+        mu=0.5,
+        coupling_mode="mean_field",
+    )
+    result = sim.run(n_steps=5, dt=0.01)
+    assert isinstance(result, SimulationResult)
+    assert result.n_oscillators == 16
+
+
+def test_oscillosim_topology_alias_modes() -> None:
+    """Topology alias modes (``ring``, ``csr``, ``auto``) resolve correctly."""
+    for mode in ("ring", "csr", "auto"):
+        sim = OscilloSim(16, coupling_strength=1.0, coupling_mode=mode)
+        result = sim.run(n_steps=3, dt=0.01)
+        assert isinstance(result, SimulationResult)
+
+
+def test_oscillosim_rk45_integrator() -> None:
+    """``OscilloSim`` with ``integrator='rk45'`` uses the adaptive solver."""
+    sim = OscilloSim(
+        8,
+        coupling_strength=1.0,
+        coupling_mode="mean_field",
+        integrator="rk45",
+    )
+    result = sim.run(n_steps=5, dt=0.01)
+    assert isinstance(result, SimulationResult)
+    assert result.n_steps >= 1
+
+
+def test_count_flops_conv2d() -> None:
+    """``count_flops`` handles ``Conv2d`` layers."""
+    import torch
+
+    m = torch.nn.Conv2d(3, 8, kernel_size=3)
+    result = count_flops(m, (1, 3, 16, 16))
+    assert result["total_flops"] > 0
+    assert any(d["type"] == "Conv2d" for d in result["layer_flops"])
+
+
+def test_count_flops_grucell() -> None:
+    """``count_flops`` handles ``GRUCell`` layers."""
+    import torch
+
+    m = torch.nn.GRUCell(4, 8)
+    result = count_flops(m, (1, 4))
+    assert result["total_flops"] > 0
+    assert any(d["type"] == "GRUCell" for d in result["layer_flops"])

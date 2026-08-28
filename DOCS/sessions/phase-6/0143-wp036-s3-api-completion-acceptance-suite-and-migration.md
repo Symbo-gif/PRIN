@@ -1,11 +1,12 @@
 # Session 0143 — WP-036 S3: Remediation — API completion, acceptance suite, and migration
 
-**Status:** PLANNED  
-**Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
-**Execution unit:** WP-036  
-**Session type:** S3 — Remediation  
-**Predecessor:** [0142 — Audit](0142-wp036-s2-api-completion-acceptance-suite-and-migration.md)  
-**Successor:** [0144 — Documentation](0144-wp036-s4-api-completion-acceptance-suite-and-migration.md)  
+**Status:** COMPLETE
+**Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
+**Execution unit:** WP-036
+**Session type:** S3 — Remediation
+**Predecessor:** [0142 — Audit](0142-wp036-s2-api-completion-acceptance-suite-and-migration.md)
+**Successor:** [0144 — Documentation](0144-wp036-s4-api-completion-acceptance-suite-and-migration.md)
+**Findings remediated:** WP036-F1 FIXED (5 new branch-coverage tests), WP036-F2 AMENDED (process deviation acknowledged). Delta re-audit: CLEAN.
 **Authority:** Project Plan §6/§8 and **amendment #31**; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and
