@@ -96,8 +96,11 @@ GPU integration benchmarks (`benches/gpu_bench.rs`, CUDA on RTX 4060):
   tensor operations masked by adjacency matrices.
 - Dynamic pruning replaces Python-level array indexing with explicit `PruningStrategy` and
   `PruningResult` forward/inverse mappings and configurable `default_amplitude`.
-- Python bindings (`prin-py` sweep/engine exposure) are deferred to Phase 6 WP-036 (plan
-  amendment #20).
+- Python bindings (`prin-py` sweep/engine exposure) were delivered in Phase 6
+  WP-036 S1 (session 0141C): `sweep_coupling_params`, `detect_oscillation`,
+  and `phase_to_rate` are bound as thin PyO3 bridges in
+  `crates/prin-py/src/bindings/sweep.rs`, with Python wrappers in
+  `python/prin/kernels.py` and top-level `prin` re-exports. DV-012 closed.
 
 ## Dependencies
 
