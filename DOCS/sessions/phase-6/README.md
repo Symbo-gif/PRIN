@@ -41,7 +41,7 @@ sessions 0141 and 0142, all feeding the single S2 audit 0142. See
 | 0141E | WP-036 | S1 — Coding | [Consolidation — Migration Guide table, smoke matrix, traceability, handoff](0141E-wp036-s1e-consolidation-and-handoff.md) | COMPLETE |
 | 0142 | WP-036 | S2 — Audit | [API completion, acceptance suite, and migration](0142-wp036-s2-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
 | 0143 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
-| 0144 | WP-036 | S4 — Documentation | [API completion, acceptance suite, and migration](0144-wp036-s4-api-completion-acceptance-suite-and-migration.md) | PLANNED |
+| 0144 | WP-036 | S4 — Documentation | [API completion, acceptance suite, and migration](0144-wp036-s4-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
 | 0144A | WP-036B | S1 — Coding | [Acceptance suite port — core, dynamics, model stack, subconscious](0144A-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
 | 0144B | WP-036B | S2 — Audit | [Acceptance suite port — core, dynamics, model stack, subconscious](0144B-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
 | 0144C | WP-036B | S3 — Remediation | [Acceptance suite port — core, dynamics, model stack, subconscious](0144C-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |

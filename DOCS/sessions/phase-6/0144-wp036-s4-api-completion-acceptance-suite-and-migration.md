@@ -1,11 +1,12 @@
 # Session 0144 — WP-036 S4: Documentation — API completion, acceptance suite, and migration
 
-**Status:** PLANNED  
-**Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
-**Execution unit:** WP-036  
-**Session type:** S4 — Documentation  
-**Predecessor:** [0143 — Remediation](0143-wp036-s3-api-completion-acceptance-suite-and-migration.md)  
-**Successor:** [0144A — Coding](0144A-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md)  
+**Status:** COMPLETE
+**Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
+**Execution unit:** WP-036
+**Session type:** S4 — Documentation
+**Predecessor:** [0143 — Remediation](0143-wp036-s3-api-completion-acceptance-suite-and-migration.md)
+**Successor:** [0144A — Coding](0144A-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md)
+**Artefacts:** `DOCS/reports/036-project-state.md` (PSR-036), CHANGELOG entry, session registers updated.
 **Authority:** Project Plan §6/§8 and **amendment #31**; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and

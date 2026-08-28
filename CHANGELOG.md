@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **WP-036 S1 — `prin` PRINet-3.0-compatible symbol surface** (sessions
+  0141A–0141E, 2026-08-27–28). All 172 `prinet.__all__` symbols resolve from
+  `prin` and pass a construct/callable smoke check (parametrized matrix, 348
+  tests). Deliverables: `prin._deprecation` freeze machinery (`deprecated`,
+  `deprecated_parameter`, `verify_api_surface`, `FROZEN_PUBLIC_API`); 26 new
+  PyO3 bindings over `prin-tensor`/`prin-train`/`prin-kernels`/`prin-sim`
+  (thin marshalling, no numerics in `prin-py`); 19 real net-new Python
+  implementations + 18 documented D-2.2 stubs; consolidated 172-row Migration
+  Guide table machine-checked against `wp001_api_traceability.md`; no-Python-
+  numerics AST regression. DV-012 (`prin-py` sweep/engine bindings) closed.
+  S2 audit: PASS-WITH-FINDINGS (2 D4). S3 remediation: both findings closed,
+  delta re-audit CLEAN. Full suite 1214 passed, 99% coverage.
+
 ### Changed
 
 - **WP-036 S1 (session 0141) decomposed into five coding sub-passes
