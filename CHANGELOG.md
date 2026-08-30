@@ -31,6 +31,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **WP-036A S1 (session 0144A) decomposed into four coding sub-passes
+  `0144A1`–`0144A4`** (2026-08-30, plan amendment #34, at WP-036A S1 start).
+  Repository verification at S1 start found the 13 trainable-layer symbols
+  (D-D-appendix rows 31–42, 44) are 13 new trainable Burn modules — not thin
+  bindings — and that five composed primitives (continuous
+  `DeltaThetaGammaNetwork`, `PhaseAmplitudeCoupling`, `phase_to_rate`, the FFI
+  phase-delay gate, the DG EMA-integration stage) have no trainable Rust owner
+  and must be Burn-ported first; with per-symbol PyO3 `autograd.Function`
+  bridges, Python `nn.Module`s, float64 `gradcheck`, PRINet-3.0 forward-parity
+  tests and ≥95% coverage this exceeds one reviewable commit range
+  (Development Workflow §7). Sub-passes: `0144A1` (inhibition & sparsification
+  family — `FeedforwardInhibition`, `DentateGyrusConverter`, `DGLayer`,
+  `oscillatory_weight_init`, `SparsityRegularizationLoss`), `0144A2`
+  (phase-to-rate & autoencoder family — `PhaseToRateConverter`,
+  `PhaseToRateAutoencoder`, `DenseAutoencoder`), `0144A3` (hierarchical / PAC /
+  discrete-layer family — `HierarchicalResonanceLayer`,
+  `PhaseAmplitudeCouplingLayer`, `DiscreteDeltaThetaGammaLayer`;
+  pre-authorised to split `0144A3a`/`0144A3b`), `0144A4` (`PRINetModel` +
+  `compile_model` + consolidation). All feed the single S2 audit `0144B`.
+  Strategic dispositions: `compile_model` is a pure-Python `torch.compile`
+  passthrough; `phase_to_rate` `soft` is fully gradchecked while `hard` is a
+  straight-through estimator; forward-parity deltas attributable to the
+  documented f32/f64 hazard or Burn's f32-internal `sigmoid` (DV-018) are
+  governed by the parity-tolerance mechanism; `HierarchicalResonanceLayer` is
+  implemented fully batched (documented D3). Planned session count 216 → 220
+  (221 if `0144A3` splits). Also remediated pre-existing amendment-#33 session-
+  plan metadata debt discovered at S1 start: `tools/wp001_baseline.py`
+  (`_SUBSESSION_BLOCKS`/`_SEQUENCE_RE`/count now model amendments #31/#33/#34),
+  the stray leading `---` in the four WP-036A briefs, and the `0144E`/`0145`
+  predecessor links; `validate_session_plan`/`validate_baseline` green.
 - **WP-036 D-D-appendix rows 31–44 owning-WP decision** (2026-08-29, plan
   amendment #33, at S4 / PSR-036). The 14 trainable-layer / discrete-network
   D-2.2 stubs shipped by WP-036 S1 (rows 31–44 of the D-D dispositions

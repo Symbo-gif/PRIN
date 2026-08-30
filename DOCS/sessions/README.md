@@ -2,7 +2,7 @@
 
 **Status:** Normative execution ledger  
 **Coverage:** Project execution start through stable `1.0.0` completion  
-**Planned sessions:** **198** integer + **8** sub-sessions `0144A`–`0144H` (plan amendment #31) + **5** sub-sessions `0141A`–`0141E` (plan amendment #32) + **4** sub-sessions `0144A`–`0144D` (plan amendment #33, WP-036A, renumber executed 2026-08-29) = **216** (note: amendment #33 reuses the `0144A`–`0144D` identifiers for WP-036A; the former WP-036B/C sessions at those numbers shifted to `0144E`–`0144H`/`0144I`–`0144L`)  
+**Planned sessions:** **198** integer + **8** sub-sessions `0144A`–`0144H` (plan amendment #31) + **6** sub-sessions `0141A`–`0141E` (plan amendment #32, `0141D`→`0141D1`/`0141D2` under Development Workflow §7) + **4** sub-sessions `0144A`–`0144D` (plan amendment #33, WP-036A, renumber executed 2026-08-29) + **4** sub-sessions `0144A1`–`0144A4` (plan amendment #34, WP-036A S1 decomposition, 2026-08-30) = **220** (note: amendment #33 reuses the `0144A`–`0144D` identifiers for WP-036A; the former WP-036B/C sessions at those numbers shifted to `0144E`–`0144H`/`0144I`–`0144L`. Amendment #34 keeps the `0144A` row and inserts `0144A1`–`0144A4` immediately after it; `0144A3` is pre-authorised to split `0144A3a`/`0144A3b` under §7)  
 **Current entry point:** [Session 0001](phase-0/0001-wp001-s1-foundation-baseline-and-traceability.md)  
 **Master order/status register:** [`SESSION_REGISTER.md`](SESSION_REGISTER.md)
 

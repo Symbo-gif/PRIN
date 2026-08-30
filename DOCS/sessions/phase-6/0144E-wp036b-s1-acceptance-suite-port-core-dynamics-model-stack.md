@@ -4,7 +4,7 @@
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S1 — Coding
-**Predecessor:** [0144 — Documentation](0144-wp036-s4-api-completion-acceptance-suite-and-migration.md)
+**Predecessor:** [0144D — Documentation](0144D-wp036a-s4-trainable-compatibility-layers-prin-train-extension.md)
 **Successor:** [0144F — Audit](0144F-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md)
 **Authority:** Project Plan §6/§8 and amendment #31; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 

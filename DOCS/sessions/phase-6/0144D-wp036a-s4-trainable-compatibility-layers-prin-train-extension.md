@@ -1,5 +1,3 @@
----
-
 # Session 0144D — WP-036A S4: Documentation — Trainable compatibility layers (`prin-train` extension)
 
 **Status:** PLANNED

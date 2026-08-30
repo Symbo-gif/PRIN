@@ -1,9 +1,11 @@
 # WP-036A S1 (session 0144A) — execution plan and decomposition proposal
 
-**Status:** DRAFT — PENDING MAINTAINER APPROVAL (prepared 2026-08-30 at
-session 0144A start). Proposed for adoption as **Plan amendment #34**. Not
-itself an execution contract; the governing contract remains the 0144A brief
-and amendment #33. **Until this is approved, no WP-036A code is written.**
+**Status:** ADOPTED (2026-08-30, MichaelMaillet). Recorded as **Plan
+amendment #34**. Maintainer approved **M1** (sub-passes `0144A1`–`0144A4`
+feeding the single S2 audit `0144B`, `0144A3` pre-authorised to split) and
+the **D-2**…**D-5** strategic dispositions. Not itself an execution
+contract; the governing contracts are the 0144A brief, amendment #33,
+amendment #34, and the four sub-pass briefs `0144A1`–`0144A4`.
 
 **Prepared for:** session 0144A (WP-036A S1 — trainable compatibility layers,
 `prin-train` extension).
@@ -326,7 +328,7 @@ Workflow §7, flagged now so S2 is not surprised.*
 > preserved). Planned session count: 216 → 220 (221 if `0144A3` splits).
 > WP-036A's acceptance criteria and non-goals (0144A brief) are unchanged.
 > Same disposition class as amendment #32 (S1 decomposition) and #20 (scope
-> decomposition). | maintainer approval (pending) |
+> decomposition). | maintainer approval (MichaelMaillet, 2026-08-30) |
 
 ---
 

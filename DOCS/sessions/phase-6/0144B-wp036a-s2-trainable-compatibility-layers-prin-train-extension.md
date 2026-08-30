@@ -1,12 +1,10 @@
----
-
 # Session 0144B — WP-036A S2: Audit — Trainable compatibility layers (`prin-train` extension)
 
 **Status:** PLANNED
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036A
 **Session type:** S2 — Audit
-**Predecessor:** [0144A — Coding](0144A-wp036a-s1-trainable-compatibility-layers-prin-train-extension.md)
+**Predecessor:** [0144A4 — Coding sub-pass 4/4](0144A4-wp036a-s1-model-container-and-consolidation.md) (the contiguous `0144A`+`0144A1`–`0144A4` range; amendment #34)
 **Successor:** [0144C — Remediation](0144C-wp036a-s3-trainable-compatibility-layers-prin-train-extension.md)
 **Authority:** Project Plan §6/§8 and amendment #33; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 

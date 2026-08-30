@@ -1,5 +1,3 @@
----
-
 # Session 0144C — WP-036A S3: Remediation — Trainable compatibility layers (`prin-train` extension)
 
 **Status:** PLANNED

@@ -70,7 +70,9 @@ _TEXT_SUFFIXES = frozenset(
 # suffix. Plan amendment #31 used a single letter (`0144A`); amendment #32's
 # `0141D` split under Development Workflow §7 introduced a two-character suffix
 # (`0141D1`/`0141D2`), so the optional letter may be followed by one digit.
-_SEQUENCE_RE = r"\d{4}(?:[A-H]\d?)?"
+# Amendment #33 extended the `0144` block to `0144L` (WP-036A/B/C); amendment
+# #34 decomposed WP-036A S1 into `0144A1`–`0144A4`.
+_SEQUENCE_RE = r"\d{4}(?:[A-L]\d?)?"
 _SESSION_ROW = re.compile(
     r"^\|\s*(?P<sequence>" + _SEQUENCE_RE + r")\s*\|\s*(?P<phase>\d+)\s*\|"
     r"\s*(?P<unit>[^|]+?)\s*\|\s*(?P<type>[^|]+?)\s*\|"
@@ -79,23 +81,46 @@ _SESSION_ROW = re.compile(
 )
 _WP_ID = re.compile(r"^WP-(\d{3})$")
 
-# Plan amendments #31 and #32 add planned two-part sub-sessions inserted
-# between existing integer sessions with two-part identifiers, without
-# renumbering the gap-free 0001..0198 integer sequence (TRACEABILITY invariant
-# 4 is preserved). This is the same additive-by-amendment principle already
-# used for the EA/EMA global sessions, applied inside the phase order.
-#   #32: WP-036 S1 executed as five coding sub-passes 0141A..0141E.
-#   #31: WP-036 split into WP-036 / WP-036B / WP-036C; WP-036B/WP-036C occupy
+# Plan amendments #31–#34 add planned sub-sessions inserted between existing
+# integer sessions with two-part identifiers, without renumbering the gap-free
+# 0001..0198 integer sequence (TRACEABILITY invariant 4 is preserved). This is
+# the same additive-by-amendment principle already used for the EA/EMA global
+# sessions, applied inside the phase order.
+#   #31: WP-036 split into WP-036 / WP-036B / WP-036C; WP-036B/WP-036C occupied
 #        eight mini-cycle sub-sessions 0144A..0144H.
+#   #32: WP-036 S1 executed as five coding sub-passes 0141A..0141E
+#        (0141D split into 0141D1/0141D2 under Development Workflow §7).
+#   #33: new WP-036A took 0144A..0144D; the amendment-#31 WP-036B/WP-036C
+#        block shifted to 0144E..0144H / 0144I..0144L.
+#   #34: WP-036A S1 decomposed into four coding sub-passes 0144A1..0144A4
+#        (0144A3 pre-authorised to split 0144A3a/0144A3b under §7).
 _PLANNED_INTEGER_COUNT = 198
-# Each block is (anchor_integer_session, ordered_two_part_sub_session_ids). The
-# block's rows appear in the register contiguously immediately after the anchor
-# row. Blocks are listed in register order.
-#   #32: WP-036 S1 executed as five coding sub-passes 0141A..0141E.
-#   #31: WP-036B/WP-036C occupy eight mini-cycle sub-sessions 0144A..0144H.
+# Each block is (anchor_integer_session, ordered_sub_session_ids). The block's
+# rows appear in the register contiguously immediately after the anchor row.
+# Blocks are listed in register order.
 _SUBSESSION_BLOCKS = (
     ("0141", ("0141A", "0141B", "0141C", "0141D1", "0141D2", "0141E")),
-    ("0144", tuple(f"0144{letter}" for letter in "ABCDEFGH")),
+    (
+        "0144",
+        (
+            "0144A",
+            "0144A1",
+            "0144A2",
+            "0144A3",
+            "0144A4",
+            "0144B",
+            "0144C",
+            "0144D",
+            "0144E",
+            "0144F",
+            "0144G",
+            "0144H",
+            "0144I",
+            "0144J",
+            "0144K",
+            "0144L",
+        ),
+    ),
 )
 _SUBSESSION_SEQUENCES = tuple(
     sequence for _, block in _SUBSESSION_BLOCKS for sequence in block

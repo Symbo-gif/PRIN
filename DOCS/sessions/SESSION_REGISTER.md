@@ -1,7 +1,7 @@
 # PRIN Master Session Register
 
 **Register version:** 1.2  
-**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 6 sub-sessions (`0141A`–`0141C`, `0141D1`, `0141D2`, `0141E`, plan amendment #32 — `0141D` split into `0141D1`/`0141D2` under Development Workflow §7, 2026-08-27) + 4 sub-sessions (`0144A`–`0144D`, plan amendment #33, WP-036A, mechanical renumber executed 2026-08-29) = **216**  
+**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 6 sub-sessions (`0141A`–`0141C`, `0141D1`, `0141D2`, `0141E`, plan amendment #32 — `0141D` split into `0141D1`/`0141D2` under Development Workflow §7, 2026-08-27) + 4 sub-sessions (`0144A`–`0144D`, plan amendment #33, WP-036A, mechanical renumber executed 2026-08-29) + 4 sub-sessions (`0144A1`–`0144A4`, plan amendment #34, WP-036A S1 decomposition, 2026-08-30 — `0144A3` pre-authorised to split `0144A3a`/`0144A3b` under Development Workflow §7) = **220**  
 **Current entry point:** Session 0001  
 **Status authority:** the latest approved Project State Report; this register
 is updated during S4 only from committed evidence.
@@ -28,6 +28,23 @@ WP-036 S4). The existing WP-036B sessions shifted from `0144A`–`0144D` to
 `0144E`–`0144H`; the existing WP-036C sessions shifted from `0144E`–`0144H`
 to `0144I`–`0144L`. Planned session count: 216 (212 + 4). WP-036A's Audit
 Report and Project State Report are numbered `036a`.
+
+**Amendment-inserted sub-sessions (plan amendment #34, adopted 2026-08-30):**
+WP-036A S1 (session 0144A) is executed as four sequential S1 coding
+sub-passes `0144A1`–`0144A4`, inserted between `0144A` and the S2 audit
+`0144B` (see
+`DOCS/sessions/phase-6/WP-036A-S1-execution-plan-and-decomposition.md`),
+because the 13 trainable-layer symbols are 13 new trainable Burn modules
+(five composed primitives lack a trainable Rust owner) — one commit range
+too large to review at S2 without deferring tests or weakening gradcheck
+tolerances (Development Workflow §7). They do **not** renumber the integer
+sequence or the `0144E`–`0144L` block (`0144B`'s predecessor becomes
+`0144A4`). All four commit at their own green local gate and feed the
+single S2 audit `0144B`; the contiguous `0144A`+`0144A1`–`0144A4` range is
+pushed once with `0144B` (amendment #28). `0144A3` is pre-authorised to
+split into `0144A3a` / `0144A3b` under Development Workflow §7 (the
+continuous three-band-network Burn port is the single largest new-numerics
+item); if it splits, planned count becomes 221.
 
 **Amendment-inserted sub-sessions (plan amendment #32):** WP-036 S1
 (session 0141) is executed as five sequential S1 coding sub-passes
@@ -249,6 +266,10 @@ introduction and are not retroactively added here; this table starts with
 | 0143 | 6 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](phase-6/0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
 | 0144 | 6 | WP-036 | S4 — Documentation | [API completion, acceptance suite, and migration](phase-6/0144-wp036-s4-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
 | 0144A | 6 | WP-036A | S1 — Coding | [Trainable compatibility layers — `prin-train` extension](phase-6/0144A-wp036a-s1-trainable-compatibility-layers-prin-train-extension.md) | PLANNED |
+| 0144A1 | 6 | WP-036A | S1 — Coding | [Inhibition and sparsification family](phase-6/0144A1-wp036a-s1-inhibition-and-sparsification-family.md) | PLANNED |
+| 0144A2 | 6 | WP-036A | S1 — Coding | [Phase-to-rate and autoencoder family](phase-6/0144A2-wp036a-s1-phase-to-rate-and-autoencoder-family.md) | PLANNED |
+| 0144A3 | 6 | WP-036A | S1 — Coding | [Hierarchical, PAC, and discrete-layer family](phase-6/0144A3-wp036a-s1-hierarchical-pac-and-discrete-layer-family.md) | PLANNED |
+| 0144A4 | 6 | WP-036A | S1 — Coding | [Model container and consolidation](phase-6/0144A4-wp036a-s1-model-container-and-consolidation.md) | PLANNED |
 | 0144B | 6 | WP-036A | S2 — Audit | [Trainable compatibility layers — `prin-train` extension](phase-6/0144B-wp036a-s2-trainable-compatibility-layers-prin-train-extension.md) | PLANNED |
 | 0144C | 6 | WP-036A | S3 — Remediation | [Trainable compatibility layers — `prin-train` extension](phase-6/0144C-wp036a-s3-trainable-compatibility-layers-prin-train-extension.md) | PLANNED |
 | 0144D | 6 | WP-036A | S4 — Documentation | [Trainable compatibility layers — `prin-train` extension](phase-6/0144D-wp036a-s4-trainable-compatibility-layers-prin-train-extension.md) | PLANNED |

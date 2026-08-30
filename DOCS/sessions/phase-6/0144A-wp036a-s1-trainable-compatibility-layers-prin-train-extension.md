@@ -1,5 +1,3 @@
----
-
 # Session 0144A — WP-036A S1: Coding — Trainable compatibility layers (`prin-train` extension)
 
 **Status:** PLANNED
@@ -7,12 +5,25 @@
 **Execution unit:** WP-036A
 **Session type:** S1 — Coding
 **Predecessor:** [0144 — Documentation](0144-wp036-s4-api-completion-acceptance-suite-and-migration.md)
-**Successor:** [0144B — Audit](0144B-wp036a-s2-trainable-compatibility-layers-prin-train-extension.md)
-**Authority:** Project Plan §6/§8 and **amendment #33**; the applicable normative
-standards. If this brief conflicts with a normative standard, the standard wins.
+**Successor:** [0144A1 — sub-pass 1/4](0144A1-wp036a-s1-inhibition-and-sparsification-family.md)
+**Authority:** Project Plan §6/§8 and **amendments #33/#34**; the decomposition
+plan [`WP-036A-S1-execution-plan-and-decomposition.md`](WP-036A-S1-execution-plan-and-decomposition.md);
+the applicable normative standards. If this brief conflicts with a normative
+standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and
 > results belong in Audit Reports, Project State Reports, and experiment artefacts.
+
+> **Decomposition note (amendment #34):** repository verification at S1 start
+> shows the 13 symbols are 13 new trainable Burn modules (five composed
+> primitives lack a trainable Rust owner and must be Burn-ported first) — one
+> commit range too large to review at S2 without deferring tests or weakening
+> gradcheck tolerances (Development Workflow §7). WP-036A S1 is executed as four
+> dependency-ordered sub-passes `0144A1`–`0144A4`, each committing at its own
+> green local gate, all feeding the single S2 audit `0144B`. `0144A3` is
+> pre-authorised to split `0144A3a`/`0144A3b`. The acceptance criteria,
+> non-goals, required evidence, and prohibitions below are unchanged and are
+> satisfied **in aggregate across the sub-passes**. See the decomposition plan.
 
 > **Scope note (amendment #33):** WP-036A delivers the 13 trainable-layer /
 > discrete-network symbols (D-D appendix rows 31–42, 44) as real `prin-train`
