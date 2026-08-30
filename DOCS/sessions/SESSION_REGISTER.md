@@ -1,7 +1,7 @@
 # PRIN Master Session Register
 
 **Register version:** 1.2  
-**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 6 sub-sessions (`0141A`–`0141C`, `0141D1`, `0141D2`, `0141E`, plan amendment #32 — `0141D` split into `0141D1`/`0141D2` under Development Workflow §7, 2026-08-27) = 212  
+**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 6 sub-sessions (`0141A`–`0141C`, `0141D1`, `0141D2`, `0141E`, plan amendment #32 — `0141D` split into `0141D1`/`0141D2` under Development Workflow §7, 2026-08-27) = 212, **+ 4 sub-sessions pending (WP-036A `0144A`–`0144D`, plan amendment #33, adopted 2026-08-29, mechanical renumber not yet executed) = 216 on execution**  
 **Current entry point:** Session 0001  
 **Status authority:** the latest approved Project State Report; this register
 is updated during S4 only from committed evidence.
@@ -19,6 +19,16 @@ and 0145. They do **not** renumber the 0001–0198 integer sequence
 same additive-by-amendment precedent as the EA/EMA global sessions
 (amendments #15, #23) but inside the phase sequence. Their Audit Reports and
 Project State Reports are numbered `036b`/`036c`.
+
+**Pending amendment-inserted sub-sessions (plan amendment #33, adopted
+2026-08-29, not yet mechanically executed):** the D-D-appendix rows 31–44
+owning-WP decision assigns 13 trainable-layer/discrete-network rebuild
+symbols to a new work package, WP-036A, taking sessions `0144A`–`0144D`; the
+existing WP-036B (`0144A`–`0144D`) and WP-036C (`0144E`–`0144H`) sessions
+below are still listed at their amendment-#31 numbers and will shift to
+`0144E`–`0144H`/`0144I`–`0144L` (plus four new WP-036A briefs) when WP-036A
+is declared. Planned session count on adoption: 216 (212 + 4). Do not start
+`0144A` under its current (WP-036B) scope until this rename executes.
 
 **Amendment-inserted sub-sessions (plan amendment #32):** WP-036 S1
 (session 0141) is executed as five sequential S1 coding sub-passes

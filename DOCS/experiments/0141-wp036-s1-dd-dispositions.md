@@ -153,15 +153,37 @@ smoke check") without introducing Python numerics. S2 retains veto.
 Rows 31–44 (the trainable `nn/layers.py` family, `DiscreteDeltaThetaGamma`
 core binding, and `DiscreteDeltaThetaGammaLayer`) need a maintainer-declared
 owning WP before this work is done. The D-D appendix flagged this at 0141B;
-0141E records it as an **open maintainer-decision item for session 0142 (S2)
+0141E recorded it as an **open maintainer-decision item for session 0142 (S2)
 and PSR-036** rather than inventing a WP. `tools/wp001_ownership.json` already
 carries per-symbol `future_wp` attributions (WP-022/023/024/026/027) for
 WP-001 traceability, but those WPs are closed and did not rebuild these
-symbols; the actual rebuild home is a governance call. The amendment-#31
-acceptance-suite port (WP-036B / WP-036C, sessions 0144A–0144H) is the
-plausible catch basin — each ported reference test that exercises one of these
-symbols forces its rebuild — but that is for the maintainer to confirm or
-redirect.
+symbols; the actual rebuild home is a governance call.
+
+**Decided 2026-08-29 (Project Plan amendment #33; recorded as a 0143
+addendum, referenced in PSR-036 §5 and the S2 audit §7 closure table).** The
+amendment-#31 acceptance-suite port is *not* a uniform catch basin: WP-036B/C
+briefs (`0144A`/`0144E`) explicitly non-goal "new `prin` public symbols," and
+13 of these 14 rows need genuine new `prin-train` numerics, not test-porting.
+Disposition:
+
+- **Row 43 (`DiscreteDeltaThetaGamma`)** — owned by **WP-036B S1 (`0144A`)**.
+  Its Rust core is already audited (WP-022); only the PyO3 bridge is missing.
+  A binding-only fix over an existing owner needs no new numerics and is not
+  "a new public symbol" (it already resolves as a D-2.2 stub), so it does not
+  trip WP-036B's non-goal.
+- **Rows 31–42, 44 (13 symbols)** — owned by a **new work package, WP-036A**
+  ("Trainable compatibility layers — `prin-train` extension"), because a
+  faithful rebuild needs new trainable Rust numerics that neither WP-036 nor
+  WP-036B/C's declarations permit. WP-036A must execute and close **before**
+  WP-036B S1 ports `test_hierarchical`/`test_phase_to_rate`/`test_q2`/
+  `test_q2_remaining`/`test_q3_new` (12 of the 13 symbols) and `test_nn`/
+  `test_hybrid` (`PRINetModel`/`compile_model`) — porting those clusters
+  against stubs would force weakened assertions (Testing Standards §1.1) or a
+  quarantine large enough to gut WP-036B's own deliverable. WP-036C is
+  unaffected. Sessions `0144A`–`0144D` are reassigned to WP-036A; the existing
+  WP-036B/C sessions shift to `0144E`–`0144H`/`0144I`–`0144L`. The file
+  rename and the four new WP-036A briefs are executed as WP-036A's own
+  declaration step, not by this decision record.
 
 ## S2 veto questions
 
@@ -192,4 +214,7 @@ For the 0141E finalisation, 0142 must additionally confirm:
 5. **The owning WP for the trainable-layer / discrete-network rebuild (rows
    31–44) is a maintainer decision that 0141E deliberately did not make.** 0142
    / PSR-036 must record the maintainer's call (a new WP, or WP-036B/C absorbs
-   it per ported-test need).
+   it per ported-test need). **Decided 2026-08-29, Project Plan amendment
+   #33:** row 43 → WP-036B S1 (`0144A`, binding-only, no new numerics); rows
+   31–42/44 → new work package WP-036A, sequenced before WP-036B S1 ports the
+   clusters those symbols gate. See the "Owning WP" section above.

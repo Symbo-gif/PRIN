@@ -464,7 +464,10 @@ security control.
   sequence -- it is a different metric. This symbol is D-2.2 in 0141D2.
 - The 12 deferred trainable-layer symbols (dispositions rows 31-42) and
   `DiscreteDeltaThetaGamma`/`DiscreteDeltaThetaGammaLayer` still need a
-  maintainer-declared owning WP before 0141E closes S1.
+  maintainer-declared owning WP before 0141E closes S1. **Decided
+  2026-08-29, Project Plan amendment #33:** `DiscreteDeltaThetaGamma` (row
+  43) → WP-036B S1 (`0144A`); the other 13 (rows 31-42, 44) → new work
+  package WP-036A. See `0141-wp036-s1-dd-dispositions.md` §"Owning WP...".
 
 ---
 

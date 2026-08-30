@@ -420,7 +420,8 @@ convention (WP036-F2).
    implementation (which is a future-WP obligation).
 2. **WP036-F2 (D4):** No action required. Note for future decomposed sessions.
 3. **Owning-WP decision (rows 31–44):** Maintainer to declare at PSR-036 or
-   before WP-036B/C starts.
+   before WP-036B/C starts. **Resolved 2026-08-29** — see §7 closure table
+   and Project Plan amendment #33.
 
 ---
 
@@ -430,5 +431,6 @@ convention (WP036-F2).
 |---|---|---|---|
 | WP036-F1 | FIXED | S3 commit (this session) | 5 new tests in `tests/test_bucket_g_remainder.py` exercise the Stuart-Landau path, topology alias modes, RK45 integrator, `Conv2d`, and `GRUCell` branches. `simulation.py` 90%→**100%**, `y4q1_tools.py` 89%→**100%**. Full suite 1214 passed, 99% overall coverage. |
 | WP036-F2 | AMENDED | S3 commit (this session) | Process deviation acknowledged. No code change applicable. Future decomposed sessions will enforce the per-sub-pass handoff-append convention in the exit gate check. |
+| Required S3 action 3 (Owning-WP, rows 31–44) | DECIDED | Project Plan amendment #33 (2026-08-29); 0143 addendum | `DiscreteDeltaThetaGamma` (row 43, existing Rust owner, binding-only) → WP-036B S1 (`0144A`). Remaining 13 trainable-`nn.Module`/no-Rust-owner symbols (rows 31–42, 44) → new work package **WP-036A** ("Trainable compatibility layers — `prin-train` extension"), sequenced before WP-036B S1 ports the `test_hierarchical`/`test_phase_to_rate`/`test_q2`/`test_q2_remaining`/`test_q3_new`/`test_nn`/`test_hybrid` clusters those symbols gate. Sessions `0144A`–`0144D` reassigned to WP-036A; existing WP-036B/C sessions shift to `0144E`–`0144H`/`0144I`–`0144L` (mechanical rename executed at WP-036A's declaration, not here). Closes S2 veto question 5. |
 
 **Delta re-audit date:** 2026-08-28 — **Result:** CLEAN

@@ -268,14 +268,24 @@ Two new amendments adopted and executed:
   condition. Status: OPEN, unchanged.
 - **DV-025 (`retrain_controller`):** Stub delivered in WP-036 S1 (0141E);
   real implementation owned by WP-036C S1 (session 0144E) per register row.
-- **Owning WP for trainable-layer rebuild (D-D rows 31–44):** Open maintainer
-  decision. 14 symbols (`FeedforwardInhibition`, `DentateGyrusConverter`,
-  `DGLayer`, `oscillatory_weight_init`, `PhaseToRateConverter`,
-  `PhaseToRateAutoencoder`, `DenseAutoencoder`, `SparsityRegularizationLoss`,
-  `HierarchicalResonanceLayer`, `PhaseAmplitudeCouplingLayer`, `PRINetModel`,
-  `compile_model`, `DiscreteDeltaThetaGamma`, `DiscreteDeltaThetaGammaLayer`)
-  need a maintainer-declared owning WP. WP-036B/C is the plausible catch
-  basin (each ported reference test that exercises one forces its rebuild).
+- **Owning WP for trainable-layer rebuild (D-D rows 31–44):** **Decided
+  2026-08-29 (Project Plan amendment #33; recorded as a 0143 addendum).**
+  `DiscreteDeltaThetaGamma` (row 43 — existing audited Rust owner, binding
+  only) is owned by WP-036B S1 (`0144A`). The remaining 13 symbols
+  (`FeedforwardInhibition`, `DentateGyrusConverter`, `DGLayer`,
+  `oscillatory_weight_init`, `PhaseToRateConverter`, `PhaseToRateAutoencoder`,
+  `DenseAutoencoder`, `SparsityRegularizationLoss`, `HierarchicalResonanceLayer`,
+  `PhaseAmplitudeCouplingLayer`, `PRINetModel`, `compile_model`,
+  `DiscreteDeltaThetaGammaLayer`) — genuine new trainable Rust numerics, no
+  existing owner — are assigned to a new work package, **WP-036A**
+  ("Trainable compatibility layers — `prin-train` extension"), sequenced to
+  close before WP-036B S1 ports the reference-test clusters those symbols
+  gate (`test_hierarchical`/`test_phase_to_rate`/`test_q2`/`test_q2_remaining`/
+  `test_q3_new`/`test_nn`/`test_hybrid`). Sessions `0144A`–`0144D` are
+  reassigned to WP-036A; the existing WP-036B/C sessions shift to
+  `0144E`–`0144H`/`0144I`–`0144L`. The mechanical file rename and the four
+  new WP-036A session briefs are pending, executed as WP-036A's own
+  declaration step, not as part of this decision.
 - All other DV register items closed at or before PSR-035 remain closed;
   `tools/check_dv_register_gates.py` passes (29 rows / 198 sessions).
 - No new risks introduced.
