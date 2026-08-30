@@ -32,12 +32,16 @@ analytics session (the first analytics session for this project). It defines:
 
 ## Companion files
 
-Each phase report has two companion files in its phase directory:
+Each phase report has companion files in its phase directory:
 
 - **Evidence index** (`phase-N-evidence-index.md`) — structured index of every
   evidence artefact cited in the report.
 - **Recommendations register** (`phase-N-recommendations.md`) — prioritized
   recommendations for the next phase.
+- **Recommendation implementation governance**
+  (`phase-N-recommendation-implementation-governance.md`) — governance record
+  tracking which recommendations were implemented, by which session, and with
+  what disposition. Present for phases 1–5; phase 0 has no governance file.
 
 ## Rules
 

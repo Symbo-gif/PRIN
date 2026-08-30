@@ -7,7 +7,6 @@ Scientific experiment records governed by the
 
 ```
 experiments/
-├── campaign-plan.md              # approved order of campaign experiments (Phase 7)
 └── EXP-NNN-<slug>/
     ├── preregistration.md        # frozen at execution start (E1/E2)
     ├── log.md                    # execution log (E3)
@@ -194,7 +193,10 @@ at the top level until they are folded into the final campaign archive in Phase 
   D-D symbol disposition appendix: 30 GPU/Triton/no-CPU-analogue rows (0141A)
   plus 12 deferred trainable-layer-rebuild rows (0141B), subject to the
   session-0142 S2 audit veto.
-
+- [`hotfix-dv019-handoff.md`](hotfix-dv019-handoff.md) — Dedicated
+  hotfix/correction session for DV-019 (flaky `prin-train` tests,
+  `burn-autodiff` cross-thread graph-server interaction). Handoff from
+  `Hotfix-DV019` session (2026-08-26).
 
 Placement note (EA-002 E-F10): the WP-009 S1 handoff note lives at
 [`../sessions/phase-1/wp009-s1-handoff-note.md`](../sessions/phase-1/wp009-s1-handoff-note.md)
