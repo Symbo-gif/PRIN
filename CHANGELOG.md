@@ -21,9 +21,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   numerics AST regression. DV-012 (`prin-py` sweep/engine bindings) closed.
   S2 audit: PASS-WITH-FINDINGS (2 D4). S3 remediation: both findings closed,
   delta re-audit CLEAN. Full suite 1214 passed, 99% coverage.
+  - **S4 documentation closure (session 0144):** crate READMEs updated
+    (`prin-sim` deferral resolved, WP-036 entries in workspace table);
+    Migration Guide, `.pyi` stubs, and Sphinx API pages current; Project
+    State Report `DOCS/reports/036-project-state.md` issued, declaring
+    WP-036A (trainable compatibility layers) as the registered successor;
+    D-D-appendix rows 31–44 owning-WP decision recorded as plan
+    amendment #33.
 
 ### Changed
 
+- **WP-036 D-D-appendix rows 31–44 owning-WP decision** (2026-08-29, plan
+  amendment #33, at S4 / PSR-036). The 14 trainable-layer / discrete-network
+  D-2.2 stubs shipped by WP-036 S1 (rows 31–44 of the D-D dispositions
+  appendix) had no owning work package at S1 close; S2 audit veto question 5
+  flagged the gap. 13 of the 14 (all but `DiscreteDeltaThetaGamma`) are
+  trainable `nn.Module`s with no existing Rust owner — a faithful rebuild
+  needs new `prin-train` numerics, out of scope for both WP-036 (compat
+  surface, no numerics) and WP-036B/C (test-porting only, non-goal "new
+  `prin` public symbols"). **Decision:** `DiscreteDeltaThetaGamma` (row 43,
+  existing audited Rust owner `prin_train::bands::DiscreteDeltaThetaGamma`,
+  WP-022; only the PyO3 bridge is missing) → WP-036B S1 (`0144A`,
+  binding-only, no new numerics). Remaining 13 symbols (rows 31–42, 44) →
+  new work package **WP-036A** ("Trainable compatibility layers —
+  `prin-train` extension"), sequenced to execute and close before WP-036B S1
+  ports the `test_hierarchical`/`test_phase_to_rate`/`test_q2`/
+  `test_q2_remaining`/`test_q3_new`/`test_nn`/`test_hybrid` clusters those
+  symbols gate. WP-036A takes sessions `0144A`–`0144D`; existing WP-036B/C
+  sessions shift to `0144E`–`0144H`/`0144I`–`0144L` (mechanical rename
+  deferred to WP-036A's declaration). Planned session count 212 → 216.
+  Closes S2 audit required action 3 and D-D appendix veto question 5.
 - **WP-036 S1 (session 0141) decomposed into five coding sub-passes
   `0141A`–`0141E`** (2026-08-27, plan amendment #32, at WP-036 S1 start).
   Repository verification at S1 start found that even the amendment-#31-narrowed

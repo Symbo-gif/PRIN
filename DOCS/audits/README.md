@@ -171,6 +171,15 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   reporting error hierarchy, FIXED `8dbf55d`; WP034-F4: private cross-module
   import between `table_generation` and `figure_generation`, FIXED `8dbf55d`)
   resolved in S3 with a CLEAN delta re-audit.
+- [`035-wp035-audit.md`](035-wp035-audit.md) — WP-035 "Reproduction pipeline
+  and manifest" audit (`PASS-WITH-FINDINGS`); findings resolved in S3 with a
+  CLEAN delta re-audit.
+- [`036-wp036-audit.md`](036-wp036-audit.md) — WP-036 "API completion,
+  acceptance suite, and migration" audit (`PASS-WITH-FINDINGS`); two D4
+  findings (WP036-F1: per-module stub coverage gaps, FIXED in S3; WP036-F2:
+  handoff drafting process deviation, AMENDED in S3). Delta re-audit CLEAN.
+  Closure table appended with S3 addendum (amendment #33, owning-WP decision
+  for D-D rows 31–44).
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.
@@ -255,3 +264,11 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   ledgers (2 new); zero regressions, 33 PASS, 0 FAIL, 0 INCONCLUSIVE, 7
   `REQUIRES_HUMAN_REVIEW` — all 7 signed off by the maintainer this session
   (report §8), per the DV-013 recorded-sign-off precedent.
+- [`EXECUTIVE_MATH_AUDIT_REPORT_005.md`](EXECUTIVE_MATH_AUDIT_REPORT_005.md) —
+  Fifth Executive Mathematical Audit (EMA-005, 2026-08-26), Phase 5 close,
+  `PASS-WITH-REMEDIATION`. Re-verified all 40 existing claims against
+  `79cf971` (zero regressions); authored and executed 6 new
+  `prin-daemon-phase5-properties.json` claims (HUN-01, IOU-01, COHEN-01,
+  WELCH-DF-01, GAMMA-REFLECT-01, BETA-SYM-01), 6/6 genuine `PASS`. 46 total
+  claims across 9 ledgers; 39 PASS, 7 `REQUIRES_HUMAN_REVIEW` (unchanged
+  composition from EMA-004). Maintainer sign-off granted 2026-08-26.

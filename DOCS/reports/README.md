@@ -75,6 +75,10 @@ starts by reading it (Development Workflow Standards §6).
   closure and WP-035 declaration.
 - [`035-project-state.md`](035-project-state.md) — WP-035 S4
   closure and WP-036 declaration.
+- [`036-project-state.md`](036-project-state.md) — WP-036 S4
+  closure, cumulative deviation ledger (120 rows), and WP-036A declaration
+  (trainable compatibility layers — `prin-train` extension, plan
+  amendment #33).
 
 
 The [`DEFERRED_VALIDATION_REGISTER.md`](DEFERRED_VALIDATION_REGISTER.md)
