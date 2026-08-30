@@ -16,7 +16,7 @@ Read-only audit of WP-036B S1: the ported first-half acceptance suite.
 
 ## Contract
 
-- **Acceptance:** as 0144A — every ported test passes on CPU across the matrix;
+- **Acceptance:** as 0144E — every ported test passes on CPU across the matrix;
   no weakened assertion; every tolerance annotation is hazard-attributed and in
   the Parity Report; GPU-only skips are justified.
 - **Non-goals:** any source fix (S3 owns that).

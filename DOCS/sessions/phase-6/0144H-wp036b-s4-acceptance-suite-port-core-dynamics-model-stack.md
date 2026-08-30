@@ -43,7 +43,7 @@ Report.
 4. Write `DOCS/reports/036b-project-state.md` with measured metric trends
    (ported test count, coverage, tolerance annotations, discoveries),
    cumulative deviation ledger, amendments, risks, and trajectory verdict.
-5. Confirm WP-036C (session 0144E) entry conditions and record maintainer
+5. Confirm WP-036C (session 0144I) entry conditions and record maintainer
    approval before its S1 begins.
 6. Update this session's status and the master register from verified evidence.
 
@@ -61,4 +61,4 @@ correction cycle.
 ## Exit gate
 
 All S4 artefacts committed and local gates green. WP-036B is closed; only then
-may WP-036C (0144E) begin.
+may WP-036C (0144I) begin.

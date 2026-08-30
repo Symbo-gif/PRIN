@@ -43,7 +43,7 @@ where its reference tests are in this scope.
 
 ## Entry conditions
 
-- WP-036B S4 (0144D) is closed and committed.
+- WP-036B S4 (0144H) is closed and committed.
 - No unresolved D1/D2 finding exists.
 - WP-036C scope, acceptance criteria, and non-goals have maintainer approval.
 

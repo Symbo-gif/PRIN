@@ -16,7 +16,7 @@ Read-only audit of WP-036C S1: the remaining acceptance-suite port and DV-025.
 
 ## Contract
 
-- **Acceptance:** as 0144E — full ported ~1,670-test suite green on CPU; no
+- **Acceptance:** as 0144I — full ported ~1,670-test suite green on CPU; no
   weakened assertion; tolerance annotations hazard-attributed and in the Parity
   Report; GPU skips justified; DV-025 resolved with parity evidence; DoD 1–2
   demonstrably met.
