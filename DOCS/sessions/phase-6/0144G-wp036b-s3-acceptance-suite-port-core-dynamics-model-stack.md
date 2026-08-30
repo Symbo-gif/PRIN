@@ -1,11 +1,11 @@
-# Session 0144C — WP-036B S3: Remediation — Acceptance suite port (core, dynamics, model stack, subconscious)
+# Session 0144G — WP-036B S3: Remediation — Acceptance suite port (core, dynamics, model stack, subconscious)
 
 **Status:** PLANNED
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S3 — Remediation
-**Predecessor:** [0144B — Audit](0144B-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md)
-**Successor:** [0144D — Documentation](0144D-wp036b-s4-acceptance-suite-port-core-dynamics-model-stack.md)
+**Predecessor:** [0144F — Audit](0144F-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md)
+**Successor:** [0144H — Documentation](0144H-wp036b-s4-acceptance-suite-port-core-dynamics-model-stack.md)
 **Authority:** Project Plan §6/§8 and amendment #31; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence.

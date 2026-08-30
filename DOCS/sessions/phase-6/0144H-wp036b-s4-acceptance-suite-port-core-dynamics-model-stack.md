@@ -1,11 +1,11 @@
-# Session 0144D — WP-036B S4: Documentation — Acceptance suite port (core, dynamics, model stack, subconscious)
+# Session 0144H — WP-036B S4: Documentation — Acceptance suite port (core, dynamics, model stack, subconscious)
 
 **Status:** PLANNED
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S4 — Documentation
-**Predecessor:** [0144C — Remediation](0144C-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md)
-**Successor:** [0144E — Coding](0144E-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md)
+**Predecessor:** [0144G — Remediation](0144G-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md)
+**Successor:** [0144I — Coding](0144I-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md)
 **Authority:** Project Plan §6/§8 and amendment #31; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence.

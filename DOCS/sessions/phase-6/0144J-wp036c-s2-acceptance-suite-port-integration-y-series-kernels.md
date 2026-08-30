@@ -1,11 +1,11 @@
-# Session 0144F — WP-036C S2: Audit — Acceptance suite port (integration, y-series, kernels; DV-025)
+# Session 0144J — WP-036C S2: Audit — Acceptance suite port (integration, y-series, kernels; DV-025)
 
 **Status:** PLANNED
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S2 — Audit
-**Predecessor:** [0144E — Coding](0144E-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md)
-**Successor:** [0144G — Remediation](0144G-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md)
+**Predecessor:** [0144I — Coding](0144I-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md)
+**Successor:** [0144K — Remediation](0144K-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md)
 **Authority:** Project Plan §6/§8 and amendment #31; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence.

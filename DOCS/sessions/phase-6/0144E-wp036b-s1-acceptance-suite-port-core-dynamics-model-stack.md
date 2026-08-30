@@ -1,11 +1,11 @@
-# Session 0144A — WP-036B S1: Coding — Acceptance suite port (core, dynamics, model stack, subconscious)
+# Session 0144E — WP-036B S1: Coding — Acceptance suite port (core, dynamics, model stack, subconscious)
 
 **Status:** PLANNED
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S1 — Coding
 **Predecessor:** [0144 — Documentation](0144-wp036-s4-api-completion-acceptance-suite-and-migration.md)
-**Successor:** [0144B — Audit](0144B-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md)
+**Successor:** [0144F — Audit](0144F-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md)
 **Authority:** Project Plan §6/§8 and amendment #31; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and
