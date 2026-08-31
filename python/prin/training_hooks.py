@@ -18,19 +18,33 @@ stubs: :class:`MixedPrecisionTrainer` and :class:`AsyncCPUGPUPipeline`
 telemetry-supervised implementation owned by WP-036C S1 (session 0144E); the
 stub here keeps the symbol resolvable so the WP-036 S1 surface is complete
 (register row unchanged; S2 veto retained).
+
+Sub-pass 0144E6 (WP-036B S1) rebuilds :func:`collect_system_state` as the
+real faithful port of ``prinet.core.subconscious_daemon.collect_system_state``
+— best-effort GPU/CPU telemetry I/O plus dataclass assembly, no oscillator or
+model numerics — needed by the strict-ported ``test_subconscious`` acceptance
+suite. It joins :class:`StateCollector` (rebuilt real at 0144E5) as a live
+member of the active-control family; ``retrain_controller`` remains the sole
+deferred stub here (WP-036C).
 """
 
 from __future__ import annotations
 
 import json
+import logging
 import threading
 import time
 from collections import deque
-from typing import Any, NoReturn
+from typing import TYPE_CHECKING, Any, NoReturn
 
 import torch
 
 from prin.daemon import ControlSignals
+
+if TYPE_CHECKING:
+    from prin.daemon import SubconsciousState
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "ActiveControlTrainer",
@@ -377,16 +391,94 @@ def create_ablation_tracker(*_args: Any, **_kwargs: Any) -> NoReturn:
     )
 
 
-def collect_system_state(*_args: Any, **_kwargs: Any) -> NoReturn:
-    """Reject calls to the deferred system-state collector.
+def collect_system_state(
+    *,
+    r_per_band: list[float] | None = None,
+    r_global: float = 0.0,
+    loss_ema: float = 0.0,
+    loss_variance: float = 0.0,
+    grad_norm_ema: float = 0.0,
+    lr_current: float = 1e-3,
+    scalr_alpha: float = 1.0,
+    epoch: int = 0,
+    regime: str = "mean_field",
+) -> SubconsciousState:
+    """Build a :class:`SubconsciousState` with automatic hardware telemetry.
 
-    Raises:
-        NotImplementedError: Always. Reads GPU telemetry via pynvml /
-            torch.cuda and constructs a SubconsciousState (Python numerics).
+    Faithful port of PRINet 3.0
+    ``prinet.core.subconscious_daemon.collect_system_state`` (0144E6). Reads
+    GPU temperature / utilisation / VRAM via :mod:`pynvml` and
+    :mod:`torch.cuda`, and CPU utilisation via :mod:`psutil`, each guarded so
+    a missing dependency degrades to ``0.0`` rather than raising. This is
+    telemetry I/O and dataclass assembly only -- the numeric packing of the
+    returned state lives in the Rust ``prin-daemon`` owner reached through
+    :meth:`SubconsciousState.to_tensor` (Coding Standards §1.2).
+
+    Args:
+        r_per_band: Per-band Kuramoto order parameters (delta, theta, gamma).
+        r_global: Global order parameter.
+        loss_ema: EMA of training loss.
+        loss_variance: Variance of training loss.
+        grad_norm_ema: EMA of gradient L2 norm.
+        lr_current: Current learning rate.
+        scalr_alpha: Current SCALR alpha.
+        epoch: Current epoch index.
+        regime: Active coupling regime.
+
+    Returns:
+        A fully-populated :class:`SubconsciousState` stamped with the
+        wall-clock time.
     """
-    _raise_disposition(
-        "collect_system_state",
-        "Reads GPU telemetry and constructs SubconsciousState (Python numerics).",
+    from prin.daemon import SubconsciousState
+
+    gpu_temp = 0.0
+    gpu_util = 0.0
+    vram_pct = 0.0
+    cpu_util = 0.0
+
+    try:
+        if torch.cuda.is_available():
+            mem = torch.cuda.mem_get_info()
+            vram_pct = 1.0 - (mem[0] / max(mem[1], 1))
+    except Exception:
+        logger.debug("VRAM telemetry probe failed; leaving vram_pct=0.0", exc_info=True)
+
+    try:
+        import psutil
+
+        cpu_util = psutil.cpu_percent(interval=None) / 100.0
+    except Exception:
+        logger.debug("CPU telemetry probe failed; leaving cpu_util=0.0", exc_info=True)
+
+    try:
+        import pynvml
+
+        pynvml.nvmlInit()
+        handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+        gpu_temp = float(pynvml.nvmlDeviceGetTemperature(handle, 0))
+        util = pynvml.nvmlDeviceGetUtilizationRates(handle)
+        gpu_util = float(util.gpu) / 100.0
+    except Exception:
+        logger.debug("GPU telemetry probe failed; leaving gpu_*=0.0", exc_info=True)
+
+    return SubconsciousState(
+        r_per_band=r_per_band if r_per_band is not None else [0.0, 0.0, 0.0],
+        r_global=r_global,
+        loss_ema=loss_ema,
+        loss_variance=loss_variance,
+        grad_norm_ema=grad_norm_ema,
+        lr_current=lr_current,
+        scalr_alpha=scalr_alpha,
+        gpu_temp=gpu_temp,
+        gpu_util=gpu_util,
+        vram_pct=vram_pct,
+        cpu_util=cpu_util,
+        step_latency_p50=0.0,
+        step_latency_p95=0.0,
+        throughput=0.0,
+        epoch=epoch,
+        regime=regime,
+        timestamp=time.time(),
     )
 
 

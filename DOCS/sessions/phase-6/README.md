@@ -81,8 +81,8 @@ rebuilt through Rust-backed layers, never semantic-test rewrites. See
 | 0144E2 | WP-036B | S1 — Coding | [Phases, hierarchical, and phase-to-rate strict port](0144E2-wp036b-s1-phases-hierarchical-and-phase-to-rate-strict-port.md) | COMPLETE |
 | 0144E3 | WP-036B | S1 — Coding | [Q2 and Q2-remaining strict port](0144E3-wp036b-s1-q2-and-q2-remaining-strict-port.md) | COMPLETE |
 | 0144E4 | WP-036B | S1 — Coding | [Q3-new, NN, and SCALR-enhanced strict port](0144E4-wp036b-s1-q3-nn-and-scalr-enhanced-strict-port.md) | COMPLETE |
-| 0144E5 | WP-036B | S1 — Coding | [Hybrid and CLEVR-N strict port](0144E5-wp036b-s1-hybrid-and-clevr-n-strict-port.md) | PLANNED |
-| 0144E6 | WP-036B | S1 — Coding | [Subconscious strict port and consolidation](0144E6-wp036b-s1-subconscious-and-consolidation.md) | PLANNED |
+| 0144E5 | WP-036B | S1 — Coding | [Hybrid and CLEVR-N strict port](0144E5-wp036b-s1-hybrid-and-clevr-n-strict-port.md) | COMPLETE |
+| 0144E6 | WP-036B | S1 — Coding | [Subconscious strict port and consolidation](0144E6-wp036b-s1-subconscious-and-consolidation.md) | COMPLETE |
 | 0144F | WP-036B | S2 — Audit | [Acceptance suite port — core, dynamics, model stack, subconscious](0144F-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
 | 0144G | WP-036B | S3 — Remediation | [Acceptance suite port — core, dynamics, model stack, subconscious](0144G-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
 | 0144H | WP-036B | S4 — Documentation | [Acceptance suite port — core, dynamics, model stack, subconscious](0144H-wp036b-s4-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |

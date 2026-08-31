@@ -1,6 +1,6 @@
 # Session 0144E6 — WP-036B S1 (sub-pass 6/6): Subconscious strict port and consolidation
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S1 — Coding

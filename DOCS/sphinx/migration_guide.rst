@@ -797,13 +797,21 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
 
   **Deferred to later WPs:**
 
-  - ``SubconsciousController.export_to_onnx`` / ``.quantize_onnx`` →
-    **WP-036** (re-targeted at WP-030 S4 from an original WP-030 estimate;
-    WP-030's actual maintainer-approved scope — training hooks and MOT
-    evaluation — never named these symbols, and neither does the Project
-    Plan §6 Phase 5 roadmap row; see
-    `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-025).
-  - ``retrain_controller`` → **WP-036** (same re-targeting; see DV-025).
+  - ``SubconsciousController`` (the PyTorch training/export half) and
+    ``.export_to_onnx`` → **delivered at WP-036B S1 0144E6** as
+    :class:`prin.subconscious_compat.SubconsciousController` (a plain
+    ``torch.nn`` MLP with per-channel activation heads, the same
+    "standard PyTorch composition" category as
+    :mod:`prin.nn.hybrid_compat`), needed by the strict-ported
+    ``test_subconscious`` acceptance suite. Kept apart from the WP-028
+    inference-time :class:`prin.daemon.SubconsciousController`.
+  - ``SubconsciousController.quantize_onnx`` (INT8) and
+    ``retrain_controller`` → **WP-036C** (re-targeted at WP-030 S4 from an
+    original WP-030 estimate; WP-030's actual maintainer-approved scope —
+    training hooks and MOT evaluation — never named these symbols, and
+    neither does the Project Plan §6 Phase 5 roadmap row; see
+    `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-025). The
+    ``test_subconscious`` suite references neither.
 
 - ``prin-daemon`` training hooks and MOT evaluation (WP-030) — loss
   EMA/variance, gradient-norm EMA, and step-latency percentile hooks feeding
@@ -1409,9 +1417,9 @@ resolve from the top-level ``prin`` namespace.
    "AlternatingOptimizer", "prin.AlternatingOptimizer / prin.nn.AlternatingOptimizer", "D-2.2 stub; trainable parameter management"
    "ControlSignalBuffer", "prin.ControlSignalBuffer / prin.training_hooks.ControlSignalBuffer", "Real thread-safe buffer (``threading.Lock``)"
    "ActiveControlTrainer", "prin.ActiveControlTrainer / prin.training_hooks.ActiveControlTrainer", "D-2.2 stub; training loop with control policies"
-   "StateCollector", "prin.StateCollector / prin.training_hooks.StateCollector", "D-2.2 stub; loss EMA / gradient norms"
+   "StateCollector", "prin.StateCollector / prin.training_hooks.StateCollector", "Real non-numeric training-loop hook (rebuilt WP-036B S1 0144E5)"
    "create_ablation_tracker", "prin.create_ablation_tracker / prin.training_hooks.create_ablation_tracker", "D-2.2 stub; constructs trainable trackers"
-   "collect_system_state", "prin.collect_system_state / prin.training_hooks.collect_system_state", "D-2.2 stub; GPU telemetry + SubconsciousState"
+   "collect_system_state", "prin.collect_system_state / prin.training_hooks.collect_system_state", "Real best-effort telemetry I/O + Rust-backed ``SubconsciousState`` (rebuilt WP-036B S1 0144E6)"
    "SlotAttentionCLEVRN", "prin.SlotAttentionCLEVRN / prin.nn.SlotAttentionCLEVRN", "D-2.2 stub; trainable ``nn.Module``"
 
 **Deliberate deviations and preserved hazards:**
@@ -1615,7 +1623,7 @@ and the ``prinet`` ownership rows in
    "binding_robustness_score", "prin.binding_robustness_score", "real - direct re-export", "0141A"
    "build_knn_neighbors", "prin.build_knn_neighbors", "real - Rust PyO3 binding (0141C)", "0141C"
    "build_phase_knn", "prin.build_phase_knn", "real - direct re-export", "0141A"
-   "collect_system_state", "prin.collect_system_state", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "collect_system_state", "prin.collect_system_state", "real - non-numeric orchestration (0141D2)", "0141D2"
    "compile_model", "prin.compile_model", "real - pure-Python torch.compile passthrough (WP-036A)", "0144A4"
    "compute_full_temporal_metrics", "prin.compute_full_temporal_metrics", "real - direct re-export", "0141A"
    "compute_p_value", "prin.compute_p_value", "real - direct re-export", "0141A"

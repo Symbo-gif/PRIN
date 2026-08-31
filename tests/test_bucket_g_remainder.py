@@ -44,7 +44,6 @@ from prin.topology import ring_topology, small_world_topology
 from prin.training_hooks import (
     ActiveControlTrainer,
     ControlSignalBuffer,
-    collect_system_state,
     create_ablation_tracker,
 )
 from prin.y4q1_tools import (
@@ -448,11 +447,15 @@ def test_control_signal_buffer_concurrent_access() -> None:
     [
         ActiveControlTrainer,
         create_ablation_tracker,
-        collect_system_state,
     ],
 )
 def test_active_control_d22_stubs_raise(cls_or_fn: object) -> None:
-    """Every numeric active-control symbol raises the D-2.2 disposition."""
+    """Every still-deferred numeric active-control symbol raises the disposition.
+
+    ``collect_system_state`` was rebuilt as the real faithful telemetry-I/O
+    port at WP-036B S1 0144E6 (needed by the strict-ported ``test_subconscious``
+    suite) and is covered there; it is no longer a D-2.2 stub.
+    """
     with pytest.raises(NotImplementedError, match=r"D-2\.2"):
         cls_or_fn()  # type: ignore[operator]
 

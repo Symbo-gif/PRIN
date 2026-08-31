@@ -49,6 +49,7 @@ _SCANNED = (
     "temporal_training.py",
     "y4q1_tools.py",
     "training_hooks.py",
+    "subconscious_compat.py",
     "nn/hybrid_compat.py",
     "nn/deferred_layers.py",
     "nn/inhibition_layers.py",
@@ -64,6 +65,7 @@ _RUST_BRIDGE_MODULES = frozenset(
         "python/prin/nn/hierarchical_layers.py",
         "python/prin/nn/model.py",
         "python/prin/nn/hybrid_compat.py",
+        "python/prin/subconscious_compat.py",
     }
 )
 

@@ -1,10 +1,13 @@
 # Session 0144E / WP-036B S1 running handoff
 
 **Date:** 2026-08-31 (session start and decomposition)  
-**Status:** S1 **IN PROGRESS**. Plan amendment #35 (MichaelMaillet,
-2026-08-31) inserts six sequential coding sub-passes `0144E1`–`0144E6`, all
-feeding the single mandatory S2 audit `0144F`. Sub-passes `0144E1`–`0144E4` are
-complete at their green local gates; `0144E5` is next. S1 does not self-certify.
+**Status:** S1 **COMPLETE** (all six sub-passes committed locally at green
+gates; not pushed). Plan amendment #35 (MichaelMaillet, 2026-08-31) inserted
+six sequential coding sub-passes `0144E1`–`0144E6`, all feeding the single
+mandatory S2 audit `0144F`. `0144E6` (2026-08-31) closed the range: all 498
+reference `def test_` functions are ported and executed (489 pass / 9 reference
+skip guards / 0 deferred / 0 tolerances). S1 does not self-certify — `0144F` is
+next.
 
 ## Session-start protocol (Development Workflow §6)
 
@@ -489,4 +492,163 @@ consolidation**.
 
 ### 0144E6 — subconscious + consolidation
 
-*Pending execution.*
+**Complete 2026-08-31; committed locally with amendment #35; not pushed. This
+sub-pass closes WP-036B S1. Next: the mandatory read-only S2 audit `0144F`.**
+
+#### Strict-port accounting and semantic proof
+
+| Reference | Stable port | Source lines | `def test_` | Collected / passed | Tolerance annotations | Skips / guards | Discoveries |
+|---|---|---:|---:|---:|---:|---:|---|
+| `test_subconscious.py` | `tests/test_acceptance_subconscious.py` | 605 | 49 | 49 / 48 | 0 | 1 (reference `pytest.skip("psutil not installed")` in `test_cpu_util_populated`) | PyTorch `SubconsciousController` training/export half + `SubconsciousDaemon` threading port + real `collect_system_state`; `PRINET_SUBCONSCIOUS_BACKEND` env name; `SubconsciousState.default()`/`clone()` and dtype/shape-tolerant `ControlSignals.from_tensor` |
+| **E6 total** | **1 file** | **605** | **49** | **49 / 48** | **0** | **1** | — |
+
+**Import-only proof:** `tools/_port_e6.py` performs the import remap; the port
+is otherwise byte-identical to the archived reference.
+`git diff --no-index --unified=0` against
+`DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/tests/test_subconscious.py`
+reports only the four `from prinet.* import` module-path lines changed, all
+redirected to the single acceptance owner `prin.subconscious_compat`
+(`prinet.core.subconscious`, `prinet.core.subconscious_daemon`,
+`prinet.nn.subconscious_model`, `prinet.utils.npu_backend`). Source and port
+`def test_` / line inventories match exactly (49 / 605). No assertion, expected
+value, parametrization, call order, body, marker, skip, or tolerance changed.
+
+#### Changed-owner mapping
+
+| Compatibility behavior | Numerical owner | Python exposure |
+|---|---|---|
+| `SubconsciousState` / `ControlSignals` field access, 32-float packing, 8-float `np.clip` decode, regime encoding, timestamp reduction | `prin-daemon::state` via `prin._prin_core` (unchanged) | `prin.subconscious_compat` thin `__getattr__`-delegating wrappers that add only the PRINet 3.0 constructor-side helpers the frozen Rust `#[pyclass]` cannot expose: `SubconsciousState.default()` (wall-clock stamp) / `.clone()`, `ControlSignals.default()`, and a `ravel`+`astype(float64)` front for `ControlSignals.from_tensor` so float32 and 2-D arrays decode (length check + clamp still Rust) |
+| `SubconsciousController` forward / `num_parameters` / `export_to_onnx` | n/a — a plain `torch.nn` MLP (`Linear 32→128→128→8`) with Softplus/Softmax/Sigmoid activation heads; the PRINet 3.0 reference is itself pure PyTorch with no oscillator numerics | new `prin.subconscious_compat.SubconsciousController`, the same "standard PyTorch composition" category as `prin.nn.hybrid_compat` / `benchmarks.oscillobench` (0144E4/0144E5); added to `tools/check_no_python_numerics.py` `_SCANNED` + `_RUST_BRIDGE_MODULES`. Kept apart from the WP-028 inference-time `prin.daemon.SubconsciousController` |
+| `SubconsciousDaemon` background thread | n/a — `threading.Thread` + ONNX-session orchestration only; `state.to_tensor()` / `ControlSignals.from_tensor` numerics are the Rust owner's | new `prin.subconscious_compat.SubconsciousDaemon`, faithful port of `prinet.core.subconscious_daemon.SubconsciousDaemon`; session created via `prin.daemon.create_session`; same disposition as `prin.training_hooks.StateCollector` |
+| `collect_system_state` GPU/CPU telemetry | n/a — best-effort `psutil` / `pynvml` / `torch.cuda` I/O + Rust-backed `SubconsciousState` assembly | rebuilt real in `prin.training_hooks.collect_system_state` (was a D-2.2 stub); re-exported from `prin.subconscious_compat`. Bare `try/except/pass` telemetry guards replaced with `logger.debug(..., exc_info=True)` so bandit B110 is not triggered on the new code |
+| `detect_best_backend` / `npu_available` / `directml_available` / `backend_info` | `prin-daemon::backend` via `prin.daemon` (unchanged) | `prin.subconscious_compat` faithful ports of `prinet.utils.npu_backend`: `detect_best_backend` honours the reference's `PRINET_SUBCONSCIOUS_BACKEND` env name (fail-soft on an unknown value) then delegates; `backend_info` re-keys the `prin.daemon` probe to the reference key set (`available_eps`, …) |
+
+Same-pass focused coverage: the 49 acceptance tests plus
+`tests/test_e6_compat_regressions.py` (7 tests) covering the wrapper
+read-only / delegating-setattr / recursion-guard paths, dtype-tolerant
+`from_tensor`, explicit-arg `collect_system_state` + finite packed vector, the
+backend-probe key set, and daemon abort-without-inference on an unloadable
+model file.
+
+#### Command evidence
+
+- Exact E6 collect-only: **49 collected**; exact E6 run: **48 passed, 1
+  skipped** (the reference's own `psutil`-absent skip).
+- Full 13-file ported subset
+  (`test_acceptance_core … test_acceptance_subconscious`): **489 passed, 9
+  skipped** = **498** — the complete source inventory. Skips are exactly the
+  reference guards: 8 CUDA `skipif` (E2 ×3, E3 ×5) + 1 `psutil`-absent (E6 ×1);
+  0 tolerance annotations across the whole subset.
+- Full fast Python gate (`pytest -m "not slow and not gpu"`): **1,763 passed,
+  9 skipped, 9 deselected**.
+- `parity/`: **592 passed** (`test_parity_subconscious.py` included).
+- `ruff check python/ tests/ tools/ benchmarks/ parity/`: clean, with the new
+  per-file-ignore `["F401", "I001", "NPY002", "RUF100"]` for the ported file
+  (matching the E1–E5 pattern: reference keeps unused imports, `np.random.randn`,
+  and an inline `# noqa: F401`). `ruff format --check`: clean.
+- `mypy python/prin --strict`: clean (55 files).
+- `bandit -r python/ -c pyproject.toml`: **0 issues on changed code** (the 1
+  remaining LOW is the pre-existing `hybrid_compat.py:327` from 0144E5).
+- `tools/check_no_python_numerics.py`: clean (**19** modules; `subconscious_compat.py`
+  added to `_SCANNED` + `_RUST_BRIDGE_MODULES`).
+- `tools/wp036_migration_table.py check`: OK (172 symbols) — the consolidated
+  index re-rendered because `collect_system_state` now probes "real";
+  `tests/test_migration_guide_consolidated.py` and `tests/test_bucket_g_remainder.py`
+  green (the `collect_system_state` D-2.2 parametrize entry trimmed, E5 precedent).
+- `tests/test_wp001_baseline.py`: green after setting `0144E6` (and the
+  overlooked `0144E5`) to `COMPLETE` in `SESSION_REGISTER.md` /
+  `phase-6/README.md` to match their brief status lines (session-plan validator).
+- `interrogate`: **97.4%**, pass.
+- No Rust source changed. Confirmatory full workspace run:
+  `cargo fmt --all -- --check` clean; `cargo test --workspace` **48 suites ok,
+  0 failed**; `cargo clippy --workspace --all-targets -- -D warnings` clean;
+  `cargo audit` exit 0 with only the three pre-existing governed warnings
+  (`bincode`, `paste`, yanked `chacha20`). The pre-built PyO3 extension is
+  current (no binding change).
+- No dependency declaration changed (`pyproject.toml` delta is one ruff
+  per-file-ignore line), so Snyk Open Source / `cargo audit` / `pip-audit`
+  dependency scans are not applicable. **Snyk Code** at severity **low**:
+  **0 issues** on `python/prin/subconscious_compat.py` and
+  `python/prin/training_hooks.py`.
+- Coverage instrumentation crashes on this host while importing Torch
+  (recorded EA / 0144E1 precedent); reported blocked, manual changed-code
+  review done via the acceptance suite + `test_e6_compat_regressions.py`, CI
+  authoritative.
+
+#### Out-of-scope discoveries and boundary decisions (for `0144F`)
+
+1. **Torch `SubconsciousController` + `export_to_onnx` delivered here, not
+   deferred.** DV-025's prose lumps `export_to_onnx` with
+   `quantize_onnx`/`retrain_controller` under a WP-036C traceability note, but
+   DV-025 is **CLOSED / D4 (traceability-doc only)** and `test_subconscious.py`
+   genuinely exercises the torch controller and `export_to_onnx` with no skip
+   guard (onnx + onnxruntime are installed). The maintainer approved building
+   the torch compat now (2026-08-31) rather than weakening/skipping ~15
+   acceptance tests. `SubconsciousController.quantize_onnx` (INT8) and
+   `retrain_controller` remain **WP-036C-owned stubs** and are referenced by
+   **neither** `test_subconscious.py` nor any other E1–E6 reference file.
+2. **`collect_system_state` un-deferred.** Rebuilt from a D-2.2 stub to the
+   real faithful telemetry-I/O port (no oscillator/model numerics). Governance
+   updated in step: `test_bucket_g_remainder` parametrize trimmed,
+   migration-guide bucket-G row + consolidated index updated,
+   `check_no_python_numerics` scope extended. The bucket-G disposition table
+   also had `StateCollector` still marked "D-2.2 stub" (stale since 0144E5);
+   corrected in passing.
+3. **`_RUST_BRIDGE_MODULES` is now a slight misnomer** — it holds the
+   PyTorch-composition compat modules permitted `nn` / `functional` use
+   (`hybrid_compat.py` since 0144E5, now `subconscious_compat.py`), not only
+   literal Rust bridges. Cosmetic; flagged for a future rename.
+4. **Migration-guide WP-028 section** still carries the `clone_state` vs
+   `clone` deviation note; the compat wrapper now also offers `.clone()` on the
+   Python side while the Rust `#[pyclass]` keeps `clone_state`. Note left as-is
+   (it accurately describes the Rust binding); the wrapper behaviour is
+   documented in `prin/subconscious_compat.py`.
+
+**Parity-evidence disposition:** directly comparable PRINet 3.0 behavior
+exists and is the literal 49-test acceptance source. The imports-only diff
+plus all-green execution (48 passed + the single unchanged reference
+`psutil`-absent skip) is the E6 parity evidence. No new hazard tolerance or
+backend guard was required, so `DOCS/sphinx/parity_report.rst` is unchanged.
+
+---
+
+## WP-036B S1 consolidation — all 498 reference functions accounted for
+
+| Sub-pass | Reference files | Ports | Source lines | `def test_` | Passed | Skipped (reference guards) | Tolerance annotations |
+|---|---|---|---:|---:|---:|---:|---:|
+| `0144E1` | `test_core`, `test_utils` | `test_acceptance_core`, `test_acceptance_utils` | 1,362 | 125 | 125 | 0 | 0 |
+| `0144E2` | `test_phases`, `test_hierarchical`, `test_phase_to_rate` | `test_acceptance_phases`, `test_acceptance_hierarchical`, `test_acceptance_phase_to_rate` | 1,336 | 95 | 92 | 3 (CUDA `skipif`) | 0 |
+| `0144E3` | `test_q2`, `test_q2_remaining` | `test_acceptance_q2`, `test_acceptance_q2_remaining` | 1,722 | 118 | 113 | 5 (CUDA `skipif`) | 0 |
+| `0144E4` | `test_q3_new`, `test_nn`, `test_scalr_enhanced` | `test_acceptance_q3_new`, `test_acceptance_nn`, `test_acceptance_scalr_enhanced` | 1,750 | 75 | 75 | 0 | 0 |
+| `0144E5` | `test_hybrid`, `test_clevr_n` | `test_acceptance_hybrid`, `test_acceptance_clevr_n` | 1,310 | 36 | 36 | 0 | 0 |
+| `0144E6` | `test_subconscious` | `test_acceptance_subconscious` | 605 | 49 | 48 | 1 (`psutil` absent) | 0 |
+| **Total** | **13 files** | **13 ports** | **8,085** | **498** | **489** | **9** | **0** |
+
+Every one of the 498 source `def test_` functions is ported under a stable
+`tests/test_acceptance_*.py` name and executes: **489 pass**, **9 skip via the
+reference's own unchanged availability guards** (8 CUDA `skipif` + 1
+`psutil`-absent), **0 deferred, 0 unapproved skips, 0 tolerance annotations, 0
+assertion edits**. The initial `pytest --collect-only` discrepancy (481
+collected + one `test_clevr_n` import error) is fully resolved: `benchmarks.clevr_n`
+compatibility support was rebuilt at `0144E5` and all 17 `test_clevr_n`
+functions now collect and pass. The per-file line total is 8,085: the plan's
+8,570 estimate carried `test_subconscious.py` at an over-estimated 1,090 lines
+(its exact source length is 605); the other twelve files sum to 7,480 exactly
+as the plan recorded. The authoritative contract is the 498-function inventory,
+which is met exactly.
+
+Aggregate reference-vs-port diff across all 13 files: **import-module lines
+only**, plus the two governed `ruff format` re-wraps recorded at `0144E4`
+(`test_nn` assert-message wrap) — no assertion, expected value, parametrization,
+call order, body, marker, skip, or tolerance changed in any file. GPU/Triton
+cases keep the reference's `skipif` precedent; no new hazard tolerance or
+backend-availability annotation was introduced in any sub-pass, so
+`DOCS/sphinx/parity_report.rst` is unchanged across the whole range.
+
+**Handoff:** `0144E` + `0144E1`–`0144E6` are committed locally at their green
+sub-pass gates and are **not pushed**. The contiguous range now feeds the
+single mandatory read-only S2 audit **`0144F`**, which independently diffs
+every copied test against its reference and reviews the Rust-backed
+compatibility owners, the governed dispositions changed here
+(`collect_system_state`, `StateCollector` row), and the four boundary
+decisions listed above. S1 does not self-certify.

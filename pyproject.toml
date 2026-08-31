@@ -135,6 +135,7 @@ convention = "google"
 "tests/test_acceptance_scalr_enhanced.py" = ["B007", "B905", "F841", "I001"]
 "tests/test_acceptance_hybrid.py" = ["B007", "E741", "F401", "I001"]
 "tests/test_acceptance_clevr_n.py" = ["E741", "F401", "RUF059"]
+"tests/test_acceptance_subconscious.py" = ["F401", "I001", "NPY002", "RUF100"]
 "parity/test_parity_differential.py" = ["E402", "I001"]
 "parity/test_parity_subconscious.py" = ["E402", "I001"]
 
