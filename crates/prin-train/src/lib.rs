@@ -15,6 +15,12 @@
 //! - [`inhibition`] — [`inhibition::FeedbackInhibition`] (WP-023): top-`k`
 //!   winner-take-all competition with a hard-forward / soft-backward
 //!   straight-through estimator (STE).
+//! - [`inhibition_layers`] — [`inhibition_layers::FeedforwardInhibition`],
+//!   [`inhibition_layers::DentateGyrusConverter`], and
+//!   [`inhibition_layers::DgLayer`] (WP-036A): phase-delay gating and the
+//!   FFI → EMA → FBI sparsification family.
+//! - [`weight_init`] — oscillator-aware coupling, projection, and bias
+//!   initialization (WP-036A).
 //! - [`activations`] — [`activations::d_silu`],
 //!   [`activations::HolomorphicActivation`] (split-complex),
 //!   [`activations::GatedPhaseActivation`] (WP-023): oscillator-compatible
@@ -130,6 +136,7 @@ pub mod flops;
 pub mod hep;
 pub mod hybrid;
 pub mod inhibition;
+pub mod inhibition_layers;
 pub mod layers;
 pub mod losses;
 pub mod phase_tracker;
@@ -140,6 +147,7 @@ pub mod stats;
 pub mod sync_gd;
 pub mod temporal_metrics;
 pub mod trainer;
+pub mod weight_init;
 
 mod support;
 
@@ -148,6 +156,7 @@ pub use attention::OscillatoryAttentionParams;
 pub use bands::DiscreteDeltaThetaGammaParams;
 pub use error::TrainError;
 pub use feedback::{OrderParameter, OscillatorOptimizer, StepFeedback};
+pub use inhibition_layers::DgLayerParams;
 pub use layers::ResonanceLayerParams;
 pub use rip::{Rip, RipConfig};
 pub use scalr::{Scalr, ScalrConfig};

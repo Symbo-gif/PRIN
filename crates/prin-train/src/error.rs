@@ -33,6 +33,15 @@ pub enum TrainError {
         value: f64,
     },
 
+    /// A named scalar hyperparameter was not strictly positive.
+    #[error("{name} must be finite and > 0, got {value}")]
+    InvalidPositiveParameter {
+        /// Parameter name.
+        name: &'static str,
+        /// Offending value.
+        value: f64,
+    },
+
     /// A timestep was non-finite or non-positive.
     #[error("invalid timestep dt = {value}, must be finite and > 0")]
     InvalidTimestep {

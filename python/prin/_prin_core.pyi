@@ -55,6 +55,95 @@ class GatedPhaseActivationBridge:
     def state_dict(self) -> bytes: ...
     def load_state_dict(self, state: bytes) -> None: ...
 
+# --- Inhibition and sparsification bridges (WP-036A) ---
+class FeedforwardInhibitionCtx:
+    def backward(self, grad_output: object) -> tuple[object, object]: ...
+
+class FeedforwardInhibitionBridge:
+    def __init__(
+        self,
+        delay_steps: int = 1,
+        tau: float = 0.05,
+        delay_fraction: float = 0.1,
+    ) -> None: ...
+    @property
+    def delay_steps(self) -> int: ...
+    @property
+    def tau(self) -> float: ...
+    def forward(
+        self, phase: object, amplitude: object
+    ) -> tuple[object, FeedforwardInhibitionCtx]: ...
+
+class DentateGyrusConverterCtx:
+    def backward(self, grad_output: object) -> tuple[object, object]: ...
+
+class DentateGyrusConverterBridge:
+    def __init__(
+        self,
+        n_oscillators: int,
+        k: int | None = None,
+        target_sparsity: float = 0.1,
+        ffi_delay: int = 1,
+        ffi_tau: float = 0.05,
+        fbi_delay: int = 20,
+        fbi_temperature: float = 1.0,
+        integration_alpha: float = 0.95,
+    ) -> None: ...
+    @property
+    def n_oscillators(self) -> int: ...
+    def forward(
+        self, phase: object, amplitude: object, n_integration_steps: int
+    ) -> tuple[object, DentateGyrusConverterCtx]: ...
+
+class DGLayerCtx:
+    def backward(self, grad_output: object) -> tuple[object, object]: ...
+
+class DGLayerBridge:
+    def __init__(
+        self,
+        n_input: int,
+        top_k: int = 8,
+        ffi_delay: int = 2,
+        fbi_delay: int = 20,
+        n_integration_steps: int = 5,
+    ) -> None: ...
+    @property
+    def n_input(self) -> int: ...
+    @property
+    def top_k(self) -> int: ...
+    def forward(
+        self, phase: object, amplitude: object
+    ) -> tuple[object, DGLayerCtx]: ...
+    def state_dict(self) -> bytes: ...
+    def load_state_dict(self, state: bytes) -> None: ...
+
+class SparsityRegularizationLossCtx:
+    def backward(self, grad_output: object) -> object: ...
+
+class SparsityRegularizationLossBridge:
+    def __init__(
+        self, target_sparsity: float = 0.9, temperature: float = 0.1
+    ) -> None: ...
+    @property
+    def target_sparsity(self) -> float: ...
+    @property
+    def temperature(self) -> float: ...
+    def forward(
+        self, activations: object
+    ) -> tuple[object, SparsityRegularizationLossCtx]: ...
+
+class OscillatoryWeightInitBridge:
+    def matrix(
+        self,
+        parameter: object,
+        coupling: bool,
+        coupling_scale: float,
+        proj_gain: float,
+        seed_counter: int,
+        seed_key: int,
+    ) -> object: ...
+    def bias(self, parameter: object) -> object: ...
+
 # --- Torch bridges (WP-026 / Exec-WP-026 S1) ---
 class OscillatoryAttentionCtx:
     def backward(self, grad_output: object) -> tuple[object, object | None]: ...

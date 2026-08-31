@@ -60,7 +60,7 @@ See
 | 0143 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
 | 0144 | WP-036 | S4 — Documentation | [API completion, acceptance suite, and migration](0144-wp036-s4-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
 | 0144A | WP-036A | S1 — Coding | [Trainable compatibility layers — `prin-train` extension](0144A-wp036a-s1-trainable-compatibility-layers-prin-train-extension.md) | SPLIT → 0144A1–0144A4 |
-| 0144A1 | WP-036A | S1 — Coding | [Inhibition and sparsification family](0144A1-wp036a-s1-inhibition-and-sparsification-family.md) | PLANNED |
+| 0144A1 | WP-036A | S1 — Coding | [Inhibition and sparsification family](0144A1-wp036a-s1-inhibition-and-sparsification-family.md) | COMPLETE |
 | 0144A2 | WP-036A | S1 — Coding | [Phase-to-rate and autoencoder family](0144A2-wp036a-s1-phase-to-rate-and-autoencoder-family.md) | PLANNED |
 | 0144A3 | WP-036A | S1 — Coding | [Hierarchical, PAC, and discrete-layer family](0144A3-wp036a-s1-hierarchical-pac-and-discrete-layer-family.md) | PLANNED |
 | 0144A4 | WP-036A | S1 — Coding | [Model container and consolidation](0144A4-wp036a-s1-model-container-and-consolidation.md) | PLANNED |

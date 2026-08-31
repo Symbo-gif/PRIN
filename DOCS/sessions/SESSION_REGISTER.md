@@ -266,7 +266,7 @@ introduction and are not retroactively added here; this table starts with
 | 0143 | 6 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](phase-6/0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
 | 0144 | 6 | WP-036 | S4 — Documentation | [API completion, acceptance suite, and migration](phase-6/0144-wp036-s4-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
 | 0144A | 6 | WP-036A | S1 — Coding | [Trainable compatibility layers — `prin-train` extension](phase-6/0144A-wp036a-s1-trainable-compatibility-layers-prin-train-extension.md) | PLANNED |
-| 0144A1 | 6 | WP-036A | S1 — Coding | [Inhibition and sparsification family](phase-6/0144A1-wp036a-s1-inhibition-and-sparsification-family.md) | PLANNED |
+| 0144A1 | 6 | WP-036A | S1 — Coding | [Inhibition and sparsification family](phase-6/0144A1-wp036a-s1-inhibition-and-sparsification-family.md) | COMPLETE |
 | 0144A2 | 6 | WP-036A | S1 — Coding | [Phase-to-rate and autoencoder family](phase-6/0144A2-wp036a-s1-phase-to-rate-and-autoencoder-family.md) | PLANNED |
 | 0144A3 | 6 | WP-036A | S1 — Coding | [Hierarchical, PAC, and discrete-layer family](phase-6/0144A3-wp036a-s1-hierarchical-pac-and-discrete-layer-family.md) | PLANNED |
 | 0144A4 | 6 | WP-036A | S1 — Coding | [Model container and consolidation](phase-6/0144A4-wp036a-s1-model-container-and-consolidation.md) | PLANNED |

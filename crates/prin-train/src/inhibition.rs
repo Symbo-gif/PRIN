@@ -179,12 +179,35 @@ impl FeedbackInhibition {
     /// Returns [`TrainError::ShapeMismatch`] if `rates`'s width is not
     /// [`Self::n_oscillators`].
     pub fn compete<B: Backend>(&self, rates: Tensor<B, 2>) -> Result<Tensor<B, 2>, TrainError> {
+        let temperature = Tensor::<B, 1>::from_floats([self.temperature], &rates.device());
+        self.compete_with_temperature(rates, temperature)
+    }
+
+    /// Apply top-`k` competition with a differentiable scalar temperature.
+    ///
+    /// This is the same STE as [`Self::compete`], but accepts a shape-`[1]`
+    /// tensor so a composing Burn module can learn the FBI temperature.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] if `rates` has the wrong width or
+    /// `temperature` is not a scalar tensor represented as shape `[1]`.
+    pub fn compete_with_temperature<B: Backend>(
+        &self,
+        rates: Tensor<B, 2>,
+        temperature: Tensor<B, 1>,
+    ) -> Result<Tensor<B, 2>, TrainError> {
         let dims = rates.dims();
         check_dims("rates", dims, [dims[0], self.n_oscillators])?;
+        check_dims("temperature", temperature.dims(), [1])?;
         let [batch, n] = dims;
         let device = rates.device();
+        let temperature = temperature
+            .reshape([1, 1])
+            .repeat_dim(0, batch)
+            .repeat_dim(1, n);
 
-        let soft_scores = softmax(rates.clone().div_scalar(self.temperature), 1);
+        let soft_scores = softmax(rates.clone() / temperature, 1);
         let (_topk_vals, topk_idx) = rates.clone().topk_with_indices(self.k, 1);
 
         let zeros = Tensor::<B, 2>::zeros([batch, n], &device);

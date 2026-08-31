@@ -50,7 +50,9 @@ _SCANNED = (
     "training_hooks.py",
     "nn/hybrid_compat.py",
     "nn/deferred_layers.py",
+    "nn/inhibition_layers.py",
 )
+_RUST_BRIDGE_MODULES = frozenset({"python/prin/nn/inhibition_layers.py"})
 
 _FORBIDDEN_ATTRS = frozenset(
     {
@@ -106,7 +108,7 @@ def _violations(path: Path) -> list[str]:
                 or module in _FORBIDDEN_IMPORT_MODULES
             ):
                 found.append(f"{rel}:{node.lineno}: from {module} import ...")
-        elif isinstance(node, ast.ClassDef):
+        elif isinstance(node, ast.ClassDef) and rel not in _RUST_BRIDGE_MODULES:
             for base in node.bases:
                 dumped = ast.dump(base)
                 if "'Module'" in dumped or "'Function'" in dumped:

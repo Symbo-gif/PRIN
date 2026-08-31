@@ -42,16 +42,12 @@ PRINet-3.0-compatible surface: :mod:`prin.nn.activations` (`dSiLU`,
 (`FeedbackInhibition`), and :mod:`prin.nn.energy` (`HolomorphicEnergy`,
 `HolomorphicEPTrainer`) — all re-exported here.
 
-WP-036 S1 sub-pass 0141E completes the 172-symbol surface: the deferred
-trainable-layer symbols with no faithful non-numeric PRIN build
-(`PRINetModel`, `HierarchicalResonanceLayer`, `PhaseToRateConverter`,
-`PhaseToRateAutoencoder`, `DenseAutoencoder`, `SparsityRegularizationLoss`,
-`PhaseAmplitudeCouplingLayer`, `DGLayer`, `DentateGyrusConverter`,
-`FeedforwardInhibition`, `oscillatory_weight_init`, `compile_model`,
-`DiscreteDeltaThetaGamma`, `DiscreteDeltaThetaGammaLayer`) are re-exported
-from :mod:`prin.nn.deferred_layers` as **importable D-2.2 stubs** that raise a
-typed ``NotImplementedError`` on use. The trainable-layer rebuild is owned by a
-future work package; session 0142 (S2) retains veto over every disposition.
+WP-036A sub-pass 0144A1 replaces the inhibition and sparsification family
+(`FeedforwardInhibition`, `DentateGyrusConverter`, `DGLayer`,
+`SparsityRegularizationLoss`, and `oscillatory_weight_init`) with real
+Rust-backed implementations in :mod:`prin.nn.inhibition_layers`. The remaining
+WP-036A symbols continue to resolve from :mod:`prin.nn.deferred_layers` until
+their assigned sub-pass.
 """
 
 from __future__ import annotations
@@ -79,19 +75,14 @@ from .allocation import (
 from .attention import OscillatoryAttention
 from .deferred_layers import (
     DenseAutoencoder,
-    DentateGyrusConverter,
-    DGLayer,
     DiscreteDeltaThetaGamma,
     DiscreteDeltaThetaGammaLayer,
-    FeedforwardInhibition,
     HierarchicalResonanceLayer,
     PhaseAmplitudeCouplingLayer,
     PhaseToRateAutoencoder,
     PhaseToRateConverter,
     PRINetModel,
-    SparsityRegularizationLoss,
     compile_model,
-    oscillatory_weight_init,
 )
 from .energy import HolomorphicEnergy, HolomorphicEPTrainer
 from .hybrid import HybridPRINetV2
@@ -104,6 +95,13 @@ from .hybrid_compat import (
     TemporalHybridPRINet,
 )
 from .inhibition import FeedbackInhibition
+from .inhibition_layers import (
+    DentateGyrusConverter,
+    DGLayer,
+    FeedforwardInhibition,
+    SparsityRegularizationLoss,
+    oscillatory_weight_init,
+)
 from .optimizers import Rip, Scalr, SyncGd
 from .phase_tracker import PhaseTracker, TrackingResult
 from .slot_attention import (

@@ -24,6 +24,7 @@ pub(crate) mod sweep;
 pub(crate) mod temporal;
 pub(crate) mod tensor;
 pub(crate) mod train;
+pub(crate) mod train_inhibition_layers;
 pub(crate) mod train_layers;
 pub(crate) mod train_support;
 pub(crate) mod trainer;

@@ -26,7 +26,12 @@ def test_every_scanned_module_exists_and_is_covered() -> None:
     """The scan list points only at real files and covers the new submodules."""
     for name in _module._SCANNED:
         assert (_ROOT / "python" / "prin" / name).is_file(), name
-    for expected in ("nn/deferred_layers.py", "training_hooks.py", "solvers.py"):
+    for expected in (
+        "nn/deferred_layers.py",
+        "nn/inhibition_layers.py",
+        "training_hooks.py",
+        "solvers.py",
+    ):
         assert expected in _module._SCANNED
 
 

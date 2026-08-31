@@ -103,6 +103,13 @@ _GPU_STUBS = frozenset(
         "fused_discrete_step_cuda",
     }
 )
+_WP036A_SUBPASSES = {
+    "DGLayer": "0144A1",
+    "DentateGyrusConverter": "0144A1",
+    "FeedforwardInhibition": "0144A1",
+    "SparsityRegularizationLoss": "0144A1",
+    "oscillatory_weight_init": "0144A1",
+}
 _RENAME_ALIASES = frozenset(
     {
         "SCALROptimizer",
@@ -129,6 +136,8 @@ def _disposition_class(name: str, subpass: str, probe: str) -> str:
         return "real - direct re-export"
     if subpass in ("0141B", "0141C"):
         return f"real - Rust PyO3 binding ({subpass})"
+    if subpass.startswith("0144A"):
+        return "real - Rust PyO3 binding (WP-036A)"
     if subpass in ("0141D1", "0141D2"):
         return f"real - non-numeric orchestration ({subpass})"
     return f"real ({subpass})"
@@ -144,7 +153,7 @@ def _rows() -> list[tuple[str, str, str, str]]:
         if not hasattr(prin, name):
             raise SystemExit(f"prinet symbol does not resolve from prin: {name}")
         obj = getattr(prin, name)
-        subpass = buckets.get(name, "0141A")
+        subpass = _WP036A_SUBPASSES.get(name, buckets.get(name, "0141A"))
         probe = _probe_disposition(name, obj)
         rows.append(
             (

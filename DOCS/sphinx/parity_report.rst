@@ -292,3 +292,29 @@ magnitude tighter than the trajectory tier. The corpus itself is immutable and
 unchanged; trajectory tolerances are unchanged; single-runtime metric
 verification (WP-010/WP-014 acceptance criteria) still targets ``rtol=1e-10``
 because those comparisons do not cross torch builds.
+
+WP-036A — Inhibition and sparsification parity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sub-pass 0144A1 compares the Rust-backed ``FeedforwardInhibition``,
+``DentateGyrusConverter``, and ``DGLayer`` forwards directly with installed
+PRINet 3.0 float64 references in ``tests/test_inhibition_layers.py``. The
+measured maximum absolute differences on the registered deterministic case are
+``3.33e-16`` (FFI), ``1.67e-16`` (DG converter), and ``1.39e-16`` (DG layer);
+all three tests therefore use ``rtol=1e-10, atol=1e-12`` rather than invoking a
+hazard tolerance.
+
+``SparsityRegularizationLoss`` uses Burn 0.16.1's f32-internal sigmoid
+(DV-018). Its measured absolute reference delta is ``1.19e-9`` on the
+registered case, so the parity assertion uses the existing DV-018 tier
+``rtol=1e-6, atol=1e-8`` and gradcheck uses ``eps=1e-4`` with the session's
+required ``rtol=1e-3, atol=1e-3``.
+
+The DG family composes the existing hard-forward/soft-backward FBI
+straight-through estimator. Such an estimator is deliberately not the
+Jacobian of one globally smooth forward function; generic finite-difference
+``gradcheck`` would therefore be mathematically invalid. The Python gradchecks
+run at the stationary FFI readout point ``phase=pi``, where analytical and
+finite-difference Jacobians legitimately coincide. Independent Rust autodiff
+tests verify nonzero finite gradients to phase, amplitude, ``ffi_scale``, and
+``fbi_temperature`` away from that stationary point.

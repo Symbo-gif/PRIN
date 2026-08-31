@@ -88,3 +88,84 @@ Execute `0144A1` at §4 of the decomposition plan. Each sub-pass commits at
 its own green local gate; the contiguous `0144A`+`0144A1`–`0144A4` range
 feeds the single S2 audit `0144B` and is pushed once with it (amendment #28
 cadence). S1 may not self-certify.
+
+## 0144A1 — Inhibition and sparsification family (COMPLETE 2026-08-30)
+
+### Delivered symbol map
+
+| Row | Symbol | Rust owner | PyO3 / Python delegation | Verification |
+|---:|---|---|---|---|
+| 31 | `FeedforwardInhibition` | `prin_train::inhibition_layers::FeedforwardInhibition` | `FeedforwardInhibitionBridge` → `prin.nn.inhibition_layers` | direct PRINet parity; float64 input gradcheck; vector/batch/error tests |
+| 32 | `DentateGyrusConverter` | `prin_train::inhibition_layers::DentateGyrusConverter` composing `inhibition::FeedbackInhibition` | `DentateGyrusConverterBridge` → `prin.nn.inhibition_layers` | FFI→EMA→FBI parity; top-k invariant; stationary-point gradcheck; error tests |
+| 33 | `DGLayer` | `prin_train::inhibition_layers::DgLayer` (`ffi_scale`, `fbi_temperature` Rust-owned) | `DGLayerBridge` → `prin.nn.inhibition_layers.DGLayer` | direct parity; stationary-point gradcheck; nonzero Rust autodiff to both inputs and both parameters; checkpoint round-trip |
+| 34 | `oscillatory_weight_init` | `prin_train::weight_init` | `OscillatoryWeightInitBridge` → Python name/parameter orchestration only | symmetric/scale/zero-diagonal reference case; deterministic Xavier bound; zero bias |
+| 38 | `SparsityRegularizationLoss` | `prin_train::losses::SparsityRegularizationLoss` | `SparsityRegularizationLossBridge` → `prin.nn.inhibition_layers` | direct parity; DV-018 float64 gradcheck (`eps=1e-4`); validation tests |
+
+`python/prin/nn/deferred_layers.py` now compatibility-re-exports these five
+real symbols; the other WP-036A rows remain typed D-2.2 stubs for their assigned
+sub-passes. No public symbol was added:
+`verify_api_surface(prin.__all__) == (set(), set())`.
+
+### Numerical / parity evidence
+
+- Direct installed-PRINet comparisons in `tests/test_inhibition_layers.py`:
+  maximum absolute delta FFI `3.33e-16`, DG converter `1.67e-16`, DGLayer
+  `1.39e-16` (`rtol=1e-10, atol=1e-12`).
+- `SparsityRegularizationLoss` maximum absolute delta `1.19e-9`; its
+  `rtol=1e-6, atol=1e-8` parity tier and `eps=1e-4` gradcheck are the existing
+  Burn sigmoid DV-018 disposition, recorded at the test and in
+  `DOCS/sphinx/parity_report.rst`.
+- FBI is a deliberate hard-forward / soft-backward STE, not the Jacobian of a
+  globally smooth function. DG/DGLayer finite-difference gradchecks therefore
+  use the FFI stationary point `phase=pi`, where analytical and numerical
+  Jacobians coincide. Away from that point, Rust autodiff tests independently
+  prove finite nonzero flow to phase, amplitude, `ffi_scale`, and
+  `fbi_temperature`; no STE assertion was weakened or misrepresented.
+
+### Coverage and quality evidence
+
+- Python targeted: 17 passed; `prin.nn.inhibition_layers` 95 statements,
+  2 missed, **97.89%**.
+- Rust `cargo llvm-cov -p prin-train --lib`: 389 passed;
+  `inhibition_layers.rs` **97.05% lines / 100.00% functions**,
+  `weight_init.rs` **100.00% lines / 100.00% functions**, extended `losses.rs`
+  **95.79% lines**; crate total 96.40% lines.
+- Full fast Python suite after migration-table regeneration: **1227 passed**,
+  9 slow/GPU tests deselected, 99% package coverage.
+- Migration Guide: all five rows and the machine-generated consolidated index
+  report real WP-036A delegation; `wp036_migration_table.py check` reports 172
+  symbols consistent.
+- `maturin develop -m crates/prin-py/Cargo.toml` succeeded on Windows / Python
+  3.14 / Rust 1.92; imports and DLPack execution verified.
+
+### Security evidence
+
+- Snyk Code, severity threshold **low**, scoped to modified `prin-train`,
+  `prin-py`, `python/prin/nn`, the new test, and
+  `tools/check_no_python_numerics.py`: **0 issues in every scope**.
+- Whole-repository Snyk Code: 5 pre-existing low path-traversal findings in
+  `tools/wp001_baseline.py`, `tools/wp030_mot_fixture.py`, and
+  `tools/wp031_stats_fixture.py`; none arises from 0144A1. No suppression or
+  exclusion added.
+- No dependency manifest changed; Snyk Open Source is therefore not applicable.
+  Native `cargo audit` exits 0 with the same three governed warnings
+  (`paste`, `bincode`, `chacha20`); both `pip-audit` scopes report no known
+  vulnerabilities. Active-source Bandit (`python/prin tools`) reports 0 issues.
+  The broader `bandit -r .` observes two pre-existing low `assert` findings in
+  a manual `EVIDENCE/math-audit` verification script (0 medium/high); the
+  immutable evidence artifact was not changed.
+- `prin-py` remains `#![deny(unsafe_code)]`; all DLPack FFI stays in the audited
+  module.
+
+### Inherited gate remediation
+
+The full Ruff gate exposed two pre-existing `RUF003` en-dashes in comments
+introduced by the immediately preceding amendment-#34
+`tools/wp001_baseline.py` change. They were changed to ASCII hyphens only; no
+logic changed. This is recorded rather than silently attributed to 0144A1.
+
+### Handoff
+
+Sub-pass 0144A1 is complete to the author's knowledge and does not self-certify
+WP-036A. Proceed to 0144A2; the complete `0144A` + `0144A1`–`0144A4` range
+remains subject to the single mandatory S2 audit at 0144B.

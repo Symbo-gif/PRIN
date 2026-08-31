@@ -71,7 +71,7 @@ _TEXT_SUFFIXES = frozenset(
 # `0141D` split under Development Workflow §7 introduced a two-character suffix
 # (`0141D1`/`0141D2`), so the optional letter may be followed by one digit.
 # Amendment #33 extended the `0144` block to `0144L` (WP-036A/B/C); amendment
-# #34 decomposed WP-036A S1 into `0144A1`–`0144A4`.
+# #34 decomposed WP-036A S1 into `0144A1`-`0144A4`.
 _SEQUENCE_RE = r"\d{4}(?:[A-L]\d?)?"
 _SESSION_ROW = re.compile(
     r"^\|\s*(?P<sequence>" + _SEQUENCE_RE + r")\s*\|\s*(?P<phase>\d+)\s*\|"
@@ -81,7 +81,7 @@ _SESSION_ROW = re.compile(
 )
 _WP_ID = re.compile(r"^WP-(\d{3})$")
 
-# Plan amendments #31–#34 add planned sub-sessions inserted between existing
+# Plan amendments #31-#34 add planned sub-sessions inserted between existing
 # integer sessions with two-part identifiers, without renumbering the gap-free
 # 0001..0198 integer sequence (TRACEABILITY invariant 4 is preserved). This is
 # the same additive-by-amendment principle already used for the EA/EMA global

@@ -1,6 +1,6 @@
 # Session 0144A1 — WP-036A S1 (sub-pass 1/4): Inhibition and sparsification family
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-30)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036A
 **Session type:** S1 — Coding
@@ -104,3 +104,23 @@ undocumented public API, hidden RNG, unapproved `unsafe`, scope creep into
 
 Local gate green; acceptance items evidence-mapped. Commit locally only.
 Proceed to 0144A2.
+
+## Completion evidence (2026-08-30)
+
+- Rust owners: `prin_train::inhibition_layers` implements FFI, DG conversion,
+  and `DgLayer`; `prin_train::weight_init` implements deterministic coupling /
+  Xavier / bias initialization; `prin_train::losses` owns the sigmoid-surrogate
+  sparsity loss.
+- PyO3: `bindings::train_inhibition_layers` provides four differentiable
+  DLPack bridges plus the weight-initialization bridge, with no new `unsafe`.
+- Python: `prin.nn.inhibition_layers` replaces all five D-2.2 stubs while
+  `prin.nn.deferred_layers` retains compatibility re-exports.
+- Tests: 13 Python parity/gradcheck/API/error tests and Rust unit/autodiff tests;
+  changed-code coverage is 97.89% Python, 97.05% / 100% Rust lines for
+  `inhibition_layers.rs` / `weight_init.rs`, and 95.79% for `losses.rs`.
+- Numerical evidence: FFI/DG/DGLayer maximum absolute parity deltas are
+  `3.33e-16` / `1.67e-16` / `1.39e-16`; sigmoid-loss delta is `1.19e-9`
+  under the governed DV-018 tolerance. The FBI STE gradcheck stationary-point
+  disposition is recorded in `DOCS/sphinx/parity_report.rst`.
+- Detailed acceptance mapping and validation evidence are appended to
+  `DOCS/experiments/0144A-wp036a-s1-handoff.md` under **0144A1**.

@@ -1,18 +1,11 @@
-"""PRINet 3.0-compatible trainable-layer symbols with no faithful WP-036 build.
+"""PRINet 3.0-compatible deferred-layer compatibility exports.
 
-Every symbol in this module is a **documented D-2.2 disposition** (Plan
-amendment #32; ``DOCS/experiments/0141-wp036-s1-dd-dispositions.md``). In
-PRINet 3.0 these are trainable ``torch.nn.Module`` subclasses (``nn.Linear``
-projections, ``nn.Parameter`` modulation depths) or weight-initialisation /
-compilation helpers. A faithful PRIN implementation needs net-new trainable
-Rust numerics plus Burn autodiff, which WP-036 S1 prohibits ("thin marshalling
-only", "no Python numerics" — Coding Standards Sec. 1.2).
-
-Per D-2.2 (maintainer-approved) they are delivered here as **importable stubs**
-that resolve from ``prin`` and ``prin.nn`` and raise a typed
-``NotImplementedError`` on construction/call, each with a Migration-Guide row
-and a disposition-appendix entry. The trainable-layer rebuild is owned by a
-future work package; S2 (session 0142) retains veto over every row.
+WP-036A sub-pass 0144A1 replaces the inhibition/sparsification-family stubs
+(``FeedforwardInhibition``, ``DentateGyrusConverter``, ``DGLayer``,
+``oscillatory_weight_init``, and ``SparsityRegularizationLoss``) with real
+Rust-backed exports from :mod:`prin.nn.inhibition_layers`. The remaining
+symbols retain their documented D-2.2 dispositions until their assigned
+WP-036A sub-pass.
 
 Two symbols are a narrower case: ``DiscreteDeltaThetaGamma`` and
 ``DiscreteDeltaThetaGammaLayer``. The discrete three-band network core has an
@@ -28,6 +21,14 @@ float64 gradcheck) is deferred to the same trainable-layer rebuild WP; the
 from __future__ import annotations
 
 from typing import Any, NoReturn
+
+from .inhibition_layers import (
+    DentateGyrusConverter,
+    DGLayer,
+    FeedforwardInhibition,
+    SparsityRegularizationLoss,
+    oscillatory_weight_init,
+)
 
 __all__ = [
     "DGLayer",
@@ -54,79 +55,6 @@ def _raise_disposition(symbol: str, detail: str) -> NoReturn:
         "It is a trainable component with no faithful non-numeric PRIN "
         "implementation in WP-036 S1; the rebuild is owned by a future work "
         "package. See the Migration Guide for the disposition and the owning WP."
-    )
-
-
-class FeedforwardInhibition:
-    """Deferred-rebuild stub for the feedforward-inhibition phase-delay gate.
-
-    PRINet 3.0 ``core.propagation.inhibition.FeedforwardInhibition``: a
-    parameter-free gate that delays and attenuates a phase signal. Deliberately
-    excluded from the WP-023 Rust rebuild (023 audit, Non-goals); needs a
-    ``prin-dynamics`` / ``prin-train`` rebuild.
-
-    Raises:
-        NotImplementedError: Always on construction.
-    """
-
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "FeedforwardInhibition",
-            "Parameter-free phase-delay gate, excluded from the WP-023 rebuild.",
-        )
-
-
-class DentateGyrusConverter:
-    """Deferred-rebuild stub for the dentate-gyrus sparsification pipeline.
-
-    PRINet 3.0 ``core.propagation.inhibition.DentateGyrusConverter``: a
-    feedforward-inhibition -> integration -> feedback-inhibition pipeline that
-    sparsifies phase codes. Excluded from the WP-023 rebuild.
-
-    Raises:
-        NotImplementedError: Always on construction.
-    """
-
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "DentateGyrusConverter",
-            "FFI -> integration -> FBI sparsification pipeline, no Rust owner.",
-        )
-
-
-class DGLayer:
-    """Deferred-rebuild stub for the trainable dentate-gyrus layer.
-
-    PRINet 3.0 ``nn.layers.DGLayer``: a trainable ``nn.Module`` wrapping
-    :class:`DentateGyrusConverter`. No Rust owner.
-
-    Raises:
-        NotImplementedError: Always on construction.
-    """
-
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "DGLayer",
-            "Trainable wrapper over DentateGyrusConverter, no Rust owner.",
-        )
-
-
-def oscillatory_weight_init(*_args: Any, **_kwargs: Any) -> NoReturn:
-    """Reject calls to the deferred oscillatory weight-initialisation helper.
-
-    PRINet 3.0 ``nn.layers.oscillatory_weight_init``: initialises a weight
-    tensor with an oscillatory (phase-structured) pattern. Numeric
-    initialisation helper with no Rust owner.
-
-    Raises:
-        NotImplementedError: Always.
-    """
-    _raise_disposition(
-        "oscillatory_weight_init",
-        "Oscillatory weight-initialisation helper (Python numerics).",
     )
 
 
@@ -181,24 +109,6 @@ class DenseAutoencoder:
         _raise_disposition(
             "DenseAutoencoder",
             "Trainable dense-MLP baseline autoencoder, no Rust owner.",
-        )
-
-
-class SparsityRegularizationLoss:
-    """Deferred-rebuild stub for the sparsity-regularisation loss module.
-
-    PRINet 3.0 ``nn.layers.SparsityRegularizationLoss``: a trainable-loss
-    ``nn.Module`` penalising dense activations. Numeric loss, no Rust owner.
-
-    Raises:
-        NotImplementedError: Always on construction.
-    """
-
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "SparsityRegularizationLoss",
-            "Trainable-loss nn.Module (Python numerics), no Rust owner.",
         )
 
 

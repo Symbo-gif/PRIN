@@ -1,8 +1,9 @@
-//! Training losses for temporal-tracking similarity matrices (WP-027): a
-//! direct port of PRINet 3.0's `hungarian_similarity_loss`/
-//! `temporal_smoothness_loss` (`utils/temporal_training.py:261-336`).
+//! Training losses for sparsification and temporal tracking.
 //!
-//! Both are consumed by [`crate::trainer::train_phase_tracker`] to train
+//! [`SparsityRegularizationLoss`] is the WP-036A sigmoid-surrogate L0 density
+//! penalty. [`hungarian_similarity_loss`] and [`temporal_smoothness_loss`] are
+//! direct WP-027 ports from PRINet 3.0 (`utils/temporal_training.py:261-336`).
+//! The temporal losses are consumed by [`crate::trainer::train_phase_tracker`] to train
 //! [`crate::phase_tracker::PhaseTracker`] (and, symmetrically, could drive
 //! [`crate::slot_attention::TemporalSlotAttentionMOT`]) on differentiable
 //! similarity matrices produced by `forward`/`process_frame` +
@@ -10,9 +11,101 @@
 //! as the reference's own `_train_step_pt`/`_train_step_sa` do
 //! (`temporal_training.py:540-627`).
 
-use burn::tensor::activation::log_softmax;
+use burn::tensor::activation::{log_softmax, sigmoid};
 use burn::tensor::backend::Backend;
 use burn::tensor::{Tensor, TensorData};
+
+use crate::error::TrainError;
+use crate::support::validate_finite;
+
+/// Validated hyperparameters for [`SparsityRegularizationLoss`].
+#[derive(Clone, Debug, PartialEq)]
+pub struct SparsityRegularizationLossConfig {
+    /// Target fraction of inactive units.
+    pub target_sparsity: f64,
+    /// Sigmoid-surrogate temperature.
+    pub temperature: f64,
+}
+
+impl SparsityRegularizationLossConfig {
+    /// Construct with PRINet 3.0 defaults.
+    pub fn new() -> Self {
+        Self {
+            target_sparsity: 0.9,
+            temperature: 0.1,
+        }
+    }
+
+    /// Construct with explicit hyperparameters.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed validation error unless `target_sparsity` is in
+    /// `[0, 1]` and `temperature` is finite and strictly positive.
+    pub fn with_params(target_sparsity: f64, temperature: f64) -> Result<Self, TrainError> {
+        validate_finite("target_sparsity", target_sparsity)?;
+        validate_finite("temperature", temperature)?;
+        if !(0.0..=1.0).contains(&target_sparsity) {
+            return Err(TrainError::InvalidRatio {
+                name: "target_sparsity",
+                value: target_sparsity,
+            });
+        }
+        if temperature <= 0.0 {
+            return Err(TrainError::InvalidPositiveParameter {
+                name: "temperature",
+                value: temperature,
+            });
+        }
+        Ok(Self {
+            target_sparsity,
+            temperature,
+        })
+    }
+
+    /// Build the parameter-free loss module.
+    pub fn init(&self) -> SparsityRegularizationLoss {
+        SparsityRegularizationLoss {
+            target_sparsity: self.target_sparsity,
+            temperature: self.temperature,
+        }
+    }
+}
+
+impl Default for SparsityRegularizationLossConfig {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Sigmoid-surrogate L0 density-penalty loss.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SparsityRegularizationLoss {
+    target_sparsity: f64,
+    temperature: f64,
+}
+
+impl SparsityRegularizationLoss {
+    /// Target fraction of inactive units.
+    pub fn target_sparsity(&self) -> f64 {
+        self.target_sparsity
+    }
+
+    /// Sigmoid-surrogate temperature.
+    pub fn temperature(&self) -> f64 {
+        self.temperature
+    }
+
+    /// Compute `(1 - mean(sigmoid(activations / temperature)) - target)^2`.
+    pub fn forward<B: Backend, const D: usize>(&self, activations: Tensor<B, D>) -> Tensor<B, 1> {
+        let actual_sparsity = sigmoid(activations.div_scalar(self.temperature))
+            .mean()
+            .neg()
+            + 1.0;
+        let error = actual_sparsity - self.target_sparsity;
+        error.clone() * error
+    }
+}
 
 /// Assignment loss on a similarity matrix: cross-entropy over each row
 /// (temperature-scaled) with the identity permutation as the target,
@@ -212,5 +305,57 @@ mod tests {
         let loss = temporal_smoothness_loss(&[a, b, c]);
         let v = loss.into_data().to_vec::<f64>().unwrap()[0];
         assert!((v - 0.5).abs() < 1e-12, "loss {v}");
+    }
+
+    #[test]
+    fn sparsity_loss_matches_reference_formula() {
+        let loss = SparsityRegularizationLossConfig::with_params(0.6, 0.2)
+            .unwrap()
+            .init();
+        let activations = tensor(vec![-0.4, 0.0, 0.8, 1.2], 2, 2);
+        let got = loss.forward(activations).into_scalar();
+        let density = [-0.4_f64, 0.0, 0.8, 1.2]
+            .into_iter()
+            .map(|value| 1.0 / (1.0 + (-value / 0.2).exp()))
+            .sum::<f64>()
+            / 4.0;
+        let expected = (1.0 - density - 0.6).powi(2);
+        assert!((got - expected).abs() < 1e-6, "{got} vs {expected}");
+    }
+
+    #[test]
+    fn sparsity_loss_validates_configuration_and_has_finite_gradient() {
+        assert!(matches!(
+            SparsityRegularizationLossConfig::with_params(1.1, 0.1).unwrap_err(),
+            TrainError::InvalidRatio {
+                name: "target_sparsity",
+                ..
+            }
+        ));
+        assert!(matches!(
+            SparsityRegularizationLossConfig::with_params(0.9, 0.0).unwrap_err(),
+            TrainError::InvalidPositiveParameter {
+                name: "temperature",
+                ..
+            }
+        ));
+        use burn::backend::Autodiff;
+        type AutodiffBackend = Autodiff<TestBackend>;
+        let dev: <AutodiffBackend as Backend>::Device = Default::default();
+        let activations = Tensor::<AutodiffBackend, 2>::from_data(
+            TensorData::new(vec![-0.4, 0.0, 0.8, 1.2], vec![2, 2]),
+            &dev,
+        )
+        .require_grad();
+        let loss = SparsityRegularizationLossConfig::new().init();
+        let grads = loss.forward(activations.clone()).sum().backward();
+        let grad = activations
+            .grad(&grads)
+            .unwrap()
+            .to_data()
+            .to_vec::<f64>()
+            .unwrap();
+        assert!(grad.iter().all(|value| value.is_finite()));
+        assert!(grad.iter().any(|value| value.abs() > 0.0));
     }
 }
