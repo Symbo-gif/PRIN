@@ -85,5 +85,9 @@ fn _prin_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Daemon/evaluation integration and Phase 5 gate (WP-032)
     bindings::phase5::register(m)?;
 
+    // GPU engine bindings (WP-036D / 0144I1)
+    #[cfg(any(feature = "cuda", feature = "wgpu"))]
+    bindings::gpu::register(m)?;
+
     Ok(())
 }

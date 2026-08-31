@@ -10,6 +10,8 @@ pub(crate) mod attention;
 pub(crate) mod bands;
 pub(crate) mod coupling;
 pub(crate) mod daemon;
+#[cfg(any(feature = "cuda", feature = "wgpu"))]
+pub(crate) mod gpu;
 pub(crate) mod hybrid;
 pub(crate) mod integrators;
 pub(crate) mod kernels;

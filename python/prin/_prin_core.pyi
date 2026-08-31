@@ -1858,3 +1858,77 @@ def phase_to_rate(
     sparsity: float = 0.1,
     temperature: float = 1.0,
 ) -> list[float]: ...
+
+# --- GPU engine bindings (WP-036D / 0144I1) ---
+# Available only when prin-py is built with the `cuda` or `wgpu` feature.
+class GpuSparseKuramoto:
+    """Sparse Kuramoto coupling dispatched through prin-kernels GPU backends."""
+
+    def __init__(
+        self,
+        n: int,
+        decay_rate: float,
+        freq_adaptation_rate: float,
+        k: float,
+        crow_indices: list[int],
+        col_indices: list[int],
+        values: list[float],
+    ) -> None: ...
+    @property
+    def n_oscillators(self) -> int: ...
+    @property
+    def decay_rate(self) -> float: ...
+    @property
+    def freq_adaptation_rate(self) -> float: ...
+    @property
+    def k(self) -> float: ...
+    def compute_derivatives(
+        self, phase: object, amplitude: object, frequency: object
+    ) -> tuple[object, object, object]: ...
+
+class GpuMeanFieldEngine:
+    """Dense mean-field RK4 engine stepped via the fused prin-kernels kernel."""
+
+    def __init__(
+        self,
+        phase: object,
+        amplitude: object,
+        frequency: object,
+        k: float,
+        decay: float,
+        gamma: float,
+        dt: float,
+    ) -> None: ...
+    @property
+    def n_oscillators(self) -> int: ...
+    @property
+    def dt(self) -> float: ...
+    def step(self) -> dict[str, object]: ...
+    def state(self) -> tuple[object, object, object]: ...
+
+class GpuBandStepper:
+    """Fused three-band (delta/theta/gamma) discrete-time stepper."""
+
+    def __init__(
+        self,
+        phase: object,
+        amplitude: object,
+        frequency: object,
+        band_sizes: list[int],
+        ks: list[float],
+        decays: list[float],
+        gammas: list[float],
+        pac_modulation_depths: list[float],
+        pac_phase_offsets: list[float],
+        amp_min: float,
+        amp_max: float,
+        dt: float,
+    ) -> None: ...
+    @property
+    def n_oscillators(self) -> int: ...
+    @property
+    def band_sizes(self) -> list[int]: ...
+    @property
+    def dt(self) -> float: ...
+    def step(self) -> dict[str, object]: ...
+    def state(self) -> tuple[object, object, object]: ...

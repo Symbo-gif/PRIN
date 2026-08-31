@@ -33,6 +33,6 @@ serde_json.workspace = true
 
 [features]
 default = []
-cuda = ["prin-kernels/cuda"]
-wgpu = ["prin-kernels/wgpu"]
+cuda = ["prin-kernels/cuda", "prin-sim/cuda"]
+wgpu = ["prin-kernels/wgpu", "prin-sim/wgpu"]
 npu = ["prin-daemon/npu"]

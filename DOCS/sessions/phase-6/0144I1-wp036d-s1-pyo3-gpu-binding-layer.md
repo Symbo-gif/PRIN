@@ -1,6 +1,6 @@
 # Session 0144I1 — WP-036D S1 (sub-pass 1/3): PyO3 GPU binding layer
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31, locally committed; not pushed)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036D
 **Session type:** S1 — Coding
