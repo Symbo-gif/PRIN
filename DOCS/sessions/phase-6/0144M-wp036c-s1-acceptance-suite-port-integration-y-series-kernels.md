@@ -1,12 +1,16 @@
-# Session 0144I — WP-036C S1: Coding — Acceptance suite port (integration, y-series, kernels; DV-025)
+# Session 0144M — WP-036C S1: Coding — Acceptance suite port (integration, y-series, kernels; DV-025)
 
 **Status:** PLANNED
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S1 — Coding
-**Predecessor:** [0144H — Documentation](0144H-wp036b-s4-acceptance-suite-port-core-dynamics-model-stack.md)
-**Successor:** [0144J — Audit](0144J-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md)
-**Authority:** Project Plan §6/§8 and amendment #31; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Predecessor:** [0144L — Documentation (WP-036D S4)](0144L-wp036d-s4-gpu-execution-path-ported-acceptance-suite.md)
+**Successor:** [0144N — Audit](0144N-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md)
+**Authority:** Project Plan §6/§8 and amendments #31/#36; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+
+> Renumbered `0144I` → `0144M` by plan amendment #36 (WP-036D, "GPU execution
+> path for the ported acceptance suite", takes `0144I`–`0144L`). Scope,
+> acceptance criteria, and non-goals are unchanged.
 
 > This is a prospective execution contract, not completion evidence.
 
@@ -30,7 +34,16 @@ where its reference tests are in this scope.
   elsewhere) are `skipif`-guarded on backend availability. DoD items 1–2 are
   satisfied on close.
 - **Non-goals:** New `prin` public symbols beyond DV-025's; final documentation
-  prose or release publishing; GPU-runner execution of the skipped tests.
+  prose or release publishing; GPU-runner execution of the skipped tests;
+  extending WP-036D's Python GPU execution path to `test_gpu` /
+  `test_triton_kernels` (those stay `skipif`-guarded — `test_triton_kernels`
+  has no CPU analogue and needs the Linux GPU runner tracked by DV-001).
+
+> **Coordination with WP-036D (amendment #36).** WP-036D delivers the Python
+> GPU execution path for the 8 CUDA-guarded acceptance tests in the WP-036B
+> files and closes before this session. When porting `test_gpu.py` here,
+> reuse whatever device-dispatch surface WP-036D established in
+> `_torch_compat.py`; do not re-derive a parallel path.
 
 ## Required reading
 
@@ -43,7 +56,7 @@ where its reference tests are in this scope.
 
 ## Entry conditions
 
-- WP-036B S4 (0144H) is closed and committed.
+- WP-036B S4 (0144H) and WP-036D S4 (0144L) are closed and committed.
 - No unresolved D1/D2 finding exists.
 - WP-036C scope, acceptance criteria, and non-goals have maintainer approval.
 

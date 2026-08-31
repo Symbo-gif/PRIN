@@ -9,7 +9,7 @@ completion; completion evidence is cited by Audit and Project State Reports.
 
 | Requirement | Primary implementation sessions | Independent confirmation |
 |---|---|---|
-| **F1 — 175+ symbol feature parity** | WP-001 inventory (0001–0004); incremental WPs 006–036; WP-036 compatibility surface + freeze machinery + Migration Guide table (0141 + coding sub-passes `0141A`–`0141E`, amdt #32; audit/remediation/docs 0142–0144); WP-036A trainable compatibility layers (`0144A` + coding sub-passes `0144A1`–`0144A4`, amdt #34; audit/remediation/docs `0144B`–`0144D`); WP-036B strict acceptance-suite port (`0144E` + `0144E1`–`0144E6` feeding `0144F`–`0144H`, amdt #31/#33/#35) and WP-036C acceptance-suite port (`0144I`–`0144L`) | EXP-002 E1–E5 (0159–0163); WP-039 audit (0196) |
+| **F1 — 175+ symbol feature parity** | WP-001 inventory (0001–0004); incremental WPs 006–036; WP-036 compatibility surface + freeze machinery + Migration Guide table (0141 + coding sub-passes `0141A`–`0141E`, amdt #32; audit/remediation/docs 0142–0144); WP-036A trainable compatibility layers (`0144A` + coding sub-passes `0144A1`–`0144A4`, amdt #34; audit/remediation/docs `0144B`–`0144D`); WP-036B strict acceptance-suite port (`0144E` + `0144E1`–`0144E6` feeding `0144F`–`0144H`, amdt #31/#33/#35); WP-036D GPU execution path for the ported suite (`0144I` + `0144I1`–`0144I3` feeding `0144J`–`0144L`, amdt #36); WP-036C acceptance-suite port (`0144M`–`0144P`, shifted by amdt #36) | EXP-002 E1–E5 (0159–0163); WP-039 audit (0196) |
 | **F2 — numerical/result parity** | WP-002 corpus (0005–0008); all numerical WPs 006–032; WP-037 Parity draft | EXP-001 (0154–0158), EXP-002 (0159–0163), EXP-005–007 (0174–0188); synthesis 0194 |
 | **F3 — differentiability/PyTorch interop** | WP-003 spike (0009–0012); WP-022–027 (0085–0108) | EXP-004 (0169–0173), EXP-006 (0179–0183); WP-039 audit |
 | **F4 — byte-comparable reproduction** | WP-034–035 (0133–0140), WP-037 (0145–0148) | EXP-002 (0159–0163); synthesis 0194 |
@@ -77,7 +77,7 @@ completion; completion evidence is cited by Audit and Project State Reports.
 | DoD item | Final evidence session(s) |
 |---:|---|
 | 1. Public API complete | WP-036 (compatibility surface + freeze machinery); EXP-002; 0196 |
-| 2. Acceptance suite cross-platform | WP-036B (`0144E` + `0144E1`–`0144E6` strict port, then `0144F`–`0144H`) and WP-036C (`0144I`–`0144L`); WP-038; 0196 |
+| 2. Acceptance suite cross-platform | WP-036B (`0144E` + `0144E1`–`0144E6` strict port, then `0144F`–`0144H`), WP-036D (GPU execution path, `0144I`–`0144L`), and WP-036C (`0144M`–`0144P`); WP-038; 0196 |
 | 3. Parity suite + Report | EXP-001/002; 0194; 0196 |
 | 4. Performance targets/regression gates | EXP-003/004/007; 0194; 0196 |
 | 5. Reproduction manifest | WP-035; EXP-002; 0196 |
@@ -100,14 +100,18 @@ The Session Plan is structurally complete only if all remain true:
    #31 (`0144A`–`0144H`), amendment #32 (`0141A`–`0141E`), amendment #33
    (`0144A`–`0144D` for WP-036A, shifting the amendment-#31 block to
    `0144E`–`0144L`), amendment #34 (`0144A1`–`0144A4`, WP-036A S1
-   decomposition), and amendment #35 (`0144E1`–`0144E6`, WP-036B strict-port
-   S1 decomposition) add planned sub-sessions between existing integers; the
-   integer sequence 0001–0198 remains unique and gap-free.
+   decomposition), amendment #35 (`0144E1`–`0144E6`, WP-036B strict-port
+   S1 decomposition), and amendment #36 (WP-036D at `0144I`–`0144L` incl.
+   `0144I1`–`0144I3`, shifting the WP-036C block to `0144M`–`0144P`) add
+   planned sub-sessions between existing integers; the integer sequence
+   0001–0198 remains unique and gap-free.
 5. Every predecessor/successor link resolves; only 0001 lacks a file
    predecessor and only 0198 lacks a file successor. Sub-session chains link
    internally: `0141` → `0141A` → … → `0141E` → `0142`, and
    `0144A` → `0144A1` → … → `0144A4` → `0144B` → … → `0144E` →
-   `0144E1` → … → `0144E6` → `0144F` → … → `0144L` → `0145`.
+   `0144E1` → … → `0144E6` → `0144F` → `0144G` → `0144H` → `0144I` →
+   `0144I1` → `0144I2` → `0144I3` → `0144J` → `0144K` → `0144L` →
+   `0144M` → … → `0144P` → `0145`.
 6. Every Project Plan F/N requirement, roadmap phase, risk, parity hazard, and
    Definition-of-Done item has at least one implementation owner and one
    independent confirmation point.

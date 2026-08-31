@@ -72,8 +72,10 @@ _TEXT_SUFFIXES = frozenset(
 # (`0141D1`/`0141D2`), so the optional letter may be followed by one digit.
 # Amendment #33 extended the `0144` block to `0144L` (WP-036A/B/C); amendments
 # #34/#35 use the same letter-plus-digit shape for `0144A1`-`0144A4` and
-# `0144E1`-`0144E6`.
-_SEQUENCE_RE = r"\d{4}(?:[A-L]\d?)?"
+# `0144E1`-`0144E6`. Amendment #36 inserts WP-036D at `0144I`-`0144L`
+# (S1 decomposed `0144I1`-`0144I3`) and shifts the WP-036C block to
+# `0144M`-`0144P`, so the suffix letter now ranges `[A-P]`.
+_SEQUENCE_RE = r"\d{4}(?:[A-P]\d?)?"
 _SESSION_ROW = re.compile(
     r"^\|\s*(?P<sequence>" + _SEQUENCE_RE + r")\s*\|\s*(?P<phase>\d+)\s*\|"
     r"\s*(?P<unit>[^|]+?)\s*\|\s*(?P<type>[^|]+?)\s*\|"
@@ -96,6 +98,9 @@ _WP_ID = re.compile(r"^WP-(\d{3})$")
 #   #34: WP-036A S1 decomposed into four coding sub-passes 0144A1..0144A4.
 #   #35: WP-036B S1 decomposed into six strict-port coding sub-passes
 #        0144E1..0144E6, preserving import-only/assertions-unchanged.
+#   #36: new WP-036D ("GPU execution path for the ported acceptance suite")
+#        took 0144I..0144L (S1 decomposed into 0144I1..0144I3); the WP-036C
+#        block shifted 0144I..0144L -> 0144M..0144P.
 _PLANNED_INTEGER_COUNT = 198
 # Each block is (anchor_integer_session, ordered_sub_session_ids). The block's
 # rows appear in the register contiguously immediately after the anchor row.
@@ -124,9 +129,16 @@ _SUBSESSION_BLOCKS = (
             "0144G",
             "0144H",
             "0144I",
+            "0144I1",
+            "0144I2",
+            "0144I3",
             "0144J",
             "0144K",
             "0144L",
+            "0144M",
+            "0144N",
+            "0144O",
+            "0144P",
         ),
     ),
 )

@@ -43,6 +43,19 @@ literal: adapt imports only, assertions unchanged; compatibility gaps are
 rebuilt through Rust-backed layers, never semantic-test rewrites. See
 [`WP-036B-S1-execution-plan-and-decomposition.md`](WP-036B-S1-execution-plan-and-decomposition.md).
 
+Plan amendment #36 inserts a new work package **WP-036D** ("GPU execution
+path for the ported acceptance suite") at `0144I`–`0144L`, between WP-036B
+and WP-036C; the existing WP-036C sessions shift `0144I`–`0144L` →
+`0144M`–`0144P`. WP-036D closes the WP-036B S2 audit's §8-addendum gap: 8 of
+the 9 acceptance-suite skips are CUDA guards on tests with a real reference
+GPU path, red on every CPU host because `python/prin/_torch_compat.py` has no
+GPU execution path — while the Rust CubeCL kernels, the `prin-sim` GPU
+engines, and the self-hosted `PRIN-GPU-Runner` all already exist. WP-036D S1
+(session `0144I`) is executed as three sequential coding sub-passes
+`0144I1`–`0144I3` feeding the single S2 audit `0144J`. No new `prin` public
+symbol; the CPU path is untouched; DV-005 / DV-001 are not closed by it. See
+[`WP-036D-S1-execution-plan-and-decomposition.md`](WP-036D-S1-execution-plan-and-decomposition.md).
+
 | Seq | Unit | Type | Session brief | Current status |
 |---:|---|---|---|---|
 | 0129 | WP-033 | S1 — Coding | [Unified benchmark runner and category migration](0129-wp033-s1-unified-benchmark-runner-and-category-migration.md) | COMPLETE |
@@ -86,10 +99,17 @@ rebuilt through Rust-backed layers, never semantic-test rewrites. See
 | 0144F | WP-036B | S2 — Audit | [Acceptance suite port — core, dynamics, model stack, subconscious](0144F-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md) | COMPLETE |
 | 0144G | WP-036B | S3 — Remediation | [Acceptance suite port — core, dynamics, model stack, subconscious](0144G-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md) | COMPLETE |
 | 0144H | WP-036B | S4 — Documentation | [Acceptance suite port — core, dynamics, model stack, subconscious](0144H-wp036b-s4-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
-| 0144I | WP-036C | S1 — Coding | [Acceptance suite port — integration, y-series, kernels; DV-025](0144I-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
-| 0144J | WP-036C | S2 — Audit | [Acceptance suite port — integration, y-series, kernels; DV-025](0144J-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
-| 0144K | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144K-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
-| 0144L | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144L-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
+| 0144I | WP-036D | S1 — Coding | [GPU execution path for the ported acceptance suite](0144I-wp036d-s1-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
+| 0144I1 | WP-036D | S1 — Coding | [PyO3 GPU binding layer](0144I1-wp036d-s1-pyo3-gpu-binding-layer.md) | PLANNED |
+| 0144I2 | WP-036D | S1 — Coding | [Python device dispatch and DLPack marshalling](0144I2-wp036d-s1-device-dispatch-and-dlpack-marshalling.md) | PLANNED |
+| 0144I3 | WP-036D | S1 — Coding | [GPU test activation, CI, and consolidation](0144I3-wp036d-s1-gpu-test-activation-and-ci.md) | PLANNED |
+| 0144J | WP-036D | S2 — Audit | [GPU execution path for the ported acceptance suite](0144J-wp036d-s2-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
+| 0144K | WP-036D | S3 — Remediation | [GPU execution path for the ported acceptance suite](0144K-wp036d-s3-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
+| 0144L | WP-036D | S4 — Documentation | [GPU execution path for the ported acceptance suite](0144L-wp036d-s4-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
+| 0144M | WP-036C | S1 — Coding | [Acceptance suite port — integration, y-series, kernels; DV-025](0144M-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
+| 0144N | WP-036C | S2 — Audit | [Acceptance suite port — integration, y-series, kernels; DV-025](0144N-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
+| 0144O | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
+| 0144P | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0145 | WP-037 | S1 — Coding | [Documentation, notebooks, paper, and Parity Report draft](0145-wp037-s1-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
 | 0146 | WP-037 | S2 — Audit | [Documentation, notebooks, paper, and Parity Report draft](0146-wp037-s2-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
 | 0147 | WP-037 | S3 — Remediation | [Documentation, notebooks, paper, and Parity Report draft](0147-wp037-s3-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |

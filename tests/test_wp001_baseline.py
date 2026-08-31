@@ -130,7 +130,7 @@ def test_session_plan_validator_detects_missing_brief(tmp_path: Path) -> None:
     errors = validate_session_plan(tmp_path)
 
     assert any(
-        "found 225 physical numbered session briefs" in error for error in errors
+        "found 232 physical numbered session briefs" in error for error in errors
     )
     assert any("register target does not exist" in error for error in errors)
 
@@ -150,14 +150,15 @@ def test_session_plan_validator_detects_duplicate_sequence_ids(
     assert any(
         "duplicate session brief sequence IDs: 0002" in error for error in errors
     )
-    assert any("227 physical numbered session briefs" in error for error in errors)
+    assert any("234 physical numbered session briefs" in error for error in errors)
 
 
 def test_session_plan_validator_accepts_additive_subsessions() -> None:
     """The register accepts all amendment #31-#35 additive sub-sessions.
 
-    This includes the 0141A-0141E block, the shifted 0144A-0144L block,
-    0144A1-0144A4, and the WP-036B strict-port passes 0144E1-0144E6.
+    This includes the 0141A-0141E block, the 0144A-0144P block (WP-036A/B/D/C,
+    amendments #33/#36), 0144A1-0144A4, the WP-036B strict-port passes
+    0144E1-0144E6, and the WP-036D GPU sub-passes 0144I1-0144I3.
     """
     assert validate_session_plan(ROOT) == []
 
@@ -275,7 +276,7 @@ def test_repository_inventory_is_deterministic_and_separates_archive() -> None:
     assert len(first["workspace"]["members"]) == 8
     assert len(first["ci"]["workflows"]) == 7
     assert "snyk.yml" in first["ci"]["workflows"]
-    assert first["session_plan"]["numbered_briefs"] == 226
+    assert first["session_plan"]["numbered_briefs"] == 233
     assert first["archive"]["python_modules"] == 43
     assert "target" in first["excluded_directories"]
     assert ".git" in first["excluded_directories"]

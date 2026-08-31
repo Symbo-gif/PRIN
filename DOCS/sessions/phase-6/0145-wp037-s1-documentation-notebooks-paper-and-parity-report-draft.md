@@ -4,7 +4,7 @@
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-037  
 **Session type:** S1 — Coding  
-**Predecessor:** [0144L — Documentation](0144L-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md)  
+**Predecessor:** [0144P — Documentation](0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md)  
 **Successor:** [0146 — Audit](0146-wp037-s2-documentation-notebooks-paper-and-parity-report-draft.md)  
 **Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 

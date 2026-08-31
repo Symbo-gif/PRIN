@@ -5,8 +5,8 @@
 **Execution unit:** WP-036B
 **Session type:** S4 — Documentation
 **Predecessor:** [0144G — Remediation](0144G-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md)
-**Successor:** [0144I — Coding](0144I-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md)
-**Authority:** Project Plan §6/§8 and amendment #31; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Successor:** [0144I — Coding (WP-036D S1)](0144I-wp036d-s1-gpu-execution-path-ported-acceptance-suite.md)
+**Authority:** Project Plan §6/§8 and amendments #31/#36; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence.
 
@@ -43,8 +43,10 @@ Report.
 4. Write `DOCS/reports/036b-project-state.md` with measured metric trends
    (ported test count, coverage, tolerance annotations, discoveries),
    cumulative deviation ledger, amendments, risks, and trajectory verdict.
-5. Confirm WP-036C (session 0144I) entry conditions and record maintainer
-   approval before its S1 begins.
+5. Confirm WP-036D (session 0144I) entry conditions and record maintainer
+   approval before its S1 begins. (Plan amendment #36 inserts WP-036D — "GPU
+   execution path for the ported acceptance suite" — at `0144I`–`0144L`,
+   between WP-036B and the renumbered WP-036C at `0144M`–`0144P`.)
 6. Update this session's status and the master register from verified evidence.
 
 ## Required outputs
@@ -61,4 +63,4 @@ correction cycle.
 ## Exit gate
 
 All S4 artefacts committed and local gates green. WP-036B is closed; only then
-may WP-036C (0144I) begin.
+may WP-036D (0144I) begin.

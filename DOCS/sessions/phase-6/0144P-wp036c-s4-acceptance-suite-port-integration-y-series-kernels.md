@@ -1,12 +1,14 @@
-# Session 0144L — WP-036C S4: Documentation — Acceptance suite port (integration, y-series, kernels; DV-025)
+# Session 0144P — WP-036C S4: Documentation — Acceptance suite port (integration, y-series, kernels; DV-025)
 
 **Status:** PLANNED
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S4 — Documentation
-**Predecessor:** [0144K — Remediation](0144K-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md)
+**Predecessor:** [0144O — Remediation](0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md)
 **Successor:** [0145 — Coding](0145-wp037-s1-documentation-notebooks-paper-and-parity-report-draft.md)
-**Authority:** Project Plan §6/§8 and amendment #31; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Authority:** Project Plan §6/§8 and amendments #31/#36; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+
+> Renumbered `0144L` → `0144P` by plan amendment #36.
 
 > This is a prospective execution contract, not completion evidence.
 
@@ -47,7 +49,7 @@ Project State Report, and hand Phase 6 to WP-037.
    cumulative deviation ledger, amendments, risks, DoD item 1–2 status, and
    trajectory verdict. Re-confirm WP-037 scope/approval.
 6. Update this session's status and the master register from verified evidence.
-   This closes the WP-036 / WP-036B / WP-036C group.
+   This closes the WP-036 / WP-036A / WP-036B / WP-036D / WP-036C group.
 
 ## Required outputs
 

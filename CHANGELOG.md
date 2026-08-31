@@ -66,6 +66,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **New work package WP-036D ("GPU execution path for the ported acceptance
+  suite") + WP-036C renumber** (2026-08-31, plan amendment #36, after WP-036B
+  S3 / before WP-036D S1). The WP-036B S2 audit (`036b`, PASS/0 findings) §8
+  addendum established that 8 of the 9 acceptance-suite skips are CUDA guards
+  on tests with a real reference GPU path, permanently red because
+  `python/prin/_torch_compat.py` has no GPU execution path — while the Rust
+  CubeCL kernels (`prin-kernels`), the `prin-sim` GPU engines, and the
+  self-hosted `PRIN-GPU-Runner` (DV-002 CLOSED) all already exist. WP-036D is
+  declared as WP-036's sibling and takes sessions `0144I`–`0144L`; the
+  existing WP-036C sessions shift `0144I`–`0144L` → `0144M`–`0144P` (four
+  PLANNED briefs renamed with cross-links, `SESSION_REGISTER.md` /
+  `TRACEABILITY.md` / `sessions/README.md` / phase-6 README /
+  `tools/wp001_baseline.py` / `tests/test_wp001_baseline.py` updated). WP-036D
+  runs a full S1–S4 cycle (`036d-*` audit/PSR) and closes before WP-036C S1.
+  WP-036D S1 (`0144I`) decomposes into three coding sub-passes: `0144I1`
+  (PyO3 GPU binding layer over `prin-sim`'s GPU engines, zero-copy DLPack),
+  `0144I2` (`_torch_compat.py` device dispatch, CPU path unchanged), `0144I3`
+  (`@pytest.mark.gpu` on the 8 tests + `skipif` guard, `gpu.yml` runs
+  `-m gpu`, kernel-equivalence evidence). No new `prin` public symbol; no
+  Python numerics; the 489 CPU acceptance tests are byte-for-byte unaffected.
+  Does **not** close DV-005 (CUDA Burn training backend) or DV-001 (Linux
+  Triton runner). Planned session count 226 → 233. See
+  `DOCS/sessions/phase-6/WP-036D-S1-execution-plan-and-decomposition.md`.
+- **WP-036B S3 (session 0144G) closed with a no-change delta re-audit**
+  (2026-08-31). The `036b` S2 audit returned PASS with zero findings;
+  mandatory S3 executed per Development Workflow §3 and recorded the CLEAN
+  no-change delta verification in the audit report §7 closure table
+  (`git diff 47390d4..HEAD -- crates/ python/ tests/` empty; ported 13-file
+  subset re-run 489 pass / 9 skip; `ruff` + `mypy --strict` clean). No
+  source change, no plan amendment, no deviation-ledger delta.
 - **WP-036A S1 (session 0144A) decomposed into four coding sub-passes
   `0144A1`–`0144A4`** (2026-08-30, plan amendment #34, at WP-036A S1 start).
   Repository verification at S1 start found the 13 trainable-layer symbols

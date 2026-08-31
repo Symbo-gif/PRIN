@@ -1,12 +1,14 @@
-# Session 0144J — WP-036C S2: Audit — Acceptance suite port (integration, y-series, kernels; DV-025)
+# Session 0144N — WP-036C S2: Audit — Acceptance suite port (integration, y-series, kernels; DV-025)
 
 **Status:** PLANNED
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S2 — Audit
-**Predecessor:** [0144I — Coding](0144I-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md)
-**Successor:** [0144K — Remediation](0144K-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md)
-**Authority:** Project Plan §6/§8 and amendment #31; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Predecessor:** [0144M — Coding](0144M-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md)
+**Successor:** [0144O — Remediation](0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md)
+**Authority:** Project Plan §6/§8 and amendments #31/#36; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+
+> Renumbered `0144J` → `0144N` by plan amendment #36.
 
 > This is a prospective execution contract, not completion evidence.
 
@@ -16,7 +18,7 @@ Read-only audit of WP-036C S1: the remaining acceptance-suite port and DV-025.
 
 ## Contract
 
-- **Acceptance:** as 0144I — full ported ~1,670-test suite green on CPU; no
+- **Acceptance:** as 0144M — full ported ~1,670-test suite green on CPU; no
   weakened assertion; tolerance annotations hazard-attributed and in the Parity
   Report; GPU skips justified; DV-025 resolved with parity evidence; DoD 1–2
   demonstrably met.
