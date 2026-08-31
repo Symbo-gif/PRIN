@@ -29,7 +29,8 @@ def test_beta_gamma_identity() -> None:
     lhs = safe_sympify("beta(a,b)", variables=["a", "b"])
     rhs = safe_sympify("gamma(a)*gamma(b)/gamma(a+b)", variables=["a", "b"])
     diff = simplify(lhs - rhs)
-    assert diff == 0, f"Expected 0, got {diff}"
+    if diff != 0:
+        raise AssertionError(f"Expected 0, got {diff}")
     print(f"PASS  beta(a,b) == gamma(a)*gamma(b)/gamma(a+b)  [diff={diff}]")
 
 
@@ -41,7 +42,8 @@ def test_betainc_regularized_symmetry() -> None:
     rhs = safe_sympify("1", variables=["a", "b", "x"])
     subs = {S("a"): 5, S("b"): S("0.5"), S("x"): S("0.3")}
     val = N(lhs.subs(subs) - rhs.subs(subs), 15)
-    assert abs(complex(val)) < 1e-10, f"Expected ~0, got {val}"
+    if abs(complex(val)) >= 1e-10:
+        raise AssertionError(f"Expected ~0, got {val}")
     print(f"PASS  betainc_regularized symmetry  [numeric residual={val}]")
 
 

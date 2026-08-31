@@ -140,6 +140,7 @@ pub mod error;
 pub mod feedback;
 pub mod flops;
 pub mod hep;
+pub mod hierarchical_layers;
 pub mod hybrid;
 pub mod inhibition;
 pub mod inhibition_layers;
@@ -163,6 +164,9 @@ pub use autoencoders::{DenseAutoencoderParams, LinearWeights, PhaseToRateAutoenc
 pub use bands::DiscreteDeltaThetaGammaParams;
 pub use error::TrainError;
 pub use feedback::{OrderParameter, OscillatorOptimizer, StepFeedback};
+pub use hierarchical_layers::{
+    DiscreteDeltaThetaGammaLayerParams, HierarchicalResonanceLayerParams,
+};
 pub use inhibition_layers::DgLayerParams;
 pub use layers::ResonanceLayerParams;
 pub use rip::{Rip, RipConfig};

@@ -297,3 +297,75 @@ self-certify WP-036A. Proceed to 0144A3 (hierarchical / PAC / discrete-layer
 family, rows 39/40/44 — pre-authorised to split `0144A3a`/`0144A3b`). The
 complete `0144A` + `0144A1`–`0144A4` range remains subject to the single
 mandatory S2 audit at 0144B.
+
+## 0144A3 — Hierarchical, PAC, and discrete-layer family (COMPLETE 2026-08-31)
+
+### Delivered symbol map
+
+| Row | Symbol | Rust owner | Bridge / Python owner | Acceptance evidence |
+|---:|---|---|---|---|
+| 39 | `HierarchicalResonanceLayer` | `prin_train::hierarchical_layers::HierarchicalResonanceLayer` plus fully batched continuous three-band RK4/PAC dynamics | `HierarchicalResonanceLayerBridge` → `prin.nn.hierarchical_layers` | weight-injected PRINet amplitude/phase parity; float64 dual-output gradcheck; D-5 batch/vector equivalence; checkpoint/error tests |
+| 40 | `PhaseAmplitudeCouplingLayer` | `prin_train::hierarchical_layers::PhaseAmplitudeCouplingLayer` | `PhaseAmplitudeCouplingLayerBridge` → `prin.nn.hierarchical_layers` | installed-PRINet parity; float64 two-input gradcheck; checkpoint/error tests |
+| 44 | `DiscreteDeltaThetaGammaLayer` | `prin_train::hierarchical_layers::DiscreteDeltaThetaGammaLayer` over `prin_train::bands::DiscreteDeltaThetaGamma` | `DiscreteDeltaThetaGammaLayerBridge` → `prin.nn.hierarchical_layers` | all-weight-injected PRINet parity; float64 gradcheck; checkpoint/error tests |
+
+`python/prin/nn/deferred_layers.py` compatibility-re-exports all three real
+symbols; `prin.nn.__init__` imports them from the implementation module. No
+public symbol was added: `verify_api_surface(prin.__all__) == (set(), set())`.
+
+### Numerical, gradient, and design evidence
+
+- Continuous hierarchical amplitude and wrapped phase match the installed
+  float64 reference at `rtol=1e-9, atol=1e-11` after exact projection/PAC
+  parameter injection.
+- PAC matches at `rtol=1e-8, atol=1e-9`; PRINet stores `initial_depth` as
+  float32 before `.double()`, producing the documented approximately `6e-9`
+  scalar discrepancy.
+- Discrete-layer parity uses DV-018 `rtol=2e-7, atol=2e-8`; Burn 0.16.1's
+  f32-internal sigmoid produces a measured three-step maximum relative delta
+  of `1.39e-7`.
+- All three float64 `torch.autograd.gradcheck` calls pass at
+  `rtol=1e-3, atol=1e-3`; row 39 includes amplitude and phase cotangents, and
+  row 44 uses `eps=1e-5` solely to rise above the DV-018 finite-difference
+  floor.
+- D-5: row 39 evaluates `(batch, n_dims)` in one Burn graph with no per-sample
+  loop. It matches stacking independent vector calls at
+  `rtol=1e-12, atol=1e-12`, while preserving vector-in/vector-out behavior.
+
+### Coverage and quality evidence
+
+- Rust: `cargo fmt --all -- --check`, workspace clippy `-D warnings`, workspace
+  tests, and `RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps` are
+  green. `prin-train` has 426 passing lib tests plus integration/doctests;
+  `cargo llvm-cov -p prin-train --lib` reports 99.79% line coverage for
+  `hierarchical_layers.rs`.
+- Python: 12 targeted layer tests pass; the full fast suite reports **1253
+  passed, 9 deselected** and 99% package line coverage. Ruff check/format,
+  `mypy --strict`, interrogate (97.4%), full Bandit, no-Python-numerics (16
+  modules), and the 172-symbol migration-table check are green.
+- `maturin develop -m crates/prin-py/Cargo.toml` succeeded on Windows / Python
+  3.14 / Rust 1.92. A clean-output Sphinx `-W --keep-going` build succeeded.
+- The full Bandit gate initially exposed two pre-existing B101 findings in
+  `EVIDENCE/math-audit/manual/mf9-beta-allowlist-verification.py`; explicit
+  failure branches replaced optimization-sensitive assertions. The script and
+  full Bandit scan then passed without findings.
+
+### Security evidence
+
+- Snyk Code at severity **low** reports zero findings in the changed Rust,
+  Python, test, migration-tool, and M-F9 files. Whole-repository Snyk Code
+  retains the same five pre-existing low path-traversal findings in
+  `tools/wp001_baseline.py`, `tools/wp030_mot_fixture.py`, and
+  `tools/wp031_stats_fixture.py`; none arises from 0144A3.
+- No dependency manifest changed, so Snyk Open Source is not applicable.
+  `cargo audit` exits 0 with the three governed warnings (`bincode`, `paste`,
+  `chacha20`). Both project and Sphinx-requirement `pip-audit` scans report no
+  known vulnerabilities.
+- `prin-py` remains `#![deny(unsafe_code)]`; all DLPack FFI remains in the
+  audited shared module.
+
+### Handoff
+
+Sub-pass 0144A3 is complete to the author's knowledge and does not self-certify
+WP-036A. Proceed to 0144A4 (model container and consolidation). The complete
+`0144A` + `0144A1`–`0144A4` range remains subject to the single mandatory S2
+audit at 0144B.

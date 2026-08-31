@@ -81,15 +81,13 @@ from .autoencoders import (
     PhaseToRateAutoencoder,
     PhaseToRateConverter,
 )
-from .deferred_layers import (
-    DiscreteDeltaThetaGamma,
+from .deferred_layers import DiscreteDeltaThetaGamma, PRINetModel, compile_model
+from .energy import HolomorphicEnergy, HolomorphicEPTrainer
+from .hierarchical_layers import (
     DiscreteDeltaThetaGammaLayer,
     HierarchicalResonanceLayer,
     PhaseAmplitudeCouplingLayer,
-    PRINetModel,
-    compile_model,
 )
-from .energy import HolomorphicEnergy, HolomorphicEPTrainer
 from .hybrid import HybridPRINetV2
 from .hybrid_compat import (
     AlternatingOptimizer,

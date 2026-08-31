@@ -359,3 +359,31 @@ exactly in the forward pass (``rate * top_k_mask``, forward-identical to
 through the discrete selection, so the Python gradcheck runs on ``soft`` only
 and ``hard`` gets a straight-through gradient-shape/finiteness assertion plus
 an independent Rust autodiff test.
+
+WP-036A — Hierarchical, PAC, and discrete-layer parity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sub-pass 0144A3 compares the Rust-backed ``HierarchicalResonanceLayer``,
+``PhaseAmplitudeCouplingLayer``, and ``DiscreteDeltaThetaGammaLayer`` directly
+with installed PRINet 3.0 float64 references in
+``tests/test_hierarchical_layers.py``. The reference models' exact projection
+and dynamics parameters are injected before comparison.
+
+The continuous hierarchical layer's amplitude and wrapped-phase outputs use
+``rtol=1e-9, atol=1e-11``. Its fully batched Burn path also matches a stack of
+independent vector calls at ``rtol=1e-12, atol=1e-12``; replacing PRINet's
+per-sample Python loop is the documented D-5 better-design deviation and does
+not alter the equations or parameter layout.
+
+The standalone PAC layer uses ``rtol=1e-8, atol=1e-9`` because PRINet stores
+``initial_depth`` as float32 before ``.double()``, leaving an approximately
+``6e-9`` scalar discrepancy from PRIN's direct f64 parameter. The discrete
+layer uses the governed DV-018 envelope ``rtol=2e-7, atol=2e-8``: Burn 0.16.1's
+f32-internal sigmoid produces a measured three-step maximum relative delta of
+``1.39e-7`` on the registered case.
+
+All three layers pass float64 ``torch.autograd.gradcheck`` at the required
+``rtol=1e-3, atol=1e-3``. The hierarchical check includes both amplitude and
+phase cotangents. The discrete check uses ``eps=1e-5`` to rise above the
+registered DV-018 finite-difference floor; its required relative and absolute
+tolerances are unchanged.

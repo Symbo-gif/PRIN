@@ -1,6 +1,6 @@
 # Session 0144A3 — WP-036A S1 (sub-pass 3/4): Hierarchical, PAC, and discrete-layer family
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036A
 **Session type:** S1 — Coding
@@ -100,3 +100,43 @@ experimentation.
 
 Local gate green; acceptance items evidence-mapped. Commit locally only.
 Proceed to 0144A4.
+
+## Completion evidence (2026-08-31)
+
+- Rust owner: `crates/prin-train/src/hierarchical_layers.rs` implements the
+  fully batched continuous three-band RK4/PAC network, all three trainable
+  modules, seeded projections, reference-parameter injection, checkpoint
+  records, and autodiff. `crates/prin-train/src/bands.rs` exposes the existing
+  discrete core's validated parameters for composition. No Python numerics.
+- PyO3: `crates/prin-py/src/bindings/train_hierarchical_layers.rs` provides
+  three thin DLPack bridges and recompute-on-backward contexts;
+  `#![deny(unsafe_code)]` remains unchanged.
+- Python: `prin.nn.hierarchical_layers` replaces all three D-2.2 stubs while
+  `prin.nn.deferred_layers` retains compatibility re-exports. The frozen API
+  check remains `verify_api_surface(prin.__all__) == (set(), set())`.
+- Tests: 12 Python parity/gradcheck/API/error/checkpoint tests and 17 Rust unit/
+  autodiff tests. Continuous amplitude/phase parity passes at
+  `rtol=1e-9, atol=1e-11`; PAC at `rtol=1e-8, atol=1e-9`; discrete parity uses
+  the documented DV-018 `rtol=2e-7, atol=2e-8` envelope (measured maximum
+  relative delta `1.39e-7`). All three float64 gradchecks pass at the required
+  `rtol=1e-3, atol=1e-3`. The D-5 batched path equals stacked vector calls at
+  `rtol=1e-12, atol=1e-12`.
+- Gates: Rust formatting, workspace clippy `-D warnings`, workspace tests, and
+  rustdoc are green. `cargo llvm-cov -p prin-train --lib` reports 99.79% line
+  coverage for `hierarchical_layers.rs`. Ruff check/format, `mypy --strict`,
+  interrogate (97.4% package documentation), full Bandit, no-Python-numerics,
+  the migration-table check, a clean Sphinx build, and the full fast Python
+  suite (1253 passed, 9 deselected; 99% package coverage) are green.
+  `maturin develop` succeeded on Windows / Python 3.14 / Rust 1.92.
+- Security: scoped Snyk Code at severity `low` reports zero findings in every
+  changed implementation/test/tool file. The whole-repository scan retains
+  five pre-existing low path-traversal findings in three unrelated tools.
+  No dependency manifest changed, so Snyk Open Source is not applicable.
+  `cargo audit` exits 0 with the three governed warnings (`bincode`, `paste`,
+  `chacha20`); both project and Sphinx-requirement `pip-audit` scans report no
+  known vulnerabilities. Two pre-existing Bandit B101 findings in the manual
+  M-F9 verification script were remediated with explicit failures and the
+  script was rerun successfully.
+- Migration Guide, consolidated 172-symbol table, parity report, session
+  registers, and the 0144A handoff now record the real 0144A3 implementations,
+  tolerances, D-5 batching note, and verification evidence.

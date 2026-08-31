@@ -112,6 +112,9 @@ _WP036A_SUBPASSES = {
     "PhaseToRateConverter": "0144A2",
     "PhaseToRateAutoencoder": "0144A2",
     "DenseAutoencoder": "0144A2",
+    "HierarchicalResonanceLayer": "0144A3",
+    "PhaseAmplitudeCouplingLayer": "0144A3",
+    "DiscreteDeltaThetaGammaLayer": "0144A3",
 }
 _RENAME_ALIASES = frozenset(
     {

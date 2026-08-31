@@ -377,6 +377,29 @@ impl<B: Backend> DiscreteDeltaThetaGamma<B> {
         self.n_delta + self.n_theta + self.n_gamma
     }
 
+    /// Validate every parameter shape after loading a checkpoint record.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] when a parameter is incompatible
+    /// with this module's stored band sizes.
+    pub fn validate_shapes(&self) -> Result<(), TrainError> {
+        let (nd, nt, ng) = (self.n_delta, self.n_theta, self.n_gamma);
+        check_dims("delta_freq", self.delta_freq.val().dims(), [nd])?;
+        check_dims("theta_freq", self.theta_freq.val().dims(), [nt])?;
+        check_dims("gamma_freq", self.gamma_freq.val().dims(), [ng])?;
+        check_dims("w_delta", self.w_delta.val().dims(), [nd, nd])?;
+        check_dims("w_theta", self.w_theta.val().dims(), [nt, nt])?;
+        check_dims("w_gamma", self.w_gamma.val().dims(), [ng, ng])?;
+        check_dims("w_pac_dt", self.w_pac_dt.val().dims(), [2 * nd, nt])?;
+        check_dims("b_pac_dt", self.b_pac_dt.val().dims(), [nt])?;
+        check_dims("w_pac_tg", self.w_pac_tg.val().dims(), [2 * nt, ng])?;
+        check_dims("b_pac_tg", self.b_pac_tg.val().dims(), [ng])?;
+        check_dims("mu_delta", self.mu_delta.val().dims(), [1, 1])?;
+        check_dims("mu_theta", self.mu_theta.val().dims(), [1, 1])?;
+        check_dims("mu_gamma", self.mu_gamma.val().dims(), [1, 1])
+    }
+
     /// Whether `w_delta` currently requires grad — crate-internal
     /// introspection for [`crate::ablation::PhaseTrackerFrozen`]'s
     /// regression test (confirms [`burn::module::Module::no_grad`]

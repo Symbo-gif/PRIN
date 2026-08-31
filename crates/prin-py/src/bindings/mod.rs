@@ -25,6 +25,7 @@ pub(crate) mod temporal;
 pub(crate) mod tensor;
 pub(crate) mod train;
 pub(crate) mod train_autoencoders;
+pub(crate) mod train_hierarchical_layers;
 pub(crate) mod train_inhibition_layers;
 pub(crate) mod train_layers;
 pub(crate) mod train_support;

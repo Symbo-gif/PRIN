@@ -16,7 +16,8 @@
 
 use burn::backend::NdArray;
 use prin_train::{
-    DgLayerParams, DiscreteDeltaThetaGammaParams, GatedPhaseActivationParams, OrderParameter,
+    DgLayerParams, DiscreteDeltaThetaGammaLayerParams, DiscreteDeltaThetaGammaParams,
+    GatedPhaseActivationParams, HierarchicalResonanceLayerParams, OrderParameter,
     OscillatorOptimizer, OscillatoryAttentionParams, ResonanceLayerParams, Rip, RipConfig, Scalr,
     ScalrConfig, StepFeedback, SyncGd, SyncGdConfig,
 };
@@ -30,12 +31,16 @@ fn params_are_nameable_at_crate_root() {
     fn accepts_gated_phase_activation_params(_: GatedPhaseActivationParams<TestBackend>) {}
     fn accepts_attention_params(_: OscillatoryAttentionParams<TestBackend>) {}
     fn accepts_dg_layer_params(_: DgLayerParams<TestBackend>) {}
+    fn accepts_hierarchical_params(_: HierarchicalResonanceLayerParams<TestBackend>) {}
+    fn accepts_discrete_layer_params(_: DiscreteDeltaThetaGammaLayerParams<TestBackend>) {}
 
     let _ = accepts_bands_params;
     let _ = accepts_layers_params;
     let _ = accepts_gated_phase_activation_params;
     let _ = accepts_attention_params;
     let _ = accepts_dg_layer_params;
+    let _ = accepts_hierarchical_params;
+    let _ = accepts_discrete_layer_params;
 }
 
 #[test]
