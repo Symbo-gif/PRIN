@@ -123,6 +123,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     classes' fused-GPU kernels deferred to `0144I3` runner evidence, and
     reconciles the pre-existing `0144E` / `0144I1` brief↔register status
     drift. No new session IDs; count unchanged at 233.
+  - **S1 sub-pass `0144I3` (GPU test activation + CI, 2026-08-31):**
+    `@pytest.mark.gpu` added to the 8 CUDA-guarded acceptance tests
+    (alongside the existing `skipif` guards); `.github/workflows/gpu.yml`
+    switched from the DV-029 exit-5 workaround to `pytest tests/ -m gpu`;
+    `test_sparse_vram_subquadratic` VRAM threshold relaxed `0.10` → `0.60`
+    (flagged at S2 audit, WP036D-F1). All 8 GPU tests pass on
+    `PRIN-GPU-Runner` (RTX 4060, torch `2.11.0+cu128`); CPU acceptance
+    suite unchanged.
+  - **WP-036D S2 audit (session `0144J`, 2026-08-31):**
+    **PASS-WITH-FINDINGS** — `DOCS/audits/036d-wp036d-audit.md`. GPU
+    binding layer is thin marshalling over the audited CubeCL kernels, CPU
+    path byte-for-byte preserved, 8/8 GPU tests independently reproduced on
+    the runner, no new public symbol. Three findings for S3: WP036D-F1 (D2,
+    `test_sparse_vram_subquadratic` assertion weakened outside the governed
+    tolerance mechanism and against amendment #37's "deferred (DV-030)"
+    disposition, no Parity Report entry), WP036D-F2 (D2, `0144I3`
+    brief↔register status mismatch red-fails `test_wp001_baseline.py`),
+    WP036D-F3 (D4, new dispatch-test GPU tolerance lacks a Parity Report
+    line).
 - **WP-036B S3 (session 0144G) closed with a no-change delta re-audit**
   (2026-08-31). The `036b` S2 audit returned PASS with zero findings;
   mandatory S3 executed per Development Workflow §3 and recorded the CLEAN

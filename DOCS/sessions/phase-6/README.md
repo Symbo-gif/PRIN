@@ -103,7 +103,7 @@ symbol; the CPU path is untouched; DV-005 / DV-001 are not closed by it. See
 | 0144I1 | WP-036D | S1 — Coding | [PyO3 GPU binding layer](0144I1-wp036d-s1-pyo3-gpu-binding-layer.md) | PLANNED |
 | 0144I2 | WP-036D | S1 — Coding | [Python device dispatch and DLPack marshalling](0144I2-wp036d-s1-device-dispatch-and-dlpack-marshalling.md) | PLANNED |
 | 0144I3 | WP-036D | S1 — Coding | [GPU test activation, CI, and consolidation](0144I3-wp036d-s1-gpu-test-activation-and-ci.md) | PLANNED |
-| 0144J | WP-036D | S2 — Audit | [GPU execution path for the ported acceptance suite](0144J-wp036d-s2-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
+| 0144J | WP-036D | S2 — Audit | [GPU execution path for the ported acceptance suite](0144J-wp036d-s2-gpu-execution-path-ported-acceptance-suite.md) | COMPLETE |
 | 0144K | WP-036D | S3 — Remediation | [GPU execution path for the ported acceptance suite](0144K-wp036d-s3-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
 | 0144L | WP-036D | S4 — Documentation | [GPU execution path for the ported acceptance suite](0144L-wp036d-s4-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
 | 0144M | WP-036C | S1 — Coding | [Acceptance suite port — integration, y-series, kernels; DV-025](0144M-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |

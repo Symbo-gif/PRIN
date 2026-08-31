@@ -1,6 +1,6 @@
 # Session 0144J — WP-036D S2: Audit — GPU execution path for the ported acceptance suite
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036D
 **Session type:** S2 — Audit
