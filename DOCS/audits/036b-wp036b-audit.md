@@ -286,9 +286,29 @@ No remediation required — S3 closes with no delta.
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(no findings)* | — | — | — |
+| *(no findings)* | Mandatory S3 executed after a zero-finding S2 (Development Workflow and Audit Standards §3; `SESSION_REGISTER.md` "Mandatory S3 executes even after a zero-finding audit"). No source change, no plan amendment, no closure action required. | — | See "Delta re-audit" below |
 
-**Delta re-audit date:** *(S3 to append)* — **Result:** *(S3 to append)*
+**Delta re-audit date:** 2026-08-31 (session 0144G, WP-036B S3) — **Result:
+CLEAN.**
+
+- **Source immutability.** `git diff --stat 47390d4..HEAD -- crates/ python/
+  tests/` is empty. The two intervening commits (`6f254b4` the S2 Audit
+  Report, `aac33ce` the §8 GPU-skip addendum) touch only
+  `DOCS/audits/036b-wp036b-audit.md`, `CHANGELOG.md`, `DOCS/sessions/`. The
+  audited artefact set is byte-for-byte unchanged from the S2 inspection
+  point.
+- **Ported subset re-run (this host, session 0144G).**
+  `.venv\Scripts\python -m pytest` over the same 13 ported files
+  (`--basetemp=.pytest_basetemp`): **489 passed, 9 skipped in 23.02s** —
+  identical to §3.1's per-file table (498 collected, 489 pass, 9 reference
+  guards).
+- **Quality gates re-run.** `ruff check python/prin tests/test_acceptance_*.py`
+  → All checks passed. `mypy python/prin --strict` → Success: no issues found
+  in 55 source files.
+- **Deviation ledger.** No new finding; nothing carried. WP-036B S3 closes
+  with a no-change delta verification.
+
+Hand off to S4 (session 0144H).
 
 ---
 

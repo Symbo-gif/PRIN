@@ -1,6 +1,6 @@
 # Session 0144G — WP-036B S3: Remediation — Acceptance suite port (core, dynamics, model stack, subconscious)
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S3 — Remediation
@@ -57,3 +57,17 @@ any D4.
 ## Exit gate
 
 Every finding closed and delta re-audit CLEAN. Hand off to S4.
+
+---
+
+## Closure (session 0144G, 2026-08-31)
+
+S2 audit `DOCS/audits/036b-wp036b-audit.md` returned **PASS with zero
+findings**. Mandatory S3 executed per Development Workflow and Audit Standards
+§3. No source change, no plan amendment, no finding commit.
+
+- **No-change delta verification recorded** in the audit report §7 closure
+  table: `git diff 47390d4..HEAD -- crates/ python/ tests/` empty; ported
+  subset re-run **489 passed / 9 skipped**; `ruff` and `mypy --strict` clean.
+- **Deviation-ledger delta:** none.
+- **Result:** delta re-audit **CLEAN**. Handed off to S4 (session 0144H).
