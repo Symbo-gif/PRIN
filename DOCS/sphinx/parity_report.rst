@@ -318,3 +318,44 @@ run at the stationary FFI readout point ``phase=pi``, where analytical and
 finite-difference Jacobians legitimately coincide. Independent Rust autodiff
 tests verify nonzero finite gradients to phase, amplitude, ``ffi_scale``, and
 ``fbi_temperature`` away from that stationary point.
+
+WP-036A — Phase-to-rate and autoencoder parity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sub-pass 0144A2 compares the Rust-backed ``PhaseToRateConverter``,
+``PhaseToRateAutoencoder``, and ``DenseAutoencoder`` forwards with installed
+PRINet 3.0 float64 references in ``tests/test_autoencoders.py``. The
+``phase_to_rate`` softmax, ``softplus``/``relu``/``log_softmax``, and the
+``Linear`` stacks use only ``burn-tensor`` elementwise/reduction ops, so none
+inherit the DV-018 ``f32``-internal ``sigmoid`` floor. Measured maximum
+absolute reference deltas on the registered deterministic cases:
+``PhaseToRateConverter`` ``soft`` / ``hard`` / ``annealed``
+``2.8e-17`` / ``0.0`` / ``2.8e-17``; ``PhaseToRateAutoencoder``
+reconstruction / rates / ``classify`` ``1.1e-16`` / ``5.6e-17`` / ``4.4e-16``;
+``DenseAutoencoder`` reconstruction / codes / ``classify``
+``1.1e-16`` / ``1.7e-16`` / ``4.4e-16``. All parity assertions use
+``rtol=1e-9, atol<=1e-11`` (autoencoders) or ``rtol=1e-12`` (``hard``); no
+hazard tolerance is invoked.
+
+Autoencoder forward-parity is measured with the reference model's exact
+parameters injected via ``load_reference_weights`` — PRIN's seeded
+Xavier-uniform ``Linear`` init deliberately differs from PyTorch's default
+Kaiming-uniform ``nn.Linear`` init (only the initial scale is load-bearing;
+the ``ResonanceLayer`` precedent).
+
+``PhaseToRateConverter`` keeps a Rust-owned learnable temperature that receives
+a softmax gradient in the ``soft`` / ``annealed`` regimes; PRINet 3.0 detaches
+it with ``.item()``. This is a forward-identical superset, so it does not
+affect parity. The ``annealed`` blend coefficient
+``sigmoid(1/max(T, 1e-6) - 1)`` is computed by PRINet 3.0 in the default
+float32 dtype (``torch.tensor(...)``) even for a float64 model; at the default
+unit temperature it evaluates to exactly ``0.5`` in both dtypes, so no D-4
+tolerance loosening is required. A non-unit fixed temperature would surface a
+``~1e-7`` float32 artifact governed by the D-4 mechanism.
+
+``hard`` mode reproduces PRINet 3.0's non-differentiable top-``k`` selection
+exactly in the forward pass (``rate * top_k_mask``, forward-identical to
+``zeros.scatter_(topk_idx, topk_vals)``); Burn autodiff never differentiates
+through the discrete selection, so the Python gradcheck runs on ``soft`` only
+and ``hard`` gets a straight-through gradient-shape/finiteness assertion plus
+an independent Rust autodiff test.

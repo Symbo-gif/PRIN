@@ -45,9 +45,12 @@ PRINet-3.0-compatible surface: :mod:`prin.nn.activations` (`dSiLU`,
 WP-036A sub-pass 0144A1 replaces the inhibition and sparsification family
 (`FeedforwardInhibition`, `DentateGyrusConverter`, `DGLayer`,
 `SparsityRegularizationLoss`, and `oscillatory_weight_init`) with real
-Rust-backed implementations in :mod:`prin.nn.inhibition_layers`. The remaining
-WP-036A symbols continue to resolve from :mod:`prin.nn.deferred_layers` until
-their assigned sub-pass.
+Rust-backed implementations in :mod:`prin.nn.inhibition_layers`. Sub-pass
+0144A2 replaces the phase-to-rate / autoencoder family (`PhaseToRateConverter`,
+`PhaseToRateAutoencoder`, `DenseAutoencoder`) with real Rust-backed
+implementations in :mod:`prin.nn.autoencoders`. The remaining WP-036A symbols
+continue to resolve from :mod:`prin.nn.deferred_layers` until their assigned
+sub-pass.
 """
 
 from __future__ import annotations
@@ -73,14 +76,16 @@ from .allocation import (
     estimate_complexity,
 )
 from .attention import OscillatoryAttention
-from .deferred_layers import (
+from .autoencoders import (
     DenseAutoencoder,
+    PhaseToRateAutoencoder,
+    PhaseToRateConverter,
+)
+from .deferred_layers import (
     DiscreteDeltaThetaGamma,
     DiscreteDeltaThetaGammaLayer,
     HierarchicalResonanceLayer,
     PhaseAmplitudeCouplingLayer,
-    PhaseToRateAutoencoder,
-    PhaseToRateConverter,
     PRINetModel,
     compile_model,
 )

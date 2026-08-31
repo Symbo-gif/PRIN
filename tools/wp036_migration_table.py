@@ -109,6 +109,9 @@ _WP036A_SUBPASSES = {
     "FeedforwardInhibition": "0144A1",
     "SparsityRegularizationLoss": "0144A1",
     "oscillatory_weight_init": "0144A1",
+    "PhaseToRateConverter": "0144A2",
+    "PhaseToRateAutoencoder": "0144A2",
+    "DenseAutoencoder": "0144A2",
 }
 _RENAME_ALIASES = frozenset(
     {

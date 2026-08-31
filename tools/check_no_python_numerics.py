@@ -51,8 +51,14 @@ _SCANNED = (
     "nn/hybrid_compat.py",
     "nn/deferred_layers.py",
     "nn/inhibition_layers.py",
+    "nn/autoencoders.py",
 )
-_RUST_BRIDGE_MODULES = frozenset({"python/prin/nn/inhibition_layers.py"})
+_RUST_BRIDGE_MODULES = frozenset(
+    {
+        "python/prin/nn/inhibition_layers.py",
+        "python/prin/nn/autoencoders.py",
+    }
+)
 
 _FORBIDDEN_ATTRS = frozenset(
     {

@@ -21,6 +21,11 @@
 //!   FFI → EMA → FBI sparsification family.
 //! - [`weight_init`] — oscillator-aware coupling, projection, and bias
 //!   initialization (WP-036A).
+//! - [`autoencoders`] — [`autoencoders::phase_to_rate`],
+//!   [`autoencoders::PhaseToRateConverter`] (learnable temperature),
+//!   [`autoencoders::PhaseToRateAutoencoder`], and
+//!   [`autoencoders::DenseAutoencoder`] (WP-036A): phase-to-rate winner-take-all
+//!   conversion and the autoencoder comparison models.
 //! - [`activations`] — [`activations::d_silu`],
 //!   [`activations::HolomorphicActivation`] (split-complex),
 //!   [`activations::GatedPhaseActivation`] (WP-023): oscillator-compatible
@@ -127,6 +132,7 @@ pub mod activations;
 pub mod adversarial;
 pub mod allocation;
 pub mod attention;
+pub mod autoencoders;
 pub mod bands;
 pub mod dataset;
 pub mod energy;
@@ -153,6 +159,7 @@ mod support;
 
 pub use activations::GatedPhaseActivationParams;
 pub use attention::OscillatoryAttentionParams;
+pub use autoencoders::{DenseAutoencoderParams, LinearWeights, PhaseToRateAutoencoderParams};
 pub use bands::DiscreteDeltaThetaGammaParams;
 pub use error::TrainError;
 pub use feedback::{OrderParameter, OscillatorOptimizer, StepFeedback};

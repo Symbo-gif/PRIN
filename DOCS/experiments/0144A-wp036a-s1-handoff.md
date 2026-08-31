@@ -169,3 +169,131 @@ logic changed. This is recorded rather than silently attributed to 0144A1.
 Sub-pass 0144A1 is complete to the author's knowledge and does not self-certify
 WP-036A. Proceed to 0144A2; the complete `0144A` + `0144A1`–`0144A4` range
 remains subject to the single mandatory S2 audit at 0144B.
+
+## 0144A2 — Phase-to-rate and autoencoder family (COMPLETE 2026-08-30)
+
+### Delivered symbol map
+
+| Row | Symbol | Rust owner | PyO3 / Python delegation | Verification |
+|---:|---|---|---|---|
+| 35 | `PhaseToRateConverter` | `prin_train::autoencoders::PhaseToRateConverter` (Rust-owned learnable `temperature`) | `PhaseToRateConverterBridge` → `prin.nn.autoencoders` | direct PRINet parity (soft/hard/annealed); float64 soft gradcheck; hard STE gradient-shape test; vector/error/checkpoint tests |
+| 36 | `PhaseToRateAutoencoder` | `prin_train::autoencoders::PhaseToRateAutoencoder` (Rust-owned `Linear` stacks + `PhaseToRateConverter` bottleneck + classifier head) | `PhaseToRateAutoencoderBridge` (`forward` → `(recon, rates)`, `classify`) → `prin.nn.autoencoders` | weight-injected PRINet parity for `forward` + `classify`; float64 gradcheck of `forward`/`classify` wrt input; construction/error/checkpoint tests |
+| 37 | `DenseAutoencoder` | `prin_train::autoencoders::DenseAutoencoder` (Rust-owned dense-MLP encoder/decoder + classifier head) | `DenseAutoencoderBridge` (`forward` → `(recon, codes)`, `classify`) → `prin.nn.autoencoders` | weight-injected PRINet parity; float64 gradcheck wrt input; construction/error/checkpoint tests |
+
+`python/prin/nn/deferred_layers.py` now compatibility-re-exports these three
+real symbols from `prin.nn.autoencoders`; `prin.nn.__init__` imports them from
+the real module directly. No public symbol was added:
+`verify_api_surface(prin.__all__) == (set(), set())`.
+
+### New Rust: `crates/prin-train/src/autoencoders.rs`
+
+- `phase_to_rate` — Burn autodiff port of PRINet 3.0's
+  `core.propagation.phase_to_rate`. `soft` (softmax) is fully differentiable;
+  `hard` is `rate * top_k_mask` (mask from `topk`'s non-differentiable
+  indices, forward-identical to `zeros.scatter_(topk_idx, topk_vals)`);
+  `annealed` blends with `blend = sigmoid(1/max(T, 1e-6) - 1)` computed from
+  the (detached) temperature value, matching the reference's `.item()`.
+- `PhaseToRateConverter` — `Module` with a Rust-owned `Param<Tensor<B, 1>>`
+  temperature. **Documented deviation (D-3 superset):** the reference detaches
+  the temperature with `.item()`; PRIN keeps it live so the softmax gradient
+  reaches it. Forward-identical.
+- `PhaseToRateAutoencoder` / `DenseAutoencoder` — `Module`s composing
+  `burn::nn::Linear` stacks (`relu` / `softplus` / `log_softmax`), the
+  converter bottleneck (row 36 only), and a classifier head.
+  `*Config::init` draws Xavier-uniform `Linear` weights from the project
+  `Seed` (documented deviation from PyTorch's default Kaiming init — only the
+  scale is load-bearing, the `ResonanceLayer` precedent);
+  `*Config::init_from_params` / `LinearWeights` inject the reference model's
+  exact weights (PyTorch `[out, in]` layout transposed to Burn `[in, out]`)
+  for the forward-parity tests.
+- 20 `#[cfg(test)]` unit + autodiff tests. `prin-train` lib: 389 → 409 passed.
+
+### New PyO3: `crates/prin-py/src/bindings/train_autoencoders.rs`
+
+Three `#[pyclass]` bridges + five `*Ctx` recompute-on-backward contexts, all
+thin DLPack marshalling over `prin-train`. `#![deny(unsafe_code)]` unchanged;
+all DLPack FFI stays in the audited `dlpack` module. `load_torch_weights`
+accepts a flat capsule list for the parity tests; `state_dict` /
+`load_state_dict` delegate to `burn::record`.
+
+### Numerical / parity evidence
+
+Direct installed-PRINet float64 comparisons in `tests/test_autoencoders.py`
+(measured maximum absolute deltas on the registered deterministic cases):
+
+- `PhaseToRateConverter` `soft` / `hard` / `annealed`:
+  `2.8e-17` / `0.0` / `2.8e-17` (`rtol=1e-9`; `hard` `rtol=1e-12`).
+- `PhaseToRateAutoencoder` reconstruction / rates / `classify`:
+  `1.1e-16` / `5.6e-17` / `4.4e-16` (`rtol=1e-9, atol<=1e-11`).
+- `DenseAutoencoder` reconstruction / codes / `classify`:
+  `1.1e-16` / `1.7e-16` / `4.4e-16` (`rtol=1e-9, atol<=1e-11`).
+
+No hazard tolerance is invoked: `phase_to_rate`'s softmax and the
+`softplus`/`relu`/`log_softmax`/`Linear` ops are `burn-tensor` elementwise/
+reduction ops and do not hit the DV-018 `f32`-internal `sigmoid` floor. The
+`annealed` blend at the default unit temperature is exactly `0.5` in both
+float32 and float64; a non-unit fixed temperature would surface a `~1e-7`
+float32 artifact governed by the D-4 mechanism (recorded in
+`DOCS/sphinx/parity_report.rst`, "WP-036A — Phase-to-rate and autoencoder
+parity").
+
+### Gradient evidence
+
+- `soft` mode: `torch.autograd.gradcheck` at `eps=1e-6, rtol=1e-3, atol=1e-3`
+  (float64) passes w.r.t. phase and amplitude.
+- `PhaseToRateAutoencoder` / `DenseAutoencoder`: `gradcheck` of `forward` and
+  `classify` w.r.t. the input at the same tolerance.
+- `hard` mode: a straight-through estimator over a discrete top-`k` selection
+  is not the Jacobian of one smooth function, so it gets a
+  gradient-shape/finiteness assertion (Python) plus an independent Rust
+  autodiff test (`phase_to_rate_hard_ste_gradient_has_input_shape`), never a
+  weakened `gradcheck`.
+
+### Coverage and quality evidence
+
+- Rust: `cargo test -p prin-train -p prin-py` green (409 lib + integration +
+  13 doctests; no failures). `cargo fmt --all --check`, `cargo clippy
+  --workspace --all-targets -D warnings`, `RUSTDOCFLAGS=-D warnings cargo doc`
+  all clean.
+- Python: `tests/test_autoencoders.py` 14 passed; full fast suite **1218
+  passed**, 32 deselected. `ruff check` / `ruff format --check` /
+  `mypy --strict` (autoencoders.py, deferred_layers.py, nn/__init__.py) /
+  `interrogate -f 100` (autoencoders.py 100%) / active-source `bandit` all
+  clean. `tools/check_no_python_numerics.py` green (15 modules;
+  `nn/autoencoders.py` added to `_SCANNED` + `_RUST_BRIDGE_MODULES`).
+  `wp036_migration_table.py check` green (172 symbols consistent);
+  `tests/test_migration_guide_consolidated.py` + `tests/test_wp001_baseline.py`
+  + `tests/test_check_dv_register_gates.py` + `tests/test_api_surface.py` (88
+  passed).
+- `maturin develop -m crates/prin-py/Cargo.toml` succeeded on Windows /
+  Python 3.14 / Rust 1.92; imports and DLPack execution verified.
+- **Line-coverage tooling blocked locally:** `pytest --cov` / `coverage run`
+  segfault on this host (Python 3.14 + `coverage` C/sysmon tracer + torch),
+  reproducibly and identically for the pre-existing `tests/test_inhibition_layers.py`
+  — not a regression from this sub-pass. Per CLAUDE.md this is reported as
+  blocked, not claimed passed; CI is the authoritative coverage gate. Manual
+  review: every public function, property, and error branch of
+  `prin.nn.autoencoders` is exercised by a test.
+
+### Security evidence
+
+- Snyk Code, severity threshold **low**, scoped to `crates/prin-train/src/autoencoders.rs`,
+  `crates/prin-py/src/bindings/train_autoencoders.rs`,
+  `python/prin/nn/autoencoders.py`, `tests/test_autoencoders.py`: **0 issues**.
+  Whole-repository Snyk Code: the same 5 pre-existing low path-traversal
+  findings in `tools/wp001_baseline.py` / `tools/wp030_mot_fixture.py` /
+  `tools/wp031_stats_fixture.py`; none arises from 0144A2. No suppression added.
+- No dependency manifest changed, so Snyk Open Source is not applicable.
+  `cargo audit` exits 0 with the same three governed warnings (`paste`,
+  `bincode`, `chacha20`). `pip-audit` reports only pre-existing `pip`-tool
+  advisories (environment, not a PRIN manifest change).
+- `prin-py` remains `#![deny(unsafe_code)]`; all DLPack FFI stays in the
+  audited module.
+
+### Handoff
+
+Sub-pass 0144A2 is complete to the author's knowledge and does not
+self-certify WP-036A. Proceed to 0144A3 (hierarchical / PAC / discrete-layer
+family, rows 39/40/44 — pre-authorised to split `0144A3a`/`0144A3b`). The
+complete `0144A` + `0144A1`–`0144A4` range remains subject to the single
+mandatory S2 audit at 0144B.

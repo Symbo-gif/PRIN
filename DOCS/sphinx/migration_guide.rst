@@ -462,6 +462,16 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   - *Feedforward inhibition and dentate gyrus ownership:* WP-036A sub-pass 0144A1
     rebuilds ``FeedforwardInhibition`` and ``DentateGyrusConverter`` in
     ``prin-train::inhibition_layers``; Python only supplies DLPack/autograd marshalling.
+  - *Phase-to-rate and autoencoder ownership:* WP-036A sub-pass 0144A2 rebuilds
+    ``PhaseToRateConverter``, ``PhaseToRateAutoencoder``, and ``DenseAutoencoder``
+    in ``prin-train::autoencoders``. ``PhaseToRateConverter`` keeps a Rust-owned
+    learnable temperature that receives a softmax gradient (PRINet 3.0 detaches
+    it with ``.item()``) — a forward-identical superset. ``hard`` mode is a
+    straight-through estimator over the reference top-``k`` selection; ``soft``
+    is fully autodiff and gradchecked (D-3). Autoencoder forward-parity is
+    measured with the reference model's exact weights injected via
+    ``load_reference_weights`` (PRIN's seeded ``Linear`` init differs from
+    PyTorch's default).
 
   **Parity and validation:**
   Golden-value parity tests against PRINet 3.0 (evaluated in ``torch==2.13.0+cpu`` float64):
@@ -1206,9 +1216,9 @@ also resolve from the top-level ``prin`` namespace (the frozen RC1 contract).
    "DentateGyrusConverter", "prin.nn.DentateGyrusConverter", "Real FFI→EMA→FBI bridge over ``prin_train::inhibition_layers::DentateGyrusConverter`` (WP-036A/0144A1)"
    "DGLayer", "prin.nn.DGLayer", "Real ``nn.Module`` over Rust-owned ``prin_train::inhibition_layers::DgLayer`` parameters (WP-036A/0144A1)"
    "oscillatory_weight_init", "prin.nn.oscillatory_weight_init", "Real deterministic Rust initialization over ``prin_train::weight_init`` (WP-036A/0144A1)"
-   "PhaseToRateConverter", "(deferred)", "Trainable ``nn.Module`` (``nn/layers.py``); no Rust owner. Deferred rebuild"
-   "PhaseToRateAutoencoder", "(deferred)", "Trainable ``nn.Module`` (``nn/layers.py``); no Rust owner. Deferred rebuild"
-   "DenseAutoencoder", "(deferred)", "Trainable ``nn.Module`` (``nn/layers.py``); no Rust owner. Deferred rebuild"
+   "PhaseToRateConverter", "prin.nn.PhaseToRateConverter", "Real ``nn.Module`` over Rust-owned ``prin_train::autoencoders::PhaseToRateConverter`` (learnable temperature) (WP-036A/0144A2)"
+   "PhaseToRateAutoencoder", "prin.nn.PhaseToRateAutoencoder", "Real ``nn.Module`` over ``prin_train::autoencoders::PhaseToRateAutoencoder`` (WP-036A/0144A2)"
+   "DenseAutoencoder", "prin.nn.DenseAutoencoder", "Real ``nn.Module`` over ``prin_train::autoencoders::DenseAutoencoder`` (WP-036A/0144A2)"
    "SparsityRegularizationLoss", "prin.nn.SparsityRegularizationLoss", "Real ``nn.Module`` bridge over ``prin_train::losses::SparsityRegularizationLoss`` (WP-036A/0144A1)"
    "HierarchicalResonanceLayer", "(deferred)", "Trainable ``nn.Module`` over ``DeltaThetaGammaNetwork`` with learnable projections/PAC depths; no Rust owner. Deferred rebuild"
    "PhaseAmplitudeCouplingLayer", "(deferred)", "Trainable ``nn.Module`` over ``PhaseAmplitudeCoupling`` with a learnable modulation depth; no Rust owner. Deferred rebuild"
@@ -1441,9 +1451,9 @@ top-level ``prin`` namespace.
    "DentateGyrusConverter", "prin.DentateGyrusConverter / prin.nn.DentateGyrusConverter", "Real WP-036A implementation; FFI->EMA->FBI pipeline in ``prin_train::inhibition_layers``"
    "DGLayer", "prin.DGLayer / prin.nn.DGLayer", "Real WP-036A ``nn.Module``; Rust-owned ``ffi_scale`` / ``fbi_temperature``"
    "oscillatory_weight_init", "prin.oscillatory_weight_init / prin.nn.oscillatory_weight_init", "Real WP-036A deterministic Rust initialization; Python performs orchestration only"
-   "PhaseToRateConverter", "prin.PhaseToRateConverter / prin.nn.PhaseToRateConverter", "D-2.2 stub; trainable phase-to-rate ``nn.Module``, no Rust owner"
-   "PhaseToRateAutoencoder", "prin.PhaseToRateAutoencoder / prin.nn.PhaseToRateAutoencoder", "D-2.2 stub; trainable autoencoder comparison model"
-   "DenseAutoencoder", "prin.DenseAutoencoder / prin.nn.DenseAutoencoder", "D-2.2 stub; trainable dense-MLP baseline"
+   "PhaseToRateConverter", "prin.PhaseToRateConverter / prin.nn.PhaseToRateConverter", "Real WP-036A ``nn.Module`` (sub-pass 0144A2); Rust-owned learnable temperature in ``prin_train::autoencoders``"
+   "PhaseToRateAutoencoder", "prin.PhaseToRateAutoencoder / prin.nn.PhaseToRateAutoencoder", "Real WP-036A ``nn.Module`` (sub-pass 0144A2); Rust-owned encoder/decoder/classifier + phase-to-rate bottleneck"
+   "DenseAutoencoder", "prin.DenseAutoencoder / prin.nn.DenseAutoencoder", "Real WP-036A ``nn.Module`` (sub-pass 0144A2); Rust-owned dense-MLP baseline in ``prin_train::autoencoders``"
    "SparsityRegularizationLoss", "prin.SparsityRegularizationLoss / prin.nn.SparsityRegularizationLoss", "Real WP-036A ``nn.Module`` bridge to ``prin_train::losses``"
    "HierarchicalResonanceLayer", "prin.HierarchicalResonanceLayer / prin.nn.HierarchicalResonanceLayer", "D-2.2 stub; trainable ``nn.Module`` with learnable projections + PAC depths"
    "PhaseAmplitudeCouplingLayer", "prin.PhaseAmplitudeCouplingLayer / prin.nn.PhaseAmplitudeCouplingLayer", "D-2.2 stub; trainable ``nn.Module`` with a learnable modulation depth"
@@ -1501,7 +1511,7 @@ and the ``prinet`` ownership rows in
    "ControlSignals", "prin.ControlSignals", "real - direct re-export", "0141A"
    "DGLayer", "prin.DGLayer", "real - Rust PyO3 binding (WP-036A)", "0144A1"
    "DeltaThetaGammaNetwork", "prin.DeltaThetaGammaNetwork", "real - rename alias", "0141A"
-   "DenseAutoencoder", "prin.DenseAutoencoder", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "DenseAutoencoder", "prin.DenseAutoencoder", "real - Rust PyO3 binding (WP-036A)", "0144A2"
    "DentateGyrusConverter", "prin.DentateGyrusConverter", "real - Rust PyO3 binding (WP-036A)", "0144A1"
    "DiscreteDeltaThetaGamma", "prin.DiscreteDeltaThetaGamma", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
    "DiscreteDeltaThetaGammaLayer", "prin.DiscreteDeltaThetaGammaLayer", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
@@ -1535,8 +1545,8 @@ and the ``prinet`` ownership rows in
    "PhaseActivation", "prin.PhaseActivation", "real - Rust PyO3 binding (0141B)", "0141B"
    "PhaseAmplitudeCoupling", "prin.PhaseAmplitudeCoupling", "real - direct re-export", "0141A"
    "PhaseAmplitudeCouplingLayer", "prin.PhaseAmplitudeCouplingLayer", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
-   "PhaseToRateAutoencoder", "prin.PhaseToRateAutoencoder", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
-   "PhaseToRateConverter", "prin.PhaseToRateConverter", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "PhaseToRateAutoencoder", "prin.PhaseToRateAutoencoder", "real - Rust PyO3 binding (WP-036A)", "0144A2"
+   "PhaseToRateConverter", "prin.PhaseToRateConverter", "real - Rust PyO3 binding (WP-036A)", "0144A2"
    "PhaseTracker", "prin.PhaseTracker", "real - direct re-export", "0141A"
    "PhaseTrackerFrozen", "prin.PhaseTrackerFrozen", "real - direct re-export", "0141A"
    "PhaseTrackerStatic", "prin.PhaseTrackerStatic", "real - direct re-export", "0141A"

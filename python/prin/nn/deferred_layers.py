@@ -3,9 +3,11 @@
 WP-036A sub-pass 0144A1 replaces the inhibition/sparsification-family stubs
 (``FeedforwardInhibition``, ``DentateGyrusConverter``, ``DGLayer``,
 ``oscillatory_weight_init``, and ``SparsityRegularizationLoss``) with real
-Rust-backed exports from :mod:`prin.nn.inhibition_layers`. The remaining
-symbols retain their documented D-2.2 dispositions until their assigned
-WP-036A sub-pass.
+Rust-backed exports from :mod:`prin.nn.inhibition_layers`. Sub-pass 0144A2
+replaces the phase-to-rate / autoencoder family (``PhaseToRateConverter``,
+``PhaseToRateAutoencoder``, ``DenseAutoencoder``) with real Rust-backed
+exports from :mod:`prin.nn.autoencoders`. The remaining symbols retain their
+documented D-2.2 dispositions until their assigned WP-036A sub-pass.
 
 Two symbols are a narrower case: ``DiscreteDeltaThetaGamma`` and
 ``DiscreteDeltaThetaGammaLayer``. The discrete three-band network core has an
@@ -22,6 +24,11 @@ from __future__ import annotations
 
 from typing import Any, NoReturn
 
+from .autoencoders import (
+    DenseAutoencoder,
+    PhaseToRateAutoencoder,
+    PhaseToRateConverter,
+)
 from .inhibition_layers import (
     DentateGyrusConverter,
     DGLayer,
@@ -56,60 +63,6 @@ def _raise_disposition(symbol: str, detail: str) -> NoReturn:
         "implementation in WP-036 S1; the rebuild is owned by a future work "
         "package. See the Migration Guide for the disposition and the owning WP."
     )
-
-
-class PhaseToRateConverter:
-    """Deferred-rebuild stub for the trainable phase-to-rate converter.
-
-    PRINet 3.0 ``nn.layers.PhaseToRateConverter``: a trainable ``nn.Module``
-    mapping oscillator phases to sparse firing rates. No Rust owner.
-
-    Raises:
-        NotImplementedError: Always on construction.
-    """
-
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "PhaseToRateConverter",
-            "Trainable phase-to-rate nn.Module, no Rust owner.",
-        )
-
-
-class PhaseToRateAutoencoder:
-    """Deferred-rebuild stub for the phase-to-rate autoencoder comparison model.
-
-    PRINet 3.0 ``nn.layers.PhaseToRateAutoencoder``: a trainable
-    encoder/decoder ``nn.Module``. No Rust owner.
-
-    Raises:
-        NotImplementedError: Always on construction.
-    """
-
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "PhaseToRateAutoencoder",
-            "Trainable autoencoder comparison model, no Rust owner.",
-        )
-
-
-class DenseAutoencoder:
-    """Deferred-rebuild stub for the dense autoencoder comparison baseline.
-
-    PRINet 3.0 ``nn.layers.DenseAutoencoder``: a plain ``nn.Linear`` MLP
-    autoencoder used as a non-oscillatory baseline. No Rust owner.
-
-    Raises:
-        NotImplementedError: Always on construction.
-    """
-
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "DenseAutoencoder",
-            "Trainable dense-MLP baseline autoencoder, no Rust owner.",
-        )
 
 
 class HierarchicalResonanceLayer:

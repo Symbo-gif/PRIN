@@ -1,6 +1,6 @@
 # Session 0144A2 — WP-036A S1 (sub-pass 2/4): Phase-to-rate and autoencoder family
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-30)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036A
 **Session type:** S1 — Coding
@@ -80,3 +80,38 @@ unregistered experimentation.
 
 Local gate green; acceptance items evidence-mapped. Commit locally only.
 Proceed to 0144A3.
+
+## Completion evidence (2026-08-30)
+
+- Rust owner: `crates/prin-train/src/autoencoders.rs` — Burn-autodiff
+  `phase_to_rate` (`soft` differentiable, `hard` straight-through over the
+  reference top-`k` selection, `annealed` interpolating — D-3),
+  `PhaseToRateConverter` (Rust-owned learnable temperature, a documented
+  forward-identical superset of the reference's detached `.item()` — D-3),
+  `PhaseToRateAutoencoder`, and `DenseAutoencoder` (Rust-owned `burn::nn::Linear`
+  stacks + classifier heads). No Python numerics.
+- PyO3: `crates/prin-py/src/bindings/train_autoencoders.rs` — three DLPack
+  bridges + five recompute-on-backward `*Ctx` classes; `#![deny(unsafe_code)]`
+  unchanged.
+- Python: `prin.nn.autoencoders` replaces the three D-2.2 stubs;
+  `prin.nn.deferred_layers` retains compatibility re-exports.
+  `verify_api_surface(prin.__all__) == (set(), set())`.
+- Tests: 14 Python parity/gradcheck/API/error tests + 20 Rust unit/autodiff
+  tests. Maximum absolute PRINet float64 parity deltas: converter
+  `soft`/`hard`/`annealed` `2.8e-17`/`0.0`/`2.8e-17`;
+  `PhaseToRateAutoencoder` recon/rates/classify `1.1e-16`/`5.6e-17`/`4.4e-16`;
+  `DenseAutoencoder` recon/codes/classify `1.1e-16`/`1.7e-16`/`4.4e-16`. No
+  hazard tolerance invoked. `soft` gradcheck at `rtol=1e-3, atol=1e-3`
+  (float64) passes.
+- Gates: `cargo fmt`/`clippy -D warnings`/tests/rustdoc green; `ruff`,
+  `ruff format`, `mypy --strict`, `interrogate` 100%, `bandit`, full fast
+  `pytest` (1218 passed), `wp036_migration_table check`, and the WP-001/DV
+  regression suites all green. `maturin develop` succeeded (Windows / Python
+  3.14 / Rust 1.92). Snyk Code: 0 issues in the changed scope (5 pre-existing
+  low findings elsewhere, none from this sub-pass). No manifest changed —
+  Snyk Open Source not applicable; `cargo audit` 3 governed warnings only.
+  Line-coverage tooling segfaults on this host (pre-existing, reproduces on
+  `test_inhibition_layers.py`) — reported blocked per CLAUDE.md, CI authoritative.
+- Migration Guide, `DOCS/sphinx/parity_report.rst`, and
+  `DOCS/experiments/0144A-wp036a-s1-handoff.md` updated with the 0144A2
+  disposition, deviations, and evidence.
