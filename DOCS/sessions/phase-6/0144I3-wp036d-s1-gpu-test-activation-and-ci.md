@@ -1,6 +1,6 @@
 # Session 0144I3 — WP-036D S1 (sub-pass 3/3): GPU test activation, CI, and consolidation
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036D
 **Session type:** S1 — Coding

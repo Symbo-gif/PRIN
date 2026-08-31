@@ -190,6 +190,7 @@ class TestExponentialIntegrator:
 
         assert torch.allclose(direct, krylov, atol=1e-4)
 
+    @pytest.mark.gpu
     @pytest.mark.skipif(not HAS_CUDA, reason="CUDA not available")
     def test_gpu_exponential_integrator(self) -> None:
         """ExponentialIntegrator works on CUDA."""
@@ -526,6 +527,7 @@ class TestGradientCheckpointing:
         )
         assert torch.isfinite(final.phase).all()
 
+    @pytest.mark.gpu
     @pytest.mark.skipif(not HAS_CUDA, reason="CUDA not available")
     def test_checkpoint_gpu_memory_budget(self) -> None:
         """GPU memory budget adjusts checkpoint frequency."""
@@ -545,6 +547,7 @@ class TestGradientCheckpointing:
         assert final.phase.device.type == "cuda"
         assert torch.isfinite(final.phase).all()
 
+    @pytest.mark.gpu
     @pytest.mark.skipif(not HAS_CUDA, reason="CUDA not available")
     def test_checkpoint_vram_stays_bounded(self) -> None:
         """VRAM usage with checkpointing stays under budget at N=4K.

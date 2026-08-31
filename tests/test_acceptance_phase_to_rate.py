@@ -93,6 +93,7 @@ class TestPhaseToRateConverter:
         # Higher sparsity → more active units
         assert active_high > active_low
 
+    @pytest.mark.gpu
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
     def test_gpu_parity(self) -> None:
         """CPU and GPU results should be close."""

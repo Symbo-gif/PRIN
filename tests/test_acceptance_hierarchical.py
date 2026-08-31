@@ -87,6 +87,7 @@ class TestMultiRateIntegrator:
         assert state.amplitude.grad is not None
         assert torch.isfinite(state.amplitude.grad).all()
 
+    @pytest.mark.gpu
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
     def test_gpu_parity(self) -> None:
         """CPU and GPU results should match."""
@@ -257,6 +258,7 @@ class TestDeltaThetaGammaNetwork:
         for s in state:
             assert torch.isfinite(s.phase).all()
 
+    @pytest.mark.gpu
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
     def test_gpu_forward(self) -> None:
         """GPU forward pass should work."""
