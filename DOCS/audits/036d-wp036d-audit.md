@@ -377,12 +377,37 @@ approves audit verdicts).
 
 ---
 
-## 7. Closure table (appended by S3 remediation)
+## 7. Closure table (appended by S3 remediation — session `0144K`)
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP036D-F1 | | | |
-| WP036D-F2 | | | |
-| WP036D-F3 | | | |
+| WP036D-F1 | **FIXED** (audit remedy option **(a)**) | `3f47060` | `tests/test_acceptance_q2.py::test_sparse_vram_subquadratic`: assertion reverted `vram_full * 0.60` → `* 0.10` (the test body is now byte-for-byte identical to the `0144E3` strict port — `git diff 658708e -- tests/test_acceptance_q2.py` shows only added decorators); `@pytest.mark.gpu` removed; `@pytest.mark.skip(reason="deferred to DV-030 (plan amendment #37) …")` added so the test is genuinely deferred, not passing under a resource heuristic. `pytest -m gpu` now selects **7** (independently confirmed) and all 7 pass on the RTX 4060 (`2.11.0+cu128`, 117 s); the deferred test skips with its DV-030 reason on both CPU and CUDA hosts (`15 passed, 1 skipped` on the `TestSparseKNNCoupling` subset). DV-030 register `Current status` updated to record the S3 disposition and the 8→7 activated-count change. No Parity Report entry required — the test is deferred, not relaxed. Aligns with amendment #37(c) ("the `test_sparse_vram_subquadratic` assertion … is deferred … DV-030") and the DV-030 register text. |
+| WP036D-F2 | **FIXED** | `d2b965c` | `DOCS/sessions/SESSION_REGISTER.md` row `0144I3` reconciled `PLANNED` → `COMPLETE`, matching the same-commit brief header edit in `d88ca23` and the `0144I1` / `0144I2` rows. `tools/wp001_baseline.py::validate_baseline` / `validate_session_plan` no longer emit `session 0144I3: brief/register status mismatch`; `pytest tests/test_wp001_baseline.py` → **46 passed** (was 3 failed: `test_current_baseline_automation_is_green`, `test_session_plan_validator_accepts_additive_subsessions`, `test_cli_check_reports_success`). `tools/check_dv_register_gates.py` → pass (30 DV rows × 198 session entries). |
+| WP036D-F3 | **FIXED** | `ac3b739` | `DOCS/sphinx/parity_report.rst`: new section "WP-036D — GPU sparse k-NN f32 dispatch parity" — f32-truncation hazard class (amendment #14 pattern, the CubeCL kernel's f32 working precision vs the f64 CPU reference), measured worst case `max\|Δ\| ≈ 9.5e-7` abs / `≈ 5.8e-6` rel across the three registered dispatch-test cases, cross-reference to the Rust `from_knn_phase` `< 1e-4` kernel-equivalence test, DV-030 link. `tests/test_wp036d_gpu_dispatch.py`: agreement assertions tightened `atol=rtol=1e-4` → `rtol=1e-5, atol=1e-5` (`GPU_ATOL` / `GPU_RTOL`, lines 41–42, 166, 178, 221) — matches the Testing Standards §3 default `rtol`; `atol` kept one order above the §3 default because the observed `9.5e-7` absolute delta leaves no working margin at `1e-6` for GPU-kernel run-to-run / driver variation. `15/15` pass, stable over 6 consecutive runs. `sphinx-build -W` clean. |
 
-**Delta re-audit date:** YYYY-MM-DD — **Result:** CLEAN / findings remain
+### Delta re-audit (touched-area re-inspection)
+
+Scope re-inspected: `tests/test_acceptance_q2.py` (one test's decorators + assertion), `tests/test_wp036d_gpu_dispatch.py` (tolerance constants), `DOCS/sphinx/parity_report.rst`, `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` (DV-030 row), `DOCS/sessions/SESSION_REGISTER.md` (row `0144I3`). No source-code (`.rs` / non-test `.py`) change in the S3 range.
+
+| Check | Result |
+|---|---|
+| `pytest -m gpu` on RTX 4060 | **7 passed**, 1796 deselected, 117 s (was 8; `test_sparse_vram_subquadratic` now deferred) |
+| `pytest tests/test_wp036d_gpu_dispatch.py` | 15 passed (6× consecutive, stable at the tightened tolerance) |
+| `pytest tests/test_wp001_baseline.py` | 46 passed (F2 regression closed) |
+| `pytest tests/ -m "not slow and not gpu"` | 1784 passed, 2 skipped, 16 deselected, **1 failed** — `test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression` only (see note) |
+| `cargo fmt --all -- --check` | exit 0 |
+| `cargo clippy -p prin-py -- -D warnings` | clean |
+| `cargo clippy -p prin-py --features cuda --all-targets -- -D warnings` | clean |
+| `cargo test -p prin-py --features cuda bindings::gpu` | 5 passed |
+| `ruff check python/ tests/` / `ruff format --check` | clean / 2 files already formatted |
+| `mypy python/prin --strict` | no issues in 55 files |
+| `interrogate -c pyproject.toml python/prin` | 97.4% (min 95.0%) |
+| `tools/check_no_python_numerics.py` | clean (19 modules) |
+| `tools/check_dv_register_gates.py` | pass |
+| `sphinx-build -b html -W DOCS/sphinx` | exit 0 |
+
+**Note on the one fast-gate failure —** `test_no_gpu_throughput_regression` is a wall-clock throughput-ratio heuristic (`with_daemon / baseline < 1.30`, measured over a ~10 ms `math.sin` loop). It **passed** at the audit baseline (`66ded92`) in the same command (`§2`: "3 failures ALL `tests/test_wp001_baseline.py`") and is not reachable from any file the S3 range touches (test-decorator / tolerance-constant / `.rst` / register edits only — no path to `prin.daemon` / `_ort` / the subconscious model). During S3 it failed with ratios varying `2.24`–`6.26` run-to-run under measurable concurrent CPU load on the shared maintainer dev host (other agent / `snyk-win` processes). Same disposition class as audit Observation #4 (parallel-execution flake), DV-016, and DV-019: a timing-sensitive test under host contention; CI (`python.yml`) is authoritative at S4. Not a WP-036D S3 regression and not a new finding.
+
+**Delta re-audit date:** 2026-08-31 — **Result:** CLEAN. All three findings (WP036D-F1 D2, WP036D-F2 D2, WP036D-F3 D4) are FIXED; no new deviation introduced; the sole fast-gate red is a pre-existing host-contention timing flake outside the S3 change surface.
+
+**Maintainer acknowledgment of the S2 verdict and this closure:** pending — to be recorded by the maintainer (Development Workflow §6). The S3 remediation work is complete and committed locally (`d2b965c`, `3f47060`, `ac3b739`); push is at S4 per the amendment #28 cadence.
