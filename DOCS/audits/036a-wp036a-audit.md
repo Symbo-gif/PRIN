@@ -309,10 +309,111 @@ documentation).
 
 ---
 
-## 7. Closure table (appended by S3 remediation)
+## 7. Closure table (appended by S3 remediation — session 0144C)
+
+Per Development Workflow and Audit Standards §3 ("S3 remains mandatory when S2
+finds zero deviations: it records a no-change closure and independent delta
+verification"), session 0144C performed the mandatory no-change closure. S2
+recorded no D1–D4 finding, so no source fix was applicable or permitted. The
+S1-audited tree was independently re-verified before this documentation-only
+closure.
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| *(none — S3 no-change closure)* | — | — | — |
+| *(no findings — S2 recorded none)* | NO-CHANGE CLOSURE — no source fix applicable or performed | this session's closure commit (documentation only) | §7 delta re-audit below |
 
-**Delta re-audit date:** *pending S3*
+### Delta re-audit
+
+**Source-tree identity.** The S2 audit was taken at `main` @ `e05e29d` (the
+contiguous `0144A`+`0144A1`–`0144A4` S1 range); the S2 report itself was then
+committed as `d41143c`. At S3:
+
+```
+git diff --stat e05e29d HEAD
+#  → DOCS/audits/036a-wp036a-audit.md | 318 +++++++++++++++++++++++++++++++++++++++
+#    1 file changed, 318 insertions(+)
+git diff --stat e05e29d HEAD -- crates/ python/ tests/ parity/ Cargo.toml \
+    Cargo.lock pyproject.toml tools/ DOCS/sphinx/
+#  → (empty)
+```
+
+The only change since the S2-audited state is the S2 audit report. The source,
+binding, Python-wrapper, test, dependency, configuration, tool, and Sphinx
+trees are byte-for-byte identical to `e05e29d`. No `EVIDENCE/` file changed.
+
+**Independent S3 verification (2026-08-31, Windows 11 / Rust 1.92.0 / Python
+3.14.0 — the S1/S2 host environment):**
+
+```powershell
+git diff --stat e05e29d HEAD -- crates/ python/ tests/ parity/ Cargo.* pyproject.toml tools/ DOCS/sphinx/  # empty
+cargo fmt --all -- --check                                                     # exit 0
+cargo clippy --workspace --all-targets -- -D warnings                          # exit 0, clean
+cargo test --workspace                                                         # 1540 passed, 0 failed, 1 ignored (prin-train lib 440)
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps               # exit 0, 0 warnings
+cargo audit                                                                    # exit 0; 3 allowed governed warnings (paste RUSTSEC-2024-0436 / DV-008, bincode RUSTSEC-2025-0141 / DV-017, chacha20 yanked)
+.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/             # All checks passed!
+.venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/    # 166 files already formatted
+.venv\Scripts\mypy python/prin --strict                                        # Success: 53 source files, 0 issues
+.venv\Scripts\python -m interrogate -c pyproject.toml python/prin              # 97.4%, PASSED (min 95%)
+.venv\Scripts\python -m bandit -r . -c pyproject.toml                          # 0 issues (High/Medium/Low all 0)
+.venv\Scripts\python -m pip_audit .                                            # No known vulnerabilities found
+.venv\Scripts\python -m pip_audit -r DOCS/sphinx/requirements.txt              # No known vulnerabilities found
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -q   # 1266 passed, 9 deselected
+.venv\Scripts\python -m pytest tests/test_api_surface.py tests/test_migration_guide_consolidated.py tests/test_wp001_baseline.py tests/test_check_dv_register_gates.py -q  # 88 passed (14 + 8 + 46 + 20)
+.venv\Scripts\python tools/check_no_python_numerics.py                         # No Python numerics in 17 WP-036 S1 compat modules.
+.venv\Scripts\python tools/wp001_baseline.py check                             # WP-001 baseline validation passed.
+.venv\Scripts\python tools/wp036_migration_table.py check                      # OK (172 symbols)
+.venv\Scripts\python tools/check_dv_register_gates.py                          # passed (29 DV rows / 198 session entries)
+.venv\Scripts\python tools/check_deviation_ledger.py DOCS/reports/035-project-state.md DOCS/reports/036-project-state.md  # passed (118 vs 120 rows)
+python -c "import prin; from prin._deprecation import verify_api_surface; print(verify_api_surface(prin.__all__))"  # (set(), set())
+Remove-Item -Recurse -Force DOCS/sphinx/_build_s3; .venv\Scripts\python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build_s3/html  # build succeeded, 0 warnings
+```
+
+Every gate reproduces the S2 figures on the unchanged tree:
+
+| Checklist row | S2 result | S3 delta re-audit |
+|---|---|---|
+| A1 — scope / `verify_api_surface` | 13 real symbols; `(set(), set())` | Reproduced: `(set(), set())`; four per-sub-pass symbol-resolution tests pass inside the 1266-pass suite |
+| A2 — architecture / no Python numerics | `check_no_python_numerics.py` clean (17) | Reproduced clean (17 modules) |
+| A3 — tests + coverage | 1266 passed, 9 deselected; gradcheck green | 1266 passed, 9 deselected (exact); `cargo test --workspace` 1540 passed / 0 failed / 1 ignored |
+| A4 — numerical parity | forward-parity within documented tolerance; DV-018 / D-4 governed | Unchanged assertions on an unchanged tree; all parity tests pass in the reproduced suites |
+| A5 — quality gates | fmt / clippy / doc / ruff / ruff-format / mypy / interrogate / bandit clean | All reproduced clean |
+| A6 — security | `cargo audit` exit 0 (3 governed); `pip-audit` clean; bandit 0 | Reproduced identically |
+| A7 — docstring / doc | interrogate 97.4%; Sphinx `-W` clean | interrogate 97.4%; fresh-directory Sphinx `-W` build succeeded, 0 warnings |
+| A8 — hygiene | 0 `TODO`/`FIXME`/`HACK`/`XXX` in new source/tests | Re-grepped: 0 matches across the 5 new Rust modules, 4 new binding files, 4 new Python modules |
+| A9 — CI / regressions | local gate reproduction (nothing pushed this cycle) | `test_api_surface` 14, `test_migration_guide_consolidated` 8, `test_wp001_baseline` 46, `test_check_dv_register_gates` 20 — 88 passed, 0 failed; `check_deviation_ledger` / `check_dv_register_gates` / `wp001_baseline` / `wp036_migration_table` all pass |
+| A10 — artefact trail | S1 handoff, Migration Guide, amendment #34, parity report entries present | Unchanged and consistent; `DOCS/experiments/0144A-wp036a-s1-handoff.md` present |
+
+**One prose discrepancy identified (no verdict impact).** §3.9 (A9) of the S2
+report lists `test_wp001_baseline.py` as "43 passed"; on the byte-identical
+tree this file collects and passes **46** tests (last modified at `24bdde6`,
+before the S2-audited `e05e29d`, so this count also held at S2). This is an
+inaccurate figure in the S2 report prose, not source drift — the diff check
+above shows zero change to `tests/` since `e05e29d`. Per the immutability rule
+(Development Workflow §3; cf. the WP-032 S3 closure's handling of an analogous
+S2 arithmetic slip), the S2 finding table is not altered; this closure records
+the accurate re-count for the audit trail. No pass/fail verdict is affected —
+S2 and S3 both show 0 failures.
+
+**Snyk.** No interactive Snyk CLI / MCP session is available in this execution
+environment; per Coding Standards §6.1 item 5 and the standing R23 condition
+(Snyk-CLI-only accepted as permanent; CI is the authoritative gate), this is
+reported as **blocked at S3, not claimed as passed**. The WP-036A source tree
+is byte-for-byte identical to the S2-audited `e05e29d`, so S1's Snyk Code
+disposition (0 new issues across the changed `prin-train` / `prin-py` /
+`python/prin` scopes, recorded in the S1 handoff note) carries unchanged. No
+dependency manifest changed, so no Snyk Open Source scan is
+change-attributable. CI's Snyk job remains the authoritative gate at the S4
+push.
+
+**GitHub secret scanning / push protection.** Unchanged DV-009 condition; the
+approved Gitleaks + branch-protection substitute (amendment #5) remains
+authoritative and was not altered this session.
+
+No source, dependency, configuration, test, evidence-file, or documentation
+drift was found. Every governed gate is green and reproduces the S2 result on
+an unchanged tree.
+
+**Delta re-audit date:** 2026-08-31 — **Result:** CLEAN (mandatory no-change
+closure; zero findings to close; zero source changes; all governed gates
+green). Hand off to `0144D` (S4 documentation).

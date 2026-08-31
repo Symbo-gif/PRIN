@@ -1,6 +1,6 @@
 # Session 0144B — WP-036A S2: Audit — Trainable compatibility layers (`prin-train` extension)
 
-**Status:** PLANNED
+**Status:** COMPLETE — S2 audit committed at `d41143c`; verdict PASS with zero findings, see `DOCS/audits/036a-wp036a-audit.md`.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036A
 **Session type:** S2 — Audit

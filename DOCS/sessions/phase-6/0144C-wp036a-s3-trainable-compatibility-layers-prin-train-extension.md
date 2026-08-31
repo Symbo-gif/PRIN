@@ -1,6 +1,6 @@
 # Session 0144C — WP-036A S3: Remediation — Trainable compatibility layers (`prin-train` extension)
 
-**Status:** PLANNED
+**Status:** COMPLETE — mandatory no-change closure (S2 recorded zero findings); delta re-audit CLEAN, see `DOCS/audits/036a-wp036a-audit.md` §7.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036A
 **Session type:** S3 — Remediation

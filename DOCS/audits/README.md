@@ -180,6 +180,18 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   handoff drafting process deviation, AMENDED in S3). Delta re-audit CLEAN.
   Closure table appended with S3 addendum (amendment #33, owning-WP decision
   for D-D rows 31–44).
+- [`036a-wp036a-audit.md`](036a-wp036a-audit.md) — WP-036A "Trainable
+  compatibility layers (`prin-train` extension)" audit (`PASS`); zero findings;
+  all 13 D-D trainable-layer / discrete-network symbols (rows 31–42, 44)
+  delivered as real `prin-train` Rust implementations + thin PyO3 bindings +
+  Python `nn.Module` wrappers. S3 (session 0144C) no-change closure with CLEAN
+  delta re-audit: the full gate suite re-run against a byte-for-byte unchanged
+  source tree (`cargo test --workspace` 1540 passed / 1 ignored; `pytest`
+  1266 passed / 9 deselected; fmt/clippy/doc/ruff/mypy/interrogate 97.4%/
+  bandit/`cargo audit`/`pip-audit`/Sphinx `-W` all clean;
+  `verify_api_surface` `(set(), set())`). One S2 prose figure corrected in the
+  closure (`test_wp001_baseline.py` collects 46, not 43) with no verdict
+  impact.
 - [`EXECUTIVE_AUDIT_REPORT_001.md`](EXECUTIVE_AUDIT_REPORT_001.md) — First
   project-level executive audit (EA-001, 2026-08-07), `PASS-WITH-REMEDIATION`;
   five findings (E-F1–E-F5) remediated in-session.
