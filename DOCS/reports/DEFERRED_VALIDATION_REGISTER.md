@@ -61,6 +61,53 @@ superseded.
 
 ---
 
+## Plan amendment #38 — Deferred-Validation closure plan before Phase 7 (2026-08-31)
+
+**Status:** planning adopted (maintainer, MichaelMaillet, 2026-08-31, via the
+planning session's `AskUserQuestion` selections). The row-level status updates
+below are executed by each closing WP's own S4 session, from committed
+evidence — this subsection records the assigned owner and disposition class
+for every open item, per the register's update protocol. Governing document:
+`DOCS/sessions/phase-6/WP-036E-036F-036G-execution-plan-and-decomposition.md`.
+
+Three new sibling work packages run between WP-036C (`0144P`) and WP-037
+(`0145`):
+
+| WP | Sessions | Closes / disposes |
+|---|---|---|
+| **WP-036E** — GPU device-resident execution path | `0144Q`–`0144T` | **DV-030** (device-resident buffers + true zero-copy Torch↔CubeCL DLPack; activates `test_sparse_vram_subquadratic` at `* 0.10`) and **DV-003** (on-device `f64` level-2 combine; device-event timing over the fused RK4 sequence) → both **CLOSED** at WP-036E S4 (`0144T`). |
+| **WP-036F** — DirectML controller-graph execution | `0144U`–`0144X` | **DV-006 DirectML half** — re-export the controller ONNX graph with three-input `Gemm` nodes so `DmlExecutionProvider` executes it; discharges plan amendment #13's DirectML deferral → DirectML half **CLOSED** at WP-036F S4 (`0144X`); the VitisAI/Ryzen AI NPU half stays **OPEN**, re-scoped to hardware-gated (same class as DV-001). |
+| **WP-036G** — DV-register consolidation and permanent dispositions | `0144Y`–`0144AB` | Every remaining open item gets a dated disposition (below); the `chacha20` yanked advisory becomes a register row; two pre-existing test-fragility issues are resolved or documented as CI-authoritative; a Phase 7 entry statement is issued. All at WP-036G S4 (`0144AB`). |
+
+**Disposition of every open item:**
+
+| Item | Class | Owner / outcome |
+|---|---|---|
+| DV-001 (Linux Triton runner) | Standing external — not a Phase 7 entry blocker | WP-036G: evidenced re-verification; dormant `.github/workflows/gpu-triton.yml` added; closes only on out-of-band Linux-runner registration. |
+| DV-003 (device-event timing) | Closeable | **WP-036E → CLOSED.** |
+| DV-005 (CUDA Burn training backend) | Scoping decision | **`AMENDED` by amendment #38** — out of scope for 1.0.0; re-gate to a post-1.0 WP (or Phase 7 EXP-004) opened only when a concrete CUDA training workload the CPU `NdArray` backend cannot serve exists. |
+| DV-006 (DirectML + VitisAI) | Split | DirectML half **WP-036F → CLOSED**; VitisAI/NPU half OPEN, hardware-gated. |
+| DV-007 (f64/f32 preserved hazard) | Permanent disposition, no re-audit gate | WP-036G: governed by the `1e-6` derivative tolerance + corpus `rtol=2e-6` + Parity Report (amdts #14/#16/#17/#25); reference-implementation hazard, not expected to close. |
+| DV-008 (`paste` RUSTSEC) | Standing third-party — not a Phase 7 blocker | WP-036G re-confirmation; upgrade when `cubecl` moves. |
+| DV-009 (GitHub secret scanning) | Standing external — not a Phase 7 blocker | WP-036G re-confirmation; gitleaks + branch protection compensating control (amdt #5). |
+| DV-010 (Phase 1/2 pre-release tag) | Reassigned | **WP-038 S1 scope** (amendment #38; `0149` brief updated) — the tag push belongs with RC1 publication. |
+| DV-011 (torch Snyk advisories) | Standing third-party — not a Phase 7 blocker | WP-036G re-confirmation; next scheduled recheck 2026-11-14 unchanged. |
+| DV-013 (`M-F3`/`M-F7` `REQUIRES_HUMAN_REVIEW`) | Permanent disposition, no re-audit gate | WP-036G: sign-off re-granted each EMA when the claim set changes; by-design governance pattern. |
+| DV-017 (`bincode` RUSTSEC) | Standing third-party — not a Phase 7 blocker | WP-036G re-confirmation (amdt #27). |
+| DV-018 (`burn-tensor` f32 `sigmoid`) | Permanent disposition, re-check only on `burn` bump | WP-036G: documented per-call-site with `eps=1e-4`; not a correctness issue at the scale used. |
+| DV-022 (`ubuntu-latest` disk exhaustion) | Standing external — not a Phase 7 blocker | WP-036G re-confirmation; `parity.yml` WSL2 fallback documented. |
+| DV-027 (`math-audit-mcp` stale `dist-info`) | Routed | WP-036G records routing to **EMA-006** (`pip install -e .` refreshes it); cosmetic, zero functional impact. |
+| DV-028 (vendoring `math-audit-mcp`) | Permanent disposition, no re-audit gate | WP-036G: R36 decision final (do not vendor; no CI-reachable remote); re-evaluate only if a publishable remote appears. |
+| DV-030 (device-resident GPU / zero-copy) | Closeable | **WP-036E → CLOSED.** |
+| `chacha20` yanked advisory (new) | Standing third-party — not a Phase 7 blocker | WP-036G adds a register row under the DV-008 governance class. |
+
+After WP-036G S4, no open row remains in an undated "re-audit every cycle"
+state; every item is `CLOSED`, `AMENDED`, permanent-disposition, or
+standing-external-disposition with an explicit "not a Phase 7 entry blocker"
+statement.
+
+---
+
 ## Phase 1 analytics recommendations — deferred items
 
 | Rec ID | Summary | Deferred to | Status |

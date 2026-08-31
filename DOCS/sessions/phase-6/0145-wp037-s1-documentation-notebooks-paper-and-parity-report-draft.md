@@ -4,12 +4,19 @@
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-037  
 **Session type:** S1 — Coding  
-**Predecessor:** [0144P — Documentation](0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md)  
+**Predecessor:** [0144AB — Documentation (WP-036G S4)](0144AB-wp036g-s4-dv-register-consolidation-and-permanent-dispositions.md)  
 **Successor:** [0146 — Audit](0146-wp037-s2-documentation-notebooks-paper-and-parity-report-draft.md)  
 **Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and
 > results belong in Audit Reports, Project State Reports, and experiment artefacts.
+
+> Predecessor changed `0144P` → `0144AB` by plan amendment #38: the
+> WP-036E/F/G Deferred-Validation closure block (GPU device-resident
+> execution, DirectML controller graph, DV-register consolidation) runs
+> between WP-036C and WP-037. The draft Parity Report and docs therefore
+> reflect the post-DV state — `test_sparse_vram_subquadratic` active,
+> DirectML in DoD item 7, the DV register consolidated.
 
 ## Mission
 

@@ -5,24 +5,28 @@
 **Execution unit:** WP-036C
 **Session type:** S4 — Documentation
 **Predecessor:** [0144O — Remediation](0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md)
-**Successor:** [0145 — Coding](0145-wp037-s1-documentation-notebooks-paper-and-parity-report-draft.md)
-**Authority:** Project Plan §6/§8 and amendments #31/#36; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Successor:** [0144Q — Coding (WP-036E S1)](0144Q-wp036e-s1-gpu-device-resident-execution-path.md)
+**Authority:** Project Plan §6/§8 and amendments #31/#36/#38; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
-> Renumbered `0144L` → `0144P` by plan amendment #36.
+> Renumbered `0144L` → `0144P` by plan amendment #36. Successor changed
+> `0145` → `0144Q` by plan amendment #38 (the WP-036E/F/G Deferred-Validation
+> closure block runs before WP-037).
 
 > This is a prospective execution contract, not completion evidence.
 
 ## Mission
 
 Document the completed acceptance-suite port, close DV-025, issue the WP-036C
-Project State Report, and hand Phase 6 to WP-037.
+Project State Report, and hand off to WP-036E (session `0144Q`) — the first
+of the amendment-#38 Deferred-Validation closure block (WP-036E/F/G) that
+runs before WP-037.
 
 ## Contract
 
 - **Acceptance:** all touched READMEs updated; CHANGELOG entry; Parity Report
   tolerance table complete for the whole ported suite; docs gates green; DV-025
-  closed in the register; PSR issued; WP-037 (0145) re-confirmed as the
-  successor with its entry conditions checked.
+  closed in the register; PSR issued; WP-036E (`0144Q`) declared as the
+  successor with its entry conditions checked (plan amendment #38).
 - **Non-goals:** functional feature work; RC1 publishing.
 
 ## Required reading
@@ -47,9 +51,11 @@ Project State Report, and hand Phase 6 to WP-037.
 4. Run documentation, link, quality, security, and full-suite gates.
 5. Write `DOCS/reports/036c-project-state.md` with measured metric trends,
    cumulative deviation ledger, amendments, risks, DoD item 1–2 status, and
-   trajectory verdict. Re-confirm WP-037 scope/approval.
+   trajectory verdict. Declare WP-036E (`0144Q`) as the next WP, quoting its
+   brief (plan amendment #38).
 6. Update this session's status and the master register from verified evidence.
-   This closes the WP-036 / WP-036A / WP-036B / WP-036D / WP-036C group.
+   This closes the WP-036 / WP-036A / WP-036B / WP-036D / WP-036C acceptance
+   group; the WP-036E/F/G Deferred-Validation closure block follows.
 
 ## Required outputs
 
@@ -65,5 +71,5 @@ correction cycle.
 
 ## Exit gate
 
-All S4 artefacts committed and local gates green. The WP-036 group is closed;
-only then may session 0145 (WP-037 S1) begin.
+All S4 artefacts committed and local gates green. The WP-036 acceptance group
+is closed; only then may session `0144Q` (WP-036E S1) begin.

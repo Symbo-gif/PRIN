@@ -6,7 +6,13 @@
 **Session type:** S1 — Coding  
 **Predecessor:** [0148 — Documentation](0148-wp037-s4-documentation-notebooks-paper-and-parity-report-draft.md)  
 **Successor:** [0150 — Audit](0150-wp038-s2-rc1-packaging-and-phase-6-gate.md)  
-**Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Authority:** Project Plan §6/§8 and amendment #38; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+
+> Plan amendment #38 reassigned **DV-010** (Phase 1/2 pre-release tag never
+> pushed; `release.yml` has never executed) from open-ended "maintainer
+> approval" into this session's scope — the tag creation/push that triggers a
+> real PyPI/crates.io publish belongs with RC1 publication, not a mid-phase
+> session.
 
 > This is a prospective execution contract, not completion evidence. Status and
 > results belong in Audit Reports, Project State Reports, and experiment artefacts.
@@ -41,6 +47,13 @@ Build/smoke all wheel/sdist targets, validate release security/OIDC configuratio
 3. Add unit, property, parity, gradient, kernel-equivalence, integration, security, and performance tests as the touched behavior requires.
 4. Validate public inputs, use typed errors, document all public API, preserve deterministic Seed flow, and capture benchmark environments.
 5. Record out-of-scope discoveries for a later WP; do not expand scope silently.
+6. **DV-010:** stage the Phase 1/2 pre-release tag(s) per Versioning and
+   Release Standards §1 (amendments #22/#38) — version-consistent
+   `chore: release …` commit, tag creation, and the `origin` tag push that
+   fires `release.yml` — executed only on explicit maintainer confirmation
+   in-session; update `DEFERRED_VALIDATION_REGISTER.md` DV-010 with the
+   outcome (CLOSED on push, or the recorded reason it is held to a later
+   explicit action).
 
 ## Required evidence and outputs
 

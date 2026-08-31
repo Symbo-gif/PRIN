@@ -73,6 +73,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Three new work packages WP-036E / WP-036F / WP-036G — Deferred-Validation
+  closure before Phase 7** (2026-08-31, plan amendment #38, planning session;
+  sessions `0144Q`–`0144AB` inserted between WP-036C `0144P` and WP-037
+  `0145`). The Deferred Validation Register carried 17 open items at PSR-036D;
+  Phase 7 pre-registration should not begin with work-package-resolvable
+  items open, and the rest need dated dispositions (Phase 5 analytics R35
+  anti-pattern; DV-004 and DV-021/#30 precedent). **WP-036E** ("GPU
+  device-resident execution path", `0144Q`–`0144T`) makes the `prin-kernels`
+  CubeCL dispatch layer and the `prin-sim` GPU engines device-resident, adds
+  a true zero-copy Torch↔CubeCL DLPack path, moves the mean-field RK4 level-2
+  `f64` combine on-device, and activates
+  `test_acceptance_q2.py::test_sparse_vram_subquadratic` — closes **DV-030**
+  and **DV-003**. **WP-036F** ("DirectML controller-graph execution",
+  `0144U`–`0144X`) re-exports the subconscious controller ONNX graph with
+  three-input `Gemm` nodes so `DmlExecutionProvider` executes it — closes the
+  **DirectML half of DV-006** and discharges amendment #13's DirectML
+  deferral; the VitisAI/Ryzen AI NPU half stays open, hardware-gated.
+  **WP-036G** ("Deferred-Validation register consolidation and permanent
+  dispositions", `0144Y`–`0144AB`; no source numerics) assigns every
+  remaining open item a dated disposition — permanent (DV-007, DV-013,
+  DV-018, DV-028) or standing-external / "not a Phase 7 entry blocker"
+  (DV-001, DV-008, DV-009, DV-011, DV-017, DV-022) — adds a `chacha20`
+  register row and a dormant `gpu-triton.yml`, resolves two pre-existing
+  test-fragility issues (the DV-019 Python-side gradcheck sub-item;
+  `test_no_gpu_throughput_regression`), and writes a Phase 7 entry
+  statement. **DV-005** (CUDA Burn training-stack autodiff backend) is closed
+  as `AMENDED` — out of scope for 1.0.0; re-gate to a post-1.0 WP with a
+  concrete CUDA training workload. **DV-010** (Phase 1/2 pre-release tag)
+  moves to WP-038 S1 scope; **DV-027** routes to EMA-006. WP-036E S1
+  (`0144Q`) is pre-authorised to decompose into `0144Q1`–`0144Qn` under
+  Development Workflow §7. Identifiers roll single-letter `0144Q`–`0144Z` to
+  two-letter `0144AA`–`0144AB`; the 0001–0198 integer sequence and the block
+  `0144A`–`0144P` are unchanged (TRACEABILITY invariant 4). Planned session
+  count 233 → 245. `DOCS/PRIN_Project_Plan.md` §6/§8.3, `SESSION_REGISTER.md`
+  (v1.3 → v1.4), `TRACEABILITY.md`, `DOCS/sessions/README.md`, phase-6 README,
+  `DEFERRED_VALIDATION_REGISTER.md`, and the `0144P` / `0145` / `0149` briefs
+  updated;
+  `DOCS/sessions/phase-6/WP-036E-036F-036G-execution-plan-and-decomposition.md`
+  is the governing decomposition document.
+
 - **New work package WP-036D ("GPU execution path for the ported acceptance
   suite") + WP-036C renumber** (2026-08-31, plan amendment #36, after WP-036B
   S3 / before WP-036D S1). The WP-036B S2 audit (`036b`, PASS/0 findings) §8

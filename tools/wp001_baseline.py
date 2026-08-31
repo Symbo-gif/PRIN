@@ -74,8 +74,12 @@ _TEXT_SUFFIXES = frozenset(
 # #34/#35 use the same letter-plus-digit shape for `0144A1`-`0144A4` and
 # `0144E1`-`0144E6`. Amendment #36 inserts WP-036D at `0144I`-`0144L`
 # (S1 decomposed `0144I1`-`0144I3`) and shifts the WP-036C block to
-# `0144M`-`0144P`, so the suffix letter now ranges `[A-P]`.
-_SEQUENCE_RE = r"\d{4}(?:[A-P]\d?)?"
+# `0144M`-`0144P`. Amendment #38 inserts WP-036E/F/G at `0144Q`-`0144AB`
+# between `0144P` and `0145`; the suffix rolls from single-letter `0144Q`-
+# `0144Z` to two-letter `0144AA`-`0144AB`. The suffix is therefore either a
+# single letter optionally followed by one digit (`0141D1`, `0144A3`), or one
+# to two letters (`0144P`, `0144AB`).
+_SEQUENCE_RE = r"\d{4}(?:[A-Z]\d|[A-Z]{1,2})?"
 _SESSION_ROW = re.compile(
     r"^\|\s*(?P<sequence>" + _SEQUENCE_RE + r")\s*\|\s*(?P<phase>\d+)\s*\|"
     r"\s*(?P<unit>[^|]+?)\s*\|\s*(?P<type>[^|]+?)\s*\|"
@@ -84,8 +88,9 @@ _SESSION_ROW = re.compile(
 )
 _WP_ID = re.compile(r"^WP-(\d{3})$")
 
-# Plan amendments #31-#35 add planned sub-sessions inserted between existing
-# integer sessions with two-part identifiers, without renumbering the gap-free
+# Plan amendments #31-#36 and #38 add planned sub-sessions inserted between
+# existing integer sessions with two-part identifiers, without renumbering the
+# gap-free
 # 0001..0198 integer sequence (TRACEABILITY invariant 4 is preserved). This is
 # the same additive-by-amendment principle already used for the EA/EMA global
 # sessions, applied inside the phase order.
@@ -101,6 +106,9 @@ _WP_ID = re.compile(r"^WP-(\d{3})$")
 #   #36: new WP-036D ("GPU execution path for the ported acceptance suite")
 #        took 0144I..0144L (S1 decomposed into 0144I1..0144I3); the WP-036C
 #        block shifted 0144I..0144L -> 0144M..0144P.
+#   #38: three new sibling WPs (WP-036E/F/G, "Deferred-Validation closure
+#        before Phase 7") took 0144Q..0144AB, inserted between 0144P and 0145
+#        (single-letter 0144Q..0144Z then two-letter 0144AA..0144AB).
 _PLANNED_INTEGER_COUNT = 198
 # Each block is (anchor_integer_session, ordered_sub_session_ids). The block's
 # rows appear in the register contiguously immediately after the anchor row.
@@ -139,6 +147,18 @@ _SUBSESSION_BLOCKS = (
             "0144N",
             "0144O",
             "0144P",
+            "0144Q",
+            "0144R",
+            "0144S",
+            "0144T",
+            "0144U",
+            "0144V",
+            "0144W",
+            "0144X",
+            "0144Y",
+            "0144Z",
+            "0144AA",
+            "0144AB",
         ),
     ),
 )

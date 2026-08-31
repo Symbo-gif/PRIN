@@ -56,6 +56,19 @@ engines, and the self-hosted `PRIN-GPU-Runner` all already exist. WP-036D S1
 symbol; the CPU path is untouched; DV-005 / DV-001 are not closed by it. See
 [`WP-036D-S1-execution-plan-and-decomposition.md`](WP-036D-S1-execution-plan-and-decomposition.md).
 
+Plan amendment #38 inserts three new sibling work packages **WP-036E**
+("GPU device-resident execution path", `0144Q`–`0144T`, closes DV-030/DV-003),
+**WP-036F** ("DirectML controller-graph execution", `0144U`–`0144X`, closes the
+DirectML half of DV-006), and **WP-036G** ("Deferred-Validation register
+consolidation and permanent dispositions", `0144Y`–`0144AB`) between the
+WP-036C block (`0144P`) and `0145`. Together they close or assign a dated
+disposition to every open Deferred Validation Register item before Phase 7;
+**DV-005** is closed as `AMENDED` (out of scope for 1.0.0), **DV-010** moves to
+WP-038 S1 scope, **DV-027** routes to EMA-006. WP-036E S1 is pre-authorised to
+decompose into `0144Q1`–`0144Qn` under Development Workflow §7. Identifiers
+roll single-letter `0144Q`–`0144Z` to two-letter `0144AA`–`0144AB`. See
+[`WP-036E-036F-036G-execution-plan-and-decomposition.md`](WP-036E-036F-036G-execution-plan-and-decomposition.md).
+
 | Seq | Unit | Type | Session brief | Current status |
 |---:|---|---|---|---|
 | 0129 | WP-033 | S1 — Coding | [Unified benchmark runner and category migration](0129-wp033-s1-unified-benchmark-runner-and-category-migration.md) | COMPLETE |
@@ -110,6 +123,18 @@ symbol; the CPU path is untouched; DV-005 / DV-001 are not closed by it. See
 | 0144N | WP-036C | S2 — Audit | [Acceptance suite port — integration, y-series, kernels; DV-025](0144N-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0144O | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0144P | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
+| 0144Q | WP-036E | S1 — Coding | [GPU device-resident execution path](0144Q-wp036e-s1-gpu-device-resident-execution-path.md) | PLANNED |
+| 0144R | WP-036E | S2 — Audit | [GPU device-resident execution path](0144R-wp036e-s2-gpu-device-resident-execution-path.md) | PLANNED |
+| 0144S | WP-036E | S3 — Remediation | [GPU device-resident execution path](0144S-wp036e-s3-gpu-device-resident-execution-path.md) | PLANNED |
+| 0144T | WP-036E | S4 — Documentation | [GPU device-resident execution path](0144T-wp036e-s4-gpu-device-resident-execution-path.md) | PLANNED |
+| 0144U | WP-036F | S1 — Coding | [DirectML controller-graph execution](0144U-wp036f-s1-directml-controller-graph-execution.md) | PLANNED |
+| 0144V | WP-036F | S2 — Audit | [DirectML controller-graph execution](0144V-wp036f-s2-directml-controller-graph-execution.md) | PLANNED |
+| 0144W | WP-036F | S3 — Remediation | [DirectML controller-graph execution](0144W-wp036f-s3-directml-controller-graph-execution.md) | PLANNED |
+| 0144X | WP-036F | S4 — Documentation | [DirectML controller-graph execution](0144X-wp036f-s4-directml-controller-graph-execution.md) | PLANNED |
+| 0144Y | WP-036G | S1 — Coding | [Deferred-Validation register consolidation and permanent dispositions](0144Y-wp036g-s1-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
+| 0144Z | WP-036G | S2 — Audit | [Deferred-Validation register consolidation and permanent dispositions](0144Z-wp036g-s2-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
+| 0144AA | WP-036G | S3 — Remediation | [Deferred-Validation register consolidation and permanent dispositions](0144AA-wp036g-s3-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
+| 0144AB | WP-036G | S4 — Documentation | [Deferred-Validation register consolidation and permanent dispositions](0144AB-wp036g-s4-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
 | 0145 | WP-037 | S1 — Coding | [Documentation, notebooks, paper, and Parity Report draft](0145-wp037-s1-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
 | 0146 | WP-037 | S2 — Audit | [Documentation, notebooks, paper, and Parity Report draft](0146-wp037-s2-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
 | 0147 | WP-037 | S3 — Remediation | [Documentation, notebooks, paper, and Parity Report draft](0147-wp037-s3-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |

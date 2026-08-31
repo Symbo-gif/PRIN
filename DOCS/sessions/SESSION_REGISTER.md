@@ -1,7 +1,7 @@
 # PRIN Master Session Register
 
-**Register version:** 1.3  
-**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 6 sub-sessions (`0141A`–`0141C`, `0141D1`, `0141D2`, `0141E`, plan amendment #32 — `0141D` split into `0141D1`/`0141D2` under Development Workflow §7, 2026-08-27) + 4 sub-sessions (`0144A`–`0144D`, plan amendment #33, WP-036A, mechanical renumber executed 2026-08-29) + 4 sub-sessions (`0144A1`–`0144A4`, plan amendment #34, WP-036A S1 decomposition, 2026-08-30) + 6 sub-sessions (`0144E1`–`0144E6`, plan amendment #35, WP-036B strict-port decomposition, 2026-08-31) + 7 sub-sessions (WP-036D at `0144I`–`0144L` with S1 decomposed into `0144I1`–`0144I3`, plan amendment #36, "GPU execution path for the ported acceptance suite", 2026-08-31; the WP-036C block shifted `0144I`–`0144L` → `0144M`–`0144P`) = **233**
+**Register version:** 1.4  
+**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 6 sub-sessions (`0141A`–`0141C`, `0141D1`, `0141D2`, `0141E`, plan amendment #32 — `0141D` split into `0141D1`/`0141D2` under Development Workflow §7, 2026-08-27) + 4 sub-sessions (`0144A`–`0144D`, plan amendment #33, WP-036A, mechanical renumber executed 2026-08-29) + 4 sub-sessions (`0144A1`–`0144A4`, plan amendment #34, WP-036A S1 decomposition, 2026-08-30) + 6 sub-sessions (`0144E1`–`0144E6`, plan amendment #35, WP-036B strict-port decomposition, 2026-08-31) + 7 sub-sessions (WP-036D at `0144I`–`0144L` with S1 decomposed into `0144I1`–`0144I3`, plan amendment #36, "GPU execution path for the ported acceptance suite", 2026-08-31; the WP-036C block shifted `0144I`–`0144L` → `0144M`–`0144P`) + 12 sub-sessions (`0144Q`–`0144AB`, plan amendment #38, WP-036E/F/G Deferred-Validation closure block, 2026-08-31) = **245**
 **Current entry point:** Session 0001  
 **Status authority:** the latest approved Project State Report; this register
 is updated during S4 only from committed evidence.
@@ -95,6 +95,40 @@ on-device via CubeCL, and a true zero-copy Torch↔CubeCL path is deferred as
 **DV-030**. No new session IDs; count unchanged at **233**; no renumber. It
 also reconciled the pre-existing `0144E` / `0144I1` brief↔register status
 drift to `COMPLETE`.
+
+**Amendment-inserted sub-sessions (plan amendment #38, adopted 2026-08-31):**
+three new sibling work packages close or formally dispose of every open
+Deferred Validation Register item before Phase 7, taking sessions
+`0144Q`–`0144AB` inserted between the WP-036C block (`0144P`) and `0145`
+(`0144P`'s successor becomes `0144Q`; `0145`'s predecessor becomes `0144AB`).
+**WP-036E** ("GPU device-resident execution path", `0144Q`–`0144T`) makes the
+`prin-kernels` dispatch layer and `prin-sim` GPU engines device-resident,
+adds a true zero-copy Torch↔CubeCL DLPack path, moves the mean-field RK4
+level-2 `f64` combine on-device, and activates
+`test_sparse_vram_subquadratic` — **closes DV-030 and DV-003**. **WP-036F**
+("DirectML controller-graph execution", `0144U`–`0144X`) re-exports the
+subconscious controller ONNX graph with three-input `Gemm` nodes so
+`DmlExecutionProvider` executes it — **closes the DirectML half of DV-006**,
+discharges amendment #13's DirectML deferral; the VitisAI/NPU half stays
+OPEN, hardware-gated. **WP-036G** ("Deferred-Validation register
+consolidation and permanent dispositions", `0144Y`–`0144AB`; no source
+numerics) assigns every remaining open item a dated disposition — permanent
+(DV-007, DV-013, DV-018, DV-028) or standing-external / "not a Phase 7 entry
+blocker" (DV-001, DV-008, DV-009, DV-011, DV-017, DV-022) — adds a `chacha20`
+register row and a dormant `gpu-triton.yml`, resolves two pre-existing
+test-fragility issues, and writes a Phase 7 entry statement. **DV-005** (CUDA
+Burn training backend) is closed as `AMENDED` (out of scope for 1.0.0; re-gate
+to a post-1.0 WP with a concrete workload); **DV-010** is reassigned to
+WP-038 S1 scope; **DV-027** routed to EMA-006. WP-036E S1 (`0144Q`) is
+pre-authorised to decompose into `0144Q1`–`0144Qn` under Development Workflow
+§7. Identifiers roll single-letter `0144Q`–`0144Z` to two-letter
+`0144AA`–`0144AB` for the last two. The integer sequence 0001–0198 and the
+block `0144A`–`0144P` are unchanged (TRACEABILITY invariant 4 preserved).
+WP-036E/F/G Audit Reports and Project State Reports are numbered
+`036e`/`036f`/`036g`. Planned session count: **233 → 245** (+12). See
+[`phase-6/WP-036E-036F-036G-execution-plan-and-decomposition.md`](phase-6/WP-036E-036F-036G-execution-plan-and-decomposition.md).
+The sub-session chain extends `… → 0144P → 0144Q → 0144R → 0144S → 0144T →
+0144U → 0144V → 0144W → 0144X → 0144Y → 0144Z → 0144AA → 0144AB → 0145`.
 
 **Amendment-inserted sub-sessions (plan amendment #32):** WP-036 S1
 (session 0141) is executed as five sequential S1 coding sub-passes
@@ -344,6 +378,18 @@ introduction and are not retroactively added here; this table starts with
 | 0144N | 6 | WP-036C | S2 — Audit | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144N-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0144O | 6 | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0144P | 6 | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
+| 0144Q | 6 | WP-036E | S1 — Coding | [GPU device-resident execution path](phase-6/0144Q-wp036e-s1-gpu-device-resident-execution-path.md) | PLANNED |
+| 0144R | 6 | WP-036E | S2 — Audit | [GPU device-resident execution path](phase-6/0144R-wp036e-s2-gpu-device-resident-execution-path.md) | PLANNED |
+| 0144S | 6 | WP-036E | S3 — Remediation | [GPU device-resident execution path](phase-6/0144S-wp036e-s3-gpu-device-resident-execution-path.md) | PLANNED |
+| 0144T | 6 | WP-036E | S4 — Documentation | [GPU device-resident execution path](phase-6/0144T-wp036e-s4-gpu-device-resident-execution-path.md) | PLANNED |
+| 0144U | 6 | WP-036F | S1 — Coding | [DirectML controller-graph execution](phase-6/0144U-wp036f-s1-directml-controller-graph-execution.md) | PLANNED |
+| 0144V | 6 | WP-036F | S2 — Audit | [DirectML controller-graph execution](phase-6/0144V-wp036f-s2-directml-controller-graph-execution.md) | PLANNED |
+| 0144W | 6 | WP-036F | S3 — Remediation | [DirectML controller-graph execution](phase-6/0144W-wp036f-s3-directml-controller-graph-execution.md) | PLANNED |
+| 0144X | 6 | WP-036F | S4 — Documentation | [DirectML controller-graph execution](phase-6/0144X-wp036f-s4-directml-controller-graph-execution.md) | PLANNED |
+| 0144Y | 6 | WP-036G | S1 — Coding | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144Y-wp036g-s1-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
+| 0144Z | 6 | WP-036G | S2 — Audit | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144Z-wp036g-s2-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
+| 0144AA | 6 | WP-036G | S3 — Remediation | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144AA-wp036g-s3-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
+| 0144AB | 6 | WP-036G | S4 — Documentation | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144AB-wp036g-s4-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
 | 0145 | 6 | WP-037 | S1 — Coding | [Documentation, notebooks, paper, and Parity Report draft](phase-6/0145-wp037-s1-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
 | 0146 | 6 | WP-037 | S2 — Audit | [Documentation, notebooks, paper, and Parity Report draft](phase-6/0146-wp037-s2-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
 | 0147 | 6 | WP-037 | S3 — Remediation | [Documentation, notebooks, paper, and Parity Report draft](phase-6/0147-wp037-s3-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
