@@ -1,6 +1,6 @@
 # Session 0144I — WP-036D S1: Coding — GPU execution path for the ported acceptance suite
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036D
 **Session type:** S1 — Coding

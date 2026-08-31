@@ -13,28 +13,40 @@ with import-only changes (`prinet.*` → `prin.*`); assertions are unchanged
 | `test_acceptance_core.py` | 106 | 106 | 0 | — |
 | `test_acceptance_utils.py` | 19 | 19 | 0 | — |
 | `test_acceptance_phases.py` | 30 | 30 | 0 | — |
-| `test_acceptance_hierarchical.py` | 43 | 41 | 2 | 2 CUDA `skipif` |
-| `test_acceptance_phase_to_rate.py` | 22 | 21 | 1 | 1 CUDA `skipif` |
-| `test_acceptance_q2.py` | 67 | 65 | 2 | 2 CUDA `skipif` |
-| `test_acceptance_q2_remaining.py` | 51 | 48 | 3 | 3 CUDA `skipif` |
+| `test_acceptance_hierarchical.py` | 43 | 41 | 2 | 2 CUDA `skipif` (2 `@pytest.mark.gpu`) |
+| `test_acceptance_phase_to_rate.py` | 22 | 21 | 1 | 1 CUDA `skipif` (1 `@pytest.mark.gpu`) |
+| `test_acceptance_q2.py` | 67 | 65 | 2 | 1 CUDA `skipif` (1 `@pytest.mark.gpu`) + 1 DV-030 `skip` |
+| `test_acceptance_q2_remaining.py` | 51 | 48 | 3 | 2 CUDA `skipif` (2 `@pytest.mark.gpu`) + 1 `skip` (`@pytest.mark.gpu`) |
 | `test_acceptance_q3_new.py` | 31 | 31 | 0 | — |
 | `test_acceptance_nn.py` | 30 | 30 | 0 | — |
 | `test_acceptance_scalr_enhanced.py` | 14 | 14 | 0 | — |
 | `test_acceptance_hybrid.py` | 19 | 19 | 0 | — |
 | `test_acceptance_clevr_n.py` | 17 | 17 | 0 | — |
 | `test_acceptance_subconscious.py` | 49 | 48 | 1 | 1 `psutil`-absent |
-| **Total** | **498** | **489** | **9** | 8 CUDA + 1 psutil |
+| **Total** | **498** | **489** | **9** | 7 `gpu` + 1 DV-030 `skip` + 1 psutil |
 
-**Marker policy:** The 8 CUDA skips are `@pytest.mark.skipif(not
-torch.cuda.is_available(), ...)` guards matching the reference files exactly;
-they will activate when the GPU execution path (WP-036D) is delivered. The
-1 psutil skip matches `pytest.skip("psutil not installed")` in the reference.
-No test carries `@pytest.mark.xfail`; no assertion is weakened; no tolerance
-annotation was required (zero numerical-parity deviations from the ported
-suite). Run the ported subset:
+**Marker policy:** Tests that require a GPU carry both
+`@pytest.mark.skipif(not torch.cuda.is_available(), ...)` (the reference guard)
+**and** `@pytest.mark.gpu`. On a CPU-only host the `skipif` fires and the test
+is skipped; on the self-hosted CUDA runner (`PRIN-GPU-Runner`, selected by
+`-m gpu`) the test runs for real. Seven of the original eight CUDA guards are
+activated; the eighth (`test_sparse_vram_subquadratic`) carries an explicit
+`@pytest.mark.skip(reason="deferred to DV-030 ...")` because the sparse-vs-full
+VRAM ratio cannot be verified while the coupling matrix lives in Rust host
+memory (DV-030). The 1 psutil skip matches `pytest.skip("psutil not installed")`
+in the reference. No test carries `@pytest.mark.xfail`; no assertion is
+weakened; no tolerance annotation was required beyond the Parity Report entry
+for the GPU sparse k-NN f32 dispatch (`DOCS/sphinx/parity_report.rst`).
+Run the ported subset:
 
 ```bash
 pytest tests/test_acceptance_*.py -v --basetemp=.pytest_basetemp
+```
+
+Run the GPU subset (self-hosted runner):
+
+```bash
+pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
 ```
 
 ## Additional PRIN-specific suites (per the Testing Standards)

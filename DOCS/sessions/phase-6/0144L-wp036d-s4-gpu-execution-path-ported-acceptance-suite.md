@@ -1,6 +1,6 @@
 # Session 0144L — WP-036D S4: Documentation — GPU execution path for the ported acceptance suite
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036D
 **Session type:** S4 — Documentation

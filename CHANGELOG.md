@@ -142,6 +142,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     brief↔register status mismatch red-fails `test_wp001_baseline.py`),
     WP036D-F3 (D4, new dispatch-test GPU tolerance lacks a Parity Report
     line).
+  - **WP-036D S3 remediation (session `0144K`, 2026-08-31):** all three
+    findings FIXED. WP036D-F1: `test_sparse_vram_subquadratic` reverted to
+    `* 0.10`, `@pytest.mark.gpu` removed, explicit `@pytest.mark.skip`
+    applied (deferred to DV-030); activated GPU count is 7 (not 8).
+    WP036D-F2: `SESSION_REGISTER.md` row `0144I3` reconciled
+    `PLANNED` → `COMPLETE`. WP036D-F3: `parity_report.rst` new section
+    "WP-036D — GPU sparse k-NN f32 dispatch parity"; dispatch-test
+    tolerances tightened `atol=rtol=1e-4` → `rtol=1e-5, atol=1e-5`.
+    Delta re-audit CLEAN; `test_wp001_baseline.py` 46 passed.
+  - **WP-036D S4 documentation (session `0144L`, 2026-08-31):**
+    `tests/README.md` updated (GPU marker policy, 7 activated tests,
+    DV-030 deferral); `crates/prin-py/README.md` updated (WP-036D GPU
+    binding module); `gpu.yml` comment corrected (8 → 7 tests);
+    `parity_report.rst` GPU-vs-CPU tolerance table current;
+    `DEFERRED_VALIDATION_REGISTER.md` records WP-036D closed the
+    inference/dynamics Python GPU-path gap; Project State Report
+    `DOCS/reports/036d-project-state.md` issued. WP-036D closed;
+    WP-036C (session `0144M`) is the registered successor.
 - **WP-036B S3 (session 0144G) closed with a no-change delta re-audit**
   (2026-08-31). The `036b` S2 audit returned PASS with zero findings;
   mandatory S3 executed per Development Workflow §3 and recorded the CLEAN

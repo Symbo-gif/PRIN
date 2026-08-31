@@ -201,6 +201,36 @@ PRINet-3.0 forward-parity at documented tolerances.
 Type stubs are maintained at `python/prin/_prin_core.pyi` and regenerated
 whenever the extension API changes.
 
+### WP-036D: GPU execution path (sessions 0144I–0144L)
+
+- **`bindings/gpu.rs`** (new, feature-gated `#[cfg(any(feature = "cuda",
+  feature = "wgpu"))]`) — PyO3 wrappers over `prin-sim`'s GPU simulation
+  engines: `GpuSparseKuramoto` (sparse k-NN coupling, including the
+  `from_knn_phase` constructor that builds the CSR topology in Rust so the
+  Python dispatch constructs no coupling weights), `GpuMeanFieldEngine`
+  (mean-field RK4/exponential integration), `GpuBandStepper` (hierarchical
+  band-network stepping). All are thin marshalling — numerical authority
+  remains in `prin-kernels` (CubeCL) and `prin-sim`.
+- **`dlpack.rs`** — two additive `f32` helpers (`read_dlpack_f32` /
+  `export_dlpack_f32`) mirroring the audited `f64` patterns verbatim
+  (identical SAFETY justifications, no new `unsafe` blocks). Per plan
+  amendment #37 the marshalling boundary is CPU `float32` DLPack; the GPU
+  compute runs on-device via CubeCL backend selection.
+- **`python/prin/_torch_compat.py`** — `_is_gpu` predicate; `_gpu_f32` /
+  `_from_gpu` CPU-float32 DLPack marshalling helpers; a GPU dispatch branch
+  in `OscillatorModel.compute_derivatives` routing a CUDA sparse k-NN input
+  to `GpuSparseKuramoto.from_knn_phase` → CubeCL sparse k-NN kernel. CPU
+  path byte-for-byte unchanged.
+- **`python/prin/_prin_core.pyi`** — stubs for `GpuSparseKuramoto`,
+  `GpuMeanFieldEngine`, `GpuBandStepper`, `read_dlpack_f32`,
+  `export_dlpack_f32`.
+- 15-test dispatch unit suite (`tests/test_wp036d_gpu_dispatch.py`) covering
+  the predicate, CPU-path golden-value identity, marshalling round-trip,
+  real sparse k-NN CubeCL dispatch, batched dispatch, and CUDA-guarded
+  device assertions. 7 acceptance tests carry `@pytest.mark.gpu` and pass
+  on the self-hosted CUDA runner; the eighth (`test_sparse_vram_subquadratic`)
+  is deferred to DV-030 (device-resident buffers).
+
 ### WP-028: Daemon bindings (sessions 0109–0112)
 
 - **`bindings/daemon.rs`** — PyO3 surface for the `prin-daemon` crate:

@@ -333,13 +333,13 @@ introduction and are not retroactively added here; this table starts with
 | 0144F | 6 | WP-036B | S2 — Audit | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144F-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md) | COMPLETE |
 | 0144G | 6 | WP-036B | S3 — Remediation | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144G-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md) | COMPLETE |
 | 0144H | 6 | WP-036B | S4 — Documentation | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144H-wp036b-s4-acceptance-suite-port-core-dynamics-model-stack.md) | COMPLETE |
-| 0144I | 6 | WP-036D | S1 — Coding | [GPU execution path for the ported acceptance suite](phase-6/0144I-wp036d-s1-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
+| 0144I | 6 | WP-036D | S1 — Coding | [GPU execution path for the ported acceptance suite](phase-6/0144I-wp036d-s1-gpu-execution-path-ported-acceptance-suite.md) | COMPLETE |
 | 0144I1 | 6 | WP-036D | S1 — Coding | [PyO3 GPU binding layer](phase-6/0144I1-wp036d-s1-pyo3-gpu-binding-layer.md) | COMPLETE |
 | 0144I2 | 6 | WP-036D | S1 — Coding | [Python device dispatch and DLPack marshalling](phase-6/0144I2-wp036d-s1-device-dispatch-and-dlpack-marshalling.md) | COMPLETE |
 | 0144I3 | 6 | WP-036D | S1 — Coding | [GPU test activation, CI, and consolidation](phase-6/0144I3-wp036d-s1-gpu-test-activation-and-ci.md) | COMPLETE |
 | 0144J | 6 | WP-036D | S2 — Audit | [GPU execution path for the ported acceptance suite](phase-6/0144J-wp036d-s2-gpu-execution-path-ported-acceptance-suite.md) | COMPLETE |
-| 0144K | 6 | WP-036D | S3 — Remediation | [GPU execution path for the ported acceptance suite](phase-6/0144K-wp036d-s3-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
-| 0144L | 6 | WP-036D | S4 — Documentation | [GPU execution path for the ported acceptance suite](phase-6/0144L-wp036d-s4-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
+| 0144K | 6 | WP-036D | S3 — Remediation | [GPU execution path for the ported acceptance suite](phase-6/0144K-wp036d-s3-gpu-execution-path-ported-acceptance-suite.md) | COMPLETE |
+| 0144L | 6 | WP-036D | S4 — Documentation | [GPU execution path for the ported acceptance suite](phase-6/0144L-wp036d-s4-gpu-execution-path-ported-acceptance-suite.md) | COMPLETE |
 | 0144M | 6 | WP-036C | S1 — Coding | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144M-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0144N | 6 | WP-036C | S2 — Audit | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144N-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0144O | 6 | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
