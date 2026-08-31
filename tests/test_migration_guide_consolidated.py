@@ -12,8 +12,9 @@ import re
 from pathlib import Path
 
 import prin
-import prinet
 import pytest
+
+prinet = pytest.importorskip("prinet")
 
 _ROOT = Path(__file__).resolve().parents[1]
 _TOOL = _ROOT / "tools" / "wp036_migration_table.py"

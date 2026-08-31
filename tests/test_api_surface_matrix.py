@@ -22,8 +22,9 @@ from __future__ import annotations
 import inspect
 
 import prin
-import prinet
 import pytest
+
+prinet = pytest.importorskip("prinet")
 
 _LEGACY_SYMBOLS = sorted(prinet.__all__)
 
