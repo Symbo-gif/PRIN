@@ -2,7 +2,7 @@
 
 **Status:** Normative execution ledger  
 **Coverage:** Project execution start through stable `1.0.0` completion  
-**Planned sessions:** **198** integer + **8** sub-sessions `0144A`–`0144H` (plan amendment #31) + **6** sub-sessions `0141A`–`0141E` (plan amendment #32, `0141D`→`0141D1`/`0141D2` under Development Workflow §7) + **4** sub-sessions `0144A`–`0144D` (plan amendment #33, WP-036A, renumber executed 2026-08-29) + **4** sub-sessions `0144A1`–`0144A4` (plan amendment #34, WP-036A S1 decomposition, 2026-08-30) = **220** (note: amendment #33 reuses the `0144A`–`0144D` identifiers for WP-036A; the former WP-036B/C sessions at those numbers shifted to `0144E`–`0144H`/`0144I`–`0144L`. Amendment #34 keeps the `0144A` row and inserts `0144A1`–`0144A4` immediately after it; `0144A3` is pre-authorised to split `0144A3a`/`0144A3b` under §7)  
+**Planned sessions:** **198** integer + **8** sub-sessions `0144A`–`0144H` (plan amendment #31) + **6** sub-sessions `0141A`–`0141E` (plan amendment #32, `0141D`→`0141D1`/`0141D2` under Development Workflow §7) + **4** sub-sessions `0144A`–`0144D` (plan amendment #33, WP-036A) + **4** sub-sessions `0144A1`–`0144A4` (plan amendment #34, WP-036A S1 decomposition) + **6** sub-sessions `0144E1`–`0144E6` (plan amendment #35, WP-036B strict-port decomposition) = **226**. Amendment #33 shifted WP-036B/C to `0144E`–`0144H`/`0144I`–`0144L`; amendment #35 inserts `0144E1`–`0144E6` between `0144E` and `0144F`.
 **Current entry point:** [Session 0001](phase-0/0001-wp001-s1-foundation-baseline-and-traceability.md)  
 **Master order/status register:** [`SESSION_REGISTER.md`](SESSION_REGISTER.md)
 
@@ -38,7 +38,7 @@ never change a brief silently to hide code drift.**
 | Phase 3 — GPU kernels | WP-017…WP-021 | 0065–0084 | S1 → S2 → S3 → S4 per WP |
 | Phase 4 — Trainable stack/bridge | WP-022…WP-027 | 0085–0108 | S1 → S2 → S3 → S4 per WP |
 | Phase 5 — Daemon/experiment tooling | WP-028…WP-032 | 0109–0128 | S1 → S2 → S3 → S4 per WP |
-| Phase 6 — Benchmarks/repro/docs/RC1 | WP-033…WP-038 (WP-036 split into WP-036/036A/036B/036C, amdt #31/#33; WP-036 S1 → `0141A`–`0141E`, amdt #32) | 0129–0152 + `0141A`–`0141E` + `0144A`–`0144L` | S1 → S2 → S3 → S4 per WP |
+| Phase 6 — Benchmarks/repro/docs/RC1 | WP-033…WP-038 (WP-036 split into WP-036/036A/036B/036C, amdt #31/#33; S1 decompositions amdt #32/#34/#35) | 0129–0152 + `0141A`–`0141E` + `0144A`–`0144L` + `0144A1`–`0144A4` + `0144E1`–`0144E6` | S1 → S2 → S3 → S4 per WP |
 | Phase 7 campaign planning | Campaign E0 | 0153 | Approval before science |
 | Phase 7 confirmatory campaign | EXP-001…EXP-008 | 0154–0193 | E1 → E2 → E3 → E4 → E5 per experiment |
 | Campaign synthesis | Campaign E6 | 0194 | Evidence reconciliation |
@@ -122,8 +122,10 @@ NNNN-expNNN-eK-title.md
   trainable compatibility layers, amendment #33), `0144E`–`0144H` (WP-036B
   acceptance suite port, amendment #31, shifted from `0144A`–`0144D`),
   `0144I`–`0144L` (WP-036C acceptance suite port, amendment #31, shifted from
-  `0144E`–`0144H`), and `0141A`–`0141E` (WP-036 S1 coding sub-passes,
-  amendment #32).
+  `0144E`–`0144H`), `0141A`–`0141E` (WP-036 S1 coding sub-passes,
+  amendment #32), `0144A1`–`0144A4` (WP-036A S1 coding sub-passes,
+  amendment #34), and `0144E1`–`0144E6` (WP-036B strict-port coding
+  sub-passes, amendment #35).
 - `WP-NNN`: development work package; four consecutive S1–S4 files.
 - `EXP-NNN`: campaign experiment; five consecutive E1–E5 files.
 - Each brief specifies predecessor, successor, mission, acceptance criteria,

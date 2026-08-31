@@ -309,6 +309,37 @@ pub fn safe_phase_diffs(a: &[f64], b: &[f64]) -> Result<Vec<f64>, StateError> {
         .collect())
 }
 
+/// Clamp arbitrary values to a symmetric finite interval.
+///
+/// This is the Rust owner for PRINet 3.0's compatibility helper
+/// ``_clamp_finite``: non-finite values become zero and finite values are
+/// clamped to ``[-limit, limit]``.
+///
+/// # Errors
+///
+/// Returns [`StateError::OutOfRange`] when `limit` is non-finite or negative.
+pub fn clamp_finite(values: &[f64], limit: f64) -> Result<Vec<f64>, StateError> {
+    if !limit.is_finite() || limit < 0.0 {
+        return Err(StateError::OutOfRange {
+            name: "limit",
+            index: 0,
+            value: limit,
+            min: 0.0,
+            max: f64::MAX,
+        });
+    }
+    Ok(values
+        .iter()
+        .map(|&value| {
+            if value.is_finite() {
+                value.clamp(-limit, limit)
+            } else {
+                0.0
+            }
+        })
+        .collect())
+}
+
 /// Clamp an amplitude scalar to `[AMPLITUDE_MIN, AMPLITUDE_MAX]`.
 ///
 /// Non-finite inputs are repaired to the nearest bound: `NaN` becomes
@@ -565,6 +596,21 @@ fn guard_derivative_value(d: f64, _index: usize, _name: &'static str) -> Result<
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+
+    #[test]
+    fn clamp_finite_repairs_non_finite_and_bounds_finite_values() {
+        let values = [1.0, f64::NAN, f64::INFINITY, f64::NEG_INFINITY, 1e5, -1e5];
+        assert_eq!(
+            clamp_finite(&values, 100.0).unwrap(),
+            [1.0, 0.0, 0.0, 0.0, 100.0, -100.0]
+        );
+    }
+
+    #[test]
+    fn clamp_finite_rejects_invalid_limits() {
+        assert!(clamp_finite(&[1.0], -1.0).is_err());
+        assert!(clamp_finite(&[1.0], f64::NAN).is_err());
+    }
 
     #[test]
     fn new_accepts_n1() {

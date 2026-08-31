@@ -199,6 +199,11 @@ at the top level until they are folded into the final campaign archive in Phase 
   across four sub-passes (0144A1–0144A4), with per-symbol evidence maps,
   float64 gradcheck for all 11 trainable modules, and PRINet-3.0
   forward-parity at documented tolerances.
+- [`0144E-wp036b-s1-handoff.md`](0144E-wp036b-s1-handoff.md) — running WP-036B
+  S1 handoff: records the 805-vs-498 scope-count discrepancy, initial 481-test
+  collection plus the missing `benchmarks.clevr_n` import error, amendment #35's
+  six-pass strict-port split (`0144E1`–`0144E6`), exact per-file counts, and the
+  Rust-backed compatibility/no-semantic-test-rewrite disposition.
 - [`hotfix-dv019-handoff.md`](hotfix-dv019-handoff.md) — Dedicated
   hotfix/correction session for DV-019 (flaky `prin-train` tests,
   `burn-autodiff` cross-thread graph-server interaction). Handoff from

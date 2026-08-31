@@ -27,6 +27,101 @@ pub trait Dynamics {
     fn compute_derivatives(&self, state: &OscillatorState) -> Result<StateDerivatives, StateError>;
 }
 
+/// Compute a vector-Jacobian product for oscillator derivatives.
+///
+/// The derivative model remains Rust-owned while the PyTorch compatibility
+/// facade uses this central-difference fallback to connect the non-trainable
+/// dynamics API to autograd. Phase-neighbour selection is treated as locally
+/// constant, matching the reference's non-differentiable sort operation.
+///
+/// # Errors
+///
+/// Returns [`StateError`] when gradient lengths mismatch the state or a model
+/// evaluation fails.
+pub fn dynamics_vjp(
+    model: &dyn Dynamics,
+    state: &OscillatorState,
+    grad_dphase: &[f64],
+    grad_damplitude: &[f64],
+    grad_dfrequency: &[f64],
+) -> Result<StateDerivatives, StateError> {
+    let n = state.n_oscillators();
+    for (name, values) in [
+        ("grad_dphase", grad_dphase),
+        ("grad_damplitude", grad_damplitude),
+        ("grad_dfrequency", grad_dfrequency),
+    ] {
+        if values.len() != n {
+            return Err(StateError::LengthMismatch {
+                name,
+                expected: n,
+                got: values.len(),
+            });
+        }
+    }
+
+    fn objective(
+        derivative: &StateDerivatives,
+        grad_dphase: &[f64],
+        grad_damplitude: &[f64],
+        grad_dfrequency: &[f64],
+    ) -> f64 {
+        derivative
+            .dphase
+            .iter()
+            .zip(grad_dphase)
+            .chain(derivative.damplitude.iter().zip(grad_damplitude))
+            .chain(derivative.dfrequency.iter().zip(grad_dfrequency))
+            .map(|(value, gradient)| value * gradient)
+            .sum()
+    }
+
+    const EPSILON: f64 = 1e-6;
+    let mut gradients = [vec![0.0; n], vec![0.0; n], vec![0.0; n]];
+    for (field, output) in gradients.iter_mut().enumerate() {
+        for (index, gradient) in output.iter_mut().enumerate() {
+            let mut plus = state.clone();
+            let mut minus = state.clone();
+            let (plus_field, minus_field) = match field {
+                0 => (&mut plus.phase, &mut minus.phase),
+                1 => (&mut plus.amplitude, &mut minus.amplitude),
+                _ => (&mut plus.frequency, &mut minus.frequency),
+            };
+            plus_field[index] += EPSILON;
+            minus_field[index] -= EPSILON;
+            let plus_value = objective(
+                &model.compute_derivatives(&plus)?,
+                grad_dphase,
+                grad_damplitude,
+                grad_dfrequency,
+            );
+            let minus_value = objective(
+                &model.compute_derivatives(&minus)?,
+                grad_dphase,
+                grad_damplitude,
+                grad_dfrequency,
+            );
+            *gradient = (plus_value - minus_value) / (2.0 * EPSILON);
+        }
+    }
+    for (name, values) in [
+        ("gradient_phase", &gradients[0]),
+        ("gradient_amplitude", &gradients[1]),
+        ("gradient_frequency", &gradients[2]),
+    ] {
+        for (index, &value) in values.iter().enumerate() {
+            if !value.is_finite() {
+                return Err(StateError::NonFiniteValue { name, index, value });
+            }
+        }
+    }
+    Ok(StateDerivatives {
+        dphase: gradients[0].clone(),
+        damplitude: gradients[1].clone(),
+        dfrequency: gradients[2].clone(),
+    })
+}
+
 fn validate_finite(value: f64, name: &'static str) -> Result<(), StateError> {
     if !value.is_finite() {
         return Err(StateError::NonFiniteValue {
@@ -914,6 +1009,33 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
     use proptest::prelude::*;
+
+    #[test]
+    fn dynamics_vjp_rejects_each_gradient_length_mismatch() {
+        let model = KuramotoOscillator::new(1, 2.0, 0.1, 0.0, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(vec![0.2], vec![1.0], vec![3.0], None).unwrap();
+        assert!(dynamics_vjp(&model, &state, &[], &[1.0], &[1.0]).is_err());
+        assert!(dynamics_vjp(&model, &state, &[1.0], &[], &[1.0]).is_err());
+        assert!(dynamics_vjp(&model, &state, &[1.0], &[1.0], &[]).is_err());
+    }
+
+    #[test]
+    fn dynamics_vjp_matches_singleton_kuramoto_derivatives() {
+        let model = KuramotoOscillator::new(1, 2.0, 0.1, 0.0, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(vec![0.2], vec![1.0], vec![3.0], None).unwrap();
+        let gradient = dynamics_vjp(&model, &state, &[1.0], &[1.0], &[1.0]).unwrap();
+        assert_relative_eq!(gradient.dphase[0], 0.0, epsilon = 1e-8);
+        assert_relative_eq!(gradient.damplitude[0], -0.1, epsilon = 1e-8);
+        assert_relative_eq!(gradient.dfrequency[0], 1.0, epsilon = 1e-8);
+    }
+
+    #[test]
+    fn dynamics_vjp_does_not_apply_time_derivative_clamp() {
+        let model = KuramotoOscillator::new(1, 2.0, 0.1, 0.0, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(vec![0.2], vec![1.0], vec![3.0], None).unwrap();
+        let gradient = dynamics_vjp(&model, &state, &[0.0], &[1.0e6], &[0.0]).unwrap();
+        assert_relative_eq!(gradient.damplitude[0], -1.0e5, epsilon = 1e-2);
+    }
 
     #[test]
     fn test_coupling_mode_default() {

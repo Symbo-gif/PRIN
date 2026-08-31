@@ -4,15 +4,17 @@
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S2 — Audit
-**Predecessor:** [0144E — Coding](0144E-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md)
+**Predecessor:** [0144E6 — subconscious and consolidation](0144E6-wp036b-s1-subconscious-and-consolidation.md)
 **Successor:** [0144G — Remediation](0144G-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md)
-**Authority:** Project Plan §6/§8 and amendment #31; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Authority:** Project Plan §6/§8 and amendments #31/#33/#35; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence.
 
 ## Mission
 
-Read-only audit of WP-036B S1: the ported first-half acceptance suite.
+Read-only audit of the aggregate WP-036B S1 strict port across
+`0144E`+`0144E1`–`0144E6`: 13 reference files, 498 source test functions, and
+8,570 reference lines.
 
 ## Contract
 
@@ -43,9 +45,14 @@ Read-only audit of WP-036B S1: the ported first-half acceptance suite.
    annotation cites a specific amendment (#14/#16/#17/#25) and a Parity Report
    line.
 4. Confirm no skipped test lacks a maintainer-approved quarantine issue.
-5. Independently re-run the ported subset on this host; spot-check counts
-   against the reference (`def test_` per file).
-6. Give each finding `WP036B-Fn`, severity D1–D4, evidence, violated clause,
+5. Independently re-run the complete ported subset on this host; reconcile all
+   **498** source `def test_` functions against the amendment-#35 per-file table
+   (do not substitute the initial 481-collected result), and confirm all 17
+   `test_clevr_n.py` functions collect after the `benchmarks.clevr_n` repair.
+6. Confirm every compatibility behavior added by `0144E1`–`0144E6` is owned by
+   Rust-backed layers with thin PyO3/Python delegation, not copied-test shims or
+   Python numerics.
+7. Give each finding `WP036B-Fn`, severity D1–D4, evidence, violated clause,
    remedy. Assign PASS / PASS-WITH-FINDINGS / FAIL.
 
 ## Required outputs

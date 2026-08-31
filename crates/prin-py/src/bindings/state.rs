@@ -7,9 +7,11 @@ use pyo3::types::PyList;
 
 use prin_dynamics::seed::Seed;
 use prin_dynamics::state::{
-    OscillatorState, StateDerivatives, StateError, AMPLITUDE_MAX, AMPLITUDE_MIN, DERIV_CLAMP,
-    SPARSE_EPS, TAU,
+    clamp_finite, safe_phase_diffs, OscillatorState, StateDerivatives, StateError, AMPLITUDE_MAX,
+    AMPLITUDE_MIN, DERIV_CLAMP, SPARSE_EPS, TAU,
 };
+
+use super::super::dlpack::{export_dlpack_f64, read_dlpack_f64};
 
 pub(crate) fn state_err_to_py(err: StateError) -> PyErr {
     PyValueError::new_err(err.to_string())
@@ -240,11 +242,44 @@ impl PySeed {
     }
 }
 
+/// Compute elementwise wrapped phase differences for a DLPack tensor pair.
+#[pyfunction]
+fn safe_phase_diffs_dlpack(
+    py: Python<'_>,
+    a: &Bound<'_, PyAny>,
+    b: &Bound<'_, PyAny>,
+) -> PyResult<Py<PyAny>> {
+    let (shape_a, values_a) = read_dlpack_f64(a)?;
+    let (shape_b, values_b) = read_dlpack_f64(b)?;
+    if shape_a != shape_b {
+        return Err(PyValueError::new_err(format!(
+            "phase shapes differ: {shape_a:?} and {shape_b:?}"
+        )));
+    }
+    let values = safe_phase_diffs(&values_a, &values_b).map_err(state_err_to_py)?;
+    export_dlpack_f64(py, shape_a, values)
+}
+
+/// Clamp a DLPack tensor to finite values through the Rust state owner.
+#[pyfunction]
+#[pyo3(signature = (values, limit=DERIV_CLAMP))]
+fn clamp_finite_dlpack(
+    py: Python<'_>,
+    values: &Bound<'_, PyAny>,
+    limit: f64,
+) -> PyResult<Py<PyAny>> {
+    let (shape, input) = read_dlpack_f64(values)?;
+    let output = clamp_finite(&input, limit).map_err(state_err_to_py)?;
+    export_dlpack_f64(py, shape, output)
+}
+
 /// Register state/seed types and functions into a module.
 pub(crate) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyOscillatorState>()?;
     m.add_class::<PyStateDerivatives>()?;
     m.add_class::<PySeed>()?;
+    m.add_function(wrap_pyfunction!(safe_phase_diffs_dlpack, m)?)?;
+    m.add_function(wrap_pyfunction!(clamp_finite_dlpack, m)?)?;
     m.add("TAU", TAU)?;
     m.add("AMPLITUDE_MIN", AMPLITUDE_MIN)?;
     m.add("AMPLITUDE_MAX", AMPLITUDE_MAX)?;

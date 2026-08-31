@@ -20,6 +20,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 use prin_dynamics::Seed;
+use prin_tensor::utils::{frobenius_norm, mode_unfold};
 use prin_tensor::{cp_als, hosvd, CPDecomposition, PolyadicTensor, TensorError};
 
 use super::super::dlpack::{export_dlpack_f64, read_dlpack_f64};
@@ -160,6 +161,39 @@ impl PyPolyadicTensorBridge {
         let pt = hosvd(&arr, Some(&ranks)).map_err(tensor_err_to_py)?;
         self.decomp = Some(pt);
         Ok(())
+    }
+
+    /// Compute relative Frobenius reconstruction error against an input tensor.
+    fn reconstruction_error(&self, original: &Bound<'_, PyAny>) -> PyResult<f64> {
+        let pt = self.decomp.as_ref().ok_or_else(not_decomposed)?;
+        let input = arrayd_from_dlpack(original)?;
+        if input.shape() != self.shape.as_slice() {
+            return Err(PyValueError::new_err(format!(
+                "tensor shape {:?} does not match the configured shape {:?}",
+                input.shape(),
+                self.shape
+            )));
+        }
+        let reconstructed = pt.reconstruct();
+        let residual = &input - &reconstructed;
+        let norm = frobenius_norm(&input);
+        if norm < 1e-12 {
+            Ok(0.0)
+        } else {
+            Ok(frobenius_norm(&residual) / norm)
+        }
+    }
+
+    /// Unfold a tensor along one mode through the Rust tensor utility owner.
+    #[staticmethod]
+    fn mode_n_unfold(
+        py: Python<'_>,
+        tensor: &Bound<'_, PyAny>,
+        mode: usize,
+    ) -> PyResult<Py<PyAny>> {
+        let input = arrayd_from_dlpack(tensor)?;
+        let unfolded = mode_unfold(&input, mode).map_err(tensor_err_to_py)?;
+        export_matrix(py, &unfolded)
     }
 
     /// Reconstruct `G ×₁ U⁰ ×₂ U¹ …` as a new `float64` DLPack capsule.

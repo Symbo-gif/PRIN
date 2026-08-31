@@ -34,6 +34,15 @@ deferring tests or weakening gradcheck tolerances (Development Workflow §7).
 See
 [`WP-036A-S1-execution-plan-and-decomposition.md`](WP-036A-S1-execution-plan-and-decomposition.md).
 
+Plan amendment #35 decomposes **WP-036B S1 (session 0144E)** into six
+sequential strict-port coding sub-passes `0144E1`–`0144E6`, all feeding the
+single S2 audit `0144F`. The verified scope is 498 test functions / 8,570 lines
+across 13 reference files (initial collect-only: 481 plus `test_clevr_n` import
+error from missing `benchmarks.clevr_n`). Testing Standards §1.1 remains
+literal: adapt imports only, assertions unchanged; compatibility gaps are
+rebuilt through Rust-backed layers, never semantic-test rewrites. See
+[`WP-036B-S1-execution-plan-and-decomposition.md`](WP-036B-S1-execution-plan-and-decomposition.md).
+
 | Seq | Unit | Type | Session brief | Current status |
 |---:|---|---|---|---|
 | 0129 | WP-033 | S1 — Coding | [Unified benchmark runner and category migration](0129-wp033-s1-unified-benchmark-runner-and-category-migration.md) | COMPLETE |
@@ -67,7 +76,13 @@ See
 | 0144B | WP-036A | S2 — Audit | [Trainable compatibility layers — `prin-train` extension](0144B-wp036a-s2-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE |
 | 0144C | WP-036A | S3 — Remediation | [Trainable compatibility layers — `prin-train` extension](0144C-wp036a-s3-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE |
 | 0144D | WP-036A | S4 — Documentation | [Trainable compatibility layers — `prin-train` extension](0144D-wp036a-s4-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE |
-| 0144E | WP-036B | S1 — Coding | [Acceptance suite port — core, dynamics, model stack, subconscious](0144E-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
+| 0144E | WP-036B | S1 — Coding | [Acceptance suite port — core, dynamics, model stack, subconscious](0144E-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED (decomposed into 0144E1–0144E6) |
+| 0144E1 | WP-036B | S1 — Coding | [Core and utils strict port](0144E1-wp036b-s1-core-and-utils-strict-port.md) | COMPLETE |
+| 0144E2 | WP-036B | S1 — Coding | [Phases, hierarchical, and phase-to-rate strict port](0144E2-wp036b-s1-phases-hierarchical-and-phase-to-rate-strict-port.md) | PLANNED |
+| 0144E3 | WP-036B | S1 — Coding | [Q2 and Q2-remaining strict port](0144E3-wp036b-s1-q2-and-q2-remaining-strict-port.md) | PLANNED |
+| 0144E4 | WP-036B | S1 — Coding | [Q3-new, NN, and SCALR-enhanced strict port](0144E4-wp036b-s1-q3-nn-and-scalr-enhanced-strict-port.md) | PLANNED |
+| 0144E5 | WP-036B | S1 — Coding | [Hybrid and CLEVR-N strict port](0144E5-wp036b-s1-hybrid-and-clevr-n-strict-port.md) | PLANNED |
+| 0144E6 | WP-036B | S1 — Coding | [Subconscious strict port and consolidation](0144E6-wp036b-s1-subconscious-and-consolidation.md) | PLANNED |
 | 0144F | WP-036B | S2 — Audit | [Acceptance suite port — core, dynamics, model stack, subconscious](0144F-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
 | 0144G | WP-036B | S3 — Remediation | [Acceptance suite port — core, dynamics, model stack, subconscious](0144G-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
 | 0144H | WP-036B | S4 — Documentation | [Acceptance suite port — core, dynamics, model stack, subconscious](0144H-wp036b-s4-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |

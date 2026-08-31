@@ -1,11 +1,52 @@
 //! PyO3 bindings for `prin_dynamics::models` (Dynamics trait implementors).
 
+use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::prelude::*;
 
-use prin_dynamics::models::{Dynamics, HopfOscillator, KuramotoOscillator, StuartLandauOscillator};
+use prin_dynamics::models::{
+    dynamics_vjp, Dynamics, HopfOscillator, KuramotoOscillator, StuartLandauOscillator,
+};
 
 use super::coupling::PyCouplingMode;
 use super::state::{state_err_to_py, PyOscillatorState, PyStateDerivatives};
+
+type PyArrayTriple<'py> = (
+    Bound<'py, PyArray1<f64>>,
+    Bound<'py, PyArray1<f64>>,
+    Bound<'py, PyArray1<f64>>,
+);
+
+fn model_vjp<'py>(
+    py: Python<'py>,
+    model: &dyn Dynamics,
+    state: &PyOscillatorState,
+    grad_dphase: PyReadonlyArray1<'py, f64>,
+    grad_damplitude: PyReadonlyArray1<'py, f64>,
+    grad_dfrequency: PyReadonlyArray1<'py, f64>,
+) -> PyResult<PyArrayTriple<'py>> {
+    let grad_dphase = grad_dphase
+        .as_slice()
+        .map_err(|_| pyo3::exceptions::PyValueError::new_err("grad_dphase must be contiguous"))?;
+    let grad_damplitude = grad_damplitude.as_slice().map_err(|_| {
+        pyo3::exceptions::PyValueError::new_err("grad_damplitude must be contiguous")
+    })?;
+    let grad_dfrequency = grad_dfrequency.as_slice().map_err(|_| {
+        pyo3::exceptions::PyValueError::new_err("grad_dfrequency must be contiguous")
+    })?;
+    let gradient = dynamics_vjp(
+        model,
+        &state.inner,
+        grad_dphase,
+        grad_damplitude,
+        grad_dfrequency,
+    )
+    .map_err(state_err_to_py)?;
+    Ok((
+        PyArray1::from_vec(py, gradient.dphase),
+        PyArray1::from_vec(py, gradient.damplitude),
+        PyArray1::from_vec(py, gradient.dfrequency),
+    ))
+}
 
 /// Kuramoto coupled oscillator model.
 #[pyclass(
@@ -62,6 +103,24 @@ impl PyKuramotoOscillator {
             .compute_derivatives(&state.inner)
             .map_err(state_err_to_py)?;
         Ok(PyStateDerivatives { inner: deriv })
+    }
+
+    fn dynamics_vjp<'py>(
+        &self,
+        py: Python<'py>,
+        state: &PyOscillatorState,
+        grad_dphase: PyReadonlyArray1<'py, f64>,
+        grad_damplitude: PyReadonlyArray1<'py, f64>,
+        grad_dfrequency: PyReadonlyArray1<'py, f64>,
+    ) -> PyResult<PyArrayTriple<'py>> {
+        model_vjp(
+            py,
+            &self.inner,
+            state,
+            grad_dphase,
+            grad_damplitude,
+            grad_dfrequency,
+        )
     }
 
     fn __repr__(&self) -> String {
@@ -124,6 +183,24 @@ impl PyStuartLandauOscillator {
             .compute_derivatives(&state.inner)
             .map_err(state_err_to_py)?;
         Ok(PyStateDerivatives { inner: deriv })
+    }
+
+    fn dynamics_vjp<'py>(
+        &self,
+        py: Python<'py>,
+        state: &PyOscillatorState,
+        grad_dphase: PyReadonlyArray1<'py, f64>,
+        grad_damplitude: PyReadonlyArray1<'py, f64>,
+        grad_dfrequency: PyReadonlyArray1<'py, f64>,
+    ) -> PyResult<PyArrayTriple<'py>> {
+        model_vjp(
+            py,
+            &self.inner,
+            state,
+            grad_dphase,
+            grad_damplitude,
+            grad_dfrequency,
+        )
     }
 
     fn __repr__(&self) -> String {
@@ -191,6 +268,24 @@ impl PyHopfOscillator {
             .compute_derivatives(&state.inner)
             .map_err(state_err_to_py)?;
         Ok(PyStateDerivatives { inner: deriv })
+    }
+
+    fn dynamics_vjp<'py>(
+        &self,
+        py: Python<'py>,
+        state: &PyOscillatorState,
+        grad_dphase: PyReadonlyArray1<'py, f64>,
+        grad_damplitude: PyReadonlyArray1<'py, f64>,
+        grad_dfrequency: PyReadonlyArray1<'py, f64>,
+    ) -> PyResult<PyArrayTriple<'py>> {
+        model_vjp(
+            py,
+            &self.inner,
+            state,
+            grad_dphase,
+            grad_damplitude,
+            grad_dfrequency,
+        )
     }
 
     fn __repr__(&self) -> String {

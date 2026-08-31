@@ -70,8 +70,9 @@ _TEXT_SUFFIXES = frozenset(
 # suffix. Plan amendment #31 used a single letter (`0144A`); amendment #32's
 # `0141D` split under Development Workflow §7 introduced a two-character suffix
 # (`0141D1`/`0141D2`), so the optional letter may be followed by one digit.
-# Amendment #33 extended the `0144` block to `0144L` (WP-036A/B/C); amendment
-# #34 decomposed WP-036A S1 into `0144A1`-`0144A4`.
+# Amendment #33 extended the `0144` block to `0144L` (WP-036A/B/C); amendments
+# #34/#35 use the same letter-plus-digit shape for `0144A1`-`0144A4` and
+# `0144E1`-`0144E6`.
 _SEQUENCE_RE = r"\d{4}(?:[A-L]\d?)?"
 _SESSION_ROW = re.compile(
     r"^\|\s*(?P<sequence>" + _SEQUENCE_RE + r")\s*\|\s*(?P<phase>\d+)\s*\|"
@@ -81,7 +82,7 @@ _SESSION_ROW = re.compile(
 )
 _WP_ID = re.compile(r"^WP-(\d{3})$")
 
-# Plan amendments #31-#34 add planned sub-sessions inserted between existing
+# Plan amendments #31-#35 add planned sub-sessions inserted between existing
 # integer sessions with two-part identifiers, without renumbering the gap-free
 # 0001..0198 integer sequence (TRACEABILITY invariant 4 is preserved). This is
 # the same additive-by-amendment principle already used for the EA/EMA global
@@ -92,8 +93,9 @@ _WP_ID = re.compile(r"^WP-(\d{3})$")
 #        (0141D split into 0141D1/0141D2 under Development Workflow §7).
 #   #33: new WP-036A took 0144A..0144D; the amendment-#31 WP-036B/WP-036C
 #        block shifted to 0144E..0144H / 0144I..0144L.
-#   #34: WP-036A S1 decomposed into four coding sub-passes 0144A1..0144A4
-#        (0144A3 pre-authorised to split 0144A3a/0144A3b under §7).
+#   #34: WP-036A S1 decomposed into four coding sub-passes 0144A1..0144A4.
+#   #35: WP-036B S1 decomposed into six strict-port coding sub-passes
+#        0144E1..0144E6, preserving import-only/assertions-unchanged.
 _PLANNED_INTEGER_COUNT = 198
 # Each block is (anchor_integer_session, ordered_sub_session_ids). The block's
 # rows appear in the register contiguously immediately after the anchor row.
@@ -112,6 +114,12 @@ _SUBSESSION_BLOCKS = (
             "0144C",
             "0144D",
             "0144E",
+            "0144E1",
+            "0144E2",
+            "0144E3",
+            "0144E4",
+            "0144E5",
+            "0144E6",
             "0144F",
             "0144G",
             "0144H",

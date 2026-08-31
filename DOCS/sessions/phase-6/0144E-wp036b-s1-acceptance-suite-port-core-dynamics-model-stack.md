@@ -5,11 +5,19 @@
 **Execution unit:** WP-036B
 **Session type:** S1 — Coding
 **Predecessor:** [0144D — Documentation](0144D-wp036a-s4-trainable-compatibility-layers-prin-train-extension.md)
-**Successor:** [0144F — Audit](0144F-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md)
-**Authority:** Project Plan §6/§8 and amendment #31; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
+**Successor:** [0144E1 — core and utils strict port](0144E1-wp036b-s1-core-and-utils-strict-port.md)
+**Authority:** Project Plan §6/§8 and amendments #31/#33/#35; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and
 > results belong in Audit Reports, Project State Reports, and experiment artefacts.
+
+> **Decomposition (Plan amendment #35):** repository verification corrected the
+> prospective ~805 estimate to **498 `def test_` functions / 8,570 lines**.
+> Collect-only reached 481 tests before `test_clevr_n.py` failed import because
+> `benchmarks.clevr_n` is missing. The maintainer selected **Decompose strict
+> port**: execute `0144E1`–`0144E6`, preserve import-only/assertions-unchanged,
+> and rebuild missing compatibility behavior through Rust-backed layers. See
+> [`WP-036B-S1-execution-plan-and-decomposition.md`](WP-036B-S1-execution-plan-and-decomposition.md).
 
 ## Mission
 
@@ -17,8 +25,9 @@ Port the first half of the PRINet 3.0 acceptance suite — reference test files
 `test_core`, `test_utils`, `test_phases`, `test_hierarchical`,
 `test_phase_to_rate`, `test_q2`, `test_q2_remaining`, `test_q3_new`, `test_nn`,
 `test_scalr_enhanced`, `test_hybrid`, `test_clevr_n`, `test_subconscious`
-(~805 `def test_` functions) — into `tests/` against the `prin` compatibility
-surface delivered by WP-036, adapting imports only.
+(**498 `def test_` functions / 8,570 lines**) — into `tests/` against the
+`prin` compatibility surface, adapting imports only, across the six sequential
+sub-passes `0144E1`–`0144E6`.
 
 ## Contract
 
@@ -29,10 +38,12 @@ surface delivered by WP-036, adapting imports only.
   is added and recorded in the Parity Report — never a deletion, skip, or
   weakened logical assertion. Purely GPU/Triton reference tests in these files
   are `skipif`-guarded on backend availability (reference-suite precedent).
-- **Non-goals:** New `prin` public symbols (WP-036 owns those; a genuine gap is
-  an out-of-scope discovery recorded for WP-036 follow-up, not silently filled
-  here); the integration/y-series/kernel clusters (WP-036C); final
-  documentation prose or release publishing.
+- **Non-goals:** New `prin` public symbols (WP-036 owns those). Amendment #35
+  explicitly permits compatibility-behavior repair behind already-public
+  surfaces in the owning Rust crate with thin PyO3/Python delegation; it does
+  not permit a semantic-test rewrite or Python numerics. The integration/
+  y-series/kernel clusters (WP-036C), final documentation prose, and release
+  publishing remain out of scope.
 
 ## Required reading
 

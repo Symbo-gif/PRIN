@@ -19,7 +19,13 @@ from torch.utils.dlpack import from_dlpack
 
 from prin._prin_core import CPDecompositionBridge, PolyadicTensorBridge
 
-__all__ = ["CPDecomposition", "DecompositionError", "PolyadicTensor"]
+__all__ = [
+    "CPDecomposition",
+    "DecompositionError",
+    "DimensionsMismatchError",
+    "PolyadicTensor",
+    "TensorDecompositionBase",
+]
 
 
 class DecompositionError(RuntimeError):
@@ -30,12 +36,20 @@ class DecompositionError(RuntimeError):
     """
 
 
+class DimensionsMismatchError(ValueError):
+    """Raised when decomposition input dimensions differ from configuration."""
+
+
+class TensorDecompositionBase:
+    """Compatibility base for PRINet 3.0 decomposition implementations."""
+
+
 def _as_input(tensor: torch.Tensor) -> torch.Tensor:
     """Return ``tensor`` as a detached, contiguous, CPU ``float64`` view."""
     return tensor.detach().to(dtype=torch.float64, device="cpu").contiguous()
 
 
-class PolyadicTensor:
+class PolyadicTensor(TensorDecompositionBase):
     """Tucker (HOSVD) tensor decomposition.
 
     Decomposes an N-way tensor ``X`` into a core tensor ``G`` and orthogonal
@@ -68,6 +82,12 @@ class PolyadicTensor:
         dtype: torch.dtype = torch.float32,
     ) -> None:
         """Configure (but do not run) the Tucker decomposition."""
+        if rank < 1:
+            raise ValueError(
+                f"Rank must be a positive integer, got {rank} (rank must be positive)"
+            )
+        if any(dimension < 1 for dimension in shape):
+            raise ValueError(f"All shape dimensions must be positive, got {shape}")
         self._bridge = PolyadicTensorBridge(list(shape), rank)
         self._dtype = dtype
         self._device = (
@@ -95,7 +115,30 @@ class PolyadicTensor:
             ValueError: If ``tensor``'s shape does not match ``self.shape`` or
                 the decomposition fails a ``prin-tensor`` guard.
         """
+        if tuple(tensor.shape) != self.shape:
+            raise DimensionsMismatchError(
+                f"Expected shape {self.shape}; input shape {tuple(tensor.shape)} "
+                "does not match"
+            )
         self._bridge.decompose(_as_input(tensor))
+
+    def reconstruction_error(self, original: torch.Tensor) -> float:
+        """Return Rust-owned relative Frobenius reconstruction error."""
+        if tuple(original.shape) != self.shape:
+            raise DimensionsMismatchError(
+                f"Expected shape {self.shape}, got {tuple(original.shape)}"
+            )
+        if not self._bridge.is_decomposed:
+            raise DecompositionError(
+                "No decomposition performed yet. Call decompose() first."
+            )
+        return self._bridge.reconstruction_error(_as_input(original))
+
+    @staticmethod
+    def _mode_n_unfold(tensor: torch.Tensor, mode: int) -> torch.Tensor:
+        """Delegate mode-n unfolding to the Rust tensor utility owner."""
+        capsule = PolyadicTensorBridge.mode_n_unfold(_as_input(tensor), mode)
+        return from_dlpack(capsule).to(dtype=tensor.dtype, device=tensor.device)
 
     def reconstruct(self) -> torch.Tensor:
         """Reconstruct ``G x_1 U^(1) ...`` from the fitted factors.
@@ -105,7 +148,7 @@ class PolyadicTensor:
         """
         if not self._bridge.is_decomposed:
             raise DecompositionError(
-                "no decomposition performed yet; call decompose() first"
+                "No decomposition performed yet. Call decompose() first."
             )
         return self._restore(self._bridge.reconstruct())
 
@@ -118,7 +161,7 @@ class PolyadicTensor:
         """
         if not self._bridge.is_decomposed:
             raise DecompositionError(
-                "no decomposition performed yet; call decompose() first"
+                "No decomposition performed yet. Call decompose() first."
             )
         return self._restore(self._bridge.core())
 
@@ -131,12 +174,12 @@ class PolyadicTensor:
         """
         if not self._bridge.is_decomposed:
             raise DecompositionError(
-                "no decomposition performed yet; call decompose() first"
+                "No decomposition performed yet. Call decompose() first."
             )
         return [self._restore(cap) for cap in self._bridge.factors()]
 
 
-class CPDecomposition:
+class CPDecomposition(TensorDecompositionBase):
     """Canonical Polyadic (CP / CANDECOMP-PARAFAC) decomposition via ALS.
 
     Decomposes a tensor into a sum of ``rank`` rank-1 components
@@ -208,6 +251,11 @@ class CPDecomposition:
                 or ALS does not converge within ``max_iter`` (a ``prin-tensor``
                 guard; PRINet 3.0 instead returned the last iterate).
         """
+        if tuple(tensor.shape) != self.shape:
+            raise DimensionsMismatchError(
+                f"Expected shape {self.shape}; input shape {tuple(tensor.shape)} "
+                "does not match"
+            )
         self._bridge.decompose(_as_input(tensor))
 
     def reconstruct(self) -> torch.Tensor:
@@ -218,7 +266,7 @@ class CPDecomposition:
         """
         if not self._bridge.is_decomposed:
             raise DecompositionError(
-                "no decomposition performed yet; call decompose() first"
+                "No decomposition performed yet. Call decompose() first."
             )
         return self._restore(self._bridge.reconstruct())
 
@@ -231,7 +279,7 @@ class CPDecomposition:
         """
         if not self._bridge.is_decomposed:
             raise DecompositionError(
-                "no decomposition performed yet; call decompose() first"
+                "No decomposition performed yet. Call decompose() first."
             )
         return self._restore(self._bridge.weights())
 
@@ -244,6 +292,6 @@ class CPDecomposition:
         """
         if not self._bridge.is_decomposed:
             raise DecompositionError(
-                "no decomposition performed yet; call decompose() first"
+                "No decomposition performed yet. Call decompose() first."
             )
         return [self._restore(cap) for cap in self._bridge.factors()]

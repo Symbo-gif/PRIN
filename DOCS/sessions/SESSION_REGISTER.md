@@ -1,7 +1,7 @@
 # PRIN Master Session Register
 
 **Register version:** 1.2  
-**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 6 sub-sessions (`0141A`–`0141C`, `0141D1`, `0141D2`, `0141E`, plan amendment #32 — `0141D` split into `0141D1`/`0141D2` under Development Workflow §7, 2026-08-27) + 4 sub-sessions (`0144A`–`0144D`, plan amendment #33, WP-036A, mechanical renumber executed 2026-08-29) + 4 sub-sessions (`0144A1`–`0144A4`, plan amendment #34, WP-036A S1 decomposition, 2026-08-30 — `0144A3` pre-authorised to split `0144A3a`/`0144A3b` under Development Workflow §7) = **220**  
+**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 6 sub-sessions (`0141A`–`0141C`, `0141D1`, `0141D2`, `0141E`, plan amendment #32 — `0141D` split into `0141D1`/`0141D2` under Development Workflow §7, 2026-08-27) + 4 sub-sessions (`0144A`–`0144D`, plan amendment #33, WP-036A, mechanical renumber executed 2026-08-29) + 4 sub-sessions (`0144A1`–`0144A4`, plan amendment #34, WP-036A S1 decomposition, 2026-08-30) + 6 sub-sessions (`0144E1`–`0144E6`, plan amendment #35, WP-036B strict-port decomposition, 2026-08-31) = **226**
 **Current entry point:** Session 0001  
 **Status authority:** the latest approved Project State Report; this register
 is updated during S4 only from committed evidence.
@@ -45,6 +45,20 @@ pushed once with `0144B` (amendment #28). `0144A3` is pre-authorised to
 split into `0144A3a` / `0144A3b` under Development Workflow §7 (the
 continuous three-band-network Burn port is the single largest new-numerics
 item); if it splits, planned count becomes 221.
+
+**Amendment-inserted sub-sessions (plan amendment #35, adopted 2026-08-31):**
+WP-036B S1 (session `0144E`) is executed as six sequential strict-port coding
+sub-passes `0144E1`–`0144E6`, inserted between `0144E` and the S2 audit
+`0144F` (see
+`DOCS/sessions/phase-6/WP-036B-S1-execution-plan-and-decomposition.md`). The
+13 reference files contain 498 test functions / 8,570 lines; collect-only
+reached 481 before `test_clevr_n.py` failed on missing `benchmarks.clevr_n`.
+Testing Standards §1.1 stays literal: imports only, assertions unchanged;
+missing behavior is rebuilt through Rust-backed compatibility layers, never a
+semantic-test rewrite. All six commit at their own green local gate and feed
+the single S2 audit `0144F`; `0144F`'s predecessor becomes `0144E6`. They do
+not renumber the integer sequence or surrounding `0144A`–`0144L` block.
+Planned session count: 220 + 6 = 226.
 
 **Amendment-inserted sub-sessions (plan amendment #32):** WP-036 S1
 (session 0141) is executed as five sequential S1 coding sub-passes
@@ -274,6 +288,12 @@ introduction and are not retroactively added here; this table starts with
 | 0144C | 6 | WP-036A | S3 — Remediation | [Trainable compatibility layers — `prin-train` extension](phase-6/0144C-wp036a-s3-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE |
 | 0144D | 6 | WP-036A | S4 — Documentation | [Trainable compatibility layers — `prin-train` extension](phase-6/0144D-wp036a-s4-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE |
 | 0144E | 6 | WP-036B | S1 — Coding | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144E-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
+| 0144E1 | 6 | WP-036B | S1 — Coding | [Core and utils strict port](phase-6/0144E1-wp036b-s1-core-and-utils-strict-port.md) | COMPLETE |
+| 0144E2 | 6 | WP-036B | S1 — Coding | [Phases, hierarchical, and phase-to-rate strict port](phase-6/0144E2-wp036b-s1-phases-hierarchical-and-phase-to-rate-strict-port.md) | PLANNED |
+| 0144E3 | 6 | WP-036B | S1 — Coding | [Q2 and Q2-remaining strict port](phase-6/0144E3-wp036b-s1-q2-and-q2-remaining-strict-port.md) | PLANNED |
+| 0144E4 | 6 | WP-036B | S1 — Coding | [Q3-new, NN, and SCALR-enhanced strict port](phase-6/0144E4-wp036b-s1-q3-nn-and-scalr-enhanced-strict-port.md) | PLANNED |
+| 0144E5 | 6 | WP-036B | S1 — Coding | [Hybrid and CLEVR-N strict port](phase-6/0144E5-wp036b-s1-hybrid-and-clevr-n-strict-port.md) | PLANNED |
+| 0144E6 | 6 | WP-036B | S1 — Coding | [Subconscious strict port and consolidation](phase-6/0144E6-wp036b-s1-subconscious-and-consolidation.md) | PLANNED |
 | 0144F | 6 | WP-036B | S2 — Audit | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144F-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
 | 0144G | 6 | WP-036B | S3 — Remediation | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144G-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
 | 0144H | 6 | WP-036B | S4 — Documentation | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144H-wp036b-s4-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
