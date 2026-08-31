@@ -34,7 +34,12 @@ from prin._torch_compat import (
 )
 
 SEED = 7
-GPU_ATOL = 1e-4  # Testing Standards §3: f32 GPU kernel vs f64 CPU reference.
+# f32 GPU (CubeCL) sparse k-NN kernel vs f64 CPU reference. Documented per-kernel
+# tolerance tier — see DOCS/sphinx/parity_report.rst "WP-036D — GPU sparse k-NN
+# f32 dispatch parity" (amendment #14 f32-truncation hazard pattern; measured
+# worst case max|Δ| ≈ 9.5e-7 abs / ≈ 5.8e-6 rel across the registered cases).
+GPU_ATOL = 1e-5
+GPU_RTOL = 1e-5
 
 
 # ── _is_gpu predicate ──────────────────────────────────────────────────────
@@ -158,7 +163,7 @@ def test_gpu_sparse_knn_dispatch_hook_agrees_with_cpu_reference() -> None:
     names = ("dphase", "damplitude", "dfrequency")
     for got, ref, name in zip(gpu, cpu, names, strict=True):
         assert torch.isfinite(got).all(), name
-        torch.testing.assert_close(got, ref, atol=GPU_ATOL, rtol=GPU_ATOL, msg=name)
+        torch.testing.assert_close(got, ref, atol=GPU_ATOL, rtol=GPU_RTOL, msg=name)
 
 
 def test_gpu_sparse_knn_dispatch_hook_batched_state() -> None:
@@ -170,7 +175,7 @@ def test_gpu_sparse_knn_dispatch_hook_batched_state() -> None:
     assert gpu is not None
     cpu = model.compute_derivatives(state)
     assert tuple(gpu[0].shape) == (2, 16)
-    torch.testing.assert_close(gpu[0], cpu[0], atol=GPU_ATOL, rtol=GPU_ATOL)
+    torch.testing.assert_close(gpu[0], cpu[0], atol=GPU_ATOL, rtol=GPU_RTOL)
 
 
 def test_gpu_dispatch_hook_returns_none_for_full_coupling() -> None:
@@ -213,4 +218,4 @@ def test_sparse_knn_compute_derivatives_on_cuda_returns_cuda() -> None:
     )
     cpu_osc = KuramotoOscillator(128, coupling_strength=2.0, coupling_mode="sparse_knn")
     dphi_cpu, _, _ = cpu_osc.compute_derivatives(cpu_state)
-    torch.testing.assert_close(dphi.cpu(), dphi_cpu, atol=GPU_ATOL, rtol=GPU_ATOL)
+    torch.testing.assert_close(dphi.cpu(), dphi_cpu, atol=GPU_ATOL, rtol=GPU_RTOL)

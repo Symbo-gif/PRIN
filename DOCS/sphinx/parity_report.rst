@@ -440,3 +440,40 @@ floor.
 passthrough — so it has no parity comparison; it is exercised by a
 construct/callable + ``torch.compile`` smoke test and a guard-branch test
 (``torch.compile`` removed → the model is returned unchanged).
+
+WP-036D — GPU sparse k-NN f32 dispatch parity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+WP-036D's ``_torch_compat`` GPU dispatch branch (session ``0144I2``) routes a
+sparse k-NN derivative evaluation through the ``GpuSparseKuramoto.from_knn_phase``
+PyO3 binding to the CubeCL sparse k-NN coupling kernel. Per plan amendment #37
+the marshalling boundary is CPU ``float32`` (``prin-kernels`` dispatch is
+host-in/host-out); the numerical work runs on the GPU backend CubeCL selects
+(CUDA on ``PRIN-GPU-Runner``). The kernel therefore computes in ``f32`` while the
+CPU reference path (``KuramotoOscillator.compute_derivatives``) is ``f64`` — the
+same f32-vs-f64 truncation hazard class as the amendment #14 mechanism, here
+arising from the GPU kernel's working precision rather than a ``torch.complex64``
+intermediate.
+
+Measured maximum deviation of the CubeCL ``f32`` sparse k-NN kernel against the
+``f64`` CPU reference across the registered dispatch-test cases
+(``tests/test_wp036d_gpu_dispatch.py``: ``n=32`` unbatched seed 42; ``n=16``
+batch 2 seed 3; ``n=128`` CUDA seed 7):
+
+- ``dphase`` / ``damplitude``: ``max|Δ| ≈ 9.5e-7`` absolute, ``≈ 4.5e-7``
+  relative.
+- ``dfrequency``: ``max|Δ| ≈ 1.7e-10`` absolute (the frequency-adaptation term
+  is near zero for these inputs), ``≈ 5.8e-6`` relative on that vanishing scale.
+
+Disposition: the dispatch-test agreement assertions use ``rtol=1e-5,
+atol=1e-5`` (``GPU_ATOL`` / ``GPU_RTOL`` in ``tests/test_wp036d_gpu_dispatch.py``).
+This tier matches the Testing Standards §3 default relative tolerance and
+loosens only the absolute tolerance one order of magnitude, because the observed
+absolute delta (``9.5e-7``) sits at the §3 default ``atol`` of ``1e-6`` with no
+working margin for GPU-kernel run-to-run and driver-to-driver ``f32`` variation.
+The Rust-side ``from_knn_phase`` kernel-equivalence test
+(``crates/prin-py/src/bindings/gpu.rs``) independently asserts agreement with the
+``KuramotoOscillator`` ``SparseKnn`` reference within ``1e-4``. This deviation is
+tracked with DV-030 (device-resident GPU buffers); a future device-resident path
+does not change the kernel's working precision, so this tolerance tier is
+expected to persist.
