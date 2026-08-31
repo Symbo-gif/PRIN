@@ -68,6 +68,37 @@ def _numpy(tensor: torch.Tensor) -> np.ndarray[Any, np.dtype[np.float64]]:
     return tensor.detach().to(dtype=torch.float64, device="cpu").contiguous().numpy()
 
 
+def _is_gpu(tensor: torch.Tensor) -> bool:
+    """Return ``True`` when a tensor lives on a non-CPU (CUDA) device.
+
+    The device-dispatch predicate for the WP-036D GPU execution path: a
+    ``True`` result routes the call to the ``0144I1`` ``prin._prin_core`` GPU
+    engine bindings; a ``False`` result leaves the call on the existing
+    ``_numpy()`` -> Rust CPU -> ``_tensor()`` path, byte for byte.
+    """
+    return tensor.device.type != "cpu"
+
+
+def _gpu_f32(tensor: torch.Tensor) -> torch.Tensor:
+    """Marshal a tensor to contiguous CPU ``float32`` for the GPU-engine boundary.
+
+    The ``0144I1`` GPU-engine bindings (``prin._prin_core.GpuSparseKuramoto``
+    et al.) consume ``float32`` DLPack tensors and dispatch the CubeCL kernel
+    on-device. Per WP-036D plan amendment #37 the marshalling boundary is CPU
+    ``float32`` — ``prin-kernels``' kernel dispatch is host-in/host-out, so a
+    zero-copy GPU<->GPU DLPack path is not reachable without device-resident
+    buffers (deferred, see the ``0144I`` handoff). A CUDA input is copied to
+    host ``float32`` here, the numerical work runs on the GPU, and
+    :func:`_from_gpu` returns the result to the caller's device.
+    """
+    return tensor.detach().to(dtype=torch.float32, device="cpu").contiguous()
+
+
+def _from_gpu(capsule: object, like: torch.Tensor) -> torch.Tensor:
+    """Decode a GPU-engine DLPack result to the dtype and device of ``like``."""
+    return from_dlpack(capsule).to(dtype=like.dtype, device=like.device)
+
+
 def _tensor(value: object, like: torch.Tensor) -> torch.Tensor:
     """Marshal a Rust/Python value to the dtype and device of ``like``."""
     return torch.as_tensor(value, dtype=like.dtype, device=like.device)
@@ -362,10 +393,30 @@ class OscillatorModel(ABC):
     def _rebuild(self, mode: _core.CouplingMode) -> None:
         """Rebuild the Rust model with a new coupling mode."""
 
+    def _compute_derivatives_gpu(
+        self, state: OscillatorState
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor] | None:
+        """GPU device-dispatch hook for :meth:`compute_derivatives`.
+
+        Returns ``None`` for models with no GPU execution path (the base and
+        Stuart-Landau / Hopf models); :class:`KuramotoOscillator` overrides it
+        for the sparse k-NN coupling regime (WP-036D ``0144I2``).
+        """
+        return None
+
     def compute_derivatives(
         self, state: OscillatorState
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Compute derivatives in Rust and marshal them to Torch tensors."""
+        """Compute derivatives in Rust and marshal them to Torch tensors.
+
+        A CUDA input state is routed to the ``0144I1`` GPU engine binding by
+        :meth:`_compute_derivatives_gpu` (WP-036D); a CPU input stays on the
+        ``_numpy()`` -> Rust CPU -> ``_tensor()`` path below, unchanged.
+        """
+        if _is_gpu(state.phase):
+            gpu = self._compute_derivatives_gpu(state)
+            if gpu is not None:
+                return gpu
         derivatives = [
             _DynamicsAutograd.apply(  # type: ignore[no-untyped-call]
                 self._raw, phase, amplitude, frequency
@@ -508,6 +559,58 @@ class KuramotoOscillator(OscillatorModel):
     def sparse_k(self) -> int:
         """Return resolved sparse-neighbour count."""
         return self._sparse_k
+
+    def _compute_derivatives_gpu(
+        self, state: OscillatorState
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor] | None:
+        """Route a CUDA sparse k-NN derivative evaluation to the GPU kernel.
+
+        Dispatches to ``prin._prin_core.GpuSparseKuramoto`` (WP-036D ``0144I1``),
+        whose ``from_knn_phase`` builds the k-NN CSR topology in Rust from the
+        current phase and runs the CubeCL sparse k-NN kernel. Returns ``None``
+        for every other regime (mean-field / full coupling, ``n <= 1``, or a
+        build without the GPU bindings), leaving :meth:`compute_derivatives` on
+        its CPU path.
+
+        The GPU path is not differentiable (no autograd through the kernel);
+        this matches the reference tests, which never call ``backward`` on a
+        CUDA derivative.
+        """
+        if self._coupling_mode != "sparse_knn" or self._sparse_k < 1 or self._n <= 1:
+            return None
+        gpu_cls = getattr(_core, "GpuSparseKuramoto", None)
+        if gpu_cls is None:
+            return None
+        rows = []
+        for phase, amplitude, frequency in zip(
+            _rows(state.phase),
+            _rows(state.amplitude),
+            _rows(state.frequency),
+            strict=True,
+        ):
+            engine = gpu_cls.from_knn_phase(
+                self._n,
+                self._sparse_k,
+                self._coupling_strength,
+                self._decay_rate,
+                self._freq_adaptation_rate,
+                _gpu_f32(phase),
+            )
+            dphase, damplitude, dfrequency = engine.compute_derivatives(
+                _gpu_f32(phase), _gpu_f32(amplitude), _gpu_f32(frequency)
+            )
+            rows.append(
+                (
+                    _from_gpu(dphase, phase),
+                    _from_gpu(damplitude, amplitude),
+                    _from_gpu(dfrequency, frequency),
+                )
+            )
+        return (
+            _stack([row[0] for row in rows], state.phase),
+            _stack([row[1] for row in rows], state.amplitude),
+            _stack([row[2] for row in rows], state.frequency),
+        )
 
 
 class StuartLandauOscillator(OscillatorModel):
@@ -868,6 +971,12 @@ def gradient_checkpoint_integration(
 
     Uses :class:`MultiRateIntegrator` with one RK4 sub-step per call so the
     chain stays differentiable when ``state`` has ``requires_grad``.
+
+    A CUDA input state stays on-device across the segmented loop through the
+    per-step device-restoring marshalling in :class:`MultiRateIntegrator`
+    (``final.phase.device`` matches the input). The frequency/VRAM-budget
+    accounting itself is device-agnostic; a device-resident checkpointing
+    buffer path is deferred (WP-036D plan amendment #37).
     """
     if n_steps < 0:
         raise ValueError(f"n_steps must be non-negative, got {n_steps}")
@@ -1076,7 +1185,15 @@ class ExponentialIntegrator:
     def step(
         self, model: OscillatorModel, state: OscillatorState, dt: float
     ) -> OscillatorState:
-        """Advance one step through the exponential Euler integrator."""
+        """Advance one step through the exponential Euler integrator.
+
+        A CUDA input state is carried through the Rust owner via the
+        device-restoring marshalling in :meth:`OscillatorState._from_raw_rows`
+        (``new_state.phase.device`` matches the input). A dedicated fused-GPU
+        exponential-integrator kernel is deferred — ``prin-kernels`` ships no
+        exponential-integrator kernel (WP-036D plan amendment #37; see the
+        ``0144I`` handoff).
+        """
         rows = [
             self._raw_for(3 * len(row.phase)).step(model._raw, row, dt)
             for row in state._raw_rows()
@@ -1176,7 +1293,14 @@ def phase_to_rate(
     sparsity: float = 0.1,
     temperature: float = 1.0,
 ) -> torch.Tensor:
-    """Delegate differentiable phase-to-rate conversion to ``prin-train``."""
+    """Delegate differentiable phase-to-rate conversion to ``prin-train``.
+
+    A CUDA input is restored to its device on the returned tensor. The GPU
+    parity reference (``test_acceptance_phase_to_rate.py::test_gpu_parity``)
+    exercises the ``prin.nn.autoencoders.PhaseToRateConverter`` ``nn.Module``
+    directly, not this function; a GPU kernel path for that module lives
+    outside ``_torch_compat.py`` and is deferred (WP-036D plan amendment #37).
+    """
     from prin.nn.autoencoders import PhaseToRateConverter
 
     converter = PhaseToRateConverter(
@@ -1236,7 +1360,16 @@ class _HierarchicalNetwork:
     def step(
         self, state: tuple[OscillatorState, ...], dt: float = 0.001
     ) -> tuple[OscillatorState, ...]:
-        """Advance every band through Rust in the archived PAC stepping order."""
+        """Advance every band through Rust in the archived PAC stepping order.
+
+        A CUDA input state keeps its device on every returned band tensor
+        (``new_state[0].phase.is_cuda`` holds) via the device-restoring
+        marshalling in :class:`MultiRateIntegrator` and
+        :class:`PhaseAmplitudeCoupling`. The fused three-band GPU stepper
+        (``prin._prin_core.GpuBandStepper``) is a *discrete-Euler* kernel and
+        is not numerically equivalent to this multi-rate RK4 + PAC ordering,
+        so it is not routed here (WP-036D plan amendment #37).
+        """
         values = list(state)
         values[0] = self._integrators[0].step(self._models[0], values[0], dt)
         for index, pac in enumerate(self._pac, start=1):
