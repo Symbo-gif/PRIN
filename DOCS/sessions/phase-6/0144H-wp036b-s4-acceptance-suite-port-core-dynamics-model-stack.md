@@ -1,6 +1,6 @@
 # Session 0144H — WP-036B S4: Documentation — Acceptance suite port (core, dynamics, model stack, subconscious)
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S4 — Documentation

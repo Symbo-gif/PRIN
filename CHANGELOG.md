@@ -63,6 +63,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (q2 + q2_remaining, 118), `0144E4` (q3_new + nn + scalr_enhanced, 75),
   `0144E5` (hybrid + clevr_n, 36), `0144E6` (subconscious + consolidation,
   49). S2 audit (`0144F`): PASS, zero findings. S3: no-change closure.
+  - **S4 documentation closure (session 0144H):** `tests/README.md` updated
+    with ported-suite inventory (13 files, 498 tests, per-file counts and
+    marker policy); Project State Report `DOCS/reports/036b-project-state.md`
+    issued, declaring WP-036D (GPU execution path for the ported acceptance
+    suite, amendment #36) as the registered successor; WP-036B closed. Parity
+    Report unchanged (zero tolerance annotations). Full suite 1,770 passed,
+    9 deselected; interrogate 97.4%.
 
 ### Changed
 

@@ -314,7 +314,7 @@ introduction and are not retroactively added here; this table starts with
 | 0144B | 6 | WP-036A | S2 — Audit | [Trainable compatibility layers — `prin-train` extension](phase-6/0144B-wp036a-s2-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE |
 | 0144C | 6 | WP-036A | S3 — Remediation | [Trainable compatibility layers — `prin-train` extension](phase-6/0144C-wp036a-s3-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE |
 | 0144D | 6 | WP-036A | S4 — Documentation | [Trainable compatibility layers — `prin-train` extension](phase-6/0144D-wp036a-s4-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE |
-| 0144E | 6 | WP-036B | S1 — Coding | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144E-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
+| 0144E | 6 | WP-036B | S1 — Coding | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144E-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md) | COMPLETE |
 | 0144E1 | 6 | WP-036B | S1 — Coding | [Core and utils strict port](phase-6/0144E1-wp036b-s1-core-and-utils-strict-port.md) | COMPLETE |
 | 0144E2 | 6 | WP-036B | S1 — Coding | [Phases, hierarchical, and phase-to-rate strict port](phase-6/0144E2-wp036b-s1-phases-hierarchical-and-phase-to-rate-strict-port.md) | COMPLETE |
 | 0144E3 | 6 | WP-036B | S1 — Coding | [Q2 and Q2-remaining strict port](phase-6/0144E3-wp036b-s1-q2-and-q2-remaining-strict-port.md) | COMPLETE |
@@ -323,7 +323,7 @@ introduction and are not retroactively added here; this table starts with
 | 0144E6 | 6 | WP-036B | S1 — Coding | [Subconscious strict port and consolidation](phase-6/0144E6-wp036b-s1-subconscious-and-consolidation.md) | COMPLETE |
 | 0144F | 6 | WP-036B | S2 — Audit | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144F-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md) | COMPLETE |
 | 0144G | 6 | WP-036B | S3 — Remediation | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144G-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md) | COMPLETE |
-| 0144H | 6 | WP-036B | S4 — Documentation | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144H-wp036b-s4-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
+| 0144H | 6 | WP-036B | S4 — Documentation | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144H-wp036b-s4-acceptance-suite-port-core-dynamics-model-stack.md) | COMPLETE |
 | 0144I | 6 | WP-036D | S1 — Coding | [GPU execution path for the ported acceptance suite](phase-6/0144I-wp036d-s1-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
 | 0144I1 | 6 | WP-036D | S1 — Coding | [PyO3 GPU binding layer](phase-6/0144I1-wp036d-s1-pyo3-gpu-binding-layer.md) | PLANNED |
 | 0144I2 | 6 | WP-036D | S1 — Coding | [Python device dispatch and DLPack marshalling](phase-6/0144I2-wp036d-s1-device-dispatch-and-dlpack-marshalling.md) | PLANNED |

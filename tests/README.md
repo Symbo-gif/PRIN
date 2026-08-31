@@ -1,10 +1,43 @@
 # tests/ — pytest acceptance suite
 
-The PRINet 3.0 pytest suite (37 files, ~1,670 tests) is the **acceptance
-contract** for PRIN: it defines the public API. It will be ported incrementally
-with imports adapted (`prinet` → `prin`) and assertions otherwise unchanged.
+The PRIN pytest suite (50 files, ~1,788 tests) is the **acceptance contract**
+for PRIN: it defines the public API. The WP-036B strict port has adapted 13
+PRINet 3.0 reference files (498 `def test_` functions, 8,085 reference lines)
+with import-only changes (`prinet.*` → `prin.*`); assertions are unchanged
+(Testing Standards §1.1).
 
-Additional PRIN-specific suites (per the Testing Standards):
+## WP-036B ported acceptance suite (13 files, 498 tests)
+
+| Port file | `def test_` | Passed | Skipped | Reference guard |
+|---|---:|---:|---:|---|
+| `test_acceptance_core.py` | 106 | 106 | 0 | — |
+| `test_acceptance_utils.py` | 19 | 19 | 0 | — |
+| `test_acceptance_phases.py` | 30 | 30 | 0 | — |
+| `test_acceptance_hierarchical.py` | 43 | 41 | 2 | 2 CUDA `skipif` |
+| `test_acceptance_phase_to_rate.py` | 22 | 21 | 1 | 1 CUDA `skipif` |
+| `test_acceptance_q2.py` | 67 | 65 | 2 | 2 CUDA `skipif` |
+| `test_acceptance_q2_remaining.py` | 51 | 48 | 3 | 3 CUDA `skipif` |
+| `test_acceptance_q3_new.py` | 31 | 31 | 0 | — |
+| `test_acceptance_nn.py` | 30 | 30 | 0 | — |
+| `test_acceptance_scalr_enhanced.py` | 14 | 14 | 0 | — |
+| `test_acceptance_hybrid.py` | 19 | 19 | 0 | — |
+| `test_acceptance_clevr_n.py` | 17 | 17 | 0 | — |
+| `test_acceptance_subconscious.py` | 49 | 48 | 1 | 1 `psutil`-absent |
+| **Total** | **498** | **489** | **9** | 8 CUDA + 1 psutil |
+
+**Marker policy:** The 8 CUDA skips are `@pytest.mark.skipif(not
+torch.cuda.is_available(), ...)` guards matching the reference files exactly;
+they will activate when the GPU execution path (WP-036D) is delivered. The
+1 psutil skip matches `pytest.skip("psutil not installed")` in the reference.
+No test carries `@pytest.mark.xfail`; no assertion is weakened; no tolerance
+annotation was required (zero numerical-parity deviations from the ported
+suite). Run the ported subset:
+
+```bash
+pytest tests/test_acceptance_*.py -v --basetemp=.pytest_basetemp
+```
+
+## Additional PRIN-specific suites (per the Testing Standards)
 
 - `test_wp001_baseline.py` — 44 fail-closed metadata, session-ledger,
   traceability, CI, release-guard, and security-control tests. Validates that
