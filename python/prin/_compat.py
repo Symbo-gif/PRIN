@@ -15,7 +15,7 @@ from prin.dynamics import (
     TemporalPropagator,
 )
 from prin.eval import recovery_speed
-from prin.nn import Rip, Scalr, SyncGd
+from prin.nn import RIPOptimizer, SCALROptimizer, SynchronizedGradientDescent
 
 __all__: list[str] = [
     "BackendUnavailableError",
@@ -56,9 +56,6 @@ class OscillatorModel(Protocol):
         ...
 
 
-SCALROptimizer = Scalr
-RIPOptimizer = Rip
-SynchronizedGradientDescent = SyncGd
 TemporalPhasePropagator = TemporalPropagator
 temporal_recovery_speed = recovery_speed
 ThetaGammaNetwork = BandNetwork.theta_gamma

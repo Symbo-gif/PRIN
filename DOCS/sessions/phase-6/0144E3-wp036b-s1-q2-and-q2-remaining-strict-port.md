@@ -1,6 +1,6 @@
 # Session 0144E3 — WP-036B S1 (sub-pass 3/6): Q2 and Q2-remaining strict port
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S1 — Coding

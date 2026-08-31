@@ -1,6 +1,6 @@
 # Session 0144E4 — WP-036B S1 (sub-pass 4/6): Q3-new, NN, and SCALR-enhanced strict port
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S1 — Coding

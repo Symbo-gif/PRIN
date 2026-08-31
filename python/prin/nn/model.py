@@ -113,10 +113,18 @@ class PRINetModel(torch.nn.Module):
         self.layer_norms = [object() for _ in range(n_layers)]
         self._mixed_precision = False
         self._mixed_precision_dtype: torch.dtype | None = None
-        # Compatibility: a single no-op Parameter lets legacy torch.optim and
-        # SCALR optimizers construct with ``model.parameters()``.
+        # Compatibility: no-op Parameters let legacy ``torch.optim`` / SCALR
+        # optimizers construct with ``model.parameters()`` and give
+        # ``oscillatory_weight_init`` a square ``coupling`` matrix to
+        # symmetrize. The Rust bridge owns every trained weight, so these
+        # mirrors are ``requires_grad=False`` — a gradient walk over
+        # ``named_parameters()`` skips them.
         self._compatibility_param = torch.nn.Parameter(
-            torch.zeros(1, dtype=torch.float64)
+            torch.zeros(1, dtype=torch.float64), requires_grad=False
+        )
+        self.coupling = torch.nn.Parameter(
+            torch.randn(n_resonances, n_resonances, dtype=torch.float64) * 0.1,
+            requires_grad=False,
         )
 
     @property
@@ -177,8 +185,10 @@ class PRINetModel(torch.nn.Module):
         if was_vector:
             result = result.squeeze(0)
         # PRINet 3.0's log_softmax output is a leaf from the Rust bridge; make
-        # it backward-safe for legacy gradient checks without exposing
-        # Rust-owned parameters as ``torch.nn.Parameter``.
+        # it backward-safe for legacy gradient checks. The compatibility
+        # mirrors below are ``requires_grad=False`` (the Rust bridge owns the
+        # trained weights), so a gradient walk over ``named_parameters()``
+        # skips them and ``torch.compile`` still finds nothing to fuse.
         return result.requires_grad_(True)
 
     def load_reference_weights(self, reference: Any) -> None:

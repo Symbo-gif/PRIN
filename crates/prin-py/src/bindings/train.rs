@@ -238,6 +238,49 @@ impl PyResonanceLayerBridge {
         Ok((out_capsule, Py::new(py, ctx)?))
     }
 
+    /// Per-batch-row Kuramoto order parameter after the full `n_steps`
+    /// integration — PRINet 3.0's `ResonanceLayer.get_order_parameter`
+    /// monitoring hook. `x` is `[batch, n_dims]`; returns a `[batch]`
+    /// `float64` tensor. Non-differentiable (synchronization monitoring
+    /// only, matching the reference).
+    ///
+    /// # Errors
+    ///
+    /// Raises `ValueError` on a non-`float64`/non-CPU/non-contiguous input,
+    /// a shape other than `[batch, n_dims]`, or a `prin-train` /
+    /// `prin-metrics` failure.
+    fn order_parameter(&self, py: Python<'_>, x: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+        let (x, x_shape, _x_data) = tensor_from_dlpack_with_data::<2>(x)?;
+        if x_shape[1] != self.n_dims {
+            return Err(PyValueError::new_err(format!(
+                "expected x shape [batch, {}], got {:?}",
+                self.n_dims, x_shape
+            )));
+        }
+        let state = self.layer.init_state(x).map_err(train_err_to_py)?;
+        let n_steps = self.layer.n_steps();
+        let final_state = self
+            .layer
+            .integrate(state, n_steps)
+            .map_err(train_err_to_py)?;
+        let phase = final_state.phase().clone().inner();
+        let dims = phase.dims();
+        let (batch, n) = (dims[0], dims[1]);
+        let data = phase
+            .into_data()
+            .to_vec::<f64>()
+            .map_err(|e| PyValueError::new_err(format!("failed to read phase data: {e:?}")))?;
+        let mut r = Vec::with_capacity(batch);
+        for b in 0..batch {
+            let row = &data[b * n..(b + 1) * n];
+            r.push(
+                prin_metrics::kuramoto_order_parameter(row)
+                    .map_err(|e| PyValueError::new_err(format!("{e}")))?,
+            );
+        }
+        crate::dlpack::export_dlpack_f64(py, vec![batch as i64], r)
+    }
+
     /// Serialize the layer's parameters to opaque, byte-exact checkpoint
     /// bytes (`burn::record::BinBytesRecorder<DoublePrecisionSettings>` —
     /// the same mechanism `layers.rs`'s

@@ -42,7 +42,6 @@ from prin.dynamics import (
     TemporalPropagator,
 )
 from prin.eval import recovery_speed
-from prin.nn import Rip, Scalr, SyncGd
 
 REEXPORTED_SYMBOLS = frozenset(
     {
@@ -189,10 +188,19 @@ def test_deprecated_parameter_only_warns_when_supplied_by_keyword() -> None:
 
 
 def test_pure_rename_aliases_resolve_and_construct() -> None:
-    """Rename aliases are identity shims or BandNetwork factories."""
-    assert SCALROptimizer is Scalr
-    assert RIPOptimizer is Rip
-    assert SynchronizedGradientDescent is SyncGd
+    """Rename aliases are identity shims or BandNetwork factories.
+
+    ``SCALROptimizer`` / ``RIPOptimizer`` / ``SynchronizedGradientDescent`` are
+    no longer pure renames of the WP-027 ``Scalr`` / ``Rip`` / ``SyncGd``
+    bridges: WP-036B S1 (0144E4) rebuilds the full PRINet 3.0
+    ``nn.optimizers`` public API (metric histories, ``compute_sync_penalty``,
+    per-frequency ``order_parameter`` dicts, EMA-adaptive ``r_min``) on top of
+    those Rust bridges, so they are their own ``torch.optim.Optimizer``
+    subclasses.
+    """
+    assert issubclass(SCALROptimizer, torch.optim.Optimizer)
+    assert issubclass(RIPOptimizer, torch.optim.Optimizer)
+    assert issubclass(SynchronizedGradientDescent, torch.optim.Optimizer)
     assert TemporalPhasePropagator is TemporalPropagator
     assert temporal_recovery_speed is recovery_speed
 
@@ -211,10 +219,10 @@ def test_pure_rename_aliases_resolve_and_construct() -> None:
     assert three_band.band_sizes() == [1, 2, 3]
 
     parameter = torch.zeros(1, dtype=torch.float64, requires_grad=True)
-    assert isinstance(SCALROptimizer([parameter]), Scalr)
-    assert isinstance(SynchronizedGradientDescent([parameter]), SyncGd)
+    assert isinstance(SCALROptimizer([parameter]), torch.optim.Optimizer)
+    assert isinstance(SynchronizedGradientDescent([parameter]), torch.optim.Optimizer)
     coupling = torch.zeros((2, 2), dtype=torch.float64, requires_grad=True)
-    assert isinstance(RIPOptimizer([coupling]), Rip)
+    assert isinstance(RIPOptimizer([coupling]), torch.optim.Optimizer)
 
 
 def test_unavailable_backend_predicates_are_false() -> None:

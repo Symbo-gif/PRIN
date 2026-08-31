@@ -193,10 +193,14 @@ class TestResonanceLayerErrors:
         with pytest.raises(ValueError, match=r"expected x shape \[batch, 3\]"):
             resonance_layer(x)
 
-    def test_1d_input_rejected(self, resonance_layer: ResonanceLayer) -> None:
+    def test_1d_input_accepted(self, resonance_layer: ResonanceLayer) -> None:
+        # PRINet 3.0's ``ResonanceLayer.forward`` accepts an unbatched
+        # ``(n_dims,)`` input and returns ``(n_oscillators,)`` (WP-036B S1
+        # 0144E4 acceptance port: ``test_nn.TestResonanceLayer``).
         x = torch.randn(3, dtype=torch.float64)
-        with pytest.raises(ValueError, match="expected a 2-D tensor"):
-            resonance_layer(x)
+        out = resonance_layer(x)
+        assert out.shape == (4,)
+        assert torch.isfinite(out).all()
 
     def test_non_contiguous_input_accepted(
         self, resonance_layer: ResonanceLayer

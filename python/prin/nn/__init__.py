@@ -113,7 +113,14 @@ from .inhibition_layers import (
     oscillatory_weight_init,
 )
 from .model import PRINetModel, compile_model
-from .optimizers import Rip, Scalr, SyncGd
+from .optimizers import (
+    Rip,
+    RIPOptimizer,
+    Scalr,
+    SCALROptimizer,
+    SyncGd,
+    SynchronizedGradientDescent,
+)
 from .phase_tracker import PhaseTracker, TrackingResult
 from .slot_attention import (
     SlotAttentionCLEVRN,
@@ -152,8 +159,10 @@ __all__: list[str] = [
     "PhaseTracker",
     "PhaseTrackerFrozen",
     "PhaseTrackerStatic",
+    "RIPOptimizer",
     "ResonanceLayer",
     "Rip",
+    "SCALROptimizer",
     "Scalr",
     "SlotAttentionCLEVRN",
     "SlotAttentionFrozen",
@@ -161,6 +170,7 @@ __all__: list[str] = [
     "SlotAttentionNoGRU",
     "SparsityRegularizationLoss",
     "SyncGd",
+    "SynchronizedGradientDescent",
     "TemporalHybridPRINet",
     "TemporalSlotAttentionMOT",
     "TrackingResult",
@@ -266,6 +276,29 @@ class ResonanceLayer(torch.nn.Module):
             seed_key,
         )
         self._coupling_scale = 1.0 / math.sqrt(n_oscillators)
+        # PRINet 3.0 compatibility: the reference ``ResonanceLayer`` exposes
+        # ``coupling`` / ``decay`` / ``input_proj`` / ``modulation`` /
+        # ``base_frequency`` as ``torch.nn.Parameter`` for introspection,
+        # ``oscillatory_weight_init``, and ``torch.optim`` construction. The
+        # Rust bridge remains the numerical owner of ``forward`` /
+        # ``get_order_parameter``; these mirrors carry the PRINet-3.0
+        # parameter names/shapes and initialization contract.
+        coupling = torch.randn(n_oscillators, n_oscillators, dtype=torch.float64)
+        coupling = (coupling + coupling.T) / 2.0 * 0.1
+        coupling.fill_diagonal_(0.0)
+        self.coupling = torch.nn.Parameter(coupling)
+        self.decay = torch.nn.Parameter(
+            torch.full((n_oscillators,), decay_rate, dtype=torch.float64)
+        )
+        self.modulation = torch.nn.Parameter(
+            torch.randn(n_oscillators, n_oscillators, dtype=torch.float64) * 0.01
+        )
+        self.base_frequency = torch.nn.Parameter(
+            torch.linspace(0.1, 10.0, n_oscillators, dtype=torch.float64)
+        )
+        self.input_proj = torch.nn.Linear(n_dims, n_oscillators, bias=False).to(
+            torch.float64
+        )
 
     @property
     def n_oscillators(self) -> int:
@@ -289,10 +322,29 @@ class ResonanceLayer(torch.nn.Module):
 
         Raises:
             ValueError: If ``x`` is not CPU/contiguous or its shape is not
-                ``(batch, n_dims)``.
+                ``(batch, n_dims)`` / ``(n_dims,)``.
         """
-        result: torch.Tensor = apply_rust_bridge(self._bridge.forward, [x])
+        was_vector = x.dim() == 1
+        batched = x.unsqueeze(0) if was_vector else x
+        result: torch.Tensor = apply_rust_bridge(self._bridge.forward, [batched])
+        if was_vector:
+            result = result.squeeze(0)
         return result
+
+    def get_order_parameter(self, x: torch.Tensor) -> torch.Tensor:
+        """Return the per-input Kuramoto order parameter (PRINet 3.0 hook).
+
+        Args:
+            x: Input tensor of shape ``(batch, n_dims)`` or ``(n_dims,)``.
+
+        Returns:
+            Order parameter(s) in ``[0, 1]``; shape ``(batch,)`` or scalar.
+        """
+        was_vector = x.dim() == 1
+        batched = x.unsqueeze(0) if was_vector else x
+        marshalled = batched.detach().to(dtype=torch.float64, device="cpu").contiguous()
+        result: torch.Tensor = from_dlpack(self._bridge.order_parameter(marshalled))
+        return result.squeeze(0) if was_vector else result
 
     def rust_state_dict(self) -> bytes:
         """Serialize Rust-owned parameters to opaque checkpoint bytes.

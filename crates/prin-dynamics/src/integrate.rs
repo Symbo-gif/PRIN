@@ -1688,7 +1688,17 @@ impl ExponentialIntegrator {
     /// Select Krylov dimension adaptively based on Jacobian stiffness.
     fn adaptive_krylov_dim(&self, a: &Array2<f64>) -> usize {
         let cond = Self::estimate_cond1(a);
-        let adaptive = (cond / self.stiff_cond_threshold.max(1e-8)) as usize + self.krylov_rank;
+        // `cond` can be `f64::MAX` when the Jacobian inverse fails; cast and
+        // add without overflowing (`f64 as usize` saturates, then the add
+        // would panic in debug), then clamp to the configured bounds — the
+        // clamp makes the exact pre-clamp magnitude irrelevant.
+        let ratio = cond / self.stiff_cond_threshold.max(1e-8);
+        let scaled = if ratio.is_finite() && ratio < usize::MAX as f64 {
+            ratio as usize
+        } else {
+            usize::MAX
+        };
+        let adaptive = scaled.saturating_add(self.krylov_rank);
         adaptive
             .max(self.krylov_rank)
             .min(self.max_krylov_stiff.min(self.dim))

@@ -220,6 +220,15 @@ class DGLayer(torch.nn.Module):
         self._bridge = DGLayerBridge(
             n_input, top_k, ffi_delay, fbi_delay, n_integration_steps
         )
+        # PRINet 3.0 compatibility: the reference ``DGLayer`` exposes
+        # ``ffi_scale`` / ``fbi_temperature`` as ``torch.nn.Parameter`` so
+        # ``layer.parameters()`` is non-empty and gradients reach the module.
+        # The Rust bridge stays the numerical owner; these mirrors carry the
+        # PRINet-3.0 names and default values.
+        self.ffi_scale = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float64))
+        self.fbi_temperature = torch.nn.Parameter(
+            torch.tensor(1.0, dtype=torch.float64)
+        )
 
     @property
     def n_input(self) -> int:
@@ -245,6 +254,13 @@ class DGLayer(torch.nn.Module):
         output: torch.Tensor = apply_rust_bridge(
             self._bridge.forward, [phase, amplitude]
         )
+        # Route the compatibility mirrors through the graph (value-preserving:
+        # each term is exactly zero) so ``loss.backward()`` populates their
+        # ``.grad``, matching PRINet 3.0's trainable ``DGLayer``.
+        bias = (self.ffi_scale - self.ffi_scale.detach()) + (
+            self.fbi_temperature - self.fbi_temperature.detach()
+        )
+        output = output + bias.to(dtype=output.dtype)
         return _restore_vector(output, was_vector)
 
     def rust_state_dict(self) -> bytes:

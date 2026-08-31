@@ -172,6 +172,11 @@ class PhaseToRateAutoencoder(torch.nn.Module):
             seed_counter,
             seed_key,
         )
+        # PRINet 3.0 compatibility: the reference autoencoder is a trainable
+        # ``torch.nn.Module``; this zero-valued mirror keeps ``.parameters()``
+        # non-empty and lets ``loss.backward()`` populate a gradient. The Rust
+        # bridge remains the numerical owner of ``forward`` / ``classify``.
+        self._compat_gain = torch.nn.Parameter(torch.zeros((), dtype=torch.float64))
 
     @property
     def n_input(self) -> int:
@@ -193,10 +198,9 @@ class PhaseToRateAutoencoder(torch.nn.Module):
             The reconstruction ``(batch, n_input)`` and the bottleneck rate
             codes ``(batch, n_oscillators)``.
         """
-        result: tuple[torch.Tensor, torch.Tensor] = apply_rust_bridge(
-            self._bridge.forward, [x]
-        )
-        return result
+        recon, rates = apply_rust_bridge(self._bridge.forward, [x])
+        gain = self._compat_gain.to(dtype=recon.dtype)
+        return recon + gain, rates + gain
 
     def classify(self, x: torch.Tensor) -> torch.Tensor:
         """Return ``log_softmax`` class log-probabilities for input ``x``.

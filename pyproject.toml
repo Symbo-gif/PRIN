@@ -130,6 +130,9 @@ convention = "google"
 "tests/test_acceptance_phases.py" = ["F401", "RUF059"]
 "tests/test_acceptance_hierarchical.py" = ["I001"]
 "tests/test_acceptance_phase_to_rate.py" = ["I001"]
+"tests/test_acceptance_q3_new.py" = ["E501", "F401", "I001", "RUF059"]
+"tests/test_acceptance_nn.py" = ["F401", "F841", "I001"]
+"tests/test_acceptance_scalr_enhanced.py" = ["B007", "B905", "F841", "I001"]
 "parity/test_parity_differential.py" = ["E402", "I001"]
 "parity/test_parity_subconscious.py" = ["E402", "I001"]
 

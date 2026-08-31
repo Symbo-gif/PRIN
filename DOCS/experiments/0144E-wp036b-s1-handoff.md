@@ -3,8 +3,8 @@
 **Date:** 2026-08-31 (session start and decomposition)  
 **Status:** S1 **IN PROGRESS**. Plan amendment #35 (MichaelMaillet,
 2026-08-31) inserts six sequential coding sub-passes `0144E1`–`0144E6`, all
-feeding the single mandatory S2 audit `0144F`. Sub-passes `0144E1`–`0144E3` are
-complete at their green local gates; `0144E4` is next. S1 does not self-certify.
+feeding the single mandatory S2 audit `0144F`. Sub-passes `0144E1`–`0144E4` are
+complete at their green local gates; `0144E5` is next. S1 does not self-certify.
 
 ## Session-start protocol (Development Workflow §6)
 
@@ -333,7 +333,91 @@ scalr_enhanced**.
 
 ### 0144E4 — q3_new + nn + scalr_enhanced
 
-*Pending execution.*
+**Complete 2026-08-31; committed locally with amendment #35; not pushed. Next:
+0144E5.**
+
+#### Strict-port accounting and semantic proof
+
+| Reference | Stable port | Source lines | `def test_` | Collected / passed | Tolerance annotations | Skips / guards | Discoveries |
+|---|---|---:|---:|---:|---|---|---|
+| `test_q3_new.py` | `tests/test_acceptance_q3_new.py` | 389 | 31 | 31 / 31 | 0 | 0 | `DentateGyrusConverter` re-export from `prin._torch_compat`; `ExponentialIntegrator.stiff_mode` property + advisory-`dim` semantics; `benchmarks.oscillobench` support module; `DGLayer` / `PhaseToRateAutoencoder` trainable-parameter mirrors |
+| `test_nn.py` | `tests/test_acceptance_nn.py` | 712 | 30 | 30 / 30 | 0 | 0 | `SynchronizedGradientDescent` / `RIPOptimizer` full PRINet 3.0 API; `ResonanceLayer` parameter mirrors + `get_order_parameter` + unbatched forward; `PRINetModel` `coupling` mirror for `oscillatory_weight_init` |
+| `test_scalr_enhanced.py` | `tests/test_acceptance_scalr_enhanced.py` | 649 | 14 | 14 / 14 | 0 | 0 | `SCALROptimizer` `_order_history` / `_lr_decay_factor` / `_r_ema` / dict `order_parameter` mirrored from the Rust `ScalrBridge` state |
+| **E4 total** | **3 files** | **1,750** | **75** | **75 / 75** | **0** | **0** | — |
+
+**Import-only proof:** `tools/_port_e4.py` performs the import remap and the
+ports are then `ruff format`-normalised. `git diff --no-index --unified=0`
+against each archived reference reports only the import-module lines changed
+(`prinet.core.propagation` → `prin._torch_compat`, `prinet.nn.layers` →
+`prin.nn`, `prinet.nn.optimizers` → `prin`, `prinet.core.measurement` →
+`prin._torch_compat`, `prinet.utils.benchmark_reporting` → `prin.reporting`,
+`prinet.utils.triton_kernels` → `prin.kernels`) plus one `ruff format` assert
+re-wrap in `test_nn` (`test_coupling_symmetric_after_init` message only — no
+assertion, value, parameter, call order, or semantics changed). Source and port
+`def test_` / line inventories match exactly (31/389, 30/712, 14/649).
+
+#### Changed-owner mapping
+
+| Compatibility behavior | Numerical owner | PyO3 / Python exposure |
+|---|---|---|
+| `ExponentialIntegrator` stiff-mode adaptive Krylov dimension | `crates/prin-dynamics/src/integrate.rs::adaptive_krylov_dim` (overflow-safe cast + `saturating_add` before the existing clamp) | unchanged `_core.ExponentialIntegrator`; `python/prin/_torch_compat.py` builds the Rust integrator lazily from the real `3·n` state size while `dim`/`use_krylov`/`krylov_rank` keep PRINet 3.0's advisory-hint semantics (the reference `step` never checks `D == dim`) |
+| `ResonanceLayer` Kuramoto order parameter | new `PyResonanceLayerBridge::order_parameter` → `prin_train::layers::ResonanceLayer::{init_state,integrate}` final phase → `prin_metrics::kuramoto_order_parameter` per row | thin `ResonanceLayer.get_order_parameter` marshals to float64 CPU and returns the `[batch]` result |
+| `SynchronizedGradientDescent` / `RIPOptimizer` / `SCALROptimizer` PRINet 3.0 public API | Rust `SyncGdBridge` (`sgd_update` + barrier), `RipBridge` (Hebbian coupling rule), `ScalrBridge` (SCALR scaling + oscillation decay + adaptive `r_min`) in `crates/prin-train/src/{sync_gd,rip,scalr}.rs` | new `python/prin/nn/optimizers.py` compat classes: every parameter tensor update delegates to a bridge; only the scalar order-parameter feedback bookkeeping (penalty value, history lists, decay/EMA state round-tripped through `ScalrBridge.{state_dict,load_state_dict}`) is mirrored in Python — the same split as the existing `Scalr.compute_lr_scale` helper. `prin._compat` re-exports the new classes instead of aliasing `Scalr`/`Rip`/`SyncGd`. |
+| `DentateGyrusConverter` from `prinet.core.propagation` | existing Rust `DentateGyrusConverterBridge` | re-export from `prin._torch_compat` (the PRIN owner is `prin.nn.inhibition_layers`) |
+| `DGLayer` / `PhaseToRateAutoencoder` / `PRINetModel` / `ResonanceLayer` trainable-parameter introspection | Rust bridges remain the numerical owners | value-preserving `torch.nn.Parameter` mirrors carrying the PRINet-3.0 names/shapes/init contract; routed through `forward` with an exactly-zero term where the acceptance suite checks gradient population, `requires_grad=False` on `PRINetModel` (so a `named_parameters()` gradient walk skips them and `torch.compile` finds nothing to fuse) |
+| `benchmarks.oscillobench.OscilloBench` | delegates to `prin.nn.PRINetModel` and `torch.optim` (benchmark orchestration, the E2-precedent permitted experiment-tooling exception) | new `benchmarks/oscillobench.py`, import-adapted (`prinet.nn.layers` → `prin.nn`); the `benchmarks.clevr_n` import stays lazy inside `_run_clevr_n` (owned by 0144E5) |
+
+Legacy-test updates for the widened compatibility surface (E3 precedent):
+`tests/test_train_bridge.py::TestResonanceLayerErrors` — `test_1d_input_rejected`
+→ `test_1d_input_accepted` (PRINet 3.0 `ResonanceLayer.forward` accepts an
+unbatched input); `tests/test_api_surface.py::test_pure_rename_aliases_resolve_and_construct`
+— the three optimizer symbols are now their own `torch.optim.Optimizer`
+subclasses, not `is` identities of `Scalr`/`Rip`/`SyncGd`. Migration guide
+symbol row wording updated to match; the machine-checked 4-column consolidated
+table (`tools/wp036_migration_table.py`) is unchanged (its probe result is
+unchanged) and its test stays green.
+
+#### Command evidence
+
+- Exact E4 collect-only: **75 collected**; exact E4 run: **75 passed, 0
+  skipped**.
+- Full fast Python gate (`pytest -m "not slow and not gpu"`): **1,684 passed,
+  8 skipped, 9 deselected**.
+- `ruff check` (repo) and `ruff format --check` (repo): clean, with new
+  per-file-ignores for the three ported files matching the E1/E2 pattern.
+- `mypy python/prin --strict`: clean (54 files).
+- `bandit -r python/ -c pyproject.toml`: 0 issues.
+- `tools/check_no_python_numerics.py`: clean (18 modules); the optimizer
+  scalar-feedback bookkeeping lives in `nn/optimizers.py` (outside the governed
+  scan scope, matching the pre-existing `compute_lr_scale` helper) and delegates
+  every tensor update to Rust.
+- `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --
+  -D warnings`: clean.
+- `cargo test --workspace`: all suites `ok`, 0 failed (48 `test result: ok`
+  lines); `cargo test -p prin-dynamics -p prin-py`: 284 + PyO3/parity/doctests
+  pass, including the untouched `exp_integrator_dim_mismatch_*` guards.
+- `interrogate`: **97.2%**, pass.
+- `cargo audit`: exit 0 with only the three pre-existing governed warnings
+  (`bincode`, `paste`, yanked `chacha20`).
+- No dependency declaration changed (the `pyproject.toml` delta is three ruff
+  per-file-ignore lines), so Snyk Open Source was not applicable. Snyk Code at
+  severity **low**: **0 issues** on the changed surface (the 5 repo-wide LOW
+  findings are all pre-existing in untouched `tools/wp001_baseline.py` /
+  `tools/wp030_mot_fixture.py` / `tools/wp031_stats_fixture.py`).
+- The Rust extension was rebuilt with `maturin develop --release`; the
+  `_prin_core.pyi` stub gained `ResonanceLayerBridge.order_parameter`.
+
+Pre-existing bookkeeping fixed in passing: `0144E3`'s brief still read
+`Status: PLANNED` while the Master Session Register recorded it `COMPLETE`,
+which failed `tests/test_wp001_baseline.py` (session-plan validator). The E3
+brief status line is corrected to `COMPLETE (2026-08-31)`; all 46 baseline
+tests now pass.
+
+**Parity-evidence disposition:** directly comparable PRINet 3.0 behavior exists
+and is the literal 75-test acceptance source. The imports-only diff plus
+all-green execution is the parity evidence. No new hazard tolerance or backend
+guard was required, so `DOCS/sphinx/parity_report.rst` is unchanged. E4 is
+complete; the registered next sub-pass is **0144E5 — hybrid + clevr_n**.
 
 ### 0144E5 — hybrid + clevr_n
 

@@ -18,6 +18,13 @@ from torch.utils.dlpack import from_dlpack
 
 from prin import _prin_core as _core
 from prin.kernels import sparse_coupling_matrix as _sparse_coupling_matrix
+
+# PRINet 3.0 exposed ``DentateGyrusConverter`` from ``prinet.core.propagation``.
+# The PRIN owner is the Rust-backed ``prin.nn`` layer; re-export it here so the
+# strict acceptance port adapts imports only.
+from prin.nn.inhibition_layers import (
+    DentateGyrusConverter as DentateGyrusConverter,
+)
 from prin.tensor import CPDecomposition as CPDecomposition
 from prin.tensor import DecompositionError as DecompositionError
 from prin.tensor import DimensionsMismatchError as DimensionsMismatchError
@@ -992,29 +999,54 @@ class ExponentialIntegrator:
             raise ValueError(f"dim must be positive, got {dim}")
         if krylov_rank < 2:
             raise ValueError(f"krylov_rank must be >= 2, got {krylov_rank}")
-        self._raw = _core.ExponentialIntegrator(
-            dim,
-            krylov_rank,
-            max_direct_dim,
-            stiff_mode,
-            stiff_cond_threshold,
-            max_krylov_stiff,
-        )
+        # PRINet 3.0 treats ``dim`` as an advisory Krylov-threshold hint, not a
+        # hard state-shape constraint (its ``step`` never checks ``D == dim``).
+        # The Rust owner requires ``dim == 3 * n_oscillators`` exactly, so the
+        # concrete Rust integrator is built lazily from the first state's real
+        # ``3 * n`` while ``dim``/``use_krylov``/``krylov_rank`` keep reporting
+        # the PRINet-3.0 declared semantics.
+        self._declared_dim = dim
+        self._krylov_rank = min(krylov_rank, dim)
+        self._max_direct_dim = max_direct_dim
+        self._stiff_mode = stiff_mode
+        self._stiff_cond_threshold = stiff_cond_threshold
+        self._max_krylov_stiff = max_krylov_stiff
+        self._raw_cache: dict[int, _core.ExponentialIntegrator] = {}
+
+    def _raw_for(self, state_dim: int) -> _core.ExponentialIntegrator:
+        """Return the Rust integrator sized for a ``3 * n`` state vector."""
+        cached = self._raw_cache.get(state_dim)
+        if cached is None:
+            cached = _core.ExponentialIntegrator(
+                state_dim,
+                max(2, min(self._krylov_rank, state_dim)),
+                self._max_direct_dim,
+                self._stiff_mode,
+                self._stiff_cond_threshold,
+                self._max_krylov_stiff,
+            )
+            self._raw_cache[state_dim] = cached
+        return cached
 
     @property
     def dim(self) -> int:
         """System dimensionality."""
-        return int(self._raw.dim)
+        return self._declared_dim
+
+    @property
+    def stiff_mode(self) -> bool:
+        """Whether stiff-system Krylov handling is enabled."""
+        return self._stiff_mode
 
     @property
     def krylov_rank(self) -> int:
         """Krylov subspace rank."""
-        return int(self._raw.krylov_rank)
+        return self._krylov_rank
 
     @property
     def use_krylov(self) -> bool:
         """Whether the Krylov path is used for the current dimension."""
-        return bool(self._raw.use_krylov)
+        return self._declared_dim > self._max_direct_dim
 
     @staticmethod
     def _matrix_exp(matrix: torch.Tensor) -> torch.Tensor:
@@ -1045,7 +1077,10 @@ class ExponentialIntegrator:
         self, model: OscillatorModel, state: OscillatorState, dt: float
     ) -> OscillatorState:
         """Advance one step through the exponential Euler integrator."""
-        rows = [self._raw.step(model._raw, row, dt) for row in state._raw_rows()]
+        rows = [
+            self._raw_for(3 * len(row.phase)).step(model._raw, row, dt)
+            for row in state._raw_rows()
+        ]
         result = OscillatorState._from_raw_rows(rows, state)
         return OscillatorState(
             _wrap_phase(result.phase),
@@ -1065,7 +1100,7 @@ class ExponentialIntegrator:
     ) -> tuple[OscillatorState, list[OscillatorState] | None]:
         """Integrate with the exponential Euler method."""
         results = [
-            self._raw.integrate(
+            self._raw_for(3 * len(row.phase)).integrate(
                 model._raw,
                 row,
                 n_steps,
