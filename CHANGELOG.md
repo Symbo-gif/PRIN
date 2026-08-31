@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Version string `0.3.0-alpha.1` → `0.3.0`** (WP-036C S1 sub-pass `0144M1`,
+  plan amendment #40). The pre-release tag is dropped so the ported PRINet 3.0
+  Y2Q4 API-freeze acceptance tests (`test_acceptance_y2q4::TestVersioning` /
+  `TestAPIFreeze::test_version_is_stable`) pass on their unchanged assertions
+  (three-part all-digit semantic version, no `alpha`/`rc`/`dev` suffix). This
+  is a version-string correction only; release publishing is unchanged.
+
 ### Added
 
 - **WP-036 S1 — `prin` PRINet-3.0-compatible symbol surface** (sessions

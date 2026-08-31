@@ -54,6 +54,9 @@ pub struct PyOscillatoryAttentionCtx {
     /// `forward` (otherwise phase is derived internally from `x` and has no
     /// independent gradient to report).
     phase: Option<(Vec<usize>, Vec<f64>)>,
+    /// `Some((shape, data))` when an attention `mask` was supplied; replayed
+    /// as a constant (non-grad) `[seq, seq]` tensor on the backward recompute.
+    mask: Option<(Vec<usize>, Vec<f64>)>,
 }
 
 #[pymethods]
@@ -68,11 +71,12 @@ impl PyOscillatoryAttentionCtx {
     /// Raises `ValueError` if `grad_output` has the wrong shape, or if the
     /// gradient graph unexpectedly has no entry for `x` (internal bridge
     /// defect, not a user error).
+    #[allow(clippy::type_complexity)]
     fn backward(
         &self,
         py: Python<'_>,
         grad_output: &Bound<'_, PyAny>,
-    ) -> PyResult<(Py<PyAny>, Option<Py<PyAny>>)> {
+    ) -> PyResult<(Py<PyAny>, Option<Py<PyAny>>, Option<Py<PyAny>>)> {
         let grad_output = plain_tensor_from_dlpack::<3>(grad_output, self.out_shape)?;
 
         let x = Tensor::from_data(
@@ -88,9 +92,16 @@ impl PyOscillatoryAttentionCtx {
             .require_grad()
         });
 
+        let mask_leaf = self.mask.as_ref().map(|(shape, data)| {
+            Tensor::<BridgeBackend, 2>::from_data(
+                burn::tensor::TensorData::new(data.clone(), shape.clone()),
+                &device(),
+            )
+        });
+
         let output = self
             .layer
-            .forward(x.clone(), phase_leaf.clone())
+            .forward_masked(x.clone(), phase_leaf.clone(), mask_leaf)
             .expect("shape already validated by the saved forward call");
 
         let weighted = output * grad_output;
@@ -113,7 +124,8 @@ impl PyOscillatoryAttentionCtx {
             None => None,
         };
 
-        Ok((grad_x_capsule, grad_phase_capsule))
+        // The attention `mask` is a constant with no gradient.
+        Ok((grad_x_capsule, grad_phase_capsule, None))
     }
 }
 
@@ -188,12 +200,13 @@ impl PyOscillatoryAttentionBridge {
     /// Raises `ValueError` on a non-`float64`/non-CPU/non-contiguous input or
     /// a shape mismatch (see
     /// [`prin_train::attention::OscillatoryAttention::forward`]).
-    #[pyo3(signature = (x, phase=None))]
+    #[pyo3(signature = (x, phase=None, mask=None))]
     fn forward(
         &self,
         py: Python<'_>,
         x: &Bound<'_, PyAny>,
         phase: Option<&Bound<'_, PyAny>>,
+        mask: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<(Py<PyAny>, Py<PyOscillatoryAttentionCtx>)> {
         let (x, x_shape, x_data) = tensor_from_dlpack_with_data::<3>(x)?;
         let phase_decoded = optional_tensor_from_dlpack_with_data::<3>(phase)?;
@@ -201,10 +214,15 @@ impl PyOscillatoryAttentionBridge {
             Some((t, shape, data)) => (Some(t), Some((shape, data))),
             None => (None, None),
         };
+        let mask_decoded = optional_tensor_from_dlpack_with_data::<2>(mask)?;
+        let (mask_tensor, mask_saved) = match mask_decoded {
+            Some((t, shape, data)) => (Some(t), Some((shape, data))),
+            None => (None, None),
+        };
 
         let output = self
             .layer
-            .forward(x, phase_tensor)
+            .forward_masked(x, phase_tensor, mask_tensor)
             .map_err(train_err_to_py)?;
         let out_shape = output.dims();
         let out_capsule = export_tensor::<3>(py, output.inner())?;
@@ -214,8 +232,28 @@ impl PyOscillatoryAttentionBridge {
             x_shape,
             x_data,
             phase: phase_saved,
+            mask: mask_saved,
         };
         Ok((out_capsule, Py::new(py, ctx)?))
+    }
+
+    /// Replace the per-head coherence-bias strength `alpha` (length
+    /// `n_heads`). The Python wrapper owns the canonical `alpha`
+    /// `nn.Parameter` and pushes it here before every forward.
+    fn set_alpha(&mut self, alpha: Vec<f64>) -> PyResult<()> {
+        if alpha.len() != self.layer.n_heads() {
+            return Err(PyValueError::new_err(format!(
+                "alpha length {} does not match n_heads {}",
+                alpha.len(),
+                self.layer.n_heads()
+            )));
+        }
+        let tensor = Tensor::<BridgeBackend, 1>::from_data(
+            burn::tensor::TensorData::new(alpha, [self.layer.n_heads()]),
+            &device(),
+        );
+        self.layer.set_alpha(tensor);
+        Ok(())
     }
 
     /// Serialize parameters to checkpoint bytes. See `train.rs`'s

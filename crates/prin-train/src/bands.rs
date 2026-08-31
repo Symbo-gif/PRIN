@@ -55,6 +55,7 @@ use burn::tensor::activation::sigmoid;
 use burn::tensor::backend::Backend;
 use burn::tensor::Tensor;
 use prin_dynamics::Seed;
+use prin_metrics::order::kuramoto_order_parameter;
 
 use crate::error::TrainError;
 use crate::support::{check_dims, seeded_uniform, validate_dt, validate_finite, xavier_bound};
@@ -493,6 +494,90 @@ impl<B: Backend> DiscreteDeltaThetaGamma<B> {
         }
         Ok(state)
     }
+
+    /// Per-band Kuramoto order parameters from a concatenated phase tensor.
+    ///
+    /// Faithful port of PRINet 3.0
+    /// `core.propagation.networks.DiscreteDeltaThetaGamma.order_parameters`:
+    /// average each band's phases over the batch, then take
+    /// `r = |mean_j exp(i·φ_j)|` per band.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] if `phase`'s width is not
+    /// [`Self::n_total`].
+    pub fn order_parameters(&self, phase: Tensor<B, 2>) -> Result<(f64, f64, f64), TrainError> {
+        let (nd, nt, ng) = (self.n_delta, self.n_theta, self.n_gamma);
+        let batch = phase.dims()[0];
+        check_dims("phase", phase.dims(), [batch, nd + nt + ng])?;
+        let col_mean: Vec<f64> = phase
+            .mean_dim(0)
+            .to_data()
+            .to_vec::<f64>()
+            .expect("phase tensor is f64-convertible");
+        let order = |slice: &[f64]| -> f64 { kuramoto_order_parameter(slice).unwrap_or(0.0) };
+        Ok((
+            order(&col_mean[..nd]),
+            order(&col_mean[nd..nd + nt]),
+            order(&col_mean[nd + nt..]),
+        ))
+    }
+
+    /// Phase-amplitude coupling modulation index for both couplings
+    /// (delta→theta, theta→gamma).
+    ///
+    /// Faithful port of PRINet 3.0
+    /// `core.propagation.networks.DiscreteDeltaThetaGamma.pac_index`: a
+    /// cos-correlation proxy of how strongly fast-band amplitude covaries with
+    /// slow-band mean phase. Returned values are `>= 0`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] if `phase` / `amplitude` widths
+    /// are not [`Self::n_total`].
+    pub fn pac_index(
+        &self,
+        phase: Tensor<B, 2>,
+        amplitude: Tensor<B, 2>,
+    ) -> Result<(f64, f64), TrainError> {
+        let (nd, nt, ng) = (self.n_delta, self.n_theta, self.n_gamma);
+        let batch = phase.dims()[0];
+        check_dims("phase", phase.dims(), [batch, nd + nt + ng])?;
+        check_dims("amplitude", amplitude.dims(), [batch, nd + nt + ng])?;
+        let phase_rows: Vec<f64> = phase
+            .to_data()
+            .to_vec::<f64>()
+            .expect("phase tensor is f64-convertible");
+        let amp_rows: Vec<f64> = amplitude
+            .to_data()
+            .to_vec::<f64>()
+            .expect("amplitude tensor is f64-convertible");
+        let width = nd + nt + ng;
+        let mut acc_dt = 0.0_f64;
+        let mut acc_tg = 0.0_f64;
+        for b in 0..batch {
+            let row_p = &phase_rows[b * width..(b + 1) * width];
+            let row_a = &amp_rows[b * width..(b + 1) * width];
+            let p_d = &row_p[..nd];
+            let p_t = &row_p[nd..nd + nt];
+            let a_t = &row_a[nd..nd + nt];
+            let a_g = &row_a[nd + nt..];
+
+            let mean_p_d = p_d.iter().sum::<f64>() / nd as f64;
+            let mean_p_t = p_t.iter().sum::<f64>() / nt as f64;
+            let mean_a_t = a_t.iter().sum::<f64>() / nt as f64;
+            let mean_a_g = a_g.iter().sum::<f64>() / ng as f64;
+
+            let cos_d = mean_p_d.cos();
+            let cos_t = mean_p_t.cos();
+            let corr_dt = a_t.iter().map(|a| a * cos_d).sum::<f64>() / nt as f64;
+            let corr_tg = a_g.iter().map(|a| a * cos_t).sum::<f64>() / ng as f64;
+
+            acc_dt += (corr_dt / (mean_a_t + 1e-8)).abs();
+            acc_tg += (corr_tg / (mean_a_g + 1e-8)).abs();
+        }
+        Ok((acc_dt / batch as f64, acc_tg / batch as f64))
+    }
 }
 
 /// Wrap a phase tensor to `[0, 2π)`.
@@ -724,6 +809,51 @@ mod tests {
             .unwrap();
         let b = manual.phase().clone().to_data().to_vec::<f64>().unwrap();
         assert_eq!(a, b);
+    }
+
+    #[test]
+    fn order_parameters_are_one_for_synchronized_phases() {
+        let net = seeded_net::<TestBackend>(&device());
+        // All phases identical (zero) → each band's Kuramoto r ≈ 1.
+        let phase = Tensor::<TestBackend, 2>::zeros([2, 9], &device());
+        let (r_d, r_t, r_g) = net.order_parameters(phase).unwrap();
+        for r in [r_d, r_t, r_g] {
+            assert!((r - 1.0).abs() < 1e-9, "r {r} not ~1 for zero phases");
+        }
+    }
+
+    #[test]
+    fn order_parameters_reject_wrong_width() {
+        let net = seeded_net::<TestBackend>(&device());
+        let phase = Tensor::<TestBackend, 2>::zeros([2, 5], &device());
+        assert!(matches!(
+            net.order_parameters(phase).unwrap_err(),
+            TrainError::ShapeMismatch { name: "phase", .. }
+        ));
+    }
+
+    #[test]
+    fn pac_index_is_finite_and_non_negative() {
+        let net = seeded_net::<TestBackend>(&device());
+        let dev = device();
+        let mut seed = Seed::new(3, 0);
+        let phase = seeded_uniform::<TestBackend, 2>([4, 9], 0.0, 6.0, &dev, &mut seed);
+        let amp = Tensor::<TestBackend, 2>::ones([4, 9], &dev);
+        let (pac_dt, pac_tg) = net.pac_index(phase, amp).unwrap();
+        assert!(pac_dt.is_finite() && pac_dt >= 0.0, "pac_dt = {pac_dt}");
+        assert!(pac_tg.is_finite() && pac_tg >= 0.0, "pac_tg = {pac_tg}");
+    }
+
+    #[test]
+    fn pac_index_rejects_wrong_width() {
+        let net = seeded_net::<TestBackend>(&device());
+        let dev = device();
+        let phase = Tensor::<TestBackend, 2>::zeros([2, 5], &dev);
+        let amp = Tensor::<TestBackend, 2>::ones([2, 5], &dev);
+        assert!(matches!(
+            net.pac_index(phase, amp).unwrap_err(),
+            TrainError::ShapeMismatch { name: "phase", .. }
+        ));
     }
 
     // --- Numerical / shape guards ---

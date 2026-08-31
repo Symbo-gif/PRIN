@@ -68,6 +68,18 @@ from torch.utils.dlpack import from_dlpack
 
 from prin._prin_core import GatedPhaseActivationBridge, ResonanceLayerBridge
 
+# PRINet 3.0 compatibility: ``prinet.nn`` re-exports the Workstream-C
+# training-observation / control-policy surface. In PRIN these live in
+# ``prin.training_hooks`` (top-level); re-export them here so the reference
+# ``from prinet.nn import TelemetryLogger, apply_lr_adjustment, ...`` form
+# resolves under the adapted ``prin.nn`` path.
+from prin.training_hooks import (
+    TelemetryLogger,
+    apply_k_range_narrowing,
+    apply_lr_adjustment,
+    apply_regime_bias,
+)
+
 from ._bridge import apply_rust_bridge
 from .ablation import (
     PhaseTrackerFrozen,
@@ -171,9 +183,13 @@ __all__: list[str] = [
     "SparsityRegularizationLoss",
     "SyncGd",
     "SynchronizedGradientDescent",
+    "TelemetryLogger",
     "TemporalHybridPRINet",
     "TemporalSlotAttentionMOT",
     "TrackingResult",
+    "apply_k_range_narrowing",
+    "apply_lr_adjustment",
+    "apply_regime_bias",
     "compile_model",
     "dSiLU",
     "estimate_complexity",

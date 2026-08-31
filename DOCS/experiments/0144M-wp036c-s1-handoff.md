@@ -1,11 +1,13 @@
 # Session 0144M / WP-036C S1 running handoff
 
-**Date:** 2026-08-31 (session start and decomposition)
-**Status:** S1 **decomposed, not yet executed.** Plan amendment #39
-(MichaelMaillet, 2026-08-31) inserts eight sequential strict-port coding
-sub-passes `0144M1`–`0144M8`, all feeding the single mandatory S2 audit
-`0144N`. No sub-pass has run; no `tests/test_acceptance_*` file for the
-WP-036C cluster is committed yet.
+**Date:** 2026-08-31 (session start + decomposition; `0144M1` executed)
+**Status:** S1 **in progress** — sub-pass `0144M1` (integration_q3 + y2q1 +
+y2q4, 93 functions) **COMPLETE and committed locally** at a green gate; not
+pushed. Plan amendment #39 inserted the eight strict-port sub-passes
+`0144M1`–`0144M8` feeding the single mandatory S2 audit `0144N`; plan
+amendment #40 (2026-08-31) records three `0144M1` scope confirmations
+(deferred-symbol rebuild in-scope, `__version__` → `0.3.0`, minimal `docs/`
+guides). Next: `0144M2`.
 
 ## Session-start protocol (Development Workflow §6)
 
@@ -118,7 +120,108 @@ sub-pass commits at its own green local gate; the contiguous
 
 _(appended as each sub-pass executes)_
 
-### 0144M1 — not started
+### 0144M1 — integration_q3 + y2q1 + y2q4 — COMPLETE (2026-08-31)
+
+**Committed locally at a green sub-pass gate; not pushed. Plan amendment #40
+recorded three maintainer `AskUserQuestion` scope confirmations. Next: 0144M2.**
+
+#### Strict-port accounting and semantic proof
+
+| Reference | Stable port | Lines | `def test_` | Result (default gate) | Slow | Tolerance annotations | Discoveries |
+|---|---|---:|---:|---|---:|---:|---|
+| `test_integration_q3.py` | `tests/test_acceptance_integration_q3.py` | 496 | 19 | 19 / 19 | 0 | 0 | `DeltaThetaGammaNetwork.integrate`; `PhaseToRateConverter.temperature`; `HierarchicalResonanceLayer.pac_depth_dt/tg` mirrors |
+| `test_y2q1.py` | `tests/test_acceptance_y2q1.py` | 926 | 48 | 42 / 42 + 6 not-slow… (47/48 incl. slow) | 6 | 0 | `DiscreteDeltaThetaGamma` core rebuild; `InterleavedHybridPRINet` rebuild; `OscillatoryAttention.alpha` + `mask`; `apply_lr_adjustment`/`apply_k_range_narrowing`/`apply_regime_bias`; `prin.nn` re-exports |
+| `test_y2q4.py` | `tests/test_acceptance_y2q4.py` | 417 | 26 | 26 / 26 (29 incl. parametrize + slow) | 1 | 0 | `prin.__version__` → `0.3.0`; `docs/` guides; `benchmarks/y2q4_benchmarks.py` support module |
+| **M1 total** | **3 files** | **1,839** | **93** | **91 / 91 default gate** | **7** | **0** | — |
+
+Full M1 run **incl. slow**: 95 passed, 1 failed — the single failure is
+`test_y2q1.py::TestDiscreteDeltaThetaGamma::test_speed_vs_transformer`
+(`@pytest.mark.slow`, not in the default `-m "not slow and not gpu"` gate): it
+asserts the existing Rust-backed `DiscreteDeltaThetaGammaLayer` bridge is ≤5×
+slower than an `nn.TransformerEncoderLayer`; measured 5.3–8.0× depending on
+host load. This is the architecturally-fixed per-call `torch.autograd.Function`
++ DLPack dispatch overhead recorded in plan amendment #30 (bridge overhead at
+small shapes). Carried to `0144N` as an out-of-scope discovery, not weakened.
+
+**Import-only proof:** `tools/_port_m1.py` performs the import remap; the ports
+are then `ruff format`-normalised (matching the E4 precedent). `git diff
+--no-index` against each archived reference shows only `from prinet.* import`
+module-path lines changed, plus `ruff format` assert-message re-wraps
+(`assert (\n cond\n), msg` → `assert cond, (\n msg\n)` — no assertion, value,
+parametrization, call order, or semantics changed). Per-file `ruff` ignores
+added to `pyproject.toml` for the three ports + `benchmarks/y2q4_benchmarks.py`
+(faithful-copy `F401`/`I001`/`E501`/`RUF00x`/`UP045`/`B007`), matching the
+E1–E6 pattern.
+
+#### Changed-owner mapping
+
+| Compatibility behaviour | Numerical / Rust owner | Python exposure |
+|---|---|---|
+| Standalone `DiscreteDeltaThetaGamma` `step` / `integrate` | `prin_train::bands::DiscreteDeltaThetaGamma` (audited Burn module, WP-022) via new `DiscreteDeltaThetaGammaBridge` PyO3 class (`crates/prin-py/src/bindings/train_hierarchical_layers.rs`) | `prin.nn.hierarchical_layers.DiscreteDeltaThetaGamma` — real `nn.Module` holding the reference `nn.Parameter` / `nn.Linear` declarations (byte-identical `torch.randn` / `xavier_uniform_` init); each `step`/`integrate` pushes params to Rust via `load_torch_weights` and runs the (non-differentiable) Rust forward, then adds a value-preserving `Σ(p.sum() − p.sum().detach())` zero term so `loss.backward()` populates `.grad` (E4 layer-mirror pattern). `deferred_layers.py` re-exports it; the D-2.2 stub + `_raise_disposition` helper are removed. |
+| `DiscreteDeltaThetaGamma.order_parameters` / `.pac_index` | **new** methods on `prin_train::bands::DiscreteDeltaThetaGamma` (Rust; `order_parameters` reuses `prin_metrics::order::kuramoto_order_parameter`, `pac_index` is a faithful port of the reference cos-correlation proxy) | bridge `order_parameters` / `pac_index` → Python returns scalar tensors |
+| `OscillatoryAttention.alpha` (learnable per-head coherence-bias strength) | `prin_train::attention::OscillatoryAttention` (`alpha` already owned); **new** `set_alpha` method + bridge `set_alpha(list[float])` | Python `alpha` `nn.Parameter` (zeros, `[n_heads]`) pushed to Rust before every forward (so it genuinely drives the bias) + zero term for `.grad` |
+| `OscillatoryAttention(..., mask=...)` | **new** `prin_train::attention::OscillatoryAttention::forward_masked` — `[seq, seq]` mask, `-inf` at `0` positions before softmax, broadcast over batch/heads; bridge `forward` gains a `mask` arg, ctx replays it, `backward` returns a 3-tuple | `prin.nn.attention.OscillatoryAttention.forward` gains a `mask` kwarg |
+| `DeltaThetaGammaNetwork.integrate(state, n_steps, dt, record_trajectory=False)` | loops the existing Rust-backed `_HierarchicalNetwork.step`; faithful port of the reference loop | new method on `prin._torch_compat._HierarchicalNetwork` |
+| `PhaseToRateConverter.temperature` / `HierarchicalResonanceLayer.pac_depth_dt` / `.pac_depth_tg` | Rust bridges remain the numerical owners of the active parameters | value-preserving `nn.Parameter` mirrors carrying the reference names/init, routed through `forward` with an exactly-zero term for `.grad` population (E4 pattern) |
+| `apply_lr_adjustment` / `apply_k_range_narrowing` / `apply_regime_bias` | n/a — pure control-signal bookkeeping over `torch.optim` param groups / `nn.Module` parameter clamps (same category as `StateCollector`) | faithful ports in `prin.training_hooks`; `prin.nn` re-exports them + `TelemetryLogger` so `from prinet.nn import ...` resolves under the adapted path |
+| `InterleavedHybridPRINet` | PyTorch composition over the real `DiscreteDeltaThetaGamma` + `OscillatoryAttention` + `nn.Linear`/`LayerNorm`/`GELU` | real `nn.Module` in `prin.nn.hybrid_compat` (D-2.2 stub replaced), incl. `oscillatory_parameters()` / `rate_coded_parameters()` |
+| `benchmarks/y2q4_benchmarks` (`run_j3_regression_suite`, `run_k1_capacity_sweep`, `run_k2_phase_diagrams`, `generate_clevr_n`, `DiscreteDTGCLEVRN`, …) | benchmark orchestration (E2 permitted experiment-tooling exception) | `benchmarks/y2q4_benchmarks.py`, import-adapted from the reference |
+| `test_y2q4::TestVersioning` / `TestAPIFreeze` | n/a | `prin.__version__` / `pyproject.toml` / `Cargo.toml` / `CITATION.cff` bumped `0.3.0-alpha.1` → `0.3.0`; `CHANGELOG.md` + `tests/test_wp001_baseline.py` version assert updated |
+| `test_y2q4::TestDocumentation` | n/a | new `docs/Architecture_Guide.md`, `docs/Getting_Started_Tutorial.md` (with a "Migrating from prinet" section), `docs/API_Reference_Coupling_Topologies.md` |
+
+Rust regression coverage: 4 new `bands.rs` unit tests (`order_parameters`
+synchronized/wrong-width, `pac_index` finite-non-negative/wrong-width) and 3
+new `attention.rs` unit tests (`forward_masked` excludes/rejects, `set_alpha`
+drives the bias). `cargo test -p prin-train --lib`: 447 passed.
+`cargo test --workspace`: 48 suites ok, 0 failed.
+
+Governance updated in step: `deferred_layers.py` docstring + `__all__`;
+`prin.nn.__init__` re-exports + `__all__`; `_prin_core.pyi`
+(`DiscreteDeltaThetaGammaBridge`, `OscillatoryAttentionBridge.set_alpha` /
+`mask` / 3-tuple ctx); `DOCS/sphinx/migration_guide.rst` consolidated table
+re-rendered + `DiscreteDeltaThetaGamma` / `InterleavedHybridPRINet` prose rows;
+`tests/test_bucket_g_remainder.py` `test_hybrid_family_d22_stubs_raise`
+parametrize trimmed for `InterleavedHybridPRINet`; `tools/check_no_python_numerics.py`
+scope unchanged (both new/edited modules already listed as bridge modules);
+`SESSION_REGISTER.md` / `TRACEABILITY.md` / `phase-6/README.md` amendment #40
+recorded + `0144M1` marked COMPLETE; `tools/wp001_baseline.py` amendment
+comment.
+
+#### Command evidence
+
+- `pytest tests/test_acceptance_integration_q3.py tests/test_acceptance_y2q1.py
+  tests/test_acceptance_y2q4.py -m "not slow"`: **91 passed, 5 deselected**.
+- `pytest tests/ -m "not slow and not gpu"`: **1874 passed, 2 skipped, 21
+  deselected** (before the GPU-dispatch and version-assert fixes it was
+  1872/3-failed; both fixed — the extension is rebuilt with `--features cuda`
+  per `gpu.yml`, and `test_wp001_baseline.py`'s `0.3.0-alpha.1` assert updated).
+- `ruff check` (repo) + `ruff format --check` (repo): clean.
+- `mypy python/prin --strict`: clean (55 files).
+- `bandit -r python/ benchmarks/y2q4_benchmarks.py -c pyproject.toml`: 0 new
+  issues (the 1 remaining LOW `B110` is the pre-existing `hybrid_compat.py:327`
+  from 0144E5).
+- `tools/check_no_python_numerics.py`: clean (19 modules).
+- `tools/wp036_migration_table.py check`: OK (172 symbols).
+- `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --
+  -D warnings`: clean.
+- `cargo test -p prin-train --lib`: 447 passed; `cargo test --workspace`: 48
+  suites ok, 0 failed.
+- `cargo audit`: exit 0 with only the three pre-existing governed warnings
+  (`bincode` RUSTSEC-2025-0141, `paste` RUSTSEC-2024-0436, yanked `chacha20`).
+- **Snyk Code** (`--severity-threshold=low`) on `python/prin`,
+  `crates/prin-train/src`, `crates/prin-py/src`, and `tests`: **0 issues**.
+- `Cargo.lock` delta is the 8 workspace-crate version strings only; no new
+  dependency, so Snyk Open Source / `pip-audit` are not applicable.
+- Coverage instrumentation remains host-blocked
+  ([[wp036-coverage-tooling-blocked]]); the acceptance suite + `cargo test`
+  unit coverage + manual review stand in, CI authoritative.
+
+**Parity-evidence disposition:** directly comparable PRINet 3.0 behaviour
+exists and is the literal 93-test acceptance source. Imports-only diff (plus
+the governed `ruff format` re-wraps) + 91/91 default-gate execution is the M1
+parity evidence. No new hazard tolerance or backend-availability guard was
+introduced, so `DOCS/sphinx/parity_report.rst` is unchanged.
+
 ### 0144M2 — not started
 ### 0144M3 — not started
 ### 0144M4 — not started

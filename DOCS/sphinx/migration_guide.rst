@@ -1412,7 +1412,7 @@ resolve from the top-level ``prin`` namespace.
    "HybridPRINet", "prin.HybridPRINet / prin.nn.HybridPRINet", "D-2.2 stub; trainable ``nn.Module``"
    "HybridCLEVRN", "prin.HybridCLEVRN / prin.nn.HybridCLEVRN", "D-2.2 stub; trainable ``nn.Module``"
    "HybridPRINetV2CLEVRN", "prin.HybridPRINetV2CLEVRN / prin.nn.HybridPRINetV2CLEVRN", "D-2.2 stub; trainable ``nn.Module``"
-   "InterleavedHybridPRINet", "prin.InterleavedHybridPRINet / prin.nn.InterleavedHybridPRINet", "D-2.2 stub; trainable ``nn.Module``"
+   "InterleavedHybridPRINet", "prin.InterleavedHybridPRINet / prin.nn.InterleavedHybridPRINet", "Real ``nn.Module`` (WP-036C S1 ``0144M1``); PyTorch composition over the Rust-backed ``DiscreteDeltaThetaGamma`` + ``OscillatoryAttention``"
    "TemporalHybridPRINet", "prin.TemporalHybridPRINet / prin.nn.TemporalHybridPRINet", "D-2.2 stub; trainable ``nn.Module``"
    "AlternatingOptimizer", "prin.AlternatingOptimizer / prin.nn.AlternatingOptimizer", "D-2.2 stub; trainable parameter management"
    "ControlSignalBuffer", "prin.ControlSignalBuffer / prin.training_hooks.ControlSignalBuffer", "Real thread-safe buffer (``threading.Lock``)"
@@ -1455,7 +1455,9 @@ appendix and the S1 handoff note.
 ``PhaseAmplitudeCouplingLayer``, ``PRINetModel``, ``compile_model``,
 ``DiscreteDeltaThetaGamma``, ``DiscreteDeltaThetaGammaLayer``) and the
 training-loop wrappers (``MixedPrecisionTrainer``, ``AsyncCPUGPUPipeline``,
-``retrain_controller``) are delivered as **importable D-2.2 dispositions**:
+``retrain_controller``) were initially delivered as **importable D-2.2
+dispositions** (``DiscreteDeltaThetaGamma`` was made real in WP-036C S1
+``0144M1``, plan amendment #40; the rest were rebuilt by WP-036A / WP-036B):
 each resolves from ``prin`` (and ``prin.nn`` / ``prin.training_hooks``) and
 raises a typed ``NotImplementedError`` on construction/call. This makes every
 ``prinet.__all__`` symbol resolvable and construct/callable-checkable while the
@@ -1468,12 +1470,13 @@ while retaining compatibility re-exports. The 0144A1 inhibition/sparsification
 family lives in :mod:`prin.nn.inhibition_layers`; the 0144A2 phase-to-rate /
 autoencoder family in :mod:`prin.nn.autoencoders`; the 0144A3 hierarchical,
 PAC, and discrete-layer family in :mod:`prin.nn.hierarchical_layers`; and the
-0144A4 ``PRINetModel`` / ``compile_model`` pair in :mod:`prin.nn.model`. After
-0144A4 the only symbols still resolving from :mod:`prin.nn.deferred_layers` as
-D-2.2 stubs are ``DiscreteDeltaThetaGamma`` (core binding, WP-036B) and the
-training-loop trio ``MixedPrecisionTrainer`` / ``AsyncCPUGPUPipeline`` /
-``retrain_controller`` in :mod:`prin.training_hooks`. All seventeen also
-resolve from the top-level ``prin`` namespace.
+0144A4 ``PRINetModel`` / ``compile_model`` pair in :mod:`prin.nn.model`. WP-036C
+S1 ``0144M1`` makes ``DiscreteDeltaThetaGamma`` real in
+:mod:`prin.nn.hierarchical_layers` (compatibility re-export retained from
+:mod:`prin.nn.deferred_layers`). After ``0144M1`` the only symbols resolving as
+D-2.2 stubs are the training-loop trio ``MixedPrecisionTrainer`` /
+``AsyncCPUGPUPipeline`` / ``retrain_controller`` in :mod:`prin.training_hooks`.
+All seventeen also resolve from the top-level ``prin`` namespace.
 
 .. csv-table:: 0141E symbol dispositions
    :header: "PRINet 3.0 symbol", "PRIN symbol", "Disposition"
@@ -1491,7 +1494,7 @@ resolve from the top-level ``prin`` namespace.
    "PhaseAmplitudeCouplingLayer", "prin.PhaseAmplitudeCouplingLayer / prin.nn.PhaseAmplitudeCouplingLayer", "Real WP-036A ``nn.Module`` (sub-pass 0144A3); Rust-owned PAC modulation and learnable depth"
    "PRINetModel", "prin.PRINetModel / prin.nn.PRINetModel", "Real WP-036A ``nn.Module`` (sub-pass 0144A4); Rust-owned stacked ``ResonanceLayer`` container with inter-layer ``LayerNorm``, concept readout, and clamped ``log_softmax`` in ``prin_train::model``"
    "compile_model", "prin.compile_model / prin.nn.compile_model", "Real WP-036A pure-Python guarded ``torch.compile`` passthrough (sub-pass 0144A4, D-2); the one symbol with no Rust component"
-   "DiscreteDeltaThetaGamma", "prin.DiscreteDeltaThetaGamma / prin.nn.DiscreteDeltaThetaGamma", "D-2.2 stub; audited Rust owner (``prin_train::bands``, WP-022) exists but is unbound - the PyO3 bridge is a recorded out-of-scope discovery (WP-025)"
+   "DiscreteDeltaThetaGamma", "prin.DiscreteDeltaThetaGamma / prin.nn.DiscreteDeltaThetaGamma", "Real ``nn.Module`` (WP-036C S1 ``0144M1``, plan amendment #40); new ``DiscreteDeltaThetaGammaBridge`` PyO3 binding over the audited Burn owner ``prin_train::bands`` (WP-022), plus ``order_parameters`` / ``pac_index`` added to that module. Parameters are Python ``nn.Parameter``/``nn.Linear`` mirrors; ``step`` / ``integrate`` run the Rust forward (non-differentiable, with a value-preserving zero term for ``.grad`` population — the E4 layer-mirror pattern)"
    "DiscreteDeltaThetaGammaLayer", "prin.DiscreteDeltaThetaGammaLayer / prin.nn.DiscreteDeltaThetaGammaLayer", "Real WP-036A ``nn.Module`` (sub-pass 0144A3); Rust-owned discrete three-band core and learnable phase/amplitude projections"
    "MixedPrecisionTrainer", "prin.MixedPrecisionTrainer / prin.training_hooks.MixedPrecisionTrainer", "D-2.2 stub; ``torch.amp`` training-step wrapper (training loop, Python numerics)"
    "AsyncCPUGPUPipeline", "prin.AsyncCPUGPUPipeline / prin.training_hooks.AsyncCPUGPUPipeline", "D-2.2 stub; async CPU/GPU training-loop wrapper (Python numerics)"
@@ -1553,7 +1556,7 @@ and the ``prinet`` ownership rows in
    "DeltaThetaGammaNetwork", "prin.DeltaThetaGammaNetwork", "real - rename alias", "0141A"
    "DenseAutoencoder", "prin.DenseAutoencoder", "real - Rust PyO3 binding (WP-036A)", "0144A2"
    "DentateGyrusConverter", "prin.DentateGyrusConverter", "real - Rust PyO3 binding (WP-036A)", "0144A1"
-   "DiscreteDeltaThetaGamma", "prin.DiscreteDeltaThetaGamma", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "DiscreteDeltaThetaGamma", "prin.DiscreteDeltaThetaGamma", "real (0141E)", "0141E"
    "DiscreteDeltaThetaGammaLayer", "prin.DiscreteDeltaThetaGammaLayer", "real - Rust PyO3 binding (WP-036A)", "0144A3"
    "ExponentialIntegrator", "prin.ExponentialIntegrator", "real - direct re-export", "0141A"
    "ExtendedTrainingResult", "prin.ExtendedTrainingResult", "real - non-numeric orchestration (0141D2)", "0141D2"
@@ -1570,7 +1573,7 @@ and the ``prinet`` ownership rows in
    "HybridPRINet", "prin.HybridPRINet", "real - non-numeric orchestration (0141D2)", "0141D2"
    "HybridPRINetV2", "prin.HybridPRINetV2", "real - direct re-export", "0141A"
    "HybridPRINetV2CLEVRN", "prin.HybridPRINetV2CLEVRN", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
-   "InterleavedHybridPRINet", "prin.InterleavedHybridPRINet", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "InterleavedHybridPRINet", "prin.InterleavedHybridPRINet", "real - non-numeric orchestration (0141D2)", "0141D2"
    "KuramotoOscillator", "prin.KuramotoOscillator", "real - direct re-export", "0141A"
    "LargeScaleOscillatorSystem", "prin.LargeScaleOscillatorSystem", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
    "MixedPrecisionTrainer", "prin.MixedPrecisionTrainer", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"

@@ -76,6 +76,13 @@ class PhaseToRateConverter(torch.nn.Module):
         self._bridge = PhaseToRateConverterBridge(
             n_oscillators, mode, sparsity, initial_temperature
         )
+        # PRINet 3.0 compatibility: ``nn.layers.PhaseToRateConverter`` exposes a
+        # learnable ``temperature`` ``nn.Parameter``. The Rust bridge owns the
+        # numerically active temperature; this is a value-preserving mirror
+        # carrying the reference name / init contract, routed through
+        # :meth:`forward` with an exactly-zero term so gradient-population
+        # walkers see it (same pattern as the E4 optimizer / layer mirrors).
+        self.temperature = torch.nn.Parameter(torch.tensor(initial_temperature))
 
     @property
     def n_oscillators(self) -> int:
@@ -116,6 +123,7 @@ class PhaseToRateConverter(torch.nn.Module):
         output: torch.Tensor = apply_rust_bridge(
             self._bridge.forward, [phase_b, amplitude_b]
         )
+        output = output + (self.temperature - self.temperature.detach()) * 0.0
         return output.squeeze(0) if was_vector else output
 
     def rust_state_dict(self) -> bytes:

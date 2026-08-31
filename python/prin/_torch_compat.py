@@ -1390,6 +1390,34 @@ class _HierarchicalNetwork:
         """Compute one Rust-owned order parameter per band."""
         return tuple(kuramoto_order_parameter(item.phase) for item in state)
 
+    def integrate(
+        self,
+        state: tuple[OscillatorState, ...],
+        n_steps: int,
+        dt: float = 0.01,
+        record_trajectory: bool = False,
+    ) -> tuple[
+        tuple[OscillatorState, ...],
+        list[tuple[OscillatorState, ...]] | None,
+    ]:
+        """Advance every band for ``n_steps`` outer steps.
+
+        Faithful port of PRINet 3.0
+        ``core.propagation.networks.DeltaThetaGammaNetwork.integrate``: it loops
+        :meth:`step` (the archived multi-rate RK4 + PAC stepping order, every
+        substep Rust-owned) and returns ``(final_states, trajectory)`` where
+        ``trajectory`` is ``None`` unless ``record_trajectory`` is set.
+        """
+        trajectory: list[tuple[OscillatorState, ...]] | None = (
+            [] if record_trajectory else None
+        )
+        current = tuple(state)
+        for _ in range(n_steps):
+            current = self.step(current, dt=dt)
+            if trajectory is not None:
+                trajectory.append(tuple(item.clone() for item in current))
+        return current, trajectory
+
 
 class DeltaThetaGammaNetwork(_HierarchicalNetwork):
     """Three-band compatibility composition over Rust-backed owners."""

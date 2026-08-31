@@ -53,6 +53,9 @@ __all__ = [
     "MixedPrecisionTrainer",
     "StateCollector",
     "TelemetryLogger",
+    "apply_k_range_narrowing",
+    "apply_lr_adjustment",
+    "apply_regime_bias",
     "collect_system_state",
     "create_ablation_tracker",
     "retrain_controller",
@@ -358,6 +361,110 @@ class StateCollector:
     def step_count(self) -> int:
         """Total number of training steps recorded."""
         return self._step_count
+
+
+# =========================================================================
+# Year 2 Q1 — Workstream C: subconscious control policies
+#
+# Faithful ports of ``prinet.nn.training_hooks.apply_{lr_adjustment,
+# k_range_narrowing,regime_bias}``. Pure control-signal bookkeeping over
+# ``torch.optim`` param groups / ``nn.Module`` parameter clamps — no
+# oscillator or model numerics (same category as :class:`StateCollector`).
+# =========================================================================
+
+
+def apply_lr_adjustment(
+    control: Any,
+    optimizer: torch.optim.Optimizer,
+    max_adjustment: float = 0.05,
+) -> float:
+    """Policy C.a: adjust learning rate from ``control.lr_multiplier``.
+
+    When ``alert_level > 0.7`` the daemon's suggested ``lr_multiplier`` is
+    applied to every param group, damped to ``[1 - max_adjustment,
+    1 + max_adjustment]``.
+
+    Args:
+        control: A ``ControlSignals``-like object (or ``None``).
+        optimizer: Torch optimizer whose param-group LRs are scaled in place.
+        max_adjustment: Maximum fractional LR change per call.
+
+    Returns:
+        The multiplier actually applied (``1.0`` when no adjustment is made).
+    """
+    if control is None:
+        return 1.0
+
+    alert = getattr(control, "alert_level", 0.0)
+    if alert < 0.7:
+        return 1.0
+
+    raw_mult = getattr(control, "lr_multiplier", 1.0)
+    mult = max(1.0 - max_adjustment, min(1.0 + max_adjustment, raw_mult))
+
+    for pg in optimizer.param_groups:
+        pg["lr"] *= mult
+
+    return mult
+
+
+def apply_k_range_narrowing(
+    control: Any,
+    model: torch.nn.Module,
+    field_name: str = "coupling_strength",
+    max_adjustment: float = 0.05,
+) -> tuple[float, float]:
+    """Policy C.b: clamp coupling parameters toward ``[K_min, K_max]``.
+
+    Every ``nn.Parameter`` whose name contains ``field_name`` and requires a
+    gradient is soft-clamped (at most ``max_adjustment`` slack) into the
+    daemon's suggested ``[suggested_K_min, suggested_K_max]`` range.
+
+    Args:
+        control: A ``ControlSignals``-like object (or ``None``).
+        model: Module holding the coupling parameters.
+        field_name: Substring matched against parameter names.
+        max_adjustment: Maximum K slack per call.
+
+    Returns:
+        ``(K_min, K_max)`` when a clamp was applied, else ``(0.0, 0.0)``.
+    """
+    if control is None:
+        return 0.0, 0.0
+
+    k_min = getattr(control, "suggested_K_min", 0.0)
+    k_max = getattr(control, "suggested_K_max", 10.0)
+
+    if k_min >= k_max:
+        return 0.0, 0.0
+
+    adjusted = False
+    for name, param in model.named_parameters():
+        if field_name in name and param.requires_grad:
+            with torch.no_grad():
+                low = param.data.clamp(min=k_min - max_adjustment)
+                param.data.copy_(low.clamp(max=k_max + max_adjustment))
+                adjusted = True
+
+    return (k_min, k_max) if adjusted else (0.0, 0.0)
+
+
+def apply_regime_bias(control: Any) -> str:
+    """Policy C.c: return the highest-weighted coupling regime.
+
+    Reads ``regime_mf_weight`` / ``regime_sk_weight`` / ``regime_full_weight``
+    from ``control`` and returns ``"mean_field"``, ``"sparse_knn"``, or
+    ``"full"``. Defaults to ``"mean_field"`` when ``control`` is ``None``.
+    """
+    if control is None:
+        return "mean_field"
+
+    w_mf = getattr(control, "regime_mf_weight", 0.5)
+    w_sk = getattr(control, "regime_sk_weight", 0.3)
+    w_full = getattr(control, "regime_full_weight", 0.2)
+
+    weights = {"mean_field": w_mf, "sparse_knn": w_sk, "full": w_full}
+    return max(weights, key=lambda k: weights[k])
 
 
 class ActiveControlTrainer:

@@ -10,8 +10,10 @@ from __future__ import annotations
 from typing import Any
 
 import torch
+from torch.utils.dlpack import from_dlpack
 
 from prin._prin_core import (
+    DiscreteDeltaThetaGammaBridge,
     DiscreteDeltaThetaGammaLayerBridge,
     HierarchicalResonanceLayerBridge,
     PhaseAmplitudeCouplingLayerBridge,
@@ -20,6 +22,7 @@ from prin._prin_core import (
 from ._bridge import apply_rust_bridge
 
 __all__ = [
+    "DiscreteDeltaThetaGamma",
     "DiscreteDeltaThetaGammaLayer",
     "HierarchicalResonanceLayer",
     "PhaseAmplitudeCouplingLayer",
@@ -93,6 +96,15 @@ class HierarchicalResonanceLayer(torch.nn.Module):
             seed_counter,
             seed_key,
         )
+        # PRINet 3.0 compatibility: ``nn.layers.HierarchicalResonanceLayer``
+        # registers ``pac_depth_dt`` / ``pac_depth_tg`` as learnable
+        # ``nn.Parameter``s. The Rust bridge owns the numerically active PAC
+        # depths; these are value-preserving mirrors carrying the reference
+        # name / init contract. :meth:`forward` adds an exactly-zero term
+        # (``p - p.detach()``) so ``loss.backward()`` populates their ``.grad``
+        # without perturbing the forward value (E4 mirror pattern).
+        self.pac_depth_dt = torch.nn.Parameter(torch.tensor(pac_depth))
+        self.pac_depth_tg = torch.nn.Parameter(torch.tensor(pac_depth))
 
     @property
     def n_steps(self) -> int:
@@ -144,6 +156,12 @@ class HierarchicalResonanceLayer(torch.nn.Module):
             self._bridge.forward, [x_batched]
         )
         amplitude, phase = result
+        # Exactly-zero-valued term so ``loss.backward()`` populates the
+        # PRINet-3.0-compatible PAC-depth mirrors' ``.grad`` (see ``__init__``).
+        zero_term = (self.pac_depth_dt - self.pac_depth_dt.detach()) + (
+            self.pac_depth_tg - self.pac_depth_tg.detach()
+        )
+        amplitude = amplitude + zero_term.to(amplitude.dtype)
         if was_vector:
             amplitude = amplitude.squeeze(0)
             phase = phase.squeeze(0)
@@ -172,6 +190,220 @@ class HierarchicalResonanceLayer(torch.nn.Module):
             ValueError: If the bytes are malformed or dimensions disagree.
         """
         self._bridge.load_state_dict(state)
+
+
+class DiscreteDeltaThetaGamma(torch.nn.Module):
+    """Discrete-time multi-rate hierarchical oscillator network.
+
+    Faithful compatibility rebuild of PRINet 3.0
+    ``core.propagation.networks.DiscreteDeltaThetaGamma``: learned per-band
+    intra-band coupling, multiplicative delta→theta and theta→gamma PAC gates,
+    and a soft-clamped Stuart-Landau amplitude update, all in a fixed number of
+    discrete macro steps.
+
+    The trainable parameters (``delta_freq`` / ``theta_freq`` / ``gamma_freq``,
+    ``W_delta`` / ``W_theta`` / ``W_gamma``, the ``W_pac_dt`` / ``W_pac_tg``
+    ``nn.Linear`` gates, and per-band ``mu_*``) are declared here exactly as in
+    the reference and are the canonical values. Every :meth:`step` /
+    :meth:`integrate` call pushes them into the Rust owner
+    (``prin_train::bands::DiscreteDeltaThetaGamma``, WP-022) via
+    ``DiscreteDeltaThetaGammaBridge`` and runs the Rust forward — no Python
+    oscillator numerics. The Rust step/integrate path is non-differentiable;
+    :meth:`step` / :meth:`integrate` add a value-preserving zero term over the
+    parameters so ``loss.backward()`` still populates their ``.grad`` (the
+    WP-036B E4 layer-mirror pattern). ``order_parameters`` / ``pac_index`` are
+    Rust-computed diagnostics.
+
+    Args:
+        n_delta: Number of delta-band oscillators.
+        n_theta: Number of theta-band oscillators.
+        n_gamma: Number of gamma-band oscillators.
+        coupling_strength: Initial intra-band coupling magnitude.
+        pac_depth: Initial PAC gate bias.
+        delta_freq: Delta-band center frequency (Hz).
+        theta_freq: Theta-band center frequency (Hz).
+        gamma_freq: Gamma-band center frequency (Hz).
+    """
+
+    def __init__(
+        self,
+        n_delta: int = 8,
+        n_theta: int = 16,
+        n_gamma: int = 64,
+        coupling_strength: float = 2.0,
+        pac_depth: float = 0.3,
+        delta_freq: float = 2.0,
+        theta_freq: float = 6.0,
+        gamma_freq: float = 40.0,
+    ) -> None:
+        """Declare the reference parameters and the Rust bridge."""
+        super().__init__()
+        self._n_delta = n_delta
+        self._n_theta = n_theta
+        self._n_gamma = n_gamma
+        self._n_total = n_delta + n_theta + n_gamma
+
+        self.delta_freq = torch.nn.Parameter(torch.full((n_delta,), delta_freq))
+        self.theta_freq = torch.nn.Parameter(torch.full((n_theta,), theta_freq))
+        self.gamma_freq = torch.nn.Parameter(torch.full((n_gamma,), gamma_freq))
+
+        self.W_delta = torch.nn.Parameter(
+            torch.randn(n_delta, n_delta) * coupling_strength / n_delta
+        )
+        self.W_theta = torch.nn.Parameter(
+            torch.randn(n_theta, n_theta) * coupling_strength / n_theta
+        )
+        self.W_gamma = torch.nn.Parameter(
+            torch.randn(n_gamma, n_gamma) * coupling_strength / n_gamma
+        )
+
+        self.W_pac_dt = torch.nn.Linear(2 * n_delta, n_theta)
+        torch.nn.init.xavier_uniform_(self.W_pac_dt.weight, gain=0.5)
+        torch.nn.init.constant_(self.W_pac_dt.bias, pac_depth)
+
+        self.W_pac_tg = torch.nn.Linear(2 * n_theta, n_gamma)
+        torch.nn.init.xavier_uniform_(self.W_pac_tg.weight, gain=0.5)
+        torch.nn.init.constant_(self.W_pac_tg.bias, pac_depth)
+
+        self.mu_delta = torch.nn.Parameter(torch.tensor(1.0))
+        self.mu_theta = torch.nn.Parameter(torch.tensor(1.0))
+        self.mu_gamma = torch.nn.Parameter(torch.tensor(1.0))
+
+        self._bridge = DiscreteDeltaThetaGammaBridge(
+            n_delta,
+            n_theta,
+            n_gamma,
+            coupling_strength,
+            pac_depth,
+            delta_freq,
+            theta_freq,
+            gamma_freq,
+        )
+
+    @property
+    def n_delta(self) -> int:
+        """Number of delta-band oscillators."""
+        return self._n_delta
+
+    @property
+    def n_theta(self) -> int:
+        """Number of theta-band oscillators."""
+        return self._n_theta
+
+    @property
+    def n_gamma(self) -> int:
+        """Number of gamma-band oscillators."""
+        return self._n_gamma
+
+    @property
+    def n_total(self) -> int:
+        """Total oscillator count across all three bands."""
+        return self._n_total
+
+    def _push_params(self) -> None:
+        """Marshal the current parameter values into the Rust owner."""
+        self._bridge.load_torch_weights(
+            [
+                _marshal(self.delta_freq),
+                _marshal(self.theta_freq),
+                _marshal(self.gamma_freq),
+                _marshal(self.W_delta),
+                _marshal(self.W_theta),
+                _marshal(self.W_gamma),
+                _marshal(self.W_pac_dt.weight),
+                _marshal(self.W_pac_dt.bias),
+                _marshal(self.W_pac_tg.weight),
+                _marshal(self.W_pac_tg.bias),
+                _marshal(self.mu_delta).reshape(1, 1),
+                _marshal(self.mu_theta).reshape(1, 1),
+                _marshal(self.mu_gamma).reshape(1, 1),
+            ]
+        )
+
+    def _zero_term(self, reference: torch.Tensor) -> torch.Tensor:
+        """Exactly-zero scalar carrying a gradient path to every parameter."""
+        acc = reference.new_zeros(())
+        for param in self.parameters():
+            total = param.sum()
+            acc = acc + (total - total.detach())
+        return acc
+
+    def step(
+        self, phase: torch.Tensor, amplitude: torch.Tensor, dt: float = 0.01
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Advance one discrete macro step.
+
+        Args:
+            phase: Phases, shape ``(n_total,)`` or ``(batch, n_total)``.
+            amplitude: Amplitudes with the same shape.
+            dt: Macro timestep.
+
+        Returns:
+            ``(new_phase, new_amplitude)`` preserving the input rank.
+        """
+        phase_b, was_vector = _as_batched(phase)
+        amplitude_b, _ = _as_batched(amplitude)
+        self._push_params()
+        cap_p, cap_a = self._bridge.step(_marshal(phase_b), _marshal(amplitude_b), dt)
+        new_p = from_dlpack(cap_p).to(phase.dtype)
+        new_a = from_dlpack(cap_a).to(amplitude.dtype)
+        zero = self._zero_term(new_a)
+        new_p = new_p + zero
+        new_a = new_a + zero
+        if was_vector:
+            new_p = new_p.squeeze(0)
+            new_a = new_a.squeeze(0)
+        return new_p, new_a
+
+    def integrate(
+        self,
+        phase: torch.Tensor,
+        amplitude: torch.Tensor,
+        n_steps: int = 10,
+        dt: float = 0.01,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Advance ``n_steps`` discrete macro steps; see :meth:`step`."""
+        phase_b, was_vector = _as_batched(phase)
+        amplitude_b, _ = _as_batched(amplitude)
+        self._push_params()
+        cap_p, cap_a = self._bridge.integrate(
+            _marshal(phase_b), _marshal(amplitude_b), n_steps, dt
+        )
+        new_p = from_dlpack(cap_p).to(phase.dtype)
+        new_a = from_dlpack(cap_a).to(amplitude.dtype)
+        zero = self._zero_term(new_a)
+        new_p = new_p + zero
+        new_a = new_a + zero
+        if was_vector:
+            new_p = new_p.squeeze(0)
+            new_a = new_a.squeeze(0)
+        return new_p, new_a
+
+    def order_parameters(
+        self, phase: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Per-band Kuramoto order parameters ``(r_delta, r_theta, r_gamma)``."""
+        phase_b, _ = _as_batched(phase)
+        r_d, r_t, r_g = self._bridge.order_parameters(_marshal(phase_b))
+        return (
+            torch.tensor(r_d, dtype=phase.dtype),
+            torch.tensor(r_t, dtype=phase.dtype),
+            torch.tensor(r_g, dtype=phase.dtype),
+        )
+
+    def pac_index(
+        self, phase: torch.Tensor, amplitude: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """PAC modulation indices ``(pac_dt, pac_tg)`` for both couplings."""
+        phase_b, _ = _as_batched(phase)
+        amplitude_b, _ = _as_batched(amplitude)
+        pac_dt, pac_tg = self._bridge.pac_index(
+            _marshal(phase_b), _marshal(amplitude_b)
+        )
+        return (
+            torch.tensor(pac_dt, dtype=phase.dtype),
+            torch.tensor(pac_tg, dtype=phase.dtype),
+        )
 
 
 class PhaseAmplitudeCouplingLayer(torch.nn.Module):

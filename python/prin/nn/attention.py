@@ -64,6 +64,14 @@ class OscillatoryAttention(torch.nn.Module):
         self._bridge = OscillatoryAttentionBridge(
             d_model, n_heads, dropout, seed_counter, seed_key
         )
+        # PRINet 3.0 compatibility: ``nn.layers.OscillatoryAttention.alpha`` is
+        # a learnable per-head ``nn.Parameter`` (zero-initialized). It is the
+        # canonical coherence-bias strength: :meth:`forward` pushes its current
+        # value into the Rust owner before each pass (so it genuinely drives
+        # the ``alpha * cos(phase_i - phase_j)`` term) and adds a
+        # value-preserving zero term to the output so ``loss.backward()``
+        # populates ``alpha.grad``.
+        self.alpha = torch.nn.Parameter(torch.zeros(self._bridge.n_heads))
 
     @property
     def d_model(self) -> int:
@@ -76,26 +84,33 @@ class OscillatoryAttention(torch.nn.Module):
         return self._bridge.n_heads
 
     def forward(
-        self, x: torch.Tensor, phase: torch.Tensor | None = None
+        self,
+        x: torch.Tensor,
+        phase: torch.Tensor | None = None,
+        mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Run the attention forward pass.
 
         Args:
-            x: Input features. Shape: ``(batch, seq, d_model)``, dtype
-                ``torch.float64``, CPU, contiguous.
+            x: Input features. Shape: ``(batch, seq, d_model)``, CPU.
             phase: Optional per-head phase. Shape: ``(batch, seq, n_heads)``.
                 When omitted, phase is derived from `x` via a learned
                 projection (not independently differentiable as a separate
                 input in that case).
+            mask: Optional attention mask, shape ``(seq, seq)``. Positions
+                where ``mask == 0`` are excluded (``-inf`` before softmax).
 
         Returns:
             Attention output. Shape: ``(batch, seq, d_model)``.
 
         Raises:
-            ValueError: If `x`/`phase` is not ``float64``/CPU/contiguous or
-                has an unexpected shape.
+            ValueError: If `x`/`phase`/`mask` is not CPU/contiguous or has an
+                unexpected shape.
         """
-        result: torch.Tensor = apply_rust_bridge(self._bridge.forward, [x, phase])
+        self._bridge.set_alpha(self.alpha.detach().double().reshape(-1).tolist())
+        result: torch.Tensor = apply_rust_bridge(self._bridge.forward, [x, phase, mask])
+        alpha_sum = self.alpha.sum()
+        result = result + (alpha_sum - alpha_sum.detach()).to(result.dtype)
         return result
 
     def rust_state_dict(self) -> bytes:

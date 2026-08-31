@@ -18,13 +18,12 @@
 //! ```
 //!
 //! This is a line-for-line port of `OscillatoryAttention.forward`
-//! (`nn/layers.py`). The optional attention `mask` argument the PRINet 3.0
-//! reference also accepts is not ported: no caller in this WP's scope
-//! ([`crate::hybrid::HybridPRINetV2`]) ever passes one, and adding masked
-//! softmax support with no exercising caller and no golden-value coverage
-//! would be unregistered experimentation (Development Workflow and Audit
-//! Standards). Recorded as an explicit out-of-scope discovery for a future
-//! WP that needs masked attention.
+//! (`nn/layers.py`). The reference's optional attention `mask` argument is
+//! supported via [`OscillatoryAttention::forward_masked`] (WP-036C S1
+//! `0144M1`, plan amendment #40): a `[seq, seq]` mask whose `0` positions are
+//! set to `-inf` before the softmax, broadcast across batch and heads —
+//! needed by the strict-ported `test_y2q1` `OscillatoryAttention` /
+//! `InterleavedHybridPRINet` suite.
 //!
 //! Standard multi-head-attention plumbing (`Q`/`K`/`V`/output linear
 //! projections, dropout) uses [`burn::nn::Linear`]/[`burn::nn::Dropout`]
@@ -288,10 +287,47 @@ impl<B: Backend> OscillatoryAttention<B> {
     /// Returns [`TrainError::ShapeMismatch`] if `x`'s last dimension is not
     /// [`Self::d_model`] or `phase`'s shape does not match
     /// `[batch, seq, n_heads]`.
+    /// Replace the per-head coherence-bias strength `alpha` (shape
+    /// `[n_heads]`). Used by the Python `nn.Module` wrapper, which owns the
+    /// canonical `alpha` `nn.Parameter` (PRINet 3.0 `nn.layers`
+    /// `OscillatoryAttention.alpha`).
+    pub fn set_alpha(&mut self, alpha: Tensor<B, 1>) {
+        self.alpha = Param::initialized(Default::default(), alpha.require_grad());
+    }
+
+    /// Forward pass with an oscillatory coherence bias (no attention mask).
+    ///
+    /// Equivalent to [`Self::forward_masked`] with `mask = None`; see that
+    /// method and the module docs for the exact per-head scoring formula.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TrainError::ShapeMismatch`] if `x`'s last dimension is not
+    /// [`Self::d_model`] or `phase`'s shape is not `[batch, seq, n_heads]`.
     pub fn forward(
         &self,
         x: Tensor<B, 3>,
         phase: Option<Tensor<B, 3>>,
+    ) -> Result<Tensor<B, 3>, TrainError> {
+        self.forward_masked(x, phase, None)
+    }
+
+    /// Forward pass with an optional additive attention mask.
+    ///
+    /// `mask`, when supplied, is `[seq, seq]`; positions where `mask == 0` are
+    /// set to `-inf` before the softmax (PRINet 3.0 `nn.layers`
+    /// `OscillatoryAttention` `masked_fill` semantics), broadcast across
+    /// batch and heads.
+    ///
+    /// # Errors
+    ///
+    /// See [`Self::forward`]; additionally returns [`TrainError::ShapeMismatch`]
+    /// if `mask`'s shape is not `[seq, seq]`.
+    pub fn forward_masked(
+        &self,
+        x: Tensor<B, 3>,
+        phase: Option<Tensor<B, 3>>,
+        mask: Option<Tensor<B, 2>>,
     ) -> Result<Tensor<B, 3>, TrainError> {
         let [batch, seq, d] = x.dims();
         check_dims("x", [d], [self.d_model])?;
@@ -319,7 +355,13 @@ impl<B: Backend> OscillatoryAttention<B> {
         let coherence = (phase_i - phase_j).cos(); // [batch, h, seq, seq]
 
         let alpha = self.alpha.val().reshape([1, h, 1, 1]);
-        let scores = scores + coherence * alpha;
+        let mut scores = scores + coherence * alpha;
+
+        if let Some(mask) = mask {
+            check_dims("mask", mask.dims(), [seq, seq])?;
+            let masked_positions = mask.equal_elem(0.0).reshape([1, 1, seq, seq]);
+            scores = scores.mask_fill(masked_positions, f64::NEG_INFINITY);
+        }
 
         let attn = self.dropout.forward(softmax(scores, 3));
         let out = attn.matmul(v); // [batch, h, seq, d_k]
@@ -333,6 +375,8 @@ impl<B: Backend> OscillatoryAttention<B> {
 mod tests {
     use super::*;
     use burn::backend::{Autodiff, NdArray};
+
+    use crate::support::seeded_uniform;
 
     type TestBackend = NdArray<f64>;
     type TestAutodiffBackend = Autodiff<TestBackend>;
@@ -442,6 +486,86 @@ mod tests {
         assert_eq!(out.dims(), [2, 5, 16]);
         let data = out.to_data().to_vec::<f64>().unwrap();
         assert!(data.iter().all(|v| v.is_finite()));
+    }
+
+    #[test]
+    fn forward_masked_excludes_zero_positions_and_stays_finite() {
+        let mut seed = Seed::new(9, 0);
+        let attn = OscillatoryAttentionConfig::new(8, 2)
+            .unwrap()
+            .init::<TestBackend>(&device(), &mut seed);
+        let dev = device();
+        let x = Tensor::<TestBackend, 3>::ones([2, 4, 8], &dev);
+        // Lower-triangular causal mask.
+        let mask = Tensor::<TestBackend, 2>::from_data(
+            burn::tensor::TensorData::new(
+                vec![
+                    1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0,
+                ],
+                [4, 4],
+            ),
+            &dev,
+        );
+        let out = attn.forward_masked(x, None, Some(mask)).unwrap();
+        assert_eq!(out.dims(), [2, 4, 8]);
+        assert!(out
+            .to_data()
+            .to_vec::<f64>()
+            .unwrap()
+            .iter()
+            .all(|v| v.is_finite()));
+    }
+
+    #[test]
+    fn forward_masked_rejects_wrong_mask_shape() {
+        let mut seed = Seed::new(10, 0);
+        let attn = OscillatoryAttentionConfig::new(8, 2)
+            .unwrap()
+            .init::<TestBackend>(&device(), &mut seed);
+        let dev = device();
+        let x = Tensor::<TestBackend, 3>::ones([1, 4, 8], &dev);
+        let mask = Tensor::<TestBackend, 2>::ones([3, 3], &dev);
+        assert!(matches!(
+            attn.forward_masked(x, None, Some(mask)).unwrap_err(),
+            TrainError::ShapeMismatch { name: "mask", .. }
+        ));
+    }
+
+    #[test]
+    fn set_alpha_replaces_the_coherence_bias_strength() {
+        let mut seed = Seed::new(11, 0);
+        let mut attn = OscillatoryAttentionConfig::new(8, 2)
+            .unwrap()
+            .init::<TestBackend>(&device(), &mut seed);
+        let dev = device();
+        attn.set_alpha(Tensor::<TestBackend, 1>::from_data(
+            burn::tensor::TensorData::new(vec![5.0, 5.0], [2]),
+            &dev,
+        ));
+        // With a large alpha, two different external phases must produce
+        // different outputs (the coherence bias is active). Tokens must
+        // differ for attention weights to matter, so use a varied input.
+        let x = seeded_uniform::<TestBackend, 3>([1, 3, 8], -1.0, 1.0, &dev, &mut seed);
+        let out_zero = attn
+            .forward(x.clone(), Some(Tensor::zeros([1, 3, 2], &dev)))
+            .unwrap();
+        let out_rand = attn
+            .forward(
+                x,
+                Some(Tensor::<TestBackend, 3>::from_data(
+                    burn::tensor::TensorData::new(vec![0.0, 0.0, 1.5, 1.5, 3.0, 3.0], [1, 3, 2]),
+                    &dev,
+                )),
+            )
+            .unwrap();
+        let a = out_zero.to_data().to_vec::<f64>().unwrap();
+        let b = out_rand.to_data().to_vec::<f64>().unwrap();
+        let max_diff = a
+            .iter()
+            .zip(b.iter())
+            .map(|(x, y)| (x - y).abs())
+            .fold(0.0_f64, f64::max);
+        assert!(max_diff > 1e-6, "alpha had no effect (max diff {max_diff})");
     }
 
     #[test]

@@ -1,6 +1,6 @@
 # Session 0144M1 — WP-036C S1 (sub-pass 1/8): Integration-Q3 and Y2Q1/Y2Q4 strict port
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S1 — Coding

@@ -115,7 +115,7 @@ The Session Plan is structurally complete only if all remain true:
    `0144AA`–`0144AB`), and amendment #39 (`0144M1`–`0144M8`, WP-036C
    strict-port S1 decomposition, inserted between `0144M` and `0144N`) add
    planned sub-sessions between existing integers; the integer sequence
-   0001–0198 remains unique and gap-free.
+   0001–0198 remains unique and gap-free. Amendment #40 (2026-08-31, `0144M1` scope confirmations: deferred-symbol rebuild in-scope, `__version__` → `0.3.0`, minimal `docs/` guides) adds no session IDs.
 5. Every predecessor/successor link resolves; only 0001 lacks a file
    predecessor and only 0198 lacks a file successor. Sub-session chains link
    internally: `0141` → `0141A` → … → `0141E` → `0142`, and

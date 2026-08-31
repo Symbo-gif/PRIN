@@ -112,6 +112,9 @@ _WP_ID = re.compile(r"^WP-(\d{3})$")
 #   #39: WP-036C S1 decomposed into eight strict-port coding sub-passes
 #        0144M1..0144M8, inserted between 0144M and 0144N, preserving
 #        import-only/assertions-unchanged.
+#   #40: 0144M1 scope confirmations (no new session IDs): deferred-symbol
+#        rebuild (DiscreteDeltaThetaGamma core + InterleavedHybridPRINet)
+#        in-scope; __version__ 0.3.0-alpha.1 -> 0.3.0; minimal docs/ guides.
 _PLANNED_INTEGER_COUNT = 198
 # Each block is (anchor_integer_session, ordered_sub_session_ids). The block's
 # rows appear in the register contiguously immediately after the anchor row.

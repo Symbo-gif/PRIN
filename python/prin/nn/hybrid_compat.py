@@ -415,16 +415,146 @@ class HybridPRINetV2CLEVRN:
         _raise_disposition("HybridPRINetV2CLEVRN")
 
 
-class InterleavedHybridPRINet:
-    """Deferred-rebuild stub for the interleaved hybrid model.
+class InterleavedHybridPRINet(nn.Module):
+    """Interleaved oscillatory-attention hybrid model.
 
-    Raises:
-        NotImplementedError: Always on construction.
+    Faithful compatibility rebuild of PRINet 3.0
+    ``nn.hybrid.InterleavedHybridPRINet`` (plan amendment #40, sub-pass
+    0144M1): oscillatory dynamics (:class:`prin.nn.DiscreteDeltaThetaGamma`)
+    and :class:`prin.nn.OscillatoryAttention` interleaved at every layer, with
+    the persistent phase state biasing attention toward phase-coherent tokens.
+    Every differentiable stage delegates to a Rust owner; this class only
+    chains them with standard ``nn.Linear`` / ``nn.LayerNorm`` / ``nn.GELU``
+    projections (the same "PyTorch composition over Rust-backed layers"
+    category as :class:`HybridPRINet`).
     """
 
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition("InterleavedHybridPRINet")
+    def __init__(
+        self,
+        n_input: int = 256,
+        n_classes: int = 10,
+        n_tokens: int = 44,
+        d_model: int = 64,
+        n_heads: int = 4,
+        n_layers: int = 2,
+        dropout: float = 0.1,
+        n_delta: int = 4,
+        n_theta: int = 8,
+        n_gamma: int = 32,
+        n_discrete_steps: int = 3,
+    ) -> None:
+        """Build the interleaved oscillatory-attention stack."""
+        super().__init__()
+        from prin.nn import DiscreteDeltaThetaGamma, OscillatoryAttention
+
+        self.n_input = n_input
+        self.n_classes = n_classes
+        self.n_tokens = n_tokens
+        self.d_model = d_model
+        self.n_layers = n_layers
+        self._n_heads = n_heads
+        self.n_osc_total = n_delta + n_theta + n_gamma
+        self._n_discrete_steps = n_discrete_steps
+
+        self.input_proj = nn.Linear(n_input, n_tokens * d_model)
+        self.phase_init = nn.Linear(n_input, n_tokens * n_heads)
+        self.dynamics = DiscreteDeltaThetaGamma(
+            n_delta=n_delta, n_theta=n_theta, n_gamma=n_gamma
+        )
+
+        self.attn_layers = nn.ModuleList()
+        self.ffn_layers = nn.ModuleList()
+        self.norm1_layers = nn.ModuleList()
+        self.norm2_layers = nn.ModuleList()
+        for _ in range(n_layers):
+            self.attn_layers.append(
+                OscillatoryAttention(d_model=d_model, n_heads=n_heads, dropout=0.0)
+            )
+            self.ffn_layers.append(
+                nn.Sequential(
+                    nn.Linear(d_model, d_model * 4),
+                    nn.GELU(),
+                    nn.Dropout(dropout),
+                    nn.Linear(d_model * 4, d_model),
+                    nn.Dropout(dropout),
+                )
+            )
+            self.norm1_layers.append(nn.LayerNorm(d_model))
+            self.norm2_layers.append(nn.LayerNorm(d_model))
+
+        self.pool_norm = nn.LayerNorm(d_model)
+        self.classifier = nn.Sequential(
+            nn.Linear(d_model, d_model),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(d_model, n_classes),
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Interleaved forward pass; returns log-probabilities."""
+        import math
+
+        was_1d = x.dim() == 1
+        if was_1d:
+            x = x.unsqueeze(0)
+        batch = x.shape[0]
+        n_heads = self._n_heads
+
+        h = self.input_proj(x).view(batch, self.n_tokens, self.d_model)
+        phase_init_raw = self.phase_init(x).view(batch, self.n_tokens, n_heads)
+        phase_state = phase_init_raw % (2.0 * math.pi)
+        amp_state = torch.ones(batch, self.n_osc_total, device=x.device, dtype=x.dtype)
+        dyn_phase = phase_state[:, : self.n_osc_total, :].mean(dim=-1)
+
+        for i in range(self.n_layers):
+            dyn_phase, amp_state = self.dynamics.integrate(
+                dyn_phase, amp_state, n_steps=self._n_discrete_steps, dt=0.01
+            )
+            if self.n_tokens == self.n_osc_total:
+                token_phase = dyn_phase.unsqueeze(-1).expand(
+                    batch, self.n_tokens, n_heads
+                )
+            else:
+                repeated = dyn_phase.repeat(1, (self.n_tokens // self.n_osc_total) + 1)[
+                    :, : self.n_tokens
+                ]
+                token_phase = repeated.unsqueeze(-1).expand(
+                    batch, self.n_tokens, n_heads
+                )
+
+            h_norm = self.norm1_layers[i](h)
+            h = h + self.attn_layers[i](h_norm, phase=token_phase)
+            h_norm = self.norm2_layers[i](h)
+            h = h + self.ffn_layers[i](h_norm)
+
+        pooled = self.pool_norm(h.mean(dim=1))
+        logits = self.classifier(pooled)
+        logits = torch.clamp(logits, min=-_LOGIT_CLAMP, max=_LOGIT_CLAMP)
+        log_probs = F.log_softmax(logits, dim=-1)
+        return log_probs.squeeze(0) if was_1d else log_probs
+
+    def oscillatory_parameters(self) -> list[nn.Parameter]:
+        """Parameters belonging to the oscillatory components."""
+        from prin.nn import OscillatoryAttention
+
+        params: list[nn.Parameter] = list(self.dynamics.parameters())
+        params.extend(self.phase_init.parameters())
+        for attn in self.attn_layers:
+            if isinstance(attn, OscillatoryAttention):
+                params.append(attn.alpha)
+        return params
+
+    def rate_coded_parameters(self) -> list[nn.Parameter]:
+        """Parameters belonging to the rate-coded components."""
+        params: list[nn.Parameter] = list(self.input_proj.parameters())
+        for ffn in self.ffn_layers:
+            params.extend(ffn.parameters())
+        for norm1, norm2 in zip(self.norm1_layers, self.norm2_layers, strict=True):
+            params.extend(norm1.parameters())
+            params.extend(norm2.parameters())
+        params.extend(self.pool_norm.parameters())
+        params.extend(self.classifier.parameters())
+        return params
 
 
 class TemporalHybridPRINet:

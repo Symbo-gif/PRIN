@@ -454,6 +454,186 @@ impl PyDiscreteDeltaThetaGammaLayerBridge {
     }
 }
 
+/// Rust-owned standalone discrete three-band *network* bridge (no in/out
+/// projections — that is [`PyDiscreteDeltaThetaGammaLayerBridge`]).
+///
+/// Mirrors PRINet 3.0 `core.propagation.networks.DiscreteDeltaThetaGamma`.
+/// The canonical trainable parameters live on the Python `nn.Module` (13
+/// tensors: per-band frequencies, intra-band coupling, PAC gate weights /
+/// biases, and per-band `μ`); each `step` / `integrate` call pushes the
+/// current values through [`Self::load_torch_weights`] and then runs the
+/// Rust forward. `step` / `integrate` are non-differentiable end to end
+/// (the Python wrapper populates parameter `.grad` with a value-preserving
+/// mirror term, matching the WP-036B E4 layer-mirror pattern);
+/// `order_parameters` / `pac_index` are pure diagnostics.
+#[pyclass(
+    name = "DiscreteDeltaThetaGammaBridge",
+    module = "prin._prin_core",
+    unsendable
+)]
+pub struct PyDiscreteDeltaThetaGammaBridge {
+    config: prin_train::bands::DiscreteDeltaThetaGammaConfig,
+    net: prin_train::bands::DiscreteDeltaThetaGamma<BridgeBackend>,
+}
+
+#[pymethods]
+impl PyDiscreteDeltaThetaGammaBridge {
+    #[new]
+    #[pyo3(signature = (n_delta=8, n_theta=16, n_gamma=64, coupling_strength=2.0, pac_depth=0.3, delta_freq=2.0, theta_freq=6.0, gamma_freq=40.0, seed_counter=0, seed_key=0))]
+    #[allow(clippy::too_many_arguments)]
+    fn new(
+        n_delta: usize,
+        n_theta: usize,
+        n_gamma: usize,
+        coupling_strength: f64,
+        pac_depth: f64,
+        delta_freq: f64,
+        theta_freq: f64,
+        gamma_freq: f64,
+        seed_counter: u64,
+        seed_key: u64,
+    ) -> PyResult<Self> {
+        let config = prin_train::bands::DiscreteDeltaThetaGammaConfig::with_params(
+            n_delta,
+            n_theta,
+            n_gamma,
+            coupling_strength,
+            pac_depth,
+            delta_freq,
+            theta_freq,
+            gamma_freq,
+        )
+        .map_err(train_err_to_py)?;
+        let mut seed = Seed::new(seed_counter.into(), seed_key.into());
+        let net = config.init::<BridgeBackend>(&device(), &mut seed);
+        Ok(Self { config, net })
+    }
+
+    #[getter]
+    fn n_delta(&self) -> usize {
+        self.config.n_delta
+    }
+
+    #[getter]
+    fn n_theta(&self) -> usize {
+        self.config.n_theta
+    }
+
+    #[getter]
+    fn n_gamma(&self) -> usize {
+        self.config.n_gamma
+    }
+
+    #[getter]
+    fn n_total(&self) -> usize {
+        self.config.n_total()
+    }
+
+    /// Replace the network parameters from the Python `nn.Module` mirrors.
+    ///
+    /// Order: `delta_freq, theta_freq, gamma_freq` (rank 1); `w_delta,
+    /// w_theta, w_gamma` (rank 2); `w_pac_dt` (rank 2, `[n_theta, 2*n_delta]`
+    /// — transposed here to the Rust `[2*n_delta, n_theta]` layout), `b_pac_dt`
+    /// (rank 1); `w_pac_tg` (rank 2, transposed), `b_pac_tg` (rank 1);
+    /// `mu_delta, mu_theta, mu_gamma` (rank 2, `[1, 1]`).
+    fn load_torch_weights(&mut self, weights: Vec<Bound<'_, PyAny>>) -> PyResult<()> {
+        if weights.len() != 13 {
+            return Err(PyValueError::new_err(format!(
+                "expected 13 weight tensors, got {}",
+                weights.len()
+            )));
+        }
+        let rank1 = |i: usize| tensor_from_dlpack_with_data::<1>(&weights[i]).map(|v| v.0);
+        let rank2 = |i: usize| tensor_from_dlpack_with_data::<2>(&weights[i]).map(|v| v.0);
+        let rank2_transposed = |i: usize| {
+            rank2(i).map(|tensor| Tensor::from_data(tensor.transpose().into_data(), &device()))
+        };
+        let params = DiscreteDeltaThetaGammaParams {
+            delta_freq: rank1(0)?,
+            theta_freq: rank1(1)?,
+            gamma_freq: rank1(2)?,
+            w_delta: rank2(3)?,
+            w_theta: rank2(4)?,
+            w_gamma: rank2(5)?,
+            w_pac_dt: rank2_transposed(6)?,
+            b_pac_dt: rank1(7)?,
+            w_pac_tg: rank2_transposed(8)?,
+            b_pac_tg: rank1(9)?,
+            mu_delta: rank2(10)?,
+            mu_theta: rank2(11)?,
+            mu_gamma: rank2(12)?,
+        };
+        self.net = self
+            .config
+            .init_from_params(params)
+            .map_err(train_err_to_py)?;
+        Ok(())
+    }
+
+    /// Advance one macro step. Returns `(new_phase, new_amplitude)` capsules.
+    fn step(
+        &self,
+        py: Python<'_>,
+        phase: &Bound<'_, PyAny>,
+        amplitude: &Bound<'_, PyAny>,
+        dt: f64,
+    ) -> PyResult<(Py<PyAny>, Py<PyAny>)> {
+        let (phase, _, _) = tensor_from_dlpack_with_data::<2>(phase)?;
+        let (amplitude, _, _) = tensor_from_dlpack_with_data::<2>(amplitude)?;
+        let state =
+            prin_train::bands::DiscreteBandState::new(phase, amplitude).map_err(train_err_to_py)?;
+        let next = self.net.step(state, dt).map_err(train_err_to_py)?;
+        let (p, a) = next.into_parts();
+        Ok((
+            export_tensor::<2>(py, p.inner())?,
+            export_tensor::<2>(py, a.inner())?,
+        ))
+    }
+
+    /// Advance `n_steps` macro steps. Returns `(final_phase, final_amplitude)`.
+    fn integrate(
+        &self,
+        py: Python<'_>,
+        phase: &Bound<'_, PyAny>,
+        amplitude: &Bound<'_, PyAny>,
+        n_steps: usize,
+        dt: f64,
+    ) -> PyResult<(Py<PyAny>, Py<PyAny>)> {
+        let (phase, _, _) = tensor_from_dlpack_with_data::<2>(phase)?;
+        let (amplitude, _, _) = tensor_from_dlpack_with_data::<2>(amplitude)?;
+        let state =
+            prin_train::bands::DiscreteBandState::new(phase, amplitude).map_err(train_err_to_py)?;
+        let next = self
+            .net
+            .integrate(state, n_steps, dt)
+            .map_err(train_err_to_py)?;
+        let (p, a) = next.into_parts();
+        Ok((
+            export_tensor::<2>(py, p.inner())?,
+            export_tensor::<2>(py, a.inner())?,
+        ))
+    }
+
+    /// Per-band Kuramoto order parameters `(r_delta, r_theta, r_gamma)`.
+    fn order_parameters(&self, phase: &Bound<'_, PyAny>) -> PyResult<(f64, f64, f64)> {
+        let (phase, _, _) = tensor_from_dlpack_with_data::<2>(phase)?;
+        self.net.order_parameters(phase).map_err(train_err_to_py)
+    }
+
+    /// PAC modulation indices `(pac_dt, pac_tg)`.
+    fn pac_index(
+        &self,
+        phase: &Bound<'_, PyAny>,
+        amplitude: &Bound<'_, PyAny>,
+    ) -> PyResult<(f64, f64)> {
+        let (phase, _, _) = tensor_from_dlpack_with_data::<2>(phase)?;
+        let (amplitude, _, _) = tensor_from_dlpack_with_data::<2>(amplitude)?;
+        self.net
+            .pac_index(phase, amplitude)
+            .map_err(train_err_to_py)
+    }
+}
+
 pub(crate) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyHierarchicalResonanceLayerBridge>()?;
     m.add_class::<PyHierarchicalResonanceLayerCtx>()?;
@@ -461,5 +641,6 @@ pub(crate) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyPhaseAmplitudeCouplingLayerCtx>()?;
     m.add_class::<PyDiscreteDeltaThetaGammaLayerBridge>()?;
     m.add_class::<PyDiscreteDeltaThetaGammaLayerCtx>()?;
+    m.add_class::<PyDiscreteDeltaThetaGammaBridge>()?;
     Ok(())
 }

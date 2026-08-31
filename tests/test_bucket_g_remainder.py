@@ -17,7 +17,6 @@ from prin.dynamics import (
 )
 from prin.nn.hybrid_compat import (
     HybridPRINetV2CLEVRN,
-    InterleavedHybridPRINet,
     TemporalHybridPRINet,
 )
 from prin.nn.slot_attention import SlotAttentionCLEVRN
@@ -383,12 +382,16 @@ def test_y4q1_tools_d22_stubs_raise(cls_or_fn: object) -> None:
     "cls",
     [
         HybridPRINetV2CLEVRN,
-        InterleavedHybridPRINet,
         TemporalHybridPRINet,
     ],
 )
 def test_hybrid_family_d22_stubs_raise(cls: type) -> None:
-    """Every hybrid-model symbol raises the D-2.2 disposition."""
+    """Every still-deferred hybrid-model symbol raises the D-2.2 disposition.
+
+    ``InterleavedHybridPRINet`` is a real PyTorch composition as of WP-036C S1
+    ``0144M1`` (plan amendment #40) and is covered by
+    ``tests/test_acceptance_y2q1.py``; it is no longer a D-2.2 stub.
+    """
     with pytest.raises(NotImplementedError, match=r"D-2\.2"):
         cls()
 
