@@ -16,9 +16,6 @@ from prin.dynamics import (
     OscillatorState,
 )
 from prin.nn.hybrid_compat import (
-    AlternatingOptimizer,
-    HybridCLEVRN,
-    HybridPRINet,
     HybridPRINetV2CLEVRN,
     InterleavedHybridPRINet,
     TemporalHybridPRINet,
@@ -47,7 +44,6 @@ from prin.topology import ring_topology, small_world_topology
 from prin.training_hooks import (
     ActiveControlTrainer,
     ControlSignalBuffer,
-    StateCollector,
     collect_system_state,
     create_ablation_tracker,
 )
@@ -387,12 +383,9 @@ def test_y4q1_tools_d22_stubs_raise(cls_or_fn: object) -> None:
 @pytest.mark.parametrize(
     "cls",
     [
-        HybridPRINet,
-        HybridCLEVRN,
         HybridPRINetV2CLEVRN,
         InterleavedHybridPRINet,
         TemporalHybridPRINet,
-        AlternatingOptimizer,
     ],
 )
 def test_hybrid_family_d22_stubs_raise(cls: type) -> None:
@@ -453,7 +446,6 @@ def test_control_signal_buffer_concurrent_access() -> None:
 @pytest.mark.parametrize(
     "cls_or_fn",
     [
-        StateCollector,
         ActiveControlTrainer,
         create_ablation_tracker,
         collect_system_state,

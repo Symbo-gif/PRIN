@@ -1,6 +1,6 @@
 # Session 0144E5 — WP-036B S1 (sub-pass 5/6): Hybrid and CLEVR-N strict port
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S1 — Coding

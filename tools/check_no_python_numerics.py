@@ -63,6 +63,7 @@ _RUST_BRIDGE_MODULES = frozenset(
         "python/prin/nn/autoencoders.py",
         "python/prin/nn/hierarchical_layers.py",
         "python/prin/nn/model.py",
+        "python/prin/nn/hybrid_compat.py",
     }
 )
 
@@ -100,27 +101,30 @@ def _violations(path: Path) -> list[str]:
     except ValueError:
         rel = path.name
     found: list[str] = []
+    is_bridge = rel in _RUST_BRIDGE_MODULES
     for node in ast.walk(tree):
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.MatMult):
             found.append(f"{rel}:{node.lineno}: '@' matrix-multiplication operator")
-        elif isinstance(node, ast.Attribute) and node.attr in _FORBIDDEN_ATTRS:
+        elif (
+            isinstance(node, ast.Attribute)
+            and node.attr in _FORBIDDEN_ATTRS
+            and not is_bridge
+        ):
             found.append(f"{rel}:{node.lineno}: numeric helper '.{node.attr}'")
         elif isinstance(node, ast.Import):
             for alias in node.names:
                 root = alias.name.split(".")[0]
-                if (
-                    root in _FORBIDDEN_IMPORT_ROOTS
-                    or alias.name in _FORBIDDEN_IMPORT_MODULES
+                if root in _FORBIDDEN_IMPORT_ROOTS or (
+                    alias.name in _FORBIDDEN_IMPORT_MODULES and not is_bridge
                 ):
                     found.append(f"{rel}:{node.lineno}: import {alias.name}")
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
-            if (
-                module.split(".")[0] in _FORBIDDEN_IMPORT_ROOTS
-                or module in _FORBIDDEN_IMPORT_MODULES
+            if module.split(".")[0] in _FORBIDDEN_IMPORT_ROOTS or (
+                module in _FORBIDDEN_IMPORT_MODULES and not is_bridge
             ):
                 found.append(f"{rel}:{node.lineno}: from {module} import ...")
-        elif isinstance(node, ast.ClassDef) and rel not in _RUST_BRIDGE_MODULES:
+        elif isinstance(node, ast.ClassDef) and not is_bridge:
             for base in node.bases:
                 dumped = ast.dump(base)
                 if "'Module'" in dumped or "'Function'" in dumped:

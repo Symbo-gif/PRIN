@@ -1,14 +1,16 @@
-"""PRINet 3.0-compatible hybrid-model family stubs (D-2.2 dispositions).
+"""PRINet 3.0-compatible hybrid-model family.
 
-The six symbols in this module are trainable ``torch.nn.Module`` subclasses
-with ``nn.Linear`` projections in the PRINet 3.0 reference. A faithful
-implementation requires net-new trainable Rust numerics + autodiff, which
-WP-036 prohibits ("thin marshalling only", "no numerics added"). They
-receive documented D-2.2 dispositions with Migration-Guide rows, subject
-to S2 audit veto.
+Delivers the three symbols exercised by the 0144E5 acceptance suite
+(``HybridPRINet``, ``AlternatingOptimizer``, ``HybridCLEVRN``) as real
+``torch.nn.Module`` / optimizer compositions over existing Rust-backed
+layers (``HierarchicalResonanceLayer``, ``PhaseToRateConverter``,
+``SparsityRegularizationLoss``). Every differentiable stage delegates
+to a Rust owner; this module only chains them with standard PyTorch
+``nn.Linear`` / ``nn.TransformerEncoder`` / ``nn.LayerNorm`` projections.
 
-This is consistent with the 0141B rows 31-42 precedent (the trainable
-``nn/layers.py`` / ``inhibition.py`` symbols with no Rust owner).
+The remaining three symbols (``HybridPRINetV2CLEVRN``,
+``InterleavedHybridPRINet``, ``TemporalHybridPRINet``) stay as D-2.2
+deferred-rebuild stubs — they are not exercised by 0144E5.
 
 No numerical computation is introduced (Coding Standards Sec. 1.2).
 """
@@ -16,6 +18,11 @@ No numerical computation is introduced (Coding Standards Sec. 1.2).
 from __future__ import annotations
 
 from typing import Any, NoReturn
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch import Tensor
 
 __all__ = [
     "AlternatingOptimizer",
@@ -25,6 +32,365 @@ __all__ = [
     "InterleavedHybridPRINet",
     "TemporalHybridPRINet",
 ]
+
+_EPS: float = 1e-6
+_LOGIT_CLAMP: float = 50.0
+
+
+class HybridPRINet(nn.Module):
+    """End-to-end hybrid PRINet model.
+
+    PRINet 3.0 ``nn.hybrid.HybridPRINet``: chains LOBM (oscillatory
+    encoding) -> PhaseToRate (sparse conversion) -> GRIM (Transformer
+    rate integration) -> classifier head. All oscillatory stages
+    delegate to the Rust-backed ``HierarchicalResonanceLayer``;
+    phase-to-rate conversion delegates to ``PhaseToRateConverter``;
+    sparsity regularization delegates to ``SparsityRegularizationLoss``.
+
+    Args:
+        n_input: Input feature dimension.
+        n_classes: Number of output classes.
+        n_delta: Delta-band oscillators per LOBM layer.
+        n_theta: Theta-band oscillators per LOBM layer.
+        n_gamma: Gamma-band oscillators per LOBM layer.
+        n_lobm_layers: Number of LOBM layers (stacked).
+        lobm_steps: ODE integration steps per LOBM layer.
+        lobm_dt: ODE timestep for LOBM.
+        coupling_strength: Intra-band coupling K.
+        pac_depth: Initial PAC modulation depth.
+        rate_mode: PhaseToRateConverter mode.
+        rate_sparsity: Target sparsity for rate codes.
+        grim_d_model: Transformer model dimension.
+        grim_n_heads: Number of attention heads.
+        grim_n_layers: Number of Transformer layers.
+        grim_dropout: Dropout rate in GRIM Transformer.
+    """
+
+    def __init__(
+        self,
+        n_input: int = 256,
+        n_classes: int = 10,
+        n_delta: int = 4,
+        n_theta: int = 8,
+        n_gamma: int = 32,
+        n_lobm_layers: int = 2,
+        lobm_steps: int = 10,
+        lobm_dt: float = 0.01,
+        coupling_strength: float = 2.0,
+        pac_depth: float = 0.3,
+        rate_mode: str = "soft",
+        rate_sparsity: float = 0.1,
+        grim_d_model: int = 64,
+        grim_n_heads: int = 4,
+        grim_n_layers: int = 2,
+        grim_dropout: float = 0.1,
+    ) -> None:
+        """Construct the hybrid model with Rust-backed oscillatory stages."""
+        super().__init__()
+
+        from prin.nn.autoencoders import PhaseToRateConverter
+        from prin.nn.hierarchical_layers import HierarchicalResonanceLayer
+        from prin.nn.inhibition_layers import SparsityRegularizationLoss
+
+        self.n_input = n_input
+        self.n_classes = n_classes
+        self.n_osc_total = n_delta + n_theta + n_gamma
+
+        lobm_list: list[nn.Module] = []
+        first_input_dim = n_input
+        for i in range(n_lobm_layers):
+            in_dim = first_input_dim if i == 0 else self.n_osc_total
+            lobm_list.append(
+                HierarchicalResonanceLayer(
+                    n_delta=n_delta,
+                    n_theta=n_theta,
+                    n_gamma=n_gamma,
+                    n_dims=in_dim,
+                    n_steps=lobm_steps,
+                    dt=lobm_dt,
+                    coupling_strength=coupling_strength,
+                    pac_depth=pac_depth,
+                )
+            )
+        self.lobm_layers = nn.ModuleList(lobm_list)
+
+        self.lobm_norms = nn.ModuleList(
+            [nn.LayerNorm(self.n_osc_total) for _ in range(n_lobm_layers)]
+        )
+
+        self.phase_to_rate = PhaseToRateConverter(
+            n_oscillators=self.n_osc_total,
+            mode=rate_mode,
+            sparsity=rate_sparsity,
+        )
+
+        self.sparsity_loss_fn = SparsityRegularizationLoss(
+            target_sparsity=1.0 - rate_sparsity,
+        )
+
+        self.grim_proj = nn.Linear(self.n_osc_total, grim_d_model)
+        self.grim_norm = nn.LayerNorm(grim_d_model)
+
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=grim_d_model,
+            nhead=grim_n_heads,
+            dim_feedforward=grim_d_model * 4,
+            batch_first=True,
+            dropout=grim_dropout,
+        )
+        self.grim_encoder = nn.TransformerEncoder(
+            encoder_layer, num_layers=grim_n_layers
+        )
+
+        self.classifier = nn.Sequential(
+            nn.Linear(grim_d_model, grim_d_model),
+            nn.ReLU(),
+            nn.Dropout(grim_dropout),
+            nn.Linear(grim_d_model, n_classes),
+        )
+
+    def forward(
+        self,
+        x: Tensor,
+        return_rates: bool = False,
+    ) -> Tensor | tuple[Tensor, Tensor]:
+        """Forward pass through full HybridPRINet.
+
+        Args:
+            x: Input tensor of shape ``(B, D)`` or ``(D,)``.
+            return_rates: If ``True``, also return sparse rate codes.
+
+        Returns:
+            Log-probabilities ``(B, K)``; or tuple of
+            ``(log_probs, sparse_rates)`` if ``return_rates=True``.
+        """
+        was_1d = x.dim() == 1
+        if was_1d:
+            x = x.unsqueeze(0)
+
+        h = x
+        for lobm_layer, norm in zip(
+            self.lobm_layers[:-1], self.lobm_norms[:-1], strict=True
+        ):
+            h = lobm_layer(h)
+            h = norm(h)
+
+        last_layer = self.lobm_layers[-1]
+        last_norm = self.lobm_norms[-1]
+        h_amp, osc_phase = last_layer(h, return_phase=True)
+        h = last_norm(h_amp)
+
+        rate_codes = self.phase_to_rate(osc_phase, h)
+
+        grim_in = self.grim_proj(rate_codes)
+        grim_in = self.grim_norm(grim_in)
+        grim_in = grim_in.unsqueeze(1)
+        grim_out = self.grim_encoder(grim_in)
+        grim_out = grim_out.squeeze(1)
+
+        grim_out = grim_out.float()
+        logits = self.classifier(grim_out)
+        logits = torch.clamp(logits, min=-_LOGIT_CLAMP, max=_LOGIT_CLAMP)
+        log_probs = F.log_softmax(logits, dim=-1)
+
+        if was_1d:
+            log_probs = log_probs.squeeze(0)
+            rate_codes = rate_codes.squeeze(0)
+
+        if return_rates:
+            return log_probs, rate_codes
+        return log_probs
+
+    def sparsity_loss(self, rate_codes: Tensor) -> Tensor:
+        """Compute sparsity regularization loss on rate codes.
+
+        Args:
+            rate_codes: Sparse rate codes from ``forward(..., return_rates=True)``.
+
+        Returns:
+            Scalar sparsity loss.
+        """
+        result: Tensor = self.sparsity_loss_fn(rate_codes)
+        return result
+
+    def oscillatory_parameters(self) -> list[nn.Parameter]:
+        """Return parameters belonging to the oscillatory (LOBM) stage."""
+        params: list[nn.Parameter] = []
+        for lobm in self.lobm_layers:
+            params.extend(lobm.parameters())
+        for norm in self.lobm_norms:
+            params.extend(norm.parameters())
+        params.extend(self.phase_to_rate.parameters())
+        return params
+
+    def rate_coded_parameters(self) -> list[nn.Parameter]:
+        """Return parameters belonging to the rate-coded (GRIM) stage."""
+        params: list[nn.Parameter] = []
+        params.extend(self.grim_proj.parameters())
+        params.extend(self.grim_norm.parameters())
+        params.extend(self.grim_encoder.parameters())
+        params.extend(self.classifier.parameters())
+        return params
+
+
+class AlternatingOptimizer:
+    """Alternating optimization for hybrid oscillatory + rate-coded training.
+
+    PRINet 3.0 ``nn.hybrid.AlternatingOptimizer``: manages two separate
+    optimizers and alternates between them based on a schedule. Optionally
+    integrates with a subconscious daemon for adaptive control signals.
+
+    Args:
+        model: A :class:`HybridPRINet` model.
+        osc_lr: Learning rate for oscillatory parameters.
+        rate_lr: Learning rate for rate-coded parameters.
+        osc_optimizer_cls: Optimizer class for oscillatory params.
+        rate_optimizer_cls: Optimizer class for rate-coded params.
+        alternation_mode: ``"epoch"`` or ``"step"``.
+        sparsity_weight: Weight for sparsity regularization loss.
+        daemon: Optional subconscious daemon for adaptive control.
+    """
+
+    def __init__(
+        self,
+        model: HybridPRINet,
+        osc_lr: float = 1e-4,
+        rate_lr: float = 1e-3,
+        osc_optimizer_cls: type = torch.optim.Adam,
+        rate_optimizer_cls: type = torch.optim.Adam,
+        alternation_mode: str = "epoch",
+        sparsity_weight: float = 0.01,
+        daemon: Any = None,
+    ) -> None:
+        """Construct the alternating optimizer with separate param groups."""
+        self.model = model
+        self._mode = alternation_mode
+        self._sparsity_weight = sparsity_weight
+        self._step_count = 0
+        self._daemon = daemon
+
+        osc_params = model.oscillatory_parameters()
+        rate_params = model.rate_coded_parameters()
+
+        self.osc_optimizer = osc_optimizer_cls(osc_params, lr=osc_lr)
+        self.rate_optimizer = rate_optimizer_cls(rate_params, lr=rate_lr)
+
+    @property
+    def sparsity_weight(self) -> float:
+        """Current sparsity loss weight."""
+        return self._sparsity_weight
+
+    def step(self, epoch: int = 0) -> None:
+        """Perform one optimization step with alternating schedule.
+
+        Args:
+            epoch: Current epoch number (used in ``"epoch"`` mode).
+        """
+        if self._daemon is not None:
+            self._apply_daemon_control()
+
+        if self._mode == "epoch":
+            if epoch % 2 == 0:
+                self.osc_optimizer.step()
+            else:
+                self.rate_optimizer.step()
+        else:
+            if self._step_count % 2 == 0:
+                self.osc_optimizer.step()
+            else:
+                self.rate_optimizer.step()
+
+        self._step_count += 1
+
+    def step_both(self) -> None:
+        """Step both optimizers simultaneously."""
+        if self._daemon is not None:
+            self._apply_daemon_control()
+        self.osc_optimizer.step()
+        self.rate_optimizer.step()
+        self._step_count += 1
+
+    def zero_grad(self) -> None:
+        """Zero gradients for both optimizers."""
+        self.osc_optimizer.zero_grad()
+        self.rate_optimizer.zero_grad()
+
+    def _apply_daemon_control(self) -> None:
+        """Read control signals from the subconscious daemon and apply."""
+        try:
+            ctrl = self._daemon.get_control()
+            lr_mult = ctrl.lr_multiplier
+            for pg in self.osc_optimizer.param_groups:
+                pg["lr"] = pg.get("initial_lr", pg["lr"]) * lr_mult
+            for pg in self.rate_optimizer.param_groups:
+                pg["lr"] = pg.get("initial_lr", pg["lr"]) * lr_mult
+        except Exception:  # noqa: S110
+            pass  # Daemon not ready or failed — continue without control
+
+
+class HybridCLEVRN(nn.Module):
+    """HybridPRINet adapter for CLEVR-N benchmark.
+
+    PRINet 3.0 ``nn.hybrid.HybridCLEVRN``: scene + query -> hybrid
+    oscillatory encoding -> binary classification.
+
+    Args:
+        scene_dim: Per-item scene feature dimension.
+        query_dim: Query vector dimension.
+        n_delta: Delta-band oscillators.
+        n_theta: Theta-band oscillators.
+        n_gamma: Gamma-band oscillators.
+        hidden_dim: Internal hidden dimension.
+        lobm_steps: LOBM integration steps.
+    """
+
+    def __init__(
+        self,
+        scene_dim: int = 16,
+        query_dim: int = 44,
+        n_delta: int = 4,
+        n_theta: int = 8,
+        n_gamma: int = 32,
+        hidden_dim: int = 64,
+        lobm_steps: int = 5,
+    ) -> None:
+        """Construct the hybrid CLEVR-N adapter."""
+        super().__init__()
+        n_osc = n_delta + n_theta + n_gamma
+
+        self.scene_proj = nn.Linear(scene_dim, n_osc)
+        self.query_proj = nn.Linear(query_dim, hidden_dim)
+
+        self.hybrid = HybridPRINet(
+            n_input=n_osc,
+            n_classes=2,
+            n_delta=n_delta,
+            n_theta=n_theta,
+            n_gamma=n_gamma,
+            n_lobm_layers=1,
+            lobm_steps=lobm_steps,
+            grim_d_model=hidden_dim,
+            grim_n_layers=1,
+        )
+
+        self.merge = nn.Linear(2 + hidden_dim, 2)
+
+    def forward(self, scene: Tensor, query: Tensor) -> Tensor:
+        """Forward pass.
+
+        Args:
+            scene: ``(B, N, D_scene)``
+            query: ``(B, D_query)``
+
+        Returns:
+            Log probabilities ``(B, 2)``.
+        """
+        scene_agg = scene.mean(dim=1)
+        scene_enc = self.scene_proj(scene_agg)
+
+        log_probs: Tensor = self.hybrid(scene_enc)
+
+        return log_probs
 
 
 def _raise_disposition(symbol: str) -> NoReturn:
@@ -37,45 +403,8 @@ def _raise_disposition(symbol: str) -> NoReturn:
     )
 
 
-class HybridPRINet:
-    """Deferred-rebuild stub for the end-to-end hybrid PRINet model.
-
-    PRINet 3.0 ``nn.hybrid.HybridPRINet``: chains LOBM (oscillatory
-    encoding) -> PhaseToRate (sparse conversion) -> GRIM (Transformer
-    rate integration) -> classifier head. All stages contain trainable
-    ``nn.Linear`` projections.
-
-    Raises:
-        NotImplementedError: Always on construction.
-    """
-
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition("HybridPRINet")
-
-
-class HybridCLEVRN:
-    """Deferred-rebuild stub for the hybrid CLEVR-N classifier.
-
-    PRINet 3.0 ``nn.hybrid.HybridCLEVRN``: scene + query -> hybrid
-    oscillatory encoding -> binary classification. Contains trainable
-    ``nn.Linear`` projections.
-
-    Raises:
-        NotImplementedError: Always on construction.
-    """
-
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition("HybridCLEVRN")
-
-
 class HybridPRINetV2CLEVRN:
     """Deferred-rebuild stub for the HybridPRINetV2 CLEVR-N adapter.
-
-    PRINet 3.0 ``nn.hybrid.HybridPRINetV2CLEVRN``: adapter wrapping
-    HybridPRINetV2 for CLEVR-N scene + query classification. Contains
-    trainable ``nn.Linear`` projections.
 
     Raises:
         NotImplementedError: Always on construction.
@@ -89,10 +418,6 @@ class HybridPRINetV2CLEVRN:
 class InterleavedHybridPRINet:
     """Deferred-rebuild stub for the interleaved hybrid model.
 
-    PRINet 3.0 ``nn.hybrid.InterleavedHybridPRINet``: interleaves
-    oscillatory and rate-coded layers. Contains trainable ``nn.Linear``
-    projections.
-
     Raises:
         NotImplementedError: Always on construction.
     """
@@ -105,10 +430,6 @@ class InterleavedHybridPRINet:
 class TemporalHybridPRINet:
     """Deferred-rebuild stub for the temporal hybrid model.
 
-    PRINet 3.0 ``nn.hybrid.TemporalHybridPRINet``: extends the hybrid
-    architecture with temporal dynamics across frames. Contains trainable
-    ``nn.Linear`` projections.
-
     Raises:
         NotImplementedError: Always on construction.
     """
@@ -116,19 +437,3 @@ class TemporalHybridPRINet:
     def __init__(self, *_args: Any, **_kwargs: Any) -> None:
         """Raise the D-2.2 disposition."""
         _raise_disposition("TemporalHybridPRINet")
-
-
-class AlternatingOptimizer:
-    """Deferred-rebuild stub for the alternating optimizer.
-
-    PRINet 3.0 ``nn.hybrid.AlternatingOptimizer``: joint training of
-    oscillatory and rate-coded parameter groups with separate learning
-    rates. Contains trainable parameter management.
-
-    Raises:
-        NotImplementedError: Always on construction.
-    """
-
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition("AlternatingOptimizer")

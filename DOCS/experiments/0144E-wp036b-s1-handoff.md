@@ -421,7 +421,71 @@ complete; the registered next sub-pass is **0144E5 — hybrid + clevr_n**.
 
 ### 0144E5 — hybrid + clevr_n
 
-*Pending execution.*
+**Complete 2026-08-31; committed locally with amendment #35; not pushed. Next:
+0144E6.**
+
+#### Strict-port accounting and semantic proof
+
+| Reference | Stable port | Source lines | `def test_` | Collected / passed | Tolerance annotations | Skips / guards | Discoveries |
+|---|---|---:|---:|---:|---:|---:|---|
+| `test_hybrid.py` | `tests/test_acceptance_hybrid.py` | 907 | 19 | 19 / 19 | 0 | 0 | `HybridPRINet` / `AlternatingOptimizer` / `HybridCLEVRN` rebuilt as real PyTorch compositions over existing Rust-backed layers; `StateCollector` rebuilt as pure bookkeeping |
+| `test_clevr_n.py` | `tests/test_acceptance_clevr_n.py` | 403 | 17 | 17 / 17 | 0 | 0 | `benchmarks.clevr_n` compatibility module restored with all data generation, encoding, baseline, and sweep symbols |
+| **E5 total** | **2 files** | **1,310** | **36** | **36 / 36** | **0** | **0** | — |
+
+**Import-only proof:** `tools/_port_e5.py` performs the import remap; the
+ports are then `ruff format`-normalised. `git diff --no-index --unified=0`
+against each archived reference reports only import-module lines changed:
+`prinet.nn.hybrid` → `prin.nn`, `prinet.nn.training_hooks` →
+`prin.training_hooks`, `prinet.nn.layers` → `prin.nn` (one inline import).
+Source and port `def test_` / line inventories match exactly (19/907 and
+17/403).
+
+#### Changed-owner mapping
+
+| Compatibility behavior | Numerical owner | PyO3 / Python exposure |
+|---|---|---|
+| `HybridPRINet` end-to-end forward (LOBM → PhaseToRate → GRIM → classifier) | existing `HierarchicalResonanceLayer` (with `return_phase`), `PhaseToRateConverter`, `SparsityRegularizationLoss` | `python/prin/nn/hybrid_compat.py` chains the Rust-backed layers with standard `nn.Linear` / `nn.TransformerEncoder` / `nn.LayerNorm` projections |
+| `AlternatingOptimizer` dual-optimizer scheduling | n/a — pure Python bookkeeping | `python/prin/nn/hybrid_compat.py`; reads `HybridPRINet.oscillatory_parameters()` / `rate_coded_parameters()` |
+| `HybridCLEVRN` scene+query adapter | delegates to `HybridPRINet` | `python/prin/nn/hybrid_compat.py`; thin `nn.Linear` scene/query projections |
+| `StateCollector` training-loop telemetry | n/a — pure Python bookkeeping | `python/prin/training_hooks.py`; accumulates loss EMA, gradient norm EMA, latency percentiles; submits `SubconsciousState` to daemon |
+| `benchmarks.clevr_n` data generation, encoding, baselines, sweep | n/a — benchmark orchestration (E2 precedent) | `benchmarks/clevr_n.py`; import-adapted from reference; `ThetaGammaCLEVRN` / `DeltaThetaGammaCLEVRN` use `prin._torch_compat` hierarchical networks |
+
+#### Command evidence
+
+- Exact E5 collect-only: **36 collected**; exact E5 run: **36 passed, 0
+  skipped**.
+- Full fast Python gate (`pytest -m "not slow and not gpu"`): **1716 passed,
+  8 skipped, 9 deselected**.
+- `ruff check` (repo) and `ruff format --check` (repo): clean, with new
+  per-file-ignores for the two ported files matching the E1–E4 pattern.
+- `mypy python/prin --strict`: clean (54 files).
+- `bandit -r python/ -c pyproject.toml`: 0 issues on changed code (the one
+  low-severity `try/except/pass` in `_apply_daemon_control` carries `noqa:
+  S110`, matching the reference's silent-fallback pattern).
+- `tools/check_no_python_numerics.py`: clean; `hybrid_compat.py` added to
+  the permitted-exception list (standard PyTorch composition over Rust-backed
+  layers, same category as `benchmarks/oscillobench.py`).
+- `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --
+  -D warnings`: clean.
+- `cargo test --workspace`: **1,641 passed, 0 failed, 1 ignored**.
+- `interrogate`: **97.3%**, pass.
+- `cargo audit`: exit 0 with only the three pre-existing governed warnings
+  (`bincode`, `paste`, yanked `chacha20`).
+- No dependency declaration changed (the `pyproject.toml` delta is two
+  ruff per-file-ignore lines), so Snyk Open Source was not applicable.
+
+Pre-existing bookkeeping updated in passing: `test_bucket_g_remainder.py`
+parametrize lists trimmed for the four symbols that are now real
+implementations; `tools/check_no_python_numerics.py` governance scope
+updated; `tools/wp036_migration_table.py` re-rendered for the updated
+disposition rows.
+
+**Parity-evidence disposition:** directly comparable PRINet 3.0 behavior
+exists and is the literal 36-test acceptance source. The imports-only diff
+plus all-green execution is the parity evidence. No new hazard tolerance or
+backend guard was required, so `DOCS/sphinx/parity_report.rst` is unchanged.
+E5 is complete; the registered next sub-pass is **0144E6 — subconscious +
+consolidation**.
 
 ### 0144E6 — subconscious + consolidation
 

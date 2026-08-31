@@ -28,6 +28,8 @@ import time
 from collections import deque
 from typing import Any, NoReturn
 
+import torch
+
 from prin.daemon import ControlSignals
 
 __all__ = [
@@ -188,23 +190,160 @@ def _raise_disposition(symbol: str, detail: str) -> NoReturn:
 
 
 class StateCollector:
-    """Deferred-rebuild stub for the training-loop daemon bridge.
+    """Training loop hook that bridges the model and subconscious daemon.
 
     PRINet 3.0 ``nn.training_hooks.StateCollector``: collects training
     metrics (loss EMA, gradient norms, latency percentiles) and submits
-    a packed ``SubconsciousState`` to the daemon. Computes loss EMA /
-    variance (Python numerics).
+    a packed ``SubconsciousState`` to the daemon. Pure bookkeeping —
+    no oscillator numerics.
 
-    Raises:
-        NotImplementedError: Always on construction.
+    Args:
+        daemon: Running subconscious daemon (or mock).
+        loss_ema_alpha: EMA smoothing factor for loss tracking.
+        latency_window: Number of recent step latencies to keep.
     """
 
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "StateCollector",
-            "Computes loss EMA / gradient norms (Python numerics).",
+    def __init__(
+        self,
+        daemon: Any,
+        loss_ema_alpha: float = 0.1,
+        latency_window: int = 100,
+    ) -> None:
+        """Construct the collector with EMA and latency-window settings."""
+        self._daemon = daemon
+        self._loss_ema: float = 0.0
+        self._loss_var: float = 0.0
+        self._loss_alpha = loss_ema_alpha
+        self._grad_norm_ema: float = 0.0
+        self._step_latencies: deque[float] = deque(maxlen=latency_window)
+        self._last_step_time: float = time.monotonic()
+        self._step_count: int = 0
+        self._epoch: int = 0
+
+    def on_step_start(self) -> None:
+        """Call at the beginning of each training step to record timing."""
+        self._last_step_time = time.monotonic()
+
+    def on_step_end(
+        self,
+        loss: float | torch.Tensor,
+        model: torch.nn.Module | None = None,
+    ) -> None:
+        """Call at the end of each training step to accumulate metrics.
+
+        Args:
+            loss: Current step loss (scalar Tensor or float).
+            model: Optional model to compute gradient norm from.
+        """
+        elapsed = (time.monotonic() - self._last_step_time) * 1000.0
+        self._step_latencies.append(elapsed)
+
+        loss_val = float(loss.item() if isinstance(loss, torch.Tensor) else loss)
+        alpha = self._loss_alpha
+        self._loss_ema = alpha * loss_val + (1 - alpha) * self._loss_ema
+        diff = loss_val - self._loss_ema
+        self._loss_var = alpha * (diff * diff) + (1 - alpha) * self._loss_var
+
+        if model is not None:
+            total_norm = 0.0
+            for p in model.parameters():
+                if p.grad is not None:
+                    total_norm += p.grad.data.norm(2).item() ** 2
+            grad_norm = total_norm**0.5
+            self._grad_norm_ema = alpha * grad_norm + (1 - alpha) * self._grad_norm_ema
+
+        self._step_count += 1
+
+    def on_epoch_end(
+        self,
+        epoch: int,
+        loss: float | torch.Tensor | None = None,
+        r_per_band: list[float] | None = None,
+        r_global: float | None = None,
+        lr_current: float = 0.0,
+        scalr_alpha: float = 1.0,
+        regime: str = "mean_field",
+    ) -> None:
+        """Call at the end of each epoch to submit state to daemon.
+
+        Args:
+            epoch: Current epoch number.
+            loss: Epoch loss (overrides accumulated EMA if provided).
+            r_per_band: Per-band order parameters.
+            r_global: Global order parameter.
+            lr_current: Current learning rate.
+            scalr_alpha: SCALR alpha parameter.
+            regime: Current coupling regime name.
+        """
+        from prin.daemon import SubconsciousState
+
+        self._epoch = epoch
+
+        if loss is not None:
+            loss_val = float(loss.item() if isinstance(loss, torch.Tensor) else loss)
+            self._loss_ema = loss_val
+
+        rpb = r_per_band if r_per_band is not None else [0.5, 0.5, 0.5]
+        r_g = r_global if r_global is not None else sum(rpb) / len(rpb)
+
+        if self._step_latencies:
+            sorted_lat = sorted(self._step_latencies)
+            n = len(sorted_lat)
+            p50 = sorted_lat[n // 2]
+            p95 = sorted_lat[min(int(n * 0.95), n - 1)]
+            throughput = 1000.0 / (sum(sorted_lat) / n) if n > 0 else 0.0
+        else:
+            p50 = p95 = 0.0
+            throughput = 0.0
+
+        sys_state = SubconsciousState(
+            r_per_band=rpb,
+            r_global=r_g,
+            loss_ema=self._loss_ema,
+            loss_variance=self._loss_var,
+            grad_norm_ema=self._grad_norm_ema,
+            lr_current=lr_current,
+            scalr_alpha=scalr_alpha,
+            gpu_temp=0.0,
+            gpu_util=0.0,
+            vram_pct=0.0,
+            cpu_util=0.0,
+            step_latency_p50=p50,
+            step_latency_p95=p95,
+            throughput=throughput,
+            epoch=epoch,
+            regime=regime,
         )
+
+        self._daemon.submit_state(sys_state)
+
+    def latest_control(self) -> Any:
+        """Read the latest control signals from the daemon.
+
+        Returns:
+            Control signals from daemon.
+        """
+        return self._daemon.get_control()
+
+    @property
+    def loss_ema(self) -> float:
+        """Current exponentially-weighted moving average of loss."""
+        return self._loss_ema
+
+    @property
+    def loss_variance(self) -> float:
+        """Current EMA of loss variance."""
+        return self._loss_var
+
+    @property
+    def grad_norm_ema(self) -> float:
+        """Current EMA of gradient norm."""
+        return self._grad_norm_ema
+
+    @property
+    def step_count(self) -> int:
+        """Total number of training steps recorded."""
+        return self._step_count
 
 
 class ActiveControlTrainer:
