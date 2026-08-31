@@ -289,3 +289,137 @@ No remediation required — S3 closes with no delta.
 | *(no findings)* | — | — | — |
 
 **Delta re-audit date:** *(S3 to append)* — **Result:** *(S3 to append)*
+
+---
+
+## 8. Addendum — GPU skip assessment and remediation roadmap
+
+*Added at maintainer request during 0144F audit.*
+
+### 8.1 Skipped GPU tests — inventory
+
+8 of the 9 total skips are CUDA-availability guards. Each is a
+`@pytest.mark.skipif(not torch.cuda.is_available(), ...)` (or `not HAS_CUDA`)
+that matches the reference file's own guard exactly:
+
+| # | Test | File | What it exercises |
+|---|---|---|---|
+| 1 | `test_gpu_parity` | `test_acceptance_hierarchical.py:91` | Multi-rate integrator step on CUDA tensors; CPU/GPU result agreement (`atol=1e-4`) |
+| 2 | `test_gpu_forward` | `test_acceptance_hierarchical.py:261` | `DeltaThetaGammaNetwork` forward with `device="cuda"`; asserts `phase.is_cuda` |
+| 3 | `test_gpu_parity` | `test_acceptance_phase_to_rate.py:97` | `PhaseToRateConverter` on CUDA tensors; CPU/GPU `assert_close` (`atol=1e-5`) |
+| 4 | `test_sparse_on_gpu` | `test_acceptance_q2.py:862` | Sparse k-NN coupling derivatives on CUDA device; asserts `dphi.device.type == "cuda"` |
+| 5 | `test_sparse_vram_subquadratic` | `test_acceptance_q2.py:876` | Sparse k-NN VRAM usage is sub-quadratic vs full coupling; uses `torch.cuda.max_memory_allocated` |
+| 6 | `test_gpu_exponential_integrator` | `test_acceptance_q2_remaining.py:194` | `ExponentialIntegrator` step on CUDA; asserts `new_state.phase.device.type == "cuda"` |
+| 7 | `test_checkpoint_gpu_memory_budget` | `test_acceptance_q2_remaining.py:530` | Gradient checkpointing adjusts frequency based on GPU memory budget |
+| 8 | `test_checkpoint_vram_stays_bounded` | `test_acceptance_q2_remaining.py:556` | VRAM stays bounded during checkpointed integration on 8GB GPU |
+
+### 8.2 Root cause analysis
+
+**The Rust GPU kernel layer exists and is tested.** `prin-kernels` ships
+CubeCL single-source GPU kernels for mean-field RK4, sparse k-NN coupling,
+PAC, and discrete step — each with `#[cfg(all(test, feature = "cuda"))]`
+and `#[cfg(all(test, feature = "wgpu"))]` test modules. The `gpu.yml` CI
+workflow runs `cargo test --workspace --features cuda` and `--features wgpu`
+on the self-hosted `PRIN-GPU-Runner`.
+
+**The Python compatibility layer has no GPU execution path.** The root cause
+is in `python/prin/_torch_compat.py`:
+
+```python
+def _numpy(tensor: torch.Tensor) -> np.ndarray[Any, np.dtype[np.float64]]:
+    """Marshal a tensor to contiguous CPU float64 storage."""
+    return tensor.detach().to(dtype=torch.float64, device="cpu").contiguous().numpy()
+```
+
+Every compatibility function marshals input tensors to CPU float64 via
+`_numpy()`, calls the Rust CPU binding, then restores the result to the
+caller's original device via `_tensor()`. This means:
+
+- GPU tensors are silently copied to CPU, computed, and copied back.
+- The computed results are numerically correct but the computation never
+  executes on GPU.
+- Tests asserting `tensor.device.type == "cuda"` on intermediate results
+  would fail because the Rust bindings return CPU tensors.
+- Tests measuring `torch.cuda.max_memory_allocated` would report near-zero
+  because no GPU computation occurs.
+
+**The PyO3 bindings expose CPU-only Rust types.** `crates/prin-py/src/bindings/`
+wraps `prin-dynamics` and `prin-metrics` CPU types. The GPU kernel dispatch
+in `prin-kernels` (via `prin-sim`'s `gpu` module) has no PyO3 exposure.
+
+**No Python test carries `@pytest.mark.gpu`.** The `gpu.yml` CI workflow
+explicitly documents this: *"zero tests in this project carry
+`@pytest.mark.gpu` yet, so `-m gpu` structurally selects 0 every time."*
+
+### 8.3 Gap summary
+
+| Layer | GPU status | What exists | What's missing |
+|---|---|---|---|
+| Rust kernels (`prin-kernels`) | ✅ Functional | CubeCL CUDA + wgpu kernels with test coverage | — |
+| Rust sim dispatch (`prin-sim`) | ✅ Functional | `GpuSparseKuramoto`, `GpuMeanFieldEngine`, `GpuBandStepper` behind `cuda`/`wgpu` features | — |
+| PyO3 bindings (`prin-py`) | ❌ CPU-only | `OscillatorState`, `KuramotoOscillator`, etc. (CPU) | GPU-aware binding variants or device-dispatch |
+| Python compat (`_torch_compat.py`) | ❌ CPU-marshalling | `_numpy()` → CPU → Rust → `_tensor()` → restore device | Device-aware dispatch: if input is CUDA, use GPU kernel path |
+| Python tests | ❌ All skipped | 8 `skipif(not CUDA)` guards | GPU execution path to make them pass |
+
+### 8.4 Remediation roadmap
+
+Bringing the 8 GPU tests online requires work across three layers. This is
+out of scope for WP-036B (test-porting only) and belongs in a future WP
+(candidate: WP-039 or a new WP-040 GPU integration work package).
+
+**Phase A — PyO3 GPU binding layer (new `prin-py` GPU module)**
+
+1. Add a `gpu` module to `crates/prin-py/src/bindings/` that wraps
+   `prin-sim`'s GPU engine types (`GpuSparseKuramoto`, `GpuMeanFieldEngine`,
+   etc.) behind `#[cfg(feature = "cuda")]`.
+2. Expose device-aware constructors: `KuramotoOscillatorGPU::new(n, ...,
+   device_id)` that allocate GPU buffers via CubeCL.
+3. Expose GPU step/forward methods that accept and return DLPack GPU
+   tensors (zero-copy GPU↔GPU, no CPU round-trip).
+4. Add `#[cfg(all(test, feature = "cuda"))]` PyO3 integration tests.
+
+**Phase B — Python device-dispatch in `_torch_compat.py`**
+
+5. Add a `_is_gpu(tensor)` helper and device-dispatch branches:
+   ```python
+   def _step(self, state, dt):
+       if state.phase.is_cuda:
+           return self._step_gpu(state, dt)  # GPU kernel path
+       return self._step_cpu(state, dt)      # existing CPU path
+   ```
+6. The GPU path marshals via DLPack (not `_numpy()`) to the GPU PyO3
+   binding, runs the CubeCL kernel, and returns the GPU tensor directly.
+7. Preserve the CPU path unchanged — no regression risk for the 489
+   passing tests.
+
+**Phase C — Test activation and CI**
+
+8. Add `@pytest.mark.gpu` to the 8 GPU tests (in addition to the existing
+   `skipif` guards — the marker enables CI selection, the guard handles
+   hardware absence).
+9. Update `gpu.yml` to run `pytest tests/ -v -m gpu` (replacing the current
+   "no tests exist yet" exit-5 workaround).
+10. Verify kernel equivalence: GPU vs CPU results within Testing Standards
+    §3 tolerances (`rtol=1e-5`, `atol=1e-6` for f32 GPU kernel vs CPU
+    reference).
+
+**Estimated scope:** ~3–4 S1 sessions (new WP). Phase A is the largest
+(new PyO3 GPU bindings, ~600–800 lines of Rust). Phase B is moderate
+(device-dispatch in ~6 compatibility classes). Phase C is small (test
+markers + CI update).
+
+**Dependencies:**
+- Self-hosted GPU runner (`PRIN-GPU-Runner`) is already registered and
+  online with CUDA support.
+- CubeCL GPU kernels are already implemented and tested in `prin-kernels`.
+- `prin-sim` GPU engine dispatch is already implemented.
+- The gap is exclusively the PyO3 exposure and Python-side dispatch.
+
+### 8.5 Interim recommendation
+
+Until the GPU remediation WP executes, the 8 CUDA `skipif` guards are
+correct and necessary — they prevent false passes on CPU-only hardware.
+The guards match the reference files exactly and are not a port deviation.
+The `gpu.yml` CI workflow's Rust kernel-equivalence tests
+(`cargo test --features cuda,wgpu`) remain the authoritative GPU
+verification until the Python GPU path is delivered.
