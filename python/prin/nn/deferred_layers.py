@@ -8,13 +8,14 @@ replaces the phase-to-rate / autoencoder family (``PhaseToRateConverter``,
 ``PhaseToRateAutoencoder``, ``DenseAutoencoder``) with real Rust-backed
 exports from :mod:`prin.nn.autoencoders`. Sub-pass 0144A3 replaces the
 hierarchical, PAC, and discrete-layer family with exports from
-:mod:`prin.nn.hierarchical_layers`. The remaining symbols retain their
-documented D-2.2 dispositions until their assigned WP-036A sub-pass.
+:mod:`prin.nn.hierarchical_layers`. Sub-pass 0144A4 replaces ``PRINetModel``
+(Rust-backed) and ``compile_model`` (pure-Python ``torch.compile``
+passthrough, WP-036A D-2) with exports from :mod:`prin.nn.model`.
 
-``DiscreteDeltaThetaGamma`` remains a narrower case: its audited Rust owner
-(``prin_train::bands::DiscreteDeltaThetaGamma``, WP-022) is composed by the
-real ``DiscreteDeltaThetaGammaLayer`` but is not independently bound to Python.
-That standalone binding remains assigned to WP-036B.
+``DiscreteDeltaThetaGamma`` is the last remaining stub here: its audited Rust
+owner (``prin_train::bands::DiscreteDeltaThetaGamma``, WP-022) is composed by
+the real ``DiscreteDeltaThetaGammaLayer`` but is not independently bound to
+Python. That standalone binding remains assigned to WP-036B.
 """
 
 from __future__ import annotations
@@ -38,6 +39,7 @@ from .inhibition_layers import (
     SparsityRegularizationLoss,
     oscillatory_weight_init,
 )
+from .model import PRINetModel, compile_model
 
 __all__ = [
     "DGLayer",
@@ -64,39 +66,6 @@ def _raise_disposition(symbol: str, detail: str) -> NoReturn:
         "It is a trainable component with no faithful non-numeric PRIN "
         "implementation in WP-036 S1; the rebuild is owned by a future work "
         "package. See the Migration Guide for the disposition and the owning WP."
-    )
-
-
-class PRINetModel:
-    """Deferred-rebuild stub for the top-level trainable PRINet model.
-
-    PRINet 3.0 ``nn.layers.PRINetModel``: the complete end-to-end trainable
-    model (projection -> hierarchical dynamics -> readout). No Rust owner.
-
-    Raises:
-        NotImplementedError: Always on construction.
-    """
-
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "PRINetModel",
-            "Top-level trainable model, no Rust owner.",
-        )
-
-
-def compile_model(*_args: Any, **_kwargs: Any) -> NoReturn:
-    """Reject calls to the deferred ``torch.compile`` model helper.
-
-    PRINet 3.0 ``nn.layers.compile_model``: wraps a model in ``torch.compile``
-    with PRINet-specific options. Depends on the trainable model stack.
-
-    Raises:
-        NotImplementedError: Always.
-    """
-    _raise_disposition(
-        "compile_model",
-        "torch.compile helper for the trainable model stack, no Rust owner.",
     )
 
 

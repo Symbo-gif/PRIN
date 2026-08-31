@@ -53,12 +53,14 @@ _SCANNED = (
     "nn/inhibition_layers.py",
     "nn/autoencoders.py",
     "nn/hierarchical_layers.py",
+    "nn/model.py",
 )
 _RUST_BRIDGE_MODULES = frozenset(
     {
         "python/prin/nn/inhibition_layers.py",
         "python/prin/nn/autoencoders.py",
         "python/prin/nn/hierarchical_layers.py",
+        "python/prin/nn/model.py",
     }
 )
 

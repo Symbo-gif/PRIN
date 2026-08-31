@@ -115,6 +115,8 @@ _WP036A_SUBPASSES = {
     "HierarchicalResonanceLayer": "0144A3",
     "PhaseAmplitudeCouplingLayer": "0144A3",
     "DiscreteDeltaThetaGammaLayer": "0144A3",
+    "PRINetModel": "0144A4",
+    "compile_model": "0144A4",
 }
 _RENAME_ALIASES = frozenset(
     {
@@ -134,6 +136,8 @@ def _disposition_class(name: str, subpass: str, probe: str) -> str:
     """Human-readable disposition class for the consolidated table."""
     if name in _GPU_STUBS:
         return "GPU-only stub (typed BackendUnavailableError)"
+    if name == "compile_model":
+        return "real - pure-Python torch.compile passthrough (WP-036A)"
     if probe == "disposition":
         return "D-2.2 deferred stub (typed NotImplementedError)"
     if name in _RENAME_ALIASES:

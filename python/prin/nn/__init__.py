@@ -48,9 +48,14 @@ WP-036A sub-pass 0144A1 replaces the inhibition and sparsification family
 Rust-backed implementations in :mod:`prin.nn.inhibition_layers`. Sub-pass
 0144A2 replaces the phase-to-rate / autoencoder family (`PhaseToRateConverter`,
 `PhaseToRateAutoencoder`, `DenseAutoencoder`) with real Rust-backed
-implementations in :mod:`prin.nn.autoencoders`. The remaining WP-036A symbols
-continue to resolve from :mod:`prin.nn.deferred_layers` until their assigned
-sub-pass.
+implementations in :mod:`prin.nn.autoencoders`. Sub-pass 0144A3 replaces the
+hierarchical, PAC, and discrete-layer family (`HierarchicalResonanceLayer`,
+`PhaseAmplitudeCouplingLayer`, `DiscreteDeltaThetaGammaLayer`) with real
+implementations in :mod:`prin.nn.hierarchical_layers`. Sub-pass 0144A4
+replaces `PRINetModel` (Rust-backed) and `compile_model` (pure-Python
+``torch.compile`` passthrough) with :mod:`prin.nn.model`, leaving only the
+`DiscreteDeltaThetaGamma` core-binding stub (WP-036B) in
+:mod:`prin.nn.deferred_layers`.
 """
 
 from __future__ import annotations
@@ -81,7 +86,7 @@ from .autoencoders import (
     PhaseToRateAutoencoder,
     PhaseToRateConverter,
 )
-from .deferred_layers import DiscreteDeltaThetaGamma, PRINetModel, compile_model
+from .deferred_layers import DiscreteDeltaThetaGamma
 from .energy import HolomorphicEnergy, HolomorphicEPTrainer
 from .hierarchical_layers import (
     DiscreteDeltaThetaGammaLayer,
@@ -105,6 +110,7 @@ from .inhibition_layers import (
     SparsityRegularizationLoss,
     oscillatory_weight_init,
 )
+from .model import PRINetModel, compile_model
 from .optimizers import Rip, Scalr, SyncGd
 from .phase_tracker import PhaseTracker, TrackingResult
 from .slot_attention import (

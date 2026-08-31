@@ -1,6 +1,6 @@
 # Session 0144A4 — WP-036A S1 (sub-pass 4/4): Model container and consolidation
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036A
 **Session type:** S1 — Coding

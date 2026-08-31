@@ -1,9 +1,12 @@
 # Session 0144A / WP-036A S1 running handoff
 
-**Date:** 2026-08-30
-**Status:** decomposition **ADOPTED** (Plan amendment #34, MichaelMaillet,
-2026-08-30). WP-036A S1 now executes as sub-passes `0144A1`–`0144A4`.
-Sub-pass execution not yet started.
+**Date:** 2026-08-30 (decomposition); 2026-08-31 (0144A4 close)
+**Status:** all four sub-passes `0144A1`–`0144A4` **COMPLETE** at their green
+local gates (Plan amendment #34, MichaelMaillet, 2026-08-30). The 13 D-D
+trainable-layer / discrete-network symbols (rows 31–42, 44) are all real
+`prin-train`-backed implementations. The contiguous `0144A` + `0144A1`–`0144A4`
+range is committed locally only and awaits the single mandatory S2 audit
+`0144B`; S1 does not self-certify.
 
 ## Session-start protocol (Development Workflow §6)
 
@@ -369,3 +372,203 @@ Sub-pass 0144A3 is complete to the author's knowledge and does not self-certify
 WP-036A. Proceed to 0144A4 (model container and consolidation). The complete
 `0144A` + `0144A1`–`0144A4` range remains subject to the single mandatory S2
 audit at 0144B.
+
+## 0144A4 — Model container and consolidation (COMPLETE 2026-08-31)
+
+### Delivered symbol map
+
+| Row | Symbol | Rust owner | Bridge / Python owner | Acceptance evidence |
+|---:|---|---|---|---|
+| 41 | `PRINetModel` | `prin_train::model::PRINetModel` (input `layers::ResonanceLayer` + `n_layers-1` stacked + per-layer `burn::nn::LayerNorm` + concept-readout `burn::nn::Linear` + `[-50, 50]` logit clamp + `log_softmax`) | `PRINetModelBridge` → `prin.nn.model.PRINetModel` | float64 `gradcheck` (`n_layers` 1 and 2); zero-input parity vs the reference float64 readout reproduction (delta `0.0`) and vs the reference's real float32 `forward` (delta `0.0`, D-4 tier); readout-head golden test; batched==stacked-singles; checkpoint round-trip / malformed-bytes / shape-mismatch; construction/error tests |
+| 42 | `compile_model` | *(none — D-2; the one WP-036A symbol with no Rust component)* | pure-Python guarded `torch.compile` passthrough in `prin.nn.model` | construct/callable + `torch.compile` smoke test; guard-branch test (`torch.compile` removed → model returned unchanged); no `# pragma: no cover` |
+
+`python/prin/nn/deferred_layers.py` now compatibility-re-exports `PRINetModel`
+and `compile_model` from `prin.nn.model`; `prin.nn.__init__` imports them from
+the implementation module directly. The only symbols still resolving from
+`deferred_layers` as typed D-2.2 stubs are `DiscreteDeltaThetaGamma`
+(core binding, WP-036B) and the `prin.training_hooks` trio
+(`MixedPrecisionTrainer` / `AsyncCPUGPUPipeline` / `retrain_controller`). No
+public symbol was added: `verify_api_surface(prin.__all__) == (set(), set())`.
+
+### New Rust: `crates/prin-train/src/model.rs`
+
+`PRINetModelConfig` (validated `new` / `with_params`), `PRINetModelParams<B>`
+(`input_layer` + `stacked` + `layer_norms` + `concept_proj` for reference
+injection), `PRINetModel<B>` (`#[derive(Module)]`), `LayerNormWeights<B>`.
+`init` draws the concept-readout `Linear` Xavier-uniform from the project
+`Seed` (documented deviation from PyTorch's Kaiming default — only scale is
+load-bearing, the `ResonanceLayer` precedent); `LayerNorm` starts at
+`γ=1, β=0` (identical in both). `forward` is a line-for-line port of
+`PRINetModel.forward` minus the reference's `h.float()` cast (see below).
+`validate_shapes` checks the stacked-layer count, every `LayerNorm` width, and
+the readout shape after `load_record`. 14 `#[cfg(test)]` unit/autodiff tests;
+`prin-train` lib 426 → 440 passing.
+
+### New PyO3: `crates/prin-py/src/bindings/train_model.rs`
+
+One `#[pyclass] PyPRINetModelBridge` + `PyPRINetModelCtx` recompute-on-backward
+context, thin DLPack marshalling over `prin-train`. `load_torch_weights`
+accepts a flat list of `7 * n_layers + 2` capsules (5 per resonance layer, 2
+per `LayerNorm`, 2 for the readout); `input_proj` is transposed from PyTorch
+`[n_osc, n_dims]` to Burn `[n_dims, n_osc]` on the way in. `state_dict` /
+`load_state_dict` delegate to `burn::record`; `load_state_dict` validates
+shapes on a clone before committing (WP025-F1 precedent).
+`#![deny(unsafe_code)]` unchanged; all DLPack FFI stays in the audited `dlpack`
+module.
+
+### Documented deviation — the reference's broken float64 forward
+
+PRINet 3.0's `PRINetModel.forward` unconditionally runs `h = h.float()` before
+the readout; on a `.double()` model the float64 `concept_proj` weights then
+raise `RuntimeError: mat1 and mat2 must have the same dtype`, so **no float64
+end-to-end reference output exists** (`test_reference_forward_raises_in_float64_but_prin_does_not`
+records this directly). PRIN runs the whole forward in the backend dtype with
+no internal cast. Forward-parity is established two ways at a zero input — the
+regime where the composed `ResonanceLayer` initial-state encoding coincides
+exactly with the reference — with the reference model's exact weights injected:
+
+- vs a float64 reproduction of the documented forward on the reference's own
+  (working-in-f64) submodules: measured max abs delta `0.0`
+  (`rtol=1e-9, atol=1e-11`).
+- vs the reference's real float32 `forward`: measured max abs delta `0.0`,
+  D-4 envelope `rtol=1e-4, atol=1e-5` (the only disagreement source in that
+  regime is the f32/f64 hazard).
+
+`PRINetModel` composes the audited `ResonanceLayer` unchanged and inherits its
+FFT-vs-matmul feature-to-oscillator encoding deviation (plan amendment #19).
+For an arbitrary non-zero input the end-to-end log-probability delta grows to
+order 1 (measured `0.99` on a small registered case), bounded by — not newly
+introduced by — that inherited deviation. The readout head `PRINetModel` adds
+(`LayerNorm` + `concept_proj` + clamp + `log_softmax`) is checked in isolation
+against a hand-computed `log_softmax(clamp(h @ Wᵀ + b))` (`< 1e-12`, Rust).
+Recorded in `DOCS/sphinx/parity_report.rst` ("WP-036A — Model container
+parity") and the Migration Guide.
+
+### Gradient evidence
+
+`torch.autograd.gradcheck` (float64) passes at the required
+`rtol=1e-3, atol=1e-3` for `n_layers = 1` and `n_layers = 2`. No DV-018
+tolerance is invoked: the added head is `LayerNorm` / `Linear` / `clamp` /
+`log_softmax`, all `burn-tensor` elementwise/reduction ops, none touching the
+`f32`-internal `sigmoid` floor. Rust autodiff tests independently confirm
+finite non-zero gradient flow to the model input, `concept_proj` weight/bias,
+and both `LayerNorm` affines. `compile_model` performs no numerics, so it has
+a construct/callable + `torch.compile` smoke test and a guard-branch test
+instead of a gradcheck.
+
+### Consolidation deliverables
+
+- **Migration Guide** (`DOCS/sphinx/migration_guide.rst`): all 13 D-D rows now
+  read "real implementation" with the `prin.nn.<module>` delegation path
+  (0141B deferred-rebuild table, 0141E dispositions table, deviation-notes
+  bullets, and the machine-generated consolidated 172-symbol index). No silent
+  removals: `python tools/wp036_migration_table.py check` →
+  "WP-036 consolidated migration table OK (172 symbols)".
+- **`tools/check_no_python_numerics.py`**: `nn/model.py` added to `_SCANNED`
+  (16 → 17 modules) and `_RUST_BRIDGE_MODULES`; check green.
+- **`verify_api_surface(prin.__all__) == (set(), set())`** re-confirmed (WP-036A
+  adds no public symbols; `tests/test_model.py::test_reexports_are_real_and_public_surface_remains_frozen`
+  and `tests/test_api_surface.py`).
+- **Full construct/callable smoke** over all 13 symbols: every one resolves
+  from `prin` and `prin.nn` as a real (non-stub) implementation, verified this
+  session and by `tests/test_api_surface_matrix.py` (433 passed across the
+  consolidation suites).
+- **`_prin_core.pyi`**: `PRINetModelBridge` / `PRINetModelCtx` stubs added;
+  `mypy --strict` clean on `nn/model.py`, `nn/deferred_layers.py`,
+  `nn/__init__.py` (the 0141E stub-completeness check).
+
+### 13-symbol aggregate map (0144A1–0144A4)
+
+| Row | Symbol | Rust owner module | PyO3 binding | Sub-pass | gradcheck / verification |
+|---:|---|---|---|---|---|
+| 31 | `FeedforwardInhibition` | `inhibition_layers` | `train_inhibition_layers` | 0144A1 | float64 input gradcheck; direct PRINet parity `3.33e-16` |
+| 32 | `DentateGyrusConverter` | `inhibition_layers` (composes `inhibition::FeedbackInhibition`) | `train_inhibition_layers` | 0144A1 | stationary-point gradcheck (FBI STE); parity `1.67e-16` |
+| 33 | `DGLayer` | `inhibition_layers` | `train_inhibition_layers` | 0144A1 | stationary-point gradcheck; Rust autodiff to both inputs + both params; parity `1.39e-16` |
+| 34 | `oscillatory_weight_init` | `weight_init` | `train_inhibition_layers` (in-place param transform) | 0144A1 | deterministic reference-scheme unit test |
+| 35 | `PhaseToRateConverter` | `autoencoders` | `train_autoencoders` | 0144A2 | float64 `soft` gradcheck; `hard` STE gradient-shape test; parity `soft/hard/annealed` `2.8e-17 / 0.0 / 2.8e-17` |
+| 36 | `PhaseToRateAutoencoder` | `autoencoders` | `train_autoencoders` | 0144A2 | float64 `forward`/`classify` gradcheck wrt input; weight-injected parity `≤4.4e-16` |
+| 37 | `DenseAutoencoder` | `autoencoders` | `train_autoencoders` | 0144A2 | float64 `forward`/`classify` gradcheck; weight-injected parity `≤4.4e-16` |
+| 38 | `SparsityRegularizationLoss` | `losses` | `train_inhibition_layers` | 0144A1 | DV-018 float64 gradcheck (`eps=1e-4`); parity `1.19e-9` (`rtol=1e-6`) |
+| 39 | `HierarchicalResonanceLayer` | `hierarchical_layers` (batched continuous 3-band RK4/PAC) | `train_hierarchical_layers` | 0144A3 | float64 dual-output gradcheck; weight-injected parity `rtol=1e-9`; D-5 batch==stacked `rtol=1e-12` |
+| 40 | `PhaseAmplitudeCouplingLayer` | `hierarchical_layers` | `train_hierarchical_layers` | 0144A3 | float64 two-input gradcheck; parity `rtol=1e-8` (`~6e-9` f32-stored `initial_depth`) |
+| 41 | `PRINetModel` | `model` (over `layers::ResonanceLayer`) | `train_model` | 0144A4 | float64 gradcheck (`n_layers` 1, 2); zero-input parity delta `0.0` (f64 readout and f32 forward); head golden test `<1e-12` |
+| 42 | `compile_model` | *(none — D-2)* | *(none)* | 0144A4 | construct/callable + `torch.compile` smoke; guard-branch test; no `# pragma: no cover` |
+| 44 | `DiscreteDeltaThetaGammaLayer` | `hierarchical_layers` (over `bands::DiscreteDeltaThetaGamma`, WP-022) | `train_hierarchical_layers` | 0144A3 | float64 gradcheck (`eps=1e-5`, DV-018); all-weight-injected parity `rtol=2e-7` (DV-018) |
+
+### 0144A acceptance-criterion → evidence (aggregate)
+
+| 0144A brief criterion | Evidence |
+|---|---|
+| All 13 symbols resolve from `prin` as **real** (not stubs) | This-session smoke + `tests/test_api_surface_matrix.py`; `deferred_layers` re-exports the real modules; only `DiscreteDeltaThetaGamma` (row 43, WP-036B) + the training-hook trio remain typed stubs |
+| Each trainable module passes float64 `gradcheck(rtol=1e-3, atol=1e-3)` | 11 trainable modules gradchecked in `tests/test_{inhibition_layers,autoencoders,hierarchical_layers,model}.py`; FBI-STE modules use the FFI stationary point + independent Rust autodiff (documented, not weakened); `hard` mode uses an STE gradient-shape test (D-3) |
+| Forward pass matches the PRINet 3.0 reference within documented tolerance | Direct installed-PRINet float64 comparisons per family (`parity_report.rst` "WP-036A — …" sections); D-4 loosenings recorded per test, none deleted/skipped; `PRINetModel`'s reference `forward` is broken in f64, handled per the deviation note above |
+| `compile_model` constructs a `PRINetModel` and returns a callable model | `tests/test_model.py::test_compile_model_returns_a_callable_wrapper` (constructs a `PRINetModel`, wraps it, asserts callable + output parity) + the guard-branch test |
+| `oscillatory_weight_init` applies the documented scheme to a parameter tensor | `tests/test_inhibition_layers.py` (0144A1); `weight_init.rs` 100% line/function coverage |
+| All new Rust in `crates/prin-train/`; all new PyO3 in `crates/prin-py/src/bindings/` | `inhibition_layers.rs`, `weight_init.rs`, `losses.rs` (extended), `autoencoders.rs`, `hierarchical_layers.rs`, `model.rs`; bindings `train_inhibition_layers.rs`, `train_autoencoders.rs`, `train_hierarchical_layers.rs`, `train_model.rs` |
+| No Python numerics (Coding Standards §2.1) | `tools/check_no_python_numerics.py` green (17 modules) |
+| `verify_api_surface(prin.__all__) == (set(), set())` | Re-confirmed every sub-pass; `tests/test_api_surface.py` + each family's re-export test |
+| `tools/check_no_python_numerics.py` clean (updated module count) | 13 → 14 → 15 → 16 → 17 modules across 0141E → 0144A1 → 0144A2 → 0144A3 → 0144A4 |
+| Migration Guide updated for all 13 symbols | `wp036_migration_table.py check` green (172 symbols consistent); `tests/test_migration_guide_consolidated.py` |
+| S1 handoff note maps each symbol → owner / binding / test count / gradcheck | This document (per-sub-pass sections + the 13-symbol aggregate map above) |
+| `mypy --strict` clean; `_prin_core.pyi` completeness (0141E check) | clean on every touched module each sub-pass |
+| Rust + Python gates green across `0144A1`–`0144A4` | see the gate table below |
+
+### Coverage and quality evidence
+
+- **Rust:** `cargo fmt --all -- --check`, `cargo clippy --workspace
+  --all-targets -D warnings`, `cargo test -p prin-train -p prin-py`
+  (440 `prin-train` lib + integration + doctests; `prin-py` integration all
+  green), `RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps` — all
+  clean. `model.rs` new tests: 14 `#[cfg(test)]`.
+- **Python:** `tests/test_model.py` 13 passed; full fast suite
+  **1266 passed, 9 deselected** (was 1253 at 0144A3). `ruff check` /
+  `ruff format --check` / `mypy --strict` (`nn/model.py`,
+  `nn/deferred_layers.py`, `nn/__init__.py`) / `interrogate -f 100`
+  (`model.py` 100%) / active-source `bandit` (`python/prin tools`, 0 issues) /
+  `check_no_python_numerics` (17 modules) / `wp036_migration_table.py check`
+  (172 symbols) / `test_migration_guide_consolidated` + `test_api_surface` +
+  `test_api_surface_matrix` + `test_wp001_baseline` +
+  `test_check_dv_register_gates` (433 passed) — all green.
+  `pytest --doctest-modules python/prin/nn/model.py` 2 passed.
+  Clean-output Sphinx `-W --keep-going` build succeeded.
+- **Line-coverage tooling blocked locally:** `pytest --cov` / `coverage run`
+  segfault on this host (Python 3.14 + `coverage` C/sysmon tracer + torch),
+  reproducibly and unrelated to this sub-pass. Per CLAUDE.md this is reported
+  as blocked, not claimed passed; CI is the authoritative coverage gate.
+  Manual review: every public function, property, and error branch of
+  `prin.nn.model` is exercised; every `#[cfg(test)]` path in `model.rs` and
+  `train_model.rs`'s bridge/ctx methods is exercised via the Rust and Python
+  suites (including `load_torch_weights`, `state_dict`/`load_state_dict`, the
+  shape-mismatch and malformed-bytes branches, and the `compile_model` guard
+  branch).
+- `maturin develop -m crates/prin-py/Cargo.toml` succeeded on Windows /
+  Python 3.14 / Rust 1.92; imports and DLPack execution verified.
+
+### Security evidence
+
+- Snyk Code, severity threshold **low**, scoped to
+  `crates/prin-train/src/model.rs`,
+  `crates/prin-py/src/bindings/train_model.rs`, `python/prin/nn/model.py`,
+  `python/prin/nn/deferred_layers.py`, `tests/test_model.py`,
+  `tools/wp036_migration_table.py`, `tools/check_no_python_numerics.py`:
+  **0 issues in every scope**. Whole-repository Snyk Code: the same 5
+  pre-existing low path-traversal findings in `tools/wp001_baseline.py`,
+  `tools/wp030_mot_fixture.py`, `tools/wp031_stats_fixture.py`; none arises
+  from 0144A4. No suppression or exclusion added.
+- **No dependency manifest changed** (`burn::nn::LayerNorm` is already a
+  workspace dependency), so Snyk Open Source is not applicable. `cargo audit`
+  exits 0 with the same three governed warnings (`paste`, `bincode`,
+  `chacha20`). `pip-audit` reports only pre-existing `pip`-tool advisories
+  (environment, not a PRIN manifest change).
+- `prin-py` remains `#![deny(unsafe_code)]`; all DLPack FFI stays in the
+  audited `dlpack` module. No hidden RNG (the concept-readout `Linear` init is
+  threaded through the explicit project `Seed`).
+
+### Handoff
+
+Sub-pass 0144A4 is complete to the author's knowledge and **does not
+self-certify WP-036A**. The 13 D-D trainable-layer / discrete-network symbols
+(rows 31–42, 44) are all real `prin-train`-backed implementations across
+`0144A1`–`0144A4`. The complete `0144A` + `0144A1`–`0144A4` range is committed
+locally only and is handed to the single mandatory S2 audit **`0144B`**; the
+contiguous range is pushed once with `0144B` (amendment #28 cadence).

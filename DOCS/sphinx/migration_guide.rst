@@ -472,6 +472,25 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
     measured with the reference model's exact weights injected via
     ``load_reference_weights`` (PRIN's seeded ``Linear`` init differs from
     PyTorch's default).
+  - *Hierarchical, PAC, and discrete-layer ownership:* WP-036A sub-pass 0144A3
+    rebuilds ``HierarchicalResonanceLayer``, ``PhaseAmplitudeCouplingLayer``,
+    and ``DiscreteDeltaThetaGammaLayer`` in ``prin-train::hierarchical_layers``.
+    The continuous hierarchy is fully batched — the reference's per-sample
+    Python loop is not reproduced (D-5).
+  - *Model container ownership:* WP-036A sub-pass 0144A4 rebuilds
+    ``PRINetModel`` in ``prin-train::model`` (an input ``ResonanceLayer``,
+    ``n_layers - 1`` stacked ``ResonanceLayer``\\ s, a ``LayerNorm`` after
+    each, a concept-readout ``Linear``, a logit clamp to ``[-50, 50]``, and a
+    final ``log_softmax``). PRINet 3.0's ``PRINetModel.forward`` hard-casts the
+    hidden state to ``float32`` before the readout, which makes its own
+    ``forward`` raise ``RuntimeError`` for a ``.double()`` model; PRIN runs the
+    whole forward in the backend dtype. ``PRINetModel`` composes the audited
+    ``ResonanceLayer`` unchanged and inherits its FFT-vs-matmul initial-encoding
+    deviation (plan amendment #19); end-to-end parity with the reference is
+    exact where that encoding coincides (a zero input) and bounded elsewhere by
+    the inherited deviation. ``compile_model`` is a real pure-Python guarded
+    ``torch.compile`` passthrough — the one WP-036A symbol with no Rust
+    component (D-2); ``torch.compile`` is graph capture, not PRIN numerics.
 
   **Parity and validation:**
   Golden-value parity tests against PRINet 3.0 (evaluated in ``torch==2.13.0+cpu`` float64):
@@ -1222,8 +1241,8 @@ also resolve from the top-level ``prin`` namespace (the frozen RC1 contract).
    "SparsityRegularizationLoss", "prin.nn.SparsityRegularizationLoss", "Real ``nn.Module`` bridge over ``prin_train::losses::SparsityRegularizationLoss`` (WP-036A/0144A1)"
    "HierarchicalResonanceLayer", "prin.nn.HierarchicalResonanceLayer", "Real ``nn.Module`` over Rust-owned continuous delta/theta/gamma dynamics with learnable projections and PAC depths (WP-036A/0144A3)"
    "PhaseAmplitudeCouplingLayer", "prin.nn.PhaseAmplitudeCouplingLayer", "Real ``nn.Module`` over Rust-owned PAC modulation with a learnable modulation depth (WP-036A/0144A3)"
-   "PRINetModel", "(deferred)", "Top-level trainable model (``nn/layers.py``); no Rust owner. Deferred rebuild"
-   "compile_model", "(deferred)", "``torch.compile`` helper (``nn/layers.py``); no Rust owner. Deferred rebuild"
+   "PRINetModel", "prin.nn.PRINetModel", "Real ``nn.Module`` over ``prin_train::model::PRINetModel`` (stacked ``ResonanceLayer`` + inter-layer ``LayerNorm`` + concept readout + clamped ``log_softmax``) (WP-036A/0144A4)"
+   "compile_model", "prin.nn.compile_model", "Real pure-Python guarded ``torch.compile`` passthrough — the one WP-036A symbol with no Rust component (WP-036A D-2 / 0144A4)"
 
 WP-036 compatibility surface (sub-pass 0141C)
 ---------------------------------------------
@@ -1437,12 +1456,16 @@ retains veto over every disposition (``DOCS/experiments/0141-wp036-s1-dd-disposi
 
 Namespace: the fourteen compatibility symbols initially landed in
 :mod:`prin.nn.deferred_layers`; WP-036A moves each family to its real module
-while retaining compatibility re-exports. The 0144A1 family lives in
-:mod:`prin.nn.inhibition_layers`; the 0144A3 hierarchical, PAC, and discrete
-layer family lives in :mod:`prin.nn.hierarchical_layers`;
-``MixedPrecisionTrainer`` / ``AsyncCPUGPUPipeline`` / ``retrain_controller``
-extend :mod:`prin.training_hooks`. All seventeen also resolve from the
-top-level ``prin`` namespace.
+while retaining compatibility re-exports. The 0144A1 inhibition/sparsification
+family lives in :mod:`prin.nn.inhibition_layers`; the 0144A2 phase-to-rate /
+autoencoder family in :mod:`prin.nn.autoencoders`; the 0144A3 hierarchical,
+PAC, and discrete-layer family in :mod:`prin.nn.hierarchical_layers`; and the
+0144A4 ``PRINetModel`` / ``compile_model`` pair in :mod:`prin.nn.model`. After
+0144A4 the only symbols still resolving from :mod:`prin.nn.deferred_layers` as
+D-2.2 stubs are ``DiscreteDeltaThetaGamma`` (core binding, WP-036B) and the
+training-loop trio ``MixedPrecisionTrainer`` / ``AsyncCPUGPUPipeline`` /
+``retrain_controller`` in :mod:`prin.training_hooks`. All seventeen also
+resolve from the top-level ``prin`` namespace.
 
 .. csv-table:: 0141E symbol dispositions
    :header: "PRINet 3.0 symbol", "PRIN symbol", "Disposition"
@@ -1458,8 +1481,8 @@ top-level ``prin`` namespace.
    "SparsityRegularizationLoss", "prin.SparsityRegularizationLoss / prin.nn.SparsityRegularizationLoss", "Real WP-036A ``nn.Module`` bridge to ``prin_train::losses``"
    "HierarchicalResonanceLayer", "prin.HierarchicalResonanceLayer / prin.nn.HierarchicalResonanceLayer", "Real WP-036A ``nn.Module`` (sub-pass 0144A3); Rust-owned continuous three-band dynamics, projections, and PAC depths"
    "PhaseAmplitudeCouplingLayer", "prin.PhaseAmplitudeCouplingLayer / prin.nn.PhaseAmplitudeCouplingLayer", "Real WP-036A ``nn.Module`` (sub-pass 0144A3); Rust-owned PAC modulation and learnable depth"
-   "PRINetModel", "prin.PRINetModel / prin.nn.PRINetModel", "D-2.2 stub; top-level trainable model, no Rust owner"
-   "compile_model", "prin.compile_model / prin.nn.compile_model", "D-2.2 stub; ``torch.compile`` helper for the trainable model stack"
+   "PRINetModel", "prin.PRINetModel / prin.nn.PRINetModel", "Real WP-036A ``nn.Module`` (sub-pass 0144A4); Rust-owned stacked ``ResonanceLayer`` container with inter-layer ``LayerNorm``, concept readout, and clamped ``log_softmax`` in ``prin_train::model``"
+   "compile_model", "prin.compile_model / prin.nn.compile_model", "Real WP-036A pure-Python guarded ``torch.compile`` passthrough (sub-pass 0144A4, D-2); the one symbol with no Rust component"
    "DiscreteDeltaThetaGamma", "prin.DiscreteDeltaThetaGamma / prin.nn.DiscreteDeltaThetaGamma", "D-2.2 stub; audited Rust owner (``prin_train::bands``, WP-022) exists but is unbound - the PyO3 bridge is a recorded out-of-scope discovery (WP-025)"
    "DiscreteDeltaThetaGammaLayer", "prin.DiscreteDeltaThetaGammaLayer / prin.nn.DiscreteDeltaThetaGammaLayer", "Real WP-036A ``nn.Module`` (sub-pass 0144A3); Rust-owned discrete three-band core and learnable phase/amplitude projections"
    "MixedPrecisionTrainer", "prin.MixedPrecisionTrainer / prin.training_hooks.MixedPrecisionTrainer", "D-2.2 stub; ``torch.amp`` training-step wrapper (training loop, Python numerics)"
@@ -1550,7 +1573,7 @@ and the ``prinet`` ownership rows in
    "OscillatorState", "prin.OscillatorState", "real - direct re-export", "0141A"
    "OscillatoryAttention", "prin.OscillatoryAttention", "real - direct re-export", "0141A"
    "OscilloSim", "prin.OscilloSim", "real - non-numeric orchestration (0141D2)", "0141D2"
-   "PRINetModel", "prin.PRINetModel", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "PRINetModel", "prin.PRINetModel", "real - Rust PyO3 binding (WP-036A)", "0144A4"
    "PhaseActivation", "prin.PhaseActivation", "real - Rust PyO3 binding (0141B)", "0141B"
    "PhaseAmplitudeCoupling", "prin.PhaseAmplitudeCoupling", "real - direct re-export", "0141A"
    "PhaseAmplitudeCouplingLayer", "prin.PhaseAmplitudeCouplingLayer", "real - Rust PyO3 binding (WP-036A)", "0144A3"
@@ -1593,7 +1616,7 @@ and the ``prinet`` ownership rows in
    "build_knn_neighbors", "prin.build_knn_neighbors", "real - Rust PyO3 binding (0141C)", "0141C"
    "build_phase_knn", "prin.build_phase_knn", "real - direct re-export", "0141A"
    "collect_system_state", "prin.collect_system_state", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
-   "compile_model", "prin.compile_model", "D-2.2 deferred stub (typed NotImplementedError)", "0141E"
+   "compile_model", "prin.compile_model", "real - pure-Python torch.compile passthrough (WP-036A)", "0144A4"
    "compute_full_temporal_metrics", "prin.compute_full_temporal_metrics", "real - direct re-export", "0141A"
    "compute_p_value", "prin.compute_p_value", "real - direct re-export", "0141A"
    "configure_neurips_style", "prin.configure_neurips_style", "real - direct re-export", "0141A"

@@ -146,6 +146,7 @@ pub mod inhibition;
 pub mod inhibition_layers;
 pub mod layers;
 pub mod losses;
+pub mod model;
 pub mod phase_tracker;
 pub mod rip;
 pub mod scalr;
@@ -169,6 +170,7 @@ pub use hierarchical_layers::{
 };
 pub use inhibition_layers::DgLayerParams;
 pub use layers::ResonanceLayerParams;
+pub use model::{LayerNormWeights, PRINetModelParams};
 pub use rip::{Rip, RipConfig};
 pub use scalr::{Scalr, ScalrConfig};
 pub use sync_gd::{SyncGd, SyncGdConfig};

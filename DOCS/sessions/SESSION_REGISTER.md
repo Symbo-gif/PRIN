@@ -269,7 +269,7 @@ introduction and are not retroactively added here; this table starts with
 | 0144A1 | 6 | WP-036A | S1 — Coding | [Inhibition and sparsification family](phase-6/0144A1-wp036a-s1-inhibition-and-sparsification-family.md) | COMPLETE |
 | 0144A2 | 6 | WP-036A | S1 — Coding | [Phase-to-rate and autoencoder family](phase-6/0144A2-wp036a-s1-phase-to-rate-and-autoencoder-family.md) | COMPLETE |
 | 0144A3 | 6 | WP-036A | S1 — Coding | [Hierarchical, PAC, and discrete-layer family](phase-6/0144A3-wp036a-s1-hierarchical-pac-and-discrete-layer-family.md) | COMPLETE |
-| 0144A4 | 6 | WP-036A | S1 — Coding | [Model container and consolidation](phase-6/0144A4-wp036a-s1-model-container-and-consolidation.md) | PLANNED |
+| 0144A4 | 6 | WP-036A | S1 — Coding | [Model container and consolidation](phase-6/0144A4-wp036a-s1-model-container-and-consolidation.md) | COMPLETE |
 | 0144B | 6 | WP-036A | S2 — Audit | [Trainable compatibility layers — `prin-train` extension](phase-6/0144B-wp036a-s2-trainable-compatibility-layers-prin-train-extension.md) | PLANNED |
 | 0144C | 6 | WP-036A | S3 — Remediation | [Trainable compatibility layers — `prin-train` extension](phase-6/0144C-wp036a-s3-trainable-compatibility-layers-prin-train-extension.md) | PLANNED |
 | 0144D | 6 | WP-036A | S4 — Documentation | [Trainable compatibility layers — `prin-train` extension](phase-6/0144D-wp036a-s4-trainable-compatibility-layers-prin-train-extension.md) | PLANNED |

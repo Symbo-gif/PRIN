@@ -28,5 +28,6 @@ pub(crate) mod train_autoencoders;
 pub(crate) mod train_hierarchical_layers;
 pub(crate) mod train_inhibition_layers;
 pub(crate) mod train_layers;
+pub(crate) mod train_model;
 pub(crate) mod train_support;
 pub(crate) mod trainer;

@@ -387,3 +387,56 @@ All three layers pass float64 ``torch.autograd.gradcheck`` at the required
 phase cotangents. The discrete check uses ``eps=1e-5`` to rise above the
 registered DV-018 finite-difference floor; its required relative and absolute
 tolerances are unchanged.
+
+WP-036A — Model container parity (sub-pass 0144A4)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sub-pass 0144A4 rebuilds ``PRINetModel`` in ``prin_train::model`` as an input
+``ResonanceLayer``, ``n_layers - 1`` stacked ``ResonanceLayer``\\ s, a
+``LayerNorm`` after each, a concept-readout ``Linear``, a logit clamp to
+``[-50, 50]``, and a final ``log_softmax``.
+
+**No float64 end-to-end reference exists.** PRINet 3.0's
+``PRINetModel.forward`` unconditionally casts the post-resonance hidden state
+to ``float32`` (``h = h.float()``) before the readout; on a ``.double()``
+model the ``float64`` ``concept_proj`` weights then raise
+``RuntimeError: mat1 and mat2 must have the same dtype``. Forward-parity is
+therefore established two ways, both on ``tests/test_model.py`` with the
+reference model's exact weights injected via ``load_reference_weights``:
+
+- **float64 readout reproduction.** The reference's own submodules
+  (``input_layer``, ``layer_norms``, ``concept_proj``) run correctly in
+  float64; only the composed ``forward``'s cast is broken. Reproducing the
+  documented forward in float64 and comparing to PRIN at a zero input gives a
+  measured maximum absolute delta of ``0.0`` (assertion tier
+  ``rtol=1e-9, atol=1e-11``).
+- **reference float32 forward.** Calling the real
+  ``prinet.nn.layers.PRINetModel.forward`` (its working float32 mode) at a
+  zero input and comparing to PRIN's float64 output cast back to float32 gives
+  a measured maximum absolute delta of ``0.0`` on the registered case; the
+  assertion uses the D-4 envelope ``rtol=1e-4, atol=1e-5`` because the only
+  source of disagreement in that regime is the f32-vs-f64 hazard.
+
+Both comparisons use a **zero input**, the regime where the composed
+``ResonanceLayer`` initial-state encoding coincides exactly with the
+reference. ``PRINetModel`` composes the audited ``ResonanceLayer`` unchanged
+and inherits its documented FFT-vs-matmul feature-to-oscillator encoding
+deviation (plan amendment #19, WP-022/WP-025): for an arbitrary non-zero input
+the end-to-end log-probability delta grows to order 1 (measured ``0.99`` on a
+small registered case), bounded by — not newly introduced by — that inherited
+deviation. The readout head that ``PRINetModel`` itself adds (``LayerNorm`` +
+``concept_proj`` + clamp + ``log_softmax``) is additionally checked in
+isolation against a hand-computed ``log_softmax(clamp(h @ Wᵀ + b))`` in
+``prin_train::model``'s Rust tests (``< 1e-12``).
+
+The float64 ``torch.autograd.gradcheck`` passes at the required
+``rtol=1e-3, atol=1e-3`` for ``n_layers = 1`` and ``n_layers = 2``. No
+DV-018 tolerance is invoked: the added head is ``LayerNorm`` (mean/variance
+reduction), ``Linear``, ``clamp``, and ``log_softmax`` — all ``burn-tensor``
+elementwise/reduction ops, none touching the ``f32``-internal ``sigmoid``
+floor.
+
+``compile_model`` performs no numerics — it is a guarded ``torch.compile``
+passthrough — so it has no parity comparison; it is exercised by a
+construct/callable + ``torch.compile`` smoke test and a guard-branch test
+(``torch.compile`` removed → the model is returned unchanged).
