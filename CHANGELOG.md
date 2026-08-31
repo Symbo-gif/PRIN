@@ -49,6 +49,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for every symbol. 52 new Python tests. S2 audit: PASS, zero findings.
   S3: no-change closure, delta re-audit CLEAN. Full suite 1266 passed,
   9 deselected; interrogate 97.4%.
+- **WP-036B S1 — Strict acceptance-suite port** (sessions `0144E` +
+  `0144E1`–`0144E6`, 2026-08-31). 13 PRINet 3.0 reference files strict-ported
+  under stable `tests/test_acceptance_*.py` names: 498 `def test_` functions
+  across 8,085 reference lines. Import-only adaptation (Testing Standards
+  §1.1): zero assertion edits, zero tolerance annotations, zero unapproved
+  skips. Execution: 489 passed, 9 skipped (8 CUDA `skipif` + 1 `psutil`-absent,
+  all matching reference guards). Compatibility behavior rebuilt through
+  Rust-backed layers with thin PyO3/Python delegation; no Python numerics
+  (`check_no_python_numerics.py` clean for 19 modules). Plan amendment #35
+  decomposed the single S1 into six sub-passes: `0144E1` (core + utils, 125
+  functions), `0144E2` (phases + hierarchical + phase-to-rate, 95), `0144E3`
+  (q2 + q2_remaining, 118), `0144E4` (q3_new + nn + scalr_enhanced, 75),
+  `0144E5` (hybrid + clevr_n, 36), `0144E6` (subconscious + consolidation,
+  49). S2 audit (`0144F`): PASS, zero findings. S3: no-change closure.
 
 ### Changed
 

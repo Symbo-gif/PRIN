@@ -1,6 +1,6 @@
 # Session 0144F — WP-036B S2: Audit — Acceptance suite port (core, dynamics, model stack, subconscious)
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S2 — Audit
