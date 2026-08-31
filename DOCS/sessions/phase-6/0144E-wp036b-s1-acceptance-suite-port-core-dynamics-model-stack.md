@@ -1,6 +1,9 @@
 # Session 0144E — WP-036B S1: Coding — Acceptance suite port (core, dynamics, model stack, subconscious)
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31 — decomposed into sub-passes `0144E1`–`0144E6`
+under plan amendment #35; the range is COMPLETE and audited by `0144F`. Parent
+row reconciled to the register by session `0144I2` housekeeping, plan
+amendment #37.)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S1 — Coding

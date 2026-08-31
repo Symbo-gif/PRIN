@@ -1,6 +1,6 @@
 # Session 0144I2 — WP-036D S1 (sub-pass 2/3): Python device dispatch and DLPack marshalling
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31, locally committed; not pushed)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036D
 **Session type:** S1 — Coding
@@ -9,6 +9,35 @@
 **Authority:** Project Plan §6/§8, amendments #31/#33/#36, and [`WP-036D-S1-execution-plan-and-decomposition.md`](WP-036D-S1-execution-plan-and-decomposition.md). The normative standard wins on conflict.
 
 > Prospective execution contract, not completion evidence.
+
+## Amendment #37 re-scope (2026-08-31)
+
+Repository verification during execution established that this brief's original
+Contract is not deliverable against the `0144I1` surface as built:
+
+- `prin-kernels`' CubeCL dispatch and `prin-sim`'s GPU engines are
+  **host-in / host-out** (`&[f32]` / `Vec<f32>`) — there is no device-resident
+  buffer anywhere — so "the GPU branch … no host round-trip … returns the GPU
+  tensor directly" is not reachable. **Plan amendment #37 waives that clause**
+  for WP-036D; the marshalling boundary is CPU `float32` DLPack and the compute
+  runs on the GPU via CubeCL backend selection. A true zero-copy path is
+  **DV-030** (a future WP).
+- `prin-kernels` ships **no** exponential-integrator kernel, and `GpuBandStepper`
+  (fused discrete Euler) is not numerically equivalent to
+  `_HierarchicalNetwork.step` (multi-rate RK4 + PAC ordering).
+
+**Delivered (amendment #37 (c)):** the `_is_gpu` predicate; the
+`_gpu_f32` / `_from_gpu` `float32` DLPack marshalling helpers; and one genuine
+GPU dispatch branch — `OscillatorModel.compute_derivatives` routes a CUDA
+sparse k-NN input to the CubeCL sparse k-NN kernel via
+`GpuSparseKuramoto.from_knn_phase` (`0144I1` reopen). The CPU `else` path is
+byte-for-byte unchanged (golden-value pre/post test). For
+`_HierarchicalNetwork.step` / `DeltaThetaGammaNetwork`,
+`ExponentialIntegrator.step`, `gradient_checkpoint_integration`, and
+`PhaseToRateConverter`, CUDA inputs are already carried on-device by the
+existing device-restoring marshalling (`_tensor` / `_from_raw_rows`); a
+dedicated fused-GPU-kernel path for each is deferred, with GPU-runner evidence
+gathered in `0144I3`. See `DOCS/experiments/0144I-wp036d-s1-handoff.md`.
 
 ## Mission
 

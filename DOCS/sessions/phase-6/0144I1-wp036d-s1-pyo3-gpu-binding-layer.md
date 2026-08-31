@@ -1,6 +1,7 @@
 # Session 0144I1 — WP-036D S1 (sub-pass 1/3): PyO3 GPU binding layer
 
-**Status:** COMPLETE (2026-08-31, locally committed; not pushed)
+**Status:** COMPLETE (2026-08-31, locally committed; not pushed; reopened once
+under plan amendment #37 — see "Amendment #37 reopen" below)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036D
 **Session type:** S1 — Coding
@@ -9,6 +10,19 @@
 **Authority:** Project Plan §6/§8, amendments #31/#33/#36, and [`WP-036D-S1-execution-plan-and-decomposition.md`](WP-036D-S1-execution-plan-and-decomposition.md). The normative standard wins on conflict.
 
 > Prospective execution contract, not completion evidence.
+
+## Amendment #37 reopen (2026-08-31)
+
+Reopened once under plan amendment #37 to add a single binding —
+`GpuSparseKuramoto.from_knn_phase(n, k_neighbors, coupling_strength,
+decay_rate, freq_adaptation_rate, phase)`, which builds the k-NN CSR topology
+in Rust via `SparseCoupling::from_knn` so the `0144I2` sparse k-NN dispatch
+constructs no coupling weights in Python — plus its `.pyi` stub and a
+feature-gated Rust parity test — then re-closed. No other change. The
+"zero-copy DLPack GPU in/out" contract language below is **superseded by plan
+amendment #37**: the marshalling boundary is host-mediated CPU `float32`
+(`prin-kernels`' CubeCL dispatch is host-in/host-out); a true zero-copy
+Torch↔CubeCL path is deferred as **DV-030**.
 
 ## Mission
 

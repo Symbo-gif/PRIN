@@ -157,3 +157,35 @@ Execute `0144I1` (PyO3 GPU binding layer). Keep numerical authority in Rust,
 marshal GPU tensors zero-copy via DLPack, leave the CPU path untouched,
 append evidence to `DOCS/experiments/0144I-wp036d-s1-handoff.md`, and commit
 locally only when the sub-pass gate is green.
+
+## 8. Plan amendment #37 (2026-08-31) — zero-copy waiver and `0144I2` re-scope
+
+Executing `0144I2` established that the "zero-copy DLPack GPU in/out — no host
+round-trip" premise of this decomposition (§3.3, §4 `0144I1`/`0144I2` rows) is
+**not reachable at the current architecture**: `prin-kernels`' CubeCL dispatch
+functions and every `prin-sim` GPU engine are host-in / host-out
+(`&[f32]` / `Vec<f32>`), with no device-resident buffer in the workspace;
+`prin-kernels` ships no exponential-integrator kernel; `GpuSparseKuramoto`
+needs caller-supplied CSR topology.
+
+Plan amendment #37 (maintainer, 2026-08-31):
+
+1. **Waives the zero-copy / no-host-round-trip clause for WP-036D.** The GPU
+   marshalling boundary is CPU `float32` DLPack (the `0144I1`
+   `read_dlpack_f32` / `export_dlpack_f32` helpers); GPU compute still runs
+   on-device via CubeCL. Device-resident buffers → **DV-030** (a future WP).
+2. **Reopens `0144I1` minimally** for `GpuSparseKuramoto.from_knn_phase`
+   (Rust-built k-NN CSR topology) + `.pyi` + a feature-gated Rust parity test.
+3. **Re-scopes `0144I2`** to: `_is_gpu` + `_gpu_f32` / `_from_gpu` marshalling
+   helpers + the sparse k-NN `compute_derivatives` GPU dispatch (the one path
+   where binding and CPU algorithm match); CPU path byte-for-byte unchanged;
+   device-preservation for the remaining named classes handled by the existing
+   `_tensor` marshalling, dedicated fused-GPU kernels deferred with `0144I3`
+   runner evidence.
+4. **Discovery for `0144J`:** `_tensor(value, like)` already restores the
+   caller's CUDA device on every result, so 7 of the 8 guarded tests assert
+   conditions the pre-`0144I2` code already met; the real WP-036D gains are
+   running the CubeCL sparse k-NN kernel for real and (deferred, DV-030)
+   `test_sparse_vram_subquadratic`.
+
+No new session IDs; count unchanged at 233; no renumber.

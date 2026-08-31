@@ -86,6 +86,15 @@ preserved). WP-036D's Audit Report and Project State Report are numbered
 amendment #33 (new sibling WP + mechanical renumber) and #35 (S1
 decomposition). See
 [`phase-6/WP-036D-S1-execution-plan-and-decomposition.md`](phase-6/WP-036D-S1-execution-plan-and-decomposition.md).
+**Plan amendment #37 (2026-08-31)** reopened `0144I1` once (added
+`GpuSparseKuramoto.from_knn_phase`) and re-scoped `0144I2` after verification
+showed the "zero-copy DLPack GPU" premise is unreachable at the current
+architecture (`prin-kernels`' CubeCL dispatch and `prin-sim`'s GPU engines are
+host-in/host-out); the marshalling boundary is CPU `float32`, GPU compute runs
+on-device via CubeCL, and a true zero-copy Torch↔CubeCL path is deferred as
+**DV-030**. No new session IDs; count unchanged at **233**; no renumber. It
+also reconciled the pre-existing `0144E` / `0144I1` brief↔register status
+drift to `COMPLETE`.
 
 **Amendment-inserted sub-sessions (plan amendment #32):** WP-036 S1
 (session 0141) is executed as five sequential S1 coding sub-passes
@@ -325,8 +334,8 @@ introduction and are not retroactively added here; this table starts with
 | 0144G | 6 | WP-036B | S3 — Remediation | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144G-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md) | COMPLETE |
 | 0144H | 6 | WP-036B | S4 — Documentation | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144H-wp036b-s4-acceptance-suite-port-core-dynamics-model-stack.md) | COMPLETE |
 | 0144I | 6 | WP-036D | S1 — Coding | [GPU execution path for the ported acceptance suite](phase-6/0144I-wp036d-s1-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
-| 0144I1 | 6 | WP-036D | S1 — Coding | [PyO3 GPU binding layer](phase-6/0144I1-wp036d-s1-pyo3-gpu-binding-layer.md) | PLANNED |
-| 0144I2 | 6 | WP-036D | S1 — Coding | [Python device dispatch and DLPack marshalling](phase-6/0144I2-wp036d-s1-device-dispatch-and-dlpack-marshalling.md) | PLANNED |
+| 0144I1 | 6 | WP-036D | S1 — Coding | [PyO3 GPU binding layer](phase-6/0144I1-wp036d-s1-pyo3-gpu-binding-layer.md) | COMPLETE |
+| 0144I2 | 6 | WP-036D | S1 — Coding | [Python device dispatch and DLPack marshalling](phase-6/0144I2-wp036d-s1-device-dispatch-and-dlpack-marshalling.md) | COMPLETE |
 | 0144I3 | 6 | WP-036D | S1 — Coding | [GPU test activation, CI, and consolidation](phase-6/0144I3-wp036d-s1-gpu-test-activation-and-ci.md) | PLANNED |
 | 0144J | 6 | WP-036D | S2 — Audit | [GPU execution path for the ported acceptance suite](phase-6/0144J-wp036d-s2-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
 | 0144K | 6 | WP-036D | S3 — Remediation | [GPU execution path for the ported acceptance suite](phase-6/0144K-wp036d-s3-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |

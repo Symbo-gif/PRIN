@@ -96,6 +96,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Does **not** close DV-005 (CUDA Burn training backend) or DV-001 (Linux
   Triton runner). Planned session count 226 → 233. See
   `DOCS/sessions/phase-6/WP-036D-S1-execution-plan-and-decomposition.md`.
+  - **S1 sub-pass `0144I1` (PyO3 GPU binding layer, 2026-08-31):** new
+    feature-gated `gpu` binding module (`crates/prin-py/src/bindings/gpu.rs`)
+    wrapping `prin-sim`'s `GpuSparseKuramoto` / `GpuMeanFieldEngine` /
+    `GpuBandStepper` behind `cuda` / `wgpu`; `f32` DLPack helpers in
+    `dlpack.rs`; `.pyi` stubs; feature-gated PyO3 tests; maturin rebuild.
+  - **S1 sub-pass `0144I1` reopened once (plan amendment #37, 2026-08-31):**
+    added `GpuSparseKuramoto.from_knn_phase` (builds the k-NN CSR topology in
+    Rust so the Python dispatch constructs no coupling weights) + `.pyi` + a
+    feature-gated parity test.
+  - **S1 sub-pass `0144I2` (`_torch_compat.py` device dispatch, 2026-08-31):**
+    `_is_gpu` predicate; `_gpu_f32` / `_from_gpu` `float32` DLPack marshalling
+    helpers; a GPU dispatch branch routing a CUDA sparse k-NN
+    `compute_derivatives` call to the CubeCL sparse k-NN kernel via
+    `GpuSparseKuramoto.from_knn_phase`. CPU path byte-for-byte unchanged
+    (golden-value pre/post test). 15-test unit suite
+    (`tests/test_wp036d_gpu_dispatch.py`).
+  - **Plan amendment #37 (2026-08-31):** waives WP-036D's "zero-copy DLPack
+    GPU in/out — no host round-trip" contract line — `prin-kernels`' CubeCL
+    dispatch and `prin-sim`'s GPU engines are host-in/host-out with no
+    device-resident buffers, so the marshalling boundary is CPU `float32`
+    while the compute runs on-device via CubeCL. A true zero-copy
+    Torch↔CubeCL path is recorded as new deferred item **DV-030** for a
+    future WP. Also re-scopes `0144I2` to the sparse k-NN dispatch (the one
+    path where binding and CPU algorithm match) with the remaining named
+    classes' fused-GPU kernels deferred to `0144I3` runner evidence, and
+    reconciles the pre-existing `0144E` / `0144I1` brief↔register status
+    drift. No new session IDs; count unchanged at 233.
 - **WP-036B S3 (session 0144G) closed with a no-change delta re-audit**
   (2026-08-31). The `036b` S2 audit returned PASS with zero findings;
   mandatory S3 executed per Development Workflow §3 and recorded the CLEAN
