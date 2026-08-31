@@ -69,6 +69,18 @@ decompose into `0144Q1`–`0144Qn` under Development Workflow §7. Identifiers
 roll single-letter `0144Q`–`0144Z` to two-letter `0144AA`–`0144AB`. See
 [`WP-036E-036F-036G-execution-plan-and-decomposition.md`](WP-036E-036F-036G-execution-plan-and-decomposition.md).
 
+Plan amendment #39 decomposes **WP-036C S1** (session `0144M`) into eight
+sequential strict-port coding sub-passes `0144M1`–`0144M8` feeding the single S2
+audit `0144N`. Repository verification corrects the brief's "~790 `def test_`
+functions" to **1,097 functions / ~15,810 lines across 24 reference files**
+(1,172 collected) plus DV-025's `retrain_controller` resolution (in `0144M2`).
+Testing Standards §1.1 stays literal: imports only, assertions unchanged;
+compatibility gaps rebuilt through Rust-backed layers, never semantic-test
+rewrites; GPU/Triton tests stay `skipif`-guarded and reuse WP-036D's
+`_torch_compat.py` device dispatch. `0144M8` is pre-authorised to split under
+Development Workflow §7. Planned session count 245 → 253. See
+[`WP-036C-S1-execution-plan-and-decomposition.md`](WP-036C-S1-execution-plan-and-decomposition.md).
+
 | Seq | Unit | Type | Session brief | Current status |
 |---:|---|---|---|---|
 | 0129 | WP-033 | S1 — Coding | [Unified benchmark runner and category migration](0129-wp033-s1-unified-benchmark-runner-and-category-migration.md) | COMPLETE |
@@ -119,7 +131,15 @@ roll single-letter `0144Q`–`0144Z` to two-letter `0144AA`–`0144AB`. See
 | 0144J | WP-036D | S2 — Audit | [GPU execution path for the ported acceptance suite](0144J-wp036d-s2-gpu-execution-path-ported-acceptance-suite.md) | COMPLETE |
 | 0144K | WP-036D | S3 — Remediation | [GPU execution path for the ported acceptance suite](0144K-wp036d-s3-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
 | 0144L | WP-036D | S4 — Documentation | [GPU execution path for the ported acceptance suite](0144L-wp036d-s4-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
-| 0144M | WP-036C | S1 — Coding | [Acceptance suite port — integration, y-series, kernels; DV-025](0144M-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
+| 0144M | WP-036C | S1 — Coding | [Acceptance suite port — integration, y-series, kernels; DV-025](0144M-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED (decomposed into 0144M1–0144M8) |
+| 0144M1 | WP-036C | S1 — Coding | [Integration-Q3 and Y2Q1/Y2Q4 strict port](0144M1-wp036c-s1-integration-q3-and-y2q1-y2q4-strict-port.md) | PLANNED |
+| 0144M2 | WP-036C | S1 — Coding | [Y2Q2/Y2Q3 strict port and DV-025 retrain_controller](0144M2-wp036c-s1-y2q2-y2q3-strict-port-and-dv025.md) | PLANNED |
+| 0144M3 | WP-036C | S1 — Coding | [Y3Q1/Y3Q2 strict port](0144M3-wp036c-s1-y3q1-y3q2-strict-port.md) | PLANNED |
+| 0144M4 | WP-036C | S1 — Coding | [Y3Q3/Y3Q4/Y3Q45/Y3Q49 strict port](0144M4-wp036c-s1-y3q3-y3q4-y3q45-y3q49-strict-port.md) | PLANNED |
+| 0144M5 | WP-036C | S1 — Coding | [Y4Q1/Y4Q1_2/Y4Q1_3 strict port](0144M5-wp036c-s1-y4q1-y4q1-2-y4q1-3-strict-port.md) | PLANNED |
+| 0144M6 | WP-036C | S1 — Coding | [Y4Q1_4/Y4Q1_5/Y4Q1_9 strict port](0144M6-wp036c-s1-y4q1-4-y4q1-5-y4q1-9-strict-port.md) | PLANNED |
+| 0144M7 | WP-036C | S1 — Coding | [Y4Q1_7/Y4Q1_8 strict port](0144M7-wp036c-s1-y4q1-7-y4q1-8-strict-port.md) | PLANNED |
+| 0144M8 | WP-036C | S1 — Coding | [Y4Q2/Y4Q3/Y4Q4, GPU/Triton guards, and consolidation](0144M8-wp036c-s1-y4q2-y4q3-y4q4-kernels-and-consolidation.md) | PLANNED |
 | 0144N | WP-036C | S2 — Audit | [Acceptance suite port — integration, y-series, kernels; DV-025](0144N-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0144O | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0144P | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |

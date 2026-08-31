@@ -9,7 +9,7 @@ completion; completion evidence is cited by Audit and Project State Reports.
 
 | Requirement | Primary implementation sessions | Independent confirmation |
 |---|---|---|
-| **F1 — 175+ symbol feature parity** | WP-001 inventory (0001–0004); incremental WPs 006–036; WP-036 compatibility surface + freeze machinery + Migration Guide table (0141 + coding sub-passes `0141A`–`0141E`, amdt #32; audit/remediation/docs 0142–0144); WP-036A trainable compatibility layers (`0144A` + coding sub-passes `0144A1`–`0144A4`, amdt #34; audit/remediation/docs `0144B`–`0144D`); WP-036B strict acceptance-suite port (`0144E` + `0144E1`–`0144E6` feeding `0144F`–`0144H`, amdt #31/#33/#35); WP-036D GPU execution path for the ported suite (`0144I` + `0144I1`–`0144I3` feeding `0144J`–`0144L`, amdt #36); WP-036C acceptance-suite port (`0144M`–`0144P`, shifted by amdt #36) | EXP-002 E1–E5 (0159–0163); WP-039 audit (0196) |
+| **F1 — 175+ symbol feature parity** | WP-001 inventory (0001–0004); incremental WPs 006–036; WP-036 compatibility surface + freeze machinery + Migration Guide table (0141 + coding sub-passes `0141A`–`0141E`, amdt #32; audit/remediation/docs 0142–0144); WP-036A trainable compatibility layers (`0144A` + coding sub-passes `0144A1`–`0144A4`, amdt #34; audit/remediation/docs `0144B`–`0144D`); WP-036B strict acceptance-suite port (`0144E` + `0144E1`–`0144E6` feeding `0144F`–`0144H`, amdt #31/#33/#35); WP-036D GPU execution path for the ported suite (`0144I` + `0144I1`–`0144I3` feeding `0144J`–`0144L`, amdt #36); WP-036C acceptance-suite port (`0144M` + `0144M1`–`0144M8` strict-port sub-passes feeding `0144N`–`0144P`, amdt #36/#39) | EXP-002 E1–E5 (0159–0163); WP-039 audit (0196) |
 | **F2 — numerical/result parity** | WP-002 corpus (0005–0008); all numerical WPs 006–032; WP-037 Parity draft | EXP-001 (0154–0158), EXP-002 (0159–0163), EXP-005–007 (0174–0188); synthesis 0194 |
 | **F3 — differentiability/PyTorch interop** | WP-003 spike (0009–0012); WP-022–027 (0085–0108) | EXP-004 (0169–0173), EXP-006 (0179–0183); WP-039 audit |
 | **F4 — byte-comparable reproduction** | WP-034–035 (0133–0140), WP-037 (0145–0148) | EXP-002 (0159–0163); synthesis 0194 |
@@ -79,7 +79,7 @@ completion; completion evidence is cited by Audit and Project State Reports.
 | DoD item | Final evidence session(s) |
 |---:|---|
 | 1. Public API complete | WP-036 (compatibility surface + freeze machinery); EXP-002; 0196 |
-| 2. Acceptance suite cross-platform | WP-036B (`0144E` + `0144E1`–`0144E6` strict port, then `0144F`–`0144H`), WP-036D (GPU execution path, `0144I`–`0144L`), WP-036C (`0144M`–`0144P`), and WP-036E (device-resident GPU path activating `test_sparse_vram_subquadratic`, `0144Q`–`0144T`); WP-038; 0196 |
+| 2. Acceptance suite cross-platform | WP-036B (`0144E` + `0144E1`–`0144E6` strict port, then `0144F`–`0144H`), WP-036D (GPU execution path, `0144I`–`0144L`), WP-036C (`0144M` + `0144M1`–`0144M8` strict port, then `0144N`–`0144P`), and WP-036E (device-resident GPU path activating `test_sparse_vram_subquadratic`, `0144Q`–`0144T`); WP-038; 0196 |
 | 3. Parity suite + Report | EXP-001/002; 0194; 0196 |
 | 4. Performance targets/regression gates | EXP-003/004/007; 0194; 0196 |
 | 5. Reproduction manifest | WP-035; EXP-002; 0196 |
@@ -112,15 +112,18 @@ The Session Plan is structurally complete only if all remain true:
    `0144I1`–`0144I3`, shifting the WP-036C block to `0144M`–`0144P`), and
    amendment #38 (`0144Q`–`0144AB` for WP-036E/F/G, inserted between `0144P`
    and `0145`; single-letter `0144Q`–`0144Z` then two-letter
-   `0144AA`–`0144AB`) add planned sub-sessions between existing integers; the
-   integer sequence 0001–0198 remains unique and gap-free.
+   `0144AA`–`0144AB`), and amendment #39 (`0144M1`–`0144M8`, WP-036C
+   strict-port S1 decomposition, inserted between `0144M` and `0144N`) add
+   planned sub-sessions between existing integers; the integer sequence
+   0001–0198 remains unique and gap-free.
 5. Every predecessor/successor link resolves; only 0001 lacks a file
    predecessor and only 0198 lacks a file successor. Sub-session chains link
    internally: `0141` → `0141A` → … → `0141E` → `0142`, and
    `0144A` → `0144A1` → … → `0144A4` → `0144B` → … → `0144E` →
    `0144E1` → … → `0144E6` → `0144F` → `0144G` → `0144H` → `0144I` →
    `0144I1` → `0144I2` → `0144I3` → `0144J` → `0144K` → `0144L` →
-   `0144M` → … → `0144P` → `0144Q` → `0144R` → `0144S` → `0144T` →
+   `0144M` → `0144M1` → … → `0144M8` → `0144N` → `0144O` → `0144P` →
+   `0144Q` → `0144R` → `0144S` → `0144T` →
    `0144U` → `0144V` → `0144W` → `0144X` → `0144Y` → `0144Z` → `0144AA` →
    `0144AB` → `0145`.
 6. Every Project Plan F/N requirement, roadmap phase, risk, parity hazard, and

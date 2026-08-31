@@ -1,11 +1,11 @@
 # Session 0144M — WP-036C S1: Coding — Acceptance suite port (integration, y-series, kernels; DV-025)
 
-**Status:** PLANNED
+**Status:** PLANNED (decomposed into `0144M1`–`0144M8` by plan amendment #39)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S1 — Coding
 **Predecessor:** [0144L — Documentation (WP-036D S4)](0144L-wp036d-s4-gpu-execution-path-ported-acceptance-suite.md)
-**Successor:** [0144N — Audit](0144N-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md)
+**Successor:** [0144M1 — Coding (sub-pass 1/8)](0144M1-wp036c-s1-integration-q3-and-y2q1-y2q4-strict-port.md)
 **Authority:** Project Plan §6/§8 and amendments #31/#36; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > Renumbered `0144I` → `0144M` by plan amendment #36 (WP-036D, "GPU execution

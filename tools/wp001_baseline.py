@@ -109,6 +109,9 @@ _WP_ID = re.compile(r"^WP-(\d{3})$")
 #   #38: three new sibling WPs (WP-036E/F/G, "Deferred-Validation closure
 #        before Phase 7") took 0144Q..0144AB, inserted between 0144P and 0145
 #        (single-letter 0144Q..0144Z then two-letter 0144AA..0144AB).
+#   #39: WP-036C S1 decomposed into eight strict-port coding sub-passes
+#        0144M1..0144M8, inserted between 0144M and 0144N, preserving
+#        import-only/assertions-unchanged.
 _PLANNED_INTEGER_COUNT = 198
 # Each block is (anchor_integer_session, ordered_sub_session_ids). The block's
 # rows appear in the register contiguously immediately after the anchor row.
@@ -144,6 +147,14 @@ _SUBSESSION_BLOCKS = (
             "0144K",
             "0144L",
             "0144M",
+            "0144M1",
+            "0144M2",
+            "0144M3",
+            "0144M4",
+            "0144M5",
+            "0144M6",
+            "0144M7",
+            "0144M8",
             "0144N",
             "0144O",
             "0144P",

@@ -4,7 +4,7 @@
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S2 — Audit
-**Predecessor:** [0144M — Coding](0144M-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md)
+**Predecessor:** [0144M8 — Coding (sub-pass 8/8, consolidation)](0144M8-wp036c-s1-y4q2-y4q3-y4q4-kernels-and-consolidation.md)
 **Successor:** [0144O — Remediation](0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md)
 **Authority:** Project Plan §6/§8 and amendments #31/#36; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
