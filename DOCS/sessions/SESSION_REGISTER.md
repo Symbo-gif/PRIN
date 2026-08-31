@@ -336,7 +336,7 @@ introduction and are not retroactively added here; this table starts with
 | 0144I | 6 | WP-036D | S1 — Coding | [GPU execution path for the ported acceptance suite](phase-6/0144I-wp036d-s1-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
 | 0144I1 | 6 | WP-036D | S1 — Coding | [PyO3 GPU binding layer](phase-6/0144I1-wp036d-s1-pyo3-gpu-binding-layer.md) | COMPLETE |
 | 0144I2 | 6 | WP-036D | S1 — Coding | [Python device dispatch and DLPack marshalling](phase-6/0144I2-wp036d-s1-device-dispatch-and-dlpack-marshalling.md) | COMPLETE |
-| 0144I3 | 6 | WP-036D | S1 — Coding | [GPU test activation, CI, and consolidation](phase-6/0144I3-wp036d-s1-gpu-test-activation-and-ci.md) | PLANNED |
+| 0144I3 | 6 | WP-036D | S1 — Coding | [GPU test activation, CI, and consolidation](phase-6/0144I3-wp036d-s1-gpu-test-activation-and-ci.md) | COMPLETE |
 | 0144J | 6 | WP-036D | S2 — Audit | [GPU execution path for the ported acceptance suite](phase-6/0144J-wp036d-s2-gpu-execution-path-ported-acceptance-suite.md) | COMPLETE |
 | 0144K | 6 | WP-036D | S3 — Remediation | [GPU execution path for the ported acceptance suite](phase-6/0144K-wp036d-s3-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
 | 0144L | 6 | WP-036D | S4 — Documentation | [GPU execution path for the ported acceptance suite](phase-6/0144L-wp036d-s4-gpu-execution-path-ported-acceptance-suite.md) | PLANNED |
