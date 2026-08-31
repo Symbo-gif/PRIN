@@ -381,16 +381,14 @@ def test_y4q1_tools_d22_stubs_raise(cls_or_fn: object) -> None:
 @pytest.mark.parametrize(
     "cls",
     [
-        HybridPRINetV2CLEVRN,
-        TemporalHybridPRINet,
     ],
 )
 def test_hybrid_family_d22_stubs_raise(cls: type) -> None:
     """Every still-deferred hybrid-model symbol raises the D-2.2 disposition.
 
-    ``InterleavedHybridPRINet`` is a real PyTorch composition as of WP-036C S1
-    ``0144M1`` (plan amendment #40) and is covered by
-    ``tests/test_acceptance_y2q1.py``; it is no longer a D-2.2 stub.
+    ``InterleavedHybridPRINet`` was rebuilt at 0144M1; ``HybridPRINetV2CLEVRN``
+    and ``TemporalHybridPRINet`` were rebuilt at 0144M2. All are now real
+    PyTorch compositions and no longer D-2.2 stubs.
     """
     with pytest.raises(NotImplementedError, match=r"D-2\.2"):
         cls()
@@ -448,16 +446,14 @@ def test_control_signal_buffer_concurrent_access() -> None:
 @pytest.mark.parametrize(
     "cls_or_fn",
     [
-        ActiveControlTrainer,
         create_ablation_tracker,
     ],
 )
 def test_active_control_d22_stubs_raise(cls_or_fn: object) -> None:
     """Every still-deferred numeric active-control symbol raises the disposition.
 
-    ``collect_system_state`` was rebuilt as the real faithful telemetry-I/O
-    port at WP-036B S1 0144E6 (needed by the strict-ported ``test_subconscious``
-    suite) and is covered there; it is no longer a D-2.2 stub.
+    ``collect_system_state`` was rebuilt at 0144E6; ``ActiveControlTrainer``
+    was rebuilt at 0144M2. Both are now real and no longer D-2.2 stubs.
     """
     with pytest.raises(NotImplementedError, match=r"D-2\.2"):
         cls_or_fn()  # type: ignore[operator]

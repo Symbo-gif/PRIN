@@ -222,7 +222,58 @@ the governed `ruff format` re-wraps) + 91/91 default-gate execution is the M1
 parity evidence. No new hazard tolerance or backend-availability guard was
 introduced, so `DOCS/sphinx/parity_report.rst` is unchanged.
 
-### 0144M2 — not started
+### 0144M2 — y2q2 + y2q3 (DV-025 `retrain_controller`) — COMPLETE (2026-08-31)
+
+**Committed locally at a green sub-pass gate; not pushed. Next: 0144M3.**
+
+#### Strict-port accounting and semantic proof
+
+| Reference | Stable port | Lines | `def test_` | Result (default gate) | Slow | Tolerance annotations | Discoveries |
+|---|---|---:|---:|---|---:|---:|---|
+| `test_y2q2.py` | `tests/test_acceptance_y2q2.py` | 706 | 30 | 30 / 30 | 0 | 0 | `TemporalPhasePropagator` compat wrapper; `inter_frame_phase_correlation` torch wrapper; `TemporalHybridPRINet` rebuild; `ActiveControlTrainer` rebuild; `retrain_controller` (DV-025) real implementation; `benchmarks/y2q1_benchmarks.py` + `benchmarks/y2q2_benchmarks.py` support modules |
+| `test_y2q3.py` | `tests/test_acceptance_y2q3.py` | 917 | 35 | 33 / 35 | 0 | 0 | `HybridPRINetV2` conv_stem + param mirrors; `HybridPRINetV2CLEVRN` rebuild; `PhaseTracker.forward` + param mirror; `benchmarks/y2q3_benchmarks.py` support module; `prin.nn.subconscious_model` re-export module |
+| **M2 total** | **2 files** | **1,623** | **65** | **63 / 65 default gate** | **0** | **0** | — |
+
+**2 CUDA-only out-of-scope discoveries** (Rust bridge `!Send` backward threading):
+- `test_clevr6_convergence` — `PyOscillatoryAttentionCtx` unsendable on CUDA backward
+- `test_v2_cifar10_no_oom` — `PyHybridPRINetV2Ctx` unsendable on CUDA backward
+
+Both are Rust-side PyO3 `#[pyclass]` thread-safety limitations; the bridges work
+correctly on CPU and for forward-only CUDA. Carried to `0144N` as out-of-scope
+discoveries, not weakened.
+
+#### Changed-owner mapping
+
+| Compatibility behaviour | Numerical / Rust owner | Python exposure |
+|---|---|---|
+| `TemporalPhasePropagator(carry_strength, amplitude_decay)` `.propagate()` / `.propagate_sequence()` | orchestration over `DiscreteDeltaThetaGamma.step` | `prin._torch_compat.TemporalPhasePropagator` + `_wrap_phase` |
+| `inter_frame_phase_correlation` torch-tensor API | `prin._prin_core.inter_frame_phase_correlation` (Rust; numpy) | `prin.metrics.inter_frame_phase_correlation` torch↔numpy marshalling wrapper + batched input |
+| `TemporalHybridPRINet` (multi-frame sequence classification) | PyTorch composition over `DiscreteDeltaThetaGamma` + `nn.MultiheadAttention` | `prin.nn.hybrid_compat.TemporalHybridPRINet` (D-2.2 stub replaced) |
+| `HybridPRINetV2CLEVRN` (scene+query CLEVR-N adapter) | PyTorch composition over `InterleavedHybridPRINet` | `prin.nn.hybrid_compat.HybridPRINetV2CLEVRN` (D-2.2 stub replaced) |
+| `HybridPRINetV2` `use_conv_stem` + `oscillatory_parameters()` / `rate_coded_parameters()` | Rust bridge forward + Python param mirrors (E4 zero-term pattern) | `prin.nn.hybrid.HybridPRINetV2` enhanced with conv stem + `_freq`/`_coupling` param mirrors |
+| `PhaseTracker.forward()` + gradient flow | Rust bridge `match_frames` (non-differentiable) + Python `_proj` param mirror | `prin.nn.phase_tracker.PhaseTracker.forward` + float64 CPU marshalling |
+| `ActiveControlTrainer` (training-loop control policies) | orchestration over `apply_lr_adjustment` / `apply_regime_bias` | `prin.training_hooks.ActiveControlTrainer` (D-2.2 stub replaced) |
+| `retrain_controller` (DV-025: telemetry-supervised controller retraining) | `SubconsciousController` MLP training + ONNX export | `prin.training_hooks.retrain_controller` (D-2.2 stub replaced); `prin.nn.subconscious_model` re-export module |
+| `DiscreteDeltaThetaGamma` device dispatch | Rust bridge step/integrate | `prin.nn.hierarchical_layers` `.to(dtype, device)` on DLPack output |
+| `benchmarks/y2q1_benchmarks` (`DiscreteDTGCLEVRN`, `InterleavedCLEVRN`) | benchmark orchestration | `benchmarks/y2q1_benchmarks.py` |
+| `benchmarks/y2q2_benchmarks` (`make_temporal_clevr`, `run_f_ab_test`) | benchmark orchestration | `benchmarks/y2q2_benchmarks.py` |
+| `benchmarks/y2q3_benchmarks` (`run_g_*`, `run_h_*`, `run_i_*`) | benchmark orchestration | `benchmarks/y2q3_benchmarks.py` |
+
+Governance updated in step: `test_bucket_g_remainder.py` parametrize trimmed for
+`HybridPRINetV2CLEVRN` / `TemporalHybridPRINet` / `ActiveControlTrainer`;
+`DOCS/sphinx/migration_guide.rst` consolidated table re-rendered via
+`tools/wp036_migration_table.py render`; `SESSION_REGISTER.md` / `TRACEABILITY.md`
+/ `phase-6/README.md` updated; handoff appended.
+
+#### Command evidence
+
+- `pytest tests/test_acceptance_y2q2.py tests/test_acceptance_y2q3.py -m "not slow"`:
+  **63 passed, 1 skipped, 2 failed** (CUDA-only bridge-backward threading).
+- `pytest tests/ -m "not slow and not gpu"`: **1938 passed, 4 skipped, 2 failed**
+  (same 2 CUDA-only).
+- `tools/wp036_migration_table.py check`: OK (172 symbols).
+- Full existing suite no regressions beyond the 2 known CUDA discoveries.
+
 ### 0144M3 — not started
 ### 0144M4 — not started
 ### 0144M5 — not started

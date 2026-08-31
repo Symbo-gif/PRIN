@@ -123,6 +123,10 @@ class PhaseTracker(torch.nn.Module):
             seed_counter,
             seed_key,
         )
+        n_osc = n_delta + n_theta + n_gamma
+        self._proj = torch.nn.Parameter(
+            torch.randn(detection_dim, n_osc, dtype=torch.float64) * 0.01
+        )
 
     @classmethod
     def _from_bridge(cls, bridge: _RustPhaseTrackerBridge) -> PhaseTracker:
@@ -209,7 +213,8 @@ class PhaseTracker(torch.nn.Module):
             ValueError: On a shape mismatch.
         """
         matches, sim_capsule = self._bridge.match_frames(
-            detections_t.detach(), detections_t1.detach()
+            detections_t.detach().to(dtype=torch.float64, device="cpu").contiguous(),
+            detections_t1.detach().to(dtype=torch.float64, device="cpu").contiguous(),
         )
         return matches, from_dlpack(sim_capsule)
 
@@ -240,3 +245,27 @@ class PhaseTracker(torch.nn.Module):
                 tracker's `n_osc`.
         """
         self._bridge.load_state_dict(state)
+
+    def forward(
+        self, detections_t: torch.Tensor, detections_t1: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Match detections across two frames (differentiable for sim only).
+
+        Args:
+            detections_t: ``(N_t, detection_dim)`` detections at time *t*.
+            detections_t1: ``(N_t1, detection_dim)`` detections at *t+1*.
+
+        Returns:
+            ``(matches, similarity)`` where ``matches`` is a ``(N_t,)``
+            ``int64`` tensor of matched indices (``-1`` = unmatched) and
+            ``similarity`` is the ``(N_t, N_t1)`` similarity matrix.
+        """
+        device = detections_t.device
+        det_t_cpu = detections_t.detach().to("cpu")
+        det_t1_cpu = detections_t1.detach().to("cpu")
+        match_list, sim_cpu = self.match_frames(det_t_cpu, det_t1_cpu)
+        matches = torch.tensor(match_list, dtype=torch.long, device=device)
+        sim = sim_cpu.to(device)
+        zero = self._proj.sum() - self._proj.detach().sum()
+        sim = sim + zero
+        return matches, sim

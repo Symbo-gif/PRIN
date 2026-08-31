@@ -345,8 +345,8 @@ class DiscreteDeltaThetaGamma(torch.nn.Module):
         amplitude_b, _ = _as_batched(amplitude)
         self._push_params()
         cap_p, cap_a = self._bridge.step(_marshal(phase_b), _marshal(amplitude_b), dt)
-        new_p = from_dlpack(cap_p).to(phase.dtype)
-        new_a = from_dlpack(cap_a).to(amplitude.dtype)
+        new_p = from_dlpack(cap_p).to(dtype=phase.dtype, device=phase.device)
+        new_a = from_dlpack(cap_a).to(dtype=amplitude.dtype, device=amplitude.device)
         zero = self._zero_term(new_a)
         new_p = new_p + zero
         new_a = new_a + zero
@@ -369,8 +369,8 @@ class DiscreteDeltaThetaGamma(torch.nn.Module):
         cap_p, cap_a = self._bridge.integrate(
             _marshal(phase_b), _marshal(amplitude_b), n_steps, dt
         )
-        new_p = from_dlpack(cap_p).to(phase.dtype)
-        new_a = from_dlpack(cap_a).to(amplitude.dtype)
+        new_p = from_dlpack(cap_p).to(dtype=phase.dtype, device=phase.device)
+        new_a = from_dlpack(cap_a).to(dtype=amplitude.dtype, device=amplitude.device)
         zero = self._zero_term(new_a)
         new_p = new_p + zero
         new_a = new_a + zero

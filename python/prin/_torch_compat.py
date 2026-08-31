@@ -1502,3 +1502,105 @@ class ThetaGammaNetwork(_HierarchicalNetwork):
             MultiRateIntegrator(1),
             MultiRateIntegrator(max(1, int(gamma_freq / max(theta_freq, 1e-6)))),
         )
+
+
+# ---------------------------------------------------------------------------
+# Temporal phase propagation (PRINet 3.0 core.propagation compatibility)
+# ---------------------------------------------------------------------------
+
+
+def _wrap_phase(phase: torch.Tensor) -> torch.Tensor:
+    """Wrap phase values to ``[0, 2π)`` using PyTorch remainder."""
+    return torch.remainder(phase, 2.0 * math.pi)
+
+
+class TemporalPhasePropagator:
+    """Temporal phase propagation across frames.
+
+    PRINet 3.0 ``core.propagation.TemporalPhasePropagator``: blends the
+    previous-frame phase with the current-frame input phase via a
+    ``carry_strength`` exponential-smoothing coefficient, wraps to ``[0, 2π)``,
+    and applies amplitude decay. Orchestration only — no new numerics.
+
+    Args:
+        carry_strength: Weight for the previous-frame phase in ``[0, 1]``.
+        amplitude_decay: Multiplicative amplitude decay per frame.
+    """
+
+    def __init__(
+        self,
+        carry_strength: float = 0.5,
+        amplitude_decay: float = 0.01,
+    ) -> None:
+        self.carry_strength = carry_strength
+        self.amplitude_decay = amplitude_decay
+
+    def propagate(
+        self,
+        prev_phase: torch.Tensor,
+        prev_amp: torch.Tensor,
+        input_phase: torch.Tensor,
+        input_amp: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Blend previous and input phase/amplitude.
+
+        Returns:
+            ``(new_phase, new_amp)`` — phase wrapped to ``[0, 2π)``,
+            amplitude clamped to ``[1e-6, 10.0]``.
+        """
+        new_phase = _wrap_phase(
+            self.carry_strength * prev_phase
+            + (1.0 - self.carry_strength) * input_phase
+        )
+        new_amp = torch.clamp(
+            prev_amp * self.amplitude_decay + input_amp * (1.0 - self.amplitude_decay),
+            min=1e-6,
+            max=10.0,
+        )
+        return new_phase, new_amp
+
+    def propagate_sequence(
+        self,
+        dynamics: Any,
+        input_phases: torch.Tensor,
+        input_amps: torch.Tensor,
+        n_steps: int = 1,
+        dt: float = 0.01,
+    ) -> tuple[torch.Tensor, torch.Tensor, list[torch.Tensor]]:
+        """Propagate through a temporal sequence of frames.
+
+        At each frame, runs ``n_steps`` of the supplied dynamics, then
+        applies the temporal carry. Returns output phases, amplitudes, and
+        per-frame inter-frame phase correlations (``T-1`` values).
+        """
+        B, T, N = input_phases.shape
+        device = input_phases.device
+
+        cur_phase = input_phases[:, 0, :].clone()
+        cur_amp = input_amps[:, 0, :].clone()
+
+        out_phases = [cur_phase.clone()]
+        out_amps = [cur_amp.clone()]
+        correlations: list[torch.Tensor] = []
+
+        for t in range(1, T):
+            for _ in range(n_steps):
+                cur_phase, cur_amp = dynamics.step(cur_phase, cur_amp, dt=dt)
+
+            cur_phase, cur_amp = self.propagate(
+                cur_phase, cur_amp, input_phases[:, t, :], input_amps[:, t, :]
+            )
+
+            corr = torch.mean(
+                torch.cos(cur_phase - out_phases[-1]), dim=-1
+            )
+            correlations.append(corr)
+
+            out_phases.append(cur_phase.clone())
+            out_amps.append(cur_amp.clone())
+
+        return (
+            torch.stack(out_phases, dim=1),
+            torch.stack(out_amps, dim=1),
+            correlations,
+        )

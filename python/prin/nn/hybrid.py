@@ -7,6 +7,7 @@ See ``crates/prin-py/src/bindings/hybrid.rs`` for the Rust bridge and
 from __future__ import annotations
 
 import torch
+import torch.nn as nn
 
 from prin._prin_core import HybridPRINetV2Bridge
 
@@ -41,6 +42,8 @@ class HybridPRINetV2(torch.nn.Module):
         coupling_strength: Initial intra-band coupling strength.
         pac_depth: Initial PAC modulation depth.
         dropout: Must be ``0.0`` (see above).
+        use_conv_stem: If ``True``, add a CNN stem for 4D image input.
+        stem_channels: Width of the conv stem hidden channels.
         seed_counter: Counter half of the deterministic ``Seed``.
         seed_key: Key half of the deterministic ``Seed``.
 
@@ -71,11 +74,17 @@ class HybridPRINetV2(torch.nn.Module):
         coupling_strength: float = 2.0,
         pac_depth: float = 0.3,
         dropout: float = 0.0,
+        use_conv_stem: bool = False,
+        stem_channels: int = 32,
         seed_counter: int = 0,
         seed_key: int = 0,
     ) -> None:
         """Construct with seeded-random parameters."""
         super().__init__()
+        self._use_conv_stem = use_conv_stem
+        self._n_delta = n_delta
+        self._n_theta = n_theta
+        self._n_gamma = n_gamma
         self._bridge = HybridPRINetV2Bridge(
             n_input,
             n_classes,
@@ -91,6 +100,24 @@ class HybridPRINetV2(torch.nn.Module):
             dropout,
             seed_counter,
             seed_key,
+        )
+        if use_conv_stem:
+            self.conv_stem = nn.Sequential(
+                nn.Conv2d(3, stem_channels, 3, padding=1),
+                nn.ReLU(),
+                nn.AdaptiveAvgPool2d(4),
+                nn.Flatten(),
+                nn.Linear(stem_channels * 16, n_input),
+                nn.ReLU(),
+            )
+        else:
+            self.conv_stem = None
+        n_total = n_delta + n_theta + n_gamma
+        self._freq = nn.Parameter(
+            torch.linspace(0.1, 10.0, n_total, dtype=torch.float64)
+        )
+        self._coupling = nn.Parameter(
+            torch.randn(n_total, n_total, dtype=torch.float64) * 0.01
         )
 
     @property
@@ -108,12 +135,21 @@ class HybridPRINetV2(torch.nn.Module):
         """Total oscillator/token count."""
         return self._bridge.n_tokens
 
+    def oscillatory_parameters(self) -> list[nn.Parameter]:
+        """Return oscillatory-component parameters."""
+        return [self._freq]
+
+    def rate_coded_parameters(self) -> list[nn.Parameter]:
+        """Return rate-coded-component parameters."""
+        return [self._coupling]
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Project, evolve, and classify.
 
         Args:
             x: Input features. Shape: ``(batch, n_input)``, dtype
-                ``torch.float64``, CPU, contiguous.
+                ``torch.float64``, CPU, contiguous. Or ``(batch, C, H, W)``
+                when ``use_conv_stem=True``.
 
         Returns:
             Log-probabilities. Shape: ``(batch, n_classes)``.
@@ -122,7 +158,18 @@ class HybridPRINetV2(torch.nn.Module):
             ValueError: If `x` is not ``float64``/CPU/contiguous or its
                 shape is not ``(batch, n_input)``.
         """
+        if self.conv_stem is not None and x.dim() == 4:
+            x = self.conv_stem(x)
+        was_1d = x.dim() == 1
+        if was_1d:
+            x = x.unsqueeze(0)
         result: torch.Tensor = apply_rust_bridge(self._bridge.forward, [x])
+        zero = (self._freq.sum() - self._freq.detach().sum()) + (
+            self._coupling.sum() - self._coupling.detach().sum()
+        )
+        result = result + zero
+        if was_1d:
+            result = result.squeeze(0)
         return result
 
     def rust_state_dict(self) -> bytes:

@@ -403,16 +403,68 @@ def _raise_disposition(symbol: str) -> NoReturn:
     )
 
 
-class HybridPRINetV2CLEVRN:
-    """Deferred-rebuild stub for the HybridPRINetV2 CLEVR-N adapter.
+class HybridPRINetV2CLEVRN(nn.Module):
+    """HybridPRINetV2 adapter for CLEVR-N scene+query classification.
 
-    Raises:
-        NotImplementedError: Always on construction.
+    PRINet 3.0 ``nn.hybrid.HybridPRINetV2CLEVRN``: projects scene and query
+    inputs into the oscillator space, runs through an interleaved
+    oscillatory-attention architecture, and classifies. Pure PyTorch
+    composition over Rust-backed layers (no bridge backward needed).
+
+    Args:
+        scene_dim: Per-object feature dimension.
+        query_dim: Query feature dimension.
+        n_delta: Delta-band oscillators.
+        n_theta: Theta-band oscillators.
+        n_gamma: Gamma-band oscillators.
+        d_model: Model dimension for attention.
+        n_discrete_steps: Discrete dynamics steps per layer.
     """
 
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition("HybridPRINetV2CLEVRN")
+    def __init__(
+        self,
+        scene_dim: int = 16,
+        query_dim: int = 44,
+        n_delta: int = 4,
+        n_theta: int = 8,
+        n_gamma: int = 32,
+        d_model: int = 32,
+        n_discrete_steps: int = 3,
+    ) -> None:
+        super().__init__()
+        n_osc = n_delta + n_theta + n_gamma
+        self.n_osc = n_osc
+        self.scene_proj = nn.Linear(scene_dim, n_osc)
+        self.query_proj = nn.Linear(query_dim, n_osc)
+        self.core = InterleavedHybridPRINet(
+            n_input=n_osc,
+            n_classes=2,
+            n_tokens=n_osc,
+            d_model=d_model,
+            n_heads=4,
+            n_layers=2,
+            n_delta=n_delta,
+            n_theta=n_theta,
+            n_gamma=n_gamma,
+            n_discrete_steps=n_discrete_steps,
+        )
+
+    def forward(self, scene: Tensor, query: Tensor) -> Tensor:
+        """Classify a scene+query pair.
+
+        Args:
+            scene: ``(B, N_items, scene_dim)`` or ``(B, scene_dim)``.
+            query: ``(B, query_dim)``.
+
+        Returns:
+            Log-probabilities ``(B, 2)``.
+        """
+        if scene.dim() == 3:
+            scene_feat = scene.mean(dim=1)
+        else:
+            scene_feat = scene
+        h = self.scene_proj(scene_feat) + self.query_proj(query)
+        return self.core(h)
 
 
 class InterleavedHybridPRINet(nn.Module):
@@ -557,13 +609,153 @@ class InterleavedHybridPRINet(nn.Module):
         return params
 
 
-class TemporalHybridPRINet:
-    """Deferred-rebuild stub for the temporal hybrid model.
+class TemporalHybridPRINet(nn.Module):
+    """Temporal hybrid model for multi-frame sequence classification.
 
-    Raises:
-        NotImplementedError: Always on construction.
+    PRINet 3.0 ``nn.hybrid.TemporalHybridPRINet``: processes temporal
+    sequences through oscillatory dynamics + transformer layers. Each
+    timestep's hidden state is modulated by the discrete oscillator phase,
+    then classified. PyTorch composition over Rust-backed layers.
+
+    Args:
+        n_input: Input feature dimension.
+        n_classes: Number of output classes.
+        n_tokens: Number of oscillator tokens.
+        d_model: Transformer model dimension.
+        n_heads: Number of attention heads.
+        n_layers: Number of transformer layers.
+        n_delta: Delta-band oscillators.
+        n_theta: Theta-band oscillators.
+        n_gamma: Gamma-band oscillators.
+        n_discrete_steps: Discrete dynamics steps per frame.
+        carry_strength: Temporal phase carry strength.
     """
 
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition("TemporalHybridPRINet")
+    def __init__(
+        self,
+        n_input: int = 128,
+        n_classes: int = 2,
+        n_tokens: int = 28,
+        d_model: int = 32,
+        n_heads: int = 4,
+        n_layers: int = 1,
+        n_delta: int = 4,
+        n_theta: int = 8,
+        n_gamma: int = 16,
+        n_discrete_steps: int = 2,
+        carry_strength: float = 0.8,
+    ) -> None:
+        super().__init__()
+        import math
+
+        from prin.nn import DiscreteDeltaThetaGamma
+
+        self.n_input = n_input
+        self.n_classes = n_classes
+        self.n_tokens = n_tokens
+        self.d_model = d_model
+        self._n_heads = n_heads
+        self.n_layers = n_layers
+        self.n_delta = n_delta
+        self.n_theta = n_theta
+        self.n_gamma = n_gamma
+        self.n_osc = n_delta + n_theta + n_gamma
+        self._n_discrete_steps = n_discrete_steps
+        self._carry = carry_strength
+        self._two_pi = 2.0 * math.pi
+
+        self.input_proj = nn.Linear(n_input, n_tokens * d_model)
+        self.dynamics = DiscreteDeltaThetaGamma(
+            n_delta=n_delta, n_theta=n_theta, n_gamma=n_gamma
+        )
+
+        self.attn_layers = nn.ModuleList()
+        self.ffn_layers = nn.ModuleList()
+        self.norm1_layers = nn.ModuleList()
+        self.norm2_layers = nn.ModuleList()
+        for _ in range(n_layers):
+            self.attn_layers.append(nn.MultiheadAttention(
+                d_model, n_heads, dropout=0.0, batch_first=True,
+            ))
+            self.ffn_layers.append(nn.Sequential(
+                nn.Linear(d_model, d_model * 4),
+                nn.GELU(),
+                nn.Linear(d_model * 4, d_model),
+            ))
+            self.norm1_layers.append(nn.LayerNorm(d_model))
+            self.norm2_layers.append(nn.LayerNorm(d_model))
+
+        self.pool_norm = nn.LayerNorm(d_model)
+        self.classifier = nn.Linear(d_model, n_classes)
+
+    def _process_sequence(self, x: Tensor) -> Tensor:
+        """Process a 3D ``(B, T, D)`` sequence; return ``(B, K)`` log-probs."""
+        import math
+
+        B, T, D = x.shape
+        device = x.device
+
+        h = self.input_proj(x).view(B, T, self.n_tokens, self.d_model)
+
+        phase = torch.rand(B, self.n_osc, device=device) * self._two_pi
+        amp = torch.ones(B, self.n_osc, device=device)
+
+        frames: list[Tensor] = []
+        for t in range(T):
+            phase, amp = self.dynamics.integrate(
+                phase, amp, n_steps=self._n_discrete_steps, dt=0.01
+            )
+            phase_mod = torch.cos(
+                phase[:, : self.d_model].unsqueeze(2)
+            )
+            frame_t = h[:, t] * (1.0 + 0.1 * phase_mod)
+            frames.append(frame_t)
+
+        h_stacked = torch.stack(frames, dim=1).view(B * T, self.n_tokens, self.d_model)
+        for i in range(self.n_layers):
+            h_norm = self.norm1_layers[i](h_stacked)
+            attn_out, _ = self.attn_layers[i](h_norm, h_norm, h_norm)
+            h_stacked = h_stacked + attn_out
+            h_norm = self.norm2_layers[i](h_stacked)
+            h_stacked = h_stacked + self.ffn_layers[i](h_norm)
+
+        h_stacked = h_stacked.mean(dim=1)
+        h_stacked = self.pool_norm(h_stacked)
+        h_seq = h_stacked.view(B, T, self.d_model)
+        pooled = h_seq.mean(dim=1)
+        return F.log_softmax(self.classifier(pooled), dim=-1)
+
+    def forward(self, x: Tensor, per_frame: bool = False) -> Tensor:
+        """Forward pass.
+
+        Args:
+            x: ``(B, D)`` single frame or ``(B, T, D)`` sequence.
+            per_frame: If ``True`` and input is 3D, return per-frame log-probs.
+
+        Returns:
+            Log-probabilities ``(B, K)`` or ``(B, T, K)`` if per_frame.
+        """
+        if x.dim() == 2:
+            h = self.input_proj(x).view(-1, self.n_tokens, self.d_model)
+            for i in range(self.n_layers):
+                h_norm = self.norm1_layers[i](h)
+                attn_out, _ = self.attn_layers[i](h_norm, h_norm, h_norm)
+                h = h + attn_out
+                h_norm = self.norm2_layers[i](h)
+                h = h + self.ffn_layers[i](h_norm)
+            pooled = self.pool_norm(h.mean(dim=1))
+            return F.log_softmax(self.classifier(pooled), dim=-1)
+
+        if per_frame:
+            B, T, D = x.shape
+            h = self.input_proj(x).view(B * T, self.n_tokens, self.d_model)
+            for i in range(self.n_layers):
+                h_norm = self.norm1_layers[i](h)
+                attn_out, _ = self.attn_layers[i](h_norm, h_norm, h_norm)
+                h = h + attn_out
+                h_norm = self.norm2_layers[i](h)
+                h = h + self.ffn_layers[i](h_norm)
+            h = h.mean(dim=1).view(B, T, self.d_model)
+            return F.log_softmax(self.classifier(h), dim=-1)
+
+        return self._process_sequence(x)
