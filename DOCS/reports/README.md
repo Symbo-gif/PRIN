@@ -79,6 +79,10 @@ starts by reading it (Development Workflow Standards §6).
   closure, cumulative deviation ledger (120 rows), and WP-036A declaration
   (trainable compatibility layers — `prin-train` extension, plan
   amendment #33).
+- [`036a-project-state.md`](036a-project-state.md) — WP-036A S4
+  closure, zero findings (S2 PASS, S3 no-change closure), and WP-036B
+  declaration (acceptance suite port — core, dynamics, model stack,
+  subconscious).
 
 
 The [`DEFERRED_VALIDATION_REGISTER.md`](DEFERRED_VALIDATION_REGISTER.md)

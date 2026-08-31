@@ -41,8 +41,25 @@ differentiable bridge crosses the Rust/Python boundary exactly once per call
   `torch.optim.Optimizer` subclasses wrapping the Rust optimizer-step bridges
   (`SyncGdBridge`/`ScalrBridge`/`RipBridge` in `crates/prin-py/src/bindings/optim.rs`).
 
+- **`FeedforwardInhibition`**, **`DentateGyrusConverter`**, **`DGLayer`**,
+  **`oscillatory_weight_init`**, **`SparsityRegularizationLoss`**
+  (`inhibition_layers.py`, WP-036A / 0144A1) — feedforward lateral
+  inhibition, dentate gyrus pattern separation, and sparsity regularization,
+  all Rust-backed via `prin-train`.
+- **`PhaseToRateConverter`**, **`PhaseToRateAutoencoder`**,
+  **`DenseAutoencoder`** (`autoencoders.py`, WP-036A / 0144A2) —
+  phase-to-rate conversion (smooth/hard/annealed) and dense autoencoding,
+  Rust-backed via `prin-train`.
+- **`HierarchicalResonanceLayer`**, **`PhaseAmplitudeCouplingLayer`**,
+  **`DiscreteDeltaThetaGammaLayer`** (`hierarchical_layers.py`, WP-036A /
+  0144A3) — multi-band hierarchical resonance, PAC gating, and discrete
+  three-band networks, Rust-backed via `prin-train`.
+- **`PRINetModel`**, **`compile_model`** (`model.py`, WP-036A / 0144A4) —
+  the canonical PRINet 3.0 full model container (Rust-backed) and a pure-
+  Python `torch.compile` passthrough.
+
 ## Not yet implemented
 
-`PRINetModel`, `HierarchicalResonanceLayer`, `PhaseToRateConverter`,
-`HybridPRINet` (v1); the remaining activations
-(`HolomorphicActivation`); the HEP trainer.
+`HybridPRINet` (v1); `DiscreteDeltaThetaGamma` standalone binding (the
+composed `DiscreteDeltaThetaGammaLayer` is real; the independent core
+binding is assigned to WP-036B).

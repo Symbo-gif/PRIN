@@ -193,6 +193,12 @@ at the top level until they are folded into the final campaign archive in Phase 
   D-D symbol disposition appendix: 30 GPU/Triton/no-CPU-analogue rows (0141A)
   plus 12 deferred trainable-layer-rebuild rows (0141B), subject to the
   session-0142 S2 audit veto.
+- [`0144A-wp036a-s1-handoff.md`](0144A-wp036a-s1-handoff.md) — WP-036A S1
+  handoff to the S2 audit for trainable compatibility layers: 13 D-D-appendix
+  symbols (rows 31–42, 44) delivered as real `prin-train` Burn implementations
+  across four sub-passes (0144A1–0144A4), with per-symbol evidence maps,
+  float64 gradcheck for all 11 trainable modules, and PRINet-3.0
+  forward-parity at documented tolerances.
 - [`hotfix-dv019-handoff.md`](hotfix-dv019-handoff.md) — Dedicated
   hotfix/correction session for DV-019 (flaky `prin-train` tests,
   `burn-autodiff` cross-thread graph-server interaction). Handoff from

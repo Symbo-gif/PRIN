@@ -59,14 +59,14 @@ See
 | 0142 | WP-036 | S2 — Audit | [API completion, acceptance suite, and migration](0142-wp036-s2-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
 | 0143 | WP-036 | S3 — Remediation | [API completion, acceptance suite, and migration](0143-wp036-s3-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
 | 0144 | WP-036 | S4 — Documentation | [API completion, acceptance suite, and migration](0144-wp036-s4-api-completion-acceptance-suite-and-migration.md) | COMPLETE |
-| 0144A | WP-036A | S1 — Coding | [Trainable compatibility layers — `prin-train` extension](0144A-wp036a-s1-trainable-compatibility-layers-prin-train-extension.md) | SPLIT → 0144A1–0144A4 |
+| 0144A | WP-036A | S1 — Coding | [Trainable compatibility layers — `prin-train` extension](0144A-wp036a-s1-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE (sub-passes 0144A1–0144A4) |
 | 0144A1 | WP-036A | S1 — Coding | [Inhibition and sparsification family](0144A1-wp036a-s1-inhibition-and-sparsification-family.md) | COMPLETE |
 | 0144A2 | WP-036A | S1 — Coding | [Phase-to-rate and autoencoder family](0144A2-wp036a-s1-phase-to-rate-and-autoencoder-family.md) | COMPLETE |
 | 0144A3 | WP-036A | S1 — Coding | [Hierarchical, PAC, and discrete-layer family](0144A3-wp036a-s1-hierarchical-pac-and-discrete-layer-family.md) | COMPLETE |
 | 0144A4 | WP-036A | S1 — Coding | [Model container and consolidation](0144A4-wp036a-s1-model-container-and-consolidation.md) | COMPLETE |
 | 0144B | WP-036A | S2 — Audit | [Trainable compatibility layers — `prin-train` extension](0144B-wp036a-s2-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE |
 | 0144C | WP-036A | S3 — Remediation | [Trainable compatibility layers — `prin-train` extension](0144C-wp036a-s3-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE |
-| 0144D | WP-036A | S4 — Documentation | [Trainable compatibility layers — `prin-train` extension](0144D-wp036a-s4-trainable-compatibility-layers-prin-train-extension.md) | PLANNED |
+| 0144D | WP-036A | S4 — Documentation | [Trainable compatibility layers — `prin-train` extension](0144D-wp036a-s4-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE |
 | 0144E | WP-036B | S1 — Coding | [Acceptance suite port — core, dynamics, model stack, subconscious](0144E-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
 | 0144F | WP-036B | S2 — Audit | [Acceptance suite port — core, dynamics, model stack, subconscious](0144F-wp036b-s2-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
 | 0144G | WP-036B | S3 — Remediation | [Acceptance suite port — core, dynamics, model stack, subconscious](0144G-wp036b-s3-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |

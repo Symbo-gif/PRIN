@@ -28,6 +28,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     WP-036A (trainable compatibility layers) as the registered successor;
     D-D-appendix rows 31–44 owning-WP decision recorded as plan
     amendment #33.
+- **WP-036A S1 — Trainable compatibility layers** (sessions 0144A +
+  0144A1–0144A4, 2026-08-30–31). 13 D-D-appendix trainable-layer symbols
+  (rows 31–42, 44) delivered as real `prin-train` Burn implementations
+  replacing the D-2.2 stubs shipped by WP-036 S1: `FeedforwardInhibition`,
+  `DentateGyrusConverter`, `DGLayer`, `oscillatory_weight_init`,
+  `SparsityRegularizationLoss` (0144A1); `PhaseToRateConverter`,
+  `PhaseToRateAutoencoder`, `DenseAutoencoder` (0144A2);
+  `HierarchicalResonanceLayer`, `PhaseAmplitudeCouplingLayer`,
+  `DiscreteDeltaThetaGammaLayer` (0144A3); `PRINetModel`, `compile_model`
+  (0144A4). New Rust modules in `crates/prin-train/src/`
+  (`inhibition_layers.rs`, `weight_init.rs`, `autoencoders.rs`,
+  `hierarchical_layers.rs`, `model.rs`; `losses.rs` extended); 12 new PyO3/
+  DLPack bridges in `crates/prin-py/src/bindings/` (thin marshalling, no
+  numerics in `prin-py`); Python `nn.Module` wrappers in
+  `python/prin/nn/` (`inhibition_layers.py`, `autoencoders.py`,
+  `hierarchical_layers.py`, `model.py`); `deferred_layers.py` re-exports
+  from implementation modules. All 11 trainable modules pass float64
+  `torch.autograd.gradcheck`; forward-parity within documented tolerance
+  for every symbol. 52 new Python tests. S2 audit: PASS, zero findings.
+  S3: no-change closure, delta re-audit CLEAN. Full suite 1266 passed,
+  9 deselected; interrogate 97.4%.
 
 ### Changed
 

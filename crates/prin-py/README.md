@@ -171,6 +171,33 @@ entry point and checkpoint round-trip/shape-mismatch-rejection for every
 - **`python/prin/_prin_core.pyi`** — +103 lines of stubs for `TrainingResult`,
   `train_phase_tracker`, `SyncGdBridge`, `ScalrBridge`, `RipBridge`.
 
+### WP-036A: Trainable compatibility layer bridges (sessions 0144A–0144A4)
+
+Four new binding modules delivering PyO3/DLPack `torch.autograd.Function`
+bridges for the 13 D-D-appendix trainable-layer symbols (WP-036A):
+
+- **`bindings/train_inhibition_layers.rs`** — `FeedforwardInhibitionBridge`,
+  `DentateGyrusConverterBridge`, `DGLayerBridge`,
+  `SparsityRegularizationLossBridge`, `OscillatoryWeightInitBridge` (5
+  bridges, 4 differentiable + 1 non-differentiable init function).
+- **`bindings/train_autoencoders.rs`** — `PhaseToRateConverterBridge`,
+  `PhaseToRateAutoencoderBridge` (forward + classify),
+  `DenseAutoencoderBridge` (forward + classify) (3 bridges, all
+  differentiable).
+- **`bindings/train_hierarchical_layers.rs`** —
+  `HierarchicalResonanceLayerBridge`, `PhaseAmplitudeCouplingLayerBridge`,
+  `DiscreteDeltaThetaGammaLayerBridge` (3 bridges, all differentiable).
+- **`bindings/train_model.rs`** — `PRINetModelBridge` (1 differentiable
+  bridge).
+
+All bridges follow the established WP-025/Exec-WP-026 pattern: thin DLPack
+marshalling wrappers, no numerics in `prin-py`, `#![deny(unsafe_code)]`
+unchanged. `python/prin/_prin_core.pyi` stubs cover all 12 new bridge
+classes plus their `*Ctx` backward contexts. 52 new Python tests across
+four new `tests/test_{inhibition_layers,autoencoders,hierarchical_layers,
+model}.py` files, all with float64 `torch.autograd.gradcheck` and
+PRINet-3.0 forward-parity at documented tolerances.
+
 Type stubs are maintained at `python/prin/_prin_core.pyi` and regenerated
 whenever the extension API changes.
 

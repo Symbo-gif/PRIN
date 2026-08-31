@@ -1,6 +1,6 @@
 # Session 0144D — WP-036A S4: Documentation — Trainable compatibility layers (`prin-train` extension)
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036A
 **Session type:** S4 — Documentation

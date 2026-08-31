@@ -316,11 +316,69 @@ no-change closure, delta re-audit CLEAN. Coverage ≥95% on every new file
 (`temporal_metrics.rs` 95.04%, `stats.rs` 96.77%, `flops.rs` 96.53%,
 `adversarial.rs` 96.03%, `trainer.rs` 98.04%).
 
+### WP-036A: Trainable compatibility layers (sessions 0144A–0144A4)
+
+New `prin-train` modules delivering the 13 D-D-appendix trainable-layer
+symbols (rows 31–42, 44) as real Burn implementations, replacing the D-2.2
+stubs shipped by WP-036 S1:
+
+- **`inhibition_layers`** — feedforward lateral inhibition and dentate gyrus
+  conversion (rebuild of PRINet 3.0 `core.propagation.inhibition`):
+  - `FeedforwardInhibition` — competitive k-WTA via learned phase-dependent
+    inhibition with straight-through estimator.
+  - `DentateGyrusConverter` — pattern separation via sparse stationary-point
+    selection (top-$k$ STE on learned sparsity scores).
+  - `DGLayer` — combined feedforward inhibition + dentate gyrus stage with
+    learned amplitude gating.
+- **`weight_init`** — `oscillatory_weight_init`: deterministic oscillatory
+  initialization (cosine-decay envelope modulated by phase offsets) for
+  inhibition-layer coupling matrices.
+- **`autoencoders`** — phase-to-rate conversion and dense autoencoding
+  (rebuild of PRINet 3.0 `nn.layers` phase-to-rate / autoencoder paths):
+  - `PhaseToRateConverter` — smooth/hard/annealed phase-to-rate conversion
+    (soft: differentiable sigmoid scaling; hard: STE; annealed: temperature
+    schedule).
+  - `PhaseToRateAutoencoder` — encoder (phase-to-rate) + classifier head.
+  - `DenseAutoencoder` — symmetric dense autoencoder with learned bottleneck.
+- **`hierarchical_layers`** — multi-band hierarchical and discrete-time
+  layers (rebuild of PRINet 3.0 `nn.layers` hierarchical / discrete paths):
+  - `HierarchicalResonanceLayer` — fully batched multi-band resonance with
+    learned inter-band coupling and per-band Kuramoto integration.
+  - `PhaseAmplitudeCouplingLayer` — learned slow-phase → fast-amplitude PAC
+    gating.
+  - `DiscreteDeltaThetaGammaLayer` — discrete-time three-band (delta/theta/
+    gamma) network with learned coupling and multiplicative PAC gates
+    (composes the audited `bands::DiscreteDeltaThetaGamma` core, WP-022).
+- **`model`** — `PRINetModel`: the canonical PRINet 3.0 full model container
+  (multi-layer stack with band-specific readout), bridged to Burn.
+- **`losses`** (extended) — `SparsityRegularizationLoss`: learned target-
+  sparsity regularization (DV-018 governed tolerance).
+
+All 12 trainable modules (all symbols except `oscillatory_weight_init` and
+`compile_model`) pass `torch.autograd.gradcheck` in float64. Forward-parity
+tests against PRINet 3.0 reference are within documented tolerance for every
+symbol. `compile_model` is a pure-Python `torch.compile` passthrough (D-2
+disposition — no PRIN numerics).
+
+PyO3 bindings in `crates/prin-py/src/bindings/`
+(`train_inhibition_layers.rs`, `train_autoencoders.rs`,
+`train_hierarchical_layers.rs`, `train_model.rs`) are thin DLPack
+marshalling wrappers; no numerics in `prin-py`.
+
+S2 audit: PASS, zero findings (`DOCS/audits/036a-wp036a-audit.md`). S3:
+no-change closure, delta re-audit CLEAN.
+
 ## Not yet implemented
 
 CUDA DLPack path (DV-005).
 
+`DiscreteDeltaThetaGamma` (standalone PyO3 binding for the audited
+`bands::DiscreteDeltaThetaGamma` core, WP-022) — the composed
+`DiscreteDeltaThetaGammaLayer` (WP-036A) is real; the independent core
+binding is assigned to WP-036B.
+
 Rebuild target for PRINet 3.0 `nn/{layers,optimizers,activations,hep,hybrid,
 slot_attention,ablation_variants,adaptive_allocation}.py` and the trainable
 half of `core/propagation/{networks,inhibition}.py` — **complete through
-WP-027** (all modules ported; optimizer wrappers delivered).
+WP-036A** (all modules ported; optimizer wrappers delivered; trainable
+compatibility layers delivered).
