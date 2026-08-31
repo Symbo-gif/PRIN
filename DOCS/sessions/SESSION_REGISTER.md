@@ -290,7 +290,7 @@ introduction and are not retroactively added here; this table starts with
 | 0144E | 6 | WP-036B | S1 — Coding | [Acceptance suite port — core, dynamics, model stack, subconscious](phase-6/0144E-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED |
 | 0144E1 | 6 | WP-036B | S1 — Coding | [Core and utils strict port](phase-6/0144E1-wp036b-s1-core-and-utils-strict-port.md) | COMPLETE |
 | 0144E2 | 6 | WP-036B | S1 — Coding | [Phases, hierarchical, and phase-to-rate strict port](phase-6/0144E2-wp036b-s1-phases-hierarchical-and-phase-to-rate-strict-port.md) | COMPLETE |
-| 0144E3 | 6 | WP-036B | S1 — Coding | [Q2 and Q2-remaining strict port](phase-6/0144E3-wp036b-s1-q2-and-q2-remaining-strict-port.md) | PLANNED |
+| 0144E3 | 6 | WP-036B | S1 — Coding | [Q2 and Q2-remaining strict port](phase-6/0144E3-wp036b-s1-q2-and-q2-remaining-strict-port.md) | COMPLETE |
 | 0144E4 | 6 | WP-036B | S1 — Coding | [Q3-new, NN, and SCALR-enhanced strict port](phase-6/0144E4-wp036b-s1-q3-nn-and-scalr-enhanced-strict-port.md) | PLANNED |
 | 0144E5 | 6 | WP-036B | S1 — Coding | [Hybrid and CLEVR-N strict port](phase-6/0144E5-wp036b-s1-hybrid-and-clevr-n-strict-port.md) | PLANNED |
 | 0144E6 | 6 | WP-036B | S1 — Coding | [Subconscious strict port and consolidation](phase-6/0144E6-wp036b-s1-subconscious-and-consolidation.md) | PLANNED |

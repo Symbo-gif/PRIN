@@ -3,8 +3,8 @@
 **Date:** 2026-08-31 (session start and decomposition)  
 **Status:** S1 **IN PROGRESS**. Plan amendment #35 (MichaelMaillet,
 2026-08-31) inserts six sequential coding sub-passes `0144E1`–`0144E6`, all
-feeding the single mandatory S2 audit `0144F`. Sub-pass `0144E1` is complete at
-its green local gate; `0144E2` is next. S1 does not self-certify.
+feeding the single mandatory S2 audit `0144F`. Sub-passes `0144E1`–`0144E3` are
+complete at their green local gates; `0144E4` is next. S1 does not self-certify.
 
 ## Session-start protocol (Development Workflow §6)
 
@@ -278,7 +278,58 @@ remains unchanged. E2 is complete and the registered next sub-pass is
 
 ### 0144E3 — q2 + q2_remaining
 
-*Pending execution.*
+**Complete 2026-08-31; committed locally with amendment #35; not pushed. Next:
+0144E4.**
+
+#### Strict-port accounting and semantic proof
+
+| Reference | Stable port | Source lines | `def test_` | Collected / passed | Tolerance annotations | Skips / guards | Discoveries |
+|---|---|---:|---:|---:|---|---|---|
+| `test_q2.py` | `tests/test_acceptance_q2.py` | 915 | 67 | 65 / 65 | 0 | 2 CUDA availability guards | `PRINetModel` 1-D input, `HolomorphicEPTrainer`, `HolomorphicEnergy` beta/nudge, `dSiLU` / `PhaseActivation` / `HolomorphicActivation` shape/dtype handling, `ExponentialIntegrator` matrix-exp helpers, `gradient_checkpoint_integration` autograd |
+| `test_q2_remaining.py` | `tests/test_acceptance_q2_remaining.py` | 807 | 51 | 48 / 48 | 0 | 3 CUDA availability guards | `KuramotoOscillator` sparse k-NN `n<=1` fallback, RK45/FixedStepRK4 solver imports from `prin._torch_compat` |
+
+**Import-only proof:** the ported files were produced by `tools/_port_q2.py`
+import mapping and then ruff-formatted; no assertion or expected value changed.
+
+**Semantic proof:** all missing behavior was rebuilt in the product:
+
+- `prin.nn.PRINetModel.forward` supports 1-D and 2-D float32/float64, returns
+  `log_softmax` log-probs with `requires_grad=True`, and raises typed shape
+  errors.
+- `prin.nn.HolomorphicEPTrainer` adds `train_step` and `compute_hep_gradients`
+  for `PRINetModel`, using the Rust `HolomorphicEpTrainer` on a synthetic
+  resonance layer plus non-zero readout surrogates.
+- `prin.nn.HolomorphicEnergy.forward` handles free and +/-beta nudged energy
+  with per-example cross-entropy.
+- `prin.nn.activations` now supports `dSiLU` 0-D/1-D, `PhaseActivation` custom
+  inner activation, and `HolomorphicActivation` both `holomorphic=False`
+  (split-complex `scale*tanh`) and `holomorphic=True` (true complex
+  `scale*tanh`).
+- `prin._torch_compat.ExponentialIntegrator` exposes `_matrix_exp`, `_phi1`,
+  and `_krylov_matrix_exp_vec` using PyTorch `matrix_exp` / `mm` / `mv` (the
+  no-Python-numerics gate passes).
+- `prin._torch_compat.gradient_checkpoint_integration` now uses
+  `MultiRateIntegrator.step` so the chain is differentiable.
+- `prin._torch_compat._resolve_coupling_mode` falls back to `full` coupling for
+  `sparse_knn` with `n_oscillators <= 1` or `k < 1`.
+
+**Quality gate evidence:**
+
+- `ruff check` and `ruff format --check` passed.
+- `mypy python/prin --strict` passed.
+- `bandit -r . -c pyproject.toml` passed.
+- `cargo test --workspace` passed (440 unit + 10 parity + doc-tests).
+- `cargo clippy --workspace --all-targets -- -D warnings` passed.
+- `cargo fmt --all -- --check` passed.
+- `pytest tests/ -m "not slow and not gpu"` passed: 1609 passed, 8 skipped.
+- `tests/test_no_python_numerics.py` passed.
+- Snyk Code scan of `C:\dev\PRIN\python` returned 0 issues on changed code.
+- Snyk SCA scan returned 0 issues.
+- `cargo audit` returned 3 allowed low/unspecified warnings for `bincode`,
+  `paste`, and `chacha20`, all pre-existing and outside this change.
+
+E3 is complete; the registered next sub-pass is **0144E4 — q3_new + nn +
+scalr_enhanced**.
 
 ### 0144E4 — q3_new + nn + scalr_enhanced
 
