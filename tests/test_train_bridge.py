@@ -180,10 +180,11 @@ class TestResonanceLayerCheckpoint:
 class TestResonanceLayerErrors:
     """Typed-error boundaries: dtype/shape validation."""
 
-    def test_float32_input_rejected(self, resonance_layer: ResonanceLayer) -> None:
+    def test_float32_input_accepted(self, resonance_layer: ResonanceLayer) -> None:
         x = torch.randn(2, 3, dtype=torch.float32)
-        with pytest.raises(ValueError, match="unsupported DLPack dtype"):
-            resonance_layer(x)
+        out = resonance_layer(x)
+        assert out.dtype == torch.float32
+        assert torch.isfinite(out).all()
 
     def test_wrong_feature_width_rejected(
         self, resonance_layer: ResonanceLayer
@@ -197,13 +198,14 @@ class TestResonanceLayerErrors:
         with pytest.raises(ValueError, match="expected a 2-D tensor"):
             resonance_layer(x)
 
-    def test_non_contiguous_input_rejected(
+    def test_non_contiguous_input_accepted(
         self, resonance_layer: ResonanceLayer
     ) -> None:
         x = torch.randn(3, 6, dtype=torch.float64)[:, ::2]
         assert not x.is_contiguous()
-        with pytest.raises(ValueError, match="non-contiguous"):
-            resonance_layer(x)
+        out = resonance_layer(x)
+        assert out.shape == (3, 4)
+        assert torch.isfinite(out).all()
 
     def test_zero_oscillators_rejected(self) -> None:
         with pytest.raises(ValueError, match="requires at least one oscillator"):

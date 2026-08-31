@@ -169,7 +169,7 @@ def test_construction_and_input_errors_are_typed() -> None:
 
     model = _small_model(n_layers=1)
     with pytest.raises(ValueError, match="2-D"):
-        model(torch.zeros(4, dtype=torch.float64))
+        model(torch.zeros(3, dtype=torch.float64))
     with pytest.raises(ValueError, match="expected shape"):
         model(torch.zeros(2, 5, dtype=torch.float64))
 

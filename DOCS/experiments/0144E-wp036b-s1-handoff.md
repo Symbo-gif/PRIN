@@ -198,7 +198,83 @@ backend guard was required, so `DOCS/sphinx/parity_report.rst` is unchanged.
 
 ### 0144E2 — phases + hierarchical + phase-to-rate
 
-*Pending execution.*
+**Executed 2026-08-31; COMPLETE locally; no commit or push performed. Next:
+0144E3.**
+
+#### Strict-port accounting and semantic proof
+
+| Reference | Stable port | Lines | `def test_` | Result | Tolerance annotations | Skips / guards | Discoveries |
+|---|---|---:|---:|---:|---:|---:|---|
+| `test_phases.py` | `tests/test_acceptance_phases.py` | 389 | 30 | 30 passed | 0 | 0 | Three historical benchmark support modules were absent |
+| `test_hierarchical.py` | `tests/test_acceptance_hierarchical.py` | 604 | 43 | 41 passed, 2 skipped | 0 | 2 existing CUDA `skipif` guards | Multi-rate/autograd and legacy layer contracts required completion |
+| `test_phase_to_rate.py` | `tests/test_acceptance_phase_to_rate.py` | 343 | 22 | 21 passed, 1 skipped | 0 | 1 existing CUDA `skipif` guard | Float32 inputs required bridge marshalling |
+| **E2 total** | **3 files** | **1,336** | **95** | **92 passed, 3 skipped** | **0** | **3** | — |
+
+`git diff --no-index --unified=0` proves that `test_phases.py` is byte-identical
+and the other two ports differ only at four import-path lines:
+`prinet.core.propagation` → internal `prin._torch_compat` and
+`prinet.nn.layers` → `prin.nn`. Source and port inventories match exactly at
+389/30, 604/43, and 343/22. No body, assertion, value, parameter, call order,
+marker, skip, or tolerance changed.
+
+#### Changed-owner mapping
+
+| Compatibility behavior | Owner and disposition |
+|---|---|
+| Phase 1 statistical helpers | `benchmarks/phase1_statistical_hardening.py`; permitted Python post-hoc experiment statistics, deterministic and independent of oscillator numerics |
+| Phase 2 scaling/data/training helpers | `benchmarks/phase2_scaling_analysis.py`; benchmark orchestration and deterministic synthetic fixtures around current Rust-backed `PhaseTracker` / `TemporalSlotAttentionMOT` owners |
+| Phase 3 profiling/gradient support | `benchmarks/phase3_scientific_experiments.py`; delegates to the Phase 2 current-component adapters |
+| Float32 trainable calls | shared `python/prin/nn/_bridge.py` marshals inputs/cotangents to the Rust bridges' float64 CPU ABI and restores each original Torch dtype/device; Rust remains the numerical owner |
+| Multi-rate gradient flow | `crates/prin-dynamics/src/integrate.rs::MultiRateIntegrator::step_vjp`, thin PyO3 exposure in `crates/prin-py/src/bindings/integrators.rs`, and autograd-only orchestration in `python/prin/_torch_compat.py` |
+| PAC offset | non-zero `phase_offset` delegates to the existing `prin-dynamics::pac::PhaseAmplitudeCoupling` binding; it is no longer rejected in Python |
+| Legacy hierarchical module shape | `python/prin/nn/hierarchical_layers.py` restores `n_steps` and the visible `modulation_depth` parameter while every forward remains Rust-backed |
+
+Two Rust unit regressions cover multi-rate VJP value/guard behavior, and six
+focused Python regressions in `tests/test_e2_compat_regressions.py` cover
+float32 forward/backward restoration, multi-rate gradient flow, Rust PAC
+phase-offset delegation, legacy module properties/parameters, statistical
+branches, and Slot Attention adapter behavior.
+
+#### Command evidence
+
+- Exact E2 collect-only: **95 collected**.
+- Exact E2 execution with `--basetemp=.pytest_basetemp`: **92 passed, 3
+  skipped**; the skips are exactly the three reference CUDA `skipif` guards.
+- E2 plus focused regressions: **98 passed, 3 skipped**.
+- Existing changed-owner Python suites (`test_autoencoders.py`,
+  `test_hierarchical_layers.py`, `test_inhibition_layers.py`,
+  `test_train_bridge_phase_tracker.py`, `test_train_bridge_slot_attention.py`)
+  plus regressions: **76 passed**.
+- `cargo test -p prin-dynamics -p prin-py`: **354 passed** including unit,
+  parity/integration, and doctests (344 dynamics + 10 PyO3), 0 failed.
+- `cargo llvm-cov -p prin-dynamics --lib`: all **282** unit tests passed;
+  touched `integrate.rs` is **96.17% line covered** (whole-file), satisfying the
+  changed-owner threshold. Focused Python coverage measured the three new
+  benchmark modules at **99.4% combined**, shared `_bridge.py` at **100%**;
+  acceptance directly covers every added hierarchical compatibility line.
+- `cargo fmt --all -- --check`, touched-crate `cargo clippy --all-targets --
+  -D warnings`, repository `ruff check` / `ruff format --check`, and
+  `mypy python/prin --strict`: clean. `interrogate`: **97.3%**, pass.
+- `tools/check_no_python_numerics.py`: clean for its governed compatibility
+  scope; benchmark statistics/training orchestration is the explicitly
+  permitted experiment-tooling exception, not oscillator/model numerics.
+- `bandit -r .`: 0 issues. `cargo audit`: exit 0 with only the three existing
+  governed warnings (`bincode`, `paste`, yanked `chacha20`). Touched-crate
+  rustdoc under `RUSTDOCFLAGS=-D warnings`: exit 0.
+- No dependency declaration or Parity Report changed. Snyk Code was not run in
+  this sub-pass and is not claimed.
+
+Windows occasionally emitted the pre-existing WinError 32 incremental-cache
+finalization warning while commands still exited 0; isolated tests and gates
+were green. No tolerance, new public top-level `prin` symbol, dependency, or
+out-of-scope E3 implementation was introduced.
+
+**Parity-evidence disposition:** directly comparable references exist and are
+the three literal acceptance files. Imports-only diff proof plus 95/95
+accounting (92 executed and the three unchanged CUDA availability guards) is
+the E2 parity evidence. No hazard tolerance was required; the Parity Report
+remains unchanged. E2 is complete and the registered next sub-pass is
+**0144E3 — q2 + q2_remaining**.
 
 ### 0144E3 — q2 + q2_remaining
 

@@ -218,6 +218,8 @@ class Scalr(torch.optim.Optimizer):
             r_min_ema_alpha=r_min_ema_alpha,
         )
         super().__init__(params, defaults)
+        self.order_history: list[float] = []
+        self.lr_history: list[float] = []
         for group in self.param_groups:
             for p in group["params"]:
                 self.state[p]["_bridge"] = ScalrBridge(
@@ -233,6 +235,14 @@ class Scalr(torch.optim.Optimizer):
                     adaptive_r_min=group["adaptive_r_min"],
                     r_min_ema_alpha=group["r_min_ema_alpha"],
                 )
+
+    def compute_lr_scale(self, order_parameter: float) -> float:
+        """Return the SCALR learning-rate multiplier for ``order_parameter``."""
+        group = self.param_groups[0]
+        r_min = float(group["r_min"])
+        alpha = float(group["alpha"])
+        r = max(0.0, min(1.0, order_parameter))
+        return float(r_min + (1.0 - r_min) * (r**alpha))
 
     @torch.no_grad()
     def step(
@@ -258,13 +268,31 @@ class Scalr(torch.optim.Optimizer):
                 if p.grad is None:
                     continue
                 bridge = self.state[p]["_bridge"]
-                flat_param = p.detach().reshape(-1).contiguous()
-                flat_grad = p.grad.detach().reshape(-1).contiguous()
+                flat_param = (
+                    p.detach()
+                    .to(dtype=torch.float64, device="cpu")
+                    .reshape(-1)
+                    .contiguous()
+                )
+                flat_grad = (
+                    p.grad.detach()
+                    .to(dtype=torch.float64, device="cpu")
+                    .reshape(-1)
+                    .contiguous()
+                )
                 updated = from_dlpack(
                     bridge.step(flat_param, flat_grad, order_parameter)
                 )
                 p.data.copy_(updated.reshape(p.shape))
 
+        lr_scale = (
+            1.0 if order_parameter is None else self.compute_lr_scale(order_parameter)
+        )
+        lr = self.param_groups[0]["lr"] * lr_scale
+        self.order_history.append(
+            order_parameter if order_parameter is not None else 0.0
+        )
+        self.lr_history.append(lr)
         return loss
 
     def rust_state_dict(self) -> list[str]:

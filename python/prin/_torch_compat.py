@@ -76,6 +76,33 @@ def _stack(values: list[torch.Tensor], template: torch.Tensor) -> torch.Tensor:
     return values[0] if template.dim() == 1 else torch.stack(values)
 
 
+def _wrap_phase(phase: torch.Tensor) -> torch.Tensor:
+    """Wrap phase values to ``[0, 2π)`` using PyTorch remainder."""
+    return torch.remainder(phase, 2.0 * math.pi)
+
+
+def _resolve_coupling_mode(
+    coupling_mode: str, n_oscillators: int, sparse_k: int | None
+) -> tuple[_core.CouplingMode, int]:
+    """Return the Rust ``CouplingMode`` and resolved sparse ``k`` for a string tag."""
+    if coupling_mode == "mean_field":
+        return _core.CouplingMode.mean_field(), 0
+    if coupling_mode == "sparse_knn":
+        if n_oscillators <= 1:
+            return _core.CouplingMode.full(), 0
+        k = (
+            sparse_k
+            if sparse_k is not None
+            else max(1, min(n_oscillators - 1, math.ceil(math.log2(n_oscillators))))
+        )
+        if k < 1:
+            return _core.CouplingMode.full(), 0
+        return _core.CouplingMode.sparse_knn(k), k
+    if coupling_mode not in ("full", "auto"):
+        raise ValueError(f"Unknown coupling_mode '{coupling_mode}'")
+    return _core.CouplingMode.full(), 0
+
+
 def _safe_phase_diff(phi_j: torch.Tensor, phi_i: torch.Tensor) -> torch.Tensor:
     """Delegate elementwise wrapped phase differences to ``prin-dynamics``."""
     a = phi_j.detach().to(dtype=torch.float64, device="cpu").contiguous()
@@ -363,7 +390,13 @@ class OscillatorModel(ABC):
                 f"Unknown integration method '{method}'. Use 'euler' or 'rk4'."
             )
         rows = [integrator.step(self._raw, row, dt) for row in state._raw_rows()]
-        return OscillatorState._from_raw_rows(rows, state)
+        result = OscillatorState._from_raw_rows(rows, state)
+        return OscillatorState(
+            _wrap_phase(result.phase),
+            result.amplitude,
+            result.frequency,
+            result.freq_band,
+        )
 
     def integrate(
         self,
@@ -388,12 +421,27 @@ class OscillatorModel(ABC):
             for row in state._raw_rows()
         ]
         final = OscillatorState._from_raw_rows([item[0] for item in results], state)
+
+        def _wrap(state: OscillatorState) -> OscillatorState:
+            return OscillatorState(
+                _wrap_phase(state.phase),
+                state.amplitude,
+                state.frequency,
+                state.freq_band,
+            )
+
+        final = _wrap(final)
         if not record_trajectory:
             return final, None
         trajectory = [
-            OscillatorState._from_raw_rows(
-                [cast(list[_core.OscillatorState], item[1])[index] for item in results],
-                state,
+            _wrap(
+                OscillatorState._from_raw_rows(
+                    [
+                        cast(list[_core.OscillatorState], item[1])[index]
+                        for item in results
+                    ],
+                    state,
+                )
             )
             for index in range(n_steps)
         ]
@@ -409,7 +457,7 @@ class KuramotoOscillator(OscillatorModel):
         coupling_strength: float = 1.0,
         decay_rate: float = 0.1,
         freq_adaptation_rate: float = 0.01,
-        coupling_mode: str = "full",
+        coupling_mode: str = "auto",
         sparse_k: int | None = None,
         device: object = None,
         dtype: object = None,
@@ -417,16 +465,12 @@ class KuramotoOscillator(OscillatorModel):
         super().__init__(n_oscillators, coupling_strength)
         self._decay_rate = decay_rate
         self._freq_adaptation_rate = freq_adaptation_rate
-        self._sparse_k = (
-            sparse_k
-            if sparse_k is not None
-            else max(1, min(n_oscillators - 1, math.ceil(math.log2(n_oscillators))))
+        self._coupling_mode = coupling_mode
+        mode, resolved_k = _resolve_coupling_mode(
+            coupling_mode, n_oscillators, sparse_k
         )
-        mode = (
-            _core.CouplingMode.sparse_knn(self._sparse_k)
-            if coupling_mode == "sparse_knn" and n_oscillators > 1
-            else _core.CouplingMode.full()
-        )
+        self._sparse_k = resolved_k
+        self._current_mode = mode
         self._rebuild(mode)
 
     def _rebuild(self, mode: _core.CouplingMode) -> None:
@@ -437,6 +481,11 @@ class KuramotoOscillator(OscillatorModel):
             self._freq_adaptation_rate,
             mode,
         )
+
+    @property
+    def coupling_mode(self) -> str:
+        """Return the configured coupling mode string."""
+        return self._coupling_mode
 
     @property
     def decay_rate(self) -> float:
@@ -462,16 +511,19 @@ class StuartLandauOscillator(OscillatorModel):
         n_oscillators: int,
         coupling_strength: float = 1.0,
         bifurcation_param: float = 1.0,
-        coupling_mode: str = "full",
+        coupling_mode: str = "auto",
         sparse_k: int | None = None,
         device: object = None,
         dtype: object = None,
     ) -> None:
         super().__init__(n_oscillators, coupling_strength)
         self._bifurcation_param = bifurcation_param
-        mode = _core.CouplingMode.full()
-        if coupling_mode == "sparse_knn" and n_oscillators > 1:
-            mode = _core.CouplingMode.sparse_knn(sparse_k)
+        self._coupling_mode = coupling_mode
+        mode, resolved_k = _resolve_coupling_mode(
+            coupling_mode, n_oscillators, sparse_k
+        )
+        self._sparse_k = resolved_k
+        self._current_mode = mode
         self._rebuild(mode)
 
     def _rebuild(self, mode: _core.CouplingMode) -> None:
@@ -480,9 +532,30 @@ class StuartLandauOscillator(OscillatorModel):
         )
 
     @property
+    def coupling_mode(self) -> str:
+        """Return the configured coupling mode string."""
+        return self._coupling_mode
+
+    @property
     def bifurcation_param(self) -> float:
         """Return the Hopf bifurcation parameter."""
         return self._bifurcation_param
+
+    @bifurcation_param.setter
+    def bifurcation_param(self, value: float) -> None:
+        """Set the bifurcation parameter and rebuild the Rust owner."""
+        self._bifurcation_param = value
+        self._rebuild(self._current_mode)
+
+    @property
+    def limit_cycle_amplitude(self) -> float:
+        """Return the Hopf limit-cycle amplitude ``√max(0, μ)``."""
+        return math.sqrt(max(0.0, self._bifurcation_param))
+
+    @property
+    def sparse_k(self) -> int:
+        """Return resolved sparse-neighbour count."""
+        return self._sparse_k
 
 
 class HopfOscillator(StuartLandauOscillator):
@@ -494,12 +567,15 @@ class HopfOscillator(StuartLandauOscillator):
         coupling_strength: float = 1.0,
         bifurcation_param: float = 1.0,
         freq_adaptation_rate: float = 0.0,
-        coupling_mode: str = "full",
+        coupling_mode: str = "auto",
+        mean_field: bool = False,
         sparse_k: int | None = None,
         device: object = None,
         dtype: object = None,
     ) -> None:
         self._freq_adaptation_rate = freq_adaptation_rate
+        if mean_field:
+            coupling_mode = "mean_field"
         super().__init__(
             n_oscillators,
             coupling_strength,
@@ -781,7 +857,11 @@ def gradient_checkpoint_integration(
     checkpoint_every: int = 10,
     memory_budget_mb: float | None = None,
 ) -> OscillatorState:
-    """Delegate segmented compatibility integration to Rust RK4 calls."""
+    """Delegate segmented compatibility integration to Rust RK4 calls.
+
+    Uses :class:`MultiRateIntegrator` with one RK4 sub-step per call so the
+    chain stays differentiable when ``state`` has ``requires_grad``.
+    """
     if n_steps < 0:
         raise ValueError(f"n_steps must be non-negative, got {n_steps}")
     if checkpoint_every <= 0:
@@ -789,10 +869,440 @@ def gradient_checkpoint_integration(
     segment = checkpoint_every
     if memory_budget_mb is not None:
         segment = max(1, int(math.sqrt(max(n_steps, 1))))
+    integrator = MultiRateIntegrator(sub_steps=1, method="rk4")
     current = state
     remaining = n_steps
     while remaining:
         count = min(segment, remaining)
-        current, _ = model.integrate(current, count, dt, "rk4", False)
+        for _ in range(count):
+            current = integrator.step(model, current, dt)
         remaining -= count
     return current
+
+
+class _MultiRateAutograd(torch.autograd.Function):
+    """Connect Rust multi-rate step and VJP implementations to autograd."""
+
+    @staticmethod
+    def forward(
+        ctx: Any,
+        integrator: _core.MultiRateIntegrator,
+        model: _RawModel,
+        dt: float,
+        phase: torch.Tensor,
+        amplitude: torch.Tensor,
+        frequency: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Evaluate one unbatched multi-rate row in Rust."""
+        raw_state = _core.OscillatorState(
+            _numpy(phase), _numpy(amplitude), _numpy(frequency)
+        )
+        output = integrator.step(model, raw_state, dt)
+        ctx.integrator = integrator
+        ctx.model = model
+        ctx.dt = dt
+        ctx.raw_state = raw_state
+        ctx.save_for_backward(phase, amplitude, frequency)
+        return (
+            _tensor(output.phase, phase),
+            _tensor(output.amplitude, amplitude),
+            _tensor(output.frequency, frequency),
+        )
+
+    @staticmethod
+    def backward(
+        ctx: Any,
+        grad_phase: torch.Tensor | None,
+        grad_amplitude: torch.Tensor | None,
+        grad_frequency: torch.Tensor | None,
+    ) -> tuple[None, None, None, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Evaluate the Rust-owned multi-rate vector-Jacobian product."""
+        phase, amplitude, frequency = ctx.saved_tensors
+        gradients = (
+            torch.zeros_like(phase) if grad_phase is None else grad_phase,
+            torch.zeros_like(amplitude) if grad_amplitude is None else grad_amplitude,
+            torch.zeros_like(frequency) if grad_frequency is None else grad_frequency,
+        )
+        result = ctx.integrator.step_vjp(
+            ctx.model,
+            ctx.raw_state,
+            ctx.dt,
+            *(_numpy(value) for value in gradients),
+        )
+        return (
+            None,
+            None,
+            None,
+            _tensor(result.dphase, phase),
+            _tensor(result.damplitude, amplitude),
+            _tensor(result.dfrequency, frequency),
+        )
+
+
+class MultiRateIntegrator:
+    """Torch-facing wrapper over the Rust uniform sub-step integrator."""
+
+    def __init__(self, sub_steps: int = 10, method: str = "rk4") -> None:
+        self.sub_steps = sub_steps
+        self._raw = _core.MultiRateIntegrator(sub_steps, method)
+
+    def step(
+        self, model: OscillatorModel, state: OscillatorState, dt: float
+    ) -> OscillatorState:
+        """Run one Rust-owned multi-rate outer step."""
+        outputs = [
+            _MultiRateAutograd.apply(  # type: ignore[no-untyped-call]
+                self._raw, model._raw, dt, phase, amplitude, frequency
+            )
+            for phase, amplitude, frequency in zip(
+                _rows(state.phase),
+                _rows(state.amplitude),
+                _rows(state.frequency),
+                strict=True,
+            )
+        ]
+        return OscillatorState(
+            _stack([output[0] for output in outputs], state.phase),
+            _stack([output[1] for output in outputs], state.amplitude),
+            _stack([output[2] for output in outputs], state.frequency),
+        )
+
+
+class ExponentialIntegrator:
+    """PRINet 3.0 exponential Euler integrator with a PyTorch-facing API.
+
+    Numerical integration is delegated to the Rust
+    :class:`prin.dynamics.ExponentialIntegrator`. The private helpers
+    ``_phi1``, ``_matrix_exp`` and ``_krylov_matrix_exp_vec`` are implemented
+    with ``torch.linalg`` so the legacy unit tests can verify the analytical
+    identities without re-implementing matrix-exponential math in Python.
+    """
+
+    def __init__(
+        self,
+        dim: int,
+        krylov_rank: int = 16,
+        max_direct_dim: int = 150,
+        stiff_mode: bool = False,
+        stiff_cond_threshold: float = 20.0,
+        max_krylov_stiff: int = 48,
+    ) -> None:
+        """Validate PRINet 3.0 arguments and construct the Rust owner."""
+        if dim <= 0:
+            raise ValueError(f"dim must be positive, got {dim}")
+        if krylov_rank < 2:
+            raise ValueError(f"krylov_rank must be >= 2, got {krylov_rank}")
+        self._raw = _core.ExponentialIntegrator(
+            dim,
+            krylov_rank,
+            max_direct_dim,
+            stiff_mode,
+            stiff_cond_threshold,
+            max_krylov_stiff,
+        )
+
+    @property
+    def dim(self) -> int:
+        """System dimensionality."""
+        return int(self._raw.dim)
+
+    @property
+    def krylov_rank(self) -> int:
+        """Krylov subspace rank."""
+        return int(self._raw.krylov_rank)
+
+    @property
+    def use_krylov(self) -> bool:
+        """Whether the Krylov path is used for the current dimension."""
+        return bool(self._raw.use_krylov)
+
+    @staticmethod
+    def _matrix_exp(matrix: torch.Tensor) -> torch.Tensor:
+        """Compute ``exp(matrix)`` with PyTorch's matrix exponential."""
+        return torch.matrix_exp(matrix)
+
+    @staticmethod
+    def _phi1(h_a: torch.Tensor) -> torch.Tensor:
+        """Compute the first phi function ``φ1(hA) = (exp(hA) - I) / hA``.
+
+        Returns the identity matrix at ``hA = 0`` (the limit).
+        """
+        dim = h_a.shape[0]
+        eye = torch.eye(dim, dtype=h_a.dtype, device=h_a.device)
+        if h_a.abs().max() < 1e-12:
+            return eye
+        exp_h_a = torch.matrix_exp(h_a)
+        a_inv = torch.inverse(h_a)
+        return torch.mm(exp_h_a - eye, a_inv)
+
+    def _krylov_matrix_exp_vec(
+        self, a: torch.Tensor, h: float, v: torch.Tensor
+    ) -> torch.Tensor:
+        """Direct matrix-exponential reference for the Krylov vector test."""
+        return torch.mv(torch.matrix_exp(h * a), v)
+
+    def step(
+        self, model: OscillatorModel, state: OscillatorState, dt: float
+    ) -> OscillatorState:
+        """Advance one step through the exponential Euler integrator."""
+        rows = [self._raw.step(model._raw, row, dt) for row in state._raw_rows()]
+        result = OscillatorState._from_raw_rows(rows, state)
+        return OscillatorState(
+            _wrap_phase(result.phase),
+            result.amplitude,
+            result.frequency,
+            result.freq_band,
+        )
+
+    def integrate(
+        self,
+        model: OscillatorModel,
+        state: OscillatorState,
+        n_steps: int,
+        dt: float,
+        record_trajectory: bool = False,
+        recompute_jacobian_every: int = 1,
+    ) -> tuple[OscillatorState, list[OscillatorState] | None]:
+        """Integrate with the exponential Euler method."""
+        results = [
+            self._raw.integrate(
+                model._raw,
+                row,
+                n_steps,
+                dt,
+                record_trajectory,
+                recompute_jacobian_every,
+            )
+            for row in state._raw_rows()
+        ]
+        final = OscillatorState._from_raw_rows([item[0] for item in results], state)
+
+        def _wrap(s: OscillatorState) -> OscillatorState:
+            return OscillatorState(
+                _wrap_phase(s.phase),
+                s.amplitude,
+                s.frequency,
+                s.freq_band,
+            )
+
+        final = _wrap(final)
+        if not record_trajectory:
+            return final, None
+        trajectory = [
+            _wrap(
+                OscillatorState._from_raw_rows(
+                    [
+                        cast(list[_core.OscillatorState], item[1])[index]
+                        for item in results
+                    ],
+                    state,
+                )
+            )
+            for index in range(n_steps)
+        ]
+        return final, trajectory
+
+
+class PhaseAmplitudeCoupling:
+    """Torch facade over the differentiable Rust PAC layer owner."""
+
+    def __init__(self, modulation_depth: float = 0.3) -> None:
+        from prin.nn.hierarchical_layers import PhaseAmplitudeCouplingLayer
+
+        self.modulation_depth = modulation_depth
+        self._layer = PhaseAmplitudeCouplingLayer(modulation_depth)
+
+    def modulate(
+        self,
+        slow_phase: torch.Tensor,
+        fast_amplitude: torch.Tensor,
+        phase_offset: float = 0.0,
+    ) -> torch.Tensor:
+        """Delegate PAC modulation to a Rust owner, including phase offset."""
+        dtype = fast_amplitude.dtype
+        device = fast_amplitude.device
+        if phase_offset != 0.0:
+            owner = _core.PhaseAmplitudeCoupling(self.modulation_depth)
+            values = owner.modulate(
+                _numpy(slow_phase), _numpy(fast_amplitude), phase_offset
+            )
+            return _tensor(values, fast_amplitude)
+        output: torch.Tensor = self._layer(
+            slow_phase.to(dtype=torch.float64, device="cpu"),
+            fast_amplitude.to(dtype=torch.float64, device="cpu"),
+        )
+        return output.to(dtype=dtype, device=device)
+
+
+def phase_to_rate(
+    phase: torch.Tensor,
+    amplitude: torch.Tensor,
+    mode: str = "soft",
+    sparsity: float = 0.1,
+    temperature: float = 1.0,
+) -> torch.Tensor:
+    """Delegate differentiable phase-to-rate conversion to ``prin-train``."""
+    from prin.nn.autoencoders import PhaseToRateConverter
+
+    converter = PhaseToRateConverter(
+        phase.shape[-1], mode=mode, sparsity=sparsity, initial_temperature=temperature
+    )
+    dtype = phase.dtype
+    device = phase.device
+    output: torch.Tensor = converter(
+        phase.to(dtype=torch.float64, device="cpu"),
+        amplitude.to(dtype=torch.float64, device="cpu"),
+    )
+    return output.to(dtype=dtype, device=device)
+
+
+def sweep_coupling_params(**kwargs: Any) -> list[dict[str, float]]:
+    """Delegate parameter sweeps to the Rust simulation owner."""
+    from prin.kernels import sweep_coupling_params as owner
+
+    return owner(**kwargs)
+
+
+def detect_oscillation(
+    r_history: list[float], window: int = 20, threshold: float = 0.01
+) -> bool:
+    """Delegate oscillation detection to the Rust simulation owner."""
+    from prin.kernels import detect_oscillation as owner
+
+    return owner(r_history, window, threshold)
+
+
+class _HierarchicalNetwork:
+    """Compose Rust-backed band models using the archived stepping order."""
+
+    _sizes: tuple[int, ...]
+    _models: tuple[KuramotoOscillator, ...]
+    _pac: tuple[PhaseAmplitudeCoupling, ...]
+    _integrators: tuple[MultiRateIntegrator, ...]
+    _frequency_ranges: tuple[tuple[float, float], ...]
+    _device: torch.device | str | None
+    _dtype: torch.dtype
+
+    def create_initial_state(self, seed: int = 0) -> tuple[OscillatorState, ...]:
+        """Create one deterministic state per configured frequency band."""
+        return tuple(
+            OscillatorState.create_random(
+                size,
+                freq_range=frequency_range,
+                device=self._device,
+                dtype=self._dtype,
+                seed=seed + 1000 * index,
+            )
+            for index, (size, frequency_range) in enumerate(
+                zip(self._sizes, self._frequency_ranges, strict=True)
+            )
+        )
+
+    def step(
+        self, state: tuple[OscillatorState, ...], dt: float = 0.001
+    ) -> tuple[OscillatorState, ...]:
+        """Advance every band through Rust in the archived PAC stepping order."""
+        values = list(state)
+        values[0] = self._integrators[0].step(self._models[0], values[0], dt)
+        for index, pac in enumerate(self._pac, start=1):
+            current = values[index]
+            modulated = OscillatorState(
+                current.phase,
+                pac.modulate(values[index - 1].phase, current.amplitude),
+                current.frequency,
+            )
+            values[index] = self._integrators[index].step(
+                self._models[index], modulated, dt
+            )
+        return tuple(values)
+
+    def order_parameters(
+        self, state: tuple[OscillatorState, ...]
+    ) -> tuple[torch.Tensor, ...]:
+        """Compute one Rust-owned order parameter per band."""
+        return tuple(kuramoto_order_parameter(item.phase) for item in state)
+
+
+class DeltaThetaGammaNetwork(_HierarchicalNetwork):
+    """Three-band compatibility composition over Rust-backed owners."""
+
+    def __init__(
+        self,
+        n_delta: int = 8,
+        n_theta: int = 16,
+        n_gamma: int = 64,
+        coupling_strength: float = 2.0,
+        pac_depth_dt: float = 0.3,
+        pac_depth_tg: float = 0.3,
+        delta_freq: float = 2.0,
+        theta_freq: float = 6.0,
+        gamma_freq: float = 40.0,
+        sparse_k: int | None = None,
+        device: torch.device | str | None = None,
+        dtype: torch.dtype = torch.float32,
+    ) -> None:
+        self.n_delta, self.n_theta, self.n_gamma = n_delta, n_theta, n_gamma
+        self._sizes = (n_delta, n_theta, n_gamma)
+        self._device = torch.device("cpu") if device is None else device
+        self._dtype = dtype
+        self._frequency_ranges = ((1.0, 4.0), (4.0, 8.0), (30.0, 50.0))
+        self._models = tuple(
+            KuramotoOscillator(
+                size,
+                coupling_strength,
+                coupling_mode="sparse_knn",
+                sparse_k=sparse_k,
+                device=self._device,
+                dtype=dtype,
+            )
+            for size in self._sizes
+        )
+        self._delta_model, self._theta_model, self._gamma_model = self._models
+        self._pac = (
+            PhaseAmplitudeCoupling(pac_depth_dt),
+            PhaseAmplitudeCoupling(pac_depth_tg),
+        )
+        self._integrators = (
+            MultiRateIntegrator(1),
+            MultiRateIntegrator(max(1, int(theta_freq / max(delta_freq, 1e-6)))),
+            MultiRateIntegrator(max(1, int(gamma_freq / max(delta_freq, 1e-6)))),
+        )
+
+
+class ThetaGammaNetwork(_HierarchicalNetwork):
+    """Two-band compatibility composition over Rust-backed owners."""
+
+    def __init__(
+        self,
+        n_theta: int = 8,
+        n_gamma: int = 64,
+        coupling_strength: float = 2.0,
+        pac_depth: float = 0.3,
+        theta_freq: float = 6.0,
+        gamma_freq: float = 40.0,
+        sparse_k: int | None = None,
+        device: torch.device | str | None = None,
+        dtype: torch.dtype = torch.float32,
+    ) -> None:
+        self.n_theta, self.n_gamma = n_theta, n_gamma
+        self._sizes = (n_theta, n_gamma)
+        self._device = torch.device("cpu") if device is None else device
+        self._dtype = dtype
+        self._frequency_ranges = ((4.0, 8.0), (30.0, 50.0))
+        self._models = tuple(
+            KuramotoOscillator(
+                size,
+                coupling_strength,
+                coupling_mode="sparse_knn",
+                sparse_k=sparse_k,
+                device=self._device,
+                dtype=dtype,
+            )
+            for size in self._sizes
+        )
+        self._theta_model, self._gamma_model = self._models
+        self._pac = (PhaseAmplitudeCoupling(pac_depth),)
+        self._integrators = (
+            MultiRateIntegrator(1),
+            MultiRateIntegrator(max(1, int(gamma_freq / max(theta_freq, 1e-6)))),
+        )

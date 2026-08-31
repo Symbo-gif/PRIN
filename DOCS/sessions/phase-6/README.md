@@ -78,7 +78,7 @@ rebuilt through Rust-backed layers, never semantic-test rewrites. See
 | 0144D | WP-036A | S4 — Documentation | [Trainable compatibility layers — `prin-train` extension](0144D-wp036a-s4-trainable-compatibility-layers-prin-train-extension.md) | COMPLETE |
 | 0144E | WP-036B | S1 — Coding | [Acceptance suite port — core, dynamics, model stack, subconscious](0144E-wp036b-s1-acceptance-suite-port-core-dynamics-model-stack.md) | PLANNED (decomposed into 0144E1–0144E6) |
 | 0144E1 | WP-036B | S1 — Coding | [Core and utils strict port](0144E1-wp036b-s1-core-and-utils-strict-port.md) | COMPLETE |
-| 0144E2 | WP-036B | S1 — Coding | [Phases, hierarchical, and phase-to-rate strict port](0144E2-wp036b-s1-phases-hierarchical-and-phase-to-rate-strict-port.md) | PLANNED |
+| 0144E2 | WP-036B | S1 — Coding | [Phases, hierarchical, and phase-to-rate strict port](0144E2-wp036b-s1-phases-hierarchical-and-phase-to-rate-strict-port.md) | COMPLETE |
 | 0144E3 | WP-036B | S1 — Coding | [Q2 and Q2-remaining strict port](0144E3-wp036b-s1-q2-and-q2-remaining-strict-port.md) | PLANNED |
 | 0144E4 | WP-036B | S1 — Coding | [Q3-new, NN, and SCALR-enhanced strict port](0144E4-wp036b-s1-q3-nn-and-scalr-enhanced-strict-port.md) | PLANNED |
 | 0144E5 | WP-036B | S1 — Coding | [Hybrid and CLEVR-N strict port](0144E5-wp036b-s1-hybrid-and-clevr-n-strict-port.md) | PLANNED |

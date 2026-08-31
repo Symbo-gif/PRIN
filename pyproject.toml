@@ -127,6 +127,9 @@ convention = "google"
 "tests/test_generate_corpus.py" = ["E402", "I001"]
 "tests/test_acceptance_core.py" = ["F401", "I001", "RUF003", "RUF059"]
 "tests/test_acceptance_utils.py" = ["F401", "I001"]
+"tests/test_acceptance_phases.py" = ["F401", "RUF059"]
+"tests/test_acceptance_hierarchical.py" = ["I001"]
+"tests/test_acceptance_phase_to_rate.py" = ["I001"]
 "parity/test_parity_differential.py" = ["E402", "I001"]
 "parity/test_parity_subconscious.py" = ["E402", "I001"]
 

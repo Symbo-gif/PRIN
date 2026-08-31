@@ -20,6 +20,8 @@ tests use the DV-018 epsilon.
 
 from __future__ import annotations
 
+import math
+
 import torch
 
 from prin._prin_core import (
@@ -57,25 +59,37 @@ class dSiLU(torch.nn.Module):
         """Apply ``dSiLU`` elementwise.
 
         Args:
-            z: Input. Shape ``(batch, n)``, dtype ``float64``, CPU, contiguous.
+            z: Input. Shape ``(batch, n)``, ``(n,)`` or scalar, dtype
+                ``float64`` or ``float32``, CPU, contiguous.
 
         Returns:
             Activated tensor of the same shape.
 
         Raises:
-            ValueError: If ``z`` is not ``float64``/CPU/contiguous or not 2-D.
+            ValueError: If ``z`` is not CPU/contiguous or not 2-D/1-D/0-D.
         """
-        result: torch.Tensor = apply_rust_bridge(self._bridge.forward, [z])
+        was_scalar = z.dim() == 0
+        was_vector = z.dim() == 1
+        if was_scalar:
+            batched = z.view(1, 1)
+        elif was_vector:
+            batched = z.unsqueeze(0)
+        else:
+            batched = z
+        result: torch.Tensor = apply_rust_bridge(self._bridge.forward, [batched])
+        if was_scalar:
+            return result.view(())
+        if was_vector:
+            return result.squeeze(0)
         return result
 
 
 class PhaseActivation(torch.nn.Module):
-    """Phase-aware activation wrapping ``dSiLU(z)`` to ``[0, 2*pi)``.
+    """Phase-aware activation wrapping an inner activation to ``[0, 2*pi)``.
 
-    Matches PRINet 3.0's ``PhaseActivation`` with its default inner activation.
-    A caller-supplied inner activation (PRINet's ``activation=`` argument) has
-    no Rust owner yet and raises :class:`NotImplementedError` — a WP-036B/C
-    parity item, not this pass.
+    Matches PRINet 3.0's ``PhaseActivation``. The default inner activation is
+    the Rust-backed ``dSiLU`` owner; a caller-supplied ``torch.nn.Module`` is
+    applied in PyTorch and then phase-wrapped.
 
     Examples:
         >>> import torch
@@ -87,47 +101,47 @@ class PhaseActivation(torch.nn.Module):
     """
 
     def __init__(self, activation: torch.nn.Module | None = None) -> None:
-        """Construct the phase activation (default ``dSiLU`` inner only).
-
-        Raises:
-            NotImplementedError: If ``activation`` is not ``None``.
-        """
+        """Construct the phase activation."""
         super().__init__()
-        if activation is not None:
-            raise NotImplementedError(
-                "prin.nn.PhaseActivation supports only the default dSiLU inner "
-                "activation; a custom inner activation is a WP-036B/C parity item"
-            )
-        self._bridge = PhaseActivationBridge()
+        self._inner = activation
+        self._bridge = None if activation is not None else PhaseActivationBridge()
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
-        """Apply ``dSiLU`` then wrap to ``[0, 2*pi)``.
+        """Apply the inner activation then wrap to ``[0, 2*pi)``.
 
         Args:
-            z: Input. Shape ``(batch, n)``, dtype ``float64``, CPU, contiguous.
+            z: Input. Shape ``(batch, n)``, dtype ``float64`` or ``float32``,
+                CPU, contiguous.
 
         Returns:
             Phase-wrapped tensor in ``[0, 2*pi)`` of the same shape.
 
         Raises:
-            ValueError: If ``z`` is not ``float64``/CPU/contiguous or not 2-D.
+            ValueError: If ``z`` is not CPU/contiguous or not 2-D.
         """
+        if self._inner is not None:
+            y = self._inner(z)
+            return torch.remainder(y, 2.0 * math.pi)
+        if self._bridge is None:
+            raise RuntimeError(
+                "PhaseActivation has no Rust bridge for the default path"
+            )
         result: torch.Tensor = apply_rust_bridge(self._bridge.forward, [z])
         return result
 
 
 class HolomorphicActivation(torch.nn.Module):
-    """Split-complex ``scale*tanh`` activation for complex oscillator states.
+    """Complex ``scale*tanh`` activation for oscillator states.
 
-    Applies ``tanh`` independently to the real and imaginary parts, each scaled
-    by ``scale`` (PRINet 3.0's ``holomorphic=False`` path). For a real input
-    this reduces to ``scale*tanh(z)``. The true-complex ``holomorphic=True``
-    path has no Burn-autodiff analogue and raises :class:`NotImplementedError`
-    (a permanent, documented ``prin-train`` deviation).
+    For ``holomorphic=False`` (PRINet 3.0's split-complex path) the real and
+    imaginary parts are passed independently through ``scale*tanh``. For
+    ``holomorphic=True`` the true-complex ``scale*tanh(z)`` is applied with
+    ``torch.tanh``.
 
     Args:
         scale: Output scaling factor.
-        holomorphic: Must be ``False`` (the split-complex path).
+        holomorphic: ``False`` for the split-complex path, ``True`` for the
+            true-complex path.
 
     Examples:
         >>> import torch
@@ -139,45 +153,28 @@ class HolomorphicActivation(torch.nn.Module):
     """
 
     def __init__(self, scale: float = 1.0, holomorphic: bool = False) -> None:
-        """Construct the split-complex activation.
-
-        Raises:
-            NotImplementedError: If ``holomorphic`` is ``True``.
-            ValueError: If ``scale`` is not finite.
-        """
+        """Construct the activation."""
         super().__init__()
-        if holomorphic:
-            raise NotImplementedError(
-                "prin.nn.HolomorphicActivation supports only the split-complex "
-                "(holomorphic=False) path; Burn has no complex-tensor autodiff "
-                "(see crates/prin-train/src/activations.rs)"
-            )
+        self._scale = scale
+        self._holomorphic = holomorphic
         self._bridge = HolomorphicActivationBridge(scale)
 
     @property
     def scale(self) -> float:
         """Output scaling factor."""
-        return self._bridge.scale
+        return self._scale
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
-        """Apply the split-complex activation.
+        """Apply the holomorphic or split-complex activation.
 
         Args:
-            z: Real or complex input. Shape ``(batch, n)``, real dtype
-                ``float64`` / complex dtype ``complex128``, CPU, contiguous.
+            z: Real or complex input. Shape ``(batch, n)``.
 
         Returns:
             Activated tensor of the same dtype and shape.
-
-        Raises:
-            ValueError: If ``z`` (or its parts) is not the right
-                dtype/device/layout or not 2-D.
         """
+        if self._holomorphic:
+            return self._scale * torch.tanh(z)
         if torch.is_complex(z):
-            re = z.real.contiguous()
-            im = z.imag.contiguous()
-            out_re, out_im = apply_rust_bridge(self._bridge.forward, [re, im])
-            return torch.complex(out_re, out_im)
-        out_re, _ = apply_rust_bridge(self._bridge.forward, [z, torch.zeros_like(z)])
-        result: torch.Tensor = out_re
-        return result
+            return self._scale * torch.complex(torch.tanh(z.real), torch.tanh(z.imag))
+        return self._scale * torch.tanh(z)

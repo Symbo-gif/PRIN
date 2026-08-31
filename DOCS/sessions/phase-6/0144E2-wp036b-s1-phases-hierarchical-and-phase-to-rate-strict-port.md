@@ -1,6 +1,6 @@
 # Session 0144E2 — WP-036B S1 (sub-pass 2/6): Phases, hierarchical, and phase-to-rate strict port
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036B
 **Session type:** S1 — Coding

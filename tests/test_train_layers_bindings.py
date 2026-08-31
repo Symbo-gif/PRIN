@@ -81,10 +81,12 @@ def test_phase_activation_gradcheck() -> None:
     assert torch.autograd.gradcheck(act, (z,), **_DV018)
 
 
-def test_phase_activation_rejects_custom_inner_activation() -> None:
-    """A caller-supplied inner activation is not yet supported."""
-    with pytest.raises(NotImplementedError, match="dSiLU inner"):
-        PhaseActivation(activation=torch.nn.ReLU())
+def test_phase_activation_accepts_custom_inner_activation() -> None:
+    """A caller-supplied inner activation is wrapped to [0, 2π)."""
+    act = PhaseActivation(activation=torch.nn.ReLU())
+    z = torch.randn(4, 8, dtype=torch.float64)
+    y = act(z)
+    assert (y >= 0).all() and (y < 2 * torch.pi).all()
 
 
 # --- HolomorphicActivation ------------------------------------------
@@ -117,10 +119,11 @@ def test_holomorphic_activation_gradcheck_split_parts() -> None:
     )
 
 
-def test_holomorphic_activation_rejects_true_complex_path() -> None:
-    """The ``holomorphic=True`` branch has no Burn-autodiff analogue."""
-    with pytest.raises(NotImplementedError, match="split-complex"):
-        HolomorphicActivation(holomorphic=True)
+def test_holomorphic_activation_true_complex_path() -> None:
+    """The ``holomorphic=True`` branch applies true complex tanh."""
+    act = HolomorphicActivation(scale=1.5, holomorphic=True)
+    z = torch.randn(2, 3, dtype=torch.complex128)
+    assert torch.allclose(act(z), 1.5 * torch.tanh(z), atol=1e-10)
 
 
 # --- FeedbackInhibition ---------------------------------------------

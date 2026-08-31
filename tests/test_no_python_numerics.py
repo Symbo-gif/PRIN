@@ -27,6 +27,7 @@ def test_every_scanned_module_exists_and_is_covered() -> None:
     for name in _module._SCANNED:
         assert (_ROOT / "python" / "prin" / name).is_file(), name
     for expected in (
+        "_torch_compat.py",
         "nn/deferred_layers.py",
         "nn/inhibition_layers.py",
         "training_hooks.py",

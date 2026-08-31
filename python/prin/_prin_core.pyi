@@ -1056,6 +1056,15 @@ class MultiRateIntegrator:
     def step(
         self, model: Any, state: OscillatorState, dt: float
     ) -> OscillatorState: ...
+    def step_vjp(
+        self,
+        model: Any,
+        state: OscillatorState,
+        dt: float,
+        grad_phase: NDArray[np.float64],
+        grad_amplitude: NDArray[np.float64],
+        grad_frequency: NDArray[np.float64],
+    ) -> StateDerivatives: ...
     def integrate(
         self,
         model: Any,

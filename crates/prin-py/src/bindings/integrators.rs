@@ -1,6 +1,7 @@
 //! PyO3 bindings for `prin_dynamics::integrate` (Euler, RK4, RK45, Exponential,
 //! MultiRate integrators).
 
+use numpy::PyReadonlyArray1;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -12,7 +13,7 @@ use prin_dynamics::integrate::{
 use prin_dynamics::models::Dynamics;
 
 use super::models::{PyHopfOscillator, PyKuramotoOscillator, PyStuartLandauOscillator};
-use super::state::PyOscillatorState;
+use super::state::{PyOscillatorState, PyStateDerivatives};
 
 fn integrate_err_to_py(err: IntegrateError) -> PyErr {
     PyValueError::new_err(err.to_string())
@@ -510,6 +511,40 @@ impl PyMultiRateIntegrator {
             .step(dyn_model.as_ref(), &state.inner, dt)
             .map_err(integrate_err_to_py)?;
         Ok(PyOscillatorState { inner: new_state })
+    }
+
+    /// Compute the Rust-owned VJP for one sub-stepped integration call.
+    fn step_vjp(
+        &self,
+        model: &Bound<'_, PyAny>,
+        state: &PyOscillatorState,
+        dt: f64,
+        grad_phase: PyReadonlyArray1<'_, f64>,
+        grad_amplitude: PyReadonlyArray1<'_, f64>,
+        grad_frequency: PyReadonlyArray1<'_, f64>,
+    ) -> PyResult<PyStateDerivatives> {
+        let dyn_model = extract_dynamics(model)?;
+        let grad_phase = grad_phase
+            .as_slice()
+            .map_err(|_| PyValueError::new_err("grad_phase must be contiguous"))?;
+        let grad_amplitude = grad_amplitude
+            .as_slice()
+            .map_err(|_| PyValueError::new_err("grad_amplitude must be contiguous"))?;
+        let grad_frequency = grad_frequency
+            .as_slice()
+            .map_err(|_| PyValueError::new_err("grad_frequency must be contiguous"))?;
+        let gradient = self
+            .inner
+            .step_vjp(
+                dyn_model.as_ref(),
+                &state.inner,
+                dt,
+                grad_phase,
+                grad_amplitude,
+                grad_frequency,
+            )
+            .map_err(integrate_err_to_py)?;
+        Ok(PyStateDerivatives { inner: gradient })
     }
 
     /// Integrate for n_steps outer steps with sub-stepping.

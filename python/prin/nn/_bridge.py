@@ -64,10 +64,27 @@ class _RustBridgeFunction(torch.autograd.Function):
         from `*tensors`.
         """
         del n_tensor_inputs
-        detached = tuple(t.detach() if t is not None else None for t in tensors)
+        specs = tuple(
+            None if tensor is None else (tensor.dtype, tensor.device)
+            for tensor in tensors
+        )
+        concrete_specs = tuple(spec for spec in specs if spec is not None)
+        output_spec = concrete_specs[0]
+        if any(spec != output_spec for spec in concrete_specs[1:]):
+            raise ValueError("Rust bridge tensor inputs must share dtype and device")
+        detached = tuple(
+            None
+            if tensor is None
+            else tensor.detach().to(dtype=torch.float64, device="cpu").contiguous()
+            for tensor in tensors
+        )
         *out_capsules, rust_ctx = bridge_forward(*detached)
-        outputs = tuple(from_dlpack(cap) for cap in out_capsules)
+        outputs = tuple(
+            from_dlpack(cap).to(dtype=output_spec[0], device=output_spec[1])
+            for cap in out_capsules
+        )
         ctx.rust_ctx = rust_ctx  # type: ignore[attr-defined]
+        ctx.input_specs = specs  # type: ignore[attr-defined]
         return outputs if len(outputs) > 1 else outputs[0]
 
     @staticmethod
@@ -81,11 +98,20 @@ class _RustBridgeFunction(torch.autograd.Function):
         non-differentiable input).
         """
         rust_ctx = ctx.rust_ctx  # type: ignore[attr-defined]
-        grads = rust_ctx.backward(*(g.contiguous() for g in grad_outputs))
+        input_specs = ctx.input_specs  # type: ignore[attr-defined]
+        grads = rust_ctx.backward(
+            *(
+                gradient.detach().to(dtype=torch.float64, device="cpu").contiguous()
+                for gradient in grad_outputs
+            )
+        )
         if not isinstance(grads, tuple):
             grads = (grads,)
         decoded: tuple[torch.Tensor | None, ...] = tuple(
-            from_dlpack(g) if g is not None else None for g in grads
+            None
+            if gradient is None or spec is None
+            else from_dlpack(gradient).to(dtype=spec[0], device=spec[1])
+            for gradient, spec in zip(grads, input_specs, strict=True)
         )
         # Two leading `None`s for the non-tensor `bridge_forward`/
         # `n_tensor_inputs` positional arguments `forward` received.

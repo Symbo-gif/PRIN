@@ -1888,6 +1888,95 @@ impl MultiRateIntegrator {
         self.method
     }
 
+    /// Compute a vector-Jacobian product for one multi-rate step.
+    ///
+    /// This Rust-owned central-difference fallback supplies autograd for the
+    /// legacy Torch compatibility surface without moving integration numerics
+    /// into Python. The finite-difference perturbations reuse this integrator's
+    /// exact configured sub-step method.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IntegrateError`] for gradient length mismatches or any failed
+    /// perturbed integration step.
+    pub fn step_vjp(
+        &self,
+        model: &dyn Dynamics,
+        state: &OscillatorState,
+        dt: f64,
+        grad_phase: &[f64],
+        grad_amplitude: &[f64],
+        grad_frequency: &[f64],
+    ) -> Result<StateDerivatives, IntegrateError> {
+        validate_dt(dt)?;
+        let n = state.n_oscillators();
+        for (name, values) in [
+            ("grad_phase", grad_phase),
+            ("grad_amplitude", grad_amplitude),
+            ("grad_frequency", grad_frequency),
+        ] {
+            if values.len() != n {
+                return Err(IntegrateError::Dynamics(StateError::LengthMismatch {
+                    name,
+                    expected: n,
+                    got: values.len(),
+                }));
+            }
+        }
+
+        let objective = |output: &OscillatorState| {
+            output
+                .phase
+                .iter()
+                .zip(grad_phase)
+                .chain(output.amplitude.iter().zip(grad_amplitude))
+                .chain(output.frequency.iter().zip(grad_frequency))
+                .map(|(value, gradient)| value * gradient)
+                .sum::<f64>()
+        };
+        let relative_step = f64::EPSILON.cbrt();
+        let mut gradients = [vec![0.0; n], vec![0.0; n], vec![0.0; n]];
+        for (field, output) in gradients.iter_mut().enumerate() {
+            for (index, gradient) in output.iter_mut().enumerate() {
+                let mut plus = state.clone();
+                let mut minus = state.clone();
+                let (plus_field, minus_field) = match field {
+                    0 => (&mut plus.phase, &mut minus.phase),
+                    1 => (&mut plus.amplitude, &mut minus.amplitude),
+                    _ => (&mut plus.frequency, &mut minus.frequency),
+                };
+                let epsilon = relative_step * plus_field[index].abs().max(1.0);
+                plus_field[index] += epsilon;
+                minus_field[index] -= epsilon;
+                let mut plus_integrator = self.clone();
+                let mut minus_integrator = self.clone();
+                let plus_value = objective(&plus_integrator.step(model, &plus, dt)?);
+                let minus_value = objective(&minus_integrator.step(model, &minus, dt)?);
+                *gradient = (plus_value - minus_value) / (2.0 * epsilon);
+            }
+        }
+        for (name, values) in [
+            ("gradient_phase", &gradients[0]),
+            ("gradient_amplitude", &gradients[1]),
+            ("gradient_frequency", &gradients[2]),
+        ] {
+            for (index, &value) in values.iter().enumerate() {
+                if !value.is_finite() {
+                    return Err(IntegrateError::Dynamics(StateError::NonFiniteValue {
+                        name,
+                        index,
+                        value,
+                    }));
+                }
+            }
+        }
+        Ok(StateDerivatives {
+            dphase: gradients[0].clone(),
+            damplitude: gradients[1].clone(),
+            dfrequency: gradients[2].clone(),
+        })
+    }
+
     /// Integrate for multiple outer steps with sub-stepping.
     ///
     /// # Errors
@@ -2831,6 +2920,53 @@ mod tests {
             assert_relative_eq!(s_mri.amplitude[i], s_rk4.amplitude[i], epsilon = 1e-14);
             assert_relative_eq!(s_mri.frequency[i], s_rk4.frequency[i], epsilon = 1e-14);
         }
+    }
+
+    #[test]
+    fn multi_rate_step_vjp_matches_uncoupled_euler_amplitude() {
+        let model = uncoupled(1, 0.1);
+        let state = make_state(1, 0.2, 1.0, 2.0);
+        let integrator = MultiRateIntegrator::with_method(2, MultiRateMethod::Euler).unwrap();
+        let gradient = integrator
+            .step_vjp(&model, &state, 0.01, &[0.0], &[1.0], &[0.0])
+            .unwrap();
+        assert_relative_eq!(gradient.damplitude[0], 1.0, epsilon = 1e-7);
+        assert_relative_eq!(gradient.dphase[0], 0.0, epsilon = 1e-7);
+        assert_relative_eq!(gradient.dfrequency[0], 0.0, epsilon = 1e-7);
+    }
+
+    #[test]
+    fn multi_rate_step_vjp_rejects_gradient_length_mismatch() {
+        let model = uncoupled(1, 0.1);
+        let state = make_state(1, 0.2, 1.0, 2.0);
+        let integrator = MultiRateIntegrator::new(2).unwrap();
+        assert!(integrator
+            .step_vjp(&model, &state, 0.01, &[], &[1.0], &[0.0])
+            .is_err());
+    }
+
+    #[test]
+    fn multi_rate_step_vjp_rejects_invalid_dt_before_perturbation() {
+        let model = uncoupled(1, 0.1);
+        let state = make_state(1, 0.2, 1.0, 2.0);
+        let integrator = MultiRateIntegrator::new(2).unwrap();
+        assert!(matches!(
+            integrator
+                .step_vjp(&model, &state, 0.0, &[0.0], &[1.0], &[0.0])
+                .unwrap_err(),
+            IntegrateError::InvalidTimestep { .. }
+        ));
+    }
+
+    #[test]
+    fn multi_rate_step_vjp_does_not_apply_derivative_clamp_to_state_gradient() {
+        let model = uncoupled(1, 0.1);
+        let state = make_state(1, 0.2, 1.0, 2.0);
+        let integrator = MultiRateIntegrator::with_method(2, MultiRateMethod::Euler).unwrap();
+        let gradient = integrator
+            .step_vjp(&model, &state, 0.01, &[0.0], &[1.0e6], &[0.0])
+            .unwrap();
+        assert!(gradient.damplitude[0] > 9.0e5);
     }
 
     #[test]

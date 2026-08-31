@@ -79,6 +79,7 @@ class HierarchicalResonanceLayer(torch.nn.Module):
     ) -> None:
         """Construct the Rust-owned hierarchical layer."""
         super().__init__()
+        self._n_steps = n_steps
         self._bridge = HierarchicalResonanceLayerBridge(
             n_delta,
             n_theta,
@@ -92,6 +93,11 @@ class HierarchicalResonanceLayer(torch.nn.Module):
             seed_counter,
             seed_key,
         )
+
+    @property
+    def n_steps(self) -> int:
+        """Number of configured outer integration steps."""
+        return self._n_steps
 
     @property
     def n_delta(self) -> int:
@@ -178,6 +184,7 @@ class PhaseAmplitudeCouplingLayer(torch.nn.Module):
     def __init__(self, initial_depth: float = 0.3) -> None:
         """Construct the Rust-owned PAC parameter."""
         super().__init__()
+        self.modulation_depth = torch.nn.Parameter(torch.tensor(initial_depth))
         self._bridge = PhaseAmplitudeCouplingLayerBridge(initial_depth)
 
     def forward(
@@ -195,6 +202,8 @@ class PhaseAmplitudeCouplingLayer(torch.nn.Module):
         Raises:
             ValueError: If ranks or batch dimensions are incompatible.
         """
+        depth = float(self.modulation_depth.detach().clamp(0.0, 1.0).item())
+        self._bridge = PhaseAmplitudeCouplingLayerBridge(depth)
         phase_batched, phase_vector = _as_batched(slow_phase)
         amplitude_batched, amplitude_vector = _as_batched(fast_amplitude)
         if phase_vector != amplitude_vector:

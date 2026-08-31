@@ -60,6 +60,7 @@ replaces `PRINetModel` (Rust-backed) and `compile_model` (pure-Python
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING
 
 import torch
@@ -67,6 +68,7 @@ from torch.utils.dlpack import from_dlpack
 
 from prin._prin_core import GatedPhaseActivationBridge, ResonanceLayerBridge
 
+from ._bridge import apply_rust_bridge
 from .ablation import (
     PhaseTrackerFrozen,
     PhaseTrackerStatic,
@@ -263,6 +265,7 @@ class ResonanceLayer(torch.nn.Module):
             seed_counter,
             seed_key,
         )
+        self._coupling_scale = 1.0 / math.sqrt(n_oscillators)
 
     @property
     def n_oscillators(self) -> int:
@@ -279,16 +282,16 @@ class ResonanceLayer(torch.nn.Module):
 
         Args:
             x: Input features. Shape: ``(batch, n_dims)``, dtype
-                ``torch.float64``, CPU, contiguous.
+                ``torch.float64`` or ``torch.float32``, CPU, contiguous.
 
         Returns:
             Final oscillator amplitudes. Shape: ``(batch, n_oscillators)``.
 
         Raises:
-            ValueError: If ``x`` is not ``float64``/CPU/contiguous or its
-                shape is not ``(batch, n_dims)``.
+            ValueError: If ``x`` is not CPU/contiguous or its shape is not
+                ``(batch, n_dims)``.
         """
-        result: torch.Tensor = _ResonanceLayerFunction.apply(x, self._bridge)  # type: ignore[no-untyped-call]
+        result: torch.Tensor = apply_rust_bridge(self._bridge.forward, [x])
         return result
 
     def rust_state_dict(self) -> bytes:
@@ -385,17 +388,17 @@ class GatedPhaseActivation(torch.nn.Module):
 
         Args:
             z: Input features. Shape: ``(batch, n_dims)``, dtype
-                ``torch.float64``, CPU, contiguous.
+                ``torch.float64`` or ``torch.float32``, CPU, contiguous.
 
         Returns:
             Activated output. Shape: ``(batch, n_dims)``, values in
             ``[0, 2*pi)`` scaled by the sigmoid gate.
 
         Raises:
-            ValueError: If ``z`` is not ``float64``/CPU/contiguous or its
-                shape is not ``(batch, n_dims)``.
+            ValueError: If ``z`` is not CPU/contiguous or its shape is not
+                ``(batch, n_dims)``.
         """
-        result: torch.Tensor = _GatedPhaseActivationFunction.apply(z, self._bridge)  # type: ignore[no-untyped-call]
+        result: torch.Tensor = apply_rust_bridge(self._bridge.forward, [z])
         return result
 
     def rust_state_dict(self) -> bytes:

@@ -40,6 +40,7 @@ _SCANNED = (
     "_compat.py",
     "_deprecation.py",
     "_public_api.py",
+    "_torch_compat.py",
     "tensor.py",
     "kernels.py",
     "solvers.py",
@@ -57,6 +58,7 @@ _SCANNED = (
 )
 _RUST_BRIDGE_MODULES = frozenset(
     {
+        "python/prin/_torch_compat.py",
         "python/prin/nn/inhibition_layers.py",
         "python/prin/nn/autoencoders.py",
         "python/prin/nn/hierarchical_layers.py",
