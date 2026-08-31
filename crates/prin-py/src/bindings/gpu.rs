@@ -32,6 +32,37 @@ fn to_f64(v: &[f32]) -> Vec<f64> {
     v.iter().map(|&x| f64::from(x)).collect()
 }
 
+/// Build a [`GpuSparseKuramoto`] whose k-NN coupling topology is derived from a
+/// phase vector entirely in Rust (via [`SparseCoupling::from_knn`]), so the
+/// Python caller never constructs coupling indices or weights.
+///
+/// This is the topology-construction counterpart the WP-036D `0144I2` device
+/// dispatch needs: `python/prin/_torch_compat.py`'s sparse k-NN
+/// `compute_derivatives` path only has the current phase, `n`, `k`, and the
+/// scalar model parameters — not a CSR triple — and computing the k-NN graph
+/// with `K / degree` weights on the Python side would be Python numerics
+/// (Coding Standards §1.2). Factored out of [`PyGpuSparseKuramoto::from_knn_phase`]
+/// so the feature-gated Rust test can exercise it without a DLPack capsule.
+fn build_gpu_sparse_from_knn_phase(
+    n: usize,
+    k_neighbors: usize,
+    coupling_strength: f64,
+    decay_rate: f64,
+    freq_adaptation_rate: f64,
+    phase: &[f64],
+) -> PyResult<GpuSparseKuramoto> {
+    let coupling =
+        SparseCoupling::from_knn(phase, k_neighbors, coupling_strength).map_err(sim_err)?;
+    GpuSparseKuramoto::new(
+        n,
+        decay_rate,
+        freq_adaptation_rate,
+        coupling_strength,
+        coupling,
+    )
+    .map_err(sim_err)
+}
+
 fn build_oscillator_state(
     phase_data: &[f32],
     amp_data: &[f32],
@@ -97,6 +128,37 @@ impl PyGpuSparseKuramoto {
             SparseCoupling::from_csr(&crow_indices, &col_indices, &values, n).map_err(sim_err)?;
         let inner = GpuSparseKuramoto::new(n, decay_rate, freq_adaptation_rate, k, coupling)
             .map_err(sim_err)?;
+        Ok(Self { inner })
+    }
+
+    /// Build a GPU-dispatched sparse Kuramoto model from a phase vector.
+    ///
+    /// The k-NN coupling topology (`k_neighbors` nearest phase neighbours per
+    /// oscillator, uniform `coupling_strength / k_neighbors` edge weight) is
+    /// built in Rust via `SparseCoupling::from_knn` — the Python caller supplies
+    /// only the current phase (as a `float32` DLPack tensor) and the scalar
+    /// model parameters, never coupling indices or weights.
+    #[staticmethod]
+    #[pyo3(signature = (
+        n, k_neighbors, coupling_strength, decay_rate, freq_adaptation_rate, phase,
+    ))]
+    fn from_knn_phase(
+        n: usize,
+        k_neighbors: usize,
+        coupling_strength: f64,
+        decay_rate: f64,
+        freq_adaptation_rate: f64,
+        phase: &Bound<'_, PyAny>,
+    ) -> PyResult<Self> {
+        let (_, p_data) = read_dlpack_f32(phase)?;
+        let inner = build_gpu_sparse_from_knn_phase(
+            n,
+            k_neighbors,
+            coupling_strength,
+            decay_rate,
+            freq_adaptation_rate,
+            &to_f64(&p_data),
+        )?;
         Ok(Self { inner })
     }
 
@@ -406,8 +468,8 @@ mod tests {
 
         let coupling = SparseCoupling::from_knn(&phase, k_neighbors, 2.0).unwrap();
         let csr = coupling.as_csr();
-        let crow_indices: Vec<usize> = csr.indptr().raw_storage().iter().map(|&x| x).collect();
-        let col_indices: Vec<usize> = csr.indices().iter().map(|&x| x).collect();
+        let crow_indices: Vec<usize> = csr.indptr().raw_storage().to_vec();
+        let col_indices: Vec<usize> = csr.indices().to_vec();
         let values: Vec<f64> = csr.data().to_vec();
 
         let model =
@@ -460,8 +522,8 @@ mod tests {
 
         let coupling = SparseCoupling::from_knn(&phase, k_neighbors, 2.0).unwrap();
         let csr = coupling.as_csr();
-        let crow_indices: Vec<usize> = csr.indptr().raw_storage().iter().map(|&x| x).collect();
-        let col_indices: Vec<usize> = csr.indices().iter().map(|&x| x).collect();
+        let crow_indices: Vec<usize> = csr.indptr().raw_storage().to_vec();
+        let col_indices: Vec<usize> = csr.indices().to_vec();
         let values: Vec<f64> = csr.data().to_vec();
 
         let gpu_model =
@@ -471,6 +533,48 @@ mod tests {
         let ref_dphase_f32 = to_f32(&reference.dphase);
         let gpu_dphase_f32 = to_f32(&gpu_deriv.dphase);
         approx_eq_f32(&gpu_dphase_f32, &ref_dphase_f32, "gpu vs cpu dphase");
+    }
+
+    #[test]
+    fn gpu_sparse_kuramoto_from_knn_phase_matches_cpu_reference() {
+        let n = 8;
+        let k_neighbors = 3;
+        let phase: Vec<f64> = (0..n).map(|i| 0.3 * i as f64).collect();
+        let amp = vec![1.0_f64; n];
+        let freq: Vec<f64> = (0..n).map(|i| 0.1 * (i as f64 - 2.5)).collect();
+        let state = OscillatorState::new(phase.clone(), amp, freq, None).unwrap();
+
+        let reference_model = KuramotoOscillator::new(
+            n,
+            2.0,
+            0.1,
+            0.01,
+            CouplingMode::SparseKnn {
+                k: Some(k_neighbors),
+            },
+        )
+        .unwrap();
+        let reference = reference_model.compute_derivatives(&state).unwrap();
+
+        let phase_derived =
+            build_gpu_sparse_from_knn_phase(n, k_neighbors, 2.0, 0.1, 0.01, &phase).unwrap();
+        assert_eq!(phase_derived.n_oscillators(), n);
+        assert_eq!(phase_derived.k(), 2.0);
+        let gpu = phase_derived.compute_derivatives(&state).unwrap();
+
+        // f32 GPU kernel vs f64 prin-dynamics reference: the wider `1e-4`
+        // absolute tolerance the `prin-sim` gpu module documents for exactly
+        // this comparison (`gpu_sparse_kuramoto_matches_cpu_dynamics_reference`).
+        for i in 0..n {
+            assert!(
+                (gpu.dphase[i] - reference.dphase[i]).abs() < 1e-4,
+                "dphase[{i}]: {} vs {}",
+                gpu.dphase[i],
+                reference.dphase[i],
+            );
+            assert!((gpu.damplitude[i] - reference.damplitude[i]).abs() < 1e-4);
+            assert!((gpu.dfrequency[i] - reference.dfrequency[i]).abs() < 1e-4);
+        }
     }
 
     // ── GpuMeanFieldEngine ─────────────────────────────────────────────

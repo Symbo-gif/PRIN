@@ -1882,6 +1882,15 @@ class GpuSparseKuramoto:
     def freq_adaptation_rate(self) -> float: ...
     @property
     def k(self) -> float: ...
+    @staticmethod
+    def from_knn_phase(
+        n: int,
+        k_neighbors: int,
+        coupling_strength: float,
+        decay_rate: float,
+        freq_adaptation_rate: float,
+        phase: object,
+    ) -> GpuSparseKuramoto: ...
     def compute_derivatives(
         self, phase: object, amplitude: object, frequency: object
     ) -> tuple[object, object, object]: ...
