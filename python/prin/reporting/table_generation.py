@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
@@ -780,9 +781,22 @@ def generate_all_tables(
         11
     """
     results, output = _dirs(results_dir, output_dir)
-    return {
-        name: generator(results, output) for name, generator in TABLE_GENERATORS.items()
-    }
+    generated: dict[str, Path] = {}
+    for name, generator in TABLE_GENERATORS.items():
+        try:
+            generated[name] = generator(results, output)
+        except (
+            PublicationGenerationError,
+            FileNotFoundError,
+            KeyError,
+            json.JSONDecodeError,
+        ):
+            # Reference-faithful graceful degradation: a table whose stored
+            # benchmark artefact is absent or malformed is omitted rather than
+            # aborting the batch (PRINet 3.0 ``generate_all_tables`` catches the
+            # same failure classes; WP036C-F1).
+            continue
+    return generated
 
 
 __all__ = [

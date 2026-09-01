@@ -362,13 +362,25 @@ def test_non_mapping_and_invalid_json_are_typed_schema_errors(tmp_path: Path) ->
         tables.table_ablation_variants(results, tmp_path / "output-b")
 
 
-def test_master_generators_fail_loudly_on_missing_artefact(tmp_path: Path) -> None:
+def test_master_generators_degrade_on_missing_artefact(tmp_path: Path) -> None:
+    """The batch generators degrade rather than abort on an absent artefact.
+
+    PRINet 3.0's ``generate_all_figures`` / ``generate_all_tables`` catch the
+    missing-artefact failure classes so one unavailable benchmark JSON does not
+    sink the whole batch; the ported y4q2 acceptance suite (``TestEdgeCases``,
+    ``TestGenerateAllFigures``) asserts that contract. The *individual*
+    generators still fail loudly with typed errors (covered by the schema-error
+    tests above) — only the master batch functions degrade (WP036C-F1).
+    """
     results = tmp_path / "empty"
     results.mkdir()
-    with pytest.raises(figures.ArtifactNotFoundError):
-        figures.generate_all_figures(results, tmp_path / "figures")
-    with pytest.raises(tables.ArtifactNotFoundError):
-        tables.generate_all_tables(results, tmp_path / "tables")
+
+    figure_result = figures.generate_all_figures(results, tmp_path / "figures")
+    assert isinstance(figure_result, dict)
+    assert all(paths == [] for paths in figure_result.values())
+
+    table_result = tables.generate_all_tables(results, tmp_path / "tables")
+    assert table_result == {}
 
 
 def test_output_paths_are_confined(stored_results: Path, tmp_path: Path) -> None:
