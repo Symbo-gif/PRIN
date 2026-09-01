@@ -1,6 +1,6 @@
 # Session 0144N — WP-036C S2: Audit — Acceptance suite port (integration, y-series, kernels; DV-025)
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S2 — Audit

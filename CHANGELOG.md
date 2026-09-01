@@ -18,6 +18,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **WP-036C S1 — Strict acceptance-suite port, part 2** (sessions `0144M` +
+  `0144M1`–`0144M8`, 2026-08-31–09-01, plan amendments #39/#40). 24 PRINet 3.0
+  reference files strict-ported under stable `tests/test_acceptance_*.py`
+  names: all 1,097 `def test_` functions across ~15,810 reference lines,
+  import-only adaptation (Testing Standards §1.1 — zero assertion edits, zero
+  tolerance annotations). DV-025 `retrain_controller` delivered (0144M2) as a
+  thin `prin` wrapper over the `SubconsciousController` MLP + ONNX export.
+  Compatibility work rebuilt through Rust-backed layers (M1–M3) and Python
+  experiment-tooling delegation (M4–M8); new `prin.temporal_metrics`,
+  `prin.adversarial_tools`, `prin.simulation_experiments`,
+  `prin.nn.temporal_compat`.
+- **WP-036C S2 audit (session `0144N`, 2026-09-01): FAIL** —
+  `DOCS/audits/036c-wp036c-audit.md`. The strict port itself is clean
+  (1,097/1,097 functions, import-only, zero weakened assertions, all quality/
+  security gates green, Snyk Code 0). But the WP's defining acceptance
+  criterion — the full ported suite green on CPU — is unmet: **~78 ported
+  acceptance tests fail** in the default gate (independently reproduced: 53
+  outside `test_acceptance_y4q3.py` + 24 inside), and S1 closed its exit gate
+  by routing all of them into an "out-of-scope discovery" bucket the 0144M
+  brief does not authorise, with no maintainer-approved quarantine for any.
+  Two D1 (WP036C-F1 acceptance/CI-gate breach, systemic; WP036C-F2 in-scope
+  Rust-bridge gradient-flow + FFI-panic repairs left undone), two D2
+  (WP036C-F3 missing GPU backend guards; WP036C-F5 self-inflicted
+  `0.3.0`-vs-`3.0.0` version-assertion break), one D3 (WP036C-F4
+  `check_no_python_numerics` scope narrowed 19→17 without amendment), four D4
+  (WP036C-F6 handoff
+  "no regressions" framing; WP036C-F7 untracked working-tree artefact;
+  WP036C-F8 stale DV-025 traceability rows; WP036C-F9 lint-ignore scope creep
+  on shipped modules). FAIL freezes new feature work until S3 (`0144O`) clears
+  it. Not pushed (amendment #28 cadence).
 - **WP-036 S1 — `prin` PRINet-3.0-compatible symbol surface** (sessions
   0141A–0141E, 2026-08-27–28). All 172 `prinet.__all__` symbols resolve from
   `prin` and pass a construct/callable smoke check (parametrized matrix, 348
