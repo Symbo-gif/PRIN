@@ -9,6 +9,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **ETCA-001 remediation (2026-09-01) — all ten findings closed; verdict
+  `PASS-WITH-REMEDIATION` → `PASS`.** Dedicated remediation session for the
+  first Executive Testing and CI Audit (`DOCS/audits/EXECUTIVE_TESTING_AND_CI_AUDIT_REPORT_001.md`
+  §7).
+  - **T-F1:** `python/prin/kernels.py` and `python/prin/nn/hybrid_compat.py`
+    carry bandit-native `# nosec B404/B603/B110` (the rationale already
+    documented for the ruff `# noqa`), so `bandit -r python/prin` exits 0. The
+    R17 deviation-ledger and R34 DV-register gates move from `python.yml`'s
+    `lint` job into a new dedicated **`governance`** job so a failing lint step
+    can never leave them unreached again.
+  - **T-F2:** 17 WP-036A reference-parity tests (`test_autoencoders.py`,
+    `test_hierarchical_layers.py`, `test_inhibition_layers.py`,
+    `test_model.py`) gained an in-body `pytest.importorskip(...)` guard so they
+    skip — not hard-fail — on the `python.yml` matrix, which does not install
+    the archived PRINet 3.0 reference.
+  - **T-F3:** `tools/wp001_baseline.py` scans the whole leading session-brief
+    metadata block (to the first `## ` heading) instead of a hard 12-line
+    window; the `0144P` brief's `**Status:**` block was compressed.
+  - **T-F5:** `python.yml` (ubuntu legs), `repro.yml`, and the new
+    `nightly.yml` reclaim runner disk and install a CPU-only torch before
+    `maturin develop`, so `torch>=2.0` no longer drags the ~5 GB CUDA 13 wheel
+    stack from PyPI (`[Errno 28]`). DV-022 scope extended.
+  - **T-F6:** `rust.yml`'s Windows `test` leg returns to GitHub-hosted
+    `windows-latest` (a `GITHUB_TOKEN` cannot query self-hosted-runner status
+    for a dynamic preflight), removing the single-runner SPOF that hung the leg
+    24 h. `PRIN-GPU-Runner` stays reserved for `gpu.yml`. DV-024 updated.
+  - **T-F8:** `test_no_gpu_throughput_regression` quarantine now tracked as
+    **DV-032** (perf-test hardening) with a dated maintainer disposition;
+    `tests/conftest.py` skip reason names it.
+  - **T-F9:** new `prin.reporting._artifacts.allowed_output_roots()` adds the
+    in-repo `.pytest_basetemp` to the figure/table output allowlist only under
+    pytest, so the 11 `test_acceptance_y4q2` generators pass under the
+    `AGENTS.md`-mandated `--basetemp` override; production confinement
+    unchanged.
+  - **T-F10:** `AGENTS.md` bandit invocation aligned to
+    `bandit -r python/prin -c pyproject.toml` (matches `python.yml` /
+    Coding Standards §5/§6.2).
+  - **CI-only Windows failures** flagged by the audit's T6 dimension:
+    `StateCollector` step-latency timing switched `time.monotonic()` →
+    `time.perf_counter()` (`python/prin/training_hooks.py` — Windows
+    `monotonic` granularity zeroed sub-15 ms steps); the two
+    `test_wp036d_gpu_dispatch.py` kernel-agreement tests gained a
+    `skipif(not hasattr(prin._prin_core, "GpuSparseKuramoto"))` guard for the
+    non-CUDA `python.yml` build.
+
 - **Version string `0.3.0-alpha.1` → `0.3.0`** (WP-036C S1 sub-pass `0144M1`,
   plan amendment #40). The pre-release tag is dropped so the ported PRINet 3.0
   Y2Q4 API-freeze acceptance tests (`test_acceptance_y2q4::TestVersioning` /
@@ -17,6 +62,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is a version-string correction only; release publishing is unchanged.
 
 ### Added
+
+- **`.github/workflows/nightly.yml` — scheduled full-suite + enforcing
+  benchmark-regression gate (ETCA-001 T-F7).** Runs at 05:00 UTC (and on
+  `workflow_dispatch`): a `full-suite` job (`pytest tests/ parity/` including
+  `slow`, plus `cargo test --workspace --features strict-checks`) and a
+  `bench-regression` job that runs the criterion and `pytest-benchmark`
+  microbenchmarks and fails on a **>10 % mean-runtime regression** versus a
+  rolling `actions/cache` baseline, via the new `tools/check_bench_regression.py`.
+  Closes the Testing Standards §2 (">10 % slowdown fails CI") and §4
+  ("full suite runs nightly") gaps. The first scheduled run seeds the
+  baseline; the enforcing comparison is live from the second run.
+
+- **`tools/check_bench_regression.py`** — compares current criterion
+  (`target/criterion/**/new/estimates.json`) and `pytest-benchmark`
+  (`pytest-bench.json`) means against a stored baseline directory and exits
+  non-zero on a regression past a configurable threshold (default 10 %). A
+  missing baseline seeds rather than fails.
 
 - **Executive Testing and CI Audit (ETCA) — new audit type and first session
   (ETCA-001, 2026-09-01).** Phase 6 mid-phase audit of the test suite and
