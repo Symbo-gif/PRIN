@@ -23,6 +23,21 @@ jobs:
         run: interrogate -c pyproject.toml python/prin
       - name: Security SAST (bandit)
         run: bandit -r python/prin -c pyproject.toml
+
+  # ETCA-001 T-F1: the R17 deviation-ledger and R34 DV-register gates ran as
+  # the last two steps of the `lint` job, so any earlier lint-step failure
+  # (e.g. `bandit` exiting non-zero) left them permanently unreached. They are
+  # now their own job with a minimal checkout+python setup so they always run
+  # regardless of the state of ruff/mypy/interrogate/bandit.
+  governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Deviation-ledger consistency (R17, EA-004 E-F2 enforcement)
         shell: bash
         run: |
@@ -85,11 +100,24 @@ jobs:
           else
             echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
           fi
+      # ETCA-001 T-F5 / DV-022: the GitHub-hosted ubuntu-latest image ships
+      # ~14 GB free; `torch>=2.0` from PyPI now drags the full CUDA 13 stack
+      # (cuda-toolkit, nvidia-*-cu13, triton — ~5 GB) as hard deps, exhausting
+      # the disk during `maturin develop`. Reclaim space and install a genuine
+      # CPU-only torch *before* the build so nothing re-resolves it.
+      - name: Free disk space (Linux hosted runner)
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost /opt/hostedtoolcache/CodeQL \
+            "${AGENT_TOOLSDIRECTORY:-}" || true
+          sudo apt-get clean || true
+          df -h /
       - name: Build extension and install
         run: |
           python -m pip install --no-cache-dir maturin
-          maturin develop -m crates/prin-py/Cargo.toml
           python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
+          maturin develop -m crates/prin-py/Cargo.toml
           python -m pip install --no-cache-dir -e ".[dev,onnx]"
       - name: Run tests
         run: python -m pytest tests/ -v -m "not slow and not gpu" --cov=prin --cov-report=xml

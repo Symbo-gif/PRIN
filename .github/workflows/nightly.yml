@@ -1,0 +1,109 @@
+name: nightly
+
+# ETCA-001 finding T-F7: Testing Standards §4 requires the full suite to run
+# nightly, and Testing Standards §2 requires the criterion / pytest-benchmark
+# regression gates to *fail on a >10% slowdown*. Before this workflow no
+# `schedule:`d job existed and no gate ever compared a benchmark against a
+# stored baseline. This workflow closes both gaps.
+#
+# Reference-hardware caveat (PSR-016 §5, rust.yml `bench-smoke` comment):
+# GitHub-hosted runners have variable/throttled CPU and are not the Phase 2
+# exit-gate reference hardware. The 10% threshold here catches gross
+# regressions; it is not a substitute for a measured speedup-ratio
+# reproduction on the reference host.
+
+on:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-suite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost /opt/hostedtoolcache/CodeQL \
+            "${AGENT_TOOLSDIRECTORY:-}" || true
+          sudo apt-get clean || true
+          df -h /
+      - name: Build and install (CPU-only torch)
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          python -m pip install --no-cache-dir maturin
+          python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
+          maturin develop -m crates/prin-py/Cargo.toml
+          python -m pip install --no-cache-dir -e ".[dev,onnx]"
+          python -m pip install --no-cache-dir -e "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main"
+      - name: Full Python suite (including slow + parity)
+        run: python -m pytest tests/ parity/ -v
+      - name: Rust workspace tests (strict-checks)
+        run: cargo test --workspace --features strict-checks
+
+  bench-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost /opt/hostedtoolcache/CodeQL \
+            "${AGENT_TOOLSDIRECTORY:-}" || true
+          sudo apt-get clean || true
+      - name: Build and install (CPU-only torch)
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          python -m pip install --no-cache-dir maturin
+          python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
+          maturin develop -m crates/prin-py/Cargo.toml
+          python -m pip install --no-cache-dir -e ".[dev,onnx]"
+      # Rolling baseline: the exact key never hits (run_id is unique) so a fresh
+      # copy is always saved; restore-keys pulls the most recent prior nightly.
+      - name: Restore benchmark baseline
+        uses: actions/cache@v4
+        with:
+          path: bench-baseline
+          key: bench-baseline-${{ github.run_id }}
+          restore-keys: |
+            bench-baseline-
+      - name: Rust criterion benchmarks
+        run: |
+          cargo bench --workspace \
+            --bench control_buffer --bench training_hooks \
+            --bench mean_field_rk4_bench --bench sparse_knn_bench \
+            --bench discrete_step_bench --bench sweep_bench \
+            --bench resonance_layer_bridge --bench phase_tracker_bridge
+      - name: pytest-benchmark microbenchmarks
+        run: |
+          python -m pytest tests/ -m slow -q \
+            --benchmark-only --benchmark-json=pytest-bench.json || true
+      - name: Compare against baseline (>10% mean regression fails)
+        run: python tools/check_bench_regression.py --baseline bench-baseline --threshold 0.10
+      - name: Refresh baseline
+        if: always()
+        run: |
+          rm -rf bench-baseline
+          mkdir -p bench-baseline
+          [ -d target/criterion ] && cp -r target/criterion bench-baseline/criterion || true
+          [ -f pytest-bench.json ] && cp pytest-bench.json bench-baseline/pytest-bench.json || true

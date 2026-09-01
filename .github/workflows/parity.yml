@@ -50,11 +50,21 @@ jobs:
           else
             echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
           fi
+      # ETCA-001 T-F5 / DV-022: reclaim disk and install a CPU-only torch
+      # before `maturin develop` so `torch>=2.0` does not pull the ~5 GB CUDA
+      # 13 wheel stack from PyPI and exhaust the ubuntu-latest disk.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost /opt/hostedtoolcache/CodeQL \
+            "${AGENT_TOOLSDIRECTORY:-}" || true
+          sudo apt-get clean || true
+          df -h /
       - name: Install new build + reference PRINet 3.0.0 in one venv
         run: |
           pip install --no-cache-dir maturin
-          maturin develop -m crates/prin-py/Cargo.toml
           pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
+          maturin develop -m crates/prin-py/Cargo.toml
           pip install --no-cache-dir -e ".[dev,onnx]"
           pip install --no-cache-dir pytest-xdist
           pip install --no-cache-dir -e "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main"

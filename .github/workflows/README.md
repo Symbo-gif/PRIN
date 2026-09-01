@@ -7,6 +7,7 @@
 | `parity.yml` | Differential corpus gate; runs when `parity/` cases are present |
 | `gpu.yml` | Opt-in self-hosted GPU validation |
 | `repro.yml` | Reproduction pipeline: tamper tests + verified figure/table regeneration from the SHA-256 manifest (WP-035) |
+| `nightly.yml` | Scheduled (05:00 UTC) full suite — `pytest tests/ parity/` incl. `slow`, `cargo test --features strict-checks` — plus the enforcing criterion / pytest-benchmark regression gate (`tools/check_bench_regression.py`, >10% mean slowdown fails); Testing Standards §2/§4, ETCA-001 T-F7 |
 | `release.yml` | Three-OS abi3 wheel matrix (manylinux x86_64/aarch64, Windows x86_64, macOS universal2), sdist, wheel smoke test, and PyPI OIDC / crates.io publication path |
 | `snyk.yml` | Snyk Code plus required full-history Gitleaks secret scanning |
 

@@ -40,24 +40,26 @@ jobs:
       - run: cargo clippy --workspace --all-targets --features strict-checks -- -D warnings
 
   test:
+    # ETCA-001 T-F6 / DV-024: the Windows `test` leg was pinned to the single
+    # self-hosted PRIN-GPU-Runner (DV-016/DV-023 migration). When that runner
+    # is offline the job sat ~24 h "awaiting a runner" before auto-failing —
+    # GitHub Actions has no queue timeout, so `timeout-minutes` does not help.
+    # The self-hosted runner is a single point of failure with no fallback and
+    # the GITHUB_TOKEN cannot query runner status to pick one dynamically
+    # (that needs repo-admin scope). Windows Rust tests therefore run on
+    # GitHub-hosted `windows-latest` — reliable and always green, at the cost
+    # of the known DV-016 hosted-Windows slowness, bounded by `timeout-minutes`
+    # below. The self-hosted runner stays reserved for `gpu.yml` (`[gpu]` tag).
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             runner: ubuntu-latest
-            self_hosted: false
           - os: windows-latest
-            # DV-024 RESOLVED: self-hosted PRIN-GPU-Runner is back online
-            # (2026-08-25). Routes Windows to [self-hosted, Windows, X64]
-            # to avoid GitHub-hosted windows-latest timeout (DV-016).
-            # self_hosted: true — Rust is pre-installed; skip dtolnay/rust-toolchain
-            # (requires WSL bash, unavailable on this runner) and rust-cache.
-            runner: [self-hosted, Windows, X64]
-            self_hosted: true
+            runner: windows-latest
           - os: macos-latest
             runner: macos-latest
-            self_hosted: false
     runs-on: ${{ matrix.runner }}
     # DV-016: bound worst case rather than risk the default 360-minute job
     # timeout silently burning Actions minutes.
@@ -65,9 +67,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-        if: ${{ !matrix.self_hosted }}
       - uses: Swatinem/rust-cache@v2
-        if: ${{ !matrix.self_hosted }}
       - run: cargo test --workspace
       - name: CubeCL CPU kernel-equivalence tests
         run: cargo test -p prin-kernels --features cpu
