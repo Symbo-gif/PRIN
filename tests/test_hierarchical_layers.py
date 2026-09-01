@@ -291,3 +291,40 @@ def test_reexports_are_real_and_public_surface_remains_frozen() -> None:
         assert getattr(prin.nn, name) is getattr(implemented, name)
         assert getattr(prin, name) is getattr(implemented, name)
     assert verify_api_surface(prin.__all__) == (set(), set())
+
+
+def test_discrete_dtg_step_integrate_pass_input_gradients_through() -> None:
+    """WP036C-F2 regression: the STE keeps a gradient path to the phase input.
+
+    The Rust step/integrate forward detaches its inputs; before the S3 fix a
+    ``loss.backward()`` through :meth:`DiscreteDeltaThetaGamma.integrate` left an
+    upstream encoder's input with ``grad is None``. The straight-through identity
+    term restores an input Jacobian without changing the returned values.
+    """
+    from prin.nn import DiscreteDeltaThetaGamma
+
+    dtg = DiscreteDeltaThetaGamma(n_delta=2, n_theta=4, n_gamma=8)
+    n_osc = 2 + 4 + 8
+
+    encoder = torch.nn.Linear(3, n_osc)
+    dets = torch.randn(5, 3, requires_grad=True)
+    phase = encoder(dets) % (2.0 * math.pi)
+    amp = torch.ones_like(phase)
+
+    evolved_phase, _evolved_amp = dtg.integrate(phase, amp, n_steps=3, dt=0.01)
+    # Value unchanged by the zero-valued STE term.
+    with torch.no_grad():
+        ref_phase, _ = dtg.integrate(phase.detach(), amp, n_steps=3, dt=0.01)
+    assert torch.allclose(evolved_phase, ref_phase, atol=1e-6)
+
+    evolved_phase.sum().backward()
+    assert dets.grad is not None
+    assert torch.isfinite(dets.grad).all()
+    assert dets.grad.abs().sum() > 0.0
+
+    # step() carries the same path.
+    dets2 = torch.randn(4, 3, requires_grad=True)
+    phase2 = encoder(dets2) % (2.0 * math.pi)
+    sp, sa = dtg.step(phase2, torch.ones_like(phase2), dt=0.01)
+    (sp.sum() + sa.sum()).backward()
+    assert dets2.grad is not None and dets2.grad.abs().sum() > 0.0

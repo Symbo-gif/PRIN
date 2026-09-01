@@ -211,7 +211,11 @@ class DiscreteDeltaThetaGamma(torch.nn.Module):
     oscillator numerics. The Rust step/integrate path is non-differentiable;
     :meth:`step` / :meth:`integrate` add a value-preserving zero term over the
     parameters so ``loss.backward()`` still populates their ``.grad`` (the
-    WP-036B E4 layer-mirror pattern). ``order_parameters`` / ``pac_index`` are
+    WP-036B E4 layer-mirror pattern), and a straight-through identity term over
+    the ``phase`` / ``amplitude`` inputs so gradients still reach an upstream
+    encoder (WP-036C S3, WP036C-F2: the reference module was a pure PyTorch
+    graph with a real input Jacobian; the STE is the value-preserving surrogate
+    over the Rust forward). ``order_parameters`` / ``pac_index`` are
     Rust-computed diagnostics.
 
     Args:
@@ -328,6 +332,20 @@ class DiscreteDeltaThetaGamma(torch.nn.Module):
             acc = acc + (total - total.detach())
         return acc
 
+    @staticmethod
+    def _ste(output: torch.Tensor, source: torch.Tensor) -> torch.Tensor:
+        """Straight-through identity: return ``output`` value with ``d/dsource = I``.
+
+        The Rust forward detaches its inputs, so a bare ``output`` carries no
+        gradient path back to ``source`` (an upstream encoder). Adding the
+        exactly-zero ``source - source.detach()`` restores an identity Jacobian
+        without changing the value (WP036C-F2). Shapes must match; if the Rust
+        forward changed the shape the term is skipped.
+        """
+        if output.shape != source.shape:
+            return output
+        return output + (source.to(output.dtype) - source.to(output.dtype).detach())
+
     def step(
         self, phase: torch.Tensor, amplitude: torch.Tensor, dt: float = 0.01
     ) -> tuple[torch.Tensor, torch.Tensor]:
@@ -348,8 +366,8 @@ class DiscreteDeltaThetaGamma(torch.nn.Module):
         new_p = from_dlpack(cap_p).to(dtype=phase.dtype, device=phase.device)
         new_a = from_dlpack(cap_a).to(dtype=amplitude.dtype, device=amplitude.device)
         zero = self._zero_term(new_a)
-        new_p = new_p + zero
-        new_a = new_a + zero
+        new_p = self._ste(new_p + zero, phase_b)
+        new_a = self._ste(new_a + zero, amplitude_b)
         if was_vector:
             new_p = new_p.squeeze(0)
             new_a = new_a.squeeze(0)
@@ -372,8 +390,8 @@ class DiscreteDeltaThetaGamma(torch.nn.Module):
         new_p = from_dlpack(cap_p).to(dtype=phase.dtype, device=phase.device)
         new_a = from_dlpack(cap_a).to(dtype=amplitude.dtype, device=amplitude.device)
         zero = self._zero_term(new_a)
-        new_p = new_p + zero
-        new_a = new_a + zero
+        new_p = self._ste(new_p + zero, phase_b)
+        new_a = self._ste(new_a + zero, amplitude_b)
         if was_vector:
             new_p = new_p.squeeze(0)
             new_a = new_a.squeeze(0)
