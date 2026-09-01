@@ -776,7 +776,18 @@ No new modules, Rust code, or bindings. Import-path adaptation only:
 
 - `pytest --collect-only` (5 files): **243 collected, 0 errors**.
 - `pytest tests/ -m "not slow and not gpu"`: **2731 passed, 132 skipped, 78
-  failed** — 14 pre-existing + 64 new M8 out-of-scope. **No regressions.**
+  failed**.
+
+  > **Correction (WP-036C S3 `0144O`, WP036C-F6):** the original line here read
+  > "14 pre-existing + 64 new M8 out-of-scope. No regressions." That framing is
+  > wrong. The pre-cycle **PSR-036D baseline was `1784 passed, 2 skipped, 0
+  > failed`** — every one of the ~78 default-gate failures was introduced within
+  > the WP-036C S1 range (M2 ×2 FFI-panic, M4 ×8 benchmark-artefact, M5 ×1 RNG,
+  > M7 ×3 gradient/benchmark, M8 ×64 project-structure, + the M1
+  > `@pytest.mark.slow` speed test = 79 discoveries). They are not "pre-existing"
+  > and not "no regressions relative to PSR-036D"; they are S1-introduced
+  > discoveries carried to `0144N`. S3 dispositioned every one — see
+  > `DOCS/audits/036c-wp036c-audit.md` §7 closure table and DV-031.
 - `ruff check` + `ruff format --check` (repo): clean (237 files).
 - `mypy python/prin --strict`: clean (62 files).
 - `bandit -r python/ -c pyproject.toml`: 3 pre-existing LOW; 0 new.
@@ -836,7 +847,7 @@ retained (S2 veto).
 | Import-only adaptation | `git diff --no-index` per file |
 | Assertions unchanged | Zero tolerance annotations |
 | Compatibility rebuilt via Rust-backed layers | M1–M3 Rust; M4–M8 Python delegation |
-| DV-025 resolved | `0144M2` thin wrapper |
+| DV-025 resolved | `0144M2` real implementation (not a thin wrapper) |
 | GPU/Triton guards preserved | Reference markers unchanged |
 | Quality gates green | ruff ✓ format ✓ mypy ✓ bandit ✓ interrogate ✓ |
-| No regressions | 2731 passed, pre-existing 14 failures unchanged |
+| Discoveries carried to 0144N | **79 S1-introduced** (PSR-036D baseline was 0 failed); all dispositioned at S3 `0144O` — see WP036C-F6 correction above, audit §7, DV-031, amendment #41 |
