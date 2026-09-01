@@ -1,6 +1,6 @@
 # Session 0144M4 — WP-036C S1 (sub-pass 4/8): Y3Q3/Y3Q4/Y3Q45/Y3Q49 strict port
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31; committed locally at commit a0b7c2b, not pushed; register status backfilled in 0144M5)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S1 — Coding

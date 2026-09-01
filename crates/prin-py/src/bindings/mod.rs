@@ -20,6 +20,7 @@ pub(crate) mod models;
 pub(crate) mod optim;
 pub(crate) mod phase5;
 pub(crate) mod phase_tracker;
+pub(crate) mod sim;
 pub(crate) mod slot_attention;
 pub(crate) mod state;
 pub(crate) mod sweep;

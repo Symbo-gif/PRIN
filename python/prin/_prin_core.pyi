@@ -1898,6 +1898,56 @@ def phase_to_rate(
     temperature: float = 1.0,
 ) -> list[float]: ...
 
+# --- OscilloSim-compat + Year-4-Q1 owners (WP-036C S1 / 0144M5) ---
+def oscillo_compat_run(
+    n: int,
+    coupling_strength: float,
+    mode: str,
+    k_neighbors: int,
+    sparsity: float,
+    mu: float,
+    freq_mean: float,
+    freq_std: float,
+    phase_lag: float,
+    p_rewire: float,
+    integrator: str,
+    seed: int,
+    n_steps: int,
+    dt: float,
+    record_trajectory: bool,
+    record_interval: int,
+    coupling_weights: list[float] | None = None,
+    initial_phase: list[float] | None = None,
+    initial_amplitude: list[float] | None = None,
+) -> tuple[
+    list[float],
+    list[float],
+    list[float],
+    float,
+    float,
+    list[list[float]] | None,
+]: ...
+def ring_topology_indices(n: int, k: int) -> list[int]: ...
+def small_world_topology_indices(
+    n: int, k: int, p_rewire: float, seed: int
+) -> list[int]: ...
+def cosine_coupling_kernel_row(n: int, k: int, a: float) -> list[float]: ...
+def chimera_initial_condition(n: int, seed: int) -> list[float]: ...
+def gaussian_bump_ic(
+    n: int, a0: float, sigma_ratio: float, phi0: float, noise_amp: float, seed: int
+) -> list[float]: ...
+def half_sync_half_random_ic(
+    n: int, sync_phase: float, noise_amp: float, seed: int
+) -> list[float]: ...
+def y4q1_bootstrap_ci(
+    values: list[float], n_bootstrap: int = 10000, alpha: float = 0.05, seed: int = 42
+) -> tuple[float, float, float, float, float]: ...
+def y4q1_cohens_d(group_a: list[float], group_b: list[float]) -> float: ...
+def y4q1_welch_t_test(
+    group_a: list[float], group_b: list[float]
+) -> tuple[float, float, float, float]: ...
+def y4q1_spatial_correlation(values: list[float], max_lag: int = 50) -> list[float]: ...
+
 # --- GPU engine bindings (WP-036D / 0144I1) ---
 # Available only when prin-py is built with the `cuda` or `wgpu` feature.
 class GpuSparseKuramoto:

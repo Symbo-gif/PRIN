@@ -1,6 +1,9 @@
 # Session 0144M5 — WP-036C S1 (sub-pass 5/8): Y4Q1/Y4Q1_2/Y4Q1_3 strict port
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31) — committed locally at a green sub-pass gate;
+not pushed. 171 / 171 reference functions ported (190 / 191 default-gate
+executed; 1 RNG-regime out-of-scope discovery carried to `0144N`). Full
+accounting in `DOCS/experiments/0144M-wp036c-s1-handoff.md`.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S1 — Coding

@@ -68,7 +68,7 @@ class _TrackerAdapter(torch.nn.Module):
             identity_preservation = result.identity_preservation
         else:
             result = self.owner.track_sequence(prepared, Seed(self._seed, 0))
-            identity_preservation = result[2]
+            identity_preservation = result["identity_preservation"]
         return {"identity_preservation": float(identity_preservation)}
 
 

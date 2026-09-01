@@ -164,7 +164,7 @@ def test_oscillosim_validates_arguments() -> None:
 def test_oscillosim_trajectory_recording() -> None:
     """Trajectory recording populates ``trajectory_phase`` and order params."""
     sim = OscilloSim(16, coupling_mode="mean_field")
-    result = sim.run(n_steps=5, dt=0.01, record_trajectory=True)
+    result = sim.run(n_steps=5, dt=0.01, record_trajectory=True, record_interval=1)
     assert result.trajectory_phase is not None
     assert result.trajectory_phase.shape[0] == 5
     assert len(result.order_parameter) == 5
@@ -193,53 +193,60 @@ def test_oscillator_pruner_is_real() -> None:
 
 
 def test_ring_topology_returns_correct_neighbour_count() -> None:
-    """``ring_topology`` returns a flat list of N*k indices."""
-    nbrs = ring_topology(8, k_neighbors=2)
-    assert len(nbrs) == 16
-    # Each oscillator has exactly 2 neighbours.
+    """``ring_topology`` returns an ``(N, k)`` int64 tensor (PRINet 3.0 shape)."""
+    nbrs = ring_topology(8, 2)
+    assert nbrs.shape == (8, 2)
+    assert nbrs.dtype.is_floating_point is False
     for i in range(8):
-        row = nbrs[i * 2 : (i + 1) * 2]
+        row = nbrs[i].tolist()
         assert len(row) == 2
         assert all(0 <= j < 8 for j in row)
+        assert i not in row
 
 
 def test_ring_topology_validates_arguments() -> None:
     """``ring_topology`` rejects invalid N and k."""
-    with pytest.raises(ValueError, match="n_oscillators"):
-        ring_topology(1)
-    with pytest.raises(ValueError, match="k_neighbors must be a positive even"):
-        ring_topology(8, k_neighbors=3)
-    with pytest.raises(ValueError, match=r"k_neighbors.*must be < n_oscillators"):
-        ring_topology(4, k_neighbors=4)
+    with pytest.raises(ValueError, match="k must be < N"):
+        ring_topology(1, 4)
+    with pytest.raises(ValueError, match="k must be even"):
+        ring_topology(8, 3)
+    with pytest.raises(ValueError, match="k must be < N"):
+        ring_topology(4, 4)
 
 
 def test_ring_topology_deterministic() -> None:
     """``ring_topology`` is deterministic (no RNG)."""
-    a = ring_topology(10, k_neighbors=4)
-    b = ring_topology(10, k_neighbors=4)
-    assert a == b
+    import torch
+
+    a = ring_topology(10, 4)
+    b = ring_topology(10, 4)
+    assert torch.equal(a, b)
 
 
 def test_small_world_topology_no_rewire_matches_ring() -> None:
     """With ``p_rewire=0``, small-world equals ring."""
-    ring = ring_topology(8, k_neighbors=2)
-    sw = small_world_topology(8, k_neighbors=2, p_rewire=0.0, seed=42)
-    assert sorted(sw) == sorted(ring)
+    import torch
+
+    ring = ring_topology(8, 2)
+    sw = small_world_topology(8, 2, p_rewire=0.0, seed=42)
+    assert torch.equal(ring, sw)
 
 
 def test_small_world_topology_validates_arguments() -> None:
     """``small_world_topology`` rejects invalid arguments."""
-    with pytest.raises(ValueError, match="p_rewire"):
-        small_world_topology(8, p_rewire=1.5)
-    with pytest.raises(ValueError, match="n_oscillators"):
-        small_world_topology(1)
+    with pytest.raises(ValueError, match="k must be even"):
+        small_world_topology(8, 3)
+    with pytest.raises(ValueError, match="k must be < N"):
+        small_world_topology(1, 4)
 
 
 def test_small_world_topology_deterministic_with_seed() -> None:
     """Same seed produces the same rewiring."""
-    a = small_world_topology(16, k_neighbors=4, p_rewire=0.3, seed=99)
-    b = small_world_topology(16, k_neighbors=4, p_rewire=0.3, seed=99)
-    assert a == b
+    import torch
+
+    a = small_world_topology(16, 4, p_rewire=0.3, seed=99)
+    b = small_world_topology(16, 4, p_rewire=0.3, seed=99)
+    assert torch.equal(a, b)
 
 
 # ── temporal_training grab-bag ────────────────────────────────────────────
@@ -358,16 +365,28 @@ def test_measure_wall_time_validates_arguments() -> None:
 @pytest.mark.parametrize(
     "cls_or_fn",
     [
-        AblationHybridPRINetV2,
-        create_ablation_model,
         train_clevr_n_single_seed,
         train_clevr_n_extended,
     ],
 )
 def test_y4q1_tools_d22_stubs_raise(cls_or_fn: object) -> None:
-    """Every numeric y4q1_tools symbol raises the D-2.2 disposition."""
+    """Every still-deferred numeric y4q1_tools symbol raises the D-2.2 disposition.
+
+    ``AblationHybridPRINetV2`` / ``create_ablation_model`` were rebuilt at
+    0144M5 (``prin.nn.ablation_variants``) and are no longer D-2.2 stubs.
+    """
     with pytest.raises(NotImplementedError, match=r"D-2\.2"):
         cls_or_fn()  # type: ignore[operator]
+
+
+def test_ablation_variants_are_real() -> None:
+    """Ablation variants build real models, not D-2.2 stubs (0144M5)."""
+    import torch
+
+    model = create_ablation_model("full", n_input=32, n_classes=4, d_model=16)
+    assert isinstance(model, AblationHybridPRINetV2)
+    out = model(torch.randn(2, 32))
+    assert out.shape == (2, 4)
 
 
 # ── Hybrid-model family ───────────────────────────────────────────────────
@@ -491,13 +510,18 @@ def test_oscillosim_topology_alias_modes() -> None:
         assert isinstance(result, SimulationResult)
 
 
-def test_oscillosim_rk45_integrator() -> None:
-    """``OscilloSim`` with ``integrator='rk45'`` uses the adaptive solver."""
+def test_oscillosim_rk4_integrator() -> None:
+    """``OscilloSim`` with ``integrator='rk4'`` runs the RK4 stepping loop.
+
+    (PRINet 3.0 ``OscilloSim`` supports ``euler`` / ``rk4`` only; the earlier
+    PRIN-only ``rk45`` adaptive path was dropped in the ``0144M5``
+    reference realignment.)
+    """
     sim = OscilloSim(
         8,
         coupling_strength=1.0,
         coupling_mode="mean_field",
-        integrator="rk45",
+        integrator="rk4",
     )
     result = sim.run(n_steps=5, dt=0.01)
     assert isinstance(result, SimulationResult)

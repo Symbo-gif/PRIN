@@ -1,67 +1,76 @@
 """PRINet 3.0-compatible Year 4 Q1 experiment utilities.
 
-This module provides the PRINet 3.0 ``prinet.utils.y4q1_tools`` public API
-as a mix of real data containers / profiling utilities and documented D-2.2
-stubs. Dataclasses (``AblationConfig``, ``ExtendedTrainingResult``) and
-profiling helpers (``count_flops``, ``measure_wall_time``) are real
-implementations. Training loops and model constructors requiring Python
-numerics receive typed D-2.2 dispositions.
+This module provides the PRINet 3.0 ``prinet.utils.y4q1_tools`` public API.
+Profiling helpers (``count_flops``, ``measure_wall_time``) and dataclasses are
+real. The ablation framework (``AblationConfig``, ``AblationHybridPRINetV2``,
+``create_ablation_model``) is re-exported from
+:mod:`prin.nn.ablation_variants` (a Rust-backed PyTorch composition). The
+Year-4-Q1.2 statistical utilities and chimera initial conditions delegate their
+numerics to the Rust ``prin_sim`` owners exposed through
+:mod:`prin._prin_core`; ``seed_stability_analysis`` is plain list bookkeeping.
 
-No numerical computation is introduced (Coding Standards Sec. 1.2).
+No numerical computation is introduced in this module (Coding Standards
+Sec. 1.2).
 """
 
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import dataclass, field
 from typing import Any, NoReturn
+
+import torch
+
+from prin._prin_core import (
+    chimera_initial_condition as _rust_chimera_ic,
+)
+from prin._prin_core import (
+    gaussian_bump_ic as _rust_gaussian_bump_ic,
+)
+from prin._prin_core import (
+    half_sync_half_random_ic as _rust_half_sync_ic,
+)
+from prin._prin_core import (
+    y4q1_bootstrap_ci as _rust_bootstrap_ci,
+)
+from prin._prin_core import (
+    y4q1_cohens_d as _rust_cohens_d,
+)
+from prin._prin_core import (
+    y4q1_spatial_correlation as _rust_spatial_correlation,
+)
+from prin._prin_core import (
+    y4q1_welch_t_test as _rust_welch_t_test,
+)
+from prin.nn.ablation_variants import (
+    AblationConfig as AblationConfig,
+)
+from prin.nn.ablation_variants import (
+    AblationHybridPRINetV2 as AblationHybridPRINetV2,
+)
+from prin.nn.ablation_variants import (
+    create_ablation_model as create_ablation_model,
+)
 
 __all__ = [
     "AblationConfig",
     "AblationHybridPRINetV2",
     "ExtendedTrainingResult",
+    "bootstrap_ci",
+    "chimera_initial_condition",
+    "cohens_d",
     "count_flops",
     "create_ablation_model",
+    "gaussian_bump_ic",
+    "half_sync_half_random_ic",
     "measure_wall_time",
+    "seed_stability_analysis",
+    "spatial_correlation",
     "train_clevr_n_extended",
     "train_clevr_n_single_seed",
+    "welch_t_test",
 ]
-
-
-@dataclass
-class AblationConfig:
-    """Configuration for HybridPRINetV2 ablation variants.
-
-    Attributes:
-        variant: One of ``"full"``, ``"attention_only"``,
-            ``"oscillator_only"``, ``"shared_phase"``.
-        n_input: Input dimension.
-        n_classes: Number of classes.
-        d_model: Model dimension.
-        n_heads: Attention heads.
-        n_layers: Number of layers.
-        n_delta: Delta-band oscillators.
-        n_theta: Theta-band oscillators.
-        n_gamma: Gamma-band oscillators.
-        n_discrete_steps: Dynamics steps per layer.
-        coupling_strength: Coupling *K*.
-        pac_depth: PAC modulation depth.
-        dropout: Dropout rate.
-    """
-
-    variant: str = "full"
-    n_input: int = 256
-    n_classes: int = 10
-    d_model: int = 64
-    n_heads: int = 4
-    n_layers: int = 2
-    n_delta: int = 4
-    n_theta: int = 8
-    n_gamma: int = 32
-    n_discrete_steps: int = 5
-    coupling_strength: float = 2.0
-    pac_depth: float = 0.3
-    dropout: float = 0.1
 
 
 @dataclass
@@ -171,6 +180,23 @@ def count_flops(
                     "params": sum(p.numel() for p in module.parameters()),
                 }
             )
+        elif mod_type == "OscillatoryAttention":
+            # PRIN's OscillatoryAttention keeps its q/k/v/out projections in
+            # the Rust bridge, so they are invisible to a ``named_modules``
+            # ``nn.Linear`` scan. Account for the four ``d_model x d_model``
+            # projections directly (matching how the reference counts an
+            # ``nn.MultiheadAttention``-style block).
+            d = module.d_model
+            flops = 4 * 2 * d * d
+            total_flops += flops
+            layer_details.append(
+                {
+                    "name": name,
+                    "type": "OscillatoryAttention",
+                    "flops": flops,
+                    "params": 4 * d * d,
+                }
+            )
 
     batch_size = input_shape[0] if len(input_shape) > 1 else 1
     total_flops *= batch_size
@@ -241,42 +267,192 @@ def measure_wall_time(
     }
 
 
+# =========================================================================
+# Q1.2: Statistical utilities & chimera initial conditions
+# =========================================================================
+
+
+def bootstrap_ci(
+    values: list[float],
+    n_bootstrap: int = 10_000,
+    alpha: float = 0.05,
+    seed: int = 42,
+) -> dict[str, float]:
+    """Percentile bootstrap confidence interval for the mean.
+
+    Delegates the resampling and percentile computation to the Rust
+    ``y4q1_bootstrap_ci`` owner.
+
+    Args:
+        values: Observed values.
+        n_bootstrap: Number of bootstrap resamples.
+        alpha: Significance level (``0.05`` → 95 % CI).
+        seed: Random seed.
+
+    Returns:
+        Dict with ``mean``, ``ci_lower``, ``ci_upper``, ``ci_width``, ``se``.
+    """
+    mean_v, lo, hi, width, se = _rust_bootstrap_ci(
+        [float(v) for v in values], n_bootstrap, alpha, seed
+    )
+    return {
+        "mean": mean_v,
+        "ci_lower": lo,
+        "ci_upper": hi,
+        "ci_width": width,
+        "se": se,
+    }
+
+
+def cohens_d(group_a: list[float], group_b: list[float]) -> float:
+    """Cohen's *d* effect size with pooled standard deviation.
+
+    Args:
+        group_a: Observations from condition A.
+        group_b: Observations from condition B.
+
+    Returns:
+        Cohen's *d* (positive means A > B); ``0.0`` for degenerate inputs.
+    """
+    return float(
+        _rust_cohens_d([float(v) for v in group_a], [float(v) for v in group_b])
+    )
+
+
+def welch_t_test(
+    group_a: list[float],
+    group_b: list[float],
+) -> dict[str, float]:
+    """Welch's t-test with effect size.
+
+    Args:
+        group_a: Observations from condition A.
+        group_b: Observations from condition B.
+
+    Returns:
+        Dict with ``t_stat``, ``p_value``, ``cohens_d``, ``mean_diff``.
+    """
+    t_stat, p_value, d, mean_diff = _rust_welch_t_test(
+        [float(v) for v in group_a], [float(v) for v in group_b]
+    )
+    return {
+        "t_stat": t_stat,
+        "p_value": p_value,
+        "cohens_d": d,
+        "mean_diff": mean_diff,
+    }
+
+
+def spatial_correlation(
+    r_local: torch.Tensor,
+    max_lag: int = 50,
+) -> list[float]:
+    """Spatial autocorrelation of a local order parameter field.
+
+    Args:
+        r_local: Local order parameter ``(N,)``.
+        max_lag: Maximum spatial lag.
+
+    Returns:
+        List of autocorrelation values for lags ``0 .. max_lag``.
+    """
+    flat = r_local.detach().to(dtype=torch.float64, device="cpu").reshape(-1).tolist()
+    return list(_rust_spatial_correlation(flat, int(max_lag)))
+
+
+def seed_stability_analysis(
+    per_seed_results: list[dict[str, Any]],
+    metric_key: str,
+) -> dict[str, float]:
+    """Analyse stability of a metric across random seeds.
+
+    Args:
+        per_seed_results: List of dicts, each containing ``metric_key``.
+        metric_key: Key to extract from each result dict.
+
+    Returns:
+        Dict with ``mean``, ``std``, ``cv``, ``range``, ``n_seeds``.
+    """
+    vals = [r[metric_key] for r in per_seed_results]
+    mean_v = sum(vals) / len(vals)
+    std_v = (sum((v - mean_v) ** 2 for v in vals) / max(len(vals) - 1, 1)) ** 0.5
+    return {
+        "mean": mean_v,
+        "std": std_v,
+        "cv": std_v / abs(mean_v) if abs(mean_v) > 1e-12 else 0.0,
+        "range": max(vals) - min(vals),
+        "n_seeds": len(vals),
+    }
+
+
+def chimera_initial_condition(N: int, seed: int = 0) -> torch.Tensor:
+    """Single-humped initial phase profile for chimera emergence.
+
+    Args:
+        N: Number of oscillators.
+        seed: Random seed for the perturbation.
+
+    Returns:
+        Phase tensor ``(N,)``.
+    """
+    return torch.tensor(_rust_chimera_ic(int(N), int(seed)), dtype=torch.float32)
+
+
+def gaussian_bump_ic(
+    N: int,
+    A0: float = math.pi,
+    sigma_ratio: float = 1 / 6,
+    phi0: float = 0.0,
+    noise_amp: float = 0.01,
+    seed: int = 0,
+) -> torch.Tensor:
+    """Smooth Gaussian-bump initial condition for chimera states.
+
+    Args:
+        N: Number of oscillators.
+        A0: Amplitude of the Gaussian bump (radians).
+        sigma_ratio: ``sigma/N`` ratio.
+        phi0: Baseline phase offset.
+        noise_amp: Uniform noise amplitude.
+        seed: Random seed.
+
+    Returns:
+        Phase tensor ``(N,)`` in ``[0, 2π)``.
+    """
+    return torch.tensor(
+        _rust_gaussian_bump_ic(int(N), A0, sigma_ratio, phi0, noise_amp, int(seed)),
+        dtype=torch.float32,
+    )
+
+
+def half_sync_half_random_ic(
+    N: int,
+    sync_phase: float = 0.0,
+    noise_amp: float = 0.01,
+    seed: int = 0,
+) -> torch.Tensor:
+    """Half-synchronised, half-random initial condition.
+
+    Args:
+        N: Number of oscillators.
+        sync_phase: Phase of the synchronised half (radians).
+        noise_amp: Noise amplitude for the coherent half.
+        seed: Random seed.
+
+    Returns:
+        Phase tensor ``(N,)`` in ``[0, 2π)``.
+    """
+    return torch.tensor(
+        _rust_half_sync_ic(int(N), sync_phase, noise_amp, int(seed)),
+        dtype=torch.float32,
+    )
+
+
 def _raise_disposition(symbol: str, detail: str) -> NoReturn:
     """Raise the typed D-2.2 disposition error."""
     raise NotImplementedError(
         f"{symbol} is a deferred-rebuild symbol (WP-036 D-2.2). {detail} "
         "See the Migration Guide for the disposition and the owning WP."
-    )
-
-
-class AblationHybridPRINetV2:
-    """Deferred-rebuild stub for the ablation HybridPRINetV2 variant.
-
-    Trainable ``nn.Module`` with ``nn.Linear`` projections. Needs a
-    trainable-layer rebuild (same disposition class as the hybrid-model
-    family).
-
-    Raises:
-        NotImplementedError: Always on construction.
-    """
-
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "AblationHybridPRINetV2",
-            "Trainable nn.Module with nn.Linear projections; needs rebuild.",
-        )
-
-
-def create_ablation_model(*_args: Any, **_kwargs: Any) -> NoReturn:
-    """Reject calls to the deferred ablation model constructor.
-
-    Raises:
-        NotImplementedError: Always. Constructs trainable nn.Module variants.
-    """
-    _raise_disposition(
-        "create_ablation_model",
-        "Constructs trainable nn.Module ablation variants.",
     )
 
 

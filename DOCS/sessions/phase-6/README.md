@@ -135,8 +135,8 @@ Development Workflow §7. Planned session count 245 → 253. See
 | 0144M1 | WP-036C | S1 — Coding | [Integration-Q3 and Y2Q1/Y2Q4 strict port](0144M1-wp036c-s1-integration-q3-and-y2q1-y2q4-strict-port.md) | COMPLETE |
 | 0144M2 | WP-036C | S1 — Coding | [Y2Q2/Y2Q3 strict port and DV-025 retrain_controller](0144M2-wp036c-s1-y2q2-y2q3-strict-port-and-dv025.md) | COMPLETE |
 | 0144M3 | WP-036C | S1 — Coding | [Y3Q1/Y3Q2 strict port](0144M3-wp036c-s1-y3q1-y3q2-strict-port.md) | COMPLETE |
-| 0144M4 | WP-036C | S1 — Coding | [Y3Q3/Y3Q4/Y3Q45/Y3Q49 strict port](0144M4-wp036c-s1-y3q3-y3q4-y3q45-y3q49-strict-port.md) | PLANNED |
-| 0144M5 | WP-036C | S1 — Coding | [Y4Q1/Y4Q1_2/Y4Q1_3 strict port](0144M5-wp036c-s1-y4q1-y4q1-2-y4q1-3-strict-port.md) | PLANNED |
+| 0144M4 | WP-036C | S1 — Coding | [Y3Q3/Y3Q4/Y3Q45/Y3Q49 strict port](0144M4-wp036c-s1-y3q3-y3q4-y3q45-y3q49-strict-port.md) | COMPLETE |
+| 0144M5 | WP-036C | S1 — Coding | [Y4Q1/Y4Q1_2/Y4Q1_3 strict port](0144M5-wp036c-s1-y4q1-y4q1-2-y4q1-3-strict-port.md) | COMPLETE |
 | 0144M6 | WP-036C | S1 — Coding | [Y4Q1_4/Y4Q1_5/Y4Q1_9 strict port](0144M6-wp036c-s1-y4q1-4-y4q1-5-y4q1-9-strict-port.md) | PLANNED |
 | 0144M7 | WP-036C | S1 — Coding | [Y4Q1_7/Y4Q1_8 strict port](0144M7-wp036c-s1-y4q1-7-y4q1-8-strict-port.md) | PLANNED |
 | 0144M8 | WP-036C | S1 — Coding | [Y4Q2/Y4Q3/Y4Q4, GPU/Triton guards, and consolidation](0144M8-wp036c-s1-y4q2-y4q3-y4q4-kernels-and-consolidation.md) | PLANNED |

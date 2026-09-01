@@ -16,7 +16,7 @@ Rust bridge reproduces bit-identical noise on backward recompute). Pass a
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import torch
 from torch.utils.dlpack import from_dlpack
@@ -212,16 +212,24 @@ class TemporalSlotAttentionMOT(torch.nn.Module):
     def process_frame(
         self,
         detections: torch.Tensor,
-        seed: Seed,
+        seed_or_prev: Any = None,
         prev_slots: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Process one frame's detections, carrying `prev_slots` via GRU if supplied.
 
+        The second positional argument accepts **either** a
+        :class:`prin._prin_core.Seed` (PRIN bridge contract — consumed /
+        advanced for fresh slot-initialisation noise) **or** the previous
+        frame's slots (PRINet 3.0 ``process_frame(detections, prev_slots)``
+        contract). When no ``Seed`` is supplied an internal default seed is
+        used.
+
         Args:
-            detections: Shape ``(N, detection_dim)``.
-            seed: Consumed (advanced) for fresh slot-initialization noise.
-            prev_slots: Optional prior slots, shape ``(1, num_slots,
-                slot_dim)``.
+            detections: Shape ``(N, detection_dim)`` or ``(1, N, detection_dim)``.
+            seed_or_prev: A ``Seed`` or the previous-frame slots ``(1,
+                num_slots, slot_dim)``.
+            prev_slots: Previous-frame slots when ``seed_or_prev`` is a
+                ``Seed``.
 
         Returns:
             Updated slots. Shape: ``(1, num_slots, slot_dim)``.
@@ -229,6 +237,15 @@ class TemporalSlotAttentionMOT(torch.nn.Module):
         Raises:
             ValueError: On a shape mismatch.
         """
+        from prin._prin_core import Seed as _Seed
+
+        if isinstance(seed_or_prev, _Seed):
+            seed = seed_or_prev
+        else:
+            seed = _Seed(0, 0)
+            prev_slots = seed_or_prev
+        if detections.dim() == 3:
+            detections = detections.reshape(detections.shape[-2], detections.shape[-1])
         result: torch.Tensor = apply_rust_bridge(
             lambda d, p: self._bridge.process_frame(d, seed, p),
             [detections, prev_slots],
@@ -238,14 +255,18 @@ class TemporalSlotAttentionMOT(torch.nn.Module):
     def slot_similarity(
         self, slots_a: torch.Tensor, slots_b: torch.Tensor
     ) -> torch.Tensor:
-        """Cosine similarity between two slot sets, each ``(1, num_slots, slot_dim)``.
+        """Cosine similarity between two slot sets.
+
+        Accepts ``(num_slots, slot_dim)`` or ``(1, num_slots, slot_dim)`` for
+        either argument (PRINet 3.0 passes the un-batched form); returns a
+        ``(num_slots, num_slots)`` matrix.
 
         Raises:
             ValueError: On a shape mismatch.
         """
-        result: torch.Tensor = apply_rust_bridge(
-            self._bridge.slot_similarity, [slots_a, slots_b]
-        )
+        a = slots_a.unsqueeze(0) if slots_a.dim() == 2 else slots_a
+        b = slots_b.unsqueeze(0) if slots_b.dim() == 2 else slots_b
+        result: torch.Tensor = apply_rust_bridge(self._bridge.slot_similarity, [a, b])
         return result
 
     def match_frames(
@@ -264,28 +285,41 @@ class TemporalSlotAttentionMOT(torch.nn.Module):
         return matches, from_dlpack(sim_capsule)
 
     def track_sequence(
-        self, frame_detections: list[torch.Tensor], seed: Seed
-    ) -> tuple[list[torch.Tensor], list[list[int]], float, list[float]]:
+        self, frame_detections: list[torch.Tensor], seed: Seed | None = None
+    ) -> dict[str, Any]:
         """Track objects across a sequence of frames. **Non-differentiable**.
 
-        `seed` is consumed (advanced).
-
-        Returns:
-            `(slot_history, identity_matches, identity_preservation,
-            per_frame_similarity)`.
+        Matches the PRINet 3.0 ``track_sequence`` contract: a dict with
+        ``slot_history`` / ``identity_matches`` / ``identity_preservation`` /
+        ``per_frame_similarity``. ``seed`` is consumed (advanced); an internal
+        default seed is used when *None*.
 
         Raises:
             ValueError: On a shape mismatch in any frame.
         """
+        from prin._prin_core import Seed as _Seed
+
+        if not frame_detections:
+            return {
+                "slot_history": [],
+                "identity_matches": [],
+                "identity_preservation": 0.0,
+                "per_frame_similarity": [],
+            }
+        if seed is None:
+            seed = _Seed(0, 0)
+        frames64: list[object] = [
+            d.detach().to(dtype=torch.float64, device="cpu") for d in frame_detections
+        ]
         slot_history, identity_matches, identity_preservation, per_frame_similarity = (
-            self._bridge.track_sequence([d.detach() for d in frame_detections], seed)
+            self._bridge.track_sequence(frames64, seed)
         )
-        return (
-            [from_dlpack(t) for t in slot_history],
-            identity_matches,
-            identity_preservation,
-            per_frame_similarity,
-        )
+        return {
+            "slot_history": [from_dlpack(t) for t in slot_history],
+            "identity_matches": identity_matches,
+            "identity_preservation": identity_preservation,
+            "per_frame_similarity": per_frame_similarity,
+        }
 
     def rust_state_dict(self) -> bytes:
         """Serialize Rust-owned parameters to opaque checkpoint bytes."""

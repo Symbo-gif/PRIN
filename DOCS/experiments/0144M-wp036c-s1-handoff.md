@@ -1,14 +1,15 @@
 # Session 0144M / WP-036C S1 running handoff
 
 **Date:** 2026-08-31 (session start + decomposition; `0144M1`–`0144M3` executed)
-**Status:** S1 **in progress** — sub-passes `0144M1`–`0144M4` (integration_q3 +
+**Status:** S1 **in progress** — sub-passes `0144M1`–`0144M5` (integration_q3 +
 y2q1 + y2q4, 93 fns; y2q2 + y2q3, 65 fns; y3q1 + y3q2, 78 fns; y3q3 + y3q4 +
-y3q45 + y3q49, 117 fns) **COMPLETE and committed locally** at green gates; not
-pushed. **353 / 1,097** reference functions ported. Plan amendment #39 inserted
+y3q45 + y3q49, 117 fns; y4q1 + y4q1_2 + y4q1_3, 171 fns) **COMPLETE and
+committed locally** at green gates; not pushed. **524 / 1,097** reference
+functions ported. Plan amendment #39 inserted
 the eight strict-port sub-passes `0144M1`–`0144M8` feeding the single mandatory
 S2 audit `0144N`; plan amendment #40 (2026-08-31) records three `0144M1` scope
 confirmations (deferred-symbol rebuild in-scope, `__version__` → `0.3.0`,
-minimal `docs/` guides). Next: `0144M5`.
+minimal `docs/` guides). Next: `0144M6`.
 
 ## Session-start protocol (Development Workflow §6)
 
@@ -438,7 +439,102 @@ handoff appended.
 - `tools/wp036_migration_table.py check`: OK (172 symbols).
 - `git diff --no-index` reference vs port: import-path lines only (plus `ruff
   format` assert-message re-wraps).
-### 0144M5 — not started
+### 0144M5 — y4q1 + y4q1_2 + y4q1_3 — COMPLETE (2026-08-31)
+
+**Committed locally at a green sub-pass gate; not pushed. Next: 0144M6.**
+
+Maintainer selected **Full Rust** for the OscilloSim compatibility gap
+(new `prin-sim` PyO3 binding + rebuild; deterministic-`Seed` RNG divergence
+from PRINet 3.0's `torch.Generator` accepted, exact phase values not claimed).
+
+#### Strict-port accounting and semantic proof
+
+| Reference | Stable port | Lines | `def test_` | Result (default gate) | Slow | Tolerance annotations | Discoveries |
+|---|---|---:|---:|---|---:|---:|---|
+| `test_y4q1.py` | `tests/test_acceptance_y4q1.py` | 467 | 49 | 49 / 49 | 0 | 0 | reference-faithful `OscilloSim` (ring/small_world/csr/phase_lag/rk4/coupling_weights/`initial_phase`); `ring_topology`/`small_world_topology` realigned to PRINet 3.0 `(N,k)` int64 tensor; `TemporalSlotAttentionMOT` reference facade (`process_frame` seed-optional, `slot_similarity` 2-D, `track_sequence` → dict); `AblationHybridPRINetV2`/`create_ablation_model` real (`prin.nn.ablation_variants`); `count_flops` `OscillatoryAttention` branch |
+| `test_y4q1_2.py` | `tests/test_acceptance_y4q1_2.py` | 803 | 73 | 72 / 73 | 4 | 0 | `bootstrap_ci`/`cohens_d`/`welch_t_test`/`spatial_correlation` (Rust `prin_sim::y4q1_stats`); `chimera_initial_condition`; `seed_stability_analysis` (Python list bookkeeping) |
+| `test_y4q1_3.py` | `tests/test_acceptance_y4q1_3.py` | 611 | 49 | 48 / 49 | 0 | 0 | RK4 accuracy vs Euler; `cosine_coupling_kernel` (Rust); SI/η/χ chimera metrics (already-bound `prin_metrics`); `gaussian_bump_ic`/`half_sync_half_random_ic` |
+| **M5 total** | **3 files** | **1,881** | **171** | **169 / 171 default gate** | **4** | **0** | **1 (`test_cosine_kernel_affects_dynamics`)** |
+
+Full M5 run **incl. slow**: 173 passed, 1 failed (same single failure).
+
+**1 out-of-scope discovery** — `test_y4q1_3.py::TestWeightedCoupling::test_cosine_kernel_affects_dynamics`:
+asserts uniform vs. cosine-weighted ring dynamics differ by `> 1e-3` in the
+final order parameter at `N=64, k=8, K=10, gaussian-bump IC, seed=42`. At
+`k=8` the cosine kernel is near-uniform (weights `0.122…0.127`), so the
+order-parameter difference is RNG-regime-sensitive: PRIN's deterministic-`Seed`
+frequency draw lands `Δr ≈ 6.1e-4` for this seed while other seeds give
+`1.2e-3…2.1e-3`; the final *phases* do diverge (`max Δ ≈ 7.7e-3`). This is the
+RNG divergence the sub-pass contract explicitly permits, not weakened; carried
+to `0144N`. Same class as `0144M1`'s speed test and `0144M2`'s CUDA threading.
+
+#### Changed-owner mapping
+
+| Compatibility behaviour | Numerical / Rust owner | Python exposure |
+|---|---|---|
+| `OscilloSim` step loop (mean_field / sparse_knn / csr / ring / small_world; Euler / RK4; `phase_lag` α; Stuart–Landau amplitude; per-edge `coupling_weights`) — line-for-line port of the reference `_step_*` / `run` | **new** `prin_sim::oscillo_compat::OscilloCompat` (self-contained `Dynamics`-free stepper) + **new** `_prin_core.oscillo_compat_run` PyO3 fn | `prin.simulation.OscilloSim` reshaped to the PRINet 3.0 ctor/`run` signature; delegates every step to Rust; `SimulationResult` fields now `torch.Tensor`; `record_interval` default → 10; PRIN-only `rk45` path dropped |
+| `ring_topology` / `small_world_topology` as `(N, k)` int64 tensors | **new** `prin_sim::oscillo_compat::{ring_indices, small_world_indices}` + `_prin_core.{ring_topology_indices, small_world_topology_indices}` | `prin.topology` realigned to PRINet 3.0 (positional `k`, `(N,k)` tensor, `device` arg) — closes Migration-Guide **D1** (no first-party consumer relied on the flat-list form); re-exported from `prin.simulation` |
+| `cosine_coupling_kernel` (Abrams & Strogatz `G(d)`) | **new** `prin_sim::oscillo_compat::cosine_coupling_kernel` + `_prin_core.cosine_coupling_kernel_row` | `prin.simulation.cosine_coupling_kernel` — length-`k` Rust row broadcast to `(N,k)` |
+| `local_order_parameter` / `bimodality_index` / `strength_of_incoherence` / `discontinuity_measure` / `chimera_index` / `strength_of_incoherence_temporal` | **already** `prin_metrics::chimera` (bound since 0141C; EMA-001 M-F1 centred-wrap fix over the reference) | torch↔numpy/list marshalling wrappers in `prin.simulation` |
+| `chimera_initial_condition` / `gaussian_bump_ic` / `half_sync_half_random_ic` | **new** `prin_sim::oscillo_compat` seeded IC generators + `_prin_core` fns | `prin.y4q1_tools` torch wrappers |
+| `bootstrap_ci` / `cohens_d` / `welch_t_test` / `spatial_correlation` | **new** `prin_sim::y4q1_stats` (percentile bootstrap; pooled-`d`; Welch t via regularized incomplete beta — no SciPy dep; roll-based autocorrelation) + `_prin_core.y4q1_*` fns | `prin.y4q1_tools` list/dict wrappers |
+| `AblationHybridPRINetV2` / `AblationConfig` / `create_ablation_model` | n/a — PyTorch composition over the Rust-backed `OscillatoryAttention` (dropout forced to 0.0 — bridge constraint) + standalone `DiscreteDeltaThetaGamma` (0144M1) bridges + stock `nn.*` | **new** `prin.nn.ablation_variants` (D-2.2 stub replaced); re-exported from `prin.y4q1_tools`; **not** added to `check_no_python_numerics` (same eval/experiment-tooling category as `prin.nn.mot_evaluation`) |
+| `count_flops` attention accounting | n/a — arithmetic estimate | `prin.y4q1_tools.count_flops` gains an `OscillatoryAttention` branch (PRIN keeps the q/k/v/out projections in Rust, invisible to an `nn.Linear` scan) |
+| `TemporalSlotAttentionMOT` reference contract | Rust bridge unchanged | `prin.nn.slot_attention.TemporalSlotAttentionMOT`: `process_frame` 2nd positional accepts a `Seed` **or** `prev_slots`; `slot_similarity` accepts 2-D; `track_sequence` returns the PRINet 3.0 **dict** (and `[]` → `{"identity_preservation": 0.0}`) — `test_train_bridge_slot_attention` + `benchmarks/phase2_scaling_analysis.py` updated for the dict |
+
+New Rust crate code: `prin-sim/src/oscillo_compat.rs` (12 unit tests),
+`prin-sim/src/y4q1_stats.rs` (7 unit tests), `crates/prin-py/src/bindings/sim.rs`
+(11 registered fns). `cargo test --workspace`: 48 suites ok. No `Cargo.*` /
+`Cargo.lock` change (both new deps — `prin-sim`, `serde` — already in the graph).
+
+Governance updated in step: `_prin_core.pyi` (11 new fn stubs);
+`DOCS/sphinx/migration_guide.rst` consolidated table re-rendered (`AblationHybridPRINetV2`
+/ `create_ablation_model` → real) + the `0141D2` prose rows;
+`tests/test_bucket_g_remainder.py` (topology tests → `(N,k)` tensor / positional
+`k` / new error strings; `record_interval=1`; `rk45`→`rk4`; `d22_stubs_raise`
+parametrize trimmed for the ablation symbols + new `test_ablation_variants_are_real`);
+`tests/test_train_bridge_slot_attention.py::test_track_sequence` (dict);
+`benchmarks/phase2_scaling_analysis.py` (dict); per-file `ruff` ignores for the
+three ports; `SESSION_REGISTER.md` / `phase-6/README.md` (`0144M4` + `0144M5` →
+COMPLETE — `0144M4` had left itself PLANNED; same feeder range → same `0144N`
+audit).
+
+#### Command evidence
+
+- `pytest tests/test_acceptance_y4q1.py tests/test_acceptance_y4q1_2.py
+  tests/test_acceptance_y4q1_3.py`: **191 passed, 1 failed** (the RNG-regime
+  discovery); **incl. slow**: 193 passed, 1 failed.
+- `pytest tests/ -m "not slow and not gpu"`: no new regressions beyond the
+  pre-existing `0144M2` CUDA-only ×2 and `0144M4` artefact ×8 discoveries and
+  this pass's RNG discovery ×1.
+- `git diff --no-index` reference vs port (all three): import-path lines only,
+  plus two `ruff format` assert-message re-wraps (no assertion / value /
+  parametrization / call-order / semantics change).
+- `ruff check` + `ruff format --check` (repo): clean.
+- `mypy python/prin --strict`: clean (58 files).
+- `tools/check_no_python_numerics.py`: clean (19 modules — `nn/ablation_variants.py`
+  deliberately not added, per the `nn/mot_evaluation.py` precedent).
+- `tools/wp036_migration_table.py check`: OK (172 symbols).
+- `bandit -r python/ -c pyproject.toml`: 3 pre-existing LOW (`kernels.py`
+  subprocess ×2, `hybrid_compat.py:327` `B110`); 0 new.
+- `interrogate -c pyproject.toml python/`: PASS (97.5%).
+- `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets --
+  -D warnings`: clean. `cargo test --workspace`: 48 suites ok, 0 failed.
+- `cargo audit`: exit 0 with only the three pre-existing governed warnings.
+- **Snyk Code** (`--severity-threshold=low`) on `python/prin`,
+  `crates/prin-sim/src`, `crates/prin-py/src`, `tests`: **0 issues**.
+- Coverage instrumentation remains host-blocked
+  ([[wp036-coverage-tooling-blocked]]); the 171-test acceptance subset + the
+  new Rust unit tests + the full 2300+-test suite + manual review stand in,
+  CI authoritative.
+
+**Parity-evidence disposition:** directly comparable PRINet 3.0 behaviour
+exists and is the literal 171-test acceptance source. Imports-only diff (plus
+the governed `ruff format` re-wraps) + 169/171 default-gate execution is the M5
+parity evidence. No new hazard-tolerance annotation or backend-availability
+guard, so `DOCS/sphinx/parity_report.rst` is unchanged. The single RNG-regime
+discovery is carried to `0144N`, not weakened.
+
 ### 0144M6 — not started
 ### 0144M7 — not started
 ### 0144M8 — not started

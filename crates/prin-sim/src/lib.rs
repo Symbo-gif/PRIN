@@ -76,12 +76,20 @@ pub mod engine;
 pub mod error;
 #[cfg(any(feature = "cpu", feature = "cuda", feature = "wgpu"))]
 pub mod gpu;
+pub mod oscillo_compat;
 pub mod pruning;
 pub mod sweep;
+pub mod y4q1_stats;
 
 pub use chimera::{compute_chimera_metrics, trajectory_chimera_metrics, ChimeraMetrics};
 pub use csr_coupling::SparseCoupling;
 pub use engine::{apply_guards, OscilloSim, SparseKuramoto, SparseStuartLandau, Trajectory};
 pub use error::SimError;
+pub use oscillo_compat::{
+    chimera_initial_condition, cosine_coupling_kernel, gaussian_bump_ic, half_sync_half_random_ic,
+    order_parameter_magnitude, ring_indices, small_world_indices, CompatCoupling, CompatIntegrator,
+    OscilloCompat, OscilloCompatConfig, OscilloCompatOutput,
+};
 pub use pruning::{PruningResult, PruningStrategy};
 pub use sweep::{detect_oscillation, run_sweep, SweepAxis, SweepConfig, SweepModel, SweepResult};
+pub use y4q1_stats::{bootstrap_ci, cohens_d, spatial_correlation, welch_t_test};

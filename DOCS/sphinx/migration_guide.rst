@@ -1411,8 +1411,8 @@ resolve from the top-level ``prin`` namespace.
    "ExtendedTrainingResult", "prin.ExtendedTrainingResult / prin.y4q1_tools.ExtendedTrainingResult", "Faithful ``@dataclass`` port"
    "count_flops", "prin.count_flops / prin.y4q1_tools.count_flops", "Real profiling utility"
    "measure_wall_time", "prin.measure_wall_time / prin.y4q1_tools.measure_wall_time", "Real profiling utility"
-   "AblationHybridPRINetV2", "prin.AblationHybridPRINetV2", "D-2.2 stub; trainable ``nn.Module``"
-   "create_ablation_model", "prin.create_ablation_model", "D-2.2 stub; constructs trainable modules"
+   "AblationHybridPRINetV2", "prin.AblationHybridPRINetV2 / prin.nn.ablation_variants.AblationHybridPRINetV2", "Real (0144M5); PyTorch composition over the Rust-backed ``OscillatoryAttention`` + ``DiscreteDeltaThetaGamma`` bridges"
+   "create_ablation_model", "prin.create_ablation_model", "Real (0144M5); builds ``AblationHybridPRINetV2``"
    "train_clevr_n_single_seed", "prin.train_clevr_n_single_seed", "D-2.2 stub; training loop"
    "train_clevr_n_extended", "prin.train_clevr_n_extended", "D-2.2 stub; multi-seed training"
    "HybridPRINet", "prin.HybridPRINet / prin.nn.HybridPRINet", "D-2.2 stub; trainable ``nn.Module``"
@@ -1548,7 +1548,7 @@ and the ``prinet`` ownership rows in
    :widths: 30, 24, 34, 12
 
    "AblationConfig", "prin.AblationConfig", "real - non-numeric orchestration (0141D2)", "0141D2"
-   "AblationHybridPRINetV2", "prin.AblationHybridPRINetV2", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "AblationHybridPRINetV2", "prin.AblationHybridPRINetV2", "real - non-numeric orchestration (0141D2)", "0141D2"
    "ActiveControlTrainer", "prin.ActiveControlTrainer", "real - non-numeric orchestration (0141D2)", "0141D2"
    "AlternatingOptimizer", "prin.AlternatingOptimizer", "real - non-numeric orchestration (0141D2)", "0141D2"
    "AsyncCPUGPUPipeline", "prin.AsyncCPUGPUPipeline", "real (0141E)", "0141E"
@@ -1639,7 +1639,7 @@ and the ``prinet`` ownership rows in
    "configure_neurips_style", "prin.configure_neurips_style", "real - direct re-export", "0141A"
    "count_flops", "prin.count_flops", "real - non-numeric orchestration (0141D2)", "0141D2"
    "count_parameters", "prin.count_parameters", "real - non-numeric orchestration (0141D2)", "0141D2"
-   "create_ablation_model", "prin.create_ablation_model", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "create_ablation_model", "prin.create_ablation_model", "real - non-numeric orchestration (0141D2)", "0141D2"
    "create_ablation_tracker", "prin.create_ablation_tracker", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
    "create_session", "prin.create_session", "real - direct re-export", "0141A"
    "csr_coupling_step", "prin.csr_coupling_step", "real - Rust PyO3 binding (0141C)", "0141C"

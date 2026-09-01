@@ -188,9 +188,11 @@ class TestTemporalSlotAttentionMOT:
 
     def test_track_sequence(self, mot: TemporalSlotAttentionMOT) -> None:
         frames = [torch.randn(4, 4, dtype=torch.float64) for _ in range(3)]
-        history, identity_matches, preservation, sims = mot.track_sequence(
-            frames, Seed(40, 0)
-        )
+        result = mot.track_sequence(frames, Seed(40, 0))
+        history = result["slot_history"]
+        identity_matches = result["identity_matches"]
+        preservation = result["identity_preservation"]
+        sims = result["per_frame_similarity"]
         assert len(history) == 3
         assert all(h.shape == (1, 3, 4) for h in history)
         assert len(identity_matches) == 2
