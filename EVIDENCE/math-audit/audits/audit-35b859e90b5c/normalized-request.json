@@ -1,0 +1,16 @@
+{
+  "lhs": "-gamma * ((A_rest + 1) - A_rest)",
+  "rhs": "-gamma",
+  "assumptions": [
+    "gamma > 0"
+  ],
+  "variables": [
+    "gamma",
+    "A_rest"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 10,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

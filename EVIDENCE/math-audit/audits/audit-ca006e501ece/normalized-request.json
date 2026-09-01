@@ -1,0 +1,7 @@
+{
+  "expression": "(sin(atan2(sin(a - b), cos(a - b)))) - (sin(a - b))",
+  "task_type": "simplify",
+  "assumptions": [],
+  "timeout_seconds": 20.0,
+  "precision_digits": 30
+}

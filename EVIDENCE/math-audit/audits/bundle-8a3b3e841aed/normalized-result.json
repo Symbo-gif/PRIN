@@ -1,0 +1,624 @@
+[
+  {
+    "audit_id": "audit-be8f32ff29a0",
+    "parent_audit_id": null,
+    "request_id": "req-eacaa86f40db",
+    "claim_id": "PW-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "All 1 quer(y/ies) held: wrap-phase-unique: pass",
+    "detailed_reasoning": "wrap-phase-unique: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "kd",
+          "sort": "Int",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "w1",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "w2",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "w1 >= 0",
+        "w1 < 6.283185307179586",
+        "w2 >= 0",
+        "w2 < 6.283185307179586",
+        "w1 - w2 == kd*6.283185307179586"
+      ],
+      "queries": [
+        {
+          "query_id": "wrap-phase-unique",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "w1 == w2"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:57:51.311Z",
+    "finished_at_utc": "2026-09-01T19:57:51.331Z",
+    "duration_ms": 20,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:2b5be0592472c424501015882d4b377969e6814a59b1bf8db9e0d4c630ab6aea",
+    "output_content_hash": "sha256:c0c775e85dcb8035acca78230113ad09f7b0dbbda3e95cc02d695a0fb7f875ab"
+  },
+  {
+    "audit_id": "audit-840399a7fb2a",
+    "parent_audit_id": null,
+    "request_id": "req-eacaa86f40db",
+    "claim_id": "PW-02",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "All 1 quer(y/ies) held: si-wrap-centred-at-zero: pass",
+    "detailed_reasoning": "si-wrap-centred-at-zero: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "d",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "k",
+          "sort": "Int",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "w",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "z",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "w == (d + 3.141592653589793) - k*6.283185307179586",
+        "w >= 0",
+        "w < 6.283185307179586",
+        "z == w - 3.141592653589793"
+      ],
+      "queries": [
+        {
+          "query_id": "si-wrap-centred-at-zero",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "Implies(d == 0, z == 0)"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:57:51.348Z",
+    "finished_at_utc": "2026-09-01T19:57:51.367Z",
+    "duration_ms": 19,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:3f8007351b8f15e4625b5ca10fb6e39f38a1df185ba99f9cd2985b03c4547774",
+    "output_content_hash": "sha256:5e11d4235bf19bf733b6d46ceee185b15cd7adbd898d01c0957dafce6be747c5"
+  },
+  {
+    "audit_id": "audit-d9f6a876bdb1",
+    "parent_audit_id": null,
+    "request_id": "req-eacaa86f40db",
+    "claim_id": "CL-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "All 1 quer(y/ies) held: amp-clamp-bounded-monotone: pass",
+    "detailed_reasoning": "amp-clamp-bounded-monotone: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "a1",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "a2",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "o1",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "o2",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "o1 == If(a1 < 0.000001, 0.000001, If(a1 > 10.0, 10.0, a1))",
+        "o2 == If(a2 < 0.000001, 0.000001, If(a2 > 10.0, 10.0, a2))",
+        "a1 <= a2"
+      ],
+      "queries": [
+        {
+          "query_id": "amp-clamp-bounded-monotone",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "And(o1 >= 0.000001, o1 <= 10.0, o1 <= o2)"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:57:51.385Z",
+    "finished_at_utc": "2026-09-01T19:57:51.421Z",
+    "duration_ms": 35,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:97d33272c2f5971171d26aff705f345a3c12a072f257a0b6aa930b28bc208ff5",
+    "output_content_hash": "sha256:0b98455a2c42eb93faffdaad3ecbe1c62c2f3b16217cb3c2428bb3ccc28cf20c"
+  },
+  {
+    "audit_id": "audit-86e43fb90efb",
+    "parent_audit_id": null,
+    "request_id": "req-eacaa86f40db",
+    "claim_id": "CL-02",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "All 1 quer(y/ies) held: deriv-clamp-bounded-sign-preserving: pass",
+    "detailed_reasoning": "deriv-clamp-bounded-sign-preserving: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "d",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "o",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "o == If(d < -10000.0, -10000.0, If(d > 10000.0, 10000.0, d))"
+      ],
+      "queries": [
+        {
+          "query_id": "deriv-clamp-bounded-sign-preserving",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "And(Abs(o) <= 10000.0, Implies(d >= 0, o >= 0), Implies(d <= 0, o <= 0))"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:57:51.446Z",
+    "finished_at_utc": "2026-09-01T19:57:51.457Z",
+    "duration_ms": 11,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:53ee57a36a3c1a1e957dda375343b0f3e0389bdd37553f0ef263cbaab95e3651",
+    "output_content_hash": "sha256:e8ee106d2552e78f7e9ec5aa130ea40877774a577dd24fd2089af4bdcbece198"
+  },
+  {
+    "audit_id": "audit-73671ecc1036",
+    "parent_audit_id": null,
+    "request_id": "req-eacaa86f40db",
+    "claim_id": "OP-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "critical",
+    "summary": "All 1 quer(y/ies) held: order-parameter-bounded: pass",
+    "detailed_reasoning": "order-parameter-bounded: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "m",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "r",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "m >= 0",
+        "r == If(m > 1.0, 1.0, m)"
+      ],
+      "queries": [
+        {
+          "query_id": "order-parameter-bounded",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "And(r >= 0, r <= 1.0)"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:57:51.485Z",
+    "finished_at_utc": "2026-09-01T19:57:51.496Z",
+    "duration_ms": 11,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:7211a196406edb9557cc1f9a7d15b4610519c5b376b796840a3da0f8fb1a1613",
+    "output_content_hash": "sha256:4d41242c59c12bb2fd1e8eb46630376f7fa1f33bbf275b07f526327a5865344b"
+  },
+  {
+    "audit_id": "audit-9a3148bd67e3",
+    "parent_audit_id": null,
+    "request_id": "req-eacaa86f40db",
+    "claim_id": "SI-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "medium",
+    "summary": "All 1 quer(y/ies) held: si-numerator-le-denominator: pass",
+    "detailed_reasoning": "si-numerator-le-denominator: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "z0",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "z1",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "z2",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "z3",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "numer",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "denom",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "numer == (Abs((z2+z3)/2) + Abs((z3+z0)/2) + Abs((z0+z1)/2) + Abs((z1+z2)/2))/4",
+        "denom == (Abs(z0)+Abs(z1)+Abs(z2)+Abs(z3))/4"
+      ],
+      "queries": [
+        {
+          "query_id": "si-numerator-le-denominator",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "numer <= denom"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 15000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-09-01T19:57:51.526Z",
+    "finished_at_utc": "2026-09-01T19:57:51.539Z",
+    "duration_ms": 14,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:2384e783973c0854bade09eed8275ef64b960ae7d7b472b67cd00ab2b2439314",
+    "output_content_hash": "sha256:3e4bd93fa474ebff0e17bef87c0998659f7efc3c2642e083924f7bad3f8b6062"
+  },
+  {
+    "audit_id": "audit-002a2eb409b3",
+    "parent_audit_id": null,
+    "request_id": "req-eacaa86f40db",
+    "claim_id": "PAC-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "medium",
+    "summary": "All 1 quer(y/ies) held: pac-modulation-bounded: pass",
+    "detailed_reasoning": "pac-modulation-bounded: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "A",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "m",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "c",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "raw",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "out",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "A >= 0.000001",
+        "A <= 10.0",
+        "m >= 0",
+        "m <= 1.0",
+        "c >= -1.0",
+        "c <= 1.0",
+        "raw == A*(1 + m*c)",
+        "out == If(raw < 0.000001, 0.000001, If(raw > 10.0, 10.0, raw))"
+      ],
+      "queries": [
+        {
+          "query_id": "pac-modulation-bounded",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "And(raw >= 0, raw <= 2*A, out >= 0.000001, out <= 10.0)"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:57:51.563Z",
+    "finished_at_utc": "2026-09-01T19:57:51.606Z",
+    "duration_ms": 43,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:5d4a8483cdfd763a4e17b9ca9ac1c25ec73e10f0202008200069caef7af386a7",
+    "output_content_hash": "sha256:f329c31294871d335cd45a04d23eb89a378c999d85d46a69c008fb285b04e84d"
+  }
+]

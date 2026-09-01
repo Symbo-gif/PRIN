@@ -1,0 +1,17 @@
+{
+  "lhs": "sqrt(((n-1)*v + (n-1)*v)/(n+n-2))",
+  "rhs": "sqrt(v)",
+  "assumptions": [
+    "n > 1",
+    "v > 0"
+  ],
+  "variables": [
+    "n",
+    "v"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 30,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

@@ -1,0 +1,1045 @@
+[
+  {
+    "audit_id": "audit-e5d4d038ca8f",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "HSL-01",
+    "tool_name": "verify_identity",
+    "adapter_name": "sympy",
+    "status": "PASS",
+    "severity": "medium",
+    "summary": "Symbolic proof established: -(1/2)*(log(exp(0/T)/(exp(0/T)+exp(0/T))) + log(exp(0/T)/(exp(0/T)+exp(0/T)))) == log(2).",
+    "detailed_reasoning": "SymPy reduced (lhs - rhs) to 0 via simplification/assumption refinement. This is a genuine symbolic equivalence proof, not a numeric approximation.",
+    "normalized_inputs": {
+      "lhs": "-(1/2)*(log(exp(0/T)/(exp(0/T)+exp(0/T))) + log(exp(0/T)/(exp(0/T)+exp(0/T))))",
+      "rhs": "log(2)",
+      "assumptions": [],
+      "variables": [
+        "T"
+      ],
+      "domain": "real",
+      "strategy": "symbolic_then_numeric",
+      "numeric_samples": 10,
+      "precision_digits": 30,
+      "crosscheck_with_wolfram": false
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-09-01T19:55:21.161Z",
+    "finished_at_utc": "2026-09-01T19:55:21.163Z",
+    "duration_ms": 2,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:000f626c15dc18a7ef73d80b7bb140865ead2ad10d3067b264671f39559c3506",
+    "output_content_hash": "sha256:9eba53305bebc667bcea39de58974125f5fdc95c7b8385fbb053c4b5635064a8"
+  },
+  {
+    "audit_id": "audit-5e7255d0006f",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "HSL-01",
+    "tool_name": "wolfram_crosscheck",
+    "adapter_name": "wolfram",
+    "status": "SKIPPED_BY_POLICY",
+    "severity": "medium",
+    "summary": "Wolfram adapter unavailable or disabled by policy.",
+    "detailed_reasoning": "Wolfram adapter disabled by policy (adapters.enable_wolfram=false)",
+    "normalized_inputs": {
+      "expression": "(-(1/2)*(log(exp(0/T)/(exp(0/T)+exp(0/T))) + log(exp(0/T)/(exp(0/T)+exp(0/T))))) - (log(2))",
+      "task_type": "simplify",
+      "assumptions": [],
+      "timeout_seconds": 20.0,
+      "precision_digits": 30
+    },
+    "assumptions": [],
+    "limitations": [
+      "No Wolfram evaluation was attempted. This is never treated as a PASS."
+    ],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 20.0,
+    "started_at_utc": "2026-09-01T19:55:21.189Z",
+    "finished_at_utc": "2026-09-01T19:55:21.189Z",
+    "duration_ms": 0,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:731667d581ffbbadb32df00cc5c81576e027826e0a1a3c43bfbf84310d20c797",
+    "output_content_hash": "sha256:30b042d53f96b5b45a6c64fcecb516bdd9980a6d1892c881041c4884e640ef7e"
+  },
+  {
+    "audit_id": "audit-2037e283349a",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "DSILU-01",
+    "tool_name": "verify_identity",
+    "adapter_name": "sympy",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "Symbolic proof established: 1/(1+exp(-z)) + z*(1/(1+exp(-z)))*(1 - 1/(1+exp(-z))) == 1/(1+exp(-z)) + z*exp(-z)/(1+exp(-z))**2.",
+    "detailed_reasoning": "SymPy reduced (lhs - rhs) to 0 via simplification/assumption refinement. This is a genuine symbolic equivalence proof, not a numeric approximation.",
+    "normalized_inputs": {
+      "lhs": "1/(1+exp(-z)) + z*(1/(1+exp(-z)))*(1 - 1/(1+exp(-z)))",
+      "rhs": "1/(1+exp(-z)) + z*exp(-z)/(1+exp(-z))**2",
+      "assumptions": [],
+      "variables": [
+        "z"
+      ],
+      "domain": "real",
+      "strategy": "symbolic_then_numeric",
+      "numeric_samples": 40,
+      "precision_digits": 30,
+      "crosscheck_with_wolfram": false
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-09-01T19:55:21.218Z",
+    "finished_at_utc": "2026-09-01T19:55:21.244Z",
+    "duration_ms": 25,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:7ce2baeb64c1890928f6264329b6fd3d6f9da044e0fb089568a721ef0499de79",
+    "output_content_hash": "sha256:0f7eba0768f2e7286777b05e77294588cb7d4d6d298392dee9489c053ed6c3f3"
+  },
+  {
+    "audit_id": "audit-2107cbb92cad",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "DSILU-01",
+    "tool_name": "wolfram_crosscheck",
+    "adapter_name": "wolfram",
+    "status": "SKIPPED_BY_POLICY",
+    "severity": "high",
+    "summary": "Wolfram adapter unavailable or disabled by policy.",
+    "detailed_reasoning": "Wolfram adapter disabled by policy (adapters.enable_wolfram=false)",
+    "normalized_inputs": {
+      "expression": "(1/(1+exp(-z)) + z*(1/(1+exp(-z)))*(1 - 1/(1+exp(-z)))) - (1/(1+exp(-z)) + z*exp(-z)/(1+exp(-z))**2)",
+      "task_type": "simplify",
+      "assumptions": [],
+      "timeout_seconds": 20.0,
+      "precision_digits": 30
+    },
+    "assumptions": [],
+    "limitations": [
+      "No Wolfram evaluation was attempted. This is never treated as a PASS."
+    ],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 20.0,
+    "started_at_utc": "2026-09-01T19:55:21.302Z",
+    "finished_at_utc": "2026-09-01T19:55:21.303Z",
+    "duration_ms": 1,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:c4e397834012bc2d2510bf1755232e07cba6a28411dda8f747f2120f1699d999",
+    "output_content_hash": "sha256:466db18cfd6e9a03a0db4bc6dc3f4bebbfa9f2acd22e16b4c7ab6673842ab39f"
+  },
+  {
+    "audit_id": "audit-0be52334b43d",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "SCALR-LR-01",
+    "tool_name": "verify_identity",
+    "adapter_name": "sympy",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "Symbolic proof established: r_min + (1 - r_min)*1**alpha == 1.",
+    "detailed_reasoning": "SymPy reduced (lhs - rhs) to 0 via simplification/assumption refinement. This is a genuine symbolic equivalence proof, not a numeric approximation.",
+    "normalized_inputs": {
+      "lhs": "r_min + (1 - r_min)*1**alpha",
+      "rhs": "1",
+      "assumptions": [],
+      "variables": [
+        "r_min",
+        "alpha"
+      ],
+      "domain": "real",
+      "strategy": "symbolic_then_numeric",
+      "numeric_samples": 40,
+      "precision_digits": 30,
+      "crosscheck_with_wolfram": false
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-09-01T19:55:21.330Z",
+    "finished_at_utc": "2026-09-01T19:55:21.331Z",
+    "duration_ms": 2,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:44dbf603d42a52d982ca96059647d4f691393e1fcd16b7aaedaccac561b0523c",
+    "output_content_hash": "sha256:4e906350f61a6e37a36c4106bbe8087e2d3babe220b2398406b6fd3f7eaebb98"
+  },
+  {
+    "audit_id": "audit-06d2e69c90ef",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "SCALR-LR-01",
+    "tool_name": "wolfram_crosscheck",
+    "adapter_name": "wolfram",
+    "status": "SKIPPED_BY_POLICY",
+    "severity": "high",
+    "summary": "Wolfram adapter unavailable or disabled by policy.",
+    "detailed_reasoning": "Wolfram adapter disabled by policy (adapters.enable_wolfram=false)",
+    "normalized_inputs": {
+      "expression": "(r_min + (1 - r_min)*1**alpha) - (1)",
+      "task_type": "simplify",
+      "assumptions": [],
+      "timeout_seconds": 20.0,
+      "precision_digits": 30
+    },
+    "assumptions": [],
+    "limitations": [
+      "No Wolfram evaluation was attempted. This is never treated as a PASS."
+    ],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 20.0,
+    "started_at_utc": "2026-09-01T19:55:21.360Z",
+    "finished_at_utc": "2026-09-01T19:55:21.360Z",
+    "duration_ms": 1,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:0fb028fd918ebf41e7deb5dce54741939dbfa9a1ad0185b37ce92d8922aa63e8",
+    "output_content_hash": "sha256:8b12be9aba4e496478f427b642de5c1555837f2ca3824201ee5ee41b941317d7"
+  },
+  {
+    "audit_id": "audit-792aaac65981",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "SCALR-LR-02",
+    "tool_name": "verify_identity",
+    "adapter_name": "sympy",
+    "status": "PASS",
+    "severity": "medium",
+    "summary": "Symbolic proof established: r_min + (1 - r_min)*0**alpha == r_min.",
+    "detailed_reasoning": "SymPy reduced (lhs - rhs) to 0 via simplification/assumption refinement. This is a genuine symbolic equivalence proof, not a numeric approximation.",
+    "normalized_inputs": {
+      "lhs": "r_min + (1 - r_min)*0**alpha",
+      "rhs": "r_min",
+      "assumptions": [
+        "alpha > 0"
+      ],
+      "variables": [
+        "r_min",
+        "alpha"
+      ],
+      "domain": "real",
+      "strategy": "symbolic_then_numeric",
+      "numeric_samples": 20,
+      "precision_digits": 30,
+      "crosscheck_with_wolfram": false
+    },
+    "assumptions": [
+      "alpha > 0"
+    ],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-09-01T19:55:21.405Z",
+    "finished_at_utc": "2026-09-01T19:55:21.407Z",
+    "duration_ms": 2,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:9764b7320d4ecf3a6997b742f3cdb65c41b178fde3e6432015e9acb3fd98e57f",
+    "output_content_hash": "sha256:1d2f083d58561af04ca2ec39a6e840285ebe611daaa0c53bb9a82b5ade8bdaad"
+  },
+  {
+    "audit_id": "audit-c40475e8b89b",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "SCALR-LR-02",
+    "tool_name": "wolfram_crosscheck",
+    "adapter_name": "wolfram",
+    "status": "SKIPPED_BY_POLICY",
+    "severity": "medium",
+    "summary": "Wolfram adapter unavailable or disabled by policy.",
+    "detailed_reasoning": "Wolfram adapter disabled by policy (adapters.enable_wolfram=false)",
+    "normalized_inputs": {
+      "expression": "(r_min + (1 - r_min)*0**alpha) - (r_min)",
+      "task_type": "simplify",
+      "assumptions": [
+        "alpha > 0"
+      ],
+      "timeout_seconds": 20.0,
+      "precision_digits": 30
+    },
+    "assumptions": [],
+    "limitations": [
+      "No Wolfram evaluation was attempted. This is never treated as a PASS."
+    ],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 20.0,
+    "started_at_utc": "2026-09-01T19:55:21.440Z",
+    "finished_at_utc": "2026-09-01T19:55:21.442Z",
+    "duration_ms": 2,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:0937659c3710395941c41b45781176f07164c86a4f049cdefa2a4b3d15dbfa10",
+    "output_content_hash": "sha256:d384df3e90b5ef7783486ffec50c5e9c7ba09613a26bc2b9b3db38c148b128da"
+  },
+  {
+    "audit_id": "audit-46be93fd00c9",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "RIP-HEBB-01",
+    "tool_name": "verify_identity",
+    "adapter_name": "sympy",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "Symbolic proof established: lr * cos(0) * r_target * (r_target - r_target) == 0.",
+    "detailed_reasoning": "SymPy reduced (lhs - rhs) to 0 via simplification/assumption refinement. This is a genuine symbolic equivalence proof, not a numeric approximation.",
+    "normalized_inputs": {
+      "lhs": "lr * cos(0) * r_target * (r_target - r_target)",
+      "rhs": "0",
+      "assumptions": [],
+      "variables": [
+        "lr",
+        "r_target"
+      ],
+      "domain": "real",
+      "strategy": "symbolic_then_numeric",
+      "numeric_samples": 20,
+      "precision_digits": 30,
+      "crosscheck_with_wolfram": false
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-09-01T19:55:21.499Z",
+    "finished_at_utc": "2026-09-01T19:55:21.500Z",
+    "duration_ms": 2,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:69ee16efe2f261501eece803e69f53e4f103f3f0ca613cc428116c391675b010",
+    "output_content_hash": "sha256:0640aa8ba15330345364ac78abc8da11d8d67ff047d464987666d91c50843bb1"
+  },
+  {
+    "audit_id": "audit-2222c7e81557",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "RIP-HEBB-01",
+    "tool_name": "wolfram_crosscheck",
+    "adapter_name": "wolfram",
+    "status": "SKIPPED_BY_POLICY",
+    "severity": "high",
+    "summary": "Wolfram adapter unavailable or disabled by policy.",
+    "detailed_reasoning": "Wolfram adapter disabled by policy (adapters.enable_wolfram=false)",
+    "normalized_inputs": {
+      "expression": "(lr * cos(0) * r_target * (r_target - r_target)) - (0)",
+      "task_type": "simplify",
+      "assumptions": [],
+      "timeout_seconds": 20.0,
+      "precision_digits": 30
+    },
+    "assumptions": [],
+    "limitations": [
+      "No Wolfram evaluation was attempted. This is never treated as a PASS."
+    ],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 20.0,
+    "started_at_utc": "2026-09-01T19:55:21.531Z",
+    "finished_at_utc": "2026-09-01T19:55:21.538Z",
+    "duration_ms": 8,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:4074a0223ced89e37d5fb0db6f265579b54df10f846e4bffa230c83610557abe",
+    "output_content_hash": "sha256:25935f183d434ee9dcee5cbfd64eeba90e154daa91e87eeb6eea8c2e70798a23"
+  },
+  {
+    "audit_id": "audit-5090277ed905",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "SYNC-PEN-01",
+    "tool_name": "verify_identity",
+    "adapter_name": "sympy",
+    "status": "PASS",
+    "severity": "medium",
+    "summary": "Symbolic proof established: 2*lam*(K_c - K) == 2*lam*(K_c - K).",
+    "detailed_reasoning": "SymPy reduced (lhs - rhs) to 0 via simplification/assumption refinement. This is a genuine symbolic equivalence proof, not a numeric approximation.",
+    "normalized_inputs": {
+      "lhs": "2*lam*(K_c - K)",
+      "rhs": "2*lam*(K_c - K)",
+      "assumptions": [
+        "K < K_c",
+        "lam > 0"
+      ],
+      "variables": [
+        "lam",
+        "K_c",
+        "K"
+      ],
+      "domain": "real",
+      "strategy": "symbolic_then_numeric",
+      "numeric_samples": 20,
+      "precision_digits": 30,
+      "crosscheck_with_wolfram": false
+    },
+    "assumptions": [
+      "K < K_c",
+      "lam > 0"
+    ],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-09-01T19:55:21.581Z",
+    "finished_at_utc": "2026-09-01T19:55:21.585Z",
+    "duration_ms": 3,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:79f990e1947fe7fe297712e6fc0609ca12df945169bf102adb9d69db67419d3a",
+    "output_content_hash": "sha256:25e1b36392baedd55865fe7d2ffb3a69feb3609148049612de53b784adb77acb"
+  },
+  {
+    "audit_id": "audit-33ba1ec5107b",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "SYNC-PEN-01",
+    "tool_name": "wolfram_crosscheck",
+    "adapter_name": "wolfram",
+    "status": "SKIPPED_BY_POLICY",
+    "severity": "medium",
+    "summary": "Wolfram adapter unavailable or disabled by policy.",
+    "detailed_reasoning": "Wolfram adapter disabled by policy (adapters.enable_wolfram=false)",
+    "normalized_inputs": {
+      "expression": "(2*lam*(K_c - K)) - (2*lam*(K_c - K))",
+      "task_type": "simplify",
+      "assumptions": [
+        "K < K_c",
+        "lam > 0"
+      ],
+      "timeout_seconds": 20.0,
+      "precision_digits": 30
+    },
+    "assumptions": [],
+    "limitations": [
+      "No Wolfram evaluation was attempted. This is never treated as a PASS."
+    ],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 20.0,
+    "started_at_utc": "2026-09-01T19:55:21.634Z",
+    "finished_at_utc": "2026-09-01T19:55:21.636Z",
+    "duration_ms": 2,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:ce59d456744475fc9fae749568e3939a20d79157feb2410f23653473e0d032b6",
+    "output_content_hash": "sha256:bde6e68bd568107e60533bc6f39ee5ca5854d9f64283f882abba89b822d6da54"
+  },
+  {
+    "audit_id": "audit-42d9ef57473c",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "GPA-BOUND-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "All 1 quer(y/ies) held: gpa-output-bounded: pass",
+    "detailed_reasoning": "gpa-output-bounded: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "gate",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "phase",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "out",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "gate >= 0",
+        "gate <= 1",
+        "phase >= 0",
+        "phase < 6.283185307179586",
+        "out == gate * phase"
+      ],
+      "queries": [
+        {
+          "query_id": "gpa-output-bounded",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "And(out >= 0, out < 6.283185307179586)"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:55:21.660Z",
+    "finished_at_utc": "2026-09-01T19:55:21.670Z",
+    "duration_ms": 10,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:947ec564234f48949b64cceb8a5c527de776578fdd57e2ddc4c484027e385003",
+    "output_content_hash": "sha256:5a828dd0fbf8d7659d2a8b4fde27b1772294b79a0ca3e0da00e0d2ff85aa4fb8"
+  },
+  {
+    "audit_id": "audit-461746574f7e",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "SCALR-SCALE-BOUND-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "All 1 quer(y/ies) held: scalr-scale-bounded: pass",
+    "detailed_reasoning": "scalr-scale-bounded: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "r_min",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "r",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "scale",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "r_min >= 0",
+        "r_min <= 1",
+        "r >= 0",
+        "r <= 1",
+        "scale == r_min + (1 - r_min) * r"
+      ],
+      "queries": [
+        {
+          "query_id": "scalr-scale-bounded",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "And(scale >= r_min, scale <= 1)"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:55:21.692Z",
+    "finished_at_utc": "2026-09-01T19:55:21.698Z",
+    "duration_ms": 6,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:675fa51852a393a2369d61b62780595efc41e23ede1eb2bcc2b572ff6c86a77b",
+    "output_content_hash": "sha256:caa542cd4c61131c8fe02e3b8ff7e1199c09d15f53f802de8a21f13c65c7357d"
+  },
+  {
+    "audit_id": "audit-e4a82d6b2025",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "SYNC-PEN-BOUND-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "medium",
+    "summary": "All 1 quer(y/ies) held: penalty-non-negative: pass",
+    "detailed_reasoning": "penalty-non-negative: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "lam",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "K_c",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "K",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "deficit",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "penalty",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "lam >= 0",
+        "deficit == If(K_c - K > 0, K_c - K, 0)",
+        "penalty == lam * deficit * deficit"
+      ],
+      "queries": [
+        {
+          "query_id": "penalty-non-negative",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "penalty >= 0"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:55:21.719Z",
+    "finished_at_utc": "2026-09-01T19:55:21.728Z",
+    "duration_ms": 8,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:c648f0b159f18cea15273825a4b4ec6a0968f1349e0d558d5cbf76ecf86b9f27",
+    "output_content_hash": "sha256:78945ca7016c8a5c676a154ed752e97fa951db3bc4ecc9aa7056338f78450a5c"
+  },
+  {
+    "audit_id": "audit-dc558f788929",
+    "parent_audit_id": null,
+    "request_id": "req-51a1f0cf74cd",
+    "claim_id": "RIP-DIAG-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "medium",
+    "summary": "All 1 quer(y/ies) held: diagonal-always-zero: pass",
+    "detailed_reasoning": "diagonal-always-zero: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "delta",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "mask",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "out",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "mask == 0",
+        "out == delta * mask"
+      ],
+      "queries": [
+        {
+          "query_id": "diagonal-always-zero",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "out == 0"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:55:21.750Z",
+    "finished_at_utc": "2026-09-01T19:55:21.754Z",
+    "duration_ms": 4,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:2e0c1e2bfa23e1410726bb2aa516b322e395be8bbc7d4460e042140040f73c90",
+    "output_content_hash": "sha256:1cda783a1fbe4208e1befd8ef31bd5101ecc0edb6e9c8bbcfb744d49f38b132f"
+  }
+]

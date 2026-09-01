@@ -1,0 +1,40 @@
+{
+  "variables": [
+    {
+      "name": "value",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "limit",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "output",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "limit > 0",
+    "value >= -1e300",
+    "value <= 1e300",
+    "output == Max(-limit, Min(limit, value))"
+  ],
+  "queries": [
+    {
+      "query_id": "clamp-finite-bounded",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "And(output >= -limit, output <= limit)"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

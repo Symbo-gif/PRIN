@@ -1,0 +1,45 @@
+{
+  "variables": [
+    {
+      "name": "a1",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "a2",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "o1",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "o2",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "o1 == If(a1 < 0.000001, 0.000001, If(a1 > 10.0, 10.0, a1))",
+    "o2 == If(a2 < 0.000001, 0.000001, If(a2 > 10.0, 10.0, a2))",
+    "a1 <= a2"
+  ],
+  "queries": [
+    {
+      "query_id": "amp-clamp-bounded-monotone",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "And(o1 >= 0.000001, o1 <= 10.0, o1 <= o2)"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

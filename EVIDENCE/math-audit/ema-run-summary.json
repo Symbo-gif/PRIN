@@ -2,47 +2,57 @@
   "gate_pass": false,
   "ledgers": [
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-03d8fa549ee9",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-6e2a064f6024",
       "ledger": "prin-daemon-phase5-properties.json",
       "overall_status": "PASS"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-945f53fbb790",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-acd69e22088c",
       "ledger": "prin-dynamics-graph-topology.json",
       "overall_status": "REQUIRES_HUMAN_REVIEW"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-71702192e0f9",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-8f5043debf14",
       "ledger": "prin-dynamics-ode-properties.json",
       "overall_status": "REQUIRES_HUMAN_REVIEW"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-95c5a33505bf",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-52fd5abec367",
       "ledger": "prin-dynamics-symbolic-identities.json",
       "overall_status": "PASS"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-f8aa53154048",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-8d44b05884f1",
       "ledger": "prin-dynamics-tensor-contracts.json",
       "overall_status": "REQUIRES_HUMAN_REVIEW"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-e064692bb9a5",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-ffad8baa72be",
       "ledger": "prin-dynamics-z3-invariants.json",
       "overall_status": "PASS"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-d6fbab82315f",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-39b1815e139c",
       "ledger": "prin-kernels-gpu-properties.json",
       "overall_status": "PASS"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-89e78398a7ff",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-d225f185e4fc",
+      "ledger": "prin-sim-phase6-stats-properties.json",
+      "overall_status": "PASS"
+    },
+    {
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-576b3206380c",
       "ledger": "prin-tensor-hosvd-reconstruction.json",
       "overall_status": "REQUIRES_HUMAN_REVIEW"
     },
     {
-      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-0ca683f823ab",
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-090130f1140c",
+      "ledger": "prin-train-phase6-properties.json",
+      "overall_status": "PASS"
+    },
+    {
+      "bundle_path": "C:\\dev\\PRIN\\EVIDENCE\\math-audit\\audits\\bundle-ced602cf0c8b",
       "ledger": "prin-train-trainable-stack-properties.json",
       "overall_status": "PASS"
     }

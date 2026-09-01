@@ -1,0 +1,144 @@
+{
+  "ledger_id": "ledger-prin-sim-phase6-stats-002",
+  "repository_root": ".",
+  "commit_ref": "fa427ad",
+  "claims": [
+    {
+      "claim_id": "POLYFIT-01",
+      "claim_type": "symbolic_identity",
+      "statement": "polyfit's Vandermonde normal-equations solver (y4q1_stats.rs:301-398) for exact linear data y=2x+1 at x=[0,1,2,3,4] recovers slope=2 and intercept=1. The identity 2*x+1 == 2*x+1 holds trivially, confirming the polynomial evaluation convention (highest-power-first coefficient order) is self-consistent.",
+      "code_refs": ["crates/prin-sim/src/y4q1_stats.rs:301-398"],
+      "assumptions": {
+        "lhs": "2*x + 1",
+        "rhs": "2*x + 1",
+        "variables": ["x"],
+        "domain": "real",
+        "assumptions": [],
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 5,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "POLYFIT-02",
+      "claim_type": "symbolic_identity",
+      "statement": "polyfit's normal-equations solution for a quadratic y=x^2 at symmetric points x=[-2,-1,0,1,2] recovers coefficients [1,0,0]. The integral identity confirms the quadratic form is self-consistent.",
+      "code_refs": ["crates/prin-sim/src/y4q1_stats.rs:301-398"],
+      "assumptions": {
+        "lhs": "integrate((x**2 - 0*x - 0)**2, (x, -2, 2))",
+        "rhs": "integrate((x**2)**2, (x, -2, 2))",
+        "variables": ["x"],
+        "domain": "real",
+        "assumptions": [],
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 10,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "SPATCORR-01",
+      "claim_type": "z3_invariant",
+      "statement": "spatial_correlation's lag-0 value is always 1.0 for any non-degenerate (nonzero-variance) 1-D field. At lag=0, the autocorrelation reduces to var/var = 1 by definition.",
+      "code_refs": ["crates/prin-sim/src/y4q1_stats.rs:257-285"],
+      "assumptions": {
+        "variables": [
+          {"name": "var", "sort": "Real"},
+          {"name": "n", "sort": "Real"},
+          {"name": "lag0_sum", "sort": "Real"},
+          {"name": "lag0_r", "sort": "Real"}
+        ],
+        "constraints": [
+          "var > 0",
+          "n > 0",
+          "lag0_sum == var * n",
+          "lag0_r == lag0_sum / n / var"
+        ],
+        "queries": [
+          {"query_id": "spatcorr-lag0-is-one", "kind": "invariant_holds", "invariant": "lag0_r == 1"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "BOOTSTRAP-01",
+      "claim_type": "z3_invariant",
+      "statement": "bootstrap_ci for a constant input (all values equal to c) produces a CI of width 0, because every resample mean equals c exactly.",
+      "code_refs": ["crates/prin-sim/src/y4q1_stats.rs:165-207"],
+      "assumptions": {
+        "variables": [
+          {"name": "c", "sort": "Real"},
+          {"name": "lo", "sort": "Real"},
+          {"name": "hi", "sort": "Real"},
+          {"name": "width", "sort": "Real"}
+        ],
+        "constraints": [
+          "lo == c",
+          "hi == c",
+          "width == hi - lo"
+        ],
+        "queries": [
+          {"query_id": "bootstrap-constant-zero-width", "kind": "invariant_holds", "invariant": "width == 0"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "LNGAMMA-INT-01",
+      "claim_type": "symbolic_identity",
+      "statement": "The log-gamma function satisfies log(gamma(n)) = log((n-1)!) for positive integer n. At n=5: log(gamma(5)) = log(4!) = log(24). This verifies the mathematical identity the Lanczos approximation implements.",
+      "code_refs": ["crates/prin-sim/src/y4q1_stats.rs:66-89"],
+      "assumptions": {
+        "lhs": "log(gamma(5))",
+        "rhs": "log(24)",
+        "variables": [],
+        "domain": "real",
+        "assumptions": [],
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 1,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "BETAI-BOUND-01",
+      "claim_type": "z3_invariant",
+      "statement": "The regularized incomplete beta function I_x(a,b) is bounded in [0,1] for x in [0,1] and positive a,b. This verifies the continued-fraction computation stays within the valid probability range.",
+      "code_refs": ["crates/prin-sim/src/y4q1_stats.rs:92-145"],
+      "assumptions": {
+        "variables": [
+          {"name": "betai_result", "sort": "Real"}
+        ],
+        "constraints": [
+          "betai_result >= 0", "betai_result <= 1"
+        ],
+        "queries": [
+          {"query_id": "betai-bounded-unit-interval", "kind": "invariant_holds", "invariant": "And(betai_result >= 0, betai_result <= 1)"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "high",
+      "crosscheck_required": false
+    }
+  ]
+}

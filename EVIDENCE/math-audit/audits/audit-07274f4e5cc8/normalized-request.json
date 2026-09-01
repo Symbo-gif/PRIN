@@ -1,0 +1,14 @@
+{
+  "lhs": "(K/d)*sin(0 - 0) + (K/d)*sin(0 - 0) + (K/d)*sin(0 - 0)",
+  "rhs": "0",
+  "assumptions": [],
+  "variables": [
+    "K",
+    "d"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 20,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

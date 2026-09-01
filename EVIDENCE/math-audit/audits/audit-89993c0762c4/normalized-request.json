@@ -1,0 +1,33 @@
+{
+  "variables": [
+    {
+      "name": "bound",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "value",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "bound > 0",
+    "value >= -bound",
+    "value <= bound"
+  ],
+  "queries": [
+    {
+      "query_id": "xavier-bounded-by-bound",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "And(value >= -bound, value <= bound)"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

@@ -1,0 +1,45 @@
+{
+  "variables": [
+    {
+      "name": "c",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "lo",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "hi",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "width",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "lo == c",
+    "hi == c",
+    "width == hi - lo"
+  ],
+  "queries": [
+    {
+      "query_id": "bootstrap-constant-zero-width",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "width == 0"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

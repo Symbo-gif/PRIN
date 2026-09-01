@@ -1,0 +1,7 @@
+{
+  "expression": "((1 - (1/(1+exp(2.0)) + 0.5 + 1/(1+exp(-4.0)) + 1/(1+exp(-6.0)))/4 - 0.6)**2) - ((1 - (1/(1+exp(2.0)) + 0.5 + 1/(1+exp(-4.0)) + 1/(1+exp(-6.0)))/4 - 0.6)**2)",
+  "task_type": "simplify",
+  "assumptions": [],
+  "timeout_seconds": 20.0,
+  "precision_digits": 30
+}

@@ -1,0 +1,611 @@
+[
+  {
+    "audit_id": "audit-6e77725526a5",
+    "parent_audit_id": null,
+    "request_id": "req-0057ef0012cb",
+    "claim_id": "VJP-DYN-01",
+    "tool_name": "verify_identity",
+    "adapter_name": "sympy",
+    "status": "TOOL_ERROR",
+    "severity": "high",
+    "summary": "Could not route claim to verify_identity.",
+    "detailed_reasoning": "failed to route claim 'VJP-DYN-01' to 'verify_identity': claim.assumptions did not validate against VerifyIdentityRequest: [{'type': 'greater_than_equal', 'loc': ('precision_digits',), 'msg': 'Input should be greater than or equal to 15', 'input': 6, 'ctx': {'ge': 15}, 'url': 'https://errors.pydantic.dev/2.13/v/greater_than_equal'}]",
+    "normalized_inputs": {},
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-09-01T19:55:20.865Z",
+    "finished_at_utc": "2026-09-01T19:55:20.866Z",
+    "duration_ms": 1,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "output_content_hash": "sha256:c10a0050600c3c6f1ebcc9e6f22e84a2a2e6057bb80040f47b7479158087c872"
+  },
+  {
+    "audit_id": "audit-be51dea58f5e",
+    "parent_audit_id": null,
+    "request_id": "req-0057ef0012cb",
+    "claim_id": "SPARSITY-01",
+    "tool_name": "verify_identity",
+    "adapter_name": "sympy",
+    "status": "TOOL_ERROR",
+    "severity": "medium",
+    "summary": "Could not route claim to verify_identity.",
+    "detailed_reasoning": "failed to route claim 'SPARSITY-01' to 'verify_identity': claim.assumptions did not validate against VerifyIdentityRequest: [{'type': 'greater_than', 'loc': ('numeric_samples',), 'msg': 'Input should be greater than 0', 'input': 0, 'ctx': {'gt': 0}, 'url': 'https://errors.pydantic.dev/2.13/v/greater_than'}, {'type': 'greater_than_equal', 'loc': ('precision_digits',), 'msg': 'Input should be greater than or equal to 15', 'input': 12, 'ctx': {'ge': 15}, 'url': 'https://errors.pydantic.dev/2.13/v/greater_than_equal'}]",
+    "normalized_inputs": {},
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-09-01T19:55:20.890Z",
+    "finished_at_utc": "2026-09-01T19:55:20.891Z",
+    "duration_ms": 1,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "output_content_hash": "sha256:e9116ad071286f650731857c87221949a30f88a6e72360351b06f48cbff17734"
+  },
+  {
+    "audit_id": "audit-809523577608",
+    "parent_audit_id": null,
+    "request_id": "req-0057ef0012cb",
+    "claim_id": "WEIGHTINIT-SYM-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "high",
+    "summary": "All 1 quer(y/ies) held: weightinit-symmetric-zero-diag: pass",
+    "detailed_reasoning": "weightinit-symmetric-zero-diag: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "a",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "b",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "c",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "d",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "scale",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "out_00",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "out_01",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "out_10",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "out_11",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "scale > 0",
+        "out_00 == 0",
+        "out_11 == 0",
+        "out_01 == (b + c) / 2 * scale",
+        "out_10 == (b + c) / 2 * scale"
+      ],
+      "queries": [
+        {
+          "query_id": "weightinit-symmetric-zero-diag",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "And(out_00 == 0, out_11 == 0, out_01 == out_10)"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:55:20.923Z",
+    "finished_at_utc": "2026-09-01T19:55:20.950Z",
+    "duration_ms": 27,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:9d8dd6962bccf7d8074d4011c206c8f4b4e7ba08b7ea484971bd0d0b5694100c",
+    "output_content_hash": "sha256:335cde186bd8eb5b15968a2143fd939ef7b8aad795163e42f0016488676753d0"
+  },
+  {
+    "audit_id": "audit-fdd200f23d00",
+    "parent_audit_id": null,
+    "request_id": "req-0057ef0012cb",
+    "claim_id": "WEIGHTINIT-XAV-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "TOOL_ERROR",
+    "severity": "medium",
+    "summary": "A constraint was rejected by the security guard.",
+    "detailed_reasoning": "only Implies/If/Not/Abs/And/Or function calls are allowed",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "gain",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "fan_in",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "fan_out",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "bound",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "value",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "gain > 0",
+        "fan_in > 0",
+        "fan_out > 0",
+        "bound == gain * sqrt(6 / (fan_in + fan_out))",
+        "value >= -bound",
+        "value <= bound"
+      ],
+      "queries": [
+        {
+          "query_id": "xavier-bounded-by-bound",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "And(value >= -bound, value <= bound)"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:55:20.973Z",
+    "finished_at_utc": "2026-09-01T19:55:20.974Z",
+    "duration_ms": 0,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:ff36278e9159883d8f0d9ef373533307c8ee63a82f2bdd34acafaa616a19a2d3",
+    "output_content_hash": "sha256:d955e16f4cb226ba23b407c3a52d3f3a0706269cf9fbd2ce6ce833bcf8a15676"
+  },
+  {
+    "audit_id": "audit-1e540acf59e4",
+    "parent_audit_id": null,
+    "request_id": "req-0057ef0012cb",
+    "claim_id": "ORDERPARAM-01",
+    "tool_name": "verify_identity",
+    "adapter_name": "sympy",
+    "status": "TOOL_ERROR",
+    "severity": "medium",
+    "summary": "Expression rejected by security guard.",
+    "detailed_reasoning": "unknown identifier: 'k'",
+    "normalized_inputs": {
+      "lhs": "Abs(Sum(exp(I*phi), (k, 1, n)) / n)",
+      "rhs": "1",
+      "assumptions": [
+        "n > 0",
+        "im(phi) == 0"
+      ],
+      "variables": [
+        "phi",
+        "n"
+      ],
+      "domain": "complex",
+      "strategy": "symbolic_then_numeric",
+      "numeric_samples": 20,
+      "precision_digits": 30,
+      "crosscheck_with_wolfram": false
+    },
+    "assumptions": [],
+    "limitations": [
+      "Input failed restricted-parser validation before any mathematical evaluation occurred."
+    ],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 15.0,
+    "started_at_utc": "2026-09-01T19:55:21.015Z",
+    "finished_at_utc": "2026-09-01T19:55:21.016Z",
+    "duration_ms": 1,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:f2ed2bc88f8562560163c3037261b22cab85ae27d152518745eff06c8a7b64f7",
+    "output_content_hash": "sha256:56e489bc7a12a80db0fde8d7bab5f695881bc601968deabcc90afee87d743617"
+  },
+  {
+    "audit_id": "audit-458520dc75c9",
+    "parent_audit_id": null,
+    "request_id": "req-0057ef0012cb",
+    "claim_id": "ORDERPARAM-01",
+    "tool_name": "wolfram_crosscheck",
+    "adapter_name": "wolfram",
+    "status": "SKIPPED_BY_POLICY",
+    "severity": "medium",
+    "summary": "Wolfram adapter unavailable or disabled by policy.",
+    "detailed_reasoning": "Wolfram adapter disabled by policy (adapters.enable_wolfram=false)",
+    "normalized_inputs": {
+      "expression": "(Abs(Sum(exp(I*phi), (k, 1, n)) / n)) - (1)",
+      "task_type": "simplify",
+      "assumptions": [
+        "n > 0",
+        "im(phi) == 0"
+      ],
+      "timeout_seconds": 20.0,
+      "precision_digits": 30
+    },
+    "assumptions": [],
+    "limitations": [
+      "No Wolfram evaluation was attempted. This is never treated as a PASS."
+    ],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 20.0,
+    "started_at_utc": "2026-09-01T19:55:21.048Z",
+    "finished_at_utc": "2026-09-01T19:55:21.050Z",
+    "duration_ms": 1,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:fb4ed6a1eff30953f895563e0b002c72d524c88b92046a775b7ea5285b417d36",
+    "output_content_hash": "sha256:e19888f7eba1e17af2b312f356eb34664fb9c29c1b2a41ac1b8e23d70eefbd7e"
+  },
+  {
+    "audit_id": "audit-f28ccf753ff3",
+    "parent_audit_id": null,
+    "request_id": "req-0057ef0012cb",
+    "claim_id": "PACINDEX-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "PASS",
+    "severity": "medium",
+    "summary": "All 1 quer(y/ies) held: pacindex-nonnegative: pass",
+    "detailed_reasoning": "pacindex-nonnegative: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "corr",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "mean_amp",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "eps",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "term",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "mean_amp > 0",
+        "eps > 0",
+        "term == Abs(corr) / (mean_amp + eps)"
+      ],
+      "queries": [
+        {
+          "query_id": "pacindex-nonnegative",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "term >= 0"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:55:21.086Z",
+    "finished_at_utc": "2026-09-01T19:55:21.104Z",
+    "duration_ms": 18,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:a63076fd584d2cd162e6b7e9a59ca64652167d51b41124363a289daeeec9103c",
+    "output_content_hash": "sha256:cb200a742c0320d3862325ee21da1550aea7cc78888590bf26df9051d0668e3b"
+  },
+  {
+    "audit_id": "audit-85d7751e71b7",
+    "parent_audit_id": null,
+    "request_id": "req-0057ef0012cb",
+    "claim_id": "CLAMP-01",
+    "tool_name": "check_constraint_model",
+    "adapter_name": "z3",
+    "status": "TOOL_ERROR",
+    "severity": "medium",
+    "summary": "A constraint was rejected by the security guard.",
+    "detailed_reasoning": "only Implies/If/Not/Abs/And/Or function calls are allowed",
+    "normalized_inputs": {
+      "variables": [
+        {
+          "name": "value",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "limit",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        },
+        {
+          "name": "output",
+          "sort": "Real",
+          "bitvec_width": null,
+          "enum_values": null
+        }
+      ],
+      "constraints": [
+        "limit > 0",
+        "value >= -1e300",
+        "value <= 1e300",
+        "output == Max(-limit, Min(limit, value))"
+      ],
+      "queries": [
+        {
+          "query_id": "clamp-finite-bounded",
+          "kind": "invariant_holds",
+          "expression": null,
+          "invariant": "And(output >= -limit, output <= limit)"
+        }
+      ],
+      "bounds": {},
+      "timeout_ms": 10000,
+      "produce_models": true,
+      "maximize_counterexample_readability": true
+    },
+    "assumptions": [],
+    "limitations": [],
+    "environment": {
+      "python_version": "3.12.9",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "implementation": "CPython"
+    },
+    "dependency_versions": {
+      "math-audit-mcp": "0.1.0",
+      "sympy": "1.14.0",
+      "numpy": "2.5.2",
+      "scipy": "1.18.0",
+      "mpmath": "1.3.0",
+      "z3-solver": "5.0.0.0",
+      "networkx": "3.6.1",
+      "pydantic": "2.13.4",
+      "fastmcp": "3.4.7"
+    },
+    "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+    "random_seed": null,
+    "precision": null,
+    "timeout_seconds": 10.0,
+    "started_at_utc": "2026-09-01T19:55:21.130Z",
+    "finished_at_utc": "2026-09-01T19:55:21.131Z",
+    "duration_ms": 1,
+    "warnings": [],
+    "metrics": [],
+    "residuals": [],
+    "counterexamples": [],
+    "artifacts": [],
+    "raw_log_reference": null,
+    "input_content_hash": "sha256:06102a1a73484d74572bb8b01c10bdf866e8787bfac5fb703bcd8d83075a8b71",
+    "output_content_hash": "sha256:b151fc8be594a79617be41e40d0351c6feb5aa649e347cc642628ae78aa9a022"
+  }
+]

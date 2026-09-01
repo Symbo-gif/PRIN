@@ -1,0 +1,10 @@
+{
+  "expression": "(integrate(t**(a-1)*(1-t)**(b-1), (t, 0, 1))) - (gamma(a)*gamma(b)/gamma(a+b))",
+  "task_type": "simplify",
+  "assumptions": [
+    "a > 0",
+    "b > 0"
+  ],
+  "timeout_seconds": 20.0,
+  "precision_digits": 30
+}

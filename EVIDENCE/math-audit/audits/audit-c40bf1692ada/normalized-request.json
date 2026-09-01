@@ -1,0 +1,18 @@
+{
+  "lhs": "im(((mu + I*w)*(r*exp(I*p)) - r**2*(r*exp(I*p)))*exp(-I*p))/r",
+  "rhs": "w",
+  "assumptions": [
+    "r > 0"
+  ],
+  "variables": [
+    "mu",
+    "w",
+    "p",
+    "r"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 60,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

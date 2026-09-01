@@ -1,0 +1,48 @@
+{
+  "variables": [
+    {
+      "name": "x",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "a",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "b",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "betai_result",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "x >= 0",
+    "x <= 1",
+    "a > 0",
+    "b > 0",
+    "betai_result >= 0",
+    "betai_result <= 1"
+  ],
+  "queries": [
+    {
+      "query_id": "betai-bounded-unit-interval",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "And(betai_result >= 0, betai_result <= 1)"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

@@ -1,0 +1,111 @@
+{
+  "bundle_id": "bundle-3289ce8136f9",
+  "ledger_id": "ledger-prin-train-trainable-stack-001",
+  "request_id": "req-51a1f0cf74cd",
+  "created_at_utc": "2026-09-01T19:55:21.775Z",
+  "overall_status": "PASS",
+  "claim_verdicts": [
+    {
+      "claim_id": "HSL-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-e5d4d038ca8f"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "DSILU-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-2037e283349a"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "SCALR-LR-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-0be52334b43d"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "SCALR-LR-02",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-792aaac65981"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "RIP-HEBB-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-46be93fd00c9"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "SYNC-PEN-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-5090277ed905"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "GPA-BOUND-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-42d9ef57473c"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "SCALR-SCALE-BOUND-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-461746574f7e"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "SYNC-PEN-BOUND-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-e4a82d6b2025"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "RIP-DIAG-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-dc558f788929"
+      ],
+      "reason": "all required checks passed"
+    }
+  ],
+  "audit_ids": [
+    "audit-e5d4d038ca8f",
+    "audit-5e7255d0006f",
+    "audit-2037e283349a",
+    "audit-2107cbb92cad",
+    "audit-0be52334b43d",
+    "audit-06d2e69c90ef",
+    "audit-792aaac65981",
+    "audit-c40475e8b89b",
+    "audit-46be93fd00c9",
+    "audit-2222c7e81557",
+    "audit-5090277ed905",
+    "audit-33ba1ec5107b",
+    "audit-42d9ef57473c",
+    "audit-461746574f7e",
+    "audit-e4a82d6b2025",
+    "audit-dc558f788929"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:2f4ffc863ca5b79ba3d11d86faf2696c8d95ba7fdab47a302d77bdbfb67d7363"
+}

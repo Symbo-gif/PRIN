@@ -1,0 +1,45 @@
+{
+  "bundle_id": "bundle-39b1815e139c",
+  "ledger_id": "ledger-prin-kernels-gpu-properties-001",
+  "request_id": "req-99c30844e428",
+  "created_at_utc": "2026-09-01T20:00:29.335Z",
+  "overall_status": "PASS",
+  "claim_verdicts": [
+    {
+      "claim_id": "GPU-RK4-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-27d1bbf9e928"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "GPU-RED-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-36a7f3fd0b88"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "GPU-KNN-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-b72d65f1dd9c"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    }
+  ],
+  "audit_ids": [
+    "audit-27d1bbf9e928",
+    "audit-f710f9408143",
+    "audit-36a7f3fd0b88",
+    "audit-ab5910e712b3",
+    "audit-b72d65f1dd9c",
+    "audit-d15fa3b81b2f"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:a20283c25fe9057504ca76ab56a1dd053a1978b6aaca3ea3f19ed9b3ee299c5e"
+}

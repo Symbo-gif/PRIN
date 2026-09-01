@@ -1,0 +1,260 @@
+[
+  {
+    "lhs": "-gamma * ((A_rest + 1) - A_rest)",
+    "rhs": "-gamma",
+    "assumptions": [
+      "gamma > 0"
+    ],
+    "variables": [
+      "gamma",
+      "A_rest"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 10,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "(-gamma * ((A_rest + 1) - A_rest)) - (-gamma)",
+    "task_type": "simplify",
+    "assumptions": [
+      "gamma > 0"
+    ],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  {
+    "lhs": "(1 - (1/(1+exp(2.0)) + 0.5 + 1/(1+exp(-4.0)) + 1/(1+exp(-6.0)))/4 - 0.6)**2",
+    "rhs": "(1 - (1/(1+exp(2.0)) + 0.5 + 1/(1+exp(-4.0)) + 1/(1+exp(-6.0)))/4 - 0.6)**2",
+    "assumptions": [],
+    "variables": [],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 1,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "((1 - (1/(1+exp(2.0)) + 0.5 + 1/(1+exp(-4.0)) + 1/(1+exp(-6.0)))/4 - 0.6)**2) - ((1 - (1/(1+exp(2.0)) + 0.5 + 1/(1+exp(-4.0)) + 1/(1+exp(-6.0)))/4 - 0.6)**2)",
+    "task_type": "simplify",
+    "assumptions": [],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  {
+    "variables": [
+      {
+        "name": "a",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "b",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "c",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "d",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "scale",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "out_00",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "out_01",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "out_10",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "out_11",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "scale > 0",
+      "out_00 == 0",
+      "out_11 == 0",
+      "out_01 == (b + c) / 2 * scale",
+      "out_10 == (b + c) / 2 * scale"
+    ],
+    "queries": [
+      {
+        "query_id": "weightinit-symmetric-zero-diag",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(out_00 == 0, out_11 == 0, out_01 == out_10)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "variables": [
+      {
+        "name": "bound",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "value",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "bound > 0",
+      "value >= -bound",
+      "value <= bound"
+    ],
+    "queries": [
+      {
+        "query_id": "xavier-bounded-by-bound",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(value >= -bound, value <= bound)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "lhs": "cos(phi)**2 + sin(phi)**2",
+    "rhs": "1",
+    "assumptions": [],
+    "variables": [
+      "phi"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 20,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "(cos(phi)**2 + sin(phi)**2) - (1)",
+    "task_type": "simplify",
+    "assumptions": [],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  {
+    "variables": [
+      {
+        "name": "corr",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "mean_amp",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "eps",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "term",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "mean_amp > 0",
+      "eps > 0",
+      "term == Abs(corr) / (mean_amp + eps)"
+    ],
+    "queries": [
+      {
+        "query_id": "pacindex-nonnegative",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "term >= 0"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "variables": [
+      {
+        "name": "value",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "limit",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "output",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "limit > 0",
+      "value >= -limit",
+      "value <= limit",
+      "output == value"
+    ],
+    "queries": [
+      {
+        "query_id": "clamp-finite-bounded",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(output >= -limit, output <= limit)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  }
+]

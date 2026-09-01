@@ -1,0 +1,81 @@
+{
+  "bundle_id": "bundle-090130f1140c",
+  "ledger_id": "ledger-prin-train-phase6-002",
+  "request_id": "req-e56b07a6a302",
+  "created_at_utc": "2026-09-01T20:00:31.056Z",
+  "overall_status": "PASS",
+  "claim_verdicts": [
+    {
+      "claim_id": "VJP-DYN-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-35b859e90b5c"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "SPARSITY-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-0550386a4415"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "WEIGHTINIT-SYM-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-922fd47c92f6"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "WEIGHTINIT-XAV-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-89993c0762c4"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "ORDERPARAM-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-7f8dabb467c0"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "PACINDEX-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-b762f20fe6a0"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "CLAMP-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-dd904207a9ad"
+      ],
+      "reason": "all required checks passed"
+    }
+  ],
+  "audit_ids": [
+    "audit-35b859e90b5c",
+    "audit-1cc66e98f618",
+    "audit-0550386a4415",
+    "audit-cd5ab190796d",
+    "audit-922fd47c92f6",
+    "audit-89993c0762c4",
+    "audit-7f8dabb467c0",
+    "audit-af46f9677222",
+    "audit-b762f20fe6a0",
+    "audit-dd904207a9ad"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:c06ef30c098bab24e747aa7ad78efe5a3bef12000b89c7b7621c6b24a9e976d8"
+}

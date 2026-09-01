@@ -1,0 +1,9 @@
+{
+  "expression": "(r_min + (1 - r_min)*0**alpha) - (r_min)",
+  "task_type": "simplify",
+  "assumptions": [
+    "alpha > 0"
+  ],
+  "timeout_seconds": 20.0,
+  "precision_digits": 30
+}

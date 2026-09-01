@@ -1,0 +1,46 @@
+{
+  "variables": [
+    {
+      "name": "var",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "n",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "lag0_sum",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "lag0_r",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "var > 0",
+    "n > 0",
+    "lag0_sum == var * n",
+    "lag0_r == lag0_sum / n / var"
+  ],
+  "queries": [
+    {
+      "query_id": "spatcorr-lag0-is-one",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "lag0_r == 1"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

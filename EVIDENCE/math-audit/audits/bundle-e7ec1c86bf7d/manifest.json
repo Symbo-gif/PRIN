@@ -1,0 +1,61 @@
+{
+  "bundle_id": "bundle-e7ec1c86bf7d",
+  "ledger_id": "ledger-prin-dynamics-graph-topology-001",
+  "request_id": "req-fc0bd032ecd2",
+  "created_at_utc": "2026-09-01T19:52:18.920Z",
+  "overall_status": "REQUIRES_HUMAN_REVIEW",
+  "claim_verdicts": [
+    {
+      "claim_id": "GRA-01",
+      "status": "REQUIRES_HUMAN_REVIEW",
+      "contributing_audit_ids": [
+        "audit-e2864a591008"
+      ],
+      "reason": "high/critical-severity claim passed only numerically; policy requires symbolic or formal (SymPy/Z3/Lean) corroboration before a PASS verdict"
+    },
+    {
+      "claim_id": "GRA-02",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-ed667df46611"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "GRA-01-LEAN",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-5606f3e16a8d"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "GRA-01-SAT",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-85d6d1c9edc4"
+      ],
+      "reason": "all required checks passed"
+    }
+  ],
+  "audit_ids": [
+    "audit-e2864a591008",
+    "audit-ed667df46611",
+    "audit-5606f3e16a8d",
+    "audit-85d6d1c9edc4"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [
+    {
+      "artifact_id": "art-800beb71cc9b",
+      "artifact_type": "text",
+      "relative_path": "artifacts/audit-5606f3e16a8d__lean-diagnostics.txt",
+      "content_hash": "sha256:87e3e6d27c2212f0d83c00671cf384fdcbdc8220c8fafdee774f4671335224d5",
+      "content_type": "text/plain",
+      "description": "Sanitized Lean/lake stdout+stderr",
+      "created_at_utc": "2026-09-01T19:52:18.338Z"
+    }
+  ],
+  "bundle_content_hash": "sha256:b4276c311f2960bb8f5bc44643d7333d874c72d9125d05a8f5362ab0ca69f1fa"
+}

@@ -1,0 +1,45 @@
+{
+  "variables": [
+    {
+      "name": "corr",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "mean_amp",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "eps",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "term",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "mean_amp > 0",
+    "eps > 0",
+    "term == Abs(corr) / (mean_amp + eps)"
+  ],
+  "queries": [
+    {
+      "query_id": "pacindex-nonnegative",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "term >= 0"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

@@ -1,0 +1,11 @@
+{
+  "lhs": "log(gamma(5))",
+  "rhs": "log(24)",
+  "assumptions": [],
+  "variables": [],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 1,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

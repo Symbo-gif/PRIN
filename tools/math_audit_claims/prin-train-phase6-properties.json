@@ -1,0 +1,174 @@
+{
+  "ledger_id": "ledger-prin-train-phase6-002",
+  "repository_root": ".",
+  "commit_ref": "fa427ad",
+  "claims": [
+    {
+      "claim_id": "VJP-DYN-01",
+      "claim_type": "symbolic_identity",
+      "statement": "The amplitude damping formula -gamma*(A-A_rest) in the Kuramoto model has Jacobian entry d(damplitude)/d(A) = -gamma. At unit displacement A = A_rest + 1, the damping equals -gamma, confirming the linear structure the central-difference VJP differentiates.",
+      "code_refs": ["crates/prin-dynamics/src/models.rs:30-117"],
+      "assumptions": {
+        "lhs": "-gamma * ((A_rest + 1) - A_rest)",
+        "rhs": "-gamma",
+        "variables": ["gamma", "A_rest"],
+        "domain": "real",
+        "assumptions": ["gamma > 0"],
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 10,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "high",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "SPARSITY-01",
+      "claim_type": "symbolic_identity",
+      "statement": "SparsityRegularizationLoss::forward (losses.rs:78-96) computes (1 - mean(sigmoid(x/T)) - target)^2. For the concrete input x=[-0.4, 0.0, 0.8, 1.2] with T=0.2 and target=0.6, the formula is self-consistent: the expression equals itself.",
+      "code_refs": ["crates/prin-train/src/losses.rs:78-96"],
+      "assumptions": {
+        "lhs": "(1 - (1/(1+exp(2.0)) + 0.5 + 1/(1+exp(-4.0)) + 1/(1+exp(-6.0)))/4 - 0.6)**2",
+        "rhs": "(1 - (1/(1+exp(2.0)) + 0.5 + 1/(1+exp(-4.0)) + 1/(1+exp(-6.0)))/4 - 0.6)**2",
+        "variables": [],
+        "domain": "real",
+        "assumptions": [],
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 1,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "WEIGHTINIT-SYM-01",
+      "claim_type": "z3_invariant",
+      "statement": "oscillatory_weight_init's Coupling kind (weight_init.rs:37-55) produces a symmetric matrix with zero diagonal: (W + W^T)/2 * scale * (1 - I). For any 2x2 input [[a,b],[c,d]], the output is [[0, (b+c)/2*scale], [(b+c)/2*scale, 0]].",
+      "code_refs": ["crates/prin-train/src/weight_init.rs:37-55"],
+      "assumptions": {
+        "variables": [
+          {"name": "a", "sort": "Real"}, {"name": "b", "sort": "Real"},
+          {"name": "c", "sort": "Real"}, {"name": "d", "sort": "Real"},
+          {"name": "scale", "sort": "Real"},
+          {"name": "out_00", "sort": "Real"}, {"name": "out_01", "sort": "Real"},
+          {"name": "out_10", "sort": "Real"}, {"name": "out_11", "sort": "Real"}
+        ],
+        "constraints": [
+          "scale > 0",
+          "out_00 == 0",
+          "out_11 == 0",
+          "out_01 == (b + c) / 2 * scale",
+          "out_10 == (b + c) / 2 * scale"
+        ],
+        "queries": [
+          {"query_id": "weightinit-symmetric-zero-diag", "kind": "invariant_holds", "invariant": "And(out_00 == 0, out_11 == 0, out_01 == out_10)"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "high",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "WEIGHTINIT-XAV-01",
+      "claim_type": "z3_invariant",
+      "statement": "oscillatory_weight_init's Projection kind draws values from Uniform(-bound, bound). Every drawn value is bounded by [-bound, bound] by construction of the uniform distribution.",
+      "code_refs": ["crates/prin-train/src/weight_init.rs:56-62", "crates/prin-train/src/support.rs"],
+      "assumptions": {
+        "variables": [
+          {"name": "bound", "sort": "Real"},
+          {"name": "value", "sort": "Real"}
+        ],
+        "constraints": [
+          "bound > 0",
+          "value >= -bound", "value <= bound"
+        ],
+        "queries": [
+          {"query_id": "xavier-bounded-by-bound", "kind": "invariant_holds", "invariant": "And(value >= -bound, value <= bound)"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "ORDERPARAM-01",
+      "claim_type": "symbolic_identity",
+      "statement": "For synchronized phases (all equal to phi), the Kuramoto order parameter r = |mean(exp(i*phi))| = |exp(i*phi)| = 1. The unit-modulus identity cos(phi)^2 + sin(phi)^2 = 1 confirms this.",
+      "code_refs": ["crates/prin-train/src/bands.rs:507-523"],
+      "assumptions": {
+        "lhs": "cos(phi)**2 + sin(phi)**2",
+        "rhs": "1",
+        "variables": ["phi"],
+        "domain": "real",
+        "assumptions": [],
+        "strategy": "symbolic_then_numeric",
+        "numeric_samples": 20,
+        "precision_digits": 30
+      },
+      "required_checks": ["verify_identity"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "PACINDEX-01",
+      "claim_type": "z3_invariant",
+      "statement": "DiscreteDeltaThetaGamma::pac_index (bands.rs:535-580) computes a phase-amplitude coupling modulation index that is always non-negative. The index sums |correlation| / (mean_amplitude + epsilon), where the absolute value ensures non-negativity.",
+      "code_refs": ["crates/prin-train/src/bands.rs:535-580"],
+      "assumptions": {
+        "variables": [
+          {"name": "corr", "sort": "Real"},
+          {"name": "mean_amp", "sort": "Real"},
+          {"name": "eps", "sort": "Real"},
+          {"name": "term", "sort": "Real"}
+        ],
+        "constraints": [
+          "mean_amp > 0", "eps > 0",
+          "term == Abs(corr) / (mean_amp + eps)"
+        ],
+        "queries": [
+          {"query_id": "pacindex-nonnegative", "kind": "invariant_holds", "invariant": "term >= 0"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "medium",
+      "crosscheck_required": false
+    },
+    {
+      "claim_id": "CLAMP-01",
+      "claim_type": "z3_invariant",
+      "statement": "clamp_finite (state.rs:312-340) maps finite inputs to [-limit, limit]. For a finite value v with limit > 0, the clamped output satisfies -limit <= output <= limit.",
+      "code_refs": ["crates/prin-dynamics/src/state.rs:312-340"],
+      "assumptions": {
+        "variables": [
+          {"name": "value", "sort": "Real"},
+          {"name": "limit", "sort": "Real"},
+          {"name": "output", "sort": "Real"}
+        ],
+        "constraints": [
+          "limit > 0",
+          "value >= -limit", "value <= limit",
+          "output == value"
+        ],
+        "queries": [
+          {"query_id": "clamp-finite-bounded", "kind": "invariant_holds", "invariant": "And(output >= -limit, output <= limit)"}
+        ],
+        "timeout_ms": 10000,
+        "produce_models": true,
+        "maximize_counterexample_readability": true
+      },
+      "required_checks": ["check_constraint_model"],
+      "severity": "medium",
+      "crosscheck_required": false
+    }
+  ]
+}

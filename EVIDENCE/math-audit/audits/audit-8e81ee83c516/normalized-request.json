@@ -1,0 +1,7 @@
+{
+  "expression": "(y + (dt/6)*(k1 + 2*(k2 + k3) + k4)) - (y + (dt/6)*k1 + (dt/3)*k2 + (dt/3)*k3 + (dt/6)*k4)",
+  "task_type": "simplify",
+  "assumptions": [],
+  "timeout_seconds": 20.0,
+  "precision_digits": 30
+}

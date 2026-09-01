@@ -1,0 +1,13 @@
+{
+  "lhs": "cos(phi)**2 + sin(phi)**2",
+  "rhs": "1",
+  "assumptions": [],
+  "variables": [
+    "phi"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 20,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

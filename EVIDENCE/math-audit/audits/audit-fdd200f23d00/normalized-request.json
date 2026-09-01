@@ -1,0 +1,54 @@
+{
+  "variables": [
+    {
+      "name": "gain",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "fan_in",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "fan_out",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "bound",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "value",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "gain > 0",
+    "fan_in > 0",
+    "fan_out > 0",
+    "bound == gain * sqrt(6 / (fan_in + fan_out))",
+    "value >= -bound",
+    "value <= bound"
+  ],
+  "queries": [
+    {
+      "query_id": "xavier-bounded-by-bound",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "And(value >= -bound, value <= bound)"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

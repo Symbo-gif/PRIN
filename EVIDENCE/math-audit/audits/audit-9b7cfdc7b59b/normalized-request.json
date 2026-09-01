@@ -1,0 +1,7 @@
+{
+  "expression": "(2*x + 1) - (2*x + 1)",
+  "task_type": "simplify",
+  "assumptions": [],
+  "timeout_seconds": 20.0,
+  "precision_digits": 30
+}

@@ -1,0 +1,152 @@
+{
+  "audit_id": "audit-607fea729d8c",
+  "parent_audit_id": null,
+  "request_id": "req-28216420e1fb",
+  "claim_id": "TEN-01",
+  "tool_name": "audit_tensor_contract",
+  "adapter_name": "none",
+  "status": "PASS",
+  "severity": "high",
+  "summary": "Contraction compatibility, output signature, and 1 symmetry claim(s) all checked out.",
+  "detailed_reasoning": "Validated 0 contraction pair(s) across 1 shape trial(s); output rank matched output_signature. Symmetry checks: W.symmetric['i', 'j']: held on provided sample_values.",
+  "normalized_inputs": {
+    "expression": "W_ij = ring coupling weight between oscillators i and j (build_ring output, N=6, k_ring=4, K=1.0)",
+    "tensors": [
+      {
+        "name": "W",
+        "rank": 2,
+        "variance": [],
+        "named_axes": [
+          "i",
+          "j"
+        ],
+        "dimensions": {
+          "i": 6,
+          "j": 6
+        },
+        "dtype": "float64",
+        "expected_symmetries": [],
+        "basis": null,
+        "sample_values": [
+          [
+            0.0,
+            0.25,
+            0.25,
+            0.0,
+            0.25,
+            0.25
+          ],
+          [
+            0.25,
+            0.0,
+            0.25,
+            0.25,
+            0.0,
+            0.25
+          ],
+          [
+            0.25,
+            0.25,
+            0.0,
+            0.25,
+            0.25,
+            0.0
+          ],
+          [
+            0.0,
+            0.25,
+            0.25,
+            0.0,
+            0.25,
+            0.25
+          ],
+          [
+            0.25,
+            0.0,
+            0.25,
+            0.25,
+            0.0,
+            0.25
+          ],
+          [
+            0.25,
+            0.25,
+            0.0,
+            0.25,
+            0.25,
+            0.0
+          ]
+        ]
+      }
+    ],
+    "output_signature": {
+      "rank": 2,
+      "named_axes": [
+        "i",
+        "j"
+      ]
+    },
+    "contraction_pairs": [],
+    "index_conventions": {
+      "summation_convention": "explicit",
+      "index_order_matters": true
+    },
+    "required_symmetries": [
+      {
+        "tensor_name": "W",
+        "kind": "symmetric",
+        "axes": [
+          "i",
+          "j"
+        ]
+      }
+    ],
+    "test_shapes": [],
+    "random_seed": 0,
+    "numeric_trials": 1,
+    "expected_output": null,
+    "output_tolerance": 1e-8
+  },
+  "assumptions": [],
+  "limitations": [
+    "Contraction/output-signature checks without sample_values use synthetic random trial tensors (they validate shape/einsum plumbing, not real code output).",
+    "The `expression` field is documentation only and was not evaluated."
+  ],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": 0,
+  "precision": null,
+  "timeout_seconds": 15.0,
+  "started_at_utc": "2026-09-01T19:57:47.068Z",
+  "finished_at_utc": "2026-09-01T19:57:47.069Z",
+  "duration_ms": 0,
+  "warnings": [],
+  "metrics": [
+    {
+      "name": "contraction_trials_executed",
+      "value": 1.0,
+      "unit": null
+    }
+  ],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:82660d254947b7672735487334e29f28972ce7f79b4623f334b089bc44ca7194",
+  "output_content_hash": "sha256:9f2762a1e5f88dac4dee487b7420e7a236ddbdccc655ba808110dd6d7e11be79"
+}

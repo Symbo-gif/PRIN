@@ -1,0 +1,153 @@
+{
+  "expression": "R_ijk = R_ijk (identity contraction; the tool's genuine work is the expected_output numeric comparison, not this trivial einsum)",
+  "tensors": [
+    {
+      "name": "R",
+      "rank": 3,
+      "variance": [],
+      "named_axes": [
+        "i",
+        "j",
+        "k"
+      ],
+      "dimensions": {
+        "i": 3,
+        "j": 4,
+        "k": 2
+      },
+      "dtype": "float64",
+      "expected_symmetries": [],
+      "basis": null,
+      "sample_values": [
+        [
+          [
+            -2.942091015256665e-15,
+            0.9999999999999964
+          ],
+          [
+            2.000000000000001,
+            3.000000000000001
+          ],
+          [
+            3.999999999999999,
+            4.999999999999999
+          ],
+          [
+            6.0,
+            7.0
+          ]
+        ],
+        [
+          [
+            7.999999999999997,
+            8.999999999999996
+          ],
+          [
+            10.000000000000002,
+            11.0
+          ],
+          [
+            11.999999999999998,
+            12.999999999999998
+          ],
+          [
+            13.999999999999996,
+            14.999999999999996
+          ]
+        ],
+        [
+          [
+            16.000000000000004,
+            17.0
+          ],
+          [
+            18.000000000000004,
+            19.000000000000007
+          ],
+          [
+            20.0,
+            21.0
+          ],
+          [
+            22.000000000000004,
+            23.000000000000004
+          ]
+        ]
+      ]
+    }
+  ],
+  "output_signature": {
+    "rank": 3,
+    "named_axes": [
+      "i",
+      "j",
+      "k"
+    ]
+  },
+  "contraction_pairs": [],
+  "index_conventions": {
+    "summation_convention": "explicit",
+    "index_order_matters": true
+  },
+  "required_symmetries": [],
+  "test_shapes": [],
+  "random_seed": 0,
+  "numeric_trials": 8,
+  "expected_output": [
+    [
+      [
+        0.0,
+        1.0
+      ],
+      [
+        2.0,
+        3.0
+      ],
+      [
+        4.0,
+        5.0
+      ],
+      [
+        6.0,
+        7.0
+      ]
+    ],
+    [
+      [
+        8.0,
+        9.0
+      ],
+      [
+        10.0,
+        11.0
+      ],
+      [
+        12.0,
+        13.0
+      ],
+      [
+        14.0,
+        15.0
+      ]
+    ],
+    [
+      [
+        16.0,
+        17.0
+      ],
+      [
+        18.0,
+        19.0
+      ],
+      [
+        20.0,
+        21.0
+      ],
+      [
+        22.0,
+        23.0
+      ]
+    ]
+  ],
+  "output_tolerance": 1e-10
+}

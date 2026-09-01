@@ -1,0 +1,223 @@
+[
+  {
+    "rhs_expression": "-2*y",
+    "state_variables": [
+      "y"
+    ],
+    "independent_variable": "t",
+    "initial_conditions": {
+      "y": 1.0
+    },
+    "interval": [
+      0.0,
+      1.0
+    ],
+    "candidate_method": "euler",
+    "candidate_step_size": 0.05,
+    "reference_methods": [
+      "RK45"
+    ],
+    "tolerances": {
+      "y": 0.02
+    },
+    "expected_properties": [
+      {
+        "property_type": "positivity",
+        "state_variable": "y",
+        "lower_bound": null,
+        "upper_bound": null,
+        "equilibrium_value": null,
+        "conserved_quantity_expression": null,
+        "tolerance": 1e-06
+      },
+      {
+        "property_type": "monotonicity",
+        "state_variable": "y",
+        "lower_bound": null,
+        "upper_bound": null,
+        "equilibrium_value": null,
+        "conserved_quantity_expression": null,
+        "tolerance": 1e-06
+      },
+      {
+        "property_type": "boundedness",
+        "state_variable": "y",
+        "lower_bound": 0.0,
+        "upper_bound": 1.0,
+        "equilibrium_value": null,
+        "conserved_quantity_expression": null,
+        "tolerance": 1e-06
+      }
+    ],
+    "refinement_levels": 4,
+    "stiffness_check": false,
+    "generate_artifacts": true
+  },
+  {
+    "rhs_expression": "-2*y",
+    "state_variables": [
+      "y"
+    ],
+    "independent_variable": "t",
+    "initial_conditions": {
+      "y": 1.0
+    },
+    "interval": [
+      0.0,
+      1.0
+    ],
+    "candidate_method": "rk4",
+    "candidate_step_size": 0.1,
+    "reference_methods": [
+      "RK45"
+    ],
+    "tolerances": {
+      "y": 0.0001
+    },
+    "expected_properties": [
+      {
+        "property_type": "positivity",
+        "state_variable": "y",
+        "lower_bound": null,
+        "upper_bound": null,
+        "equilibrium_value": null,
+        "conserved_quantity_expression": null,
+        "tolerance": 1e-06
+      },
+      {
+        "property_type": "monotonicity",
+        "state_variable": "y",
+        "lower_bound": null,
+        "upper_bound": null,
+        "equilibrium_value": null,
+        "conserved_quantity_expression": null,
+        "tolerance": 1e-06
+      },
+      {
+        "property_type": "boundedness",
+        "state_variable": "y",
+        "lower_bound": 0.0,
+        "upper_bound": 1.0,
+        "equilibrium_value": null,
+        "conserved_quantity_expression": null,
+        "tolerance": 1e-06
+      }
+    ],
+    "refinement_levels": 4,
+    "stiffness_check": false,
+    "generate_artifacts": true
+  },
+  {
+    "rhs_expression": "4*y - y**3",
+    "state_variables": [
+      "y"
+    ],
+    "independent_variable": "t",
+    "initial_conditions": {
+      "y": 0.5
+    },
+    "interval": [
+      0.0,
+      10.0
+    ],
+    "candidate_method": "rk4",
+    "candidate_step_size": 0.01,
+    "reference_methods": [
+      "RK45"
+    ],
+    "tolerances": {},
+    "expected_properties": [
+      {
+        "property_type": "positivity",
+        "state_variable": "y",
+        "lower_bound": null,
+        "upper_bound": null,
+        "equilibrium_value": null,
+        "conserved_quantity_expression": null,
+        "tolerance": 1e-06
+      },
+      {
+        "property_type": "monotonicity",
+        "state_variable": "y",
+        "lower_bound": null,
+        "upper_bound": null,
+        "equilibrium_value": null,
+        "conserved_quantity_expression": null,
+        "tolerance": 1e-06
+      },
+      {
+        "property_type": "boundedness",
+        "state_variable": "y",
+        "lower_bound": 0.5,
+        "upper_bound": 2.0,
+        "equilibrium_value": null,
+        "conserved_quantity_expression": null,
+        "tolerance": 0.001
+      },
+      {
+        "property_type": "equilibrium",
+        "state_variable": "y",
+        "lower_bound": null,
+        "upper_bound": null,
+        "equilibrium_value": 2.0,
+        "conserved_quantity_expression": null,
+        "tolerance": 0.0001
+      }
+    ],
+    "refinement_levels": 4,
+    "stiffness_check": false,
+    "generate_artifacts": true
+  },
+  {
+    "rhs_expression": "1 - 2*sin(y)",
+    "state_variables": [
+      "y"
+    ],
+    "independent_variable": "t",
+    "initial_conditions": {
+      "y": 0.1
+    },
+    "interval": [
+      0.0,
+      20.0
+    ],
+    "candidate_method": "rk4",
+    "candidate_step_size": 0.01,
+    "reference_methods": [
+      "RK45"
+    ],
+    "tolerances": {},
+    "expected_properties": [
+      {
+        "property_type": "monotonicity",
+        "state_variable": "y",
+        "lower_bound": null,
+        "upper_bound": null,
+        "equilibrium_value": null,
+        "conserved_quantity_expression": null,
+        "tolerance": 1e-06
+      },
+      {
+        "property_type": "boundedness",
+        "state_variable": "y",
+        "lower_bound": 0.1,
+        "upper_bound": 0.5235987755982988,
+        "equilibrium_value": null,
+        "conserved_quantity_expression": null,
+        "tolerance": 0.001
+      },
+      {
+        "property_type": "equilibrium",
+        "state_variable": "y",
+        "lower_bound": null,
+        "upper_bound": null,
+        "equilibrium_value": 0.5235987755982988,
+        "conserved_quantity_expression": null,
+        "tolerance": 0.0001
+      }
+    ],
+    "refinement_levels": 4,
+    "stiffness_check": false,
+    "generate_artifacts": true
+  }
+]

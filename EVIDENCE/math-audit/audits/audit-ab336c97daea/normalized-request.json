@@ -1,0 +1,13 @@
+{
+  "lhs": "2*x + 1",
+  "rhs": "2*x + 1",
+  "assumptions": [],
+  "variables": [
+    "x"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 5,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

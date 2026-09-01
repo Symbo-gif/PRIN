@@ -1,0 +1,72 @@
+{
+  "bundle_id": "bundle-be00c0eada6f",
+  "ledger_id": "ledger-prin-sim-phase6-stats-002",
+  "request_id": "req-3c2ab7af6467",
+  "created_at_utc": "2026-09-01T19:57:52.573Z",
+  "overall_status": "PASS",
+  "claim_verdicts": [
+    {
+      "claim_id": "POLYFIT-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-ab336c97daea"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "POLYFIT-02",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-6e2bb68ca184"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "SPATCORR-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-743337424df0"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "BOOTSTRAP-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-8a3b883436bf"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "LNGAMMA-INT-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-5e6778fc8f85"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "BETAI-BOUND-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-4c2d1dc25fc0"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    }
+  ],
+  "audit_ids": [
+    "audit-ab336c97daea",
+    "audit-eab74909d5c4",
+    "audit-6e2bb68ca184",
+    "audit-dc55c0c68dca",
+    "audit-743337424df0",
+    "audit-8a3b883436bf",
+    "audit-5e6778fc8f85",
+    "audit-276d7f851c9d",
+    "audit-4c2d1dc25fc0"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:697e335b8e0ceb49735c80759d8a79098706cc1f24df0dfcbe1bef24ffae83a7"
+}

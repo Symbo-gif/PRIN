@@ -1,0 +1,247 @@
+[
+  {},
+  {},
+  {
+    "variables": [
+      {
+        "name": "a",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "b",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "c",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "d",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "scale",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "out_00",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "out_01",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "out_10",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "out_11",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "scale > 0",
+      "out_00 == 0",
+      "out_11 == 0",
+      "out_01 == (b + c) / 2 * scale",
+      "out_10 == (b + c) / 2 * scale"
+    ],
+    "queries": [
+      {
+        "query_id": "weightinit-symmetric-zero-diag",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(out_00 == 0, out_11 == 0, out_01 == out_10)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "variables": [
+      {
+        "name": "gain",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "fan_in",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "fan_out",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "bound",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "value",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "gain > 0",
+      "fan_in > 0",
+      "fan_out > 0",
+      "bound == gain * sqrt(6 / (fan_in + fan_out))",
+      "value >= -bound",
+      "value <= bound"
+    ],
+    "queries": [
+      {
+        "query_id": "xavier-bounded-by-bound",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(value >= -bound, value <= bound)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "lhs": "Abs(Sum(exp(I*phi), (k, 1, n)) / n)",
+    "rhs": "1",
+    "assumptions": [
+      "n > 0",
+      "im(phi) == 0"
+    ],
+    "variables": [
+      "phi",
+      "n"
+    ],
+    "domain": "complex",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 20,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "(Abs(Sum(exp(I*phi), (k, 1, n)) / n)) - (1)",
+    "task_type": "simplify",
+    "assumptions": [
+      "n > 0",
+      "im(phi) == 0"
+    ],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  {
+    "variables": [
+      {
+        "name": "corr",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "mean_amp",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "eps",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "term",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "mean_amp > 0",
+      "eps > 0",
+      "term == Abs(corr) / (mean_amp + eps)"
+    ],
+    "queries": [
+      {
+        "query_id": "pacindex-nonnegative",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "term >= 0"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "variables": [
+      {
+        "name": "value",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "limit",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "output",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "limit > 0",
+      "value >= -1e300",
+      "value <= 1e300",
+      "output == Max(-limit, Min(limit, value))"
+    ],
+    "queries": [
+      {
+        "query_id": "clamp-finite-bounded",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(output >= -limit, output <= limit)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  }
+]

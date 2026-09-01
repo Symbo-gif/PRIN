@@ -1,0 +1,90 @@
+{
+  "audit_id": "audit-da3963c2bdc9",
+  "parent_audit_id": null,
+  "request_id": "req-6745957b07df",
+  "claim_id": "CL-01",
+  "tool_name": "check_constraint_model",
+  "adapter_name": "z3",
+  "status": "PASS",
+  "severity": "high",
+  "summary": "All 1 quer(y/ies) held: amp-clamp-bounded-monotone: pass",
+  "detailed_reasoning": "amp-clamp-bounded-monotone: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+  "normalized_inputs": {
+    "variables": [
+      {
+        "name": "a1",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "a2",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "o1",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "o2",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "o1 == If(a1 < 0.000001, 0.000001, If(a1 > 10.0, 10.0, a1))",
+      "o2 == If(a2 < 0.000001, 0.000001, If(a2 > 10.0, 10.0, a2))",
+      "a1 <= a2"
+    ],
+    "queries": [
+      {
+        "query_id": "amp-clamp-bounded-monotone",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(o1 >= 0.000001, o1 <= 10.0, o1 <= o2)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  "assumptions": [],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 10.0,
+  "started_at_utc": "2026-09-01T19:55:19.967Z",
+  "finished_at_utc": "2026-09-01T19:55:19.971Z",
+  "duration_ms": 4,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:97d33272c2f5971171d26aff705f345a3c12a072f257a0b6aa930b28bc208ff5",
+  "output_content_hash": "sha256:a98bef21aeac1af9c6271260e5c4a2fdb59d33579a6be2e8c250a0a9d1fede09"
+}

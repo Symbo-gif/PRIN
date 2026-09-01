@@ -1,0 +1,148 @@
+{
+  "audit_id": "audit-a4e1e56896e8",
+  "parent_audit_id": null,
+  "request_id": "req-b22930171ebb",
+  "claim_id": "HUN-01",
+  "tool_name": "check_constraint_model",
+  "adapter_name": "z3",
+  "status": "PASS",
+  "severity": "high",
+  "summary": "All 1 quer(y/ies) held: hungarian-3x3-lower-bound-5: pass",
+  "detailed_reasoning": "hungarian-3x3-lower-bound-5: assumptions AND NOT(invariant) is UNSAT: the invariant holds under all satisfying assignments.",
+  "normalized_inputs": {
+    "variables": [
+      {
+        "name": "x00",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x01",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x02",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x10",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x11",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x12",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x20",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x21",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "x22",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "cost",
+        "sort": "Int",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "x00 >= 0",
+      "x00 <= 1",
+      "x01 >= 0",
+      "x01 <= 1",
+      "x02 >= 0",
+      "x02 <= 1",
+      "x10 >= 0",
+      "x10 <= 1",
+      "x11 >= 0",
+      "x11 <= 1",
+      "x12 >= 0",
+      "x12 <= 1",
+      "x20 >= 0",
+      "x20 <= 1",
+      "x21 >= 0",
+      "x21 <= 1",
+      "x22 >= 0",
+      "x22 <= 1",
+      "x00 + x01 + x02 == 1",
+      "x10 + x11 + x12 == 1",
+      "x20 + x21 + x22 == 1",
+      "x00 + x10 + x20 == 1",
+      "x01 + x11 + x21 == 1",
+      "x02 + x12 + x22 == 1",
+      "cost == 4*x00 + 1*x01 + 3*x02 + 2*x10 + 0*x11 + 5*x12 + 3*x20 + 2*x21 + 2*x22"
+    ],
+    "queries": [
+      {
+        "query_id": "hungarian-3x3-lower-bound-5",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "cost >= 5"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 15000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  "assumptions": [],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 15.0,
+  "started_at_utc": "2026-09-01T19:55:13.885Z",
+  "finished_at_utc": "2026-09-01T19:55:13.892Z",
+  "duration_ms": 7,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:fb830d45ecf44edc8f33e2196302a05116302af5fdd0d26d045cc22225e20f8d",
+  "output_content_hash": "sha256:5f530f7fe3f62b202d6095b9ecd34a5c6c086af2ce214a5d515a82225d470b19"
+}

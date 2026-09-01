@@ -1,0 +1,63 @@
+{
+  "audit_id": "audit-27d1bbf9e928",
+  "parent_audit_id": null,
+  "request_id": "req-99c30844e428",
+  "claim_id": "GPU-RK4-01",
+  "tool_name": "verify_identity",
+  "adapter_name": "sympy",
+  "status": "PASS",
+  "severity": "critical",
+  "summary": "Symbolic proof established: y + (dt/6)*(k1 + 2*(k2 + k3) + k4) == y + (dt/6)*k1 + (dt/3)*k2 + (dt/3)*k3 + (dt/6)*k4.",
+  "detailed_reasoning": "SymPy reduced (lhs - rhs) to 0 via simplification/assumption refinement. This is a genuine symbolic equivalence proof, not a numeric approximation.",
+  "normalized_inputs": {
+    "lhs": "y + (dt/6)*(k1 + 2*(k2 + k3) + k4)",
+    "rhs": "y + (dt/6)*k1 + (dt/3)*k2 + (dt/3)*k3 + (dt/6)*k4",
+    "assumptions": [],
+    "variables": [
+      "y",
+      "dt",
+      "k1",
+      "k2",
+      "k3",
+      "k4"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 40,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  "assumptions": [],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 15.0,
+  "started_at_utc": "2026-09-01T20:00:28.694Z",
+  "finished_at_utc": "2026-09-01T20:00:28.872Z",
+  "duration_ms": 178,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:92483bf45fa9265fa1a7c5f18289024b259bd5575b6d519489fd803ecef66ed6",
+  "output_content_hash": "sha256:59d35eda179c728ed20d92509a58726aff3a7e4b09754fdd03403a03941cf1c9"
+}

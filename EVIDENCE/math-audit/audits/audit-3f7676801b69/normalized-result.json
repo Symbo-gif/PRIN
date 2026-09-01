@@ -1,0 +1,149 @@
+{
+  "audit_id": "audit-3f7676801b69",
+  "parent_audit_id": null,
+  "request_id": "req-0486469a1d44",
+  "claim_id": "GRA-01",
+  "tool_name": "audit_graph_topology",
+  "adapter_name": "networkx",
+  "status": "PASS",
+  "severity": "high",
+  "summary": "Graph is confirmed 4-regular.",
+  "detailed_reasoning": "All 6 nodes have degree 4. Additional properties: connected=True.",
+  "normalized_inputs": {
+    "nodes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        5,
+        1
+      ]
+    ],
+    "graph_kind": "undirected",
+    "topology_intent": "k_regular",
+    "requested_properties": [
+      "connected"
+    ],
+    "expected_degree": 4,
+    "allow_parallel_edges": false,
+    "allow_self_loops": false
+  },
+  "assumptions": [],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 15.0,
+  "started_at_utc": "2026-09-01T20:00:02.536Z",
+  "finished_at_utc": "2026-09-01T20:00:02.546Z",
+  "duration_ms": 9,
+  "warnings": [],
+  "metrics": [
+    {
+      "name": "num_nodes",
+      "value": 6.0,
+      "unit": null
+    },
+    {
+      "name": "num_edges",
+      "value": 12.0,
+      "unit": null
+    },
+    {
+      "name": "num_connected_components",
+      "value": 1.0,
+      "unit": null
+    },
+    {
+      "name": "cycle_basis_size",
+      "value": 7.0,
+      "unit": null
+    },
+    {
+      "name": "diameter",
+      "value": 2.0,
+      "unit": null
+    },
+    {
+      "name": "average_shortest_path_length",
+      "value": 1.2,
+      "unit": null
+    },
+    {
+      "name": "algebraic_connectivity",
+      "value": 4.0,
+      "unit": null
+    }
+  ],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:5c40abf3df2a3892a6b1a8b048d78b38bba3bd8616aa02da864474bd1182de8c",
+  "output_content_hash": "sha256:c2cde917f6fac6ad7ff857e335ab6e177bdb1128c0d96d7bd5c46dc9288d6382"
+}

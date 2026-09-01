@@ -1,0 +1,24 @@
+{
+  "bundle_id": "bundle-576b3206380c",
+  "ledger_id": "ledger-prin-tensor-hosvd-reconstruction-001",
+  "request_id": "req-08462c570d2b",
+  "created_at_utc": "2026-09-01T20:00:29.793Z",
+  "overall_status": "REQUIRES_HUMAN_REVIEW",
+  "claim_verdicts": [
+    {
+      "claim_id": "TCK-01",
+      "status": "REQUIRES_HUMAN_REVIEW",
+      "contributing_audit_ids": [
+        "audit-0a7c2a41976b"
+      ],
+      "reason": "high/critical-severity claim passed only numerically; policy requires symbolic or formal (SymPy/Z3/Lean) corroboration before a PASS verdict"
+    }
+  ],
+  "audit_ids": [
+    "audit-0a7c2a41976b"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:191a1ddd98cb3162f9bde82a2cc2b619c77bd7d501e1cc543095a57bf3647c3d"
+}

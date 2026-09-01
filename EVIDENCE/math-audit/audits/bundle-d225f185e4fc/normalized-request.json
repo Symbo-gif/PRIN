@@ -1,0 +1,177 @@
+[
+  {
+    "lhs": "2*x + 1",
+    "rhs": "2*x + 1",
+    "assumptions": [],
+    "variables": [
+      "x"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 5,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "(2*x + 1) - (2*x + 1)",
+    "task_type": "simplify",
+    "assumptions": [],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  {
+    "lhs": "integrate((x**2 - 0*x - 0)**2, (x, -2, 2))",
+    "rhs": "integrate((x**2)**2, (x, -2, 2))",
+    "assumptions": [],
+    "variables": [
+      "x"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 10,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "(integrate((x**2 - 0*x - 0)**2, (x, -2, 2))) - (integrate((x**2)**2, (x, -2, 2)))",
+    "task_type": "simplify",
+    "assumptions": [],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  {
+    "variables": [
+      {
+        "name": "var",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "n",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "lag0_sum",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "lag0_r",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "var > 0",
+      "n > 0",
+      "lag0_sum == var * n",
+      "lag0_r == lag0_sum / n / var"
+    ],
+    "queries": [
+      {
+        "query_id": "spatcorr-lag0-is-one",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "lag0_r == 1"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "variables": [
+      {
+        "name": "c",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "lo",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "hi",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "width",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "lo == c",
+      "hi == c",
+      "width == hi - lo"
+    ],
+    "queries": [
+      {
+        "query_id": "bootstrap-constant-zero-width",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "width == 0"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  {
+    "lhs": "log(gamma(5))",
+    "rhs": "log(24)",
+    "assumptions": [],
+    "variables": [],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 1,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  {
+    "expression": "(log(gamma(5))) - (log(24))",
+    "task_type": "simplify",
+    "assumptions": [],
+    "timeout_seconds": 20.0,
+    "precision_digits": 30
+  },
+  {
+    "variables": [
+      {
+        "name": "betai_result",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "betai_result >= 0",
+      "betai_result <= 1"
+    ],
+    "queries": [
+      {
+        "query_id": "betai-bounded-unit-interval",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(betai_result >= 0, betai_result <= 1)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  }
+]

@@ -1,0 +1,79 @@
+{
+  "bundle_id": "bundle-47051c338f93",
+  "ledger_id": "ledger-prin-train-phase6-001",
+  "request_id": "req-0057ef0012cb",
+  "created_at_utc": "2026-09-01T19:55:21.151Z",
+  "overall_status": "FAIL",
+  "claim_verdicts": [
+    {
+      "claim_id": "VJP-DYN-01",
+      "status": "FAIL",
+      "contributing_audit_ids": [
+        "audit-6e77725526a5"
+      ],
+      "reason": "a required check failed to execute (TOOL_ERROR); a missing/errored tool is never treated as PASS"
+    },
+    {
+      "claim_id": "SPARSITY-01",
+      "status": "FAIL",
+      "contributing_audit_ids": [
+        "audit-be51dea58f5e"
+      ],
+      "reason": "a required check failed to execute (TOOL_ERROR); a missing/errored tool is never treated as PASS"
+    },
+    {
+      "claim_id": "WEIGHTINIT-SYM-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-809523577608"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "WEIGHTINIT-XAV-01",
+      "status": "FAIL",
+      "contributing_audit_ids": [
+        "audit-fdd200f23d00"
+      ],
+      "reason": "a required check failed to execute (TOOL_ERROR); a missing/errored tool is never treated as PASS"
+    },
+    {
+      "claim_id": "ORDERPARAM-01",
+      "status": "FAIL",
+      "contributing_audit_ids": [
+        "audit-1e540acf59e4"
+      ],
+      "reason": "a required check failed to execute (TOOL_ERROR); a missing/errored tool is never treated as PASS"
+    },
+    {
+      "claim_id": "PACINDEX-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-f28ccf753ff3"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "CLAMP-01",
+      "status": "FAIL",
+      "contributing_audit_ids": [
+        "audit-85d7751e71b7"
+      ],
+      "reason": "a required check failed to execute (TOOL_ERROR); a missing/errored tool is never treated as PASS"
+    }
+  ],
+  "audit_ids": [
+    "audit-6e77725526a5",
+    "audit-be51dea58f5e",
+    "audit-809523577608",
+    "audit-fdd200f23d00",
+    "audit-1e540acf59e4",
+    "audit-458520dc75c9",
+    "audit-f28ccf753ff3",
+    "audit-85d7751e71b7"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:8c4cb386e356b1c68f5a35d8b22a529319461bb9010f4cef8beec65f175377ad"
+}

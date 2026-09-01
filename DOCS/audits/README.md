@@ -284,3 +284,15 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   WELCH-DF-01, GAMMA-REFLECT-01, BETA-SYM-01), 6/6 genuine `PASS`. 46 total
   claims across 9 ledgers; 39 PASS, 7 `REQUIRES_HUMAN_REVIEW` (unchanged
   composition from EMA-004). Maintainer sign-off granted 2026-08-26.
+- [`EXECUTIVE_MATH_AUDIT_REPORT_006.md`](EXECUTIVE_MATH_AUDIT_REPORT_006.md) —
+  Sixth Executive Mathematical Audit (EMA-006, 2026-09-01), Phase 6 mid-phase,
+  `PASS-WITH-REMEDIATION`. Re-verified all 46 existing claims against
+  `fa427ad` (zero regressions); authored and executed 13 new claims across 2
+  new ledgers (`prin-sim-phase6-stats-properties.json`: POLYFIT-01/02,
+  SPATCORR-01, BOOTSTRAP-01, LNGAMMA-INT-01, BETAI-BOUND-01;
+  `prin-train-phase6-properties.json`: VJP-DYN-01, SPARSITY-01,
+  WEIGHTINIT-SYM-01, WEIGHTINIT-XAV-01, ORDERPARAM-01, PACINDEX-01,
+  CLAMP-01), 13/13 genuine `PASS`. 59 total claims across 11 ledgers;
+  52 PASS, 7 `REQUIRES_HUMAN_REVIEW` (unchanged composition from EMA-005).
+  All 13 new claims independently corroborated via Wolfram Engine.
+  Maintainer sign-off pending for the 7 `REQUIRES_HUMAN_REVIEW` claims.

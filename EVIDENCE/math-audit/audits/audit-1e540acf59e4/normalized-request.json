@@ -1,0 +1,17 @@
+{
+  "lhs": "Abs(Sum(exp(I*phi), (k, 1, n)) / n)",
+  "rhs": "1",
+  "assumptions": [
+    "n > 0",
+    "im(phi) == 0"
+  ],
+  "variables": [
+    "phi",
+    "n"
+  ],
+  "domain": "complex",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 20,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

@@ -1,0 +1,99 @@
+{
+  "audit_id": "audit-fdd200f23d00",
+  "parent_audit_id": null,
+  "request_id": "req-0057ef0012cb",
+  "claim_id": "WEIGHTINIT-XAV-01",
+  "tool_name": "check_constraint_model",
+  "adapter_name": "z3",
+  "status": "TOOL_ERROR",
+  "severity": "medium",
+  "summary": "A constraint was rejected by the security guard.",
+  "detailed_reasoning": "only Implies/If/Not/Abs/And/Or function calls are allowed",
+  "normalized_inputs": {
+    "variables": [
+      {
+        "name": "gain",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "fan_in",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "fan_out",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "bound",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      },
+      {
+        "name": "value",
+        "sort": "Real",
+        "bitvec_width": null,
+        "enum_values": null
+      }
+    ],
+    "constraints": [
+      "gain > 0",
+      "fan_in > 0",
+      "fan_out > 0",
+      "bound == gain * sqrt(6 / (fan_in + fan_out))",
+      "value >= -bound",
+      "value <= bound"
+    ],
+    "queries": [
+      {
+        "query_id": "xavier-bounded-by-bound",
+        "kind": "invariant_holds",
+        "expression": null,
+        "invariant": "And(value >= -bound, value <= bound)"
+      }
+    ],
+    "bounds": {},
+    "timeout_ms": 10000,
+    "produce_models": true,
+    "maximize_counterexample_readability": true
+  },
+  "assumptions": [],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "0.1.0",
+    "sympy": "1.14.0",
+    "numpy": "2.5.2",
+    "scipy": "1.18.0",
+    "mpmath": "1.3.0",
+    "z3-solver": "5.0.0.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.13.4",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 10.0,
+  "started_at_utc": "2026-09-01T19:55:20.973Z",
+  "finished_at_utc": "2026-09-01T19:55:20.974Z",
+  "duration_ms": 0,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:ff36278e9159883d8f0d9ef373533307c8ee63a82f2bdd34acafaa616a19a2d3",
+  "output_content_hash": "sha256:d955e16f4cb226ba23b407c3a52d3f3a0706269cf9fbd2ce6ce833bcf8a15676"
+}

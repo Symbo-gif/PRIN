@@ -1,0 +1,10 @@
+{
+  "expression": "(2*lam*(K_c - K)) - (2*lam*(K_c - K))",
+  "task_type": "simplify",
+  "assumptions": [
+    "K < K_c",
+    "lam > 0"
+  ],
+  "timeout_seconds": 20.0,
+  "precision_digits": 30
+}

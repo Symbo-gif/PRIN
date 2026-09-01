@@ -1,0 +1,11 @@
+{
+  "lhs": "(1 - (1/(1+exp(2.0)) + 0.5 + 1/(1+exp(-4.0)) + 1/(1+exp(-6.0)))/4 - 0.6)**2",
+  "rhs": "(1 - (1/(1+exp(2.0)) + 0.5 + 1/(1+exp(-4.0)) + 1/(1+exp(-6.0)))/4 - 0.6)**2",
+  "assumptions": [],
+  "variables": [],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 1,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

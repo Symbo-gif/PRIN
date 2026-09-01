@@ -1,0 +1,59 @@
+=== EMA-006 Wolfram Corroboration ===
+Date: Tue 1 Sep 2026 17:02:20
+
+--- POLYFIT-01: Linear polynomial recovery ---
+Fit result: 1.0000000000000024 + 1.9999999999999987*x
+Expected: 1 + 2 x
+Match: True
+
+--- POLYFIT-02: Quadratic polynomial recovery ---
+Fit result: 5.958081967793455*^-16 - 2.808666774861361*^-16*x + 0.9999999999999997*x^2
+Expected: x^2
+Match: x*(0.8432740427115678 + 1.*x) == 1.7888543819998322
+
+--- LNGAMMA-INT-01: log-gamma at integer ---
+Log[Gamma[5]] = Log[24]
+Log[24] = Log[24]
+Match: True
+Numeric: 3.1780538303479456196469416012970554088739909609035152140966`30. vs 3.1780538303479456196469416012970554088739909609035152140966`30.
+
+--- BETAI-BOUND-01: Beta regularized boundaries ---
+BetaRegularized[0, 2, 3] = 0
+BetaRegularized[1, 2, 3] = 1
+BetaRegularized[0.5, 2, 3] = 0.6875
+All in [0,1]: True
+
+--- SPARSITY-01: Sparsity loss formula ---
+Density = 0.6496860222258478
+Loss = 0.06234310969496656
+Formula self-consistent: True
+
+--- ORDERPARAM-01: Synchronized order parameter ---
+|exp(i*phi)| = 0.9999999999999999
+cos^2 + sin^2 = 0.9999999999999999
+Numeric check at phi=1.234: 0.9999999999999999
+
+--- WEIGHTINIT-SYM-01: Coupling symmetry ---
+Symmetrized: MatrixForm[{{0.1*a, 0.05*(b + c)}, {0.05*(b + c), 0.1*d}}]
+Zero-diagonal: MatrixForm[diag_zero]
+Symmetric (off-diag equal): True
+
+Part::partd: Part specification (diag_zero)[[1,1]] is longer than depth of object.
+
+Part::partw: Part 2 of _zero does not exist.
+Diagonal zero: (diag_zero)[[1,1]] == 0 && (diag_zero)[[2,2]] == 0
+
+--- VJP-DYN-01: Amplitude damping ---
+Damping at A=Arest+1: -gamma
+Expected: -gamma
+Match: True
+
+--- BOOTSTRAP-01: Constant input bootstrap ---
+All resample means = 3.0: True
+CI width = 0.
+
+--- SPATCORR-01: Lag-0 autocorrelation ---
+Lag-0 autocorrelation = 0.9999999999999999
+Equals 1.0: True
+
+=== EMA-006 Wolfram Corroboration Complete ===
