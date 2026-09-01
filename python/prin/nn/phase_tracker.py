@@ -39,6 +39,9 @@ class TrackingResult:
     """Python-facing mirror of :class:`prin._prin_core.TrackingResult`.
 
     The result of :meth:`PhaseTracker.track_sequence`.
+
+    Supports dict-like access (``result["key"]``, ``"key" in result``)
+    for compatibility with the PRINet 3.0 reference tests.
     """
 
     phase_history: list[torch.Tensor]
@@ -58,6 +61,30 @@ class TrackingResult:
 
     per_frame_phase_correlation: list[float]
     """Per-transition mean circular phase correlation."""
+
+    _FIELD_NAMES = frozenset(
+        {
+            "phase_history",
+            "identity_matches",
+            "identity_preservation",
+            "per_frame_similarity",
+            "per_frame_phase_correlation",
+        }
+    )
+
+    def __getitem__(self, key: str) -> object:
+        if key in self._FIELD_NAMES:
+            return getattr(self, key)
+        raise KeyError(key)
+
+    def __contains__(self, key: object) -> bool:
+        return key in self._FIELD_NAMES
+
+    def get(self, key: str, default: object = None) -> object:
+        """Dict-like ``get`` with a default."""
+        if key in self._FIELD_NAMES:
+            return getattr(self, key)
+        return default
 
     @staticmethod
     def _from_rust(result: _RustTrackingResult) -> TrackingResult:
@@ -230,7 +257,12 @@ class PhaseTracker(torch.nn.Module):
         Raises:
             ValueError: On a shape mismatch in any frame.
         """
-        result = self._bridge.track_sequence([d.detach() for d in frame_detections])
+        result = self._bridge.track_sequence(
+            [
+                d.detach().to(dtype=torch.float64, device="cpu").contiguous()
+                for d in frame_detections
+            ]
+        )
         return TrackingResult._from_rust(result)
 
     def rust_state_dict(self) -> bytes:

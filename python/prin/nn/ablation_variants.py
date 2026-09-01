@@ -259,3 +259,180 @@ def create_ablation_model(
         **kwargs,
     )
     return AblationHybridPRINetV2(config)
+
+
+class PhaseTrackerStatic(nn.Module):
+    """PhaseTracker with no coupling (independent oscillators).
+
+    Replaces the DiscreteDeltaThetaGamma dynamics with a simple
+    phase advance using fixed frequencies — no Kuramoto coupling.
+    """
+
+    _EPS = 1e-6
+
+    def __init__(
+        self,
+        detection_dim: int = 4,
+        n_delta: int = 4,
+        n_theta: int = 8,
+        n_gamma: int = 16,
+        n_discrete_steps: int = 5,
+        match_threshold: float = 0.3,
+    ) -> None:
+        super().__init__()
+        self.n_osc = n_delta + n_theta + n_gamma
+        self._n_discrete_steps = n_discrete_steps
+        self.match_threshold = match_threshold
+
+        self.det_to_phase = nn.Sequential(
+            nn.Linear(detection_dim, 64),
+            nn.ReLU(),
+            nn.Linear(64, self.n_osc),
+        )
+        self.det_to_amp = nn.Sequential(
+            nn.Linear(detection_dim, 64),
+            nn.ReLU(),
+            nn.Linear(64, self.n_osc),
+            nn.Softplus(),
+        )
+
+        freqs: list[float] = []
+        freqs.extend([2.0] * n_delta)
+        freqs.extend([6.0] * n_theta)
+        freqs.extend([40.0] * n_gamma)
+        self.register_buffer("frequencies", torch.tensor(freqs))
+
+    def encode(self, detections: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        phase_raw = self.det_to_phase(detections)
+        phase = phase_raw % (2.0 * math.pi)
+        amp = self.det_to_amp(detections)
+        return phase, amp
+
+    def evolve(
+        self, phase: torch.Tensor, amplitude: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        dt = 0.01
+        freqs = self.frequencies
+        for _ in range(self._n_discrete_steps):
+            phase = phase + 2.0 * math.pi * freqs * dt  # type: ignore[operator]
+            phase = phase % (2.0 * math.pi)
+        return phase, amplitude
+
+    def phase_similarity(
+        self, phase_a: torch.Tensor, phase_b: torch.Tensor
+    ) -> torch.Tensor:
+        z_a = torch.exp(1j * phase_a.to(torch.complex64))
+        z_b = torch.exp(1j * phase_b.to(torch.complex64))
+        z_a_norm = z_a / (z_a.abs().pow(2).sum(dim=-1, keepdim=True).sqrt() + self._EPS)
+        z_b_norm = z_b / (z_b.abs().pow(2).sum(dim=-1, keepdim=True).sqrt() + self._EPS)
+        sim = (
+            (z_a_norm.unsqueeze(1) * z_b_norm.conj().unsqueeze(0))
+            .sum(dim=-1)
+            .real.float()
+        )
+        return sim
+
+    def forward(
+        self,
+        detections_t: torch.Tensor,
+        detections_t1: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        phase_t, amp_t = self.encode(detections_t)
+        phase_t1, _amp_t1 = self.encode(detections_t1)
+        phase_t_evolved, _ = self.evolve(phase_t, amp_t)
+        sim = self.phase_similarity(phase_t_evolved, phase_t1)
+        N_t = detections_t.shape[0]
+        matches = torch.full((N_t,), -1, dtype=torch.long, device=detections_t.device)
+        used = torch.zeros(
+            detections_t1.shape[0],
+            dtype=torch.bool,
+            device=detections_t.device,
+        )
+        max_sims, max_idxs = sim.max(dim=1)
+        order = max_sims.argsort(descending=True)
+        for idx in order:
+            best_j = int(max_idxs[idx].item())
+            if not used[best_j] and max_sims[idx] > self.match_threshold:
+                matches[idx] = best_j
+                used[best_j] = True
+        return matches, sim
+
+    def track_sequence(self, frame_detections: list[torch.Tensor]) -> dict[str, Any]:
+        """Track via independent phase evolution (no coupling)."""
+        T = len(frame_detections)
+        phase_history: list[torch.Tensor] = []
+        identity_matches: list[torch.Tensor] = []
+        per_frame_sim: list[float] = []
+        total_matches = 0
+        total_possible = 0
+
+        with torch.no_grad():
+            for t in range(T):
+                dets = frame_detections[t]
+                phase_t, amp_t = self.encode(dets)
+                if t == 0:
+                    phase_history.append(phase_t.detach().cpu())
+                    continue
+                prev_phase = phase_history[-1].to(dets.device)
+                prev_amp = torch.ones_like(prev_phase)
+                evolved_phase, _ = self.evolve(prev_phase, prev_amp)
+                sim = self.phase_similarity(evolved_phase, phase_t)
+                N_prev = evolved_phase.shape[0]
+                N_curr = phase_t.shape[0]
+                N_match = min(N_prev, N_curr)
+                matches = torch.full(
+                    (N_prev,),
+                    -1,
+                    dtype=torch.long,
+                    device=dets.device,
+                )
+                used = torch.zeros(N_curr, dtype=torch.bool, device=dets.device)
+                max_sims, max_idxs = sim.max(dim=1)
+                order = max_sims.argsort(descending=True)
+                for idx in order:
+                    best_j = int(max_idxs[idx].item())
+                    if (
+                        best_j < N_curr
+                        and not used[best_j]
+                        and max_sims[idx] > self.match_threshold
+                    ):
+                        matches[idx] = best_j
+                        used[best_j] = True
+                n_matched = int((matches >= 0).sum().item())
+                identity_matches.append(matches.cpu())
+                per_frame_sim.append(float(max_sims.mean().item()))
+                total_matches += n_matched
+                total_possible += N_match
+                phase_history.append(phase_t.detach().cpu())
+
+        preservation = total_matches / max(total_possible, 1)
+        return {
+            "phase_history": phase_history,
+            "identity_matches": identity_matches,
+            "identity_preservation": preservation,
+            "per_frame_similarity": per_frame_sim,
+            "per_frame_phase_correlation": [],
+        }
+
+
+def create_ablation_tracker(
+    variant: str,
+    detection_dim: int = 4,
+    **kwargs: Any,
+) -> nn.Module:
+    """Create an ablation tracker variant by name."""
+    if variant == "pt_full":
+        from prin.nn.phase_tracker import PhaseTracker
+
+        return PhaseTracker(detection_dim=detection_dim, **kwargs)
+    if variant == "pt_static":
+        return PhaseTrackerStatic(detection_dim=detection_dim, **kwargs)
+    if variant == "sa_full":
+        from prin.nn.slot_attention import (
+            TemporalSlotAttentionMOT,
+        )
+
+        return TemporalSlotAttentionMOT(detection_dim=detection_dim, **kwargs)
+    raise ValueError(
+        f"Unknown variant: {variant!r}. Choose from: pt_full, pt_static, sa_full"
+    )

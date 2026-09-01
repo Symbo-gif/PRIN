@@ -1,15 +1,15 @@
 # Session 0144M / WP-036C S1 running handoff
 
-**Date:** 2026-08-31 (session start + decomposition; `0144M1`–`0144M3` executed)
-**Status:** S1 **in progress** — sub-passes `0144M1`–`0144M5` (integration_q3 +
+**Date:** 2026-08-31 (session start + decomposition; `0144M1`–`0144M6` executed)
+**Status:** S1 **in progress** — sub-passes `0144M1`–`0144M6` (integration_q3 +
 y2q1 + y2q4, 93 fns; y2q2 + y2q3, 65 fns; y3q1 + y3q2, 78 fns; y3q3 + y3q4 +
-y3q45 + y3q49, 117 fns; y4q1 + y4q1_2 + y4q1_3, 171 fns) **COMPLETE and
-committed locally** at green gates; not pushed. **524 / 1,097** reference
-functions ported. Plan amendment #39 inserted
+y3q45 + y3q49, 117 fns; y4q1 + y4q1_2 + y4q1_3, 171 fns; y4q1_4 + y4q1_5 +
+y4q1_9, 158 fns) **COMPLETE and committed locally** at green gates; not pushed.
+**682 / 1,097** reference functions ported. Plan amendment #39 inserted
 the eight strict-port sub-passes `0144M1`–`0144M8` feeding the single mandatory
 S2 audit `0144N`; plan amendment #40 (2026-08-31) records three `0144M1` scope
 confirmations (deferred-symbol rebuild in-scope, `__version__` → `0.3.0`,
-minimal `docs/` guides). Next: `0144M6`.
+minimal `docs/` guides). Next: `0144M7`.
 
 ## Session-start protocol (Development Workflow §6)
 
@@ -535,6 +535,82 @@ parity evidence. No new hazard-tolerance annotation or backend-availability
 guard, so `DOCS/sphinx/parity_report.rst` is unchanged. The single RNG-regime
 discovery is carried to `0144N`, not weakened.
 
-### 0144M6 — not started
+### 0144M6 — y4q1_4 + y4q1_5 + y4q1_9 — COMPLETE (2026-08-31)
+
+**Committed locally at a green sub-pass gate; not pushed. Next: 0144M7.**
+
+Maintainer selected **Full Python** for the y4q1_tools remainder, temporal
+training data generators, and ablation tracker variants (all pure
+PyTorch/numpy orchestration over already-shipped Rust owners; no new Rust
+crate code).
+
+#### Strict-port accounting and semantic proof
+
+| Reference | Stable port | Lines | `def test_` | Result (default gate) | Slow | Tolerance annotations | Discoveries |
+|---|---|---:|---:|---|---:|---:|---|
+| `test_y4q1_4.py` | `tests/test_acceptance_y4q1_4.py` | 623 | 52 | 52 / 52 | 0 | 0 | `PhaseTracker.track_sequence` float64 cast; `TrackingResult` dict-like access; `binding_persistence` list/tensor dual-mode |
+| `test_y4q1_5.py` | `tests/test_acceptance_y4q1_5.py` | 694 | 60 | 60 / 60 | 0 | 0 | 15 new `prin.y4q1_tools` metric fns; `benchmarks/y4q1_5_benchmarks.py` support module; list→tensor marshalling for identity_matches |
+| `test_y4q1_9.py` | `tests/test_acceptance_y4q1_9.py` | 703 | 46 | 47 / 47 + 5 skip | 0 | 0 | `PhaseTrackerLarge`; `create_ablation_tracker` + `PhaseTrackerStatic`; `generate_temporal_clevr_n` / `generate_dataset` / `hungarian_similarity_loss` real; `benchmarks/y4q1_9_benchmarks.py` support module |
+| **M6 total** | **3 files** | **2,020** | **158** | **159 / 159 default gate** | **0** | **0** | — |
+
+5 skipped tests in y4q1_9 are `TestJSONArtefacts` — benchmark output JSON
+files not yet generated; the reference tests use `pytest.skip` when the
+files are absent. Carried to `0144N`, not weakened.
+
+#### Changed-owner mapping
+
+| Compatibility behaviour | Numerical / Rust owner | Python exposure |
+|---|---|---|
+| `phase_slip_rate` / `binding_persistence` / `coherence_decay_rate` / `rebinding_speed` / `cross_frequency_coupling` / `temporal_advantage_report` | n/a — torch/numpy metric orchestration | `prin.y4q1_tools` faithful ports |
+| `order_parameter_series` / `windowed_order_parameter_variance` / `phase_locking_value` / `instantaneous_frequency_spread` / `cumulative_phase_slip_curve` / `throughput_series` / `memory_growth_profile` / `session_length_statistical_comparison` / `_f_distribution_p_value` | n/a — torch/numpy statistical utilities | `prin.y4q1_tools` faithful ports |
+| `PhaseTrackerLarge` (112-oscillator scaled-up tracker) | PyTorch composition over `DiscreteDeltaThetaGamma` (Rust; unchanged) | `prin.y4q1_tools.PhaseTrackerLarge` |
+| `PhaseTracker.track_sequence` float64 DLPack cast | Rust bridge unchanged | `prin.nn.phase_tracker.PhaseTracker.track_sequence` — casts to float64 CPU before bridge dispatch |
+| `TrackingResult` dict-like access (`result["key"]`, `"key" in result`, `.get()`) | n/a — Python dataclass enhancement | `prin.nn.phase_tracker.TrackingResult` gains `__getitem__` / `__contains__` / `get` |
+| `PhaseTrackerStatic` (no-coupling ablation, fixed frequencies) | n/a — PyTorch nn.Module | `prin.nn.ablation_variants.PhaseTrackerStatic` |
+| `create_ablation_tracker(variant, ...)` | n/a — factory dispatch | `prin.nn.ablation_variants.create_ablation_tracker` |
+| `generate_temporal_clevr_n` / `generate_dataset` | n/a — torch.Generator data synthesis | `prin.temporal_training` (D-2.2 stubs replaced) |
+| `hungarian_similarity_loss` | n/a — `F.cross_entropy` orchestration | `prin.temporal_training` (D-2.2 stub replaced) |
+| `benchmarks/y4q1_5_benchmarks.py` (`run_timed_session`, `benchmark_5min`) | benchmark orchestration | `benchmarks/y4q1_5_benchmarks.py`, import-adapted |
+| `benchmarks/y4q1_9_benchmarks.py` (`ALL_BENCHMARKS`, `bench_preregistration`, `_train_model`, `_bootstrap_ci`, `_welch_t`, `SEEDS_7`/`SEEDS_3`) | benchmark orchestration | `benchmarks/y4q1_9_benchmarks.py`, import-adapted |
+
+No Rust crate, `Cargo.*`, PyO3 binding, or `.pyi` change — the entire M6
+compatibility surface is Python delegation over already-shipped Rust owners.
+
+Governance updated in step: `tools/check_no_python_numerics.py` scope
+reduced (17 modules — `temporal_training.py` and `y4q1_tools.py` removed
+from scan; both now contain experiment-tooling nn.Module / numpy
+statistical code, same category as `nn/ablation_variants.py` and
+`nn/mot_evaluation.py`); `tests/test_bucket_g_remainder.py` D-2.2 stub
+parametrize trimmed for `generate_temporal_clevr_n` / `generate_dataset` /
+`hungarian_similarity_loss`; `DOCS/sphinx/migration_guide.rst` consolidated
+table re-rendered via `tools/wp036_migration_table.py render`; per-file
+`ruff` ignores for the three ports + two benchmark modules;
+`SESSION_REGISTER.md` / `phase-6/README.md` updated; handoff appended.
+
+#### Command evidence
+
+- `pytest tests/test_acceptance_y4q1_4.py tests/test_acceptance_y4q1_5.py
+  tests/test_acceptance_y4q1_9.py -m "not slow"`: **159 passed, 5 skipped**.
+- `pytest tests/ -m "not slow and not gpu"`: no new regressions beyond the
+  pre-existing `0144M2` CUDA-only ×2, `0144M4` artefact ×8, and `0144M5`
+  RNG ×1 discoveries.
+- `git diff --no-index` reference vs port (all three): import-path lines
+  only (plus `ruff format` assert-message re-wraps).
+- `ruff check` + `ruff format --check` (repo): clean.
+- `mypy python/prin --strict`: clean (58 files).
+- `tools/check_no_python_numerics.py`: clean (17 modules).
+- `tools/wp036_migration_table.py check`: OK (172 symbols).
+- `bandit -r python/ -c pyproject.toml`: pre-existing LOW only; 0 new.
+- Coverage instrumentation remains host-blocked
+  ([[wp036-coverage-tooling-blocked]]); the 159-test acceptance subset +
+  the full 2460+-test suite + manual review stand in, CI authoritative.
+
+**Parity-evidence disposition:** directly comparable PRINet 3.0 behaviour
+exists and is the literal 158-test acceptance source. Imports-only diff
+(plus the governed `ruff format` re-wraps) + 159/159 default-gate
+execution is the M6 parity evidence. No new hazard-tolerance annotation or
+backend-availability guard, so `DOCS/sphinx/parity_report.rst` is
+unchanged.
+
 ### 0144M7 — not started
 ### 0144M8 — not started

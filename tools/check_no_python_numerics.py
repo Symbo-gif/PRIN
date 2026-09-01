@@ -46,8 +46,6 @@ _SCANNED = (
     "solvers.py",
     "simulation.py",
     "topology.py",
-    "temporal_training.py",
-    "y4q1_tools.py",
     "training_hooks.py",
     "subconscious_compat.py",
     "nn/hybrid_compat.py",

@@ -29,9 +29,6 @@ from prin.temporal_training import (
     TemporalTrainer,
     TrainingSnapshot,
     count_parameters,
-    generate_dataset,
-    generate_temporal_clevr_n,
-    hungarian_similarity_loss,
     temporal_smoothness_loss,
     train_multi_seed,
 )
@@ -290,9 +287,6 @@ def test_count_parameters_counts_linear_model() -> None:
 @pytest.mark.parametrize(
     "fn",
     [
-        generate_temporal_clevr_n,
-        generate_dataset,
-        hungarian_similarity_loss,
         temporal_smoothness_loss,
         train_multi_seed,
     ],

@@ -1661,12 +1661,12 @@ and the ``prinet`` ownership rows in
    "generate_all_figures", "prin.generate_all_figures", "real - direct re-export", "0141A"
    "generate_all_tables", "prin.generate_all_tables", "real - direct re-export", "0141A"
    "generate_benchmark_report", "prin.generate_benchmark_report", "real - direct re-export", "0141A"
-   "generate_dataset", "prin.generate_dataset", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "generate_dataset", "prin.generate_dataset", "real - non-numeric orchestration (0141D2)", "0141D2"
    "generate_leaderboard", "prin.generate_leaderboard", "real - direct re-export", "0141A"
    "generate_scalr_metrics_report", "prin.generate_scalr_metrics_report", "real - direct re-export", "0141A"
-   "generate_temporal_clevr_n", "prin.generate_temporal_clevr_n", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "generate_temporal_clevr_n", "prin.generate_temporal_clevr_n", "real - non-numeric orchestration (0141D2)", "0141D2"
    "gradient_checkpoint_integration", "prin.gradient_checkpoint_integration", "real - non-numeric orchestration (0141D1)", "0141D1"
-   "hungarian_similarity_loss", "prin.hungarian_similarity_loss", "D-2.2 deferred stub (typed NotImplementedError)", "0141D2"
+   "hungarian_similarity_loss", "prin.hungarian_similarity_loss", "real - non-numeric orchestration (0141D2)", "0141D2"
    "identity_overcount", "prin.identity_overcount", "real - direct re-export", "0141A"
    "identity_switches", "prin.identity_switches", "real - direct re-export", "0141A"
    "inter_frame_phase_correlation", "prin.inter_frame_phase_correlation", "real - direct re-export", "0141A"
@@ -1721,4 +1721,6 @@ and the ``prinet`` ownership rows in
    "triton_sparse_knn_coupling", "prin.triton_sparse_knn_coupling", "GPU-only stub (typed BackendUnavailableError)", "0141A"
 
 .. wp036-consolidated-table-end
+
+
 
