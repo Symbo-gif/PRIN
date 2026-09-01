@@ -477,3 +477,30 @@ The Rust-side ``from_knn_phase`` kernel-equivalence test
 tracked with DV-030 (device-resident GPU buffers); a future device-resident path
 does not change the kernel's working precision, so this tolerance tier is
 expected to persist.
+
+WP-036C — Deterministic-``Seed`` RNG regime (ported OscilloSim)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The WP-036C S1 (``0144M5``) ``OscilloSim`` compatibility rebuild draws
+natural frequencies and initial phases from PRIN's deterministic
+``prin_dynamics::Seed`` splitmix/PCG stream, not PRINet 3.0's
+``torch.Generator``. The two streams are both reproducible but not
+bit-identical, so any ported test whose pass/fail hinges on the *specific*
+random draw for one seed rather than on a regime-level property is a
+preserved RNG-regime hazard, not a numerical defect.
+
+One ported case is affected:
+``tests/test_acceptance_y4q1_3.py::TestWeightedCoupling::test_cosine_kernel_affects_dynamics``
+asserts that uniform-vs-cosine-weighted ring coupling changes the final
+Kuramoto order parameter by ``> 1e-3`` at ``N=64, k=8, K=10``, gaussian-bump
+IC, ``seed=42``. At ``k=8`` the cosine kernel is near-uniform (weights
+``0.122…0.127``); the order-parameter difference is therefore RNG-regime
+sensitive. PRIN's deterministic ``Seed`` frequency draw lands
+``Δr ≈ 6.1e-4`` for this one seed, while other seeds give
+``1.2e-3 … 2.1e-3`` and the final *phases* do diverge (``max Δ ≈ 7.7e-3``).
+
+Disposition: the assertion is **unchanged** (Testing Standards §1.1). The
+case carries a governed ``pytest.mark.skip`` in ``tests/conftest.py`` citing
+this entry and the ``0144M5`` sub-pass disposition (WP036C-F3). It is a
+candidate to re-point at a regime-level property (e.g. per-seed mean over a
+seed sweep) in a later parity pass.
