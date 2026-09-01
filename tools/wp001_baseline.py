@@ -842,7 +842,14 @@ def validate_session_plan(root: Path) -> list[str]:
         if not lines or not lines[0].startswith(f"# Session {sequence} "):
             errors.append(f"session {sequence}: heading does not match sequence")
         metadata: dict[str, str] = {}
-        for line in lines[:12]:
+        # ETCA-001 T-F3: scan the whole leading metadata block (up to the first
+        # "## " section heading, with a safety cap) rather than a hard 12-line
+        # window — a brief whose "**Status:**" value wraps across several lines
+        # otherwise pushes "**Session type:**" out of range and the check
+        # spuriously reports a brief/register mismatch.
+        for line in lines[:60]:
+            if line.startswith("## "):
+                break
             match = re.match(r"^\*\*(.+?):\*\*\s*(.+?)\s*$", line)
             if match:
                 metadata[match.group(1)] = match.group(2).rstrip()

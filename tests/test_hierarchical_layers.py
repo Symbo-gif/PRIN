@@ -23,6 +23,7 @@ def _input(batch: int = 2, width: int = 3) -> torch.Tensor:
 
 def test_hierarchical_matches_installed_prinet_with_reference_weights() -> None:
     """Continuous amplitudes and wrapped phases match installed PRINet directly."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import HierarchicalResonanceLayer as Reference
 
     torch.manual_seed(11)
@@ -58,6 +59,7 @@ def test_hierarchical_matches_installed_prinet_with_reference_weights() -> None:
 
 def test_pac_matches_installed_prinet() -> None:
     """Mean-slow-phase PAC matches PRINet 3.0 for one batched row."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import PhaseAmplitudeCouplingLayer as Reference
 
     phase = torch.tensor([[0.2, 0.5, 0.9]], dtype=torch.float64)
@@ -71,6 +73,7 @@ def test_pac_matches_installed_prinet() -> None:
 
 def test_discrete_layer_matches_installed_prinet_with_all_reference_weights() -> None:
     """Discrete projections, dynamics parameters, and outputs match PRINet."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import DiscreteDeltaThetaGammaLayer as Reference
 
     torch.manual_seed(12)
@@ -262,6 +265,7 @@ def test_checkpoint_roundtrips_and_rejects_malformed_bytes() -> None:
 
 def test_reference_weight_injection_rejects_incompatible_layer() -> None:
     """Reference injection validates every projection and dynamics shape."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import DiscreteDeltaThetaGammaLayer as ReferenceDiscrete
     from prinet.nn.layers import HierarchicalResonanceLayer as ReferenceHierarchical
 

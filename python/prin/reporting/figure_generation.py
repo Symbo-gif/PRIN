@@ -29,6 +29,7 @@ from prin.reporting._artifacts import (
     PublicationGenerationError,
     ReportingError,
     _load_json,
+    allowed_output_roots,
 )
 
 COLORS = {
@@ -73,10 +74,9 @@ def _dirs(results_dir: Path | None, output_dir: Path | None) -> tuple[Path, Path
     results = Path(results_dir) if results_dir is not None else DEFAULT_RESULTS_DIR
     output = Path(output_dir) if output_dir is not None else DEFAULT_OUTPUT_DIR
     resolved = output.resolve()
-    if not any(
-        resolved == root or root in resolved.parents for root in ALLOWED_OUTPUT_ROOTS
-    ):
-        roots = ", ".join(str(root) for root in ALLOWED_OUTPUT_ROOTS)
+    roots_checked = allowed_output_roots(ALLOWED_OUTPUT_ROOTS)
+    if not any(resolved == root or root in resolved.parents for root in roots_checked):
+        roots = ", ".join(str(root) for root in roots_checked)
         raise OutputPathError(
             f"output directory {resolved} is outside allowed roots: {roots}"
         )

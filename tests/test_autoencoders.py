@@ -25,6 +25,7 @@ def _phase_amp(batch: int = 3, n: int = 5) -> tuple[torch.Tensor, torch.Tensor]:
 
 def test_phase_to_rate_converter_soft_matches_reference() -> None:
     """The Rust soft converter matches PRINet 3.0 float64 within 1e-9."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import PhaseToRateConverter as Reference
 
     phase, amplitude = _phase_amp()
@@ -36,6 +37,7 @@ def test_phase_to_rate_converter_soft_matches_reference() -> None:
 
 def test_phase_to_rate_converter_hard_matches_reference() -> None:
     """Hard top-k selection is forward-identical to the reference."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import PhaseToRateConverter as Reference
 
     phase, amplitude = _phase_amp()
@@ -54,6 +56,7 @@ def test_phase_to_rate_converter_annealed_matches_reference() -> None:
     ``torch.tensor(...)`` float32 blend is a latent hazard only at non-unit
     temperature.
     """
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import PhaseToRateConverter as Reference
 
     phase, amplitude = _phase_amp()
@@ -115,6 +118,7 @@ def test_phase_to_rate_converter_checkpoint_roundtrip() -> None:
 
 
 def _reference_ptr_autoencoder() -> torch.nn.Module:
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import PhaseToRateAutoencoder as Reference
 
     torch.manual_seed(1)
@@ -169,6 +173,7 @@ def test_phase_to_rate_autoencoder_construction_and_errors() -> None:
 
 def test_dense_autoencoder_matches_reference() -> None:
     """Forward and classify match the reference dense baseline exactly."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import DenseAutoencoder as Reference
 
     torch.manual_seed(3)

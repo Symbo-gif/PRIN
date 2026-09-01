@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import pytest
 import torch
+from prin import _prin_core
 from prin._torch_compat import (
     HopfOscillator,
     KuramotoOscillator,
@@ -31,6 +32,21 @@ from prin._torch_compat import (
     _from_gpu,
     _gpu_f32,
     _is_gpu,
+)
+
+# The GPU sparse k-NN binding is only present when the extension is built with
+# `--features cuda` (the maintainer host and the `[gpu]` CI leg). On the plain
+# `python.yml` matrix `maturin develop` has no CUDA feature, so
+# `_compute_derivatives_gpu` returns None and the kernel-agreement tests below
+# have nothing to exercise — same reference-guard class as the file's
+# `skipif(not torch.cuda.is_available())` markers. WP-036D / DV-031(B).
+_GPU_SPARSE_KNN_BUILT = hasattr(_prin_core, "GpuSparseKuramoto")
+_needs_gpu_binding = pytest.mark.skipif(
+    not _GPU_SPARSE_KNN_BUILT,
+    reason=(
+        "prin._prin_core.GpuSparseKuramoto absent "
+        "(extension built without --features cuda)"
+    ),
 )
 
 SEED = 7
@@ -147,6 +163,7 @@ def test_from_gpu_restores_dtype_and_device() -> None:
 # ── GPU branch: sparse k-NN CubeCL kernel dispatch ─────────────────────────
 
 
+@_needs_gpu_binding
 def test_gpu_sparse_knn_dispatch_hook_agrees_with_cpu_reference() -> None:
     """``_compute_derivatives_gpu`` runs the CubeCL sparse k-NN kernel and agrees.
 
@@ -166,6 +183,7 @@ def test_gpu_sparse_knn_dispatch_hook_agrees_with_cpu_reference() -> None:
         torch.testing.assert_close(got, ref, atol=GPU_ATOL, rtol=GPU_RTOL, msg=name)
 
 
+@_needs_gpu_binding
 def test_gpu_sparse_knn_dispatch_hook_batched_state() -> None:
     """The batched dispatch loop stacks per-row GPU results back to ``[B, N]``."""
     state = OscillatorState.create_random(16, batch_size=2, seed=3)

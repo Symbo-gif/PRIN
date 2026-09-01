@@ -233,13 +233,16 @@ class StateCollector:
         self._loss_alpha = loss_ema_alpha
         self._grad_norm_ema: float = 0.0
         self._step_latencies: deque[float] = deque(maxlen=latency_window)
-        self._last_step_time: float = time.monotonic()
+        # perf_counter, not monotonic: on Windows time.monotonic() has ~15.6 ms
+        # granularity, so a sub-15 ms training step measures 0.0 latency
+        # (ETCA-001 remediation — test_acceptance_hybrid latency assertion).
+        self._last_step_time: float = time.perf_counter()
         self._step_count: int = 0
         self._epoch: int = 0
 
     def on_step_start(self) -> None:
         """Call at the beginning of each training step to record timing."""
-        self._last_step_time = time.monotonic()
+        self._last_step_time = time.perf_counter()
 
     def on_step_end(
         self,
@@ -252,7 +255,7 @@ class StateCollector:
             loss: Current step loss (scalar Tensor or float).
             model: Optional model to compute gradient norm from.
         """
-        elapsed = (time.monotonic() - self._last_step_time) * 1000.0
+        elapsed = (time.perf_counter() - self._last_step_time) * 1000.0
         self._step_latencies.append(elapsed)
 
         loss_val = float(loss.item() if isinstance(loss, torch.Tensor) else loss)

@@ -152,13 +152,16 @@ _RNG_NODES = frozenset(
 # failure (~25-40% on this host): asserts an ONNX-controller-vs-baseline
 # throughput ratio < 1.30 and measures 1.28-1.32 depending on machine load.
 # Ported verbatim from PRINet 3.0 (commit 47390d4, 0144E6); green at the
-# PSR-036D baseline only marginally. Skipped here to keep the gate
-# deterministic; flagged in PSR-036C for a proper perf-test disposition
-# (widen the ratio, mark `slow`, or make it a `pytest-benchmark` gate).
+# PSR-036D baseline only marginally. Quarantined here to keep the gate
+# deterministic. Tracked as DV-032 (perf-test hardening) with a dated
+# maintainer disposition (ETCA-001 finding T-F8); concrete fix path = widen
+# the ratio, mark `slow`, or convert to a `pytest-benchmark` gate under the
+# new nightly workflow.
 _FLAKE_SKIP = (
-    "Pre-existing host-sensitive perf-ratio flake from WP-036B S1 (not a "
-    "WP-036C finding); asserts throughput ratio < 1.30, measures ~1.28-1.32 "
-    "under load. Flagged in PSR-036C for a perf-test disposition."
+    "DV-032 (ETCA-001 T-F8): pre-existing host-sensitive perf-ratio flake from "
+    "WP-036B S1 (not a WP-036C finding); asserts throughput ratio < 1.30, "
+    "measures ~1.28-1.32 under load. Dated maintainer quarantine, fix tracked "
+    "in the Deferred Validation Register."
 )
 _FLAKE_NODES = frozenset(
     {

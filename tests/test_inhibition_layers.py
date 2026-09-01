@@ -29,6 +29,7 @@ def _inputs() -> tuple[torch.Tensor, torch.Tensor]:
 
 def test_feedforward_inhibition_matches_reference() -> None:
     """Rust FFI matches the installed PRINet 3.0 reference."""
+    pytest.importorskip("prinet.core.propagation.inhibition")
     from prinet.core.propagation.inhibition import (
         FeedforwardInhibition as ReferenceFeedforwardInhibition,
     )
@@ -72,6 +73,7 @@ def test_feedforward_inhibition_properties_and_errors() -> None:
 
 def test_dentate_gyrus_converter_matches_reference_and_is_sparse() -> None:
     """The batched Rust DG pipeline matches PRINet and retains top-k winners."""
+    pytest.importorskip("prinet.core.propagation.inhibition")
     from prinet.core.propagation.inhibition import (
         DentateGyrusConverter as ReferenceDentateGyrusConverter,
     )
@@ -129,6 +131,7 @@ def test_dentate_gyrus_converter_vector_and_errors() -> None:
 
 def test_dg_layer_matches_reference() -> None:
     """The Rust-owned trainable DG layer matches reference default parameters."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import DGLayer as ReferenceDGLayer
 
     phase, amplitude = _inputs()
@@ -175,6 +178,7 @@ def test_dg_layer_properties_and_errors() -> None:
 
 def test_sparsity_regularization_matches_reference() -> None:
     """Rust sigmoid-surrogate density loss matches PRINet 3.0."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import (
         SparsityRegularizationLoss as ReferenceSparsityRegularizationLoss,
     )

@@ -8,7 +8,7 @@ Rust functions exposed by :mod:`prin._prin_core` own every numerical result.
 from __future__ import annotations
 
 import os
-import subprocess
+import subprocess  # nosec B404 - subprocess use is confined to the vswhere.exe lookup in _find_msvc_cl (see the B603 justification there); no shell, constant args
 import sys
 import warnings
 from collections.abc import Callable, Sequence
@@ -1117,7 +1117,7 @@ def _find_msvc_cl() -> str | None:
     if not vswhere.exists():
         return None
     try:
-        out = subprocess.check_output(  # noqa: S603 - fixed absolute path to the MS-signed vswhere.exe (existence checked above), constant list args, no shell, no user input
+        out = subprocess.check_output(  # noqa: S603 # nosec B603 - fixed absolute path to the MS-signed vswhere.exe (existence checked above), constant list args, no shell, no user input
             [
                 str(vswhere),
                 "-latest",

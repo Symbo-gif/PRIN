@@ -65,6 +65,7 @@ def test_forward_returns_log_probabilities() -> None:
 
 def test_reference_forward_raises_in_float64_but_prin_does_not() -> None:
     """Document the reference's broken f64 path that motivates the parity design."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import PRINetModel as Reference
 
     reference = Reference(
@@ -81,6 +82,7 @@ def test_reference_forward_raises_in_float64_but_prin_does_not() -> None:
 
 def test_forward_parity_vs_reference_readout_float64() -> None:
     """At a zero input, the full model matches the reference readout in f64."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import PRINetModel as Reference
 
     torch.manual_seed(7)
@@ -98,6 +100,7 @@ def test_forward_parity_vs_reference_readout_float64() -> None:
 
 def test_forward_parity_vs_reference_default_float32() -> None:
     """The real reference ``forward`` (float32) matches PRIN under a D-4 envelope."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import PRINetModel as Reference
 
     torch.manual_seed(9)
@@ -187,6 +190,7 @@ def test_checkpoint_roundtrips_and_rejects_malformed_bytes() -> None:
 
 def test_reference_weight_injection_rejects_incompatible_model() -> None:
     """A wrong layer count in the injected reference is a typed error."""
+    pytest.importorskip("prinet.nn.layers")
     from prinet.nn.layers import PRINetModel as Reference
 
     model = PRINetModel(3, 4, 2, n_layers=1, n_steps=1)

@@ -324,7 +324,7 @@ class AlternatingOptimizer:
                 pg["lr"] = pg.get("initial_lr", pg["lr"]) * lr_mult
             for pg in self.rate_optimizer.param_groups:
                 pg["lr"] = pg.get("initial_lr", pg["lr"]) * lr_mult
-        except Exception:  # noqa: S110
+        except Exception:  # noqa: S110 # nosec B110 - best-effort daemon control; a failure here is intentionally swallowed so training continues without subconscious control
             pass  # Daemon not ready or failed — continue without control
 
 

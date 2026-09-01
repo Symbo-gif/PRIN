@@ -9,11 +9,29 @@ into the other's private names.
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+import os
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, SupportsIndex, TypeAlias, cast, overload
 
 JSONValue: TypeAlias = dict[str, Any] | list[Any] | str | int | float | bool | None
+
+
+def allowed_output_roots(static_roots: Sequence[Path]) -> tuple[Path, ...]:
+    """Return ``static_roots`` plus the in-repo pytest basetemp under pytest.
+
+    ETCA-001 finding T-F9: ``AGENTS.md`` mandates
+    ``--basetemp=.pytest_basetemp`` (an in-repo directory) for pytest on
+    Windows, which is outside the production figure/table output allowlist and
+    made 11 ``test_acceptance_y4q2`` figure/table generators raise
+    :class:`OutputPathError`. Permit that directory **only** while running
+    under pytest (``PYTEST_CURRENT_TEST`` is set by pytest per test); the
+    production output confinement (Coding Standards §6.1) is unchanged.
+    """
+    if "PYTEST_CURRENT_TEST" in os.environ:
+        repo_root = Path(__file__).resolve().parents[3]
+        return (*static_roots, (repo_root / ".pytest_basetemp").resolve())
+    return tuple(static_roots)
 
 
 class ReportingError(Exception):
