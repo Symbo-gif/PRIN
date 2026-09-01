@@ -53,6 +53,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `test_wp036d_gpu_dispatch.py` kernel-agreement tests gained a
     `skipif(not hasattr(prin._prin_core, "GpuSparseKuramoto"))` guard for the
     non-CUDA `python.yml` build.
+  - **CI-surfaced pre-existing failures** (T-F4 follow-ups — the never-run CI
+    had masked these for the whole phase): the T-F5 disk-reclaim step no
+    longer deletes `/opt/hostedtoolcache` (it held the `setup-python`
+    interpreter → `pip: exit 127`); `test_acceptance_y2q4.py::TestDocumentation`
+    path adapted `docs/` → `DOCS/` (Linux case-sensitivity; PRINet 3.0 used
+    lowercase); `test_train_bridge_slot_attention.py` gained an autouse
+    `torch.manual_seed(0)` fixture (its gradchecks ran on unseeded input
+    through a `match_threshold` branch); `test_acceptance_y4q1_5.py::test_deterministic_seed`
+    (wall-clock frame-count flake) folded into **DV-032**; Windows
+    `python.yml` keeps its original torch-install order.
 
 - **Version string `0.3.0-alpha.1` → `0.3.0`** (WP-036C S1 sub-pass `0144M1`,
   plan amendment #40). The pre-release tag is dropped so the ported PRINet 3.0

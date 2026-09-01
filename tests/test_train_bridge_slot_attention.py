@@ -40,6 +40,21 @@ _EPS = 1e-4
 _ATOL = 3e-3
 
 
+@pytest.fixture(autouse=True)
+def _seed_torch() -> None:
+    """Seed the global torch RNG so unseeded ``torch.randn`` inputs are stable.
+
+    Several tests here gradcheck ``process_frame`` / the slot-attention bridge,
+    which contain a data-dependent greedy-matching branch (``match_threshold``).
+    On an unseeded input a draw can land on a matching boundary where the
+    numerical Jacobian is discontinuous and gradcheck spuriously fails — this
+    was masked locally by RNG state from earlier tests and only surfaced once
+    CI ran the suite in a different order (ETCA-001 remediation, Testing
+    Standards §1.5).
+    """
+    torch.manual_seed(0)
+
+
 @pytest.fixture
 def slot_attention() -> SlotAttentionModule:
     return SlotAttentionModule(3, 8, 5, seed_counter=1)

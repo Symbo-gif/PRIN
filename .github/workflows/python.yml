@@ -114,11 +114,24 @@ jobs:
             /usr/local/share/boost || true
           sudo apt-get clean || true
           df -h /
-      - name: Build extension and install
+      # Linux: install the CPU-only torch BEFORE `maturin develop` so
+      # `torch>=2.0` is already satisfied and pip never resolves it from PyPI
+      # (which now drags the ~5 GB CUDA 13 wheel stack). Windows keeps the
+      # original order — no disk pressure there, and reordering shifted the
+      # resolved torch version and flipped a boundary-sensitive gradcheck.
+      - name: Build extension and install (Linux)
+        if: runner.os == 'Linux'
         run: |
           python -m pip install --no-cache-dir maturin
           python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
           maturin develop -m crates/prin-py/Cargo.toml
+          python -m pip install --no-cache-dir -e ".[dev,onnx]"
+      - name: Build extension and install (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          python -m pip install --no-cache-dir maturin
+          maturin develop -m crates/prin-py/Cargo.toml
+          python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
           python -m pip install --no-cache-dir -e ".[dev,onnx]"
       - name: Run tests
         run: python -m pytest tests/ -v -m "not slow and not gpu" --cov=prin --cov-report=xml
