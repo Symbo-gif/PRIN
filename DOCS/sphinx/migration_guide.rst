@@ -811,7 +811,10 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
     training hooks and MOT evaluation — never named these symbols, and
     neither does the Project Plan §6 Phase 5 roadmap row; see
     `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` DV-025). The
-    ``test_subconscious`` suite references neither.
+    ``test_subconscious`` suite references neither. ``retrain_controller`` was
+    **delivered in WP-036C S1 ``0144M2``**; ``quantize_onnx`` remains its
+    documented stub (no in-scope ported assertion exercises it — amendment #39
+    S2-veto disposition).
 
 - ``prin-daemon`` training hooks and MOT evaluation (WP-030) — loss
   EMA/variance, gradient-norm EMA, and step-latency percentile hooks feeding
@@ -1441,8 +1444,9 @@ resolve from the top-level ``prin`` namespace.
 - *``SimulationResult`` backing (D3):* PRINet 3.0's ``SimulationResult`` held
   ``torch.Tensor`` fields. PRIN's uses ``numpy.ndarray`` because the Rust
   integrators return NumPy-backed ``OscillatorState``.
-- *``retrain_controller`` (DV-025):* descoped to WP-036C S1 (session 0144E)
-  per the DV-025 register row. Not delivered in this sub-pass.
+- *``retrain_controller`` (DV-025):* descoped to WP-036C S1 per the DV-025
+  register row; **delivered in WP-036C S1 sub-pass ``0144M2``** as a real
+  telemetry-supervised implementation.
 - *Behavioural parity:* not established in this sub-pass. Numerical parity is
   a WP-036B/WP-036C acceptance-suite obligation.
 
@@ -1463,7 +1467,9 @@ appendix and the S1 handoff note.
 training-loop wrappers (``MixedPrecisionTrainer``, ``AsyncCPUGPUPipeline``,
 ``retrain_controller``) were initially delivered as **importable D-2.2
 dispositions** (``DiscreteDeltaThetaGamma`` was made real in WP-036C S1
-``0144M1``, plan amendment #40; the rest were rebuilt by WP-036A / WP-036B):
+``0144M1``, plan amendment #40; ``MixedPrecisionTrainer`` /
+``AsyncCPUGPUPipeline`` in ``0144M4``; ``retrain_controller`` in ``0144M2``
+per DV-025; the rest were rebuilt by WP-036A / WP-036B):
 each resolves from ``prin`` (and ``prin.nn`` / ``prin.training_hooks``) and
 raises a typed ``NotImplementedError`` on construction/call. This makes every
 ``prinet.__all__`` symbol resolvable and construct/callable-checkable while the
@@ -1479,10 +1485,11 @@ PAC, and discrete-layer family in :mod:`prin.nn.hierarchical_layers`; and the
 0144A4 ``PRINetModel`` / ``compile_model`` pair in :mod:`prin.nn.model`. WP-036C
 S1 ``0144M1`` makes ``DiscreteDeltaThetaGamma`` real in
 :mod:`prin.nn.hierarchical_layers` (compatibility re-export retained from
-:mod:`prin.nn.deferred_layers`). After ``0144M1`` the only symbols resolving as
-D-2.2 stubs are the training-loop trio ``MixedPrecisionTrainer`` /
-``AsyncCPUGPUPipeline`` / ``retrain_controller`` in :mod:`prin.training_hooks`.
-All seventeen also resolve from the top-level ``prin`` namespace.
+:mod:`prin.nn.deferred_layers`). WP-036C S1 also resolved the training-loop
+trio: ``retrain_controller`` in ``0144M2`` (DV-025), ``MixedPrecisionTrainer``
+and ``AsyncCPUGPUPipeline`` in ``0144M4``. As of WP-036C S1 none of the
+seventeen resolves as a D-2.2 stub. All seventeen also resolve from the
+top-level ``prin`` namespace.
 
 .. csv-table:: 0141E symbol dispositions
    :header: "PRINet 3.0 symbol", "PRIN symbol", "Disposition"
@@ -1500,11 +1507,11 @@ All seventeen also resolve from the top-level ``prin`` namespace.
    "PhaseAmplitudeCouplingLayer", "prin.PhaseAmplitudeCouplingLayer / prin.nn.PhaseAmplitudeCouplingLayer", "Real WP-036A ``nn.Module`` (sub-pass 0144A3); Rust-owned PAC modulation and learnable depth"
    "PRINetModel", "prin.PRINetModel / prin.nn.PRINetModel", "Real WP-036A ``nn.Module`` (sub-pass 0144A4); Rust-owned stacked ``ResonanceLayer`` container with inter-layer ``LayerNorm``, concept readout, and clamped ``log_softmax`` in ``prin_train::model``"
    "compile_model", "prin.compile_model / prin.nn.compile_model", "Real WP-036A pure-Python guarded ``torch.compile`` passthrough (sub-pass 0144A4, D-2); the one symbol with no Rust component"
-   "DiscreteDeltaThetaGamma", "prin.DiscreteDeltaThetaGamma / prin.nn.DiscreteDeltaThetaGamma", "Real ``nn.Module`` (WP-036C S1 ``0144M1``, plan amendment #40); new ``DiscreteDeltaThetaGammaBridge`` PyO3 binding over the audited Burn owner ``prin_train::bands`` (WP-022), plus ``order_parameters`` / ``pac_index`` added to that module. Parameters are Python ``nn.Parameter``/``nn.Linear`` mirrors; ``step`` / ``integrate`` run the Rust forward (non-differentiable, with a value-preserving zero term for ``.grad`` population — the E4 layer-mirror pattern)"
+   "DiscreteDeltaThetaGamma", "prin.DiscreteDeltaThetaGamma / prin.nn.DiscreteDeltaThetaGamma", "Real ``nn.Module`` (WP-036C S1 ``0144M1``, plan amendment #40); new ``DiscreteDeltaThetaGammaBridge`` PyO3 binding over the audited Burn owner ``prin_train::bands`` (WP-022), plus ``order_parameters`` / ``pac_index`` added to that module. Parameters are Python ``nn.Parameter``/``nn.Linear`` mirrors; ``step`` / ``integrate`` run the Rust forward (non-differentiable, with a value-preserving zero term for parameter ``.grad`` population — the E4 layer-mirror pattern — and, since WP-036C S3 ``0144O`` / WP036C-F2, a straight-through identity term over the phase/amplitude inputs so gradients reach an upstream encoder)"
    "DiscreteDeltaThetaGammaLayer", "prin.DiscreteDeltaThetaGammaLayer / prin.nn.DiscreteDeltaThetaGammaLayer", "Real WP-036A ``nn.Module`` (sub-pass 0144A3); Rust-owned discrete three-band core and learnable phase/amplitude projections"
-   "MixedPrecisionTrainer", "prin.MixedPrecisionTrainer / prin.training_hooks.MixedPrecisionTrainer", "D-2.2 stub; ``torch.amp`` training-step wrapper (training loop, Python numerics)"
-   "AsyncCPUGPUPipeline", "prin.AsyncCPUGPUPipeline / prin.training_hooks.AsyncCPUGPUPipeline", "D-2.2 stub; async CPU/GPU training-loop wrapper (Python numerics)"
-   "retrain_controller", "prin.retrain_controller / prin.training_hooks.retrain_controller", "D-2.2 stub; real telemetry-supervised implementation owned by WP-036C S1 (session 0144E) per DV-025 (register row unchanged)"
+   "MixedPrecisionTrainer", "prin.MixedPrecisionTrainer / prin.training_hooks.MixedPrecisionTrainer", "Real (WP-036C S1 ``0144M4``); ``torch.amp`` training-step orchestration over Rust-backed models (training-loop bookkeeping, no Python oscillator numerics)"
+   "AsyncCPUGPUPipeline", "prin.AsyncCPUGPUPipeline / prin.training_hooks.AsyncCPUGPUPipeline", "Real (WP-036C S1 ``0144M4``); CPU-synchronous training-loop orchestration"
+   "retrain_controller", "prin.retrain_controller / prin.training_hooks.retrain_controller", "Real (WP-036C S1 ``0144M2``, DV-025); telemetry-supervised ``SubconsciousController`` MLP retraining + ONNX export over the Rust owner. Reference consumers ``test_acceptance_y2q2`` / ``y2q3`` pass"
 
 **0144A3 batching migration note (D-5):** PRINet 3.0's
 ``HierarchicalResonanceLayer.forward`` iterates over samples in Python. PRIN
@@ -1519,9 +1526,12 @@ better-design deviation with no changed model equations or parameter layout.
 - *``retrain_controller`` (DV-025) - reconciliation.* The 0141D2 section noted
   ``retrain_controller`` as "descoped to WP-036C S1"; the 0141 brief Contract
   nevertheless requires every ``prinet.__all__`` symbol to resolve from ``prin``
-  at S1 close. 0141E ships an importable D-2.2 stub so the surface is complete;
-  the DV-025 register row is unchanged (the real implementation remains owned by
-  WP-036C S1 / session 0144E, which also owns the reference retraining tests).
+  at S1 close. 0141E shipped an importable D-2.2 stub so the surface was
+  complete; **WP-036C S1 sub-pass ``0144M2`` replaced the stub with the real
+  telemetry-supervised implementation** (``SubconsciousController`` MLP
+  retraining + ONNX export over the Rust owner), and its reference retraining
+  tests (``test_acceptance_y2q2`` / ``y2q3``) pass. DV-025 CLOSED
+  (traceability-doc currency corrected at WP-036C S3 ``0144O``, WP036C-F8).
 - *No Python numerics.* Every 0141E symbol is a stub that raises before any
   computation. Coding Standards Sec. 1.2 is preserved across the whole
   0141A-0141E range, evidenced by ``tools/check_no_python_numerics.py``.
