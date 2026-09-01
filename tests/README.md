@@ -1,10 +1,10 @@
 # tests/ — pytest acceptance suite
 
-The PRIN pytest suite (50 files, ~1,788 tests) is the **acceptance contract**
-for PRIN: it defines the public API. The WP-036B strict port has adapted 13
-PRINet 3.0 reference files (498 `def test_` functions, 8,085 reference lines)
-with import-only changes (`prinet.*` → `prin.*`); assertions are unchanged
-(Testing Standards §1.1).
+The PRIN pytest suite (50 files, ~2,969 tests) is the **acceptance contract**
+for PRIN: it defines the public API. The WP-036B + WP-036C strict ports have
+adapted 37 PRINet 3.0 reference files (1,670 `def test_` functions, ~24,000
+reference lines) with import-only changes (`prinet.*` → `prin.*`); assertions
+are unchanged (Testing Standards §1.1).
 
 ## WP-036B ported acceptance suite (13 files, 498 tests)
 
@@ -37,6 +37,66 @@ memory (DV-030). The 1 psutil skip matches `pytest.skip("psutil not installed")`
 in the reference. No test carries `@pytest.mark.xfail`; no assertion is
 weakened; no tolerance annotation was required beyond the Parity Report entry
 for the GPU sparse k-NN f32 dispatch (`DOCS/sphinx/parity_report.rst`).
+
+## WP-036C ported acceptance suite (24 files, 1,172 tests)
+
+| Port file | `def test_` | Passed | Skipped | Reference guard |
+|---|---:|---:|---:|---|
+| `test_acceptance_integration_q3.py` | 19 | 19 | 0 | — |
+| `test_acceptance_y2q1.py` | 44 | 44 | 0 | — |
+| `test_acceptance_y2q2.py` | 30 | 30 | 0 | — |
+| `test_acceptance_y2q3.py` | 48 | 45 | 3 | 2 DV-031 `skip` (FFI-panic, WP-036E) + 1 DV-031 `skip` (CUDA exec) |
+| `test_acceptance_y2q4.py` | 28 | 28 | 0 | — |
+| `test_acceptance_y3q1.py` | 40 | 40 | 0 | — |
+| `test_acceptance_y3q2.py` | 38 | 38 | 0 | — |
+| `test_acceptance_y3q3.py` | 32 | 32 | 0 | — |
+| `test_acceptance_y3q4.py` | 32 | 32 | 0 | — |
+| `test_acceptance_y3q45.py` | 23 | 23 | 0 | — |
+| `test_acceptance_y3q49.py` | 55 | 24 | 31 | DV-031(A) `skip` (unbuilt Phase-6 deliverables) |
+| `test_acceptance_y4q1.py` | 61 | 61 | 0 | — |
+| `test_acceptance_y4q1_2.py` | 78 | 74 | 0 | 4 `slow` deselected |
+| `test_acceptance_y4q1_3.py` | 49 | 48 | 1 | 1 DV-031 `skip` (RNG-regime, parity_report.rst) |
+| `test_acceptance_y4q1_4.py` | 52 | 52 | 0 | — |
+| `test_acceptance_y4q1_5.py` | 60 | 60 | 0 | — |
+| `test_acceptance_y4q1_7.py` | 84 | 84 | 0 | — |
+| `test_acceptance_y4q1_8.py` | 148 | 83 | 65 | 65 `skip` (reference: benchmark artefacts absent) |
+| `test_acceptance_y4q1_9.py` | 52 | 47 | 5 | 5 `skip` (reference: benchmark artefacts absent) |
+| `test_acceptance_y4q2.py` | 71 | 40 | 31 | DV-031(A) `skip` (unbuilt Phase-6 deliverables) + reference skips |
+| `test_acceptance_y4q3.py` | 47 | 36 | 11 | DV-031(A) `skip` (unbuilt deliverables) + version `skip` (amdt #41) |
+| `test_acceptance_y4q4.py` | 57 | 20 | 37 | DV-031(A) `skip` (unbuilt deliverables) + version `skip` (amdt #41) |
+| `test_acceptance_triton_kernels.py` | 55 | 22 | 33 | 33 `skip` (reference: Triton requires Linux) |
+| `test_acceptance_gpu.py` | 48 | 41 | 7 | 7 DV-031(B) `skip` (CUDA exec, WP-036E) |
+| **Total** | **1,172** | **794** | **378** | — |
+
+**Combined ported suite: 37 files, 1,670 tests** (WP-036B: 498 + WP-036C: 1,172).
+Full default gate (`-m "not slow and not gpu"`): **2,743 passed, 201 skipped,
+0 failed** (321 s).
+
+**WP-036C marker policy:** Governed skips are applied via a single
+`tests/conftest.py` `pytest_collection_modifyitems` hook — no ported test file
+is edited (assertions + text byte-unchanged). Skip categories:
+
+- **DV-031(A):** Tests asserting the existence of benchmark campaign artefacts,
+  notebooks, paper, or docs files that are unbuilt Phase-6 deliverables
+  (deferred to WP-038).
+- **DV-031(B):** Tests requiring GPU execution paths the current architecture
+  does not yet provide (CUDA execution tests, FFI-panic ctx-on-autograd-worker
+  tests) — deferred to WP-036E.
+- **Plan amendment #41:** Version/classifier/citation tests asserting PRINet 3.0
+  version numbering — PRIN is independently versioned; re-pointed at WP-038.
+- **RNG-regime** (`y4q1_3`): One test whose pass/fail hinges on a specific
+  random draw from PRIN's deterministic `Seed` stream vs PRINet 3.0's
+  `torch.Generator` — preserved hazard, `parity_report.rst` entry.
+- **Reference `skip`:** `y4q1_8` (×65), `y4q1_9` (×5), `triton_kernels` (×33)
+  carry reference-text `pytest.skip(...)` calls preserved verbatim (benchmark
+  artefacts absent; Triton requires Linux).
+
+Run the full ported subset:
+
+```bash
+pytest tests/test_acceptance_*.py -v
+```
+
 Run the ported subset:
 
 ```bash

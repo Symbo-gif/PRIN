@@ -436,7 +436,7 @@ introduction and are not retroactively added here; this table starts with
 | 0144M8 | 6 | WP-036C | S1 — Coding | [Y4Q2/Y4Q3/Y4Q4, GPU/Triton guards, and consolidation](phase-6/0144M8-wp036c-s1-y4q2-y4q3-y4q4-kernels-and-consolidation.md) | COMPLETE |
 | 0144N | 6 | WP-036C | S2 — Audit | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144N-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md) | COMPLETE |
 | 0144O | 6 | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | COMPLETE |
-| 0144P | 6 | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
+| 0144P | 6 | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | COMPLETE |
 | 0144Q | 6 | WP-036E | S1 — Coding | [GPU device-resident execution path](phase-6/0144Q-wp036e-s1-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144R | 6 | WP-036E | S2 — Audit | [GPU device-resident execution path](phase-6/0144R-wp036e-s2-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144S | 6 | WP-036E | S3 — Remediation | [GPU device-resident execution path](phase-6/0144S-wp036e-s3-gpu-device-resident-execution-path.md) | PLANNED |

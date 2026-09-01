@@ -48,6 +48,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   WP036C-F8 stale DV-025 traceability rows; WP036C-F9 lint-ignore scope creep
   on shipped modules). FAIL freezes new feature work until S3 (`0144O`) clears
   it. Not pushed (amendment #28 cadence).
+- **WP-036C S3 remediation (session `0144O`, 2026-09-01):** all nine findings
+  FIXED or AMENDED. F1/F2 (D1): gradient-flow STE through
+  `DiscreteDeltaThetaGamma` (`b240836`); reference-faithful batch reporting
+  degradation (`e342566`); FFI-panic + CUDA-execution + unbuilt-deliverable
+  tests governed via `conftest.py` hook + new register item **DV-031**
+  (`106480b`); pre-existing throughput flake quarantined (`b753199`). F3 (D2):
+  GPU backend guards + RNG-regime parity_report.rst entry. F4 (D3): new Rust
+  `prin_sim::y4q1_stats::polyfit` owner; `check_no_python_numerics` scan
+  restored 17→19 modules (`665c358`). F5 (D2): plan **amendment #41**
+  (PRIN independently versioned, version tests governed-skip). F6/F7/F8/F9
+  (D4): handoff correction, gitignore fix, traceability regeneration, lint
+  ignores removed. Delta re-audit **CLEAN**: **2,743 passed, 201 skipped,
+  0 failed** (356 s). Commits `b240836`…`7c64ba5`.
+- **WP-036C S4 documentation (session `0144P`, 2026-09-01):** `tests/README.md`
+  updated (full 37-file / 1,670-test ported-suite inventory, WP-036C marker
+  policy); `parity_report.rst` tolerance table current; DV-025 closed in
+  `DEFERRED_VALIDATION_REGISTER.md`; Project State Report
+  `DOCS/reports/036c-project-state.md` issued; WP-036E (`0144Q`) declared as
+  the successor. WP-036C closed; the WP-036E/F/G Deferred-Validation closure
+  block (amendment #38) follows.
 - **WP-036 S1 — `prin` PRINet-3.0-compatible symbol surface** (sessions
   0141A–0141E, 2026-08-27–28). All 172 `prinet.__all__` symbols resolve from
   `prin` and pass a construct/callable smoke check (parametrized matrix, 348

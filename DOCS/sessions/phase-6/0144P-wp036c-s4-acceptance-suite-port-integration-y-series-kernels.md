@@ -1,6 +1,13 @@
 # Session 0144P — WP-036C S4: Documentation — Acceptance suite port (integration, y-series, kernels; DV-025)
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-09-01) — `tests/README.md` updated (full 37-file /
+1,670-test ported-suite inventory, WP-036C marker policy); CHANGELOG current;
+`parity_report.rst` tolerance table current; DV-025 closed in
+`DEFERRED_VALIDATION_REGISTER.md`; Project State Report
+`DOCS/reports/036c-project-state.md` issued; WP-036E (`0144Q`) declared as
+the registered successor. WP-036C closed; the WP-036E/F/G Deferred-Validation
+closure block (plan amendment #38) follows. Full local gate green: 2,743
+passed, 201 skipped, 0 failed (321 s).
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S4 — Documentation
