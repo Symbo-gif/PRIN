@@ -1,6 +1,6 @@
 # Session 0144M8 — WP-036C S1 (sub-pass 8/8): Y4Q2/Y4Q3/Y4Q4, GPU/Triton guards, and consolidation
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S1 — Coding
