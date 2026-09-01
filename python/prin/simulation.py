@@ -601,6 +601,7 @@ class LargeScaleOscillatorSystem:
         seed: int = 42,
         coupling_strength: float = 2.0,
     ) -> None:
+        """Build the k-NN neighbour graph and cache the integration parameters."""
         self.n_oscillators = n_oscillators
         self.k_neighbors = k_neighbors
         self.seed = seed
@@ -673,6 +674,7 @@ class OscillatorPruner:
         threshold: float = 0.1,
         n_eval_steps: int = 20,
     ) -> None:
+        """Store the amplitude threshold and evaluation-step count."""
         self.threshold = threshold
         self.n_eval_steps = n_eval_steps
 

@@ -73,11 +73,13 @@ class TrackingResult:
     )
 
     def __getitem__(self, key: str) -> object:
+        """Dict-like field access; raises ``KeyError`` for an unknown field."""
         if key in self._FIELD_NAMES:
             return getattr(self, key)
         raise KeyError(key)
 
     def __contains__(self, key: object) -> bool:
+        """Return whether ``key`` names one of the tracking-result fields."""
         return key in self._FIELD_NAMES
 
     def get(self, key: str, default: object = None) -> object:

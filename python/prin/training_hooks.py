@@ -673,6 +673,7 @@ class MixedPrecisionTrainer:
         enabled: bool = True,
         device_type: str = "cpu",
     ) -> None:
+        """Store the model, optimizer, and AMP configuration."""
         self.model = model
         self.optimizer = optimizer
         self.enabled = enabled
@@ -744,6 +745,7 @@ class AsyncCPUGPUPipeline:
     """
 
     def __init__(self, daemon: Any, model: Any, optimizer: Any) -> None:
+        """Store the optional daemon, model, and optimizer."""
         self.daemon = daemon
         self.model = model
         self.optimizer = optimizer

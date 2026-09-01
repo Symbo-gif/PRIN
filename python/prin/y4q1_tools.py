@@ -1023,6 +1023,7 @@ class PhaseTrackerLarge(torch.nn.Module):
         n_discrete_steps: int = 5,
         match_threshold: float = 0.1,
     ) -> None:
+        """Build the scaled-up encoders, refinement head, and Rust dynamics."""
         super().__init__()
         from prin.nn import DiscreteDeltaThetaGamma
 

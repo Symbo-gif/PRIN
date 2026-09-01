@@ -77,6 +77,7 @@ class PhaseTracker(nn.Module):
         n_discrete_steps: int = 5,
         match_threshold: float = 0.3,
     ) -> None:
+        """Build the detection encoders and the Rust-backed dynamics."""
         super().__init__()
         self.n_osc = n_delta + n_theta + n_gamma
         self._n_discrete_steps = n_discrete_steps
@@ -277,6 +278,7 @@ class SlotAttentionModule(nn.Module):
         hidden_dim: int | None = None,
         eps: float = 1e-8,
     ) -> None:
+        """Build the Slot Attention projection, GRU, and update MLP."""
         super().__init__()
         self.num_slots = num_slots
         self.slot_dim = slot_dim
@@ -363,6 +365,7 @@ class TemporalSlotAttentionMOT(nn.Module):
         num_iterations: int = 3,
         match_threshold: float = 0.3,
     ) -> None:
+        """Build the per-frame Slot Attention module for MOT tracking."""
         super().__init__()
         self.num_slots = num_slots
         self.slot_dim = slot_dim

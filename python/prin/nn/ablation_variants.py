@@ -288,6 +288,7 @@ class PhaseTrackerStatic(nn.Module):
         n_discrete_steps: int = 5,
         match_threshold: float = 0.3,
     ) -> None:
+        """Build the encoders and the fixed per-band frequency buffer."""
         super().__init__()
         self.n_osc = n_delta + n_theta + n_gamma
         self._n_discrete_steps = n_discrete_steps
@@ -312,6 +313,7 @@ class PhaseTrackerStatic(nn.Module):
         self.register_buffer("frequencies", torch.tensor(freqs))
 
     def encode(self, detections: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Encode detections into ``(phase, amplitude)`` embeddings."""
         phase_raw = self.det_to_phase(detections)
         phase = phase_raw % (2.0 * math.pi)
         amp = self.det_to_amp(detections)
@@ -320,6 +322,7 @@ class PhaseTrackerStatic(nn.Module):
     def evolve(
         self, phase: torch.Tensor, amplitude: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Advance the phase by fixed-frequency rotation (no coupling)."""
         dt = 0.01
         freqs = self.frequencies
         for _ in range(self._n_discrete_steps):
@@ -330,6 +333,7 @@ class PhaseTrackerStatic(nn.Module):
     def phase_similarity(
         self, phase_a: torch.Tensor, phase_b: torch.Tensor
     ) -> torch.Tensor:
+        """Cosine similarity of the complex phase embeddings."""
         z_a = torch.exp(1j * phase_a.to(torch.complex64))
         z_b = torch.exp(1j * phase_b.to(torch.complex64))
         z_a_norm = z_a / (z_a.abs().pow(2).sum(dim=-1, keepdim=True).sqrt() + self._EPS)
@@ -346,6 +350,7 @@ class PhaseTrackerStatic(nn.Module):
         detections_t: torch.Tensor,
         detections_t1: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Match detections across two consecutive frames."""
         phase_t, amp_t = self.encode(detections_t)
         phase_t1, _amp_t1 = self.encode(detections_t1)
         phase_t_evolved, _ = self.evolve(phase_t, amp_t)
@@ -378,7 +383,7 @@ class PhaseTrackerStatic(nn.Module):
         with torch.no_grad():
             for t in range(T):
                 dets = frame_detections[t]
-                phase_t, amp_t = self.encode(dets)
+                phase_t, _amp_t = self.encode(dets)
                 if t == 0:
                     phase_history.append(phase_t.detach().cpu())
                     continue
@@ -443,6 +448,7 @@ class PhaseTrackerFrozen(nn.Module):
         n_discrete_steps: int = 5,
         match_threshold: float = 0.3,
     ) -> None:
+        """Wrap a PhaseTracker and freeze its Rust-backed dynamics parameters."""
         super().__init__()
         from prin.nn.temporal_compat import PhaseTracker
 
@@ -506,6 +512,7 @@ class SlotAttentionNoGRU(nn.Module):
         num_iterations: int = 3,
         match_threshold: float = 0.3,
     ) -> None:
+        """Build a per-frame Slot Attention tracker with no GRU recurrence."""
         super().__init__()
         from prin.nn.temporal_compat import SlotAttentionModule
 
@@ -623,6 +630,7 @@ class SlotAttentionFrozen(nn.Module):
         num_iterations: int = 3,
         match_threshold: float = 0.3,
     ) -> None:
+        """Wrap a TemporalSlotAttentionMOT and freeze every parameter."""
         super().__init__()
         from prin.nn.temporal_compat import TemporalSlotAttentionMOT
 

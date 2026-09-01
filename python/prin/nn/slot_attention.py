@@ -360,6 +360,7 @@ class SlotAttentionCLEVRN(torch.nn.Module):
         d_model: int = 64,
         num_iterations: int = 3,
     ) -> None:
+        """Build the CLEVR-N Slot Attention classifier layers."""
         super().__init__()
         self.scene_dim = scene_dim
         self.query_dim = query_dim

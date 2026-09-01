@@ -1117,7 +1117,7 @@ def _find_msvc_cl() -> str | None:
     if not vswhere.exists():
         return None
     try:
-        out = subprocess.check_output(
+        out = subprocess.check_output(  # noqa: S603 - fixed absolute path to the MS-signed vswhere.exe (existence checked above), constant list args, no shell, no user input
             [
                 str(vswhere),
                 "-latest",
