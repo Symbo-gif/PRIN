@@ -83,6 +83,17 @@ starts by reading it (Development Workflow Standards §6).
   closure, zero findings (S2 PASS, S3 no-change closure), and WP-036B
   declaration (acceptance suite port — core, dynamics, model stack,
   subconscious).
+- [`036b-project-state.md`](036b-project-state.md) — WP-036B S4
+  closure, zero findings (S2 PASS, S3 no-change closure), and WP-036C
+  declaration (acceptance suite port — integration, y-series, kernels;
+  DV-025).
+- [`036c-project-state.md`](036c-project-state.md) — WP-036C S4
+  closure; S2 FAIL (two D1, two D2, one D3, four D4) remediated in S3
+  with CLEAN delta re-audit; DV-025 delivered; DV-031 opened; plan
+  amendment #41; and WP-036D declaration (GPU execution path).
+- [`036d-project-state.md`](036d-project-state.md) — WP-036D S4
+  closure; S2 PASS-WITH-FINDINGS (three D4 findings: WP036D-F1/F2/F3)
+  resolved in S3 with CLEAN delta re-audit; DV-030 opened.
 
 
 The [`DEFERRED_VALIDATION_REGISTER.md`](DEFERRED_VALIDATION_REGISTER.md)

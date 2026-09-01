@@ -302,6 +302,21 @@ changes.
 
 ---
 
+## 7. Remediation closure table (appended by remediation session)
+
+All four findings remediated in a dedicated session (2026-09-01).
+
+| ID | Resolution | Evidence |
+|---|---|---|
+| D-F1 | **FIXED.** Restructured napoleon `Attributes:` sections to per-field attribute docstrings in `python/prin/nn/mot_evaluation.py` (`Detection` 4 attrs, `TrackingResult` 11 attrs) and `python/prin/nn/allocation.py` (`OscillatorBudget` 4 attrs — discovered during verification, same root-cause class). Fresh-directory Sphinx `-W` build: **0 warnings** (down from 19). | `ruff check`/`format`/`mypy --strict`/`interrogate` all clean |
+| D-F2 | **FIXED.** Added `036b-project-state.md`, `036c-project-state.md`, `036d-project-state.md` entries to `DOCS/reports/README.md`, matching existing entry format. | Index now lists all 43 PSRs (001–036d) |
+| D-F3 | **FIXED.** Added `036b-wp036b-audit.md`, `036c-wp036c-audit.md`, `036d-wp036d-audit.md` entries to `DOCS/audits/README.md`, matching existing entry format. | Index now lists all WP audit reports through 036d |
+| D-F4 | **FIXED.** Modified `tools/check_deviation_ledger.py` `parse_ledger()` to detect delegation pointers (regex `PSR[- ]?0?(\d+[a-z]?)\s*§\s*3`) when a §3 section contains zero table rows, and resolve the canonical PSR automatically. CI gate now compares 120 rows vs 120 rows for sub-PSR pairs (was 0 vs 0). Backward-compatible: pre-sub-PSR pair (032, 033) still compares 112 → 113 rows correctly. | `check_deviation_ledger.py 036c 036d`: 120 vs 120 rows PASS; `check_deviation_ledger.py 032 033`: 112 → 113 rows PASS |
+
+**Post-remediation verdict: PASS** (all findings closed, verification suite clean).
+
+---
+
 ## Appendix A: Phase 6 Documentation Inventory
 
 | Category | Count | Notes |

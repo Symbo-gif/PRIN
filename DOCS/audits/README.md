@@ -181,6 +181,20 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   handoff drafting process deviation, AMENDED in S3). Delta re-audit CLEAN.
   Closure table appended with S3 addendum (amendment #33, owning-WP decision
   for D-D rows 31–44).
+- [`036b-wp036b-audit.md`](036b-wp036b-audit.md) — WP-036B "Acceptance
+  suite port — core, dynamics, model stack, subconscious" audit (`PASS`);
+  zero findings; S3 no-change closure with CLEAN delta re-audit. 13
+  reference files strict-ported (498 test functions, 8,085 reference
+  lines); 489 passed, 9 skipped (all matching reference guards).
+- [`036c-wp036c-audit.md`](036c-wp036c-audit.md) — WP-036C "Acceptance
+  suite port — integration, y-series, kernels; DV-025" audit (`FAIL`);
+  eight findings (two D1, two D2, one D3, four D4) resolved in S3 with
+  CLEAN delta re-audit; DV-031 opened; plan amendment #41. 24 reference
+  files strict-ported (1,097 test functions, ~15,810 reference lines).
+- [`036d-wp036d-audit.md`](036d-wp036d-audit.md) — WP-036D "GPU execution
+  path for the ported acceptance suite" audit (`PASS-WITH-FINDINGS`);
+  three D4 findings (WP036D-F1/F2/F3) resolved in S3 with CLEAN delta
+  re-audit; DV-030 opened.
 - [`036a-wp036a-audit.md`](036a-wp036a-audit.md) — WP-036A "Trainable
   compatibility layers (`prin-train` extension)" audit (`PASS`); zero findings;
   all 13 D-D trainable-layer / discrete-network symbols (rows 31–42, 44)

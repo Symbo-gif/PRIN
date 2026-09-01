@@ -58,51 +58,58 @@ __all__: list[str] = [
 
 @dataclass
 class Detection:
-    """A single detection in a frame.
-
-    Attributes:
-        frame_id: Frame index (0-based).
-        obj_id: Ground-truth object identity (-1 if unknown).
-        bbox: Bounding box ``[x, y, w, h]``.
-        features: Optional feature vector for tracker input.
-    """
+    """A single detection in a frame."""
 
     frame_id: int
+    """Frame index (0-based)."""
+
     obj_id: int
+    """Ground-truth object identity (-1 if unknown)."""
+
     bbox: list[float]
+    """Bounding box ``[x, y, w, h]``."""
+
     features: list[float] | None = None
+    """Optional feature vector for tracker input."""
 
 
 @dataclass
 class TrackingResult:
-    """Result of tracking evaluation on a sequence.
-
-    Attributes:
-        sequence_name: Name of the evaluated sequence.
-        n_frames: Number of frames processed.
-        n_objects: Number of unique ground-truth identities.
-        mota: Multiple Object Tracking Accuracy ``in (-inf, 1]``.
-        motp: Multiple Object Tracking Precision ``in [0, 1]``.
-        idf1: ID F1 score ``in [0, 1]``.
-        id_switches: Number of identity switches.
-        false_positives: Total false positive count.
-        false_negatives: Total false negative count.
-        identity_preservation: Fraction of GT objects tracked for
-            >= 80 % of their lifespan without ID switch.
-        raw_metrics: Full metrics dict from the Rust MOT core.
-    """
+    """Result of tracking evaluation on a sequence."""
 
     sequence_name: str
+    """Name of the evaluated sequence."""
+
     n_frames: int
+    """Number of frames processed."""
+
     n_objects: int
+    """Number of unique ground-truth identities."""
+
     mota: float
+    """Multiple Object Tracking Accuracy ``in (-inf, 1]``."""
+
     motp: float
+    """Multiple Object Tracking Precision ``in [0, 1]``."""
+
     idf1: float
+    """ID F1 score ``in [0, 1]``."""
+
     id_switches: int
+    """Number of identity switches."""
+
     false_positives: int
+    """Total false positive count."""
+
     false_negatives: int
+    """Total false negative count."""
+
     identity_preservation: float
+    """Fraction of GT objects tracked for >= 80% of their lifespan without
+    ID switch."""
+
     raw_metrics: dict[str, float] = field(default_factory=dict)
+    """Full metrics dict from the Rust MOT core."""
 
 
 # ------------------------------------------------------------------

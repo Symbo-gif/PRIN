@@ -60,18 +60,19 @@ class OscillatorBudget:
     Bookkeeping only -- the counts are produced by the Rust allocator. A
     frozen dataclass so tests can construct it directly and compare budgets
     by value.
-
-    Attributes:
-        n_delta: Delta-band (1-4 Hz) oscillators.
-        n_theta: Theta-band (4-8 Hz) oscillators.
-        n_gamma: Gamma-band (30-100 Hz) oscillators.
-        complexity: Estimated scene complexity in ``[0, 1]``.
     """
 
     n_delta: int
+    """Delta-band (1-4 Hz) oscillators."""
+
     n_theta: int
+    """Theta-band (4-8 Hz) oscillators."""
+
     n_gamma: int
+    """Gamma-band (30-100 Hz) oscillators."""
+
     complexity: float
+    """Estimated scene complexity in ``[0, 1]``."""
 
     @property
     def total(self) -> int:

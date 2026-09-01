@@ -1629,6 +1629,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   still push immediately, outside this cadence. See Development Workflow and
   Audit Standards §3 ("Push and CI cadence") and Coding Standards §4.
 
+### Fixed
+
+- **EDA-001 remediation (2026-09-01):** all four findings from the first
+  Executive Documentation Audit closed. D-F1 (D2): restructured napoleon
+  `Attributes:` sections to per-field attribute docstrings in
+  `python/prin/nn/mot_evaluation.py` (`Detection`, `TrackingResult`) and
+  `python/prin/nn/allocation.py` (`OscillatorBudget`) — same root-cause class
+  as PA4-F2/R26; fresh-directory Sphinx `-W` build now clean (0 warnings,
+  down from 19). D-F2 (D3): added missing `036b`/`036c`/`036d` PSR entries
+  to `DOCS/reports/README.md`. D-F3 (D3): added missing `036b`/`036c`/`036d`
+  audit entries to `DOCS/audits/README.md`. D-F4 (D3): modified
+  `tools/check_deviation_ledger.py` to detect delegation pointers in sub-PSRs
+  (e.g. "ledger maintained in PSR-036 §3") and resolve the canonical ledger
+  automatically; CI gate now compares 120 rows vs 120 rows for sub-PSR pairs
+  instead of trivially passing on 0 vs 0.
+
 ## [0.3.0-alpha.1] — Phase 2 exit (Advanced numerics and simulation)
 
 ### Added

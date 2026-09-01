@@ -47,8 +47,17 @@ class LedgerRow:
 COMMIT_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
 
 
+_DELEGATION_RE = re.compile(r"PSR[- ]?0?(\d+[a-z]?)\s*§\s*3", re.IGNORECASE)
+
+
 def parse_ledger(path: Path) -> list[LedgerRow]:
-    """Parse the deviation-ledger table from a PSR file."""
+    """Parse the deviation-ledger table from a PSR file.
+
+    If the section contains no table rows but includes a delegation
+    pointer (e.g. "The full cumulative deviation ledger is maintained in
+    PSR-036 §3"), the canonical PSR is resolved relative to the same
+    ``DOCS/reports/`` directory and parsed instead.
+    """
     text = path.read_text(encoding="utf-8")
 
     # Locate the deviation-ledger section.
@@ -94,6 +103,14 @@ def parse_ledger(path: Path) -> list[LedgerRow]:
                 source=str(path),
             )
         )
+
+    if not rows:
+        delegation_match = _DELEGATION_RE.search(remaining)
+        if delegation_match is not None:
+            canonical_id = delegation_match.group(1).zfill(3)
+            canonical_path = path.parent / f"{canonical_id}-project-state.md"
+            if canonical_path.is_file():
+                return parse_ledger(canonical_path)
 
     return rows
 
