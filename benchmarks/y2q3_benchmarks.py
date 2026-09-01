@@ -49,12 +49,14 @@ def run_g_architecture_sweep(
             dt=0.01,
         )
         n_params = sum(p.numel() for p in layer.parameters() if p.requires_grad)
-        configs_tested.append({
-            **cfg,
-            "n_total": n_total,
-            "n_params": n_params,
-            "output_dim": layer.n_total,
-        })
+        configs_tested.append(
+            {
+                **cfg,
+                "n_total": n_total,
+                "n_params": n_params,
+                "output_dim": layer.n_total,
+            }
+        )
 
     return {"configs": configs_tested}
 
@@ -89,12 +91,14 @@ def run_g_hyperparam_sweep(
         out = layer(x)
         finite = torch.isfinite(out).all().item()
 
-        results_list.append({
-            "coupling_strength": K,
-            "all_finite": finite,
-            "output_mean": float(out.mean().item()),
-            "output_std": float(out.std().item()),
-        })
+        results_list.append(
+            {
+                "coupling_strength": K,
+                "all_finite": finite,
+                "output_mean": float(out.mean().item()),
+                "output_std": float(out.std().item()),
+            }
+        )
 
     return {"results": results_list}
 
@@ -111,8 +115,12 @@ def run_h_medium_scale(
     torch.manual_seed(seed)
 
     layer = DiscreteDeltaThetaGammaLayer(
-        n_delta=4, n_theta=8, n_gamma=32,
-        n_dims=44, n_steps=10, dt=0.01,
+        n_delta=4,
+        n_theta=8,
+        n_gamma=32,
+        n_dims=44,
+        n_steps=10,
+        dt=0.01,
     )
     x = torch.randn(16, 44, device=device)
     out = layer(x)
@@ -142,8 +150,12 @@ def run_i_subconscious_learning(
     torch.manual_seed(seed)
 
     layer = DiscreteDeltaThetaGammaLayer(
-        n_delta=4, n_theta=8, n_gamma=32,
-        n_dims=44, n_steps=10, dt=0.01,
+        n_delta=4,
+        n_theta=8,
+        n_gamma=32,
+        n_dims=44,
+        n_steps=10,
+        dt=0.01,
     )
 
     # Simulate a few integration steps and measure amplitude stability

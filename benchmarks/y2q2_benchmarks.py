@@ -68,9 +68,7 @@ def make_temporal_clevr(
 
         for t in range(n_frames):
             if t > 0:
-                delta = (
-                    torch.rand(n_items, generator=rng) * 2 - 1
-                ) * movement_scale
+                delta = (torch.rand(n_items, generator=rng) * 2 - 1) * movement_scale
                 positions_float = positions_float + delta
                 positions_float = torch.clamp(
                     positions_float, 0.0, float(N_POSITIONS - 1)
@@ -110,7 +108,7 @@ def make_temporal_clevr(
         all_queries.append(query)
         all_labels.append(label)
 
-    scenes = torch.stack(all_scenes)    # (N, T, n_items, D_PHASE)
+    scenes = torch.stack(all_scenes)  # (N, T, n_items, D_PHASE)
     queries = torch.stack(all_queries)  # (N, 32)
     labels = torch.tensor(all_labels, dtype=torch.long)
 
@@ -136,7 +134,10 @@ def _train_single_run(
     optimizer = torch.optim.Adam(model.parameters(), lr=base_lr)
 
     scenes, queries, labels = make_clevr_n(
-        n_items, n_samples=100, seed=seed, phase_encode=True,
+        n_items,
+        n_samples=100,
+        seed=seed,
+        phase_encode=True,
     )
     scenes, queries, labels = scenes.to(device), queries.to(device), labels.to(device)
 
@@ -196,10 +197,18 @@ def run_f_ab_test(
 
     for r in range(n_runs_per_group):
         active_losses = _train_single_run(
-            n_epochs, n_items, seed=base_seed + r * 2, device=device, active=True,
+            n_epochs,
+            n_items,
+            seed=base_seed + r * 2,
+            device=device,
+            active=True,
         )
         passive_losses = _train_single_run(
-            n_epochs, n_items, seed=base_seed + r * 2 + 1, device=device, active=False,
+            n_epochs,
+            n_items,
+            seed=base_seed + r * 2 + 1,
+            device=device,
+            active=False,
         )
         active_runs.append(active_losses)
         passive_runs.append(passive_losses)

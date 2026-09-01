@@ -1,6 +1,6 @@
 # Session 0144M2 — WP-036C S1 (sub-pass 2/8): Y2Q2/Y2Q3 strict port and DV-025 retrain_controller
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S1 — Coding

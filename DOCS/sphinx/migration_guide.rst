@@ -855,11 +855,17 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
     ``[0.5, 0.5, 0.5]`` when band ratios are unavailable; PRIN requires an
     explicit ``Vec<f64>`` (empty when unavailable), which
     ``SubconsciousState::band()`` zero-fills — no silent defaulting.
-  - *``evaluate_tracking``'s tracker-wiring loop is not reproduced:*
-    ``crates/README.md``'s layering places `prin-train` (where
-    ``PhaseTracker`` lives) at the same tier as ``prin-daemon``, so wiring a
-    real tracker's per-frame hypotheses into ``MotAccumulator`` is a Python
-    orchestration concern (``python/prin/eval``), not yet delivered — see
+  - *``evaluate_tracking``'s tracker-wiring loop* is a Python orchestration
+    concern (``crates/README.md``'s layering places `prin-train`, where
+    ``PhaseTracker`` lives, at the same tier as ``prin-daemon``). It is
+    **delivered at WP-036C S1 0144M3** as
+    :mod:`prin.nn.mot_evaluation` (``evaluate_tracking`` /
+    ``run_subconscious_ab_test`` / ``AttentionTracker`` / the synthetic
+    sequence generators), needed by the strict-ported ``test_y3q2``
+    acceptance suite. Its metric computation delegates frame-by-frame to the
+    Rust :class:`prin.eval.MotAccumulator` core; only the tracker-wiring loop
+    and the synthetic-data / baseline tooling are Python (same category as
+    the ``benchmarks`` generators). See
     `DOCS/experiments/0117-wp030-s1-handoff.md` out-of-scope discovery #1.
   - *``TRANSFER``/``ASCEND``/``MIGRATE`` event subtypes and the full
     per-event ``RAW`` log are not reproduced:* the four target metrics

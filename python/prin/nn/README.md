@@ -30,9 +30,19 @@ differentiable bridge crosses the Rust/Python boundary exactly once per call
   `SlotAttentionFrozen`** (`ablation.py`, Exec-WP-026 S1) — structural
   ablation variants.
 - **`AdaptiveOscillatorAllocator`, `DynamicPhaseTracker`, `OscillatorBudget`,
-  `estimate_complexity`** (`allocation.py`, Exec-WP-026 S1) —
+  `estimate_complexity`** (`allocation.py`, Exec-WP-026 S1; PRINet 3.0
+  `adaptive_allocation` surface realigned at WP-036C S1 0144M3) —
   complexity-driven adaptive oscillator-count allocation, entirely
-  non-differentiable; neither class is a `torch.nn.Module`.
+  non-differentiable; neither allocator class is a `torch.nn.Module`. The
+  numerical core stays in `crates/prin-train/src/allocation.rs`.
+- **`AttentionTracker`, `Detection`, `TrackingResult`, `evaluate_tracking`,
+  `generate_{linear,crowded,temporal_reasoning}_mot_sequence`,
+  `run_subconscious_ab_test`** (`mot_evaluation.py`, WP-036C S1 0144M3) —
+  MOT17-style evaluation harness for the strict-ported `test_y3q2` suite.
+  Metrics delegate to the Rust `prin.eval.MotAccumulator` core; the synthetic
+  generators and the non-oscillatory `AttentionTracker` baseline are Python
+  (benchmark/eval-tooling category). `prin.nn.TrackingResult` re-exports this
+  module's, matching PRINet 3.0.
 
 `_bridge.py` provides the shared `apply_rust_bridge` generic
 `torch.autograd.Function` glue every differentiable entry point above uses.

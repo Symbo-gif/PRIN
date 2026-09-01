@@ -7,6 +7,8 @@ access.
 
 from __future__ import annotations
 
+from typing import Any
+
 import torch
 
 from prin._prin_core import (
@@ -17,7 +19,6 @@ from prin._prin_core import (
     default_chimera_threshold,
     discontinuity_measure,
     extract_concept_probabilities,
-    inter_frame_phase_correlation as _rust_inter_frame_phase_correlation,
     kuramoto_order_parameter,
     kuramoto_order_parameter_complex,
     local_order_parameter,
@@ -31,6 +32,9 @@ from prin._prin_core import (
     strength_of_incoherence,
     strength_of_incoherence_temporal,
     synchronization_energy,
+)
+from prin._prin_core import (
+    inter_frame_phase_correlation as _rust_inter_frame_phase_correlation,
 )
 
 
@@ -56,30 +60,23 @@ def inter_frame_phase_correlation(
     if phase_t.numel() == 0 or phase_t_prev.numel() == 0:
         raise ValueError("inter_frame_phase_correlation: empty tensor")
     if phase_t.shape != phase_t_prev.shape:
-        raise ValueError(
-            f"Shape mismatch: {phase_t.shape} vs {phase_t_prev.shape}"
-        )
+        raise ValueError(f"Shape mismatch: {phase_t.shape} vs {phase_t_prev.shape}")
+
+    def _np(t: torch.Tensor) -> Any:
+        """Marshal a tensor to a contiguous CPU float64 NumPy array."""
+        return t.detach().to(dtype=torch.float64, device="cpu").contiguous().numpy()
 
     if phase_t.dim() == 1:
-        a = phase_t.detach().to(dtype=torch.float64, device="cpu").contiguous().numpy()
-        b = (
-            phase_t_prev.detach().to(dtype=torch.float64, device="cpu").contiguous().numpy()
-        )
-        result = _rust_inter_frame_phase_correlation(a, b)
+        result = _rust_inter_frame_phase_correlation(_np(phase_t), _np(phase_t_prev))
         return torch.tensor(result, dtype=phase_t.dtype, device=phase_t.device)
 
     results = []
     for i in range(phase_t.shape[0]):
-        a = phase_t[i].detach().to(dtype=torch.float64, device="cpu").contiguous().numpy()
-        b = (
-            phase_t_prev[i]
-            .detach()
-            .to(dtype=torch.float64, device="cpu")
-            .contiguous()
-            .numpy()
+        results.append(
+            _rust_inter_frame_phase_correlation(_np(phase_t[i]), _np(phase_t_prev[i]))
         )
-        results.append(_rust_inter_frame_phase_correlation(a, b))
     return torch.tensor(results, dtype=phase_t.dtype, device=phase_t.device)
+
 
 __all__ = [
     "bimodality_chimera_threshold",

@@ -101,8 +101,8 @@ class HybridPRINetV2(torch.nn.Module):
             seed_counter,
             seed_key,
         )
-        if use_conv_stem:
-            self.conv_stem = nn.Sequential(
+        self.conv_stem: nn.Sequential | None = (
+            nn.Sequential(
                 nn.Conv2d(3, stem_channels, 3, padding=1),
                 nn.ReLU(),
                 nn.AdaptiveAvgPool2d(4),
@@ -110,8 +110,9 @@ class HybridPRINetV2(torch.nn.Module):
                 nn.Linear(stem_channels * 16, n_input),
                 nn.ReLU(),
             )
-        else:
-            self.conv_stem = None
+            if use_conv_stem
+            else None
+        )
         n_total = n_delta + n_theta + n_gamma
         self._freq = nn.Parameter(
             torch.linspace(0.1, 10.0, n_total, dtype=torch.float64)

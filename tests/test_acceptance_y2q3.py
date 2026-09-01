@@ -115,9 +115,9 @@ class TestHybridPRINetV2:
         n_total = sum(1 for _ in model.parameters())
         assert n_with_grad > 0, "No parameters received gradients"
         # Most params should have grad (some may be unused in small config)
-        assert (
-            n_with_grad >= n_total * 0.5
-        ), f"Only {n_with_grad}/{n_total} params got gradients"
+        assert n_with_grad >= n_total * 0.5, (
+            f"Only {n_with_grad}/{n_total} params got gradients"
+        )
 
     def test_numerical_stability(self) -> None:
         """V2 output is finite (no NaN/Inf) across 5 random batches."""
@@ -161,9 +161,9 @@ class TestHybridPRINetV2:
         out = model(x)
         probs = out.exp()
         sums = probs.sum(dim=-1)
-        assert torch.allclose(
-            sums, torch.ones_like(sums), atol=1e-4
-        ), f"Probabilities don't sum to 1: {sums}"
+        assert torch.allclose(sums, torch.ones_like(sums), atol=1e-4), (
+            f"Probabilities don't sum to 1: {sums}"
+        )
 
     def test_adaptive_tokens(self) -> None:
         """V2 n_tokens equals n_oscillators (adaptive, no fixed padding)."""
@@ -176,9 +176,9 @@ class TestHybridPRINetV2:
             n_theta=16,
             n_gamma=32,
         )
-        assert (
-            model.n_tokens == 56
-        ), f"Expected n_tokens=56 (8+16+32), got {model.n_tokens}"
+        assert model.n_tokens == 56, (
+            f"Expected n_tokens=56 (8+16+32), got {model.n_tokens}"
+        )
 
     def test_param_groups_disjoint(self) -> None:
         """Oscillatory and rate-coded parameter groups don't overlap."""
@@ -259,9 +259,9 @@ class TestHybridPRINetV2:
         # Loss should decrease (compare first 2 epochs avg vs last 2)
         early = sum(losses[:2]) / 2
         late = sum(losses[-2:]) / 2
-        assert (
-            late < early
-        ), f"Loss did not decrease: early={early:.4f} -> late={late:.4f}"
+        assert late < early, (
+            f"Loss did not decrease: early={early:.4f} -> late={late:.4f}"
+        )
 
     def test_passes_existing_tests_api(self) -> None:
         """V2 has the same public API surface as InterleavedHybridPRINet."""
@@ -728,9 +728,9 @@ class TestPhaseTracker:
         sim = tracker.phase_similarity(phase, phase)
         # Diagonal should be highest per row
         diag = sim.diag()
-        assert (
-            diag >= sim.max(dim=1).values - 0.01
-        ).all(), "Self-similarity not highest"
+        assert (diag >= sim.max(dim=1).values - 0.01).all(), (
+            "Self-similarity not highest"
+        )
 
     def test_forward_matches(self) -> None:
         """Forward pass produces valid match indices and similarity."""

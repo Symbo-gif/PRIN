@@ -149,8 +149,11 @@ class InterleavedCLEVRN(nn.Module):
         N = scene.shape[1]
         if N < self._n_items:
             pad = torch.zeros(
-                B, self._n_items - N, scene.shape[2],
-                device=scene.device, dtype=scene.dtype,
+                B,
+                self._n_items - N,
+                scene.shape[2],
+                device=scene.device,
+                dtype=scene.dtype,
             )
             scene = torch.cat([scene, pad], dim=1)
         elif N > self._n_items:

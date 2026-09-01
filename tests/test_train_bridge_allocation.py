@@ -3,6 +3,12 @@ oscillator-count allocation.
 
 Every entry point here is non-differentiable (Coding Standards §3.2) — no
 `gradcheck` in this file, matching the module's own docs.
+
+WP-036C S1 0144M3 realigned `prin.nn.allocation` to the PRINet 3.0
+`adaptive_allocation` reference surface exercised by `test_acceptance_y3q2`:
+`OscillatorBudget.total` is now a property (not a method), `estimate_complexity`
+returns a `float32` scalar tensor, and the reference `ValueError` messages are
+used. This file was updated in step to that canonical API.
 """
 
 from __future__ import annotations
@@ -29,7 +35,7 @@ class TestEstimateComplexity:
             dets, spatial_weight=0.5, count_weight=0.5, max_objects=50
         )
         expected = 0.5 * (1.0 / 50.0) / 1.0
-        assert c == pytest.approx(expected, abs=1e-12)
+        assert c == pytest.approx(expected, abs=1e-6)
 
 
 class TestAdaptiveOscillatorAllocatorRule:
@@ -46,7 +52,7 @@ class TestAdaptiveOscillatorAllocatorRule:
         self, allocator: AdaptiveOscillatorAllocator
     ) -> None:
         budget = allocator.allocate(0.5)
-        assert 12 <= budget.total() <= 64
+        assert 12 <= budget.total <= 64
         assert budget.n_delta >= 1
         assert budget.n_theta >= 1
         assert budget.n_gamma >= 1
@@ -73,12 +79,12 @@ class TestAdaptiveOscillatorAllocatorRule:
         restored = AdaptiveOscillatorAllocator(12, 64)
         restored.load_rust_state_dict(state)
         torch.testing.assert_close(
-            torch.tensor([allocator.allocate(0.5).total()]),
-            torch.tensor([restored.allocate(0.5).total()]),
+            torch.tensor([allocator.allocate(0.5).total]),
+            torch.tensor([restored.allocate(0.5).total]),
         )
 
     def test_invalid_range_rejected(self) -> None:
-        with pytest.raises(ValueError, match="allocator range"):
+        with pytest.raises(ValueError, match="min_total must be >= 3"):
             AdaptiveOscillatorAllocator(2, 64)
 
 
@@ -99,13 +105,13 @@ class TestAdaptiveOscillatorAllocatorLearned:
     ) -> None:
         features = torch.rand(1, 1, dtype=torch.float64)
         budget = allocator.allocate(0.5, features)
-        assert budget.total() >= 12
+        assert budget.total >= 12
 
     def test_allocate_without_features_falls_back_to_rule(
         self, allocator: AdaptiveOscillatorAllocator
     ) -> None:
         budget = allocator.allocate(0.5)
-        assert budget.total() >= 12
+        assert budget.total >= 12
 
     def test_checkpoint_rejects_complexity_dim_mismatch(
         self, allocator: AdaptiveOscillatorAllocator
@@ -130,7 +136,7 @@ class TestDynamicPhaseTracker:
         matches, sim, budget = dyn.forward(dets_t, dets_t1, Seed(30, 0))
         assert len(matches) == 3
         assert sim.shape == (3, 3)
-        assert budget.total() >= 12
+        assert budget.total >= 12
 
     def test_caches_tracker_per_budget(self) -> None:
         """Two calls landing on the same budget must produce a tracker built
@@ -141,7 +147,7 @@ class TestDynamicPhaseTracker:
         seed = Seed(30, 0)
         _, sim1, budget1 = dyn.forward(dets, dets, seed)
         _, sim2, budget2 = dyn.forward(dets, dets, seed)
-        if budget1.total() == budget2.total():
+        if budget1.total == budget2.total:
             torch.testing.assert_close(sim1, sim2)
 
     def test_learned_strategy_still_uses_rule_allocation(self) -> None:
@@ -153,4 +159,4 @@ class TestDynamicPhaseTracker:
         )
         dets = torch.rand(3, 4, dtype=torch.float64)
         _, _, budget = dyn.forward(dets, dets, Seed(31, 0))
-        assert budget.total() >= 12
+        assert budget.total >= 12

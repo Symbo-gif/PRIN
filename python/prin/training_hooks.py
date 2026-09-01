@@ -493,6 +493,7 @@ class ActiveControlTrainer:
         active: bool = False,
         max_adjustment: float = 0.05,
     ) -> None:
+        """Bind the model/optimizer/daemon and reset the telemetry log."""
         self.model = model
         self.optimizer = optimizer
         self.daemon = daemon
@@ -516,9 +517,7 @@ class ActiveControlTrainer:
                 "k_range": (0.0, 0.0),
                 "regime": "mean_field",
             }
-            self.telemetry.append(
-                {"epoch": epoch, "loss": loss, "policy": policy}
-            )
+            self.telemetry.append({"epoch": epoch, "loss": loss, "policy": policy})
             self.last_policy_applied = policy
             return policy
 
@@ -543,9 +542,7 @@ class ActiveControlTrainer:
             "k_range": (ctrl.suggested_K_min, ctrl.suggested_K_max),
             "regime": regime,
         }
-        self.telemetry.append(
-            {"epoch": epoch, "loss": loss, "policy": policy}
-        )
+        self.telemetry.append({"epoch": epoch, "loss": loss, "policy": policy})
         self.last_policy_applied = policy
         return policy
 
@@ -728,8 +725,6 @@ def retrain_controller(
     Raises:
         ValueError: If records are empty or no source is provided.
     """
-    from pathlib import Path
-
     from prin.subconscious_compat import SubconsciousController
 
     if telemetry_records is not None:
@@ -773,9 +768,7 @@ def retrain_controller(
         targets[i, 6] = ctrl.get("alert_level", 0.0)
         targets[i, 7] = ctrl.get("coupling_mode_suggestion", 0.0)
 
-    controller = SubconsciousController(
-        state_dim=state_dim, control_dim=control_dim
-    )
+    controller = SubconsciousController(state_dim=state_dim, control_dim=control_dim)
     optimizer = torch.optim.Adam(controller.parameters(), lr=lr)
     loss_fn = torch.nn.MSELoss()
 

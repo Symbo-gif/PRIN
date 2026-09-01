@@ -431,6 +431,7 @@ class HybridPRINetV2CLEVRN(nn.Module):
         d_model: int = 32,
         n_discrete_steps: int = 3,
     ) -> None:
+        """Build scene/query projections over an ``InterleavedHybridPRINet`` core."""
         super().__init__()
         n_osc = n_delta + n_theta + n_gamma
         self.n_osc = n_osc
@@ -464,7 +465,8 @@ class HybridPRINetV2CLEVRN(nn.Module):
         else:
             scene_feat = scene
         h = self.scene_proj(scene_feat) + self.query_proj(query)
-        return self.core(h)
+        out: Tensor = self.core(h)
+        return out
 
 
 class InterleavedHybridPRINet(nn.Module):
@@ -645,6 +647,7 @@ class TemporalHybridPRINet(nn.Module):
         n_discrete_steps: int = 2,
         carry_strength: float = 0.8,
     ) -> None:
+        """Build the per-frame encoder stack and temporal phase-carry state."""
         super().__init__()
         import math
 
@@ -674,14 +677,21 @@ class TemporalHybridPRINet(nn.Module):
         self.norm1_layers = nn.ModuleList()
         self.norm2_layers = nn.ModuleList()
         for _ in range(n_layers):
-            self.attn_layers.append(nn.MultiheadAttention(
-                d_model, n_heads, dropout=0.0, batch_first=True,
-            ))
-            self.ffn_layers.append(nn.Sequential(
-                nn.Linear(d_model, d_model * 4),
-                nn.GELU(),
-                nn.Linear(d_model * 4, d_model),
-            ))
+            self.attn_layers.append(
+                nn.MultiheadAttention(
+                    d_model,
+                    n_heads,
+                    dropout=0.0,
+                    batch_first=True,
+                )
+            )
+            self.ffn_layers.append(
+                nn.Sequential(
+                    nn.Linear(d_model, d_model * 4),
+                    nn.GELU(),
+                    nn.Linear(d_model * 4, d_model),
+                )
+            )
             self.norm1_layers.append(nn.LayerNorm(d_model))
             self.norm2_layers.append(nn.LayerNorm(d_model))
 
@@ -690,9 +700,7 @@ class TemporalHybridPRINet(nn.Module):
 
     def _process_sequence(self, x: Tensor) -> Tensor:
         """Process a 3D ``(B, T, D)`` sequence; return ``(B, K)`` log-probs."""
-        import math
-
-        B, T, D = x.shape
+        B, T, _D = x.shape
         device = x.device
 
         h = self.input_proj(x).view(B, T, self.n_tokens, self.d_model)
@@ -705,9 +713,7 @@ class TemporalHybridPRINet(nn.Module):
             phase, amp = self.dynamics.integrate(
                 phase, amp, n_steps=self._n_discrete_steps, dt=0.01
             )
-            phase_mod = torch.cos(
-                phase[:, : self.d_model].unsqueeze(2)
-            )
+            phase_mod = torch.cos(phase[:, : self.d_model].unsqueeze(2))
             frame_t = h[:, t] * (1.0 + 0.1 * phase_mod)
             frames.append(frame_t)
 
@@ -747,7 +753,7 @@ class TemporalHybridPRINet(nn.Module):
             return F.log_softmax(self.classifier(pooled), dim=-1)
 
         if per_frame:
-            B, T, D = x.shape
+            B, T, _D = x.shape
             h = self.input_proj(x).view(B * T, self.n_tokens, self.d_model)
             for i in range(self.n_layers):
                 h_norm = self.norm1_layers[i](h)

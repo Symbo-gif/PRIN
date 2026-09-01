@@ -1509,11 +1509,6 @@ class ThetaGammaNetwork(_HierarchicalNetwork):
 # ---------------------------------------------------------------------------
 
 
-def _wrap_phase(phase: torch.Tensor) -> torch.Tensor:
-    """Wrap phase values to ``[0, 2π)`` using PyTorch remainder."""
-    return torch.remainder(phase, 2.0 * math.pi)
-
-
 class TemporalPhasePropagator:
     """Temporal phase propagation across frames.
 
@@ -1549,8 +1544,7 @@ class TemporalPhasePropagator:
             amplitude clamped to ``[1e-6, 10.0]``.
         """
         new_phase = _wrap_phase(
-            self.carry_strength * prev_phase
-            + (1.0 - self.carry_strength) * input_phase
+            self.carry_strength * prev_phase + (1.0 - self.carry_strength) * input_phase
         )
         new_amp = torch.clamp(
             prev_amp * self.amplitude_decay + input_amp * (1.0 - self.amplitude_decay),
@@ -1573,8 +1567,7 @@ class TemporalPhasePropagator:
         applies the temporal carry. Returns output phases, amplitudes, and
         per-frame inter-frame phase correlations (``T-1`` values).
         """
-        B, T, N = input_phases.shape
-        device = input_phases.device
+        _B, T, _N = input_phases.shape
 
         cur_phase = input_phases[:, 0, :].clone()
         cur_amp = input_amps[:, 0, :].clone()
@@ -1591,9 +1584,7 @@ class TemporalPhasePropagator:
                 cur_phase, cur_amp, input_phases[:, t, :], input_amps[:, t, :]
             )
 
-            corr = torch.mean(
-                torch.cos(cur_phase - out_phases[-1]), dim=-1
-            )
+            corr = torch.mean(torch.cos(cur_phase - out_phases[-1]), dim=-1)
             correlations.append(corr)
 
             out_phases.append(cur_phase.clone())

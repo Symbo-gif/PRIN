@@ -1,13 +1,14 @@
 # Session 0144M / WP-036C S1 running handoff
 
-**Date:** 2026-08-31 (session start + decomposition; `0144M1` executed)
-**Status:** S1 **in progress** — sub-pass `0144M1` (integration_q3 + y2q1 +
-y2q4, 93 functions) **COMPLETE and committed locally** at a green gate; not
-pushed. Plan amendment #39 inserted the eight strict-port sub-passes
-`0144M1`–`0144M8` feeding the single mandatory S2 audit `0144N`; plan
-amendment #40 (2026-08-31) records three `0144M1` scope confirmations
-(deferred-symbol rebuild in-scope, `__version__` → `0.3.0`, minimal `docs/`
-guides). Next: `0144M2`.
+**Date:** 2026-08-31 (session start + decomposition; `0144M1`–`0144M3` executed)
+**Status:** S1 **in progress** — sub-passes `0144M1` (integration_q3 + y2q1 +
+y2q4, 93 fns), `0144M2` (y2q2 + y2q3, 65 fns, DV-025 `retrain_controller`),
+and `0144M3` (y3q1 + y3q2, 78 fns) **COMPLETE and committed locally** at green
+gates; not pushed. **236 / 1,097** reference functions ported. Plan amendment
+#39 inserted the eight strict-port sub-passes `0144M1`–`0144M8` feeding the
+single mandatory S2 audit `0144N`; plan amendment #40 (2026-08-31) records
+three `0144M1` scope confirmations (deferred-symbol rebuild in-scope,
+`__version__` → `0.3.0`, minimal `docs/` guides). Next: `0144M4`.
 
 ## Session-start protocol (Development Workflow §6)
 
@@ -274,7 +275,113 @@ Governance updated in step: `test_bucket_g_remainder.py` parametrize trimmed for
 - `tools/wp036_migration_table.py check`: OK (172 symbols).
 - Full existing suite no regressions beyond the 2 known CUDA discoveries.
 
-### 0144M3 — not started
+### 0144M3 — y3q1 + y3q2 — COMPLETE (2026-08-31)
+
+**Committed locally at a green sub-pass gate; not pushed. Next: 0144M4.**
+
+#### Strict-port accounting and semantic proof
+
+| Reference | Stable port | Lines | `def test_` | Result (default gate) | Slow | Tolerance annotations | Discoveries |
+|---|---|---:|---:|---|---:|---:|---|
+| `test_y3q1.py` | `tests/test_acceptance_y3q1.py` | 665 | 40 | 40 / 40 | 0 | 0 | `FeedbackInhibition.compete` arbitrary leading dims; `SubconsciousDaemon` DLQ (`dead_letter_queue`/`dlq_size` + 3 ctor params + `_run_inference` escalation); `prin.datasets` port; `benchmarks/clevr_n.py` M.3/M.4 extended-palette section |
+| `test_y3q2.py` | `tests/test_acceptance_y3q2.py` | 687 | 38 | 38 / 38 | 0 | 0 | `prin.nn.allocation` realigned to PRINet 3.0 `adaptive_allocation` API (`OscillatorBudget` frozen dataclass w/ `.total` property, `estimate_complexity` → `float32` tensor, `AdaptiveOscillatorAllocator.min_total/max_total/_mlp/__call__`, `DynamicPhaseTracker(dets_t, dets_t1)` callable + tensor `matches`); new `prin.nn.mot_evaluation` (synthetic generators + `evaluate_tracking` over Rust `prin.eval.MotAccumulator` + `AttentionTracker` baseline + `run_subconscious_ab_test`); `prin.nn` re-exports |
+| **M3 total** | **2 files** | **1,352** | **78** | **78 / 78 default gate** | **0** | **0** | — |
+
+No slow-marked tests in either file; no new hazard-tolerance annotation or
+backend-availability guard; `DOCS/sphinx/parity_report.rst` unchanged. Full run
+including slow: same 78/78 (no `@pytest.mark.slow` cases in this range).
+
+**Import-only proof:** `tools/_port_m3.py` performs the import remap; the two
+ports are then `ruff format`-normalised (M1 precedent). `git diff --no-index`
+against each archived reference shows only `from prinet.* import` module-path
+lines changed — plus, in `test_y3q1`, one
+`from prinet.core.propagation import (…19 symbols…)` split into
+`from prin._torch_compat import (…16…)` + `from prin.nn import (…3…)` because
+PRIN partitions that reference module across two owners (identical in kind to
+the `test_integration_q3` split in 0144M1) — and `ruff format` assert-message
+re-wraps in `test_y3q2` (`assert (\n cond\n), msg` → `assert cond, (\n msg\n)`;
+adjacent f-string concatenation collapsed). No assertion, value,
+parametrization, call order, or semantics changed.
+
+Per-file `ruff` ignores added to `pyproject.toml` for the two ports
+(faithful-copy `F401`/`F841`/`I001`/`E501`/`B905`/`RUF002`/`RUF003`/`RUF059`/
+`RUF100`), matching the `test_acceptance_y2q1`/`y2q4` pattern.
+
+#### Changed-owner mapping
+
+| Compatibility behaviour | Numerical / Rust owner | Python exposure |
+|---|---|---|
+| `FeedbackInhibition.compete(rates)` with arbitrary leading dims (`(…, N)`, incl. 1-D) and any float dtype | `prin_train::inhibition::FeedbackInhibition` STE (unchanged); Python reshapes `(…, N)` → `(-1, N)` → bridge → original shape; `apply_rust_bridge` already casts f32↔f64 and restores dtype/device | `prin.nn.inhibition.FeedbackInhibition.compete` — closes the "arbitrary leading batch dimensions are a WP-036B/C parity item" note in that module |
+| `SubconsciousDaemon` dead-letter queue + escalation (`dlq_maxlen`, `max_errors_before_escalation`, `error_escalation_callback` ctor params; `dead_letter_queue`/`dlq_size` properties; `_run_inference` DLQ append + threshold callback) | n/a — threading / telemetry bookkeeping only (same disposition as `StateCollector`) | faithful port into `prin.subconscious_compat.SubconsciousDaemon` |
+| `prinet.utils.datasets` (`CIFAR10_CLASSES`/`CIFAR10_MEAN`/`CIFAR10_STD`/`FMNIST_CLASSES`, `get_cifar10_loaders`, `get_fashion_mnist_loaders`, `evaluate_accuracy`) | n/a — torchvision transform pipelines + `DataLoader` construction + an `argmax`/equality accuracy count (data plumbing) | faithful port filling the `prin.datasets` stub |
+| `benchmarks.clevr_n` M.3/M.4 (`COLORS_24`/`COLORS_24_RGB`/`D_COLOR_24`, `make_clevr_n_extended`, `_rgb_to_lab`/`_delta_e`/`build_adversarial_colour_pairs`, `make_adversarial_clevr`, `_make_query_ext`) | n/a — synthetic-scene generation (same category as the existing `make_clevr_n`) | appended verbatim to `benchmarks/clevr_n.py`; `TensorDataset` added to imports; two comment glyphs de-unicoded to match the file's existing normalisation |
+| `prinet.nn.adaptive_allocation` full reference API surface | `prin_train::allocation` (rule allocation, learned MLP, `estimate_complexity` spread reduction, per-budget `PhaseTracker` cache) — **unchanged**; the Rust bridge is untouched | `prin.nn.allocation` reshaped: Python frozen `OscillatorBudget` (`.total` property, value eq), `estimate_complexity` returns `torch.float32` scalar tensor, `AdaptiveOscillatorAllocator` exposes `min_total`/`max_total`/`_mlp`/`__call__` + the reference `ValueError` messages, `DynamicPhaseTracker` callable as `tracker(dets_t, dets_t1)` with an internal `Seed` and an `int64` `matches` tensor |
+| `prinet.nn.mot_evaluation.evaluate_tracking` / `run_subconscious_ab_test` / `AttentionTracker` / `generate_{linear,crowded,temporal_reasoning}_mot_sequence` / `Detection` / `TrackingResult` / `load_mot17_sequence` | MOT metrics core = Rust `prin_daemon::mot` via `prin.eval.MotAccumulator` (the "`python/prin/eval` orchestration" the WP-030 migration guide flagged *not yet delivered*); synthetic generators and the `AttentionTracker` baseline are Python (same category as `benchmarks` generators / the `benchmarks.clevr_n` LSTM/Transformer baselines) | new `prin.nn.mot_evaluation`, re-exported from `prin.nn`; `prin.nn.TrackingResult` now re-exports this module's (matches PRINet 3.0; `prin.nn.phase_tracker.TrackingResult` still importable from its submodule for `ablation.py`) |
+
+No Rust crate, `Cargo.*`, PyO3 binding, or `.pyi` change — the entire M3
+compatibility surface is Python delegation over already-shipped Rust owners.
+
+Governance updated in step:
+- `tests/test_train_bridge_allocation.py` realigned to the now-canonical
+  `prin.nn.allocation` API (`.total()` → `.total`, `estimate_complexity`
+  `abs=1e-12` → `abs=1e-6`, reference `ValueError` match string).
+- `tests/test_train_layers_bindings.py::test_feedback_inhibition_requires_2d_input`
+  → `test_feedback_inhibition_accepts_arbitrary_leading_dims` (asserts the new
+  PRINet-3.0-parity behaviour; a 0-d tensor is still rejected).
+- `DOCS/sphinx/migration_guide.rst` WP-030 "`evaluate_tracking`'s tracker-wiring
+  loop … not yet delivered" deviation note → "delivered at WP-036C S1 0144M3".
+- `python/prin/nn/__init__.py` module docstring + `__all__` + re-exports;
+  `SESSION_REGISTER.md` / `phase-6/README.md` `0144M3` → COMPLETE.
+- **Pre-existing `0144M2` gate debt cleaned in step** (same `0144M` feeder
+  range → same `0144N` audit): `ruff check` (16 findings across
+  `_torch_compat.py` / `metrics.py` / `hybrid_compat.py` / `training_hooks.py`
+  / `test_bucket_g_remainder.py`, incl. dangling imports from M2's parametrize
+  trims), `ruff format --check` (8 files incl. `benchmarks/y2q{1,2,3}_benchmarks.py`
+  and the M2 ports), and `mypy --strict` (3: `hybrid.py` `conv_stem` Optional,
+  `hybrid_compat.py` `no-any-return`, `_torch_compat.py` duplicate `_wrap_phase`
+  def) were all red at commit `6ba0448`; all fixed here. `test_acceptance_y2q2`
+  / `y2q3` per-file `ruff` ignores added (M2 committed those ports without
+  them). Recorded for `0144N` visibility, not attributable to M3's changes.
+
+#### Command evidence
+
+- `pytest tests/test_acceptance_y3q1.py tests/test_acceptance_y3q2.py`:
+  **78 passed** (no deselected — no slow/gpu cases in range).
+- `pytest tests/ -m "not slow and not gpu"`: **2016 passed, 4 skipped, 21
+  deselected, 2 failed** — the 2 failures are the known `0144M2` CUDA-only
+  discoveries (`test_clevr6_convergence`, `test_v2_cifar10_no_oom`,
+  `PyOscillatoryAttentionCtx` unsendable on CUDA backward), unchanged.
+- `git diff --no-index` reference vs port (both files): import-path lines +
+  the one governed split + `ruff format` assert re-wraps only.
+- `ruff check python/ tests/ benchmarks/ tools/`: clean.
+- `ruff format --check python/ tests/ benchmarks/ tools/`: clean (205 files).
+- `mypy python/prin --strict`: clean (57 files).
+- `tools/check_no_python_numerics.py`: clean (19 modules) — `nn/mot_evaluation.py`
+  is **not** added to the scanned set: it houses the deliberate non-oscillatory
+  `AttentionTracker` baseline + torch synthetic generators, the same
+  eval/benchmark-tooling category as `benchmarks/y2q4_benchmarks.py` and
+  `benchmarks/clevr_n.py`'s baselines; its MOT metrics go through Rust
+  (`prin.eval.MotAccumulator`).
+- `tools/wp036_migration_table.py check`: OK (172 symbols — no new
+  `prinet.__all__`-level symbol; all M3 additions are submodule-level).
+- `bandit -r python/ -c pyproject.toml`: 1 LOW `B110` — the pre-existing
+  `hybrid_compat.py:327` from 0144E5, unchanged.
+- `interrogate -c pyproject.toml python/`: PASS (97.2%, min 95%).
+- **Snyk Code** (`--severity-threshold=low`) on `python/prin` and `tests`:
+  **0 issues**.
+- No dependency / manifest / crate change → Snyk Open Source, `pip-audit`,
+  `cargo audit`, and the `cargo` build/test/clippy gates are not applicable
+  (`pyproject.toml` delta is per-file `ruff` ignores only).
+- Coverage instrumentation remains host-blocked
+  ([[wp036-coverage-tooling-blocked]]); the 78-test acceptance subset + the
+  full 2016-test suite + manual review stand in, CI authoritative.
+
+**Parity-evidence disposition:** directly comparable PRINet 3.0 behaviour
+exists and is the literal 78-test acceptance source. Imports-only diff (plus
+the governed split and `ruff format` re-wraps) + 78/78 default-gate execution
+is the M3 parity evidence. No new hazard tolerance or backend-availability
+guard, so `DOCS/sphinx/parity_report.rst` is unchanged.
+
 ### 0144M4 — not started
 ### 0144M5 — not started
 ### 0144M6 — not started

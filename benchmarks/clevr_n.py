@@ -27,7 +27,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, TensorDataset
 
 SEED = 42
 
@@ -749,3 +749,323 @@ def run_all_baselines(
         print(f"\nResults saved to {save_path}")
 
     return all_results
+
+
+# ---- M.3: Extended 24-colour palette -----------------------------------
+
+#: 24-colour vocabulary for extended CLEVR-N (M.3).
+#: Includes the original 8 colours plus 16 additional perceptually
+#: distinct colours for capacity curves up to N=16.
+COLORS_24 = [
+    # Original 8
+    "red",
+    "blue",
+    "green",
+    "yellow",
+    "purple",
+    "cyan",
+    "orange",
+    "gray",
+    # Extended 16
+    "pink",
+    "lime",
+    "maroon",
+    "navy",
+    "teal",
+    "gold",
+    "violet",
+    "brown",
+    "salmon",
+    "turquoise",
+    "indigo",
+    "coral",
+    "olive",
+    "azure",
+    "magenta",
+    "silver",
+]
+
+#: sRGB values (0-255) for each colour in COLORS_24 (for rendering).
+COLORS_24_RGB: dict[str, tuple[int, int, int]] = {
+    "red": (220, 50, 50),
+    "blue": (50, 50, 220),
+    "green": (50, 180, 50),
+    "yellow": (220, 220, 50),
+    "purple": (128, 0, 128),
+    "cyan": (50, 200, 200),
+    "orange": (230, 130, 50),
+    "gray": (128, 128, 128),
+    "pink": (255, 150, 180),
+    "lime": (150, 255, 50),
+    "maroon": (128, 0, 0),
+    "navy": (0, 0, 128),
+    "teal": (0, 128, 128),
+    "gold": (212, 175, 55),
+    "violet": (238, 130, 238),
+    "brown": (139, 69, 19),
+    "salmon": (250, 128, 114),
+    "turquoise": (64, 224, 208),
+    "indigo": (75, 0, 130),
+    "coral": (255, 127, 80),
+    "olive": (128, 128, 0),
+    "azure": (240, 255, 255),
+    "magenta": (255, 0, 255),
+    "silver": (192, 192, 192),
+}
+
+D_COLOR_24 = len(COLORS_24)
+
+
+def _make_query_ext(
+    pos_ids: torch.Tensor,
+    color_ids: torch.Tensor,
+    shape_ids: torch.Tensor,
+    rng: torch.Generator,
+    n_colors: int = D_COLOR_24,
+) -> tuple[torch.Tensor, int]:
+    """Like _make_query but supports an arbitrary n_colors vocabulary.
+
+    Returns:
+        query_vec ``(feat_dim * 2,)`` with feat_dim = n_colors + D_SHAPE + D_POS
+        label: 1 if obj_i left of obj_j, else 0.
+    """
+    feat_dim = n_colors + D_SHAPE + D_POS
+    n = pos_ids.shape[0]
+    idx = torch.randperm(n, generator=rng)[:2]
+    i, j = int(idx[0].item()), int(idx[1].item())
+
+    def _oh(c: int, s: int, p: int) -> torch.Tensor:
+        v = torch.zeros(feat_dim)
+        v[c] = 1.0
+        v[n_colors + s] = 1.0
+        v[n_colors + D_SHAPE + p] = 1.0
+        return v
+
+    q_i = _oh(
+        int(color_ids[i].item()), int(shape_ids[i].item()), int(pos_ids[i].item())
+    )
+    q_j = _oh(
+        int(color_ids[j].item()), int(shape_ids[j].item()), int(pos_ids[j].item())
+    )
+    label = 1 if pos_ids[i] < pos_ids[j] else 0
+    return torch.cat([q_i, q_j]), label
+
+
+def make_clevr_n_extended(
+    n_items: int,
+    n_samples: int = 1000,
+    seed: int = SEED,
+    device: str | torch.device = "cpu",
+) -> TensorDataset:
+    """Generate a CLEVR-N dataset using the 24-colour extended palette.
+
+    Identical to :func:`make_clevr_n` but draws colours from
+    :data:`COLORS_24` (24 entries) instead of the original 8.
+
+    Args:
+        n_items: Number of objects per scene.
+        n_samples: Number of scene samples.
+        seed: Random seed.
+        device: Target device.
+
+    Returns:
+        :class:`~torch.utils.data.TensorDataset` of
+        ``(scene_enc, query_vec, label)`` triples.
+
+    Example:
+        >>> ds = make_clevr_n_extended(n_items=8, n_samples=200, seed=0)
+        >>> len(ds)
+        200
+    """
+    rng = torch.Generator()
+    rng.manual_seed(seed)
+
+    d_feat_24 = D_COLOR_24 + D_SHAPE + D_POS
+    scene_encs = torch.zeros(n_samples, n_items, d_feat_24)
+    # Query = concatenated one-hot for two objects -> 2 x d_feat_24
+    query_vecs = torch.zeros(n_samples, d_feat_24 * 2)
+    labels = torch.zeros(n_samples, dtype=torch.long)
+
+    for i in range(n_samples):
+        colors = torch.randint(0, D_COLOR_24, (n_items,), generator=rng)
+        shapes = torch.randint(0, D_SHAPE, (n_items,), generator=rng)
+        positions = torch.randperm(N_POSITIONS, generator=rng)[:n_items]
+
+        scene_enc = torch.zeros(n_items, d_feat_24)
+        for idx in range(n_items):
+            scene_enc[idx, colors[idx]] = 1.0
+            scene_enc[idx, D_COLOR_24 + shapes[idx]] = 1.0
+            scene_enc[idx, D_COLOR_24 + D_SHAPE + positions[idx]] = 1.0
+
+        query_vec, label = _make_query_ext(
+            positions, colors, shapes, rng, n_colors=D_COLOR_24
+        )
+
+        scene_encs[i] = scene_enc
+        query_vecs[i] = query_vec
+        labels[i] = label
+
+    dev = torch.device(device)
+    return TensorDataset(scene_encs.to(dev), query_vecs.to(dev), labels.to(dev))
+
+
+# ---- M.4: Adversarial similar-colour distractors -----------------------
+
+
+def _rgb_to_lab(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
+    """Convert sRGB (0-255) to approximate CIELAB (D65 illuminant).
+
+    Uses the standard linearisation + Bradford matrix approximation.
+    Accurate enough for perceptual proximity comparisons.
+    """
+    # Linearise
+    r, g, b = (c / 255.0 for c in rgb)
+
+    def _lin(v: float) -> float:
+        return v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4
+
+    r, g, b = _lin(r), _lin(g), _lin(b)
+
+    # sRGB → XYZ (D65)
+    x = r * 0.4124 + g * 0.3576 + b * 0.1805
+    y = r * 0.2126 + g * 0.7152 + b * 0.0722
+    z = r * 0.0193 + g * 0.1192 + b * 0.9505
+
+    # XYZ → Lab
+    xn, yn, zn = 0.9505, 1.0000, 1.0890  # D65 white point
+
+    def _f(t: float) -> float:
+        delta = 6.0 / 29.0
+        return t ** (1 / 3) if t > delta**3 else t / (3 * delta**2) + 4.0 / 29.0
+
+    fx, fy, fz = _f(x / xn), _f(y / yn), _f(z / zn)
+    L = 116 * fy - 16
+    a = 500 * (fx - fy)
+    b_ = 200 * (fy - fz)
+    return L, a, b_
+
+
+def _delta_e(rgb1: tuple[int, int, int], rgb2: tuple[int, int, int]) -> float:
+    """CIE76 colour difference (ΔE) between two sRGB colours."""
+    L1, a1, b1 = _rgb_to_lab(rgb1)
+    L2, a2, b2 = _rgb_to_lab(rgb2)
+    return math.sqrt((L2 - L1) ** 2 + (a2 - a1) ** 2 + (b2 - b1) ** 2)
+
+
+def build_adversarial_colour_pairs(
+    palette: dict[str, tuple[int, int, int]] | None = None,
+    max_delta_e: float = 25.0,
+) -> list[tuple[str, str, float]]:
+    """Find visually similar colour pairs (potential distractors).
+
+    Pairs colours whose CIE76 ΔE (perceptual distance) is below
+    *max_delta_e*, ordering by proximity (most similar first).
+
+    Args:
+        palette: Dict of ``{colour_name: (R, G, B)}``.
+            Defaults to :data:`COLORS_24_RGB`.
+        max_delta_e: Maximum ΔE to include in output.
+
+    Returns:
+        List of ``(colour_a, colour_b, delta_e)`` tuples sorted
+        by *delta_e* ascending.
+
+    Example:
+        >>> pairs = build_adversarial_colour_pairs(max_delta_e=30.0)
+        >>> assert all(de <= 30.0 for _, _, de in pairs)
+    """
+    if palette is None:
+        palette = COLORS_24_RGB
+    names = list(palette.keys())
+    pairs: list[tuple[str, str, float]] = []
+    for i, na in enumerate(names):
+        for nb in names[i + 1 :]:
+            de = _delta_e(palette[na], palette[nb])
+            if de <= max_delta_e:
+                pairs.append((na, nb, de))
+    pairs.sort(key=lambda t: t[2])
+    return pairs
+
+
+def make_adversarial_clevr(
+    n_items: int,
+    n_samples: int = 1000,
+    seed: int = SEED,
+    max_distractor_delta_e: float = 25.0,
+    device: str | torch.device = "cpu",
+) -> TensorDataset:
+    """Generate adversarial CLEVR-N with similar-colour distractors.
+
+    Each scene contains at least one *adversarial pair*: two objects
+    with perceptually similar colours (ΔE ≤ *max_distractor_delta_e*).
+    This tests whether oscillatory binding can disambiguate items that
+    a pure feature detector would confuse.
+
+    Args:
+        n_items: Objects per scene (must be ≥ 2 for adversarial pairing).
+        n_samples: Number of scenes.
+        seed: Random seed.
+        max_distractor_delta_e: Maximum CIE76 ΔE for adversarial pair.
+        device: Target device.
+
+    Returns:
+        :class:`~torch.utils.data.TensorDataset` of
+        ``(scene_enc, query_vec, label)`` triples.  The encoding uses
+        the 24-colour palette features (dimension = D_COLOR_24 + D_SHAPE
+        + D_POS).
+
+    Example:
+        >>> ds = make_adversarial_clevr(n_items=4, n_samples=100, seed=0)
+        >>> len(ds)
+        100
+    """
+    adv_pairs = build_adversarial_colour_pairs(max_delta_e=max_distractor_delta_e)
+    if not adv_pairs:
+        raise ValueError(
+            f"No adversarial pairs found at max_delta_e={max_distractor_delta_e}. "
+            "Try increasing max_distractor_delta_e."
+        )
+
+    rng = torch.Generator()
+    rng.manual_seed(seed)
+    import random as _random
+
+    _random.seed(seed)
+
+    d_feat_24 = D_COLOR_24 + D_SHAPE + D_POS
+    scene_encs = torch.zeros(n_samples, n_items, d_feat_24)
+    query_vecs = torch.zeros(n_samples, d_feat_24 * 2)
+    labels = torch.zeros(n_samples, dtype=torch.long)
+
+    for i in range(n_samples):
+        # Pick an adversarial colour pair for the first two objects
+        pair_idx = int(
+            torch.randint(0, min(len(adv_pairs), 10), (1,), generator=rng).item()
+        )
+        ca_name, cb_name, _ = adv_pairs[pair_idx]
+        ca = COLORS_24.index(ca_name)
+        cb = COLORS_24.index(cb_name)
+
+        colors = torch.randint(0, D_COLOR_24, (n_items,), generator=rng)
+        colors[0] = ca
+        colors[1] = cb
+
+        shapes = torch.randint(0, D_SHAPE, (n_items,), generator=rng)
+        positions = torch.randperm(N_POSITIONS, generator=rng)[:n_items]
+
+        scene_enc = torch.zeros(n_items, d_feat_24)
+        for idx in range(n_items):
+            scene_enc[idx, colors[idx]] = 1.0
+            scene_enc[idx, D_COLOR_24 + shapes[idx]] = 1.0
+            scene_enc[idx, D_COLOR_24 + D_SHAPE + positions[idx]] = 1.0
+
+        query_vec, label = _make_query_ext(
+            positions, colors, shapes, rng, n_colors=D_COLOR_24
+        )
+
+        scene_encs[i] = scene_enc
+        query_vecs[i] = query_vec
+        labels[i] = label
+
+    dev = torch.device(device)
+    return TensorDataset(scene_encs.to(dev), query_vecs.to(dev), labels.to(dev))

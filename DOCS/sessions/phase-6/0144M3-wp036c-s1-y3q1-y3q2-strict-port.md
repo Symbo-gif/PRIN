@@ -1,6 +1,6 @@
 # Session 0144M3 — WP-036C S1 (sub-pass 3/8): Y3Q1/Y3Q2 strict port
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-08-31; committed locally, not pushed)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S1 — Coding

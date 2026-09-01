@@ -101,22 +101,25 @@ class FeedbackInhibition:
         """Apply feedback inhibition to enforce sparse WTA.
 
         Args:
-            rates: Rate tensor. Shape ``(batch, N)``, dtype ``float64``, CPU,
-                contiguous. (Arbitrary leading batch dimensions are a WP-036B/C
-                parity item.)
+            rates: Rate tensor of shape ``(..., N)`` (PRINet 3.0 accepts any
+                number of leading dimensions, including none). Any float dtype
+                on any device; the Rust bridge runs in ``float64`` on CPU and
+                the result is cast back to ``rates``'s dtype/device.
 
         Returns:
-            Sparse rate tensor ``(batch, N)`` with only the top-``k`` active.
+            Sparse rate tensor of the same shape as ``rates`` with only the
+            top-``k`` active per row.
 
         Raises:
-            ValueError: If ``rates`` is not 2-D / ``float64`` / CPU /
-                contiguous.
+            ValueError: If ``rates`` has no dimensions.
         """
-        if rates.dim() != 2:
+        if rates.dim() == 0:
             raise ValueError(
-                f"prin.nn.FeedbackInhibition.compete requires a 2-D (batch, N) "
-                f"tensor, got shape {tuple(rates.shape)}"
+                "prin.nn.FeedbackInhibition.compete requires a tensor with at "
+                "least one dimension (..., N)"
             )
-        bridge = self._bridge_for(rates.shape[-1])
-        result: torch.Tensor = apply_rust_bridge(bridge.forward, [rates])
-        return result
+        width = rates.shape[-1]
+        bridge = self._bridge_for(width)
+        flat = rates.reshape(-1, width)
+        result: torch.Tensor = apply_rust_bridge(bridge.forward, [flat])
+        return result.reshape(rates.shape)

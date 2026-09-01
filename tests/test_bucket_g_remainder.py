@@ -15,10 +15,6 @@ from prin.dynamics import (
     KuramotoOscillator,
     OscillatorState,
 )
-from prin.nn.hybrid_compat import (
-    HybridPRINetV2CLEVRN,
-    TemporalHybridPRINet,
-)
 from prin.nn.slot_attention import SlotAttentionCLEVRN
 from prin.simulation import (
     LargeScaleOscillatorSystem,
@@ -41,7 +37,6 @@ from prin.temporal_training import (
 )
 from prin.topology import ring_topology, small_world_topology
 from prin.training_hooks import (
-    ActiveControlTrainer,
     ControlSignalBuffer,
     create_ablation_tracker,
 )
@@ -380,8 +375,7 @@ def test_y4q1_tools_d22_stubs_raise(cls_or_fn: object) -> None:
 
 @pytest.mark.parametrize(
     "cls",
-    [
-    ],
+    [],
 )
 def test_hybrid_family_d22_stubs_raise(cls: type) -> None:
     """Every still-deferred hybrid-model symbol raises the D-2.2 disposition.

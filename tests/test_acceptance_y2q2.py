@@ -174,9 +174,9 @@ class TestTemporalCLEVR:
 
         # High carry_strength → phase close to previous
         corr = inter_frame_phase_correlation(new_phase, prev_phase)
-        assert (
-            corr.mean() > 0.5
-        ), f"Expected high correlation with carry_strength=0.9, got {corr.mean():.3f}"
+        assert corr.mean() > 0.5, (
+            f"Expected high correlation with carry_strength=0.9, got {corr.mean():.3f}"
+        )
 
     def test_phase_propagation_zero_carry(self) -> None:
         """With carry_strength=0, phase equals input phase."""

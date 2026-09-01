@@ -163,10 +163,17 @@ def test_feedback_inhibition_backward_matches_soft_term_vjp() -> None:
     assert torch.allclose(rates.grad[0, 1], expected[1], atol=1e-9)
 
 
-def test_feedback_inhibition_requires_2d_input() -> None:
-    """A non-2-D ``rates`` tensor is rejected with actionable guidance."""
-    with pytest.raises(ValueError, match="2-D"):
-        FeedbackInhibition(k=2).compete(torch.rand(2, 2, 3, dtype=torch.float64))
+def test_feedback_inhibition_accepts_arbitrary_leading_dims() -> None:
+    """PRINet 3.0 parity (WP-036C S1 0144M3): ``rates`` may carry any number
+    of leading dimensions; the result keeps the input shape with exactly
+    ``k`` winners per trailing row."""
+    fbi = FeedbackInhibition(k=2)
+    rates = torch.rand(2, 3, 5, dtype=torch.float64) + 0.1
+    out = fbi.compete(rates)
+    assert out.shape == rates.shape
+    assert torch.equal((out.abs() > 1e-9).sum(-1), torch.full((2, 3), 2))
+    with pytest.raises(ValueError, match="at least one dimension"):
+        fbi.compete(torch.tensor(0.5, dtype=torch.float64))
 
 
 def test_feedback_inhibition_rejects_bad_config_and_exposes_hparams() -> None:

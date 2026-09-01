@@ -46,6 +46,8 @@ import logging
 import queue
 import threading
 import time
+from collections import deque
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -443,6 +445,13 @@ class SubconsciousDaemon(threading.Thread):
         interval: Maximum seconds to wait for a new state before looping.
         queue_size: Bounded queue capacity for pending states.
         warmup: If ``True``, run a single dummy inference on start.
+        dlq_maxlen: Maximum number of failed-inference records retained in
+            the dead-letter queue (oldest evicted past this bound).
+        max_errors_before_escalation: Total error count at which
+            ``error_escalation_callback`` fires (``0`` disables escalation).
+        error_escalation_callback: Optional callable invoked with a
+            ``{"error_count", "dlq_tail"}`` dict once the error threshold is
+            reached.
     """
 
     def __init__(
@@ -453,6 +462,9 @@ class SubconsciousDaemon(threading.Thread):
         queue_size: int = _DEFAULT_QUEUE_SIZE,
         *,
         warmup: bool = True,
+        dlq_maxlen: int = 100,
+        max_errors_before_escalation: int = 10,
+        error_escalation_callback: Callable[[dict[str, Any]], None] | None = None,
     ) -> None:
         """Configure the daemon; the ONNX session is created in :meth:`run`."""
         super().__init__(daemon=True, name="PRIN-Subconscious")
@@ -470,6 +482,13 @@ class SubconsciousDaemon(threading.Thread):
         self._inferences: int = 0
         self._errors: int = 0
         self._start_time: float = 0.0
+
+        # Dead-letter queue for failed inference records
+        self._dead_letter_queue: deque[dict[str, Any]] = deque(maxlen=dlq_maxlen)
+        self._max_errors_before_escalation: int = max_errors_before_escalation
+        self._error_escalation_callback: Callable[[dict[str, Any]], None] | None = (
+            error_escalation_callback
+        )
 
         self._session: Any | None = None
         self._input_name: str = "state_vector"
@@ -528,6 +547,20 @@ class SubconsciousDaemon(threading.Thread):
     def error_count(self) -> int:
         """Number of inference errors encountered."""
         return self._errors
+
+    @property
+    def dead_letter_queue(self) -> list[dict[str, Any]]:
+        """Snapshot of the dead-letter queue (most-recent first).
+
+        Each entry is a ``dict`` with keys ``"error"`` (str),
+        ``"error_count"`` (int), and ``"timestamp"`` (float).
+        """
+        return list(reversed(self._dead_letter_queue))
+
+    @property
+    def dlq_size(self) -> int:
+        """Number of entries currently in the dead-letter queue."""
+        return len(self._dead_letter_queue)
 
     @property
     def uptime(self) -> float:
@@ -609,6 +642,23 @@ class SubconsciousDaemon(threading.Thread):
 
             self._control_buffer.update(signals)
             self._inferences += 1
-        except Exception:
+        except Exception as exc:
             self._errors += 1
             logger.exception("Inference error in SubconsciousDaemon.")
+            entry: dict[str, Any] = {
+                "error": str(exc),
+                "error_count": self._errors,
+                "timestamp": time.monotonic(),
+            }
+            self._dead_letter_queue.append(entry)
+            if (
+                self._max_errors_before_escalation > 0
+                and self._errors >= self._max_errors_before_escalation
+                and self._error_escalation_callback is not None
+            ):
+                try:
+                    self._error_escalation_callback(
+                        {"error_count": self._errors, "dlq_tail": entry}
+                    )
+                except Exception:
+                    logger.debug("Error escalation callback raised.", exc_info=True)

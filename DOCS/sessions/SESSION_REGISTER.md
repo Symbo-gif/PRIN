@@ -427,8 +427,8 @@ introduction and are not retroactively added here; this table starts with
 | 0144L | 6 | WP-036D | S4 — Documentation | [GPU execution path for the ported acceptance suite](phase-6/0144L-wp036d-s4-gpu-execution-path-ported-acceptance-suite.md) | COMPLETE |
 | 0144M | 6 | WP-036C | S1 — Coding | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144M-wp036c-s1-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0144M1 | 6 | WP-036C | S1 — Coding | [Integration-Q3 and Y2Q1/Y2Q4 strict port](phase-6/0144M1-wp036c-s1-integration-q3-and-y2q1-y2q4-strict-port.md) | COMPLETE |
-| 0144M2 | 6 | WP-036C | S1 — Coding | [Y2Q2/Y2Q3 strict port and DV-025 retrain_controller](phase-6/0144M2-wp036c-s1-y2q2-y2q3-strict-port-and-dv025.md) | PLANNED |
-| 0144M3 | 6 | WP-036C | S1 — Coding | [Y3Q1/Y3Q2 strict port](phase-6/0144M3-wp036c-s1-y3q1-y3q2-strict-port.md) | PLANNED |
+| 0144M2 | 6 | WP-036C | S1 — Coding | [Y2Q2/Y2Q3 strict port and DV-025 retrain_controller](phase-6/0144M2-wp036c-s1-y2q2-y2q3-strict-port-and-dv025.md) | COMPLETE |
+| 0144M3 | 6 | WP-036C | S1 — Coding | [Y3Q1/Y3Q2 strict port](phase-6/0144M3-wp036c-s1-y3q1-y3q2-strict-port.md) | COMPLETE |
 | 0144M4 | 6 | WP-036C | S1 — Coding | [Y3Q3/Y3Q4/Y3Q45/Y3Q49 strict port](phase-6/0144M4-wp036c-s1-y3q3-y3q4-y3q45-y3q49-strict-port.md) | PLANNED |
 | 0144M5 | 6 | WP-036C | S1 — Coding | [Y4Q1/Y4Q1_2/Y4Q1_3 strict port](phase-6/0144M5-wp036c-s1-y4q1-y4q1-2-y4q1-3-strict-port.md) | PLANNED |
 | 0144M6 | 6 | WP-036C | S1 — Coding | [Y4Q1_4/Y4Q1_5/Y4Q1_9 strict port](phase-6/0144M6-wp036c-s1-y4q1-4-y4q1-5-y4q1-9-strict-port.md) | PLANNED |

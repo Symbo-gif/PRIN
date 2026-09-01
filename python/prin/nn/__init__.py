@@ -33,7 +33,11 @@ Symbols, by submodule: :mod:`prin.nn.attention` (`OscillatoryAttention`),
 (`PhaseTrackerFrozen`, `PhaseTrackerStatic`, `SlotAttentionNoGRU`,
 `SlotAttentionFrozen`), :mod:`prin.nn.allocation`
 (`AdaptiveOscillatorAllocator`, `DynamicPhaseTracker`, `OscillatorBudget`,
-`estimate_complexity`), :mod:`prin.nn.optimizers` (`SyncGd`, `Scalr`, `Rip`
+`estimate_complexity`), :mod:`prin.nn.mot_evaluation` (`AttentionTracker`,
+`Detection`, `TrackingResult`, `evaluate_tracking`, the synthetic MOT
+sequence generators, `run_subconscious_ab_test` — WP-036C S1 0144M3;
+`prin.nn.TrackingResult` re-exports this module's, matching PRINet 3.0),
+:mod:`prin.nn.optimizers` (`SyncGd`, `Scalr`, `Rip`
 — WP-027 `torch.optim.Optimizer` wrappers) — all re-exported here.
 
 WP-036 S1 sub-pass 0141B adds the WP-023 trainable primitives as the
@@ -125,6 +129,16 @@ from .inhibition_layers import (
     oscillatory_weight_init,
 )
 from .model import PRINetModel, compile_model
+from .mot_evaluation import (
+    AttentionTracker,
+    Detection,
+    TrackingResult,
+    evaluate_tracking,
+    generate_crowded_mot_sequence,
+    generate_linear_mot_sequence,
+    generate_temporal_reasoning_sequence,
+    run_subconscious_ab_test,
+)
 from .optimizers import (
     Rip,
     RIPOptimizer,
@@ -133,7 +147,7 @@ from .optimizers import (
     SyncGd,
     SynchronizedGradientDescent,
 )
-from .phase_tracker import PhaseTracker, TrackingResult
+from .phase_tracker import PhaseTracker
 from .slot_attention import (
     SlotAttentionCLEVRN,
     SlotAttentionModule,
@@ -143,9 +157,11 @@ from .slot_attention import (
 __all__: list[str] = [
     "AdaptiveOscillatorAllocator",
     "AlternatingOptimizer",
+    "AttentionTracker",
     "DGLayer",
     "DenseAutoencoder",
     "DentateGyrusConverter",
+    "Detection",
     "DiscreteDeltaThetaGamma",
     "DiscreteDeltaThetaGammaLayer",
     "DynamicPhaseTracker",
@@ -193,7 +209,12 @@ __all__: list[str] = [
     "compile_model",
     "dSiLU",
     "estimate_complexity",
+    "evaluate_tracking",
+    "generate_crowded_mot_sequence",
+    "generate_linear_mot_sequence",
+    "generate_temporal_reasoning_sequence",
     "oscillatory_weight_init",
+    "run_subconscious_ab_test",
 ]
 
 if TYPE_CHECKING:
