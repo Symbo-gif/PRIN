@@ -83,5 +83,11 @@ DOCS/sphinx/_build/
 # Generated benchmark reports/artefacts (canonical artefacts live in benchmarks/results/)
 DOCS/test_and_benchmark_results/
 
+# Benchmark-run side-effects written into the (otherwise-tracked, currently-empty)
+# results dir by ported acceptance tests — e.g. test_acceptance_y4q1_9.py's
+# `bench_preregistration()` `_save("preregistration_hash", ...)` (WP036C-F7).
+# Real campaign artefacts are added deliberately at WP-038, not left by a test run.
+benchmarks/results/*_preregistration_hash.json
+
 # Archived reference material is tracked but never imported at runtime
 # (DOCS/archive and reference from PRINet 3.0/ is reference-only)
