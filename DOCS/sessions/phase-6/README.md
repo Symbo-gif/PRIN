@@ -141,7 +141,7 @@ Development Workflow §7. Planned session count 245 → 253. See
 | 0144M7 | WP-036C | S1 — Coding | [Y4Q1_7/Y4Q1_8 strict port](0144M7-wp036c-s1-y4q1-7-y4q1-8-strict-port.md) | COMPLETE |
 | 0144M8 | WP-036C | S1 — Coding | [Y4Q2/Y4Q3/Y4Q4, GPU/Triton guards, and consolidation](0144M8-wp036c-s1-y4q2-y4q3-y4q4-kernels-and-consolidation.md) | COMPLETE |
 | 0144N | WP-036C | S2 — Audit | [Acceptance suite port — integration, y-series, kernels; DV-025](0144N-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md) | COMPLETE |
-| 0144O | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
+| 0144O | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | COMPLETE — F1–F9 FIXED/AMENDED, delta re-audit CLEAN; amendment #41, DV-031 |
 | 0144P | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0144Q | WP-036E | S1 — Coding | [GPU device-resident execution path](0144Q-wp036e-s1-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144R | WP-036E | S2 — Audit | [GPU device-resident execution path](0144R-wp036e-s2-gpu-device-resident-execution-path.md) | PLANNED |

@@ -1,6 +1,12 @@
 # Session 0144O — WP-036C S3: Remediation — Acceptance suite port (integration, y-series, kernels; DV-025)
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-09-01) — every WP036C-F1…F9 finding FIXED or
+AMENDED; delta re-audit CLEAN (`DOCS/audits/036c-wp036c-audit.md` §7); full
+local gate green (2743 passed / 201 skipped / 0 failed). New governance
+artefacts: plan amendment #41 (PRIN independent versioning), DV-031
+(unbuilt-deliverable + CUDA-execution acceptance tests → WP-037/WP-038/WP-036E).
+Commits `b240836`…`b753199` + audit-closure commit. Not pushed (amendment #28
+cadence — S4 pushes the cycle). Hand off to S4 `0144P`.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S3 — Remediation
