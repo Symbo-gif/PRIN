@@ -6,6 +6,7 @@ All contributions are governed by these documents:
 - `Executive_Audit_Governance_and_Methodology.md` — Executive Audit Session governance, multi-domain methodology, and remediation protocols.
 - `Executive_Mathematical_Audit_Governance_and_Methodology.md` — Executive Mathematical Audit (EMA) Session governance: independent, tool-executed re-verification of PRIN's mathematical claims via `math-audit-mcp`.
 - `Executive_Documentation_Audit_Governance_and_Methodology.md` — Executive Documentation Audit (EDA) Session governance: systematic verification of documentation artefacts produced during a phase or series of work packages.
+- `Executive_Testing_and_CI_Audit_Governance_and_Methodology.md` — Executive Testing and CI Audit (ETCA) Session governance: in-depth verification of the test suite and CI/CD gate machinery (EA dimensions E3/E9) across 8 dimensions T1–T8, typically mid-phase or at phase boundaries.
 - `Coding_Standards.md` — Rust/Python design, quality, and security controls.
 - `Testing_Standards.md` — test layers, tolerances, and coverage.
 - `Documentation_Standards.md` — API/project documentation and S4 closure.

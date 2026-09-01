@@ -9,6 +9,7 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
 - Executive Audit Template: [`TEMPLATE_Executive_Audit_Report.md`](TEMPLATE_Executive_Audit_Report.md)
 - Executive Mathematical Audit Template: [`TEMPLATE_Executive_Math_Audit_Report.md`](TEMPLATE_Executive_Math_Audit_Report.md)
 - Executive Documentation Audit Template: [`TEMPLATE_Executive_Documentation_Audit_Report.md`](TEMPLATE_Executive_Documentation_Audit_Report.md)
+- Executive Testing and CI Audit Template: [`TEMPLATE_Executive_Testing_and_CI_Audit_Report.md`](TEMPLATE_Executive_Testing_and_CI_Audit_Report.md)
 - Audits are append-only history: never edit a committed audit except to add
   the S3 closure table.
 - Verdicts: `PASS` / `PASS-WITH-FINDINGS` / `FAIL` (any D1 finding ⇒ `FAIL`;
@@ -323,3 +324,23 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   napoleon/autodoc class as PA4-F2/R26), D-F2 (D3, reports README missing
   036b/c/d entries), D-F3 (D3, audits README missing 036b/c/d entries),
   D-F4 (D3, deviation-ledger CI gate functionally inert for sub-PSRs).
+- [`EXECUTIVE_TESTING_AND_CI_AUDIT_REPORT_001.md`](EXECUTIVE_TESTING_AND_CI_AUDIT_REPORT_001.md) —
+  First Executive Testing and CI Audit (ETCA-001, 2026-09-01), Phase 6
+  mid-phase, `PASS-WITH-REMEDIATION`. Establishes the ETCA audit type
+  (governance at `DOCS/standards/Executive_Testing_and_CI_Audit_Governance_and_Methodology.md`,
+  plan amendment #42). In-depth verification of the test suite and CI/CD gate
+  machinery (EA dimensions E3/E9) across 8 dimensions T1–T8 against the
+  Phase 6 test/CI delta. Ten findings, zero D1: T-F1 (D2, `python.yml`
+  bandit gate exits 1 → the R17 deviation-ledger and R34 DV-register CI
+  enforcement steps never run), T-F2 (D2, ~13 WP-036A reference-parity tests
+  hard-fail CI with `ModuleNotFoundError: prinet`), T-F3 (D2, `wp001_baseline`
+  gate + 3 tests red from a 12-line session-brief parser cap hit by the
+  `0144P` brief), T-F4 (D3, the entire 28-commit WP-036C cycle is unpushed
+  and has never been through CI), T-F5 (D3, `repro.yml`/`python.yml` ubuntu
+  disk exhaustion — DV-022 class), T-F6 (D3, self-hosted Windows `rust` leg
+  24 h runner hang — DV-024 class), T-F7 (D3, no enforcing benchmark-regression
+  gate / no `schedule:`d full-suite workflow), T-F8 (D3, perf flake
+  quarantined without a DV item), T-F9/T-F10 (D4, local/CI gate drift).
+  Read-only; all findings passed to a dedicated remediation session.
+  Blocking recommendation: no Phase 6 close push until T-F1/T-F2/T-F3/T-F5/T-F6
+  fixed and `origin/main` CI green.

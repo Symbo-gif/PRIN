@@ -18,6 +18,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Executive Testing and CI Audit (ETCA) — new audit type and first session
+  (ETCA-001, 2026-09-01).** Phase 6 mid-phase audit of the test suite and
+  CI/CD gate machinery (Executive Audit dimensions E3/E9, exhausted rather
+  than sampled) across 8 dimensions (T1–T8). Governance and methodology at
+  `DOCS/standards/Executive_Testing_and_CI_Audit_Governance_and_Methodology.md`
+  (registered by Project Plan amendment #42); report template at
+  `DOCS/audits/TEMPLATE_Executive_Testing_and_CI_Audit_Report.md`; first
+  report at `DOCS/audits/EXECUTIVE_TESTING_AND_CI_AUDIT_REPORT_001.md`.
+  Verdict: `PASS-WITH-REMEDIATION` — ten findings, zero D1. **D2:** T-F1
+  (`python.yml` `bandit -r python/prin` exits 1 on 3 Phase-6 `Low` findings
+  suppressed only with ruff `# noqa`, not bandit `# nosec` — which leaves the
+  R17 deviation-ledger and R34 DV-register CI enforcement steps, later in the
+  same `lint` job, permanently unreached); T-F2 (~13 WP-036A reference-parity
+  tests do an unguarded in-body `from prinet import …` and hard-fail
+  `python.yml` with `ModuleNotFoundError` because that workflow does not
+  install the archived reference); T-F3 (`tools/wp001_baseline.py check` and
+  3 `test_wp001_baseline.py` tests are red — the `0144P` session brief's
+  multi-line `**Status:**` pushes `**Session type:**` past the parser's
+  12-line window). **D3:** T-F4 (the entire 28-commit WP-036C cycle —
+  `+143k` insertions, `+1,172` acceptance tests, `+~2,010` first-party Rust
+  lines — is unpushed and CI has never run against it; `origin/main` CI is
+  red on `python`/`repro`/`rust`); T-F5 (`repro.yml` and all `python.yml`
+  ubuntu legs fail `[Errno 28] No space left on device`, DV-022 class, with
+  the WSL2 fallback wired only into `parity.yml`); T-F6 (the self-hosted
+  Windows `rust` test leg hung 24 h awaiting an offline runner, DV-024
+  class); T-F7 (no *enforcing* benchmark-regression gate exists —
+  `bench-smoke` is `--test`-only, `gpu.yml` only *writes* a baseline, and no
+  workflow has a `schedule:` trigger for the nightly full suite Testing
+  Standards §4 requires); T-F8 (`test_no_gpu_throughput_regression` is
+  quarantined in `tests/conftest.py` with no DV-register row or dated
+  quarantine approval — Testing Standards §1.4). **D4:** T-F9 (11
+  `test_acceptance_y4q2` figure/table tests fail under the
+  `--basetemp=.pytest_basetemp` invocation `AGENTS.md` mandates for Windows,
+  because the reporting output allowlist excludes an in-repo tmp dir);
+  T-F10 (local/CI gate command drift and Phase-6 S4 PSR verification blocks
+  reporting non-zero-exit gates as "passed"). The audit is read-only w.r.t.
+  first-party source/test code; all findings are passed forward to a
+  dedicated ETCA-001 remediation session. Blocking recommendation: no Phase 6
+  close push and no WP-036E S1 until T-F1/T-F2/T-F3/T-F5/T-F6 are fixed and
+  `origin/main` CI is green.
+
 - **Executive Documentation Audit (EDA) — new audit type and first session
   (EDA-001, 2026-09-01).** Phase 6 mid-phase documentation audit across 8
   dimensions (D1–D8). Governance and methodology established at
