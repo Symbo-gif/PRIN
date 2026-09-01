@@ -64,6 +64,13 @@ pub enum SimError {
         reason: String,
     },
 
+    /// A numeric routine received malformed or degenerate input.
+    #[error("invalid input: {reason}")]
+    InvalidInput {
+        /// Description of the problem.
+        reason: String,
+    },
+
     /// An error from the dynamics layer.
     #[error("dynamics error: {0}")]
     Dynamics(#[from] prin_dynamics::StateError),
@@ -97,4 +104,13 @@ pub enum SimError {
     /// (`prin_kernels::sparse_knn`).
     #[error("sparse k-NN kernel error: {0}")]
     SparseKnnKernel(#[from] prin_kernels::sparse_knn::SparseKnnError),
+}
+
+impl SimError {
+    /// Construct an [`SimError::InvalidInput`] from any string-like reason.
+    pub fn invalid_input(reason: impl Into<String>) -> Self {
+        Self::InvalidInput {
+            reason: reason.into(),
+        }
+    }
 }

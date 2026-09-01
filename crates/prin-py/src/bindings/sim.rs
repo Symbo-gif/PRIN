@@ -16,7 +16,7 @@ use prin_sim::oscillo_compat::{
     OscilloCompatConfig,
 };
 use prin_sim::y4q1_stats::{
-    bootstrap_ci as bootstrap_owner, cohens_d as cohens_d_owner,
+    bootstrap_ci as bootstrap_owner, cohens_d as cohens_d_owner, polyfit as polyfit_owner,
     spatial_correlation as spatial_corr_owner, welch_t_test as welch_owner,
 };
 
@@ -218,6 +218,19 @@ fn y4q1_spatial_correlation(values: Vec<f64>, max_lag: usize) -> Vec<f64> {
     spatial_corr_owner(&values, max_lag)
 }
 
+/// Least-squares polynomial fit (``numpy.polyfit`` semantics).
+///
+/// Returns ``degree + 1`` coefficients highest-power first.
+///
+/// # Errors
+///
+/// Returns ``ValueError`` on length mismatch, too few points, or a singular
+/// system.
+#[pyfunction]
+fn y4q1_polyfit(x: Vec<f64>, y: Vec<f64>, degree: usize) -> PyResult<Vec<f64>> {
+    polyfit_owner(&x, &y, degree).map_err(value_error)
+}
+
 /// Register the OscilloSim-compat and Year-4-Q1 owner functions.
 pub(crate) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(oscillo_compat_run, m)?)?;
@@ -231,5 +244,6 @@ pub(crate) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(y4q1_cohens_d, m)?)?;
     m.add_function(wrap_pyfunction!(y4q1_welch_t_test, m)?)?;
     m.add_function(wrap_pyfunction!(y4q1_spatial_correlation, m)?)?;
+    m.add_function(wrap_pyfunction!(y4q1_polyfit, m)?)?;
     Ok(())
 }

@@ -32,6 +32,9 @@ def test_every_scanned_module_exists_and_is_covered() -> None:
         "nn/inhibition_layers.py",
         "training_hooks.py",
         "solvers.py",
+        # WP036C-F4: restored after the S1 narrowing (0144M6 removed them).
+        "temporal_training.py",
+        "y4q1_tools.py",
     ):
         assert expected in _module._SCANNED
 

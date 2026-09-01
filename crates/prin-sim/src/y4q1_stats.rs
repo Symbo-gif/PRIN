@@ -263,9 +263,120 @@ pub fn spatial_correlation(values: &[f64], max_lag: usize) -> Vec<f64> {
         .collect()
 }
 
+/// Least-squares polynomial fit, `numpy.polyfit(x, y, degree)` semantics.
+///
+/// Returns the `degree + 1` coefficients highest-power first, so a linear fit
+/// yields `[slope, intercept]` and a quadratic yields `[a, b, c]` for
+/// `a x^2 + b x + c`. Solves the normal equations of the Vandermonde system by
+/// Gaussian elimination with partial pivoting — sufficient for the low-degree
+/// decay-rate / trend fits in `prin.y4q1_tools` (`coherence_decay_rate`,
+/// `instantaneous_frequency_spread`, `cumulative_phase_slip_curve`,
+/// `memory_growth_profile`, `noise_crossover_analysis`).
+///
+/// # Errors
+/// Returns [`SimError`] when `x` and `y` differ in length, fewer than
+/// `degree + 1` points are supplied, or the system is singular (e.g. all `x`
+/// equal).
+pub fn polyfit(x: &[f64], y: &[f64], degree: usize) -> Result<Vec<f64>, SimError> {
+    if x.len() != y.len() {
+        return Err(SimError::invalid_input("polyfit: x and y length mismatch"));
+    }
+    let n = x.len();
+    let cols = degree + 1;
+    if n < cols {
+        return Err(SimError::invalid_input(
+            "polyfit: not enough points for the requested degree",
+        ));
+    }
+    // Vandermonde columns ascending power: v[i][j] = x[i]^j.
+    let mut vander = vec![0.0f64; n * cols];
+    for i in 0..n {
+        let mut p = 1.0;
+        for j in 0..cols {
+            vander[i * cols + j] = p;
+            p *= x[i];
+        }
+    }
+    // Normal equations A = VᵀV  (cols×cols),  b = Vᵀy.
+    let mut a = vec![0.0f64; cols * cols];
+    let mut b = vec![0.0f64; cols];
+    for r in 0..cols {
+        for i in 0..n {
+            b[r] += vander[i * cols + r] * y[i];
+            for c in 0..cols {
+                a[r * cols + c] += vander[i * cols + r] * vander[i * cols + c];
+            }
+        }
+    }
+    // Gaussian elimination with partial pivoting.
+    for pivot in 0..cols {
+        let mut max_row = pivot;
+        let mut max_val = a[pivot * cols + pivot].abs();
+        for r in (pivot + 1)..cols {
+            let v = a[r * cols + pivot].abs();
+            if v > max_val {
+                max_val = v;
+                max_row = r;
+            }
+        }
+        if max_val < 1e-300 {
+            return Err(SimError::invalid_input("polyfit: singular system"));
+        }
+        if max_row != pivot {
+            for c in 0..cols {
+                a.swap(pivot * cols + c, max_row * cols + c);
+            }
+            b.swap(pivot, max_row);
+        }
+        for r in (pivot + 1)..cols {
+            let factor = a[r * cols + pivot] / a[pivot * cols + pivot];
+            for c in pivot..cols {
+                a[r * cols + c] -= factor * a[pivot * cols + c];
+            }
+            b[r] -= factor * b[pivot];
+        }
+    }
+    let mut coeffs_asc = vec![0.0f64; cols];
+    for i in (0..cols).rev() {
+        let mut s = b[i];
+        for c in (i + 1)..cols {
+            s -= a[i * cols + c] * coeffs_asc[c];
+        }
+        coeffs_asc[i] = s / a[i * cols + i];
+    }
+    coeffs_asc.reverse();
+    Ok(coeffs_asc)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn polyfit_linear_recovers_slope_intercept() {
+        let x = [0.0, 1.0, 2.0, 3.0, 4.0];
+        let y = [1.0, 3.0, 5.0, 7.0, 9.0];
+        let c = polyfit(&x, &y, 1).unwrap();
+        assert!((c[0] - 2.0).abs() < 1e-9);
+        assert!((c[1] - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn polyfit_quadratic_recovers_coeffs() {
+        let x = [-2.0, -1.0, 0.0, 1.0, 2.0, 3.0];
+        let y: Vec<f64> = x.iter().map(|&v| 2.0 * v * v - 3.0 * v + 1.0).collect();
+        let c = polyfit(&x, &y, 2).unwrap();
+        assert!((c[0] - 2.0).abs() < 1e-8);
+        assert!((c[1] + 3.0).abs() < 1e-8);
+        assert!((c[2] - 1.0).abs() < 1e-8);
+    }
+
+    #[test]
+    fn polyfit_rejects_singular_and_short() {
+        assert!(polyfit(&[1.0, 1.0, 1.0], &[2.0, 3.0, 4.0], 1).is_err());
+        assert!(polyfit(&[1.0], &[2.0], 1).is_err());
+        assert!(polyfit(&[1.0, 2.0], &[1.0, 2.0, 3.0], 1).is_err());
+    }
 
     #[test]
     fn bootstrap_constant_is_narrow() {

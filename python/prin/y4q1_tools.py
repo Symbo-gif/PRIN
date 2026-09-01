@@ -38,6 +38,9 @@ from prin._prin_core import (
     y4q1_cohens_d as _rust_cohens_d,
 )
 from prin._prin_core import (
+    y4q1_polyfit as _rust_polyfit,
+)
+from prin._prin_core import (
     y4q1_spatial_correlation as _rust_spatial_correlation,
 )
 from prin._prin_core import (
@@ -589,9 +592,7 @@ def coherence_decay_rate(
         }
     t = np.arange(n, dtype=np.float64)
     ln_c = np.log(c)
-    A = np.vstack([t, np.ones(n)]).T
-    result = np.linalg.lstsq(A, ln_c, rcond=None)
-    slope, intercept = result[0]
+    slope, intercept = _rust_polyfit(t.tolist(), ln_c.tolist(), 1)
     lam = -slope
     c0 = math.exp(intercept)
     predicted = slope * t + intercept
@@ -726,7 +727,7 @@ def windowed_order_parameter_variance(
         stds.append(float(np.std(w)))
     x = np.arange(len(stds), dtype=float)
     y = np.array(stds, dtype=float)
-    slope = float(np.polyfit(x, y, 1)[0]) if len(stds) >= 2 else 0.0
+    slope = _rust_polyfit(x.tolist(), y.tolist(), 1)[0] if len(stds) >= 2 else 0.0
     return {
         "window_stds": stds,
         "trend_slope": slope,
@@ -770,7 +771,7 @@ def instantaneous_frequency_spread(
     spread = omega.std(dim=1).tolist()
     x = np.arange(len(spread), dtype=float)
     y = np.array(spread, dtype=float)
-    slope = float(np.polyfit(x, y, 1)[0]) if len(spread) >= 2 else 0.0
+    slope = _rust_polyfit(x.tolist(), y.tolist(), 1)[0] if len(spread) >= 2 else 0.0
     return {
         "freq_spread_series": spread,
         "mean_spread": float(np.mean(spread)) if spread else 0.0,
@@ -804,7 +805,7 @@ def cumulative_phase_slip_curve(
     if len(cum) >= 3:
         x = np.arange(len(cum), dtype=float)
         y = np.array(cum, dtype=float)
-        coeffs = np.polyfit(x, y, 2)
+        coeffs = _rust_polyfit(x.tolist(), y.tolist(), 2)
         accel = float(coeffs[0])
     return {
         "cumulative_slips": cum,
@@ -863,7 +864,7 @@ def memory_growth_profile(
     rate = 0.0
     if len(arr) >= 2:
         x_minutes = np.arange(len(arr)) * interval_seconds / 60.0
-        slope = float(np.polyfit(x_minutes, arr, 1)[0])
+        slope = _rust_polyfit(x_minutes.tolist(), arr.tolist(), 1)[0]
         rate = slope
     return {
         "initial_mb": initial,
@@ -1260,11 +1261,11 @@ def noise_crossover_analysis(
             break
 
     def _fit_exp(means: list[float]) -> float:
-        s_arr = np.array(sigmas)
-        m_arr = np.clip(np.array(means), 1e-10, None)
+        s_arr = np.array(sigmas, dtype=float)
+        m_arr = np.clip(np.array(means, dtype=float), 1e-10, None)
         ln_m = np.log(m_arr)
         if len(s_arr) >= 2:
-            coeffs = np.polyfit(s_arr, ln_m, 1)
+            coeffs = _rust_polyfit(s_arr.tolist(), ln_m.tolist(), 1)
             return -float(coeffs[0])
         return 0.0
 

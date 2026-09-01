@@ -46,6 +46,8 @@ _SCANNED = (
     "solvers.py",
     "simulation.py",
     "topology.py",
+    "temporal_training.py",
+    "y4q1_tools.py",
     "training_hooks.py",
     "subconscious_compat.py",
     "nn/hybrid_compat.py",
@@ -64,6 +66,15 @@ _RUST_BRIDGE_MODULES = frozenset(
         "python/prin/nn/model.py",
         "python/prin/nn/hybrid_compat.py",
         "python/prin/subconscious_compat.py",
+        # WP-036C S3 (WP036C-F4): restored to the scan after the S1 narrowing.
+        # Both delegate their numerics to Rust owners — the polynomial
+        # decay-rate fits moved to ``prin_sim::polyfit``, statistics to
+        # ``prin_sim::y4q1_stats`` — and compose the Rust-backed
+        # ``DiscreteDeltaThetaGamma`` for their nn.Module tooling
+        # (``PhaseTrackerLarge``) / ``TemporalTrainer`` loop, the same
+        # bridge-module pattern as ``hierarchical_layers.py``.
+        "python/prin/y4q1_tools.py",
+        "python/prin/temporal_training.py",
     }
 )
 

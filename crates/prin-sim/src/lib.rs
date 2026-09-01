@@ -92,4 +92,4 @@ pub use oscillo_compat::{
 };
 pub use pruning::{PruningResult, PruningStrategy};
 pub use sweep::{detect_oscillation, run_sweep, SweepAxis, SweepConfig, SweepModel, SweepResult};
-pub use y4q1_stats::{bootstrap_ci, cohens_d, spatial_correlation, welch_t_test};
+pub use y4q1_stats::{bootstrap_ci, cohens_d, polyfit, spatial_correlation, welch_t_test};
