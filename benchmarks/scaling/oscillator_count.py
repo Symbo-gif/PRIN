@@ -43,7 +43,7 @@ def _run_once(n: int, n_steps: int, dt: float, seed: Seed) -> float:
     state = OscillatorState.create_random(n, (0.5, 1.5), seed)
     integrator = RK4Integrator()
     final_state, _ = integrator.integrate_fixed(model, state, n_steps, dt)
-    return kuramoto_order_parameter(final_state.phase)
+    return float(kuramoto_order_parameter(final_state.phase))
 
 
 @register(

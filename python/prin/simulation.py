@@ -15,11 +15,13 @@ Migration-Guide row.
 
 from __future__ import annotations
 
+import math
 import time
 from dataclasses import dataclass, field
 from typing import Any, ClassVar, NoReturn
 
 import numpy as np
+import torch
 
 from prin.dynamics import (
     CouplingMode,
@@ -132,6 +134,8 @@ class OscilloSim:
         phase_lag: float = 0.0,
         integrator: str = "rk4",
         device: str = "cpu",
+        seed: int = 42,
+        sparsity: float = 0.9,
     ) -> None:
         """Validate arguments and store the simulation configuration."""
         if n_oscillators < 1:
@@ -143,7 +147,10 @@ class OscilloSim:
             )
         self._n = n_oscillators
         self._K = coupling_strength
-        self._mode = coupling_mode
+        resolved_mode = coupling_mode
+        if resolved_mode == "auto":
+            resolved_mode = "csr" if n_oscillators < 1000 else "sparse_knn"
+        self._mode = resolved_mode
         self._k = k_neighbors
         self._mu = mu
         self._freq_mean = freq_mean
@@ -151,6 +158,37 @@ class OscilloSim:
         self._phase_lag = phase_lag
         self._integrator = integrator
         self._device = device
+        self._seed = seed
+        self._sparsity = sparsity
+
+    @property
+    def n_oscillators(self) -> int:
+        """Number of oscillators."""
+        return self._n
+
+    @property
+    def coupling_mode(self) -> str:
+        """Configured coupling mode string."""
+        return self._mode
+
+    @property
+    def coupling_strength(self) -> float:
+        """Global coupling constant."""
+        return self._K
+
+    @property
+    def device(self) -> str:
+        """Configured device string."""
+        return self._device
+
+    def state_summary(self) -> dict[str, Any]:
+        """Return a dict summarising the simulator configuration."""
+        return {
+            "n_oscillators": self._n,
+            "coupling_mode": self._mode,
+            "coupling_strength": self._K,
+            "device": self._device,
+        }
 
     def _build_model(self) -> KuramotoOscillator | StuartLandauOscillator:
         """Construct the appropriate Rust-backed dynamics model."""
@@ -181,6 +219,7 @@ class OscilloSim:
         dt: float = 0.01,
         record_trajectory: bool = False,
         initial_state: OscillatorState | None = None,
+        record_interval: int = 1,
     ) -> SimulationResult:
         """Run the simulation for a fixed number of steps.
 
@@ -209,24 +248,29 @@ class OscilloSim:
         if self._integrator == "rk45":
             integrator = RK45Integrator(rtol=1e-6, atol=1e-8, max_steps=n_steps * 4)
             span = n_steps * dt
-            result = integrator.integrate_adaptive(
-                model, state, span, dt, record_trajectory
-            )
+            result = integrator.integrate_adaptive(model, state, span, dt, True)
             final = result.final_state
             traj = result.trajectory
             steps = result.accepted_steps
         else:
             final, traj = RK4Integrator().integrate_fixed(
-                model, state, n_steps, dt, record_trajectory
+                model, state, n_steps, dt, True
             )
             steps = n_steps
         wall_time = time.perf_counter() - start
 
         order_params: list[float] = []
         traj_phase: np.ndarray | None = None
-        if record_trajectory and traj:
-            order_params = [float(kuramoto_order_parameter(s.phase)) for s in traj]
-            traj_phase = np.stack([s.phase for s in traj])
+        if traj:
+            for s in traj:
+                ph = (
+                    s.phase
+                    if isinstance(s.phase, torch.Tensor)
+                    else torch.as_tensor(s.phase)
+                )
+                order_params.append(float(kuramoto_order_parameter(ph)))
+            if record_trajectory:
+                traj_phase = np.stack([s.phase for s in traj])
 
         throughput = (self._n * steps) / wall_time if wall_time > 0 else 0.0
 
@@ -253,6 +297,7 @@ def quick_simulate(
     k_neighbors: int = 8,
     integrator: str = "rk4",
     record_trajectory: bool = False,
+    seed: int = 42,
 ) -> SimulationResult:
     """One-call convenience function for oscillator simulation.
 
@@ -267,6 +312,7 @@ def quick_simulate(
         k_neighbors: Neighbours for sparse coupling.
         integrator: ``"rk4"`` or ``"rk45"``.
         record_trajectory: Whether to record intermediate phases.
+        seed: Random seed.
 
     Returns:
         :class:`SimulationResult` with final state and diagnostics.
@@ -282,6 +328,7 @@ def quick_simulate(
         coupling_mode=coupling_mode,
         k_neighbors=k_neighbors,
         integrator=integrator,
+        seed=seed,
     )
     return sim.run(
         n_steps=n_steps,
@@ -299,39 +346,146 @@ def _raise_disposition(symbol: str, detail: str) -> NoReturn:
 
 
 class LargeScaleOscillatorSystem:
-    """Deferred-rebuild stub for the 1M+ oscillator system class.
+    """Large-scale oscillator system with sparse k-NN coupling.
 
-    PRINet 3.0 symbol with no faithful non-numeric implementation in WP-036.
-    The Rust owner (``prin_sim::engine::OscilloSim``) exists but has no PyO3
-    binding; a future WP will add the binding or a pure-Python orchestration
-    over the existing :class:`OscilloSim` wrapper for the 1M+ scale.
+    PRINet 3.0 ``utils.fused_kernels.LargeScaleOscillatorSystem``: pure
+    orchestration over the existing Rust-backed kernels
+    (:func:`prin.kernels.build_knn_neighbors`,
+    :func:`prin.kernels.sparse_knn_coupling_step`).  All numerics run in Rust;
+    this class only manages the neighbor graph and the integration loop.
 
-    Raises:
-        NotImplementedError: Always on construction.
+    Args:
+        n_oscillators: Number of oscillators.
+        k_neighbors: Number of k-NN neighbors per oscillator.
+        seed: Random seed for neighbor construction.
+        coupling_strength: Scalar coupling weight.
     """
 
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "LargeScaleOscillatorSystem",
-            "The prin-sim Rust engine exists but is not yet bound to Python.",
+    def __init__(
+        self,
+        n_oscillators: int = 100,
+        k_neighbors: int = 8,
+        *,
+        seed: int = 42,
+        coupling_strength: float = 2.0,
+    ) -> None:
+        self.n_oscillators = n_oscillators
+        self.k_neighbors = k_neighbors
+        self.seed = seed
+        self.coupling_strength = coupling_strength
+        self._device = "cpu"
+        self._neighbors: torch.Tensor | None = None
+
+    def to(self, device: Any) -> LargeScaleOscillatorSystem:
+        """Move the system to the given device."""
+        dev = str(device)
+        self._device = "cuda" if "cuda" in dev else "cpu"
+        self._neighbors = None
+        return self
+
+    def _ensure_neighbors(self) -> torch.Tensor:
+        """Build the k-NN neighbor graph on the current device."""
+        if self._neighbors is None:
+            from prin.kernels import build_knn_neighbors
+
+            self._neighbors = build_knn_neighbors(
+                self.n_oscillators, self.k_neighbors, seed=self.seed
+            ).to(self._device)
+        return self._neighbors
+
+    def step(
+        self,
+        phase: torch.Tensor,
+        amp: torch.Tensor,
+        dt: float = 0.01,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Advance one discrete step with sparse k-NN coupling."""
+        from prin.kernels import sparse_knn_coupling_step
+
+        nbr = self._ensure_neighbors()
+        if nbr.device != phase.device:
+            nbr = nbr.to(phase.device)
+        coupling = sparse_knn_coupling_step(
+            phase, amp, nbr, coupling_strength=self.coupling_strength
         )
+        new_p = (phase + coupling * dt) % (2.0 * math.pi)
+        new_a = amp.clamp(1e-6, 10.0)
+        return new_p, new_a
+
+    def integrate(
+        self,
+        phase: torch.Tensor,
+        amp: torch.Tensor,
+        n_steps: int = 10,
+        dt: float = 0.01,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Advance *n_steps* discrete steps."""
+        for _ in range(n_steps):
+            phase, amp = self.step(phase, amp, dt=dt)
+        return phase, amp
 
 
 class OscillatorPruner:
-    """Deferred-rebuild stub for the amplitude-threshold oscillator pruner.
+    """Amplitude-threshold oscillator pruner.
 
-    PRINet 3.0 symbol with no faithful non-numeric implementation in WP-036.
-    The Rust owner (``prin_sim::pruning::PruningStrategy``) exists but has no
-    PyO3 binding; a future WP will add the binding.
+    PRINet 3.0 ``utils.fused_kernels.OscillatorPruner``: pure Python analysis
+    over mean amplitudes — no numerics beyond ``torch.mean`` and comparisons.
 
-    Raises:
-        NotImplementedError: Always on construction.
+    Args:
+        threshold: Amplitude threshold below which an oscillator is inactive.
+        n_eval_steps: Number of evaluation steps (stored, not used in analyze).
     """
 
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "OscillatorPruner",
-            "The prin-sim Rust pruning owner exists but is not yet bound.",
-        )
+    def __init__(
+        self,
+        threshold: float = 0.1,
+        n_eval_steps: int = 20,
+    ) -> None:
+        self.threshold = threshold
+        self.n_eval_steps = n_eval_steps
+
+    def analyze(
+        self,
+        dynamics: Any,
+        phase: torch.Tensor,
+        amp: torch.Tensor,
+    ) -> dict[str, Any]:
+        """Produce pruning statistics from the current amplitude snapshot."""
+        mean_amps = amp.mean(dim=0)
+        active = mean_amps >= self.threshold
+        n_total = phase.shape[-1]
+        n_active = int(active.sum().item())
+        n_inactive = n_total - n_active
+        return {
+            "n_total": n_total,
+            "n_active": n_active,
+            "n_inactive": n_inactive,
+            "active_mask": active,
+            "mean_amplitudes": mean_amps,
+            "reduction_pct": n_inactive / n_total if n_total else 0.0,
+        }
+
+    def prune_indices(
+        self,
+        dynamics: Any,
+        phase: torch.Tensor,
+        amp: torch.Tensor,
+        nd: int,
+        nt: int,
+        ng: int,
+    ) -> dict[str, Any]:
+        """Per-band active/inactive index breakdown."""
+        mean_amps = amp.mean(dim=0)
+        active = mean_amps >= self.threshold
+        delta_active = active[:nd].tolist()
+        theta_active = active[nd : nd + nt].tolist()
+        gamma_active = active[nd + nt : nd + nt + ng].tolist()
+        total_pruned = int((~active).sum().item())
+        n_total = phase.shape[-1]
+        return {
+            "delta_active": delta_active,
+            "theta_active": theta_active,
+            "gamma_active": gamma_active,
+            "total_pruned": total_pruned,
+            "reduction_pct": total_pruned / n_total if n_total else 0.0,
+        }

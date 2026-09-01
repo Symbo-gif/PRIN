@@ -1,14 +1,14 @@
 # Session 0144M / WP-036C S1 running handoff
 
 **Date:** 2026-08-31 (session start + decomposition; `0144M1`–`0144M3` executed)
-**Status:** S1 **in progress** — sub-passes `0144M1` (integration_q3 + y2q1 +
-y2q4, 93 fns), `0144M2` (y2q2 + y2q3, 65 fns, DV-025 `retrain_controller`),
-and `0144M3` (y3q1 + y3q2, 78 fns) **COMPLETE and committed locally** at green
-gates; not pushed. **236 / 1,097** reference functions ported. Plan amendment
-#39 inserted the eight strict-port sub-passes `0144M1`–`0144M8` feeding the
-single mandatory S2 audit `0144N`; plan amendment #40 (2026-08-31) records
-three `0144M1` scope confirmations (deferred-symbol rebuild in-scope,
-`__version__` → `0.3.0`, minimal `docs/` guides). Next: `0144M4`.
+**Status:** S1 **in progress** — sub-passes `0144M1`–`0144M4` (integration_q3 +
+y2q1 + y2q4, 93 fns; y2q2 + y2q3, 65 fns; y3q1 + y3q2, 78 fns; y3q3 + y3q4 +
+y3q45 + y3q49, 117 fns) **COMPLETE and committed locally** at green gates; not
+pushed. **353 / 1,097** reference functions ported. Plan amendment #39 inserted
+the eight strict-port sub-passes `0144M1`–`0144M8` feeding the single mandatory
+S2 audit `0144N`; plan amendment #40 (2026-08-31) records three `0144M1` scope
+confirmations (deferred-symbol rebuild in-scope, `__version__` → `0.3.0`,
+minimal `docs/` guides). Next: `0144M5`.
 
 ## Session-start protocol (Development Workflow §6)
 
@@ -382,7 +382,62 @@ the governed split and `ruff format` re-wraps) + 78/78 default-gate execution
 is the M3 parity evidence. No new hazard tolerance or backend-availability
 guard, so `DOCS/sphinx/parity_report.rst` is unchanged.
 
-### 0144M4 — not started
+### 0144M4 — y3q3 + y3q4 + y3q45 + y3q49 — COMPLETE (2026-08-31)
+
+**Committed locally at a green sub-pass gate; not pushed. Next: 0144M5.**
+
+#### Strict-port accounting and semantic proof
+
+| Reference | Stable port | Lines | `def test_` | Result (default gate) | Slow | Tolerance annotations | Discoveries |
+|---|---|---:|---:|---|---:|---:|---|
+| `test_y3q3.py` | `tests/test_acceptance_y3q3.py` | 676 | 32 | 32 / 32 | 0 | 0 | `HybridPRINetV2.compile`/`is_compiled`/`compiled_forward`/`_triton_available`; `MixedPrecisionTrainer` real implementation; `AsyncCPUGPUPipeline` real implementation; `LargeScaleOscillatorSystem` real implementation over Rust k-NN kernels; `OscillatorPruner` real implementation; `cuda_fused_kernel_available` re-export in `prin.kernels` |
+| `test_y3q4.py` | `tests/test_acceptance_y3q4.py` | 417 | 32 | 32 / 32 | 1 (CUDA-only) | 0 | `OscilloSim` properties (`n_oscillators`/`coupling_mode`/`coupling_strength`/`device`) + `state_summary()`; `auto` mode resolves to `csr`/`sparse_knn`; `OscilloSim.run()` always computes order params; `seed`/`sparsity`/`record_interval` params; `SlotAttentionModule.forward` optional `seed`; `SlotAttentionCLEVRN` real `nn.Module`; `prin.metrics.kuramoto_order_parameter` → torch-compatible wrapper |
+| `test_y3q45.py` | `tests/test_acceptance_y3q45.py` | 370 | 23 | 23 / 23 | 0 | 0 | `_find_msvc_cl`/`_ensure_msvc_on_path` in `prin.kernels`; `HybridPRINetV2CLEVRN` re-exported from `prin.nn.hybrid`; `query_dim` default → 60; `merge` layer added |
+| `test_y3q49.py` | `tests/test_acceptance_y3q49.py` | 632 | 30 | 22 / 30 | 0 | 0 | `KuramotoOscillator` `mean_field` param; 8 `test_artefact_exists` failures (benchmark output files not generated — out-of-scope, carried to `0144N`) |
+| **M4 total** | **4 files** | **2,095** | **117** | **109 / 117 default gate** | **1** | **0** | — |
+
+**8 out-of-scope discoveries** (y3q49 `TestResultArtefacts`): benchmark JSON
+artefacts not generated — the benchmark script hasn't been run. Carried to
+`0144N`, not weakened.
+
+#### Changed-owner mapping
+
+| Compatibility behaviour | Numerical / Rust owner | Python exposure |
+|---|---|---|
+| `HybridPRINetV2.compile`/`is_compiled`/`compiled_forward`/`_triton_available` | n/a — torch.compile orchestration | `prin.nn.hybrid.HybridPRINetV2` |
+| `MixedPrecisionTrainer` | n/a — `torch.cuda.amp` orchestration | `prin.training_hooks.MixedPrecisionTrainer` (D-2.2 stub replaced) |
+| `AsyncCPUGPUPipeline` | n/a — CPU-synchronous orchestration | `prin.training_hooks.AsyncCPUGPUPipeline` (D-2.2 stub replaced) |
+| `LargeScaleOscillatorSystem` | `prin.kernels.build_knn_neighbors` + `sparse_knn_coupling_step` (Rust) | `prin.simulation.LargeScaleOscillatorSystem` (D-2.2 stub replaced) |
+| `OscillatorPruner` | n/a — `torch.mean` + comparisons | `prin.simulation.OscillatorPruner` (D-2.2 stub replaced) |
+| `_find_msvc_cl` / `_ensure_msvc_on_path` | n/a — `vswhere` subprocess | `prin.kernels._find_msvc_cl` / `_ensure_msvc_on_path` |
+| `SlotAttentionModule.forward(seed=None)` | Rust bridge (unchanged) | optional `seed` param with default `Seed(0, 0)` |
+| `SlotAttentionCLEVRN` | `SlotAttentionModule` bridge + PyTorch classifier | `prin.nn.slot_attention.SlotAttentionCLEVRN` (D-2.2 stub replaced) |
+| `OscilloSim` properties + `state_summary()` + `seed`/`sparsity`/`record_interval` | n/a — orchestration | `prin.simulation.OscilloSim` enhanced |
+| `KuramotoOscillator(mean_field=...)` | Rust bridge (unchanged) | `prin._torch_compat.KuramotoOscillator` `mean_field` param |
+| `HybridPRINetV2CLEVRN` re-export + `merge` layer + `query_dim=60` default | n/a — PyTorch composition | `prin.nn.hybrid.HybridPRINetV2CLEVRN` re-exported; `prin.nn.hybrid_compat` `merge` layer added |
+| `prin.metrics.kuramoto_order_parameter` | Rust `_core.kuramoto_order_parameter` (numpy) | torch-compatible wrapper accepting both Tensor and ndarray |
+
+No Rust crate, `Cargo.*`, PyO3 binding, or `.pyi` change — the entire M4
+compatibility surface is Python delegation over already-shipped Rust owners.
+
+Governance updated in step: `test_bucket_g_remainder.py` D-2.2 stub tests →
+real-implementation tests for `LargeScaleOscillatorSystem`/`OscillatorPruner`/
+`SlotAttentionCLEVRN`; `test_dynamics_bindings.py::test_metrics_module` updated
+for torch-compatible `kuramoto_order_parameter`; `DOCS/sphinx/migration_guide.rst`
+consolidated table re-rendered; `benchmarks/y3q49_scientific_regime_benchmark.py`
+minimal stub created; `SESSION_REGISTER.md` / `phase-6/README.md` updated;
+handoff appended.
+
+#### Command evidence
+
+- `pytest tests/test_acceptance_y3q3.py tests/test_acceptance_y3q4.py
+  tests/test_acceptance_y3q45.py tests/test_acceptance_y3q49.py -m "not slow"`:
+  **109 passed, 12 skipped, 8 failed** (8 artefact-exists out-of-scope).
+- `ruff check` (repo) + `ruff format --check` (repo): clean.
+- `mypy python/prin --strict`: clean (57 files).
+- `tools/wp036_migration_table.py check`: OK (172 symbols).
+- `git diff --no-index` reference vs port: import-path lines only (plus `ruff
+  format` assert-message re-wraps).
 ### 0144M5 — not started
 ### 0144M6 — not started
 ### 0144M7 — not started

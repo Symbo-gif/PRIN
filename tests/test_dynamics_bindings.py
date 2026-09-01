@@ -725,6 +725,9 @@ class TestModuleReexports:
         assert S is Seed
 
     def test_metrics_module(self) -> None:
+        from prin._torch_compat import (
+            kuramoto_order_parameter as torch_kop,
+        )
         from prin.metrics import (
             kuramoto_order_parameter as kop,
         )
@@ -732,5 +735,5 @@ class TestModuleReexports:
             mean_phase_coherence as mpc,
         )
 
-        assert kop is kuramoto_order_parameter
+        assert kop is torch_kop
         assert mpc is mean_phase_coherence

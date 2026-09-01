@@ -62,7 +62,7 @@ def _run_once(
     assert trajectory is not None
 
     neighbors = build_phase_knn(final_state.phase, k_neighbors)
-    r = kuramoto_order_parameter(final_state.phase)
+    r = float(kuramoto_order_parameter(final_state.phase))
     chi = chimera_index(final_state.phase, neighbors, 0.5)
     si = strength_of_incoherence(final_state.phase, max(2, n // 8))
     flat_traj = np.concatenate([s.phase for s in trajectory])

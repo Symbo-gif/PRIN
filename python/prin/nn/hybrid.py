@@ -6,14 +6,17 @@ See ``crates/prin-py/src/bindings/hybrid.rs`` for the Rust bridge and
 
 from __future__ import annotations
 
+import importlib
+
 import torch
 import torch.nn as nn
 
 from prin._prin_core import HybridPRINetV2Bridge
 
 from ._bridge import apply_rust_bridge
+from .hybrid_compat import HybridPRINetV2CLEVRN
 
-__all__: list[str] = ["HybridPRINetV2"]
+__all__: list[str] = ["HybridPRINetV2", "HybridPRINetV2CLEVRN"]
 
 
 class HybridPRINetV2(torch.nn.Module):
@@ -172,6 +175,49 @@ class HybridPRINetV2(torch.nn.Module):
         if was_1d:
             result = result.squeeze(0)
         return result
+
+    @staticmethod
+    def _triton_available() -> bool:
+        """Return whether the Triton compiler is importable."""
+        try:
+            importlib.import_module("triton")
+            return True
+        except (ImportError, ModuleNotFoundError):
+            return False
+
+    @property
+    def is_compiled(self) -> bool:
+        """Whether :meth:`compile` has been called on this instance."""
+        return getattr(self, "_compiled", False)
+
+    def compile(  # type: ignore[override]
+        self, *, backend: str = "eager", mode: str | None = None
+    ) -> HybridPRINetV2:
+        """Mark this model as compiled (PRINet 3.0 ``compile`` API).
+
+        With the ``eager`` backend this is a no-op marker.  With other
+        backends it delegates to :func:`torch.compile` when Triton is
+        available, otherwise falls back to the eager marker.
+
+        Returns *self* for method chaining.
+        """
+        if backend == "eager" or not self._triton_available():
+            self._compiled = True
+            self._compile_backend = backend
+            return self
+        self._compiled_model = torch.compile(
+            self, backend=backend, mode=mode or "reduce-overhead"
+        )
+        self._compiled = True
+        self._compile_backend = backend
+        return self
+
+    def compiled_forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Run forward through the compiled graph if available, else plain forward."""
+        if getattr(self, "_compiled_model", None) is not None:
+            result: torch.Tensor = self._compiled_model(x)
+            return result
+        return self.forward(x)
 
     def rust_state_dict(self) -> bytes:
         """Serialize Rust-owned parameters to opaque checkpoint bytes."""

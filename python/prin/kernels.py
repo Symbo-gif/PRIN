@@ -7,19 +7,27 @@ Rust functions exposed by :mod:`prin._prin_core` own every numerical result.
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 import warnings
 from collections.abc import Callable, Sequence
+from pathlib import Path
 from typing import TypeAlias
 
 import torch
 from torch import Tensor
 
 from prin import _prin_core
+from prin._compat import cuda_fused_kernel_available
 from prin._prin_core import Seed
 
 __all__ = [
+    "_ensure_msvc_on_path",
+    "_find_msvc_cl",
     "build_knn_neighbors",
     "csr_coupling_step",
+    "cuda_fused_kernel_available",
     "detect_oscillation",
     "phase_to_rate",
     "pytorch_cross_band_coupling",
@@ -1092,3 +1100,55 @@ def phase_to_rate(
         )
     ]
     return _tensor(output, phase, phase.shape)
+
+
+def _find_msvc_cl() -> str | None:
+    """Locate the MSVC ``cl.exe`` compiler via ``vswhere`` (Windows only).
+
+    Returns the path to ``cl.exe`` or ``None`` if Visual Studio is not
+    installed or ``vswhere`` cannot find it.  On non-Windows platforms
+    always returns ``None``.
+    """
+    if sys.platform != "win32":
+        return None
+    vswhere = Path(
+        r"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+    )
+    if not vswhere.exists():
+        return None
+    try:
+        out = subprocess.check_output(
+            [
+                str(vswhere),
+                "-latest",
+                "-property",
+                "installationPath",
+            ],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    vs_root = Path(out.strip())
+    cl_candidates = sorted(vs_root.rglob("cl.exe"))
+    for cl in cl_candidates:
+        if "Hostx64" in str(cl) or "Hostx86" in str(cl):
+            return str(cl)
+    return str(cl_candidates[0]) if cl_candidates else None
+
+
+def _ensure_msvc_on_path() -> bool:
+    """Ensure the MSVC ``cl.exe`` directory is on ``PATH`` (Windows only).
+
+    Returns ``True`` if ``cl.exe`` was found and its directory was added to
+    ``PATH`` (or was already there).  Returns ``False`` on non-Windows or
+    when no installation is found.
+    """
+    cl = _find_msvc_cl()
+    if cl is None:
+        return False
+    cl_dir = str(Path(cl).parent)
+    current = os.environ.get("PATH", "")
+    if cl_dir not in current:
+        os.environ["PATH"] = cl_dir + os.pathsep + current
+    return True

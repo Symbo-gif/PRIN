@@ -19,7 +19,6 @@ from prin._prin_core import (
     default_chimera_threshold,
     discontinuity_measure,
     extract_concept_probabilities,
-    kuramoto_order_parameter,
     kuramoto_order_parameter_complex,
     local_order_parameter,
     mean_phase_coherence,
@@ -35,6 +34,9 @@ from prin._prin_core import (
 )
 from prin._prin_core import (
     inter_frame_phase_correlation as _rust_inter_frame_phase_correlation,
+)
+from prin._torch_compat import (
+    kuramoto_order_parameter as kuramoto_order_parameter,
 )
 
 

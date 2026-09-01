@@ -651,47 +651,137 @@ def collect_system_state(
 
 
 class MixedPrecisionTrainer:
-    """Deferred-rebuild stub for the mixed-precision training wrapper.
+    """Mixed-precision training wrapper (PRINet 3.0 ``MixedPrecisionTrainer``).
 
-    PRINet 3.0 ``utils.fused_kernels.MixedPrecisionTrainer``: wraps a model +
-    optimizer training step in ``torch.amp.autocast`` / ``GradScaler``. It is a
-    training-loop wrapper (``loss.backward()`` / ``optimizer.step()`` /
-    gradient scaling), the same category as the 0141D2 ``TemporalTrainer`` /
-    ``train_multi_seed`` stubs; delivering it faithfully requires exercising a
-    trainable model (Python numerics), out of scope for WP-036 S1.
+    Wraps a model + optimizer training step in ``torch.amp.autocast`` /
+    ``GradScaler``.  Pure orchestration — all numerics remain in the model's
+    forward and the optimizer's step; this class only manages the autocast
+    context and gradient scaling.
 
-    Raises:
-        NotImplementedError: Always on construction.
+    Args:
+        model: The model to train.
+        optimizer: The optimizer.
+        enabled: Whether AMP is enabled (default ``True``).
+        device_type: ``"cuda"`` or ``"cpu"``.
     """
 
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "MixedPrecisionTrainer",
-            "torch.amp training-step wrapper (training loop, Python numerics).",
-        )
+    def __init__(
+        self,
+        model: Any,
+        optimizer: Any,
+        *,
+        enabled: bool = True,
+        device_type: str = "cpu",
+    ) -> None:
+        self.model = model
+        self.optimizer = optimizer
+        self.enabled = enabled
+        self.device_type = device_type
+        self.step_count = 0
+        self._scaler: Any | None = None
+        if enabled and device_type == "cuda":
+            self._scaler = torch.cuda.amp.GradScaler()
+
+    def train_step(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        loss_fn: Any,
+    ) -> float:
+        """Run one training step and return the scalar loss."""
+        self.model.train()
+        self.optimizer.zero_grad()
+        if self.enabled and self.device_type == "cuda" and self._scaler is not None:
+            with torch.cuda.amp.autocast():
+                out = self.model(x)
+                loss = loss_fn(out, y)
+            self._scaler.scale(loss).backward()
+            self._scaler.step(self.optimizer)
+            self._scaler.update()
+        else:
+            out = self.model(x)
+            loss = loss_fn(out, y)
+            loss.backward()
+            self.optimizer.step()
+        self.step_count += 1
+        return float(loss.item())
+
+    def state_dict(self) -> dict[str, Any]:
+        """Return a checkpoint-friendly state dict."""
+        state: dict[str, Any] = {
+            "step_count": self.step_count,
+            "enabled": self.enabled,
+            "device_type": self.device_type,
+        }
+        if self._scaler is not None:
+            state["scaler"] = self._scaler.state_dict()
+        else:
+            state["scaler"] = {}
+        return state
+
+    def load_state_dict(self, state: dict[str, Any]) -> None:
+        """Restore state from a previous :meth:`state_dict`."""
+        self.step_count = state.get("step_count", 0)
+        self.enabled = state.get("enabled", self.enabled)
+        self.device_type = state.get("device_type", self.device_type)
+        if self._scaler is not None and state.get("scaler"):
+            self._scaler.load_state_dict(state["scaler"])
 
 
 class AsyncCPUGPUPipeline:
-    """Deferred-rebuild stub for the overlapped CPU/GPU training pipeline.
+    """Async CPU+GPU training pipeline (PRINet 3.0 ``AsyncCPUGPUPipeline``).
 
-    PRINet 3.0 ``utils.fused_kernels.AsyncCPUGPUPipeline``: runs the
-    ``SubconsciousDaemon`` ONNX inference on a CPU thread while a GPU training
-    loop proceeds concurrently, with double-buffered state passing. It is a
-    training-loop wrapper (``loss.backward()`` / ``optimizer.step()``), the
-    same category as :class:`MixedPrecisionTrainer`; a CPU-synchronous shim
-    would still have to drive a trainable model, out of scope for WP-036 S1.
+    CPU-synchronous orchestration over a model + optimizer.  The PRINet 3.0
+    reference ran subconscious-daemon ONNX inference on a CPU thread while a
+    GPU training loop proceeded concurrently; this implementation provides
+    the same API surface in a CPU-synchronous fashion (the ONNX daemon is
+    optional and may be ``None``).
 
-    Raises:
-        NotImplementedError: Always on construction.
+    Args:
+        daemon: Optional daemon with ``start``/``stop``/``get_control``.
+        model: The model to train.
+        optimizer: The optimizer.
     """
 
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        _raise_disposition(
-            "AsyncCPUGPUPipeline",
-            "Async CPU/GPU training-loop wrapper (Python numerics).",
-        )
+    def __init__(self, daemon: Any, model: Any, optimizer: Any) -> None:
+        self.daemon = daemon
+        self.model = model
+        self.optimizer = optimizer
+        self.step_count = 0
+        self._running = False
+
+    @property
+    def is_running(self) -> bool:
+        """Whether the pipeline has been started."""
+        return self._running
+
+    def start(self) -> None:
+        """Start the pipeline (and the daemon, if present)."""
+        if self.daemon is not None:
+            self.daemon.start()
+        self._running = True
+
+    def stop(self) -> None:
+        """Stop the pipeline (and the daemon, if present)."""
+        if self.daemon is not None:
+            self.daemon.stop()
+        self._running = False
+
+    def train_step(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        loss_fn: Any,
+    ) -> float:
+        """Run one training step and return the scalar loss."""
+        self.model.train()
+        self.optimizer.zero_grad()
+        out = self.model(x)
+        loss = loss_fn(out, y)
+        loss.backward()
+        self.optimizer.step()
+        self.step_count += 1
+        return float(loss.item())
 
 
 def retrain_controller(

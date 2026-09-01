@@ -177,16 +177,16 @@ def test_quick_simulate_delegates_to_oscillosim() -> None:
     assert result.n_oscillators == 16
 
 
-def test_large_scale_oscillator_system_is_d22_stub() -> None:
-    """``LargeScaleOscillatorSystem`` raises the D-2.2 disposition."""
-    with pytest.raises(NotImplementedError, match=r"D-2\.2"):
-        LargeScaleOscillatorSystem(1000)
+def test_large_scale_oscillator_system_is_real() -> None:
+    """``LargeScaleOscillatorSystem`` is now a real implementation (0144M4)."""
+    sys = LargeScaleOscillatorSystem(n_oscillators=100, k_neighbors=6, seed=42)
+    assert sys.n_oscillators == 100
 
 
-def test_oscillator_pruner_is_d22_stub() -> None:
-    """``OscillatorPruner`` raises the D-2.2 disposition."""
-    with pytest.raises(NotImplementedError, match=r"D-2\.2"):
-        OscillatorPruner()
+def test_oscillator_pruner_is_real() -> None:
+    """``OscillatorPruner`` is now a real implementation (0144M4)."""
+    pruner = OscillatorPruner(threshold=0.1)
+    assert pruner.threshold == 0.1
 
 
 # ── Topology builders ─────────────────────────────────────────────────────
@@ -456,10 +456,15 @@ def test_active_control_d22_stubs_raise(cls_or_fn: object) -> None:
 # ── SlotAttentionCLEVRN ──────────────────────────────────────────────────
 
 
-def test_slot_attention_clevrn_is_d22_stub() -> None:
-    """``SlotAttentionCLEVRN`` raises the D-2.2 disposition."""
-    with pytest.raises(NotImplementedError, match=r"D-2\.2"):
-        SlotAttentionCLEVRN()
+def test_slot_attention_clevrn_is_real() -> None:
+    """``SlotAttentionCLEVRN`` is now a real implementation (0144M4)."""
+    import torch
+
+    model = SlotAttentionCLEVRN(scene_dim=16, query_dim=60, d_model=32)
+    scene = torch.randn(2, 16)
+    query = torch.randn(2, 60)
+    out = model(scene, query)
+    assert out.shape == (2, 2)
 
 
 # ── Coverage: OscilloSim branch paths (WP036-F1) ────────────────────────

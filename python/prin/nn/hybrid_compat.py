@@ -424,7 +424,7 @@ class HybridPRINetV2CLEVRN(nn.Module):
     def __init__(
         self,
         scene_dim: int = 16,
-        query_dim: int = 44,
+        query_dim: int = 60,
         n_delta: int = 4,
         n_theta: int = 8,
         n_gamma: int = 32,
@@ -437,6 +437,7 @@ class HybridPRINetV2CLEVRN(nn.Module):
         self.n_osc = n_osc
         self.scene_proj = nn.Linear(scene_dim, n_osc)
         self.query_proj = nn.Linear(query_dim, n_osc)
+        self.merge = nn.Linear(n_osc, n_osc)
         self.core = InterleavedHybridPRINet(
             n_input=n_osc,
             n_classes=2,
@@ -464,7 +465,7 @@ class HybridPRINetV2CLEVRN(nn.Module):
             scene_feat = scene.mean(dim=1)
         else:
             scene_feat = scene
-        h = self.scene_proj(scene_feat) + self.query_proj(query)
+        h = self.merge(self.scene_proj(scene_feat) + self.query_proj(query))
         out: Tensor = self.core(h)
         return out
 

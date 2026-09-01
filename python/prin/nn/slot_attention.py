@@ -16,7 +16,7 @@ Rust bridge reproduces bit-identical noise on backward recompute). Pass a
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import torch
 from torch.utils.dlpack import from_dlpack
@@ -100,13 +100,14 @@ class SlotAttentionModule(torch.nn.Module):
         """Slot dimensionality."""
         return self._bridge.slot_dim
 
-    def forward(self, inputs: torch.Tensor, seed: Seed) -> torch.Tensor:
+    def forward(self, inputs: torch.Tensor, seed: Seed | None = None) -> torch.Tensor:
         """Run Slot Attention on input features.
 
         Args:
             inputs: Shape ``(batch, n, input_dim)``, dtype ``torch.float64``.
             seed: Consumed (advanced) for fresh slot-initialization noise —
-                see the module docs.
+                see the module docs.  When *None*, an internal default seed
+                is used (deterministic for the same ``seed_counter``/``seed_key``).
 
         Returns:
             Slots. Shape: ``(batch, num_slots, slot_dim)``.
@@ -114,6 +115,10 @@ class SlotAttentionModule(torch.nn.Module):
         Raises:
             ValueError: On a shape mismatch.
         """
+        from prin._prin_core import Seed as _Seed
+
+        if seed is None:
+            seed = _Seed(0, 0)
         result: torch.Tensor = apply_rust_bridge(
             lambda inp: self._bridge.forward(inp, seed), [inputs]
         )
@@ -296,27 +301,61 @@ class TemporalSlotAttentionMOT(torch.nn.Module):
         self._bridge.load_state_dict(state)
 
 
-class SlotAttentionCLEVRN:
-    """Deferred-rebuild stub for the Slot Attention CLEVR-N adapter.
+class SlotAttentionCLEVRN(torch.nn.Module):
+    """Slot Attention adapter for CLEVR-N binary classification.
 
-    PRINet 3.0 ``nn.slot_attention.SlotAttentionCLEVRN``: adapter wrapping
-    :class:`SlotAttentionModule` for CLEVR-N scene + query binary
-    classification. Contains trainable ``nn.Linear`` projections (scene
-    projection, query projection, classifier MLP).
+    PRINet 3.0 ``nn.slot_attention.SlotAttentionCLEVRN``: uses
+    :class:`SlotAttentionModule` to encode scene and query inputs, then
+    classifies via a small MLP.  Outputs log-softmax probabilities ``(B, 2)``.
 
-    A faithful implementation requires net-new trainable Rust numerics +
-    autodiff, which WP-036 prohibits. Consistent with the hybrid-model
-    family D-2.2 disposition (0141B rows 31-42 precedent).
-
-    Raises:
-        NotImplementedError: Always on construction.
+    Args:
+        scene_dim: Per-scene feature dimension.
+        query_dim: Query feature dimension.
+        num_slots: Number of attention slots.
+        slot_dim: Slot vector dimension.
+        d_model: Internal model dimension.
+        num_iterations: Slot Attention iterations.
     """
 
-    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
-        """Raise the D-2.2 disposition."""
-        raise NotImplementedError(
-            "SlotAttentionCLEVRN is a deferred-rebuild symbol (WP-036 D-2.2). "
-            "Trainable nn.Module with nn.Linear projections; needs a "
-            "trainable-layer rebuild in a future WP. "
-            "See the Migration Guide for the disposition."
+    def __init__(
+        self,
+        scene_dim: int = 16,
+        query_dim: int = 60,
+        num_slots: int = 8,
+        slot_dim: int = 64,
+        d_model: int = 64,
+        num_iterations: int = 3,
+    ) -> None:
+        super().__init__()
+        self.scene_dim = scene_dim
+        self.query_dim = query_dim
+        combined = scene_dim + query_dim
+        self.slot_attn = SlotAttentionModule(
+            num_slots=num_slots,
+            slot_dim=slot_dim,
+            input_dim=combined,
+            num_iterations=num_iterations,
         )
+        self.classifier = torch.nn.Sequential(
+            torch.nn.Linear(num_slots * slot_dim, d_model),
+            torch.nn.ReLU(),
+            torch.nn.Linear(d_model, 2),
+        )
+
+    def forward(self, scene: torch.Tensor, query: torch.Tensor) -> torch.Tensor:
+        """Classify a scene+query pair.
+
+        Args:
+            scene: ``(B, scene_dim)``.
+            query: ``(B, query_dim)``.
+
+        Returns:
+            Log-probabilities ``(B, 2)``.
+        """
+        combined = torch.cat([scene, query], dim=-1)
+        if combined.dim() == 2:
+            combined = combined.unsqueeze(1)
+        slots = self.slot_attn(combined)
+        flat = slots.reshape(slots.shape[0], -1)
+        logits = self.classifier(flat)
+        return torch.nn.functional.log_softmax(logits, dim=-1)

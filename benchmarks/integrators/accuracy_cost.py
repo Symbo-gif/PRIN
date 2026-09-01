@@ -48,7 +48,7 @@ def _reference_r(n: int, t_span: float, seed_state: OscillatorState) -> float:
     result = RK45Integrator(rtol=1e-10, atol=1e-12).integrate_adaptive(
         _model(n), seed_state, t_span, t_span / 100.0
     )
-    return kuramoto_order_parameter(result.final_state.phase)
+    return float(kuramoto_order_parameter(result.final_state.phase))
 
 
 @register(

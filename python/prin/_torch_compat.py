@@ -517,13 +517,17 @@ class KuramotoOscillator(OscillatorModel):
         freq_adaptation_rate: float = 0.01,
         coupling_mode: str = "auto",
         sparse_k: int | None = None,
+        mean_field: bool = False,
         device: object = None,
         dtype: object = None,
     ) -> None:
         super().__init__(n_oscillators, coupling_strength)
         self._decay_rate = decay_rate
         self._freq_adaptation_rate = freq_adaptation_rate
+        if mean_field and coupling_mode == "auto":
+            coupling_mode = "mean_field"
         self._coupling_mode = coupling_mode
+        self._mean_field = mean_field
         mode, resolved_k = _resolve_coupling_mode(
             coupling_mode, n_oscillators, sparse_k
         )
@@ -714,6 +718,8 @@ def _scalar_rows(function: Any, phase: torch.Tensor, *extra: object) -> torch.Te
 
 def kuramoto_order_parameter(phase: torch.Tensor) -> torch.Tensor:
     """Compute the Rust-owned Kuramoto order parameter."""
+    if not isinstance(phase, torch.Tensor):
+        phase = torch.as_tensor(phase)
     if phase.numel() == 0:
         raise ValueError("Phase tensor must not be empty.")
     return _scalar_rows(_core.kuramoto_order_parameter, phase)
