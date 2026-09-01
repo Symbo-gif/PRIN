@@ -61,18 +61,24 @@ __all__ = [
     "binding_persistence",
     "bootstrap_ci",
     "chimera_initial_condition",
-    "coherence_decay_rate",
     "cohens_d",
+    "coherence_decay_rate",
     "count_flops",
     "create_ablation_model",
     "cross_frequency_coupling",
     "cumulative_phase_slip_curve",
+    "curriculum_dataset",
+    "curriculum_train",
     "gaussian_bump_ic",
     "half_sync_half_random_ic",
     "instantaneous_frequency_spread",
-    "memory_growth_profile",
     "measure_wall_time",
+    "memory_growth_profile",
+    "noise_crossover_analysis",
+    "noise_degradation_curve",
+    "noise_tolerance_sweep",
     "order_parameter_series",
+    "per_community_order_parameter",
     "phase_locking_value",
     "phase_slip_rate",
     "rebinding_speed",
@@ -1153,3 +1159,215 @@ class PhaseTrackerLarge(torch.nn.Module):
             "per_frame_similarity": all_sims,
             "per_frame_phase_correlation": all_corrs,
         }
+
+
+# =========================================================================
+# Y4 Q1.8: noise tolerance + curriculum (benchmark orchestration)
+# =========================================================================
+
+
+def noise_tolerance_sweep(
+    pt_model: torch.nn.Module,
+    sa_model: torch.nn.Module,
+    dataset_fn: Any,
+    sigmas: list[float],
+    n_seeds: int = 3,
+    device: str = "cpu",
+) -> dict[str, Any]:
+    """Sweep noise levels and compare identity preservation for PT vs. SA."""
+    results: dict[str, Any] = {}
+    for sigma in sigmas:
+        pt_ips: list[float] = []
+        sa_ips: list[float] = []
+        for s in range(n_seeds):
+            ds = dataset_fn(seed=42 + s, noise_sigma=sigma)
+            for model, ips in [(pt_model, pt_ips), (sa_model, sa_ips)]:
+                model.eval()
+                model.to(device)
+                seq_ips: list[float] = []
+                dyn_model: Any = model
+                with torch.no_grad():
+                    for seq in ds:
+                        frames = [f.to(device) for f in seq.frames]
+                        res = dyn_model.track_sequence(frames)
+                        seq_ips.append(res["identity_preservation"])
+                ips.append(sum(seq_ips) / max(len(seq_ips), 1))
+        results[str(sigma)] = {
+            "sigma": sigma,
+            "pt_ips": pt_ips,
+            "sa_ips": sa_ips,
+            "pt_mean": sum(pt_ips) / max(len(pt_ips), 1),
+            "sa_mean": sum(sa_ips) / max(len(sa_ips), 1),
+            "pt_ci": bootstrap_ci(pt_ips) if len(pt_ips) >= 2 else None,
+            "sa_ci": bootstrap_ci(sa_ips) if len(sa_ips) >= 2 else None,
+        }
+    return results
+
+
+def noise_degradation_curve(
+    model: torch.nn.Module,
+    dataset_fn: Any,
+    sigmas: list[float],
+    n_seeds: int = 3,
+    device: str = "cpu",
+) -> dict[str, Any]:
+    """Identity preservation as a function of noise sigma with bootstrap CI."""
+    import numpy as np
+
+    curve: dict[str, Any] = {}
+    for sigma in sigmas:
+        ips: list[float] = []
+        for s in range(n_seeds):
+            ds = dataset_fn(seed=42 + s, noise_sigma=sigma)
+            model.eval()
+            model.to(device)
+            seq_ips: list[float] = []
+            dyn_model: Any = model
+            with torch.no_grad():
+                for seq in ds:
+                    frames = [f.to(device) for f in seq.frames]
+                    res = dyn_model.track_sequence(frames)
+                    seq_ips.append(res["identity_preservation"])
+            ips.append(sum(seq_ips) / max(len(seq_ips), 1))
+        curve[str(sigma)] = {
+            "sigma": sigma,
+            "ips": ips,
+            "mean": float(np.mean(ips)),
+            "std": float(np.std(ips, ddof=1)) if len(ips) > 1 else 0.0,
+            "ci": bootstrap_ci(ips) if len(ips) >= 2 else None,
+        }
+    return curve
+
+
+def noise_crossover_analysis(
+    pt_curve: dict[str, Any],
+    sa_curve: dict[str, Any],
+) -> dict[str, Any]:
+    """Find the crossover sigma where PT identity preservation exceeds SA."""
+    import numpy as np
+
+    sigmas = sorted([float(k) for k in pt_curve.keys()])
+    pt_means = [pt_curve[str(s)]["mean"] for s in sigmas]
+    sa_means = [sa_curve[str(s)]["mean"] for s in sigmas]
+
+    crossover_sigma = None
+    for i in range(len(sigmas) - 1):
+        diff_i = pt_means[i] - sa_means[i]
+        diff_j = pt_means[i + 1] - sa_means[i + 1]
+        if diff_i <= 0 and diff_j > 0:
+            f = -diff_i / max(diff_j - diff_i, 1e-12)
+            crossover_sigma = sigmas[i] + f * (sigmas[i + 1] - sigmas[i])
+            break
+
+    def _fit_exp(means: list[float]) -> float:
+        s_arr = np.array(sigmas)
+        m_arr = np.clip(np.array(means), 1e-10, None)
+        ln_m = np.log(m_arr)
+        if len(s_arr) >= 2:
+            coeffs = np.polyfit(s_arr, ln_m, 1)
+            return -float(coeffs[0])
+        return 0.0
+
+    lambda_pt = _fit_exp(pt_means)
+    lambda_sa = _fit_exp(sa_means)
+
+    stats = {}
+    for s in sigmas:
+        sk = str(s)
+        if sk in pt_curve and sk in sa_curve:
+            pt_ips = pt_curve[sk].get("ips", [])
+            sa_ips = sa_curve[sk].get("ips", [])
+            if len(pt_ips) >= 2 and len(sa_ips) >= 2:
+                stats[sk] = welch_t_test(pt_ips, sa_ips)
+
+    return {
+        "crossover_sigma": crossover_sigma,
+        "lambda_pt": lambda_pt,
+        "lambda_sa": lambda_sa,
+        "pt_degrades_slower": lambda_pt < lambda_sa,
+        "per_sigma_stats": stats,
+    }
+
+
+def curriculum_dataset(
+    stage: int,
+    n_seqs: int = 20,
+    det_dim: int = 4,
+    seed: int = 42,
+) -> list[Any]:
+    """Generate a dataset for a curriculum stage (1-4: harder objects/frames)."""
+    from prin.temporal_training import generate_dataset
+
+    stage_config = {
+        1: (2, 10),
+        2: (3, 20),
+        3: (4, 40),
+        4: (6, 60),
+    }
+    n_obj, n_frames = stage_config.get(stage, (4, 20))
+    return generate_dataset(
+        n_seqs,
+        n_objects=n_obj,
+        n_frames=n_frames,
+        det_dim=det_dim,
+        base_seed=seed,
+    )
+
+
+def curriculum_train(
+    model: torch.nn.Module,
+    n_stages: int = 4,
+    epochs_per_stage: int = 10,
+    n_train: int = 30,
+    n_val: int = 10,
+    det_dim: int = 4,
+    lr: float = 3e-4,
+    device: str = "cpu",
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Train a model through progressive difficulty stages."""
+    from prin.temporal_training import TemporalTrainer
+
+    results = {}
+    for stage in range(1, n_stages + 1):
+        train_ds = curriculum_dataset(stage, n_train, det_dim, seed + stage * 100)
+        val_ds = curriculum_dataset(stage, n_val, det_dim, seed + stage * 200)
+
+        trainer = TemporalTrainer(
+            model=model,
+            lr=lr,
+            max_epochs=epochs_per_stage,
+            patience=epochs_per_stage,
+            device=device,
+        )
+        tr = trainer.train(train_data=train_ds, val_data=val_ds)
+
+        results[f"stage_{stage}"] = {
+            "n_objects": [2, 3, 4, 6][stage - 1],
+            "n_frames": [10, 20, 40, 60][stage - 1],
+            "final_val_ip": tr.final_val_ip,
+            "best_epoch": tr.best_epoch,
+            "total_epochs": tr.total_epochs,
+            "wall_time_s": tr.wall_time_s,
+            "val_ips": tr.val_ips,
+        }
+
+    return results
+
+
+def per_community_order_parameter(
+    phase: torch.Tensor,
+    community_assignments: list[list[int]],
+) -> list[float]:
+    """Compute the Kuramoto order parameter r per community."""
+    r_values = []
+    for indices in community_assignments:
+        if not indices:
+            r_values.append(0.0)
+            continue
+        idx_t = torch.tensor(indices, dtype=torch.long, device=phase.device)
+        sub_phase = phase[idx_t]
+        z = torch.exp(1j * sub_phase.to(torch.complex64))
+        r = float(z.mean().abs().item())
+        r_values.append(r)
+    return r_values

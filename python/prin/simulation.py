@@ -51,6 +51,14 @@ from prin._prin_core import (
 from prin._prin_core import (
     strength_of_incoherence_temporal as _rust_strength_of_incoherence_temporal,
 )
+from prin.simulation_experiments import (
+    community_topology,
+    conduction_delay_matrix,
+    directed_weighted_topology,
+    evolutionary_coupling_update,
+    heterogeneous_natural_frequencies,
+    hierarchical_topology,
+)
 from prin.topology import ring_topology, small_world_topology
 
 __all__ = [
@@ -60,8 +68,14 @@ __all__ = [
     "SimulationResult",
     "bimodality_index",
     "chimera_index",
+    "community_topology",
+    "conduction_delay_matrix",
     "cosine_coupling_kernel",
+    "directed_weighted_topology",
     "discontinuity_measure",
+    "evolutionary_coupling_update",
+    "heterogeneous_natural_frequencies",
+    "hierarchical_topology",
     "local_order_parameter",
     "quick_simulate",
     "ring_topology",

@@ -33,8 +33,17 @@ from prin.nn.attention import OscillatoryAttention
 __all__ = [
     "AblationConfig",
     "AblationHybridPRINetV2",
+    "PhaseTrackerFrozen",
+    "PhaseTrackerStatic",
+    "SlotAttentionFrozen",
+    "SlotAttentionNoGRU",
     "create_ablation_model",
+    "create_ablation_tracker",
 ]
+
+# ``PhaseTracker{Frozen,Static}`` / ``SlotAttention{NoGRU,Frozen}`` are faithful
+# ports of the PRINet 3.0 ``nn.ablation_variants`` classes; their per-method
+# docstrings mirror the reference (Testing Standards §1.1).
 
 
 @dataclass
@@ -415,24 +424,303 @@ class PhaseTrackerStatic(nn.Module):
         }
 
 
+class PhaseTrackerFrozen(nn.Module):
+    """PhaseTracker with frozen Kuramoto coupling weights (PT-frozen).
+
+    Wraps a :class:`prin.nn.temporal_compat.PhaseTracker` whose
+    :class:`~prin.nn.DiscreteDeltaThetaGamma` dynamics parameters are frozen
+    (``requires_grad=False``); the detection encoder stays trainable. Tests
+    whether training helps PT exploit oscillatory dynamics or if the untrained
+    dynamics already provide sufficient structure.
+    """
+
+    def __init__(
+        self,
+        detection_dim: int = 4,
+        n_delta: int = 4,
+        n_theta: int = 8,
+        n_gamma: int = 16,
+        n_discrete_steps: int = 5,
+        match_threshold: float = 0.3,
+    ) -> None:
+        super().__init__()
+        from prin.nn.temporal_compat import PhaseTracker
+
+        self._inner = PhaseTracker(
+            detection_dim=detection_dim,
+            n_delta=n_delta,
+            n_theta=n_theta,
+            n_gamma=n_gamma,
+            n_discrete_steps=n_discrete_steps,
+            match_threshold=match_threshold,
+        )
+        for p in self._inner.dynamics.parameters():
+            p.requires_grad = False
+
+    @property
+    def n_osc(self) -> int:
+        """Total oscillator count."""
+        return self._inner.n_osc
+
+    @property
+    def match_threshold(self) -> float:
+        """Minimum phase similarity for a valid match."""
+        return self._inner.match_threshold
+
+    def encode(self, detections: Tensor) -> tuple[Tensor, Tensor]:
+        """See :meth:`prin.nn.temporal_compat.PhaseTracker.encode`."""
+        return self._inner.encode(detections)
+
+    def evolve(self, phase: Tensor, amplitude: Tensor) -> tuple[Tensor, Tensor]:
+        """See :meth:`prin.nn.temporal_compat.PhaseTracker.evolve`."""
+        return self._inner.evolve(phase, amplitude)
+
+    def phase_similarity(self, phase_a: Tensor, phase_b: Tensor) -> Tensor:
+        """See :meth:`prin.nn.temporal_compat.PhaseTracker.phase_similarity`."""
+        return self._inner.phase_similarity(phase_a, phase_b)
+
+    def forward(
+        self, detections_t: Tensor, detections_t1: Tensor
+    ) -> tuple[Tensor, Tensor]:
+        """Delegate to the wrapped tracker's ``forward``."""
+        result: tuple[Tensor, Tensor] = self._inner(detections_t, detections_t1)
+        return result
+
+    def track_sequence(self, frame_detections: list[Tensor]) -> dict[str, Any]:
+        """Delegate to the wrapped tracker's ``track_sequence``."""
+        return self._inner.track_sequence(frame_detections)
+
+
+class SlotAttentionNoGRU(nn.Module):
+    """TemporalSlotAttentionMOT without GRU carry-over (SA-no-GRU).
+
+    Slots re-initialise from scratch every frame. Tests whether temporal
+    recurrence is necessary for identity preservation.
+    """
+
+    def __init__(
+        self,
+        detection_dim: int = 4,
+        num_slots: int = 8,
+        slot_dim: int = 64,
+        num_iterations: int = 3,
+        match_threshold: float = 0.3,
+    ) -> None:
+        super().__init__()
+        from prin.nn.temporal_compat import SlotAttentionModule
+
+        self.num_slots = num_slots
+        self.slot_dim = slot_dim
+        self.match_threshold = match_threshold
+
+        self.det_encoder = nn.Sequential(
+            nn.Linear(detection_dim, slot_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(slot_dim, slot_dim),
+        )
+        self.slot_attention = SlotAttentionModule(
+            num_slots=num_slots,
+            slot_dim=slot_dim,
+            input_dim=slot_dim,
+            num_iterations=num_iterations,
+        )
+        # NO temporal_gru, NO temporal_norm
+
+    def process_frame(
+        self, detections: Tensor, prev_slots: Tensor | None = None
+    ) -> Tensor:
+        """Process a frame without temporal carry-over (``prev_slots`` ignored)."""
+        if detections.dim() == 2:
+            detections = detections.unsqueeze(0)
+        features = self.det_encoder(detections)
+        new_slots: Tensor = self.slot_attention(features)
+        return new_slots
+
+    def slot_similarity(self, slots_a: Tensor, slots_b: Tensor) -> Tensor:
+        """Cosine similarity ``(K, K)`` between two slot sets."""
+        if slots_a.dim() == 3:
+            slots_a = slots_a.squeeze(0)
+        if slots_b.dim() == 3:
+            slots_b = slots_b.squeeze(0)
+        a_norm = F.normalize(slots_a, dim=-1)
+        b_norm = F.normalize(slots_b, dim=-1)
+        return a_norm @ b_norm.T
+
+    def track_sequence(self, frame_detections: list[Tensor]) -> dict[str, Any]:
+        """Track objects across a sequence of frames. **Non-differentiable**."""
+        T = len(frame_detections)
+        slot_history: list[Tensor] = []
+        identity_matches: list[Tensor] = []
+        per_frame_sim: list[float] = []
+        total_matches = 0
+        total_possible = 0
+
+        with torch.no_grad():
+            prev_slots = None
+            for t in range(T):
+                dets = frame_detections[t]
+                slots = self.process_frame(dets, None)
+                slot_history.append(slots.detach().cpu())
+
+                if prev_slots is not None:
+                    sim = self.slot_similarity(prev_slots, slots)
+                    K = self.num_slots
+                    matches = torch.full((K,), -1, dtype=torch.long)
+                    used = torch.zeros(K, dtype=torch.bool)
+                    max_sims, max_idxs = sim.max(dim=1)
+                    order = max_sims.argsort(descending=True)
+                    for idx in order:
+                        j = int(max_idxs[idx].item())
+                        if not used[j] and max_sims[idx] > self.match_threshold:
+                            matches[idx] = j
+                            used[j] = True
+                    n_matched = int((matches >= 0).sum().item())
+                    identity_matches.append(matches)
+                    per_frame_sim.append(float(max_sims.mean().item()))
+                    total_matches += n_matched
+                    total_possible += K
+                prev_slots = slots
+
+        preservation = total_matches / max(total_possible, 1)
+        return {
+            "slot_history": slot_history,
+            "identity_matches": identity_matches,
+            "identity_preservation": preservation,
+            "per_frame_similarity": per_frame_sim,
+        }
+
+    def forward(
+        self, detections_t: Tensor, detections_t1: Tensor
+    ) -> tuple[Tensor, Tensor]:
+        """Process two consecutive frames for training."""
+        slots_t = self.process_frame(detections_t)
+        slots_t1 = self.process_frame(detections_t1, None)
+        sim = self.slot_similarity(slots_t, slots_t1)
+        K = self.num_slots
+        matches = torch.full((K,), -1, dtype=torch.long, device=detections_t.device)
+        used = torch.zeros(K, dtype=torch.bool, device=detections_t.device)
+        max_sims, max_idxs = sim.max(dim=1)
+        order = max_sims.argsort(descending=True)
+        for idx in order:
+            j = int(max_idxs[idx].item())
+            if not used[j] and max_sims[idx] > self.match_threshold:
+                matches[idx] = j
+                used[j] = True
+        return matches, sim
+
+
+class SlotAttentionFrozen(nn.Module):
+    """TemporalSlotAttentionMOT with every parameter frozen (SA-frozen).
+
+    The untrained SA baseline paired with :class:`PhaseTrackerFrozen`.
+    """
+
+    def __init__(
+        self,
+        detection_dim: int = 4,
+        num_slots: int = 8,
+        slot_dim: int = 64,
+        num_iterations: int = 3,
+        match_threshold: float = 0.3,
+    ) -> None:
+        super().__init__()
+        from prin.nn.temporal_compat import TemporalSlotAttentionMOT
+
+        self._inner = TemporalSlotAttentionMOT(
+            detection_dim=detection_dim,
+            num_slots=num_slots,
+            slot_dim=slot_dim,
+            num_iterations=num_iterations,
+            match_threshold=match_threshold,
+        )
+        for p in self._inner.parameters():
+            p.requires_grad = False
+
+    @property
+    def num_slots(self) -> int:
+        """Number of object slots."""
+        return self._inner.num_slots
+
+    @property
+    def slot_dim(self) -> int:
+        """Slot dimensionality."""
+        return self._inner.slot_dim
+
+    @property
+    def match_threshold(self) -> float:
+        """Minimum similarity for a valid identity match."""
+        return self._inner.match_threshold
+
+    def process_frame(
+        self, detections: Tensor, prev_slots: Tensor | None = None
+    ) -> Tensor:
+        """Delegate to the wrapped tracker's ``process_frame``."""
+        return self._inner.process_frame(detections, prev_slots)
+
+    def slot_similarity(self, slots_a: Tensor, slots_b: Tensor) -> Tensor:
+        """Delegate to the wrapped tracker's ``slot_similarity``."""
+        return self._inner.slot_similarity(slots_a, slots_b)
+
+    def forward(
+        self, detections_t: Tensor, detections_t1: Tensor
+    ) -> tuple[Tensor, Tensor]:
+        """Process two consecutive frames."""
+        prev_slots = self._inner.process_frame(detections_t)
+        curr_slots = self._inner.process_frame(detections_t1, prev_slots)
+        sim = self._inner.slot_similarity(prev_slots, curr_slots)
+        K = self._inner.num_slots
+        matches = torch.full((K,), -1, dtype=torch.long, device=detections_t.device)
+        used = torch.zeros(K, dtype=torch.bool, device=detections_t.device)
+        max_sims, max_idxs = sim.max(dim=1)
+        order = max_sims.argsort(descending=True)
+        for idx in order:
+            j = int(max_idxs[idx].item())
+            if not used[j] and max_sims[idx] > self.match_threshold:
+                matches[idx] = j
+                used[j] = True
+        return matches, sim
+
+    def track_sequence(self, frame_detections: list[Tensor]) -> dict[str, Any]:
+        """Delegate to the wrapped tracker's ``track_sequence``."""
+        return self._inner.track_sequence(frame_detections)
+
+
 def create_ablation_tracker(
     variant: str,
     detection_dim: int = 4,
     **kwargs: Any,
 ) -> nn.Module:
-    """Create an ablation tracker variant by name."""
+    """Create an ablation tracker variant by name.
+
+    Args:
+        variant: One of ``"pt_full"``, ``"pt_frozen"``, ``"pt_static"``,
+            ``"sa_full"``, ``"sa_no_gru"``, ``"sa_frozen"``.
+        detection_dim: Per-detection dimension.
+        **kwargs: Additional constructor kwargs.
+
+    Returns:
+        Tracker module.
+
+    Raises:
+        ValueError: If the variant is unknown.
+    """
     if variant == "pt_full":
-        from prin.nn.phase_tracker import PhaseTracker
+        from prin.nn.temporal_compat import PhaseTracker
 
         return PhaseTracker(detection_dim=detection_dim, **kwargs)
+    if variant == "pt_frozen":
+        return PhaseTrackerFrozen(detection_dim=detection_dim, **kwargs)
     if variant == "pt_static":
         return PhaseTrackerStatic(detection_dim=detection_dim, **kwargs)
     if variant == "sa_full":
-        from prin.nn.slot_attention import (
-            TemporalSlotAttentionMOT,
-        )
+        from prin.nn.temporal_compat import TemporalSlotAttentionMOT
 
         return TemporalSlotAttentionMOT(detection_dim=detection_dim, **kwargs)
+    if variant == "sa_no_gru":
+        return SlotAttentionNoGRU(detection_dim=detection_dim, **kwargs)
+    if variant == "sa_frozen":
+        return SlotAttentionFrozen(detection_dim=detection_dim, **kwargs)
     raise ValueError(
-        f"Unknown variant: {variant!r}. Choose from: pt_full, pt_static, sa_full"
+        f"Unknown variant: {variant!r}. "
+        f"Choose from: pt_full, pt_frozen, pt_static, sa_full, sa_no_gru, sa_frozen"
     )

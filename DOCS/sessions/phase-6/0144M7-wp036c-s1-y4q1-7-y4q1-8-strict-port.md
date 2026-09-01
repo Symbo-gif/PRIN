@@ -1,6 +1,6 @@
 # Session 0144M7 — WP-036C S1 (sub-pass 7/8): Y4Q1_7/Y4Q1_8 strict port
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036C
 **Session type:** S1 — Coding

@@ -431,8 +431,8 @@ introduction and are not retroactively added here; this table starts with
 | 0144M3 | 6 | WP-036C | S1 — Coding | [Y3Q1/Y3Q2 strict port](phase-6/0144M3-wp036c-s1-y3q1-y3q2-strict-port.md) | COMPLETE |
 | 0144M4 | 6 | WP-036C | S1 — Coding | [Y3Q3/Y3Q4/Y3Q45/Y3Q49 strict port](phase-6/0144M4-wp036c-s1-y3q3-y3q4-y3q45-y3q49-strict-port.md) | COMPLETE |
 | 0144M5 | 6 | WP-036C | S1 — Coding | [Y4Q1/Y4Q1_2/Y4Q1_3 strict port](phase-6/0144M5-wp036c-s1-y4q1-y4q1-2-y4q1-3-strict-port.md) | COMPLETE |
-| 0144M6 | 6 | WP-036C | S1 — Coding | [Y4Q1_4/Y4Q1_5/Y4Q1_9 strict port](phase-6/0144M6-wp036c-s1-y4q1-4-y4q1-5-y4q1-9-strict-port.md) | PLANNED |
-| 0144M7 | 6 | WP-036C | S1 — Coding | [Y4Q1_7/Y4Q1_8 strict port](phase-6/0144M7-wp036c-s1-y4q1-7-y4q1-8-strict-port.md) | PLANNED |
+| 0144M6 | 6 | WP-036C | S1 — Coding | [Y4Q1_4/Y4Q1_5/Y4Q1_9 strict port](phase-6/0144M6-wp036c-s1-y4q1-4-y4q1-5-y4q1-9-strict-port.md) | COMPLETE |
+| 0144M7 | 6 | WP-036C | S1 — Coding | [Y4Q1_7/Y4Q1_8 strict port](phase-6/0144M7-wp036c-s1-y4q1-7-y4q1-8-strict-port.md) | COMPLETE |
 | 0144M8 | 6 | WP-036C | S1 — Coding | [Y4Q2/Y4Q3/Y4Q4, GPU/Triton guards, and consolidation](phase-6/0144M8-wp036c-s1-y4q2-y4q3-y4q4-kernels-and-consolidation.md) | PLANNED |
 | 0144N | 6 | WP-036C | S2 — Audit | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144N-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0144O | 6 | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |

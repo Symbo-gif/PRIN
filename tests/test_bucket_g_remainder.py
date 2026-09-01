@@ -284,23 +284,50 @@ def test_count_parameters_counts_linear_model() -> None:
     assert counts["complex_adjusted"] == 10
 
 
-@pytest.mark.parametrize(
-    "fn",
-    [
-        temporal_smoothness_loss,
-        train_multi_seed,
-    ],
-)
-def test_temporal_training_d22_stubs_raise(fn: object) -> None:
-    """Every numeric temporal_training symbol raises the D-2.2 disposition."""
-    with pytest.raises(NotImplementedError, match=r"D-2\.2"):
-        fn()  # type: ignore[operator]
+def test_temporal_smoothness_loss_is_real() -> None:
+    """``temporal_smoothness_loss`` is the real similarity-sequence loss (0144M7)."""
+    import torch
+
+    zero = temporal_smoothness_loss([torch.eye(3), torch.eye(3)])
+    assert zero.item() == pytest.approx(0.0, abs=1e-6)
+    nonzero = temporal_smoothness_loss([torch.eye(3), torch.zeros(3, 3)])
+    assert nonzero.item() > 0.0
 
 
-def test_temporal_trainer_is_d22_stub() -> None:
-    """``TemporalTrainer`` raises the D-2.2 disposition on construction."""
-    with pytest.raises(NotImplementedError, match=r"D-2\.2"):
-        TemporalTrainer(model=None)
+def test_temporal_trainer_is_real() -> None:
+    """``TemporalTrainer`` is the real training loop (0144M7)."""
+    from prin.nn.temporal_compat import PhaseTracker
+    from prin.temporal_training import TrainingResult, generate_dataset
+
+    model = PhaseTracker(
+        detection_dim=4, n_delta=2, n_theta=2, n_gamma=2, n_discrete_steps=1
+    )
+    trainer = TemporalTrainer(model, lr=1e-3, max_epochs=2, patience=2)
+    data = generate_dataset(2, n_objects=2, n_frames=4, base_seed=1)
+    result = trainer.train(data, data)
+    assert isinstance(result, TrainingResult)
+    assert result.total_epochs >= 1
+
+
+def test_train_multi_seed_is_real() -> None:
+    """``train_multi_seed`` aggregates real per-seed training runs (0144M7)."""
+    from prin.nn.temporal_compat import PhaseTracker
+    from prin.temporal_training import MultiSeedResult, generate_dataset
+
+    data = generate_dataset(2, n_objects=2, n_frames=4, base_seed=1)
+    result = train_multi_seed(
+        lambda: PhaseTracker(
+            detection_dim=4, n_delta=2, n_theta=2, n_gamma=2, n_discrete_steps=1
+        ),
+        "pt",
+        data,
+        data,
+        seeds=(42, 123),
+        max_epochs=1,
+        patience=1,
+    )
+    assert isinstance(result, MultiSeedResult)
+    assert len(result.per_seed) == 2
 
 
 # ── y4q1_tools grab-bag ──────────────────────────────────────────────────

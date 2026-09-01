@@ -1,15 +1,15 @@
 # Session 0144M / WP-036C S1 running handoff
 
-**Date:** 2026-08-31 (session start + decomposition; `0144M1`–`0144M6` executed)
-**Status:** S1 **in progress** — sub-passes `0144M1`–`0144M6` (integration_q3 +
+**Date:** 2026-08-31 start; `0144M7` executed 2026-09-01
+**Status:** S1 **in progress** — sub-passes `0144M1`–`0144M7` (integration_q3 +
 y2q1 + y2q4, 93 fns; y2q2 + y2q3, 65 fns; y3q1 + y3q2, 78 fns; y3q3 + y3q4 +
 y3q45 + y3q49, 117 fns; y4q1 + y4q1_2 + y4q1_3, 171 fns; y4q1_4 + y4q1_5 +
-y4q1_9, 158 fns) **COMPLETE and committed locally** at green gates; not pushed.
-**682 / 1,097** reference functions ported. Plan amendment #39 inserted
-the eight strict-port sub-passes `0144M1`–`0144M8` feeding the single mandatory
-S2 audit `0144N`; plan amendment #40 (2026-08-31) records three `0144M1` scope
-confirmations (deferred-symbol rebuild in-scope, `__version__` → `0.3.0`,
-minimal `docs/` guides). Next: `0144M7`.
+y4q1_9, 158 fns; y4q1_7 + y4q1_8, 194 fns) **COMPLETE and committed locally**
+at green gates; not pushed. **876 / 1,097** reference functions ported. Plan
+amendment #39 inserted the eight strict-port sub-passes `0144M1`–`0144M8`
+feeding the single mandatory S2 audit `0144N`; plan amendment #40 (2026-08-31)
+records three `0144M1` scope confirmations (deferred-symbol rebuild in-scope,
+`__version__` → `0.3.0`, minimal `docs/` guides). Next: `0144M8`.
 
 ## Session-start protocol (Development Workflow §6)
 
@@ -612,5 +612,126 @@ execution is the M6 parity evidence. No new hazard-tolerance annotation or
 backend-availability guard, so `DOCS/sphinx/parity_report.rst` is
 unchanged.
 
-### 0144M7 — not started
+### 0144M7 — y4q1_7 + y4q1_8 — COMPLETE (2026-09-01)
+
+**Committed locally at a green sub-pass gate; not pushed. Next: 0144M8.**
+
+Maintainer selected **Full Python compat (M6-consistent)** for the compat gap
+(`AskUserQuestion`, 2026-09-01): the Q1.7/Q1.8 reference tests exercise the
+PRINet-3.0 *PyTorch-module* shape of `PhaseTracker` / `TemporalSlotAttentionMOT`
+/ the ablation variants (`model.parameters()` for `count_parameters` +
+gradient clipping, `_inner.dynamics` / `_inner.det_to_phase` introspection,
+differentiable `forward(d0,d1)->(matches,sim)`, tensor-arg
+`process_frame(dets, prev_slots)`, a full `TemporalTrainer` loop) — PRIN's
+`prin.nn.phase_tracker` / `prin.nn.slot_attention` / `prin.nn.ablation` Rust
+bridges (Rust-owned params, `.inner` property, Seed-arg `process_frame`) do not
+provide it. Resolution: new/extended faithful-port modules as real
+`torch.nn.Module` graphs composing the Rust-backed `DiscreteDeltaThetaGamma`
+for the oscillatory core; the non-oscillatory Slot Attention baseline
+(Locatello et al. 2020) and the match-list metrics stay Python — the same
+disposition class as `prin.nn.mot_evaluation` / `prin.nn.ablation_variants` /
+`prin.y4q1_tools` (all excluded from the `check_no_python_numerics` scan).
+Adversarial / gradient-flow tests that need a *differentiable*
+`DiscreteDeltaThetaGamma.integrate` (currently a non-differentiable Rust
+forward + value-preserving zero term, M1 disposition) are carried to `0144N`
+as out-of-scope discoveries — not weakened.
+
+#### Strict-port accounting and semantic proof
+
+| Reference | Stable port | Lines | `def test_` | Result (default gate) | Slow | Tolerance annotations | Discoveries |
+|---|---|---:|---:|---|---:|---:|---|
+| `test_y4q1_7.py` | `tests/test_acceptance_y4q1_7.py` | 840 | 79 | 79 / 79 | 0 | 0 | `prin.temporal_metrics` (new); `prin.nn.temporal_compat` (new — compat `PhaseTracker` / `SlotAttentionModule` / `TemporalSlotAttentionMOT`); `TemporalTrainer` + `TrainingResult` + `temporal_smoothness_loss` + `train_multi_seed` real (D-2.2 stubs resolved); `PhaseTrackerFrozen` / `SlotAttentionNoGRU` / `SlotAttentionFrozen` + 6-variant `create_ablation_tracker` in `prin.nn.ablation_variants` |
+| `test_y4q1_8.py` | `tests/test_acceptance_y4q1_8.py` | 1,071 | 115 | 52 / 55 + 60 skip | 0 | 0 | `prin.adversarial_tools` (new — fgsm/pgd/evaluate/comparison); `prin.simulation_experiments` (new — `community_topology` / `hierarchical_topology` / `conduction_delay_matrix` / `directed_weighted_topology` / `evolutionary_coupling_update` / `heterogeneous_natural_frequencies`, re-exported from `prin.simulation`); `prin.y4q1_tools` += `noise_tolerance_sweep` / `noise_degradation_curve` / `noise_crossover_analysis` / `curriculum_dataset` / `curriculum_train` / `per_community_order_parameter`; **3 out-of-scope discoveries** |
+| **M7 total** | **2 files** | **1,911** | **194** | **131 / 134 default gate** | **0** | **0** | **3** |
+
+199 collected (parametrize expansion: `test_all_variants_constructable` ×6).
+65 skipped in `test_y4q1_8` are the `Test*Report` benchmark-artefact-JSON
+classes that `pytest.skip` when their output files are absent (reference
+behaviour, unchanged).
+
+**3 out-of-scope discoveries** (all `test_y4q1_8`, carried to `0144N`, not
+weakened):
+- `TestFGSMAttack::test_gradient_sign` — asserts `fgsm_attack` perturbs
+  `dets_t` (needs `d(sim)/d(dets_t) != 0`). The compat `PhaseTracker.evolve`
+  delegates to the Rust `DiscreteDeltaThetaGamma.integrate`, which is a
+  non-differentiable Rust forward wrt its `phase` input (M1 disposition:
+  detached marshal + value-preserving zero term for parameter `.grad` only),
+  so the greedy-match gradient path to `dets_t` is broken.
+- `TestPhaseTrackerLargeModel::test_gradient_flow` — same root cause
+  (`dets_t.grad is None` after `sim.sum().backward()` on `PhaseTrackerLarge`).
+- `TestInfrastructure::test_preregistration_exists` — hard-asserts
+  `benchmarks/results/y4q1_8_preregistration_hash.json` exists; the Q1.8
+  benchmark suite has not been run (WP-036C non-goal; identical class to
+  `0144M4`'s 8 `y3q49` `test_artefact_exists` failures).
+
+#### Changed-owner mapping
+
+| Compatibility behaviour | Numerical / Rust owner | Python exposure |
+|---|---|---|
+| `temporal_metrics.{temporal_smoothness, identity_switches, track_fragmentation_rate, identity_overcount, mostly_tracked_lost, track_duration_stats, recovery_speed, binding_robustness_score, compute_full_temporal_metrics}` + `TemporalMetrics` | n/a — host-side match-list / index bookkeeping + one mean-of-L2-norm over a position tensor (same category as `nn/mot_evaluation`) | **new** `prin.temporal_metrics`, faithful port |
+| `nn.hybrid.PhaseTracker` (encode → evolve → phase-similarity → greedy match) | `prin.nn.DiscreteDeltaThetaGamma` (Rust `prin_train::bands`, WP-022) owns `.evolve`; `det_to_phase` / `det_to_amp` are stock `nn.Linear`; `phase_similarity` is a cosine-of-`exp(i·phase)` similarity metric | **new** `prin.nn.temporal_compat.PhaseTracker` — real `nn.Module`, faithful port. `from prinet.nn.hybrid import PhaseTracker` → `from prin.nn.temporal_compat import PhaseTracker` for the M7 ports (M4/M6 keep `prin.nn.phase_tracker` for their y4q1_4/_9 ports — that Rust bridge is unchanged) |
+| `nn.slot_attention.SlotAttentionModule` / `TemporalSlotAttentionMOT` | n/a — the explicitly *non-oscillatory* Slot Attention comparison baseline (Locatello et al. 2020); same disposition as `mot_evaluation`'s `AttentionTracker` | **new** `prin.nn.temporal_compat.{SlotAttentionModule, TemporalSlotAttentionMOT}` — real `nn.Module`s, faithful port |
+| `temporal_training.{TemporalTrainer, TrainingResult, temporal_smoothness_loss, train_multi_seed}` | n/a — `torch.optim` orchestration over the Rust-backed models (D-2.2 stubs resolved) | `prin.temporal_training` — real implementations; `_is_phase_tracker` recognises the compat `PhaseTracker` (`det_to_phase` + `dynamics`), `PhaseTrackerLarge`, `PhaseTrackerStatic` (`det_to_phase` + `frequencies`), and `_inner`-wrapped frozen variants |
+| `nn.ablation_variants.{PhaseTrackerFrozen, SlotAttentionNoGRU, SlotAttentionFrozen}` + `create_ablation_tracker` (6 variants) | wrap the compat `PhaseTracker` / `TemporalSlotAttentionMOT` / `SlotAttentionModule`; `PhaseTrackerFrozen` freezes `_inner.dynamics.parameters()` (the Rust-backed `DiscreteDeltaThetaGamma` mirrors) | `prin.nn.ablation_variants` — faithful ports added alongside the existing `AblationHybridPRINetV2` / `PhaseTrackerStatic` |
+| `adversarial_tools.{fgsm_attack, pgd_attack, adversarial_evaluate, adversarial_comparison}` | n/a — `torch.autograd` orchestration over the tracker models' own `forward` / `track_sequence` | **new** `prin.adversarial_tools`, faithful port |
+| `oscillosim.{community_topology, hierarchical_topology, conduction_delay_matrix, directed_weighted_topology, evolutionary_coupling_update, heterogeneous_natural_frequencies}` | n/a — synthetic `(N,k)` neighbour / weight / frequency tensor builders (same category as `benchmarks` generators); chimera metrics + the `OscilloSim` stepper stay Rust | **new** `prin.simulation_experiments`, re-exported from `prin.simulation` |
+| `y4q1_tools.{noise_tolerance_sweep, noise_degradation_curve, noise_crossover_analysis, curriculum_dataset, curriculum_train, per_community_order_parameter}` | n/a — benchmark orchestration + numpy statistics (`np.polyfit` exp-decay fit); `curriculum_train` drives `TemporalTrainer` | `prin.y4q1_tools` — faithful ports appended |
+
+No Rust crate, `Cargo.*`, PyO3 binding, or `.pyi` change — the entire M7
+compatibility surface is Python delegation over already-shipped Rust owners
+plus the non-oscillatory Slot Attention baseline.
+
+`tools/check_no_python_numerics.py` scope unchanged (still 17 modules): the
+five new modules (`temporal_metrics.py`, `temporal_training.py` — already
+excluded at M6, `adversarial_tools.py`, `simulation_experiments.py`,
+`nn/temporal_compat.py`) are benchmark/experiment tracker-and-metric tooling,
+the same category as `nn/mot_evaluation.py` / `nn/ablation_variants.py` /
+`y4q1_tools.py` which are likewise not scanned.
+
+Governance updated in step: `DOCS/sphinx/migration_guide.rst` consolidated
+172-symbol table re-rendered (`TemporalTrainer` / `temporal_smoothness_loss` /
+`train_multi_seed` D-2.2 stub → real); `tests/test_bucket_g_remainder.py`
+`test_temporal_training_d22_stubs_raise` / `test_temporal_trainer_is_d22_stub`
+→ `test_temporal_smoothness_loss_is_real` / `test_temporal_trainer_is_real` /
+`test_train_multi_seed_is_real`; per-file `ruff` ignores for the two ports
+(`test_acceptance_y4q1_7` = `F401`/`I001`/`RUF059`; `test_acceptance_y4q1_8` =
+`B007`/`E501`/`F401`/`I001`/`RUF059`) + `nn/temporal_compat.py` (`D107`) +
+`nn/ablation_variants.py` (add `D102`/`D107`); `SESSION_REGISTER.md` /
+`phase-6/README.md` `0144M7` → COMPLETE **and pre-existing `0144M6` register
+debt fixed** (`0144M6` brief said COMPLETE but the register / README rows still
+said PLANNED — `validate_baseline` `brief/register status mismatch`; recorded
+for `0144N` visibility, not attributable to M7).
+
+#### Command evidence
+
+- `pytest tests/test_acceptance_y4q1_7.py tests/test_acceptance_y4q1_8.py`:
+  **131 passed, 3 failed, 65 skipped** (the 3 out-of-scope discoveries above).
+- `pytest tests/ -m "not slow and not gpu"`: no new regressions beyond the
+  pre-existing `0144M2` CUDA-only ×2, `0144M4` artefact ×8, `0144M5` RNG ×1
+  discoveries and this pass's ×3.
+- `git diff --no-index` reference vs port (both files): import-path lines only
+  (6 + 6 / 7 + 7), plus `import prinet` → `import prin as prinet` (M1
+  precedent). No assertion / value / parametrization / call-order / semantics
+  change; no `ruff format` re-wrap needed this pass.
+- `ruff check` + `ruff format --check` (repo): clean.
+- `mypy python/prin --strict`: clean (62 files).
+- `tools/check_no_python_numerics.py`: clean (17 modules).
+- `tools/wp036_migration_table.py check`: OK (172 symbols).
+- `interrogate -c pyproject.toml python/`: PASS (97.0%).
+- `bandit -r python/ -c pyproject.toml`: 3 pre-existing LOW; 0 new.
+- **Snyk Code** (`--severity-threshold=low`) on `python/prin` and `tests`:
+  **0 issues**.
+- No dependency / manifest / crate change → Snyk Open Source, `pip-audit`,
+  `cargo audit`, and the `cargo` build/test/clippy gates are not applicable
+  (`pyproject.toml` delta is per-file `ruff` ignores only).
+- Coverage instrumentation remains host-blocked
+  ([[wp036-coverage-tooling-blocked]]); the 194-test acceptance subset + the
+  full suite + manual review stand in, CI authoritative.
+
+**Parity-evidence disposition:** directly comparable PRINet 3.0 behaviour
+exists and is the literal 194-test acceptance source. Imports-only diff +
+131/134 default-gate execution is the M7 parity evidence. No new hazard
+tolerance or backend-availability guard, so `DOCS/sphinx/parity_report.rst` is
+unchanged. The 3 discoveries are carried to `0144N`, not weakened.
+
 ### 0144M8 — not started
