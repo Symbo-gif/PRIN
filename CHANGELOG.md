@@ -18,6 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Executive Documentation Audit (EDA) — new audit type and first session
+  (EDA-001, 2026-09-01).** Phase 6 mid-phase documentation audit across 8
+  dimensions (D1–D8). Governance and methodology established at
+  `DOCS/standards/Executive_Documentation_Audit_Governance_and_Methodology.md`;
+  report template at `DOCS/audits/TEMPLATE_Executive_Documentation_Audit_Report.md`;
+  first report at `DOCS/audits/EXECUTIVE_DOCUMENTATION_AUDIT_REPORT_001.md`.
+  Verdict: `PASS-WITH-REMEDIATION` — four findings (D-F1 D2: Sphinx 19
+  duplicate-object warnings; D-F2/D-F3 D3: stale directory indexes; D-F4 D3:
+  deviation-ledger CI gate inert for sub-PSRs). All recommended for
+  remediation in a dedicated session.
+
 - **WP-036C S1 — Strict acceptance-suite port, part 2** (sessions `0144M` +
   `0144M1`–`0144M8`, 2026-08-31–09-01, plan amendments #39/#40). 24 PRINet 3.0
   reference files strict-ported under stable `tests/test_acceptance_*.py`

@@ -8,6 +8,7 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
 - Template: [`TEMPLATE_Audit_Report.md`](TEMPLATE_Audit_Report.md)
 - Executive Audit Template: [`TEMPLATE_Executive_Audit_Report.md`](TEMPLATE_Executive_Audit_Report.md)
 - Executive Mathematical Audit Template: [`TEMPLATE_Executive_Math_Audit_Report.md`](TEMPLATE_Executive_Math_Audit_Report.md)
+- Executive Documentation Audit Template: [`TEMPLATE_Executive_Documentation_Audit_Report.md`](TEMPLATE_Executive_Documentation_Audit_Report.md)
 - Audits are append-only history: never edit a committed audit except to add
   the S3 closure table.
 - Verdicts: `PASS` / `PASS-WITH-FINDINGS` / `FAIL` (any D1 finding ⇒ `FAIL`;
@@ -296,3 +297,15 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   52 PASS, 7 `REQUIRES_HUMAN_REVIEW` (unchanged composition from EMA-005).
   All 13 new claims independently corroborated via Wolfram Engine.
   Maintainer sign-off pending for the 7 `REQUIRES_HUMAN_REVIEW` claims.
+- [`EXECUTIVE_DOCUMENTATION_AUDIT_REPORT_001.md`](EXECUTIVE_DOCUMENTATION_AUDIT_REPORT_001.md) —
+  First Executive Documentation Audit (EDA-001, 2026-09-01), Phase 6
+  mid-phase, `PASS-WITH-REMEDIATION`. Establishes the EDA audit type
+  (governance at `DOCS/standards/Executive_Documentation_Audit_Governance_and_Methodology.md`).
+  Systematic verification of Phase 6 documentation across 8 dimensions
+  (D1–D8): CHANGELOG accuracy, session register consistency, PSR integrity,
+  directory README/index currency, cross-reference consistency, DV register
+  accuracy, Sphinx build health, and plan amendment traceability. Four
+  findings: D-F1 (D2, Sphinx 19 duplicate-object warnings — same
+  napoleon/autodoc class as PA4-F2/R26), D-F2 (D3, reports README missing
+  036b/c/d entries), D-F3 (D3, audits README missing 036b/c/d entries),
+  D-F4 (D3, deviation-ledger CI gate functionally inert for sub-PSRs).
