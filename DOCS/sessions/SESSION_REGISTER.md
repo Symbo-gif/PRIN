@@ -520,7 +520,7 @@ introduction and are not retroactively added here; this table starts with
 | 0144R | 6 | WP-036E | S2 — Audit | [GPU device-resident execution path](phase-6/0144R-wp036e-s2-gpu-device-resident-execution-path.md) | COMPLETE |
 | 0144S | 6 | WP-036E | S3 — Remediation | [GPU device-resident execution path](phase-6/0144S-wp036e-s3-gpu-device-resident-execution-path.md) | COMPLETE |
 | 0144T | 6 | WP-036E | S4 — Documentation | [GPU device-resident execution path](phase-6/0144T-wp036e-s4-gpu-device-resident-execution-path.md) | COMPLETE |
-| 0144U | 6 | WP-036F | S1 — Coding | [DirectML controller-graph execution](phase-6/0144U-wp036f-s1-directml-controller-graph-execution.md) | PLANNED |
+| 0144U | 6 | WP-036F | S1 — Coding | [DirectML controller-graph execution](phase-6/0144U-wp036f-s1-directml-controller-graph-execution.md) | COMPLETE |
 | 0144V | 6 | WP-036F | S2 — Audit | [DirectML controller-graph execution](phase-6/0144V-wp036f-s2-directml-controller-graph-execution.md) | PLANNED |
 | 0144W | 6 | WP-036F | S3 — Remediation | [DirectML controller-graph execution](phase-6/0144W-wp036f-s3-directml-controller-graph-execution.md) | PLANNED |
 | 0144X | 6 | WP-036F | S4 — Documentation | [DirectML controller-graph execution](phase-6/0144X-wp036f-s4-directml-controller-graph-execution.md) | PLANNED |

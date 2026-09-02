@@ -1,6 +1,6 @@
 # tests/ — pytest acceptance suite
 
-The PRIN pytest suite (50 files, ~2,969 tests) is the **acceptance contract**
+The PRIN pytest suite (51 files, ~2,991 tests) is the **acceptance contract**
 for PRIN: it defines the public API. The WP-036B + WP-036C strict ports have
 adapted 37 PRINet 3.0 reference files (1,670 `def test_` functions, ~24,000
 reference lines) with import-only changes (`prinet.*` → `prin.*`); assertions
@@ -173,6 +173,15 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   (5 `@pytest.mark.gpu` CUDA: kDLCUDA capsule export, deterministic
   export, snapshot stability, sparse k-NN CUDA dispatch, device-end-to-end
   hook; 1 default-gate CPU regression).
+- `test_wp036f_reexport.py` — 21 WP-036F tests for the re-exported
+  controller graph (`tools/wp036f_reexport_controller.py`,
+  `tools/wp036f_provider_latency.py`): three-input `Gemm` structure and
+  zero-bias values, the idempotent transform and its `--check` verifier,
+  CPU bit-identity vs the bias-stripped and pristine-archive graphs over the
+  48-case set, and — `skipif` `DmlExecutionProvider` is not registered — that
+  DirectML rejects the pre-transform graph and executes the re-exported one
+  within `rtol=1e-5, atol=1e-6` of CPU. Not `@pytest.mark.gpu` (DirectML is a
+  default-gate provider on the Windows host).
 - `test_benchrunner.py` — WP-033 tests for the unified `benchrunner` CLI and
   its nine category packages (`../benchmarks/`): shared config/timing/
   registry/result-writer infrastructure, the ≥10-measured-iteration timing

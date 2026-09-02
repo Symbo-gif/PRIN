@@ -204,6 +204,14 @@ at the top level until they are folded into the final campaign archive in Phase 
   collection plus the missing `benchmarks.clevr_n` import error, amendment #35's
   six-pass strict-port split (`0144E1`–`0144E6`), exact per-file counts, and the
   Rust-backed compatibility/no-semantic-test-rewrite disposition.
+- [`0144Q-wp036e-s1-handoff.md`](0144Q-wp036e-s1-handoff.md) — WP-036E S1
+  handoff: plan amendment #43 re-scope, the `0144Q1`–`0144Q3` decomposition,
+  and each sub-pass's device-resident-execution evidence.
+- [`0144U-wp036f-s1-handoff.md`](0144U-wp036f-s1-handoff.md) — WP-036F S1
+  handoff to the S2 audit `0144V`: the controller ONNX graph re-exported with
+  three-input `Gemm` nodes so `DmlExecutionProvider` executes it, the CPU
+  bit-identity gate (48 cases), the DirectML agreement + latency evidence, and
+  the acceptance-criterion → evidence map.
 - [`hotfix-dv019-handoff.md`](hotfix-dv019-handoff.md) — Dedicated
   hotfix/correction session for DV-019 (flaky `prin-train` tests,
   `burn-autodiff` cross-thread graph-server interaction). Handoff from

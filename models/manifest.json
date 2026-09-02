@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "description": "SHA-256 manifest for the pre-trained PRIN subconscious controller artefacts, copied unchanged from PRINet 3.0. Verified by prin_daemon::model::ModelManifest and prin.daemon.verify_model_artefacts before any ONNX session is created.",
+  "description": "SHA-256 manifest for the pre-trained PRIN subconscious controller artefacts. The graph originates unchanged from PRINet 3.0; WP-036F (session 0144U) re-exported subconscious_controller.onnx with three-input Gemm nodes (explicit zero bias) so ONNX Runtime's DmlExecutionProvider can execute it — mathematically identical, bit-identical on CPUExecutionProvider. Regenerate with tools/wp036f_reexport_controller.py. Verified by prin_daemon::model::ModelManifest and prin.daemon.verify_model_artefacts before any ONNX session is created.",
   "files": [
     {
       "path": "subconscious_controller.onnx",
-      "bytes": 18270,
-      "sha256": "3396bfdd433afcfbf865363ff5113e2b068096dbdfabfbc2c9e976b4f07d4102"
+      "bytes": 19428,
+      "sha256": "d7d7935b70b3faab7af303be088bd82698f2140ff27a9d9f74a811d609d8341a"
     },
     {
       "path": "subconscious_controller.onnx.data",

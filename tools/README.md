@@ -63,6 +63,21 @@ or execute archived reference code.
   `prin_train::stats::welch_t_test` against (8 scenarios, `rtol=1e-9,
   atol=1e-12`). Calls only scipy — never implements any numerical algorithm
   (per `tools/` policy).
+- `wp036f_reexport_controller.py` (WP-036F) rewrites
+  `models/subconscious_controller.onnx` so every `Gemm` node carries an
+  explicit zero-valued `float32` bias third input (`net.N.weight` ->
+  `net.N.bias`), which `DmlExecutionProvider`'s `DmlFusedGemm` fusion
+  requires. Adding a zero bias leaves the graph's function unchanged. The
+  transform is idempotent; `--check` re-verifies the committed artefact and
+  its `manifest.json` and exits 1 on any drift. It also refreshes
+  `models/manifest.json`.
+- `wp036f_provider_latency.py` (WP-036F) records the DV-006 "provider and
+  latency acceptance" evidence to
+  `EVIDENCE/0144U-wp036f-s1-controller-provider-report.json`: the re-exported
+  graph is bit-identical to the pristine PRINet 3.0 graph on
+  `CPUExecutionProvider` over 48 cases, `DmlExecutionProvider` executes it and
+  agrees with CPU within `rtol=1e-5, atol=1e-6`, and the DirectML-vs-CPU
+  median inference latency.
 
 Run the WP-001 validator from the repository root:
 

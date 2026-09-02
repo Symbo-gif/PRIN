@@ -42,16 +42,19 @@ fn the_committed_manifest_verifies_every_model_artefact() {
     let verified = manifest.verify(models_dir()).expect("artefacts verify");
     assert_eq!(verified.len(), 2);
 
-    // The graph digest recorded in WP-005's ORT probe evidence
-    // (EVIDENCE/0017-wp005-s1-ort-probe.json) must still hold.
+    // WP-036F (session 0144U) re-exported the graph with three-input `Gemm`
+    // nodes (explicit zero bias) so DirectML's `DmlFusedGemm` fusion accepts it;
+    // the function is unchanged (bit-identical on CPUExecutionProvider) but the
+    // digest and size move. WP-005's `EVIDENCE/0017-wp005-s1-ort-probe.json`
+    // records the pre-transform digest and is left as the historical artefact.
     let graph = manifest
         .entry("subconscious_controller.onnx")
         .expect("graph entry");
     assert_eq!(
         graph.sha256,
-        "3396bfdd433afcfbf865363ff5113e2b068096dbdfabfbc2c9e976b4f07d4102"
+        "d7d7935b70b3faab7af303be088bd82698f2140ff27a9d9f74a811d609d8341a"
     );
-    assert_eq!(graph.bytes, 18_270);
+    assert_eq!(graph.bytes, 19_428);
 
     let data = manifest
         .entry("subconscious_controller.onnx.data")
@@ -129,7 +132,7 @@ fn full_validation_rejects_a_wrong_digest() {
     assert!(matches!(err, DaemonError::HashMismatch { .. }));
     let message = err.to_string();
     assert!(message.contains(&"0".repeat(64)));
-    assert!(message.contains("3396bfdd433afcfbf865363ff5113e2b068096dbdfabfbc2c9e976b4f07d4102"));
+    assert!(message.contains("d7d7935b70b3faab7af303be088bd82698f2140ff27a9d9f74a811d609d8341a"));
 }
 
 #[test]
@@ -137,6 +140,6 @@ fn validation_without_an_expected_digest_still_enforces_the_contract() {
     let model = ControllerModel::validate(model_path(), None).expect("valid");
     assert_eq!(
         model.sha256,
-        "3396bfdd433afcfbf865363ff5113e2b068096dbdfabfbc2c9e976b4f07d4102"
+        "d7d7935b70b3faab7af303be088bd82698f2140ff27a9d9f74a811d609d8341a"
     );
 }

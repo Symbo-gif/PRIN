@@ -45,6 +45,14 @@ session that produced it.
   — WP-036E S3 (`0144S`) finding WP036E-F1: DV-003 host-residual re-probe on
   `PRIN-GPU-Runner` confirming CUDA `StepReport.timing_method == "system"` and
   a bounded ~0.03 ms host residual (plan amendment #44).
+- [`0144U-wp036f-s1-controller-provider-report.json`](0144U-wp036f-s1-controller-provider-report.json)
+  — WP-036F S1 (`0144U`) DV-006 "provider and latency acceptance" evidence for
+  the re-exported controller graph (three-input `Gemm` nodes): the pristine-vs-
+  re-exported `Gemm` input arities and the CPU bit-identity over the 48-case
+  set, `DmlExecutionProvider` execution and its agreement with CPU
+  (`max_abs_diff_vs_cpu`, `rtol=1e-5, atol=1e-6`), and the DirectML-vs-CPU
+  median inference latency. Regenerate with
+  `tools/wp036f_provider_latency.py`.
 
 ## Rules
 

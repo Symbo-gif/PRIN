@@ -272,3 +272,24 @@ class TestCrossProviderAgreement:
                     atol=1e-6,
                 )
                 assert actual.preferred_regime == expected.preferred_regime
+
+    @pytest.mark.skipif(
+        "DmlExecutionProvider" not in ort.get_available_providers(),
+        reason="DmlExecutionProvider is not registered on this host",
+    )
+    def test_directml_executes_the_reexported_graph(self, sample_states):
+        """WP-036F: the re-exported three-input-Gemm graph runs on DirectML.
+
+        Before WP-036F the controller graph's two-input ``Gemm`` nodes made
+        DirectML reject it at load (``InvalidGraph``) and the cross-provider
+        harness fell back to CPU only. The DV-006 DirectML half closes here:
+        ``directml`` is now an executable backend and its outputs agree with
+        CPU within Testing Standards §3's ``rtol=1e-5, atol=1e-6``.
+        """
+        assert "directml" in _executable_backends()
+        batch = np.stack([s.to_tensor() for s in sample_states])
+        cpu = SubconsciousController(backend="cpu").run(batch)
+        dml_controller = SubconsciousController(backend="directml")
+        assert dml_controller.backend == "directml"
+        assert "DmlExecutionProvider" in dml_controller.active_providers
+        np.testing.assert_allclose(dml_controller.run(batch), cpu, rtol=1e-5, atol=1e-6)

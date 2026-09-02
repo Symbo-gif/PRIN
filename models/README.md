@@ -2,11 +2,25 @@
 
 Pre-trained model artefacts.
 
-- `subconscious_controller.onnx` (18 KB) — the ONNX graph for the
-  pre-trained subconscious controller, copied unchanged from PRINet 3.0 and
-  consumed by `prin-daemon` on CPU / DirectML / Ryzen AI NPU backends.
+- `subconscious_controller.onnx` (19 KB) — the ONNX graph for the
+  pre-trained subconscious controller, consumed by `prin-daemon` on
+  CPU / DirectML / Ryzen AI NPU backends. The graph originates unchanged from
+  PRINet 3.0; **WP-036F (session 0144U)** re-exported it with three-input
+  `Gemm` nodes — an explicit zero-valued `float32` bias per layer
+  (`net.0.bias` / `net.3.bias` / `net.6.bias`, all zeros) — so ONNX Runtime's
+  `DmlExecutionProvider` accepts it (its `DmlFusedGemm` fusion rejects the
+  two-input `Gemm` form). The transform adds a zero bias, so the graph's
+  function is unchanged: it is bit-identical to the pre-transform graph on
+  `CPUExecutionProvider` over the 48-case differential set. Regenerate or
+  verify with `tools/wp036f_reexport_controller.py`
+  (`--check` fails on any drift). The pristine pre-transform graph is
+  preserved at
+  `DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/models/`.
 - `subconscious_controller.onnx.data` (86 KB) — external tensor data
-  companion for the above graph. The two files together total ~104 KB.
+  companion for the above graph (the three MLP weight matrices). The bias
+  tensors are stored inline in the `.onnx` file, so this companion is
+  byte-identical to the PRINet 3.0 original. The two files together total
+  ~105 KB.
 
 - `manifest.json` — the SHA-256 + size manifest covering both files
   (WP-028). It is the authority for the integrity check that

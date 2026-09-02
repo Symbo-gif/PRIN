@@ -1,6 +1,8 @@
 # Session 0144U — WP-036F S1: Coding — DirectML controller-graph execution
 
-**Status:** PLANNED
+**Status:** COMPLETE — S1 delivered and committed locally; handoff
+[`DOCS/experiments/0144U-wp036f-s1-handoff.md`](../../experiments/0144U-wp036f-s1-handoff.md).
+Awaiting the mandatory S2 audit `0144V`.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036F
 **Session type:** S1 — Coding

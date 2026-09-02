@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **WP-036F S1 coding (`0144U`) — DirectML controller-graph execution.** The
+  subconscious controller ONNX graph (`models/subconscious_controller.onnx`)
+  is re-exported with **three-input `Gemm` nodes**: an explicit zero-valued
+  `float32` bias per layer (`net.0.bias` / `net.3.bias` / `net.6.bias`, all
+  zeros), which ONNX Runtime's `DmlExecutionProvider` requires — its
+  `DmlFusedGemm` fusion rejects the two-input `Gemm` form PyTorch exported
+  (`InvalidGraph: ... input size 2 not in range [min=3, max=3]`). Adding a
+  zero bias does not change the graph's function: it is **bit-identical** to
+  the pre-transform graph on `CPUExecutionProvider` over the 48-case
+  differential set (`max_abs_diff = 0.0`). `DmlExecutionProvider` now executes
+  the graph and agrees with CPU within `rtol=1e-5, atol=1e-6`
+  (`max_abs_diff_vs_cpu = 7.15e-7`); DirectML-vs-CPU inference latency is
+  recorded (`EVIDENCE/0144U-wp036f-s1-controller-provider-report.json`). New
+  `tools/wp036f_reexport_controller.py` (idempotent transform + `--check`
+  verifier, refreshes `models/manifest.json`) and
+  `tools/wp036f_provider_latency.py`. The graph digest moves
+  `3396bfdd…4102` → `d7d7935b…341a` (18,270 → 19,428 bytes); the
+  `subconscious_controller.onnx.data` weight companion is unchanged.
+  `tests/test_wp036f_reexport.py` (21 tests) and a DirectML case in
+  `tests/test_daemon_controller.py::TestCrossProviderAgreement`. Closes the
+  DirectML half of **DV-006** (evidence in place; register/DoD updates at
+  WP-036F S4); the VitisAI / Ryzen AI NPU half stays OPEN (hardware/wheel
+  gated). No `prin` public-API change; controller algorithm, daemon runtime,
+  and backend-selection logic untouched.
 - **WP-036E S4 documentation (`0144T`) — WP-036E closed.** READMEs updated
   (`crates/prin-kernels/`, `crates/prin-sim/`, `crates/prin-py/`, `tests/`);
   `DOCS/sphinx/parity_report.rst` GPU-vs-CPU tolerance table current;

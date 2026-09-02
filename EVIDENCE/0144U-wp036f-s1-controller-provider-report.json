@@ -1,0 +1,60 @@
+{
+  "available_providers": [
+    "DmlExecutionProvider",
+    "CPUExecutionProvider"
+  ],
+  "directml": {
+    "active_providers": [
+      "DmlExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "agrees_with_cpu": true,
+    "executes": true,
+    "max_abs_diff_vs_cpu": 7.152557373046875e-07,
+    "registered": true,
+    "tolerance": {
+      "atol": 1e-06,
+      "rtol": 1e-05
+    }
+  },
+  "environment": {
+    "numpy": "2.5.1",
+    "onnx": "1.22.0",
+    "onnxruntime": "1.24.4",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+    "python": "3.14.0"
+  },
+  "latency_ms_median_batch48": {
+    "cpu": 0.03289995947852731,
+    "directml": 0.271800032351166
+  },
+  "model": {
+    "bytes": 19428,
+    "gemm_input_arities": [
+      3,
+      3,
+      3
+    ],
+    "path": "subconscious_controller.onnx",
+    "sha256": "d7d7935b70b3faab7af303be088bd82698f2140ff27a9d9f74a811d609d8341a"
+  },
+  "pre_transform_differential": {
+    "available": true,
+    "bit_identical": true,
+    "cases": 48,
+    "max_abs_diff": 0.0,
+    "pristine_gemm_input_arities": [
+      2,
+      2,
+      2
+    ],
+    "reexported_gemm_input_arities": [
+      3,
+      3,
+      3
+    ]
+  },
+  "session": "0144U - WP-036F S1",
+  "timestamp": "2026-09-02T11:51:55-0300"
+}
