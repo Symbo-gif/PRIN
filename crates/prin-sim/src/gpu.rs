@@ -701,14 +701,27 @@ impl GpuMeanFieldEngine {
             });
         }
 
-        Ok(Self {
+        Ok(Self::host(params, phase32, amp32, freq32))
+    }
+
+    /// Host-slice fallback engine — the variant `new` builds when no CubeCL
+    /// client can be initialised (no GPU adapter with a compute feature
+    /// compiled in). Split out so its arms stay covered on hosts where a
+    /// device client always resolves.
+    fn host(
+        params: MeanFieldRk4Params,
+        phase: Vec<f32>,
+        amplitude: Vec<f32>,
+        frequency: Vec<f32>,
+    ) -> Self {
+        Self {
             params,
             inner: MeanFieldInner::Host {
-                phase: phase32,
-                amplitude: amp32,
-                frequency: freq32,
+                phase,
+                amplitude,
+                frequency,
             },
-        })
+        }
     }
 
     /// Number of oscillators.
@@ -977,15 +990,28 @@ impl GpuBandStepper {
             });
         }
 
-        Ok(Self {
+        Ok(Self::host(band_sizes, params, phase32, amp32, freq32))
+    }
+
+    /// Host-slice fallback stepper — the variant `new` builds when no CubeCL
+    /// client can be initialised. Split out so its arms stay covered on hosts
+    /// where a device client always resolves.
+    fn host(
+        band_sizes: [usize; 3],
+        params: DiscreteStepParams,
+        phase: Vec<f32>,
+        amplitude: Vec<f32>,
+        frequency: Vec<f32>,
+    ) -> Self {
+        Self {
             band_sizes,
             params,
             inner: BandStepperInner::Host {
-                phase: phase32,
-                amplitude: amp32,
-                frequency: freq32,
+                phase,
+                amplitude,
+                frequency,
             },
-        })
+        }
     }
 
     /// Number of oscillators across all three bands.
@@ -1382,7 +1408,7 @@ mod tests {
         for _ in 0..4 {
             (p, a, f) = step_cpu(&p, &a, &f, &params).unwrap();
         }
-        for (i, &pi) in p.iter().enumerate().take(n) {
+        for (i, &pi) in p.iter().enumerate() {
             assert!(
                 (got.phase[i] - f64::from(pi)).abs() < 1e-5,
                 "phase[{i}]: got={}, expected={}",
@@ -1608,7 +1634,7 @@ mod tests {
         for _ in 0..3 {
             (p, a, f) = discrete_step_cpu(&p, &a, &f, band_sizes, &params).unwrap();
         }
-        for (i, &pi) in p.iter().enumerate().take(got.n_oscillators()) {
+        for (i, &pi) in p.iter().enumerate() {
             assert!(
                 (got.phase[i] - f64::from(pi)).abs() < 1e-5,
                 "phase[{i}]: got={}, expected={}",
@@ -1616,5 +1642,141 @@ mod tests {
                 f64::from(pi)
             );
         }
+    }
+
+    // ── WP036E-F3: host-slice fallback arms + CUDA-export edge cases ────────
+
+    /// The host-slice fallback variant of [`GpuMeanFieldEngine`] (the path
+    /// taken when no CubeCL client initialises) round-trips through every
+    /// accessor. `PRIN-GPU-Runner` always resolves a device client, so the
+    /// fallback is constructed directly here to keep its arms covered.
+    #[test]
+    fn mean_field_engine_host_fallback_arms_round_trip() {
+        let n = 20;
+        let state = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(11, 0)).unwrap();
+
+        // Exercise the device-resident Debug arm.
+        let _ = format!(
+            "{:?}",
+            GpuMeanFieldEngine::new(&state, mean_field_params()).unwrap()
+        );
+
+        let mut engine = GpuMeanFieldEngine::host(
+            mean_field_params(),
+            to_f32(&state.phase),
+            to_f32(&state.amplitude),
+            to_f32(&state.frequency),
+        );
+
+        assert_eq!(engine.n_oscillators(), n);
+        assert!((engine.dt() - f64::from(mean_field_params().dt)).abs() < 1e-12);
+        assert!(format!("{engine:?}").contains("Host"));
+
+        let before = engine.state().unwrap();
+        assert_eq!(before.n_oscillators(), n);
+        let report = engine.step().unwrap();
+        assert!(report.wall_time_seconds >= 0.0);
+        assert_eq!(engine.state().unwrap().n_oscillators(), n);
+
+        #[cfg(feature = "cuda")]
+        assert!(engine.state_cuda_export().is_none());
+    }
+
+    /// Same for [`GpuBandStepper`]'s host-slice fallback.
+    #[test]
+    fn band_stepper_host_fallback_arms_round_trip() {
+        let band_sizes = [4usize, 5, 6];
+        let state = band_state(band_sizes);
+
+        // Exercise the device-resident Debug arm.
+        let _ = format!(
+            "{:?}",
+            GpuBandStepper::new(&state, band_sizes, discrete_step_params()).unwrap()
+        );
+
+        let mut stepper = GpuBandStepper::host(
+            band_sizes,
+            discrete_step_params(),
+            to_f32(&state.phase),
+            to_f32(&state.amplitude),
+            to_f32(&state.frequency),
+        );
+
+        assert_eq!(stepper.n_oscillators(), 15);
+        assert_eq!(stepper.band_sizes(), band_sizes);
+        assert!((stepper.dt() - discrete_step_params().dt as f64).abs() < 1e-12);
+        assert!(format!("{stepper:?}").contains("Host"));
+
+        assert_eq!(stepper.state().unwrap().n_oscillators(), 15);
+        let report = stepper.step().unwrap();
+        assert!(report.wall_time_seconds >= 0.0);
+        assert_eq!(stepper.state().unwrap().n_oscillators(), 15);
+    }
+
+    /// [`GpuSparseKuramoto`] falls back to the host-slice derivative path when
+    /// its device topology is absent, and its `Debug` renders the device
+    /// resources.
+    #[test]
+    fn sparse_kuramoto_host_fallback_and_debug() {
+        let n = 8;
+        let coupling = SparseCoupling::from_ring(n, 2, 2.0).unwrap();
+        let mut model = GpuSparseKuramoto::new(n, 0.1, 0.01, 2.0, coupling).unwrap();
+        assert!(!format!("{model:?}").is_empty());
+
+        let st = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(12, 0)).unwrap();
+        let device_derivs = model.compute_derivatives(&st).unwrap();
+
+        #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+        {
+            model.device = None;
+            let host_derivs = model.compute_derivatives(&st).unwrap();
+            for i in 0..n {
+                assert!((device_derivs.dphase[i] - host_derivs.dphase[i]).abs() < 1e-4);
+            }
+        }
+        let _ = device_derivs;
+    }
+
+    /// CUDA zero-copy export helpers: `into_raw_parts`, the `n <= 1` and
+    /// length-mismatch guards, and the `device = None` fallback.
+    #[cfg(feature = "cuda")]
+    #[test]
+    fn cuda_export_helpers_and_guards() {
+        let n = 8;
+        let state = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(13, 0)).unwrap();
+        let mut engine = GpuMeanFieldEngine::new(&state, mean_field_params()).unwrap();
+        engine.step().unwrap();
+        let export = engine
+            .state_cuda_export()
+            .expect("CUDA device-resident path");
+        let (ptr, dev, len, _keepalive) = export.phase.into_raw_parts();
+        assert_ne!(ptr, 0);
+        assert_eq!(dev, 0);
+        assert_eq!(len, n);
+
+        // Sparse export guards.
+        let coupling = SparseCoupling::from_ring(6, 2, 2.0).unwrap();
+        let mut model = GpuSparseKuramoto::new(6, 0.1, 0.01, 2.0, coupling).unwrap();
+        let bad = OscillatorState::new(vec![0.0; 3], vec![1.0; 3], vec![1.0; 3], None).unwrap();
+        assert!(matches!(
+            model.compute_derivatives_cuda_export(&bad),
+            Err(StateError::LengthMismatch { .. })
+        ));
+        let good = OscillatorState::create_random(6, (0.5, 5.0), &mut Seed::new(14, 0)).unwrap();
+        assert!(model
+            .compute_derivatives_cuda_export(&good)
+            .unwrap()
+            .is_some());
+        model.device = None;
+        assert!(model
+            .compute_derivatives_cuda_export(&good)
+            .unwrap()
+            .is_none());
+
+        // n <= 1 free-streaming: no export.
+        let c1 = SparseCoupling::from_csr(&[0usize, 0], &[], &[], 1).unwrap();
+        let m1 = GpuSparseKuramoto::new(1, 0.1, 0.01, 1.0, c1).unwrap();
+        let s1 = OscillatorState::new(vec![0.5], vec![1.0], vec![3.0], None).unwrap();
+        assert!(m1.compute_derivatives_cuda_export(&s1).unwrap().is_none());
     }
 }

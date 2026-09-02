@@ -1102,6 +1102,33 @@ mod tests_cpu {
             DiscreteStepError::InvalidParameter { name: "dt", .. }
         ));
     }
+
+    /// `DiscreteStepDeviceState::from_parts` adopts caller-held per-band
+    /// handle triples with no transfer: rebuilt from another state's handles
+    /// it reads back byte-identical (slow→fast concatenation).
+    #[test]
+    fn device_state_from_parts_adopts_per_band_handles() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        let client = CpuRuntime::client(&CpuDevice);
+
+        let band_sizes = [3usize, 5, 7];
+        let (phase, amp, freq) = make_state(band_sizes);
+        let uploaded =
+            DiscreteStepDeviceState::<CpuRuntime>::upload(&client, &phase, &amp, &freq, band_sizes);
+
+        let adopted = DiscreteStepDeviceState::<CpuRuntime>::from_parts(
+            band_sizes,
+            uploaded.phase.clone(),
+            uploaded.amplitude.clone(),
+            uploaded.frequency.clone(),
+        );
+        assert_eq!(adopted.n(), 15);
+
+        let (p, a, f) = adopted.to_host(&client).unwrap();
+        assert_eq!(p, phase);
+        assert_eq!(a, amp);
+        assert_eq!(f, freq);
+    }
 }
 
 #[cfg(all(test, feature = "cuda"))]

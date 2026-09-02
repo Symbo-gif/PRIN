@@ -350,6 +350,30 @@ fn read_f32s<R: Runtime>(
     Ok(f32::from_bytes(&bytes).to_vec())
 }
 
+/// Level-2 order-parameter combine on the host in `f64`: read the per-block
+/// partials back and accumulate them in double precision, then scale by
+/// `n_inv`. Used by every non-CUDA runtime; the CUDA path runs the
+/// equivalent accumulation on-device ([`order_param_finalize_f64`], DV-003).
+fn host_f64_combine<R: Runtime>(
+    client: &ComputeClient<R>,
+    block_real_h: &Handle,
+    block_imag_h: &Handle,
+    num_blocks: usize,
+    n_inv: f32,
+) -> Result<(f32, f32), MeanFieldRk4Error> {
+    let block_real = read_f32s(client, block_real_h, num_blocks)?;
+    let block_imag = read_f32s(client, block_imag_h, num_blocks)?;
+
+    let mut real_sum = 0.0_f64;
+    let mut imag_sum = 0.0_f64;
+    for (&r, &im) in block_real.iter().zip(&block_imag) {
+        real_sum += f64::from(r);
+        imag_sum += f64::from(im);
+    }
+    let n_inv64 = f64::from(n_inv);
+    Ok(((real_sum * n_inv64) as f32, (imag_sum * n_inv64) as f32))
+}
+
 /// Compute the mean-field order parameter of a device-resident `(phase, amp)`
 /// pair via the two-level hierarchical reduction described in the module
 /// documentation: [`order_param_block_reduce`] on the device, finished with
@@ -400,17 +424,7 @@ fn order_param_device<R: Runtime>(
     // Host f64 combine (wgpu/CPU path, or non-CUDA fallback).
     #[allow(unreachable_code)]
     {
-        let block_real = read_f32s(client, block_real_h, num_blocks)?;
-        let block_imag = read_f32s(client, block_imag_h, num_blocks)?;
-
-        let mut real_sum = 0.0_f64;
-        let mut imag_sum = 0.0_f64;
-        for (&r, &im) in block_real.iter().zip(&block_imag) {
-            real_sum += f64::from(r);
-            imag_sum += f64::from(im);
-        }
-        let n_inv64 = f64::from(n_inv);
-        Ok(((real_sum * n_inv64) as f32, (imag_sum * n_inv64) as f32))
+        host_f64_combine(client, block_real_h, block_imag_h, num_blocks, n_inv)
     }
 }
 
@@ -444,17 +458,9 @@ fn order_param_device_cuda_or_host<R: Runtime>(
         let result = read_f32s(client, &out_h, 2)?;
         Ok((result[0], result[1]))
     } else {
-        // Host f64 combine fallback (wgpu/CPU runtime with CUDA feature compiled in).
-        let block_real = read_f32s(client, block_real_h, num_blocks)?;
-        let block_imag = read_f32s(client, block_imag_h, num_blocks)?;
-        let mut real_sum = 0.0_f64;
-        let mut imag_sum = 0.0_f64;
-        for (&r, &im) in block_real.iter().zip(&block_imag) {
-            real_sum += f64::from(r);
-            imag_sum += f64::from(im);
-        }
-        let n_inv64 = f64::from(n_inv);
-        Ok(((real_sum * n_inv64) as f32, (imag_sum * n_inv64) as f32))
+        // wgpu/CPU runtime with the CUDA feature also compiled in: same host
+        // f64 combine every non-CUDA runtime uses.
+        host_f64_combine(client, block_real_h, block_imag_h, num_blocks, n_inv)
     }
 }
 
@@ -1503,6 +1509,52 @@ mod tests_cpu {
             MeanFieldRk4Error::NonFiniteParameter { name: "dt", .. }
         ));
     }
+
+    /// `MeanFieldDeviceState::from_parts` adopts caller-held device handles
+    /// with no transfer: a state rebuilt from another state's handles reads
+    /// back byte-identical.
+    #[test]
+    fn device_state_from_parts_adopts_handles_without_transfer() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        let client = CpuRuntime::client(&CpuDevice);
+
+        let n = 24usize;
+        let (phase, amplitude, frequency) = seed_state(n);
+        let uploaded =
+            MeanFieldDeviceState::<CpuRuntime>::upload(&client, &phase, &amplitude, &frequency);
+
+        let adopted = MeanFieldDeviceState::<CpuRuntime>::from_parts(
+            uploaded.n,
+            uploaded.phase.clone(),
+            uploaded.amplitude.clone(),
+            uploaded.frequency.clone(),
+        );
+        assert_eq!(adopted.n, n);
+
+        let (p, a, f) = adopted.to_host(&client).unwrap();
+        assert_eq!(p, phase);
+        assert_eq!(a, amplitude);
+        assert_eq!(f, frequency);
+    }
+
+    /// `step_cubecl_device` rejects an empty population before touching the
+    /// pool.
+    #[test]
+    fn device_dispatch_rejects_empty_population() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        let client = CpuRuntime::client(&CpuDevice);
+
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+        let mut state = MeanFieldDeviceState::<CpuRuntime>::upload(&client, &[], &[], &[]);
+        let pool = CubeclBufferPool::<CpuRuntime>::new(&client, 1);
+        let err = step_cubecl_device(&client, &mut state, &params, &pool).unwrap_err();
+        assert!(matches!(err, MeanFieldRk4Error::EmptyPopulation));
+    }
 }
 
 #[cfg(all(test, feature = "cuda"))]
@@ -1654,5 +1706,49 @@ mod tests_priority {
 
         let (_, report) = step_auto(&phase, &amplitude, &frequency, &params).unwrap();
         assert_eq!(report.backend_name, "cuda");
+    }
+
+    /// With the CUDA feature compiled in but a wgpu client at runtime,
+    /// `order_param_device` must take the host `f64` combine fallback
+    /// (`order_param_device_cuda_or_host`'s non-CUDA arm) and still match the
+    /// CPU reference — device `f64` is CUDA-only (DV-003).
+    #[test]
+    fn wgpu_runtime_under_cuda_feature_uses_host_f64_combine() {
+        use cubecl::wgpu::{WgpuDevice, WgpuRuntime};
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        let Ok(client) = catch_unwind(AssertUnwindSafe(|| {
+            WgpuRuntime::client(&WgpuDevice::DefaultDevice)
+        })) else {
+            return; // no wgpu adapter — the CUDA-only leg is covered elsewhere
+        };
+
+        let n = 300usize;
+        let phase: Vec<_> = (0..n).map(|i| 0.03 * i as f32).collect();
+        let amplitude: Vec<_> = (0..n).map(|i| 0.2 + 0.001 * i as f32).collect();
+        let n_inv = 1.0_f32 / n as f32;
+        let (host_zr, host_zi) = crate::mean_field_rk4::order_param(&phase, &amplitude, n_inv);
+
+        let pool = CubeclBufferPool::<WgpuRuntime>::new(&client, n);
+        let num_blocks = pool.num_blocks();
+        let phase_h = client.create_from_slice(f32::as_bytes(&phase));
+        let amp_h = client.create_from_slice(f32::as_bytes(&amplitude));
+
+        let (zr, zi) = order_param_device(
+            &client,
+            &CubeCount::Static(num_blocks as u32, 1, 1),
+            CubeDim::new_1d(256),
+            &phase_h,
+            &amp_h,
+            &pool.block_real,
+            &pool.block_imag,
+            num_blocks,
+            n,
+            n_inv,
+        )
+        .unwrap();
+
+        assert!((host_zr - zr).abs() < 1e-5, "zr: host={host_zr} wgpu={zr}");
+        assert!((host_zi - zi).abs() < 1e-5, "zi: host={host_zi} wgpu={zi}");
     }
 }

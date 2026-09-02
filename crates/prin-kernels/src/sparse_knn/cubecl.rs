@@ -893,6 +893,41 @@ mod tests_cpu {
             SparseKnnError::NonFiniteParameter { name: "k", .. }
         ));
     }
+
+    /// `SparseKnnDeviceDerivs::from_parts` adopts caller-held output handles
+    /// with no allocation: a set rebuilt from a computed set's handles reads
+    /// back byte-identical.
+    #[test]
+    fn device_derivs_from_parts_adopts_handles() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        let client = CpuRuntime::client(&CpuDevice);
+
+        let n = 12;
+        let graph = ring_graph(n, 2);
+        let phase = vec![0.2_f32; n];
+        let params = SparseKnnParams {
+            k: 1.5,
+            decay: 0.1,
+            gamma: 0.01,
+        };
+        let state =
+            SparseKnnDeviceState::<CpuRuntime>::upload(&client, &phase, &phase, &phase, &graph);
+        let mut derivs = SparseKnnDeviceDerivs::<CpuRuntime>::empty(&client, n);
+        sparse_knn_coupling_device(&client, &state, &params, &mut derivs).unwrap();
+        let (want_p, want_a, want_f) = derivs.to_host(&client).unwrap();
+
+        let adopted = SparseKnnDeviceDerivs::<CpuRuntime>::from_parts(
+            derivs.n,
+            derivs.dphase.clone(),
+            derivs.damplitude.clone(),
+            derivs.dfrequency.clone(),
+        );
+        assert_eq!(adopted.n, n);
+        let (got_p, got_a, got_f) = adopted.to_host(&client).unwrap();
+        assert_eq!(got_p, want_p);
+        assert_eq!(got_a, want_a);
+        assert_eq!(got_f, want_f);
+    }
 }
 
 #[cfg(all(test, feature = "cuda"))]
