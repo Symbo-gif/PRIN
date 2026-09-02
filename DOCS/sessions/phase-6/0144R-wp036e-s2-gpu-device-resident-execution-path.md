@@ -1,6 +1,7 @@
 # Session 0144R — WP-036E S2: Audit — GPU device-resident execution path
 
-**Status:** PLANNED
+**Status:** COMPLETE
+**Audit verdict:** `FAIL` — four findings (one D1, two D2, one D4) handed to mandatory S3 (`0144S`)
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036E
 **Session type:** S2 — Audit

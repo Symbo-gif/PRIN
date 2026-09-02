@@ -196,6 +196,11 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   path for the ported acceptance suite" audit (`PASS-WITH-FINDINGS`);
   three D4 findings (WP036D-F1/F2/F3) resolved in S3 with CLEAN delta
   re-audit; DV-030 opened.
+- [`036e-wp036e-audit.md`](036e-wp036e-audit.md) — WP-036E "GPU
+  device-resident execution path" audit (`FAIL`); four findings: CUDA reports
+  system rather than device-event timing (D1), the CUDA feature clippy and
+  changed-line coverage gates are not green/proven (two D2), and S1 evidence
+  metadata is inaccurate (D4). Mandatory S3 owns all four.
 - [`036a-wp036a-audit.md`](036a-wp036a-audit.md) — WP-036A "Trainable
   compatibility layers (`prin-train` extension)" audit (`PASS`); zero findings;
   all 13 D-D trainable-layer / discrete-network symbols (rows 31–42, 44)

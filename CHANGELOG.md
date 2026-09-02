@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **WP-036E S2 audit (`0144R`) — `FAIL`, mandatory S3 handoff.** Independent
+  CUDA/CPU execution confirms the device-resident architecture, zero-copy
+  `kDLCUDA` export, default GPU tolerances, 12 GPU-selected tests, and 2,743
+  fast CPU tests. Four findings remain: CUDA profiling reports system timing
+  rather than the required device event (WP036E-F1, D1); the explicit CUDA
+  `prin-sim` clippy gate has five Q2-introduced findings (F2, D2); ≥95%
+  changed-line coverage is not demonstrated (F3, D2); and S1's GPU count plus
+  phase index are inaccurate (F4, D4). Snyk Code/Open Source and native
+  security gates found no change-attributable vulnerability. See
+  `DOCS/audits/036e-wp036e-audit.md`.
 - **`mean_field_rk4::cubecl` RK4 step `launch_count` 8 → 9 (WP-036E S1 sub-pass
   `0144Q1`).** The device-resident step has no host-resident input slice, so
   stage 1 now takes its order parameter from the same device-side hierarchical
