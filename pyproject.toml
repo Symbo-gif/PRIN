@@ -93,6 +93,7 @@ testpaths = ["tests"]
 addopts = "-v --tb=short"
 markers = [
     "gpu: tests that require CUDA GPU",
+    "directml: tests that require a DirectML-capable device (skip cleanly on incapable hosts via tests/_env.py::directml_executes; run on PRIN-GPU-Runner)",
     "slow: tests that take >5s (training convergence, benchmarks)",
     "parity: differential tests against the archived PRINet 3.0.0 source",
 ]

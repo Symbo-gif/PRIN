@@ -191,6 +191,18 @@ test-and-CI-audit context):
    availability, hosted-runner disk) follows the DV-014/DV-022/DV-024
    precedent: it is passed forward with a dated disposition and, where
    possible, a wired fallback, not left as an untracked red.
+6. **Recurrence demands a class guard** (ETCA-002, amendment #45). When an
+   ETCA finding is a recurrence of a prior finding whose remediation was
+   signed off, the remediation session must add a *regression guard for the
+   class* — a CI check, a pinned toolchain, a scheduled local-vs-CI diff —
+   not only fix the instance. A recurrence with no class guard is itself a
+   D2 finding at the next audit.
+7. **Confirm green after you push** (ETCA-002, amendment #45). A gate is not
+   "passed" because the last session said the local substitute was green.
+   Every S4 / ETCA / EA push is verified live against its own SHA with
+   `tools/check_ci_green.py` and the output pasted verbatim into the PSR
+   verification block before any WP is declared closed, PSR issued, or DV
+   item / plan amendment discharged.
 
 ---
 
@@ -221,7 +233,11 @@ test-and-CI-audit context):
 5. **Recurrence:** an ETCA session is warranted at the points described in
    §1.1. At minimum, one ETCA session per phase when the phase produces 5+
    work packages, 50+ commits, or a 25%+ net test-count change; and one at
-   every phase boundary, alongside the EA session.
+   every phase boundary, alongside the EA session. **§1.1 condition 3
+   (`origin/main` CI red or partially red for more than one push) is an
+   *automatic* trigger, not a maintainer-discretion one** (ETCA-002,
+   amendment #45); during a phase with heavy CI-topology change (e.g. the
+   WP-036 family), run one ETCA per WP-family close, not only per phase.
 6. **Closing checklist:** As a global session outside every WP-N S4
    checklist, an ETCA session's own file changes are not otherwise swept by
    R7's documentation-accuracy net (Documentation Standards §7). Before this

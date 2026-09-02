@@ -13,6 +13,7 @@ import pytest
 
 ort = pytest.importorskip("onnxruntime")
 
+from _env import directml_executes  # noqa: E402
 from prin.daemon import (  # noqa: E402
     CONTROL_DIM,
     STATE_DIM,
@@ -21,6 +22,7 @@ from prin.daemon import (  # noqa: E402
     SubconsciousState,
     available_providers,
     backend_priority,
+    backend_provider_names,
     create_session,
     default_model_path,
     select_backend,
@@ -41,10 +43,16 @@ def _executable_backends() -> list[str]:
     executable = []
     for backend in backend_priority():
         try:
-            _, resolved, _ = create_session(default_model_path(), backend)
+            _, resolved, active = create_session(default_model_path(), backend)
         except (ValueError, RuntimeError, OSError):
             continue
-        if resolved == backend:
+        # `resolved == backend` only means a *session* was constructed on that
+        # backend's ladder rung; an accelerator provider can construct and then
+        # silently run on CPU (ETCA-002 T-F3: `onnxruntime-directml` on a hosted
+        # runner with no DX12 device). Require the backend's own provider to be
+        # among the ones ORT actually activated.
+        wanted = backend_provider_names(backend)[0]
+        if resolved == backend and wanted in active:
             executable.append(backend)
     return executable
 
@@ -273,9 +281,11 @@ class TestCrossProviderAgreement:
                 )
                 assert actual.preferred_regime == expected.preferred_regime
 
+    @pytest.mark.directml
     @pytest.mark.skipif(
-        "DmlExecutionProvider" not in ort.get_available_providers(),
-        reason="DmlExecutionProvider is not registered on this host",
+        not directml_executes(),
+        reason="DirectML does not execute a graph on this host (ETCA-002 T-F3: "
+        "probe executability, not registration)",
     )
     def test_directml_executes_the_reexported_graph(self, sample_states):
         """WP-036F: the re-exported three-input-Gemm graph runs on DirectML.

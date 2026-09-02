@@ -143,7 +143,7 @@ def apply_rust_bridge(
         A single output tensor, or a tuple of tensors if the bridge method
         returns more than one.
     """
-    result: Any = _RustBridgeFunction.apply(  # type: ignore[no-untyped-call]
+    result: Any = _RustBridgeFunction.apply(  # type: ignore[no-untyped-call, unused-ignore]
         bridge_forward, len(tensors), *tensors
     )
     return result

@@ -24,6 +24,7 @@ import pytest
 onnx = pytest.importorskip("onnx")
 ort = pytest.importorskip("onnxruntime")
 
+from _env import directml_executes  # noqa: E402
 from onnx import numpy_helper  # noqa: E402
 from prin.daemon import default_model_path, default_models_dir  # noqa: E402
 
@@ -279,9 +280,13 @@ class TestMathematicalIdentity:
         assert np.array_equal(pre.view(np.uint32), post.view(np.uint32))
 
 
+@pytest.mark.directml
 @pytest.mark.skipif(
-    _DML not in ort.get_available_providers(),
-    reason="DmlExecutionProvider is not registered on this host",
+    not directml_executes(),
+    reason="DirectML does not execute a graph on this host (ETCA-002 T-F3: the "
+    "guard probes executability, not wheel-level provider registration — "
+    "onnxruntime-directml registers the provider on a hosted runner with no "
+    "DX12 device)",
 )
 class TestDirectMLExecution:
     """Acceptance: DirectML executes the re-exported graph and agrees with CPU."""
@@ -431,10 +436,13 @@ class TestProviderLatencyTool:
     def test_build_report_records_the_acceptance_evidence(self):
         report = latency_tool.build_report(default_model_path())
         assert report["model"]["gemm_input_arities"] == [3, 3, 3]
-        assert report["pre_transform_differential"]["bit_identical"] is True
+        # `close` (within rtol=1e-5, atol=1e-6) is the portable acceptance
+        # signal; `bit_identical` depends on the ORT graph-optimisation level
+        # and is not portable across hosted-runner ORT builds (ETCA-002 T-F3).
+        assert report["pre_transform_differential"]["close"] is True
         assert "cpu" in report["latency_ms_median_batch48"]
         directml = report["directml"]
-        if directml["registered"]:
+        if directml_executes():
             assert directml["executes"] is True
             assert directml["agrees_with_cpu"] is True
             assert "directml" in report["latency_ms_median_batch48"]

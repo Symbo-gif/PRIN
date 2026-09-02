@@ -18,6 +18,19 @@
    requires a linked issue and maintainer approval.
 5. **Determinism.** Every stochastic test seeds explicitly through the `Seed`
    type; flaky tests are treated as bugs.
+6. **A hardware/runtime `skipif` guard must probe executability, not
+   registration** (ETCA-002 T-F3 / Plan amendment #45 G4). A guard that reads
+   `"<EP>" in onnxruntime.get_available_providers()` (or any "is the feature
+   *compiled in*" check) does **not** fire on a runner that has the wheel but
+   no device, so the guarded test runs and hard-fails in CI. The guard must
+   *attempt the operation* (build a one-node session on the provider and run
+   it — `tests/_env.py::directml_executes()`; `torch.cuda.is_available()` is
+   an accepted device probe) and must be verified to actually skip on a host
+   lacking the feature. Hardware-gated tests carry a marker
+   (`@pytest.mark.gpu` / `@pytest.mark.directml`) and run on the capable
+   self-hosted runner, never silently no-op on a hosted one. The
+   `governance` CI job greps for the registration anti-pattern
+   (`tools/check_skipif_probes.py`).
 
 ## 2. Test layers (all mandatory where applicable)
 

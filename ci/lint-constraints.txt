@@ -1,0 +1,23 @@
+# Pinned toolchain for the `python.yml` `lint` job.
+#
+# ETCA-002 findings T-F2 / T-F10 / governance G6: before this file the `lint`
+# job ran `pip install ruff mypy interrogate bandit hypothesis torch` with no
+# version pins and pulled `torch` from the default (CUDA) PyPI index. The
+# resolved `mypy` / `torch` floated run-to-run, so `mypy python/prin --strict`
+# was a non-deterministic merge gate — green locally, red in CI on the same
+# commit (the `warn_unused_ignores` verdict flips with the torch stub version).
+#
+# No CI job may `pip install` an unpinned tool that gates a merge. Bump these
+# deliberately, in their own commit, and re-run the gate.
+#
+# Kept in step with the maintainer host (`.venv`) so the local gate the
+# AGENTS.md one-liner reproduces is equivalent to this CI gate
+# (methodology §2 principle 3).
+ruff==0.16.1
+mypy==2.3.0
+interrogate==1.7.0
+bandit==1.9.4
+hypothesis==6.165.2
+# torch is needed only so `mypy --strict` can follow `import torch`; the CPU
+# wheel avoids dragging the ~5 GB CUDA 13 stack onto the hosted runner.
+torch==2.11.0

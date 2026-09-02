@@ -188,6 +188,28 @@ _TIMING_NODES = frozenset(
     }
 )
 
+# --- Forward-pass wall-clock ratio flake (ETCA-002 T-F5) --------------------
+# `nightly.yml`'s `full-suite` job (the only gate that runs @pytest.mark.slow)
+# has been red since it began running on this: a hard `assert ratio <= 5.0` on
+# the DiscreteDTG-vs-Transformer forward-pass wall-clock ratio, measured 5.66x
+# on the shared ubuntu runner. Same DV-032 host-timing class as the two tests
+# above; ported verbatim from PRINet 3.0, not weakenable. Dated maintainer
+# quarantine (AskUserQuestion, 2026-09-02). Fix path = convert to a seeded
+# frame-count / pytest-benchmark bound under nightly.yml, or widen to a
+# defensible ratio with governance — tracked in the Deferred Validation
+# Register.
+_RATIO_SKIP = (
+    "DV-032 (ETCA-002 T-F5): forward-pass wall-clock ratio flake — asserts "
+    "DiscreteDTG is <=5x an equivalent Transformer layer, measures ~5.7x on "
+    "shared CI runners. Ported verbatim from PRINet 3.0; dated maintainer "
+    "quarantine; fix tracked in the Deferred Validation Register."
+)
+_RATIO_NODES = frozenset(
+    {
+        "tests/test_acceptance_y2q1.py::TestDiscreteDeltaThetaGamma::test_speed_vs_transformer",
+    }
+)
+
 
 def _reason_for(nodeid: str) -> str | None:
     """Return the governed-skip reason for ``nodeid``, or ``None`` to run it."""
@@ -205,6 +227,8 @@ def _reason_for(nodeid: str) -> str | None:
         return _FLAKE_SKIP
     if nodeid in _TIMING_NODES:
         return _TIMING_SKIP
+    if nodeid in _RATIO_NODES:
+        return _RATIO_SKIP
     return None
 
 

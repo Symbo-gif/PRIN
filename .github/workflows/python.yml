@@ -15,7 +15,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install ruff mypy "interrogate>=1.7" "bandit[toml]>=1.7" hypothesis torch
+      # ETCA-002 T-F2 / T-F10 / G6: pinned, deterministic toolchain. Every tool
+      # version is pinned in ci/lint-constraints.txt and kept in step with the
+      # maintainer .venv so the local gate == this CI gate. torch is installed
+      # from the CPU index first (no CUDA stack) and is needed only so
+      # `mypy --strict` can follow `import torch`.
+      - run: pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch
+      - run: pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis
       - run: ruff check python/ tests/ benchmarks/ tools/
       - run: ruff format --check python/ tests/ benchmarks/ tools/
       - run: mypy python/prin --strict
@@ -66,6 +72,8 @@ jobs:
           fi
       - name: DV-register gate enforcement (R34, EA-006 E-F2 remediation)
         run: python tools/check_dv_register_gates.py
+      - name: skipif-guard executability gate (ETCA-002 T-F3 / G8)
+        run: python tools/check_skipif_probes.py
 
   test:
     strategy:

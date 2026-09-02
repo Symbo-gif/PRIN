@@ -1,25 +1,34 @@
 name: gpu
 
-# Opt-in GPU job on a self-hosted GPU runner (Project Plan amendment #26,
-# confirming the self-hosted strategy for DV-001/DV-002). Triggered by a
-# `[gpu]` tag in the commit message (mirrors the PRINet 3.0 convention).
+# GPU validation on a self-hosted GPU runner (Project Plan amendment #26,
+# confirming the self-hosted strategy for DV-001/DV-002).
+#
+# ETCA-002 findings T-F1 / T-F6 / governance G4 + Project Plan amendment #45:
+# this workflow used to be opt-in via a `[gpu]` tag in the commit message, so
+# the GPU path was skipped on exactly the pushes that forgot the tag — which
+# empirically included `adbb1e3`, the push that closed WP-036E (GPU
+# device-resident execution) and WP-036F (DirectML controller-graph
+# execution). It now runs unconditionally on every `main` push and on a
+# nightly schedule. The self-hosted runner is idle otherwise, so there is no
+# cost argument for opt-in.
 #
 # Requires a GitHub Actions self-hosted runner registered with the
 # `[self-hosted, gpu]` labels (GitHub Settings -> Actions -> Runners).
 # `PRIN-GPU-Runner` (Windows, online, `[self-hosted, Windows, X64, gpu]`)
-# is registered and available. Jobs are opt-in via `[gpu]` in the commit
-# message. Closing DV-001's Triton comparison additionally requires a
-# Linux runner (Triton has no Windows support); the current Windows runner
-# closes DV-002 (wgpu) but not DV-001's Triton-specific requirement.
+# has a real CUDA GPU and a DirectML-capable adapter. Closing DV-001's Triton
+# comparison additionally requires a Linux runner (Triton has no Windows
+# support); the current Windows runner closes DV-002 (wgpu) but not DV-001.
 
 on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
 
 jobs:
   gpu-cuda:
-    if: contains(github.event.head_commit.message, '[gpu]')
     runs-on: [self-hosted, gpu]
     steps:
       - uses: actions/checkout@v4
@@ -58,16 +67,18 @@ jobs:
         run: |
           .venv\Scripts\python.exe -m pip install --no-cache-dir maturin
           .venv\Scripts\python.exe -m maturin develop -m crates/prin-py/Cargo.toml --features cuda
-          .venv\Scripts\python.exe -m pip install --no-cache-dir -e ".[dev]"
-      - name: Python GPU tests
+          .venv\Scripts\python.exe -m pip install --no-cache-dir -e ".[dev,onnx]"
+      - name: Python GPU + DirectML tests
         # WP-036D (0144I3) + WP-036E (0144Q3): 12 tests carry @pytest.mark.gpu
-        # (7 ported acceptance + 5 export zero-copy); -m gpu selects them on
-        # this CUDA runner. test_sparse_vram_subquadratic is @pytest.mark.skip'd
-        # to DV-030 (device-resident buffers). On a CPU-only host the same
-        # tests skip via their reference skipif(not torch.cuda.is_available())
-        # guards. `-rs` prints skip reasons for visibility.
+        # (7 ported acceptance + 5 export zero-copy). ETCA-002 T-F3/T-F6: the
+        # DirectML acceptance tests carry @pytest.mark.directml and run here on
+        # PRIN-GPU-Runner's real DirectML adapter (they skip cleanly on hosts
+        # without one via tests/_env.py::directml_executes). -m "gpu or directml"
+        # selects both. test_sparse_vram_subquadratic is @pytest.mark.skip'd to
+        # DV-030. On a CPU-only host the reference skipif guards fire.
+        # `-rs` prints skip reasons for visibility.
         run: |
-          .venv\Scripts\python.exe -m pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
+          .venv\Scripts\python.exe -m pytest tests/ -v -m "gpu or directml" -rs --basetemp=.pytest_basetemp
       - name: Kernel performance regression gates
         # `cargo bench --workspace -- <criterion-args>` forwards those args
         # to *every* bench-profile binary it builds, including each crate's
@@ -86,7 +97,6 @@ jobs:
   gpu-wgpu:
     # Closes DV-002: wgpu kernel-equivalence tests deferred from the default
     # CI matrix (amendment #12) to this self-hosted GPU runner.
-    if: contains(github.event.head_commit.message, '[gpu]')
     runs-on: [self-hosted, gpu]
     steps:
       - uses: actions/checkout@v4

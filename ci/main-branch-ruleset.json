@@ -1,0 +1,56 @@
+{
+  "name": "main protection (ETCA-002 T-F7 / amendment #45 G3)",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] }
+  },
+  "bypass_actors": [],
+  "rules": [
+    { "type": "deletion" },
+    { "type": "non_fast_forward" },
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": false,
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": false,
+        "automatic_copilot_code_review_enabled": false,
+        "allowed_merge_methods": ["merge", "squash", "rebase"]
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": false,
+        "do_not_enforce_on_create": false,
+        "required_status_checks": [
+          { "context": "lint" },
+          { "context": "governance" },
+          { "context": "security" },
+          { "context": "test (ubuntu-latest, 3.11)" },
+          { "context": "test (ubuntu-latest, 3.12)" },
+          { "context": "test (ubuntu-latest, 3.13)" },
+          { "context": "test (windows-latest, 3.11)" },
+          { "context": "test (windows-latest, 3.12)" },
+          { "context": "test (windows-latest, 3.13)" },
+          { "context": "fmt" },
+          { "context": "clippy" },
+          { "context": "clippy-strict" },
+          { "context": "test-strict" },
+          { "context": "docs" },
+          { "context": "audit" },
+          { "context": "test (ubuntu-latest, ubuntu-latest)" },
+          { "context": "test (macos-latest, macos-latest)" },
+          { "context": "test (windows-latest, windows-latest)" },
+          { "context": "parity" },
+          { "context": "reproduce" },
+          { "context": "Snyk Code" },
+          { "context": "Secret Scan" }
+        ]
+      }
+    }
+  ]
+}

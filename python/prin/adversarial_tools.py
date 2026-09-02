@@ -66,7 +66,7 @@ def fgsm_attack(
     sim_block = sim[:N, :N]
     target = torch.arange(N, device=sim.device)
     loss = F.cross_entropy(sim_block / 0.1, target)
-    loss.backward()  # type: ignore[no-untyped-call]
+    loss.backward()  # type: ignore[no-untyped-call, unused-ignore]
 
     if dets_t_adv.grad is None:
         return dets_t.clone()
@@ -129,7 +129,7 @@ def pgd_attack(
         sim_block = sim[:N, :N]
         target = torch.arange(N, device=sim.device)
         loss = F.cross_entropy(sim_block / 0.1, target)
-        loss.backward()  # type: ignore[no-untyped-call]
+        loss.backward()  # type: ignore[no-untyped-call, unused-ignore]
 
         if dets_adv.grad is None:
             break

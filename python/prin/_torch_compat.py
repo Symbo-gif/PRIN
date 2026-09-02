@@ -427,7 +427,7 @@ class OscillatorModel(ABC):
             if gpu is not None:
                 return gpu
         derivatives = [
-            _DynamicsAutograd.apply(  # type: ignore[no-untyped-call]
+            _DynamicsAutograd.apply(  # type: ignore[no-untyped-call, unused-ignore]
                 self._raw, phase, amplitude, frequency
             )
             for phase, amplitude, frequency in zip(
@@ -1085,7 +1085,7 @@ class MultiRateIntegrator:
     ) -> OscillatorState:
         """Run one Rust-owned multi-rate outer step."""
         outputs = [
-            _MultiRateAutograd.apply(  # type: ignore[no-untyped-call]
+            _MultiRateAutograd.apply(  # type: ignore[no-untyped-call, unused-ignore]
                 self._raw, model._raw, dt, phase, amplitude, frequency
             )
             for phase, amplitude, frequency in zip(

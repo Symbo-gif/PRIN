@@ -71,6 +71,19 @@ The existing hotfix exception (§7) is unaffected: a broken `main` or a live
 security finding may still be pushed immediately, outside this cadence, and
 is retro-audited at the next S2.
 
+**Per-WP push is mandatory and blocking; the local substitute expires at S4**
+(ETCA-002, Plan amendment #45). A WP's S4 session **must** push its own cycle
+range, and the **next** WP's S1 **must not begin** until `tools/check_ci_green.py`
+(run against that push's SHA) reports every non-opt-in workflow green — its
+output pasted verbatim into the PSR verification block. Batching two or more
+WPs into one "phase-close" push is **prohibited** absent an explicit dated
+Plan amendment that names the batch and assigns the green-CI-confirmation step
+to a specific session. The amendment-#28 "local substitute" is an S2/S3 device
+only; at S4 it **expires** and a real green CI run is required before the WP is
+declared closed, its PSR issued, or any DV item / plan amendment discharged.
+A red `nightly.yml` conclusion is dispositioned like a red push — fixed, or
+given a dated DV row, before the next WP closes.
+
 ### S1 — Coding session
 
 **Entry:** WP declared; previous cycle fully closed (S4 artefacts committed).
@@ -224,7 +237,7 @@ lives in the template and is version-controlled with it):
 | A6 | Security: no `unsafe` outside audited modules, bandit/ruff-S clean, `cargo audit` + `pip-audit` clean, no secrets, no runtime codegen | Coding Standards §6 |
 | A7 | Docstring/doc coverage at threshold (Rust 100% public; Python 100% public, ≥95% overall) | Documentation Standards §2 |
 | A8 | Repository hygiene: no TODO/FIXME/stub markers outside declared placeholders, `__all__` consistent, no orphan files, gitignore respected | 3.0 audit methodology |
-| A9 | CI: at S2/S3, local gate reproduction stands in (nothing pushed yet this cycle, per the Push and CI cadence above); at S4, all workflows green on `origin/main` for the pushed S1–S4 range; benchmark regression gates not tripped | Versioning Standards §3 |
+| A9 | CI: at S2/S3, local gate reproduction stands in (nothing pushed yet this cycle, per the Push and CI cadence above); at S4, `tools/check_ci_green.py <push-SHA>` reports every non-opt-in workflow green on `origin/main` for the pushed S1–S4 range, output pasted verbatim into the PSR (ETCA-002 / amendment #45); the latest `nightly.yml` conclusion checked and dispositioned; benchmark regression gates not tripped | Versioning Standards §3 |
 | A10 | Artefact trail: prior cycle's audit/report artefacts exist and are consistent | This document §5 |
 
 ## 5. Deviation classification and ledger

@@ -576,16 +576,27 @@ two-input form PyTorch exported). ``Gemm`` computes ``Y = α·A'·B' + β·C`` w
 Measured over a 48-case differential batch
 (``np.random.default_rng(20260902)``, batch ``(48, 32)`` ``float32``):
 
-- **CPU bit-identity.** The re-exported graph and the pristine archived
-  PRINet 3.0 graph produce identical output on ``CPUExecutionProvider`` —
-  ``np.array_equal`` on the ``uint32`` views is ``True``, ``max_abs_diff = 0.0``.
-  This is the R3 acceptance gate, satisfied before any DirectML claim.
+- **CPU agreement.** The re-exported graph and the pristine archived
+  PRINet 3.0 graph agree within ``rtol=1e-5, atol=1e-6`` on
+  ``CPUExecutionProvider`` over the differential set — the portable R3
+  acceptance signal (``wp036f_provider_latency._pre_transform_check``'s
+  ``close`` field), satisfied before any DirectML claim. They are additionally
+  **bit-identical** (``np.array_equal`` on the ``uint32`` views, ``max_abs_diff
+  = 0.0``) on the pinned maintainer / ``PRIN-GPU-Runner`` ONNX Runtime build;
+  bit-identity depends on the ORT graph-optimisation level folding the added
+  ``+ 0`` term and is not guaranteed across every hosted-runner ORT build
+  (ETCA-002 T-F3), so the tolerance, not bit-identity, is the acceptance
+  criterion of record.
 - **DirectML agreement.** ``DmlExecutionProvider`` executes the re-exported
   graph (active provider ``DmlExecutionProvider``, not a silent CPU fallback)
   and agrees with the CPU provider at ``max_abs_diff = 7.15e-7``, inside the
   Testing Standards §3 default ``rtol=1e-5, atol=1e-6``. No tolerance was
   loosened — this is the standing GPU/accelerator-vs-CPU tier already used by
-  ``tests/test_daemon_controller.py::TestCrossProviderAgreement``.
+  ``tests/test_daemon_controller.py::TestCrossProviderAgreement``. The DirectML
+  acceptance tests carry ``@pytest.mark.directml`` and run on
+  ``PRIN-GPU-Runner``'s real DirectML adapter (``gpu.yml``, every push); on a
+  host without one they skip via ``tests/_env.py::directml_executes()`` — an
+  *executability* probe, not a wheel-registration check (ETCA-002 T-F3).
 
 Disposition: not a numerical deviation from PRINet 3.0 — the transform is
 mathematically exact and the reference graph fails DirectML identically

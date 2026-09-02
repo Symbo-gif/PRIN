@@ -185,6 +185,14 @@ threshold**:
 
 ### 6.2 Toolchain gates (all must be clean; run in CI on every PR)
 
+**No merge-gating CI job may `pip install` (or `cargo install`) an unpinned
+tool** (ETCA-002 T-F10 / Plan amendment #45 G6). A gate whose toolchain floats
+run-to-run is non-deterministic — green locally, red in CI on the same commit —
+and cannot be trusted as a merge control. Every gating job installs from a
+committed constraints/lock file (`ci/lint-constraints.txt`, `Cargo.lock`,
+`DOCS/sphinx/requirements.txt`, …), kept in step with the maintainer host, and
+tool versions are bumped deliberately in their own commit.
+
 | Tool | Scope | Gate |
 |---|---|---|
 | `cargo audit` | Rust dependency advisories | 0 unaddressed advisories |

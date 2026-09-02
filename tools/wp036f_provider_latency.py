@@ -96,7 +96,16 @@ def _median_latency_ms(session: ort.InferenceSession, batch: np.ndarray) -> floa
 
 
 def _pre_transform_check(committed: Path, batch: np.ndarray) -> dict[str, Any]:
-    """Compare the committed graph against the pristine PRINet 3.0 graph on CPU."""
+    """Compare the committed graph against the pristine PRINet 3.0 graph on CPU.
+
+    The transform (a zero-valued ``Gemm`` bias per layer) is mathematically
+    exact, so the two graphs agree within ``rtol=1e-5, atol=1e-6`` on every
+    ORT build. Whether they are *bit*-identical additionally depends on the
+    ORT graph-optimisation level folding the ``+ 0`` term — it holds on the
+    pinned maintainer/`PRIN-GPU-Runner` ORT build but is not portable across
+    hosted-runner ORT builds (ETCA-002 T-F3), so ``close`` is the acceptance
+    signal and ``bit_identical`` is recorded for information only.
+    """
     if not _PRISTINE.is_file():
         return {"available": False}
     old = _infer(_session(_PRISTINE, [_CPU]), batch)
@@ -106,6 +115,8 @@ def _pre_transform_check(committed: Path, batch: np.ndarray) -> dict[str, Any]:
         "pristine_gemm_input_arities": _gemm_arities(_PRISTINE),
         "reexported_gemm_input_arities": _gemm_arities(committed),
         "cases": int(batch.shape[0]),
+        "close": bool(np.allclose(old, new, rtol=_RTOL, atol=_ATOL)),
+        "tolerance": _TOL,
         "bit_identical": bool(np.array_equal(old.view(np.uint32), new.view(np.uint32))),
         "max_abs_diff": float(np.abs(old - new).max()),
     }
@@ -167,8 +178,10 @@ def main(argv: list[str] | None = None) -> int:
         argv: Command-line arguments, or ``None`` to read ``sys.argv``.
 
     Returns:
-        ``0`` when DirectML executes the graph and agrees with CPU (or DirectML
-        is not registered on this host), ``1`` otherwise.
+        ``0`` when DirectML executes the graph and agrees with CPU, or when
+        DirectML cannot execute a graph on this host at all (not registered, or
+        registered with no capable device — ETCA-002 T-F3: a hosted runner);
+        ``1`` only when DirectML *executes* the graph but disagrees with CPU.
     """
     parser = argparse.ArgumentParser(
         description="Record WP-036F DirectML provider + latency evidence."
@@ -189,9 +202,9 @@ def main(argv: list[str] | None = None) -> int:
     print(json.dumps(report["directml"], indent=2))
 
     directml = report["directml"]
-    if not directml["registered"]:
+    if not directml["registered"] or not directml.get("executes"):
         return 0
-    return 0 if directml.get("executes") and directml.get("agrees_with_cpu") else 1
+    return 0 if directml.get("agrees_with_cpu") else 1
 
 
 if __name__ == "__main__":

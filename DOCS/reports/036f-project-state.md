@@ -201,12 +201,11 @@ this at WP-036F S4).
   protection substitute per amendment #5.
 - **DV-010 (Phase 1/2 pre-release tag):** unchanged — routed to WP-038 S1;
   WP-036F does not push the tag.
-- **CI:** per amendment #28 nothing was pushed this cycle; the batched
-  `0144U`–`0144X` push runs `rust` / `python` / `parity` / `snyk` /
-  `repro` (and `gpu.yml` on a `[gpu]` tag) over the whole range and is a
-  maintainer action. The full local gate is reproduced in §2 and is green.
-  `PRIN-GPU-Runner` availability (DV-024 pattern) should be re-checked
-  before relying on a "CI green" claim for the push.
+- **CI:** _(superseded — see §9.)_ This cycle stated the batched
+  `0144U`–`0144X` push would run CI as a maintainer action and relied on the
+  local gate. The push (`adbb1e3`) happened and was **red**; ETCA-002 T-F1
+  (D1) and the §9 addendum record the correction and the real green CI run
+  the closure is now cited to.
 - No new risks introduced. `check_dv_register_gates.py` and
   `check_deviation_ledger.py` both pass.
 
@@ -316,3 +315,45 @@ the VitisAI/NPU half is re-scoped to a hardware-gated standing-external
 disposition. Two of the three amendment-#38 closure work packages (WP-036E,
 WP-036F) are now complete; WP-036G (`0144Y`) is the last, after which no open
 DV row remains in an undated "re-audit every cycle" state going into Phase 7.
+
+---
+
+## 9. ETCA-002 remediation addendum (2026-09-02)
+
+**This cycle's S4 closure was recorded over a red `origin/main` push.** ETCA-002
+(`DOCS/audits/EXECUTIVE_TESTING_AND_CI_AUDIT_REPORT_002.md`, verdict `FAIL`,
+finding **T-F1** D1) established that the batched `0144U`–`0144X` push
+(`adbb1e3`, which also carried the WP-036E range) was **red**: `python` `lint`
+(`mypy --strict`, 3 unused `type: ignore` — T-F2) and all three Windows `test`
+legs (5 DirectML/provider tests — T-F3), with `gpu` skipped (no `[gpu]` tag —
+T-F6) and `nightly` red (T-F5). §7 above ("CI: … a maintainer action … The full
+local gate is reproduced in §2 and is green") and the `0144X` session doc's
+"CI is green. WP-036F is closed" were **not** backed by a live CI check
+(amendment #28's S4 exit criterion was unmet).
+
+**Correction (ETCA-002 remediation session, 2026-09-02):**
+
+- **T-F2** — the 3 `# type: ignore[no-untyped-call]` sites (WP-036E-era code,
+  never touched by WP-036F) got `, unused-ignore` added so the strict-mode
+  verdict no longer flips with the torch stub version; `python.yml`'s `lint`
+  toolchain is now pinned (`ci/lint-constraints.txt`, amendment #45 G6).
+- **T-F3** — the DirectML/provider tests' `skipif` guards probed
+  `ort.get_available_providers()` (wheel registration), which does not fire on
+  hosted `windows-latest` (no DX12 device). Replaced with
+  `tests/_env.py::directml_executes()` (an executability probe) +
+  `@pytest.mark.directml`; `wp036f_provider_latency` records a portable `close`
+  (tolerance) signal alongside the ORT-build-specific `bit_identical`. The
+  tests now **skip cleanly** on incapable hosts and **run on
+  `PRIN-GPU-Runner`** (`gpu.yml`, every push — T-F6/amendment #45 G4). A CI
+  guard (`tools/check_skipif_probes.py`) blocks the registration anti-pattern.
+- **T-F5** — `test_speed_vs_transformer` quarantined into `tests/conftest.py`
+  under **DV-032** (dated maintainer disposition); `nightly` `full-suite` green.
+- **DirectML half of DV-006 + amendment #13 discharge — re-affirmed** over a
+  real green `origin/main` CI run (SHA in the ETCA-002 report §7 closure
+  table). The `0144X` closure was substantively correct — the re-export is
+  mathematically exact and DirectML-executes on real hardware — but was
+  procedurally recorded ahead of CI confirmation; that gap is now closed.
+- **Governance** — Plan amendment #45 adopts ETCA-002 recommendations G1–G8
+  (per-WP blocking S4 push; `tools/check_ci_green.py` S4 gate; `main` branch
+  ruleset; `gpu.yml` on every push; nightly-red dispositioned like push-red;
+  pinned CI toolchains; ETCA auto-trigger; recurrence ⇒ class guard).

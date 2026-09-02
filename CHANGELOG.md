@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **ETCA-002 remediation (`2026-09-02`) — CI-gate machinery, push/close
+  cadence, and re-affirmation of the WP-036F / DV-006-DirectML / amendment-#13
+  closures over a real green CI run.** Filled the ETCA-002 report §7 closure
+  table; `DOCS/sessions/SESSION_REGISTER.md` ETCA table gains the remediation
+  row. **Source/test (T-F2, T-F3):** `# type: ignore[no-untyped-call]` sites in
+  `python/prin/{nn/_bridge,_torch_compat,adversarial_tools,temporal_training}.py`
+  carry `, unused-ignore` so `mypy --strict` no longer flips with the torch
+  stub version; new `tests/_env.py::directml_executes()` executability probe
+  and `@pytest.mark.directml` marker replace the
+  `ort.get_available_providers()` registration guards in
+  `tests/test_wp036f_reexport.py` and `tests/test_daemon_controller.py`;
+  `tools/wp036f_provider_latency.py` records a portable `close` (tolerance)
+  signal and `main()` returns 0 on a host where DirectML is registered but
+  cannot execute. **Tooling:** `tools/check_ci_green.py` (S4 CI-green gate,
+  G2), `tools/check_skipif_probes.py` (registration-guard regression guard,
+  G8; wired into `python.yml`'s `governance` job), `ci/lint-constraints.txt`
+  (pinned `lint` toolchain, G6). **Workflows:** `gpu.yml` runs on every `main`
+  push + nightly `schedule` + `workflow_dispatch` (no more `[gpu]` tag gate,
+  G4) and runs `-m "gpu or directml"`; `python.yml` `lint` installs from the
+  constraints file. **Governance:** Plan **amendment #45** adopts G1–G8;
+  Development Workflow §3, Coding Standards §6.2, Testing Standards §1
+  principle 6, and the ETCA methodology §4/§5.5 updated; a `main` branch
+  **ruleset** (`ci/main-branch-ruleset.json`) with required status checks +
+  PR-required + no bypass replaces direct pushes to `main`. **DV register:**
+  DV-032 gains `test_speed_vs_transformer` (T-F5); new **DV-034** (`gpu` not
+  yet a required ruleset check — `PRIN-GPU-Runner` SPOF); DV-006 and DV-024
+  annotated. **T-F5:** `test_speed_vs_transformer` quarantined into
+  `tests/conftest.py`; `nightly` `full-suite` green.
 - **ETCA-002 (`2026-09-02`) — Executive Testing and CI Audit Session 002;
   verdict `FAIL`.** Post-push CI-failure audit of the batched WP-036E + WP-036F
   range (`6343416..adbb1e3`, sessions `0144Q`–`0144X`). New report

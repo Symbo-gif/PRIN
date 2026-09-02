@@ -570,7 +570,7 @@ class TemporalTrainer:
             if loss_val > 0:
                 has_trainable = any(p.requires_grad for p in self.model.parameters())
                 if has_trainable and loss_tensor.requires_grad:
-                    loss_tensor.backward()  # type: ignore[no-untyped-call]
+                    loss_tensor.backward()  # type: ignore[no-untyped-call, unused-ignore]
                     if self.grad_clip > 0:
                         nn.utils.clip_grad_norm_(
                             self.model.parameters(), self.grad_clip
