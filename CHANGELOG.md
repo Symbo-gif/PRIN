@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **WP-036F S4 documentation (`0144X`) — WP-036F closed; DirectML half of
+  DV-006 CLOSED.** READMEs refreshed (`tests/`, `models/`); Sphinx daemon API
+  page and Migration Guide note the re-exported three-input-`Gemm` controller
+  graph and the DirectML-vs-CPU provider latency (batch 48, median of 500 warm
+  calls: CPU ≈ 0.033 ms, DirectML ≈ 0.27 ms — dispatch-bound on a
+  ~50 K-parameter MLP, recorded, not a regression);
+  `DOCS/sphinx/parity_report.rst` gains a "WP-036F — DirectML controller-graph
+  execution" deviation-register entry (CPU bit-identity + DirectML agreement at
+  `max_abs_diff 7.15e-7`). `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` —
+  **DV-006 DirectML half CLOSED** (cites `036f-wp036f-audit.md`, the `0144U`
+  handoff, and `EVIDENCE/0144U-wp036f-s1-controller-provider-report.json`); the
+  row is re-scoped to the VitisAI / Ryzen AI NPU remainder, which stays OPEN,
+  hardware-gated (same standing-external-disposition class as DV-001). Plan
+  amendment #13's WP-005 DirectML deferral is marked **discharged**; Project
+  Plan §3.1 F5 / §9 item 7's DirectML condition is recorded as met. PSR
+  `DOCS/reports/036f-project-state.md` issued. WP-036G (session `0144Y`) entry
+  conditions confirmed.
+- **WP-036F S3 remediation (`0144W`) — both `0144V` findings FIXED; delta
+  re-audit CLEAN.** **WP036F-F1 (D2) FIXED**: nine targeted tests added to
+  `tests/test_wp036f_reexport.py` (`TestTransformErrorPaths`,
+  `TestCheckDriftBranches`, `TestProviderLatencyToolEdgeCases`) — every
+  previously-uncovered `transform_graph` / `_gemm_out_features` error path and
+  `_check` drift branch of the two new tools is now exercised; scoped
+  changed-code coverage 94% → **100%** on both modules, fast suite
+  2765 → 2774 passed. No tool source or assertion changed. **WP036F-F2 (D4)
+  FIXED** (not carried): `tools/wp036f_reexport_controller.py:148` stale
+  `# type: ignore[arg-type]` replaced with `cast("list[dict[str, object]]", …)`;
+  `tools/wp036f_provider_latency.py:131` `**_TOL` splat into `np.allclose`
+  replaced with explicit `rtol=_RTOL, atol=_ATOL` (new module constants;
+  `_TOL` retained verbatim for the evidence JSON's `tolerance` field).
+  `mypy --strict` on both tools 3 errors → **0**; run-time behaviour
+  byte-identical. See `DOCS/audits/036f-wp036f-audit.md` §7 and
+  `EVIDENCE/0144W-wp036f-s3-remediation-gate.md`.
 - **WP-036F S2 audit (`0144V`) — `PASS-WITH-FINDINGS`, mandatory S3 handoff.**
   Independent verification confirms the re-exported three-input-`Gemm`
   controller graph is bit-identical to the PRINet 3.0 reference on

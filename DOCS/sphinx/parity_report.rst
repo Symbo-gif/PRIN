@@ -563,6 +563,40 @@ runtime, or a dedicated vendored-shim WP — not gated to WP-036E and not
 a Phase 7 entry blocker. WP-036G records the residual in the register
 consolidation.
 
+WP-036F — DirectML controller-graph execution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+WP-036F (session ``0144U``) re-exported
+``models/subconscious_controller.onnx`` with three-input ``Gemm`` nodes — an
+explicit zero-valued ``float32`` bias per layer — so ONNX Runtime's
+``DmlExecutionProvider`` executes it (its ``DmlFusedGemm`` fusion rejects the
+two-input form PyTorch exported). ``Gemm`` computes ``Y = α·A'·B' + β·C`` with
+``β = 1`` and the added ``C`` all zeros, so the graph's function is unchanged.
+
+Measured over a 48-case differential batch
+(``np.random.default_rng(20260902)``, batch ``(48, 32)`` ``float32``):
+
+- **CPU bit-identity.** The re-exported graph and the pristine archived
+  PRINet 3.0 graph produce identical output on ``CPUExecutionProvider`` —
+  ``np.array_equal`` on the ``uint32`` views is ``True``, ``max_abs_diff = 0.0``.
+  This is the R3 acceptance gate, satisfied before any DirectML claim.
+- **DirectML agreement.** ``DmlExecutionProvider`` executes the re-exported
+  graph (active provider ``DmlExecutionProvider``, not a silent CPU fallback)
+  and agrees with the CPU provider at ``max_abs_diff = 7.15e-7``, inside the
+  Testing Standards §3 default ``rtol=1e-5, atol=1e-6``. No tolerance was
+  loosened — this is the standing GPU/accelerator-vs-CPU tier already used by
+  ``tests/test_daemon_controller.py::TestCrossProviderAgreement``.
+
+Disposition: not a numerical deviation from PRINet 3.0 — the transform is
+mathematically exact and the reference graph fails DirectML identically
+(Project Plan amendment #13). Provider/latency acceptance is recorded in
+``EVIDENCE/0144U-wp036f-s1-controller-provider-report.json``: DirectML-vs-CPU
+inference latency (batch 48, median of 500 warm calls) is CPU ≈ 0.033 ms,
+DirectML ≈ 0.27 ms — dispatch/copy overhead dominates a ~50 K-parameter MLP,
+recorded as-is, not a regression (the daemon does not select DirectML for the
+controller by default). This closed the DirectML half of DV-006 (WP-036F S4,
+``0144X``); the VitisAI / Ryzen AI NPU half stays OPEN, hardware-gated.
+
 WP-036C — Deterministic-``Seed`` RNG regime (ported OscilloSim)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

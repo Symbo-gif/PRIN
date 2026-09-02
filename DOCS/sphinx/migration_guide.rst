@@ -748,6 +748,23 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
     clips in ``f32`` to match, not ``f64``.
   - *Python modulo:* ``timestamp % 86400.0`` takes the sign of the divisor in
     Python; the Rust port uses ``f64::rem_euclid`` to match.
+  - *Controller graph, three-input Gemm (WP-036F, session 0144U):*
+    PRINet 3.0's ``models/subconscious_controller.onnx`` exports two-input
+    ``Gemm`` nodes (bias-free ``nn.Linear``). PRIN re-exports the graph with an
+    explicit zero-valued ``float32`` bias per layer so ONNX Runtime's
+    ``DmlExecutionProvider`` (which fuses ``Gemm`` + ``Relu`` into a
+    three-input ``DmlFusedGemm``) executes it directly instead of falling back
+    to CPU. ``Y = α·A'·B' + 1·0`` is exact, so the graph is bit-identical to
+    the pre-transform graph on ``CPUExecutionProvider`` over the 48-case
+    differential set; DirectML then agrees with CPU at
+    ``max_abs_diff = 7.15e-7`` (``rtol=1e-5, atol=1e-6``). DirectML inference
+    latency is dispatch-bound and higher than CPU on this ~50 K-parameter MLP
+    (batch 48, median of 500 warm calls: CPU ≈ 0.033 ms, DirectML ≈ 0.27 ms) —
+    recorded, not a regression. The graph digest moves
+    ``3396bfdd…4102`` → ``d7d7935b…341a``; ``subconscious_controller.onnx.data``
+    is unchanged (biases are inline). This closed the DirectML half of DV-006
+    (WP-036F S4, ``0144X``); the VitisAI / Ryzen AI NPU half stays open,
+    hardware-gated.
 
 - ``prin-daemon`` daemon runtime and lock-free control buffer (WP-029) —
   native background thread, lock-free control-signal ring buffer, pluggable

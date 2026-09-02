@@ -94,6 +94,15 @@ starts by reading it (Development Workflow Standards §6).
 - [`036d-project-state.md`](036d-project-state.md) — WP-036D S4
   closure; S2 PASS-WITH-FINDINGS (three D4 findings: WP036D-F1/F2/F3)
   resolved in S3 with CLEAN delta re-audit; DV-030 opened.
+- [`036e-project-state.md`](036e-project-state.md) — WP-036E S4
+  closure; S2 FAIL (one D1, two D2, one D4) remediated in S3 with CLEAN
+  delta re-audit; plan amendments #43/#44; DV-030 and DV-003 re-scoped to
+  `PARTIALLY CLOSED by WP-036E`.
+- [`036f-project-state.md`](036f-project-state.md) — WP-036F S4
+  closure; S2 PASS-WITH-FINDINGS (one D2, one D4) both FIXED in S3 with
+  CLEAN delta re-audit; **DV-006 DirectML half CLOSED**, VitisAI/NPU half
+  re-scoped and OPEN (hardware-gated); plan amendment #13 DirectML deferral
+  discharged; and WP-036G declaration.
 
 
 The [`DEFERRED_VALIDATION_REGISTER.md`](DEFERRED_VALIDATION_REGISTER.md)

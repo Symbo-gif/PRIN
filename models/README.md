@@ -16,6 +16,10 @@ Pre-trained model artefacts.
   (`--check` fails on any drift). The pristine pre-transform graph is
   preserved at
   `DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/models/`.
+  `DmlExecutionProvider` executes the re-exported graph and agrees with the
+  CPU provider within `rtol=1e-5, atol=1e-6` (WP-036F S4, session `0144X`,
+  closed the DirectML half of DV-006); the Ryzen AI NPU (VitisAI) half stays
+  open, hardware-gated.
 - `subconscious_controller.onnx.data` (86 KB) — external tensor data
   companion for the above graph (the three MLP weight matrices). The bias
   tensors are stored inline in the `.onnx` file, so this companion is

@@ -1,6 +1,6 @@
 # tests/ — pytest acceptance suite
 
-The PRIN pytest suite (51 files, ~2,991 tests) is the **acceptance contract**
+The PRIN pytest suite (51 files, ~3,000 tests) is the **acceptance contract**
 for PRIN: it defines the public API. The WP-036B + WP-036C strict ports have
 adapted 37 PRINet 3.0 reference files (1,670 `def test_` functions, ~24,000
 reference lines) with import-only changes (`prinet.*` → `prin.*`); assertions
@@ -75,8 +75,9 @@ k-NN f32 dispatch (`DOCS/sphinx/parity_report.rst`).
 | **Total** | **1,172** | **794** | **378** | — |
 
 **Combined ported suite: 37 files, 1,670 tests** (WP-036B: 498 + WP-036C: 1,172).
-Full default gate (`-m "not slow and not gpu"`): **2,743 passed, 201 skipped,
-0 failed** (321 s).
+Full default gate (`-m "not slow and not gpu"`): **2,774 passed, 202 skipped,
+0 failed** (WP-036F `0144W` adds +9 `test_wp036f_reexport.py` error-path tests
+over the WP-036E baseline of 2,765).
 
 **WP-036C marker policy:** Governed skips are applied via a single
 `tests/conftest.py` `pytest_collection_modifyitems` hook — no ported test file
@@ -173,7 +174,7 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   (5 `@pytest.mark.gpu` CUDA: kDLCUDA capsule export, deterministic
   export, snapshot stability, sparse k-NN CUDA dispatch, device-end-to-end
   hook; 1 default-gate CPU regression).
-- `test_wp036f_reexport.py` — 21 WP-036F tests for the re-exported
+- `test_wp036f_reexport.py` — 30 WP-036F tests for the re-exported
   controller graph (`tools/wp036f_reexport_controller.py`,
   `tools/wp036f_provider_latency.py`): three-input `Gemm` structure and
   zero-bias values, the idempotent transform and its `--check` verifier,
@@ -181,7 +182,10 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   48-case set, and — `skipif` `DmlExecutionProvider` is not registered — that
   DirectML rejects the pre-transform graph and executes the re-exported one
   within `rtol=1e-5, atol=1e-6` of CPU. Not `@pytest.mark.gpu` (DirectML is a
-  default-gate provider on the Windows host).
+  default-gate provider on the Windows host). The `0144W` S3 remediation added
+  nine error-path / drift-branch tests (`TestTransformErrorPaths`,
+  `TestCheckDriftBranches`, `TestProviderLatencyToolEdgeCases`), taking scoped
+  changed-code coverage of both tool modules to 100% (WP036F-F1).
 - `test_benchrunner.py` — WP-033 tests for the unified `benchrunner` CLI and
   its nine category packages (`../benchmarks/`): shared config/timing/
   registry/result-writer infrastructure, the ≥10-measured-iteration timing

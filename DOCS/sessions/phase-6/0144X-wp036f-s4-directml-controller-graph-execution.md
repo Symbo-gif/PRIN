@@ -1,6 +1,10 @@
 # Session 0144X — WP-036F S4: Documentation — DirectML controller-graph execution
 
-**Status:** PLANNED
+**Status:** COMPLETE — all S4 artefacts committed; DV-006 DirectML half CLOSED,
+VitisAI/NPU half re-scoped and OPEN; plan amendment #13 DirectML deferral
+discharged; PSR `DOCS/reports/036f-project-state.md` issued. WP-036F is closed.
+The batched WP-036F `0144U`–`0144X` push (CI over the full range) is the
+maintainer's to execute; local gates are green.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036F
 **Session type:** S4 — Documentation

@@ -207,9 +207,9 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   error/drift branches (WP036F-F1, D2), and `mypy --strict` nits in the new
   tools (WP036F-F2, D4). The re-exported three-input-`Gemm` controller graph
   is independently verified bit-identical to the PRINet 3.0 reference on CPU
-  and `DmlExecutionProvider` executes it within tolerance; DV-006 DirectML
-  half evidence in place for the S4 register/DoD update. Mandatory S3 owns
-  both findings.
+  and `DmlExecutionProvider` executes it within tolerance. Both findings
+  `FIXED` in S3 (`0144W`) with a CLEAN delta re-audit (§7 closure table);
+  DV-006 DirectML half CLOSED at S4 (`0144X`).
 - [`036a-wp036a-audit.md`](036a-wp036a-audit.md) — WP-036A "Trainable
   compatibility layers (`prin-train` extension)" audit (`PASS`); zero findings;
   all 13 D-D trainable-layer / discrete-network symbols (rows 31–42, 44)
