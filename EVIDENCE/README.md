@@ -36,6 +36,15 @@ session that produced it.
   re-implementation of PRINet 3.0's design (5 runs each) and the actual
   archived PRINet 3.0 `ControlSignalBuffer` measured directly (5 runs),
   methodology, and environment capture.
+- [`0144S-wp036e-s3-changed-line-coverage.md`](0144S-wp036e-s3-changed-line-coverage.md)
+  — WP-036E S3 (`0144S`) finding WP036E-F3: union changed-line coverage of the
+  feature-gated GPU crates across the `nofeat/cpu/wgpu/cuda/cuda,wgpu`
+  `cargo-llvm-cov` matrix (98.71 % after the one DV-004 `#[cube]` exclusion),
+  the per-line residual justification, and the nine regression tests added.
+- [`0144S-wp036e-s3-dv003-timing-reprobe.md`](0144S-wp036e-s3-dv003-timing-reprobe.md)
+  — WP-036E S3 (`0144S`) finding WP036E-F1: DV-003 host-residual re-probe on
+  `PRIN-GPU-Runner` confirming CUDA `StepReport.timing_method == "system"` and
+  a bounded ~0.03 ms host residual (plan amendment #44).
 
 ## Rules
 

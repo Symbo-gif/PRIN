@@ -195,6 +195,25 @@ do not renumber `0001`–`0198` or the surrounding `0144A`–`0144AB` block
 invariant is unchanged. Same disposition class as amendment #37 (same blocker,
 predecessor session) and #30/#33/#39.
 
+**Plan amendment #44 (adopted 2026-09-02, no new session IDs):** WP-036E S3
+(`0144S`) audit finding WP036E-F1 (D1). Genuine CUDA device-event timing — the
+amendment-#38 / `0144Q2` DV-003 closure criterion — is **not reachable on
+`cubecl = "0.10.0"`**: `cubecl-cuda` 0.10.0 hard-registers `TimingMethod::System`
+(`src/runtime.rs:173`) and its compute server `block_on(sync())`-brackets every
+`client.profile(...)` (`src/compute/server.rs:197-213`). The alternatives (a new
+direct `cudarc` dep + `unsafe` `cuEvent*` FFI outside the amendment-#8-audited
+modules, or a vendored `cubecl-cuda` fork) are barred by the WP-036E contract —
+the same dependency wall as amendments #37/#43. **Decision (maintainer,
+2026-09-02, `AskUserQuestion`):** **DV-003 → `PARTIALLY CLOSED by WP-036E`** —
+the on-device CUDA `f64` combine + batched read-backs + a measured bounded host
+residual (≈0.03 ms at N=262,144) are delivered and kept; `StepReport::timing_method`
+reports `System` on CUDA honestly; genuine device-event timing is re-gated to a
+`cubecl` release exposing `TimingMethod::Device`/stream-event hooks for CUDA, or
+a dedicated vendored-shim WP (not gated to WP-036E, not a Phase 7 entry blocker;
+WP-036G consolidates the residual). No source numerics changed; no session IDs
+added; planned count unchanged (256). Same disposition class as amendments
+#37/#43 (same dependency wall, same WP family) and #30.
+
 **Plan amendment #40 (adopted 2026-08-31, no new session IDs):** three `0144M1`
 scope confirmations (maintainer `AskUserQuestion` selections). (1) The
 deferred-symbol rebuild of the standalone `DiscreteDeltaThetaGamma` core and
@@ -499,7 +518,7 @@ introduction and are not retroactively added here; this table starts with
 | 0144Q2 | 6 | WP-036E | S1 — Coding | [`prin-sim` persistent device buffers + DV-003 on-device combine](phase-6/0144Q2-wp036e-s1-prin-sim-persistent-device-buffers-dv003.md) | COMPLETE |
 | 0144Q3 | 6 | WP-036E | S1 — Coding | [`prin-py` export zero-copy DLPack, `_torch_compat.py` device path, test activation](phase-6/0144Q3-wp036e-s1-prin-py-export-zero-copy-dlpack-torch-compat-test-activation.md) | COMPLETE |
 | 0144R | 6 | WP-036E | S2 — Audit | [GPU device-resident execution path](phase-6/0144R-wp036e-s2-gpu-device-resident-execution-path.md) | COMPLETE |
-| 0144S | 6 | WP-036E | S3 — Remediation | [GPU device-resident execution path](phase-6/0144S-wp036e-s3-gpu-device-resident-execution-path.md) | PLANNED |
+| 0144S | 6 | WP-036E | S3 — Remediation | [GPU device-resident execution path](phase-6/0144S-wp036e-s3-gpu-device-resident-execution-path.md) | COMPLETE |
 | 0144T | 6 | WP-036E | S4 — Documentation | [GPU device-resident execution path](phase-6/0144T-wp036e-s4-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144U | 6 | WP-036F | S1 — Coding | [DirectML controller-graph execution](phase-6/0144U-wp036f-s1-directml-controller-graph-execution.md) | PLANNED |
 | 0144V | 6 | WP-036F | S2 — Audit | [DirectML controller-graph execution](phase-6/0144V-wp036f-s2-directml-controller-graph-execution.md) | PLANNED |

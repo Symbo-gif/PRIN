@@ -163,7 +163,7 @@ count 253 → 256. See
 | 0144Q2 | WP-036E | S1 — Coding | [`prin-sim` persistent device buffers + DV-003 on-device combine](0144Q2-wp036e-s1-prin-sim-persistent-device-buffers-dv003.md) | COMPLETE |
 | 0144Q3 | WP-036E | S1 — Coding | [`prin-py` export zero-copy DLPack, `_torch_compat.py` device path, test activation](0144Q3-wp036e-s1-prin-py-export-zero-copy-dlpack-torch-compat-test-activation.md) | COMPLETE |
 | 0144R | WP-036E | S2 — Audit | [GPU device-resident execution path](0144R-wp036e-s2-gpu-device-resident-execution-path.md) | COMPLETE — FAIL (1 D1, 2 D2, 1 D4) |
-| 0144S | WP-036E | S3 — Remediation | [GPU device-resident execution path](0144S-wp036e-s3-gpu-device-resident-execution-path.md) | PLANNED |
+| 0144S | WP-036E | S3 — Remediation | [GPU device-resident execution path](0144S-wp036e-s3-gpu-device-resident-execution-path.md) | COMPLETE — F1 AMENDED (amdt #44: DV-003 → PARTIALLY CLOSED, device-event timing not reachable on cubecl 0.10), F2/F3/F4 FIXED; delta re-audit CLEAN |
 | 0144T | WP-036E | S4 — Documentation | [GPU device-resident execution path](0144T-wp036e-s4-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144U | WP-036F | S1 — Coding | [DirectML controller-graph execution](0144U-wp036f-s1-directml-controller-graph-execution.md) | PLANNED |
 | 0144V | WP-036F | S2 — Audit | [DirectML controller-graph execution](0144V-wp036f-s2-directml-controller-graph-execution.md) | PLANNED |
