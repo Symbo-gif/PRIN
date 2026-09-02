@@ -332,7 +332,7 @@ unchanged. `_gpu_f32` (Torch `.cpu()` marshalling) already provides it.
 | `cargo test -p prin-sim -p prin-py --features cuda` | prin-sim **193** pass, prin-py lib **15** pass |
 | `RUSTDOCFLAGS='-D warnings' cargo doc -p prin-sim -p prin-py --no-deps --features cuda` | clean |
 | `ruff check python/ tests/ benchmarks/ tools/` / `ruff format --check` | clean |
-| `pytest tests/ -m gpu -rs` (on `PRIN-GPU-Runner`) | **13 passed** (7 WP-036D acceptance + 6 new `test_wp036e_q3_zero_copy.py`) |
+| `pytest tests/ -m gpu -rs` (on `PRIN-GPU-Runner`) | **12 passed** (7 WP-036D acceptance + 5 `gpu`-marked in `test_wp036e_q3_zero_copy.py`). *Corrected from "13 / +6" per S2 audit `0144R` finding WP036E-F4: the file's sixth test (`test_cpu_compute_derivatives_still_cpu_and_finite`) is a deliberate default-gate CPU regression test and is not `@pytest.mark.gpu`.* |
 | `pytest tests/ -m "not slow and not gpu"` | **2743 passed, 202 skipped** (0 failed) — the 489 CPU acceptance tests among them byte-for-byte unchanged; `test_wp036d_gpu_dispatch.py::test_cpu_compute_derivatives_unchanged` golden values intact |
 | `cargo audit` | exit 0; 3 allowed warnings (DV-008 `paste`, DV-017 `bincode`, `chacha20` yanked) — no `Cargo.toml` change, no new advisory |
 | `snyk code test crates/prin-py` / `crates/prin-sim` / `python/prin` (`--severity-threshold=low`, org `symbo-gif`) | **0 issues** each |
@@ -368,7 +368,7 @@ byte-for-byte unchanged. Deterministic — the export path adds no RNG.
 | `0144Q3` criterion | Status |
 |---|---|
 | 489 CPU acceptance tests + `_torch_compat.py` CPU path byte-for-byte unchanged | held — docstring-only Python edit; golden `test_cpu_compute_derivatives_unchanged` re-run green in the `-m gpu` leg and the new `test_cpu_compute_derivatives_still_cpu_and_finite` in the default leg |
-| 7 WP-036D GPU acceptance tests still pass on the runner | **pass** (`-m gpu` = 13 total) |
+| 7 WP-036D GPU acceptance tests still pass on the runner | **pass** (`-m gpu` = 12 total; corrected per WP036E-F4) |
 | No new `prin` public symbol; `unsafe` only in amendment-#8 modules | held — `.pyi` unchanged; new `unsafe`-adjacent code is in `dlpack.rs` reusing the audited pattern |
 | export zero-copy verified on the runner | `kDLCUDA` `state()` / derivative capsules adopted by `torch.from_dlpack` as CUDA tensors; snapshot-stable; values match the CPU reference within `rtol=1e-5, atol=1e-6` |
 | `test_sparse_vram_subquadratic` disposition | governed `skip` retained, reason → amendment #43 DV-030 residual; **`0144R` adjudicates** |

@@ -132,8 +132,10 @@ the `0144Q`+`0144Q1`–`0144Q3` range is ready for the S2 audit `0144R`.
 `cargo fmt` / `clippy --workspace --all-targets` (CI-authoritative) /
 `cargo test --workspace` / `cargo test --workspace --features cuda`
 (mirrors `gpu.yml`, on the RTX 4060) / `cargo doc --features cuda` /
-`ruff` + `ruff format --check` / `pytest -m gpu` (**13 passed** — 7 WP-036D +
-6 new) / `cargo audit` (exit 0, 3 allowed warnings, no `Cargo.toml` change) /
+`ruff` + `ruff format --check` / `pytest -m gpu` (**12 passed** — 7 WP-036D +
+5 `gpu`-marked in `test_wp036e_q3_zero_copy.py`; its 6th test is a default-gate
+CPU regression test, not `gpu`-marked — corrected per S2 audit `0144R` finding
+WP036E-F4) / `cargo audit` (exit 0, 3 allowed warnings, no `Cargo.toml` change) /
 `snyk code test` on `prin-py` + `prin-sim` + `python/prin` (**0 issues**) /
 `pip-audit` (pre-existing build-tooling advisories only; no Python dep
 changed). Full CPU gate (`pytest -m "not slow and not gpu"`): **2743 passed,

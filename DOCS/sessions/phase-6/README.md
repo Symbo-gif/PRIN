@@ -159,9 +159,9 @@ count 253 → 256. See
 | 0144O | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | COMPLETE — F1–F9 FIXED/AMENDED, delta re-audit CLEAN; amendment #41, DV-031 |
 | 0144P | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
 | 0144Q | WP-036E | S1 — Coding | [GPU device-resident execution path](0144Q-wp036e-s1-gpu-device-resident-execution-path.md) | PLANNED (decomposed into `0144Q1`–`0144Q3`, re-scoped — amendment #43) |
-| 0144Q1 | WP-036E | S1 — Coding | [`prin-kernels` device-`Handle` dispatch layer](0144Q1-wp036e-s1-prin-kernels-device-handle-dispatch-layer.md) | PLANNED |
-| 0144Q2 | WP-036E | S1 — Coding | [`prin-sim` persistent device buffers + DV-003 on-device combine](0144Q2-wp036e-s1-prin-sim-persistent-device-buffers-dv003.md) | PLANNED |
-| 0144Q3 | WP-036E | S1 — Coding | [`prin-py` export zero-copy DLPack, `_torch_compat.py` device path, test activation](0144Q3-wp036e-s1-prin-py-export-zero-copy-dlpack-torch-compat-test-activation.md) | PLANNED |
+| 0144Q1 | WP-036E | S1 — Coding | [`prin-kernels` device-`Handle` dispatch layer](0144Q1-wp036e-s1-prin-kernels-device-handle-dispatch-layer.md) | COMPLETE |
+| 0144Q2 | WP-036E | S1 — Coding | [`prin-sim` persistent device buffers + DV-003 on-device combine](0144Q2-wp036e-s1-prin-sim-persistent-device-buffers-dv003.md) | COMPLETE |
+| 0144Q3 | WP-036E | S1 — Coding | [`prin-py` export zero-copy DLPack, `_torch_compat.py` device path, test activation](0144Q3-wp036e-s1-prin-py-export-zero-copy-dlpack-torch-compat-test-activation.md) | COMPLETE |
 | 0144R | WP-036E | S2 — Audit | [GPU device-resident execution path](0144R-wp036e-s2-gpu-device-resident-execution-path.md) | COMPLETE — FAIL (1 D1, 2 D2, 1 D4) |
 | 0144S | WP-036E | S3 — Remediation | [GPU device-resident execution path](0144S-wp036e-s3-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144T | WP-036E | S4 — Documentation | [GPU device-resident execution path](0144T-wp036e-s4-gpu-device-resident-execution-path.md) | PLANNED |
