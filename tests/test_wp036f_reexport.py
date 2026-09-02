@@ -304,6 +304,129 @@ class TestDirectMLExecution:
         np.testing.assert_allclose(dml, cpu, rtol=1e-5, atol=1e-6)
 
 
+def _single_gemm_model(
+    inputs: list[str],
+    initializers: list[onnx.TensorProto],
+    *,
+    name: str = "g0",
+) -> onnx.ModelProto:
+    """A minimal one-``Gemm`` model, checker-free, for the error-path tests."""
+    node = onnx.helper.make_node("Gemm", inputs, ["y"], name=name)
+    graph = onnx.helper.make_graph([node], "g", [], [], initializer=initializers)
+    return onnx.helper.make_model(graph)
+
+
+class TestTransformErrorPaths:
+    """WP036F-F1: the ``transform_graph`` guard clauses (reexport 71-72, 121-122)."""
+
+    def test_transform_rejects_a_non_rank2_weight(self):
+        weight = numpy_helper.from_array(
+            np.zeros((2, 2, 2), dtype=np.float32), name="w"
+        )
+        model = _single_gemm_model(["a", "w"], [weight])
+        with pytest.raises(ValueError, match="not rank-2"):
+            reexport.transform_graph(model)
+
+    def test_transform_rejects_a_colliding_bias_name(self):
+        weight = numpy_helper.from_array(
+            np.zeros((2, 3), dtype=np.float32), name="net.0.weight"
+        )
+        collision = numpy_helper.from_array(
+            np.zeros(3, dtype=np.float32), name="net.0.bias"
+        )
+        model = _single_gemm_model(["a", "net.0.weight"], [weight, collision])
+        with pytest.raises(ValueError, match="already present as an initializer"):
+            reexport.transform_graph(model)
+
+
+class TestCheckDriftBranches:
+    """WP036F-F1: the drift branches of ``reexport._check`` (174, 184-188, 201-206)."""
+
+    def _empty_manifest(self, tmp_path: Path) -> Path:
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text('{"files": []}', encoding="utf-8")
+        return manifest
+
+    def test_check_reports_no_gemm_nodes(self, tmp_path):
+        model = onnx.helper.make_model(
+            onnx.helper.make_graph(
+                [onnx.helper.make_node("Identity", ["a"], ["y"], name="id")],
+                "g",
+                [],
+                [],
+            )
+        )
+        model_path = tmp_path / "m.onnx"
+        onnx.save(model, model_path)
+        problems = reexport._check(model_path, self._empty_manifest(tmp_path))
+        assert any("no Gemm nodes" in p for p in problems)
+
+    def test_check_reports_a_non_initializer_bias(self, tmp_path):
+        weight = numpy_helper.from_array(np.zeros((4, 2), dtype=np.float32), name="w")
+        model = _single_gemm_model(["a", "w", "b"], [weight])
+        model_path = tmp_path / "m.onnx"
+        onnx.save(model, model_path)
+        problems = reexport._check(model_path, self._empty_manifest(tmp_path))
+        assert any("is not inline" in p for p in problems)
+
+    def test_check_reports_a_non_zero_bias(self, tmp_path):
+        weight = numpy_helper.from_array(np.zeros((4, 2), dtype=np.float32), name="w")
+        bias = numpy_helper.from_array(np.ones(4, dtype=np.float32), name="b")
+        model = _single_gemm_model(["a", "w", "b"], [weight, bias])
+        model_path = tmp_path / "m.onnx"
+        onnx.save(model, model_path)
+        problems = reexport._check(model_path, self._empty_manifest(tmp_path))
+        assert any("is not float32 zero" in p for p in problems)
+
+    def test_check_reports_a_manifest_missing_file(self, tmp_path):
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text(
+            '{"files": [{"path": "gone.bin", "bytes": 1, "sha256": "0"}]}',
+            encoding="utf-8",
+        )
+        problems = reexport._check(default_model_path(), manifest)
+        assert any("manifest lists a missing file" in p for p in problems)
+
+    def test_check_reports_a_stale_manifest_digest(self, tmp_path):
+        import json
+
+        model_path = default_model_path()
+        manifest = tmp_path / "manifest.json"
+        entry = {
+            "path": model_path.name,
+            "bytes": model_path.stat().st_size,
+            "sha256": "0" * 64,
+        }
+        manifest.write_text(json.dumps({"files": [entry]}), encoding="utf-8")
+        problems = reexport._check(model_path, manifest)
+        assert any("sha256 stale" in p for p in problems)
+        assert not any("bytes stale" in p for p in problems)
+
+
+class TestProviderLatencyToolEdgeCases:
+    """WP036F-F1: the latency tool's degraded-host branches (latency lines 99, 191)."""
+
+    def test_pre_transform_check_handles_an_absent_archive(self, tmp_path, monkeypatch):
+        monkeypatch.setattr(latency_tool, "_PRISTINE", tmp_path / "not-here.onnx")
+        result = latency_tool._pre_transform_check(
+            default_model_path(), latency_tool._state_batch()
+        )
+        assert result == {"available": False}
+
+    def test_main_returns_zero_when_directml_unregistered(self, tmp_path, monkeypatch):
+        import json
+
+        monkeypatch.setattr(
+            latency_tool, "available_providers", lambda: [latency_tool._CPU]
+        )
+        out = tmp_path / "report.json"
+        rc = latency_tool.main(["--output", str(out)])
+        assert rc == 0
+        report = json.loads(out.read_text(encoding="utf-8"))
+        assert report["directml"] == {"registered": False}
+        assert "directml" not in report["latency_ms_median_batch48"]
+
+
 class TestProviderLatencyTool:
     def test_build_report_records_the_acceptance_evidence(self):
         report = latency_tool.build_report(default_model_path())
