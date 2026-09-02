@@ -305,8 +305,10 @@ Ordered S3 (`0144S`) action list:
 
 New feature work is frozen until S3 resolves or amends the D1 finding.
 
-**Maintainer acknowledgment of the verdict:** pending — to be recorded before
-S3 begins (Development Workflow and Audit Standards §6).
+**Maintainer acknowledgment of the verdict:** acknowledged 2026-09-02
+(MichaelMaillet). The `FAIL` verdict and the ordered S3 action list were
+accepted; the WP036E-F1 (D1) code-vs-amend decision was put to the maintainer
+at S3 start via `AskUserQuestion` and resolved as **plan amendment #44** (§7).
 
 ---
 

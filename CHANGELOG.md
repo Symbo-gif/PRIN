@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **WP-036E S3 remediation (`0144S`) — all four `0144R` findings closed; delta
+  re-audit CLEAN.** **WP036E-F1 (D1) AMENDED** via **plan amendment #44**:
+  genuine CUDA device-event timing is not reachable on the pinned
+  `cubecl = "0.10.0"` (`cubecl-cuda` hard-registers `TimingMethod::System` and
+  its compute server syncs around every profile), so **DV-003 is
+  `PARTIALLY CLOSED by WP-036E`** — the on-device CUDA `f64` level-2 combine,
+  batched read-backs and a measured bounded host residual (0.155 ms median at
+  N=262,144, wall/`StepReport` ratio 1.058) are delivered; genuine device-event
+  timing is re-gated to a `cubecl` release exposing `TimingMethod::Device` for
+  CUDA, or a vendored-shim WP. Same dependency wall as amendments #37/#43.
+  **WP036E-F2 (D2) FIXED**: the five `cargo clippy -p prin-sim --features cuda`
+  lints resolved without behaviour change (`try_create_client` restructured;
+  `MeanFieldInner`/`BandStepperInner` device payloads boxed via
+  `MeanFieldDevice`/`BandStepperDevice`; two `needless_range_loop`).
+  **WP036E-F3 (D2) FIXED**: changed-line coverage reported across the
+  `nofeat ∪ cpu ∪ wgpu ∪ cuda` matrix with a documented DV-004 exclusion for
+  the one changed `#[cube(launch)]` body; regression tests added for the
+  `*DeviceState::from_parts` adopt-handles paths, the `EmptyPopulation` guard,
+  the wgpu-under-CUDA host `f64` combine, and the `prin-sim` host-slice
+  fallback arms + CUDA-export guards; `order_param_device`'s duplicated host
+  `f64` combine deduplicated into `host_f64_combine`. **WP036E-F4 (D4) FIXED**:
+  `pytest -m gpu` selects exactly 12 (the S1 handoff/Q3 brief "13" corrected);
+  `DOCS/sessions/phase-6/README.md` `0144Q1`–`0144Q3` moved to `COMPLETE`.
 - **WP-036E S2 audit (`0144R`) — `FAIL`, mandatory S3 handoff.** Independent
   CUDA/CPU execution confirms the device-resident architecture, zero-copy
   `kDLCUDA` export, default GPU tolerances, 12 GPU-selected tests, and 2,743
