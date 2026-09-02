@@ -87,6 +87,38 @@ GPU integration benchmarks (`benches/gpu_bench.rs`, CUDA on RTX 4060):
   ~3.6 ms (unpooled per-stage buffer allocation dominates at this scale; pooled execution is a candidate
   future performance optimization).
 
+## Phase 6 — WP-036E: Device-resident GPU engines
+
+WP-036E (sessions `0144Q`–`0144T`) made the three GPU simulation engines
+device-resident: state stays on-device between `step()` calls; explicit
+`to_host()` only when the caller asks.
+
+- **[`GpuMeanFieldEngine`](src/gpu.rs):** holds a `ComputeClient`,
+  `MeanFieldDeviceState` (device `Handle`s for phase/amplitude/frequency),
+  and a `CubeclBufferPool`. `step()` calls
+  `step_cubecl_device` without host transfer. The CUDA `f64` level-2
+  order-parameter combine runs on-device (DV-003); `StepReport` honestly
+  reports `timing_method = System` on CUDA (CubeCL 0.10.0 does not
+  expose `TimingMethod::Device` for CUDA — plan amendment #44).
+- **[`GpuBandStepper`](src/gpu.rs):** holds `DiscreteStepDeviceState`
+  (per-band device handles) and a `CubeclBufferPool`; the fused 10-launch
+  discrete step runs entirely on-device.
+- **[`GpuSparseKuramoto`](src/gpu.rs):** uploads CSR `indptr`/`indices`
+  once at construction; per-call sparse k-NN coupling runs on
+  device-resident handles. The generic `Dynamics` interface remains
+  intentionally per-call host-in/host-out; the Python CUDA export path
+  avoids output read-back.
+- **Export-direction zero-copy DLPack** (WP-036E, `prin-py`):
+  `GpuMeanFieldEngine::state()` and `GpuSparseKuramoto`'s CUDA dispatch
+  obtain CubeCL's device resource pointer, pin a cloned `Handle`,
+  synchronize before export, and let Torch adopt a `kDLCUDA` capsule
+  with no host round-trip. Per plan amendment #43 the *input* boundary
+  stays a single host `float32` upload (CubeCL 0.10.0 cannot adopt an
+  external CUDA device pointer as a kernel-input `Handle`).
+
+Evidence: `DOCS/audits/036e-wp036e-audit.md`;
+`DOCS/reports/036e-project-state.md`.
+
 ## PRINet 3.0 Migration Notes
 
 - `prinet.utils.oscillosim.OscilloSim` → `prin_sim::OscilloSim` + `prin_sim::SparseCoupling`.

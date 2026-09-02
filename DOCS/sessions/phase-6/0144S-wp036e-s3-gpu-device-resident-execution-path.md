@@ -1,6 +1,6 @@
 # Session 0144S — WP-036E S3: Remediation — GPU device-resident execution path
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036E
 **Session type:** S3 — Remediation

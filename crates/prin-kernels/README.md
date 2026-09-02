@@ -204,6 +204,45 @@ and locked regression baselines:
 Evidence: `DOCS/audits/021-wp021-audit.md` (verdict `PASS-WITH-FINDINGS`, one D4 finding
 WP021-F1 FIXED in S3); `DOCS/experiments/0081-wp021-s1-handoff.md`.
 
+## Phase 6 — WP-036E: Device-resident GPU execution path
+
+WP-036E (sessions `0144Q`–`0144T`) made the kernel dispatch layer
+device-resident. Each algorithm now has a **device-`Handle` entry point**
+that operates entirely on GPU buffers; the existing host-slice functions
+(`step_auto`, `sparse_knn_coupling_auto`, `discrete_step_auto`) are thin
+upload → device-path → download wrappers (one algorithm, one
+implementation — Coding Standards §N5).
+
+- **[`mean_field_rk4::cubecl`](src/mean_field_rk4/cubecl.rs):**
+  `MeanFieldDeviceState<R>` holds `(phase, amplitude, frequency)` device
+  `Handle`s; `step_cubecl_device` runs the full 9-launch RK4 sequence
+  (4 stage kernels + 4 order-parameter reductions + 1 finalize) without
+  touching host memory. The level-2 `f64` order-parameter combine
+  (`order_param_finalize_f64`) runs on-device on CUDA (wgpu DX12 keeps
+  the documented host `f64` combine — `SHADER_F64` is Vulkan-only).
+  `MeanFieldDeviceState::upload` / `::to_host` are the explicit
+  host↔device boundaries.
+- **[`sparse_knn::cubecl`](src/sparse_knn/cubecl.rs):**
+  `SparseKnnDeviceState<R>` holds the CSR `indptr`/`indices` plus
+  `phases` on device; `sparse_knn_coupling_device` runs the gather
+  kernel over device-resident handles. The host wrapper uploads once per
+  call; `GpuSparseKuramoto` in `prin-sim` uploads CSR topology once at
+  construction.
+- **[`discrete_step::cubecl`](src/discrete_step/cubecl.rs):**
+  `DiscreteStepDeviceState<R>` holds per-band `(phase, amplitude)`
+  handles; `discrete_step_device` runs the full 10-launch fused path
+  on-device.
+- **`CubeclBufferPool`** (WP-036E): drops the three `out_*` handles
+  (device path allocates finalize outputs per step); gains a zeroed
+  `k_zero` handle allocated once at pool construction.
+
+Changed-line coverage across the `nofeat ∪ cpu ∪ wgpu ∪ cuda ∪ cuda,wgpu`
+matrix: **98.71 %** after the single documented DV-004 `#[cube(launch)]`
+exclusion (`order_param_finalize_f64`, kernel-equivalence tested).
+
+Evidence: `DOCS/audits/036e-wp036e-audit.md` (S2 verdict FAIL → S3
+remediation CLEAN, plan amendment #44); `DOCS/reports/036e-project-state.md`.
+
 ## Roadmap Progression
 
 Phase 3 (GPU kernels) is complete. Phase 4 begins with WP-022:

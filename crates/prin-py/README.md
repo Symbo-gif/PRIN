@@ -231,6 +231,36 @@ whenever the extension API changes.
   on the self-hosted CUDA runner; the eighth (`test_sparse_vram_subquadratic`)
   is deferred to DV-030 (device-resident buffers).
 
+### WP-036E: Device-resident GPU engines and export zero-copy DLPack
+(sessions 0144Q–0144T)
+
+- **`bindings/gpu.rs`** — `GpuMeanFieldEngine` and `GpuBandStepper` gain
+  a `.state()` method returning three `kDLCUDA` DLPack capsules over the
+  engine's live device buffers (phase, amplitude, frequency). The
+  capsules pin a cloned CubeCL `Handle`; the next `step()` allocates
+  fresh state handles, so the exported snapshot is stable (standard
+  DLPack producer semantics). `GpuSparseKuramoto.compute_derivatives()`
+  on a CUDA input returns on-device CUDA tensors via the same
+  export path.
+- **`dlpack.rs`** — `CudaExternalF32` / `export_dlpack_f32_cuda`:
+  obtains CubeCL's device resource pointer via
+  `ComputeClient::get_resource(handle)`, pins a cloned `Handle` into a
+  `CudaBufferExport` keepalive, synchronizes, and constructs a
+  `kDLCUDA` DLPack capsule Torch adopts with no host round-trip.
+  Export direction only — per plan amendment #43 the input boundary
+  stays a single host `float32` upload (CubeCL 0.10.0 cannot adopt an
+  external CUDA device pointer as a kernel-input `Handle`).
+- **`python/prin/_torch_compat.py`** — `_compute_derivatives_gpu`
+  hook; `_from_gpu` restores results to the input's device (a CUDA
+  input stays CUDA end to end, no host bounce). CPU `else` branch
+  byte-for-byte unchanged.
+- **`python/prin/_prin_core.pyi`** — stubs for `GpuMeanFieldEngine.state()`,
+  `GpuSparseKuramoto.compute_derivatives()` CUDA overload.
+- 6-test zero-copy suite (`tests/test_wp036e_q3_zero_copy.py`): 5
+  `@pytest.mark.gpu` CUDA tests (kDLCUDA capsule export, deterministic
+  export, snapshot stability, sparse k-NN CUDA dispatch, device-end-to-end
+  hook) + 1 CPU regression test.
+
 ### WP-028: Daemon bindings (sessions 0109–0112)
 
 - **`bindings/daemon.rs`** — PyO3 surface for the `prin-daemon` crate:

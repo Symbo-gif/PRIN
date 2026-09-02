@@ -478,6 +478,91 @@ tracked with DV-030 (device-resident GPU buffers); a future device-resident path
 does not change the kernel's working precision, so this tolerance tier is
 expected to persist.
 
+WP-036E — Device-resident GPU kernel equivalence and timing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+WP-036E (sessions ``0144Q``–``0144T``) made the ``prin-kernels`` dispatch
+layer and the ``prin-sim`` GPU engines device-resident. The kernel-working
+precision is unchanged from WP-036D (``f32`` CubeCL kernels vs ``f64`` CPU
+reference); the device-resident path adds no new numerical hazard. All
+CUDA kernel-equivalence tests retain the Testing Standards §3 default
+``rtol=1e-5, atol=1e-6``; no tolerance annotation beyond the existing
+WP-036D entry is needed.
+
+GPU-vs-CPU kernel-equivalence tolerance summary (all at ``rtol=1e-5,
+atol=1e-6`` unless noted):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 15 15 40
+
+   * - Kernel
+     - ``rtol``
+     - ``atol``
+     - Notes
+   * - Mean-field RK4 (CUDA, N=64…1M)
+     - 1e-5
+     - 1e-6
+     - 9-launch device-resident step; on-device CUDA ``f64`` combine
+   * - Sparse k-NN coupling (CUDA, N=300, k=6)
+     - 1e-5
+     - 1e-5
+     - f32 dispatch vs f64 CPU — WP-036D tier persists (see above)
+   * - Discrete step (CUDA, multi-block)
+     - 1e-5
+     - 1e-6
+     - 10-launch fused three-band step
+   * - PAC modulation (CUDA, N=600)
+     - 1e-5
+     - 1e-6
+     - Two-stage hierarchical reduction
+   * - Export zero-copy (kDLCUDA)
+     - 1e-5
+     - 1e-5
+     - Sparse k-NN CUDA dispatch vs CPU reference
+
+**Device-event timing (DV-003).** The on-device CUDA ``f64`` level-2
+order-parameter combine (``order_param_finalize_f64``) is delivered;
+batched read-backs (2 ``f32``\ s/stage vs ``2·num_blocks``) replace the
+prior per-block host read-back. ``StepReport::timing_method`` honestly
+reports ``System`` on CUDA — genuine CUDA device-event timing is **not
+reachable on the pinned ``cubecl = "0.10.0"``**: ``cubecl-cuda`` 0.10.0
+hard-registers ``TimingMethod::System`` (``src/runtime.rs:173``) and its
+compute server brackets every ``client.profile(...)`` with
+``block_on(self.sync())`` (``src/compute/server.rs:197-213``), so CubeCL
+profiling on CUDA is inherently host-wall-clock (plan amendment #44).
+
+Measured residual on ``PRIN-GPU-Runner`` (RTX 4060) at N=262,144
+oscillators, 5 warm-up + 20 measured ``step()``\ s:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 30 30
+
+   * - Metric
+     - S1 probe (``0144R``)
+     - S3 probe (``0144S``)
+   * - Median outer wall
+     - 2.8215 ms
+     - 0.6731 ms
+   * - Median ``StepReport``
+     - 2.6664 ms
+     - 0.6449 ms
+   * - Median residual
+     - 0.1552 ms
+     - 0.0282 ms
+   * - wall / ``StepReport`` ratio
+     - 1.058
+     - 1.044
+
+The residual is bounded and much smaller than the historical ≈25 ms vs
+388 µs gap. Genuine CUDA device-event timing over the fused RK4 launch
+sequence is re-gated to a ``cubecl`` release registering
+``TimingMethod::Device`` / exposing stream-event hooks for the CUDA
+runtime, or a dedicated vendored-shim WP — not gated to WP-036E and not
+a Phase 7 entry blocker. WP-036G records the residual in the register
+consolidation.
+
 WP-036C — Deterministic-``Seed`` RNG regime (ported OscilloSim)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

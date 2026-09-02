@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **WP-036E S4 documentation (`0144T`) — WP-036E closed.** READMEs updated
+  (`crates/prin-kernels/`, `crates/prin-sim/`, `crates/prin-py/`, `tests/`);
+  `DOCS/sphinx/parity_report.rst` GPU-vs-CPU tolerance table current;
+  `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` — **DV-030** and **DV-003**
+  updated to `PARTIALLY CLOSED by WP-036E` with evidence chain; PSR
+  `DOCS/reports/036e-project-state.md` issued. WP-036F (session `0144U`)
+  entry conditions confirmed. WP-036E is closed; only then may WP-036F
+  (`0144U`) begin.
 - **WP-036E S3 remediation (`0144S`) — all four `0144R` findings closed; delta
   re-audit CLEAN.** **WP036E-F1 (D1) AMENDED** via **plan amendment #44**:
   genuine CUDA device-event timing is not reachable on the pinned

@@ -60,10 +60,10 @@ jobs:
           .venv\Scripts\python.exe -m maturin develop -m crates/prin-py/Cargo.toml --features cuda
           .venv\Scripts\python.exe -m pip install --no-cache-dir -e ".[dev]"
       - name: Python GPU tests
-        # WP-036D S1 (0144I3) + S3 (0144K): 7 tests carry @pytest.mark.gpu;
-        # -m gpu selects them on this CUDA runner. The eighth original CUDA
-        # guard (test_sparse_vram_subquadratic) is @pytest.mark.skip'd to
-        # DV-030 (device-resident buffers). On a CPU-only host the same
+        # WP-036D (0144I3) + WP-036E (0144Q3): 12 tests carry @pytest.mark.gpu
+        # (7 ported acceptance + 5 export zero-copy); -m gpu selects them on
+        # this CUDA runner. test_sparse_vram_subquadratic is @pytest.mark.skip'd
+        # to DV-030 (device-resident buffers). On a CPU-only host the same
         # tests skip via their reference skipif(not torch.cuda.is_available())
         # guards. `-rs` prints skip reasons for visibility.
         run: |

@@ -33,10 +33,16 @@ is skipped; on the self-hosted CUDA runner (`PRIN-GPU-Runner`, selected by
 activated; the eighth (`test_sparse_vram_subquadratic`) carries an explicit
 `@pytest.mark.skip(reason="deferred to DV-030 ...")` because the sparse-vs-full
 VRAM ratio cannot be verified while the coupling matrix lives in Rust host
-memory (DV-030). The 1 psutil skip matches `pytest.skip("psutil not installed")`
-in the reference. No test carries `@pytest.mark.xfail`; no assertion is
-weakened; no tolerance annotation was required beyond the Parity Report entry
-for the GPU sparse k-NN f32 dispatch (`DOCS/sphinx/parity_report.rst`).
+memory (DV-030). WP-036E (sessions `0144Q`–`0144T`) adds 5 further
+`@pytest.mark.gpu` tests in `test_wp036e_q3_zero_copy.py` (kDLCUDA capsule
+export, deterministic export, snapshot stability, sparse k-NN CUDA dispatch,
+device-end-to-end hook); the file's 6th test is a default-gate CPU regression
+check, not `gpu`-marked. **Total: 12 `@pytest.mark.gpu` tests** (7 ported
+acceptance + 5 WP-036E), selected by `pytest -m gpu`. The 1 psutil skip
+matches `pytest.skip("psutil not installed")` in the reference. No test
+carries `@pytest.mark.xfail`; no assertion is weakened; no tolerance
+annotation was required beyond the Parity Report entries for the GPU sparse
+k-NN f32 dispatch (`DOCS/sphinx/parity_report.rst`).
 
 ## WP-036C ported acceptance suite (24 files, 1,172 tests)
 
@@ -160,6 +166,13 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   (`encode → evolve → phase_similarity`) and benchmark class (WP-027).
 - `test_gpu_*.py` — GPU integration tests, marker `gpu` (opt-in, self-hosted
   runner, `[gpu]` commit-message trigger).
+- `test_wp036d_gpu_dispatch.py` — 15 WP-036D GPU dispatch unit tests
+  (predicate, CPU-path golden-value, marshalling round-trip, sparse k-NN
+  CubeCL dispatch, batched dispatch, CUDA device assertions).
+- `test_wp036e_q3_zero_copy.py` — 6 WP-036E export zero-copy tests
+  (5 `@pytest.mark.gpu` CUDA: kDLCUDA capsule export, deterministic
+  export, snapshot stability, sparse k-NN CUDA dispatch, device-end-to-end
+  hook; 1 default-gate CPU regression).
 - `test_benchrunner.py` — WP-033 tests for the unified `benchrunner` CLI and
   its nine category packages (`../benchmarks/`): shared config/timing/
   registry/result-writer infrastructure, the ≥10-measured-iteration timing
