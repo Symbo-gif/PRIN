@@ -115,6 +115,10 @@ _WP_ID = re.compile(r"^WP-(\d{3})$")
 #   #40: 0144M1 scope confirmations (no new session IDs): deferred-symbol
 #        rebuild (DiscreteDeltaThetaGamma core + InterleavedHybridPRINet)
 #        in-scope; __version__ 0.3.0-alpha.1 -> 0.3.0; minimal docs/ guides.
+#   #43: WP-036E S1 decomposed into three coding sub-passes 0144Q1..0144Q3,
+#        inserted between 0144Q and 0144R; the headline "true zero-copy
+#        Torch<->CubeCL DLPack" deliverable re-scoped (not reachable on
+#        cubecl 0.10.0), DV-030 -> PARTIALLY CLOSED.
 _PLANNED_INTEGER_COUNT = 198
 # Each block is (anchor_integer_session, ordered_sub_session_ids). The block's
 # rows appear in the register contiguously immediately after the anchor row.
@@ -162,6 +166,9 @@ _SUBSESSION_BLOCKS = (
             "0144O",
             "0144P",
             "0144Q",
+            "0144Q1",
+            "0144Q2",
+            "0144Q3",
             "0144R",
             "0144S",
             "0144T",

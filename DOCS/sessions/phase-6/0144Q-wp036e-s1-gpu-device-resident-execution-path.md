@@ -1,12 +1,22 @@
 # Session 0144Q — WP-036E S1: Coding — GPU device-resident execution path
 
-**Status:** PLANNED
+**Status:** PLANNED — **decomposed into `0144Q1`–`0144Q3` and the headline
+deliverable re-scoped by Plan amendment #43** (2026-09-02). S1-start repository
+verification established that a *true zero-copy Torch↔CubeCL DLPack kernel-input
+path* is not reachable on the pinned `cubecl 0.10.0` (no external-CUDA-pointer
+`Handle` API); DV-030 is re-scoped to `PARTIALLY CLOSED` and the S1 deliverable
+to the device-resident envelope (persistent device buffers + device-`Handle`
+dispatch + on-device CUDA `f64` combine + **export**-direction zero-copy + one
+host upload at engine construction). See
+[`WP-036E-S1-execution-plan-and-decomposition.md`](WP-036E-S1-execution-plan-and-decomposition.md).
+The Mission/Contract text below is retained verbatim for rationale; where it
+says "true zero-copy … no host round-trip" read amendment #43's re-scope.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036E
 **Session type:** S1 — Coding
 **Predecessor:** [0144P — Documentation (WP-036C S4)](0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md)
-**Successor:** [0144R — Audit](0144R-wp036e-s2-gpu-device-resident-execution-path.md)
-**Authority:** Project Plan §6/§8 and amendments #31/#33/#36/#37/#38, and [`WP-036E-036F-036G-execution-plan-and-decomposition.md`](WP-036E-036F-036G-execution-plan-and-decomposition.md). If this brief conflicts with a normative standard, the standard wins.
+**Successor:** [0144Q1 — Coding (sub-pass 1/3)](0144Q1-wp036e-s1-prin-kernels-device-handle-dispatch-layer.md)
+**Authority:** Project Plan §6/§8 and amendments #31/#33/#36/#37/#38/#43, and [`WP-036E-036F-036G-execution-plan-and-decomposition.md`](WP-036E-036F-036G-execution-plan-and-decomposition.md) + [`WP-036E-S1-execution-plan-and-decomposition.md`](WP-036E-S1-execution-plan-and-decomposition.md). If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and
 > results belong in Audit Reports, Project State Reports, and experiment artefacts.

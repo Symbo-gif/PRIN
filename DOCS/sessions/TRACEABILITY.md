@@ -47,7 +47,7 @@ completion; completion evidence is cited by Audit and Project State Reports.
 | STE hard-forward/soft-backward | WP-023 (0089–0092), bridge WP-025 | EXP-004/EXP-006 |
 | Statistical—not pointwise—chaotic parity | WP-002 harness; WP-010/WP-015 | EXP-001/EXP-005 |
 | PRINet-3.0 `torch.complex64`/f32 mean-field drift (DV-007) | WP-007 (0025–0028), amdts #14/#16/#17/#25; permanent disposition recorded at WP-036G (`0144Y`–`0144AB`, amdt #38) | EXP-001/EXP-002/EXP-005; Parity Report |
-| Device-event GPU timing / host dispatch dominance (DV-003) | WP-018 (0069–0072); closed by WP-036E on-device `f64` combine (`0144Q`–`0144T`, amdt #38) | EXP-004 |
+| Device-event GPU timing / host dispatch dominance (DV-003) | WP-018 (0069–0072); closed by WP-036E on-device CUDA `f64` combine (`0144Q2`, amdt #38/#43) | EXP-004 |
 
 ## 5. Phase exits
 
@@ -59,14 +59,14 @@ completion; completion evidence is cited by Audit and Project State Reports.
 | 3 | WP-021 S4 — **0084** | Kernel equivalence and approved GPU targets |
 | 4 | WP-027 S4 — **0108** | PhaseTracker validation threshold, gradcheck, bridge <5% |
 | 5 | WP-032 S4 — **0128** | Daemon latency and MOT reference equivalence |
-| 6 | WP-038 S4 — **0152** | Repro/CI/docs/wheels green; RC1 published. Before WP-037, the WP-036E/F/G Deferred-Validation closure block (`0144Q`–`0144AB`, amdt #38) closes DV-030/DV-003 (WP-036E), the DirectML half of DV-006 (WP-036F), and assigns every remaining open DV item a dated disposition (WP-036G) — every open item closed or dispositioned before Phase 7 |
+| 6 | WP-038 S4 — **0152** | Repro/CI/docs/wheels green; RC1 published. Before WP-037, the WP-036E/F/G Deferred-Validation closure block (`0144Q`–`0144AB`, amdt #38) closes DV-003 and partially closes DV-030 (WP-036E; bidirectional zero-copy kernel-input re-gated on a CubeCL external-memory API — amdt #43), closes the DirectML half of DV-006 (WP-036F), and assigns every remaining open DV item a dated disposition (WP-036G) — every open item closed or dispositioned before Phase 7 |
 | 7 | WP-039 S4 — **0198** | Campaign complete; DoD clean; stable `1.0.0` released |
 
 ## 6. Risk register coverage
 
 | Risk | Prevention/de-risk session | Detection/response |
 |---:|---|---|
-| R1 CubeCL misses Triton | WP-004 (0013–0016) | WP-021 gate; WP-036E device-resident GPU path (`0144Q`–`0144T`) closes DV-030/DV-003; WP-036G records DV-001's standing external disposition + dormant `gpu-triton.yml` (`0144Y`–`0144AB`); EXP-004; amendment/fallback correction cycle |
+| R1 CubeCL misses Triton | WP-004 (0013–0016) | WP-021 gate; WP-036E device-resident GPU path (`0144Q`–`0144T`) closes DV-003 and partially closes DV-030 (amdt #43); WP-036G records DV-001's standing external disposition + dormant `gpu-triton.yml` (`0144Y`–`0144AB`); EXP-004; amendment/fallback correction cycle |
 | R2 bridge overhead | WP-003 (0009–0012) | WP-025/027 gates; EXP-004 |
 | R3 numerical drift | WP-002 before numerics | Every numerical S2; EXP-001/002/005–007 |
 | R4 VitisAI gaps | WP-005 | WP-028; WP-036F closes the DirectML half of DV-006 (`0144U`–`0144X`); WP-036G re-scopes DV-006 to the hardware-gated VitisAI/NPU remainder (`0144Y`–`0144AB`); EXP-008; documented CPU/DirectML fallback |
@@ -79,7 +79,7 @@ completion; completion evidence is cited by Audit and Project State Reports.
 | DoD item | Final evidence session(s) |
 |---:|---|
 | 1. Public API complete | WP-036 (compatibility surface + freeze machinery); EXP-002; 0196 |
-| 2. Acceptance suite cross-platform | WP-036B (`0144E` + `0144E1`–`0144E6` strict port, then `0144F`–`0144H`), WP-036D (GPU execution path, `0144I`–`0144L`), WP-036C (`0144M` + `0144M1`–`0144M8` strict port, then `0144N`–`0144P`), and WP-036E (device-resident GPU path activating `test_sparse_vram_subquadratic`, `0144Q`–`0144T`); WP-038; 0196 |
+| 2. Acceptance suite cross-platform | WP-036B (`0144E` + `0144E1`–`0144E6` strict port, then `0144F`–`0144H`), WP-036D (GPU execution path, `0144I`–`0144L`), WP-036C (`0144M` + `0144M1`–`0144M8` strict port, then `0144N`–`0144P`), and WP-036E (device-resident GPU path; `test_sparse_vram_subquadratic` disposition adjudicated at `0144R` per amdt #43, `0144Q`–`0144T`); WP-038; 0196 |
 | 3. Parity suite + Report | EXP-001/002; 0194; 0196 |
 | 4. Performance targets/regression gates | EXP-003/004/007; 0194; 0196 |
 | 5. Reproduction manifest | WP-035; EXP-002; 0196 |
@@ -115,7 +115,7 @@ The Session Plan is structurally complete only if all remain true:
    `0144AA`–`0144AB`), and amendment #39 (`0144M1`–`0144M8`, WP-036C
    strict-port S1 decomposition, inserted between `0144M` and `0144N`) add
    planned sub-sessions between existing integers; the integer sequence
-   0001–0198 remains unique and gap-free. Amendment #40 (2026-08-31, `0144M1` scope confirmations: deferred-symbol rebuild in-scope, `__version__` → `0.3.0`, minimal `docs/` guides) adds no session IDs.
+   0001–0198 remains unique and gap-free. Amendment #40 (2026-08-31, `0144M1` scope confirmations: deferred-symbol rebuild in-scope, `__version__` → `0.3.0`, minimal `docs/` guides) adds no session IDs. Amendment #43 (2026-09-02, WP-036E S1 decomposition into `0144Q1`–`0144Q3` + zero-copy re-scope: a true bidirectional zero-copy Torch↔CubeCL DLPack kernel-input path is not reachable on the pinned `cubecl 0.10.0`, so DV-030 → `PARTIALLY CLOSED`) adds `0144Q1`–`0144Q3` between `0144Q` and `0144R`; count 253 → 256; `0001`–`0198` remains unique and gap-free.
 5. Every predecessor/successor link resolves; only 0001 lacks a file
    predecessor and only 0198 lacks a file successor. Sub-session chains link
    internally: `0141` → `0141A` → … → `0141E` → `0142`, and
@@ -123,7 +123,7 @@ The Session Plan is structurally complete only if all remain true:
    `0144E1` → … → `0144E6` → `0144F` → `0144G` → `0144H` → `0144I` →
    `0144I1` → `0144I2` → `0144I3` → `0144J` → `0144K` → `0144L` →
    `0144M` → `0144M1` → … → `0144M8` → `0144N` → `0144O` → `0144P` →
-   `0144Q` → `0144R` → `0144S` → `0144T` →
+   `0144Q` → `0144Q1` → `0144Q2` → `0144Q3` → `0144R` → `0144S` → `0144T` →
    `0144U` → `0144V` → `0144W` → `0144X` → `0144Y` → `0144Z` → `0144AA` →
    `0144AB` → `0145`.
 6. Every Project Plan F/N requirement, roadmap phase, risk, parity hazard, and

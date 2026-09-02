@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Plan amendment #43 (2026-09-02) — WP-036E S1 (`0144Q`) re-scoped and
+  decomposed.** S1-start repository verification established that a *true
+  bidirectional zero-copy Torch↔CubeCL DLPack kernel-input path* (DV-030's
+  stated closure mechanism, and the `0144Q` brief's headline deliverable) is
+  **not reachable on the pinned `cubecl 0.10.0`**: `cubecl-cuda`'s `GpuStorage`
+  has no API to adopt an externally-owned CUDA device pointer as a `Handle`,
+  and `ComputeClient`'s entire handle-creation surface consumes host bytes or
+  allocates uninitialised device memory (no `[patch]`/vendored fork). Same wall
+  that re-scoped predecessor `0144I2` (amendment #37). WP-036E S1 is re-scoped
+  to the achievable device-resident envelope — `prin-kernels` device-`Handle`
+  dispatch entry points, `prin-sim` engines holding persistent device buffers
+  across `step`, an on-device CUDA `f64` mean-field RK4 combine (DV-003), and an
+  **export-direction** zero-copy DLPack path plus one host upload at engine
+  construction — and decomposed into three coding sub-passes `0144Q1`–`0144Q3`
+  (Development Workflow §7; pre-authorised by amendment #38) feeding the single
+  S2 audit `0144R`. **DV-030 → `PARTIALLY CLOSED`**: bidirectional zero-copy
+  kernel-input is re-gated to a `cubecl` version bump that adds external-memory
+  registration to `GpuStorage`, or a vendored `cubecl-cuda` storage shim (a
+  dedicated future WP). `test_acceptance_q2.py::test_sparse_vram_subquadratic`'s
+  disposition is adjudicated at S2 (`0144R`) per Plan risk R2. Planned session
+  count 253 → 256.
 - **ETCA-001 remediation (2026-09-01) — all ten findings closed; verdict
   `PASS-WITH-REMEDIATION` → `PASS`.** Dedicated remediation session for the
   first Executive Testing and CI Audit (`DOCS/audits/EXECUTIVE_TESTING_AND_CI_AUDIT_REPORT_001.md`

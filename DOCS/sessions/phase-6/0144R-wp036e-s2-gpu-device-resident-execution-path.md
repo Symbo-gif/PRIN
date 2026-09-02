@@ -4,7 +4,7 @@
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036E
 **Session type:** S2 — Audit
-**Predecessor:** [0144Q — Coding](0144Q-wp036e-s1-gpu-device-resident-execution-path.md)
+**Predecessor:** [0144Q3 — Coding (sub-pass 3/3)](0144Q3-wp036e-s1-prin-py-export-zero-copy-dlpack-torch-compat-test-activation.md)
 **Successor:** [0144S — Remediation](0144S-wp036e-s3-gpu-device-resident-execution-path.md)
 **Authority:** Project Plan §6/§8 and amendments #31/#33/#36/#37/#38; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 

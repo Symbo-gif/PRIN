@@ -6,6 +6,19 @@ session's `AskUserQuestion` selections) and carried into authority by
 matrix, and dependency ordering. Not an execution contract; the governing
 contracts are the new WP-036E/F/G briefs `0144Q`–`0144AB`.
 
+> **Superseded in part by Plan amendment #43 (2026-09-02).** WP-036E S1-start
+> repository verification established that a *true bidirectional zero-copy
+> Torch↔CubeCL DLPack kernel-input path* is not reachable on the pinned
+> `cubecl 0.10.0` (`cubecl-cuda`'s `GpuStorage` cannot adopt an external CUDA
+> device pointer as a `Handle`). Where this document says "**DV-030 … CLOSED by
+> WP-036E**" and "the reason this WP exists", read: **`PARTIALLY CLOSED`** —
+> device-resident buffers + device-`Handle` dispatch + on-device CUDA `f64`
+> combine (DV-003) + **export**-direction zero-copy DLPack are delivered;
+> bidirectional zero-copy kernel-input is re-gated to a `cubecl` external-memory
+> API or a vendored `cubecl-cuda` storage shim. `0144Q` is decomposed into
+> `0144Q1`–`0144Q3`. See
+> [`WP-036E-S1-execution-plan-and-decomposition.md`](WP-036E-S1-execution-plan-and-decomposition.md).
+
 **Prepared for:** the block of sessions inserted between WP-036C S4 (`0144P`)
 and WP-037 S1 (`0145`).
 **Author:** Claude Sonnet 5 (AI pair)

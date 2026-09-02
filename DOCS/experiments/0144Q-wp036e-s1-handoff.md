@@ -1,0 +1,183 @@
+# Session 0144Q / WP-036E S1 running handoff
+
+**Date:** 2026-09-02
+**Status:** S1-start repository verification COMPLETE; **Plan amendment #43**
+recorded (re-scope + decomposition into `0144Q1`–`0144Q3`); governance-doc
+updates committed locally. The three implementation sub-passes `0144Q1`–`0144Q3`
+are the next work. S1 does not self-certify — `0144R` (S2 audit) follows all
+three sub-passes.
+
+---
+
+## 1. Session-start protocol (Development Workflow §6)
+
+Read: latest Project State Report (`036d-project-state.md`); the `0144Q` brief and
+the WP-036E/F/G planning doc; Project Plan §6/§8 (amendments
+#31/#33/#36/#37/#38); Development Workflow §3/§7; Testing Standards §1/§3;
+`DEFERRED_VALIDATION_REGISTER.md` DV-003/DV-030/DV-001/DV-005; the WP-036D S1
+handoff (`0144I-wp036d-s1-handoff.md`); the CubeCL kernel modules
+(`crates/prin-kernels/src/{mean_field_rk4,sparse_knn,discrete_step}/cubecl.rs`),
+`crates/prin-sim/src/gpu.rs`, `crates/prin-py/src/bindings/gpu.rs`.
+
+## 2. S1-start repository verification
+
+### Entry conditions — met
+
+| Condition | Evidence |
+|---|---|
+| WP-036C S4 (`0144P`) closed and committed | `git log`: `fa427ad` (WP-036C S4) … `6343416`; `0144P` brief + register `COMPLETE` |
+| `origin/main` CI green; no unresolved D1/D2 | ETCA-001 remediation `PASS` (SESSION_REGISTER); tree clean, up to date with `origin/main` |
+| `PRIN-GPU-Runner` live and CUDA-capable | This workstation. `nvidia-smi`: RTX 4060, driver 595.95, CUDA 13.2. `python -c "import torch"`: `2.11.0+cu128`, `torch.cuda.is_available() == True`, `device_count() == 1`. `cargo build -p prin-kernels --features cuda` → exit 0 (~7 s incremental). |
+
+### Blocking finding — the headline deliverable is not reachable on `cubecl 0.10.0`
+
+The `0144Q` Contract requires *"a true zero-copy Torch↔CubeCL DLPack path … no
+host round-trip"* (DV-030's stated closure mechanism). Verified against the
+pinned dependency source:
+
+- **`cubecl-cuda` 0.10.0 `GpuStorage`** (`src/compute/storage/gpu.rs`) — the CUDA
+  memory backend — allocates every buffer itself via `cudarc malloc_async`/
+  `malloc_sync`, tracked in an internal `HashMap<StorageId, …>`. There is **no
+  API, public or internal, to adopt an externally-owned CUDA device pointer** as
+  a `StorageHandle`/`Handle`.
+- **`cubecl-runtime` 0.10.0 `ComputeClient`** (`src/client.rs`) — the entire
+  handle-creation surface (`create`, `create_from_slice`, `create_tensor*`,
+  `empty*`) consumes **host `Bytes`/`&[u8]`** or allocates uninitialised device
+  memory. No `from_device_ptr` / `register_external` / DLPack import.
+- Workspace pins `cubecl = "0.10.0"` (`Cargo.toml`), no `[patch]`, no vendored
+  fork. No newer `cubecl` in the registry cache.
+
+The only cubecl-0.10 route to a no-host-round-trip **kernel-input** path is a
+device-to-device `cuMemcpyDtoD` from torch's DLPack device pointer into a
+CubeCL-allocated `Handle` — which needs (a) a new direct `cudarc`/CUDA-driver
+dependency in `prin-py`, (b) fresh `unsafe` FFI outside the amendment-#8-audited
+kernel modules, and (c) torch↔CubeCL cross-stream synchronization. All three are
+barred by the `0144Q` Contract (`unsafe` only in audited modules; no new public
+dep-audit surface unbudgeted). This is the **identical architectural wall** that
+re-scoped predecessor `0144I2` and produced amendment #37 / DV-030.
+
+### What *is* reachable on cubecl 0.10 (verified)
+
+| Capability | Route |
+|---|---|
+| **Export**-direction zero-copy DLPack | `ComputeClient::get_resource(handle)` (`client.rs:197`) → CUDA `GpuResource { ptr: u64, size }` exposes a handle's device pointer for a `kDLCUDA` `DLManagedTensor` torch wraps with no copy |
+| Persistent device residence across `step` | engines hold `ComputeClient` + `Handle`s; `to_host()` explicit — no cubecl API gap |
+| `prin-kernels` device-`Handle` dispatch entry points | the kernels already launch on `ArrayArg::from_raw_parts(handle, n)`; only the host-slice upload/download wrappers need splitting out |
+| On-device `f64` RK4 level-2 combine (DV-003) | CUDA supports device `f64`; a CUDA-only `#[cube]` `f64` reduction. wgpu DX12 keeps the documented host `f64` combine (`SHADER_F64` is Vulkan-only) |
+
+### `test_sparse_vram_subquadratic`
+
+Per the `0144I3` evidence, its failure cause is that PRIN's "full" coupling mode
+has **no O(N²) GPU kernel** (`_compute_derivatives_gpu` returns `None` for
+`coupling_mode != "sparse_knn"` → CPU path), so `vram_full` ≈ 48–96 KB of
+allocator/state overhead, not an N×N matrix. A device-resident **sparse** CSR
+path shrinks the numerator but cannot move the denominator; the ratio stays
+~0.5, not `< 0.10`. Its disposition (governed skip retained with the DV-030
+residual / Parity-Report-annotated bound with evidence / new DV item with a
+concrete gate) is **adjudicated at S2 (`0144R`)** — Plan risk R2, and the
+`0144K`/WP036D-F1 precedent. Never a silently weakened assertion.
+
+## 3. Maintainer decision and amendment #43
+
+Maintainer selected **option A** (2026-09-02 `AskUserQuestion`): re-scope to the
+achievable device-resident envelope, decompose `0144Q` into `0144Q1`–`0144Q3`,
+re-scope DV-030 to `PARTIALLY CLOSED`. Recorded as **Plan amendment #43**.
+
+Governance-doc changes committed this session:
+
+| File | Change |
+|---|---|
+| `DOCS/PRIN_Project_Plan.md` | amendment #43 row (§8.3); §6 roadmap Phase 6 row DV-030 wording |
+| `DOCS/sessions/SESSION_REGISTER.md` | amendment #43 block; count `253 → 256`; rows `0144Q1`–`0144Q3`; `0144Q` status note; sub-session chain |
+| `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` | DV-030 → `PARTIALLY CLOSED` + residual re-gate; DV-003 → on-device CUDA `f64` combine at `0144Q2`; disposition-matrix rows |
+| `DOCS/sessions/phase-6/WP-036E-S1-execution-plan-and-decomposition.md` | new — decomposition rationale + the verification table above |
+| `DOCS/sessions/phase-6/0144Q{1,2,3}-*.md` | new sub-pass briefs |
+| `DOCS/sessions/phase-6/0144Q-*.md` | Status/predecessor→`0144Q1`/authority note |
+| `DOCS/sessions/phase-6/0144R-*.md` | predecessor → `0144Q3` |
+| `DOCS/sessions/{README.md, phase-6/README.md}`, `DOCS/sessions/TRACEABILITY.md` | counts, chains, DV wording |
+| `tools/wp001_baseline.py` | `0144Q1`–`0144Q3` in `_SUBSESSION_BLOCKS`; amendment #43 comment |
+| `CHANGELOG.md` | `[Unreleased] → Changed` amendment #43 entry |
+
+`tools/wp001_baseline.py check` → **passed**.
+
+## 4. Design notes for the implementation sub-passes
+
+### `0144Q1` — `prin-kernels` device-`Handle` dispatch layer
+
+- `sparse_knn::cubecl` — simplest: `sparse_knn_coupling_cubecl` currently
+  `create_from_slice` × (phase/amp/freq/indptr/indices) + `empty` × 3 outputs +
+  1 launch + `read_f32s` × 3. Add `sparse_knn_coupling_device<R>(client, in_h:
+  &SparseKnnDeviceState<R>, params, out_h: &mut SparseKnnDeviceDerivs<R>)` doing
+  only the launch; host wrapper = upload + call + download.
+- `mean_field_rk4::cubecl` — already handle-heavy via `CubeclBufferPool` and
+  `order_param_device`. Add `step_cubecl_device<R>(client, state: &mut
+  MeanFieldDeviceState<R>, params, pool)` running the 8-launch sequence writing
+  back into `state` handles, no final `read_f32s`. **Stage 1's order parameter**
+  currently comes from the host slice (`super::order_param`); device-resident,
+  it must use `order_param_device` like stages 2–4 → `launch_count` goes 8 → 9.
+  Document the change (or keep 8 by a documented "stage-1 uses the caller's
+  last-known Z" contract — decide in `0144Q1`, note in the handoff).
+- `discrete_step::cubecl` — hardest: the whole per-step body is a
+  `client.profile(move || { … })` closure that captures the host slices and
+  slices them per-band. A device entry point needs per-band input handles
+  (three bands) — either a `DiscreteDeviceState<R>` with per-band handle
+  triples, or one full-length handle triple plus `Handle::offset` slicing
+  (verify cubecl 0.10 `ArrayArg` offset support first).
+- Tests: kernel-equivalence for each device entry point vs the CPU reference
+  (`rtol=1e-5, atol=1e-6`); the existing `*_cubecl`/`*_auto` tests stay
+  unchanged and green (proves the host wrapper is behaviour-equivalent).
+- Gate matrix: `--features cuda` / `wgpu` / `cpu` for clippy + test.
+
+### `0144Q2` — `prin-sim` persistent buffers + DV-003
+
+- `GpuSparseKuramoto`/`GpuMeanFieldEngine`/`GpuBandStepper` currently hold
+  `Vec<f32>` + derive `Clone, Debug`. Device-resident: hold the `0144Q1` device
+  state + a resolved `ComputeClient<R>` (pick backend once at construction via
+  `backend::auto_detect_order`). This **breaks `Clone`/`Debug`** and introduces
+  a generic `R` or an enum-of-backends — ripples into `prin-py`'s concrete
+  `PyGpu*` wrappers. Consider a non-generic `enum GpuBackendClient { Cuda(...),
+  Wgpu(...), Cpu(...) }` to keep `prin-py` monomorphic.
+- `GpuSparseKuramoto: Dynamics` — `compute_derivatives(&self, …)` stays a
+  one-shot host-slice evaluator for the generic-integrator path; the
+  device-resident path is a new engine `step` loop. Document the split (the
+  `0144Q2` brief already notes this).
+- DV-003: CUDA-only `#[cube]` `f64` finalize reducing `block_real`/`block_imag`
+  partials on-device; batch the read-backs across the 8-launch sequence; record
+  `StepReport` device-event timing over the whole sequence on `PRIN-GPU-Runner`
+  and put the device-event-vs-host-wallclock figures in this handoff.
+
+### `0144Q3` — `prin-py` export zero-copy + `_torch_compat.py` + test activation
+
+- `dlpack.rs`: `export_dlpack_f32_cuda(py, device_ptr, shape)` building a
+  `kDLCUDA` `DLManagedTensor` (device_type 2) over `get_resource().ptr`; reuse
+  the existing audited `unsafe` capsule patterns. `read_dlpack_f32` gains a
+  CUDA-capsule branch returning the device pointer for the one-time
+  construction upload.
+- `bindings/gpu.rs`: `PyGpu*` own the persistent device buffers; `state()` /
+  kernel outputs export zero-copy; `.pyi` updated; `#[cfg(all(test, feature =
+  "cuda"))]` parity tests.
+- `_torch_compat.py`: the `0144I2` GPU branches route through the device path;
+  CPU `else` byte-for-byte unchanged; re-assert the golden pre/post CPU test.
+- `test_sparse_vram_subquadratic`: per §2 — leave the `0144K` governed skip in
+  place with an updated reason pointing at amendment #43's DV-030 residual, and
+  let `0144R` adjudicate. Do **not** restore `* 0.10` as a red test.
+- Gates: full CPU pytest (`-m "not slow and not gpu"`); `-m gpu` on the runner
+  (7 WP-036D tests still green); `cargo test -p prin-py --features cuda`;
+  maturin rebuild `--features cuda`; `pip-audit`; Snyk Code (+ Snyk OSS +
+  `cargo audit` iff a `Cargo.toml` dep changes).
+
+## 5. Acceptance-criterion → status map (for `0144R`)
+
+| `0144Q` acceptance criterion | Status after this session |
+|---|---|
+| `test_sparse_vram_subquadratic` passes at `* 0.10` on the runner | **Re-scoped (amdt #43):** architecturally red for a device-resident sparse path; S2 adjudicates disposition |
+| 7 WP-036D GPU tests still pass | Not yet re-run (no code change this session) — `0144Q3` gate |
+| GPU f32 vs CPU f64 within `rtol=1e-5, atol=1e-6` | `0144Q1`/`0144Q2` kernel-equivalence tests |
+| DV-003 host-overhead gap closed or bounded with evidence | `0144Q2` — on-device CUDA `f64` combine + device-event timing |
+| CPU marshalling path + 489 CPU tests byte-for-byte unchanged | `0144Q3` golden pre/post |
+| Numerical authority in Rust; no new `prin` public symbol; `unsafe` only in audited modules | held by all sub-passes; **the zero-copy-input path that would have needed new `unsafe` is out of scope (amdt #43)** |
+| `≥95%` coverage on changed first-party code | per sub-pass; CI authoritative where `coverage.sysmon` segfaults (DV-033) |
+
+## 6. Next step
+
+Sub-pass `0144Q1` — `prin-kernels` device-`Handle` dispatch layer.

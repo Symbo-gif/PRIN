@@ -1,7 +1,7 @@
 # PRIN Master Session Register
 
 **Register version:** 1.4  
-**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 6 sub-sessions (`0141A`–`0141C`, `0141D1`, `0141D2`, `0141E`, plan amendment #32 — `0141D` split into `0141D1`/`0141D2` under Development Workflow §7, 2026-08-27) + 4 sub-sessions (`0144A`–`0144D`, plan amendment #33, WP-036A, mechanical renumber executed 2026-08-29) + 4 sub-sessions (`0144A1`–`0144A4`, plan amendment #34, WP-036A S1 decomposition, 2026-08-30) + 6 sub-sessions (`0144E1`–`0144E6`, plan amendment #35, WP-036B strict-port decomposition, 2026-08-31) + 7 sub-sessions (WP-036D at `0144I`–`0144L` with S1 decomposed into `0144I1`–`0144I3`, plan amendment #36, "GPU execution path for the ported acceptance suite", 2026-08-31; the WP-036C block shifted `0144I`–`0144L` → `0144M`–`0144P`) + 12 sub-sessions (`0144Q`–`0144AB`, plan amendment #38, WP-036E/F/G Deferred-Validation closure block, 2026-08-31) + 8 sub-sessions (`0144M1`–`0144M8`, plan amendment #39, WP-036C S1 strict-port decomposition, 2026-08-31) = **253**
+**Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 6 sub-sessions (`0141A`–`0141C`, `0141D1`, `0141D2`, `0141E`, plan amendment #32 — `0141D` split into `0141D1`/`0141D2` under Development Workflow §7, 2026-08-27) + 4 sub-sessions (`0144A`–`0144D`, plan amendment #33, WP-036A, mechanical renumber executed 2026-08-29) + 4 sub-sessions (`0144A1`–`0144A4`, plan amendment #34, WP-036A S1 decomposition, 2026-08-30) + 6 sub-sessions (`0144E1`–`0144E6`, plan amendment #35, WP-036B strict-port decomposition, 2026-08-31) + 7 sub-sessions (WP-036D at `0144I`–`0144L` with S1 decomposed into `0144I1`–`0144I3`, plan amendment #36, "GPU execution path for the ported acceptance suite", 2026-08-31; the WP-036C block shifted `0144I`–`0144L` → `0144M`–`0144P`) + 12 sub-sessions (`0144Q`–`0144AB`, plan amendment #38, WP-036E/F/G Deferred-Validation closure block, 2026-08-31) + 8 sub-sessions (`0144M1`–`0144M8`, plan amendment #39, WP-036C S1 strict-port decomposition, 2026-08-31) + 3 sub-sessions (`0144Q1`–`0144Q3`, plan amendment #43, WP-036E S1 decomposition + zero-copy re-scope, 2026-09-02) = **256**
 **Current entry point:** Session 0001  
 **Status authority:** the latest approved Project State Report; this register
 is updated during S4 only from committed evidence.
@@ -160,6 +160,40 @@ integer sequence or the surrounding `0144A`–`0144AB` block. Planned session
 count: **245 → 253** (254 if `0144M8` splits). The sub-session chain becomes
 `… → 0144M → 0144M1 → 0144M2 → 0144M3 → 0144M4 → 0144M5 → 0144M6 → 0144M7 →
 0144M8 → 0144N → …`.
+
+**Amendment-inserted sub-sessions (plan amendment #43, adopted 2026-09-02):**
+WP-036E S1 (session `0144Q`) is executed as three sequential coding sub-passes
+`0144Q1`–`0144Q3`, inserted between `0144Q` and the S2 audit `0144R` (see
+[`phase-6/WP-036E-S1-execution-plan-and-decomposition.md`](phase-6/WP-036E-S1-execution-plan-and-decomposition.md)).
+S1-start repository verification established that the brief's headline
+deliverable — a *true bidirectional zero-copy Torch↔CubeCL DLPack kernel-input
+path* (DV-030's stated closure mechanism) — is **not reachable on the pinned
+`cubecl 0.10.0`**: `cubecl-cuda`'s `GpuStorage` has no API to adopt an
+externally-owned CUDA device pointer as a `Handle`, and `ComputeClient`'s entire
+handle-creation surface consumes host bytes or allocates uninitialised device
+memory (no `[patch]`/vendored fork). The only no-host-round-trip *input* route
+needs a new direct `cudarc` dependency + `unsafe` FFI outside the
+amendment-#8-audited modules + torch↔CubeCL cross-stream sync — all barred by
+the `0144Q` Contract. Same wall that re-scoped predecessor `0144I2`
+(amendment #37). **Decision (maintainer, 2026-09-02, `AskUserQuestion`):**
+re-scope the S1 deliverable to the device-resident envelope
+(`0144Q1` `prin-kernels` device-`Handle` dispatch layer; `0144Q2` `prin-sim`
+persistent device buffers + on-device CUDA `f64` combine, DV-003; `0144Q3`
+`prin-py` **export**-direction zero-copy DLPack + `_torch_compat.py` device
+path + one host upload at engine construction + `test_sparse_vram_subquadratic`
+disposition), and re-scope **DV-030** from `CLOSED by WP-036E` to
+`PARTIALLY CLOSED` — bidirectional zero-copy kernel-input re-gated to a `cubecl`
+external-memory API or a vendored `cubecl-cuda` storage shim (dedicated future
+WP). `test_sparse_vram_subquadratic`'s disposition is adjudicated at S2
+(`0144R`) per Plan risk R2. Each sub-pass commits at its own green local gate;
+the contiguous `0144Q`+`0144Q1`–`0144Q3` range feeds the single S2 audit
+`0144R` (predecessor becomes `0144Q3`). The three identifiers are additive and
+do not renumber `0001`–`0198` or the surrounding `0144A`–`0144AB` block
+(TRACEABILITY invariant 4 preserved). Planned session count: **253 → 256**
+(+3). The sub-session chain becomes `… → 0144P → 0144Q → 0144Q1 → 0144Q2 →
+0144Q3 → 0144R → 0144S → 0144T → 0144U → …`. Every other `0144Q` Contract
+invariant is unchanged. Same disposition class as amendment #37 (same blocker,
+predecessor session) and #30/#33/#39.
 
 **Plan amendment #40 (adopted 2026-08-31, no new session IDs):** three `0144M1`
 scope confirmations (maintainer `AskUserQuestion` selections). (1) The
@@ -461,6 +495,9 @@ introduction and are not retroactively added here; this table starts with
 | 0144O | 6 | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | COMPLETE |
 | 0144P | 6 | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | COMPLETE |
 | 0144Q | 6 | WP-036E | S1 — Coding | [GPU device-resident execution path](phase-6/0144Q-wp036e-s1-gpu-device-resident-execution-path.md) | PLANNED |
+| 0144Q1 | 6 | WP-036E | S1 — Coding | [`prin-kernels` device-`Handle` dispatch layer](phase-6/0144Q1-wp036e-s1-prin-kernels-device-handle-dispatch-layer.md) | PLANNED |
+| 0144Q2 | 6 | WP-036E | S1 — Coding | [`prin-sim` persistent device buffers + DV-003 on-device combine](phase-6/0144Q2-wp036e-s1-prin-sim-persistent-device-buffers-dv003.md) | PLANNED |
+| 0144Q3 | 6 | WP-036E | S1 — Coding | [`prin-py` export zero-copy DLPack, `_torch_compat.py` device path, test activation](phase-6/0144Q3-wp036e-s1-prin-py-export-zero-copy-dlpack-torch-compat-test-activation.md) | PLANNED |
 | 0144R | 6 | WP-036E | S2 — Audit | [GPU device-resident execution path](phase-6/0144R-wp036e-s2-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144S | 6 | WP-036E | S3 — Remediation | [GPU device-resident execution path](phase-6/0144S-wp036e-s3-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144T | 6 | WP-036E | S4 — Documentation | [GPU device-resident execution path](phase-6/0144T-wp036e-s4-gpu-device-resident-execution-path.md) | PLANNED |

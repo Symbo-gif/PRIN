@@ -57,7 +57,8 @@ symbol; the CPU path is untouched; DV-005 / DV-001 are not closed by it. See
 [`WP-036D-S1-execution-plan-and-decomposition.md`](WP-036D-S1-execution-plan-and-decomposition.md).
 
 Plan amendment #38 inserts three new sibling work packages **WP-036E**
-("GPU device-resident execution path", `0144Q`–`0144T`, closes DV-030/DV-003),
+("GPU device-resident execution path", `0144Q`–`0144T`, closes DV-003 and
+partially closes DV-030 — amendment #43),
 **WP-036F** ("DirectML controller-graph execution", `0144U`–`0144X`, closes the
 DirectML half of DV-006), and **WP-036G** ("Deferred-Validation register
 consolidation and permanent dispositions", `0144Y`–`0144AB`) between the
@@ -80,6 +81,20 @@ rewrites; GPU/Triton tests stay `skipif`-guarded and reuse WP-036D's
 `_torch_compat.py` device dispatch. `0144M8` is pre-authorised to split under
 Development Workflow §7. Planned session count 245 → 253. See
 [`WP-036C-S1-execution-plan-and-decomposition.md`](WP-036C-S1-execution-plan-and-decomposition.md).
+
+Plan amendment #43 decomposes **WP-036E S1** (session `0144Q`) into three
+sequential coding sub-passes `0144Q1`–`0144Q3` feeding the single S2 audit
+`0144R`, and re-scopes the headline deliverable: S1-start verification
+established that a *true bidirectional zero-copy Torch↔CubeCL DLPack
+kernel-input path* is not reachable on the pinned `cubecl 0.10.0` (no
+external-CUDA-pointer `Handle` API). DV-030 is re-scoped to `PARTIALLY CLOSED` —
+device-resident buffers + device-`Handle` dispatch (`0144Q1`) + on-device CUDA
+`f64` combine (`0144Q2`, DV-003) + **export**-direction zero-copy DLPack
+(`0144Q3`) are delivered; bidirectional zero-copy kernel-input is re-gated to a
+CubeCL external-memory API or a vendored storage shim.
+`test_sparse_vram_subquadratic` is adjudicated at S2 (`0144R`). Planned session
+count 253 → 256. See
+[`WP-036E-S1-execution-plan-and-decomposition.md`](WP-036E-S1-execution-plan-and-decomposition.md).
 
 | Seq | Unit | Type | Session brief | Current status |
 |---:|---|---|---|---|
@@ -143,7 +158,10 @@ Development Workflow §7. Planned session count 245 → 253. See
 | 0144N | WP-036C | S2 — Audit | [Acceptance suite port — integration, y-series, kernels; DV-025](0144N-wp036c-s2-acceptance-suite-port-integration-y-series-kernels.md) | COMPLETE |
 | 0144O | WP-036C | S3 — Remediation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144O-wp036c-s3-acceptance-suite-port-integration-y-series-kernels.md) | COMPLETE — F1–F9 FIXED/AMENDED, delta re-audit CLEAN; amendment #41, DV-031 |
 | 0144P | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | PLANNED |
-| 0144Q | WP-036E | S1 — Coding | [GPU device-resident execution path](0144Q-wp036e-s1-gpu-device-resident-execution-path.md) | PLANNED |
+| 0144Q | WP-036E | S1 — Coding | [GPU device-resident execution path](0144Q-wp036e-s1-gpu-device-resident-execution-path.md) | PLANNED (decomposed into `0144Q1`–`0144Q3`, re-scoped — amendment #43) |
+| 0144Q1 | WP-036E | S1 — Coding | [`prin-kernels` device-`Handle` dispatch layer](0144Q1-wp036e-s1-prin-kernels-device-handle-dispatch-layer.md) | PLANNED |
+| 0144Q2 | WP-036E | S1 — Coding | [`prin-sim` persistent device buffers + DV-003 on-device combine](0144Q2-wp036e-s1-prin-sim-persistent-device-buffers-dv003.md) | PLANNED |
+| 0144Q3 | WP-036E | S1 — Coding | [`prin-py` export zero-copy DLPack, `_torch_compat.py` device path, test activation](0144Q3-wp036e-s1-prin-py-export-zero-copy-dlpack-torch-compat-test-activation.md) | PLANNED |
 | 0144R | WP-036E | S2 — Audit | [GPU device-resident execution path](0144R-wp036e-s2-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144S | WP-036E | S3 — Remediation | [GPU device-resident execution path](0144S-wp036e-s3-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144T | WP-036E | S4 — Documentation | [GPU device-resident execution path](0144T-wp036e-s4-gpu-device-resident-execution-path.md) | PLANNED |
