@@ -872,10 +872,12 @@ class TestSparseKNNCoupling:
         assert torch.isfinite(dphi).all()
 
     @pytest.mark.skip(
-        reason="deferred to DV-030 (plan amendment #37): the sparse-vs-full "
-        "VRAM ratio cannot be verified while the coupling matrix lives in Rust "
-        "host memory invisible to torch's CUDA allocator; needs device-resident "
-        "CubeCL buffers, a multi-crate rearchitecture out of WP-036D scope"
+        reason="DV-030 residual (plan amendment #43): WP-036E delivered "
+        "device-resident CubeCL buffers + export-direction zero-copy DLPack, "
+        "but PRIN 'full' coupling has no O(N^2) GPU kernel, so vram_full is "
+        "allocator/state overhead (~tens of KB) not an N*N matrix and the "
+        "sparse-vs-full ratio stays ~0.5, not < 0.10. Disposition adjudicated "
+        "by WP-036E S2 (0144R); never a silently weakened assertion."
     )
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
     def test_sparse_vram_subquadratic(self) -> None:

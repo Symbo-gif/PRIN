@@ -72,6 +72,17 @@ struct OwnedDlpackTensor {
 enum TensorStorage {
     F32(Vec<f32>),
     F64(Vec<f64>),
+    /// External CUDA device memory (`float32`), for the WP-036E Q3 zero-copy
+    /// `kDLCUDA` export path. `ptr` is a `CUdeviceptr` owned by a CubeCL
+    /// engine in `prin-sim`; `_pin` is the boxed cloned CubeCL `Handle` that
+    /// keeps that allocation — and therefore `ptr` — valid for the capsule's
+    /// lifetime. Nothing here is read or freed by this module; dropping the
+    /// storage drops `_pin`, releasing the pin.
+    #[cfg(feature = "cuda")]
+    CudaExternalF32 {
+        ptr: *mut c_void,
+        _pin: Box<dyn core::any::Any + Send>,
+    },
 }
 
 impl TensorStorage {
@@ -87,6 +98,12 @@ impl TensorStorage {
                 bits: 64,
                 lanes: 1,
             },
+            #[cfg(feature = "cuda")]
+            TensorStorage::CudaExternalF32 { .. } => DataType {
+                code: data_type_codes::FLOAT,
+                bits: 32,
+                lanes: 1,
+            },
         }
     }
 
@@ -94,6 +111,8 @@ impl TensorStorage {
         match self {
             TensorStorage::F32(v) => v.as_mut_ptr() as *mut c_void,
             TensorStorage::F64(v) => v.as_mut_ptr() as *mut c_void,
+            #[cfg(feature = "cuda")]
+            TensorStorage::CudaExternalF32 { ptr, .. } => *ptr,
         }
     }
 }
@@ -153,7 +172,22 @@ unsafe extern "C" fn py_capsule_destructor(capsule: *mut pyffi::PyObject) {
 }
 
 impl OwnedDlpackTensor {
-    fn from_storage(shape: Vec<i64>, mut storage: TensorStorage) -> NonNull<c_void> {
+    fn from_storage(shape: Vec<i64>, storage: TensorStorage) -> NonNull<c_void> {
+        Self::from_storage_in(
+            shape,
+            storage,
+            Context {
+                device_type: device_type_codes::CPU,
+                device_id: 0,
+            },
+        )
+    }
+
+    fn from_storage_in(
+        shape: Vec<i64>,
+        mut storage: TensorStorage,
+        ctx: Context,
+    ) -> NonNull<c_void> {
         let mut strides: Option<Vec<i64>> = None;
 
         // Build the DLPack `Tensor` descriptor pointing at the owned storage.
@@ -165,10 +199,7 @@ impl OwnedDlpackTensor {
 
         let dl_tensor = Tensor {
             data: storage.as_mut_ptr(),
-            ctx: Context {
-                device_type: device_type_codes::CPU,
-                device_id: 0,
-            },
+            ctx,
             ndim: shape.len() as i32,
             dtype: storage.dtype(),
             shape: shape_ptr,
@@ -340,6 +371,10 @@ fn read_and_negate(obj: &Bound<'_, PyAny>) -> PyResult<NonNull<c_void>> {
                 let input = std::slice::from_raw_parts(tensor.data as *const f64, len);
                 TensorStorage::F64(negate_f64(input))
             }
+            #[cfg(feature = "cuda")]
+            TensorStorage::CudaExternalF32 { .. } => {
+                unreachable!("the DLPack read path only builds host F32/F64 storage")
+            }
         }
     };
 
@@ -508,6 +543,10 @@ fn read_and_clone(obj: &Bound<'_, PyAny>) -> PyResult<NonNull<c_void>> {
             TensorStorage::F64(_) => {
                 let input = std::slice::from_raw_parts(tensor.data as *const f64, len);
                 TensorStorage::F64(input.to_vec())
+            }
+            #[cfg(feature = "cuda")]
+            TensorStorage::CudaExternalF32 { .. } => {
+                unreachable!("the DLPack read path only builds host F32/F64 storage")
             }
         }
     };
@@ -754,6 +793,60 @@ pub(crate) fn export_dlpack_f32(
     // `ptr` is a non-null, heap-allocated `OwnedDlpackTensor` whose first
     // three fields form a valid `ManagedTensor`; `py_capsule_destructor`
     // frees it exactly once, whether or not a consumer renames the capsule.
+    let capsule = unsafe {
+        PyCapsule::new_with_pointer_and_destructor(
+            py,
+            ptr,
+            NAME_DLTENSOR,
+            Some(py_capsule_destructor),
+        )?
+    };
+    Ok(capsule.into_any().unbind())
+}
+
+/// Export an existing CUDA device buffer as a new `dltensor` `PyCapsule`
+/// (`float32`, `kDLCUDA`) — the WP-036E Q3 zero-copy device export.
+///
+/// `device_ptr` is a `CUdeviceptr` owned by a `prin-sim` CubeCL engine;
+/// `pin` is the opaque keep-alive (`prin_sim::gpu::CudaBufferExport`'s boxed
+/// `Handle`) that keeps that allocation — and therefore `device_ptr` — valid.
+/// The capsule takes ownership of `pin`: `torch.utils.dlpack.from_dlpack`
+/// adopts the device pointer with no copy, and the CubeCL allocation is
+/// released only when the resulting Torch tensor (and any views) are dropped.
+///
+/// The producer (the `prin-sim` engine) has already synchronised the CUDA
+/// stream, so the legacy DLPack producer-synchronised contract Torch expects
+/// for a bare `kDLCUDA` capsule is satisfied.
+///
+/// # Errors
+///
+/// Returns a [`BridgeError`] (as a `PyErr`) for a negative shape dimension.
+#[cfg(feature = "cuda")]
+pub(crate) fn export_dlpack_f32_cuda(
+    py: Python<'_>,
+    device_ptr: u64,
+    device_id: i32,
+    shape: Vec<i64>,
+    pin: Box<dyn core::any::Any + Send>,
+) -> PyResult<Py<PyAny>> {
+    validate_shape(&shape)?;
+
+    let storage = TensorStorage::CudaExternalF32 {
+        ptr: device_ptr as *mut c_void,
+        _pin: pin,
+    };
+    let ctx = Context {
+        device_type: device_type_codes::GPU,
+        device_id,
+    };
+    let ptr = OwnedDlpackTensor::from_storage_in(shape, storage, ctx);
+
+    // SAFETY: identical lifetime contract to `export_dlpack_f64` — `ptr` is a
+    // non-null, heap-allocated `OwnedDlpackTensor` whose first three fields
+    // form a valid `ManagedTensor`; `py_capsule_destructor` frees it exactly
+    // once, dropping the boxed CubeCL `Handle` that pins the device
+    // allocation. The `data` pointer is device memory this module never
+    // dereferences.
     let capsule = unsafe {
         PyCapsule::new_with_pointer_and_destructor(
             py,

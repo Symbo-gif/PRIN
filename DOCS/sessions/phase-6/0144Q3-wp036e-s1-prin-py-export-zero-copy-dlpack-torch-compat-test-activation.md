@@ -1,6 +1,6 @@
 # Session 0144Q3 — WP-036E S1 (sub-pass 3/3): `prin-py` export zero-copy DLPack, `_torch_compat.py` device path, test activation
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036E
 **Session type:** S1 — Coding
@@ -74,3 +74,76 @@ All gates green; export zero-copy verified on the runner; CPU suite
 byte-for-byte unchanged; every acceptance criterion evidence-mapped in
 `DOCS/experiments/0144Q-wp036e-s1-handoff.md`. Commit at the green local gate;
 the `0144Q`+`0144Q1`–`0144Q3` range is ready for the S2 audit `0144R`.
+
+---
+
+## S1 Handoff (2026-09-02)
+
+**Status:** COMPLETE — all gates green (full evidence in
+`DOCS/experiments/0144Q-wp036e-s1-handoff.md` §8).
+
+### Deliverables
+
+1. **Export-direction zero-copy `kDLCUDA` DLPack:**
+   - `prin-py::dlpack::export_dlpack_f32_cuda` builds a `kDLCUDA`
+     (`device_type = 2`) `DLManagedTensor` over a CUDA device pointer, reusing
+     the amendment-#8-audited capsule / deleter `unsafe` pattern (no new
+     `unsafe` operation kind). `TensorStorage` gains a feature-gated
+     `CudaExternalF32 { ptr, _pin }` variant; `from_storage_in` generalises the
+     device context.
+   - `prin-sim::gpu` (feature `cuda`) exposes `CudaBufferExport` /
+     `CudaStateExport` via `GpuMeanFieldEngine::state_cuda_export()` and
+     `GpuSparseKuramoto::compute_derivatives_cuda_export()`. The pointer comes
+     from `ComputeClient::get_resource(handle.clone()).resource().ptr` after
+     `client.sync()`; the capsule keep-alive is a **cloned CubeCL `Handle`**
+     whose refcount pins the allocation (stable snapshot across the next
+     `step()`).
+
+2. **`PyGpu*` engines:** `PyGpuMeanFieldEngine::state()` and
+   `PyGpuSparseKuramoto::compute_derivatives()` return zero-copy `kDLCUDA`
+   capsules on the CUDA device-resident path, CPU `float32` capsules
+   otherwise. `.pyi` signatures unchanged (no new `prin` public symbol);
+   docstrings updated. `PyGpuBandStepper::state()` stays CPU `float32` —
+   per-band `[Handle; 3]` device state is not one contiguous buffer
+   (cubecl-0.10 offset-alignment constraint, `0144Q1`).
+
+3. **`python/prin/_torch_compat.py`:** `_gpu_f32` / `_from_gpu` /
+   `_compute_derivatives_gpu` docstrings updated for the amendment #43
+   envelope (one host upload in, zero-copy `kDLCUDA` out). No code change —
+   the existing GPU branch's return path becomes zero-copy automatically.
+   CPU `else` path byte-for-byte unchanged; golden pre/post CPU test green.
+
+4. **`read_dlpack_f32`:** no CUDA branch added — a true device→device adopt is
+   the amendment-#43-barred path; construction-time input stays a single host
+   `f32` upload (the permitted "one host upload at construction"). Recorded in
+   the handoff.
+
+5. **`test_sparse_vram_subquadratic`:** governed `@pytest.mark.skip` retained;
+   reason updated to the amendment #43 DV-030 residual. **`0144R` adjudicates**
+   the final disposition; `* 0.10` not restored as a red test (Plan risk R2).
+   `tests/README.md` GPU count unchanged (the test did not activate).
+
+6. **Tests:** 2 new `prin-sim` `#[cfg(feature = "cuda")]` export tests; new
+   `tests/test_wp036e_q3_zero_copy.py` (6 tests — 5 `@pytest.mark.gpu` CUDA
+   export/snapshot/parity + 1 default-gate CPU-path regression).
+
+### Gates verified
+
+`cargo fmt` / `clippy --workspace --all-targets` (CI-authoritative) /
+`cargo test --workspace` / `cargo test --workspace --features cuda`
+(mirrors `gpu.yml`, on the RTX 4060) / `cargo doc --features cuda` /
+`ruff` + `ruff format --check` / `pytest -m gpu` (**13 passed** — 7 WP-036D +
+6 new) / `cargo audit` (exit 0, 3 allowed warnings, no `Cargo.toml` change) /
+`snyk code test` on `prin-py` + `prin-sim` + `python/prin` (**0 issues**) /
+`pip-audit` (pre-existing build-tooling advisories only; no Python dep
+changed). Full CPU gate (`pytest -m "not slow and not gpu"`): **2743 passed,
+202 skipped, 0 failed**.
+
+### Handoff to `0144R` (S2 audit)
+
+The contiguous `0144Q`+`0144Q1`–`0144Q3` range is complete and committed
+locally. `0144R` adjudicates: the `test_sparse_vram_subquadratic` disposition
+(Plan risk R2); the pre-existing `clippy -p prin-sim --features cuda
+--all-targets` findings (5, all reproduced with this sub-pass stashed, not a
+CI gate); and DV-003 full device-event-vs-wall-clock timing evidence
+(`0144Q2` handoff).

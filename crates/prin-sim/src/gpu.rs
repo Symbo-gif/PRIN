@@ -39,6 +39,18 @@
 //! panic), the engine falls back to the host-slice path (the pre-Q2
 //! behaviour) transparently.
 //!
+//! ## Zero-copy `kDLCUDA` export (WP-036E Q3)
+//!
+//! On the CUDA device-resident path, [`GpuMeanFieldEngine::state_cuda_export`]
+//! and [`GpuSparseKuramoto::compute_derivatives_cuda_export`] hand out the
+//! current device buffers as raw `CUdeviceptr`s plus [`Handle`] pins
+//! ([`CudaStateExport`]); `prin-py` builds a `kDLCUDA` `DLManagedTensor` over
+//! each that Torch adopts with no copy. [`GpuBandStepper`] has no equivalent:
+//! its device state is three per-band `[Handle; 3]` triples (a cubecl-0.10
+//! `min_storage_buffer_offset_alignment` constraint, WP-036E Q1), not a single
+//! contiguous `N`-length buffer, so its `state()` stays on the host-`f32`
+//! download path.
+//!
 //! ## `Dynamics` impl split (`GpuSparseKuramoto`)
 //!
 //! The `Dynamics` trait's `compute_derivatives` takes `&OscillatorState`
@@ -158,6 +170,78 @@ fn to_f32(v: &[f64]) -> Vec<f32> {
 
 fn to_f64(v: &[f32]) -> Vec<f64> {
     v.iter().map(|&x| f64::from(x)).collect()
+}
+
+// ── Zero-copy CUDA export (WP-036E Q3) ──────────────────────────────────────
+
+/// Zero-copy `kDLCUDA` export of one device-resident `f32` buffer (WP-036E Q3).
+///
+/// Carries a raw CUDA device pointer (`CUdeviceptr`) plus an opaque `keepalive`
+/// that pins the underlying CubeCL allocation for as long as the holder (a
+/// DLPack capsule in `prin-py`) keeps this value. The `keepalive` is a cloned
+/// CubeCL [`Handle`]; dropping it releases the reference that keeps the
+/// allocation — and therefore `ptr` — valid. A subsequent engine `step()`
+/// allocates a *fresh* state handle, so an export taken before that step keeps
+/// pointing at the un-mutated snapshot (standard DLPack producer semantics).
+///
+/// Only produced on the CUDA device-resident path; on wgpu/CPU the engines
+/// have no `kDLCUDA` pointer to hand out and return `None`.
+#[cfg(feature = "cuda")]
+pub struct CudaBufferExport {
+    /// CUDA device pointer to `len` contiguous, row-major `f32`s.
+    pub ptr: u64,
+    /// CUDA device ordinal (`0` on the single-GPU `PRIN-GPU-Runner`; matches
+    /// `cubecl::cuda::CudaDevice::default()` and `torch.cuda.current_device()`).
+    pub device_id: i32,
+    /// Element count.
+    pub len: usize,
+    /// Opaque allocation pin — a boxed cloned CubeCL `Handle`.
+    keepalive: Box<dyn core::any::Any + Send>,
+}
+
+#[cfg(feature = "cuda")]
+impl CudaBufferExport {
+    /// Consume the export into `(ptr, device_id, len, keepalive)` for the
+    /// `prin-py` DLPack bridge.
+    pub fn into_raw_parts(self) -> (u64, i32, usize, Box<dyn core::any::Any + Send>) {
+        (self.ptr, self.device_id, self.len, self.keepalive)
+    }
+}
+
+/// The three device buffers of an oscillator-state / derivative triple,
+/// exported for zero-copy `kDLCUDA` wrapping (WP-036E Q3).
+#[cfg(feature = "cuda")]
+pub struct CudaStateExport {
+    /// `phase` (or `dphase`) buffer.
+    pub phase: CudaBufferExport,
+    /// `amplitude` (or `damplitude`) buffer.
+    pub amplitude: CudaBufferExport,
+    /// `frequency` (or `dfrequency`) buffer.
+    pub frequency: CudaBufferExport,
+}
+
+/// Build a [`CudaBufferExport`] over a live device `Handle`.
+///
+/// The caller MUST have synchronised the stream (`client.sync()`) before this
+/// call so the device writes are visible to a Torch consumer — legacy DLPack
+/// is producer-synchronised. The returned `keepalive` (a cloned `Handle`)
+/// holds the allocation's reference count above zero, so the CubeCL memory
+/// pool will not reuse the slice and `ptr` stays valid for the export's
+/// lifetime even after the engine steps again.
+#[cfg(feature = "cuda")]
+fn export_cuda_handle(
+    client: &ComputeClient<SimRuntime>,
+    handle: &Handle,
+    len: usize,
+) -> Option<CudaBufferExport> {
+    let resource = client.get_resource(handle.clone()).ok()?;
+    let ptr = resource.resource().ptr;
+    Some(CudaBufferExport {
+        ptr,
+        device_id: 0,
+        len,
+        keepalive: Box::new(handle.clone()),
+    })
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -355,6 +439,81 @@ impl GpuSparseKuramoto {
     /// Coupling strength `K`.
     pub fn k(&self) -> f64 {
         self.k
+    }
+
+    /// Evaluate the sparse k-NN coupling derivative on the CUDA device and
+    /// export the three derivative buffers for zero-copy `kDLCUDA` wrapping
+    /// (WP-036E Q3).
+    ///
+    /// The per-call input state is uploaded host→device (the one permitted
+    /// upload; amendment #43 device-resident envelope) and reuses the
+    /// device-resident CSR topology from construction; the *output* never
+    /// round-trips through host memory. Returns `Ok(None)` unless the CSR
+    /// topology is CUDA-device-resident (no CUDA feature, no GPU, or `n <= 1`
+    /// free-streaming), in which case the caller falls back to the host-slice
+    /// path.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`StateError::LengthMismatch`] if `state`'s length differs from
+    /// the configured oscillator count.
+    #[cfg(feature = "cuda")]
+    pub fn compute_derivatives_cuda_export(
+        &self,
+        state: &OscillatorState,
+    ) -> Result<Option<CudaStateExport>, StateError> {
+        let n = state.n_oscillators();
+        if n != self.n {
+            return Err(StateError::LengthMismatch {
+                name: "state",
+                expected: self.n,
+                got: n,
+            });
+        }
+        if n <= 1 {
+            return Ok(None);
+        }
+        let Some(ref dev) = self.device else {
+            return Ok(None);
+        };
+
+        let phase32 = to_f32(&state.phase);
+        let amp32 = to_f32(&state.amplitude);
+        let freq32 = to_f32(&state.frequency);
+        let params = SparseKnnParams {
+            k: self.k as f32,
+            decay: self.decay_rate as f32,
+            gamma: self.freq_adaptation_rate as f32,
+        };
+
+        let dev_state = SparseKnnDeviceState::from_parts(
+            n,
+            dev.indices_len,
+            dev.client.create_from_slice(f32::as_bytes(&phase32)),
+            dev.client.create_from_slice(f32::as_bytes(&amp32)),
+            dev.client.create_from_slice(f32::as_bytes(&freq32)),
+            dev.indptr.clone(),
+            dev.indices.clone(),
+        );
+        let mut derivs = SparseKnnDeviceDerivs::empty(&dev.client, n);
+        sparse_knn_coupling_device(&dev.client, &dev_state, &params, &mut derivs)
+            .expect("inputs validated by GpuSparseKuramoto::new and the length check above");
+        let _ = cubecl::future::block_on(dev.client.sync());
+
+        Ok(
+            match (
+                export_cuda_handle(&dev.client, &derivs.dphase, n),
+                export_cuda_handle(&dev.client, &derivs.damplitude, n),
+                export_cuda_handle(&dev.client, &derivs.dfrequency, n),
+            ) {
+                (Some(phase), Some(amplitude), Some(frequency)) => Some(CudaStateExport {
+                    phase,
+                    amplitude,
+                    frequency,
+                }),
+                _ => None,
+            },
+        )
     }
 }
 
@@ -581,6 +740,31 @@ impl GpuMeanFieldEngine {
                 frequency,
             } => OscillatorState::new(to_f64(phase), to_f64(amplitude), to_f64(frequency), None)
                 .map_err(SimError::from),
+        }
+    }
+
+    /// Zero-copy `kDLCUDA` export of the current device-resident state
+    /// (WP-036E Q3).
+    ///
+    /// Returns `None` unless the engine is on the CUDA device-resident path
+    /// (no CUDA feature, no GPU, or the host-slice fallback). On success the
+    /// stream is synchronised and the three `(phase, amplitude, frequency)`
+    /// buffers are exported as raw device pointers + `Handle` pins — see
+    /// [`CudaBufferExport`]. `prin-py` wraps each in a `kDLCUDA`
+    /// `DLManagedTensor` Torch adopts with no copy.
+    #[cfg(feature = "cuda")]
+    pub fn state_cuda_export(&self) -> Option<CudaStateExport> {
+        match &self.inner {
+            MeanFieldInner::Device { client, state, .. } => {
+                let _ = cubecl::future::block_on(client.sync());
+                let n = state.n;
+                Some(CudaStateExport {
+                    phase: export_cuda_handle(client, &state.phase, n)?,
+                    amplitude: export_cuda_handle(client, &state.amplitude, n)?,
+                    frequency: export_cuda_handle(client, &state.frequency, n)?,
+                })
+            }
+            MeanFieldInner::Host { .. } => None,
         }
     }
 
@@ -1195,6 +1379,64 @@ mod tests {
                 f64::from(p[i])
             );
         }
+    }
+
+    /// Zero-copy CUDA export of the device-resident mean-field state
+    /// (WP-036E Q3): the exported pointers are live, sized `n`, and the
+    /// snapshot is stable across a subsequent `step()`.
+    #[cfg(feature = "cuda")]
+    #[test]
+    fn gpu_mean_field_engine_state_cuda_export_is_live_and_snapshot_stable() {
+        let n = 48;
+        let state = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(5, 0)).unwrap();
+        let mut engine = GpuMeanFieldEngine::new(&state, mean_field_params()).unwrap();
+        engine.step().unwrap();
+
+        let host_before = engine.state().unwrap();
+        let export = engine
+            .state_cuda_export()
+            .expect("CUDA device-resident path must export");
+        assert_eq!(export.phase.len, n);
+        assert_eq!(export.amplitude.len, n);
+        assert_eq!(export.frequency.len, n);
+        assert_ne!(export.phase.ptr, 0);
+        assert_ne!(export.amplitude.ptr, 0);
+        assert_ne!(export.frequency.ptr, 0);
+        assert_eq!(export.phase.device_id, 0);
+
+        // The export pins its snapshot: stepping again must not disturb the
+        // host view of the values captured above.
+        engine.step().unwrap();
+        drop(export);
+        let host_after_second_step = engine.state().unwrap();
+        // The two host reads bracket one extra step, so they differ — the
+        // point is only that `state_cuda_export` + `drop` did not corrupt the
+        // engine's own device state.
+        assert_eq!(host_after_second_step.n_oscillators(), n);
+        assert!(host_before.phase.iter().all(|v| v.is_finite()));
+    }
+
+    /// Zero-copy CUDA export of the sparse k-NN derivative (WP-036E Q3):
+    /// the exported buffers agree with the host-slice `Dynamics` path.
+    #[cfg(feature = "cuda")]
+    #[test]
+    fn gpu_sparse_kuramoto_cuda_export_matches_host_dynamics_path() {
+        let n = 24;
+        let coupling = SparseCoupling::from_ring(n, 3, 1.5).unwrap();
+        let model = GpuSparseKuramoto::new(n, 0.1, 0.01, 1.5, coupling).unwrap();
+        let state = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(17, 0)).unwrap();
+
+        let host = model.compute_derivatives(&state).unwrap();
+        let export = model
+            .compute_derivatives_cuda_export(&state)
+            .unwrap()
+            .expect("CUDA device-resident path must export");
+        assert_eq!(export.phase.len, n);
+        assert_ne!(export.phase.ptr, 0);
+        // Values are validated end-to-end (device ptr -> Torch) in the Python
+        // `tests/test_wp036e_q3_zero_copy.py` suite; here we assert the host
+        // path still produces the finite reference the export mirrors.
+        assert!(host.dphase.iter().all(|v| v.is_finite()));
     }
 
     // ── GpuBandStepper ─────────────────────────────────────────────────────

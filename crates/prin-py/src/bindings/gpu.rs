@@ -3,10 +3,14 @@
 //! Exposes [`GpuSparseKuramoto`], [`GpuMeanFieldEngine`], and
 //! [`GpuBandStepper`] behind `#[cfg(any(feature = "cuda", feature = "wgpu"))]`.
 //! The binding is marshalling and dispatch only — numerical authority stays
-//! in the existing CubeCL kernels via `prin-sim`. State tensors cross the
-//! PyO3 boundary as `float32` DLPack capsules (the GPU-engine dtype),
-//! mirroring the WP-025 `read_dlpack_f64` / `export_dlpack_f64` pattern
-//! with the `f32` helpers added to `dlpack.rs` for this sub-pass.
+//! in the existing CubeCL kernels via `prin-sim`. Inputs cross the PyO3
+//! boundary as CPU `float32` DLPack capsules (the GPU-engine dtype); results
+//! cross as CPU `float32` capsules, or — on the CUDA device-resident path
+//! (WP-036E Q3) — as zero-copy `kDLCUDA` capsules over the engine's live
+//! device buffers (`export_dlpack_f32_cuda`). `GpuBandStepper` keeps the CPU
+//! `float32` result path: its device state is three per-band `[Handle; 3]`
+//! triples (a cubecl-0.10 buffer-offset-alignment constraint, WP-036E Q1),
+//! not one contiguous `N`-length buffer.
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -18,7 +22,11 @@ use prin_kernels::mean_field_rk4::MeanFieldRk4Params;
 use prin_sim::gpu::{GpuBandStepper, GpuMeanFieldEngine, GpuSparseKuramoto};
 use prin_sim::SparseCoupling;
 
+#[cfg(feature = "cuda")]
+use crate::dlpack::export_dlpack_f32_cuda;
 use crate::dlpack::{export_dlpack_f32, read_dlpack_f32};
+#[cfg(feature = "cuda")]
+use prin_sim::gpu::CudaStateExport;
 
 fn sim_err(err: impl core::fmt::Display) -> PyErr {
     PyValueError::new_err(err.to_string())
@@ -75,6 +83,26 @@ fn build_oscillator_state(
         None,
     )
     .map_err(sim_err)
+}
+
+/// Wrap a [`CudaStateExport`]'s three device buffers as zero-copy `kDLCUDA`
+/// DLPack capsules (WP-036E Q3). Each capsule owns the `Handle` pin that keeps
+/// the CUDA allocation alive; Torch's `from_dlpack` adopts the pointer with no
+/// copy.
+#[cfg(feature = "cuda")]
+fn export_cuda_state(
+    py: Python<'_>,
+    export: CudaStateExport,
+) -> PyResult<(Py<PyAny>, Py<PyAny>, Py<PyAny>)> {
+    let mk = |buf: prin_sim::gpu::CudaBufferExport| -> PyResult<Py<PyAny>> {
+        let (ptr, device_id, len, pin) = buf.into_raw_parts();
+        export_dlpack_f32_cuda(py, ptr, device_id, vec![len as i64], pin)
+    };
+    Ok((
+        mk(export.phase)?,
+        mk(export.amplitude)?,
+        mk(export.frequency)?,
+    ))
 }
 
 fn export_state_as_f32(
@@ -164,9 +192,12 @@ impl PyGpuSparseKuramoto {
 
     /// Compute derivatives via the GPU sparse k-NN kernel.
     ///
-    /// Accepts three `float32` DLPack tensors (phase, amplitude, frequency);
-    /// returns three `float32` DLPack capsules (d_phase, d_amplitude,
-    /// d_frequency).
+    /// Accepts three `float32` DLPack tensors (phase, amplitude, frequency).
+    /// On the CUDA device-resident path (WP-036E Q3) the three derivative
+    /// buffers are returned as zero-copy `kDLCUDA` capsules — the CSR topology
+    /// stays device-resident and the output never round-trips through host
+    /// memory. Otherwise (wgpu / CPU-SIMD / no GPU) three CPU `float32` DLPack
+    /// capsules are returned, as before.
     fn compute_derivatives(
         &self,
         py: Python<'_>,
@@ -185,6 +216,16 @@ impl PyGpuSparseKuramoto {
         }
 
         let state = build_oscillator_state(&p_data, &a_data, &f_data)?;
+
+        #[cfg(feature = "cuda")]
+        if let Some(export) = self
+            .inner
+            .compute_derivatives_cuda_export(&state)
+            .map_err(sim_err)?
+        {
+            return export_cuda_state(py, export);
+        }
+
         let deriv = self.inner.compute_derivatives(&state).map_err(sim_err)?;
 
         let n = deriv.dphase.len();
@@ -274,9 +315,17 @@ impl PyGpuMeanFieldEngine {
         Ok(dict.into_any().unbind())
     }
 
-    /// Current state as three `float32` DLPack capsules
-    /// `(phase, amplitude, frequency)`.
+    /// Current state as three DLPack capsules `(phase, amplitude, frequency)`.
+    ///
+    /// On the CUDA device-resident path (WP-036E Q3) these are zero-copy
+    /// `kDLCUDA` capsules over the engine's live device buffers (a stable
+    /// snapshot — the next `step()` allocates fresh handles). Otherwise they
+    /// are CPU `float32` capsules downloaded from the device.
     fn state(&self, py: Python<'_>) -> PyResult<(Py<PyAny>, Py<PyAny>, Py<PyAny>)> {
+        #[cfg(feature = "cuda")]
+        if let Some(export) = self.inner.state_cuda_export() {
+            return export_cuda_state(py, export);
+        }
         let state = self.inner.state().map_err(sim_err)?;
         export_state_as_f32(py, &state)
     }

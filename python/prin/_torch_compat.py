@@ -82,20 +82,29 @@ def _is_gpu(tensor: torch.Tensor) -> bool:
 def _gpu_f32(tensor: torch.Tensor) -> torch.Tensor:
     """Marshal a tensor to contiguous CPU ``float32`` for the GPU-engine boundary.
 
-    The ``0144I1`` GPU-engine bindings (``prin._prin_core.GpuSparseKuramoto``
-    et al.) consume ``float32`` DLPack tensors and dispatch the CubeCL kernel
-    on-device. Per WP-036D plan amendment #37 the marshalling boundary is CPU
-    ``float32`` — ``prin-kernels``' kernel dispatch is host-in/host-out, so a
-    zero-copy GPU<->GPU DLPack path is not reachable without device-resident
-    buffers (deferred, see the ``0144I`` handoff). A CUDA input is copied to
-    host ``float32`` here, the numerical work runs on the GPU, and
-    :func:`_from_gpu` returns the result to the caller's device.
+    The GPU-engine bindings (``prin._prin_core.GpuSparseKuramoto`` et al.)
+    consume ``float32`` DLPack tensors and dispatch the CubeCL kernel on-device.
+    Per WP-036E plan amendment #43 the *input* boundary is a single host
+    ``float32`` upload per call (``cubecl 0.10`` cannot adopt an external CUDA
+    device pointer as a kernel-input ``Handle``; DV-030 residual). The kernel
+    then runs fully device-resident — for the sparse k-NN path the CSR topology
+    is uploaded once at construction (WP-036E Q2) — and the *result* comes back
+    zero-copy: :meth:`GpuSparseKuramoto.compute_derivatives` returns
+    ``kDLCUDA`` capsules over the on-device derivative buffers (WP-036E Q3), so
+    :func:`_from_gpu` never round-trips the output through host memory.
     """
     return tensor.detach().to(dtype=torch.float32, device="cpu").contiguous()
 
 
 def _from_gpu(capsule: object, like: torch.Tensor) -> torch.Tensor:
-    """Decode a GPU-engine DLPack result to the dtype and device of ``like``."""
+    """Decode a GPU-engine DLPack result to the dtype and device of ``like``.
+
+    The capsule is a CPU ``float32`` tensor (wgpu / CPU-SIMD / no-GPU build) or
+    a zero-copy ``kDLCUDA`` capsule over an on-device buffer (WP-036E Q3 CUDA
+    path). ``from_dlpack`` adopts either with no copy; the trailing ``.to`` is a
+    no-op when the capsule already matches ``like``'s placement and an
+    on-device cast otherwise.
+    """
     return from_dlpack(capsule).to(dtype=like.dtype, device=like.device)
 
 
@@ -571,10 +580,13 @@ class KuramotoOscillator(OscillatorModel):
 
         Dispatches to ``prin._prin_core.GpuSparseKuramoto`` (WP-036D ``0144I1``),
         whose ``from_knn_phase`` builds the k-NN CSR topology in Rust from the
-        current phase and runs the CubeCL sparse k-NN kernel. Returns ``None``
-        for every other regime (mean-field / full coupling, ``n <= 1``, or a
-        build without the GPU bindings), leaving :meth:`compute_derivatives` on
-        its CPU path.
+        current phase and runs the CubeCL sparse k-NN kernel. Since WP-036E the
+        CSR topology is uploaded once and held device-resident (Q2), and on a
+        CUDA build the derivative buffers return as zero-copy ``kDLCUDA``
+        capsules so :func:`_from_gpu` keeps the result on-device (Q3). Returns
+        ``None`` for every other regime (mean-field / full coupling, ``n <= 1``,
+        or a build without the GPU bindings), leaving :meth:`compute_derivatives`
+        on its CPU path.
 
         The GPU path is not differentiable (no autograd through the kernel);
         this matches the reference tests, which never call ``backward`` on a

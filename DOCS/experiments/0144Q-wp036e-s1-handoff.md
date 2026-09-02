@@ -3,9 +3,10 @@
 **Date:** 2026-09-02
 **Status:** S1-start repository verification COMPLETE; **Plan amendment #43**
 recorded (re-scope + decomposition into `0144Q1`–`0144Q3`); governance-doc
-updates committed locally. **Sub-pass `0144Q1` COMPLETE** (§7) — committed
-locally. Next: `0144Q2` (`prin-sim` persistent device buffers + DV-003). S1 does
-not self-certify — `0144R` (S2 audit) follows all three sub-passes.
+updates committed locally. **Sub-passes `0144Q1` (§7), `0144Q2` (handoff in the
+`0144Q2` brief), and `0144Q3` (§8) all COMPLETE** — committed locally. The
+contiguous `0144Q`+`0144Q1`–`0144Q3` range is ready for the S2 audit `0144R`.
+S1 does not self-certify — `0144R` follows all three sub-passes.
 
 ---
 
@@ -279,3 +280,96 @@ no RNG.
   partials each stage (4 per step now). The **on-device CUDA `f64` combine
   (DV-003)** is `0144Q2` scope.
 - `test_sparse_vram_subquadratic` disposition unchanged — `0144R` adjudicates.
+
+---
+
+## 8. `0144Q3` — `prin-py` export zero-copy `kDLCUDA` + `_torch_compat.py` + test disposition (COMPLETE, 2026-09-02)
+
+**Commit:** local only (per amendment #28 cadence — the `0144Q`+`0144Q1`–`0144Q3`
+range pushes once before `0144R`). Tree: `crates/prin-sim/src/gpu.rs`,
+`crates/prin-py/src/{dlpack.rs,bindings/gpu.rs}`, `python/prin/_torch_compat.py`,
+`tests/test_acceptance_q2.py`, new `tests/test_wp036e_q3_zero_copy.py`.
+
+### What landed
+
+| Layer | Change |
+|---|---|
+| `prin-sim::gpu` (`#[cfg(feature = "cuda")]`) | `CudaBufferExport { ptr: u64, device_id: i32, len, keepalive: Box<dyn Any + Send> }` + `CudaStateExport`; `export_cuda_handle` reads `client.get_resource(handle.clone()).resource().ptr` after `client.sync()`. `GpuMeanFieldEngine::state_cuda_export()` and `GpuSparseKuramoto::compute_derivatives_cuda_export()` return `Some` only on the CUDA device-resident path. The `keepalive` is a **cloned CubeCL `Handle`** — its `Arc` refcount keeps the pool from reusing the slice, so `ptr` stays valid after the engine steps again (snapshot semantics). |
+| `prin-py::dlpack` (`#[cfg(feature = "cuda")]`) | `TensorStorage::CudaExternalF32 { ptr, _pin }`; `OwnedDlpackTensor::from_storage_in(shape, storage, ctx)` generalises the CPU-only `from_storage`; `export_dlpack_f32_cuda(py, ptr, device_id, shape, pin)` builds a `kDLCUDA` (`device_type = 2`) `DLManagedTensor` over the device pointer. The existing audited `unsafe` capsule/deleter patterns are reused verbatim — the deleter drops the boxed `Handle`, releasing the pin. No new `unsafe` operation kinds. |
+| `prin-py::bindings::gpu` | `PyGpuMeanFieldEngine::state()` and `PyGpuSparseKuramoto::compute_derivatives()` prefer the CUDA export (`export_cuda_state`) and fall back to the CPU-`f32` capsule path on wgpu / CPU-SIMD / no-GPU. `.pyi` signatures unchanged (`-> tuple[object, object, object]`); docstrings updated. `PyGpuBandStepper::state()` **stays CPU-`f32`** — its device state is three per-band `[Handle; 3]` triples (the cubecl-0.10 `min_storage_buffer_offset_alignment` constraint from `0144Q1`), not one contiguous `N`-length buffer. |
+| `python/prin/_torch_compat.py` | `_gpu_f32` / `_from_gpu` / `KuramotoOscillator._compute_derivatives_gpu` **docstrings** updated to describe the amendment #43 envelope (one host upload in; zero-copy `kDLCUDA` out). **No code change** — the GPU branch already calls `engine.compute_derivatives(...)` then `_from_gpu(...)`, so the Rust-side switch to `kDLCUDA` output makes the return path zero-copy automatically (a CUDA input now stays on device end to end; a CPU input still lands on CPU via `_from_gpu`'s device restore). CPU `else` path byte-for-byte unchanged. |
+| `tests/test_acceptance_q2.py` | `test_sparse_vram_subquadratic` skip **reason** updated to the amendment #43 DV-030 residual (device-resident buffers + export zero-copy delivered; PRIN "full" coupling has no O(N²) GPU kernel so `vram_full` is allocator/state overhead and the ratio stays ~0.5). **Still `@pytest.mark.skip`** — `0144R` adjudicates; `* 0.10` not restored as a red test (Plan risk R2). |
+
+### `kDLCUDA` lifetime / snapshot contract
+
+An exported `state()` / derivative capsule holds a cloned `Handle`. The next
+`engine.step()` allocates *fresh* state handles (`0144Q1` finalize outputs are
+moved into the state each step), so the pre-step export keeps its values —
+verified by `test_mean_field_state_export_is_a_stable_snapshot` (Python) and
+`gpu_mean_field_engine_state_cuda_export_is_live_and_snapshot_stable` (Rust).
+The producer `client.sync()`s before handing out the pointer, satisfying the
+legacy-DLPack producer-synchronised contract Torch expects for a bare
+`kDLCUDA` capsule.
+
+### `read_dlpack_f32` — no CUDA branch (amendment #43-consistent)
+
+The `0144Q3` brief floated a `read_dlpack_f32` CUDA-capsule branch "for a
+one-time device→device or host upload at engine construction". A true D→D
+adopt is the barred path (needs a new `cudarc` dep + fresh `unsafe` outside
+the audited modules — amendment #43 §2). The construction-time input therefore
+stays a single host `f32` upload — exactly the "one host upload at
+construction" the re-scoped envelope permits — and `read_dlpack_f32` is
+unchanged. `_gpu_f32` (Torch `.cpu()` marshalling) already provides it.
+
+### Gates (all green, local)
+
+| Gate | Result |
+|---|---|
+| `cargo fmt --all -- --check` | clean |
+| `cargo clippy --workspace --all-targets -- -D warnings` (CI-authoritative) | clean |
+| `cargo test --workspace` | pass |
+| `cargo test --workspace --features cuda` (mirrors `gpu.yml`) | pass (incl. 2 new `prin-sim` `#[cfg(feature = "cuda")]` export tests on the RTX 4060) |
+| `cargo test -p prin-sim -p prin-py --features cuda` | prin-sim **193** pass, prin-py lib **15** pass |
+| `RUSTDOCFLAGS='-D warnings' cargo doc -p prin-sim -p prin-py --no-deps --features cuda` | clean |
+| `ruff check python/ tests/ benchmarks/ tools/` / `ruff format --check` | clean |
+| `pytest tests/ -m gpu -rs` (on `PRIN-GPU-Runner`) | **13 passed** (7 WP-036D acceptance + 6 new `test_wp036e_q3_zero_copy.py`) |
+| `pytest tests/ -m "not slow and not gpu"` | **2743 passed, 202 skipped** (0 failed) — the 489 CPU acceptance tests among them byte-for-byte unchanged; `test_wp036d_gpu_dispatch.py::test_cpu_compute_derivatives_unchanged` golden values intact |
+| `cargo audit` | exit 0; 3 allowed warnings (DV-008 `paste`, DV-017 `bincode`, `chacha20` yanked) — no `Cargo.toml` change, no new advisory |
+| `snyk code test crates/prin-py` / `crates/prin-sim` / `python/prin` (`--severity-threshold=low`, org `symbo-gif`) | **0 issues** each |
+| `pip-audit` | pre-existing `pip`/`setuptools` build-tooling advisories only; **no Python dependency added or changed** by this sub-pass |
+
+`Cargo.toml` / `Cargo.lock` unchanged → no new dependency-audit surface (Snyk
+Open Source not triggered).
+
+### Pre-existing latent lint (carried to `0144R`)
+
+`cargo clippy -p prin-sim --features cuda --all-targets -- -D warnings` reports
+5 findings (`needless_return` in `try_create_client`; `large_enum_variant` on
+`MeanFieldInner`/`BandStepperInner`; two `needless_range_loop` in `0144Q2`
+tests). All are **pre-existing** — reproduced identically with this sub-pass's
+changes stashed — and this invocation is **not a CI gate** (`rust.yml` clippy
+carries no GPU feature; `gpu.yml` runs `cargo test`, not clippy). The
+`large_enum_variant` fix would box the hot-path `Device` variant (a `0144Q2`
+architecture change). Left for `0144R` to adjudicate; this sub-pass adds no new
+clippy findings under any invocation.
+
+### Invariants held
+
+No `#[cube]` kernel changed. No new `unsafe` operation kind — `dlpack.rs`
+reuses its audited capsule/deleter pattern; `prin-sim` uses only safe
+`cubecl` APIs (`get_resource`, `sync`, `Handle::clone`). No new `prin` public
+symbol (`verify_api_surface` stays `(set(), set())` — the `.pyi` gains no
+class or function). `check_no_python_numerics.py` unaffected (docstring-only
+`_torch_compat.py` edit). CPU marshalling path + the 489 CPU acceptance tests
+byte-for-byte unchanged. Deterministic — the export path adds no RNG.
+
+### Acceptance-criterion → status map (for `0144R`)
+
+| `0144Q3` criterion | Status |
+|---|---|
+| 489 CPU acceptance tests + `_torch_compat.py` CPU path byte-for-byte unchanged | held — docstring-only Python edit; golden `test_cpu_compute_derivatives_unchanged` re-run green in the `-m gpu` leg and the new `test_cpu_compute_derivatives_still_cpu_and_finite` in the default leg |
+| 7 WP-036D GPU acceptance tests still pass on the runner | **pass** (`-m gpu` = 13 total) |
+| No new `prin` public symbol; `unsafe` only in amendment-#8 modules | held — `.pyi` unchanged; new `unsafe`-adjacent code is in `dlpack.rs` reusing the audited pattern |
+| export zero-copy verified on the runner | `kDLCUDA` `state()` / derivative capsules adopted by `torch.from_dlpack` as CUDA tensors; snapshot-stable; values match the CPU reference within `rtol=1e-5, atol=1e-6` |
+| `test_sparse_vram_subquadratic` disposition | governed `skip` retained, reason → amendment #43 DV-030 residual; **`0144R` adjudicates** |
+| `tests/README.md` GPU count | unchanged — `test_sparse_vram_subquadratic` did not activate; the new `test_wp036e_q3_zero_copy.py` is a WP-internal file (like `test_wp036d_gpu_dispatch.py`), not a ported reference file counted in that table |

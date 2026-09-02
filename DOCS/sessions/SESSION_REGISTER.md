@@ -496,8 +496,8 @@ introduction and are not retroactively added here; this table starts with
 | 0144P | 6 | WP-036C | S4 — Documentation | [Acceptance suite port — integration, y-series, kernels; DV-025](phase-6/0144P-wp036c-s4-acceptance-suite-port-integration-y-series-kernels.md) | COMPLETE |
 | 0144Q | 6 | WP-036E | S1 — Coding | [GPU device-resident execution path](phase-6/0144Q-wp036e-s1-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144Q1 | 6 | WP-036E | S1 — Coding | [`prin-kernels` device-`Handle` dispatch layer](phase-6/0144Q1-wp036e-s1-prin-kernels-device-handle-dispatch-layer.md) | COMPLETE |
-| 0144Q2 | 6 | WP-036E | S1 — Coding | [`prin-sim` persistent device buffers + DV-003 on-device combine](phase-6/0144Q2-wp036e-s1-prin-sim-persistent-device-buffers-dv003.md) | PLANNED |
-| 0144Q3 | 6 | WP-036E | S1 — Coding | [`prin-py` export zero-copy DLPack, `_torch_compat.py` device path, test activation](phase-6/0144Q3-wp036e-s1-prin-py-export-zero-copy-dlpack-torch-compat-test-activation.md) | PLANNED |
+| 0144Q2 | 6 | WP-036E | S1 — Coding | [`prin-sim` persistent device buffers + DV-003 on-device combine](phase-6/0144Q2-wp036e-s1-prin-sim-persistent-device-buffers-dv003.md) | COMPLETE |
+| 0144Q3 | 6 | WP-036E | S1 — Coding | [`prin-py` export zero-copy DLPack, `_torch_compat.py` device path, test activation](phase-6/0144Q3-wp036e-s1-prin-py-export-zero-copy-dlpack-torch-compat-test-activation.md) | COMPLETE |
 | 0144R | 6 | WP-036E | S2 — Audit | [GPU device-resident execution path](phase-6/0144R-wp036e-s2-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144S | 6 | WP-036E | S3 — Remediation | [GPU device-resident execution path](phase-6/0144S-wp036e-s3-gpu-device-resident-execution-path.md) | PLANNED |
 | 0144T | 6 | WP-036E | S4 — Documentation | [GPU device-resident execution path](phase-6/0144T-wp036e-s4-gpu-device-resident-execution-path.md) | PLANNED |
