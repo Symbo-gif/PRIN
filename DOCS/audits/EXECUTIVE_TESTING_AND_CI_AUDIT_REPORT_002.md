@@ -31,7 +31,8 @@ session is *confirmation of the existing methodology* — no methodology change 
 made here; governance **recommendations** for the maintainer/remediation
 session are in §4.3.
 **Prior session:** ETCA-001 + its remediation (2026-09-01, verdict `PASS`).
-**Verdict:** **FAIL**
+**Verdict:** **FAIL** (audit) → **PASS** (after the ETCA-002 remediation
+session, 2026-09-02, commit `bef851c` — §7).
 
 ---
 
@@ -569,18 +570,29 @@ classic branch-protection being unavailable on this private/Free repo — DV-009
 precedent); run `gpu.yml` on every `main` push; adopt G1–G8 as Plan
 **amendment #45**; quarantine `test_speed_vs_transformer` into DV-032.
 
-Remediation commit: `<REMEDIATION_SHA>` (pushed to `origin/main`).
-Green-CI confirmation: `<GREEN_SHA>` — `tools/check_ci_green.py` output pasted
-below (appended after the push once `origin/main` CI completed).
+Remediation commit: **`bef851c`** (pushed to `origin/main` 2026-09-02, over
+`adbb1e3`).
+Green-CI confirmation: **`bef851c`** — all five hosted workflows
+(`rust`/`python`/`parity`/`repro`/`snyk`) `success`; `tools/check_ci_green.py
+bef851c` output pasted below.
+`gpu` run for `bef851c`: **queued** — `PRIN-GPU-Runner` was offline at
+remediation time (DV-024 / new **DV-034**); it dequeues when the runner comes
+online. The DirectML capability is not in doubt — it was independently proven
+at the WP-036F S2 audit and on the maintainer host, and the hosted-runner
+failures were skip-guard defects (T-F3), not capability defects; the new
+executability-probe design makes those tests **run** on the runner and
+**skip** on incapable hosts.
+`nightly` (`workflow_dispatch` on `bef851c`, run `33678873449`): triggered to
+confirm T-F5.
 
 | ID | Severity | Resolution | Evidence |
 |---|---|---|---|
-| **T-F1** | D1 | **FIXED.** WP-036F is re-closed over a real green `origin/main` CI run (SHA `<GREEN_SHA>`), not a recollected one. `tools/check_ci_green.py` (G2) is the machine-checked S4 gate that makes "recollected green" an impossible state going forward; Development Workflow §3 + Plan amendment #45 G1 make per-WP S4 push blocking and prohibit un-amended multi-WP batching. WP-036E's own closure (`0144T`) is retro-covered by the same green run over the `6343416..<REMEDIATION_SHA>` range. | `check_ci_green.py <GREEN_SHA>` output (below); Plan amendment #45; Development Workflow §3 "Per-WP push is mandatory and blocking"; `tools/check_ci_green.py` |
-| **T-F2** | D2 | **FIXED.** `# type: ignore[no-untyped-call]` → `# type: ignore[no-untyped-call, unused-ignore]` at all 6 torch-stub-dependent sites (`nn/_bridge.py:146`, `_torch_compat.py:430`/`:1088`, `adversarial_tools.py:69`/`:132`, `temporal_training.py:573`) — `mypy` accepts a redundant `unused-ignore` code, so the comment is correct under both torch stub versions. `python.yml` `lint` toolchain pinned via `ci/lint-constraints.txt` (T-F10 / G6). `mypy python/prin --strict` exit 0 locally and in the `<GREEN_SHA>` CI run. | `git show` the 4 files; `ci/lint-constraints.txt`; `python.yml` `lint` job; CI `<GREEN_SHA>` `lint` green |
-| **T-F3** | D2 | **FIXED.** New `tests/_env.py::directml_executes()` builds a one-node `DmlExecutionProvider` session and runs it — an *executability* probe. `TestDirectMLExecution`, `TestProviderLatencyTool`'s DirectML branch, and `test_daemon_controller.py::…::test_directml_executes_the_reexported_graph` now guard on it + carry `@pytest.mark.directml`; `_executable_backends()` checks active providers, not just the constructed session. `wp036f_provider_latency._pre_transform_check` records a portable `close` (`np.allclose rtol=1e-5 atol=1e-6`) alongside `bit_identical`; `main()` returns 0 when DirectML is registered-but-not-executable. `parity_report.rst` updated: tolerance, not bit-identity, is the acceptance criterion. Guard-class regression guard `tools/check_skipif_probes.py` in `python.yml` `governance`. On a host without a DirectML device the tests **skip**; on `PRIN-GPU-Runner` they **run and pass** (`gpu.yml`, every push). | `tests/_env.py`; `git show` the 3 test files + the tool; `check_skipif_probes.py` exit 0; CI `<GREEN_SHA>` Windows `test` legs green + `gpu` green |
+| **T-F1** | D1 | **FIXED.** WP-036F is re-closed over a real green `origin/main` CI run (`bef851c` — all five hosted workflows `success`; `gpu` queued behind the offline `PRIN-GPU-Runner`, DV-034), not a recollected one. `tools/check_ci_green.py` (G2) is the machine-checked S4 gate that makes "recollected green" an impossible state going forward; Development Workflow §3 + Plan amendment #45 G1 make per-WP S4 push blocking and prohibit un-amended multi-WP batching. WP-036E's own closure (`0144T`) is retro-covered by the same green run over the `6343416..bef851c` range. | `check_ci_green.py bef851c` output (below); Plan amendment #45; Development Workflow §3 "Per-WP push is mandatory and blocking"; `tools/check_ci_green.py` |
+| **T-F2** | D2 | **FIXED.** `# type: ignore[no-untyped-call]` → `# type: ignore[no-untyped-call, unused-ignore]` at all 6 torch-stub-dependent sites (`nn/_bridge.py:146`, `_torch_compat.py:430`/`:1088`, `adversarial_tools.py:69`/`:132`, `temporal_training.py:573`) — `mypy` accepts a redundant `unused-ignore` code, so the comment is correct under both torch stub versions. `python.yml` `lint` toolchain pinned via `ci/lint-constraints.txt` (T-F10 / G6). `mypy python/prin --strict` exit 0 locally and in the `bef851c` CI run. | `git show` the 4 files; `ci/lint-constraints.txt`; `python.yml` `lint` job; CI `bef851c` `lint` green |
+| **T-F3** | D2 | **FIXED.** New `tests/_env.py::directml_executes()` builds a one-node `DmlExecutionProvider` session and runs it — an *executability* probe. `TestDirectMLExecution`, `TestProviderLatencyTool`'s DirectML branch, and `test_daemon_controller.py::…::test_directml_executes_the_reexported_graph` now guard on it + carry `@pytest.mark.directml`; `_executable_backends()` checks active providers, not just the constructed session. `wp036f_provider_latency._pre_transform_check` records a portable `close` (`np.allclose rtol=1e-5 atol=1e-6`) alongside `bit_identical`; `main()` returns 0 when DirectML is registered-but-not-executable. `parity_report.rst` updated: tolerance, not bit-identity, is the acceptance criterion. Guard-class regression guard `tools/check_skipif_probes.py` in `python.yml` `governance`. On a host without a DirectML device the tests **skip**; on `PRIN-GPU-Runner` they are configured to **run** (`gpu.yml` `-m "gpu or directml"`, every push — that run is queued behind the offline runner, DV-034). Verified in CI: the five previously-failing tests now **skip** on every hosted `windows-latest` `test` leg of `bef851c` (`python` workflow `success`); `TestProviderLatencyTool`'s two tests **run and pass** there under the tolerance-based assertions. | `tests/_env.py`; `git show` the 3 test files + the tool; `check_skipif_probes.py` exit 0; CI `bef851c` `python` (all 6 `test` legs) green |
 | **T-F4** | D2 | **FIXED.** Root cause was procedural — S4 closed on a recollected "CI is green". `tools/check_ci_green.py` (G2) + Development Workflow §3 A9 update + amendment #45 G1 require the S4 session to run it against its own SHA and paste the output into the PSR before any closure. PSR-036F §9 addendum records the correction; the `0144X` "CI is green" claim is superseded. | Plan amendment #45 G1/G2; Development Workflow §4 checklist item A9; `DOCS/reports/036f-project-state.md` §9 |
-| **T-F5** | D3 | **FIXED.** `test_acceptance_y2q1.py::…::test_speed_vs_transformer` folded into **DV-032** with a dated maintainer disposition (AskUserQuestion, 2026-09-02) — central `pytest.mark.skip` in `tests/conftest.py`, assertion byte-unchanged. `tests/` swept for wall-clock ratio siblings: this is the only one. `nightly.yml` `full-suite` green on the `<GREEN_SHA>` schedule / `workflow_dispatch` run. | `tests/conftest.py` `_RATIO_NODES`; `DEFERRED_VALIDATION_REGISTER.md` DV-032 test (3); CI `nightly` green |
-| **T-F6** | D3 | **FIXED.** `.github/workflows/gpu.yml` loses the `if: contains(…, '[gpu]')` gate on both jobs and runs on `push: [main]` + `schedule` (nightly) + `workflow_dispatch`; installs `.[dev,onnx]`; runs `-m "gpu or directml"` so the DirectML acceptance tests execute on the real adapter. `@pytest.mark.directml` registered in `pyproject.toml`. (Amendment #45 G4.) | `git show .github/workflows/gpu.yml`; CI `<GREEN_SHA>` `gpu` job green |
+| **T-F5** | D3 | **FIXED.** `test_acceptance_y2q1.py::…::test_speed_vs_transformer` folded into **DV-032** with a dated maintainer disposition (AskUserQuestion, 2026-09-02) — central `pytest.mark.skip` in `tests/conftest.py`, assertion byte-unchanged. `tests/` swept for wall-clock ratio siblings: this is the only one (the `test_acceptance_y2q2.py` ±5% asserts are on computed values). `nightly.yml` re-triggered on `bef851c` via `workflow_dispatch` (run `33678873449`) to confirm `full-suite` green. | `tests/conftest.py` `_RATIO_NODES`; `DEFERRED_VALIDATION_REGISTER.md` DV-032 test (3); `nightly` run `33678873449` |
+| **T-F6** | D3 | **FIXED.** `.github/workflows/gpu.yml` loses the `if: contains(…, '[gpu]')` gate on both jobs and runs on `push: [main]` + `schedule` (nightly) + `workflow_dispatch`; installs `.[dev,onnx]`; runs `-m "gpu or directml"` so the DirectML acceptance tests execute on the real adapter. `@pytest.mark.directml` registered in `pyproject.toml`. (Amendment #45 G4.) The `gpu` run for `bef851c` is **queued** pending `PRIN-GPU-Runner` coming online (DV-034) — the workflow change itself is verified (the run registered and is waiting for the runner, not skipped). | `git show .github/workflows/gpu.yml`; `gh run list --workflow gpu.yml` shows a queued run for `bef851c` (not skipped); DV-034 |
 | **T-F7** | D3 | **FIXED (as a ruleset).** Classic branch protection is unavailable on this private/Free repo (`404 "Branch protection has been disabled"` — DV-009 precedent), so a `main` branch **ruleset** (`ci/main-branch-ruleset.json`) is created instead: required status checks (the `python`/`rust`/`parity`/`repro`/`snyk` job contexts), pull-request-required (0 approvals), block force-push/deletion, **no bypass actors**, enforcement `active`. Direct pushes to `main` are replaced by a PR flow whose merge is blocked on a red check. `gpu` is deliberately excluded from the required set (DV-034 — `PRIN-GPU-Runner` SPOF). | `ci/main-branch-ruleset.json`; `gh api repos/Symbo-gif/PRIN/rulesets` (post-remediation); Plan amendment #45 G3; DV-034 |
 | **T-F8** | D3 | **DISPOSITIONED.** The finding described the `rust.yml` Windows `test` leg as an unbounded self-hosted job; verified against the repo it is already on GitHub-hosted `windows-latest` with `timeout-minutes: 120` (ETCA-001 DV-024 remediation, in place at the audit baseline `6343416`). The >1 h runtime observed at audit is DV-016 hosted-Windows CubeCL slowness **within** that bound, not an unbounded hang. Residual = DV-016 (standing disposition, not re-fixable without faster Windows CI hardware). No code change. | `.github/workflows/rust.yml` `test` job (`runs-on: windows-latest`, `timeout-minutes: 120`); DV-016; DV-024 |
 | **T-F9** | D4 | **FIXED.** PSR-036F §9 addendum, DV-006 / DV-024 / DV-032 annotations, `036f-project-state.md` §7 CI bullet marked superseded, `CHANGELOG.md` `[Unreleased]`, and the session memory index all corrected to record that `adbb1e3` **was** pushed and **was** red, and to cite the real green run. | `git show` the doc set; `DOCS/reports/036f-project-state.md` §7/§9; memory index |
@@ -589,7 +601,24 @@ below (appended after the push once `origin/main` CI completed).
 ### `tools/check_ci_green.py` output for the green SHA
 
 ```
-<APPENDED AFTER THE REMEDIATION PUSH — origin/main CI over the WP-036E+WP-036F+remediation range>
+$ python tools/check_ci_green.py bef851c
+CI-green check — branch 'main', commit bef851c
+  rust       green     — run 33666793089
+  python     green     — run 33666793414
+  parity     green     — run 33666793024
+  repro      green     — run 33666792979
+  snyk       green     — run 33666792998
+RESULT: all required workflows green
+$ echo $?
+0
+
+$ python tools/check_ci_green.py bef851c --required gpu
+  gpu        PENDING   — status=queued        # PRIN-GPU-Runner offline (DV-034)
+
+Audit-window range 6343416..bef851c is covered by this green run: it carries
+the whole WP-036E (0144Q–0144T) + WP-036F (0144U–0144X) range plus the
+remediation commit, so WP-036E's own never-independently-pushed closure
+(0144T) is retro-covered here.
 ```
 
 ---

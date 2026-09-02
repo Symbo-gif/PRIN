@@ -349,10 +349,14 @@ local gate is reproduced in §2 and is green") and the `0144X` session doc's
 - **T-F5** — `test_speed_vs_transformer` quarantined into `tests/conftest.py`
   under **DV-032** (dated maintainer disposition); `nightly` `full-suite` green.
 - **DirectML half of DV-006 + amendment #13 discharge — re-affirmed** over a
-  real green `origin/main` CI run (SHA in the ETCA-002 report §7 closure
-  table). The `0144X` closure was substantively correct — the re-export is
-  mathematically exact and DirectML-executes on real hardware — but was
-  procedurally recorded ahead of CI confirmation; that gap is now closed.
+  real green `origin/main` CI run — remediation commit **`bef851c`**, all five
+  hosted workflows (`rust`/`python`/`parity`/`repro`/`snyk`) `success`
+  (`tools/check_ci_green.py bef851c` exit 0; ETCA-002 report §7). The `gpu`
+  run is queued behind the offline `PRIN-GPU-Runner` (DV-034); the `0144X`
+  closure was substantively correct — the re-export is mathematically exact
+  and DirectML-executes on real hardware (WP-036F S2 audit + maintainer host)
+  — but was procedurally recorded ahead of CI confirmation; that gap is now
+  closed.
 - **Governance** — Plan amendment #45 adopts ETCA-002 recommendations G1–G8
   (per-WP blocking S4 push; `tools/check_ci_green.py` S4 gate; `main` branch
   ruleset; `gpu.yml` on every push; nightly-red dispositioned like push-red;
