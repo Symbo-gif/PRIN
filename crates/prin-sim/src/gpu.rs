@@ -1,4 +1,4 @@
-//! GPU-dispatched simulation components (WP-021).
+//! GPU-dispatched simulation components (WP-021, device-resident WP-036E Q2).
 //!
 //! `prin-sim`'s default engine ([`crate::engine::OscilloSim`]) is a pure-CPU,
 //! `f64` path built on [`crate::csr_coupling::SparseCoupling`]'s rayon-dispatched
@@ -14,16 +14,43 @@
 //!   topology (no duplicate neighbor-graph construction) and drops straight
 //!   into [`crate::engine::OscilloSim::step`]/`run` via the existing
 //!   `Integrator`/`Dynamics` machinery — no engine changes required.
+//!   Since WP-036E Q2, the CSR topology (`indptr`/`indices`) is held
+//!   device-resident after construction; the `Dynamics` impl uploads only the
+//!   per-call state `(phase, amplitude, frequency)` and downloads the
+//!   derivatives.
 //! - [`GpuMeanFieldEngine`] — a small stepper around the *fused* dense
 //!   all-to-all RK4 kernel ([`prin_kernels::mean_field_rk4::cubecl::step_auto`]),
 //!   for the dense mean-field regime the §N1 `N = 1M` GPU throughput target
-//!   names. The kernel fuses the entire RK4 sub-step sequence in one launch
-//!   set, so it cannot be expressed as a [`prin_dynamics::models::Dynamics`]
-//!   (which evaluates one derivative at a time) — this type is the fused
-//!   analogue of [`crate::engine::OscilloSim`] for that regime.
+//!   names. Since WP-036E Q2, the engine holds a resolved `ComputeClient` +
+//!   persistent device `Handle`s across `step`; state stays on-device between
+//!   steps; explicit `state()` / `to_host()` is the only download.
 //! - [`GpuBandStepper`] — the analogous fused stepper for the three-band
 //!   discrete-time step
 //!   ([`prin_kernels::discrete_step::cubecl::discrete_step_auto`]).
+//!   Same device-resident restructuring as `GpuMeanFieldEngine`.
+//!
+//! ## Device-resident dispatch (WP-036E Q2)
+//!
+//! Each engine resolves a `ComputeClient` once at construction (backend chosen
+//! via [`prin_kernels::backend::auto_detect_order`]). The device resources
+//! (state handles, buffer pool, CSR topology) persist across `step` calls;
+//! `step` mutates device state in place with no per-step host transfer.
+//! If the client cannot be initialised at construction (no GPU, backend
+//! panic), the engine falls back to the host-slice path (the pre-Q2
+//! behaviour) transparently.
+//!
+//! ## `Dynamics` impl split (`GpuSparseKuramoto`)
+//!
+//! The `Dynamics` trait's `compute_derivatives` takes `&OscillatorState`
+//! (host `f64`) and returns `StateDerivatives` (host `f64`) — it is a
+//! one-shot derivative evaluator driven by the generic RK4 integrator,
+//! called four times per integrator step. The device-resident path for the
+//! sparse Kuramoto coupling is therefore *partial*: the CSR topology
+//! (`indptr`/`indices`) is uploaded once at construction and reused across
+//! all `compute_derivatives` calls; only the per-call state
+//! `(phase, amplitude, frequency)` is uploaded and the derivatives
+//! downloaded. The fused engines (`GpuMeanFieldEngine`, `GpuBandStepper`)
+//! have their own `step` loops and achieve full device residency.
 //!
 //! ## Precision
 //!
@@ -59,6 +86,72 @@ use crate::csr_coupling::SparseCoupling;
 use crate::engine::Trajectory;
 use crate::error::SimError;
 
+// ── CubeCL device-resident dispatch (WP-036E Q2) ─────────────────────────
+
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+use cubecl::prelude::{ComputeClient, CubeElement};
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+use cubecl::server::Handle;
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+use cubecl::Runtime;
+
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+use prin_kernels::buffers::CubeclBufferPool;
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+use prin_kernels::discrete_step::cubecl::{discrete_step_device, DiscreteStepDeviceState};
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+use prin_kernels::mean_field_rk4::cubecl::{step_cubecl_device, MeanFieldDeviceState};
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+use prin_kernels::sparse_knn::cubecl::{
+    sparse_knn_coupling_device, SparseKnnDeviceDerivs, SparseKnnDeviceState,
+};
+
+/// Preferred CubeCL runtime, selected at compile time by feature flags.
+///
+/// The priority matches [`prin_kernels::backend::auto_detect_order`]: CUDA →
+/// wgpu → CPU. The engine structs store a `ComputeClient<SimRuntime>` +
+/// device state; if the client cannot be initialised at construction, the
+/// engine falls back to the host-slice path.
+#[cfg(feature = "cuda")]
+type SimRuntime = cubecl::cuda::CudaRuntime;
+#[cfg(all(feature = "wgpu", not(feature = "cuda")))]
+type SimRuntime = cubecl::wgpu::WgpuRuntime;
+#[cfg(all(feature = "cpu", not(any(feature = "cuda", feature = "wgpu"))))]
+type SimRuntime = cubecl::cpu::CpuRuntime;
+
+/// Attempt to create a `ComputeClient` for the preferred [`SimRuntime`].
+///
+/// Returns `None` if the backend panics during initialisation (e.g. no GPU
+/// adapter). The caller falls back to the host-slice path.
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+fn try_create_client() -> Option<ComputeClient<SimRuntime>> {
+    use std::panic::{catch_unwind, AssertUnwindSafe};
+
+    #[cfg(feature = "cuda")]
+    {
+        use cubecl::cuda::{CudaDevice, CudaRuntime};
+        return catch_unwind(AssertUnwindSafe(|| {
+            CudaRuntime::client(&CudaDevice::default())
+        }))
+        .ok();
+    }
+
+    #[cfg(all(feature = "wgpu", not(feature = "cuda")))]
+    {
+        use cubecl::wgpu::{WgpuDevice, WgpuRuntime};
+        return catch_unwind(AssertUnwindSafe(|| {
+            WgpuRuntime::client(&WgpuDevice::DefaultDevice)
+        }))
+        .ok();
+    }
+
+    #[cfg(all(feature = "cpu", not(any(feature = "cuda", feature = "wgpu"))))]
+    {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        return catch_unwind(AssertUnwindSafe(|| CpuRuntime::client(&CpuDevice))).ok();
+    }
+}
+
 fn to_f32(v: &[f64]) -> Vec<f32> {
     v.iter().map(|&x| x as f32).collect()
 }
@@ -92,6 +185,15 @@ fn to_f64(v: &[f32]) -> Vec<f64> {
 /// custom-weighted [`SparseCoupling::from_csr`] will generally fail this
 /// check, by design: silently ignoring the actual weights would produce
 /// wrong physics.
+///
+/// # Device-resident CSR topology (WP-036E Q2)
+///
+/// When a CubeCL backend is available, the CSR topology (`indptr`/`indices`)
+/// is uploaded to the device once at construction and reused across all
+/// `compute_derivatives` calls. Only the per-call state
+/// `(phase, amplitude, frequency)` is uploaded and the derivatives
+/// downloaded — the topology never moves again. See the module-level
+/// "Dynamics impl split" note for the partial-residency rationale.
 #[derive(Clone, Debug)]
 pub struct GpuSparseKuramoto {
     n: usize,
@@ -99,6 +201,34 @@ pub struct GpuSparseKuramoto {
     freq_adaptation_rate: f64,
     k: f64,
     graph: SparseKnnGraph,
+    /// Device-resident CSR topology + client (WP-036E Q2). `None` when no
+    /// CubeCL backend could be initialised — the `Dynamics` impl falls back
+    /// to the host-slice [`sparse_knn_coupling_auto`] path.
+    #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+    device: Option<SparseKnnDeviceResources>,
+}
+
+/// Device-resident CSR topology for [`GpuSparseKuramoto`].
+///
+/// The `indptr`/`indices` handles are uploaded once at construction and
+/// reused across all `compute_derivatives` calls. The `client` is resolved
+/// once and shared across calls.
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+#[derive(Clone)]
+struct SparseKnnDeviceResources {
+    client: ComputeClient<SimRuntime>,
+    indptr: Handle,
+    indices: Handle,
+    indices_len: usize,
+}
+
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+impl core::fmt::Debug for SparseKnnDeviceResources {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("SparseKnnDeviceResources")
+            .field("indices_len", &self.indices_len)
+            .finish_non_exhaustive()
+    }
 }
 
 impl GpuSparseKuramoto {
@@ -179,12 +309,31 @@ impl GpuSparseKuramoto {
 
         let graph = SparseKnnGraph::from_csr(n, indptr, indices)?;
 
+        // Upload CSR topology to device (WP-036E Q2).
+        #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+        let device = try_create_client().map(|client: ComputeClient<SimRuntime>| {
+            let indices_len = graph.nnz().max(1);
+            let indices_handle = if graph.nnz() > 0 {
+                client.create_from_slice(u32::as_bytes(graph.indices()))
+            } else {
+                client.create_from_slice(u32::as_bytes(&[0u32]))
+            };
+            SparseKnnDeviceResources {
+                indptr: client.create_from_slice(u32::as_bytes(graph.indptr())),
+                indices: indices_handle,
+                indices_len,
+                client,
+            }
+        });
+
         Ok(Self {
             n,
             decay_rate,
             freq_adaptation_rate,
             k,
             graph,
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            device,
         })
     }
 
@@ -240,12 +389,29 @@ impl Dynamics for GpuSparseKuramoto {
             gamma: self.freq_adaptation_rate as f32,
         };
 
-        // Length/graph-size preconditions are validated by `new` and the
-        // early `n != self.n` check above; `sparse_knn_coupling_auto` always
-        // falls back to the native CPU reference (which cannot fail on
-        // already-valid input), so a kernel-layer error here would indicate
-        // a logic bug in this wrapper, not a runtime condition callers can
-        // recover from.
+        // Device-resident CSR path (WP-036E Q2): upload per-call state,
+        // reuse the device-resident topology, download derivatives.
+        #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+        if let Some(ref dev) = self.device {
+            let dev_state = SparseKnnDeviceState::from_parts(
+                n,
+                dev.indices_len,
+                dev.client.create_from_slice(f32::as_bytes(&phase32)),
+                dev.client.create_from_slice(f32::as_bytes(&amp32)),
+                dev.client.create_from_slice(f32::as_bytes(&freq32)),
+                dev.indptr.clone(),
+                dev.indices.clone(),
+            );
+            let mut derivs = SparseKnnDeviceDerivs::empty(&dev.client, n);
+            sparse_knn_coupling_device(&dev.client, &dev_state, &params, &mut derivs)
+                .expect("inputs validated by GpuSparseKuramoto::new and the length check above");
+            let (dphase32, damp32, dfreq32) = derivs
+                .to_host(&dev.client)
+                .expect("device read-back cannot fail on already-valid input");
+            return StateDerivatives::new(to_f64(&dphase32), to_f64(&damp32), to_f64(&dfreq32));
+        }
+
+        // Host-slice fallback (no CubeCL backend, or no CubeCL feature).
         let (dphase32, damp32, dfreq32) =
             sparse_knn_coupling_auto(&phase32, &amp32, &freq32, &self.graph, &params)
                 .expect("inputs validated by GpuSparseKuramoto::new and the length check above");
@@ -270,12 +436,51 @@ impl Dynamics for GpuSparseKuramoto {
 /// step/run loop instead, reusing [`crate::engine::Trajectory`] for
 /// trajectory recording so callers get the same recorded-artifact shape as
 /// `OscilloSim`.
+///
+/// # Device-resident state (WP-036E Q2)
+///
+/// When a CubeCL backend is available, the engine holds a resolved
+/// `ComputeClient` + persistent [`MeanFieldDeviceState`] + preallocated
+/// [`CubeclBufferPool`] across `step` calls. State stays on-device between
+/// steps; `step` mutates device state in place with no per-step host
+/// transfer. `state()` is the only download. If the client cannot be
+/// initialised at construction, the engine falls back to the host-slice
+/// path transparently.
 #[derive(Clone, Debug)]
 pub struct GpuMeanFieldEngine {
-    phase: Vec<f32>,
-    amplitude: Vec<f32>,
-    frequency: Vec<f32>,
     params: MeanFieldRk4Params,
+    inner: MeanFieldInner,
+}
+
+#[derive(Clone)]
+enum MeanFieldInner {
+    /// Device-resident path: client + persistent state + buffer pool.
+    #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+    Device {
+        client: ComputeClient<SimRuntime>,
+        state: MeanFieldDeviceState<SimRuntime>,
+        pool: CubeclBufferPool<SimRuntime>,
+    },
+    /// Host-slice fallback (no CubeCL backend, or no CubeCL feature).
+    Host {
+        phase: Vec<f32>,
+        amplitude: Vec<f32>,
+        frequency: Vec<f32>,
+    },
+}
+
+impl core::fmt::Debug for MeanFieldInner {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            Self::Device { state, pool, .. } => f
+                .debug_struct("Device")
+                .field("n", &state.n)
+                .field("pool_capacity", &pool.capacity())
+                .finish_non_exhaustive(),
+            Self::Host { phase, .. } => f.debug_struct("Host").field("n", &phase.len()).finish(),
+        }
+    }
 }
 
 impl GpuMeanFieldEngine {
@@ -312,17 +517,42 @@ impl GpuMeanFieldEngine {
             });
         }
 
+        let phase32 = to_f32(&state.phase);
+        let amp32 = to_f32(&state.amplitude);
+        let freq32 = to_f32(&state.frequency);
+
+        // Try device-resident path (WP-036E Q2).
+        #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+        if let Some(client) = try_create_client() {
+            let dev_state = MeanFieldDeviceState::upload(&client, &phase32, &amp32, &freq32);
+            let pool = CubeclBufferPool::new(&client, n);
+            return Ok(Self {
+                params,
+                inner: MeanFieldInner::Device {
+                    client,
+                    state: dev_state,
+                    pool,
+                },
+            });
+        }
+
         Ok(Self {
-            phase: to_f32(&state.phase),
-            amplitude: to_f32(&state.amplitude),
-            frequency: to_f32(&state.frequency),
             params,
+            inner: MeanFieldInner::Host {
+                phase: phase32,
+                amplitude: amp32,
+                frequency: freq32,
+            },
         })
     }
 
     /// Number of oscillators.
     pub fn n_oscillators(&self) -> usize {
-        self.phase.len()
+        match &self.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            MeanFieldInner::Device { state, .. } => state.n,
+            MeanFieldInner::Host { phase, .. } => phase.len(),
+        }
     }
 
     /// Timestep `dt`.
@@ -334,29 +564,57 @@ impl GpuMeanFieldEngine {
     ///
     /// # Errors
     ///
-    /// Returns [`SimError`] if the internal `f32` state somehow fails
-    /// [`OscillatorState`]'s length invariants (unreachable in practice: the
-    /// three buffers are always resized together).
+    /// Returns [`SimError`] if the internal state fails [`OscillatorState`]'s
+    /// length invariants (unreachable in practice) or if a device read-back
+    /// fails.
     pub fn state(&self) -> Result<OscillatorState, SimError> {
-        OscillatorState::new(
-            to_f64(&self.phase),
-            to_f64(&self.amplitude),
-            to_f64(&self.frequency),
-            None,
-        )
-        .map_err(SimError::from)
+        match &self.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            MeanFieldInner::Device { client, state, .. } => {
+                let (phase, amp, freq) = state.to_host(client)?;
+                OscillatorState::new(to_f64(&phase), to_f64(&amp), to_f64(&freq), None)
+                    .map_err(SimError::from)
+            }
+            MeanFieldInner::Host {
+                phase,
+                amplitude,
+                frequency,
+            } => OscillatorState::new(to_f64(phase), to_f64(amplitude), to_f64(frequency), None)
+                .map_err(SimError::from),
+        }
     }
 
     /// Advance by one fused RK4 step.
     ///
+    /// On the device-resident path, state is mutated in place on the device
+    /// with no host transfer. On the host-slice fallback, the per-call
+    /// upload/download path is used.
+    ///
     /// # Errors
     ///
     /// Returns [`SimError`] if the kernel dispatch fails (see
-    /// [`step_auto`]).
+    /// [`step_auto`]) or a device read-back fails.
     pub fn step(&mut self) -> Result<MeanFieldStepReport, SimError> {
-        let (out, report) = step_auto(&self.phase, &self.amplitude, &self.frequency, &self.params)?;
-        (self.phase, self.amplitude, self.frequency) = out;
-        Ok(report)
+        match &mut self.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            MeanFieldInner::Device {
+                client,
+                state,
+                pool,
+            } => {
+                let report = step_cubecl_device(client, state, &self.params, pool)?;
+                Ok(report)
+            }
+            MeanFieldInner::Host {
+                phase,
+                amplitude,
+                frequency,
+            } => {
+                let (out, report) = step_auto(phase, amplitude, frequency, &self.params)?;
+                (*phase, *amplitude, *frequency) = out;
+                Ok(report)
+            }
+        }
     }
 
     /// Run for `n_steps`, optionally recording a trajectory.
@@ -385,9 +643,10 @@ impl GpuMeanFieldEngine {
                 frequencies: Vec::with_capacity(n_steps + 1),
                 times: Vec::with_capacity(n_steps + 1),
             };
-            t.phases.push(to_f64(&self.phase));
-            t.amplitudes.push(to_f64(&self.amplitude));
-            t.frequencies.push(to_f64(&self.frequency));
+            let s0 = self.state()?;
+            t.phases.push(s0.phase);
+            t.amplitudes.push(s0.amplitude);
+            t.frequencies.push(s0.frequency);
             t.times.push(0.0);
             Some(t)
         } else {
@@ -397,9 +656,10 @@ impl GpuMeanFieldEngine {
         for step in 0..n_steps {
             self.step()?;
             if let Some(ref mut traj) = trajectory {
-                traj.phases.push(to_f64(&self.phase));
-                traj.amplitudes.push(to_f64(&self.amplitude));
-                traj.frequencies.push(to_f64(&self.frequency));
+                let s = self.state()?;
+                traj.phases.push(s.phase);
+                traj.amplitudes.push(s.amplitude);
+                traj.frequencies.push(s.frequency);
                 traj.times.push((step + 1) as f64 * dt);
             }
         }
@@ -421,13 +681,47 @@ impl GpuMeanFieldEngine {
 /// `GpuMeanFieldEngine` wraps the fused RK4 kernel — this WP is the first
 /// point either fused kernel is driven by anything other than a
 /// microbenchmark or unit test.
+///
+/// # Device-resident state (WP-036E Q2)
+///
+/// Same device-resident restructuring as [`GpuMeanFieldEngine`]: the engine
+/// holds a resolved `ComputeClient` + persistent [`DiscreteStepDeviceState`]
+/// across `step` calls; state stays on-device between steps; `state()` is
+/// the only download.
 #[derive(Clone, Debug)]
 pub struct GpuBandStepper {
-    phase: Vec<f32>,
-    amplitude: Vec<f32>,
-    frequency: Vec<f32>,
     band_sizes: [usize; 3],
     params: DiscreteStepParams,
+    inner: BandStepperInner,
+}
+
+#[derive(Clone)]
+enum BandStepperInner {
+    /// Device-resident path.
+    #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+    Device {
+        client: ComputeClient<SimRuntime>,
+        state: DiscreteStepDeviceState<SimRuntime>,
+    },
+    /// Host-slice fallback.
+    Host {
+        phase: Vec<f32>,
+        amplitude: Vec<f32>,
+        frequency: Vec<f32>,
+    },
+}
+
+impl core::fmt::Debug for BandStepperInner {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            Self::Device { state, .. } => f
+                .debug_struct("Device")
+                .field("n", &state.n())
+                .finish_non_exhaustive(),
+            Self::Host { phase, .. } => f.debug_struct("Host").field("n", &phase.len()).finish(),
+        }
+    }
 }
 
 impl GpuBandStepper {
@@ -469,18 +763,43 @@ impl GpuBandStepper {
             });
         }
 
+        let phase32 = to_f32(&state.phase);
+        let amp32 = to_f32(&state.amplitude);
+        let freq32 = to_f32(&state.frequency);
+
+        // Try device-resident path (WP-036E Q2).
+        #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+        if let Some(client) = try_create_client() {
+            let dev_state =
+                DiscreteStepDeviceState::upload(&client, &phase32, &amp32, &freq32, band_sizes);
+            return Ok(Self {
+                band_sizes,
+                params,
+                inner: BandStepperInner::Device {
+                    client,
+                    state: dev_state,
+                },
+            });
+        }
+
         Ok(Self {
-            phase: to_f32(&state.phase),
-            amplitude: to_f32(&state.amplitude),
-            frequency: to_f32(&state.frequency),
             band_sizes,
             params,
+            inner: BandStepperInner::Host {
+                phase: phase32,
+                amplitude: amp32,
+                frequency: freq32,
+            },
         })
     }
 
     /// Number of oscillators across all three bands.
     pub fn n_oscillators(&self) -> usize {
-        self.phase.len()
+        match &self.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            BandStepperInner::Device { state, .. } => state.n(),
+            BandStepperInner::Host { phase, .. } => phase.len(),
+        }
     }
 
     /// Per-band oscillator counts `[delta, theta, gamma]`.
@@ -497,34 +816,53 @@ impl GpuBandStepper {
     ///
     /// # Errors
     ///
-    /// Returns [`SimError`] if the internal `f32` state somehow fails
-    /// [`OscillatorState`]'s length invariants (unreachable in practice).
+    /// Returns [`SimError`] if the internal state fails [`OscillatorState`]'s
+    /// length invariants (unreachable in practice) or if a device read-back
+    /// fails.
     pub fn state(&self) -> Result<OscillatorState, SimError> {
-        OscillatorState::new(
-            to_f64(&self.phase),
-            to_f64(&self.amplitude),
-            to_f64(&self.frequency),
-            None,
-        )
-        .map_err(SimError::from)
+        match &self.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            BandStepperInner::Device { client, state } => {
+                let (phase, amp, freq) = state.to_host(client)?;
+                OscillatorState::new(to_f64(&phase), to_f64(&amp), to_f64(&freq), None)
+                    .map_err(SimError::from)
+            }
+            BandStepperInner::Host {
+                phase,
+                amplitude,
+                frequency,
+            } => OscillatorState::new(to_f64(phase), to_f64(amplitude), to_f64(frequency), None)
+                .map_err(SimError::from),
+        }
     }
 
     /// Advance by one fused discrete step.
     ///
+    /// On the device-resident path, state is mutated in place on the device
+    /// with no host transfer.
+    ///
     /// # Errors
     ///
     /// Returns [`SimError`] if the kernel dispatch fails (see
-    /// [`discrete_step_auto`]).
+    /// [`discrete_step_auto`]) or a device read-back fails.
     pub fn step(&mut self) -> Result<DiscreteStepReport, SimError> {
-        let (out, report) = discrete_step_auto(
-            &self.phase,
-            &self.amplitude,
-            &self.frequency,
-            self.band_sizes,
-            &self.params,
-        )?;
-        (self.phase, self.amplitude, self.frequency) = out;
-        Ok(report)
+        match &mut self.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            BandStepperInner::Device { client, state } => {
+                let report = discrete_step_device(client, state, &self.params)?;
+                Ok(report)
+            }
+            BandStepperInner::Host {
+                phase,
+                amplitude,
+                frequency,
+            } => {
+                let (out, report) =
+                    discrete_step_auto(phase, amplitude, frequency, self.band_sizes, &self.params)?;
+                (*phase, *amplitude, *frequency) = out;
+                Ok(report)
+            }
+        }
     }
 
     /// Run for `n_steps`, optionally recording a trajectory.
@@ -553,9 +891,10 @@ impl GpuBandStepper {
                 frequencies: Vec::with_capacity(n_steps + 1),
                 times: Vec::with_capacity(n_steps + 1),
             };
-            t.phases.push(to_f64(&self.phase));
-            t.amplitudes.push(to_f64(&self.amplitude));
-            t.frequencies.push(to_f64(&self.frequency));
+            let s0 = self.state()?;
+            t.phases.push(s0.phase);
+            t.amplitudes.push(s0.amplitude);
+            t.frequencies.push(s0.frequency);
             t.times.push(0.0);
             Some(t)
         } else {
@@ -565,9 +904,10 @@ impl GpuBandStepper {
         for step in 0..n_steps {
             self.step()?;
             if let Some(ref mut traj) = trajectory {
-                traj.phases.push(to_f64(&self.phase));
-                traj.amplitudes.push(to_f64(&self.amplitude));
-                traj.frequencies.push(to_f64(&self.frequency));
+                let s = self.state()?;
+                traj.phases.push(s.phase);
+                traj.amplitudes.push(s.amplitude);
+                traj.frequencies.push(s.frequency);
                 traj.times.push((step + 1) as f64 * dt);
             }
         }
@@ -754,10 +1094,6 @@ mod tests {
 
     #[test]
     fn gpu_mean_field_engine_rejects_empty_state() {
-        // `OscillatorState`'s own constructors reject n=0; its fields are
-        // public, so an empty state is only reachable via direct struct
-        // construction (mirroring how `OscilloSim::new` defensively checks
-        // the same condition in `engine.rs`).
         let empty = OscillatorState {
             phase: vec![],
             amplitude: vec![],
@@ -787,8 +1123,6 @@ mod tests {
         assert_eq!(final_state.n_oscillators(), n);
         let traj = traj.unwrap();
         assert_eq!(traj.n_steps(), 6);
-        // `dt` round-trips through `f32` (the kernel's native precision), so
-        // the accumulated time carries f32 rounding error, not f64 precision.
         assert!((traj.times[5] - 0.05).abs() < 1e-6);
     }
 
@@ -828,6 +1162,39 @@ mod tests {
         let engine = GpuMeanFieldEngine::new(&state, mean_field_params()).unwrap();
         assert_eq!(engine.n_oscillators(), n);
         assert!((engine.dt() - 0.01).abs() < 1e-9);
+    }
+
+    /// Device-resident multi-step loop: the engine holds state on-device
+    /// across steps; `state()` is the only download (WP-036E Q2).
+    #[test]
+    fn gpu_mean_field_engine_device_resident_multi_step() {
+        let n = 64;
+        let state = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(99, 0)).unwrap();
+        let params = mean_field_params();
+
+        let mut engine = GpuMeanFieldEngine::new(&state, params).unwrap();
+        for _ in 0..4 {
+            engine.step().unwrap();
+        }
+        let got = engine.state().unwrap();
+        assert_eq!(got.n_oscillators(), n);
+
+        // Verify against the CPU reference (4 steps from the same initial state).
+        let phase32 = to_f32(&state.phase);
+        let amp32 = to_f32(&state.amplitude);
+        let freq32 = to_f32(&state.frequency);
+        let (mut p, mut a, mut f) = (phase32, amp32, freq32);
+        for _ in 0..4 {
+            (p, a, f) = step_cpu(&p, &a, &f, &params).unwrap();
+        }
+        for i in 0..n {
+            assert!(
+                (got.phase[i] - f64::from(p[i])).abs() < 1e-5,
+                "phase[{i}]: got={}, expected={}",
+                got.phase[i],
+                f64::from(p[i])
+            );
+        }
     }
 
     // ── GpuBandStepper ─────────────────────────────────────────────────────
@@ -964,5 +1331,37 @@ mod tests {
         assert_eq!(stepper.n_oscillators(), 12);
         assert_eq!(stepper.band_sizes(), band_sizes);
         assert!((stepper.dt() - 0.01).abs() < 1e-9);
+    }
+
+    /// Device-resident multi-step loop for the band stepper (WP-036E Q2).
+    #[test]
+    fn gpu_band_stepper_device_resident_multi_step() {
+        let band_sizes = [16usize, 16, 16];
+        let state = band_state(band_sizes);
+        let params = discrete_step_params();
+
+        let mut stepper = GpuBandStepper::new(&state, band_sizes, params).unwrap();
+        for _ in 0..3 {
+            stepper.step().unwrap();
+        }
+        let got = stepper.state().unwrap();
+        assert_eq!(got.n_oscillators(), 48);
+
+        // Verify against the CPU reference.
+        let phase32 = to_f32(&state.phase);
+        let amp32 = to_f32(&state.amplitude);
+        let freq32 = to_f32(&state.frequency);
+        let (mut p, mut a, mut f) = (phase32, amp32, freq32);
+        for _ in 0..3 {
+            (p, a, f) = discrete_step_cpu(&p, &a, &f, band_sizes, &params).unwrap();
+        }
+        for i in 0..got.n_oscillators() {
+            assert!(
+                (got.phase[i] - f64::from(p[i])).abs() < 1e-5,
+                "phase[{i}]: got={}, expected={}",
+                got.phase[i],
+                f64::from(p[i])
+            );
+        }
     }
 }

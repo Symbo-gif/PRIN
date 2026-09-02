@@ -251,6 +251,39 @@ fn order_param_block_reduce<F: Float + CubeElement>(
     sync_cube();
 }
 
+/// DV-003: CUDA-only level-2 f64 finalize kernel.
+///
+/// Takes the `num_blocks` partial-sum pairs from [`order_param_block_reduce`]
+/// and accumulates them in `f64` on device, writing the final `(zr, zi)` as
+/// `f32` to a 2-element output buffer. This eliminates the host read-back of
+/// `2 * num_blocks` f32s per stage — only 2 f32s are read back instead.
+///
+/// Gated behind `#[cfg(feature = "cuda")]` because device `f64` is not
+/// portable: wgpu DX12 lacks `SHADER_F64` (Vulkan-only), and most consumer
+/// GPUs don't expose a portable device-side `f64`. The wgpu/CPU path keeps
+/// the host `f64` combine in [`order_param_device`].
+#[cfg(feature = "cuda")]
+#[cube(launch)]
+fn order_param_finalize_f64(
+    block_real: &Array<f32>,
+    block_imag: &Array<f32>,
+    out: &mut Array<f32>,
+    n_inv: f32,
+) {
+    if UNIT_POS == 0u32 {
+        let mut real_sum: f64 = 0.0;
+        let mut imag_sum: f64 = 0.0;
+        let len = block_real.len();
+        for j in 0..len {
+            real_sum += f64::cast_from(block_real[j]);
+            imag_sum += f64::cast_from(block_imag[j]);
+        }
+        let n_inv64 = f64::cast_from(n_inv);
+        out[0] = f32::cast_from(real_sum * n_inv64);
+        out[1] = f32::cast_from(imag_sum * n_inv64);
+    }
+}
+
 /// Final RK4 weighted sum: `base + dt/6 * (k1 + 2*k2 + 2*k3 + k4)`.
 #[cube(launch)]
 fn mean_field_rk4_finalize<F: Float + CubeElement>(
@@ -320,7 +353,15 @@ fn read_f32s<R: Runtime>(
 /// Compute the mean-field order parameter of a device-resident `(phase, amp)`
 /// pair via the two-level hierarchical reduction described in the module
 /// documentation: [`order_param_block_reduce`] on the device, finished with
-/// an `f64` accumulator on the host.
+/// an `f64` accumulator.
+///
+/// ## DV-003: on-device f64 combine (CUDA only)
+///
+/// On CUDA, the level-2 f64 accumulation runs on device via
+/// [`order_param_finalize_f64`] — only 2 f32s `(zr, zi)` are read back
+/// instead of `2 * num_blocks` f32s. On wgpu/CPU, the level-2 f64
+/// accumulation runs on the host (device `f64` is not portable: wgpu DX12
+/// lacks `SHADER_F64`).
 #[allow(clippy::too_many_arguments)]
 fn order_param_device<R: Runtime>(
     client: &ComputeClient<R>,
@@ -344,17 +385,77 @@ fn order_param_device<R: Runtime>(
         array_arg(block_imag_h, num_blocks),
     );
 
-    let block_real = read_f32s(client, block_real_h, num_blocks)?;
-    let block_imag = read_f32s(client, block_imag_h, num_blocks)?;
-
-    let mut real_sum = 0.0_f64;
-    let mut imag_sum = 0.0_f64;
-    for (&r, &im) in block_real.iter().zip(&block_imag) {
-        real_sum += f64::from(r);
-        imag_sum += f64::from(im);
+    // DV-003: on-device f64 finalize on CUDA — read back only 2 f32s.
+    #[cfg(feature = "cuda")]
+    {
+        return order_param_device_cuda_or_host::<R>(
+            client,
+            block_real_h,
+            block_imag_h,
+            num_blocks,
+            n_inv,
+        );
     }
-    let n_inv64 = f64::from(n_inv);
-    Ok(((real_sum * n_inv64) as f32, (imag_sum * n_inv64) as f32))
+
+    // Host f64 combine (wgpu/CPU path, or non-CUDA fallback).
+    #[allow(unreachable_code)]
+    {
+        let block_real = read_f32s(client, block_real_h, num_blocks)?;
+        let block_imag = read_f32s(client, block_imag_h, num_blocks)?;
+
+        let mut real_sum = 0.0_f64;
+        let mut imag_sum = 0.0_f64;
+        for (&r, &im) in block_real.iter().zip(&block_imag) {
+            real_sum += f64::from(r);
+            imag_sum += f64::from(im);
+        }
+        let n_inv64 = f64::from(n_inv);
+        Ok(((real_sum * n_inv64) as f32, (imag_sum * n_inv64) as f32))
+    }
+}
+
+/// DV-003 helper: on CUDA, launch the on-device f64 finalize kernel and read
+/// back only 2 f32s. On non-CUDA runtimes (when the CUDA feature is compiled
+/// in but the runtime is wgpu/CPU), fall back to the host f64 combine.
+#[cfg(feature = "cuda")]
+fn order_param_device_cuda_or_host<R: Runtime>(
+    client: &ComputeClient<R>,
+    block_real_h: &Handle,
+    block_imag_h: &Handle,
+    num_blocks: usize,
+    n_inv: f32,
+) -> Result<(f32, f32), MeanFieldRk4Error> {
+    // At runtime, check if this is actually a CUDA client. The CubeCL type
+    // system doesn't give us a direct way to check, so we use the backend
+    // name. If it's CUDA, use the on-device finalize; otherwise host.
+    let backend = R::name(client);
+    if backend == "cuda" {
+        let out_byte_len = 2 * core::mem::size_of::<f32>();
+        let out_h = client.empty(out_byte_len);
+        order_param_finalize_f64::launch::<R>(
+            client,
+            CubeCount::Static(1, 1, 1),
+            CubeDim::new_1d(1),
+            array_arg(block_real_h, num_blocks),
+            array_arg(block_imag_h, num_blocks),
+            array_arg(&out_h, 2),
+            n_inv,
+        );
+        let result = read_f32s(client, &out_h, 2)?;
+        Ok((result[0], result[1]))
+    } else {
+        // Host f64 combine fallback (wgpu/CPU runtime with CUDA feature compiled in).
+        let block_real = read_f32s(client, block_real_h, num_blocks)?;
+        let block_imag = read_f32s(client, block_imag_h, num_blocks)?;
+        let mut real_sum = 0.0_f64;
+        let mut imag_sum = 0.0_f64;
+        for (&r, &im) in block_real.iter().zip(&block_imag) {
+            real_sum += f64::from(r);
+            imag_sum += f64::from(im);
+        }
+        let n_inv64 = f64::from(n_inv);
+        Ok(((real_sum * n_inv64) as f32, (imag_sum * n_inv64) as f32))
+    }
 }
 
 /// Launch one RK4 stage kernel.
@@ -440,6 +541,7 @@ pub fn step_cubecl<R: Runtime>(
 /// loop never touches the host. [`MeanFieldDeviceState::upload`] is the
 /// one-shot host→device constructor the thin [`step_cubecl_with_pool`] wrapper
 /// uses; [`MeanFieldDeviceState::to_host`] downloads the current state.
+#[derive(Clone, Debug)]
 pub struct MeanFieldDeviceState<R: Runtime> {
     /// Oscillator count `N`.
     pub n: usize,

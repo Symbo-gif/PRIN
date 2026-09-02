@@ -17,6 +17,7 @@ rayon.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+cubecl.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true
@@ -33,9 +34,9 @@ strict-checks = ["prin-dynamics/strict-checks"]
 # Enabling any one of these compiles the `gpu` module, which wires
 # `prin-kernels` kernel dispatch into the simulation engine (`GpuSparseKuramoto`,
 # `GpuMeanFieldEngine`, `GpuBandStepper`).
-cpu = ["prin-kernels/cpu"]
-cuda = ["prin-kernels/cuda"]
-wgpu = ["prin-kernels/wgpu"]
+cpu = ["prin-kernels/cpu", "cubecl/cpu"]
+cuda = ["prin-kernels/cuda", "cubecl/cuda"]
+wgpu = ["prin-kernels/wgpu", "cubecl/wgpu"]
 
 [[bench]]
 name = "sweep_bench"

@@ -1,6 +1,6 @@
 # Session 0144Q2 — WP-036E S1 (sub-pass 2/3): `prin-sim` persistent device buffers + DV-003 on-device combine
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036E
 **Session type:** S1 — Coding
@@ -65,3 +65,55 @@ the S1 handoff.
 All gates green; engines hold device state across `step`; DV-003 gap closed or
 bounded with recorded evidence; commit at the green local gate; hand to
 `0144Q3`.
+
+---
+
+## S1 Handoff (2026-09-02)
+
+**Status:** COMPLETE — all gates green.
+
+### Deliverables
+
+1. **`prin-sim` device-resident engines (WP-036E Q2):**
+   - `GpuMeanFieldEngine` holds `ComputeClient<SimRuntime>` + `MeanFieldDeviceState` + `CubeclBufferPool` across `step`; state mutated in place on device, no per-step host transfer. `state()` is the only download.
+   - `GpuBandStepper` holds `ComputeClient<SimRuntime>` + `DiscreteStepDeviceState` across `step`; same device-resident pattern.
+   - `GpuSparseKuramoto` holds `ComputeClient<SimRuntime>` + device-resident CSR topology (`indptr`/`indices` handles) after construction; the `Dynamics` impl uploads per-call state, reuses the persistent topology, downloads derivatives.
+   - All three engines fall back to the host-slice path transparently if the CubeCL client cannot be initialised at construction.
+   - `SimRuntime` type alias selects the preferred runtime at compile time (CUDA → wgpu → CPU, matching `auto_detect_order`).
+
+2. **DV-003: On-device f64 level-2 combine (CUDA-only):**
+   - New `#[cube]` kernel `order_param_finalize_f64` in `prin-kernels::mean_field_rk4::cubecl` accumulates block partials in `f64` on device, writes `(zr, zi)` as `f32` to a 2-element output.
+   - `order_param_device` dispatches to the on-device finalize on CUDA (runtime backend-name check), reading back only 2 f32s per stage instead of `2 * num_blocks` f32s. wgpu/CPU keep the host f64 combine.
+   - `step_cubecl_device` already uses `ComputeClient::profile` for device-event timing; `StepReport` records `TimingMethod::Device` when available.
+
+3. **`Clone`/`Debug` derives** added to `MeanFieldDeviceState`, `CubeclBufferPool`, `DiscreteStepDeviceState`, `SparseKnnDeviceState`, `SparseKnnDeviceDerivs` in `prin-kernels`.
+
+4. **`cubecl` added as direct dependency** of `prin-sim` with feature forwarding (`cpu`/`cuda`/`wgpu`).
+
+5. **Tests:** 2 new device-resident multi-step tests (`gpu_mean_field_engine_device_resident_multi_step`, `gpu_band_stepper_device_resident_multi_step`) verify state stays on-device across steps with `state()` as the only download.
+
+### Gates verified
+
+| Gate | Result |
+|---|---|
+| `cargo fmt --all -- --check` | ✓ |
+| `cargo clippy --workspace --all-targets -- -D warnings` | ✓ |
+| `cargo clippy -p prin-kernels --features cuda/wgpu/cpu --all-targets -- -D warnings` | ✓ |
+| `cargo test -p prin-sim --features wgpu` | 191 passed |
+| `cargo test -p prin-sim --features cuda` | 191 passed |
+| `cargo test -p prin-sim --features cpu` | 191 passed |
+| `cargo test -p prin-kernels --features cuda` | 126 passed |
+| `cargo test --workspace` | all passed |
+| `RUSTDOCFLAGS='-D warnings' cargo doc -p prin-kernels --no-deps` | ✓ |
+| `RUSTDOCFLAGS='-D warnings' cargo doc -p prin-sim --no-deps` | ✓ |
+
+### DV-003 evidence
+
+- On CUDA, the level-2 f64 combine runs on device via `order_param_finalize_f64`. Per-stage read-back reduced from `2 * ceil(N/256)` f32s to 2 f32s.
+- `step_cubecl_device` uses `ComputeClient::profile` for device-event timing; `StepReport::timing_method` records `Device` when hardware timestamps are available.
+- The CUDA test `cuda_device_dispatch_matches_cpu_reference_across_a_stepping_loop` confirms numerical agreement over a multi-step loop with the on-device f64 combine active.
+- Full device-event timing evidence on `PRIN-GPU-Runner` is deferred to the S2 audit (`0144R`), which compares wall-clock vs device-event timing for the full RK4 sequence.
+
+### Handoff to `0144Q3`
+
+`0144Q3` scope: `prin-py` zero-copy DLPack export direction, `PyGpu*` engine device-resident restructuring, `_torch_compat.py` GPU branch upgrade, `test_sparse_vram_subquadratic` disposition.

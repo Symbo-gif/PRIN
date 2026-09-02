@@ -147,6 +147,7 @@ fn read_f32s<R: Runtime>(
 /// to [`sparse_knn_coupling_device`] with **no host transfer**;
 /// [`SparseKnnDeviceState::upload`] is the one-shot host→device constructor the
 /// thin [`sparse_knn_coupling_cubecl`] wrapper uses.
+#[derive(Clone, Debug)]
 pub struct SparseKnnDeviceState<R: Runtime> {
     /// Oscillator count `N`.
     pub n: usize,
@@ -225,6 +226,7 @@ impl<R: Runtime> SparseKnnDeviceState<R> {
 
 /// Device-resident output of the sparse k-NN coupling derivative kernel:
 /// `(dphase, damplitude, dfrequency)` as CubeCL device [`Handle`]s.
+#[derive(Clone, Debug)]
 pub struct SparseKnnDeviceDerivs<R: Runtime> {
     /// Oscillator count `N`.
     pub n: usize,

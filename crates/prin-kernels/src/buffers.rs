@@ -162,6 +162,7 @@ pub(crate) fn num_blocks_for(n: usize) -> usize {
 /// ensure that kernel launches use the matching element count when
 /// constructing `ArrayArg` from these handles.
 #[cfg(any(feature = "cpu", feature = "cuda", feature = "wgpu"))]
+#[derive(Clone, Debug)]
 pub struct CubeclBufferPool<R: Runtime> {
     /// Oscillator count this pool was sized for.
     n: usize,

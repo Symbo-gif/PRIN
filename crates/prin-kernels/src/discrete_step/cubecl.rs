@@ -359,6 +359,7 @@ fn launch_band_euler_step<R: Runtime>(
 /// [`DiscreteStepDeviceState::upload`] is the one-shot host→device constructor
 /// the thin [`discrete_step_cubecl`] wrapper uses; [`to_host`](Self::to_host)
 /// concatenates the bands back slow→fast.
+#[derive(Clone, Debug)]
 pub struct DiscreteStepDeviceState<R: Runtime> {
     /// Per-band oscillator counts `[delta, theta, gamma]`.
     pub band_sizes: [usize; 3],
