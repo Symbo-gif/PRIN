@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **WP-036F S2 audit (`0144V`) — `PASS-WITH-FINDINGS`, mandatory S3 handoff.**
+  Independent verification confirms the re-exported three-input-`Gemm`
+  controller graph is bit-identical to the PRINet 3.0 reference on
+  `CPUExecutionProvider` over the 48-case set, that `DmlExecutionProvider`
+  executes it (not a CPU fallback) and agrees with CPU at `max_abs_diff
+  7.15e-7` within `rtol=1e-5, atol=1e-6`, and that the change is confined to a
+  graph-transform pass + tools + tests + docs (no controller algorithm, daemon
+  runtime, backend-selection, DV-025, or `prin` public-API change). Two
+  findings: changed-code coverage on the two new tools is 94% (< 95%) with
+  untested `transform_graph` error paths and `_check` drift branches
+  (WP036F-F1, D2); `mypy --strict` nits in the new tools, outside the
+  `python/prin` gate (WP036F-F2, D4). DV-006 DirectML-half evidence is in
+  place for the S4 register/DoD update. See `DOCS/audits/036f-wp036f-audit.md`.
 - **WP-036F S1 coding (`0144U`) — DirectML controller-graph execution.** The
   subconscious controller ONNX graph (`models/subconscious_controller.onnx`)
   is re-exported with **three-input `Gemm` nodes**: an explicit zero-valued

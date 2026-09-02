@@ -201,6 +201,15 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   system rather than device-event timing (D1), the CUDA feature clippy and
   changed-line coverage gates are not green/proven (two D2), and S1 evidence
   metadata is inaccurate (D4). Mandatory S3 owns all four.
+- [`036f-wp036f-audit.md`](036f-wp036f-audit.md) — WP-036F "DirectML
+  controller-graph execution" audit (`PASS-WITH-FINDINGS`); two findings:
+  changed-code coverage on the two new tools is 94% (< 95%) with untested
+  error/drift branches (WP036F-F1, D2), and `mypy --strict` nits in the new
+  tools (WP036F-F2, D4). The re-exported three-input-`Gemm` controller graph
+  is independently verified bit-identical to the PRINet 3.0 reference on CPU
+  and `DmlExecutionProvider` executes it within tolerance; DV-006 DirectML
+  half evidence in place for the S4 register/DoD update. Mandatory S3 owns
+  both findings.
 - [`036a-wp036a-audit.md`](036a-wp036a-audit.md) — WP-036A "Trainable
   compatibility layers (`prin-train` extension)" audit (`PASS`); zero findings;
   all 13 D-D trainable-layer / discrete-network symbols (rows 31–42, 44)

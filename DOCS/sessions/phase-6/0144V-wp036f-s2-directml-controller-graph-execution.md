@@ -1,6 +1,7 @@
 # Session 0144V — WP-036F S2: Audit — DirectML controller-graph execution
 
-**Status:** PLANNED
+**Status:** COMPLETE
+**Audit verdict:** `PASS-WITH-FINDINGS` — two findings (one D2, one D4) handed to mandatory S3 (`0144W`); report `DOCS/audits/036f-wp036f-audit.md`
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036F
 **Session type:** S2 — Audit
