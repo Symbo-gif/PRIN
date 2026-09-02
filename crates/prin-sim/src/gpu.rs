@@ -139,29 +139,26 @@ type SimRuntime = cubecl::cpu::CpuRuntime;
 fn try_create_client() -> Option<ComputeClient<SimRuntime>> {
     use std::panic::{catch_unwind, AssertUnwindSafe};
 
+    // Exactly one of the three backend closures is compiled in (feature
+    // priority CUDA → wgpu → CPU, matching [`SimRuntime`]); the single tail
+    // expression keeps the fallback contract identical across the matrix.
     #[cfg(feature = "cuda")]
-    {
+    let make = || {
         use cubecl::cuda::{CudaDevice, CudaRuntime};
-        return catch_unwind(AssertUnwindSafe(|| {
-            CudaRuntime::client(&CudaDevice::default())
-        }))
-        .ok();
-    }
-
+        CudaRuntime::client(&CudaDevice::default())
+    };
     #[cfg(all(feature = "wgpu", not(feature = "cuda")))]
-    {
+    let make = || {
         use cubecl::wgpu::{WgpuDevice, WgpuRuntime};
-        return catch_unwind(AssertUnwindSafe(|| {
-            WgpuRuntime::client(&WgpuDevice::DefaultDevice)
-        }))
-        .ok();
-    }
-
+        WgpuRuntime::client(&WgpuDevice::DefaultDevice)
+    };
     #[cfg(all(feature = "cpu", not(any(feature = "cuda", feature = "wgpu"))))]
-    {
+    let make = || {
         use cubecl::cpu::{CpuDevice, CpuRuntime};
-        return catch_unwind(AssertUnwindSafe(|| CpuRuntime::client(&CpuDevice))).ok();
-    }
+        CpuRuntime::client(&CpuDevice)
+    };
+
+    catch_unwind(AssertUnwindSafe(make)).ok()
 }
 
 fn to_f32(v: &[f64]) -> Vec<f32> {
@@ -611,15 +608,24 @@ pub struct GpuMeanFieldEngine {
     inner: MeanFieldInner,
 }
 
+/// Device-resident mean-field payload: resolved client + persistent state +
+/// buffer pool. Boxed inside [`MeanFieldInner::Device`] so the enum's two
+/// variants stay close in size (`clippy::large_enum_variant`); the single
+/// heap indirection is set up once at construction and is negligible beside
+/// the per-step kernel launches.
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+#[derive(Clone)]
+struct MeanFieldDevice {
+    client: ComputeClient<SimRuntime>,
+    state: MeanFieldDeviceState<SimRuntime>,
+    pool: CubeclBufferPool<SimRuntime>,
+}
+
 #[derive(Clone)]
 enum MeanFieldInner {
     /// Device-resident path: client + persistent state + buffer pool.
     #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
-    Device {
-        client: ComputeClient<SimRuntime>,
-        state: MeanFieldDeviceState<SimRuntime>,
-        pool: CubeclBufferPool<SimRuntime>,
-    },
+    Device(Box<MeanFieldDevice>),
     /// Host-slice fallback (no CubeCL backend, or no CubeCL feature).
     Host {
         phase: Vec<f32>,
@@ -632,10 +638,10 @@ impl core::fmt::Debug for MeanFieldInner {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
-            Self::Device { state, pool, .. } => f
+            Self::Device(dev) => f
                 .debug_struct("Device")
-                .field("n", &state.n)
-                .field("pool_capacity", &pool.capacity())
+                .field("n", &dev.state.n)
+                .field("pool_capacity", &dev.pool.capacity())
                 .finish_non_exhaustive(),
             Self::Host { phase, .. } => f.debug_struct("Host").field("n", &phase.len()).finish(),
         }
@@ -687,11 +693,11 @@ impl GpuMeanFieldEngine {
             let pool = CubeclBufferPool::new(&client, n);
             return Ok(Self {
                 params,
-                inner: MeanFieldInner::Device {
+                inner: MeanFieldInner::Device(Box::new(MeanFieldDevice {
                     client,
                     state: dev_state,
                     pool,
-                },
+                })),
             });
         }
 
@@ -709,7 +715,7 @@ impl GpuMeanFieldEngine {
     pub fn n_oscillators(&self) -> usize {
         match &self.inner {
             #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
-            MeanFieldInner::Device { state, .. } => state.n,
+            MeanFieldInner::Device(dev) => dev.state.n,
             MeanFieldInner::Host { phase, .. } => phase.len(),
         }
     }
@@ -729,8 +735,8 @@ impl GpuMeanFieldEngine {
     pub fn state(&self) -> Result<OscillatorState, SimError> {
         match &self.inner {
             #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
-            MeanFieldInner::Device { client, state, .. } => {
-                let (phase, amp, freq) = state.to_host(client)?;
+            MeanFieldInner::Device(dev) => {
+                let (phase, amp, freq) = dev.state.to_host(&dev.client)?;
                 OscillatorState::new(to_f64(&phase), to_f64(&amp), to_f64(&freq), None)
                     .map_err(SimError::from)
             }
@@ -755,13 +761,13 @@ impl GpuMeanFieldEngine {
     #[cfg(feature = "cuda")]
     pub fn state_cuda_export(&self) -> Option<CudaStateExport> {
         match &self.inner {
-            MeanFieldInner::Device { client, state, .. } => {
-                let _ = cubecl::future::block_on(client.sync());
-                let n = state.n;
+            MeanFieldInner::Device(dev) => {
+                let _ = cubecl::future::block_on(dev.client.sync());
+                let n = dev.state.n;
                 Some(CudaStateExport {
-                    phase: export_cuda_handle(client, &state.phase, n)?,
-                    amplitude: export_cuda_handle(client, &state.amplitude, n)?,
-                    frequency: export_cuda_handle(client, &state.frequency, n)?,
+                    phase: export_cuda_handle(&dev.client, &dev.state.phase, n)?,
+                    amplitude: export_cuda_handle(&dev.client, &dev.state.amplitude, n)?,
+                    frequency: export_cuda_handle(&dev.client, &dev.state.frequency, n)?,
                 })
             }
             MeanFieldInner::Host { .. } => None,
@@ -781,12 +787,9 @@ impl GpuMeanFieldEngine {
     pub fn step(&mut self) -> Result<MeanFieldStepReport, SimError> {
         match &mut self.inner {
             #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
-            MeanFieldInner::Device {
-                client,
-                state,
-                pool,
-            } => {
-                let report = step_cubecl_device(client, state, &self.params, pool)?;
+            MeanFieldInner::Device(dev) => {
+                let report =
+                    step_cubecl_device(&dev.client, &mut dev.state, &self.params, &dev.pool)?;
                 Ok(report)
             }
             MeanFieldInner::Host {
@@ -879,14 +882,22 @@ pub struct GpuBandStepper {
     inner: BandStepperInner,
 }
 
+/// Device-resident band-stepper payload: resolved client + persistent
+/// per-band state. Boxed inside [`BandStepperInner::Device`] to keep the
+/// enum's variants close in size (`clippy::large_enum_variant`); the one
+/// heap indirection is established at construction.
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+#[derive(Clone)]
+struct BandStepperDevice {
+    client: ComputeClient<SimRuntime>,
+    state: DiscreteStepDeviceState<SimRuntime>,
+}
+
 #[derive(Clone)]
 enum BandStepperInner {
     /// Device-resident path.
     #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
-    Device {
-        client: ComputeClient<SimRuntime>,
-        state: DiscreteStepDeviceState<SimRuntime>,
-    },
+    Device(Box<BandStepperDevice>),
     /// Host-slice fallback.
     Host {
         phase: Vec<f32>,
@@ -899,9 +910,9 @@ impl core::fmt::Debug for BandStepperInner {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
-            Self::Device { state, .. } => f
+            Self::Device(dev) => f
                 .debug_struct("Device")
-                .field("n", &state.n())
+                .field("n", &dev.state.n())
                 .finish_non_exhaustive(),
             Self::Host { phase, .. } => f.debug_struct("Host").field("n", &phase.len()).finish(),
         }
@@ -959,10 +970,10 @@ impl GpuBandStepper {
             return Ok(Self {
                 band_sizes,
                 params,
-                inner: BandStepperInner::Device {
+                inner: BandStepperInner::Device(Box::new(BandStepperDevice {
                     client,
                     state: dev_state,
-                },
+                })),
             });
         }
 
@@ -981,7 +992,7 @@ impl GpuBandStepper {
     pub fn n_oscillators(&self) -> usize {
         match &self.inner {
             #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
-            BandStepperInner::Device { state, .. } => state.n(),
+            BandStepperInner::Device(dev) => dev.state.n(),
             BandStepperInner::Host { phase, .. } => phase.len(),
         }
     }
@@ -1006,8 +1017,8 @@ impl GpuBandStepper {
     pub fn state(&self) -> Result<OscillatorState, SimError> {
         match &self.inner {
             #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
-            BandStepperInner::Device { client, state } => {
-                let (phase, amp, freq) = state.to_host(client)?;
+            BandStepperInner::Device(dev) => {
+                let (phase, amp, freq) = dev.state.to_host(&dev.client)?;
                 OscillatorState::new(to_f64(&phase), to_f64(&amp), to_f64(&freq), None)
                     .map_err(SimError::from)
             }
@@ -1032,8 +1043,8 @@ impl GpuBandStepper {
     pub fn step(&mut self) -> Result<DiscreteStepReport, SimError> {
         match &mut self.inner {
             #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
-            BandStepperInner::Device { client, state } => {
-                let report = discrete_step_device(client, state, &self.params)?;
+            BandStepperInner::Device(dev) => {
+                let report = discrete_step_device(&dev.client, &mut dev.state, &self.params)?;
                 Ok(report)
             }
             BandStepperInner::Host {
@@ -1371,12 +1382,12 @@ mod tests {
         for _ in 0..4 {
             (p, a, f) = step_cpu(&p, &a, &f, &params).unwrap();
         }
-        for i in 0..n {
+        for (i, &pi) in p.iter().enumerate().take(n) {
             assert!(
-                (got.phase[i] - f64::from(p[i])).abs() < 1e-5,
+                (got.phase[i] - f64::from(pi)).abs() < 1e-5,
                 "phase[{i}]: got={}, expected={}",
                 got.phase[i],
-                f64::from(p[i])
+                f64::from(pi)
             );
         }
     }
@@ -1597,12 +1608,12 @@ mod tests {
         for _ in 0..3 {
             (p, a, f) = discrete_step_cpu(&p, &a, &f, band_sizes, &params).unwrap();
         }
-        for i in 0..got.n_oscillators() {
+        for (i, &pi) in p.iter().enumerate().take(got.n_oscillators()) {
             assert!(
-                (got.phase[i] - f64::from(p[i])).abs() < 1e-5,
+                (got.phase[i] - f64::from(pi)).abs() < 1e-5,
                 "phase[{i}]: got={}, expected={}",
                 got.phase[i],
-                f64::from(p[i])
+                f64::from(pi)
             );
         }
     }
