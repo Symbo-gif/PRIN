@@ -167,7 +167,7 @@ count 253 → 256. See
 | 0144T | WP-036E | S4 — Documentation | [GPU device-resident execution path](0144T-wp036e-s4-gpu-device-resident-execution-path.md) | COMPLETE |
 | 0144U | WP-036F | S1 — Coding | [DirectML controller-graph execution](0144U-wp036f-s1-directml-controller-graph-execution.md) | COMPLETE |
 | 0144V | WP-036F | S2 — Audit | [DirectML controller-graph execution](0144V-wp036f-s2-directml-controller-graph-execution.md) | COMPLETE — PASS-WITH-FINDINGS (1 D2, 1 D4) |
-| 0144W | WP-036F | S3 — Remediation | [DirectML controller-graph execution](0144W-wp036f-s3-directml-controller-graph-execution.md) | PLANNED |
+| 0144W | WP-036F | S3 — Remediation | [DirectML controller-graph execution](0144W-wp036f-s3-directml-controller-graph-execution.md) | COMPLETE — WP036F-F1/F2 FIXED, delta re-audit CLEAN |
 | 0144X | WP-036F | S4 — Documentation | [DirectML controller-graph execution](0144X-wp036f-s4-directml-controller-graph-execution.md) | PLANNED |
 | 0144Y | WP-036G | S1 — Coding | [Deferred-Validation register consolidation and permanent dispositions](0144Y-wp036g-s1-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
 | 0144Z | WP-036G | S2 — Audit | [Deferred-Validation register consolidation and permanent dispositions](0144Z-wp036g-s2-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |

@@ -1,6 +1,8 @@
 # Session 0144W — WP-036F S3: Remediation — DirectML controller-graph execution
 
-**Status:** PLANNED
+**Status:** COMPLETE — WP036F-F1 and WP036F-F2 both `FIXED`; delta re-audit
+CLEAN (`DOCS/audits/036f-wp036f-audit.md` §7). Fix commits `a9ad913` /
+`70781ca`; closure commit local only (push at S4 `0144X` per amendment #28).
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036F
 **Session type:** S3 — Remediation

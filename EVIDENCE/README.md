@@ -53,6 +53,11 @@ session that produced it.
   (`max_abs_diff_vs_cpu`, `rtol=1e-5, atol=1e-6`), and the DirectML-vs-CPU
   median inference latency. Regenerate with
   `tools/wp036f_provider_latency.py`.
+- [`0144W-wp036f-s3-remediation-gate.md`](0144W-wp036f-s3-remediation-gate.md)
+  — WP-036F S3 (`0144W`) closure evidence for audit findings WP036F-F1 (D2,
+  changed-code coverage 94 % → 100 % on the two new tools after nine added
+  tests) and WP036F-F2 (D4, `mypy --strict` on both tools 3 errors → 0), plus
+  the touched-area delta re-audit gate re-run.
 
 ## Rules
 

@@ -383,7 +383,26 @@ push is at S4 (`0144X`) per the amendment #28 cadence.
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP036F-F1 | FIXED / … | `<sha>` | |
-| WP036F-F2 | FIXED / CARRIED(1) / … | `<sha>` | |
+| WP036F-F1 | **FIXED.** Nine targeted tests added to `tests/test_wp036f_reexport.py` — `TestTransformErrorPaths` (non-rank-2 `Gemm` weight `ValueError`; pre-existing colliding `net.N.bias` initializer `ValueError`), `TestCheckDriftBranches` (`_check` over an empty graph / no `Gemm`; a three-input `Gemm` whose bias is a graph input rather than an initializer; a non-zero bias initializer; a manifest naming a missing file; a manifest with a correct byte size but a stale `sha256`), and `TestProviderLatencyToolEdgeCases` (`_pre_transform_check` with `_PRISTINE` monkeypatched to an absent path; `main` with `available_providers()` monkeypatched to exclude `DmlExecutionProvider`). Every previously-uncovered instrumentable branch of both new tools is now exercised; no residual defensive/unreachable line remains to document. No tool source or assertion changed. | `a9ad913` | `pytest tests/test_wp036f_reexport.py --cov=tools.wp036f_reexport_controller --cov=tools.wp036f_provider_latency --cov-report=term-missing` → `wp036f_reexport_controller.py` **100%**, `wp036f_provider_latency.py` **100%**, **TOTAL 100%** (30 passed), up from 92% / 97% / 94% (21 passed) at S2. `pytest -m "not slow and not gpu"` 2774 passed / 202 skipped / 30 deselected (+9 vs S2). Full table in `EVIDENCE/0144W-wp036f-s3-remediation-gate.md`. |
+| WP036F-F2 | **FIXED** (not carried). `tools/wp036f_reexport_controller.py:148` — the stale `# type: ignore[arg-type]` on `list(manifest["files"])` (mypy actually emits `call-overload`) replaced with `list(cast("list[dict[str, object]]", manifest["files"]))` + `from typing import cast`. `tools/wp036f_provider_latency.py:131` — `np.allclose(dml_out, cpu_out, **_TOL)` splat replaced with explicit `rtol=_RTOL, atol=_ATOL`; new module constants `_RTOL = 1e-5` / `_ATOL = 1e-6`, and `_TOL` (still serialised verbatim into the evidence JSON's `tolerance` field) is now `{"rtol": _RTOL, "atol": _ATOL}`. Run-time behaviour byte-identical. | `70781ca` | `mypy --strict tools/wp036f_reexport_controller.py tools/wp036f_provider_latency.py` → **`Success: no issues found in 2 source files`** (was 3 errors at S2). `ruff check` / `ruff format --check` / `bandit` / `interrogate` unchanged clean. |
 
-**Delta re-audit date:** YYYY-MM-DD — **Result:** CLEAN / findings remain
+**Delta re-audit date:** 2026-09-02 — **Result:** **CLEAN.** Both findings
+`FIXED` (no amendment required). Independent re-run of the touched areas on the
+maintainer host (`main` @ `70781ca`): scoped changed-code coverage **100%**
+(both tool modules, 30 tests); `pytest tests/test_wp036f_reexport.py
+tests/test_daemon_controller.py parity/test_parity_subconscious.py` 135 passed /
+1 skipped; `pytest -m "not slow and not gpu"` 2774 passed / 202 skipped;
+`python tools/wp036f_reexport_controller.py --check` OK; `cargo test -p
+prin-daemon` (`integration_controller_model` 7/7, `parity_subconscious` 8/8, lib
+163) 0 failed; `cargo fmt --all -- --check` + `cargo clippy --workspace
+--all-targets -- -D warnings` clean; `ruff` / `ruff format` clean; `mypy
+python/prin --strict` 0 errors / `mypy --strict` on both new tools 0 errors;
+`interrogate` 97.6%; `bandit` 0; `cargo audit` exit 0 (3 governed warnings, no
+`Cargo.toml`/`Cargo.lock` change); `pip-audit .` clean; scoped Snyk Code 0.
+`git diff b7d3ee7..70781ca` touches no dependency/manifest file — Snyk Open
+Source correctly not triggered. No new source finding. Evidence:
+`EVIDENCE/0144W-wp036f-s3-remediation-gate.md`.
+
+Per amendment #28 the WP-036F `0144U`–`0144W` commits remain **local only**;
+CI runs once at the S4 push (`0144X`) over the whole cycle range. DV-006
+register row + DoD item 7 update stay a WP-036F S4 action per amendment #38.

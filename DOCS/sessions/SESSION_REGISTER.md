@@ -522,7 +522,7 @@ introduction and are not retroactively added here; this table starts with
 | 0144T | 6 | WP-036E | S4 — Documentation | [GPU device-resident execution path](phase-6/0144T-wp036e-s4-gpu-device-resident-execution-path.md) | COMPLETE |
 | 0144U | 6 | WP-036F | S1 — Coding | [DirectML controller-graph execution](phase-6/0144U-wp036f-s1-directml-controller-graph-execution.md) | COMPLETE |
 | 0144V | 6 | WP-036F | S2 — Audit | [DirectML controller-graph execution](phase-6/0144V-wp036f-s2-directml-controller-graph-execution.md) | COMPLETE |
-| 0144W | 6 | WP-036F | S3 — Remediation | [DirectML controller-graph execution](phase-6/0144W-wp036f-s3-directml-controller-graph-execution.md) | PLANNED |
+| 0144W | 6 | WP-036F | S3 — Remediation | [DirectML controller-graph execution](phase-6/0144W-wp036f-s3-directml-controller-graph-execution.md) | COMPLETE — both findings FIXED, delta re-audit CLEAN |
 | 0144X | 6 | WP-036F | S4 — Documentation | [DirectML controller-graph execution](phase-6/0144X-wp036f-s4-directml-controller-graph-execution.md) | PLANNED |
 | 0144Y | 6 | WP-036G | S1 — Coding | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144Y-wp036g-s1-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
 | 0144Z | 6 | WP-036G | S2 — Audit | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144Z-wp036g-s2-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
