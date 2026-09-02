@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **ETCA-002 (`2026-09-02`) — Executive Testing and CI Audit Session 002;
+  verdict `FAIL`.** Post-push CI-failure audit of the batched WP-036E + WP-036F
+  range (`6343416..adbb1e3`, sessions `0144Q`–`0144X`). New report
+  `DOCS/audits/EXECUTIVE_TESTING_AND_CI_AUDIT_REPORT_002.md`;
+  `DOCS/sessions/SESSION_REGISTER.md` ETCA table gains the ETCA-002 row. Ten
+  findings — **one D1** (T-F1: WP-036E never pushed as its own S4 cycle and
+  WP-036F S4 pushed the batched range **red**, yet both WPs were declared
+  closed, PSR-036F issued, the DV-006 DirectML half marked CLOSED, and plan
+  amendment #13 marked discharged, with the S4 documentation asserting "CI is
+  green" — amendment #28's S4 exit criterion unmet for both WPs; recurrence of
+  ETCA-001 T-F4), **three D2** (T-F2 `mypy --strict` red in CI / green locally
+  from an unpinned `python.yml` `lint` toolchain; T-F3 five DirectML/provider
+  tests hard-fail every CI Windows leg because their `skipif` guards probe
+  `ort.get_available_providers()` build capability rather than device
+  executability; T-F4 false CI-verification claims in the WP-036F audit and S4
+  doc), **four D3** (T-F5 `nightly` `full-suite` permanently red on an
+  untracked DV-032-class perf-ratio flake; T-F6 `gpu.yml` opt-in `[gpu]` tag →
+  all GPU CI skipped on the push that closed two GPU work packages; T-F7 no
+  branch protection on `main`; T-F8 unbounded self-hosted `rust` Windows leg),
+  **two D4** (T-F9 doc/state drift; T-F10 unpinned `lint` toolchain hygiene).
+  Read-only w.r.t. first-party source/test code — all findings passed forward
+  to a dedicated ETCA-002 remediation session with governance recommendations
+  G1–G8. **Blocking:** WP-036F is not closed and WP-036G S1 (`0144Y`) must not
+  begin until T-F1–T-F4 are fixed and `origin/main` CI (including a `[gpu]`
+  run) is confirmed green.
 - **WP-036F S4 documentation (`0144X`) — WP-036F closed; DirectML half of
   DV-006 CLOSED.** READMEs refreshed (`tests/`, `models/`); Sphinx daemon API
   page and Migration Guide note the re-exported three-input-`Gemm` controller
