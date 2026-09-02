@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`mean_field_rk4::cubecl` RK4 step `launch_count` 8 → 9 (WP-036E S1 sub-pass
+  `0144Q1`).** The device-resident step has no host-resident input slice, so
+  stage 1 now takes its order parameter from the same device-side hierarchical
+  reduction stages 2–4 use (one extra launch). `StepReport::launch_count` is now
+  9 = 4 stage kernels + 4 order-parameter reductions + 1 finalize;
+  `discrete_step` stays at 10. Numerically within the kernel-equivalence
+  tolerance (stage-1 `Z` is a block reduction + host `f64` combine instead of a
+  host `f64` sum). `CubeclBufferPool` drops its three `out_*` handles (the
+  device path allocates the finalize outputs per step) and gains a zeroed
+  `k_zero` handle allocated once at pool construction.
 - **Plan amendment #43 (2026-09-02) — WP-036E S1 (`0144Q`) re-scoped and
   decomposed.** S1-start repository verification established that a *true
   bidirectional zero-copy Torch↔CubeCL DLPack kernel-input path* (DV-030's
@@ -94,6 +104,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`prin-kernels` device-`Handle` dispatch layer (WP-036E S1 sub-pass
+  `0144Q1`, plan amendment #43).** Each of the three CubeCL kernel modules gains
+  a device-buffer-in/out entry point alongside the existing host-slice one, so a
+  caller holding CubeCL device buffers runs the kernel with **no host
+  transfer**: `sparse_knn::cubecl::{SparseKnnDeviceState, SparseKnnDeviceDerivs,
+  sparse_knn_coupling_device}`; `mean_field_rk4::cubecl::{MeanFieldDeviceState,
+  step_cubecl_device}` (steps the state in place across calls);
+  `discrete_step::cubecl::{DiscreteStepDeviceState, discrete_step_device}`
+  (per-band device buffers). The host-slice paths (`*_cubecl` / `*_with_pool` /
+  `*_auto`) become thin `upload → device path → download` wrappers — one
+  algorithm, one implementation (Coding Standards §1) — with behaviour
+  unchanged. `#[cube]` kernel bodies are untouched; no new `unsafe`; no new
+  `prin` public symbol. Kernel-equivalence tests for every new device entry
+  point vs the CPU reference (`rtol=1e-5, atol=1e-6`) on the `cpu`, `cuda`
+  (RTX 4060), and `wgpu` backends.
 - **`.github/workflows/nightly.yml` — scheduled full-suite + enforcing
   benchmark-regression gate (ETCA-001 T-F7).** Runs at 05:00 UTC (and on
   `workflow_dispatch`): a `full-suite` job (`pytest tests/ parity/` including

@@ -39,6 +39,8 @@
 #![allow(unsafe_code)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
+use core::marker::PhantomData;
+
 use cubecl::prelude::*;
 use cubecl::server::Handle;
 
@@ -136,7 +138,206 @@ fn read_f32s<R: Runtime>(
     Ok(f32::from_bytes(&bytes).to_vec())
 }
 
+/// Device-resident input for the sparse k-NN coupling derivative kernel: the
+/// three oscillator-state buffers plus the CSR neighbour topology, all held as
+/// CubeCL device [`Handle`]s.
+///
+/// A caller that already holds these buffers on the device (e.g. a `prin-sim`
+/// GPU engine keeping state device-resident across steps) passes this straight
+/// to [`sparse_knn_coupling_device`] with **no host transfer**;
+/// [`SparseKnnDeviceState::upload`] is the one-shot host→device constructor the
+/// thin [`sparse_knn_coupling_cubecl`] wrapper uses.
+pub struct SparseKnnDeviceState<R: Runtime> {
+    /// Oscillator count `N`.
+    pub n: usize,
+    /// Length of the [`indices`](Self::indices) buffer: `nnz`, or `1` for a
+    /// dummy single-element buffer when the graph has no edges (a device
+    /// allocation of length 0 is not portable).
+    pub indices_len: usize,
+    /// `phase` buffer — `N` `f32`s.
+    pub phase: Handle,
+    /// `amplitude` buffer — `N` `f32`s.
+    pub amplitude: Handle,
+    /// `frequency` buffer — `N` `f32`s.
+    pub frequency: Handle,
+    /// CSR row-pointer buffer — `N + 1` `u32`s.
+    pub indptr: Handle,
+    /// CSR neighbour-index buffer — [`indices_len`](Self::indices_len) `u32`s.
+    pub indices: Handle,
+    runtime: PhantomData<R>,
+}
+
+impl<R: Runtime> SparseKnnDeviceState<R> {
+    /// Assemble a device state from buffers the caller already holds on the
+    /// device (no transfer). `indices_len` is `nnz`, or `1` for the no-edge
+    /// dummy buffer.
+    pub fn from_parts(
+        n: usize,
+        indices_len: usize,
+        phase: Handle,
+        amplitude: Handle,
+        frequency: Handle,
+        indptr: Handle,
+        indices: Handle,
+    ) -> Self {
+        Self {
+            n,
+            indices_len,
+            phase,
+            amplitude,
+            frequency,
+            indptr,
+            indices,
+            runtime: PhantomData,
+        }
+    }
+
+    /// Upload host state buffers and the CSR topology to the device.
+    ///
+    /// The caller is responsible for having validated `phase`/`amplitude`/
+    /// `frequency` lengths against `graph` (the [`sparse_knn_coupling_cubecl`]
+    /// wrapper does this).
+    pub fn upload(
+        client: &ComputeClient<R>,
+        phase: &[f32],
+        amplitude: &[f32],
+        frequency: &[f32],
+        graph: &SparseKnnGraph,
+    ) -> Self {
+        let indices_len = graph.nnz().max(1);
+        let indices = if graph.nnz() > 0 {
+            client.create_from_slice(u32::as_bytes(graph.indices()))
+        } else {
+            client.create_from_slice(u32::as_bytes(&[0u32]))
+        };
+        Self {
+            n: phase.len(),
+            indices_len,
+            phase: client.create_from_slice(f32::as_bytes(phase)),
+            amplitude: client.create_from_slice(f32::as_bytes(amplitude)),
+            frequency: client.create_from_slice(f32::as_bytes(frequency)),
+            indptr: client.create_from_slice(u32::as_bytes(graph.indptr())),
+            indices,
+            runtime: PhantomData,
+        }
+    }
+}
+
+/// Device-resident output of the sparse k-NN coupling derivative kernel:
+/// `(dphase, damplitude, dfrequency)` as CubeCL device [`Handle`]s.
+pub struct SparseKnnDeviceDerivs<R: Runtime> {
+    /// Oscillator count `N`.
+    pub n: usize,
+    /// `dphase` buffer — `N` `f32`s.
+    pub dphase: Handle,
+    /// `damplitude` buffer — `N` `f32`s.
+    pub damplitude: Handle,
+    /// `dfrequency` buffer — `N` `f32`s.
+    pub dfrequency: Handle,
+    runtime: PhantomData<R>,
+}
+
+impl<R: Runtime> SparseKnnDeviceDerivs<R> {
+    /// Allocate the three `N`-length output buffers on the device.
+    pub fn empty(client: &ComputeClient<R>, n: usize) -> Self {
+        let bytes = n * core::mem::size_of::<f32>();
+        Self {
+            n,
+            dphase: client.empty(bytes),
+            damplitude: client.empty(bytes),
+            dfrequency: client.empty(bytes),
+            runtime: PhantomData,
+        }
+    }
+
+    /// Assemble a derivative-output set from buffers the caller already holds.
+    pub fn from_parts(n: usize, dphase: Handle, damplitude: Handle, dfrequency: Handle) -> Self {
+        Self {
+            n,
+            dphase,
+            damplitude,
+            dfrequency,
+            runtime: PhantomData,
+        }
+    }
+
+    /// Read the three output buffers back to host `Vec<f32>`s.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SparseKnnError::BackendReadError`] on a device read-back
+    /// failure.
+    pub fn to_host(
+        &self,
+        client: &ComputeClient<R>,
+    ) -> Result<SparseKnnCubeclOutput, SparseKnnError> {
+        Ok((
+            read_f32s(client, &self.dphase)?,
+            read_f32s(client, &self.damplitude)?,
+            read_f32s(client, &self.dfrequency)?,
+        ))
+    }
+}
+
+/// Execute the sparse k-NN coupling derivative kernel on device-resident
+/// buffers, with **no host transfer** — one algorithm, one implementation
+/// (Coding Standards §1): [`sparse_knn_coupling_cubecl`] is the thin
+/// upload→this→download wrapper over it.
+///
+/// The `#[cube]` kernel launched here is byte-for-byte the one the host-slice
+/// path launches; only the buffer plumbing differs.
+///
+/// # Errors
+///
+/// Returns [`SparseKnnError::NonFiniteParameter`] for a non-finite `k`,
+/// `decay`, or `gamma`, or [`SparseKnnError::DeviceBufferMismatch`] if `state`
+/// and `derivs` were sized for different oscillator counts.
+pub fn sparse_knn_coupling_device<R: Runtime>(
+    client: &ComputeClient<R>,
+    state: &SparseKnnDeviceState<R>,
+    params: &SparseKnnParams,
+    derivs: &mut SparseKnnDeviceDerivs<R>,
+) -> Result<(), SparseKnnError> {
+    validate_param("k", params.k)?;
+    validate_param("decay", params.decay)?;
+    validate_param("gamma", params.gamma)?;
+    if state.n != derivs.n {
+        return Err(SparseKnnError::DeviceBufferMismatch {
+            state: state.n,
+            derivs: derivs.n,
+        });
+    }
+
+    let n = state.n;
+    let cube_dim = CubeDim::new_1d(256);
+    let cube_count = CubeCount::Static(n.div_ceil(256).max(1) as u32, 1, 1);
+
+    sparse_knn_coupling::launch::<f32, R>(
+        client,
+        cube_count,
+        cube_dim,
+        array_arg(&state.phase, n),
+        array_arg(&state.amplitude, n),
+        array_arg(&state.frequency, n),
+        array_arg_u32(&state.indptr, n + 1),
+        array_arg_u32(&state.indices, state.indices_len),
+        params.k,
+        params.decay,
+        params.gamma,
+        array_arg(&derivs.dphase, n),
+        array_arg(&derivs.damplitude, n),
+        array_arg(&derivs.dfrequency, n),
+    );
+
+    Ok(())
+}
+
 /// Execute the sparse k-NN coupling derivative kernel on a CubeCL runtime.
+///
+/// Thin host-slice wrapper: uploads `(phase, amplitude, frequency)` and the
+/// CSR graph to the device, runs [`sparse_knn_coupling_device`], and downloads
+/// the result. Behaviour is identical to the pre-WP-036E per-call
+/// upload/launch/download path.
 ///
 /// # Errors
 ///
@@ -155,45 +356,10 @@ pub fn sparse_knn_coupling_cubecl<R: Runtime>(
     validate_param("decay", params.decay)?;
     validate_param("gamma", params.gamma)?;
 
-    let phase_h = client.create_from_slice(f32::as_bytes(phase));
-    let amp_h = client.create_from_slice(f32::as_bytes(amplitude));
-    let freq_h = client.create_from_slice(f32::as_bytes(frequency));
-    let indptr_h = client.create_from_slice(u32::as_bytes(graph.indptr()));
-    let indices_len = graph.nnz().max(1);
-    let indices_h = if graph.nnz() > 0 {
-        client.create_from_slice(u32::as_bytes(graph.indices()))
-    } else {
-        client.create_from_slice(u32::as_bytes(&[0u32]))
-    };
-    let dphase_h = client.empty(n * core::mem::size_of::<f32>());
-    let damp_h = client.empty(n * core::mem::size_of::<f32>());
-    let dfreq_h = client.empty(n * core::mem::size_of::<f32>());
-
-    let cube_dim = CubeDim::new_1d(256);
-    let cube_count = CubeCount::Static(n.div_ceil(256).max(1) as u32, 1, 1);
-
-    sparse_knn_coupling::launch::<f32, R>(
-        client,
-        cube_count,
-        cube_dim,
-        array_arg(&phase_h, n),
-        array_arg(&amp_h, n),
-        array_arg(&freq_h, n),
-        array_arg_u32(&indptr_h, n + 1),
-        array_arg_u32(&indices_h, indices_len),
-        params.k,
-        params.decay,
-        params.gamma,
-        array_arg(&dphase_h, n),
-        array_arg(&damp_h, n),
-        array_arg(&dfreq_h, n),
-    );
-
-    let dphase = read_f32s(client, &dphase_h)?;
-    let damplitude = read_f32s(client, &damp_h)?;
-    let dfrequency = read_f32s(client, &dfreq_h)?;
-
-    Ok((dphase, damplitude, dfrequency))
+    let state = SparseKnnDeviceState::upload(client, phase, amplitude, frequency, graph);
+    let mut derivs = SparseKnnDeviceDerivs::empty(client, n);
+    sparse_knn_coupling_device(client, &state, params, &mut derivs)?;
+    derivs.to_host(client)
 }
 
 #[cfg(feature = "wgpu")]
@@ -469,6 +635,47 @@ mod tests {
             Err(e) => panic!("unexpected wgpu error: {e}"),
         }
     }
+
+    /// wgpu kernel-equivalence for the device-`Handle` entry point (WP-036E
+    /// S1) against the CPU reference, at a non-block-aligned `N`.
+    #[test]
+    fn wgpu_device_dispatch_matches_cpu_reference() {
+        use crate::sparse_knn::sparse_knn_derivatives_cpu;
+        use cubecl::wgpu::{WgpuDevice, WgpuRuntime};
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        let Ok(client) = catch_unwind(AssertUnwindSafe(|| {
+            WgpuRuntime::client(&WgpuDevice::DefaultDevice)
+        })) else {
+            return; // No wgpu adapter on this host — covered by the `_auto` fallback path.
+        };
+
+        let n = 1000;
+        let graph = ring_graph(n, 5);
+        let tau = core::f32::consts::TAU;
+        let phase: Vec<_> = (0..n).map(|i| (0.03 * i as f32).rem_euclid(tau)).collect();
+        let amplitude: Vec<_> = (0..n).map(|i| 0.5 + 0.5 * (i as f32 / n as f32)).collect();
+        let frequency: Vec<_> = (0..n).map(|i| 0.01 * (i as f32 - n as f32 / 2.0)).collect();
+        let params = SparseKnnParams {
+            k: 1.5,
+            decay: 0.2,
+            gamma: 0.02,
+        };
+
+        let (cpu_p, cpu_a, cpu_f) =
+            sparse_knn_derivatives_cpu(&phase, &amplitude, &frequency, &graph, &params).unwrap();
+
+        let state = SparseKnnDeviceState::<WgpuRuntime>::upload(
+            &client, &phase, &amplitude, &frequency, &graph,
+        );
+        let mut derivs = SparseKnnDeviceDerivs::<WgpuRuntime>::empty(&client, n);
+        sparse_knn_coupling_device(&client, &state, &params, &mut derivs).unwrap();
+        let (dev_p, dev_a, dev_f) = derivs.to_host(&client).unwrap();
+
+        assert_allclose(&dev_p, &cpu_p, 1e-5, 1e-6);
+        assert_allclose(&dev_a, &cpu_a, 1e-5, 1e-6);
+        assert_allclose(&dev_f, &cpu_f, 1e-5, 1e-6);
+    }
 }
 
 #[cfg(all(test, feature = "cpu"))]
@@ -568,6 +775,122 @@ mod tests_cpu {
         assert_allclose(&auto_a, &ref_a, 1e-5, 1e-6);
         assert_allclose(&auto_f, &ref_f, 1e-5, 1e-6);
     }
+
+    /// Kernel-equivalence for the device-`Handle` entry point (WP-036E S1):
+    /// `sparse_knn_coupling_device` on uploaded buffers must match the CPU
+    /// reference within Testing Standards §3 GPU tolerance, and the host-slice
+    /// wrapper (`sparse_knn_coupling_cubecl`) — now a thin
+    /// upload→device→download shell over it — must agree bit-for-bit with the
+    /// device path.
+    #[test]
+    fn device_dispatch_matches_cpu_reference_and_host_wrapper() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        let client = CpuRuntime::client(&CpuDevice);
+
+        let n = 300;
+        let graph = ring_graph(n, 3);
+        let phase: Vec<_> = (0..n)
+            .map(|i| (0.03 * i as f32).rem_euclid(core::f32::consts::TAU))
+            .collect();
+        let amplitude: Vec<_> = (0..n).map(|i| 0.2 + 0.001 * i as f32).collect();
+        let frequency: Vec<_> = (0..n).map(|i| 0.01 * (i as f32 - n as f32 / 2.0)).collect();
+        let params = SparseKnnParams {
+            k: 0.8,
+            decay: 0.15,
+            gamma: 0.005,
+        };
+
+        let (ref_p, ref_a, ref_f) =
+            sparse_knn_derivatives_cpu(&phase, &amplitude, &frequency, &graph, &params).unwrap();
+
+        let state = SparseKnnDeviceState::<CpuRuntime>::upload(
+            &client, &phase, &amplitude, &frequency, &graph,
+        );
+        let mut derivs = SparseKnnDeviceDerivs::<CpuRuntime>::empty(&client, n);
+        sparse_knn_coupling_device(&client, &state, &params, &mut derivs).unwrap();
+        let (dev_p, dev_a, dev_f) = derivs.to_host(&client).unwrap();
+
+        assert_allclose(&dev_p, &ref_p, 1e-5, 1e-6);
+        assert_allclose(&dev_a, &ref_a, 1e-5, 1e-6);
+        assert_allclose(&dev_f, &ref_f, 1e-5, 1e-6);
+
+        let (wrap_p, wrap_a, wrap_f) =
+            sparse_knn_coupling_cubecl(&client, &phase, &amplitude, &frequency, &graph, &params)
+                .unwrap();
+        assert_eq!(wrap_p, dev_p);
+        assert_eq!(wrap_a, dev_a);
+        assert_eq!(wrap_f, dev_f);
+    }
+
+    #[test]
+    fn device_dispatch_handles_no_edge_graph() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        let client = CpuRuntime::client(&CpuDevice);
+
+        let n = 16;
+        let graph = SparseKnnGraph::from_csr(n, vec![0u32; n + 1], vec![]).unwrap();
+        let phase: Vec<_> = (0..n).map(|i| 0.1 * i as f32).collect();
+        let amplitude = vec![1.0_f32; n];
+        let frequency: Vec<_> = (0..n).map(|i| 0.05 * (i as f32 - 8.0)).collect();
+        let params = SparseKnnParams {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+        };
+
+        let state = SparseKnnDeviceState::<CpuRuntime>::upload(
+            &client, &phase, &amplitude, &frequency, &graph,
+        );
+        assert_eq!(state.indices_len, 1);
+        let mut derivs = SparseKnnDeviceDerivs::<CpuRuntime>::empty(&client, n);
+        sparse_knn_coupling_device(&client, &state, &params, &mut derivs).unwrap();
+        let (dp, da, df) = derivs.to_host(&client).unwrap();
+
+        for i in 0..n {
+            assert!((dp[i] - frequency[i]).abs() < 1e-6);
+            assert!((da[i] - (-params.decay * amplitude[i])).abs() < 1e-6);
+            assert_eq!(df[i], 0.0);
+        }
+    }
+
+    #[test]
+    fn device_dispatch_rejects_buffer_mismatch_and_non_finite_param() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        let client = CpuRuntime::client(&CpuDevice);
+
+        let n = 8;
+        let graph = ring_graph(n, 1);
+        let phase = vec![0.1_f32; n];
+        let params = SparseKnnParams {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+        };
+        let state =
+            SparseKnnDeviceState::<CpuRuntime>::upload(&client, &phase, &phase, &phase, &graph);
+
+        let mut wrong = SparseKnnDeviceDerivs::<CpuRuntime>::empty(&client, n + 1);
+        let err = sparse_knn_coupling_device(&client, &state, &params, &mut wrong).unwrap_err();
+        assert!(matches!(
+            err,
+            SparseKnnError::DeviceBufferMismatch {
+                state: 8,
+                derivs: 9
+            }
+        ));
+
+        let mut derivs = SparseKnnDeviceDerivs::<CpuRuntime>::empty(&client, n);
+        let bad_params = SparseKnnParams {
+            k: f32::NAN,
+            ..params
+        };
+        let err =
+            sparse_knn_coupling_device(&client, &state, &bad_params, &mut derivs).unwrap_err();
+        assert!(matches!(
+            err,
+            SparseKnnError::NonFiniteParameter { name: "k", .. }
+        ));
+    }
 }
 
 #[cfg(all(test, feature = "cuda"))]
@@ -641,5 +964,48 @@ mod tests_cuda {
         let err = try_sparse_knn_coupling_cuda(&phase, &amplitude, &frequency, &graph, &params)
             .unwrap_err();
         assert!(matches!(err, SparseKnnError::LengthMismatch { .. }));
+    }
+
+    /// CUDA kernel-equivalence for the device-`Handle` entry point (WP-036E
+    /// S1): the device path runs entirely on device buffers (`no host
+    /// transfer`), and both it and the re-expressed host-slice wrapper agree
+    /// with the CPU reference.
+    #[test]
+    fn cuda_device_dispatch_matches_cpu_reference() {
+        use cubecl::cuda::{CudaDevice, CudaRuntime};
+        let client = CudaRuntime::client(&CudaDevice::default());
+
+        let n = 4096;
+        let graph = ring_graph(n, 7);
+        let tau = core::f32::consts::TAU;
+        let phase: Vec<_> = (0..n)
+            .map(|i| (0.01 * (i % 617) as f32).rem_euclid(tau))
+            .collect();
+        let amplitude: Vec<_> = (0..n).map(|i| 0.5 + 0.5 * (i as f32 / n as f32)).collect();
+        let frequency: Vec<_> = (0..n).map(|i| 0.02 * ((i % 100) as f32 - 50.0)).collect();
+        let params = SparseKnnParams {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+        };
+
+        let (cpu_p, cpu_a, cpu_f) =
+            sparse_knn_derivatives_cpu(&phase, &amplitude, &frequency, &graph, &params).unwrap();
+
+        let state = SparseKnnDeviceState::<CudaRuntime>::upload(
+            &client, &phase, &amplitude, &frequency, &graph,
+        );
+        let mut derivs = SparseKnnDeviceDerivs::<CudaRuntime>::empty(&client, n);
+        sparse_knn_coupling_device(&client, &state, &params, &mut derivs).unwrap();
+        let (dev_p, dev_a, dev_f) = derivs.to_host(&client).unwrap();
+
+        assert_allclose(&dev_p, &cpu_p, 1e-5, 1e-6);
+        assert_allclose(&dev_a, &cpu_a, 1e-5, 1e-6);
+        assert_allclose(&dev_f, &cpu_f, 1e-5, 1e-6);
+
+        let (wrap_p, _, _) =
+            sparse_knn_coupling_cubecl(&client, &phase, &amplitude, &frequency, &graph, &params)
+                .unwrap();
+        assert_eq!(wrap_p, dev_p);
     }
 }

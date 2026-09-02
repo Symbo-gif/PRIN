@@ -1,6 +1,6 @@
 # Session 0144Q1 — WP-036E S1 (sub-pass 1/3): `prin-kernels` device-`Handle` dispatch layer
 
-**Status:** PLANNED
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036E
 **Session type:** S1 — Coding

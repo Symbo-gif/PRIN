@@ -125,6 +125,15 @@ pub enum SparseKnnError {
         /// Backend name.
         name: &'static str,
     },
+    /// A device dispatch was handed a state and a derivative-output buffer set
+    /// sized for different oscillator counts.
+    #[error("device buffer count mismatch: state has {state} oscillators, derivs has {derivs}")]
+    DeviceBufferMismatch {
+        /// Oscillator count the device state was built for.
+        state: usize,
+        /// Oscillator count the derivative-output buffers were built for.
+        derivs: usize,
+    },
 }
 
 /// A sparse phase-neighbor graph in CSR (compressed sparse row) format.

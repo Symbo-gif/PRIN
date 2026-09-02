@@ -5,6 +5,18 @@
 //! [`super::step_cpu`] remains the numerical authority; this path is checked
 //! against it in the kernel-equivalence tests.
 //!
+//! ## Device-resident dispatch (WP-036E)
+//!
+//! [`step_cubecl_device`] runs the whole 4-stage sequence on a
+//! [`MeanFieldDeviceState`] whose `(phase, amplitude, frequency)` buffers stay
+//! on the device across steps — a caller holding CubeCL device handles steps
+//! with **no host transfer**. [`step_cubecl_with_pool`] and [`step_cubecl`]
+//! are the thin host-slice wrappers over it (upload → `step_cubecl_device` →
+//! download); one algorithm, one implementation (Coding Standards §1). Because
+//! the device path has no host-resident input slice for stage 1, stage 1 takes
+//! its order parameter from the same device reduction stages 2–4 use, so the
+//! step dispatches **9** launches, not 8 — see [`StepReport::launch_count`].
+//!
 //! ## Hierarchical device-side order-parameter reduction
 //!
 //! Each RK4 stage needs the mean-field order parameter `Z` of the
@@ -45,11 +57,14 @@
 //!
 //! ## Buffer management
 //!
-//! [`step_cubecl_with_pool`] reuses preallocated device [`Handle`]s from a
-//! [`CubeclBufferPool`], eliminating per-step `client.empty()` calls. Only the 4 input handles (base state +
-//! k-zero) are created fresh each step via `client.create_from_slice` because
-//! they carry host data. The original [`step_cubecl`] allocates all handles
-//! per step and is retained for one-shot use.
+//! [`step_cubecl_with_pool`] and [`step_cubecl_device`] reuse preallocated
+//! device [`Handle`]s from a [`CubeclBufferPool`] (k1–k4, stage, the zeroed
+//! `k_zero`, and the reduction partials), eliminating per-step
+//! `client.empty()` calls for the working set. The device path allocates only
+//! the three finalize-output handles per step (moved into the
+//! [`MeanFieldDeviceState`]); the host-slice path additionally uploads the
+//! base state each call. The original [`step_cubecl`] allocates a fresh pool
+//! per call and is retained for one-shot use.
 //!
 //! SAFETY: All `unsafe` blocks are confined to `ArrayArg::from_raw_parts` with
 //! handles whose lengths are exactly `len * size_of::<f32>()` bytes. Those
@@ -58,6 +73,8 @@
 
 #![allow(unsafe_code)]
 #![deny(unsafe_op_in_unsafe_fn)]
+
+use core::marker::PhantomData;
 
 use cubecl::prelude::*;
 use cubecl::profile::TimingMethod as CubeclTimingMethod;
@@ -104,10 +121,16 @@ pub struct StepReport {
     pub wall_time_seconds: f64,
     /// How [`Self::wall_time_seconds`] was measured.
     pub timing_method: TimingMethod,
-    /// Number of kernel launches dispatched: 4 RK4 stage kernels, 3
-    /// device-side order-parameter reductions (stages 2-4; stage 1 reuses the
-    /// host-resident input state and needs no device reduction), and 1
-    /// finalize kernel.
+    /// Number of kernel launches dispatched.
+    ///
+    /// Since WP-036E the step runs device-resident ([`step_cubecl_device`],
+    /// which the host-slice wrappers delegate to), so every stage — stage 1
+    /// included — takes its order parameter from a device-side
+    /// `order_param_block_reduce` reduction: **9** = 4 RK4 stage kernels + 4
+    /// order-parameter reductions (one per stage) + 1 finalize kernel. Before
+    /// WP-036E stage 1 read its order parameter from the caller's host slice
+    /// and the count was 8. The native-CPU fallback in [`step_auto`] reports
+    /// `0` (no kernel launches).
     pub launch_count: u32,
 }
 
@@ -409,30 +432,111 @@ pub fn step_cubecl<R: Runtime>(
     step_cubecl_with_pool(client, phase, amplitude, frequency, params, &pool)
 }
 
-/// Execute one mean-field RK4 step using preallocated device buffers.
+/// Device-resident `(phase, amplitude, frequency)` state for the mean-field
+/// RK4 step, held as CubeCL device [`Handle`]s that persist across steps.
 ///
-/// Reuses the working, output, and reduction [`Handle`]s from the
-/// [`CubeclBufferPool`], eliminating per-step `client.empty()` calls. Only
-/// the 4 input handles (base state + k-zero) are created fresh via
-/// `client.create_from_slice`. The order parameter needed by stages 2-4 is
-/// computed by `order_param_device`'s hierarchical device-side reduction
-/// (see the module documentation); the whole launch sequence is timed via
+/// [`step_cubecl_device`] reads the base state from here and, on success,
+/// replaces the three handles with the stepped state — a caller stepping in a
+/// loop never touches the host. [`MeanFieldDeviceState::upload`] is the
+/// one-shot host→device constructor the thin [`step_cubecl_with_pool`] wrapper
+/// uses; [`MeanFieldDeviceState::to_host`] downloads the current state.
+pub struct MeanFieldDeviceState<R: Runtime> {
+    /// Oscillator count `N`.
+    pub n: usize,
+    /// `phase` buffer — `N` `f32`s.
+    pub phase: Handle,
+    /// `amplitude` buffer — `N` `f32`s.
+    pub amplitude: Handle,
+    /// `frequency` buffer — `N` `f32`s.
+    pub frequency: Handle,
+    runtime: PhantomData<R>,
+}
+
+impl<R: Runtime> MeanFieldDeviceState<R> {
+    /// Assemble a device state from buffers the caller already holds on the
+    /// device (no transfer).
+    pub fn from_parts(n: usize, phase: Handle, amplitude: Handle, frequency: Handle) -> Self {
+        Self {
+            n,
+            phase,
+            amplitude,
+            frequency,
+            runtime: PhantomData,
+        }
+    }
+
+    /// Upload host state buffers to the device.
+    pub fn upload(
+        client: &ComputeClient<R>,
+        phase: &[f32],
+        amplitude: &[f32],
+        frequency: &[f32],
+    ) -> Self {
+        Self {
+            n: phase.len(),
+            phase: client.create_from_slice(f32::as_bytes(phase)),
+            amplitude: client.create_from_slice(f32::as_bytes(amplitude)),
+            frequency: client.create_from_slice(f32::as_bytes(frequency)),
+            runtime: PhantomData,
+        }
+    }
+
+    /// Download the current `(phase, amplitude, frequency)` state to host
+    /// `Vec<f32>`s.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`MeanFieldRk4Error::BackendReadError`] on a device read-back
+    /// failure.
+    pub fn to_host(
+        &self,
+        client: &ComputeClient<R>,
+    ) -> Result<super::MeanFieldRk4Output, MeanFieldRk4Error> {
+        Ok((
+            read_f32s(client, &self.phase, self.n)?,
+            read_f32s(client, &self.amplitude, self.n)?,
+            read_f32s(client, &self.frequency, self.n)?,
+        ))
+    }
+}
+
+/// Execute one mean-field RK4 step on device-resident buffers, with **no host
+/// transfer** — one algorithm, one implementation (Coding Standards §1):
+/// [`step_cubecl_with_pool`] and [`step_cubecl`] are the thin
+/// upload→this→download wrappers.
+///
+/// On success `state`'s three handles are replaced with the stepped state
+/// (the old handles are freed). The `#[cube]` kernels launched here are
+/// byte-for-byte those the host-slice path launches.
+///
+/// Unlike the pre-WP-036E host path, **stage 1 also takes its order parameter
+/// from a device reduction** (there is no host-resident input slice to read it
+/// from), so the sequence dispatches 9 launches — see
+/// [`StepReport::launch_count`]. The whole sequence is timed via
 /// `ComputeClient::profile` (device-event timing where the backend supports
 /// it).
-pub fn step_cubecl_with_pool<R: Runtime>(
+///
+/// # Errors
+///
+/// Returns [`MeanFieldRk4Error`] for a non-finite/invalid parameter, an empty
+/// population, a [`CubeclBufferPool`] sized for a different `N`, a device
+/// read-back failure inside the order-parameter reduction, or a profiling
+/// failure.
+pub fn step_cubecl_device<R: Runtime>(
     client: &ComputeClient<R>,
-    phase: &[f32],
-    amplitude: &[f32],
-    frequency: &[f32],
+    state: &mut MeanFieldDeviceState<R>,
     params: &MeanFieldRk4Params,
     pool: &CubeclBufferPool<R>,
-) -> Result<StepCubeclOutput, MeanFieldRk4Error> {
-    let n = validate_state(phase, amplitude, frequency)?;
+) -> Result<StepReport, MeanFieldRk4Error> {
     validate_param("k", params.k, false)?;
     validate_param("decay", params.decay, false)?;
     validate_param("gamma", params.gamma, false)?;
     validate_param("dt", params.dt, true)?;
 
+    let n = state.n;
+    if n == 0 {
+        return Err(MeanFieldRk4Error::EmptyPopulation);
+    }
     if pool.capacity() != n {
         return Err(MeanFieldRk4Error::PoolSizeMismatch {
             capacity: pool.capacity(),
@@ -444,22 +548,41 @@ pub fn step_cubecl_with_pool<R: Runtime>(
     let half_dt = params.dt * 0.5;
     let num_blocks = pool.num_blocks();
 
-    // Input handles: created fresh each step (carry host data).
-    let base_phase_h = client.create_from_slice(f32::as_bytes(phase));
-    let base_amp_h = client.create_from_slice(f32::as_bytes(amplitude));
-    let base_freq_h = client.create_from_slice(f32::as_bytes(frequency));
-    let k_zero_h = client.create_from_slice(f32::as_bytes(&vec![0.0_f32; n]));
+    let base_phase_h = state.phase.clone();
+    let base_amp_h = state.amplitude.clone();
+    let base_freq_h = state.frequency.clone();
+
+    let byte_len = n * core::mem::size_of::<f32>();
+    let out_phase_h = client.empty(byte_len);
+    let out_amp_h = client.empty(byte_len);
+    let out_freq_h = client.empty(byte_len);
+    let fin_phase = out_phase_h.clone();
+    let fin_amp = out_amp_h.clone();
+    let fin_freq = out_freq_h.clone();
 
     let cube_dim = CubeDim::new_1d(256);
     let cube_count = CubeCount::Static(n.div_ceil(256).max(1) as u32, 1, 1);
     let reduce_cube_count = CubeCount::Static(num_blocks as u32, 1, 1);
 
     let profiled = client.profile(
-        move || -> Result<super::MeanFieldRk4Output, MeanFieldRk4Error> {
-            // Stage 1: dt_scale = 0, next_dt_scale = 0.5*dt. The order
-            // parameter of the initial state is already host-resident (it is
-            // this function's input), so no device reduction is needed.
-            let (zr, zi) = super::order_param(phase, amplitude, n_inv);
+        move || -> Result<(), MeanFieldRk4Error> {
+            // Stage 1: dt_scale = 0, next_dt_scale = 0.5*dt. Device-resident,
+            // there is no host-resident input slice for `super::order_param`,
+            // so stage 1 takes its order parameter from the same hierarchical
+            // device reduction stages 2-4 use (+1 launch vs the pre-WP-036E
+            // host path -> launch_count 9).
+            let (zr, zi) = order_param_device(
+                client,
+                &reduce_cube_count,
+                cube_dim,
+                &base_phase_h,
+                &base_amp_h,
+                &pool.block_real,
+                &pool.block_imag,
+                num_blocks,
+                n,
+                n_inv,
+            )?;
             launch_stage::<R>(
                 client,
                 &cube_count,
@@ -467,9 +590,9 @@ pub fn step_cubecl_with_pool<R: Runtime>(
                 &base_phase_h,
                 &base_amp_h,
                 &base_freq_h,
-                &k_zero_h,
-                &k_zero_h,
-                &k_zero_h,
+                &pool.k_zero,
+                &pool.k_zero,
+                &pool.k_zero,
                 0.0,
                 half_dt,
                 zr,
@@ -599,7 +722,7 @@ pub fn step_cubecl_with_pool<R: Runtime>(
                 n,
             );
 
-            // Final weighted sum.
+            // Final weighted sum, written into the fresh output handles.
             mean_field_rk4_finalize::launch::<f32, R>(
                 client,
                 cube_count.clone(),
@@ -620,15 +743,12 @@ pub fn step_cubecl_with_pool<R: Runtime>(
                 array_arg(&pool.k3_freq, n),
                 array_arg(&pool.k4_freq, n),
                 params.dt,
-                array_arg(&pool.out_phase, n),
-                array_arg(&pool.out_amp, n),
-                array_arg(&pool.out_freq, n),
+                array_arg(&fin_phase, n),
+                array_arg(&fin_amp, n),
+                array_arg(&fin_freq, n),
             );
 
-            let out_phase = read_f32s(client, &pool.out_phase, n)?;
-            let out_amp = read_f32s(client, &pool.out_amp, n)?;
-            let out_freq = read_f32s(client, &pool.out_freq, n)?;
-            Ok((out_phase, out_amp, out_freq))
+            Ok(())
         },
         "mean_field_rk4_step",
     );
@@ -636,7 +756,7 @@ pub fn step_cubecl_with_pool<R: Runtime>(
     let (result, profile_duration) = profiled.map_err(|e| MeanFieldRk4Error::ProfilingFailed {
         message: e.to_string(),
     })?;
-    let out = result?;
+    result?;
 
     let timing_method = if profile_duration.timing_method() == CubeclTimingMethod::Device {
         TimingMethod::Device
@@ -645,13 +765,55 @@ pub fn step_cubecl_with_pool<R: Runtime>(
     };
     let ticks = cubecl::future::block_on(profile_duration.resolve());
 
-    let report = StepReport {
+    state.phase = out_phase_h;
+    state.amplitude = out_amp_h;
+    state.frequency = out_freq_h;
+
+    Ok(StepReport {
         backend_name: R::name(client).to_string(),
         wall_time_seconds: ticks.duration().as_secs_f64(),
         timing_method,
-        launch_count: 8,
-    };
+        launch_count: 9,
+    })
+}
 
+/// Execute one mean-field RK4 step using preallocated device buffers.
+///
+/// Thin host-slice wrapper: uploads `(phase, amplitude, frequency)` to a
+/// [`MeanFieldDeviceState`], runs [`step_cubecl_device`] against the caller's
+/// [`CubeclBufferPool`], and downloads the stepped state. Behaviour matches
+/// the pre-WP-036E per-call path (the launch sequence is unchanged bar stage
+/// 1's order-parameter reduction now running on-device — numerically within
+/// the kernel-equivalence tolerance, `launch_count` 8 → 9).
+///
+/// # Errors
+///
+/// Returns [`MeanFieldRk4Error`] on invalid inputs or parameters, a pool size
+/// mismatch, a device read-back failure, or a profiling failure.
+pub fn step_cubecl_with_pool<R: Runtime>(
+    client: &ComputeClient<R>,
+    phase: &[f32],
+    amplitude: &[f32],
+    frequency: &[f32],
+    params: &MeanFieldRk4Params,
+    pool: &CubeclBufferPool<R>,
+) -> Result<StepCubeclOutput, MeanFieldRk4Error> {
+    let n = validate_state(phase, amplitude, frequency)?;
+    validate_param("k", params.k, false)?;
+    validate_param("decay", params.decay, false)?;
+    validate_param("gamma", params.gamma, false)?;
+    validate_param("dt", params.dt, true)?;
+
+    if pool.capacity() != n {
+        return Err(MeanFieldRk4Error::PoolSizeMismatch {
+            capacity: pool.capacity(),
+            actual: n,
+        });
+    }
+
+    let mut state = MeanFieldDeviceState::upload(client, phase, amplitude, frequency);
+    let report = step_cubecl_device(client, &mut state, params, pool)?;
+    let out = state.to_host(client)?;
     Ok((out, report))
 }
 
@@ -783,7 +945,7 @@ mod tests {
             try_step_wgpu(&phase, &amplitude, &frequency, &params).unwrap();
 
         assert_eq!(report.backend_name, "wgpu<wgsl>");
-        assert_eq!(report.launch_count, 8);
+        assert_eq!(report.launch_count, 9); // WP-036E: stage-1 order param now device-side
         assert!(report.wall_time_seconds >= 0.0);
         eprintln!("N={n} wgpu step report: {report:?}");
         assert_allclose(&gpu_p, &cpu_p, 1e-5, 1e-6);
@@ -919,6 +1081,46 @@ mod tests {
             Err(e) => panic!("unexpected wgpu error: {e}"),
         }
     }
+
+    /// wgpu kernel-equivalence for `step_cubecl_device` (WP-036E S1) against
+    /// the CPU reference, at a non-block-aligned `N`.
+    #[test]
+    fn wgpu_device_dispatch_matches_cpu_reference() {
+        use cubecl::wgpu::{WgpuDevice, WgpuRuntime};
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        let Ok(client) = catch_unwind(AssertUnwindSafe(|| {
+            WgpuRuntime::client(&WgpuDevice::DefaultDevice)
+        })) else {
+            return; // No wgpu adapter — the `_auto` path covers the fallback.
+        };
+
+        let n = 1000usize;
+        let phase: Vec<f32> = (0..n)
+            .map(|i| (0.07 * i as f32).rem_euclid(core::f32::consts::TAU))
+            .collect();
+        let amplitude: Vec<f32> = (0..n).map(|i| 0.5 + 0.5 * (i as f32 / n as f32)).collect();
+        let frequency: Vec<f32> = (0..n).map(|i| 0.02 * (i as f32 - n as f32 / 2.0)).collect();
+        let params = MeanFieldRk4Params {
+            k: 1.5,
+            decay: 0.2,
+            gamma: 0.02,
+            dt: 0.02,
+        };
+
+        let (cpu_p, cpu_a, cpu_f) = step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
+
+        let pool = CubeclBufferPool::<WgpuRuntime>::new(&client, n);
+        let mut state =
+            MeanFieldDeviceState::<WgpuRuntime>::upload(&client, &phase, &amplitude, &frequency);
+        let report = step_cubecl_device(&client, &mut state, &params, &pool).unwrap();
+        assert_eq!(report.launch_count, 9);
+        let (dev_p, dev_a, dev_f) = state.to_host(&client).unwrap();
+
+        assert_allclose(&dev_p, &cpu_p, 1e-5, 1e-6);
+        assert_allclose(&dev_a, &cpu_a, 1e-5, 1e-6);
+        assert_allclose(&dev_f, &cpu_f, 1e-5, 1e-6);
+    }
 }
 
 // `TimingMethod` is not feature-gated, but the `wgpu`/`cpu` test modules are;
@@ -1024,7 +1226,7 @@ mod tests_cpu {
             try_step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
 
         assert_eq!(report.backend_name, "cpu");
-        assert_eq!(report.launch_count, 8);
+        assert_eq!(report.launch_count, 9); // WP-036E: stage-1 order param now device-side
         eprintln!("N={n} cpu step report: {report:?}");
         assert_allclose(&out_p, &cpu_p, 1e-5, 1e-6);
         assert_allclose(&out_a, &cpu_a, 1e-5, 1e-6);
@@ -1108,6 +1310,97 @@ mod tests_cpu {
         assert!(!report.backend_name.is_empty());
         assert!(report.wall_time_seconds >= 0.0);
     }
+
+    fn seed_state(n: usize) -> (Vec<f32>, Vec<f32>, Vec<f32>) {
+        let phase = (0..n)
+            .map(|i| (0.03 * i as f32).rem_euclid(core::f32::consts::TAU))
+            .collect();
+        let amplitude = (0..n).map(|i| 0.2 + 0.001 * i as f32).collect();
+        let frequency = (0..n).map(|i| 0.01 * (i as f32 - n as f32 / 2.0)).collect();
+        (phase, amplitude, frequency)
+    }
+
+    /// Kernel-equivalence for the device-`Handle` entry point (WP-036E S1):
+    /// `step_cubecl_device` against a fresh-per-step CPU-reference RK4, with
+    /// state kept device-resident across a multi-step loop (`to_host` only at
+    /// the end), at a non-block-aligned `N`. Also pins the 9-launch count and
+    /// checks the re-expressed host wrapper agrees bit-for-bit with a single
+    /// device step.
+    #[test]
+    fn device_dispatch_matches_cpu_reference_across_a_stepping_loop() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        let client = CpuRuntime::client(&CpuDevice);
+
+        let n = 300usize;
+        let (mut phase, mut amplitude, mut frequency) = seed_state(n);
+        let params = MeanFieldRk4Params {
+            k: 1.5,
+            decay: 0.12,
+            gamma: 0.008,
+            dt: 0.01,
+        };
+
+        let pool = CubeclBufferPool::<CpuRuntime>::new(&client, n);
+        let mut state =
+            MeanFieldDeviceState::<CpuRuntime>::upload(&client, &phase, &amplitude, &frequency);
+
+        for step in 0..4 {
+            let report = step_cubecl_device(&client, &mut state, &params, &pool).unwrap();
+            assert_eq!(report.launch_count, 9, "step {step}");
+            let (rp, ra, rf) = step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
+            (phase, amplitude, frequency) = (rp, ra, rf);
+        }
+
+        let (dev_p, dev_a, dev_f) = state.to_host(&client).unwrap();
+        assert_allclose(&dev_p, &phase, 1e-5, 1e-6);
+        assert_allclose(&dev_a, &amplitude, 1e-5, 1e-6);
+        assert_allclose(&dev_f, &frequency, 1e-5, 1e-6);
+
+        // The re-expressed host wrapper == one device step from the same input.
+        let (p0, a0, f0) = seed_state(n);
+        let mut one = MeanFieldDeviceState::<CpuRuntime>::upload(&client, &p0, &a0, &f0);
+        step_cubecl_device(&client, &mut one, &params, &pool).unwrap();
+        let one_host = one.to_host(&client).unwrap();
+        let ((wrap_p, wrap_a, wrap_f), wrap_report) =
+            step_cubecl_with_pool(&client, &p0, &a0, &f0, &params, &pool).unwrap();
+        assert_eq!(wrap_report.launch_count, 9);
+        assert_eq!((wrap_p, wrap_a, wrap_f), one_host);
+    }
+
+    #[test]
+    fn device_dispatch_rejects_pool_mismatch_and_non_finite_param() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        let client = CpuRuntime::client(&CpuDevice);
+
+        let n = 32usize;
+        let (phase, amplitude, frequency) = seed_state(n);
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+        let mut state =
+            MeanFieldDeviceState::<CpuRuntime>::upload(&client, &phase, &amplitude, &frequency);
+
+        let wrong_pool = CubeclBufferPool::<CpuRuntime>::new(&client, n + 1);
+        let err = step_cubecl_device(&client, &mut state, &params, &wrong_pool).unwrap_err();
+        assert!(matches!(
+            err,
+            MeanFieldRk4Error::PoolSizeMismatch { capacity, actual } if capacity == n + 1 && actual == n
+        ));
+
+        let pool = CubeclBufferPool::<CpuRuntime>::new(&client, n);
+        let bad = MeanFieldRk4Params {
+            dt: f32::NAN,
+            ..params
+        };
+        let err = step_cubecl_device(&client, &mut state, &bad, &pool).unwrap_err();
+        assert!(matches!(
+            err,
+            MeanFieldRk4Error::NonFiniteParameter { name: "dt", .. }
+        ));
+    }
 }
 
 #[cfg(all(test, feature = "cuda"))]
@@ -1146,7 +1439,7 @@ mod tests_cuda {
             try_step_cuda(&phase, &amplitude, &frequency, &params).unwrap();
 
         assert_eq!(report.backend_name, "cuda");
-        assert_eq!(report.launch_count, 8);
+        assert_eq!(report.launch_count, 9); // WP-036E: stage-1 order param now device-side
         eprintln!("N={n} cuda step report: {report:?}");
         assert_allclose(&gpu_p, &cpu_p, 1e-5, 1e-6);
         assert_allclose(&gpu_a, &cpu_a, 1e-5, 1e-6);
@@ -1190,6 +1483,43 @@ mod tests_cuda {
         };
         let err = try_step_cuda(&phase, &amp, &freq, &params).unwrap_err();
         assert!(matches!(err, MeanFieldRk4Error::LengthMismatch { .. }));
+    }
+
+    /// CUDA kernel-equivalence for `step_cubecl_device` (WP-036E S1): state
+    /// held device-resident across a stepping loop, `to_host` only at the end.
+    #[test]
+    fn cuda_device_dispatch_matches_cpu_reference_across_a_stepping_loop() {
+        use cubecl::cuda::{CudaDevice, CudaRuntime};
+        let client = CudaRuntime::client(&CudaDevice::default());
+
+        let n = 4096usize;
+        let mut phase: Vec<f32> = (0..n)
+            .map(|i| (0.02 * (i % 311) as f32).rem_euclid(core::f32::consts::TAU))
+            .collect();
+        let mut amplitude: Vec<f32> = (0..n).map(|i| 0.5 + 0.3 * (i as f32 / n as f32)).collect();
+        let mut frequency: Vec<f32> = (0..n).map(|i| 0.01 * ((i % 97) as f32 - 48.0)).collect();
+        let params = MeanFieldRk4Params {
+            k: 2.0,
+            decay: 0.1,
+            gamma: 0.01,
+            dt: 0.01,
+        };
+
+        let pool = CubeclBufferPool::<CudaRuntime>::new(&client, n);
+        let mut state =
+            MeanFieldDeviceState::<CudaRuntime>::upload(&client, &phase, &amplitude, &frequency);
+
+        for _ in 0..3 {
+            let report = step_cubecl_device(&client, &mut state, &params, &pool).unwrap();
+            assert_eq!(report.launch_count, 9);
+            let (rp, ra, rf) = step_cpu(&phase, &amplitude, &frequency, &params).unwrap();
+            (phase, amplitude, frequency) = (rp, ra, rf);
+        }
+
+        let (dev_p, dev_a, dev_f) = state.to_host(&client).unwrap();
+        assert_allclose(&dev_p, &phase, 1e-5, 1e-6);
+        assert_allclose(&dev_a, &amplitude, 1e-5, 1e-6);
+        assert_allclose(&dev_f, &frequency, 1e-5, 1e-6);
     }
 }
 

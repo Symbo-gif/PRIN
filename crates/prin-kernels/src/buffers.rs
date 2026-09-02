@@ -6,12 +6,15 @@
 //! - [`MeanFieldRk4Buffers`] — CPU-side `Vec<f32>` buffers for the mean-field
 //!   RK4 step. Eliminates 15+ per-step allocations (k1–k4 intermediates,
 //!   stage states, output buffers, and derivative temporaries).
-//! - `CubeclBufferPool` — GPU-side CubeCL `Handle`s for working and output
-//!   buffers. Eliminates 15 per-step `client.empty()` calls; only the 4 input
-//!   handles (which carry fresh host data) are created per step. Also holds
-//!   the `block_real`/`block_imag` partial-sum buffers used by the device-side
-//!   hierarchical order-parameter reduction (one `f32` pair per 256-thread
-//!   cube block), sized to `ceil(n / 256)` rather than `n`.
+//! - `CubeclBufferPool` — GPU-side CubeCL `Handle`s for the k1–k4 and stage
+//!   working buffers. Eliminates 15 per-step `client.empty()` calls. Also
+//!   holds the `block_real`/`block_imag` partial-sum buffers used by the
+//!   device-side hierarchical order-parameter reduction (one `f32` pair per
+//!   256-thread cube block, sized to `ceil(n / 256)` rather than `n`) and a
+//!   zeroed `k_zero` buffer (the RK4 stage-1 kernel's `k_prev` argument).
+//!   Since WP-036E the device-resident step path
+//!   (`mean_field_rk4::cubecl::step_cubecl_device`) allocates only the three
+//!   finalize-output handles per step.
 //!
 //! Both pools grow to the required size on first use and reuse their capacity
 //! for all subsequent steps with the same or smaller oscillator count.
@@ -140,16 +143,20 @@ pub(crate) fn num_blocks_for(n: usize) -> usize {
 
 /// Preallocated CubeCL device handles for the mean-field RK4 step.
 ///
-/// Holds the 15 working + output device [`Handle`]s that would otherwise be
-/// created via `client.empty()` on every step, plus the `block_real`/
+/// Holds the 15 k1–k4 + stage working device [`Handle`]s that would otherwise
+/// be created via `client.empty()` on every step, plus the `block_real`/
 /// `block_imag` partial-sum buffers used by the device-side hierarchical
-/// order-parameter reduction. Only the 4 input handles (base_phase, base_amp,
-/// base_freq, k_zero) are created fresh each step because they carry host
-/// data via `client.create_from_slice`.
+/// order-parameter reduction and the zeroed `k_zero` buffer the RK4 stage-1
+/// kernel takes as its `k_prev` argument.
+///
+/// The host-slice step paths (`mean_field_rk4::cubecl::step_cubecl` /
+/// `step_cubecl_with_pool`) upload the base state fresh each call; the
+/// device-resident path (`step_cubecl_device`) keeps the base state on-device
+/// and allocates only the three finalize-output handles per step.
 ///
 /// # Safety
 ///
-/// The 15 working/output handles are allocated with `byte_len = n *
+/// The 15 working handles and `k_zero` are allocated with `byte_len = n *
 /// size_of::<f32>()` bytes; `block_real`/`block_imag` are allocated with
 /// `byte_len = num_blocks(n) * size_of::<f32>()` bytes. The caller must
 /// ensure that kernel launches use the matching element count when
@@ -180,10 +187,8 @@ pub struct CubeclBufferPool<R: Runtime> {
     pub(crate) stage_phase: Handle,
     pub(crate) stage_amp: Handle,
     pub(crate) stage_freq: Handle,
-    // Output
-    pub(crate) out_phase: Handle,
-    pub(crate) out_amp: Handle,
-    pub(crate) out_freq: Handle,
+    // Zeroed buffer: the stage-1 kernel's `k_prev` argument (dt_scale = 0).
+    pub(crate) k_zero: Handle,
     // Hierarchical order-parameter reduction: one partial sum per cube block.
     pub(crate) block_real: Handle,
     pub(crate) block_imag: Handle,
@@ -193,11 +198,13 @@ pub struct CubeclBufferPool<R: Runtime> {
 
 #[cfg(any(feature = "cpu", feature = "cuda", feature = "wgpu"))]
 impl<R: Runtime> CubeclBufferPool<R> {
-    /// Allocate all 20 working + output device handles.
+    /// Allocate the 15 k1–k4 + stage working device handles, the zeroed
+    /// `k_zero` buffer, and the two reduction partial-sum buffers.
     ///
-    /// The 18 per-oscillator handles have `n * size_of::<f32>()` bytes each;
+    /// The 16 per-oscillator handles have `n * size_of::<f32>()` bytes each;
     /// `block_real`/`block_imag` have `num_blocks(n) * size_of::<f32>()`
-    /// bytes each.
+    /// bytes each. `k_zero` is filled with zeros at construction (its only
+    /// host upload).
     pub fn new(client: &ComputeClient<R>, n: usize) -> Self {
         let byte_len = n * core::mem::size_of::<f32>();
         let empty = || client.empty(byte_len);
@@ -221,9 +228,7 @@ impl<R: Runtime> CubeclBufferPool<R> {
             stage_phase: empty(),
             stage_amp: empty(),
             stage_freq: empty(),
-            out_phase: empty(),
-            out_amp: empty(),
-            out_freq: empty(),
+            k_zero: client.create_from_slice(f32::as_bytes(&vec![0.0_f32; n.max(1)])),
             block_real: client.empty(block_byte_len),
             block_imag: client.empty(block_byte_len),
             _runtime: core::marker::PhantomData,

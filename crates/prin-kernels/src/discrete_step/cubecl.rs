@@ -39,11 +39,24 @@
 //! 9. `complex_order_reduce` (gamma's `Z`, from the gated amplitude)
 //! 10. `band_euler_step` (gamma)
 //!
-//! No buffer pool is used this session (each band's device handles are
-//! created fresh via `client.create_from_slice`/`client.empty`), matching the
-//! precedent set by `sparse_knn`/`pac` (WP-019 S1 handoff, "Out-of-scope
-//! discoveries") — a future performance WP can add pooling if profiling shows
-//! per-call allocation dominating.
+//! No buffer pool is used (each step's device handles are created fresh via
+//! `client.empty`), matching the precedent set by `sparse_knn`/`pac` (WP-019
+//! S1 handoff, "Out-of-scope discoveries") — a future performance WP can add
+//! pooling if profiling shows per-call allocation dominating.
+//!
+//! ## Device-resident dispatch (WP-036E)
+//!
+//! [`discrete_step_device`] runs the whole sequence on a
+//! [`DiscreteStepDeviceState`] whose `(phase, amplitude, frequency)` buffers —
+//! held **per band** — stay on the device across steps, so a caller holding
+//! CubeCL device handles steps with **no host transfer**.
+//! [`discrete_step_cubecl`] is the thin upload→`discrete_step_device`→download
+//! wrapper — one algorithm, one implementation (Coding Standards §1). The
+//! launch sequence (and `launch_count = 10`) is unchanged: `delta`'s order
+//! parameter was already a device reduction, so no stage gained a launch.
+//! Per-band standalone buffers (not `offset`-sliced views of one concatenated
+//! buffer) are required because wgpu rejects sub-buffer bindings that violate
+//! `min_storage_buffer_offset_alignment`.
 //!
 //! SAFETY: All `unsafe` blocks are confined to `ArrayArg::from_raw_parts` with
 //! handles whose lengths are exactly `len * size_of::<f32>()` bytes. Those
@@ -53,13 +66,15 @@
 #![allow(unsafe_code)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
+use core::marker::PhantomData;
+
 use cubecl::prelude::*;
 use cubecl::profile::TimingMethod as CubeclTimingMethod;
 use cubecl::server::Handle;
 
 use super::{
     band_offsets, validate_bands, validate_params, validate_state, BandStepParams,
-    DiscreteStepError, DiscreteStepParams, DELTA,
+    DiscreteStepError, DiscreteStepParams, DELTA, GAMMA, THETA,
 };
 use crate::buffers::num_blocks_for;
 pub use crate::mean_field_rk4::cubecl::TimingMethod;
@@ -330,7 +345,242 @@ fn launch_band_euler_step<R: Runtime>(
     );
 }
 
+/// Device-resident `(phase, amplitude, frequency)` state for the fused
+/// three-band discrete step, held **per band** as CubeCL device [`Handle`]s
+/// that persist across steps.
+///
+/// Per-band standalone allocations (rather than `offset`-sliced views of one
+/// concatenated buffer) keep every kernel binding at buffer offset 0 — wgpu's
+/// `min_storage_buffer_offset_alignment` (32 bytes on DX12) rejects the
+/// arbitrary sub-buffer offsets a non-block-aligned band split would need.
+///
+/// [`discrete_step_device`] reads the base state from here and, on success,
+/// replaces the handles with the stepped state.
+/// [`DiscreteStepDeviceState::upload`] is the one-shot host→device constructor
+/// the thin [`discrete_step_cubecl`] wrapper uses; [`to_host`](Self::to_host)
+/// concatenates the bands back slow→fast.
+pub struct DiscreteStepDeviceState<R: Runtime> {
+    /// Per-band oscillator counts `[delta, theta, gamma]`.
+    pub band_sizes: [usize; 3],
+    /// Per-band `phase` buffers, indexed by [`DELTA`]/[`THETA`]/[`GAMMA`].
+    pub phase: [Handle; 3],
+    /// Per-band `amplitude` buffers.
+    pub amplitude: [Handle; 3],
+    /// Per-band `frequency` buffers.
+    pub frequency: [Handle; 3],
+    runtime: PhantomData<R>,
+}
+
+impl<R: Runtime> DiscreteStepDeviceState<R> {
+    /// Assemble a device state from per-band buffers the caller already holds
+    /// on the device (no transfer).
+    pub fn from_parts(
+        band_sizes: [usize; 3],
+        phase: [Handle; 3],
+        amplitude: [Handle; 3],
+        frequency: [Handle; 3],
+    ) -> Self {
+        Self {
+            band_sizes,
+            phase,
+            amplitude,
+            frequency,
+            runtime: PhantomData,
+        }
+    }
+
+    /// Total oscillator count `N` (sum of the three band sizes).
+    pub fn n(&self) -> usize {
+        self.band_sizes.iter().sum()
+    }
+
+    /// Upload the concatenated slow→fast host state, splitting it into the
+    /// three per-band device buffers.
+    pub fn upload(
+        client: &ComputeClient<R>,
+        phase: &[f32],
+        amplitude: &[f32],
+        frequency: &[f32],
+        band_sizes: [usize; 3],
+    ) -> Self {
+        let offsets = band_offsets(band_sizes);
+        let split = |src: &[f32]| {
+            [DELTA, THETA, GAMMA].map(|b| {
+                client
+                    .create_from_slice(f32::as_bytes(&src[offsets[b]..offsets[b] + band_sizes[b]]))
+            })
+        };
+        Self {
+            band_sizes,
+            phase: split(phase),
+            amplitude: split(amplitude),
+            frequency: split(frequency),
+            runtime: PhantomData,
+        }
+    }
+
+    /// Download the current state, concatenated slow→fast.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`DiscreteStepError::BackendReadError`] on a device read-back
+    /// failure.
+    pub fn to_host(
+        &self,
+        client: &ComputeClient<R>,
+    ) -> Result<super::DiscreteStepOutput, DiscreteStepError> {
+        let cat = |hs: &[Handle; 3]| -> Result<Vec<f32>, DiscreteStepError> {
+            let mut v = Vec::with_capacity(self.n());
+            for h in hs {
+                v.extend_from_slice(&read_f32s(client, h)?);
+            }
+            Ok(v)
+        };
+        Ok((
+            cat(&self.phase)?,
+            cat(&self.amplitude)?,
+            cat(&self.frequency)?,
+        ))
+    }
+}
+
+/// Execute one fused three-band discrete step on device-resident buffers, with
+/// **no host transfer** — one algorithm, one implementation (Coding Standards
+/// §1): [`discrete_step_cubecl`] is the thin upload→this→download wrapper.
+///
+/// On success `state`'s per-band handles are replaced with the stepped state.
+/// Each band reads its own input handles and writes freshly allocated output
+/// handles (input and output never alias). The `#[cube]` kernels and the
+/// 10-launch sequence are byte-for-byte those the host-slice path launches.
+///
+/// # Errors
+///
+/// Returns [`DiscreteStepError`] on invalid `band_sizes`/parameters, a device
+/// read-back failure inside a reduction, or a profiling failure.
+pub fn discrete_step_device<R: Runtime>(
+    client: &ComputeClient<R>,
+    state: &mut DiscreteStepDeviceState<R>,
+    params: &DiscreteStepParams,
+) -> Result<StepReport, DiscreteStepError> {
+    let band_sizes = state.band_sizes;
+    validate_bands(band_sizes, state.n())?;
+    validate_params(params)?;
+
+    let in_phase = state.phase.clone();
+    let in_amp = state.amplitude.clone();
+    let in_freq = state.frequency.clone();
+
+    let elem = core::mem::size_of::<f32>();
+    let out_phase: [Handle; 3] = band_sizes.map(|nb| client.empty(nb * elem));
+    let out_amp: [Handle; 3] = band_sizes.map(|nb| client.empty(nb * elem));
+    let out_freq: [Handle; 3] = band_sizes.map(|nb| client.empty(nb * elem));
+    let fin_phase = out_phase.clone();
+    let fin_amp = out_amp.clone();
+    let fin_freq = out_freq.clone();
+
+    let profiled = client.profile(
+        move || -> Result<(), DiscreteStepError> {
+            // Band 0 (delta): no incoming PAC gate.
+            let n_delta = band_sizes[DELTA];
+            let (zr, zi) =
+                complex_order_reduce_device(client, &in_phase[DELTA], &in_amp[DELTA], n_delta)?;
+            launch_band_euler_step(
+                client,
+                &in_phase[DELTA],
+                &in_amp[DELTA],
+                &in_freq[DELTA],
+                zr,
+                zi,
+                &params.bands[DELTA],
+                params.dt,
+                1.0 / n_delta as f32,
+                &fin_phase[DELTA],
+                &fin_amp[DELTA],
+                &fin_freq[DELTA],
+                n_delta,
+            );
+
+            let mut prev_out_phase = fin_phase[DELTA].clone();
+            let mut prev_n = n_delta;
+
+            for pair in 0..2 {
+                let slow = pair;
+                let fast = pair + 1;
+                let n_fast = band_sizes[fast];
+
+                let mean_slow_new_phase = real_mean_reduce_device(client, &prev_out_phase, prev_n)?;
+                let modulation = 1.0_f32
+                    + params.pac[slow].modulation_depth
+                        * (mean_slow_new_phase + params.pac[slow].phase_offset).cos();
+
+                let gated_amp_h = client.empty(n_fast * elem);
+                pac_gate::launch::<f32, R>(
+                    client,
+                    CubeCount::Static(n_fast.div_ceil(256).max(1) as u32, 1, 1),
+                    CubeDim::new_1d(256),
+                    array_arg(&in_amp[fast], n_fast),
+                    modulation,
+                    params.amp_min,
+                    params.amp_max,
+                    array_arg(&gated_amp_h, n_fast),
+                );
+
+                let (zr, zi) =
+                    complex_order_reduce_device(client, &in_phase[fast], &gated_amp_h, n_fast)?;
+                launch_band_euler_step(
+                    client,
+                    &in_phase[fast],
+                    &gated_amp_h,
+                    &in_freq[fast],
+                    zr,
+                    zi,
+                    &params.bands[fast],
+                    params.dt,
+                    1.0 / n_fast as f32,
+                    &fin_phase[fast],
+                    &fin_amp[fast],
+                    &fin_freq[fast],
+                    n_fast,
+                );
+
+                prev_out_phase = fin_phase[fast].clone();
+                prev_n = n_fast;
+            }
+
+            Ok(())
+        },
+        "discrete_step",
+    );
+
+    let (result, profile_duration) = profiled.map_err(|e| DiscreteStepError::ProfilingFailed {
+        message: e.to_string(),
+    })?;
+    result?;
+
+    let timing_method = if profile_duration.timing_method() == CubeclTimingMethod::Device {
+        TimingMethod::Device
+    } else {
+        TimingMethod::System
+    };
+    let ticks = cubecl::future::block_on(profile_duration.resolve());
+
+    state.phase = out_phase;
+    state.amplitude = out_amp;
+    state.frequency = out_freq;
+
+    Ok(StepReport {
+        backend_name: R::name(client).to_string(),
+        wall_time_seconds: ticks.duration().as_secs_f64(),
+        timing_method,
+        launch_count: 10,
+    })
+}
+
 /// Execute one fused three-band discrete step on a CubeCL runtime.
+///
+/// Thin host-slice wrapper: uploads the concatenated `(phase, amplitude,
+/// frequency)` state, runs [`discrete_step_device`], and downloads the
+/// stepped state. Behaviour is identical to the pre-WP-036E per-call path.
 ///
 /// See [`super`] and this module's documentation for the algorithm and
 /// launch sequence.
@@ -351,131 +601,10 @@ pub fn discrete_step_cubecl<R: Runtime>(
     validate_bands(band_sizes, n)?;
     validate_params(params)?;
 
-    let offsets = band_offsets(band_sizes);
-
-    let profiled = client.profile(
-        move || -> Result<super::DiscreteStepOutput, DiscreteStepError> {
-            // Band 0 (delta): no incoming PAC gate.
-            let n_delta = band_sizes[DELTA];
-            let d_r = offsets[DELTA]..offsets[DELTA] + n_delta;
-            let delta_phase_h = client.create_from_slice(f32::as_bytes(&phase[d_r.clone()]));
-            let delta_amp_h = client.create_from_slice(f32::as_bytes(&amplitude[d_r.clone()]));
-            let delta_freq_h = client.create_from_slice(f32::as_bytes(&frequency[d_r.clone()]));
-
-            let (zr, zi) =
-                complex_order_reduce_device(client, &delta_phase_h, &delta_amp_h, n_delta)?;
-
-            let delta_out_phase_h = client.empty(n_delta * core::mem::size_of::<f32>());
-            let delta_out_amp_h = client.empty(n_delta * core::mem::size_of::<f32>());
-            let delta_out_freq_h = client.empty(n_delta * core::mem::size_of::<f32>());
-            launch_band_euler_step(
-                client,
-                &delta_phase_h,
-                &delta_amp_h,
-                &delta_freq_h,
-                zr,
-                zi,
-                &params.bands[DELTA],
-                params.dt,
-                1.0 / n_delta as f32,
-                &delta_out_phase_h,
-                &delta_out_amp_h,
-                &delta_out_freq_h,
-                n_delta,
-            );
-
-            let mut out_phase_parts = vec![read_f32s(client, &delta_out_phase_h)?];
-            let mut out_amp_parts = vec![read_f32s(client, &delta_out_amp_h)?];
-            let mut out_freq_parts = vec![read_f32s(client, &delta_out_freq_h)?];
-
-            let mut prev_out_phase_h = delta_out_phase_h;
-            let mut prev_n = n_delta;
-
-            for pair in 0..2 {
-                let slow = pair;
-                let fast = pair + 1;
-                let n_fast = band_sizes[fast];
-                let f_r = offsets[fast]..offsets[fast] + n_fast;
-
-                let mean_slow_new_phase =
-                    real_mean_reduce_device(client, &prev_out_phase_h, prev_n)?;
-                let modulation = 1.0_f32
-                    + params.pac[slow].modulation_depth
-                        * (mean_slow_new_phase + params.pac[slow].phase_offset).cos();
-
-                let fast_amp_h = client.create_from_slice(f32::as_bytes(&amplitude[f_r.clone()]));
-                let gated_amp_h = client.empty(n_fast * core::mem::size_of::<f32>());
-                pac_gate::launch::<f32, R>(
-                    client,
-                    CubeCount::Static(n_fast.div_ceil(256).max(1) as u32, 1, 1),
-                    CubeDim::new_1d(256),
-                    array_arg(&fast_amp_h, n_fast),
-                    modulation,
-                    params.amp_min,
-                    params.amp_max,
-                    array_arg(&gated_amp_h, n_fast),
-                );
-
-                let fast_phase_h = client.create_from_slice(f32::as_bytes(&phase[f_r.clone()]));
-                let fast_freq_h = client.create_from_slice(f32::as_bytes(&frequency[f_r.clone()]));
-                let (zr, zi) =
-                    complex_order_reduce_device(client, &fast_phase_h, &gated_amp_h, n_fast)?;
-
-                let fast_out_phase_h = client.empty(n_fast * core::mem::size_of::<f32>());
-                let fast_out_amp_h = client.empty(n_fast * core::mem::size_of::<f32>());
-                let fast_out_freq_h = client.empty(n_fast * core::mem::size_of::<f32>());
-                launch_band_euler_step(
-                    client,
-                    &fast_phase_h,
-                    &gated_amp_h,
-                    &fast_freq_h,
-                    zr,
-                    zi,
-                    &params.bands[fast],
-                    params.dt,
-                    1.0 / n_fast as f32,
-                    &fast_out_phase_h,
-                    &fast_out_amp_h,
-                    &fast_out_freq_h,
-                    n_fast,
-                );
-
-                out_phase_parts.push(read_f32s(client, &fast_out_phase_h)?);
-                out_amp_parts.push(read_f32s(client, &fast_out_amp_h)?);
-                out_freq_parts.push(read_f32s(client, &fast_out_freq_h)?);
-
-                prev_out_phase_h = fast_out_phase_h;
-                prev_n = n_fast;
-            }
-
-            Ok((
-                out_phase_parts.concat(),
-                out_amp_parts.concat(),
-                out_freq_parts.concat(),
-            ))
-        },
-        "discrete_step",
-    );
-
-    let (result, profile_duration) = profiled.map_err(|e| DiscreteStepError::ProfilingFailed {
-        message: e.to_string(),
-    })?;
-    let out = result?;
-
-    let timing_method = if profile_duration.timing_method() == CubeclTimingMethod::Device {
-        TimingMethod::Device
-    } else {
-        TimingMethod::System
-    };
-    let ticks = cubecl::future::block_on(profile_duration.resolve());
-
-    let report = StepReport {
-        backend_name: R::name(client).to_string(),
-        wall_time_seconds: ticks.duration().as_secs_f64(),
-        timing_method,
-        launch_count: 10,
-    };
-
+    let mut state =
+        DiscreteStepDeviceState::upload(client, phase, amplitude, frequency, band_sizes);
+    let report = discrete_step_device(client, &mut state, params)?;
+    let out = state.to_host(client)?;
     Ok((out, report))
 }
 
@@ -728,6 +857,38 @@ mod tests {
             Err(e) => panic!("unexpected wgpu error: {e}"),
         }
     }
+
+    /// wgpu kernel-equivalence for `discrete_step_device` (WP-036E S1) against
+    /// the CPU reference, at non-block-aligned band sizes.
+    #[test]
+    fn wgpu_device_dispatch_matches_cpu_reference() {
+        use cubecl::wgpu::{WgpuDevice, WgpuRuntime};
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        let Ok(client) = catch_unwind(AssertUnwindSafe(|| {
+            WgpuRuntime::client(&WgpuDevice::DefaultDevice)
+        })) else {
+            return; // No wgpu adapter — `_auto` covers the fallback.
+        };
+
+        let band_sizes = [300usize, 777, 513];
+        let (phase, amp, freq) = make_state(band_sizes);
+        let params = default_params();
+
+        let (cpu_p, cpu_a, cpu_f) =
+            discrete_step_cpu(&phase, &amp, &freq, band_sizes, &params).unwrap();
+
+        let mut state = DiscreteStepDeviceState::<WgpuRuntime>::upload(
+            &client, &phase, &amp, &freq, band_sizes,
+        );
+        let report = discrete_step_device(&client, &mut state, &params).unwrap();
+        assert_eq!(report.launch_count, 10);
+        let (dev_p, dev_a, dev_f) = state.to_host(&client).unwrap();
+
+        assert_allclose(&dev_p, &cpu_p, 1e-5, 1e-6);
+        assert_allclose(&dev_a, &cpu_a, 1e-5, 1e-6);
+        assert_allclose(&dev_f, &cpu_f, 1e-5, 1e-6);
+    }
 }
 
 #[cfg(all(test, feature = "cpu"))]
@@ -872,6 +1033,74 @@ mod tests_cpu {
             }
         ));
     }
+
+    /// Kernel-equivalence for the device-`Handle` entry point (WP-036E S1):
+    /// `discrete_step_device` on a per-band device-resident state, across a
+    /// multi-step loop (`to_host` only at the end), vs the CPU reference. Band
+    /// sizes are non-block-aligned.
+    #[test]
+    fn device_dispatch_matches_cpu_reference_across_a_stepping_loop() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        let client = CpuRuntime::client(&CpuDevice);
+
+        let band_sizes = [300usize, 400, 500];
+        let (mut phase, mut amp, mut freq) = make_state(band_sizes);
+        let params = default_params();
+
+        let mut state =
+            DiscreteStepDeviceState::<CpuRuntime>::upload(&client, &phase, &amp, &freq, band_sizes);
+
+        for step in 0..4 {
+            let report = discrete_step_device(&client, &mut state, &params).unwrap();
+            assert_eq!(report.launch_count, 10, "step {step}");
+            let (rp, ra, rf) = discrete_step_cpu(&phase, &amp, &freq, band_sizes, &params).unwrap();
+            (phase, amp, freq) = (rp, ra, rf);
+        }
+
+        let (dev_p, dev_a, dev_f) = state.to_host(&client).unwrap();
+        assert_allclose(&dev_p, &phase, 1e-5, 1e-6);
+        assert_allclose(&dev_a, &amp, 1e-5, 1e-6);
+        assert_allclose(&dev_f, &freq, 1e-5, 1e-6);
+
+        // The re-expressed host wrapper agrees bit-for-bit with one device step.
+        let (p0, a0, f0) = make_state(band_sizes);
+        let mut one =
+            DiscreteStepDeviceState::<CpuRuntime>::upload(&client, &p0, &a0, &f0, band_sizes);
+        discrete_step_device(&client, &mut one, &params).unwrap();
+        let one_host = one.to_host(&client).unwrap();
+        let ((wp, wa, wf), _) =
+            discrete_step_cubecl(&client, &p0, &a0, &f0, band_sizes, &params).unwrap();
+        assert_eq!((wp, wa, wf), one_host);
+    }
+
+    #[test]
+    fn device_dispatch_rejects_bad_bands_and_params() {
+        use cubecl::cpu::{CpuDevice, CpuRuntime};
+        let client = CpuRuntime::client(&CpuDevice);
+
+        // Population mismatch is caught by the host wrapper before upload.
+        let (phase, amp, freq) = make_state([4, 4, 4]);
+        let err = discrete_step_cubecl(&client, &phase, &amp, &freq, [4, 4, 5], &default_params())
+            .unwrap_err();
+        assert!(matches!(
+            err,
+            DiscreteStepError::PopulationMismatch {
+                expected: 13,
+                got: 12
+            }
+        ));
+
+        // A non-finite parameter is caught by `discrete_step_device` itself.
+        let mut state =
+            DiscreteStepDeviceState::<CpuRuntime>::upload(&client, &phase, &amp, &freq, [4, 4, 4]);
+        let mut bad = default_params();
+        bad.dt = -1.0;
+        let err = discrete_step_device(&client, &mut state, &bad).unwrap_err();
+        assert!(matches!(
+            err,
+            DiscreteStepError::InvalidParameter { name: "dt", .. }
+        ));
+    }
 }
 
 #[cfg(all(test, feature = "cuda"))]
@@ -968,6 +1197,35 @@ mod tests_cuda {
                 got: 9
             }
         ));
+    }
+
+    /// CUDA kernel-equivalence for `discrete_step_device` (WP-036E S1): a
+    /// per-band device-resident state, `to_host` only at the end of a
+    /// multi-step loop.
+    #[test]
+    fn cuda_device_dispatch_matches_cpu_reference_across_a_stepping_loop() {
+        use cubecl::cuda::{CudaDevice, CudaRuntime};
+        let client = CudaRuntime::client(&CudaDevice::default());
+
+        let band_sizes = [600usize, 700, 800];
+        let (mut phase, mut amp, mut freq) = make_state(band_sizes);
+        let params = default_params();
+
+        let mut state = DiscreteStepDeviceState::<CudaRuntime>::upload(
+            &client, &phase, &amp, &freq, band_sizes,
+        );
+
+        for _ in 0..3 {
+            let report = discrete_step_device(&client, &mut state, &params).unwrap();
+            assert_eq!(report.launch_count, 10);
+            let (rp, ra, rf) = discrete_step_cpu(&phase, &amp, &freq, band_sizes, &params).unwrap();
+            (phase, amp, freq) = (rp, ra, rf);
+        }
+
+        let (dev_p, dev_a, dev_f) = state.to_host(&client).unwrap();
+        assert_allclose(&dev_p, &phase, 1e-5, 1e-6);
+        assert_allclose(&dev_a, &amp, 1e-5, 1e-6);
+        assert_allclose(&dev_f, &freq, 1e-5, 1e-6);
     }
 }
 

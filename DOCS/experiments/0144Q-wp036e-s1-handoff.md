@@ -3,9 +3,9 @@
 **Date:** 2026-09-02
 **Status:** S1-start repository verification COMPLETE; **Plan amendment #43**
 recorded (re-scope + decomposition into `0144Q1`–`0144Q3`); governance-doc
-updates committed locally. The three implementation sub-passes `0144Q1`–`0144Q3`
-are the next work. S1 does not self-certify — `0144R` (S2 audit) follows all
-three sub-passes.
+updates committed locally. **Sub-pass `0144Q1` COMPLETE** (§7) — committed
+locally. Next: `0144Q2` (`prin-sim` persistent device buffers + DV-003). S1 does
+not self-certify — `0144R` (S2 audit) follows all three sub-passes.
 
 ---
 
@@ -180,4 +180,102 @@ Governance-doc changes committed this session:
 
 ## 6. Next step
 
-Sub-pass `0144Q1` — `prin-kernels` device-`Handle` dispatch layer.
+Sub-pass `0144Q2` — `prin-sim` persistent device buffers + DV-003 on-device
+CUDA `f64` combine. `0144Q1` is COMPLETE (§7).
+
+---
+
+## 7. `0144Q1` — `prin-kernels` device-`Handle` dispatch layer (COMPLETE, 2026-09-02)
+
+**Commit:** local only (per amendment #28 cadence — the `0144Q`+`0144Q1`–`0144Q3`
+range pushes once before `0144R`). Tree: `crates/prin-kernels/**` only.
+
+### What landed
+
+| Module | New public surface | Host-slice wrapper |
+|---|---|---|
+| `sparse_knn::cubecl` | `SparseKnnDeviceState<R>` (`upload` / `from_parts`), `SparseKnnDeviceDerivs<R>` (`empty` / `from_parts` / `to_host`), `sparse_knn_coupling_device<R>(client, &state, params, &mut derivs)` | `sparse_knn_coupling_cubecl` = `upload → device → to_host` (byte-identical behaviour; existing `*_cubecl`/`*_auto` tests unchanged and green) |
+| `mean_field_rk4::cubecl` | `MeanFieldDeviceState<R>` (`upload` / `from_parts` / `to_host`), `step_cubecl_device<R>(client, &mut state, params, &pool) -> StepReport` (writes the stepped state back into `state`'s handles) | `step_cubecl_with_pool` = `upload → step_cubecl_device → to_host`; `step_cubecl` unchanged (delegates) |
+| `discrete_step::cubecl` | `DiscreteStepDeviceState<R>` (`upload` / `from_parts` / `n` / `to_host`) holding **per-band** handle triples, `discrete_step_device<R>(client, &mut state, params) -> StepReport` | `discrete_step_cubecl` = `upload → device → to_host` |
+| `buffers` | `CubeclBufferPool` drops `out_phase`/`out_amp`/`out_freq` (device path allocates the 3 finalize outputs per step and moves them into the state), gains a zeroed `k_zero` handle (one upload at pool construction) | — |
+
+`SparseKnnError` gained one variant: `DeviceBufferMismatch { state, derivs }`.
+
+### `launch_count` 8 → **9** for the mean-field RK4 device path (decision)
+
+The device state has no host-resident input slice, so **stage 1 now takes its
+order parameter from the same hierarchical `order_param_device` reduction stages
+2–4 use** — one extra launch. `StepReport::launch_count` for `step_cubecl_device`
+(and therefore the re-expressed `step_cubecl_with_pool` / `step_cubecl` /
+`try_step_*`) is **9** = 4 stage kernels + 4 order-parameter reductions + 1
+finalize. Documented on `StepReport::launch_count` and the module docs. Three
+existing test assertions updated `8 → 9` (`wgpu`/`cpu`/`cuda`
+`*_matches_cpu_reference_for_small_n`) — an expectation update to match a
+deliberate, documented behaviour change, **not** a weakened assertion (still
+exact equality; Testing Standards §5). Stage-1 Z is now a device block-reduction
++ host `f64` combine instead of a host `f64` sum over the full slice — within the
+kernel-equivalence tolerance (`rtol=1e-5, atol=1e-6`), so every existing
+`assert_allclose` stays green. `discrete_step` `launch_count` stays **10**
+(delta's Z was already a device reduction).
+
+### `discrete_step` device state is **per-band**, not one concatenated buffer
+
+First attempt used one `N`-length handle per array + `Handle::offset_start`/
+`offset_end` sub-views per band. This **works on the CubeCL CPU and CUDA
+backends but wgpu (DX12) rejects it**: `min_storage_buffer_offset_alignment` is
+32 bytes, and a non-block-aligned band split (e.g. `[300, 777, 513]`) needs
+sub-buffer bindings at byte offsets 1200 / 4308 — `Validation Error … does not
+respect … min_storage_buffer_offset_alignment`. It also regressed the existing
+`wgpu_matches_cpu_reference_for_non_block_aligned_bands` test. Fix:
+`DiscreteStepDeviceState` holds three `[Handle; 3]` per-band triples
+(`create_from_slice` per band on upload, exactly what the pre-change closure
+did); `to_host` concatenates slow→fast. Every kernel binding stays at buffer
+offset 0. Recorded on the struct doc + module docs. **`0144Q2`'s `GpuBandStepper`
+should hold the per-band triples too.**
+
+### `offset` slicing verdict for `0144Q2`/`0144Q3`
+
+`Handle::offset_start`/`offset_end` sub-views are **cubecl-0.10-supported on CPU
+and CUDA** (used and tested here in the first `discrete_step` attempt) but **not
+portable to wgpu** unless every offset is a multiple of 32 bytes (8 `f32`s). Use
+per-buffer allocations where band/segment boundaries are arbitrary.
+
+### Gates (all green, local)
+
+| Gate | Result |
+|---|---|
+| `cargo fmt --all -- --check` | clean |
+| `cargo clippy --workspace --all-targets -- -D warnings` | clean |
+| `cargo clippy -p prin-kernels --features cuda \| wgpu \| cpu --all-targets -- -D warnings` | clean (each) |
+| `cargo test --workspace` | pass (no cubecl-feature tests here) |
+| `cargo test -p prin-kernels --features cpu` | **138 pass** / 0 fail (incl. new `sparse_knn`/`mean_field_rk4`/`discrete_step` device tests) |
+| `cargo test -p prin-kernels --features cuda` | **126 pass** / 0 fail (RTX 4060) |
+| `cargo test -p prin-kernels --features wgpu` | **145 pass** / 0 fail (incl. the previously-failing non-block-aligned + backend-unavailable tests) |
+| `RUSTDOCFLAGS='-D warnings' cargo doc -p prin-kernels --no-deps` | clean (also `--features cuda`/`wgpu`/`cpu`) |
+| `cargo audit` | exit 0; 3 allowed warnings (DV-008 `paste`, DV-017 `bincode`, `chacha20` yanked) — no `Cargo.toml` change, no new advisory |
+| `snyk code test crates/prin-kernels --severity-threshold=low` | **0 issues** (org `symbo-gif`) |
+
+Coverage on changed non-`#[cube]` lines: CI-authoritative (DV-033 — local
+`coverage.sysmon` segfault). New device entry points, `upload`/`to_host`/
+`from_parts`, the `DeviceBufferMismatch`/pool-mismatch/non-finite-param error
+paths, and multi-step device-resident loops are all exercised by the
+cpu/cuda/wgpu test modules.
+
+### Invariants held
+
+No `#[cube]` kernel body changed. No new `unsafe` (the `array_arg` helpers and
+their `// SAFETY:` notes are unchanged). No new `prin` public symbol
+(`prin-kernels` is Rust; `check_no_python_numerics.py` / `verify_api_surface`
+unaffected). CPU reference path untouched. Deterministic — the device paths add
+no RNG.
+
+### Carried to `0144Q2` / `0144R`
+
+- `step_cubecl_device` allocates 3 finalize-output handles per step (moved into
+  the state). A persistent-engine double-buffer swap is an available
+  optimisation if `0144Q2` profiling shows it matters — not required for
+  correctness.
+- `order_param_device` still does a small host `f64` combine of the per-block
+  partials each stage (4 per step now). The **on-device CUDA `f64` combine
+  (DV-003)** is `0144Q2` scope.
+- `test_sparse_vram_subquadratic` disposition unchanged — `0144R` adjudicates.
