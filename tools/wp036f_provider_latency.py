@@ -53,7 +53,9 @@ _CPU = "CPUExecutionProvider"
 _DML = "DmlExecutionProvider"
 _WARMUP = 50
 _MEASURED = 500
-_TOL = {"rtol": 1e-5, "atol": 1e-6}
+_RTOL = 1e-5
+_ATOL = 1e-6
+_TOL = {"rtol": _RTOL, "atol": _ATOL}
 
 
 def _state_batch(cases: int = 48) -> np.ndarray:
@@ -128,7 +130,7 @@ def build_report(model_path: Path) -> dict[str, Any]:
         directml.update(
             active_providers=active,
             executes=active[0] == _DML,
-            agrees_with_cpu=bool(np.allclose(dml_out, cpu_out, **_TOL)),
+            agrees_with_cpu=bool(np.allclose(dml_out, cpu_out, rtol=_RTOL, atol=_ATOL)),
             max_abs_diff_vs_cpu=float(np.abs(dml_out - cpu_out).max()),
             tolerance=_TOL,
         )

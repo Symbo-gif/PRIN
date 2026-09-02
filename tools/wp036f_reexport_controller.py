@@ -33,6 +33,7 @@ import hashlib
 import json
 import sys
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import onnx
@@ -145,7 +146,9 @@ def _write_manifest(manifest_path: Path, model_dir: Path) -> list[dict[str, obje
     are recomputed from ``model_dir``. Returns the updated ``files`` list.
     """
     manifest: dict[str, object] = json.loads(manifest_path.read_text(encoding="utf-8"))
-    files: list[dict[str, object]] = list(manifest["files"])  # type: ignore[arg-type]
+    files: list[dict[str, object]] = list(
+        cast("list[dict[str, object]]", manifest["files"])
+    )
     for entry in files:
         artefact = model_dir / str(entry["path"])
         entry["bytes"] = artefact.stat().st_size
