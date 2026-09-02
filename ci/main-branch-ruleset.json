@@ -48,7 +48,9 @@
           { "context": "parity" },
           { "context": "reproduce" },
           { "context": "Snyk Code" },
-          { "context": "Secret Scan" }
+          { "context": "Secret Scan" },
+          { "context": "gpu-cuda" },
+          { "context": "gpu-wgpu" }
         ]
       }
     }

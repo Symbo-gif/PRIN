@@ -32,11 +32,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Development Workflow §3, Coding Standards §6.2, Testing Standards §1
   principle 6, and the ETCA methodology §4/§5.5 updated; a `main` branch
   **ruleset** (`ci/main-branch-ruleset.json`) with required status checks +
-  PR-required + no bypass replaces direct pushes to `main`. **DV register:**
-  DV-032 gains `test_speed_vs_transformer` (T-F5); new **DV-034** (`gpu` not
-  yet a required ruleset check — `PRIN-GPU-Runner` SPOF); DV-006 and DV-024
-  annotated. **T-F5:** `test_speed_vs_transformer` quarantined into
-  `tests/conftest.py`; `nightly` `full-suite` green.
+  PR-required + no bypass replaces direct pushes to `main`;
+  `gpu-cuda` / `gpu-wgpu` are **required** checks (maintainer decision).
+  **DV register:** DV-032 gains `test_speed_vs_transformer` (T-F5); new
+  **DV-034** (the required `gpu` checks are gated on the single
+  `PRIN-GPU-Runner`); DV-006 and DV-024 annotated. **T-F5:**
+  `test_speed_vs_transformer` quarantined into `tests/conftest.py`; `nightly`
+  `full-suite` green. **Runner:** the chronic `PRIN-GPU-Runner` offline
+  condition (DV-024) is root-caused — it was never installed as a Windows
+  service, only run interactively — and fixed by
+  `ci/install-gpu-runner-service.ps1` (one-shot, elevated: re-registers it as
+  an auto-start service, disables AC sleep). `ci/README.md` documents the
+  `ci/` artefacts.
 - **ETCA-002 (`2026-09-02`) — Executive Testing and CI Audit Session 002;
   verdict `FAIL`.** Post-push CI-failure audit of the batched WP-036E + WP-036F
   range (`6343416..adbb1e3`, sessions `0144Q`–`0144X`). New report

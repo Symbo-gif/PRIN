@@ -32,12 +32,14 @@ import json
 import subprocess  # nosec B404
 import sys
 
-# The push-triggered workflows that gate `main`. `gpu` runs on every push
-# (amendment #45) but is intentionally not in this default set: it depends on
-# the single self-hosted `PRIN-GPU-Runner` (DV-024 SPOF), so a session confirms
-# it explicitly with `--required gpu` when the WP touched a GPU path, rather
-# than blocking every close on runner uptime.
-_DEFAULT_REQUIRED = ("rust", "python", "parity", "repro", "snyk")
+# The push-triggered workflows that gate `main` — all of them, `gpu` included
+# (maintainer decision 2026-09-02, promoted per DV-034: `gpu-cuda` / `gpu-wgpu`
+# are required `main` branch-ruleset checks). `gpu` runs only on the single
+# self-hosted `PRIN-GPU-Runner` (DV-024 SPOF), so a `gpu` "PENDING — queued"
+# result means the runner is offline: bring it online before declaring a WP
+# closed, or `--required rust python parity repro snyk` for an explicit,
+# recorded exception.
+_DEFAULT_REQUIRED = ("rust", "python", "parity", "repro", "snyk", "gpu")
 
 
 def _gh_runs(branch: str, limit: int) -> list[dict[str, object]]:
