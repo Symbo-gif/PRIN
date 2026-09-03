@@ -40,13 +40,19 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-Location $RunnerRoot
 
-Write-Host "== Removing the existing (interactive) runner registration =="
-$removeToken = (gh api -X POST "repos/$Repo/actions/runners/remove-token" --jq .token)
-& "$RunnerRoot\config.cmd" remove --token $removeToken
+if (Test-Path "$RunnerRoot\.runner") {
+    Write-Host "== Removing the existing runner registration =="
+    $removeToken = (gh api -X POST "repos/$Repo/actions/runners/remove-token" --jq .token)
+    # Don't abort if the server-side registration is already gone.
+    try { & "$RunnerRoot\bin\Runner.Listener.exe" remove --token $removeToken }
+    catch { Write-Warning "remove failed (already gone?) — continuing: $_" }
+} else {
+    Write-Host "== No local .runner config (runner already de-registered) — registering fresh =="
+}
 
-Write-Host "== Re-registering as an auto-start service (account: $Account) =="
+Write-Host "== Registering as an auto-start service (account: $Account) =="
 $regToken = (gh api -X POST "repos/$Repo/actions/runners/registration-token" --jq .token)
-& "$RunnerRoot\config.cmd" `
+& "$RunnerRoot\bin\Runner.Listener.exe" configure `
     --url "https://github.com/$Repo" `
     --token $regToken `
     --name $RunnerName `
