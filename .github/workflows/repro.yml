@@ -6,13 +6,11 @@ name: repro
 on:
   push:
     branches: [main]
+  # ETCA-002 T-F7: `reproduce` is a required `main` branch-ruleset check, so it
+  # must report on every PR — a path filter here would leave the required check
+  # permanently "expected" (never run) on any PR that doesn't touch these
+  # paths, deadlocking the merge. Runs on all PRs.
   pull_request:
-    paths:
-      - ".github/workflows/repro.yml"
-      - "tools/**"
-      - "tests/test_reproduce.py"
-      - "python/prin/reporting/**"
-      - "paper/**"
 
 
 jobs:

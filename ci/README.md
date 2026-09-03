@@ -28,6 +28,12 @@ gh api -X POST repos/Symbo-gif/PRIN/rulesets --input ci/main-branch-ruleset.json
 gh api -X PUT repos/Symbo-gif/PRIN/rulesets/RULESET_ID --input ci/main-branch-ruleset.json
 ```
 
+Every workflow whose job context is in the required set must run on **every**
+PR (no `pull_request` `paths:` filter) — a filtered required check stays
+permanently "expected" and blocks the merge on any PR that doesn't touch its
+paths. `parity.yml` and `repro.yml` had such filters; they were removed when
+`parity` / `reproduce` were made required.
+
 It enforces, with **no bypass actors** (`enforce_admins` equivalent):
 
 - a pull request before merging (`0` required approvals — the gate is CI, not

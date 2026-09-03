@@ -27,6 +27,16 @@ on:
     - cron: "0 6 * * *"
   workflow_dispatch:
 
+# PRIN-GPU-Runner is the maintainer's 32 GB workstation. `cargo test
+# --workspace` fans out one rustc per test crate; the big prin-train test
+# binaries can each take ~1-2 GB, so an unbounded parallel compile burst
+# exhausts RAM and rustc dies with STATUS_STACK_BUFFER_OVERRUN / "memory
+# allocation failed" — a flake, worse when anything else runs on the box.
+# Cap the parallel compile so `gpu-cuda` / `gpu-wgpu` are reliable as required
+# checks (ETCA-002 T-F7). Codegen units default is unchanged.
+env:
+  CARGO_BUILD_JOBS: "4"
+
 jobs:
   gpu-cuda:
     runs-on: [self-hosted, gpu]
