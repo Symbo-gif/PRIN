@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **ETCA-002 follow-up (`2026-09-05`) — `rust.yml`'s Windows `test` leg moved
+  back to the self-hosted `PRIN-GPU-Runner`, closing DV-016/DV-024's last open
+  loop.** With the runner now an auto-start Windows service (no more DV-024
+  outage risk), the hosted-`windows-latest` slowness (DV-016) that justified
+  ETCA-001's move away from self-hosted outweighs the (now-eliminated)
+  reliability concern — and had twice hit the `timeout-minutes: 120` bound
+  outright on a real PR. The matrix gained a `self_hosted` key routing only
+  the Windows leg to `[self-hosted, gpu]` (ubuntu/macos stay hosted); an
+  explicit job `name:` pins the check-run context to
+  `test (windows-latest, windows-latest)` so the `main` branch-ruleset
+  required-check set doesn't need updating; `dtolnay/rust-toolchain` /
+  `Swatinem/rust-cache` are skipped on the self-hosted leg (WSL-only, same as
+  `gpu.yml`). DV-016 and DV-024 register rows updated.
 - **ETCA-002 remediation (`2026-09-02`) — CI-gate machinery, push/close
   cadence, and re-affirmation of the WP-036F / DV-006-DirectML / amendment-#13
   closures over a real green CI run.** Filled the ETCA-002 report §7 closure

@@ -40,34 +40,56 @@ jobs:
       - run: cargo clippy --workspace --all-targets --features strict-checks -- -D warnings
 
   test:
-    # ETCA-001 T-F6 / DV-024: the Windows `test` leg was pinned to the single
-    # self-hosted PRIN-GPU-Runner (DV-016/DV-023 migration). When that runner
-    # is offline the job sat ~24 h "awaiting a runner" before auto-failing —
-    # GitHub Actions has no queue timeout, so `timeout-minutes` does not help.
-    # The self-hosted runner is a single point of failure with no fallback and
-    # the GITHUB_TOKEN cannot query runner status to pick one dynamically
-    # (that needs repo-admin scope). Windows Rust tests therefore run on
-    # GitHub-hosted `windows-latest` — reliable and always green, at the cost
-    # of the known DV-016 hosted-Windows slowness, bounded by `timeout-minutes`
-    # below. The self-hosted runner stays reserved for `gpu.yml` (`[gpu]` tag).
+    # ETCA-001 T-F6 / DV-024 (historical): the Windows `test` leg was moved to
+    # GitHub-hosted `windows-latest` because the self-hosted `PRIN-GPU-Runner`
+    # was only ever run interactively — offline for days at a stretch — and a
+    # required job stuck "awaiting a runner" has no queue timeout. That traded
+    # DV-024's outage risk for DV-016's hosted-Windows CubeCL-CPU slowness,
+    # which regularly runs 80-120 min and — now that `gpu`/`gpu-cuda`/
+    # `gpu-wgpu` are required branch-ruleset checks (ETCA-002 T-F7) — twice hit
+    # the `timeout-minutes: 120` bound outright on a real PR (etca-002 #8).
+    #
+    # ETCA-002 remediation fixed DV-024 at the root: `PRIN-GPU-Runner` is now
+    # an auto-start Windows **service** (`ci/install-gpu-runner-service.ps1`),
+    # not an interactive process, so the outage risk that justified moving off
+    # it is gone. It already gates every push as a required check via
+    # `gpu.yml`, so routing this leg to it adds no new failure mode — only one
+    # more (fast, ~5 min) job in that runner's queue. Only the Windows leg
+    # moves; ubuntu/macos stay hosted, where they are fast and reliable.
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             runner: ubuntu-latest
+            self_hosted: false
           - os: windows-latest
             runner: windows-latest
+            self_hosted: true
           - os: macos-latest
             runner: macos-latest
-    runs-on: ${{ matrix.runner }}
+            self_hosted: false
+    # Explicit name so the check-run context stays `test (<os>, <runner>)`
+    # regardless of the `self_hosted` matrix key — that context string is a
+    # required `main` branch-ruleset check (ETCA-002 T-F7); letting the
+    # auto-generated name pick up `self_hosted` too would rename the context
+    # and permanently block every future PR (the same class of deadlock T-F7
+    # hit with `parity`/`reproduce`'s path filters).
+    name: test (${{ matrix.os }}, ${{ matrix.runner }})
+    runs-on: ${{ matrix.self_hosted && fromJson('["self-hosted","gpu"]') || matrix.runner }}
     # DV-016: bound worst case rather than risk the default 360-minute job
-    # timeout silently burning Actions minutes.
+    # timeout silently burning Actions minutes. The self-hosted leg finishes
+    # in minutes; 120 is purely a safety net for the two hosted legs.
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+      # dtolnay/rust-toolchain and Swatinem/rust-cache both need WSL bash,
+      # unavailable on the self-hosted Windows runner (same DV-024 root cause
+      # gpu.yml documents); Rust is already pre-installed there.
       - uses: dtolnay/rust-toolchain@stable
+        if: ${{ !matrix.self_hosted }}
       - uses: Swatinem/rust-cache@v2
+        if: ${{ !matrix.self_hosted }}
       - run: cargo test --workspace
       - name: CubeCL CPU kernel-equivalence tests
         run: cargo test -p prin-kernels --features cpu
