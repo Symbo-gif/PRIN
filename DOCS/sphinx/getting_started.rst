@@ -297,6 +297,7 @@ root:
 
 .. code-block:: python
 
+   # sphinx-example: skip — migration comparison, not executable
    # old
    from prinet import KuramotoOscillator, PRINetModel
 
