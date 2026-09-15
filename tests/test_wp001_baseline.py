@@ -584,6 +584,12 @@ def test_python_dependency_audits_are_complete_and_gating() -> None:
     assert "|| true" not in security_job
 
 
+def test_python_workflow_limits_default_github_token_permissions() -> None:
+    workflow = (ROOT / ".github/workflows/python.yml").read_text(encoding="utf-8")
+
+    assert "\npermissions:\n  contents: read\n" in workflow
+
+
 def test_python_docs_job_installs_mot_extra_for_notebook_execution() -> None:
     workflow = (ROOT / ".github/workflows/python.yml").read_text(encoding="utf-8")
     docs_job = workflow.split("  docs:\n", maxsplit=1)[1].split(
