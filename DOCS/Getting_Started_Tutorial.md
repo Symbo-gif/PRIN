@@ -65,24 +65,33 @@ autograd graph is stitched through DLPack bridges.
 
 ```python
 import torch
-from prin.nn import DiscreteDeltaThetaGamma
+from prin.nn import DiscreteDeltaThetaGammaLayer
 
-net = DiscreteDeltaThetaGamma(n_delta=4, n_theta=8, n_gamma=32)
-phase = torch.rand(16, net.n_total) * 2 * torch.pi
-amplitude = torch.ones(16, net.n_total)
+torch.manual_seed(0)
+net = DiscreteDeltaThetaGammaLayer(
+    n_delta=4, n_theta=8, n_gamma=32, n_dims=64, n_steps=3
+)
+x = torch.randn(16, net.n_dims)
+amplitudes = net(x)
 
-phase, amplitude = net.step(phase, amplitude, dt=0.01)
-(phase.sum() + amplitude.sum()).backward()
-print(sum(p.grad is not None for p in net.parameters()))   # 13
+amplitudes.square().sum().backward()
+print(sum(p.grad is not None for p in net.parameters()))   # 15
+
+optimizer = torch.optim.SGD(net.parameters(), lr=1e-3)
+before = net(x).detach()
+optimizer.step()
+print(not torch.equal(before, net(x).detach()))            # True
 ```
 
-`DiscreteDeltaThetaGamma` declares its per-band frequencies, coupling matrices,
-PAC gates, and amplitude growth rates as real `nn.Parameter`s, so a torch
-optimizer can train it. **Not every layer does:** `DiscreteDeltaThetaGammaLayer`
-and `ResonanceLayer` keep their weights inside the Rust bridge — input gradients
-still flow, but `parameters()` is empty or disconnected from `forward`. Check
-`sum(p.numel() for p in layer.parameters())` before handing a layer to an
-optimizer; see `notebooks/04_torch_bridge.ipynb` §6.
+`DiscreteDeltaThetaGammaLayer` and `ResonanceLayer` expose canonical
+`nn.Parameter` values: every forward synchronizes them into Rust/Burn and
+backward returns real parameter VJPs, so a torch optimizer changes the next
+Rust-backed forward. Other compatibility modules retain different ownership
+contracts. `DiscreteDeltaThetaGamma`, for example, pushes canonical values
+into a non-differentiable Rust stepper, while `HierarchicalResonanceLayer`'s
+PAC-depth tensors are value-preserving mirrors. See
+`notebooks/04_torch_bridge.ipynb` §6 before interpreting a populated `.grad`
+as a Burn parameter gradient.
 
 ## Tutorial 3: Phase-to-rate readout
 

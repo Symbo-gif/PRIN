@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **WP-037 S4 documentation (`0148`, 2026-09-15) — WP-037 closed locally;
+  all eight S2 findings are governed and the delta re-audit is CLEAN.**
+  `ResonanceLayer` and `DiscreteDeltaThetaGammaLayer` now expose canonical
+  PyTorch parameters synchronized into the Rust/Burn forward and receive
+  real Burn parameter VJPs (5/5 and 15/15 in the non-vacuous regression
+  probes), so ordinary `torch.optim` steps change subsequent Rust-backed
+  forwards. The documentation now distinguishes that ownership model from
+  Rust-owned state and value-preserving compatibility mirrors across the
+  Sphinx API, architecture, getting-started, migration, notebook,
+  `prin.nn`, and Rust-binding documentation. The docs CI job executes the
+  shipped guide examples under the committed constraints file; notebook 04
+  demonstrates optimizer reachability; all four notebooks execute
+  end-to-end; the Sphinx build is warning-free; `tools/reproduce.py`
+  verifies 172 artefacts and regenerates 39 paper files; and the draft
+  Parity Report remains explicitly labelled `VALIDATION` versus
+  `CONFIRMATORY`/`REFERENCE-HISTORICAL` with zero confirmatory results.
+  PSR `DOCS/reports/037-project-state.md` records the current gates
+  (`3,496 passed / 185 skipped` full Python + parity; 1,577 Rust tests +
+  1 ignored from the corrective delta; security scans clean at governed
+  thresholds) and declares WP-038 (`0149`). WP037-F6 remains the recorded
+  maintainer push/remote-CI gate; no `1.0` release or Phase 7
+  pre-registration was created.
 - **WP-036G S4 documentation (`0144AB`, 2026-09-15) — WP-036G closed; the
   amendment-#38 Deferred-Validation closure block is complete.** The
   `DEFERRED_VALIDATION_REGISTER.md` permanent dispositions for

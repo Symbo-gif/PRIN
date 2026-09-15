@@ -71,9 +71,12 @@ How one forward pass travels from Python to Rust and back:
    ``prin-train`` / ``prin-dynamics`` routine, and returns the results together
    with a recompute closure for the backward pass.
 3. ``torch.autograd.Function`` orchestration in Python stitches the forward and
-   VJP calls into the autograd graph. Gradients flow back into Rust-owned
-   parameters, which are checkpointed as opaque bytes
-   (``rust_state_dict()`` / ``load_rust_state_dict()``).
+   VJP calls into the autograd graph. Rust/Burn returns input VJPs and, for the
+   canonical-parameter bridges, parameter VJPs as well. ``ResonanceLayer`` and
+   ``DiscreteDeltaThetaGammaLayer`` synchronize their canonical
+   ``torch.nn.Parameter`` values into Rust on every forward; other modules may
+   retain Rust-owned parameters checkpointed through
+   ``rust_state_dict()`` / ``load_rust_state_dict()``.
 
 .. code-block:: text
 

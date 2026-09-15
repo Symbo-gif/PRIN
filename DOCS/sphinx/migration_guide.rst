@@ -502,19 +502,18 @@ The following symbols are new in PRIN and have no direct PRINet 3.0 equivalent:
   outer-product derivation (:math:`<10^{-9}`).
 
   **WP-025 Python bridge (``prin.nn``):** the production ``torch.autograd.Function``
-  bridge is now delivered. ``prin.nn.ResonanceLayer`` and
-  ``prin.nn.GatedPhaseActivation`` are ``torch.nn.Module`` wrappers whose
-  ``forward``/``backward`` call into the Rust core via DLPack zero-copy
-  tensor exchange (``crates/prin-py/src/bindings/train.rs``). Trainable
-  parameters remain owned by the Rust bridge (not ``torch.nn.Parameter``);
-  train them with ``prin-train`` oscillator-aware optimizers
-  (``SyncGd``/``Rip``/``Scalr``). Checkpointing uses
-  ``rust_state_dict``/``load_rust_state_dict`` (Rust-native ``burn::record``
-  bytes), with shape validation at load time (WP025-F1 fix). Every bridge
-  requires ``float64`` CPU, contiguous input. 31 Python tests pass
-  ``torch.autograd.gradcheck`` in float64. GPU-backed Burn backends
-  (``wgpu``/``cuda``) remain unbridged (DV-005; no Burn CUDA backend in
-  workspace).
+  bridge is delivered through ``crates/prin-py/src/bindings/train.rs``.
+  ``prin.nn.ResonanceLayer`` is fully torch-trainable: its
+  ``torch.nn.Parameter`` tensors are canonical, each forward synchronizes them
+  into the Rust/Burn owner, and backward returns real parameter VJPs. Its
+  ``rust_state_dict``/``load_rust_state_dict`` methods serialize those
+  canonical values as Rust-native ``burn::record`` bytes with load-time shape
+  validation (WP025-F1 fix). ``prin.nn.GatedPhaseActivation`` keeps its gate
+  parameters Rust-owned and remains in the ``prin-train`` optimizer ownership
+  model. Regular differentiable inputs must share dtype/device; the bridge
+  marshals them as contiguous ``float64`` CPU tensors for Rust. GPU-backed
+  Burn backends (``wgpu``/``cuda``) remain unbridged (DV-005; no Burn CUDA
+  backend in workspace).
 
 - ``prin-train`` PhaseTracker, Hybrid, baselines, and allocation (WP-026) —
   the fifth increment of the Burn-based trainable stack, rebuilding PRINet 3.0
@@ -1525,7 +1524,7 @@ top-level ``prin`` namespace.
    "PRINetModel", "prin.PRINetModel / prin.nn.PRINetModel", "Real WP-036A ``nn.Module`` (sub-pass 0144A4); Rust-owned stacked ``ResonanceLayer`` container with inter-layer ``LayerNorm``, concept readout, and clamped ``log_softmax`` in ``prin_train::model``"
    "compile_model", "prin.compile_model / prin.nn.compile_model", "Real WP-036A pure-Python guarded ``torch.compile`` passthrough (sub-pass 0144A4, D-2); the one symbol with no Rust component"
    "DiscreteDeltaThetaGamma", "prin.DiscreteDeltaThetaGamma / prin.nn.DiscreteDeltaThetaGamma", "Real ``nn.Module`` (WP-036C S1 ``0144M1``, plan amendment #40); new ``DiscreteDeltaThetaGammaBridge`` PyO3 binding over the audited Burn owner ``prin_train::bands`` (WP-022), plus ``order_parameters`` / ``pac_index`` added to that module. Parameters are Python ``nn.Parameter``/``nn.Linear`` mirrors; ``step`` / ``integrate`` run the Rust forward (non-differentiable, with a value-preserving zero term for parameter ``.grad`` population — the E4 layer-mirror pattern — and, since WP-036C S3 ``0144O`` / WP036C-F2, a straight-through identity term over the phase/amplitude inputs so gradients reach an upstream encoder)"
-   "DiscreteDeltaThetaGammaLayer", "prin.DiscreteDeltaThetaGammaLayer / prin.nn.DiscreteDeltaThetaGammaLayer", "Real WP-036A ``nn.Module`` (sub-pass 0144A3); Rust-owned discrete three-band core and learnable phase/amplitude projections"
+   "DiscreteDeltaThetaGammaLayer", "prin.DiscreteDeltaThetaGammaLayer / prin.nn.DiscreteDeltaThetaGammaLayer", "Real WP-036A ``nn.Module`` (sub-pass 0144A3); canonical ``torch.nn.Parameter`` projections and dynamics synchronized into Rust/Burn with real parameter VJPs (WP-037 S3 corrective delta)"
    "MixedPrecisionTrainer", "prin.MixedPrecisionTrainer / prin.training_hooks.MixedPrecisionTrainer", "Real (WP-036C S1 ``0144M4``); ``torch.amp`` training-step orchestration over Rust-backed models (training-loop bookkeeping, no Python oscillator numerics)"
    "AsyncCPUGPUPipeline", "prin.AsyncCPUGPUPipeline / prin.training_hooks.AsyncCPUGPUPipeline", "Real (WP-036C S1 ``0144M4``); CPU-synchronous training-loop orchestration"
    "retrain_controller", "prin.retrain_controller / prin.training_hooks.retrain_controller", "Real (WP-036C S1 ``0144M2``, DV-025); telemetry-supervised ``SubconsciousController`` MLP retraining + ONNX export over the Rust owner. Reference consumers ``test_acceptance_y2q2`` / ``y2q3`` pass"

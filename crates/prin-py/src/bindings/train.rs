@@ -426,8 +426,9 @@ impl PyGatedPhaseActivationCtx {
 /// `torch.autograd.Function` via DLPack (WP-025).
 ///
 /// Wraps [`prin_train::activations::GatedPhaseActivation`]: `y = σ(w_g·z +
-/// b_g) · phase_activation(z)`. Gate parameters live in Rust (see
-/// [`PyResonanceLayerBridge`]'s docs for the same training-ownership split).
+/// b_g) · phase_activation(z)`. Gate parameters live in Rust. Unlike
+/// [`PyResonanceLayerBridge`], this bridge does not accept canonical PyTorch
+/// parameter tensors and returns only the input VJP.
 #[pyclass(
     name = "GatedPhaseActivationBridge",
     module = "prin._prin_core",

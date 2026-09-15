@@ -8,17 +8,17 @@ executed outputs**, so reading a notebook shows what the API actually produced.
 
 | Notebook | Description | Measured runtime |
 |---|---|---|
-| [`01_oscillosim_quickstart.ipynb`](01_oscillosim_quickstart.ipynb) | **Oscillator dynamics and synchronization basics** — `quick_simulate` throughput, `OscilloSim` trajectory recording, a coupling-strength sweep through the Kuramoto transition, a coupling-mode comparison, and a ring chimera state diagnosed with `local_order_parameter` / `chimera_index`. | 20.3 s |
-| [`02_clevr_n_binding.ipynb`](02_clevr_n_binding.ipynb) | **Hierarchical δ/θ/γ binding and multi-object tracking** — model architecture and parameter counts, a short real training run on synthetic temporal CLEVR-N, an object-count scaling sweep, oscillator phase dynamics during binding, and MOT evaluation via `evaluate_tracking`. | 19.9 s |
-| [`03_custom_coupling.ipynb`](03_custom_coupling.ipynb) | **Custom coupling topologies and PAC** — the built-in topology builders, a custom two-cluster graph driven through the Rust core, a coupling-mode comparison, the PAC modulation curve, the Abrams–Strogatz cosine kernel, and rewiring probability vs synchronization speed. | 14.8 s |
-| [`04_torch_bridge.ipynb`](04_torch_bridge.ipynb) | **New:** using the Rust core from PyTorch training loops — DLPack round-trips, the `autograd.Function` bridge, float64 `gradcheck`, Rust-owned parameter state via `rust_state_dict()`, a complete Adam loop, and an audit of where each layer's weights actually live. | 9.4 s |
+| [`01_oscillosim_quickstart.ipynb`](01_oscillosim_quickstart.ipynb) | **Oscillator dynamics and synchronization basics** — `quick_simulate` throughput, `OscilloSim` trajectory recording, a coupling-strength sweep through the Kuramoto transition, a coupling-mode comparison, and a ring chimera state diagnosed with `local_order_parameter` / `chimera_index`. | 86.4 s |
+| [`02_clevr_n_binding.ipynb`](02_clevr_n_binding.ipynb) | **Hierarchical δ/θ/γ binding and multi-object tracking** — model architecture and parameter counts, a short real training run on synthetic temporal CLEVR-N, an object-count scaling sweep, oscillator phase dynamics during binding, and MOT evaluation via `evaluate_tracking`. | 65.6 s |
+| [`03_custom_coupling.ipynb`](03_custom_coupling.ipynb) | **Custom coupling topologies and PAC** — the built-in topology builders, a custom two-cluster graph driven through the Rust core, a coupling-mode comparison, the PAC modulation curve, the Abrams–Strogatz cosine kernel, and rewiring probability vs synchronization speed. | 51.2 s |
+| [`04_torch_bridge.ipynb`](04_torch_bridge.ipynb) | **New:** using the Rust core from PyTorch training loops — DLPack round-trips, the `autograd.Function` bridge, float64 `gradcheck`, Rust-native parameter checkpointing, and a canonical-parameter Adam loop that changes the next Rust-backed `ResonanceLayer` forward. | 35.4 s |
 
 Runtimes are wall-clock for a full `nbclient` execution (kernel start included),
-measured on the maintainer's Windows workstation, CPU-only, during WP-037 S1
-(session `0145`). All four together: **64.4 s**. Treat them as an order-of-
-magnitude budget for CI sizing, not as a benchmark — Benchmarking and
-Reproducibility Standards require the environment to travel with any quoted
-timing.
+measured on the maintainer's Windows workstation, CPU-only, during WP-037 S4
+(session `0148`) via `pytest tests/test_notebooks.py -m slow`. All four
+together: **238.8 s**. Treat them as an order-of-magnitude budget for CI
+sizing, not as a benchmark — Benchmarking and Reproducibility Standards require
+the environment to travel with any quoted timing.
 
 ## Naming
 

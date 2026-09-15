@@ -228,48 +228,49 @@ See :doc:`coupling_topologies` for the full mode catalogue.
 Tutorial 5 — a trainable band network
 -------------------------------------
 
-``prin.nn`` modules are ordinary ``torch.nn.Module``s. ``DiscreteDeltaThetaGamma``
-is the discrete-time δ/θ/γ network: its per-band frequencies, intra-band
-coupling matrices, PAC gates, and amplitude growth rates are ``nn.Parameter``s,
-and every ``step`` pushes them into the Rust owner before running the Rust
-forward.
+``prin.nn`` modules are ordinary ``torch.nn.Module``s.
+``DiscreteDeltaThetaGammaLayer`` is the discrete-time δ/θ/γ network: its input
+projections and dynamics parameters are canonical ``nn.Parameter`` values.
+Every forward marshals those values into the Rust/Burn owner, and backward
+returns real parameter VJPs.
 
 .. code-block:: python
 
    import torch
-   from prin.nn import DiscreteDeltaThetaGamma
+   from prin.nn import DiscreteDeltaThetaGammaLayer
 
-   net = DiscreteDeltaThetaGamma(n_delta=4, n_theta=8, n_gamma=32)
+   torch.manual_seed(0)
+   net = DiscreteDeltaThetaGammaLayer(
+       n_delta=4, n_theta=8, n_gamma=32, n_dims=64, n_steps=3
+   )
    print(net.n_total)                    # 44
 
-   phase = torch.rand(16, net.n_total) * 2 * torch.pi
-   amplitude = torch.ones(16, net.n_total)
+   x = torch.randn(16, net.n_dims)
+   amplitudes = net(x)
+   print(amplitudes.shape)               # torch.Size([16, 44])
 
-   phase, amplitude = net.step(phase, amplitude, dt=0.01)
-   print(phase.shape)                    # torch.Size([16, 44])
-
-   loss = phase.sum() + amplitude.sum()
+   loss = amplitudes.square().sum()
    loss.backward()
-   print(sum(p.grad is not None for p in net.parameters()))   # 13
+   print(sum(p.grad is not None for p in net.parameters()))   # 15
 
-   r_delta, r_theta, r_gamma = net.order_parameters(phase)
-   print([round(float(r.mean()), 3) for r in (r_delta, r_theta, r_gamma)])
-   # [0.979, 0.938, 0.912]
+   optimizer = torch.optim.SGD(net.parameters(), lr=1e-3)
+   before = net(x).detach()
+   optimizer.step()
+   print(not torch.equal(before, net(x).detach()))            # True
 
-.. admonition:: Not every layer exposes torch-owned parameters
+.. admonition:: Parameter ownership is not uniform
    :class: caution
 
-   The layer family is not uniform in where its weights live.
-   ``DiscreteDeltaThetaGamma`` and ``HierarchicalResonanceLayer`` declare real
-   ``nn.Parameter``s that a torch optimizer can update.
-   ``DiscreteDeltaThetaGammaLayer`` and ``ResonanceLayer`` keep their weights
-   inside the Rust bridge: gradients still flow to the *input* (so they compose
-   inside a larger differentiable model), but ``parameters()`` is empty or
-   disconnected from ``forward``, and ``rust_state_dict()`` returns them as
-   opaque bytes. Check ``sum(p.numel() for p in layer.parameters())`` before
-   handing a layer to an optimizer. This asymmetry is recorded as an
-   out-of-scope discovery in the WP-037 S1 handoff note
-   (``DOCS/experiments/0145-wp037-s1-handoff.md``) for audit classification.
+   ``ResonanceLayer`` and ``DiscreteDeltaThetaGammaLayer`` are the fully
+   torch-trainable bridge layers: their ``nn.Parameter`` objects are canonical,
+   synchronized into Rust/Burn on every forward, and updated by real Burn VJPs.
+   Other compatibility modules deliberately preserve PRINet-3.0 surfaces with
+   value-preserving mirrors or straight-through terms. For example,
+   ``DiscreteDeltaThetaGamma`` pushes canonical values into a
+   non-differentiable Rust stepper, while ``HierarchicalResonanceLayer`` keeps
+   its numerically active PAC depths Rust-owned. A populated ``.grad`` on one
+   of those mirrors is not a Burn parameter VJP; check the class docstring
+   before treating it as a training gradient.
 
 Tutorial 6 — phase-to-rate readout
 ----------------------------------

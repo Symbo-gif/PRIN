@@ -12,18 +12,22 @@ are **not** re-exported — the ablation-variant framework, the MOT-17 loader,
 the subconscious-model compatibility aliases, and the bridge entry point
 itself.
 
-.. admonition:: Where the weights live differs by layer
+.. admonition:: Parameter ownership is not uniform
    :class: caution
 
-   ``DiscreteDeltaThetaGamma`` and ``HierarchicalResonanceLayer`` declare real
-   ``torch.nn.Parameter``s that an optimizer can update.
-   ``DiscreteDeltaThetaGammaLayer`` and ``ResonanceLayer`` keep their weights
-   inside the Rust bridge: input gradients flow, but ``parameters()`` is empty
-   or disconnected from ``forward``, and the weights are reachable only as
-   opaque bytes through ``rust_state_dict()``. Check
-   ``sum(p.numel() for p in layer.parameters())`` before handing a layer to an
-   optimizer. Recorded as an out-of-scope discovery in
-   ``DOCS/experiments/0145-wp037-s1-handoff.md``.
+   ``ResonanceLayer`` and ``DiscreteDeltaThetaGammaLayer`` are fully
+   torch-trainable bridge layers: their ``torch.nn.Parameter`` objects are the
+   canonical optimizer-visible values, each forward synchronizes them into the
+   Rust/Burn owner, backward returns real Burn-computed parameter VJPs, and a
+   ``torch.optim`` step changes the next Rust-owned forward.
+
+   Other compatibility modules use documented value-preserving mirrors or
+   straight-through terms for PRINet-3.0 API parity. For example,
+   ``DiscreteDeltaThetaGamma`` pushes canonical values into a
+   non-differentiable Rust stepper, while ``HierarchicalResonanceLayer`` keeps
+   its numerically active PAC depths Rust-owned. A populated ``.grad`` on one
+   of those mirrors is not a Burn parameter VJP. Check the class docstring
+   before interpreting a parameter as a genuine torch-training path.
 
 .. automodule:: prin.nn
    :members:

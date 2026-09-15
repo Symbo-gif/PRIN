@@ -195,6 +195,8 @@ jobs:
           python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
       - name: Documentation-surface and paper-wiring regression tests
         run: python -m pytest tests/test_sphinx_docs.py tests/test_paper_wiring.py tests/test_notebooks.py -q -m "not slow"
+      - name: Sphinx guide examples execute end-to-end
+        run: python -m pytest tests/test_sphinx_examples.py -q -m slow
       - name: All four notebooks execute end-to-end (Definition of Done #8)
         run: python -m pytest tests/test_notebooks.py -q -m slow
 

@@ -35,8 +35,9 @@ sufficient — you do not have to run it to see what the API produces.
    * - ``04_torch_bridge.ipynb``
      - **New, no reference counterpart.** Using the Rust core from PyTorch
        training loops: DLPack round-trips, an ``autograd.Function`` bridge
-       forward and backward, float64 ``gradcheck``, Rust-owned parameter state
-       via ``rust_state_dict()``, and a complete Adam training loop.
+       forward and backward, float64 ``gradcheck``, Rust-native parameter
+       checkpointing, and an Adam loop over canonical ``ResonanceLayer``
+       parameters that changes the next Rust-backed forward.
      - —
 
 Names ``01``–``03`` follow the reference implementation because the ported
@@ -56,25 +57,26 @@ Measured runtime budget
      - Runtime
      - Cells (code / markdown)
    * - ``01_oscillosim_quickstart.ipynb``
-     - 20.3 s
+     - 86.4 s
      - 7 / 8
    * - ``02_clevr_n_binding.ipynb``
-     - 19.9 s
+     - 65.6 s
      - 7 / 8
    * - ``03_custom_coupling.ipynb``
-     - 14.8 s
+     - 51.2 s
      - 8 / 8
    * - ``04_torch_bridge.ipynb``
-     - 9.4 s
+     - 35.4 s
      - 10 / 10
    * - **All four**
-     - **64.4 s**
+     - **238.8 s**
      - —
 
-Measured CPU-only on the maintainer's Windows workstation during WP-037 S1
-(session ``0145``). These are a CI-sizing budget, not a benchmark: Benchmarking
-and Reproducibility Standards require the environment to travel with any quoted
-timing, and no environment block accompanies these numbers.
+Measured CPU-only on the maintainer's Windows workstation during WP-037 S4
+(session ``0148``) via ``pytest tests/test_notebooks.py -m slow``. These are a
+CI-sizing budget, not a benchmark: Benchmarking and Reproducibility Standards
+require the environment to travel with any quoted timing, and no environment
+block accompanies these numbers.
 
 Running them
 ------------

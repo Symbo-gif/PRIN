@@ -133,9 +133,10 @@ impl PyOscillatoryAttentionCtx {
 /// to `torch.autograd.Function` via DLPack.
 ///
 /// Wraps [`prin_train::attention::OscillatoryAttention`]; see that module's
-/// docs for the exact formula. Weight/bias/`alpha` parameters live in Rust —
-/// see `train.rs`'s docs for the training-ownership split. See the module
-/// docs above for why `dropout` is restricted to `0.0`.
+/// docs for the exact formula. Weight/bias/`alpha` parameters live in Rust;
+/// `set_alpha` imports the Python compatibility value before each forward, but
+/// backward returns only input VJPs. See the module docs above for why
+/// `dropout` is restricted to `0.0`.
 #[pyclass(
     name = "OscillatoryAttentionBridge",
     module = "prin._prin_core",

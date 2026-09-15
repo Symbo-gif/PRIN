@@ -52,6 +52,7 @@ section as a field table.
 that do not resolve, a `prin` submodule whose public names reach no documented
 page, `conf.py`'s `release` drifting from `pyproject.toml`, any module
 member-documented on two indexed pages, and guides that regress to stubs.
+`tests/test_sphinx_examples.py` executes the shipped guide code blocks end-to-end.
 
 ## Build
 
@@ -68,10 +69,11 @@ rm -rf DOCS/sphinx/_build
 sphinx-build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
 ```
 
-CI runs exactly that in `python.yml`'s `docs` job, followed by the notebook
-execution harness (`pytest tests/test_notebooks.py -m slow`) — the evidence for
-Definition of Done #8. The project README is intentionally excluded from the
-Sphinx source toctree.
+CI runs exactly that in `python.yml`'s `docs` job, followed by the shipped
+guide-example harness (`pytest tests/test_sphinx_examples.py -m slow`) and the
+notebook execution harness (`pytest tests/test_notebooks.py -m slow`) — the
+evidence for Definition of Done #8. The project README is intentionally
+excluded from the Sphinx source toctree.
 
 ## Known gap (routed to WP-038)
 

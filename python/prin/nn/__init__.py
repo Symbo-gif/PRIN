@@ -10,15 +10,18 @@ differentiable bridge follows the same contract:
   integration, not per step"); an entire multi-step Rust integration (e.g.
   :class:`ResonanceLayer`'s Kuramoto steps) runs inside a single ``forward``
   call.
-- PyTorch ``nn.Parameter`` objects are the canonical optimizer-visible values.
-  Each batched forward synchronizes them into a Burn module in the Rust bridge;
-  backward returns Burn-computed input and parameter VJPs. Rust remains the
-  sole numerical authority, while ordinary ``torch.optim`` steps alter the
-  next Rust forward. Rust-native checkpoints remain available through
-  ``rust_state_dict``/``load_rust_state_dict``.
-- Every bridge requires ``float64`` CPU, contiguous input, matching
-  ``torch.autograd.gradcheck``'s double-precision requirement (Testing
-  Standards §2).
+- ``ResonanceLayer`` and ``DiscreteDeltaThetaGammaLayer`` use canonical
+  PyTorch ``nn.Parameter`` values. Each batched forward synchronizes them into
+  a Burn module in the Rust bridge; backward returns Burn-computed input and
+  parameter VJPs, so ordinary ``torch.optim`` steps alter the next Rust
+  forward. Rust-native checkpoints remain available through
+  ``rust_state_dict``/``load_rust_state_dict``. Other compatibility modules
+  document their own ownership model; value-preserving parameter mirrors are
+  not Burn VJPs.
+- Regular differentiable inputs must share dtype/device and CPU placement;
+  the bridge marshals them as contiguous ``float64`` tensors for Rust and
+  restores the caller-visible dtype/device on output. Float64 remains the
+  required dtype for ``torch.autograd.gradcheck`` (Testing Standards §2).
 
 Some WP-026 entry points are **non-differentiable** evaluation utilities
 (greedy frame-to-frame matching, oscillator-count allocation) rather than
@@ -56,9 +59,9 @@ hierarchical, PAC, and discrete-layer family (`HierarchicalResonanceLayer`,
 `PhaseAmplitudeCouplingLayer`, `DiscreteDeltaThetaGammaLayer`) with real
 implementations in :mod:`prin.nn.hierarchical_layers`. Sub-pass 0144A4
 replaces `PRINetModel` (Rust-backed) and `compile_model` (pure-Python
-``torch.compile`` passthrough) with :mod:`prin.nn.model`, leaving only the
-`DiscreteDeltaThetaGamma` core-binding stub (WP-036B) in
-:mod:`prin.nn.deferred_layers`.
+``torch.compile`` passthrough) with :mod:`prin.nn.model`; WP-036C S1 sub-pass
+0144M1 then replaced the final `DiscreteDeltaThetaGamma` stub with the real
+bridge re-exported through :mod:`prin.nn.deferred_layers`.
 """
 
 from __future__ import annotations
@@ -266,7 +269,7 @@ class ResonanceLayer(torch.nn.Module):
         seed_counter: int = 0,
         seed_key: int = 0,
     ) -> None:
-        """Construct the layer with seeded-random Rust-owned parameters."""
+        """Construct the layer and canonical parameters from the Rust seed."""
         super().__init__()
         self._bridge = ResonanceLayerBridge(
             n_oscillators,
@@ -419,9 +422,10 @@ class GatedPhaseActivation(torch.nn.Module):
     phase_activation(z)``, bridged to Rust forward/backward via DLPack. Gate
     weight/bias are owned by the Rust bridge
     (``prin-train::activations::GatedPhaseActivation``), zero-initialized
-    (matching PRINet 3.0); see :class:`ResonanceLayer`'s docs for the same
-    training-ownership split (a ``prin-train`` ``OscillatorOptimizer``, not
-    ``torch.optim``).
+    (matching PRINet 3.0). Unlike :class:`ResonanceLayer`, this module does not
+    expose canonical ``torch.nn.Parameter`` weights; its Rust-owned gate is
+    trained by a ``prin-train`` ``OscillatorOptimizer`` rather than
+    ``torch.optim``.
 
     Args:
         n_dims: Input/output feature dimension.

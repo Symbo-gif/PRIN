@@ -111,6 +111,11 @@ starts by reading it (Development Workflow Standards §6).
   entry statement issued. **WP-036E/F/G complete; the amendment-#38
   Deferred-Validation closure block is complete**; WP-037 (`0145`) entry
   conditions confirmed.
+- [`037-project-state.md`](037-project-state.md) — WP-037 S4 closure;
+  S2 FAIL (eight findings) remediated in S3 with CLEAN delta re-audit after
+  the corrective canonical-parameter / Burn-VJP second delta; WP037-F6
+  carried to the governed maintainer push/remote-CI gate, WP037-F7 amended
+  into DV-036, and WP-038 (`0149`) declared.
 
 
 The [`DEFERRED_VALIDATION_REGISTER.md`](DEFERRED_VALIDATION_REGISTER.md)

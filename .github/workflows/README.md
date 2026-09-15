@@ -3,7 +3,7 @@
 | Workflow | Current role |
 |---|---|
 | `rust.yml` | Formatting, Clippy, cross-platform tests, rustdoc, Cargo Audit, and CubeCL CPU kernel-equivalence tests (`cargo test -p prin-kernels --features cpu`) |
-| `python.yml` | Lint/type/doc/security gates and Python 3.11–3.13 Linux/Windows tests; installs the `onnx` extra on every matrix cell so the real ORT probe runs cross-platform |
+| `python.yml` | Lint/type/doc/security gates and Python 3.11–3.13 Linux/Windows tests; installs the `onnx` extra on every matrix cell so the real ORT probe runs cross-platform; the `docs` job builds Sphinx warning-free, executes shipped guide examples, and runs all four notebooks under the committed `ci/docs-constraints.txt` pin |
 | `parity.yml` | Differential corpus gate; runs when `parity/` cases are present |
 | `gpu.yml` | Required self-hosted Windows GPU validation on each push/PR and nightly schedule |
 | `gpu-triton.yml` | Dormant DV-001 same-hardware PRIN CUDA / PRINet 3.0 Triton comparison; manually activated after a `[self-hosted, linux, gpu]` runner is registered |

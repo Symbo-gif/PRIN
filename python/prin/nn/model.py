@@ -6,8 +6,8 @@ audited DLPack bridge; every parameter (the stacked ``ResonanceLayer``
 coupling/decay/projection tensors, the inter-layer ``LayerNorm`` affines, and
 the concept-readout ``Linear``) is owned by ``prin-train``
 (``prin_train::model::PRINetModel``), trained with a ``prin-train``
-oscillator-aware optimizer rather than ``torch.optim`` (the ``ResonanceLayer``
-/ ``HybridPRINetV2`` training-ownership split).
+oscillator-aware optimizer rather than ``torch.optim``. Its compatibility
+parameters are non-trainable mirrors, not Burn parameter VJPs.
 
 :func:`compile_model` is the one WP-036A symbol with no Rust component
 (WP-036A D-2): a pure-Python guarded ``torch.compile`` passthrough, identical

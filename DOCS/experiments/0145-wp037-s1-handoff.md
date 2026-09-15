@@ -471,7 +471,13 @@ stated with the evidence needed to classify it at S2.
 
 ### 5.1 Two `prin.nn` layers are not trainable by a torch optimizer — *documentation contradicted*
 
-Measured against PRIN 0.3.0:
+**Post-S3 status (2026-09-15):** resolved by the WP-037 corrective second
+delta. `ResonanceLayer` and `DiscreteDeltaThetaGammaLayer` now synchronize
+canonical `torch.nn.Parameter` values into Rust/Burn on every forward and
+return real parameter VJPs. The measurements below are retained as the
+pre-remediation evidence that produced WP037-F1.
+
+Measured against PRIN 0.3.0 before remediation:
 
 | Layer | `sum(p.numel() for p in layer.parameters())` | `forward()` output `grad_fn` | Parameter grads after `backward()` | Reference `prinet` equivalent |
 |---|---|---|---|---|
@@ -512,14 +518,14 @@ Why this matters beyond the code:
   but it does mean the audit did not test optimizer-reachability of the
   projections.
 
-**WP-037 action taken:** documentation only. The Sphinx `api/nn.rst` page,
-`getting_started.rst` (Tutorial 5 admonition), and `notebooks/04_torch_bridge.ipynb`
-§6 all state the asymmetry and tell the reader to check
-`sum(p.numel() for p in layer.parameters())` before optimizing. The Migration
-Guide table was **not** edited: it is machine-checked by
-`tools/wp036_migration_table.py` and `tests/test_migration_guide_consolidated.py`,
-and changing a disposition row is a governance act that belongs to S2/S3, not to
-a documentation S1.
+**WP-037 S1 action taken:** documentation only. The Sphinx `api/nn.rst` page,
+`getting_started.rst` (Tutorial 5 admonition), and
+`notebooks/04_torch_bridge.ipynb` §6 recorded the then-current asymmetry and
+told the reader to check `sum(p.numel() for p in layer.parameters())` before
+optimizing. The Migration Guide table was **not** edited during S1 because
+changing a disposition row is a governance act. **S3/S4 update:** the defect
+was remediated, and those pages now describe the canonical-parameter /
+Burn-VJP contract plus the remaining compatibility mirrors.
 
 **Suggested classification:** the documentation/behavior contradiction is at
 least D3 (plan drift) and arguably D2; whether the underlying trainability gap is

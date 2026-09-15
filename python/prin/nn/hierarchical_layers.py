@@ -425,7 +425,12 @@ class DiscreteDeltaThetaGamma(torch.nn.Module):
 
 
 class PhaseAmplitudeCouplingLayer(torch.nn.Module):
-    """Learnable mean-slow-phase PAC layer backed entirely by Rust.
+    """Mean-slow-phase PAC layer backed entirely by Rust.
+
+    ``modulation_depth`` is the canonical value pushed into Rust on each
+    forward, but the bridge returns only input VJPs; it does not compute a Burn
+    parameter VJP for ``modulation_depth``. Rust-native optimizers train the
+    owned depth.
 
     Args:
         initial_depth: Initial modulation depth in ``[0, 1]``.

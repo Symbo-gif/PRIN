@@ -222,8 +222,9 @@ at the top level until they are folded into the final campaign archive in Phase 
   the acceptance-criterion → evidence map; four recorded deviations
   (`docs/`→`DOCS/sphinx/` path adaptation, the cp1252 notebook constraint, the
   Sphinx duplicate-object resolution, notebook naming); and six out-of-scope
-  discoveries, including two `prin.nn` layers that are not trainable by a torch
-  optimizer against a Migration Guide claim that they are.
+  discoveries, including two `prin.nn` layers that were not then trainable by a
+  torch optimizer against a Migration Guide claim that they were (WP037-F1;
+  fixed by the WP-037 S3 corrective delta).
 - [`hotfix-dv019-handoff.md`](hotfix-dv019-handoff.md) — Dedicated
   hotfix/correction session for DV-019 (flaky `prin-train` tests,
   `burn-autodiff` cross-thread graph-server interaction). Handoff from
