@@ -233,10 +233,50 @@ All ten audit dimensions are clean. Every DV register row maps unambiguously to 
 
 ---
 
-## 7. Closure table (appended by S3 remediation)
+## 7. Closure table (appended by S3 remediation — session 0144AA)
+
+Per Development Workflow and Audit Standards §3 ("S3 remains mandatory when S2
+finds zero deviations: it records a no-change closure and independent delta
+verification"), session 0144AA performed the mandatory no-change closure. S2
+recorded zero findings (no D1–D4 deviations), so no source fix was applicable
+or permitted. The S2-audited tree was independently re-verified before this
+closure.
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| (none) | No findings to close | — | — |
+| *(no findings — S2 recorded none)* | NO-CHANGE CLOSURE — no source fix applicable or performed | Local S3 closure commit (documentation only) | §7.1 delta re-audit below |
 
-**Delta re-audit date:** YYYY-MM-DD — **Result:** CLEAN
+### 7.1 Delta re-audit
+
+**Source-tree identity and immutability:**
+- `git diff --stat 18ce2e3 HEAD -- crates/ python/ tests/ parity/ Cargo.toml Cargo.lock pyproject.toml tools/ DOCS/sphinx/` is empty.
+- The source, test, binding, configuration, tooling, and documentation files are byte-for-byte identical to the S2 audit entry point (`18ce2e3` / `1a41e3f`).
+
+**Independent S3 verification (2026-09-15, Windows 11 / Rust 1.92.0 / Python 3.14.0):**
+
+| Gate / Check | Command | Result |
+|---|---|---|
+| A1 — API surface | `python -c "from prin._deprecation import verify_api_surface; from prin import __all__; print(verify_api_surface(__all__))"` | `(set(), set())` — clean |
+| A2 — No Python numerics | `.venv\Scripts\python tools/check_no_python_numerics.py` | Clean — 19 WP-036 S1 compat modules |
+| A8 — DV register gate | `.venv\Scripts\python tools/check_dv_register_gates.py` | Passed — 35 DV rows against 198 session entries |
+| A8 — WP-001 baseline | `.venv\Scripts\python tools/wp001_baseline.py check` | Passed |
+| A5 — Rust format | `cargo fmt --all -- --check` | Clean (exit 0) |
+| A5 — Rust clippy | `cargo clippy --workspace --all-targets -- -D warnings` | Clean (exit 0, 0 warnings) |
+| A5 — Rust workspace tests | `cargo test --workspace` | Passed (all workspace tests & doctests pass) |
+| A7 — Rustdoc | `$env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps` | Clean (exit 0, 0 warnings) |
+| A5 — Python ruff | `.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/` | All checks passed |
+| A5 — Python format | `.venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/` | 248 files already formatted |
+| A5 — Python typing | `.venv\Scripts\mypy python/prin --strict` | Success: no issues found in 62 source files |
+| A7 — Docstring coverage | `.venv\Scripts\python -m interrogate -c pyproject.toml python/prin` | 97.6% PASSED (minimum: 95.0%) |
+| A6 — Bandit security | `.venv\Scripts\python -m bandit -r python/prin -c pyproject.toml` | 0 issues identified (20,129 lines scanned) |
+| A6 — Cargo audit | `cargo audit` | exit 0; 3 allowed governed warnings (`bincode` RUSTSEC-2025-0141, `paste` RUSTSEC-2024-0436, `chacha20` yanked DV-035) |
+| A6 — Pip audit (repo) | `.venv\Scripts\python -m pip_audit .` | No known vulnerabilities found |
+| A6 — Pip audit (sphinx) | `.venv\Scripts\python -m pip_audit -r DOCS/sphinx/requirements.txt` | No known vulnerabilities found |
+| A6 — Snyk SCA scan | `snyk_sca_scan(all_projects=true, command=...)` | Success: 0 issues |
+| A3 — Throughput test | `pytest tests/test_acceptance_subconscious.py -k test_no_gpu_throughput_regression` | 3/3 independent runs passed |
+| A3 — Gradcheck test | `pytest tests/test_train_bridge_slot_attention.py -k test_process_frame_gradcheck_with_prev_slots` | 5/5 independent runs passed |
+| A3 — Fast test suite | `pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing` | 2775 passed, 201 skipped, 30 deselected; 95% coverage |
+
+**Deviation ledger:** No new finding; zero carried. No source change, plan amendment, or finding commit required.
+
+**Delta re-audit date:** 2026-09-15 — **Result:** **CLEAN** (mandatory no-change closure; zero findings to close; zero source changes; all governed gates green). Hand off to S4 (`0144AB`).

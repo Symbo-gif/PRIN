@@ -170,8 +170,8 @@ count 253 → 256. See
 | 0144W | WP-036F | S3 — Remediation | [DirectML controller-graph execution](0144W-wp036f-s3-directml-controller-graph-execution.md) | COMPLETE — WP036F-F1/F2 FIXED, delta re-audit CLEAN |
 | 0144X | WP-036F | S4 — Documentation | [DirectML controller-graph execution](0144X-wp036f-s4-directml-controller-graph-execution.md) | COMPLETE — WP-036F closed; DV-006 DirectML half CLOSED |
 | 0144Y | WP-036G | S1 — Coding | [Deferred-Validation register consolidation and permanent dispositions](0144Y-wp036g-s1-dv-register-consolidation-and-permanent-dispositions.md) | COMPLETE — dispositions drafted; DV-035 registered; fragility resolved |
-| 0144Z | WP-036G | S2 — Audit | [Deferred-Validation register consolidation and permanent dispositions](0144Z-wp036g-s2-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
-| 0144AA | WP-036G | S3 — Remediation | [Deferred-Validation register consolidation and permanent dispositions](0144AA-wp036g-s3-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
+| 0144Z | WP-036G | S2 — Audit | [Deferred-Validation register consolidation and permanent dispositions](0144Z-wp036g-s2-dv-register-consolidation-and-permanent-dispositions.md) | COMPLETE — PASS (zero findings) |
+| 0144AA | WP-036G | S3 — Remediation | [Deferred-Validation register consolidation and permanent dispositions](0144AA-wp036g-s3-dv-register-consolidation-and-permanent-dispositions.md) | COMPLETE — mandatory no-change closure, delta re-audit CLEAN |
 | 0144AB | WP-036G | S4 — Documentation | [Deferred-Validation register consolidation and permanent dispositions](0144AB-wp036g-s4-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
 | 0145 | WP-037 | S1 — Coding | [Documentation, notebooks, paper, and Parity Report draft](0145-wp037-s1-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
 | 0146 | WP-037 | S2 — Audit | [Documentation, notebooks, paper, and Parity Report draft](0146-wp037-s2-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |

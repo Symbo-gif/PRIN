@@ -1,6 +1,6 @@
 # Session 0144Z — WP-036G S2: Audit — Deferred-Validation register consolidation and permanent dispositions
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-09-15) — verdict PASS (zero findings), see `DOCS/audits/036g-wp036g-audit.md`.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036G
 **Session type:** S2 — Audit
