@@ -187,7 +187,7 @@ jobs:
           python -m pip install --no-cache-dir -c ci/docs-constraints.txt maturin
           python -m pip install --no-cache-dir -c ci/docs-constraints.txt --index-url https://download.pytorch.org/whl/cpu torch torchvision
           maturin develop -m crates/prin-py/Cargo.toml
-          python -m pip install --no-cache-dir -c ci/docs-constraints.txt -e ".[dev]"
+          python -m pip install --no-cache-dir -c ci/docs-constraints.txt -e ".[dev,mot]"
           python -m pip install --no-cache-dir -c ci/docs-constraints.txt -r DOCS/sphinx/requirements.txt
       - name: Sphinx builds warning-free against a fresh output directory
         run: |

@@ -584,6 +584,19 @@ def test_python_dependency_audits_are_complete_and_gating() -> None:
     assert "|| true" not in security_job
 
 
+def test_python_docs_job_installs_mot_extra_for_notebook_execution() -> None:
+    workflow = (ROOT / ".github/workflows/python.yml").read_text(encoding="utf-8")
+    docs_job = workflow.split("  docs:\n", maxsplit=1)[1].split(
+        "\n  security:\n", maxsplit=1
+    )[0]
+
+    assert (
+        'python -m pip install --no-cache-dir -c ci/docs-constraints.txt -e '
+        '".[dev,mot]"' in docs_job
+    )
+    assert 'python -m pytest tests/test_notebooks.py -q -m slow' in docs_job
+
+
 def test_release_workflow_publishes_workspace_crates() -> None:
     workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
     publish_job = workflow.split("  publish-crates:\n", maxsplit=1)[1]
