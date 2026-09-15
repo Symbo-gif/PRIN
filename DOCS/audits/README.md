@@ -219,6 +219,12 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   tests pass under independent re-runs. Mandatory S3 no-change closure with a
   CLEAN delta re-audit (§7). Permanent dispositions signed at S4 (`0144AB`,
   PSR-036G §3.3).
+- [`037-wp037-audit.md`](037-wp037-audit.md) — WP-037 "Documentation,
+  notebooks, paper, and Parity Report draft" audit (`FAIL`); eight findings:
+  two trainable Python layers do not train their Rust-owned behavior (WP037-F1,
+  D1), four test/process/CI pinning gaps (F2–F5, D2), predecessor-push and
+  recurring-nightly-red drift (F6–F7, D3), and notebook output hygiene (F8,
+  D4). Mandatory S3 owns all eight.
 - [`036a-wp036a-audit.md`](036a-wp036a-audit.md) — WP-036A "Trainable
   compatibility layers (`prin-train` extension)" audit (`PASS`); zero findings;
   all 13 D-D trainable-layer / discrete-network symbols (rows 31–42, 44)
