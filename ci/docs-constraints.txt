@@ -1,0 +1,16 @@
+# Pinned toolchain for the `python.yml` `docs` job.
+#
+# WP037-F3 remediation: the docs job previously installed maturin, torch,
+# torchvision, and notebook tooling without version pins, violating the
+# amendment-#45/G6 control (no unpinned tool may gate a merge). These pins
+# are kept in step with `ci/lint-constraints.txt` and the maintainer `.venv`
+# so the local gate == the CI gate.
+maturin==1.14.1
+# torch/torchvision: the CPU index URL in the CI step selects the CPU wheel;
+# the pin here bounds the version independent of the index.
+torch==2.11.0
+torchvision==0.28.0
+# Notebook execution (Definition of Done #8).
+nbformat==5.11.1
+nbclient==0.11.0
+ipykernel==7.3.0

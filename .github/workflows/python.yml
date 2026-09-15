@@ -178,13 +178,17 @@ jobs:
             /usr/local/share/boost || true
           sudo apt-get clean || true
           df -h /
+      # WP037-F3: every pip install in this job is bounded by
+      # ci/docs-constraints.txt so the merge-gating docs job is deterministic
+      # (amendment #45 / G6). Bump the constraints deliberately, in their own
+      # commit, and re-run the gate.
       - name: Build extension and install documentation dependencies
         run: |
-          python -m pip install --no-cache-dir maturin
-          python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
+          python -m pip install --no-cache-dir -c ci/docs-constraints.txt maturin
+          python -m pip install --no-cache-dir -c ci/docs-constraints.txt --index-url https://download.pytorch.org/whl/cpu torch torchvision
           maturin develop -m crates/prin-py/Cargo.toml
-          python -m pip install --no-cache-dir -e ".[dev]"
-          python -m pip install --no-cache-dir -r DOCS/sphinx/requirements.txt
+          python -m pip install --no-cache-dir -c ci/docs-constraints.txt -e ".[dev]"
+          python -m pip install --no-cache-dir -c ci/docs-constraints.txt -r DOCS/sphinx/requirements.txt
       - name: Sphinx builds warning-free against a fresh output directory
         run: |
           rm -rf DOCS/sphinx/_build

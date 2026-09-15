@@ -116,8 +116,10 @@ rejected at construction:
 
 .. code-block:: python
 
-   BandNetwork.theta_gamma(4, 0, theta, gamma, 0.3)
-   # ValueError: band 1 has zero oscillators
+   try:
+       BandNetwork.theta_gamma(4, 0, theta, gamma, 0.3)
+   except ValueError as exc:
+       print(f"rejected: {exc}")
 
 The typed ``BandError`` variants are ``NoBands``, ``EmptyBand``,
 ``PopulationMismatch``, and the frequency-validation cases.

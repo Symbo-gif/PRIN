@@ -45,28 +45,30 @@ def _references(name: str, pattern: re.Pattern[str]) -> list[str]:
     return pattern.findall(text)
 
 
-def _figure_stems() -> set[str]:
-    """Return every filename stem the figure generators can write.
+#: Keys whose saved filename differs from the registry key.
+#: Discovered from the ``_save_fig(fig, "<stem>", ...)`` call inside each
+#: generator function.
+_ABBREVIATED_FIGURE_STEMS: dict[str, str] = {
+    "fig4_chimera_k_alpha": "fig4_chimera_k_alpha_heatmap",
+    "fig5_mot_occlusion": "fig5_mot_occlusion_comparison",
+    "fig7_ablation": "fig7_ablation_results",
+}
 
-    Three ``FIGURE_GENERATORS`` keys are abbreviated relative to the stems they
-    actually save (``fig4_chimera_k_alpha`` writes
-    ``fig4_chimera_k_alpha_heatmap``), so the accepted set is the union of the
-    registry keys and the reference tree's on-disk names.
+
+def _figure_stems() -> set[str]:
+    """Return every filename stem the current figure generators can write.
+
+    Derived from the generator registry and the known key→stem mapping for the
+    two generators whose saved filename differs from their registry key.  No
+    archive or reference-tree lookup — the archive is not runtime authority
+    (Documentation Standards §4; WP037-F5).
 
     Returns:
         Set of accepted figure stems without extension.
     """
-    stems = set(figure_generation.FIGURE_GENERATORS)
-    reference = (
-        ROOT
-        / "DOCS"
-        / "archive and reference from PRINet 3.0"
-        / "PRINet-3.0.0-main"
-        / "paper"
-        / "figures"
-    )
-    if reference.is_dir():
-        stems.update(path.stem for path in reference.glob("*.pdf"))
+    stems: set[str] = set()
+    for key in figure_generation.FIGURE_GENERATORS:
+        stems.add(_ABBREVIATED_FIGURE_STEMS.get(key, key))
     return stems
 
 
@@ -167,7 +169,9 @@ def test_every_generator_is_referenced_or_documented_as_unreferenced() -> None:
     Four figures and two tables are generated but included by neither source.
     They are retained because ``tests/test_publication_generation.py`` asserts
     the full 14 / 11 ported set by name; ``paper/README.md`` names them so the
-    orphans are a documented decision rather than drift.
+    orphans are a documented decision rather than drift.  The orphan sets are
+    asserted exactly so an unexpected new orphan fails here rather than
+    silently passing because the README happens to mention it (WP037-F5).
     """
     used_figures = {
         Path(path).stem
@@ -187,5 +191,29 @@ def test_every_generator_is_referenced_or_documented_as_unreferenced() -> None:
     unreferenced_figures = {
         stem for stem in _figure_stems() if stem.startswith("fig")
     } - used_figures
+    assert unreferenced_figures == {
+        "fig5_mot_occlusion_comparison",
+        "fig11_flops_scaling",
+        "fig12_supercritical_regime",
+        "fig15_noise_velocity",
+    }
     for figure in unreferenced_figures:
         assert figure in readme, f"paper/README.md does not document orphan {figure}"
+
+
+def test_figure_stems_reject_unknown_archive_names() -> None:
+    """Negative control: a stem only in the archive must not pass validation.
+
+    If the archive directory exists and contains a PDF whose stem is not
+    produced by any current generator, that stem must not appear in
+    ``_figure_stems()``.  This guards against re-introducing the old
+    archive-as-authority shortcut (WP037-F5).
+    """
+    archive_stems = {
+        "fig_prinet3_historical_only_a",
+        "fig_prinet3_historical_only_b",
+    }
+    current = _figure_stems()
+    assert not archive_stems.intersection(current), (
+        "_figure_stems() must derive from current generators only"
+    )

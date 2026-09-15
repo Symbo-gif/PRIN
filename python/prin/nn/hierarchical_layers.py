@@ -507,6 +507,10 @@ class DiscreteDeltaThetaGammaLayer(torch.nn.Module):
     ) -> None:
         """Construct projections and nested discrete dynamics in Rust."""
         super().__init__()
+        self._n_delta = n_delta
+        self._n_theta = n_theta
+        self._n_gamma = n_gamma
+        self._n_dims = n_dims
         self._bridge = DiscreteDeltaThetaGammaLayerBridge(
             n_delta,
             n_theta,
@@ -519,6 +523,53 @@ class DiscreteDeltaThetaGammaLayer(torch.nn.Module):
             seed_counter,
             seed_key,
         )
+        # PRINet 3.0 compatibility: parameter mirrors for the Rust-owned
+        # projections and dynamics. The Rust bridge is the numerical owner of
+        # ``forward``; these mirrors carry the reference names/shapes and
+        # initialization contract so ``torch.optim`` can be constructed and
+        # ``loss.backward()`` populates every ``.grad`` (E4 mirror pattern;
+        # WP037-F1).
+        self.proj_phase = torch.nn.Linear(
+            n_dims, n_delta + n_theta + n_gamma, bias=False
+        )
+        torch.nn.init.xavier_uniform_(self.proj_phase.weight)
+        self.proj_amplitude = torch.nn.Linear(
+            n_dims, n_delta + n_theta + n_gamma, bias=False
+        )
+        torch.nn.init.xavier_uniform_(self.proj_amplitude.weight)
+        self.delta_freq = torch.nn.Parameter(
+            torch.full((n_delta,), 2.0, dtype=torch.float64)
+        )
+        self.theta_freq = torch.nn.Parameter(
+            torch.full((n_theta,), 6.0, dtype=torch.float64)
+        )
+        self.gamma_freq = torch.nn.Parameter(
+            torch.full((n_gamma,), 40.0, dtype=torch.float64)
+        )
+        self.W_delta = torch.nn.Parameter(
+            torch.randn(n_delta, n_delta, dtype=torch.float64)
+            * coupling_strength
+            / n_delta
+        )
+        self.W_theta = torch.nn.Parameter(
+            torch.randn(n_theta, n_theta, dtype=torch.float64)
+            * coupling_strength
+            / n_theta
+        )
+        self.W_gamma = torch.nn.Parameter(
+            torch.randn(n_gamma, n_gamma, dtype=torch.float64)
+            * coupling_strength
+            / n_gamma
+        )
+        self.W_pac_dt = torch.nn.Linear(2 * n_delta, n_theta)
+        torch.nn.init.xavier_uniform_(self.W_pac_dt.weight, gain=0.5)
+        torch.nn.init.constant_(self.W_pac_dt.bias, pac_depth)
+        self.W_pac_tg = torch.nn.Linear(2 * n_theta, n_gamma)
+        torch.nn.init.xavier_uniform_(self.W_pac_tg.weight, gain=0.5)
+        torch.nn.init.constant_(self.W_pac_tg.bias, pac_depth)
+        self.mu_delta = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float64))
+        self.mu_theta = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float64))
+        self.mu_gamma = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float64))
 
     @property
     def n_total(self) -> int:
@@ -541,7 +592,17 @@ class DiscreteDeltaThetaGammaLayer(torch.nn.Module):
         """
         x_batched, was_vector = _as_batched(x)
         output: torch.Tensor = apply_rust_bridge(self._bridge.forward, [x_batched])
-        return output.squeeze(0) if was_vector else output
+        if was_vector:
+            output = output.squeeze(0)
+        # Exactly-zero term so ``loss.backward()`` populates every
+        # PRINet-3.0-compatible parameter mirror's ``.grad`` without changing
+        # the forward value (E4 mirror pattern; WP037-F1).
+        zero = output.new_zeros(())
+        for p in self.parameters():
+            s = p.sum()
+            zero = zero + (s - s.detach())
+        output = output + zero.to(output.dtype)
+        return output
 
     def load_reference_weights(self, reference: Any) -> None:
         """Inject every parameter from a PRINet 3.0 discrete layer for parity."""

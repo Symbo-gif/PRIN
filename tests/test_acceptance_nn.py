@@ -83,6 +83,16 @@ class TestResonanceLayer:
         assert x.grad is not None
         assert not torch.isnan(x.grad).any()
 
+    def test_all_parameter_grads_populated(
+        self, resonance_layer: ResonanceLayer
+    ) -> None:
+        """Every parameter mirror receives a gradient after backward (WP037-F1)."""
+        x = torch.randn(4, 64, requires_grad=True)
+        out = resonance_layer(x)
+        out.sum().backward()
+        for name, p in resonance_layer.named_parameters():
+            assert p.grad is not None, f"no grad for {name} (shape {tuple(p.shape)})"
+
     def test_parameter_count(self, resonance_layer: ResonanceLayer) -> None:
         """Layer has expected trainable parameters."""
         param_names = {n for n, _ in resonance_layer.named_parameters()}

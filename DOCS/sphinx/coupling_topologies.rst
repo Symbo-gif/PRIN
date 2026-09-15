@@ -61,14 +61,11 @@ Degenerate arguments are **rejected, not silently repaired**:
 
    from prin.dynamics import CouplingMode, KuramotoOscillator, OscillatorState, Seed
 
-   KuramotoOscillator(8, 2.0, 0.1, 0.0, CouplingMode.sparse_knn(k=0))
-   # ValueError: invalid k-NN count: k=0 must be less than N=8
-
-   KuramotoOscillator(1, 2.0, 0.1, 0.0, CouplingMode.sparse_knn(k=4))
-   # ValueError: invalid k-NN count: k=4 must be less than N=1
-
-   KuramotoOscillator(8, 2.0, 0.1, 0.0, CouplingMode.sparse_knn(k=100))
-   # ValueError: invalid k-NN count: k=100 must be less than N=8
+   for bad_k, n in [(0, 8), (4, 1), (100, 8)]:
+       try:
+           KuramotoOscillator(n, 2.0, 0.1, 0.0, CouplingMode.sparse_knn(k=bad_k))
+       except ValueError as exc:
+           print(f"k={bad_k}, N={n}: {exc}")
 
 The invariant is ``1 <= k < N``. A single-oscillator network has no neighbours
 and must use ``mean_field()`` or ``full()``.
@@ -221,6 +218,7 @@ Neighbour-index tensors
 
 .. code-block:: python
 
+   import numpy as np
    import torch
    from prin import local_order_parameter, ring_topology, small_world_topology
    from prin.simulation import chimera_index, strength_of_incoherence
@@ -228,10 +226,12 @@ Neighbour-index tensors
    neighbours = ring_topology(256, 6)                   # (256, 6) int64
    small_world_topology(256, 6, p_rewire=0.3, seed=0)   # (256, 6) int64
 
-   phase = torch.rand(256) * 2 * torch.pi
-   local_r = local_order_parameter(phase, neighbours)   # (256,)
-   chimera_index(phase, neighbours)                     # float, threshold=0.5
-   strength_of_incoherence(phase, window_size=10)       # 0-dim tensor
+   phase_np = np.asarray(torch.rand(256) * 2 * torch.pi, dtype=np.float64)
+   nbr_list = neighbours.detach().cpu().tolist()
+   local_r = local_order_parameter(phase_np, nbr_list)  # (256,)
+   phase_t = torch.from_numpy(phase_np)
+   chimera_index(phase_t, neighbours)                    # float, threshold=0.5
+   strength_of_incoherence(phase_t, window_size=10)      # 0-dim tensor
 
 A custom topology is, at this level, just an ``(N, k)`` integer tensor of
 neighbour indices — build one with ``torch.randint`` or from an adjacency

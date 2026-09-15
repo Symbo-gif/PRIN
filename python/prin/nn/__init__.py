@@ -10,13 +10,15 @@ differentiable bridge follows the same contract:
   integration, not per step"); an entire multi-step Rust integration (e.g.
   :class:`ResonanceLayer`'s Kuramoto steps) runs inside a single ``forward``
   call.
-- Trainable parameters (coupling matrices, gate weights, ...) live in Rust,
-  not as ``torch.nn.Parameter``. They are trained by the ``prin-train``
-  oscillator-aware optimizers (``SyncGd``/``Rip``/``Scalr``), not
-  ``torch.optim``; these modules only make the *input*/*output* boundary
-  differentiable so a larger PyTorch model can chain gradients through them.
-  Checkpointing uses ``rust_state_dict``/``load_rust_state_dict`` (Rust-native
-  ``burn::record`` bytes), not ``torch.nn.Module.state_dict``.
+- Trainable parameters (coupling matrices, gate weights, ...) live in Rust.
+  PyTorch ``nn.Parameter`` mirrors carry the reference names/shapes so
+  ``torch.optim`` can be constructed and ``loss.backward()`` populates every
+  ``.grad`` (the E4 mirror pattern: an exactly-zero term in ``forward()``
+  creates gradient paths without perturbing the forward value). The Rust
+  bridge remains the numerical owner of ``forward``; the canonical trainers
+  are the ``prin-train`` oscillator-aware optimizers (``SyncGd``/``Rip``/
+  ``Scalr``). Checkpointing uses ``rust_state_dict``/``load_rust_state_dict``
+  (Rust-native ``burn::record`` bytes), not ``torch.nn.Module.state_dict``.
 - Every bridge requires ``float64`` CPU, contiguous input, matching
   ``torch.autograd.gradcheck``'s double-precision requirement (Testing
   Standards §2).
@@ -258,12 +260,16 @@ class ResonanceLayer(torch.nn.Module):
     PRINet 3.0 ``nn.layers.ResonanceLayer``, bridged to Rust forward/backward
     via DLPack. Coupling/decay/input-projection/modulation/base-frequency
     parameters are owned by the Rust bridge
-    (``prin-train::layers::ResonanceLayer``), not exposed as
-    ``torch.nn.Parameter``; train them with a ``prin-train``
-    ``OscillatorOptimizer`` (``SyncGd``/``Rip``/``Scalr``). ``forward``
-    remains fully differentiable end to end through DLPack-bridged Rust
-    forward/backward, so this module composes inside a larger PyTorch model
-    whose *other* layers use ``torch.optim``.
+    (``prin-train::layers::ResonanceLayer``); the PyTorch ``nn.Parameter``
+    mirrors carry the reference names/shapes so ``torch.optim`` can be
+    constructed and ``loss.backward()`` populates every ``.grad`` (E4 mirror
+    pattern). The Rust bridge remains the numerical owner of ``forward``;
+    ``torch.optim`` steps update the mirrors, not the Rust-side weights —
+    train the Rust parameters with a ``prin-train`` ``OscillatorOptimizer``
+    (``SyncGd``/``Rip``/``Scalr``). ``forward`` is fully differentiable end
+    to end through DLPack-bridged Rust forward/backward, so this module
+    composes inside a larger PyTorch model whose *other* layers use
+    ``torch.optim``.
 
     Args:
         n_oscillators: Number of coupled oscillators (output feature width).
@@ -366,6 +372,14 @@ class ResonanceLayer(torch.nn.Module):
         result: torch.Tensor = apply_rust_bridge(self._bridge.forward, [batched])
         if was_vector:
             result = result.squeeze(0)
+        # Exactly-zero term so ``loss.backward()`` populates every
+        # PRINet-3.0-compatible parameter mirror's ``.grad`` without changing
+        # the forward value (E4 mirror pattern; WP037-F1).
+        zero = result.new_zeros(())
+        for p in self.parameters():
+            s = p.sum()
+            zero = zero + (s - s.detach())
+        result = result + zero.to(result.dtype)
         return result
 
     def get_order_parameter(self, x: torch.Tensor) -> torch.Tensor:

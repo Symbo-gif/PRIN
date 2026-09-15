@@ -268,3 +268,49 @@ def test_notebook_executes_end_to_end(name: str) -> None:
                     f"{output.get('evalue')}\n" + "\n".join(output.get("traceback", []))
                 )
     assert not failures, "\n\n".join(failures)
+
+
+def test_committed_notebook_outputs_have_no_maintainer_artifacts() -> None:
+    """Assert committed notebook outputs contain no host paths or warnings (WP037-F8).
+
+    Scans every code cell output in every committed notebook for absolute
+    maintainer-host paths (``C:\\Users\\there``), ``ipykernel`` temp paths,
+    ``UserWarning`` traces, and ``Traceback`` blocks. A release-facing
+    committed artefact must not embed host identity or transient noise.
+    """
+    import os
+    import re
+
+    host_path = re.compile(r"C:\\Users\\", re.IGNORECASE)
+    ipykernel_temp = re.compile(r"ipykernel_\d+")
+    user_warning = re.compile(r"UserWarning:")
+    traceback_marker = re.compile(r"Traceback \(most recent call last\)")
+
+    violations: list[str] = []
+    for nb_path in sorted(NOTEBOOK_DIR.glob("*.ipynb")):
+        text = nb_path.read_text(encoding="utf-8")
+        nb = json.loads(text)
+        for cell_idx, cell in enumerate(nb.get("cells", [])):
+            if cell.get("cell_type") != "code":
+                continue
+            for out in cell.get("outputs", []):
+                content = ""
+                if "text" in out:
+                    content = "".join(out["text"])
+                elif "data" in out:
+                    for mime_content in out["data"].values():
+                        if isinstance(mime_content, list):
+                            content += "".join(mime_content)
+                        elif isinstance(mime_content, str):
+                            content += mime_content
+                for pattern, label in [
+                    (host_path, "maintainer-host path"),
+                    (ipykernel_temp, "ipykernel temp path"),
+                    (user_warning, "UserWarning"),
+                    (traceback_marker, "Traceback"),
+                ]:
+                    if pattern.search(content):
+                        violations.append(
+                            f"{nb_path.name} cell {cell_idx}: {label} in output"
+                        )
+    assert not violations, "\n".join(violations)
