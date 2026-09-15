@@ -79,15 +79,14 @@ ignore:
           EA-003 E-F7 (high severity): no fixed version exists (semver range
           [0,)); vulnerability is in deserializing untrusted .pt2 files via
           torch.export load handlers even under weights_only=True. PRIN never
-          calls torch.load, torch.export.load, or any .pt2 handler anywhere
-          in python/, tests/, benchmarks/, tools/, or parity/ (repo-wide grep
-          confirms zero references; the only deserialization in the codebase
-          is np.load on committed, trusted golden-corpus fixtures in
-          python/prin/parity/schema.py, unrelated to torch or untrusted
-          input) -- the vulnerable code path is unreachable in this project's
-          current usage. Re-evaluate before this project ever adds torch
-          checkpoint loading. Maintainer approval 2026-08-14, recheck by
-          2026-11-14
+          calls torch.export.load or handles .pt2 files in python/, tests/,
+          benchmarks/, tools/, or parity/ (repo-wide grep reconfirmed
+          2026-09-15). Two post-approval acceptance/benchmark call sites use
+          ordinary torch.load(..., weights_only=True) on project-generated .pt
+          state-dict caches; that is a distinct API and artefact format from
+          the advisory's torch.export .pt2 handler. The vulnerable path remains
+          unreachable. Re-evaluate before this project adds torch.export.load
+          or .pt2 input. Maintainer approval 2026-08-14, recheck by 2026-11-14
         expires: 2026-11-14T00:00:00.000Z
         created: 2026-08-14T00:00:00.000Z
 version: v1.25.1

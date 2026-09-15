@@ -147,28 +147,6 @@ _RNG_NODES = frozenset(
     }
 )
 
-# --- Pre-existing host-sensitive perf-ratio flake (WP-036B S1) ---------------
-# Not a WP-036C S2 finding. Surfaced during WP-036C S3 as a flaky default-gate
-# failure (~25-40% on this host): asserts an ONNX-controller-vs-baseline
-# throughput ratio < 1.30 and measures 1.28-1.32 depending on machine load.
-# Ported verbatim from PRINet 3.0 (commit 47390d4, 0144E6); green at the
-# PSR-036D baseline only marginally. Quarantined here to keep the gate
-# deterministic. Tracked as DV-032 (perf-test hardening) with a dated
-# maintainer disposition (ETCA-001 finding T-F8); concrete fix path = widen
-# the ratio, mark `slow`, or convert to a `pytest-benchmark` gate under the
-# new nightly workflow.
-_FLAKE_SKIP = (
-    "DV-032 (ETCA-001 T-F8): pre-existing host-sensitive perf-ratio flake from "
-    "WP-036B S1 (not a WP-036C finding); asserts throughput ratio < 1.30, "
-    "measures ~1.28-1.32 under load. Dated maintainer quarantine, fix tracked "
-    "in the Deferred Validation Register."
-)
-_FLAKE_NODES = frozenset(
-    {
-        "tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression",
-    }
-)
-
 # --- Wall-clock-throughput timing flakes (ETCA-001 remediation) --------------
 # Surfaced once CI actually ran the ubuntu legs (T-F4/T-F5): tests that run
 # fixed wall-clock windows and compare frame counts / FPS between runs. On a
@@ -223,8 +201,6 @@ def _reason_for(nodeid: str) -> str | None:
         return _WP038_SKIP
     if nodeid in _RNG_NODES:
         return _RNG_SKIP
-    if nodeid in _FLAKE_NODES:
-        return _FLAKE_SKIP
     if nodeid in _TIMING_NODES:
         return _TIMING_SKIP
     if nodeid in _RATIO_NODES:

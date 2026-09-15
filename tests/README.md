@@ -3,8 +3,9 @@
 The PRIN pytest suite (51 files, ~3,000 tests) is the **acceptance contract**
 for PRIN: it defines the public API. The WP-036B + WP-036C strict ports have
 adapted 37 PRINet 3.0 reference files (1,670 `def test_` functions, ~24,000
-reference lines) with import-only changes (`prinet.*` → `prin.*`); assertions
-are unchanged (Testing Standards §1.1).
+reference lines) with import-only changes (`prinet.*` → `prin.*`). Assertions
+remain unchanged except for separately governed post-port hardening documented
+in the Deferred Validation Register (Testing Standards §1.1).
 
 ## WP-036B ported acceptance suite (13 files, 498 tests)
 
@@ -24,6 +25,11 @@ are unchanged (Testing Standards §1.1).
 | `test_acceptance_clevr_n.py` | 17 | 17 | 0 | — |
 | `test_acceptance_subconscious.py` | 49 | 48 | 1 | 1 `psutil`-absent |
 | **Total** | **498** | **489** | **9** | 7 `gpu` + 1 DV-030 `skip` + 1 psutil |
+
+WP-036G S1 removed DV-032's quarantine from
+`test_no_gpu_throughput_regression` after hardening it with fixed work, warm-up,
+and a seven-sample relative-median gate. The original `<1.30` acceptance limit
+is unchanged; three consecutive isolated runs passed on the maintainer host.
 
 **Marker policy:** Tests that require a GPU carry both
 `@pytest.mark.skipif(not torch.cuda.is_available(), ...)` (the reference guard)

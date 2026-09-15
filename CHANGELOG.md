@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **WP-036G S1 (`0144Y`, 2026-09-15) — Deferred Validation Register
+  consolidation and test hardening.** Drafted permanent dispositions for
+  DV-007/DV-013/DV-018/DV-028 and dated standing dispositions for every
+  external/upstream residual; registered the `chacha20` yanked release as
+  DV-035; added dormant `.github/workflows/gpu-triton.yml` for a future Linux
+  GPU runner; hardened `test_no_gpu_throughput_regression` with warm-up and a
+  seven-sample median without changing its `<1.30` limit; confirmed the
+  DV-019 Python recurrence was the already-fixed Torch RNG/order issue, not
+  Burn's global-server mechanism. The `.snyk` high-advisory rationale now
+  distinguishes two ordinary project-cache `torch.load` calls from the absent
+  vulnerable `torch.export.load` / `.pt2` path. The pass also upgraded locked
+  `rustls` 0.23.43 to 0.23.45 for RUSTSEC-2026-0285 before S1 continued.
 - **ETCA-002 follow-up (`2026-09-05`) — `rust.yml`'s Windows `test` leg moved
   back to the self-hosted `PRIN-GPU-Runner`, closing DV-016/DV-024's last open
   loop.** With the runner now an auto-start Windows service (no more DV-024

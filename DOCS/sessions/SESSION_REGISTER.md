@@ -526,7 +526,7 @@ introduction and are not retroactively added here; this table starts with
 | 0144V | 6 | WP-036F | S2 — Audit | [DirectML controller-graph execution](phase-6/0144V-wp036f-s2-directml-controller-graph-execution.md) | COMPLETE |
 | 0144W | 6 | WP-036F | S3 — Remediation | [DirectML controller-graph execution](phase-6/0144W-wp036f-s3-directml-controller-graph-execution.md) | COMPLETE |
 | 0144X | 6 | WP-036F | S4 — Documentation | [DirectML controller-graph execution](phase-6/0144X-wp036f-s4-directml-controller-graph-execution.md) | COMPLETE |
-| 0144Y | 6 | WP-036G | S1 — Coding | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144Y-wp036g-s1-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
+| 0144Y | 6 | WP-036G | S1 — Coding | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144Y-wp036g-s1-dv-register-consolidation-and-permanent-dispositions.md) | COMPLETE |
 | 0144Z | 6 | WP-036G | S2 — Audit | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144Z-wp036g-s2-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
 | 0144AA | 6 | WP-036G | S3 — Remediation | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144AA-wp036g-s3-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |
 | 0144AB | 6 | WP-036G | S4 — Documentation | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144AB-wp036g-s4-dv-register-consolidation-and-permanent-dispositions.md) | PLANNED |

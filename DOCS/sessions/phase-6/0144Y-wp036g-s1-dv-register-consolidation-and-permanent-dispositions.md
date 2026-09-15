@@ -1,6 +1,8 @@
 # Session 0144Y — WP-036G S1: Coding — Deferred-Validation register consolidation and permanent dispositions
 
-**Status:** PLANNED
+**Status:** COMPLETE — S1 delivered and committed locally; handoff
+[`DOCS/experiments/0144Y-wp036g-s1-handoff.md`](../../experiments/0144Y-wp036g-s1-handoff.md).
+Awaiting the mandatory S2 audit `0144Z`.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036G
 **Session type:** S1 — Coding

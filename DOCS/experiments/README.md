@@ -212,6 +212,10 @@ at the top level until they are folded into the final campaign archive in Phase 
   three-input `Gemm` nodes so `DmlExecutionProvider` executes it, the CPU
   bit-identity gate (48 cases), the DirectML agreement + latency evidence, and
   the acceptance-criterion → evidence map.
+- [`0144Y-wp036g-s1-handoff.md`](0144Y-wp036g-s1-handoff.md) — WP-036G S1
+  handoff to `0144Z`: consolidated DV dispositions, DV-035, the dormant Linux
+  Triton workflow, both fragility resolutions, security evidence, and the
+  itemized Phase 7 entry draft.
 - [`hotfix-dv019-handoff.md`](hotfix-dv019-handoff.md) — Dedicated
   hotfix/correction session for DV-019 (flaky `prin-train` tests,
   `burn-autodiff` cross-thread graph-server interaction). Handoff from

@@ -1,0 +1,34 @@
+name: gpu-triton
+
+# Dormant DV-001 workflow: activate with workflow_dispatch after registering a
+# self-hosted Linux GPU runner carrying the [self-hosted, linux, gpu] labels.
+# Runner registration is the only remaining infrastructure prerequisite.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  triton-comparison:
+    runs-on: [self-hosted, linux, gpu]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install benchmark environments
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          python -m pip install --no-cache-dir maturin
+          python -m pip install --no-cache-dir -e "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main"
+      - name: PRIN CUDA mean-field benchmark
+        run: cargo bench -p prin-kernels --features cuda --bench mean_field_rk4_bench
+      - name: PRINet 3.0 Triton benchmark
+        run: python "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/benchmarks/triton_fused_kernel_benchmark.py"

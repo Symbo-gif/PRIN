@@ -278,7 +278,7 @@ def test_repository_inventory_is_deterministic_and_separates_archive() -> None:
     assert first["project"]["name"] == "prin"
     assert first["project"]["version"] == "0.3.0"
     assert len(first["workspace"]["members"]) == 8
-    assert len(first["ci"]["workflows"]) == 8
+    assert len(first["ci"]["workflows"]) == 9
     assert "snyk.yml" in first["ci"]["workflows"]
     assert "nightly.yml" in first["ci"]["workflows"]
     assert first["session_plan"]["numbered_briefs"] == 256
