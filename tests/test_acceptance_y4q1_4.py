@@ -609,7 +609,11 @@ class TestVersionConsistency:
     def test_version_string(self) -> None:
         import prin
 
-        parts = prin.__version__.split(".")
+        # Strip pre-release suffix (e.g. "1.0.0rc1" -> "1.0.0") for format check
+        import re
+
+        core = re.split(r"[a-zA-Z]", prin.__version__)[0].rstrip(".")
+        parts = core.split(".")
         assert len(parts) == 3 and all(p.isdigit() for p in parts)
 
     def test_pyproject_version(self) -> None:

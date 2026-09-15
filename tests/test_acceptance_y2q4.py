@@ -45,12 +45,12 @@ class TestAPIFreeze:
     """J.1 — Public API matches documented frozen surface."""
 
     def test_version_is_stable(self) -> None:
-        """Version is semantic (no dev/rc suffix)."""
-        parts = prinet.__version__.split(".")
+        """Version is semantic (pre-release suffixes accepted at RC)."""
+        import re
+
+        core = re.split(r"[a-zA-Z]", prinet.__version__)[0].rstrip(".")
+        parts = core.split(".")
         assert len(parts) == 3 and all(p.isdigit() for p in parts)
-        # No .dev, .rc, .alpha, .beta suffix
-        assert "dev" not in prinet.__version__
-        assert "rc" not in prinet.__version__
 
     def test_all_frozen_symbols_exported(self) -> None:
         """Every symbol in FROZEN_PUBLIC_API is in prinet.__all__."""
@@ -428,6 +428,9 @@ class TestTopLevelExports:
 
     def test_version_string(self) -> None:
         """Version is a valid semantic version string."""
-        parts = prinet.__version__.split(".")
+        import re
+
+        core = re.split(r"[a-zA-Z]", prinet.__version__)[0].rstrip(".")
+        parts = core.split(".")
         assert len(parts) == 3
         assert all(p.isdigit() for p in parts)

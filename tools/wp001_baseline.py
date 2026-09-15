@@ -602,7 +602,19 @@ def validate_metadata(root: Path) -> list[str]:
         ),
         "CITATION.cff": _cff_scalar(root / "CITATION.cff", "version"),
     }
-    if len(set(versions.values())) != 1 or None in versions.values():
+    # Normalize pre-release separators for cross-format comparison:
+    # Cargo.toml / CITATION.cff use semver (``1.0.0-rc1``), while
+    # pyproject.toml / ``__version__`` use PEP 440 (``1.0.0rc1``).
+    # Stripping the hyphen before the pre-release tag makes them comparable.
+    import re as _re
+
+    def _normalize_version(v: str | None) -> str | None:
+        if v is None:
+            return None
+        return _re.sub(r"-(alpha|beta|rc|a|b)", r"\1", v, flags=_re.IGNORECASE)
+
+    normalized = {name: _normalize_version(v) for name, v in versions.items()}
+    if len(set(normalized.values())) != 1 or None in normalized.values():
         details = ", ".join(f"{name}={value}" for name, value in versions.items())
         errors.append(f"project version mismatch: {details}")
     pyproject_license = project.get("license", {})

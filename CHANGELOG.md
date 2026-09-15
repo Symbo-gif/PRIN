@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-rc1] — 2026-09-15
+
+### Added
+
+- **RC1 packaging (`0149`, WP-038 S1).** Version bumped to `1.0.0-rc1` (semver)
+  / `1.0.0rc1` (PEP 440) across `Cargo.toml`, `pyproject.toml`,
+  `python/prin/__init__.py`, `CITATION.cff`. Development Status classifier
+  advanced from `Pre-Alpha` to `Beta`. `release.yml` `publish-crates` job
+  enabled: 7 library crates publish to crates.io in dependency order behind
+  `environment: release` + `CARGO_REGISTRY_TOKEN`; `prin-py` marked
+  `publish = false` (Python extension). Wheel (abi3, manylinux2014, universal2)
+  and sdist build, smoke test, and SHA-256 checksum verified locally.
+
 ### Changed
 
 - **WP-037 S4 documentation (`0148`, 2026-09-15) — WP-037 closed locally;

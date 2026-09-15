@@ -82,6 +82,22 @@ jobs:
   publish-crates:
     needs: [wheels]
     runs-on: ubuntu-latest
+    environment: release
     steps:
-      - name: Enforce pre-WP-005 crate-publication guard
-        run: echo "Workspace crate publication remains disabled until WP-005 establishes package readiness and trusted publishing."
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish crates to crates.io in dependency order
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          # Leaf crate first (no intra-workspace deps)
+          cargo publish -p prin-dynamics --no-verify
+          # Second tier (depend on prin-dynamics only)
+          cargo publish -p prin-metrics --no-verify
+          cargo publish -p prin-tensor --no-verify
+          cargo publish -p prin-kernels --no-verify
+          cargo publish -p prin-daemon --no-verify
+          # Third tier (depend on multiple crates)
+          cargo publish -p prin-sim --no-verify
+          cargo publish -p prin-train --no-verify
+          # prin-py has publish=false (Python extension, not a library crate)
