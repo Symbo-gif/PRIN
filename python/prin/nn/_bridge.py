@@ -23,10 +23,12 @@ below is a few lines of glue instead of a bespoke subclass:
   optional input such as an omitted `phase`/`prev_slots` argument) per
   tensor `apply_rust_bridge` was given.
 
-Every bridge requires ``float64`` CPU, contiguous input, matching
-``torch.autograd.gradcheck``'s double-precision requirement (Testing
-Standards §2) — see each wrapper class in ``python/prin/nn`` for the
-per-module contract.
+Regular differentiable inputs must share dtype/device. Canonical module
+parameters may follow those inputs from ``parameter_start`` onward; each
+parameter keeps its own output/VJP dtype and device so a ``float64`` parameter
+can accompany a ``float32`` activation. Every tensor is marshalled as
+contiguous ``float64`` CPU storage for Rust while Burn retains numerical
+authority.
 """
 
 from __future__ import annotations
@@ -54,6 +56,7 @@ class _RustBridgeFunction(torch.autograd.Function):
         ctx: torch.autograd.function.FunctionCtx,
         bridge_forward: Callable[..., tuple[Any, ...]],
         n_tensor_inputs: int,
+        parameter_start: int,
         *tensors: torch.Tensor | None,
     ) -> Any:
         """Call `bridge_forward` and decode every DLPack capsule it returns.
@@ -61,16 +64,19 @@ class _RustBridgeFunction(torch.autograd.Function):
         Decodes every output capsule `bridge_forward` returns except the
         trailing Rust context object. `n_tensor_inputs` is unused beyond
         documenting the arity `tensors` must match; PyTorch itself infers it
-        from `*tensors`.
+        from `*tensors`. `parameter_start` separates regular inputs, which must
+        share dtype/device, from canonical parameters with independent specs.
         """
         del n_tensor_inputs
         specs = tuple(
             None if tensor is None else (tensor.dtype, tensor.device)
             for tensor in tensors
         )
-        concrete_specs = tuple(spec for spec in specs if spec is not None)
-        output_spec = concrete_specs[0]
-        if any(spec != output_spec for spec in concrete_specs[1:]):
+        regular_specs = tuple(
+            spec for spec in specs[:parameter_start] if spec is not None
+        )
+        output_spec = regular_specs[0]
+        if any(spec != output_spec for spec in regular_specs[1:]):
             raise ValueError("Rust bridge tensor inputs must share dtype and device")
         detached = tuple(
             None
@@ -105,7 +111,9 @@ class _RustBridgeFunction(torch.autograd.Function):
                 for gradient in grad_outputs
             )
         )
-        if not isinstance(grads, tuple):
+        if isinstance(grads, list):
+            grads = tuple(grads)
+        elif not isinstance(grads, tuple):
             grads = (grads,)
         decoded: tuple[torch.Tensor | None, ...] = tuple(
             None
@@ -113,14 +121,17 @@ class _RustBridgeFunction(torch.autograd.Function):
             else from_dlpack(gradient).to(dtype=spec[0], device=spec[1])
             for gradient, spec in zip(grads, input_specs, strict=True)
         )
-        # Two leading `None`s for the non-tensor `bridge_forward`/
-        # `n_tensor_inputs` positional arguments `forward` received.
-        return (None, None, *decoded)
+        # Three leading `None`s for the non-tensor `bridge_forward`,
+        # `n_tensor_inputs`, and `parameter_start` arguments `forward`
+        # received.
+        return (None, None, None, *decoded)
 
 
 def apply_rust_bridge(
     bridge_forward: Callable[..., tuple[Any, ...]],
     tensors: Sequence[torch.Tensor | None],
+    *,
+    parameter_start: int | None = None,
 ) -> Any:
     """Apply a Rust bridge's ``forward`` method as a differentiable call.
 
@@ -138,12 +149,19 @@ def apply_rust_bridge(
             optional differentiable input (e.g. `OscillatoryAttention`'s
             `phase` when not supplied) and is passed through as ``None``
             rather than detached.
+        parameter_start: Index of the first canonical parameter tensor, if any.
+            Entries before this index are regular inputs and must share
+            dtype/device; entries from this index onward retain independent
+            output/VJP dtype/device specs.
 
     Returns:
         A single output tensor, or a tuple of tensors if the bridge method
         returns more than one.
     """
+    first_parameter = len(tensors) if parameter_start is None else parameter_start
+    if not 0 < first_parameter <= len(tensors):
+        raise ValueError("parameter_start must identify a suffix of tensors")
     result: Any = _RustBridgeFunction.apply(  # type: ignore[no-untyped-call, unused-ignore]
-        bridge_forward, len(tensors), *tensors
+        bridge_forward, len(tensors), first_parameter, *tensors
     )
     return result

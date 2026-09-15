@@ -319,7 +319,7 @@ pub struct PyDiscreteDeltaThetaGammaLayerCtx {
 
 #[pymethods]
 impl PyDiscreteDeltaThetaGammaLayerCtx {
-    fn backward(&self, py: Python<'_>, grad_output: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+    fn backward(&self, py: Python<'_>, grad_output: &Bound<'_, PyAny>) -> PyResult<Vec<Py<PyAny>>> {
         let grad_output = plain_tensor_from_dlpack::<2>(grad_output, self.output_shape)?;
         let x = leaf_2d(&self.x_shape, &self.x_data);
         let output = self
@@ -327,11 +327,39 @@ impl PyDiscreteDeltaThetaGammaLayerCtx {
             .forward(x.clone())
             .expect("saved discrete-layer input shape remains valid");
         let grads = (output * grad_output).sum().backward();
-        export_tensor::<2>(py, x.grad(&grads).ok_or_else(|| no_input_grad("x"))?)
+        let (proj_phase, proj_amplitude, params) = self.layer.parameter_tensors();
+        macro_rules! grad_or_zeros {
+            ($tensor:expr) => {
+                $tensor
+                    .grad(&grads)
+                    .unwrap_or_else(|| Tensor::zeros($tensor.dims(), &$tensor.device()))
+            };
+        }
+        Ok(vec![
+            export_tensor::<2>(py, x.grad(&grads).ok_or_else(|| no_input_grad("x"))?)?,
+            export_tensor::<2>(py, grad_or_zeros!(proj_phase).transpose())?,
+            export_tensor::<2>(py, grad_or_zeros!(proj_amplitude).transpose())?,
+            export_tensor::<1>(py, grad_or_zeros!(params.delta_freq))?,
+            export_tensor::<1>(py, grad_or_zeros!(params.theta_freq))?,
+            export_tensor::<1>(py, grad_or_zeros!(params.gamma_freq))?,
+            export_tensor::<2>(py, grad_or_zeros!(params.w_delta))?,
+            export_tensor::<2>(py, grad_or_zeros!(params.w_theta))?,
+            export_tensor::<2>(py, grad_or_zeros!(params.w_gamma))?,
+            export_tensor::<2>(py, grad_or_zeros!(params.w_pac_dt).transpose())?,
+            export_tensor::<1>(py, grad_or_zeros!(params.b_pac_dt))?,
+            export_tensor::<2>(py, grad_or_zeros!(params.w_pac_tg).transpose())?,
+            export_tensor::<1>(py, grad_or_zeros!(params.b_pac_tg))?,
+            export_tensor::<2>(py, grad_or_zeros!(params.mu_delta))?,
+            export_tensor::<2>(py, grad_or_zeros!(params.mu_theta))?,
+            export_tensor::<2>(py, grad_or_zeros!(params.mu_gamma))?,
+        ])
     }
 }
 
-/// Rust-owned discrete three-band layer bridge.
+/// Discrete three-band layer with canonical optimizer-visible PyTorch values.
+///
+/// Each batched forward imports all 15 current parameter tensors into Burn;
+/// backward returns Burn-computed VJPs in the same PyTorch layouts.
 #[pyclass(
     name = "DiscreteDeltaThetaGammaLayerBridge",
     module = "prin._prin_core",
@@ -385,12 +413,36 @@ impl PyDiscreteDeltaThetaGammaLayerBridge {
         self.config.n_dims
     }
 
+    /// Return current Rust values in the 15 canonical PyTorch layouts.
+    fn parameter_values(&self, py: Python<'_>) -> PyResult<Vec<Py<PyAny>>> {
+        let (proj_phase, proj_amplitude, params) = self.layer.parameter_tensors();
+        Ok(vec![
+            export_tensor::<2>(py, proj_phase.transpose().inner())?,
+            export_tensor::<2>(py, proj_amplitude.transpose().inner())?,
+            export_tensor::<1>(py, params.delta_freq.inner())?,
+            export_tensor::<1>(py, params.theta_freq.inner())?,
+            export_tensor::<1>(py, params.gamma_freq.inner())?,
+            export_tensor::<2>(py, params.w_delta.inner())?,
+            export_tensor::<2>(py, params.w_theta.inner())?,
+            export_tensor::<2>(py, params.w_gamma.inner())?,
+            export_tensor::<2>(py, params.w_pac_dt.transpose().inner())?,
+            export_tensor::<1>(py, params.b_pac_dt.inner())?,
+            export_tensor::<2>(py, params.w_pac_tg.transpose().inner())?,
+            export_tensor::<1>(py, params.b_pac_tg.inner())?,
+            export_tensor::<2>(py, params.mu_delta.inner())?,
+            export_tensor::<2>(py, params.mu_theta.inner())?,
+            export_tensor::<2>(py, params.mu_gamma.inner())?,
+        ])
+    }
+
     fn forward(
-        &self,
+        &mut self,
         py: Python<'_>,
         x: &Bound<'_, PyAny>,
+        weights: Vec<Bound<'_, PyAny>>,
     ) -> PyResult<(Py<PyAny>, Py<PyDiscreteDeltaThetaGammaLayerCtx>)> {
         let (x, x_shape, x_data) = tensor_from_dlpack_with_data::<2>(x)?;
+        self.load_torch_weights(weights)?;
         let output = self.layer.forward(x).map_err(train_err_to_py)?;
         let output_shape = output.dims();
         let capsule = export_tensor::<2>(py, output.inner())?;

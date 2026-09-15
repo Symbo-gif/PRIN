@@ -401,6 +401,28 @@ impl<B: Backend> DiscreteDeltaThetaGamma<B> {
         check_dims("mu_gamma", self.mu_gamma.val().dims(), [1, 1])
     }
 
+    /// Return cloned parameter tensor handles in the explicit bridge layout.
+    ///
+    /// Clones preserve Burn autodiff identities, allowing a foreign-autograd
+    /// bridge to extract parameter VJPs after a forward pass.
+    pub fn parameter_tensors(&self) -> DiscreteDeltaThetaGammaParams<B> {
+        DiscreteDeltaThetaGammaParams {
+            delta_freq: self.delta_freq.val(),
+            theta_freq: self.theta_freq.val(),
+            gamma_freq: self.gamma_freq.val(),
+            w_delta: self.w_delta.val(),
+            w_theta: self.w_theta.val(),
+            w_gamma: self.w_gamma.val(),
+            w_pac_dt: self.w_pac_dt.val(),
+            b_pac_dt: self.b_pac_dt.val(),
+            w_pac_tg: self.w_pac_tg.val(),
+            b_pac_tg: self.b_pac_tg.val(),
+            mu_delta: self.mu_delta.val(),
+            mu_theta: self.mu_theta.val(),
+            mu_gamma: self.mu_gamma.val(),
+        }
+    }
+
     /// Whether `w_delta` currently requires grad — crate-internal
     /// introspection for [`crate::ablation::PhaseTrackerFrozen`]'s
     /// regression test (confirms [`burn::module::Module::no_grad`]

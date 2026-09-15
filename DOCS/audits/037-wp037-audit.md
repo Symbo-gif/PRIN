@@ -338,8 +338,8 @@ gaps.
 
 | ID | Resolution | Commit / amendment | Delta re-audit evidence |
 |---|---|---|---|
-| WP037-F1 | FIXED | This S3 commit — E4 mirror pattern applied to `ResonanceLayer.forward()` and `DiscreteDeltaThetaGammaLayer.__init__`/`forward()`; all parameters now receive gradients after `backward()` | Counterexample reproduced: `ResonanceLayer` 5/5 params with grads (was 0/5), `DiscreteDeltaThetaGammaLayer` 15/15 params with grads (was 0/0). New regression test `test_all_parameter_grads_populated`. Existing `test_gradient_flow` for `DiscreteDeltaThetaGammaLayer` now non-vacuous. |
-| WP037-F2 | FIXED | This S3 commit — full gate run in prescribed order before commit (ruff → format → mypy → interrogate → bandit → cargo fmt → clippy → test → rustdoc → sphinx → pytest); outputs recorded in this closure table | All gates green: ruff clean, format 252 files, mypy 62 files, interrogate 97.6%, bandit 0 issues, cargo fmt/clippy/test/rustdoc clean, sphinx 0 warnings, pytest fast-suite green. |
+| WP037-F1 | FIXED (corrective second delta) | The `e40ed03` E4 mirror fix is superseded: each layer now has one canonical optimizer-visible PyTorch owner; every batched call passes those values into the Rust/Burn forward, and the custom autograd contexts return Burn-computed parameter VJPs in addition to the input VJP. No exactly-zero mirror term or STE parameter gradient remains. | `ResonanceLayer` 5/5 and `DiscreteDeltaThetaGammaLayer` 15/15 trainable parameters receive finite real VJPs. Targeted SGD steps on `input_proj.weight` and `proj_amplitude.weight`, respectively, change the next Rust-owned forward (`output_changed=True`). Float64 input gradchecks remain green, and the focused corrective suite passes 61/61. |
+| WP037-F2 | FIXED | This S3 commit — full gate run in prescribed order before commit (ruff → format → mypy → interrogate → bandit → cargo fmt → clippy → test → rustdoc → sphinx → pytest); outputs recorded in this closure table | All gates green after the corrective second delta: ruff clean, format 252 files, mypy 62 files, interrogate 97.6%, bandit 0 issues, cargo fmt/clippy/test/rustdoc clean (Rust 1,577 passed / 1 ignored), Sphinx 0 warnings, fast pytest 2,873 passed / 178 skipped / 38 deselected, and the complete `tests/ parity/` suite 3,496 passed / 185 skipped. |
 | WP037-F3 | FIXED | This S3 commit — `ci/docs-constraints.txt` pins maturin, torch, torchvision, nbformat, nbclient, ipykernel; `python.yml::docs` installs under `-c ci/docs-constraints.txt` | Constraints file matches maintainer `.venv` versions; every pip install in the docs job is now bounded. |
 | WP037-F4 | FIXED | This S3 commit — `tests/test_sphinx_examples.py` extracts and executes all Python code blocks from `getting_started.rst`, `coupling_topologies.rst`, `capacity_analysis.rst`; two RST guide bugs fixed (error-demonstration wrapped in try/except, numpy/torch type mismatch corrected) | 3/3 guide scripts execute without error under `pytest -m slow`. Sphinx build warning-free after RST fixes. |
 | WP037-F5 | FIXED | This S3 commit — `_figure_stems()` derives from `FIGURE_GENERATORS` registry + explicit key→stem mapping only; archive directory no longer consulted; orphan figure set asserted exactly; negative control added | 13/13 paper wiring tests pass. Negative control `test_figure_stems_reject_unknown_archive_names` passes. |
@@ -347,4 +347,26 @@ gaps.
 | WP037-F7 | AMENDED | DV-031 entry added to `DEFERRED_VALIDATION_REGISTER.md` | Nightly benchmark regression (run 34931835896, 2026-09-15) disposed as host-instability / baseline-staleness class. DV disposition registered with re-audit gate at WP-038 S1. |
 | WP037-F8 | FIXED | This S3 commit — `notebooks/04_torch_bridge.ipynb` re-executed with `p.detach()` fix; `test_committed_notebook_outputs_have_no_maintainer_artifacts` regression test added | Grep for `Users\\there`, `ipykernel`, `UserWarning`, `Traceback` returns 0 matches. New hygiene test passes. |
 
-**Delta re-audit date:** 2026-09-15 — **Result:** CLEAN (all findings closed; F6 permitted CARRIED(1) with S4 gate; F7 AMENDED to DV register)
+**WP037-F1 corrective second delta:** the original S3 evidence from `e40ed03`
+proved only that fake mirror gradients were populated; it did not prove that an
+optimizer step changed Rust-owned behavior. The superseding evidence above tests
+both gradient provenance and changed forward behavior while retaining one
+batched Python/Rust boundary crossing per integration. The generic bridge now
+keeps the historical dtype/device guard for regular differentiable inputs while
+explicitly allowing the canonical parameter suffix to remain `float64` when an
+activation is `float32`; the `test_bridge_rejects_mixed_tensor_placement`
+compatibility regression is green.
+
+**Security delta (corrective second delta):** Snyk Code scanned the changed
+Python (`python/prin`, `python/prin/nn`, `tests`) and Rust
+(`crates/prin-py/src/bindings`, `crates/prin-train/src`) scopes at the low
+threshold and returned 0 issues in each scope. Snyk Open Source scanned the
+whole repository (`all_projects=true`, low threshold, maintainer `.venv`
+interpreter) and returned 0 issues. Native controls remain green: Bandit 0,
+`cargo audit` exit 0 with only the three governed warnings (`paste`
+RUSTSEC-2024-0436, `bincode` RUSTSEC-2025-0141, `chacha20` yanked), and both
+`pip-audit` scopes report no known vulnerabilities. `gitleaks` is still
+unavailable locally, so local secret scanning is **blocked**, not claimed;
+GitHub full-history Gitleaks remains the amendment-#5 substitute at push.
+
+**Delta re-audit date:** 2026-09-15 — **Result:** CLEAN after the WP037-F1 corrective second delta (F6 permitted CARRIED(1) with S4 gate; F7 AMENDED to DV register)

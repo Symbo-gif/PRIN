@@ -479,6 +479,10 @@ class PhaseAmplitudeCouplingLayer(torch.nn.Module):
 class DiscreteDeltaThetaGammaLayer(torch.nn.Module):
     """Bias-free input projections over the existing discrete three-band core.
 
+    PyTorch parameters are the canonical optimizer-visible values. Every
+    forward synchronizes all 15 tensors into one Rust/Burn integration call,
+    whose backward returns real Burn-computed input and parameter VJPs.
+
     Args:
         n_delta: Number of delta-band oscillators.
         n_theta: Number of theta-band oscillators.
@@ -523,53 +527,30 @@ class DiscreteDeltaThetaGammaLayer(torch.nn.Module):
             seed_counter,
             seed_key,
         )
-        # PRINet 3.0 compatibility: parameter mirrors for the Rust-owned
-        # projections and dynamics. The Rust bridge is the numerical owner of
-        # ``forward``; these mirrors carry the reference names/shapes and
-        # initialization contract so ``torch.optim`` can be constructed and
-        # ``loss.backward()`` populates every ``.grad`` (E4 mirror pattern;
-        # WP037-F1).
+        values = [from_dlpack(capsule) for capsule in self._bridge.parameter_values()]
         self.proj_phase = torch.nn.Linear(
-            n_dims, n_delta + n_theta + n_gamma, bias=False
+            n_dims, n_delta + n_theta + n_gamma, bias=False, dtype=torch.float64
         )
-        torch.nn.init.xavier_uniform_(self.proj_phase.weight)
+        self.proj_phase.weight = torch.nn.Parameter(values[0])
         self.proj_amplitude = torch.nn.Linear(
-            n_dims, n_delta + n_theta + n_gamma, bias=False
+            n_dims, n_delta + n_theta + n_gamma, bias=False, dtype=torch.float64
         )
-        torch.nn.init.xavier_uniform_(self.proj_amplitude.weight)
-        self.delta_freq = torch.nn.Parameter(
-            torch.full((n_delta,), 2.0, dtype=torch.float64)
-        )
-        self.theta_freq = torch.nn.Parameter(
-            torch.full((n_theta,), 6.0, dtype=torch.float64)
-        )
-        self.gamma_freq = torch.nn.Parameter(
-            torch.full((n_gamma,), 40.0, dtype=torch.float64)
-        )
-        self.W_delta = torch.nn.Parameter(
-            torch.randn(n_delta, n_delta, dtype=torch.float64)
-            * coupling_strength
-            / n_delta
-        )
-        self.W_theta = torch.nn.Parameter(
-            torch.randn(n_theta, n_theta, dtype=torch.float64)
-            * coupling_strength
-            / n_theta
-        )
-        self.W_gamma = torch.nn.Parameter(
-            torch.randn(n_gamma, n_gamma, dtype=torch.float64)
-            * coupling_strength
-            / n_gamma
-        )
-        self.W_pac_dt = torch.nn.Linear(2 * n_delta, n_theta)
-        torch.nn.init.xavier_uniform_(self.W_pac_dt.weight, gain=0.5)
-        torch.nn.init.constant_(self.W_pac_dt.bias, pac_depth)
-        self.W_pac_tg = torch.nn.Linear(2 * n_theta, n_gamma)
-        torch.nn.init.xavier_uniform_(self.W_pac_tg.weight, gain=0.5)
-        torch.nn.init.constant_(self.W_pac_tg.bias, pac_depth)
-        self.mu_delta = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float64))
-        self.mu_theta = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float64))
-        self.mu_gamma = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float64))
+        self.proj_amplitude.weight = torch.nn.Parameter(values[1])
+        self.delta_freq = torch.nn.Parameter(values[2])
+        self.theta_freq = torch.nn.Parameter(values[3])
+        self.gamma_freq = torch.nn.Parameter(values[4])
+        self.W_delta = torch.nn.Parameter(values[5])
+        self.W_theta = torch.nn.Parameter(values[6])
+        self.W_gamma = torch.nn.Parameter(values[7])
+        self.W_pac_dt = torch.nn.Linear(2 * n_delta, n_theta, dtype=torch.float64)
+        self.W_pac_dt.weight = torch.nn.Parameter(values[8])
+        self.W_pac_dt.bias = torch.nn.Parameter(values[9])
+        self.W_pac_tg = torch.nn.Linear(2 * n_theta, n_gamma, dtype=torch.float64)
+        self.W_pac_tg.weight = torch.nn.Parameter(values[10])
+        self.W_pac_tg.bias = torch.nn.Parameter(values[11])
+        self.mu_delta = torch.nn.Parameter(values[12].reshape(()))
+        self.mu_theta = torch.nn.Parameter(values[13].reshape(()))
+        self.mu_gamma = torch.nn.Parameter(values[14].reshape(()))
 
     @property
     def n_total(self) -> int:
@@ -581,6 +562,26 @@ class DiscreteDeltaThetaGammaLayer(torch.nn.Module):
         """Input feature width."""
         return self._bridge.n_dims
 
+    def _parameter_tensors(self) -> list[torch.Tensor]:
+        """Return canonical parameters in the Rust bridge's declared order."""
+        return [
+            self.proj_phase.weight,
+            self.proj_amplitude.weight,
+            self.delta_freq,
+            self.theta_freq,
+            self.gamma_freq,
+            self.W_delta,
+            self.W_theta,
+            self.W_gamma,
+            self.W_pac_dt.weight,
+            self.W_pac_dt.bias,
+            self.W_pac_tg.weight,
+            self.W_pac_tg.bias,
+            self.mu_delta.reshape(1, 1),
+            self.mu_theta.reshape(1, 1),
+            self.mu_gamma.reshape(1, 1),
+        ]
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Project and integrate an input vector or batch.
 
@@ -591,23 +592,18 @@ class DiscreteDeltaThetaGammaLayer(torch.nn.Module):
             Final oscillator amplitudes with matching leading rank.
         """
         x_batched, was_vector = _as_batched(x)
-        output: torch.Tensor = apply_rust_bridge(self._bridge.forward, [x_batched])
-        if was_vector:
-            output = output.squeeze(0)
-        # Exactly-zero term so ``loss.backward()`` populates every
-        # PRINet-3.0-compatible parameter mirror's ``.grad`` without changing
-        # the forward value (E4 mirror pattern; WP037-F1).
-        zero = output.new_zeros(())
-        for p in self.parameters():
-            s = p.sum()
-            zero = zero + (s - s.detach())
-        output = output + zero.to(output.dtype)
-        return output
+        parameters = self._parameter_tensors()
+        output: torch.Tensor = apply_rust_bridge(
+            lambda value, *weights: self._bridge.forward(value, list(weights)),
+            [x_batched, *parameters],
+            parameter_start=1,
+        )
+        return output.squeeze(0) if was_vector else output
 
     def load_reference_weights(self, reference: Any) -> None:
         """Inject every parameter from a PRINet 3.0 discrete layer for parity."""
         dynamics = reference.dynamics
-        weights: list[object] = [
+        weights: list[torch.Tensor] = [
             _marshal(reference.proj_phase.weight),
             _marshal(reference.proj_amplitude.weight),
             _marshal(dynamics.delta_freq),
@@ -625,9 +621,21 @@ class DiscreteDeltaThetaGammaLayer(torch.nn.Module):
             _marshal(dynamics.mu_gamma).reshape(1, 1),
         ]
         self._bridge.load_torch_weights(weights)
+        with torch.no_grad():
+            for parameter, weight in zip(
+                self._parameter_tensors(), weights, strict=True
+            ):
+                parameter.copy_(
+                    weight.to(dtype=parameter.dtype, device=parameter.device)
+                )
 
     def rust_state_dict(self) -> bytes:
-        """Serialize projections and nested discrete dynamics."""
+        """Serialize canonical parameters as a Rust Burn checkpoint."""
+        weights = [
+            parameter.detach().to(dtype=torch.float64, device="cpu").contiguous()
+            for parameter in self._parameter_tensors()
+        ]
+        self._bridge.load_torch_weights(weights)
         return self._bridge.state_dict()
 
     def load_rust_state_dict(self, state: bytes) -> None:
@@ -637,3 +645,9 @@ class DiscreteDeltaThetaGammaLayer(torch.nn.Module):
             ValueError: If the bytes are malformed or dimensions disagree.
         """
         self._bridge.load_state_dict(state)
+        values = [from_dlpack(capsule) for capsule in self._bridge.parameter_values()]
+        with torch.no_grad():
+            for parameter, value in zip(self._parameter_tensors(), values, strict=True):
+                parameter.copy_(
+                    value.to(dtype=parameter.dtype, device=parameter.device)
+                )

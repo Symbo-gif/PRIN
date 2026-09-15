@@ -10,15 +10,12 @@ differentiable bridge follows the same contract:
   integration, not per step"); an entire multi-step Rust integration (e.g.
   :class:`ResonanceLayer`'s Kuramoto steps) runs inside a single ``forward``
   call.
-- Trainable parameters (coupling matrices, gate weights, ...) live in Rust.
-  PyTorch ``nn.Parameter`` mirrors carry the reference names/shapes so
-  ``torch.optim`` can be constructed and ``loss.backward()`` populates every
-  ``.grad`` (the E4 mirror pattern: an exactly-zero term in ``forward()``
-  creates gradient paths without perturbing the forward value). The Rust
-  bridge remains the numerical owner of ``forward``; the canonical trainers
-  are the ``prin-train`` oscillator-aware optimizers (``SyncGd``/``Rip``/
-  ``Scalr``). Checkpointing uses ``rust_state_dict``/``load_rust_state_dict``
-  (Rust-native ``burn::record`` bytes), not ``torch.nn.Module.state_dict``.
+- PyTorch ``nn.Parameter`` objects are the canonical optimizer-visible values.
+  Each batched forward synchronizes them into a Burn module in the Rust bridge;
+  backward returns Burn-computed input and parameter VJPs. Rust remains the
+  sole numerical authority, while ordinary ``torch.optim`` steps alter the
+  next Rust forward. Rust-native checkpoints remain available through
+  ``rust_state_dict``/``load_rust_state_dict``.
 - Every bridge requires ``float64`` CPU, contiguous input, matching
   ``torch.autograd.gradcheck``'s double-precision requirement (Testing
   Standards §2).
@@ -220,38 +217,7 @@ __all__: list[str] = [
 ]
 
 if TYPE_CHECKING:
-    from prin._prin_core import GatedPhaseActivationCtx, ResonanceLayerCtx
-
-
-class _ResonanceLayerFunction(torch.autograd.Function):
-    """``torch.autograd.Function`` gluing :class:`ResonanceLayer` to Rust.
-
-    ``forward``/``backward`` each make exactly one call into the Rust bridge;
-    the entire ``n_steps``-step Kuramoto integration runs inside that single
-    Rust call.
-    """
-
-    @staticmethod
-    def forward(
-        ctx: torch.autograd.function.FunctionCtx,
-        x: torch.Tensor,
-        bridge: ResonanceLayerBridge,
-    ) -> torch.Tensor:
-        """Decode ``x``, run the Rust forward pass, save the Rust context."""
-        out_capsule, rust_ctx = bridge.forward(x.detach())
-        output: torch.Tensor = from_dlpack(out_capsule)
-        ctx.rust_ctx = rust_ctx  # type: ignore[attr-defined]
-        return output
-
-    @staticmethod
-    def backward(
-        ctx: torch.autograd.function.FunctionCtx, grad_output: torch.Tensor
-    ) -> tuple[torch.Tensor, None]:
-        """Run the Rust backward pass for the saved context."""
-        rust_ctx: ResonanceLayerCtx = ctx.rust_ctx  # type: ignore[attr-defined]
-        grad_x_capsule = rust_ctx.backward(grad_output.contiguous())
-        grad_x: torch.Tensor = from_dlpack(grad_x_capsule)
-        return grad_x, None
+    from prin._prin_core import GatedPhaseActivationCtx
 
 
 class ResonanceLayer(torch.nn.Module):
@@ -259,17 +225,11 @@ class ResonanceLayer(torch.nn.Module):
 
     PRINet 3.0 ``nn.layers.ResonanceLayer``, bridged to Rust forward/backward
     via DLPack. Coupling/decay/input-projection/modulation/base-frequency
-    parameters are owned by the Rust bridge
-    (``prin-train::layers::ResonanceLayer``); the PyTorch ``nn.Parameter``
-    mirrors carry the reference names/shapes so ``torch.optim`` can be
-    constructed and ``loss.backward()`` populates every ``.grad`` (E4 mirror
-    pattern). The Rust bridge remains the numerical owner of ``forward``;
-    ``torch.optim`` steps update the mirrors, not the Rust-side weights —
-    train the Rust parameters with a ``prin-train`` ``OscillatorOptimizer``
-    (``SyncGd``/``Rip``/``Scalr``). ``forward`` is fully differentiable end
-    to end through DLPack-bridged Rust forward/backward, so this module
-    composes inside a larger PyTorch model whose *other* layers use
-    ``torch.optim``.
+    ``nn.Parameter`` objects are the canonical optimizer-visible values. Each
+    call synchronizes them into ``prin-train::layers::ResonanceLayer`` for the
+    complete Rust forward, and Burn returns their real VJPs during backward.
+    Consequently ordinary ``torch.optim`` steps alter subsequent Rust-owned
+    forward behavior without moving oscillator numerics into Python.
 
     Args:
         n_oscillators: Number of coupled oscillators (output feature width).
@@ -319,29 +279,15 @@ class ResonanceLayer(torch.nn.Module):
             seed_key,
         )
         self._coupling_scale = 1.0 / math.sqrt(n_oscillators)
-        # PRINet 3.0 compatibility: the reference ``ResonanceLayer`` exposes
-        # ``coupling`` / ``decay`` / ``input_proj`` / ``modulation`` /
-        # ``base_frequency`` as ``torch.nn.Parameter`` for introspection,
-        # ``oscillatory_weight_init``, and ``torch.optim`` construction. The
-        # Rust bridge remains the numerical owner of ``forward`` /
-        # ``get_order_parameter``; these mirrors carry the PRINet-3.0
-        # parameter names/shapes and initialization contract.
-        coupling = torch.randn(n_oscillators, n_oscillators, dtype=torch.float64)
-        coupling = (coupling + coupling.T) / 2.0 * 0.1
-        coupling.fill_diagonal_(0.0)
-        self.coupling = torch.nn.Parameter(coupling)
-        self.decay = torch.nn.Parameter(
-            torch.full((n_oscillators,), decay_rate, dtype=torch.float64)
-        )
-        self.modulation = torch.nn.Parameter(
-            torch.randn(n_oscillators, n_oscillators, dtype=torch.float64) * 0.01
-        )
-        self.base_frequency = torch.nn.Parameter(
-            torch.linspace(0.1, 10.0, n_oscillators, dtype=torch.float64)
-        )
+        values = [from_dlpack(capsule) for capsule in self._bridge.parameter_values()]
+        self.coupling = torch.nn.Parameter(values[0])
+        self.decay = torch.nn.Parameter(values[1])
         self.input_proj = torch.nn.Linear(n_dims, n_oscillators, bias=False).to(
             torch.float64
         )
+        self.input_proj.weight = torch.nn.Parameter(values[2])
+        self.modulation = torch.nn.Parameter(values[3])
+        self.base_frequency = torch.nn.Parameter(values[4])
 
     @property
     def n_oscillators(self) -> int:
@@ -352,6 +298,16 @@ class ResonanceLayer(torch.nn.Module):
     def n_dims(self) -> int:
         """Input feature dimension."""
         return self._bridge.n_dims
+
+    def _parameter_tensors(self) -> list[torch.Tensor]:
+        """Return canonical parameters in the Rust bridge's declared order."""
+        return [
+            self.coupling,
+            self.decay,
+            self.input_proj.weight,
+            self.modulation,
+            self.base_frequency,
+        ]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Run the Kuramoto integration and return final amplitudes.
@@ -369,18 +325,13 @@ class ResonanceLayer(torch.nn.Module):
         """
         was_vector = x.dim() == 1
         batched = x.unsqueeze(0) if was_vector else x
-        result: torch.Tensor = apply_rust_bridge(self._bridge.forward, [batched])
-        if was_vector:
-            result = result.squeeze(0)
-        # Exactly-zero term so ``loss.backward()`` populates every
-        # PRINet-3.0-compatible parameter mirror's ``.grad`` without changing
-        # the forward value (E4 mirror pattern; WP037-F1).
-        zero = result.new_zeros(())
-        for p in self.parameters():
-            s = p.sum()
-            zero = zero + (s - s.detach())
-        result = result + zero.to(result.dtype)
-        return result
+        parameters = self._parameter_tensors()
+        result: torch.Tensor = apply_rust_bridge(
+            lambda value, *weights: self._bridge.forward(value, list(weights)),
+            [batched, *parameters],
+            parameter_start=1,
+        )
+        return result.squeeze(0) if was_vector else result
 
     def get_order_parameter(self, x: torch.Tensor) -> torch.Tensor:
         """Return the per-input Kuramoto order parameter (PRINet 3.0 hook).
@@ -394,23 +345,26 @@ class ResonanceLayer(torch.nn.Module):
         was_vector = x.dim() == 1
         batched = x.unsqueeze(0) if was_vector else x
         marshalled = batched.detach().to(dtype=torch.float64, device="cpu").contiguous()
-        result: torch.Tensor = from_dlpack(self._bridge.order_parameter(marshalled))
+        weights = [
+            parameter.detach().to(dtype=torch.float64, device="cpu").contiguous()
+            for parameter in self._parameter_tensors()
+        ]
+        result: torch.Tensor = from_dlpack(
+            self._bridge.order_parameter(marshalled, weights)
+        )
         return result.squeeze(0) if was_vector else result
 
     def rust_state_dict(self) -> bytes:
-        """Serialize Rust-owned parameters to opaque checkpoint bytes.
-
-        Returns:
-            Bytes produced by ``burn::record`` (``BinBytesRecorder<
-            DoublePrecisionSettings>``); pass to :meth:`load_rust_state_dict`
-            to restore. Not interchangeable with
-            ``torch.nn.Module.state_dict`` (there is no ``torch.nn.Parameter``
-            on this module).
-        """
+        """Serialize the canonical parameters as a Rust Burn checkpoint."""
+        weights = [
+            parameter.detach().to(dtype=torch.float64, device="cpu").contiguous()
+            for parameter in self._parameter_tensors()
+        ]
+        self._bridge.load_torch_weights(weights)
         return self._bridge.state_dict()
 
     def load_rust_state_dict(self, state: bytes) -> None:
-        """Restore parameters previously produced by :meth:`rust_state_dict`.
+        """Restore a Burn checkpoint into the canonical PyTorch parameters.
 
         Args:
             state: Bytes from a prior :meth:`rust_state_dict` call on a
@@ -421,12 +375,18 @@ class ResonanceLayer(torch.nn.Module):
                 layer's parameter shapes.
         """
         self._bridge.load_state_dict(state)
+        values = [from_dlpack(capsule) for capsule in self._bridge.parameter_values()]
+        with torch.no_grad():
+            for parameter, value in zip(self._parameter_tensors(), values, strict=True):
+                parameter.copy_(
+                    value.to(dtype=parameter.dtype, device=parameter.device)
+                )
 
 
 class _GatedPhaseActivationFunction(torch.autograd.Function):
     """``torch.autograd.Function`` gluing :class:`GatedPhaseActivation`.
 
-    See :class:`_ResonanceLayerFunction` for the general contract.
+    Forward and backward each cross the Rust boundary once.
     """
 
     @staticmethod

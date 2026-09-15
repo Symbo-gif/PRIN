@@ -86,12 +86,28 @@ class TestResonanceLayer:
     def test_all_parameter_grads_populated(
         self, resonance_layer: ResonanceLayer
     ) -> None:
-        """Every parameter mirror receives a gradient after backward (WP037-F1)."""
+        """Every canonical parameter receives a finite Burn VJP (WP037-F1)."""
         x = torch.randn(4, 64, requires_grad=True)
         out = resonance_layer(x)
-        out.sum().backward()
-        for name, p in resonance_layer.named_parameters():
-            assert p.grad is not None, f"no grad for {name} (shape {tuple(p.shape)})"
+        out.square().sum().backward()
+        for name, parameter in resonance_layer.named_parameters():
+            assert parameter.grad is not None, f"no grad for {name}"
+            assert torch.isfinite(parameter.grad).all(), f"non-finite grad for {name}"
+            assert not torch.equal(parameter.grad, torch.ones_like(parameter.grad)), (
+                f"fake all-ones grad for {name}"
+            )
+
+    def test_optimizer_step_changes_rust_forward(
+        self, resonance_layer: ResonanceLayer
+    ) -> None:
+        """A targeted PyTorch optimizer step changes Rust-owned behavior."""
+        x = torch.randn(4, 64)
+        optimizer = torch.optim.SGD([resonance_layer.input_proj.weight], lr=1e-3)
+        before = resonance_layer(x).detach().clone()
+        resonance_layer(x).square().sum().backward()
+        optimizer.step()
+        after = resonance_layer(x).detach()
+        assert not torch.equal(before, after)
 
     def test_parameter_count(self, resonance_layer: ResonanceLayer) -> None:
         """Layer has expected trainable parameters."""

@@ -278,7 +278,6 @@ def test_committed_notebook_outputs_have_no_maintainer_artifacts() -> None:
     ``UserWarning`` traces, and ``Traceback`` blocks. A release-facing
     committed artefact must not embed host identity or transient noise.
     """
-    import os
     import re
 
     host_path = re.compile(r"C:\\Users\\", re.IGNORECASE)

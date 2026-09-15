@@ -175,7 +175,7 @@ count 253 → 256. See
 | 0144AB | WP-036G | S4 — Documentation | [Deferred-Validation register consolidation and permanent dispositions](0144AB-wp036g-s4-dv-register-consolidation-and-permanent-dispositions.md) | COMPLETE — WP-036G closed; permanent dispositions signed; Phase 7 entry statement issued |
 | 0145 | WP-037 | S1 — Coding | [Documentation, notebooks, paper, and Parity Report draft](0145-wp037-s1-documentation-notebooks-paper-and-parity-report-draft.md) | COMPLETE — Sphinx guides/API complete (`-W` clean), four notebooks executed, docs.rs + paper artefacts wired, draft Parity Report issued; 19 DV-031(A) nodes un-skipped; handoff to `0146` |
 | 0146 | WP-037 | S2 — Audit | [Documentation, notebooks, paper, and Parity Report draft](0146-wp037-s2-documentation-notebooks-paper-and-parity-report-draft.md) | COMPLETE — FAIL (8 findings; S3 mandatory) |
-| 0147 | WP-037 | S3 — Remediation | [Documentation, notebooks, paper, and Parity Report draft](0147-wp037-s3-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
+| 0147 | WP-037 | S3 — Remediation | [Documentation, notebooks, paper, and Parity Report draft](0147-wp037-s3-documentation-notebooks-paper-and-parity-report-draft.md) | COMPLETE — all eight findings closed after the WP037-F1 corrective second delta; delta re-audit CLEAN |
 | 0148 | WP-037 | S4 — Documentation | [Documentation, notebooks, paper, and Parity Report draft](0148-wp037-s4-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
 | 0149 | WP-038 | S1 — Coding | [RC1 packaging and Phase 6 gate](0149-wp038-s1-rc1-packaging-and-phase-6-gate.md) | PLANNED |
 | 0150 | WP-038 | S2 — Audit | [RC1 packaging and Phase 6 gate](0150-wp038-s2-rc1-packaging-and-phase-6-gate.md) | PLANNED |
