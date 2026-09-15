@@ -103,6 +103,14 @@ starts by reading it (Development Workflow Standards §6).
   CLEAN delta re-audit; **DV-006 DirectML half CLOSED**, VitisAI/NPU half
   re-scoped and OPEN (hardware-gated); plan amendment #13 DirectML deferral
   discharged; and WP-036G declaration.
+- [`036g-project-state.md`](036g-project-state.md) — WP-036G S4
+  closure; S2 PASS (zero findings), S3 no-change closure with CLEAN delta
+  re-audit; **permanent dispositions for DV-007/DV-013/DV-018/DV-028 signed**
+  (maintainer MichaelMaillet, 2026-09-15), DV-035 (`chacha20`) registered and
+  signed, every open DV item disposed with a dated class, and the Phase 7
+  entry statement issued. **WP-036E/F/G complete; the amendment-#38
+  Deferred-Validation closure block is complete**; WP-037 (`0145`) entry
+  conditions confirmed.
 
 
 The [`DEFERRED_VALIDATION_REGISTER.md`](DEFERRED_VALIDATION_REGISTER.md)

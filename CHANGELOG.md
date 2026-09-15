@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **WP-036G S4 documentation (`0144AB`, 2026-09-15) — WP-036G closed; the
+  amendment-#38 Deferred-Validation closure block is complete.** The
+  `DEFERRED_VALIDATION_REGISTER.md` permanent dispositions for
+  DV-007/DV-013/DV-018/DV-028 are signed (maintainer MichaelMaillet,
+  2026-09-15, PSR-036G §3.3), DV-035's `chacha20` standing disposition is
+  recorded signed, and every row is now `CLOSED`, `AMENDED`,
+  `PARTIALLY CLOSED`, permanent-disposition, or
+  standing-external/third-party disposition — zero undated "re-audit every
+  cycle" rows. PSR `DOCS/reports/036g-project-state.md` issued with the
+  maintainer sign-off block, the consolidated re-verification evidence
+  summary, and the Phase 7 entry statement enumerating all 23 non-terminal
+  items as non-blocking. `DOCS/reports/README.md` and `DOCS/audits/README.md`
+  gained the `036g` entries; `SESSION_REGISTER.md` and the phase-6 README mark
+  `0144AB` COMPLETE; the AGENTS.md `.pytest_basetemp-full` spelling is
+  corrected to the governed `.pytest_basetemp` path. WP-036E/F/G are all
+  complete and WP-037 (`0145`) entry conditions are confirmed.
 - **WP-036G S1 (`0144Y`, 2026-09-15) — Deferred Validation Register
   consolidation and test hardening.** Drafted permanent dispositions for
   DV-007/DV-013/DV-018/DV-028 and dated standing dispositions for every

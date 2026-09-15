@@ -210,6 +210,15 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   and `DmlExecutionProvider` executes it within tolerance. Both findings
   `FIXED` in S3 (`0144W`) with a CLEAN delta re-audit (§7 closure table);
   DV-006 DirectML half CLOSED at S4 (`0144X`).
+- [`036g-wp036g-audit.md`](036g-wp036g-audit.md) — WP-036G "Deferred-Validation
+  register consolidation and permanent dispositions" audit (`PASS`); zero
+  findings. Every DV register row maps to one disposition class (terminal,
+  permanent, standing external, standing third-party, `AMENDED`, or routed);
+  the `chacha20` row (DV-035) meets the Coding Standards §6.2 advisory bar;
+  the dormant `gpu-triton.yml` is valid and trigger-dormant; both fragile
+  tests pass under independent re-runs. Mandatory S3 no-change closure with a
+  CLEAN delta re-audit (§7). Permanent dispositions signed at S4 (`0144AB`,
+  PSR-036G §3.3).
 - [`036a-wp036a-audit.md`](036a-wp036a-audit.md) — WP-036A "Trainable
   compatibility layers (`prin-train` extension)" audit (`PASS`); zero findings;
   all 13 D-D trainable-layer / discrete-network symbols (rows 31–42, 44)

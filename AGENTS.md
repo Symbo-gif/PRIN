@@ -29,7 +29,7 @@ isolation (EA-002 E-F13).
 .venv\Scripts\python -m interrogate -c pyproject.toml python/prin
 .venv\Scripts\python -m bandit -r python/prin -c pyproject.toml
 .venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp
-.venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp-full
+.venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
