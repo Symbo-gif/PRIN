@@ -8,7 +8,7 @@
 maturin==1.14.1
 # torch/torchvision: the CPU index URL in the CI step selects the CPU wheel;
 # the pin here bounds the version independent of the index.
-torch==2.11.0
+torch==2.13.0
 torchvision==0.28.0
 # Notebook execution (Definition of Done #8).
 nbformat==5.11.1
