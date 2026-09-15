@@ -115,8 +115,18 @@ deviation record are in
   clean (62 files), interrogate **97.6 %**, bandit clean, pytest fast gate
   **2870 passed / 176 skipped**, coverage **95 %**, `pip-audit .` clean,
   `cargo fmt --check` clean, `cargo metadata` parses, `cargo clippy --workspace
-  --all-targets -D warnings` clean, and `check_dv_register_gates.py` /
-  `check_skipif_probes.py` / `wp001_baseline.py check` all pass.
+  --all-targets -D warnings` clean, `cargo test --workspace` **1578 passed /
+  0 failed**, `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps`
+  clean, and `check_dv_register_gates.py` / `check_skipif_probes.py` /
+  `wp001_baseline.py check` all pass.
+- **One self-reported process deviation** (handoff §3.2): the delivery commit
+  `80830b8` was made before `cargo test --workspace` and `cargo doc` were run,
+  contrary to the ordering in Development Workflow §3's S1 exit criteria and
+  Coding Standards §5, and the handoff note as committed argued those two items
+  were inapplicable rather than running them. Both were run immediately after on
+  the committed tree and both are green, so the protected outcome was not
+  compromised; the ordering violation is recorded for S2 to classify (suggested
+  D2, self-reported; S2 may judge D4). Same failure class as ETCA-002 T-F4.
 - **Six out-of-scope discoveries recorded, none fixed** (handoff §5), the
   material one being that `prin.nn.DiscreteDeltaThetaGammaLayer` exposes **0**
   torch parameters (reference: 13 031) and `prin.nn.ResonanceLayer`'s 6 776
