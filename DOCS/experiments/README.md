@@ -216,6 +216,14 @@ at the top level until they are folded into the final campaign archive in Phase 
   handoff to `0144Z`: consolidated DV dispositions, DV-035, the dormant Linux
   Triton workflow, both fragility resolutions, security evidence, and the
   itemized Phase 7 entry draft.
+- [`0145-wp037-s1-handoff.md`](0145-wp037-s1-handoff.md) — WP-037 S1 handoff to
+  the S2 audit `0146`: the completed Sphinx guides/API surface, four executed
+  notebooks, docs.rs wiring, paper artefact wiring, and the draft Parity Report;
+  the acceptance-criterion → evidence map; four recorded deviations
+  (`docs/`→`DOCS/sphinx/` path adaptation, the cp1252 notebook constraint, the
+  Sphinx duplicate-object resolution, notebook naming); and six out-of-scope
+  discoveries, including two `prin.nn` layers that are not trainable by a torch
+  optimizer against a Migration Guide claim that they are.
 - [`hotfix-dv019-handoff.md`](hotfix-dv019-handoff.md) — Dedicated
   hotfix/correction session for DV-019 (flaky `prin-train` tests,
   `burn-autodiff` cross-thread graph-server interaction). Handoff from

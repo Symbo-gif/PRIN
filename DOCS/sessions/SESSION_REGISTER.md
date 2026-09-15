@@ -530,7 +530,7 @@ introduction and are not retroactively added here; this table starts with
 | 0144Z | 6 | WP-036G | S2 — Audit | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144Z-wp036g-s2-dv-register-consolidation-and-permanent-dispositions.md) | COMPLETE |
 | 0144AA | 6 | WP-036G | S3 — Remediation | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144AA-wp036g-s3-dv-register-consolidation-and-permanent-dispositions.md) | COMPLETE |
 | 0144AB | 6 | WP-036G | S4 — Documentation | [Deferred-Validation register consolidation and permanent dispositions](phase-6/0144AB-wp036g-s4-dv-register-consolidation-and-permanent-dispositions.md) | COMPLETE |
-| 0145 | 6 | WP-037 | S1 — Coding | [Documentation, notebooks, paper, and Parity Report draft](phase-6/0145-wp037-s1-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
+| 0145 | 6 | WP-037 | S1 — Coding | [Documentation, notebooks, paper, and Parity Report draft](phase-6/0145-wp037-s1-documentation-notebooks-paper-and-parity-report-draft.md) | COMPLETE |
 | 0146 | 6 | WP-037 | S2 — Audit | [Documentation, notebooks, paper, and Parity Report draft](phase-6/0146-wp037-s2-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
 | 0147 | 6 | WP-037 | S3 — Remediation | [Documentation, notebooks, paper, and Parity Report draft](phase-6/0147-wp037-s3-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |
 | 0148 | 6 | WP-037 | S4 — Documentation | [Documentation, notebooks, paper, and Parity Report draft](phase-6/0148-wp037-s4-documentation-notebooks-paper-and-parity-report-draft.md) | PLANNED |

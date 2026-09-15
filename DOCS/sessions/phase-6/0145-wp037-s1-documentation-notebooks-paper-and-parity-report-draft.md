@@ -1,6 +1,8 @@
 # Session 0145 — WP-037 S1: Coding — Documentation, notebooks, paper, and Parity Report draft
 
-**Status:** PLANNED  
+**Status:** COMPLETE — S1 delivered and committed locally; handoff at
+[`DOCS/experiments/0145-wp037-s1-handoff.md`](../../experiments/0145-wp037-s1-handoff.md).
+Awaiting the mandatory S2 audit (`0146`); S1 does not self-certify.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-037  
 **Session type:** S1 — Coding  
@@ -66,3 +68,61 @@ Complete Sphinx guides/API, four notebooks, docs.rs links, paper artefact wiring
 
 All S1 gates are green and every acceptance criterion is evidence-mapped. Hand
 off to the mandatory S2 audit; S1 may not self-certify completion.
+
+---
+
+## S1 delivery (session 0145, 2026-09-15)
+
+Executed per this brief as a single S1 with logically scoped commits; Development
+Workflow §7 decomposition was considered and declined, with reasons, in the
+handoff note §4.7. Full acceptance-criterion → evidence map, gate output, and the
+deviation record are in
+[`DOCS/experiments/0145-wp037-s1-handoff.md`](../../experiments/0145-wp037-s1-handoff.md).
+
+- **Sphinx guides/API complete.** 14 new `api/` pages (9 → 23) plus
+  `coupling_topologies.rst`, `capacity_analysis.rst`, `rust_api.rst`,
+  `notebooks.rst`, `paper.rst`; `getting_started.rst` and `architecture.rst`
+  rewritten from 20- and 7-line stubs; `conf.py` now derives `release`/`version`
+  from `pyproject.toml` instead of hard-coding a stale `0.1.0`. Clean-directory
+  `sphinx-build -W --keep-going` reports **0 warnings** (103 at the first attempt
+  with the new pages; root cause and resolution in handoff §4.3).
+- **Four notebooks execute.** `01_oscillosim_quickstart`, `02_clevr_n_binding`,
+  `03_custom_coupling`, `04_torch_bridge` (net-new), all committed with executed
+  outputs; `pytest tests/test_notebooks.py -m slow` → **4 passed, 64.43 s, 0
+  error outputs**. Names follow the frozen ported parametrization (handoff §4.4).
+- **docs.rs links wired.** `documentation` key + `[package.metadata.docs.rs]` on
+  all seven publishable crates, with per-crate feature sets chosen for what a
+  docs.rs builder can compile; `rust_api.rst` states the publication gate
+  (`release.yml`'s `publish-crates` job is still the pre-WP-005 guard) rather
+  than implying the URLs resolve today.
+- **Paper artefacts wired.** `paper/main.tex` + `supplementary.tex` carried over
+  per Project Plan §14; `DEFAULT_OUTPUT_DIR` moved to `paper/figures` /
+  `paper/tables` and `paper/` added to both `ALLOWED_OUTPUT_ROOTS`;
+  `python tools/reproduce.py --output-dir paper --verify-manifest` verified
+  **172 stored artefacts** and wrote 39 files. Generated binaries gitignored
+  (handoff §4.5).
+- **Draft Parity Report.** `parity_report.rst` gains a DRAFT admonition, a
+  VALIDATION / CONFIRMATORY / REFERENCE-HISTORICAL label scheme, a tolerance
+  register, the 504-case golden-corpus results read from
+  `parity/corpus/manifest.json`, a §"Benchmark re-run comparison" marked
+  **CONFIRMATORY — not yet run**, and an evidence index.
+- **DV-031(A) WP-037 half discharged.** 19 governed-skip nodes removed from
+  `tests/conftest.py` and now passing; `test_sphinx_build_succeeds` moved to
+  `pytest.mark.slow` in the adaptation layer.
+- **New tests:** `tests/test_sphinx_docs.py` (32), `tests/test_paper_wiring.py`
+  (12), `tests/test_notebooks.py` (27).
+- **Local gate:** ruff clean, `ruff format --check` clean, `mypy --strict`
+  clean (62 files), interrogate **97.6 %**, bandit clean, pytest fast gate
+  **2870 passed / 176 skipped**, coverage **95 %**, `pip-audit .` clean,
+  `cargo fmt --check` clean, `cargo metadata` parses, `cargo clippy --workspace
+  --all-targets -D warnings` clean, and `check_dv_register_gates.py` /
+  `check_skipif_probes.py` / `wp001_baseline.py check` all pass.
+- **Six out-of-scope discoveries recorded, none fixed** (handoff §5), the
+  material one being that `prin.nn.DiscreteDeltaThetaGammaLayer` exposes **0**
+  torch parameters (reference: 13 031) and `prin.nn.ResonanceLayer`'s 6 776
+  parameters are disconnected from its `forward` — so neither is trainable by a
+  torch optimizer, against `migration_guide.rst` line 1528's "learnable
+  phase/amplitude projections". S2 owns classification.
+
+Committed locally; **not pushed** (amendment #28 — the S4 commit carries the
+cycle range and is the sole CI point).

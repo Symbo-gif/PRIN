@@ -7,6 +7,15 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
+documentation = "https://docs.rs/prin-sim"
+
+# docs.rs build configuration. `cpu` is the only backend a docs.rs builder can
+# compile (`cuda`/`wgpu` need vendor toolchains the builder does not have), so
+# the published docs cover the CPU dispatch path plus the forwarded
+# `strict-checks` guards. See `crates/prin-dynamics/Cargo.toml` for when these
+# links resolve.
+[package.metadata.docs.rs]
+features = ["strict-checks", "cpu"]
 
 [dependencies]
 prin-dynamics.workspace = true

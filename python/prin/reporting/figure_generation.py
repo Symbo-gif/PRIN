@@ -49,12 +49,11 @@ COLORS = {
 }
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_RESULTS_DIR = _REPOSITORY_ROOT / "benchmarks" / "results"
-DEFAULT_OUTPUT_DIR = (
-    _REPOSITORY_ROOT / "DOCS" / "test_and_benchmark_results" / "figures"
-)
+DEFAULT_OUTPUT_DIR = _REPOSITORY_ROOT / "paper" / "figures"
 ALLOWED_OUTPUT_ROOTS = (
     (_REPOSITORY_ROOT / "benchmarks" / "results").resolve(),
     (_REPOSITORY_ROOT / "DOCS" / "test_and_benchmark_results").resolve(),
+    (_REPOSITORY_ROOT / "paper").resolve(),
     Path(tempfile.gettempdir()).resolve(),
 )
 _FIXED_DATE = datetime(2000, 1, 1, tzinfo=UTC)

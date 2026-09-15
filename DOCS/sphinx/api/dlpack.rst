@@ -7,4 +7,3 @@ the compiled ``prin._prin_core`` extension (built from ``crates/prin-py``).
 
 .. automodule:: prin.dlpack
    :members:
-   :undoc-members:

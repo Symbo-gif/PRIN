@@ -7,6 +7,12 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
+documentation = "https://docs.rs/prin-train"
+
+# docs.rs build configuration; `strict-checks` is pure Rust. See
+# `crates/prin-dynamics/Cargo.toml` for when these links resolve.
+[package.metadata.docs.rs]
+all-features = true
 
 [features]
 # Numerical guard validation returns typed errors instead of silently

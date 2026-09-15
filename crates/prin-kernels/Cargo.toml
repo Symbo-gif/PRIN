@@ -7,6 +7,16 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
+documentation = "https://docs.rs/prin-kernels"
+
+# docs.rs build configuration. `cpu` is the only CubeCL backend a docs.rs
+# builder can compile — `cuda` and `wgpu` need vendor toolchains the builder
+# does not have — so the published docs cover the single-source kernels and
+# their CPU reference path. The GPU-only items are `#[cfg]`-gated and appear
+# in a local `cargo doc --features cuda` instead. See
+# `crates/prin-dynamics/Cargo.toml` for when these links resolve.
+[package.metadata.docs.rs]
+features = ["cpu"]
 
 [dependencies]
 prin-dynamics.workspace = true

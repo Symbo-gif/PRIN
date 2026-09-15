@@ -50,4 +50,3 @@ wheel).
 
 .. automodule:: prin.daemon
    :members:
-   :undoc-members:
