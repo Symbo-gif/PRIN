@@ -155,14 +155,28 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.crate_api }}
         run: |
+          # Helper function: publish a crate, skip if already published
+          publish_or_skip() {
+            local crate=$1
+            echo "Publishing $crate..."
+            if cargo publish -p "$crate" --no-verify 2>&1; then
+              echo "✓ $crate published successfully"
+            elif cargo search "$crate" --limit 1 | grep -q "^$crate = "; then
+              echo "⊘ $crate already exists on crates.io, skipping"
+            else
+              echo "✗ Failed to publish $crate"
+              exit 1
+            fi
+          }
+          
           # Leaf crate first (no intra-workspace deps)
-          cargo publish -p prin-dynamics --no-verify
+          publish_or_skip prin-dynamics
           # Second tier (depend on prin-dynamics only)
-          cargo publish -p prin-metrics --no-verify
-          cargo publish -p prin-tensor --no-verify
-          cargo publish -p prin-kernels --no-verify
-          cargo publish -p prin-daemon --no-verify
+          publish_or_skip prin-metrics
+          publish_or_skip prin-tensor
+          publish_or_skip prin-kernels
+          publish_or_skip prin-daemon
           # Third tier (depend on multiple crates)
-          cargo publish -p prin-sim --no-verify
-          cargo publish -p prin-train --no-verify
+          publish_or_skip prin-sim
+          publish_or_skip prin-train
           # prin-py has publish=false (Python extension, not a library crate)

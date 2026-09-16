@@ -18,6 +18,7 @@ version = "1.0.0rc1"
 description = "PRIN -- Phase-Resonance Interference Network: oscillatory binding for neural networks (Rust core + Python API)"
 requires-python = ">=3.11"
 license = {text = "MIT"}
+license-files = ["LICENSE"]
 readme = "README.md"
 authors = [
     {name = "Michael Maillet", email = "therealmichaelmaillet@gmail.com"},
