@@ -45,6 +45,10 @@ session that produced it.
   — WP-036E S3 (`0144S`) finding WP036E-F1: DV-003 host-residual re-probe on
   `PRIN-GPU-Runner` confirming CUDA `StepReport.timing_method == "system"` and
   a bounded ~0.03 ms host residual (plan amendment #44).
+- [`0144Y-wp036g-s1-dv-reverification/`](0144Y-wp036g-s1-dv-reverification/)
+  — WP-036G S1 consolidated external/security/test-fragility re-verification:
+  runner and secret-scanning state, native and Snyk dependency scans, DV-019
+  and DV-032 repeated tests, local gates, and the transparent basetemp finding.
 - [`0144U-wp036f-s1-controller-provider-report.json`](0144U-wp036f-s1-controller-provider-report.json)
   — WP-036F S1 (`0144U`) DV-006 "provider and latency acceptance" evidence for
   the re-exported controller graph (three-input `Gemm` nodes): the pristine-vs-

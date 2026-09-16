@@ -210,6 +210,23 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   and `DmlExecutionProvider` executes it within tolerance. Both findings
   `FIXED` in S3 (`0144W`) with a CLEAN delta re-audit (§7 closure table);
   DV-006 DirectML half CLOSED at S4 (`0144X`).
+- [`036g-wp036g-audit.md`](036g-wp036g-audit.md) — WP-036G "Deferred-Validation
+  register consolidation and permanent dispositions" audit (`PASS`); zero
+  findings. Every DV register row maps to one disposition class (terminal,
+  permanent, standing external, standing third-party, `AMENDED`, or routed);
+  the `chacha20` row (DV-035) meets the Coding Standards §6.2 advisory bar;
+  the dormant `gpu-triton.yml` is valid and trigger-dormant; both fragile
+  tests pass under independent re-runs. Mandatory S3 no-change closure with a
+  CLEAN delta re-audit (§7). Permanent dispositions signed at S4 (`0144AB`,
+  PSR-036G §3.3).
+- [`037-wp037-audit.md`](037-wp037-audit.md) — WP-037 "Documentation,
+  notebooks, paper, and Parity Report draft" audit (`FAIL`); eight findings:
+  two trainable Python layers did not train their Rust-owned behavior (WP037-F1,
+  D1), four test/process/CI pinning gaps (F2–F5, D2), predecessor-push and
+  recurring-nightly-red drift (F6–F7, D3), and notebook output hygiene (F8,
+  D4). S3 closed all eight after the corrective canonical-parameter /
+  Burn-VJP second delta; F6 is CARRIED(1) to the S4 push gate, F7 is AMENDED
+  into DV-036, and the delta re-audit is CLEAN.
 - [`036a-wp036a-audit.md`](036a-wp036a-audit.md) — WP-036A "Trainable
   compatibility layers (`prin-train` extension)" audit (`PASS`); zero findings;
   all 13 D-D trainable-layer / discrete-network symbols (rows 31–42, 44)

@@ -367,7 +367,12 @@ class TestDocumentationCompleteness:
         assert os.path.isfile(path)
 
     def test_sphinx_conf_exists(self, project_root: str) -> None:
-        path = os.path.join(project_root, "docs", "conf.py")
+        # Path adaptation only (ETCA-001 T-F4 follow-up (b) precedent; WP-037
+        # S1, session `0145`): Documentation Standards §3 supersedes PRINet
+        # 3.0's lowercase `docs/` — Windows filesystems are case-insensitive, so
+        # `docs/` cannot coexist with PRIN's governance tree `DOCS/`, and the
+        # Sphinx site lives at `DOCS/sphinx/`. Assertion unchanged.
+        path = os.path.join(project_root, "DOCS", "sphinx", "conf.py")
         assert os.path.isfile(path)
 
 

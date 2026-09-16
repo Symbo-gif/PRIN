@@ -7,8 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-rc1] — 2026-09-15
+
+### Added
+
+- **RC1 packaging (`0149`, WP-038 S1).** Version bumped to `1.0.0-rc1` (semver)
+  / `1.0.0rc1` (PEP 440) across `Cargo.toml`, `pyproject.toml`,
+  `python/prin/__init__.py`, `CITATION.cff`. Development Status classifier
+  advanced from `Pre-Alpha` to `Beta`. `release.yml` `publish-crates` job
+  enabled: 7 library crates publish to crates.io in dependency order behind
+  `environment: release` + `CARGO_REGISTRY_TOKEN`; `prin-py` marked
+  `publish = false` (Python extension). Wheel (abi3, manylinux2014, universal2)
+  and sdist build, smoke test, and SHA-256 checksum verified locally.
+
 ### Changed
 
+- **WP-037 S4 documentation (`0148`, 2026-09-15) — WP-037 closed locally;
+  all eight S2 findings are governed and the delta re-audit is CLEAN.**
+  `ResonanceLayer` and `DiscreteDeltaThetaGammaLayer` now expose canonical
+  PyTorch parameters synchronized into the Rust/Burn forward and receive
+  real Burn parameter VJPs (5/5 and 15/15 in the non-vacuous regression
+  probes), so ordinary `torch.optim` steps change subsequent Rust-backed
+  forwards. The documentation now distinguishes that ownership model from
+  Rust-owned state and value-preserving compatibility mirrors across the
+  Sphinx API, architecture, getting-started, migration, notebook,
+  `prin.nn`, and Rust-binding documentation. The docs CI job executes the
+  shipped guide examples under the committed constraints file; notebook 04
+  demonstrates optimizer reachability; all four notebooks execute
+  end-to-end; the Sphinx build is warning-free; `tools/reproduce.py`
+  verifies 172 artefacts and regenerates 39 paper files; and the draft
+  Parity Report remains explicitly labelled `VALIDATION` versus
+  `CONFIRMATORY`/`REFERENCE-HISTORICAL` with zero confirmatory results.
+  PSR `DOCS/reports/037-project-state.md` records the current gates
+  (`3,496 passed / 185 skipped` full Python + parity; 1,577 Rust tests +
+  1 ignored from the corrective delta; security scans clean at governed
+  thresholds) and declares WP-038 (`0149`). WP037-F6 remains the recorded
+  maintainer push/remote-CI gate; no `1.0` release or Phase 7
+  pre-registration was created.
+- **WP-036G S4 documentation (`0144AB`, 2026-09-15) — WP-036G closed; the
+  amendment-#38 Deferred-Validation closure block is complete.** The
+  `DEFERRED_VALIDATION_REGISTER.md` permanent dispositions for
+  DV-007/DV-013/DV-018/DV-028 are signed (maintainer MichaelMaillet,
+  2026-09-15, PSR-036G §3.3), DV-035's `chacha20` standing disposition is
+  recorded signed, and every row is now `CLOSED`, `AMENDED`,
+  `PARTIALLY CLOSED`, permanent-disposition, or
+  standing-external/third-party disposition — zero undated "re-audit every
+  cycle" rows. PSR `DOCS/reports/036g-project-state.md` issued with the
+  maintainer sign-off block, the consolidated re-verification evidence
+  summary, and the Phase 7 entry statement enumerating all 23 non-terminal
+  items as non-blocking. `DOCS/reports/README.md` and `DOCS/audits/README.md`
+  gained the `036g` entries; `SESSION_REGISTER.md` and the phase-6 README mark
+  `0144AB` COMPLETE; the AGENTS.md `.pytest_basetemp-full` spelling is
+  corrected to the governed `.pytest_basetemp` path. WP-036E/F/G are all
+  complete and WP-037 (`0145`) entry conditions are confirmed.
+- **WP-036G S1 (`0144Y`, 2026-09-15) — Deferred Validation Register
+  consolidation and test hardening.** Drafted permanent dispositions for
+  DV-007/DV-013/DV-018/DV-028 and dated standing dispositions for every
+  external/upstream residual; registered the `chacha20` yanked release as
+  DV-035; added dormant `.github/workflows/gpu-triton.yml` for a future Linux
+  GPU runner; hardened `test_no_gpu_throughput_regression` with warm-up and a
+  seven-sample median without changing its `<1.30` limit; confirmed the
+  DV-019 Python recurrence was the already-fixed Torch RNG/order issue, not
+  Burn's global-server mechanism. The `.snyk` high-advisory rationale now
+  distinguishes two ordinary project-cache `torch.load` calls from the absent
+  vulnerable `torch.export.load` / `.pt2` path. The pass also upgraded locked
+  `rustls` 0.23.43 to 0.23.45 for RUSTSEC-2026-0285 before S1 continued.
+- **ETCA-002 follow-up (`2026-09-05`) — `rust.yml`'s Windows `test` leg moved
+  back to the self-hosted `PRIN-GPU-Runner`, closing DV-016/DV-024's last open
+  loop.** With the runner now an auto-start Windows service (no more DV-024
+  outage risk), the hosted-`windows-latest` slowness (DV-016) that justified
+  ETCA-001's move away from self-hosted outweighs the (now-eliminated)
+  reliability concern — and had twice hit the `timeout-minutes: 120` bound
+  outright on a real PR. The matrix gained a `self_hosted` key routing only
+  the Windows leg to `[self-hosted, gpu]` (ubuntu/macos stay hosted); an
+  explicit job `name:` pins the check-run context to
+  `test (windows-latest, windows-latest)` so the `main` branch-ruleset
+  required-check set doesn't need updating; `dtolnay/rust-toolchain` /
+  `Swatinem/rust-cache` are skipped on the self-hosted leg (WSL-only, same as
+  `gpu.yml`). DV-016 and DV-024 register rows updated.
 - **ETCA-002 remediation (`2026-09-02`) — CI-gate machinery, push/close
   cadence, and re-affirmation of the WP-036F / DV-006-DirectML / amendment-#13
   closures over a real green CI run.** Filled the ETCA-002 report §7 closure

@@ -361,7 +361,10 @@ class TestQ45CrossIntegration:
 
     def test_api_version(self) -> None:
         """prin.__version__ is a valid semver."""
+        import re
+
         import prin
 
-        parts = prin.__version__.split(".")
+        core = re.split(r"[a-zA-Z]", prin.__version__)[0].rstrip(".")
+        parts = core.split(".")
         assert len(parts) == 3 and all(p.isdigit() for p in parts)

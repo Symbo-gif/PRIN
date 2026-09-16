@@ -20,6 +20,7 @@ import tempfile
 import threading
 import time
 from pathlib import Path
+from statistics import median
 
 import numpy as np
 import pytest
@@ -576,24 +577,34 @@ class TestIntegration:
         daemon = SubconsciousDaemon(tmp_onnx, backend="cpu", interval=0.5, warmup=True)
 
         # Baseline: compute without daemon
-        t0 = time.perf_counter()
-        _dummy_work(n=100_000)
-        baseline = time.perf_counter() - t0
+        _dummy_work(n=1_000_000)
+        baseline_samples = []
+        for _ in range(3):
+            t0 = time.perf_counter()
+            _dummy_work(n=1_000_000)
+            baseline_samples.append(time.perf_counter() - t0)
 
         # With daemon running
         daemon.start()
         time.sleep(0.5)
         for _ in range(3):
             daemon.submit_state(SubconsciousState.default())
-
-        t0 = time.perf_counter()
-        _dummy_work(n=100_000)
-        with_daemon = time.perf_counter() - t0
+        _dummy_work(n=1_000_000)
+        with_daemon_samples = []
+        for _ in range(7):
+            t0 = time.perf_counter()
+            _dummy_work(n=1_000_000)
+            with_daemon_samples.append(time.perf_counter() - t0)
 
         daemon.stop(timeout=5.0)
+        _dummy_work(n=1_000_000)
+        for _ in range(4):
+            t0 = time.perf_counter()
+            _dummy_work(n=1_000_000)
+            baseline_samples.append(time.perf_counter() - t0)
 
         # Daemon should add < 30% overhead (generous margin for CI / background load)
-        ratio = with_daemon / max(baseline, 1e-9)
+        ratio = median(with_daemon_samples) / max(median(baseline_samples), 1e-9)
         assert ratio < 1.30, f"Throughput ratio {ratio:.2f} > 1.30"
 
 

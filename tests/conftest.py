@@ -13,7 +13,10 @@ auditable adaptation-layer hook. Every entry names its governing item:
 
 * ``DV-031`` — `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`; un-skipped as the
   owning WP (WP-037 docs/notebooks/paper, WP-038 reproduce.py + benchmark
-  campaign + manifest, WP-036E CUDA execution) lands its deliverable.
+  campaign + manifest, WP-036E CUDA execution) lands its deliverable. The
+  WP-037 half was fully discharged at WP-037 S1 (session ``0145``); what
+  remains here is the WP-038 half, the CUDA-execution half, and three
+  non-deliverable classes (version, RNG regime, host timing).
 * Plan amendment #41 — PRIN is independently versioned toward ``1.0.0-rc1``;
   the PRINet-3.0 ``__version__ == "3.0.0"`` assertions are re-pointed at WP-038.
 
@@ -64,44 +67,43 @@ _CUDA_NODES = frozenset(
 )
 
 # --- WP036C-F1 / DV-031(A): unbuilt Phase-6 deliverables ---------------------
-_WP037_SKIP = (
-    "WP036C-F1 / DV-031(A): asserts a Phase-6 documentation deliverable "
-    "(Sphinx site / notebooks / LaTeX paper) built by WP-037."
-)
 _WP038_SKIP = (
     "WP036C-F1 / DV-031(A): asserts a Phase-6 reproducibility deliverable "
     "(root reproduce.py / benchmark-result JSON / SHA-256 manifest / release "
     "classifier) built by WP-038; the benchmark campaign is a Phase-7 activity."
 )
 
-_WP037_NODES = frozenset(
+# The whole WP-037 half of DV-031(A) was discharged at WP-037 S1 (session
+# `0145`) and its nodes removed from this registry: the Sphinx site
+# (`y4q3::TestSphinxDocs`;
+# `y4q4::TestDocumentationCompleteness::test_sphinx_conf_exists`), the notebooks
+# (`y4q3::TestNotebooks` x12, `y4q4::TestArtefactCounts::test_notebook_count`),
+# the LaTeX paper (`y4q3::TestLaTeXPaper`;
+# `y4q4::TestDocumentationCompleteness::test_latex_paper_exists`), and the
+# publication output roots
+# (`y4q2::TestStyleConsistency::test_*_default_output_dir`).
+# `TestSphinxDocs`' three path-existence tests needed a `docs/` -> `DOCS/sphinx/`
+# path adaptation first (Documentation Standards §3 supersedes the lowercase
+# convention; ETCA-001 T-F4 follow-up (b) precedent) — assertions, expected
+# values, and call order unchanged. `TestSphinxDocs::test_sphinx_build_succeeds`
+# now runs under `pytest.mark.slow` (see _WP037_SLOW_NODES).
+
+# --- WP-037 S1 (`0145`): nested-build meta-test marked slow ------------------
+# `TestSphinxDocs::test_sphinx_build_succeeds` spawns a full `sphinx-build`
+# subprocess (up to its own 300 s timeout) inside the test session. Testing
+# Standards §4 defines `slow` as >5 s and keeps the default CI gate at
+# `-m "not slow and not gpu"`, so it belongs in the nightly/full-suite leg
+# rather than the fast gate. The marker is applied here in the adaptation layer
+# rather than edited into the ported test (Testing Standards §1.1).
+_WP037_SLOW_NODES = frozenset(
     {
-        "tests/test_acceptance_y4q2.py::TestStyleConsistency::test_default_output_dir",
-        "tests/test_acceptance_y4q2.py::TestStyleConsistency::test_table_default_output_dir",
-        "tests/test_acceptance_y4q4.py::TestArtefactCounts::test_notebook_count",
-        "tests/test_acceptance_y4q4.py::TestDocumentationCompleteness::test_latex_paper_exists",
-        "tests/test_acceptance_y4q4.py::TestDocumentationCompleteness::test_sphinx_conf_exists",
-        "tests/test_acceptance_y4q3.py::TestSphinxDocs::test_conf_py_exists",
-        "tests/test_acceptance_y4q3.py::TestSphinxDocs::test_index_rst_exists",
-        "tests/test_acceptance_y4q3.py::TestSphinxDocs::test_api_rst_files_exist",
         "tests/test_acceptance_y4q3.py::TestSphinxDocs::test_sphinx_build_succeeds",
-        "tests/test_acceptance_y4q3.py::TestLaTeXPaper::test_paper_tex_exists",
-        "tests/test_acceptance_y4q3.py::TestLaTeXPaper::test_paper_has_sections",
-        "tests/test_acceptance_y4q3.py::TestLaTeXPaper::test_paper_has_bibliography",
     }
 )
 
 # Parametrised / prefix-matched WP-038 benchmark-artefact cases.
 _WP038_PREFIXES = (
     "tests/test_acceptance_y3q49.py::TestResultArtefacts::test_artefact_exists[",
-)
-
-# Parametrised / prefix-matched WP-037 notebook cases.
-_WP037_PREFIXES = (
-    "tests/test_acceptance_y4q3.py::TestNotebooks::test_notebook_exists[",
-    "tests/test_acceptance_y4q3.py::TestNotebooks::test_notebook_valid_json[",
-    "tests/test_acceptance_y4q3.py::TestNotebooks::test_notebook_has_code_cells[",
-    "tests/test_acceptance_y4q3.py::TestNotebooks::test_notebook_has_markdown_cells[",
 )
 
 _WP038_NODES = frozenset(
@@ -144,28 +146,6 @@ _RNG_SKIP = (
 _RNG_NODES = frozenset(
     {
         "tests/test_acceptance_y4q1_3.py::TestWeightedCoupling::test_cosine_kernel_affects_dynamics",
-    }
-)
-
-# --- Pre-existing host-sensitive perf-ratio flake (WP-036B S1) ---------------
-# Not a WP-036C S2 finding. Surfaced during WP-036C S3 as a flaky default-gate
-# failure (~25-40% on this host): asserts an ONNX-controller-vs-baseline
-# throughput ratio < 1.30 and measures 1.28-1.32 depending on machine load.
-# Ported verbatim from PRINet 3.0 (commit 47390d4, 0144E6); green at the
-# PSR-036D baseline only marginally. Quarantined here to keep the gate
-# deterministic. Tracked as DV-032 (perf-test hardening) with a dated
-# maintainer disposition (ETCA-001 finding T-F8); concrete fix path = widen
-# the ratio, mark `slow`, or convert to a `pytest-benchmark` gate under the
-# new nightly workflow.
-_FLAKE_SKIP = (
-    "DV-032 (ETCA-001 T-F8): pre-existing host-sensitive perf-ratio flake from "
-    "WP-036B S1 (not a WP-036C finding); asserts throughput ratio < 1.30, "
-    "measures ~1.28-1.32 under load. Dated maintainer quarantine, fix tracked "
-    "in the Deferred Validation Register."
-)
-_FLAKE_NODES = frozenset(
-    {
-        "tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression",
     }
 )
 
@@ -217,14 +197,10 @@ def _reason_for(nodeid: str) -> str | None:
         return _VERSION_SKIP
     if nodeid in _CUDA_NODES:
         return _CUDA_SKIP
-    if nodeid in _WP037_NODES or nodeid.startswith(_WP037_PREFIXES):
-        return _WP037_SKIP
     if nodeid in _WP038_NODES or nodeid.startswith(_WP038_PREFIXES):
         return _WP038_SKIP
     if nodeid in _RNG_NODES:
         return _RNG_SKIP
-    if nodeid in _FLAKE_NODES:
-        return _FLAKE_SKIP
     if nodeid in _TIMING_NODES:
         return _TIMING_SKIP
     if nodeid in _RATIO_NODES:
@@ -238,3 +214,5 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         reason = _reason_for(item.nodeid)
         if reason is not None:
             item.add_marker(pytest.mark.skip(reason=reason))
+        elif item.nodeid in _WP037_SLOW_NODES:
+            item.add_marker(pytest.mark.slow)

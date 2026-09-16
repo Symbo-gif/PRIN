@@ -20,4 +20,4 @@ bandit==1.9.4
 hypothesis==6.165.2
 # torch is needed only so `mypy --strict` can follow `import torch`; the CPU
 # wheel avoids dragging the ~5 GB CUDA 13 stack onto the hosted runner.
-torch==2.11.0
+torch==2.13.0

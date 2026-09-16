@@ -19,9 +19,10 @@ class OscillatoryAttention(torch.nn.Module):
     """Multi-head attention with an additive oscillatory coherence bias.
 
     PRINet 3.0 ``nn.layers.OscillatoryAttention``, bridged to Rust
-    forward/backward via DLPack. Weight/bias/``alpha`` parameters are owned
-    by the Rust bridge (see :class:`prin.nn.ResonanceLayer`'s docs for the
-    training-ownership split).
+    forward/backward via DLPack. Weight and bias parameters are Rust-owned;
+    ``alpha`` is a PRINet-compatible canonical value pushed into Rust before
+    each forward, but its populated ``.grad`` comes from a value-preserving
+    term rather than a Burn parameter VJP.
 
     ``dropout`` must be ``0.0``: Burn's ``Dropout`` draws from an unseeded
     backend RNG under autodiff, which would break both

@@ -343,9 +343,27 @@ class TestDiscreteDeltaThetaGammaLayer:
         loss.backward()
 
         assert x.grad is not None
-        # Check that layer parameters have gradients
-        for p in layer.parameters():
-            assert p.grad is not None, f"No grad for param shape {p.shape}"
+        for name, parameter in layer.named_parameters():
+            assert parameter.grad is not None, f"No grad for {name}"
+            assert torch.isfinite(parameter.grad).all(), f"Non-finite grad for {name}"
+            assert not torch.equal(parameter.grad, torch.ones_like(parameter.grad)), (
+                f"Fake all-ones grad for {name}"
+            )
+
+    def test_optimizer_step_changes_rust_forward(self) -> None:
+        """A targeted PyTorch optimizer step changes Rust-owned behavior."""
+        from prin.nn import DiscreteDeltaThetaGammaLayer
+
+        layer = DiscreteDeltaThetaGammaLayer(
+            n_delta=2, n_theta=3, n_gamma=4, n_dims=5, n_steps=2
+        )
+        x = torch.randn(3, 5)
+        optimizer = torch.optim.SGD([layer.proj_amplitude.weight], lr=1e-3)
+        before = layer(x).detach().clone()
+        layer(x).square().sum().backward()
+        optimizer.step()
+        after = layer(x).detach()
+        assert not torch.equal(before, after)
 
     def test_output_nonnegative(self) -> None:
         """Output amplitudes should be non-negative."""

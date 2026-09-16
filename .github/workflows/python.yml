@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -147,6 +150,58 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
         with:
           files: coverage.xml
+
+  # WP-037 (session `0145`): the documentation gate. Sphinx is built with
+  # `-W --keep-going` against a freshly created output directory (Documentation
+  # Standards §7 item 3 / AGENTS.md clean-build discipline: an incremental build
+  # does not notice an `automodule`-sourced docstring change under an unmodified
+  # `.rst`, so a reused directory can mask a real warning). The four notebooks
+  # are then executed end-to-end, which is the evidence for Definition of Done
+  # #8. Needs the compiled extension because autodoc imports `prin`.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Create virtual environment
+        shell: bash
+        run: |
+          python -m venv .venv
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      # Same disk-pressure mitigation as the `test` job (ETCA-001 T-F5 / DV-022):
+      # CPU-only torch installed before `maturin develop` so pip never resolves
+      # the ~5 GB CUDA wheel stack. Do not touch /opt/hostedtoolcache.
+      - name: Free disk space (Linux hosted runner)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost || true
+          sudo apt-get clean || true
+          df -h /
+      # WP037-F3: every pip install in this job is bounded by
+      # ci/docs-constraints.txt so the merge-gating docs job is deterministic
+      # (amendment #45 / G6). Bump the constraints deliberately, in their own
+      # commit, and re-run the gate.
+      - name: Build extension and install documentation dependencies
+        run: |
+          python -m pip install --no-cache-dir -c ci/docs-constraints.txt maturin
+          python -m pip install --no-cache-dir -c ci/docs-constraints.txt --index-url https://download.pytorch.org/whl/cpu torch torchvision
+          maturin develop -m crates/prin-py/Cargo.toml
+          python -m pip install --no-cache-dir -c ci/docs-constraints.txt -e ".[dev,mot]"
+          python -m pip install --no-cache-dir -c ci/docs-constraints.txt -r DOCS/sphinx/requirements.txt
+      - name: Sphinx builds warning-free against a fresh output directory
+        run: |
+          rm -rf DOCS/sphinx/_build
+          python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
+      - name: Documentation-surface and paper-wiring regression tests
+        run: python -m pytest tests/test_sphinx_docs.py tests/test_paper_wiring.py tests/test_notebooks.py -q -m "not slow"
+      - name: Sphinx guide examples execute end-to-end
+        run: python -m pytest tests/test_sphinx_examples.py -q -m slow
+      - name: All four notebooks execute end-to-end (Definition of Done #8)
+        run: python -m pytest tests/test_notebooks.py -q -m slow
 
   security:
     runs-on: ubuntu-latest

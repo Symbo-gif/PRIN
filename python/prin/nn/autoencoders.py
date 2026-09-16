@@ -10,8 +10,8 @@ receives a softmax gradient in the ``soft`` / ``annealed`` regimes; PRINet
 3.0 detaches it with ``.item()``. This is a forward-identical superset of the
 reference (see ``prin_train::autoencoders`` module docs). The
 encoder/decoder/classifier ``Linear`` stacks are Rust-owned too and are
-trained with a ``prin-train`` oscillator-aware optimizer, not ``torch.optim``
-(the ``ResonanceLayer`` / ``HybridPRINetV2`` training-ownership split).
+trained with a ``prin-train`` oscillator-aware optimizer, not ``torch.optim``;
+their Python compatibility mirrors are not Burn parameter VJPs.
 """
 
 from __future__ import annotations

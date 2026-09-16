@@ -20,10 +20,11 @@ from prin.reporting._artifacts import (
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_RESULTS_DIR = _REPOSITORY_ROOT / "benchmarks" / "results"
-DEFAULT_OUTPUT_DIR = _REPOSITORY_ROOT / "DOCS" / "test_and_benchmark_results" / "tables"
+DEFAULT_OUTPUT_DIR = _REPOSITORY_ROOT / "paper" / "tables"
 ALLOWED_OUTPUT_ROOTS = (
     (_REPOSITORY_ROOT / "benchmarks" / "results").resolve(),
     (_REPOSITORY_ROOT / "DOCS" / "test_and_benchmark_results").resolve(),
+    (_REPOSITORY_ROOT / "paper").resolve(),
     Path(tempfile.gettempdir()).resolve(),
 )
 _ROW_END = r"\\"

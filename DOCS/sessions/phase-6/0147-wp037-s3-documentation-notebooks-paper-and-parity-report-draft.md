@@ -1,6 +1,6 @@
 # Session 0147 — WP-037 S3: Remediation — Documentation, notebooks, paper, and Parity Report draft
 
-**Status:** PLANNED  
+**Status:** COMPLETE (2026-09-15) — all eight S2 findings closed after the WP037-F1 corrective second delta; delta re-audit CLEAN, see `DOCS/audits/037-wp037-audit.md` §7.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-037  
 **Session type:** S3 — Remediation  

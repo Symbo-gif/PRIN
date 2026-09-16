@@ -7,9 +7,13 @@ Trainable layers and PyTorch wrappers (Phase 4).
 `torch.nn.Module` wrappers and `torch.autograd.Function` bridges connecting
 PyTorch to `prin-train` in Rust via zero-copy DLPack tensor exchange. Every
 differentiable bridge crosses the Rust/Python boundary exactly once per call
-(Coding Standards §3.2); trainable parameters live in Rust and are trained by
-`prin-train`'s oscillator-aware optimizers (`SyncGd`/`Rip`/`Scalr`), not
-`torch.optim`. See each submodule's own docstring for its full contract.
+(Coding Standards §3.2). `ResonanceLayer` and `DiscreteDeltaThetaGammaLayer`
+expose canonical `torch.nn.Parameter` values, synchronize them into Rust/Burn
+on every forward, and receive real parameter VJPs for `torch.optim`. Other
+compatibility modules document their own ownership model; some retain
+Rust-owned parameters trained by `prin-train`'s oscillator-aware optimizers
+(`SyncGd`/`Rip`/`Scalr`), and compatibility mirrors are not Burn VJPs. See each
+submodule's own docstring for its full contract.
 
 ## Delivered symbols
 
@@ -68,8 +72,10 @@ differentiable bridge crosses the Rust/Python boundary exactly once per call
   the canonical PRINet 3.0 full model container (Rust-backed) and a pure-
   Python `torch.compile` passthrough.
 
-## Not yet implemented
+## Compatibility note
 
-`HybridPRINet` (v1); `DiscreteDeltaThetaGamma` standalone binding (the
-composed `DiscreteDeltaThetaGammaLayer` is real; the independent core
-binding is assigned to WP-036B).
+`DiscreteDeltaThetaGamma` is re-exported through `deferred_layers.py` for the
+PRINet-3.0 namespace, but it is a real Rust-backed binding delivered in
+WP-036C S1 — not a remaining stub. Its canonical values drive the Rust
+stepper, while its populated parameter gradients come from a documented
+value-preserving term rather than Burn VJPs.

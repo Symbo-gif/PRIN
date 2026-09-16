@@ -7,6 +7,14 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
+documentation = "https://docs.rs/prin-daemon"
+
+# docs.rs build configuration. `npu` and `strict-checks` are plain cfg flags
+# with no vendor-toolchain requirement, so all-features documents the
+# VitisAI-gated paths a reader cannot otherwise reach. See
+# `crates/prin-dynamics/Cargo.toml` for when these links resolve.
+[package.metadata.docs.rs]
+all-features = true
 
 [dependencies]
 arc-swap.workspace = true

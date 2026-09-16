@@ -1,10 +1,13 @@
 # tests/ — pytest acceptance suite
 
-The PRIN pytest suite (51 files, ~3,000 tests) is the **acceptance contract**
+The PRIN pytest suite (91 `test_*.py` files) is the **acceptance contract**
 for PRIN: it defines the public API. The WP-036B + WP-036C strict ports have
 adapted 37 PRINet 3.0 reference files (1,670 `def test_` functions, ~24,000
-reference lines) with import-only changes (`prinet.*` → `prin.*`); assertions
-are unchanged (Testing Standards §1.1).
+reference lines) with import-only changes (`prinet.*` → `prin.*`). Assertions
+remain unchanged except for separately governed post-port hardening documented
+in the Deferred Validation Register (Testing Standards §1.1). WP-037 adds the
+documentation/example/notebook gates described below; the current full
+`tests/ parity/` local run is 3,496 passed and 185 skipped.
 
 ## WP-036B ported acceptance suite (13 files, 498 tests)
 
@@ -25,6 +28,11 @@ are unchanged (Testing Standards §1.1).
 | `test_acceptance_subconscious.py` | 49 | 48 | 1 | 1 `psutil`-absent |
 | **Total** | **498** | **489** | **9** | 7 `gpu` + 1 DV-030 `skip` + 1 psutil |
 
+WP-036G S1 removed DV-032's quarantine from
+`test_no_gpu_throughput_regression` after hardening it with fixed work, warm-up,
+and a seven-sample relative-median gate. The original `<1.30` acceptance limit
+is unchanged; three consecutive isolated runs passed on the maintainer host.
+
 **Marker policy:** Tests that require a GPU carry both
 `@pytest.mark.skipif(not torch.cuda.is_available(), ...)` (the reference guard)
 **and** `@pytest.mark.gpu`. On a CPU-only host the `skipif` fires and the test
@@ -43,6 +51,24 @@ matches `pytest.skip("psutil not installed")` in the reference. No test
 carries `@pytest.mark.xfail`; no assertion is weakened; no tolerance
 annotation was required beyond the Parity Report entries for the GPU sparse
 k-NN f32 dispatch (`DOCS/sphinx/parity_report.rst`).
+
+## WP-037 documentation and trainability gates
+
+- `test_sphinx_docs.py` checks the shipped Sphinx structure, API references,
+  and output-hygiene constraints.
+- `test_sphinx_examples.py` extracts and executes the shipped Python examples
+  from `getting_started.rst`, `coupling_topologies.rst`, and
+  `capacity_analysis.rst` (marked `slow` for the complete examples gate).
+- `test_paper_wiring.py` derives expected figure stems from current generator
+  metadata only — archived PRINet filenames are not authority — and asserts the
+  exact orphan-figure set.
+- `test_notebooks.py` executes all four notebooks end-to-end and checks that
+  committed outputs contain no maintainer-host paths, `ipykernel` temp paths,
+  warnings, or tracebacks.
+- `test_acceptance_nn.py` and `test_acceptance_y2q1.py` carry the WP037-F1
+  non-vacuous trainability regressions: `ResonanceLayer` receives 5/5 finite
+  Burn parameter VJPs, `DiscreteDeltaThetaGammaLayer` receives 15/15, and an
+  optimizer step changes each layer's next Rust-backed forward.
 
 ## WP-036C ported acceptance suite (24 files, 1,172 tests)
 
@@ -75,17 +101,16 @@ k-NN f32 dispatch (`DOCS/sphinx/parity_report.rst`).
 | **Total** | **1,172** | **794** | **378** | — |
 
 **Combined ported suite: 37 files, 1,670 tests** (WP-036B: 498 + WP-036C: 1,172).
-Full default gate (`-m "not slow and not gpu"`): **2,774 passed, 202 skipped,
-0 failed** (WP-036F `0144W` adds +9 `test_wp036f_reexport.py` error-path tests
-over the WP-036E baseline of 2,765).
+Full default gate (`-m "not slow and not gpu"`): **2,873 passed, 178 skipped,
+38 deselected** after the WP-037 S3 corrective trainability delta.
 
 **WP-036C marker policy:** Governed skips are applied via a single
 `tests/conftest.py` `pytest_collection_modifyitems` hook — no ported test file
 is edited (assertions + text byte-unchanged). Skip categories:
 
-- **DV-031(A):** Tests asserting the existence of benchmark campaign artefacts,
-  notebooks, paper, or docs files that are unbuilt Phase-6 deliverables
-  (deferred to WP-038).
+- **DV-031(A):** WP-037 activated the 19 nodes covering Sphinx documentation,
+  notebooks, and the LaTeX paper artefact. Remaining rows still cover benchmark
+  campaign artefacts or Phase-6 deliverables owned by WP-038.
 - **DV-031(B):** Tests requiring GPU execution paths the current architecture
   does not yet provide (CUDA execution tests, FFI-panic ctx-on-autograd-worker
   tests) — deferred to WP-036E.

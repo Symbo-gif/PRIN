@@ -28,13 +28,14 @@ Documentation Standards §3).
 
 ## Current state
 
-- Latest Project State Report: [`027-project-state.md`](reports/027-project-state.md) —
-  WP-027 S4 closure (Phase 4 sixth and final WP: trainable-stack integration),
-  **Phase 4 complete**, exit gate GREEN, WP-028 declaration.
-- Latest Audit Report: [`027-wp027-audit.md`](audits/027-wp027-audit.md) —
-  `PASS` (zero findings), S3 no-change closure, delta re-audit **CLEAN**.
-- Latest Phase Analytics: [`ANALYTICS/phase-3/phase-3-analytics-report.md`](ANALYTICS/phase-3/phase-3-analytics-report.md) —
-  Phase 3 **PASS — SATISFACTORY**.
+- Latest Project State Report: [`037-project-state.md`](reports/037-project-state.md) —
+  WP-037 S4 closure, all eight S2 findings closed or governed (CLEAN delta
+  re-audit), canonical-parameter trainability restored, WP-038 declaration.
+- Latest Audit Report: [`037-wp037-audit.md`](audits/037-wp037-audit.md) —
+  S2 `FAIL` (eight findings), S3 corrective remediation, delta re-audit
+  **CLEAN**.
+- Latest Phase Analytics: [`ANALYTICS/phase-5/phase-5-analytics-report.md`](ANALYTICS/phase-5/phase-5-analytics-report.md) —
+  Phase 5 **PASS — SATISFACTORY**.
 
 Operational checklists mirroring the Session Cycle live in
 `.windsurf/workflows/` (`/coding-session`, `/audit-session`,

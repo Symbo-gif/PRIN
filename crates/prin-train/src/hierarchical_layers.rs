@@ -794,6 +794,21 @@ impl<B: Backend> DiscreteDeltaThetaGammaLayer<B> {
             .1)
     }
 
+    /// Return cloned parameter tensor handles in PyTorch-compatible order.
+    ///
+    /// Projection and PAC weights are transposed from Burn's
+    /// `[in_features, out_features]` layout. Clones preserve autodiff identities
+    /// until those layout conversions are requested by the bridge.
+    pub fn parameter_tensors(
+        &self,
+    ) -> (Tensor<B, 2>, Tensor<B, 2>, DiscreteDeltaThetaGammaParams<B>) {
+        (
+            self.proj_phase.weight.val(),
+            self.proj_amplitude.weight.val(),
+            self.dynamics.parameter_tensors(),
+        )
+    }
+
     /// Validate projection and nested dynamics dimensions after checkpoint load.
     ///
     /// # Errors

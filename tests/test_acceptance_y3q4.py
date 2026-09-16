@@ -39,9 +39,12 @@ class TestPackagingV2:
 
     def test_version_is_2_0_0(self) -> None:
         """Package version is a valid semver."""
+        import re
+
         import prin
 
-        parts = prin.__version__.split(".")
+        core = re.split(r"[a-zA-Z]", prin.__version__)[0].rstrip(".")
+        parts = core.split(".")
         assert len(parts) == 3 and all(p.isdigit() for p in parts)
 
     def test_slot_attention_importable_from_top_level(self) -> None:

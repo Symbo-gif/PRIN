@@ -1,6 +1,6 @@
 # Session 0146 — WP-037 S2: Audit — Documentation, notebooks, paper, and Parity Report draft
 
-**Status:** PLANNED  
+**Status:** COMPLETE (2026-09-15) — verdict **FAIL**; eight findings (`WP037-F1` D1, `F2`–`F5` D2, `F6`–`F7` D3, `F8` D4), see `DOCS/audits/037-wp037-audit.md`.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-037  
 **Session type:** S2 — Audit  
@@ -60,3 +60,18 @@ S2. Discovery and correction remain separate for audit independence.
 
 Audit Report and verdict are committed. Hand off to S3 **even with zero
 findings**; a zero-finding S3 records no-change closure and delta verification.
+
+---
+
+## S2 completion (2026-09-15)
+
+Audit report: `DOCS/audits/037-wp037-audit.md`. Verdict: **FAIL**.
+Eight findings were recorded: `WP037-F1` (D1), `WP037-F2`–`WP037-F5`
+(D2), `WP037-F6`–`WP037-F7` (D3), and `WP037-F8` (D4). The visible WP
+acceptance evidence reproduced (fresh Sphinx warning-as-error build, four
+notebooks, and 172-record/39-output paper reproduction), but the D1
+trainability counterexample and the remaining process/test/CI findings require
+the mandatory S3 remediation. DV-031(A) is adjudicated partially closed for
+the WP-037 documentation/notebook/paper sub-scope; its WP-038 portion and
+DV-031(B) remain routed. Maintainer acknowledgment is recorded in the audit
+report header before the S2 commit.

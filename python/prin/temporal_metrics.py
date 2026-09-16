@@ -175,8 +175,8 @@ def identity_overcount(
 ) -> float:
     """Compute identity overcount ratio.
 
-    IOC = |unique predicted IDs assigned| / n_objects. IOC = 1.0 is optimal;
-    IOC > 1.0 means the tracker creates spurious IDs.
+    IOC = (count of unique predicted IDs assigned) / n_objects. IOC = 1.0 is
+    optimal; IOC > 1.0 means the tracker creates spurious IDs.
 
     Args:
         matches_history: List of T-1 match tensors.

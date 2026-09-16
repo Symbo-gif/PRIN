@@ -7,6 +7,12 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
+documentation = "https://docs.rs/prin-metrics"
+
+# docs.rs build configuration; `prin-metrics` has no features. See
+# `crates/prin-dynamics/Cargo.toml` for when these links resolve.
+[package.metadata.docs.rs]
+all-features = true
 
 [dependencies]
 prin-dynamics.workspace = true

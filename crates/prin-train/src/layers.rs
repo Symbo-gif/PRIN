@@ -217,8 +217,9 @@ impl ResonanceLayerConfig {
     /// PRINet 3.0's `torch.full`); `base_frequency` is linearly spaced on
     /// `[0.1, 10.0]` (matching PRINet 3.0's `torch.linspace`, deterministic
     /// in both). `coupling`/`modulation`/`input_proj` are Xavier-uniform
-    /// (gain `0.5`, matching PRINet 3.0's projection init) drawn from `seed`
-    /// — PRINet 3.0 uses `torch.randn` for `coupling`/`modulation`; only the
+    /// (gain `0.5`, matching PRINet 3.0's projection init) drawn from `seed`;
+    /// the coupling diagonal is zeroed to match the public parameter contract.
+    /// PRINet 3.0 uses `torch.randn` for `coupling`/`modulation`; only the
     /// initial scale is load-bearing for training, not the exact
     /// distribution shape.
     pub fn init<B: Backend>(&self, device: &B::Device, seed: &mut Seed) -> ResonanceLayer<B> {
@@ -226,8 +227,10 @@ impl ResonanceLayerConfig {
         let d = self.n_dims;
 
         let coupling_bound = xavier_bound(n, n, 0.5);
+        let coupling_mask = Tensor::<B, 2>::ones([n, n], device) - Tensor::<B, 2>::eye(n, device);
         let coupling =
-            seeded_uniform::<B, 2>([n, n], -coupling_bound, coupling_bound, device, seed);
+            seeded_uniform::<B, 2>([n, n], -coupling_bound, coupling_bound, device, seed)
+                * coupling_mask;
         let modulation_bound = xavier_bound(n, n, 0.05);
         let modulation =
             seeded_uniform::<B, 2>([n, n], -modulation_bound, modulation_bound, device, seed);
@@ -349,6 +352,20 @@ impl<B: Backend> ResonanceLayer<B> {
         check_dims("modulation", self.modulation.val().dims(), [n, n])?;
         check_dims("base_frequency", self.base_frequency.val().dims(), [n])?;
         Ok(())
+    }
+
+    /// Return cloned parameter tensor handles in the explicit bridge layout.
+    ///
+    /// Clones preserve Burn autodiff identities, allowing a foreign-autograd
+    /// bridge to extract parameter VJPs from the graph built by [`Self::forward`].
+    pub fn parameter_tensors(&self) -> ResonanceLayerParams<B> {
+        ResonanceLayerParams {
+            coupling: self.coupling.val(),
+            decay: self.decay.val(),
+            input_proj: self.input_proj.val(),
+            modulation: self.modulation.val(),
+            base_frequency: self.base_frequency.val(),
+        }
     }
 
     /// Number of Kuramoto steps per forward pass.

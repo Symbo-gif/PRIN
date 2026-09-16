@@ -7,6 +7,16 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
+documentation = "https://docs.rs/prin-dynamics"
+
+# docs.rs build configuration. `strict-checks` is this crate's only feature and
+# is pure Rust, so an all-features build is what a reader should see: it
+# documents the guarded clamp/finite paths alongside the default ones.
+# These links resolve once `release.yml`'s `publish-crates` job is enabled at
+# RC1 (WP-038); until then the authoritative rendered rustdoc is
+# `cargo doc --workspace --no-deps` (the `rust.yml` docs job).
+[package.metadata.docs.rs]
+all-features = true
 
 [dependencies]
 ndarray.workspace = true

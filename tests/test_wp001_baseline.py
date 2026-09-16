@@ -276,9 +276,9 @@ def test_repository_inventory_is_deterministic_and_separates_archive() -> None:
 
     assert first == second
     assert first["project"]["name"] == "prin"
-    assert first["project"]["version"] == "0.3.0"
+    assert first["project"]["version"] == "1.0.0rc1"
     assert len(first["workspace"]["members"]) == 8
-    assert len(first["ci"]["workflows"]) == 8
+    assert len(first["ci"]["workflows"]) == 9
     assert "snyk.yml" in first["ci"]["workflows"]
     assert "nightly.yml" in first["ci"]["workflows"]
     assert first["session_plan"]["numbered_briefs"] == 256
@@ -584,13 +584,33 @@ def test_python_dependency_audits_are_complete_and_gating() -> None:
     assert "|| true" not in security_job
 
 
-def test_release_workflow_guards_unready_workspace_crates() -> None:
+def test_python_workflow_limits_default_github_token_permissions() -> None:
+    workflow = (ROOT / ".github/workflows/python.yml").read_text(encoding="utf-8")
+
+    assert "\npermissions:\n  contents: read\n" in workflow
+
+
+def test_python_docs_job_installs_mot_extra_for_notebook_execution() -> None:
+    workflow = (ROOT / ".github/workflows/python.yml").read_text(encoding="utf-8")
+    docs_job = workflow.split("  docs:\n", maxsplit=1)[1].split(
+        "\n  security:\n", maxsplit=1
+    )[0]
+
+    assert (
+        "python -m pip install --no-cache-dir -c ci/docs-constraints.txt -e "
+        '".[dev,mot]"' in docs_job
+    )
+    assert "python -m pytest tests/test_notebooks.py -q -m slow" in docs_job
+
+
+def test_release_workflow_publishes_workspace_crates() -> None:
     workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
     publish_job = workflow.split("  publish-crates:\n", maxsplit=1)[1]
 
-    assert "WP-005" in publish_job
-    assert "cargo publish" not in publish_job
-    assert "CARGO_REGISTRY_TOKEN" not in publish_job
+    assert "cargo publish" in publish_job
+    assert "CARGO_REGISTRY_TOKEN" in publish_job
+    assert "prin-dynamics" in publish_job
+    assert "prin-py has publish=false" in publish_job
 
 
 def test_repro_workflow_runs_wp035_pipeline_and_tamper_tests() -> None:

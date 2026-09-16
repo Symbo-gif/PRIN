@@ -836,5 +836,9 @@ class TestVersion:
     def test_version(self) -> None:
         import prin as prinet
 
-        parts = prinet.__version__.split(".")
+        # Strip pre-release suffix (e.g. "1.0.0rc1" -> "1.0.0") for format check
+        import re
+
+        core = re.split(r"[a-zA-Z]", prinet.__version__)[0].rstrip(".")
+        parts = core.split(".")
         assert len(parts) == 3 and all(p.isdigit() for p in parts)

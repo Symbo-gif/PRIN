@@ -1,6 +1,6 @@
 # Session 0144AA — WP-036G S3: Remediation — Deferred-Validation register consolidation and permanent dispositions
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-09-15) — mandatory no-change closure (S2 recorded zero findings); delta re-audit CLEAN, see `DOCS/audits/036g-wp036g-audit.md` §7.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036G
 **Session type:** S3 — Remediation
@@ -67,3 +67,22 @@ New features, scope creep, unapproved amendments, editing a DV status cell to
 
 Every finding `FIXED` or `AMENDED`; delta re-audit CLEAN; local gates green;
 `check_dv_register_gates.py` passes. Hand off to S4 (`0144AB`).
+
+---
+
+## Closure (session 0144AA, 2026-09-15)
+
+S2 audit `DOCS/audits/036g-wp036g-audit.md` returned **PASS with zero
+findings**. Mandatory S3 executed per Development Workflow and Audit Standards
+§3. No source change, no plan amendment, no finding commit.
+
+- **No-change delta verification recorded** in the audit report §7 closure
+  table: `git diff 18ce2e3 HEAD -- crates/ python/ tests/` empty; all A1–A10
+  quality, security, and repository hygiene gates clean.
+- **Fragile tests re-verified:** throughput test 3/3 passed; gradcheck test 5/5
+  passed.
+- **Register / numerical invariants:** `check_dv_register_gates.py` and
+  `check_no_python_numerics.py` pass; API surface delta empty `(set(), set())`.
+- **Deviation-ledger delta:** none.
+- **Result:** delta re-audit **CLEAN**. Handed off to S4 (session `0144AB`).
+

@@ -5,12 +5,10 @@
 //! - A `*Bridge` `#[pyclass]` owns a Burn `Module` built on
 //!   `Autodiff<NdArray<f64>>` — the same backend `prin-train`'s own gradient
 //!   tests already use (`bands.rs`/`layers.rs`/`activations.rs`
-//!   `TestAutodiffBackend`). Parameters live only in Rust; they are trained by
-//!   the WP-024 `OscillatorOptimizer` implementations (`Rip`/`Scalr`/`SyncGd`),
-//!   not by `torch.optim`, so the bridge exposes only the differentiable
-//!   input/output boundary a larger PyTorch model needs to chain gradients
-//!   through (Coding Standards §3.2: "boundary crossings are batched — one
-//!   call per integration, not per step").
+//!   `TestAutodiffBackend`). For PyTorch-trainable layers, `nn.Parameter`
+//!   tensors are the canonical optimizer-visible values: each batched forward
+//!   imports them into a Burn module and backward returns Burn-computed input
+//!   and parameter VJPs (Coding Standards §3.2).
 //! - `forward(x)` decodes `x` from a DLPack capsule (`float64` CPU,
 //!   [`super::train_support::tensor_from_dlpack_with_data`]), runs the
 //!   *entire* Rust forward pass in one call (`ResonanceLayer::forward`
@@ -76,7 +74,7 @@ use pyo3::types::PyBytes;
 
 use prin_dynamics::Seed;
 use prin_train::activations::{GatedPhaseActivation, GatedPhaseActivationConfig};
-use prin_train::layers::{ResonanceLayer, ResonanceLayerConfig};
+use prin_train::layers::{ResonanceLayer, ResonanceLayerConfig, ResonanceLayerParams};
 
 use super::train_support::{
     device, export_tensor, load_checkpoint_record, plain_tensor_from_dlpack, record_to_bytes,
@@ -103,8 +101,8 @@ impl PyResonanceLayerCtx {
     /// Run the Rust backward pass for the saved forward call.
     ///
     /// `grad_output` is the upstream cotangent (`d(loss)/d(output)`), a
-    /// `float64` CPU tensor shaped like the forward output. Returns
-    /// `d(loss)/d(x)` as a new DLPack capsule. May be called more than once
+    /// `float64` CPU tensor shaped like the forward output. Returns the VJPs
+    /// for `x` and all five optimizer-visible parameter tensors. May be called more than once
     /// (with different `grad_output` values) against the same saved forward
     /// pass — see the module docs for why this recomputes the forward pass
     /// internally on every call.
@@ -114,7 +112,7 @@ impl PyResonanceLayerCtx {
     /// Raises `ValueError` if `grad_output` has the wrong dtype/device/shape,
     /// or if the gradient graph unexpectedly has no entry for `x` (would
     /// indicate an internal bridge defect, not a user error).
-    fn backward(&self, py: Python<'_>, grad_output: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+    fn backward(&self, py: Python<'_>, grad_output: &Bound<'_, PyAny>) -> PyResult<Vec<Py<PyAny>>> {
         let grad_output = plain_tensor_from_dlpack::<2>(grad_output, self.out_shape)?;
 
         let x = Tensor::from_data(
@@ -127,13 +125,29 @@ impl PyResonanceLayerCtx {
             .forward(x.clone())
             .expect("shape already validated by the saved forward call");
 
-        let weighted = output * grad_output;
-        let grads = weighted.sum().backward();
+        let grads = (output * grad_output).sum().backward();
+        let params = self.layer.parameter_tensors();
+        macro_rules! grad_or_zeros {
+            ($tensor:expr) => {
+                $tensor
+                    .grad(&grads)
+                    .unwrap_or_else(|| Tensor::zeros($tensor.dims(), &$tensor.device()))
+            };
+        }
 
-        let grad_x = x.grad(&grads).ok_or_else(|| {
-            PyValueError::new_err("internal error: no gradient recorded for the bridge input")
-        })?;
-        export_tensor::<2>(py, grad_x)
+        Ok(vec![
+            export_tensor::<2>(
+                py,
+                x.grad(&grads).ok_or_else(|| {
+                    PyValueError::new_err("internal error: missing ResonanceLayer input VJP")
+                })?,
+            )?,
+            export_tensor::<2>(py, grad_or_zeros!(params.coupling))?,
+            export_tensor::<1>(py, grad_or_zeros!(params.decay))?,
+            export_tensor::<2>(py, grad_or_zeros!(params.input_proj).transpose())?,
+            export_tensor::<2>(py, grad_or_zeros!(params.modulation))?,
+            export_tensor::<1>(py, grad_or_zeros!(params.base_frequency))?,
+        ])
     }
 }
 
@@ -141,15 +155,13 @@ impl PyResonanceLayerCtx {
 /// `torch.autograd.Function` via DLPack (WP-025).
 ///
 /// Wraps [`prin_train::layers::ResonanceLayer`]; see that module's docs for
-/// the exact per-step formula. Parameters (`coupling`, `decay`,
-/// `input_proj`, `modulation`, `base_frequency`) live in Rust and are
-/// trained by a WP-024 `OscillatorOptimizer`, not by `torch.optim` — this
-/// bridge only makes `forward`/`backward` on `x` differentiable so a larger
-/// PyTorch model can chain gradients through it.
+/// the exact per-step formula. The Python `nn.Parameter` tensors are canonical:
+/// every forward imports their current values, Rust owns all numerical work,
+/// and backward returns Burn-computed VJPs for the input and all parameters.
 #[pyclass(name = "ResonanceLayerBridge", module = "prin._prin_core", unsendable)]
 pub struct PyResonanceLayerBridge {
+    config: ResonanceLayerConfig,
     layer: ResonanceLayer<BridgeBackend>,
-    n_dims: usize,
 }
 
 impl PyResonanceLayerBridge {
@@ -189,7 +201,7 @@ impl PyResonanceLayerBridge {
         .map_err(train_err_to_py)?;
         let mut seed = Seed::new(seed_counter as u128, seed_key as u128);
         let layer = cfg.init::<BridgeBackend>(&device(), &mut seed);
-        Ok(Self { layer, n_dims })
+        Ok(Self { config: cfg, layer })
     }
 
     /// Number of coupled oscillators (the output feature width).
@@ -201,7 +213,47 @@ impl PyResonanceLayerBridge {
     /// Input feature dimension.
     #[getter]
     fn n_dims(&self) -> usize {
-        self.n_dims
+        self.config.n_dims
+    }
+
+    /// Return the current Rust parameter values in PyTorch-compatible layout.
+    fn parameter_values(&self, py: Python<'_>) -> PyResult<Vec<Py<PyAny>>> {
+        let params = self.layer.parameter_tensors();
+        Ok(vec![
+            export_tensor::<2>(py, params.coupling.inner())?,
+            export_tensor::<1>(py, params.decay.inner())?,
+            export_tensor::<2>(py, params.input_proj.transpose().inner())?,
+            export_tensor::<2>(py, params.modulation.inner())?,
+            export_tensor::<1>(py, params.base_frequency.inner())?,
+        ])
+    }
+
+    /// Replace the Rust working copy from the five canonical PyTorch tensors.
+    ///
+    /// # Errors
+    ///
+    /// Raises `ValueError` for the wrong count, rank, dtype, device, or shape.
+    fn load_torch_weights(&mut self, weights: Vec<Bound<'_, PyAny>>) -> PyResult<()> {
+        if weights.len() != 5 {
+            return Err(PyValueError::new_err(format!(
+                "expected 5 weight tensors, got {}",
+                weights.len()
+            )));
+        }
+        let rank1 = |i: usize| tensor_from_dlpack_with_data::<1>(&weights[i]).map(|v| v.0);
+        let rank2 = |i: usize| tensor_from_dlpack_with_data::<2>(&weights[i]).map(|v| v.0);
+        let input_proj = rank2(2)?;
+        self.layer = self
+            .config
+            .init_from_params(ResonanceLayerParams {
+                coupling: rank2(0)?,
+                decay: rank1(1)?,
+                input_proj: Tensor::from_data(input_proj.transpose().into_data(), &device()),
+                modulation: rank2(3)?,
+                base_frequency: rank1(4)?,
+            })
+            .map_err(train_err_to_py)?;
+        Ok(())
     }
 
     /// Run the full `n_steps`-step forward pass for one batched boundary
@@ -215,17 +267,19 @@ impl PyResonanceLayerBridge {
     /// a shape other than `[batch, n_dims]`, or a `prin-train` validation
     /// failure (see [`prin_train::error::TrainError`]).
     fn forward(
-        &self,
+        &mut self,
         py: Python<'_>,
         x: &Bound<'_, PyAny>,
+        weights: Vec<Bound<'_, PyAny>>,
     ) -> PyResult<(Py<PyAny>, Py<PyResonanceLayerCtx>)> {
         let (x, x_shape, x_data) = tensor_from_dlpack_with_data::<2>(x)?;
-        if x_shape[1] != self.n_dims {
+        if x_shape[1] != self.config.n_dims {
             return Err(PyValueError::new_err(format!(
                 "expected x shape [batch, {}], got {:?}",
-                self.n_dims, x_shape
+                self.config.n_dims, x_shape
             )));
         }
+        self.load_torch_weights(weights)?;
         let output = self.layer.forward(x).map_err(train_err_to_py)?;
         let out_shape = output.dims();
         let out_capsule = export_tensor::<2>(py, output.inner())?;
@@ -249,14 +303,20 @@ impl PyResonanceLayerBridge {
     /// Raises `ValueError` on a non-`float64`/non-CPU/non-contiguous input,
     /// a shape other than `[batch, n_dims]`, or a `prin-train` /
     /// `prin-metrics` failure.
-    fn order_parameter(&self, py: Python<'_>, x: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+    fn order_parameter(
+        &mut self,
+        py: Python<'_>,
+        x: &Bound<'_, PyAny>,
+        weights: Vec<Bound<'_, PyAny>>,
+    ) -> PyResult<Py<PyAny>> {
         let (x, x_shape, _x_data) = tensor_from_dlpack_with_data::<2>(x)?;
-        if x_shape[1] != self.n_dims {
+        if x_shape[1] != self.config.n_dims {
             return Err(PyValueError::new_err(format!(
                 "expected x shape [batch, {}], got {:?}",
-                self.n_dims, x_shape
+                self.config.n_dims, x_shape
             )));
         }
+        self.load_torch_weights(weights)?;
         let state = self.layer.init_state(x).map_err(train_err_to_py)?;
         let n_steps = self.layer.n_steps();
         let final_state = self
@@ -366,8 +426,9 @@ impl PyGatedPhaseActivationCtx {
 /// `torch.autograd.Function` via DLPack (WP-025).
 ///
 /// Wraps [`prin_train::activations::GatedPhaseActivation`]: `y = σ(w_g·z +
-/// b_g) · phase_activation(z)`. Gate parameters live in Rust (see
-/// [`PyResonanceLayerBridge`]'s docs for the same training-ownership split).
+/// b_g) · phase_activation(z)`. Gate parameters live in Rust. Unlike
+/// [`PyResonanceLayerBridge`], this bridge does not accept canonical PyTorch
+/// parameter tensors and returns only the input VJP.
 #[pyclass(
     name = "GatedPhaseActivationBridge",
     module = "prin._prin_core",

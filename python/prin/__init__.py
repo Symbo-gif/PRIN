@@ -224,7 +224,7 @@ from prin.y4q1_tools import (
     train_clevr_n_single_seed,
 )
 
-__version__ = "0.3.0"
+__version__ = "1.0.0rc1"
 
 try:
     from prin._prin_core import core_version

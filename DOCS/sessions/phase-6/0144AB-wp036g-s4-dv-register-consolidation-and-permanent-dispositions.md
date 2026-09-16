@@ -1,6 +1,6 @@
 # Session 0144AB — WP-036G S4: Documentation — Deferred-Validation register consolidation and permanent dispositions
 
-**Status:** PLANNED
+**Status:** COMPLETE (2026-09-15) — all S4 artefacts committed; WP-036G closed; see the closure section.
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1
 **Execution unit:** WP-036G
 **Session type:** S4 — Documentation
@@ -95,3 +95,35 @@ All S4 artefacts committed; the S4 push carries the full WP-036G S1–S4 range
 and CI is green; the DV register is fully consolidated; the Phase 7 entry
 statement is signed. WP-036G is closed; the amendment-#38 DV-closure block is
 complete; only then may WP-037 (`0145`) begin.
+
+---
+
+## Closure (session 0144AB, 2026-09-15)
+
+WP-036G S4 executed per this brief. All acceptance items are delivered and
+committed locally; the batched `0144Y`–`0144AB` push remains a maintainer
+action (amendment #28).
+
+- **Register finalised.** `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`
+  promotes the four permanent-disposition drafts (DV-007, DV-013, DV-018,
+  DV-028) and the standing-third-party draft (DV-035) to signed dispositions
+  (maintainer MichaelMaillet, 2026-09-15 — PSR-036G §3.3); every row is now
+  `CLOSED`, `AMENDED` (DV-005, #38), `PARTIALLY CLOSED` (DV-003 #44, DV-030
+  #43), permanent-disposition, or standing-external/third-party disposition —
+  zero undated "re-audit every cycle" rows. DV-010 → WP-038 S1; DV-027 →
+  EMA-006; DV-006 DirectML half `CLOSED` / NPU half standing-external.
+- **PSR issued.** `DOCS/reports/036g-project-state.md` carries the metric
+  trends, cumulative deviation ledger (delegating to PSR-036 §3), the
+  maintainer sign-off block (§3.3), the consolidated re-verification evidence
+  summary (§3.4), and the Phase 7 entry statement (§8).
+- **Docs.** `CHANGELOG.md`, `DOCS/reports/README.md`, `DOCS/audits/README.md`
+  updated; AGENTS.md `.pytest_basetemp-full` spelling corrected to the
+  governed `.pytest_basetemp` path; Sphinx Parity Report / Migration Guide
+  confirmed to carry the DV-007 permanent-hazard language; fresh-directory
+  Sphinx build clean.
+- **Gates.** `tools/check_dv_register_gates.py` (35 rows × 198 sessions),
+  `tools/check_deviation_ledger.py`, `tools/wp001_baseline.py check`, and the
+  full local quality/security gate all green (PSR-036G §2).
+- **Register/status.** `SESSION_REGISTER.md` and the phase-6 README mark
+  `0144AB` COMPLETE; WP-036E/F/G are all complete. WP-037 (`0145`) entry
+  conditions confirmed; maintainer approval recorded (PSR-036G §6).

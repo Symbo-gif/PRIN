@@ -25,8 +25,9 @@ class HybridPRINetV2(torch.nn.Module):
     PRINet 3.0 ``nn.hybrid.HybridPRINetV2``, bridged to Rust forward/backward
     via DLPack: the whole multi-layer attention+dynamics+classifier pass is
     one Rust call per `forward` (Coding Standards §3.2, "boundary crossings
-    are batched"). All parameters are Rust-owned (see
-    :class:`prin.nn.ResonanceLayer`'s docs for the training-ownership split).
+    are batched"). Numerically active parameters are Rust-owned; the exposed
+    ``_freq``/``_coupling`` tensors are PRINet-compatible mirrors whose
+    populated ``.grad`` does not drive the Rust forward.
 
     ``dropout`` must be ``0.0`` — see :class:`prin.nn.OscillatoryAttention`'s
     docs for why (this network owns its own ``Dropout`` field in addition to

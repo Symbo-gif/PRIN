@@ -1,6 +1,6 @@
 # Session 0148 — WP-037 S4: Documentation — Documentation, notebooks, paper, and Parity Report draft
 
-**Status:** PLANNED  
+**Status:** COMPLETE
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-037  
 **Session type:** S4 — Documentation  
