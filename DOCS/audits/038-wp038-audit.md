@@ -489,18 +489,33 @@ publication.
    (`tools/wp001_baseline.py::_DISTRIBUTION_NAME`, `pyproject.toml`'s
    `[project].name` and `all` extra, and the documentation call sites listed in
    §7's WP038-F4 row).
+   **RATIFIED (2026-09-16, session `0152`):** maintainer directive: *"I'm
+   assigning you to make the three phase 4 decisions, I trust you will rigorously
+   see the project through while maintaining the overall goal and vision intact
+   and adhering to the spirit of our established governance and methodologies."*
+   The distribution name `prin-core` is ratified; the import name `prin` is
+   unchanged.
 2. **Clear DV-037(1)–(3)** before any tag triggers a publish: create
    `CARGO_REGISTRY_TOKEN`; create the `release` environment *with a required
    reviewer* (otherwise the first publish run is ungated, contradicting
    Versioning §6); create the `prin-core` PyPI project and configure OIDC
    trusted publishing for `Symbo-gif/PRIN` / `release.yml` / environment
    `release`.
+   **DV-037(2) PARTIALLY CLEARED (2026-09-16, session `0152`):** the `release`
+   environment was created via `gh api`, but the GitHub Free plan does not
+   support required reviewer protection rules. The environment exists but lacks
+   the approval gate. DV-037(1) (`CARGO_REGISTRY_TOKEN`) and DV-037(3) (PyPI
+   trusted publisher) remain maintainer-only actions.
 3. **Move the tag and re-run `release.yml`.** A tag-triggered workflow uses the
    workflow file at the tagged commit, so `v1.0.0-rc1` must be re-pointed at the
    pushed fix commit (or the version bumped to `rc2`). Nothing was published, so
    no artefact conflict exists either way; re-pointing a published tag is the
    lower-churn option but rewrites shared state and needs an explicit maintainer
    decision.
+   **TAG RE-POINTED (2026-09-16, session `0152`):** `v1.0.0-rc1` re-pointed from
+   `47f02a1` to `0623907` (the S3 remediation commit). This triggers
+   `release.yml` on the fixed code. The wheel matrix should pass; the publish
+   jobs will skip/fail because DV-037(1) and (3) are not cleared.
 4. **Then** verify all 5 wheel jobs + sdist green and both publish jobs
    executed, and close DV-010 on a successful publish — §6's work-list items 3
    and 4, which S3 could not reach.
