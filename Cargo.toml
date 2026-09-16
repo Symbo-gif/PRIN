@@ -25,14 +25,31 @@ repository = "https://github.com/Symbo-gif/PRIN"
 description = "PRIN — Phase-Resonance Interference Network (Rust core)"
 
 [workspace.dependencies]
-# Intra-workspace crates
-prin-dynamics = { path = "crates/prin-dynamics" }
-prin-metrics = { path = "crates/prin-metrics" }
-prin-tensor = { path = "crates/prin-tensor" }
-prin-kernels = { path = "crates/prin-kernels" }
-prin-sim = { path = "crates/prin-sim" }
-prin-train = { path = "crates/prin-train" }
-prin-daemon = { path = "crates/prin-daemon" }
+# Intra-workspace crates.
+#
+# WP038-F3: each of these must carry an explicit `version` alongside `path`.
+# `cargo publish` strips the `path` key and rewrites the dependency to point at
+# crates.io, so a path-only dependency is rejected outright —
+# `cargo package -p prin-metrics --no-verify` failed with "all dependencies
+# must have a version requirement specified when packaging. dependency
+# `prin-dynamics` does not specify a version". Only `prin-dynamics` (which has
+# no intra-workspace deps) would have published, so release.yml's
+# `publish-crates` job would have left a partial, irreversible publication on
+# crates.io before failing on the second crate. Inside the workspace the
+# `path` still wins, so local builds are unaffected.
+#
+# These literals must equal `[workspace.package].version` above. That is
+# mechanically enforced by `tools/wp001_baseline.py::validate_metadata`, which
+# `tests/test_wp001_baseline.py` runs against the real tree — so a release
+# bump that forgets them fails the Python CI test matrix rather than the
+# publish.
+prin-dynamics = { path = "crates/prin-dynamics", version = "1.0.0-rc1" }
+prin-metrics = { path = "crates/prin-metrics", version = "1.0.0-rc1" }
+prin-tensor = { path = "crates/prin-tensor", version = "1.0.0-rc1" }
+prin-kernels = { path = "crates/prin-kernels", version = "1.0.0-rc1" }
+prin-sim = { path = "crates/prin-sim", version = "1.0.0-rc1" }
+prin-train = { path = "crates/prin-train", version = "1.0.0-rc1" }
+prin-daemon = { path = "crates/prin-daemon", version = "1.0.0-rc1" }
 
 # Numerics
 ndarray = { version = "0.16", features = ["serde"] }

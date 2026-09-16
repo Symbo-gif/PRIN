@@ -3,7 +3,17 @@ requires = ["maturin>=1.7,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "prin"
+# Distribution name is `prin-core`, not `prin` (Project Plan amendment #46,
+# WP038-F4). PyPI's `prin` is owned by an unrelated project whose only two
+# releases date from 2015-05-20, so `publish-pypi` could never have uploaded
+# under that name and Plan N4 / Versioning Standards §5 were unsatisfiable as
+# written. The **import** name is unchanged — `pip install prin-core` then
+# `import prin` — which maturin supports for a mixed Rust/Python project
+# because `module-name` below names the package independently of the
+# distribution. Verified by building `prin_core-1.0.0rc1-cp311-abi3-win_amd64`
+# and confirming `prin/__init__.py` + `prin/_prin_core.pyd` land in the wheel.
+# Enforced mechanically by tools/wp001_baseline.py::validate_metadata.
+name = "prin-core"
 version = "1.0.0rc1"
 description = "PRIN -- Phase-Resonance Interference Network: oscillatory binding for neural networks (Rust core + Python API)"
 requires-python = ">=3.11"
@@ -79,7 +89,11 @@ parity = [
     # in DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main.
 ]
 all = [
-    "prin[dev,mot,onnx]",
+    # Self-reference must use the *distribution* name. Left as `prin[...]`
+    # after the amendment-#46 rename, `pip install prin-core[all]` would
+    # resolve `prin` from PyPI and install the unrelated 2015 project of that
+    # name. Enforced by tools/wp001_baseline.py::validate_metadata.
+    "prin-core[dev,mot,onnx]",
 ]
 
 [project.urls]

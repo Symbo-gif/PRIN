@@ -67,10 +67,21 @@ def _rust_version() -> str | None:
 
 
 def _prin_version() -> str | None:
-    try:
-        return metadata.version("prin")
-    except metadata.PackageNotFoundError:
-        return None
+    """Return the installed PRIN distribution version, or ``None`` if absent.
+
+    The distribution is ``prin-core``, not ``prin``: Project Plan amendment
+    #46 moved the published name because PyPI's ``prin`` is owned by an
+    unrelated 2015 project, while the ``prin`` import name is unchanged. The
+    pre-amendment name is still probed so a benchmark environment installed
+    before the rename records a real version rather than silently reporting
+    ``None``.
+    """
+    for distribution_name in ("prin-core", "prin"):
+        try:
+            return metadata.version(distribution_name)
+        except metadata.PackageNotFoundError:
+            continue
+    return None
 
 
 def _gpu_info() -> dict[str, Any]:

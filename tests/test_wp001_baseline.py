@@ -119,6 +119,113 @@ def test_metadata_validator_detects_missing_workspace_manifest(tmp_path: Path) -
     assert any("crates/prin-metrics/Cargo.toml" in error for error in errors)
 
 
+def test_metadata_validator_detects_unpublishable_workspace_dependency(
+    tmp_path: Path,
+) -> None:
+    # WP038-F3 regression: `cargo publish` strips `path` and rewrites the
+    # dependency against crates.io, so a version-less path dependency made
+    # every publishable crate except prin-dynamics unpackageable.
+    _copy_metadata_fixture(tmp_path)
+    cargo_toml = tmp_path / "Cargo.toml"
+    original = cargo_toml.read_text(encoding="utf-8")
+    workspace_version = re.search(  # type: ignore[union-attr]
+        r'\[workspace\.package\]\nversion = "([^"]+)"', original
+    ).group(1)
+    pinned = (
+        f'prin-metrics = {{ path = "crates/prin-metrics", '
+        f'version = "{workspace_version}" }}'
+    )
+    assert pinned in original
+
+    cargo_toml.write_text(
+        original.replace(pinned, 'prin-metrics = { path = "crates/prin-metrics" }', 1),
+        encoding="utf-8",
+    )
+
+    errors = validate_metadata(tmp_path)
+
+    assert any(
+        "workspace.dependencies.prin-metrics must declare a version" in error
+        for error in errors
+    )
+
+
+def test_metadata_validator_detects_stale_workspace_dependency_pin(
+    tmp_path: Path,
+) -> None:
+    # WP038-F3 regression, second half: the pin must track the workspace
+    # version, or a release bump publishes crates that depend on a version of
+    # their siblings that was never released.
+    _copy_metadata_fixture(tmp_path)
+    cargo_toml = tmp_path / "Cargo.toml"
+    original = cargo_toml.read_text(encoding="utf-8")
+    stale = 'prin-tensor = { path = "crates/prin-tensor", version = "0.1.0" }'
+
+    rewritten = re.sub(
+        r'prin-tensor = \{ path = "crates/prin-tensor", version = "[^"]+" \}',
+        stale,
+        original,
+        count=1,
+    )
+    assert rewritten != original
+    cargo_toml.write_text(rewritten, encoding="utf-8")
+
+    errors = validate_metadata(tmp_path)
+
+    assert any(
+        "workspace.dependencies.prin-tensor version '0.1.0' does not match "
+        "workspace.package.version" in error
+        for error in errors
+    )
+
+
+def test_metadata_validator_rejects_reverting_the_distribution_name(
+    tmp_path: Path,
+) -> None:
+    # WP038-F4 regression: PyPI's `prin` belongs to an unrelated project last
+    # released 2015-05-20, so reverting the distribution name would aim
+    # release.yml's publish-pypi job at a project we do not own. Only the
+    # distribution name is pinned here; the `prin` *import* name is guarded by
+    # the same validator's maturin module-name assertion.
+    _copy_metadata_fixture(tmp_path)
+    pyproject = tmp_path / "pyproject.toml"
+    original = pyproject.read_text(encoding="utf-8")
+    assert 'name = "prin-core"' in original
+
+    pyproject.write_text(
+        original.replace('name = "prin-core"', 'name = "prin"', 1),
+        encoding="utf-8",
+    )
+
+    errors = validate_metadata(tmp_path)
+
+    assert any("project.name must equal 'prin-core'" in error for error in errors)
+
+
+def test_metadata_validator_rejects_self_referencing_extra_by_import_name(
+    tmp_path: Path,
+) -> None:
+    # WP038-F4 regression: `all = ["prin[dev,mot,onnx]"]` survived the
+    # distribution rename, so `pip install prin-core[all]` would have resolved
+    # `prin` from PyPI and installed the unrelated 2015 project that owns it.
+    _copy_metadata_fixture(tmp_path)
+    pyproject = tmp_path / "pyproject.toml"
+    original = pyproject.read_text(encoding="utf-8")
+    assert '"prin-core[dev,mot,onnx]"' in original
+
+    pyproject.write_text(
+        original.replace('"prin-core[dev,mot,onnx]"', '"prin[dev,mot,onnx]"', 1),
+        encoding="utf-8",
+    )
+
+    errors = validate_metadata(tmp_path)
+
+    assert any(
+        "optional-dependencies.all self-references the import name" in error
+        for error in errors
+    )
+
+
 def test_session_plan_validator_detects_missing_brief(tmp_path: Path) -> None:
     sessions = tmp_path / "DOCS" / "sessions"
     shutil.copytree(ROOT / "DOCS" / "sessions", sessions)
@@ -275,7 +382,7 @@ def test_repository_inventory_is_deterministic_and_separates_archive() -> None:
     second = collect_repository_inventory(ROOT)
 
     assert first == second
-    assert first["project"]["name"] == "prin"
+    assert first["project"]["name"] == "prin-core"
     assert first["project"]["version"] == "1.0.0rc1"
     assert len(first["workspace"]["members"]) == 8
     assert len(first["ci"]["workflows"]) == 9
@@ -312,7 +419,7 @@ def test_cli_emits_machine_readable_inventory(
 
     captured = capsys.readouterr()
     assert exit_code == 0
-    assert json.loads(captured.out)["project"]["name"] == "prin"
+    assert json.loads(captured.out)["project"]["name"] == "prin-core"
     assert captured.err == ""
 
 
@@ -611,6 +718,101 @@ def test_release_workflow_publishes_workspace_crates() -> None:
     assert "CARGO_REGISTRY_TOKEN" in publish_job
     assert "prin-dynamics" in publish_job
     assert "prin-py has publish=false" in publish_job
+
+
+def _release_wheels_job() -> str:
+    workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+    return workflow.split("  wheels:\n", maxsplit=1)[1].split(
+        "\n  sdist:\n", maxsplit=1
+    )[0]
+
+
+def _release_wheel_steps() -> list[str]:
+    return list(re.split(r"\n(?=      - )", _release_wheels_job()))
+
+
+def test_release_workflow_smoke_test_never_uses_bash_on_the_self_hosted_leg() -> None:
+    # WP038-F1 regression: `shell: bash` resolves to C:\windows\system32\
+    # bash.EXE on PRIN-GPU-Runner, whose WSL is not installed, so the smoke
+    # test died with `execvpe(/bin/bash) failed` after the wheel built fine
+    # (release run 35021650652, job 104558518001). Same DV-024 root cause
+    # gpu.yml and rust.yml already work around.
+    windows_leg = (
+        _release_wheels_job()
+        .split("- os: windows-latest", maxsplit=1)[1]
+        .split("- os: ubuntu-latest", maxsplit=1)[0]
+    )
+    assert "[self-hosted, Windows, X64]" in windows_leg
+    assert "self_hosted: true" in windows_leg
+
+    bash_steps = [
+        step
+        for step in _release_wheel_steps()
+        if "shell: bash" in step.partition("run: |")[0]
+    ]
+    assert bash_steps, "the hosted-leg smoke test should still use bash globbing"
+    for step in bash_steps:
+        assert "!matrix.self_hosted" in step.partition("run: |")[0], step
+
+
+def test_release_workflow_windows_smoke_test_names_its_shell_and_isolates() -> None:
+    # WP038-F1 regression, second half: the Windows leg states `shell: pwsh`
+    # explicitly rather than inheriting the runner default, and installs into a
+    # throwaway venv addressed by absolute path — gpu.yml's DV-029 note records
+    # that a bare `pip` on that runner reaches the shared Miniforge install, so
+    # an RC wheel installed there would pollute the maintainer's environment
+    # and prove nothing about a clean no-compiler install.
+    windows_steps = [
+        step
+        for step in _release_wheel_steps()
+        if "Wheel smoke test (self-hosted Windows)" in step
+    ]
+    assert len(windows_steps) == 1
+    # Assert against the step's YAML keys and its script separately: the
+    # explanatory comment above this step quotes `shell: bash`, and YAML
+    # comments attach to the preceding step when the job is split on `- `.
+    header, _, script = windows_steps[0].partition("run: |")
+
+    assert "if: matrix.self_hosted" in header
+    assert "shell: pwsh" in header
+    assert "bash" not in header
+    assert ".smoke-venv\\Scripts\\python.exe" in script
+    assert "import prin" in script
+    assert "bash" not in script
+
+
+def test_release_workflow_reclaims_disk_before_the_hosted_build() -> None:
+    # WP038-F2 / DV-022 regression: the smoke test's `torch>=2.0` resolve
+    # filled the ~14 GB ubuntu-latest image (release run 35021650652, job
+    # 104558518084, `No space left on device`).
+    reclaim = [step for step in _release_wheel_steps() if "Free disk space" in step]
+    assert len(reclaim) == 1
+    step = reclaim[0]
+
+    assert "if: runner.os == 'Linux'" in step
+    assert "/usr/share/dotnet" in step
+    # /opt/hostedtoolcache holds the interpreter the job runs on; reclaiming
+    # it breaks every later step. The reclaim must be command-level, so check
+    # the rm lines rather than the step's explanatory comment.
+    rm_lines = [line for line in step.splitlines() if "rm -rf" in line]
+    assert rm_lines
+    assert not any("hostedtoolcache" in line for line in rm_lines)
+
+
+def test_release_workflow_smoke_test_satisfies_torch_from_the_cpu_index() -> None:
+    # WP038-F2 / DV-022 regression, second half: torch must already be
+    # satisfied from the CPU index *before* the wheel is installed, or pip
+    # re-resolves it from PyPI and drags the ~5 GB CUDA 13 stack. Mirrors
+    # python.yml's Linux build step.
+    smoke = [
+        step for step in _release_wheel_steps() if "Wheel smoke test (hosted" in step
+    ]
+    assert len(smoke) == 1
+    step = smoke[0]
+
+    cpu_index = "https://download.pytorch.org/whl/cpu"
+    assert cpu_index in step
+    assert step.index(cpu_index) < step.index("dist/*.whl")
 
 
 def test_repro_workflow_runs_wp035_pipeline_and_tamper_tests() -> None:

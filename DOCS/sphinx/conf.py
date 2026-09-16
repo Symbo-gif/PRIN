@@ -13,8 +13,8 @@ def _read_release() -> str:
 
     ReadTheDocs installs only ``DOCS/sphinx/requirements.txt`` (see
     ``.readthedocs.yaml``), so ``importlib.metadata`` cannot resolve the
-    ``prin`` distribution there. ``pyproject.toml`` is always present in the
-    checkout and is the single source of truth that the wheel, the workspace
+    ``prin-core`` distribution there. ``pyproject.toml`` is always present in
+    the checkout and is the single source of truth that the wheel, the workspace
     ``Cargo.toml``, ``prin.__version__``, and ``CITATION.cff`` are kept in
     step with (``tests/test_wp001_baseline.py``).
 

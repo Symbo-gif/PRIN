@@ -171,7 +171,7 @@ def _import_ort() -> Any:
     except ModuleNotFoundError as exc:
         msg = (
             "onnxruntime is required for the subconscious controller; "
-            'install the "onnx" extra: pip install "prin[onnx]"'
+            'install the "onnx" extra: pip install "prin-core[onnx]"'
         )
         raise OrtUnavailableError(msg) from exc
 

@@ -50,14 +50,24 @@
    and publishes the `prin-*` crates to crates.io in dependency order.
 4. Draft GitHub release notes: new symbols, performance deltas (with
    evidence), parity status, migration actions.
-5. Post-release: verify `pip install prin` on all three OS families; verify
-   docs deployed; verify docs.rs builds.
+5. Post-release: verify `pip install prin-core` on all three OS families;
+   verify docs deployed; verify docs.rs builds.
 
 ## 5. Distribution requirements
 
-- `pip install prin` must never require a user-side compiler (N4). CUDA-enabled
-  wheels ship as a variant (`prin[cuda]` or `prin-cuda`; final form decided by
-  the Phase 0 spike).
+- The PyPI **distribution** name is `prin-core`; the **import** name remains
+  `prin` (`pip install prin-core` → `import prin`). Amendment #46 moved the
+  distribution name because PyPI's `prin` is owned by an unrelated project
+  whose only releases date from 2015-05-20, so publishing under `prin` was
+  impossible and N4 as originally worded was unsatisfiable. maturin supports
+  the split for a mixed Rust/Python project because `[tool.maturin]
+  module-name` names the Python package independently of `[project].name`.
+  `tools/wp001_baseline.py::validate_metadata` pins both halves. If a PEP 541
+  request for `prin` ever succeeds, a `prin` metapackage depending on
+  `prin-core` may be added without further amendment.
+- `pip install prin-core` must never require a user-side compiler (N4).
+  CUDA-enabled wheels ship as a variant (`prin-core[cuda]` or `prin-cuda`;
+  final form decided by the Phase 0 spike).
 - abi3 (py311) wheels to minimize the matrix.
 - Wheels embed the license; sdist builds from source with only Rust stable +
   maturin.

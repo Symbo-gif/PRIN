@@ -17,35 +17,101 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # `self_hosted` is the same matrix key rust.yml uses: it is the
+          # switch that keeps WSL-dependent steps off PRIN-GPU-Runner, which
+          # has no WSL (DV-024). release.yml needs it per-leg rather than
+          # per-workflow because — unlike gpu.yml, which has no hosted leg at
+          # all — this matrix mixes the self-hosted Windows runner with three
+          # GitHub-hosted legs.
           - os: windows-latest
             target: x86_64
             runner: [self-hosted, Windows, X64]
+            self_hosted: true
           - os: ubuntu-latest
             target: x86_64
             manylinux: "2014"
             runner: ubuntu-latest
+            self_hosted: false
           - os: ubuntu-latest
             target: aarch64
             manylinux: "2014"
             runner: ubuntu-latest
+            self_hosted: false
           - os: macos-latest
             target: universal2-apple-darwin
             runner: macos-latest
+            self_hosted: false
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
+      # WP038-F2 / DV-022: the GitHub-hosted ubuntu-latest image ships ~14 GB
+      # free, and the smoke test below installs the wheel together with its
+      # declared `torch>=2.0` dependency. Resolved from PyPI that drags the
+      # full CUDA 13 wheel stack (~5 GB) and fills the disk — release run
+      # 35021650652, job 104558518084 died with `No space left on device`
+      # straight after `Collecting torch>=2.0 (from prin==1.0.0rc1)`. Reclaim
+      # space up front, exactly as python.yml / parity.yml / repro.yml do.
+      # NB: do not touch /opt/hostedtoolcache — the runner's interpreter lives
+      # there.
+      - name: Free disk space (Linux hosted runner)
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost || true
+          sudo apt-get clean || true
+          df -h /
       - uses: PyO3/maturin-action@v1
         with:
           command: build
           args: --release -m crates/prin-py/Cargo.toml --out dist
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux || 'auto' }}
-      - name: Wheel smoke test
-        if: matrix.target != 'aarch64'
-        run: |
-          python -m pip install dist/*.whl
-          python -c "import prin; print(prin.core_version())"
+      # Hosted legs only. The aarch64 wheel is cross-compiled and cannot
+      # execute on the x86_64 build host, so it stays exempt as before.
+      # Linux pre-installs a genuine CPU-only torch from the PyTorch index so
+      # the wheel install finds `torch>=2.0` already satisfied and pip never
+      # re-resolves it from PyPI (the DV-022 mitigation, same shape as
+      # python.yml). macOS is deliberately left alone: PyPI's macOS torch
+      # wheels carry no CUDA stack, and this leg already passed.
+      - name: Wheel smoke test (hosted Linux/macOS)
+        if: ${{ !matrix.self_hosted && matrix.target != 'aarch64' }}
         shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            python -m pip install --no-cache-dir \
+              --index-url https://download.pytorch.org/whl/cpu torch
+          fi
+          python -m pip install --no-cache-dir dist/*.whl
+          python -c "import prin; print(prin.core_version())"
+      # WP038-F1 / DV-024: this step used to be a single `shell: bash` step for
+      # the whole matrix. On PRIN-GPU-Runner `shell: bash` resolves to
+      # C:\windows\system32\bash.EXE — the WSL shim — and WSL is not installed
+      # there, so the step died with `execvpe(/bin/bash) failed: No such file
+      # or directory` (release run 35021650652, job 104558518001) *after* the
+      # wheel had built fine (`📦 Built wheel for abi3 Python ≥ 3.11 to
+      # dist\prin-1.0.0rc1-cp311-abi3-win_amd64.whl`). `shell: pwsh` is
+      # stated explicitly rather than left to the runner default so the shell
+      # this release gate executes under is not implicit; PRIN-GPU-Runner has
+      # PowerShell 7 (the same run's checkout step invoked
+      # "C:\Program Files\PowerShell\7\pwsh.exe").
+      #
+      # The install goes into a throwaway venv addressed by absolute path, not
+      # the runner's global interpreter: gpu.yml's DV-029 note records that a
+      # bare `python`/`pip` on this runner resolves to the shared Miniforge
+      # install even after a PATH prepend, and installing an RC wheel plus a
+      # second torch over the maintainer's global environment would both
+      # pollute it and invalidate the "clean, no-compiler install" claim this
+      # smoke test exists to make. torch comes from the CPU index because
+      # PyPI's Windows wheels bundle ~2.5 GB of CUDA libraries.
+      - name: Wheel smoke test (self-hosted Windows)
+        if: matrix.self_hosted
+        shell: pwsh
+        run: |
+          python -m venv .smoke-venv
+          .smoke-venv\Scripts\python.exe -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch
+          $wheel = (Get-ChildItem dist\*.whl | Select-Object -First 1).FullName
+          .smoke-venv\Scripts\python.exe -m pip install --no-cache-dir $wheel
+          .smoke-venv\Scripts\python.exe -c "import prin; print(prin.core_version())"
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.target }}
@@ -68,15 +134,14 @@ jobs:
     needs: [wheels, sdist]
     runs-on: ubuntu-latest
     environment: release
-    permissions:
-      id-token: write  # OIDC trusted publishing
     steps:
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@v1.14.2
         with:
+          password: ${{ secrets.pypi_api }}
           packages-dir: dist
 
   publish-crates:
@@ -88,7 +153,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Publish crates to crates.io in dependency order
         env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.crate_api }}
         run: |
           # Leaf crate first (no intra-workspace deps)
           cargo publish -p prin-dynamics --no-verify
