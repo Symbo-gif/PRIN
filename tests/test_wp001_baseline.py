@@ -597,10 +597,10 @@ def test_python_docs_job_installs_mot_extra_for_notebook_execution() -> None:
     )[0]
 
     assert (
-        'python -m pip install --no-cache-dir -c ci/docs-constraints.txt -e '
+        "python -m pip install --no-cache-dir -c ci/docs-constraints.txt -e "
         '".[dev,mot]"' in docs_job
     )
-    assert 'python -m pytest tests/test_notebooks.py -q -m slow' in docs_job
+    assert "python -m pytest tests/test_notebooks.py -q -m slow" in docs_job
 
 
 def test_release_workflow_publishes_workspace_crates() -> None:
