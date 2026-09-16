@@ -76,7 +76,7 @@ jobs:
     # and permanently block every future PR (the same class of deadlock T-F7
     # hit with `parity`/`reproduce`'s path filters).
     name: test (${{ matrix.os }}, ${{ matrix.runner }})
-    runs-on: ${{ matrix.self_hosted && fromJson('["self-hosted","gpu"]') || matrix.runner }}
+    runs-on: ${{ matrix.self_hosted && fromJson('["self-hosted","Windows","gpu"]') || matrix.runner }}
     # DV-016: bound worst case rather than risk the default 360-minute job
     # timeout silently burning Actions minutes. The self-hosted leg finishes
     # in minutes; 120 is purely a safety net for the two hosted legs.
