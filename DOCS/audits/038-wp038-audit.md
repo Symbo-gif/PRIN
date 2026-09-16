@@ -365,6 +365,16 @@ pytest tests/test_wp001_baseline.py tests/test_phase0_gate.py tests/test_daemon_
 #   PRIN-GPU-Runner via gpu.yml — amendment #45 G4/DV-034), matching S2's
 #   treatment. The fast suite and the governance tools were re-run on the final
 #   tree after every edit, not only on an intermediate one.
+#
+#   Confirmation run against the committed state: after `d5581fe` was created,
+#   `git status --short` and `git diff HEAD --stat` were both empty and the fast
+#   suite was re-run on that exact tree — 2885 passed, 178 skipped,
+#   38 deselected, TOTAL 7727/410/95%, identical to the pre-commit run. The one
+#   edit that landed after the pre-commit fast run (`DOCS/sphinx/conf.py`'s
+#   docstring, `prin` -> `prin-core`) had already been independently verified at
+#   the time via a fresh Sphinx `-W --keep-going` build (0 warnings) plus
+#   `tests/test_sphinx_docs.py` and `tests/test_paper_wiring.py` (45 passed);
+#   this confirmation run closes the ordering gap for the suite as a whole.
 
 # Security
 .venv\Scripts\python -m pip_audit .                                 # No known vulnerabilities found
