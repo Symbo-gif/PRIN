@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING (packaging): the PyPI distribution is renamed `prin` →
+  `prin-core`; the import name is unchanged (`0151`, WP-038 S3, Project Plan
+  amendment #46).** Install with `pip install prin-core`, then `import prin`
+  exactly as before — no code change is required by any user. The rename was
+  forced, not chosen: PyPI's `prin` belongs to an unrelated project whose only
+  two releases were uploaded 2015-05-20, so `release.yml`'s `publish-pypi` job
+  could never have uploaded and Plan N4 / Versioning and Release Standards §5
+  were unsatisfiable as written. maturin supports the split for a mixed
+  Rust/Python project because `[tool.maturin] module-name` names the Python
+  package independently of `[project].name`; verified by building
+  `prin_core-1.0.0rc1-cp311-abi3-win_amd64.whl` and confirming its `METADATA`
+  reads `Name: prin-core` while its payload still contains `prin/__init__.py`
+  and `prin/_prin_core.pyd`. `tools/wp001_baseline.py::validate_metadata` now
+  pins both halves so a revert cannot silently re-target a publish at a project
+  we do not own. This amends the not-yet-published `1.0.0-rc1` below; S4
+  (`0152`) folds it into that section before the tag is re-run.
+
+### Fixed
+
+- **`release.yml` could not build a green wheel matrix (`0151`, WP-038 S3,
+  WP038-F1 / WP038-F2).** The wheel smoke test was a single `shell: bash` step
+  for the whole matrix; on the self-hosted Windows runner `shell: bash`
+  resolves to `C:\windows\system32\bash.EXE` — the WSL shim — and WSL is not
+  installed there, so the step died with `execvpe(/bin/bash) failed` *after*
+  the wheel had built fine (run `35021650652`, job `104558518001`; the same
+  DV-024 root cause `gpu.yml` and `rust.yml` already work around). The step is
+  now split: hosted Linux/macOS keep bash globbing behind `!matrix.self_hosted`,
+  and the Windows leg runs under an explicit `shell: pwsh`, installing into a
+  throwaway `.smoke-venv` rather than the runner's shared global interpreter.
+  Separately, the Ubuntu x86_64 leg exhausted the ~14 GB hosted image because
+  `pip install dist/*.whl` resolved the declared `torch>=2.0` from PyPI and
+  dragged the ~5 GB CUDA 13 wheel stack (job `104558518084`, `No space left on
+  device`; DV-022). It now runs the same disk-reclaim step and CPU-index
+  `torch` pre-install that `python.yml`, `parity.yml`, and `repro.yml` use.
+- **`cargo publish` would have left a partial, irreversible crates.io
+  publication (`0151`, WP-038 S3, WP038-F3).** The seven intra-workspace
+  entries in `[workspace.dependencies]` were bare `path` dependencies with no
+  `version`. `cargo publish` strips `path` and rewrites the dependency against
+  crates.io, so packaging was rejected outright — `cargo package -p
+  prin-metrics --no-verify` failed with *"all dependencies must have a version
+  requirement specified when packaging"*. Only `prin-dynamics`, the sole
+  publishable crate with no intra-workspace dependency, would have uploaded
+  before `publish-crates` failed on the second crate. All seven now pin
+  `version = "1.0.0-rc1"`, `cargo package --workspace --no-verify` packages all
+  eight cleanly, and `validate_metadata` mechanically enforces both the pin's
+  presence and its agreement with `[workspace.package].version` so a future
+  release bump cannot drift.
+
 ## [1.0.0-rc1] — 2026-09-15
 
 ### Added

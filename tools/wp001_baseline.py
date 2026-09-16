@@ -19,6 +19,10 @@ _ARCHIVE = Path(
     "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet"
 )
 _DEFAULT_OWNERSHIP = Path("tools/wp001_ownership.json")
+# The PyPI distribution name (Project Plan amendment #46 / WP038-F4). Not the
+# import name, which stays `prin` — PyPI's `prin` is owned by an unrelated
+# project last released in 2015.
+_DISTRIBUTION_NAME = "prin-core"
 _EVIDENCE_OUTPUT = Path("DOCS/baselines")
 _EXCLUDED_FILES = frozenset({".coverage", "coverage.xml"})
 _EXCLUDED_DIRECTORIES = frozenset(
@@ -573,6 +577,61 @@ def _workflow_python_versions(path: Path) -> set[str]:
     return set(re.findall(r"[\"'](3\.\d+)[\"']", match.group(1)))
 
 
+def _validate_publishable_dependencies(
+    cargo: dict[str, Any], members: list[str]
+) -> list[str]:
+    """Check that intra-workspace deps carry a version pin cargo can publish.
+
+    WP038-F3: ``cargo publish`` strips the ``path`` key from a dependency and
+    rewrites it to point at crates.io, so a path-only dependency makes
+    packaging fail outright ("all dependencies must have a version requirement
+    specified when packaging"). ``release.yml``'s ``publish-crates`` job had
+    never run, so this was invisible until WP-038 S3 packaged the crates by
+    hand: only ``prin-dynamics`` — the one publishable crate with no
+    intra-workspace dependency — would have uploaded, leaving a partial and
+    irreversible crates.io publication behind before the job failed on
+    ``prin-metrics``.
+
+    The pin must also *track* ``[workspace.package].version``. Every crate
+    inherits its own version from there, so a release bump that updates the
+    workspace version but not these pins would publish crates declaring a
+    dependency on a version of their siblings that does not exist.
+    """
+    errors: list[str] = []
+    workspace = cargo.get("workspace", {})
+    workspace_version = workspace.get("package", {}).get("version")
+    member_names = {Path(member).name for member in members}
+    dependencies = workspace.get("dependencies", {})
+    if not isinstance(dependencies, dict):
+        return ["Cargo workspace.dependencies must be a table"]
+    for name in sorted(member_names):
+        if name not in dependencies:
+            continue
+        spec = dependencies[name]
+        if not isinstance(spec, dict):
+            errors.append(
+                f"workspace.dependencies.{name} must be an inline table "
+                "carrying both path and version"
+            )
+            continue
+        if not spec.get("path"):
+            errors.append(f"workspace.dependencies.{name} must declare a path")
+        pinned = spec.get("version")
+        if pinned is None:
+            errors.append(
+                f"workspace.dependencies.{name} must declare a version: "
+                "cargo publish strips path dependencies and refuses to "
+                "package a crate whose dependencies have no version "
+                "requirement"
+            )
+        elif pinned != workspace_version:
+            errors.append(
+                f"workspace.dependencies.{name} version {pinned!r} does not "
+                f"match workspace.package.version {workspace_version!r}"
+            )
+    return errors
+
+
 def validate_metadata(root: Path) -> list[str]:
     """Validate cross-file project, packaging, toolchain, and CI metadata."""
     root = _validate_root_path(root)
@@ -641,6 +700,38 @@ def validate_metadata(root: Path) -> list[str]:
     if len(set(repositories.values())) != 1 or None in repositories.values():
         details = ", ".join(f"{name}={value}" for name, value in repositories.items())
         errors.append(f"repository URL mismatch: {details}")
+    # WP038-F4 / Project Plan amendment #46: the published distribution is
+    # `prin-core` because PyPI's `prin` belongs to an unrelated project last
+    # released in 2015, while the import package stays `prin`. Pinning the
+    # distribution name here means a stray revert cannot silently re-target a
+    # release at a project we do not own; the matching `module-name` check
+    # below pins the import half.
+    if project.get("name") != _DISTRIBUTION_NAME:
+        errors.append(
+            f"pyproject.toml: project.name must equal {_DISTRIBUTION_NAME!r} "
+            f"(the `prin` import name is separate; see Project Plan "
+            f"amendment #46), found {project.get('name')!r}"
+        )
+    # A self-referencing optional-dependency must name the *distribution*, not
+    # the import package. `all = ["prin[dev,mot,onnx]"]` survived the
+    # amendment-#46 rename unnoticed, which would have made
+    # `pip install prin-core[all]` resolve `prin` from PyPI and install the
+    # unrelated project that owns that name.
+    optional_dependencies = project.get("optional-dependencies", {})
+    if isinstance(optional_dependencies, dict):
+        for extra, requirements in optional_dependencies.items():
+            if not isinstance(requirements, list):
+                continue
+            for requirement in requirements:
+                if not isinstance(requirement, str):
+                    continue
+                if requirement.split("[", 1)[0].strip() == "prin":
+                    errors.append(
+                        f"pyproject.toml: optional-dependencies.{extra} "
+                        f"self-references the import name in {requirement!r}; "
+                        f"use {_DISTRIBUTION_NAME!r} so pip does not resolve "
+                        "the unrelated PyPI project named `prin`"
+                    )
     members = cargo.get("workspace", {}).get("members", [])
     if not isinstance(members, list) or not all(
         isinstance(member, str) for member in members
@@ -675,6 +766,7 @@ def validate_metadata(root: Path) -> list[str]:
                     f"{relative_manifest}: package.{field} must inherit "
                     "workspace metadata"
                 )
+    errors.extend(_validate_publishable_dependencies(cargo, members))
     maturin = pyproject.get("tool", {}).get("maturin", {})
     manifest_path = maturin.get("manifest-path")
     if manifest_path != "crates/prin-py/Cargo.toml":

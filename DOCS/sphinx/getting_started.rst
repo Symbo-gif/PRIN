@@ -20,7 +20,12 @@ Released wheel:
 
 .. code-block:: bash
 
-   pip install prin
+   pip install prin-core
+
+The distribution is ``prin-core``; the import name is ``prin``. PyPI's
+``prin`` belongs to an unrelated project last released in 2015, so the
+published name had to differ (Project Plan amendment #46). Everything after
+the install is unaffected — ``import prin`` either way.
 
 Development install (builds the Rust core with ``maturin``):
 

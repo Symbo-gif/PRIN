@@ -120,6 +120,53 @@ class TestCheckWheelMatrix:
         assert result["findings"]["three_os_matrix"] is True
         assert result["findings"]["macos_universal2"] is True
 
+    def _write_fixture(self, tmp_path: Path, release_text: str) -> None:
+        workflows = tmp_path / ".github" / "workflows"
+        workflows.mkdir(parents=True, exist_ok=True)
+        (workflows / "release.yml").write_text(release_text, encoding="utf-8")
+        crates = tmp_path / "crates" / "prin-py"
+        crates.mkdir(parents=True, exist_ok=True)
+        (crates / "Cargo.toml").write_text(
+            'features = ["abi3-py311"]', encoding="utf-8"
+        )
+        (tmp_path / "pyproject.toml").write_text(
+            "Operating System :: OS Independent\n", encoding="utf-8"
+        )
+
+    def test_smoke_step_with_pip_flags_still_counts(self, tmp_path: Path) -> None:
+        # WP038-F1/F2 regression. Splitting the smoke test per runner leg added
+        # `--no-cache-dir` (a DV-022 disk-pressure control) between `install`
+        # and the wheel glob, and the gate's exact-literal substring match then
+        # failed the whole Phase 0 report even though the smoke test was intact.
+        release = self._RELEASE_YML.replace(
+            "          pip install dist/*.whl\n",
+            "          python -m pip install --no-cache-dir dist/*.whl\n",
+        )
+        assert release != self._RELEASE_YML
+        self._write_fixture(tmp_path, release)
+
+        result = _check_wheel_matrix(tmp_path)
+
+        assert result["status"] == "ok"
+        assert result["findings"]["wheel_smoke_step"] is True
+
+    def test_smoke_step_named_but_not_installing_the_wheel_fails(
+        self, tmp_path: Path
+    ) -> None:
+        # The relaxation above must not turn the check into a name-only match.
+        release = self._RELEASE_YML.replace(
+            "          pip install dist/*.whl\n",
+            '          python -c "import prin"\n',
+        )
+        assert release != self._RELEASE_YML
+        self._write_fixture(tmp_path, release)
+
+        result = _check_wheel_matrix(tmp_path)
+
+        assert result["status"] == "fail"
+        assert result["findings"]["wheel_smoke_step"] is False
+        assert any("missing wheel smoke test" in error for error in result["errors"])
+
     def test_missing_os(self, tmp_path: Path) -> None:
         workflows = tmp_path / ".github" / "workflows"
         workflows.mkdir(parents=True, exist_ok=True)

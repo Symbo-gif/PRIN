@@ -25,6 +25,10 @@ MANIFEST
 .venv/
 venv/
 env/
+# release.yml's self-hosted-Windows wheel smoke test (WP038-F1). Named
+# separately from `.venv` because gpu.yml owns that directory in the same
+# runner workspace.
+.smoke-venv/
 
 # Unit test / coverage
 htmlcov/

@@ -176,7 +176,15 @@ def _check_wheel_matrix(root: Path) -> dict[str, Any]:
         findings["macos_universal2"] = False
         errors.append("release.yml missing macOS universal2 target")
 
-    if "Wheel smoke test" in release_text and "pip install dist/*.whl" in release_text:
+    # WP038-F1/F2 split the single `shell: bash` smoke-test step into a hosted
+    # Linux/macOS step and a self-hosted-Windows `shell: pwsh` step, and the
+    # install gained `--no-cache-dir` (a DV-022 disk-pressure control). Match
+    # the *shape* of the check — a named smoke-test step that pip-installs the
+    # built wheel glob — rather than one exact command literal: the literal
+    # form silently failed this whole Phase 0 gate the moment a flag was
+    # inserted between `install` and the glob.
+    smoke_install = re.search(r"pip install[^\n]*dist[/\\]\*\.whl", release_text)
+    if "Wheel smoke test" in release_text and smoke_install is not None:
         findings["wheel_smoke_step"] = True
     else:
         findings["wheel_smoke_step"] = False

@@ -41,7 +41,8 @@ and Hypothesis-driven fuzzing.
 ## Corpus generation
 
 The reference implementation is installed from the archived source tree, not
-from PyPI. With `prin[dev]` installed, run:
+from PyPI. With `prin-core[dev]` installed (the distribution name; the import
+name is `prin`), run:
 
 ```bash
 pip install -e "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main"

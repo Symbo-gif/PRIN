@@ -33,6 +33,11 @@ session and trajectory.
 
 ## Installation (development)
 
+The released PyPI distribution is **`prin-core`**; the import name is **`prin`**
+(`pip install prin-core` → `import prin`). Project Plan amendment #46 moved the
+distribution name because PyPI's `prin` belongs to an unrelated project last
+released in 2015.
+
 ```bash
 # Requires Rust (stable) and Python >= 3.11
 python -m venv .venv
