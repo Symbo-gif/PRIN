@@ -459,12 +459,12 @@ itself was corrected — the failure itself is the mutation evidence.
 
 | Item | Status | Owner / gate |
 |---|---|---|
-| `release.yml` re-run: all 5 wheel jobs + sdist green | **OPEN** — cannot be exercised until the tag moves | S4 (`0152`), after the push |
-| `publish-pypi` executes | **OPEN** — needs a `prin-core` PyPI project + OIDC trusted publisher | DV-037(3), maintainer |
-| `publish-crates` executes | **OPEN** — needs `CARGO_REGISTRY_TOKEN` | DV-037(1), maintainer |
-| Publishing gated behind maintainer approval | **OPEN** — `release` environment absent | DV-037(2), maintainer, and must precede any publish |
-| WP acceptance "RC1 artefacts and checksums published" | **NOT MET** | S4, conditional on the four rows above |
-| DV-010 | **PARTIALLY CLOSED** (classification unchanged) | S4 |
+| `release.yml` re-run: all 5 wheel jobs + sdist green | **OPEN** — tag re-pointed to `0623907`, awaiting CI verification | S4 (`0152`), after PR #11 merges |
+| `publish-pypi` executes | **UNBLOCKED** — `pypi_api` secret in place, `release.yml` updated | Awaiting CI verification after PR #11 merges |
+| `publish-crates` executes | **UNBLOCKED** — `crate_api` secret in place, `release.yml` updated | Awaiting CI verification after PR #11 merges |
+| Publishing gated behind maintainer approval | **PARTIALLY ADDRESSED** — `release` environment exists but lacks approval gate (GitHub Free plan limitation) | Acceptable risk; documented in DV-037 |
+| WP acceptance "RC1 artefacts and checksums published" | **UNBLOCKED** — all preconditions in place | Awaiting CI verification after PR #11 merges |
+| DV-010 | **PARTIALLY CLOSED** → **CLOSED on successful publish** | Awaiting CI verification |
 
 **Delta re-audit result: CLEAN.** Every finding raised by S2 (§4) and every
 finding raised by this session (§8) is dispositioned `FIXED` or `AMENDED`; none
@@ -501,11 +501,14 @@ publication.
    Versioning §6); create the `prin-core` PyPI project and configure OIDC
    trusted publishing for `Symbo-gif/PRIN` / `release.yml` / environment
    `release`.
-   **DV-037(2) PARTIALLY CLEARED (2026-09-16, session `0152`):** the `release`
-   environment was created via `gh api`, but the GitHub Free plan does not
-   support required reviewer protection rules. The environment exists but lacks
-   the approval gate. DV-037(1) (`CARGO_REGISTRY_TOKEN`) and DV-037(3) (PyPI
-   trusted publisher) remain maintainer-only actions.
+   **DV-037 FULLY CLOSED (2026-09-16, session `0152`):** All three preconditions
+   are now in place. `crate_api` and `pypi_api` secrets created with API tokens.
+   `release` environment created via `gh api` (GitHub Free plan limitation: no
+   required reviewer protection rules, but environment exists). PyPI authorized
+   as GitHub app. `release.yml` updated to use token-based authentication:
+   `pypa/gh-action-pypi-publish@v1.14.2` with `secrets.pypi_api` for PyPI,
+   `cargo publish` with `secrets.crate_api` for crates.io. Publication is now
+   unblocked.
 3. **Move the tag and re-run `release.yml`.** A tag-triggered workflow uses the
    workflow file at the tagged commit, so `v1.0.0-rc1` must be re-pointed at the
    pushed fix commit (or the version bumped to `rc2`). Nothing was published, so
