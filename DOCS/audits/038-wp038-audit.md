@@ -23,7 +23,7 @@
 | Security (A6) | ✅ | bandit 0 issues; cargo audit exit 0 (3 governed warnings); pip-audit 0 vulnerabilities |
 | Docstring/doc coverage (A7) | ✅ | interrogate 97.6%; Sphinx clean build 0 warnings; no `todo!()`/`unimplemented!()`/`FIXME` in Rust crates |
 | Repository hygiene (A8) | ✅ | No TODO/FIXME/HACK markers; `__all__` present; skipif probes clean; DV-register gates pass (36 rows, 198 session entries); no whitespace errors |
-| CI status (A9) | ⚠️ | PR #9: 29/29 pass; post-merge main: 6/6 green; **release.yml (tag-triggered): 2/5 wheel jobs fail** (WP038-F1, WP038-F2); publish-pypi and publish-crates skipped |
+| CI status (A9) | ⚠️ | PR #9: 29/29 pass; post-merge main: 6/6 green; **release.yml (tag-triggered): 2/4 wheel jobs fail** (WP038-F1, WP038-F2); publish-pypi and publish-crates skipped |
 | Artefact trail (A10) | ✅ | S1 handoff evidence-backed; DV-010 disposition updated; version changes documented; PR consolidation documented |
 
 WP-038 S1 delivered the visible RC1 packaging artefacts correctly: version bump is
@@ -215,7 +215,7 @@ publication files (figures + tables) with deterministic SHA-256 checksums.
 |---|---|---|
 | PR #9 checks | ✅ 29/29 pass | rust, python, gpu, parity, repro, snyk |
 | Post-merge main | ✅ 6/6 green | rust, python, gpu, parity, repro, snyk |
-| `release.yml` (tag `v1.0.0-rc1`) | ❌ 2/5 wheel jobs fail | See WP038-F1, WP038-F2 |
+| `release.yml` (tag `v1.0.0-rc1`) | ❌ 2/4 wheel jobs fail | See WP038-F1, WP038-F2 |
 | `publish-pypi` | ⏭️ SKIPPED | Blocked by `wheels` failures |
 | `publish-crates` | ⏭️ SKIPPED | Blocked by `wheels` failures |
 
@@ -264,7 +264,7 @@ established fix patterns in sibling workflows.
 
 1. **WP038-F1:** Fix `release.yml` Windows smoke test — use PowerShell-compatible syntax on the Windows leg (mirror `gpu.yml` DV-024 workaround).
 2. **WP038-F2:** Fix `release.yml` Ubuntu x86_64 smoke test — add disk cleanup + CPU-index torch install (mirror `python.yml` lines 124 + 136).
-3. Re-tag or re-run `release.yml`; verify all 5 wheel jobs + sdist pass; verify `publish-pypi` and `publish-crates` execute successfully.
+3. Re-tag or re-run `release.yml`; verify all 4 wheel jobs + sdist pass; verify `publish-pypi` and `publish-crates` execute successfully.
 4. Close DV-010 on successful publish to PyPI + crates.io.
 5. Append closure table to this audit report.
 
@@ -286,7 +286,7 @@ finding list in §4 is unchanged — this table and §8–§10 are append-only.
 
 **Delta re-audit date:** 2026-09-16 **Result:** **CLEAN** for every finding
 above — see §9. Publication **COMPLETED (2026-09-17)**: `release.yml` run
-`35245682857` at commit `a4f90f6` succeeded — all 5 wheel jobs + sdist
+`35245682857` at commit `a4f90f6` succeeded — all 4 wheel jobs + sdist
 completed, `publish-pypi` uploaded `prin-core` 1.0.0rc1 to PyPI
 (https://pypi.org/project/prin-core/), and `publish-crates` published all 7
 crates to crates.io at version 1.0.0-rc1. DV-010 is now **CLOSED**.
@@ -299,7 +299,7 @@ S2 could not have found these. `release.yml`'s first-ever execution
 (`35021650652`) failed inside the `wheels` job, so `publish-pypi` and
 `publish-crates` were **skipped** — everything behind the wheel matrix was
 unexecuted and therefore unobservable. They surfaced when S3 executed §6's
-ordered work-list items 3 and 4 ("verify all 5 wheel jobs + sdist pass; verify
+ordered work-list items 3 and 4 ("verify all 4 wheel jobs + sdist pass; verify
 `publish-pypi` and `publish-crates` execute successfully", "close DV-010 on
 successful publish").
 
@@ -462,7 +462,7 @@ itself was corrected — the failure itself is the mutation evidence.
 
 **ALL ITEMS CLOSED (2026-09-17, WP-038 S4, session `0152`).** Publication
 completed successfully: `release.yml` run `35245682857` at commit `a4f90f6`
-succeeded — all 5 wheel jobs + sdist completed, `publish-pypi` uploaded
+succeeded — all 4 wheel jobs + sdist completed, `publish-pypi` uploaded
 `prin-core` 1.0.0rc1 to PyPI (https://pypi.org/project/prin-core/), and
 `publish-crates` published all 7 crates to crates.io at version 1.0.0-rc1.
 DV-010 is now **CLOSED**. WP-038 acceptance criteria are fully met.
@@ -473,10 +473,13 @@ is carried. The local gate is green with no newly introduced deviation — the o
 deviation this session's own changes introduced (the Phase 0 gate coupling) was
 caught by that gate and fixed in-session with a two-directional regression test.
 
-The S3 exit gate is therefore satisfied **as to findings**. That is not a claim
-that WP-038 is complete: §9.4 lists what remains, all of it gated on the S4 push
-and on maintainer-only configuration (DV-037). This report does not certify
-publication.
+The S3 exit gate is therefore satisfied **as to findings**.
+
+**S4 update (2026-09-17, session `0152`):** WP-038 is now **complete**. The S4
+push executed successfully — `release.yml` run `35245682857` at `a4f90f6`
+passed all 4 wheel jobs + sdist, both publish jobs executed, and DV-037 was
+fully closed. This report now **certifies publication**. Historical §10 handoff
+items 3–4 below are annotated with their completion status.
 
 ---
 
@@ -520,12 +523,21 @@ publication.
    `47f02a1` to `0623907` (the S3 remediation commit). This triggers
    `release.yml` on the fixed code. The wheel matrix should pass; the publish
    jobs will skip/fail because DV-037(1) and (3) are not cleared.
-4. **Then** verify all 5 wheel jobs + sdist green and both publish jobs
+   **COMPLETED (2026-09-17):** tag re-pointed and `release.yml` triggered
+   successfully at commit `a4f90f6` (run `35245682857`).
+4. **Then** verify all 4 wheel jobs + sdist green and both publish jobs
    executed, and close DV-010 on a successful publish — §6's work-list items 3
    and 4, which S3 could not reach.
+   **COMPLETED (2026-09-17):** all 4 wheel jobs + sdist passed; `publish-pypi`
+   uploaded `prin-core` 1.0.0rc1 to PyPI; `publish-crates` published all 7
+   crates to crates.io at 1.0.0-rc1. DV-010 is **CLOSED**.
 5. **Adjudicate DV-036** (§8): evidence the benchmark re-baseline or re-point its
    gate at the Phase 7 campaign (`0153` E0), where a quiescent-runner
    re-baseline belongs.
+   **COMPLETED (2026-09-17, WP-038 post-review):** DV-036 re-audit gate
+   re-pointed from WP-038 S1 to the Phase 7 benchmark campaign (session
+   `0153` E0). Disposition unchanged (host-instability / baseline-staleness
+   class, not a Phase 7 entry blocker).
 6. **Fold the `[Unreleased]` changelog entry into `[1.0.0-rc1]`** before the tag
    is re-run, so the published release notes carry the rename.
 7. **Optional, for S4 to decide (deliberately not done at S3):** adding

@@ -111,3 +111,5 @@ benchmarks/results/*_preregistration_hash.json
 
 # Archived reference material is tracked but never imported at runtime
 # (DOCS/archive and reference from PRINet 3.0/ is reference-only)
+# Oberon (out-of-context telemetry, postmortems, raw blobs)
+.oberon/
