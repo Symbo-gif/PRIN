@@ -720,6 +720,26 @@ def test_release_workflow_publishes_workspace_crates() -> None:
     assert "prin-py has publish=false" in publish_job
 
 
+def test_release_workflow_publish_or_skip_checks_exact_version() -> None:
+    # Devin code review finding: the original publish_or_skip used `cargo search`
+    # which only checks if the crate name exists, not the specific version. This
+    # meant later version publish failures would be silently skipped. The fix
+    # queries the crates.io API for the exact version.
+    workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+    publish_job = workflow.split("  publish-crates:\n", maxsplit=1)[1]
+
+    # Must extract workspace version
+    assert "WORKSPACE_VERSION=" in publish_job
+    assert "Cargo.toml" in publish_job
+
+    # Must query crates.io API for exact version, not just crate name
+    assert "crates.io/api/v1/crates/$crate/$WORKSPACE_VERSION" in publish_job
+    assert "HTTP_STATUS" in publish_job
+
+    # Must NOT use cargo search (the buggy approach)
+    assert "cargo search" not in publish_job
+
+
 def _release_wheels_job() -> str:
     workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
     return workflow.split("  wheels:\n", maxsplit=1)[1].split(

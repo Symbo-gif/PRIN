@@ -1,7 +1,7 @@
 name: release
 
-# Wheel matrix + sdist, published to PyPI via OIDC trusted publishing;
-# Rust crates published to crates.io.
+# Wheel matrix + sdist, published to PyPI via API token;
+# Rust crates published to crates.io via API token.
 
 on:
   push:
@@ -143,6 +143,7 @@ jobs:
         with:
           password: ${{ secrets.pypi_api }}
           packages-dir: dist
+          skip-existing: true
 
   publish-crates:
     needs: [wheels]
@@ -155,20 +156,28 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.crate_api }}
         run: |
-          # Helper function: publish a crate, skip if already published
+          # Get the workspace version from Cargo.toml
+          WORKSPACE_VERSION=$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "Publishing version $WORKSPACE_VERSION"
+
+          # Helper function: publish a crate, skip if this exact version already exists
           publish_or_skip() {
             local crate=$1
-            echo "Publishing $crate..."
+            echo "Publishing $crate v$WORKSPACE_VERSION..."
             if cargo publish -p "$crate" --no-verify 2>&1; then
-              echo "✓ $crate published successfully"
-            elif cargo search "$crate" --limit 1 | grep -q "^$crate = "; then
-              echo "⊘ $crate already exists on crates.io, skipping"
+              echo "✓ $crate v$WORKSPACE_VERSION published successfully"
             else
-              echo "✗ Failed to publish $crate"
-              exit 1
+              # Check if this exact version already exists on crates.io
+              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://crates.io/api/v1/crates/$crate/$WORKSPACE_VERSION")
+              if [ "$HTTP_STATUS" = "200" ]; then
+                echo "⊘ $crate v$WORKSPACE_VERSION already exists on crates.io, skipping"
+              else
+                echo "✗ Failed to publish $crate v$WORKSPACE_VERSION (HTTP $HTTP_STATUS)"
+                exit 1
+              fi
             fi
           }
-          
+
           # Leaf crate first (no intra-workspace deps)
           publish_or_skip prin-dynamics
           # Second tier (depend on prin-dynamics only)
