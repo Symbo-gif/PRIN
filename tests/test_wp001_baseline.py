@@ -725,6 +725,10 @@ def test_release_workflow_publish_or_skip_checks_exact_version() -> None:
     # which only checks if the crate name exists, not the specific version. This
     # meant later version publish failures would be silently skipped. The fix
     # parses the cargo publish error output for "already exists" message.
+    # 
+    # Critical: GitHub Actions runs Bash with `-e -o pipefail`, so command
+    # substitution assignments inherit the substituted command's nonzero status
+    # and terminate the script. The fix uses an if-condition to suppress errexit.
     workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
     publish_job = workflow.split("  publish-crates:\n", maxsplit=1)[1]
 
@@ -732,14 +736,18 @@ def test_release_workflow_publish_or_skip_checks_exact_version() -> None:
     assert "WORKSPACE_VERSION=" in publish_job
     assert "Cargo.toml" in publish_job
 
-    # Must capture cargo publish output and check for "already exists" message
-    assert "OUTPUT=$(cargo publish" in publish_job
-    # Check for flexible pattern matching (case-insensitive, multiple variations)
+    # Must use if-condition to execute cargo publish (suppresses errexit)
+    assert "if OUTPUT=$(cargo publish" in publish_job
+    
+    # Must check for "already exists" message in else branch
     assert 'grep -qi "already.*exists' in publish_job
 
     # Must NOT use cargo search or crates.io API (the buggy approaches)
     assert "cargo search" not in publish_job
     assert "crates.io/api" not in publish_job
+    
+    # Must NOT use EXIT_CODE=$? pattern (doesn't work with errexit)
+    assert "EXIT_CODE=$?" not in publish_job
 
 
 def _release_wheels_job() -> str:

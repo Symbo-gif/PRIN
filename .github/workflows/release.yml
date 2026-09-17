@@ -161,20 +161,22 @@ jobs:
           echo "Publishing version $WORKSPACE_VERSION"
 
           # Helper function: publish a crate, skip if this exact version already exists
+          # Uses if-condition to suppress errexit when cargo publish fails
           publish_or_skip() {
             local crate=$1
             echo "Publishing $crate v$WORKSPACE_VERSION..."
-            OUTPUT=$(cargo publish -p "$crate" --no-verify 2>&1)
-            EXIT_CODE=$?
             
-            if [ $EXIT_CODE -eq 0 ]; then
+            if OUTPUT=$(cargo publish -p "$crate" --no-verify 2>&1); then
               echo "✓ $crate v$WORKSPACE_VERSION published successfully"
-            elif echo "$OUTPUT" | grep -qi "already.*exists\|already.*published"; then
-              echo "⊘ $crate v$WORKSPACE_VERSION already exists on crates.io, skipping"
             else
-              echo "✗ Failed to publish $crate v$WORKSPACE_VERSION"
-              echo "$OUTPUT"
-              exit 1
+              # Check if it's an "already exists" error
+              if echo "$OUTPUT" | grep -qi "already.*exists\|already.*published"; then
+                echo "⊘ $crate v$WORKSPACE_VERSION already exists on crates.io, skipping"
+              else
+                echo "✗ Failed to publish $crate v$WORKSPACE_VERSION"
+                echo "$OUTPUT"
+                exit 1
+              fi
             fi
           }
 
