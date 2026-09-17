@@ -164,17 +164,17 @@ jobs:
           publish_or_skip() {
             local crate=$1
             echo "Publishing $crate v$WORKSPACE_VERSION..."
-            if cargo publish -p "$crate" --no-verify 2>&1; then
+            OUTPUT=$(cargo publish -p "$crate" --no-verify 2>&1)
+            EXIT_CODE=$?
+            
+            if [ $EXIT_CODE -eq 0 ]; then
               echo "✓ $crate v$WORKSPACE_VERSION published successfully"
+            elif echo "$OUTPUT" | grep -q "already exists"; then
+              echo "⊘ $crate v$WORKSPACE_VERSION already exists on crates.io, skipping"
             else
-              # Check if this exact version already exists on crates.io
-              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://crates.io/api/v1/crates/$crate/$WORKSPACE_VERSION")
-              if [ "$HTTP_STATUS" = "200" ]; then
-                echo "⊘ $crate v$WORKSPACE_VERSION already exists on crates.io, skipping"
-              else
-                echo "✗ Failed to publish $crate v$WORKSPACE_VERSION (HTTP $HTTP_STATUS)"
-                exit 1
-              fi
+              echo "✗ Failed to publish $crate v$WORKSPACE_VERSION"
+              echo "$OUTPUT"
+              exit 1
             fi
           }
 
