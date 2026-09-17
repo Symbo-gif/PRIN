@@ -734,7 +734,8 @@ def test_release_workflow_publish_or_skip_checks_exact_version() -> None:
 
     # Must capture cargo publish output and check for "already exists" message
     assert "OUTPUT=$(cargo publish" in publish_job
-    assert 'grep -q "already exists"' in publish_job
+    # Check for flexible pattern matching (case-insensitive, multiple variations)
+    assert 'grep -qi "already.*exists' in publish_job
 
     # Must NOT use cargo search or crates.io API (the buggy approaches)
     assert "cargo search" not in publish_job

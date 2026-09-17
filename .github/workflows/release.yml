@@ -169,7 +169,7 @@ jobs:
             
             if [ $EXIT_CODE -eq 0 ]; then
               echo "✓ $crate v$WORKSPACE_VERSION published successfully"
-            elif echo "$OUTPUT" | grep -q "already exists"; then
+            elif echo "$OUTPUT" | grep -qi "already.*exists\|already.*published"; then
               echo "⊘ $crate v$WORKSPACE_VERSION already exists on crates.io, skipping"
             else
               echo "✗ Failed to publish $crate v$WORKSPACE_VERSION"
