@@ -143,6 +143,7 @@ jobs:
         with:
           password: ${{ secrets.pypi_api }}
           packages-dir: dist
+          skip-existing: true
 
   publish-crates:
     needs: [wheels]
