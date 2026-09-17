@@ -3,9 +3,12 @@ from __future__ import annotations
 import builtins
 import importlib.util
 import json
+import os
 import re
 import shutil
+import subprocess
 import sys
+import textwrap
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -725,6 +728,10 @@ def test_release_workflow_publish_or_skip_checks_exact_version() -> None:
     # which only checks if the crate name exists, not the specific version. This
     # meant later version publish failures would be silently skipped. The fix
     # parses the cargo publish error output for "already exists" message.
+    #
+    # Critical: GitHub Actions runs Bash with `-e -o pipefail`, so command
+    # substitution assignments inherit the substituted command's nonzero status
+    # and terminate the script. The fix uses an if-condition to suppress errexit.
     workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
     publish_job = workflow.split("  publish-crates:\n", maxsplit=1)[1]
 
@@ -732,13 +739,124 @@ def test_release_workflow_publish_or_skip_checks_exact_version() -> None:
     assert "WORKSPACE_VERSION=" in publish_job
     assert "Cargo.toml" in publish_job
 
-    # Must capture cargo publish output and check for "already exists" message
-    assert "OUTPUT=$(cargo publish" in publish_job
-    assert 'grep -q "already exists"' in publish_job
+    # Must use if-condition to execute cargo publish (suppresses errexit)
+    assert "if OUTPUT=$(cargo publish" in publish_job
+
+    # Must check for "already exists" message in else branch
+    assert 'grep -qi "already.*exists' in publish_job
 
     # Must NOT use cargo search or crates.io API (the buggy approaches)
     assert "cargo search" not in publish_job
     assert "crates.io/api" not in publish_job
+
+    # Must NOT use EXIT_CODE=$? pattern (doesn't work with errexit)
+    assert "EXIT_CODE=$?" not in publish_job
+
+
+def _release_publish_or_skip_source() -> str:
+    workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+    body = workflow.split("          publish_or_skip() {\n", maxsplit=1)[1].split(
+        "\n          }\n", maxsplit=1
+    )[0]
+    return "publish_or_skip() {\n" + textwrap.dedent(body) + "\n}\n"
+
+
+@pytest.mark.parametrize(
+    "cargo_error",
+    [
+        "error: crate version `1.2.3` is already uploaded",
+        "error: crate version 1.2.3 already exists on crates.io index",
+        "error: crate prin-dynamics@1.2.3 already published",
+    ],
+)
+def test_release_workflow_publish_or_skip_continues_under_errexit(
+    tmp_path: Path, cargo_error: str
+) -> None:
+    # Devin code review finding: the runner executes the step as `bash -e`, so
+    # publish_or_skip must survive a duplicate-version rejection and go on to
+    # the crates that are not published yet.
+    bash = shutil.which("bash")
+    if bash is None:
+        pytest.skip("bash unavailable")
+
+    bindir = tmp_path / "bin"
+    bindir.mkdir()
+    cargo = bindir / "cargo"
+    cargo.write_text(
+        "#!/usr/bin/env bash\n"
+        'if [ "$3" = "prin-dynamics" ]; then\n'
+        f'  echo "{cargo_error}" >&2\n'
+        "  exit 101\n"
+        "fi\n"
+        'echo "Uploading $3"\n',
+        encoding="utf-8",
+    )
+    cargo.chmod(0o755)
+
+    script = tmp_path / "publish.sh"
+    script.write_text(
+        "set -e -o pipefail\n"
+        "WORKSPACE_VERSION=1.2.3\n"
+        + _release_publish_or_skip_source()
+        + "publish_or_skip prin-dynamics\n"
+        "publish_or_skip prin-sim\n",
+        encoding="utf-8",
+    )
+
+    env = dict(os.environ, PATH=f"{bindir}{os.pathsep}{os.environ['PATH']}")
+    result = subprocess.run(
+        [bash, str(script)],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        env=env,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "prin-dynamics v1.2.3 already exists on crates.io, skipping" in result.stdout
+    assert "prin-sim v1.2.3 published successfully" in result.stdout
+
+
+def test_release_workflow_publish_or_skip_fails_on_unrelated_error(
+    tmp_path: Path,
+) -> None:
+    bash = shutil.which("bash")
+    if bash is None:
+        pytest.skip("bash unavailable")
+
+    bindir = tmp_path / "bin"
+    bindir.mkdir()
+    cargo = bindir / "cargo"
+    cargo.write_text(
+        "#!/usr/bin/env bash\n"
+        "echo 'error: failed to verify package tarball' >&2\n"
+        "exit 101\n",
+        encoding="utf-8",
+    )
+    cargo.chmod(0o755)
+
+    script = tmp_path / "publish.sh"
+    script.write_text(
+        "set -e -o pipefail\n"
+        "WORKSPACE_VERSION=1.2.3\n"
+        + _release_publish_or_skip_source()
+        + "publish_or_skip prin-dynamics\n"
+        "publish_or_skip prin-sim\n",
+        encoding="utf-8",
+    )
+
+    env = dict(os.environ, PATH=f"{bindir}{os.pathsep}{os.environ['PATH']}")
+    result = subprocess.run(
+        [bash, str(script)],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        env=env,
+    )
+
+    assert result.returncode != 0
+    assert "Failed to publish prin-dynamics" in result.stdout
+    assert "prin-sim" not in result.stdout
 
 
 def _release_wheels_job() -> str:
