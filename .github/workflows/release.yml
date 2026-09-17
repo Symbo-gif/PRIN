@@ -169,8 +169,9 @@ jobs:
             if OUTPUT=$(cargo publish -p "$crate" --no-verify 2>&1); then
               echo "✓ $crate v$WORKSPACE_VERSION published successfully"
             else
-              # Check if it's an "already exists" error
-              if echo "$OUTPUT" | grep -qi "already.*exists\|already.*published"; then
+              # Check if it's an "already exists" error. crates.io answers a
+              # duplicate version with "crate version `X` is already uploaded".
+              if echo "$OUTPUT" | grep -qi "already.*exists\|already.*published\|already.*uploaded"; then
                 echo "⊘ $crate v$WORKSPACE_VERSION already exists on crates.io, skipping"
               else
                 echo "✗ Failed to publish $crate v$WORKSPACE_VERSION"
