@@ -518,23 +518,33 @@ class GraphStore:
             ),
         )
 
-    def spans_by_operation(self, limit: int = 1000) -> dict[str, list[float]]:
-        """Return duration samples grouped by operation name.
+    def spans_by_operation(
+        self, limit: int = 1000
+    ) -> dict[str, list[tuple[float, str]]]:
+        """Return ``(duration_ms, status)`` samples grouped by operation name.
 
         Args:
-            limit: Maximum spans considered per operation.
+            limit: Maximum spans considered in total (most recent first,
+                across all operations) before grouping — not a per-operation
+                cap, since a single bounded query orders by recency globally.
 
         Returns:
-            Mapping of operation name to a list of durations in ms.
+            Mapping of operation name to a list of ``(duration_ms, status)``
+            pairs. Duration and status are drawn from the same bounded query
+            so any statistic derived per operation (e.g. an error rate) is
+            computed over one consistent sample rather than two differently
+            bounded populations (PR #17 devin-ai-integration review).
         """
         rows = self._conn.execute(
-            "SELECT operation_name, duration_ms FROM runtime_spans "
+            "SELECT operation_name, duration_ms, status FROM runtime_spans "
             "ORDER BY start_utc DESC LIMIT ?",
             (max(1, min(limit, 100000)),),
         ).fetchall()
-        out: dict[str, list[float]] = {}
+        out: dict[str, list[tuple[float, str]]] = {}
         for r in rows:
-            out.setdefault(r["operation_name"], []).append(float(r["duration_ms"]))
+            out.setdefault(r["operation_name"], []).append(
+                (float(r["duration_ms"]), str(r["status"]))
+            )
         return out
 
     def span_count(self) -> int:

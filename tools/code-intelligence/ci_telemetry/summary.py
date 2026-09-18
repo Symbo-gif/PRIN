@@ -9,7 +9,6 @@ static centrality metrics in ``ci_analytics``.
 from __future__ import annotations
 
 import math
-import sqlite3
 from dataclasses import dataclass
 
 from ci_graph.store import GraphStore
@@ -59,43 +58,33 @@ def operation_stats(store: GraphStore, limit: int = 1000) -> list[OperationStats
 
     Args:
         store: An open :class:`~ci_graph.store.GraphStore`.
-        limit: Maximum spans considered per operation (most recent first).
+        limit: Maximum spans considered in total, most recent first, before
+            grouping by operation (see
+            :meth:`~ci_graph.store.GraphStore.spans_by_operation`).
 
     Returns:
         Statistics for every operation with at least one sample, sorted by
         descending sample count then operation name for determinism.
     """
-    durations = store.spans_by_operation(limit=limit)
-    error_counts = _error_counts(store)
+    samples = store.spans_by_operation(limit=limit)
     stats = []
-    for op, values in durations.items():
-        values_sorted = sorted(values)
-        errors = error_counts.get(op, 0)
+    for op, pairs in samples.items():
+        durations_sorted = sorted(duration for duration, _status in pairs)
+        errors = sum(status == "error" for _duration, status in pairs)
         stats.append(
             OperationStats(
                 operation_name=op,
-                count=len(values_sorted),
-                p50_ms=_percentile(values_sorted, 50),
-                p95_ms=_percentile(values_sorted, 95),
-                p99_ms=_percentile(values_sorted, 99),
-                mean_ms=sum(values_sorted) / len(values_sorted),
+                count=len(durations_sorted),
+                p50_ms=_percentile(durations_sorted, 50),
+                p95_ms=_percentile(durations_sorted, 95),
+                p99_ms=_percentile(durations_sorted, 99),
+                mean_ms=sum(durations_sorted) / len(durations_sorted),
                 error_count=errors,
-                error_rate=errors / len(values_sorted) if values_sorted else 0.0,
+                error_rate=errors / len(durations_sorted) if durations_sorted else 0.0,
             )
         )
     stats.sort(key=lambda s: (-s.count, s.operation_name))
     return stats
-
-
-def _error_counts(store: GraphStore) -> dict[str, int]:
-    # sqlite3.Row objects from GraphStore internals are not exposed for
-    # aggregate queries; this reuses the public per-operation accessor to
-    # stay within the store's documented interface.
-    counts: dict[str, int] = {}
-    for op in store.spans_by_operation().keys():
-        rows: list[sqlite3.Row] = store.spans_for_operation(op)
-        counts[op] = sum(1 for r in rows if r["status"] == "error")
-    return counts
 
 
 def slowest_operations(store: GraphStore, limit: int = 20) -> list[OperationStats]:

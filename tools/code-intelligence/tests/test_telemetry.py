@@ -100,6 +100,68 @@ def test_operation_stats_percentiles(tmp_path: Path) -> None:
     store.close()
 
 
+def _make_span(*, index: int, operation_name: str, status: str) -> dict[str, object]:
+    # Explicit, strictly increasing timestamps (rather than back-to-back
+    # `traced()` calls) so ordering by `start_utc` is deterministic.
+    stamp = f"2026-09-18T00:00:{index:02d}.000000+00:00"
+    return {
+        "span_id": f"span-{index}",
+        "trace_id": f"trace-{index}",
+        "parent_span_id": None,
+        "operation_name": operation_name,
+        "start_utc": stamp,
+        "end_utc": stamp,
+        "duration_ms": 1.0,
+        "status": status,
+        "error_class": "ValueError" if status == "error" else None,
+        "attributes": {},
+    }
+
+
+def test_error_rate_never_exceeds_one_under_a_tight_global_limit(
+    tmp_path: Path,
+) -> None:
+    # Regression test (PR #17 devin-ai-integration review): error_count used
+    # to be drawn from every span ever ingested for an operation while
+    # `count` was drawn from a globally-bounded recent-N sample, so an
+    # operation with few recent samples but many historical errors could
+    # report error_rate > 1.0 and error_count > count.
+    store = GraphStore(tmp_path / "graph.db")
+    index = 0
+    # Oldest: five historical errors for "cli.rare".
+    for _ in range(5):
+        store.insert_span(
+            _make_span(index=index, operation_name="cli.rare", status="error"),
+            source_file="test.jsonl",
+        )
+        index += 1
+    # One more-recent ok span for "cli.rare".
+    store.insert_span(
+        _make_span(index=index, operation_name="cli.rare", status="ok"),
+        source_file="test.jsonl",
+    )
+    index += 1
+    # Newest: a flood of an unrelated operation.
+    for _ in range(10):
+        store.insert_span(
+            _make_span(index=index, operation_name="cli.flood", status="ok"),
+            source_file="test.jsonl",
+        )
+        index += 1
+
+    # A global limit of 11 captures the 10 flood spans plus the single
+    # newest "cli.rare" span, excluding its 5 older error spans.
+    stats = {
+        s.operation_name: s for s in telemetry_summary.operation_stats(store, limit=11)
+    }
+    rare = stats["cli.rare"]
+    assert rare.count == 1
+    assert rare.error_count == 0  # the 5 historical errors fell outside the window
+    assert rare.error_count <= rare.count
+    assert rare.error_rate <= 1.0
+    store.close()
+
+
 def test_malformed_span_lines_are_skipped_not_fatal(tmp_path: Path) -> None:
     telemetry_dir = tmp_path / "traces"
     telemetry_dir.mkdir(parents=True)

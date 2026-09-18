@@ -414,3 +414,16 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   in the EDA-002 remediation session (2026-09-18), including a new durable
   guard (`tools/check_global_session_registration.py`) closing the D-F1
   recurrence class; see report §7 closure table.
+- [`PR017-devin-review-audit.md`](PR017-devin-review-audit.md) — External
+  code review audit of PR #17 (`devin-ai-integration[bot]` automated
+  findings, 2026-09-18), `PASS-WITH-FINDINGS` → remediated `PASS`. Two `D2`
+  findings independently re-verified against the repository (not taken on
+  the bot's assertion): PR017-F1 (`ci_indexer/python_adapter.py` — class
+  nodes double-counted every method-body call, inflating
+  `call_site_frequency` enough to drop real `CALLS` edges past the
+  resolution cap) and PR017-F2 (`ci_telemetry/summary.py` — `error_count`
+  drawn from an unbounded all-time query while `count` was drawn from a
+  globally-bounded recent sample, letting `error_rate` exceed `1.0`). Both
+  reproduced with a failing test before the fix, then FIXED with regression
+  tests proven to fail pre-fix and pass post-fix; CLEAN delta re-audit,
+  ruff/mypy --strict/Snyk Code all clean, full subsystem suite 64/64.

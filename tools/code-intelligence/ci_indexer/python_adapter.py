@@ -138,7 +138,15 @@ def _walk_statement(
                 out,
                 scope_prefix=f"{qualified}.",
             )
-        _collect_calls(stmt, class_id, out)
+            # Methods and nested classes collect their own calls via the
+            # recursive _walk_statement above; only direct class-body
+            # statements (e.g. `x = default_factory()`) are walked here, to
+            # avoid re-attributing every method-body call to the class node
+            # as well as to the method (PR #17 devin-ai-integration review).
+            if not isinstance(
+                member, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef
+            ):
+                _collect_calls(member, class_id, out)
     elif isinstance(stmt, ast.FunctionDef | ast.AsyncFunctionDef):
         qualified = f"{scope_prefix}{stmt.name}"
         func_id = symbol_node_id("python", repo_path, qualified)

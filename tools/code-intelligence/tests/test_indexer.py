@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from ci_graph.store import GraphStore
+from ci_indexer import python_adapter
 from ci_indexer.orchestrator import discover_files, is_secret_like, run_index
 
 
@@ -117,3 +118,37 @@ def test_discover_files_works_with_relative_repo_root(
     relative_root = Path(fixture_repo.name)
     files = discover_files(relative_root)
     assert any(f.endswith("py_pkg/a.py") for f in files)
+
+
+def test_class_method_calls_are_not_double_attributed_to_the_class() -> None:
+    # Regression test (PR #17 devin-ai-integration review): the class-level
+    # call walk used to re-visit every method body already covered by that
+    # method's own call collection, so each method-body call was recorded
+    # once against the method and again against the enclosing class.
+    source = (
+        "class Foo:\n"
+        "    def a(self):\n"
+        "        helper()\n"
+        "    def b(self):\n"
+        "        helper()\n"
+    )
+    out = python_adapter.parse("file:foo.py", "foo.py", "hash", source)
+    class_node = next(n for n in out.nodes if n.node_type == "class")
+    class_calls = [c for c in out.pending_calls if c.src_id == class_node.node_id]
+    method_calls = [c for c in out.pending_calls if c.src_id != class_node.node_id]
+    assert not class_calls
+    assert len(method_calls) == 2
+    assert len(out.pending_calls) == 2
+
+
+def test_class_body_level_calls_are_still_attributed_to_the_class() -> None:
+    # A call made directly in the class body (not inside a method) must
+    # still be collected against the class node -- the fix above narrows
+    # collection to direct class-body statements, it must not drop them.
+    source = "class Foo:\n    x = default_factory()\n    def a(self):\n        pass\n"
+    out = python_adapter.parse("file:foo.py", "foo.py", "hash", source)
+    class_node = next(n for n in out.nodes if n.node_type == "class")
+    assert any(
+        c.src_id == class_node.node_id and c.callee_name == "default_factory"
+        for c in out.pending_calls
+    )

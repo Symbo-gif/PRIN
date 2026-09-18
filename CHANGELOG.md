@@ -91,6 +91,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   eight cleanly, and `validate_metadata` mechanically enforces both the pin's
   presence and its agreement with `[workspace.package].version` so a future
   release bump cannot drift.
+- **`tools/code-intelligence` call-graph double-counting and an invalid
+  >100% telemetry error rate (PR #17, `devin-ai-integration` review,
+  PR017-F1/F2 — `DOCS/audits/PR017-devin-review-audit.md`).**
+  `ci_indexer/python_adapter.py`'s class-level call collection re-walked
+  every method body already covered by that method's own collection,
+  double-recording each call against the enclosing class and inflating
+  `call_site_frequency` enough to drop real `CALLS` edges past the
+  30-occurrence resolution cap; class-level collection is now scoped to
+  direct, non-definition class-body statements only. Separately,
+  `ci_telemetry/summary.py::operation_stats` computed `error_count` from an
+  unbounded all-time query (`GraphStore.spans_for_operation`) while `count`
+  came from a globally-bounded recent sample (`GraphStore.spans_by_operation`),
+  so an operation with few recent samples but many historical errors could
+  report `error_rate` above `1.0`; `spans_by_operation` now returns
+  `(duration, status)` pairs from one bounded query so both statistics
+  describe the same sample. Both independently reproduced with a failing
+  test before the fix and confirmed to pass after; full subsystem suite
+  64/64, `ruff`/`mypy --strict`/Snyk Code clean.
 
 ### Added
 
