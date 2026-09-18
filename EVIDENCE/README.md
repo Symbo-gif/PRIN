@@ -2,8 +2,22 @@
 
 Machine-readable and human-readable evidence files produced during Session
 Cycle work (S1 handoffs, S2 audit reproductions, S3 remediation verifications,
-S4 gate runs). Each file is named `NNNN-wpNNN-sN-<slug>.<ext>` to match the
-session that produced it.
+S4 gate runs).
+
+## Finding Evidence
+
+Evidence files follow the naming convention `NNNN-wpNNN-sN-<slug>.<ext>`:
+
+| Pattern | Meaning | Example |
+|---|---|---|
+| `NNNN` | Session number (zero-padded to 4 digits) | `0017` = session 0017 |
+| `wpNNN` | Work package | `wp005` = WP-005 |
+| `sN` | Session phase | `s1` = Coding, `s2` = Audit, `s3` = Remediation |
+| `<slug>` | Descriptive label | `ort-probe`, `phase0-gate` |
+
+To find evidence for a specific work package, look for files matching
+`*-wpNNN-*`. For example, all WP-036F evidence starts with `0144U-wp036f-` or
+`0144W-wp036f-`.
 
 ## Current contents
 

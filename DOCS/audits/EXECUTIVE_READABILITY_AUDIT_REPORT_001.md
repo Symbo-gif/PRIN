@@ -9,7 +9,7 @@
 | **Governance** | [`Executive_Readability_Audit_Governance_and_Methodology.md`](../standards/Executive_Readability_Audit_Governance_and_Methodology.md) (established this session) |
 | **Git state** | `55b1290` (clean working tree at audit start) |
 | **Dimensions** | R1–R8 (First Impression, Quick-Start, Audience Segmentation, Density/Scannability, Navigation, Terminology, Directory README Quality, Visual Communication) |
-| **Verdict** | **PASS-WITH-REMEDIATION** — 12 findings (0 R1, 3 R2, 5 R3, 4 R4) |
+| **Verdict** | **PASS** — 12 findings (0 R1, 3 R2, 5 R3, 4 R4), all FIXED |
 
 ---
 
@@ -225,14 +225,14 @@ diagrams are missing from user-facing documentation.
 | R-F8 | Expand `workflows/README.md` | ✅ FIXED — added workflow listing table with descriptions |
 | R-F12 | Summarize crate table cells in `crates/README.md` | ✅ FIXED — replaced wall-of-text cells with 1-2 sentence summaries + links |
 
-### Pass-forward (logged for next S4 session)
+### Pass-forward (logged for next S4 session) — ALL COMPLETED
 
-| Finding | Action | Owner |
+| Finding | Action | Status |
 |---|---|---|
-| R-F6 | Add documentation navigation map to DOCS/README.md | Next S4 |
-| R-F9 | Categorize tools in `tools/README.md` | Next S4 |
-| R-F10 | Expand `EVIDENCE/README.md` | Next S4 |
-| R-F11 | Verify and expand `ci/README.md` | Next S4 |
+| R-F6 | Add documentation navigation map to DOCS/README.md | ✅ FIXED — added tree diagram + "Where to start" guide |
+| R-F9 | Categorize tools in `tools/README.md` | ✅ FIXED — grouped into 7 categories with headers |
+| R-F10 | Expand `EVIDENCE/README.md` | ✅ FIXED — added naming-convention table + lookup guide |
+| R-F11 | Verify and expand `ci/README.md` | ✅ FIXED — added contents summary table |
 
 ---
 
@@ -285,10 +285,10 @@ After remediation, the following checks verify compliance:
 | R-F3 | FIXED | This session | Audience table + Key Concepts glossary added |
 | R-F4 | FIXED | This session | Quick Start section added at top of tests/README.md |
 | R-F5 | FIXED | This session | Module Summary table added to prin-dynamics README |
-| R-F6 | CARRIED(1) | Next S4 | Documentation navigation map deferred |
+| R-F6 | FIXED | ERA-001 remediation follow-up | Documentation navigation tree + "Where to start" guide |
 | R-F7 | FIXED | This session | ASCII architecture diagram added to root README |
 | R-F8 | FIXED | This session | Workflow listing table added |
-| R-F9 | CARRIED(1) | Next S4 | Tool categorization deferred |
-| R-F10 | CARRIED(1) | Next S4 | EVIDENCE README expansion deferred |
-| R-F11 | CARRIED(1) | Next S4 | ci/README verification deferred |
+| R-F9 | FIXED | ERA-001 remediation follow-up | Tools grouped into 7 categories |
+| R-F10 | FIXED | ERA-001 remediation follow-up | Naming-convention table + lookup guide added |
+| R-F11 | FIXED | ERA-001 remediation follow-up | Contents summary table added |
 | R-F12 | FIXED | This session | Crate table cells summarized with links |
