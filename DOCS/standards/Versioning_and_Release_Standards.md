@@ -80,3 +80,38 @@
   maintainer approval.
 - Model artefacts verified against the SHA-256 manifest during the repro CI
   job.
+
+## 7. Post-release hotfix workflow
+
+After a release is published to PyPI and/or crates.io, defects discovered in
+the published package are addressed through the following workflow:
+
+1. **Severity assessment.** Determine whether the defect requires an
+   immediate patch release (security vulnerability, data corruption, crash
+   on import) or can wait for the next scheduled release. Only immediate
+   patches trigger this workflow.
+2. **Hotfix branch.** Create a short-lived branch off the release tag
+   (`hotfix/vX.Y.Z+1`). Do not branch off `main` — the hotfix must contain
+   only the fix, not intervening development.
+3. **Fix and test.** Implement the minimal fix with regression coverage.
+   Run the full verification one-liner (`AGENTS.md`). The fix must not
+   introduce new dependencies or API changes.
+4. **Version bump.** Bump the patch version (`X.Y.Z` → `X.Y.Z+1`) in all
+   four version sources (`Cargo.toml`, `pyproject.toml`, `__init__.py`,
+   `CITATION.cff`). Update `CHANGELOG.md` with a new `[X.Y.Z+1]` section.
+5. **Tag and publish.** Tag `vX.Y.Z+1`; `release.yml` builds, tests, and
+   publishes automatically. PyPI and crates.io accept the new version
+   alongside the previous one — no yanking is required unless the previous
+   release is fundamentally broken.
+6. **Yanking (rare).** If the previous release is fundamentally broken
+   (e.g., publishes incorrect numerics, ships a security vulnerability),
+   yank it from PyPI (`yank` subcommand) and crates.io (`cargo yank`).
+   Document the yank rationale in `CHANGELOG.md` and the GitHub release
+   notes. Yanking does not delete the release — it prevents new installs
+   while allowing existing dependents to continue.
+7. **Retro-audit.** The hotfix is retro-audited at the next S2 per
+   Development Workflow Standards §7. The hotfix branch is merged to `main`
+   after the audit passes.
+8. **Communication.** For security patches, notify downstream users via
+   GitHub Security Advisories. For all patches, the GitHub release notes
+   describe the fix and the affected version range.

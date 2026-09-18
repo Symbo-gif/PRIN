@@ -1,6 +1,6 @@
 # Session 0149 — WP-038 S1: Coding — RC1 packaging and Phase 6 gate
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-038  
 **Session type:** S1 — Coding  

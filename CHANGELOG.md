@@ -57,6 +57,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   presence and its agreement with `[workspace.package].version` so a future
   release bump cannot drift.
 
+### Added
+
+- **Phase 6 recommendation implementation (inter-phase, 2026-09-17).** All
+  five Phase 6 analytics recommendations (R37–R41) reach terminal
+  disposition: R37 (P1) — created missing `DOCS/reports/038-project-state.md`,
+  fixed 14 stale PLANNED→COMPLETE statuses in phase-6 README, updated
+  SESSION_REGISTER for WP-038 and added EMA-006/EDA-001 register rows with
+  dedicated EDA section; R38 (P2) — added large-suite provision to
+  `ANALYTICS_METHODOLOGY.md` §5.2 (>3,000 tests: accept PSR S4 figures);
+  R39 (P3) — recorded pytest-xdist evaluation decision (defer, test
+  isolation not verified); R40 (P2) — added §7 post-release hotfix workflow
+  to `Versioning_and_Release_Standards.md`; R41 (P3) — added EMA-006/EDA-001
+  register rows and dedicated EDA section to SESSION_REGISTER.
+
 ## [1.0.0-rc1] — 2026-09-15
 
 ### Added
