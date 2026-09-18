@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Local codebase visualization + runtime-observability MCP subsystem**
+  (`tools/code-intelligence/`): a SQLite code knowledge graph (Python/Rust/
+  Lean/TOML/JSON/YAML/TS-JS adapters), graph analytics (cycles, PageRank,
+  fan-in/fan-out, articulation points, impact analysis, heuristic dead-code
+  candidates, bounded git-churn), bounded/sanitized Mermaid diagram
+  generation, a local read-only stdio MCP server (16 tools), an opt-in
+  local JSONL runtime-telemetry pipeline for the subsystem's own
+  operations, and a Windows-friendly CLI. Added as a well-isolated
+  developer-tooling add-on — not part of the Session Cycle/WP process, and
+  no existing PRIN functionality was changed. New optional dependency
+  extras `devtools` (`mcp`, `networkx`, `pyyaml`, `pathspec`) and
+  `devtools-extra` (`tree-sitter`, `opentelemetry-api/-sdk`, neither
+  required). See `DOCS/devtools/visualization-mcp.md` and
+  `DOCS/devtools/visualization-mcp-plan.md`.
+
 ### Changed
 
 - **BREAKING (packaging): the PyPI distribution is renamed `prin` →

@@ -58,11 +58,14 @@ PRIN/
 ├── parity/               # golden-trajectory corpus + differential tests vs PRINet 3.0
 ├── benchmarks/           # 9 category packages + benchrunner CLI
 ├── tests/                # pytest acceptance and repository-control tests
-├── tools/                # baseline/traceability tooling; guarded reproduction
+├── tools/                # baseline/traceability tooling; guarded reproduction;
+│                         # code-intelligence/ (optional local codebase
+│                         # visualization + MCP subsystem, see DOCS/devtools/)
 ├── models/               # subconscious_controller.onnx
 ├── notebooks/            # tutorial notebooks
 ├── paper/                # NeurIPS paper artefacts
-├── DOCS/                 # plan, standards, baselines, audits, reports, Sphinx
+├── DOCS/                 # plan, standards, baselines, audits, reports, Sphinx,
+│                         # devtools/ (code-intelligence subsystem docs)
 └── .github/workflows/    # quality, security, parity, repro, GPU, release CI
 ```
 
@@ -82,6 +85,7 @@ PRIN/
 | [`DOCS/standards/Versioning_and_Release_Standards.md`](DOCS/standards/Versioning_and_Release_Standards.md) | Versioning, CI/CD, and release standards |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution workflow |
 | [`AGENTS.md`](AGENTS.md) | Agent/IDE notes and local verification commands (kept in sync with CI) |
+| [`DOCS/devtools/visualization-mcp.md`](DOCS/devtools/visualization-mcp.md) | Local codebase visualization + runtime-observability MCP subsystem (`tools/code-intelligence/`) — an isolated developer-tooling add-on, not part of the Session Cycle |
 
 ## License
 

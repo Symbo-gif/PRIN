@@ -25,6 +25,7 @@ Documentation Standards §3).
 | [`sphinx/`](sphinx/README.md) | The Sphinx documentation site (ReadTheDocs) |
 | `archive and reference from PRINet 3.0/` | **Archived PRINet 3.0.0 — reference and planning material only.** Nothing in it is imported, executed, or built by PRIN |
 | `test_and_benchmark_results/` | Generated benchmark reports (gitignored; canonical artefacts in `benchmarks/results/`) |
+| [`devtools/`](devtools/visualization-mcp.md) | Local codebase visualization + runtime-observability MCP subsystem (`tools/code-intelligence/`) — a well-isolated developer-tooling add-on outside the Session Cycle; see the plan, architecture, security, and troubleshooting docs there |
 
 ## Current state
 

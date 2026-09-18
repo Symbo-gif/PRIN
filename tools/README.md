@@ -78,6 +78,20 @@ or execute archived reference code.
   `CPUExecutionProvider` over 48 cases, `DmlExecutionProvider` executes it and
   agrees with CPU within `rtol=1e-5, atol=1e-6`, and the DirectML-vs-CPU
   median inference latency.
+- `code-intelligence/` is a self-contained, optional local codebase
+  visualization and runtime-observability subsystem: a SQLite code
+  knowledge graph, graph analytics, bounded Mermaid diagrams, a read-only
+  local MCP server, and opt-in JSONL runtime telemetry for its own
+  operations. Not part of the Session Cycle/WP process — a well-isolated
+  developer-tooling add-on. See `code-intelligence/README.md` and
+  `DOCS/devtools/visualization-mcp.md`.
+
+  ```powershell
+  python -m pip install -e ".[devtools]"
+  python tools\code-intelligence\cli.py verify-installation
+  python tools\code-intelligence\cli.py index
+  python tools\code-intelligence\cli.py serve-mcp
+  ```
 
 Run the WP-001 validator from the repository root:
 
