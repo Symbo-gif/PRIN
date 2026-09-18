@@ -410,4 +410,7 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   EMA-007/ETCA-002 audits and the `038-project-state.md` PSR), D-F4 (D3,
   Plan §6 roadmap table Phase 6 row not marked `✅ COMPLETE`), D-F5 (D4,
   verbatim-duplicate `EDA-001` row in the EMA register table). Read-only;
-  all findings passed to a dedicated remediation session.
+  all findings passed to a dedicated remediation session. **All five FIXED**
+  in the EDA-002 remediation session (2026-09-18), including a new durable
+  guard (`tools/check_global_session_registration.py`) closing the D-F1
+  recurrence class; see report §7 closure table.

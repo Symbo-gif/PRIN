@@ -59,6 +59,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Seventh Executive Mathematical Audit (EMA-007, 2026-09-17) — Phase 6
+  close mathematical audit.** Re-verified all 59 existing claims against
+  `2dd0568` (zero regressions) via four independent channels (math-audit-mcp,
+  direct SymPy/Z3, Wolfram Engine 15.0.0, Lean 4.34.0). Independently
+  investigated the post-EMA-006 diff (`fa427ad..2dd0568`, ~2,853 lines
+  across 26 `crates/` files) and found no new mathematical content requiring
+  a new claim — device-resident GPU dispatch (WP-036E) is an architectural
+  buffer-ownership refactor of already-verified kernels, DLPack/PyO3 changes
+  are marshalling/FFI, and the one genuine mathematical change (ResonanceLayer
+  coupling diagonal zeroing, WP-037) is subsumed by the existing
+  WEIGHTINIT-SYM-01 claim (recorded as **M-F14**, D4 hygiene). Verdict
+  `PASS`. Report `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_007.md`. *(This
+  entry, and this session's SESSION_REGISTER.md/DEFERRED_VALIDATION_
+  REGISTER.md entries, were not added at the time — the third recurrence of
+  the EMA-001/EMA-003 self-registration gap; added retroactively by the
+  EDA-002 remediation session below, which also introduced a durable
+  mechanical guard against recurrence.)*
 - **Phase 6 recommendation implementation (inter-phase, 2026-09-17).** All
   five Phase 6 analytics recommendations (R37–R41) reach terminal
   disposition: R37 (P1) — created missing `DOCS/reports/038-project-state.md`,
@@ -84,6 +101,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   verbatim-duplicate `EDA-001` row left in the EMA register table by the
   Phase 6 recommendation-implementation session above. All five passed
   forward for remediation in a dedicated session.
+- **EDA-002 remediation (2026-09-18): all five findings FIXED.** D-F1 —
+  EMA-007 registered retroactively (CHANGELOG entry above,
+  `SESSION_REGISTER.md` EMA table row, `DEFERRED_VALIDATION_REGISTER.md`
+  review-log entry); new `tools/check_global_session_registration.py` (+ 19
+  tests) mechanically cross-references every Executive Audit report against
+  its session-register row and is wired into `python.yml`'s `governance`
+  job, closing the recurrence class rather than only this instance. D-F2 —
+  confirmed already fixed in the EDA-002 audit session itself (no further
+  action). D-F3 — added the missing `038-project-state.md` entry to
+  `DOCS/reports/README.md`. D-F4 — `DOCS/PRIN_Project_Plan.md` §6's Phase 6
+  roadmap row now reads `✅ COMPLETE`. D-F5 — removed the verbatim-duplicate
+  `EDA-001` row from `SESSION_REGISTER.md`'s EMA table. See
+  `DOCS/audits/EXECUTIVE_DOCUMENTATION_AUDIT_REPORT_002.md` §7 closure
+  table.
 
 ## [1.0.0-rc1] — 2026-09-15
 

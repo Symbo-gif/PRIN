@@ -419,6 +419,24 @@ audit session runs and reproduces the same registration gap a fourth time.
 
 ---
 
+## 7. Remediation closure table (appended by remediation session)
+
+All five findings remediated in a dedicated session (2026-09-18).
+
+| ID | Resolution | Evidence |
+|---|---|---|
+| D-F1 | **FIXED.** EMA-007 registered retroactively: dedicated `CHANGELOG.md` `[Unreleased]` entry, a new row in `SESSION_REGISTER.md`'s "Global sessions — Executive Mathematical Audits" table, and a `DEFERRED_VALIDATION_REGISTER.md` review-log entry ("no DV item changed status"). **Durable class-level guard added**, not just the instance fix: `tools/check_global_session_registration.py` (+ `tests/test_check_global_session_registration.py`, 19 tests) scans `DOCS/audits/EXECUTIVE_*_REPORT_*.md` filenames, derives each report's implied session ID (EA/EMA/EDA/ETCA-NNN), and fails if `SESSION_REGISTER.md` has no matching row. Wired into `python.yml`'s `governance` job alongside `check_dv_register_gates.py` and `check_skipif_probes.py`. | `tools/check_global_session_registration.py`: "Checked 17 Executive Audit reports" / exit 0; 19/19 tests pass; `ruff check`/`format --check`/`mypy --strict` all clean on the new files |
+| D-F2 | **Already resolved** — verification during this remediation session confirmed `DOCS/audits/README.md` already carries entries for `038-wp038-audit.md`, `EXECUTIVE_MATH_AUDIT_REPORT_007.md`, and `EXECUTIVE_TESTING_AND_CI_AUDIT_REPORT_002.md` (added as part of EDA-002's own mandatory self-registration commit, `417a67b`, alongside its own required index entry). No further action was needed; this is recorded here for an accurate closure record rather than left silently unaddressed. | `git show 417a67b --stat` shows `DOCS/audits/README.md` modified in the audit session's own commit; `grep` for all three filenames in the current file confirms presence |
+| D-F3 | **FIXED.** Added a `038-project-state.md` entry to `DOCS/reports/README.md`, matching the format of the `037-project-state.md` entry immediately preceding it. | Index now lists all 45 PSR files (001–038, plus sub-PSRs 036a–036g) |
+| D-F4 | **FIXED.** `DOCS/PRIN_Project_Plan.md` §6's roadmap-table Phase 6 row now reads `**6 — Benchmarks, repro, docs, release** ✅ COMPLETE`, matching the marker format of every prior phase row. | `grep -n "6 — Benchmarks" DOCS/PRIN_Project_Plan.md` shows the `✅ COMPLETE` marker |
+| D-F5 | **FIXED.** Removed the verbatim-duplicate `EDA-001` row from `SESSION_REGISTER.md`'s "Global sessions — Executive Mathematical Audits" table; the correctly-placed row in the dedicated EDA table is untouched and remains the single source of truth. | `grep -c "^| EDA-001 "` on `SESSION_REGISTER.md`: 1 (was 2) |
+
+**Verification suite re-run after remediation:** `tools/check_deviation_ledger.py` (128↔128 rows, PASS), `tools/check_dv_register_gates.py` (37 rows × 198 entries, PASS), `tools/check_global_session_registration.py` (17 reports, PASS — new), fresh-directory Sphinx build (0 warnings), `ruff check`/`format --check` (254 files, PASS), `mypy python/prin --strict` (62 files, PASS; new tool/test files independently PASS), `bandit -r python/prin` (0 issues), `cargo fmt --all -- --check` (PASS), `cargo clippy --workspace --all-targets -- -D warnings` (PASS), targeted regression run (`test_wp001_baseline.py`, `test_phase0_gate.py`, `test_acceptance_y4q4.py`, `test_check_dv_register_gates.py`, `test_check_global_session_registration.py`: 152 passed, 23 skipped, 0 failed).
+
+**Post-remediation verdict: PASS** (all findings closed, verification suite clean).
+
+---
+
 ## Appendix A: Phase 6 Close Documentation Inventory (this audit's window)
 
 | Category | Count | Notes |
