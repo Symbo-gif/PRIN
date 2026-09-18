@@ -1,0 +1,17 @@
+{
+  "lhs": "(t + t)**2 / (t**2/(n-1) + t**2/(n-1))",
+  "rhs": "2*(n-1)",
+  "assumptions": [
+    "n > 1",
+    "t > 0"
+  ],
+  "variables": [
+    "t",
+    "n"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 30,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

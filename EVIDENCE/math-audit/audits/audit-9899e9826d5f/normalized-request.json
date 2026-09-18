@@ -1,0 +1,16 @@
+{
+  "lhs": "gamma(x)*gamma(1-x)",
+  "rhs": "pi/sin(pi*x)",
+  "assumptions": [
+    "x > 0",
+    "x < 1"
+  ],
+  "variables": [
+    "x"
+  ],
+  "domain": "real",
+  "strategy": "symbolic_then_numeric",
+  "numeric_samples": 30,
+  "precision_digits": 30,
+  "crosscheck_with_wolfram": false
+}

@@ -1,0 +1,103 @@
+{
+  "variables": [
+    {
+      "name": "x00",
+      "sort": "Int",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "x01",
+      "sort": "Int",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "x02",
+      "sort": "Int",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "x10",
+      "sort": "Int",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "x11",
+      "sort": "Int",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "x12",
+      "sort": "Int",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "x20",
+      "sort": "Int",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "x21",
+      "sort": "Int",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "x22",
+      "sort": "Int",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "cost",
+      "sort": "Int",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "x00 >= 0",
+    "x00 <= 1",
+    "x01 >= 0",
+    "x01 <= 1",
+    "x02 >= 0",
+    "x02 <= 1",
+    "x10 >= 0",
+    "x10 <= 1",
+    "x11 >= 0",
+    "x11 <= 1",
+    "x12 >= 0",
+    "x12 <= 1",
+    "x20 >= 0",
+    "x20 <= 1",
+    "x21 >= 0",
+    "x21 <= 1",
+    "x22 >= 0",
+    "x22 <= 1",
+    "x00 + x01 + x02 == 1",
+    "x10 + x11 + x12 == 1",
+    "x20 + x21 + x22 == 1",
+    "x00 + x10 + x20 == 1",
+    "x01 + x11 + x21 == 1",
+    "x02 + x12 + x22 == 1",
+    "cost == 4*x00 + 1*x01 + 3*x02 + 2*x10 + 0*x11 + 5*x12 + 3*x20 + 2*x21 + 2*x22"
+  ],
+  "queries": [
+    {
+      "query_id": "hungarian-3x3-lower-bound-5",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "cost >= 5"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 15000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}
