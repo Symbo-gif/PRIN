@@ -1,14 +1,26 @@
 # prin-dynamics
 
-Fundamental oscillator dynamics for PRIN: oscillator state (struct-of-arrays),
-deterministic counter-based PRNG authority (`Seed`), numerical guards and clamps,
-Kuramoto / Stuart–Landau / Hopf models, Euler / RK4 / RK45 integrators,
-exponential (direct/Krylov) and multi-rate sub-stepped integrators,
-phase–amplitude coupling, coupling topologies, continuous hierarchical band
-networks (ThetaGamma, DeltaThetaGamma), and complex-phasor temporal propagation.
+Fundamental oscillator dynamics for PRIN: oscillator state, deterministic PRNG,
+numerical guards, Kuramoto / Stuart–Landau / Hopf models, integrators
+(Euler / RK4 / RK45 / exponential / multi-rate), phase–amplitude coupling,
+coupling topologies, hierarchical band networks, and temporal propagation.
 
 Rebuild target for PRINet 3.0 modules:
 `core/propagation/{oscillator_state,oscillator_models,integrators,coupling,networks,temporal}.py`.
+
+## Module Summary
+
+| Module | Purpose | Key Types |
+|---|---|---|
+| `state` | Struct-of-arrays oscillator state, phase wrapping, guards | `OscillatorState`, `StateDerivatives` |
+| `seed` | Counter-based deterministic PRNG authority | `Seed` (`Pcg64`) |
+| `errors` | Typed error enumerations | `StateError`, `SeedError` |
+| `models` | Three oscillator models with mean-field, full, and sparse k-NN coupling | `KuramotoOscillator`, `StuartLandauOscillator`, `HopfOscillator` |
+| `coupling` | Coupling modes and topology builders | `CouplingMode`, `Topology` |
+| `integrate` | Five integrators with reusable buffers and numerical guards | `EulerIntegrator`, `RK4Integrator`, `RK45Integrator`, `ExponentialIntegrator`, `MultiRateIntegrator` |
+| `pac` | Cross-frequency phase–amplitude coupling | `PhaseAmplitudeCoupling` |
+| `bands` | Continuous hierarchical band networks (θ/γ, δ/θ/γ) | `BandNetwork`, `BandParams`, `PacPair` |
+| `temporal` | Frame-to-frame temporal propagation via complex-phasor blending | `TemporalPropagator`, `ComplexPhasorBlender`, `EmaAmplitudeBlender` |
 
 ## Modules Implemented (WP-006, WP-007, WP-008, WP-009, WP-012, WP-013)
 

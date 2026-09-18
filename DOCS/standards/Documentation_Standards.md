@@ -101,7 +101,11 @@ may close:
 
 1. **Directory READMEs.** Every directory whose contents changed in S1–S3 has
    its README updated to describe the new state (contents, phase status,
-   usage). New directories get a README on creation.
+   usage). New directories get a README on creation. All READMEs must comply
+   with the readability requirements in
+   [`Executive_Readability_Audit_Governance_and_Methodology.md`](Executive_Readability_Audit_Governance_and_Methodology.md)
+   §6 (answer what/why/how/status; proportional length; scannable structure;
+   no WP-number soup or unbroken walls of text).
 2. **CHANGELOG.** All user-visible changes of the cycle are recorded under
    `[Unreleased]`, Keep-a-Changelog categories.
 3. **API docs.** Docstrings/rustdoc complete for all new/changed symbols;

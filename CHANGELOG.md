@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **First Executive Readability Audit (ERA-001, 2026-09-18) — new audit type
+  and governance for human readability.** Established the Executive Readability
+  Audit as a new global session type focused on documentation accessibility,
+  density, audience segmentation, and navigational coherence (8 dimensions
+  R1–R8). New governance document
+  `DOCS/standards/Executive_Readability_Audit_Governance_and_Methodology.md`
+  establishes enforceable readability standards for READMEs (root README must
+  have value proposition, quick start, architecture diagram, audience entry
+  points; directory READMEs must answer what/why/how/status; WP-number soup
+  and unbroken walls of text are prohibited). Audit report
+  `DOCS/audits/EXECUTIVE_READABILITY_AUDIT_REPORT_001.md` — verdict
+  `PASS-WITH-REMEDIATION`, 12 findings (0 R1, 3 R2, 5 R3, 4 R4). Immediate
+  remediation applied: root README rewritten with architecture diagram, quick
+  start, audience table, project status table, and key-concepts glossary;
+  `tests/README.md` restructured with quick-start at top;
+  `crates/prin-dynamics/README.md` gains summary table; `crates/README.md`
+  table cells summarized with links to crate READMEs; `workflows/README.md`
+  expanded with workflow listing table.
 - **Local codebase visualization + runtime-observability MCP subsystem**
   (`tools/code-intelligence/`): a SQLite code knowledge graph (Python/Rust/
   Lean/TOML/JSON/YAML/TS-JS adapters), graph analytics (cycles, PageRank,
