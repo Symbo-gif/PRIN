@@ -1,6 +1,6 @@
 # Session 0151 — WP-038 S3: Remediation — RC1 packaging and Phase 6 gate
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 6 — Benchmarks, reproduction, docs, and RC1  
 **Execution unit:** WP-038  
 **Session type:** S3 — Remediation  

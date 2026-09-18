@@ -157,7 +157,17 @@ cited evidence points.
    finding count?).
 4. **Independent verification.** Re-execute a representative subset of the
    verification one-liner (`AGENTS.md`) and compare results to the latest
-   project state report. Document any discrepancies.
+   project state report. Document any discrepancies. **Large-suite
+   provision (Phase 6 analytics R38; adopted 2026-09-17):** when the Python
+   test suite exceeds 3,000 collected tests, the analytics session may
+   accept the latest PSR's S4-verified figures as authoritative for the
+   full-suite counts (fast suite, full suite + parity) rather than re-
+   executing the entire suite within the analytics session's time budget.
+   The analytics session still independently re-executes all non-test
+   verification commands (quality gates, security scans, governance tools)
+   and reports the large-suite limitation explicitly in its Limitations
+   section. This provision does not apply to the Rust test suite, which
+   remains fully re-executed regardless of size.
 5. **Recommendations.** Produce actionable, prioritized recommendations for
    the next phase. Each recommendation states: the dimension it addresses,
    the evidence that motivates it, the recommended action, and what evidence

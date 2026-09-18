@@ -4,6 +4,40 @@ Single documentation tree for PRIN (Windows filesystems are case-insensitive,
 so a separate lowercase `docs/` cannot coexist with `DOCS/`; see the
 Documentation Standards §3).
 
+## Navigation Map
+
+```
+DOCS/
+├── PRIN_Project_Plan.md          ← THE plan: mission, roadmap, amendments
+├── standards/                    ← Normative engineering standards (12 docs)
+│   ├── Development_Workflow...   ← The Session Cycle (S1→S2→S3→S4)
+│   ├── Coding_Standards          ← Rust + Python + security
+│   ├── Testing_Standards         ← Test layers, tolerances, coverage
+│   ├── Documentation_Standards   ← API docs, S4 closure, readability (ERA)
+│   ├── Executive_*_Governance... ← EA, EMA, EDA, ETCA, ERA audit governance
+│   └── ...
+├── sessions/                     ← 198 session briefs + register + traceability
+│   ├── SESSION_REGISTER.md       ← Master session order and status
+│   ├── TRACEABILITY.md           ← Symbol-to-session mapping
+│   └── phase-N/                  ← Per-phase brief directories
+├── audits/                       ← S2 audit reports (one per WP) + executive audits
+├── reports/                      ← S4 Project State Reports + DV Register
+├── ANALYTICS/                    ← Phase-level retrospective assessments
+├── experiments/                  ← Pre-registrations, execution logs, handoffs
+├── baselines/                    ← Immutable baseline artefacts (WP-001)
+├── sphinx/                       ← Sphinx site source (ReadTheDocs)
+├── devtools/                     ← Code-intelligence subsystem docs
+└── archive and reference.../     ← PRINet 3.0 reference (read-only)
+```
+
+**Where to start:**
+- **What is the project doing?** → `PRIN_Project_Plan.md`
+- **How does work flow?** → `standards/Development_Workflow_and_Audit_Standards.md`
+- **Where are we now?** → `reports/` (latest `NNN-project-state.md`)
+- **What was audited?** → `audits/` (per-WP reports + executive audits)
+- **What is planned next?** → `sessions/SESSION_REGISTER.md`
+- **How did a phase go?** → `ANALYTICS/phase-N/`
+
 ## Contents
 
 | Item | Purpose |
@@ -25,6 +59,7 @@ Documentation Standards §3).
 | [`sphinx/`](sphinx/README.md) | The Sphinx documentation site (ReadTheDocs) |
 | `archive and reference from PRINet 3.0/` | **Archived PRINet 3.0.0 — reference and planning material only.** Nothing in it is imported, executed, or built by PRIN |
 | `test_and_benchmark_results/` | Generated benchmark reports (gitignored; canonical artefacts in `benchmarks/results/`) |
+| [`devtools/`](devtools/visualization-mcp.md) | Local codebase visualization + runtime-observability MCP subsystem (`tools/code-intelligence/`) — a well-isolated developer-tooling add-on outside the Session Cycle; see the plan, architecture, security, implementation-report, and troubleshooting docs there |
 
 ## Current state
 

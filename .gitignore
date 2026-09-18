@@ -113,3 +113,11 @@ benchmarks/results/*_preregistration_hash.json
 # (DOCS/archive and reference from PRINet 3.0/ is reference-only)
 # Oberon (out-of-context telemetry, postmortems, raw blobs)
 .oberon/
+
+# Code-intelligence subsystem (tools/code-intelligence/): the generated
+# SQLite graph database, JSONL runtime telemetry, and Mermaid diagram
+# output are all reproducible from `cli.py index` / normal use and are
+# never committed. Source under tools/code-intelligence/ is tracked as
+# usual; only these generated-data directories are ignored.
+tools/code-intelligence/.data/
+tools/code-intelligence/output/

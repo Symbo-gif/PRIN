@@ -4,6 +4,14 @@ Committed configuration consumed by `.github/workflows/*` and by the
 maintainer when provisioning repository settings. Introduced by the ETCA-002
 remediation session (2026-09-02, Project Plan amendment #45).
 
+## Contents
+
+| File | Purpose |
+|---|---|
+| `lint-constraints.txt` | Pinned Python lint toolchain for `python.yml` `lint` job |
+| `main-branch-ruleset.json` | `main` branch ruleset payload (required checks, no bypass) |
+| `install-gpu-runner-service.ps1` | One-shot script to install `PRIN-GPU-Runner` as an auto-start Windows service |
+
 ## `lint-constraints.txt`
 
 Pinned toolchain for `python.yml`'s `lint` job (ETCA-002 T-F2 / T-F10 /

@@ -1,0 +1,7 @@
+[project]
+name = "fixture-project"
+version = "0.0.1"
+dependencies = [
+    "requests>=2.0",
+    "click>=8.0",
+]

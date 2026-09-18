@@ -29,6 +29,7 @@ analytics session (the first analytics session for this project). It defines:
 | 3 — GPU kernels | [`phase-3/phase-3-analytics-report.md`](phase-3/phase-3-analytics-report.md) | **PASS — SATISFACTORY** | 2026-08-18 |
 | 4 — Trainable stack and Torch bridge | [`phase-4/phase-4-analytics-report.md`](phase-4/phase-4-analytics-report.md) | **PASS — SATISFACTORY** | 2026-08-21 |
 | 5 — Daemon and experiment tooling | [`phase-5/phase-5-analytics-report.md`](phase-5/phase-5-analytics-report.md) | **PASS — SATISFACTORY** | 2026-08-26 |
+| 6 — Benchmarks, repro, docs, RC1 | [`phase-6/phase-6-analytics-report.md`](phase-6/phase-6-analytics-report.md) | **PASS — SATISFACTORY** | 2026-09-17 |
 
 ## Companion files
 

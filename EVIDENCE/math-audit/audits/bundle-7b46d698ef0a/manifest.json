@@ -1,0 +1,73 @@
+{
+  "bundle_id": "bundle-7b46d698ef0a",
+  "ledger_id": "ledger-prin-daemon-phase5-properties-001",
+  "request_id": "req-ad453ae78f95",
+  "created_at_utc": "2026-09-18T01:14:23.202Z",
+  "overall_status": "PASS",
+  "claim_verdicts": [
+    {
+      "claim_id": "HUN-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-f2f4325894a0"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    },
+    {
+      "claim_id": "IOU-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-e983016fa96d"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "COHEN-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-e8dd9a58b89c"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "WELCH-DF-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-2e7592f29f1d"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "GAMMA-REFLECT-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-f8739cb92ab4"
+      ],
+      "reason": "all required checks passed"
+    },
+    {
+      "claim_id": "BETA-SYM-01",
+      "status": "PASS",
+      "contributing_audit_ids": [
+        "audit-30f178220b03"
+      ],
+      "reason": "all required checks passed (formal/symbolic corroboration present)"
+    }
+  ],
+  "audit_ids": [
+    "audit-f2f4325894a0",
+    "audit-e983016fa96d",
+    "audit-e8dd9a58b89c",
+    "audit-e4aa59a9020c",
+    "audit-2e7592f29f1d",
+    "audit-2e143c59a5e0",
+    "audit-f8739cb92ab4",
+    "audit-f2af7916088e",
+    "audit-30f178220b03",
+    "audit-80f09b714dc1"
+  ],
+  "policy_name": "prin-ema",
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "artifacts": [],
+  "bundle_content_hash": "sha256:74a3ce2db53d7b48800868fd094a99cbe4b18072f7d02927bb9b1a8f201ac343"
+}

@@ -1,0 +1,6 @@
+{
+  "experiment": {
+    "seed": 42,
+    "trials": 5
+  }
+}

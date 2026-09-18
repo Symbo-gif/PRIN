@@ -1,0 +1,64 @@
+{
+  "audit_id": "audit-f8739cb92ab4",
+  "parent_audit_id": null,
+  "request_id": "req-ad453ae78f95",
+  "claim_id": "GAMMA-REFLECT-01",
+  "tool_name": "verify_identity",
+  "adapter_name": "sympy",
+  "status": "PASS",
+  "severity": "medium",
+  "summary": "Symbolic proof established: gamma(x)*gamma(1-x) == pi/sin(pi*x).",
+  "detailed_reasoning": "SymPy reduced (lhs - rhs) to 0 via simplification/assumption refinement. This is a genuine symbolic equivalence proof, not a numeric approximation.",
+  "normalized_inputs": {
+    "lhs": "gamma(x)*gamma(1-x)",
+    "rhs": "pi/sin(pi*x)",
+    "assumptions": [
+      "x > 0",
+      "x < 1"
+    ],
+    "variables": [
+      "x"
+    ],
+    "domain": "real",
+    "strategy": "symbolic_then_numeric",
+    "numeric_samples": 30,
+    "precision_digits": 30,
+    "crosscheck_with_wolfram": false
+  },
+  "assumptions": [
+    "x > 0",
+    "x < 1"
+  ],
+  "limitations": [],
+  "environment": {
+    "python_version": "3.14.0",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "implementation": "CPython"
+  },
+  "dependency_versions": {
+    "math-audit-mcp": "not_installed",
+    "sympy": "1.14.0",
+    "numpy": "2.3.5",
+    "scipy": "1.16.3",
+    "mpmath": "1.3.0",
+    "z3-solver": "4.15.4.0",
+    "networkx": "3.6.1",
+    "pydantic": "2.12.5",
+    "fastmcp": "3.4.7"
+  },
+  "policy_snapshot_hash": "sha256:ce2a55569334b141336622ea947a63c0da13fdc43f4b0d1bff0fe71df9586bb5",
+  "random_seed": null,
+  "precision": null,
+  "timeout_seconds": 15.0,
+  "started_at_utc": "2026-09-18T01:14:21.303Z",
+  "finished_at_utc": "2026-09-18T01:14:21.347Z",
+  "duration_ms": 44,
+  "warnings": [],
+  "metrics": [],
+  "residuals": [],
+  "counterexamples": [],
+  "artifacts": [],
+  "raw_log_reference": null,
+  "input_content_hash": "sha256:3acb573cc328c668bfdff592032364c448897e494eeb32f2725ec9bd70d4a5be",
+  "output_content_hash": "sha256:75d2e3ae7c1637f7e12f93235718c810c6c0c608be298b3c2743088b31b13808"
+}

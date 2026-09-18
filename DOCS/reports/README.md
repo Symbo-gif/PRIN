@@ -116,6 +116,13 @@ starts by reading it (Development Workflow Standards §6).
   the corrective canonical-parameter / Burn-VJP second delta; WP037-F6
   carried to the governed maintainer push/remote-CI gate, WP037-F7 amended
   into DV-036, and WP-038 (`0149`) declared.
+- [`038-project-state.md`](038-project-state.md) — WP-038 S4 closure;
+  S2 `PASS-WITH-FINDINGS` (WP038-F1/F2) plus four more findings surfaced and
+  fixed in S3 (WP038-F3 `cargo publish` packaging defect; WP038-F4 PyPI
+  `prin`→`prin-core` rename, plan amendment #46; WP038-F5/F6 → DV-037) with
+  a CLEAN delta re-audit; `1.0.0-rc1` published to PyPI (`prin-core`) and
+  crates.io (DV-010 CLOSED); every Deferred Validation item closed or
+  dispositioned; **Phase 6 complete**.
 
 
 The [`DEFERRED_VALIDATION_REGISTER.md`](DEFERRED_VALIDATION_REGISTER.md)

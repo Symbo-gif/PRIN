@@ -1,0 +1,5 @@
+service:
+  name: fixture-service
+  timeout_seconds: 30
+logging:
+  level: INFO

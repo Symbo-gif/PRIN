@@ -1,0 +1,55 @@
+{
+  "variables": [
+    {
+      "name": "a_vol",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "b_vol",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "i_vol",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "u_vol",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    },
+    {
+      "name": "iou",
+      "sort": "Real",
+      "bitvec_width": null,
+      "enum_values": null
+    }
+  ],
+  "constraints": [
+    "a_vol >= 0",
+    "b_vol >= 0",
+    "i_vol > 0",
+    "i_vol <= a_vol",
+    "i_vol <= b_vol",
+    "u_vol == a_vol + b_vol - i_vol",
+    "iou == i_vol / u_vol"
+  ],
+  "queries": [
+    {
+      "query_id": "iou-bounded-unit-interval",
+      "kind": "invariant_holds",
+      "expression": null,
+      "invariant": "And(iou >= 0, iou <= 1)"
+    }
+  ],
+  "bounds": {},
+  "timeout_ms": 10000,
+  "produce_models": true,
+  "maximize_counterexample_readability": true
+}

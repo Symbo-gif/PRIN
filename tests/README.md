@@ -1,13 +1,34 @@
 # tests/ — pytest acceptance suite
 
+## Quick Start
+
+```bash
+# Default gate (fast, no GPU, no slow tests)
+pytest tests/ -v -m "not slow and not gpu" --basetemp=.pytest_basetemp
+
+# Full suite (includes GPU and slow tests)
+pytest tests/ parity/ --basetemp=.pytest_basetemp
+
+# GPU-only subset (requires self-hosted CUDA runner)
+pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
+
+# Ported acceptance suite only
+pytest tests/test_acceptance_*.py -v
+```
+
+**Current counts:** 3,496 passed, 185 skipped (full `tests/ parity/` run).
+
+---
+
+## Overview
+
 The PRIN pytest suite (91 `test_*.py` files) is the **acceptance contract**
 for PRIN: it defines the public API. The WP-036B + WP-036C strict ports have
 adapted 37 PRINet 3.0 reference files (1,670 `def test_` functions, ~24,000
 reference lines) with import-only changes (`prinet.*` → `prin.*`). Assertions
 remain unchanged except for separately governed post-port hardening documented
 in the Deferred Validation Register (Testing Standards §1.1). WP-037 adds the
-documentation/example/notebook gates described below; the current full
-`tests/ parity/` local run is 3,496 passed and 185 skipped.
+documentation/example/notebook gates described below.
 
 ## WP-036B ported acceptance suite (13 files, 498 tests)
 

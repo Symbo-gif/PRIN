@@ -375,3 +375,55 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   Read-only; all findings passed to a dedicated remediation session.
   Blocking recommendation: no Phase 6 close push until T-F1/T-F2/T-F3/T-F5/T-F6
   fixed and `origin/main` CI green.
+- [`EXECUTIVE_TESTING_AND_CI_AUDIT_REPORT_002.md`](EXECUTIVE_TESTING_AND_CI_AUDIT_REPORT_002.md) —
+  Second Executive Testing and CI Audit (ETCA-002, 2026-09-02), post-push
+  CI-failure audit of the batched WP-036E + WP-036F range, `FAIL` →
+  remediated `PASS`. One D1 (T-F1: WP-036E/F closed and pushed over a red
+  `origin/main` run), three D2, four D3, two D4. Remediation adopted
+  governance recommendations G1–G8 as plan amendment #45 (per-WP blocking
+  S4 push, machine-checked `tools/check_ci_green.py` S4 gate, `main` branch
+  ruleset, unconditional `gpu.yml`, pinned CI toolchains); `origin/main`
+  confirmed green on all 6 workflows post-remediation.
+- [`038-wp038-audit.md`](038-wp038-audit.md) — WP-038 "RC1 packaging and
+  Phase 6 gate" audit (`PASS-WITH-FINDINGS`); findings resolved in S3 with a
+  CLEAN delta re-audit; RC1 published to PyPI (`prin-core`) and crates.io,
+  Phase 6 closed.
+- [`EXECUTIVE_MATH_AUDIT_REPORT_007.md`](EXECUTIVE_MATH_AUDIT_REPORT_007.md) —
+  Seventh Executive Mathematical Audit (EMA-007, 2026-09-17), Phase 6 close,
+  `PASS`. Re-verified all 59 existing claims against `2dd0568` (zero
+  regressions) via four independent channels (math-audit-mcp, direct
+  SymPy/Z3, Wolfram Engine, Lean 4.34.0); independently investigated the
+  post-EMA-006 diff (~2,853 lines across 26 `crates/` files) and found no
+  new mathematical content requiring new claims. One D4 hygiene note
+  (M-F14: ResonanceLayer coupling diagonal zeroing subsumed by the existing
+  WEIGHTINIT-SYM-01 claim). Maintainer sign-off re-granted for the unchanged
+  7-claim `REQUIRES_HUMAN_REVIEW` set.
+- [`EXECUTIVE_DOCUMENTATION_AUDIT_REPORT_002.md`](EXECUTIVE_DOCUMENTATION_AUDIT_REPORT_002.md) —
+  Second Executive Documentation Audit (EDA-002, 2026-09-18), Phase 6 close,
+  `PASS-WITH-REMEDIATION`. Audit window delta since EDA-001 (`3ab206a`)
+  through `e1844a6` — 80 commits, 297 files, covering WP-036E/F/G, WP-037,
+  WP-038, ETCA-001/002 (+remediations), EMA-007, and the Phase 6
+  recommendation-implementation session. Five findings: D-F1 (D2, EMA-007
+  never registered itself in CHANGELOG/SESSION_REGISTER/DV-register — third
+  recurrence of the EMA self-registration gap class), D-F2/D-F3 (D3, this
+  README and `DOCS/reports/README.md` missing entries for the WP-038/
+  EMA-007/ETCA-002 audits and the `038-project-state.md` PSR), D-F4 (D3,
+  Plan §6 roadmap table Phase 6 row not marked `✅ COMPLETE`), D-F5 (D4,
+  verbatim-duplicate `EDA-001` row in the EMA register table). Read-only;
+  all findings passed to a dedicated remediation session. **All five FIXED**
+  in the EDA-002 remediation session (2026-09-18), including a new durable
+  guard (`tools/check_global_session_registration.py`) closing the D-F1
+  recurrence class; see report §7 closure table.
+- [`PR017-devin-review-audit.md`](PR017-devin-review-audit.md) — External
+  code review audit of PR #17 (`devin-ai-integration[bot]` automated
+  findings, 2026-09-18), `PASS-WITH-FINDINGS` → remediated `PASS`. Two `D2`
+  findings independently re-verified against the repository (not taken on
+  the bot's assertion): PR017-F1 (`ci_indexer/python_adapter.py` — class
+  nodes double-counted every method-body call, inflating
+  `call_site_frequency` enough to drop real `CALLS` edges past the
+  resolution cap) and PR017-F2 (`ci_telemetry/summary.py` — `error_count`
+  drawn from an unbounded all-time query while `count` was drawn from a
+  globally-bounded recent sample, letting `error_rate` exceed `1.0`). Both
+  reproduced with a failing test before the fix, then FIXED with regression
+  tests proven to fail pre-fix and pass post-fix; CLEAN delta re-audit,
+  ruff/mypy --strict/Snyk Code all clean, full subsystem suite 64/64.

@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **First Executive Readability Audit (ERA-001, 2026-09-18) — new audit type
+  and governance for human readability.** Established the Executive Readability
+  Audit as a new global session type focused on documentation accessibility,
+  density, audience segmentation, and navigational coherence (8 dimensions
+  R1–R8). New governance document
+  `DOCS/standards/Executive_Readability_Audit_Governance_and_Methodology.md`
+  establishes enforceable readability standards for READMEs (root README must
+  have value proposition, quick start, architecture diagram, audience entry
+  points; directory READMEs must answer what/why/how/status; WP-number soup
+  and unbroken walls of text are prohibited). Audit report
+  `DOCS/audits/EXECUTIVE_READABILITY_AUDIT_REPORT_001.md` — verdict
+  `PASS-WITH-REMEDIATION`, 12 findings (0 R1, 3 R2, 5 R3, 4 R4). Immediate
+  remediation applied: root README rewritten with architecture diagram, quick
+  start, audience table, project status table, and key-concepts glossary;
+  `tests/README.md` restructured with quick-start at top;
+  `crates/prin-dynamics/README.md` gains summary table; `crates/README.md`
+  table cells summarized with links to crate READMEs; `workflows/README.md`
+  expanded with workflow listing table.
+- **Local codebase visualization + runtime-observability MCP subsystem**
+  (`tools/code-intelligence/`): a SQLite code knowledge graph (Python/Rust/
+  Lean/TOML/JSON/YAML/TS-JS adapters), graph analytics (cycles, PageRank,
+  fan-in/fan-out, articulation points, impact analysis, heuristic dead-code
+  candidates, bounded git-churn), bounded/sanitized Mermaid diagram
+  generation, a local read-only stdio MCP server (16 tools), an opt-in
+  local JSONL runtime-telemetry pipeline for the subsystem's own
+  operations, and a Windows-friendly CLI. Added as a well-isolated
+  developer-tooling add-on — not part of the Session Cycle/WP process, and
+  no existing PRIN functionality was changed. New optional dependency
+  extras `devtools` (`mcp`, `networkx`, `pyyaml`, `pathspec`) and
+  `devtools-extra` (`tree-sitter`, `opentelemetry-api/-sdk`, neither
+  required). See `DOCS/devtools/visualization-mcp.md` and
+  `DOCS/devtools/visualization-mcp-plan.md`.
+
 ### Changed
 
 - **BREAKING (packaging): the PyPI distribution is renamed `prin` →
@@ -56,6 +91,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   eight cleanly, and `validate_metadata` mechanically enforces both the pin's
   presence and its agreement with `[workspace.package].version` so a future
   release bump cannot drift.
+- **`tools/code-intelligence` call-graph double-counting and an invalid
+  >100% telemetry error rate (PR #17, `devin-ai-integration` review,
+  PR017-F1/F2 — `DOCS/audits/PR017-devin-review-audit.md`).**
+  `ci_indexer/python_adapter.py`'s class-level call collection re-walked
+  every method body already covered by that method's own collection,
+  double-recording each call against the enclosing class and inflating
+  `call_site_frequency` enough to drop real `CALLS` edges past the
+  30-occurrence resolution cap; class-level collection is now scoped to
+  direct, non-definition class-body statements only. Separately,
+  `ci_telemetry/summary.py::operation_stats` computed `error_count` from an
+  unbounded all-time query (`GraphStore.spans_for_operation`) while `count`
+  came from a globally-bounded recent sample (`GraphStore.spans_by_operation`),
+  so an operation with few recent samples but many historical errors could
+  report `error_rate` above `1.0`; `spans_by_operation` now returns
+  `(duration, status)` pairs from one bounded query so both statistics
+  describe the same sample. Both independently reproduced with a failing
+  test before the fix and confirmed to pass after; full subsystem suite
+  64/64, `ruff`/`mypy --strict`/Snyk Code clean.
+
+### Added
+
+- **Seventh Executive Mathematical Audit (EMA-007, 2026-09-17) — Phase 6
+  close mathematical audit.** Re-verified all 59 existing claims against
+  `2dd0568` (zero regressions) via four independent channels (math-audit-mcp,
+  direct SymPy/Z3, Wolfram Engine 15.0.0, Lean 4.34.0). Independently
+  investigated the post-EMA-006 diff (`fa427ad..2dd0568`, ~2,853 lines
+  across 26 `crates/` files) and found no new mathematical content requiring
+  a new claim — device-resident GPU dispatch (WP-036E) is an architectural
+  buffer-ownership refactor of already-verified kernels, DLPack/PyO3 changes
+  are marshalling/FFI, and the one genuine mathematical change (ResonanceLayer
+  coupling diagonal zeroing, WP-037) is subsumed by the existing
+  WEIGHTINIT-SYM-01 claim (recorded as **M-F14**, D4 hygiene). Verdict
+  `PASS`. Report `DOCS/audits/EXECUTIVE_MATH_AUDIT_REPORT_007.md`. *(This
+  entry, and this session's SESSION_REGISTER.md/DEFERRED_VALIDATION_
+  REGISTER.md entries, were not added at the time — the third recurrence of
+  the EMA-001/EMA-003 self-registration gap; added retroactively by the
+  EDA-002 remediation session below, which also introduced a durable
+  mechanical guard against recurrence.)*
+- **Phase 6 recommendation implementation (inter-phase, 2026-09-17).** All
+  five Phase 6 analytics recommendations (R37–R41) reach terminal
+  disposition: R37 (P1) — created missing `DOCS/reports/038-project-state.md`,
+  fixed 14 stale PLANNED→COMPLETE statuses in phase-6 README, updated
+  SESSION_REGISTER for WP-038 and added EMA-006/EDA-001 register rows with
+  dedicated EDA section; R38 (P2) — added large-suite provision to
+  `ANALYTICS_METHODOLOGY.md` §5.2 (>3,000 tests: accept PSR S4 figures);
+  R39 (P3) — recorded pytest-xdist evaluation decision (defer, test
+  isolation not verified); R40 (P2) — added §7 post-release hotfix workflow
+  to `Versioning_and_Release_Standards.md`; R41 (P3) — added EMA-006/EDA-001
+  register rows and dedicated EDA section to SESSION_REGISTER.
+- **Second Executive Documentation Audit (EDA-002, 2026-09-18) — Phase 6
+  close audit.** Delta since EDA-001 (`3ab206a`) through `e1844a6` — 80
+  commits, 297 files. Report
+  `DOCS/audits/EXECUTIVE_DOCUMENTATION_AUDIT_REPORT_002.md`. Verdict:
+  `PASS-WITH-REMEDIATION` — five findings: D-F1 (D2) EMA-007 has no
+  CHANGELOG/session-register/DV-register entry (third recurrence of the
+  EMA self-registration gap class); D-F2/D-F3 (D3) `DOCS/audits/README.md`
+  and `DOCS/reports/README.md` missing entries for the WP-038/EMA-007/
+  ETCA-002 audit reports and the `038-project-state.md` PSR respectively;
+  D-F4 (D3) Plan §6 roadmap table's Phase 6 row not marked `✅ COMPLETE`
+  despite Phase 6's exit criteria being fully met; D-F5 (D4) a
+  verbatim-duplicate `EDA-001` row left in the EMA register table by the
+  Phase 6 recommendation-implementation session above. All five passed
+  forward for remediation in a dedicated session.
+- **EDA-002 remediation (2026-09-18): all five findings FIXED.** D-F1 —
+  EMA-007 registered retroactively (CHANGELOG entry above,
+  `SESSION_REGISTER.md` EMA table row, `DEFERRED_VALIDATION_REGISTER.md`
+  review-log entry); new `tools/check_global_session_registration.py` (+ 19
+  tests) mechanically cross-references every Executive Audit report against
+  its session-register row and is wired into `python.yml`'s `governance`
+  job, closing the recurrence class rather than only this instance. D-F2 —
+  confirmed already fixed in the EDA-002 audit session itself (no further
+  action). D-F3 — added the missing `038-project-state.md` entry to
+  `DOCS/reports/README.md`. D-F4 — `DOCS/PRIN_Project_Plan.md` §6's Phase 6
+  roadmap row now reads `✅ COMPLETE`. D-F5 — removed the verbatim-duplicate
+  `EDA-001` row from `SESSION_REGISTER.md`'s EMA table. See
+  `DOCS/audits/EXECUTIVE_DOCUMENTATION_AUDIT_REPORT_002.md` §7 closure
+  table.
 
 ## [1.0.0-rc1] — 2026-09-15
 
