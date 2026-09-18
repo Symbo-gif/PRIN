@@ -70,6 +70,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   isolation not verified); R40 (P2) — added §7 post-release hotfix workflow
   to `Versioning_and_Release_Standards.md`; R41 (P3) — added EMA-006/EDA-001
   register rows and dedicated EDA section to SESSION_REGISTER.
+- **Second Executive Documentation Audit (EDA-002, 2026-09-18) — Phase 6
+  close audit.** Delta since EDA-001 (`3ab206a`) through `e1844a6` — 80
+  commits, 297 files. Report
+  `DOCS/audits/EXECUTIVE_DOCUMENTATION_AUDIT_REPORT_002.md`. Verdict:
+  `PASS-WITH-REMEDIATION` — five findings: D-F1 (D2) EMA-007 has no
+  CHANGELOG/session-register/DV-register entry (third recurrence of the
+  EMA self-registration gap class); D-F2/D-F3 (D3) `DOCS/audits/README.md`
+  and `DOCS/reports/README.md` missing entries for the WP-038/EMA-007/
+  ETCA-002 audit reports and the `038-project-state.md` PSR respectively;
+  D-F4 (D3) Plan §6 roadmap table's Phase 6 row not marked `✅ COMPLETE`
+  despite Phase 6's exit criteria being fully met; D-F5 (D4) a
+  verbatim-duplicate `EDA-001` row left in the EMA register table by the
+  Phase 6 recommendation-implementation session above. All five passed
+  forward for remediation in a dedicated session.
 
 ## [1.0.0-rc1] — 2026-09-15
 
