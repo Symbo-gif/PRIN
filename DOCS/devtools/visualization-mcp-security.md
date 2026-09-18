@@ -82,8 +82,8 @@ with justification):
   `opentelemetry-sdk` — optional accelerators; the subsystem functions
   fully without them.
 
-Scans run against this change (exact commands and results in the
-implementation report):
+Scans run against this change (exact commands and results in
+[`visualization-mcp-implementation-report.md`](visualization-mcp-implementation-report.md)):
 
 - **Snyk Code** (`snyk code test tools/code-intelligence`): 0 issues at any
   severity.
@@ -98,8 +98,17 @@ implementation report):
   `networkx`, `pyyaml`, or `pathspec`. Not attributable to this change per
   Coding Standards §6.2/§6.4's remediation-attribution scope; not
   suppressed or ignored — reported here as-is.
-- **`pip-audit .`** (the exact invocation `.github/workflows/python.yml`
-  uses): no known vulnerabilities found.
+- **`pip-audit`** (the exact invocation `.github/workflows/python.yml`
+  uses): as of this subsystem's initial build, no known vulnerabilities were
+  found. A later independent re-verification pass (see
+  [`visualization-mcp-implementation-report.md`](visualization-mcp-implementation-report.md)
+  §3) found `pip-audit`'s live vulnerability database had since gained
+  advisories against the pre-existing, already-installed `pip==25.2` and
+  `setuptools==78.1.0` — neither declared by the `devtools`/`devtools-extra`
+  extras, `setuptools` being the same `torch`-transitive path Snyk Open
+  Source flags above. Not attributable to this change; not suppressed.
+  Treat this line as a point-in-time record, not a standing guarantee —
+  re-run `pip-audit` for the current state.
 - **`bandit -r tools/code-intelligence`**: 4 Low-severity findings, 0
   Medium+ (the repository's own gate threshold is "0 medium+ findings").
   All four are expected, reviewed patterns: `B404`/`B603` for the one

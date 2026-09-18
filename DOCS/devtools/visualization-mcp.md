@@ -7,7 +7,9 @@ existing PRIN functionality. See
 repository facts and assumptions this subsystem is built on,
 [`visualization-mcp-architecture.md`](visualization-mcp-architecture.md) for
 the data model, [`visualization-mcp-security.md`](visualization-mcp-security.md)
-for the trust boundary, and
+for the trust boundary,
+[`visualization-mcp-implementation-report.md`](visualization-mcp-implementation-report.md)
+for exact verification commands and results, and
 [`visualization-mcp-troubleshooting.md`](visualization-mcp-troubleshooting.md)
 for common problems.
 
