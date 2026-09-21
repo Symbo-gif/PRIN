@@ -1,6 +1,8 @@
 # EXP-001 — Golden-trajectory numerical parity (track C1)
 
-**Status:** SKELETON — no pre-registration exists yet; nothing may execute.
+**Status:** PRE-REGISTERED (DRAFT, session 0154, 2026-09-21) — pending E2
+maintainer approval before anything may execute. See
+[`preregistration.md`](preregistration.md).
 **Campaign plan row:** [`DOCS/experiments/campaign-plan.md`](../campaign-plan.md) §2.1 (EXP-001).
 **Raw artefact root:** [`benchmarks/results/EXP-001/`](../../../benchmarks/results/EXP-001/README.md)
 
@@ -17,7 +19,7 @@
 
 | Session | Stage | Brief | Status |
 |---|---|---|---|
-| 0154 | E1 — Pre-registration | [`0154-exp001-e1-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0154-exp001-e1-golden-trajectory-numerical-parity.md) | PLANNED |
+| 0154 | E1 — Pre-registration | [`0154-exp001-e1-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0154-exp001-e1-golden-trajectory-numerical-parity.md) | COMPLETE — DRAFT pre-registration committed; H4 driver support pending (see preregistration §5.4) |
 | 0155 | E2 — Review and approval | [`0155-exp001-e2-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0155-exp001-e2-golden-trajectory-numerical-parity.md) | PLANNED |
 | 0156 | E3 — Execution | [`0156-exp001-e3-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0156-exp001-e3-golden-trajectory-numerical-parity.md) | PLANNED |
 | 0157 | E4 — Analysis | [`0157-exp001-e4-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0157-exp001-e4-golden-trajectory-numerical-parity.md) | PLANNED |

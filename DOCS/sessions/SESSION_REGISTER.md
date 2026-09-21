@@ -549,7 +549,7 @@ introduction and are not retroactively added here; this table starts with
 | 0151 | 6 | WP-038 | S3 — Remediation | [RC1 packaging and Phase 6 gate](phase-6/0151-wp038-s3-rc1-packaging-and-phase-6-gate.md) | COMPLETE |
 | 0152 | 6 | WP-038 | S4 — Documentation | [RC1 packaging and Phase 6 gate](phase-6/0152-wp038-s4-rc1-packaging-and-phase-6-gate.md) | COMPLETE |
 | 0153 | 7 | Campaign | E0 — Campaign planning | [Approve and freeze Phase 7 campaign plan](phase-7/0153-campaign-e0-planning.md) | COMPLETE |
-| 0154 | 7 | EXP-001/C1 | E1 — Pre-registration | [Golden-trajectory numerical parity](phase-7/0154-exp001-e1-golden-trajectory-numerical-parity.md) | PLANNED |
+| 0154 | 7 | EXP-001/C1 | E1 — Pre-registration | [Golden-trajectory numerical parity](phase-7/0154-exp001-e1-golden-trajectory-numerical-parity.md) | COMPLETE |
 | 0155 | 7 | EXP-001/C1 | E2 — Review and approval | [Golden-trajectory numerical parity](phase-7/0155-exp001-e2-golden-trajectory-numerical-parity.md) | PLANNED |
 | 0156 | 7 | EXP-001/C1 | E3 — Execution | [Golden-trajectory numerical parity](phase-7/0156-exp001-e3-golden-trajectory-numerical-parity.md) | PLANNED |
 | 0157 | 7 | EXP-001/C1 | E4 — Analysis | [Golden-trajectory numerical parity](phase-7/0157-exp001-e4-golden-trajectory-numerical-parity.md) | PLANNED |

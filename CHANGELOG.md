@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 pre-registration — golden-trajectory numerical parity (session
+  0154, E1, 2026-09-21) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`.**
+  Four falsifiable hypotheses against the campaign plan's reconciled targets
+  (trajectory `rtol=1e-6/atol=1e-8`; metric `rtol=2e-6/atol=1e-12`;
+  GPU-kernel `rtol=1e-5/atol=1e-6`): H1 full 504-case corpus parity, H2
+  ≥1,000-case hypothesis-fuzzed parity with a registered `T*=20`-step
+  shadowing horizon (pointwise within, Welch-t/Cohen's-d/bootstrap-CI
+  distributional comparison beyond), H3 14-cell bit-level repeatability, and
+  H4 GPU sparse-k-NN kernel-path tolerance-identity (driver support pending
+  a `--features cuda` rebuild — the default build lacks
+  `GpuSparseKuramoto`, discovered during driver development; logged as a
+  documented pre-E3 gap, not silently dropped). New committed, tested
+  campaign driver `benchmarks/campaign/exp001_driver.py` (H1–H3; 29/29 tests
+  in `tests/test_exp001_driver.py`; `ruff`/`mypy --strict`/Snyk Code clean)
+  implementing the corpus, repeatability, and fuzz comparisons against the
+  actual `prin.dynamics` Rust core and writing results via
+  `benchmarks._common.result.write_result` plus a new
+  `campaign-metadata.json` sidecar (campaign plan §7.2). No experiment
+  executed; this is pre-registration only (Experimentation Standards §1.1).
 - **Raw benchmark artefacts are now append-only at the writer (DV-038).**
   `benchmarks/_common/result.py::write_result` stages and flushes complete JSON,
   then publishes it with atomic exclusive-create semantics. Concurrent writers
