@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Phase 7 campaign plan approved and frozen (session 0153, Campaign E0,
+  2026-09-21) — `DOCS/experiments/campaign-plan.md`.** The campaign-level
+  artefact required by Experimentation Standards §3: EXP-001…EXP-008 registered
+  in Session Register order with their C1–C4 tracks, dependency graph and
+  blocking rule, owners, verified hardware/backend matrix (reference host H1 =
+  `PRIN-GPU-Runner`; hosted Linux/macOS/Windows for platform legs only;
+  Linux-GPU/Triton, VitisAI/NPU and Metal legs governed by an explicit
+  unavailable-hardware rule), seed policy (`seed_key` = experiment number,
+  `seed_counter` = replicate, ≥ 10 seeds, repeatability gate), shared artefact
+  schema and run-directory rule (`benchmarks/results/EXP-00n/RUN-<UTC>-<SHA>-<label>/`
+  with a per-run SHA-256 `manifest.json` via `tools/reproduce.py`), resource
+  and storage caps, statistics policy bound to the existing Rust-backed
+  Welch/bootstrap/Cohen's-d and governed Cliff's-δ/Holm–Bonferroni code paths,
+  campaign-wide abort/stop/escalation rules, and the C1–C3 conclusion-reversal
+  → D1 correction-cycle procedure. Records brief-vs-standard reconciliations
+  binding on every pre-registration (14 figures not 15; amendment-#21 CPU
+  targets ≥ 1.5×/≥ 3.5×; amendment-#30 bridge-overhead scope; `prin-core`).
+  Sixteen experiment directory skeletons created (`DOCS/experiments/EXP-00n-*/`,
+  `benchmarks/results/EXP-00n/`). Registered three campaign-entry gaps in the
+  Deferred Validation Register: **DV-038** (no writer-level overwrite guard in
+  `write_result`; run-directory + manifest controls until closed, gate before
+  session 0156), **DV-039** (`nightly.yml` `full-suite` red from missing
+  `sphinx`/`motmetrics` provisioning, gate before session 0156), and the
+  reached **DV-036** gate (hosted-runner bench-regression baseline staleness →
+  reference-host re-baseline assigned to EXP-003/EXP-004 E3, gate before
+  session 0168). Authorizes EXP-001 E1 (session 0154) to begin.
 - **First Executive Readability Audit (ERA-001, 2026-09-18) — new audit type
   and governance for human readability.** Established the Executive Readability
   Audit as a new global session type focused on documentation accessibility,
