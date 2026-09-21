@@ -5,11 +5,17 @@ measurement payload into one artefact and writes it as JSON, confining
 writes to the declared output directories (Coding Standards §6.1:
 "File-system writes confined to declared output directories
 (`benchmarks/results/`, `DOCS/test_and_benchmark_results/`, temp dirs)").
+
+Raw artefacts are append-only (Experimentation Standards §4: "raw JSON
+artefacts are append-only; corrections happen by re-running with a new run
+ID"): an artefact path that already exists is never overwritten — the writer
+raises :class:`ArtefactExistsError` instead (DV-038, campaign plan §7.3).
 """
 
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -24,6 +30,16 @@ _ALLOWED_ROOTS = (
 
 class OutputPathError(ValueError):
     """Raised when a benchmark result path escapes the declared output roots."""
+
+
+class ArtefactExistsError(OutputPathError):
+    """Raised when a benchmark result path already exists.
+
+    Raw artefacts are append-only; a re-run, retry, or correction must target a
+    new run directory (``RUN-<UTC>-<SHA>-<label>/``) rather than replace an
+    accepted artefact in place. Subclasses :class:`OutputPathError` so existing
+    callers that treat "cannot write here" uniformly keep working.
+    """
 
 
 def _validate_output_path(path: Path) -> Path:
@@ -64,6 +80,8 @@ def write_result(
         OutputPathError: If ``path`` escapes the declared output roots, or
             ``payload`` collides with the reserved ``environment``/``config``
             envelope keys.
+        ArtefactExistsError: If ``path`` already exists. Raw artefacts are
+            append-only; write to a new run directory instead.
     """
     resolved = _validate_output_path(path)
     if "environment" in payload or "config" in payload:
@@ -72,8 +90,29 @@ def write_result(
         )
     artefact = {"environment": environment, "config": config, **payload}
     resolved.parent.mkdir(parents=True, exist_ok=True)
-    resolved.write_text(
-        json.dumps(artefact, indent=2, sort_keys=True, ensure_ascii=False),
-        encoding="utf-8",
-    )
+    staging_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=resolved.parent,
+            prefix=f".{resolved.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as staging:
+            staging_path = Path(staging.name)
+            json.dump(artefact, staging, indent=2, sort_keys=True, ensure_ascii=False)
+            staging.flush()
+            os.fsync(staging.fileno())
+        try:
+            os.link(staging_path, resolved)
+        except FileExistsError as exc:
+            raise ArtefactExistsError(
+                f"{resolved} already exists; raw benchmark artefacts are append-only "
+                "(Experimentation Standards §4) — write to a new run directory "
+                "instead of overwriting"
+            ) from exc
+    finally:
+        if staging_path is not None:
+            staging_path.unlink(missing_ok=True)
     return resolved

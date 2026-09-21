@@ -13,6 +13,7 @@ sizes are kept tiny throughout -- this suite characterizes the *machinery*
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import ClassVar
 
@@ -31,7 +32,11 @@ from benchmarks._common.registry import (
     list_specs,
     register,
 )
-from benchmarks._common.result import OutputPathError, write_result
+from benchmarks._common.result import (
+    ArtefactExistsError,
+    OutputPathError,
+    write_result,
+)
 from benchmarks._common.timing import timed_run
 from benchmarks.benchrunner.__main__ import _load_categories, main
 
@@ -208,6 +213,66 @@ class TestWriteResult:
                 payload={},
             )
 
+    def test_existing_artefact_is_never_overwritten(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # DV-038 / Experimentation Standards §4: raw artefacts are append-only.
+        import benchmarks._common.result as result_module
+
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
+        out = tmp_path / "RUN-20260921T000000Z-8ce115f-smoke" / "artefact.json"
+        write_result(out, environment={}, config={}, payload={"x": 1})
+        before = out.read_bytes()
+        with pytest.raises(ArtefactExistsError, match="append-only"):
+            write_result(out, environment={}, config={}, payload={"x": 2})
+        assert out.read_bytes() == before
+        # The guard is an OutputPathError so callers catching the base class
+        # (benchrunner's CLI) keep their existing error path.
+        assert issubclass(ArtefactExistsError, OutputPathError)
+
+    def test_concurrent_writers_create_exactly_one_artefact(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import benchmarks._common.result as result_module
+
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
+        out = tmp_path / "RUN-race" / "artefact.json"
+        out.parent.mkdir()
+
+        def attempt(value: int) -> int | None:
+            try:
+                write_result(out, environment={}, config={}, payload={"x": value})
+            except ArtefactExistsError:
+                return None
+            return value
+
+        values = tuple(range(8))
+        with ThreadPoolExecutor(max_workers=len(values)) as executor:
+            results = list(executor.map(attempt, values))
+
+        assert sum(result is not None for result in results) == 1
+        assert json.loads(out.read_text(encoding="utf-8"))["x"] in values
+        assert not list(out.parent.glob(".artefact.json.*.tmp"))
+
+    def test_failed_staging_write_leaves_no_destination(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import benchmarks._common.result as result_module
+
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
+
+        def fail_fsync(_file_descriptor: int) -> None:
+            raise OSError("disk full")
+
+        monkeypatch.setattr(result_module.os, "fsync", fail_fsync)
+        out = tmp_path / "RUN-failure" / "artefact.json"
+
+        with pytest.raises(OSError, match="disk full"):
+            write_result(out, environment={}, config={}, payload={"x": 1})
+
+        assert not out.exists()
+        assert not list(out.parent.glob(".artefact.json.*.tmp"))
+
 
 # ---------------------------------------------------------------------------
 # JSON schema compatibility: Benchmarking and Reproducibility Standards §1.3
@@ -323,6 +388,38 @@ class TestBenchrunnerCli:
         assert data["config"]["iterations"] == 10
         assert "environment" in data
         assert data["benchmark"] == "oscillator_count_scaling"
+
+    def test_second_run_into_same_out_dir_is_an_error(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        # DV-038: re-running with the same --out must not silently replace the
+        # first artefact; the campaign run-directory rule requires a new RUN-
+        # directory per execution (campaign plan §7.1).
+        import benchmarks._common.result as result_module
+
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
+        argv = [
+            "--category",
+            "scaling",
+            "--name",
+            "oscillator_count",
+            "--out",
+            str(tmp_path),
+            "--iterations",
+            "10",
+            "--warmup",
+            "1",
+        ]
+        assert main(argv) == 0
+        out_file = tmp_path / "scaling_oscillator_count.json"
+        before = out_file.read_bytes()
+        capsys.readouterr()
+        assert main(argv) == 2
+        assert "append-only" in capsys.readouterr().err
+        assert out_file.read_bytes() == before
 
     def test_unknown_name_within_category_is_an_error(self, tmp_path: Path) -> None:
         exit_code = main(

@@ -23,12 +23,13 @@ from benchmarks._common.registry import (
     list_specs,
     register,
 )
-from benchmarks._common.result import OutputPathError, write_result
+from benchmarks._common.result import ArtefactExistsError, OutputPathError, write_result
 from benchmarks._common.timing import TimingStats, timed_run
 
 __all__ = [
     "CATEGORIES",
     "MIN_MEASURED_ITERATIONS",
+    "ArtefactExistsError",
     "BenchmarkConfig",
     "BenchmarkConfigError",
     "BenchmarkSpec",
