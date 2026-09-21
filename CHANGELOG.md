@@ -10,17 +10,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Raw benchmark artefacts are now append-only at the writer (DV-038).**
-  `benchmarks/_common/result.py::write_result` raises `ArtefactExistsError`
-  (a subclass of `OutputPathError`, exported from `benchmarks._common`) when the
-  destination already exists, so `benchrunner` exits 2 on a repeated `--out`
-  instead of silently replacing an accepted artefact (Experimentation Standards
-  §4; campaign plan §7). Re-runs write to a new `RUN-<UTC>-<SHA>-<label>/`
-  directory.
+  `benchmarks/_common/result.py::write_result` stages and flushes complete JSON,
+  then publishes it with atomic exclusive-create semantics. Concurrent writers
+  cannot replace one another, failed staging writes leave no destination, and
+  an existing path raises `ArtefactExistsError` (a subclass of
+  `OutputPathError`, exported from `benchmarks._common`), so `benchrunner` exits
+  2 on a repeated `--out` (Experimentation Standards §4; campaign plan §7).
+  Re-runs write to a new `RUN-<UTC>-<SHA>-<label>/` directory.
 - **`nightly.yml` `full-suite` provisioning aligned with the docs gate
-  (DV-039).** The job now installs the `mot` extra and the Sphinx toolchain
-  (`ci/docs-constraints.txt`-bounded), which `tests/test_notebooks.py` and
-  `tests/test_acceptance_y4q3.py::TestSphinxDocs` require; the two nightly
-  failures on `8ce115f` were provisioning drift, not code regressions.
+  (DV-039).** The job now installs the `mot` extra and the Sphinx toolchain, and
+  applies `ci/docs-constraints.txt` to every pip install, matching the
+  merge-gating docs job. `tests/test_notebooks.py` and
+  `tests/test_acceptance_y4q3.py::TestSphinxDocs` require those dependencies;
+  the two nightly failures on `8ce115f` were provisioning drift, not code
+  regressions.
 - **Phase 7 campaign plan approved and frozen (session 0153, Campaign E0,
   2026-09-21) — `DOCS/experiments/campaign-plan.md`.** The campaign-level
   artefact required by Experimentation Standards §3: EXP-001…EXP-008 registered

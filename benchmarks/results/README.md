@@ -17,18 +17,19 @@ benchmarks/results/
 ├── EXP-001/ … EXP-008/            # one raw-artefact root per experiment
 │   ├── README.md                  # the run-directory rule for that experiment
 │   └── RUN-<UTC>-<SHA>-<label>/   # one directory per execution, never reused
-│       ├── <category>_<name>.json # write_result envelope + campaign payload fields
+│       ├── campaign-metadata.json # campaign provenance sidecar
+│       ├── <category>_<name>.json # write_result envelope + legacy-compatible payload
 │       └── manifest.json          # per-run SHA-256 manifest (tools/reproduce.py)
 └── y4q1_9_preregistration_hash.json
 ```
 
-Rules: pass a **new** `RUN-…` directory to `--out` for every execution (re-runs
-and corrections get a new run ID — raw artefacts are append-only,
-Experimentation Standards §4); close each run with
-`tools.reproduce.append_manifest`/`verify_manifest` on that directory;
-`write_result` refuses to overwrite an existing artefact (`ArtefactExistsError`,
-DV-038 fix), so a repeated `--out` fails with exit code 2 instead of replacing
-data. Tracked size cap 2 MiB per run, 64 MiB campaign-wide.
+Rules: every campaign execution uses its committed metadata-enriching driver to
+create a **new** `RUN-…` directory; direct campaign `benchrunner` use is
+prohibited (campaign plan §7.2). Re-runs and corrections get a new run ID, and
+each run closes with `tools.reproduce.append_manifest`/`verify_manifest`.
+`write_result` atomically refuses to overwrite an existing artefact
+(`ArtefactExistsError`, DV-038 fix), so a repeated output path fails instead of
+replacing data. Tracked size cap 2 MiB per run, 64 MiB campaign-wide.
 
 Generated reports/figures derived from these artefacts go to
 `DOCS/test_and_benchmark_results/` (gitignored), not here.

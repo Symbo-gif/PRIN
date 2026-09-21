@@ -315,14 +315,14 @@ the category payload schema. The pre-registration and E3 log record the exact
 driver command and metadata inputs; missing metadata aborts before any result is
 accepted.
 
-### 7.3 Append-only: what is enforced, what is detected, what is a gap
+### 7.3 Append-only enforcement and detection
 
 | Property | Mechanism | Status |
 |---|---|---|
 | A run is never overwritten by a later run | Run-scoped `--out benchmarks/results/EXP-00n/RUN-<id>/`; directory name embeds UTC time + SHA; **rule: a `RUN-` directory that already exists is never passed to `--out`** | Enforced by convention (§7.1) + checked at E3 (`log.md` lists every `RUN-` directory created) |
 | Mutation/removal of an accepted artefact is detected | `tools/reproduce.py verify_manifest(results_dir=<RUN dir>, manifest_path=<RUN dir>/manifest.json)` fails closed on missing, modified, resized, or unmanifested `*.json` (non-recursive glob, so one manifest per run directory) | **Enforced** by existing, tested code |
 | The manifest itself is append-only | `append_manifest` refuses to rewrite or drop existing records | **Enforced** by existing, tested code |
-| The writer refuses to overwrite an existing file | `write_result` has **no overwrite guard** (`resolved.write_text(...)`); `benchrunner` writes the fixed name `<category>_<name>.json` into `--out` | **GAP — registered as DV-038 (§11.1)**; mitigated by the run-directory rule and manifest verification until closed |
+| The writer refuses to overwrite an existing file | `write_result` stages and flushes complete JSON, then atomically publishes with exclusive-create semantics; concurrent writers cannot replace one another and failed staging writes leave no destination | **FIX COMMITTED — DV-038 (§11.1)**; closes when PR #19 merges green |
 
 `git` history provides a further immutable record: raw artefacts and their
 manifests are committed at E3 close; any later change is a visible diff.
@@ -501,20 +501,19 @@ defect in PRIN's numerics; each has a proposed disposition and a dated,
 mechanically checkable gate (`tools/check_dv_register_gates.py` parses
 "before session NNNN").
 
-### 11.1 DV-038 — no writer-level overwrite guard for raw artefacts (§7.3)
+### 11.1 DV-038 — writer-level append-only enforcement (§7.3)
 
-- **Fact:** `benchmarks/_common/result.py::write_result` unconditionally
-  `write_text`s; `benchrunner` names artefacts `<category>_<name>.json` inside
-  `--out`. Re-running with the same `--out` overwrites the prior artefact.
-- **Compensating controls now:** §7.1 run-directory rule; per-run
-  `manifest.json` via `append_manifest`/`verify_manifest` (fail-closed
-  detection); git history.
-- **Proposed disposition:** add an opt-out-free "refuse to overwrite an
-  existing artefact" guard to `write_result` (raise `OutputPathError`), with
-  tests in tandem and Snyk Code scan, **before session 0156 (EXP-001 E3)**,
-  executed as a governed hotfix-class change (Workflow Standards §7) or as
-  part of the driver-commit slot of 0154/0155 (§12 rule 4). Until closed, the
-  E3 log must show the run-directory rule was followed.
+- **Original fact:** `benchmarks._common.result.write_result` used an
+  unconditional `write_text`; re-running with the same `--out` overwrote the
+  prior artefact.
+- **Fix committed:** the writer stages and flushes complete JSON, then publishes
+  it through an atomic exclusive-create operation. An existing destination
+  raises `ArtefactExistsError`; concurrent writers cannot replace one another;
+  failed staging writes leave no destination. Direct writer, concurrent-race,
+  interrupted-write, and repeated-CLI tests cover the contract.
+- **Closure gate:** PR #19 merges with required CI and Snyk Code green before
+  session 0156 (EXP-001 E3). The §7.1 run-directory and per-run manifest rules
+  remain independent defense in depth.
 
 ### 11.2 DV-039 — `nightly.yml` `full-suite` red: environment provisioning drift
 
@@ -609,7 +608,7 @@ this explicit record.
 |---|---|---|
 | Approved/frozen campaign plan | this file | **APPROVED — FROZEN** (§14.1 A4) |
 | Experiment registry in Session Register order, dependencies, owners, hardware/backend matrix, seeds policy, resource/storage budgets, shared schemas, stop/escalation rules | §2, §3, §2.2, §5, §6, §8, §7, §10 | adopted (A1, A3, A4) |
-| Raw artefacts append-only; deterministic regeneration path + SHA-256 manifest per report | §7.3 (with the DV-038 gap stated honestly), §7.4 | adopted (A2) |
+| Raw artefacts append-only; deterministic regeneration path + SHA-256 manifest per report | §7.3 (DV-038 writer fix committed), §7.4 | adopted (A2) |
 | C1–C3 reversals feed a D1 correction cycle before later sessions proceed | §10.4, §3.3 | adopted (A4) |
 | Capacity allocation | §5.2, §5.3, §8 | adopted (A1, A3) |
 | Experiment directory skeletons | `DOCS/experiments/EXP-001…008-*/README.md`; `benchmarks/results/EXP-001…008/README.md` | created |
@@ -640,4 +639,4 @@ Hypotheses are never in this document.
 
 | # | Date | Section | Change | Approved by |
 |---|---|---|---|---|
-| 1 | 2026-09-21 | §11.1, §11.2 (gap dispositions; §7.3 GAP row) | Executes decision A2: the DV-038 `write_result` refuse-to-overwrite guard (`ArtefactExistsError`, tests in tandem, Snyk Code 0 issues) and the DV-039 `nightly.yml` `full-suite` provisioning alignment are committed on governed hotfix branch `hotfix/dv038-dv039-artefact-guard-nightly-provisioning`; both DV rows read `OPEN — FIX COMMITTED` and close on green merge (+ one green nightly dispatch for DV-039). No change to §2–§6, §8–§10. | MichaelMaillet (A2) |
+| 1 | 2026-09-21 | §11.1, §11.2 (gap dispositions; §7.3 enforcement row) | Executes decision A2: the DV-038 `write_result` guard stages and flushes JSON before atomic exclusive publication (`ArtefactExistsError`; direct, race, interrupted-write, and CLI tests; Snyk Code required) and DV-039 constrains every `nightly.yml` `full-suite` pip install while provisioning MOT/Sphinx. Both fixes are committed on governed hotfix branch `hotfix/dv038-dv039-artefact-guard-nightly-provisioning`; DV-038 closes on green merge and DV-039 on green merge plus one green nightly dispatch. No change to §2–§6, §8–§10. | MichaelMaillet (A2) |

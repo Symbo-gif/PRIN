@@ -15,6 +15,7 @@ raises :class:`ArtefactExistsError` instead (DV-038, campaign plan §7.3).
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -83,20 +84,35 @@ def write_result(
             append-only; write to a new run directory instead.
     """
     resolved = _validate_output_path(path)
-    if resolved.exists():
-        raise ArtefactExistsError(
-            f"{resolved} already exists; raw benchmark artefacts are append-only "
-            "(Experimentation Standards §4) — write to a new run directory "
-            "instead of overwriting"
-        )
     if "environment" in payload or "config" in payload:
         raise OutputPathError(
             "payload must not define reserved keys 'environment'/'config'"
         )
     artefact = {"environment": environment, "config": config, **payload}
     resolved.parent.mkdir(parents=True, exist_ok=True)
-    resolved.write_text(
-        json.dumps(artefact, indent=2, sort_keys=True, ensure_ascii=False),
-        encoding="utf-8",
-    )
+    staging_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=resolved.parent,
+            prefix=f".{resolved.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as staging:
+            staging_path = Path(staging.name)
+            json.dump(artefact, staging, indent=2, sort_keys=True, ensure_ascii=False)
+            staging.flush()
+            os.fsync(staging.fileno())
+        try:
+            os.link(staging_path, resolved)
+        except FileExistsError as exc:
+            raise ArtefactExistsError(
+                f"{resolved} already exists; raw benchmark artefacts are append-only "
+                "(Experimentation Standards §4) — write to a new run directory "
+                "instead of overwriting"
+            ) from exc
+    finally:
+        if staging_path is not None:
+            staging_path.unlink(missing_ok=True)
     return resolved

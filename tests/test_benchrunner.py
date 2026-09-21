@@ -13,7 +13,9 @@ sizes are kept tiny throughout -- this suite characterizes the *machinery*
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Barrier
 from typing import ClassVar
 
 import pytest
@@ -228,6 +230,55 @@ class TestWriteResult:
         # The guard is an OutputPathError so callers catching the base class
         # (benchrunner's CLI) keep their existing error path.
         assert issubclass(ArtefactExistsError, OutputPathError)
+
+    def test_concurrent_writers_create_exactly_one_artefact(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import benchmarks._common.result as result_module
+
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
+        original_link = result_module.os.link
+        barrier = Barrier(2)
+
+        def synchronized_link(source: Path, destination: Path) -> None:
+            barrier.wait()
+            original_link(source, destination)
+
+        monkeypatch.setattr(result_module.os, "link", synchronized_link)
+        out = tmp_path / "RUN-race" / "artefact.json"
+
+        def attempt(value: int) -> int | None:
+            try:
+                write_result(out, environment={}, config={}, payload={"x": value})
+            except ArtefactExistsError:
+                return None
+            return value
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = list(executor.map(attempt, (1, 2)))
+
+        assert sum(result is not None for result in results) == 1
+        assert json.loads(out.read_text(encoding="utf-8"))["x"] in {1, 2}
+        assert not list(out.parent.glob(".artefact.json.*.tmp"))
+
+    def test_failed_staging_write_leaves_no_destination(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        import benchmarks._common.result as result_module
+
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
+
+        def fail_fsync(_file_descriptor: int) -> None:
+            raise OSError("disk full")
+
+        monkeypatch.setattr(result_module.os, "fsync", fail_fsync)
+        out = tmp_path / "RUN-failure" / "artefact.json"
+
+        with pytest.raises(OSError, match="disk full"):
+            write_result(out, environment={}, config={}, payload={"x": 1})
+
+        assert not out.exists()
+        assert not list(out.parent.glob(".artefact.json.*.tmp"))
 
 
 # ---------------------------------------------------------------------------
