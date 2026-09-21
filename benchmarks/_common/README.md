@@ -17,7 +17,10 @@ writer shared by every category package and the `benchrunner` CLI (WP-033).
 - `result.py` — `write_result()`: merges environment/config/payload and
   writes JSON, confined to `benchmarks/results/`,
   `DOCS/test_and_benchmark_results/`, or a temp directory (Coding Standards
-  §6.1).
+  §6.1). **Append-only:** an existing artefact path is never overwritten —
+  `ArtefactExistsError` (a subclass of `OutputPathError`) is raised instead
+  (DV-038; Experimentation Standards §4). Re-runs write to a new
+  `RUN-<UTC>-<SHA>-<label>/` directory (`DOCS/experiments/campaign-plan.md` §7).
 
 No numerical computation lives here or in any category module — every
 measured quantity comes from the Rust-backed `prin` API or, for GPU kernel

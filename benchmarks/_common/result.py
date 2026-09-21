@@ -5,6 +5,11 @@ measurement payload into one artefact and writes it as JSON, confining
 writes to the declared output directories (Coding Standards §6.1:
 "File-system writes confined to declared output directories
 (`benchmarks/results/`, `DOCS/test_and_benchmark_results/`, temp dirs)").
+
+Raw artefacts are append-only (Experimentation Standards §4: "raw JSON
+artefacts are append-only; corrections happen by re-running with a new run
+ID"): an artefact path that already exists is never overwritten — the writer
+raises :class:`ArtefactExistsError` instead (DV-038, campaign plan §7.3).
 """
 
 from __future__ import annotations
@@ -24,6 +29,16 @@ _ALLOWED_ROOTS = (
 
 class OutputPathError(ValueError):
     """Raised when a benchmark result path escapes the declared output roots."""
+
+
+class ArtefactExistsError(OutputPathError):
+    """Raised when a benchmark result path already exists.
+
+    Raw artefacts are append-only; a re-run, retry, or correction must target a
+    new run directory (``RUN-<UTC>-<SHA>-<label>/``) rather than replace an
+    accepted artefact in place. Subclasses :class:`OutputPathError` so existing
+    callers that treat "cannot write here" uniformly keep working.
+    """
 
 
 def _validate_output_path(path: Path) -> Path:
@@ -64,8 +79,16 @@ def write_result(
         OutputPathError: If ``path`` escapes the declared output roots, or
             ``payload`` collides with the reserved ``environment``/``config``
             envelope keys.
+        ArtefactExistsError: If ``path`` already exists. Raw artefacts are
+            append-only; write to a new run directory instead.
     """
     resolved = _validate_output_path(path)
+    if resolved.exists():
+        raise ArtefactExistsError(
+            f"{resolved} already exists; raw benchmark artefacts are append-only "
+            "(Experimentation Standards §4) — write to a new run directory "
+            "instead of overwriting"
+        )
     if "environment" in payload or "config" in payload:
         raise OutputPathError(
             "payload must not define reserved keys 'environment'/'config'"

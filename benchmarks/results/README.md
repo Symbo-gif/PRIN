@@ -26,9 +26,9 @@ Rules: pass a **new** `RUN-…` directory to `--out` for every execution (re-run
 and corrections get a new run ID — raw artefacts are append-only,
 Experimentation Standards §4); close each run with
 `tools.reproduce.append_manifest`/`verify_manifest` on that directory;
-`write_result` itself has no overwrite guard (DV-038), so the run-directory
-rule is the control until that row closes. Tracked size cap 2 MiB per run,
-64 MiB campaign-wide.
+`write_result` refuses to overwrite an existing artefact (`ArtefactExistsError`,
+DV-038 fix), so a repeated `--out` fails with exit code 2 instead of replacing
+data. Tracked size cap 2 MiB per run, 64 MiB campaign-wide.
 
 Generated reports/figures derived from these artefacts go to
 `DOCS/test_and_benchmark_results/` (gitignored), not here.

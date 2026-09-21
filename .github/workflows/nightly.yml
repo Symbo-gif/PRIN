@@ -47,7 +47,14 @@ jobs:
           python -m pip install --no-cache-dir maturin
           python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
           maturin develop -m crates/prin-py/Cargo.toml
-          python -m pip install --no-cache-dir -e ".[dev,onnx]"
+          # DV-039: this job runs the *whole* suite, so it needs every extra
+          # the merge-gating jobs provision between them — `mot` (motmetrics,
+          # exercised by tests/test_notebooks.py[02_clevr_n_binding]) and the
+          # Sphinx toolchain (tests/test_acceptance_y4q3.py::TestSphinxDocs),
+          # both installed by python.yml's `docs` job but previously missing
+          # here. Same constraints file as that job (amendment #45 / G6).
+          python -m pip install --no-cache-dir -e ".[dev,onnx,mot]"
+          python -m pip install --no-cache-dir -c ci/docs-constraints.txt -r DOCS/sphinx/requirements.txt
           python -m pip install --no-cache-dir -e "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main"
       - name: Full Python suite (including slow + parity)
         run: python -m pytest tests/ parity/ -v

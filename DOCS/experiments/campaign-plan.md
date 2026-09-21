@@ -614,4 +614,4 @@ Hypotheses are never in this document.
 
 | # | Date | Section | Change | Approved by |
 |---|---|---|---|---|
-| — | — | — | (none) | — |
+| 1 | 2026-09-21 | §11.1, §11.2 (gap dispositions; §7.3 GAP row) | Executes decision A2: the DV-038 `write_result` refuse-to-overwrite guard (`ArtefactExistsError`, tests in tandem, Snyk Code 0 issues) and the DV-039 `nightly.yml` `full-suite` provisioning alignment are committed on governed hotfix branch `hotfix/dv038-dv039-artefact-guard-nightly-provisioning`; both DV rows read `OPEN — FIX COMMITTED` and close on green merge (+ one green nightly dispatch for DV-039). No change to §2–§6, §8–§10. | MichaelMaillet (A2) |
