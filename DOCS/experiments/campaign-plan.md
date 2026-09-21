@@ -60,8 +60,8 @@ must cite the reconciliation.**
 
 | ID / Track | Title | Sessions (E1–E5) | Record root / Raw root | Registered expectation (brief) | Failure / abort boundary (brief) | Reconciliation with normative standards (binding on E1) | Baselines for comparison |
 |---|---|---|---|---|---|---|---|
-| **EXP-001 / C1** | Golden-trajectory numerical parity | 0154–0158 | `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/` · `benchmarks/results/EXP-001/` | All non-chaotic cases satisfy registered tolerances; chaotic cases preserve registered distributional conclusions; bit-level seeded repeatability holds | Unexplained tolerance breach, invariant violation, or cross-run seed mismatch = D1; environment/schema/manifest failure aborts a run | Tolerances are Plan §5 item 2: trajectories `rtol=1e-6, atol=1e-8` (corpus `manifest.json` `trajectory_rtol`/`trajectory_atol`); metrics/decompositions `rtol=2e-6` cross-platform (amendments #16/#17), `1e-10` single-runtime where achievable. `strength_of_incoherence*` is a **declared non-hazard exception** (amendment #25) and must be pre-registered as "expected divergence", not as parity. DV-007 f32-complex drift is a permanent disposition (`1e-6` derivative tolerance). | `parity/corpus/` — 504 cases (`n_cases: 504`, schema 1, generator `prinet 3.0.0`); `parity/test_parity_differential.py` (hypothesis fuzz); `crates/prin-dynamics/tests/parity_models.rs` |
-| **EXP-002 / C1** | API, benchmark-result, and reproduction parity | 0159–0163 | `…/EXP-002-api-benchmark-result-and-reproduction-parity/` · `benchmarks/results/EXP-002/` | 175+ mapped symbols pass; all historical scientific conclusion orderings unchanged; 15 figures / 11 tables match the manifest | Missing symbols, changed scientific conclusions, or unexplained artefact mismatch = D1; corrupt source artefacts abort | **Figure count is 14, not 15** (WP034-F1, PSR-034 §4: figures 2–15 are the verifiable set; `tools/reproduce.py` docstring "fourteen verifiable historical figures"). Registered reproduction target = **14 figures + 11 tables = 39 generated files, 172-record `paper/artefact_manifest.json`, byte-comparable** (PSR-038 §4: "172 artefacts verified, 39 files generated"). **Symbol target:** `prin.__all__` = **175** symbols vs the frozen PRINet 3.0 canonical `__all__` of **172** (`DOCS/baselines/wp001_api_traceability.md`; 657 module-symbol rows); `verify_api_surface(__all__)` must return `(set(), set())`. "Conclusion orderings" = the ordering/direction claims in the Parity Report (`DOCS/sphinx/parity_report.rst`) re-derivable **without training or GPU**; training-/GPU-dependent conclusions are owned by EXP-004–EXP-007 and cross-referenced, never dropped. | `DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/benchmarks/results/` (172 JSON, manifested); `paper/artefact_manifest.json`; `DOCS/baselines/wp033_benchmark_traceability.md` (58 legacy scripts → 9 categories) |
+| **EXP-001 / C1** | Golden-trajectory numerical parity | 0154–0158 | `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/` · `benchmarks/results/EXP-001/` | All non-chaotic cases satisfy registered tolerances; chaotic cases preserve registered distributional conclusions; bit-level seeded repeatability holds | Unexplained tolerance breach, invariant violation, or cross-run seed mismatch = D1; environment/schema/manifest failure aborts a run | Tolerances are Plan §5 numbered rule 2 ("Tolerances"): trajectories `rtol=1e-6, atol=1e-8` (corpus `manifest.json` `trajectory_rtol`/`trajectory_atol`); metrics/decompositions `rtol=2e-6` cross-platform (amendments #16/#17), `1e-10` single-runtime where achievable. `strength_of_incoherence*` is a **declared non-hazard exception** (amendment #25) and must be pre-registered as "expected divergence", not as parity. DV-007 f32-complex drift is a permanent disposition (`1e-6` derivative tolerance). | `parity/corpus/` — 504 cases (`n_cases: 504`, schema 1, generator `prinet 3.0.0`); `parity/test_parity_differential.py` (hypothesis fuzz); `crates/prin-dynamics/tests/parity_models.rs` |
+| **EXP-002 / C1** | API, benchmark-result, and reproduction parity | 0159–0163 | `…/EXP-002-api-benchmark-result-and-reproduction-parity/` · `benchmarks/results/EXP-002/` | 175+ mapped symbols pass; all historical scientific conclusion orderings unchanged; 15 figures / 11 tables match the manifest | Missing symbols, changed scientific conclusions, or unexplained artefact mismatch = D1; corrupt source artefacts abort | **Figure count is 14, not 15** (WP034-F1, PSR-034 §4: figures 2–15 are the verifiable set; `tools/reproduce.py` docstring "fourteen verifiable historical figures"). Registered reproduction target = **14 figures × 2 formats + 11 tables = 39 generated files**, with the 172-record `paper/artefact_manifest.json`, byte-comparable (PSR-038 §4: "172 artefacts verified, 39 files generated"). **Symbol target:** `prin.__all__` = **175** symbols vs the frozen PRINet 3.0 canonical `__all__` of **172** (`DOCS/baselines/wp001_api_traceability.md`; 657 module-symbol rows); `verify_api_surface(__all__)` must return `(set(), set())`. "Conclusion orderings" = the ordering/direction claims in the Parity Report (`DOCS/sphinx/parity_report.rst`) re-derivable **without training or GPU**; training-/GPU-dependent conclusions are owned by EXP-004–EXP-007 and cross-referenced, never dropped. | `DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/benchmarks/results/` (172 JSON, manifested); `paper/artefact_manifest.json`; `DOCS/baselines/wp033_benchmark_traceability.md` (58 legacy scripts → 9 categories) |
 | **EXP-003 / C2** | CPU scaling and sweep performance | 0164–0168 | `…/EXP-003-cpu-scaling-and-sweep-performance/` · `benchmarks/results/EXP-003/` | Eligible CPU kernels ≥2× and parameter sweeps ≥8× on controlled same-hardware comparisons without parity loss | Failure of a normative N1 target = D1 unless amended; thermal throttling, background load, or parity failure aborts timing | **Brief prose is superseded by amendment #21** (Benchmarking Standards §2.4 + footnote 1): CPU fallback paths **≥ 1.5×** and parameter sweeps **≥ 3.5×**, both *multi-core vs 1-thread* on the 8-physical-core / 16-SMT reference host, sweeps measured at config count ≈ physical core count (8). The "≥2× pure PyTorch" comparison is a **future obligation** pending a cross-language harness; E1 may pre-register it only as an *exploratory* hypothesis, and its miss is not a D1. Plan §6 Phase 2 exit row already carries the ≥3.5× re-scope. | WP-016 S3 evidence (`crates/prin-sim/benches/sweep_bench.rs`, 3.92× at 8 configs; SpMV plateau 1.51–1.60×); PRINet 3.0 torch-CPU stored artefacts for like-for-like scaling curves |
 | **EXP-004 / C2** | GPU kernels and Torch bridge performance | 0169–0173 | `…/EXP-004-gpu-kernels-and-torch-bridge-performance/` · `benchmarks/results/EXP-004/` | GPU workloads meet or exceed registered 3.0 baselines; training parity ±10%; bridge overhead <5% with correctness intact | Normative target miss or correctness drift = D1; unavailable backend, asynchronous timing error, or throttling aborts affected runs | **Bridge overhead target is amendment #30**: `<5%` **at moderate/large batch and shape sizes**; the ~38–41 % small-shape dispatch floor (DV-021) is architecturally fixed and pre-registered as such. **Triton same-hardware comparison is hardware-gated (DV-001, no Linux GPU host)** → pre-register as a hypothesis whose verdict is `INCONCLUSIVE — hardware unavailable` unless a Linux GPU host is provisioned before 0171 (§5.4). GPU timing must use device-side events/synchronization (Benchmarking Standards §2.2); **DV-003**: `cubecl-cuda` 0.10 `TimingMethod::System` is bracketed by `sync()` (amendment #44) — E1 must state the timing method actually available and its bound. DV-005 (CUDA Burn training) is post-1.0 (amendment #38) — training-step parity is measured on the delivered torch-bridge path. | Benchmarking Standards §2.4 rows 1–3, 7; WP-018/019/020/021 kernel-equivalence and criterion baselines; PRINet 3.0 Triton/CUDA stored artefacts (numbers only — not same-hardware) |
 | **EXP-005 / C3** | Dynamics, chimera, and capacity replication | 0174–0178 | `…/EXP-005-dynamics-chimera-and-capacity-replication/` · `benchmarks/results/EXP-005/` | Registered phase boundaries, effect directions, and capacity conclusions reproduce within predeclared statistical/numerical intervals | A published conclusion reversal = D1; insufficient coverage, failed controls, or invalid chaotic-window diagnostics aborts inference | Chimera **strength-of-incoherence** values are *expected* to differ from PRINet 3.0 fixtures (amendment #25, upstream defect EMA-001 M-F1); the replication target is the **phase-diagram boundary and ordering conclusions**, computed with PRIN's corrected implementation, versus the *published* boundaries. E1 must separate "boundary reproduces" (confirmatory) from "SI value matches 3.0" (declared non-target). | Published 3.0 figures/tables (`paper/figures`, `paper/tables`, `fig_chimera_heatmap`, `fig_gold_standard_chimera`, `fig_clevr_n_capacity`, `fig_oscillosim_scaling`); `benchmarks/chimera`, `benchmarks/scaling`, `benchmarks/integrators` |
@@ -104,16 +104,16 @@ multiple E stages into one session").
               │      │               │        │
               │      └───────┐       │        │
               ▼              ▼       ▼        │
-   EXP-005  Dynamics/    EXP-006  PhaseTracker/ablation (C3)             
-            chimera (C3)         │                                       
-                                 ▼                                       
-                        EXP-007  Daemon/MOT/adversarial (C3)             
-                                 │                                       
-      EXP-002 ─┐  EXP-003 ─┐     │                                       
-               ▼           ▼     ▼                                       
-                EXP-008  Cross-platform + new capability (C4)            
-                                 │                                       
-                                 ▼                                       
+   EXP-005  Dynamics/    EXP-006  PhaseTracker/ablation (C3)
+            chimera (C3)         │
+                                 ▼
+                        EXP-007  Daemon/MOT/adversarial (C3)
+                                 │
+      EXP-002 ─┐  EXP-003 ─┐     │
+               ▼           ▼     ▼
+                EXP-008  Cross-platform + new capability (C4)
+                                 │
+                                 ▼
                 0194  Campaign E6 synthesis → WP-039 (0195–0198)
 ```
 
@@ -240,15 +240,19 @@ E6 (0194).
    exact `(counter, key)` pairs per arm. Changing the list after E2 approval is
    a protocol deviation reported in E5.
 5. **Repeatability gate.** Every E3 session re-runs replicate 0 of at least one
-   registered configuration; the two artefacts' payloads must be **identical
-   after removing timing fields** (`config.seed_counter` equal, digests of the
-   canonical JSON equal). A mismatch is an abort for that configuration and, if
-   unexplained, a D1 (brief EXP-001: "cross-run seed mismatch is a D1").
+   registered configuration. Before comparison, validate each run's campaign
+   metadata sidecar (§7.2) independently, require the same scientific config
+   (including `seed_counter`, `seed_key`, backend, dtype, and code SHA), and
+   compare a canonical result projection that excludes per-run provenance
+   (`environment`, `config.out_dir`, and `run_id`) plus pre-registered timing
+   measurements. All remaining scientific inputs and outputs must be identical.
+   A mismatch is an abort for that configuration and, if unexplained, a D1
+   (brief EXP-001: "cross-run seed mismatch is a D1").
 6. **Cross-backend repeatability.** Where a configuration runs on more than one
    backend (cpu/cuda/wgpu), the E1 document states whether bit-identity or
-   tolerance-identity is expected, with the tolerance — Plan §5 item 5 targets
-   exact reproducibility across CPU/GPU; known f32 accumulation differences
-   must be declared in advance.
+   tolerance-identity is expected, with the tolerance — Plan §5 numbered rule 5
+   ("Bit-level reproducibility") targets exact reproducibility across CPU/GPU;
+   known f32 accumulation differences must be declared in advance.
 
 ---
 
@@ -266,6 +270,7 @@ DOCS/experiments/EXP-00n-<slug>/
 benchmarks/results/EXP-00n/
 ├── README.md              # skeleton (this session): the run-directory rule
 └── RUN-<UTC yyyymmddThhmmssZ>-<short SHA>-<label>/
+    ├── campaign-metadata.json     # campaign provenance sidecar
     ├── <category>_<name>.json     # benchrunner/driver artefacts (write_result envelope)
     ├── …
     └── manifest.json              # per-run SHA-256 manifest (tools/reproduce.py append_manifest)
@@ -277,9 +282,9 @@ abort, or a corrected run gets a new `RUN-…` directory (Experimentation
 Standards §2 E3 "re-runs get new run IDs"; §4 "corrections happen by
 re-running with a new run ID").
 
-### 7.2 Artefact envelope (unchanged PRINet 3.0 payload schema + PRIN envelope)
+### 7.2 Result envelope and campaign metadata sidecar
 
-Every JSON artefact is written by `benchmarks._common.result.write_result`
+Each category result is written by `benchmarks._common.result.write_result`
 (or a committed driver that calls it) and therefore has exactly:
 
 - `environment` — `benchmarks._common.environment.capture_environment` output:
@@ -292,14 +297,23 @@ Every JSON artefact is written by `benchmarks._common.result.write_result`
   `benchmarks/README.md`).
 
 Drivers that emit per-case records (EXP-001 corpus comparisons) use the same
-envelope with a payload of `{cases: [...]}`; the payload never contains the
-reserved keys `environment`/`config` (enforced by `write_result`).
+result envelope with a payload of `{cases: [...]}`; the payload never contains
+the reserved keys `environment`/`config` (enforced by `write_result`). Campaign
+provenance does not alter that legacy-compatible payload schema.
 
-Additional mandatory fields for campaign runs, carried **inside the payload**
-(so the envelope code is unchanged): `exp_id` (`"EXP-00n"`), `run_id` (the
-`RUN-…` directory name), `session` (`"0156"` etc.), `operator`, `hypotheses`
-(the H-ids this artefact bears on), `timing_method` for any GPU timing
-(`"device-event"` | `"system-synced"`, per DV-003/amendment #44).
+Every run also contains a separate `campaign-metadata.json` sidecar with
+`exp_id` (`"EXP-00n"`), `run_id` (the `RUN-…` directory name), `session`
+(`"0156"` etc.), `operator`, and an `artefacts` mapping from each result filename
+to the H-ids it bears on. GPU result entries additionally carry `timing_method`
+(`"device-event"` | `"system-synced"`, per DV-003/amendment #44). The sidecar
+and all result files are covered by the run manifest.
+
+Campaign runs must not invoke `benchrunner` directly. E1 must provide a
+committed, tested campaign driver that accepts and validates the metadata above,
+writes the sidecar, and invokes `benchrunner` or `write_result` without changing
+the category payload schema. The pre-registration and E3 log record the exact
+driver command and metadata inputs; missing metadata aborts before any result is
+accepted.
 
 ### 7.3 Append-only: what is enforced, what is detected, what is a gap
 
@@ -392,10 +406,14 @@ cross-platform legs.
   ≥ 10 measured iterations; a target is met only if the CI lower bound clears
   the target.
 - **Chaotic regimes (EXP-001/EXP-005):** compared statistically beyond the
-  shadowing horizon (Plan §5 item 2), with the horizon and the distributional
-  statistic (e.g. order-parameter distribution, KS distance) pre-registered.
-- Every verdict is `CONFIRMED | REFUTED | INCONCLUSIVE` with effect size and
-  CI (Experimentation Standards §2 E5).
+  shadowing horizon (Plan §5 numbered rule 2, "Tolerances"), with the horizon
+  and the distributional statistic (e.g. order-parameter distribution, KS
+  distance) pre-registered.
+- Every verdict is `CONFIRMED | REFUTED | INCONCLUSIVE`. Statistical hypotheses
+  report an effect size and CI (Experimentation Standards §2 E5). Deterministic
+  C1 parity hypotheses instead report pass/fail counts, maximum relative and
+  absolute error, the error distribution, and the registered tolerance; an
+  effect size or CI is not applicable.
 
 ### 9.2 Implementations (the only permitted statistical code paths)
 
@@ -414,7 +432,7 @@ cross-platform legs.
 
 1. NaN/Inf guard trip; order parameter outside [0, 1]; phase outside the
    wrapped range; amplitude/derivative clamp trips outside the documented
-   hazard envelope (Plan §5 item 6).
+   hazard envelope (Plan §5 numbered rule 6, "Preserved numerical hazards").
 2. Seed irreproducibility on the §6.5 repeatability gate.
 3. Environment capture incomplete (any `environment` field `null` that the
    configuration requires — e.g. `gpu` null on a GPU leg).
@@ -523,16 +541,20 @@ mechanically checkable gate (`tools/check_dv_register_gates.py` parses
   baseline-staleness). The DV row's re-audit gate was re-pointed by 0152 to
   "the Phase 7 benchmark campaign (session 0153 E0), where a quiescent-runner
   re-baseline belongs".
-- **Disposition (this session):** the **reference-host re-baseline is
-  assigned to EXP-003 E3 (0166, CPU criterion/pytest-benchmark groups) and
-  EXP-004 E3 (0171, GPU/bridge groups)** as a pre-registered baseline-capture
-  leg on quiescent H1 (§5.3), producing committed criterion baselines for
-  `tools/check_bench_regression.py`. The hosted `nightly.yml` gate remains a
-  gross-regression detector only (its own header says so); making it
-  baseline-stable on hosted runners (e.g. relative-to-same-run control
+- **Disposition (this session):** the reference-host re-baseline is split into
+  two independently blocking gates on quiescent H1 (§5.3): **(1) CPU
+  criterion/pytest-benchmark groups are captured in EXP-003 E3 (0166) and must
+  be committed before session 0168 (EXP-003 E5); (2) GPU/bridge groups are
+  captured in EXP-004 E3 (0171) and must be committed before session 0173
+  (EXP-004 E5).** Failure of the CPU gate blocks EXP-003 E5 and every dependent
+  experiment; failure of the GPU/bridge gate blocks EXP-004 E5 and its
+  dependants. Each gate produces committed baselines for
+  `tools/check_bench_regression.py`; satisfying the CPU gate changes DV-036 to
+  **PARTIALLY CLOSED**, and satisfying both closes it. The hosted `nightly.yml`
+  gate remains a gross-regression detector only (its own header says so);
+  making it baseline-stable on hosted runners (e.g. relative-to-same-run control
   benchmark, or a self-hosted nightly) is a CI-robustness item for WP-039 S1
-  (0195), not a campaign experiment. DV-036 stays OPEN with the gate
-  "re-baseline before session 0168 (EXP-003 E5)".
+  (0195), not a campaign experiment.
 
 ### 11.4 Brief-vs-standard target reconciliation (EXP-002, EXP-003, EXP-004, EXP-008)
 
@@ -561,9 +583,13 @@ this explicit record.
    workflow step 1).
 3. **Commit cadence.** Each E-session commits locally at its exit gate on a
    `campaign/<session>-<exp>-<stage>` branch; `main` is PR-only (ruleset
-   `22150076`, amendment #45). The E5 session's PR carries the E1–E5 range;
-   `check_ci_green.py` on the merge SHA is pasted into the E5 report's
-   artefact index. A red push is dispositioned before the next E1.
+   `22150076`, amendment #45). The E5 session's PR carries the E1–E5 range. Its
+   report records the tested PR head SHA and required-check results available
+   before approval; it must not claim the not-yet-created merge SHA. After
+   merge, the next governed session (the dependent experiment's E1, or session
+   0194 after EXP-008) records the final merge SHA and pastes
+   `check_ci_green.py <merge-SHA>` output into its dependency/entry evidence. A
+   red merge push is dispositioned before that session proceeds.
 4. **Freeze semantics.** A pre-registration is frozen when its E3 session's
    first `RUN-` directory is created; the freeze is recorded by the git SHA of
    the last pre-registration edit, quoted in `log.md` line 1.
@@ -599,7 +625,7 @@ this explicit record.
 | # | Decision | Maintainer answer | Date |
 |---|---|---|---|
 | A1 | Hardware matrix §5 adopted as the campaign's authorized execution envelope; unavailable legs (Linux-GPU/Triton, VitisAI/NPU, Metal) handled by §5.4 | **Adopted as written.** No additional host is provisioned; the Metal N2 reconciliation is decided at E6 (0194) per §5.4. | 2026-09-21 |
-| A2 | Gap dispositions §11.1–§11.3 adopted (DV-038 and DV-039 opened with "before session 0156" gates; DV-036 re-baseline assigned to EXP-003/EXP-004 E3 with gate "before session 0168") | **Adopted.** Execution mode for DV-038/DV-039: **one governed CI/tooling hotfix PR** (Workflow Standards §7), opened after this session's commit — `write_result` refuse-to-overwrite guard with tests in tandem and Snyk Code; `nightly.yml` `full-suite` install aligned with `python.yml`'s docs job. Both rows close on green required CI plus one green `nightly.yml` dispatch; retro-audited at the next S2-class audit. | 2026-09-21 |
+| A2 | Gap dispositions §11.1–§11.3 adopted (DV-038 and DV-039 opened with "before session 0156" gates; DV-036 CPU re-baseline assigned to EXP-003 E3 before session 0168 and GPU/bridge re-baseline assigned to EXP-004 E3 before session 0173) | **Adopted.** Execution mode for DV-038/DV-039: **one governed CI/tooling hotfix PR** (Workflow Standards §7), opened after this session's commit — `write_result` refuse-to-overwrite guard with tests in tandem and Snyk Code; `nightly.yml` `full-suite` install aligned with `python.yml`'s docs job. Both rows close on green required CI plus one green `nightly.yml` dispatch; retro-audited at the next S2-class audit. | 2026-09-21 |
 | A3 | Budget caps §8 and storage rules §7.5 adopted | **Adopted as written.** | 2026-09-21 |
 | A4 | Campaign plan **APPROVED and FROZEN**; **EXP-001 E1 (session 0154) is authorized to begin** | **Approved and frozen; EXP-001 E1 authorized.** Recorded via the session's `AskUserQuestion` selections (the amendment-#38 planning-session precedent). | 2026-09-21 |
 

@@ -1,6 +1,6 @@
 # Session 0153 — Campaign E0: Campaign planning — Approve and freeze Phase 7 campaign plan
 
-**Status:** COMPLETE  
+**Status:** COMPLETE
 **Roadmap phase:** 7 — Experimentation campaign and stable release  
 **Execution unit:** Campaign  
 **Session type:** E0 — Campaign planning  
