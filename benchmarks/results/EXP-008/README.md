@@ -16,6 +16,7 @@ is closed by generating its own SHA-256 manifest:
 ```python
 from pathlib import Path
 from tools.reproduce import append_manifest, verify_manifest
+
 run = Path("benchmarks/results/EXP-008/RUN-...")
 append_manifest(results_dir=run, manifest_path=run / "manifest.json")
 verify_manifest(results_dir=run, manifest_path=run / "manifest.json")
