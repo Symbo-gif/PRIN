@@ -7,7 +7,7 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 
 | Seq | Unit | Type | Session brief | Current status |
 |---:|---|---|---|---|
-| 0153 | Campaign | E0 — Campaign planning | [Approve and freeze Phase 7 campaign plan](0153-campaign-e0-planning.md) | PLANNED |
+| 0153 | Campaign | E0 — Campaign planning | [Approve and freeze Phase 7 campaign plan](0153-campaign-e0-planning.md) | COMPLETE — campaign plan `DOCS/experiments/campaign-plan.md` APPROVED/FROZEN 2026-09-21; EXP-001 E1 authorized; DV-038/DV-039 opened, DV-036 gate executed |
 | 0154 | EXP-001 | E1 — Pre-registration | [Golden-trajectory numerical parity](0154-exp001-e1-golden-trajectory-numerical-parity.md) | PLANNED |
 | 0155 | EXP-001 | E2 — Review and approval | [Golden-trajectory numerical parity](0155-exp001-e2-golden-trajectory-numerical-parity.md) | PLANNED |
 | 0156 | EXP-001 | E3 — Execution | [Golden-trajectory numerical parity](0156-exp001-e3-golden-trajectory-numerical-parity.md) | PLANNED |

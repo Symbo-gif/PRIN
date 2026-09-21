@@ -3,18 +3,44 @@
 Scientific experiment records governed by the
 [Experimentation Standards](../standards/Experimentation_Standards.md).
 
+## Phase 7 campaign plan
+
+[`campaign-plan.md`](campaign-plan.md) is the approved, frozen campaign-level
+artefact required by Experimentation Standards §3: the EXP-001…EXP-008
+registry in Session Register order, dependency graph, owners, hardware/backend
+matrix, seed policy, shared artefact schema and run-directory rule, budgets,
+statistics policy, stop/escalation rules, registered gaps (DV-036/038/039),
+and the maintainer approval record (session 0153, Campaign E0). Every
+pre-registration inherits its §5–§10 rules. It contains no hypotheses and no
+results.
+
 ## Layout
 
 ```
 experiments/
+├── campaign-plan.md              # Phase 7 campaign plan (E0, session 0153)
 └── EXP-NNN-<slug>/
+    ├── README.md                 # skeleton: status, sessions, inherited rules (E0)
     ├── preregistration.md        # frozen at execution start (E1/E2)
     ├── log.md                    # execution log (E3)
-    └── report.md                 # results vs expectations (E5)
+    ├── report.md                 # results vs expectations (E5)
+    └── report-manifest.json      # SHA-256 of regenerated figures/tables (E4/E5)
 ```
 
-Raw run artefacts live under `benchmarks/results/EXP-NNN/` (JSON, tracked);
-figures/tables regenerate from them via `prin.reporting`.
+Raw run artefacts live under `benchmarks/results/EXP-NNN/RUN-<UTC>-<SHA>-<label>/`
+(JSON, tracked, one per-run `manifest.json`; campaign plan §7); figures/tables
+regenerate from them via `prin.reporting`.
+
+| Experiment | Track | Record root |
+|---|---|---|
+| EXP-001 | C1 | [`EXP-001-golden-trajectory-numerical-parity/`](EXP-001-golden-trajectory-numerical-parity/README.md) |
+| EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) |
+| EXP-003 | C2 | [`EXP-003-cpu-scaling-and-sweep-performance/`](EXP-003-cpu-scaling-and-sweep-performance/README.md) |
+| EXP-004 | C2 | [`EXP-004-gpu-kernels-and-torch-bridge-performance/`](EXP-004-gpu-kernels-and-torch-bridge-performance/README.md) |
+| EXP-005 | C3 | [`EXP-005-dynamics-chimera-and-capacity-replication/`](EXP-005-dynamics-chimera-and-capacity-replication/README.md) |
+| EXP-006 | C3 | [`EXP-006-temporal-binding-phasetracker-and-ablation-replication/`](EXP-006-temporal-binding-phasetracker-and-ablation-replication/README.md) |
+| EXP-007 | C3 | [`EXP-007-daemon-mot-and-adversarial-replication/`](EXP-007-daemon-mot-and-adversarial-replication/README.md) |
+| EXP-008 | C4 | [`EXP-008-cross-platform-and-new-capability-characterization/`](EXP-008-cross-platform-and-new-capability-characterization/README.md) |
 
 ## Spike handoff and coverage records
 
@@ -237,6 +263,10 @@ ID in this directory layout (WP009-F5). S1 handoff notes belong here under
 their session sequence prefix; the WP-009 rename is the documented exception.
 
 ## Rules (summary)
+
+- **The campaign plan governs all eight experiments**: pre-register against
+  its §2.1 reconciled targets, its §5 hardware matrix, §6 seeds, §7 artefact
+  layout, §8 budget caps, §9 statistics, and §10 abort/D1 rules.
 
 - **No execution without a committed, approved pre-registration** including
   expected results and failure/abort conditions.
