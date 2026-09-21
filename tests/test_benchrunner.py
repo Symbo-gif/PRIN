@@ -15,7 +15,6 @@ from __future__ import annotations
 import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from threading import Barrier
 from typing import ClassVar
 
 import pytest
@@ -237,15 +236,8 @@ class TestWriteResult:
         import benchmarks._common.result as result_module
 
         monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
-        original_link = result_module.os.link
-        barrier = Barrier(2)
-
-        def synchronized_link(source: Path, destination: Path) -> None:
-            barrier.wait()
-            original_link(source, destination)
-
-        monkeypatch.setattr(result_module.os, "link", synchronized_link)
         out = tmp_path / "RUN-race" / "artefact.json"
+        out.parent.mkdir()
 
         def attempt(value: int) -> int | None:
             try:
@@ -254,11 +246,12 @@ class TestWriteResult:
                 return None
             return value
 
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            results = list(executor.map(attempt, (1, 2)))
+        values = tuple(range(8))
+        with ThreadPoolExecutor(max_workers=len(values)) as executor:
+            results = list(executor.map(attempt, values))
 
         assert sum(result is not None for result in results) == 1
-        assert json.loads(out.read_text(encoding="utf-8"))["x"] in {1, 2}
+        assert json.loads(out.read_text(encoding="utf-8"))["x"] in values
         assert not list(out.parent.glob(".artefact.json.*.tmp"))
 
     def test_failed_staging_write_leaves_no_destination(
