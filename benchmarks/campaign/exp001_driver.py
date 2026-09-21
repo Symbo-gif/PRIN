@@ -13,6 +13,11 @@ comparisons, all against the actual PRIN (Rust) numerical core:
 * **Hypothesis-fuzzed parity** (H2): draw a random-but-valid case spec and an
   explicit initial condition, run *both* PRINet 3.0 and PRIN from that
   identical input, and compare.
+* **GPU kernel-path tolerance-identity** (H4): for every ``kuramoto_sparse_knn_*``
+  corpus case, evaluate one derivative step through the CPU (f64 Rust) path
+  and the GPU (f32 CubeCL) ``prin._prin_core.GpuSparseKuramoto`` kernel via
+  ``prin._torch_compat.KuramotoOscillator``, and compare within the
+  registered GPU-kernel tolerance.
 
 The fuzz sampler (:func:`draw_fuzz_spec`, :func:`draw_fuzz_initial`) mirrors
 the value ranges declared in ``prin.parity.strategies`` — the canonical
@@ -25,7 +30,13 @@ introduce a second RNG path").
 All numerical authority for the PRIN side lives in ``prin.dynamics``
 (``prin._prin_core``, float64, CPU); this module performs no numerics of its
 own beyond assembling arrays and invoking that authority and the tolerance-
-aware comparison already implemented in ``prin.parity.harness``.
+aware comparison already implemented in ``prin.parity.harness``. H4's GPU
+kernel-path comparison instead goes through ``prin._torch_compat`` (the
+facade the GPU dispatch hook is defined on), since ``prin._prin_core.
+GpuSparseKuramoto`` is a single-step derivative kernel, not a trajectory
+integrator; the comparison tolerance is the registered f32 GPU-kernel bound
+(``KERNEL_RTOL``/``KERNEL_ATOL`` below), not ``prin.parity.harness``'s f64
+trajectory/metric tolerances.
 """
 
 from __future__ import annotations
@@ -38,8 +49,12 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import torch
 from numpy.typing import NDArray
+from prin import _prin_core
 from prin._prin_core import kuramoto_order_parameter, mean_phase_coherence
+from prin._torch_compat import KuramotoOscillator as TorchKuramotoOscillator
+from prin._torch_compat import OscillatorState as TorchOscillatorState
 from prin.dynamics import (
     CouplingMode,
     EulerIntegrator,
@@ -57,6 +72,13 @@ from benchmarks._common.environment import capture_environment
 from benchmarks._common.result import ArtefactExistsError, write_result
 
 EXP_ID = "EXP-001"
+
+#: GPU sparse-k-NN kernel-path tolerance (H4; Testing Standards §3;
+#: ``prin_kernels::equivalence::{DEFAULT_RTOL, DEFAULT_ATOL}``) — the fused
+#: CubeCL kernel computes in f32, so this is *not* the f64 trajectory/metric
+#: tolerance used elsewhere in this module.
+KERNEL_RTOL = 1e-5
+KERNEL_ATOL = 1e-6
 
 #: Oscillator model classes, keyed by :class:`~prin.parity.schema.Model` value.
 _PRIN_INTEGRATORS: dict[str, type[EulerIntegrator] | type[RK4Integrator]] = {
@@ -514,6 +536,121 @@ def run_fuzz_batch(
     return records
 
 
+class GpuBindingUnavailableError(DriverError):
+    """Raised when H4 kernel-path mode runs without a ``cuda``-feature build.
+
+    Per preregistration §4 item 6 / campaign plan §10.1 item 6, an extension
+    built without ``prin._prin_core.GpuSparseKuramoto`` is a build-
+    configuration abort (reported ``NOT EXECUTED — cuda feature not built``,
+    verdict ``INCONCLUSIVE``), not a negative result.
+    """
+
+
+def _compare_kernel_array(
+    name: str, reference: NDArray[np.float64], test: NDArray[np.float64]
+) -> dict[str, Any]:
+    """Compare one derivative array at the registered GPU-kernel tolerance (H4).
+
+    Mirrors ``prin.parity.harness.compare_arrays``' allclose statistics, but
+    against the fixed ``KERNEL_RTOL``/``KERNEL_ATOL`` bound rather than a
+    ``Quantity``-derived f64 tolerance (the GPU kernel computes in f32).
+    """
+    diff = np.abs(reference - test)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        rel = diff / (np.abs(reference) + 1e-300)
+    close = np.isclose(reference, test, rtol=KERNEL_RTOL, atol=KERNEL_ATOL)
+    return {
+        "array_name": name,
+        "within_tolerance": bool(np.all(close)),
+        "max_abs_diff": float(np.max(diff)) if diff.size else 0.0,
+        "max_rel_diff": float(np.max(rel)) if rel.size else 0.0,
+        "failed_count": int(np.size(close) - int(np.count_nonzero(close))),
+        "total_count": int(reference.size),
+    }
+
+
+def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, Any]:
+    """Compare the GPU sparse-k-NN derivative kernel against the CPU reference (H4).
+
+    Builds a ``prin._torch_compat.KuramotoOscillator`` from one
+    ``kuramoto_sparse_knn_*`` corpus case's stored parameters and initial
+    state, evaluates one derivative step through the CPU (f64 Rust) path and
+    the GPU (f32 CubeCL) ``GpuSparseKuramoto`` kernel via the model's
+    ``_compute_derivatives_gpu`` dispatch hook (WP-036D), and compares within
+    the registered ``KERNEL_RTOL``/``KERNEL_ATOL`` tolerance.
+
+    Raises:
+        GpuBindingUnavailableError: If the extension lacks
+            ``GpuSparseKuramoto`` (no ``cuda``-feature build), or the
+            dispatch hook otherwise declines to run (unexpected for a
+            ``sparse_knn`` case).
+        ValueError: If ``case_id`` does not name a ``kuramoto``/``sparse_knn``
+            case.
+    """
+    if not hasattr(_prin_core, "GpuSparseKuramoto"):
+        raise GpuBindingUnavailableError(
+            "prin._prin_core.GpuSparseKuramoto is absent (extension built "
+            "without --features cuda); H4 kernel-path mode aborts"
+        )
+    loaded = loader.load(case_id)
+    spec = loaded.spec
+    if spec.model != Model.KURAMOTO.value or spec.coupling != Coupling.SPARSE_KNN.value:
+        raise ValueError(
+            "H4 kernel-path mode requires a kuramoto/sparse_knn case, got "
+            f"model={spec.model!r} coupling={spec.coupling!r} (case {case_id})"
+        )
+    parameters: dict[str, Any] = dict(spec.parameters)
+    model = TorchKuramotoOscillator(
+        spec.n_oscillators,
+        coupling_strength=float(parameters["coupling_strength"]),
+        decay_rate=float(parameters.get("decay_rate", 0.0)),
+        freq_adaptation_rate=float(parameters.get("freq_adaptation_rate", 0.0)),
+        coupling_mode="sparse_knn",
+        sparse_k=int(parameters["sparse_k"]),
+    )
+    state = TorchOscillatorState(
+        phase=torch.tensor(loaded.arrays.phase_init, dtype=torch.float64),
+        amplitude=torch.tensor(loaded.arrays.amplitude_init, dtype=torch.float64),
+        frequency=torch.tensor(loaded.arrays.frequency_init, dtype=torch.float64),
+    )
+    cpu_dphase, cpu_damplitude, cpu_dfrequency = model.compute_derivatives(state)
+    gpu = model._compute_derivatives_gpu(state)
+    if gpu is None:
+        raise GpuBindingUnavailableError(
+            "GpuSparseKuramoto is present but the dispatch hook declined to "
+            f"run for case {case_id} (unexpected for a sparse_knn case)"
+        )
+    gpu_dphase, gpu_damplitude, gpu_dfrequency = gpu
+    comparisons = [
+        _compare_kernel_array(
+            name,
+            cpu.detach().to(dtype=torch.float64, device="cpu").numpy(),
+            gpu_val.detach().to(dtype=torch.float64, device="cpu").numpy(),
+        )
+        for name, cpu, gpu_val in (
+            ("dphase", cpu_dphase, gpu_dphase),
+            ("damplitude", cpu_damplitude, gpu_damplitude),
+            ("dfrequency", cpu_dfrequency, gpu_dfrequency),
+        )
+    ]
+    return {
+        "case_id": case_id,
+        "model": spec.model,
+        "coupling": spec.coupling,
+        "n_oscillators": spec.n_oscillators,
+        "sparse_k": int(parameters["sparse_k"]),
+        "within_tolerance": all(c["within_tolerance"] for c in comparisons),
+        "comparisons": comparisons,
+    }
+
+
+def compare_kernel_path_subset(
+    loader: CorpusLoader, case_ids: Sequence[str]
+) -> list[dict[str, Any]]:
+    """Compare every case in ``case_ids`` (see :func:`compare_kernel_path_case`)."""
+    return [compare_kernel_path_case(loader, case_id) for case_id in case_ids]
+
+
 def _validate_metadata(exp_id: str, run_id: str, session: str, operator: str) -> None:
     """Raise :class:`DriverMetadataError` if any required field is empty."""
     missing = [
@@ -569,11 +706,21 @@ def write_campaign_metadata(
     return path
 
 
+#: Hypothesis tag recorded in ``campaign-metadata.json`` per run mode
+#: (campaign plan §7.2).
+_MODE_HYPOTHESIS: dict[str, list[str]] = {
+    "corpus": ["H1"],
+    "repeatability": ["H3"],
+    "fuzz": ["H2"],
+    "kernel-path": ["H4"],
+}
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--mode",
-        choices=("corpus", "repeatability", "fuzz"),
+        choices=("corpus", "repeatability", "fuzz", "kernel-path"),
         required=True,
         help="Which pre-registered comparison to run.",
     )
@@ -628,14 +775,24 @@ def main(argv: list[str] | None = None) -> int:
                 )
             loader = CorpusLoader(args.corpus_dir)
             cases = [check_repeatability(loader, cid) for cid in args.case_ids]
+        elif args.mode == "kernel-path":
+            loader = CorpusLoader(args.corpus_dir)
+            case_ids = args.case_ids or [
+                record.case_id
+                for record in loader.manifest.cases
+                if record.model == Model.KURAMOTO.value
+                and record.coupling == Coupling.SPARSE_KNN.value
+            ]
+            cases = compare_kernel_path_subset(loader, case_ids)
         else:
             cases = run_fuzz_batch(args.seed_counter, args.seed_key, args.n_fuzz_cases)
     except DriverError as exc:
         print(f"ABORT: {exc}", file=sys.stderr)
         return 2
 
+    backend, dtype = ("cuda", "f32") if args.mode == "kernel-path" else ("cpu", "f64")
     environment = capture_environment(
-        backend="cpu", dtype="f64", seed=args.seed_counter
+        backend=backend, dtype=dtype, seed=args.seed_counter
     )
     config = {
         "iterations": len(cases),
@@ -657,7 +814,7 @@ def main(argv: list[str] | None = None) -> int:
         run_id=run_id,
         session=args.session,
         operator=args.operator,
-        artefacts={result_name: ["H1"] if args.mode != "fuzz" else ["H2"]},
+        artefacts={result_name: _MODE_HYPOTHESIS[args.mode]},
     )
     print(f"Wrote {result_path}")
     return 0

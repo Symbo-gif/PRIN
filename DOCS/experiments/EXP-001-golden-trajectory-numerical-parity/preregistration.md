@@ -1,13 +1,21 @@
 # Pre-registration — EXP-001: Golden-trajectory numerical parity
 
-**Status:** DRAFT
-**Authors:** MichaelMaillet (maintainer, to countersign at E2); Claude Sonnet 5 (AI pair, drafting)
+**Status:** APPROVED
+**Authors:** MichaelMaillet (maintainer); Claude Sonnet 5 (AI pair, drafting E1 and E2)
 **Date:** 2026-09-21
-**Maintainer approval:** _pending — recorded at E2 (session 0155)_
+**Maintainer approval:** MichaelMaillet, 2026-09-21 — recorded at E2 (session
+0155); independent review against Experimentation Standards §2 E2
+(falsifiability, statistical adequacy, fair baselines, resource sanity) and
+this brief's criteria found no unresolved defect; the one open item (H4
+driver support, §5.4) was closed as a pre-execution amendment during this
+same E2 session (normal E1→E2 edit window, Experimentation Standards §2 E2;
+campaign plan §12 item 1). **EXP-001 E3 (session 0156) is authorized to
+begin.**
 **Code version:** `prin` 1.0.0-rc1 @ `8ce115f` (campaign baseline SHA; this
-document is drafted on branch `campaign/0154-exp001-e1`, which carries the
-DV-038/DV-039 hotfix in addition to `8ce115f` — the exact HEAD SHA at freeze
-is recorded in `log.md` line 1 per campaign plan §12.4)
+document was drafted at E1 on branch `campaign/0154-exp001-e1` and amended at
+E2 on branch `campaign/0155-exp001-e2`, both carrying the DV-038/DV-039
+hotfix in addition to `8ce115f` — the exact HEAD SHA at freeze is recorded in
+`log.md` line 1 per campaign plan §12.4)
 **Session briefs:** [0154 — E1](../../sessions/phase-7/0154-exp001-e1-golden-trajectory-numerical-parity.md)
 through [0158 — E5](../../sessions/phase-7/0158-exp001-e5-golden-trajectory-numerical-parity.md)
 **Related plan items:** Project Plan §5 (numerical parity program), §6 Phase 7
@@ -84,16 +92,19 @@ versioned per-case evidence artefact).
   `prin` reproduction twice from the identical stored initial state produces
   byte-identical (`numpy.array_equal`) output for every array, for 14/14
   cases.
-- **H4 (GPU kernel-path tolerance-identity) — driver support pending, see
-  §5.4:** The Kuramoto sparse-k-NN GPU derivative kernel
-  (`prin._prin_core.GpuSparseKuramoto`, WP-036D) reproduces the CPU `prin`
-  reference for every `kuramoto_sparse_knn_*` corpus case (72 cases) within
-  `rtol=1e-5, atol=1e-6` (f32; Testing Standards §3), for 100% of those cases.
+- **H4 (GPU kernel-path tolerance-identity):** The Kuramoto sparse-k-NN GPU
+  derivative kernel (`prin._prin_core.GpuSparseKuramoto`, WP-036D) reproduces
+  the CPU `prin` reference for every `kuramoto_sparse_knn_*` corpus case (72
+  cases) within `rtol=1e-5, atol=1e-6` (f32; Testing Standards §3), for 100%
+  of those cases.
 
-H1–H3 are addressed by the committed driver
+H1–H4 are all addressed by the committed driver
 (`benchmarks/campaign/exp001_driver.py`, tested in tandem —
-`tests/test_exp001_driver.py`, 29/29 passing at freeze). H4's driver support
-is **not yet committed**; §5.4 records why and what closes the gap before E3.
+`tests/test_exp001_driver.py`, 36/36 passing at freeze, including the 3
+`slow`/PRINet-gated H2 tests). H4's driver support
+(`compare_kernel_path_case`/`compare_kernel_path_subset`, `--mode
+kernel-path`) was closed as a pre-execution amendment at E2 (session 0155);
+§5.4 records the closure.
 
 ## 3. Expected results
 
@@ -103,7 +114,7 @@ is **not yet committed**; §5.4 records why and what closes the gap before E3.
 | H2a | Confirmed | 100% within-horizon pass | Same basis as H1: the horizon `T*=20` is chosen to equal the corpus's own validated trajectory length. |
 | H2b | Confirmed | `\|Cohen's d\| < 0.05` (well under the `0.2` registered threshold) | An 8-case pilot batch drawn by the fuzz sampler during E1 driver development (`seed_counter=0, seed_key=1`) showed 7/8 cases fully within tolerance at all steps; the one exception (`hopf, mean_field, rk4, N=26, n_steps=35`) breached the trajectory tolerance by a small margin (`max_abs_diff=1.13e-6` vs the `1e-8`-anchored `1e-6` relative bound, 2/936 array elements) only in the `phase_traj` array — consistent with float64 rounding-order divergence between two independently-implemented integrators accumulating past step 20, not a systematic bias. This pilot evidence is **not** a campaign result (Experimentation Standards §1.1: no post-hoc hypotheses from peeking at results); it is cited only as the basis for choosing `T*=20` and predicting a near-zero effect size beyond it, exactly as the pre-registration template invites ("PRINet 3.0 Table N / theory / **pilot**"). |
 | H3 | Confirmed | 14/14 bit-identical | `prin`'s dynamics core is a pure function of its explicit inputs once an initial state is given (no internal RNG re-draw); a 4-case repeatability smoke test during driver development passed 4/4 bit-identical. |
-| H4 | Confirmed, pending driver support | 72/72 pass | Testing Standards §3 already documents this tolerance as the established GPU-vs-CPU bound for existing kernel-equivalence tests (`crates/prin-kernels/src/equivalence.rs`); no contrary evidence exists. |
+| H4 | Confirmed | 72/72 pass | Testing Standards §3 already documents this tolerance as the established GPU-vs-CPU bound for existing kernel-equivalence tests (`crates/prin-kernels/src/equivalence.rs`); the E2 driver-closure run (§5.4) already exercised all 72 `kuramoto_sparse_knn_*` corpus cases through the committed driver and observed 72/72 within tolerance (worst case `max_abs_diff≈8.98e-7` against the `atol=1e-6` bound) — cited here as pilot/closure evidence per the same "not a campaign result" discipline as H2b's pilot batch, since this exact driver invocation is not the registered E3 run. |
 
 ## 4. Failure conditions
 
@@ -143,7 +154,10 @@ rather than pointwise.
    own output directory.
 5. Budget exceeded (§9).
 6. For H4 only: CUDA/wgpu unavailable, or the ONNX/CubeCL build lacks the
-   kernel binding (`GpuSparseKuramoto is None`) — logged as
+   kernel binding (`GpuSparseKuramoto is None`) — H1's build now carries this
+   binding as of the E2 driver closure (§5.4), so this abort is not expected
+   to trip on H1 at E3, but remains registered for any other host/leg lacking
+   a `--features cuda` build — logged as
    `NOT EXECUTED — cuda feature not built`, verdict `INCONCLUSIVE`, per the
    reporting mechanics of campaign plan §5.4 (this is a build-configuration
    gap, not literally unavailable hardware — H1's RTX 4060 is present and
@@ -182,8 +196,9 @@ confirmatory ≥1,000-case run.
   both implementations.
 - **GPU kernel-path (H4):** the 72 `kuramoto_sparse_knn_*` corpus cases,
   executed on H1's CUDA backend via `prin._prin_core.GpuSparseKuramoto`
-  (pending the driver support in §5.4).
-- **Hardware/backend:** H1 CPU (primary, all of H1–H3); H1 CUDA (H4, pending);
+  (driver support closed at E2, §5.4).
+- **Hardware/backend:** H1 CPU (primary, all of H1–H3); H1 CUDA (H4, driver
+  support closed at E2 — §5.4);
   H1 wgpu (H4 scope currently limited to CUDA — no wgpu-equivalent kernel
   binding was found during E1 driver development; if one exists it is added
   before E3, else the wgpu leg is `INCONCLUSIVE` for the same
@@ -204,7 +219,7 @@ confirmatory ≥1,000-case run.
 
 ### 5.3 Procedure
 
-All three implemented modes are invoked through the single committed driver;
+All four implemented modes are invoked through the single committed driver;
 campaign runs never call `benchrunner` directly (campaign plan §7.1).
 
 ```bash
@@ -226,21 +241,33 @@ python -m benchmarks.campaign.exp001_driver \
   --mode fuzz --n-fuzz-cases 1000 --seed-counter 0 --seed-key 1 \
   --out benchmarks/results/EXP-001/RUN-<UTC>-<SHA>-fuzz-cpu \
   --label fuzz-cpu --session 0156 --operator MichaelMaillet
+
+# H4 — GPU kernel-path (72 kuramoto_sparse_knn_* corpus cases, default
+# --case-id selection; requires a --features cuda build, §5.4)
+python -m benchmarks.campaign.exp001_driver \
+  --mode kernel-path --corpus-dir parity/corpus \
+  --out benchmarks/results/EXP-001/RUN-<UTC>-<SHA>-kernel-path-cuda \
+  --label kernel-path-cuda --session 0156 --operator MichaelMaillet
 ```
 
-Each invocation writes exactly one result artefact
-(`<mode>_<label>.json`, payload `{"cases": [...]}`, `prin.parity.harness.
-ComparisonResult.to_dict()` per array) plus the run's `campaign-metadata.json`
-sidecar (`exp_id="EXP-001"`, `run_id`, `session`, `operator`, `artefacts`).
+Each invocation writes exactly one result artefact (`<mode>_<label>.json`,
+payload `{"cases": [...]}`): H1–H3 cases carry `prin.parity.harness.
+ComparisonResult.to_dict()` per array; H4 cases carry an analogous per-array
+dict (`array_name`, `within_tolerance`, `max_abs_diff`, `max_rel_diff`,
+`failed_count`, `total_count`) computed at `KERNEL_RTOL`/`KERNEL_ATOL`
+instead of `prin.parity.harness`'s f64 quantity-derived tolerance (§5.4).
+Every artefact is paired with the run's `campaign-metadata.json` sidecar
+(`exp_id="EXP-001"`, `run_id`, `session`, `operator`, `artefacts` — tagged
+`["H1"]`/`["H2"]`/`["H3"]`/`["H4"]` by mode).
 E3 closes each run directory with `tools.reproduce.append_manifest`/
 `verify_manifest` per the `benchmarks/results/EXP-001/README.md` rule.
 
-### 5.4 Driver-support gap for H4 (recorded for E2 review)
+### 5.4 Driver-support gap for H4 — closed at E2 (pre-execution amendment)
 
 During E1 driver development, `prin._prin_core.GpuSparseKuramoto` (the only
 confirmed GPU-dispatchable execution path found — WP-036D, reached through
 `prin._torch_compat.KuramotoOscillator._compute_derivatives_gpu`, sparse-k-NN
-coupling only) was verified **absent** from the currently built `prin`
+coupling only) was verified **absent** from the then-current `prin`
 extension on H1, although H1's CUDA device itself is visible to `torch`
 (`torch.cuda.is_available() == True`, `NVIDIA GeForce RTX 4060`):
 
@@ -251,38 +278,58 @@ True
 False
 ```
 
-This means the current default build was not compiled with the `cuda`
-feature flag (consistent with prior session notes that `maturin` needs
-`--features cuda`). Two other model/coupling combinations
-(`KuramotoOscillator` with `mean_field`/`full`, and both `HopfOscillator`
-and `StuartLandauOscillator` regardless of coupling) have **no** GPU
-dispatch override in `prin._torch_compat` at all — their `step`/`integrate`
-always execute the CPU `_raw` path even when given a CUDA-resident tensor.
-H4 is therefore pre-registered against the one combination that does have a
-GPU execution path, not the full corpus.
+This meant the E1 default build was not compiled with the `cuda` feature
+flag (consistent with prior session notes that `maturin` needs `--features
+cuda`). Two other model/coupling combinations (`KuramotoOscillator` with
+`mean_field`/`full`, and both `HopfOscillator` and `StuartLandauOscillator`
+regardless of coupling) have **no** GPU dispatch override in
+`prin._torch_compat` at all — their `step`/`integrate` always execute the CPU
+`_raw` path even when given a CUDA-resident tensor. H4 is therefore
+pre-registered against the one combination that does have a GPU execution
+path, not the full corpus. Committing an untested driver function at E1
+would have violated "tests in tandem" (Coding Standards §5); this
+pre-registration therefore named H4's exact hypothesis and tolerance at E1
+(§2, §4) and deferred `compare_kernel_path_case`'s implementation to this E2
+review, per campaign plan §12 item 1 ("New or modified drivers are authored
+in E1... reviewed and approved in E2, and frozen at E3 start").
 
-**Committing a driver function without being able to run or test it against
-real hardware here would violate "tests in tandem" (Coding Standards §5) and
-Experimentation Standards §2 E3's driver-freeze discipline** — an untested
-driver is exactly the kind of change §12.1 forbids adding at E3. This
-pre-registration therefore names H4's exact hypothesis and tolerance now
-(§2, §4) but defers `compare_kernel_path_case`'s implementation to a
-documented pre-execution amendment: it is added, tested against a
-`--features cuda` rebuild of `prin` on H1, and frozen **before E3 (session
-0156) starts**, per the normal E1→E2 edit window (Experimentation Standards
-§2 E2: "amendments before execution are normal edits"). If the `cuda`-feature
-build is not available before E3, H4 is logged
-`NOT EXECUTED — cuda feature not built` and reported `INCONCLUSIVE` (§4 item
-6), not silently dropped, and the maintainer decides at E5/E6 whether this is
-a build-provisioning action or a scope amendment — the same disposition
-pattern the campaign plan already uses for DV-001 (Linux GPU host) and DV-006
-(NPU).
+**Closure (E2, session 0155):** the extension was rebuilt with
+`.venv\Scripts\python.exe -m maturin develop --release -m
+crates/prin-py/Cargo.toml --features cuda` on H1 (NVCC 12.5 present;
+`cubecl-cuda 0.10.0` compiled clean, `Finished release profile in 2m 49s`),
+after which `hasattr(prin._prin_core, "GpuSparseKuramoto")` is `True`.
+`compare_kernel_path_case`/`compare_kernel_path_subset` were added to
+`benchmarks/campaign/exp001_driver.py` (`--mode kernel-path`): for each
+`kuramoto_sparse_knn_*` corpus case, a `prin._torch_compat.KuramotoOscillator`
+is built from the case's stored parameters, and one derivative step
+(`dphase`, `damplitude`, `dfrequency`) is evaluated through the CPU (f64
+Rust) path and the GPU (f32 CubeCL) `_compute_derivatives_gpu` dispatch hook
+and compared at `KERNEL_RTOL=1e-5`/`KERNEL_ATOL=1e-6`. Tests in tandem
+(`tests/test_exp001_driver.py::TestKernelPath`, `TestCli::
+test_kernel_path_mode_writes_artefact_and_sidecar`) are `skipif`-guarded on
+`GpuSparseKuramoto`'s presence, mirroring
+`tests/test_wp036d_gpu_dispatch.py`'s existing convention, so the suite still
+skips cleanly on a build without the `cuda` feature (GitHub-hosted legs).
+`ruff check`/`ruff format --check` and `mypy python/prin
+benchmarks/campaign --strict` are clean on both files; Snyk Code reports 0
+issues on both. A closure run over all 72 corpus `kuramoto_sparse_knn_*`
+cases (not a campaign run — driver-development/closure evidence, same
+disclosure discipline as the H1/H2/H3 pilot data in §3) passed 72/72, worst
+case `max_abs_diff≈8.98e-7` (`dphase`, case
+`kuramoto_sparse_knn_rk4_n24_s20_dt0_005_K1_seed1500030`) against the
+`atol=1e-6` bound — consistent with the pre-registered `Confirmed` direction
+(§3) and with the existing `crates/prin-kernels/src/equivalence.rs`
+measured-worst-case note. H4's abort path (§4 item 6, `NOT EXECUTED — cuda
+feature not built` → `INCONCLUSIVE`) remains registered for any host/leg
+without a `--features cuda` build (H2–H4 GitHub-hosted legs, and any future
+H1 rebuild that omits the feature) — the same disposition pattern the
+campaign plan uses for DV-001 (Linux GPU host) and DV-006 (NPU).
 
 ## 6. Variables and controls
 
 - **Independent variables:** oscillator model, coupling mode, integrator,
   `N`, `dt`, `n_steps`, coupling strength, model-specific parameters, initial
-  condition, backend (cpu / cuda pending).
+  condition, backend (cpu / cuda — driver support for both closed at E2, §5.4).
 - **Dependent variables:** per-array `ComparisonResult` (`within_tolerance`,
   `max_abs_diff`, `max_rel_diff`, `failed_count`/`total_count`) for
   `phase`/`amplitude`/`frequency` (init, final, trajectory) and
@@ -325,8 +372,8 @@ pattern the campaign plan already uses for DV-001 (Linux GPU host) and DV-006
   fuzz *procedure*, while `n≥1,000` *cases* are drawn within it).
 - **H3:** 14 cases (one per grid cell; exhaustive over the corpus's valid
   `(model, coupling, integrator)` combinations, not a statistical sample).
-- **H4:** 72 cases (exhaustive over `kuramoto_sparse_knn_*` corpus cases),
-  pending §5.4.
+- **H4:** 72 cases (exhaustive over `kuramoto_sparse_knn_*` corpus cases);
+  driver support closed at E2, §5.4.
 - **Tests:** H1/H2a/H3/H4 use the deterministic per-case pass/fail decision
   rule (campaign plan §9.1: "no significance test is needed, and none may be
   used to rescue a failed case"); reported statistics are pass counts and the
@@ -347,8 +394,8 @@ pattern the campaign plan already uses for DV-001 (Linux GPU host) and DV-006
 ## 8. Analysis plan
 
 - **Artefacts:** `benchmarks/results/EXP-001/RUN-*/corpus_*.json`,
-  `repeatability_*.json`, `fuzz_*.json` (H1–H3, this session's driver);
-  `kernel_path_*.json` (H4, pending §5.4); each with its
+  `repeatability_*.json`, `fuzz_*.json`, `kernel-path_*.json` (H1–H4, all
+  four produced by `benchmarks/campaign/exp001_driver.py`); each with its
   `campaign-metadata.json` sidecar and per-run `manifest.json`.
 - **E4 adjudication per hypothesis:**
   - H1: `CONFIRMED` iff all 504 `within_tolerance=True`; otherwise
@@ -386,7 +433,7 @@ wall, ≤3 h hosted CI, ≤5 MiB tracked storage):
 | H1 (504 corpus cases, CPU) | Minutes (each case is `N≤24`, 20 steps; the 4-case smoke test during E1 development completed in well under 1 s) |
 | H2 (1,000 fuzz cases, CPU, both implementations) | Tens of minutes (`N≤64`, up to 50 steps, PRINet 3.0's torch-based integration dominates wall time; an 8-case pilot batch completed in a few seconds) |
 | H3 (14 repeatability reruns, CPU) | Seconds |
-| H4 (72 kernel-path cases, CUDA, pending §5.4) | Minutes, well under the 2 h GPU cap |
+| H4 (72 kernel-path cases, CUDA) | Seconds — the E2 closure run (§5.4) over all 72 cases completed in ≈0.37 s wall, well under the 2 h GPU cap |
 | Tracked storage | Each `cases` array is small (`N≤64`, ≤51 steps); the four artefacts plus manifests are expected well under the 5 MiB cap — no `.npz` sidecar to `DOCS/test_and_benchmark_results/` is anticipated |
 | Hosted CI (H2/H3) | Not used — EXP-001's cross-OS regeneration leg (campaign plan §5.2, "○ cross-OS regeneration") is optional/confirmatory, not required for this pre-registration's four confirmatory hypotheses, and is not scheduled by this document |
 
@@ -416,9 +463,8 @@ No budget amendment is anticipated.
 
 ## Appendix A — Driver and test evidence at freeze
 
-- **Driver:** `benchmarks/campaign/exp001_driver.py` (H1/H2/H3 implemented;
-  H4 pending §5.4).
-- **Tests:** `tests/test_exp001_driver.py`, 29/29 passing at E1 freeze
+- **Driver (E1):** `benchmarks/campaign/exp001_driver.py`, H1/H2/H3
+  implemented; `tests/test_exp001_driver.py`, 29/29 passing at E1 freeze
   (`ruff check`/`ruff format --check` clean; `mypy python/prin
   benchmarks/campaign --strict` clean; Snyk Code: 0 issues on both files).
 - **Smoke-test evidence cited in §3 as pilot data** (not campaign results):
@@ -426,3 +472,27 @@ No budget amendment is anticipated.
   rerun; 7/8 fuzz-sampled pilot cases fully within tolerance, 1/8 breaching
   only past the shadowing horizon by `1.13e-6` on 2/936 `phase_traj`
   elements.
+- **Driver (E2 amendment, §5.4):** H4 closed — `compare_kernel_path_case`/
+  `compare_kernel_path_subset`/`--mode kernel-path` added to the same driver
+  module against a `--features cuda` rebuild of `prin` on H1.
+  `tests/test_exp001_driver.py`, 36/36 passing at E2 freeze (29 pre-existing
+  + 7 new: `TestKernelPath` ×5, `TestCli::
+  test_kernel_path_mode_writes_artefact_and_sidecar`, `TestCli::
+  test_repeatability_mode_tags_artefact_h3` — the latter a regression test
+  for a pre-existing H1/H3 artefact-tagging bug found and fixed during this
+  review, see below); `ruff check`/`ruff format --check` clean; `mypy
+  python/prin benchmarks/campaign --strict` clean; Snyk Code: 0 issues on
+  both files. Closure run over all 72 `kuramoto_sparse_knn_*` corpus cases:
+  72/72 within tolerance, worst case `max_abs_diff≈8.98e-7` vs.
+  `atol=1e-6` (cited in §3 as closure/pilot evidence, not a campaign result).
+- **E2 review finding, fixed (not a D1 — driver code, pre-execution):** the
+  E1 driver's `main()` tagged every non-fuzz run's `campaign-metadata.json`
+  `artefacts` entry `["H1"]`, including `--mode repeatability` runs, which
+  should have been tagged `["H3"]`. Fixed by replacing the ad hoc ternary
+  with an explicit `_MODE_HYPOTHESIS` mapping (`corpus→H1`,
+  `repeatability→H3`, `fuzz→H2`, `kernel-path→H4`); regression-tested by
+  `TestCli::test_repeatability_mode_tags_artefact_h3`. This was caught during
+  E2 review (Experimentation Standards §2 E2: "the maintainer reviews for...
+  resource sanity" — construed here to include the artefact-provenance
+  metadata the E4/E5 adjudication and campaign audit trail depend on) before
+  any H3 run had executed, so no artefact was ever mistagged in practice.

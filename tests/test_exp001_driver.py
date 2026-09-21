@@ -1,12 +1,12 @@
 """Tests for the EXP-001 campaign driver (tests in tandem, Coding Standards §5).
 
-Covers the three comparisons the EXP-001 pre-registration names: corpus
-parity (H1), hypothesis-fuzzed parity (H2), and bit-level repeatability (H3),
-plus the campaign-metadata sidecar and CLI wiring (campaign plan §7.2).
-GPU/wgpu kernel-path comparison (H4) is intentionally out of scope for this
-driver: the pre-registration records that the default build lacks the
-``cuda``/``wgpu`` feature flags needed to test it (verified during E1 driver
-development — ``GpuSparseKuramoto`` is absent from ``prin._prin_core``).
+Covers the four comparisons the EXP-001 pre-registration names: corpus parity
+(H1), hypothesis-fuzzed parity (H2), bit-level repeatability (H3), and the
+GPU sparse-k-NN kernel-path comparison (H4), plus the campaign-metadata
+sidecar and CLI wiring (campaign plan §7.2). H4's tests are ``skipif``-guarded
+on ``prin._prin_core.GpuSparseKuramoto`` being present (a build-configuration
+gate, not hardware — the extension must be built with ``--features cuda``),
+mirroring ``tests/test_wp036d_gpu_dispatch.py``'s existing convention.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from prin import _prin_core
 from prin.dynamics import HopfOscillator, StuartLandauOscillator
 from prin.parity.loader import CorpusLoader
 from prin.parity.schema import CaseArrays, Coupling, Model
@@ -34,6 +35,24 @@ _REPRESENTATIVE_CASES = [
     "kuramoto_full_rk4_n8_s20_dt0_005_K0_5_seed1300000",
     "hopf_sparse_knn_rk4_n8_s20_dt0_005_K0_5_seed2100000",
     "stuart_landau_full_euler_n8_s20_dt0_005_K0_5_seed2200000",
+]
+
+# GpuSparseKuramoto is only present when the extension is built with
+# `--features cuda` (the maintainer host and the `[gpu]` CI leg); absent on
+# the plain `python.yml` matrix. Same reference-guard class as
+# test_wp036d_gpu_dispatch.py's `_needs_gpu_binding`.
+_GPU_SPARSE_KNN_BUILT = hasattr(_prin_core, "GpuSparseKuramoto")
+_needs_gpu_binding = pytest.mark.skipif(
+    not _GPU_SPARSE_KNN_BUILT,
+    reason=(
+        "prin._prin_core.GpuSparseKuramoto absent "
+        "(extension built without --features cuda)"
+    ),
+)
+
+_KURAMOTO_SPARSE_KNN_CASES = [
+    "kuramoto_sparse_knn_euler_n8_s20_dt0_005_K0_5_seed1400000",
+    "kuramoto_sparse_knn_rk4_n24_s20_dt0_005_K1_seed1500030",
 ]
 
 
@@ -224,6 +243,50 @@ class TestFuzzComparison:
             driver.compare_fuzz_case(spec)
 
 
+class TestKernelPath:
+    """H4: the GPU sparse-k-NN derivative kernel agrees with the CPU reference."""
+
+    @_needs_gpu_binding
+    @pytest.mark.parametrize("case_id", _KURAMOTO_SPARSE_KNN_CASES)
+    def test_representative_cases_within_tolerance(
+        self, loader: CorpusLoader, case_id: str
+    ) -> None:
+        record = driver.compare_kernel_path_case(loader, case_id)
+        assert record["within_tolerance"] is True
+        assert record["case_id"] == case_id
+        assert {c["array_name"] for c in record["comparisons"]} == {
+            "dphase",
+            "damplitude",
+            "dfrequency",
+        }
+
+    @_needs_gpu_binding
+    def test_all_sparse_knn_corpus_cases_pass(self, loader: CorpusLoader) -> None:
+        """Exhaustive over the corpus's 72 kuramoto/sparse_knn cases (§5.1)."""
+        case_ids = [
+            record.case_id
+            for record in loader.manifest.cases
+            if record.model == Model.KURAMOTO.value
+            and record.coupling == Coupling.SPARSE_KNN.value
+        ]
+        assert len(case_ids) == 72
+        records = driver.compare_kernel_path_subset(loader, case_ids)
+        assert all(r["within_tolerance"] for r in records)
+
+    @_needs_gpu_binding
+    def test_non_sparse_knn_case_raises(self, loader: CorpusLoader) -> None:
+        with pytest.raises(ValueError, match="kuramoto/sparse_knn"):
+            driver.compare_kernel_path_case(loader, _REPRESENTATIVE_CASES[0])
+
+    def test_missing_binding_raises(
+        self, loader: CorpusLoader, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A build without the cuda feature aborts, not silently skips (§4 item 6)."""
+        monkeypatch.delattr(_prin_core, "GpuSparseKuramoto", raising=False)
+        with pytest.raises(driver.GpuBindingUnavailableError):
+            driver.compare_kernel_path_case(loader, _KURAMOTO_SPARSE_KNN_CASES[0])
+
+
 class TestCampaignMetadata:
     """write_campaign_metadata validates required fields and is append-only."""
 
@@ -315,6 +378,71 @@ class TestCli:
         )
         assert sidecar["exp_id"] == "EXP-001"
         assert sidecar["session"] == "0156"
+        assert sidecar["artefacts"] == {"corpus_smoke.json": ["H1"]}
+
+    def test_repeatability_mode_tags_artefact_h3(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Regression test: repeatability runs must tag H3, not H1 (§8)."""
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
+        run_dir = tmp_path / "RUN-repeatability-smoke"
+        argv = [
+            "--mode",
+            "repeatability",
+            "--corpus-dir",
+            str(_CORPUS_DIR),
+            "--case-id",
+            _REPRESENTATIVE_CASES[0],
+            "--out",
+            str(run_dir),
+            "--label",
+            "smoke",
+            "--session",
+            "0156",
+            "--operator",
+            "tester",
+        ]
+        assert driver.main(argv) == 0
+        sidecar = json.loads(
+            (run_dir / "campaign-metadata.json").read_text(encoding="utf-8")
+        )
+        assert sidecar["artefacts"] == {"repeatability_smoke.json": ["H3"]}
+
+    @_needs_gpu_binding
+    def test_kernel_path_mode_writes_artefact_and_sidecar(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
+        run_dir = tmp_path / "RUN-kernel-path-smoke"
+        case_id_flags = [
+            flag for cid in _KURAMOTO_SPARSE_KNN_CASES for flag in ("--case-id", cid)
+        ]
+        argv = [
+            "--mode",
+            "kernel-path",
+            "--corpus-dir",
+            str(_CORPUS_DIR),
+            *case_id_flags,
+            "--out",
+            str(run_dir),
+            "--label",
+            "smoke",
+            "--session",
+            "0156",
+            "--operator",
+            "tester",
+        ]
+        assert driver.main(argv) == 0
+        result_path = run_dir / "kernel-path_smoke.json"
+        payload = json.loads(result_path.read_text(encoding="utf-8"))
+        assert len(payload["cases"]) == len(_KURAMOTO_SPARSE_KNN_CASES)
+        assert payload["environment"]["backend"] == "cuda"
+        assert payload["environment"]["dtype"] == "f32"
+        assert all(c["within_tolerance"] for c in payload["cases"])
+        sidecar = json.loads(
+            (run_dir / "campaign-metadata.json").read_text(encoding="utf-8")
+        )
+        assert sidecar["artefacts"] == {"kernel-path_smoke.json": ["H4"]}
 
     def test_missing_operator_aborts_without_writing(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

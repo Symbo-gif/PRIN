@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 pre-registration APPROVED — golden-trajectory numerical parity
+  (session 0155, E2, 2026-09-21) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`.**
+  Independent review against Experimentation Standards §2 E2 (falsifiability,
+  statistical adequacy, fair baselines, resource sanity); maintainer approval
+  recorded (MichaelMaillet, 2026-09-21). Closed the one open item from E1 as
+  a pre-execution amendment: H4's driver support (`compare_kernel_path_case`/
+  `compare_kernel_path_subset`, `--mode kernel-path` in
+  `benchmarks/campaign/exp001_driver.py`), built and tested against a
+  `--features cuda` rebuild of `prin` on H1 (`GpuSparseKuramoto` now present).
+  A closure run over all 72 `kuramoto_sparse_knn_*` corpus cases passed
+  72/72 at the registered `rtol=1e-5, atol=1e-6` kernel tolerance (worst case
+  `max_abs_diff≈8.98e-7`). 7 new tests added (`tests/test_exp001_driver.py`,
+  36/36 passing; `ruff`/`mypy --strict`/Snyk Code clean on both files), one of
+  which regression-tests a pre-existing bug found during this review: the E1
+  driver's `campaign-metadata.json` artefact tagging mistagged
+  `--mode repeatability` runs as `H1` instead of `H3` (fixed with an explicit
+  `_MODE_HYPOTHESIS` mapping; no run had executed under the bug). EXP-001 E3
+  (session 0156) is authorized to begin.
 - **EXP-001 pre-registration — golden-trajectory numerical parity (session
   0154, E1, 2026-09-21) —
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`.**
