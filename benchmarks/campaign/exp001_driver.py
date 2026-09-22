@@ -120,6 +120,20 @@ _RUN_ID_RE = re.compile(
     r"^RUN-(?P<utc>\d{8}T\d{6}Z)-(?P<sha>[0-9a-f]{7,40})-(?P<label>[A-Za-z0-9][A-Za-z0-9._-]*)$"
 )
 
+#: A ``--label`` must be exactly one safe filename component — the same
+#: charset ``_RUN_ID_RE``'s ``<label>`` group accepts. ``main`` embeds it
+#: directly into ``result_name = f"{mode}_{label}.json"``, which becomes both
+#: a real filesystem path under ``run_dir`` and a key in the
+#: ``campaign-metadata.json`` sidecar that ``check_run_complete`` later
+#: trusts; an unvalidated label containing ``/``, ``\``, or ``..`` segments
+#: can move the resulting path outside ``run_dir`` — confirmed empirically:
+#: label ``"x/../../../EXP-002/foreign"`` resolves into a *different*
+#: experiment's directory while still passing
+#: ``benchmarks._common.result``'s allowed-roots check, since that check only
+#: confirms containment under ``benchmarks/results/`` as a whole (CWE-22,
+#: CodeRabbit + Copilot).
+_LABEL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+
 #: GPU sparse-k-NN kernel-path tolerance (H4; Testing Standards §3;
 #: ``prin_kernels::equivalence::{DEFAULT_RTOL, DEFAULT_ATOL}``) — the fused
 #: CubeCL kernel computes in f32, so this is *not* the f64 trajectory/metric
@@ -241,19 +255,51 @@ def prinet_reference_provenance() -> dict[str, str]:
     }
 
 
-def _validate_run_dir(run_dir: Path) -> None:
-    """Enforce the campaign plan §7.1 run-directory contract before any write.
+def _validate_label(label: str) -> None:
+    """Reject a ``--label`` that is not a single safe filename component.
+
+    See :data:`_LABEL_RE`'s docstring for why: an unvalidated label can move
+    ``result_name`` outside ``run_dir`` (CWE-22).
+
+    Raises:
+        DriverMetadataError: If ``label`` does not match :data:`_LABEL_RE`.
+    """
+    if _LABEL_RE.match(label) is None:
+        raise DriverMetadataError(
+            f"--label {label!r} must be a single filename component "
+            "(letters, digits, '.', '_', '-' only, no path separators or "
+            "'..' segments) — campaign plan §7.1 <label> convention"
+        )
+
+
+def _reserve_run_dir(run_dir: Path) -> None:
+    """Validate and atomically reserve the campaign plan §7.1 run directory.
 
     A run directory must (1) be named ``RUN-<UTC yyyymmddThhmmssZ>-<short
     SHA>-<label>``, (2) be a direct child of :data:`_RUN_ROOT`
     (``benchmarks/results/EXP-001/``), and (3) not already exist — "a run
     directory is never reused: a re-run, a retry after an abort, or a
-    corrected run gets a new RUN- directory". Checked up front, before any
-    comparison runs, so a typo or accidental retry fails fast rather than
-    appending a valid-looking artefact to an unrelated or reused directory.
+    corrected run gets a new RUN- directory". Name and parent are checked up
+    front, before any comparison runs, so a typo or accidental retry fails
+    fast rather than appending a valid-looking artefact to an unrelated or
+    reused directory.
+
+    The directory is then created **here**, via a bare exclusive-create
+    ``mkdir()`` (no ``exist_ok``) — not left to
+    ``benchmarks._common.result.write_json_exclusive``'s later
+    ``mkdir(parents=True, exist_ok=True)`` call, which is a no-op if the
+    directory already exists. Deferring creation that way leaves a window in
+    which two concurrent invocations can both pass an ``exists()`` check and
+    the later one publish into a directory it never reserved, violating the
+    never-reused contract (CodeRabbit) — the same TOCTOU class already
+    closed for individual files (§5.5/§5.7) applies to the directory itself.
+    On failure the reserved directory is **not** removed: a run directory,
+    once created, is never reused or deleted (preregistration §10); a failed
+    run's directory is left for inspection, and any retry gets a new RUN- ID.
 
     Raises:
-        DriverMetadataError: On any of the three violations.
+        DriverMetadataError: On a name/parent violation, if the raw-artefact
+            root does not exist, or if the directory already exists.
     """
     if _RUN_ID_RE.match(run_dir.name) is None:
         raise DriverMetadataError(
@@ -265,30 +311,55 @@ def _validate_run_dir(run_dir: Path) -> None:
             f"run directory {run_dir} must be a direct child of {_RUN_ROOT} "
             "(campaign plan §7.1 raw-artefact root for this experiment)"
         )
-    if run_dir.exists():
+    if not run_dir.parent.is_dir():
+        raise DriverMetadataError(
+            f"{run_dir.parent} does not exist; cannot create a run directory "
+            "under a missing raw-artefact root"
+        )
+    try:
+        run_dir.mkdir()
+    except FileExistsError as exc:
         raise DriverMetadataError(
             f"run directory {run_dir} already exists; a run directory is never "
             "reused (campaign plan §7.1) — re-runs, retries, and corrections "
             "get a new RUN- ID"
-        )
+        ) from exc
+
+
+def _is_safe_artefact_name(name: str) -> bool:
+    """True iff ``name`` is a plain filename: no separators, no ``.``/``..``."""
+    return (
+        bool(name) and name not in (".", "..") and "/" not in name and "\\" not in name
+    )
 
 
 def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
-    """Run-closure precondition: every artefact the sidecar names must exist.
+    """Run-closure precondition: the sidecar and the directory's result files
+    name each other exactly, with no path escapes either way.
 
     ``tools.reproduce.append_manifest`` inventories every ``*.json`` in a
     directory without reading ``campaign-metadata.json``, so on its own it
-    would happily manifest a sidecar-only directory left by a process kill
-    between the sidecar and result writes, and ``verify_manifest`` would then
-    accept it. E3 must call this before ``append_manifest`` (see
+    would happily manifest: a sidecar-only directory left by a process kill
+    between the sidecar and result writes (missing-artefact case, below); a
+    directory holding a result JSON the sidecar never named (unlisted-file
+    case, below — the corresponding gap CodeRabbit's finding does not cover
+    but Copilot's does: "does not... require every top-level result JSON to
+    be listed"); or, if the sidecar's ``artefacts`` mapping were ever
+    tampered with or malformed, a name containing ``..`` that resolves
+    outside ``run_dir`` entirely (Copilot; the same CWE-22 class as
+    :data:`_LABEL_RE`, defended here independently of label validation since
+    this function must not trust that every sidecar it is ever pointed at
+    was written by a conforming invocation of this driver). E3 must call
+    this before ``append_manifest`` (see
     ``benchmarks/results/EXP-001/README.md`` and preregistration §5.3).
 
     Returns:
         The sidecar's ``artefacts`` mapping, for the caller's log.
 
     Raises:
-        IncompleteRunError: If the sidecar is missing, malformed, or names an
-            artefact that does not exist in ``run_dir``.
+        IncompleteRunError: If the sidecar is missing or malformed, names an
+            unsafe or absent artefact path, or the directory holds a result
+            JSON the sidecar does not name.
     """
     sidecar = run_dir / "campaign-metadata.json"
     if not sidecar.is_file():
@@ -308,6 +379,14 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
         raise IncompleteRunError(
             f"{sidecar} is malformed ({exc}); not a closable run"
         ) from exc
+    unsafe = sorted(name for name in artefacts if not _is_safe_artefact_name(name))
+    if unsafe:
+        raise IncompleteRunError(
+            f"{sidecar} names unsafe artefact path(s) {', '.join(unsafe)} "
+            "(must be a plain filename directly in run_dir, no path "
+            "separators or '..' segments) — refusing to treat as a "
+            "closable run"
+        )
     missing = sorted(name for name in artefacts if not (run_dir / name).is_file())
     if missing:
         raise IncompleteRunError(
@@ -316,6 +395,23 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
             "was interrupted between the sidecar and result writes. Record it "
             "as aborted (preregistration §10; never delete it) and retry under "
             "a new RUN- ID; do not manifest it."
+        )
+    # Excludes the sidecar itself and manifest.json — both are run-directory
+    # infrastructure the campaign-metadata artefacts mapping never names
+    # (manifest.json is written by append_manifest, after this check; it may
+    # already exist if this is called again on an already-closed directory).
+    infrastructure = {sidecar.name, "manifest.json"}
+    present = {
+        path.name
+        for path in run_dir.iterdir()
+        if path.is_file() and path.suffix == ".json" and path.name not in infrastructure
+    }
+    unlisted = sorted(present - set(artefacts))
+    if unlisted:
+        raise IncompleteRunError(
+            f"{run_dir} holds result file(s) {', '.join(unlisted)} that "
+            "campaign-metadata.json does not name in its artefacts mapping "
+            "— refusing to treat as a closable run"
         )
     return artefacts
 
@@ -1171,7 +1267,13 @@ def _parser() -> argparse.ArgumentParser:
         "RUN-<UTC yyyymmddThhmmssZ>-<short git SHA>-<label> (campaign plan "
         "§7.1). Rejected otherwise, before any comparison runs.",
     )
-    parser.add_argument("--label", required=True)
+    parser.add_argument(
+        "--label",
+        required=True,
+        help="Short pre-registered tag (e.g. corpus-cpu, seedrep0). A single "
+        "filename component: letters, digits, '.', '_', '-' only — no path "
+        "separators or '..' segments (campaign plan §7.1).",
+    )
     parser.add_argument("--session", required=True)
     parser.add_argument("--operator", required=True)
     return parser
@@ -1188,7 +1290,8 @@ def main(argv: list[str] | None = None) -> int:
     reference: dict[str, str] = {}
     try:
         _validate_metadata(EXP_ID, run_id, args.session, args.operator)
-        _validate_run_dir(run_dir)
+        _validate_label(args.label)
+        _reserve_run_dir(run_dir)
         if args.mode == "corpus":
             loader = CorpusLoader(args.corpus_dir)
             case_ids = args.case_ids or [

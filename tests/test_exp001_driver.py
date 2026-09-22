@@ -556,10 +556,16 @@ class TestKernelPath:
 
 
 class TestRunDirectoryContract:
-    """_validate_run_dir enforces campaign plan §7.1 before any write (Copilot)."""
+    """_reserve_run_dir enforces campaign plan §7.1 before any write (Copilot,
+    CodeRabbit)."""
 
-    def test_canonical_new_child_of_root_passes(self, run_root: Path) -> None:
-        driver._validate_run_dir(_run_dir(run_root, "corpus-cpu"))
+    def test_canonical_new_child_of_root_passes_and_creates_it(
+        self, run_root: Path
+    ) -> None:
+        run_dir = _run_dir(run_root, "corpus-cpu")
+        assert not run_dir.exists()
+        driver._reserve_run_dir(run_dir)
+        assert run_dir.is_dir()
 
     @pytest.mark.parametrize(
         "name",
@@ -574,21 +580,46 @@ class TestRunDirectoryContract:
         ],
     )
     def test_non_canonical_name_rejected(self, run_root: Path, name: str) -> None:
+        target = run_root / name
         with pytest.raises(driver.DriverMetadataError, match=r"§7\.1 form"):
-            driver._validate_run_dir(run_root / name)
+            driver._reserve_run_dir(target)
+        assert not target.exists()
 
     def test_wrong_parent_rejected(self, run_root: Path, tmp_path: Path) -> None:
         elsewhere = tmp_path / "EXP-002"
         elsewhere.mkdir()
+        target = _run_dir(elsewhere, "corpus-cpu")
         with pytest.raises(driver.DriverMetadataError, match="direct child"):
-            driver._validate_run_dir(_run_dir(elsewhere, "corpus-cpu"))
+            driver._reserve_run_dir(target)
+        assert not target.exists()
 
     def test_existing_directory_rejected(self, run_root: Path) -> None:
         """A run directory is never reused (campaign plan §7.1)."""
         run_dir = _run_dir(run_root, "retry")
         run_dir.mkdir()
         with pytest.raises(driver.DriverMetadataError, match="never"):
-            driver._validate_run_dir(run_dir)
+            driver._reserve_run_dir(run_dir)
+
+    def test_concurrent_reservation_only_one_wins(self, run_root: Path) -> None:
+        """Regression test: exists()-then-write is a TOCTOU race (CodeRabbit).
+
+        The check is now an atomic exclusive-create ``mkdir()``: simulating
+        two invocations racing for the same directory, exactly one succeeds
+        and the other sees it as already existing, rather than both passing
+        a check and one silently publishing into the other's directory.
+        """
+        run_dir = _run_dir(run_root, "race")
+        driver._reserve_run_dir(run_dir)  # first invocation wins
+        with pytest.raises(driver.DriverMetadataError, match="never"):
+            driver._reserve_run_dir(run_dir)  # second invocation loses
+
+    def test_missing_root_rejected(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        missing_root = tmp_path / "does-not-exist"
+        monkeypatch.setattr(driver, "_RUN_ROOT", missing_root)
+        with pytest.raises(driver.DriverMetadataError, match="does not exist"):
+            driver._reserve_run_dir(_run_dir(missing_root, "smoke"))
 
     def test_cli_rejects_before_any_comparison(
         self, run_root: Path, monkeypatch: pytest.MonkeyPatch
@@ -618,6 +649,68 @@ class TestRunDirectoryContract:
         assert driver.main(argv) == 2
         assert calls == []
         assert not (run_root / "RUN-typo").exists()
+
+
+class TestLabelContract:
+    """_validate_label rejects a --label that could escape run_dir (CWE-22,
+    CodeRabbit + Copilot)."""
+
+    @pytest.mark.parametrize(
+        "label", ["corpus-cpu", "seedrep0", "knn16k.cuda", "a", "A1_2-3.4"]
+    )
+    def test_safe_label_passes(self, label: str) -> None:
+        driver._validate_label(label)
+
+    @pytest.mark.parametrize(
+        "label",
+        [
+            "",
+            "..",
+            "x/../../../EXP-002/foreign",
+            "a/b",
+            "a\\b",
+            "/etc/passwd",
+            "..\\..\\foreign",
+            ".hidden",
+        ],
+    )
+    def test_unsafe_label_rejected(self, label: str) -> None:
+        with pytest.raises(driver.DriverMetadataError, match="single filename"):
+            driver._validate_label(label)
+
+    def test_traversal_label_confirmed_empirically_and_rejected(
+        self, run_root: Path
+    ) -> None:
+        """The exact scenario CodeRabbit/Copilot demonstrated: proves the
+        traversal is real (would escape run_dir if unvalidated) *and* that
+        the CLI rejects it before writing anything, anywhere."""
+        run_dir = _run_dir(run_root, "smoke")
+        label = "x/../../../EXP-002/foreign"
+        result_name = f"corpus_{label}.json"
+        escaped = (run_dir / result_name).resolve()
+        assert run_root.resolve() not in escaped.parents, (
+            "fixture assumption violated: this label no longer escapes run_dir"
+        )
+
+        argv = [
+            "--mode",
+            "corpus",
+            "--corpus-dir",
+            str(_CORPUS_DIR),
+            "--case-id",
+            _REPRESENTATIVE_CASES[0],
+            "--out",
+            str(run_dir),
+            "--label",
+            label,
+            "--session",
+            "0156",
+            "--operator",
+            "tester",
+        ]
+        assert driver.main(argv) == 2
+        assert not escaped.exists()
+        assert not run_dir.exists()
 
 
 class TestReferenceProvenance:
@@ -739,6 +832,50 @@ class TestRunClosure:
         (run_dir / "campaign-metadata.json").write_text(body, encoding="utf-8")
         with pytest.raises(driver.IncompleteRunError, match="malformed"):
             driver.check_run_complete(run_dir)
+
+    @pytest.mark.parametrize(
+        "unsafe_name",
+        ["../../foreign.json", "sub/inner.json", "..", ".", "a\\b.json"],
+    )
+    def test_unsafe_artefact_name_rejected(
+        self, run_root: Path, unsafe_name: str
+    ) -> None:
+        """A tampered or malformed sidecar naming a traversal path must never
+        be trusted, independent of --label validation upstream (Copilot).
+        """
+        run_dir = _run_dir(run_root, "unsafe")
+        run_dir.mkdir()
+        (run_dir / "campaign-metadata.json").write_text(
+            json.dumps({"artefacts": {unsafe_name: ["H1"]}}), encoding="utf-8"
+        )
+        with pytest.raises(driver.IncompleteRunError, match="unsafe artefact"):
+            driver.check_run_complete(run_dir)
+
+    def test_unlisted_result_file_rejected(self, run_root: Path) -> None:
+        """Every top-level result JSON must be named by the sidecar, not just
+        every sidecar name be present (Copilot: "does not require every
+        top-level result JSON to be listed").
+        """
+        run_dir = _run_dir(run_root, "unlisted")
+        self._sidecar(run_dir, {"corpus_smoke.json": ["H1"]})
+        (run_dir / "corpus_smoke.json").write_text("{}", encoding="utf-8")
+        (run_dir / "corpus_extra.json").write_text("{}", encoding="utf-8")
+        with pytest.raises(driver.IncompleteRunError, match=r"corpus_extra\.json"):
+            driver.check_run_complete(run_dir)
+
+    def test_manifest_json_is_not_treated_as_an_unlisted_result(
+        self, run_root: Path
+    ) -> None:
+        """manifest.json is run-directory infrastructure (written by
+        append_manifest, the step *after* this check), not a result artefact
+        the sidecar would ever name — so its presence must not trip the
+        unlisted-file check. This also makes check_run_complete safe to call
+        again on an already-closed directory."""
+        run_dir = _run_dir(run_root, "withmanifest")
+        self._sidecar(run_dir, {"corpus_smoke.json": ["H1"]})
+        (run_dir / "corpus_smoke.json").write_text("{}", encoding="utf-8")
+        (run_dir / "manifest.json").write_text("{}", encoding="utf-8")
+        assert driver.check_run_complete(run_dir) == {"corpus_smoke.json": ["H1"]}
 
 
 class TestCampaignMetadata:

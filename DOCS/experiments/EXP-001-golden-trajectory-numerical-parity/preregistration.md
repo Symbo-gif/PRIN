@@ -16,13 +16,18 @@ pre-execution amendment (§5.5). A fresh CodeRabbit review plus a new Copilot
 review were then explicitly requested on the same PR; their findings were
 triaged and fixed as a third pre-execution amendment (§5.6), and a further
 Copilot review of that commit found two follow-on defects §5.6 had itself
-introduced, fixed as a fourth (§5.7); a final CodeRabbit + Copilot round on
+introduced, fixed as a fourth (§5.7); a further CodeRabbit + Copilot round on
 that commit found six more items — the unpinned H2 reference, the
 unenforced §7.1 run-directory contract, the kill-between-writes closure gap
 and §5.7's overstated transaction claim, a §4/§8 H2b inconsistency, and a
-locale nit — each independently validated and fixed as a fifth (§5.8). All
-still within the same E1→E2 edit window, since no `RUN-` directory exists
-yet.
+locale nit — each independently validated and fixed as a fifth (§5.8); a
+sixth round on that commit found five more items — a `--label` path-
+traversal gap, a TOCTOU race in §5.8's own run-directory reservation, two
+`check_run_complete` containment gaps (an unsafe artefact name and an
+unlisted result file), and a finding-count arithmetic error this document
+had carried since §5.5 — each independently validated and fixed as a sixth
+(§5.9). All still within the same E1→E2 edit window, since no `RUN-`
+directory exists yet.
 **EXP-001 E3 (session 0156) is authorized to begin.**
 **Code version:** `prin` 1.0.0-rc1 @ `8ce115f` (campaign baseline SHA; this
 document was drafted at E1 on branch `campaign/0154-exp001-e1` and amended at
@@ -128,20 +133,21 @@ versioned per-case evidence artefact).
 
 H1–H4 are all addressed by the committed driver
 (`benchmarks/campaign/exp001_driver.py`, tested in tandem —
-`tests/test_exp001_driver.py`, 79/79 passing at freeze, including the 4
+`tests/test_exp001_driver.py`, 102/102 passing at freeze, including the 4
 `slow`/PRINet-gated H2 tests). H4's driver support
 (`compare_kernel_path_case`/`compare_kernel_path_subset`, `--mode
 kernel-path`) was closed as a pre-execution amendment at E2 (session 0155);
-§5.4 records the closure, and four further E2 remediation passes (§5.5,
-§5.6, §5.7, §5.8) fixed a total of seventeen code-review findings across
-four review rounds — an H2a/H2b data-sufficiency gap, unenforced abort
-criteria, artefact-write races and the sidecar/result transaction, H4's
-CUDA/wgpu ambiguity (closed properly only at §5.6, after §5.5's first
-attempt proved insufficient), H2b's cross-metric pooling, the clamp-trip
-criterion's scope, the H4 test guards, two follow-on defects §5.6 itself
-introduced, the unpinned H2 reference, the unenforced §7.1 run-directory
-contract, the kill-between-writes closure gap, and a §4/§8 H2b
-inconsistency.
+§5.4 records the closure, and five further E2 remediation passes (§5.5,
+§5.6, §5.7, §5.8, §5.9) fixed a total of sixteen code-review findings (plus
+one locale correction) across five review rounds — an H2a/H2b
+data-sufficiency gap, unenforced abort criteria, artefact-write races and
+the sidecar/result transaction, H4's CUDA/wgpu ambiguity (closed properly
+only at §5.6, after §5.5's first attempt proved insufficient), H2b's
+cross-metric pooling, the clamp-trip criterion's scope, the H4 test guards,
+two follow-on defects §5.6 itself introduced, the unpinned H2 reference, the
+unenforced §7.1 run-directory contract, the kill-between-writes closure gap,
+a §4/§8 H2b inconsistency, a `--label` path-traversal gap, a run-directory
+reservation TOCTOU race, and two `check_run_complete` containment gaps.
 
 ## 3. Expected results
 
@@ -698,6 +704,82 @@ canonical `RUN-` names under a `run_root` fixture; `tests/test_benchrunner.py`
 benchmarks/campaign --strict` clean; Snyk Code 0 issues on both touched
 Python files; full local quick suite green.
 
+### 5.9 Sixth E2 remediation pass — fifth review round (pre-execution amendment)
+
+A sixth CodeRabbit + Copilot round on §5.8's commit found five items. Each
+was independently validated against the code and standards before being
+fixed (still no `RUN-` directory; CI green throughout):
+
+1. **`--label` accepted a path-traversal payload (Copilot; validated).**
+   §5.8's `_validate_run_dir` fixed the *name* of `--out` but never
+   constrained `--label` itself, and `--label` is embedded verbatim into
+   that name. A label such as `x/../../../EXP-002/foreign` still matches
+   nothing the regex rejects until the whole basename is checked as one
+   string — reproduced empirically end-to-end through `main()`: it escaped
+   the intended run directory. Fixed: `_validate_label` rejects any label
+   that is not a single safe filename component
+   (`_LABEL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")`) before
+   `--out` is even inspected, so the escape can no longer be constructed.
+2. **The run-directory reservation was check-then-act, not atomic
+   (CodeRabbit; validated).** §5.8's `_validate_run_dir` (renamed
+   `_reserve_run_dir`) tested `run_dir.exists()` and raised if true, but the
+   actual directory creation happened later inside `write_json_exclusive`
+   via `mkdir(parents=True, exist_ok=True)` — a TOCTOU window in which two
+   concurrent invocations with the same `RUN-` name could both pass the
+   `exists()` check and race to create/populate the same directory. Fixed:
+   `_reserve_run_dir` now calls `run_dir.mkdir()` (no `exist_ok`) itself and
+   converts `FileExistsError` into `DriverMetadataError`, so reservation is
+   the atomic act of creation, not a separate check before it.
+3. **`check_run_complete` did not validate artefact names before using them
+   as paths (Copilot; validated).** A `campaign-metadata.json` naming
+   `"../../foreign.json"` or `"sub/inner.json"` in its `artefacts` mapping
+   would have `run_dir / name` resolve outside (or into a subdirectory of)
+   `run_dir`, and the existing missing-file check would silently treat that
+   escaped path as present-or-absent without ever flagging that the sidecar
+   itself was malformed. Fixed: `_is_safe_artefact_name` rejects any name
+   that is empty, `.`/`..`, or contains a `/` or `\`; `check_run_complete`
+   checks every artefact name against it before the existence check runs.
+4. **An unmanifested extra result file in a run directory would close
+   silently (CodeRabbit; validated).** `check_run_complete` verified every
+   *named* artefact exists but never checked the converse — a `*.json` file
+   present in `run_dir` that `campaign-metadata.json` does not name (e.g.
+   left by a retried write, or a foreign file placed in the directory)
+   would be picked up by `append_manifest`'s directory glob and manifested
+   as if it were a legitimate campaign artefact, with no record of why it
+   is there. Fixed: `check_run_complete` also computes the set of `*.json`
+   files present (excluding the sidecar itself and `manifest.json`, both
+   run-directory infrastructure no artefacts mapping ever names) and raises
+   `IncompleteRunError` if it is not a subset of the named artefacts.
+5. **This document's own finding count was wrong (CodeRabbit; validated,
+   correction differs from CodeRabbit's own suggested figure).** §5.5–§5.8
+   are collectively described elsewhere in this document as "seventeen"
+   remediation items; CodeRabbit's review comment proposed correcting this
+   to "18 remediation items (17 findings + 1 locale)". An exact recount
+   (pattern `^\d+\. \*\*` per `### 5.x` subsection: §5.5=4, §5.6=5, §5.7=2,
+   §5.8=5) gives 16, not 17 or 18. Fixed throughout this document using the
+   independently verified figure, not CodeRabbit's own arithmetic.
+
+Evidence: `tests/test_exp001_driver.py`, 102/102 passing (79 prior + 23 new:
+`TestLabelContract` incl. parametrized safe/unsafe labels and an end-to-end
+CLI reproduction of the exact traversal payload from finding 1, asserting
+neither the escaped path nor `run_dir` itself is ever created;
+`TestRunDirectoryContract` +2 (a concurrent-reservation test asserting
+exactly one of two racing reservations wins, and a missing-`_RUN_ROOT`
+test); `TestRunClosure` +3 (parametrized unsafe artefact names, an unlisted
+result file, and a regression test asserting `manifest.json` itself is
+correctly excluded from the unlisted-file check — this last test was
+initially written backwards during this round, expecting an exception,
+before being corrected to assert successful closure once the intended
+infrastructure-exclusion design was reasoned through). `ruff check`/`ruff
+format --check` and `mypy python/prin benchmarks/campaign --strict` clean;
+Snyk Code 0 issues on both touched Python files (scanned individually);
+full local quick suite green; `tools.wp001_baseline check`,
+`check_global_session_registration.py`, and `check_dv_register_gates.py` all
+pass. An end-to-end corpus-mode smoke run through the live driver against
+the real corpus (reserve → compare → write → close) independently confirms
+the full pipeline still produces a `check_run_complete`-closable directory
+after all five fixes.
+
 ## 6. Variables and controls
 
 - **Independent variables:** oscillator model, coupling mode, integrator,
@@ -933,7 +1015,7 @@ No budget amendment is anticipated.
   `tests/test_exp001_driver.py`, 57/57 passing at that point;
   `ruff`/`mypy --strict` clean; Snyk Code 0 issues on both touched files —
   see §5.7 for the full evidence and finding-by-finding disposition.
-- **Driver (E2 fifth remediation, §5.8):** a final CodeRabbit + Copilot
+- **Driver (E2 fifth remediation, §5.8):** a further CodeRabbit + Copilot
   round on the §5.7 commit found 6 items, each independently validated
   against the code and standards before being fixed: the H2 reference was
   never pinned or recorded (`prinet_reference_provenance` now aborts unless
@@ -952,3 +1034,25 @@ No budget amendment is anticipated.
   new); `ruff`/`mypy --strict` clean; Snyk Code 0 issues on both touched
   Python files — see §5.8 for the full evidence and finding-by-finding
   disposition.
+- **Driver (E2 sixth remediation, §5.9):** a sixth CodeRabbit + Copilot
+  round on the §5.8 commit found 5 items, each independently validated
+  against the code and standards before being fixed: `--label` accepted a
+  path-traversal payload that §5.8's directory-name regex alone could not
+  catch (`_validate_label` now rejects anything but a single safe filename
+  component before `--out` is inspected); §5.8's own run-directory
+  reservation was check-then-act, not atomic (`_reserve_run_dir` now
+  creates the directory itself with a bare `mkdir()` and converts
+  `FileExistsError` into the abort, closing the race); `check_run_complete`
+  neither validated artefact names as safe path components nor rejected an
+  unmanifested extra `*.json` file in the run directory (both closed,
+  `manifest.json` correctly excluded as run-directory infrastructure); and
+  this document's own "seventeen remediation items" count was wrong — an
+  exact recount gives 16, not 17, and not CodeRabbit's own suggested "18".
+  `tests/test_exp001_driver.py`, 102/102 passing at freeze (23 new);
+  `ruff`/`mypy --strict` clean; Snyk Code 0 issues on both touched Python
+  files; full local quick suite and all three governance gates
+  (`wp001_baseline`, session registration, DV register) green; an
+  end-to-end corpus-mode smoke run through the live driver against the real
+  corpus independently confirmed the full reserve→compare→write→close
+  pipeline still works after all five fixes — see §5.9 for the full
+  evidence and finding-by-finding disposition.

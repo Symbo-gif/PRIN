@@ -9,6 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 pre-registration — sixth E2 remediation, fifth code-review
+  round on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.9.** A sixth CodeRabbit + Copilot round found 5 items; each was
+  independently validated against the code and standards before being
+  fixed as a sixth pre-execution amendment. (1) `--label` accepted a
+  path-traversal payload: §5.8's `_validate_run_dir` constrained `--out`'s
+  full basename but never `--label` alone, so `x/../../../EXP-002/foreign`
+  could still escape the intended run directory — reproduced empirically
+  end-to-end through `main()`. New `_validate_label()` rejects anything but
+  a single safe filename component
+  (`_LABEL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")`) before `--out`
+  is even inspected. (2) The run-directory reservation itself was
+  check-then-act, not atomic: `_validate_run_dir` tested `run_dir.exists()`
+  and raised if true, but the actual `mkdir` happened later inside
+  `write_json_exclusive`, leaving a TOCTOU window for two concurrent
+  invocations with the same `RUN-` name. Renamed to `_reserve_run_dir`,
+  which now calls `run_dir.mkdir()` itself (no `exist_ok`) and converts
+  `FileExistsError` into the abort. (3) `check_run_complete()` used
+  artefact names from `campaign-metadata.json` as path components without
+  validating them, so `"../../foreign.json"` or `"sub/inner.json"` would
+  resolve outside or below `run_dir` without ever being flagged as
+  malformed. New `_is_safe_artefact_name()` rejects any name that is empty,
+  `.`/`..`, or contains `/` or `\`, checked before the existence check.
+  (4) `check_run_complete()` verified every named artefact exists but never
+  the converse — an unmanifested extra `*.json` file in the run directory
+  would be silently picked up by `append_manifest`'s glob. It now also
+  rejects any `*.json` file present that `campaign-metadata.json` does not
+  name (excluding the sidecar itself and `manifest.json`, both
+  run-directory infrastructure). (5) This document's own "seventeen
+  remediation items" count was wrong; an exact recount (§5.5=4, §5.6=5,
+  §5.7=2, §5.8=5) gives sixteen findings plus one locale correction — fixed
+  throughout using the verified figure, not CodeRabbit's own suggested
+  "18". 23 new tests (`tests/test_exp001_driver.py`, 102/102 passing);
+  `ruff`/`mypy --strict` clean; Snyk Code 0 issues on both touched Python
+  files; full local quick suite and all three governance gates
+  (`wp001_baseline`, session registration, DV register) green; an
+  end-to-end corpus-mode smoke run through the live driver independently
+  confirmed the full reserve→compare→write→close pipeline still works.
+  EXP-001 E3 (session 0156) remains authorized to begin.
 - **EXP-001 pre-registration — fifth E2 remediation, fourth code-review
   round on PR #20 (session 0155, E2, 2026-09-22) —
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
