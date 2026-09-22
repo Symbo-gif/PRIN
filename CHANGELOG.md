@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 pre-registration — fourth E2 remediation, third code-review round
+  on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.7.** A further Copilot review of the third-remediation commit found 2
+  follow-on defects that remediation had itself introduced, both fixed as a
+  fourth pre-execution amendment: (1) the pre-existing-result `Path.exists()`
+  fast-fail was described as *reserving* the result path, but it is only a
+  TOCTOU check — a concurrent writer can still take the path between it and
+  `write_result`, leaving the sidecar this invocation already published
+  attached to a result it did not write. Fixed by making the pair genuinely
+  transactional: the sidecar still goes first (campaign plan §7.2 accepts a
+  result only with its provenance), and any `write_result` failure now rolls
+  the sidecar back — which can only ever remove this invocation's own
+  sidecar, since `write_campaign_metadata` publishes by exclusive-create and
+  raises if one already exists. (2) The driver's module docstring still
+  described H4's GPU side as running through
+  `prin._torch_compat.KuramotoOscillator`, which the third remediation had
+  deliberately replaced with a direct `prin._prin_core.GpuSparseKuramoto`
+  call; beyond being stale, that wording invited a future change to reroute
+  the path back through the dispatch hook and silently drop the
+  CUDA-residency check. 1 new test
+  (`test_result_write_failure_rolls_back_the_sidecar`, asserting both that
+  the sidecar exists when `write_result` is entered and that it is gone
+  afterwards; `tests/test_exp001_driver.py`, 57/57 passing);
+  `ruff`/`mypy --strict` clean; Snyk Code 0 issues. EXP-001 E3 (session 0156)
+  remains authorized to begin.
 - **EXP-001 pre-registration — third E2 remediation, second code-review round
   on PR #20 (session 0155, E2, 2026-09-22) —
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`

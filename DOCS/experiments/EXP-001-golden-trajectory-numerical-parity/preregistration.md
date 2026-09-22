@@ -14,8 +14,10 @@ review (PR #20) ahead of E3, per maintainer direction; Devin/CodeRabbit/
 Copilot findings from that review were triaged and fixed as a second
 pre-execution amendment (§5.5). A fresh CodeRabbit review plus a new Copilot
 review were then explicitly requested on the same PR; their findings were
-triaged and fixed as a third pre-execution amendment (§5.6) — still within
-the same E1→E2 edit window throughout, since no `RUN-` directory exists yet.
+triaged and fixed as a third pre-execution amendment (§5.6), and a further
+Copilot review of that commit found two follow-on defects §5.6 had itself
+introduced, fixed as a fourth (§5.7) — still within the same E1→E2 edit
+window throughout, since no `RUN-` directory exists yet.
 **EXP-001 E3 (session 0156) is authorized to begin.**
 **Code version:** `prin` 1.0.0-rc1 @ `8ce115f` (campaign baseline SHA; this
 document was drafted at E1 on branch `campaign/0154-exp001-e1` and amended at
@@ -121,16 +123,17 @@ versioned per-case evidence artefact).
 
 H1–H4 are all addressed by the committed driver
 (`benchmarks/campaign/exp001_driver.py`, tested in tandem —
-`tests/test_exp001_driver.py`, 56/56 passing at freeze, including the 3
+`tests/test_exp001_driver.py`, 57/57 passing at freeze, including the 3
 `slow`/PRINet-gated H2 tests). H4's driver support
 (`compare_kernel_path_case`/`compare_kernel_path_subset`, `--mode
 kernel-path`) was closed as a pre-execution amendment at E2 (session 0155);
-§5.4 records the closure, and two further E2 remediation passes (§5.5, §5.6)
-fixed a total of nine code-review findings across two review rounds — an
-H2a/H2b data-sufficiency gap, unenforced abort criteria, two artefact-write
-races, H4's CUDA/wgpu ambiguity (closed properly only at §5.6, after §5.5's
-first attempt proved insufficient), H2b's cross-metric pooling, the
-clamp-trip criterion's scope, and the H4 test guards.
+§5.4 records the closure, and three further E2 remediation passes (§5.5,
+§5.6, §5.7) fixed a total of eleven code-review findings across three review
+rounds — an H2a/H2b data-sufficiency gap, unenforced abort criteria,
+artefact-write races and the sidecar/result transaction, H4's CUDA/wgpu
+ambiguity (closed properly only at §5.6, after §5.5's first attempt proved
+insufficient), H2b's cross-metric pooling, the clamp-trip criterion's scope,
+the H4 test guards, and two follow-on defects §5.6 itself introduced.
 
 ## 3. Expected results
 
@@ -561,6 +564,45 @@ addition); `ruff check`/`ruff format --check` and `mypy python/prin
 benchmarks/campaign --strict` clean; Snyk Code 0 issues on
 `benchmarks/campaign/exp001_driver.py` and `tests/test_exp001_driver.py`.
 
+### 5.7 Fourth E2 remediation pass — third review round (pre-execution amendment)
+
+A further Copilot review of §5.6's commit found two follow-on defects that
+§5.6's own fixes had introduced. Both fixed as a fourth pre-execution
+amendment (still no `RUN-` directory; CI green on all 29 checks throughout):
+
+1. **The "reservation" was only a TOCTOU check (Copilot).** §5.6 item 2
+   fast-fails on a pre-existing result via `Path.exists()`, which the
+   surrounding comment described as *reserving* the path. It does not: a
+   concurrent writer can still take the result path between that check and
+   `write_result`, in which case this invocation would publish its sidecar
+   and only then fail — exactly the misattributed-provenance outcome §5.6
+   set out to prevent, just through a narrower window. Fixed by making the
+   pair genuinely transactional rather than by widening the check: the
+   sidecar is still published first (campaign plan §7.2 accepts a result
+   only with its provenance), but any failure of the subsequent
+   `write_result` now **rolls the sidecar back**. That rollback can only
+   ever remove this invocation's own sidecar, since
+   `write_campaign_metadata` publishes by exclusive-create and raises if one
+   already exists — so reaching the rollback proves we created it. Either
+   both artefacts land or neither does. The `exists()` check is retained as
+   a cheap fast-fail and its comment corrected to say so.
+2. **Module docstring described the superseded H4 path (Copilot).** The
+   driver's own module docstring still said H4's GPU side runs "via
+   `prin._torch_compat.KuramotoOscillator`", which §5.6 item 1 had
+   deliberately changed to a direct `prin._prin_core.GpuSparseKuramoto`
+   call. Beyond being stale, that wording invited a future change to reroute
+   the path back through the dispatch hook and silently drop the
+   CUDA-residency check. Corrected, with an explicit note that the direct
+   call is load-bearing rather than stylistic.
+
+Evidence: `tests/test_exp001_driver.py`, 57/57 passing (56 prior + 1 new:
+`TestCli::test_result_write_failure_rolls_back_the_sidecar`, which asserts
+both that the sidecar exists when `write_result` is entered and that it is
+gone after the failure — a weaker test would pass even if the sidecar were
+never written); `ruff check`/`ruff format --check` and `mypy python/prin
+benchmarks/campaign --strict` clean; Snyk Code 0 issues on both touched
+files; full local quick suite green.
+
 ## 6. Variables and controls
 
 - **Independent variables:** oscillator model, coupling mode, integrator,
@@ -781,6 +823,18 @@ No budget amendment is anticipated.
   introduced by §5.5's own fix, H2b's cross-metric pooling, the clamp-trip
   criterion's enforced/not-enforced scope, and the H4 test guards missing
   the strengthened CUDA requirement. `tests/test_exp001_driver.py`, 56/56
-  passing at freeze; `ruff`/`mypy --strict` clean; Snyk Code 0 issues on
+  passing at that point; `ruff`/`mypy --strict` clean; Snyk Code 0 issues on
   `exp001_driver.py` and `test_exp001_driver.py` — see §5.6 for the full
   evidence and finding-by-finding disposition.
+- **Driver (E2 fourth remediation, §5.7):** a further Copilot review of the
+  §5.6 commit found 2 follow-on defects that §5.6's own fixes had
+  introduced: its pre-existing-result `exists()` check was described as a
+  reservation but is only a TOCTOU check (closed by making the
+  sidecar/result pair transactional — the sidecar is rolled back if the
+  result write fails, and can only ever roll back this invocation's own
+  creation), and the module docstring still described the superseded
+  `_torch_compat` H4 path (corrected, with a note that the direct binding
+  call is load-bearing because it carries the CUDA-residency check).
+  `tests/test_exp001_driver.py`, 57/57 passing at freeze;
+  `ruff`/`mypy --strict` clean; Snyk Code 0 issues on both touched files —
+  see §5.7 for the full evidence and finding-by-finding disposition.

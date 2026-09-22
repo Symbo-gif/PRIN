@@ -19,9 +19,16 @@ comparisons, all against the actual PRIN (Rust) numerical core:
   statistic itself — see :func:`compare_fuzz_case`).
 * **GPU kernel-path tolerance-identity** (H4): for every ``kuramoto_sparse_knn_*``
   corpus case, evaluate one derivative step through the CPU (f64 Rust) path
-  and the GPU (f32 CubeCL) ``prin._prin_core.GpuSparseKuramoto`` kernel via
-  ``prin._torch_compat.KuramotoOscillator``, and compare within the
-  registered GPU-kernel tolerance.
+  (``prin._torch_compat.KuramotoOscillator.compute_derivatives``) and the GPU
+  (f32 CubeCL) ``prin._prin_core.GpuSparseKuramoto`` kernel — called
+  **directly**, not through ``prin._torch_compat``'s
+  ``_compute_derivatives_gpu`` dispatch hook — and compare within the
+  registered GPU-kernel tolerance. The direct call is required, not
+  stylistic: it is the only way to inspect the raw DLPack result's device
+  and so confirm the kernel actually dispatched through CUDA rather than
+  wgpu or a host-slice fallback (see :func:`compare_kernel_path_case`). Do
+  not reroute this path back through the dispatch hook — doing so silently
+  removes that CUDA-residency check.
 
 The fuzz sampler (:func:`draw_fuzz_spec`, :func:`draw_fuzz_initial`) mirrors
 the value ranges declared in ``prin.parity.strategies`` — the canonical
@@ -34,11 +41,12 @@ introduce a second RNG path").
 All numerical authority for the PRIN side lives in ``prin.dynamics``
 (``prin._prin_core``, float64, CPU); this module performs no numerics of its
 own beyond assembling arrays and invoking that authority and the tolerance-
-aware comparison already implemented in ``prin.parity.harness``. H4's GPU
-kernel-path comparison instead goes through ``prin._torch_compat`` (the
-facade the GPU dispatch hook is defined on), since ``prin._prin_core.
-GpuSparseKuramoto`` is a single-step derivative kernel, not a trajectory
-integrator; the comparison tolerance is the registered f32 GPU-kernel bound
+aware comparison already implemented in ``prin.parity.harness``. H4 is the
+exception to the *trajectory* framing: ``prin._prin_core.GpuSparseKuramoto``
+is a single-step derivative kernel, not a trajectory integrator, so H4
+compares one derivative evaluation — its CPU reference through
+``prin._torch_compat``, its GPU side through the raw ``prin._prin_core``
+binding (above) — at the registered f32 GPU-kernel bound
 (``KERNEL_RTOL``/``KERNEL_ATOL`` below), not ``prin.parity.harness``'s f64
 trajectory/metric tolerances.
 
@@ -86,7 +94,11 @@ from prin.parity.schema import CaseArrays, CaseSpec, Coupling, Integrator, Model
 from torch.utils.dlpack import from_dlpack
 
 from benchmarks._common.environment import capture_environment
-from benchmarks._common.result import write_json_exclusive, write_result
+from benchmarks._common.result import (
+    OutputPathError,
+    write_json_exclusive,
+    write_result,
+)
 
 EXP_ID = "EXP-001"
 
@@ -1047,14 +1059,14 @@ def main(argv: list[str] | None = None) -> int:
         "seed_key": args.seed_key,
         "out_dir": str(run_dir),
     }
-    # Reserve the result path before writing anything: if it already exists
-    # (a stale result from an earlier invocation targeting this same run
-    # directory/label, e.g. a retry), abort here rather than let
-    # write_campaign_metadata below succeed and then write_result fail —
-    # that would leave a fresh sidecar claiming provenance over an older,
-    # unrelated result it never actually produced.
     result_name = f"{args.mode}_{args.label}.json"
     result_path = run_dir / result_name
+
+    # Fast fail on a *pre-existing* result (a stale artefact from an earlier
+    # invocation targeting this same run directory/label, e.g. a retry).
+    # This is only a cheap check, not a reservation — a concurrent writer can
+    # still create the path between here and `write_result` below, which is
+    # what the rollback further down actually closes.
     if result_path.exists():
         print(
             f"ABORT: {result_path} already exists; raw benchmark artefacts "
@@ -1064,15 +1076,19 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
-    # Metadata is written *before* the result (campaign plan §7.2: a result
-    # is only accepted with its provenance sidecar). Reversing this order
-    # would let a sidecar-write failure strand a result with no provenance;
-    # this order instead risks, on a result-write failure, a sidecar
-    # referencing a not-yet-written result filename — inert, not misleading,
-    # and never mistaken for accepted evidence the way an unprovenanced
-    # result artefact could be. The reservation check above closes the
-    # remaining gap (a *pre-existing* result at this same path).
-    write_campaign_metadata(
+    # The sidecar/result pair is published transactionally: either both land
+    # or neither does.
+    #
+    # The sidecar goes first because campaign plan §7.2 only accepts a result
+    # that carries its provenance — writing the result first would let a
+    # sidecar failure strand unprovenanced evidence. The mirror risk (a
+    # sidecar naming a result this invocation never published, e.g. because a
+    # concurrent writer won the result path first) is closed by rolling the
+    # sidecar back on any failure below. That rollback can only ever remove
+    # *this* invocation's own sidecar: `write_campaign_metadata` publishes via
+    # exclusive-create and raises if one already exists, so reaching this
+    # point proves we created it.
+    metadata_path = write_campaign_metadata(
         run_dir,
         exp_id=EXP_ID,
         run_id=run_id,
@@ -1080,12 +1096,20 @@ def main(argv: list[str] | None = None) -> int:
         operator=args.operator,
         artefacts={result_name: _MODE_HYPOTHESIS[args.mode]},
     )
-    result_path = write_result(
-        result_path,
-        environment=environment,
-        config=config,
-        payload={"cases": cases},
-    )
+    try:
+        result_path = write_result(
+            result_path,
+            environment=environment,
+            config=config,
+            payload={"cases": cases},
+        )
+    except OutputPathError as exc:
+        metadata_path.unlink(missing_ok=True)
+        print(f"ABORT: {exc}", file=sys.stderr)
+        return 2
+    except BaseException:
+        metadata_path.unlink(missing_ok=True)
+        raise
     print(f"Wrote {result_path}")
     return 0
 

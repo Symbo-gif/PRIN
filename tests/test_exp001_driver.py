@@ -660,6 +660,49 @@ class TestCli:
         assert stale_result.read_text(encoding="utf-8") == '{"stale": true}'
         assert not (run_dir / "campaign-metadata.json").exists()
 
+    def test_result_write_failure_rolls_back_the_sidecar(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A lost race for the result path leaves no orphan sidecar (Copilot).
+
+        The ``exists()`` fast-fail above is only a check, not a reservation:
+        a concurrent writer can still take the result path between it and
+        ``write_result``. Simulated here by having ``write_result`` raise
+        ``ArtefactExistsError`` as it would in that race. The sidecar this
+        invocation already published must then be rolled back, so it never
+        claims provenance over a result this invocation did not write.
+        """
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
+        run_dir = tmp_path / "RUN-lost-race"
+        sidecar = run_dir / "campaign-metadata.json"
+        sidecar_existed_at_result_write = False
+
+        def _lost_race(*args: object, **kwargs: object) -> Path:
+            nonlocal sidecar_existed_at_result_write
+            sidecar_existed_at_result_write = sidecar.exists()
+            raise result_module.ArtefactExistsError("lost the race for the result")
+
+        monkeypatch.setattr(driver, "write_result", _lost_race)
+        argv = [
+            "--mode",
+            "corpus",
+            "--corpus-dir",
+            str(_CORPUS_DIR),
+            "--case-id",
+            _REPRESENTATIVE_CASES[0],
+            "--out",
+            str(run_dir),
+            "--label",
+            "smoke",
+            "--session",
+            "0156",
+            "--operator",
+            "tester",
+        ]
+        assert driver.main(argv) == 2
+        assert sidecar_existed_at_result_write, "sidecar must be published first"
+        assert not sidecar.exists(), "sidecar must be rolled back on failure"
+
     def test_repeatability_mode_tags_artefact_h3(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
