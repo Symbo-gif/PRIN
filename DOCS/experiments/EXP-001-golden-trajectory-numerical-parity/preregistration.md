@@ -9,8 +9,12 @@
 this brief's criteria found no unresolved defect; the one open item (H4
 driver support, §5.4) was closed as a pre-execution amendment during this
 same E2 session (normal E1→E2 edit window, Experimentation Standards §2 E2;
-campaign plan §12 item 1). **EXP-001 E3 (session 0156) is authorized to
-begin.**
+campaign plan §12 item 1). The E1+E2 branch was then pushed for CI and code
+review (PR #20) ahead of E3, per maintainer direction; Devin/CodeRabbit/
+Copilot findings from that review were triaged and fixed as a second
+pre-execution amendment (§5.5) — still within the same E1→E2 edit window,
+since no `RUN-` directory exists yet. **EXP-001 E3 (session 0156) is
+authorized to begin.**
 **Code version:** `prin` 1.0.0-rc1 @ `8ce115f` (campaign baseline SHA; this
 document was drafted at E1 on branch `campaign/0154-exp001-e1` and amended at
 E2 on branch `campaign/0155-exp001-e2`, both carrying the DV-038/DV-039
@@ -76,22 +80,30 @@ versioned per-case evidence artefact).
   `prin.parity.strategies`, §5 below), run from an identical explicit initial
   condition on both PRINet 3.0 and `prin`:
   - **H2a (within-horizon, pointwise):** every array value at trajectory
-    steps `0..20` inclusive (the shadowing horizon `T* = 20`, defined in §6)
+    steps `0..min(20, n_steps)` inclusive (the shadowing horizon `T* = 20`,
+    defined in §6, bounded to the case's own length when `n_steps < 20`)
     satisfies the registered tolerance, for 100% of the ≥1,000 cases.
   - **H2b (beyond-horizon, distributional):** for the pooled set of
     `order_parameter` and `mean_phase_coherence` values at steps `21..n_steps`
     across every fuzzed case with `n_steps > 20`, the PRINet-3.0 and `prin`
-    samples show no practically significant difference: a two-sided Welch
-    t-test (`prin.y4q1_tools.welch_t_test`) at `α=0.05` is either
-    non-significant, or significant with `|Cohen's d| < 0.2` (negligible,
-    Cohen's convention), **and** the 95% bootstrap CI
+    samples show no practically significant difference, adjudicated by one
+    predicate applied identically at §4/§8: **H2b is CONFIRMED iff
+    `|Cohen's d| < 0.2` (negligible, Cohen's convention;
+    `prin.y4q1_tools.cohens_d`) AND the 95% bootstrap CI
     (`prin.y4q1_tools.bootstrap_ci`, 10,000 resamples, seeded per §7) on the
-    mean paired difference contains 0.
+    mean paired difference contains 0 — otherwise REFUTED.** The two-sided
+    Welch t-test (`prin.y4q1_tools.welch_t_test`, `α=0.05`) is still computed
+    and reported for transparency, but does not gate the verdict: at the
+    fuzz batch's scale a trivially small, practically-negligible difference
+    can still test "significant", which is exactly why the effect size and
+    CI — not the raw p-value — decide H2b (standard equivalence-testing
+    practice).
 - **H3 (bit-level seeded repeatability):** For one representative corpus case
   per each of the 14 `(model, coupling, integrator)` grid cells, running the
   `prin` reproduction twice from the identical stored initial state produces
-  byte-identical (`numpy.array_equal`) output for every array, for 14/14
-  cases.
+  byte-identical output (identical dtype, shape, and raw bytes — stricter
+  than `numpy.array_equal`, which compares element values only and does not
+  check `dtype`) for every array, for 14/14 cases.
 - **H4 (GPU kernel-path tolerance-identity):** The Kuramoto sparse-k-NN GPU
   derivative kernel (`prin._prin_core.GpuSparseKuramoto`, WP-036D) reproduces
   the CPU `prin` reference for every `kuramoto_sparse_knn_*` corpus case (72
@@ -100,11 +112,13 @@ versioned per-case evidence artefact).
 
 H1–H4 are all addressed by the committed driver
 (`benchmarks/campaign/exp001_driver.py`, tested in tandem —
-`tests/test_exp001_driver.py`, 36/36 passing at freeze, including the 3
+`tests/test_exp001_driver.py`, 55/55 passing at freeze, including the 3
 `slow`/PRINet-gated H2 tests). H4's driver support
 (`compare_kernel_path_case`/`compare_kernel_path_subset`, `--mode
 kernel-path`) was closed as a pre-execution amendment at E2 (session 0155);
-§5.4 records the closure.
+§5.4 records the closure and a second E2 remediation pass (§5.5) that fixed
+five code-review findings — an H2a/H2b data-sufficiency gap, unenforced
+abort criteria, two artefact-write races, and this H4 CUDA/wgpu ambiguity.
 
 ## 3. Expected results
 
@@ -123,8 +137,8 @@ kernel-path`) was closed as a pre-execution amendment at E2 (session 0155);
 | Hypothesis | Outcome that refutes it |
 |---|---|
 | H1 | Any of the 504 cases has `within_tolerance=False` for any array, and the breach is not attributable to a registered abort criterion (§4 below) |
-| H2a | Any within-horizon (`step ≤ 20`) array value breaches the registered tolerance in any fuzzed case |
-| H2b | Beyond-horizon pooled Welch t-test is significant (`p<0.05`) with `\|Cohen's d\| ≥ 0.2`, or the 95% bootstrap CI on the mean paired difference excludes 0 while `\|d\| ≥ 0.2` |
+| H2a | Any within-horizon (`step ≤ min(20, n_steps)`) array value breaches the registered tolerance in any fuzzed case |
+| H2b | `\|Cohen's d\| ≥ 0.2`, or the 95% bootstrap CI on the mean paired difference excludes 0 (the same predicate as §2/§8 — a case is REFUTED whenever it is not CONFIRMED, not by a separate rule) |
 | H3 | Any of the 14 representative cases produces a non-bit-identical rerun |
 | H4 | Any of the 72 `kuramoto_sparse_knn_*` cases breaches `rtol=1e-5, atol=1e-6` on the GPU derivative kernel vs. the CPU reference |
 
@@ -139,10 +153,22 @@ rather than pointwise.
 
 **Abort criteria (invalid run, not a negative result) — campaign plan §10.1:**
 
-1. NaN/Inf in any produced array, or `order_parameter`/`mean_phase_coherence`
-   outside `[0, 1]`, or phase outside its wrapped range, or an
+1. NaN/Inf in any produced array, or `order_parameter` outside `[0, 1]`
+   (`kuramoto_order_parameter` — the complex mean field's magnitude, clamped
+   to `1.0`, `crates/prin-metrics/src/order.rs`), or `mean_phase_coherence`
+   outside `[-1, 1]` (a mean pairwise cosine, clamped to that range — *not*
+   `[0, 1]`; corrected during E2 remediation, §5.5, after the driver's own
+   implementation of this criterion caught the corpus's real
+   `mean_phase_coherence` values going negative, which the pre-registration
+   had originally mis-bounded), or phase outside its wrapped range, or an
    amplitude/derivative clamp trip outside the documented hazard envelope
-   (Plan §5 rule 6).
+   (Plan §5 rule 6) — the driver checks the first three mechanically
+   (`benchmarks/campaign/exp001_driver.py::_case_arrays_hazard_violation`);
+   the clamp-trip sub-criterion is not independently observable from Python
+   (`prin-dynamics::clamp_derivative` exposes no trip signal) and is a
+   disclosed limitation, not silently skipped. A breach marks that case
+   `"aborted": true` with an `"abort_reason"` and the batch continues over
+   the remaining cases (§10).
 2. Seed irreproducibility on the H3 repeatability gate re-run of any
    configuration beyond the 14 registered cases (campaign plan §6.5).
 3. Environment capture incomplete for a configuration the run requires — in
@@ -153,16 +179,19 @@ rather than pointwise.
 4. `tools.reproduce.verify_manifest` raises for any input corpus or the run's
    own output directory.
 5. Budget exceeded (§9).
-6. For H4 only: CUDA/wgpu unavailable, or the ONNX/CubeCL build lacks the
-   kernel binding (`GpuSparseKuramoto is None`) — H1's build now carries this
-   binding as of the E2 driver closure (§5.4), so this abort is not expected
-   to trip on H1 at E3, but remains registered for any other host/leg lacking
-   a `--features cuda` build — logged as
-   `NOT EXECUTED — cuda feature not built`, verdict `INCONCLUSIVE`, per the
-   reporting mechanics of campaign plan §5.4 (this is a build-configuration
-   gap, not literally unavailable hardware — H1's RTX 4060 is present and
-   CUDA-visible to `torch`, per E1 driver-development verification — but the
-   same "never silently skipped, never reported negative" discipline applies).
+6. For H4 only: the extension lacks the `GpuSparseKuramoto` binding
+   (`hasattr` false — no `--features cuda`/`--features wgpu` build), **or**
+   the binding is present but `torch.cuda.is_available()` is `False` (a
+   `--features wgpu`-only build, or no CUDA device at all — §5.1/§5.5: there
+   is no Python-visible way to tell a wgpu-only build's binding apart from a
+   CUDA build's without a live device check). H1's build carries the binding
+   *and* a confirmed CUDA device as of the E2 driver closure (§5.4), so this
+   abort is not expected to trip on H1 at E3, but remains registered for any
+   other host/leg — logged as `NOT EXECUTED — cuda feature not built`,
+   verdict `INCONCLUSIVE`, per the reporting mechanics of campaign plan §5.4
+   (a build-configuration gap, not literally unavailable hardware — the
+   same "never silently skipped, never reported negative" discipline
+   applies).
 
 **Reporting commitment on failure:** results are reported in full per
 Experimentation Standards §1.2 regardless of outcome; H2's per-case pilot
@@ -198,13 +227,23 @@ confirmatory ≥1,000-case run.
   executed on H1's CUDA backend via `prin._prin_core.GpuSparseKuramoto`
   (driver support closed at E2, §5.4).
 - **Hardware/backend:** H1 CPU (primary, all of H1–H3); H1 CUDA (H4, driver
-  support closed at E2 — §5.4);
-  H1 wgpu (H4 scope currently limited to CUDA — no wgpu-equivalent kernel
-  binding was found during E1 driver development; if one exists it is added
-  before E3, else the wgpu leg is `INCONCLUSIVE` for the same
-  build-configuration reason as CUDA if the feature is not compiled in). No
-  H2/H3/H4 case is timed; this experiment measures correctness, not
-  performance (that is EXP-003/EXP-004).
+  support closed at E2 — §5.4). H1 wgpu is a distinct, not-yet-exercised
+  leg: `GpuSparseKuramoto` itself compiles under `cfg(any(feature = "cuda",
+  feature = "wgpu"))` (`crates/prin-py/src/bindings/mod.rs`) — the *same*
+  Python class, not a separate wgpu-specific binding, corrected during E2
+  remediation (§5.5) after a code-review finding showed the earlier E1/E2
+  text ("no wgpu-equivalent kernel binding was found") was factually wrong.
+  The two backends are mutually exclusive at compile time
+  (`cubecl-cuda`/`cubecl-wgpu` behind a `SimRuntime` type alias,
+  `crates/prin-sim/src/gpu.rs`: cuda wins whenever both features are
+  enabled), and there is no Python-visible query to tell them apart — so the
+  driver requires a live `torch.cuda.is_available()` check in addition to
+  the binding's presence (§5.5) before recording a `backend: "cuda"` result,
+  and a `--features wgpu`-only build aborts `INCONCLUSIVE` for the same
+  build-configuration reason as CUDA-absent (§4 item 6) rather than risk
+  mislabeling a wgpu result as the required CUDA leg. No H2/H3/H4 case is
+  timed; this experiment measures correctness, not performance (that is
+  EXP-003/EXP-004).
 
 ### 5.2 Model-specific fuzz parameter ranges (from `prin.parity.strategies`)
 
@@ -325,6 +364,79 @@ without a `--features cuda` build (H2–H4 GitHub-hosted legs, and any future
 H1 rebuild that omits the feature) — the same disposition pattern the
 campaign plan uses for DV-001 (Linux GPU host) and DV-006 (NPU).
 
+### 5.5 Second E2 remediation pass — code-review findings (pre-execution amendment)
+
+PR #20 (the E1+E2 push, campaign plan §12 item 3) drew review from Devin,
+CodeRabbit, and GitHub Copilot before E3 started. Per the same "amendments
+before execution are normal edits" rule as §5.4, five findings were fixed as
+a second pre-execution amendment (still no `RUN-` directory exists; the
+pre-registration is not yet frozen):
+
+1. **H2a/H2b data-sufficiency gap (Devin, CodeRabbit).** The original
+   `compare_fuzz_case` applied one whole-trajectory pointwise comparison
+   (`prin.parity.harness.compare_case`) with no horizon split at all: points
+   beyond step 20 were checked with the same strict pointwise tolerance as
+   H2a, and the stored artefact retained only aggregate
+   `ComparisonResult`s (max error, pass count) — not the raw paired values
+   H2b's Welch-t/Cohen's-d/bootstrap-CI test needs. E4 could not have
+   computed the registered H2b analysis from an E3 run. Fixed: H2a now
+   compares only steps `0..min(T_STAR, n_steps)` inclusive on the
+   trajectory-shaped arrays (`T_STAR = 20`, now a named module constant)
+   plus the `_init` arrays; `_final` is excluded (redundant within the
+   horizon, out of either hypothesis's scope beyond it). A new
+   `"beyond_horizon"` field stores the raw paired
+   `order_parameter`/`mean_phase_coherence` values at every step past the
+   horizon (`None` when `n_steps ≤ T_STAR`) for E4 to pool across cases —
+   this driver stores the data, it does not compute H2b's statistic itself
+   (E3 executes, E4 analyzes).
+2. **Abort criteria were never enforced (Devin, Copilot — 6 call sites).**
+   Nothing checked produced arrays for NaN/Inf, `order_parameter`/
+   `mean_phase_coherence` range, or phase-wrap range before writing a
+   result; a hazard-envelope breach would have silently become an ordinary
+   `within_tolerance=False` failure (a *negative result*), not the
+   registered ABORT (an *invalid run* — §10's distinction). Fixed:
+   `_case_arrays_hazard_violation`/`_finite_violation` check every produced
+   array (and, for fuzz mode, the PRINet reference array too — both are
+   live-computed, not stored corpus data) before comparison; a breach marks
+   that case `"aborted": true` with an `"abort_reason"` and the batch
+   continues over the remaining cases, per §10. **Implementing this check
+   surfaced a real pre-existing error in this pre-registration itself**
+   (not in the driver): `mean_phase_coherence`'s true range is `[-1, 1]`
+   (`crates/prin-metrics/src/coherence.rs` — a mean pairwise cosine, clamped
+   to that range), not `[0, 1]` as §4 item 1 originally stated; the first
+   hazard-check implementation false-positived on real corpus cases whose
+   coherence is genuinely negative. §4 item 1 is corrected above.
+3. **Two artefact-write races (Devin, Copilot).** `write_campaign_metadata`
+   used check-then-write (`path.exists()` then `write_text`) — not atomic,
+   so two concurrent invocations could both pass the check and the later one
+   silently overwrite the earlier sidecar (the same race class DV-038 had
+   already closed for `write_result`, just not applied here). Separately,
+   `main()` wrote the result artefact *before* its mandatory metadata
+   sidecar, so a sidecar-write failure could strand a result with no
+   provenance. Fixed: the stage-then-exclusive-create write DV-038
+   established for `write_result` is now a shared primitive
+   (`benchmarks._common.result.write_json_exclusive`) used by both writers;
+   `main()` writes the sidecar first.
+4. **H4 backend mislabeling (Devin, Copilot; §5.1).** Documented above and
+   in the corrected §5.1 hardware/backend bullet: `compare_kernel_path_case`
+   now also requires a live `torch.cuda.is_available()` check, not just the
+   `GpuSparseKuramoto` binding's presence, since that binding compiles under
+   `--features wgpu` alone too.
+
+Evidence: `tests/test_exp001_driver.py`, 55/55 passing (36 prior + 19 new:
+`TestHazardEnvelope` ×13, `TestBitIdentical` ×4,
+`TestFuzzComparison::test_beyond_horizon_present_only_when_n_steps_exceeds_t_star`,
+`TestKernelPath::test_binding_present_but_cuda_unavailable_raises`);
+`ruff check`/`ruff format --check` and `mypy python/prin benchmarks/campaign
+--strict` clean; Snyk Code 0 issues on `benchmarks/campaign/exp001_driver.py`,
+`benchmarks/_common/result.py`, `benchmarks/_common/__init__.py`, and
+`tests/test_exp001_driver.py` (the shared-write refactor in item 3 above also
+closed 3 LOW path-traversal findings Snyk raised against the new
+staging/`os.link` code once it lived directly in the CLI-argument-handling
+file; moving it into `benchmarks._common.result` — already scanned clean —
+resolved them without weakening the check itself, since `write_result`
+already relies on the identical pattern there).
+
 ## 6. Variables and controls
 
 - **Independent variables:** oscillator model, coupling mode, integrator,
@@ -397,22 +509,41 @@ campaign plan uses for DV-001 (Linux GPU host) and DV-006 (NPU).
   `repeatability_*.json`, `fuzz_*.json`, `kernel-path_*.json` (H1–H4, all
   four produced by `benchmarks/campaign/exp001_driver.py`); each with its
   `campaign-metadata.json` sidecar and per-run `manifest.json`.
-- **E4 adjudication per hypothesis:**
-  - H1: `CONFIRMED` iff all 504 `within_tolerance=True`; otherwise
-    `REFUTED` (D1) unless every failing case matches a §4 abort criterion, in
-    which case those cases are `ABORTED` (invalid) and H1 is adjudicated on
-    the remaining cases — if that remaining set is not the full 504,
-    `INCONCLUSIVE` with the abort reasons documented.
-  - H2a: `CONFIRMED` iff no within-horizon breach across all fuzzed cases;
-    otherwise `REFUTED` (D1) subject to the same abort-criterion carve-out.
+- **E4 adjudication per hypothesis.** Every driver record now carries an
+  explicit `"aborted"` boolean (§5.5 remediation): a case with
+  `aborted=True` is excluded from the pass/fail count entirely (never
+  counted as a pass, a failure, or silently dropped — its `abort_reason` is
+  reported per §10). Each hypothesis below is adjudicated on its
+  non-aborted cases; **any hypothesis whose non-aborted case count is below
+  its full registered denominator is `INCONCLUSIVE`, not `CONFIRMED`** — a
+  partial abort can only ever produce `INCONCLUSIVE` or `REFUTED`, never
+  `CONFIRMED`, closing the gap where dropping a failing case via an abort
+  carve-out could otherwise let a sub-full-denominator run pass:
+  - H1: full denominator 504. `CONFIRMED` iff all non-aborted cases have
+    `within_tolerance=True` **and** the non-aborted count is exactly 504;
+    `REFUTED` (D1) if any non-aborted case has `within_tolerance=False`;
+    otherwise (some cases aborted, remaining ones all pass) `INCONCLUSIVE`
+    with the abort reasons documented.
+  - H2a: full denominator ≥1,000 (the registered fuzz batch size).
+    `CONFIRMED` iff no within-horizon breach across all non-aborted cases
+    **and** the non-aborted count meets the registered batch size; `REFUTED`
+    (D1) on any non-aborted breach; otherwise `INCONCLUSIVE`.
   - H2b: computed once per run on the pooled beyond-horizon
-    `order_parameter`/`mean_phase_coherence` value pairs; `CONFIRMED` iff
-    `|d| < 0.2` and (if significant) the bootstrap CI contains 0; otherwise
-    `REFUTED` (D1).
-  - H3: `CONFIRMED` iff all 14 `bit_identical=True`; otherwise `REFUTED` (D1).
-  - H4: `CONFIRMED` iff all 72 `within_tolerance=True` at the f32 kernel
-    tolerance; `INCONCLUSIVE` if `NOT EXECUTED — cuda feature not built`;
-    otherwise `REFUTED` (D1).
+    `order_parameter`/`mean_phase_coherence` value pairs from non-aborted,
+    `n_steps > 20` cases (the `"beyond_horizon"` field, §5.5). `CONFIRMED`
+    iff `|d| < 0.2` **and** the bootstrap CI contains 0 (the same predicate
+    as §2/§4 — both conditions required, unconditionally, regardless of the
+    Welch test's significance); `REFUTED` (D1) otherwise. If no non-aborted
+    case has `n_steps > 20` (no beyond-horizon pool at all — e.g. every such
+    case aborted), H2b is `INCONCLUSIVE` for lack of data.
+  - H3: full denominator 14. `CONFIRMED` iff all non-aborted cases have
+    `bit_identical=True` **and** the non-aborted count is exactly 14;
+    `REFUTED` (D1) on any non-aborted mismatch; otherwise `INCONCLUSIVE`.
+  - H4: full denominator 72. `CONFIRMED` iff all non-aborted cases have
+    `within_tolerance=True` at the f32 kernel tolerance **and** the
+    non-aborted count is exactly 72; `INCONCLUSIVE` if `NOT EXECUTED — cuda
+    feature not built` (§4 item 6) or if any case aborted for another
+    reason; `REFUTED` (D1) on any non-aborted breach.
 - **Tables/figures:** a single summary table (hypothesis × verdict × pass
   count × max error) generated deterministically via `prin.reporting`
   from the stored run artefacts (Experimentation Standards §2 E4: "figures/
@@ -455,9 +586,11 @@ No budget amendment is anticipated.
   either a confirmation or a refutation.
 - Both are reported with equal rigor in the E5 report (Experimentation
   Standards §1.2); a run that mixes aborted and non-aborted cases (e.g. one
-  H4 case tripping an amplitude-clamp abort while the rest execute) reports
-  the abort explicitly and adjudicates the hypothesis on the non-aborted
-  cases only, noting the reduced sample size.
+  H4 case tripping a hazard-envelope abort while the rest execute) reports
+  the abort explicitly. Per §8's rule, the hypothesis is then `INCONCLUSIVE`
+  (never `CONFIRMED`) unless the non-aborted cases still meet the full
+  registered denominator — a partial abort narrows what can be concluded,
+  it never lets a reduced sample stand in for the registered one.
 
 ---
 
@@ -496,3 +629,13 @@ No budget amendment is anticipated.
   resource sanity" — construed here to include the artefact-provenance
   metadata the E4/E5 adjudication and campaign audit trail depend on) before
   any H3 run had executed, so no artefact was ever mistagged in practice.
+- **Driver (E2 second remediation, §5.5):** PR #20 code review (Devin,
+  CodeRabbit, Copilot) found and this session fixed 5 further issues before
+  E3: the H2a/H2b data-sufficiency gap, unenforced abort criteria (which
+  also surfaced and corrected this document's own `mean_phase_coherence`
+  range error), two artefact-write races, and H4's CUDA/wgpu ambiguity.
+  `tests/test_exp001_driver.py`, 55/55 passing at freeze (36 prior + 19
+  new); `ruff`/`mypy --strict` clean; Snyk Code 0 issues on all four touched
+  files (`exp001_driver.py`, `benchmarks/_common/result.py`,
+  `benchmarks/_common/__init__.py`, `test_exp001_driver.py`) — see §5.5 for
+  the full evidence and finding-by-finding disposition.

@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 pre-registration — second E2 remediation, code review on PR #20
+  (session 0155, E2, 2026-09-21) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.5.** The E1+E2 branch was pushed for CI and code review ahead of E3, per
+  maintainer direction; Devin, CodeRabbit, and GitHub Copilot found 5 issues
+  in `benchmarks/campaign/exp001_driver.py`, fixed as a second pre-execution
+  amendment (no `RUN-` directory yet exists, so the E1→E2 edit window still
+  applies): (1) H2a/H2b data-sufficiency gap — H2a is now bounded to
+  `0..min(T_STAR, n_steps)` and a new `beyond_horizon` field stores the raw
+  paired values E4 needs for H2b's pooled statistic, which the prior
+  whole-trajectory `compare_case` call could not have supplied; (2) abort
+  criteria (NaN/Inf, `order_parameter`/`mean_phase_coherence` range,
+  phase-wrap) were never enforced — now checked per case
+  (`_case_arrays_hazard_violation`), marking a breach `"aborted": true`
+  instead of silently reporting it as a tolerance failure; implementing this
+  check also surfaced and corrected a real error in the pre-registration
+  itself (`mean_phase_coherence`'s true range is `[-1, 1]`, not `[0, 1]`);
+  (3) two artefact-write races — `write_campaign_metadata`'s check-then-write
+  and result-before-sidecar ordering in `main()`, fixed by extracting DV-038's
+  stage-then-exclusive-create write into a shared
+  `benchmarks._common.result.write_json_exclusive` and writing the sidecar
+  first; (4) H4 backend mislabeling — `GpuSparseKuramoto` compiles under
+  `--features wgpu` alone too, so `compare_kernel_path_case` now also
+  requires `torch.cuda.is_available()` before recording a `backend: "cuda"`
+  result. `_bit_identical` also replaces `numpy.array_equal` for H3's
+  repeatability check (dtype + raw bytes, not just element values). 19 new
+  tests (`tests/test_exp001_driver.py`, 55/55 passing); `ruff`/`mypy --strict`
+  clean; Snyk Code 0 issues on all 4 touched files (moving the shared write
+  primitive into `benchmarks/_common/result.py` also resolved 3 LOW
+  path-traversal findings Snyk raised against the same code once it lived in
+  the CLI-argument-handling file). EXP-001 E3 (session 0156) remains
+  authorized to begin.
 - **EXP-001 pre-registration APPROVED — golden-trajectory numerical parity
   (session 0155, E2, 2026-09-21) —
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`.**

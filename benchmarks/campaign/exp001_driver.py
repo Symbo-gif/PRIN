@@ -12,7 +12,11 @@ comparisons, all against the actual PRIN (Rust) numerical core:
   initial state and require byte-identical output arrays.
 * **Hypothesis-fuzzed parity** (H2): draw a random-but-valid case spec and an
   explicit initial condition, run *both* PRINet 3.0 and PRIN from that
-  identical input, and compare.
+  identical input; H2a compares pointwise within the ``T_STAR``-step
+  shadowing horizon, and H2b records the raw beyond-horizon
+  ``order_parameter``/``mean_phase_coherence`` pairs for E4's pooled
+  Welch-t/Cohen's-d/bootstrap-CI analysis (this driver does not compute that
+  statistic itself — see :func:`compare_fuzz_case`).
 * **GPU kernel-path tolerance-identity** (H4): for every ``kuramoto_sparse_knn_*``
   corpus case, evaluate one derivative step through the CPU (f64 Rust) path
   and the GPU (f32 CubeCL) ``prin._prin_core.GpuSparseKuramoto`` kernel via
@@ -37,12 +41,24 @@ GpuSparseKuramoto`` is a single-step derivative kernel, not a trajectory
 integrator; the comparison tolerance is the registered f32 GPU-kernel bound
 (``KERNEL_RTOL``/``KERNEL_ATOL`` below), not ``prin.parity.harness``'s f64
 trajectory/metric tolerances.
+
+Every per-case comparison first checks the produced (and, for fuzz mode, the
+reference) arrays against the registered hazard envelope (preregistration §4
+item 1 / campaign plan §10.1 item 1: NaN/Inf, ``order_parameter`` outside
+``[0, 1]``, ``mean_phase_coherence`` outside ``[-1, 1]``, phase outside its
+wrapped range). A breach marks that case ``"aborted": True`` with an
+``"abort_reason"`` instead of an ordinary ``within_tolerance`` verdict, so
+an invalid run is never silently reported as a scientific refutation — the
+batch continues over the remaining cases (preregistration §10: a run may mix
+aborted and non-aborted cases). An
+amplitude/derivative *clamp trip* is not independently observable from
+Python (``prin-dynamics::clamp_derivative`` exposes no trip signal) and is
+not checked here; this is a disclosed limitation, not silently skipped.
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -64,12 +80,12 @@ from prin.dynamics import (
     RK4Integrator,
     StuartLandauOscillator,
 )
-from prin.parity.harness import ComparisonResult, compare_case
+from prin.parity.harness import compare_arrays, compare_case
 from prin.parity.loader import CorpusLoader
 from prin.parity.schema import CaseArrays, CaseSpec, Coupling, Integrator, Model
 
 from benchmarks._common.environment import capture_environment
-from benchmarks._common.result import ArtefactExistsError, write_result
+from benchmarks._common.result import write_json_exclusive, write_result
 
 EXP_ID = "EXP-001"
 
@@ -79,6 +95,30 @@ EXP_ID = "EXP-001"
 #: tolerance used elsewhere in this module.
 KERNEL_RTOL = 1e-5
 KERNEL_ATOL = 1e-6
+
+#: Shadowing horizon T* (preregistration §6): H2a requires pointwise
+#: agreement only through this step (bounded to ``min(T_STAR, n_steps)`` for
+#: cases shorter than the horizon); H2b pools ``order_parameter``/
+#: ``mean_phase_coherence`` values at every step beyond it. Equal to the
+#: golden corpus's own validated trajectory length.
+T_STAR = 20
+
+#: Trajectory-shaped arrays H2a's within-horizon pointwise check covers.
+_TRAJ_ARRAY_NAMES: tuple[str, ...] = (
+    "phase_traj",
+    "amplitude_traj",
+    "frequency_traj",
+    "order_parameter_traj",
+    "mean_phase_coherence_traj",
+)
+
+#: Arrays H2b pools beyond the horizon (preregistration §2: order-parameter
+#: and mean-phase-coherence only — phase/amplitude/frequency beyond the
+#: horizon are adjudicated by neither H2a nor H2b).
+_BEYOND_HORIZON_ARRAY_NAMES: tuple[str, ...] = (
+    "order_parameter_traj",
+    "mean_phase_coherence_traj",
+)
 
 #: Oscillator model classes, keyed by :class:`~prin.parity.schema.Model` value.
 _PRIN_INTEGRATORS: dict[str, type[EulerIntegrator] | type[RK4Integrator]] = {
@@ -113,6 +153,51 @@ class PrinetUnavailableError(DriverError):
     Per campaign plan §10.1 item 3, environment capture incomplete for a
     configuration the run requires is an abort, not a negative result.
     """
+
+
+def _case_arrays_hazard_violation(label: str, arrays: CaseArrays) -> str | None:
+    """Return a human-readable abort reason if ``arrays`` breaches the
+    registered hazard envelope, or ``None`` if clean.
+
+    Checks (preregistration §4 item 1 / campaign plan §10.1 item 1): NaN/Inf
+    in any array; ``order_parameter_traj`` outside ``[0, 1]``
+    (``kuramoto_order_parameter`` = ``norm().min(1.0)`` of the complex mean
+    field, `crates/prin-metrics/src/order.rs`); ``mean_phase_coherence_traj``
+    outside ``[-1, 1]`` (a mean pairwise cosine, clamped to that range —
+    *not* ``[0, 1]``, `crates/prin-metrics/src/coherence.rs`); ``phase_traj``
+    outside the wrapped ``[0, 2*pi)`` range. Does **not** check for an
+    amplitude/derivative clamp trip — ``prin-dynamics::clamp_derivative``
+    exposes no trip signal to Python, so that sub-criterion is not
+    mechanically detectable here; it is a disclosed limitation
+    (preregistration §4 item 1 note), not a silent skip.
+    """
+    for name in CaseArrays._ARRAY_NAMES:
+        if not np.all(np.isfinite(getattr(arrays, name))):
+            return f"{label}: non-finite value(s) in {name} (NaN/Inf hazard guard trip)"
+    if np.any(arrays.order_parameter_traj < 0.0) or np.any(
+        arrays.order_parameter_traj > 1.0
+    ):
+        return f"{label}: order_parameter_traj outside the registered [0, 1] range"
+    if np.any(arrays.mean_phase_coherence_traj < -1.0) or np.any(
+        arrays.mean_phase_coherence_traj > 1.0
+    ):
+        return (
+            f"{label}: mean_phase_coherence_traj outside the registered [-1, 1] range"
+        )
+    if np.any(arrays.phase_traj < 0.0) or np.any(arrays.phase_traj >= 2.0 * np.pi):
+        return f"{label}: phase_traj outside the wrapped [0, 2*pi) range"
+    return None
+
+
+def _finite_violation(label: str, name: str, array: NDArray[np.float64]) -> str | None:
+    """Return an abort reason if ``array`` has a non-finite value, else ``None``.
+
+    Used for H4's raw derivative arrays, which are not :class:`CaseArrays`
+    (no order-parameter/phase-wrap concept applies to a derivative).
+    """
+    if not np.all(np.isfinite(array)):
+        return f"{label}: non-finite value(s) in {name} (NaN/Inf hazard guard trip)"
+    return None
 
 
 def _coupling_mode(coupling: str, parameters: dict[str, Any]) -> CouplingMode:
@@ -261,23 +346,8 @@ def run_prin_case(spec: CaseSpec, initial: CaseArrays) -> CaseArrays:
     )
 
 
-def compare_corpus_case(loader: CorpusLoader, case_id: str) -> dict[str, Any]:
-    """Compare one golden-corpus case's PRIN reproduction against its reference.
-
-    Returns:
-        A JSON-serializable per-case record: identifying fields, the overall
-        ``within_tolerance`` verdict, and every array-level
-        :class:`~prin.parity.harness.ComparisonResult`.
-    """
-    loaded = loader.load(case_id)
-    produced = run_prin_case(loaded.spec, loaded.arrays)
-    comparisons = compare_case(loaded.arrays, produced, loaded.spec.model)
-    return _corpus_case_record(loaded.spec, comparisons)
-
-
-def _corpus_case_record(
-    spec: CaseSpec, comparisons: list[ComparisonResult]
-) -> dict[str, Any]:
+def _case_identity(spec: CaseSpec) -> dict[str, Any]:
+    """Return the identifying fields shared by every corpus-derived record."""
     return {
         "case_id": spec.case_id,
         "model": spec.model,
@@ -287,6 +357,32 @@ def _corpus_case_record(
         "n_steps": spec.n_steps,
         "dt": spec.dt,
         "seed": spec.seed,
+    }
+
+
+def compare_corpus_case(loader: CorpusLoader, case_id: str) -> dict[str, Any]:
+    """Compare one golden-corpus case's PRIN reproduction against its reference.
+
+    Returns:
+        A JSON-serializable per-case record: identifying fields, an
+        ``"aborted"`` flag, and — when not aborted — the overall
+        ``within_tolerance`` verdict and every array-level
+        :class:`~prin.parity.harness.ComparisonResult`. An aborted record
+        carries ``"abort_reason"`` instead (campaign plan §10.1 item 1): a
+        hazard-envelope breach is never silently reported as a tolerance
+        failure.
+    """
+    loaded = loader.load(case_id)
+    spec = loaded.spec
+    identity = _case_identity(spec)
+    produced = run_prin_case(spec, loaded.arrays)
+    violation = _case_arrays_hazard_violation("produced", produced)
+    if violation is not None:
+        return {**identity, "aborted": True, "abort_reason": violation}
+    comparisons = compare_case(loaded.arrays, produced, spec.model)
+    return {
+        **identity,
+        "aborted": False,
         "within_tolerance": all(c.within_tolerance for c in comparisons),
         "comparisons": [c.to_dict() for c in comparisons],
     }
@@ -299,6 +395,22 @@ def compare_corpus_subset(
     return [compare_corpus_case(loader, case_id) for case_id in case_ids]
 
 
+def _bit_identical(a: NDArray[Any], b: NDArray[Any]) -> bool:
+    """Return ``True`` iff ``a`` and ``b`` share dtype, shape, and raw bytes.
+
+    Stricter than ``numpy.array_equal``, which compares element values only:
+    it does not check ``dtype`` and (with its default ``equal_nan=False``)
+    still permits distinct byte patterns that compare equal as values (e.g.
+    signed-zero). H3 claims *bit-level* repeatability, so the check compares
+    the actual memory representation.
+    """
+    return (
+        a.dtype == b.dtype
+        and a.shape == b.shape
+        and np.ascontiguousarray(a).tobytes() == np.ascontiguousarray(b).tobytes()
+    )
+
+
 def check_repeatability(loader: CorpusLoader, case_id: str) -> dict[str, Any]:
     """Run a corpus case's PRIN reproduction twice and require bit-identity.
 
@@ -308,13 +420,18 @@ def check_repeatability(loader: CorpusLoader, case_id: str) -> dict[str, Any]:
     loaded = loader.load(case_id)
     first = run_prin_case(loaded.spec, loaded.arrays)
     second = run_prin_case(loaded.spec, loaded.arrays)
+    for label, arrays in (("first", first), ("second", second)):
+        violation = _case_arrays_hazard_violation(label, arrays)
+        if violation is not None:
+            return {"case_id": case_id, "aborted": True, "abort_reason": violation}
     mismatched = [
         name
         for name in CaseArrays._ARRAY_NAMES
-        if not np.array_equal(getattr(first, name), getattr(second, name))
+        if not _bit_identical(getattr(first, name), getattr(second, name))
     ]
     return {
         "case_id": case_id,
+        "aborted": False,
         "bit_identical": not mismatched,
         "mismatched_arrays": mismatched,
     }
@@ -464,13 +581,26 @@ def run_prinet_trajectory(
 def compare_fuzz_case(spec: dict[str, Any]) -> dict[str, Any]:
     """Run one fuzz-drawn case spec through both implementations and compare.
 
+    Implements the H2a/H2b split (preregistration §2, §6): ``within_tolerance``/
+    ``comparisons`` are H2a's pointwise verdict, bounded to steps
+    ``0..min(T_STAR, n_steps)`` inclusive (:data:`_TRAJ_ARRAY_NAMES` plus the
+    ``_init`` arrays; ``_final`` is excluded — beyond the horizon it names a
+    step no hypothesis adjudicates pointwise, and within it it duplicates the
+    corresponding ``_traj`` array's last included row). When ``n_steps >
+    T_STAR``, ``beyond_horizon`` carries the raw paired
+    ``order_parameter``/``mean_phase_coherence`` values at every step past the
+    horizon (else ``None``) for E4 to pool across cases and compute H2b's
+    Welch-t/Cohen's-d/bootstrap-CI verdict — this driver stores the data, it
+    does not compute that pooled statistic itself (E3 executes, E4 analyzes).
+
     Args:
         spec: A dict from :func:`draw_fuzz_spec`, plus an ``"rng"`` key
             (``numpy.random.Generator``) used to draw the shared initial
             condition (kept out of the returned record).
 
     Returns:
-        A JSON-serializable record analogous to :func:`compare_corpus_case`.
+        A JSON-serializable record: identifying fields, an ``"aborted"``
+        flag, and either ``"abort_reason"`` or the H2a/H2b fields above.
 
     Raises:
         PrinetUnavailableError: If PRINet 3.0 is not importable.
@@ -501,8 +631,7 @@ def compare_fuzz_case(spec: dict[str, Any]) -> dict[str, Any]:
         amplitude_init=amplitude,
         frequency_init=frequency,
     )
-    comparisons = compare_case(reference, produced, spec["model"])
-    return {
+    identity = {
         "seed": spec["seed"],
         "model": spec["model"],
         "coupling": spec["coupling"],
@@ -510,8 +639,44 @@ def compare_fuzz_case(spec: dict[str, Any]) -> dict[str, Any]:
         "n_oscillators": spec["n_oscillators"],
         "n_steps": spec["n_steps"],
         "dt": spec["dt"],
-        "within_tolerance": all(c.within_tolerance for c in comparisons),
-        "comparisons": [c.to_dict() for c in comparisons],
+    }
+    for label, arrays in (("reference", reference), ("produced", produced)):
+        violation = _case_arrays_hazard_violation(label, arrays)
+        if violation is not None:
+            return {**identity, "aborted": True, "abort_reason": violation}
+
+    n_steps = spec["n_steps"]
+    horizon = min(T_STAR, n_steps)
+    h2a_comparisons = [
+        compare_arrays(
+            getattr(reference, name), getattr(produced, name), name, spec["model"]
+        )
+        for name in ("phase_init", "amplitude_init", "frequency_init")
+    ] + [
+        compare_arrays(
+            getattr(reference, name)[: horizon + 1],
+            getattr(produced, name)[: horizon + 1],
+            name,
+            spec["model"],
+        )
+        for name in _TRAJ_ARRAY_NAMES
+    ]
+    beyond_horizon = None
+    if n_steps > T_STAR:
+        beyond_horizon = {
+            name: {
+                "reference": getattr(reference, name)[horizon + 1 :].tolist(),
+                "produced": getattr(produced, name)[horizon + 1 :].tolist(),
+            }
+            for name in _BEYOND_HORIZON_ARRAY_NAMES
+        }
+    return {
+        **identity,
+        "aborted": False,
+        "horizon": horizon,
+        "within_tolerance": all(c.within_tolerance for c in h2a_comparisons),
+        "comparisons": [c.to_dict() for c in h2a_comparisons],
+        "beyond_horizon": beyond_horizon,
     }
 
 
@@ -581,16 +746,38 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
 
     Raises:
         GpuBindingUnavailableError: If the extension lacks
-            ``GpuSparseKuramoto`` (no ``cuda``-feature build), or the
+            ``GpuSparseKuramoto`` (no ``cuda``/``wgpu``-feature build), if
+            CUDA is not confirmed available (see note below), or if the
             dispatch hook otherwise declines to run (unexpected for a
             ``sparse_knn`` case).
         ValueError: If ``case_id`` does not name a ``kuramoto``/``sparse_knn``
             case.
+
+    Note:
+        ``GpuSparseKuramoto`` compiles under ``cfg(any(feature = "cuda",
+        feature = "wgpu"))`` (``crates/prin-py/src/bindings/mod.rs``), and its
+        backend (``cubecl-cuda`` vs. ``cubecl-wgpu``) is a compile-time
+        choice with no Python-visible query. H4 is registered specifically
+        against the CUDA leg (preregistration §5.1), so this function also
+        requires ``torch.cuda.is_available()`` before proceeding — a build
+        with only ``--features wgpu`` (no CUDA device) aborts here rather
+        than risk mislabeling a wgpu result as the required CUDA leg.
     """
     if not hasattr(_prin_core, "GpuSparseKuramoto"):
         raise GpuBindingUnavailableError(
             "prin._prin_core.GpuSparseKuramoto is absent (extension built "
-            "without --features cuda); H4 kernel-path mode aborts"
+            "without --features cuda or --features wgpu); H4 kernel-path "
+            "mode aborts"
+        )
+    if not torch.cuda.is_available():
+        raise GpuBindingUnavailableError(
+            "prin._prin_core.GpuSparseKuramoto is present, but "
+            "torch.cuda.is_available() is False. GpuSparseKuramoto also "
+            "compiles under --features wgpu alone, and there is no "
+            "Python-visible signal to tell a wgpu-only build apart from a "
+            "cuda build without a live CUDA device; H4 is registered "
+            "specifically against the CUDA leg (preregistration §5.1), so "
+            "this aborts rather than risk recording a wgpu result as cuda"
         )
     loaded = loader.load(case_id)
     spec = loaded.spec
@@ -621,24 +808,42 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
             f"run for case {case_id} (unexpected for a sparse_knn case)"
         )
     gpu_dphase, gpu_damplitude, gpu_dfrequency = gpu
-    comparisons = [
-        _compare_kernel_array(
-            name,
-            cpu.detach().to(dtype=torch.float64, device="cpu").numpy(),
-            gpu_val.detach().to(dtype=torch.float64, device="cpu").numpy(),
-        )
-        for name, cpu, gpu_val in (
-            ("dphase", cpu_dphase, gpu_dphase),
-            ("damplitude", cpu_damplitude, gpu_damplitude),
-            ("dfrequency", cpu_dfrequency, gpu_dfrequency),
-        )
-    ]
-    return {
+    identity = {
         "case_id": case_id,
         "model": spec.model,
         "coupling": spec.coupling,
         "n_oscillators": spec.n_oscillators,
         "sparse_k": int(parameters["sparse_k"]),
+    }
+    pairs = [
+        (
+            "dphase",
+            cpu_dphase.detach().to(dtype=torch.float64, device="cpu").numpy(),
+            gpu_dphase.detach().to(dtype=torch.float64, device="cpu").numpy(),
+        ),
+        (
+            "damplitude",
+            cpu_damplitude.detach().to(dtype=torch.float64, device="cpu").numpy(),
+            gpu_damplitude.detach().to(dtype=torch.float64, device="cpu").numpy(),
+        ),
+        (
+            "dfrequency",
+            cpu_dfrequency.detach().to(dtype=torch.float64, device="cpu").numpy(),
+            gpu_dfrequency.detach().to(dtype=torch.float64, device="cpu").numpy(),
+        ),
+    ]
+    for label, cpu_arr, gpu_arr in pairs:
+        for source, arr in (("cpu", cpu_arr), ("gpu", gpu_arr)):
+            violation = _finite_violation(source, label, arr)
+            if violation is not None:
+                return {**identity, "aborted": True, "abort_reason": violation}
+    comparisons = [
+        _compare_kernel_array(name, cpu_arr, gpu_arr)
+        for name, cpu_arr, gpu_arr in pairs
+    ]
+    return {
+        **identity,
+        "aborted": False,
         "within_tolerance": all(c["within_tolerance"] for c in comparisons),
         "comparisons": comparisons,
     }
@@ -680,17 +885,23 @@ def write_campaign_metadata(
 ) -> Path:
     """Write the ``campaign-metadata.json`` sidecar (campaign plan §7.2).
 
+    Delegates the path-safety check and the stage-then-exclusive-create
+    write to ``benchmarks._common.result.write_json_exclusive`` (DV-038): a
+    check-then-write is not atomic, so two concurrent invocations could both
+    pass an ``exists()`` check and the later one silently overwrite the
+    earlier sidecar. Sharing that primitive with ``write_result`` (rather
+    than reimplementing the same ``json.dump``/``os.link`` sequence here)
+    keeps one place responsible for confining and safely publishing every
+    operator-supplied output path in this driver.
+
     Raises:
         DriverMetadataError: If required metadata is missing.
+        OutputPathError: If ``run_dir`` resolves outside the declared output
+            roots (Coding Standards §6.1).
         ArtefactExistsError: If the sidecar already exists (append-only).
     """
     _validate_metadata(exp_id, run_id, session, operator)
     path = run_dir / "campaign-metadata.json"
-    if path.exists():
-        raise ArtefactExistsError(
-            f"{path} already exists; campaign metadata is append-only "
-            "(campaign plan §7.3) — write to a new run directory instead"
-        )
     payload = {
         "exp_id": exp_id,
         "run_id": run_id,
@@ -698,12 +909,15 @@ def write_campaign_metadata(
         "operator": operator,
         "artefacts": artefacts,
     }
-    run_dir.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False),
-        encoding="utf-8",
+    return write_json_exclusive(
+        path,
+        payload,
+        conflict_message=(
+            f"{path.resolve()} already exists; campaign metadata is "
+            "append-only (campaign plan §7.3) — write to a new run "
+            "directory instead"
+        ),
     )
-    return path
 
 
 #: Hypothesis tag recorded in ``campaign-metadata.json`` per run mode
@@ -801,13 +1015,14 @@ def main(argv: list[str] | None = None) -> int:
         "seed_key": args.seed_key,
         "out_dir": str(run_dir),
     }
+    # Metadata is written *before* the result (campaign plan §7.2: a result
+    # is only accepted with its provenance sidecar). Reversing this order
+    # would let a sidecar-write failure strand a result with no provenance;
+    # this order instead risks, on a result-write failure, a sidecar
+    # referencing a not-yet-written result filename — inert, not misleading,
+    # and never mistaken for accepted evidence the way an unprovenanced
+    # result artefact could be.
     result_name = f"{args.mode}_{args.label}.json"
-    result_path = write_result(
-        run_dir / result_name,
-        environment=environment,
-        config=config,
-        payload={"cases": cases},
-    )
     write_campaign_metadata(
         run_dir,
         exp_id=EXP_ID,
@@ -815,6 +1030,12 @@ def main(argv: list[str] | None = None) -> int:
         session=args.session,
         operator=args.operator,
         artefacts={result_name: _MODE_HYPOTHESIS[args.mode]},
+    )
+    result_path = write_result(
+        run_dir / result_name,
+        environment=environment,
+        config=config,
+        payload={"cases": cases},
     )
     print(f"Wrote {result_path}")
     return 0

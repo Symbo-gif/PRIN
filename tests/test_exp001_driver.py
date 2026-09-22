@@ -125,6 +125,7 @@ class TestCorpusParity:
         self, loader: CorpusLoader, case_id: str
     ) -> None:
         record = driver.compare_corpus_case(loader, case_id)
+        assert record["aborted"] is False
         assert record["within_tolerance"] is True
         assert record["case_id"] == case_id
         assert len(record["comparisons"]) == len(CaseArrays._ARRAY_NAMES)
@@ -134,6 +135,7 @@ class TestCorpusParity:
     ) -> None:
         subset = driver.compare_corpus_subset(loader, _REPRESENTATIVE_CASES)
         assert [r["case_id"] for r in subset] == _REPRESENTATIVE_CASES
+        assert all(r["aborted"] is False for r in subset)
         assert all(r["within_tolerance"] for r in subset)
 
     def test_unknown_case_id_raises(self, loader: CorpusLoader) -> None:
@@ -149,8 +151,162 @@ class TestRepeatability:
     @pytest.mark.parametrize("case_id", _REPRESENTATIVE_CASES)
     def test_bit_identical_on_rerun(self, loader: CorpusLoader, case_id: str) -> None:
         record = driver.check_repeatability(loader, case_id)
+        assert record["aborted"] is False
         assert record["bit_identical"] is True
         assert record["mismatched_arrays"] == []
+
+
+def _make_case_arrays(
+    *,
+    n: int = 4,
+    steps: int = 3,
+    phase_traj: np.ndarray | None = None,
+    order_parameter_traj: np.ndarray | None = None,
+    mean_phase_coherence_traj: np.ndarray | None = None,
+) -> CaseArrays:
+    """Build a minimal, otherwise-clean :class:`CaseArrays` for hazard tests."""
+    zeros_n = np.zeros(n, dtype=np.float64)
+    ones_n = np.ones(n, dtype=np.float64)
+    zeros_traj = np.zeros((steps + 1, n), dtype=np.float64)
+    zeros_scalar = np.zeros(steps + 1, dtype=np.float64)
+    return CaseArrays(
+        phase_init=zeros_n.copy(),
+        amplitude_init=ones_n.copy(),
+        frequency_init=zeros_n.copy(),
+        phase_final=zeros_n.copy(),
+        amplitude_final=ones_n.copy(),
+        frequency_final=zeros_n.copy(),
+        phase_traj=zeros_traj.copy() if phase_traj is None else phase_traj,
+        amplitude_traj=np.ones((steps + 1, n), dtype=np.float64),
+        frequency_traj=zeros_traj.copy(),
+        order_parameter_traj=(
+            zeros_scalar.copy()
+            if order_parameter_traj is None
+            else order_parameter_traj
+        ),
+        mean_phase_coherence_traj=(
+            zeros_scalar.copy()
+            if mean_phase_coherence_traj is None
+            else mean_phase_coherence_traj
+        ),
+    )
+
+
+class TestHazardEnvelope:
+    """_case_arrays_hazard_violation/_finite_violation detect registered breaches."""
+
+    def test_clean_arrays_pass(self) -> None:
+        assert (
+            driver._case_arrays_hazard_violation("produced", _make_case_arrays())
+            is None
+        )
+
+    def test_nan_detected(self) -> None:
+        bad = _make_case_arrays(phase_traj=np.full((4, 4), np.nan))
+        violation = driver._case_arrays_hazard_violation("produced", bad)
+        assert violation is not None
+        assert "non-finite" in violation
+        assert "phase_traj" in violation
+
+    def test_inf_detected(self) -> None:
+        traj = np.zeros((4, 4))
+        traj[0, 0] = np.inf
+        violation = driver._case_arrays_hazard_violation(
+            "produced", _make_case_arrays(phase_traj=traj)
+        )
+        assert violation is not None and "non-finite" in violation
+
+    def test_order_parameter_above_one_detected(self) -> None:
+        bad = _make_case_arrays(order_parameter_traj=np.array([0.5, 1.5, 0.9, 0.1]))
+        violation = driver._case_arrays_hazard_violation("produced", bad)
+        assert violation is not None
+        assert "order_parameter_traj" in violation
+        assert "[0, 1]" in violation
+
+    def test_order_parameter_negative_detected(self) -> None:
+        bad = _make_case_arrays(order_parameter_traj=np.array([0.5, -0.1, 0.9, 0.1]))
+        violation = driver._case_arrays_hazard_violation("produced", bad)
+        assert violation is not None and "order_parameter_traj" in violation
+
+    def test_mean_phase_coherence_allows_negative(self) -> None:
+        """mean_phase_coherence's true range is [-1, 1], not [0, 1] (a mean
+        pairwise cosine, `crates/prin-metrics/src/coherence.rs`) — a negative
+        value alone must not trip the hazard guard."""
+        ok = _make_case_arrays(
+            mean_phase_coherence_traj=np.array([-0.9, -0.5, 0.0, 0.3])
+        )
+        assert driver._case_arrays_hazard_violation("produced", ok) is None
+
+    def test_mean_phase_coherence_below_negative_one_detected(self) -> None:
+        bad = _make_case_arrays(
+            mean_phase_coherence_traj=np.array([-1.5, 0.0, 0.0, 0.0])
+        )
+        violation = driver._case_arrays_hazard_violation("produced", bad)
+        assert violation is not None
+        assert "mean_phase_coherence_traj" in violation
+        assert "[-1, 1]" in violation
+
+    def test_mean_phase_coherence_above_one_detected(self) -> None:
+        bad = _make_case_arrays(
+            mean_phase_coherence_traj=np.array([1.5, 0.0, 0.0, 0.0])
+        )
+        violation = driver._case_arrays_hazard_violation("produced", bad)
+        assert violation is not None and "mean_phase_coherence_traj" in violation
+
+    def test_phase_outside_wrapped_range_detected(self) -> None:
+        traj = np.zeros((4, 4))
+        traj[0, 0] = 7.0  # > 2*pi
+        violation = driver._case_arrays_hazard_violation(
+            "produced", _make_case_arrays(phase_traj=traj)
+        )
+        assert violation is not None
+        assert "phase_traj" in violation
+        assert "wrapped" in violation
+
+    def test_negative_phase_detected(self) -> None:
+        traj = np.zeros((4, 4))
+        traj[0, 0] = -0.1
+        violation = driver._case_arrays_hazard_violation(
+            "produced", _make_case_arrays(phase_traj=traj)
+        )
+        assert violation is not None and "wrapped" in violation
+
+    def test_label_is_included(self) -> None:
+        bad = _make_case_arrays(phase_traj=np.full((4, 4), np.nan))
+        violation = driver._case_arrays_hazard_violation("reference", bad)
+        assert violation is not None and violation.startswith("reference:")
+
+    def test_finite_violation_clean(self) -> None:
+        assert driver._finite_violation("cpu", "dphase", np.array([0.1, 0.2])) is None
+
+    def test_finite_violation_detects_nan(self) -> None:
+        violation = driver._finite_violation("gpu", "dphase", np.array([0.1, np.nan]))
+        assert violation is not None
+        assert "gpu" in violation
+        assert "dphase" in violation
+
+
+class TestBitIdentical:
+    """_bit_identical is stricter than numpy.array_equal (dtype + raw bytes)."""
+
+    def test_identical_arrays(self) -> None:
+        a = np.array([1.0, 2.0, 3.0])
+        assert driver._bit_identical(a, a.copy()) is True
+
+    def test_different_values(self) -> None:
+        a = np.array([1.0, 2.0, 3.0])
+        b = np.array([1.0, 2.0, 3.0000001])
+        assert driver._bit_identical(a, b) is False
+
+    def test_different_dtype_same_values(self) -> None:
+        a = np.array([1.0, 2.0], dtype=np.float64)
+        b = np.array([1.0, 2.0], dtype=np.float32)
+        assert driver._bit_identical(a, b) is False
+
+    def test_different_shape(self) -> None:
+        a = np.array([1.0, 2.0])
+        b = np.array([[1.0, 2.0]])
+        assert driver._bit_identical(a, b) is False
 
 
 class TestFuzzSampler:
@@ -205,13 +361,20 @@ class TestFuzzComparison:
     existing convention in ``parity/test_parity_differential.py``.
     """
 
+    #: 3 init + 5 trajectory-shaped arrays — H2a excludes the 3 ``_final``
+    #: arrays (redundant within the horizon, out of scope beyond it; see
+    #: compare_fuzz_case's docstring).
+    _H2A_ARRAY_COUNT = 8
+
     def test_run_fuzz_batch_returns_structured_records(self) -> None:
         pytest.importorskip("prinet")
         records = driver.run_fuzz_batch(seed_counter=0, seed_key=1, n_cases=3)
         assert len(records) == 3
         for record in records:
+            assert record["aborted"] is False
             assert isinstance(record["within_tolerance"], bool)
-            assert len(record["comparisons"]) == len(CaseArrays._ARRAY_NAMES)
+            assert len(record["comparisons"]) == self._H2A_ARRAY_COUNT
+            assert record["horizon"] == min(driver.T_STAR, record["n_steps"])
 
     def test_run_fuzz_batch_deterministic(self) -> None:
         pytest.importorskip("prinet")
@@ -221,6 +384,44 @@ class TestFuzzComparison:
         assert [r["within_tolerance"] for r in first] == [
             r["within_tolerance"] for r in second
         ]
+
+    def test_beyond_horizon_present_only_when_n_steps_exceeds_t_star(self) -> None:
+        """H2b's raw pairs are recorded iff n_steps > T_STAR (preregistration §2)."""
+        pytest.importorskip("prinet")
+        rng = np.random.default_rng(3)
+        short_spec = {
+            "model": Model.KURAMOTO.value,
+            "coupling": Coupling.MEAN_FIELD.value,
+            "integrator": "euler",
+            "n_oscillators": 8,
+            "n_steps": driver.T_STAR,
+            "dt": 0.01,
+            "seed": 1,
+            "parameters": {
+                "coupling_strength": 1.0,
+                "decay_rate": 0.1,
+                "freq_adaptation_rate": 0.0,
+            },
+            "rng": rng,
+        }
+        short_record = driver.compare_fuzz_case(short_spec)
+        assert short_record["aborted"] is False
+        assert short_record["horizon"] == driver.T_STAR
+        assert short_record["beyond_horizon"] is None
+
+        long_spec = {**short_spec, "n_steps": driver.T_STAR + 10, "seed": 2}
+        long_spec["rng"] = np.random.default_rng(4)
+        long_record = driver.compare_fuzz_case(long_spec)
+        assert long_record["aborted"] is False
+        assert long_record["horizon"] == driver.T_STAR
+        beyond = long_record["beyond_horizon"]
+        assert beyond is not None
+        assert set(beyond) == {"order_parameter_traj", "mean_phase_coherence_traj"}
+        for pair in beyond.values():
+            assert set(pair) == {"reference", "produced"}
+            # steps (T_STAR+1)..(T_STAR+10) inclusive = 10 beyond-horizon points.
+            assert len(pair["reference"]) == 10
+            assert len(pair["produced"]) == 10
 
     def test_fuzz_unavailable_without_prinet(
         self, monkeypatch: pytest.MonkeyPatch
@@ -252,6 +453,7 @@ class TestKernelPath:
         self, loader: CorpusLoader, case_id: str
     ) -> None:
         record = driver.compare_kernel_path_case(loader, case_id)
+        assert record["aborted"] is False
         assert record["within_tolerance"] is True
         assert record["case_id"] == case_id
         assert {c["array_name"] for c in record["comparisons"]} == {
@@ -271,6 +473,7 @@ class TestKernelPath:
         ]
         assert len(case_ids) == 72
         records = driver.compare_kernel_path_subset(loader, case_ids)
+        assert all(r["aborted"] is False for r in records)
         assert all(r["within_tolerance"] for r in records)
 
     @_needs_gpu_binding
@@ -284,6 +487,21 @@ class TestKernelPath:
         """A build without the cuda feature aborts, not silently skips (§4 item 6)."""
         monkeypatch.delattr(_prin_core, "GpuSparseKuramoto", raising=False)
         with pytest.raises(driver.GpuBindingUnavailableError):
+            driver.compare_kernel_path_case(loader, _KURAMOTO_SPARSE_KNN_CASES[0])
+
+    @_needs_gpu_binding
+    def test_binding_present_but_cuda_unavailable_raises(
+        self, loader: CorpusLoader, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A wgpu-only build (binding present, no CUDA device) aborts too.
+
+        Regression test for the bug where ``compare_kernel_path_case`` only
+        checked ``hasattr(_prin_core, "GpuSparseKuramoto")`` — that binding
+        also compiles under ``--features wgpu`` alone, so it is not on its
+        own sufficient evidence the CUDA leg ran.
+        """
+        monkeypatch.setattr(driver.torch.cuda, "is_available", lambda: False)
+        with pytest.raises(driver.GpuBindingUnavailableError, match="cuda"):
             driver.compare_kernel_path_case(loader, _KURAMOTO_SPARSE_KNN_CASES[0])
 
 

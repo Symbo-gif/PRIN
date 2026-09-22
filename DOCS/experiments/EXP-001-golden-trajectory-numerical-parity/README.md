@@ -19,8 +19,8 @@ recorded; EXP-001 E3 (session 0156) is authorized to begin. See
 
 | Session | Stage | Brief | Status |
 |---|---|---|---|
-| 0154 | E1 — Pre-registration | [`0154-exp001-e1-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0154-exp001-e1-golden-trajectory-numerical-parity.md) | COMPLETE — DRAFT pre-registration committed; H4 driver support pending (see preregistration §5.4) |
-| 0155 | E2 — Review and approval | [`0155-exp001-e2-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0155-exp001-e2-golden-trajectory-numerical-parity.md) | COMPLETE — pre-registration APPROVED; H4 driver support closed as a pre-execution amendment (preregistration §5.4); H1/H3 artefact-tagging bug found and fixed |
+| 0154 | E1 — Pre-registration | [`0154-exp001-e1-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0154-exp001-e1-golden-trajectory-numerical-parity.md) | COMPLETE (historical, as of E1 close) — DRAFT pre-registration committed; H4 driver support left pending for E2 review (see preregistration §5.4). **Superseded by 0155 below: H4 was closed the same day.** |
+| 0155 | E2 — Review and approval | [`0155-exp001-e2-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0155-exp001-e2-golden-trajectory-numerical-parity.md) | COMPLETE — pre-registration APPROVED; H4 driver support closed as a pre-execution amendment (preregistration §5.4); H1/H3 artefact-tagging bug found and fixed; PR #20 code review (Devin/CodeRabbit/Copilot) triaged and fixed as a second amendment (preregistration §5.5) |
 | 0156 | E3 — Execution | [`0156-exp001-e3-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0156-exp001-e3-golden-trajectory-numerical-parity.md) | PLANNED |
 | 0157 | E4 — Analysis | [`0157-exp001-e4-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0157-exp001-e4-golden-trajectory-numerical-parity.md) | PLANNED |
 | 0158 | E5 — Report | [`0158-exp001-e5-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0158-exp001-e5-golden-trajectory-numerical-parity.md) | PLANNED |
