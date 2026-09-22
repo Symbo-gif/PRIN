@@ -848,7 +848,27 @@ class TestRunClosure:
         (run_dir / "campaign-metadata.json").write_text(
             json.dumps({"artefacts": {unsafe_name: ["H1"]}}), encoding="utf-8"
         )
-        with pytest.raises(driver.IncompleteRunError, match="unsafe artefact"):
+        with pytest.raises(driver.IncompleteRunError, match="unsafe or reserved"):
+            driver.check_run_complete(run_dir)
+
+    @pytest.mark.parametrize(
+        "reserved_name", ["campaign-metadata.json", "manifest.json"]
+    )
+    def test_reserved_infrastructure_name_rejected_as_artefact(
+        self, run_root: Path, reserved_name: str
+    ) -> None:
+        """A sidecar naming itself or manifest.json as an artefact would
+        otherwise pass both the missing-file check (the file exists — it
+        just isn't a result) and the unlisted-file check (it is excluded
+        from `present` precisely because it is infrastructure) for the
+        wrong reason (Copilot).
+        """
+        run_dir = _run_dir(run_root, "reserved")
+        run_dir.mkdir()
+        (run_dir / "campaign-metadata.json").write_text(
+            json.dumps({"artefacts": {reserved_name: ["H1"]}}), encoding="utf-8"
+        )
+        with pytest.raises(driver.IncompleteRunError, match="unsafe or reserved"):
             driver.check_run_complete(run_dir)
 
     def test_unlisted_result_file_rejected(self, run_root: Path) -> None:

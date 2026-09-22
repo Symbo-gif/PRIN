@@ -26,8 +26,14 @@ traversal gap, a TOCTOU race in §5.8's own run-directory reservation, two
 `check_run_complete` containment gaps (an unsafe artefact name and an
 unlisted result file), and a finding-count arithmetic error this document
 had carried since §5.5 — each independently validated and fixed as a sixth
-(§5.9). All still within the same E1→E2 edit window, since no `RUN-`
-directory exists yet.
+(§5.9); a seventh round on that commit found three more items — a residual
+`check_run_complete` gap (a sidecar could name its own infrastructure
+filename as an artefact and pass closure), the finding-count summary still
+not matching §5.9's own contents, and an unverified-at-time-of-writing "CI
+green" claim in §5.9's own intro (checked afterward and found accurate, but
+not evidence-backed when first asserted) — each independently validated and
+fixed as a seventh (§5.10). All still within the same E1→E2 edit window,
+since no `RUN-` directory exists yet.
 **EXP-001 E3 (session 0156) is authorized to begin.**
 **Code version:** `prin` 1.0.0-rc1 @ `8ce115f` (campaign baseline SHA; this
 document was drafted at E1 on branch `campaign/0154-exp001-e1` and amended at
@@ -133,13 +139,16 @@ versioned per-case evidence artefact).
 
 H1–H4 are all addressed by the committed driver
 (`benchmarks/campaign/exp001_driver.py`, tested in tandem —
-`tests/test_exp001_driver.py`, 102/102 passing at freeze, including the 4
+`tests/test_exp001_driver.py`, 104/104 passing at freeze, including the 4
 `slow`/PRINet-gated H2 tests). H4's driver support
 (`compare_kernel_path_case`/`compare_kernel_path_subset`, `--mode
 kernel-path`) was closed as a pre-execution amendment at E2 (session 0155);
-§5.4 records the closure, and five further E2 remediation passes (§5.5,
-§5.6, §5.7, §5.8, §5.9) fixed a total of sixteen code-review findings (plus
-one locale correction) across five review rounds — an H2a/H2b
+§5.4 records the closure, and six further E2 remediation passes (§5.5,
+§5.6, §5.7, §5.8, §5.9, §5.10) fixed a total of twenty-three substantive
+code-review findings, plus one locale correction (§5.8 item 5) —
+twenty-four numbered remediation items in all, by an exact recount of every
+`` `^\d+\. \*\*` `` entry per subsection (§5.5=4, §5.6=5, §5.7=2, §5.8=5,
+§5.9=5, §5.10=3) — across six review rounds — an H2a/H2b
 data-sufficiency gap, unenforced abort criteria, artefact-write races and
 the sidecar/result transaction, H4's CUDA/wgpu ambiguity (closed properly
 only at §5.6, after §5.5's first attempt proved insufficient), H2b's
@@ -147,7 +156,9 @@ cross-metric pooling, the clamp-trip criterion's scope, the H4 test guards,
 two follow-on defects §5.6 itself introduced, the unpinned H2 reference, the
 unenforced §7.1 run-directory contract, the kill-between-writes closure gap,
 a §4/§8 H2b inconsistency, a `--label` path-traversal gap, a run-directory
-reservation TOCTOU race, and two `check_run_complete` containment gaps.
+reservation TOCTOU race, two `check_run_complete` containment gaps, a
+residual `check_run_complete` reserved-name gap, a finding-count summary
+drift, and an unverified-at-time-of-writing CI-status claim.
 
 ## 3. Expected results
 
@@ -708,7 +719,10 @@ Python files; full local quick suite green.
 
 A sixth CodeRabbit + Copilot round on §5.8's commit found five items. Each
 was independently validated against the code and standards before being
-fixed (still no `RUN-` directory; CI green throughout):
+fixed (still no `RUN-` directory; §5.10 records that this pass's own "CI
+green throughout" claim was asserted before checking the pushed commit's
+actual GitHub Actions status, which the next round's review correctly
+flagged as unverified at time of writing):
 
 1. **`--label` accepted a path-traversal payload (Copilot; validated).**
    §5.8's `_validate_run_dir` fixed the *name* of `--out` but never
@@ -779,6 +793,83 @@ pass. An end-to-end corpus-mode smoke run through the live driver against
 the real corpus (reserve → compare → write → close) independently confirms
 the full pipeline still produces a `check_run_complete`-closable directory
 after all five fixes.
+
+### 5.10 Seventh E2 remediation pass — sixth review round (pre-execution amendment)
+
+A seventh CodeRabbit + Copilot round on the §5.9 commit found 3 items. Each
+was independently validated against the code and standards before being
+fixed (still no `RUN-` directory):
+
+1. **`check_run_complete` accepted a sidecar naming its own infrastructure
+   filename as an artefact (Copilot; validated).** `_is_safe_artefact_name`
+   accepts `"campaign-metadata.json"` and `"manifest.json"` — neither
+   contains a path separator or a `.`/`..` segment — but `check_run_complete`
+   excludes exactly those two names from `present` when computing the
+   unlisted-file check (§5.9 item 4). A sidecar naming
+   `{"campaign-metadata.json": ["H1"]}` in its own `artefacts` mapping
+   therefore passed every check for the wrong reason: the missing-file check
+   sees the sidecar file itself and calls it present, and the unlisted-file
+   check never considers it because it was excluded as infrastructure —
+   `check_run_complete` would return successfully and treat the sidecar as
+   its own "result", with zero actual comparison data ever written.
+   Reproduced empirically: a two-line sidecar naming itself passed
+   `check_run_complete` before this fix. Fixed: the `infrastructure` set
+   (`{sidecar.name, "manifest.json"}`) is now computed once, up front, and
+   an artefact name is rejected as unsafe if it is either not a plain
+   filename *or* a member of `infrastructure` — closing the gap
+   architecturally (one reserved-name set, checked once) rather than as a
+   special case bolted onto the existing safety check.
+2. **This document's finding-count summary still didn't match §5.9's own
+   contents (CodeRabbit; validated).** §5.9 item 5 fixed the §5.5–§5.8
+   count (16, not 17 or 18) but the H1–H4 summary paragraph (§3) was edited
+   in the same commit to list all five passes §5.5–§5.9 while still citing
+   the pre-§5.9 total of "sixteen findings" — silently dropping §5.9's own
+   five findings from the sum it claimed to cover, the same class of error
+   §5.9 item 5 had just fixed one level up. CodeRabbit's finding text itself
+   uses "findings" and "numbered items" interchangeably without defining
+   which is meant, which is part of why the drift wasn't caught by
+   proofreading; the fix here adopts a single explicit definition — a
+   *finding* is a numbered entry that fixes a defect, a *locale correction*
+   (§5.8 item 5, a wording fix with no functional or documentation-accuracy
+   change) is reported separately, and *numbered remediation items* is the
+   sum of both — and states the definition inline rather than requiring the
+   reader to infer it: twenty findings, one locale correction, twenty-one
+   items, exact per-section recount §5.5=4/§5.6=5/§5.7=2/§5.8=5/§5.9=5
+   cited alongside it so it is independently checkable without rerunning
+   the recount script.
+3. **The §5.9 intro's "CI green throughout" was asserted without checking
+   the pushed commit's actual GitHub Actions status (CodeRabbit; validated
+   — but the underlying claim itself was true, not false).** At the time
+   §5.9 was written, "CI green" reflected only local checks (`ruff`, `mypy
+   --strict`, Snyk Code CLI, `pytest`, the three governance gate scripts) —
+   the same category of unverified-CI-status assertion this project's own
+   governance history (ETCA-002, finding T-F4) identifies as a recurrence
+   risk worth treating as a hard rule, not a one-off. Checked now: `gh pr
+   checks 20` against the exact §5.9 head commit
+   (`ae494931db43aa207d8b1f38aba233c340c95460`, `ae49493` short) shows all
+   26 checks passing, including both required `gpu-cuda` and `gpu-wgpu`
+   legs — so the claim happened to be correct, but was not evidence-backed
+   when made. §5.9's intro sentence now says so
+   explicitly rather than being silently corrected, so the record shows
+   what was actually verified at each point in time; this section's own
+   evidence paragraph below cites the checked commit SHA and check count
+   directly, per that same rule.
+
+Evidence: `tests/test_exp001_driver.py`, 104/104 passing (102 prior + 2 new:
+`TestRunClosure::test_reserved_infrastructure_name_rejected_as_artefact`,
+parametrized over both reserved names). Applying the fix required renaming
+one existing assertion — `test_unsafe_artefact_name_rejected`'s
+`pytest.raises(..., match="unsafe artefact")` no longer matched the new
+message wording ("unsafe *or reserved* artefact"), caught immediately by
+running the full file after the fix, before this round's other changes were
+made (the exact "check that fixes don't cause further issues" failure mode
+this round's remediation was requested to guard against). `ruff check`/`ruff
+format --check` and `mypy python/prin benchmarks/campaign --strict` clean;
+Snyk Code 0 issues on both touched Python files (scanned individually); full
+local quick suite green. `gh pr checks 20` at commit `ae49493` (the exact
+commit §5.9's review comments were anchored to): 26/26 checks pass,
+including `gpu-cuda` and `gpu-wgpu` — cited here, not asserted from local
+validation alone, per finding 3 above.
 
 ## 6. Variables and controls
 
@@ -1055,4 +1146,27 @@ No budget amendment is anticipated.
   end-to-end corpus-mode smoke run through the live driver against the real
   corpus independently confirmed the full reserve→compare→write→close
   pipeline still works after all five fixes — see §5.9 for the full
+  evidence and finding-by-finding disposition.
+- **Driver (E2 seventh remediation, §5.10):** a seventh CodeRabbit + Copilot
+  round on the §5.9 commit found 3 items, each independently validated
+  against the code and standards before being fixed: a sidecar could name
+  its own infrastructure filename (`campaign-metadata.json` or
+  `manifest.json`) as an artefact and pass `check_run_complete` for the
+  wrong reason — the missing-file check saw the file (it exists, just not
+  as a result) and the unlisted-file check never considered it (excluded as
+  infrastructure); fixed by rejecting any artefact name that is a member of
+  the same `infrastructure` set both checks already used, checked once, up
+  front. This document's finding-count summary (§3) still didn't reflect
+  §5.9's own five findings even after §5.9 corrected the count it inherited
+  from §5.5–§5.8, the same drift recurring one level up; fixed by defining
+  "finding" vs. "locale correction" vs. "numbered remediation item"
+  explicitly and citing the exact per-section recount inline. §5.9's "CI
+  green throughout" claim was asserted before checking the pushed commit's
+  actual GitHub Actions status — checked now (`gh pr checks 20` at
+  `ae49493`: 26/26 including `gpu-cuda`/`gpu-wgpu`) and found accurate, but
+  not evidence-backed when first written; §5.9's text now says so rather
+  than being silently corrected. `tests/test_exp001_driver.py`, 104/104
+  passing at freeze (2 new); fixing the reserved-name check required
+  updating one existing test's `pytest.raises` match string, caught by
+  running the suite immediately after the fix — see §5.10 for the full
   evidence and finding-by-finding disposition.

@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 pre-registration — seventh E2 remediation, sixth code-review
+  round on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.10.** A seventh CodeRabbit + Copilot round found 3 items; each was
+  independently validated against the code and standards before being
+  fixed as a seventh pre-execution amendment. (1) `check_run_complete()`
+  accepted a sidecar naming its own infrastructure filename
+  (`campaign-metadata.json` or `manifest.json`) as an artefact and passed
+  closure for the wrong reason — the missing-file check sees the file (it
+  exists, just isn't a result) and the unlisted-file check never considers
+  it (excluded as infrastructure). Reproduced empirically before the fix.
+  Fixed: the `infrastructure` set both checks already used is now computed
+  once, up front, and an artefact name is rejected if it is either not a
+  plain filename or a member of that set. (2) This document's finding-count
+  summary still didn't reflect §5.9's own five findings even after §5.9
+  corrected the count it inherited from §5.5-§5.8 — the same drift
+  recurring one level up. Fixed by explicitly defining "finding" vs.
+  "locale correction" vs. "numbered remediation item" and citing the exact
+  per-section recount inline (twenty-three findings, one locale correction,
+  twenty-four items total: §5.5=4, §5.6=5, §5.7=2, §5.8=5, §5.9=5,
+  §5.10=3). (3) §5.9's "CI green throughout" claim was asserted before
+  checking the pushed commit's actual GitHub Actions status — the same
+  unverified-CI-status pattern this project's own governance history
+  (ETCA-002, T-F4) already identified as a recurrence risk. Checked now
+  (`gh pr checks 20` at `ae49493`): 26/26 checks pass, including both
+  `gpu-cuda` and `gpu-wgpu` — the claim was accurate, but not
+  evidence-backed when first made; §5.9's text now says so explicitly
+  rather than being silently corrected. 2 new tests
+  (`tests/test_exp001_driver.py`, 104/104 passing); fixing finding 1
+  required updating one existing test's `pytest.raises` match string
+  ("unsafe artefact" → "unsafe or reserved"), caught immediately by running
+  the suite after the fix. `ruff`/`mypy --strict` clean; Snyk Code 0 issues
+  on both touched Python files; full local quick suite green. EXP-001 E3
+  (session 0156) remains authorized to begin.
 - **EXP-001 pre-registration — sixth E2 remediation, fifth code-review
   round on PR #20 (session 0155, E2, 2026-09-22) —
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`

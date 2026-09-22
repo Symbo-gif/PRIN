@@ -349,17 +349,22 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
     outside ``run_dir`` entirely (Copilot; the same CWE-22 class as
     :data:`_LABEL_RE`, defended here independently of label validation since
     this function must not trust that every sidecar it is ever pointed at
-    was written by a conforming invocation of this driver). E3 must call
-    this before ``append_manifest`` (see
-    ``benchmarks/results/EXP-001/README.md`` and preregistration §5.3).
+    was written by a conforming invocation of this driver); or a sidecar
+    naming its own infrastructure filename (itself, or ``manifest.json``) as
+    one of its artefacts, which would otherwise pass both the missing-file
+    check (the file exists — it just isn't a result) and the unlisted-file
+    check (it is excluded from ``present`` precisely because it is
+    infrastructure) for the wrong reason (Copilot). E3 must call this before
+    ``append_manifest`` (see ``benchmarks/results/EXP-001/README.md`` and
+    preregistration §5.3).
 
     Returns:
         The sidecar's ``artefacts`` mapping, for the caller's log.
 
     Raises:
         IncompleteRunError: If the sidecar is missing or malformed, names an
-            unsafe or absent artefact path, or the directory holds a result
-            JSON the sidecar does not name.
+            unsafe, reserved, or absent artefact path, or the directory
+            holds a result JSON the sidecar does not name.
     """
     sidecar = run_dir / "campaign-metadata.json"
     if not sidecar.is_file():
@@ -379,13 +384,27 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
         raise IncompleteRunError(
             f"{sidecar} is malformed ({exc}); not a closable run"
         ) from exc
-    unsafe = sorted(name for name in artefacts if not _is_safe_artefact_name(name))
+    # Run-directory infrastructure the campaign-metadata artefacts mapping
+    # never legitimately names: the sidecar always exists (it is what this
+    # function is reading), and manifest.json is written by append_manifest
+    # *after* this check (it may already exist if this is called again on an
+    # already-closed directory). A sidecar naming either as one of its own
+    # artefacts would otherwise pass both checks below for the wrong reason —
+    # not because a real result was written, but because the infrastructure
+    # file it is impersonating as a result already happens to exist.
+    infrastructure = {sidecar.name, "manifest.json"}
+    unsafe = sorted(
+        name
+        for name in artefacts
+        if not _is_safe_artefact_name(name) or name in infrastructure
+    )
     if unsafe:
         raise IncompleteRunError(
-            f"{sidecar} names unsafe artefact path(s) {', '.join(unsafe)} "
-            "(must be a plain filename directly in run_dir, no path "
-            "separators or '..' segments) — refusing to treat as a "
-            "closable run"
+            f"{sidecar} names unsafe or reserved artefact path(s) "
+            f"{', '.join(unsafe)} (must be a plain filename directly in "
+            f"run_dir, no path separators or '..' segments, and not one of "
+            f"the reserved infrastructure names {sorted(infrastructure)}) — "
+            "refusing to treat as a closable run"
         )
     missing = sorted(name for name in artefacts if not (run_dir / name).is_file())
     if missing:
@@ -396,11 +415,6 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
             "as aborted (preregistration §10; never delete it) and retry under "
             "a new RUN- ID; do not manifest it."
         )
-    # Excludes the sidecar itself and manifest.json — both are run-directory
-    # infrastructure the campaign-metadata artefacts mapping never names
-    # (manifest.json is written by append_manifest, after this check; it may
-    # already exist if this is called again on an already-closed directory).
-    infrastructure = {sidecar.name, "manifest.json"}
     present = {
         path.name
         for path in run_dir.iterdir()
