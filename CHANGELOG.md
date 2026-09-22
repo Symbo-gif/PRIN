@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 pre-registration — third E2 remediation, second code-review round
+  on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.6.** A maintainer-requested fresh CodeRabbit review plus a new Copilot
+  review found 5 more issues, all fixed as a third pre-execution amendment:
+  (1) the prior CUDA check (`torch.cuda.is_available()`) was necessary but
+  not sufficient — a `--features wgpu`-only build's binding can pass it on a
+  CUDA-capable host, and even a `--features cuda` build silently falls back
+  to `prin-sim`'s host-slice (CPU) path when its CubeCL client fails to
+  initialise; `compare_kernel_path_case` now calls `GpuSparseKuramoto`
+  directly and inspects the raw DLPack capsule's device (`kDLCUDA` only on
+  the true CUDA path) instead of going through
+  `prin._torch_compat`'s device-normalizing dispatch hook; (2) a
+  provenance-reservation gap the second remediation's own metadata-first
+  fix introduced — a stale result at the target path could receive a fresh,
+  misattributed sidecar — closed by reserving the result path before
+  writing either file; (3) H2b previously pooled `order_parameter` and
+  `mean_phase_coherence` (different ranges, `[0,1]` vs `[-1,1]`) into one
+  combined sample; now two independent per-metric predicates, both must
+  confirm; (4) the clamp-trip abort sub-criterion is now explicitly scoped
+  as "not enforced — registered validity boundary" rather than ambiguously
+  "disclosed"; (5) the H4 test guards were updated to require real CUDA
+  execution (`_needs_gpu_execution`), not just binding presence, matching
+  fix (1). 1 new test plus 1 renamed/rewritten in place
+  (`tests/test_exp001_driver.py`, 56/56 passing); `ruff`/`mypy --strict`
+  clean; Snyk Code 0 issues. EXP-001 E3 (session 0156) remains authorized to
+  begin.
 - **EXP-001 pre-registration — second E2 remediation, code review on PR #20
   (session 0155, E2, 2026-09-21) —
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`

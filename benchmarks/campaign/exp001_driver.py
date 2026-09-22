@@ -83,6 +83,7 @@ from prin.dynamics import (
 from prin.parity.harness import compare_arrays, compare_case
 from prin.parity.loader import CorpusLoader
 from prin.parity.schema import CaseArrays, CaseSpec, Coupling, Integrator, Model
+from torch.utils.dlpack import from_dlpack
 
 from benchmarks._common.environment import capture_environment
 from benchmarks._common.result import write_json_exclusive, write_result
@@ -739,17 +740,19 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
 
     Builds a ``prin._torch_compat.KuramotoOscillator`` from one
     ``kuramoto_sparse_knn_*`` corpus case's stored parameters and initial
-    state, evaluates one derivative step through the CPU (f64 Rust) path and
-    the GPU (f32 CubeCL) ``GpuSparseKuramoto`` kernel via the model's
-    ``_compute_derivatives_gpu`` dispatch hook (WP-036D), and compares within
-    the registered ``KERNEL_RTOL``/``KERNEL_ATOL`` tolerance.
+    state for the CPU (f64 Rust) reference, and calls
+    ``prin._prin_core.GpuSparseKuramoto`` directly (not through
+    ``prin._torch_compat``'s ``_compute_derivatives_gpu`` dispatch hook) for
+    the GPU (f32 CubeCL) side, so the raw DLPack result can be inspected for
+    its true device before any placement-normalizing ``.to()`` call — see the
+    note below. Compares within the registered ``KERNEL_RTOL``/
+    ``KERNEL_ATOL`` tolerance.
 
     Raises:
         GpuBindingUnavailableError: If the extension lacks
-            ``GpuSparseKuramoto`` (no ``cuda``/``wgpu``-feature build), if
-            CUDA is not confirmed available (see note below), or if the
-            dispatch hook otherwise declines to run (unexpected for a
-            ``sparse_knn`` case).
+            ``GpuSparseKuramoto`` (no ``cuda``/``wgpu``-feature build), or if
+            the GPU call does not confirm true CUDA execution (see note
+            below).
         ValueError: If ``case_id`` does not name a ``kuramoto``/``sparse_knn``
             case.
 
@@ -757,27 +760,26 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
         ``GpuSparseKuramoto`` compiles under ``cfg(any(feature = "cuda",
         feature = "wgpu"))`` (``crates/prin-py/src/bindings/mod.rs``), and its
         backend (``cubecl-cuda`` vs. ``cubecl-wgpu``) is a compile-time
-        choice with no Python-visible query. H4 is registered specifically
-        against the CUDA leg (preregistration §5.1), so this function also
-        requires ``torch.cuda.is_available()`` before proceeding — a build
-        with only ``--features wgpu`` (no CUDA device) aborts here rather
-        than risk mislabeling a wgpu result as the required CUDA leg.
+        choice. Even a ``--features cuda`` build silently falls back to a
+        host-slice (CPU) compute path when ``try_create_client()`` cannot
+        initialise a device (``crates/prin-sim/src/gpu.rs``) — so neither
+        the binding's presence nor ``torch.cuda.is_available()`` proves this
+        call actually dispatched through CUDA. The true CUDA device-resident
+        path is the only one that returns a zero-copy ``kDLCUDA`` capsule
+        (WP-036E Q3); everything else (wgpu, CPU-SIMD, host-slice fallback)
+        returns a CPU-resident capsule (module docstring,
+        ``crates/prin-py/src/bindings/gpu.rs``). This function therefore
+        calls the binding directly and checks the *raw* result's
+        ``.device.type`` — the only ground-truth signal — instead of relying
+        on ``prin._torch_compat``'s dispatch hook, whose ``_from_gpu`` always
+        normalizes the result to the input tensor's device and would hide
+        this distinction either way.
     """
     if not hasattr(_prin_core, "GpuSparseKuramoto"):
         raise GpuBindingUnavailableError(
             "prin._prin_core.GpuSparseKuramoto is absent (extension built "
             "without --features cuda or --features wgpu); H4 kernel-path "
             "mode aborts"
-        )
-    if not torch.cuda.is_available():
-        raise GpuBindingUnavailableError(
-            "prin._prin_core.GpuSparseKuramoto is present, but "
-            "torch.cuda.is_available() is False. GpuSparseKuramoto also "
-            "compiles under --features wgpu alone, and there is no "
-            "Python-visible signal to tell a wgpu-only build apart from a "
-            "cuda build without a live CUDA device; H4 is registered "
-            "specifically against the CUDA leg (preregistration §5.1), so "
-            "this aborts rather than risk recording a wgpu result as cuda"
         )
     loaded = loader.load(case_id)
     spec = loaded.spec
@@ -787,6 +789,7 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
             f"model={spec.model!r} coupling={spec.coupling!r} (case {case_id})"
         )
     parameters: dict[str, Any] = dict(spec.parameters)
+
     model = TorchKuramotoOscillator(
         spec.n_oscillators,
         coupling_strength=float(parameters["coupling_strength"]),
@@ -801,13 +804,42 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
         frequency=torch.tensor(loaded.arrays.frequency_init, dtype=torch.float64),
     )
     cpu_dphase, cpu_damplitude, cpu_dfrequency = model.compute_derivatives(state)
-    gpu = model._compute_derivatives_gpu(state)
-    if gpu is None:
+
+    phase_f32 = torch.as_tensor(
+        loaded.arrays.phase_init, dtype=torch.float32
+    ).contiguous()
+    amplitude_f32 = torch.as_tensor(
+        loaded.arrays.amplitude_init, dtype=torch.float32
+    ).contiguous()
+    frequency_f32 = torch.as_tensor(
+        loaded.arrays.frequency_init, dtype=torch.float32
+    ).contiguous()
+    engine = _prin_core.GpuSparseKuramoto.from_knn_phase(
+        spec.n_oscillators,
+        int(parameters["sparse_k"]),
+        float(parameters["coupling_strength"]),
+        float(parameters.get("decay_rate", 0.0)),
+        float(parameters.get("freq_adaptation_rate", 0.0)),
+        phase_f32,
+    )
+    gpu_dphase_capsule, gpu_damplitude_capsule, gpu_dfrequency_capsule = (
+        engine.compute_derivatives(phase_f32, amplitude_f32, frequency_f32)
+    )
+    gpu_dphase_raw = from_dlpack(gpu_dphase_capsule)
+    if gpu_dphase_raw.device.type != "cuda":
         raise GpuBindingUnavailableError(
-            "GpuSparseKuramoto is present but the dispatch hook declined to "
-            f"run for case {case_id} (unexpected for a sparse_knn case)"
+            "GpuSparseKuramoto.compute_derivatives returned a "
+            f"{gpu_dphase_raw.device.type!r}-resident result for case "
+            f"{case_id!r}, not the zero-copy kDLCUDA capsule the true CUDA "
+            "device-resident path returns. This means the call did not "
+            "actually dispatch through CUDA here — a --features wgpu-only "
+            "build, or a CUDA client that failed to initialise and fell "
+            "back to prin-sim's host-slice path — so H4 aborts rather than "
+            "record a non-CUDA result as cuda (preregistration §5.1)"
         )
-    gpu_dphase, gpu_damplitude, gpu_dfrequency = gpu
+    gpu_damplitude_raw = from_dlpack(gpu_damplitude_capsule)
+    gpu_dfrequency_raw = from_dlpack(gpu_dfrequency_capsule)
+
     identity = {
         "case_id": case_id,
         "model": spec.model,
@@ -819,17 +851,17 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
         (
             "dphase",
             cpu_dphase.detach().to(dtype=torch.float64, device="cpu").numpy(),
-            gpu_dphase.detach().to(dtype=torch.float64, device="cpu").numpy(),
+            gpu_dphase_raw.detach().to(dtype=torch.float64, device="cpu").numpy(),
         ),
         (
             "damplitude",
             cpu_damplitude.detach().to(dtype=torch.float64, device="cpu").numpy(),
-            gpu_damplitude.detach().to(dtype=torch.float64, device="cpu").numpy(),
+            gpu_damplitude_raw.detach().to(dtype=torch.float64, device="cpu").numpy(),
         ),
         (
             "dfrequency",
             cpu_dfrequency.detach().to(dtype=torch.float64, device="cpu").numpy(),
-            gpu_dfrequency.detach().to(dtype=torch.float64, device="cpu").numpy(),
+            gpu_dfrequency_raw.detach().to(dtype=torch.float64, device="cpu").numpy(),
         ),
     ]
     for label, cpu_arr, gpu_arr in pairs:
@@ -1015,14 +1047,31 @@ def main(argv: list[str] | None = None) -> int:
         "seed_key": args.seed_key,
         "out_dir": str(run_dir),
     }
+    # Reserve the result path before writing anything: if it already exists
+    # (a stale result from an earlier invocation targeting this same run
+    # directory/label, e.g. a retry), abort here rather than let
+    # write_campaign_metadata below succeed and then write_result fail —
+    # that would leave a fresh sidecar claiming provenance over an older,
+    # unrelated result it never actually produced.
+    result_name = f"{args.mode}_{args.label}.json"
+    result_path = run_dir / result_name
+    if result_path.exists():
+        print(
+            f"ABORT: {result_path} already exists; raw benchmark artefacts "
+            "are append-only (Experimentation Standards §4) — write to a "
+            "new run directory instead",
+            file=sys.stderr,
+        )
+        return 2
+
     # Metadata is written *before* the result (campaign plan §7.2: a result
     # is only accepted with its provenance sidecar). Reversing this order
     # would let a sidecar-write failure strand a result with no provenance;
     # this order instead risks, on a result-write failure, a sidecar
     # referencing a not-yet-written result filename — inert, not misleading,
     # and never mistaken for accepted evidence the way an unprovenanced
-    # result artefact could be.
-    result_name = f"{args.mode}_{args.label}.json"
+    # result artefact could be. The reservation check above closes the
+    # remaining gap (a *pre-existing* result at this same path).
     write_campaign_metadata(
         run_dir,
         exp_id=EXP_ID,
@@ -1032,7 +1081,7 @@ def main(argv: list[str] | None = None) -> int:
         artefacts={result_name: _MODE_HYPOTHESIS[args.mode]},
     )
     result_path = write_result(
-        run_dir / result_name,
+        result_path,
         environment=environment,
         config=config,
         payload={"cases": cases},

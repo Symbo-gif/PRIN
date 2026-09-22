@@ -3,10 +3,16 @@
 Covers the four comparisons the EXP-001 pre-registration names: corpus parity
 (H1), hypothesis-fuzzed parity (H2), bit-level repeatability (H3), and the
 GPU sparse-k-NN kernel-path comparison (H4), plus the campaign-metadata
-sidecar and CLI wiring (campaign plan §7.2). H4's tests are ``skipif``-guarded
-on ``prin._prin_core.GpuSparseKuramoto`` being present (a build-configuration
-gate, not hardware — the extension must be built with ``--features cuda``),
-mirroring ``tests/test_wp036d_gpu_dispatch.py``'s existing convention.
+sidecar and CLI wiring (campaign plan §7.2). H4's tests are ``skipif``-guarded:
+``_needs_gpu_binding`` (mirroring ``tests/test_wp036d_gpu_dispatch.py``'s
+existing convention) for tests that only need
+``prin._prin_core.GpuSparseKuramoto`` present (a build-configuration gate),
+and ``_needs_gpu_execution`` (additionally requiring
+``torch.cuda.is_available()``) for tests that actually call
+``compare_kernel_path_case`` expecting it to run — since that function also
+requires a live CUDA device (§5.5 remediation: the binding alone compiles
+under ``--features wgpu`` too), a binding-only guard would let those tests
+run-and-fail rather than skip on a hypothetical wgpu-only build.
 """
 
 from __future__ import annotations
@@ -16,6 +22,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import torch
 from prin import _prin_core
 from prin.dynamics import HopfOscillator, StuartLandauOscillator
 from prin.parity.loader import CorpusLoader
@@ -38,15 +45,29 @@ _REPRESENTATIVE_CASES = [
 ]
 
 # GpuSparseKuramoto is only present when the extension is built with
-# `--features cuda` (the maintainer host and the `[gpu]` CI leg); absent on
-# the plain `python.yml` matrix. Same reference-guard class as
-# test_wp036d_gpu_dispatch.py's `_needs_gpu_binding`.
+# `--features cuda` or `--features wgpu` (the maintainer host and the `[gpu]`
+# CI leg); absent on the plain `python.yml` matrix. Same reference-guard class
+# as test_wp036d_gpu_dispatch.py's `_needs_gpu_binding`.
 _GPU_SPARSE_KNN_BUILT = hasattr(_prin_core, "GpuSparseKuramoto")
 _needs_gpu_binding = pytest.mark.skipif(
     not _GPU_SPARSE_KNN_BUILT,
     reason=(
         "prin._prin_core.GpuSparseKuramoto absent "
-        "(extension built without --features cuda)"
+        "(extension built without --features cuda/--features wgpu)"
+    ),
+)
+
+# compare_kernel_path_case additionally requires a live CUDA device (§5.5):
+# the binding alone can't distinguish a wgpu-only build from a cuda build, so
+# it aborts unless torch.cuda.is_available(). Tests that actually execute it
+# expecting success need this stronger guard, not just binding presence,
+# or they would run-and-fail (instead of skip) on a hypothetical
+# --features wgpu-only build.
+_needs_gpu_execution = pytest.mark.skipif(
+    not (_GPU_SPARSE_KNN_BUILT and torch.cuda.is_available()),
+    reason=(
+        "H4 kernel-path execution requires both prin._prin_core."
+        "GpuSparseKuramoto and a live CUDA device (torch.cuda.is_available())"
     ),
 )
 
@@ -447,7 +468,7 @@ class TestFuzzComparison:
 class TestKernelPath:
     """H4: the GPU sparse-k-NN derivative kernel agrees with the CPU reference."""
 
-    @_needs_gpu_binding
+    @_needs_gpu_execution
     @pytest.mark.parametrize("case_id", _KURAMOTO_SPARSE_KNN_CASES)
     def test_representative_cases_within_tolerance(
         self, loader: CorpusLoader, case_id: str
@@ -462,7 +483,7 @@ class TestKernelPath:
             "dfrequency",
         }
 
-    @_needs_gpu_binding
+    @_needs_gpu_execution
     def test_all_sparse_knn_corpus_cases_pass(self, loader: CorpusLoader) -> None:
         """Exhaustive over the corpus's 72 kuramoto/sparse_knn cases (§5.1)."""
         case_ids = [
@@ -476,7 +497,7 @@ class TestKernelPath:
         assert all(r["aborted"] is False for r in records)
         assert all(r["within_tolerance"] for r in records)
 
-    @_needs_gpu_binding
+    @_needs_gpu_execution
     def test_non_sparse_knn_case_raises(self, loader: CorpusLoader) -> None:
         with pytest.raises(ValueError, match="kuramoto/sparse_knn"):
             driver.compare_kernel_path_case(loader, _REPRESENTATIVE_CASES[0])
@@ -490,17 +511,24 @@ class TestKernelPath:
             driver.compare_kernel_path_case(loader, _KURAMOTO_SPARSE_KNN_CASES[0])
 
     @_needs_gpu_binding
-    def test_binding_present_but_cuda_unavailable_raises(
+    def test_non_cuda_resident_result_raises(
         self, loader: CorpusLoader, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """A wgpu-only build (binding present, no CUDA device) aborts too.
+        """A non-CUDA-resident GPU result aborts rather than counting as cuda.
 
         Regression test for the bug where ``compare_kernel_path_case`` only
-        checked ``hasattr(_prin_core, "GpuSparseKuramoto")`` — that binding
-        also compiles under ``--features wgpu`` alone, so it is not on its
-        own sufficient evidence the CUDA leg ran.
+        checked ``hasattr(_prin_core, "GpuSparseKuramoto")`` (later,
+        ``torch.cuda.is_available()``) — neither proves the call actually
+        dispatched through CUDA: ``GpuSparseKuramoto`` also compiles under
+        ``--features wgpu`` alone, and even a ``--features cuda`` build
+        silently falls back to a host-slice (CPU) path when its CUDA client
+        fails to initialise (``crates/prin-sim/src/gpu.rs``). Both failure
+        modes return a CPU-resident DLPack capsule instead of the true CUDA
+        path's zero-copy ``kDLCUDA`` one, so this simulates that directly.
         """
-        monkeypatch.setattr(driver.torch.cuda, "is_available", lambda: False)
+        monkeypatch.setattr(
+            driver, "from_dlpack", lambda capsule: torch.zeros(1, device="cpu")
+        )
         with pytest.raises(driver.GpuBindingUnavailableError, match="cuda"):
             driver.compare_kernel_path_case(loader, _KURAMOTO_SPARSE_KNN_CASES[0])
 
@@ -598,6 +626,40 @@ class TestCli:
         assert sidecar["session"] == "0156"
         assert sidecar["artefacts"] == {"corpus_smoke.json": ["H1"]}
 
+    def test_preexisting_result_aborts_before_writing_metadata(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A stale result at the target path aborts before any write (CodeRabbit).
+
+        Regression test: a result left over from an earlier invocation
+        (e.g. a retry reusing the same --out/--label) must never receive a
+        *fresh* campaign-metadata.json sidecar claiming provenance over it.
+        """
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
+        run_dir = tmp_path / "RUN-stale-result"
+        run_dir.mkdir()
+        stale_result = run_dir / "corpus_smoke.json"
+        stale_result.write_text('{"stale": true}', encoding="utf-8")
+        argv = [
+            "--mode",
+            "corpus",
+            "--corpus-dir",
+            str(_CORPUS_DIR),
+            "--case-id",
+            _REPRESENTATIVE_CASES[0],
+            "--out",
+            str(run_dir),
+            "--label",
+            "smoke",
+            "--session",
+            "0156",
+            "--operator",
+            "tester",
+        ]
+        assert driver.main(argv) == 2
+        assert stale_result.read_text(encoding="utf-8") == '{"stale": true}'
+        assert not (run_dir / "campaign-metadata.json").exists()
+
     def test_repeatability_mode_tags_artefact_h3(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -626,7 +688,7 @@ class TestCli:
         )
         assert sidecar["artefacts"] == {"repeatability_smoke.json": ["H3"]}
 
-    @_needs_gpu_binding
+    @_needs_gpu_execution
     def test_kernel_path_mode_writes_artefact_and_sidecar(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
