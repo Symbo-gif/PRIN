@@ -83,6 +83,28 @@ def loader() -> CorpusLoader:
     return CorpusLoader(_CORPUS_DIR)
 
 
+@pytest.fixture
+def run_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Point both write gates at a temp directory for CLI tests.
+
+    ``benchmarks._common.result._ALLOWED_ROOTS`` confines where any artefact
+    may be written; ``exp001_driver._RUN_ROOT`` is the campaign plan §7.1
+    raw-artefact root every run directory must be a direct child of. Both are
+    narrowed to ``tmp_path`` so the CLI's real contract checks still run,
+    just against a scratch root. Test run directories must still use the
+    canonical ``RUN-<UTC>-<SHA>-<label>`` name (see :func:`_run_dir`).
+    """
+    root = tmp_path.resolve()
+    monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (root,))
+    monkeypatch.setattr(driver, "_RUN_ROOT", root)
+    return root
+
+
+def _run_dir(root: Path, label: str) -> Path:
+    """A canonically named, not-yet-created run directory under ``root``."""
+    return root / f"RUN-20260921T000000Z-abc1234-{label}"
+
+
 class TestBuildPrinModel:
     """build_prin_model constructs the correct Rust-backed model class."""
 
@@ -533,6 +555,192 @@ class TestKernelPath:
             driver.compare_kernel_path_case(loader, _KURAMOTO_SPARSE_KNN_CASES[0])
 
 
+class TestRunDirectoryContract:
+    """_validate_run_dir enforces campaign plan §7.1 before any write (Copilot)."""
+
+    def test_canonical_new_child_of_root_passes(self, run_root: Path) -> None:
+        driver._validate_run_dir(_run_dir(run_root, "corpus-cpu"))
+
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "RUN-race",
+            "RUN-20260921T000000Z-smoke",
+            "RUN-20260921T000000Z-abc1234-",
+            "RUN-2026-09-21T00:00:00Z-abc1234-smoke",
+            "RUN-20260921T000000Z-ABC1234-smoke",
+            "RUN-20260921T000000Z-xyz-smoke",
+            "corpus-cpu",
+        ],
+    )
+    def test_non_canonical_name_rejected(self, run_root: Path, name: str) -> None:
+        with pytest.raises(driver.DriverMetadataError, match=r"§7\.1 form"):
+            driver._validate_run_dir(run_root / name)
+
+    def test_wrong_parent_rejected(self, run_root: Path, tmp_path: Path) -> None:
+        elsewhere = tmp_path / "EXP-002"
+        elsewhere.mkdir()
+        with pytest.raises(driver.DriverMetadataError, match="direct child"):
+            driver._validate_run_dir(_run_dir(elsewhere, "corpus-cpu"))
+
+    def test_existing_directory_rejected(self, run_root: Path) -> None:
+        """A run directory is never reused (campaign plan §7.1)."""
+        run_dir = _run_dir(run_root, "retry")
+        run_dir.mkdir()
+        with pytest.raises(driver.DriverMetadataError, match="never"):
+            driver._validate_run_dir(run_dir)
+
+    def test_cli_rejects_before_any_comparison(
+        self, run_root: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The contract is checked up front, so a bad --out never runs cases."""
+        calls: list[str] = []
+
+        def _record(*args: object, **kwargs: object) -> list[dict[str, object]]:
+            calls.append("ran")
+            return []
+
+        monkeypatch.setattr(driver, "compare_corpus_subset", _record)
+        argv = [
+            "--mode",
+            "corpus",
+            "--corpus-dir",
+            str(_CORPUS_DIR),
+            "--out",
+            str(run_root / "RUN-typo"),
+            "--label",
+            "smoke",
+            "--session",
+            "0156",
+            "--operator",
+            "tester",
+        ]
+        assert driver.main(argv) == 2
+        assert calls == []
+        assert not (run_root / "RUN-typo").exists()
+
+
+class TestReferenceProvenance:
+    """prinet_reference_provenance pins and records the H2 reference (Copilot)."""
+
+    def test_registered_version_passes_and_reports_source(self) -> None:
+        pytest.importorskip("prinet")
+        provenance = driver.prinet_reference_provenance()
+        assert provenance["prinet_version"] == driver.PRINET_REFERENCE_VERSION
+        assert Path(provenance["prinet_source"]).is_dir()
+
+    def test_other_version_aborts(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A different prinet on sys.path must never yield a '3.0.0' result."""
+        prinet = pytest.importorskip("prinet")
+        monkeypatch.setattr(prinet, "__version__", "3.1.0")
+        with pytest.raises(driver.PrinetUnavailableError, match=r"3\.1\.0"):
+            driver.prinet_reference_provenance()
+        # The per-case path is guarded too, not just main().
+        rng = np.random.default_rng(0)
+        spec = driver.draw_fuzz_spec(rng)
+        spec["rng"] = rng
+        with pytest.raises(driver.PrinetUnavailableError, match=r"3\.1\.0"):
+            driver.compare_fuzz_case(spec)
+
+    @pytest.mark.slow
+    def test_fuzz_artefact_records_reference(self, run_root: Path) -> None:
+        pytest.importorskip("prinet")
+        run_dir = _run_dir(run_root, "fuzz")
+        argv = [
+            "--mode",
+            "fuzz",
+            "--n-fuzz-cases",
+            "1",
+            "--out",
+            str(run_dir),
+            "--label",
+            "smoke",
+            "--session",
+            "0156",
+            "--operator",
+            "tester",
+        ]
+        assert driver.main(argv) == 0
+        payload = json.loads((run_dir / "fuzz_smoke.json").read_text(encoding="utf-8"))
+        assert payload["config"]["prinet_version"] == driver.PRINET_REFERENCE_VERSION
+        assert "prinet_source" in payload["config"]
+
+    def test_corpus_artefact_does_not_claim_a_reference(self, run_root: Path) -> None:
+        """Corpus mode's reference is the stored corpus, not a live prinet."""
+        run_dir = _run_dir(run_root, "corpus")
+        argv = [
+            "--mode",
+            "corpus",
+            "--corpus-dir",
+            str(_CORPUS_DIR),
+            "--case-id",
+            _REPRESENTATIVE_CASES[0],
+            "--out",
+            str(run_dir),
+            "--label",
+            "smoke",
+            "--session",
+            "0156",
+            "--operator",
+            "tester",
+        ]
+        assert driver.main(argv) == 0
+        payload = json.loads(
+            (run_dir / "corpus_smoke.json").read_text(encoding="utf-8")
+        )
+        assert "prinet_version" not in payload["config"]
+
+
+class TestRunClosure:
+    """check_run_complete refuses to bless a sidecar-only directory (CodeRabbit)."""
+
+    def _sidecar(self, run_dir: Path, artefacts: dict[str, list[str]]) -> None:
+        driver.write_campaign_metadata(
+            run_dir,
+            exp_id="EXP-001",
+            run_id=run_dir.name,
+            session="0156",
+            operator="tester",
+            artefacts=artefacts,
+        )
+
+    def test_complete_directory_passes(self, run_root: Path) -> None:
+        run_dir = _run_dir(run_root, "complete")
+        self._sidecar(run_dir, {"corpus_smoke.json": ["H1"]})
+        (run_dir / "corpus_smoke.json").write_text("{}", encoding="utf-8")
+        assert driver.check_run_complete(run_dir) == {"corpus_smoke.json": ["H1"]}
+
+    def test_sidecar_only_directory_rejected(self, run_root: Path) -> None:
+        """The kill-between-writes case: sidecar present, result absent.
+
+        ``tools.reproduce.append_manifest`` would inventory this directory's
+        single JSON file and ``verify_manifest`` would then accept the
+        manifest; this is the check E3 must run first.
+        """
+        run_dir = _run_dir(run_root, "killed")
+        self._sidecar(run_dir, {"corpus_smoke.json": ["H1"]})
+        with pytest.raises(driver.IncompleteRunError, match=r"corpus_smoke\.json"):
+            driver.check_run_complete(run_dir)
+
+    def test_missing_sidecar_rejected(self, run_root: Path) -> None:
+        run_dir = _run_dir(run_root, "nosidecar")
+        run_dir.mkdir()
+        (run_dir / "corpus_smoke.json").write_text("{}", encoding="utf-8")
+        with pytest.raises(driver.IncompleteRunError, match="no campaign-metadata"):
+            driver.check_run_complete(run_dir)
+
+    @pytest.mark.parametrize(
+        "body",
+        ["not json", "{}", '{"artefacts": {}}', '{"artefacts": {"x.json": 5}}'],
+    )
+    def test_malformed_sidecar_rejected(self, run_root: Path, body: str) -> None:
+        run_dir = _run_dir(run_root, "malformed")
+        run_dir.mkdir()
+        (run_dir / "campaign-metadata.json").write_text(body, encoding="utf-8")
+        with pytest.raises(driver.IncompleteRunError, match="malformed"):
+            driver.check_run_complete(run_dir)
+
+
 class TestCampaignMetadata:
     """write_campaign_metadata validates required fields and is append-only."""
 
@@ -590,11 +798,8 @@ class TestCampaignMetadata:
 class TestCli:
     """End-to-end CLI: metadata validation, artefact + sidecar writes."""
 
-    def test_corpus_mode_writes_artefact_and_sidecar(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
-        run_dir = tmp_path / "RUN-20260921T000000Z-abc1234-smoke"
+    def test_corpus_mode_writes_artefact_and_sidecar(self, run_root: Path) -> None:
+        run_dir = _run_dir(run_root, "smoke")
         case_id_flags = [
             flag for cid in _REPRESENTATIVE_CASES for flag in ("--case-id", cid)
         ]
@@ -627,16 +832,18 @@ class TestCli:
         assert sidecar["artefacts"] == {"corpus_smoke.json": ["H1"]}
 
     def test_preexisting_result_aborts_before_writing_metadata(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self, run_root: Path
     ) -> None:
         """A stale result at the target path aborts before any write (CodeRabbit).
 
         Regression test: a result left over from an earlier invocation
         (e.g. a retry reusing the same --out/--label) must never receive a
         *fresh* campaign-metadata.json sidecar claiming provenance over it.
+        (Since the §7.1 never-reused rule was enforced, this now trips the
+        run-directory-exists check even earlier — same outcome: exit 2,
+        nothing written.)
         """
-        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
-        run_dir = tmp_path / "RUN-stale-result"
+        run_dir = _run_dir(run_root, "stale")
         run_dir.mkdir()
         stale_result = run_dir / "corpus_smoke.json"
         stale_result.write_text('{"stale": true}', encoding="utf-8")
@@ -661,7 +868,7 @@ class TestCli:
         assert not (run_dir / "campaign-metadata.json").exists()
 
     def test_result_write_failure_rolls_back_the_sidecar(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self, run_root: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A lost race for the result path leaves no orphan sidecar (Copilot).
 
@@ -672,8 +879,7 @@ class TestCli:
         invocation already published must then be rolled back, so it never
         claims provenance over a result this invocation did not write.
         """
-        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
-        run_dir = tmp_path / "RUN-lost-race"
+        run_dir = _run_dir(run_root, "lostrace")
         sidecar = run_dir / "campaign-metadata.json"
         sidecar_existed_at_result_write = False
 
@@ -703,12 +909,9 @@ class TestCli:
         assert sidecar_existed_at_result_write, "sidecar must be published first"
         assert not sidecar.exists(), "sidecar must be rolled back on failure"
 
-    def test_repeatability_mode_tags_artefact_h3(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_repeatability_mode_tags_artefact_h3(self, run_root: Path) -> None:
         """Regression test: repeatability runs must tag H3, not H1 (§8)."""
-        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
-        run_dir = tmp_path / "RUN-repeatability-smoke"
+        run_dir = _run_dir(run_root, "repeatability")
         argv = [
             "--mode",
             "repeatability",
@@ -732,11 +935,8 @@ class TestCli:
         assert sidecar["artefacts"] == {"repeatability_smoke.json": ["H3"]}
 
     @_needs_gpu_execution
-    def test_kernel_path_mode_writes_artefact_and_sidecar(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
-        run_dir = tmp_path / "RUN-kernel-path-smoke"
+    def test_kernel_path_mode_writes_artefact_and_sidecar(self, run_root: Path) -> None:
+        run_dir = _run_dir(run_root, "kernel-path")
         case_id_flags = [
             flag for cid in _KURAMOTO_SPARSE_KNN_CASES for flag in ("--case-id", cid)
         ]
@@ -767,11 +967,8 @@ class TestCli:
         )
         assert sidecar["artefacts"] == {"kernel-path_smoke.json": ["H4"]}
 
-    def test_missing_operator_aborts_without_writing(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
-        run_dir = tmp_path / "RUN-abort"
+    def test_missing_operator_aborts_without_writing(self, run_root: Path) -> None:
+        run_dir = _run_dir(run_root, "abort")
         argv = [
             "--mode",
             "corpus",
@@ -791,11 +988,8 @@ class TestCli:
         assert driver.main(argv) == 2
         assert not run_dir.exists()
 
-    def test_repeatability_mode_without_case_id_aborts(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (tmp_path.resolve(),))
-        run_dir = tmp_path / "RUN-no-case"
+    def test_repeatability_mode_without_case_id_aborts(self, run_root: Path) -> None:
+        run_dir = _run_dir(run_root, "nocase")
         argv = [
             "--mode",
             "repeatability",

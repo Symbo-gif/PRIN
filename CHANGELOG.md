@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 pre-registration — fifth E2 remediation, fourth code-review
+  round on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.8.** A final CodeRabbit + Copilot round found 6 items; each was
+  independently validated against the code and standards before being
+  fixed as a fifth pre-execution amendment. (1) The H2 reference was never
+  pinned or recorded: `run_prinet_trajectory` caught only `ImportError`, so
+  a manually run H2 would compare against whatever `prinet` was importable
+  while the artefact still described itself as a PRINet 3.0.0 result. New
+  `prinet_reference_provenance()` aborts unless `prinet.__version__` equals
+  the new `PRINET_REFERENCE_VERSION = "3.0.0"` constant and records
+  `prinet_version`/`prinet_source` in the fuzz artefact's `config` envelope;
+  fuzz mode calls it before the batch, and `run_prinet_trajectory` on every
+  case. (2) The campaign plan §7.1 run-directory contract was unenforced —
+  the driver checked only a non-empty basename, and the shared writer
+  creates parents with `exist_ok=True`. New `_validate_run_dir` rejects a
+  non-canonical `RUN-<UTC>-<SHA>-<label>` name, a parent other than
+  `benchmarks/results/EXP-001/`, or an already-existing directory, before
+  any comparison runs. (3) A process kill between the sidecar and result
+  writes would leave a sidecar-only directory that
+  `tools.reproduce.append_manifest` (which globs `*.json` without reading
+  the sidecar) would manifest and `verify_manifest` would accept; new
+  `check_run_complete()` is now the mandatory first step of run closure in
+  `benchmarks/results/EXP-001/README.md` and preregistration §5.3, raising
+  `IncompleteRunError` for such a directory (recorded as aborted, retried
+  under a new `RUN-` ID, never deleted or manifested). The previous entry's
+  "either both land or neither does" is narrowed to driver-handled failures
+  accordingly. (4) Preregistration §4's H2b row said a metric is REFUTED
+  whenever not CONFIRMED, contradicting §8's INCONCLUSIVE-on-no-data rule;
+  §4 now states that exception. (5) "afterwards" → "afterward". 22 new tests
+  (`tests/test_exp001_driver.py`, 79/79 passing; the nine existing CLI
+  tests moved to canonical `RUN-` names under a shared `run_root` fixture);
+  `ruff`/`mypy --strict` clean; Snyk Code 0 issues. EXP-001 E3 (session
+  0156) remains authorized to begin.
 - **EXP-001 pre-registration — fourth E2 remediation, third code-review round
   on PR #20 (session 0155, E2, 2026-09-22) —
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
@@ -32,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   CUDA-residency check. 1 new test
   (`test_result_write_failure_rolls_back_the_sidecar`, asserting both that
   the sidecar exists when `write_result` is entered and that it is gone
-  afterwards; `tests/test_exp001_driver.py`, 57/57 passing);
+  afterward; `tests/test_exp001_driver.py`, 57/57 passing);
   `ruff`/`mypy --strict` clean; Snyk Code 0 issues. EXP-001 E3 (session 0156)
   remains authorized to begin.
 - **EXP-001 pre-registration — third E2 remediation, second code-review round

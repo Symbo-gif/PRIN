@@ -16,8 +16,13 @@ pre-execution amendment (§5.5). A fresh CodeRabbit review plus a new Copilot
 review were then explicitly requested on the same PR; their findings were
 triaged and fixed as a third pre-execution amendment (§5.6), and a further
 Copilot review of that commit found two follow-on defects §5.6 had itself
-introduced, fixed as a fourth (§5.7) — still within the same E1→E2 edit
-window throughout, since no `RUN-` directory exists yet.
+introduced, fixed as a fourth (§5.7); a final CodeRabbit + Copilot round on
+that commit found six more items — the unpinned H2 reference, the
+unenforced §7.1 run-directory contract, the kill-between-writes closure gap
+and §5.7's overstated transaction claim, a §4/§8 H2b inconsistency, and a
+locale nit — each independently validated and fixed as a fifth (§5.8). All
+still within the same E1→E2 edit window, since no `RUN-` directory exists
+yet.
 **EXP-001 E3 (session 0156) is authorized to begin.**
 **Code version:** `prin` 1.0.0-rc1 @ `8ce115f` (campaign baseline SHA; this
 document was drafted at E1 on branch `campaign/0154-exp001-e1` and amended at
@@ -123,17 +128,20 @@ versioned per-case evidence artefact).
 
 H1–H4 are all addressed by the committed driver
 (`benchmarks/campaign/exp001_driver.py`, tested in tandem —
-`tests/test_exp001_driver.py`, 57/57 passing at freeze, including the 3
+`tests/test_exp001_driver.py`, 79/79 passing at freeze, including the 4
 `slow`/PRINet-gated H2 tests). H4's driver support
 (`compare_kernel_path_case`/`compare_kernel_path_subset`, `--mode
 kernel-path`) was closed as a pre-execution amendment at E2 (session 0155);
-§5.4 records the closure, and three further E2 remediation passes (§5.5,
-§5.6, §5.7) fixed a total of eleven code-review findings across three review
-rounds — an H2a/H2b data-sufficiency gap, unenforced abort criteria,
-artefact-write races and the sidecar/result transaction, H4's CUDA/wgpu
-ambiguity (closed properly only at §5.6, after §5.5's first attempt proved
-insufficient), H2b's cross-metric pooling, the clamp-trip criterion's scope,
-the H4 test guards, and two follow-on defects §5.6 itself introduced.
+§5.4 records the closure, and four further E2 remediation passes (§5.5,
+§5.6, §5.7, §5.8) fixed a total of seventeen code-review findings across
+four review rounds — an H2a/H2b data-sufficiency gap, unenforced abort
+criteria, artefact-write races and the sidecar/result transaction, H4's
+CUDA/wgpu ambiguity (closed properly only at §5.6, after §5.5's first
+attempt proved insufficient), H2b's cross-metric pooling, the clamp-trip
+criterion's scope, the H4 test guards, two follow-on defects §5.6 itself
+introduced, the unpinned H2 reference, the unenforced §7.1 run-directory
+contract, the kill-between-writes closure gap, and a §4/§8 H2b
+inconsistency.
 
 ## 3. Expected results
 
@@ -153,7 +161,7 @@ the H4 test guards, and two follow-on defects §5.6 itself introduced.
 |---|---|
 | H1 | Any of the 504 cases has `within_tolerance=False` for any array, and the breach is not attributable to a registered abort criterion (§4 below) |
 | H2a | Any within-horizon (`step ≤ min(20, n_steps)`) array value breaches the registered tolerance in any fuzzed case |
-| H2b | For either metric (`order_parameter` or `mean_phase_coherence`, evaluated independently — §2): `\|Cohen's d\| ≥ 0.2`, or the 95% bootstrap CI on the mean paired difference excludes 0 (the same per-metric predicate as §2/§8 — a metric is REFUTED whenever it is not CONFIRMED; H2b overall is REFUTED if either metric is) |
+| H2b | For either metric (`order_parameter` or `mean_phase_coherence`, evaluated independently — §2): `\|Cohen's d\| ≥ 0.2`, or the 95% bootstrap CI on the mean paired difference excludes 0 (the same per-metric predicate as §2/§8). REFUTED requires a *valid sample*: a metric whose beyond-horizon pool is empty (no non-aborted case has `n_steps > 20`) is `INCONCLUSIVE`, not REFUTED — the §8 no-data rule takes precedence, so an all-short or fully-aborted pool can never be read as a falsification. H2b overall is REFUTED if either metric is REFUTED, and INCONCLUSIVE if neither is REFUTED but either lacks a valid sample |
 | H3 | Any of the 14 representative cases produces a non-bit-identical rerun |
 | H4 | Any of the 72 `kuramoto_sparse_knn_*` cases breaches `rtol=1e-5, atol=1e-6` on the GPU derivative kernel vs. the CPU reference |
 
@@ -336,9 +344,17 @@ dict (`array_name`, `within_tolerance`, `max_abs_diff`, `max_rel_diff`,
 instead of `prin.parity.harness`'s f64 quantity-derived tolerance (§5.4).
 Every artefact is paired with the run's `campaign-metadata.json` sidecar
 (`exp_id="EXP-001"`, `run_id`, `session`, `operator`, `artefacts` — tagged
-`["H1"]`/`["H2"]`/`["H3"]`/`["H4"]` by mode).
-E3 closes each run directory with `tools.reproduce.append_manifest`/
-`verify_manifest` per the `benchmarks/results/EXP-001/README.md` rule.
+`["H1"]`/`["H2"]`/`["H3"]`/`["H4"]` by mode; fuzz mode additionally records
+`prinet_version`/`prinet_source` in the `config` envelope, §5.8). `--out`
+must be a not-yet-existing direct child of `benchmarks/results/EXP-001/`
+named `RUN-<UTC yyyymmddThhmmssZ>-<short git SHA>-<label>` (campaign plan
+§7.1) — the driver rejects anything else before any comparison runs (§5.8).
+E3 closes each run directory in three steps per the
+`benchmarks/results/EXP-001/README.md` rule:
+`benchmarks.campaign.exp001_driver.check_run_complete` (every artefact the
+sidecar names must exist — a sidecar-only directory from a process kill is
+recorded as aborted and retried under a new `RUN-` ID, never manifested;
+§5.8), then `tools.reproduce.append_manifest`, then `verify_manifest`.
 
 ### 5.4 Driver-support gap for H4 — closed at E2 (pre-execution amendment)
 
@@ -583,9 +599,13 @@ amendment (still no `RUN-` directory; CI green on all 29 checks throughout):
    `write_result` now **rolls the sidecar back**. That rollback can only
    ever remove this invocation's own sidecar, since
    `write_campaign_metadata` publishes by exclusive-create and raises if one
-   already exists — so reaching the rollback proves we created it. Either
-   both artefacts land or neither does. The `exists()` check is retained as
-   a cheap fast-fail and its comment corrected to say so.
+   already exists — so reaching the rollback proves we created it. Within
+   the failures the driver itself handles — any exception raised after the
+   sidecar is written — either both artefacts land or neither does. (That
+   qualification was added at §5.8: the guarantee does **not** extend to
+   process termination between the two writes, which §5.8 item 3 closes at
+   run closure instead.) The `exists()` check is retained as a cheap
+   fast-fail and its comment corrected to say so.
 2. **Module docstring described the superseded H4 path (Copilot).** The
    driver's own module docstring still said H4's GPU side runs "via
    `prin._torch_compat.KuramotoOscillator`", which §5.6 item 1 had
@@ -602,6 +622,81 @@ gone after the failure — a weaker test would pass even if the sidecar were
 never written); `ruff check`/`ruff format --check` and `mypy python/prin
 benchmarks/campaign --strict` clean; Snyk Code 0 issues on both touched
 files; full local quick suite green.
+
+### 5.8 Fifth E2 remediation pass — fourth review round (pre-execution amendment)
+
+A further CodeRabbit + Copilot round on §5.7's commit found six items. Each
+was independently validated against the code and standards before being
+fixed (still no `RUN-` directory; CI green on all 29 checks throughout):
+
+1. **The H2 reference was never pinned or recorded (Copilot; validated).**
+   `run_prinet_trajectory` caught only `ImportError`, so a manually run H2
+   would compare against whatever `prinet` was importable while the artefact
+   still described itself as a PRINet 3.0.0 parity result. The archived
+   reference does expose `prinet.__version__ == "3.0.0"`, and the golden
+   corpus's own `manifest.json` records `generator_version`/`reference_source`
+   — the fuzz artefact recorded nothing comparable. Fixed:
+   `prinet_reference_provenance()` imports the reference, aborts
+   (`PrinetUnavailableError` — an environment-capture abort, campaign plan
+   §10.1 item 3) unless `__version__` equals the new
+   `PRINET_REFERENCE_VERSION = "3.0.0"` constant, and returns
+   `{prinet_version, prinet_source}`; fuzz mode calls it *before* the batch
+   (a wrong reference aborts in milliseconds, not after 1,000 integrations)
+   and records the result in the artefact's `config` envelope, and
+   `run_prinet_trajectory` calls it on every case so the guard holds even
+   when the function is used outside `main()`.
+2. **The §7.1 run-directory contract was unenforced (Copilot; validated).**
+   Campaign plan §7.1 mandates `RUN-<UTC yyyymmddThhmmssZ>-<short git
+   SHA>-<label>` as a direct child of `benchmarks/results/EXP-001/`, never
+   reused; the driver checked only that `--out`'s basename was non-empty,
+   and the shared writer creates parents with `exist_ok=True`, so a typo or
+   accidental retry could append a valid-looking artefact to an unrelated
+   or reused directory. Fixed: `_validate_run_dir` enforces name (regex
+   `^RUN-\d{8}T\d{6}Z-[0-9a-f]{7,40}-[A-Za-z0-9][A-Za-z0-9._-]*$`), parent
+   (`_RUN_ROOT`), and non-existence, up front — before any comparison runs.
+   Tests narrow `_RUN_ROOT` to a scratch directory and use canonical names,
+   so the contract itself is exercised, not bypassed. Verified against the
+   real repository paths: §5.3's `--out benchmarks/results/EXP-001/RUN-…`
+   form is accepted; `EXP-002/…`, `RUN-corpus-cpu`, and `README.md` are
+   rejected.
+3. **A kill between the two writes would still be manifested (CodeRabbit;
+   validated) and §5.7's transaction claim overstated (CodeRabbit;
+   validated).** `tools.reproduce.append_manifest` globs `*.json` without
+   reading the sidecar's `artefacts` mapping, so a sidecar-only directory
+   left by process termination between `write_campaign_metadata` and
+   `write_result` would be manifested, and `verify_manifest` would accept
+   it — while §5.7 said "either both artefacts land or neither does", which
+   is true only for driver-handled exceptions. Both fixed without changing
+   the governed shared `tools/reproduce.py` (CodeRabbit: "a commit-marker or
+   atomic-directory redesign is not required"): `check_run_complete(run_dir)`
+   is the new first step of run closure — it raises `IncompleteRunError` if
+   the sidecar is missing, malformed, or names an artefact that does not
+   exist — and `benchmarks/results/EXP-001/README.md`'s closure snippet (the
+   contract E3 copies) plus §5.3 now run it before `append_manifest`. Such a
+   directory is recorded as an aborted run (never deleted, §10) and the run
+   retried under a new `RUN-` ID. §5.7's claim is narrowed to the failures
+   the driver handles.
+4. **§4's H2b row contradicted §8's no-data rule (CodeRabbit; validated).**
+   §4 said a metric is REFUTED whenever not CONFIRMED; §8 says INCONCLUSIVE
+   when no non-aborted case contributes beyond-horizon data. §4 now states
+   the exception: REFUTED requires a valid sample; an empty pool is
+   INCONCLUSIVE, so an all-short or fully-aborted pool can never read as a
+   falsification.
+5. **Locale (CodeRabbit).** "afterwards" → "afterward" in the CHANGELOG
+   (American English, per the repository's LanguageTool locale rule).
+
+Evidence: `tests/test_exp001_driver.py`, 79/79 passing (57 prior + 22 new:
+`TestRunDirectoryContract` ×11 incl. seven rejected name shapes and a CLI
+test proving a bad `--out` never runs a comparison; `TestReferenceProvenance`
+×4 incl. a monkeypatched `__version__ = "3.1.0"` aborting both
+`prinet_reference_provenance` and the per-case `compare_fuzz_case` path, and
+the fuzz artefact recording `prinet_version`/`prinet_source` while corpus
+mode records neither; `TestRunClosure` ×7 incl. the sidecar-only
+kill-between-writes case). All nine existing `TestCli` tests were moved to
+canonical `RUN-` names under a `run_root` fixture; `tests/test_benchrunner.py`
+54/54 unchanged. `ruff check`/`ruff format --check` and `mypy python/prin
+benchmarks/campaign --strict` clean; Snyk Code 0 issues on both touched
+Python files; full local quick suite green.
 
 ## 6. Variables and controls
 
@@ -835,6 +930,25 @@ No budget amendment is anticipated.
   creation), and the module docstring still described the superseded
   `_torch_compat` H4 path (corrected, with a note that the direct binding
   call is load-bearing because it carries the CUDA-residency check).
-  `tests/test_exp001_driver.py`, 57/57 passing at freeze;
+  `tests/test_exp001_driver.py`, 57/57 passing at that point;
   `ruff`/`mypy --strict` clean; Snyk Code 0 issues on both touched files —
   see §5.7 for the full evidence and finding-by-finding disposition.
+- **Driver (E2 fifth remediation, §5.8):** a final CodeRabbit + Copilot
+  round on the §5.7 commit found 6 items, each independently validated
+  against the code and standards before being fixed: the H2 reference was
+  never pinned or recorded (`prinet_reference_provenance` now aborts unless
+  `prinet.__version__ == "3.0.0"` and records `prinet_version`/
+  `prinet_source` in the fuzz artefact); the campaign plan §7.1
+  run-directory contract was unenforced (`_validate_run_dir` now rejects a
+  non-canonical name, wrong parent, or already-existing directory before
+  any comparison runs); a process kill between the sidecar and result
+  writes would leave a sidecar-only directory that `append_manifest` would
+  manifest and `verify_manifest` accept (`check_run_complete` is now the
+  mandatory first step of run closure, in the raw-artefact README and
+  §5.3), and §5.7's "either both land or neither does" is narrowed to
+  driver-handled failures accordingly; §4's H2b row now states the §8
+  no-data exception so an empty pool is INCONCLUSIVE, never REFUTED; and a
+  locale nit. `tests/test_exp001_driver.py`, 79/79 passing at freeze (22
+  new); `ruff`/`mypy --strict` clean; Snyk Code 0 issues on both touched
+  Python files — see §5.8 for the full evidence and finding-by-finding
+  disposition.

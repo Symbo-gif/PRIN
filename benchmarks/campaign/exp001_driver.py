@@ -67,6 +67,8 @@ not checked here; this is a disclosed limitation, not silently skipped.
 from __future__ import annotations
 
 import argparse
+import json
+import re
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -101,6 +103,22 @@ from benchmarks._common.result import (
 )
 
 EXP_ID = "EXP-001"
+
+#: The PRINet reference implementation H2 compares against (preregistration
+#: §6 "Baselines"; corpus ``manifest.json`` ``generator_version``). Fuzz mode
+#: aborts if the importable ``prinet`` reports any other version, so a parity
+#: result can never be silently produced against a different reference.
+PRINET_REFERENCE_VERSION = "3.0.0"
+
+#: Every run directory must be a direct child of this root (campaign plan
+#: §7.1 layout). Tests point it at a temp directory.
+_RUN_ROOT = Path(__file__).resolve().parents[2] / "benchmarks" / "results" / EXP_ID
+
+#: Canonical run-directory name, campaign plan §7.1:
+#: ``RUN-<UTC yyyymmddThhmmssZ>-<short git SHA>-<label>``.
+_RUN_ID_RE = re.compile(
+    r"^RUN-(?P<utc>\d{8}T\d{6}Z)-(?P<sha>[0-9a-f]{7,40})-(?P<label>[A-Za-z0-9][A-Za-z0-9._-]*)$"
+)
 
 #: GPU sparse-k-NN kernel-path tolerance (H4; Testing Standards §3;
 #: ``prin_kernels::equivalence::{DEFAULT_RTOL, DEFAULT_ATOL}``) — the fused
@@ -157,15 +175,149 @@ class DriverError(RuntimeError):
 
 
 class DriverMetadataError(DriverError):
-    """Raised when required campaign metadata (campaign plan §7.2) is missing."""
+    """Raised when required campaign metadata (campaign plan §7.2) is missing
+    or a run directory violates the §7.1 layout contract."""
 
 
 class PrinetUnavailableError(DriverError):
-    """Raised when fuzz mode is requested but PRINet 3.0 is not importable.
+    """Raised when fuzz mode is requested but the registered PRINet 3.0.0
+    reference is not importable, or the importable ``prinet`` is a different
+    version.
 
     Per campaign plan §10.1 item 3, environment capture incomplete for a
     configuration the run requires is an abort, not a negative result.
     """
+
+
+class IncompleteRunError(DriverError):
+    """Raised at run closure when ``campaign-metadata.json`` names an artefact
+    that is not present in the run directory.
+
+    The sidecar/result pair is published transactionally only with respect to
+    failures the driver itself handles (an exception after the sidecar is
+    written rolls the sidecar back). A process kill between the two writes is
+    outside that guarantee and leaves a sidecar-only directory; this error is
+    how run closure (:func:`check_run_complete`) refuses to manifest one. Per
+    preregistration §10 such a directory is recorded as an aborted run — never
+    deleted — and the run is retried under a new ``RUN-`` ID.
+    """
+
+
+def prinet_reference_provenance() -> dict[str, str]:
+    """Import the PRINet reference and confirm it is the registered 3.0.0.
+
+    Returns:
+        ``{"prinet_version": ..., "prinet_source": ...}`` — recorded into the
+        fuzz run's ``config`` envelope so the H2 artefact states which
+        reference it was actually compared against, rather than assuming it.
+
+    Raises:
+        PrinetUnavailableError: If ``prinet`` is not importable, or its
+            ``__version__`` is not :data:`PRINET_REFERENCE_VERSION`. Catching
+            only ``ImportError`` would let a manually run H2 silently compare
+            against whatever ``prinet`` happens to be on ``sys.path`` while the
+            artefact still described itself as a PRINet 3.0.0 parity result.
+    """
+    try:
+        import prinet
+    except ImportError as exc:
+        raise PrinetUnavailableError(
+            "fuzz-mode parity requires the archived PRINet 3.0.0 reference "
+            "implementation ('prinet') installed; environment incomplete "
+            "(campaign plan §10.1 item 3) — aborting"
+        ) from exc
+    version = str(getattr(prinet, "__version__", ""))
+    if version != PRINET_REFERENCE_VERSION:
+        raise PrinetUnavailableError(
+            f"the importable 'prinet' reports version {version!r}, not the "
+            f"registered reference {PRINET_REFERENCE_VERSION!r} "
+            f"(preregistration §6) — refusing to produce a parity result "
+            "against a different reference; environment incomplete "
+            "(campaign plan §10.1 item 3) — aborting"
+        )
+    return {
+        "prinet_version": version,
+        "prinet_source": str(Path(str(prinet.__file__)).resolve().parent),
+    }
+
+
+def _validate_run_dir(run_dir: Path) -> None:
+    """Enforce the campaign plan §7.1 run-directory contract before any write.
+
+    A run directory must (1) be named ``RUN-<UTC yyyymmddThhmmssZ>-<short
+    SHA>-<label>``, (2) be a direct child of :data:`_RUN_ROOT`
+    (``benchmarks/results/EXP-001/``), and (3) not already exist — "a run
+    directory is never reused: a re-run, a retry after an abort, or a
+    corrected run gets a new RUN- directory". Checked up front, before any
+    comparison runs, so a typo or accidental retry fails fast rather than
+    appending a valid-looking artefact to an unrelated or reused directory.
+
+    Raises:
+        DriverMetadataError: On any of the three violations.
+    """
+    if _RUN_ID_RE.match(run_dir.name) is None:
+        raise DriverMetadataError(
+            f"run directory name {run_dir.name!r} does not match the campaign "
+            "plan §7.1 form RUN-<UTC yyyymmddThhmmssZ>-<short git SHA>-<label>"
+        )
+    if run_dir.parent != _RUN_ROOT:
+        raise DriverMetadataError(
+            f"run directory {run_dir} must be a direct child of {_RUN_ROOT} "
+            "(campaign plan §7.1 raw-artefact root for this experiment)"
+        )
+    if run_dir.exists():
+        raise DriverMetadataError(
+            f"run directory {run_dir} already exists; a run directory is never "
+            "reused (campaign plan §7.1) — re-runs, retries, and corrections "
+            "get a new RUN- ID"
+        )
+
+
+def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
+    """Run-closure precondition: every artefact the sidecar names must exist.
+
+    ``tools.reproduce.append_manifest`` inventories every ``*.json`` in a
+    directory without reading ``campaign-metadata.json``, so on its own it
+    would happily manifest a sidecar-only directory left by a process kill
+    between the sidecar and result writes, and ``verify_manifest`` would then
+    accept it. E3 must call this before ``append_manifest`` (see
+    ``benchmarks/results/EXP-001/README.md`` and preregistration §5.3).
+
+    Returns:
+        The sidecar's ``artefacts`` mapping, for the caller's log.
+
+    Raises:
+        IncompleteRunError: If the sidecar is missing, malformed, or names an
+            artefact that does not exist in ``run_dir``.
+    """
+    sidecar = run_dir / "campaign-metadata.json"
+    if not sidecar.is_file():
+        raise IncompleteRunError(
+            f"{run_dir} has no campaign-metadata.json; not a closable run "
+            "(campaign plan §7.2)"
+        )
+    try:
+        payload = json.loads(sidecar.read_text(encoding="utf-8"))
+        raw = payload["artefacts"]
+        if not isinstance(raw, dict) or not raw:
+            raise TypeError("artefacts must be a non-empty mapping")
+        artefacts = {
+            str(name): [str(tag) for tag in tags] for name, tags in raw.items()
+        }
+    except (ValueError, KeyError, TypeError) as exc:
+        raise IncompleteRunError(
+            f"{sidecar} is malformed ({exc}); not a closable run"
+        ) from exc
+    missing = sorted(name for name in artefacts if not (run_dir / name).is_file())
+    if missing:
+        raise IncompleteRunError(
+            f"{run_dir} is incomplete: campaign-metadata.json names "
+            f"{', '.join(missing)} but the file(s) are not present — the run "
+            "was interrupted between the sidecar and result writes. Record it "
+            "as aborted (preregistration §10; never delete it) and retry under "
+            "a new RUN- ID; do not manifest it."
+        )
+    return artefacts
 
 
 def _case_arrays_hazard_violation(label: str, arrays: CaseArrays) -> str | None:
@@ -536,8 +688,13 @@ def run_prinet_trajectory(
     stores its output) does not require them installed.
 
     Raises:
-        PrinetUnavailableError: If ``prinet`` or ``torch`` is not importable.
+        PrinetUnavailableError: If ``prinet`` or ``torch`` is not importable,
+            or the importable ``prinet`` is not the registered
+            :data:`PRINET_REFERENCE_VERSION` (checked via
+            :func:`prinet_reference_provenance` on every call — cheap, and it
+            keeps this function correct even when invoked outside ``main``).
     """
+    prinet_reference_provenance()
     try:
         import torch
         from prinet.core.measurement import (
@@ -1005,7 +1162,15 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--seed-counter", type=int, default=0)
     parser.add_argument("--seed-key", type=int, default=1, help="EXP-001 = 1.")
-    parser.add_argument("--out", type=Path, required=True, help="Run directory.")
+    parser.add_argument(
+        "--out",
+        type=Path,
+        required=True,
+        help="Run directory: a NEW, not-yet-existing direct child of "
+        "benchmarks/results/EXP-001/ named "
+        "RUN-<UTC yyyymmddThhmmssZ>-<short git SHA>-<label> (campaign plan "
+        "§7.1). Rejected otherwise, before any comparison runs.",
+    )
     parser.add_argument("--label", required=True)
     parser.add_argument("--session", required=True)
     parser.add_argument("--operator", required=True)
@@ -1018,8 +1183,12 @@ def main(argv: list[str] | None = None) -> int:
     run_dir: Path = args.out.resolve()
     run_id = run_dir.name
 
+    # Fuzz mode records which PRINet reference it actually compared against;
+    # empty for the other modes, whose reference is the stored golden corpus.
+    reference: dict[str, str] = {}
     try:
         _validate_metadata(EXP_ID, run_id, args.session, args.operator)
+        _validate_run_dir(run_dir)
         if args.mode == "corpus":
             loader = CorpusLoader(args.corpus_dir)
             case_ids = args.case_ids or [
@@ -1043,6 +1212,9 @@ def main(argv: list[str] | None = None) -> int:
             ]
             cases = compare_kernel_path_subset(loader, case_ids)
         else:
+            # Validate the reference *before* the batch so a wrong/missing
+            # prinet aborts in milliseconds, not after 1,000 integrations.
+            reference = prinet_reference_provenance()
             cases = run_fuzz_batch(args.seed_counter, args.seed_key, args.n_fuzz_cases)
     except DriverError as exc:
         print(f"ABORT: {exc}", file=sys.stderr)
@@ -1058,6 +1230,7 @@ def main(argv: list[str] | None = None) -> int:
         "seed_counter": args.seed_counter,
         "seed_key": args.seed_key,
         "out_dir": str(run_dir),
+        **reference,
     }
     result_name = f"{args.mode}_{args.label}.json"
     result_path = run_dir / result_name
