@@ -769,11 +769,39 @@ class TestLabelContract:
             "/etc/passwd",
             "..\\..\\foreign",
             ".hidden",
+            "safe\n",
+            "safe\nrogue",
         ],
     )
     def test_unsafe_label_rejected(self, label: str) -> None:
         with pytest.raises(driver.DriverMetadataError, match="single filename"):
             driver._validate_label(label)
+
+    def test_trailing_newline_label_confirmed_empirically_and_rejected(self) -> None:
+        """Regression test (Copilot): Python's unanchored ``$`` matches just
+        before a trailing ``\\n``, not only the true end of string, so
+        ``re.match(r"...$", "safe\\n")`` succeeds even though the label
+        carries an embedded control character. Confirmed against the actual
+        pattern object before asserting the driver rejects it.
+        """
+        import re
+
+        loose = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+        assert loose.match("safe\n") is not None, (
+            "fixture assumption violated: $ no longer admits a trailing newline"
+        )
+        with pytest.raises(driver.DriverMetadataError):
+            driver._validate_label("safe\n")
+
+
+class TestRunIdContract:
+    """_RUN_ID_RE shares _LABEL_RE's \\Z-anchoring fix (Copilot)."""
+
+    def test_trailing_newline_run_id_rejected(self, run_root: Path) -> None:
+        run_dir = run_root / "RUN-20260921T000000Z-abc1234-smoke\n"
+        with pytest.raises(driver.DriverMetadataError, match="does not match"):
+            driver._reserve_run_dir(run_dir)
+        assert not run_dir.exists()
 
     def test_traversal_label_confirmed_empirically_and_rejected(
         self, run_root: Path
@@ -1135,6 +1163,43 @@ class TestRunClosure:
         with pytest.raises(driver.IncompleteRunError, match="registered"):
             driver.check_run_complete(run_dir)
 
+    def test_bare_dot_json_present_file_rejected(self, run_root: Path) -> None:
+        """A top-level ``.json`` file is recognised, not silently invisible.
+
+        Regression test (CodeRabbit): ``Path.glob("*.json")`` matches the
+        bare name ``.json`` too (``*`` matches an empty prefix), so
+        ``append_manifest`` would manifest it even though the earlier
+        ``_is_json_name`` (which required a non-empty stem) never saw it as
+        present — breaking the "closure and manifest agree" contract this
+        module documents. A declared ``.json`` is separately still rejected
+        as an unregistered name shape (not exercised here).
+        """
+        run_dir = _run_dir(run_root, "baredotjson")
+        self._sidecar(run_dir, {"corpus_smoke.json": ["H1"]})
+        _write_envelope(run_dir, "corpus_smoke.json")
+        (run_dir / ".json").write_text("{}", encoding="utf-8")
+        with pytest.raises(driver.IncompleteRunError, match=r"\.json"):
+            driver.check_run_complete(run_dir)
+
+    @_needs_symlink_support
+    def test_symlinked_manifest_json_rejected(self, run_root: Path) -> None:
+        """``manifest.json`` itself must not be a symlink (Copilot, CWE-59).
+
+        ``append_manifest`` resolves its destination before writing, so a
+        dangling or in-root symlink named ``manifest.json`` would make the
+        *next* closure step publish this run's manifest somewhere outside
+        ``run_dir`` — the same class of defense already applied to the
+        sidecar and every declared artefact.
+        """
+        run_dir = _run_dir(run_root, "manifestsymlink")
+        outside = run_root / "outside-manifest.json"
+        outside.write_text("{}", encoding="utf-8")
+        self._sidecar(run_dir, {"corpus_smoke.json": ["H1"]})
+        _write_envelope(run_dir, "corpus_smoke.json")
+        (run_dir / "manifest.json").symlink_to(outside)
+        with pytest.raises(driver.IncompleteRunError, match="symbolic link"):
+            driver.check_run_complete(run_dir)
+
     def test_tags_supplied_as_a_string_rejected(self, run_root: Path) -> None:
         """``"H9"`` must be rejected, never splatted into ``["H", "9"]``."""
         run_dir = _run_dir(run_root, "stringtags")
@@ -1375,6 +1440,73 @@ class TestRunClosureEnvelope:
         _write_envelope(run_dir, "kernel-path_cuda.json", backend="cpu")
         with pytest.raises(driver.IncompleteRunError, match="backend"):
             driver.check_run_complete(run_dir)
+
+    def test_gpu_entry_missing_gpu_field_rejected_at_closure(
+        self, run_root: Path
+    ) -> None:
+        """Closure must require the GPU-only fields too, not just the common set.
+
+        Regression test (CodeRabbit + Copilot, same finding): a tampered or
+        buggy ``kernel-path`` result missing ``gpu``/``gpu_vram_mb`` used to
+        pass closure because ``_envelope_violation`` only checked
+        ``_REQUIRED_ENV_FIELDS``, never ``_GPU_REQUIRED_ENV_FIELDS`` — a
+        result ``main`` itself would have refused to publish
+        (``_validate_environment`` requires them on every GPU leg).
+        """
+        run_dir = _run_dir(run_root, "gpumissinggpu")
+        driver.write_campaign_metadata(
+            run_dir,
+            exp_id="EXP-001",
+            run_id=run_dir.name,
+            session="0156",
+            operator="tester",
+            artefacts={
+                "kernel-path_cuda.json": {
+                    "hypotheses": ["H4"],
+                    "timing_method": driver.KERNEL_PATH_TIMING_METHOD,
+                }
+            },
+        )
+        document = _envelope(run_dir, backend="cuda")
+        del document["environment"]["gpu"]  # type: ignore[index]
+        (run_dir / "kernel-path_cuda.json").write_text(
+            json.dumps(document), encoding="utf-8"
+        )
+        with pytest.raises(driver.IncompleteRunError, match="gpu"):
+            driver.check_run_complete(run_dir)
+
+    def test_null_environment_field_rejected_at_closure(self, run_root: Path) -> None:
+        """A present-but-null field must fail closure exactly as an absent one.
+
+        Regression test (CodeRabbit + Copilot): the old check was
+        ``field not in block``, which a ``null`` value satisfies (the key is
+        present) — so ``{"git_commit": null, ...}`` passed closure even
+        though ``_validate_environment`` (the driver's own publication gate)
+        treats ``None`` as incomplete.
+        """
+        run_dir = self._closable(run_root, "nullenv")
+        document = _envelope(run_dir)
+        document["environment"]["git_commit"] = None  # type: ignore[index]
+        (run_dir / "corpus_smoke.json").write_text(
+            json.dumps(document), encoding="utf-8"
+        )
+        with pytest.raises(driver.IncompleteRunError, match="git_commit"):
+            driver.check_run_complete(run_dir)
+
+    def test_zero_valued_config_fields_still_pass_closure(self, run_root: Path) -> None:
+        """``warmup``/``iterations`` of ``0`` are legitimate, not "empty".
+
+        The null/empty envelope check must not reject ``0``: it is neither
+        ``None`` nor ``""``.
+        """
+        run_dir = self._closable(run_root, "zeroconfig")
+        document = _envelope(run_dir)
+        document["config"]["warmup"] = 0  # type: ignore[index]
+        document["config"]["iterations"] = 0  # type: ignore[index]
+        (run_dir / "corpus_smoke.json").write_text(
+            json.dumps(document), encoding="utf-8"
+        )
+        assert driver.check_run_complete(run_dir) == {"corpus_smoke.json": ["H1"]}
 
 
 class TestCampaignMetadata:
@@ -1728,7 +1860,9 @@ class TestKernelPathCapsuleResidency:
         non_cuda_index: int,
         expected: str,
     ) -> None:
-        monkeypatch.setattr(_prin_core, "GpuSparseKuramoto", _FakeGpuEngine)
+        monkeypatch.setattr(
+            _prin_core, "GpuSparseKuramoto", _FakeGpuEngine, raising=False
+        )
         devices = {capsule: "cuda" for capsule in _FakeGpuEngine.CAPSULES}
         devices[_FakeGpuEngine.CAPSULES[non_cuda_index]] = "cpu"
         monkeypatch.setattr(
@@ -1740,7 +1874,9 @@ class TestKernelPathCapsuleResidency:
     def test_error_names_every_offending_capsule(
         self, loader: CorpusLoader, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setattr(_prin_core, "GpuSparseKuramoto", _FakeGpuEngine)
+        monkeypatch.setattr(
+            _prin_core, "GpuSparseKuramoto", _FakeGpuEngine, raising=False
+        )
         monkeypatch.setattr(driver, "from_dlpack", lambda capsule: _FakeTensor("cpu"))
         with pytest.raises(driver.GpuBindingUnavailableError) as excinfo:
             driver.compare_kernel_path_case(loader, _KURAMOTO_SPARSE_KNN_CASES[0])
@@ -1764,7 +1900,9 @@ class TestCudaCapabilityProbe:
     def _probe(monkeypatch: pytest.MonkeyPatch, device_type: str) -> bool:
         import torch.utils.dlpack
 
-        monkeypatch.setattr(_prin_core, "GpuSparseKuramoto", _FakeGpuEngine)
+        monkeypatch.setattr(
+            _prin_core, "GpuSparseKuramoto", _FakeGpuEngine, raising=False
+        )
         monkeypatch.setattr(
             torch.utils.dlpack,
             "from_dlpack",
@@ -1808,7 +1946,9 @@ class TestCudaCapabilityProbe:
             def from_knn_phase(cls, *args: object, **kwargs: object) -> object:
                 raise RuntimeError("no CUDA device")
 
-        monkeypatch.setattr(_prin_core, "GpuSparseKuramoto", _Unavailable)
+        monkeypatch.setattr(
+            _prin_core, "GpuSparseKuramoto", _Unavailable, raising=False
+        )
         cuda_kernel_executes.cache_clear()
         try:
             assert cuda_kernel_executes() is False
@@ -2031,6 +2171,60 @@ class TestH2bAdjudication:
         assert result["metrics"]["order_parameter_traj"]["verdict"] == "REFUTED"
         assert result["metrics"]["mean_phase_coherence_traj"]["verdict"] == "CONFIRMED"
         assert result["verdict"] == "REFUTED"
+
+
+class TestCaseIdUniqueness:
+    """--case-id must not repeat a corpus case within one invocation (Copilot).
+
+    Without this guard, repeating one passing case-id 504 times would
+    publish an H1-tagged artefact with 504 records that are not 504 distinct
+    corpus cases, defeating the preregistration §8 non-aborted-count check.
+    """
+
+    def test_no_duplicates_passes(self) -> None:
+        driver._validate_case_ids(["a", "b", "c"])
+
+    def test_none_passes(self) -> None:
+        driver._validate_case_ids(None)
+
+    def test_empty_list_passes(self) -> None:
+        driver._validate_case_ids([])
+
+    def test_single_duplicate_rejected(self) -> None:
+        with pytest.raises(driver.DriverMetadataError, match="repeated"):
+            driver._validate_case_ids(["a", "b", "a"])
+
+    def test_names_every_duplicate(self) -> None:
+        with pytest.raises(driver.DriverMetadataError, match=r"a.*b|b.*a"):
+            driver._validate_case_ids(["a", "b", "a", "b", "c"])
+
+    def test_repeated_case_id_confirmed_empirically_and_rejected(
+        self, run_root: Path
+    ) -> None:
+        """The exact scenario Copilot described: the same --case-id passed
+        multiple times must abort before any comparison runs, not silently
+        inflate the artefact's record count."""
+        run_dir = _run_dir(run_root, "dupcase")
+        argv = [
+            "--mode",
+            "corpus",
+            "--corpus-dir",
+            str(_CORPUS_DIR),
+            "--case-id",
+            _REPRESENTATIVE_CASES[0],
+            "--case-id",
+            _REPRESENTATIVE_CASES[0],
+            "--out",
+            str(run_dir),
+            "--label",
+            "dupcase",
+            "--session",
+            "0156",
+            "--operator",
+            "tester",
+        ]
+        assert driver.main(argv) == 2
+        assert not run_dir.exists()
 
 
 class TestFuzzBatchSize:

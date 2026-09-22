@@ -170,12 +170,12 @@ versioned per-case evidence artefact).
 
 H1–H4 are all addressed by the committed driver
 (`benchmarks/campaign/exp001_driver.py`, tested in tandem —
-`tests/test_exp001_driver.py`, 197/197 passing at freeze, including the 5
+`tests/test_exp001_driver.py`, 212/212 passing at freeze, including the 5
 `slow`/PRINet-gated H2 tests and the 5 `@pytest.mark.gpu` H4 tests). H4's
 driver support (`compare_kernel_path_case`/`compare_kernel_path_subset`,
 `--mode kernel-path`) was closed as a pre-execution amendment at E2 (session
-0155); §5.4 records that closure, and eight further E2 remediation passes
-(§5.5–§5.12), across eight code-review rounds, fixed the findings listed in
+0155); §5.4 records that closure, and nine further E2 remediation passes
+(§5.5–§5.13), across nine code-review rounds, fixed the findings listed in
 those sections.
 
 **Finding counts are not restated here.** Earlier revisions of this paragraph
@@ -1128,6 +1128,51 @@ wgpu-only build (simulated at unit level by
 `TestCudaCapabilityProbe::test_wgpu_only_build_probes_false`, not by an
 actual wgpu rebuild) and any hosted CI run of this commit.
 
+### 5.13 Tenth E2 remediation pass — ninth review round (pre-execution amendment)
+
+Pushing §5.12's commit (`12262fc`) to PR #20 ran hosted CI and a ninth
+CodeRabbit + Copilot review round for the first time against that commit.
+Six of the twenty-eight required checks failed (`test (ubuntu-latest,
+3.11/3.12/3.13)`, `test (windows-latest, 3.11/3.12/3.13)`); CodeRabbit and
+Copilot raised nine further findings (one raised independently by both
+tools). Each was independently validated against the repository before being
+acted on — none was accepted on the review text alone.
+
+| # | Finding | Verified how | Disposition | Where fixed |
+|---|---|---|---|---|
+| 1 | All six hosted `test` legs failed identically: `AttributeError: <module 'prin._prin_core' ...> has no attribute 'GpuSparseKuramoto'`, raised from inside `monkeypatch.setattr` itself, in `TestKernelPathCapsuleResidency` and `TestCudaCapabilityProbe`. | Downloaded and diffed all six job logs — byte-identical failure set on both OSes and all three Python versions. Root cause: `pytest.MonkeyPatch.setattr(obj, name, value)` defaults `raising=True`, which requires the attribute to **already exist**; the plain `python.yml` build (no `--features cuda`/`wgpu`) has no `GpuSparseKuramoto` attribute at all, so the four `setattr` calls raised before their test bodies ran. This host's own `--features cuda` build has the attribute, which is exactly why local runs never caught it. | **CONFIRMED — fixed.** All four sites take `raising=False`. Reproduced the exact CI condition locally (`delattr(_prin_core, "GpuSparseKuramoto")` then re-ran the affected classes) — 8/8 pass with the binding absent, in addition to the existing 5/5 pass with it present. | `tests/test_exp001_driver.py` `TestKernelPathCapsuleResidency`, `TestCudaCapabilityProbe::_probe`/`test_unavailable_runtime_probes_false` |
+| 2 | `_is_json_name` returns `False` for the bare name `.json` (empty stem), but `Path.glob("*.json")` matches it (`*` matches an empty prefix). A top-level `.json` would be invisible to closure's `present` inventory yet still manifested by `append_manifest` (CodeRabbit). | Reproduced empirically: `Path.glob("*.json")` on a directory containing `.json` returns it. | **CONFIRMED — fixed.** Dropped the non-empty-stem requirement; a declared `.json` is still rejected downstream by `_result_name_mode` (empty mode before `_` never matches a registered mode), so nothing becomes acceptable as a *declared* artefact. | `exp001_driver._is_json_name`; `TestRunClosure::test_bare_dot_json_present_file_rejected` |
+| 3 | `_envelope_violation` checked only field *presence*, never GPU-required fields or null/empty values, so a `kernel-path` result missing `gpu`/`gpu_vram_mb`, or any result with e.g. `"git_commit": null`, passed closure even though `_validate_environment` (the driver's own publication gate) would have refused to publish it (CodeRabbit and Copilot, independently, same finding). | Read `_envelope_violation` against `_validate_environment`'s actual rule; confirmed `field not in block` is satisfied by a present `null` value, and the GPU-required set was never consulted at closure. | **CONFIRMED — fixed.** Closure now applies the identical rule: GPU-required fields added for GPU modes, and a field is incomplete iff its value is in `(None, "")` — verified this does **not** reject `config.warmup == 0`/`iterations == 0` (`0` is neither `None` nor `""`), with a dedicated regression test. | `exp001_driver._envelope_violation`; `TestRunClosureEnvelope::test_gpu_entry_missing_gpu_field_rejected_at_closure`, `::test_null_environment_field_rejected_at_closure`, `::test_zero_valued_config_fields_still_pass_closure` |
+| 4 | The ninth-remediation CHANGELOG entry's closing sentence still read "EXP-001 E3 ... remains authorized, subject to the one open maintainer decision recorded in §5.12" — stale after the same-day ratification recorded in the entry immediately above it (CodeRabbit). | Read both CHANGELOG entries in file order; confirmed the ratification entry is chronologically above (newer than) the sentence it contradicts. | **CONFIRMED — fixed.** Sentence now points to the ratification entry instead of restating the resolved gate. | `CHANGELOG.md` |
+| 5 | `manifest.json` is excluded from the result inventory as infrastructure but was never checked for being a symlink; `append_manifest` resolves its destination before writing, so a dangling or in-root symlink named `manifest.json` would let the *next* closure step publish this run's manifest outside `run_dir` (Copilot; CWE-59, the same class already closed for the sidecar and declared artefacts). | Read `tools/reproduce.py::append_manifest`: `destination = manifest_path.resolve()` follows symlinks before any write. Confirmed `check_run_complete` had no symlink check for this specific infrastructure name. | **CONFIRMED — fixed.** `check_run_complete` rejects a symlinked `manifest.json` (no-follow `is_symlink()`) before declaring the directory closable; `tools/reproduce.py` itself is untouched (governed shared tool). | `exp001_driver.check_run_complete`; `TestRunClosure::test_symlinked_manifest_json_rejected` (capability-gated) |
+| 6 | An explicit `--case-id` list has no uniqueness check; repeating one passing ID 504 times produces `len(cases) == 504` without covering 504 distinct corpus cases, satisfying the naive non-aborted-count check the preregistration §8 adjudication rule uses (Copilot). | Traced `case_ids = args.case_ids or [...]` through to `compare_corpus_subset`/`compare_kernel_path_subset`/the repeatability list comprehension: none deduplicates. | **CONFIRMED — fixed.** New `_validate_case_ids` rejects any repeated `--case-id` before `_reserve_run_dir` runs, across all three modes that accept the flag. There is no legitimate reason to name the same corpus case twice in one invocation, so outright rejection is the smallest safe fix — no new "subset vs. confirmatory" artefact classification was built. | `exp001_driver._validate_case_ids`, `main`; `TestCaseIdUniqueness` |
+| 7 | `_LABEL_RE`/`_RUN_ID_RE` anchor with `$`, which in Python (without `re.MULTILINE`) matches at the end of the string *or* just before a trailing `\n` — so `"safe\n"` and a `RUN-...-smoke\n` directory name both pass their "safe filename" check (Copilot). | Reproduced empirically: `re.compile(r"...$").match("safe\n")` returns a match spanning only `"safe"`. | **CONFIRMED — fixed.** Both patterns anchor with `\Z` instead, which matches only the true end of string; verified the same input now fails to match. | `exp001_driver._LABEL_RE`, `_RUN_ID_RE`; `TestLabelContract::test_trailing_newline_label_confirmed_empirically_and_rejected`, `TestRunIdContract::test_trailing_newline_run_id_rejected` |
+| 8 | The new campaign plan §11.5 subsection was inserted before §11.4, leaving §11 out of numerical order (Copilot). | `grep`'d `### 11\.` headings; confirmed §11.5 preceded §11.4 in file order. | **CONFIRMED — fixed.** Reordered so §11.4 precedes §11.5; no content changed. | `DOCS/experiments/campaign-plan.md` §11 |
+| 9 | `KERNEL_PATH_TIMING_METHOD`'s docstring still said the enum extension "requires maintainer ratification ... before E3 executes", contradicting the ratification this same PR recorded (campaign plan §11.5/§14.2 row 2) (Copilot). | Read the comment against the already-committed §11.5/§14.2 ratification. | **CONFIRMED — fixed.** Comment now states the ratification is complete and cites it, rather than restating a closed gate as open. | `exp001_driver.py` (module-level comment) |
+| 10 | `compare_fuzz_case`'s `Args:` docstring still described an `"rng"` key holding a `numpy.random.Generator`, but the function reads `spec["seed_stream"]` as a `prin._prin_core.Seed` (and `spec["case_index"]`, undocumented) — a holdover from the §5.12 RNG-authority change (Copilot). | Read the function body against its own docstring; confirmed the mismatch. | **CONFIRMED — fixed.** Docstring now documents `case_index` and `seed_stream` accurately. | `exp001_driver.compare_fuzz_case` |
+
+No finding in this round changes a registered hypothesis, tolerance, or
+statistic; all ten are closure/validation hardening, a CLI robustness fix, or
+documentation-drift corrections. Still no `RUN-` directory exists and no
+campaign data was generated.
+
+**Validation at this amendment.** `tests/test_exp001_driver.py` 212/212
+passing under the governed Windows command (15 new: `TestRunClosure` ×2,
+`TestRunClosureEnvelope` ×3, `TestLabelContract`/`TestRunIdContract` ×2,
+`TestCaseIdUniqueness` ×6, plus the `raising=False` fix restoring the 8
+`TestKernelPathCapsuleResidency`/`TestCudaCapabilityProbe` tests under a
+simulated no-binding condition); the CI-failure condition was reproduced
+directly (`delattr(_prin_core, "GpuSparseKuramoto")` then re-run) rather than
+inferred from the log alone. `pytest -m "gpu or directml"` selects and
+passes the same 5 H4 tests on this host's real `--features cuda` build.
+`ruff check`/`ruff format --check` clean across `python/ tests/ benchmarks/
+tools/ parity/`; `mypy --strict benchmarks/campaign python/prin` clean (64
+files). Full `tests/ -m "not slow and not gpu"` suite: 3117 passed, 176
+skipped. An end-to-end temp-directory smoke test independently exercised the
+new duplicate-`--case-id` abort, the `manifest.json`-symlink rejection, and
+the ordinary reserve→compare→write→close→manifest pipeline together. No
+`RUN-` directory was created under `benchmarks/results/EXP-001/`.
+
 ## 6. Variables and controls
 
 - **Independent variables:** oscillator model, coupling mode, integrator,
@@ -1529,3 +1574,22 @@ No budget amendment is anticipated.
   `ruff`/`mypy --strict` clean — see §5.12 for the full table, the three
   protocol changes; the `timing_method` enum extension is ratified
   (campaign plan §11.5 / §14.2 amendment row 2, MichaelMaillet, 2026-09-22).
+- **Driver (E2 tenth remediation, §5.13):** pushing §5.12's commit ran
+  hosted CI and a ninth review round against it for the first time. Six of
+  the twenty-eight required checks failed (all six `test` legs, identically
+  — `raising=True` default on a `monkeypatch.setattr` targeting an attribute
+  absent from the plain, non-`--features cuda`/`wgpu` build); CodeRabbit and
+  Copilot raised nine further findings, independently validated and all
+  confirmed: a bare-`.json` closure/manifest recognition gap, a closure
+  envelope check weaker than the driver's own publication gate (missing
+  GPU-required fields and a null/empty check), a stale CHANGELOG sentence, a
+  `manifest.json`-symlink gap, an unchecked duplicate `--case-id`, a
+  `$`-vs-`\Z` regex anchoring bug admitting a trailing newline into a "safe
+  filename", a misordered campaign-plan subsection, and two stale
+  docstrings/comments left over from §5.12's own changes. `tests/
+  test_exp001_driver.py`, 212/212 passing under the governed Windows command
+  (15 new); the CI-failure condition was reproduced directly
+  (`delattr(_prin_core, "GpuSparseKuramoto")`, then re-run — 8/8 pass) rather
+  than inferred from the log; `pytest -m "gpu or directml"` still selects
+  and passes the same 5 H4 tests; `ruff`/`mypy --strict` clean — see §5.13
+  for the full table.

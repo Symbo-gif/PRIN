@@ -9,6 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 pre-registration — tenth E2 remediation, ninth code-review round
+  on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.13.** Pushing the ninth-remediation commit ran hosted CI and a ninth
+  CodeRabbit + Copilot review round against it for the first time. Six of
+  twenty-eight required checks failed — all six `test` legs (both OSes, all
+  three Python versions), identically: `pytest.MonkeyPatch.setattr` defaults
+  `raising=True`, which requires the target attribute to already exist, and
+  four new mocked GPU tests targeted `prin._prin_core.GpuSparseKuramoto`,
+  which is absent from the plain (non-`--features cuda`/`wgpu`) build those
+  legs use — so the `setattr` calls themselves raised `AttributeError`
+  before the test bodies ran. Reproduced directly
+  (`delattr(_prin_core, "GpuSparseKuramoto")`, then re-run) rather than
+  inferred from the log; fixed with `raising=False` at all four sites.
+  CodeRabbit and Copilot raised nine further findings, independently
+  validated and all confirmed: `_is_json_name` missed the bare `.json`
+  filename that `Path.glob("*.json")` actually matches; the closure envelope
+  check accepted a null/empty required field and never required
+  `gpu`/`gpu_vram_mb` on a GPU entry, weaker than the driver's own
+  publication gate; a stale CHANGELOG sentence still described a maintainer
+  decision as open after the same-day ratification recorded above it;
+  `manifest.json` was never checked for being a symlink before closure
+  (CWE-59, the class already closed for the sidecar and declared
+  artefacts); a repeated `--case-id` had no uniqueness check, letting one
+  passing ID repeated 504 times satisfy the naive non-aborted-count check;
+  `_LABEL_RE`/`_RUN_ID_RE` anchored with `$`, which Python matches just
+  before a trailing `\n` as well as the true end of string, admitting a
+  control character into a "safe filename"; the new campaign-plan §11.5 was
+  inserted before §11.4, out of numerical order; and two comments/docstrings
+  (the `timing_method` ratification note, `compare_fuzz_case`'s `Args:`
+  section) still described a pre-ratification/pre-Seed-refactor state.
+  `tests/test_exp001_driver.py` 212/212 passing under the governed Windows
+  command (15 new); `pytest -m "gpu or directml"` still selects and passes
+  the same 5 H4 tests on this host's real `--features cuda` build;
+  `ruff check`/`ruff format --check` clean across `python/ tests/
+  benchmarks/ tools/ parity/`; `mypy --strict benchmarks/campaign python/prin`
+  clean; full `tests/ -m "not slow and not gpu"` suite 3117 passed, 176
+  skipped. No `RUN-` directory was created and no campaign evidence was
+  generated. EXP-001 E3 (session 0156) remains authorized.
 - **EXP-001 pre-registration — maintainer decisions on the ninth E2
   remediation pass (session 0155, E2, 2026-09-22).** Three decisions the
   §5.12 remediation left open are resolved. **(1) `timing_method:
@@ -72,8 +111,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ruff check`/`ruff format --check` clean across `python/ tests/ benchmarks/
   tools/ parity/`; `mypy --strict benchmarks/campaign python/prin` clean. No
   `RUN-` directory was created and no campaign evidence was generated. EXP-001
-  E3 (session 0156) remains authorized, subject to the one open maintainer
-  decision recorded in §5.12.
+  E3 (session 0156) remains authorized. (The `timing_method` extension this
+  pass left open for maintainer ratification was ratified the same day — see
+  the entry above.)
 - **EXP-001 pre-registration — eighth E2 remediation, seventh code-review
   round on PR #20 (session 0155, E2, 2026-09-22) —
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`

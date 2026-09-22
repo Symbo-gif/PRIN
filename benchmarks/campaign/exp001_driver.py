@@ -131,9 +131,15 @@ PRINET_REFERENCE_VERSION = "3.0.0"
 _RUN_ROOT = Path(__file__).resolve().parents[2] / "benchmarks" / "results" / EXP_ID
 
 #: Canonical run-directory name, campaign plan §7.1:
-#: ``RUN-<UTC yyyymmddThhmmssZ>-<short git SHA>-<label>``.
+#: ``RUN-<UTC yyyymmddThhmmssZ>-<short git SHA>-<label>``. Anchored with
+#: ``\Z``, not ``$``: Python's ``$`` (without ``re.MULTILINE``) matches at the
+#: end of the string *or* just before a trailing ``\n`` — confirmed
+#: empirically, ``re.match(r"...\$", "safe\n")`` succeeds — so a name with a
+#: trailing newline would otherwise pass this "safe filename" check and reach
+#: ``mkdir()``/``write_json_exclusive`` with a literal control character in
+#: it (Copilot). ``\Z`` matches only the true end of the string.
 _RUN_ID_RE = re.compile(
-    r"^RUN-(?P<utc>\d{8}T\d{6}Z)-(?P<sha>[0-9a-f]{7,40})-(?P<label>[A-Za-z0-9][A-Za-z0-9._-]*)$"
+    r"^RUN-(?P<utc>\d{8}T\d{6}Z)-(?P<sha>[0-9a-f]{7,40})-(?P<label>[A-Za-z0-9][A-Za-z0-9._-]*)\Z"
 )
 
 #: A ``--label`` must be exactly one safe filename component — the same
@@ -147,8 +153,9 @@ _RUN_ID_RE = re.compile(
 #: experiment's directory while still passing
 #: ``benchmarks._common.result``'s allowed-roots check, since that check only
 #: confirms containment under ``benchmarks/results/`` as a whole (CWE-22,
-#: CodeRabbit + Copilot).
-_LABEL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+#: CodeRabbit + Copilot). Anchored with ``\Z`` for the same reason as
+#: :data:`_RUN_ID_RE` — ``$`` alone admits a trailing-newline label.
+_LABEL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 
 #: The four registered run modes, each producing exactly one result artefact
 #: named ``<mode>_<label>.json`` (preregistration §5.3). ``<label>`` matches
@@ -183,9 +190,9 @@ _GPU_MODES: frozenset[str] = frozenset({"kernel-path"})
 #: performs no timing measurement at all (preregistration §5.1, "No H2/H3/H4
 #: case is timed"), so neither registered value describes it truthfully, and
 #: recording either would assert a timing method that was never used. The
-#: extension is implemented here so the sidecar is never silently missing the
-#: field, but it widens a frozen plan enum and therefore requires maintainer
-#: ratification (campaign plan §14.2) before E3 executes.
+#: extension widened a frozen plan enum and so required maintainer
+#: ratification (campaign plan §14.2) before E3; **ratified 2026-09-22**
+#: (campaign plan §11.5, §14.2 amendment row 2) — this is not an open gate.
 KERNEL_PATH_TIMING_METHOD = "not-timed"
 _TIMING_METHODS: frozenset[str] = frozenset(
     {"device-event", "system-synced", KERNEL_PATH_TIMING_METHOD}
@@ -402,6 +409,42 @@ def _validate_label(label: str) -> None:
         )
 
 
+def _validate_case_ids(case_ids: Sequence[str] | None) -> None:
+    """Reject a repeated ``--case-id`` value.
+
+    Every mode that accepts ``--case-id`` (``corpus``, ``repeatability``,
+    ``kernel-path``) treats the count of records it produces as meaningful:
+    the preregistration §8 adjudication rule reads a mode's ``len(cases)``
+    (via the artefact's non-aborted count) against a *registered denominator*
+    (504 for H1, 14 for H3, 72 for H4). Nothing else in this module requires
+    ``case_ids`` to be a set — an operator (or a scripting bug) repeating one
+    passing ID 504 times would produce an H1-tagged artefact with 504
+    records that are not 504 distinct corpus cases, satisfying the naive
+    count check without covering the registered corpus at all (Copilot).
+    There is no legitimate reason to name the same corpus case twice within
+    one invocation, so the smallest safe fix is to reject the duplicate
+    outright rather than build a separate "confirmatory vs. subset" artefact
+    classification.
+
+    Raises:
+        DriverMetadataError: If ``case_ids`` contains a duplicate.
+    """
+    if case_ids is None:
+        return
+    seen: set[str] = set()
+    duplicates: set[str] = set()
+    for cid in case_ids:
+        if cid in seen:
+            duplicates.add(cid)
+        seen.add(cid)
+    if duplicates:
+        raise DriverMetadataError(
+            f"--case-id repeated for {', '.join(sorted(duplicates))}; each --case-id "
+            "must name a distinct corpus case, since the registered "
+            "denominator (preregistration §8) counts records, not requests"
+        )
+
+
 def _reserve_run_dir(run_dir: Path) -> None:
     """Validate and atomically reserve the campaign plan §7.1 run directory.
 
@@ -477,9 +520,17 @@ def _is_json_name(name: str) -> bool:
     rejecting the non-canonical spelling explicitly, makes the closure and
     manifest contract deterministic instead of inheriting the host
     filesystem's behaviour.
+
+    No non-empty-stem requirement: ``glob("*.json")`` matches the bare name
+    ``.json`` too (``*`` matches an empty prefix, verified empirically), so a
+    top-level ``.json`` file would otherwise be manifested while invisible to
+    this recognition check — a declared ``.json`` is still rejected downstream
+    by :func:`_result_name_mode` (an empty ``mode`` before the ``_`` never
+    matches a registered mode), so relaxing this check does not admit it as a
+    valid declared artefact.
     """
-    stem, dot, suffix = name.rpartition(".")
-    return bool(dot) and bool(stem) and suffix.casefold() == "json"
+    _stem, dot, suffix = name.rpartition(".")
+    return bool(dot) and suffix.casefold() == "json"
 
 
 def _result_name_mode(name: str) -> str | None:
@@ -603,6 +654,14 @@ def _envelope_violation(path: Path, run_dir: Path, mode: str) -> str | None:
     being closed against: ``config.out_dir`` must resolve to this run
     directory, and a GPU entry's ``environment.backend`` must be the ``cuda``
     backend that entry asserts.
+
+    The required-field set and the null/empty rule mirror
+    :func:`_validate_environment` exactly — a GPU mode additionally requires
+    :data:`_GPU_REQUIRED_ENV_FIELDS`, and a field present but ``None``/``""``
+    is treated as absent — so closure can never accept a result ``main``
+    itself would have refused to publish. A field that is legitimately
+    falsy-but-present (``config.warmup == 0``, ``config.iterations == 0``) is
+    unaffected: ``0`` is neither ``None`` nor ``""``.
     """
     try:
         document = json.loads(path.read_text(encoding="utf-8"))
@@ -617,9 +676,14 @@ def _envelope_violation(path: Path, run_dir: Path, mode: str) -> str | None:
         block = document.get(block_name)
         if not isinstance(block, dict):
             return f"has no {block_name!r} object (campaign plan §7.2 envelope)"
-        absent = [field for field in required if field not in block]
-        if absent:
-            return f"{block_name!r} is missing required field(s) {', '.join(absent)}"
+        if block_name == "environment" and mode in _GPU_MODES:
+            required = (*required, *_GPU_REQUIRED_ENV_FIELDS)
+        incomplete = [field for field in required if block.get(field) in (None, "")]
+        if incomplete:
+            return (
+                f"{block_name!r} is missing or has null/empty required "
+                f"field(s) {', '.join(incomplete)}"
+            )
     config = document["config"]
     environment = document["environment"]
     out_dir = config["out_dir"]
@@ -758,6 +822,21 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
     # differs from the sidecar's only in case still resolves to the same
     # on-disk file, so an exact-string comparison would miss it (CodeRabbit).
     infrastructure = frozenset({sidecar.name.casefold(), "manifest.json".casefold()})
+    # manifest.json itself is excluded from the result inventory as
+    # infrastructure (below), but that must not exempt it from the same
+    # no-follow symlink discipline the sidecar and every declared artefact
+    # already get: append_manifest resolves its destination before writing,
+    # so a dangling or in-root symlink named manifest.json would make the
+    # *next* closure step publish this run's manifest somewhere outside
+    # run_dir (Copilot, CWE-59 class). Checked here, before this directory is
+    # ever declared closable, not inside append_manifest itself (a governed
+    # shared tool this driver does not modify).
+    manifest_path = run_dir / "manifest.json"
+    if manifest_path.is_symlink():
+        raise IncompleteRunError(
+            f"{manifest_path} is a symbolic link, not run-generated "
+            "infrastructure — refusing to treat as a closable run"
+        )
     artefacts: dict[str, list[str]] = {}
     modes: dict[str, str] = {}
     violations: list[str] = []
@@ -1352,9 +1431,13 @@ def compare_fuzz_case(spec: dict[str, Any]) -> dict[str, Any]:
     adjudicate (E3 executes, E4 analyzes).
 
     Args:
-        spec: A dict from :func:`draw_fuzz_spec`, plus an ``"rng"`` key
-            (``numpy.random.Generator``) used to draw the shared initial
-            condition (kept out of the returned record).
+        spec: A dict from :func:`draw_fuzz_spec`, plus ``"case_index"`` (this
+            draw's 0-based position in the stream, carried into the returned
+            record's identity fields) and ``"seed_stream"`` (the
+            ``prin._prin_core.Seed`` used to draw the shared initial
+            condition via :func:`draw_fuzz_initial`; kept out of the returned
+            record — the registered ``Seed`` authority, not a NumPy
+            ``Generator``; preregistration §5.12 item 15).
 
     Returns:
         A JSON-serializable record: identifying fields, an ``"aborted"``
@@ -2032,6 +2115,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         _validate_metadata(EXP_ID, run_id, args.session, args.operator)
         _validate_label(args.label)
+        _validate_case_ids(args.case_ids)
         _reserve_run_dir(run_dir)
         batch: dict[str, Any] = {}
         if args.mode == "corpus":

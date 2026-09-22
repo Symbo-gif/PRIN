@@ -556,6 +556,18 @@ mechanically checkable gate (`tools/check_dv_register_gates.py` parses
   benchmark, or a self-hosted nightly) is a CI-robustness item for WP-039 S1
   (0195), not a campaign experiment.
 
+### 11.4 Brief-vs-standard target reconciliation (EXP-002, EXP-003, EXP-004, EXP-008)
+
+Recorded in §2.1 "Reconciliation" and binding on E1: figure count 14 (not
+15); CPU targets ≥ 1.5× / ≥ 3.5× (amendment #21, not ≥ 2× / ≥ 8×); bridge
+overhead < 5 % at moderate/large shapes (amendment #30); distribution name
+`prin-core` (amendment #46); Triton/NPU/Metal legs under §5.4. These are
+**factual corrections to brief prose** (the PSR-034 §4 disposition class), not
+plan amendments — the Plan already carries every amended target. Pre-registering
+against the unamended brief prose would be a D3 (Workflow Standards §8 "stale
+… session-plan metadata … D2 when it could authorize work incorrectly") — hence
+this explicit record.
+
 ### 11.5 `timing_method` enum extension — EXP-001 H4 (§7.2), ratified 2026-09-22
 
 - **Original fact:** §7.2 registers exactly two `timing_method` values for a
@@ -585,18 +597,6 @@ mechanically checkable gate (`tools/check_dv_register_gates.py` parses
   experiment whose GPU leg is genuinely untimed may reuse `"not-timed"`
   without a further amendment; a *timed* GPU leg still requires
   `"device-event"` or `"system-synced"` per DV-003/amendment #44.
-
-### 11.4 Brief-vs-standard target reconciliation (EXP-002, EXP-003, EXP-004, EXP-008)
-
-Recorded in §2.1 "Reconciliation" and binding on E1: figure count 14 (not
-15); CPU targets ≥ 1.5× / ≥ 3.5× (amendment #21, not ≥ 2× / ≥ 8×); bridge
-overhead < 5 % at moderate/large shapes (amendment #30); distribution name
-`prin-core` (amendment #46); Triton/NPU/Metal legs under §5.4. These are
-**factual corrections to brief prose** (the PSR-034 §4 disposition class), not
-plan amendments — the Plan already carries every amended target. Pre-registering
-against the unamended brief prose would be a D3 (Workflow Standards §8 "stale
-… session-plan metadata … D2 when it could authorize work incorrectly") — hence
-this explicit record.
 
 ---
 
