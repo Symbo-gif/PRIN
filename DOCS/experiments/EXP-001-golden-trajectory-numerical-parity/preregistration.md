@@ -26,14 +26,20 @@ traversal gap, a TOCTOU race in §5.8's own run-directory reservation, two
 `check_run_complete` containment gaps (an unsafe artefact name and an
 unlisted result file), and a finding-count arithmetic error this document
 had carried since §5.5 — each independently validated and fixed as a sixth
-(§5.9); a seventh round on that commit found three more items — a residual
+(§5.9); a sixth CodeRabbit + Copilot review round on that commit found
+three more items — a residual
 `check_run_complete` gap (a sidecar could name its own infrastructure
 filename as an artefact and pass closure), the finding-count summary still
 not matching §5.9's own contents, and an unverified-at-time-of-writing "CI
 green" claim in §5.9's own intro (checked afterward and found accurate, but
 not evidence-backed when first asserted) — each independently validated and
-fixed as a seventh (§5.10). All still within the same E1→E2 edit window,
-since no `RUN-` directory exists yet.
+fixed as a seventh (§5.10); a seventh review round on that commit found
+three more items — a symlinked-artefact bypass of `check_run_complete`
+(CWE-59), a case-insensitive-filesystem bypass of §5.10's own
+reserved-name check, and a remediation-pass/review-round counter mixup in
+§5.10's own prose — each independently validated and fixed as an eighth
+(§5.11). All still within the same E1→E2 edit window, since no `RUN-`
+directory exists yet.
 **EXP-001 E3 (session 0156) is authorized to begin.**
 **Code version:** `prin` 1.0.0-rc1 @ `8ce115f` (campaign baseline SHA; this
 document was drafted at E1 on branch `campaign/0154-exp001-e1` and amended at
@@ -139,16 +145,17 @@ versioned per-case evidence artefact).
 
 H1–H4 are all addressed by the committed driver
 (`benchmarks/campaign/exp001_driver.py`, tested in tandem —
-`tests/test_exp001_driver.py`, 104/104 passing at freeze, including the 4
+`tests/test_exp001_driver.py`, 108/108 passing at freeze, including the 4
 `slow`/PRINet-gated H2 tests). H4's driver support
 (`compare_kernel_path_case`/`compare_kernel_path_subset`, `--mode
 kernel-path`) was closed as a pre-execution amendment at E2 (session 0155);
-§5.4 records the closure, and six further E2 remediation passes (§5.5,
-§5.6, §5.7, §5.8, §5.9, §5.10) fixed a total of twenty-three substantive
-code-review findings, plus one locale correction (§5.8 item 5) —
-twenty-four numbered remediation items in all, by an exact recount of every
-`` `^\d+\. \*\*` `` entry per subsection (§5.5=4, §5.6=5, §5.7=2, §5.8=5,
-§5.9=5, §5.10=3) — across six review rounds — an H2a/H2b
+§5.4 records the closure, and seven further E2 remediation passes (§5.5,
+§5.6, §5.7, §5.8, §5.9, §5.10, §5.11) fixed a total of twenty-six
+substantive code-review findings, plus one locale correction (§5.8 item 5)
+— twenty-seven numbered remediation items in all, by an exact recount of
+every `` `^\d+\. \*\*` `` entry per subsection (§5.5=4, §5.6=5, §5.7=2,
+§5.8=5, §5.9=5, §5.10=3, §5.11=3) — across seven review rounds — an
+H2a/H2b
 data-sufficiency gap, unenforced abort criteria, artefact-write races and
 the sidecar/result transaction, H4's CUDA/wgpu ambiguity (closed properly
 only at §5.6, after §5.5's first attempt proved insufficient), H2b's
@@ -158,7 +165,9 @@ unenforced §7.1 run-directory contract, the kill-between-writes closure gap,
 a §4/§8 H2b inconsistency, a `--label` path-traversal gap, a run-directory
 reservation TOCTOU race, two `check_run_complete` containment gaps, a
 residual `check_run_complete` reserved-name gap, a finding-count summary
-drift, and an unverified-at-time-of-writing CI-status claim.
+drift, an unverified-at-time-of-writing CI-status claim, a symlinked-artefact
+bypass, a case-insensitive-filesystem bypass, and a remediation-pass/
+review-round counter mixup.
 
 ## 3. Expected results
 
@@ -796,7 +805,7 @@ after all five fixes.
 
 ### 5.10 Seventh E2 remediation pass — sixth review round (pre-execution amendment)
 
-A seventh CodeRabbit + Copilot round on the §5.9 commit found 3 items. Each
+A sixth CodeRabbit + Copilot review round on the §5.9 commit found 3 items. Each
 was independently validated against the code and standards before being
 fixed (still no `RUN-` directory):
 
@@ -870,6 +879,89 @@ local quick suite green. `gh pr checks 20` at commit `ae49493` (the exact
 commit §5.9's review comments were anchored to): 26/26 checks pass,
 including `gpu-cuda` and `gpu-wgpu` — cited here, not asserted from local
 validation alone, per finding 3 above.
+
+### 5.11 Eighth E2 remediation pass — seventh review round (pre-execution amendment)
+
+A seventh CodeRabbit review round on the §5.10 commit found 3 items. Each
+was independently validated against the code and standards before being
+fixed (still no `RUN-` directory):
+
+1. **A declared artefact that is a symbolic link bypassed
+   `check_run_complete` (CodeRabbit; validated — CWE-59, "Major",
+   Reachability: Internal).** `_is_safe_artefact_name` validates only the
+   filename text, but the missing-file check (`(run_dir / name).is_file()`)
+   follows symbolic links. Reproduced empirically before the fix: a sidecar
+   naming `corpus_h1.json` as an H1 artefact, with `run_dir/corpus_h1.json`
+   actually a symlink to an arbitrary file outside `run_dir`, passed
+   `check_run_complete` and returned that name as a legitimate artefact —
+   the linked-to content, not anything this run wrote, would then be
+   manifested and its digest recorded as if it belonged to this run.
+   Reachability is internal (something must first place the symlink inside
+   `run_dir`) and exploitability difficult, per CodeRabbit's own assessment,
+   but the documented closure contract already treats the sidecar as
+   untrusted input from a possibly-tampered directory (§5.9 item 3, §5.10
+   item 1), and a symlink is exactly the kind of tampering that contract is
+   meant to catch. Fixed: a new check rejects any artefact name whose
+   `run_dir`-relative path `is_symlink()` (no-follow), run before the
+   existing missing-file check so a symlink is never given the chance to be
+   treated as present.
+2. **The reserved-infrastructure-name check from §5.10 item 1 used an
+   exact-string comparison (CodeRabbit; validated).** On a case-insensitive
+   filesystem — the default on Windows and macOS, both in this project's
+   own CI matrix (`test (windows-latest, ...)`, `test (macos-latest,
+   macos-latest)`) — a name that differs from `campaign-metadata.json` or
+   `manifest.json` only in case (e.g. `CAMPAIGN-METADATA.JSON`) resolves to
+   the same on-disk file, so the exact-string `in infrastructure` check from
+   §5.10 missed it: reproduced empirically before this fix, the exact same
+   sidecar-impersonation bug §5.10 item 1 had just closed, bypassed purely
+   by changing case. Fixed: both the reserved-name membership check and the
+   `present`-set infrastructure exclusion now compare with `.casefold()`,
+   closing the gap without weakening the underlying filename-shape check
+   `_is_safe_artefact_name` still performs on the original (non-folded)
+   name.
+3. **§5.10's own heading correctly distinguished remediation-pass and
+   review-round counters, but its body prose and Appendix A entry did not
+   (CodeRabbit; validated).** §5.10's heading reads "Seventh E2 remediation
+   pass — sixth review round" — remediation passes are counted including
+   §5.4's H4 closure and so run one ahead of PR-review rounds, which start
+   counting from §5.5 — but its body text and the Appendix A bullet both
+   called the work "a seventh CodeRabbit + Copilot round", silently
+   switching to the remediation-pass count. This is the same class of
+   silent-drift error as §5.9 item 5 and §5.10 item 2 (a count computed
+   correctly once, then repeated inconsistently elsewhere in the same
+   document), just in the "which counter" dimension rather than the
+   "what's the total" dimension. Fixed in the approval-history paragraph,
+   §5.10's own intro sentence, and the Appendix A entry, all now reading
+   "sixth CodeRabbit + Copilot review round"; "seventh" is kept only for
+   explicit "E2 remediation pass" phrasing. The same pre-existing
+   inconsistency is present in §5.6's–§5.9's body prose (each says "a
+   `<pass-ordinal>` CodeRabbit + Copilot round", one ahead of that
+   section's own heading's review-round ordinal) but those sections are
+   historical record from already-reviewed commits; per this document's
+   established editing pattern (retroactive fixes are applied when a
+   *current* finding requires them, not otherwise), they are left as
+   written rather than rewritten as a side effect of this finding.
+
+Evidence: `tests/test_exp001_driver.py`, 108/108 passing (104 prior + 4 new:
+`TestRunClosure::test_reserved_infrastructure_name_rejected_case_insensitively`
+parametrized over three case variants of both reserved names, testing the
+comparison logic directly rather than relying on the host filesystem's own
+case-folding behavior, so it is meaningful on any OS; `TestRunClosure::
+test_symlinked_artefact_rejected`, guarded by a `_needs_symlink_support`
+capability probe — mirroring this file's existing GPU-capability-guard
+pattern — since symlink creation requires elevated privilege or Developer
+Mode on a non-admin Windows host, even though GitHub-hosted `windows-latest`
+runners (which run as Administrator) do not need it; the test ran
+unskipped on this development host). `ruff check`/`ruff format --check` and
+`mypy python/prin benchmarks/campaign --strict` clean; Snyk Code 0 issues on
+both touched Python files (scanned individually); full local quick suite
+green; all three governance gates (`wp001_baseline`, session registration,
+DV register) pass. `gh pr checks 20` at commit `ae49493` (the head this
+round's review comments were anchored to, before this round's own push):
+28/28 required checks pass (`Sourcery review` shows `skipping`, not a
+failure). A third end-to-end corpus-mode smoke run through the live driver
+against the real corpus independently confirmed the reserve→compare→
+write→close pipeline still works after all three fixes.
 
 ## 6. Variables and controls
 
@@ -1147,8 +1239,8 @@ No budget amendment is anticipated.
   corpus independently confirmed the full reserve→compare→write→close
   pipeline still works after all five fixes — see §5.9 for the full
   evidence and finding-by-finding disposition.
-- **Driver (E2 seventh remediation, §5.10):** a seventh CodeRabbit + Copilot
-  round on the §5.9 commit found 3 items, each independently validated
+- **Driver (E2 seventh remediation, §5.10):** a sixth CodeRabbit + Copilot
+  review round on the §5.9 commit found 3 items, each independently validated
   against the code and standards before being fixed: a sidecar could name
   its own infrastructure filename (`campaign-metadata.json` or
   `manifest.json`) as an artefact and pass `check_run_complete` for the
@@ -1170,3 +1262,31 @@ No budget amendment is anticipated.
   updating one existing test's `pytest.raises` match string, caught by
   running the suite immediately after the fix — see §5.10 for the full
   evidence and finding-by-finding disposition.
+- **Driver (E2 eighth remediation, §5.11):** a seventh CodeRabbit review
+  round on the §5.10 commit found 3 items, each independently validated
+  against the code and standards before being fixed: a declared artefact
+  that is a symbolic link bypassed `check_run_complete` (CWE-59) because the
+  missing-file check follows symlinks — reproduced empirically before the
+  fix; fixed by rejecting any artefact name whose path `is_symlink()`,
+  checked before the missing-file check runs. §5.10's own reserved-name
+  check used an exact-string comparison, so a case-varying alias
+  (`CAMPAIGN-METADATA.JSON`) bypassed it on a case-insensitive filesystem —
+  Windows and macOS, both in this project's own CI matrix — reproducing the
+  same sidecar-impersonation bug §5.10 had just closed; fixed with
+  `.casefold()` on both the reserved-name membership check and the
+  `present`-set infrastructure exclusion. §5.10's heading correctly
+  distinguished the remediation-pass and review-round counters but its own
+  body prose and Appendix A entry didn't, calling the work "a seventh
+  CodeRabbit + Copilot round" instead of "sixth review round" — the same
+  historical inconsistency present in §5.6-§5.9's body prose (left as
+  written, per this document's established pattern of not retroactively
+  rewriting already-reviewed sections) recurring in newly-written text,
+  where it is fixed. `tests/test_exp001_driver.py`, 108/108 passing at
+  freeze (4 new, one symlink test capability-gated by a
+  `_needs_symlink_support` probe mirroring the existing GPU-guard pattern);
+  `ruff`/`mypy --strict` clean; Snyk Code 0 issues on both touched Python
+  files; full local quick suite and all three governance gates green; a
+  third end-to-end corpus-mode smoke run through the live driver
+  independently confirmed the reserve→compare→write→close pipeline still
+  works — see §5.11 for the full evidence and finding-by-finding
+  disposition.

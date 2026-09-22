@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 pre-registration — eighth E2 remediation, seventh code-review
+  round on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.11.** A seventh CodeRabbit review round found 3 items; each was
+  independently validated against the code and standards before being
+  fixed as an eighth pre-execution amendment. (1) A declared artefact that
+  is a symbolic link bypassed `check_run_complete()` (CWE-59): the
+  missing-file check follows symlinks, so a sidecar naming a symlinked path
+  as an artefact was treated as a legitimate result even though the linked
+  content lives outside `run_dir`. Reproduced empirically before the fix.
+  Fixed: any artefact name whose `run_dir`-relative path `is_symlink()`
+  (no-follow) is now rejected before the missing-file check runs. (2) The
+  previous round's reserved-infrastructure-name check used an exact-string
+  comparison, so a case-varying alias (`CAMPAIGN-METADATA.JSON`) bypassed it
+  on a case-insensitive filesystem — Windows and macOS, both in this
+  project's own CI matrix — reproducing the same sidecar-impersonation bug
+  that check was meant to close. Fixed with `.casefold()` on both the
+  reserved-name membership check and the unlisted-file infrastructure
+  exclusion. (3) The previous round's own section heading correctly
+  distinguished the remediation-pass counter from the review-round counter,
+  but its body prose and Appendix A entry didn't, calling the same work by
+  the wrong counter — fixed in the newly-written text (the same
+  inconsistency in earlier, already-reviewed sections is left as historical
+  record). 4 new tests (`tests/test_exp001_driver.py`, 108/108 passing;
+  the symlink regression test is capability-gated by a runtime probe, since
+  symlink creation needs elevated privilege on a non-admin Windows host);
+  `ruff`/`mypy --strict` clean; Snyk Code 0 issues on both touched Python
+  files; full local quick suite green; all three governance gates pass. A
+  third end-to-end corpus-mode smoke run independently confirmed the
+  driver's reserve→compare→write→close pipeline still works. EXP-001 E3
+  (session 0156) remains authorized to begin.
 - **EXP-001 pre-registration — seventh E2 remediation, sixth code-review
   round on PR #20 (session 0155, E2, 2026-09-22) —
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`

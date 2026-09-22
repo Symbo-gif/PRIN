@@ -77,6 +77,35 @@ _KURAMOTO_SPARSE_KNN_CASES = [
 ]
 
 
+def _probe_symlink_support() -> bool:
+    """True iff this process can create a symlink in a temp directory.
+
+    Symlink creation requires elevated privilege or Developer Mode on
+    Windows (unlike GitHub-hosted `windows-latest` runners, which run as
+    Administrator, an arbitrary local or self-hosted Windows environment may
+    not), so the regression test for the symlinked-artefact rejection
+    (§5.10 remediation) is gated on this rather than assumed available.
+    """
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as raw:
+        d = Path(raw)
+        target = d / "target"
+        target.write_text("x", encoding="utf-8")
+        link = d / "link"
+        try:
+            link.symlink_to(target)
+        except OSError:
+            return False
+        return True
+
+
+_needs_symlink_support = pytest.mark.skipif(
+    not _probe_symlink_support(),
+    reason="creating symlinks is not permitted in this environment",
+)
+
+
 @pytest.fixture
 def loader() -> CorpusLoader:
     """Load the real golden-trajectory corpus."""
@@ -869,6 +898,43 @@ class TestRunClosure:
             json.dumps({"artefacts": {reserved_name: ["H1"]}}), encoding="utf-8"
         )
         with pytest.raises(driver.IncompleteRunError, match="unsafe or reserved"):
+            driver.check_run_complete(run_dir)
+
+    @pytest.mark.parametrize(
+        "cased_name",
+        ["CAMPAIGN-METADATA.JSON", "Campaign-Metadata.Json", "MANIFEST.JSON"],
+    )
+    def test_reserved_infrastructure_name_rejected_case_insensitively(
+        self, run_root: Path, cased_name: str
+    ) -> None:
+        """A case-varying alias of a reserved name must be rejected too: on
+        a case-insensitive filesystem (Windows/macOS, both in this
+        project's CI matrix), `CAMPAIGN-METADATA.JSON` resolves to the same
+        on-disk file as `campaign-metadata.json`, so an exact-string
+        comparison would miss it (CodeRabbit).
+        """
+        run_dir = _run_dir(run_root, "reservedcase")
+        run_dir.mkdir()
+        (run_dir / "campaign-metadata.json").write_text(
+            json.dumps({"artefacts": {cased_name: ["H1"]}}), encoding="utf-8"
+        )
+        with pytest.raises(driver.IncompleteRunError, match="unsafe or reserved"):
+            driver.check_run_complete(run_dir)
+
+    @_needs_symlink_support
+    def test_symlinked_artefact_rejected(self, run_root: Path) -> None:
+        """A declared artefact that is a symlink to a file outside run_dir
+        must never be trusted: Path.is_file() follows symlinks, so this
+        would otherwise pass the missing-file check and be manifested as if
+        it were written directly into run_dir by this run (CodeRabbit,
+        CWE-59).
+        """
+        run_dir = _run_dir(run_root, "symlinked")
+        outside = run_root / "outside_secret.json"
+        outside.write_text('{"not": "a real result"}', encoding="utf-8")
+        self._sidecar(run_dir, {"corpus_h1.json": ["H1"]})
+        (run_dir / "corpus_h1.json").symlink_to(outside)
+        with pytest.raises(driver.IncompleteRunError, match="symbolic link"):
             driver.check_run_complete(run_dir)
 
     def test_unlisted_result_file_rejected(self, run_root: Path) -> None:

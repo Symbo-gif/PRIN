@@ -349,22 +349,27 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
     outside ``run_dir`` entirely (Copilot; the same CWE-22 class as
     :data:`_LABEL_RE`, defended here independently of label validation since
     this function must not trust that every sidecar it is ever pointed at
-    was written by a conforming invocation of this driver); or a sidecar
-    naming its own infrastructure filename (itself, or ``manifest.json``) as
-    one of its artefacts, which would otherwise pass both the missing-file
-    check (the file exists — it just isn't a result) and the unlisted-file
-    check (it is excluded from ``present`` precisely because it is
-    infrastructure) for the wrong reason (Copilot). E3 must call this before
-    ``append_manifest`` (see ``benchmarks/results/EXP-001/README.md`` and
-    preregistration §5.3).
+    was written by a conforming invocation of this driver); a sidecar
+    naming its own infrastructure filename (itself, or ``manifest.json``,
+    matched case-insensitively so a differently-cased name can't alias the
+    same on-disk file on Windows/macOS) as one of its artefacts, which would
+    otherwise pass both the missing-file check (the file exists — it just
+    isn't a result) and the unlisted-file check (it is excluded from
+    ``present`` precisely because it is infrastructure) for the wrong reason
+    (Copilot, CodeRabbit); or a declared artefact that is a symbolic link to
+    a file outside ``run_dir``, since ``Path.is_file()`` follows symlinks and
+    would otherwise treat linked-to content as if it were written directly
+    into ``run_dir`` by this run (CWE-59, CodeRabbit). E3 must call this
+    before ``append_manifest`` (see ``benchmarks/results/EXP-001/README.md``
+    and preregistration §5.3).
 
     Returns:
         The sidecar's ``artefacts`` mapping, for the caller's log.
 
     Raises:
         IncompleteRunError: If the sidecar is missing or malformed, names an
-            unsafe, reserved, or absent artefact path, or the directory
-            holds a result JSON the sidecar does not name.
+            unsafe, reserved, symlinked, or absent artefact path, or the
+            directory holds a result JSON the sidecar does not name.
     """
     sidecar = run_dir / "campaign-metadata.json"
     if not sidecar.is_file():
@@ -391,20 +396,37 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
     # already-closed directory). A sidecar naming either as one of its own
     # artefacts would otherwise pass both checks below for the wrong reason —
     # not because a real result was written, but because the infrastructure
-    # file it is impersonating as a result already happens to exist.
-    infrastructure = {sidecar.name, "manifest.json"}
+    # file it is impersonating as a result already happens to exist. Matched
+    # case-insensitively: on a case-insensitive filesystem (default on
+    # Windows and macOS, both in this project's CI matrix), a name that
+    # differs from the sidecar's only in case still resolves to the same
+    # on-disk file, so an exact-string comparison would miss it (CodeRabbit).
+    infrastructure = {sidecar.name.casefold(), "manifest.json".casefold()}
     unsafe = sorted(
         name
         for name in artefacts
-        if not _is_safe_artefact_name(name) or name in infrastructure
+        if not _is_safe_artefact_name(name) or name.casefold() in infrastructure
     )
     if unsafe:
         raise IncompleteRunError(
             f"{sidecar} names unsafe or reserved artefact path(s) "
             f"{', '.join(unsafe)} (must be a plain filename directly in "
             f"run_dir, no path separators or '..' segments, and not one of "
-            f"the reserved infrastructure names {sorted(infrastructure)}) — "
-            "refusing to treat as a closable run"
+            f"the reserved infrastructure names {sorted(infrastructure)}, "
+            "case-insensitively) — refusing to treat as a closable run"
+        )
+    # A declared artefact that is a symbolic link is never trusted, even if
+    # it resolves to a regular file: Path.is_file() below follows symlinks,
+    # so a link to a file outside run_dir would otherwise pass the
+    # missing-file check and be manifested as if it were written directly
+    # into run_dir by this run (CWE-59, CodeRabbit). Checked with
+    # is_symlink() (no-follow) before any is_file() call runs.
+    symlinked = sorted(name for name in artefacts if (run_dir / name).is_symlink())
+    if symlinked:
+        raise IncompleteRunError(
+            f"{sidecar} names artefact path(s) {', '.join(symlinked)} that "
+            "are symbolic links, not regular files written directly by this "
+            "run — refusing to treat as a closable run"
         )
     missing = sorted(name for name in artefacts if not (run_dir / name).is_file())
     if missing:
@@ -418,7 +440,9 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
     present = {
         path.name
         for path in run_dir.iterdir()
-        if path.is_file() and path.suffix == ".json" and path.name not in infrastructure
+        if path.is_file()
+        and path.suffix == ".json"
+        and path.name.casefold() not in infrastructure
     }
     unlisted = sorted(present - set(artefacts))
     if unlisted:
