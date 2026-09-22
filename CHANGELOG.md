@@ -9,6 +9,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 pre-registration — maintainer decisions on the ninth E2
+  remediation pass (session 0155, E2, 2026-09-22).** Three decisions the
+  §5.12 remediation left open are resolved. **(1) `timing_method:
+  "not-timed"` ratified:** campaign plan §11.5 records the disposition and
+  §14.2 amendment row 2 the approval (MichaelMaillet, 2026-09-22); the
+  preregistration's §5.1/§5.12 item 6 and header now cite the ratification
+  instead of an open decision. **(2) Sub-registered fuzz batches: existing
+  disposition confirmed as sufficient, no code change.** The driver already
+  labels any `--n-fuzz-cases` batch below the registered 1,000-case minimum
+  `config.fuzz_batch_class = "pilot"` (never silent), and preregistration §8's
+  denominator rule already makes a run below its registered denominator
+  `INCONCLUSIVE`, never `CONFIRMED` — the same discipline campaign plan §2.1
+  applies to EXP-006's Phase 4 pilot evidence ("may be cited only as basis for
+  prediction"). A pilot batch therefore cannot be silently read as
+  confirmatory H2 evidence by either the sidecar, the artefact, or E4's
+  adjudication; no further floor or reporting-path change was judged
+  necessary. **(3) The three §5.12 protocol changes (H2b decision rule, H2b
+  unit of analysis, fuzz RNG authority) are approved** as the pre-execution
+  amendment §5.12 already documents; no further edit made. EXP-001 E3
+  (session 0156) is authorized with no outstanding maintainer decision.
+- **EXP-001 pre-registration — ninth E2 remediation, eighth code-review
+  round on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.12.** The first review round to audit the scientific protocol as well as
+  the code raised sixteen items; each was independently validated against the
+  repository and the governing documents, and every finding and disposition is
+  recorded in §5.12's audit table (which replaces the running finding-count
+  arithmetic that had drifted three times). **Three change the registered
+  protocol, all before E3, with no campaign data in existence.** (1) *H2b
+  decision rule:* `|Cohen's d| < 0.2` **and** "the bootstrap CI contains 0"
+  does not establish equivalence — a wide interval can contain zero and
+  conclusion-reversing differences at once. Replaced by a genuine equivalence
+  test: both endpoints of the 95 % bootstrap CI on the mean per-case paired
+  difference must lie inside a registered per-metric margin (1 % of each
+  metric's bounded range: 0.01 for `order_parameter`, 0.02 for
+  `mean_phase_coherence`), with fewer than 30 contributing cases
+  `INCONCLUSIVE` rather than `REFUTED`, and Cohen's *d* / Welch's *t*
+  descriptive only. (2) *H2b unit of analysis:* post-horizon steps of one
+  trajectory are serially dependent and are no longer pooled as independent
+  observations — each case contributes one predefined paired summary, the
+  independent clusters being the independently drawn cases. (3) *RNG
+  authority:* campaign plan §6.1 forbids a second RNG path, but the fuzz
+  sampler derived a NumPy PCG64 stream from `(seed_counter, seed_key)`; it now
+  draws directly from `prin._prin_core.Seed`, and the per-case `"seed"` field
+  that determined nothing is replaced by `case_index`. The remaining thirteen
+  items hardened run closure (full campaign plan §7.2 sidecar schema with no
+  value coercion, symlinked-sidecar rejection before any link-following call,
+  closure/manifest case alignment so a `rogue.JSON` cannot be manifested on
+  Windows while invisible to closure, and result-envelope cross-checks),
+  enforced the §10.1 item 3 environment-capture abort, registered H4's
+  `timing_method: "not-timed"` (an enum extension needing maintainer
+  ratification), checked all three GPU capsules for CUDA residency, replaced
+  the `torch.cuda.is_available()` test guard with an executability probe
+  (`tests/_env.py::cuda_kernel_executes`; ETCA-002 T-F3 / G8), added
+  `@pytest.mark.gpu` so `gpu.yml` actually selects the H4 tests, normalized
+  the CLI's expected-failure handling to the `ABORT:`/exit-2 convention
+  without catching programming errors, and rejected `--n-fuzz-cases <= 0`.
+  `tests/test_exp001_driver.py` 197/197 passing under the governed Windows
+  command (89 new tests); `pytest -m "gpu or directml"` selects and passes 5
+  H4 tests on this host's real `--features cuda` build and CUDA runtime;
+  `ruff check`/`ruff format --check` clean across `python/ tests/ benchmarks/
+  tools/ parity/`; `mypy --strict benchmarks/campaign python/prin` clean. No
+  `RUN-` directory was created and no campaign evidence was generated. EXP-001
+  E3 (session 0156) remains authorized, subject to the one open maintainer
+  decision recorded in §5.12.
 - **EXP-001 pre-registration — eighth E2 remediation, seventh code-review
   round on PR #20 (session 0155, E2, 2026-09-22) —
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`

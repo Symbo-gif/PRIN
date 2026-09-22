@@ -38,8 +38,16 @@ three more items — a symlinked-artefact bypass of `check_run_complete`
 (CWE-59), a case-insensitive-filesystem bypass of §5.10's own
 reserved-name check, and a remediation-pass/review-round counter mixup in
 §5.10's own prose — each independently validated and fixed as an eighth
-(§5.11). All still within the same E1→E2 edit window, since no `RUN-`
-directory exists yet.
+(§5.11); an eighth review round on that commit — the first to examine the
+scientific protocol as well as the code — found sixteen further items, each
+recorded with its disposition in §5.12's audit table and fixed as a ninth
+pre-execution amendment (§5.12). That round changed the **H2b decision rule**
+(a real equivalence margin replaces "`|d| < 0.2` and the CI contains 0"), the
+**H2b unit of analysis** (one predefined paired summary per case, not every
+post-horizon time point), and the **fuzz RNG authority** (the registered
+`Seed`, not a derived NumPy stream); all three are registered here **before
+E3**, and no campaign data exists to be affected. All still within the same
+E1→E2 edit window, since no `RUN-` directory exists yet.
 **EXP-001 E3 (session 0156) is authorized to begin.**
 **Code version:** `prin` 1.0.0-rc1 @ `8ce115f` (campaign baseline SHA; this
 document was drafted at E1 on branch `campaign/0154-exp001-e1` and amended at
@@ -117,20 +125,37 @@ versioned per-case evidence artefact).
     corrected during E2 remediation, §5.5, after a code-review finding
     showed the original pooled-sample wording), computed on the set of
     values at steps `21..n_steps` across every fuzzed case with
-    `n_steps > 20`: the PRINet-3.0 and `prin` samples show no practically
-    significant difference, adjudicated by one predicate applied identically
-    per metric at §4/§8: **a metric is CONFIRMED iff `|Cohen's d| < 0.2`
-    (negligible, Cohen's convention; `prin.y4q1_tools.cohens_d`) AND the 95%
-    bootstrap CI (`prin.y4q1_tools.bootstrap_ci`, 10,000 resamples, seeded
-    per §7) on the mean paired difference contains 0 — otherwise REFUTED for
-    that metric. H2b overall is CONFIRMED iff *both* metrics are CONFIRMED;
-    REFUTED if either metric is REFUTED.** The two-sided Welch t-test
-    (`prin.y4q1_tools.welch_t_test`, `α=0.05`) is still computed and
-    reported per metric for transparency, but does not gate either
-    predicate: at the fuzz batch's scale a trivially small,
-    practically-negligible difference can still test "significant", which is
-    why the effect size and CI — not the raw p-value — decide each metric's
-    verdict (standard equivalence-testing practice).
+    `n_steps > 20`: the PRINet-3.0 and `prin` values are **equivalent within
+    a registered margin**, adjudicated by one predicate applied identically
+    per metric at §4/§8.
+
+    **Unit of analysis (§5.12).** Values at successive steps of one
+    trajectory are serially dependent, so they are never treated as
+    independent observations. Each contributing case contributes exactly
+    **one predefined paired summary per metric**: the mean of
+    `prin − PRINet-3.0` over that case's steps `21..n_steps`
+    (`beyond_horizon.<metric>.mean_paired_difference`, written by the
+    driver). Cases are drawn independently from the registered `Seed`
+    stream, so those per-case summaries are the independent sample.
+
+    **Predicate.** For metric *m* with registered equivalence margin
+    δₘ (§7): **CONFIRMED iff both endpoints of the 95% bootstrap CI
+    (`prin.y4q1_tools.bootstrap_ci`, 10,000 resamples, seed 42) on the mean
+    per-case paired difference lie strictly inside `(−δₘ, +δₘ)`;
+    REFUTED if the sample is valid and either endpoint falls outside;
+    INCONCLUSIVE if fewer than 30 cases contribute (§7's registered minimum
+    information requirement).** H2b overall is CONFIRMED iff *both* metrics
+    are CONFIRMED, REFUTED if either is REFUTED, INCONCLUSIVE otherwise.
+    Cohen's *d* (`prin.y4q1_tools.cohens_d`) and the two-sided Welch t-test
+    (`prin.y4q1_tools.welch_t_test`, `α=0.05`) are computed and reported per
+    metric for transparency but **gate nothing**: a CI that merely contains
+    zero does not establish equivalence (a wide interval can contain zero
+    and, at the same time, conclusion-reversing differences), and on a
+    low-variance paired sample a physically negligible difference can still
+    produce a large `|d|` and a small *p* (§5.12). The single implementation
+    of this predicate is
+    `benchmarks.campaign.exp001_driver.adjudicate_h2b`, used by E4 and
+    covered by `tests/test_exp001_driver.py::TestH2bAdjudication`.
 - **H3 (bit-level seeded repeatability):** For one representative corpus case
   per each of the 14 `(model, coupling, integrator)` grid cells, running the
   `prin` reproduction twice from the identical stored initial state produces
@@ -145,29 +170,22 @@ versioned per-case evidence artefact).
 
 H1–H4 are all addressed by the committed driver
 (`benchmarks/campaign/exp001_driver.py`, tested in tandem —
-`tests/test_exp001_driver.py`, 108/108 passing at freeze, including the 4
-`slow`/PRINet-gated H2 tests). H4's driver support
-(`compare_kernel_path_case`/`compare_kernel_path_subset`, `--mode
-kernel-path`) was closed as a pre-execution amendment at E2 (session 0155);
-§5.4 records the closure, and seven further E2 remediation passes (§5.5,
-§5.6, §5.7, §5.8, §5.9, §5.10, §5.11) fixed a total of twenty-six
-substantive code-review findings, plus one locale correction (§5.8 item 5)
-— twenty-seven numbered remediation items in all, by an exact recount of
-every `` `^\d+\. \*\*` `` entry per subsection (§5.5=4, §5.6=5, §5.7=2,
-§5.8=5, §5.9=5, §5.10=3, §5.11=3) — across seven review rounds — an
-H2a/H2b
-data-sufficiency gap, unenforced abort criteria, artefact-write races and
-the sidecar/result transaction, H4's CUDA/wgpu ambiguity (closed properly
-only at §5.6, after §5.5's first attempt proved insufficient), H2b's
-cross-metric pooling, the clamp-trip criterion's scope, the H4 test guards,
-two follow-on defects §5.6 itself introduced, the unpinned H2 reference, the
-unenforced §7.1 run-directory contract, the kill-between-writes closure gap,
-a §4/§8 H2b inconsistency, a `--label` path-traversal gap, a run-directory
-reservation TOCTOU race, two `check_run_complete` containment gaps, a
-residual `check_run_complete` reserved-name gap, a finding-count summary
-drift, an unverified-at-time-of-writing CI-status claim, a symlinked-artefact
-bypass, a case-insensitive-filesystem bypass, and a remediation-pass/
-review-round counter mixup.
+`tests/test_exp001_driver.py`, 197/197 passing at freeze, including the 5
+`slow`/PRINet-gated H2 tests and the 5 `@pytest.mark.gpu` H4 tests). H4's
+driver support (`compare_kernel_path_case`/`compare_kernel_path_subset`,
+`--mode kernel-path`) was closed as a pre-execution amendment at E2 (session
+0155); §5.4 records that closure, and eight further E2 remediation passes
+(§5.5–§5.12), across eight code-review rounds, fixed the findings listed in
+those sections.
+
+**Finding counts are not restated here.** Earlier revisions of this paragraph
+carried a running arithmetic total of remediation items, and that total drifted
+out of step with the sections it summarised three separate times (§5.9 item 5,
+§5.10 item 2, §5.11 item 3 — each a review finding about the count itself).
+§5.12's audit table is now the single place where every finding and its
+disposition is recorded; per-section prose states its own count and nothing
+totals them, which removes the drift surface rather than re-deriving it
+(§5.12 item 16).
 
 ## 3. Expected results
 
@@ -175,7 +193,7 @@ review-round counter mixup.
 |---|---|---|---|
 | H1 | Confirmed | 504/504 (100%) pass | Phase 1–3 exit criteria required the CI-gated parity suite green on this same corpus; a 4-case representative smoke test run during E1 driver development (`kuramoto_mean_field_euler`, `kuramoto_full_rk4`, `hopf_sparse_knn_rk4`, `stuart_landau_full_euler`, all `n=8, s=20`) passed 4/4 at the registered tolerance. |
 | H2a | Confirmed | 100% within-horizon pass | Same basis as H1: the horizon `T*=20` is chosen to equal the corpus's own validated trajectory length. |
-| H2b | Confirmed | `\|Cohen's d\| < 0.05` (well under the `0.2` registered threshold) | An 8-case pilot batch drawn by the fuzz sampler during E1 driver development (`seed_counter=0, seed_key=1`) showed 7/8 cases fully within tolerance at all steps; the one exception (`hopf, mean_field, rk4, N=26, n_steps=35`) breached the trajectory tolerance by a small margin (`max_abs_diff=1.13e-6` vs the `1e-8`-anchored `1e-6` relative bound, 2/936 array elements) only in the `phase_traj` array — consistent with float64 rounding-order divergence between two independently-implemented integrators accumulating past step 20, not a systematic bias. This pilot evidence is **not** a campaign result (Experimentation Standards §1.1: no post-hoc hypotheses from peeking at results); it is cited only as the basis for choosing `T*=20` and predicting a near-zero effect size beyond it, exactly as the pre-registration template invites ("PRINet 3.0 Table N / theory / **pilot**"). |
+| H2b | Confirmed | Both CI endpoints well inside the registered margins (δ = 0.01 / 0.02); `\|Cohen's d\|` reported descriptively, predicted < 0.05 | An 8-case pilot batch drawn by the fuzz sampler during E1 driver development (`seed_counter=0, seed_key=1`) showed 7/8 cases fully within tolerance at all steps; the one exception (`hopf, mean_field, rk4, N=26, n_steps=35`) breached the trajectory tolerance by a small margin (`max_abs_diff=1.13e-6` vs the `1e-8`-anchored `1e-6` relative bound, 2/936 array elements) only in the `phase_traj` array — consistent with float64 rounding-order divergence between two independently-implemented integrators accumulating past step 20, not a systematic bias. This pilot evidence is **not** a campaign result (Experimentation Standards §1.1: no post-hoc hypotheses from peeking at results); it is cited only as the basis for choosing `T*=20` and predicting a near-zero effect size beyond it, exactly as the pre-registration template invites ("PRINet 3.0 Table N / theory / **pilot**"). |
 | H3 | Confirmed | 14/14 bit-identical | `prin`'s dynamics core is a pure function of its explicit inputs once an initial state is given (no internal RNG re-draw); a 4-case repeatability smoke test during driver development passed 4/4 bit-identical. |
 | H4 | Confirmed | 72/72 pass | Testing Standards §3 already documents this tolerance as the established GPU-vs-CPU bound for existing kernel-equivalence tests (`crates/prin-kernels/src/equivalence.rs`); the E2 driver-closure run (§5.4) already exercised all 72 `kuramoto_sparse_knn_*` corpus cases through the committed driver and observed 72/72 within tolerance (worst case `max_abs_diff≈8.98e-7` against the `atol=1e-6` bound) — cited here as pilot/closure evidence per the same "not a campaign result" discipline as H2b's pilot batch, since this exact driver invocation is not the registered E3 run. |
 
@@ -187,7 +205,7 @@ review-round counter mixup.
 |---|---|
 | H1 | Any of the 504 cases has `within_tolerance=False` for any array, and the breach is not attributable to a registered abort criterion (§4 below) |
 | H2a | Any within-horizon (`step ≤ min(20, n_steps)`) array value breaches the registered tolerance in any fuzzed case |
-| H2b | For either metric (`order_parameter` or `mean_phase_coherence`, evaluated independently — §2): `\|Cohen's d\| ≥ 0.2`, or the 95% bootstrap CI on the mean paired difference excludes 0 (the same per-metric predicate as §2/§8). REFUTED requires a *valid sample*: a metric whose beyond-horizon pool is empty (no non-aborted case has `n_steps > 20`) is `INCONCLUSIVE`, not REFUTED — the §8 no-data rule takes precedence, so an all-short or fully-aborted pool can never be read as a falsification. H2b overall is REFUTED if either metric is REFUTED, and INCONCLUSIVE if neither is REFUTED but either lacks a valid sample |
+| H2b | For either metric (`order_parameter` or `mean_phase_coherence`, evaluated independently — §2): either endpoint of the 95% bootstrap CI on the mean **per-case** paired difference falls outside that metric's registered equivalence margin δₘ (§7: 0.01 and 0.02 respectively) — the same per-metric predicate as §2/§8. Cohen's *d* and Welch's *t* are descriptive and refute nothing. REFUTED requires a *valid sample*: a metric with fewer than the registered minimum of 30 contributing cases (including the empty case, where no non-aborted case has `n_steps > 20`) is `INCONCLUSIVE`, not REFUTED — the §8 minimum-information rule takes precedence, so an all-short, undersized, or fully-aborted pool can never be read as a falsification. H2b overall is REFUTED if either metric is REFUTED, and INCONCLUSIVE if neither is REFUTED but either lacks a valid sample |
 | H3 | Any of the 14 representative cases produces a non-bit-identical rerun |
 | H4 | Any of the 72 `kuramoto_sparse_knn_*` cases breaches `rtol=1e-5, atol=1e-6` on the GPU derivative kernel vs. the CPU reference |
 
@@ -233,18 +251,30 @@ rather than pointwise.
    one by this driver.
 2. Seed irreproducibility on the H3 repeatability gate re-run of any
    configuration beyond the 14 registered cases (campaign plan §6.5).
-3. Environment capture incomplete for a configuration the run requires — in
-   particular, **fuzz mode (H2) aborts with `PrinetUnavailableError` if
-   PRINet 3.0 is not importable** rather than silently skipping (verified
-   behavior: `tests/test_exp001_driver.py::TestFuzzComparison::
-   test_fuzz_unavailable_without_prinet`).
+3. Environment capture incomplete for a configuration the run requires.
+   **Enforced by the driver, per mode, before anything is published**
+   (`_validate_environment`, §5.12 item 5): every run requires
+   `prin_version`, `git_commit`, `rust_version`, `python_version`,
+   `platform`, `processor`, `logical_cpus`, `backend`, `dtype`, and `seed`
+   to be non-null; a GPU leg (H4) additionally requires `gpu` and
+   `gpu_vram_mb`, exactly the example campaign plan §10.1 item 3 gives.
+   A missing field raises `EnvironmentIncompleteError`, so the run aborts
+   with no sidecar and no result rather than publishing evidence with a
+   `null` provenance field; no placeholder is ever substituted. The H4 leg
+   additionally proves its recorded `backend: "cuda"` by the per-case
+   CUDA-residency check (item 6), and refuses to publish a `cuda` artefact
+   at all if no case ran. In particular, **fuzz mode (H2) aborts with
+   `PrinetUnavailableError` if PRINet 3.0 is not importable** rather than
+   silently skipping (verified behavior: `tests/test_exp001_driver.py::
+   TestFuzzComparison::test_fuzz_unavailable_without_prinet`).
 4. `tools.reproduce.verify_manifest` raises for any input corpus or the run's
    own output directory.
 5. Budget exceeded (§9).
 6. For H4 only: the extension lacks the `GpuSparseKuramoto` binding
    (`hasattr` false — no `--features cuda`/`--features wgpu` build), **or**
-   the binding is present but the raw derivative-kernel call does not return
-   a CUDA device-resident (`kDLCUDA`) result (§5.1/§5.6: a `--features
+   the binding is present but **any** of the three raw derivative capsules
+   (`dphase`, `damplitude`, `dfrequency` — all checked, §5.12 item 7) is not
+   CUDA device-resident (`kDLCUDA`) (§5.1/§5.6: a `--features
    wgpu`-only build, no CUDA device at all, or a `--features cuda` build
    whose CubeCL client failed to initialise and fell back to `prin-sim`'s
    host-slice path — neither the binding's presence nor
@@ -316,7 +346,18 @@ confirmatory ≥1,000-case run.
   build-configuration reason as CUDA-absent (§4 item 6) otherwise, rather
   than risk mislabeling a non-CUDA result as the required CUDA leg. No
   H2/H3/H4 case is timed; this experiment measures correctness, not
-  performance (that is EXP-003/EXP-004).
+  performance (that is EXP-003/EXP-004). Campaign plan §7.2 nevertheless
+  requires a GPU result entry to carry `timing_method`, whose registered
+  values are `"device-event"` and `"system-synced"` (DV-003 / Project Plan
+  amendment #44). Neither describes an untimed correctness comparison, and
+  recording either would assert a timing method H4 never used, so H4's
+  sidecar entry carries **`timing_method: "not-timed"`** — an EXP-001
+  pre-execution extension of that enum, registered here and implemented in
+  the driver and the closure validator (§5.12 item 6). Because §7.2 is
+  outside the list of sections campaign plan §14.2 leaves amendable after
+  the freeze, the third value **required maintainer ratification before E3
+  executes**. **Ratified: MichaelMaillet, 2026-09-22, campaign plan §11.5 /
+  §14.2 amendment row 2.**
 
 ### 5.2 Model-specific fuzz parameter ranges (from `prin.parity.strategies`)
 
@@ -348,7 +389,9 @@ python -m benchmarks.campaign.exp001_driver \
   --out benchmarks/results/EXP-001/RUN-<UTC>-<SHA>-repeatability-cpu \
   --label repeatability-cpu --session 0156 --operator MichaelMaillet
 
-# H2 — fuzz (>=1000 cases; seed_key=1 per campaign plan §6.2)
+# H2 — fuzz (>=1000 cases; seed_key=1 per campaign plan §6.2). The driver
+# rejects --n-fuzz-cases <= 0, and stamps config.fuzz_batch_class =
+# "confirmatory" only at >= 1000 (§5.12 item 12).
 python -m benchmarks.campaign.exp001_driver \
   --mode fuzz --n-fuzz-cases 1000 --seed-counter 0 --seed-key 1 \
   --out benchmarks/results/EXP-001/RUN-<UTC>-<SHA>-fuzz-cpu \
@@ -370,17 +413,46 @@ dict (`array_name`, `within_tolerance`, `max_abs_diff`, `max_rel_diff`,
 instead of `prin.parity.harness`'s f64 quantity-derived tolerance (§5.4).
 Every artefact is paired with the run's `campaign-metadata.json` sidecar
 (`exp_id="EXP-001"`, `run_id`, `session`, `operator`, `artefacts` — tagged
-`["H1"]`/`["H2"]`/`["H3"]`/`["H4"]` by mode; fuzz mode additionally records
-`prinet_version`/`prinet_source` in the `config` envelope, §5.8). `--out`
+`["H1"]`/`["H2"]`/`["H3"]` by mode, and, for the H4 GPU entry, the object
+form `{"hypotheses": ["H4"], "timing_method": "not-timed"}` required by
+campaign plan §7.2 for a GPU result, §5.1/§5.12 item 6; fuzz mode
+additionally records `prinet_version`/`prinet_source` and the batch-class
+fields in the `config` envelope, §5.8/§5.12 item 12). `--out`
 must be a not-yet-existing direct child of `benchmarks/results/EXP-001/`
 named `RUN-<UTC yyyymmddThhmmssZ>-<short git SHA>-<label>` (campaign plan
 §7.1) — the driver rejects anything else before any comparison runs (§5.8).
 E3 closes each run directory in three steps per the
 `benchmarks/results/EXP-001/README.md` rule:
-`benchmarks.campaign.exp001_driver.check_run_complete` (every artefact the
-sidecar names must exist — a sidecar-only directory from a process kill is
-recorded as aborted and retried under a new `RUN-` ID, never manifested;
-§5.8), then `tools.reproduce.append_manifest`, then `verify_manifest`.
+`benchmarks.campaign.exp001_driver.check_run_complete`, then
+`tools.reproduce.append_manifest`, then `verify_manifest`.
+`check_run_complete` validates the **whole** campaign plan §7.2 sidecar
+schema (§5.12 items 1–4), not only that every named artefact exists:
+`exp_id` is exactly `EXP-001`, `run_id` equals the directory name,
+`session`/`operator` are non-empty strings, `artefacts` is a non-empty
+object, every key is a canonical `<mode>_<label>.json` filename directly in
+the run directory, every value carries exactly the hypothesis tags
+registered for that mode (a GPU entry additionally carrying a registered
+`timing_method`), and each declared result's own `environment`/`config`
+envelope is present and agrees with the sidecar (`config.out_dir` resolves
+to this directory; a GPU entry's `environment.backend` is `cuda`). Nothing
+is coerced — a tag list given as the string `"H9"` is rejected, never
+splatted into `["H", "9"]`. The sidecar must itself be a non-symlink
+regular file, checked before any call that would follow the link. A
+sidecar-only directory from a process kill is recorded as aborted and
+retried under a new `RUN-` ID, never manifested (§5.8).
+
+**Closure/manifest case contract (§5.12 item 3).** `append_manifest` and
+`verify_manifest` inventory a run directory with `Path.glob("*.json")`,
+which is **case-insensitive on Windows and case-sensitive on Linux** — both
+platforms are in this project's CI matrix — so a `rogue.JSON` is manifested
+on one and invisible on the other. `check_run_complete` therefore
+*recognises* a `.json` suffix case-insensitively (so the file is never
+invisible to closure on any host) and then *requires* it to be spelled in
+canonical lowercase, for declared names and present files alike. A
+top-level `rogue.JSON` fails closure exactly as `rogue.json` does; a
+declared `notes.txt` fails because the manifest could never cover it;
+`campaign-metadata.json` and `manifest.json` stay out of the result
+inventory, matched case-insensitively.
 
 ### 5.4 Driver-support gap for H4 — closed at E2 (pre-execution amendment)
 
@@ -651,7 +723,10 @@ files; full local quick suite green.
 
 ### 5.8 Fifth E2 remediation pass — fourth review round (pre-execution amendment)
 
-A further CodeRabbit + Copilot round on §5.7's commit found six items. Each
+A further CodeRabbit + Copilot round on §5.7's commit found five items
+(this sentence read "six items" until §5.12 item 16; the subsection has
+always had five numbered entries, and §2's own per-section recount already
+said five). Each
 was independently validated against the code and standards before being
 fixed (still no `RUN-` directory; CI green on all 29 checks throughout):
 
@@ -963,6 +1038,96 @@ failure). A third end-to-end corpus-mode smoke run through the live driver
 against the real corpus independently confirmed the reserve→compare→
 write→close pipeline still works after all three fixes.
 
+### 5.12 Ninth E2 remediation pass — eighth review round (pre-execution amendment)
+
+An eighth review round on the §5.11 commit (`8f91120`) — the first to audit
+the **scientific protocol** as well as the code — raised sixteen items. Each
+was independently validated against the repository and the governing
+documents before being acted on; the table below is this document's single
+record of every finding and its disposition, replacing the running
+finding-count arithmetic earlier revisions carried (item 16). Still no `RUN-`
+directory exists, no campaign data was generated, and no E3 step was run, so
+every change below is registered **before execution**.
+
+Three of the sixteen change the registered protocol and are called out in
+full after the table: **H2b's decision rule** (item 13), **H2b's unit of
+analysis** (item 14), and the **fuzz RNG authority** (item 15).
+
+| # | Finding (round 8) | Disposition | Where fixed |
+|---|---|---|---|
+| 1 | `check_run_complete` validated only that `artefacts` was a non-empty mapping; `exp_id`, `run_id`, `session`, `operator`, tag membership, tag/mode consistency, and artefact-name shape were all unchecked, and `[str(tag) for tag in tags]` silently splatted the string `"H9"` into `["H", "9"]`. | **CONFIRMED — fixed.** The whole campaign plan §7.2 schema is validated, nothing is coerced, and each declared result's `environment`/`config` envelope is validated and cross-checked against the sidecar (`config.out_dir` → this directory; a GPU entry's `environment.backend` → `cuda`). | `exp001_driver.check_run_complete`, `_declared_name_violation`, `_declared_tags_violation`, `_envelope_violation`; §5.3 |
+| 2 | A symlinked `campaign-metadata.json` was followed by `is_file()`/`read_text()`, so a document outside `run_dir` could decide what the run published (CWE-59 — the class §5.11 closed for declared artefacts, still open for the sidecar itself). | **CONFIRMED — fixed.** `is_symlink()` (no-follow) runs before any link-following call; the declared-artefact rejection from §5.11 is unchanged. | `exp001_driver.check_run_complete` |
+| 3 | Closure inventoried results with `path.suffix == ".json"` while `append_manifest`/`verify_manifest` use `Path.glob("*.json")`, which is case-insensitive on Windows and case-sensitive on Linux. A top-level `rogue.JSON` was invisible to closure and manifested anyway on Windows; a declared `notes.txt` passed closure and could never be manifested at all. | **CONFIRMED — fixed.** Verified empirically on this host: `glob("*.json")` returns `b.JSON` and `c.Json`, `suffix == ".json"` does not. Closure now *recognises* the suffix case-insensitively and *requires* canonical lowercase, for declared names and present files alike, making the contract deterministic instead of host-dependent. `campaign-metadata.json`/`manifest.json` remain excluded case-insensitively. | `exp001_driver._is_json_name`, `check_run_complete`; §5.3 |
+| 4 | No regression coverage for the schema, symlink, and case-alignment gaps. | **CONFIRMED — fixed.** 40 new closure tests covering every enumerated case, including the symlinked sidecar (capability-gated by the existing `_needs_symlink_support` probe). | `TestRunClosure`, `TestRunClosureEnvelope` |
+| 5 | `capture_environment` returns `None` for anything it cannot determine, and the driver published the result regardless — so campaign plan §10.1 item 3 ("environment capture incomplete ... e.g. `gpu` null on a GPU leg") was a registered abort that nothing enforced. | **CONFIRMED — fixed.** A per-mode required-field validator runs before anything is published; a missing field raises `EnvironmentIncompleteError` and the run aborts with no sidecar and no result. No placeholder is ever substituted. A GPU leg additionally refuses to publish a `backend: "cuda"` artefact when no case ran (nothing would have proved CUDA dispatch). | `exp001_driver._validate_environment`, `main`; §4 item 3; `TestEnvironmentValidation` |
+| 6 | Campaign plan §7.2 requires a GPU result entry to carry `timing_method`, whose registered values are `"device-event"` and `"system-synced"`; H4 is untimed, and the sidecar carried no such field. | **CONFIRMED — fixed and ratified.** H4's entry now uses the object form `{"hypotheses": ["H4"], "timing_method": "not-timed"}`, applied identically in the writer, the closure validator, the tests, and §5.1/§5.3. Recording either registered value would assert a timing method never used. The third enum value is ratified as campaign plan §11.5 / §14.2 amendment row 2 (MichaelMaillet, 2026-09-22). | `exp001_driver.KERNEL_PATH_TIMING_METHOD`, `_TIMING_METHODS`, `main`; §5.1, §5.3; campaign plan §11.5 |
+| 7 | Only the `dphase` capsule's device was checked; `damplitude` and `dfrequency` were consumed unchecked, so a mixed-device return would have been compared as if it were the CUDA result. | **CONFIRMED — fixed.** All three capsules are checked before any value is read, and the error names every offending one. Covered hardware-free with a mocked engine and mocked `from_dlpack`. | `exp001_driver.compare_kernel_path_case`; §4 item 6; `TestKernelPathCapsuleResidency` |
+| 8 | No test in this file carried `@pytest.mark.gpu`, so `gpu.yml`'s `-m "gpu or directml"` selected **none** of the H4 tests on `PRIN-GPU-Runner`; they ran only on a developer host. | **CONFIRMED — fixed.** Every H4 test that needs a GPU build now carries the marker; `pytest -m "gpu or directml"` selects 5 of them. The binding-absent negative test stays outside the marker so it runs on every hosted leg. | `TestKernelPath` |
+| 9 | `_needs_gpu_execution` gated on `hasattr(...) and torch.cuda.is_available()`. `GpuSparseKuramoto` compiles under `--features wgpu` too, and `torch.cuda.is_available()` describes PyTorch's runtime, not the extension's compiled backend — so a wgpu-only build on a CUDA host passed the guard and the tests ran and failed instead of skipping (ETCA-002 T-F3 / governance G8: a hardware guard must probe *executability*). | **CONFIRMED — fixed.** `tests/_env.py::cuda_kernel_executes` runs one `N=4, k=2` derivative evaluation and requires every returned capsule to be CUDA-resident. CUDA build → run; wgpu-only build (even on a CUDA host) → skip; binding absent → skip; CUDA runtime unavailable → skip; explicit negative tests still execute. The probe is `lru_cache`d, allocates three length-4 tensors, and mutates no state. | `tests/_env.py`, `TestCudaCapabilityProbe` |
+| 10 | `TestCampaignMetadata::test_writes_expected_schema` and `::test_append_only` used a bare `tmp_path`, so they failed under the governed Windows command `--basetemp=.pytest_basetemp_pr20` (the path is outside `benchmarks._common.result._ALLOWED_ROOTS`). | **CONFIRMED — fixed.** Both now use the existing `run_root` fixture and `_run_dir` helper, exercising the real confinement contract against a scratch root rather than weakening `_ALLOWED_ROOTS`. Verified: `python -m pytest tests/test_exp001_driver.py --basetemp=.pytest_basetemp_pr20` → 197 passed. | `TestCampaignMetadata` |
+| 11 | `main()` caught only `DriverError`, so a `CorpusValidationError` (unknown `--case-id`, bad `--corpus-dir`), an `OutputPathError`, or an `ArtefactExistsError` from the sidecar write surfaced as a Python traceback rather than the `ABORT:`/exit-2 convention. | **CONFIRMED — fixed.** The whole operation — validation, comparison, environment capture, and both writes — sits under one handler listing `DriverError`, `CorpusValidationError`, and `OutputPathError` (which `ArtefactExistsError` subclasses) explicitly. Unexpected programming errors are **not** caught and still surface with their traceback, with the sidecar rollback preserved. H4's wrong-`--case-id` `ValueError` became a `DriverMetadataError`, since it is an operator error. | `exp001_driver.main`, `compare_kernel_path_case`; `TestCliExpectedFailures` |
+| 12 | `--n-fuzz-cases` accepted `0` and negative values, publishing an empty H2 artefact whose "all cases pass" predicates are vacuously true. | **CONFIRMED — zero floor fixed; mode distinction reported separately.** `--n-fuzz-cases` is now a strictly-positive argparse type. The registered denominator is **not** silently changed: §8's rule already makes any run below the registered batch size `INCONCLUSIVE`, and a sub-1,000 batch is additionally stamped `config.fuzz_batch_class = "pilot"` (with `fuzz_batch_confirmatory_minimum` and `n_fuzz_cases_requested`) so it cannot be read or closed as confirmatory H2 evidence. Whether pilot batches should be forbidden outright rather than labelled is left to the maintainer. | `exp001_driver._positive_int`, `main`; §5.3; `TestFuzzBatchSize` |
+| 13 | H2b's rule (`\|Cohen's d\| < 0.2` **and** the bootstrap CI contains 0) does not establish equivalence: a wide interval can contain zero *and* differences large enough to reverse a conclusion. | **CONFIRMED — protocol changed (below).** | §2, §4, §7, §8; `adjudicate_h2b`; `TestH2bAdjudication` |
+| 14 | H2b treated every post-horizon time point as an independent observation, although values at successive steps of one trajectory are serially dependent. | **CONFIRMED — protocol changed (below).** | §2, §7, §8; `_beyond_horizon_record`; `TestH2bAdjudication` |
+| 15 | Campaign plan §6.1 requires all randomness to flow through `Seed` and forbids a second RNG path, but `run_fuzz_batch` built a NumPy PCG64 stream from `seed_key * 1_000_000_007 + seed_counter`; separately, each record's serialized `"seed"` field determined nothing. | **CONFIRMED — protocol changed (below).** The preferred fix applied: the NumPy stream is gone, not documented as an exception, so no maintainer decision is needed. | §6; `draw_fuzz_spec`, `draw_fuzz_initial`, `run_fuzz_batch`; `TestFuzzSampler` |
+| 16 | Documentation drift: §5.8 said "six items" over five numbered entries, and the running finding-count total in §2 had already drifted three times (§5.9 item 5, §5.10 item 2, §5.11 item 3). | **CONFIRMED — fixed, and the drift surface removed.** §5.8's count is corrected to five. §2 no longer carries a running total at all: this table is the single record of findings and dispositions, and each section states only its own count. The remediation-pass/review-round counters (this is the **ninth** remediation pass and the **eighth** review round) are used consistently in this section's heading and prose. | §2, §5.8, this table |
+
+**Item 13 — H2b equivalence (protocol change).** The registered predicate is
+now a genuine equivalence test: for each metric independently, **both
+endpoints** of the 95% bootstrap CI on the mean per-case paired difference
+must lie strictly inside that metric's registered margin δ (§7:
+`order_parameter` 0.01, `mean_phase_coherence` 0.02 — 1 % of each metric's
+own bounded range, justified by the C1 replication target being the
+synchronised/incoherent classification and the phase-boundary location,
+campaign plan §2.1). Cohen's *d* and Welch's *t* are reported but gate
+nothing; `|d| < 0.2` is unsound in *both* directions here — it passes a wide
+interval that straddles the margin, and it fails a low-variance sample whose
+difference is physically negligible. A metric below the registered minimum of
+30 contributing cases is `INCONCLUSIVE`, never `REFUTED`. The identical
+predicate appears in §2, §4, §7, §8, in
+`exp001_driver.adjudicate_h2b_metric`/`adjudicate_h2b` (the only
+implementation — E4 calls it rather than reimplementing the rule), and in
+`TestH2bAdjudication`, whose cases include a wide CI that contains zero while
+crossing the bounds (the exact defect the old rule missed) and opposite
+per-metric effects that would cancel under pooling.
+
+**Item 14 — trajectory dependence (protocol change).** The registered option
+taken is **one predefined paired summary per case**, not a cluster bootstrap:
+the per-case mean of `prin − PRINet-3.0` over steps `21..n_steps`, written
+by the driver as `beyond_horizon.<metric>.mean_paired_difference` beside the
+raw arrays. Cases are drawn independently from the registered `Seed` stream,
+so the per-case summaries are the independent sample; individual post-horizon
+steps never are. A cluster bootstrap over trajectories would be a new
+statistic, and campaign plan §9.2 fixes the permitted statistical code paths
+to the existing `prin.y4q1_tools` → Rust owners, so the paired-summary route
+is both the smaller and the contract-consistent change. The synthetic arrays
+in `TestH2bAdjudication` are unit-test fixtures only; they are never
+represented as campaign observations and never reach a run directory.
+
+**Item 15 — RNG authority (protocol change).** `draw_fuzz_spec` and
+`draw_fuzz_initial` now take a `prin._prin_core.Seed` and read it through
+`next_f64`/`next_f64_range`; `run_fuzz_batch` constructs
+`Seed(seed_counter, seed_key)` directly. Integer draws use the f64 form
+rather than `next_u64() % span`, which is biased for a span that does not
+divide 2⁶⁴. The NumPy `Generator` is removed entirely, so no "second RNG
+path" claim has to be defended and no NumPy-version sensitivity enters the
+reproducibility contract. The decoy per-case `"seed"` field is replaced by
+`case_index`, the draw's position in the stream, which together with
+`seed_counter`/`seed_key` genuinely determines the case. Case draws change
+relative to §5.11's driver, which is why this is registered before E3; no
+campaign data exists to be invalidated.
+
+**Validation at this amendment.** `tests/test_exp001_driver.py` 197/197
+passing under the governed Windows command (`--basetemp=.pytest_basetemp_pr20`);
+`pytest -m "gpu or directml"` selects and passes the 5 H4 tests on this
+host's real `--features cuda` build and CUDA runtime; `ruff check` and
+`ruff format --check` clean across `python/ tests/ benchmarks/ tools/
+parity/`; `mypy --strict benchmarks/campaign python/prin` clean (64 source
+files). Hardware-dependent legs not executed here, and not claimed: a
+wgpu-only build (simulated at unit level by
+`TestCudaCapabilityProbe::test_wgpu_only_build_probes_false`, not by an
+actual wgpu rebuild) and any hosted CI run of this commit.
+
 ## 6. Variables and controls
 
 - **Independent variables:** oscillator model, coupling mode, integrator,
@@ -980,15 +1145,32 @@ write→close pipeline still works after all three fixes.
   - **Identical parameters.** The same `CaseSpec`/fuzz-spec dict parameterizes
     both implementations' model construction (`build_prin_model` /
     `run_prinet_trajectory`'s `_build_model`).
-  - **Single seed authority.** The fuzz sampler draws from a
-    `numpy.random.Generator` seeded from the registered `(seed_counter,
-    seed_key)` pair (`seed_key=1000000×seed_key_component`... concretely
-    `np.random.default_rng(seed_key * 1_000_000_007 + seed_counter)`); it
-    does **not** use Hypothesis's internal engine, keeping the campaign's
-    single registered `Seed` authority intact (Plan §4 rule 3; campaign plan
-    §6.1). `prin.parity.strategies` remains the canonical definition of valid
-    fuzz-case space; `tests/test_exp001_driver.py::TestFuzzSampler` checks
-    the sampler's bounds and per-model coupling constraints against it.
+  - **Single seed authority.** Every fuzz draw comes directly from
+    `prin._prin_core.Seed(seed_counter, seed_key)` — the campaign's single
+    registered randomness authority (Plan §4 rule 3; campaign plan §6.1,
+    "No experiment may introduce a second RNG path"), constructed from the
+    registered pair with no intermediate derivation, and read through its
+    own `next_f64`/`next_f64_range` API. Hypothesis's internal engine is not
+    used. **Corrected at §5.12 item 15:** the E1–E2 driver instead derived a
+    NumPy PCG64 stream (`np.random.default_rng(seed_key * 1_000_000_007 +
+    seed_counter)`). That reproduced deterministically, but it was literally
+    the second RNG path §6.1 forbids, and it made the case stream depend on
+    NumPy's bit-generator versioning rather than on the registered `Seed`.
+    It is removed, not documented as an exception; the reproducibility
+    contract is now the `Seed` type's own.
+    `tests/test_exp001_driver.py::TestFuzzSampler::
+    test_sampler_rejects_a_numpy_generator` is the regression guard.
+    `prin.parity.strategies` remains the canonical definition of valid
+    fuzz-case space; `TestFuzzSampler` checks the sampler's bounds and
+    per-model coupling constraints against it.
+  - **Per-case identity.** Each fuzz record carries `case_index`, its
+    0-based position in that stream, which together with
+    `seed_counter`/`seed_key` (recorded in the `config` envelope)
+    determines the case. The E1–E2 driver instead serialized a per-case
+    `"seed"` integer that was drawn from the stream and then consumed by
+    nothing — both implementations run from the explicitly drawn initial
+    condition and never re-seed themselves — so it named a reproducibility
+    guarantee it did not provide. It is removed (§5.12 item 15).
   - **Shadowing horizon `T* = 20` steps.** Chosen because it equals the
     golden corpus's own validated trajectory length (H1's target), giving a
     non-arbitrary, evidence-grounded cutoff between "must match pointwise"
@@ -1015,23 +1197,53 @@ write→close pipeline still works after all three fixes.
 - **Tests:** H1/H2a/H3/H4 use the deterministic per-case pass/fail decision
   rule (campaign plan §9.1: "no significance test is needed, and none may be
   used to rescue a failed case"); reported statistics are pass counts and the
-  max relative/absolute error distribution. H2b uses Welch's t-test
-  (`prin.y4q1_tools.welch_t_test`) with Cohen's *d*
-  (`prin.y4q1_tools.cohens_d`) and a 95% bootstrap CI on the mean paired
+  max relative/absolute error distribution.
+- **H2b unit of analysis (§5.12 item 14):** one predefined paired summary per
+  contributing case per metric — the mean of `prin − PRINet-3.0` over that
+  case's steps `21..n_steps`. Post-horizon steps of a single trajectory are
+  serially dependent, so they are **not** independent observations and are
+  never pooled as such; cases, drawn independently from the registered
+  `Seed` stream, are the clusters. The driver materialises the summary as
+  `beyond_horizon.<metric>.mean_paired_difference` alongside the raw arrays,
+  so E4 re-derives it deterministically rather than recomputing a different
+  reduction. A cluster bootstrap over trajectories is the registered
+  alternative and is **not** used: it would be a new statistic, and campaign
+  plan §9.2 fixes the permitted statistical code paths.
+- **H2b equivalence margins (§5.12 item 13):** `order_parameter`
+  δ = **0.01**; `mean_phase_coherence` δ = **0.02**. Each is 1 % of that
+  metric's own bounded range (`[0, 1]` and `[-1, 1]`). Domain
+  justification: the C1 replication target is the *conclusion* — whether a
+  regime reads as synchronised or incoherent, and where a phase boundary
+  falls (campaign plan §2.1) — and a mean beyond-horizon difference below one
+  percent of a bounded coherence measure's range cannot move either. The
+  margins are metric-specific and are never applied to a pooled
+  cross-metric sample.
+- **H2b statistic:** a 95% bootstrap CI on the mean per-case paired
   difference (`prin.y4q1_tools.bootstrap_ci`, `n_bootstrap=10_000`,
-  `seed=42` — the function's documented default, itself derived from no
-  experiment-specific randomness since it operates on already-collected
-  values), computed **twice** — once for `order_parameter`, once for
-  `mean_phase_coherence` — never pooled into one combined sample (§2, §5.5).
-- **Effect size:** Cohen's *d*, negligible threshold `|d| < 0.2`, computed
-  per metric.
-- **Multiple comparisons:** H2b's family is the 2 per-metric tests
-  (`order_parameter`, `mean_phase_coherence`); each pools all beyond-horizon
-  cases into two groups (PRINet-3.0 vs. `prin`) rather than testing
-  per-case, so within a metric there is still only one comparison.
-  2 comparisons does not exceed campaign plan §9.1's "> 2 comparisons in one
-  hypothesis family" Holm–Bonferroni trigger, so it does not apply; both
-  metrics use the unadjusted `α = 0.05` bootstrap CI/effect-size predicate.
+  `alpha=0.05`, `seed=42` — the function's documented default, derived from
+  no experiment-specific randomness since it operates on already-collected
+  values), computed **twice**, once per metric, never pooled (§2, §5.5).
+  A metric is equivalent iff **both** endpoints lie strictly inside
+  `(−δ, +δ)`.
+- **H2b minimum information:** at least **30** contributing cases per metric.
+  Below that (including zero) the metric is `INCONCLUSIVE`, never `REFUTED`.
+  The registered ≥1,000-case batch draws `n_steps` uniformly in `[5, 50]`,
+  so roughly 60 % of cases clear `T* = 20` and the floor is not a practical
+  constraint on a conforming confirmatory run.
+- **Descriptive only:** Cohen's *d* (`prin.y4q1_tools.cohens_d`, on the
+  paired per-case arm means) and the two-sided Welch t-test
+  (`prin.y4q1_tools.welch_t_test`, `α = 0.05`) are computed and reported per
+  metric but **gate nothing**. Neither is a sound equivalence criterion: on
+  a low-variance paired sample a physically negligible difference yields a
+  large `|d|` and a small *p*, and at batch scale a trivially small
+  difference still tests "significant". The E1–E2 rule (`|d| < 0.2` **and**
+  the CI contains 0) is superseded for the reason given in §5.12 item 13 — a
+  wide CI can contain zero while spanning conclusion-reversing differences.
+- **Multiple comparisons:** H2b's family is the 2 per-metric equivalence
+  decisions; within a metric there is one comparison. 2 comparisons does not
+  exceed campaign plan §9.1's "> 2 comparisons in one hypothesis family"
+  Holm–Bonferroni trigger, so it does not apply; both metrics use the
+  unadjusted `α = 0.05` interval.
 - **α:** 0.05 (default, no deviation).
 
 ## 8. Analysis plan
@@ -1059,18 +1271,24 @@ write→close pipeline still works after all three fixes.
     `CONFIRMED` iff no within-horizon breach across all non-aborted cases
     **and** the non-aborted count meets the registered batch size; `REFUTED`
     (D1) on any non-aborted breach; otherwise `INCONCLUSIVE`.
-  - H2b: computed once per run, **independently for each of
-    `order_parameter` and `mean_phase_coherence`** (never pooled into one
-    combined sample — §2/§5.5), on the value pairs from non-aborted,
-    `n_steps > 20` cases (the `"beyond_horizon"` field). Each metric is
-    `CONFIRMED` iff `|d| < 0.2` **and** the bootstrap CI contains 0 (the same
-    per-metric predicate as §2/§4 — both conditions required,
-    unconditionally, regardless of the Welch test's significance); `REFUTED`
-    (D1) for that metric otherwise. H2b overall is `CONFIRMED` iff *both*
-    metrics are `CONFIRMED`; `REFUTED` (D1) if either metric is `REFUTED`.
-    If no non-aborted case has `n_steps > 20` (no beyond-horizon pool at
-    all — e.g. every such case aborted), H2b is `INCONCLUSIVE` for lack of
-    data.
+  - H2b: computed once per run by
+    `benchmarks.campaign.exp001_driver.adjudicate_h2b`, **independently for
+    each of `order_parameter` and `mean_phase_coherence`** (never pooled into
+    one combined sample — §2/§5.5), over **one predefined paired summary per
+    non-aborted `n_steps > 20` case** (`beyond_horizon.<metric>.
+    mean_paired_difference`; §7). Each metric is `CONFIRMED` iff **both
+    endpoints** of the 95% bootstrap CI on the mean per-case paired
+    difference lie strictly inside that metric's registered margin
+    `(−δ, +δ)` (δ = 0.01 / 0.02, §7) — the same per-metric predicate as
+    §2/§4; `REFUTED` (D1) for that metric if the sample is valid and either
+    endpoint falls outside. Cohen's *d* and the Welch test are reported but
+    gate nothing. H2b overall is `CONFIRMED` iff *both* metrics are
+    `CONFIRMED`; `REFUTED` (D1) if either metric is `REFUTED`. If a metric
+    has fewer than the registered minimum of 30 contributing cases —
+    including zero, e.g. no non-aborted case has `n_steps > 20`, or every
+    such case aborted — that metric is `INCONCLUSIVE` for lack of
+    information, and H2b overall is `INCONCLUSIVE` unless the other metric
+    is `REFUTED`.
   - H3: full denominator 14. `CONFIRMED` iff all non-aborted cases have
     `bit_identical=True` **and** the non-aborted count is exactly 14;
     `REFUTED` (D1) on any non-aborted mismatch; otherwise `INCONCLUSIVE`.
@@ -1290,3 +1508,24 @@ No budget amendment is anticipated.
   independently confirmed the reserve→compare→write→close pipeline still
   works — see §5.11 for the full evidence and finding-by-finding
   disposition.
+- **Driver (E2 ninth remediation, §5.12):** an eighth review round — the
+  first to audit the scientific protocol as well as the code — raised
+  sixteen items, every one recorded with its disposition in §5.12's audit
+  table. Three change the registered protocol before E3: H2b's decision rule
+  (a per-metric equivalence margin replaces "`|d| < 0.2` and the CI contains
+  0"), H2b's unit of analysis (one predefined paired summary per case, not
+  every post-horizon time point), and the fuzz RNG authority (the registered
+  `prin._prin_core.Seed`, not a derived NumPy PCG64 stream). The rest
+  hardened run closure (full §7.2 sidecar schema, symlinked sidecar,
+  closure/manifest case alignment, result-envelope cross-checks), enforced
+  the environment-capture abort criterion, registered H4's
+  `timing_method: "not-timed"`, checked all three GPU capsules for CUDA
+  residency, replaced the dishonest CUDA test guard with an executability
+  probe, added `@pytest.mark.gpu` so the GPU workflow actually selects the H4
+  tests, normalized the CLI's expected-failure handling, and rejected a
+  zero-case fuzz batch. `tests/test_exp001_driver.py`, 197/197 passing under
+  the governed Windows command (89 new); `pytest -m "gpu or directml"`
+  selects and passes 5 H4 tests on this host's real `--features cuda` build;
+  `ruff`/`mypy --strict` clean — see §5.12 for the full table, the three
+  protocol changes; the `timing_method` enum extension is ratified
+  (campaign plan §11.5 / §14.2 amendment row 2, MichaelMaillet, 2026-09-22).

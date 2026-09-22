@@ -13,10 +13,14 @@ comparisons, all against the actual PRIN (Rust) numerical core:
 * **Hypothesis-fuzzed parity** (H2): draw a random-but-valid case spec and an
   explicit initial condition, run *both* PRINet 3.0 and PRIN from that
   identical input; H2a compares pointwise within the ``T_STAR``-step
-  shadowing horizon, and H2b records the raw beyond-horizon
-  ``order_parameter``/``mean_phase_coherence`` pairs for E4's pooled
-  Welch-t/Cohen's-d/bootstrap-CI analysis (this driver does not compute that
-  statistic itself — see :func:`compare_fuzz_case`).
+  shadowing horizon, and H2b records, per case and per metric, the raw
+  beyond-horizon ``order_parameter``/``mean_phase_coherence`` pairs **and the
+  one predefined paired summary** (the case's mean paired difference) that is
+  the registered unit of analysis — post-horizon steps of one trajectory are
+  serially dependent and are never treated as independent observations. E3
+  (this module's ``main``) only records them; E4 adjudicates them with
+  :func:`adjudicate_h2b`, the single implementation of the registered
+  per-metric equivalence predicate (see :func:`compare_fuzz_case`).
 * **GPU kernel-path tolerance-identity** (H4): for every ``kuramoto_sparse_knn_*``
   corpus case, evaluate one derivative step through the CPU (f64 Rust) path
   (``prin._torch_compat.KuramotoOscillator.compute_derivatives``) and the GPU
@@ -32,11 +36,14 @@ comparisons, all against the actual PRIN (Rust) numerical core:
 
 The fuzz sampler (:func:`draw_fuzz_spec`, :func:`draw_fuzz_initial`) mirrors
 the value ranges declared in ``prin.parity.strategies`` — the canonical
-definition of valid fuzz-case space — but draws from the single registered
-``Seed`` authority (a ``numpy.random.Generator`` seeded from the registered
-``(seed_counter, seed_key)`` pair) rather than Hypothesis's own internal
-engine, per Project Plan §4 rule 3 and campaign plan §6.1 ("no experiment may
-introduce a second RNG path").
+definition of valid fuzz-case space — but draws every value directly from
+``prin._prin_core.Seed(seed_counter, seed_key)``, the campaign's single
+registered randomness authority, rather than from Hypothesis's internal
+engine or from a NumPy ``Generator`` (Project Plan §4 rule 3; campaign plan
+§6.1, "no experiment may introduce a second RNG path"). An earlier revision
+derived a NumPy PCG64 stream from the registered pair; it reproduced
+deterministically but was literally that second RNG path, and is gone
+(preregistration §5.12).
 
 All numerical authority for the PRIN side lives in ``prin.dynamics``
 (``prin._prin_core``, float64, CPU); this module performs no numerics of its
@@ -92,11 +99,20 @@ from prin.dynamics import (
 )
 from prin.parity.harness import compare_arrays, compare_case
 from prin.parity.loader import CorpusLoader
-from prin.parity.schema import CaseArrays, CaseSpec, Coupling, Integrator, Model
+from prin.parity.schema import (
+    CaseArrays,
+    CaseSpec,
+    CorpusValidationError,
+    Coupling,
+    Integrator,
+    Model,
+)
+from prin.y4q1_tools import bootstrap_ci, cohens_d, welch_t_test
 from torch.utils.dlpack import from_dlpack
 
 from benchmarks._common.environment import capture_environment
 from benchmarks._common.result import (
+    ArtefactExistsError,
     OutputPathError,
     write_json_exclusive,
     write_result,
@@ -134,6 +150,92 @@ _RUN_ID_RE = re.compile(
 #: CodeRabbit + Copilot).
 _LABEL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
+#: The four registered run modes, each producing exactly one result artefact
+#: named ``<mode>_<label>.json`` (preregistration §5.3). ``<label>`` matches
+#: :data:`_LABEL_RE`, which excludes ``_``, so the mode is recoverable from a
+#: result filename by splitting on the first ``_`` — the basis on which
+#: :func:`check_run_complete` checks that a sidecar's hypothesis tags are the
+#: ones registered for the mode that actually produced the file.
+_MODE_HYPOTHESIS: dict[str, list[str]] = {
+    "corpus": ["H1"],
+    "repeatability": ["H3"],
+    "fuzz": ["H2"],
+    "kernel-path": ["H4"],
+}
+
+#: One ``campaign-metadata.json`` ``artefacts`` entry value: a list of the
+#: hypothesis tags the result bears on, or — for a GPU result — an object
+#: additionally carrying ``timing_method`` (campaign plan §7.2).
+ArtefactEntry = list[str] | dict[str, Any]
+
+#: Every hypothesis tag EXP-001 registers (preregistration §2). A sidecar tag
+#: outside this set is rejected rather than coerced.
+_VALID_HYPOTHESES: frozenset[str] = frozenset({"H1", "H2", "H3", "H4"})
+
+#: Modes whose result is a GPU entry, and which therefore additionally carry
+#: ``timing_method`` in the sidecar (campaign plan §7.2).
+_GPU_MODES: frozenset[str] = frozenset({"kernel-path"})
+
+#: ``timing_method`` values this driver accepts. ``device-event`` and
+#: ``system-synced`` are campaign plan §7.2's registered pair (DV-003 /
+#: Project Plan amendment #44). ``not-timed`` is an EXP-001 **pre-execution
+#: extension** (preregistration §5.12): H4 is a correctness comparison that
+#: performs no timing measurement at all (preregistration §5.1, "No H2/H3/H4
+#: case is timed"), so neither registered value describes it truthfully, and
+#: recording either would assert a timing method that was never used. The
+#: extension is implemented here so the sidecar is never silently missing the
+#: field, but it widens a frozen plan enum and therefore requires maintainer
+#: ratification (campaign plan §14.2) before E3 executes.
+KERNEL_PATH_TIMING_METHOD = "not-timed"
+_TIMING_METHODS: frozenset[str] = frozenset(
+    {"device-event", "system-synced", KERNEL_PATH_TIMING_METHOD}
+)
+
+#: Required ``campaign-metadata.json`` top-level fields (campaign plan §7.2).
+_REQUIRED_SIDECAR_FIELDS: tuple[str, ...] = (
+    "exp_id",
+    "run_id",
+    "session",
+    "operator",
+    "artefacts",
+)
+
+#: Required ``environment`` block fields (campaign plan §7.2; Benchmarking and
+#: Reproducibility Standards §1.4). A ``null`` in any of these for a
+#: configuration the run requires is a registered abort, not a result
+#: (campaign plan §10.1 item 3 / preregistration §4 item 3).
+_REQUIRED_ENV_FIELDS: tuple[str, ...] = (
+    "prin_version",
+    "git_commit",
+    "rust_version",
+    "python_version",
+    "platform",
+    "processor",
+    "logical_cpus",
+    "backend",
+    "dtype",
+    "seed",
+)
+
+#: Environment fields additionally required on a GPU leg — campaign plan
+#: §10.1 item 3 names ``gpu`` null on a GPU leg as its own example.
+_GPU_REQUIRED_ENV_FIELDS: tuple[str, ...] = ("gpu", "gpu_vram_mb")
+
+#: Required ``config`` envelope fields (campaign plan §7.2).
+_REQUIRED_CONFIG_FIELDS: tuple[str, ...] = (
+    "iterations",
+    "warmup",
+    "seed_counter",
+    "seed_key",
+    "out_dir",
+)
+
+#: Registered confirmatory fuzz batch size (preregistration §7: "≥1,000
+#: fuzzed cases"). A batch below this is published with
+#: ``config.fuzz_batch_class == "pilot"`` so it can never be read as the
+#: registered confirmatory H2 evidence; see :func:`main`.
+REGISTERED_FUZZ_BATCH_MIN = 1000
+
 #: GPU sparse-k-NN kernel-path tolerance (H4; Testing Standards §3;
 #: ``prin_kernels::equivalence::{DEFAULT_RTOL, DEFAULT_ATOL}``) — the fused
 #: CubeCL kernel computes in f32, so this is *not* the f64 trajectory/metric
@@ -164,6 +266,34 @@ _BEYOND_HORIZON_ARRAY_NAMES: tuple[str, ...] = (
     "order_parameter_traj",
     "mean_phase_coherence_traj",
 )
+
+#: Registered per-metric equivalence margins for H2b (preregistration §5.12).
+#: Each is **1 % of the metric's own bounded range** — ``order_parameter``
+#: lives in ``[0, 1]`` and ``mean_phase_coherence`` in ``[-1, 1]`` — the
+#: domain justification being that a mean beyond-horizon difference below one
+#: percent of a bounded coherence measure's range cannot move a synchronised/
+#: incoherent classification or a phase-boundary location, which is what the
+#: C1 replication target actually is (campaign plan §2.1). The margins are
+#: metric-specific and are never applied to a pooled cross-metric sample.
+H2B_EQUIVALENCE_MARGIN: dict[str, float] = {
+    "order_parameter_traj": 0.01,
+    "mean_phase_coherence_traj": 0.02,
+}
+
+#: Minimum number of contributing cases for a valid H2b sample
+#: (preregistration §5.12). Below this the metric is ``INCONCLUSIVE`` for lack
+#: of information rather than adjudicated on a bootstrap the sample cannot
+#: support. The registered ≥1,000-case batch draws ``n_steps`` uniformly in
+#: ``[5, 50]``, so ~60 % of cases clear ``T_STAR`` and this floor is not a
+#: practical constraint on a conforming confirmatory run.
+H2B_MIN_CASES = 30
+
+#: Bootstrap parameters for H2b (preregistration §7; campaign plan §9.1
+#: "≥ 10,000 resamples, seeded"). ``prin.y4q1_tools.bootstrap_ci`` delegates
+#: to the Rust owner ``y4q1_stats::bootstrap_ci``.
+H2B_BOOTSTRAP_RESAMPLES = 10_000
+H2B_BOOTSTRAP_SEED = 42
+H2B_ALPHA = 0.05
 
 #: Oscillator model classes, keyed by :class:`~prin.parity.schema.Model` value.
 _PRIN_INTEGRATORS: dict[str, type[EulerIntegrator] | type[RK4Integrator]] = {
@@ -333,6 +463,179 @@ def _is_safe_artefact_name(name: str) -> bool:
     )
 
 
+def _is_json_name(name: str) -> bool:
+    """True iff ``name`` is *recognised* as a JSON file, case-insensitively.
+
+    Recognition is case-insensitive while the canonical spelling required by
+    :func:`_declared_name_violation` is lowercase ``.json``:
+    ``pathlib.Path.glob("*.json")`` — which
+    ``tools.reproduce.append_manifest``/``verify_manifest`` use to inventory a
+    run directory — is **case-insensitive on Windows and case-sensitive on
+    Linux** (verified empirically; both platforms are in this project's CI
+    matrix). A ``rogue.JSON`` is therefore manifested on one platform and
+    invisible on the other. Recognising it here regardless of case, and then
+    rejecting the non-canonical spelling explicitly, makes the closure and
+    manifest contract deterministic instead of inheriting the host
+    filesystem's behaviour.
+    """
+    stem, dot, suffix = name.rpartition(".")
+    return bool(dot) and bool(stem) and suffix.casefold() == "json"
+
+
+def _result_name_mode(name: str) -> str | None:
+    """Return the run mode a canonical ``<mode>_<label>.json`` name encodes.
+
+    ``main`` writes exactly one result per invocation, named
+    ``f"{mode}_{label}.json"`` (preregistration §5.3), and :data:`_LABEL_RE`
+    excludes ``_`` from a label, so the first ``_`` separates the two
+    unambiguously. Returns ``None`` if ``name`` is not such a name.
+    """
+    stem, dot, suffix = name.rpartition(".")
+    if not dot or suffix != "json":
+        return None
+    mode, sep, label = stem.partition("_")
+    if not sep or mode not in _MODE_HYPOTHESIS or _LABEL_RE.match(label) is None:
+        return None
+    return mode
+
+
+def _declared_name_violation(name: str, infrastructure: frozenset[str]) -> str | None:
+    """Return why ``name`` is not an acceptable declared artefact, else ``None``."""
+    if not _is_safe_artefact_name(name):
+        return (
+            "is not a plain filename directly in run_dir (no path separators "
+            "or '.'/'..' segments)"
+        )
+    if name.casefold() in infrastructure:
+        return (
+            "is a reserved run-directory infrastructure name "
+            f"({', '.join(sorted(infrastructure))}, matched case-insensitively)"
+        )
+    if not _is_json_name(name):
+        return (
+            "does not have a '.json' suffix; the run manifest inventories "
+            "'*.json' only (campaign plan §7.2), so a non-JSON artefact could "
+            "never be covered by it"
+        )
+    if not name.endswith(".json"):
+        return (
+            "spells its suffix in a non-canonical case; Path.glob('*.json') "
+            "matches it on Windows but not on Linux, so it must be written "
+            "lowercase to be manifested deterministically on both"
+        )
+    if _result_name_mode(name) is None:
+        return (
+            "is not a registered '<mode>_<label>.json' result name (modes: "
+            f"{', '.join(sorted(_MODE_HYPOTHESIS))}; the label carries no "
+            "'_' and matches the campaign plan §7.1 label charset)"
+        )
+    return None
+
+
+def _declared_tags_violation(mode: str, value: object) -> tuple[list[str], str | None]:
+    """Validate one sidecar ``artefacts`` entry value against its result mode.
+
+    Returns ``(hypotheses, violation)``. The hypothesis list is meaningful
+    only when ``violation`` is ``None``; a malformed value is never coerced
+    into a valid-looking one. In particular the entry is **not** rebuilt with
+    ``[str(tag) for tag in value]``, which silently splats the string
+    ``"H9"`` into the two "tags" ``["H", "9"]`` instead of rejecting it.
+
+    A GPU entry (campaign plan §7.2: "GPU result entries additionally carry
+    ``timing_method``") is an object with ``hypotheses`` and
+    ``timing_method``; every other entry is a bare list of hypothesis tags.
+    """
+    if mode in _GPU_MODES:
+        if not isinstance(value, dict):
+            return [], (
+                "must be an object {'hypotheses': [...], 'timing_method': ...} "
+                "— a GPU result entry additionally carries timing_method "
+                "(campaign plan §7.2)"
+            )
+        unexpected = sorted(set(value) - {"hypotheses", "timing_method"})
+        if unexpected:
+            return [], f"has unexpected key(s) {', '.join(unexpected)}"
+        timing_method = value.get("timing_method")
+        if not isinstance(timing_method, str) or timing_method not in _TIMING_METHODS:
+            return [], (
+                f"has timing_method {timing_method!r}, not one of "
+                f"{', '.join(sorted(_TIMING_METHODS))}"
+            )
+        raw_tags: object = value.get("hypotheses")
+    else:
+        if isinstance(value, dict):
+            return [], (
+                "must be a list of hypothesis tags; only GPU result entries "
+                f"({', '.join(sorted(_GPU_MODES))}) use the object form"
+            )
+        raw_tags = value
+    if not isinstance(raw_tags, list) or not raw_tags:
+        return [], (
+            f"has hypothesis tags {raw_tags!r}, which is not a non-empty list "
+            "(a bare string is not a tag list)"
+        )
+    if not all(isinstance(tag, str) for tag in raw_tags):
+        return [], f"has non-string hypothesis tag(s) in {raw_tags!r}"
+    tags = [str(tag) for tag in raw_tags]
+    unknown = sorted(set(tags) - _VALID_HYPOTHESES)
+    if unknown:
+        return [], (
+            f"names unregistered hypothesis tag(s) {', '.join(unknown)} "
+            f"(registered: {', '.join(sorted(_VALID_HYPOTHESES))})"
+        )
+    registered = _MODE_HYPOTHESIS[mode]
+    if sorted(tags) != sorted(registered):
+        return [], (
+            f"is tagged {tags} but a {mode!r} result bears {registered} "
+            "(preregistration §5.3)"
+        )
+    return tags, None
+
+
+def _envelope_violation(path: Path, run_dir: Path, mode: str) -> str | None:
+    """Return why a declared result's envelope is unacceptable, else ``None``.
+
+    Campaign plan §7.2 fixes the result envelope: an ``environment`` block
+    carrying the Benchmarking and Reproducibility Standards §1.4 fields and a
+    ``config`` block carrying ``iterations``, ``warmup``, ``seed_counter``,
+    ``seed_key``, and ``out_dir``. Closure validates that schema and
+    cross-checks the two values that tie an envelope to the sidecar it is
+    being closed against: ``config.out_dir`` must resolve to this run
+    directory, and a GPU entry's ``environment.backend`` must be the ``cuda``
+    backend that entry asserts.
+    """
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return f"is not readable as JSON ({exc})"
+    if not isinstance(document, dict):
+        return "is not a JSON object"
+    for block_name, required in (
+        ("environment", _REQUIRED_ENV_FIELDS),
+        ("config", _REQUIRED_CONFIG_FIELDS),
+    ):
+        block = document.get(block_name)
+        if not isinstance(block, dict):
+            return f"has no {block_name!r} object (campaign plan §7.2 envelope)"
+        absent = [field for field in required if field not in block]
+        if absent:
+            return f"{block_name!r} is missing required field(s) {', '.join(absent)}"
+    config = document["config"]
+    environment = document["environment"]
+    out_dir = config["out_dir"]
+    if not isinstance(out_dir, str) or Path(out_dir).resolve() != run_dir:
+        return (
+            f"declares config.out_dir {out_dir!r}, which does not resolve to "
+            f"the run directory being closed ({run_dir})"
+        )
+    if mode in _GPU_MODES and environment.get("backend") != "cuda":
+        return (
+            f"declares environment.backend {environment.get('backend')!r}, not "
+            "the 'cuda' backend a GPU result entry asserts (campaign plan §5.2)"
+        )
+    return None
+
+
 def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
     """Run-closure precondition: the sidecar and the directory's result files
     name each other exactly, with no path escapes either way.
@@ -356,22 +659,50 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
     otherwise pass both the missing-file check (the file exists — it just
     isn't a result) and the unlisted-file check (it is excluded from
     ``present`` precisely because it is infrastructure) for the wrong reason
-    (Copilot, CodeRabbit); or a declared artefact that is a symbolic link to
-    a file outside ``run_dir``, since ``Path.is_file()`` follows symlinks and
+    (Copilot, CodeRabbit); or a declared artefact — or the sidecar itself —
+    that is a symbolic link to a file outside ``run_dir``, since
+    ``Path.is_file()`` and ``Path.read_text()`` both follow symlinks and
     would otherwise treat linked-to content as if it were written directly
     into ``run_dir`` by this run (CWE-59, CodeRabbit). E3 must call this
     before ``append_manifest`` (see ``benchmarks/results/EXP-001/README.md``
     and preregistration §5.3).
 
+    The whole campaign plan §7.2 sidecar schema is validated, not only the
+    ``artefacts`` key: ``exp_id`` must be exactly :data:`EXP_ID`, ``run_id``
+    must equal ``run_dir.name``, ``session`` and ``operator`` must be
+    non-empty strings, ``artefacts`` must be a non-empty object, and every
+    entry must name a canonical ``<mode>_<label>.json`` result carrying
+    exactly the hypothesis tags registered for that mode — plus, for a GPU
+    entry, a registered ``timing_method``. Each declared result's own
+    envelope is validated against campaign plan §7.2 and cross-checked
+    against the sidecar (``config.out_dir`` resolves to this directory; a GPU
+    entry's ``environment.backend`` is ``cuda``). Nothing is coerced: a
+    malformed value is a closure failure, never repaired into a
+    valid-looking one.
+
     Returns:
-        The sidecar's ``artefacts`` mapping, for the caller's log.
+        The sidecar's artefact name → hypothesis-tag mapping, for the
+        caller's log.
 
     Raises:
-        IncompleteRunError: If the sidecar is missing or malformed, names an
-            unsafe, reserved, symlinked, or absent artefact path, or the
+        IncompleteRunError: If the sidecar is missing, a symbolic link, or
+            malformed; if it names an unsafe, reserved, mis-tagged,
+            symlinked, or absent artefact path; if a declared result's
+            envelope is missing or disagrees with the sidecar; or if the
             directory holds a result JSON the sidecar does not name.
     """
+    resolved_run_dir = run_dir.resolve()
     sidecar = run_dir / "campaign-metadata.json"
+    # Checked with is_symlink() (no-follow) *before* is_file()/read_text(),
+    # both of which follow the link: a symlinked sidecar would otherwise let
+    # a campaign-metadata document living outside run_dir decide what this
+    # run published (CWE-59 — the same class already closed below for
+    # declared result artefacts).
+    if sidecar.is_symlink():
+        raise IncompleteRunError(
+            f"{sidecar} is a symbolic link, not a regular file written "
+            "directly into the run directory; not a closable run"
+        )
     if not sidecar.is_file():
         raise IncompleteRunError(
             f"{run_dir} has no campaign-metadata.json; not a closable run "
@@ -379,16 +710,41 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
         )
     try:
         payload = json.loads(sidecar.read_text(encoding="utf-8"))
-        raw = payload["artefacts"]
-        if not isinstance(raw, dict) or not raw:
-            raise TypeError("artefacts must be a non-empty mapping")
-        artefacts = {
-            str(name): [str(tag) for tag in tags] for name, tags in raw.items()
-        }
-    except (ValueError, KeyError, TypeError) as exc:
+    except (OSError, ValueError) as exc:
         raise IncompleteRunError(
             f"{sidecar} is malformed ({exc}); not a closable run"
         ) from exc
+    if not isinstance(payload, dict):
+        raise IncompleteRunError(f"{sidecar} is not a JSON object; not a closable run")
+    absent = [field for field in _REQUIRED_SIDECAR_FIELDS if field not in payload]
+    if absent:
+        raise IncompleteRunError(
+            f"{sidecar} is missing required field(s) {', '.join(absent)} "
+            "(campaign plan §7.2); not a closable run"
+        )
+    if payload["exp_id"] != EXP_ID:
+        raise IncompleteRunError(
+            f"{sidecar} declares exp_id {payload['exp_id']!r}, not {EXP_ID!r}; "
+            "not a closable run for this experiment"
+        )
+    if payload["run_id"] != run_dir.name:
+        raise IncompleteRunError(
+            f"{sidecar} declares run_id {payload['run_id']!r} but lives in "
+            f"{run_dir.name!r} (campaign plan §7.1/§7.2); not a closable run"
+        )
+    for field in ("session", "operator"):
+        value = payload[field]
+        if not isinstance(value, str) or not value:
+            raise IncompleteRunError(
+                f"{sidecar} declares {field} {value!r}, not a non-empty "
+                "string; not a closable run"
+            )
+    raw_artefacts = payload["artefacts"]
+    if not isinstance(raw_artefacts, dict) or not raw_artefacts:
+        raise IncompleteRunError(
+            f"{sidecar} declares artefacts {raw_artefacts!r}, not a non-empty "
+            "object; not a closable run"
+        )
     # Run-directory infrastructure the campaign-metadata artefacts mapping
     # never legitimately names: the sidecar always exists (it is what this
     # function is reading), and manifest.json is written by append_manifest
@@ -401,19 +757,44 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
     # Windows and macOS, both in this project's CI matrix), a name that
     # differs from the sidecar's only in case still resolves to the same
     # on-disk file, so an exact-string comparison would miss it (CodeRabbit).
-    infrastructure = {sidecar.name.casefold(), "manifest.json".casefold()}
-    unsafe = sorted(
+    infrastructure = frozenset({sidecar.name.casefold(), "manifest.json".casefold()})
+    artefacts: dict[str, list[str]] = {}
+    modes: dict[str, str] = {}
+    violations: list[str] = []
+    for name, value in raw_artefacts.items():
+        if not isinstance(name, str):
+            violations.append(f"{name!r}: artefact key is not a string")
+            continue
+        name_violation = _declared_name_violation(name, infrastructure)
+        if name_violation is not None:
+            violations.append(f"{name!r} {name_violation}")
+            continue
+        mode = _result_name_mode(name)
+        if mode is None:  # pragma: no cover - guaranteed by the check above
+            violations.append(f"{name!r} is not a registered result name")
+            continue
+        tags, tag_violation = _declared_tags_violation(mode, value)
+        if tag_violation is not None:
+            violations.append(f"{name!r} {tag_violation}")
+            continue
+        artefacts[name] = tags
+        modes[name] = mode
+    if violations:
+        raise IncompleteRunError(
+            f"{sidecar} declares invalid artefact entr(ies): "
+            + "; ".join(sorted(violations))
+            + " — refusing to treat as a closable run"
+        )
+    collisions = sorted(
         name
         for name in artefacts
-        if not _is_safe_artefact_name(name) or name.casefold() in infrastructure
+        if sum(1 for other in artefacts if other.casefold() == name.casefold()) > 1
     )
-    if unsafe:
+    if collisions:
         raise IncompleteRunError(
-            f"{sidecar} names unsafe or reserved artefact path(s) "
-            f"{', '.join(unsafe)} (must be a plain filename directly in "
-            f"run_dir, no path separators or '..' segments, and not one of "
-            f"the reserved infrastructure names {sorted(infrastructure)}, "
-            "case-insensitively) — refusing to treat as a closable run"
+            f"{sidecar} declares artefact name(s) {', '.join(collisions)} that "
+            "differ only in case and would alias the same file on a "
+            "case-insensitive filesystem; not a closable run"
         )
     # A declared artefact that is a symbolic link is never trusted, even if
     # it resolves to a regular file: Path.is_file() below follows symlinks,
@@ -437,19 +818,51 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
             "as aborted (preregistration §10; never delete it) and retry under "
             "a new RUN- ID; do not manifest it."
         )
+    envelope_violations = sorted(
+        f"{name!r} {violation}"
+        for name, violation in (
+            (name, _envelope_violation(run_dir / name, resolved_run_dir, modes[name]))
+            for name in artefacts
+        )
+        if violation is not None
+    )
+    if envelope_violations:
+        raise IncompleteRunError(
+            f"{run_dir} holds declared result(s) whose campaign plan §7.2 "
+            "envelope is invalid or disagrees with campaign-metadata.json: "
+            + "; ".join(envelope_violations)
+            + " — refusing to treat as a closable run"
+        )
+    # `present` uses the case-insensitive suffix test so a `rogue.JSON` is
+    # *seen* on every platform (see :func:`_is_json_name`), is compared
+    # case-insensitively against the declared set so it cannot alias a
+    # declared lowercase name on a case-insensitive filesystem, and is then
+    # required to spell its own suffix canonically so the closure inventory
+    # and `append_manifest`'s glob agree on both Windows and Linux.
     present = {
         path.name
         for path in run_dir.iterdir()
         if path.is_file()
-        and path.suffix == ".json"
+        and _is_json_name(path.name)
         and path.name.casefold() not in infrastructure
     }
-    unlisted = sorted(present - set(artefacts))
+    declared_folded = {name.casefold() for name in artefacts}
+    unlisted = sorted(
+        name for name in present if name.casefold() not in declared_folded
+    )
     if unlisted:
         raise IncompleteRunError(
             f"{run_dir} holds result file(s) {', '.join(unlisted)} that "
             "campaign-metadata.json does not name in its artefacts mapping "
             "— refusing to treat as a closable run"
+        )
+    non_canonical = sorted(name for name in present if not name.endswith(".json"))
+    if non_canonical:
+        raise IncompleteRunError(
+            f"{run_dir} holds file(s) {', '.join(non_canonical)} whose '.json' "
+            "suffix is not spelled in canonical lowercase; Path.glob('*.json') "
+            "manifests them on Windows but not on Linux — refusing to treat as "
+            "a closable run"
         )
     return artefacts
 
@@ -736,42 +1149,84 @@ def check_repeatability(loader: CorpusLoader, case_id: str) -> dict[str, Any]:
     }
 
 
-def draw_fuzz_spec(rng: np.random.Generator) -> dict[str, Any]:
-    """Deterministically draw a valid case spec from the registered ``Seed`` RNG.
+def _seed_uniform(stream: _prin_core.Seed, lo: float, hi: float) -> float:
+    """Draw one f64 uniformly in ``[lo, hi)`` from the registered Seed stream."""
+    return float(stream.next_f64_range(lo, hi))
+
+
+def _seed_integer(stream: _prin_core.Seed, lo: int, hi: int) -> int:
+    """Draw one integer uniformly in ``[lo, hi)`` from the registered Seed stream.
+
+    ``Seed`` exposes ``next_f64``/``next_f64_range``/``next_u64``; the f64
+    form is used rather than ``next_u64() % span`` because modulo of a 64-bit
+    draw is biased for a span that does not divide ``2**64``. ``next_f64``
+    returns a value in ``[0, 1)``, so ``lo + int(u * span)`` is already in
+    range; the ``min`` only guards against a hypothetical rounding artefact
+    at the top of the interval.
+    """
+    if hi <= lo:
+        raise ValueError(f"empty integer range [{lo}, {hi})")
+    span = hi - lo
+    return min(lo + int(stream.next_f64() * span), hi - 1)
+
+
+def _seed_choice(stream: _prin_core.Seed, options: tuple[str, ...]) -> str:
+    """Draw one element of ``options`` uniformly from the registered Seed stream."""
+    return options[_seed_integer(stream, 0, len(options))]
+
+
+def _seed_vector(
+    stream: _prin_core.Seed, lo: float, hi: float, size: int
+) -> NDArray[np.float64]:
+    """Assemble a length-``size`` f64 vector of ``[lo, hi)`` Seed draws."""
+    return np.ascontiguousarray(
+        [stream.next_f64_range(lo, hi) for _ in range(size)], dtype=np.float64
+    )
+
+
+def draw_fuzz_spec(stream: _prin_core.Seed) -> dict[str, Any]:
+    """Deterministically draw a valid case spec from the registered ``Seed``.
 
     Mirrors the value ranges declared in ``prin.parity.strategies`` (the
     canonical definition of valid fuzz-case space): 3 models, coupling modes
     valid for the drawn model, 2 basic integrators, ``n_oscillators`` in
     ``[8, 64]``, ``n_steps`` in ``[5, 50]``, ``dt`` in ``[0.001, 0.05]``,
     ``coupling_strength`` in ``[0.1, 4.0]``, and model-specific parameter
-    ranges. Draws from ``rng`` rather than Hypothesis's own engine so the
-    campaign's single registered ``Seed`` remains the only randomness source
-    (Project Plan §4 rule 3).
+    ranges.
+
+    Every draw comes from ``prin._prin_core.Seed`` — the campaign's single
+    registered randomness authority (Project Plan §4 rule 3; campaign plan
+    §6.1, "No experiment may introduce a second RNG path"). Neither
+    Hypothesis's internal engine nor a NumPy ``Generator`` is used: an
+    earlier revision of this driver derived a NumPy PCG64 stream from
+    ``(seed_counter, seed_key)``, which reproduced deterministically but was
+    literally the second RNG path §6.1 forbids, and made the case stream
+    depend on NumPy's bit-generator implementation rather than on the
+    registered ``Seed`` (preregistration §5.12).
     """
-    model = str(rng.choice(_FUZZ_MODELS))
+    model = _seed_choice(stream, _FUZZ_MODELS)
     coupling = (
         Coupling.FULL.value
         if model == Model.STUART_LANDAU.value
-        else str(rng.choice(_FUZZ_COUPLINGS))
+        else _seed_choice(stream, _FUZZ_COUPLINGS)
     )
-    integrator = str(rng.choice(_FUZZ_INTEGRATORS))
-    n_oscillators = int(rng.integers(8, 65))
-    n_steps = int(rng.integers(5, 51))
-    dt = float(rng.uniform(0.001, 0.05))
-    seed = int(rng.integers(0, 2_147_483_648))
+    integrator = _seed_choice(stream, _FUZZ_INTEGRATORS)
+    n_oscillators = _seed_integer(stream, 8, 65)
+    n_steps = _seed_integer(stream, 5, 51)
+    dt = _seed_uniform(stream, 0.001, 0.05)
     parameters: dict[str, Any] = {
-        "coupling_strength": float(rng.uniform(0.1, 4.0)),
+        "coupling_strength": _seed_uniform(stream, 0.1, 4.0),
     }
     if coupling == Coupling.SPARSE_KNN.value:
-        parameters["sparse_k"] = int(rng.integers(2, min(13, n_oscillators)))
+        parameters["sparse_k"] = _seed_integer(stream, 2, min(13, n_oscillators))
     if model == Model.KURAMOTO.value:
-        parameters["decay_rate"] = float(rng.uniform(0.0, 0.5))
-        parameters["freq_adaptation_rate"] = float(rng.uniform(0.0, 0.05))
+        parameters["decay_rate"] = _seed_uniform(stream, 0.0, 0.5)
+        parameters["freq_adaptation_rate"] = _seed_uniform(stream, 0.0, 0.05)
     elif model == Model.HOPF.value:
-        parameters["bifurcation_param"] = float(rng.uniform(-0.5, 2.0))
-        parameters["freq_adaptation_rate"] = float(rng.uniform(0.0, 0.05))
+        parameters["bifurcation_param"] = _seed_uniform(stream, -0.5, 2.0)
+        parameters["freq_adaptation_rate"] = _seed_uniform(stream, 0.0, 0.05)
     elif model == Model.STUART_LANDAU.value:
-        parameters["bifurcation_param"] = float(rng.uniform(-0.5, 2.0))
+        parameters["bifurcation_param"] = _seed_uniform(stream, -0.5, 2.0)
     return {
         "model": model,
         "coupling": coupling,
@@ -779,27 +1234,24 @@ def draw_fuzz_spec(rng: np.random.Generator) -> dict[str, Any]:
         "n_oscillators": n_oscillators,
         "n_steps": n_steps,
         "dt": dt,
-        "seed": seed,
         "parameters": parameters,
     }
 
 
 def draw_fuzz_initial(
-    rng: np.random.Generator, n_oscillators: int
+    stream: _prin_core.Seed, n_oscillators: int
 ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
     """Draw an explicit ``(phase, amplitude, frequency)`` initial condition.
 
     Fed identically into both PRINet 3.0 and PRIN so the two implementations
     are compared from the same input rather than each drawing its own
-    (implementation-specific) random state.
+    (implementation-specific) random state. Drawn from the same registered
+    ``Seed`` stream as :func:`draw_fuzz_spec`.
     """
-    phase = rng.uniform(0.0, 2.0 * np.pi, size=n_oscillators)
-    amplitude = rng.uniform(0.5, 1.5, size=n_oscillators)
-    frequency = rng.uniform(-1.0, 1.0, size=n_oscillators)
     return (
-        np.ascontiguousarray(phase, dtype=np.float64),
-        np.ascontiguousarray(amplitude, dtype=np.float64),
-        np.ascontiguousarray(frequency, dtype=np.float64),
+        _seed_vector(stream, 0.0, 2.0 * np.pi, n_oscillators),
+        _seed_vector(stream, 0.5, 1.5, n_oscillators),
+        _seed_vector(stream, -1.0, 1.0, n_oscillators),
     )
 
 
@@ -891,11 +1343,13 @@ def compare_fuzz_case(spec: dict[str, Any]) -> dict[str, Any]:
     ``_init`` arrays; ``_final`` is excluded — beyond the horizon it names a
     step no hypothesis adjudicates pointwise, and within it it duplicates the
     corresponding ``_traj`` array's last included row). When ``n_steps >
-    T_STAR``, ``beyond_horizon`` carries the raw paired
+    T_STAR``, ``beyond_horizon`` carries, per metric, the raw paired
     ``order_parameter``/``mean_phase_coherence`` values at every step past the
-    horizon (else ``None``) for E4 to pool across cases and compute H2b's
-    Welch-t/Cohen's-d/bootstrap-CI verdict — this driver stores the data, it
-    does not compute that pooled statistic itself (E3 executes, E4 analyzes).
+    horizon **plus that case's one predefined paired summary**
+    (``mean_paired_difference``; :func:`_beyond_horizon_record`), else
+    ``None``. E4 adjudicates H2b from those per-case summaries via
+    :func:`adjudicate_h2b`; this function stores the data, it does not
+    adjudicate (E3 executes, E4 analyzes).
 
     Args:
         spec: A dict from :func:`draw_fuzz_spec`, plus an ``"rng"`` key
@@ -909,8 +1363,8 @@ def compare_fuzz_case(spec: dict[str, Any]) -> dict[str, Any]:
     Raises:
         PrinetUnavailableError: If PRINet 3.0 is not importable.
     """
-    rng: np.random.Generator = spec["rng"]
-    phase, amplitude, frequency = draw_fuzz_initial(rng, spec["n_oscillators"])
+    stream: _prin_core.Seed = spec["seed_stream"]
+    phase, amplitude, frequency = draw_fuzz_initial(stream, spec["n_oscillators"])
     reference = run_prinet_trajectory(
         model=spec["model"],
         coupling=spec["coupling"],
@@ -936,7 +1390,7 @@ def compare_fuzz_case(spec: dict[str, Any]) -> dict[str, Any]:
         frequency_init=frequency,
     )
     identity = {
-        "seed": spec["seed"],
+        "case_index": spec["case_index"],
         "model": spec["model"],
         "coupling": spec["coupling"],
         "integrator": spec["integrator"],
@@ -968,10 +1422,10 @@ def compare_fuzz_case(spec: dict[str, Any]) -> dict[str, Any]:
     beyond_horizon = None
     if n_steps > T_STAR:
         beyond_horizon = {
-            name: {
-                "reference": getattr(reference, name)[horizon + 1 :].tolist(),
-                "produced": getattr(produced, name)[horizon + 1 :].tolist(),
-            }
+            name: _beyond_horizon_record(
+                getattr(reference, name)[horizon + 1 :],
+                getattr(produced, name)[horizon + 1 :],
+            )
             for name in _BEYOND_HORIZON_ARRAY_NAMES
         }
     return {
@@ -989,20 +1443,191 @@ def run_fuzz_batch(
 ) -> list[dict[str, Any]]:
     """Draw and compare ``n_cases`` fuzzed cases from the registered ``Seed``.
 
-    The RNG stream is seeded deterministically from ``(seed_counter,
-    seed_key)`` (campaign plan §6.2/§6.3) so a given pair always reproduces
-    the same sequence of drawn cases.
+    The stream is ``prin._prin_core.Seed(seed_counter, seed_key)`` — the
+    campaign's single registered randomness authority, constructed directly
+    from the registered pair (campaign plan §6.1/§6.2/§6.3) with no
+    intermediate derivation — so a given pair always reproduces the same
+    sequence of drawn cases, and the reproducibility contract is the
+    ``Seed`` type's own rather than NumPy's bit-generator versioning.
+
+    Each record's ``case_index`` is its 0-based position in that stream,
+    which (with ``seed_counter``/``seed_key``, recorded in the artefact's
+    ``config`` envelope) is what actually determines the case. The earlier
+    per-case ``"seed"`` field did not: it was an integer drawn from the
+    stream and then consumed by nothing, since both implementations run from
+    the explicitly drawn initial condition rather than re-seeding themselves
+    (preregistration §5.12).
 
     Raises:
         PrinetUnavailableError: If PRINet 3.0 is not importable.
     """
-    rng = np.random.default_rng(seed_key * 1_000_000_007 + seed_counter)
+    stream = _prin_core.Seed(seed_counter, seed_key)
     records = []
-    for _ in range(n_cases):
-        spec = draw_fuzz_spec(rng)
-        spec["rng"] = rng
+    for case_index in range(n_cases):
+        spec = draw_fuzz_spec(stream)
+        spec["case_index"] = case_index
+        spec["seed_stream"] = stream
         records.append(compare_fuzz_case(spec))
     return records
+
+
+def _beyond_horizon_record(
+    reference: NDArray[np.float64], produced: NDArray[np.float64]
+) -> dict[str, Any]:
+    """Pack one case's beyond-horizon values for one metric, plus its summary.
+
+    The raw per-step arrays are kept for transparency and for E4's
+    regeneration path, but the **registered unit of analysis is the per-case
+    summary**, not the individual time points: values at successive steps of
+    one trajectory are serially dependent, so pooling every post-horizon step
+    across cases as if it were an independent observation would understate
+    the variance of any interval computed from them. ``mean_paired_difference``
+    is that predefined per-case paired summary (preregistration §5.12); cases
+    are drawn independently from the registered ``Seed`` stream, so the
+    per-case summaries are the independent sample H2b adjudicates.
+    """
+    n_points = int(reference.size)
+    difference = produced - reference
+    return {
+        "reference": reference.tolist(),
+        "produced": produced.tolist(),
+        "n_points": n_points,
+        "reference_mean": float(np.mean(reference)) if n_points else 0.0,
+        "produced_mean": float(np.mean(produced)) if n_points else 0.0,
+        "mean_paired_difference": float(np.mean(difference)) if n_points else 0.0,
+    }
+
+
+def h2b_case_summaries(
+    cases: Sequence[dict[str, Any]], metric: str
+) -> list[dict[str, float]]:
+    """Collect one paired summary per contributing fuzz case, for ``metric``.
+
+    A case contributes iff it is non-aborted and carries a ``beyond_horizon``
+    block (i.e. ``n_steps > T_STAR``). Aborted cases are excluded entirely,
+    never counted as a pass or a failure (preregistration §8).
+    """
+    summaries: list[dict[str, float]] = []
+    for case in cases:
+        if case.get("aborted", True):
+            continue
+        beyond = case.get("beyond_horizon")
+        if not isinstance(beyond, dict) or metric not in beyond:
+            continue
+        record = beyond[metric]
+        if not isinstance(record, dict) or not record.get("n_points"):
+            continue
+        summaries.append(
+            {
+                "reference_mean": float(record["reference_mean"]),
+                "produced_mean": float(record["produced_mean"]),
+                "mean_paired_difference": float(record["mean_paired_difference"]),
+            }
+        )
+    return summaries
+
+
+def adjudicate_h2b_metric(
+    cases: Sequence[dict[str, Any]], metric: str
+) -> dict[str, Any]:
+    """Apply H2b's registered equivalence predicate to one metric.
+
+    The predicate (preregistration §2/§4/§5.12/§8, stated identically in all
+    four): the metric is ``CONFIRMED`` iff **both endpoints** of the 95 %
+    bootstrap CI on the mean per-case paired difference lie strictly inside
+    ``±`` that metric's registered equivalence margin
+    (:data:`H2B_EQUIVALENCE_MARGIN`). A CI that merely *contains* zero does
+    not establish equivalence — a wide interval can contain zero and, at the
+    same time, differences large enough to reverse a scientific conclusion —
+    which is why the earlier ``|Cohen's d| < 0.2`` **and** ``CI contains 0``
+    combination was replaced (preregistration §5.12).
+
+    Cohen's *d* and Welch's *t* are computed and reported for transparency
+    but gate nothing: on a paired sample whose within-sample variance is tiny,
+    a physically negligible difference can produce an arbitrarily large ``d``
+    and an arbitrarily small *p*, so neither is a sound equivalence criterion.
+
+    A sample with fewer than :data:`H2B_MIN_CASES` contributing cases (or
+    none at all) is ``INCONCLUSIVE``, never ``REFUTED``.
+
+    Every statistic comes from ``prin.y4q1_tools`` → the Rust
+    ``y4q1_stats`` owner (campaign plan §9.2, the only permitted statistical
+    code paths); this function performs only the paired-summary arithmetic
+    already materialised by :func:`_beyond_horizon_record`.
+    """
+    margin = H2B_EQUIVALENCE_MARGIN[metric]
+    summaries = h2b_case_summaries(cases, metric)
+    differences = [s["mean_paired_difference"] for s in summaries]
+    reference_means = [s["reference_mean"] for s in summaries]
+    produced_means = [s["produced_mean"] for s in summaries]
+    base: dict[str, Any] = {
+        "metric": metric,
+        "equivalence_margin": margin,
+        "n_cases": len(summaries),
+        "min_cases": H2B_MIN_CASES,
+    }
+    if len(summaries) < H2B_MIN_CASES:
+        return {
+            **base,
+            "verdict": "INCONCLUSIVE",
+            "reason": (
+                f"{len(summaries)} contributing case(s) is below the registered "
+                f"minimum of {H2B_MIN_CASES}; no valid beyond-horizon sample "
+                "(preregistration §5.12)"
+            ),
+        }
+    interval = bootstrap_ci(
+        differences,
+        n_bootstrap=H2B_BOOTSTRAP_RESAMPLES,
+        alpha=H2B_ALPHA,
+        seed=H2B_BOOTSTRAP_SEED,
+    )
+    ci_lower = float(interval["ci_lower"])
+    ci_upper = float(interval["ci_upper"])
+    equivalent = -margin < ci_lower and ci_upper < margin
+    return {
+        **base,
+        "verdict": "CONFIRMED" if equivalent else "REFUTED",
+        "mean_paired_difference": float(interval["mean"]),
+        "ci_lower": ci_lower,
+        "ci_upper": ci_upper,
+        "within_margin": equivalent,
+        "descriptive": {
+            "cohens_d": float(cohens_d(produced_means, reference_means)),
+            "welch": {
+                key: float(value)
+                for key, value in welch_t_test(produced_means, reference_means).items()
+            },
+        },
+    }
+
+
+def adjudicate_h2b(cases: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """Adjudicate H2b over both registered metrics, independently.
+
+    ``CONFIRMED`` iff both metrics are ``CONFIRMED``; ``REFUTED`` if either
+    is ``REFUTED``; otherwise ``INCONCLUSIVE`` (preregistration §4/§8). The
+    two metrics are never pooled into one combined sample: they are different
+    physical quantities on different ranges, and opposite effects in the two
+    would cancel if pooled.
+
+    E3 (this driver's ``main``) does not call this — it stores the data; E4
+    calls it on the published artefact's ``cases`` payload. It lives here, not
+    in the analysis session's own code, so exactly one implementation of the
+    registered predicate exists and is covered by this module's tests.
+    """
+    metrics = {
+        metric: adjudicate_h2b_metric(cases, metric)
+        for metric in _BEYOND_HORIZON_ARRAY_NAMES
+    }
+    verdicts = {result["verdict"] for result in metrics.values()}
+    if "REFUTED" in verdicts:
+        overall = "REFUTED"
+    elif "INCONCLUSIVE" in verdicts:
+        overall = "INCONCLUSIVE"
+    else:
+        overall = "CONFIRMED"
+    return {"verdict": overall, "metrics": metrics}
 
 
 class GpuBindingUnavailableError(DriverError):
@@ -1054,10 +1679,11 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
     Raises:
         GpuBindingUnavailableError: If the extension lacks
             ``GpuSparseKuramoto`` (no ``cuda``/``wgpu``-feature build), or if
-            the GPU call does not confirm true CUDA execution (see note
-            below).
-        ValueError: If ``case_id`` does not name a ``kuramoto``/``sparse_knn``
-            case.
+            any of the three returned capsules does not confirm true CUDA
+            execution (see note below).
+        DriverMetadataError: If ``case_id`` does not name a
+            ``kuramoto``/``sparse_knn`` case — an operator error that aborts
+            the run, not an unexpected programming fault.
 
     Note:
         ``GpuSparseKuramoto`` compiles under ``cfg(any(feature = "cuda",
@@ -1087,7 +1713,7 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
     loaded = loader.load(case_id)
     spec = loaded.spec
     if spec.model != Model.KURAMOTO.value or spec.coupling != Coupling.SPARSE_KNN.value:
-        raise ValueError(
+        raise DriverMetadataError(
             "H4 kernel-path mode requires a kuramoto/sparse_knn case, got "
             f"model={spec.model!r} coupling={spec.coupling!r} (case {case_id})"
         )
@@ -1128,20 +1754,36 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
     gpu_dphase_capsule, gpu_damplitude_capsule, gpu_dfrequency_capsule = (
         engine.compute_derivatives(phase_f32, amplitude_f32, frequency_f32)
     )
-    gpu_dphase_raw = from_dlpack(gpu_dphase_capsule)
-    if gpu_dphase_raw.device.type != "cuda":
+    # Every returned capsule is checked, not just the first: the three
+    # derivative outputs are separate DLPack capsules and nothing in the
+    # binding's contract guarantees they share a device, so validating only
+    # ``dphase`` would let a CPU-resident ``damplitude``/``dfrequency`` be
+    # consumed and compared as if it were the CUDA result (preregistration
+    # §4 item 6). The check runs on all three before any value is read.
+    gpu_raw = {
+        "dphase": from_dlpack(gpu_dphase_capsule),
+        "damplitude": from_dlpack(gpu_damplitude_capsule),
+        "dfrequency": from_dlpack(gpu_dfrequency_capsule),
+    }
+    non_cuda = sorted(
+        f"{name}={tensor.device.type!r}"
+        for name, tensor in gpu_raw.items()
+        if tensor.device.type != "cuda"
+    )
+    if non_cuda:
         raise GpuBindingUnavailableError(
-            "GpuSparseKuramoto.compute_derivatives returned a "
-            f"{gpu_dphase_raw.device.type!r}-resident result for case "
-            f"{case_id!r}, not the zero-copy kDLCUDA capsule the true CUDA "
-            "device-resident path returns. This means the call did not "
-            "actually dispatch through CUDA here — a --features wgpu-only "
-            "build, or a CUDA client that failed to initialise and fell "
-            "back to prin-sim's host-slice path — so H4 aborts rather than "
-            "record a non-CUDA result as cuda (preregistration §5.1)"
+            "GpuSparseKuramoto.compute_derivatives returned non-CUDA-resident "
+            f"result(s) ({', '.join(non_cuda)}) for case {case_id!r}, not the "
+            "zero-copy kDLCUDA capsule the true CUDA device-resident path "
+            "returns. This means the call did not actually dispatch through "
+            "CUDA here — a --features wgpu-only build, or a CUDA client that "
+            "failed to initialise and fell back to prin-sim's host-slice path "
+            "— so H4 aborts rather than record a non-CUDA result as cuda "
+            "(preregistration §5.1)"
         )
-    gpu_damplitude_raw = from_dlpack(gpu_damplitude_capsule)
-    gpu_dfrequency_raw = from_dlpack(gpu_dfrequency_capsule)
+    gpu_dphase_raw = gpu_raw["dphase"]
+    gpu_damplitude_raw = gpu_raw["damplitude"]
+    gpu_dfrequency_raw = gpu_raw["dfrequency"]
 
     identity = {
         "case_id": case_id,
@@ -1191,6 +1833,41 @@ def compare_kernel_path_subset(
     return [compare_kernel_path_case(loader, case_id) for case_id in case_ids]
 
 
+class EnvironmentIncompleteError(DriverError):
+    """Raised when required ``environment`` fields are absent for a run's mode.
+
+    Campaign plan §10.1 item 3 / preregistration §4 item 3: "Environment
+    capture incomplete (any ``environment`` field ``null`` that the
+    configuration requires — e.g. ``gpu`` null on a GPU leg)" is a **run
+    abort**, not an H1/H2/H3/H4 pass/fail result. ``capture_environment`` returns
+    ``None`` for anything it cannot determine (no ``git``/``rustc`` on
+    ``PATH``, no ``nvidia-smi``) rather than raising, so the requirement has
+    to be enforced by the caller — here, before anything is published.
+    """
+
+
+def _validate_environment(mode: str, environment: dict[str, Any]) -> None:
+    """Raise :class:`EnvironmentIncompleteError` if ``environment`` is incomplete.
+
+    The required-field set is per mode: :data:`_REQUIRED_ENV_FIELDS` for every
+    run, plus :data:`_GPU_REQUIRED_ENV_FIELDS` (``gpu``, ``gpu_vram_mb``) on a
+    GPU leg. No value is ever substituted or invented — a missing field aborts
+    the run so that a retry under a new ``RUN-`` ID can capture it for real.
+    """
+    required = list(_REQUIRED_ENV_FIELDS)
+    if mode in _GPU_MODES:
+        required += list(_GPU_REQUIRED_ENV_FIELDS)
+    incomplete = [field for field in required if environment.get(field) in (None, "")]
+    if incomplete:
+        raise EnvironmentIncompleteError(
+            f"environment capture is incomplete for --mode {mode}: "
+            f"{', '.join(incomplete)} missing or null. Campaign plan §10.1 "
+            "item 3 makes this a run abort, not a result — record the run as "
+            "aborted (never delete its directory), provision the missing "
+            "tooling, and retry under a new RUN- ID."
+        )
+
+
 def _validate_metadata(exp_id: str, run_id: str, session: str, operator: str) -> None:
     """Raise :class:`DriverMetadataError` if any required field is empty."""
     missing = [
@@ -1216,7 +1893,7 @@ def write_campaign_metadata(
     run_id: str,
     session: str,
     operator: str,
-    artefacts: dict[str, list[str]],
+    artefacts: dict[str, ArtefactEntry],
 ) -> Path:
     """Write the ``campaign-metadata.json`` sidecar (campaign plan §7.2).
 
@@ -1255,14 +1932,24 @@ def write_campaign_metadata(
     )
 
 
-#: Hypothesis tag recorded in ``campaign-metadata.json`` per run mode
-#: (campaign plan §7.2).
-_MODE_HYPOTHESIS: dict[str, list[str]] = {
-    "corpus": ["H1"],
-    "repeatability": ["H3"],
-    "fuzz": ["H2"],
-    "kernel-path": ["H4"],
-}
+def _positive_int(raw: str) -> int:
+    """argparse type for a strictly positive integer count.
+
+    ``--n-fuzz-cases 0`` (or a negative value) would otherwise draw an empty
+    batch and publish an H2 artefact whose every "all cases pass" predicate is
+    vacuously true. A zero-case run is rejected at parse time rather than
+    published (preregistration §5.12).
+    """
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"{raw!r} is not an integer") from exc
+    if value <= 0:
+        raise argparse.ArgumentTypeError(
+            f"must be a positive integer, got {value}: a zero- or "
+            "negative-case fuzz batch would publish an empty H2 artefact"
+        )
+    return value
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -1290,9 +1977,15 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--n-fuzz-cases",
-        type=int,
-        default=1000,
-        help="Number of hypothesis-fuzzed cases to draw (--mode fuzz).",
+        type=_positive_int,
+        default=REGISTERED_FUZZ_BATCH_MIN,
+        help=(
+            "Number of hypothesis-fuzzed cases to draw (--mode fuzz). Must be "
+            f"> 0. The registered confirmatory batch size is "
+            f">= {REGISTERED_FUZZ_BATCH_MIN} (preregistration §7); a smaller "
+            "batch is published with config.fuzz_batch_class = 'pilot' and "
+            "can never be adjudicated as confirmatory H2 evidence."
+        ),
     )
     parser.add_argument("--seed-counter", type=int, default=0)
     parser.add_argument("--seed-key", type=int, default=1, help="EXP-001 = 1.")
@@ -1318,10 +2011,20 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run the requested comparison and write its artefact + metadata sidecar."""
+    """Run the requested comparison and write its artefact + metadata sidecar.
+
+    Every *expected* operational failure — a contract violation this driver
+    or the corpus loader detects, an output path outside the declared roots,
+    or an artefact that already exists — is reported as a one-line ``ABORT:``
+    diagnostic on stderr and exit code 2, never as a Python traceback. The
+    handler lists those exception types explicitly rather than catching
+    ``Exception``: an unexpected programming error must still surface with
+    its traceback rather than be disguised as an orderly campaign abort.
+    """
     args = _parser().parse_args(argv)
     run_dir: Path = args.out.resolve()
     run_id = run_dir.name
+    result_path = run_dir
 
     # Fuzz mode records which PRINet reference it actually compared against;
     # empty for the other modes, whose reference is the stored golden corpus.
@@ -1330,6 +2033,7 @@ def main(argv: list[str] | None = None) -> int:
         _validate_metadata(EXP_ID, run_id, args.session, args.operator)
         _validate_label(args.label)
         _reserve_run_dir(run_dir)
+        batch: dict[str, Any] = {}
         if args.mode == "corpus":
             loader = CorpusLoader(args.corpus_dir)
             case_ids = args.case_ids or [
@@ -1357,73 +2061,105 @@ def main(argv: list[str] | None = None) -> int:
             # prinet aborts in milliseconds, not after 1,000 integrations.
             reference = prinet_reference_provenance()
             cases = run_fuzz_batch(args.seed_counter, args.seed_key, args.n_fuzz_cases)
-    except DriverError as exc:
+            # The registered confirmatory batch size is >= 1,000
+            # (preregistration §7). A smaller batch is still a legitimate
+            # pilot/smoke invocation, but it is labelled as one in the
+            # published envelope so neither E4 nor run closure can read it as
+            # the registered confirmatory H2 evidence (preregistration §5.12).
+            batch = {
+                "fuzz_batch_class": (
+                    "confirmatory"
+                    if args.n_fuzz_cases >= REGISTERED_FUZZ_BATCH_MIN
+                    else "pilot"
+                ),
+                "fuzz_batch_confirmatory_minimum": REGISTERED_FUZZ_BATCH_MIN,
+                "n_fuzz_cases_requested": args.n_fuzz_cases,
+            }
+
+        backend, dtype = ("cuda", "f32") if args.mode in _GPU_MODES else ("cpu", "f64")
+        # A GPU leg records backend "cuda", which compare_kernel_path_case
+        # proves per case by checking the raw DLPack capsules' device. With
+        # no case there is no such proof, so an empty GPU batch must not
+        # publish an unbacked "cuda" claim.
+        if args.mode in _GPU_MODES and not cases:
+            raise DriverMetadataError(
+                f"--mode {args.mode} selected no cases, so nothing proved this "
+                "run dispatched through CUDA; refusing to publish a "
+                'backend "cuda" artefact with an empty payload'
+            )
+        environment = capture_environment(
+            backend=backend, dtype=dtype, seed=args.seed_counter
+        )
+        _validate_environment(args.mode, environment)
+        config = {
+            "iterations": len(cases),
+            "warmup": 0,
+            "seed_counter": args.seed_counter,
+            "seed_key": args.seed_key,
+            "out_dir": str(run_dir),
+            **batch,
+            **reference,
+        }
+        result_name = f"{args.mode}_{args.label}.json"
+        result_path = run_dir / result_name
+
+        # Fast fail on a *pre-existing* result (a stale artefact from an
+        # earlier invocation targeting this same run directory/label, e.g. a
+        # retry). This is only a cheap check, not a reservation — a concurrent
+        # writer can still create the path between here and `write_result`
+        # below, which is what the rollback further down actually closes.
+        if result_path.exists():
+            raise ArtefactExistsError(
+                f"{result_path} already exists; raw benchmark artefacts are "
+                "append-only (Experimentation Standards §4) — write to a new "
+                "run directory instead"
+            )
+
+        artefact_entry: ArtefactEntry = _MODE_HYPOTHESIS[args.mode]
+        if args.mode in _GPU_MODES:
+            artefact_entry = {
+                "hypotheses": _MODE_HYPOTHESIS[args.mode],
+                "timing_method": KERNEL_PATH_TIMING_METHOD,
+            }
+
+        # The sidecar/result pair is published transactionally with respect
+        # to the failures this process handles: either both land or neither
+        # does. That guarantee does *not* extend to process termination
+        # (SIGKILL, power loss, TerminateProcess) between the two writes,
+        # which leaves a sidecar-only directory; `check_run_complete` is what
+        # refuses to manifest one (see its docstring and
+        # benchmarks/results/EXP-001/README.md).
+        #
+        # The sidecar goes first because campaign plan §7.2 only accepts a
+        # result that carries its provenance — writing the result first would
+        # let a sidecar failure strand unprovenanced evidence. The mirror risk
+        # (a sidecar naming a result this invocation never published, e.g.
+        # because a concurrent writer won the result path first) is closed by
+        # rolling the sidecar back on any failure below. That rollback can only
+        # ever remove *this* invocation's own sidecar: `write_campaign_metadata`
+        # publishes via exclusive-create and raises if one already exists, so
+        # reaching this point proves we created it.
+        metadata_path = write_campaign_metadata(
+            run_dir,
+            exp_id=EXP_ID,
+            run_id=run_id,
+            session=args.session,
+            operator=args.operator,
+            artefacts={result_name: artefact_entry},
+        )
+        try:
+            result_path = write_result(
+                result_path,
+                environment=environment,
+                config=config,
+                payload={"cases": cases},
+            )
+        except BaseException:
+            metadata_path.unlink(missing_ok=True)
+            raise
+    except (DriverError, CorpusValidationError, OutputPathError) as exc:
         print(f"ABORT: {exc}", file=sys.stderr)
         return 2
-
-    backend, dtype = ("cuda", "f32") if args.mode == "kernel-path" else ("cpu", "f64")
-    environment = capture_environment(
-        backend=backend, dtype=dtype, seed=args.seed_counter
-    )
-    config = {
-        "iterations": len(cases),
-        "warmup": 0,
-        "seed_counter": args.seed_counter,
-        "seed_key": args.seed_key,
-        "out_dir": str(run_dir),
-        **reference,
-    }
-    result_name = f"{args.mode}_{args.label}.json"
-    result_path = run_dir / result_name
-
-    # Fast fail on a *pre-existing* result (a stale artefact from an earlier
-    # invocation targeting this same run directory/label, e.g. a retry).
-    # This is only a cheap check, not a reservation — a concurrent writer can
-    # still create the path between here and `write_result` below, which is
-    # what the rollback further down actually closes.
-    if result_path.exists():
-        print(
-            f"ABORT: {result_path} already exists; raw benchmark artefacts "
-            "are append-only (Experimentation Standards §4) — write to a "
-            "new run directory instead",
-            file=sys.stderr,
-        )
-        return 2
-
-    # The sidecar/result pair is published transactionally: either both land
-    # or neither does.
-    #
-    # The sidecar goes first because campaign plan §7.2 only accepts a result
-    # that carries its provenance — writing the result first would let a
-    # sidecar failure strand unprovenanced evidence. The mirror risk (a
-    # sidecar naming a result this invocation never published, e.g. because a
-    # concurrent writer won the result path first) is closed by rolling the
-    # sidecar back on any failure below. That rollback can only ever remove
-    # *this* invocation's own sidecar: `write_campaign_metadata` publishes via
-    # exclusive-create and raises if one already exists, so reaching this
-    # point proves we created it.
-    metadata_path = write_campaign_metadata(
-        run_dir,
-        exp_id=EXP_ID,
-        run_id=run_id,
-        session=args.session,
-        operator=args.operator,
-        artefacts={result_name: _MODE_HYPOTHESIS[args.mode]},
-    )
-    try:
-        result_path = write_result(
-            result_path,
-            environment=environment,
-            config=config,
-            payload={"cases": cases},
-        )
-    except OutputPathError as exc:
-        metadata_path.unlink(missing_ok=True)
-        print(f"ABORT: {exc}", file=sys.stderr)
-        return 2
-    except BaseException:
-        metadata_path.unlink(missing_ok=True)
-        raise
     print(f"Wrote {result_path}")
     return 0
 

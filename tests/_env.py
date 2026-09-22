@@ -53,3 +53,50 @@ def directml_executes() -> bool:
     except Exception:
         return False
     return True
+
+
+@functools.lru_cache(maxsize=1)
+def cuda_kernel_executes() -> bool:
+    """Whether ``prin._prin_core.GpuSparseKuramoto`` really dispatches via CUDA.
+
+    The same executability-over-registration rule as :func:`directml_executes`,
+    applied to the extension's GPU kernel binding. ``GpuSparseKuramoto``
+    compiles under ``cfg(any(feature = "cuda", feature = "wgpu"))``, so its
+    presence proves only that *some* GPU feature was built, and
+    ``torch.cuda.is_available()`` describes PyTorch's runtime, not which
+    backend the Rust extension was compiled against — a wgpu-only build on a
+    CUDA host passes both checks and then hard-fails. Even a ``--features
+    cuda`` build falls back to ``prin-sim``'s host-slice path when its CubeCL
+    client cannot initialise (``crates/prin-sim/src/gpu.rs``).
+
+    This probe therefore does what the code under test does: it runs one tiny
+    (``N=4``, ``k=2``) derivative evaluation and checks that **every** returned
+    DLPack capsule is CUDA-resident, which only the true CUDA device-resident
+    path produces (WP-036E Q3). ``True`` → the H4 success-path tests can run;
+    ``False`` → they skip, on a wgpu-only build, a binding-less build, or a
+    host whose CUDA runtime is unavailable.
+
+    The probe allocates three length-4 f32 tensors and one throwaway engine;
+    it mutates no process or device state, and the ``lru_cache`` means the
+    cost is paid at most once per session.
+    """
+    try:
+        import torch
+        from prin import _prin_core
+        from torch.utils.dlpack import from_dlpack
+    except ImportError:
+        return False
+
+    engine_cls = getattr(_prin_core, "GpuSparseKuramoto", None)
+    if engine_cls is None:
+        return False
+
+    try:
+        phase = torch.zeros(4, dtype=torch.float32).contiguous()
+        amplitude = torch.ones(4, dtype=torch.float32).contiguous()
+        frequency = torch.zeros(4, dtype=torch.float32).contiguous()
+        engine = engine_cls.from_knn_phase(4, 2, 0.5, 0.0, 0.0, phase)
+        capsules = engine.compute_derivatives(phase, amplitude, frequency)
+        return all(from_dlpack(capsule).device.type == "cuda" for capsule in capsules)
+    except Exception:
+        return False

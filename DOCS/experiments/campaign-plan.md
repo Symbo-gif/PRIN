@@ -305,8 +305,9 @@ Every run also contains a separate `campaign-metadata.json` sidecar with
 `exp_id` (`"EXP-00n"`), `run_id` (the `RUN-…` directory name), `session`
 (`"0156"` etc.), `operator`, and an `artefacts` mapping from each result filename
 to the H-ids it bears on. GPU result entries additionally carry `timing_method`
-(`"device-event"` | `"system-synced"`, per DV-003/amendment #44). The sidecar
-and all result files are covered by the run manifest.
+(`"device-event"` | `"system-synced"` | `"not-timed"`, per DV-003/amendment #44
+and §11.5's ratified extension for an untimed GPU correctness comparison). The
+sidecar and all result files are covered by the run manifest.
 
 Campaign runs must not invoke `benchrunner` directly. E1 must provide a
 committed, tested campaign driver that accepts and validates the metadata above,
@@ -555,6 +556,36 @@ mechanically checkable gate (`tools/check_dv_register_gates.py` parses
   benchmark, or a self-hosted nightly) is a CI-robustness item for WP-039 S1
   (0195), not a campaign experiment.
 
+### 11.5 `timing_method` enum extension — EXP-001 H4 (§7.2), ratified 2026-09-22
+
+- **Original fact:** §7.2 registers exactly two `timing_method` values for a
+  GPU result entry, `"device-event"` and `"system-synced"` (DV-003/amendment
+  #44), both premised on the entry being a *timed* GPU measurement. EXP-001's
+  H4 (§2.1: "GPU kernel-path tolerance-identity") is a GPU result entry that
+  performs no timing measurement at all — preregistration §5.1 states plainly
+  "No H2/H3/H4 case is timed; this experiment measures correctness, not
+  performance." Neither registered value describes that leg truthfully, and
+  recording either would assert a timing method H4 never used.
+- **Fix:** a third registered value, **`"not-timed"`**, for a GPU result entry
+  that performs no timing measurement. Applied identically in the driver's
+  writer (`exp001_driver.KERNEL_PATH_TIMING_METHOD`), the closure validator
+  (`check_run_complete`'s `_TIMING_METHODS`), the tests, and the
+  pre-registration (§5.1, §5.3, §5.12 item 6). No existing `"device-event"`/
+  `"system-synced"` leg is touched.
+- **Why a §11 disposition rather than a bare code fix:** §7.2 is a shared
+  campaign-wide schema, and §14.2 restricts post-freeze amendments to
+  hardware availability (§5), budget caps (§8), storage rules (§7.5), and gap
+  dispositions (§11) — an untimed correctness leg discovered while
+  implementing an already-authorized experiment (EXP-001 E1 was authorized at
+  §14.1 A4) is exactly the class of registered-schema gap §11 exists to
+  disposition, not a change to experiment order, seed policy, or statistics
+  policy.
+- **Disposition:** **ratified.** MichaelMaillet, 2026-09-22, in response to the
+  ninth EXP-001 E2 remediation pass (preregistration §5.12 item 6). Any future
+  experiment whose GPU leg is genuinely untimed may reuse `"not-timed"`
+  without a further amendment; a *timed* GPU leg still requires
+  `"device-event"` or `"system-synced"` per DV-003/amendment #44.
+
 ### 11.4 Brief-vs-standard target reconciliation (EXP-002, EXP-003, EXP-004, EXP-008)
 
 Recorded in §2.1 "Reconciliation" and binding on E1: figure count 14 (not
@@ -640,3 +671,4 @@ Hypotheses are never in this document.
 | # | Date | Section | Change | Approved by |
 |---|---|---|---|---|
 | 1 | 2026-09-21 | §11.1, §11.2 (gap dispositions; §7.3 enforcement row) | Executes decision A2: the DV-038 `write_result` guard stages and flushes JSON before atomic exclusive publication (`ArtefactExistsError`; direct, race, interrupted-write, and CLI tests; Snyk Code required) and DV-039 constrains every `nightly.yml` `full-suite` pip install while provisioning MOT/Sphinx. Both fixes are committed on governed hotfix branch `hotfix/dv038-dv039-artefact-guard-nightly-provisioning`; DV-038 closes on green merge and DV-039 on green merge plus one green nightly dispatch. No change to §2–§6, §8–§10. | MichaelMaillet (A2) |
+| 2 | 2026-09-22 | §11.5 (gap disposition; §7.2 schema row) | Ratifies a third `timing_method` value, `"not-timed"`, for a GPU result entry that performs no timing measurement (EXP-001 H4, preregistration §5.12 item 6). Applied in the driver, the closure validator, and the pre-registration; no existing `"device-event"`/`"system-synced"` leg changes. No change to §2–§6, §8–§10, §11.1–§11.4. | MichaelMaillet |
