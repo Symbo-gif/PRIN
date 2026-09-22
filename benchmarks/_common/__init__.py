@@ -23,7 +23,12 @@ from benchmarks._common.registry import (
     list_specs,
     register,
 )
-from benchmarks._common.result import ArtefactExistsError, OutputPathError, write_result
+from benchmarks._common.result import (
+    ArtefactExistsError,
+    OutputPathError,
+    write_json_exclusive,
+    write_result,
+)
 from benchmarks._common.timing import TimingStats, timed_run
 
 __all__ = [
@@ -41,5 +46,6 @@ __all__ = [
     "list_specs",
     "register",
     "timed_run",
+    "write_json_exclusive",
     "write_result",
 ]

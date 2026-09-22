@@ -9,6 +9,374 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 pre-registration — tenth E2 remediation, ninth code-review round
+  on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.13.** Pushing the ninth-remediation commit ran hosted CI and a ninth
+  CodeRabbit + Copilot review round against it for the first time. Six of
+  twenty-eight required checks failed — all six `test` legs (both OSes, all
+  three Python versions), identically: `pytest.MonkeyPatch.setattr` defaults
+  `raising=True`, which requires the target attribute to already exist, and
+  four new mocked GPU tests targeted `prin._prin_core.GpuSparseKuramoto`,
+  which is absent from the plain (non-`--features cuda`/`wgpu`) build those
+  legs use — so the `setattr` calls themselves raised `AttributeError`
+  before the test bodies ran. Reproduced directly
+  (`delattr(_prin_core, "GpuSparseKuramoto")`, then re-run) rather than
+  inferred from the log; fixed with `raising=False` at all four sites.
+  CodeRabbit and Copilot raised nine further findings, independently
+  validated and all confirmed: `_is_json_name` missed the bare `.json`
+  filename that `Path.glob("*.json")` actually matches; the closure envelope
+  check accepted a null/empty required field and never required
+  `gpu`/`gpu_vram_mb` on a GPU entry, weaker than the driver's own
+  publication gate; a stale CHANGELOG sentence still described a maintainer
+  decision as open after the same-day ratification recorded above it;
+  `manifest.json` was never checked for being a symlink before closure
+  (CWE-59, the class already closed for the sidecar and declared
+  artefacts); a repeated `--case-id` had no uniqueness check, letting one
+  passing ID repeated 504 times satisfy the naive non-aborted-count check;
+  `_LABEL_RE`/`_RUN_ID_RE` anchored with `$`, which Python matches just
+  before a trailing `\n` as well as the true end of string, admitting a
+  control character into a "safe filename"; the new campaign-plan §11.5 was
+  inserted before §11.4, out of numerical order; and two comments/docstrings
+  (the `timing_method` ratification note, `compare_fuzz_case`'s `Args:`
+  section) still described a pre-ratification/pre-Seed-refactor state.
+  `tests/test_exp001_driver.py` 212/212 passing under the governed Windows
+  command (15 new); `pytest -m "gpu or directml"` still selects and passes
+  the same 5 H4 tests on this host's real `--features cuda` build;
+  `ruff check`/`ruff format --check` clean across `python/ tests/
+  benchmarks/ tools/ parity/`; `mypy --strict benchmarks/campaign python/prin`
+  clean; full `tests/ -m "not slow and not gpu"` suite 3117 passed, 176
+  skipped. No `RUN-` directory was created and no campaign evidence was
+  generated. EXP-001 E3 (session 0156) remains authorized.
+- **EXP-001 pre-registration — maintainer decisions on the ninth E2
+  remediation pass (session 0155, E2, 2026-09-22).** Three decisions the
+  §5.12 remediation left open are resolved. **(1) `timing_method:
+  "not-timed"` ratified:** campaign plan §11.5 records the disposition and
+  §14.2 amendment row 2 the approval (MichaelMaillet, 2026-09-22); the
+  preregistration's §5.1/§5.12 item 6 and header now cite the ratification
+  instead of an open decision. **(2) Sub-registered fuzz batches: existing
+  disposition confirmed as sufficient, no code change.** The driver already
+  labels any `--n-fuzz-cases` batch below the registered 1,000-case minimum
+  `config.fuzz_batch_class = "pilot"` (never silent), and preregistration §8's
+  denominator rule already makes a run below its registered denominator
+  `INCONCLUSIVE`, never `CONFIRMED` — the same discipline campaign plan §2.1
+  applies to EXP-006's Phase 4 pilot evidence ("may be cited only as basis for
+  prediction"). A pilot batch therefore cannot be silently read as
+  confirmatory H2 evidence by either the sidecar, the artefact, or E4's
+  adjudication; no further floor or reporting-path change was judged
+  necessary. **(3) The three §5.12 protocol changes (H2b decision rule, H2b
+  unit of analysis, fuzz RNG authority) are approved** as the pre-execution
+  amendment §5.12 already documents; no further edit made. EXP-001 E3
+  (session 0156) is authorized with no outstanding maintainer decision.
+- **EXP-001 pre-registration — ninth E2 remediation, eighth code-review
+  round on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.12.** The first review round to audit the scientific protocol as well as
+  the code raised sixteen items; each was independently validated against the
+  repository and the governing documents, and every finding and disposition is
+  recorded in §5.12's audit table (which replaces the running finding-count
+  arithmetic that had drifted three times). **Three change the registered
+  protocol, all before E3, with no campaign data in existence.** (1) *H2b
+  decision rule:* `|Cohen's d| < 0.2` **and** "the bootstrap CI contains 0"
+  does not establish equivalence — a wide interval can contain zero and
+  conclusion-reversing differences at once. Replaced by a genuine equivalence
+  test: both endpoints of the 95 % bootstrap CI on the mean per-case paired
+  difference must lie inside a registered per-metric margin (1 % of each
+  metric's bounded range: 0.01 for `order_parameter`, 0.02 for
+  `mean_phase_coherence`), with fewer than 30 contributing cases
+  `INCONCLUSIVE` rather than `REFUTED`, and Cohen's *d* / Welch's *t*
+  descriptive only. (2) *H2b unit of analysis:* post-horizon steps of one
+  trajectory are serially dependent and are no longer pooled as independent
+  observations — each case contributes one predefined paired summary, the
+  independent clusters being the independently drawn cases. (3) *RNG
+  authority:* campaign plan §6.1 forbids a second RNG path, but the fuzz
+  sampler derived a NumPy PCG64 stream from `(seed_counter, seed_key)`; it now
+  draws directly from `prin._prin_core.Seed`, and the per-case `"seed"` field
+  that determined nothing is replaced by `case_index`. The remaining thirteen
+  items hardened run closure (full campaign plan §7.2 sidecar schema with no
+  value coercion, symlinked-sidecar rejection before any link-following call,
+  closure/manifest case alignment so a `rogue.JSON` cannot be manifested on
+  Windows while invisible to closure, and result-envelope cross-checks),
+  enforced the §10.1 item 3 environment-capture abort, registered H4's
+  `timing_method: "not-timed"` (an enum extension needing maintainer
+  ratification), checked all three GPU capsules for CUDA residency, replaced
+  the `torch.cuda.is_available()` test guard with an executability probe
+  (`tests/_env.py::cuda_kernel_executes`; ETCA-002 T-F3 / G8), added
+  `@pytest.mark.gpu` so `gpu.yml` actually selects the H4 tests, normalized
+  the CLI's expected-failure handling to the `ABORT:`/exit-2 convention
+  without catching programming errors, and rejected `--n-fuzz-cases <= 0`.
+  `tests/test_exp001_driver.py` 197/197 passing under the governed Windows
+  command (89 new tests); `pytest -m "gpu or directml"` selects and passes 5
+  H4 tests on this host's real `--features cuda` build and CUDA runtime;
+  `ruff check`/`ruff format --check` clean across `python/ tests/ benchmarks/
+  tools/ parity/`; `mypy --strict benchmarks/campaign python/prin` clean. No
+  `RUN-` directory was created and no campaign evidence was generated. EXP-001
+  E3 (session 0156) remains authorized. (The `timing_method` extension this
+  pass left open for maintainer ratification was ratified the same day — see
+  the entry above.)
+- **EXP-001 pre-registration — eighth E2 remediation, seventh code-review
+  round on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.11.** A seventh CodeRabbit review round found 3 items; each was
+  independently validated against the code and standards before being
+  fixed as an eighth pre-execution amendment. (1) A declared artefact that
+  is a symbolic link bypassed `check_run_complete()` (CWE-59): the
+  missing-file check follows symlinks, so a sidecar naming a symlinked path
+  as an artefact was treated as a legitimate result even though the linked
+  content lives outside `run_dir`. Reproduced empirically before the fix.
+  Fixed: any artefact name whose `run_dir`-relative path `is_symlink()`
+  (no-follow) is now rejected before the missing-file check runs. (2) The
+  previous round's reserved-infrastructure-name check used an exact-string
+  comparison, so a case-varying alias (`CAMPAIGN-METADATA.JSON`) bypassed it
+  on a case-insensitive filesystem — Windows and macOS, both in this
+  project's own CI matrix — reproducing the same sidecar-impersonation bug
+  that check was meant to close. Fixed with `.casefold()` on both the
+  reserved-name membership check and the unlisted-file infrastructure
+  exclusion. (3) The previous round's own section heading correctly
+  distinguished the remediation-pass counter from the review-round counter,
+  but its body prose and Appendix A entry didn't, calling the same work by
+  the wrong counter — fixed in the newly-written text (the same
+  inconsistency in earlier, already-reviewed sections is left as historical
+  record). 4 new tests (`tests/test_exp001_driver.py`, 108/108 passing;
+  the symlink regression test is capability-gated by a runtime probe, since
+  symlink creation needs elevated privilege on a non-admin Windows host);
+  `ruff`/`mypy --strict` clean; Snyk Code 0 issues on both touched Python
+  files; full local quick suite green; all three governance gates pass. A
+  third end-to-end corpus-mode smoke run independently confirmed the
+  driver's reserve→compare→write→close pipeline still works. EXP-001 E3
+  (session 0156) remains authorized to begin.
+- **EXP-001 pre-registration — seventh E2 remediation, sixth code-review
+  round on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.10.** A seventh CodeRabbit + Copilot round found 3 items; each was
+  independently validated against the code and standards before being
+  fixed as a seventh pre-execution amendment. (1) `check_run_complete()`
+  accepted a sidecar naming its own infrastructure filename
+  (`campaign-metadata.json` or `manifest.json`) as an artefact and passed
+  closure for the wrong reason — the missing-file check sees the file (it
+  exists, just isn't a result) and the unlisted-file check never considers
+  it (excluded as infrastructure). Reproduced empirically before the fix.
+  Fixed: the `infrastructure` set both checks already used is now computed
+  once, up front, and an artefact name is rejected if it is either not a
+  plain filename or a member of that set. (2) This document's finding-count
+  summary still didn't reflect §5.9's own five findings even after §5.9
+  corrected the count it inherited from §5.5-§5.8 — the same drift
+  recurring one level up. Fixed by explicitly defining "finding" vs.
+  "locale correction" vs. "numbered remediation item" and citing the exact
+  per-section recount inline (twenty-three findings, one locale correction,
+  twenty-four items total: §5.5=4, §5.6=5, §5.7=2, §5.8=5, §5.9=5,
+  §5.10=3). (3) §5.9's "CI green throughout" claim was asserted before
+  checking the pushed commit's actual GitHub Actions status — the same
+  unverified-CI-status pattern this project's own governance history
+  (ETCA-002, T-F4) already identified as a recurrence risk. Checked now
+  (`gh pr checks 20` at `ae49493`): 26/26 checks pass, including both
+  `gpu-cuda` and `gpu-wgpu` — the claim was accurate, but not
+  evidence-backed when first made; §5.9's text now says so explicitly
+  rather than being silently corrected. 2 new tests
+  (`tests/test_exp001_driver.py`, 104/104 passing); fixing finding 1
+  required updating one existing test's `pytest.raises` match string
+  ("unsafe artefact" → "unsafe or reserved"), caught immediately by running
+  the suite after the fix. `ruff`/`mypy --strict` clean; Snyk Code 0 issues
+  on both touched Python files; full local quick suite green. EXP-001 E3
+  (session 0156) remains authorized to begin.
+- **EXP-001 pre-registration — sixth E2 remediation, fifth code-review
+  round on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.9.** A sixth CodeRabbit + Copilot round found 5 items; each was
+  independently validated against the code and standards before being
+  fixed as a sixth pre-execution amendment. (1) `--label` accepted a
+  path-traversal payload: §5.8's `_validate_run_dir` constrained `--out`'s
+  full basename but never `--label` alone, so `x/../../../EXP-002/foreign`
+  could still escape the intended run directory — reproduced empirically
+  end-to-end through `main()`. New `_validate_label()` rejects anything but
+  a single safe filename component
+  (`_LABEL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")`) before `--out`
+  is even inspected. (2) The run-directory reservation itself was
+  check-then-act, not atomic: `_validate_run_dir` tested `run_dir.exists()`
+  and raised if true, but the actual `mkdir` happened later inside
+  `write_json_exclusive`, leaving a TOCTOU window for two concurrent
+  invocations with the same `RUN-` name. Renamed to `_reserve_run_dir`,
+  which now calls `run_dir.mkdir()` itself (no `exist_ok`) and converts
+  `FileExistsError` into the abort. (3) `check_run_complete()` used
+  artefact names from `campaign-metadata.json` as path components without
+  validating them, so `"../../foreign.json"` or `"sub/inner.json"` would
+  resolve outside or below `run_dir` without ever being flagged as
+  malformed. New `_is_safe_artefact_name()` rejects any name that is empty,
+  `.`/`..`, or contains `/` or `\`, checked before the existence check.
+  (4) `check_run_complete()` verified every named artefact exists but never
+  the converse — an unmanifested extra `*.json` file in the run directory
+  would be silently picked up by `append_manifest`'s glob. It now also
+  rejects any `*.json` file present that `campaign-metadata.json` does not
+  name (excluding the sidecar itself and `manifest.json`, both
+  run-directory infrastructure). (5) This document's own "seventeen
+  remediation items" count was wrong; an exact recount (§5.5=4, §5.6=5,
+  §5.7=2, §5.8=5) gives sixteen findings plus one locale correction — fixed
+  throughout using the verified figure, not CodeRabbit's own suggested
+  "18". 23 new tests (`tests/test_exp001_driver.py`, 102/102 passing);
+  `ruff`/`mypy --strict` clean; Snyk Code 0 issues on both touched Python
+  files; full local quick suite and all three governance gates
+  (`wp001_baseline`, session registration, DV register) green; an
+  end-to-end corpus-mode smoke run through the live driver independently
+  confirmed the full reserve→compare→write→close pipeline still works.
+  EXP-001 E3 (session 0156) remains authorized to begin.
+- **EXP-001 pre-registration — fifth E2 remediation, fourth code-review
+  round on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.8.** A final CodeRabbit + Copilot round found 6 items; each was
+  independently validated against the code and standards before being
+  fixed as a fifth pre-execution amendment. (1) The H2 reference was never
+  pinned or recorded: `run_prinet_trajectory` caught only `ImportError`, so
+  a manually run H2 would compare against whatever `prinet` was importable
+  while the artefact still described itself as a PRINet 3.0.0 result. New
+  `prinet_reference_provenance()` aborts unless `prinet.__version__` equals
+  the new `PRINET_REFERENCE_VERSION = "3.0.0"` constant and records
+  `prinet_version`/`prinet_source` in the fuzz artefact's `config` envelope;
+  fuzz mode calls it before the batch, and `run_prinet_trajectory` on every
+  case. (2) The campaign plan §7.1 run-directory contract was unenforced —
+  the driver checked only a non-empty basename, and the shared writer
+  creates parents with `exist_ok=True`. New `_validate_run_dir` rejects a
+  non-canonical `RUN-<UTC>-<SHA>-<label>` name, a parent other than
+  `benchmarks/results/EXP-001/`, or an already-existing directory, before
+  any comparison runs. (3) A process kill between the sidecar and result
+  writes would leave a sidecar-only directory that
+  `tools.reproduce.append_manifest` (which globs `*.json` without reading
+  the sidecar) would manifest and `verify_manifest` would accept; new
+  `check_run_complete()` is now the mandatory first step of run closure in
+  `benchmarks/results/EXP-001/README.md` and preregistration §5.3, raising
+  `IncompleteRunError` for such a directory (recorded as aborted, retried
+  under a new `RUN-` ID, never deleted or manifested). The previous entry's
+  "either both land or neither does" is narrowed to driver-handled failures
+  accordingly. (4) Preregistration §4's H2b row said a metric is REFUTED
+  whenever not CONFIRMED, contradicting §8's INCONCLUSIVE-on-no-data rule;
+  §4 now states that exception. (5) "afterwards" → "afterward". 22 new tests
+  (`tests/test_exp001_driver.py`, 79/79 passing; the nine existing CLI
+  tests moved to canonical `RUN-` names under a shared `run_root` fixture);
+  `ruff`/`mypy --strict` clean; Snyk Code 0 issues. EXP-001 E3 (session
+  0156) remains authorized to begin.
+- **EXP-001 pre-registration — fourth E2 remediation, third code-review round
+  on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.7.** A further Copilot review of the third-remediation commit found 2
+  follow-on defects that remediation had itself introduced, both fixed as a
+  fourth pre-execution amendment: (1) the pre-existing-result `Path.exists()`
+  fast-fail was described as *reserving* the result path, but it is only a
+  TOCTOU check — a concurrent writer can still take the path between it and
+  `write_result`, leaving the sidecar this invocation already published
+  attached to a result it did not write. Fixed by making the pair genuinely
+  transactional: the sidecar still goes first (campaign plan §7.2 accepts a
+  result only with its provenance), and any `write_result` failure now rolls
+  the sidecar back — which can only ever remove this invocation's own
+  sidecar, since `write_campaign_metadata` publishes by exclusive-create and
+  raises if one already exists. (2) The driver's module docstring still
+  described H4's GPU side as running through
+  `prin._torch_compat.KuramotoOscillator`, which the third remediation had
+  deliberately replaced with a direct `prin._prin_core.GpuSparseKuramoto`
+  call; beyond being stale, that wording invited a future change to reroute
+  the path back through the dispatch hook and silently drop the
+  CUDA-residency check. 1 new test
+  (`test_result_write_failure_rolls_back_the_sidecar`, asserting both that
+  the sidecar exists when `write_result` is entered and that it is gone
+  afterward; `tests/test_exp001_driver.py`, 57/57 passing);
+  `ruff`/`mypy --strict` clean; Snyk Code 0 issues. EXP-001 E3 (session 0156)
+  remains authorized to begin.
+- **EXP-001 pre-registration — third E2 remediation, second code-review round
+  on PR #20 (session 0155, E2, 2026-09-22) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.6.** A maintainer-requested fresh CodeRabbit review plus a new Copilot
+  review found 5 more issues, all fixed as a third pre-execution amendment:
+  (1) the prior CUDA check (`torch.cuda.is_available()`) was necessary but
+  not sufficient — a `--features wgpu`-only build's binding can pass it on a
+  CUDA-capable host, and even a `--features cuda` build silently falls back
+  to `prin-sim`'s host-slice (CPU) path when its CubeCL client fails to
+  initialise; `compare_kernel_path_case` now calls `GpuSparseKuramoto`
+  directly and inspects the raw DLPack capsule's device (`kDLCUDA` only on
+  the true CUDA path) instead of going through
+  `prin._torch_compat`'s device-normalizing dispatch hook; (2) a
+  provenance-reservation gap the second remediation's own metadata-first
+  fix introduced — a stale result at the target path could receive a fresh,
+  misattributed sidecar — closed by reserving the result path before
+  writing either file; (3) H2b previously pooled `order_parameter` and
+  `mean_phase_coherence` (different ranges, `[0,1]` vs `[-1,1]`) into one
+  combined sample; now two independent per-metric predicates, both must
+  confirm; (4) the clamp-trip abort sub-criterion is now explicitly scoped
+  as "not enforced — registered validity boundary" rather than ambiguously
+  "disclosed"; (5) the H4 test guards were updated to require real CUDA
+  execution (`_needs_gpu_execution`), not just binding presence, matching
+  fix (1). 1 new test plus 1 renamed/rewritten in place
+  (`tests/test_exp001_driver.py`, 56/56 passing); `ruff`/`mypy --strict`
+  clean; Snyk Code 0 issues. EXP-001 E3 (session 0156) remains authorized to
+  begin.
+- **EXP-001 pre-registration — second E2 remediation, code review on PR #20
+  (session 0155, E2, 2026-09-21) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`
+  §5.5.** The E1+E2 branch was pushed for CI and code review ahead of E3, per
+  maintainer direction; Devin, CodeRabbit, and GitHub Copilot found 5 issues
+  in `benchmarks/campaign/exp001_driver.py`, fixed as a second pre-execution
+  amendment (no `RUN-` directory yet exists, so the E1→E2 edit window still
+  applies): (1) H2a/H2b data-sufficiency gap — H2a is now bounded to
+  `0..min(T_STAR, n_steps)` and a new `beyond_horizon` field stores the raw
+  paired values E4 needs for H2b's pooled statistic, which the prior
+  whole-trajectory `compare_case` call could not have supplied; (2) abort
+  criteria (NaN/Inf, `order_parameter`/`mean_phase_coherence` range,
+  phase-wrap) were never enforced — now checked per case
+  (`_case_arrays_hazard_violation`), marking a breach `"aborted": true`
+  instead of silently reporting it as a tolerance failure; implementing this
+  check also surfaced and corrected a real error in the pre-registration
+  itself (`mean_phase_coherence`'s true range is `[-1, 1]`, not `[0, 1]`);
+  (3) two artefact-write races — `write_campaign_metadata`'s check-then-write
+  and result-before-sidecar ordering in `main()`, fixed by extracting DV-038's
+  stage-then-exclusive-create write into a shared
+  `benchmarks._common.result.write_json_exclusive` and writing the sidecar
+  first; (4) H4 backend mislabeling — `GpuSparseKuramoto` compiles under
+  `--features wgpu` alone too, so `compare_kernel_path_case` now also
+  requires `torch.cuda.is_available()` before recording a `backend: "cuda"`
+  result. `_bit_identical` also replaces `numpy.array_equal` for H3's
+  repeatability check (dtype + raw bytes, not just element values). 19 new
+  tests (`tests/test_exp001_driver.py`, 55/55 passing); `ruff`/`mypy --strict`
+  clean; Snyk Code 0 issues on all 4 touched files (moving the shared write
+  primitive into `benchmarks/_common/result.py` also resolved 3 LOW
+  path-traversal findings Snyk raised against the same code once it lived in
+  the CLI-argument-handling file). EXP-001 E3 (session 0156) remains
+  authorized to begin.
+- **EXP-001 pre-registration APPROVED — golden-trajectory numerical parity
+  (session 0155, E2, 2026-09-21) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`.**
+  Independent review against Experimentation Standards §2 E2 (falsifiability,
+  statistical adequacy, fair baselines, resource sanity); maintainer approval
+  recorded (MichaelMaillet, 2026-09-21). Closed the one open item from E1 as
+  a pre-execution amendment: H4's driver support (`compare_kernel_path_case`/
+  `compare_kernel_path_subset`, `--mode kernel-path` in
+  `benchmarks/campaign/exp001_driver.py`), built and tested against a
+  `--features cuda` rebuild of `prin` on H1 (`GpuSparseKuramoto` now present).
+  A closure run over all 72 `kuramoto_sparse_knn_*` corpus cases passed
+  72/72 at the registered `rtol=1e-5, atol=1e-6` kernel tolerance (worst case
+  `max_abs_diff≈8.98e-7`). 7 new tests added (`tests/test_exp001_driver.py`,
+  36/36 passing; `ruff`/`mypy --strict`/Snyk Code clean on both files), one of
+  which regression-tests a pre-existing bug found during this review: the E1
+  driver's `campaign-metadata.json` artefact tagging mistagged
+  `--mode repeatability` runs as `H1` instead of `H3` (fixed with an explicit
+  `_MODE_HYPOTHESIS` mapping; no run had executed under the bug). EXP-001 E3
+  (session 0156) is authorized to begin.
+- **EXP-001 pre-registration — golden-trajectory numerical parity (session
+  0154, E1, 2026-09-21) —
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`.**
+  Four falsifiable hypotheses against the campaign plan's reconciled targets
+  (trajectory `rtol=1e-6/atol=1e-8`; metric `rtol=2e-6/atol=1e-12`;
+  GPU-kernel `rtol=1e-5/atol=1e-6`): H1 full 504-case corpus parity, H2
+  ≥1,000-case hypothesis-fuzzed parity with a registered `T*=20`-step
+  shadowing horizon (pointwise within, Welch-t/Cohen's-d/bootstrap-CI
+  distributional comparison beyond), H3 14-cell bit-level repeatability, and
+  H4 GPU sparse-k-NN kernel-path tolerance-identity (driver support pending
+  a `--features cuda` rebuild — the default build lacks
+  `GpuSparseKuramoto`, discovered during driver development; logged as a
+  documented pre-E3 gap, not silently dropped). New committed, tested
+  campaign driver `benchmarks/campaign/exp001_driver.py` (H1–H3; 29/29 tests
+  in `tests/test_exp001_driver.py`; `ruff`/`mypy --strict`/Snyk Code clean)
+  implementing the corpus, repeatability, and fuzz comparisons against the
+  actual `prin.dynamics` Rust core and writing results via
+  `benchmarks._common.result.write_result` plus a new
+  `campaign-metadata.json` sidecar (campaign plan §7.2). No experiment
+  executed; this is pre-registration only (Experimentation Standards §1.1).
 - **Raw benchmark artefacts are now append-only at the writer (DV-038).**
   `benchmarks/_common/result.py::write_result` stages and flushes complete JSON,
   then publishes it with atomic exclusive-create semantics. Concurrent writers

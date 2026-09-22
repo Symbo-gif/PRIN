@@ -54,6 +54,60 @@ def _validate_output_path(path: Path) -> Path:
     )
 
 
+def write_json_exclusive(
+    path: Path, payload: dict[str, Any], *, conflict_message: str
+) -> Path:
+    """Write ``payload`` as JSON to ``path``, confined, atomic, and exclusive.
+
+    The shared low-level primitive behind :func:`write_result` and
+    ``benchmarks.campaign.exp001_driver.write_campaign_metadata``: both need
+    "confine to a declared output root, stage to a temp file, publish with
+    an exclusive-create that can never silently overwrite" semantics
+    (DV-038); only the payload shape and the conflict citation differ. Kept
+    as one function, rather than duplicated per caller, so the path-safety
+    check and the raw ``json.dump``/``os.link`` sink calls live in a single
+    place for static analysis to reason about (Coding Standards §6.1).
+
+    Args:
+        path: Destination file. Must resolve inside ``benchmarks/results/``,
+            ``DOCS/test_and_benchmark_results/``, or a temp directory.
+        payload: The JSON-serializable document to write.
+        conflict_message: The :class:`ArtefactExistsError` message to raise
+            if ``path`` already exists (append-only — never overwritten).
+
+    Returns:
+        The resolved path actually written.
+
+    Raises:
+        OutputPathError: If ``path`` escapes the declared output roots.
+        ArtefactExistsError: If ``path`` already exists.
+    """
+    resolved = _validate_output_path(path)
+    resolved.parent.mkdir(parents=True, exist_ok=True)
+    staging_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=resolved.parent,
+            prefix=f".{resolved.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as staging:
+            staging_path = Path(staging.name)
+            json.dump(payload, staging, indent=2, sort_keys=True, ensure_ascii=False)
+            staging.flush()
+            os.fsync(staging.fileno())
+        try:
+            os.link(staging_path, resolved)
+        except FileExistsError as exc:
+            raise ArtefactExistsError(conflict_message) from exc
+    finally:
+        if staging_path is not None:
+            staging_path.unlink(missing_ok=True)
+    return resolved
+
+
 def write_result(
     path: Path,
     *,
@@ -83,36 +137,17 @@ def write_result(
         ArtefactExistsError: If ``path`` already exists. Raw artefacts are
             append-only; write to a new run directory instead.
     """
-    resolved = _validate_output_path(path)
     if "environment" in payload or "config" in payload:
         raise OutputPathError(
             "payload must not define reserved keys 'environment'/'config'"
         )
     artefact = {"environment": environment, "config": config, **payload}
-    resolved.parent.mkdir(parents=True, exist_ok=True)
-    staging_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=resolved.parent,
-            prefix=f".{resolved.name}.",
-            suffix=".tmp",
-            delete=False,
-        ) as staging:
-            staging_path = Path(staging.name)
-            json.dump(artefact, staging, indent=2, sort_keys=True, ensure_ascii=False)
-            staging.flush()
-            os.fsync(staging.fileno())
-        try:
-            os.link(staging_path, resolved)
-        except FileExistsError as exc:
-            raise ArtefactExistsError(
-                f"{resolved} already exists; raw benchmark artefacts are append-only "
-                "(Experimentation Standards §4) — write to a new run directory "
-                "instead of overwriting"
-            ) from exc
-    finally:
-        if staging_path is not None:
-            staging_path.unlink(missing_ok=True)
-    return resolved
+    return write_json_exclusive(
+        path,
+        artefact,
+        conflict_message=(
+            f"{path.resolve()} already exists; raw benchmark artefacts are "
+            "append-only (Experimentation Standards §4) — write to a new run "
+            "directory instead of overwriting"
+        ),
+    )

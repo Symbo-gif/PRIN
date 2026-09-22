@@ -1,6 +1,6 @@
 # Session 0154 — EXP-001 / C1 E1: Pre-registration — Golden-trajectory numerical parity
 
-**Status:** PLANNED  
+**Status:** COMPLETE  
 **Roadmap phase:** 7 — Experimentation campaign and stable release  
 **Execution unit:** EXP-001 / C1  
 **Session type:** E1 — Pre-registration  
