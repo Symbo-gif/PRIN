@@ -125,3 +125,10 @@ Local implementation commit: `8bcea55`. The [correction audit](../../audits/2026
 S2 commit `e09b7f5` raised no additional source finding. S3 verified the
 workflow, checker, and tests are unchanged from locally validated S1 commit
 `8bcea55`; local delta re-audit CLEAN. S4 and hosted validation remain pending.
+
+## DV-036 S4 preparation
+
+S1 `8bcea55`, S2 `e09b7f5`, and S3 `a0c1d2b` are locally complete.
+Documentation/index updates are prepared for the authorized hotfix push and
+nightly test. S4, final Project State Report, hosted success, and main-merge
+confirmation remain pending; no E3 run is authorized by these local commits.

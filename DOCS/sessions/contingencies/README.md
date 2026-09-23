@@ -8,7 +8,7 @@ numbered session. Copy each template to a dated/identified file before use.
 
 ## Active correction
 
-DV-036 — session 0156 blocked; S1 in progress, S2–S4 planned.
+DV-036 — session 0156 blocked; S1–S3 locally complete, S4 in progress pending hosted validation and main-merge confirmation.
 
 - [2026-09-23-dv036-s1-correction-implementation.md](2026-09-23-dv036-s1-correction-implementation.md)
 - [2026-09-23-dv036-s2-correction-audit.md](2026-09-23-dv036-s2-correction-audit.md)

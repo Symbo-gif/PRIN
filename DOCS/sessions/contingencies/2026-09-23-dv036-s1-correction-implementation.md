@@ -1,6 +1,6 @@
 # DV-036 S1 — Correction implementation
 
-**Status:** IN PROGRESS  
+**Status:** COMPLETE (local stage)\
 **Triggering deviation:** `DV036-F1 / DV036-F2`  
 **Blocked numbered session:** `0156`
 
@@ -33,3 +33,5 @@ selection retained; 10% threshold unchanged; fail-closed completeness tests;
 >=95% changed-code coverage; affected local/security gates green; fresh
 whole-nightly success required for closure. No automatic baseline promotion.
 No main merge or E3 authorization is claimed by implementation completion.
+
+**Evidence:** implementation commit `8bcea55`; see the [correction audit](../../audits/2026-09-23-dv036-nightly-correction-audit.md) and the [EXP-001 execution log](../../experiments/EXP-001-golden-trajectory-numerical-parity/log.md).

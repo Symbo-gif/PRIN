@@ -427,3 +427,5 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   reproduced with a failing test before the fix, then FIXED with regression
   tests proven to fail pre-fix and pass post-fix; CLEAN delta re-audit,
   ruff/mypy --strict/Snyk Code all clean, full subsystem suite 64/64.
+- [`2026-09-23-dv036-nightly-correction-audit.md`](2026-09-23-dv036-nightly-correction-audit.md) —
+  DV-036 local S2 PASS and S3 CLEAN; S4/hosted confirmation pending.

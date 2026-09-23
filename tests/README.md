@@ -30,6 +30,13 @@ remain unchanged except for separately governed post-port hardening documented
 in the Deferred Validation Register (Testing Standards §1.1). WP-037 adds the
 documentation/example/notebook gates described below.
 
+## Nightly comparison correction
+
+`test_check_bench_regression.py` covers the DV-036 correction: the unchanged
+10% boundary, each mandatory measurement source, malformed/non-finite or
+duplicate data, unmatched benchmark identities, and the same-job workflow
+contract. These synthetic inputs are tests, never campaign observations.
+
 ## WP-036B ported acceptance suite (13 files, 498 tests)
 
 | Port file | `def test_` | Passed | Skipped | Reference guard |
