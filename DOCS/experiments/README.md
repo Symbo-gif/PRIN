@@ -26,6 +26,15 @@ tolerances** — a REFUTED/D1 trajectory under preregistration §8, escalated
 to E4 (session 0157) for adjudication per campaign plan §10.4. See
 [EXP-001's execution log](EXP-001-golden-trajectory-numerical-parity/log.md).
 
+**EXP-001 E4 adjudicated on 2026-09-23 UTC (session 0157) — campaign plan
+§10.4 D1 raised.** Applying the frozen §8 rule: **H1 `REFUTED`**,
+**H2a `REFUTED`**, **H2b `CONFIRMED`**, **H3 `CONFIRMED`**,
+**H4 `CONFIRMED`**. Session 0158 (E5) still completes and reports the
+negatives in full, then blocks session 0159 and every downstream experiment
+until the four contingency correction sessions close; EXP-001 is then re-run
+as a new record, `EXP-001-r1`. No root cause is claimed at E4. See
+[EXP-001's E4 analysis record](EXP-001-golden-trajectory-numerical-parity/analysis.md).
+
 ## Layout
 
 ```

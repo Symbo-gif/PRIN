@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 E4 analysis — golden-trajectory numerical parity adjudicated
+  (session 0157, 2026-09-23 UTC).** The frozen pre-registration §8 decision
+  rule was applied to the four immutable E3 run artefacts at code SHA
+  `6b9d6b6`, after `tools/reproduce.py::verify_manifest` passed on all four
+  run directories. Verdicts: **H1 `REFUTED`** (485 of 504 corpus cases within
+  the registered tolerance), **H2a `REFUTED`** (897 of 1,000 fuzzed cases
+  within the shadowing horizon), **H2b `CONFIRMED`** (both metrics' 95 %
+  bootstrap CIs strictly inside their registered ±δ over 657 contributing
+  cases: `order_parameter` [−4.004e-03, −1.204e-04] against δ = 0.01 and
+  `mean_phase_coherence` [−3.676e-03, +5.565e-04] against δ = 0.02),
+  **H3 `CONFIRMED`** (14/14 bit-identical), and **H4 `CONFIRMED`** (72/72
+  within `rtol=1e-5, atol=1e-6` on a CUDA backend). No case aborted in any
+  run, so no hypothesis falls into §8's partial-abort branch. **The campaign
+  plan §10.4 D1 flag is raised.** Per §10.4 item 2, session 0158 (E5) still
+  completes and reports the negatives in full, then blocks session 0159
+  (EXP-002 E1) and every downstream experiment until the four contingency
+  correction sessions close, after which EXP-001 is re-run as `EXP-001-r1`.
+  No root cause is claimed at E4; diagnosis belongs to the correction cycle.
+- **Committed E4 analysis code and report manifest for EXP-001
+  (session 0157).** `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py`
+  implements the registered §8 rule, delegating H2b verbatim to the single
+  committed predicate `benchmarks.campaign.exp001_driver.adjudicate_h2b` and
+  adding no statistic outside campaign plan §9.2's permitted set. It
+  regenerates every output deterministically (no wall clock, no unseeded
+  randomness, sorted keys, fixed row order) into the gitignored
+  `DOCS/test_and_benchmark_results/EXP-001/`, digested in the committed
+  `report-manifest.json` alongside every input run manifest, the per-hypothesis
+  verdicts, and the D1 flag. Covered by `tests/test_exp001_e4_analysis.py`
+  (33 tests). The E4 adjudication record, protocol deviations, threats to
+  validity, and exploratory notes are in the record root's `analysis.md`.
+
 - **EXP-001 E3 execution — full golden-trajectory numerical parity
   (session 0156, 2026-09-23 UTC).** The first Phase 7 campaign experiment
   executed all four registered runs through the committed driver
@@ -26,6 +57,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **DV-040 opened (2026-09-23, session 0157).** Campaign plan §7.4 item 2
+  prescribes the experiment record root for E4 analysis code, but
+  `python.yml`'s lint job runs `ruff`, `mypy --strict`, `interrogate`, and
+  `bandit` over `python/ tests/ benchmarks/ tools/` only — so campaign
+  analysis code committed where the plan directs is outside the authoritative
+  merge gate for those checks (Snyk Code, which scans the whole checkout, does
+  cover it). EXP-001 E4 ran the full gate locally and placed its tests under
+  `tests/` as a compensating control. Resolution — extend the CI lint paths or
+  relocate campaign analysis code and amend §7.4 — is a maintainer decision;
+  re-audit gate is EXP-002 E4 (session 0162).
 - **Campaign plan amendment 6 (2026-09-23 UTC) — EXP-001 storage budget.**
   The four E3 runs total 5.921 MiB, exceeding §8's 5 MiB EXP-001 cap and
   §7.5's 2 MiB per-run cap (the 1,000-case fuzz artefact is 4.199 MiB and

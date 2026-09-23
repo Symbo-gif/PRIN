@@ -8,7 +8,11 @@
 each closed with `check_run_complete` + `append_manifest` +
 `verify_manifest`. Total 5.921 MiB under campaign plan amendment 6
 (EXP-001 tracked cap 8 MiB; §7.5 per-run cap waived for the `fuzz` leg).
-Verdicts belong to E4 — see the experiment log. Record root:
+Verdicts were assigned at E4 (session 0157) on the frozen pre-registration §8
+rule: **H1 `REFUTED`, H2a `REFUTED`, H2b/H3/H4 `CONFIRMED`**, raising the campaign
+plan §10.4 D1 flag. These artefacts are unchanged by that adjudication and are
+never edited; the re-run after the correction cycle gets a new experiment record
+(`EXP-001-r1`) with new `RUN-` directories. Record root:
 [`DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/`](../../../DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/README.md).
 
 ## Run-directory rule (campaign plan §7.1, §7.3)
