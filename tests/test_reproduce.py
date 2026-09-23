@@ -359,3 +359,134 @@ def test_main_success_prints_deterministic_file_manifest(
     assert "tables/table.tex" in output
     assert reproduce.compute_sha256(generated) in output
     assert "Generated 1 files" in output
+
+
+def _probe_symlink_support() -> bool:
+    """True iff this process can create a symlink in a temporary directory.
+
+    Symlink creation needs elevated privilege or Developer Mode on Windows
+    (GitHub-hosted `windows-latest` runners have it; an arbitrary local or
+    self-hosted Windows host may not), so the PR23-F1 regression tests are
+    gated on an executability probe rather than on a platform assumption —
+    the same guard class as
+    ``tests/test_exp001_driver.py::_probe_symlink_support``.
+    """
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as raw:
+        directory = Path(raw)
+        target = directory / "target"
+        target.write_text("x", encoding="utf-8")
+        link = directory / "link"
+        try:
+            link.symlink_to(target)
+        except OSError:
+            return False
+        return True
+
+
+_needs_symlink_support = pytest.mark.skipif(
+    not _probe_symlink_support(),
+    reason="creating symlinks is not permitted in this environment",
+)
+
+
+class TestManifestSymlinkProvenance:
+    """PR23-F1 (Copilot, PR #23): the shared verifier must not follow links.
+
+    ``verify_manifest`` previously established *content* integrity (the bytes
+    at this path hash to the recorded digest) but not *path provenance*: its
+    ``is_file()``, ``stat()``, and ``open()`` calls all follow symbolic links,
+    so a manifest or artefact that was a link to a file outside the governed
+    directory verified clean. ``benchmarks/campaign/exp001_driver.py``
+    deliberately closed the same CWE-59 class in its own
+    ``check_run_complete`` without modifying this shared tool; these tests pin
+    the fix in the shared tool itself, which is the path
+    ``DOCS/experiments/EXP-001-.../analysis/exp001_e4_analysis.py`` uses.
+    """
+
+    @_needs_symlink_support
+    def test_verify_manifest_rejects_a_symlinked_artefact(self, tmp_path: Path) -> None:
+        governed = tmp_path / "governed"
+        governed.mkdir()
+        outside = tmp_path / "outside.json"
+        payload = b'{"a": 1}\n'
+        outside.write_bytes(payload)
+        manifest = {
+            "schema_version": 1,
+            "description": "test manifest",
+            "source": "synthetic",
+            "files": [
+                {
+                    "path": "a.json",
+                    "bytes": len(payload),
+                    "sha256": reproduce.compute_sha256(outside),
+                }
+            ],
+        }
+        manifest_path = governed / "manifest.json"
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        (governed / "a.json").symlink_to(outside)
+
+        with pytest.raises(
+            reproduce.ManifestMismatchError, match=r"manifested artefact.*symbolic link"
+        ):
+            reproduce.verify_manifest(governed, manifest_path)
+
+    @_needs_symlink_support
+    def test_verify_manifest_rejects_a_symlinked_manifest(self, tmp_path: Path) -> None:
+        governed = tmp_path / "governed"
+        governed.mkdir()
+        outside_manifest = _write_manifest(tmp_path, {"a.json": b'{"a": 1}\n'})
+        (governed / "a.json").write_bytes(b'{"a": 1}\n')
+        link = governed / "manifest.json"
+        link.symlink_to(outside_manifest)
+
+        with pytest.raises(
+            reproduce.ManifestMismatchError, match=r"manifest.*symbolic link"
+        ):
+            reproduce.verify_manifest(governed, link)
+
+    @_needs_symlink_support
+    def test_append_manifest_never_blesses_a_symlinked_artefact(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(reproduce, "ALLOWED_MANIFEST_ROOTS", (tmp_path.resolve(),))
+        governed = tmp_path / "governed"
+        governed.mkdir()
+        outside = tmp_path / "outside.json"
+        outside.write_bytes(b'{"a": 1}\n')
+        (governed / "a.json").symlink_to(outside)
+        manifest_path = governed / "manifest.json"
+
+        with pytest.raises(
+            reproduce.ManifestMismatchError, match=r"candidate artefact.*symbolic link"
+        ):
+            reproduce.append_manifest(governed, manifest_path)
+        assert not manifest_path.exists()
+
+    @_needs_symlink_support
+    def test_append_manifest_rejects_a_symlinked_destination(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(reproduce, "ALLOWED_MANIFEST_ROOTS", (tmp_path.resolve(),))
+        governed = tmp_path / "governed"
+        governed.mkdir()
+        (governed / "a.json").write_bytes(b'{"a": 1}\n')
+        outside_manifest = tmp_path / "outside-manifest.json"
+        outside_manifest.write_text("{}", encoding="utf-8")
+        link = governed / "manifest.json"
+        link.symlink_to(outside_manifest)
+
+        with pytest.raises(
+            reproduce.ManifestMismatchError, match=r"manifest.*symbolic link"
+        ):
+            reproduce.append_manifest(governed, link)
+        assert outside_manifest.read_text(encoding="utf-8") == "{}"
+
+    def test_regular_files_still_verify(self, tmp_path: Path) -> None:
+        """The guard must not disturb the ordinary all-regular-files path."""
+        manifest = _write_manifest(tmp_path, {"a.json": b'{"a": 1}\n'})
+        assert [r.path for r in reproduce.verify_manifest(tmp_path, manifest)] == [
+            "a.json"
+        ]

@@ -111,6 +111,39 @@ def compute_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _reject_symlink(path: Path, role: str) -> None:
+    """Refuse a symbolic link before any link-following operation reads it.
+
+    ``Path.is_file``, ``Path.stat``, ``Path.read_text``, and ``Path.open`` all
+    follow symbolic links, so a manifest or artefact that is a link to a file
+    living outside the governed directory would be read, hashed, and accepted
+    as if the directory itself held it: content integrity would be verified
+    while path provenance silently would not be (CWE-59). The check is
+    no-follow and runs *before* any of those calls, mirroring the discipline
+    ``benchmarks/campaign/exp001_driver.py::check_run_complete`` already
+    applies to a run's sidecar, its ``manifest.json``, and every declared
+    artefact. Raised as a mismatch, not a format error: the manifest may be
+    perfectly well-formed and still not attest what the directory holds.
+
+    The governed directory itself is deliberately *not* checked. It is chosen
+    by the caller (a governed tool or a test fixture), not attested by the
+    manifest, and on macOS the standard temporary root is itself a symbolic
+    link.
+
+    Args:
+        path: Candidate manifest or artefact path, unresolved.
+        role: Human-readable role used in the failure message.
+
+    Raises:
+        ManifestMismatchError: If ``path`` is a symbolic link.
+    """
+    if path.is_symlink():
+        raise ManifestMismatchError(
+            f"{role} {path} is a symbolic link, not a regular file held by the "
+            "governed directory; refusing to verify it"
+        )
+
+
 def _record_from_dict(payload: object, index: int) -> ManifestRecord:
     if not isinstance(payload, dict):
         raise ManifestFormatError(f"files[{index}] must be a JSON object")
@@ -182,7 +215,11 @@ def append_manifest(
 
     Existing records must still match exactly. Only previously unmanifested JSON
     files are added, making mutation or removal of an accepted artefact a hard
-    failure rather than silently blessing it with a new digest.
+    failure rather than silently blessing it with a new digest. A symbolic link
+    is never manifested: the manifest destination and every candidate ``*.json``
+    in ``results_dir`` are rejected up front if they are links, so a digest is
+    only ever recorded for a regular file the directory itself holds (see
+    :func:`_reject_symlink`).
 
     Args:
         results_dir: Directory containing stored JSON artefacts.
@@ -195,8 +232,10 @@ def append_manifest(
         ReproductionConfigurationError: If the manifest destination is outside
             the governed output roots.
         ManifestFormatError: If an existing manifest is malformed.
-        ManifestMismatchError: If an existing record was removed or modified.
+        ManifestMismatchError: If an existing record was removed or modified, or
+            if the manifest or any candidate artefact is a symbolic link.
     """
+    _reject_symlink(manifest_path, "manifest")
     results = results_dir.resolve()
     destination = manifest_path.resolve()
     if not any(
@@ -209,6 +248,8 @@ def append_manifest(
         )
     records = load_manifest(destination) if destination.is_file() else ()
     existing = {record.path: record for record in records}
+    for candidate in sorted(results.glob("*.json")):
+        _reject_symlink(candidate, "candidate artefact")
     actual_paths = {
         path.name: path
         for path in results.glob("*.json")
@@ -263,7 +304,10 @@ def verify_manifest(
 
     The function is read-only. Existing artefacts can never be silently
     replaced: missing, modified, resized, or newly appended JSON files require a
-    reviewed manifest update before reproduction succeeds.
+    reviewed manifest update before reproduction succeeds. The manifest and
+    every manifested artefact must also be a regular file held by
+    ``results_dir`` itself, never a symbolic link into it (see
+    :func:`_reject_symlink`).
 
     Args:
         results_dir: Directory containing immutable stored JSON artefacts.
@@ -274,8 +318,10 @@ def verify_manifest(
 
     Raises:
         ManifestFormatError: If the manifest is malformed.
-        ManifestMismatchError: If inventory, size, or digest checks fail.
+        ManifestMismatchError: If inventory, size, or digest checks fail, or if
+            the manifest or any manifested artefact is a symbolic link.
     """
+    _reject_symlink(manifest_path, "manifest")
     results = results_dir.resolve()
     records = load_manifest(manifest_path)
     expected = {record.path for record in records}
@@ -290,6 +336,7 @@ def verify_manifest(
         raise ManifestMismatchError(f"unmanifested artefacts: {', '.join(unexpected)}")
     for record in records:
         path = results / record.path
+        _reject_symlink(path, "manifested artefact")
         if path.stat().st_size != record.bytes:
             raise ManifestMismatchError(f"size mismatch: {record.path}")
         if compute_sha256(path) != record.sha256:
