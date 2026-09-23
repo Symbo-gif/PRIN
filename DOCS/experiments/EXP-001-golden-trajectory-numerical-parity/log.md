@@ -1,8 +1,10 @@
-Pre-registration freeze: NOT STARTED — no `RUN-` directory has been created.
+Pre-registration freeze: **`c22db0b7559dd572b368966bb0c72f283ddcd626`** — the git SHA of the last `preregistration.md` edit, frozen 2026-09-23T13:40:12Z when the first `RUN-` directory (`RUN-20260923T134012Z-6b9d6b6-corpus-cpu`) was created (campaign plan §12.4).
 
 # EXP-001 — Session 0156 E3 execution log
 
-**Status:** BLOCKED AT PREFLIGHT — E3 execution has not begun.
+**Status:** EXECUTED — all four registered runs complete; **two candidate D1 conditions and one
+registered budget-cap breach are escalated below**. The preflight history that follows is
+retained verbatim (it is never rewritten); execution begins at §"E3 execution — 2026-09-23 UTC".
 **Record date:** 2026-09-23 UTC (maintainer session dated 2026-09-22 locally).
 **Operator:** Devin (AI pair), acting on MichaelMaillet's instructions.
 **Branch:** `campaign/0156-exp001-e3`.
@@ -154,3 +156,207 @@ amendment 4 (symmetric arms, counterbalanced order, contention group
 advisory on hosted runners). The fix is pushed to the hotfix branch and a
 hosted run is pending. No E3 run is authorized, and session 0156 stays
 blocked.
+
+---
+
+# E3 execution — 2026-09-23 UTC
+
+**Operator (registered `--operator` value):** MichaelMaillet.
+**AI pair executing the committed drivers:** Claude Opus 5 (Experimentation
+Standards §4 authorship disclosure).
+**Branch:** `campaign/0156-exp001-e3`, fast-forwarded to `origin/main`.
+**Code SHA for every run:** `6b9d6b621a2a46e37373bbcafafd475c1d0f644f`
+(`6b9d6b6`), working tree clean at each invocation.
+**Pre-registration freeze SHA:** `c22db0b` (log line 1, campaign plan §12.4).
+
+## Entry conditions — all met
+
+| Condition | Evidence |
+|---|---|
+| E2 approval recorded | `preregistration.md` header, MichaelMaillet 2026-09-21; PR #20 merged `e997431` |
+| `origin/main` green at E3 start (campaign plan §10.2) | `tools/check_ci_green.py b43455405055d189b74441642ab32c96513b2e57 --limit 120` → `RESULT: all required workflows green` (rust `35847498343`, python `35847498316`, parity `35847498434`, repro `35847498332`, snyk `35847498489`, gpu `35847498331`) |
+| Red nightly dispositioned; maintainer's **whole-nightly-green** gate | `nightly.yml` dispatch `35847692136` at `b434554` concluded **success** for the whole workflow — `full-suite` (`107137725899`) and `bench-regression` (`107137725730`) both green |
+| DV-036 blocking correction closed | Conditional cycle S1 `8bcea55` → S2 `e09b7f5` → S3 `a0c1d2b` → S4 closed 2026-09-23; DV036-F1/F2/F3 FIXED, F4 CLOSED, F5 deferred to 0166. Independently re-verified here by re-running the committed checker against the run's preserved evidence artefact (exit 0, identical ratios) |
+| DV-038 closed before 0156 | PR #19 merged `90c0334`, required CI green |
+| DV-039 closed before 0156 | Same merge plus the wholly green nightly above |
+| Baseline code unchanged since E2 (campaign plan §10.2) | `git diff campaign/0156-exp001-e3 origin/main -- crates/ python/prin/ benchmarks/ parity/ paper/` → **empty**. No regression leg is required; the extension built at E2 with `--features cuda` remains valid |
+| Execution environment | `prin` 1.0.0rc1; `prinet` 3.0.0 importable from the archived reference source; `hasattr(prin._prin_core, "GpuSparseKuramoto") == True`; Python 3.14.0; rustc 1.98.1; Windows-11-10.0.26200; AMD64 16 logical CPUs; NVIDIA GeForce RTX 4060, 8188 MiB (host H1) |
+
+No timing claim is made by this experiment (preregistration §5.1), so the
+campaign plan §5.3 quiescence rule does not apply and the CI runner service
+was not stopped.
+
+## H3 representative-case selection (authorized at E3 by preregistration §5.1)
+
+§5.1 registers "the four already identified in `parity/test_parity_differential.py`'s
+`_REPRESENTATIVE_CASES` plus ten more selected at E3 to complete the grid".
+The selection rule adopted, stated before the run and applied uniformly with
+no inspection of results: **the first case in corpus-manifest order within
+each of the 14 `(model, coupling, integrator)` cells.** That single mechanical
+rule reproduces all four pre-identified cases exactly and supplies the ten
+remaining cells, so nothing is cherry-picked. Each cell holds 36 cases
+(14 × 36 = 504, matching the manifest's `n_cases`).
+
+## Run inventory
+
+All four runs used the committed driver `benchmarks/campaign/exp001_driver.py`
+exactly as registered in preregistration §5.3. No driver code was added or
+modified during E3 (campaign plan §12.1). No `RUN-` directory pre-existed;
+none was reused, edited, or deleted. Each was closed in the registered
+three-step order — `check_run_complete` → `append_manifest` →
+`verify_manifest` — all of which passed for all four.
+
+| H | Mode | Run ID | Wall | Cases | Aborted | Outcome as recorded |
+|---|---|---|---|---|---|---|
+| H1 | `corpus` | `RUN-20260923T134012Z-6b9d6b6-corpus-cpu` | 3.7 s | 504 | 0 | **19 cases breach the registered tolerance**; 485 pass |
+| H3 | `repeatability` | `RUN-20260923T134226Z-6b9d6b6-repeatability-cpu` | <1 s | 14 | 0 | **14/14 bit-identical** |
+| H2 | `fuzz` | `RUN-20260923T134250Z-6b9d6b6-fuzz-cpu` | 19 s | 1000 | 0 | **103 cases breach the within-horizon tolerance**; 897 pass; 657 cases carry beyond-horizon data |
+| H4 | `kernel-path` | `RUN-20260923T134255Z-6b9d6b6-kernel-path-cuda` | 4.0 s | 72 | 0 | **72/72 within `rtol=1e-5, atol=1e-6`**; worst `max_abs_diff` 8.9775e-07 |
+
+Exact commands are those in preregistration §5.3, with `--session 0156
+--operator MichaelMaillet` and the H3 `--case-id` list above. H2 used
+`--n-fuzz-cases 1000 --seed-counter 0 --seed-key 1`; the artefact's `config`
+envelope records `fuzz_batch_class: "confirmatory"`,
+`prinet_version: "3.0.0"`, and the reference source path.
+
+**No case in any run aborted.** Every registered §4 abort criterion was
+mechanically evaluated by the driver — NaN/Inf, `order_parameter` outside
+`[0, 1]`, `mean_phase_coherence` outside `[-1, 1]`, phase-wrap range,
+environment completeness, and (H4) CUDA device-residency of all three
+derivative capsules — and none tripped. H4's `environment.backend` is
+`cuda` with the RTX 4060 and 8188 MiB recorded, and its sidecar entry carries
+the amendment-2 `timing_method: "not-timed"`. The §4 item 1 residual
+boundary stands as registered: a clamp trip that leaves outputs finite and
+in-range is not detectable by this driver.
+
+## Observed conditions requiring adjudication or maintainer decision
+
+E3 executes and records; it does not adjudicate (campaign plan §10.4 item 1
+places detection at E4, and this brief prohibits interpreting results during
+execution). The following are stated as recorded facts, with no diagnosis,
+cause, or verdict attached.
+
+### (1) H1 — 19 of 504 corpus cases outside the registered tolerance → candidate D1
+
+Registered tolerances applied by `prin.parity.harness.compare_case`:
+trajectories `rtol=1e-6, atol=1e-8` (corpus manifest), metrics
+`rtol=2e-6, atol=1e-12` (`prin.parity.schema`). 504 non-aborted cases;
+485 within tolerance; **19 outside**. Breaching arrays: `phase_traj` (15
+cases), `mean_phase_coherence_traj` (8), `phase_final` (5). Concentration by
+cell: `stuart_landau/full/euler` 10, `stuart_landau/full/rk4` 7,
+`kuramoto/mean_field/euler` 1, `kuramoto/mean_field/rk4` 1. Breaches are
+sparse within each array (1–4 failing elements out of 12–504) and small in
+absolute terms: the largest `max_abs_diff` across the whole run is
+**2.0086e-07**; the largest `max_rel_diff` is 1.2714e-03.
+
+Under preregistration §8, H1's rule is `CONFIRMED` only if **all** non-aborted
+cases are within tolerance and the non-aborted count is exactly 504. The
+first clause is not satisfied. **E4 adjudicates; on the registered rule this
+is a REFUTED/D1 trajectory, which campaign plan §10.4 routes to a correction
+cycle rather than a publishable novelty.**
+
+### (2) H2a — 103 of 1,000 fuzzed cases breach within the shadowing horizon → candidate D1
+
+1,000 non-aborted cases; 897 within tolerance at steps `0..min(20, n_steps)`;
+**103 outside**. Magnitude split of each breaching case's worst
+`max_abs_diff`: 34 cases below 1e-6, 36 in `[1e-6, 1e-3)`, and **33 at or
+above 1e-3**, the largest being 2.6549e+01. The large-magnitude cases are
+not confined to one cell; breaches appear in 12 of the 14 combinations, most
+often `stuart_landau/full/euler` (34), `kuramoto/mean_field/rk4` (12) and
+`kuramoto/mean_field/euler` (10). Under §8, H2a is `CONFIRMED` only with no
+within-horizon breach across all non-aborted cases; that is not satisfied.
+
+**H2b was not adjudicated here** — §8 assigns it to
+`exp001_driver.adjudicate_h2b` at E4. The raw material is present: 657
+non-aborted cases carry `beyond_horizon` summaries, comfortably above the
+registered minimum of 30 contributing cases per metric.
+
+### (3) Registered budget cap exceeded → maintainer §14.2 decision required
+
+Bytes written under `benchmarks/results/EXP-001/`:
+
+| Run | Bytes | MiB |
+|---|---|---|
+| corpus-cpu | 1,725,249 | 1.645 |
+| repeatability-cpu | 3,992 | 0.004 |
+| **fuzz-cpu** | **4,402,765** | **4.199** |
+| kernel-path-cuda | 76,865 | 0.073 |
+| **Total** | **6,208,871** | **5.921** |
+
+Two registered limits are exceeded:
+
+- **Campaign plan §7.5 per-run cap** — "Raw JSON per run ≤ 2 MiB tracked".
+  The fuzz run is 4.199 MiB, more than twice the cap.
+- **Campaign plan §8 EXP-001 tracked-storage cap** — ≤ 5 MiB. The four runs
+  total 5.921 MiB.
+
+Campaign plan §10.1 item 5 registers "budget exceeded" as an **abort
+criterion**, and §7.5 and §8 both state that exceeding a cap "requires a
+§14.2 budget amendment". §7.5's in-plan remedy — move the large arrays to
+the gitignored `DOCS/test_and_benchmark_results/EXP-001/` and record their
+SHA-256 in a committed sidecar — cannot be applied inside E3, because
+§12.1 forbids E3 from adding or modifying driver code ("a needed driver fix
+at E3 is an abort → fix → new run ID, logged").
+
+**Maintainer decision, 2026-09-23 UTC — campaign plan amendment 6 granted.**
+MichaelMaillet raised EXP-001's §8 tracked cap from 5 MiB to **8 MiB** and
+waived §7.5's 2 MiB per-run cap for this experiment's `fuzz` leg. All four
+runs are committed as written, unmodified and unreduced. The §10.1 item 5
+abort criterion is discharged by the amendment rather than by invalidating a
+completed run, so **no run is aborted on budget grounds**. The campaign-wide
+64 MiB cap is unchanged and far from binding. The fuzz artefact could not be
+shrunk without changing the registered protocol: its per-case
+`beyond_horizon` arrays are exactly what H2b's registered E4 analysis
+consumes. No run directory was deleted, edited, or re-run.
+
+## Artefact integrity — git EOL normalization defect found and fixed at commit time
+
+Staging the four run directories surfaced a defect that would have made this
+session's evidence unverifiable. The driver writes JSON through Python text
+mode, so on Windows every result artefact carries CRLF; the repository's
+`.gitattributes` began with `* text=auto eol=lf`, so git normalized those
+artefacts to LF on commit. Measured, not inferred: the staged blob for
+`corpus_corpus-cpu.json` was **1,667,489 bytes, sha256 `c6a13f5d…`**, while
+its own `manifest.json` records **1,724,465 bytes, sha256 `882da36d…`**. Any
+clean checkout — on Linux or Windows, since `eol=lf` forces LF in the working
+tree — would therefore have read the artefact as *modified and resized*, and
+`tools/reproduce.py::verify_manifest` would have failed closed on the
+campaign's own raw evidence. Campaign plan §7.4's regeneration check ("a
+clean checkout reproduces every output digest byte-for-byte") could not have
+held.
+
+**Fix:** one `.gitattributes` rule, `benchmarks/results/** -text`, disabling
+EOL conversion for raw campaign evidence so the committed blob is exactly the
+bytes that were measured. `-text` rather than `binary` keeps diffs visible,
+which §7.3 relies on as a further immutable record. **No artefact was
+rewritten, re-run, or re-manifested** — the bytes on disk are the bytes the
+drivers produced at execution time, and the manifests are unchanged.
+
+Verified after staging: for all four runs, every staged git blob matches its
+manifest record in both size and SHA-256 (8/8 files). This is a repository
+configuration fix, not a driver, protocol, hypothesis, tolerance, or run
+change, so campaign plan §12.1's prohibition on E3 driver edits is not
+engaged. No first-party source in a Snyk-supported language and no dependency
+manifest changed in this session, so Coding Standards §6's Snyk Code, Snyk
+Open Source, `cargo audit`, and `pip-audit` gates have no changed input to
+scan here; CI remains the authoritative merge gate.
+
+## Handoff
+
+- The E3 exit gate's execution clauses are met: all four registered runs
+  executed, none aborted, every run logged, and all four run directories
+  closed with `check_run_complete` + `append_manifest` + `verify_manifest`
+  passing. Raw artefacts and manifests are complete and immutable.
+- **Both escalated conditions received a maintainer decision in-session
+  (2026-09-23 UTC):**
+  1. *Storage cap* — **campaign plan amendment 6** granted; EXP-001's tracked
+     cap 5 → 8 MiB, §7.5 per-run cap waived for the `fuzz` leg, all four runs
+     committed as written. Closed.
+  2. *H1/H2a tolerance breaches* — **routed to E4 (session 0157)** exactly as
+     campaign plan §10.4 item 1 prescribes: E3 records and escalates, E4
+     applies the registered §8 decision rule and flags the D1. No correction
+     cycle is opened by this session, and no root-cause claim is made here.
+- No hypothesis was adjudicated in this session, no seed was re-drawn, no run
+  was repeated to obtain a different outcome, no tolerance or protocol was
+  changed, and no failing case was excluded. H2b's analysis and every
+  hypothesis verdict belong to E4.

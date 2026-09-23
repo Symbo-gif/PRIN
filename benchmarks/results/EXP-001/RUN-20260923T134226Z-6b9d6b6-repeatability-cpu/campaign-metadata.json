@@ -1,0 +1,11 @@
+{
+  "artefacts": {
+    "repeatability_repeatability-cpu.json": [
+      "H3"
+    ]
+  },
+  "exp_id": "EXP-001",
+  "operator": "MichaelMaillet",
+  "run_id": "RUN-20260923T134226Z-6b9d6b6-repeatability-cpu",
+  "session": "0156"
+}

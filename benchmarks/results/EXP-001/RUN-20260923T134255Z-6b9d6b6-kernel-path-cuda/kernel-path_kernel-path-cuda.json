@@ -1,0 +1,2545 @@
+{
+  "cases": [
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_005_K0_5_seed1400000",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.30436312978577e-07,
+          "max_rel_diff": 6.949862443877543e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 7.922997063980475e-08,
+          "max_rel_diff": 3.52304730143042e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_01_K0_5_seed1400001",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.2131956412561067e-07,
+          "max_rel_diff": 8.057224917300134e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.7281284554223646e-08,
+          "max_rel_diff": 2.151111033473667e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.8210837492930315e-10,
+          "max_rel_diff": 4.791956676863646e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_02_K0_5_seed1400002",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.180191019529047e-07,
+          "max_rel_diff": 9.355812566547466e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 8.672133244846947e-08,
+          "max_rel_diff": 3.8391056412342406e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_005_K1_seed1400003",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 2.066645894416297e-07,
+          "max_rel_diff": 4.7967350444330066e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.0150229415306633e-07,
+          "max_rel_diff": 6.234662457881665e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.992333073692898e-10,
+          "max_rel_diff": 5.704712135740163e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_01_K1_seed1400004",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.131471893018215e-07,
+          "max_rel_diff": 1.426812673281793e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.289809956617205e-07,
+          "max_rel_diff": 1.5186927208107736e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_02_K1_seed1400005",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 2.5981527596030674e-07,
+          "max_rel_diff": 4.409026347842176e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 8.258628625412712e-08,
+          "max_rel_diff": 4.079856472215889e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 4.234820849026433e-10,
+          "max_rel_diff": 7.5751895807114465e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_005_K2_seed1400006",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 2.7322230788939805e-07,
+          "max_rel_diff": 5.4564188911598614e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.6245968270656164e-07,
+          "max_rel_diff": 5.37940990965548e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_01_K2_seed1400007",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.818490104696593e-07,
+          "max_rel_diff": 7.797666390377945e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.441889527775686e-07,
+          "max_rel_diff": 6.727399535441687e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 5.476368043939861e-10,
+          "max_rel_diff": 5.4737172040306624e-05,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_02_K2_seed1400008",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.785827538711374e-07,
+          "max_rel_diff": 3.7841796267005837e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.532463767579429e-07,
+          "max_rel_diff": 3.7900272746162706e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_005_K0_5_seed1400009",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.195096862171567e-07,
+          "max_rel_diff": 7.519797020040443e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 9.284589685965017e-08,
+          "max_rel_diff": 3.6745597953372574e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.6261052431605551e-10,
+          "max_rel_diff": 4.133804474679656e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_01_K0_5_seed1400010",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.294762335239511e-07,
+          "max_rel_diff": 8.648423233033327e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 6.438746491532754e-08,
+          "max_rel_diff": 3.7647084885266523e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_02_K0_5_seed1400011",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.7985642187265967e-07,
+          "max_rel_diff": 7.568915641505201e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.401131639686362e-08,
+          "max_rel_diff": 3.226650233286193e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.384877154630721e-10,
+          "max_rel_diff": 1.6666753188575928e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_005_K1_seed1400012",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.885597958472545e-07,
+          "max_rel_diff": 7.655615037218723e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 7.934847134904999e-08,
+          "max_rel_diff": 1.45323051536746e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_01_K1_seed1400013",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.691068108466425e-07,
+          "max_rel_diff": 2.7843645189442853e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.3623226591263915e-07,
+          "max_rel_diff": 4.0742485469597945e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 6.982929571387579e-10,
+          "max_rel_diff": 2.3269790050899533e-05,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_02_K1_seed1400014",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.645162056642448e-07,
+          "max_rel_diff": 7.297134130187357e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 6.721481748961367e-08,
+          "max_rel_diff": 1.4553088873889593e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_005_K2_seed1400015",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.0020871949764114e-07,
+          "max_rel_diff": 1.2901235934424776e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.9677269158524524e-07,
+          "max_rel_diff": 6.84951895002581e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 3.958891187962055e-10,
+          "max_rel_diff": 4.046023381006652e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_01_K2_seed1400016",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.493671544343215e-07,
+          "max_rel_diff": 4.5341559068182355e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.5819814924711295e-07,
+          "max_rel_diff": 1.3816330818721588e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_02_K2_seed1400017",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.860609840231291e-07,
+          "max_rel_diff": 1.0755804058006177e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.0095120967233981e-07,
+          "max_rel_diff": 2.990983288989031e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.0283412429966735e-09,
+          "max_rel_diff": 1.8517192407332667e-05,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_005_K0_5_seed1400018",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.584062605061945e-07,
+          "max_rel_diff": 1.1031352370131204e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 3.9160770959334457e-08,
+          "max_rel_diff": 2.7647869344973746e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_01_K0_5_seed1400019",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.8772797594788244e-07,
+          "max_rel_diff": 8.664282487459401e-08,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 5.477770970152562e-08,
+          "max_rel_diff": 1.6497170122181898e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 3.1270830231342785e-10,
+          "max_rel_diff": 1.65895142054084e-05,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_02_K0_5_seed1400020",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.554856326028812e-07,
+          "max_rel_diff": 1.3881646436740777e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.3681769534842374e-08,
+          "max_rel_diff": 1.332309832402658e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_005_K1_seed1400021",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.023664589818509e-07,
+          "max_rel_diff": 4.4865764507860553e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.1202735383797346e-07,
+          "max_rel_diff": 1.5038774394520113e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 4.165907385765902e-10,
+          "max_rel_diff": 2.0824852331429407e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_01_K1_seed1400022",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.845856764276959e-07,
+          "max_rel_diff": 9.719641012378887e-08,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 6.496211446549438e-08,
+          "max_rel_diff": 7.834959313678649e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_02_K1_seed1400023",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.740016373323442e-07,
+          "max_rel_diff": 1.0001824066548417e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.0680300466248127e-07,
+          "max_rel_diff": 1.8033662569463825e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 3.8542796818724634e-10,
+          "max_rel_diff": 2.4881011261250112e-05,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_005_K2_seed1400024",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.291178102912909e-07,
+          "max_rel_diff": 3.702312048189774e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.8558809111723917e-07,
+          "max_rel_diff": 1.4743068116655436e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_01_K2_seed1400025",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 8.278145084972266e-07,
+          "max_rel_diff": 3.913320922154996e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.5639599815209237e-07,
+          "max_rel_diff": 9.553003643741244e-08,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.2728752602723242e-09,
+          "max_rel_diff": 6.06642897780741e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_02_K2_seed1400026",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.091030684274301e-07,
+          "max_rel_diff": 1.010335483804325e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.3134950171966864e-07,
+          "max_rel_diff": 2.7056746353099117e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_005_K0_5_seed1400027",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.798797779732467e-07,
+          "max_rel_diff": 1.6553626389905976e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 7.759188214162549e-08,
+          "max_rel_diff": 3.519094760094061e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 3.366916237186688e-10,
+          "max_rel_diff": 6.343098638417065e-05,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_01_K0_5_seed1400028",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.6027017841510087e-07,
+          "max_rel_diff": 8.350300924791877e-08,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 8.912301485697327e-08,
+          "max_rel_diff": 2.531683708733317e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_02_K0_5_seed1400029",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.942877375706644e-07,
+          "max_rel_diff": 1.4125881335654954e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 7.225061809945643e-08,
+          "max_rel_diff": 1.6143143913765086e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 2.1622936336010467e-10,
+          "max_rel_diff": 6.575864823590077e-06,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_005_K1_seed1400030",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.541801240127597e-07,
+          "max_rel_diff": 1.217830694470517e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 6.239756988879464e-08,
+          "max_rel_diff": 1.062295426889884e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_01_K1_seed1400031",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.7090897819780366e-07,
+          "max_rel_diff": 1.3873612868385832e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.0596814803420784e-07,
+          "max_rel_diff": 1.4458626306190246e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 3.42655385399102e-10,
+          "max_rel_diff": 0.0008953823471817496,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_02_K1_seed1400032",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.167127579142061e-07,
+          "max_rel_diff": 3.185797927455269e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.2686163319841626e-07,
+          "max_rel_diff": 1.8918810024546616e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_005_K2_seed1400033",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.084543541755693e-07,
+          "max_rel_diff": 5.097934216362476e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.0931798960788228e-07,
+          "max_rel_diff": 1.604229119012266e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 7.609837780536352e-10,
+          "max_rel_diff": 3.389067364307423e-06,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_01_K2_seed1400034",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.139286282153989e-07,
+          "max_rel_diff": 1.5180960950843872e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.583123543953292e-07,
+          "max_rel_diff": 2.0010937288938143e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_02_K2_seed1400035",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.037562038623378e-07,
+          "max_rel_diff": 1.6581233821550732e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.8232426723940875e-07,
+          "max_rel_diff": 1.1546940361386485e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 7.757405597334961e-10,
+          "max_rel_diff": 7.061058313295016e-06,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_005_K0_5_seed1500000",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.529945905635714e-07,
+          "max_rel_diff": 6.554686472725992e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 3.875199983127686e-08,
+          "max_rel_diff": 2.2735929424483058e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_01_K0_5_seed1500001",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 2.3128054493781747e-07,
+          "max_rel_diff": 7.078454542182507e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 7.123257805830008e-08,
+          "max_rel_diff": 2.339105643879484e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.1362429671191859e-10,
+          "max_rel_diff": 4.6428720600368196e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_02_K0_5_seed1500002",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.591515535030567e-07,
+          "max_rel_diff": 9.340484224851185e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 6.872851210371067e-08,
+          "max_rel_diff": 4.630846217004578e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_005_K1_seed1500003",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.1978050902002906e-07,
+          "max_rel_diff": 1.968765757387004e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 9.628154640228814e-08,
+          "max_rel_diff": 4.781065508765623e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 7.094262785729832e-10,
+          "max_rel_diff": 1.0079928201489803e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_01_K1_seed1500004",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 2.959919900291652e-07,
+          "max_rel_diff": 1.0664833879441472e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.4425366534620565e-07,
+          "max_rel_diff": 4.695259633608124e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_02_K1_seed1500005",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 2.997714174668431e-07,
+          "max_rel_diff": 6.910138979284428e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.4332714304288174e-07,
+          "max_rel_diff": 5.793635942318508e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 3.391020595832489e-10,
+          "max_rel_diff": 2.062825482099776e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_005_K2_seed1500006",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.644254983394603e-07,
+          "max_rel_diff": 1.3418041321521587e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.6222471732607602e-07,
+          "max_rel_diff": 3.710827596947899e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_01_K2_seed1500007",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.954110111616728e-07,
+          "max_rel_diff": 7.710229710471031e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.0423550245164392e-07,
+          "max_rel_diff": 4.51057336499642e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 4.2322441883534123e-10,
+          "max_rel_diff": 3.2132722228360025e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_02_K2_seed1500008",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 8.322967612883758e-07,
+          "max_rel_diff": 9.48914789272596e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.7637996940766953e-07,
+          "max_rel_diff": 1.247835460258328e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_005_K0_5_seed1500009",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.0796792433184237e-07,
+          "max_rel_diff": 8.011169656159145e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.395479102914379e-08,
+          "max_rel_diff": 1.4547041581092826e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 9.857231112082865e-11,
+          "max_rel_diff": 1.1646309862841546e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_01_K0_5_seed1500010",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.064264574945355e-07,
+          "max_rel_diff": 6.987924125660073e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 5.176891262892447e-08,
+          "max_rel_diff": 2.2243207573249323e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_02_K0_5_seed1500011",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.395419050950977e-07,
+          "max_rel_diff": 5.903087285474316e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 3.69667157995579e-08,
+          "max_rel_diff": 1.710932122722456e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 2.397797400916494e-10,
+          "max_rel_diff": 2.887417289317304e-05,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_005_K1_seed1500012",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.0484603730229765e-07,
+          "max_rel_diff": 6.700794385823042e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 9.8847069973651e-08,
+          "max_rel_diff": 5.116938055466996e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_01_K1_seed1500013",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.665422276810659e-07,
+          "max_rel_diff": 7.702879034062902e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.1677768041451486e-07,
+          "max_rel_diff": 1.732600029063818e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 2.327672692179622e-10,
+          "max_rel_diff": 2.184756217457833e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_02_K1_seed1500014",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.067256486692486e-07,
+          "max_rel_diff": 1.1566884238468513e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 8.838189413662434e-08,
+          "max_rel_diff": 2.869396167034117e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_005_K2_seed1500015",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.238544412757619e-07,
+          "max_rel_diff": 3.6895899221210217e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.395321957975426e-07,
+          "max_rel_diff": 1.3016559447786167e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 6.611151486012653e-10,
+          "max_rel_diff": 8.11931744882051e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_01_K2_seed1500016",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.741741931965862e-07,
+          "max_rel_diff": 8.20400900744725e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.4774586754029428e-07,
+          "max_rel_diff": 1.333938567068038e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_02_K2_seed1500017",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.079915587127061e-07,
+          "max_rel_diff": 4.347627855571919e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.4394567671160985e-07,
+          "max_rel_diff": 1.355281777400487e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 6.833290783258075e-10,
+          "max_rel_diff": 1.6916410254961674e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_005_K0_5_seed1500018",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.923800815959112e-07,
+          "max_rel_diff": 6.579684464597759e-08,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 3.5797440900431354e-08,
+          "max_rel_diff": 1.1332979891030213e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_01_K0_5_seed1500019",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.796832329707513e-07,
+          "max_rel_diff": 8.460981697092721e-08,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 3.940900950016868e-08,
+          "max_rel_diff": 3.036180842608648e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.556592097920603e-10,
+          "max_rel_diff": 4.331089446747258e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_02_K0_5_seed1500020",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.77899169126772e-07,
+          "max_rel_diff": 1.3924123912566953e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.392037689093797e-08,
+          "max_rel_diff": 2.1651844867754368e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_005_K1_seed1500021",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.515101685280797e-07,
+          "max_rel_diff": 1.2222967863642125e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.0315947496231104e-07,
+          "max_rel_diff": 2.3153986559167671e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 2.3592287921436056e-10,
+          "max_rel_diff": 5.0962087414043615e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_01_K1_seed1500022",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.7416360232356283e-07,
+          "max_rel_diff": 7.368104135834346e-08,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 7.5816235844961e-08,
+          "max_rel_diff": 1.1169559575879369e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_02_K1_seed1500023",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.899425484732433e-07,
+          "max_rel_diff": 9.11091506850396e-08,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.1794588827829244e-07,
+          "max_rel_diff": 1.8978246028262496e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 6.714140625852655e-10,
+          "max_rel_diff": 3.049456875768544e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_005_K2_seed1500024",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.548903179748322e-07,
+          "max_rel_diff": 3.0580689506847e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.903090456334411e-07,
+          "max_rel_diff": 1.5789162748221908e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_01_K2_seed1500025",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.488937884796542e-07,
+          "max_rel_diff": 1.1794627666149854e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.0966849922920971e-07,
+          "max_rel_diff": 1.665736217525708e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 9.664770342539264e-10,
+          "max_rel_diff": 2.8118887620388175e-05,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_02_K2_seed1500026",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.709094086370214e-07,
+          "max_rel_diff": 4.248141877196843e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.7633711557607512e-07,
+          "max_rel_diff": 1.2932863762123918e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_005_K0_5_seed1500027",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.706664391562754e-07,
+          "max_rel_diff": 6.695835767305732e-08,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 6.802732169242098e-08,
+          "max_rel_diff": 4.2599974772896906e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.7422643088980082e-10,
+          "max_rel_diff": 4.952383550907819e-06,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_01_K0_5_seed1500028",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.755567945049279e-07,
+          "max_rel_diff": 1.2577688010347645e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 6.957384030004121e-08,
+          "max_rel_diff": 1.8459548156906267e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_02_K0_5_seed1500029",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.688217020212051e-07,
+          "max_rel_diff": 1.0220561261686418e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 9.181563637161716e-08,
+          "max_rel_diff": 2.831352497199572e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.3913276818633066e-10,
+          "max_rel_diff": 6.22120064974497e-06,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_005_K1_seed1500030",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 8.977523560105283e-07,
+          "max_rel_diff": 1.1678733242442728e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 9.911177556443107e-08,
+          "max_rel_diff": 1.1225474295249241e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_01_K1_seed1500031",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.4730102466417065e-07,
+          "max_rel_diff": 5.75447504120146e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.4088208555307347e-07,
+          "max_rel_diff": 4.0803490832580264e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 4.774351191900571e-10,
+          "max_rel_diff": 1.5144120024416552e-05,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_02_K1_seed1500032",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 2.829345104871095e-07,
+          "max_rel_diff": 1.587731006211848e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.4377424073508394e-07,
+          "max_rel_diff": 1.9178291382883565e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_005_K2_seed1500033",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.25691802369488e-07,
+          "max_rel_diff": 2.5764629773563e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.468086737206221e-07,
+          "max_rel_diff": 1.4326733765198105e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 4.782849045200516e-10,
+          "max_rel_diff": 1.6543130017844053e-06,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_01_K2_seed1500034",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.987929766997468e-07,
+          "max_rel_diff": 3.575677174454721e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.1558867424609218e-07,
+          "max_rel_diff": 1.429804883683694e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_02_K2_seed1500035",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.48866339045162e-07,
+          "max_rel_diff": 7.974613403714474e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.9510860371774186e-07,
+          "max_rel_diff": 1.1369589925245606e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.0139719491559368e-09,
+          "max_rel_diff": 7.051695229187907e-06,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    }
+  ],
+  "config": {
+    "iterations": 72,
+    "out_dir": "C:\\dev\\PRIN\\benchmarks\\results\\EXP-001\\RUN-20260923T134255Z-6b9d6b6-kernel-path-cuda",
+    "seed_counter": 0,
+    "seed_key": 1,
+    "warmup": 0
+  },
+  "environment": {
+    "backend": "cuda",
+    "dtype": "f32",
+    "git_commit": "6b9d6b621a2a46e37373bbcafafd475c1d0f644f",
+    "gpu": "NVIDIA GeForce RTX 4060",
+    "gpu_vram_mb": 8188,
+    "logical_cpus": 16,
+    "platform": "Windows-11-10.0.26200-SP0",
+    "prin_version": "1.0.0rc1",
+    "processor": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+    "python_version": "3.14.0",
+    "rust_version": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "seed": 0
+  }
+}

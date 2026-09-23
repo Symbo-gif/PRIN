@@ -9,6 +9,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 E3 execution — full golden-trajectory numerical parity
+  (session 0156, 2026-09-23 UTC).** The first Phase 7 campaign experiment
+  executed all four registered runs through the committed driver
+  `benchmarks/campaign/exp001_driver.py` at code SHA `6b9d6b6` on host H1,
+  with the pre-registration frozen at `c22db0b`. Four immutable run
+  directories under `benchmarks/results/EXP-001/`, each closed with
+  `check_run_complete` + `append_manifest` + `verify_manifest`: H1 corpus
+  (504 cases), H3 repeatability (14), H2 fuzz (1,000), H4 CUDA kernel-path
+  (72). **No case aborted in any run.** H3 is 14/14 bit-identical; H4 is
+  72/72 within `rtol=1e-5, atol=1e-6` on a device-residency-verified CUDA
+  path. **H1 (19 of 504) and H2a (103 of 1,000) breach the registered
+  tolerances**, which on preregistration §8's decision rule is a REFUTED/D1
+  trajectory; adjudication and the D1 flag belong to E4 (session 0157) under
+  campaign plan §10.4, and E3 records the facts without diagnosis or verdict.
+
+### Changed
+
+- **Campaign plan amendment 6 (2026-09-23 UTC) — EXP-001 storage budget.**
+  The four E3 runs total 5.921 MiB, exceeding §8's 5 MiB EXP-001 cap and
+  §7.5's 2 MiB per-run cap (the 1,000-case fuzz artefact is 4.199 MiB and
+  cannot be reduced without changing the registered protocol, since its
+  per-case beyond-horizon arrays are what H2b's E4 analysis consumes). The
+  maintainer raised EXP-001's tracked cap to 8 MiB and waived the per-run cap
+  for the `fuzz` leg, so all four runs are committed unreduced. The
+  campaign-wide 64 MiB cap is unchanged.
+
+### Fixed
+
+- **Raw campaign evidence is now byte-exact in git (session 0156).**
+  `.gitattributes` gains `benchmarks/results/** -text`. The repository's
+  `* text=auto eol=lf` default was normalizing CRLF to LF in campaign result
+  artefacts written on Windows, so a committed artefact no longer matched the
+  SHA-256 manifest written beside it: `corpus_corpus-cpu.json` staged as
+  1,667,489 bytes / `c6a13f5d…` against a manifest recording 1,724,465 bytes /
+  `882da36d…`. On any clean checkout `tools/reproduce.py::verify_manifest`
+  would have failed closed on the campaign's own evidence, and campaign plan
+  §7.4's byte-for-byte regeneration check could not have held. No artefact was
+  rewritten or re-manifested; all 8 staged blobs across the four EXP-001 runs
+  now match their manifests exactly.
+- **DV-036 nightly benchmark-comparison correction closed (2026-09-23 UTC).**
+  The conditional correction cycle S1 `8bcea55` → S2 `e09b7f5` → S3 `a0c1d2b`
+  → S4 completed. Nightly `workflow_dispatch` run `35847692136` at `main`
+  `b434554` concluded success for the whole workflow under campaign amendment
+  4's counterbalanced design: 69 benchmarks compared (63 gated, 6 advisory),
+  none gated past +10%, two reference and two candidate passes against fixed
+  reference `4590d611`. The two previously breaching gated identities moved
+  into the gate with no benchmark code change — `resonance_layer_bridge_baseline/moderate`
+  +14.7% → +4.9%, DLPack `negate_round_trip[float64]` +18.4% → −9.0%. The
+  result was independently re-derived by re-running the committed checker
+  against the run's preserved evidence artefact. DV036-F1/F2/F3 FIXED,
+  DV036-F4 CLOSED; DV036-F5 remains deferred to session 0166. The DV-036
+  register row stays OPEN for its reference-host re-baseline gates before
+  sessions 0168 and 0173.
+- **DV-038 and DV-039 closed (2026-09-23 UTC).** Both "before session 0156"
+  gates are met: PR #19 merged as `90c0334` with all required workflows
+  green, plus the wholly green nightly above for DV-039's dispatch condition.
+
 - **EXP-001 pre-registration — tenth E2 remediation, ninth code-review round
   on PR #20 (session 0155, E2, 2026-09-22) —
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`

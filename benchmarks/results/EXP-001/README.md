@@ -1,6 +1,14 @@
 # benchmarks/results/EXP-001/ — raw artefacts for EXP-001 (Golden-trajectory numerical parity)
 
-**Status:** SKELETON — no run has executed. Record root:
+**Status:** **4 runs executed** (session 0156 E3, 2026-09-23 UTC) —
+`RUN-20260923T134012Z-6b9d6b6-corpus-cpu` (H1, 504 cases),
+`RUN-20260923T134226Z-6b9d6b6-repeatability-cpu` (H3, 14),
+`RUN-20260923T134250Z-6b9d6b6-fuzz-cpu` (H2, 1,000), and
+`RUN-20260923T134255Z-6b9d6b6-kernel-path-cuda` (H4, 72). None aborted;
+each closed with `check_run_complete` + `append_manifest` +
+`verify_manifest`. Total 5.921 MiB under campaign plan amendment 6
+(EXP-001 tracked cap 8 MiB; §7.5 per-run cap waived for the `fuzz` leg).
+Verdicts belong to E4 — see the experiment log. Record root:
 [`DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/`](../../../DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/README.md).
 
 ## Run-directory rule (campaign plan §7.1, §7.3)
