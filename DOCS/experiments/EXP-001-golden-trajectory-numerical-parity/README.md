@@ -12,9 +12,10 @@ correction cycle**
 → [S3](../../sessions/contingencies/2026-09-23-exp001-d1-s3-correction-remediation.md)
 → [S4](../../sessions/contingencies/2026-09-23-exp001-d1-s4-correction-documentation.md)).
 Session 0159 and every downstream experiment, plus 0194, are blocked until the
-cycle closes and `EXP-001-r1` returns a non-reversal verdict. The report awaits
-maintainer verification. This record is immutable from here; corrections are
-errata.
+cycle closes and `EXP-001-r1` returns a non-reversal verdict. The report was
+**verified and accepted by the maintainer (MichaelMaillet) on 2026-09-23 UTC**,
+and the E1–E5 pull request is approved. This record is immutable from here;
+corrections are errata.
 
 **Prior status (E4, retained):** E4 ANALYSED (2026-09-23 UTC). The frozen pre-registration §8
 decision rule has been applied to all four immutable E3 run artefacts at code

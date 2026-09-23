@@ -47,8 +47,9 @@ with PRINet 3.0, not PRIN, so **no CI gate performed the PRIN-vs-corpus
 trajectory comparison** and the Parity Report's published VALIDATION claim to
 the contrary is unsupported (erratum issued). **Session 0159 and every
 experiment downstream of EXP-001, plus 0194, are blocked** until the cycle
-closes and `EXP-001-r1` returns a non-reversal verdict. The E5 report awaits
-maintainer verification; no root cause is claimed by any EXP-001 record.
+closes and `EXP-001-r1` returns a non-reversal verdict. The E5 report was
+verified and accepted by the maintainer on 2026-09-23 UTC and its E1–E5 pull
+request approved; no root cause is claimed by any EXP-001 record.
 
 ## Layout
 
