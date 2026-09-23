@@ -35,6 +35,21 @@ until the four contingency correction sessions close; EXP-001 is then re-run
 as a new record, `EXP-001-r1`. No root cause is claimed at E4. See
 [EXP-001's E4 analysis record](EXP-001-golden-trajectory-numerical-parity/analysis.md).
 
+**EXP-001 E5 reported on 2026-09-23 UTC (session 0158) — the campaign is
+BLOCKED.** The [E5 report](EXP-001-golden-trajectory-numerical-parity/report.md)
+issues all five verdicts in full — **H1 `REFUTED` (485/504)**, **H2a `REFUTED`
+(897/1,000)**, H2b/H3/H4 `CONFIRMED` — carries the §10.4 **D1** flag, and
+triggers the four-session contingency correction cycle
+([S1](../sessions/contingencies/2026-09-23-exp001-d1-s1-correction-implementation.md)
+→ S2 → S3 → S4). It also raises a second D1, **EXP001-E5-F1**: the `parity` CI
+job's `test_corpus_exhaustive_differential_parity` regenerates each corpus case
+with PRINet 3.0, not PRIN, so **no CI gate performed the PRIN-vs-corpus
+trajectory comparison** and the Parity Report's published VALIDATION claim to
+the contrary is unsupported (erratum issued). **Session 0159 and every
+experiment downstream of EXP-001, plus 0194, are blocked** until the cycle
+closes and `EXP-001-r1` returns a non-reversal verdict. The E5 report awaits
+maintainer verification; no root cause is claimed by any EXP-001 record.
+
 ## Layout
 
 ```

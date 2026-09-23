@@ -1,6 +1,8 @@
 # Session 0158 — EXP-001 / C1 E5: Report — Golden-trajectory numerical parity
 
-**Status:** PLANNED  
+**Status:** COMPLETE — report issued; exit gate open on the triggered D1
+correction cycle (see [`report.md`](../../experiments/EXP-001-golden-trajectory-numerical-parity/report.md)
+§8 and §13)  
 **Roadmap phase:** 7 — Experimentation campaign and stable release  
 **Execution unit:** EXP-001 / C1  
 **Session type:** E5 — Report  

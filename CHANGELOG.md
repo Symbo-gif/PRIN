@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 E5 report — golden-trajectory numerical parity reported; campaign
+  BLOCKED (session 0158, 2026-09-23 UTC).**
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/report.md`
+  issues all five verdicts in full against the pre-registered expectations —
+  **H1 `REFUTED`** (485/504), **H2a `REFUTED`** (897/1,000), **H2b/H3/H4
+  `CONFIRMED`** — with every abort/exclusion (none), protocol deviations
+  PD-1…PD-5, threats to validity, exploratory notes, and the complete artefact
+  index. The four raw run manifests and both E4 output digests were
+  re-verified in-session and reproduce byte-for-byte. The report carries the
+  campaign plan §10.4 **D1** flag and **triggers the four-session contingency
+  correction cycle**; **session 0159 and every experiment downstream of
+  EXP-001, plus 0194, are blocked** until that cycle closes and EXP-001 is
+  re-run as `EXP-001-r1`. No root cause is claimed. The report awaits
+  maintainer verification, and sessions 0154–0158 remain local-only, so no CI
+  result is claimed for the campaign branch range.
+
 - **EXP-001 E4 analysis — golden-trajectory numerical parity adjudicated
   (session 0157, 2026-09-23 UTC).** The frozen pre-registration §8 decision
   rule was applied to the four immutable E3 run artefacts at code SHA
@@ -77,6 +93,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   campaign-wide 64 MiB cap is unchanged.
 
 ### Fixed
+
+- **Erratum — Parity Report golden-corpus VALIDATION claim
+  (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
+  `DOCS/sphinx/parity_report.rst` stated that
+  `parity/test_parity_differential.py::test_corpus_exhaustive_differential_parity`
+  shows "PRIN's trajectory matches the stored reference trajectory at the
+  registered tolerance". That test regenerates each case through
+  `parity.generate_corpus._run_case`, which builds `prinet` models and
+  `prinet.core.measurement` metrics, so it compares a **PRINet 3.0
+  regeneration** against the PRINet-3.0-generated corpus — a reference
+  self-consistency check. No CI gate integrates PRIN's dynamics over the
+  golden corpus and compares the resulting trajectory. An erratum admonition
+  and a corrected test description are now in the Parity Report; verified
+  in-session on four of EXP-001 H1's nineteen failing cases (CI-path
+  comparison PASS, PRIN-vs-corpus breach) in
+  `EVIDENCE/0158-exp001-e5-parity-gate-coverage.json`. The gate itself is
+  fixed by the EXP-001 D1 correction cycle, not here.
 
 - **Raw campaign evidence is now byte-exact in git (session 0156).**
   `.gitattributes` gains `benchmarks/results/** -text`. The repository's

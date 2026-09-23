@@ -1,6 +1,9 @@
 # Session 0159 — EXP-002 / C1 E1: Pre-registration — API, benchmark-result, and reproduction parity
 
-**Status:** PLANNED  
+**Status:** BLOCKED — EXP-001 raised a campaign plan §10.4 D1 at E5
+(session 0158); this session is released only after the four contingency
+correction sessions close and `EXP-001-r1` returns a non-reversal verdict
+(campaign plan §3.3, §10.4 items 2–5)  
 **Roadmap phase:** 7 — Experimentation campaign and stable release  
 **Execution unit:** EXP-002 / C1  
 **Session type:** E1 — Pre-registration  

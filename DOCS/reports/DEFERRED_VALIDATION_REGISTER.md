@@ -361,3 +361,47 @@ the green nightly run ID.
 condition is now satisfied: `origin/main` green at `b434554`, the nightly
 wholly green and dispositioned, and no DV row carrying a pre-0156 gate left
 open. EXP-001 E3 execution is released to begin.
+
+## EXP-001 D1 raised; campaign blocked at 0159 — 2026-09-23 UTC
+
+**Recorded by session `0158` (EXP-001 E5). This is a register note, not a new
+deferred item:** the two conditions below are *active* D1s with an open
+correction cycle, not deferred validation. The authoritative per-finding
+status will be the deviation ledger of the Project State Report that the
+correction cycle's S4 issues.
+
+**D1 (a) — EXP-001 H1 and H2a `REFUTED`.** Applying the frozen
+pre-registration §8 rule to the four immutable E3 artefacts at code SHA
+`6b9d6b6`: H1 485/504 (19 corpus cases breach the registered trajectory/metric
+tolerances, worst absolute error `2.008567e-07`) and H2a 897/1,000 (103 fuzzed
+cases breach within the registered shadowing horizon, 33 of them at or above
+`1e-3`, worst `2.654853e+01`). H2b, H3, and H4 are `CONFIRMED`. Zero cases
+aborted in any run. Campaign plan §10.4 makes a C1 parity reversal a D1.
+
+**D1 (b) — `EXP001-E5-F1`: the `parity` CI corpus gate does not exercise
+PRIN.** `parity/test_parity_differential.py::test_corpus_exhaustive_differential_parity`
+regenerates each corpus case through `parity.generate_corpus._run_case`, which
+builds `prinet` models and `prinet.core.measurement` metrics — a PRINet-3.0
+self-consistency check. No CI gate integrates PRIN's dynamics over the golden
+corpus and compares the trajectory against the stored reference. The Parity
+Report's published VALIDATION claim to the contrary is unsupported; an erratum
+is issued in `DOCS/sphinx/parity_report.rst` and noted in `CHANGELOG.md`.
+Verified in-session on 4 of H1's 19 failing cases — CI-path comparison PASS,
+PRIN-vs-corpus breach — in
+`EVIDENCE/0158-exp001-e5-parity-gate-coverage.json`. Severity D1 under
+Development Workflow §5 ("published-result reproducibility").
+
+**Consequences (campaign plan §3.3, §10.4).** Session `0158` completed and
+reported the negatives in full; **sessions `0159` through `0193` and `0194`
+are blocked**. The four contingency correction sessions
+(`DOCS/sessions/contingencies/2026-09-23-exp001-d1-s1…s4`) run in strict order
+first; after S4, EXP-001 is re-run as a **new** record `EXP-001-r1` with a new
+pre-registration and new run directories. The EXP-001 record is immutable;
+corrections to it are errata. **No root cause is claimed by any EXP-001
+record** — diagnosis belongs to the correction cycle's S1.
+
+**Unaffected open rows.** `DV-040` (campaign E4 analysis code outside the CI
+lint paths) remains OPEN with its EXP-002 E4 / session `0162` re-audit gate;
+it is a gate-coverage gap, not a blocker for this correction. `DV-036`'s
+reference-host re-baseline gates before `0168` and `0173`, and `DV036-F5` at
+`0166`, remain open and are now additionally gated behind this block.

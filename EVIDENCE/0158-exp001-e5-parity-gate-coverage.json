@@ -1,0 +1,71 @@
+{
+  "cases": [
+    {
+      "breaching_arrays": [
+        {
+          "array": "phase_traj",
+          "max_abs_diff": 9.800321221220543e-08,
+          "max_rel_diff": 7.338968399638938e-06
+        }
+      ],
+      "case_id": "stuart_landau_full_euler_n12_s20_dt0_01_K1_seed2200013",
+      "ci_gate_prinet_regenerated_vs_corpus": "PASS",
+      "exp001_driver_prin_vs_corpus_within_tolerance": false
+    },
+    {
+      "breaching_arrays": [
+        {
+          "array": "phase_final",
+          "max_abs_diff": 1.618846270368124e-07,
+          "max_rel_diff": 1.533544552406e-05
+        },
+        {
+          "array": "phase_traj",
+          "max_abs_diff": 1.618846270368124e-07,
+          "max_rel_diff": 1.533544552406e-05
+        }
+      ],
+      "case_id": "stuart_landau_full_rk4_n24_s20_dt0_02_K2_seed2300035",
+      "ci_gate_prinet_regenerated_vs_corpus": "PASS",
+      "exp001_driver_prin_vs_corpus_within_tolerance": false
+    },
+    {
+      "breaching_arrays": [
+        {
+          "array": "mean_phase_coherence_traj",
+          "max_abs_diff": 1.2305103741505619e-09,
+          "max_rel_diff": 2.0576776738519186e-06
+        }
+      ],
+      "case_id": "kuramoto_mean_field_euler_n8_s20_dt0_005_K2_seed1000006",
+      "ci_gate_prinet_regenerated_vs_corpus": "PASS",
+      "exp001_driver_prin_vs_corpus_within_tolerance": false
+    },
+    {
+      "breaching_arrays": [
+        {
+          "array": "mean_phase_coherence_traj",
+          "max_abs_diff": 7.641159241802975e-10,
+          "max_rel_diff": 5.195895821314521e-06
+        }
+      ],
+      "case_id": "kuramoto_mean_field_rk4_n12_s20_dt0_02_K2_seed1100017",
+      "ci_gate_prinet_regenerated_vs_corpus": "PASS",
+      "exp001_driver_prin_vs_corpus_within_tolerance": false
+    }
+  ],
+  "environment": {
+    "git_commit": "de904a4c84f41066ad9cd5db0e402a9f97343e06",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "prin_version": "1.0.0rc1",
+    "prinet_version": "3.0.0",
+    "python_version": "3.14.0"
+  },
+  "experiment": "EXP-001",
+  "finding": "EXP001-E5-F1",
+  "method": "For each EXP-001 H1 failing case, run the CI test's own comparison (parity.test_parity_differential._regenerate + prin.parity.harness.assert_parity) and the EXP-001 driver's comparison (exp001_driver.compare_corpus_case) on the same stored case, and report both verdicts.",
+  "question": "Does parity/test_parity_differential.py::test_corpus_exhaustive_differential_parity compare PRIN (Rust core) against the stored PRINet 3.0 corpus, as DOCS/sphinx/parity_report.rst states, or does it compare a PRINet 3.0 regeneration against it?",
+  "schema_version": 1,
+  "session": "0158",
+  "stage": "E5"
+}
