@@ -78,3 +78,40 @@ benchmark comparison or a claim that the regression was resolved.
 - Resume only after evidence of a wholly successful nightly and the remaining
   E3 entry checks. Any required CI/code/baseline correction must follow its
   governing correction process; it is not an implicit part of E3 execution.
+
+## Correction authorization — 2026-09-23 UTC
+
+After the failed dispatch, MichaelMaillet requested assessment, correction,
+and another nightly. He explicitly approved the same-job fixed-reference
+comparison in campaign plan §11.6 and authorized a dedicated hotfix-branch
+push, PR, and branch nightly. The conditional DV-036 correction runs outside
+E3; EXP-001 still has no campaign runs. Original failure evidence and the
+whole-nightly-green entry condition are retained.
+
+## DV-036 S1 local implementation evidence
+
+The initial fail-closed regression run against the original checker returned
+37 failed / 8 passed. The corrected checker and workflow-contract tests
+returned 49 passed with 100% checker line coverage (96/96 statements).
+Ruff and strict mypy on the checker passed; Bandit and Snyk Code (low threshold,
+checker and test file) reported zero issues. YAML parsing and eight extracted
+Bash blocks passed syntax checks; this alone is not GitHub expression validation.
+
+The full local gate passed cargo fmt, workspace Clippy with warnings denied,
+workspace tests (one pre-existing ignored test), and warnings-denied rustdoc;
+repository Ruff check/format (310 files), strict mypy (62 package files),
+interrogate (97.6%), and Bandit (zero issues). Cargo Audit reported only the
+three existing governed warnings (bincode, paste, chacha20); project and docs
+pip-audit each reported no known vulnerabilities. DV-register and repository
+baseline checks passed.
+
+The first full pytest invocation used a suffixed basetemp and the WSL bash
+relay: 15 failed / 3151 passed / 176 skipped. No test or output guard was
+weakened. Using the documented `.pytest_basetemp` and process-local Git Bash
+PATH produced 3166 passed / 176 skipped / 48 deselected. The original failed
+invocation remains disclosed rather than relabeled a pass.
+
+Precommit review corrected an unavailable `runner` expression in job-level
+environment configuration to a run-and-attempt-specific path under
+`benchmarks/results/`; GitHub's context-availability table does not permit
+`runner` at `jobs.<job_id>.env`. No timing, threshold, or reference changed.

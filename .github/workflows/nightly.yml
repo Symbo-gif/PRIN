@@ -64,13 +64,27 @@ jobs:
   bench-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    env:
+      REFERENCE_SHA: 4590d611f34eae5dfcdadb99b562aacf998d6e94
+      RUSTUP_TOOLCHAIN: 1.98.1
+      PIP_CONSTRAINT: ${{ github.workspace }}/ci/docs-constraints.txt
+      EVIDENCE_DIR: ${{ github.workspace }}/benchmarks/results/nightly-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REFERENCE_SHA }}
+          path: .nightly-reference
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - uses: dtolnay/rust-toolchain@stable
+          python-version: "3.12.14"
+      - uses: dtolnay/rust-toolchain@1.98.1
       - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            . -> target
+            .nightly-reference -> target
       - name: Free disk space
         run: |
           # NB: do not touch /opt/hostedtoolcache — actions/setup-python's
@@ -78,41 +92,63 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
             /usr/local/share/boost || true
           sudo apt-get clean || true
-      - name: Build and install (CPU-only torch)
+      - name: Build matched candidate and reference environments
         run: |
+          set -euo pipefail
+          mkdir "$EVIDENCE_DIR"
+          git rev-parse HEAD > "$EVIDENCE_DIR/candidate-sha.txt"
+          git -C .nightly-reference rev-parse HEAD > "$EVIDENCE_DIR/reference-sha.txt"
+          test "$(git -C .nightly-reference rev-parse HEAD)" = "$REFERENCE_SHA"
+          { date -u --iso-8601=seconds; uname -a; lscpu; rustc -Vv; python --version; } > "$EVIDENCE_DIR/host.txt"
           python -m venv .venv
-          source .venv/bin/activate
-          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
-          python -m pip install --no-cache-dir maturin
-          python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
-          maturin develop -m crates/prin-py/Cargo.toml
-          python -m pip install --no-cache-dir -e ".[dev,onnx]"
-      # Rolling baseline: the exact key never hits (run_id is unique) so a fresh
-      # copy is always saved; restore-keys pulls the most recent prior nightly.
-      - name: Restore benchmark baseline
-        uses: actions/cache@v4
-        with:
-          path: bench-baseline
-          key: bench-baseline-${{ github.run_id }}
-          restore-keys: |
-            bench-baseline-
-      - name: Rust criterion benchmarks
+          .venv/bin/python -m pip install --no-cache-dir -c ci/lint-constraints.txt maturin pytest==9.1.1 pytest-benchmark==5.3.0
+          .venv/bin/python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
+          .venv/bin/python -m pip install --no-cache-dir --no-build-isolation -c ci/lint-constraints.txt -e ".[dev,onnx]"
+          .venv/bin/python -m pip freeze --all --exclude-editable > "$EVIDENCE_DIR/dependencies.txt"
+          python -m venv .nightly-reference/.venv
+          .nightly-reference/.venv/bin/python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
+          .nightly-reference/.venv/bin/python -m pip install --no-cache-dir -r "$EVIDENCE_DIR/dependencies.txt"
+          .nightly-reference/.venv/bin/python -m pip install --no-cache-dir --no-deps --no-build-isolation -e .nightly-reference
+          .nightly-reference/.venv/bin/python -m pip freeze --all --exclude-editable > "$EVIDENCE_DIR/reference-dependencies.txt"
+          cmp "$EVIDENCE_DIR/dependencies.txt" "$EVIDENCE_DIR/reference-dependencies.txt"
+      # Fixed historical source is remeasured on this runner; cached timings
+      # are never used, refreshed, or promoted after a failed comparison.
+      - name: Measure reference then candidate on the same runner
         run: |
-          cargo bench --workspace \
-            --bench control_buffer --bench training_hooks \
-            --bench mean_field_rk4_bench --bench sparse_knn_bench \
-            --bench discrete_step_bench --bench sweep_bench \
-            --bench resonance_layer_bridge --bench phase_tracker_bridge
-      - name: pytest-benchmark microbenchmarks
-        run: |
-          python -m pytest tests/ -m slow -q \
-            --benchmark-only --benchmark-json=pytest-bench.json || true
+          set -euo pipefail
+          measure() (
+            local source="$1" arm="$2"
+            cd "$source"
+            source .venv/bin/activate
+            mkdir "$EVIDENCE_DIR/$arm"
+            export CRITERION_HOME="$EVIDENCE_DIR/$arm/criterion"
+            date -u --iso-8601=seconds > "$EVIDENCE_DIR/$arm/start.txt"
+            cargo bench --locked --workspace \
+              --bench control_buffer --bench training_hooks \
+              --bench mean_field_rk4_bench --bench sparse_knn_bench \
+              --bench discrete_step_bench --bench sweep_bench \
+              --bench resonance_layer_bridge --bench phase_tracker_bridge \
+              2>&1 | tee "$EVIDENCE_DIR/$arm/criterion.log"
+            python -m pytest tests/ -m slow -q \
+              --benchmark-only --benchmark-json="$EVIDENCE_DIR/$arm/pytest-bench.json" \
+              2>&1 | tee "$EVIDENCE_DIR/$arm/pytest.log"
+            date -u --iso-8601=seconds > "$EVIDENCE_DIR/$arm/end.txt"
+          )
+          measure "$GITHUB_WORKSPACE/.nightly-reference" reference
+          measure "$GITHUB_WORKSPACE" candidate
       - name: Compare against baseline (>10% mean regression fails)
-        run: python tools/check_bench_regression.py --baseline bench-baseline --threshold 0.10
-      - name: Refresh baseline
-        if: always()
         run: |
-          rm -rf bench-baseline
-          mkdir -p bench-baseline
-          [ -d target/criterion ] && cp -r target/criterion bench-baseline/criterion || true
-          [ -f pytest-bench.json ] && cp pytest-bench.json bench-baseline/pytest-bench.json || true
+          set -euo pipefail
+          .venv/bin/python tools/check_bench_regression.py \
+            --baseline "$EVIDENCE_DIR/reference" \
+            --criterion-dir "$EVIDENCE_DIR/candidate/criterion" \
+            --pytest-json "$EVIDENCE_DIR/candidate/pytest-bench.json" \
+            --threshold 0.10 2>&1 | tee "$EVIDENCE_DIR/comparison.txt"
+      - name: Preserve benchmark evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-benchmarks-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.EVIDENCE_DIR }}
+          if-no-files-found: error
+          retention-days: 30
