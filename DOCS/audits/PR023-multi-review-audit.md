@@ -458,3 +458,200 @@ left alone rather than fixed opportunistically outside the finding set.
 **Delta re-audit date:** 2026-09-23 UTC — **Result:** CLEAN (§7 table; local
 gate output above and in §3.1). CI on the remediation head is the authoritative
 confirmation and is not pre-claimed here.
+
+---
+
+## 8. Round 2 — Copilot follow-up review (head `0cb6156`)
+
+**Trigger:** after Round 1's remediation push (`0cb6156`), Copilot re-reviewed
+the PR against its own prior findings and raised three new ones plus one
+carried item, all against `tools/reproduce.py` and
+`DOCS/experiments/EXP-001-.../analysis/exp001_e4_analysis.py` — the exact
+files `PR23-F1` had just modified. The task here is the same as Round 1: fetch
+each finding, re-derive it from the current repository state rather than the
+reviewer's wording, fix what is real, and record what is declined.
+
+```bash
+gh api repos/Symbo-gif/PRIN/pulls/23/comments --paginate \
+  | jq -r '.[] | select(.commit_id=="0cb61564c34c731980331717bfcb916afaf2344e") | .id'
+```
+
+| Reviewer | Findings raised at `0cb6156` |
+|---|---|
+| `Copilot` | 4 (3 new High; 1 carried — "Manifest verification accepts symlinked files", the original `PR23-F1` finding, re-flagged open pending the two new ones below) |
+
+### 8.1 `PR23-F12` (D2) — the inventory scan still followed symlinks for unmanifested entries
+
+*Copilot, "Reject non-file symlinks in manifest inventory" (`tools/reproduce.py:324`).*
+
+`PR23-F1` added `_reject_symlink` to the manifest path and to every
+**manifested** artefact, but `verify_manifest`'s inventory scan still built
+`actual` with `path.is_file()` over the raw glob — which follows links. A
+symlink named `rogue.json` pointing at a directory (or a broken target) is not
+a file post-resolution, so it silently dropped out of `actual` instead of
+tripping "unmanifested artefacts": the fail-closed guarantee held for content
+and for *manifested* paths, but not for an untracked link sitting in the
+governed directory. `append_manifest` did not have this gap — its own
+candidate loop already ran `_reject_symlink` over every glob match before
+filtering by `is_file()` (§3.1); this is the one call site Round 1 missed.
+
+**Fix.** `verify_manifest` now runs `_reject_symlink` over every `*.json`
+glob candidate (mirroring `append_manifest`'s existing pattern) before
+computing `actual`, so a stray symlink is rejected outright rather than
+vanishing from the inventory.
+
+**Regression test.**
+`tests/test_reproduce.py::TestManifestSymlinkProvenance::test_verify_manifest_rejects_an_unmanifested_symlink`
+— a symlink to a directory, present but not manifested, now raises
+`ManifestMismatchError` instead of verifying clean.
+
+### 8.2 `PR23-F13` (D2) — the symlink check was a check-then-open race (TOCTOU)
+
+*Copilot, "Make manifest reads race-safe against symlink replacement"
+(`tools/reproduce.py:140`).*
+
+`_reject_symlink`'s `path.is_symlink()` probe and the later `stat()`/`open()`
+calls it guards are separate operations: a concurrent writer could replace a
+regular file with a symlink between the two (CWE-59's TOCTOU variant), and
+the verifier would then read and hash a target outside the governed
+directory despite the documented no-follow guarantee.
+
+**Fix.** `_open_no_follow(path, role)` in `tools/reproduce.py` opens the file
+via `os.open(path, os.O_RDONLY | os.O_NOFOLLOW)` on POSIX, where the `open()`
+syscall itself fails with `ELOOP` if the final path component is a symlink —
+there is no separate moment at which the check has passed but the open has
+not. `_read_no_follow` and `_stat_size_and_hash_no_follow` build on it so a
+manifest's bytes, and an artefact's size and digest, each come from exactly
+one opened file descriptor rather than from independent path-based calls
+(`load_manifest`, `verify_manifest`'s per-record loop, and
+`append_manifest`'s existing-record and newly-discovered-artefact loops all
+now route through these). Windows does not define `O_NOFOLLOW`; there the
+helper falls back to the `is_symlink()` pre-check, narrower than the POSIX
+path but not a regression from Round 1 — documented honestly in the
+function's docstring rather than claimed as closed. The pre-existing
+`_reject_symlink` calls are kept as fast top-of-function rejections; the
+atomicity guarantee comes from the no-follow open, not from them.
+
+**Regression tests.** `tests/test_reproduce.py::TestOpenNoFollow` — a regular
+file opens and reads correctly; `_stat_size_and_hash_no_follow` agrees with
+`compute_sha256`; a symlink is rejected at `_open_no_follow` itself. A true
+concurrent-swap race is not simulated (inherently flaky under a timing
+harness); the fix is instead verified structurally, by confirming every I/O
+call the finding named now goes through a single no-follow open rather than a
+separate check.
+
+### 8.3 `PR23-F14` (D2) — the CLI could redirect writes into the frozen record
+
+*Copilot, "Restrict CLI outputs from overwriting immutable records"
+(`exp001_e4_analysis.py`, `_checked_destination`/`main`).*
+
+`allowed_output_roots()` includes the experiment's record root — necessary,
+because the default `report-manifest.json` destination lives there — but
+`_checked_destination` accepted **any** path under any permitted root. A
+caller could therefore run `--manifest-path
+.../report.md` and have `write_report_manifest` overwrite the frozen E5
+report, `preregistration.md`, or the analysis module's own source; or run
+`--output-dir .../EXP-001-golden-trajectory-numerical-parity` and have
+`write_outputs` write `exp001-e4-summary.md` into the record root itself.
+
+**Fix.** Two changes in `exp001_e4_analysis.py`:
+
+1. `allowed_generated_output_dirs()` — a new, narrower root set for
+   `--output-dir` that excludes the record root entirely (only the
+   gitignored `OUTPUT_ROOT` and the system temp directory). `--output-dir`
+   can no longer target the record root under any name.
+2. `_checked_manifest_destination()` — wraps `_checked_destination` for
+   `--manifest-path` and additionally requires that a destination landing
+   inside the record root be named exactly `report-manifest.json`, the one
+   file this analysis is registered to add there. A destination under
+   `OUTPUT_ROOT` or the temp directory (this module's own tests) is
+   unrestricted, since neither holds anything immutable.
+
+`allowed_output_roots()` itself is unchanged (still used for the manifest
+check's permitted-roots argument and by `run_analysis`'s programmatic-caller
+contract), so the default CLI invocation's behaviour — writing
+`report-manifest.json` to the record root, and generated files to
+`OUTPUT_ROOT` — is identical to before the fix.
+
+**Regression tests.** `tests/test_exp001_e4_analysis.py::TestOutputContainment`
+gained five: `allowed_generated_output_dirs` excludes the record root;
+`--output-dir` pointed at the record root is refused; `--manifest-path`
+pointed at the real `report.md` is refused and the file is verified
+byte-unchanged after the attempt; `_checked_manifest_destination` accepts the
+canonical name and rejects any other, unit-tested directly.
+
+### 8.4 Carried finding — "Manifest verification accepts symlinked files"
+
+Copilot's original `PR23-F1` discussion thread remained open through Round 2,
+without a "New" tag, alongside the three new findings above. Re-derived: it
+is the same underlying class as `PR23-F12`/`PR23-F13`, not a fourth distinct
+defect — `PR23-F1`'s fix closed the manifested-path and destination cases;
+the inventory-scan gap (`PR23-F12`) and the check-then-open race
+(`PR23-F13`) were exactly what remained. No separate fix was needed beyond
+§8.1–§8.2.
+
+### 8.5 Verification
+
+```text
+.venv\Scripts\python -m pytest tests/test_reproduce.py tests/test_exp001_e4_analysis.py -q
+  70 passed
+.venv\Scripts\python -m pytest tests/test_exp001_driver.py tests/test_acceptance_y4q2.py -q
+  252 passed, 27 skipped
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -q
+  3223 passed, 176 skipped, 48 deselected
+.venv\Scripts\python -m ruff check tools/reproduce.py exp001_e4_analysis.py tests/test_reproduce.py tests/test_exp001_e4_analysis.py
+  All checks passed!
+.venv\Scripts\python -m ruff format --check <same four files>
+  4 files already formatted
+.venv\Scripts\python -m mypy --strict tools/reproduce.py exp001_e4_analysis.py
+  Success: no issues found in 2 source files
+.venv\Scripts\python -m bandit tools/reproduce.py exp001_e4_analysis.py
+  No issues identified
+.venv\Scripts\python tools/check_dv_register_gates.py            passed (40 DV / 198 sessions)
+.venv\Scripts\python tools/check_skipif_probes.py                passed
+.venv\Scripts\python tools/check_global_session_registration.py  passed (17 reports)
+.venv\Scripts\python tools/wp001_baseline.py check                passed
+```
+
+**No regression to the published EXP-001 record.** The hardened analysis was
+re-run end to end to a scratch destination and compared against the committed
+`report-manifest.json`:
+
+```text
+H1: REFUTED   H2a: REFUTED   H2b: CONFIRMED   H3: CONFIRMED   H4: CONFIRMED
+D1 flag: RAISED
+exp001-e4-adjudication.json  12974 B  sha256 e6f6eb20...  MATCH
+exp001-e4-summary.md          5783 B  sha256 4551061c...  MATCH
+```
+
+**Security gates (Coding Standards §6).** `tools/reproduce.py` and
+`exp001_e4_analysis.py` are modified first-party Python, so Snyk Code
+applies; no dependency manifest changed. Local runs (Snyk CLI `1.1306.2`, org
+`symbo-gif`):
+
+```text
+snyk code test tools/reproduce.py            -> Total issues: 0
+snyk code test exp001_e4_analysis.py         -> Total issues: 3 (all LOW, Path Traversal)
+```
+
+The three LOW findings on `exp001_e4_analysis.py` (lines 857, 874, 1006 —
+`write_outputs`'s two fixed-filename joins under `output_dir`, and the
+`Path(path).resolve()` inside `_checked_destination` itself, which is the
+sanitizer) are **pre-existing**: confirmed by scanning `git show
+0cb6156:.../exp001_e4_analysis.py` before this round's edits, which reports
+the identical three findings at the pre-fix line numbers. They are not
+attributable to this round's change and are not new. They are also a
+structural false-positive class for this pattern — Snyk's static analysis
+does not model `_checked_destination`'s resolve-then-contain check as
+neutralizing the taint on the CLI-sourced path, and there is no way to
+enforce path containment in Python without first resolving the path. Left
+alone rather than fixed opportunistically outside this round's finding set,
+consistent with the `mypy` caveat already on file in §7; flagged here rather
+than silently passed over. **CI's `Snyk Code` required check on the
+remediation head is the authoritative gate**, not this local run.
+
+**Delta re-audit date:** 2026-09-23 UTC — **Result:** CLEAN. All three new
+findings (`PR23-F12`, `PR23-F13`, `PR23-F14`) FIXED with regression tests; the
+carried `PR23-F1` thread closes with them (§8.4); no D1; no verdict,
+tolerance, or measured value changed; no regression to the published EXP-001
+record (§8.5).

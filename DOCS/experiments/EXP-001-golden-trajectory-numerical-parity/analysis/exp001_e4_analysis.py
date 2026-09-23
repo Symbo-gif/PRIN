@@ -965,6 +965,30 @@ def allowed_output_roots(repository_root: Path) -> tuple[Path, ...]:
     )
 
 
+def allowed_generated_output_dirs(repository_root: Path) -> tuple[Path, ...]:
+    """Return the only directories the CLI may write generated E4 files into.
+
+    Deliberately excludes the experiment's frozen record root, unlike
+    :func:`allowed_output_roots`: ``--output-dir`` writes ``exp001-e4-summary.md``
+    and ``exp001-e4-adjudication.json`` under whatever directory it names, and
+    if the record root were accepted here a caller could point it at the
+    frozen record and shadow files there. Only ``report-manifest.json`` — the
+    one file this analysis is registered to add to the record root — may land
+    there, and it is checked separately by
+    :func:`_checked_manifest_destination`.
+
+    Args:
+        repository_root: Repository root.
+
+    Returns:
+        The resolved permitted roots.
+    """
+    return (
+        (repository_root / OUTPUT_ROOT).resolve(),
+        Path(tempfile.gettempdir()).resolve(),
+    )
+
+
 def _checked_destination(path: Path, roots: tuple[Path, ...], name: str) -> Path:
     """Resolve one write destination and refuse anything outside ``roots``.
 
@@ -988,6 +1012,45 @@ def _checked_destination(path: Path, roots: tuple[Path, ...], name: str) -> Path
     return resolved
 
 
+def _checked_manifest_destination(
+    path: Path, roots: tuple[Path, ...], record_root: Path
+) -> Path:
+    """Resolve ``report-manifest.json``'s destination, refusing to overwrite it.
+
+    A plain :func:`_checked_destination` call against :func:`allowed_output_roots`
+    would accept any path inside the frozen record root, including
+    ``preregistration.md``, ``report.md``, or this analysis's own source —
+    ``write_report_manifest`` would then overwrite whichever one
+    ``--manifest-path`` names. A destination inside the record root is
+    therefore additionally required to be named exactly
+    ``report-manifest.json``, the one file this analysis is registered to add
+    there; a destination under the generated-output root or the system
+    temporary directory (this module's own tests) is unrestricted, since
+    neither holds anything immutable.
+
+    Args:
+        path: The requested manifest destination.
+        roots: Permitted roots from :func:`allowed_output_roots`.
+        record_root: The resolved experiment record root.
+
+    Returns:
+        The resolved destination.
+
+    Raises:
+        AnalysisError: If the destination escapes every permitted root, or
+            lands inside the record root under any name other than
+            ``report-manifest.json``.
+    """
+    resolved = _checked_destination(path, roots, "manifest path")
+    if resolved.parent == record_root and resolved.name != "report-manifest.json":
+        raise AnalysisError(
+            f"manifest path {resolved} is inside the frozen record root but is "
+            "not named report-manifest.json; this analysis may not overwrite "
+            "any other file there"
+        )
+    return resolved
+
+
 def run_analysis(
     repository_root: Path, output_dir: Path, manifest_path: Path, generated_at: str
 ) -> dict[str, Any]:
@@ -1000,10 +1063,11 @@ def run_analysis(
         generated_at: Explicit provenance stamp.
 
     The destinations are taken as given. Containment against
-    :func:`allowed_output_roots` is applied at the command-line boundary in
-    :func:`main`, which is where the untrusted input is: a programmatic caller
-    (this module's tests, or a future regeneration script) supplies its own
-    trusted scratch directory and must not be forced into the governed roots.
+    :func:`allowed_generated_output_dirs` and :func:`_checked_manifest_destination`
+    is applied at the command-line boundary in :func:`main`, which is where the
+    untrusted input is: a programmatic caller (this module's tests, or a
+    future regeneration script) supplies its own trusted scratch directory
+    and must not be forced into the governed roots.
 
     Returns:
         The adjudication mapping.
@@ -1068,22 +1132,24 @@ def main(argv: list[str] | None = None) -> int:
         The D1 flag is reported on stdout and recorded in every output.
 
     Raises:
-        AnalysisError: If a command-line destination escapes
-            :func:`allowed_output_roots`. This is the trust boundary: the
-            input root is never taken from the command line (it is this
-            file's own checkout), and the two write destinations that are
-            taken from it are contained here before anything is written.
+        AnalysisError: If a command-line destination escapes its permitted
+            roots, or names anything but ``report-manifest.json`` inside the
+            record root. This is the trust boundary: the input root is never
+            taken from the command line (it is this file's own checkout), and
+            the two write destinations that are taken from it are contained
+            here before anything is written.
     """
     args = _parser().parse_args(argv)
     root = _REPOSITORY_ROOT
-    roots = allowed_output_roots(root)
     output_dir = _checked_destination(
-        Path(args.output_dir or root / OUTPUT_ROOT), roots, "output directory"
+        Path(args.output_dir or root / OUTPUT_ROOT),
+        allowed_generated_output_dirs(root),
+        "output directory",
     )
-    manifest_path = _checked_destination(
+    manifest_path = _checked_manifest_destination(
         Path(args.manifest_path or root / RECORD_ROOT / "report-manifest.json"),
-        roots,
-        "manifest path",
+        allowed_output_roots(root),
+        (root / RECORD_ROOT).resolve(),
     )
     adjudications = run_analysis(
         root, output_dir, manifest_path, str(args.generated_at)

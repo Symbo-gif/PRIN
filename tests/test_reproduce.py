@@ -428,8 +428,13 @@ class TestManifestSymlinkProvenance:
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
         (governed / "a.json").symlink_to(outside)
 
+        # Caught during the inventory scan (PR23-F: every `*.json` candidate is
+        # now rejected up front, not just manifested paths individually), so
+        # the role in the message is "candidate artefact" rather than
+        # "manifested artefact" — both roles reject the same symlink, this is
+        # just which pass reaches it first.
         with pytest.raises(
-            reproduce.ManifestMismatchError, match=r"manifested artefact.*symbolic link"
+            reproduce.ManifestMismatchError, match=r"candidate artefact.*symbolic link"
         ):
             reproduce.verify_manifest(governed, manifest_path)
 
@@ -484,9 +489,69 @@ class TestManifestSymlinkProvenance:
             reproduce.append_manifest(governed, link)
         assert outside_manifest.read_text(encoding="utf-8") == "{}"
 
+    @_needs_symlink_support
+    def test_verify_manifest_rejects_an_unmanifested_symlink(
+        self, tmp_path: Path
+    ) -> None:
+        """PR23-F (Copilot follow-up review): a stray symlink must fail closed.
+
+        Before this fix, ``actual`` was built with ``is_file()``, which
+        follows links: a symlink named ``rogue.json`` that points at a
+        directory (or a broken target) is not a file post-resolution, so it
+        silently dropped out of the inventory instead of tripping "unmanifested
+        artefacts" — the fail-closed guarantee held for content but not for an
+        untracked link sitting in the governed directory.
+        """
+        governed = tmp_path / "governed"
+        governed.mkdir()
+        manifest = _write_manifest(governed, {"a.json": b'{"a": 1}\n'})
+        outside_dir = tmp_path / "outside"
+        outside_dir.mkdir()
+        (governed / "rogue.json").symlink_to(outside_dir)
+
+        with pytest.raises(
+            reproduce.ManifestMismatchError, match=r"candidate artefact.*symbolic link"
+        ):
+            reproduce.verify_manifest(governed, manifest)
+
     def test_regular_files_still_verify(self, tmp_path: Path) -> None:
         """The guard must not disturb the ordinary all-regular-files path."""
         manifest = _write_manifest(tmp_path, {"a.json": b'{"a": 1}\n'})
         assert [r.path for r in reproduce.verify_manifest(tmp_path, manifest)] == [
             "a.json"
         ]
+
+
+class TestOpenNoFollow:
+    """PR23-F (Copilot follow-up review): close the check-then-open race.
+
+    ``_reject_symlink`` alone is a check-then-use probe: a concurrent writer
+    can replace a regular file with a symlink between the check and a later
+    ``stat()``/``open()``. ``_open_no_follow`` (and the helpers built on it)
+    fold the check into the ``open()`` itself on POSIX via ``O_NOFOLLOW``, so
+    there is no such window there; these tests pin that behaviour directly
+    rather than through the higher-level manifest functions.
+    """
+
+    def test_regular_file_opens_and_reads(self, tmp_path: Path) -> None:
+        target = tmp_path / "a.json"
+        target.write_bytes(b'{"a": 1}\n')
+        assert reproduce._read_no_follow(target, "artefact") == b'{"a": 1}\n'
+
+    def test_stat_size_and_hash_match_compute_sha256(self, tmp_path: Path) -> None:
+        target = tmp_path / "a.json"
+        payload = b'{"a": 1}\n'
+        target.write_bytes(payload)
+        size, digest = reproduce._stat_size_and_hash_no_follow(target, "artefact")
+        assert size == len(payload)
+        assert digest == reproduce.compute_sha256(target)
+
+    @_needs_symlink_support
+    def test_symlink_is_rejected_at_open(self, tmp_path: Path) -> None:
+        outside = tmp_path / "outside.json"
+        outside.write_bytes(b"{}")
+        link = tmp_path / "link.json"
+        link.symlink_to(outside)
+
+        with pytest.raises(reproduce.ManifestMismatchError, match="symbolic link"):
+            reproduce._open_no_follow(link, "artefact")

@@ -348,6 +348,63 @@ class TestOutputContainment:
             analysis.main(["--output-dir", str(escape)])
         assert not escape.exists()
 
+    def test_generated_output_dirs_exclude_the_record_root(
+        self, tmp_path: Path
+    ) -> None:
+        """PR23-F: ``--output-dir`` must not be able to write into the record.
+
+        ``allowed_output_roots`` (used for the manifest destination) still
+        includes the record root, but ``allowed_generated_output_dirs`` (used
+        for ``--output-dir``) must not — otherwise a caller could redirect the
+        generated summary/adjudication files into the frozen record.
+        """
+        record_root = (tmp_path / analysis.RECORD_ROOT).resolve()
+        dirs = analysis.allowed_generated_output_dirs(tmp_path)
+        assert record_root not in dirs
+        assert (tmp_path / analysis.OUTPUT_ROOT).resolve() in dirs
+
+    def test_the_cli_refuses_an_output_dir_inside_the_record_root(self) -> None:
+        """A caller may not redirect generated files into the frozen record."""
+        escape = _REPOSITORY_ROOT / analysis.RECORD_ROOT
+        with pytest.raises(analysis.AnalysisError, match="output directory"):
+            analysis.main(["--output-dir", str(escape)])
+
+    def test_the_cli_refuses_a_manifest_path_misnamed_in_the_record_root(
+        self,
+    ) -> None:
+        """``--manifest-path`` may only name ``report-manifest.json`` there.
+
+        Without this guard, ``--manifest-path`` pointing at ``report.md`` or
+        ``preregistration.md`` inside the record root would let
+        ``write_report_manifest`` silently overwrite the frozen E5 record.
+        """
+        escape = _REPOSITORY_ROOT / analysis.RECORD_ROOT / "report.md"
+        original = escape.read_bytes()
+        with pytest.raises(analysis.AnalysisError, match=r"report-manifest.json"):
+            analysis.main(["--manifest-path", str(escape)])
+        assert escape.read_bytes() == original
+
+    def test_checked_manifest_destination_accepts_the_canonical_name(
+        self, tmp_path: Path
+    ) -> None:
+        record_root = (tmp_path / "record").resolve()
+        record_root.mkdir()
+        destination = record_root / "report-manifest.json"
+        accepted = analysis._checked_manifest_destination(
+            destination, (record_root,), record_root
+        )
+        assert accepted == destination
+
+    def test_checked_manifest_destination_rejects_other_names(
+        self, tmp_path: Path
+    ) -> None:
+        record_root = (tmp_path / "record").resolve()
+        record_root.mkdir()
+        with pytest.raises(analysis.AnalysisError, match=r"report-manifest.json"):
+            analysis._checked_manifest_destination(
+                record_root / "report.md", (record_root,), record_root
+            )
+
 
 @pytest.mark.skipif(
     not (_REPOSITORY_ROOT / analysis.RAW_ARTEFACT_ROOT).is_dir(),

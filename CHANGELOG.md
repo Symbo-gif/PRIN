@@ -149,6 +149,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     non-defects by every reviewer who raised them. Full rationale in the audit
     §6.
 
+- **PR #23 Round 2 — Copilot follow-up review at head `0cb6156` found the
+  `PR23-F1` symlink fix incomplete; three new findings, all fixed
+  (2026-09-23 UTC).** After Round 1's push, Copilot re-reviewed the same
+  files and raised three High findings, audited as `PR23-F12`…`PR23-F14` in
+  `DOCS/audits/PR023-multi-review-audit.md` §8.
+  - **`PR23-F12` (D2) — `verify_manifest`'s inventory scan still followed
+    symlinks for unmanifested entries.** `PR23-F1` guarded the manifest path
+    and every *manifested* artefact, but the inventory scan itself still
+    built its candidate set with `is_file()`, which follows links: a symlink
+    to a directory (or a broken target) silently dropped out of the
+    inventory instead of tripping "unmanifested artefacts". `verify_manifest`
+    now rejects every `*.json` glob candidate up front, mirroring
+    `append_manifest`'s existing pattern.
+  - **`PR23-F13` (D2) — the symlink check was a check-then-open race
+    (TOCTOU).** `is_symlink()` and the later `stat()`/`open()` it guards were
+    separate operations, leaving a window for a concurrent writer to swap a
+    regular file for a symlink between them. `_open_no_follow` in
+    `tools/reproduce.py` opens with `O_NOFOLLOW` on POSIX, closing the
+    window at the syscall itself; `load_manifest`, `verify_manifest`, and
+    `append_manifest` all now read a file's bytes, size, and digest from a
+    single opened descriptor rather than independent path-based calls.
+    Windows has no `O_NOFOLLOW`; there the fix is an honestly-documented
+    best-effort fallback, not a claimed full closure.
+  - **`PR23-F14` (D2) — the CLI could redirect writes into the frozen
+    record.** `exp001_e4_analysis.py`'s destination containment accepted any
+    path under the record root, so `--manifest-path` could target
+    `report.md` or `preregistration.md` and `write_report_manifest` would
+    overwrite it. `allowed_generated_output_dirs()` now excludes the record
+    root from `--output-dir` entirely, and `_checked_manifest_destination()`
+    requires a record-root destination to be named exactly
+    `report-manifest.json`. The default CLI invocation is unchanged.
+  - Ten new regression tests across `tests/test_reproduce.py` and
+    `tests/test_exp001_e4_analysis.py`; the hardened E4 analysis re-run to a
+    scratch destination reproduces `report-manifest.json`'s digests
+    byte-for-byte against the committed record. Full suite `3223 passed, 176
+    skipped` (`pytest tests/ -m "not slow and not gpu"`); `ruff`, `ruff
+    format --check`, `mypy --strict`, `bandit`, and all four governance
+    checkers pass on the changed files. Snyk Code: 0 issues on
+    `tools/reproduce.py`; 3 pre-existing LOW Path Traversal findings on
+    `exp001_e4_analysis.py` (confirmed unchanged from before this round via
+    `git show`) are not attributable to this change and are recorded, not
+    silently dropped — audit §8.5.
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that
