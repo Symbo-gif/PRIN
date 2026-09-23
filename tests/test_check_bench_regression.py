@@ -213,6 +213,17 @@ def test_nightly_uses_fresh_same_job_reference_and_preserves_gate() -> None:
     )[1].split("      - name: Compare against baseline", 1)[0]
     assert "set -euo pipefail" in measure
     assert "|| true" not in measure
+    build = job.split(
+        "      - name: Build matched candidate and reference environments", 1
+    )[1].split("      - name: Measure reference then candidate on the same runner", 1)[
+        0
+    ]
+    # DV036-F3: --no-build-isolation editable installs spawn the `maturin`
+    # CLI from the PEP 517 hook; each venv's bin/ must be on PATH first.
+    assert build.index("source .venv/bin/activate") < build.index('-e ".[dev,onnx]"')
+    assert build.index("source .nightly-reference/.venv/bin/activate") < build.index(
+        "-e .nightly-reference"
+    )
     for name in (
         "control_buffer",
         "training_hooks",

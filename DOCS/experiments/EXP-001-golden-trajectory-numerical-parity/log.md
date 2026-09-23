@@ -132,3 +132,12 @@ S1 `8bcea55`, S2 `e09b7f5`, and S3 `a0c1d2b` are locally complete.
 Documentation/index updates are prepared for the authorized hotfix push and
 nightly test. S4, final Project State Report, hosted success, and main-merge
 confirmation remain pending; no E3 run is authorized by these local commits.
+
+## DV-036 hosted validation round 1
+
+S4 documentation committed as `c736ef1`; branch pushed and PR #21 opened.
+Branch nightly dispatch `35810787820` failed `bench-regression` in the
+environment build step (`maturin` not on PATH for `--no-build-isolation`
+editable installs) — new finding DV036-F3, recorded in the correction audit.
+Fixed by per-venv activation; focused suite and lint/format/type/actionlint
+checks clean. No benchmark comparison was reached; no E3 run authorized.

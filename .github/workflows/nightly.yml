@@ -103,13 +103,20 @@ jobs:
           python -m venv .venv
           .venv/bin/python -m pip install --no-cache-dir -c ci/lint-constraints.txt maturin pytest==9.1.1 pytest-benchmark==5.3.0
           .venv/bin/python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
-          .venv/bin/python -m pip install --no-cache-dir --no-build-isolation -c ci/lint-constraints.txt -e ".[dev,onnx]"
-          .venv/bin/python -m pip freeze --all --exclude-editable > "$EVIDENCE_DIR/dependencies.txt"
+          # DV036-F3: --no-build-isolation editable installs spawn the
+          # `maturin` CLI from the PEP 517 hook, so each venv's bin/ must be
+          # on PATH while its own editable install runs.
+          source .venv/bin/activate
+          python -m pip install --no-cache-dir --no-build-isolation -c ci/lint-constraints.txt -e ".[dev,onnx]"
+          python -m pip freeze --all --exclude-editable > "$EVIDENCE_DIR/dependencies.txt"
+          deactivate
           python -m venv .nightly-reference/.venv
-          .nightly-reference/.venv/bin/python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
-          .nightly-reference/.venv/bin/python -m pip install --no-cache-dir -r "$EVIDENCE_DIR/dependencies.txt"
-          .nightly-reference/.venv/bin/python -m pip install --no-cache-dir --no-deps --no-build-isolation -e .nightly-reference
-          .nightly-reference/.venv/bin/python -m pip freeze --all --exclude-editable > "$EVIDENCE_DIR/reference-dependencies.txt"
+          source .nightly-reference/.venv/bin/activate
+          python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
+          python -m pip install --no-cache-dir -r "$EVIDENCE_DIR/dependencies.txt"
+          python -m pip install --no-cache-dir --no-deps --no-build-isolation -e .nightly-reference
+          python -m pip freeze --all --exclude-editable > "$EVIDENCE_DIR/reference-dependencies.txt"
+          deactivate
           cmp "$EVIDENCE_DIR/dependencies.txt" "$EVIDENCE_DIR/reference-dependencies.txt"
       # Fixed historical source is remeasured on this runner; cached timings
       # are never used, refreshed, or promoted after a failed comparison.

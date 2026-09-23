@@ -28,6 +28,7 @@ and S4 closure remain pending. This is not a green-nightly certificate.
 |---|---|---|---|
 | DV036-F1 | D2 | Cross-host cached timings remained from 2026-09-16 despite later refresh steps; not a controlled same-host comparison. | Implementation addressed by `8bcea55`; live validation pending. |
 | DV036-F2 | D2 | Missing/malformed/non-finite, duplicate or unmatched measurement data could pass the old checker. | FIXED by `8bcea55`; fail-closed regression tests and 100% line coverage. |
+| DV036-F3 | D2 | First hosted run of the corrected job (dispatch `35810787820`) failed in "Build matched candidate and reference environments": `--no-build-isolation` editable installs spawn the `maturin` CLI from the PEP 517 hook, but neither venv's `bin/` was on PATH (`FileNotFoundError: 'maturin'`). | FIXED post-S4-documentation by venv activation before each editable install, plus ordering assertions in `test_nightly_uses_fresh_same_job_reference_and_preserves_gate`; re-dispatch pending. |
 
 No additional source finding arose in S2. GitHub expression scope was corrected
 before the S1 commit, then checked by both a regression assertion and real
@@ -103,3 +104,22 @@ S1 source; no repeated test pass is represented as new independent evidence.
 **Delta re-audit:** CLEAN at local scope. No new code change required.
 This is not closure of DV-036's campaign re-baseline obligations, not a claim
 of hosted success, and not authorization to start session 0156.
+
+## Hosted validation round 1 — DV036-F3
+
+Branch nightly dispatch `35810787820` (workflow on
+`hotfix/dv036-nightly-comparable-baseline`) exercised the corrected job
+end-to-end for the first time. `bench-regression` failed in the environment
+build step before any measurement: the `--no-build-isolation` editable
+install ran `maturin`'s PEP 517 hook, which spawns the `maturin` binary, but
+the step invoked `.venv/bin/python` without putting `.venv/bin` on PATH.
+The uploaded evidence artefact preserved the failure exactly as designed.
+
+Fix: `source` each venv before its own editable install (candidate `.venv`,
+then reference `.nightly-reference/.venv`), matching the `full-suite` job's
+activation pattern; measurement arms were already activating correctly.
+Ordering assertions added to the workflow-contract test. Focused suite
+49/49, Ruff/format/strict mypy/YAML parse/actionlint v1.7.7 clean. The 10%
+threshold, benchmark selection, reference SHA, and fail-closed checker are
+unchanged. A further hosted run is required; this entry is not a green
+certificate.
