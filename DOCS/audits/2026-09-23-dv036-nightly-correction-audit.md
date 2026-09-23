@@ -171,3 +171,103 @@ in untouched files. No dependency manifest changed. Smoke test on the real
 `35826531821` evidence parses all 69 ids and marks the six contention ids
 advisory. A hosted ABBA run is required, and this entry is not a green
 certificate.
+
+## Hosted validation round 3 — DV036-F4 CLOSED; correction validated
+
+**Date:** 2026-09-23 UTC. PR #22 (`hotfix/dv036-f4-counterbalanced-nightly`,
+head `83f552c`) merged to `main` as `b43455405055d189b74441642ab32c96513b2e57`.
+
+`nightly.yml` `workflow_dispatch` run
+[`35847692136`](https://github.com/Symbo-gif/PRIN/actions/runs/35847692136) at
+`b434554` is the first **wholly green** nightly of the correction:
+
+| Job | Started (UTC) | Completed (UTC) | Conclusion |
+|---|---|---|---|
+| `full-suite` (`107137725899`) | 2026-09-23T10:15:07Z | 2026-09-23T10:29:15Z | success |
+| `bench-regression` (`107137725730`) | 2026-09-23T10:15:06Z | 2026-09-23T11:49:14Z | success |
+
+Terminal workflow conclusion: **success**. This is the whole-workflow gate the
+maintainer required, not a single passing job.
+
+**The green is substantive, not vacuous.** The comparison step ran the
+amendment-4 design and reported:
+
+```
+Benchmark regression check passed: 69 benchmarks (63 gated, 6 advisory),
+none gated past +10%; 2 reference and 2 candidate runs.
+```
+
+Design conformance confirmed from the job log: `arms/candidate` and
+`arms/reference` equal-length sibling checkouts; `REFERENCE_SHA=
+4590d611f34eae5dfcdadb99b562aacf998d6e94` (unchanged fixed reference);
+counterbalanced `reference-1, candidate-1, candidate-2, reference-2` with
+per-arm means over both passes; `--threshold 0.10` unchanged; `--advisory
+criterion/control_buffer_read_under_contention/` the only advisory prefix.
+All eight Rust criterion targets and the Python benchmark selection are
+present in the 69 compared identities.
+
+**Independent re-verification (this session, not the job's own exit code).**
+The preserved evidence artefact `nightly-benchmarks-35847692136-1`
+(9,533,426 bytes, all four arm directories present) was downloaded and the
+committed checker re-run locally against it:
+
+```powershell
+.venv\Scripts\python tools\check_bench_regression.py `
+  --reference <artefact>\reference-1 <artefact>\reference-2 `
+  --candidate <artefact>\candidate-1 <artefact>\candidate-2 `
+  --advisory criterion/control_buffer_read_under_contention/ --threshold 0.10
+```
+
+Exit 0, with the identical summary line and identical per-benchmark ratios.
+The pass therefore reproduces from the preserved raw outputs and does not
+depend on the hosted job's own verdict.
+
+**The three round-2 breaches resolved without touching benchmark code:**
+
+| Identity | Round 2 (`35826531821`) | Round 3 (`35847692136`) | Gate |
+|---|---|---|---|
+| `criterion/resonance_layer_bridge_baseline/moderate_128osc_64dims_32batch` | +14.7% | **+4.9%** (1.049) | gated, pass |
+| `criterion/control_buffer_read_under_contention/mutex/4` | +25.2% | +19.7% (1.197) | advisory, reported |
+| `criterion/control_buffer_read_under_contention/mutex/1` | — | +25.2% (1.252) | advisory, reported |
+| `pytest/…::test_negate_round_trip_latency[float64]` | +18.4% | **−9.0%** (0.910) | gated, pass |
+
+The resonance and DLPack items moved into the gate under the symmetric,
+counterbalanced design alone — confirming DV036-F4's diagnosis that the
+one-sided delta was an artefact of the asymmetric layout and fixed
+reference-first order, not candidate code. The contention group's spread
+(0.789×–1.252× on identical code) persists exactly as amendment 4 predicted,
+which is why it is reported-but-advisory here and gates on the reference host
+at EXP-003 E3 (0166) together with its harness defect DV036-F5.
+
+### Finding dispositions at correction close
+
+| ID | Severity | Status |
+|---|---|---|
+| DV036-F1 | D2 | **FIXED** — verified live. Stale cross-host cached evidence is gone; both arms are built and measured in one job from a fixed reference SHA with matched toolchains and frozen dependencies. |
+| DV036-F2 | D2 | **FIXED** — fail-closed checker, 100% line coverage (121/121), mutation-checked 57/58 against the pre-change implementation. |
+| DV036-F3 | D2 | **FIXED** — verified live: the environment build step completed and all four measurement arms produced output. |
+| DV036-F4 | D2 | **CLOSED** — amendment-4 design implemented and confirmed green on hosted CI; the previously breaching gated identities now read +4.9% and −9.0%. |
+| DV036-F5 | D3 | **DEFERRED** (unchanged) to EXP-003 E3 (session `0166`), where the contention group gates on the reference host. |
+
+### A9 (CI) — closed
+
+A9 was the audit's single `PENDING` row. It is now **PASS**:
+`tools/check_ci_green.py b43455405055d189b74441642ab32c96513b2e57 --limit 120`
+→ `RESULT: all required workflows green` (rust `35847498343`, python
+`35847498316`, parity `35847498434`, repro `35847498332`, snyk `35847498489`,
+gpu `35847498331`), plus the wholly green nightly above.
+
+### Scope of this closure
+
+This closes the **hosted-CI comparison repair only**. DV-036's reference-host
+re-baseline obligations are untouched and remain open: the CPU criterion /
+pytest-benchmark gate at EXP-003 E3 (0166), due before session 0168, and the
+GPU/bridge gate at EXP-004 E3 (0171), due before session 0173. Same-job
+measurement removes the cross-host confound; it does not prove absence of
+within-job load, and the hosted nightly remains a gross-regression detector
+by its own header. No threshold was relaxed, no benchmark was dropped, no
+baseline was manually promoted, and no run was retried until green — rounds 1,
+2 and 3 are each recorded with their failures intact.
+
+**Correction verdict: the DV-036 conditional correction cycle S1→S2→S3→S4 is
+CLOSED.** Session 0156 (EXP-001 E3) is unblocked on this condition.

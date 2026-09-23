@@ -515,6 +515,9 @@ mechanically checkable gate (`tools/check_dv_register_gates.py` parses
 - **Closure gate:** PR #19 merges with required CI and Snyk Code green before
   session 0156 (EXP-001 E3). The §7.1 run-directory and per-run manifest rules
   remain independent defense in depth.
+- **CLOSED 2026-09-23 UTC.** PR #19 merged as `90c0334`;
+  `check_ci_green.py 90c0334 --limit 120` → all required workflows green.
+  DV-038 is closed in the register. The defense-in-depth rules stay in force.
 
 ### 11.2 DV-039 — `nightly.yml` `full-suite` red: environment provisioning drift
 
@@ -531,6 +534,10 @@ mechanically checkable gate (`tools/check_dv_register_gates.py` parses
   constrained by `ci/docs-constraints.txt`), **before session 0156**, as a
   governed CI hotfix; the nightly `full-suite` is the campaign's daily
   regression net and must be green before the first E3.
+- **CLOSED 2026-09-23 UTC.** Merged in PR #19; nightly `workflow_dispatch`
+  run `35847692136` at `main` `b434554` reports `full-suite` green — and the
+  **whole** workflow green, satisfying the maintainer's stricter gate. Neither
+  provisioning failure recurred. DV-039 is closed in the register.
 
 ### 11.3 DV-036 — nightly `bench-regression` red (re-audit gate reached: this session)
 
@@ -661,6 +668,25 @@ fixed together with the CPU re-baseline. Every other benchmark stays gated
 at the unchanged 10% mean-runtime threshold, fail-closed; the job budget
 rises from 90 to 180 minutes.
 
+**Hosted validation round 3 — CLOSED (2026-09-23 UTC).** PR #22 merged to
+`main` as `b43455405055d189b74441642ab32c96513b2e57`. Nightly
+`workflow_dispatch` run `35847692136` at that SHA concluded **success for the
+whole workflow**: `full-suite` green and `bench-regression` green. The
+comparison was substantive — 69 benchmarks (63 gated, 6 advisory), none gated
+past +10%, 2 reference and 2 candidate passes against the unchanged fixed
+reference `4590d611f34eae5dfcdadb99b562aacf998d6e94` at the unchanged 10%
+threshold. The two previously breaching **gated** identities moved into the
+gate under the symmetric counterbalanced design alone, with no benchmark code
+change: `resonance_layer_bridge_baseline/moderate` +14.7% → **+4.9%**, and
+DLPack `test_negate_round_trip_latency[float64]` +18.4% → **−9.0%**. The
+contention group still spreads 0.789×–1.252× on identical code and is
+reported-but-advisory as amendment 4 provides. Session 0156 re-ran the
+committed checker locally against the run's preserved evidence artefact and
+reproduced exit 0 with identical ratios, so the closure does not rest on the
+hosted job's own verdict. **The §11.6 correction is closed;** §11.3's
+reference-host re-baseline gates before 0168 and 0173, and DV036-F5's fix at
+0166, are unaffected and remain open.
+
 ---
 
 ## 12. Campaign rules that E1–E5 briefs do not spell out (adopted here)
@@ -737,3 +763,4 @@ Hypotheses are never in this document.
 | 2 | 2026-09-22 | §11.5 (gap disposition; §7.2 schema row) | Ratifies a third `timing_method` value, `"not-timed"`, for a GPU result entry that performs no timing measurement (EXP-001 H4, preregistration §5.12 item 6). Applied in the driver, the closure validator, and the pre-registration; no existing `"device-event"`/`"system-synced"` leg changes. No change to §2–§6, §8–§10, §11.1–§11.4. | MichaelMaillet |
 | 3 | 2026-09-23 UTC | §11.3, §11.6 (gap disposition) | Bring forward a bounded DV-036 correction before 0156: fixed historical reference and candidate measured in one nightly job with identical toolchains/dependencies and fresh preserved outputs; retain every benchmark and the 10% threshold; fail closed on incomplete evidence. Reference-host EXP-003/004 gates and whole-nightly-green entry remain unchanged. | MichaelMaillet (explicit same-job correction approval; hotfix branch push and testing authorized) |
 | 4 | 2026-09-23 UTC | §11.6 (gap disposition, hosted validation round 2) | After main nightly `35826531821` breached on identical-source measurements: equal-length sibling checkouts for both arms; fixed counterbalanced reference→candidate→candidate→reference order with per-arm mean of both passes; `control_buffer_read_under_contention` group measured and reported but advisory on hosted runners (reference-host gate at EXP-003 E3, 0166, with its harness defect DV036-F5); job timeout 90→180 min. 10% threshold, fixed reference SHA, matched dependencies, all eight Rust targets, Python selection, and fail-closed evidence rules unchanged. | MichaelMaillet (selected the symmetric + counterbalanced + contention-advisory option in session, 2026-09-23 UTC) |
+| 5 | 2026-09-23 UTC | §11.1, §11.2, §11.6 (gap dispositions) | Records terminal closure of three gap dispositions on verified evidence: DV-038 closed (PR #19 merged `90c0334`, required CI green), DV-039 closed (same merge plus wholly green nightly `35847692136`), and the §11.6 hosted-CI comparison correction closed (nightly `35847692136` at `main` `b434554` green under the amendment-4 counterbalanced design, independently re-derived from the preserved evidence artefact). No target, threshold, benchmark selection, reference SHA, experiment order, seed policy, statistics policy, or stop rule changes. §11.3's reference-host gates before 0168/0173 and DV036-F5's 0166 fix remain open. | MichaelMaillet (A2 closure conditions met as written; no new approval required — each gate's own pre-approved evidence standard is satisfied) |
