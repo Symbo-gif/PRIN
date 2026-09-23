@@ -480,6 +480,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   malformed, duplicate, non-finite, nonpositive, or unmatched observations
   instead of reporting partial evidence as a pass. Local tests and security
   checks pass; hosted validation and correction closure are pending.
+- **DV-036 hosted validation round 2 (2026-09-23 UTC, campaign amendment 4):**
+  nightly `35826531821` breached on identical-source measurements (same
+  Criterion binaries read +14.7% under the nested, reference-first design;
+  hosted contention noise 0.39×–1.46× for identical code). `nightly.yml` now
+  measures equal-length sibling checkouts `arms/reference` and
+  `arms/candidate` in the fixed order reference, candidate, candidate,
+  reference. `tools/check_bench_regression.py` takes `--reference`/`--candidate`
+  run lists, averages each arm, tabulates every ratio, and supports
+  fail-closed `--advisory` prefixes. The contention group is advisory on
+  hosted runners; its harness defect (DV036-F5) is deferred to EXP-003 E3.
+  The 10% threshold and all benchmarks are unchanged; a hosted run is pending.
 - **`release.yml` could not build a green wheel matrix (`0151`, WP-038 S3,
   WP038-F1 / WP038-F2).** The wheel smoke test was a single `shell: bash` step
   for the whole matrix; on the self-hosted Windows runner `shell: bash`

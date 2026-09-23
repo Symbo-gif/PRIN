@@ -21,7 +21,10 @@ or execute archived reference code.
 - `check_bench_regression.py` — fail-closed comparison of fresh same-job
   Criterion and pytest-benchmark reference/candidate measurements; all
   identities must match and every mean must be finite and positive. More than
-  10% mean slowdown fails; missing data never seeds a pass.
+  10% mean slowdown fails; missing data never seeds a pass. Each arm may
+  have several runs (`--reference`/`--candidate RUN...`, averaged; the
+  nightly uses counterbalanced ABBA order). `--advisory PREFIX` ids are
+  reported but not gating; a blank or unmatched prefix is an input error.
 
 ### Reproducibility
 - `reproduce.py` — Phase 6 reproducibility pipeline (WP-035). Regenerates all
