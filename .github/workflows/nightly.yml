@@ -71,6 +71,8 @@ jobs:
       EVIDENCE_DIR: ${{ github.workspace }}/benchmarks/results/nightly-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.REFERENCE_SHA }}
