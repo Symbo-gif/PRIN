@@ -8,9 +8,15 @@ one runner job, not timings cached from an unrelated hosted machine.
 
 Criterion means come from ``**/new/estimates.json`` (nanoseconds); pytest
 means come from ``benchmarks[].stats.mean`` (seconds). Both sources must be
-nonempty in both arms and contain exactly matching benchmark identities.
+nonempty in every run and contain exactly matching benchmark identities.
 Missing, malformed, duplicate, non-finite, or nonpositive observations are
 input errors, never a baseline-seeding success or a partial comparison.
+
+DV036-F4: each arm may be measured more than once (the nightly uses the
+counterbalanced order reference, candidate, candidate, reference) and an
+arm's mean is the arithmetic mean of its runs, which cancels linear host
+drift. ``--advisory`` identity prefixes are compared and reported but never
+fail the gate; every prefix must be nonblank and match a benchmark.
 
 Exit codes: 0 for a complete passing comparison, 1 for a regression, and 2
 for invalid arguments or evidence. A missing baseline never passes.
@@ -105,40 +111,73 @@ def _regressions(
     return hits
 
 
-def _load_arm(criterion_dir: Path, pytest_json: Path) -> dict[str, float]:
-    """Load both mandatory measurement sources with disjoint identity prefixes."""
+def _load_arm(run: Path) -> dict[str, float]:
+    """Load one run's mandatory sources with disjoint identity prefixes."""
     return {
         **{
             f"criterion/{key}": value
-            for key, value in _load_criterion_means(criterion_dir).items()
+            for key, value in _load_criterion_means(run / "criterion").items()
         },
         **{
             f"pytest/{key}": value
-            for key, value in _load_pytest_means(pytest_json).items()
+            for key, value in _load_pytest_means(run / "pytest-bench.json").items()
         },
     }
+
+
+def _require_same_identities(
+    first: dict[str, float], other: dict[str, float], context: str
+) -> None:
+    """Reject two measurement sets that do not name exactly the same cases."""
+    if first.keys() != other.keys():
+        missing = sorted(first.keys() - other.keys())
+        extra = sorted(other.keys() - first.keys())
+        raise BenchmarkInputError(
+            f"Benchmark identities differ ({context}): missing={missing}; "
+            f"unexpected={extra}"
+        )
+
+
+def _load_arm_runs(runs: list[Path]) -> dict[str, float]:
+    """Average every benchmark mean over all runs of one arm."""
+    loaded = [_load_arm(run) for run in runs]
+    for run, means in zip(runs[1:], loaded[1:], strict=True):
+        _require_same_identities(loaded[0], means, f"{runs[0]} vs {run}")
+    return {
+        name: math.fsum(means[name] for means in loaded) / len(loaded)
+        for name in loaded[0]
+    }
+
+
+def _split_advisory(names: set[str], prefixes: list[str]) -> tuple[set[str], set[str]]:
+    """Partition identities into gated and advisory by nonblank, used prefixes."""
+    advisory: set[str] = set()
+    for prefix in prefixes:
+        if not prefix.strip():
+            raise BenchmarkInputError("--advisory prefix must be nonblank")
+        matched = {name for name in names if name.startswith(prefix)}
+        if not matched:
+            raise BenchmarkInputError(f"--advisory prefix matches nothing: {prefix}")
+        advisory |= matched
+    return names - advisory, advisory
 
 
 def main(argv: list[str] | None = None) -> int:
     """Compare complete, matched measurements from the reference and candidate."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--baseline",
+        "--reference",
         type=Path,
-        default=Path("bench-baseline"),
-        help="Reference directory containing criterion/ and pytest-bench.json.",
+        nargs="+",
+        required=True,
+        help="Reference run directories, each with criterion/ and pytest-bench.json.",
     )
     parser.add_argument(
-        "--criterion-dir",
+        "--candidate",
         type=Path,
-        default=Path("target/criterion"),
-        help="Fresh candidate Criterion output directory.",
-    )
-    parser.add_argument(
-        "--pytest-json",
-        type=Path,
-        default=Path("pytest-bench.json"),
-        help="Fresh candidate pytest-benchmark JSON.",
+        nargs="+",
+        required=True,
+        help="Candidate run directories, each with criterion/ and pytest-bench.json.",
     )
     parser.add_argument(
         "--threshold",
@@ -146,26 +185,36 @@ def main(argv: list[str] | None = None) -> int:
         default=0.10,
         help="Fractional mean-runtime increase that counts as a regression.",
     )
+    parser.add_argument(
+        "--advisory",
+        action="append",
+        default=[],
+        help="Identity prefix compared and reported but not gating (repeatable).",
+    )
     args = parser.parse_args(argv)
     if not math.isfinite(args.threshold) or args.threshold < 0.0:
         print("Error: --threshold must be finite and non-negative", file=sys.stderr)
         return 2
     try:
-        current = _load_arm(args.criterion_dir, args.pytest_json)
-        baseline = _load_arm(
-            args.baseline / "criterion", args.baseline / "pytest-bench.json"
-        )
-        if current.keys() != baseline.keys():
-            missing = sorted(baseline.keys() - current.keys())
-            extra = sorted(current.keys() - baseline.keys())
-            raise BenchmarkInputError(
-                f"Benchmark identities differ: missing candidate={missing}; "
-                f"missing reference={extra}"
-            )
+        current = _load_arm_runs(args.candidate)
+        baseline = _load_arm_runs(args.reference)
+        _require_same_identities(baseline, current, "reference vs candidate")
+        gated, advisory = _split_advisory(set(current), args.advisory)
     except BenchmarkInputError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2
-    regressions = _regressions(current, baseline, args.threshold)
+    for name in sorted(current):
+        ratio = current[name] / baseline[name]
+        tag = "  ADVISORY" if name in advisory else ""
+        print(f"{ratio:7.3f}  {baseline[name]:.4g} -> {current[name]:.4g}  {name}{tag}")
+    advisory_hits = _regressions(
+        {name: current[name] for name in advisory}, baseline, args.threshold
+    )
+    for line in advisory_hits:
+        print(f"ADVISORY (not gating) past threshold: {line}")
+    regressions = _regressions(
+        {name: current[name] for name in gated}, baseline, args.threshold
+    )
     if regressions:
         print(
             f"Benchmark regression check FAILED "
@@ -176,8 +225,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {line}", file=sys.stderr)
         return 1
     print(
-        f"Benchmark regression check passed: {len(current)} benchmarks, "
-        f"{len(current)} compared, none past +{args.threshold * 100:.0f}%."
+        f"Benchmark regression check passed: {len(current)} benchmarks "
+        f"({len(gated)} gated, {len(advisory)} advisory), none gated past "
+        f"+{args.threshold * 100:.0f}%; {len(args.reference)} reference and "
+        f"{len(args.candidate)} candidate runs."
     )
     return 0
 
