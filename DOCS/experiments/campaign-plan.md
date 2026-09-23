@@ -552,9 +552,10 @@ mechanically checkable gate (`tools/check_dv_register_gates.py` parses
   `tools/check_bench_regression.py`; satisfying the CPU gate changes DV-036 to
   **PARTIALLY CLOSED**, and satisfying both closes it. The hosted `nightly.yml`
   gate remains a gross-regression detector only (its own header says so);
-  making it baseline-stable on hosted runners (e.g. relative-to-same-run control
-  benchmark, or a self-hosted nightly) is a CI-robustness item for WP-039 S1
-  (0195), not a campaign experiment.
+  making it baseline-stable on hosted runners was assigned to WP-039 S1
+  (0195). The maintainer brought forward the bounded same-job comparison
+  correction before 0156 on 2026-09-23 UTC (§11.6); reference-host campaign
+  re-baselining and its 0168/0173 gates remain unchanged.
 
 ### 11.4 Brief-vs-standard target reconciliation (EXP-002, EXP-003, EXP-004, EXP-008)
 
@@ -597,6 +598,42 @@ this explicit record.
   experiment whose GPU leg is genuinely untimed may reuse `"not-timed"`
   without a further amendment; a *timed* GPU leg still requires
   `"device-event"` or `"system-synced"` per DV-003/amendment #44.
+
+### 11.6 DV-036 — same-job nightly comparison correction, approved 2026-09-23 UTC
+
+Session 0156 preflight dispatched nightly `35804529743` at
+`e9974318b2d1ced3beb7506ca217dbb92864158e`: `full-suite` passed but
+`bench-regression` failed. MichaelMaillet required the entire nightly to be
+green and approved a separate DV-036 correction cycle before E3.
+
+Confirmed evidence: the failed job restored `bench-baseline-35058597165`
+(created 2026-09-16). Its own baseline-refresh step ran, but the cache-save
+post-step was skipped after comparison failure. The cache API still listed
+only that September 16 baseline. The reference run seeded its baseline
+without a comparison. Rust benchmark implementation files and `Cargo.lock`
+are unchanged between its SHA and the failed candidate. These facts establish
+stale, cross-run evidence reuse, not a particular hardware or thermal cause
+for every reported slowdown.
+
+Approved correction: retain the eight Rust benchmark targets, Python
+benchmark selection, and the 10% mean-runtime threshold. Rebuild fixed
+reference SHA `4590d611f34eae5dfcdadb99b562aacf998d6e94` and the candidate,
+measure reference then candidate sequentially on one hosted runner, and use
+separate fresh Criterion/pytest output directories. Both arms use the same
+Python/Rust toolchain and identical frozen third-party Python dependencies.
+Preserve SHAs, host details, dependency snapshots, logs, and both raw outputs
+as workflow artefacts even on failure. Reject missing, malformed, duplicate,
+non-finite, nonpositive, or unmatched measurements; do not seed a green gate
+from missing evidence. Do not promote failing timings or relax the threshold.
+
+This is CI regression detection, not EXP-003/004 reference-host performance
+evidence. Same-job measurement removes the different-host comparison but
+does not prove absence of within-job load or timing noise. A remaining breach
+must be investigated, not retried until green. DV-036's campaign re-baseline
+gates, DV-039's whole-nightly-green requirement, and session 0156's entry
+conditions remain in force. The correction follows conditional S1→S2→S3→S4;
+branch testing is authorized, but neither approval to merge nor E3 completion
+is implied.
 
 ---
 
@@ -672,3 +709,4 @@ Hypotheses are never in this document.
 |---|---|---|---|---|
 | 1 | 2026-09-21 | §11.1, §11.2 (gap dispositions; §7.3 enforcement row) | Executes decision A2: the DV-038 `write_result` guard stages and flushes JSON before atomic exclusive publication (`ArtefactExistsError`; direct, race, interrupted-write, and CLI tests; Snyk Code required) and DV-039 constrains every `nightly.yml` `full-suite` pip install while provisioning MOT/Sphinx. Both fixes are committed on governed hotfix branch `hotfix/dv038-dv039-artefact-guard-nightly-provisioning`; DV-038 closes on green merge and DV-039 on green merge plus one green nightly dispatch. No change to §2–§6, §8–§10. | MichaelMaillet (A2) |
 | 2 | 2026-09-22 | §11.5 (gap disposition; §7.2 schema row) | Ratifies a third `timing_method` value, `"not-timed"`, for a GPU result entry that performs no timing measurement (EXP-001 H4, preregistration §5.12 item 6). Applied in the driver, the closure validator, and the pre-registration; no existing `"device-event"`/`"system-synced"` leg changes. No change to §2–§6, §8–§10, §11.1–§11.4. | MichaelMaillet |
+| 3 | 2026-09-23 UTC | §11.3, §11.6 (gap disposition) | Bring forward a bounded DV-036 correction before 0156: fixed historical reference and candidate measured in one nightly job with identical toolchains/dependencies and fresh preserved outputs; retain every benchmark and the 10% threshold; fail closed on incomplete evidence. Reference-host EXP-003/004 gates and whole-nightly-green entry remain unchanged. | MichaelMaillet (explicit same-job correction approval; hotfix branch push and testing authorized) |

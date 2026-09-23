@@ -7,3 +7,7 @@ workflows. Current controls mirror the PRIN Session Cycle and Coding Standards
 - `copilot-instructions.md` defines repository authority for Copilot-assisted work.
 - `workflows/` contains Rust, Python, parity, GPU, reproducibility, release, Snyk,
   and compensating secret-scanning automation.
+
+The nightly comparison uses fresh fixed-reference and candidate measurements
+on the same runner; see [workflow roles](workflows/README.md). No local or
+branch validation substitutes for required green main checks.

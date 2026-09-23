@@ -472,6 +472,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **DV-036 nightly comparison correction (2026-09-23 UTC):** replace stale
+  cross-host cached timings with an approved fixed historical reference and
+  candidate measured on one runner, with identical toolchains/dependencies,
+  fresh output directories, and preserved raw evidence. Retain the eight
+  Rust targets, Python benchmark selection, and 10% threshold. Reject missing,
+  malformed, duplicate, non-finite, nonpositive, or unmatched observations
+  instead of reporting partial evidence as a pass. Local tests and security
+  checks pass; hosted validation and correction closure are pending.
 - **`release.yml` could not build a green wheel matrix (`0151`, WP-038 S3,
   WP038-F1 / WP038-F2).** The wheel smoke test was a single `shell: bash` step
   for the whole matrix; on the self-hosted Windows runner `shell: bash`

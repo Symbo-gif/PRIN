@@ -20,6 +20,14 @@ cleanup can surface as `PermissionError: [WinError 32]` fixture-setup errors.
 Run the suites sequentially; if lock errors appear, re-run the suite in
 isolation (EA-002 E-F13).
 
+The full suite must use the exact `.pytest_basetemp` name: reporting's
+pytest-only output allowlist recognizes that directory, not suffixed variants.
+For release-workflow shell tests, ensure Git Bash precedes the Windows WSL
+`bash.exe` relay on this process's PATH. A present WSL relay without a working
+distribution passes `shutil.which("bash")` but cannot run the test scripts.
+On this workstation, prepend `C:\Program Files\Git\bin` for the test process;
+do not change global PATH or weaken the tests.
+
 ## Local verification one-liner (Python + Rust + security)
 
 ```powershell

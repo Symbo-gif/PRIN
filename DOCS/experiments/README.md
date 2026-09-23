@@ -14,6 +14,11 @@ and the maintainer approval record (session 0153, Campaign E0). Every
 pre-registration inherits its §5–§10 rules. It contains no hypotheses and no
 results.
 
+DV-036's pre-0156 CI correction is approved in campaign plan §11.6 /
+amendment 3. Its evidence and blocked entry state are recorded in
+[EXP-001's execution log](EXP-001-golden-trajectory-numerical-parity/log.md);
+this is not EXP-001 execution or a reference-host performance result.
+
 ## Layout
 
 ```

@@ -18,6 +18,10 @@ or execute archived reference code.
   precondition session is COMPLETE while the item is not CLOSED.
 - `check_global_session_registration.py` — cross-references every Executive
   Audit report against its session-register row.
+- `check_bench_regression.py` — fail-closed comparison of fresh same-job
+  Criterion and pytest-benchmark reference/candidate measurements; all
+  identities must match and every mean must be finite and positive. More than
+  10% mean slowdown fails; missing data never seeds a pass.
 
 ### Reproducibility
 - `reproduce.py` — Phase 6 reproducibility pipeline (WP-035). Regenerates all
