@@ -1,8 +1,10 @@
 # EXP-001 — Golden-trajectory numerical parity (track C1)
 
-**Status:** APPROVED (session 0155, 2026-09-21) — maintainer approval
-recorded; EXP-001 E3 (session 0156) is authorized to begin. See
-[`preregistration.md`](preregistration.md).
+**Status:** E2 APPROVED; E3 BLOCKED AT PREFLIGHT (2026-09-23 UTC).
+Maintainer approval of the pre-registration remains recorded in
+[`preregistration.md`](preregistration.md). Session 0156 has not started
+execution: the required whole-nightly-green gate is unsatisfied. See
+[`log.md`](log.md) for the entry evidence and maintainer decision.
 **Campaign plan row:** [`DOCS/experiments/campaign-plan.md`](../campaign-plan.md) §2.1 (EXP-001).
 **Raw artefact root:** [`benchmarks/results/EXP-001/`](../../../benchmarks/results/EXP-001/README.md)
 
@@ -21,7 +23,7 @@ recorded; EXP-001 E3 (session 0156) is authorized to begin. See
 |---|---|---|---|
 | 0154 | E1 — Pre-registration | [`0154-exp001-e1-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0154-exp001-e1-golden-trajectory-numerical-parity.md) | COMPLETE (historical, as of E1 close) — DRAFT pre-registration committed; H4 driver support left pending for E2 review (see preregistration §5.4). **Superseded by 0155 below: H4 was closed the same day.** |
 | 0155 | E2 — Review and approval | [`0155-exp001-e2-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0155-exp001-e2-golden-trajectory-numerical-parity.md) | COMPLETE — pre-registration APPROVED; H4 driver support closed as a pre-execution amendment (preregistration §5.4); H1/H3 artefact-tagging bug found and fixed; PR #20 code review (Devin/CodeRabbit/Copilot) triaged and fixed as a second amendment (preregistration §5.5) |
-| 0156 | E3 — Execution | [`0156-exp001-e3-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0156-exp001-e3-golden-trajectory-numerical-parity.md) | PLANNED |
+| 0156 | E3 — Execution | [`0156-exp001-e3-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0156-exp001-e3-golden-trajectory-numerical-parity.md) | BLOCKED AT PREFLIGHT — no campaign runs; see [log](log.md) |
 | 0157 | E4 — Analysis | [`0157-exp001-e4-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0157-exp001-e4-golden-trajectory-numerical-parity.md) | PLANNED |
 | 0158 | E5 — Report | [`0158-exp001-e5-golden-trajectory-numerical-parity.md`](../../sessions/phase-7/0158-exp001-e5-golden-trajectory-numerical-parity.md) | PLANNED |
 
