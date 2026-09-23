@@ -429,3 +429,21 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   ruff/mypy --strict/Snyk Code all clean, full subsystem suite 64/64.
 - [`2026-09-23-dv036-nightly-correction-audit.md`](2026-09-23-dv036-nightly-correction-audit.md) —
   DV-036 local S2 PASS and S3 CLEAN; S4/hosted confirmation pending.
+- [`PR023-multi-review-audit.md`](PR023-multi-review-audit.md) — External
+  code review audit of PR #23 (EXP-001 E3–E5), 2026-09-23,
+  `PASS-WITH-FINDINGS` → all findings remediated in the same round. Seven
+  independent review runs — Copilot, CodeRabbit, Sourcery (declined, diff over
+  its size limit), and four independent LLM reviews (Qwen, Devin, Kimi, Cline)
+  — de-duplicated into eight findings `PR23-F1`…`PR23-F8`, each
+  re-derived from the repository rather than taken on the reviewer's
+  assertion. **No D1.** Two `D2`: PR23-F1 (`tools/reproduce.py::verify_manifest`
+  followed symbolic links — content integrity verified, path provenance not,
+  CWE-59; fixed with no-follow guards in the shared verifier and 5 regression
+  tests, 4 proven to fail pre-fix) and PR23-F8 (the published "no CI gate
+  integrates PRIN's dynamics over the golden corpus" claim was too absolute —
+  a 4-case PRIN-vs-corpus gate runs in every required `test` leg; corrected to
+  *the full 504-case corpus* at all 10 sites, which **strengthens**
+  `EXP001-E5-F1` because none of the 4 cases breaches). Three `D3` and three
+  `D4` governance-record consistency findings fixed; three items declined with
+  rationale (§6). Same external-review event class as
+  `PR017-devin-review-audit.md`.

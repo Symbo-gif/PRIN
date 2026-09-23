@@ -1,0 +1,460 @@
+# PRIN Audit Report — PR #23 multi-review round (EXP-001 E3–E5)
+
+**Date:** 2026-09-23 UTC
+**Auditor:** Claude Opus 5 (AI pair), independently re-deriving every finding
+from the repository — not taking any reviewer's assertion on its word. This
+report follows [`TEMPLATE_Audit_Report.md`](TEMPLATE_Audit_Report.md) and the
+severity scale of
+[`Development_Workflow_and_Audit_Standards.md`](../standards/Development_Workflow_and_Audit_Standards.md)
+§5, reusing the event-class precedent set by
+[`PR017-devin-review-audit.md`](PR017-devin-review-audit.md) for external code
+review on an open PR (no dedicated governance document exists for this class,
+and PR #23 is not a Session-Cycle S2).
+**Scope:** every review left on PR #23 (`campaign/0158-exp001-e5` → `main`)
+at head `60cc387`, and the repository state they describe —
+`tools/reproduce.py`, `tests/test_reproduce.py`,
+`DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/` (report,
+README, analysis module), `DOCS/sphinx/parity_report.rst`, `CHANGELOG.md`,
+`DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`, `DOCS/sessions/` registers and
+contingency briefs, `DOCS/audits/2026-09-23-dv036-nightly-correction-audit.md`.
+**Trigger:** GitHub PR #23. Seven independent review runs (one declined):
+
+| Reviewer | Kind | Findings raised |
+|---|---|---|
+| `Copilot` | automated (GitHub) | 4 (1 High, 3 Low) |
+| `coderabbitai[bot]` | automated | 3 actionable + 1 pre-merge check |
+| `Sourcery` | automated | 0 — declined, diff exceeds its 150,000-character limit |
+| Qwen Code | independent LLM review | 0 new; validated the 7 bot findings |
+| Devin | independent LLM review | 2 new refinements; validated the 7 bot findings |
+| Kimi | independent LLM review | 0 new; validated the 7 bot findings |
+| Cline | independent LLM review | **1 new substantive finding**; validated the 7 bot findings |
+
+**Active brief:** no session-brief file — a PR review-response round on session
+0158's branch, the same ad-hoc governance class as `PR017-devin-review`.
+Session 0158 is COMPLETE and its record is immutable; corrections to it are
+errata (campaign plan §12 item 6), which is how the two report-level findings
+below are discharged.
+**Git state:** `campaign/0158-exp001-e5` @ `60cc387` (pre-remediation);
+remediation commits follow this report.
+**Verdict:** `PASS-WITH-FINDINGS` → remediated in the same round (see §7).
+**No D1.** No finding touches a hypothesis verdict, tolerance, denominator,
+seed, decision rule, or any measured artefact. All five EXP-001 verdicts and
+both D1 declarations stand exactly as issued.
+
+---
+
+## 1. Executive summary
+
+| Area | Status | Notes |
+|---|---|---|
+| Independent re-derivation of every reported finding | ✅ | All 8 compiled findings re-derived from the repository; evidence in §3. |
+| False positives | ✅ (1 declined, not a false positive) | `PR23-F9` (CodeRabbit docstring-coverage check) is *factually* correct but measures against a threshold this project does not use; declined with evidence (§6). No reviewer claim was found to be factually wrong. |
+| Severity classification | ✅ | 2 × D2, 3 × D3, 3 × D4. **No D1** — nothing touches numerical parity, published verdicts, or measured artefacts. |
+| Regression tests (A3) | ✅ | 5 new tests for `PR23-F1`; 4 of the 5 confirmed to **fail** against the pre-fix source and pass against the fix (§3.1). |
+| Numerical parity + invariants (A4) | ✅ | EXP-001 E4 analysis re-run under the hardened verifier: both outputs and `report-manifest.json` byte-identical (§3.1). |
+| Quality gates (A5) | ✅ | Whole-repo `ruff check` + `ruff format --check`, `mypy python/prin --strict`, `interrogate` 97.6 %, Sphinx `-W` build, and all five governance checkers pass; full suite 3,214 passed / 0 failed (§7). |
+| Security (A6) | ✅ | `PR23-F1` *is* the security fix (CWE-59 class). Snyk Code 0 issues on `tools/` and `tests/`, `bandit` clean, `pip-audit` clean — actual output in §2; CI's `Snyk Code` / `Secret Scan` remain the authoritative gates. |
+| Docstring/doc coverage (A7) | ✅ | New helper and all five new tests carry docstrings; `PR23-F9` declined with evidence (§6). |
+| Repository hygiene (A8) | ✅ | Claim now stated identically at all 10 sites where it appears (§3.8). |
+| CI status (A9) | ✅ | 24/24 required checks green at `60cc387`, recorded in report §14.1 (§3.4). Remediation head runs its own checks. |
+| Artefact trail (A10) | ✅ | This report, `CHANGELOG.md` `[Unreleased]`, `DOCS/audits/README.md` index entry, E5 report §15 errata. |
+
+## 2. Methodology
+
+Reviews were fetched from the GitHub API rather than read from a summary, then
+de-duplicated: the seven automated findings recur across the four independent
+LLM reviews, so each distinct defect is compiled once and every reviewer that
+raised it is recorded against it (§3). Each finding was then re-derived from
+the repository before any fix was written.
+
+```bash
+gh api "repos/Symbo-gif/PRIN/pulls/23/comments?per_page=100" --paginate   # 7 review comments
+gh api "repos/Symbo-gif/PRIN/issues/23/comments?per_page=100" --paginate  # 7 issue comments
+gh api repos/Symbo-gif/PRIN/rulesets/22150076 \
+  --jq '.rules[] | select(.type=="required_status_checks") | .parameters.required_status_checks[].context'
+gh api repos/Symbo-gif/PRIN/commits/60cc387/check-runs --paginate \
+  --jq '.check_runs[] | "\(.name)\t\(.conclusion)"'
+```
+
+Local gate, executed on the remediation working tree (Windows 11, Python
+3.14.0, project `.venv`):
+
+```powershell
+.venv\Scripts\python -m pytest tests/test_reproduce.py -q
+.venv\Scripts\python -m pytest tests/test_exp001_e4_analysis.py tests/test_exp001_driver.py -q -m "not slow and not gpu"
+.venv\Scripts\python -m ruff check tools/reproduce.py tests/test_reproduce.py
+.venv\Scripts\python -m ruff format --check tools/reproduce.py tests/test_reproduce.py
+.venv\Scripts\python -m mypy --strict tools/reproduce.py
+.venv\Scripts\python "DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py"
+.venv\Scripts\python tools/check_dv_register_gates.py
+.venv\Scripts\python tools/check_skipif_probes.py
+.venv\Scripts\python tools/check_global_session_registration.py
+.venv\Scripts\python tools/wp001_baseline.py check
+```
+
+Actual results are quoted in §3 and §7. Where a gate was not run, this report
+says so rather than claiming it passed (Coding Standards §6 item 5).
+
+**Security gates (Coding Standards §6).** `tools/reproduce.py` and
+`tests/test_reproduce.py` are modified first-party Python, so Snyk Code
+applies; no dependency manifest changed, so Snyk Open Source, `cargo audit`,
+and `pip-audit` have no changed input. Local runs (Snyk CLI `1.1306.2`, org
+`symbo-gif`):
+
+```text
+snyk code test --severity-threshold=medium tools/    ->  Total issues: 0   (exit 0)
+snyk code test --severity-threshold=medium tests/    ->  Total issues: 0   (exit 0)
+python -m bandit -c pyproject.toml -r tools/reproduce.py  ->  no issues
+python -m pip_audit .                                ->  No known vulnerabilities found
+```
+
+`pip-audit` is a compensating check only — no dependency changed, so it has no
+delta attributable to this round. **CI remains the authoritative gate**: the
+`Snyk Code` and `Secret Scan` required checks run on the remediation head and
+their results, not these local runs, are what discharge the controls. GitHub
+secret scanning and push protection remain independent, in force at push
+time.
+
+## 3. Detailed findings
+
+### 3.1 `PR23-F1` (D2) — the shared manifest verifier followed symbolic links
+
+*Raised by Copilot (High); independently validated by Qwen, Devin, Kimi, and
+Cline, all four of whom judged the High severity overstated and recommended
+fixing it in the correction cycle.*
+
+Re-derived by reading `tools/reproduce.py`. `verify_manifest` established
+**content** integrity — the bytes at this path hash to the recorded digest —
+but not **path provenance**. Every call it makes follows symbolic links:
+`Path.is_file`, `Path.stat`, and the `Path.open` inside `compute_sha256`. A
+`manifest.json`, or any manifested `*.json`, that was a link to a file outside
+the governed directory therefore verified clean. `append_manifest` had the
+same gap on the writing side, and would have recorded a digest for a link.
+
+The finding is real and its class was already recognised in this repository:
+`benchmarks/campaign/exp001_driver.py::check_run_complete` rejects a symlinked
+sidecar, a symlinked `manifest.json`, and any symlinked declared artefact with
+no-follow `is_symlink()` checks (CWE-59), and its own comment records that it
+deliberately did *not* modify the shared tool. This finding is the shared-tool
+half of that same class, and it is the path
+`DOCS/experiments/EXP-001-.../analysis/exp001_e4_analysis.py` actually uses.
+
+**Severity: D2, not D1.** Exploitation requires the ability to write into the
+governed directory, and anyone with that ability can equally rewrite
+`manifest.json` itself; every EXP-001 artefact is committed as a regular
+`100644` blob, so no published result is affected. It breaks the normative
+fail-closed guarantee the function documents — a standard violation, not a
+trajectory breach.
+
+**Fix.** `_reject_symlink(path, role)` in `tools/reproduce.py`, applied
+no-follow and *before* any following call, in four places: the manifest path
+and each manifested artefact in `verify_manifest`, and the manifest
+destination and each candidate `*.json` in `append_manifest`. The governed
+directory itself is deliberately not checked — it is chosen by the caller, not
+attested by the manifest, and the standard temporary root is a symlink on
+macOS; the reasoning is recorded in the helper's docstring.
+
+**Regression tests.** `tests/test_reproduce.py::TestManifestSymlinkProvenance`
+(5 tests), guarded by an *executability* probe (`_probe_symlink_support`,
+mirroring `tests/test_exp001_driver.py`) rather than a platform assumption,
+because Windows symlink creation needs privilege or Developer Mode. The tests
+were proved to pin the defect by restoring the pre-fix source with
+`git show HEAD:tools/reproduce.py` and re-running them:
+
+```text
+# pre-fix (git show HEAD:tools/reproduce.py)
+E   Failed: DID NOT RAISE ManifestMismatchError                  <- symlinked artefact verified CLEAN
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'manifest.*symbolic link'
+E     Actual message: 'unmanifested artefacts: manifest.json'
+E   Failed: DID NOT RAISE ManifestMismatchError
+E   tools.reproduce.ManifestFormatError: manifest schema_version must be 1
+4 failed, 1 passed, 23 deselected
+
+# post-fix
+28 passed
+```
+
+The fifth test (`test_regular_files_still_verify`) passes in both states by
+design: it is the no-regression control.
+
+**No regression to the published EXP-001 record.** The E4 analysis calls this
+verifier on all four run directories. Re-run under the hardened verifier:
+
+```text
+H1: REFUTED   H2a: REFUTED   H2b: CONFIRMED   H3: CONFIRMED   H4: CONFIRMED
+D1 flag: RAISED
+report-manifest.json: IDENTICAL (unchanged by the run)
+exp001-e4-adjudication.json  12974 B  sha256 e6f6eb20...  MATCH
+exp001-e4-summary.md          5783 B  sha256 4551061c...  MATCH
+```
+
+`tests/test_reproduce.py` also re-verifies the 172-record repository manifest
+(`test_repository_manifest_matches_all_stored_json_artefacts`) — green.
+
+### 3.2 `PR23-F2` (D3) — `CHANGELOG.md` contradicted the accepted record
+
+*Copilot #2; CodeRabbit #2; confirmed by all four LLM reviews.*
+
+`CHANGELOG.md` said the E5 report "awaits maintainer verification, and sessions
+0154–0158 remain local-only, so no CI result is claimed", while `report.md`
+§13 records maintainer acceptance on 2026-09-23 UTC. Devin's refinement is
+correct and re-verified here: the "0154–0158" range was wrong **when written**
+— `git cat-file -e b434554:tests/test_exp001_driver.py` confirms E1/E2 reached
+`main` through PR #20 (`e997431`) before the report was drafted, so only
+0156–0158 were ever local-only. Fixed in place; the CHANGELOG is a running
+record, not a frozen report.
+
+### 3.3 `PR23-F3` (D4) — EXP-001 README session table contradicted its own header
+
+*Copilot #3; CodeRabbit #2; confirmed by all four LLM reviews.*
+
+The 0158 row ended "awaiting maintainer verification" while the status block
+above it recorded acceptance. Commit `60cc387` propagated the acceptance to the
+header and to `SESSION_REGISTER.md` but not to the table row. Fixed in place.
+
+### 3.4 `PR23-F4` (D3) — report §6 PD-5, §13, and §14.1 disagreed
+
+*Copilot #4; CodeRabbit #2; Cline and Devin both noted the real defect is the
+contradiction, not the placeholder.*
+
+§14.1's placeholder was by design — campaign plan §12 item 3 has it filled by
+an addendum commit after the checks report. The defect is that §13 already
+claimed "PD-5 discharged there" while §14.1 was still pending and §6 PD-5 still
+said the PR "is not yet created".
+
+CI is in fact complete at `60cc387`, so §14.1 is now filled from the actual
+run, which makes §13 true as written and needs no change to it:
+
+```text
+CI-green check - branch 'campaign/0158-exp001-e5', commit 60cc3875e2c91fea92a555735fe88f6024514d69
+  rust green (35884672511)   python green (35884672533)   parity green (35884672514)
+  repro green (35884672517)  snyk green (35884672499)     gpu green (35884672469)
+RESULT: all required workflows green
+```
+
+All **24** checks required by branch ruleset `22150076` concluded `success`;
+`Sourcery review` (not required) is `skipped`. §14.1 also states explicitly
+that this round's own remediation commits move the head past `60cc387` and
+that the final head's checks are the operative ones — §14.1's preamble
+anticipates exactly this.
+
+PD-5's body is in a report that declares itself immutable, so it is corrected
+by **erratum E-1** appended at PD-5, not by rewriting it; the original text is
+retained verbatim. Errata are indexed in the new report §15 and pointed to
+from the header record table.
+
+### 3.5 `PR23-F5` (D3) — `SESSION_REGISTER.md` row stale at the pushed head
+
+*CodeRabbit #2; Devin and Cline both caught that a prior review wrongly
+credited `60cc387` with this fix — it existed only as an uncommitted
+working-tree edit.* Confirmed by `git diff` at the pushed head. The prepared
+edit is committed in this round (and further qualified for `PR23-F8`).
+
+### 3.6 `PR23-F6` (D4) — DV-036 S4 correction record carried superseded status lines
+
+*CodeRabbit #3; confirmed by all four LLM reviews.*
+
+Under a `Status: COMPLETE` header, two undated present-tense entries said
+validation "remains pending", "Session 0156 remains blocked", and "S4 stays IN
+PROGRESS", contradicting the round-3 CLOSED paragraph below them and
+`DEFERRED_VALIDATION_REGISTER.md`. Both are genuine dated log entries, so they
+are labelled historical and marked superseded rather than deleted, and an
+explicit final disposition is stated at the end.
+
+### 3.7 `PR23-F7` (D4) — bare Markdown fence in the DV-036 correction audit
+
+*CodeRabbit #1.* `Documentation_Standards.md` requires a language tag on every
+fenced block. Confirmed one bare opening fence at line 195; `text` added. The
+other bare fences in that file (51, 60, 79, 198, 219) are closing fences —
+verified individually, no change needed.
+
+### 3.8 `PR23-F8` (D2) — the "no CI gate" claim was too absolute
+
+*Raised only by Cline. Missed by Copilot, CodeRabbit, and the other three LLM
+reviews, each of which endorsed the claim as written.*
+
+The E5 report §7.2, the `parity_report.rst` erratum, and several register and
+index sites all stated, in the present tense, that **no** CI gate integrates
+PRIN's dynamics over the golden corpus and compares the trajectory against the
+stored reference. That is not true as stated. Re-derived here from the
+repository, not from the review:
+
+1. `tests/test_exp001_driver.py::TestCorpusParity::test_representative_cases_within_tolerance`
+   calls `driver.compare_corpus_case` → `run_prin_case`, which drives the
+   actual `prin` Rust core, against the stored corpus arrays.
+2. It covers the 4 ids in that module's `_REPRESENTATIVE_CASES`.
+3. The module carries `pytestmark = [pytest.mark.parity]`. `python.yml`'s
+   `test` job runs `pytest tests/ -v -m "not slow and not gpu"`, which does
+   **not** deselect `parity`. Confirmed locally:
+   `pytest tests/test_exp001_driver.py -m "not slow and not gpu" -k "TestCorpusParity or TestRepeatability"`
+   → `10 passed, 202 deselected`.
+4. `git cat-file -e b434554:tests/test_exp001_driver.py` succeeds: the test is
+   on `main` at this PR's base, merged via PR #20. It was added by EXP-001's
+   own E1 (`37e218b`), so it postdates the Parity Report claim the erratum
+   corrects — the erratum's historical judgement is unaffected.
+
+**The correction strengthens the finding.** Re-derived from
+`corpus_corpus-cpu.json`: of 504 cases, 19 breach, and **none of the 4
+representative cases is among them** — all 4 pass. The one PRIN-vs-corpus gate
+that exists is green while H1 is `REFUTED`. That is the coverage gap
+`EXP001-E5-F1` names, demonstrated a second way: a 4-case subset cannot detect
+this divergence class.
+
+**Severity D2, not D1.** No verdict, tolerance, denominator, or measured value
+changes; `EXP001-E5-F1` stands. What changes is the precision of a published
+claim — a standard violation (Documentation Standards: claims must be
+evidence-backed and exact), corrected everywhere it appears.
+
+**Fix.** Corrected to *no CI gate covers the **full** 504-case corpus*, with
+the 4-case gate named and its non-breaching status stated, at all sites:
+E5 report (erratum **E-2**, §7.2, inheriting to §7.5 item 3),
+`DOCS/sphinx/parity_report.rst`, `CHANGELOG.md`,
+`DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`, `DOCS/experiments/README.md`,
+the EXP-001 `README.md` header, `DOCS/sessions/SESSION_REGISTER.md`,
+`DOCS/sessions/phase-7/README.md`, `DOCS/sessions/contingencies/README.md`,
+and the S1 correction brief — whose scope item is also sharpened to require a
+**full-corpus** gate, naming the existing 4-case gate as the insufficient
+subset rather than a substitute.
+
+`EVIDENCE/0158-exp001-e5-parity-gate-coverage.json` is **not** amended: it is
+an immutable measured artefact stamped at `de904a4`, and its `question` and
+`method` fields are already scoped precisely to
+`test_corpus_exhaustive_differential_parity`. They were accurate as written.
+
+### 3.9 Reviewer claims checked and found sound
+
+Not every reviewer statement needed action, but each was verified rather than
+assumed:
+
+- Determinism of `exp001_e4_analysis.py` (no wall-clock read, `sort_keys=True`,
+  fixed row order) — re-confirmed by the byte-identical regeneration in §3.1.
+- `.gitattributes` `benchmarks/results/** -text` — `git check-attr` reports
+  `text: unset`, `whitespace: -trailing-space`; necessary, and `-text` rather
+  than `binary` correctly preserves diff visibility.
+- Sourcery's decline is correct behaviour for a 205k-line artefact-heavy diff,
+  not a failure.
+- Devin's observation that `run_analysis` calls `verify_manifest` twice per leg
+  is factually correct and harmless (read-only, idempotent).
+
+## 4. Issues found
+
+| ID | Severity | Location | Issue | Violated clause | Remedy |
+|---|---|---|---|---|---|
+| `PR23-F1` | **D2** | `tools/reproduce.py` (`verify_manifest`, `append_manifest`) | Manifest verification followed symbolic links: content integrity checked, path provenance not (CWE-59) | Coding Standards §6; the function's own documented fail-closed contract | No-follow `_reject_symlink` guards + 5 regression tests |
+| `PR23-F8` | **D2** | E5 report §7.2 + 9 further sites | "No CI gate integrates PRIN's dynamics over the golden corpus" is false as stated; a 4-case PRIN-vs-corpus gate runs in every required `test` leg | Documentation Standards — exact, evidence-backed claims | Erratum E-2 + corrected wording at all 10 sites |
+| `PR23-F2` | D3 | `CHANGELOG.md` §Added | "awaits maintainer verification … 0154–0158 local-only" — contradicted at publication, and the range was wrong at drafting | Documentation Standards; campaign plan §12 item 3 | Rewritten to the accepted state + §14.1 pointer |
+| `PR23-F4` | D3 | E5 report §6 PD-5 / §13 / §14.1 | §13 claimed PD-5 discharged "in §14" while §14.1 was a placeholder and PD-5 said the PR did not exist | Campaign plan §12 item 3 | §14.1 filled from the actual run; erratum E-1 on PD-5 |
+| `PR23-F5` | D3 | `SESSION_REGISTER.md` L338 | "(local); sessions 0154–0158 not yet pushed" stale at the pushed head | Development Workflow §5 (stale governance metadata) | Prepared edit committed |
+| `PR23-F3` | D4 | EXP-001 `README.md` 0158 row | "awaiting maintainer verification" contradicts the header above it | Documentation Standards | Row updated |
+| `PR23-F6` | D4 | DV-036 S4 correction record | Superseded present-tense "pending"/"blocked"/"IN PROGRESS" under a `COMPLETE` header | Development Workflow §5 | Labelled historical + final disposition stated |
+| `PR23-F7` | D4 | DV-036 correction audit L195 | Fenced block without a language tag | Documentation Standards | `text` tag added |
+
+Declined, with rationale in §6: `PR23-F9` (CodeRabbit docstring-coverage
+pre-merge check), `PR23-F10` and `PR23-F11` (style nits against the frozen E4
+analysis module).
+
+## 5. Deviation-ledger delta
+
+No new ledger rows. The deviation ledger lives in the numbered Project State
+Reports (`DOCS/reports/NNN-project-state.md`), and this round is not a Session
+Cycle — the same disposition `PR017-devin-review` took. The next PSR to issue
+is the EXP-001 correction cycle's S4 (campaign plan §10.4 item 3), which
+inherits this report as prior art.
+
+Carried findings re-inspected: `EXP001-E5-F1` — **unchanged and strengthened**
+by `PR23-F8` (§3.8). `DV-040` (analysis code under `DOCS/` outside the CI lint
+path) — unchanged, re-audit gate remains EXP-002 E4 (session 0162); it is the
+correct home for `PR23-F9`'s underlying concern.
+
+## 6. Findings declined, with rationale
+
+**`PR23-F9` — CodeRabbit pre-merge check: docstring coverage 50.72 % < 80 %.**
+Factually accurate and not a false positive, but measured against a threshold
+this project does not use, and declining it is not a lowering of standards:
+
+- `interrogate` is configured `fail-under = 95` and CI runs it on
+  `python/prin` only.
+- `pyproject.toml` `[tool.ruff.lint.per-file-ignores]` sets
+  `"tests/**" = ["S", "D"]` — pydocstyle is deliberately off for tests.
+- Measured across this repository's test files: `test_wp001_baseline.py` 2 %,
+  `test_reproduce.py` 11 %, `test_exp001_driver.py` 45 %,
+  `test_exp001_e4_analysis.py` 33 %. The file CodeRabbit flags is **above** the
+  repository's own test-file norm; raising only this one file would create
+  local inconsistency, not consistency.
+- The analysis module itself is 100 % docstringed.
+
+Every reviewer who assessed this check independently reached the same
+conclusion. The real, already-tracked gap is `DV-040`. New code added by this
+round is fully docstringed regardless.
+
+**`PR23-F10` — defensive `value <= 0.0` guard in
+`exp001_e4_analysis::_decade_histogram`.** Raised as an explicit non-defect by
+Qwen ("not worth changing"), Kimi, and the two long-form reviews; the existing
+`value == 0.0` guard is correct for the non-negative error magnitudes the
+function receives. **`PR23-F11` — `run_analysis` calls `verify_manifest` twice
+per leg** (Devin): correct, and harmless — the call is read-only and
+idempotent. Both are declined on the same governing ground: that module is the
+committed analysis code of a **completed, maintainer-accepted E5 report**, and
+`report-manifest.json` digests the outputs it produces. Editing it after its
+report is issued would itself be a protocol deviation (campaign plan §12 items
+1 and 6), for no defect. Recorded here so the decision is on file rather than
+silently dropped; if `EXP-001-r1` rewrites the analysis, both are free
+improvements to make there.
+
+## 7. Verdict and required actions
+
+**`PASS-WITH-FINDINGS` → all eight actionable findings FIXED in this round; no
+D1; no verdict, tolerance, or measured value changed.**
+
+| ID | Resolution | Evidence |
+|---|---|---|
+| `PR23-F1` | **FIXED** | `_reject_symlink` in `tools/reproduce.py`; 5 tests, 4 fail pre-fix (§3.1); E4 regeneration byte-identical |
+| `PR23-F2` | **FIXED** | `CHANGELOG.md` §Added rewritten to the accepted state |
+| `PR23-F3` | **FIXED** | EXP-001 `README.md` 0158 row |
+| `PR23-F4` | **FIXED** | Report §14.1 filled (24/24 required checks green at `60cc387`); erratum E-1 |
+| `PR23-F5` | **FIXED** | `SESSION_REGISTER.md` L338 committed |
+| `PR23-F6` | **FIXED** | DV-036 S4 record: round-1/round-2 labelled historical; final disposition stated |
+| `PR23-F7` | **FIXED** | `text` language tag at L195 |
+| `PR23-F8` | **FIXED** | Erratum E-2 + corrected wording at all 10 sites; S1 brief scope sharpened |
+| `PR23-F9` / `PR23-F10` / `PR23-F11` | **DECLINED with rationale** | §6 |
+
+**Required actions carried forward (not this round's work):**
+
+1. The EXP-001 correction cycle S1 must add a **full-corpus** PRIN-vs-corpus
+   differential gate. `PR23-F8` sharpens that scope item: the existing 4-case
+   gate is the insufficient subset, not a substitute.
+2. `DV-040` remains open with its re-audit gate at EXP-002 E4 (session 0162).
+3. Merging PR #23 still does **not** release session 0159. Campaign plan §3.3 /
+   §10.4 keep 0159–0193 and 0194 BLOCKED until the correction cycle closes and
+   `EXP-001-r1` returns a non-reversal verdict.
+
+**Full-gate result on the remediation tree** (recorded verbatim; every line is
+an actual run):
+
+```text
+pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp
+    3214 passed, 176 skipped, 48 deselected in 414.81s
+ruff check python/ tests/ benchmarks/ tools/ parity/         All checks passed!
+ruff format --check python/ tests/ benchmarks/ tools/ parity/  311 files already formatted
+mypy python/prin --strict                                    no issues in 62 source files
+interrogate -c pyproject.toml python/prin                    PASSED 97.6% (min 95.0%)
+sphinx-build -b html -W --keep-going DOCS/sphinx             build succeeded
+tools/check_deviation_ledger.py 037 038                      passed (128 / 128 rows)
+tools/check_dv_register_gates.py                             passed (40 DV / 198 sessions)
+tools/check_skipif_probes.py                                 passed
+tools/check_global_session_registration.py                   passed (17 reports)
+tools/wp001_baseline.py check                                passed
+```
+
+One caveat recorded rather than hidden: `mypy --strict` on
+`tests/test_reproduce.py` reports one pre-existing error
+(`Module "tools.reproduce" does not explicitly export attribute
+"ReportingError"`, line 55). It reproduces identically against
+`git show HEAD:tests/test_reproduce.py`, is not introduced by this round, and
+is out of CI scope — `python.yml` runs `mypy python/prin --strict` only. It is
+left alone rather than fixed opportunistically outside the finding set.
+
+**Delta re-audit date:** 2026-09-23 UTC — **Result:** CLEAN (§7 table; local
+gate output above and in §3.1). CI on the remediation head is the authoritative
+confirmation and is not pre-claimed here.

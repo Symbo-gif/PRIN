@@ -21,9 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   campaign plan §10.4 **D1** flag and **triggers the four-session contingency
   correction cycle**; **session 0159 and every experiment downstream of
   EXP-001, plus 0194, are blocked** until that cycle closes and EXP-001 is
-  re-run as `EXP-001-r1`. No root cause is claimed. The report awaits
-  maintainer verification, and sessions 0154–0158 remain local-only, so no CI
-  result is claimed for the campaign branch range.
+  re-run as `EXP-001-r1`. No root cause is claimed. The report was **verified
+  and accepted by the maintainer (MichaelMaillet) on 2026-09-23 UTC**
+  (report §13). E1/E2 (sessions 0154/0155) already reached `main` through
+  **PR #20** (merge `e997431`); E3–E5 (sessions 0156–0158) are carried by
+  **PR #23**, whose tested head SHA and required-check results are recorded in
+  report §14.1.
 
 - **EXP-001 E4 analysis — golden-trajectory numerical parity adjudicated
   (session 0157, 2026-09-23 UTC).** The frozen pre-registration §8 decision
@@ -94,6 +97,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **PR #23 multi-review round — eight findings compiled from seven independent
+  review runs, all dispositioned (2026-09-23 UTC).** Copilot (4),
+  CodeRabbit (3 + 1 pre-merge check), Sourcery (declined — diff over its
+  150,000-character limit), and four independent LLM reviews (Qwen, Devin,
+  Kimi, Cline) on PR #23 were de-duplicated into eight findings
+  `PR23-F1`…`PR23-F8` and audited in
+  `DOCS/audits/PR023-multi-review-audit.md`, which follows the
+  `DOCS/audits/PR017-devin-review-audit.md` precedent for external-review
+  findings. Each finding was re-derived from the repository rather than taken
+  on the reviewer's assertion.
+  - **`PR23-F1` (D2) — `tools/reproduce.py::verify_manifest` followed symbolic
+    links.** `is_file()`, `stat()`, and `open()` all follow links, so a
+    `manifest.json` or a manifested artefact that was a link to a file outside
+    the governed directory verified clean: content integrity was checked,
+    path provenance was not (CWE-59).
+    `benchmarks/campaign/exp001_driver.py::check_run_complete` had closed the
+    same class for its own run directories without modifying the shared tool;
+    the shared verifier now closes it too. `verify_manifest` and
+    `append_manifest` both reject a symlinked manifest and any symlinked
+    candidate/manifested artefact with a no-follow `is_symlink()` check before
+    any following call. Five regression tests in `tests/test_reproduce.py`
+    (`TestManifestSymlinkProvenance`), four of which fail against the pre-fix
+    source and pass against the fix. The EXP-001 E4 analysis, which calls this
+    verifier, still regenerates both outputs and `report-manifest.json`
+    byte-for-byte.
+  - **`PR23-F8` (D2) — the "no CI gate" claim was too absolute.** Not raised by
+    any automated reviewer. `tests/test_exp001_driver.py::TestCorpusParity::test_representative_cases_within_tolerance`
+    *does* run the `prin` Rust core against stored corpus trajectories, over
+    the 4 `_REPRESENTATIVE_CASES`, in every required `test` leg. The claim is
+    corrected everywhere it appears to *no CI gate covers the **full** 504-case
+    corpus*, with the 4-case gate named. The correction **strengthens**
+    `EXP001-E5-F1`: none of the 4 cases is among H1's 19 breaching cases, so
+    that gate is green while H1 is `REFUTED` — a 4-case subset cannot detect
+    this divergence class. Erratum **E-2** in the E5 report §15.
+  - **`PR23-F2`…`PR23-F7` (D3/D4) — governance-record consistency.** The
+    maintainer acceptance and the PR/CI state are now stated identically in
+    `CHANGELOG.md`, the EXP-001 `README.md` session table, `SESSION_REGISTER.md`,
+    and the E5 report (erratum **E-1** on PD-5; §14.1 filled with the tested
+    head SHA `60cc387` and its 24/24 green required checks). The DV-036 S4
+    correction record's superseded round-1/round-2 status lines are labelled
+    historical and a final disposition is stated. One bare Markdown fence in
+    the DV-036 correction audit carries a `text` language tag.
+  - **Declined with reason:** the CodeRabbit docstring-coverage pre-merge check
+    (50.72 % on changed files) measures against an 80 % threshold this project
+    does not use — `interrogate` (`fail-under = 95`) runs on `python/prin` only
+    and ruff `D` is disabled for `tests/**`; the changed test file is above the
+    repository's own test-file norm. Two style nits against the frozen E4
+    analysis module were declined because editing committed analysis code after
+    its E5 report is itself a protocol deviation, and both were rated
+    non-defects by every reviewer who raised them. Full rationale in the audit
+    §6.
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that
@@ -104,7 +159,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `prinet.core.measurement` metrics, so it compares a **PRINet 3.0
   regeneration** against the PRINet-3.0-generated corpus — a reference
   self-consistency check. No CI gate integrates PRIN's dynamics over the
-  golden corpus and compares the resulting trajectory. An erratum admonition
+  **full** golden corpus (all 504 cases) and compares the resulting
+  trajectories against the stored reference; the only gate that runs PRIN
+  against corpus trajectories at all,
+  `tests/test_exp001_driver.py::TestCorpusParity::test_representative_cases_within_tolerance`,
+  covers 4 representative cases, none of which is among H1's 19 breaching
+  cases, so it is green while H1 is `REFUTED`. An erratum admonition
   and a corrected test description are now in the Parity Report; verified
   in-session on four of EXP-001 H1's nineteen failing cases (CI-path
   comparison PASS, PRIN-vs-corpus breach) in

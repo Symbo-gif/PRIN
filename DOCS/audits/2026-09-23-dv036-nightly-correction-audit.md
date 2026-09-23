@@ -192,7 +192,7 @@ maintainer required, not a single passing job.
 **The green is substantive, not vacuous.** The comparison step ran the
 amendment-4 design and reported:
 
-```
+```text
 Benchmark regression check passed: 69 benchmarks (63 gated, 6 advisory),
 none gated past +10%; 2 reference and 2 candidate runs.
 ```
