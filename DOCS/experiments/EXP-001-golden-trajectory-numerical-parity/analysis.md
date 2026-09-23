@@ -372,6 +372,24 @@ Both output digests must match the table above byte for byte. Passing
 `--generated-at` anything other than the registered default changes every
 digest and is not a regeneration.
 
+**Clean-checkout verification performed (2026-09-23 UTC, commit `8babcc4`).**
+A detached worktree was created at this session's commit and the check was run
+there, outside the working tree:
+
+1. `verify_manifest` passed on all four raw run directories from the clean
+   checkout — the `.gitattributes` `benchmarks/results/** -text` rule that E3
+   added holds, so the committed bytes are the measured bytes.
+2. Re-running the generator in that worktree printed the same six stdout lines
+   above and reproduced **both** output digests exactly
+   (`e6f6eb20…`/12,974 bytes and `4551061c…`/5,783 bytes).
+3. The regenerated `report-manifest.json` is byte-identical to the committed
+   one — `git status` in the worktree reported no change at all, including
+   the input records and the verdict/D1 fields.
+
+The same digests were also reproduced in-process (the determinism test), from
+a second process, and into an unrelated output directory. Campaign plan §7.4
+step 5 is satisfied.
+
 ## Handoff to E5 (session 0158)
 
 - The E4 exit gate is met: reproducible analysis outputs and the manifest are

@@ -12,8 +12,10 @@ still completes and reports the negatives in full, then blocks session 0159
 (EXP-002 E1) until the four contingency correction sessions close; EXP-001 is
 then re-run as `EXP-001-r1`. No root cause is claimed by E3 or E4. Campaign
 plan **amendment 6** raised this experiment's tracked-storage cap to 8 MiB so
-the runs could be committed unreduced. See [`analysis.md`](analysis.md) and
-[`log.md`](log.md).
+the runs could be committed unreduced. Regeneration was verified from a clean checkout of the E4 commit:
+`verify_manifest` passes on all four raw runs and the generator reproduces both
+output digests and the whole `report-manifest.json` byte for byte (campaign plan
+§7.4 step 5). See [`analysis.md`](analysis.md) and [`log.md`](log.md).
 **Campaign plan row:** [`DOCS/experiments/campaign-plan.md`](../campaign-plan.md) §2.1 (EXP-001).
 **Raw artefact root:** [`benchmarks/results/EXP-001/`](../../../benchmarks/results/EXP-001/README.md)
 
