@@ -353,6 +353,15 @@ def test_unmatched_or_blank_advisory_fails_closed(tmp_path: Path, prefix: str) -
     assert gate.main([*args, "--advisory", prefix]) == 2
 
 
+def test_advisory_covering_every_benchmark_fails_closed(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # A prefix broad enough to empty the gate would pass on zero evidence.
+    args = _abba(tmp_path, (100.0, 160.0, 160.0, 100.0))
+    assert gate.main([*args, "--advisory", "criterion/", "--advisory", "pytest/"]) == 2
+    assert "no gated benchmark" in capsys.readouterr().err
+
+
 def test_every_benchmark_is_tabulated(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

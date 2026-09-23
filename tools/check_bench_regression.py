@@ -16,7 +16,8 @@ DV036-F4: each arm may be measured more than once (the nightly uses the
 counterbalanced order reference, candidate, candidate, reference) and an
 arm's mean is the arithmetic mean of its runs, which cancels linear host
 drift. ``--advisory`` identity prefixes are compared and reported but never
-fail the gate; every prefix must be nonblank and match a benchmark.
+fail the gate; every prefix must be nonblank and match a benchmark, and the
+prefixes may never leave the gate with no benchmark to enforce.
 
 Exit codes: 0 for a complete passing comparison, 1 for a regression, and 2
 for invalid arguments or evidence. A missing baseline never passes.
@@ -159,7 +160,10 @@ def _split_advisory(names: set[str], prefixes: list[str]) -> tuple[set[str], set
         if not matched:
             raise BenchmarkInputError(f"--advisory prefix matches nothing: {prefix}")
         advisory |= matched
-    return names - advisory, advisory
+    gated = names - advisory
+    if not gated:
+        raise BenchmarkInputError("--advisory prefixes leave no gated benchmark")
+    return gated, advisory
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -488,7 +488,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `arms/candidate` in the fixed order reference, candidate, candidate,
   reference. `tools/check_bench_regression.py` takes `--reference`/`--candidate`
   run lists, averages each arm, tabulates every ratio, and supports
-  fail-closed `--advisory` prefixes. The contention group is advisory on
+  fail-closed `--advisory` prefixes (blank, unmatched, or gate-emptying
+  prefix sets are input errors). The contention group is advisory on
   hosted runners; its harness defect (DV036-F5) is deferred to EXP-003 E3.
   The 10% threshold and all benchmarks are unchanged; a hosted run is pending.
 - **`release.yml` could not build a green wheel matrix (`0151`, WP-038 S3,
