@@ -1,7 +1,8 @@
 # EXP-001 — E5 report: Golden-trajectory numerical parity (track C1)
 
-**Status:** ISSUED — awaiting maintainer verification (Experimentation
-Standards §2 E5; campaign plan §2.2 "every E5 verdict acceptance").
+**Status:** **VERIFIED AND ACCEPTED** — maintainer verification recorded
+2026-09-23 UTC (MichaelMaillet); see §13. The exit gate for *proceeding to
+session 0159* remains open on the triggered D1 correction cycle (§8.3).
 **Verdicts:** **H1 `REFUTED`**, **H2a `REFUTED`**, H2b `CONFIRMED`,
 H3 `CONFIRMED`, H4 `CONFIRMED`.
 **Campaign plan §10.4 D1 flag: RAISED.** This report completes (§10.4 item 2)
@@ -12,8 +13,9 @@ and then **blocks session 0159** and every experiment downstream of EXP-001.
 **AI pair drafting this report:** Claude Opus 5 (Experimentation Standards §4
 authorship disclosure). Every number in this report is copied from, or
 re-derived in this session from, the committed E3 artefacts and the committed
-E4 analysis module; none is asserted from memory. The maintainer's
-verification is recorded in §13 and is **not** claimed by this document.
+E4 analysis module; none is asserted from memory. The maintainer verified the
+analysis and accepted these verdicts on 2026-09-23 UTC; that record, and the
+evidence for it, are in §13.
 
 | Record | Value |
 |---|---|
@@ -675,21 +677,28 @@ inference about model coverage.
 | Regeneration re-verified in this session | AI pair | **done** — §10 |
 | D1 correction cycle triggered and the four briefs instantiated | AI pair | **done** — §8.2 |
 | Parity Report erratum + CHANGELOG note | AI pair | **done** — §7.4 |
-| **Maintainer verification of the analysis and acceptance of the E5 verdicts** | **MichaelMaillet** | **OPEN** — required by Experimentation Standards §2 E5/§4 and campaign plan §2.2. Not claimed by this document. |
-| **E1–E5 pull request; PR head SHA + required-check results recorded** | **MichaelMaillet** | **OPEN** — campaign plan §12 item 3; sessions 0154–0158 are local-only (PD-5) |
+| **Maintainer verification of the analysis and acceptance of the E5 verdicts** | MichaelMaillet | **DONE — 2026-09-23 UTC.** Verified and accepted as reported; see the verification block below |
+| **E1–E5 pull request; PR head SHA + required-check results recorded** | MichaelMaillet / AI pair | **DONE — approved 2026-09-23 UTC**; PR opened and its tested head SHA and required-check results recorded in §14 (PD-5 discharged there) |
 | Announcement of this report in the next Project State Report | correction-cycle S4 | **OPEN** — Experimentation Standards §2 E5; §10.4 item 3 assigns the PSR to S4 |
 | Correction cycle S1 → S2 → S3 → S4 executed and closed | per brief | **OPEN** — blocks 0159 (§8.3) |
 | `EXP-001-r1` re-run after S4 | per §10.4 item 4 | **OPEN** |
 
-**Maintainer verification block** — to be completed by the maintainer at
-acceptance; leave unchanged until then:
+**Maintainer verification block** — completed at acceptance:
 
 ```text
-Verified by: ______________________   Date (UTC): ____________
-Verdicts accepted as reported (H1 REFUTED, H2a REFUTED, H2b/H3/H4 CONFIRMED): [ ]
-D1 declaration and blocking of 0159 accepted:                                 [ ]
-Correction-cycle scope in §8.2 approved:                                      [ ]
+Verified by: MichaelMaillet           Date (UTC): 2026-09-23
+Verdicts accepted as reported (H1 REFUTED, H2a REFUTED, H2b/H3/H4 CONFIRMED): [x]
+D1 declaration and blocking of 0159 accepted:                                 [x]
+Correction-cycle scope in §8.2 approved:                                      [x]
 ```
+
+Recorded in-session by the maintainer (Experimentation Standards §2 E5, §4
+"reports state which analyses were drafted by the AI pair and verified by the
+maintainer"; campaign plan §2.2 "every E5 verdict acceptance"). The same
+decision approved opening the E1–E5 pull request (§14). **Acceptance of the
+verdicts is not release of session 0159**: §8.3's block stands until the
+correction cycle's S4 closes and `EXP-001-r1` returns a non-reversal verdict,
+which is a separate maintainer decision taken on that evidence.
 
 **Security and quality gates for this session.** No first-party source in any
 Snyk-supported language and no dependency manifest changed in session 0158 —
@@ -699,6 +708,39 @@ evidence artefact — so Snyk Code, Snyk Open Source, `cargo audit`, and
 run. CI remains the authoritative merge gate (Coding Standards §6; amendment
 #45). The E4 module's own gate evidence is quoted in §9 item 6 and is local
 evidence, exactly as DV-040 records.
+
+---
+
+## 14. Pull request and CI record (campaign plan §12 item 3)
+
+**Approved by the maintainer on 2026-09-23 UTC**, together with the
+verification in §13.
+
+**Range carried.** E1 and E2 (sessions 0154/0155) already reached `main`
+through **PR #20** (merge `e997431`), with the pre-registration frozen
+afterwards at `c22db0b`. This pull request therefore carries the remainder of
+the E1–E5 range — **E3 (0156), E4 (0157), and E5 (0158)** — plus the DV-036
+S4 closure commit `6b9d6b6` that the campaign's own execution SHA points at
+and that had not yet been pushed. Six commits in total against
+`origin/main` at `b434554`.
+
+**What this PR does not do.** Merging it does **not** discharge §8.3's block
+and does **not** release session 0159. It publishes the EXP-001 record — a
+negative result and two D1s — so the correction cycle can proceed against a
+merged baseline. The campaign stays blocked until the correction S4 closes
+and `EXP-001-r1` returns a non-reversal verdict.
+
+### 14.1 Tested head SHA and required-check results
+
+Recorded below from the actual run, per campaign plan §12 item 3 — the tested
+head SHA, never a not-yet-created merge SHA. This subsection is completed by a
+docs-only addendum commit after the checks report; that addendum necessarily
+changes the branch head, so the SHA named here is the head the recorded checks
+actually ran against, stated explicitly rather than implied.
+
+_Pending: filled by the addendum commit._
+
+---
 
 **Corrections to this report are errata, never edits** (Experimentation
 Standards §1.3/§4; campaign plan §12 item 6). No hypothesis verdict,
