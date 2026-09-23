@@ -1157,7 +1157,7 @@ documentation-drift corrections. Still no `RUN-` directory exists and no
 campaign data was generated.
 
 **Validation at this amendment.** `tests/test_exp001_driver.py` 212/212
-passing under the governed Windows command (15 new: `TestRunClosure` ×2,
+passing under the governed Windows command (13 new: `TestRunClosure` ×2,
 `TestRunClosureEnvelope` ×3, `TestLabelContract`/`TestRunIdContract` ×2,
 `TestCaseIdUniqueness` ×6, plus the `raising=False` fix restoring the 8
 `TestKernelPathCapsuleResidency`/`TestCudaCapabilityProbe` tests under a
