@@ -341,6 +341,21 @@ manifest changed in this session, so Coding Standards §6's Snyk Code, Snyk
 Open Source, `cargo audit`, and `pip-audit` gates have no changed input to
 scan here; CI remains the authoritative merge gate.
 
+### Verified property of `check_run_complete` (recorded for E4/E5)
+
+`check_run_complete` is a **closure-time** validator bound to the directory a
+run was written into: it requires each result's `config.out_dir` to resolve to
+the run directory being closed, and `out_dir` is recorded as an absolute path
+at execution time. Re-running it against the same commit checked out at a
+different path therefore raises `IncompleteRunError` by design, as observed
+here from a clean worktree. That is not a defect and not an artefact
+mutation. The **portable** integrity check is
+`tools.reproduce.verify_manifest`, which passed for all four runs from a
+fresh checkout of this session's commit, with every file matching its
+manifest in both size and SHA-256. E4 and E5 should use `verify_manifest`
+(campaign plan §7.4 step 1) rather than `check_run_complete` when validating
+these inputs from any other location.
+
 ## Handoff
 
 - The E3 exit gate's execution clauses are met: all four registered runs

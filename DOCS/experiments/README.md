@@ -14,10 +14,17 @@ and the maintainer approval record (session 0153, Campaign E0). Every
 pre-registration inherits its §5–§10 rules. It contains no hypotheses and no
 results.
 
-DV-036's pre-0156 CI correction is approved in campaign plan §11.6 /
-amendment 3. Its evidence and blocked entry state are recorded in
-[EXP-001's execution log](EXP-001-golden-trajectory-numerical-parity/log.md);
-this is not EXP-001 execution or a reference-host performance result.
+DV-036's pre-0156 CI correction (campaign plan §11.6 / amendments 3 and 4)
+**closed on 2026-09-23 UTC** with a wholly green nightly `35847692136`; it
+was never EXP-001 execution or a reference-host performance result, and
+DV-036's reference-host re-baseline gates before 0168 and 0173 remain open.
+
+**EXP-001 E3 executed on 2026-09-23 UTC (session 0156).** All four
+registered runs completed with no aborted case; H3 and H4 came in as
+predicted, while **H1 (19/504) and H2a (103/1,000) breach the registered
+tolerances** — a REFUTED/D1 trajectory under preregistration §8, escalated
+to E4 (session 0157) for adjudication per campaign plan §10.4. See
+[EXP-001's execution log](EXP-001-golden-trajectory-numerical-parity/log.md).
 
 ## Layout
 
