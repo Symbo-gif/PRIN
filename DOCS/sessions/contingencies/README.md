@@ -12,8 +12,10 @@ EXP-001 D1 — **OPEN, opened 2026-09-23 UTC by session `0158` (EXP-001 E5).**
 Triggered by campaign plan §10.4: EXP-001's H1 (`REFUTED`, 485/504) and H2a
 (`REFUTED`, 897/1,000) are C1 parity reversals, and finding `EXP001-E5-F1`
 (the `parity` CI corpus gate regenerates with PRINet 3.0, not PRIN, so no CI
-gate performs the PRIN-vs-corpus trajectory comparison) is a second D1. The
-four sessions below run in strict S1 → S2 → S3 → S4 order. **Session `0159`
+gate performs the PRIN-vs-corpus trajectory comparison over the full 504-case
+corpus; the only gate that runs PRIN against corpus trajectories covers 4
+representative cases, none of them among H1's 19 breaching cases) is a second
+D1. The four sessions below run in strict S1 → S2 → S3 → S4 order. **Session `0159`
 (EXP-002 E1) and every experiment downstream of EXP-001, plus `0194`, stay
 blocked until S4 closes and `EXP-001-r1` returns a non-reversal verdict.** No
 root cause is claimed by the triggering record; S1 owns it. See the

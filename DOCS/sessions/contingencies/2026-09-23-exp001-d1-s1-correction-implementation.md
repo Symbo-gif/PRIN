@@ -38,9 +38,14 @@ evidence at code SHA `6b9d6b6`:
 3. **`EXP001-E5-F1`** — the `parity` CI job's
    `test_corpus_exhaustive_differential_parity` regenerates each corpus case
    with **PRINet 3.0**, not with PRIN, so it is a reference self-consistency
-   check; no CI gate integrates PRIN's dynamics over the corpus and compares
-   the trajectory. The Parity Report's published VALIDATION claim to the
-   contrary is unsupported. Evidence:
+   check; no CI gate integrates PRIN's dynamics over the **full** corpus (all
+   504 cases) and compares the trajectories. The only gate that runs PRIN
+   against corpus trajectories at all,
+   `tests/test_exp001_driver.py::TestCorpusParity::test_representative_cases_within_tolerance`,
+   covers 4 representative cases, **none of which is among H1's 19 breaching
+   cases** — it is green while H1 is `REFUTED`, which is the coverage gap
+   itself, not a counterexample to it. The Parity Report's published
+   VALIDATION claim to the contrary is unsupported. Evidence:
    [`EVIDENCE/0158-exp001-e5-parity-gate-coverage.json`](../../../EVIDENCE/0158-exp001-e5-parity-gate-coverage.json)
    (4/4 H1-failing cases: CI comparison PASS, PRIN-vs-corpus breach).
 
@@ -59,8 +64,10 @@ In scope:
   campaign plan §10.4 item 3 that the PRINet 3.0 conclusion is itself the
   defective side — which requires an EMA-style mathematical audit claim,
   Z3/SymPy-verified where applicable, and is not discharged by inspection.
-- Close `EXP001-E5-F1`: add a real PRIN-vs-corpus differential gate to the
-  `parity` CI job, correct
+- Close `EXP001-E5-F1`: add a real **full-corpus** PRIN-vs-corpus differential
+  gate to the `parity` CI job (the existing 4-case
+  `tests/test_exp001_driver.py::TestCorpusParity` gate is the subset this
+  finding shows is insufficient, not a substitute), correct
   `parity/test_parity_differential.py::test_corpus_exhaustive_differential_parity`'s
   docstring, and correct the Parity Report text the E5 erratum flags.
 - Coding Standards §6: Snyk Code on new/modified first-party source; Snyk Open

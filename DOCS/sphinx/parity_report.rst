@@ -36,8 +36,17 @@ Parity Report
    ``prinet`` models and ``prinet.core.measurement`` metrics: it compares a
    **PRINet 3.0 regeneration** against the PRINet-3.0-generated corpus — a
    reference self-consistency check. No ``prin`` Rust core is exercised on
-   that path, and no CI gate integrates PRIN's dynamics over the golden corpus
-   and compares the resulting trajectory against the stored reference.
+   that path, and no CI gate integrates PRIN's dynamics over the *full* golden
+   corpus — all 504 cases — and compares the resulting trajectories against
+   the stored reference.
+
+   The only gate that runs PRIN against corpus trajectories at all,
+   ``tests/test_exp001_driver.py::TestCorpusParity::test_representative_cases_within_tolerance``,
+   covers **4** representative cases. It was added by EXP-001's own E1/E2
+   (merged in PR #20), so it postdates the claim corrected here, and **none of
+   its 4 cases is among the 19 that breach**: it is green while H1 is
+   ``REFUTED``. A 4-case subset cannot detect this divergence class, which is
+   the coverage gap itself.
 
    Phase 7 experiment **EXP-001** performed that comparison for the first time
    and found **19 of 504 cases outside the registered tolerance** (H1

@@ -14,14 +14,17 @@ Record commands, artefacts, approvals, commits, and handoff in the correction
 WP's audit and Project State Report. The blocked session remains blocked until
 all four conditional sessions close.
 
-Local documentation preparation only; branch nightly, required CI, main-merge confirmation, and the final correction Project State Report remain pending. Session 0156 remains blocked.
+**Historical status entry — round 1, 2026-09-23 UTC (superseded; retained as
+the dated log, not the current disposition):** local documentation preparation
+only; branch nightly, required CI, main-merge confirmation, and the final
+correction Project State Report remain pending. Session 0156 remains blocked.
 
 **Hosted validation round 2 (2026-09-23 UTC):** runs `35811372090` and
 `35826531821` breached on identical-source measurements. DV036-F4 was
 AMENDED by campaign amendment 4, and DV036-F5 was deferred to 0166; see the
 [correction audit](../../audits/2026-09-23-dv036-nightly-correction-audit.md).
-S4 stays IN PROGRESS pending a green hosted nightly with the counterbalanced
-design.
+At that point S4 stayed IN PROGRESS pending a green hosted nightly with the
+counterbalanced design. **Superseded by round 3 below.**
 
 **Hosted validation round 3 — CLOSED (2026-09-23 UTC).** PR #22 merged as
 `b43455405055d189b74441642ab32c96513b2e57`; nightly `workflow_dispatch` run
@@ -41,6 +44,10 @@ numbered Session Cycle, so its report of record is the
 (ETCA-002 remediation precedent) rather than a `NNN-project-state.md`, which
 `DOCS/reports/README.md` reserves for closed Session Cycles.
 
-**All four conditional sessions are closed. Session 0156 is released to
-proceed**, subject to its own remaining entry conditions. DV-036's
-reference-host re-baseline gates before 0168 and 0173 stay open.
+**Final disposition (supersedes the round-1 and round-2 status entries
+above): S4 is COMPLETE. All four conditional sessions are closed. Session 0156
+is released to proceed**, subject to its own remaining entry conditions.
+DV-036's reference-host re-baseline gates before 0168 and 0173 stay open, and
+DV036-F5 stays DEFERRED to 0166. The report of record for this correction is
+the [correction audit](../../audits/2026-09-23-dv036-nightly-correction-audit.md),
+not a Project State Report.

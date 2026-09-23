@@ -382,10 +382,14 @@ aborted in any run. Campaign plan §10.4 makes a C1 parity reversal a D1.
 PRIN.** `parity/test_parity_differential.py::test_corpus_exhaustive_differential_parity`
 regenerates each corpus case through `parity.generate_corpus._run_case`, which
 builds `prinet` models and `prinet.core.measurement` metrics — a PRINet-3.0
-self-consistency check. No CI gate integrates PRIN's dynamics over the golden
-corpus and compares the trajectory against the stored reference. The Parity
-Report's published VALIDATION claim to the contrary is unsupported; an erratum
-is issued in `DOCS/sphinx/parity_report.rst` and noted in `CHANGELOG.md`.
+self-consistency check. No CI gate integrates PRIN's dynamics over the **full**
+golden corpus (all 504 cases) and compares the trajectories against the stored
+reference; the only gate that runs PRIN against corpus trajectories at all,
+`tests/test_exp001_driver.py::TestCorpusParity::test_representative_cases_within_tolerance`,
+covers 4 representative cases, none of which is among H1's 19 breaching cases,
+so it is green while H1 is `REFUTED`. The Parity Report's published VALIDATION
+claim to the contrary is unsupported; an erratum is issued in
+`DOCS/sphinx/parity_report.rst` and noted in `CHANGELOG.md`.
 Verified in-session on 4 of H1's 19 failing cases — CI-path comparison PASS,
 PRIN-vs-corpus breach — in
 `EVIDENCE/0158-exp001-e5-parity-gate-coverage.json`. Severity D1 under

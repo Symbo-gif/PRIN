@@ -27,6 +27,7 @@ evidence for it, are in §13.
 | Output manifest | [`report-manifest.json`](report-manifest.json) |
 | Raw artefact root | [`benchmarks/results/EXP-001/`](../../../benchmarks/results/EXP-001/README.md) |
 | Campaign plan row | [`campaign-plan.md`](../campaign-plan.md) §2.1 EXP-001 / C1 |
+| Errata against this report | [§15](#15-errata) — **E-1**, **E-2** (2026-09-23; neither changes a verdict) |
 
 ---
 
@@ -309,6 +310,18 @@ action. This report therefore records **no** CI verdict for the campaign
 branch range. §13 carries that obligation as an explicit open item; nothing in
 this report may be read as a claim that the range is CI-green.
 
+> **Erratum E-1 — 2026-09-23 UTC (appended; the PD-5 text above is retained
+> verbatim as written).** PD-5's premise has since been discharged and one of
+> its statements was inaccurate when written. (a) The E1–E5 pull request
+> **PR #23** now exists; its tested head SHA and required-check results are
+> recorded in §14.1, which discharges PD-5. (b) "Sessions 0154–0158 are
+> committed **locally only**" was wrong at drafting: E1/E2 (sessions
+> 0154/0155) had already reached `main` through **PR #20** (merge `e997431`)
+> before this report was drafted; only sessions 0156–0158 were local-only.
+> Neither correction touches a hypothesis, verdict, tolerance, denominator,
+> seed, or decision rule. Raised by the PR #23 review round (PR23-F4); see
+> §15.
+
 No other deviation from the frozen protocol occurred: no hypothesis,
 tolerance, seed, denominator, or decision rule was changed; no case was
 excluded; no unregistered confirmatory test was run; no raw artefact was
@@ -358,6 +371,39 @@ against corpus arrays on six extracted cases; the
 **derivatives** against hard-coded PRINet values. **No CI gate integrates
 PRIN's dynamics over the golden corpus and compares the resulting trajectory
 against the stored reference** — the comparison H1 performs.
+
+> **Erratum E-2 — 2026-09-23 UTC (appended; the §7.2 text above is retained
+> verbatim as written).** The bolded sentence is too absolute as stated and is
+> corrected to read: *no CI gate integrates PRIN's dynamics over the **full**
+> golden corpus — all 504 cases — and compares the resulting trajectories
+> against the stored reference.* One gate does run PRIN against corpus
+> trajectories, over a subset:
+> `tests/test_exp001_driver.py::TestCorpusParity::test_representative_cases_within_tolerance`
+> calls `driver.compare_corpus_case` → `run_prin_case`, which drives the
+> actual `prin` Rust core, over the **4** cases in that module's
+> `_REPRESENTATIVE_CASES`. It carries `pytest.mark.parity`, which
+> `python.yml`'s `test` job (`-m "not slow and not gpu"`) does **not**
+> deselect, so it runs on every required `test` leg. It was added by this
+> experiment's own E1/E2 and merged through **PR #20**, so it postdates the
+> Parity Report claim the erratum in §7.4 corrects.
+>
+> The correction **strengthens** finding EXP001-E5-F1 rather than weakening
+> it: none of those 4 representative cases is among H1's 19 breaching cases
+> (re-derived in this session from `corpus_corpus-cpu.json`), so that gate is
+> green while H1 is `REFUTED`. A 4-case subset demonstrably cannot detect the
+> divergence class H1 found, which is precisely the coverage gap the finding
+> names. No verdict, tolerance, denominator, or D1 declaration changes.
+>
+> One consequence stated elsewhere in this report inherits the same
+> correction. §7.5 item 3 says "with no PRIN-vs-corpus regression net in CI,
+> the repository carries no evidence about when the 19 cases began to
+> breach"; read it as *no **full-corpus** PRIN-vs-corpus regression net*. The
+> 4-case net that does exist has been green since PR #20 merged, which bounds
+> only those 4 cases and says nothing about the 19 — the conclusion of item 3
+> is unchanged. §12 threat item 7 ("no PRIN-vs-corpus regression net existed
+> **before** this experiment") remains correct as written: the 4-case gate was
+> added by this experiment's own E1/E2. Raised by the PR #23 review round
+> (PR23-F8); see §15.
 
 ### 7.3 Reproduction (this session)
 
@@ -738,7 +784,73 @@ docs-only addendum commit after the checks report; that addendum necessarily
 changes the branch head, so the SHA named here is the head the recorded checks
 actually ran against, stated explicitly rather than implied.
 
-_Pending: filled by the addendum commit._
+**Tested head SHA:** `60cc3875e2c91fea92a555735fe88f6024514d69`
+(`60cc387`, "docs(0158): propagate maintainer verification to the experiment
+and session indexes"), the head of `campaign/0158-exp001-e5` at the time the
+recorded checks ran. Base: `origin/main` @ `b434554`. **This is a tested head
+SHA, not a merge SHA; the merge SHA does not exist and is not claimed.**
+
+**Required-check results at that SHA.** All **24** checks required by branch
+ruleset `22150076` completed with conclusion `success`; no required check was
+skipped, cancelled, or failed:
+
+| Required check | Conclusion |
+|---|---|
+| `lint`, `governance`, `security` | success |
+| `test` × 9 (`ubuntu/windows` × `3.11`/`3.12`/`3.13`, plus the `ubuntu-latest`, `windows-latest`, `macos-latest` legs) | success |
+| `test-strict` | success |
+| `fmt`, `clippy`, `clippy-strict` | success |
+| `docs`, `audit` | success |
+| `parity`, `reproduce` | success |
+| `gpu-cuda`, `gpu-wgpu` | success |
+| `Snyk Code`, `Secret Scan` | success |
+
+Non-required checks at the same SHA: `bench-smoke` success,
+`detect_corpus` success, `copilot-pull-request-reviewer` success,
+`Sourcery review` skipped (the diff exceeds Sourcery's 150,000-character
+limit — expected for an artefact-heavy PR; it produced no findings).
+
+The repository's own gate reports the same, verbatim:
+
+```text
+CI-green check - branch 'campaign/0158-exp001-e5', commit 60cc3875e2c91fea92a555735fe88f6024514d69
+  rust       green     - run 35884672511
+  python     green     - run 35884672533
+  parity     green     - run 35884672514
+  repro      green     - run 35884672517
+  snyk       green     - run 35884672499
+  gpu        green     - run 35884672469
+RESULT: all required workflows green
+```
+
+(`python tools/check_ci_green.py 60cc3875e2c91fea92a555735fe88f6024514d69 --branch campaign/0158-exp001-e5 --limit 120`, exit `0`.)
+
+**PD-5 is discharged by this subsection** (see the §6 erratum E-1).
+
+**Subsequent heads.** The PR #23 review round that produced this subsection
+also lands review-response commits — documentation corrections plus one
+hardening fix to `tools/reproduce.py` and its tests (PR23-F1) — which move the
+branch head past `60cc387`. Those commits are audited in
+[`DOCS/audits/PR023-multi-review-audit.md`](../../audits/PR023-multi-review-audit.md)
+and run their own required checks; **the head the maintainer approves for merge
+is the final head, whose check results are the operative ones.** The SHA named
+above is the head the checks tabulated above actually ran against, stated
+explicitly rather than implied, exactly as this subsection's preamble requires.
+
+---
+
+## 15. Errata
+
+Corrections to this report are errata, never edits (campaign plan §12 item 6).
+Each entry is appended at the point it corrects; the original text is retained
+verbatim. No erratum below changes a hypothesis, verdict, tolerance,
+denominator, seed, or decision rule — all five verdicts and the D1 declaration
+in §1 stand exactly as issued.
+
+| # | Date (UTC) | Corrects | Substance | Raised by |
+|---|---|---|---|---|
+| **E-1** | 2026-09-23 | §6 PD-5 | The E1–E5 PR now exists and §14.1 discharges PD-5; and "sessions 0154–0158 committed locally only" was wrong at drafting — 0154/0155 had already merged via PR #20 (`e997431`). | PR #23 review round, PR23-F4 (Copilot, CodeRabbit, and four independent LLM reviews) |
+| **E-2** | 2026-09-23 | §7.2 (and, by inheritance, §7.5 item 3) | "No CI gate integrates PRIN's dynamics over the golden corpus" is too absolute: `tests/test_exp001_driver.py::TestCorpusParity::test_representative_cases_within_tolerance` does exactly that over **4** representative cases in every required `test` leg. Corrected to *the full corpus (all 504 cases)*. None of the 4 is among H1's 19 breaching cases, so the correction strengthens EXP001-E5-F1. | PR #23 review round, PR23-F8 (independent agent review; missed by every automated reviewer) |
 
 ---
 

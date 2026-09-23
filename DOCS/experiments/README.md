@@ -44,8 +44,10 @@ triggers the four-session contingency correction cycle
 → S2 → S3 → S4). It also raises a second D1, **EXP001-E5-F1**: the `parity` CI
 job's `test_corpus_exhaustive_differential_parity` regenerates each corpus case
 with PRINet 3.0, not PRIN, so **no CI gate performed the PRIN-vs-corpus
-trajectory comparison** and the Parity Report's published VALIDATION claim to
-the contrary is unsupported (erratum issued). **Session 0159 and every
+trajectory comparison over the full 504-case corpus** — the only gate that runs
+PRIN against corpus trajectories covers 4 representative cases, none of them
+among H1's 19 breaching cases — and the Parity Report's published VALIDATION
+claim to the contrary is unsupported (erratum issued). **Session 0159 and every
 experiment downstream of EXP-001, plus 0194, are blocked** until the cycle
 closes and `EXP-001-r1` returns a non-reversal verdict. The E5 report was
 verified and accepted by the maintainer on 2026-09-23 UTC and its E1–E5 pull
