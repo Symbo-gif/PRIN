@@ -84,3 +84,22 @@ nightly and required-check evidence. No merge is authorized by this audit.
 Session 0156 stays blocked until the correction closes and all entry conditions
 are met. DV-036's separate reference-host EXP-003/004 re-baseline obligations
 remain open regardless of this CI repair.
+
+## S3 — no-change delta verification
+
+**Date:** 2026-09-23 UTC. S2 commit: `e09b7f5`.
+
+S2 raised no additional source finding; S3 is nevertheless executed, not
+skipped. `git diff 8bcea55 HEAD -- .github/workflows/nightly.yml
+tools/check_bench_regression.py tests/test_check_bench_regression.py` returned
+no changes. The audited implementation is identical to the locally validated
+S1 source; no repeated test pass is represented as new independent evidence.
+
+| Finding | Local disposition | Remaining obligation |
+|---|---|---|
+| DV036-F1 | AMENDED / implemented under campaign §11.6, amendment 3, commit `8bcea55` | Corrected hosted comparison and required CI; S4 stays open until evidence permits closure. |
+| DV036-F2 | FIXED, commit `8bcea55` | Covered by the accepted fail-closed tests and Snyk Code scan. |
+
+**Delta re-audit:** CLEAN at local scope. No new code change required.
+This is not closure of DV-036's campaign re-baseline obligations, not a claim
+of hosted success, and not authorization to start session 0156.
