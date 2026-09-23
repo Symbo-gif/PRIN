@@ -204,8 +204,10 @@ differential suite would be indistinguishable from a harness that never
 compares anything.
 
 The differential job installs the reference editable from the archived tree
-(``.github/workflows/parity.yml``) on every push and pull request, so corpus
-parity is a merge gate rather than a periodic check.
+(``.github/workflows/parity.yml``) on every push and pull request, so
+**PRINet corpus self-consistency** is a merge gate rather than a periodic
+check — full-corpus **PRIN**-vs-reference trajectory parity is not (see the
+erratum at the top of this page).
 
 What the corpus does **not** cover, stated plainly: the oscillator counts are
 small (8–24) and the horizon is short (20 steps). That is deliberate — it is a

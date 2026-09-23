@@ -41,10 +41,24 @@ DEFAULT_OUTPUT_DIR = (
     _REPOSITORY_ROOT / "DOCS" / "test_and_benchmark_results" / "reproduction"
 )
 MANIFEST_SCHEMA_VERSION = 1
+# The system temp root exists in ALLOWED_MANIFEST_ROOTS purely to support a
+# test's scratch directory. Containment below is "is the destination under
+# this root", checked by walking every ancestor — so if this checkout itself
+# happened to live under the system temp directory (an ephemeral CI
+# workspace, a sandboxed clone, ...), admitting the temp root at all would
+# transitively admit every path in the checkout, defeating containment
+# entirely. Omitted in that one case; scratch-directory support degrades
+# there (a test would need a temp location outside the checkout), but the
+# containment guarantee for the checkout's own files never does.
+_TEMP_ROOT = Path(tempfile.gettempdir()).resolve()
+_CHECKOUT_ROOT = _REPOSITORY_ROOT.resolve()
+_TEMP_ROOT_IS_SAFE = not (
+    _CHECKOUT_ROOT == _TEMP_ROOT or _TEMP_ROOT in _CHECKOUT_ROOT.parents
+)
 ALLOWED_MANIFEST_ROOTS = (
     (_REPOSITORY_ROOT / "paper").resolve(),
     (_REPOSITORY_ROOT / "benchmarks" / "results").resolve(),
-    Path(tempfile.gettempdir()).resolve(),
+    *((_TEMP_ROOT,) if _TEMP_ROOT_IS_SAFE else ()),
 )
 _SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
 
@@ -146,6 +160,32 @@ def _reject_symlink(path: Path, role: str) -> None:
         )
 
 
+def _reject_non_regular(path: Path, role: str) -> None:
+    """Refuse an inventory entry that exists but is not a regular file.
+
+    ``_reject_symlink`` closes the symlink case; a directory or FIFO named
+    like a manifested artefact has the same failure mode without being a
+    link: the later ``is_file()`` inventory filter silently excludes it
+    instead of the mismatch surfacing as "missing" or "unmanifested". Checked
+    after :func:`_reject_symlink` so the more specific symlink message wins
+    when both apply.
+
+    Args:
+        path: Candidate path, unresolved.
+        role: Human-readable role used in the failure message.
+
+    Raises:
+        ManifestMismatchError: If ``path`` is a symbolic link (via
+            :func:`_reject_symlink`), or exists and is not a regular file.
+    """
+    _reject_symlink(path, role)
+    if path.exists() and not path.is_file():
+        raise ManifestMismatchError(
+            f"{role} {path} exists but is not a regular file (a directory, "
+            "FIFO, or other special file); refusing to verify it"
+        )
+
+
 def _open_no_follow(path: Path, role: str) -> int:
     """Open a file read-only, refusing a symbolic link at the ``open`` itself.
 
@@ -190,8 +230,14 @@ def _open_no_follow(path: Path, role: str) -> int:
     return os.open(path, flags)
 
 
-def _read_no_follow(path: Path, role: str) -> bytes:
+def read_no_follow(path: Path, role: str) -> bytes:
     """Read a whole file's bytes through :func:`_open_no_follow`.
+
+    Public: a caller that has already verified a path through this module
+    (for example, an artefact ``verify_manifest`` just accepted) must keep
+    reading it through this function rather than through a plain
+    ``Path.read_text``/``Path.open``, or the no-follow guarantee only covers
+    verification and not the caller's own subsequent read (TOCTOU, CWE-59).
 
     Args:
         path: Candidate manifest or artefact path, unresolved.
@@ -209,12 +255,82 @@ def _read_no_follow(path: Path, role: str) -> bytes:
         return stream.read()
 
 
+def write_no_follow(path: Path, data: bytes, role: str) -> None:
+    """Write bytes to a file, refusing to write through a symbolic link.
+
+    The write-side mirror of :func:`_open_no_follow`: ``Path.write_text`` and
+    ``Path.write_bytes`` both follow a symbolic link at the destination, so a
+    caller that resolved and contained a destination path (for example,
+    against :data:`ALLOWED_MANIFEST_ROOTS`) but then wrote to it with a plain
+    ``write_text`` call could have that write silently redirected to
+    whatever the link points at if the destination were replaced with a
+    symlink between the containment check and this write (CWE-59). On POSIX,
+    ``O_CREAT | O_TRUNC | O_NOFOLLOW`` makes the ``open`` itself the check: it
+    fails with ``ELOOP`` if the final path component is an existing symlink,
+    and otherwise creates (or truncates) a regular file in one syscall.
+    Windows has no ``O_NOFOLLOW``; there this falls back to ``is_symlink()``
+    immediately before ``open()`` (see :func:`_open_no_follow`).
+
+    Args:
+        path: Destination path, unresolved.
+        data: Bytes to write.
+        role: Human-readable role used in the failure message.
+
+    Raises:
+        ManifestMismatchError: If ``path`` is a symbolic link.
+        OSError: If the file cannot be written.
+    """
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_BINARY", 0)
+    if hasattr(os, "O_NOFOLLOW"):
+        try:
+            fd = os.open(path, flags | os.O_NOFOLLOW, 0o644)
+        except OSError as error:
+            if error.errno == errno.ELOOP:
+                raise ManifestMismatchError(
+                    f"{role} {path} is a symbolic link, not a regular file "
+                    "held by the governed directory; refusing to write it"
+                ) from error
+            raise
+    else:
+        if path.is_symlink():
+            raise ManifestMismatchError(
+                f"{role} {path} is a symbolic link, not a regular file held "
+                "by the governed directory; refusing to write it"
+            )
+        fd = os.open(path, flags, 0o644)
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(data)
+
+
+def _hash_fd(fd: int) -> str:
+    """SHA-256 digest of an already-open file descriptor.
+
+    Consumes and closes ``fd`` (via ``os.fdopen``). Split out of
+    :func:`_stat_size_and_hash_no_follow` so a caller that already knows the
+    expected size can fstat first and skip hashing on a mismatch, without
+    re-opening the file (see :func:`_verify_size_and_hash_no_follow`).
+
+    Args:
+        fd: An open, readable file descriptor.
+
+    Returns:
+        Lowercase hexadecimal SHA-256 digest.
+    """
+    digest = hashlib.sha256()
+    with os.fdopen(fd, "rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def _stat_size_and_hash_no_follow(path: Path, role: str) -> tuple[int, str]:
     """Size and SHA-256 digest of one file, from a single no-follow open.
 
     Both figures come from the same file descriptor, opened exactly once, so
     there is no window between "checked" and "read" in which the path could
-    be repointed (see :func:`_open_no_follow`).
+    be repointed (see :func:`_open_no_follow`). Unconditional: use
+    :func:`_verify_size_and_hash_no_follow` instead when there is an expected
+    size to short-circuit hashing against.
 
     Args:
         path: Candidate manifest or artefact path, unresolved.
@@ -233,11 +349,44 @@ def _stat_size_and_hash_no_follow(path: Path, role: str) -> tuple[int, str]:
     except OSError:
         os.close(fd)
         raise
-    digest = hashlib.sha256()
-    with os.fdopen(fd, "rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return size, digest.hexdigest()
+    return size, _hash_fd(fd)
+
+
+def _verify_size_and_hash_no_follow(
+    path: Path, expected_size: int, name: str, role: str
+) -> str:
+    """Digest a file no-follow, short-circuiting before hashing on a size mismatch.
+
+    Hashing a large corrupted or mismatched artefact is wasted work once its
+    size alone proves it cannot match; this keeps that short-circuit while
+    still reading size and content from a single no-follow-opened descriptor
+    — no re-open between the size check and the hash, so the guarantee in
+    :func:`_open_no_follow` still covers both.
+
+    Args:
+        path: Candidate manifest or artefact path, unresolved.
+        expected_size: The manifest-recorded size to compare against.
+        name: The manifested path name, for the size-mismatch message.
+        role: Human-readable role passed to :func:`_open_no_follow`.
+
+    Returns:
+        The lowercase hexadecimal SHA-256 digest.
+
+    Raises:
+        ManifestMismatchError: If ``path`` is a symbolic link, or its size
+            does not match ``expected_size``.
+        OSError: If the file cannot be read.
+    """
+    fd = _open_no_follow(path, role)
+    try:
+        size = os.fstat(fd).st_size
+    except OSError:
+        os.close(fd)
+        raise
+    if size != expected_size:
+        os.close(fd)
+        raise ManifestMismatchError(f"size mismatch: {name}")
+    return _hash_fd(fd)
 
 
 def _record_from_dict(payload: object, index: int) -> ManifestRecord:
@@ -279,7 +428,7 @@ def load_manifest(path: Path) -> tuple[ManifestRecord, ...]:
             schema.
     """
     try:
-        raw_bytes = _read_no_follow(path, "manifest")
+        raw_bytes = read_no_follow(path, "manifest")
     except OSError as error:
         raise ManifestFormatError(f"cannot read manifest {path}: {error}") from error
     try:
@@ -313,11 +462,14 @@ def append_manifest(
 
     Existing records must still match exactly. Only previously unmanifested JSON
     files are added, making mutation or removal of an accepted artefact a hard
-    failure rather than silently blessing it with a new digest. A symbolic link
-    is never manifested: the manifest destination and every candidate ``*.json``
-    in ``results_dir`` are rejected up front if they are links, so a digest is
-    only ever recorded for a regular file the directory itself holds (see
-    :func:`_reject_symlink`).
+    failure rather than silently blessing it with a new digest. A symbolic link,
+    or any non-regular entry (directory, FIFO, ...), is never manifested: the
+    manifest destination and every candidate ``*.json`` in ``results_dir`` are
+    rejected up front if they are not a regular file (see
+    :func:`_reject_non_regular`), and every read and the eventual write go
+    through :func:`read_no_follow`/:func:`write_no_follow` on the original,
+    unresolved path — never on a path already passed through ``.resolve()``,
+    which would silently follow a symlink swapped in after the check.
 
     Args:
         results_dir: Directory containing stored JSON artefacts.
@@ -330,8 +482,9 @@ def append_manifest(
         ReproductionConfigurationError: If the manifest destination is outside
             the governed output roots.
         ManifestFormatError: If an existing manifest is malformed.
-        ManifestMismatchError: If an existing record was removed or modified, or
-            if the manifest or any candidate artefact is a symbolic link.
+        ManifestMismatchError: If an existing record was removed or modified,
+            or if the manifest or any candidate artefact is not a regular
+            file.
     """
     _reject_symlink(manifest_path, "manifest")
     results = results_dir.resolve()
@@ -344,23 +497,28 @@ def append_manifest(
         raise ReproductionConfigurationError(
             f"manifest {destination} is outside allowed roots: {roots}"
         )
-    records = load_manifest(destination) if destination.is_file() else ()
+    # `manifest_path` (unresolved) is used for every read/write below;
+    # `destination` (resolved) is only for the containment check above and
+    # the self-exclusion comparison — using the *resolved* path for I/O would
+    # silently follow whatever a swapped-in symlink pointed at, defeating the
+    # no-follow guarantee `read_no_follow`/`write_no_follow` provide on the
+    # original path (Copilot follow-up review, PR #23 head `0cb6156`).
+    records = load_manifest(manifest_path) if manifest_path.is_file() else ()
     existing = {record.path: record for record in records}
-    for candidate in sorted(results.glob("*.json")):
-        _reject_symlink(candidate, "candidate artefact")
+    candidates = sorted(results.glob("*.json"))
+    for candidate in candidates:
+        _reject_non_regular(candidate, "candidate artefact")
     actual_paths = {
-        path.name: path
-        for path in results.glob("*.json")
-        if path.is_file() and path.resolve() != destination
+        path.name: path for path in candidates if path.resolve() != destination
     }
     missing = sorted(set(existing) - set(actual_paths))
     if missing:
         raise ManifestMismatchError(f"missing artefacts: {', '.join(missing)}")
     for name, record in existing.items():
         path = actual_paths[name]
-        size, digest = _stat_size_and_hash_no_follow(path, "candidate artefact")
-        if size != record.bytes:
-            raise ManifestMismatchError(f"size mismatch: {name}")
+        digest = _verify_size_and_hash_no_follow(
+            path, record.bytes, name, "candidate artefact"
+        )
         if digest != record.sha256:
             raise ManifestMismatchError(f"SHA-256 mismatch: {name}")
     appended = []
@@ -370,7 +528,7 @@ def append_manifest(
         size, digest = _stat_size_and_hash_no_follow(path, "candidate artefact")
         appended.append(ManifestRecord(path=name, bytes=size, sha256=digest))
     complete = tuple(sorted((*records, *appended), key=lambda record: record.path))
-    if appended or not destination.is_file():
+    if appended or not manifest_path.is_file():
         payload = {
             "schema_version": MANIFEST_SCHEMA_VERSION,
             "description": (
@@ -384,10 +542,10 @@ def append_manifest(
                 for record in complete
             ],
         }
-        destination.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=True) + "\n",
-            encoding="utf-8",
-            newline="\n",
+        write_no_follow(
+            manifest_path,
+            (json.dumps(payload, indent=2, ensure_ascii=True) + "\n").encode("utf-8"),
+            "manifest",
         )
     return complete
 
@@ -402,10 +560,11 @@ def verify_manifest(
     replaced: missing, modified, resized, or newly appended JSON files require a
     reviewed manifest update before reproduction succeeds. The manifest and
     every ``*.json`` entry in ``results_dir`` — manifested or not — must also
-    be a regular file held by ``results_dir`` itself, never a symbolic link
-    into it (see :func:`_reject_symlink`); a stray unmanifested symlink is
-    rejected outright rather than silently dropped from the inventory, since
-    it would otherwise never surface as either "missing" or "unmanifested".
+    be a regular file held by ``results_dir`` itself, never a symbolic link or
+    other non-regular entry (see :func:`_reject_non_regular`); a stray
+    unmanifested entry of either kind is rejected outright rather than
+    silently dropped from the inventory, since it would otherwise never
+    surface as either "missing" or "unmanifested".
 
     Args:
         results_dir: Directory containing immutable stored JSON artefacts.
@@ -417,8 +576,8 @@ def verify_manifest(
     Raises:
         ManifestFormatError: If the manifest is malformed.
         ManifestMismatchError: If inventory, size, or digest checks fail, or if
-            the manifest or any ``*.json`` entry in ``results_dir`` is a
-            symbolic link.
+            the manifest or any ``*.json`` entry in ``results_dir`` is not a
+            regular file.
     """
     _reject_symlink(manifest_path, "manifest")
     results = results_dir.resolve()
@@ -432,8 +591,8 @@ def verify_manifest(
             if candidate.name != manifest_path.name
         ]
     for candidate in candidates:
-        _reject_symlink(candidate, "candidate artefact")
-    actual = {path.name for path in candidates if path.is_file()}
+        _reject_non_regular(candidate, "candidate artefact")
+    actual = {path.name for path in candidates}
     missing = sorted(expected - actual)
     unexpected = sorted(actual - expected)
     if missing:
@@ -443,9 +602,9 @@ def verify_manifest(
     for record in records:
         path = results / record.path
         _reject_symlink(path, "manifested artefact")
-        size, digest = _stat_size_and_hash_no_follow(path, "manifested artefact")
-        if size != record.bytes:
-            raise ManifestMismatchError(f"size mismatch: {record.path}")
+        digest = _verify_size_and_hash_no_follow(
+            path, record.bytes, record.path, "manifested artefact"
+        )
         if digest != record.sha256:
             raise ManifestMismatchError(f"SHA-256 mismatch: {record.path}")
     return records

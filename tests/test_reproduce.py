@@ -123,6 +123,18 @@ def test_append_manifest_confines_destination(tmp_path: Path) -> None:
         reproduce.append_manifest(tmp_path, Path("C:/unconfined/manifest.json"))
 
 
+def test_allowed_manifest_roots_does_not_transitively_admit_the_checkout() -> None:
+    """CodeRabbit follow-up review, PR #23 head `d9d4f2a`: the temp-directory
+    entry in ``ALLOWED_MANIFEST_ROOTS`` must not transitively legitimize the
+    whole checkout. Containment walks every ancestor, so if the checkout
+    itself were under the temp root, admitting the temp root would silently
+    admit every file in the checkout, including this module's own source.
+    """
+    checkout_root = reproduce._REPOSITORY_ROOT.resolve()
+    for root in reproduce.ALLOWED_MANIFEST_ROOTS:
+        assert not (root == checkout_root or root in checkout_root.parents)
+
+
 @pytest.mark.parametrize(
     ("mutation", "message"),
     [
@@ -153,10 +165,15 @@ def test_verify_manifest_detects_size_mismatch_before_hashing(
     payload = json.loads(manifest.read_text(encoding="utf-8"))
     payload["files"][0]["bytes"] = 99
     manifest.write_text(json.dumps(payload), encoding="utf-8")
+    # PR23-F (Copilot follow-up review): size+hash now come from a single
+    # no-follow-opened descriptor (`_verify_size_and_hash_no_follow`), so the
+    # short-circuit is pinned against the function that actually hashes,
+    # `_hash_fd` — patching the (now unrelated) public `compute_sha256` would
+    # no longer be exercised by this path and the test would pass vacuously.
     monkeypatch.setattr(
         reproduce,
-        "compute_sha256",
-        lambda _path: pytest.fail("hashing should not run after a size mismatch"),
+        "_hash_fd",
+        lambda _fd: pytest.fail("hashing should not run after a size mismatch"),
     )
 
     with pytest.raises(
@@ -521,6 +538,83 @@ class TestManifestSymlinkProvenance:
             "a.json"
         ]
 
+    def test_verify_manifest_rejects_a_directory_named_like_json(
+        self, tmp_path: Path
+    ) -> None:
+        """PR23-F (Copilot follow-up review, "previously missed"): non-symlink,
+        non-regular inventory entries must also fail closed.
+
+        A directory named ``rogue.json`` is not a symlink, so
+        ``_reject_symlink`` alone would not catch it, and the later
+        ``is_file()`` filter would silently drop it from the inventory — the
+        same failure mode as an unmanifested symlink, for a different reason.
+        """
+        governed = tmp_path / "governed"
+        governed.mkdir()
+        manifest = _write_manifest(governed, {"a.json": b'{"a": 1}\n'})
+        (governed / "rogue.json").mkdir()
+
+        with pytest.raises(
+            reproduce.ManifestMismatchError,
+            match=r"candidate artefact.*not a regular file",
+        ):
+            reproduce.verify_manifest(governed, manifest)
+
+    def test_append_manifest_rejects_a_directory_named_like_json(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(reproduce, "ALLOWED_MANIFEST_ROOTS", (tmp_path.resolve(),))
+        governed = tmp_path / "governed"
+        governed.mkdir()
+        (governed / "a.json").write_bytes(b'{"a": 1}\n')
+        (governed / "rogue.json").mkdir()
+        manifest_path = governed / "manifest.json"
+
+        with pytest.raises(
+            reproduce.ManifestMismatchError,
+            match=r"candidate artefact.*not a regular file",
+        ):
+            reproduce.append_manifest(governed, manifest_path)
+        assert not manifest_path.exists()
+
+    def test_append_manifest_writes_through_the_unresolved_manifest_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """PR23-F (Copilot follow-up review): I/O must use ``manifest_path``, not
+        a ``.resolve()`` of it.
+
+        Before this fix, ``destination = manifest_path.resolve()`` was reused
+        for the containment check *and* every subsequent read/write. A
+        concurrent symlink swap of the final path component between the
+        initial ``_reject_symlink`` check and that ``.resolve()`` call would
+        have made every later read/write silently follow the swapped-in
+        link. Proven here without a real race: ``Path.resolve`` is patched so
+        that resolving ``manifest_path`` specifically returns a decoy path
+        that is still inside the allowed roots (so containment still
+        passes), and the manifest is confirmed to land at the real
+        ``manifest_path`` — never at the decoy ``.resolve()`` returned.
+        """
+        allowed_root = tmp_path.resolve()
+        monkeypatch.setattr(reproduce, "ALLOWED_MANIFEST_ROOTS", (allowed_root,))
+        governed = tmp_path / "governed"
+        governed.mkdir()
+        (governed / "a.json").write_bytes(b'{"a": 1}\n')
+        manifest_path = governed / "manifest.json"
+        decoy = allowed_root / "decoy-manifest.json"
+        real_resolve = Path.resolve
+
+        def fake_resolve(self: Path, *args: object, **kwargs: object) -> Path:
+            if str(self) == str(manifest_path):
+                return decoy
+            return real_resolve(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "resolve", fake_resolve)
+
+        reproduce.append_manifest(governed, manifest_path)
+
+        assert manifest_path.is_file()
+        assert not decoy.exists()
+
 
 class TestOpenNoFollow:
     """PR23-F (Copilot follow-up review): close the check-then-open race.
@@ -536,7 +630,7 @@ class TestOpenNoFollow:
     def test_regular_file_opens_and_reads(self, tmp_path: Path) -> None:
         target = tmp_path / "a.json"
         target.write_bytes(b'{"a": 1}\n')
-        assert reproduce._read_no_follow(target, "artefact") == b'{"a": 1}\n'
+        assert reproduce.read_no_follow(target, "artefact") == b'{"a": 1}\n'
 
     def test_stat_size_and_hash_match_compute_sha256(self, tmp_path: Path) -> None:
         target = tmp_path / "a.json"
@@ -555,3 +649,40 @@ class TestOpenNoFollow:
 
         with pytest.raises(reproduce.ManifestMismatchError, match="symbolic link"):
             reproduce._open_no_follow(link, "artefact")
+
+
+class TestWriteNoFollow:
+    """PR23-F (Copilot follow-up review): the write-side no-follow mirror.
+
+    ``Path.write_text``/``write_bytes`` follow a symlink at the destination,
+    so a caller that resolved and contained a destination path but then wrote
+    to it with a plain ``write_text`` call could have the write silently
+    redirected if the destination were swapped for a symlink between the
+    containment check and the write.
+    """
+
+    def test_writes_a_new_file(self, tmp_path: Path) -> None:
+        target = tmp_path / "out.json"
+        reproduce.write_no_follow(target, b'{"a": 1}\n', "generated output")
+        assert target.read_bytes() == b'{"a": 1}\n'
+
+    def test_truncates_an_existing_file(self, tmp_path: Path) -> None:
+        target = tmp_path / "out.json"
+        target.write_bytes(b"a much longer previous payload\n")
+        reproduce.write_no_follow(target, b"{}\n", "generated output")
+        assert target.read_bytes() == b"{}\n"
+
+    @_needs_symlink_support
+    def test_refuses_to_write_through_a_symlinked_destination(
+        self, tmp_path: Path
+    ) -> None:
+        outside = tmp_path / "outside.json"
+        outside.write_bytes(b"original\n")
+        link = tmp_path / "link.json"
+        link.symlink_to(outside)
+
+        with pytest.raises(reproduce.ManifestMismatchError, match="symbolic link"):
+            reproduce.write_no_follow(
+                link, b"attacker-controlled\n", "generated output"
+            )
+        assert outside.read_bytes() == b"original\n"

@@ -192,6 +192,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `git show`) are not attributable to this change and are recorded, not
     silently dropped — audit §8.5.
 
+- **PR #23 Round 3 — Copilot and CodeRabbit follow-up review at head
+  `d9d4f2a`; eight more findings, all fixed (2026-09-23 UTC).** Round 2's
+  push drew another Copilot pass (3 new High findings on the Round 2 fix
+  itself) and a CodeRabbit pass (4 actionable comments, 2 already resolved by
+  Round 2); audited as `PR23-F15`…`PR23-F22` in
+  `DOCS/audits/PR023-multi-review-audit.md` §9.
+  - **`PR23-F15`/`PR23-F16` (D2) — the no-follow guarantee stopped at
+    verification and didn't cover the caller's own subsequent read/write.**
+    `_load_artefact` reopened its artefact with `Path.read_text` after
+    `verify_manifest` had already verified it no-follow; `append_manifest`
+    reused a `.resolve()`'d (link-following) copy of its destination for
+    every read/write after the initial reject check. `tools.reproduce`
+    gained public `read_no_follow`/`write_no_follow` (the latter using
+    `O_CREAT|O_TRUNC|O_NOFOLLOW` on POSIX), used by `_load_artefact`,
+    `append_manifest`, and `exp001_e4_analysis.py`'s three other write sites
+    (`write_outputs` ×2, `write_report_manifest`) in place of every
+    `Path.read_text`/`write_text` on a governed path.
+  - **`PR23-F17` (D3) — a directory or FIFO named `rogue.json` was silently
+    dropped, not rejected.** `_reject_symlink` alone didn't catch a
+    non-symlink, non-regular entry; the later `is_file()` filter quietly
+    excluded it instead. New `_reject_non_regular` closes the same
+    "vanishes instead of surfacing as missing/unmanifested" gap `PR23-F12`
+    closed for symlinks specifically.
+  - **`PR23-F18` (D4) — the temp-directory allowance could transitively
+    admit the whole checkout.** If the checkout ever lived under the system
+    temp root, admitting the temp root for scratch-directory support would
+    silently admit every file in the checkout too. New `_safe_temp_root`
+    (and the equivalent `_TEMP_ROOT_IS_SAFE` in `tools/reproduce.py`) omit
+    the temp root in that one case.
+  - **`PR23-F19` (D2) — the manifest-destination guard missed nested
+    paths.** `PR23-F14`'s fix only checked a direct child of the record
+    root; `--manifest-path record_root/analysis/exp001_e4_analysis.py`
+    (this module's own source) slipped through. Now checked at any depth
+    against the one canonical `record_root / "report-manifest.json"`.
+  - **`PR23-F20` (D3) — a hashing short-circuit was silently dropped by the
+    `PR23-F13` refactor**, caught independently during this round's own
+    re-verification and fixed with a design equivalent to CodeRabbit's:
+    `_verify_size_and_hash_no_follow` checks size before hashing, from the
+    same no-follow-opened descriptor.
+  - **`PR23-F21`/`PR23-F22` (D4) — documentation accuracy.** A
+    `parity_report.rst` sentence corrected by `PR23-F8` still read
+    ambiguously; reworded to name what is actually gated. The audit's own
+    claim that all five `PR23-F1` tests carried docstrings was wrong (4 of 5
+    don't, matching this repository's `tests/**` norm) — corrected in the
+    audit rather than left standing.
+  - **Verification incident, disclosed in audit §9.5.** Proving the
+    `PR23-F19` regression test failed pre-fix required exercising the CLI
+    against a target that pointed at the real, committed
+    `exp001_e4_analysis.py`; run against not-yet-fixed source, it exploited
+    the live vulnerability and overwrote that file with generated JSON.
+    Recovered immediately with `git checkout --` (nothing committed, nothing
+    lost); every CLI-boundary test in this area now runs against a
+    `tmp_path` sandbox via a monkeypatched `_REPOSITORY_ROOT`.
+  - 13 new regression tests. Full suite `3236 passed, 176 skipped`; `ruff`,
+    `ruff format --check`, `mypy --strict`, and `bandit` clean on the changed
+    files; the E4 analysis re-run to a scratch destination still reproduces
+    the committed record byte-for-byte. Snyk Code: 0 issues on
+    `tools/reproduce.py` (down from finding 0 before too); 1 remaining LOW
+    Path Traversal on `exp001_e4_analysis.py` (down from 3), at the
+    containment sanitizer's own entry point — the same structural
+    false-positive class already on file, not new.
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that

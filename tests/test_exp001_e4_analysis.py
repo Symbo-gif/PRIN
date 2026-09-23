@@ -314,6 +314,47 @@ class TestProvenanceGuard:
         with pytest.raises(analysis.AnalysisError, match="registered execution commit"):
             analysis._load_artefact(tmp_path, leg)
 
+    def test_load_artefact_reads_via_no_follow_not_plain_path_io(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """PR23-F (Copilot follow-up review): the read after ``verify_manifest``
+        must not go through ``Path.read_text`` — that follows symlinks and
+        reopens the artefact independently of the no-follow verification that
+        just ran, leaving a TOCTOU window a concurrent replacement could use
+        to feed the analysis a different file than the one just verified.
+        """
+        from tools.reproduce import compute_sha256
+
+        leg = analysis.RUN_LEGS[0]
+        run_dir = tmp_path / analysis.RAW_ARTEFACT_ROOT / leg.run_id
+        run_dir.mkdir(parents=True)
+        payload = _corpus_payload([_corpus_case("c0")])
+        artefact = run_dir / leg.artefact
+        artefact.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+        manifest = {
+            "schema_version": 1,
+            "files": [
+                {
+                    "path": artefact.name,
+                    "bytes": artefact.stat().st_size,
+                    "sha256": compute_sha256(artefact),
+                }
+            ],
+        }
+        (run_dir / "manifest.json").write_text(
+            json.dumps(manifest), encoding="utf-8", newline="\n"
+        )
+
+        def _forbidden(*_args: object, **_kwargs: object) -> str:
+            raise AssertionError(
+                "must not read the artefact through a link-following Path call"
+            )
+
+        monkeypatch.setattr(Path, "read_text", _forbidden)
+
+        result = analysis._load_artefact(tmp_path, leg)
+        assert result["environment"]["git_commit"] == analysis.EXECUTION_COMMIT
+
 
 class TestOutputContainment:
     """Write destinations are confined to the governed output roots."""
@@ -363,26 +404,43 @@ class TestOutputContainment:
         assert record_root not in dirs
         assert (tmp_path / analysis.OUTPUT_ROOT).resolve() in dirs
 
-    def test_the_cli_refuses_an_output_dir_inside_the_record_root(self) -> None:
-        """A caller may not redirect generated files into the frozen record."""
-        escape = _REPOSITORY_ROOT / analysis.RECORD_ROOT
+    def test_the_cli_refuses_an_output_dir_inside_the_record_root(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """A caller may not redirect generated files into the frozen record.
+
+        Exercised against a sandboxed fake checkout (``_REPOSITORY_ROOT``
+        monkeypatched), never the real repository — if this guard ever
+        regresses, the test must fail cleanly, not write into this
+        module's own committed record root.
+        """
+        monkeypatch.setattr(analysis, "_REPOSITORY_ROOT", tmp_path)
+        escape = tmp_path / analysis.RECORD_ROOT
+        escape.mkdir(parents=True)
         with pytest.raises(analysis.AnalysisError, match="output directory"):
             analysis.main(["--output-dir", str(escape)])
+        assert list(escape.iterdir()) == []
 
     def test_the_cli_refuses_a_manifest_path_misnamed_in_the_record_root(
-        self,
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         """``--manifest-path`` may only name ``report-manifest.json`` there.
 
         Without this guard, ``--manifest-path`` pointing at ``report.md`` or
         ``preregistration.md`` inside the record root would let
         ``write_report_manifest`` silently overwrite the frozen E5 record.
+        Exercised against a sandboxed fake checkout, never the real
+        repository files.
         """
-        escape = _REPOSITORY_ROOT / analysis.RECORD_ROOT / "report.md"
-        original = escape.read_bytes()
+        monkeypatch.setattr(analysis, "_REPOSITORY_ROOT", tmp_path)
+        record_root = tmp_path / analysis.RECORD_ROOT
+        record_root.mkdir(parents=True)
+        escape = record_root / "report.md"
+        escape.write_bytes(b"frozen record\n")
+
         with pytest.raises(analysis.AnalysisError, match=r"report-manifest.json"):
             analysis.main(["--manifest-path", str(escape)])
-        assert escape.read_bytes() == original
+        assert escape.read_bytes() == b"frozen record\n"
 
     def test_checked_manifest_destination_accepts_the_canonical_name(
         self, tmp_path: Path
@@ -404,6 +462,76 @@ class TestOutputContainment:
             analysis._checked_manifest_destination(
                 record_root / "report.md", (record_root,), record_root
             )
+
+    def test_checked_manifest_destination_rejects_nested_paths(
+        self, tmp_path: Path
+    ) -> None:
+        """CodeRabbit follow-up review, PR #23 head `d9d4f2a`: a destination
+        *nested* under the record root — such as this module's own source at
+        ``analysis/exp001_e4_analysis.py`` — must be rejected too, not just a
+        misnamed direct child. The prior check only compared
+        ``resolved.parent == record_root``, so a nested path slipped through.
+        """
+        record_root = (tmp_path / "record").resolve()
+        (record_root / "analysis").mkdir(parents=True)
+        with pytest.raises(analysis.AnalysisError, match=r"report-manifest.json"):
+            analysis._checked_manifest_destination(
+                record_root / "analysis" / "exp001_e4_analysis.py",
+                (record_root,),
+                record_root,
+            )
+
+    def test_the_cli_refuses_a_manifest_path_nested_in_the_record_root(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Same defect, exercised through the CLI boundary rather than the
+        unit-level helper, against a sandboxed fake checkout.
+        """
+        monkeypatch.setattr(analysis, "_REPOSITORY_ROOT", tmp_path)
+        nested_dir = tmp_path / analysis.RECORD_ROOT / "analysis"
+        nested_dir.mkdir(parents=True)
+        escape = nested_dir / "exp001_e4_analysis.py"
+        escape.write_bytes(b"# source\n")
+
+        with pytest.raises(analysis.AnalysisError, match=r"report-manifest.json"):
+            analysis.main(["--manifest-path", str(escape)])
+        assert escape.read_bytes() == b"# source\n"
+
+
+class TestSafeTempRoot:
+    """CodeRabbit follow-up review, PR #23 head `d9d4f2a`: the temp-directory
+    allowance must not transitively legitimize the checkout itself.
+    """
+
+    def test_temp_root_included_when_disjoint_from_the_checkout(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        checkout = tmp_path / "checkout"
+        checkout.mkdir()
+        elsewhere = tmp_path / "elsewhere-temp"
+        elsewhere.mkdir()
+        monkeypatch.setattr(analysis.tempfile, "gettempdir", lambda: str(elsewhere))
+
+        assert analysis._safe_temp_root(checkout) == (elsewhere.resolve(),)
+
+    def test_temp_root_excluded_when_the_checkout_is_inside_it(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        fake_temp_root = tmp_path / "tmp"
+        fake_temp_root.mkdir()
+        checkout = fake_temp_root / "some" / "nested" / "checkout"
+        checkout.mkdir(parents=True)
+        monkeypatch.setattr(
+            analysis.tempfile, "gettempdir", lambda: str(fake_temp_root)
+        )
+
+        assert analysis._safe_temp_root(checkout) == ()
+
+    def test_temp_root_excluded_when_the_checkout_is_the_temp_root(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setattr(analysis.tempfile, "gettempdir", lambda: str(tmp_path))
+        assert analysis._safe_temp_root(tmp_path) == ()
 
 
 @pytest.mark.skipif(

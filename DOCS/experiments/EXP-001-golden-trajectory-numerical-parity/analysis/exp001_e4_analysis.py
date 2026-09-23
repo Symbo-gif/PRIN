@@ -68,7 +68,12 @@ if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))
 
 from benchmarks.campaign.exp001_driver import adjudicate_h2b  # noqa: E402
-from tools.reproduce import compute_sha256, verify_manifest  # noqa: E402
+from tools.reproduce import (  # noqa: E402
+    compute_sha256,
+    read_no_follow,
+    verify_manifest,
+    write_no_follow,
+)
 
 #: Experiment identifier, matching every run's campaign metadata sidecar.
 EXPERIMENT_ID = "EXP-001"
@@ -172,9 +177,18 @@ def _load_artefact(repository_root: Path, leg: RunLeg) -> dict[str, Any]:
     run_dir = repository_root / RAW_ARTEFACT_ROOT / leg.run_id
     verify_manifest(results_dir=run_dir, manifest_path=run_dir / "manifest.json")
     artefact = run_dir / leg.artefact
-    if not artefact.is_file():
-        raise AnalysisError(f"{leg.run_id}: missing result artefact {leg.artefact}")
-    payload: dict[str, Any] = json.loads(artefact.read_text(encoding="utf-8"))
+    # Read through the same no-follow guarantee `verify_manifest` just
+    # established, rather than a plain `is_file()`/`read_text()` — those
+    # follow symlinks, so a concurrent replacement between verification and
+    # this read could feed the analysis a different file than the one just
+    # verified (Copilot follow-up review, PR #23 head `0cb6156`).
+    try:
+        raw_bytes = read_no_follow(artefact, "result artefact")
+    except FileNotFoundError as error:
+        raise AnalysisError(
+            f"{leg.run_id}: missing result artefact {leg.artefact}"
+        ) from error
+    payload: dict[str, Any] = json.loads(raw_bytes.decode("utf-8"))
     recorded = str(payload.get("environment", {}).get("git_commit", ""))
     if recorded != EXECUTION_COMMIT:
         raise AnalysisError(
@@ -854,11 +868,18 @@ def write_outputs(
         The written paths, sorted by name.
     """
     output_dir.mkdir(parents=True, exist_ok=True)
+    # write_no_follow (not write_text) so a symlink swapped into either
+    # output path between output_dir's containment check and this write
+    # cannot redirect the write through it (Copilot follow-up review, PR #23
+    # head `0cb6156`). Encoding to bytes ourselves and writing through the
+    # binary no-follow descriptor is equivalent to `write_text(...,
+    # encoding="utf-8", newline="\n")`: both emit raw "\n" with no CRLF
+    # translation.
     summary = output_dir / "exp001-e4-summary.md"
-    summary.write_text(
-        build_summary(adjudications, manifests, generated_at),
-        encoding="utf-8",
-        newline="\n",
+    write_no_follow(
+        summary,
+        build_summary(adjudications, manifests, generated_at).encode("utf-8"),
+        "generated output",
     )
     record = {
         "experiment": EXPERIMENT_ID,
@@ -872,10 +893,12 @@ def write_outputs(
         "adjudications": adjudications,
     }
     adjudication = output_dir / "exp001-e4-adjudication.json"
-    adjudication.write_text(
-        json.dumps(record, indent=2, sort_keys=True, ensure_ascii=True) + "\n",
-        encoding="utf-8",
-        newline="\n",
+    write_no_follow(
+        adjudication,
+        (json.dumps(record, indent=2, sort_keys=True, ensure_ascii=True) + "\n").encode(
+            "utf-8"
+        ),
+        "generated output",
     )
     return sorted([summary, adjudication], key=lambda path: path.name)
 
@@ -935,12 +958,43 @@ def write_report_manifest(
             for leg in RUN_LEGS
         ],
     }
-    manifest_path.write_text(
-        json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=True) + "\n",
-        encoding="utf-8",
-        newline="\n",
+    write_no_follow(
+        manifest_path,
+        (
+            json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=True) + "\n"
+        ).encode("utf-8"),
+        "manifest path",
     )
     return payload
+
+
+def _safe_temp_root(repository_root: Path) -> tuple[Path, ...]:
+    """The system temp directory, omitted if it would also legitimize the checkout.
+
+    The temp root exists in the permitted-roots tuples purely to support a
+    test's scratch directory. ``_checked_destination``'s containment test is
+    "is the destination under this root", checked by walking *every*
+    ancestor — so if the repository checkout itself happens to live under
+    the system temp directory (an ephemeral CI workspace, a sandboxed clone,
+    ...), admitting the temp root at all would transitively admit every path
+    inside the checkout, including ``report.md`` and ``CHANGELOG.md``,
+    defeating the containment entirely. Omitting the temp root in that one
+    case is the correct trade: scratch-directory support degrades (a test
+    there would need a temp location outside the checkout), but the
+    containment guarantee for the checkout's own immutable files never does.
+
+    Args:
+        repository_root: Repository root.
+
+    Returns:
+        ``(temp_root,)`` normally; ``()`` if the checkout is under, or is,
+        the temp root.
+    """
+    temp_root = Path(tempfile.gettempdir()).resolve()
+    checkout_root = repository_root.resolve()
+    if checkout_root == temp_root or temp_root in checkout_root.parents:
+        return ()
+    return (temp_root,)
 
 
 def allowed_output_roots(repository_root: Path) -> tuple[Path, ...]:
@@ -950,7 +1004,8 @@ def allowed_output_roots(repository_root: Path) -> tuple[Path, ...]:
     artefacts (``tools.reproduce.ALLOWED_MANIFEST_ROOTS``,
     ``prin.reporting._artifacts.allowed_output_roots``): the gitignored
     generated-output root, the experiment's record root, and the operating
-    system temporary directory (which is what a test's scratch directory is).
+    system temporary directory (which is what a test's scratch directory is;
+    see :func:`_safe_temp_root` for why it can be omitted).
 
     Args:
         repository_root: Repository root.
@@ -961,7 +1016,7 @@ def allowed_output_roots(repository_root: Path) -> tuple[Path, ...]:
     return (
         (repository_root / OUTPUT_ROOT).resolve(),
         (repository_root / RECORD_ROOT).resolve(),
-        Path(tempfile.gettempdir()).resolve(),
+        *_safe_temp_root(repository_root),
     )
 
 
@@ -985,7 +1040,7 @@ def allowed_generated_output_dirs(repository_root: Path) -> tuple[Path, ...]:
     """
     return (
         (repository_root / OUTPUT_ROOT).resolve(),
-        Path(tempfile.gettempdir()).resolve(),
+        *_safe_temp_root(repository_root),
     )
 
 
@@ -1021,12 +1076,14 @@ def _checked_manifest_destination(
     would accept any path inside the frozen record root, including
     ``preregistration.md``, ``report.md``, or this analysis's own source —
     ``write_report_manifest`` would then overwrite whichever one
-    ``--manifest-path`` names. A destination inside the record root is
-    therefore additionally required to be named exactly
-    ``report-manifest.json``, the one file this analysis is registered to add
-    there; a destination under the generated-output root or the system
-    temporary directory (this module's own tests) is unrestricted, since
-    neither holds anything immutable.
+    ``--manifest-path`` names — including a destination *nested* under the
+    record root, such as ``analysis/exp001_e4_analysis.py`` (this module's
+    own source). A destination anywhere inside the record root, at any
+    depth, is therefore required to be exactly
+    ``record_root / "report-manifest.json"``, the one file this analysis is
+    registered to add there; a destination under the generated-output root
+    or the system temporary directory (this module's own tests) is
+    unrestricted, since neither holds anything immutable.
 
     Args:
         path: The requested manifest destination.
@@ -1038,15 +1095,17 @@ def _checked_manifest_destination(
 
     Raises:
         AnalysisError: If the destination escapes every permitted root, or
-            lands inside the record root under any name other than
-            ``report-manifest.json``.
+            lands inside the record root under any path other than
+            ``record_root / "report-manifest.json"``.
     """
     resolved = _checked_destination(path, roots, "manifest path")
-    if resolved.parent == record_root and resolved.name != "report-manifest.json":
+    canonical = record_root / "report-manifest.json"
+    inside_record_root = resolved == record_root or record_root in resolved.parents
+    if inside_record_root and resolved != canonical:
         raise AnalysisError(
             f"manifest path {resolved} is inside the frozen record root but is "
-            "not named report-manifest.json; this analysis may not overwrite "
-            "any other file there"
+            f"not {canonical}; this analysis may not overwrite any other file "
+            "there"
         )
     return resolved
 

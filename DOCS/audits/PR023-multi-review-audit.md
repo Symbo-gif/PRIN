@@ -54,7 +54,7 @@ both D1 declarations stand exactly as issued.
 | Numerical parity + invariants (A4) | ✅ | EXP-001 E4 analysis re-run under the hardened verifier: both outputs and `report-manifest.json` byte-identical (§3.1). |
 | Quality gates (A5) | ✅ | Whole-repo `ruff check` + `ruff format --check`, `mypy python/prin --strict`, `interrogate` 97.6 %, Sphinx `-W` build, and all five governance checkers pass; full suite 3,214 passed / 0 failed (§7). |
 | Security (A6) | ✅ | `PR23-F1` *is* the security fix (CWE-59 class). Snyk Code 0 issues on `tools/` and `tests/`, `bandit` clean, `pip-audit` clean — actual output in §2; CI's `Snyk Code` / `Secret Scan` remain the authoritative gates. |
-| Docstring/doc coverage (A7) | ✅ | New helper and all five new tests carry docstrings; `PR23-F9` declined with evidence (§6). |
+| Docstring/doc coverage (A7) | ✅ | New helper carries a docstring; 1 of the 5 new tests does (`test_regular_files_still_verify`) — the other 4 rely on self-descriptive names, consistent with this repository's `tests/**` docstring norm (§6); `PR23-F9` declined with evidence (§6). |
 | Repository hygiene (A8) | ✅ | Claim now stated identically at all 10 sites where it appears (§3.8). |
 | CI status (A9) | ✅ | 24/24 required checks green at `60cc387`, recorded in report §14.1 (§3.4). Remediation head runs its own checks. |
 | Artefact trail (A10) | ✅ | This report, `CHANGELOG.md` `[Unreleased]`, `DOCS/audits/README.md` index entry, E5 report §15 errata. |
@@ -385,8 +385,14 @@ this project does not use, and declining it is not a lowering of standards:
 - The analysis module itself is 100 % docstringed.
 
 Every reviewer who assessed this check independently reached the same
-conclusion. The real, already-tracked gap is `DV-040`. New code added by this
-round is fully docstringed regardless.
+conclusion. The real, already-tracked gap is `DV-040`. New *production* code
+added by this round (the `tools/reproduce.py` helper) is fully docstringed;
+new *test* code follows the repository's existing `tests/**` norm of
+self-descriptive names over per-method docstrings — 1 of the 5 new
+`TestManifestSymlinkProvenance` tests carries one, matching that norm rather
+than contradicting it. (Corrected 2026-09-23 — CodeRabbit follow-up review,
+PR #23 head `d9d4f2a`: this paragraph and the A7 row above previously claimed
+all five new tests carried docstrings.)
 
 **`PR23-F10` — defensive `value <= 0.0` guard in
 `exp001_e4_analysis::_decade_histogram`.** Raised as an explicit non-defect by
@@ -655,3 +661,299 @@ findings (`PR23-F12`, `PR23-F13`, `PR23-F14`) FIXED with regression tests; the
 carried `PR23-F1` thread closes with them (§8.4); no D1; no verdict,
 tolerance, or measured value changed; no regression to the published EXP-001
 record (§8.5).
+
+---
+
+## 9. Round 3 — Copilot and CodeRabbit follow-up review (head `d9d4f2a`)
+
+**Trigger:** Round 2's push (`d9d4f2a`) drew a fresh Copilot review (3 new
+High findings) and a fresh CodeRabbit review (4 actionable comments, of which
+2 were auto-resolved by Round 2's own fixes) on the same push. Both reviews
+targeted the Round 2 fix itself — Copilot found the no-follow guarantee
+didn't extend to the caller's *own* read of an already-verified artefact or
+to `append_manifest`'s destination handling; CodeRabbit found the CLI
+containment fix from `PR23-F14` had two remaining gaps (nested paths, and a
+temp-directory allowance that could transitively admit the whole checkout)
+and that the `PR23-F13` fix had silently dropped the size-before-hash
+short-circuit an existing test was pinning.
+
+### 9.1 `PR23-F15` (D2) — `_load_artefact` reopened its artefact through link-following calls
+
+*Copilot, "Artifact reload bypasses no-follow verification"
+(`exp001_e4_analysis.py:177`, plus flagged as the same class at the
+function's other three write call sites, `write_outputs`/`write_report_manifest`).*
+
+`_load_artefact` called `verify_manifest` (no-follow, since Round 1/2) and
+then reopened the same artefact with `artefact.is_file()` /
+`artefact.read_text()` — both link-following. A concurrent replacement
+between the verification and this read could feed the analysis a different
+file than the one just verified: the no-follow guarantee covered
+verification but not the caller's own subsequent use of the result.
+
+**Fix.** `tools/reproduce.py::_read_no_follow` is renamed to the public
+`read_no_follow` (a caller outside the module now legitimately needs it) and
+`_load_artefact` reads through it instead of `Path.read_text`. Applied the
+same reasoning to the three sibling write sites Copilot's "also appears in"
+list named (`write_outputs`'s two output files, `write_report_manifest`'s
+manifest) — see `PR23-F16`'s `write_no_follow`, §9.2.
+
+**Regression test.**
+`tests/test_exp001_e4_analysis.py::TestProvenanceGuard::test_load_artefact_reads_via_no_follow_not_plain_path_io`
+monkeypatches `Path.read_text` to raise `AssertionError` if called at all,
+proving the read path no longer touches it.
+
+### 9.2 `PR23-F16` (D2) — `append_manifest`'s destination I/O ran through a resolved, not the original, path
+
+*Copilot, "Manifest append remains vulnerable to symlink TOCTOU"
+(`tools/reproduce.py:347`).*
+
+`destination = manifest_path.resolve()` was computed once and reused for
+*both* the containment check and every subsequent read/write
+(`load_manifest(destination)`, `destination.write_text(...)`). `.resolve()`
+follows a symlink: if a concurrent writer swapped the final path component
+between the initial `_reject_symlink` probe and this `.resolve()` call, every
+downstream read/write would silently follow the swapped-in link, bypassing
+the no-follow guarantee entirely for the append path.
+
+**Fix.** `destination` (resolved) is now used **only** for the containment
+check and the self-exclusion comparison; every read and the eventual write go
+through `manifest_path` (the original, unresolved argument) via
+`read_no_follow`/the new public `write_no_follow`. `write_no_follow` mirrors
+`_open_no_follow` on the write side: `O_CREAT | O_TRUNC | O_NOFOLLOW` makes
+the `open()` itself the check on POSIX, with the same documented Windows
+fallback. Also applied to `write_outputs`'s two output files and
+`write_report_manifest`'s manifest in `exp001_e4_analysis.py` (§9.1), closing
+the same class there.
+
+**Regression test.**
+`tests/test_reproduce.py::TestManifestSymlinkProvenance::test_append_manifest_writes_through_the_unresolved_manifest_path`
+patches `Path.resolve` so that resolving `manifest_path` specifically returns
+a decoy path still inside the allowed roots (so containment still passes),
+and confirms the manifest lands at the real `manifest_path`, never at the
+decoy — proving the fix without needing a real race.
+`tests/test_reproduce.py::TestWriteNoFollow` (3 tests) pins `write_no_follow`
+directly: new-file write, truncate-on-existing, and symlink-destination
+rejection.
+
+### 9.3 `PR23-F17` (D3) — `append_manifest` silently dropped a non-symlink, non-regular candidate
+
+*Copilot, "previously missed" Medium: "`append_manifest` ignores non-regular
+rogue entries" (`tools/reproduce.py:355`).*
+
+The inventory-scan fix from `PR23-F12` (Round 2) covered symlinks but not
+other non-regular entries: a directory or FIFO named `rogue.json` is not a
+symlink, so `_reject_symlink` alone would not catch it, and the `is_file()`
+filter that followed would silently drop it from `actual_paths` — the same
+"vanishes instead of surfacing as missing/unmanifested" failure mode as the
+symlink case, for a different reason, and on the writer side this means
+`append_manifest` could bless a manifest as if the directory were absent.
+
+**Fix.** `_reject_non_regular(path, role)` — calls `_reject_symlink` first
+(so the more specific message wins when both apply), then rejects any
+existing, non-symlink entry that is not `is_file()`. Applied to the candidate
+scan in both `verify_manifest` and `append_manifest`, replacing the narrower
+`_reject_symlink` call there.
+
+**Regression tests.**
+`test_verify_manifest_rejects_a_directory_named_like_json` and
+`test_append_manifest_rejects_a_directory_named_like_json` in
+`tests/test_reproduce.py` — a plain directory named `rogue.json`, no symlink
+involved, both fail closed with "not a regular file".
+
+### 9.4 `PR23-F18` (D4) — the temp-directory allowance could transitively admit the whole checkout
+
+*CodeRabbit, "Exclude the checkout from the temporary-directory allowance"
+(Major; `exp001_e4_analysis.py:988` and the equivalent in
+`tools/reproduce.py`'s `ALLOWED_MANIFEST_ROOTS`).*
+
+`allowed_output_roots`/`allowed_generated_output_dirs`/`ALLOWED_MANIFEST_ROOTS`
+all include the resolved system temp directory, to support a test's scratch
+directory. The containment check (`root in destination.parents`) walks every
+ancestor, so if the repository checkout itself were located under the system
+temp directory (an ephemeral CI workspace, a sandboxed clone — not this
+machine's layout, but not excluded by the code either), admitting the temp
+root at all would transitively admit *every* path in the checkout, including
+`report.md` and `CHANGELOG.md`, silently defeating the containment this
+round's other fixes just added.
+
+**Fix.** `_safe_temp_root(repository_root)` in `exp001_e4_analysis.py`, and
+the equivalent inline `_TEMP_ROOT_IS_SAFE` computation in
+`tools/reproduce.py`, omit the temp root from the permitted-roots tuple when
+the checkout is under (or is) the resolved temp directory. Scratch-directory
+support degrades only in that one deployment shape; the containment
+guarantee for the checkout's own files never does, in any deployment shape.
+
+**Regression tests.** `tests/test_exp001_e4_analysis.py::TestSafeTempRoot`
+(3 tests, via monkeypatched `tempfile.gettempdir`) and
+`tests/test_reproduce.py::test_allowed_manifest_roots_does_not_transitively_admit_the_checkout`
+(an invariant check against the real, computed `ALLOWED_MANIFEST_ROOTS` for
+this checkout).
+
+### 9.5 `PR23-F19` (D2) — the manifest-destination guard missed nested paths under the record root
+
+*CodeRabbit, "Restrict every manifest destination beneath the record root"
+(Major; `exp001_e4_analysis.py:1045`).*
+
+`_checked_manifest_destination`'s guard (`PR23-F14`, Round 2) compared
+`resolved.parent == record_root` — a **direct child** of the record root
+misnamed anything but `report-manifest.json` was rejected, but a **nested**
+destination, such as `record_root/analysis/exp001_e4_analysis.py` (this
+module's own source), was not: its parent is `record_root/analysis`, not
+`record_root`, so the guard never fired and `write_report_manifest` would
+have overwritten the analysis module itself.
+
+**Fix.** The check now tests membership anywhere under the record root
+(`resolved == record_root or record_root in resolved.parents`) against the
+one canonical destination `record_root / "report-manifest.json"`, rather than
+comparing only the direct parent and the basename.
+
+**Regression tests.**
+`test_checked_manifest_destination_rejects_nested_paths` (unit level) and
+`test_the_cli_refuses_a_manifest_path_nested_in_the_record_root` (through the
+CLI boundary) in `tests/test_exp001_e4_analysis.py`.
+
+**Verification incident, disclosed.** Proving the CLI-level test failed
+against the pre-fix code required exercising `analysis.main()` with the real
+vulnerability live. The first version of this test pointed
+`--manifest-path` at the **real, committed**
+`exp001_e4_analysis.py`/`report.md` (via `_REPOSITORY_ROOT`) rather than a
+sandbox; running it against pre-fix source (via `git stash` on the source
+files only, to confirm the test actually pins the defect — the same
+practice as `PR23-F1`'s regression proof in §3.1) exploited the real,
+then-still-present bug against the checkout's own working tree and
+overwrote `exp001_e4_analysis.py` with a `report-manifest.json`-shaped JSON
+payload. Recovered immediately with `git checkout --` (no commit had been
+made; nothing was lost) and rewritten: every test in this section, and the
+pre-existing `PR23-F14` CLI tests it sits beside
+(`test_the_cli_refuses_an_output_dir_inside_the_record_root`,
+`test_the_cli_refuses_a_manifest_path_misnamed_in_the_record_root`), now
+monkeypatch `analysis._REPOSITORY_ROOT` to a `tmp_path` sandbox and write a
+synthetic decoy file there, so a future regression in this guard fails the
+test instead of writing into the real checkout. Lesson: a test whose entire
+premise is "this write must not happen" must never point at anything real,
+precisely because the failure mode under test *is* an unwanted write.
+
+### 9.6 `PR23-F20` (D3) — the short-circuit CodeRabbit independently caught was already being fixed
+
+*CodeRabbit, "Check the recorded size before hashing existing artefacts"
+(`tools/reproduce.py:239`).*
+
+Round 2's `_stat_size_and_hash_no_follow` (introduced for `PR23-F13`)
+combined the size check and the hash into one no-follow open, but
+unconditionally hashed before the caller compared sizes — silently dropping
+the base revision's short-circuit (skip hashing once the size alone proves a
+mismatch) and, as a side effect, making the existing
+`test_verify_manifest_detects_size_mismatch_before_hashing` pass vacuously,
+since it patched the now-bypassed public `compute_sha256` rather than
+whatever actually hashes post-refactor.
+
+This was caught independently during this round's own re-verification
+(before CodeRabbit's comment was read) and fixed with a different but
+equivalent design to CodeRabbit's suggested diff: rather than an optional
+`expected_size` parameter on `_stat_size_and_hash_no_follow`, a new
+`_verify_size_and_hash_no_follow(path, expected_size, name, role)` performs
+the short-circuit (fstat, compare, close-and-raise on mismatch, else hash via
+the extracted `_hash_fd` helper) and is used at both call sites that have an
+expected size to compare against; `_stat_size_and_hash_no_follow` remains for
+the one call site (newly appended records) with no expected size. The
+existing test's monkeypatch target was corrected to `reproduce._hash_fd`
+(the function that now actually hashes) so it once again fails if hashing
+runs on a size mismatch — confirmed by reverting the fix and re-running it.
+
+### 9.7 `PR23-F21` (D4) — a corrected sentence still read ambiguously
+
+*CodeRabbit, "Specify what the parity job gates."
+(`DOCS/sphinx/parity_report.rst:208`).*
+
+The sentence "corpus parity is a merge gate" — written after `PR23-F8`'s
+erratum already corrected the paragraph above it to say the job checks
+PRINet self-consistency, not PRIN-vs-reference parity — could still be read
+as claiming the broader, uncorrected thing. Reworded to name what is
+actually gated (**PRINet corpus self-consistency**) and restate, in the same
+sentence, that full-corpus **PRIN**-vs-reference trajectory parity is not.
+
+### 9.8 `PR23-F22` (D4) — the audit's own docstring-coverage claim was inaccurate
+
+*CodeRabbit, "Correct the A7 docstring evidence."
+(`DOCS/audits/PR023-multi-review-audit.md:57`).*
+
+§1's A7 row and §6 both claimed "all five new [`PR23-F1`] tests carry
+docstrings." Re-checked directly against `tests/test_reproduce.py`: 4 of the
+5 (`test_verify_manifest_rejects_a_symlinked_artefact`,
+`test_verify_manifest_rejects_a_symlinked_manifest`,
+`test_append_manifest_never_blesses_a_symlinked_artefact`,
+`test_append_manifest_rejects_a_symlinked_destination`) have no method
+docstring; only `test_regular_files_still_verify` does. The underlying
+project standard was correctly characterized (`ruff D` is off for
+`tests/**`, ergo not a real gap), but the factual claim about this specific
+round's tests was wrong — a documentation-accuracy defect in the audit
+itself, corrected in §1 and §6.
+
+### 9.9 Carried finding, resolved with this round
+
+Copilot's original `PR23-F1` thread ("Manifest verification accepts
+symlinked files") remained open through Round 3 as well, without a "New"
+tag, alongside the three new findings above — the same pattern as Round 2
+(§8.4). `PR23-F15`/`PR23-F16`/`PR23-F17` are exactly the remaining gaps in
+that class; no separate fix was needed.
+
+CodeRabbit auto-resolved two of its four comments on this head
+(`report.md`/`CHANGELOG.md`/`README.md`/`SESSION_REGISTER.md` status
+reconciliation, and the DV-036 S4 stale-pending-status note) with "✅
+Addressed in commits d15fe5c to d9d4f2a" — both are `PR23-F2`/`PR23-F3`/
+`PR23-F5`/`PR23-F6` from Round 1 (§§3.2, 3.3, 3.5, 3.6), already fixed and
+correctly recognized as such.
+
+### 9.10 Verification
+
+```text
+.venv\Scripts\python -m pytest tests/test_reproduce.py tests/test_exp001_e4_analysis.py -q
+  83 passed
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -q
+  3236 passed, 176 skipped, 48 deselected
+.venv\Scripts\python -m ruff check tools/reproduce.py exp001_e4_analysis.py tests/test_reproduce.py tests/test_exp001_e4_analysis.py
+  All checks passed!
+.venv\Scripts\python -m ruff format --check <same four files>
+  4 files already formatted
+.venv\Scripts\python -m mypy --strict tools/reproduce.py exp001_e4_analysis.py
+  Success: no issues found in 2 source files
+.venv\Scripts\python -m bandit tools/reproduce.py exp001_e4_analysis.py
+  No issues identified
+```
+
+**No regression to the published EXP-001 record**, re-verified after this
+round's edits by regenerating to a scratch destination and comparing against
+the committed `report-manifest.json`:
+
+```text
+H1: REFUTED   H2a: REFUTED   H2b: CONFIRMED   H3: CONFIRMED   H4: CONFIRMED
+D1 flag: RAISED
+exp001-e4-adjudication.json  sha256 e6f6eb20...  MATCH
+exp001-e4-summary.md          sha256 4551061c...  MATCH
+```
+
+**Security gates.** Both files are modified first-party Python; no dependency
+manifest changed. Local Snyk Code (CLI `1.1306.2`, org `symbo-gif`):
+
+```text
+snyk code test tools/reproduce.py       -> Total issues: 0
+snyk code test exp001_e4_analysis.py    -> Total issues: 1 (LOW, Path Traversal)
+```
+
+The one remaining LOW finding is at `_checked_destination`'s own
+`Path(path).resolve()` — the sanitizer's entry point — the same structural
+false-positive class documented in §8.5 (Snyk does not model a
+resolve-then-contain check as neutralizing the taint on the path that flows
+into it); down from three such findings before this round because the
+`write_no_follow` migration (§9.1–§9.2) removed the two `write_text` sinks
+Snyk had flagged separately. **CI's `Snyk Code` required check on the
+remediation head remains the authoritative gate.**
+
+**Delta re-audit date:** 2026-09-23 UTC — **Result:** CLEAN. `PR23-F15`
+through `PR23-F22` FIXED with regression tests (`PR23-F20` fixed
+independently, before CodeRabbit's comment was read, with an equivalent
+design); the carried `PR23-F1` thread closes with them (§9.9); no D1; no
+verdict, tolerance, or measured value changed; no regression to the published
+EXP-001 record (§9.10). One local process incident during verification,
+disclosed and remediated in §9.5, with the test suite itself hardened against
+recurrence.
