@@ -63,20 +63,28 @@ jobs:
 
   bench-regression:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # DV036-F4: four counterbalanced measurement passes (~21 min each) plus
+    # two builds no longer fit the original 90-minute single-pass budget.
+    timeout-minutes: 180
     env:
       REFERENCE_SHA: 4590d611f34eae5dfcdadb99b562aacf998d6e94
       RUSTUP_TOOLCHAIN: 1.98.1
-      PIP_CONSTRAINT: ${{ github.workspace }}/ci/docs-constraints.txt
+      PIP_CONSTRAINT: ${{ github.workspace }}/arms/candidate/ci/docs-constraints.txt
       EVIDENCE_DIR: ${{ github.workspace }}/benchmarks/results/nightly-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
+      # DV036-F4: both arms are checked out as equal-length siblings
+      # (`arms/reference`, `arms/candidate`) so working directories, target
+      # directories, venv paths, and the environment each benchmark process
+      # inherits have the same shape. The earlier nested `.nightly-reference`
+      # layout gave identical binaries a reproducible one-sided delta.
       - uses: actions/checkout@v4
         with:
+          path: arms/candidate
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.REFERENCE_SHA }}
-          path: .nightly-reference
+          path: arms/reference
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -85,8 +93,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            . -> target
-            .nightly-reference -> target
+            arms/candidate -> target
+            arms/reference -> target
       - name: Free disk space
         run: |
           # NB: do not touch /opt/hostedtoolcache — actions/setup-python's
@@ -97,11 +105,12 @@ jobs:
       - name: Build matched candidate and reference environments
         run: |
           set -euo pipefail
-          mkdir "$EVIDENCE_DIR"
-          git rev-parse HEAD > "$EVIDENCE_DIR/candidate-sha.txt"
-          git -C .nightly-reference rev-parse HEAD > "$EVIDENCE_DIR/reference-sha.txt"
-          test "$(git -C .nightly-reference rev-parse HEAD)" = "$REFERENCE_SHA"
+          mkdir -p "$EVIDENCE_DIR"
+          git -C arms/candidate rev-parse HEAD > "$EVIDENCE_DIR/candidate-sha.txt"
+          git -C arms/reference rev-parse HEAD > "$EVIDENCE_DIR/reference-sha.txt"
+          test "$(git -C arms/reference rev-parse HEAD)" = "$REFERENCE_SHA"
           { date -u --iso-8601=seconds; uname -a; lscpu; rustc -Vv; python --version; } > "$EVIDENCE_DIR/host.txt"
+          cd arms/candidate
           python -m venv .venv
           .venv/bin/python -m pip install --no-cache-dir -c ci/lint-constraints.txt maturin pytest==9.1.1 pytest-benchmark==5.3.0
           .venv/bin/python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
@@ -112,46 +121,57 @@ jobs:
           python -m pip install --no-cache-dir --no-build-isolation -c ci/lint-constraints.txt -e ".[dev,onnx]"
           python -m pip freeze --all --exclude-editable > "$EVIDENCE_DIR/dependencies.txt"
           deactivate
-          python -m venv .nightly-reference/.venv
-          source .nightly-reference/.venv/bin/activate
+          cd ../reference
+          python -m venv .venv
+          source .venv/bin/activate
           python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision
           python -m pip install --no-cache-dir -r "$EVIDENCE_DIR/dependencies.txt"
-          python -m pip install --no-cache-dir --no-deps --no-build-isolation -e .nightly-reference
+          python -m pip install --no-cache-dir --no-deps --no-build-isolation -e .
           python -m pip freeze --all --exclude-editable > "$EVIDENCE_DIR/reference-dependencies.txt"
           deactivate
           cmp "$EVIDENCE_DIR/dependencies.txt" "$EVIDENCE_DIR/reference-dependencies.txt"
       # Fixed historical source is remeasured on this runner; cached timings
       # are never used, refreshed, or promoted after a failed comparison.
-      - name: Measure reference then candidate on the same runner
+      # DV036-F4 (campaign amendment 4): the fixed counterbalanced order
+      # reference, candidate, candidate, reference cancels linear host drift
+      # that a single reference-first pass reports as a candidate slowdown.
+      # Every pass is kept and averaged; none is a retry.
+      - name: Measure reference and candidate in counterbalanced order
         run: |
           set -euo pipefail
           measure() (
-            local source="$1" arm="$2"
-            cd "$source"
+            local arm="$1" run="$2"
+            cd "$GITHUB_WORKSPACE/arms/$arm"
             source .venv/bin/activate
-            mkdir "$EVIDENCE_DIR/$arm"
-            export CRITERION_HOME="$EVIDENCE_DIR/$arm/criterion"
-            date -u --iso-8601=seconds > "$EVIDENCE_DIR/$arm/start.txt"
+            mkdir "$EVIDENCE_DIR/$run"
+            export CRITERION_HOME="$EVIDENCE_DIR/$run/criterion"
+            date -u --iso-8601=seconds > "$EVIDENCE_DIR/$run/start.txt"
             cargo bench --locked --workspace \
               --bench control_buffer --bench training_hooks \
               --bench mean_field_rk4_bench --bench sparse_knn_bench \
               --bench discrete_step_bench --bench sweep_bench \
               --bench resonance_layer_bridge --bench phase_tracker_bridge \
-              2>&1 | tee "$EVIDENCE_DIR/$arm/criterion.log"
+              2>&1 | tee "$EVIDENCE_DIR/$run/criterion.log"
             python -m pytest tests/ -m slow -q \
-              --benchmark-only --benchmark-json="$EVIDENCE_DIR/$arm/pytest-bench.json" \
-              2>&1 | tee "$EVIDENCE_DIR/$arm/pytest.log"
-            date -u --iso-8601=seconds > "$EVIDENCE_DIR/$arm/end.txt"
+              --benchmark-only --benchmark-json="$EVIDENCE_DIR/$run/pytest-bench.json" \
+              2>&1 | tee "$EVIDENCE_DIR/$run/pytest.log"
+            date -u --iso-8601=seconds > "$EVIDENCE_DIR/$run/end.txt"
           )
-          measure "$GITHUB_WORKSPACE/.nightly-reference" reference
-          measure "$GITHUB_WORKSPACE" candidate
+          measure reference reference-1
+          measure candidate candidate-1
+          measure candidate candidate-2
+          measure reference reference-2
+      # DV036-F4 (campaign amendment 4): the lock-free/mutex contention
+      # group spins N writer threads on this 4-vCPU runner, and identical
+      # code varied 0.39x-1.46x between runs. It is still measured, compared,
+      # and reported, but gates only on the reference host (EXP-003 E3).
       - name: Compare against baseline (>10% mean regression fails)
         run: |
           set -euo pipefail
-          .venv/bin/python tools/check_bench_regression.py \
-            --baseline "$EVIDENCE_DIR/reference" \
-            --criterion-dir "$EVIDENCE_DIR/candidate/criterion" \
-            --pytest-json "$EVIDENCE_DIR/candidate/pytest-bench.json" \
+          arms/candidate/.venv/bin/python arms/candidate/tools/check_bench_regression.py \
+            --reference "$EVIDENCE_DIR/reference-1" "$EVIDENCE_DIR/reference-2" \
+            --candidate "$EVIDENCE_DIR/candidate-1" "$EVIDENCE_DIR/candidate-2" \
+            --advisory criterion/control_buffer_read_under_contention/ \
             --threshold 0.10 2>&1 | tee "$EVIDENCE_DIR/comparison.txt"
       - name: Preserve benchmark evidence even on failure
         if: always()

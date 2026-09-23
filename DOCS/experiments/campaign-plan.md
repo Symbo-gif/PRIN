@@ -635,6 +635,32 @@ conditions remain in force. The correction follows conditional S1→S2→S3→S4
 branch testing is authorized, but neither approval to merge nor E3 completion
 is implied.
 
+**Hosted validation round 2 — amendment 4 (2026-09-23 UTC).** Main nightly
+`35826531821` (`de411d0`) failed with three breaches, investigated rather
+than retried. (1) `resonance_layer_bridge_baseline/moderate` read +14.7%
+here and +14.4% in branch run `35811372090`, although Rust sources,
+`Cargo.lock`, and every Criterion binary hash were identical in both arms;
+the same computation through `prin-py` in the same jobs was not slower, and
+a local interleaved A/B of both SHAs at equal-length sibling paths read
+1.002×/0.992× while both arms drifted ~7.5% between rounds. The one-sided
+delta is therefore attributed to the asymmetric design (nested
+`.nightly-reference` layout and fixed reference-first order), not code.
+(2) The `control_buffer_read_under_contention` group spins writer threads on
+the 4-vCPU hosted runner; identical code varied 0.39×–1.46× between runs,
+and the harness keeps the lock-free writers alive (shadowed `_guard`) while
+the mutex case is measured. (3) The ~8 µs DLPack float64 round trip read
++18.4% with its whole distribution shifted (A/A across runs 0.79×), a
+transient host phase. Approved correction: both arms are checked out as
+equal-length siblings `arms/reference` and `arms/candidate`; measurement
+uses the fixed counterbalanced order reference, candidate, candidate,
+reference, and each arm's mean is the arithmetic mean of its two passes
+(every pass counts; none is a retry); the contention group is still
+measured, compared, and reported but is advisory on hosted runners and gates
+on the reference host at EXP-003 E3 (0166), where its harness defect is
+fixed together with the CPU re-baseline. Every other benchmark stays gated
+at the unchanged 10% mean-runtime threshold, fail-closed; the job budget
+rises from 90 to 180 minutes.
+
 ---
 
 ## 12. Campaign rules that E1–E5 briefs do not spell out (adopted here)
@@ -710,3 +736,4 @@ Hypotheses are never in this document.
 | 1 | 2026-09-21 | §11.1, §11.2 (gap dispositions; §7.3 enforcement row) | Executes decision A2: the DV-038 `write_result` guard stages and flushes JSON before atomic exclusive publication (`ArtefactExistsError`; direct, race, interrupted-write, and CLI tests; Snyk Code required) and DV-039 constrains every `nightly.yml` `full-suite` pip install while provisioning MOT/Sphinx. Both fixes are committed on governed hotfix branch `hotfix/dv038-dv039-artefact-guard-nightly-provisioning`; DV-038 closes on green merge and DV-039 on green merge plus one green nightly dispatch. No change to §2–§6, §8–§10. | MichaelMaillet (A2) |
 | 2 | 2026-09-22 | §11.5 (gap disposition; §7.2 schema row) | Ratifies a third `timing_method` value, `"not-timed"`, for a GPU result entry that performs no timing measurement (EXP-001 H4, preregistration §5.12 item 6). Applied in the driver, the closure validator, and the pre-registration; no existing `"device-event"`/`"system-synced"` leg changes. No change to §2–§6, §8–§10, §11.1–§11.4. | MichaelMaillet |
 | 3 | 2026-09-23 UTC | §11.3, §11.6 (gap disposition) | Bring forward a bounded DV-036 correction before 0156: fixed historical reference and candidate measured in one nightly job with identical toolchains/dependencies and fresh preserved outputs; retain every benchmark and the 10% threshold; fail closed on incomplete evidence. Reference-host EXP-003/004 gates and whole-nightly-green entry remain unchanged. | MichaelMaillet (explicit same-job correction approval; hotfix branch push and testing authorized) |
+| 4 | 2026-09-23 UTC | §11.6 (gap disposition, hosted validation round 2) | After main nightly `35826531821` breached on identical-source measurements: equal-length sibling checkouts for both arms; fixed counterbalanced reference→candidate→candidate→reference order with per-arm mean of both passes; `control_buffer_read_under_contention` group measured and reported but advisory on hosted runners (reference-host gate at EXP-003 E3, 0166, with its harness defect DV036-F5); job timeout 90→180 min. 10% threshold, fixed reference SHA, matched dependencies, all eight Rust targets, Python selection, and fail-closed evidence rules unchanged. | MichaelMaillet (selected the symmetric + counterbalanced + contention-advisory option in session, 2026-09-23 UTC) |

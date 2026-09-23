@@ -35,7 +35,10 @@ documentation/example/notebook gates described below.
 `test_check_bench_regression.py` covers the DV-036 correction: the unchanged
 10% boundary, each mandatory measurement source, malformed/non-finite or
 duplicate data, unmatched benchmark identities, and the same-job workflow
-contract. These synthetic inputs are tests, never campaign observations.
+contract. DV036-F4 adds multi-run arm averaging, drift cancellation under
+counterbalanced order, cross-run identity checks, fail-closed advisory
+prefixes, and the sibling-checkout/ABBA workflow contract. These synthetic
+inputs are tests, never campaign observations.
 
 ## WP-036B ported acceptance suite (13 files, 498 tests)
 

@@ -141,3 +141,16 @@ environment build step (`maturin` not on PATH for `--no-build-isolation`
 editable installs) — new finding DV036-F3, recorded in the correction audit.
 Fixed by per-venv activation; focused suite and lint/format/type/actionlint
 checks clean. No benchmark comparison was reached; no E3 run authorized.
+
+## DV-036 hosted validation round 2
+
+Branch dispatch `35811372090` and post-merge main nightly `35826531821`
+(`de411d0`) reached the comparison; `full-suite` passed and `bench-regression`
+failed (resonance moderate +14.4%/+14.7%, contention and DLPack float64
+breaches). Investigation of both evidence artefacts, plus a local interleaved
+A/B, found identical binaries and no code regression (DV036-F4; harness
+defect DV036-F5 deferred to 0166). The maintainer approved campaign
+amendment 4 (symmetric arms, counterbalanced order, contention group
+advisory on hosted runners). The fix is pushed to the hotfix branch and a
+hosted run is pending. No E3 run is authorized, and session 0156 stays
+blocked.

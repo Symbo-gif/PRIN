@@ -315,3 +315,15 @@ This brings forward only the bounded hosted-CI comparison repair. DV-036's
 reference-host CPU gate before 0168 and GPU/bridge gate before 0173 remain
 open. DV-039 remains open under the maintainer's whole-nightly-green
 requirement; no successful corrected nightly or merge is claimed here.
+
+**Hosted validation round 2 (2026-09-23 UTC).** Branch run `35811372090`
+and main nightly `35826531821` reached the comparison and breached on
+identical-source measurements; investigation found no code regression
+(DV036-F4, D2). The maintainer approved campaign amendment 4: equal-length
+sibling arms, counterbalanced reference→candidate→candidate→reference order,
+and the `control_buffer_read_under_contention` group advisory on hosted
+runners. **DV036-F5 (D3) is deferred to EXP-003 E3 (session `0166`):** the
+contention harness keeps its lock-free writers alive while measuring the
+mutex case. It is fixed with the reference-host CPU re-baseline, where that
+group gates; before session 0168 it joins DV-036's existing CPU gate. No
+green nightly is claimed.
