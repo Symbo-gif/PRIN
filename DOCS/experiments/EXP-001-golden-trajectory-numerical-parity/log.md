@@ -115,3 +115,7 @@ Precommit review corrected an unavailable `runner` expression in job-level
 environment configuration to a run-and-attempt-specific path under
 `benchmarks/results/`; GitHub's context-availability table does not permit
 `runner` at `jobs.<job_id>.env`. No timing, threshold, or reference changed.
+
+## DV-036 S2 audit
+
+Local implementation commit: `8bcea55`. The [correction audit](../../audits/2026-09-23-dv036-nightly-correction-audit.md) records PASS for local scope, with hosted validation and S4 closure pending. Real actionlint v1.7.7 returned zero findings. No E3 execution has begun.
