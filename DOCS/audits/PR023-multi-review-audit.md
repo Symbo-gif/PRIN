@@ -2238,15 +2238,214 @@ confirmed identical, no new finding from the `main()` collision check),
 each. No Snyk Open Source / `cargo audit` / `pip-audit` run — no dependency
 files changed this round.
 
-**Delta re-audit date:** 2026-09-24 UTC — **Result:** CLEAN. `PR23-F38` and
-`PR23-F39` fixed with regression tests, the latter proved by pinning the
-correct call shape rather than a live race this session cannot reliably
-simulate or verify. The verdict-logic finding investigated in depth and
+**Delta re-audit date:** 2026-09-24 UTC — **Result:** CLEAN at push time,
+locally. `PR23-F38` fixed with a regression test. `PR23-F39` was believed
+fixed by pinning the correct call shape — **this belief was wrong; see §16
+for the correction.** The verdict-logic finding investigated in depth and
 declined with the maintainer's direct confirmation, matching
 `PR23-F10`/`PR23-F11`'s established precedent — not a misreading of the
 registered rule, and unreachable against any currently-committed artefact.
 Both carried items re-confirmed with no new content. No new D1; no verdict,
 tolerance, or measured value changed; no regression to the published
 EXP-001 record; the real 172-record repository manifest still verifies.
-CodeRabbit and Copilot are re-requested on this round's push per standard
-practice.
+
+---
+
+## 16. Round 9 correction cycle — a wrong assumption shipped, caught by real CI, fixed in two more passes
+
+**This section exists because §15's `PR23-F39` claim was wrong, and this
+audit's own standing rule is to record that on the record rather than
+quietly edit history.** What happened, in order:
+
+**1. The mistake.** `PR23-F39`'s fix assumed `os.replace` supports
+`dir_fd`-relative operation on POSIX wherever `os.open` does — a plausible
+but *unverified* assumption, since this session's Windows machine cannot
+exercise that code path at all. It was documented as such in §15.2 at the
+time, with the stated intent that CI would be the real verification. Pushed
+as `949e5e1`.
+
+**2. CI disproved it.** All three ubuntu `test` legs and `reproduce` failed
+identically: `assert calls[0]["src_dir_fd"] is not None` → `None`.
+`os.replace not in os.supports_dir_fd` on real Ubuntu/Python 3.12, even
+though `os.open` is. The production code's own defensive fallback
+(`if parent_fd is not None and os.replace in os.supports_dir_fd: ... else:
+os.replace(tmp_path, path)`) had already degraded correctly and safely —
+`write_no_follow` never actually broke a write, wrote no incorrect bytes,
+and corrupted nothing. Only the *test's* assertion, which asserted the
+dir_fd branch must have been taken, was wrong to assert that.
+
+**3. First correction (`b9e3239`).** Reverted the final swap to the
+unconditional, plain-path `os.replace(tmp_path, path)` — the exact call
+Round 8's already-verified hard-link fix used. The pinned parent descriptor
+is still obtained and used for the temporary file's creation (exercised
+for real by every `write_no_follow` test on Linux/macOS CI); only the final
+rename step stopped attempting to reuse it. The invalid test was replaced
+with one asserting descriptor closure by call-count rather than by
+re-asserting the same broken mechanism.
+
+**4. The replacement test also broke CI.** `b9e3239` failed the same four
+checks again — a *different* assertion this time
+(`test_parent_descriptor_is_closed_after_a_successful_write`:
+`assert closed_count >= opened_dir_fds > 0` → `opened_dir_fds` was `0`).
+Root cause, diagnosed from the CI log alone (no local reproduction
+possible): monkeypatching `os.open` to spy on it replaces the function
+object `reproduce.py`'s own `os.open in os.supports_dir_fd` membership
+check compares against. A monkeypatched replacement is a *different
+function object* than the real one `os.supports_dir_fd` was populated
+with, so the identity check silently started returning `False` for the
+whole duration of the test — `_open_parent_dir_fd` fell back to `None`,
+the dir_fd branch never ran, and `opened_dir_fds` stayed `0` correctly
+given what actually happened, just not what the test intended to observe.
+
+**5. Second correction (`df5a476`).** The spy-based test is removed
+outright, not patched again — a third attempt at asserting an internal
+mechanism this session cannot locally verify was judged the wrong
+response to two consecutive failures of that same strategy. Replaced with
+`test_repeated_writes_do_not_exhaust_file_descriptors`: 300 writes in one
+process, asserting the *outcome* a real descriptor leak would break
+(`OSError: Too many open files` under the default Linux `ulimit`), with no
+monkeypatching of `os` at all. This is deliberately a weaker proof than a
+mechanism-level assertion would be — it cannot distinguish "no leak" from
+"a leak too small to hit the descriptor limit in 300 iterations" — but it
+is a proof this session can actually stand behind, rather than a fourth
+guess.
+
+**Two further findings addressed in the same push**, both lower-risk than
+the reverted attempt and verified with the same "check, don't assume"
+discipline this correction cycle is itself the evidence for:
+
+- **`PR23-F41` (D3) — the cleanup-on-failure path (`tmp_path.unlink()`)
+  re-resolved by path string even when a pinned parent descriptor was
+  still open**, so a symlink swapped into the parent during the call could
+  delete a same-named file elsewhere instead of the temporary file this
+  function actually created. Fixed with `os.unlink(tmp_path.name,
+  dir_fd=parent_fd)`, gated on `os.unlink in os.supports_dir_fd` *checked
+  at runtime*, falling back to the prior path-based unlink when that
+  check is false — so an incorrect assumption about `os.unlink`'s support
+  (which, per this same correction cycle, cannot be ruled out) degrades to
+  the already-safe prior behavior rather than breaking anything. Tested by
+  outcome (strengthening the existing symlinked-destination test to assert
+  no stray temp file remains), not by mechanism, learning the exact lesson
+  of steps 1–4 above.
+- **`PR23-F42` (D4) — `verify_manifest`/`append_manifest`'s self-exclusion
+  compared candidate names as bare strings**, so a `--manifest-path`
+  differing only in case from the file actually on disk would not
+  self-exclude on a case-insensitive filesystem (Windows), misreporting
+  the manifest itself as an unmanifested artefact. Fixed with
+  `os.path.normcase`, the identity function on POSIX (no behavior change
+  there) and case-folding on Windows. **Proven directly on this session's
+  own Windows machine** (NTFS is naturally case-insensitive, no CI
+  dependency needed): fails against pre-fix source with the exact
+  predicted mismatch (`['a.json', 'manifest.json'] == ['a.json']`), passes
+  post-fix.
+
+**Re-raised — "pin every ancestor" against a second function.** Copilot's
+`4ed9f14` review raised the same class of finding as `PR23-F34` again,
+this time against `exp001_e4_analysis.py::_reject_configured_root_symlink`
+(checks only the configured root's own final component, not an ancestor
+like `DOCS/test_and_benchmark_results`). Declined for the identical
+reason already on record at `PR23-F34`: closing it fully requires walking
+every path component from a trusted anchor, disproportionate to a threat
+already requiring the local-write access this whole containment scheme
+assumes. Documented in `_reject_configured_root_symlink`'s own docstring,
+extending the `PR23-F34` ledger entry rather than opening a new one.
+
+### 16.1 What this correction cycle demonstrates, stated plainly
+
+Two of three attempts to close `PR23-F39`'s residual failed CI before the
+third held. Both failures were caught immediately by this repository's own
+required Linux CI gate — exactly the gate this audit's every prior
+platform-gated fix (`PR23-F30`, `PR23-F31`, `PR23-F35` region) said
+verification was deferred to. That gate worked as designed. The error was
+shipping an assumption about a specific platform's runtime behavior
+(`os.replace`'s `dir_fd` support) that this session could not verify
+before pushing, twice in a row — first the assumption itself, then a test
+built to prove it that broke a *different* unverifiable-here assumption
+(monkeypatch identity semantics against `os.supports_dir_fd`). The
+correction each time was to reduce the claim to what could actually be
+verified, not to keep guessing: `PR23-F39`'s final state makes a smaller
+claim than originally attempted (temp-file creation only, not the full
+rename), honestly documented as smaller, rather than a larger claim
+resting on unverified ground.
+
+**A third CI failure, on `df5a476`, for an unrelated reason: `PR23-F42`'s
+own regression test.** `test_append_manifest_self_excludes_case_insensitively`
+created `manifest.json`, then referred to it as `MANIFEST.JSON`, assuming
+both name the same physical file — true on Windows and default-configured
+macOS, **false on Linux ext4**, which is case-sensitive: there,
+`MANIFEST.JSON` is simply a different, nonexistent path, so
+`append_manifest` correctly (for that platform) found the real
+`manifest.json` as an unmanifested stray candidate and appended it,
+exactly reproducing the failure the fix itself was meant to prevent.
+`PR23-F42`'s production fix (`os.path.normcase`) was never wrong; the
+test's *own setup* assumed a filesystem property — case-folding — it
+never actually checked. Corrected in `c02e1d7` by probing the real
+filesystem directly (create the file, then check `Path("...
+DIFFERENTCASE").exists()`) and skipping cleanly where the two names are
+genuinely different files, rather than assuming platform behavior from
+`os.name` or any other indirect signal. This is the identical "verify, do
+not assume" lesson as the `os.replace`/`os.supports_dir_fd` failures
+above, now demonstrated a third time against a third distinct kind of
+platform-dependent behavior (`dir_fd` syscall support, monkeypatch
+identity semantics, filesystem case-folding) — three different mechanisms,
+one recurring root cause: an assumption this session's Windows machine
+structurally cannot verify, shipped without first finding a way to verify
+it by other means (documentation citation, direct probing, or accepting a
+narrower, provable claim), each time caught by the same CI gate this
+audit's methodology has repeatedly said was the actual authority for
+exactly this class of claim.
+
+### 16.2 Verification
+
+```text
+.venv\Scripts\python -m pytest tests/test_reproduce.py tests/test_exp001_e4_analysis.py -q
+  100 passed, 2 skipped
+.venv\Scripts\python -m ruff check tools/reproduce.py tests/test_reproduce.py exp001_e4_analysis.py
+  All checks passed!
+.venv\Scripts\python -m ruff format --check <same three files>
+  3 files already formatted
+.venv\Scripts\python -m mypy --strict tools/reproduce.py exp001_e4_analysis.py
+  Success: no issues found in 2 source files
+.venv\Scripts\python -m mypy tests/test_reproduce.py
+  Success: no issues found in 1 source file
+.venv\Scripts\python -m bandit -r tools/reproduce.py
+  No issues identified
+```
+
+Also re-verified directly against the real repository manifest:
+`reproduce.verify_manifest(reproduce.DEFAULT_RESULTS_DIR,
+reproduce.DEFAULT_MANIFEST)` still returns all 172 records with no error.
+
+**No regression to the published EXP-001 record**, re-verified after every
+commit in this correction cycle by re-running `run_analysis` to a scratch
+destination: `report-manifest.json` outputs and verdicts byte-identical to
+the committed record throughout.
+
+**CI, the actual authority here.** `reproduce` and all three ubuntu `test`
+legs — the checks this whole correction cycle is about — are the
+authoritative verification for the `dir_fd`/`os.replace`/`os.unlink`
+claims made in this section; local results above cover everything else.
+`df5a476` itself failed CI a third time, on `PR23-F42`'s own test — see
+above; `c02e1d7` is the head this section's verdict actually covers.
+
+**Delta re-audit date:** 2026-09-24 UTC — **Result:** CLEAN, CI-confirmed
+on `c02e1d7`. `reproduce` and all three ubuntu `test` legs — the checks
+that failed on `949e5e1`, `b9e3239`, and `df5a476` in turn — are green;
+every other required check (Windows ×3, macOS, `parity`, `audit`, `lint`,
+`security`, `Snyk Code`, `Secret Scan`, `governance`, `fmt`, `clippy` ×2,
+`test-strict`, `bench-smoke`, `docs`, CodeRabbit, Devin Review) passed on
+the same head. Only `gpu-cuda`/`gpu-wgpu` (which this round's changes do
+not touch) and the unversioned Windows leg were still completing when this
+was written, consistent with every prior round's timing. The one local
+failure this round, `test_does_not_corrupt_a_hard_linked_sibling` in a
+full-suite run on this session's own machine, reproduced clean in
+isolation immediately after and is not attributable to this round's
+changes — the same class of local flake recorded in §10.6 — and the same
+test already passed for real on every green Linux/Windows/macOS CI leg
+above. `PR23-F41` and `PR23-F42` fixed with regression tests proven against
+pre-fix source; the re-raised ancestor-symlink question declined, extending
+`PR23-F34`'s ledger entry to a second function; `PR23-F39` closed at a
+smaller, honestly-documented scope than first attempted. No new D1; no
+verdict, tolerance, or measured value changed; no regression to the
+published EXP-001 record; the real 172-record repository manifest still
+verifies.

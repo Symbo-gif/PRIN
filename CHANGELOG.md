@@ -585,6 +585,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     (up from 3, same already-accepted class); `exp001_e4_analysis.py` 1 LOW
     (unchanged); both test files 0.
 
+- **PR #23 Round 9 correction cycle — required CI broke three times in a
+  row on unverified platform assumptions, each caught by the gate and
+  corrected; CI-confirmed green on the third attempt (2026-09-24 UTC).**
+  Full account in `DOCS/audits/PR023-multi-review-audit.md` §16, written
+  up plainly rather than edited out of the history it corrects.
+  - `PR23-F39`'s fix assumed `os.replace` supports `dir_fd`-relative
+    operation wherever `os.open` does. Wrong: CI showed
+    `os.replace not in os.supports_dir_fd` on real Ubuntu/Python 3.12. The
+    production code's own fallback had already degraded safely — no write
+    was ever actually broken — only the test's assertion (that the dir_fd
+    branch must run) was wrong. Reverted the final swap to the
+    unconditional, plain-path `os.replace` Round 8's verified hard-link fix
+    already used.
+  - The replacement test broke CI a second time: spying on `os.open` to
+    verify descriptor reuse replaces the function object
+    `reproduce.py`'s own `os.open in os.supports_dir_fd` check compares
+    identity against, silently forcing the fallback path the test meant to
+    prove was *not* taken. Removed the mechanism-level assertion entirely
+    rather than attempt a third variant; replaced with a test that proves
+    the *outcome* a real descriptor leak would break (300 writes in one
+    process, no monkeypatching of `os`) instead of the internal mechanism.
+  - **`PR23-F41` (D3) — the cleanup-on-failure path re-resolved its target
+    by path string even with a pinned parent descriptor still open**,
+    so a symlink swapped into the parent mid-call could delete a
+    same-named file elsewhere. Fixed with a `dir_fd`-relative
+    `os.unlink`, gated on a runtime `os.unlink in os.supports_dir_fd`
+    check (not assumed this time) with a safe fallback.
+  - **`PR23-F42` (D4) — the manifest self-exclusion compared filenames as
+    bare strings**, so a `--manifest-path` differing only in case from the
+    on-disk file would not self-exclude on Windows, misreporting the
+    manifest as unmanifested. Fixed with `os.path.normcase`; proven
+    directly on this session's own Windows machine (no CI dependency
+    needed for this one) against pre-fix source.
+  - `PR23-F42`'s own regression test broke CI a third time: it assumed
+    `MANIFEST.JSON` and `manifest.json` name the same file, true on
+    Windows/macOS but false on case-sensitive Linux ext4, where they are
+    two unrelated files — exactly reproducing the bug the fix was meant to
+    prevent, for a reason unrelated to the fix itself. Corrected to probe
+    the real filesystem directly (create the file, check whether the
+    differently-cased path resolves to it) and skip cleanly where it does
+    not, rather than assume platform behavior. **CI-confirmed green on the
+    corrected head (`c02e1d7`): `reproduce` and all three ubuntu `test`
+    legs — the checks that failed three times in a row across this
+    correction cycle — pass, along with every other required check.**
+  - The "pin every ancestor" question was raised a second time, against a
+    different function (`exp001_e4_analysis.py`); declined again for the
+    same reason already on record at `PR23-F34`, extending that ledger
+    entry rather than opening a new one.
+  - Targeted suite 100 passed, 2 skipped; `ruff`, `ruff format --check`,
+    `mypy --strict`, and `bandit` all clean; the real 172-record repository
+    manifest still verifies; the E4 analysis re-run to a scratch
+    destination reproduces the committed record byte-for-byte throughout
+    every commit in this cycle.
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that
