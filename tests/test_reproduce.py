@@ -133,6 +133,17 @@ def test_append_manifest_self_excludes_case_insensitively(
     now, which is the identity function on POSIX (case-sensitive there, so
     this is a no-op change on Linux/macOS-with-a-case-sensitive-volume) and
     lowercases on Windows.
+
+    Whether ``MANIFEST.JSON`` and ``manifest.json`` actually name the same
+    file is a property of the *filesystem*, not of ``os.path.normcase``
+    (which this test does not call) — Linux ext4 is case-sensitive, so
+    they are two different, unrelated files there, and this test would be
+    exercising a scenario that cannot occur rather than the one it claims
+    to (caught by real CI failing this exact assertion on ubuntu after an
+    initial version assumed the filesystem behaviour instead of probing
+    it — the same "check, don't assume" lesson `PR23-F39`'s own correction
+    drew). Probed directly below; skips cleanly wherever the two names are
+    genuinely different files.
     """
     monkeypatch.setattr(reproduce, "ALLOWED_MANIFEST_ROOTS", (tmp_path.resolve(),))
     (tmp_path / "a.json").write_bytes(b"a")
@@ -140,6 +151,13 @@ def test_append_manifest_self_excludes_case_insensitively(
     reproduce.append_manifest(tmp_path, manifest_path)
 
     differently_cased = tmp_path / "MANIFEST.JSON"
+    if not differently_cased.exists():
+        pytest.skip(
+            "this filesystem is case-sensitive: MANIFEST.JSON and "
+            "manifest.json are different files here, so the scenario this "
+            "test exercises cannot occur"
+        )
+
     records = reproduce.append_manifest(tmp_path, differently_cased)
 
     assert [record.path for record in records] == ["a.json"]
