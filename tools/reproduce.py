@@ -542,7 +542,22 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
                 )
             os.replace(tmp_path, path)
         except BaseException:
-            tmp_path.unlink(missing_ok=True)
+            # dir_fd-relative when the same pinned descriptor used to
+            # create the temporary file is still available and os.unlink
+            # supports it (checked, not assumed — see PR23-F39's own
+            # correction above for what happens when that assumption goes
+            # unverified): a plain-path unlink here would re-resolve
+            # tmp_path's parent by string, so a symlink swapped into it
+            # during this call could delete a same-named file elsewhere
+            # instead of the temporary file this function actually created
+            # (independent review, PR #23 head `4ed9f14`).
+            if parent_fd is not None and os.unlink in os.supports_dir_fd:
+                try:
+                    os.unlink(tmp_path.name, dir_fd=parent_fd)
+                except FileNotFoundError:
+                    pass
+            else:
+                tmp_path.unlink(missing_ok=True)
             raise
     finally:
         if parent_fd is not None:
@@ -820,12 +835,19 @@ def append_manifest(
     # from `actual_paths` — never surfacing as "missing" or "unmanifested" —
     # instead of being rejected as non-regular below (CWE-59; independent
     # review, PR #23 head `e946a3c`). Mirrors :func:`verify_manifest`'s
-    # already-safe name-based self-exclusion.
+    # already-safe name-based self-exclusion. Compared via os.path.normcase,
+    # not a bare string, so a --manifest-path differing only in case from
+    # the file actually on disk still self-excludes correctly on a
+    # case-insensitive filesystem (Windows; a no-op comparison on POSIX,
+    # where normcase is the identity function) rather than being
+    # misreported as an unmanifested artefact (independent review, PR #23
+    # head `4ed9f14`).
     if destination.parent == results:
+        manifest_name = os.path.normcase(manifest_path.name)
         candidates = [
             candidate
             for candidate in candidates
-            if candidate.name != manifest_path.name
+            if os.path.normcase(candidate.name) != manifest_name
         ]
     for candidate in candidates:
         _reject_non_regular(candidate, "candidate artefact")
@@ -904,10 +926,11 @@ def verify_manifest(
     expected = {record.path for record in records}
     candidates = sorted(results.glob("*.json"))
     if manifest_path.resolve().parent == results:
+        manifest_name = os.path.normcase(manifest_path.name)
         candidates = [
             candidate
             for candidate in candidates
-            if candidate.name != manifest_path.name
+            if os.path.normcase(candidate.name) != manifest_name
         ]
     for candidate in candidates:
         _reject_non_regular(candidate, "candidate artefact")

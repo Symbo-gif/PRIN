@@ -1086,6 +1086,22 @@ def _reject_configured_root_symlink(path: Path, name: str) -> None:
     configured root is refused outright. A root that does not exist yet
     (``OUTPUT_ROOT`` is gitignored) is not a symlink and passes unchanged.
 
+    This checks only the configured root's own final path component, not
+    any ancestor: if a directory *above* it (for example
+    ``DOCS/test_and_benchmark_results``, an ancestor of ``OUTPUT_ROOT``)
+    were replaced with a symlink, ``path.is_symlink()`` here would still be
+    false while the later ``.resolve()`` call transparently followed it —
+    the same "immediate component only, not every ancestor" limitation
+    ``tools.reproduce._dir_relative_open`` documents, raised again here by
+    an independent review (PR #23 head `4ed9f14`) and declined for the same
+    reason: closing it fully would mean walking every path component from a
+    trusted checkout anchor, a disproportionate change for a threat that
+    already requires the same local-write access this analysis module's
+    whole containment scheme assumes throughout. See
+    ``DOCS/audits/PR023-multi-review-audit.md`` §15/§16 for the full
+    account (`PR23-F34`'s declined-findings ledger entry, extended to cover
+    this second occurrence).
+
     Args:
         path: The configured root, unresolved.
         name: Human-readable name of the root, for the failure message.

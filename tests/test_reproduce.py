@@ -118,6 +118,33 @@ def test_append_manifest_only_adds_new_immutable_records(
         reproduce.append_manifest(tmp_path, manifest)
 
 
+def test_append_manifest_self_excludes_case_insensitively(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Independent review (PR #23 head `4ed9f14`): the self-exclusion that
+    keeps the manifest out of its own candidate inventory compared
+    ``candidate.name != manifest_path.name`` as a bare string. On a
+    case-insensitive filesystem (Windows; and, in the default
+    configuration, macOS), a ``--manifest-path`` differing only in case
+    from the file actually on disk (``manifest_path.name`` reflects the
+    caller's input, not the stored casing — ``Path.name`` does no
+    filesystem lookup) would not self-exclude, misreporting the manifest
+    itself as an unmanifested artefact. Compared via ``os.path.normcase``
+    now, which is the identity function on POSIX (case-sensitive there, so
+    this is a no-op change on Linux/macOS-with-a-case-sensitive-volume) and
+    lowercases on Windows.
+    """
+    monkeypatch.setattr(reproduce, "ALLOWED_MANIFEST_ROOTS", (tmp_path.resolve(),))
+    (tmp_path / "a.json").write_bytes(b"a")
+    manifest_path = tmp_path / "manifest.json"
+    reproduce.append_manifest(tmp_path, manifest_path)
+
+    differently_cased = tmp_path / "MANIFEST.JSON"
+    records = reproduce.append_manifest(tmp_path, differently_cased)
+
+    assert [record.path for record in records] == ["a.json"]
+
+
 def test_append_manifest_confines_destination(tmp_path: Path) -> None:
     with pytest.raises(
         reproduce.ReproductionConfigurationError, match="outside allowed roots"
@@ -922,6 +949,19 @@ class TestWriteNoFollow:
                 link, b"attacker-controlled\n", "generated output"
             )
         assert outside.read_bytes() == b"original\n"
+        # Independent review (PR #23 head `4ed9f14`): the cleanup-on-failure
+        # path must remove the temporary file it created, through whichever
+        # mechanism the platform actually supports for it — checked here by
+        # outcome (nothing named after `link.json` is left behind), not by
+        # asserting which specific os.unlink variant ran, the same lesson
+        # `PR23-F39`'s own correction drew from asserting a mechanism this
+        # session could not verify.
+        leftover = [
+            entry
+            for entry in tmp_path.iterdir()
+            if entry.name.startswith(".link.json.tmp-")
+        ]
+        assert leftover == []
 
     def test_does_not_corrupt_a_hard_linked_sibling(self, tmp_path: Path) -> None:
         """Independent review (PR #23 head `d5f47d6`): a hard-linked
@@ -947,44 +987,23 @@ class TestWriteNoFollow:
         assert manifest_path.read_bytes() == b"new manifest content\n"
         assert frozen.read_bytes() == b"immutable original\n"
 
-    @_needs_dir_fd_support
-    def test_parent_descriptor_is_closed_after_a_successful_write(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    def test_repeated_writes_do_not_exhaust_file_descriptors(
+        self, tmp_path: Path
     ) -> None:
-        """The parent descriptor `_open_parent_dir_fd` pins for the
-        temporary file's creation (where the platform supports it) must be
-        closed once `write_no_follow` returns, not leaked. A prior attempt
-        to also reuse that same descriptor for the final `os.replace`
-        (`PR23-F39`) was reverted after CI showed `os.replace` does not
-        support `dir_fd`-relative operation on real Linux
-        (`os.replace not in os.supports_dir_fd` there, despite `os.open`
-        supporting it) — the final swap re-resolves `path` by string, same
-        as the Windows fallback. This pins what remains true regardless:
-        no descriptor leak from the part that does still use one.
+        """`_open_parent_dir_fd`'s descriptor (pinned for the temporary
+        file's creation, where the platform supports it) is closed in a
+        ``finally`` block in both `write_no_follow` and
+        `_dir_relative_open`. Rather than assert that mechanism directly —
+        spying on `os.open`/`os.close` breaks `reproduce.py`'s own
+        ``os.open in os.supports_dir_fd`` identity check, since a
+        monkeypatched replacement is a different function object than the
+        real one that set contains, silently forcing the very fallback
+        path a test meant to verify the opposite was exercising (caught in
+        this round's own `PR23-F39` correction cycle) — this proves the
+        *outcome* a leak would break instead: many writes in one process
+        do not exhaust the descriptor table.
         """
-        target = tmp_path / "out.json"
-        real_open = os.open
-        real_close = os.close
-        opened_dir_fds = 0
-        closed_count = 0
-
-        def _spy_open(
-            path: str | Path, flags: int, *args: object, **kwargs: object
-        ) -> int:
-            nonlocal opened_dir_fds
-            if kwargs.get("dir_fd") is None and flags & getattr(os, "O_DIRECTORY", 0):
-                opened_dir_fds += 1
-            return real_open(path, flags, *args, **kwargs)  # type: ignore[arg-type]
-
-        def _spy_close(fd: int) -> None:
-            nonlocal closed_count
-            closed_count += 1
-            real_close(fd)
-
-        monkeypatch.setattr(os, "open", _spy_open)
-        monkeypatch.setattr(os, "close", _spy_close)
-
-        reproduce.write_no_follow(target, b"payload\n", "generated output")
-
-        assert target.read_bytes() == b"payload\n"
-        assert closed_count >= opened_dir_fds > 0
+        for index in range(300):
+            target = tmp_path / f"out{index}.json"
+            reproduce.write_no_follow(target, b"payload\n", "generated output")
+            assert target.read_bytes() == b"payload\n"
