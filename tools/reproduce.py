@@ -21,6 +21,7 @@ import re
 import stat
 import sys
 import tempfile
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -399,7 +400,7 @@ def read_no_follow(path: Path, role: str) -> bytes:
 
 
 def write_no_follow(path: Path, data: bytes, role: str) -> None:
-    """Write bytes to a file, refusing to write through a symbolic link.
+    """Write bytes to a file, refusing to write through a symbolic link or a hard link.
 
     The write-side mirror of :func:`_open_no_follow`: ``Path.write_text`` and
     ``Path.write_bytes`` both follow a symbolic link at the destination, so a
@@ -407,20 +408,40 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
     against :data:`ALLOWED_MANIFEST_ROOTS`) but then wrote to it with a plain
     ``write_text`` call could have that write silently redirected to
     whatever the link points at if the destination were replaced with a
-    symlink between the containment check and this write (CWE-59). On POSIX,
-    ``O_CREAT | O_TRUNC | O_NOFOLLOW`` makes the ``open`` itself the check: it
-    fails with ``ELOOP`` if the final path component is an existing symlink,
-    and otherwise creates (or truncates) a regular file in one syscall.
-    :func:`_dir_relative_open` closes the same window for the *immediate
-    parent* directory too, where the platform supports it (see its own
-    docstring for why this does not extend to every ancestor). Windows has
-    no ``O_NOFOLLOW`` or ``dir_fd``-relative opens; there this falls back to
-    ``is_symlink()`` immediately before ``open()`` on the full path (see
-    :func:`_open_no_follow`). ``O_NONBLOCK`` (where defined) and a post-open
-    :func:`_reject_non_regular_fd` check additionally guard against a FIFO
-    swapped in for the destination, which would otherwise block this open
-    indefinitely (a pre-existing FIFO with no reader) instead of failing
-    closed.
+    symlink between the containment check and this write (CWE-59).
+
+    A no-follow *open* of ``path`` itself is not enough, though: a local
+    process can create ``path`` as a *hard link* to an unrelated existing
+    file — a genuine regular file, indistinguishable from any other by
+    every check above, since a hard link is not a symlink and has no
+    special file type of its own. Opening such a path with ``O_TRUNC`` and
+    writing to it modifies *every* name that inode has, silently corrupting
+    whatever else it is linked to (for example, a governed manifest
+    filename hard-linked to an unrelated frozen report; independent review,
+    PR #23 head `d5f47d6`). To close this, the bytes are instead written to
+    a freshly, exclusively created sibling file (``O_EXCL`` guarantees a
+    brand new inode, never an existing hard link) and then atomically
+    swapped into place with :func:`os.replace`, which repoints only
+    ``path``'s own directory entry — whatever else the old entry's inode
+    was linked to, if anything, is never opened, truncated, or touched.
+
+    On POSIX, ``O_CREAT | O_EXCL | O_NOFOLLOW`` makes the *temporary* file's
+    ``open`` itself the symlink check: it fails with ``ELOOP`` if the final
+    path component is an existing symlink (vanishingly unlikely for a fresh
+    unique name, but checked all the same), and otherwise creates a new
+    regular file in one syscall. :func:`_dir_relative_open` closes the same
+    window for the *immediate parent* directory too, where the platform
+    supports it (see its own docstring for why this does not extend to
+    every ancestor). Windows has no ``O_NOFOLLOW`` or ``dir_fd``-relative
+    opens; there this falls back to ``is_symlink()`` immediately before
+    ``open()`` on the full path (see :func:`_open_no_follow`). ``O_NONBLOCK``
+    (where defined) and a post-open :func:`_reject_non_regular_fd` check
+    additionally guard against a FIFO swapped in for the temporary name,
+    which would otherwise block this open indefinitely instead of failing
+    closed. ``path`` itself is checked for a symlink immediately before the
+    final swap, preserving this function's documented refusal — though
+    :func:`os.replace` never follows a trailing symlink on either side even
+    without that check, so this is belt and suspenders, not the sole guard.
 
     Args:
         path: Destination path, unresolved.
@@ -436,15 +457,16 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
     flags = (
         os.O_WRONLY
         | os.O_CREAT
-        | os.O_TRUNC
+        | os.O_EXCL
         | getattr(os, "O_NONBLOCK", 0)
         | getattr(os, "O_BINARY", 0)
     )
-    fd = _dir_relative_open(path, flags, 0o644, role)
+    tmp_path = path.with_name(f".{path.name}.tmp-{os.getpid()}-{uuid.uuid4().hex}")
+    fd = _dir_relative_open(tmp_path, flags, 0o644, role)
     if fd is None:
         if hasattr(os, "O_NOFOLLOW"):
             try:
-                fd = os.open(path, flags | os.O_NOFOLLOW, 0o644)
+                fd = os.open(tmp_path, flags | os.O_NOFOLLOW, 0o644)
             except OSError as error:
                 if error.errno == errno.ELOOP:
                     raise ManifestMismatchError(
@@ -453,15 +475,25 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
                     ) from error
                 raise
         else:
-            if path.is_symlink():
+            if tmp_path.is_symlink():
                 raise ManifestMismatchError(
                     f"{role} {path} is a symbolic link, not a regular file held "
                     "by the governed directory; refusing to write it"
                 )
-            fd = os.open(path, flags, 0o644)
-    _reject_non_regular_fd(fd, path, role)
-    with os.fdopen(fd, "wb") as stream:
-        stream.write(data)
+            fd = os.open(tmp_path, flags, 0o644)
+    try:
+        _reject_non_regular_fd(fd, tmp_path, role)
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(data)
+        if path.is_symlink():
+            raise ManifestMismatchError(
+                f"{role} {path} is a symbolic link, not a regular file held "
+                "by the governed directory; refusing to write it"
+            )
+        os.replace(tmp_path, path)
+    except BaseException:
+        tmp_path.unlink(missing_ok=True)
+        raise
 
 
 def _hash_fd(fd: int) -> str:

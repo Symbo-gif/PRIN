@@ -483,6 +483,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     scratch destination reproduces the committed record byte-for-byte. Snyk
     Code: 0 issues on `tools/reproduce.py` and its test file.
 
+- **PR #23 Round 8 — Copilot review of head `d5f47d6`; a hard-link
+  corruption bug (2026-09-24 UTC).** Both Round 7 fixes confirmed resolved.
+  Audited as `PR23-F37` in `DOCS/audits/PR023-multi-review-audit.md` §14.
+  Does not touch EXP-001's numerical/parity conclusions or the D1 flag.
+  - **`PR23-F37` (D2) — a hard-linked destination let a write silently
+    corrupt an unrelated file.** Every prior no-follow guard in this module
+    defends against a *symlink*; a **hard link** is a different thing
+    entirely — a second name for the same inode, indistinguishable from an
+    ordinary regular file by every check this module runs. A local process
+    could create a governed filename (for example
+    `report-manifest.json`) as a hard link to an unrelated frozen file (for
+    example `report.md`); `write_no_follow`'s in-place `O_TRUNC` open would
+    then overwrite both names' shared content. `write_no_follow` no longer
+    opens the destination in place: it writes to a freshly,
+    *exclusively*-created sibling file (`O_CREAT | O_EXCL`, which can never
+    land on an existing hard link) through the same no-follow/ancestor/FIFO
+    machinery every other open in this module uses, then atomically swaps
+    it into place with `os.replace` — which repoints only the destination's
+    own directory entry, never touching whatever else the old entry's inode
+    was linked to. The documented "refuses a symlinked destination"
+    contract is preserved with an explicit check immediately before the
+    swap.
+  - A second Copilot finding re-raised the already-considered "pin every
+    ancestor directory, not just the immediate parent" question from Round
+    7 (`PR23-F34`). Re-affirmed as declined, on the record: it would
+    require a breaking API change (threading a trusted-anchor parameter
+    through this module's entire public surface) to close a threat that
+    already requires the same local-write access this module's whole
+    threat model assumes. Not a false positive — declined as
+    disproportionate, the same governance pattern already used for
+    CodeRabbit's docstring-coverage nitpick (`PR23-F9`).
+  - 1 new regression test, proved against pre-fix source (temporarily
+    restoring the Round 7 committed file): a hard-linked "frozen" file's
+    content was overwritten by the fix's own test pre-fix, untouched
+    post-fix. Every pre-existing `write_no_follow` test passes unchanged
+    against the rewritten implementation. Targeted suite 97 passed, 2
+    skipped; full suite (`-m "not slow and not gpu"`) `3247 passed, 181
+    skipped, 48 deselected`, 0 failed; `ruff`, `ruff format --check`, `mypy
+    --strict`, and `bandit` all clean;
+    the real 172-record repository manifest still verifies; the E4 analysis
+    re-run to a scratch destination reproduces the committed record
+    byte-for-byte — confirming the atomic-replace rewrite is
+    output-identical to the in-place write it replaced. Snyk Code:
+    `tools/reproduce.py` now shows 3 LOW Path Traversal findings (up from
+    0) — the same structural false-positive class accepted every round
+    since Round 3 (a CLI argument reaching a path-write call without Snyk's
+    tracer recognizing the containment check earlier in the same
+    function), confirmed by inspection to be a new count of an
+    already-accepted class, not a new gap.
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that

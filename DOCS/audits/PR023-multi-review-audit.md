@@ -1839,6 +1839,178 @@ latter two with regression tests proven against pre-fix source. The carried
 Round 1 thread is re-confirmed stale for the third time running; no new D1;
 no verdict, tolerance, or measured value changed; no regression to the
 published EXP-001 record; the real 172-record repository manifest still
-verifies. `PR23-F36` is not closed until CI's ubuntu legs and `reproduce`
-job pass on this round's push — the local simulation reproduces and fixes
-the reported failure, but it is not the Linux kernel.
+verifies.
+
+**`PR23-F36` closure confirmed by CI, 2026-09-24 UTC.** All three ubuntu
+`test` legs and the `reproduce` job — the four checks that failed on
+`e946a3c` — passed on `d5f47d6`, on the real Linux kernel this session's
+Windows machine could not test directly. `test (macos-latest)` also passed;
+macOS is POSIX and exercises the same `_dir_relative_open`/`O_NONBLOCK`
+code paths as Linux. Every other required check passed as well.
+
+---
+
+## 14. Round 8 — Copilot review of head `d5f47d6`
+
+**Trigger:** Round 7's push was reviewed by Copilot (review `5300429743`).
+Both `PR23-F35` and `PR23-F34` (as documentation-precision, not a code
+defect — see §14.2) are confirmed resolved. Two new findings replaced them,
+one High-severity genuine defect (`PR23-F37`) and a re-raised instance of
+the already-considered ancestor-symlink question (§14.2). The carried
+Round 1 thread appeared again, unchanged, still marked outdated by GitHub.
+
+### 14.1 `PR23-F37` (D2) — a hard-linked destination let a write silently corrupt an unrelated file
+
+*Copilot, "Hard links allow manifest writes to overwrite frozen reports"
+(New, `exp001_e4_analysis.py:1213`, generalizing to every call site of
+`write_no_follow`).*
+
+**Valid, and a materially different bug class from every prior finding in
+this file.** Every no-follow guard added across Rounds 1–7 defends against
+a *symlink* — a distinct file type, detectable with `is_symlink()`/
+`O_NOFOLLOW`. A **hard link** is not a symlink: it is a second directory
+entry naming the *same inode* as an existing file, with no separate
+identity and no special file type — `stat.S_ISREG` is true for it, exactly
+as for any other regular file, and every check this module has ever run
+(`_reject_symlink`, `_reject_non_regular`, `_reject_non_regular_fd`) passes
+it without complaint. A local process able to create
+`RECORD_ROOT/report-manifest.json` as a hard link to `RECORD_ROOT/
+report.md` (`os.link(report_md, manifest_path)`, same filesystem, ordinary
+user permission — the same governed-CI/local-checkout access level every
+other finding in this file already assumes) would pass
+`_checked_manifest_destination`'s canonical-name check and every symlink
+guard `write_no_follow` runs, and the in-place `O_TRUNC` write would then
+overwrite `report.md`'s actual bytes too, since both names shared the same
+data. Reproduced and proven against pre-fix source (temporarily restoring
+the Round 7 committed `tools/reproduce.py`): a hard-linked sibling file's
+content was overwritten as soon as the linked destination was written.
+
+**Fix.** `write_no_follow` no longer opens `path` in place at all. It writes
+to a freshly, *exclusively* created sibling file (`O_CREAT | O_EXCL`, which
+can never open an existing hard link — it guarantees a brand-new inode or
+fails), through the same `_dir_relative_open`/`O_NOFOLLOW`/`O_NONBLOCK`/
+`_reject_non_regular_fd` machinery every other open in this module already
+uses, and then atomically swaps it into place with `os.replace(tmp_path,
+path)`. `os.replace` repoints only `path`'s own directory entry to the new
+inode; whatever else the old entry's inode was linked to, if anything, is
+never opened, truncated, or touched by this call. The function's documented
+"refuses to write through a symlinked destination" contract is preserved
+with an explicit `path.is_symlink()` check immediately before the swap
+(`os.replace` itself never follows a trailing symlink on either side, so
+this is belt-and-suspenders for the existing error message, not the sole
+guard against it). Any failure between temp-file creation and the swap
+cleans up the temp file rather than leaving it behind.
+
+**Regression test.** `TestWriteNoFollow::test_does_not_corrupt_a_hard_linked_sibling`
+hard-links a "frozen" file to a governed destination name, writes through
+the destination, and asserts the frozen file's bytes are untouched. Proved
+against pre-fix source (`git show d5f47d6:tools/reproduce.py`, restored
+temporarily): the frozen file's content became the new write's content —
+`assert frozen.read_bytes() == b"immutable original\n"` failed with
+`b'new manifest content\n' == b'immutable original\n'`, exactly the
+corruption described. Passes with the fix. Every pre-existing
+`write_no_follow` test (new-file, truncate-existing, symlinked-destination)
+still passes unchanged against the rewritten implementation.
+
+### 14.2 Re-raised — "Ancestor symlink replacement bypasses no-follow path protection" (Copilot, High, comment `4090442972`, citing `tools/reproduce.py:211/376/443`)
+
+**Not a new finding — the same structural pattern as `PR23-F34` (§13.1),
+re-flagged.** All three cited lines are the single `_dir_relative_open`
+mechanism and its two callers; nothing about that code changed between
+Round 7 and this review. `PR23-F34` already established, with the concrete
+`/safe/nested/run/file` example this comment repeats: `_dir_relative_open`
+closes the race for the *immediate* parent only, the docstrings now say so
+precisely (they did not, before Round 7's fix), and full ancestor-chain
+closure was considered and declined as disproportionate — it would require
+threading a "trusted anchor" parameter through this module's entire public
+surface (`_open_no_follow`, `write_no_follow`, `_dir_relative_open`,
+`verify_manifest`, `append_manifest`, `read_verified_no_follow`,
+`stat_size_and_hash_no_follow`, every caller in `exp001_e4_analysis.py`), a
+breaking API change, to close a threat that already requires the same
+local-write access this module's entire threat model assumes throughout —
+the identical governed-CI/local-checkout posture already invoked for the
+Windows fallback (§12.2), `_safe_temp_root` (§9.4), and now `PR23-F37`
+above. An automated line-level reviewer scanning code structure has no way
+to know a limitation was already deliberately documented rather than
+missed; re-affirming the same considered decision here, rather than
+re-litigating it, is this audit's own established practice for exactly this
+situation — the same one applied to CodeRabbit's docstring-coverage nitpick
+(`PR23-F9`, §6), declined once and re-affirmed when it recurred (§11.5).
+
+**Disposition: declined, re-affirmed, added to the ledger below. No code
+change.** If a future round finds a concrete, reproducible exploit of the
+grandparent-or-higher case against this repository's actual governed roots
+(not merely the general POSIX possibility, which is not in dispute), that
+would be new evidence changing this calculus and should reopen it as a
+fresh finding, not a repeat of this one.
+
+**Declined-findings ledger entry (extending §6's Round 1 table):**
+"Pin every ancestor directory component, not only the immediate parent, in
+`_dir_relative_open`" — raised by Copilot in Rounds 7 and 8 (`PR23-F34`
+context, and again here); declined both times with rationale above; not a
+false positive (the underlying POSIX fact is correct), declined as
+disproportionate engineering cost relative to this module's own stated
+threat model.
+
+### 14.3 Carried — "Manifest verification accepts symlinked files" (Copilot, High, comment `4084668748`, unchanged, GitHub-marked outdated)
+
+Same stale Round 1 thread as §12.1/§13.3. No new evidence; no code change.
+
+### 14.4 Verification
+
+```text
+.venv\Scripts\python -m pytest tests/test_reproduce.py tests/test_exp001_e4_analysis.py -q
+  97 passed, 2 skipped (the two dir_fd/FIFO-gated tests, unchanged from Round 6)
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -q
+  3247 passed, 181 skipped, 48 deselected in 501.65s (0 failed — the
+  wall-clock flake from Round 7's run did not recur)
+.venv\Scripts\python -m ruff check tools/reproduce.py tests/test_reproduce.py
+  All checks passed!
+.venv\Scripts\python -m ruff format --check tools/reproduce.py tests/test_reproduce.py
+  2 files already formatted
+.venv\Scripts\python -m mypy --strict tools/reproduce.py
+  Success: no issues found in 1 source file
+.venv\Scripts\python -m mypy tests/test_reproduce.py
+  Success: no issues found in 1 source file
+.venv\Scripts\python -m bandit -r tools/reproduce.py
+  No issues identified
+```
+
+Also re-verified directly against the real repository manifest:
+`reproduce.verify_manifest(reproduce.DEFAULT_RESULTS_DIR,
+reproduce.DEFAULT_MANIFEST)` still returns all 172 records with no error.
+
+**No regression to the published EXP-001 record**, re-verified after this
+round's edits by re-running `run_analysis` to a scratch destination:
+`report-manifest.json` outputs and verdicts byte-identical to the committed
+record; H1–H4 verdicts and the D1 flag unchanged. `write_outputs`/
+`write_report_manifest` both call the rewritten `write_no_follow`, so this
+also confirms the atomic-replace rewrite reproduces byte-for-byte identical
+output to the in-place write it replaced.
+
+**Security gates.** Local Snyk Code (CLI `1.1306.2`, org `symbo-gif`):
+`tools/reproduce.py` 3 issues (LOW, Path Traversal — new count, up from 0),
+`tests/test_reproduce.py` 0 issues. All 3 are the same structural
+false-positive class accepted every round since §9.10: a CLI argument
+reaching a path-write operation (now `os.replace`) without Snyk's
+control-flow-insensitive tracer recognizing the containment check
+(`ALLOWED_MANIFEST_ROOTS` inside `append_manifest`, or
+`_checked_manifest_destination`/`allowed_output_roots` in
+`exp001_e4_analysis.py`) that runs earlier in the same function before any
+write is reachable. Confirmed by inspection: `append_manifest`'s
+`ALLOWED_MANIFEST_ROOTS` check (line 685, unchanged this round) raises
+before `write_no_follow` can be reached from that path; the finding is not
+a new gap, only a new count because the rewrite added more call sites in
+the same already-accepted taint chain. No Snyk Open Source / `cargo audit`
+/ `pip-audit` run — no dependency files changed this round.
+
+**Delta re-audit date:** 2026-09-24 UTC — **Result:** CLEAN. `PR23-F37`
+(a genuine, materially new bug class — hard links, not symlinks) fixed
+with a regression test proven against pre-fix source. The re-raised
+ancestor-symlink finding declined again, on the record, for the reasons
+already given in `PR23-F34`; no new attack surface, no code change. The
+carried Round 1 thread re-confirmed stale for the fourth time running. No
+new D1; no verdict, tolerance, or measured value changed; no regression to
+the published EXP-001 record; the real 172-record repository manifest
+still verifies. CodeRabbit and Copilot are re-requested on this round's
+push per standard practice.

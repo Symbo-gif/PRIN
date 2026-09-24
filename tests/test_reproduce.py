@@ -922,3 +922,27 @@ class TestWriteNoFollow:
                 link, b"attacker-controlled\n", "generated output"
             )
         assert outside.read_bytes() == b"original\n"
+
+    def test_does_not_corrupt_a_hard_linked_sibling(self, tmp_path: Path) -> None:
+        """Independent review (PR #23 head `d5f47d6`): a hard-linked
+        destination is a genuine regular file, indistinguishable from any
+        other by every symlink/regular-file check above — a governed
+        filename hard-linked to an unrelated frozen file would pass all of
+        them. Writing to it *in place* (``O_TRUNC``) would silently corrupt
+        whatever else its inode is linked to, since a hard link has no
+        separate identity from the file it names. This is exactly what
+        ``write_no_follow``'s create-new-then-``os.replace`` strategy
+        closes: the frozen sibling must be untouched by a write through its
+        hard-linked name.
+        """
+        frozen = tmp_path / "frozen.md"
+        frozen.write_bytes(b"immutable original\n")
+        manifest_path = tmp_path / "report-manifest.json"
+        os.link(frozen, manifest_path)
+
+        reproduce.write_no_follow(
+            manifest_path, b"new manifest content\n", "manifest path"
+        )
+
+        assert manifest_path.read_bytes() == b"new manifest content\n"
+        assert frozen.read_bytes() == b"immutable original\n"
