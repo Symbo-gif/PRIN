@@ -948,40 +948,43 @@ class TestWriteNoFollow:
         assert frozen.read_bytes() == b"immutable original\n"
 
     @_needs_dir_fd_support
-    def test_final_swap_uses_the_pinned_parent_descriptor(
+    def test_parent_descriptor_is_closed_after_a_successful_write(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Independent review (PR #23 head `949e5e1`): the descriptor
-        pinned for the temporary file's ancestor-symlink protection must
-        still be the one used for the final :func:`os.replace`, not
-        discarded beforehand in favour of a path-string-based rename that
-        would re-resolve the parent and lose the guarantee — closing the
-        window at creation time is worthless if the swap that follows
-        reopens it. A live race is exactly what a single-threaded test
-        cannot reliably simulate; this instead pins the *call shape*
-        ``write_no_follow`` must use whenever a parent descriptor is
-        available: both the source and destination of the replace must go
-        through the same ``dir_fd``, not a plain path.
+        """The parent descriptor `_open_parent_dir_fd` pins for the
+        temporary file's creation (where the platform supports it) must be
+        closed once `write_no_follow` returns, not leaked. A prior attempt
+        to also reuse that same descriptor for the final `os.replace`
+        (`PR23-F39`) was reverted after CI showed `os.replace` does not
+        support `dir_fd`-relative operation on real Linux
+        (`os.replace not in os.supports_dir_fd` there, despite `os.open`
+        supporting it) — the final swap re-resolves `path` by string, same
+        as the Windows fallback. This pins what remains true regardless:
+        no descriptor leak from the part that does still use one.
         """
         target = tmp_path / "out.json"
-        real_replace = os.replace
-        calls: list[dict[str, int | None]] = []
+        real_open = os.open
+        real_close = os.close
+        opened_dir_fds = 0
+        closed_count = 0
 
-        def _spy_replace(
-            src: str | Path,
-            dst: str | Path,
-            *,
-            src_dir_fd: int | None = None,
-            dst_dir_fd: int | None = None,
-        ) -> None:
-            calls.append({"src_dir_fd": src_dir_fd, "dst_dir_fd": dst_dir_fd})
-            real_replace(src, dst, src_dir_fd=src_dir_fd, dst_dir_fd=dst_dir_fd)
+        def _spy_open(
+            path: str | Path, flags: int, *args: object, **kwargs: object
+        ) -> int:
+            nonlocal opened_dir_fds
+            if kwargs.get("dir_fd") is None and flags & getattr(os, "O_DIRECTORY", 0):
+                opened_dir_fds += 1
+            return real_open(path, flags, *args, **kwargs)  # type: ignore[arg-type]
 
-        monkeypatch.setattr(os, "replace", _spy_replace)
+        def _spy_close(fd: int) -> None:
+            nonlocal closed_count
+            closed_count += 1
+            real_close(fd)
+
+        monkeypatch.setattr(os, "open", _spy_open)
+        monkeypatch.setattr(os, "close", _spy_close)
 
         reproduce.write_no_follow(target, b"payload\n", "generated output")
 
         assert target.read_bytes() == b"payload\n"
-        assert len(calls) == 1
-        assert calls[0]["src_dir_fd"] is not None
-        assert calls[0]["src_dir_fd"] == calls[0]["dst_dir_fd"]
+        assert closed_count >= opened_dir_fds > 0

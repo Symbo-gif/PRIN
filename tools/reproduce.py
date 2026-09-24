@@ -460,26 +460,25 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
     regular file in one syscall. :func:`_open_parent_dir_fd` closes the same
     window for the *immediate parent* directory too, where the platform
     supports it (see its own docstring for why this does not extend to
-    every ancestor) — and, unlike a plain call through
-    :func:`_dir_relative_open`, the descriptor it returns is kept open here
-    across *both* the temporary file's creation *and* the final
-    :func:`os.replace`, so the pinned-parent guarantee is not lost the
-    moment the temporary file is closed: a symlink swapped into the parent
-    between those two steps still cannot redirect the rename, because the
-    rename is performed relative to the same descriptor, not by
-    re-resolving the path string (independent review, PR #23 head
-    `949e5e1`, closing the residual left when this function was first
-    rewritten at head `d5f47d6`). Windows has no ``O_NOFOLLOW`` or
-    ``dir_fd``-relative opens; there this falls back to ``is_symlink()``
-    immediately before ``open()`` on the full path (see
-    :func:`_open_no_follow`), and the final swap re-resolves ``path`` by
-    string, the same narrowing-only posture already documented for every
-    other Windows fallback in this module. ``O_NONBLOCK`` (where defined)
-    and a post-open :func:`_reject_non_regular_fd` check additionally guard
-    against a FIFO swapped in for the temporary name, which would otherwise
-    block this open indefinitely instead of failing closed. ``path`` itself
-    is checked for a symlink immediately before the final swap, preserving
-    this function's documented refusal — though :func:`os.replace` never
+    every ancestor) — for the temporary file's creation only. The final
+    :func:`os.replace` re-resolves ``path``'s parent by string, the same
+    narrowing-only posture already documented for the Windows fallback
+    below: on real Linux CI, ``os.replace`` does not support
+    ``dir_fd``-relative operation (confirmed by ``os.replace not in
+    os.supports_dir_fd``, at runtime, despite ``os.open`` supporting it) —
+    a ``dir_fd``-relative attempt at this rename was tried and reverted
+    after failing on that evidence rather than shipped on an unverified
+    assumption (independent review, PR #23 head `949e5e1`; reverted at
+    head `4ed9f14` after CI disproved the assumption; see the audit for the
+    full account). Windows has no ``O_NOFOLLOW`` or ``dir_fd``-relative
+    opens either; there this falls back to ``is_symlink()`` immediately
+    before ``open()`` on the full path (see :func:`_open_no_follow`).
+    ``O_NONBLOCK`` (where defined) and a post-open
+    :func:`_reject_non_regular_fd` check additionally guard against a FIFO
+    swapped in for the temporary name, which would otherwise block this
+    open indefinitely instead of failing closed. ``path`` itself is checked
+    for a symlink immediately before the final swap, preserving this
+    function's documented refusal — though :func:`os.replace` never
     follows a trailing symlink on either side even without that check, so
     this is belt and suspenders, not the sole guard.
 
@@ -541,15 +540,7 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
                     f"{role} {path} is a symbolic link, not a regular file held "
                     "by the governed directory; refusing to write it"
                 )
-            if parent_fd is not None and os.replace in os.supports_dir_fd:
-                os.replace(
-                    tmp_path.name,
-                    path.name,
-                    src_dir_fd=parent_fd,
-                    dst_dir_fd=parent_fd,
-                )
-            else:
-                os.replace(tmp_path, path)
+            os.replace(tmp_path, path)
         except BaseException:
             tmp_path.unlink(missing_ok=True)
             raise
