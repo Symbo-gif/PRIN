@@ -1247,7 +1247,7 @@ reopening it for its integrity fields would raise `FileNotFoundError` rather
 than silently succeeding — the contract is pinned by construction, not by a
 global monkeypatch. This is possible because the accompanying `PR23-F28` fix
 (§11.3) removes the reopen entirely: `write_report_manifest` now takes
-pre-computed `(path, bytes, sha256)` tuples and never touches the
+pre-computed `list[GeneratedOutput]` records and never touches the
 filesystem for them.
 
 **Regression test.** `TestReportManifestIntegrity::test_write_report_manifest_never_reads_its_output_paths`
@@ -1430,8 +1430,203 @@ this round.
 through `PR23-F29` FIXED with regression tests; the Windows required-check
 blocker (`PR23-F26`) is structural (a test defect, not a production defect)
 and closed by removing the offending monkeypatch rather than narrowing it,
-per all three reviewers' recommendation; no D1; no verdict, tolerance, or
-measured value changed; no regression to the published EXP-001 record.
+per all three reviewers' recommendation; **no new D1 finding raised by this
+audit round** (the campaign's existing EXP-001 D1 flag, raised at E4 by
+H1/H2a `REFUTED`, is untouched by any finding in this round); no verdict,
+tolerance, or measured value changed; no regression to the published EXP-001
+record.
 CodeRabbit and Copilot are re-requested on this round's push per standard
 practice; their results are the next input, not a precondition already
 folded into this report.
+
+---
+
+## 12. Round 6 — Copilot and CodeRabbit review of head `2264771`
+
+**Trigger:** Round 5's push (`2264771`) was reviewed by Copilot (review
+`5299455964`) and CodeRabbit (review `5299492692` plus its PR comment).
+Copilot: 3 open findings (2 High, 1 Medium) — 1 carried from Round 1, 2 new
+— and confirmed 3 prior findings (the H2a self-referential minimum, the
+non-regular-manifest rejection, the symlink-specific output-integrity fix)
+resolved. CodeRabbit: 2 findings, both precision issues in this audit
+document's own prose, not code defects.
+
+**Tooling instruction.** The task for this round asked that z3, Wolfram, and
+Lean4 be used where beneficial in validating findings. `lean`/`lake` and
+`wolframscript` are available in this environment; `z3` (Python package and
+binary) is not installed. None of the three were a fit for this round's two
+substantive findings: both are POSIX syscall-semantics facts (`open(2)`'s
+`O_NOFOLLOW` scope, `O_NONBLOCK` behavior on regular files vs. FIFOs per
+`fifo(7)`) — documented, not propositions in mathematical doubt that a
+solver or proof assistant would add rigor to beyond the citation itself.
+There was no new numeric or statistical claim this round either (Round 5
+already carried SWE-2/Devin's independent Wolfram-Language recomputation of
+the H2b bootstrap statistics). Recorded here rather than silently dropped.
+
+### 12.1 Carried — "Manifest verification accepts symlinked files" (Copilot, High, comment `4084668748`, not tagged "New")
+
+**Stale, re-confirmed.** The same GitHub discussion thread as the original
+`PR23-F1` (Round 1), carried without a fresh "New" tag through Rounds 2–5
+(§8.4). Re-derived fresh against `2264771`: `verify_manifest`
+(`tools/reproduce.py` lines 612–669) calls `_reject_non_regular` on the
+manifest and every `*.json` candidate, `_reject_symlink` on each manifested
+artefact, and `_verify_size_and_hash_no_follow` (built on
+`_open_no_follow`'s no-follow open) for the digest — no plain
+`Path.stat()`/`read_text()`/`is_file()` anywhere in the path. The comment's
+premise — "the campaign's closure validator explicitly rejects these links,
+but this analysis bypasses that validator" — conflates `verify_manifest`
+with a *different* function
+(`benchmarks/campaign/exp001_driver.py::check_run_complete`, cited only as a
+discipline `_reject_symlink`'s own docstring says this module *mirrors*);
+using an independently no-follow-hardened equivalent is not a bypass. No
+code change.
+
+### 12.2 `PR23-F30` (D2) — an ancestor symlink could redirect a no-follow open outside the checked root
+
+*Copilot, "Ancestor symlink replacement bypasses write containment" (New,
+`tools/reproduce.py:286`, anchored on `write_no_follow` but identical in
+`_open_no_follow`, the shared primitive behind every read path).*
+
+`O_NOFOLLOW` refuses a symlink only at a pathname's *final* component
+(POSIX `open(2)`); it does not stop a concurrent replacement of an
+*ancestor* directory — for example the governed `output_dir` itself —
+with a symlink between an earlier resolve-and-contain check
+(`_checked_destination`/`allowed_output_roots`) and the actual `os.open()`
+call. The final filename remains a plain, non-symlinked name throughout, so
+the existing guard never fires while the open is silently redirected
+outside the checked root (CWE-59). This applied to every caller of
+`_open_no_follow`/`write_no_follow` — `read_no_follow`,
+`stat_size_and_hash_no_follow`, `_verify_size_and_hash_no_follow`,
+`read_verified_no_follow`, `verify_manifest`, `append_manifest`, and every
+write in `exp001_e4_analysis.py` — not only the write-side line Copilot's
+comment happens to anchor on.
+
+**Fix, confirmed with the maintainer as the stronger of two options**
+(narrow-only pre-open re-check vs. a `dir_fd`-based close): new
+`_dir_relative_open(path, flags, mode, role) -> int | None` opens `path`'s
+immediate parent directory as a descriptor (`O_DIRECTORY | O_NOFOLLOW`),
+then opens the final component relative to that descriptor
+(`dir_fd=parent_fd`). A file descriptor pins the directory inode it was
+opened against; a later replacement of the path string's parent with a
+symlink cannot redirect an open already performed relative to that
+descriptor — this closes the window completely on POSIX, rather than only
+narrowing it, and as a side effect also rejects a parent that is *already* a
+symlink at call time. Used from both `_open_no_follow` and `write_no_follow`,
+with a `None` return (platform doesn't support `dir_fd`-relative opens —
+Windows) falling back to each function's existing, already-documented
+`O_NOFOLLOW`-then-`is_symlink()` behavior, unchanged.
+
+**Validation, stated honestly.** This session's machine (`win32`) has none
+of `os.supports_dir_fd` for `os.open`, `os.O_DIRECTORY`, or `os.O_NOFOLLOW`
+(checked directly: all `False`). The POSIX branch cannot be exercised here.
+`tests/test_reproduce.py::TestOpenNoFollow::test_symlinked_parent_directory_is_rejected_for_reads`
+proves the fix (symlink an ancestor, confirm `read_no_follow` now raises
+`ManifestMismatchError` instead of reading through it) but is gated
+`@_needs_dir_fd_support` — it **skips on this machine** and will run for
+real on this repository's Linux CI legs, the same evidence-deferral pattern
+already used here for DirectML/CUDA-gated tests
+(`tests/_env.py::directml_executes`, `DV-030`). A separate,
+platform-adaptive test,
+`test_dir_relative_open_reflects_platform_support`, runs everywhere
+(including here) and pins the guard itself — asserting `None` on a platform
+without `dir_fd` support, or a working descriptor when it is supported —
+so a future accidental weakening of that guard would fail immediately
+rather than silently defeating the POSIX closure without any locally
+visible signal.
+
+### 12.3 `PR23-F31` (D3) — a check-then-open race could swap a candidate for a FIFO and hang instead of failing closed
+
+*Copilot, "FIFO race can block manifest verification" (New,
+`tools/reproduce.py:396`).*
+
+`_reject_non_regular` is a fast pre-check, not atomic with the open that
+follows it: a candidate could be swapped for a FIFO after the check and
+before `_open_no_follow`'s `os.open(..., O_RDONLY)`. Opening a FIFO for
+reading with no writer present blocks indefinitely on POSIX (`fifo(7)`),
+turning what should be a fail-closed rejection into a hang. The write side
+has the symmetric risk (`O_WRONLY` on a FIFO with no reader also blocks,
+absent `O_NONBLOCK`).
+
+**Fix.** `os.O_NONBLOCK` (via `getattr(os, "O_NONBLOCK", 0)`, a no-op where
+undefined, i.e. Windows) is added to both the read flags in
+`_open_no_follow` and the write flags in `write_no_follow`. Per Linux
+`open(2)`, `O_NONBLOCK` "has no effect for regular files" — safe for the
+overwhelming-majority legitimate case — but on a FIFO it makes the open
+return immediately instead of hanging. A new shared post-open check,
+`_reject_non_regular_fd(fd, path, role)`, `fstat`s the descriptor (whichever
+branch produced it: `dir_fd`, `O_NOFOLLOW`, or the Windows fallback) and
+rejects — closing the descriptor — anything that isn't `stat.S_ISREG`,
+catching a FIFO (or other special file) that slipped past the pre-check no
+matter which open branch handled it.
+
+**Validation, stated honestly.** `os.mkfifo` and `O_NONBLOCK` don't exist on
+Windows either, so the hang-prevention itself can't be locally reproduced
+here.
+`tests/test_reproduce.py::TestOpenNoFollow::test_fifo_candidate_does_not_hang_and_is_rejected`
+is gated `@_needs_fifo_support` — it **skips on this machine**, and will run
+for real on the Linux CI legs. The regular-file case (the overwhelming
+majority path) is exercised by every pre-existing read/write test, all of
+which still pass with the new flags and post-open check in place.
+
+### 12.4 `PR23-F32`/`PR23-F33` (D4) — audit-document wording precision
+
+*CodeRabbit, both against this document, not against any source file.*
+
+- §11.1 described `write_report_manifest`'s input as "pre-computed `(path,
+  bytes, sha256)` tuples"; the actual type is `list[GeneratedOutput]` (a
+  frozen dataclass, not a bare tuple), matching §11.3's own wording. Fixed.
+- The Round 5 verdict line's bare "no D1" could be misread as saying the
+  campaign's *existing* D1 flag (raised at E4 by H1/H2a `REFUTED`) was
+  cleared by that round's fixes, rather than "no *new* D1 finding was raised
+  by that audit round." Reworded for precision; every round including this
+  one leaves that flag exactly as EXP-001's report issued it.
+
+### 12.5 Verification
+
+```text
+.venv\Scripts\python -m pytest tests/test_reproduce.py tests/test_exp001_e4_analysis.py -q
+  93 passed, 2 skipped (the two dir_fd/FIFO-gated tests, by design — see §12.2/§12.3)
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -q
+  3243 passed, 181 skipped, 48 deselected in 428.36s (delta vs. Round 5's
+  3242/179/48: +1 passed from the platform-adaptive test, +2 skipped from
+  the two dir_fd/FIFO-gated tests — exactly the expected shape, 0 failed)
+.venv\Scripts\python -m ruff check tools/reproduce.py tests/test_reproduce.py
+  All checks passed!
+.venv\Scripts\python -m ruff format --check tools/reproduce.py tests/test_reproduce.py
+  2 files already formatted
+.venv\Scripts\python -m mypy --strict tools/reproduce.py
+  Success: no issues found in 1 source file
+.venv\Scripts\python -m mypy tests/test_reproduce.py
+  Success: no issues found in 1 source file
+.venv\Scripts\python -m bandit -r tools/reproduce.py
+  No issues identified
+```
+
+**No regression to the published EXP-001 record**, re-verified after this
+round's edits by re-running `run_analysis` to a scratch destination:
+`report-manifest.json` outputs and verdicts byte-identical to the committed
+record; H1–H4 verdicts and the D1 flag unchanged.
+
+**Security gates.** Local Snyk Code (CLI `1.1306.2`, org `symbo-gif`):
+`tools/reproduce.py` 0 issues; `tests/test_reproduce.py` 0 issues. No Snyk
+Open Source / `cargo audit` / `pip-audit` run — no dependency files changed
+this round.
+
+**What is, and is not, locally verified this round.** The two new
+platform-gated tests (`PR23-F30`, `PR23-F31`) skip on this Windows
+development machine by design and are confirmed to skip (not silently pass)
+rather than claimed as tested; their actual execution — proving the
+`dir_fd` closure and the FIFO non-blocking rejection for real — is deferred
+to this repository's Linux CI legs, consistent with `CLAUDE.md`'s "do not
+claim a scan or test passed when it wasn't run" rule. Everything else in
+this section (the Windows fallback paths, the regular-file case, the
+carried-finding re-derivation, the doc wording fixes, and the full local
+test/lint/type/security suite) is locally verified as shown above.
+
+**Delta re-audit date:** 2026-09-24 UTC — **Result:** CLEAN, with two
+findings' closure evidence deferred to CI by platform necessity (stated
+above, not concealed). `PR23-F30` and `PR23-F31` FIXED with regression
+tests; the carried Round 1 thread re-confirmed stale; both CodeRabbit
+wording issues fixed; no new D1; no verdict, tolerance, or measured value
+changed; no regression to the published EXP-001 record. CodeRabbit and
+Copilot are re-requested on this round's push per standard practice.

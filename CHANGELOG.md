@@ -377,6 +377,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `exp001_e4_analysis.py` is unchanged and confirmed identical against the
     pre-round baseline.
 
+- **PR #23 Round 6 — Copilot and CodeRabbit review of head `2264771`; an
+  ancestor-symlink gap and a FIFO hang risk (2026-09-24 UTC).** Audited as
+  `PR23-F30`/`PR23-F31` in `DOCS/audits/PR023-multi-review-audit.md` §12,
+  plus two audit-document wording fixes and a re-confirmation that Copilot's
+  carried "manifest verification accepts symlinked files" thread is the same
+  stale Round 1 discussion, already fixed. Neither substantive finding
+  touches EXP-001's numerical/parity conclusions or the D1 flag.
+  - **`PR23-F30` (D2) — `O_NOFOLLOW` doesn't stop a symlinked *ancestor*
+    directory from being followed, only the final path component.** A
+    concurrent replacement of a governed directory (e.g. `output_dir`) with
+    a symlink, between an earlier containment check and the actual open,
+    could redirect every read/write in `tools/reproduce.py` outside the
+    checked root while the final filename stayed a plain, non-symlinked
+    name. New `_dir_relative_open` pins the immediate parent directory as a
+    descriptor before opening the final component — a descriptor is immune
+    to a later replacement of the path string that named it — closing the
+    window on POSIX; Windows (no `dir_fd`-relative opens) keeps its existing
+    narrowing-only fallback, unchanged. Confirmed with the maintainer as the
+    stronger of two considered fixes.
+  - **`PR23-F31` (D3) — a check-then-open race could swap a manifest
+    candidate for a FIFO and hang instead of failing closed.** Opening a
+    FIFO for reading with no writer present blocks indefinitely on POSIX.
+    `O_NONBLOCK` (a no-op on regular files) is now added to both the read
+    and write open flags, paired with a new post-open
+    `_reject_non_regular_fd` check that rejects anything that isn't a
+    regular file regardless of which open branch produced the descriptor.
+  - Both fixes are implemented in the two shared primitives
+    (`_open_no_follow`, `write_no_follow`) that every read/write in this
+    module goes through, so every caller inherits them without a signature
+    change. **Their platform-specific regression tests skip on this
+    session's Windows machine by design** (no `dir_fd`/`O_NOFOLLOW`/`mkfifo`
+    support here) and will run for real on this repository's Linux CI legs
+    — the same evidence-deferral pattern already used for
+    DirectML/CUDA-gated tests. This is stated plainly rather than claimed as
+    locally verified; everything else (the Windows fallback paths, the
+    regular-file case, lint/type/security gates, and the full local test
+    suite) is locally verified.
+  - 4 new tests (1 platform-adaptive, running everywhere; 2 skip-gated for
+    Linux CI; regression coverage for both fixes). Targeted suite 93 passed,
+    2 skipped (by design); full suite (`-m "not slow and not gpu"`) `3243
+    passed, 181 skipped, 48 deselected` — exactly Round 5's baseline plus
+    the expected +1 passed / +2 skipped from this round's new tests, 0
+    failed; `ruff`, `ruff format --check`, `mypy --strict`, and `bandit` all
+    clean; the E4 analysis re-run to a scratch destination reproduces the
+    committed record byte-for-byte. Snyk Code: 0 issues on
+    `tools/reproduce.py` and its test file.
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that

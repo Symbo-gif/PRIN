@@ -18,6 +18,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 import sys
 import tempfile
 from dataclasses import dataclass
@@ -186,20 +187,128 @@ def _reject_non_regular(path: Path, role: str) -> None:
         )
 
 
+def _dir_relative_open(path: Path, flags: int, mode: int, role: str) -> int | None:
+    """Open ``path``'s final component relative to a pinned parent descriptor.
+
+    ``O_NOFOLLOW`` on ``path`` itself only refuses a symlink at the *final*
+    path component (POSIX ``open(2)``): it does not stop a concurrent
+    replacement of an *ancestor* directory (for example the governed
+    ``output_dir`` itself) with a symlink between an earlier
+    resolve-and-contain check and this open, which would silently redirect
+    the open outside the checked root while the final filename remains a
+    plain, non-symlinked name (CWE-59; independent review, PR #23 head
+    `2264771`). Opening the immediate parent directory as a descriptor pins
+    that exact directory inode: a later replacement of the path string's
+    parent cannot repoint an open performed relative to that descriptor,
+    closing the window completely rather than narrowing it. As a side
+    effect this also rejects a parent that is *already* a symlink at call
+    time, not only one swapped in mid-race.
+
+    Only attempted where the platform supports it (POSIX with
+    ``dir_fd``-relative :func:`os.open` and ``O_DIRECTORY``); returns
+    ``None`` on Windows so the caller falls back to its existing
+    final-component-only guarantee.
+
+    Args:
+        path: Candidate manifest, artefact, or destination path, unresolved.
+        flags: Open flags for the final component. ``O_NOFOLLOW`` is added
+            here; the caller must not include it.
+        mode: Permission bits, used only when ``flags`` includes ``O_CREAT``.
+        role: Human-readable role used in the failure message.
+
+    Returns:
+        An open file descriptor for ``path``, or ``None`` if this platform
+        does not support ``dir_fd``-relative opens.
+
+    Raises:
+        ManifestMismatchError: If the parent directory or ``path`` itself is
+            a symbolic link.
+        OSError: If the parent directory cannot be opened, or the file
+            cannot be opened/created.
+    """
+    if (
+        os.open not in os.supports_dir_fd
+        or not hasattr(os, "O_DIRECTORY")
+        or not hasattr(os, "O_NOFOLLOW")
+    ):
+        return None
+    parent = path.parent
+    no_follow = getattr(os, "O_NOFOLLOW", 0)
+    dir_flags = os.O_RDONLY | os.O_DIRECTORY | no_follow
+    try:
+        parent_fd = os.open(parent, dir_flags)
+    except OSError as error:
+        if error.errno == errno.ELOOP:
+            raise ManifestMismatchError(
+                f"{role} {path} has a symbolic link ancestor directory "
+                f"({parent}); refusing to open it"
+            ) from error
+        raise
+    try:
+        try:
+            return os.open(path.name, flags | no_follow, mode, dir_fd=parent_fd)
+        except OSError as error:
+            if error.errno == errno.ELOOP:
+                raise ManifestMismatchError(
+                    f"{role} {path} is a symbolic link, not a regular file "
+                    "held by the governed directory; refusing to open it"
+                ) from error
+            raise
+    finally:
+        os.close(parent_fd)
+
+
+def _reject_non_regular_fd(fd: int, path: Path, role: str) -> None:
+    """Refuse an already-open descriptor that is not a regular file.
+
+    A check-then-open race can swap a candidate for a FIFO (or another
+    special file) after :func:`_reject_non_regular`'s pre-check and before
+    the open that follows it; opening a FIFO for reading with no writer
+    present (or for writing with no reader) blocks indefinitely on POSIX
+    (``fifo(7)``), turning a fail-closed verification into a hang instead of
+    a clean rejection (independent review, PR #23 head `2264771`). Paired
+    with ``O_NONBLOCK`` on the open itself (a no-op on a regular file, but
+    what prevents that hang on a FIFO), this closes the race for good:
+    whatever the open returned, this checks what it actually is before the
+    caller uses it.
+
+    Args:
+        fd: An already-open file descriptor.
+        path: The path that was opened, for the failure message.
+        role: Human-readable role used in the failure message.
+
+    Raises:
+        ManifestMismatchError: If the descriptor is not a regular file. The
+            descriptor is closed before raising.
+    """
+    if not stat.S_ISREG(os.fstat(fd).st_mode):
+        os.close(fd)
+        raise ManifestMismatchError(
+            f"{role} {path} is not a regular file (a FIFO, device, or other "
+            "special file); refusing to use it"
+        )
+
+
 def _open_no_follow(path: Path, role: str) -> int:
     """Open a file read-only, refusing a symbolic link at the ``open`` itself.
 
     ``_reject_symlink`` is a fast pre-check; on its own it leaves a
     check-then-use window in which a concurrent writer can replace a regular
     file with a symlink between the check and a later ``stat()``/``open()``
-    (TOCTOU, still CWE-59). On POSIX, ``O_NOFOLLOW`` closes that window: the
-    ``open`` syscall itself fails with ``ELOOP`` if the final path component
-    is a symbolic link, so there is no separate moment at which the check has
-    passed but the open has not yet happened. Windows does not define
-    ``O_NOFOLLOW``; there this falls back to ``is_symlink()`` immediately
-    before ``open()``, which narrows but does not close the window — the
-    repository's own concurrent-writer threat here is a governed CI/local
-    checkout, not an adversarial remote filesystem.
+    (TOCTOU, still CWE-59). On POSIX, ``O_NOFOLLOW`` closes that window for
+    the final path component: the ``open`` syscall itself fails with
+    ``ELOOP`` if the final path component is a symbolic link, so there is no
+    separate moment at which the check has passed but the open has not yet
+    happened. :func:`_dir_relative_open` closes the same window for the
+    *parent* directory too, where the platform supports it. Windows does not
+    define ``O_NOFOLLOW`` or ``dir_fd``-relative opens; there this falls
+    back to ``is_symlink()`` immediately before ``open()`` on the full path,
+    which narrows but does not close the window — the repository's own
+    concurrent-writer threat here is a governed CI/local checkout, not an
+    adversarial remote filesystem. ``O_NONBLOCK`` (where defined) and a
+    post-open :func:`_reject_non_regular_fd` check additionally guard
+    against a FIFO swapped in for the candidate, which would otherwise block
+    this open indefinitely instead of failing closed.
 
     Args:
         path: Candidate manifest or artefact path, unresolved.
@@ -209,25 +318,32 @@ def _open_no_follow(path: Path, role: str) -> int:
         An open read-only file descriptor; the caller owns it.
 
     Raises:
-        ManifestMismatchError: If ``path`` is a symbolic link.
+        ManifestMismatchError: If ``path`` (or an ancestor directory, where
+            supported) is a symbolic link, or the opened descriptor is not a
+            regular file.
     """
-    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
-    if hasattr(os, "O_NOFOLLOW"):
-        try:
-            return os.open(path, flags | os.O_NOFOLLOW)
-        except OSError as error:
-            if error.errno == errno.ELOOP:
+    flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0)
+    fd = _dir_relative_open(path, flags, 0, role)
+    if fd is None:
+        if hasattr(os, "O_NOFOLLOW"):
+            try:
+                fd = os.open(path, flags | os.O_NOFOLLOW)
+            except OSError as error:
+                if error.errno == errno.ELOOP:
+                    raise ManifestMismatchError(
+                        f"{role} {path} is a symbolic link, not a regular file "
+                        "held by the governed directory; refusing to verify it"
+                    ) from error
+                raise
+        else:
+            if path.is_symlink():
                 raise ManifestMismatchError(
-                    f"{role} {path} is a symbolic link, not a regular file "
-                    "held by the governed directory; refusing to verify it"
-                ) from error
-            raise
-    if path.is_symlink():
-        raise ManifestMismatchError(
-            f"{role} {path} is a symbolic link, not a regular file held by the "
-            "governed directory; refusing to verify it"
-        )
-    return os.open(path, flags)
+                    f"{role} {path} is a symbolic link, not a regular file held "
+                    "by the governed directory; refusing to verify it"
+                )
+            fd = os.open(path, flags)
+    _reject_non_regular_fd(fd, path, role)
+    return fd
 
 
 def read_no_follow(path: Path, role: str) -> bytes:
@@ -268,8 +384,15 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
     ``O_CREAT | O_TRUNC | O_NOFOLLOW`` makes the ``open`` itself the check: it
     fails with ``ELOOP`` if the final path component is an existing symlink,
     and otherwise creates (or truncates) a regular file in one syscall.
-    Windows has no ``O_NOFOLLOW``; there this falls back to ``is_symlink()``
-    immediately before ``open()`` (see :func:`_open_no_follow`).
+    :func:`_dir_relative_open` closes the same window for the *parent*
+    directory too, where the platform supports it. Windows has no
+    ``O_NOFOLLOW`` or ``dir_fd``-relative opens; there this falls back to
+    ``is_symlink()`` immediately before ``open()`` on the full path (see
+    :func:`_open_no_follow`). ``O_NONBLOCK`` (where defined) and a post-open
+    :func:`_reject_non_regular_fd` check additionally guard against a FIFO
+    swapped in for the destination, which would otherwise block this open
+    indefinitely (a pre-existing FIFO with no reader) instead of failing
+    closed.
 
     Args:
         path: Destination path, unresolved.
@@ -277,27 +400,38 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
         role: Human-readable role used in the failure message.
 
     Raises:
-        ManifestMismatchError: If ``path`` is a symbolic link.
+        ManifestMismatchError: If ``path`` (or an ancestor directory, where
+            supported) is a symbolic link, or the opened descriptor is not a
+            regular file.
         OSError: If the file cannot be written.
     """
-    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_BINARY", 0)
-    if hasattr(os, "O_NOFOLLOW"):
-        try:
-            fd = os.open(path, flags | os.O_NOFOLLOW, 0o644)
-        except OSError as error:
-            if error.errno == errno.ELOOP:
+    flags = (
+        os.O_WRONLY
+        | os.O_CREAT
+        | os.O_TRUNC
+        | getattr(os, "O_NONBLOCK", 0)
+        | getattr(os, "O_BINARY", 0)
+    )
+    fd = _dir_relative_open(path, flags, 0o644, role)
+    if fd is None:
+        if hasattr(os, "O_NOFOLLOW"):
+            try:
+                fd = os.open(path, flags | os.O_NOFOLLOW, 0o644)
+            except OSError as error:
+                if error.errno == errno.ELOOP:
+                    raise ManifestMismatchError(
+                        f"{role} {path} is a symbolic link, not a regular file "
+                        "held by the governed directory; refusing to write it"
+                    ) from error
+                raise
+        else:
+            if path.is_symlink():
                 raise ManifestMismatchError(
-                    f"{role} {path} is a symbolic link, not a regular file "
-                    "held by the governed directory; refusing to write it"
-                ) from error
-            raise
-    else:
-        if path.is_symlink():
-            raise ManifestMismatchError(
-                f"{role} {path} is a symbolic link, not a regular file held "
-                "by the governed directory; refusing to write it"
-            )
-        fd = os.open(path, flags, 0o644)
+                    f"{role} {path} is a symbolic link, not a regular file held "
+                    "by the governed directory; refusing to write it"
+                )
+            fd = os.open(path, flags, 0o644)
+    _reject_non_regular_fd(fd, path, role)
     with os.fdopen(fd, "wb") as stream:
         stream.write(data)
 

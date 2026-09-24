@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 from pathlib import Path
 
 import prin.reporting
@@ -407,6 +408,17 @@ _needs_symlink_support = pytest.mark.skipif(
     reason="creating symlinks is not permitted in this environment",
 )
 
+_needs_dir_fd_support = pytest.mark.skipif(
+    os.open not in os.supports_dir_fd
+    or not hasattr(os, "O_DIRECTORY")
+    or not hasattr(os, "O_NOFOLLOW"),
+    reason="dir_fd-relative opens are not supported on this platform (e.g. Windows)",
+)
+
+_needs_fifo_support = pytest.mark.skipif(
+    not hasattr(os, "mkfifo"), reason="FIFOs are not supported on this platform"
+)
+
 
 class TestManifestSymlinkProvenance:
     """PR23-F1 (Copilot, PR #23): the shared verifier must not follow links.
@@ -692,6 +704,70 @@ class TestOpenNoFollow:
 
         with pytest.raises(reproduce.ManifestMismatchError, match="symbolic link"):
             reproduce._open_no_follow(link, "artefact")
+
+    def test_dir_relative_open_reflects_platform_support(self, tmp_path: Path) -> None:
+        """Independent review (PR #23 head `2264771`): whichever branch
+        ``_dir_relative_open`` takes must be the one this platform actually
+        supports — a wrong guard would silently defeat the ancestor-symlink
+        closure on POSIX CI without failing anywhere reachable from this
+        (Windows) development machine.
+        """
+        target = tmp_path / "a.json"
+        target.write_bytes(b"{}")
+        fd = reproduce._dir_relative_open(target, os.O_RDONLY, 0, "artefact")
+        supported = (
+            os.open in os.supports_dir_fd
+            and hasattr(os, "O_DIRECTORY")
+            and hasattr(os, "O_NOFOLLOW")
+        )
+        if supported:
+            assert fd is not None
+            os.close(fd)
+        else:
+            assert fd is None
+
+    @_needs_dir_fd_support
+    @_needs_symlink_support
+    def test_symlinked_parent_directory_is_rejected_for_reads(
+        self, tmp_path: Path
+    ) -> None:
+        """Independent review (PR #23 head `2264771`): ``O_NOFOLLOW`` only
+        refuses a symlink at the *final* path component (POSIX ``open(2)``);
+        it does not stop a symlinked *ancestor* directory from being
+        followed. Before this fix, a run directory replaced with a symlink
+        pointing elsewhere would still have its artefacts read straight out
+        of the symlink's target. ``_dir_relative_open`` pins the immediate
+        parent as a descriptor before opening the final component, which
+        also rejects a parent that is a symlink outright. Skipped on
+        platforms without ``dir_fd``-relative opens (Windows); runs for real
+        on this repository's Linux CI legs.
+        """
+        real_dir = tmp_path / "real"
+        real_dir.mkdir()
+        (real_dir / "a.json").write_bytes(b"{}")
+        linked_dir = tmp_path / "linked"
+        linked_dir.symlink_to(real_dir, target_is_directory=True)
+
+        with pytest.raises(reproduce.ManifestMismatchError, match="symbolic link"):
+            reproduce.read_no_follow(linked_dir / "a.json", "artefact")
+
+    @_needs_fifo_support
+    def test_fifo_candidate_does_not_hang_and_is_rejected(self, tmp_path: Path) -> None:
+        """Independent review (PR #23 head `2264771`): a check-then-open
+        race can swap a candidate for a FIFO after ``_reject_non_regular``'s
+        pre-check and before this open; without ``O_NONBLOCK``, opening a
+        FIFO for reading with no writer present blocks indefinitely,
+        turning a fail-closed verification into a hang instead of a clean
+        rejection. Skipped on platforms without ``os.mkfifo`` (Windows);
+        runs for real on this repository's Linux CI legs. The open must
+        return (not hang) and the descriptor must then be rejected as
+        non-regular.
+        """
+        fifo_path = tmp_path / "a.json"
+        os.mkfifo(fifo_path)  # type: ignore[attr-defined]
+
+        with pytest.raises(reproduce.ManifestMismatchError, match="not a regular file"):
+            reproduce.read_no_follow(fifo_path, "artefact")
 
 
 class TestWriteNoFollow:
