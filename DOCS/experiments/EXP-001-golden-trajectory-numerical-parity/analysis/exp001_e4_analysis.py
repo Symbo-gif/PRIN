@@ -170,8 +170,21 @@ class AnalysisError(RuntimeError):
     """
 
 
-def _load_artefact(repository_root: Path, leg: RunLeg) -> dict[str, Any]:
+def _load_artefact(
+    repository_root: Path, leg: RunLeg
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """Verify one run directory's manifest and load its result artefact.
+
+    The raw artefact root is a governed *read* root exactly as
+    :data:`OUTPUT_ROOT`/:data:`RECORD_ROOT` are governed write roots, so it
+    gets the same :func:`_reject_configured_root_symlink` component walk
+    before use — without it, a symlink at any ancestor of
+    ``benchmarks/results/EXP-001/<run_id>`` (for example ``benchmarks``
+    itself, or ``results``) would leave the final component's own
+    ``is_symlink()`` false while ``verify_manifest``'s internal
+    ``.resolve()`` transparently followed it into a redirected tree,
+    letting a forged run directory validate as if it were the real one
+    (Claude Sonnet 5-High independent review, PR #23 head `e1d4ec1`).
 
     Args:
         repository_root: Repository root the relative artefact paths resolve
@@ -179,12 +192,28 @@ def _load_artefact(repository_root: Path, leg: RunLeg) -> dict[str, Any]:
         leg: The run leg to load.
 
     Returns:
-        The parsed result artefact.
+        The parsed result artefact, and the run directory's verified
+        manifest records (``path``/``bytes``/``sha256``) — returned so a
+        caller building a provenance listing for that same directory reuses
+        this call's verification instead of re-verifying independently: a
+        second, unverified ``verify_manifest`` call on the same directory
+        would prove only what the directory looks like *then*, not that it
+        still matches what was just adjudicated, letting a self-consistent
+        swap between the two calls attest different bytes than the ones the
+        verdict was actually computed from (Claude Sonnet 5-High
+        independent review, PR #23 head `e1d4ec1`).
 
     Raises:
-        AnalysisError: If the artefact is absent or its recorded
-            ``environment.git_commit`` is not :data:`EXECUTION_COMMIT`.
+        AnalysisError: If any path component of the run directory below
+            ``repository_root`` is a symbolic link, the artefact is absent,
+            or its recorded ``environment.git_commit`` is not
+            :data:`EXECUTION_COMMIT`.
     """
+    _reject_configured_root_symlink(
+        repository_root,
+        RAW_ARTEFACT_ROOT / leg.run_id,
+        "raw artefact run directory",
+    )
     run_dir = repository_root / RAW_ARTEFACT_ROOT / leg.run_id
     records = verify_manifest(
         results_dir=run_dir, manifest_path=run_dir / "manifest.json"
@@ -219,7 +248,10 @@ def _load_artefact(repository_root: Path, leg: RunLeg) -> dict[str, Any]:
             f"{leg.run_id}: environment.git_commit {recorded!r} is not the "
             f"registered execution commit {EXECUTION_COMMIT!r}"
         )
-    return payload
+    manifest_records = [
+        {"path": r.path, "bytes": r.bytes, "sha256": r.sha256} for r in records
+    ]
+    return payload, manifest_records
 
 
 def _decade_histogram(values: list[float]) -> dict[str, int]:
@@ -348,17 +380,30 @@ def _abort_reasons(aborted: list[dict[str, Any]]) -> list[str]:
     return sorted({str(case.get("abort_reason", "")) for case in aborted})
 
 
-def _tolerance_verdict(failing: int, non_aborted: int, denominator: int) -> str:
+def _tolerance_verdict(
+    failing: int, non_aborted: int, total_cases: int, denominator: int
+) -> str:
     """Apply pre-registration §8's shared pass/fail decision shape.
 
     ``REFUTED`` on any non-aborted breach; otherwise ``CONFIRMED`` only when
-    the non-aborted count reaches the full registered denominator, and
-    ``INCONCLUSIVE`` when a partial abort leaves a reduced sample — so a
-    partial abort can never produce ``CONFIRMED``.
+    the artefact's total case count is exactly the full registered
+    denominator *and* every one of those cases is non-aborted, and
+    ``INCONCLUSIVE`` otherwise — so a partial abort can never produce
+    ``CONFIRMED``.
+
+    Checking ``total_cases`` (not just ``non_aborted``) against the
+    denominator closes a gap where a denominator's worth of passing cases
+    plus one or more *additional* aborted cases — more total cases than the
+    denominator, rather than fewer — would otherwise satisfy
+    ``non_aborted == denominator`` while an abort was still present
+    (Claude Sonnet 5-High / Copilot independent reviews, PR #23 head
+    `e1d4ec1`).
 
     Args:
         failing: Non-aborted cases outside tolerance.
         non_aborted: Total non-aborted cases.
+        total_cases: The artefact's total case count (aborted and
+            non-aborted).
         denominator: The full registered denominator.
 
     Returns:
@@ -366,6 +411,8 @@ def _tolerance_verdict(failing: int, non_aborted: int, denominator: int) -> str:
     """
     if failing:
         return "REFUTED"
+    if total_cases != denominator:
+        return "INCONCLUSIVE"
     return "CONFIRMED" if non_aborted == denominator else "INCONCLUSIVE"
 
 
@@ -385,7 +432,9 @@ def adjudicate_h1(payload: dict[str, Any]) -> dict[str, Any]:
     return {
         "hypothesis": "H1",
         "description": "Corpus parity — 504 golden-corpus cases",
-        "verdict": _tolerance_verdict(len(failing), len(non_aborted), denominator),
+        "verdict": _tolerance_verdict(
+            len(failing), len(non_aborted), len(payload["cases"]), denominator
+        ),
         "full_denominator": denominator,
         "n_cases": len(payload["cases"]),
         "n_non_aborted": len(non_aborted),
@@ -450,7 +499,9 @@ def adjudicate_h2a(payload: dict[str, Any]) -> dict[str, Any]:
     return {
         "hypothesis": "H2a",
         "description": ("Fuzzed within-horizon parity — steps 0..min(20, n_steps)"),
-        "verdict": _tolerance_verdict(len(failing), len(non_aborted), denominator),
+        "verdict": _tolerance_verdict(
+            len(failing), len(non_aborted), len(payload["cases"]), denominator
+        ),
         "full_denominator": denominator,
         "fuzz_batch_class": batch_class,
         "fuzz_batch_confirmatory_minimum": minimum,
@@ -510,7 +561,9 @@ def adjudicate_h3(payload: dict[str, Any]) -> dict[str, Any]:
     return {
         "hypothesis": "H3",
         "description": "Bit-level repeatability — 14 grid-cell representatives",
-        "verdict": _tolerance_verdict(len(failing), len(non_aborted), denominator),
+        "verdict": _tolerance_verdict(
+            len(failing), len(non_aborted), len(payload["cases"]), denominator
+        ),
         "full_denominator": denominator,
         "n_cases": len(payload["cases"]),
         "n_non_aborted": len(non_aborted),
@@ -549,7 +602,9 @@ def adjudicate_h4(payload: dict[str, Any]) -> dict[str, Any]:
         verdict = "INCONCLUSIVE"
         note = "NOT EXECUTED — cuda feature not built (pre-registration §4 item 6)"
     else:
-        verdict = _tolerance_verdict(len(failing), len(non_aborted), denominator)
+        verdict = _tolerance_verdict(
+            len(failing), len(non_aborted), len(payload["cases"]), denominator
+        )
         note = ""
     return {
         "hypothesis": "H4",
@@ -1193,6 +1248,15 @@ def allowed_generated_output_dirs(repository_root: Path) -> tuple[Path, ...]:
 def _checked_destination(path: Path, roots: tuple[Path, ...], name: str) -> Path:
     """Resolve one write destination and refuse anything outside ``roots``.
 
+    Checked no-follow, before resolution, mirroring
+    :func:`_checked_manifest_destination`: ``.resolve()`` follows a trailing
+    symlink, so a symlinked ``--output-dir`` pointing at a directory inside
+    the permitted roots would otherwise resolve into, and be accepted as,
+    that directory — an accident-prone alias this analysis has no need to
+    support, and refusing it outright removes the question of whether the
+    aliased target is actually equivalent (Qwen Code independent review, PR
+    #23 head `e1d4ec1`).
+
     Args:
         path: The requested destination.
         roots: Permitted roots from :func:`allowed_output_roots`.
@@ -1202,9 +1266,16 @@ def _checked_destination(path: Path, roots: tuple[Path, ...], name: str) -> Path
         The resolved destination.
 
     Raises:
-        AnalysisError: If the destination escapes every permitted root.
+        AnalysisError: If the destination is itself a symbolic link, or
+            escapes every permitted root.
     """
-    resolved = Path(path).resolve()
+    path = Path(path)
+    if path.is_symlink():
+        raise AnalysisError(
+            f"{name} {path} is a symbolic link; refusing to resolve it into "
+            "a write destination"
+        )
+    resolved = path.resolve()
     if not any(resolved == root or root in resolved.parents for root in roots):
         permitted = ", ".join(str(root) for root in roots)
         raise AnalysisError(
@@ -1305,14 +1376,20 @@ def run_analysis(
     payloads: dict[str, dict[str, Any]] = {}
     manifests: dict[str, list[dict[str, Any]]] = {}
     for leg in RUN_LEGS:
-        payloads[leg.label] = _load_artefact(repository_root, leg)
-        run_dir = repository_root / RAW_ARTEFACT_ROOT / leg.run_id
-        manifests[leg.label] = [
-            {"path": record.path, "bytes": record.bytes, "sha256": record.sha256}
-            for record in verify_manifest(
-                results_dir=run_dir, manifest_path=run_dir / "manifest.json"
-            )
-        ]
+        # A second, independent `verify_manifest` call on the same run
+        # directory here — purely to populate the provenance listing below —
+        # would prove only what the directory looks like at that later
+        # moment, not that it still matches the bytes `_load_artefact` just
+        # adjudicated: a self-consistent artefact+manifest swap in the
+        # window between the two calls would have the verdict computed from
+        # pre-swap bytes while this listing (and the committed
+        # `report-manifest.json`/summary it feeds) attested post-swap
+        # digests, breaking the chain-of-custody guarantee those documents
+        # claim (Claude Sonnet 5-High independent review, PR #23 head
+        # `e1d4ec1`). Reusing `_load_artefact`'s own verified records instead
+        # closes that window entirely, and also drops the redundant hashing
+        # of the largest artefact on every run.
+        payloads[leg.label], manifests[leg.label] = _load_artefact(repository_root, leg)
     adjudications = adjudicate_all(payloads)
     outputs = write_outputs(adjudications, manifests, output_dir, generated_at)
     write_report_manifest(
@@ -1391,10 +1468,22 @@ def main(argv: list[str] | None = None) -> int:
     # names exactly one of write_outputs' own filenames would have
     # write_report_manifest overwrite it after write_outputs already
     # recorded its digest, leaving the committed manifest describing bytes
-    # no longer on disk (independent review, PR #23 head `949e5e1`).
-    if manifest_path in (
-        output_dir / SUMMARY_FILENAME,
-        output_dir / ADJUDICATION_FILENAME,
+    # no longer on disk (independent review, PR #23 head `949e5e1`). Compared
+    # case-folded, not with plain Path equality: on a case-insensitive but
+    # case-preserving filesystem (macOS default APFS), a --manifest-path
+    # differing from one of these two names only in case is the same
+    # on-disk file, but PurePosixPath.__eq__ (used on that platform) is
+    # case-sensitive and would miss it — the same collision this pair is
+    # meant to catch, just reached through a case variant instead of the
+    # exact name (same bug class as the `f370a29` case-identity fix in
+    # tools.reproduce, applied here to a check that compares two
+    # not-yet-existing destinations rather than an existing file, so it
+    # cannot use lstat/samestat and instead fails closed on any case
+    # variant; Claude Sonnet 5-High independent review, PR #23 head
+    # `e1d4ec1`).
+    if str(manifest_path).casefold() in (
+        str(output_dir / SUMMARY_FILENAME).casefold(),
+        str(output_dir / ADJUDICATION_FILENAME).casefold(),
     ):
         raise AnalysisError(
             f"manifest path {manifest_path} collides with a generated output "

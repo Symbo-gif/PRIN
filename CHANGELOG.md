@@ -765,6 +765,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     dependency files changed. CodeRabbit and Copilot re-requested on this
     round's push.
 
+- **PR #23 Round 13 — independent review at head `e1d4ec1`, plus four named
+  LLM reviews (Devin/SWE-2 High, Cursor Agent, Claude Sonnet 5-High, Qwen
+  Code 3.7 Plus); five findings fixed, one prior decline corrected
+  (2026-09-24 UTC).** Audited as `e1d4ec1-F1`…`e1d4ec1-F5` in
+  `DOCS/audits/PR023-multi-review-audit.md` §20. All four named reviews
+  validated the prior rounds' fixes accurately and agreed Copilot's other
+  three "Open" items are two stale threads plus one documented decline;
+  they split on one point.
+  - **`e1d4ec1-F1` (D2) — the mixed-abort verdict gap this audit had
+    previously declined was a real, unfixed defect.** `_tolerance_verdict`
+    only ever checked `non_aborted == denominator`, never the artefact's
+    *total* case count — so a full denominator's worth of passing cases
+    plus one or more *additional* aborted cases on top (more cases than the
+    denominator, not fewer) satisfied that equality and returned
+    `CONFIRMED` despite the abort, contradicting both the function's own
+    "a partial abort can never produce CONFIRMED" contract and
+    pre-registration §8's mixed-abort rule. §18.5/§19.2 of this audit had
+    endorsed the maintainer's decline of this exact Copilot finding as
+    correct, and three of the four named reviews (Devin/SWE-2 High, Cursor
+    Agent, Qwen Code 3.7 Plus) independently re-endorsed that decline;
+    Claude Sonnet 5-High was the sole holdout, and was right. Fixed by
+    checking the total case count against the denominator before the
+    existing `non_aborted` check; not reachable against any committed
+    artefact (every real run's total case count already equals its
+    denominator by construction), so no published verdict changes.
+  - **`e1d4ec1-F2` (D2) — a second, unverified `verify_manifest` call could
+    attest different bytes than the ones adjudicated.** `run_analysis`
+    re-verified each run directory independently of `_load_artefact`'s own
+    verification, purely to populate the provenance listing — a
+    self-consistent artefact+manifest swap in the window between the two
+    calls could have the verdict computed from pre-swap bytes while the
+    committed manifest attested post-swap digests. `_load_artefact` now
+    returns its own verified records for the caller to reuse, closing the
+    window and removing a redundant full-artefact hash on every run.
+  - **`e1d4ec1-F3` (D2) — the raw artefact root had no ancestor-symlink
+    protection.** Unlike `OUTPUT_ROOT`/`RECORD_ROOT`, the input-side
+    `RAW_ARTEFACT_ROOT` was never passed through
+    `_reject_configured_root_symlink`, so a symlinked ancestor could
+    redirect `verify_manifest` into a forged run tree. Now walked with the
+    same existing helper before use.
+  - **`e1d4ec1-F4`/`e1d4ec1-F5` (D3) — two cheap CLI-boundary hardening
+    gaps.** `main()`'s manifest/generated-output collision check used
+    case-sensitive `Path` equality (silent overwrite risk on
+    case-insensitive-but-case-preserving macOS APFS), now case-folded;
+    `_checked_destination` (for `--output-dir`) resolved before checking a
+    symlink, unlike its sibling `_checked_manifest_destination`, now
+    symmetric.
+  - 5 new/extended regression tests; targeted suite 111 passed, 2 skipped;
+    `ruff`, `ruff format`, `mypy --strict` clean; Snyk Code on the modified
+    module unchanged (1 pre-existing accepted LOW, structural
+    containment-sanitizer false positive); the E4 analysis re-run to a
+    scratch destination reproduces the committed `report-manifest.json`
+    byte-for-byte and every verdict/D1 flag unchanged. No dependency files
+    changed. CodeRabbit and Copilot re-requested on this round's push.
+
 - **PR #23 Round 12 — Copilot and CodeRabbit review of head `b69f585`;
   one symlinked-manifest-destination bypass fixed, Round 11's four fixes
   confirmed resolved, the `dir_fd`-rename closure confirmed by green CI

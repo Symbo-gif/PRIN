@@ -152,16 +152,31 @@ class TestToleranceVerdict:
     """Pre-registration §8's shared pass/fail decision shape."""
 
     def test_full_clean_denominator_confirms(self) -> None:
-        assert analysis._tolerance_verdict(0, 504, 504) == "CONFIRMED"
+        assert analysis._tolerance_verdict(0, 504, 504, 504) == "CONFIRMED"
 
     def test_any_breach_refutes(self) -> None:
-        assert analysis._tolerance_verdict(1, 504, 504) == "REFUTED"
+        assert analysis._tolerance_verdict(1, 504, 504, 504) == "REFUTED"
 
     def test_partial_abort_can_never_confirm(self) -> None:
-        assert analysis._tolerance_verdict(0, 503, 504) == "INCONCLUSIVE"
+        assert analysis._tolerance_verdict(0, 503, 504, 504) == "INCONCLUSIVE"
 
     def test_breach_outranks_partial_abort(self) -> None:
-        assert analysis._tolerance_verdict(1, 503, 504) == "REFUTED"
+        assert analysis._tolerance_verdict(1, 503, 504, 504) == "REFUTED"
+
+    def test_full_denominator_plus_an_extra_abort_is_inconclusive(self) -> None:
+        """Claude Sonnet 5-High / Copilot independent reviews, PR #23 head
+        `e1d4ec1`: before this fix, a denominator's worth of non-aborted
+        passing cases plus one or more *additional* aborted cases on top —
+        more total cases than the denominator — satisfied
+        ``non_aborted == denominator`` and returned ``CONFIRMED`` even
+        though an abort was present, contradicting "a partial abort can
+        never produce CONFIRMED". Checking the total case count against the
+        denominator closes it.
+        """
+        assert analysis._tolerance_verdict(0, 504, 505, 504) == "INCONCLUSIVE"
+
+    def test_fewer_total_cases_than_the_denominator_is_inconclusive(self) -> None:
+        assert analysis._tolerance_verdict(0, 500, 500, 504) == "INCONCLUSIVE"
 
 
 class TestH1:
@@ -191,6 +206,19 @@ class TestH1:
         assert record["n_pass"] == 503
         assert record["n_fail"] == 0
         assert record["abort_reasons"] == ["nan-guard"]
+
+    def test_full_denominator_plus_an_extra_abort_is_inconclusive(self) -> None:
+        """Claude Sonnet 5-High / Copilot independent reviews, PR #23 head
+        `e1d4ec1`: a full 504-case clean denominator plus one *additional*
+        aborted case (505 cases total) must not be ``CONFIRMED`` — the extra
+        abort must still be visible to the verdict.
+        """
+        cases = [_corpus_case(f"c{i}") for i in range(504)]
+        cases.append(_corpus_case("extra-aborted", aborted=True))
+        record = analysis.adjudicate_h1(_corpus_payload(cases))
+        assert record["verdict"] == "INCONCLUSIVE"
+        assert record["n_non_aborted"] == 504
+        assert record["n_aborted"] == 1
 
 
 class TestH2a:
@@ -384,13 +412,15 @@ class TestProvenanceGuard:
         payload = _corpus_payload([_corpus_case("c0")])
         artefact = run_dir / leg.artefact
         artefact.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+        artefact_bytes = artefact.stat().st_size
+        artefact_sha256 = compute_sha256(artefact)
         manifest = {
             "schema_version": 1,
             "files": [
                 {
                     "path": artefact.name,
-                    "bytes": artefact.stat().st_size,
-                    "sha256": compute_sha256(artefact),
+                    "bytes": artefact_bytes,
+                    "sha256": artefact_sha256,
                 }
             ],
         }
@@ -410,8 +440,15 @@ class TestProvenanceGuard:
         monkeypatch.setattr(Path, "read_text", _forbidden)
         monkeypatch.setattr(Path, "read_bytes", _forbidden)
 
-        result = analysis._load_artefact(tmp_path, leg)
-        assert result["environment"]["git_commit"] == analysis.EXECUTION_COMMIT
+        payload, records = analysis._load_artefact(tmp_path, leg)
+        assert payload["environment"]["git_commit"] == analysis.EXECUTION_COMMIT
+        assert records == [
+            {
+                "path": artefact.name,
+                "bytes": artefact_bytes,
+                "sha256": artefact_sha256,
+            }
+        ]
 
     def test_load_artefact_rejects_a_swap_between_verification_and_read(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -459,6 +496,31 @@ class TestProvenanceGuard:
         monkeypatch.setattr(analysis, "verify_manifest", _swap_after_verify)
 
         with pytest.raises(ManifestMismatchError):
+            analysis._load_artefact(tmp_path, leg)
+
+    @_needs_symlink_support
+    def test_load_artefact_refuses_a_symlinked_ancestor_of_the_run_directory(
+        self, tmp_path: Path
+    ) -> None:
+        """Claude Sonnet 5-High independent review, PR #23 head `e1d4ec1`: the
+        raw artefact root is a governed *read* root exactly as
+        ``OUTPUT_ROOT``/``RECORD_ROOT`` are governed write roots (see the
+        mirrored tests in ``TestOutputContainment``), but before this fix it
+        had none of the ``_reject_configured_root_symlink`` ancestor-walk
+        protection those two write roots get — a symlink at an ancestor of
+        ``benchmarks/results/EXP-001/<run_id>`` would leave the final
+        component's own ``is_symlink()`` false while ``verify_manifest``'s
+        internal ``.resolve()`` transparently followed it into a redirected
+        tree, letting a forged run directory validate as the real one.
+        """
+        leg = analysis.RUN_LEGS[0]
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        ancestor = tmp_path / analysis.RAW_ARTEFACT_ROOT
+        ancestor.parent.mkdir(parents=True, exist_ok=True)
+        ancestor.symlink_to(elsewhere, target_is_directory=True)
+
+        with pytest.raises(analysis.AnalysisError, match="symbolic link"):
             analysis._load_artefact(tmp_path, leg)
 
 
@@ -564,6 +626,24 @@ class TestOutputContainment:
             tmp_path / "allowed" / "nested", roots, "output"
         )
         assert accepted == (tmp_path / "allowed" / "nested").resolve()
+
+    @_needs_symlink_support
+    def test_checked_destination_rejects_a_symlinked_destination(
+        self, tmp_path: Path
+    ) -> None:
+        """Qwen Code independent review, PR #23 head `e1d4ec1`: mirrors
+        ``test_checked_manifest_destination_rejects_a_symlinked_destination``
+        for ``--output-dir``'s own containment helper — a symlinked
+        destination must be refused no-follow, before ``.resolve()`` can
+        follow it into an alias of a permitted root.
+        """
+        allowed = tmp_path / "allowed"
+        allowed.mkdir()
+        destination = tmp_path / "output-dir-link"
+        destination.symlink_to(allowed, target_is_directory=True)
+
+        with pytest.raises(analysis.AnalysisError, match="symbolic link"):
+            analysis._checked_destination(destination, (allowed.resolve(),), "output")
 
     def test_the_cli_refuses_an_out_of_root_output_dir(self) -> None:
         """The guard lives at the command-line boundary, not in the library.
@@ -741,6 +821,30 @@ class TestOutputContainment:
             )
         assert not output_dir.exists()
 
+    def test_the_cli_refuses_a_case_variant_manifest_path_collision(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Claude Sonnet 5-High independent review, PR #23 head `e1d4ec1`: on
+        a case-insensitive-but-case-preserving filesystem (macOS default
+        APFS), a ``--manifest-path`` differing from ``SUMMARY_FILENAME``
+        only in case is the same on-disk file as the generated summary, but
+        the collision check must catch it even on a case-sensitive
+        filesystem (this test's host) — it fails closed on any case variant
+        rather than relying on ``lstat``/``samestat`` identity against a
+        file that does not exist yet at check time.
+        """
+        monkeypatch.setattr(analysis, "_REPOSITORY_ROOT", tmp_path)
+        output_dir = tmp_path / analysis.OUTPUT_ROOT
+        colliding = output_dir / analysis.SUMMARY_FILENAME.upper()
+
+        with pytest.raises(
+            analysis.AnalysisError, match="collides with a generated output"
+        ):
+            analysis.main(
+                ["--output-dir", str(output_dir), "--manifest-path", str(colliding)]
+            )
+        assert not output_dir.exists()
+
 
 class TestReportManifestIntegrity:
     """Independent reviews, PR #23 head `754272a`: the integrity fields
@@ -895,7 +999,7 @@ class TestRegisteredRun:
         from benchmarks.campaign.exp001_driver import adjudicate_h2b
 
         leg = next(leg for leg in analysis.RUN_LEGS if leg.label == "fuzz-cpu")
-        payload = analysis._load_artefact(_REPOSITORY_ROOT, leg)
+        payload, _records = analysis._load_artefact(_REPOSITORY_ROOT, leg)
         direct = adjudicate_h2b(copy.deepcopy(payload["cases"]))
         through = analysis.adjudicate_h2b_leg(payload)
         assert through["verdict"] == direct["verdict"]

@@ -3063,3 +3063,214 @@ four carried threads re-affirmed by reference to §18.5 with no new
 evidence. No new D1; no verdict, tolerance, or measured value changed;
 the published EXP-001 record reproduces byte-identically. CodeRabbit and
 Copilot are re-requested on this round's push per standard practice.
+
+## 20. Round 13 — independent review at head `e1d4ec1`, plus four named LLM reviews; §18.5's mixed-abort decline was wrong
+
+**Trigger:** an independent code review requested directly of this AI pair
+(not a GitHub-native bot), scoped to (a) a fresh, from-the-repository review
+of the whole PR, (b) validation of every CodeRabbit/Copilot finding since the
+last push, and (c) validation of four independently-commissioned LLM reviews
+already posted to the PR at head `e1d4ec1`: **Devin/SWE-2 High**
+(comment `5819083090`), **Cursor Agent** (`5819227826`), **Claude Sonnet
+5-High** (`5819259822`, 4 parallel read-only passes), and **Qwen Code 3.7
+Plus** (`5819434794`, 4 parallel specialized passes). All four converged on
+**APPROVE**/no-defect for three of Copilot's four "Open" items (two stale —
+already fixed; one a documented threat-model decline) and cross-validated
+each other's fix-verification tables. They disagreed on exactly one point.
+
+### 20.1 The disagreement, and why Claude Sonnet 5-High was right
+
+Copilot's fourth "Open" item, "Mixed aborts can incorrectly produce a
+CONFIRMED verdict" (comment `4090613365`, `exp001_e4_analysis.py:369`,
+`_tolerance_verdict`), had been dispositioned **declined** at §18.5/§19.2 of
+this same audit: "matches the frozen pre-registration text literally... the
+scenario needs more total cases than a fixed-cardinality set produces."
+Devin/SWE-2 High, Cursor Agent, and Qwen Code 3.7 Plus all independently
+endorsed that decline as correct; Qwen went further and stated Claude Sonnet
+5-High's dissenting finding was mathematically wrong ("the function receives
+`non_aborted` count (not total), so `non_aborted != denominator` whenever any
+case aborts — no gap exists").
+
+That reasoning holds only under an *unstated* assumption: that an artefact's
+total case count can never exceed the registered denominator. Nothing in
+`_tolerance_verdict`'s three-argument signature (`failing`, `non_aborted`,
+`denominator`) checked that. Re-deriving the pre-fix function directly:
+
+```pycon
+>>> def old_tolerance_verdict(failing, non_aborted, denominator):
+...     if failing:
+...         return "REFUTED"
+...     return "CONFIRMED" if non_aborted == denominator else "INCONCLUSIVE"
+>>> old_tolerance_verdict(0, 504, 504)   # 504 passing + 1 *additional* aborted case
+'CONFIRMED'
+```
+
+504 non-aborted cases (matching the H1 denominator) plus one more aborted
+case on top — 505 total cases — satisfies `non_aborted == denominator` and
+returns `CONFIRMED`, exactly Copilot's scenario, exactly contradicting the
+function's own docstring contract ("a partial abort can never produce
+CONFIRMED") and the pre-registration §8 mixed-abort rule. **Claude Sonnet
+5-High's finding was correct; the maintainer-confirmed decline this audit
+recorded at §18.5/§19.2, and every other reviewer's endorsement of it
+(including this AI pair's own prior round), was wrong.** The gap survived
+three prior rounds of review because nothing tested a total case count
+*above* the denominator — every existing test (`test_partial_abort_can_never_confirm`,
+`test_aborted_case_is_excluded_from_counts`) only ever reduced `non_aborted`
+*below* the denominator by removing a would-be-passing case, never added an
+abort on top of a full set.
+
+**Reachability:** confirmed **not reachable** against any committed
+artefact — H1/H3/H4's denominators are fixed registered constants and H2a's
+is read from the same field the harness uses to generate exactly that many
+case records, so a real artefact's total case count structurally equals its
+denominator. This is `D2` (a real gap in the shared decision-rule helper
+that determines every published verdict, not yet manifested against
+existing evidence), not `D1` — no committed artefact, verdict, or the D1
+campaign flag is retroactively affected; re-verified in §20.6.
+
+### 20.2 `e1d4ec1-F1` (D2) — the mixed-abort verdict gap (Claude Sonnet 5-High / Copilot `4090613365`)
+
+**Fix.** `_tolerance_verdict` now takes the artefact's total case count as a
+fourth argument and returns `INCONCLUSIVE` whenever it does not exactly
+equal the registered denominator, before the existing `non_aborted ==
+denominator` check — closing the gap for *more* total cases than the
+denominator without changing behavior for fewer (already `INCONCLUSIVE`) or
+exactly the denominator with zero aborts (still `CONFIRMED`). All four call
+sites (`adjudicate_h1`/`h2a`/`h3`/`h4`) pass `len(payload["cases"])`.
+
+**Regression tests.** `TestToleranceVerdict::test_full_denominator_plus_an_extra_abort_is_inconclusive`
+(unit level, `_tolerance_verdict(0, 504, 505, 504)`) and
+`TestH1::test_full_denominator_plus_an_extra_abort_is_inconclusive` (through
+the real `adjudicate_h1` with 504 passing cases plus one additional aborted
+case) both reproduce Copilot's exact scenario and fail against the pre-fix
+three-argument logic shown in §20.1.
+
+### 20.3 `e1d4ec1-F2` (D2) — a second, unverified `verify_manifest` call could attest different bytes than the ones adjudicated (Claude Sonnet 5-High, new)
+
+`run_analysis` called `verify_manifest` a second time on each run directory,
+independently of `_load_artefact`'s own call, purely to populate
+`report-manifest.json`'s `"inputs"` provenance listing. `_load_artefact`'s
+call is the one bound to the actual adjudicated bytes (via
+`read_verified_no_follow`'s single-descriptor pattern); the second call
+proves only what the directory looks like at that later moment. A
+self-consistent artefact+manifest swap in the window between the two calls
+would have the verdict computed from pre-swap bytes while the committed
+provenance listing attested post-swap digests — the same TOCTOU/CWE-59 class
+`read_verified_no_follow` was added at head `754272a` to close for the read
+path itself, left open one call site further out. Not reachable against any
+committed run (both calls target the same immutable, already-published
+directories), so `D2`, not `D1`.
+
+**Fix.** `_load_artefact` now returns the manifest records it already
+verified alongside the payload; `run_analysis` reuses them for the
+provenance listing instead of re-verifying. Closes the window and removes
+the redundant hashing of the largest artefact on every run (noted as a
+"harmless" inefficiency by the Devin/SWE-2 High review).
+
+**Regression coverage.** `test_load_artefact_reads_via_no_follow_not_plain_path_io`
+now asserts the returned records match the manifest; `TestRegisteredRun`'s
+existing end-to-end tests (`test_registered_verdicts`,
+`test_outputs_are_byte_identical_across_runs`,
+`test_report_manifest_covers_every_output`) exercise the refactor against
+the real committed E3 artefacts (§20.6).
+
+### 20.4 `e1d4ec1-F3` (D2) — the raw artefact root had none of the ancestor-symlink protection its sibling governed roots get (Claude Sonnet 5-High, new)
+
+`allowed_output_roots`/`allowed_generated_output_dirs` both call
+`_reject_configured_root_symlink` to walk every path component below the
+checkout anchor for `OUTPUT_ROOT`/`RECORD_ROOT` before trusting them — but
+`_load_artefact` built `RAW_ARTEFACT_ROOT / leg.run_id` and handed it
+straight to `verify_manifest` with no equivalent check at all. A symlink at
+any ancestor (`benchmarks`, `results`, or `EXP-001` itself) would leave the
+final component's own `is_symlink()` false while `verify_manifest`'s
+internal `.resolve()` transparently followed it into a redirected tree —
+the read-side counterpart of the exact write-side gap `_reject_configured_root_symlink`
+was written to close at heads `4ed9f14`/`3dfe299`.
+
+**Fix.** `_load_artefact` now calls the same
+`_reject_configured_root_symlink(repository_root, RAW_ARTEFACT_ROOT /
+leg.run_id, "raw artefact run directory")` before building `run_dir`,
+reusing the existing helper rather than a new one.
+
+**Regression test.**
+`test_load_artefact_refuses_a_symlinked_ancestor_of_the_run_directory`
+mirrors the existing `OUTPUT_ROOT`/`RECORD_ROOT` ancestor tests in
+`TestOutputContainment`.
+
+### 20.5 `e1d4ec1-F4`/`e1d4ec1-F5` (D3) — two CLI-boundary hardening gaps, both cheap to close for consistency
+
+- **`e1d4ec1-F4`** (Claude Sonnet 5-High): `main()`'s `--manifest-path`
+  collision check against `SUMMARY_FILENAME`/`ADJUDICATION_FILENAME` used
+  plain `Path.__eq__`, case-sensitive on POSIX. On a case-insensitive but
+  case-preserving filesystem (macOS default APFS), a manifest path differing
+  only in case is the same on-disk file but was not caught, so
+  `write_report_manifest` could silently overwrite an already-written
+  summary or adjudication output — the same bug class as the `f370a29`
+  case-identity fix, not applied to this specific check. The two candidate
+  paths do not necessarily exist yet at check time, so `lstat`/`samestat`
+  (used elsewhere in this codebase for the same class of check) does not
+  apply here; fixed instead with a case-folded string comparison, which
+  fails closed on any case variant regardless of filesystem. Regression:
+  `test_the_cli_refuses_a_case_variant_manifest_path_collision`.
+- **`e1d4ec1-F5`** (Qwen Code 3.7 Plus, `NEW-1`): `_checked_destination`
+  (used for `--output-dir`) resolved before checking, unlike its sibling
+  `_checked_manifest_destination`; a symlinked `--output-dir` would resolve
+  through to its target rather than being refused outright. Already
+  mitigated by containment plus `write_no_follow`'s own no-follow writes
+  (Qwen rated it LOW), but the asymmetry with `_checked_manifest_destination`
+  had no reason to exist, so the same check-before-resolve guard was added.
+  Regression: `test_checked_destination_rejects_a_symlinked_destination`.
+
+Qwen's `NEW-2` (legacy `compute_sha256` follows symlinks) is declined:
+informational per Qwen's own review, called only on paths this analysis or
+its tests just wrote themselves, never on untrusted input.
+
+### 20.6 Verification
+
+```text
+.venv\Scripts\python -m pytest tests/test_reproduce.py tests/test_exp001_e4_analysis.py -q
+  111 passed, 2 skipped (symlink-gated; run for real on POSIX CI)
+.venv\Scripts\python -m ruff check / ruff format (2 touched files)
+  All checks passed! / 2 files formatted
+.venv\Scripts\python -m mypy --strict exp001_e4_analysis.py tools/reproduce.py
+  Success: no issues found in 2 source files
+snyk code test .../analysis/exp001_e4_analysis.py
+  1 × LOW (line 1272, _checked_destination's Path(path) — the same
+  structural containment-sanitizer false positive flagged every prior
+  round; count and finding class unchanged)
+```
+
+**No regression to the published EXP-001 record.** `run_analysis` re-run
+end-to-end, from a clean scratch destination, against the real committed E3
+artefacts: `H1: REFUTED`, `H2a: REFUTED`, `H2b: CONFIRMED`, `H3: CONFIRMED`,
+`H4: CONFIRMED`, `D1 flag: RAISED` — identical to the committed record — and
+the regenerated `report-manifest.json` is **byte-identical** to
+`DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/report-manifest.json`
+(`diff` clean). None of §20.2–20.5's fixes change behavior for any artefact
+that satisfies the invariants every committed run already does.
+
+**Security gates.** No dependency files changed — no Snyk Open Source /
+`cargo audit` / `pip-audit` run required. Local Snyk Code re-run above,
+unchanged from every prior round. CI's `Snyk Code`/`Secret Scan` remain the
+authoritative gates on this push.
+
+**The four named reviews, re-assessed:**
+
+| Review | This audit's assessment |
+|---|---|
+| Devin / SWE-2 High | Every fix-verification claim independently reproduced; the mixed-abort decline it endorsed was wrong (§20.1) — the one miss in an otherwise accurate review. |
+| Cursor Agent | Same pattern: accurate on every fix table entry; endorsed the same wrong decline. |
+| Claude Sonnet 5-High | Both HIGH/MEDIUM new findings (§20.3, part of §20.4/20.1) were real; correctly the only review to keep the mixed-abort item open. |
+| Qwen Code 3.7 Plus | Two new LOW/INFO findings (§20.5) were real and cheap to close; sided with the majority (and against Claude Sonnet 5-High) on mixed-aborts, which this audit's re-derivation (§20.1) shows was the wrong side of that one disagreement. |
+
+**Delta re-audit date:** 2026-09-24 UTC — **Result:** CLEAN locally after
+remediation. Five findings fixed (`e1d4ec1-F1`…`e1d4ec1-F5`); one, `F1`,
+corrects a decline this same audit had previously confirmed — recorded here
+rather than silently amended, per this repository's own standard for
+correcting a prior audit's disposition. No new D1; every EXP-001 verdict,
+the D1 campaign flag, and `report-manifest.json` reproduce byte-identically.
+Copilot's two remaining "Open" items (hard-link overwrite, symlinked
+manifest verification) remain stale per §19.2; the mid-flight ancestor-race
+variant in `tools/reproduce.py` remains a documented, declined threat-model
+boundary. CodeRabbit and Copilot are re-requested on this round's push per
+standard practice.
