@@ -2954,3 +2954,112 @@ No new D1; no verdict, tolerance, or measured value changed; the
 published EXP-001 record reproduces byte-identically; the real
 172-record repository manifest still verifies. CodeRabbit and Copilot
 are re-requested on this round's push per standard practice.
+
+## 19. Round 12 — Copilot and CodeRabbit review of head `b69f585`
+
+**Trigger:** Round 11's push was reviewed by Copilot (review
+`5306444116`: 5 open findings — 1 new, 4 carried; **all four of Round
+11's fixes marked "Resolved since last review"**, including both
+maintainer-directed closures) and CodeRabbit (explicitly re-requested;
+incremental review finished with **zero** new actionable comments).
+**Every required CI check was green on `b69f585`** — including all
+ubuntu/macOS `test` legs and `reproduce`, which is the condition §18.3
+attached to calling the `dir_fd`-relative final rename closed: **that
+closure is now unconditional.** (Sourcery skipped, over its diff-size
+limit, as every prior round.)
+
+### 19.1 `b69f585-F1` (D3) — a symlink planted at the canonical manifest name escaped the record-root destination policy
+
+*Copilot, "Symlinked manifest path bypasses record-root destination
+policy" (New, High, comment `4095288750`,
+`exp001_e4_analysis.py:1250` — `_checked_manifest_destination`).*
+
+**Valid, confirmed by tracing the CLI validation chain.**
+`_checked_manifest_destination` delegates to `_checked_destination`,
+which applies containment to `Path(path).resolve()` — and `.resolve()`
+follows a trailing symlink. A symlink planted at the canonical name,
+`record_root/report-manifest.json -> output_root/other.json`, therefore
+resolved into the *permitted* generated-output root, so containment
+passed; `inside_record_root` was then computed on the resolved target,
+which is *not* inside the record root, so the canonical-name rule —
+the very rule protecting the record root — never fired. `main()` passes
+the accepted resolved path onward, and `write_no_follow` sees only the
+plain resolved target, writes it, and overwrites an unrelated allowed
+output while the record root keeps a symlink where its registered
+provenance file belongs. The `PR23-F38` collision guard catches only the
+two known generated filenames, not an arbitrary redirect target. Same
+check-the-resolved-path-only class as `PR23-F34`/§18.4, at the one
+remaining call site that still resolved before checking. Requires local
+symlink creation in the checkout (D3, same reachability class as every
+prior CLI-boundary symlink finding); no committed artefact or published
+verdict is affected.
+
+**Fix.** `_checked_manifest_destination` now refuses a requested
+destination that is itself a symbolic link — checked no-follow, *before*
+resolution, the same check-before-resolve boundary
+`_reject_configured_root_symlink` already establishes for the configured
+roots. A symlink swapped in after the check remains within the
+documented, declined local-write race threat model (§14.2), and the
+eventual write still passes through `write_no_follow`'s own no-follow
+open.
+
+**Regression test.**
+`test_checked_manifest_destination_rejects_a_symlinked_destination`
+builds the finding's exact scenario (canonical name in the record root
+symlinked to an unrelated file in the permitted output root) and asserts
+the refusal plus the target's untouched bytes. **Proved against the
+pre-fix source** (production module stashed to `b69f585`'s committed
+state): the test then fails with `DID NOT RAISE AnalysisError`,
+confirming the gap was real; passes post-fix.
+
+### 19.2 Carried findings — re-affirmed by reference
+
+The four remaining open threads are byte-for-byte the ones §18.5
+re-derived and dispositioned this same day: the mid-flight
+ancestor-race variant in `tools/reproduce.py` (documented threat-model
+boundary, the finding's own offered alternative), the mixed-abort
+verdict question (frozen pre-registration matched literally, maintainer
+previously confirmed the decline), and the two stale threads (hard-link
+overwrite removed at `PR23-F37`; symlinked verification fixed in
+Round 1's own remediation). No new evidence was presented in this
+review; §18.5's dispositions stand unchanged.
+
+### 19.3 Verification
+
+```text
+.venv\Scripts\python -m pytest tests/test_reproduce.py tests/test_exp001_e4_analysis.py -q
+  105 passed, 2 skipped (+1: the new symlinked-destination regression
+  test, running for real on this host)
+.venv\Scripts\python -m ruff check / ruff format --check (2 touched files)
+  All checks passed! / 2 files already formatted
+.venv\Scripts\python -m mypy --strict exp001_e4_analysis.py
+  Success: no issues found in 1 source file
+.venv\Scripts\python -m mypy tests/test_exp001_e4_analysis.py
+  Success: no issues found in 1 source file
+snyk code test .../analysis/  → 1 × LOW (line 1207), count and finding
+  unchanged from every prior round — no new issue from this fix
+governance checkers (check_dv_register_gates, check_skipif_probes,
+  check_global_session_registration)  → all pass
+```
+
+**No regression to the published EXP-001 record**, re-verified by
+re-running `run_analysis` end-to-end to a scratch destination with the
+committed provenance stamp: H1/H2a `REFUTED`, H2b/H3/H4 `CONFIRMED`
+(the registered D1 unchanged), regenerated `report-manifest.json` equal
+to the committed record. The fix sits at the CLI boundary
+(`_checked_manifest_destination`); `run_analysis` and every adjudication
+path are untouched.
+
+**Security gates.** No dependency files changed — no Snyk Open Source /
+`cargo audit` / `pip-audit` run required. Local Snyk Code re-run on the
+modified module (above), unchanged. CI's `Snyk Code`/`Secret Scan`
+remain the authoritative gates on this push.
+
+**Delta re-audit date:** 2026-09-24 UTC — **Result:** CLEAN locally.
+One new D3 fixed with a regression test proven to fail pre-fix; §18.3's
+`dir_fd`-rename closure confirmed unconditional by `b69f585`'s fully
+green required CI; CodeRabbit raised nothing on the Round 11 changes;
+four carried threads re-affirmed by reference to §18.5 with no new
+evidence. No new D1; no verdict, tolerance, or measured value changed;
+the published EXP-001 record reproduces byte-identically. CodeRabbit and
+Copilot are re-requested on this round's push per standard practice.

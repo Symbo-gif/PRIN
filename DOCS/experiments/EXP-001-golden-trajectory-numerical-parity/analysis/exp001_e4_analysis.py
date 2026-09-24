@@ -1231,6 +1231,25 @@ def _checked_manifest_destination(
     or the system temporary directory (this module's own tests) is
     unrestricted, since neither holds anything immutable.
 
+    The *requested* path is additionally checked no-follow, before
+    resolution: both containment and the canonical-name rule below apply to
+    the ``.resolve()``-ed destination, and ``.resolve()`` follows a trailing
+    symlink — so a symlink planted *at* the canonical name
+    (``record_root/report-manifest.json -> output_root/other.json``) would
+    otherwise resolve into a permitted root, sidestep the
+    inside-record-root rule entirely (the resolved target is not inside the
+    record root), and be written through: the record root would keep only a
+    symlink where its registered provenance file belongs while the bytes
+    landed on, and overwrote, a different allowed output (CWE-59;
+    independent review, PR #23 head `b69f585`). Refusing a symlink at the
+    requested path itself closes that redirection at the same
+    check-no-follow-before-resolving boundary
+    :func:`_reject_configured_root_symlink` already establishes for the
+    roots; a symlink swapped in *after* this check remains within the
+    documented, declined local-write race threat model (audit §14.2), and
+    the eventual write still goes through
+    ``tools.reproduce.write_no_follow``'s own no-follow open.
+
     Args:
         path: The requested manifest destination.
         roots: Permitted roots from :func:`allowed_output_roots`.
@@ -1240,10 +1259,16 @@ def _checked_manifest_destination(
         The resolved destination.
 
     Raises:
-        AnalysisError: If the destination escapes every permitted root, or
-            lands inside the record root under any path other than
+        AnalysisError: If the requested destination is itself a symbolic
+            link, escapes every permitted root, or lands inside the record
+            root under any path other than
             ``record_root / "report-manifest.json"``.
     """
+    if path.is_symlink():
+        raise AnalysisError(
+            f"manifest path {path} is a symbolic link; refusing to resolve "
+            "it into a write destination"
+        )
     resolved = _checked_destination(path, roots, "manifest path")
     canonical = record_root / "report-manifest.json"
     inside_record_root = resolved == record_root or record_root in resolved.parents

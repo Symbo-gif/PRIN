@@ -765,6 +765,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     dependency files changed. CodeRabbit and Copilot re-requested on this
     round's push.
 
+- **PR #23 Round 12 — Copilot and CodeRabbit review of head `b69f585`;
+  one symlinked-manifest-destination bypass fixed, Round 11's four fixes
+  confirmed resolved, the `dir_fd`-rename closure confirmed by green CI
+  (2026-09-24 UTC).** Audited as `b69f585-F1` in
+  `DOCS/audits/PR023-multi-review-audit.md` §19. CodeRabbit's
+  re-requested incremental review raised zero new actionable comments;
+  all required CI checks were green on `b69f585`, making §18.3's
+  conditional `dir_fd`-rename closure unconditional. None of this touches
+  EXP-001's numerical/parity conclusions or the D1 flag; the published
+  record re-runs byte-identically.
+  - **`b69f585-F1` (D3) — a symlink planted at the canonical manifest
+    name escaped the record-root destination policy.**
+    `_checked_manifest_destination` applied both containment and the
+    canonical-name rule to the `.resolve()`-ed destination, and
+    `.resolve()` follows a trailing symlink — so
+    `record_root/report-manifest.json -> output_root/other.json` resolved
+    into the permitted output root, never triggered the
+    inside-record-root rule, and was written through: the record root
+    kept a symlink where its registered provenance file belongs while the
+    bytes overwrote a different allowed output. The requested destination
+    is now refused no-follow, before resolution — the same
+    check-before-resolve boundary the configured-root walk already uses.
+    Regression test proven to fail (`DID NOT RAISE`) against the pre-fix
+    source.
+  - Four carried threads re-affirmed by reference to §18.5 (no new
+    evidence in this review): the mid-flight ancestor race, the
+    maintainer-confirmed mixed-abort decline, and the two stale threads.
+  - Targeted suite 105 passed, 2 skipped (+1 new regression test); `ruff`,
+    `ruff format --check`, `mypy --strict` clean; Snyk Code on the
+    modified module unchanged (1 pre-existing accepted LOW); all three
+    governance checkers pass; the E4 analysis re-run to a scratch
+    destination reproduces the committed record byte-for-byte, all
+    verdicts and the D1 flag unchanged. No dependency files changed.
+    CodeRabbit and Copilot re-requested on this round's push.
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that

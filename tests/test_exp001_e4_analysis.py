@@ -652,6 +652,37 @@ class TestOutputContainment:
                 record_root / "report.md", (record_root,), record_root
             )
 
+    @_needs_symlink_support
+    def test_checked_manifest_destination_rejects_a_symlinked_destination(
+        self, tmp_path: Path
+    ) -> None:
+        """Independent review (PR #23 head `b69f585`): the containment and
+        canonical-name rules both apply to the ``.resolve()``-ed
+        destination, and ``.resolve()`` follows a trailing symlink — so a
+        symlink planted at the canonical name,
+        ``record_root/report-manifest.json -> output_root/other.json``,
+        resolved into the permitted output root, sidestepped the
+        inside-record-root rule (the resolved target is outside the record
+        root), and was accepted: the record root would keep only a symlink
+        where its registered provenance file belongs while the write
+        overwrote a different allowed output. The requested path must be
+        refused no-follow, before resolution.
+        """
+        record_root = (tmp_path / "record").resolve()
+        record_root.mkdir()
+        output_root = (tmp_path / "generated").resolve()
+        output_root.mkdir()
+        other = output_root / "other.json"
+        other.write_bytes(b"unrelated generated output\n")
+        destination = record_root / "report-manifest.json"
+        destination.symlink_to(other)
+
+        with pytest.raises(analysis.AnalysisError, match="symbolic link"):
+            analysis._checked_manifest_destination(
+                destination, (output_root, record_root), record_root
+            )
+        assert other.read_bytes() == b"unrelated generated output\n"
+
     def test_checked_manifest_destination_rejects_nested_paths(
         self, tmp_path: Path
     ) -> None:
