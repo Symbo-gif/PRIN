@@ -67,10 +67,13 @@ _REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 if str(_REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPOSITORY_ROOT))
 
-from benchmarks.campaign.exp001_driver import adjudicate_h2b  # noqa: E402
+from benchmarks.campaign.exp001_driver import (  # noqa: E402
+    REGISTERED_FUZZ_BATCH_MIN,
+    adjudicate_h2b,
+)
 from tools.reproduce import (  # noqa: E402
-    compute_sha256,
     read_no_follow,
+    stat_size_and_hash_no_follow,
     verify_manifest,
     write_no_follow,
 )
@@ -392,16 +395,33 @@ def adjudicate_h2a(payload: dict[str, Any]) -> dict[str, Any]:
         The H2a adjudication record.
 
     Raises:
-        AnalysisError: If the artefact is not a confirmatory fuzz batch.
+        AnalysisError: If the artefact's recorded confirmatory minimum
+            disagrees with the registered minimum, or the artefact is not a
+            confirmatory batch at or above it.
     """
     config = payload["config"]
     batch_class = str(config.get("fuzz_batch_class", ""))
     minimum = int(config["fuzz_batch_confirmatory_minimum"])
     denominator = int(config["n_fuzz_cases_requested"])
-    if batch_class != "confirmatory" or denominator < minimum:
+    # The gate is the frozen REGISTERED_FUZZ_BATCH_MIN, never `minimum` — an
+    # artefact is a manifest-verified but otherwise untrusted payload, and
+    # `minimum`/`denominator` are both fields of that same payload, so a
+    # payload could set both to 1 and pass a self-referential check that
+    # only compares the payload against itself. `minimum` is still read and
+    # required to agree with the registered constant, so a payload that
+    # disagrees with the registered rule fails closed rather than silently
+    # adjudicating against its own claimed rule (Copilot follow-up review,
+    # PR #23 head `900a68f`).
+    if minimum != REGISTERED_FUZZ_BATCH_MIN:
+        raise AnalysisError(
+            f"fuzz artefact's recorded confirmatory minimum {minimum} does not "
+            f"match the registered minimum {REGISTERED_FUZZ_BATCH_MIN} "
+            "(preregistration §7)"
+        )
+    if batch_class != "confirmatory" or denominator < REGISTERED_FUZZ_BATCH_MIN:
         raise AnalysisError(
             f"fuzz artefact is not a confirmatory batch: class={batch_class!r}, "
-            f"requested={denominator}, minimum={minimum}"
+            f"requested={denominator}, minimum={REGISTERED_FUZZ_BATCH_MIN}"
         )
     non_aborted, aborted = _partition(payload)
     failing = [case for case in non_aborted if not case["within_tolerance"]]
@@ -941,13 +961,18 @@ def write_report_manifest(
             "analysis/exp001_e4_analysis.py"
         ),
         "output_root": OUTPUT_ROOT.as_posix(),
+        # Size and digest come from stat_size_and_hash_no_follow, not
+        # Path.stat()/compute_sha256, which both follow a symlink: if an
+        # output were swapped for a symlink (or otherwise changed) between
+        # write_outputs and this manifest write, those would record bytes
+        # from another path instead of the file write_no_follow actually
+        # wrote (Copilot follow-up review, PR #23 head `900a68f`).
         "outputs": [
-            {
-                "path": path.name,
-                "bytes": path.stat().st_size,
-                "sha256": compute_sha256(path),
-            }
-            for path in outputs
+            {"path": path.name, "bytes": size, "sha256": digest}
+            for path, (size, digest) in (
+                (path, stat_size_and_hash_no_follow(path, "generated output"))
+                for path in outputs
+            )
         ],
         "inputs": [
             {

@@ -254,6 +254,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     containment sanitizer's own entry point — the same structural
     false-positive class already on file, not new.
 
+- **PR #23 Round 4 — Copilot follow-up review at head `900a68f`; two more
+  findings, plus a maintainer-requested mypy fix (2026-09-23 UTC).** CI went
+  fully green on Round 3's push; Copilot's re-review found two more gaps in
+  the same no-follow class, audited as `PR23-F23`/`PR23-F24`/`PR23-F25` in
+  `DOCS/audits/PR023-multi-review-audit.md` §10. CodeRabbit's automatic
+  review is rate-limited on this org's plan this round (1 included
+  review/hour, already spent) and did not produce new comments.
+  - **`PR23-F23` (D2) — `adjudicate_h2a`'s confirmatory-batch gate compared
+    an artefact field against itself.** `fuzz_batch_confirmatory_minimum`
+    and `n_fuzz_cases_requested` are both fields of the same
+    manifest-verified-but-otherwise-untrusted payload; a payload setting
+    both to `1` would pass `denominator < minimum` (`1 < 1` is false) and
+    adjudicate `CONFIRMED` from one clean case. Now gated against the frozen
+    `REGISTERED_FUZZ_BATCH_MIN = 1000` (pre-registration §7), imported from
+    the driver, with the payload's own recorded minimum required to agree
+    with it rather than define the rule.
+  - **`PR23-F24` (D3) — the committed report-manifest's output-integrity
+    fields could still follow a symlink.** Round 3's `write_no_follow`
+    closed the write side for generated outputs; the manifest entry
+    recording each output's size/digest still used
+    `path.stat()`/`compute_sha256()` (both link-following) afterward. Now
+    uses the newly-public `tools.reproduce.stat_size_and_hash_no_follow`.
+  - **`PR23-F25` (D3) — the manifest path itself was checked for symlinks
+    only, not full non-regularity.** `PR23-F17` (Round 3) added
+    `_reject_non_regular` for candidate artefacts; the manifest path's own
+    top-level check in both `verify_manifest` and `append_manifest` still
+    used the narrower `_reject_symlink`, so a FIFO or directory named
+    `manifest.json` — realistically outside the results directory entirely,
+    where no candidate scan ever sees it — would hang or raise a raw
+    `OSError` instead of the documented `ManifestMismatchError`. Both now
+    use `_reject_non_regular`.
+  - **A false negative caught in the regression proof itself.** The first
+    version of `PR23-F25`'s `append_manifest` test placed the
+    directory-as-manifest inside `results_dir`, where an *existing* check
+    (`PR23-F17`'s candidate scan) coincidentally also caught it — the test
+    passed against pre-fix source for the wrong reason. Caught by this
+    audit's own practice of proving every regression test against
+    `git stash`'d pre-fix source (§2); corrected to the realistic shape
+    (manifest destination outside the results directory), which then failed
+    correctly pre-fix and passes post-fix.
+  - **Maintainer-requested: the standing `mypy --strict` gap on
+    `tests/test_reproduce.py` is closed.** `Module "tools.reproduce" does
+    not explicitly export attribute "ReportingError"` — `tools/reproduce.py`
+    imported it from `prin.reporting` without `__all__` or an explicit
+    re-export, so `mypy --strict`'s implied `--no-implicit-reexport` treated
+    it as private, contradicting this module's own test asserting the
+    re-export is intentional (WP035-F1). Fixed with the PEP 484 single-name
+    re-export idiom: `from prin.reporting import ReportingError as
+    ReportingError`. Fixing it also surfaced two new `mypy --strict` errors
+    in this session's own Round 3 test additions (a monkeypatched
+    `Path.resolve` replacement whose `*args`/`**kwargs` forwarding didn't
+    type-check against the real signature); narrowed to match
+    `Path.resolve`'s actual `(self, strict: bool = False)` signature and
+    fixed in the same pass.
+  - 5 new regression tests. Full suite `3240 passed, 176 skipped` (one
+    unrelated wall-clock timing test flaked once, passed in isolation
+    immediately after — not attributable to this change); `ruff`, `ruff
+    format --check`, `mypy --strict` (both the four changed files and the
+    CI-gated `python/prin` scope), and `bandit` all clean; the E4 analysis
+    re-run to a scratch destination still reproduces the committed record
+    byte-for-byte. Snyk Code unchanged from Round 3 (0 issues on
+    `tools/reproduce.py`; 1 pre-existing LOW on `exp001_e4_analysis.py`).
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that

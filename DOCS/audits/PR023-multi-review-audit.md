@@ -957,3 +957,233 @@ verdict, tolerance, or measured value changed; no regression to the published
 EXP-001 record (§9.10). One local process incident during verification,
 disclosed and remediated in §9.5, with the test suite itself hardened against
 recurrence.
+
+---
+
+## 10. Round 4 — Copilot follow-up review (head `900a68f`) plus a maintainer-flagged mypy gap
+
+**Trigger:** CI on Round 3's push (`900a68f`) went fully green (29/29
+required + optional checks; `gpu-cuda`/`gpu-wgpu` completed after the initial
+check-list snapshot). Copilot re-reviewed the same head and raised 2 new
+findings (1 High, 1 Medium) while resolving 2 more from Round 3; the carried
+`PR23-F1` thread ("Manifest verification accepts symlinked files") remains
+open, the same pattern as Rounds 2 and 3. CodeRabbit's automatic review on
+this head is rate-limited on this org's plan (`Review skipped: manual review
+required for this OSS repository`; a manual `@coderabbitai review` trigger
+returned "Review rate limited" — 1 included review/hour, already spent by
+Rounds 1–3) and did not produce new comments this round. Separately, the
+maintainer flagged a standing item from §7's caveat: `mypy --strict` on
+`tests/test_reproduce.py` reporting `Module "tools.reproduce" does not
+explicitly export attribute "ReportingError"`, previously left alone as
+pre-existing and out of CI's `mypy python/prin --strict` scope, but now
+explicitly requested to be fixed.
+
+### 10.1 `PR23-F23` (D2) — `adjudicate_h2a`'s confirmatory gate trusted a field of the artefact it was gating
+
+*Copilot, "Enforce the registered fuzz-case minimum"
+(`exp001_e4_analysis.py:401`).*
+
+`adjudicate_h2a` read `fuzz_batch_confirmatory_minimum` from the artefact
+payload itself and compared the payload's own `n_fuzz_cases_requested`
+against it (`denominator < minimum`). Both fields live in the same
+manifest-verified-but-otherwise-untrusted payload: manifest verification
+attests the bytes are unmodified since the driver wrote them, not that the
+driver was run honestly or that a hand-constructed payload couldn't declare
+`fuzz_batch_confirmatory_minimum: 1` alongside `n_fuzz_cases_requested: 1`.
+`1 < 1` is false, so the check could never reject that pair — a
+self-referential comparison, not a gate against the registered rule
+(`REGISTERED_FUZZ_BATCH_MIN = 1000` in
+`benchmarks/campaign/exp001_driver.py`, pre-registration §7). One clean case
+would then adjudicate H2a `CONFIRMED`.
+
+**Severity D2, not D1.** Exploiting it requires supplying a hand-built or
+corrupted artefact that still passes `verify_manifest`'s own SHA-256 check
+against *some* manifest — i.e., an attacker or error already inside the
+governed provenance chain; every artefact this repository has actually
+generated carries the driver's true value (1000), so no published verdict is
+affected. It breaks the normative "confirmatory means confirmatory" contract
+pre-registration §7 states, independent of exploitability.
+
+**Fix.** `adjudicate_h2a` now imports `REGISTERED_FUZZ_BATCH_MIN` from the
+driver and (a) requires the payload's own recorded minimum to equal it
+exactly — failing closed on a payload that disagrees with the registered
+rule, rather than silently adopting whatever rule it claims — and (b) gates
+`denominator` against the constant, never against the payload-supplied
+`minimum`.
+
+**Regression test.**
+`tests/test_exp001_e4_analysis.py::TestH2a::test_a_self_declared_minimum_cannot_override_the_registered_one`
+constructs exactly the `minimum=1, requested=1` payload described above and
+confirms it now fails closed with "registered minimum" in the message;
+`test_the_registered_minimum_constant_is_1000` pins the constant's value
+directly. Proved against Round 3 source (`git stash` on the two source
+files only): `DID NOT RAISE AnalysisError` pre-fix, passes post-fix.
+
+### 10.2 `PR23-F24` (D3) — the committed report-manifest's output-integrity fields could still follow a link
+
+*Copilot, "Compute output integrity from no-follow descriptors"
+(`exp001_e4_analysis.py:948`).*
+
+`Round 3`'s `write_no_follow` migration (§9.1–§9.2) closed the *write* side
+for generated outputs, but `write_report_manifest`'s `"outputs"` list —
+recording each output's committed size and digest — still computed them with
+plain `path.stat().st_size` and `compute_sha256(path)`, both link-following.
+If an output were swapped for a symlink (or otherwise changed) between
+`write_outputs` finishing and this manifest write running, the committed
+`report-manifest.json` could attest bytes from a different file than the one
+`write_no_follow` actually wrote — the no-follow guarantee covered the write
+but not the subsequent read-back used to record its own integrity.
+
+**Fix.** `tools.reproduce._stat_size_and_hash_no_follow` is renamed to the
+public `stat_size_and_hash_no_follow` (the second cross-module consumer of
+this pattern, after `read_no_follow`/`write_no_follow` in Round 3) and used
+for every entry in the `"outputs"` list, in place of the
+`stat()`/`compute_sha256()` pair. `compute_sha256` is no longer imported by
+`exp001_e4_analysis.py` at all.
+
+**Regression test.**
+`tests/test_exp001_e4_analysis.py::TestReportManifestIntegrity::test_output_integrity_does_not_use_link_following_calls`
+monkeypatches `Path.stat` and `tools.reproduce.compute_sha256` to raise if
+called, and confirms `write_report_manifest` still produces the correct
+size/digest — proving the read path no longer touches either. Proved against
+Round 3 source: fails with the monkeypatch's `AssertionError` pre-fix,
+passes post-fix.
+
+### 10.3 `PR23-F25` (D3) — the manifest path itself was checked for symlinks only, not full non-regularity
+
+*Copilot, "Reject non-regular manifests before loading"
+(`tools/reproduce.py:489`, "also appears on line 582").*
+
+`PR23-F17` (Round 3, §9.3) added `_reject_non_regular` for *candidate*
+artefacts in both `verify_manifest` and `append_manifest`, but the manifest
+path itself — checked at the top of each function, before any candidate
+scan — still used the narrower `_reject_symlink`. For `verify_manifest`,
+where the manifest and results directory coincide, the two checks can look
+equivalent in the common case, but they are not the same check, and for
+`append_manifest`'s realistic shape (`DEFAULT_MANIFEST` in `paper/`,
+`DEFAULT_RESULTS_DIR` in a different tree entirely — the manifest is *not* a
+candidate in its own results directory) only the top-level check reaches it
+at all. A FIFO there would block inside `load_manifest`'s blocking open; a
+directory would reach `write_no_follow` in `append_manifest` and fail as a
+raw, undocumented `OSError`/`PermissionError` rather than the fail-closed
+`ManifestMismatchError` both functions document.
+
+**Fix.** Both top-level calls — `verify_manifest`'s and `append_manifest`'s —
+changed from `_reject_symlink(manifest_path, "manifest")` to
+`_reject_non_regular(manifest_path, "manifest")`.
+
+**Regression tests, and a false-negative caught during their own
+verification.** The first version of the `append_manifest` test placed the
+directory-as-manifest *inside* `results_dir`, which is unintentionally also
+caught by the existing `PR23-F17` candidate-scan check — the test passed
+against pre-fix source for the wrong reason (a false negative in the
+regression proof itself, not in the fix), discovered by running it against
+`git stash`'d Round 3 source as this audit's own methodology requires (§2,
+§3.1) and noticing it passed when it should have failed. Corrected to place
+the manifest destination in a sibling directory, the realistic shape
+(`test_append_manifest_rejects_a_manifest_path_that_is_a_directory`), which
+then correctly failed with the undocumented `PermissionError` pre-fix and
+passes with `ManifestMismatchError` post-fix, exactly matching Copilot's
+description.
+`test_verify_manifest_rejects_a_manifest_path_that_is_a_directory` covers
+the `verify_manifest` side.
+
+### 10.4 Carried finding, still resolving
+
+Copilot's original `PR23-F1` thread remained open through Round 4 as well.
+`PR23-F25` is the last piece of that class this round found; whether the
+thread closes on Round 4's push is for the next review to show.
+
+### 10.5 Maintainer-requested fix — `tests/test_reproduce.py`'s pre-existing mypy gap
+
+Not a review finding; the maintainer asked directly for the caveat recorded
+in §7 to be closed rather than left standing: `mypy --strict
+tests/test_reproduce.py` reported `Module "tools.reproduce" does not
+explicitly export attribute "ReportingError"` (line 55,
+`from tools.reproduce import ReportingError`), reproducing identically
+against every head since Round 1. Root cause: `tools/reproduce.py` imports
+`ReportingError` from `prin.reporting` (line 27) without `__all__` or an
+explicit re-export alias, so mypy's `--strict`-implied
+`--no-implicit-reexport` treats it as a private import, not part of
+`tools.reproduce`'s public surface — even though
+`tests/test_reproduce.py::test_reproduce_imports_only_public_reporting_surface`
+already asserts `reproduce.ReportingError is prin.reporting.ReportingError`
+as an intentional public re-export (a WP035-F1 decision, per that test's own
+docstring).
+
+**Fix.** `from prin.reporting import ReportingError` →
+`from prin.reporting import ReportingError as ReportingError` — the PEP 484
+explicit-reexport idiom for a single name, matching how
+`prin/reporting/__init__.py` itself re-exports `ReportingError` from
+`_artifacts` (via `__all__`, appropriate there since that module has a large
+public surface; the single-name `as` alias is the equivalent, minimal form
+for `tools/reproduce.py`, which otherwise has no imported names needing
+re-export — every other public name in the module is defined there
+directly, which `--no-implicit-reexport` does not restrict).
+
+**Verification.** `mypy --strict tests/test_reproduce.py` now reports no
+issues; re-run across every file this round and Round 3 touched
+(`tools/reproduce.py`, `exp001_e4_analysis.py`,
+`tests/test_exp001_e4_analysis.py`) together, and separately against the
+CI-gated `mypy python/prin --strict` scope, both clean.
+
+Fixing this also surfaced two *new* mypy `--strict` errors in
+`tests/test_reproduce.py` from this session's own Round 3 test additions,
+caught and fixed in the same pass rather than left for a future round:
+`test_append_manifest_writes_through_the_unresolved_manifest_path`'s
+`fake_resolve(self, *args: object, **kwargs: object)` monkeypatch didn't
+type-check against `Path.resolve`'s real `(self, strict: bool = False)`
+signature when forwarding `*args`/`**kwargs` to it; narrowed to match the
+real signature exactly (`strict: bool = False`, forwarded positionally).
+
+### 10.6 Verification
+
+```text
+.venv\Scripts\python -m pytest tests/test_reproduce.py tests/test_exp001_e4_analysis.py -q
+  88 passed
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -q
+  3240 passed, 176 skipped, 48 deselected, 1 failed then verified flaky (§10.6 note)
+.venv\Scripts\python -m ruff check tools/reproduce.py exp001_e4_analysis.py tests/test_reproduce.py tests/test_exp001_e4_analysis.py
+  All checks passed!
+.venv\Scripts\python -m ruff format --check <same four files>
+  4 files already formatted
+.venv\Scripts\python -m mypy --strict tools/reproduce.py exp001_e4_analysis.py tests/test_reproduce.py tests/test_exp001_e4_analysis.py
+  Success: no issues found in 4 source files
+.venv\Scripts\python -m mypy python/prin --strict
+  Success: no issues found in 62 source files
+.venv\Scripts\python -m bandit tools/reproduce.py exp001_e4_analysis.py
+  No issues identified
+tools/check_dv_register_gates.py / check_skipif_probes.py /
+  check_global_session_registration.py / wp001_baseline.py check
+  all passed
+```
+
+**Flaky-test note.** The one failure in the full-suite run,
+`tests/test_acceptance_y4q1_2.py::TestMeasureWallTimeExtended::test_larger_batch_takes_longer`,
+is a wall-clock timing assertion (`t16["mean_ms"] >= t1["mean_ms"] * 0.5`) in
+a module untouched by any round of this PR; it passed cleanly in isolation
+immediately after. Not attributable to this change.
+
+**No regression to the published EXP-001 record**, re-verified after this
+round's edits:
+
+```text
+H1: REFUTED   H2a: REFUTED   H2b: CONFIRMED   H3: CONFIRMED   H4: CONFIRMED
+D1 flag: RAISED
+exp001-e4-adjudication.json  sha256 e6f6eb20...  MATCH
+exp001-e4-summary.md          sha256 4551061c...  MATCH
+```
+
+**Security gates.** Local Snyk Code (CLI `1.1306.2`, org `symbo-gif`):
+`tools/reproduce.py` 0 issues; `exp001_e4_analysis.py` 1 issue (LOW, Path
+Traversal — unchanged from §9.10's finding, the sanitizer's own entry point,
+same structural false-positive class). No new findings this round.
+
+**Delta re-audit date:** 2026-09-23 UTC — **Result:** CLEAN. `PR23-F23`
+through `PR23-F25` FIXED with regression tests; the maintainer-requested
+`ReportingError` re-export gap closed, along with two `mypy --strict`
+errors this session's own Round 3 tests had introduced; no D1; no verdict,
+tolerance, or measured value changed; no regression to the published EXP-001
+record. CodeRabbit did not review this head (rate-limited); its next
+automatic review, whenever the plan's window resets, is the outstanding item
+this round could not close.

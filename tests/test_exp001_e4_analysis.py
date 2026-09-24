@@ -15,6 +15,7 @@ determinism of every generated output (campaign plan §7.4 step 5).
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 import sys
@@ -196,6 +197,29 @@ class TestH2a:
         payload["config"]["fuzz_batch_class"] = "exploratory"
         with pytest.raises(analysis.AnalysisError, match="confirmatory"):
             analysis.adjudicate_h2a(payload)
+
+    def test_a_self_declared_minimum_cannot_override_the_registered_one(
+        self,
+    ) -> None:
+        """Copilot follow-up review, PR #23 head `900a68f`: the gate must be
+        the frozen registered constant, not a field of the artefact being
+        adjudicated.
+
+        Before this fix, a payload could set both
+        ``fuzz_batch_confirmatory_minimum`` and ``n_fuzz_cases_requested`` to
+        1 and pass ``denominator < minimum`` (1 < 1 is false) — a
+        self-referential check that can never reject anything, since the
+        payload controls both sides of the inequality. One clean case would
+        then adjudicate ``CONFIRMED``.
+        """
+        case = {**_corpus_case("c0"), "case_index": 0, "n_steps": 30}
+        payload = _fuzz_payload([case], requested=1)
+        payload["config"]["fuzz_batch_confirmatory_minimum"] = 1
+        with pytest.raises(analysis.AnalysisError, match="registered minimum"):
+            analysis.adjudicate_h2a(payload)
+
+    def test_the_registered_minimum_constant_is_1000(self) -> None:
+        assert analysis.REGISTERED_FUZZ_BATCH_MIN == 1000
 
 
 class TestH3:
@@ -496,6 +520,54 @@ class TestOutputContainment:
         with pytest.raises(analysis.AnalysisError, match=r"report-manifest.json"):
             analysis.main(["--manifest-path", str(escape)])
         assert escape.read_bytes() == b"# source\n"
+
+
+class TestReportManifestIntegrity:
+    """Copilot follow-up review, PR #23 head `900a68f`: the integrity fields
+    recorded for each generated output must come from a no-follow read of
+    the file actually written, not ``Path.stat()``/``compute_sha256()``
+    (both link-following) applied after the fact.
+    """
+
+    def test_output_integrity_does_not_use_link_following_calls(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        output_dir = tmp_path / "out"
+        output_dir.mkdir()
+        summary = output_dir / "exp001-e4-summary.md"
+        payload = b"hello\n"
+        summary.write_bytes(payload)
+
+        def _forbidden_stat(*_args: object, **_kwargs: object) -> None:
+            raise AssertionError("must not call Path.stat for output integrity")
+
+        def _forbidden_hash(*_args: object, **_kwargs: object) -> None:
+            raise AssertionError("must not call compute_sha256 for output integrity")
+
+        monkeypatch.setattr(Path, "stat", _forbidden_stat)
+        from tools import reproduce as reproduce_module
+
+        monkeypatch.setattr(reproduce_module, "compute_sha256", _forbidden_hash)
+
+        manifests: dict[str, list[dict[str, Any]]] = {
+            leg.label: [] for leg in analysis.RUN_LEGS
+        }
+        manifest_path = tmp_path / "report-manifest.json"
+        record = analysis.write_report_manifest(
+            [summary],
+            manifests,
+            manifest_path,
+            analysis.GENERATED_AT,
+            {"H1": {"verdict": "CONFIRMED"}},
+        )
+
+        assert record["outputs"] == [
+            {
+                "path": "exp001-e4-summary.md",
+                "bytes": len(payload),
+                "sha256": hashlib.sha256(payload).hexdigest(),
+            }
+        ]
 
 
 class TestSafeTempRoot:

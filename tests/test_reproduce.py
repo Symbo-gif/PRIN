@@ -577,6 +577,49 @@ class TestManifestSymlinkProvenance:
             reproduce.append_manifest(governed, manifest_path)
         assert not manifest_path.exists()
 
+    def test_verify_manifest_rejects_a_manifest_path_that_is_a_directory(
+        self, tmp_path: Path
+    ) -> None:
+        """PR23-F (Copilot follow-up review, PR #23 head `900a68f`): the
+        manifest path itself, not just candidate artefacts, must be rejected
+        when it is not a regular file.
+
+        Before this fix, ``verify_manifest``/``append_manifest`` only
+        ``_reject_symlink``'d the manifest path (a symlink-only check), so a
+        FIFO there would hang inside ``load_manifest``'s blocking open, and a
+        directory there would reach ``write_no_follow`` and fail as a raw
+        ``OSError`` rather than the documented ``ManifestMismatchError``.
+        """
+        governed = tmp_path / "governed"
+        governed.mkdir()
+        (governed / "manifest.json").mkdir()
+
+        with pytest.raises(
+            reproduce.ManifestMismatchError, match=r"manifest.*not a regular file"
+        ):
+            reproduce.verify_manifest(governed, governed / "manifest.json")
+
+    def test_append_manifest_rejects_a_manifest_path_that_is_a_directory(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The manifest destination lives *outside* ``results_dir`` here (the
+        realistic shape — see ``DEFAULT_MANIFEST``/``DEFAULT_RESULTS_DIR``),
+        so it is never swept up by the ``results_dir`` candidate scan that
+        already rejects a non-regular candidate there (`PR23-F17`). Only the
+        manifest-path check this test targets can catch it.
+        """
+        monkeypatch.setattr(reproduce, "ALLOWED_MANIFEST_ROOTS", (tmp_path.resolve(),))
+        governed = tmp_path / "governed"
+        governed.mkdir()
+        (governed / "a.json").write_bytes(b'{"a": 1}\n')
+        manifest_path = tmp_path / "manifest-dir" / "manifest.json"
+        manifest_path.mkdir(parents=True)
+
+        with pytest.raises(
+            reproduce.ManifestMismatchError, match=r"manifest.*not a regular file"
+        ):
+            reproduce.append_manifest(governed, manifest_path)
+
     def test_append_manifest_writes_through_the_unresolved_manifest_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -603,10 +646,10 @@ class TestManifestSymlinkProvenance:
         decoy = allowed_root / "decoy-manifest.json"
         real_resolve = Path.resolve
 
-        def fake_resolve(self: Path, *args: object, **kwargs: object) -> Path:
+        def fake_resolve(self: Path, strict: bool = False) -> Path:
             if str(self) == str(manifest_path):
                 return decoy
-            return real_resolve(self, *args, **kwargs)
+            return real_resolve(self, strict)
 
         monkeypatch.setattr(Path, "resolve", fake_resolve)
 
@@ -636,7 +679,7 @@ class TestOpenNoFollow:
         target = tmp_path / "a.json"
         payload = b'{"a": 1}\n'
         target.write_bytes(payload)
-        size, digest = reproduce._stat_size_and_hash_no_follow(target, "artefact")
+        size, digest = reproduce.stat_size_and_hash_no_follow(target, "artefact")
         assert size == len(payload)
         assert digest == reproduce.compute_sha256(target)
 

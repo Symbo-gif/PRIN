@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from prin.reporting import ReportingError
+from prin.reporting import ReportingError as ReportingError
 from prin.reporting.figure_generation import generate_all_figures
 from prin.reporting.table_generation import generate_all_tables
 
@@ -306,7 +306,7 @@ def _hash_fd(fd: int) -> str:
     """SHA-256 digest of an already-open file descriptor.
 
     Consumes and closes ``fd`` (via ``os.fdopen``). Split out of
-    :func:`_stat_size_and_hash_no_follow` so a caller that already knows the
+    :func:`stat_size_and_hash_no_follow` so a caller that already knows the
     expected size can fstat first and skip hashing on a mismatch, without
     re-opening the file (see :func:`_verify_size_and_hash_no_follow`).
 
@@ -323,8 +323,15 @@ def _hash_fd(fd: int) -> str:
     return digest.hexdigest()
 
 
-def _stat_size_and_hash_no_follow(path: Path, role: str) -> tuple[int, str]:
+def stat_size_and_hash_no_follow(path: Path, role: str) -> tuple[int, str]:
     """Size and SHA-256 digest of one file, from a single no-follow open.
+
+    Public: a caller recording integrity fields for a path it just wrote or
+    verified (for example, a manifest entry for a generated output) must
+    compute them this way rather than with ``Path.stat()`` +
+    ``compute_sha256()``, both of which follow a symlink — recording bytes
+    from a swapped-in target instead of the file actually written/verified
+    (TOCTOU, CWE-59).
 
     Both figures come from the same file descriptor, opened exactly once, so
     there is no window between "checked" and "read" in which the path could
@@ -486,7 +493,7 @@ def append_manifest(
             or if the manifest or any candidate artefact is not a regular
             file.
     """
-    _reject_symlink(manifest_path, "manifest")
+    _reject_non_regular(manifest_path, "manifest")
     results = results_dir.resolve()
     destination = manifest_path.resolve()
     if not any(
@@ -525,7 +532,7 @@ def append_manifest(
     for name, path in actual_paths.items():
         if name in existing:
             continue
-        size, digest = _stat_size_and_hash_no_follow(path, "candidate artefact")
+        size, digest = stat_size_and_hash_no_follow(path, "candidate artefact")
         appended.append(ManifestRecord(path=name, bytes=size, sha256=digest))
     complete = tuple(sorted((*records, *appended), key=lambda record: record.path))
     if appended or not manifest_path.is_file():
@@ -579,7 +586,7 @@ def verify_manifest(
             the manifest or any ``*.json`` entry in ``results_dir`` is not a
             regular file.
     """
-    _reject_symlink(manifest_path, "manifest")
+    _reject_non_regular(manifest_path, "manifest")
     results = results_dir.resolve()
     records = load_manifest(manifest_path)
     expected = {record.path for record in records}
