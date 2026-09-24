@@ -246,30 +246,10 @@ def _dir_relative_open(path: Path, flags: int, mode: int, role: str) -> int | No
         OSError: If the parent directory cannot be opened, or the file
             cannot be opened/created.
     """
-    if (
-        os.open not in os.supports_dir_fd
-        or not hasattr(os, "O_DIRECTORY")
-        or not hasattr(os, "O_NOFOLLOW")
-    ):
+    parent_fd = _open_parent_dir_fd(path.parent, role)
+    if parent_fd is None:
         return None
-    parent = path.parent
     no_follow = getattr(os, "O_NOFOLLOW", 0)
-    dir_flags = os.O_RDONLY | os.O_DIRECTORY | no_follow
-    try:
-        parent_fd = os.open(parent, dir_flags)
-    except OSError as error:
-        # Linux reports ENOTDIR, not ELOOP, for O_DIRECTORY | O_NOFOLLOW on a
-        # symlink (observed on the ubuntu CI legs, PR #23 head `e946a3c`).
-        # The open has already failed closed; the no-follow lstat only
-        # separates that case from a parent that is genuinely not a directory.
-        if error.errno == errno.ELOOP or (
-            error.errno == errno.ENOTDIR and parent.is_symlink()
-        ):
-            raise ManifestMismatchError(
-                f"{role} {path} has a symbolic link ancestor directory "
-                f"({parent}); refusing to open it"
-            ) from error
-        raise
     try:
         try:
             return os.open(path.name, flags | no_follow, mode, dir_fd=parent_fd)
@@ -282,6 +262,54 @@ def _dir_relative_open(path: Path, flags: int, mode: int, role: str) -> int | No
             raise
     finally:
         os.close(parent_fd)
+
+
+def _open_parent_dir_fd(parent: Path, role: str) -> int | None:
+    """Open ``parent`` as a no-follow directory descriptor.
+
+    Split out of :func:`_dir_relative_open` so :func:`write_no_follow` can
+    keep the same descriptor open across both its temporary file's creation
+    *and* the final :func:`os.replace` — reusing one pinned descriptor for
+    both, rather than opening and closing it once per call, is what keeps
+    the parent-directory guarantee alive through the rename too (see
+    :func:`write_no_follow`).
+
+    Returns ``None`` (platform fallback signal, not an error) when
+    ``dir_fd``-relative opens aren't supported here (Windows).
+
+    Args:
+        parent: The directory to pin, unresolved.
+        role: Human-readable role used in the failure message.
+
+    Returns:
+        An open, caller-owned directory file descriptor, or ``None``.
+
+    Raises:
+        ManifestMismatchError: If ``parent`` is a symbolic link.
+        OSError: If ``parent`` cannot be opened for another reason.
+    """
+    if (
+        os.open not in os.supports_dir_fd
+        or not hasattr(os, "O_DIRECTORY")
+        or not hasattr(os, "O_NOFOLLOW")
+    ):
+        return None
+    dir_flags = os.O_RDONLY | os.O_DIRECTORY | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        return os.open(parent, dir_flags)
+    except OSError as error:
+        # Linux reports ENOTDIR, not ELOOP, for O_DIRECTORY | O_NOFOLLOW on a
+        # symlink (observed on the ubuntu CI legs, PR #23 head `e946a3c`).
+        # The open has already failed closed; the no-follow lstat only
+        # separates that case from a parent that is genuinely not a directory.
+        if error.errno == errno.ELOOP or (
+            error.errno == errno.ENOTDIR and parent.is_symlink()
+        ):
+            raise ManifestMismatchError(
+                f"{role} has a symbolic link ancestor directory ({parent}); "
+                "refusing to open it"
+            ) from error
+        raise
 
 
 def _reject_non_regular_fd(fd: int, path: Path, role: str) -> None:
@@ -429,19 +457,31 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
     ``open`` itself the symlink check: it fails with ``ELOOP`` if the final
     path component is an existing symlink (vanishingly unlikely for a fresh
     unique name, but checked all the same), and otherwise creates a new
-    regular file in one syscall. :func:`_dir_relative_open` closes the same
+    regular file in one syscall. :func:`_open_parent_dir_fd` closes the same
     window for the *immediate parent* directory too, where the platform
     supports it (see its own docstring for why this does not extend to
-    every ancestor). Windows has no ``O_NOFOLLOW`` or ``dir_fd``-relative
-    opens; there this falls back to ``is_symlink()`` immediately before
-    ``open()`` on the full path (see :func:`_open_no_follow`). ``O_NONBLOCK``
-    (where defined) and a post-open :func:`_reject_non_regular_fd` check
-    additionally guard against a FIFO swapped in for the temporary name,
-    which would otherwise block this open indefinitely instead of failing
-    closed. ``path`` itself is checked for a symlink immediately before the
-    final swap, preserving this function's documented refusal — though
-    :func:`os.replace` never follows a trailing symlink on either side even
-    without that check, so this is belt and suspenders, not the sole guard.
+    every ancestor) — and, unlike a plain call through
+    :func:`_dir_relative_open`, the descriptor it returns is kept open here
+    across *both* the temporary file's creation *and* the final
+    :func:`os.replace`, so the pinned-parent guarantee is not lost the
+    moment the temporary file is closed: a symlink swapped into the parent
+    between those two steps still cannot redirect the rename, because the
+    rename is performed relative to the same descriptor, not by
+    re-resolving the path string (independent review, PR #23 head
+    `949e5e1`, closing the residual left when this function was first
+    rewritten at head `d5f47d6`). Windows has no ``O_NOFOLLOW`` or
+    ``dir_fd``-relative opens; there this falls back to ``is_symlink()``
+    immediately before ``open()`` on the full path (see
+    :func:`_open_no_follow`), and the final swap re-resolves ``path`` by
+    string, the same narrowing-only posture already documented for every
+    other Windows fallback in this module. ``O_NONBLOCK`` (where defined)
+    and a post-open :func:`_reject_non_regular_fd` check additionally guard
+    against a FIFO swapped in for the temporary name, which would otherwise
+    block this open indefinitely instead of failing closed. ``path`` itself
+    is checked for a symlink immediately before the final swap, preserving
+    this function's documented refusal — though :func:`os.replace` never
+    follows a trailing symlink on either side even without that check, so
+    this is belt and suspenders, not the sole guard.
 
     Args:
         path: Destination path, unresolved.
@@ -462,9 +502,20 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
         | getattr(os, "O_BINARY", 0)
     )
     tmp_path = path.with_name(f".{path.name}.tmp-{os.getpid()}-{uuid.uuid4().hex}")
-    fd = _dir_relative_open(tmp_path, flags, 0o644, role)
-    if fd is None:
-        if hasattr(os, "O_NOFOLLOW"):
+    parent_fd = _open_parent_dir_fd(path.parent, role)
+    try:
+        no_follow = getattr(os, "O_NOFOLLOW", 0)
+        if parent_fd is not None:
+            try:
+                fd = os.open(tmp_path.name, flags | no_follow, 0o644, dir_fd=parent_fd)
+            except OSError as error:
+                if error.errno == errno.ELOOP:
+                    raise ManifestMismatchError(
+                        f"{role} {path} is a symbolic link, not a regular file "
+                        "held by the governed directory; refusing to write it"
+                    ) from error
+                raise
+        elif hasattr(os, "O_NOFOLLOW"):
             try:
                 fd = os.open(tmp_path, flags | os.O_NOFOLLOW, 0o644)
             except OSError as error:
@@ -481,19 +532,30 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
                     "by the governed directory; refusing to write it"
                 )
             fd = os.open(tmp_path, flags, 0o644)
-    try:
-        _reject_non_regular_fd(fd, tmp_path, role)
-        with os.fdopen(fd, "wb") as stream:
-            stream.write(data)
-        if path.is_symlink():
-            raise ManifestMismatchError(
-                f"{role} {path} is a symbolic link, not a regular file held "
-                "by the governed directory; refusing to write it"
-            )
-        os.replace(tmp_path, path)
-    except BaseException:
-        tmp_path.unlink(missing_ok=True)
-        raise
+        try:
+            _reject_non_regular_fd(fd, tmp_path, role)
+            with os.fdopen(fd, "wb") as stream:
+                stream.write(data)
+            if path.is_symlink():
+                raise ManifestMismatchError(
+                    f"{role} {path} is a symbolic link, not a regular file held "
+                    "by the governed directory; refusing to write it"
+                )
+            if parent_fd is not None and os.replace in os.supports_dir_fd:
+                os.replace(
+                    tmp_path.name,
+                    path.name,
+                    src_dir_fd=parent_fd,
+                    dst_dir_fd=parent_fd,
+                )
+            else:
+                os.replace(tmp_path, path)
+        except BaseException:
+            tmp_path.unlink(missing_ok=True)
+            raise
+    finally:
+        if parent_fd is not None:
+            os.close(parent_fd)
 
 
 def _hash_fd(fd: int) -> str:

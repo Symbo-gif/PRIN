@@ -946,3 +946,42 @@ class TestWriteNoFollow:
 
         assert manifest_path.read_bytes() == b"new manifest content\n"
         assert frozen.read_bytes() == b"immutable original\n"
+
+    @_needs_dir_fd_support
+    def test_final_swap_uses_the_pinned_parent_descriptor(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Independent review (PR #23 head `949e5e1`): the descriptor
+        pinned for the temporary file's ancestor-symlink protection must
+        still be the one used for the final :func:`os.replace`, not
+        discarded beforehand in favour of a path-string-based rename that
+        would re-resolve the parent and lose the guarantee — closing the
+        window at creation time is worthless if the swap that follows
+        reopens it. A live race is exactly what a single-threaded test
+        cannot reliably simulate; this instead pins the *call shape*
+        ``write_no_follow`` must use whenever a parent descriptor is
+        available: both the source and destination of the replace must go
+        through the same ``dir_fd``, not a plain path.
+        """
+        target = tmp_path / "out.json"
+        real_replace = os.replace
+        calls: list[dict[str, int | None]] = []
+
+        def _spy_replace(
+            src: str | Path,
+            dst: str | Path,
+            *,
+            src_dir_fd: int | None = None,
+            dst_dir_fd: int | None = None,
+        ) -> None:
+            calls.append({"src_dir_fd": src_dir_fd, "dst_dir_fd": dst_dir_fd})
+            real_replace(src, dst, src_dir_fd=src_dir_fd, dst_dir_fd=dst_dir_fd)
+
+        monkeypatch.setattr(os, "replace", _spy_replace)
+
+        reproduce.write_no_follow(target, b"payload\n", "generated output")
+
+        assert target.read_bytes() == b"payload\n"
+        assert len(calls) == 1
+        assert calls[0]["src_dir_fd"] is not None
+        assert calls[0]["src_dir_fd"] == calls[0]["dst_dir_fd"]

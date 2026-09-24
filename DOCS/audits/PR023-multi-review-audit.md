@@ -2014,3 +2014,239 @@ new D1; no verdict, tolerance, or measured value changed; no regression to
 the published EXP-001 record; the real 172-record repository manifest
 still verifies. CodeRabbit and Copilot are re-requested on this round's
 push per standard practice.
+
+---
+
+## 15. Round 9 — Copilot review of head `949e5e1`
+
+**Trigger:** Round 8's push was reviewed by Copilot (review `5300648825`),
+which raised 6 open findings: 3 new, 2 carried (both already assessed —
+the hard-link fix reads as still-open pending this round's push landing,
+the ancestor-symlink question already declined at §14.2), and the stale
+Round 1 thread. All required CI checks passed on `949e5e1`, including
+every Windows/macOS/ubuntu `test` leg and `reproduce` — the last of these
+having been the ones that failed two rounds ago (§13.4).
+
+### 15.1 `PR23-F38` (D2) — a colliding `--manifest-path` could overwrite a generated output after its digest was already recorded
+
+*Copilot, "Manifest path can overwrite a generated output file" (New,
+`exp001_e4_analysis.py:1213`).*
+
+**Valid, confirmed by tracing the actual CLI validation.**
+`allowed_output_roots` (used for `--manifest-path`) and
+`allowed_generated_output_dirs` (used for `--output-dir`) both include
+`OUTPUT_ROOT`, and neither check knows the other's specific target
+filenames. `--output-dir X --manifest-path X/exp001-e4-summary.md` passes
+both independent checks: `write_outputs` writes the summary file and
+records its digest in a `GeneratedOutput` (computed from the in-memory
+bytes, per `PR23-F28`), then `write_report_manifest` writes the manifest to
+the *same path*, overwriting the summary. `report-manifest.json` then
+attests a digest for bytes no longer on disk — the committed record and the
+actual generated file silently diverge for that one output. This requires a
+user (or script) to explicitly choose colliding CLI arguments; it is a
+correctness/data-integrity gap, not an attacker-controlled path.
+
+**Fix.** Two new module constants, `SUMMARY_FILENAME` and
+`ADJUDICATION_FILENAME`, replace the filename string literals previously
+duplicated inline in `write_outputs`. `main()` now cross-checks the two
+independently-validated destinations against each other: if the resolved
+`--manifest-path` equals `output_dir / SUMMARY_FILENAME` or
+`output_dir / ADJUDICATION_FILENAME`, it raises `AnalysisError` before
+`run_analysis` is called — matching this module's own stated architecture
+("the guard lives at the command-line boundary, not in the library").
+
+**Regression test.**
+`TestOutputContainment::test_the_cli_refuses_a_manifest_path_colliding_with_a_generated_output`
+exercises the exact CLI combination against a sandboxed fake checkout.
+Proved against pre-fix source (`git show 949e5e1:...`, temporarily
+restored): failed with `AttributeError: module 'exp001_e4_analysis' has no
+attribute 'SUMMARY_FILENAME'` — confirming the constant, and therefore the
+guard, did not exist before this fix. Passes post-fix.
+
+### 15.2 `PR23-F39` (D2) — the pinned parent descriptor was discarded before the final rename, reopening the ancestor-symlink window `PR23-F30` had just closed
+
+*Copilot, "Final rename loses pinned-directory no-follow protection" (New,
+`tools/reproduce.py:493`).*
+
+**Valid — and, notably, a gap I had already privately flagged as a
+deliberately-scoped-out residual when implementing the `PR23-F37`
+hard-link fix, reasoning the cost disproportionate; on reflection prompted
+by this finding, it is not.** `write_no_follow`'s Round 8 rewrite (create a
+temp file, then `os.replace` it into place) opened the parent directory as
+a pinned descriptor via `_dir_relative_open` *only* for the temporary
+file's creation — that helper closes the descriptor before returning.
+The subsequent `os.replace(tmp_path, path)` then re-resolved `path`'s
+parent by string, exactly the path-based resolution the pinned descriptor
+exists to avoid: a symlink swapped into the parent directory *after* the
+temporary file was written but *before* the replace would still redirect
+the final swap outside the checked root, reopening the exact window
+`PR23-F30` (§12.2) closed for the open half of this function without
+closing it for the write-side rename half.
+
+**Fix.** `_dir_relative_open` is split: the parent-opening logic moves into
+a new `_open_parent_dir_fd(parent, role) -> int | None`, and
+`_dir_relative_open` becomes a thin wrapper around it (used unchanged by
+`_open_no_follow`). `write_no_follow` now calls `_open_parent_dir_fd`
+directly and keeps the returned descriptor open across *both* the
+temporary file's creation *and* the final swap, which is now performed as
+`os.replace(tmp_path.name, path.name, src_dir_fd=parent_fd,
+dst_dir_fd=parent_fd)` — relative to the same pinned descriptor, not a
+path string — when the platform supports `dir_fd` on `os.replace`
+(checked via `os.replace in os.supports_dir_fd`, falling back to a plain
+`os.replace(tmp_path, path)` otherwise, so an incorrect assumption about
+platform support degrades to the prior, still-correct-if-narrower
+behavior rather than misbehaving). Windows (no `dir_fd` support at all)
+is unaffected — its rename already re-resolves by path, the same
+narrowing-only posture already documented for every other Windows
+fallback in this module.
+
+**Validation, stated honestly.** This session's Windows machine cannot
+exercise the `dir_fd`-relative replace path at all (same limitation as
+every dir_fd-gated fix this round and last). A live two-step race (swap the
+parent between write and replace) is not simulated by a test — a
+single-threaded test cannot reliably reproduce that timing, and a fragile,
+unverifiable-here attempt at one was judged a worse trade than a simpler,
+robust alternative.
+`TestWriteNoFollow::test_final_swap_uses_the_pinned_parent_descriptor` (
+`@_needs_dir_fd_support`, skips on this machine, runs for real on
+Linux/macOS CI) instead pins the *call shape*: it spies on `os.replace`
+and asserts `write_no_follow` calls it with matching, non-`None`
+`src_dir_fd`/`dst_dir_fd` whenever a parent descriptor is available — proof
+the fix's actual mechanism is exercised, not silently bypassed, which is
+the risk a logic error in this rewrite would most plausibly produce.
+
+### 15.3 Deferred, declined with rationale — "Mixed aborts can incorrectly produce a CONFIRMED verdict"
+
+*Copilot, `exp001_e4_analysis.py:361` (`_tolerance_verdict`, shared by
+H1/H2a/H3/H4).*
+
+**Investigated in depth; declined, with the maintainer's confirmation.**
+Copilot's claim: `_tolerance_verdict(failing, non_aborted, denominator)`
+can return `CONFIRMED` for a run with a *full* clean denominator *plus* an
+extra aborted case (e.g. 504 passing + 1 aborted = 505 total cases for
+H1), which it characterizes as contradicting pre-registration §10.
+
+**Re-derived directly from the frozen pre-registration text, not taken on
+either the finding's or the module's own docstring's word.**
+Preregistration §8 states, verbatim, for every one of H1/H2a/H3: `CONFIRMED`
+iff all non-aborted cases pass **and** the non-aborted count is exactly the
+full denominator — worded as a count equality, not an upper bound. §10
+restates the same rule for the general mixed-abort case: "the hypothesis is
+then `INCONCLUSIVE` (never `CONFIRMED`) **unless** the non-aborted cases
+still meet the full registered denominator." Both sections, read literally,
+permit `CONFIRMED` whenever the non-aborted count reaches the denominator —
+the code implements the registered text as written, not a misreading of it.
+
+The scenario the finding describes requires *more total cases than the
+denominator*, which does not arise under how these artefacts are actually
+produced: H1's corpus, H3's representative set, and H4's kernel-path grid
+are each a fixed-cardinality set (504/14/72 respectively) that a run
+processes exactly once per case — an abort *replaces* a would-be pass/fail
+outcome for one of that fixed set, it does not *add* a case beyond it.
+(H2a's denominator is the run's own recorded batch size, a different
+mechanism already gated separately by `REGISTERED_FUZZ_BATCH_MIN`,
+`PR23-F23`.) No currently-committed EXP-001 artefact contains more cases
+than its hypothesis's registered denominator, and the real E3–E5 execution
+recorded zero aborts of any kind across all four runs (report.md, CHANGELOG:
+"No case aborted in any run"). This finding therefore cannot affect any
+already-published verdict, whether fixed or left alone.
+
+Whether it is worth hardening `_tolerance_verdict` against a
+larger-than-denominator input regardless is a real, separate question — but
+this module is the committed analysis code of a completed,
+maintainer-accepted E5 report, the same governing fact §6 already applied
+to decline `PR23-F10`/`PR23-F11`. Editing adjudication logic here, even in
+a defensive direction that would not change any output for real inputs,
+is out of scope for a PR-review-response round without either evidence it
+is reachable against a real artefact or an explicit decision to make the
+change. **Put to the maintainer directly; decision: decline, matching
+`PR23-F10`/`PR23-F11`'s disposition, recorded here rather than silently
+dropped.** If `EXP-001-r1`'s planning (the correction-cycle re-run this
+campaign already requires) determines the driver could ever emit more
+cases than a hypothesis's registered denominator, that is new evidence
+reopening this as a fresh finding against the *r1* analysis code, not a
+retroactive change to this one.
+
+**Declined-findings ledger entry (extending §6):** "Harden
+`_tolerance_verdict` against a non-aborted count exceeding the full
+registered denominator" — raised by Copilot (Round 9); not a
+misimplementation of the registered rule (the code matches pre-registration
+§8/§10's literal text); declined as out of scope for the frozen,
+maintainer-accepted E4 analysis module, unreachable against every
+currently-committed artefact; put to the maintainer directly, who confirmed
+the decline.
+
+### 15.4 Carried — hard links (`PR23-F37`) and ancestor symlink (`PR23-F34`)
+
+Both re-listed by this review as still "open" rather than "resolved since
+last review," despite `PR23-F37` being fixed in the commit this review was
+run against (`949e5e1` — the same commit introducing the fix). Re-derived
+directly: `write_no_follow` (`tools/reproduce.py`) no longer opens a
+destination in place at all; the create-temp-then-`os.replace` fix from
+§14.1 is present and unchanged in the diff between `d5f47d6` and
+`949e5e1` other than the `PR23-F39` refinement in this same round. This
+reads as Copilot's thread-tracking not having caught up with its own prior
+"Resolved since last review" determination from the same review body,
+rather than a real regression — no different code exists to re-examine.
+The ancestor-symlink item is the same already-declined `PR23-F34`
+question (§14.2), re-listed without new content. No code change from
+either carried item this round.
+
+### 15.5 Carried — "Manifest verification accepts symlinked files"
+
+Same stale Round 1 thread as §12.1/§13.3/§14.3. No new evidence; no code
+change.
+
+### 15.6 Verification
+
+```text
+.venv\Scripts\python -m pytest tests/test_reproduce.py tests/test_exp001_e4_analysis.py -q
+  98 passed, 3 skipped (the two dir_fd/FIFO-gated tests from Round 6/7 plus
+  the new dir_fd-replace spy test, all by design)
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -q
+  3248 passed, 182 skipped, 48 deselected in 534.34s, 0 failed (exactly the
+  expected +1 passed / +1 skipped from this round's two new tests)
+.venv\Scripts\python -m ruff check tools/reproduce.py tests/test_reproduce.py exp001_e4_analysis.py tests/test_exp001_e4_analysis.py
+  All checks passed!
+.venv\Scripts\python -m ruff format --check <same four files>
+  4 files already formatted
+.venv\Scripts\python -m mypy --strict tools/reproduce.py exp001_e4_analysis.py
+  Success: no issues found in 2 source files
+.venv\Scripts\python -m mypy tests/test_reproduce.py tests/test_exp001_e4_analysis.py
+  Success: no issues found in 2 source files
+.venv\Scripts\python -m bandit -r tools/reproduce.py
+  No issues identified
+```
+
+Also re-verified directly against the real repository manifest:
+`reproduce.verify_manifest(reproduce.DEFAULT_RESULTS_DIR,
+reproduce.DEFAULT_MANIFEST)` still returns all 172 records with no error.
+
+**No regression to the published EXP-001 record**, re-verified after this
+round's edits by re-running `run_analysis` to a scratch destination:
+`report-manifest.json` outputs and verdicts byte-identical to the committed
+record; H1–H4 verdicts and the D1 flag unchanged — including for `PR23-F38`
+and `PR23-F39`, neither of which touches any adjudication path.
+
+**Security gates.** Local Snyk Code (CLI `1.1306.2`, org `symbo-gif`):
+`tools/reproduce.py` 4 issues (LOW, Path Traversal — up from 3, same
+already-accepted structural class as §14.4, now one more call site in the
+same taint chain: the `PR23-F39` rewrite's second `os.replace` branch),
+`exp001_e4_analysis.py` 1 issue (LOW, unchanged from every prior round —
+confirmed identical, no new finding from the `main()` collision check),
+`tests/test_reproduce.py` and `tests/test_exp001_e4_analysis.py` 0 issues
+each. No Snyk Open Source / `cargo audit` / `pip-audit` run — no dependency
+files changed this round.
+
+**Delta re-audit date:** 2026-09-24 UTC — **Result:** CLEAN. `PR23-F38` and
+`PR23-F39` fixed with regression tests, the latter proved by pinning the
+correct call shape rather than a live race this session cannot reliably
+simulate or verify. The verdict-logic finding investigated in depth and
+declined with the maintainer's direct confirmation, matching
+`PR23-F10`/`PR23-F11`'s established precedent — not a misreading of the
+registered rule, and unreachable against any currently-committed artefact.
+Both carried items re-confirmed with no new content. No new D1; no verdict,
+tolerance, or measured value changed; no regression to the published
+EXP-001 record; the real 172-record repository manifest still verifies.
+CodeRabbit and Copilot are re-requested on this round's push per standard
+practice.

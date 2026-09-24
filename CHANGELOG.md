@@ -533,6 +533,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     function), confirmed by inspection to be a new count of an
     already-accepted class, not a new gap.
 
+- **PR #23 Round 9 — Copilot review of head `949e5e1`; a CLI collision bug,
+  a rename that lost the ancestor-symlink guarantee, and a verdict-logic
+  finding declined with the maintainer's confirmation (2026-09-24 UTC).**
+  Audited as `PR23-F38`/`PR23-F39` in
+  `DOCS/audits/PR023-multi-review-audit.md` §15. None touches EXP-001's
+  numerical/parity conclusions or the D1 flag.
+  - **`PR23-F38` (D2) — a colliding `--manifest-path` could silently
+    overwrite a generated output after its digest was already recorded.**
+    `--output-dir X --manifest-path X/exp001-e4-summary.md` passed both
+    independent CLI destination checks, since neither knew the other's
+    target filenames; the manifest write would then overwrite the summary
+    file `write_outputs` had already written and digested, leaving
+    `report-manifest.json` describing bytes no longer on disk. Two new
+    constants (`SUMMARY_FILENAME`, `ADJUDICATION_FILENAME`) replace
+    duplicated string literals, and `main()` now cross-checks the two
+    destinations against each other before either is written to.
+  - **`PR23-F39` (D2) — the parent directory descriptor pinned for the
+    hard-link fix's temporary file was discarded before the final rename,
+    reopening the ancestor-symlink window `PR23-F30` had just closed for
+    the write path.** `write_no_follow`'s create-temp-then-`os.replace`
+    strategy (`PR23-F37`, Round 8) opened the parent as a pinned
+    descriptor only for the temporary file's creation; the rename itself
+    then re-resolved the destination by path string, losing the guarantee.
+    The descriptor is now kept open across both steps, and the rename is
+    performed relative to it (`os.replace(..., src_dir_fd=, dst_dir_fd=)`)
+    wherever the platform supports it; Windows keeps its existing
+    narrowing-only fallback, unaffected.
+  - A third finding — that the shared H1/H2a/H3/H4 verdict helper could
+    return `CONFIRMED` for a hypothetical run with more total cases than
+    its registered denominator — was investigated in depth against the
+    frozen pre-registration text (§8 and §10 both), found to match the
+    registered rule as literally written rather than misimplement it, and
+    confirmed structurally unreachable against every currently-committed
+    EXP-001 artefact (fixed-cardinality case sets; zero aborts in the real
+    E3–E5 execution). Declined, matching this analysis module's existing
+    `PR23-F10`/`PR23-F11` precedent (frozen, maintainer-accepted E4 code;
+    editing it now would itself be a protocol deviation), put to the
+    maintainer directly and confirmed.
+  - 2 new regression tests, each proved against pre-fix source. `PR23-F39`'s
+    test spies on `os.replace`'s call shape (matching `src_dir_fd`/
+    `dst_dir_fd`) rather than simulating a live two-step race, which a
+    single-threaded test run on a platform without `dir_fd` support
+    (this session's machine) cannot reliably reproduce or verify — stated
+    plainly rather than claimed as more than it is. Targeted suite 98
+    passed, 3 skipped; full suite (`-m "not slow and not gpu"`) `3248
+    passed, 182 skipped, 48 deselected`, 0 failed; `ruff`, `ruff format
+    --check`, `mypy --strict`, and `bandit` all clean; the real 172-record repository manifest still verifies; the E4
+    analysis re-run to a scratch destination reproduces the committed
+    record byte-for-byte. Snyk Code: `tools/reproduce.py` 4 LOW findings
+    (up from 3, same already-accepted class); `exp001_e4_analysis.py` 1 LOW
+    (unchanged); both test files 0.
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that

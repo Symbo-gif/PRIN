@@ -648,6 +648,30 @@ class TestOutputContainment:
             analysis.main(["--manifest-path", str(escape)])
         assert escape.read_bytes() == b"# source\n"
 
+    def test_the_cli_refuses_a_manifest_path_colliding_with_a_generated_output(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Independent review (PR #23 head `949e5e1`): `allowed_output_roots`
+        permits `--manifest-path` anywhere under `--output-dir` (neither
+        generated file is immutable on its own), but a `--manifest-path`
+        that names exactly one of `write_outputs`' own filenames would have
+        `write_report_manifest` overwrite it after `write_outputs` already
+        recorded its digest — the committed manifest would then describe
+        bytes no longer on disk. Exercised against a sandboxed fake
+        checkout.
+        """
+        monkeypatch.setattr(analysis, "_REPOSITORY_ROOT", tmp_path)
+        output_dir = tmp_path / analysis.OUTPUT_ROOT
+        colliding = output_dir / analysis.SUMMARY_FILENAME
+
+        with pytest.raises(
+            analysis.AnalysisError, match="collides with a generated output"
+        ):
+            analysis.main(
+                ["--output-dir", str(output_dir), "--manifest-path", str(colliding)]
+            )
+        assert not output_dir.exists()
+
 
 class TestReportManifestIntegrity:
     """Independent reviews, PR #23 head `754272a`: the integrity fields

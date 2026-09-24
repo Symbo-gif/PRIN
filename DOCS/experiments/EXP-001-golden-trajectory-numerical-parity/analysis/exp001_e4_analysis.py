@@ -100,6 +100,14 @@ RECORD_ROOT = Path("DOCS/experiments/EXP-001-golden-trajectory-numerical-parity"
 #: Gitignored generated-output root (campaign plan §7.4 item 4).
 OUTPUT_ROOT = Path("DOCS/test_and_benchmark_results") / EXPERIMENT_ID
 
+#: Filenames `write_outputs` always writes under `OUTPUT_ROOT`; a
+#: `--manifest-path` that collides with either would let
+#: `write_report_manifest` overwrite an output after `write_outputs` already
+#: recorded its digest, leaving the committed manifest describing bytes no
+#: longer on disk (independent review, PR #23 head `949e5e1`).
+SUMMARY_FILENAME = "exp001-e4-summary.md"
+ADJUDICATION_FILENAME = "exp001-e4-adjudication.json"
+
 #: Registered tolerances, quoted for the report (pre-registration §0/§2).
 TOLERANCES = {
     "trajectory": "rtol=1e-6, atol=1e-8",
@@ -929,7 +937,7 @@ def write_outputs(
     summary_bytes = build_summary(adjudications, manifests, generated_at).encode(
         "utf-8"
     )
-    summary = output_dir / "exp001-e4-summary.md"
+    summary = output_dir / SUMMARY_FILENAME
     write_no_follow(summary, summary_bytes, "generated output")
     record = {
         "experiment": EXPERIMENT_ID,
@@ -945,7 +953,7 @@ def write_outputs(
     adjudication_bytes = (
         json.dumps(record, indent=2, sort_keys=True, ensure_ascii=True) + "\n"
     ).encode("utf-8")
-    adjudication = output_dir / "exp001-e4-adjudication.json"
+    adjudication = output_dir / ADJUDICATION_FILENAME
     write_no_follow(adjudication, adjudication_bytes, "generated output")
     outputs = [
         GeneratedOutput(
@@ -1301,11 +1309,14 @@ def main(argv: list[str] | None = None) -> int:
 
     Raises:
         AnalysisError: If a command-line destination escapes its permitted
-            roots, or names anything but ``report-manifest.json`` inside the
-            record root. This is the trust boundary: the input root is never
-            taken from the command line (it is this file's own checkout), and
-            the two write destinations that are taken from it are contained
-            here before anything is written.
+            roots, names anything but ``report-manifest.json`` inside the
+            record root, or names one of the two files ``write_outputs``
+            itself writes under ``--output-dir``. This is the trust
+            boundary: the input root is never taken from the command line
+            (it is this file's own checkout), and the two write
+            destinations that are taken from it are contained — and, since
+            they may legitimately share a directory, cross-checked against
+            each other — here, before anything is written.
     """
     args = _parser().parse_args(argv)
     root = _REPOSITORY_ROOT
@@ -1319,6 +1330,23 @@ def main(argv: list[str] | None = None) -> int:
         allowed_output_roots(root),
         (root / RECORD_ROOT).resolve(),
     )
+    # allowed_output_roots deliberately permits --manifest-path anywhere
+    # under --output-dir (neither generated file is immutable on its own),
+    # but the two destinations are validated independently and neither
+    # check knows the other's target filenames — a --manifest-path that
+    # names exactly one of write_outputs' own filenames would have
+    # write_report_manifest overwrite it after write_outputs already
+    # recorded its digest, leaving the committed manifest describing bytes
+    # no longer on disk (independent review, PR #23 head `949e5e1`).
+    if manifest_path in (
+        output_dir / SUMMARY_FILENAME,
+        output_dir / ADJUDICATION_FILENAME,
+    ):
+        raise AnalysisError(
+            f"manifest path {manifest_path} collides with a generated output "
+            f"this analysis also writes under {output_dir}; choose a "
+            "--manifest-path outside that pair"
+        )
     adjudications = run_analysis(
         root, output_dir, manifest_path, str(args.generated_at)
     )
