@@ -317,6 +317,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     byte-for-byte. Snyk Code unchanged from Round 3 (0 issues on
     `tools/reproduce.py`; 1 pre-existing LOW on `exp001_e4_analysis.py`).
 
+- **PR #23 Round 5 — three independent LLM reviews at head `754272a`; the
+  required Windows CI matrix and two more provenance gaps
+  (2026-09-24 UTC).** CLINE-A.I. (Stealth/Space-Bunny-Alpha, Xhigh-reasoning),
+  SWE-2 High-reasoning (Devin IDE), and PERPLEXITY-AI (KIMI-K3-Thinking)
+  independently reviewed the full diff, each validating every prior round's
+  findings and converging on four items, audited as `PR23-F26`…`PR23-F29` in
+  `DOCS/audits/PR023-multi-review-audit.md` §11. None challenge EXP-001's
+  numerical/parity conclusions or the D1 flag.
+  - **`PR23-F26` (D2) — a test's global `Path.stat` monkeypatch turned an
+    ordinary assertion failure into a Windows `INTERNALERROR`, failing all
+    three required Windows Python legs (3.11/3.12/3.13).**
+    `TestReportManifestIntegrity`'s Round 4 regression test patched the
+    whole `pathlib.Path` class rather than a call it made itself; on Windows
+    Python ≤3.13, `Path.lstat()` delegates to `Path.stat(follow_symlinks=False)`,
+    so `tools.reproduce`'s own legitimate no-follow `is_symlink()` pre-open
+    check hit the patch and raised, and pytest's own failure-reporting then
+    hit it a second time while formatting that failure. Rewritten to prove
+    the contract by construction instead: the output path is never created,
+    so a reopen would raise `FileNotFoundError` rather than succeed —
+    possible because `PR23-F28` below removes the reopen entirely.
+  - **`PR23-F27` (D2) — `_load_artefact` verified the run directory, then
+    read its result artefact through a second, unverified open.**
+    `verify_manifest` proved the directory matched its manifest at that
+    moment; the subsequent `read_no_follow` proved only that the reopened
+    file was not a symlink, not that its content was still the verified
+    bytes — a regular-file swap-then-restore in that window would have fed
+    adjudication unmanifested bytes undetected. `tools/reproduce.py` gains
+    `read_verified_no_follow`, which checks size and SHA-256 against a given
+    manifest record from the same single open that returns the bytes;
+    `_load_artefact` now reads through it instead.
+  - **`PR23-F28` (D3) — the report-manifest's output digest still reopened a
+    closed, already-written file.** `PR23-F24` (Round 4) closed the symlink
+    case; a concurrent replacement with another *regular* file between
+    `write_outputs` finishing and the manifest-digest step was still
+    silently accepted and recorded. `write_outputs` now computes each
+    output's size/SHA-256 from the in-memory bytes before writing them and
+    returns a `GeneratedOutput` record per output; `write_report_manifest`
+    builds its manifest entries from those fields directly, with no
+    filesystem read-back at all — closing the gap completely rather than
+    partially.
+  - **`PR23-F29` (D4) — configured output/record roots were resolved before
+    being checked for symlinks (defense-in-depth).** A symlinked
+    `OUTPUT_ROOT`/`RECORD_ROOT` would have been silently followed by
+    `.resolve()` before any containment check ran, potentially legitimizing
+    a target the guard exists to exclude. New `_reject_configured_root_symlink`
+    checks both roots no-follow before resolving them.
+  - 7 new/rewritten regression tests (1 rewritten to remove the global
+    monkeypatch, 1 strengthened to also forbid `Path.read_bytes`, 1 new
+    swap-detection test, 3 new symlink-rejection tests gated on the same
+    executability probe `tests/test_reproduce.py` uses, and the registered-run
+    end-to-end test extended to hash real outputs against the committed
+    manifest). Targeted suite 92 passed; full suite (`-m "not slow and not
+    gpu"`) `3242 passed, 179 skipped, 48 deselected`; `ruff`, `ruff format
+    --check`, `mypy --strict` (both changed source files), and `bandit` all
+    clean; the E4 analysis re-run to a scratch destination reproduces the
+    committed record byte-for-byte. Snyk Code: 0 issues on
+    `tools/reproduce.py` and the test file; the 1 pre-existing LOW on
+    `exp001_e4_analysis.py` is unchanged and confirmed identical against the
+    pre-round baseline.
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that

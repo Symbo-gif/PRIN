@@ -54,6 +54,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 import tempfile
@@ -72,8 +73,7 @@ from benchmarks.campaign.exp001_driver import (  # noqa: E402
     adjudicate_h2b,
 )
 from tools.reproduce import (  # noqa: E402
-    read_no_follow,
-    stat_size_and_hash_no_follow,
+    read_verified_no_follow,
     verify_manifest,
     write_no_follow,
 )
@@ -178,15 +178,28 @@ def _load_artefact(repository_root: Path, leg: RunLeg) -> dict[str, Any]:
             ``environment.git_commit`` is not :data:`EXECUTION_COMMIT`.
     """
     run_dir = repository_root / RAW_ARTEFACT_ROOT / leg.run_id
-    verify_manifest(results_dir=run_dir, manifest_path=run_dir / "manifest.json")
+    records = verify_manifest(
+        results_dir=run_dir, manifest_path=run_dir / "manifest.json"
+    )
+    record = next((r for r in records if r.path == leg.artefact), None)
+    if record is None:
+        raise AnalysisError(
+            f"{leg.run_id}: {leg.artefact} is not a manifested artefact"
+        )
     artefact = run_dir / leg.artefact
-    # Read through the same no-follow guarantee `verify_manifest` just
-    # established, rather than a plain `is_file()`/`read_text()` — those
-    # follow symlinks, so a concurrent replacement between verification and
-    # this read could feed the analysis a different file than the one just
-    # verified (Copilot follow-up review, PR #23 head `0cb6156`).
+    # `verify_manifest` proves the directory matched its manifest at the
+    # moment it ran; a plain `read_no_follow` afterward would only prove
+    # this second open is not a symlink, not that its content is still the
+    # bytes just verified — a concurrent regular-file replacement in that
+    # window (restored or not) would otherwise be fed straight into the
+    # analysis. `read_verified_no_follow` re-checks size and digest against
+    # the manifest record from the same read, so the bytes returned here
+    # are provably the manifested ones regardless of what happened to the
+    # path in between (independent reviews, PR #23 head `754272a`).
     try:
-        raw_bytes = read_no_follow(artefact, "result artefact")
+        raw_bytes = read_verified_no_follow(
+            artefact, record.bytes, record.sha256, leg.artefact, "result artefact"
+        )
     except FileNotFoundError as error:
         raise AnalysisError(
             f"{leg.run_id}: missing result artefact {leg.artefact}"
@@ -870,12 +883,29 @@ def build_summary(
     return "\n".join(lines)
 
 
+@dataclass(frozen=True)
+class GeneratedOutput:
+    """One written output file, with the digest of the bytes just written.
+
+    ``bytes``/``sha256`` are computed by :func:`write_outputs` from the
+    in-memory payload before it is written, not by reopening the path
+    afterward — the latter would leave a window in which a concurrent
+    regular-file replacement between the write and a later digest step is
+    silently recorded as the generated output's own content (TOCTOU,
+    CWE-59; independent reviews, PR #23 head `754272a`).
+    """
+
+    path: Path
+    bytes: int
+    sha256: str
+
+
 def write_outputs(
     adjudications: dict[str, Any],
     manifests: dict[str, list[dict[str, Any]]],
     output_dir: Path,
     generated_at: str,
-) -> list[Path]:
+) -> list[GeneratedOutput]:
     """Write every E4 output, deterministically, with LF newlines.
 
     Args:
@@ -885,7 +915,8 @@ def write_outputs(
         generated_at: Explicit provenance stamp.
 
     Returns:
-        The written paths, sorted by name.
+        The written outputs, sorted by name, each carrying the size and
+        SHA-256 digest of the bytes handed to :func:`tools.reproduce.write_no_follow`.
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     # write_no_follow (not write_text) so a symlink swapped into either
@@ -895,12 +926,11 @@ def write_outputs(
     # binary no-follow descriptor is equivalent to `write_text(...,
     # encoding="utf-8", newline="\n")`: both emit raw "\n" with no CRLF
     # translation.
-    summary = output_dir / "exp001-e4-summary.md"
-    write_no_follow(
-        summary,
-        build_summary(adjudications, manifests, generated_at).encode("utf-8"),
-        "generated output",
+    summary_bytes = build_summary(adjudications, manifests, generated_at).encode(
+        "utf-8"
     )
+    summary = output_dir / "exp001-e4-summary.md"
+    write_no_follow(summary, summary_bytes, "generated output")
     record = {
         "experiment": EXPERIMENT_ID,
         "session": SESSION,
@@ -912,19 +942,28 @@ def write_outputs(
         "inputs": {leg.run_id: manifests[leg.label] for leg in RUN_LEGS},
         "adjudications": adjudications,
     }
+    adjudication_bytes = (
+        json.dumps(record, indent=2, sort_keys=True, ensure_ascii=True) + "\n"
+    ).encode("utf-8")
     adjudication = output_dir / "exp001-e4-adjudication.json"
-    write_no_follow(
-        adjudication,
-        (json.dumps(record, indent=2, sort_keys=True, ensure_ascii=True) + "\n").encode(
-            "utf-8"
+    write_no_follow(adjudication, adjudication_bytes, "generated output")
+    outputs = [
+        GeneratedOutput(
+            path=summary,
+            bytes=len(summary_bytes),
+            sha256=hashlib.sha256(summary_bytes).hexdigest(),
         ),
-        "generated output",
-    )
-    return sorted([summary, adjudication], key=lambda path: path.name)
+        GeneratedOutput(
+            path=adjudication,
+            bytes=len(adjudication_bytes),
+            sha256=hashlib.sha256(adjudication_bytes).hexdigest(),
+        ),
+    ]
+    return sorted(outputs, key=lambda output: output.path.name)
 
 
 def write_report_manifest(
-    outputs: list[Path],
+    outputs: list[GeneratedOutput],
     manifests: dict[str, list[dict[str, Any]]],
     manifest_path: Path,
     generated_at: str,
@@ -938,7 +977,8 @@ def write_report_manifest(
     than leaving them recoverable only from a regenerated file.
 
     Args:
-        outputs: Generated output files to digest.
+        outputs: Generated outputs from :func:`write_outputs`, already
+            carrying the size/digest of the bytes actually written.
         manifests: Run label to its verified manifest records.
         manifest_path: Destination inside the record root.
         generated_at: Explicit provenance stamp.
@@ -961,18 +1001,17 @@ def write_report_manifest(
             "analysis/exp001_e4_analysis.py"
         ),
         "output_root": OUTPUT_ROOT.as_posix(),
-        # Size and digest come from stat_size_and_hash_no_follow, not
-        # Path.stat()/compute_sha256, which both follow a symlink: if an
-        # output were swapped for a symlink (or otherwise changed) between
-        # write_outputs and this manifest write, those would record bytes
-        # from another path instead of the file write_no_follow actually
-        # wrote (Copilot follow-up review, PR #23 head `900a68f`).
+        # Size and digest are exactly what write_outputs computed from the
+        # bytes it handed to write_no_follow — never a reopen of the path
+        # here, which would leave a window in which a concurrent
+        # replacement of the output with another regular file after
+        # write_outputs finished is recorded as if it were the generated
+        # content (TOCTOU, CWE-59; independent reviews, PR #23 head
+        # `754272a`, closing the residual left by the Copilot follow-up
+        # review at head `900a68f`).
         "outputs": [
-            {"path": path.name, "bytes": size, "sha256": digest}
-            for path, (size, digest) in (
-                (path, stat_size_and_hash_no_follow(path, "generated output"))
-                for path in outputs
-            )
+            {"path": output.path.name, "bytes": output.bytes, "sha256": output.sha256}
+            for output in outputs
         ],
         "inputs": [
             {
@@ -1022,6 +1061,37 @@ def _safe_temp_root(repository_root: Path) -> tuple[Path, ...]:
     return (temp_root,)
 
 
+def _reject_configured_root_symlink(path: Path, name: str) -> None:
+    """Refuse a governed root that is itself a symbolic link, before resolving it.
+
+    ``allowed_output_roots``/``allowed_generated_output_dirs`` build the
+    permitted-roots set by calling ``.resolve()`` on :data:`OUTPUT_ROOT` and
+    :data:`RECORD_ROOT`, and every later containment check
+    (:func:`_checked_destination`, :func:`_checked_manifest_destination`)
+    trusts that resolved set. ``.resolve()`` follows a symlink, so if either
+    configured root were itself replaced with a symlink — for example
+    ``OUTPUT_ROOT`` pointing at the frozen record root — the "permitted
+    root" would silently become the symlink's target instead of the
+    intended directory, and every later check against it would then admit
+    paths under that target too (CWE-59; independent reviews, PR #23 head
+    `754272a`). Checked no-follow, before resolution, so a symlinked
+    configured root is refused outright. A root that does not exist yet
+    (``OUTPUT_ROOT`` is gitignored) is not a symlink and passes unchanged.
+
+    Args:
+        path: The configured root, unresolved.
+        name: Human-readable name of the root, for the failure message.
+
+    Raises:
+        AnalysisError: If ``path`` is a symbolic link.
+    """
+    if path.is_symlink():
+        raise AnalysisError(
+            f"{name} {path} is a symbolic link; refusing to use it as a "
+            "governed output root"
+        )
+
+
 def allowed_output_roots(repository_root: Path) -> tuple[Path, ...]:
     """Return the only directories this analysis may write into.
 
@@ -1037,10 +1107,18 @@ def allowed_output_roots(repository_root: Path) -> tuple[Path, ...]:
 
     Returns:
         The resolved permitted roots.
+
+    Raises:
+        AnalysisError: If ``OUTPUT_ROOT`` or ``RECORD_ROOT`` is itself a
+            symbolic link (see :func:`_reject_configured_root_symlink`).
     """
+    output_root = repository_root / OUTPUT_ROOT
+    record_root = repository_root / RECORD_ROOT
+    _reject_configured_root_symlink(output_root, "output root")
+    _reject_configured_root_symlink(record_root, "record root")
     return (
-        (repository_root / OUTPUT_ROOT).resolve(),
-        (repository_root / RECORD_ROOT).resolve(),
+        output_root.resolve(),
+        record_root.resolve(),
         *_safe_temp_root(repository_root),
     )
 
@@ -1062,9 +1140,15 @@ def allowed_generated_output_dirs(repository_root: Path) -> tuple[Path, ...]:
 
     Returns:
         The resolved permitted roots.
+
+    Raises:
+        AnalysisError: If ``OUTPUT_ROOT`` is itself a symbolic link (see
+            :func:`_reject_configured_root_symlink`).
     """
+    output_root = repository_root / OUTPUT_ROOT
+    _reject_configured_root_symlink(output_root, "output root")
     return (
-        (repository_root / OUTPUT_ROOT).resolve(),
+        output_root.resolve(),
         *_safe_temp_root(repository_root),
     )
 

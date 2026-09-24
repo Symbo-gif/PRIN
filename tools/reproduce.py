@@ -396,6 +396,58 @@ def _verify_size_and_hash_no_follow(
     return _hash_fd(fd)
 
 
+def read_verified_no_follow(
+    path: Path, expected_size: int, expected_sha256: str, name: str, role: str
+) -> bytes:
+    """Read a file's bytes from one no-follow open, verified against a record.
+
+    Public: a caller that must both prove a specific file still matches a
+    manifest record *and* consume its bytes (for example, an analysis
+    module parsing a result artefact after :func:`verify_manifest` already
+    checked the directory) must read this way rather than calling
+    :func:`verify_manifest` and then a separate :func:`read_no_follow` on
+    the same path. The two-open pattern proves the second open is not a
+    symlink, but nothing ties its *content* to what verification saw: a
+    concurrent replacement with another regular file between the two opens
+    — restored afterward or not — would otherwise be read as if it were
+    the verified bytes (TOCTOU, CWE-59). Here, the size and digest checks
+    run against the same descriptor the caller then reads, so the returned
+    bytes are provably the ones ``expected_sha256`` describes, independent
+    of whatever happened to the path before this call.
+
+    Args:
+        path: Candidate manifest or artefact path, unresolved.
+        expected_size: The manifest-recorded size to verify.
+        expected_sha256: The manifest-recorded digest to verify.
+        name: The manifested path name, for the failure message.
+        role: Human-readable role passed to :func:`_open_no_follow`.
+
+    Returns:
+        The file's raw bytes, proven to match ``expected_size`` and
+        ``expected_sha256``.
+
+    Raises:
+        ManifestMismatchError: If ``path`` is a symbolic link, or its size
+            or digest does not match the expected values.
+        OSError: If the file cannot be read.
+    """
+    fd = _open_no_follow(path, role)
+    try:
+        size = os.fstat(fd).st_size
+    except OSError:
+        os.close(fd)
+        raise
+    if size != expected_size:
+        os.close(fd)
+        raise ManifestMismatchError(f"size mismatch: {name}")
+    with os.fdopen(fd, "rb") as stream:
+        data = stream.read()
+    digest = hashlib.sha256(data).hexdigest()
+    if digest != expected_sha256:
+        raise ManifestMismatchError(f"SHA-256 mismatch: {name}")
+    return data
+
+
 def _record_from_dict(payload: object, index: int) -> ManifestRecord:
     if not isinstance(payload, dict):
         raise ManifestFormatError(f"files[{index}] must be a JSON object")

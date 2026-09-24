@@ -1187,3 +1187,251 @@ tolerance, or measured value changed; no regression to the published EXP-001
 record. CodeRabbit did not review this head (rate-limited); its next
 automatic review, whenever the plan's window resets, is the outstanding item
 this round could not close.
+
+---
+
+## 11. Round 5 — three independent LLM reviews at head `754272a`
+
+**Trigger:** Round 4's push (`900a68f` → `754272a` after Round 4's own
+mypy-gap fix) was reviewed by three independent, non-bot LLM reviewers
+posted as PR comments rather than GitHub "reviews" (GitHub does not allow
+`REQUEST_CHANGES` from the PR author's own account, which posted all three
+on the maintainer's behalf, the same posting pattern as Qwen/Devin/Kimi/Cline
+in Round 1):
+
+| Reviewer | New findings | Validated prior findings |
+|---|---|---|
+| CLINE-A.I. (Stealth/Space-Bunny-Alpha, Xhigh-reasoning) | 4 (1 High CI blocker, 1 High, 1 Medium, 1 Low) | Yes, all Round 4 items |
+| SWE-2 High-reasoning (Devin IDE) | 0 new; pinned the CI blocker's exact mechanism | Yes, all Round 4 items, plus an independent Wolfram-Language recomputation of H2b's statistics |
+| PERPLEXITY-AI (KIMI-K3-Thinking, US-hosted) | 0 new; concurred on severity and disposition | Yes, all Round 4 items |
+
+CodeRabbit's own automatic re-review of `754272a` (triggered manually three
+times as its 1-review/hour rate limit reset) produced no new line-level
+comments but, via its `@coderabbitai` chat interface, independently
+confirmed the three required Windows checks were red at the reported run and
+confirmed the code paths behind three of the four findings below. All three
+LLM reviewers agree: **the EXP-001 numerical/parity conclusions are not in
+question** — every finding concerns the merge gate and the provenance
+guarantees the hardened verifier documentation claims, not H1–H4 or the D1
+flag.
+
+### 11.1 `PR23-F26` (D2) — a test's global `Path.stat` patch turned an ordinary assertion into a Windows `INTERNALERROR`
+
+*CLINE-A.I. and SWE-2/Devin, independently, on
+`tests/test_exp001_e4_analysis.py::TestReportManifestIntegrity::test_output_integrity_does_not_use_link_following_calls`.*
+
+The `PR23-F24` regression test (Round 4, §10.2) proved its contract by
+`monkeypatch.setattr(Path, "stat", _forbidden_stat)` — patching the whole
+`pathlib.Path` class, not a call the test itself makes. On Windows Python
+3.11–3.13, `Path.lstat()` is implemented as `self.stat(follow_symlinks=False)`,
+and `tools.reproduce._open_no_follow`'s Windows fallback (no `O_NOFOLLOW` on
+that platform) calls `path.is_symlink()` → `lstat()` → the patched `stat` —
+its own legitimate no-follow pre-open check, not the naive
+`stat()`/`compute_sha256()` pattern the test intended to forbid. That raised
+the test's `AssertionError` from inside `write_report_manifest`'s own call to
+`stat_size_and_hash_no_follow`, and pytest's failure-reporting machinery
+(`_pytest.python.py:1715` → `Path.exists()` → `Path.stat()`) then hit the
+still-active patch a second time while formatting that failure, escalating
+an ordinary test failure into a session-ending `INTERNALERROR`. SWE-2/Devin
+pinned this mechanism exactly against the hosted `test (windows-latest,
+3.13)` job log; on Python 3.14, `Path.lstat()` calls `os.lstat()` directly,
+bypassing the patch, which is why the test passed locally in this checkout
+on every prior round. All three required Windows Python legs (3.11, 3.12,
+3.13) were red at `754272a`, blocking merge — CodeRabbit's own
+`@coderabbitai` chat independently confirmed the three failing job links.
+
+**Fix.** The test no longer touches `pathlib.Path` at all. It is rewritten
+as `test_write_report_manifest_never_reads_its_output_paths`: the output
+path is deliberately never created on disk, so `write_report_manifest`
+reopening it for its integrity fields would raise `FileNotFoundError` rather
+than silently succeeding — the contract is pinned by construction, not by a
+global monkeypatch. This is possible because the accompanying `PR23-F28` fix
+(§11.3) removes the reopen entirely: `write_report_manifest` now takes
+pre-computed `(path, bytes, sha256)` tuples and never touches the
+filesystem for them.
+
+**Regression test.** `TestReportManifestIntegrity::test_write_report_manifest_never_reads_its_output_paths`
+(rewritten in place of the removed test); `TestRegisteredRun::test_report_manifest_covers_every_output`
+(§11.3) additionally cross-checks the real registered outputs' on-disk bytes
+against the manifest's recorded digest end to end.
+
+### 11.2 `PR23-F27` (D2) — `_load_artefact` verified, then re-read the artefact through an unverified second open
+
+*CLINE-A.I., SWE-2/Devin, and PERPLEXITY-AI, independently, on
+`exp001_e4_analysis.py::_load_artefact`.*
+
+`_load_artefact` called `verify_manifest(...)` (proving the run directory
+matched its manifest at that moment), closed the descriptor that used, and
+then separately opened the result artefact with `read_no_follow`.
+`read_no_follow` proves only that *this* open is not a symlink; it does not
+prove the reopened file's *content* is still the bytes `verify_manifest`
+just accepted. All three reviewers reproduced the gap by replacing the
+artefact with a different regular file between the two calls: `_load_artefact`
+returned the replacement payload. Because `run_analysis` only re-verifies
+the whole directory *after* `_load_artefact` already returned (previously
+lines 1162–1169), an attacker or a racing process that restored the original
+bytes before that later check would leave no trace — the unverified read
+would have fed adjudication unmanifested bytes undetected.
+
+**Fix.** `tools/reproduce.py` gains a new public function,
+`read_verified_no_follow(path, expected_size, expected_sha256, name, role)`,
+which opens the file exactly once and checks size and SHA-256 digest against
+the given values *from that same descriptor* before returning its bytes —
+mirroring `_verify_size_and_hash_no_follow`'s single-open discipline but
+returning content instead of discarding it. `_load_artefact` now looks up
+the `ManifestRecord` `verify_manifest` returned for `leg.artefact` and reads
+through this function instead of the unverified `read_no_follow`. The bytes
+`_load_artefact` returns are now provably the manifested ones at the moment
+they are read, independent of what happened to the path beforehand — closing
+the class of gap even for a swap-then-restore that a point-in-time
+directory check alone cannot see.
+
+**Regression test.**
+`TestProvenanceGuard::test_load_artefact_rejects_a_swap_between_verification_and_read`
+monkeypatches `analysis.verify_manifest` to swap the artefact's content as a
+side effect of an otherwise-successful call — the earliest point after
+verification and before the read that follows it — and confirms
+`_load_artefact` now raises `ManifestMismatchError` instead of silently
+returning the swapped payload. Proved against pre-fix source
+(`git stash` on the two source files): the swapped payload was previously
+returned without error. `test_load_artefact_reads_via_no_follow_not_plain_path_io`
+is also strengthened to forbid `Path.read_bytes` alongside `Path.read_text`
+— CLINE-A.I. and CodeRabbit both separately noted the pre-existing version
+only forbade the latter, so a regression to the equally link-following
+`read_bytes` would have passed undetected.
+
+### 11.3 `PR23-F28` (D3) — the report-manifest's output digest still reopened a closed, written file
+
+*CLINE-A.I., SWE-2/Devin, and PERPLEXITY-AI, independently, on
+`write_report_manifest`.*
+
+Round 4's `PR23-F24` fix (§10.2) closed the *symlink* case for output
+integrity by moving to `stat_size_and_hash_no_follow`, but that function
+still opens the path fresh, after `write_outputs` already wrote and closed
+it. A concurrent replacement of the output with another *regular* file in
+that window — not a symlink, so untouched by `PR23-F24`'s fix — is silently
+accepted and digested; the committed `report-manifest.json` would then
+attest replacement bytes instead of the ones `write_no_follow` actually
+wrote. All three reviewers reproduced this by replacing
+`exp001-e4-summary.md` between `write_outputs` and manifest construction and
+observing the replacement's bytes recorded in `report-manifest.json`, and
+converged on the same fix: hash the bytes already held in memory, not a
+later reopen.
+
+**Fix.** `write_outputs` now computes each output's size and SHA-256 digest
+from the exact in-memory bytes it hands to `write_no_follow`, *before*
+writing them, and returns a new `GeneratedOutput(path, bytes, sha256)`
+record per output instead of a bare `Path`. `write_report_manifest`'s
+signature changes to accept `list[GeneratedOutput]` and builds its
+`"outputs"` entries directly from those fields — no filesystem read-back at
+all. This closes the gap completely rather than partially: there is no
+window left between "written" and "digested" because there is no longer a
+second read of the path in between.
+
+**Regression tests.**
+`TestReportManifestIntegrity::test_write_report_manifest_never_reads_its_output_paths`
+(§11.1) proves no reopen occurs, by construction. `TestRegisteredRun::test_report_manifest_covers_every_output`
+is extended to hash each real registered output on disk and confirm it
+matches the committed manifest's `bytes`/`sha256` fields exactly — proving
+the in-memory shortcut does not drift from what is actually written, using
+the real registered artefacts rather than a synthetic fixture.
+
+### 11.4 `PR23-F29` (D4) — configured output/record roots were resolved before being checked for symlinks
+
+*CLINE-A.I., SWE-2/Devin, and PERPLEXITY-AI, independently (originally
+flagged by CodeRabbit in Round 3 as a declined-severity residual; this round
+supplied a concrete reproduction and elevated it to a tracked finding).*
+
+`allowed_output_roots`/`allowed_generated_output_dirs` build the permitted
+write-destination set by calling `.resolve()` on `OUTPUT_ROOT`/`RECORD_ROOT`.
+`.resolve()` follows a symlink, so if either configured root were itself
+replaced with a symlink — for example `OUTPUT_ROOT` pointing at the frozen
+`RECORD_ROOT` — the "permitted root" every later `_checked_destination`/
+`_checked_manifest_destination` call trusts would silently become the
+symlink's target, admitting writes there instead of refusing them.
+Reproduced by symlinking `OUTPUT_ROOT` at a local checkout to `RECORD_ROOT`:
+the resolved destination under the record was accepted as a permitted
+generated-output location. All three reviewers classify this as bounded
+defense-in-depth, not a remote-attacker path: it requires a local checkout
+or filesystem change, and the committed roots are regular directories (or
+absent) in every real checkout of this repository.
+
+**Fix.** New `_reject_configured_root_symlink(path, name)` checks
+`OUTPUT_ROOT`/`RECORD_ROOT` with `Path.is_symlink()` — no-follow, before
+`.resolve()` — and raises `AnalysisError` if either is a symlink. Applied in
+both `allowed_output_roots` (both roots) and `allowed_generated_output_dirs`
+(`OUTPUT_ROOT` only, matching its existing scope). A root that does not yet
+exist (`OUTPUT_ROOT` is gitignored) is not a symlink and is unaffected.
+
+**Regression tests.**
+`TestOutputContainment::test_allowed_output_roots_refuses_a_symlinked_output_root`,
+`test_allowed_output_roots_refuses_a_symlinked_record_root`, and
+`test_allowed_generated_output_dirs_refuses_a_symlinked_output_root`, gated
+on the same `_needs_symlink_support` executability probe used in
+`tests/test_reproduce.py` (Windows symlink creation needs elevated privilege
+or Developer Mode). All three pass in this checkout, confirming symlink
+creation is supported here and the guard fires correctly.
+
+### 11.5 Reviewer claims checked and found sound but not separately actioned
+
+- **CodeRabbit's docstring-coverage nitpick** (declined in Round 1 as
+  `PR23-F9`) was independently re-raised as a candidate by CLINE-A.I. and
+  re-affirmed as correctly declined by PERPLEXITY-AI: the generic 80 %
+  threshold CodeRabbit's tool applies is not this repository's governing
+  rule (`interrogate` at this project's own configured threshold, per §6),
+  the module is fully documented against that rule, and the real gap
+  (test-method docstrings, disabled by project `pydocstyle` configuration)
+  remains tracked as `DV-040`. No change made; the Round 1 decline stands.
+- **Copilot's H2a self-referential-minimum finding (`PR23-F23`), the
+  non-regular-manifest finding (`PR23-F17`/`PR23-F25`), and the
+  symlink-specific output-integrity finding (`PR23-F24`)** were each
+  independently re-derived and confirmed fixed by all three reviewers
+  against `754272a` — no regression found in any of them.
+
+### 11.6 Verification
+
+```text
+.venv\Scripts\python -m pytest tests/test_exp001_e4_analysis.py tests/test_reproduce.py -q
+  92 passed
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -q
+  3242 passed, 179 skipped, 48 deselected in 424.61s
+.venv\Scripts\python -m ruff check tools/reproduce.py exp001_e4_analysis.py tests/test_exp001_e4_analysis.py
+  All checks passed!
+.venv\Scripts\python -m ruff format --check <same three files>
+  3 files already formatted
+.venv\Scripts\python -m mypy --strict tools/reproduce.py exp001_e4_analysis.py
+  Success: no issues found in 2 source files
+.venv\Scripts\python -m mypy tests/test_exp001_e4_analysis.py
+  Success: no issues found in 1 source file
+.venv\Scripts\python -m bandit -r tools/reproduce.py exp001_e4_analysis.py
+  No issues identified
+```
+
+**No regression to the published EXP-001 record**, re-verified after this
+round's edits by re-running `run_analysis` to a scratch destination:
+
+```text
+H1: REFUTED   H2a: REFUTED   H2b: CONFIRMED   H3: CONFIRMED   H4: CONFIRMED
+D1 flag: RAISED
+report-manifest.json outputs, verdicts: byte-identical to the committed record
+exp001-e4-adjudication.json / exp001-e4-summary.md: byte-identical to the committed record
+```
+
+**Security gates.** Local Snyk Code (CLI `1.1306.2`, org `symbo-gif`):
+`tools/reproduce.py` 0 issues; `tests/test_exp001_e4_analysis.py` 0 issues;
+`exp001_e4_analysis.py` 1 issue (LOW, Path Traversal at the CLI destination
+check itself — unchanged from §9.10/§10.6's finding, confirmed identical
+against the pre-change baseline via `git show HEAD:<path>`, the same
+structural false-positive class: the sanitizer's own entry point). No Snyk
+Open Source / `cargo audit` / `pip-audit` run — no dependency files changed
+this round.
+
+**Delta re-audit date:** 2026-09-24 UTC — **Result:** CLEAN. `PR23-F26`
+through `PR23-F29` FIXED with regression tests; the Windows required-check
+blocker (`PR23-F26`) is structural (a test defect, not a production defect)
+and closed by removing the offending monkeypatch rather than narrowing it,
+per all three reviewers' recommendation; no D1; no verdict, tolerance, or
+measured value changed; no regression to the published EXP-001 record.
+CodeRabbit and Copilot are re-requested on this round's push per standard
+practice; their results are the next input, not a precondition already
+folded into this report.

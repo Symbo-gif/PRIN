@@ -48,6 +48,35 @@ def _load_module() -> Any:
 analysis = _load_module()
 
 
+def _probe_symlink_support() -> bool:
+    """True iff this process can create a symlink in a temporary directory.
+
+    Symlink creation needs elevated privilege or Developer Mode on Windows
+    (GitHub-hosted `windows-latest` runners have it; an arbitrary local or
+    self-hosted Windows host may not), so symlink regression tests are
+    gated on an executability probe rather than on a platform assumption —
+    the same guard class as ``tests/test_reproduce.py::_probe_symlink_support``.
+    """
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as raw:
+        directory = Path(raw)
+        target = directory / "target"
+        target.write_text("x", encoding="utf-8")
+        link = directory / "link"
+        try:
+            link.symlink_to(target)
+        except OSError:
+            return False
+        return True
+
+
+_needs_symlink_support = pytest.mark.skipif(
+    not _probe_symlink_support(),
+    reason="creating symlinks is not permitted in this environment",
+)
+
+
 def _comparison(name: str, *, ok: bool, abs_diff: float = 0.0) -> dict[str, Any]:
     """Build one comparison record shaped like the driver's output."""
     return {
@@ -369,15 +398,68 @@ class TestProvenanceGuard:
             json.dumps(manifest), encoding="utf-8", newline="\n"
         )
 
-        def _forbidden(*_args: object, **_kwargs: object) -> str:
+        def _forbidden(*_args: object, **_kwargs: object) -> str | bytes:
             raise AssertionError(
                 "must not read the artefact through a link-following Path call"
             )
 
+        # Both read_text and read_bytes: a prior version of this test only
+        # forbade read_text, so a regression to the equally link-following
+        # read_bytes would still have passed (independent reviews, PR #23
+        # head `754272a`).
         monkeypatch.setattr(Path, "read_text", _forbidden)
+        monkeypatch.setattr(Path, "read_bytes", _forbidden)
 
         result = analysis._load_artefact(tmp_path, leg)
         assert result["environment"]["git_commit"] == analysis.EXECUTION_COMMIT
+
+    def test_load_artefact_rejects_a_swap_between_verification_and_read(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Independent reviews (PR #23 head `754272a`): ``verify_manifest``
+        proves the run directory matched its manifest at the moment it ran;
+        a second, unverified read on the same path afterward proves only
+        that the reopened file is not a symlink, not that its content is
+        still the verified bytes. A concurrent regular-file replacement in
+        that window — restored afterward or not — would previously have
+        been fed straight into the analysis undetected. Simulated here by
+        swapping the artefact's content as a side effect of the (otherwise
+        successful) ``verify_manifest`` call itself, the earliest possible
+        point after verification and before the read that follows it.
+        """
+        from tools.reproduce import ManifestMismatchError, compute_sha256
+
+        leg = analysis.RUN_LEGS[0]
+        run_dir = tmp_path / analysis.RAW_ARTEFACT_ROOT / leg.run_id
+        run_dir.mkdir(parents=True)
+        payload = _corpus_payload([_corpus_case("c0")])
+        artefact = run_dir / leg.artefact
+        artefact.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+        manifest = {
+            "schema_version": 1,
+            "files": [
+                {
+                    "path": artefact.name,
+                    "bytes": artefact.stat().st_size,
+                    "sha256": compute_sha256(artefact),
+                }
+            ],
+        }
+        (run_dir / "manifest.json").write_text(
+            json.dumps(manifest), encoding="utf-8", newline="\n"
+        )
+
+        real_verify_manifest = analysis.verify_manifest
+
+        def _swap_after_verify(*args: object, **kwargs: object) -> object:
+            records = real_verify_manifest(*args, **kwargs)
+            artefact.write_text('{"swapped": true}', encoding="utf-8", newline="\n")
+            return records
+
+        monkeypatch.setattr(analysis, "verify_manifest", _swap_after_verify)
+
+        with pytest.raises(ManifestMismatchError):
+            analysis._load_artefact(tmp_path, leg)
 
 
 class TestOutputContainment:
@@ -387,6 +469,51 @@ class TestOutputContainment:
         roots = analysis.allowed_output_roots(tmp_path)
         assert (tmp_path / analysis.OUTPUT_ROOT).resolve() in roots
         assert (tmp_path / analysis.RECORD_ROOT).resolve() in roots
+
+    @_needs_symlink_support
+    def test_allowed_output_roots_refuses_a_symlinked_output_root(
+        self, tmp_path: Path
+    ) -> None:
+        """Independent reviews (PR #23 head `754272a`): a symlinked
+        ``OUTPUT_ROOT`` must be refused, not silently resolved to whatever
+        it points at — otherwise the "permitted root" a later write is
+        checked against could transitively become the frozen record root.
+        """
+        (tmp_path / analysis.RECORD_ROOT).mkdir(parents=True)
+        output_root = tmp_path / analysis.OUTPUT_ROOT
+        output_root.parent.mkdir(parents=True, exist_ok=True)
+        output_root.symlink_to(
+            tmp_path / analysis.RECORD_ROOT, target_is_directory=True
+        )
+
+        with pytest.raises(analysis.AnalysisError, match="symbolic link"):
+            analysis.allowed_output_roots(tmp_path)
+
+    @_needs_symlink_support
+    def test_allowed_output_roots_refuses_a_symlinked_record_root(
+        self, tmp_path: Path
+    ) -> None:
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        record_root = tmp_path / analysis.RECORD_ROOT
+        record_root.parent.mkdir(parents=True, exist_ok=True)
+        record_root.symlink_to(elsewhere, target_is_directory=True)
+
+        with pytest.raises(analysis.AnalysisError, match="symbolic link"):
+            analysis.allowed_output_roots(tmp_path)
+
+    @_needs_symlink_support
+    def test_allowed_generated_output_dirs_refuses_a_symlinked_output_root(
+        self, tmp_path: Path
+    ) -> None:
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        output_root = tmp_path / analysis.OUTPUT_ROOT
+        output_root.parent.mkdir(parents=True, exist_ok=True)
+        output_root.symlink_to(elsewhere, target_is_directory=True)
+
+        with pytest.raises(analysis.AnalysisError, match="symbolic link"):
+            analysis.allowed_generated_output_dirs(tmp_path)
 
     def test_a_destination_outside_every_root_is_refused(self, tmp_path: Path) -> None:
         roots = ((tmp_path / "allowed").resolve(),)
@@ -523,38 +650,46 @@ class TestOutputContainment:
 
 
 class TestReportManifestIntegrity:
-    """Copilot follow-up review, PR #23 head `900a68f`: the integrity fields
-    recorded for each generated output must come from a no-follow read of
-    the file actually written, not ``Path.stat()``/``compute_sha256()``
-    (both link-following) applied after the fact.
+    """Independent reviews, PR #23 head `754272a`: the integrity fields
+    recorded for each generated output must be exactly what
+    :func:`write_outputs` computed from the bytes it wrote, and
+    ``write_report_manifest`` must never reopen the output path to
+    second-guess them — reopening leaves a window in which a concurrent
+    regular-file replacement between ``write_outputs`` and this call is
+    recorded as if it were the generated output's own bytes (TOCTOU,
+    CWE-59).
+
+    A prior version of this test pinned that contract by globally
+    monkeypatching ``pathlib.Path.stat`` for the whole process. That also
+    broke ``tools.reproduce``'s own legitimate no-follow ``is_symlink()``
+    pre-open check on Windows Python <=3.13, where ``Path.lstat()``
+    delegates to ``Path.stat(follow_symlinks=False)``: the patch turned an
+    unrelated internal call into an ``AssertionError``, and pytest's own
+    failure-reporting machinery then hit the same patch a second time while
+    formatting that failure, escalating it to a session-ending
+    ``INTERNALERROR`` on every required Windows leg (Copilot follow-up
+    review, PR #23 head `900a68f`; independent reviews, PR #23 head
+    `754272a`). The contract is instead pinned by construction below: the
+    output path is never even created on disk, so any reopen would raise
+    ``FileNotFoundError`` rather than silently succeeding.
     """
 
-    def test_output_integrity_does_not_use_link_following_calls(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    def test_write_report_manifest_never_reads_its_output_paths(
+        self, tmp_path: Path
     ) -> None:
-        output_dir = tmp_path / "out"
-        output_dir.mkdir()
-        summary = output_dir / "exp001-e4-summary.md"
-        payload = b"hello\n"
-        summary.write_bytes(payload)
-
-        def _forbidden_stat(*_args: object, **_kwargs: object) -> None:
-            raise AssertionError("must not call Path.stat for output integrity")
-
-        def _forbidden_hash(*_args: object, **_kwargs: object) -> None:
-            raise AssertionError("must not call compute_sha256 for output integrity")
-
-        monkeypatch.setattr(Path, "stat", _forbidden_stat)
-        from tools import reproduce as reproduce_module
-
-        monkeypatch.setattr(reproduce_module, "compute_sha256", _forbidden_hash)
+        # Deliberately never created: if write_report_manifest reopened it
+        # for its integrity fields, this would raise FileNotFoundError.
+        summary = tmp_path / "out" / "exp001-e4-summary.md"
+        given = analysis.GeneratedOutput(
+            path=summary, bytes=6, sha256=hashlib.sha256(b"hello\n").hexdigest()
+        )
 
         manifests: dict[str, list[dict[str, Any]]] = {
             leg.label: [] for leg in analysis.RUN_LEGS
         }
         manifest_path = tmp_path / "report-manifest.json"
         record = analysis.write_report_manifest(
-            [summary],
+            [given],
             manifests,
             manifest_path,
             analysis.GENERATED_AT,
@@ -564,8 +699,8 @@ class TestReportManifestIntegrity:
         assert record["outputs"] == [
             {
                 "path": "exp001-e4-summary.md",
-                "bytes": len(payload),
-                "sha256": hashlib.sha256(payload).hexdigest(),
+                "bytes": given.bytes,
+                "sha256": given.sha256,
             }
         ]
 
@@ -654,6 +789,14 @@ class TestRegisteredRun:
         assert recorded == {path.name for path in out.iterdir()}
         assert len(payload["inputs"]) == len(analysis.RUN_LEGS)
         assert payload["d1_flag"] is True
+        # write_report_manifest records write_outputs's in-memory digest,
+        # not a reopen (TestReportManifestIntegrity); confirm here, against
+        # the real registered outputs, that it still matches what actually
+        # landed on disk.
+        for entry in payload["outputs"]:
+            on_disk = (out / entry["path"]).read_bytes()
+            assert entry["bytes"] == len(on_disk)
+            assert entry["sha256"] == hashlib.sha256(on_disk).hexdigest()
 
     def test_h2b_matches_the_driver_implementation(self) -> None:
         from benchmarks.campaign.exp001_driver import adjudicate_h2b
