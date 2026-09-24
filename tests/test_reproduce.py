@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import errno
 import json
 import os
 from pathlib import Path
@@ -519,6 +520,54 @@ class TestManifestSymlinkProvenance:
         assert outside_manifest.read_text(encoding="utf-8") == "{}"
 
     @_needs_symlink_support
+    def test_append_manifest_rejects_a_candidate_swapped_to_a_symlink_after_the_check(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Independent review (PR #23 head `e946a3c`): the self-exclusion
+        filter that keeps `manifest.json` itself out of the candidate
+        inventory used to compare each candidate's ``.resolve()`` against the
+        manifest's resolved destination — a link-following comparison, run
+        *after* the ``_reject_non_regular`` pre-check loop had already
+        finished with every candidate. A candidate that was still a regular
+        file when that loop checked it, then swapped for a symlink pointing
+        at ``destination`` before the exclusion comprehension ran, would
+        resolve equal to it and silently vanish from ``actual_paths`` —
+        exactly like the manifest itself — without ever surfacing as
+        "missing" or "unmanifested", let alone being rejected as a symlink.
+        Fixed to exclude by name only, computed once before any per-candidate
+        check, matching :func:`verify_manifest`'s existing pattern; a later
+        open of this now-symlinked candidate then fails closed through the
+        ordinary no-follow path.
+
+        Simulated by monkeypatching ``_reject_non_regular`` to perform the
+        swap immediately after it passes the targeted candidate — the
+        earliest point after the pre-check and before the exclusion
+        comprehension that follows it.
+        """
+        monkeypatch.setattr(reproduce, "ALLOWED_MANIFEST_ROOTS", (tmp_path.resolve(),))
+        governed = tmp_path / "governed"
+        governed.mkdir()
+        (governed / "a.json").write_bytes(b'{"a": 1}\n')
+        manifest_path = governed / "manifest.json"
+        reproduce.append_manifest(governed, manifest_path)
+
+        sneaky = governed / "sneaky.json"
+        sneaky.write_bytes(b"{}")
+
+        real_reject_non_regular = reproduce._reject_non_regular
+
+        def _swap_after_check(path: Path, role: str) -> None:
+            real_reject_non_regular(path, role)
+            if path == sneaky:
+                sneaky.unlink()
+                sneaky.symlink_to(manifest_path)
+
+        monkeypatch.setattr(reproduce, "_reject_non_regular", _swap_after_check)
+
+        with pytest.raises(reproduce.ManifestMismatchError, match="symbolic link"):
+            reproduce.append_manifest(governed, manifest_path)
+
+    @_needs_symlink_support
     def test_verify_manifest_rejects_an_unmanifested_symlink(
         self, tmp_path: Path
     ) -> None:
@@ -725,6 +774,74 @@ class TestOpenNoFollow:
             os.close(fd)
         else:
             assert fd is None
+
+    @staticmethod
+    def _linux_like_os(monkeypatch: pytest.MonkeyPatch) -> None:
+        """Make ``reproduce`` see a POSIX ``os`` whose directory open fails
+        with ``ENOTDIR``, exactly as Linux does for ``O_DIRECTORY |
+        O_NOFOLLOW`` on a symlink (the ubuntu CI legs at head `e946a3c`).
+
+        Scoped to ``reproduce``'s own ``os`` reference, never the global
+        ``os`` module, which pytest itself relies on (the lesson of
+        ``PR23-F26``).
+        """
+        fake_o_directory = 0x10000
+
+        def fake_open(path: object, flags: int, *args: object, **kwargs: object) -> int:
+            if flags & fake_o_directory:
+                raise NotADirectoryError(errno.ENOTDIR, "Not a directory", str(path))
+            raise AssertionError("the final component must not be reached")
+
+        class _LinuxLikeOs:
+            open = staticmethod(fake_open)
+            supports_dir_fd = frozenset({fake_open})
+            O_DIRECTORY = fake_o_directory
+            O_NOFOLLOW = 0x20000
+
+            def __getattr__(self, name: str) -> object:
+                return getattr(os, name)
+
+        monkeypatch.setattr(reproduce, "os", _LinuxLikeOs())
+
+    @_needs_symlink_support
+    def test_linux_enotdir_for_a_symlinked_parent_is_a_manifest_mismatch(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """CI regression, PR #23 head `e946a3c`: Linux reports ``ENOTDIR``,
+        not ``ELOOP``, when ``O_DIRECTORY | O_NOFOLLOW`` meets a symlinked
+        parent. Only ``ELOOP`` was translated, so the symlinked parent was
+        still refused but as a raw ``NotADirectoryError`` rather than the
+        documented ``ManifestMismatchError``. Simulated here so the
+        translation is exercised on every platform, not only on Linux CI.
+        """
+        real_dir = tmp_path / "real"
+        real_dir.mkdir()
+        linked_dir = tmp_path / "linked"
+        linked_dir.symlink_to(real_dir, target_is_directory=True)
+        self._linux_like_os(monkeypatch)
+
+        with pytest.raises(
+            reproduce.ManifestMismatchError, match="symbolic link ancestor"
+        ):
+            reproduce._dir_relative_open(
+                linked_dir / "a.json", os.O_RDONLY, 0, "artefact"
+            )
+
+    def test_linux_enotdir_for_a_genuine_non_directory_parent_is_reraised(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The counterpart: ``ENOTDIR`` from a parent that is a regular file,
+        not a symlink, is a genuine error and must surface as itself rather
+        than be mislabelled a symlink mismatch.
+        """
+        not_a_dir = tmp_path / "file"
+        not_a_dir.write_bytes(b"x")
+        self._linux_like_os(monkeypatch)
+
+        with pytest.raises(NotADirectoryError):
+            reproduce._dir_relative_open(
+                not_a_dir / "a.json", os.O_RDONLY, 0, "artefact"
+            )
 
     @_needs_dir_fd_support
     @_needs_symlink_support

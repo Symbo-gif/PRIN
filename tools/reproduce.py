@@ -192,17 +192,36 @@ def _dir_relative_open(path: Path, flags: int, mode: int, role: str) -> int | No
 
     ``O_NOFOLLOW`` on ``path`` itself only refuses a symlink at the *final*
     path component (POSIX ``open(2)``): it does not stop a concurrent
-    replacement of an *ancestor* directory (for example the governed
-    ``output_dir`` itself) with a symlink between an earlier
+    replacement of the *immediate parent* directory (for example the
+    governed ``output_dir`` itself) with a symlink between an earlier
     resolve-and-contain check and this open, which would silently redirect
     the open outside the checked root while the final filename remains a
     plain, non-symlinked name (CWE-59; independent review, PR #23 head
-    `2264771`). Opening the immediate parent directory as a descriptor pins
-    that exact directory inode: a later replacement of the path string's
+    `2264771`). Opening that immediate parent directory as a descriptor pins
+    its exact directory inode: a later replacement of the path string's
     parent cannot repoint an open performed relative to that descriptor,
-    closing the window completely rather than narrowing it. As a side
-    effect this also rejects a parent that is *already* a symlink at call
-    time, not only one swapped in mid-race.
+    closing the window for *that one level* rather than narrowing it. As a
+    side effect this also rejects a parent that is *already* a symlink at
+    call time, not only one swapped in mid-race.
+
+    This closes the race for the immediate parent only, not for every
+    ancestor along ``path``: a symlink swapped in at a *grandparent* or
+    higher directory, before this function's own ``os.open(parent, ...)``
+    call runs, is still followed by that call — POSIX path resolution
+    transparently traverses any non-final symlinked component, and
+    ``O_NOFOLLOW`` here only guards the component this function itself
+    opens. Every caller in this module constructs ``path`` as a fixed
+    relative name under an already-validated governed root
+    (``run_dir``/``output_dir``/``results_dir``, checked by
+    :func:`allowed_output_roots`-style callers before any of these
+    functions run), so the immediate parent is the level that check
+    actually names and the level realistically exposed to a local
+    concurrent writer; closing every deeper ancestor as well would require
+    walking and pinning each path component from a trusted anchor down
+    (independent review, PR #23 head `e946a3c` — declined as
+    disproportionate to this module's own threat model of a governed
+    CI/local checkout, not an adversarial remote filesystem, the same
+    threat model already invoked for the Windows fallback below).
 
     Only attempted where the platform supports it (POSIX with
     ``dir_fd``-relative :func:`os.open` and ``O_DIRECTORY``); returns
@@ -238,7 +257,13 @@ def _dir_relative_open(path: Path, flags: int, mode: int, role: str) -> int | No
     try:
         parent_fd = os.open(parent, dir_flags)
     except OSError as error:
-        if error.errno == errno.ELOOP:
+        # Linux reports ENOTDIR, not ELOOP, for O_DIRECTORY | O_NOFOLLOW on a
+        # symlink (observed on the ubuntu CI legs, PR #23 head `e946a3c`).
+        # The open has already failed closed; the no-follow lstat only
+        # separates that case from a parent that is genuinely not a directory.
+        if error.errno == errno.ELOOP or (
+            error.errno == errno.ENOTDIR and parent.is_symlink()
+        ):
             raise ManifestMismatchError(
                 f"{role} {path} has a symbolic link ancestor directory "
                 f"({parent}); refusing to open it"
@@ -300,8 +325,10 @@ def _open_no_follow(path: Path, role: str) -> int:
     ``ELOOP`` if the final path component is a symbolic link, so there is no
     separate moment at which the check has passed but the open has not yet
     happened. :func:`_dir_relative_open` closes the same window for the
-    *parent* directory too, where the platform supports it. Windows does not
-    define ``O_NOFOLLOW`` or ``dir_fd``-relative opens; there this falls
+    *immediate parent* directory too, where the platform supports it (see
+    its own docstring for why this does not extend to every ancestor).
+    Windows does not define ``O_NOFOLLOW`` or ``dir_fd``-relative opens;
+    there this falls
     back to ``is_symlink()`` immediately before ``open()`` on the full path,
     which narrows but does not close the window — the repository's own
     concurrent-writer threat here is a governed CI/local checkout, not an
@@ -384,9 +411,10 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
     ``O_CREAT | O_TRUNC | O_NOFOLLOW`` makes the ``open`` itself the check: it
     fails with ``ELOOP`` if the final path component is an existing symlink,
     and otherwise creates (or truncates) a regular file in one syscall.
-    :func:`_dir_relative_open` closes the same window for the *parent*
-    directory too, where the platform supports it. Windows has no
-    ``O_NOFOLLOW`` or ``dir_fd``-relative opens; there this falls back to
+    :func:`_dir_relative_open` closes the same window for the *immediate
+    parent* directory too, where the platform supports it (see its own
+    docstring for why this does not extend to every ancestor). Windows has
+    no ``O_NOFOLLOW`` or ``dir_fd``-relative opens; there this falls back to
     ``is_symlink()`` immediately before ``open()`` on the full path (see
     :func:`_open_no_follow`). ``O_NONBLOCK`` (where defined) and a post-open
     :func:`_reject_non_regular_fd` check additionally guard against a FIFO
@@ -699,11 +727,24 @@ def append_manifest(
     records = load_manifest(manifest_path) if manifest_path.is_file() else ()
     existing = {record.path: record for record in records}
     candidates = sorted(results.glob("*.json"))
+    # Self-exclusion by name, computed once before any per-candidate check —
+    # not by comparing each candidate's `.resolve()` against `destination`
+    # (the prior approach): that followed a symlink per candidate, so a
+    # candidate swapped for a symlink targeting `destination` between the
+    # glob and this comparison would resolve equal to it and silently vanish
+    # from `actual_paths` — never surfacing as "missing" or "unmanifested" —
+    # instead of being rejected as non-regular below (CWE-59; independent
+    # review, PR #23 head `e946a3c`). Mirrors :func:`verify_manifest`'s
+    # already-safe name-based self-exclusion.
+    if destination.parent == results:
+        candidates = [
+            candidate
+            for candidate in candidates
+            if candidate.name != manifest_path.name
+        ]
     for candidate in candidates:
         _reject_non_regular(candidate, "candidate artefact")
-    actual_paths = {
-        path.name: path for path in candidates if path.resolve() != destination
-    }
+    actual_paths = {path.name: path for path in candidates}
     missing = sorted(set(existing) - set(actual_paths))
     if missing:
         raise ManifestMismatchError(f"missing artefacts: {', '.join(missing)}")

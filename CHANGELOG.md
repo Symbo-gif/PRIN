@@ -424,6 +424,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     committed record byte-for-byte. Snyk Code: 0 issues on
     `tools/reproduce.py` and its test file.
 
+- **PR #23 Round 7 — Copilot review and failing CI at head `e946a3c`; a
+  second TOCTOU instance, a documentation overclaim, and a Linux-only error
+  type (2026-09-24 UTC).** Copilot confirmed both Round 6 fixes
+  (`PR23-F30`, `PR23-F31`) resolved; CodeRabbit finished its review of this
+  head with no comments. Audited as `PR23-F34`/`PR23-F35`/`PR23-F36` in
+  `DOCS/audits/PR023-multi-review-audit.md` §13. None touches EXP-001's
+  numerical/parity conclusions or the D1 flag.
+  - **`PR23-F34` (D2) — Round 6's ancestor-symlink fix closed only the
+    immediate parent directory, not every ancestor, and its own docstrings
+    overclaimed full closure.** `_dir_relative_open` pins one level;
+    a symlink at a *grandparent* (or higher) is still followed by that same
+    function's own parent-opening call, which only guards the one component
+    it itself opens. Corrected: docstrings across `_dir_relative_open`,
+    `_open_no_follow`, and `write_no_follow` now say "immediate parent"
+    precisely and explain why, with a concrete example. Full ancestor-chain
+    pinning was considered and declined as disproportionate to this
+    module's threat model (every caller's path is a fixed name under an
+    already-validated governed root, making the immediate parent both the
+    checked level and the realistically-reachable one) — documented with
+    rationale rather than silently dropped. No new attack surface closed by
+    this item; an overclaim removed, the real one-level fix from Round 6
+    unchanged.
+  - **`PR23-F35` (D2) — `append_manifest`'s self-exclusion filter followed
+    a symlink per candidate, letting a swapped candidate silently vanish
+    from the inventory instead of failing closed.** The filter that keeps
+    `manifest.json` itself out of the candidate list compared each
+    candidate's `.resolve()` against the manifest's resolved destination —
+    link-following, and run *after* the non-regular pre-check loop had
+    already passed every candidate. A candidate swapped for a symlink
+    targeting the manifest's destination in that window resolved equal to
+    it and disappeared without ever being flagged missing, unmanifested, or
+    rejected as a symlink. Fixed to exclude by name only, computed once
+    before any per-candidate check — the same pattern `verify_manifest`
+    already used, which never had this defect.
+  - **`PR23-F36` (D2) — Round 6's ancestor-symlink rejection raised the
+    wrong error type on Linux, failing all three ubuntu `test` legs and the
+    `reproduce` job at `e946a3c`.** Linux reports `ENOTDIR`, not `ELOOP`,
+    for `O_DIRECTORY | O_NOFOLLOW` on a symlink, and only `ELOOP` was
+    translated. The symlinked parent was still refused (it failed closed),
+    but as a raw `NotADirectoryError` instead of `ManifestMismatchError`.
+    Found by the POSIX-only test Round 6 deferred to CI because it could not
+    run on this session's Windows machine. `ENOTDIR` is now translated when
+    a no-follow `lstat` confirms the parent is a symlink; a parent that is
+    genuinely not a directory still raises its real error.
+  - 3 new regression tests, each proved against pre-fix source. One covers
+    `PR23-F35` (`DID NOT RAISE ManifestMismatchError` before the fix). Two
+    cover `PR23-F36` by simulating Linux's `ENOTDIR` behavior so they run on
+    every platform, not only CI; the symlink case fails on the pushed
+    `e946a3c` source with the same error CI reported. The fake `os` is
+    scoped to `reproduce`'s own reference, not the global module. Targeted
+    suite 96 passed, 2 skipped (unchanged from Round 6); full suite (`-m "not slow
+    and not gpu"`) `3245 passed, 181 skipped, 48 deselected` plus one
+    unrelated wall-clock throughput test that flaked once (passed 2 of 3
+    isolated re-runs on identical code); `ruff`, `ruff format --check`, `mypy
+    --strict`, and `bandit` all clean; the real 172-record repository
+    manifest still verifies with no error; the E4 analysis re-run to a
+    scratch destination reproduces the committed record byte-for-byte. Snyk
+    Code: 0 issues on `tools/reproduce.py` and its test file.
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that

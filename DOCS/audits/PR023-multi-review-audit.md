@@ -1630,3 +1630,215 @@ tests; the carried Round 1 thread re-confirmed stale; both CodeRabbit
 wording issues fixed; no new D1; no verdict, tolerance, or measured value
 changed; no regression to the published EXP-001 record. CodeRabbit and
 Copilot are re-requested on this round's push per standard practice.
+
+---
+
+## 13. Round 7 — Copilot review of head `e946a3c`
+
+**Trigger:** Round 6's push (`e946a3c`) was reviewed by Copilot (review
+`5300119532`). Both `PR23-F30` and `PR23-F31` are confirmed **resolved**.
+Two new findings replaced them (both High), and the carried Round 1 thread
+("Manifest verification accepts symlinked files") appeared again, unchanged
+— re-derived below as still the same stale thread, no new code path
+involved (GitHub itself now marks that thread *outdated*). CodeRabbit
+answered the `@coderabbitai review` trigger with "Review finished" but
+posted no review and no comments on this head; its earlier threads are all
+resolved. A GraphQL query of every review thread on the PR confirms exactly
+three unresolved threads at this head: the two new Copilot findings below
+and the outdated carried one — nothing else outstanding from either bot.
+
+Separately, CI on `e946a3c` failed on all three ubuntu `test` legs and the
+`reproduce` job — one test, one root cause, audited as `PR23-F36` (§13.4).
+
+### 13.1 `PR23-F34` (D2) — the ancestor-symlink fix closed only the immediate parent, not every ancestor, and Round 6's own docstrings overclaimed otherwise
+
+*Copilot, "Pin every ancestor to prevent symlink race escapes" (New,
+`tools/reproduce.py:203`).*
+
+Correct and important: `_dir_relative_open` (Round 6, `PR23-F30`) pins only
+`path.parent` — the *immediate* parent — as a descriptor. For a nested path
+such as `/safe/nested/run/file`, replacing `/safe/nested` (a *grandparent*)
+with a symlink before `_dir_relative_open`'s own `os.open(parent="/safe/
+nested/run", ...)` call still lets that call transparently traverse the
+symlinked `/safe/nested` component — `O_NOFOLLOW` there only guards the
+component the call itself opens (`run`), not everything above it. Round 6's
+own docstring claimed this "clos[ed] the window completely rather than
+narrowing it," which was true only for the one level it actually pins — an
+overclaim this audit should not have let stand.
+
+**Disposition: documentation corrected; full ancestor-chain pinning declined
+as disproportionate to this module's own threat model, not implemented.**
+A fully general fix would require resolving and pinning every path
+component from a trusted anchor down (`openat2(..., RESOLVE_NO_SYMLINKS)`
+where available, or a manual per-component `dir_fd` walk — Python's stdlib
+wraps neither directly), which this module has no existing concept of (no
+caller currently threads "how far up is trusted" through
+`_open_no_follow`/`write_no_follow`'s signatures) and would be a materially
+larger, riskier change to a security-critical path this session cannot
+locally test even for the one-level case already shipped. Every caller in
+this module constructs its path as a fixed relative name under an
+already-validated governed root (`run_dir`, `output_dir`, `results_dir` —
+each checked by `allowed_output_roots`-style logic before any of these
+functions run), so the immediate parent is both the level that check
+actually names and the level a local concurrent writer realistically
+reaches; a grandparent-or-higher swap requires the same attacker to already
+control a segment of the checkout these paths don't treat as configurable.
+Copilot's own comment offers "or narrow the guarantee to the immediate
+parent" as an acceptable alternative — taken here, with the guarantee now
+stated precisely rather than overclaimed. `_dir_relative_open`,
+`_open_no_follow`, and `write_no_follow`'s docstrings are corrected to say
+"the immediate parent" throughout and to explain, with the concrete
+`/safe/nested/run/file` example, exactly why this does not extend further —
+matching this codebase's existing honesty standard for the Windows fallback
+(itself a "narrows, does not close" case for the very same reason, one
+level further out). The one-level fix itself is unchanged and still real:
+before Round 6, there was no ancestor protection at all; now the single
+most directly-configured level (the governed root's own directory) is
+closed on POSIX.
+
+**No test change required** — `test_symlinked_parent_directory_is_rejected_for_reads`
+(Round 6) already tests exactly the one-level guarantee this finding
+clarifies the scope of, not a two-level one it never claimed to prove.
+
+### 13.2 `PR23-F35` (D2) — `append_manifest`'s self-exclusion filter followed a symlink per candidate, letting a swapped candidate vanish from the inventory
+
+*Copilot, "Prevent symlink swap from omitting manifest entries" (New,
+`tools/reproduce.py:705`).*
+
+`append_manifest` excluded the manifest's own file from its candidate
+inventory by comparing each candidate's `.resolve()` against the manifest's
+resolved `destination` — a link-following comparison, run in a comprehension
+*after* the `_reject_non_regular` pre-check loop had already finished with
+every candidate. A candidate that was still a regular file when that loop
+checked it, then swapped for a symlink targeting `destination` before the
+exclusion comprehension ran, resolves equal to `destination` and is silently
+dropped from `actual_paths` — exactly like the manifest itself — without
+ever reaching a no-follow open or surfacing as "missing" or "unmanifested".
+Reproduced (and proven against pre-fix source per this audit's standing
+methodology, §2/§3.1): a `sneaky.json` symlinked to `manifest_path` after
+passing the pre-check loop vanished from the run with no error at all.
+
+Notably, `verify_manifest` never had this defect: it already excludes its
+self-reference by *name* (`candidate.name != manifest_path.name`), computed
+once before any per-candidate check, not by a per-candidate `.resolve()`.
+`append_manifest`'s exclusion had simply never been brought in line with
+that already-hardened pattern.
+
+**Fix.** `append_manifest`'s self-exclusion now matches `verify_manifest`'s:
+computed once, by name, before the `_reject_non_regular` loop runs, with no
+per-candidate filesystem operation at all. `actual_paths` is now built
+unconditionally from the (already name-filtered) `candidates` list.
+
+**Regression test.**
+`TestManifestSymlinkProvenance::test_append_manifest_rejects_a_candidate_swapped_to_a_symlink_after_the_check`
+monkeypatches `_reject_non_regular` to swap a regular candidate for a
+symlink targeting `destination` immediately after it passes the pre-check —
+the earliest point after that check and before the exclusion comprehension
+that follows it. Proved against pre-fix source (temporarily restoring the
+Round 6 committed `tools/reproduce.py`, running the new test, restoring the
+fix): `DID NOT RAISE ManifestMismatchError` pre-fix (the candidate silently
+vanished, exactly the defect), raises with a "symbolic link" message
+post-fix (the candidate now reaches the ordinary no-follow open and fails
+closed there once it is no longer excluded).
+
+### 13.3 Carried — "Manifest verification accepts symlinked files" (Copilot, High, comment `4084668748`, unchanged)
+
+Same stale Round 1 thread, unchanged from §12.1's re-derivation; neither of
+this round's two fixes touches `verify_manifest` or `exp001_e4_analysis.py`.
+No new evidence to add; no code change.
+
+### 13.4 `PR23-F36` (D2) — Round 6's ancestor-symlink rejection raised the wrong error type on Linux, failing four required CI checks
+
+*CI on `e946a3c`: `test (ubuntu-latest, 3.11/3.12/3.13)` and `reproduce`,
+all failing on
+`TestOpenNoFollow::test_symlinked_parent_directory_is_rejected_for_reads`
+with `NotADirectoryError: [Errno 20] Not a directory`.*
+
+This is the POSIX-only test §12.2 said "skips on this machine and will run
+for real on this repository's Linux CI legs." It did run, and it caught a
+real defect in the Round 6 fix. On Linux, `open()` with `O_DIRECTORY |
+O_NOFOLLOW` on a symlink fails with `ENOTDIR`, not `ELOOP`: `O_NOFOLLOW`
+stops the kernel following the link, and `O_DIRECTORY` then finds the link
+itself is not a directory. `_dir_relative_open` translated only `ELOOP` into
+`ManifestMismatchError`, so a symlinked parent was still refused — the fix
+still failed closed, and no symlinked parent was ever followed — but as a
+raw `NotADirectoryError`, breaking the documented error contract every
+caller relies on. `ELOOP` alone had been assumed from the general
+`O_NOFOLLOW` documentation without testing the `O_DIRECTORY` combination on
+Linux; this session's Windows machine could not run that path, which is why
+§12.2 deferred it to CI, and CI is where it surfaced.
+
+**Fix.** The parent-open handler now also translates `ENOTDIR` — but only
+when a no-follow `lstat` (`parent.is_symlink()`) confirms the parent is a
+symlink, so a parent that is genuinely not a directory (a regular file)
+still surfaces as its real `NotADirectoryError` instead of being mislabelled.
+`ELOOP` stays unconditional, exactly as before. The lstat runs only after
+the open has already failed closed, so it chooses the error message and
+cannot reopen the window.
+
+**Regression tests, runnable on every platform.** The CI-only test was the
+sole coverage of this branch, and it could not run here. Two new tests
+simulate Linux's exact behavior by replacing `reproduce`'s own `os`
+reference — never the global `os` module, per the `PR23-F26` lesson — with
+a POSIX-like stand-in whose directory open raises `ENOTDIR`:
+`test_linux_enotdir_for_a_symlinked_parent_is_a_manifest_mismatch` and
+`test_linux_enotdir_for_a_genuine_non_directory_parent_is_reraised`. Both
+run on this Windows machine. The first was proved against the pushed
+`e946a3c` source: it fails there with the same `NotADirectoryError` CI
+reported, and passes with the fix. The original POSIX test is unchanged and
+is expected to pass on the next CI run; that remains unconfirmed until CI
+reports it.
+
+### 13.5 Verification
+
+```text
+.venv\Scripts\python -m pytest tests/test_reproduce.py tests/test_exp001_e4_analysis.py -q
+  96 passed, 2 skipped (the two dir_fd/FIFO-gated tests, unchanged from Round 6)
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -q
+  3245 passed, 181 skipped, 48 deselected, 1 failed then verified flaky (note below)
+.venv\Scripts\python -m ruff check tools/reproduce.py tests/test_reproduce.py
+  All checks passed!
+.venv\Scripts\python -m ruff format --check tools/reproduce.py tests/test_reproduce.py
+  2 files already formatted
+.venv\Scripts\python -m mypy --strict tools/reproduce.py
+  Success: no issues found in 1 source file
+.venv\Scripts\python -m mypy tests/test_reproduce.py
+  Success: no issues found in 1 source file
+.venv\Scripts\python -m bandit -r tools/reproduce.py
+  No issues identified
+```
+
+**Flaky-test note.** The one full-suite failure,
+`tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression`,
+compares the wall-clock time of CPU work with and without a background
+daemon thread. The module never imports `tools.reproduce`, and this round
+changes no file it depends on. Re-run in isolation three times on identical
+code: passed, failed, passed. Not attributable to this change; the same
+class as the wall-clock flake recorded in §10.6.
+
+Also re-verified directly against the real repository manifest (not just
+synthetic fixtures): `reproduce.verify_manifest(reproduce.DEFAULT_RESULTS_DIR,
+reproduce.DEFAULT_MANIFEST)` still returns all 172 records with no error.
+
+**No regression to the published EXP-001 record**, re-verified after this
+round's edits by re-running `run_analysis` to a scratch destination:
+`report-manifest.json` outputs and verdicts byte-identical to the committed
+record; H1–H4 verdicts and the D1 flag unchanged.
+
+**Security gates.** Local Snyk Code (CLI `1.1306.2`, org `symbo-gif`):
+`tools/reproduce.py` 0 issues; `tests/test_reproduce.py` 0 issues. No Snyk
+Open Source / `cargo audit` / `pip-audit` run — no dependency files changed
+this round.
+
+**Delta re-audit date:** 2026-09-24 UTC — **Result:** CLEAN locally; CI
+confirmation pending. `PR23-F34` (documentation-precision correction; no new
+attack surface closed, an existing overclaim removed), `PR23-F35` (a genuine
+second TOCTOU instance), and `PR23-F36` (the Linux-only error-type defect
+that failed four required CI checks at `e946a3c`) are all resolved, the
+latter two with regression tests proven against pre-fix source. The carried
+Round 1 thread is re-confirmed stale for the third time running; no new D1;
+no verdict, tolerance, or measured value changed; no regression to the
+published EXP-001 record; the real 172-record repository manifest still
+verifies. `PR23-F36` is not closed until CI's ubuntu legs and `reproduce`
+job pass on this round's push — the local simulation reproduces and fixes
+the reported failure, but it is not the Linux kernel.
