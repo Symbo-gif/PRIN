@@ -515,6 +515,44 @@ class TestOutputContainment:
         with pytest.raises(analysis.AnalysisError, match="symbolic link"):
             analysis.allowed_generated_output_dirs(tmp_path)
 
+    @_needs_symlink_support
+    def test_allowed_output_roots_refuses_a_symlinked_ancestor_of_the_output_root(
+        self, tmp_path: Path
+    ) -> None:
+        """Independent review (PR #23 head `4ed9f14`, closed at `3dfe299`'s
+        follow-up round): a symlink at an *ancestor* of the configured root
+        (for example ``DOCS/test_and_benchmark_results``) leaves the final
+        component's own ``is_symlink()`` false — ``OUTPUT_ROOT`` need not
+        even exist yet — while ``.resolve()`` transparently follows the
+        ancestor into a redirected tree, so the "permitted root" would
+        silently become a directory nobody configured. Every component
+        below the checkout anchor is now checked no-follow.
+        """
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        ancestor = tmp_path / analysis.OUTPUT_ROOT.parent
+        ancestor.parent.mkdir(parents=True, exist_ok=True)
+        ancestor.symlink_to(elsewhere, target_is_directory=True)
+        (tmp_path / analysis.RECORD_ROOT).mkdir(parents=True)
+
+        with pytest.raises(analysis.AnalysisError, match="symbolic link"):
+            analysis.allowed_output_roots(tmp_path)
+        with pytest.raises(analysis.AnalysisError, match="symbolic link"):
+            analysis.allowed_generated_output_dirs(tmp_path)
+
+    @_needs_symlink_support
+    def test_allowed_output_roots_refuses_a_symlinked_ancestor_of_the_record_root(
+        self, tmp_path: Path
+    ) -> None:
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        ancestor = tmp_path / analysis.RECORD_ROOT.parent
+        ancestor.parent.mkdir(parents=True, exist_ok=True)
+        ancestor.symlink_to(elsewhere, target_is_directory=True)
+
+        with pytest.raises(analysis.AnalysisError, match="symbolic link"):
+            analysis.allowed_output_roots(tmp_path)
+
     def test_a_destination_outside_every_root_is_refused(self, tmp_path: Path) -> None:
         roots = ((tmp_path / "allowed").resolve(),)
         with pytest.raises(analysis.AnalysisError, match="outside the permitted"):

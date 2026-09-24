@@ -129,21 +129,26 @@ def test_append_manifest_self_excludes_case_insensitively(
     from the file actually on disk (``manifest_path.name`` reflects the
     caller's input, not the stored casing — ``Path.name`` does no
     filesystem lookup) would not self-exclude, misreporting the manifest
-    itself as an unmanifested artefact. Compared via ``os.path.normcase``
-    now, which is the identity function on POSIX (case-sensitive there, so
-    this is a no-op change on Linux/macOS-with-a-case-sensitive-volume) and
-    lowercases on Windows.
+    itself as an unmanifested artefact. An ``os.path.normcase`` comparison
+    fixed only Windows (where it case-folds); on POSIX it is the identity
+    function, so macOS's default case-insensitive-but-case-preserving
+    volumes were still missed (independent review, PR #23 head `f370a29`).
+    The production check now compares *file identity* — ``lstat()``
+    results via ``os.path.samestat`` — so whether two casings name the
+    same file is answered by the filesystem itself, on every platform,
+    with no per-platform case rule (and a hard-linked alias of the
+    manifest, inode-identical to it, is refused outright via its link
+    count rather than silently excluded; see the sibling hard-link tests).
 
     Whether ``MANIFEST.JSON`` and ``manifest.json`` actually name the same
-    file is a property of the *filesystem*, not of ``os.path.normcase``
-    (which this test does not call) — Linux ext4 is case-sensitive, so
-    they are two different, unrelated files there, and this test would be
-    exercising a scenario that cannot occur rather than the one it claims
-    to (caught by real CI failing this exact assertion on ubuntu after an
-    initial version assumed the filesystem behaviour instead of probing
-    it — the same "check, don't assume" lesson `PR23-F39`'s own correction
-    drew). Probed directly below; skips cleanly wherever the two names are
-    genuinely different files.
+    file is a property of the *filesystem* — Linux ext4 is case-sensitive,
+    so they are two different, unrelated files there, and this test would
+    be exercising a scenario that cannot occur rather than the one it
+    claims to (caught by real CI failing this exact assertion on ubuntu
+    after an initial version assumed the filesystem behaviour instead of
+    probing it — the same "check, don't assume" lesson `PR23-F39`'s own
+    correction drew). Probed directly below; skips cleanly wherever the
+    two names are genuinely different files.
     """
     monkeypatch.setattr(reproduce, "ALLOWED_MANIFEST_ROOTS", (tmp_path.resolve(),))
     (tmp_path / "a.json").write_bytes(b"a")
@@ -161,6 +166,44 @@ def test_append_manifest_self_excludes_case_insensitively(
     records = reproduce.append_manifest(tmp_path, differently_cased)
 
     assert [record.path for record in records] == ["a.json"]
+
+
+def test_append_manifest_fails_closed_on_a_hard_linked_manifest_alias(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Independent review (PR #23 head `3dfe299`): the identity-based
+    self-exclusion (``lstat`` + ``os.path.samestat``) is inode-based, and a
+    hard link to the manifest is inode-identical — so, unguarded, a
+    ``rogue.json`` created via ``os.link(manifest, rogue)`` would be
+    silently excluded from the candidate inventory alongside the manifest's
+    own entry, instead of surfacing as an unmanifested artefact. A governed
+    manifest has exactly one directory entry, so a link count above one is
+    refused outright — fail closed, never silently filtered.
+    """
+    monkeypatch.setattr(reproduce, "ALLOWED_MANIFEST_ROOTS", (tmp_path.resolve(),))
+    (tmp_path / "a.json").write_bytes(b"a")
+    manifest_path = tmp_path / "manifest.json"
+    reproduce.append_manifest(tmp_path, manifest_path)
+
+    os.link(manifest_path, tmp_path / "rogue.json")
+
+    with pytest.raises(reproduce.ManifestMismatchError, match="hard links"):
+        reproduce.append_manifest(tmp_path, manifest_path)
+
+
+def test_verify_manifest_fails_closed_on_a_hard_linked_manifest_alias(
+    tmp_path: Path,
+) -> None:
+    """Independent review (PR #23 head `3dfe299`): same as the append-side
+    test above — ``verify_manifest``'s self-exclusion must not let a
+    hard-linked alias of the manifest vanish from the inventory (where it
+    would otherwise be accepted despite being unmanifested).
+    """
+    manifest = _write_manifest(tmp_path, {"a.json": b"a"})
+    os.link(manifest, tmp_path / "rogue.json")
+
+    with pytest.raises(reproduce.ManifestMismatchError, match="hard links"):
+        reproduce.verify_manifest(tmp_path, manifest)
 
 
 def test_append_manifest_confines_destination(tmp_path: Path) -> None:

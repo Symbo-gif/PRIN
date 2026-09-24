@@ -698,6 +698,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     CodeRabbit and Copilot are re-requested on this round's push per
     standard practice.
 
+- **PR #23 Round 11 — Copilot review of head `3dfe299`;
+  maintainer-directed closure sweep: a hard-link inventory-evasion gap
+  and a stale docstring fixed, two previously-declined findings closed by
+  their own recorded safe paths, four carried threads re-affirmed
+  (2026-09-24 UTC).** Audited as `3dfe299-F1`/`3dfe299-F2` in
+  `DOCS/audits/PR023-multi-review-audit.md` §18. None touches EXP-001's
+  numerical/parity conclusions or the D1 flag; the published record
+  re-runs byte-identically.
+  - **`3dfe299-F1` (D3) — a hard-linked alias of the manifest evaded the
+    inventory.** Round 10's identity-based self-exclusion (`lstat` +
+    `os.path.samestat`) compares inodes, and a hard link to the manifest
+    is inode-identical — so `os.link(manifest.json, rogue.json)` made the
+    alias silently vanish from both `append_manifest`'s and
+    `verify_manifest`'s candidate inventory instead of surfacing as an
+    unmanifested artefact. A governed manifest has exactly one directory
+    entry, so both filters now refuse a manifest with `st_nlink > 1`
+    outright — fail closed, never silently filtered — leaving the macOS
+    case-insensitivity fix intact (with one link, the single `samestat`
+    match can only be the manifest's own entry). Two regression tests
+    create the exact alias and assert the refusal.
+  - **`3dfe299-F2` (D4) — the case-insensitivity regression test's
+    docstring still described the replaced `os.path.normcase` mechanism.**
+    Rewritten to document the current file-identity comparison and the new
+    link-count refusal. Docstring-only.
+  - **Closed at maintainer direction — the `dir_fd`-relative final rename
+    in `write_no_follow`** (CodeRabbit, declined at §17.4 with a recorded
+    re-attempt condition): implemented exactly per that condition — the
+    final swap is `os.rename(..., src_dir_fd=, dst_dir_fd=)` only behind a
+    runtime `os.rename in os.supports_dir_fd` check (the check whose
+    absence broke required Linux CI twice at `PR23-F39`), with the plain
+    `os.replace` fallback unchanged everywhere else including all of
+    Windows. Called closed only if this push's required Linux CI legs come
+    back green, per the condition's own terms.
+  - **Closed at maintainer direction — every-component symlink walk for
+    the configured E4 output/record roots** (Copilot, previously declined
+    twice as disproportionate absent an explicit decision — which the
+    maintainer's direction now supplies):
+    `_reject_configured_root_symlink` walks every path component below the
+    trusted checkout anchor no-follow, so a symlink swapped in at an
+    ancestor (e.g. `DOCS/test_and_benchmark_results`) is refused even
+    though the final, possibly-not-yet-existing component's own
+    `is_symlink()` is false. Two regression tests cover ancestor symlinks
+    of both roots across both public root-set functions.
+  - Re-affirmed with reasons a "fix everything" instruction does not
+    change: the mid-flight ancestor-race variant in `tools/reproduce.py`
+    (threat model explicitly documented in-module — the finding's own
+    offered alternative — and re-engineering it is the exact §16
+    risk-lesson); the mixed-abort verdict question (frozen
+    pre-registration matched literally, maintainer previously confirmed
+    the decline; editing registered adjudication logic is a D1-class
+    change, not a review response); the stale hard-link-overwrite and
+    symlinked-verification threads (describe code removed at `PR23-F37`
+    and Round 1 respectively); the macOS case-alias thread (fixed at
+    `3dfe299` itself, thread lag).
+  - Targeted suite 104 passed, 2 skipped (+4 new regression tests, all
+    running for real on this host); consumer suites 280 passed, 6 skipped
+    (two documented AGENTS.md workstation issues re-verified as such);
+    `ruff`, `ruff format --check`, `mypy --strict`, and `bandit` clean;
+    Snyk Code re-run on all touched code: +1 LOW in `reproduce.py` (the
+    new gated rename call site, same already-accepted structural class),
+    analysis module unchanged at 1 LOW, tests 0; the real 172-record
+    repository manifest still verifies under the link-count guard; the E4
+    analysis re-run to a scratch destination reproduces the committed
+    record byte-for-byte, all verdicts and the D1 flag unchanged. No
+    dependency files changed. CodeRabbit and Copilot re-requested on this
+    round's push.
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that

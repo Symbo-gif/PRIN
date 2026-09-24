@@ -1069,8 +1069,10 @@ def _safe_temp_root(repository_root: Path) -> tuple[Path, ...]:
     return (temp_root,)
 
 
-def _reject_configured_root_symlink(path: Path, name: str) -> None:
-    """Refuse a governed root that is itself a symbolic link, before resolving it.
+def _reject_configured_root_symlink(
+    repository_root: Path, relative_root: Path, name: str
+) -> None:
+    """Refuse a governed root with a symbolic link component, before resolving it.
 
     ``allowed_output_roots``/``allowed_generated_output_dirs`` build the
     permitted-roots set by calling ``.resolve()`` on :data:`OUTPUT_ROOT` and
@@ -1083,37 +1085,46 @@ def _reject_configured_root_symlink(path: Path, name: str) -> None:
     intended directory, and every later check against it would then admit
     paths under that target too (CWE-59; independent reviews, PR #23 head
     `754272a`). Checked no-follow, before resolution, so a symlinked
-    configured root is refused outright. A root that does not exist yet
+    configured root is refused outright. A component that does not exist yet
     (``OUTPUT_ROOT`` is gitignored) is not a symlink and passes unchanged.
 
-    This checks only the configured root's own final path component, not
-    any ancestor: if a directory *above* it (for example
-    ``DOCS/test_and_benchmark_results``, an ancestor of ``OUTPUT_ROOT``)
-    were replaced with a symlink, ``path.is_symlink()`` here would still be
-    false while the later ``.resolve()`` call transparently followed it —
-    the same "immediate component only, not every ancestor" limitation
-    ``tools.reproduce._dir_relative_open`` documents, raised again here by
-    an independent review (PR #23 head `4ed9f14`) and declined for the same
-    reason: closing it fully would mean walking every path component from a
-    trusted checkout anchor, a disproportionate change for a threat that
-    already requires the same local-write access this analysis module's
-    whole containment scheme assumes throughout. See
-    ``DOCS/audits/PR023-multi-review-audit.md`` §15/§16 for the full
-    account (`PR23-F34`'s declined-findings ledger entry, extended to cover
-    this second occurrence).
+    Every path component below the trusted checkout anchor
+    (``repository_root``) is checked, not only the configured root's own
+    final component: a symlink swapped in at an *ancestor* — for example
+    ``DOCS/test_and_benchmark_results``, an ancestor of ``OUTPUT_ROOT`` —
+    would leave the final component's own ``is_symlink()`` false while the
+    later ``.resolve()`` call transparently followed the ancestor into a
+    redirected tree (independent reviews, PR #23 heads `4ed9f14` and
+    `d5f47d6`; previously declined as final-component-only, closed to the
+    full component walk at head `3dfe299`'s follow-up round — see
+    ``DOCS/audits/PR023-multi-review-audit.md``). ``repository_root``
+    itself, and everything above it, is deliberately *not* checked: the
+    checkout anchor is this module's trusted input (a checkout legitimately
+    reached through a symlinked home or mount point must keep working), and
+    the walk guards the governed tree below it. This is a check-time walk,
+    not a descriptor-pinned open: a component swapped *after* this check
+    and *before* the subsequent ``.resolve()`` remains within the
+    already-documented, already-declined local-write threat model
+    (``tools.reproduce._dir_relative_open``'s docstring; audit §14.2).
 
     Args:
-        path: The configured root, unresolved.
+        repository_root: The trusted checkout anchor, unresolved.
+        relative_root: The configured root, relative to ``repository_root``.
         name: Human-readable name of the root, for the failure message.
 
     Raises:
-        AnalysisError: If ``path`` is a symbolic link.
+        AnalysisError: If any component of ``relative_root`` below
+            ``repository_root`` is a symbolic link.
     """
-    if path.is_symlink():
-        raise AnalysisError(
-            f"{name} {path} is a symbolic link; refusing to use it as a "
-            "governed output root"
-        )
+    current = repository_root
+    for part in relative_root.parts:
+        current = current / part
+        if current.is_symlink():
+            raise AnalysisError(
+                f"{name} {repository_root / relative_root} has a symbolic "
+                f"link component at {current}; refusing to use it as a "
+                "governed output root"
+            )
 
 
 def allowed_output_roots(repository_root: Path) -> tuple[Path, ...]:
@@ -1133,13 +1144,14 @@ def allowed_output_roots(repository_root: Path) -> tuple[Path, ...]:
         The resolved permitted roots.
 
     Raises:
-        AnalysisError: If ``OUTPUT_ROOT`` or ``RECORD_ROOT`` is itself a
-            symbolic link (see :func:`_reject_configured_root_symlink`).
+        AnalysisError: If ``OUTPUT_ROOT`` or ``RECORD_ROOT``, or any path
+            component of either below the checkout anchor, is a symbolic
+            link (see :func:`_reject_configured_root_symlink`).
     """
     output_root = repository_root / OUTPUT_ROOT
     record_root = repository_root / RECORD_ROOT
-    _reject_configured_root_symlink(output_root, "output root")
-    _reject_configured_root_symlink(record_root, "record root")
+    _reject_configured_root_symlink(repository_root, OUTPUT_ROOT, "output root")
+    _reject_configured_root_symlink(repository_root, RECORD_ROOT, "record root")
     return (
         output_root.resolve(),
         record_root.resolve(),
@@ -1166,11 +1178,12 @@ def allowed_generated_output_dirs(repository_root: Path) -> tuple[Path, ...]:
         The resolved permitted roots.
 
     Raises:
-        AnalysisError: If ``OUTPUT_ROOT`` is itself a symbolic link (see
+        AnalysisError: If ``OUTPUT_ROOT``, or any path component of it below
+            the checkout anchor, is a symbolic link (see
             :func:`_reject_configured_root_symlink`).
     """
     output_root = repository_root / OUTPUT_ROOT
-    _reject_configured_root_symlink(output_root, "output root")
+    _reject_configured_root_symlink(repository_root, OUTPUT_ROOT, "output root")
     return (
         output_root.resolve(),
         *_safe_temp_root(repository_root),

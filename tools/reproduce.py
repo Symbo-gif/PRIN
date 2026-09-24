@@ -460,18 +460,25 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
     regular file in one syscall. :func:`_open_parent_dir_fd` closes the same
     window for the *immediate parent* directory too, where the platform
     supports it (see its own docstring for why this does not extend to
-    every ancestor) — for the temporary file's creation only. The final
-    :func:`os.replace` re-resolves ``path``'s parent by string, the same
-    narrowing-only posture already documented for the Windows fallback
-    below: on real Linux CI, ``os.replace`` does not support
-    ``dir_fd``-relative operation (confirmed by ``os.replace not in
-    os.supports_dir_fd``, at runtime, despite ``os.open`` supporting it) —
-    a ``dir_fd``-relative attempt at this rename was tried and reverted
-    after failing on that evidence rather than shipped on an unverified
-    assumption (independent review, PR #23 head `949e5e1`; reverted at
-    head `4ed9f14` after CI disproved the assumption; see the audit for the
-    full account). Windows has no ``O_NOFOLLOW`` or ``dir_fd``-relative
-    opens either; there this falls back to ``is_symlink()`` immediately
+    every ancestor) — and the final swap reuses that same pinned
+    descriptor, performed as a ``dir_fd``-relative :func:`os.rename`
+    wherever ``os.rename in os.supports_dir_fd`` confirms, at runtime, that
+    the platform actually supports it, so a parent directory swapped for a
+    symlink between the temporary file's creation and the swap cannot
+    redirect the rename either (independent review, PR #23 head
+    `f370a29`). Everywhere else it falls back to a plain
+    :func:`os.replace`, which re-resolves ``path``'s parent by string —
+    the same narrowing-only posture already documented for the Windows
+    fallback below. The runtime capability gate is the load-bearing part:
+    on real Linux CI, ``os.replace`` does *not* support ``dir_fd``-relative
+    operation (``os.replace not in os.supports_dir_fd`` on Ubuntu/Python
+    3.12, despite ``os.open`` supporting it) — an earlier
+    ``dir_fd``-relative attempt at this rename shipped without that check,
+    broke required CI twice, and was reverted (independent review, PR #23
+    head `949e5e1`; reverted at head `4ed9f14`; re-attempted with the gate,
+    per the audit's own §17.4 prescription, at this head). Windows has no
+    ``O_NOFOLLOW`` or ``dir_fd``-relative opens either; there this falls
+    back to ``is_symlink()`` immediately
     before ``open()`` on the full path (see :func:`_open_no_follow`).
     ``O_NONBLOCK`` (where defined) and a post-open
     :func:`_reject_non_regular_fd` check additionally guard against a FIFO
@@ -540,7 +547,25 @@ def write_no_follow(path: Path, data: bytes, role: str) -> None:
                     f"{role} {path} is a symbolic link, not a regular file held "
                     "by the governed directory; refusing to write it"
                 )
-            os.replace(tmp_path, path)
+            if parent_fd is not None and os.rename in os.supports_dir_fd:
+                # dir_fd-relative final swap through the same pinned parent
+                # descriptor used to create the temporary file, gated on a
+                # *runtime* capability check — `os.replace not in
+                # os.supports_dir_fd` on real Ubuntu/Python 3.12 even though
+                # `os.open` supports dir_fd there, the unverified assumption
+                # that broke required Linux CI twice at PR23-F39 (audit §16,
+                # §17.4). POSIX rename(2) atomically replaces an existing
+                # destination; Windows never reaches this branch
+                # (os.supports_dir_fd is empty there), so its
+                # existing-destination rename semantics are irrelevant here.
+                os.rename(
+                    tmp_path.name,
+                    path.name,
+                    src_dir_fd=parent_fd,
+                    dst_dir_fd=parent_fd,
+                )
+            else:
+                os.replace(tmp_path, path)
         except BaseException:
             # dir_fd-relative when the same pinned descriptor used to
             # create the temporary file is still available and os.unlink
@@ -850,9 +875,23 @@ def append_manifest(
     # `lstat` rather than `stat` on the candidate side also means a symlinked
     # candidate is compared by its own identity, not its target's, so it is
     # never mistaken for the manifest and still reaches the non-regular
-    # rejection below.
+    # rejection below. Identity comparison cuts both ways, though: a *hard
+    # link* to the manifest is inode-identical, so `samestat` alone would
+    # silently drop `rogue.json` (created via `os.link(manifest, rogue)`)
+    # from the inventory too — an unmanifested name evading the fail-closed
+    # contract entirely (independent review, PR #23 head `3dfe299`). A
+    # governed manifest legitimately has exactly one directory entry, so
+    # `st_nlink > 1` is refused outright before any exclusion: with a link
+    # count of one, the single `samestat` match can only be the manifest's
+    # own entry (in whatever casing the filesystem stores), never an alias.
     if destination.parent == results and manifest_path.is_file():
         manifest_stat = manifest_path.lstat()
+        if manifest_stat.st_nlink > 1:
+            raise ManifestMismatchError(
+                f"manifest {manifest_path} has {manifest_stat.st_nlink} hard "
+                "links; a governed manifest must have exactly one directory "
+                "entry, or a hard-linked alias could evade the inventory"
+            )
         candidates = [
             candidate
             for candidate in candidates
@@ -939,9 +978,20 @@ def verify_manifest(
         # :func:`append_manifest`'s matching filter for why `lstat` +
         # `os.path.samestat` is required on every platform, not only
         # `os.path.normcase` on Windows (independent review, PR #23 head
-        # `f370a29`). `load_manifest` above already proved `manifest_path`
-        # exists, so no existence check is needed before `lstat` here.
+        # `f370a29`), and why a multi-linked manifest must be refused before
+        # any exclusion: a hard link to the manifest is inode-identical, so
+        # `samestat` alone would silently exclude the alias from the
+        # inventory instead of reporting it as unmanifested (independent
+        # review, PR #23 head `3dfe299`). `load_manifest` above already
+        # proved `manifest_path` exists, so no existence check is needed
+        # before `lstat` here.
         manifest_stat = manifest_path.lstat()
+        if manifest_stat.st_nlink > 1:
+            raise ManifestMismatchError(
+                f"manifest {manifest_path} has {manifest_stat.st_nlink} hard "
+                "links; a governed manifest must have exactly one directory "
+                "entry, or a hard-linked alias could evade the inventory"
+            )
         candidates = [
             candidate
             for candidate in candidates
