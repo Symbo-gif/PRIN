@@ -1,6 +1,20 @@
 # benchmarks/results/EXP-001/ — raw artefacts for EXP-001 (Golden-trajectory numerical parity)
 
-**Status:** SKELETON — no run has executed. Record root:
+**Status:** **4 runs executed** (session 0156 E3, 2026-09-23 UTC) —
+`RUN-20260923T134012Z-6b9d6b6-corpus-cpu` (H1, 504 cases),
+`RUN-20260923T134226Z-6b9d6b6-repeatability-cpu` (H3, 14),
+`RUN-20260923T134250Z-6b9d6b6-fuzz-cpu` (H2, 1,000), and
+`RUN-20260923T134255Z-6b9d6b6-kernel-path-cuda` (H4, 72). None aborted;
+each closed with `check_run_complete` + `append_manifest` +
+`verify_manifest`. Total 5.921 MiB under campaign plan amendment 6
+(EXP-001 tracked cap 8 MiB; §7.5 per-run cap waived for the `fuzz` leg).
+Verdicts were assigned at E4 (session 0157) on the frozen pre-registration §8
+rule: **H1 `REFUTED`, H2a `REFUTED`, H2b/H3/H4 `CONFIRMED`**, raising the campaign
+plan §10.4 D1 flag, and reported in full at E5 (session 0158,
+[`report.md`](../../../DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/report.md)),
+which triggered the contingency correction cycle and blocked session 0159. These artefacts are unchanged by that adjudication and are
+never edited; the re-run after the correction cycle gets a new experiment record
+(`EXP-001-r1`) with new `RUN-` directories. Record root:
 [`DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/`](../../../DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/README.md).
 
 ## Run-directory rule (campaign plan §7.1, §7.3)
@@ -91,5 +105,5 @@ unmanifested `*.json` in the run directory. Artefacts carry the standard
 `environment` / `config` envelope (`benchmarks/_common/result.py`) and the
 unchanged category payload. Campaign provenance is separate in
 `campaign-metadata.json` as specified by campaign plan §7.2. Tracked size cap: 2 MiB per
-run; larger arrays go to the gitignored `DOCS/test_and_benchmark_results/EXP-001/`
+run (waived for this experiment's `fuzz` leg by campaign plan amendment 6); larger arrays go to the gitignored `DOCS/test_and_benchmark_results/EXP-001/`
 with their digests recorded in a committed sidecar.

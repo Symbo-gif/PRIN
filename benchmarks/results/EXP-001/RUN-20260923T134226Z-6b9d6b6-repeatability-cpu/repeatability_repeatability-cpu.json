@@ -1,0 +1,109 @@
+{
+  "cases": [
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "kuramoto_mean_field_euler_n8_s20_dt0_005_K0_5_seed1000000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "kuramoto_mean_field_rk4_n8_s20_dt0_005_K0_5_seed1100000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "kuramoto_full_euler_n8_s20_dt0_005_K0_5_seed1200000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "kuramoto_full_rk4_n8_s20_dt0_005_K0_5_seed1300000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_005_K0_5_seed1400000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_005_K0_5_seed1500000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "hopf_mean_field_euler_n8_s20_dt0_005_K0_5_seed1600000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "hopf_mean_field_rk4_n8_s20_dt0_005_K0_5_seed1700000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "hopf_full_euler_n8_s20_dt0_005_K0_5_seed1800000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "hopf_full_rk4_n8_s20_dt0_005_K0_5_seed1900000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "hopf_sparse_knn_euler_n8_s20_dt0_005_K0_5_seed2000000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "hopf_sparse_knn_rk4_n8_s20_dt0_005_K0_5_seed2100000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "stuart_landau_full_euler_n8_s20_dt0_005_K0_5_seed2200000",
+      "mismatched_arrays": []
+    },
+    {
+      "aborted": false,
+      "bit_identical": true,
+      "case_id": "stuart_landau_full_rk4_n8_s20_dt0_005_K0_5_seed2300000",
+      "mismatched_arrays": []
+    }
+  ],
+  "config": {
+    "iterations": 14,
+    "out_dir": "C:\\dev\\PRIN\\benchmarks\\results\\EXP-001\\RUN-20260923T134226Z-6b9d6b6-repeatability-cpu",
+    "seed_counter": 0,
+    "seed_key": 1,
+    "warmup": 0
+  },
+  "environment": {
+    "backend": "cpu",
+    "dtype": "f64",
+    "git_commit": "6b9d6b621a2a46e37373bbcafafd475c1d0f644f",
+    "gpu": "NVIDIA GeForce RTX 4060",
+    "gpu_vram_mb": 8188,
+    "logical_cpus": 16,
+    "platform": "Windows-11-10.0.26200-SP0",
+    "prin_version": "1.0.0rc1",
+    "processor": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+    "python_version": "3.14.0",
+    "rust_version": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "seed": 0
+  }
+}

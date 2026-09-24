@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "description": "SHA-256 manifest for the immutable PRINet 3.0 benchmark JSON artefacts used by tools/reproduce.py. Existing records are append-only.",
+  "source": "PRINet 3.0 stored benchmark JSON artefacts",
+  "files": [
+    {
+      "path": "campaign-metadata.json",
+      "bytes": 214,
+      "sha256": "b1f70f500f98e9acfadd2a72ee8c944ea9adb1bcef06ac4dd6920df2089a00fa"
+    },
+    {
+      "path": "corpus_corpus-cpu.json",
+      "bytes": 1724465,
+      "sha256": "882da36d54957f4942df594fb71d71d07c3a634b7737b895d4f6c0e94ebfcd97"
+    }
+  ]
+}

@@ -14,10 +14,44 @@ and the maintainer approval record (session 0153, Campaign E0). Every
 pre-registration inherits its §5–§10 rules. It contains no hypotheses and no
 results.
 
-DV-036's pre-0156 CI correction is approved in campaign plan §11.6 /
-amendment 3. Its evidence and blocked entry state are recorded in
-[EXP-001's execution log](EXP-001-golden-trajectory-numerical-parity/log.md);
-this is not EXP-001 execution or a reference-host performance result.
+DV-036's pre-0156 CI correction (campaign plan §11.6 / amendments 3 and 4)
+**closed on 2026-09-23 UTC** with a wholly green nightly `35847692136`; it
+was never EXP-001 execution or a reference-host performance result, and
+DV-036's reference-host re-baseline gates before 0168 and 0173 remain open.
+
+**EXP-001 E3 executed on 2026-09-23 UTC (session 0156).** All four
+registered runs completed with no aborted case; H3 and H4 came in as
+predicted, while **H1 (19/504) and H2a (103/1,000) breach the registered
+tolerances** — a REFUTED/D1 trajectory under preregistration §8, escalated
+to E4 (session 0157) for adjudication per campaign plan §10.4. See
+[EXP-001's execution log](EXP-001-golden-trajectory-numerical-parity/log.md).
+
+**EXP-001 E4 adjudicated on 2026-09-23 UTC (session 0157) — campaign plan
+§10.4 D1 raised.** Applying the frozen §8 rule: **H1 `REFUTED`**,
+**H2a `REFUTED`**, **H2b `CONFIRMED`**, **H3 `CONFIRMED`**,
+**H4 `CONFIRMED`**. Session 0158 (E5) still completes and reports the
+negatives in full, then blocks session 0159 and every downstream experiment
+until the four contingency correction sessions close; EXP-001 is then re-run
+as a new record, `EXP-001-r1`. No root cause is claimed at E4. See
+[EXP-001's E4 analysis record](EXP-001-golden-trajectory-numerical-parity/analysis.md).
+
+**EXP-001 E5 reported on 2026-09-23 UTC (session 0158) — the campaign is
+BLOCKED.** The [E5 report](EXP-001-golden-trajectory-numerical-parity/report.md)
+issues all five verdicts in full — **H1 `REFUTED` (485/504)**, **H2a `REFUTED`
+(897/1,000)**, H2b/H3/H4 `CONFIRMED` — carries the §10.4 **D1** flag, and
+triggers the four-session contingency correction cycle
+([S1](../sessions/contingencies/2026-09-23-exp001-d1-s1-correction-implementation.md)
+→ S2 → S3 → S4). It also raises a second D1, **EXP001-E5-F1**: the `parity` CI
+job's `test_corpus_exhaustive_differential_parity` regenerates each corpus case
+with PRINet 3.0, not PRIN, so **no CI gate performed the PRIN-vs-corpus
+trajectory comparison over the full 504-case corpus** — the only gate that runs
+PRIN against corpus trajectories covers 4 representative cases, none of them
+among H1's 19 breaching cases — and the Parity Report's published VALIDATION
+claim to the contrary is unsupported (erratum issued). **Session 0159 and every
+experiment downstream of EXP-001, plus 0194, are blocked** until the cycle
+closes and `EXP-001-r1` returns a non-reversal verdict. The E5 report was
+verified and accepted by the maintainer on 2026-09-23 UTC and its E1–E5 pull
+request approved; no root cause is claimed by any EXP-001 record.
 
 ## Layout
 

@@ -9,6 +9,903 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 E5 report — golden-trajectory numerical parity reported; campaign
+  BLOCKED (session 0158, 2026-09-23 UTC).**
+  `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/report.md`
+  issues all five verdicts in full against the pre-registered expectations —
+  **H1 `REFUTED`** (485/504), **H2a `REFUTED`** (897/1,000), **H2b/H3/H4
+  `CONFIRMED`** — with every abort/exclusion (none), protocol deviations
+  PD-1…PD-5, threats to validity, exploratory notes, and the complete artefact
+  index. The four raw run manifests and both E4 output digests were
+  re-verified in-session and reproduce byte-for-byte. The report carries the
+  campaign plan §10.4 **D1** flag and **triggers the four-session contingency
+  correction cycle**; **session 0159 and every experiment downstream of
+  EXP-001, plus 0194, are blocked** until that cycle closes and EXP-001 is
+  re-run as `EXP-001-r1`. No root cause is claimed. The report was **verified
+  and accepted by the maintainer (MichaelMaillet) on 2026-09-23 UTC**
+  (report §13). E1/E2 (sessions 0154/0155) already reached `main` through
+  **PR #20** (merge `e997431`); E3–E5 (sessions 0156–0158) are carried by
+  **PR #23**, whose tested head SHA and required-check results are recorded in
+  report §14.1.
+
+- **EXP-001 E4 analysis — golden-trajectory numerical parity adjudicated
+  (session 0157, 2026-09-23 UTC).** The frozen pre-registration §8 decision
+  rule was applied to the four immutable E3 run artefacts at code SHA
+  `6b9d6b6`, after `tools/reproduce.py::verify_manifest` passed on all four
+  run directories. Verdicts: **H1 `REFUTED`** (485 of 504 corpus cases within
+  the registered tolerance), **H2a `REFUTED`** (897 of 1,000 fuzzed cases
+  within the shadowing horizon), **H2b `CONFIRMED`** (both metrics' 95 %
+  bootstrap CIs strictly inside their registered ±δ over 657 contributing
+  cases: `order_parameter` [−4.004e-03, −1.204e-04] against δ = 0.01 and
+  `mean_phase_coherence` [−3.676e-03, +5.565e-04] against δ = 0.02),
+  **H3 `CONFIRMED`** (14/14 bit-identical), and **H4 `CONFIRMED`** (72/72
+  within `rtol=1e-5, atol=1e-6` on a CUDA backend). No case aborted in any
+  run, so no hypothesis falls into §8's partial-abort branch. **The campaign
+  plan §10.4 D1 flag is raised.** Per §10.4 item 2, session 0158 (E5) still
+  completes and reports the negatives in full, then blocks session 0159
+  (EXP-002 E1) and every downstream experiment until the four contingency
+  correction sessions close, after which EXP-001 is re-run as `EXP-001-r1`.
+  No root cause is claimed at E4; diagnosis belongs to the correction cycle.
+- **Committed E4 analysis code and report manifest for EXP-001
+  (session 0157).** `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py`
+  implements the registered §8 rule, delegating H2b verbatim to the single
+  committed predicate `benchmarks.campaign.exp001_driver.adjudicate_h2b` and
+  adding no statistic outside campaign plan §9.2's permitted set. It
+  regenerates every output deterministically (no wall clock, no unseeded
+  randomness, sorted keys, fixed row order) into the gitignored
+  `DOCS/test_and_benchmark_results/EXP-001/`, digested in the committed
+  `report-manifest.json` alongside every input run manifest, the per-hypothesis
+  verdicts, and the D1 flag. Covered by `tests/test_exp001_e4_analysis.py`
+  (33 tests). The E4 adjudication record, protocol deviations, threats to
+  validity, and exploratory notes are in the record root's `analysis.md`.
+
+- **EXP-001 E3 execution — full golden-trajectory numerical parity
+  (session 0156, 2026-09-23 UTC).** The first Phase 7 campaign experiment
+  executed all four registered runs through the committed driver
+  `benchmarks/campaign/exp001_driver.py` at code SHA `6b9d6b6` on host H1,
+  with the pre-registration frozen at `c22db0b`. Four immutable run
+  directories under `benchmarks/results/EXP-001/`, each closed with
+  `check_run_complete` + `append_manifest` + `verify_manifest`: H1 corpus
+  (504 cases), H3 repeatability (14), H2 fuzz (1,000), H4 CUDA kernel-path
+  (72). **No case aborted in any run.** H3 is 14/14 bit-identical; H4 is
+  72/72 within `rtol=1e-5, atol=1e-6` on a device-residency-verified CUDA
+  path. **H1 (19 of 504) and H2a (103 of 1,000) breach the registered
+  tolerances**, which on preregistration §8's decision rule is a REFUTED/D1
+  trajectory; adjudication and the D1 flag belong to E4 (session 0157) under
+  campaign plan §10.4, and E3 records the facts without diagnosis or verdict.
+
+### Changed
+
+- **DV-040 opened (2026-09-23, session 0157).** Campaign plan §7.4 item 2
+  prescribes the experiment record root for E4 analysis code, but
+  `python.yml`'s lint job runs `ruff`, `mypy --strict`, `interrogate`, and
+  `bandit` over `python/ tests/ benchmarks/ tools/` only — so campaign
+  analysis code committed where the plan directs is outside the authoritative
+  merge gate for those checks (Snyk Code, which scans the whole checkout, does
+  cover it). EXP-001 E4 ran the full gate locally and placed its tests under
+  `tests/` as a compensating control. Resolution — extend the CI lint paths or
+  relocate campaign analysis code and amend §7.4 — is a maintainer decision;
+  re-audit gate is EXP-002 E4 (session 0162).
+- **Campaign plan amendment 6 (2026-09-23 UTC) — EXP-001 storage budget.**
+  The four E3 runs total 5.921 MiB, exceeding §8's 5 MiB EXP-001 cap and
+  §7.5's 2 MiB per-run cap (the 1,000-case fuzz artefact is 4.199 MiB and
+  cannot be reduced without changing the registered protocol, since its
+  per-case beyond-horizon arrays are what H2b's E4 analysis consumes). The
+  maintainer raised EXP-001's tracked cap to 8 MiB and waived the per-run cap
+  for the `fuzz` leg, so all four runs are committed unreduced. The
+  campaign-wide 64 MiB cap is unchanged.
+
+### Fixed
+
+- **PR #23 multi-review round — eight findings compiled from seven independent
+  review runs, all dispositioned (2026-09-23 UTC).** Copilot (4),
+  CodeRabbit (3 + 1 pre-merge check), Sourcery (declined — diff over its
+  150,000-character limit), and four independent LLM reviews (Qwen, Devin,
+  Kimi, Cline) on PR #23 were de-duplicated into eight findings
+  `PR23-F1`…`PR23-F8` and audited in
+  `DOCS/audits/PR023-multi-review-audit.md`, which follows the
+  `DOCS/audits/PR017-devin-review-audit.md` precedent for external-review
+  findings. Each finding was re-derived from the repository rather than taken
+  on the reviewer's assertion.
+  - **`PR23-F1` (D2) — `tools/reproduce.py::verify_manifest` followed symbolic
+    links.** `is_file()`, `stat()`, and `open()` all follow links, so a
+    `manifest.json` or a manifested artefact that was a link to a file outside
+    the governed directory verified clean: content integrity was checked,
+    path provenance was not (CWE-59).
+    `benchmarks/campaign/exp001_driver.py::check_run_complete` had closed the
+    same class for its own run directories without modifying the shared tool;
+    the shared verifier now closes it too. `verify_manifest` and
+    `append_manifest` both reject a symlinked manifest and any symlinked
+    candidate/manifested artefact with a no-follow `is_symlink()` check before
+    any following call. Five regression tests in `tests/test_reproduce.py`
+    (`TestManifestSymlinkProvenance`), four of which fail against the pre-fix
+    source and pass against the fix. The EXP-001 E4 analysis, which calls this
+    verifier, still regenerates both outputs and `report-manifest.json`
+    byte-for-byte.
+  - **`PR23-F8` (D2) — the "no CI gate" claim was too absolute.** Not raised by
+    any automated reviewer. `tests/test_exp001_driver.py::TestCorpusParity::test_representative_cases_within_tolerance`
+    *does* run the `prin` Rust core against stored corpus trajectories, over
+    the 4 `_REPRESENTATIVE_CASES`, in every required `test` leg. The claim is
+    corrected everywhere it appears to *no CI gate covers the **full** 504-case
+    corpus*, with the 4-case gate named. The correction **strengthens**
+    `EXP001-E5-F1`: none of the 4 cases is among H1's 19 breaching cases, so
+    that gate is green while H1 is `REFUTED` — a 4-case subset cannot detect
+    this divergence class. Erratum **E-2** in the E5 report §15.
+  - **`PR23-F2`…`PR23-F7` (D3/D4) — governance-record consistency.** The
+    maintainer acceptance and the PR/CI state are now stated identically in
+    `CHANGELOG.md`, the EXP-001 `README.md` session table, `SESSION_REGISTER.md`,
+    and the E5 report (erratum **E-1** on PD-5; §14.1 filled with the tested
+    head SHA `60cc387` and its 24/24 green required checks). The DV-036 S4
+    correction record's superseded round-1/round-2 status lines are labelled
+    historical and a final disposition is stated. One bare Markdown fence in
+    the DV-036 correction audit carries a `text` language tag.
+  - **Declined with reason:** the CodeRabbit docstring-coverage pre-merge check
+    (50.72 % on changed files) measures against an 80 % threshold this project
+    does not use — `interrogate` (`fail-under = 95`) runs on `python/prin` only
+    and ruff `D` is disabled for `tests/**`; the changed test file is above the
+    repository's own test-file norm. Two style nits against the frozen E4
+    analysis module were declined because editing committed analysis code after
+    its E5 report is itself a protocol deviation, and both were rated
+    non-defects by every reviewer who raised them. Full rationale in the audit
+    §6.
+
+- **PR #23 Round 2 — Copilot follow-up review at head `0cb6156` found the
+  `PR23-F1` symlink fix incomplete; three new findings, all fixed
+  (2026-09-23 UTC).** After Round 1's push, Copilot re-reviewed the same
+  files and raised three High findings, audited as `PR23-F12`…`PR23-F14` in
+  `DOCS/audits/PR023-multi-review-audit.md` §8.
+  - **`PR23-F12` (D2) — `verify_manifest`'s inventory scan still followed
+    symlinks for unmanifested entries.** `PR23-F1` guarded the manifest path
+    and every *manifested* artefact, but the inventory scan itself still
+    built its candidate set with `is_file()`, which follows links: a symlink
+    to a directory (or a broken target) silently dropped out of the
+    inventory instead of tripping "unmanifested artefacts". `verify_manifest`
+    now rejects every `*.json` glob candidate up front, mirroring
+    `append_manifest`'s existing pattern.
+  - **`PR23-F13` (D2) — the symlink check was a check-then-open race
+    (TOCTOU).** `is_symlink()` and the later `stat()`/`open()` it guards were
+    separate operations, leaving a window for a concurrent writer to swap a
+    regular file for a symlink between them. `_open_no_follow` in
+    `tools/reproduce.py` opens with `O_NOFOLLOW` on POSIX, closing the
+    window at the syscall itself; `load_manifest`, `verify_manifest`, and
+    `append_manifest` all now read a file's bytes, size, and digest from a
+    single opened descriptor rather than independent path-based calls.
+    Windows has no `O_NOFOLLOW`; there the fix is an honestly-documented
+    best-effort fallback, not a claimed full closure.
+  - **`PR23-F14` (D2) — the CLI could redirect writes into the frozen
+    record.** `exp001_e4_analysis.py`'s destination containment accepted any
+    path under the record root, so `--manifest-path` could target
+    `report.md` or `preregistration.md` and `write_report_manifest` would
+    overwrite it. `allowed_generated_output_dirs()` now excludes the record
+    root from `--output-dir` entirely, and `_checked_manifest_destination()`
+    requires a record-root destination to be named exactly
+    `report-manifest.json`. The default CLI invocation is unchanged.
+  - Ten new regression tests across `tests/test_reproduce.py` and
+    `tests/test_exp001_e4_analysis.py`; the hardened E4 analysis re-run to a
+    scratch destination reproduces `report-manifest.json`'s digests
+    byte-for-byte against the committed record. Full suite `3223 passed, 176
+    skipped` (`pytest tests/ -m "not slow and not gpu"`); `ruff`, `ruff
+    format --check`, `mypy --strict`, `bandit`, and all four governance
+    checkers pass on the changed files. Snyk Code: 0 issues on
+    `tools/reproduce.py`; 3 pre-existing LOW Path Traversal findings on
+    `exp001_e4_analysis.py` (confirmed unchanged from before this round via
+    `git show`) are not attributable to this change and are recorded, not
+    silently dropped — audit §8.5.
+
+- **PR #23 Round 3 — Copilot and CodeRabbit follow-up review at head
+  `d9d4f2a`; eight more findings, all fixed (2026-09-23 UTC).** Round 2's
+  push drew another Copilot pass (3 new High findings on the Round 2 fix
+  itself) and a CodeRabbit pass (4 actionable comments, 2 already resolved by
+  Round 2); audited as `PR23-F15`…`PR23-F22` in
+  `DOCS/audits/PR023-multi-review-audit.md` §9.
+  - **`PR23-F15`/`PR23-F16` (D2) — the no-follow guarantee stopped at
+    verification and didn't cover the caller's own subsequent read/write.**
+    `_load_artefact` reopened its artefact with `Path.read_text` after
+    `verify_manifest` had already verified it no-follow; `append_manifest`
+    reused a `.resolve()`'d (link-following) copy of its destination for
+    every read/write after the initial reject check. `tools.reproduce`
+    gained public `read_no_follow`/`write_no_follow` (the latter using
+    `O_CREAT|O_TRUNC|O_NOFOLLOW` on POSIX), used by `_load_artefact`,
+    `append_manifest`, and `exp001_e4_analysis.py`'s three other write sites
+    (`write_outputs` ×2, `write_report_manifest`) in place of every
+    `Path.read_text`/`write_text` on a governed path.
+  - **`PR23-F17` (D3) — a directory or FIFO named `rogue.json` was silently
+    dropped, not rejected.** `_reject_symlink` alone didn't catch a
+    non-symlink, non-regular entry; the later `is_file()` filter quietly
+    excluded it instead. New `_reject_non_regular` closes the same
+    "vanishes instead of surfacing as missing/unmanifested" gap `PR23-F12`
+    closed for symlinks specifically.
+  - **`PR23-F18` (D4) — the temp-directory allowance could transitively
+    admit the whole checkout.** If the checkout ever lived under the system
+    temp root, admitting the temp root for scratch-directory support would
+    silently admit every file in the checkout too. New `_safe_temp_root`
+    (and the equivalent `_TEMP_ROOT_IS_SAFE` in `tools/reproduce.py`) omit
+    the temp root in that one case.
+  - **`PR23-F19` (D2) — the manifest-destination guard missed nested
+    paths.** `PR23-F14`'s fix only checked a direct child of the record
+    root; `--manifest-path record_root/analysis/exp001_e4_analysis.py`
+    (this module's own source) slipped through. Now checked at any depth
+    against the one canonical `record_root / "report-manifest.json"`.
+  - **`PR23-F20` (D3) — a hashing short-circuit was silently dropped by the
+    `PR23-F13` refactor**, caught independently during this round's own
+    re-verification and fixed with a design equivalent to CodeRabbit's:
+    `_verify_size_and_hash_no_follow` checks size before hashing, from the
+    same no-follow-opened descriptor.
+  - **`PR23-F21`/`PR23-F22` (D4) — documentation accuracy.** A
+    `parity_report.rst` sentence corrected by `PR23-F8` still read
+    ambiguously; reworded to name what is actually gated. The audit's own
+    claim that all five `PR23-F1` tests carried docstrings was wrong (4 of 5
+    don't, matching this repository's `tests/**` norm) — corrected in the
+    audit rather than left standing.
+  - **Verification incident, disclosed in audit §9.5.** Proving the
+    `PR23-F19` regression test failed pre-fix required exercising the CLI
+    against a target that pointed at the real, committed
+    `exp001_e4_analysis.py`; run against not-yet-fixed source, it exploited
+    the live vulnerability and overwrote that file with generated JSON.
+    Recovered immediately with `git checkout --` (nothing committed, nothing
+    lost); every CLI-boundary test in this area now runs against a
+    `tmp_path` sandbox via a monkeypatched `_REPOSITORY_ROOT`.
+  - 13 new regression tests. Full suite `3236 passed, 176 skipped`; `ruff`,
+    `ruff format --check`, `mypy --strict`, and `bandit` clean on the changed
+    files; the E4 analysis re-run to a scratch destination still reproduces
+    the committed record byte-for-byte. Snyk Code: 0 issues on
+    `tools/reproduce.py` (down from finding 0 before too); 1 remaining LOW
+    Path Traversal on `exp001_e4_analysis.py` (down from 3), at the
+    containment sanitizer's own entry point — the same structural
+    false-positive class already on file, not new.
+
+- **PR #23 Round 4 — Copilot follow-up review at head `900a68f`; two more
+  findings, plus a maintainer-requested mypy fix (2026-09-23 UTC).** CI went
+  fully green on Round 3's push; Copilot's re-review found two more gaps in
+  the same no-follow class, audited as `PR23-F23`/`PR23-F24`/`PR23-F25` in
+  `DOCS/audits/PR023-multi-review-audit.md` §10. CodeRabbit's automatic
+  review is rate-limited on this org's plan this round (1 included
+  review/hour, already spent) and did not produce new comments.
+  - **`PR23-F23` (D2) — `adjudicate_h2a`'s confirmatory-batch gate compared
+    an artefact field against itself.** `fuzz_batch_confirmatory_minimum`
+    and `n_fuzz_cases_requested` are both fields of the same
+    manifest-verified-but-otherwise-untrusted payload; a payload setting
+    both to `1` would pass `denominator < minimum` (`1 < 1` is false) and
+    adjudicate `CONFIRMED` from one clean case. Now gated against the frozen
+    `REGISTERED_FUZZ_BATCH_MIN = 1000` (pre-registration §7), imported from
+    the driver, with the payload's own recorded minimum required to agree
+    with it rather than define the rule.
+  - **`PR23-F24` (D3) — the committed report-manifest's output-integrity
+    fields could still follow a symlink.** Round 3's `write_no_follow`
+    closed the write side for generated outputs; the manifest entry
+    recording each output's size/digest still used
+    `path.stat()`/`compute_sha256()` (both link-following) afterward. Now
+    uses the newly-public `tools.reproduce.stat_size_and_hash_no_follow`.
+  - **`PR23-F25` (D3) — the manifest path itself was checked for symlinks
+    only, not full non-regularity.** `PR23-F17` (Round 3) added
+    `_reject_non_regular` for candidate artefacts; the manifest path's own
+    top-level check in both `verify_manifest` and `append_manifest` still
+    used the narrower `_reject_symlink`, so a FIFO or directory named
+    `manifest.json` — realistically outside the results directory entirely,
+    where no candidate scan ever sees it — would hang or raise a raw
+    `OSError` instead of the documented `ManifestMismatchError`. Both now
+    use `_reject_non_regular`.
+  - **A false negative caught in the regression proof itself.** The first
+    version of `PR23-F25`'s `append_manifest` test placed the
+    directory-as-manifest inside `results_dir`, where an *existing* check
+    (`PR23-F17`'s candidate scan) coincidentally also caught it — the test
+    passed against pre-fix source for the wrong reason. Caught by this
+    audit's own practice of proving every regression test against
+    `git stash`'d pre-fix source (§2); corrected to the realistic shape
+    (manifest destination outside the results directory), which then failed
+    correctly pre-fix and passes post-fix.
+  - **Maintainer-requested: the standing `mypy --strict` gap on
+    `tests/test_reproduce.py` is closed.** `Module "tools.reproduce" does
+    not explicitly export attribute "ReportingError"` — `tools/reproduce.py`
+    imported it from `prin.reporting` without `__all__` or an explicit
+    re-export, so `mypy --strict`'s implied `--no-implicit-reexport` treated
+    it as private, contradicting this module's own test asserting the
+    re-export is intentional (WP035-F1). Fixed with the PEP 484 single-name
+    re-export idiom: `from prin.reporting import ReportingError as
+    ReportingError`. Fixing it also surfaced two new `mypy --strict` errors
+    in this session's own Round 3 test additions (a monkeypatched
+    `Path.resolve` replacement whose `*args`/`**kwargs` forwarding didn't
+    type-check against the real signature); narrowed to match
+    `Path.resolve`'s actual `(self, strict: bool = False)` signature and
+    fixed in the same pass.
+  - 5 new regression tests. Full suite `3240 passed, 176 skipped` (one
+    unrelated wall-clock timing test flaked once, passed in isolation
+    immediately after — not attributable to this change); `ruff`, `ruff
+    format --check`, `mypy --strict` (both the four changed files and the
+    CI-gated `python/prin` scope), and `bandit` all clean; the E4 analysis
+    re-run to a scratch destination still reproduces the committed record
+    byte-for-byte. Snyk Code unchanged from Round 3 (0 issues on
+    `tools/reproduce.py`; 1 pre-existing LOW on `exp001_e4_analysis.py`).
+
+- **PR #23 Round 5 — three independent LLM reviews at head `754272a`; the
+  required Windows CI matrix and two more provenance gaps
+  (2026-09-24 UTC).** CLINE-A.I. (Stealth/Space-Bunny-Alpha, Xhigh-reasoning),
+  SWE-2 High-reasoning (Devin IDE), and PERPLEXITY-AI (KIMI-K3-Thinking)
+  independently reviewed the full diff, each validating every prior round's
+  findings and converging on four items, audited as `PR23-F26`…`PR23-F29` in
+  `DOCS/audits/PR023-multi-review-audit.md` §11. None challenge EXP-001's
+  numerical/parity conclusions or the D1 flag.
+  - **`PR23-F26` (D2) — a test's global `Path.stat` monkeypatch turned an
+    ordinary assertion failure into a Windows `INTERNALERROR`, failing all
+    three required Windows Python legs (3.11/3.12/3.13).**
+    `TestReportManifestIntegrity`'s Round 4 regression test patched the
+    whole `pathlib.Path` class rather than a call it made itself; on Windows
+    Python ≤3.13, `Path.lstat()` delegates to `Path.stat(follow_symlinks=False)`,
+    so `tools.reproduce`'s own legitimate no-follow `is_symlink()` pre-open
+    check hit the patch and raised, and pytest's own failure-reporting then
+    hit it a second time while formatting that failure. Rewritten to prove
+    the contract by construction instead: the output path is never created,
+    so a reopen would raise `FileNotFoundError` rather than succeed —
+    possible because `PR23-F28` below removes the reopen entirely.
+  - **`PR23-F27` (D2) — `_load_artefact` verified the run directory, then
+    read its result artefact through a second, unverified open.**
+    `verify_manifest` proved the directory matched its manifest at that
+    moment; the subsequent `read_no_follow` proved only that the reopened
+    file was not a symlink, not that its content was still the verified
+    bytes — a regular-file swap-then-restore in that window would have fed
+    adjudication unmanifested bytes undetected. `tools/reproduce.py` gains
+    `read_verified_no_follow`, which checks size and SHA-256 against a given
+    manifest record from the same single open that returns the bytes;
+    `_load_artefact` now reads through it instead.
+  - **`PR23-F28` (D3) — the report-manifest's output digest still reopened a
+    closed, already-written file.** `PR23-F24` (Round 4) closed the symlink
+    case; a concurrent replacement with another *regular* file between
+    `write_outputs` finishing and the manifest-digest step was still
+    silently accepted and recorded. `write_outputs` now computes each
+    output's size/SHA-256 from the in-memory bytes before writing them and
+    returns a `GeneratedOutput` record per output; `write_report_manifest`
+    builds its manifest entries from those fields directly, with no
+    filesystem read-back at all — closing the gap completely rather than
+    partially.
+  - **`PR23-F29` (D4) — configured output/record roots were resolved before
+    being checked for symlinks (defense-in-depth).** A symlinked
+    `OUTPUT_ROOT`/`RECORD_ROOT` would have been silently followed by
+    `.resolve()` before any containment check ran, potentially legitimizing
+    a target the guard exists to exclude. New `_reject_configured_root_symlink`
+    checks both roots no-follow before resolving them.
+  - 7 new/rewritten regression tests (1 rewritten to remove the global
+    monkeypatch, 1 strengthened to also forbid `Path.read_bytes`, 1 new
+    swap-detection test, 3 new symlink-rejection tests gated on the same
+    executability probe `tests/test_reproduce.py` uses, and the registered-run
+    end-to-end test extended to hash real outputs against the committed
+    manifest). Targeted suite 92 passed; full suite (`-m "not slow and not
+    gpu"`) `3242 passed, 179 skipped, 48 deselected`; `ruff`, `ruff format
+    --check`, `mypy --strict` (both changed source files), and `bandit` all
+    clean; the E4 analysis re-run to a scratch destination reproduces the
+    committed record byte-for-byte. Snyk Code: 0 issues on
+    `tools/reproduce.py` and the test file; the 1 pre-existing LOW on
+    `exp001_e4_analysis.py` is unchanged and confirmed identical against the
+    pre-round baseline.
+
+- **PR #23 Round 6 — Copilot and CodeRabbit review of head `2264771`; an
+  ancestor-symlink gap and a FIFO hang risk (2026-09-24 UTC).** Audited as
+  `PR23-F30`/`PR23-F31` in `DOCS/audits/PR023-multi-review-audit.md` §12,
+  plus two audit-document wording fixes and a re-confirmation that Copilot's
+  carried "manifest verification accepts symlinked files" thread is the same
+  stale Round 1 discussion, already fixed. Neither substantive finding
+  touches EXP-001's numerical/parity conclusions or the D1 flag.
+  - **`PR23-F30` (D2) — `O_NOFOLLOW` doesn't stop a symlinked *ancestor*
+    directory from being followed, only the final path component.** A
+    concurrent replacement of a governed directory (e.g. `output_dir`) with
+    a symlink, between an earlier containment check and the actual open,
+    could redirect every read/write in `tools/reproduce.py` outside the
+    checked root while the final filename stayed a plain, non-symlinked
+    name. New `_dir_relative_open` pins the immediate parent directory as a
+    descriptor before opening the final component — a descriptor is immune
+    to a later replacement of the path string that named it — closing the
+    window on POSIX; Windows (no `dir_fd`-relative opens) keeps its existing
+    narrowing-only fallback, unchanged. Confirmed with the maintainer as the
+    stronger of two considered fixes.
+  - **`PR23-F31` (D3) — a check-then-open race could swap a manifest
+    candidate for a FIFO and hang instead of failing closed.** Opening a
+    FIFO for reading with no writer present blocks indefinitely on POSIX.
+    `O_NONBLOCK` (a no-op on regular files) is now added to both the read
+    and write open flags, paired with a new post-open
+    `_reject_non_regular_fd` check that rejects anything that isn't a
+    regular file regardless of which open branch produced the descriptor.
+  - Both fixes are implemented in the two shared primitives
+    (`_open_no_follow`, `write_no_follow`) that every read/write in this
+    module goes through, so every caller inherits them without a signature
+    change. **Their platform-specific regression tests skip on this
+    session's Windows machine by design** (no `dir_fd`/`O_NOFOLLOW`/`mkfifo`
+    support here) and will run for real on this repository's Linux CI legs
+    — the same evidence-deferral pattern already used for
+    DirectML/CUDA-gated tests. This is stated plainly rather than claimed as
+    locally verified; everything else (the Windows fallback paths, the
+    regular-file case, lint/type/security gates, and the full local test
+    suite) is locally verified.
+  - 4 new tests (1 platform-adaptive, running everywhere; 2 skip-gated for
+    Linux CI; regression coverage for both fixes). Targeted suite 93 passed,
+    2 skipped (by design); full suite (`-m "not slow and not gpu"`) `3243
+    passed, 181 skipped, 48 deselected` — exactly Round 5's baseline plus
+    the expected +1 passed / +2 skipped from this round's new tests, 0
+    failed; `ruff`, `ruff format --check`, `mypy --strict`, and `bandit` all
+    clean; the E4 analysis re-run to a scratch destination reproduces the
+    committed record byte-for-byte. Snyk Code: 0 issues on
+    `tools/reproduce.py` and its test file.
+
+- **PR #23 Round 7 — Copilot review and failing CI at head `e946a3c`; a
+  second TOCTOU instance, a documentation overclaim, and a Linux-only error
+  type (2026-09-24 UTC).** Copilot confirmed both Round 6 fixes
+  (`PR23-F30`, `PR23-F31`) resolved; CodeRabbit finished its review of this
+  head with no comments. Audited as `PR23-F34`/`PR23-F35`/`PR23-F36` in
+  `DOCS/audits/PR023-multi-review-audit.md` §13. None touches EXP-001's
+  numerical/parity conclusions or the D1 flag.
+  - **`PR23-F34` (D2) — Round 6's ancestor-symlink fix closed only the
+    immediate parent directory, not every ancestor, and its own docstrings
+    overclaimed full closure.** `_dir_relative_open` pins one level;
+    a symlink at a *grandparent* (or higher) is still followed by that same
+    function's own parent-opening call, which only guards the one component
+    it itself opens. Corrected: docstrings across `_dir_relative_open`,
+    `_open_no_follow`, and `write_no_follow` now say "immediate parent"
+    precisely and explain why, with a concrete example. Full ancestor-chain
+    pinning was considered and declined as disproportionate to this
+    module's threat model (every caller's path is a fixed name under an
+    already-validated governed root, making the immediate parent both the
+    checked level and the realistically-reachable one) — documented with
+    rationale rather than silently dropped. No new attack surface closed by
+    this item; an overclaim removed, the real one-level fix from Round 6
+    unchanged.
+  - **`PR23-F35` (D2) — `append_manifest`'s self-exclusion filter followed
+    a symlink per candidate, letting a swapped candidate silently vanish
+    from the inventory instead of failing closed.** The filter that keeps
+    `manifest.json` itself out of the candidate list compared each
+    candidate's `.resolve()` against the manifest's resolved destination —
+    link-following, and run *after* the non-regular pre-check loop had
+    already passed every candidate. A candidate swapped for a symlink
+    targeting the manifest's destination in that window resolved equal to
+    it and disappeared without ever being flagged missing, unmanifested, or
+    rejected as a symlink. Fixed to exclude by name only, computed once
+    before any per-candidate check — the same pattern `verify_manifest`
+    already used, which never had this defect.
+  - **`PR23-F36` (D2) — Round 6's ancestor-symlink rejection raised the
+    wrong error type on Linux, failing all three ubuntu `test` legs and the
+    `reproduce` job at `e946a3c`.** Linux reports `ENOTDIR`, not `ELOOP`,
+    for `O_DIRECTORY | O_NOFOLLOW` on a symlink, and only `ELOOP` was
+    translated. The symlinked parent was still refused (it failed closed),
+    but as a raw `NotADirectoryError` instead of `ManifestMismatchError`.
+    Found by the POSIX-only test Round 6 deferred to CI because it could not
+    run on this session's Windows machine. `ENOTDIR` is now translated when
+    a no-follow `lstat` confirms the parent is a symlink; a parent that is
+    genuinely not a directory still raises its real error.
+  - 3 new regression tests, each proved against pre-fix source. One covers
+    `PR23-F35` (`DID NOT RAISE ManifestMismatchError` before the fix). Two
+    cover `PR23-F36` by simulating Linux's `ENOTDIR` behavior so they run on
+    every platform, not only CI; the symlink case fails on the pushed
+    `e946a3c` source with the same error CI reported. The fake `os` is
+    scoped to `reproduce`'s own reference, not the global module. Targeted
+    suite 96 passed, 2 skipped (unchanged from Round 6); full suite (`-m "not slow
+    and not gpu"`) `3245 passed, 181 skipped, 48 deselected` plus one
+    unrelated wall-clock throughput test that flaked once (passed 2 of 3
+    isolated re-runs on identical code); `ruff`, `ruff format --check`, `mypy
+    --strict`, and `bandit` all clean; the real 172-record repository
+    manifest still verifies with no error; the E4 analysis re-run to a
+    scratch destination reproduces the committed record byte-for-byte. Snyk
+    Code: 0 issues on `tools/reproduce.py` and its test file.
+
+- **PR #23 Round 8 — Copilot review of head `d5f47d6`; a hard-link
+  corruption bug (2026-09-24 UTC).** Both Round 7 fixes confirmed resolved.
+  Audited as `PR23-F37` in `DOCS/audits/PR023-multi-review-audit.md` §14.
+  Does not touch EXP-001's numerical/parity conclusions or the D1 flag.
+  - **`PR23-F37` (D2) — a hard-linked destination let a write silently
+    corrupt an unrelated file.** Every prior no-follow guard in this module
+    defends against a *symlink*; a **hard link** is a different thing
+    entirely — a second name for the same inode, indistinguishable from an
+    ordinary regular file by every check this module runs. A local process
+    could create a governed filename (for example
+    `report-manifest.json`) as a hard link to an unrelated frozen file (for
+    example `report.md`); `write_no_follow`'s in-place `O_TRUNC` open would
+    then overwrite both names' shared content. `write_no_follow` no longer
+    opens the destination in place: it writes to a freshly,
+    *exclusively*-created sibling file (`O_CREAT | O_EXCL`, which can never
+    land on an existing hard link) through the same no-follow/ancestor/FIFO
+    machinery every other open in this module uses, then atomically swaps
+    it into place with `os.replace` — which repoints only the destination's
+    own directory entry, never touching whatever else the old entry's inode
+    was linked to. The documented "refuses a symlinked destination"
+    contract is preserved with an explicit check immediately before the
+    swap.
+  - A second Copilot finding re-raised the already-considered "pin every
+    ancestor directory, not just the immediate parent" question from Round
+    7 (`PR23-F34`). Re-affirmed as declined, on the record: it would
+    require a breaking API change (threading a trusted-anchor parameter
+    through this module's entire public surface) to close a threat that
+    already requires the same local-write access this module's whole
+    threat model assumes. Not a false positive — declined as
+    disproportionate, the same governance pattern already used for
+    CodeRabbit's docstring-coverage nitpick (`PR23-F9`).
+  - 1 new regression test, proved against pre-fix source (temporarily
+    restoring the Round 7 committed file): a hard-linked "frozen" file's
+    content was overwritten by the fix's own test pre-fix, untouched
+    post-fix. Every pre-existing `write_no_follow` test passes unchanged
+    against the rewritten implementation. Targeted suite 97 passed, 2
+    skipped; full suite (`-m "not slow and not gpu"`) `3247 passed, 181
+    skipped, 48 deselected`, 0 failed; `ruff`, `ruff format --check`, `mypy
+    --strict`, and `bandit` all clean;
+    the real 172-record repository manifest still verifies; the E4 analysis
+    re-run to a scratch destination reproduces the committed record
+    byte-for-byte — confirming the atomic-replace rewrite is
+    output-identical to the in-place write it replaced. Snyk Code:
+    `tools/reproduce.py` now shows 3 LOW Path Traversal findings (up from
+    0) — the same structural false-positive class accepted every round
+    since Round 3 (a CLI argument reaching a path-write call without Snyk's
+    tracer recognizing the containment check earlier in the same
+    function), confirmed by inspection to be a new count of an
+    already-accepted class, not a new gap.
+
+- **PR #23 Round 9 — Copilot review of head `949e5e1`; a CLI collision bug,
+  a rename that lost the ancestor-symlink guarantee, and a verdict-logic
+  finding declined with the maintainer's confirmation (2026-09-24 UTC).**
+  Audited as `PR23-F38`/`PR23-F39` in
+  `DOCS/audits/PR023-multi-review-audit.md` §15. None touches EXP-001's
+  numerical/parity conclusions or the D1 flag.
+  - **`PR23-F38` (D2) — a colliding `--manifest-path` could silently
+    overwrite a generated output after its digest was already recorded.**
+    `--output-dir X --manifest-path X/exp001-e4-summary.md` passed both
+    independent CLI destination checks, since neither knew the other's
+    target filenames; the manifest write would then overwrite the summary
+    file `write_outputs` had already written and digested, leaving
+    `report-manifest.json` describing bytes no longer on disk. Two new
+    constants (`SUMMARY_FILENAME`, `ADJUDICATION_FILENAME`) replace
+    duplicated string literals, and `main()` now cross-checks the two
+    destinations against each other before either is written to.
+  - **`PR23-F39` (D2) — the parent directory descriptor pinned for the
+    hard-link fix's temporary file was discarded before the final rename,
+    reopening the ancestor-symlink window `PR23-F30` had just closed for
+    the write path.** `write_no_follow`'s create-temp-then-`os.replace`
+    strategy (`PR23-F37`, Round 8) opened the parent as a pinned
+    descriptor only for the temporary file's creation; the rename itself
+    then re-resolved the destination by path string, losing the guarantee.
+    The descriptor is now kept open across both steps, and the rename is
+    performed relative to it (`os.replace(..., src_dir_fd=, dst_dir_fd=)`)
+    wherever the platform supports it; Windows keeps its existing
+    narrowing-only fallback, unaffected.
+  - A third finding — that the shared H1/H2a/H3/H4 verdict helper could
+    return `CONFIRMED` for a hypothetical run with more total cases than
+    its registered denominator — was investigated in depth against the
+    frozen pre-registration text (§8 and §10 both), found to match the
+    registered rule as literally written rather than misimplement it, and
+    confirmed structurally unreachable against every currently-committed
+    EXP-001 artefact (fixed-cardinality case sets; zero aborts in the real
+    E3–E5 execution). Declined, matching this analysis module's existing
+    `PR23-F10`/`PR23-F11` precedent (frozen, maintainer-accepted E4 code;
+    editing it now would itself be a protocol deviation), put to the
+    maintainer directly and confirmed.
+  - 2 new regression tests, each proved against pre-fix source. `PR23-F39`'s
+    test spies on `os.replace`'s call shape (matching `src_dir_fd`/
+    `dst_dir_fd`) rather than simulating a live two-step race, which a
+    single-threaded test run on a platform without `dir_fd` support
+    (this session's machine) cannot reliably reproduce or verify — stated
+    plainly rather than claimed as more than it is. Targeted suite 98
+    passed, 3 skipped; full suite (`-m "not slow and not gpu"`) `3248
+    passed, 182 skipped, 48 deselected`, 0 failed; `ruff`, `ruff format
+    --check`, `mypy --strict`, and `bandit` all clean; the real 172-record repository manifest still verifies; the E4
+    analysis re-run to a scratch destination reproduces the committed
+    record byte-for-byte. Snyk Code: `tools/reproduce.py` 4 LOW findings
+    (up from 3, same already-accepted class); `exp001_e4_analysis.py` 1 LOW
+    (unchanged); both test files 0.
+
+- **PR #23 Round 9 correction cycle — required CI broke three times in a
+  row on unverified platform assumptions, each caught by the gate and
+  corrected; CI-confirmed green on the third attempt (2026-09-24 UTC).**
+  Full account in `DOCS/audits/PR023-multi-review-audit.md` §16, written
+  up plainly rather than edited out of the history it corrects.
+  - `PR23-F39`'s fix assumed `os.replace` supports `dir_fd`-relative
+    operation wherever `os.open` does. Wrong: CI showed
+    `os.replace not in os.supports_dir_fd` on real Ubuntu/Python 3.12. The
+    production code's own fallback had already degraded safely — no write
+    was ever actually broken — only the test's assertion (that the dir_fd
+    branch must run) was wrong. Reverted the final swap to the
+    unconditional, plain-path `os.replace` Round 8's verified hard-link fix
+    already used.
+  - The replacement test broke CI a second time: spying on `os.open` to
+    verify descriptor reuse replaces the function object
+    `reproduce.py`'s own `os.open in os.supports_dir_fd` check compares
+    identity against, silently forcing the fallback path the test meant to
+    prove was *not* taken. Removed the mechanism-level assertion entirely
+    rather than attempt a third variant; replaced with a test that proves
+    the *outcome* a real descriptor leak would break (300 writes in one
+    process, no monkeypatching of `os`) instead of the internal mechanism.
+  - **`PR23-F41` (D3) — the cleanup-on-failure path re-resolved its target
+    by path string even with a pinned parent descriptor still open**,
+    so a symlink swapped into the parent mid-call could delete a
+    same-named file elsewhere. Fixed with a `dir_fd`-relative
+    `os.unlink`, gated on a runtime `os.unlink in os.supports_dir_fd`
+    check (not assumed this time) with a safe fallback.
+  - **`PR23-F42` (D4) — the manifest self-exclusion compared filenames as
+    bare strings**, so a `--manifest-path` differing only in case from the
+    on-disk file would not self-exclude on Windows, misreporting the
+    manifest as unmanifested. Fixed with `os.path.normcase`; proven
+    directly on this session's own Windows machine (no CI dependency
+    needed for this one) against pre-fix source.
+  - `PR23-F42`'s own regression test broke CI a third time: it assumed
+    `MANIFEST.JSON` and `manifest.json` name the same file, true on
+    Windows/macOS but false on case-sensitive Linux ext4, where they are
+    two unrelated files — exactly reproducing the bug the fix was meant to
+    prevent, for a reason unrelated to the fix itself. Corrected to probe
+    the real filesystem directly (create the file, check whether the
+    differently-cased path resolves to it) and skip cleanly where it does
+    not, rather than assume platform behavior. **CI-confirmed green on the
+    corrected head (`c02e1d7`): `reproduce` and all three ubuntu `test`
+    legs — the checks that failed three times in a row across this
+    correction cycle — pass, along with every other required check.**
+  - The "pin every ancestor" question was raised a second time, against a
+    different function (`exp001_e4_analysis.py`); declined again for the
+    same reason already on record at `PR23-F34`, extending that ledger
+    entry rather than opening a new one.
+  - Targeted suite 100 passed, 2 skipped; `ruff`, `ruff format --check`,
+    `mypy --strict`, and `bandit` all clean; the real 172-record repository
+    manifest still verifies; the E4 analysis re-run to a scratch
+    destination reproduces the committed record byte-for-byte throughout
+    every commit in this cycle.
+
+- **PR #23 Round 10 — Copilot and CodeRabbit review of head `f370a29`; a
+  macOS case-insensitivity gap and a weak test assertion fixed, five
+  carried findings re-affirmed, one re-attempted unverified fix declined
+  on the record (2026-09-24 UTC).** Audited as `f370a29-F1`/`f370a29-F2` in
+  `DOCS/audits/PR023-multi-review-audit.md` §17. None touches EXP-001's
+  numerical/parity conclusions or the D1 flag.
+  - **`f370a29-F1` (D3) — the manifest self-exclusion filter compared
+    filenames, not file identity, missing macOS's default
+    case-insensitive-but-preserving filesystem.** `PR23-F42`'s
+    `os.path.normcase` fix (§16) closed the Windows case-folding gap but
+    not macOS: `normcase` is the identity function on every POSIX
+    platform, so a `--manifest-path` differing only in case from the file
+    actually on disk still failed to self-exclude there, letting
+    `append_manifest` re-add the manifest as an "unmanifested" candidate
+    to its own record. Both `append_manifest` and `verify_manifest` now
+    compare file identity via `lstat()` + `os.path.samestat` instead of
+    filenames — correct on every platform without a per-platform case
+    rule, and still routes a symlinked candidate to the existing
+    non-regular rejection rather than silently excluding it. No test
+    change required: the existing, already-corrected case-insensitivity
+    test now passes on the fixed code path directly.
+  - **`f370a29-F2` (D4) — the descriptor-leak regression test (Round 9
+    correction cycle, §16) proved only write success, not descriptor
+    non-leak.** A real one-descriptor-per-call leak would not exhaust a
+    typical CI runner's descriptor limit within the test's 300 iterations.
+    Where a descriptor-count directory exists (`/proc/self/fd` on Linux,
+    `/dev/fd` on macOS; neither on Windows), the test now asserts the
+    process's open-descriptor count returns to within a small tolerance,
+    skipped rather than assumed elsewhere — measuring real, unpatched OS
+    state, not the mechanism-spying pattern that broke this PR's CI twice
+    during the correction cycle it strengthens.
+  - **Declined — reintroducing a `dir_fd`-relative final rename in
+    `write_no_follow`.** The suggested fix is the identical mechanism
+    `PR23-F39` already shipped and had to revert after it broke required
+    Linux CI twice (`os.replace not in os.supports_dir_fd` on real
+    Ubuntu/Python 3.12, disproving an assumption this session's Windows
+    machine cannot verify) — gated the same unverified way, without the
+    runtime `os.rename in os.supports_dir_fd` check every other
+    `dir_fd`-relative call in this module performs first. Declined rather
+    than re-shipped on the same unverified assumption a third time;
+    recorded with the condition under which a future attempt would be
+    safe (§17.4).
+  - Five carried findings re-affirmed with no code change: the two
+    already-declined "pin every ancestor" threads (`tools/reproduce.py`
+    and `exp001_e4_analysis.py`, §14.2/§16), the stale Round 1
+    "manifest verification accepts symlinked files" thread, the
+    already-declined mixed-abort verdict question (§15.3, maintainer-
+    confirmed), and a hard-link finding whose cited line no longer
+    matches current behavior (`write_report_manifest` writes exclusively
+    through the already-hardened `write_no_follow`, never `O_TRUNC`).
+  - Targeted suite 100 passed, 2 skipped; broader-caller suite (
+    `test_exp001_driver.py`, `test_paper_wiring.py`, `test_wp001_baseline.py`)
+    280 passed, 6 skipped; `ruff`, `ruff format --check`, `mypy --strict`,
+    and `bandit` all clean; the real 172-record repository manifest still
+    verifies under the new identity-based filter; no dependency files
+    changed (no Snyk Open Source / `cargo audit` / `pip-audit` required).
+    CodeRabbit and Copilot are re-requested on this round's push per
+    standard practice.
+
+- **PR #23 Round 11 — Copilot review of head `3dfe299`;
+  maintainer-directed closure sweep: a hard-link inventory-evasion gap
+  and a stale docstring fixed, two previously-declined findings closed by
+  their own recorded safe paths, four carried threads re-affirmed
+  (2026-09-24 UTC).** Audited as `3dfe299-F1`/`3dfe299-F2` in
+  `DOCS/audits/PR023-multi-review-audit.md` §18. None touches EXP-001's
+  numerical/parity conclusions or the D1 flag; the published record
+  re-runs byte-identically.
+  - **`3dfe299-F1` (D3) — a hard-linked alias of the manifest evaded the
+    inventory.** Round 10's identity-based self-exclusion (`lstat` +
+    `os.path.samestat`) compares inodes, and a hard link to the manifest
+    is inode-identical — so `os.link(manifest.json, rogue.json)` made the
+    alias silently vanish from both `append_manifest`'s and
+    `verify_manifest`'s candidate inventory instead of surfacing as an
+    unmanifested artefact. A governed manifest has exactly one directory
+    entry, so both filters now refuse a manifest with `st_nlink > 1`
+    outright — fail closed, never silently filtered — leaving the macOS
+    case-insensitivity fix intact (with one link, the single `samestat`
+    match can only be the manifest's own entry). Two regression tests
+    create the exact alias and assert the refusal.
+  - **`3dfe299-F2` (D4) — the case-insensitivity regression test's
+    docstring still described the replaced `os.path.normcase` mechanism.**
+    Rewritten to document the current file-identity comparison and the new
+    link-count refusal. Docstring-only.
+  - **Closed at maintainer direction — the `dir_fd`-relative final rename
+    in `write_no_follow`** (CodeRabbit, declined at §17.4 with a recorded
+    re-attempt condition): implemented exactly per that condition — the
+    final swap is `os.rename(..., src_dir_fd=, dst_dir_fd=)` only behind a
+    runtime `os.rename in os.supports_dir_fd` check (the check whose
+    absence broke required Linux CI twice at `PR23-F39`), with the plain
+    `os.replace` fallback unchanged everywhere else including all of
+    Windows. Called closed only if this push's required Linux CI legs come
+    back green, per the condition's own terms.
+  - **Closed at maintainer direction — every-component symlink walk for
+    the configured E4 output/record roots** (Copilot, previously declined
+    twice as disproportionate absent an explicit decision — which the
+    maintainer's direction now supplies):
+    `_reject_configured_root_symlink` walks every path component below the
+    trusted checkout anchor no-follow, so a symlink swapped in at an
+    ancestor (e.g. `DOCS/test_and_benchmark_results`) is refused even
+    though the final, possibly-not-yet-existing component's own
+    `is_symlink()` is false. Two regression tests cover ancestor symlinks
+    of both roots across both public root-set functions.
+  - Re-affirmed with reasons a "fix everything" instruction does not
+    change: the mid-flight ancestor-race variant in `tools/reproduce.py`
+    (threat model explicitly documented in-module — the finding's own
+    offered alternative — and re-engineering it is the exact §16
+    risk-lesson); the mixed-abort verdict question (frozen
+    pre-registration matched literally, maintainer previously confirmed
+    the decline; editing registered adjudication logic is a D1-class
+    change, not a review response); the stale hard-link-overwrite and
+    symlinked-verification threads (describe code removed at `PR23-F37`
+    and Round 1 respectively); the macOS case-alias thread (fixed at
+    `3dfe299` itself, thread lag).
+  - Targeted suite 104 passed, 2 skipped (+4 new regression tests, all
+    running for real on this host); consumer suites 280 passed, 6 skipped
+    (two documented AGENTS.md workstation issues re-verified as such);
+    `ruff`, `ruff format --check`, `mypy --strict`, and `bandit` clean;
+    Snyk Code re-run on all touched code: +1 LOW in `reproduce.py` (the
+    new gated rename call site, same already-accepted structural class),
+    analysis module unchanged at 1 LOW, tests 0; the real 172-record
+    repository manifest still verifies under the link-count guard; the E4
+    analysis re-run to a scratch destination reproduces the committed
+    record byte-for-byte, all verdicts and the D1 flag unchanged. No
+    dependency files changed. CodeRabbit and Copilot re-requested on this
+    round's push.
+
+- **PR #23 Round 13 — independent review at head `e1d4ec1`, plus four named
+  LLM reviews (Devin/SWE-2 High, Cursor Agent, Claude Sonnet 5-High, Qwen
+  Code 3.7 Plus); five findings fixed, one prior decline corrected
+  (2026-09-24 UTC).** Audited as `e1d4ec1-F1`…`e1d4ec1-F5` in
+  `DOCS/audits/PR023-multi-review-audit.md` §20. All four named reviews
+  validated the prior rounds' fixes accurately and agreed Copilot's other
+  three "Open" items are two stale threads plus one documented decline;
+  they split on one point.
+  - **`e1d4ec1-F1` (D2) — the mixed-abort verdict gap this audit had
+    previously declined was a real, unfixed defect.** `_tolerance_verdict`
+    only ever checked `non_aborted == denominator`, never the artefact's
+    *total* case count — so a full denominator's worth of passing cases
+    plus one or more *additional* aborted cases on top (more cases than the
+    denominator, not fewer) satisfied that equality and returned
+    `CONFIRMED` despite the abort, contradicting both the function's own
+    "a partial abort can never produce CONFIRMED" contract and
+    pre-registration §8's mixed-abort rule. §18.5/§19.2 of this audit had
+    endorsed the maintainer's decline of this exact Copilot finding as
+    correct, and three of the four named reviews (Devin/SWE-2 High, Cursor
+    Agent, Qwen Code 3.7 Plus) independently re-endorsed that decline;
+    Claude Sonnet 5-High was the sole holdout, and was right. Fixed by
+    checking the total case count against the denominator before the
+    existing `non_aborted` check; not reachable against any committed
+    artefact (every real run's total case count already equals its
+    denominator by construction), so no published verdict changes.
+  - **`e1d4ec1-F2` (D2) — a second, unverified `verify_manifest` call could
+    attest different bytes than the ones adjudicated.** `run_analysis`
+    re-verified each run directory independently of `_load_artefact`'s own
+    verification, purely to populate the provenance listing — a
+    self-consistent artefact+manifest swap in the window between the two
+    calls could have the verdict computed from pre-swap bytes while the
+    committed manifest attested post-swap digests. `_load_artefact` now
+    returns its own verified records for the caller to reuse, closing the
+    window and removing a redundant full-artefact hash on every run.
+  - **`e1d4ec1-F3` (D2) — the raw artefact root had no ancestor-symlink
+    protection.** Unlike `OUTPUT_ROOT`/`RECORD_ROOT`, the input-side
+    `RAW_ARTEFACT_ROOT` was never passed through
+    `_reject_configured_root_symlink`, so a symlinked ancestor could
+    redirect `verify_manifest` into a forged run tree. Now walked with the
+    same existing helper before use.
+  - **`e1d4ec1-F4`/`e1d4ec1-F5` (D3) — two cheap CLI-boundary hardening
+    gaps.** `main()`'s manifest/generated-output collision check used
+    case-sensitive `Path` equality (silent overwrite risk on
+    case-insensitive-but-case-preserving macOS APFS), now case-folded;
+    `_checked_destination` (for `--output-dir`) resolved before checking a
+    symlink, unlike its sibling `_checked_manifest_destination`, now
+    symmetric.
+  - 5 new/extended regression tests; targeted suite 111 passed, 2 skipped;
+    `ruff`, `ruff format`, `mypy --strict` clean; Snyk Code on the modified
+    module unchanged (1 pre-existing accepted LOW, structural
+    containment-sanitizer false positive); the E4 analysis re-run to a
+    scratch destination reproduces the committed `report-manifest.json`
+    byte-for-byte and every verdict/D1 flag unchanged. No dependency files
+    changed. CodeRabbit and Copilot re-requested on this round's push.
+
+- **PR #23 Round 12 — Copilot and CodeRabbit review of head `b69f585`;
+  one symlinked-manifest-destination bypass fixed, Round 11's four fixes
+  confirmed resolved, the `dir_fd`-rename closure confirmed by green CI
+  (2026-09-24 UTC).** Audited as `b69f585-F1` in
+  `DOCS/audits/PR023-multi-review-audit.md` §19. CodeRabbit's
+  re-requested incremental review raised zero new actionable comments;
+  all required CI checks were green on `b69f585`, making §18.3's
+  conditional `dir_fd`-rename closure unconditional. None of this touches
+  EXP-001's numerical/parity conclusions or the D1 flag; the published
+  record re-runs byte-identically.
+  - **`b69f585-F1` (D3) — a symlink planted at the canonical manifest
+    name escaped the record-root destination policy.**
+    `_checked_manifest_destination` applied both containment and the
+    canonical-name rule to the `.resolve()`-ed destination, and
+    `.resolve()` follows a trailing symlink — so
+    `record_root/report-manifest.json -> output_root/other.json` resolved
+    into the permitted output root, never triggered the
+    inside-record-root rule, and was written through: the record root
+    kept a symlink where its registered provenance file belongs while the
+    bytes overwrote a different allowed output. The requested destination
+    is now refused no-follow, before resolution — the same
+    check-before-resolve boundary the configured-root walk already uses.
+    Regression test proven to fail (`DID NOT RAISE`) against the pre-fix
+    source.
+  - Four carried threads re-affirmed by reference to §18.5 (no new
+    evidence in this review): the mid-flight ancestor race, the
+    maintainer-confirmed mixed-abort decline, and the two stale threads.
+  - Targeted suite 105 passed, 2 skipped (+1 new regression test); `ruff`,
+    `ruff format --check`, `mypy --strict` clean; Snyk Code on the
+    modified module unchanged (1 pre-existing accepted LOW); all three
+    governance checkers pass; the E4 analysis re-run to a scratch
+    destination reproduces the committed record byte-for-byte, all
+    verdicts and the D1 flag unchanged. No dependency files changed.
+    CodeRabbit and Copilot re-requested on this round's push.
+
+- **Erratum — Parity Report golden-corpus VALIDATION claim
+  (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
+  `DOCS/sphinx/parity_report.rst` stated that
+  `parity/test_parity_differential.py::test_corpus_exhaustive_differential_parity`
+  shows "PRIN's trajectory matches the stored reference trajectory at the
+  registered tolerance". That test regenerates each case through
+  `parity.generate_corpus._run_case`, which builds `prinet` models and
+  `prinet.core.measurement` metrics, so it compares a **PRINet 3.0
+  regeneration** against the PRINet-3.0-generated corpus — a reference
+  self-consistency check. No CI gate integrates PRIN's dynamics over the
+  **full** golden corpus (all 504 cases) and compares the resulting
+  trajectories against the stored reference; the only gate that runs PRIN
+  against corpus trajectories at all,
+  `tests/test_exp001_driver.py::TestCorpusParity::test_representative_cases_within_tolerance`,
+  covers 4 representative cases, none of which is among H1's 19 breaching
+  cases, so it is green while H1 is `REFUTED`. An erratum admonition
+  and a corrected test description are now in the Parity Report; verified
+  in-session on four of EXP-001 H1's nineteen failing cases (CI-path
+  comparison PASS, PRIN-vs-corpus breach) in
+  `EVIDENCE/0158-exp001-e5-parity-gate-coverage.json`. The gate itself is
+  fixed by the EXP-001 D1 correction cycle, not here.
+
+- **Raw campaign evidence is now byte-exact in git (session 0156).**
+  `.gitattributes` gains `benchmarks/results/** -text`. The repository's
+  `* text=auto eol=lf` default was normalizing CRLF to LF in campaign result
+  artefacts written on Windows, so a committed artefact no longer matched the
+  SHA-256 manifest written beside it: `corpus_corpus-cpu.json` staged as
+  1,667,489 bytes / `c6a13f5d…` against a manifest recording 1,724,465 bytes /
+  `882da36d…`. On any clean checkout `tools/reproduce.py::verify_manifest`
+  would have failed closed on the campaign's own evidence, and campaign plan
+  §7.4's byte-for-byte regeneration check could not have held. No artefact was
+  rewritten or re-manifested; all 8 staged blobs across the four EXP-001 runs
+  now match their manifests exactly.
+- **DV-036 nightly benchmark-comparison correction closed (2026-09-23 UTC).**
+  The conditional correction cycle S1 `8bcea55` → S2 `e09b7f5` → S3 `a0c1d2b`
+  → S4 completed. Nightly `workflow_dispatch` run `35847692136` at `main`
+  `b434554` concluded success for the whole workflow under campaign amendment
+  4's counterbalanced design: 69 benchmarks compared (63 gated, 6 advisory),
+  none gated past +10%, two reference and two candidate passes against fixed
+  reference `4590d611`. The two previously breaching gated identities moved
+  into the gate with no benchmark code change — `resonance_layer_bridge_baseline/moderate`
+  +14.7% → +4.9%, DLPack `negate_round_trip[float64]` +18.4% → −9.0%. The
+  result was independently re-derived by re-running the committed checker
+  against the run's preserved evidence artefact. DV036-F1/F2/F3 FIXED,
+  DV036-F4 CLOSED; DV036-F5 remains deferred to session 0166. The DV-036
+  register row stays OPEN for its reference-host re-baseline gates before
+  sessions 0168 and 0173.
+- **DV-038 and DV-039 closed (2026-09-23 UTC).** Both "before session 0156"
+  gates are met: PR #19 merged as `90c0334` with all required workflows
+  green, plus the wholly green nightly above for DV-039's dispatch condition.
+
 - **EXP-001 pre-registration — tenth E2 remediation, ninth code-review round
   on PR #20 (session 0155, E2, 2026-09-22) —
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/preregistration.md`

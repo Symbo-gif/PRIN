@@ -1,0 +1,14 @@
+{
+  "artefacts": {
+    "kernel-path_kernel-path-cuda.json": {
+      "hypotheses": [
+        "H4"
+      ],
+      "timing_method": "not-timed"
+    }
+  },
+  "exp_id": "EXP-001",
+  "operator": "MichaelMaillet",
+  "run_id": "RUN-20260923T134255Z-6b9d6b6-kernel-path-cuda",
+  "session": "0156"
+}

@@ -3,3 +3,16 @@
 *.onnx binary
 *.npz binary
 *.ipynb text eol=lf
+
+# Raw campaign evidence (campaign plan 7.3/7.4) is byte-exact: every run
+# directory carries a SHA-256 manifest of the bytes the driver wrote, and
+# tools/reproduce.py::verify_manifest fails closed on a changed size or
+# digest. Git's `text=auto eol=lf` normalization would rewrite CRLF to LF in
+# artefacts produced on Windows, so a clean checkout would read as "modified
+# and resized" against its own manifest. Disable EOL conversion here so the
+# committed blob is the bytes that were measured. `-text` (not `binary`)
+# keeps diffs visible, which 7.3 relies on as a further immutable record.
+# `whitespace=-trailing-space` stops `git diff --check` from reporting the
+# preserved CR of each CRLF line as trailing whitespace; the bytes are
+# deliberate evidence, not a style defect.
+benchmarks/results/** -text whitespace=-trailing-space

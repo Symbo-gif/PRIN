@@ -22,6 +22,53 @@ Parity Report
    characterization-scale, or notebook run in this repository is a scientific
    result, and none is presented here as one.
 
+.. admonition:: Erratum — 2026-09-23 (EXP-001 E5, finding EXP001-E5-F1)
+   :class: error
+
+   **A VALIDATION claim in this report is not supported by the evidence it
+   cites, and a campaign experiment has now contradicted it.**
+
+   This page stated that
+   ``parity/test_parity_differential.py::test_corpus_exhaustive_differential_parity``
+   shows "PRIN's trajectory matches the stored reference trajectory at the
+   registered tolerance" over all 504 corpus cases. That test regenerates each
+   case through ``parity.generate_corpus._run_case``, which builds
+   ``prinet`` models and ``prinet.core.measurement`` metrics: it compares a
+   **PRINet 3.0 regeneration** against the PRINet-3.0-generated corpus — a
+   reference self-consistency check. No ``prin`` Rust core is exercised on
+   that path, and no CI gate integrates PRIN's dynamics over the *full* golden
+   corpus — all 504 cases — and compares the resulting trajectories against
+   the stored reference.
+
+   The only gate that runs PRIN against corpus trajectories at all,
+   ``tests/test_exp001_driver.py::TestCorpusParity::test_representative_cases_within_tolerance``,
+   covers **4** representative cases. It was added by EXP-001's own E1/E2
+   (merged in PR #20), so it postdates the claim corrected here, and **none of
+   its 4 cases is among the 19 that breach**: it is green while H1 is
+   ``REFUTED``. A 4-case subset cannot detect this divergence class, which is
+   the coverage gap itself.
+
+   Phase 7 experiment **EXP-001** performed that comparison for the first time
+   and found **19 of 504 cases outside the registered tolerance** (H1
+   ``REFUTED``), plus **103 of 1,000 hypothesis-fuzzed cases** breaching within
+   the registered shadowing horizon (H2a ``REFUTED``). Both are campaign plan
+   §10.4 **D1** conclusion reversals; a correction cycle is open and the
+   campaign is blocked at session 0159.
+
+   Bit-level seeded repeatability (H3, 14/14) and GPU sparse-k-NN kernel
+   tolerance-identity (H4, 72/72) were **confirmed** in the same experiment,
+   as was the beyond-horizon distributional equivalence of the two coherence
+   metrics (H2b).
+
+   Until the correction cycle closes and EXP-001 is re-run as ``EXP-001-r1``,
+   **the golden-corpus section below must not be read as evidence that PRIN
+   reproduces the corpus within tolerance.** The corrected statement of what
+   the corpus evidence supports is correction-cycle work, not an edit made
+   here.
+
+   Evidence: ``DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/report.md``
+   §7–§8; ``EVIDENCE/0158-exp001-e5-parity-gate-coverage.json``.
+
 How to read this report
 -----------------------
 
@@ -138,13 +185,18 @@ Coverage of the corpus, by the manifest's own fields:
    * - Steps
      - 20 (all cases)
 
-Two parametrized differential tests run over all 504 cases in the ``parity`` CI
-job (``parity/test_parity_differential.py``):
+Two parametrized differential tests run in the ``parity`` CI job
+(``parity/test_parity_differential.py``):
 
 * ``test_corpus_regenerates_identically`` — the generator reproduces each stored
-  case from its own seed, so the corpus itself is not drifting.
-* ``test_corpus_exhaustive_differential_parity`` — PRIN's trajectory matches the
-  stored reference trajectory at the registered tolerance.
+  case from its own seed, so the corpus itself is not drifting. Parametrized
+  over the 5 ``_REPRESENTATIVE_CASES``, not the full corpus.
+* ``test_corpus_exhaustive_differential_parity`` — **corrected 2026-09-23, see
+  the erratum at the top of this page.** This test regenerates each case with
+  ``prinet==3.0.0`` and compares it against the stored corpus, so it is the
+  self-consistency check above run over all 504 cases; it does **not** exercise
+  the ``prin`` Rust core and is not evidence of PRIN-vs-reference trajectory
+  parity.
 
 A third is a **negative control**: ``test_harness_detects_planted_deviation_on_corpus``
 plants a deviation and asserts the harness rejects it. Without it, a green
@@ -152,8 +204,10 @@ differential suite would be indistinguishable from a harness that never
 compares anything.
 
 The differential job installs the reference editable from the archived tree
-(``.github/workflows/parity.yml``) on every push and pull request, so corpus
-parity is a merge gate rather than a periodic check.
+(``.github/workflows/parity.yml``) on every push and pull request, so
+**PRINet corpus self-consistency** is a merge gate rather than a periodic
+check — full-corpus **PRIN**-vs-reference trajectory parity is not (see the
+erratum at the top of this page).
 
 What the corpus does **not** cover, stated plainly: the oscillator counts are
 small (8–24) and the horizon is short (20 steps). That is deliberate — it is a

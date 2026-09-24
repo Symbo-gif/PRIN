@@ -1,0 +1,105 @@
+{
+  "d1_flag": true,
+  "decision_rule": "preregistration.md \u00a78 (frozen at c22db0b)",
+  "experiment": "EXP-001",
+  "generated_at": "2026-09-23T00:00:00Z",
+  "generator": "DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py",
+  "inputs": [
+    {
+      "files": [
+        {
+          "bytes": 214,
+          "path": "campaign-metadata.json",
+          "sha256": "b1f70f500f98e9acfadd2a72ee8c944ea9adb1bcef06ac4dd6920df2089a00fa"
+        },
+        {
+          "bytes": 1724465,
+          "path": "corpus_corpus-cpu.json",
+          "sha256": "882da36d54957f4942df594fb71d71d07c3a634b7737b895d4f6c0e94ebfcd97"
+        }
+      ],
+      "hypotheses": [
+        "H1"
+      ],
+      "run_id": "RUN-20260923T134012Z-6b9d6b6-corpus-cpu"
+    },
+    {
+      "files": [
+        {
+          "bytes": 208,
+          "path": "campaign-metadata.json",
+          "sha256": "c7b314ecceb073b1bf75885067da362101adc93edb8e15238dbdbbf18190cc75"
+        },
+        {
+          "bytes": 4401991,
+          "path": "fuzz_fuzz-cpu.json",
+          "sha256": "deb9a8e3eddf7b60f2213f54e80e34896a78424a266df930556f485287e5977e"
+        }
+      ],
+      "hypotheses": [
+        "H2a",
+        "H2b"
+      ],
+      "run_id": "RUN-20260923T134250Z-6b9d6b6-fuzz-cpu"
+    },
+    {
+      "files": [
+        {
+          "bytes": 235,
+          "path": "campaign-metadata.json",
+          "sha256": "4caa0409eecd4cb2e777ad97ab23d0d14617186a9334ad1fa95c2fcf6ce7ebdf"
+        },
+        {
+          "bytes": 3176,
+          "path": "repeatability_repeatability-cpu.json",
+          "sha256": "cf1d694051118c266c130d5ba66f1651335aead223f24045a17c81640f5f398a"
+        }
+      ],
+      "hypotheses": [
+        "H3"
+      ],
+      "run_id": "RUN-20260923T134226Z-6b9d6b6-repeatability-cpu"
+    },
+    {
+      "files": [
+        {
+          "bytes": 302,
+          "path": "campaign-metadata.json",
+          "sha256": "edb4d34b97acd83fabf11b003db8c8bfb3423fe6b0357ea9bcb863dfc7744a7e"
+        },
+        {
+          "bytes": 75984,
+          "path": "kernel-path_kernel-path-cuda.json",
+          "sha256": "8932d239c9d667233587faf657e7989c53d38445cf87703cfe8bd302605198be"
+        }
+      ],
+      "hypotheses": [
+        "H4"
+      ],
+      "run_id": "RUN-20260923T134255Z-6b9d6b6-kernel-path-cuda"
+    }
+  ],
+  "output_root": "DOCS/test_and_benchmark_results/EXP-001",
+  "outputs": [
+    {
+      "bytes": 12974,
+      "path": "exp001-e4-adjudication.json",
+      "sha256": "e6f6eb200b3db8be6cc8ed6a80ad1e5733e143f8000f2a0a3a1ad427bddab525"
+    },
+    {
+      "bytes": 5783,
+      "path": "exp001-e4-summary.md",
+      "sha256": "4551061c5eff1bc73d5c9ddb65d6533dfca9dcd774f46a9310eb0241b0f88229"
+    }
+  ],
+  "schema_version": 1,
+  "session": "0157",
+  "stage": "E4",
+  "verdicts": {
+    "H1": "REFUTED",
+    "H2a": "REFUTED",
+    "H2b": "CONFIRMED",
+    "H3": "CONFIRMED",
+    "H4": "CONFIRMED"
+  }
+}
