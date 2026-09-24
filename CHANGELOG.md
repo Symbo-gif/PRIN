@@ -639,6 +639,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     destination reproduces the committed record byte-for-byte throughout
     every commit in this cycle.
 
+- **PR #23 Round 10 — Copilot and CodeRabbit review of head `f370a29`; a
+  macOS case-insensitivity gap and a weak test assertion fixed, five
+  carried findings re-affirmed, one re-attempted unverified fix declined
+  on the record (2026-09-24 UTC).** Audited as `f370a29-F1`/`f370a29-F2` in
+  `DOCS/audits/PR023-multi-review-audit.md` §17. None touches EXP-001's
+  numerical/parity conclusions or the D1 flag.
+  - **`f370a29-F1` (D3) — the manifest self-exclusion filter compared
+    filenames, not file identity, missing macOS's default
+    case-insensitive-but-preserving filesystem.** `PR23-F42`'s
+    `os.path.normcase` fix (§16) closed the Windows case-folding gap but
+    not macOS: `normcase` is the identity function on every POSIX
+    platform, so a `--manifest-path` differing only in case from the file
+    actually on disk still failed to self-exclude there, letting
+    `append_manifest` re-add the manifest as an "unmanifested" candidate
+    to its own record. Both `append_manifest` and `verify_manifest` now
+    compare file identity via `lstat()` + `os.path.samestat` instead of
+    filenames — correct on every platform without a per-platform case
+    rule, and still routes a symlinked candidate to the existing
+    non-regular rejection rather than silently excluding it. No test
+    change required: the existing, already-corrected case-insensitivity
+    test now passes on the fixed code path directly.
+  - **`f370a29-F2` (D4) — the descriptor-leak regression test (Round 9
+    correction cycle, §16) proved only write success, not descriptor
+    non-leak.** A real one-descriptor-per-call leak would not exhaust a
+    typical CI runner's descriptor limit within the test's 300 iterations.
+    Where a descriptor-count directory exists (`/proc/self/fd` on Linux,
+    `/dev/fd` on macOS; neither on Windows), the test now asserts the
+    process's open-descriptor count returns to within a small tolerance,
+    skipped rather than assumed elsewhere — measuring real, unpatched OS
+    state, not the mechanism-spying pattern that broke this PR's CI twice
+    during the correction cycle it strengthens.
+  - **Declined — reintroducing a `dir_fd`-relative final rename in
+    `write_no_follow`.** The suggested fix is the identical mechanism
+    `PR23-F39` already shipped and had to revert after it broke required
+    Linux CI twice (`os.replace not in os.supports_dir_fd` on real
+    Ubuntu/Python 3.12, disproving an assumption this session's Windows
+    machine cannot verify) — gated the same unverified way, without the
+    runtime `os.rename in os.supports_dir_fd` check every other
+    `dir_fd`-relative call in this module performs first. Declined rather
+    than re-shipped on the same unverified assumption a third time;
+    recorded with the condition under which a future attempt would be
+    safe (§17.4).
+  - Five carried findings re-affirmed with no code change: the two
+    already-declined "pin every ancestor" threads (`tools/reproduce.py`
+    and `exp001_e4_analysis.py`, §14.2/§16), the stale Round 1
+    "manifest verification accepts symlinked files" thread, the
+    already-declined mixed-abort verdict question (§15.3, maintainer-
+    confirmed), and a hard-link finding whose cited line no longer
+    matches current behavior (`write_report_manifest` writes exclusively
+    through the already-hardened `write_no_follow`, never `O_TRUNC`).
+  - Targeted suite 100 passed, 2 skipped; broader-caller suite (
+    `test_exp001_driver.py`, `test_paper_wiring.py`, `test_wp001_baseline.py`)
+    280 passed, 6 skipped; `ruff`, `ruff format --check`, `mypy --strict`,
+    and `bandit` all clean; the real 172-record repository manifest still
+    verifies under the new identity-based filter; no dependency files
+    changed (no Snyk Open Source / `cargo audit` / `pip-audit` required).
+    CodeRabbit and Copilot are re-requested on this round's push per
+    standard practice.
+
 - **Erratum — Parity Report golden-corpus VALIDATION claim
   (finding `EXP001-E5-F1`, D1; session 0158, 2026-09-23 UTC).**
   `DOCS/sphinx/parity_report.rst` stated that

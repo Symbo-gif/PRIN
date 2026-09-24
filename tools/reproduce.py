@@ -827,27 +827,36 @@ def append_manifest(
     records = load_manifest(manifest_path) if manifest_path.is_file() else ()
     existing = {record.path: record for record in records}
     candidates = sorted(results.glob("*.json"))
-    # Self-exclusion by name, computed once before any per-candidate check —
-    # not by comparing each candidate's `.resolve()` against `destination`
-    # (the prior approach): that followed a symlink per candidate, so a
-    # candidate swapped for a symlink targeting `destination` between the
-    # glob and this comparison would resolve equal to it and silently vanish
-    # from `actual_paths` — never surfacing as "missing" or "unmanifested" —
-    # instead of being rejected as non-regular below (CWE-59; independent
-    # review, PR #23 head `e946a3c`). Mirrors :func:`verify_manifest`'s
-    # already-safe name-based self-exclusion. Compared via os.path.normcase,
-    # not a bare string, so a --manifest-path differing only in case from
-    # the file actually on disk still self-excludes correctly on a
-    # case-insensitive filesystem (Windows; a no-op comparison on POSIX,
-    # where normcase is the identity function) rather than being
-    # misreported as an unmanifested artefact (independent review, PR #23
-    # head `4ed9f14`).
-    if destination.parent == results:
-        manifest_name = os.path.normcase(manifest_path.name)
+    # Self-exclusion by file identity, computed once before any per-candidate
+    # check — not by comparing each candidate's `.resolve()` against
+    # `destination` (an earlier approach): that followed a symlink per
+    # candidate, so a candidate swapped for a symlink targeting `destination`
+    # between the glob and this comparison would resolve equal to it and
+    # silently vanish from `actual_paths` — never surfacing as "missing" or
+    # "unmanifested" — instead of being rejected as non-regular below
+    # (CWE-59; independent review, PR #23 head `e946a3c`). Mirrors
+    # :func:`verify_manifest`'s already-safe self-exclusion. Compared via
+    # `os.path.samestat` on `lstat()` results, not a name string: an earlier
+    # `os.path.normcase`-based comparison self-excluded correctly on Windows
+    # (case-folding) but not on a case-insensitive-yet-case-preserving
+    # filesystem (macOS default), where `normcase` is the identity function
+    # on POSIX but the filesystem itself still treats `MANIFEST.JSON` and
+    # `manifest.json` as the same file — `glob` returns the stored casing,
+    # so a name comparison against the caller's casing missed the alias and
+    # let the manifest re-add itself as an "unmanifested" candidate
+    # (independent review, PR #23 head `f370a29`). Comparing device/inode via
+    # `lstat` instead is filesystem-identity-based, not string-based, so it
+    # is correct on every platform without a per-platform case rule; using
+    # `lstat` rather than `stat` on the candidate side also means a symlinked
+    # candidate is compared by its own identity, not its target's, so it is
+    # never mistaken for the manifest and still reaches the non-regular
+    # rejection below.
+    if destination.parent == results and manifest_path.is_file():
+        manifest_stat = manifest_path.lstat()
         candidates = [
             candidate
             for candidate in candidates
-            if os.path.normcase(candidate.name) != manifest_name
+            if not os.path.samestat(candidate.lstat(), manifest_stat)
         ]
     for candidate in candidates:
         _reject_non_regular(candidate, "candidate artefact")
@@ -926,11 +935,17 @@ def verify_manifest(
     expected = {record.path for record in records}
     candidates = sorted(results.glob("*.json"))
     if manifest_path.resolve().parent == results:
-        manifest_name = os.path.normcase(manifest_path.name)
+        # File-identity comparison, not name comparison — see
+        # :func:`append_manifest`'s matching filter for why `lstat` +
+        # `os.path.samestat` is required on every platform, not only
+        # `os.path.normcase` on Windows (independent review, PR #23 head
+        # `f370a29`). `load_manifest` above already proved `manifest_path`
+        # exists, so no existence check is needed before `lstat` here.
+        manifest_stat = manifest_path.lstat()
         candidates = [
             candidate
             for candidate in candidates
-            if os.path.normcase(candidate.name) != manifest_name
+            if not os.path.samestat(candidate.lstat(), manifest_stat)
         ]
     for candidate in candidates:
         _reject_non_regular(candidate, "candidate artefact")

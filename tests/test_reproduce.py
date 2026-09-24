@@ -1020,8 +1020,31 @@ class TestWriteNoFollow:
         this round's own `PR23-F39` correction cycle) — this proves the
         *outcome* a leak would break instead: many writes in one process
         do not exhaust the descriptor table.
+
+        The write-success assertions alone would still pass with a slow
+        leak too small to hit this process's descriptor limit in 300
+        iterations (independent review, PR #23 head `f370a29`). Where a
+        descriptor directory is available (``/proc/self/fd`` on Linux,
+        ``/dev/fd`` on macOS; neither on Windows), this also counts this
+        process's own open descriptors before and after, and asserts the
+        count returns to within a small tolerance rather than only that
+        every write succeeded — a real per-call leak of even one descriptor
+        would fail this assertion long before reaching the platform
+        ulimit. Skipped, not assumed, when neither directory exists.
         """
+        fd_dir = next(
+            (
+                Path(path)
+                for path in ("/proc/self/fd", "/dev/fd")
+                if Path(path).is_dir()
+            ),
+            None,
+        )
+        before = len(os.listdir(fd_dir)) if fd_dir is not None else None
         for index in range(300):
             target = tmp_path / f"out{index}.json"
             reproduce.write_no_follow(target, b"payload\n", "generated output")
             assert target.read_bytes() == b"payload\n"
+        if before is not None:
+            assert fd_dir is not None
+            assert len(os.listdir(fd_dir)) <= before + 1

@@ -2449,3 +2449,260 @@ smaller, honestly-documented scope than first attempted. No new D1; no
 verdict, tolerance, or measured value changed; no regression to the
 published EXP-001 record; the real 172-record repository manifest still
 verifies.
+
+---
+
+## 17. Round 10 — Copilot and CodeRabbit review of head `f370a29`
+
+**Trigger:** Round 9 correction cycle's final head (`c02e1d7`, itself
+superseded by the docs-only `f370a29`) was reviewed again: Copilot (review
+`5302275273`, 6 open findings) and CodeRabbit (review `5301538265`, 3
+actionable comments). Every required CI check was green on `f370a29`
+before this round started (`gh pr view 23`: `gpu-cuda`, `gpu-wgpu`,
+`parity`/`detect_corpus`, `python` lint/governance/docs/security/all nine
+`test` legs, `rust` fmt/clippy/clippy-strict/test-strict/audit/bench-smoke/
+docs/all three `test` legs, `Snyk Code`, `Secret Scan`, `reproduce`,
+CodeRabbit, Devin Review — `Sourcery` skipped, over its diff-size limit as
+every prior round).
+
+### 17.1 Five carried findings, re-affirmed with no code change
+
+Each re-derived directly against the current source, not taken on the
+finding's word:
+
+- **"Ancestor symlink replacement bypasses no-follow path protection"**
+  (Copilot, High, comment `4090442972`, citing `tools/reproduce.py:211`,
+  `376`, `443` — the unchanged `_dir_relative_open`/`_open_parent_dir_fd`
+  pair). Identical to the finding declined at §14.2 and re-affirmed at
+  §16; no line cited has changed since. Same disposition: the immediate
+  parent is pinned, every deeper ancestor is not, by a documented,
+  previously-declined design choice (disproportionate engineering cost
+  against a threat already requiring this module's assumed local-write
+  access). No new evidence; no code change.
+- **"Reject symlinked ancestor components before resolving output roots"**
+  (Copilot, High, comment `4090809725`, citing
+  `exp001_e4_analysis.py:1112` — `_reject_configured_root_symlink`). The
+  same "immediate component only" limitation as the item above, applied to
+  this module's own configured-root check; already declined twice on the
+  record (§16, extending `PR23-F34`'s ledger entry to this function) with
+  the identical rationale documented in the function's own docstring
+  (lines 1089–1103, unchanged this round). No new evidence; no code
+  change.
+- **"Hard links allow manifest writes to overwrite frozen reports"**
+  (Copilot, High, comment `4090442919`, citing
+  `exp001_e4_analysis.py:1237` — `_checked_manifest_destination`). The
+  description ("the subsequent `O_TRUNC` write modifies the linked frozen
+  report") does not match the current implementation: `write_report_manifest`
+  (line 1033) writes exclusively through `tools.reproduce.write_no_follow`,
+  which — since the `PR23-F37` fix (§14.1) — never opens the destination
+  path with `O_TRUNC` at all. It creates a fresh, `O_EXCL`-created sibling
+  inode and swaps it into place with `os.replace`, which repoints only the
+  destination's own directory entry; whatever else that entry's old inode
+  was linked to is never opened or touched. This is the same stale
+  hard-link thread already re-confirmed fixed at §15.4 — Copilot's own
+  review body lists `PR23-F37`'s companion finding as "Resolved since last
+  review" in the same review that re-lists this one as still open,
+  consistent with the thread-tracking lag already documented there. No new
+  evidence; no code change.
+- **"Manifest verification accepts symlinked files"** (Copilot, High,
+  comment `4084668748`, unchanged since Round 1, GitHub-marked outdated).
+  Same stale Round 1 thread as §12.1/§13.3/§14.3/§15.5. `_load_artefact`
+  (line 189) calls `tools.reproduce.verify_manifest` directly — the exact
+  hardened, no-follow validator this finding claims is bypassed. No new
+  evidence; no code change.
+- **"Mixed aborts can incorrectly produce a CONFIRMED verdict"** (Copilot,
+  `exp001_e4_analysis.py:361`/`369` — `_tolerance_verdict`). The same
+  finding investigated in depth and declined with the maintainer's direct
+  confirmation at §15.3: the code matches pre-registration §8/§10's
+  literal text, and the scenario requires more total cases than a
+  hypothesis's fixed-cardinality registered denominator, which no
+  currently-committed EXP-001 artefact has. No new evidence presented this
+  round; declined again on the same record.
+
+### 17.2 `f370a29-F1` (D3) — the manifest self-exclusion filter compared
+filenames, not file identity, missing the case-insensitive-but-preserving
+case (macOS default)
+
+*Copilot, "Fix case-insensitive manifest alias handling on macOS" (New,
+Medium, comment `4091859763`, `tests/test_reproduce.py:163`) and
+CodeRabbit (actionable, comment `4091290011`, `tools/reproduce.py:846–850`
+— the same gap in `append_manifest`'s and `verify_manifest`'s matching
+filter at line ~937).*
+
+**Valid, confirmed by tracing both filters against the actual filesystem
+semantics `os.path.normcase` provides.** `PR23-F42` (§16) fixed the
+self-exclusion filter's cross-platform correctness for Windows, where
+`os.path.normcase` case-folds. It did not fix macOS: HFS+/APFS in their
+default configuration are case-insensitive *and* case-preserving, so
+`MANIFEST.JSON` and `manifest.json` name the same file there — but
+`os.path.normcase` is the identity function on every POSIX platform,
+Linux and macOS alike, so the string comparison the filter used does not
+know that. A `--manifest-path` differing only in case from the file
+`glob` actually returns (in its stored casing) fails to self-exclude on
+macOS specifically: `append_manifest` then re-adds the manifest as an
+"unmanifested" candidate to its own record; `verify_manifest` would reject
+it as unexpected. `tests/test_reproduce.py`'s own
+`test_append_manifest_self_excludes_case_insensitively` (corrected at
+`c02e1d7`, §16, to probe the real filesystem before asserting) would fail
+this exact assertion on real macOS CI, which is why Copilot's finding
+lands on that test rather than only the production code — the test's own
+probe (`differently_cased.exists()`) does not skip on a case-insensitive
+filesystem, so it would proceed into the bug.
+
+**Fix.** Both filters (`append_manifest` and `verify_manifest`) now
+compare file identity via `lstat()` + `os.path.samestat`, not filenames.
+This is filesystem-identity-based rather than string-based, so it is
+correct on every platform (Windows, case-sensitive Linux, case-insensitive
+macOS) without a per-platform case rule, and — because both sides use
+`lstat`, never `stat` — a symlinked candidate is compared by its own
+identity, not its link target's, so it is never mistaken for the manifest
+and still reaches `_reject_non_regular`'s symlink rejection afterward
+(CodeRabbit's own note: "Keep symlink candidates in the rejection path").
+No test change was required: the existing, already-corrected
+case-insensitivity test now exercises the fixed code path directly and
+passes without modification, on every platform its own probe does not
+skip.
+
+### 17.3 `f370a29-F2` (D4) — the descriptor-count regression test proved
+only write success, not descriptor non-leak, even on a platform where a
+leak is reachable
+
+*CodeRabbit (actionable, comment `4091289945`,
+`tests/test_reproduce.py:1008–1027` —
+`test_repeated_writes_do_not_exhaust_file_descriptors`).*
+
+**Valid — and an accurate description of a limitation this test's own
+docstring and §16.3 already stated plainly.** The test (added in the
+Round 9 correction cycle, §16, as the final, verified-sound response to
+two prior mechanism-spying attempts that broke CI) writes 300 files and
+asserts only that each write succeeds. As documented at the time, this
+"cannot distinguish 'no leak' from 'a leak too small to hit the descriptor
+limit in 300 iterations.'" CodeRabbit's finding makes that limitation
+concrete: a real one-descriptor-per-call leak would not exhaust a typical
+Linux CI runner's default descriptor limit within 300 iterations, so the
+existing assertions alone could pass on a genuine (small) leak.
+
+**Fix.** Where a descriptor-count directory is available
+(`/proc/self/fd` on Linux, `/dev/fd` on macOS; neither exists on
+Windows), the test now counts this process's own open descriptors before
+and after the 300 writes and asserts the count returns to within a small
+tolerance — a real per-call leak would fail this assertion long before
+reaching the platform ulimit. The count check is skipped, not assumed,
+wherever neither directory exists, so the test degrades to its prior,
+still-correct assertions on Windows rather than failing to run or
+asserting something this platform cannot support — the same
+"verify, don't assume" discipline this test's own docstring already
+credits to the correction cycle that produced it. This is a test-only
+change with no production code path affected; it does not reintroduce the
+mechanism-spying pattern (`os.open`/`os.close` monkeypatching) that broke
+CI twice during that cycle — it counts real, unpatched OS state via
+directory listing, the same category of proof (measured outcome, not
+mocked mechanism) the surviving test already used.
+
+### 17.4 Declined — "Use a descriptor-relative rename for the final
+replacement"
+
+*CodeRabbit (actionable, comment `4091290002`, `tools/reproduce.py:531–567`
+— `write_no_follow`'s final `os.replace(tmp_path, path)`).* The finding
+describes a real, general POSIX race (a parent directory replaced with a
+symlink between the temporary file's creation and the final rename, which
+re-resolves `path`'s parent by string) and suggests closing it with
+`os.rename(..., src_dir_fd=parent_fd, dst_dir_fd=parent_fd)` whenever
+`parent_fd is not None`.
+
+**Declined, not implemented.** This is the exact residual `PR23-F39`
+scoped down to when the Round 9 correction cycle closed it (§15.2, §16):
+that fix originally attempted precisely this — a `dir_fd`-relative final
+rename, reusing the pinned parent descriptor — and shipped it gated only
+on `parent_fd is not None`, the same condition CodeRabbit's suggestion
+uses. It broke required Linux CI twice in a row (`949e5e1`, then
+`b9e3239`'s own replacement test), the first time because
+`os.replace not in os.supports_dir_fd` on real Ubuntu/Python 3.12 even
+though `os.open` supports `dir_fd` there — an unverified assumption about
+one function's platform support that this session's Windows machine
+cannot check, disproved only by real CI. `os.rename` and `os.replace` are
+the same underlying rename operation on POSIX, gated by the same
+`dir_fd` support; nothing in this round's evidence shows `os.rename`'s
+`dir_fd` support differs from `os.replace`'s on the platform that
+falsified the assumption last time, and CodeRabbit's suggested diff, like
+the reverted attempt, does not gate on a runtime
+`os.rename in os.supports_dir_fd` check before using it — the exact
+verification step every *other* `dir_fd`-relative call in this module
+performs first (`os.open` at `_open_parent_dir_fd`, `os.unlink` at the
+`PR23-F41` cleanup path). Re-attempting the identical unverified pattern
+that already cost two required-CI failures in this same function, on the
+word of a reviewer that cannot execute Python on this repository's actual
+CI platforms either, repeats exactly the mistake §16.1 draws its lesson
+from rather than applying it. The residual this closes over — a parent
+symlink-swap race between temp-file creation and the final rename — still
+requires the same local-write access this module's whole containment
+scheme assumes throughout (the same governing fact behind every other
+declined "pin every ancestor/every step" finding in this audit: §14.2,
+§16's `_reject_configured_root_symlink` extension, and §17.1 above).
+
+**Declined-findings ledger entry (extending §6/§14.2/§16):** "Make the
+final `os.replace` in `write_no_follow` `dir_fd`-relative via
+`os.rename(..., src_dir_fd=, dst_dir_fd=)`" — raised by CodeRabbit
+(Round 10); not a false positive (the general POSIX race is real); declined
+because this exact mechanism, gated the same way, already broke required
+Linux CI twice this PR (`PR23-F39`'s correction cycle, §16) on an
+assumption about `dir_fd` platform support this session cannot verify
+locally, and the suggested code does not add the runtime capability check
+that would make a re-attempt safe to ship without CI as the first
+verification. If a future round wants this closed, the runtime
+`os.rename in os.supports_dir_fd` gate (with the existing plain
+`os.replace(tmp_path, path)` fallback) is the way to attempt it again —
+verified by a real green Linux CI run before being called closed, not
+asserted from this platform.
+
+### 17.5 Verification
+
+```text
+.venv\Scripts\python -m pytest tests/test_reproduce.py tests/test_exp001_e4_analysis.py -q
+  100 passed, 2 skipped
+.venv\Scripts\python -m pytest tests/test_exp001_driver.py tests/test_paper_wiring.py tests/test_wp001_baseline.py -q
+  280 passed, 6 skipped
+.venv\Scripts\python -m ruff check tools/reproduce.py tests/test_reproduce.py
+  All checks passed!
+.venv\Scripts\python -m ruff format --check tools/reproduce.py tests/test_reproduce.py
+  2 files already formatted
+.venv\Scripts\python -m mypy --strict tools/reproduce.py
+  Success: no issues found in 1 source file
+.venv\Scripts\python -m mypy tests/test_reproduce.py
+  Success: no issues found in 1 source file
+.venv\Scripts\python -m bandit -r tools/reproduce.py
+  No issues identified
+```
+
+Also re-verified directly against the real repository manifest:
+`reproduce.verify_manifest(reproduce.DEFAULT_RESULTS_DIR,
+reproduce.DEFAULT_MANIFEST)` still returns all 172 records with no error
+under the new identity-based self-exclusion filter.
+
+**No regression to the published EXP-001 record.** Neither fix touches
+`_tolerance_verdict`, any adjudication path, or any write this analysis
+performs for its own outputs — both changes are confined to
+`tools/reproduce.py`'s manifest self-exclusion filters and a test-only
+strengthening; `_load_artefact` and `write_report_manifest`'s call shapes
+are unchanged.
+
+**Security gates.** No dependency files changed this round — no Snyk Open
+Source / `cargo audit` / `pip-audit` run required. Local Snyk Code was not
+re-run this round (no new call sites reaching a path-write operation
+outside the already-accepted, previously-documented taint class at
+§14.4/§15.6); CI's `Snyk Code`/`Secret Scan` remain the authoritative
+gates and are re-requested on this round's push per standard practice,
+consistent with the repository's Coding Standards §6 mandatory controls.
+
+**Delta re-audit date:** 2026-09-24 UTC — **Result:** CLEAN. One D3 and
+one D4 finding fixed, both confirmed by direct tracing against current
+source and neither reachable against any already-published EXP-001
+artefact or verdict. Five carried findings re-affirmed with no new
+evidence and no code change (four already-declined threads restated
+identically, one stale Round-1 thread). One new finding declined on the
+record with rationale directly citing this PR's own prior two-failure
+history in the identical code path, rather than re-attempted on an
+unverified assumption a third time. No new D1; no verdict, tolerance, or
+measured value changed; no regression to the published EXP-001 record;
+the real 172-record repository manifest still verifies. CodeRabbit and
+Copilot are re-requested on this round's push per standard practice.
