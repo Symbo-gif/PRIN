@@ -1,6 +1,6 @@
 # EXP-001 D1 S1 — Correction implementation
 
-**Status:** OPEN — not started\
+**Status:** IN PROGRESS — scope approved 2026-09-24 UTC (see "Approved scope and decisions")\
 **Triggering deviation:** `EXP-001 H1/H2a REFUTED` (campaign plan §10.4 D1) and
 `EXP001-E5-F1` (D1)\
 **Blocked numbered session:** `0159` (EXP-002 E1), and every experiment
@@ -95,3 +95,29 @@ Out of scope (explicitly, to keep the correction bounded):
 - All affected gates green locally; CI remains the authoritative merge gate.
 - Neither implementation completion nor a green local run authorizes the merge,
   `EXP-001-r1`, or the release of session `0159`.
+
+## Approved scope and decisions
+
+MichaelMaillet, 2026-09-24 UTC, in-session `AskUserQuestion` selections made
+after the read-only root-cause investigation was presented. The scope above is
+approved as written. Three decisions refine it:
+
+1. **Guard divergence: faithful default.** PRIN's `EulerIntegrator` and
+   `RK4Integrator` default to PRINet 3.0 `OscillatorModel` guard semantics:
+   amplitude clamped at or above `0` with no ceiling, and derivatives clamped
+   only on the sparse k-NN paths, as the reference does. PRIN code that ports
+   one of PRINet's `[1e-6, 10]` paths keeps that bound explicitly. This needs a
+   Project Plan §8.3 amendment making the §5.6 preserved-hazard list
+   path-specific, and it changes public default behaviour (CHANGELOG).
+2. **DV-007 cases in the full-corpus gate: explained divergence.** Every case
+   runs at the registered tolerance. A breach passes only if the case is on a
+   DV-007 `complex64` path **and** PRIN matches a test-local float64 evaluation
+   of the reference at the same registered tolerance (the amendment #25
+   pattern). No tolerance is widened and nothing is skipped. The §10.4 item 3
+   evidence is arbitrary-precision (mpmath/SymPy).
+3. **Push and draft PR authorized.** Hotfix branch
+   `hotfix/exp001-d1-parity-correction` from `origin/main` @ `ce4049f`, pushed
+   so that the `parity` workflow records the red → green transition; the
+   failing-test commit is pushed before the fix. Merging stays with the
+   maintainer. None of this authorizes a merge, `EXP-001-r1`, or the release
+   of session `0159`.
