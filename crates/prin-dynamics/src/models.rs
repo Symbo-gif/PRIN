@@ -1037,6 +1037,86 @@ mod tests {
         assert_relative_eq!(gradient.damplitude[0], -1.0e5, epsilon = 1e-2);
     }
 
+    // ------------------------------------------------------------------
+    // EXP-001 D1: derivative clamping matches PRINet 3.0 per coupling path
+    // ------------------------------------------------------------------
+    //
+    // PRINet 3.0 applies `_clamp_finite` (±1e4, NaN → 0) only inside the
+    // sparse k-NN paths (`oscillator_models.py` lines 505-507 and 872-874).
+    // Its full, mean-field, and Stuart–Landau derivatives are returned as
+    // computed.
+
+    /// Two oscillators whose natural frequencies exceed `DERIV_CLAMP`, so
+    /// `dφ/dt ≈ ω` lies outside `±1e4` on every coupling path.
+    fn fast_pair() -> OscillatorState {
+        OscillatorState::new(vec![0.0, 1.0], vec![1.0, 1.0], vec![2.0e4, 3.0e4], None).unwrap()
+    }
+
+    #[test]
+    fn non_sparse_derivatives_are_not_clamped_like_prinet() {
+        let full = || CouplingMode::Full { matrix: None };
+        let models: Vec<(&str, Box<dyn Dynamics>)> = vec![
+            (
+                "kuramoto/full",
+                Box::new(KuramotoOscillator::new(2, 1.0, 0.1, 0.0, full()).unwrap()),
+            ),
+            (
+                "kuramoto/mean_field",
+                Box::new(
+                    KuramotoOscillator::new(2, 1.0, 0.1, 0.0, CouplingMode::MeanField).unwrap(),
+                ),
+            ),
+            (
+                "hopf/full",
+                Box::new(HopfOscillator::new(2, 1.0, 1.0, 0.0, full()).unwrap()),
+            ),
+            (
+                "hopf/mean_field",
+                Box::new(HopfOscillator::new(2, 1.0, 1.0, 0.0, CouplingMode::MeanField).unwrap()),
+            ),
+            (
+                "stuart_landau/full",
+                Box::new(StuartLandauOscillator::new(2, 1.0, 1.0, full()).unwrap()),
+            ),
+        ];
+        let state = fast_pair();
+        for (label, model) in &models {
+            let d = model.compute_derivatives(&state).unwrap();
+            assert!(
+                d.dphase[1] > 2.9e4,
+                "{label}: dφ/dt = {} was clamped; PRINet 3.0 returns it unclamped",
+                d.dphase[1]
+            );
+        }
+    }
+
+    #[cfg(not(feature = "strict-checks"))]
+    #[test]
+    fn sparse_knn_derivatives_remain_clamped_like_prinet() {
+        let sparse = || CouplingMode::SparseKnn { k: Some(1) };
+        let models: Vec<Box<dyn Dynamics>> = vec![
+            Box::new(KuramotoOscillator::new(2, 1.0, 0.1, 0.0, sparse()).unwrap()),
+            Box::new(HopfOscillator::new(2, 1.0, 1.0, 0.0, sparse()).unwrap()),
+        ];
+        let state = fast_pair();
+        for model in &models {
+            let d = model.compute_derivatives(&state).unwrap();
+            assert_eq!(d.dphase[1], crate::state::DERIV_CLAMP);
+        }
+    }
+
+    #[cfg(feature = "strict-checks")]
+    #[test]
+    fn sparse_knn_out_of_range_derivatives_are_rejected_under_strict_checks() {
+        let model =
+            KuramotoOscillator::new(2, 1.0, 0.1, 0.0, CouplingMode::SparseKnn { k: Some(1) })
+                .unwrap();
+        assert!(matches!(
+            model.compute_derivatives(&fast_pair()),
+            Err(StateError::OutOfRange { .. })
+        ));
+    }
+
     #[test]
     fn test_coupling_mode_default() {
         assert_eq!(CouplingMode::default(), CouplingMode::Full { matrix: None });

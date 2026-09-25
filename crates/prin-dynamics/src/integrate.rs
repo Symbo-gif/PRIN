@@ -2219,6 +2219,142 @@ mod tests {
     }
 
     // ------------------------------------------------------------------
+    // EXP-001 D1: PRINet 3.0 `OscillatorModel` guard semantics
+    // ------------------------------------------------------------------
+    //
+    // `_step_euler` / `_step_rk4` (PRINet 3.0 `oscillator_models.py`
+    // lines 153-216) clamp every intermediate and final amplitude with
+    // `torch.clamp(·, min=0.0)`: a floor at exactly zero and no ceiling.
+
+    /// Uncoupled Kuramoto with amplitude rate `−λ`: `dr/dt = −λ r`, `dφ/dt = ω`.
+    /// A negative `decay` is exponential growth.
+    fn linear_amplitude(n: usize, decay: f64) -> KuramotoOscillator {
+        KuramotoOscillator::new(n, 0.0, decay, 0.0, CouplingMode::Full { matrix: None }).unwrap()
+    }
+
+    /// Test oracle: PRINet 3.0 `_step_rk4` over PRIN's own derivative
+    /// evaluation — stage and final amplitude `max(·, 0)` with no ceiling,
+    /// stage phase unwrapped, final phase wrapped, same `dt / 6` weighting.
+    fn prinet_model_rk4_step(
+        model: &dyn Dynamics,
+        s: &OscillatorState,
+        dt: f64,
+    ) -> OscillatorState {
+        let n = s.phase.len();
+        let floor = |a: f64| if a < 0.0 { 0.0 } else { a };
+        let stage = |k: &StateDerivatives, scale: f64| OscillatorState {
+            phase: (0..n).map(|i| s.phase[i] + scale * k.dphase[i]).collect(),
+            amplitude: (0..n)
+                .map(|i| floor(s.amplitude[i] + scale * k.damplitude[i]))
+                .collect(),
+            frequency: (0..n)
+                .map(|i| s.frequency[i] + scale * k.dfrequency[i])
+                .collect(),
+            freq_band: s.freq_band.clone(),
+        };
+        let k1 = model.compute_derivatives(s).unwrap();
+        let k2 = model.compute_derivatives(&stage(&k1, 0.5 * dt)).unwrap();
+        let k3 = model.compute_derivatives(&stage(&k2, 0.5 * dt)).unwrap();
+        let k4 = model.compute_derivatives(&stage(&k3, dt)).unwrap();
+        let sixth = dt / 6.0;
+        let combine = |base: &[f64], a: &[f64], b: &[f64], c: &[f64], d: &[f64]| -> Vec<f64> {
+            (0..n)
+                .map(|i| base[i] + sixth * (a[i] + 2.0 * b[i] + 2.0 * c[i] + d[i]))
+                .collect()
+        };
+        let phase = combine(&s.phase, &k1.dphase, &k2.dphase, &k3.dphase, &k4.dphase);
+        let amplitude = combine(
+            &s.amplitude,
+            &k1.damplitude,
+            &k2.damplitude,
+            &k3.damplitude,
+            &k4.damplitude,
+        );
+        let frequency = combine(
+            &s.frequency,
+            &k1.dfrequency,
+            &k2.dfrequency,
+            &k3.dfrequency,
+            &k4.dfrequency,
+        );
+        OscillatorState {
+            phase: phase.into_iter().map(wrap_phase).collect(),
+            amplitude: amplitude.into_iter().map(floor).collect(),
+            frequency,
+            freq_band: s.freq_band.clone(),
+        }
+    }
+
+    #[test]
+    fn euler_amplitude_floor_is_exactly_zero_like_prinet_model() {
+        // r + dt·(−λ r) = 1 − 0.1·20 = −1, which `torch.clamp(min=0.0)` maps to 0.0.
+        let model = linear_amplitude(2, 20.0);
+        let state = make_state(2, 0.3, 1.0, 1.0);
+        let result = EulerIntegrator::new().step(&model, &state, 0.1).unwrap();
+        assert_eq!(result.amplitude, vec![0.0, 0.0]);
+    }
+
+    #[test]
+    fn euler_amplitude_has_no_ceiling_like_prinet_model() {
+        // Growth: r + dt·(−λ r) = 1 + 0.1·120 = 13, above the old [1e-6, 10] bound.
+        let model = linear_amplitude(2, -120.0);
+        let state = make_state(2, 0.3, 1.0, 1.0);
+        let result = EulerIntegrator::new().step(&model, &state, 0.1).unwrap();
+        for &r in &result.amplitude {
+            assert_relative_eq!(r, 13.0, epsilon = 1e-12);
+        }
+    }
+
+    #[test]
+    fn rk4_amplitude_has_no_ceiling_like_prinet_model() {
+        // dr/dt = 20 r, h = 0.1 (h·g = 2): the RK4 growth factor is
+        // 1 + 2 + 2 + 4/3 + 2/3 = 7, so r = 2 → 14. The k4 stage state is
+        // also 14, so a stage ceiling at 10 would change the result.
+        let model = linear_amplitude(2, -20.0);
+        let state = make_state(2, 0.3, 2.0, 1.0);
+        let result = RK4Integrator::new().step(&model, &state, 0.1).unwrap();
+        for &r in &result.amplitude {
+            assert_relative_eq!(r, 14.0, epsilon = 1e-12);
+        }
+    }
+
+    #[test]
+    fn rk4_final_amplitude_floor_is_exactly_zero_like_prinet_model() {
+        // dr/dt = −30 r, h = 0.1: the combined RK4 update is negative (−0.5),
+        // which PRINet clamps to exactly 0.0.
+        let model = linear_amplitude(2, 30.0);
+        let state = make_state(2, 0.3, 1.0, 1.0);
+        let result = RK4Integrator::new().step(&model, &state, 0.1).unwrap();
+        assert_eq!(result.amplitude, vec![0.0, 0.0]);
+    }
+
+    #[test]
+    fn rk4_stage_amplitude_floor_matches_prinet_model_oracle() {
+        // Strongly damped coupled Hopf pair: the k2 stage amplitude goes
+        // negative, so the stage floor decides the stage phase velocity
+        // (`sin_sum / max(r, 1e-8)`). With the PRINet floor of 0 both
+        // neighbours vanish at the stage and `dφ/dt = ω`; a 1e-6 floor instead
+        // gives `ω + (K/N)·sin(Δφ)`, an O(1) change visible in the phase.
+        let model = crate::models::HopfOscillator::new(
+            2,
+            2.0,
+            -30.0,
+            0.0,
+            CouplingMode::Full { matrix: None },
+        )
+        .unwrap();
+        let state =
+            OscillatorState::new(vec![0.0, 1.0], vec![1.0, 1.0], vec![1.0, 2.0], None).unwrap();
+        let expected = prinet_model_rk4_step(&model, &state, 0.1);
+        let result = RK4Integrator::new().step(&model, &state, 0.1).unwrap();
+        for i in 0..2 {
+            assert_relative_eq!(result.phase[i], expected.phase[i], epsilon = 1e-12);
+            assert_relative_eq!(result.amplitude[i], expected.amplitude[i], epsilon = 1e-12);
+            assert_relative_eq!(result.frequency[i], expected.frequency[i], epsilon = 1e-12);
+        }
+    }
+
+    // ------------------------------------------------------------------
     // RK45 adaptive
     // ------------------------------------------------------------------
 
