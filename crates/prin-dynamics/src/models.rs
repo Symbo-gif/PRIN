@@ -5,6 +5,18 @@
 //! - [`HopfOscillator`]: bifurcation-driven polar coordinate dynamics.
 //!
 //! Coupling mode is an enum ([`CouplingMode`]), never a string.
+//!
+//! # Derivative clamping
+//!
+//! As in PRINet 3.0 (`oscillator_models.py`), only the sparse k-NN coupling
+//! paths clamp derivatives to `±DERIV_CLAMP` (the reference's `_clamp_finite`,
+//! via [`StateDerivatives::new`]). Full and mean-field Kuramoto/Hopf, every
+//! Stuart–Landau path with a PRINet 3.0 counterpart, and the `N ≤ 1` shortcut
+//! return derivatives exactly as computed ([`StateDerivatives::unclamped`]).
+//! Stuart–Landau sparse k-NN has no PRINet 3.0 counterpart and keeps the
+//! clamp. A consumer that wants every derivative bounded selects
+//! [`GuardPolicy::Bounded`](crate::integrate::GuardPolicy::Bounded) on the
+//! integrator.
 
 use num_complex::Complex64;
 use serde::{Deserialize, Serialize};
@@ -322,7 +334,7 @@ impl KuramotoOscillator {
             dfrequency.push(self.freq_adaptation_rate * k_r * sin_diff * inv_n);
         }
 
-        StateDerivatives::new(dphase, damplitude, dfrequency)
+        StateDerivatives::unclamped(dphase, damplitude, dfrequency)
     }
 
     fn compute_full(
@@ -372,7 +384,7 @@ impl KuramotoOscillator {
             dfrequency.push(self.freq_adaptation_rate * sin_sum * inv_n);
         }
 
-        StateDerivatives::new(dphase, damplitude, dfrequency)
+        StateDerivatives::unclamped(dphase, damplitude, dfrequency)
     }
 
     fn compute_sparse_knn(
@@ -435,7 +447,7 @@ impl Dynamics for KuramotoOscillator {
                 .map(|&a| -self.decay_rate * a)
                 .collect();
             let dfrequency = vec![0.0; n];
-            return StateDerivatives::new(dphase, damplitude, dfrequency);
+            return StateDerivatives::unclamped(dphase, damplitude, dfrequency);
         }
 
         match &self.coupling_mode {
@@ -578,7 +590,7 @@ impl StuartLandauOscillator {
             damplitude.push(dr);
         }
 
-        StateDerivatives::new(dphase, damplitude, dfrequency)
+        StateDerivatives::unclamped(dphase, damplitude, dfrequency)
     }
 
     fn compute_full(
@@ -628,7 +640,7 @@ impl StuartLandauOscillator {
                     damplitude.push(dr);
                 }
 
-                StateDerivatives::new(dphase, damplitude, dfrequency)
+                StateDerivatives::unclamped(dphase, damplitude, dfrequency)
             }
         }
     }
@@ -703,7 +715,7 @@ impl Dynamics for StuartLandauOscillator {
                 .map(|&r| mu * r - r * r * r)
                 .collect();
             let dfrequency = vec![0.0; n];
-            return StateDerivatives::new(dphase, damplitude, dfrequency);
+            return StateDerivatives::unclamped(dphase, damplitude, dfrequency);
         }
 
         match &self.coupling_mode {
@@ -873,7 +885,7 @@ impl HopfOscillator {
             dfrequency.push(self.freq_adaptation_rate * k_r * sin_diff * inv_n);
         }
 
-        StateDerivatives::new(dphase, damplitude, dfrequency)
+        StateDerivatives::unclamped(dphase, damplitude, dfrequency)
     }
 
     fn compute_full(
@@ -926,7 +938,7 @@ impl HopfOscillator {
             dfrequency.push(self.freq_adaptation_rate * sin_sum * inv_n);
         }
 
-        StateDerivatives::new(dphase, damplitude, dfrequency)
+        StateDerivatives::unclamped(dphase, damplitude, dfrequency)
     }
 
     fn compute_sparse_knn(
@@ -993,7 +1005,7 @@ impl Dynamics for HopfOscillator {
                 .map(|&r| mu * r - r * r * r)
                 .collect();
             let dfrequency = vec![0.0; n];
-            return StateDerivatives::new(dphase, damplitude, dfrequency);
+            return StateDerivatives::unclamped(dphase, damplitude, dfrequency);
         }
 
         match &self.coupling_mode {

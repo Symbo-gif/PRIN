@@ -6,8 +6,12 @@
 //! (`O(N log N)`, rayon parallel sort).
 //!
 //! Numerical invariants preserved from PRINet 3.0 (see the project plan §5):
-//! phase wrap via `% 2π`, amplitude clamp `[1e-6, 10]`, derivative clamp `±1e4`,
-//! and sparse-coupling numerical stability `SPARSE_EPS`.
+//! phase wrap via `% 2π`, sparse-coupling numerical stability `SPARSE_EPS`, and
+//! the two guard helpers — amplitude clamp `[1e-6, 10]` and derivative clamp
+//! `±1e4`. PRINet 3.0 applies those guards only on some paths (fused kernels
+//! and OscilloSim; sparse k-NN coupling), so where each one applies is decided
+//! by the models and by [`GuardPolicy`](crate::integrate::GuardPolicy), not by
+//! this module.
 
 use std::collections::HashSet;
 
@@ -104,7 +108,13 @@ pub struct OscillatorState {
     /// Phase of each oscillator, in radians and wrapped to `[0, 2π)`.
     pub phase: Vec<f64>,
 
-    /// Amplitude of each oscillator, in `[AMPLITUDE_MIN, AMPLITUDE_MAX]`.
+    /// Amplitude of each oscillator.
+    ///
+    /// [`OscillatorState::new`] guards it to `[AMPLITUDE_MIN, AMPLITUDE_MAX]`.
+    /// States produced by the fixed-step integrators follow their
+    /// [`GuardPolicy`](crate::integrate::GuardPolicy): under the default
+    /// PRINet 3.0 `OscillatorModel` semantics an amplitude may be exactly
+    /// `0.0` or exceed `AMPLITUDE_MAX`.
     pub amplitude: Vec<f64>,
 
     /// Natural frequency of each oscillator.
@@ -417,6 +427,12 @@ pub struct StateDerivatives {
 impl StateDerivatives {
     /// Construct a new derivatives container after validating lengths and numerical guards.
     ///
+    /// Every value is clamped to `±DERIV_CLAMP` (non-finite values repaired)
+    /// or, with `strict-checks`, rejected when out of range. This is PRINet
+    /// 3.0's `_clamp_finite` guard, which the reference applies on its sparse
+    /// k-NN coupling paths; see [`StateDerivatives::unclamped`] for the paths
+    /// it leaves unguarded.
+    ///
     /// # Errors
     ///
     /// Returns [`StateError`] if:
@@ -428,24 +444,7 @@ impl StateDerivatives {
         damplitude: Vec<f64>,
         dfrequency: Vec<f64>,
     ) -> Result<Self, StateError> {
-        let n = dphase.len();
-        if n == 0 {
-            return Err(StateError::EmptyPopulation);
-        }
-        if damplitude.len() != n {
-            return Err(StateError::LengthMismatch {
-                name: "damplitude",
-                expected: n,
-                got: damplitude.len(),
-            });
-        }
-        if dfrequency.len() != n {
-            return Err(StateError::LengthMismatch {
-                name: "dfrequency",
-                expected: n,
-                got: dfrequency.len(),
-            });
-        }
+        validate_derivative_lengths(&dphase, &damplitude, &dfrequency)?;
 
         let dphase = guard_derivatives(&dphase, "dphase")?;
         let damplitude = guard_derivatives(&damplitude, "damplitude")?;
@@ -458,10 +457,75 @@ impl StateDerivatives {
         })
     }
 
+    /// Construct a derivatives container without the `±DERIV_CLAMP` repair.
+    ///
+    /// PRINet 3.0 clamps derivatives only on its sparse k-NN paths. Its full
+    /// and mean-field Kuramoto/Hopf paths, and its Stuart–Landau model,
+    /// return derivatives exactly as computed (`oscillator_models.py`), so the
+    /// PRIN models use this constructor on those paths. Lengths are validated
+    /// as in [`StateDerivatives::new`]; with `strict-checks` a non-finite value
+    /// is still an error, but a finite value of any magnitude is accepted.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`StateError`] if:
+    /// - `dphase` is empty,
+    /// - `damplitude` or `dfrequency` does not match `dphase` length,
+    /// - with `strict-checks` enabled, a value is non-finite.
+    pub fn unclamped(
+        dphase: Vec<f64>,
+        damplitude: Vec<f64>,
+        dfrequency: Vec<f64>,
+    ) -> Result<Self, StateError> {
+        validate_derivative_lengths(&dphase, &damplitude, &dfrequency)?;
+        #[cfg(feature = "strict-checks")]
+        for (name, values) in [
+            ("dphase", &dphase),
+            ("damplitude", &damplitude),
+            ("dfrequency", &dfrequency),
+        ] {
+            for (index, &value) in values.iter().enumerate() {
+                guard_finite_value(value, index, name)?;
+            }
+        }
+        Ok(Self {
+            dphase,
+            damplitude,
+            dfrequency,
+        })
+    }
+
     /// Number of oscillators in the system.
     pub fn n_oscillators(&self) -> usize {
         self.dphase.len()
     }
+}
+
+/// Validate that a derivative triple is non-empty and length-consistent.
+fn validate_derivative_lengths(
+    dphase: &[f64],
+    damplitude: &[f64],
+    dfrequency: &[f64],
+) -> Result<(), StateError> {
+    let n = dphase.len();
+    if n == 0 {
+        return Err(StateError::EmptyPopulation);
+    }
+    if damplitude.len() != n {
+        return Err(StateError::LengthMismatch {
+            name: "damplitude",
+            expected: n,
+            got: damplitude.len(),
+        });
+    }
+    if dfrequency.len() != n {
+        return Err(StateError::LengthMismatch {
+            name: "dfrequency",
+            expected: n,
+            got: dfrequency.len(),
+        });
+    }
+    Ok(())
 }
 
 /// Build the k-nearest-phase-neighbour index on the phase circle.
@@ -610,6 +674,67 @@ mod tests {
     fn clamp_finite_rejects_invalid_limits() {
         assert!(clamp_finite(&[1.0], -1.0).is_err());
         assert!(clamp_finite(&[1.0], f64::NAN).is_err());
+    }
+
+    #[test]
+    fn unclamped_derivatives_keep_finite_values_of_any_magnitude() {
+        let d = StateDerivatives::unclamped(vec![5.0e7], vec![-2.0e5], vec![1.0e9]).unwrap();
+        assert_eq!(d.dphase, [5.0e7]);
+        assert_eq!(d.damplitude, [-2.0e5]);
+        assert_eq!(d.dfrequency, [1.0e9]);
+        // The clamped constructor repairs the same values (or, strict, rejects them).
+        let clamped = StateDerivatives::new(vec![5.0e7], vec![-2.0e5], vec![1.0e9]);
+        #[cfg(not(feature = "strict-checks"))]
+        assert_eq!(clamped.unwrap().dphase, [DERIV_CLAMP]);
+        #[cfg(feature = "strict-checks")]
+        assert!(clamped.is_err());
+    }
+
+    #[test]
+    fn unclamped_derivatives_validate_lengths() {
+        assert!(matches!(
+            StateDerivatives::unclamped(vec![], vec![], vec![]),
+            Err(StateError::EmptyPopulation)
+        ));
+        assert!(matches!(
+            StateDerivatives::unclamped(vec![1.0], vec![], vec![1.0]),
+            Err(StateError::LengthMismatch {
+                name: "damplitude",
+                ..
+            })
+        ));
+        assert!(matches!(
+            StateDerivatives::unclamped(vec![1.0], vec![1.0], vec![]),
+            Err(StateError::LengthMismatch {
+                name: "dfrequency",
+                ..
+            })
+        ));
+    }
+
+    #[cfg(not(feature = "strict-checks"))]
+    #[test]
+    fn unclamped_derivatives_pass_non_finite_values_through() {
+        let d =
+            StateDerivatives::unclamped(vec![f64::NAN], vec![f64::INFINITY], vec![0.0]).unwrap();
+        assert!(d.dphase[0].is_nan());
+        assert_eq!(d.damplitude[0], f64::INFINITY);
+    }
+
+    #[cfg(feature = "strict-checks")]
+    #[test]
+    fn unclamped_derivatives_reject_non_finite_values_under_strict_checks() {
+        for (dphase, damplitude, dfrequency, name) in [
+            (f64::NAN, 0.0, 0.0, "dphase"),
+            (0.0, f64::INFINITY, 0.0, "damplitude"),
+            (0.0, 0.0, f64::NEG_INFINITY, "dfrequency"),
+        ] {
+            let err = StateDerivatives::unclamped(vec![dphase], vec![damplitude], vec![dfrequency])
+                .unwrap_err();
+            assert!(
+                matches!(err, StateError::NonFiniteValue { name: got, index: 0, .. } if got == name)
+            );
+        }
     }
 
     #[test]

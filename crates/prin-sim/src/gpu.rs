@@ -1187,13 +1187,13 @@ mod tests {
     #[test]
     fn gpu_sparse_kuramoto_drives_oscillo_sim_via_integrator() {
         use crate::engine::OscilloSim;
-        use prin_dynamics::RK4Integrator;
+        use prin_dynamics::{GuardPolicy, RK4Integrator};
 
         let n = 16;
         let coupling = SparseCoupling::from_ring(n, 2, 1.0).unwrap();
         let gpu_model = GpuSparseKuramoto::new(n, 0.1, 0.01, 1.0, coupling.clone()).unwrap();
         let state = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(42, 0)).unwrap();
-        let integrator = Box::new(RK4Integrator::new());
+        let integrator = Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
         let mut engine = OscilloSim::new(state, coupling, integrator, 0.01).unwrap();
 
         let phase_before = engine.state().phase.clone();

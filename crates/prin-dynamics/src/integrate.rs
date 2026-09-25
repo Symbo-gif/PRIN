@@ -16,19 +16,39 @@
 //!   effective time resolutions. New in WP-012.
 //!
 //! All integrators use **explicit reusable buffers** (pre-allocated workspace
-//! vectors sized to `3N`) to avoid per-step heap allocation, and apply the
-//! PRINet 3.0 numerical guards: phase wrap to `[0, 2π)`, amplitude clamp to
-//! `[AMPLITUDE_MIN, AMPLITUDE_MAX]`, and derivative clamp `±DERIV_CLAMP`
-//! (applied inside [`StateDerivatives::new`]).
+//! vectors sized to `3N`) to avoid per-step heap allocation and wrap output
+//! phase to `[0, 2π)`.
+//!
+//! # Guards
+//!
+//! PRINet 3.0 guards amplitude and derivatives differently on different code
+//! paths, and PRIN follows the path each component ports ([`GuardPolicy`]).
+//! [`EulerIntegrator`] and [`RK4Integrator`] default to
+//! [`GuardPolicy::NonNegative`], the `OscillatorModel._step_euler` /
+//! `_step_rk4` guard: amplitude clamped below at exactly `0.0` with no upper
+//! bound, derivatives used as the model returns them (the models clamp only on
+//! their sparse k-NN paths, as the reference does). [`GuardPolicy::Bounded`]
+//! is the guard of PRINet 3.0's fused-kernel and OscilloSim paths — amplitude
+//! `[AMPLITUDE_MIN, AMPLITUDE_MAX]`, derivatives `±DERIV_CLAMP` — and is
+//! selected explicitly by the PRIN code that ports those paths. Before the
+//! EXP-001 D1 correction PRIN applied the bounded guard everywhere, which made
+//! the Euler/RK4 port diverge from the reference whenever an amplitude left
+//! `[AMPLITUDE_MIN, AMPLITUDE_MAX]`.
+//!
+//! [`RK45Integrator`], [`ExponentialIntegrator`], and the Jacobian helper keep
+//! their own `[AMPLITUDE_MIN, AMPLITUDE_MAX]` amplitude clamp and use model
+//! derivatives as returned. [`MultiRateIntegrator`] sub-steps with
+//! default-guard Euler/RK4, as PRINet 3.0's multi-rate integrator sub-steps
+//! with `OscillatorModel.step`.
 //!
 //! # Parity notes
 //!
 //! Euler and RK4 are faithful ports of PRINet 3.0's `_step_euler` and
 //! `_step_rk4` (`oscillator_models.py`). Intermediate RK4 stages are built
-//! without phase wrapping (matching PRINet's `_make_state`); all phase-dependent
-//! operations in the models are `2π`-periodic, so wrapping vs not wrapping
-//! intermediate phase produces identical derivatives. The final state wraps
-//! phase and clamps amplitude exactly as PRINet does. RK45 is a new capability
+//! without phase wrapping (matching PRINet's `_make_state`), so every model —
+//! including the sparse k-NN index, which sorts the unwrapped stage phases —
+//! sees the same stage state the reference sees. The final state wraps phase
+//! and guards amplitude exactly as PRINet does. RK45 is a new capability
 //! with no PRINet counterpart; its acceptance is the tolerance-property test
 //! (error scales with the requested tolerance).
 
@@ -36,7 +56,58 @@ use ndarray::Array2;
 use thiserror::Error;
 
 use crate::models::Dynamics;
-use crate::state::{clamp_amplitude, wrap_phase, OscillatorState, StateDerivatives, StateError};
+use crate::state::{
+    clamp_amplitude, clamp_derivative, wrap_phase, OscillatorState, StateDerivatives, StateError,
+};
+
+/// Amplitude and derivative guard applied by [`EulerIntegrator`] and
+/// [`RK4Integrator`] to every stage and output state.
+///
+/// PRINet 3.0 uses a different guard on different code paths; select the one
+/// matching the reference path being reproduced.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub enum GuardPolicy {
+    /// PRINet 3.0 `OscillatorModel._step_euler` / `_step_rk4` (the default).
+    ///
+    /// Amplitude is clamped below at exactly `0.0` (`torch.clamp(·, min=0.0)`:
+    /// no upper bound, `NaN` propagates) on every intermediate and final
+    /// state. Derivatives are used exactly as the model returns them; the
+    /// models themselves clamp only on their sparse k-NN paths.
+    #[default]
+    NonNegative,
+    /// PRINet 3.0 fused-kernel and OscilloSim paths.
+    ///
+    /// Amplitude is clamped to `[AMPLITUDE_MIN, AMPLITUDE_MAX]` (non-finite
+    /// values repaired) and every derivative to `±DERIV_CLAMP`. This is the
+    /// guard PRIN applied on every path before the EXP-001 D1 correction.
+    Bounded,
+}
+
+impl GuardPolicy {
+    /// Guard one stage or output amplitude.
+    fn amplitude(self, amp: f64) -> f64 {
+        match self {
+            // `amp < 0.0` is false for NaN and -0.0, which torch's clamp keeps.
+            Self::NonNegative => {
+                if amp < 0.0 {
+                    0.0
+                } else {
+                    amp
+                }
+            }
+            Self::Bounded => clamp_amplitude(amp),
+        }
+    }
+
+    /// Guard a flat derivative buffer in place.
+    fn derivatives(self, buf: &mut [f64]) {
+        if self == Self::Bounded {
+            for d in buf {
+                *d = clamp_derivative(*d);
+            }
+        }
+    }
+}
 
 /// Safety factor for adaptive step-size scaling.
 const SAFETY: f64 = 0.9;
@@ -152,11 +223,10 @@ fn validate_dt(dt: f64) -> Result<(), IntegrateError> {
 /// Build an intermediate (non-final) state from a base state and a scaled
 /// derivative increment.
 ///
-/// Phase is **not** wrapped (matching PRINet 3.0 `_make_state`); all
-/// phase-dependent model operations are `2π`-periodic so this is exact.
-/// Amplitude is clamped to `[AMPLITUDE_MIN, AMPLITUDE_MAX]`. `freq_band` is
-/// carried from the base state: it is a fixed label, not an evolving quantity,
-/// and band-partitioned dynamics such as
+/// Phase is **not** wrapped (matching PRINet 3.0 `_make_state`). Amplitude is
+/// guarded by `guard` (see [`GuardPolicy`]). `freq_band` is carried from the
+/// base state: it is a fixed label, not an evolving quantity, and
+/// band-partitioned dynamics such as
 /// [`BandNetwork`](crate::bands::BandNetwork) require it on every stage state.
 #[allow(clippy::too_many_arguments)]
 fn make_intermediate_state(
@@ -165,6 +235,7 @@ fn make_intermediate_state(
     damplitude: &[f64],
     dfrequency: &[f64],
     scale: f64,
+    guard: GuardPolicy,
     phase_buf: &mut Vec<f64>,
     amp_buf: &mut Vec<f64>,
     freq_buf: &mut Vec<f64>,
@@ -178,7 +249,7 @@ fn make_intermediate_state(
     freq_buf.reserve(n);
     for i in 0..n {
         phase_buf.push(base.phase[i] + scale * dphase[i]);
-        amp_buf.push(clamp_amplitude(base.amplitude[i] + scale * damplitude[i]));
+        amp_buf.push(guard.amplitude(base.amplitude[i] + scale * damplitude[i]));
         freq_buf.push(base.frequency[i] + scale * dfrequency[i]);
     }
     OscillatorState {
@@ -189,16 +260,17 @@ fn make_intermediate_state(
     }
 }
 
-/// Build the final (output) state from computed arrays, applying phase wrap,
-/// amplitude clamp, and carrying `freq_band` from the base state.
+/// Build the final (output) state from computed arrays, applying phase wrap and
+/// the `guard` amplitude clamp, and carrying `freq_band` from the base state.
 fn make_final_state(
     base: &OscillatorState,
     phase: Vec<f64>,
     amplitude: Vec<f64>,
     frequency: Vec<f64>,
+    guard: GuardPolicy,
 ) -> Result<OscillatorState, IntegrateError> {
     let phase: Vec<f64> = phase.into_iter().map(wrap_phase).collect();
-    let amplitude: Vec<f64> = amplitude.into_iter().map(clamp_amplitude).collect();
+    let amplitude: Vec<f64> = amplitude.into_iter().map(|a| guard.amplitude(a)).collect();
     let state = OscillatorState {
         phase,
         amplitude,
@@ -210,9 +282,11 @@ fn make_final_state(
 }
 
 /// Under `strict-checks`, verify every state component is finite and return
-/// a typed error if not. Under non-strict, only amplitude is repaired (via
-/// `clamp_amplitude` in `make_final_state`); non-finite phase or frequency
-/// values pass through silently and are only caught under `strict-checks`.
+/// a typed error if not. Under non-strict, a non-finite amplitude is repaired
+/// only by [`GuardPolicy::Bounded`] (via `clamp_amplitude` in
+/// `make_final_state`); non-finite phase or frequency values, and a `NaN`
+/// amplitude under [`GuardPolicy::NonNegative`], pass through and are only
+/// caught under `strict-checks`.
 fn check_finite(state: &OscillatorState) -> Result<(), IntegrateError> {
     #[cfg(feature = "strict-checks")]
     {
@@ -257,30 +331,51 @@ fn check_finite(state: &OscillatorState) -> Result<(), IntegrateError> {
 ///
 /// ```text
 /// φ_{n+1} = wrap(φ_n + h · dφ/dt)
-/// r_{n+1} = clamp(r_n + h · dr/dt)
+/// r_{n+1} = guard(r_n + h · dr/dt)
 /// ω_{n+1} = ω_n + h · dω/dt
 /// ```
+///
+/// `guard` is the integrator's [`GuardPolicy`]; the default,
+/// [`GuardPolicy::NonNegative`], is PRINet 3.0's `max(·, 0)`.
 #[derive(Clone, Debug)]
 pub struct EulerIntegrator {
     /// Reusable derivative-evaluation buffer (flat `3N`).
     deriv_buf: Vec<f64>,
+    /// Amplitude/derivative guard (see [`GuardPolicy`]).
+    guard: GuardPolicy,
 }
 
 impl EulerIntegrator {
-    /// Create a new Euler integrator with empty buffers (sized on first use).
+    /// Create a new Euler integrator with empty buffers (sized on first use)
+    /// and the default [`GuardPolicy::NonNegative`] guard.
     #[must_use]
     pub fn new() -> Self {
         Self {
             deriv_buf: Vec::new(),
+            guard: GuardPolicy::default(),
         }
     }
 
-    /// Create a new Euler integrator with buffers pre-sized for `n` oscillators.
+    /// Create a new Euler integrator with buffers pre-sized for `n` oscillators
+    /// and the default [`GuardPolicy::NonNegative`] guard.
     #[must_use]
     pub fn with_capacity(n: usize) -> Self {
         Self {
             deriv_buf: Vec::with_capacity(3 * n),
+            guard: GuardPolicy::default(),
         }
+    }
+
+    /// Return this integrator with `guard` as its amplitude/derivative guard.
+    #[must_use]
+    pub fn with_guard(mut self, guard: GuardPolicy) -> Self {
+        self.guard = guard;
+        self
+    }
+
+    /// The amplitude/derivative guard this integrator applies.
+    pub fn guard(&self) -> GuardPolicy {
+        self.guard
     }
 }
 
@@ -306,6 +401,7 @@ impl Integrator for EulerIntegrator {
         self.deriv_buf.extend_from_slice(&k1.dphase);
         self.deriv_buf.extend_from_slice(&k1.damplitude);
         self.deriv_buf.extend_from_slice(&k1.dfrequency);
+        self.guard.derivatives(&mut self.deriv_buf);
 
         let dphase = &self.deriv_buf[..n];
         let damplitude = &self.deriv_buf[n..2 * n];
@@ -319,7 +415,7 @@ impl Integrator for EulerIntegrator {
             .map(|i| state.frequency[i] + dt * dfrequency[i])
             .collect();
 
-        make_final_state(state, phase, amplitude, frequency)
+        make_final_state(state, phase, amplitude, frequency, self.guard)
     }
 }
 
@@ -336,9 +432,10 @@ impl Integrator for EulerIntegrator {
 /// ```
 ///
 /// Intermediate stages are built without phase wrapping (matching PRINet's
-/// `_make_state`); all model phase operations are `2π`-periodic so this is
-/// exact. The four derivative evaluations and intermediate state arrays use
-/// explicit reusable buffers.
+/// `_make_state`); stage and output amplitudes follow the integrator's
+/// [`GuardPolicy`] (default [`GuardPolicy::NonNegative`], PRINet 3.0's
+/// `max(·, 0)`). The four derivative evaluations and intermediate state arrays
+/// use explicit reusable buffers.
 #[derive(Clone, Debug)]
 pub struct RK4Integrator {
     /// Flat `3N` buffer for k1.
@@ -355,10 +452,13 @@ pub struct RK4Integrator {
     amp_buf: Vec<f64>,
     /// Reusable intermediate-state frequency buffer.
     freq_buf: Vec<f64>,
+    /// Amplitude/derivative guard (see [`GuardPolicy`]).
+    guard: GuardPolicy,
 }
 
 impl RK4Integrator {
-    /// Create a new RK4 integrator with empty buffers (sized on first use).
+    /// Create a new RK4 integrator with empty buffers (sized on first use)
+    /// and the default [`GuardPolicy::NonNegative`] guard.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -369,10 +469,12 @@ impl RK4Integrator {
             phase_buf: Vec::new(),
             amp_buf: Vec::new(),
             freq_buf: Vec::new(),
+            guard: GuardPolicy::default(),
         }
     }
 
-    /// Create a new RK4 integrator with buffers pre-sized for `n` oscillators.
+    /// Create a new RK4 integrator with buffers pre-sized for `n` oscillators
+    /// and the default [`GuardPolicy::NonNegative`] guard.
     #[must_use]
     pub fn with_capacity(n: usize) -> Self {
         let cap = 3 * n;
@@ -384,7 +486,20 @@ impl RK4Integrator {
             phase_buf: Vec::with_capacity(n),
             amp_buf: Vec::with_capacity(n),
             freq_buf: Vec::with_capacity(n),
+            guard: GuardPolicy::default(),
         }
+    }
+
+    /// Return this integrator with `guard` as its amplitude/derivative guard.
+    #[must_use]
+    pub fn with_guard(mut self, guard: GuardPolicy) -> Self {
+        self.guard = guard;
+        self
+    }
+
+    /// The amplitude/derivative guard this integrator applies.
+    pub fn guard(&self) -> GuardPolicy {
+        self.guard
     }
 
     /// Flatten a [`StateDerivatives`] into a reusable `3N` buffer.
@@ -394,6 +509,7 @@ impl RK4Integrator {
         self.k1.extend_from_slice(&deriv.dphase);
         self.k1.extend_from_slice(&deriv.damplitude);
         self.k1.extend_from_slice(&deriv.dfrequency);
+        self.guard.derivatives(&mut self.k1);
     }
 }
 
@@ -427,6 +543,7 @@ impl Integrator for RK4Integrator {
             &k1[n..2 * n],
             &k1[2 * n..],
             half,
+            self.guard,
             &mut self.phase_buf,
             &mut self.amp_buf,
             &mut self.freq_buf,
@@ -437,6 +554,7 @@ impl Integrator for RK4Integrator {
         self.k2.extend_from_slice(&d2.dphase);
         self.k2.extend_from_slice(&d2.damplitude);
         self.k2.extend_from_slice(&d2.dfrequency);
+        self.guard.derivatives(&mut self.k2);
         let k2 = self.k2.clone();
 
         // k3 = f(y_n + h/2 · k2)
@@ -446,6 +564,7 @@ impl Integrator for RK4Integrator {
             &k2[n..2 * n],
             &k2[2 * n..],
             half,
+            self.guard,
             &mut self.phase_buf,
             &mut self.amp_buf,
             &mut self.freq_buf,
@@ -456,6 +575,7 @@ impl Integrator for RK4Integrator {
         self.k3.extend_from_slice(&d3.dphase);
         self.k3.extend_from_slice(&d3.damplitude);
         self.k3.extend_from_slice(&d3.dfrequency);
+        self.guard.derivatives(&mut self.k3);
         let k3 = self.k3.clone();
 
         // k4 = f(y_n + h · k3)
@@ -465,6 +585,7 @@ impl Integrator for RK4Integrator {
             &k3[n..2 * n],
             &k3[2 * n..],
             dt,
+            self.guard,
             &mut self.phase_buf,
             &mut self.amp_buf,
             &mut self.freq_buf,
@@ -475,6 +596,7 @@ impl Integrator for RK4Integrator {
         self.k4.extend_from_slice(&d4.dphase);
         self.k4.extend_from_slice(&d4.damplitude);
         self.k4.extend_from_slice(&d4.dfrequency);
+        self.guard.derivatives(&mut self.k4);
         let k4 = &self.k4;
 
         // y_{n+1} = y_n + h/6 · (k1 + 2k2 + 2k3 + k4)
@@ -498,7 +620,7 @@ impl Integrator for RK4Integrator {
             })
             .collect();
 
-        make_final_state(state, phase, amplitude, frequency)
+        make_final_state(state, phase, amplitude, frequency, self.guard)
     }
 }
 
@@ -933,7 +1055,8 @@ impl RK45Integrator {
                 let phase: Vec<f64> = self.y5_buf[..n].to_vec();
                 let amplitude: Vec<f64> = self.y5_buf[n..2 * n].to_vec();
                 let frequency: Vec<f64> = self.y5_buf[2 * n..].to_vec();
-                current = make_final_state(&current, phase, amplitude, frequency)?;
+                current =
+                    make_final_state(&current, phase, amplitude, frequency, GuardPolicy::Bounded)?;
                 // FSAL: k1 for next step = k7 of this step.
                 self.ks[0] = self.ks[6].clone();
                 self.fsal_valid = true;
@@ -1104,7 +1227,7 @@ impl Integrator for RK45Integrator {
             })
             .collect();
 
-        make_final_state(state, phase, amplitude, frequency)
+        make_final_state(state, phase, amplitude, frequency, GuardPolicy::Bounded)
     }
 }
 
@@ -2058,7 +2181,7 @@ mod tests {
 
     use crate::coupling::CouplingMode;
     use crate::models::{KuramotoOscillator, StuartLandauOscillator};
-    use crate::state::{OscillatorState, TAU};
+    use crate::state::{OscillatorState, AMPLITUDE_MAX, AMPLITUDE_MIN, DERIV_CLAMP, TAU};
 
     /// Single uncoupled oscillator (K=0, λ=0, γ=0): dφ/dt = ω, dr/dt = 0, dω/dt = 0.
     /// The frequency `omega` is carried by the state, not the model.
@@ -2352,6 +2475,132 @@ mod tests {
             assert_relative_eq!(result.amplitude[i], expected.amplitude[i], epsilon = 1e-12);
             assert_relative_eq!(result.frequency[i], expected.frequency[i], epsilon = 1e-12);
         }
+    }
+
+    #[test]
+    fn guard_policy_default_and_builders() {
+        assert_eq!(GuardPolicy::default(), GuardPolicy::NonNegative);
+        assert_eq!(EulerIntegrator::new().guard(), GuardPolicy::NonNegative);
+        assert_eq!(RK4Integrator::new().guard(), GuardPolicy::NonNegative);
+        assert_eq!(
+            EulerIntegrator::with_capacity(4).guard(),
+            GuardPolicy::NonNegative
+        );
+        assert_eq!(
+            RK4Integrator::with_capacity(4).guard(),
+            GuardPolicy::NonNegative
+        );
+        assert_eq!(
+            EulerIntegrator::new()
+                .with_guard(GuardPolicy::Bounded)
+                .guard(),
+            GuardPolicy::Bounded
+        );
+        assert_eq!(
+            RK4Integrator::new()
+                .with_guard(GuardPolicy::Bounded)
+                .guard(),
+            GuardPolicy::Bounded
+        );
+    }
+
+    #[test]
+    fn bounded_guard_keeps_the_pre_correction_amplitude_bounds() {
+        let decay = linear_amplitude(2, 20.0);
+        let growth = linear_amplitude(2, -120.0);
+        let state = make_state(2, 0.3, 1.0, 1.0);
+        for mut integrator in [
+            Box::new(EulerIntegrator::new().with_guard(GuardPolicy::Bounded))
+                as Box<dyn Integrator>,
+            Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded)),
+        ] {
+            let low = integrator.step(&decay, &state, 0.1).unwrap();
+            assert_eq!(low.amplitude, vec![AMPLITUDE_MIN; 2]);
+            let high = integrator.step(&growth, &state, 0.1).unwrap();
+            assert_eq!(high.amplitude, vec![AMPLITUDE_MAX; 2]);
+        }
+    }
+
+    #[test]
+    fn bounded_guard_clamps_every_derivative() {
+        // dφ/dt = ω = 3e4 on a full-coupling path, which the model leaves
+        // unclamped; the bounded guard clamps it to DERIV_CLAMP.
+        let model = linear_amplitude(2, 0.0);
+        let state = make_state(2, 0.0, 1.0, 3.0e4);
+        let dt = 1e-6;
+        let bounded = EulerIntegrator::new()
+            .with_guard(GuardPolicy::Bounded)
+            .step(&model, &state, dt)
+            .unwrap();
+        assert_relative_eq!(bounded.phase[0], dt * DERIV_CLAMP, epsilon = 1e-15);
+        let rk4 = RK4Integrator::new()
+            .with_guard(GuardPolicy::Bounded)
+            .step(&model, &state, dt)
+            .unwrap();
+        assert_relative_eq!(rk4.phase[0], dt * DERIV_CLAMP, epsilon = 1e-15);
+        let faithful = EulerIntegrator::new().step(&model, &state, dt).unwrap();
+        assert_relative_eq!(faithful.phase[0], dt * 3.0e4, epsilon = 1e-15);
+    }
+
+    /// Returns a `NaN` amplitude derivative, bypassing every constructor guard.
+    #[cfg(not(feature = "strict-checks"))]
+    struct NanAmplitudeRate;
+
+    #[cfg(not(feature = "strict-checks"))]
+    impl Dynamics for NanAmplitudeRate {
+        fn compute_derivatives(
+            &self,
+            state: &OscillatorState,
+        ) -> Result<StateDerivatives, StateError> {
+            let n = state.phase.len();
+            Ok(StateDerivatives {
+                dphase: vec![0.0; n],
+                damplitude: vec![f64::NAN; n],
+                dfrequency: vec![0.0; n],
+            })
+        }
+    }
+
+    #[cfg(not(feature = "strict-checks"))]
+    #[test]
+    fn non_negative_guard_propagates_nan_like_torch_clamp() {
+        let state = make_state(1, 0.0, 1.0, 1.0);
+        let faithful = EulerIntegrator::new()
+            .step(&NanAmplitudeRate, &state, 0.1)
+            .unwrap();
+        assert!(faithful.amplitude[0].is_nan());
+        // The bounded guard repairs both the derivative (NaN → 0) and the state.
+        let bounded = EulerIntegrator::new()
+            .with_guard(GuardPolicy::Bounded)
+            .step(&NanAmplitudeRate, &state, 0.1)
+            .unwrap();
+        assert_eq!(bounded.amplitude[0], 1.0);
+    }
+
+    #[test]
+    fn non_negative_guard_keeps_negative_zero_like_torch_clamp() {
+        assert_eq!(
+            GuardPolicy::NonNegative.amplitude(-0.0).to_bits(),
+            (-0.0f64).to_bits()
+        );
+        assert_eq!(GuardPolicy::NonNegative.amplitude(f64::NEG_INFINITY), 0.0);
+        assert_eq!(
+            GuardPolicy::NonNegative.amplitude(f64::INFINITY),
+            f64::INFINITY
+        );
+        assert_eq!(GuardPolicy::NonNegative.amplitude(-3.0), 0.0);
+        assert_eq!(GuardPolicy::NonNegative.amplitude(2.5), 2.5);
+    }
+
+    #[test]
+    fn multirate_sub_steps_with_the_prinet_model_guard() {
+        // PRINet 3.0's MultiRateIntegrator sub-steps with OscillatorModel.step,
+        // whose amplitude floor is exactly 0.
+        let model = linear_amplitude(2, 40.0);
+        let state = make_state(2, 0.3, 1.0, 1.0);
+        let mut mr = MultiRateIntegrator::new(2).unwrap();
+        let result = mr.step(&model, &state, 0.1).unwrap();
+        assert_eq!(result.amplitude, vec![0.0, 0.0]);
     }
 
     // ------------------------------------------------------------------
@@ -2750,14 +2999,21 @@ mod tests {
 
     #[test]
     fn euler_amplitude_clamped() {
-        // Large negative amplitude derivative should clamp to AMPLITUDE_MIN.
+        // A large negative amplitude derivative drives r + dt·dr below zero.
+        // The default (PRINet 3.0 `OscillatorModel`) guard floors it at exactly
+        // 0.0; the bounded guard floors it at AMPLITUDE_MIN. Before the EXP-001
+        // D1 correction this test asserted the bounded floor for the default.
         let model =
             KuramotoOscillator::new(1, 0.0, 100.0, 0.0, crate::coupling::CouplingMode::MeanField)
                 .unwrap();
         let state = make_state(1, 0.0, 0.001, 0.0);
-        let mut euler = EulerIntegrator::new();
-        let result = euler.step(&model, &state, 1.0).unwrap();
-        assert!(result.amplitude[0] >= 1e-6);
+        let result = EulerIntegrator::new().step(&model, &state, 1.0).unwrap();
+        assert_eq!(result.amplitude[0], 0.0);
+        let bounded = EulerIntegrator::new()
+            .with_guard(GuardPolicy::Bounded)
+            .step(&model, &state, 1.0)
+            .unwrap();
+        assert_eq!(bounded.amplitude[0], AMPLITUDE_MIN);
     }
 
     #[test]
