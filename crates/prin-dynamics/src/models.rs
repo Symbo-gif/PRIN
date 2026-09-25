@@ -1102,6 +1102,22 @@ mod tests {
         }
     }
 
+    #[test]
+    fn single_oscillator_derivatives_are_not_clamped_like_prinet() {
+        // PRINet 3.0 has no N = 1 clamp on any path: its dense models see a
+        // zero coupling matrix and its sparse N <= 1 guard returns before
+        // `_clamp_finite`. So dφ/dt = ω, unclamped, in the N <= 1 shortcut.
+        let state = OscillatorState::new(vec![0.5], vec![1.0], vec![3.0e4], None).unwrap();
+        let models: Vec<Box<dyn Dynamics>> = vec![
+            Box::new(KuramotoOscillator::new(1, 1.0, 0.1, 0.0, CouplingMode::MeanField).unwrap()),
+            Box::new(StuartLandauOscillator::new(1, 1.0, 1.0, CouplingMode::MeanField).unwrap()),
+            Box::new(HopfOscillator::new(1, 1.0, 1.0, 0.0, CouplingMode::MeanField).unwrap()),
+        ];
+        for model in &models {
+            assert_eq!(model.compute_derivatives(&state).unwrap().dphase, [3.0e4]);
+        }
+    }
+
     #[cfg(not(feature = "strict-checks"))]
     #[test]
     fn sparse_knn_derivatives_remain_clamped_like_prinet() {
