@@ -6,6 +6,40 @@ Migration Guide (PRINet 3.0 → PRIN)
    symbol-by-symbol mapping table for all 175+ PRINet 3.0 public exports and
    numerical tolerance notes.
 
+Behaviour change: fixed-step integrator guards (EXP-001 D1 correction)
+-----------------------------------------------------------------------
+
+Campaign experiment EXP-001 found that PRIN's ``EulerIntegrator`` and
+``RK4Integrator`` guarded amplitude and derivatives differently from the
+PRINet 3.0 path they port. ``OscillatorModel._step_euler``/``_step_rk4``
+clamps every stage and output amplitude with ``torch.clamp(·, min=0.0)`` (a
+floor of exactly ``0`` and no ceiling) and clamps derivatives only inside the
+sparse k-NN models. PRIN had applied the ``[1e-6, 10]`` amplitude and
+``±1e4`` derivative bounds of PRINet 3.0's fused-kernel and OscilloSim paths
+instead.
+
+- **Default now matches PRINet 3.0.** ``prin.dynamics.EulerIntegrator()`` and
+  ``RK4Integrator()`` (Rust: ``GuardPolicy::NonNegative``) floor amplitude at
+  ``0`` with no ceiling, so an integrated amplitude may now be exactly ``0``
+  or above ``10``. The Kuramoto/Hopf full and mean-field paths and the
+  Stuart–Landau paths no longer clamp derivatives to ``±1e4``; sparse k-NN
+  coupling still does. The ``torch`` compatibility models' ``integrate``
+  inherits the corrected default. Their ``step`` rebuilds the state on every
+  call, so it inherits the default within a step, but the next call's
+  ``OscillatorState`` construction re-guards the amplitude (see below).
+- **Previous behaviour:** ``EulerIntegrator(guard="bounded")`` /
+  ``RK4Integrator(guard="bounded")`` (Rust:
+  ``.with_guard(GuardPolicy::Bounded)``) restores ``[1e-6, 10]`` and
+  ``±1e4``. ``prin-sim``'s OscilloSim ports use it, as PRINet 3.0's OscilloSim
+  does.
+- **Unchanged:** ``OscillatorState(...)`` still guards a constructed state to
+  ``[1e-6, 10]``, and ``RK45Integrator``, ``ExponentialIntegrator``, PAC,
+  temporal propagation, GPU kernels and the trainable layers keep their
+  bounded amplitude clamp.
+
+Evidence and rationale: :doc:`parity_report` (``EXP-001 D1`` register entry)
+and Project Plan amendment #47.
+
 New PRIN-only symbols
 ---------------------
 

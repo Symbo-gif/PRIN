@@ -429,6 +429,13 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   ruff/mypy --strict/Snyk Code all clean, full subsystem suite 64/64.
 - [`2026-09-23-dv036-nightly-correction-audit.md`](2026-09-23-dv036-nightly-correction-audit.md) —
   DV-036 local S2 PASS and S3 CLEAN; S4/hosted confirmation pending.
+- [`2026-09-24-exp001-d1-correction-audit.md`](2026-09-24-exp001-d1-correction-audit.md) —
+  EXP-001 D1 correction cycle (H1/H2a `REFUTED`, finding `EXP001-E5-F1`).
+  So far it holds the **S1 implementation record**: root cause (a PRIN
+  Euler/RK4 guard divergence, fixed, plus the reference's DV-007 `complex64`
+  arithmetic, with the corpus shown to be the erroneous side to the campaign
+  plan §10.4 item 3 standard), commits, the red → green transition on draft
+  PR #24, and handoff. The S2 audit, S3 closure and S4 closure are pending.
 - [`PR023-multi-review-audit.md`](PR023-multi-review-audit.md) — External
   code review audit of PR #23 (EXP-001 E3–E5), 2026-09-23,
   `PASS-WITH-FINDINGS` → all findings remediated in the same round. Seven

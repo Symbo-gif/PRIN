@@ -1,6 +1,6 @@
 # EXP-001 D1 S1 — Correction implementation
 
-**Status:** IN PROGRESS — scope approved 2026-09-24 UTC (see "Approved scope and decisions")\
+**Status:** COMPLETE (S1; pushed to draft PR #24 as authorized) — scope approved 2026-09-24 UTC (see "Approved scope and decisions")\
 **Triggering deviation:** `EXP-001 H1/H2a REFUTED` (campaign plan §10.4 D1) and
 `EXP001-E5-F1` (D1)\
 **Blocked numbered session:** `0159` (EXP-002 E1), and every experiment
@@ -121,3 +121,10 @@ approved as written. Three decisions refine it:
    failing-test commit is pushed before the fix. Merging stays with the
    maintainer. None of this authorizes a merge, `EXP-001-r1`, or the release
    of session `0159`.
+
+**Evidence:** reproduction `bd737e1`; guard fix `34e8811`; DV-007 adjudication
+and §10.4 item 3 evidence `45cca61`; see the
+[correction audit](../../audits/2026-09-24-exp001-d1-correction-audit.md) (S1
+record: root cause, commits, red → green transition, commands, handoff) and
+`EVIDENCE/exp001-d1-s1/`. Session `0159` remains `BLOCKED`. S2, S3 and S4
+follow in order.
