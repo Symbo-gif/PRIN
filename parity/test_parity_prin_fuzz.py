@@ -12,6 +12,12 @@ CI. Each replayed spec is checked against the committed E3 artefact, so a
 change to the sampler or the stream fails loudly rather than testing
 different cases.
 
+A breach on a DV-007 ``complex64`` path passes only when PRIN matches the
+reference re-evaluated in float64 (:mod:`parity.prinet_f64`) at the same
+registered tolerance — the explained-divergence rule of
+``test_parity_prin_corpus.py``, whose docstring states the evidence. Any other
+breach fails.
+
 Twenty-two cases are excluded from the pointwise comparison because the
 reference itself is not pointwise-reproducible there: evaluated in float64,
 PRINet 3.0's own map breaches the registered tolerance within the horizon
@@ -45,7 +51,7 @@ from benchmarks.campaign.exp001_driver import (
     run_prin_trajectory,
     run_prinet_trajectory,
 )
-from parity.prinet_f64 import f64_corrected_reference
+from parity.prinet_f64 import f64_corrected_reference, on_dv007_path
 
 pytestmark = [pytest.mark.parity, pytest.mark.slow]
 
@@ -65,7 +71,8 @@ _N_CASES = 1000
 
 #: Case indices where PRINet 3.0's float64 map is ill-conditioned within the
 #: horizon (see the module docstring). Evidence:
-#: ``EVIDENCE/exp001-d1-s1/root-cause-decomposition.json``.
+#: ``EVIDENCE/exp001-d1-s1/root-cause-decomposition-{prefix,postfix}.json``
+#: (``summary.ill_conditioned_cases``).
 _ILL_CONDITIONED: frozenset[int] = frozenset(
     {
         50, 76, 90, 270, 310, 330, 334, 362, 385, 398, 399,
@@ -172,14 +179,25 @@ def test_prin_matches_prinet_within_horizon(
     recorded_identities: list[dict[str, Any]],
     case_index: int,
 ) -> None:
-    """PRIN matches PRINet 3.0 pointwise within the shadowing horizon."""
+    """PRIN matches PRINet 3.0 within the horizon, or the breach is exactly DV-007."""
     spec, phase, amplitude, frequency = stream_cases[case_index]
     assert {f: spec[f] for f in _IDENTITY_FIELDS} == recorded_identities[case_index]
+    label = f"case {case_index} ({spec['model']}/{spec['coupling']}/" + (
+        f"{spec['integrator']})"
+    )
     reference = _run(run_prinet_trajectory, spec, phase, amplitude, frequency)
     produced = _run(run_prin_trajectory, spec, phase, amplitude, frequency)
     breaches = _h2a_breaches(reference, produced, spec["model"], spec["n_steps"])
-    assert not breaches, f"case {case_index} ({spec['model']}/{spec['coupling']}/" + (
-        f"{spec['integrator']}): {_describe(breaches)}"
+    if not breaches:
+        return
+    assert on_dv007_path(spec["model"], spec["coupling"]), (
+        f"{label} diverges off the DV-007 paths: {_describe(breaches)}"
+    )
+    with f64_corrected_reference():
+        corrected = _run(run_prinet_trajectory, spec, phase, amplitude, frequency)
+    residual = _h2a_breaches(corrected, produced, spec["model"], spec["n_steps"])
+    assert not residual, (
+        f"{label} breach is not explained by DV-007: {_describe(residual)}"
     )
 
 

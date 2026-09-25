@@ -1,0 +1,1058 @@
+{
+ "h1": [
+  {
+   "case": "kuramoto_mean_field_euler_n8_s20_dt0_005_K2_seed1000006",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "kuramoto",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 8.881784197001252e-16
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 2.079374006314083e-09
+   }
+  },
+  {
+   "case": "kuramoto_mean_field_rk4_n12_s20_dt0_02_K2_seed1100017",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "kuramoto",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 3.552713678800501e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 3.7751544113007185e-09
+   }
+  },
+  {
+   "case": "stuart_landau_full_euler_n8_s20_dt0_02_K1_seed2200005",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 8.881784197001252e-16
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 7.730034745634384e-08
+   }
+  },
+  {
+   "case": "stuart_landau_full_euler_n12_s20_dt0_02_K0_5_seed2200011",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 1.463962604475455e-07
+   }
+  },
+  {
+   "case": "stuart_landau_full_euler_n12_s20_dt0_01_K1_seed2200013",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 9.80032112130047e-08
+   }
+  },
+  {
+   "case": "stuart_landau_full_euler_n12_s20_dt0_02_K2_seed2200017",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj",
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 1.0700641972505309e-07
+   }
+  },
+  {
+   "case": "stuart_landau_full_euler_n16_s20_dt0_01_K0_5_seed2200019",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 5.764253430129429e-08
+   }
+  },
+  {
+   "case": "stuart_landau_full_euler_n16_s20_dt0_01_K1_seed2200022",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.8752360775309285e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 9.457953442648659e-08
+   }
+  },
+  {
+   "case": "stuart_landau_full_euler_n16_s20_dt0_02_K2_seed2200026",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.3314683517128287e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj",
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 1.8565069970222225e-07
+   }
+  },
+  {
+   "case": "stuart_landau_full_euler_n24_s20_dt0_01_K0_5_seed2200028",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.7755575615628914e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 9.52893426386936e-08
+   }
+  },
+  {
+   "case": "stuart_landau_full_euler_n24_s20_dt0_01_K1_seed2200031",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj",
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 9.718411186909748e-08
+   }
+  },
+  {
+   "case": "stuart_landau_full_euler_n24_s20_dt0_02_K2_seed2200035",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 3.0253577421035516e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 1.8606078389105107e-07
+   }
+  },
+  {
+   "case": "stuart_landau_full_rk4_n12_s20_dt0_02_K1_seed2300014",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 8.881784197001252e-16
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 2.00856711263242e-07
+   }
+  },
+  {
+   "case": "stuart_landau_full_rk4_n16_s20_dt0_01_K0_5_seed2300019",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 6.380689920870708e-08
+   }
+  },
+  {
+   "case": "stuart_landau_full_rk4_n16_s20_dt0_01_K2_seed2300025",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 1.0408279660367725e-07
+   }
+  },
+  {
+   "case": "stuart_landau_full_rk4_n16_s20_dt0_02_K2_seed2300026",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj",
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 1.299388874276275e-07
+   }
+  },
+  {
+   "case": "stuart_landau_full_rk4_n24_s20_dt0_01_K0_5_seed2300028",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 6.919071271482835e-08
+   }
+  },
+  {
+   "case": "stuart_landau_full_rk4_n24_s20_dt0_01_K2_seed2300034",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 8.995090766683589e-08
+   }
+  },
+  {
+   "case": "stuart_landau_full_rk4_n24_s20_dt0_02_K2_seed2300035",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 1.6188462659272318e-07
+   }
+  }
+ ],
+ "h2a": [
+  {
+   "case": "fuzz[6]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "hopf",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 9.769962616701378e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj",
+     "amplitude_traj"
+    ],
+    "max_abs": 1.3762111690240886e-06
+   }
+  },
+  {
+   "case": "fuzz[30]",
+   "coupling": "full",
+   "horizon": 16,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 2.1193091614968296e-08
+   }
+  },
+  {
+   "case": "fuzz[38]",
+   "coupling": "mean_field",
+   "horizon": 14,
+   "integrator": "euler",
+   "model": "kuramoto",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 8.881784197001252e-16
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 9.080605156697175e-08
+   }
+  },
+  {
+   "case": "fuzz[113]",
+   "coupling": "full",
+   "horizon": 19,
+   "integrator": "rk4",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 2.0003786183053762e-08
+   }
+  },
+  {
+   "case": "fuzz[117]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 4.707345624410664e-14
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj",
+     "amplitude_traj"
+    ],
+    "max_abs": 1.7649352876958346e-06
+   }
+  },
+  {
+   "case": "fuzz[145]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "kuramoto",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj",
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 2.635926321659099e-08
+   }
+  },
+  {
+   "case": "fuzz[150]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.5654144647214707e-14
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 6.247245138091273e-06
+   }
+  },
+  {
+   "case": "fuzz[166]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 4.762991290263585e-08
+   }
+  },
+  {
+   "case": "fuzz[179]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "hopf",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 3.552713678800501e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 1.4895831013106431e-08
+   }
+  },
+  {
+   "case": "fuzz[186]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 3.29109942631689e-08
+   }
+  },
+  {
+   "case": "fuzz[201]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "kuramoto",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 3.552713678800501e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 4.4770667617655135e-08
+   }
+  },
+  {
+   "case": "fuzz[226]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 2.944015786709997e-08
+   }
+  },
+  {
+   "case": "fuzz[340]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 2.1720669624025746e-08
+   }
+  },
+  {
+   "case": "fuzz[354]",
+   "coupling": "full",
+   "horizon": 19,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 7.973553373119557e-09
+   }
+  },
+  {
+   "case": "fuzz[366]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "kuramoto",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 4.700761380149743e-08
+   }
+  },
+  {
+   "case": "fuzz[411]",
+   "coupling": "full",
+   "horizon": 7,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 8.881784197001252e-16
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 1.3671231480216761e-08
+   }
+  },
+  {
+   "case": "fuzz[494]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 2.451107805612196e-08
+   }
+  },
+  {
+   "case": "fuzz[520]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "kuramoto",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 6.7673339154694645e-09
+   }
+  },
+  {
+   "case": "fuzz[530]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 4.290413979646246e-08
+   }
+  },
+  {
+   "case": "fuzz[576]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj",
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 2.9013910551878297e-08
+   }
+  },
+  {
+   "case": "fuzz[625]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "hopf",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 6.688620945993762e-08
+   }
+  },
+  {
+   "case": "fuzz[656]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 3.1926626675726766e-08
+   }
+  },
+  {
+   "case": "fuzz[661]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "hopf",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 5.285056836612512e-09
+   }
+  },
+  {
+   "case": "fuzz[667]",
+   "coupling": "mean_field",
+   "horizon": 19,
+   "integrator": "rk4",
+   "model": "hopf",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 5.8424530102740846e-08
+   }
+  },
+  {
+   "case": "fuzz[670]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "hopf",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 6.8833827526759706e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 1.5510423228004555e-06
+   }
+  },
+  {
+   "case": "fuzz[683]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "hopf",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 8.183586652776853e-08
+   }
+  },
+  {
+   "case": "fuzz[749]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "hopf",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 1.3404694687579877e-07
+   }
+  },
+  {
+   "case": "fuzz[791]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 4.440892098500626e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 1.5614414916598207e-07
+   }
+  },
+  {
+   "case": "fuzz[801]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "kuramoto",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 3.134592230225053e-08
+   }
+  },
+  {
+   "case": "fuzz[836]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "kuramoto",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 3.7161179688993684e-08
+   }
+  },
+  {
+   "case": "fuzz[866]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 2.135673060621457e-08
+   }
+  },
+  {
+   "case": "fuzz[903]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "hopf",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 2.6698367960875657e-09
+   }
+  },
+  {
+   "case": "fuzz[936]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "hopf",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 2.945469318449412e-08
+   }
+  },
+  {
+   "case": "fuzz[941]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "kuramoto",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 1.2417490147242916e-08
+   }
+  },
+  {
+   "case": "fuzz[949]",
+   "coupling": "mean_field",
+   "horizon": 16,
+   "integrator": "rk4",
+   "model": "hopf",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 6.812221209351321e-08
+   }
+  },
+  {
+   "case": "fuzz[952]",
+   "coupling": "full",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "stuart_landau",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "mean_phase_coherence_traj"
+    ],
+    "max_abs": 1.428669094138968e-08
+   }
+  },
+  {
+   "case": "fuzz[964]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "rk4",
+   "model": "kuramoto",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 1.7763568394002505e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj",
+     "amplitude_traj"
+    ],
+    "max_abs": 8.745077462180006e-08
+   }
+  },
+  {
+   "case": "fuzz[988]",
+   "coupling": "mean_field",
+   "horizon": 20,
+   "integrator": "euler",
+   "model": "kuramoto",
+   "prin_vs_exact": {
+    "breaches": [],
+    "max_abs": 2.6645352591003757e-15
+   },
+   "reference_is_the_erroneous_side": true,
+   "reference_vs_exact": {
+    "breaches": [
+     "phase_traj"
+    ],
+    "max_abs": 2.5761516475597546e-08
+   }
+  }
+ ],
+ "lemmas": {
+  "L1_polar_extraction_Re_Im_of_zdot_exp_minus_iphi": true,
+  "L2_mean_field_equals_pairwise_sum_N5": true,
+  "L3_stuart_landau_pairwise_coupling_equals_K_times_mean_minus_self_N5": true,
+  "L4a_phase_gradient_norm_is_1_over_r": true,
+  "L4b_phase_velocity_sensitivity_is_1_over_eps_at_floor": true
+ },
+ "mpmath_dps": 50,
+ "phase_wrap_modulus": "float64 2.0*math.pi (PRINet 3.0 _TWO_PI)",
+ "summary": {
+  "h1_cases": 19,
+  "h2a_dv007_only_cases": 38,
+  "prin_vs_exact_breaches": 0,
+  "prin_vs_exact_max_abs": 4.707345624410664e-14,
+  "reference_is_the_erroneous_side": 57,
+  "reference_vs_exact_max_abs": 6.247245138091273e-06
+ }
+}

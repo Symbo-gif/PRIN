@@ -28,7 +28,7 @@ against the unmodified reference.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
@@ -134,7 +134,7 @@ _REPLACEMENTS: tuple[tuple[type[Any], str, Any], ...] = (
 
 
 @contextmanager
-def f64_corrected_reference() -> Iterator[None]:
+def f64_corrected_reference() -> Generator[None, None, None]:
     """Evaluate PRINet 3.0's three DV-007 paths in float64 inside the block.
 
     Every other PRINet 3.0 behaviour is unchanged. The original methods are
