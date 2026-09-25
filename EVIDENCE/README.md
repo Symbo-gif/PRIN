@@ -76,6 +76,13 @@ To find evidence for a specific work package, look for files matching
   changed-code coverage 94 % → 100 % on the two new tools after nine added
   tests) and WP036F-F2 (D4, `mypy --strict` on both tools 3 errors → 0), plus
   the touched-area delta re-audit gate re-run.
+- [`exp001-d1-s1/`](exp001-d1-s1/) — EXP-001 D1 correction, S1 (an unnumbered
+  contingency session). A root-cause decomposition of every H1/H2a breach at
+  the pre-fix and post-fix builds, attributing each by controlled substitution
+  in PRINet 3.0 (0 unexplained). A campaign plan §10.4 item 3 exactness audit:
+  50-digit mpmath evaluation of PRINet 3.0's own map, plus SymPy lemmas, puts
+  the reference on the erroneous side in 57/57 DV-007 breaches. Both generator
+  scripts are included; see that directory's `README.md`.
 
 ## Rules
 

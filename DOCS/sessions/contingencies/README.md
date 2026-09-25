@@ -15,7 +15,13 @@ Triggered by campaign plan §10.4: EXP-001's H1 (`REFUTED`, 485/504) and H2a
 gate performs the PRIN-vs-corpus trajectory comparison over the full 504-case
 corpus; the only gate that runs PRIN against corpus trajectories covers 4
 representative cases, none of them among H1's 19 breaching cases) is a second
-D1. The four sessions below run in strict S1 → S2 → S3 → S4 order. **Session `0159`
+D1. The four sessions below run in strict S1 → S2 → S3 → S4 order.
+**S1 complete 2026-09-24 UTC** (draft PR #24): the root cause is a PRIN
+Euler/RK4 guard divergence (fixed) plus the reference's DV-007 `complex64`
+arithmetic (the corpus is the erroneous side, campaign plan §10.4 item 3), and
+a full-corpus PRIN gate now runs in the `parity` job. See the
+[correction audit](../../audits/2026-09-24-exp001-d1-correction-audit.md).
+S2 is next. **Session `0159`
 (EXP-002 E1) and every experiment downstream of EXP-001, plus `0194`, stay
 blocked until S4 closes and `EXP-001-r1` returns a non-reversal verdict.** No
 root cause is claimed by the triggering record; S1 owns it. See the

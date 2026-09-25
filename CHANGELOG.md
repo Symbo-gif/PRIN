@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Full-corpus PRIN-vs-corpus parity gate and the EXP-001 H2a registered-stream
+  gate (EXP-001 D1 correction, S1, 2026-09-24 UTC).** These close finding
+  EXP001-E5-F1. `parity/test_parity_prin_corpus.py` integrates PRIN from all
+  504 stored initial states and compares every array at the registered
+  tolerances. `parity/test_parity_prin_fuzz.py` replays H2a's `Seed(0, 1)`
+  stream (1,000 cases, identity-checked against the committed E3 artefact)
+  against a live PRINet 3.0 run. Both run in the `parity` job. A breach on a
+  DV-007 `complex64` path passes only when PRIN matches the reference
+  re-evaluated with those casts widened to float64 (`parity/prinet_f64.py`,
+  validated by `parity/test_prinet_f64.py`) at the same registered tolerance.
+  No tolerance is widened and no case is skipped. The 22 cases where PRINet
+  3.0's own float64 map breaches the tolerance under a one-ulp phase change
+  are excluded from the pointwise check, and that is re-proven on every run.
+  Root-cause evidence is in `EVIDENCE/exp001-d1-s1/`: a decomposition at the
+  pre-fix and post-fix builds, and the campaign plan §10.4 item 3 mpmath/SymPy
+  exactness audit.
+
 - **EXP-001 E5 report — golden-trajectory numerical parity reported; campaign
   BLOCKED (session 0158, 2026-09-23 UTC).**
   `DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/report.md`
@@ -76,6 +93,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Behaviour change — `EulerIntegrator`/`RK4Integrator` now use PRINet 3.0's
+  `OscillatorModel` guard by default (EXP-001 D1 correction, S1, Project Plan
+  amendment #47).** Stage and output amplitudes are floored at exactly `0`
+  with no upper bound, as `torch.clamp(min=0.0)` does in `_step_euler` /
+  `_step_rk4`. The Kuramoto/Hopf full and mean-field paths and the
+  Stuart–Landau paths no longer clamp derivatives to `±1e4`; sparse k-NN
+  coupling still does. An integrated amplitude may therefore be exactly `0` or
+  above `10`. The previous `[1e-6, 10]` / `±1e4` guard remains available as
+  `GuardPolicy::Bounded` (Rust `.with_guard(...)`, Python `guard="bounded"`,
+  with a read-only `.guard` property); `prin-sim`'s OscilloSim ports use it.
+  `RK45Integrator`, `ExponentialIntegrator`, and `OscillatorState`
+  construction are unchanged. See the Migration Guide.
 - **DV-040 opened (2026-09-23, session 0157).** Campaign plan §7.4 item 2
   prescribes the experiment record root for E4 analysis code, but
   `python.yml`'s lint job runs `ruff`, `mypy --strict`, `interrogate`, and
@@ -97,6 +126,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **EXP-001 H1/H2a refutations root-caused (EXP-001 D1 correction, S1,
+  2026-09-24 UTC).** Every breach is attributed.
+  - **H2a (65 of 103, including all 33 at or above `1e-3`) — PRIN defect,
+    fixed.** PRIN's Euler/RK4 port applied the `[1e-6, 10]` / `±1e4` guard of
+    PRINet 3.0's fused-kernel and OscilloSim paths instead of its
+    `OscillatorModel` guard (see Changed).
+  - **H1 (all 19) and 38 further H2a breaches — the reference's DV-007
+    `complex64` arithmetic.** A 50-digit mpmath evaluation of PRINet 3.0's own
+    discrete map puts PRIN within `4.7e-14` and the reference up to `6.2e-6`
+    away, so the reference is the erroneous side there (campaign plan §10.4
+    item 3).
+
+  Before the fix, PRIN equalled PRINet 3.0 re-evaluated in float64 with PRIN's
+  old guard to `3.3e-12`. After it, PRIN matches the float64 reference on all
+  978 well-conditioned fuzz cases and to `2.0e-15` on the corpus.
+  `parity/test_parity_differential.py::test_corpus_exhaustive_differential_parity`'s
+  docstring no longer claims to validate PRIN; it is a reference
+  self-consistency check. The Parity Report carries a dated update to its E5
+  erratum and a new register entry. This does not authorize `EXP-001-r1` or
+  release session 0159; S2–S4 follow.
 - **PR #23 multi-review round — eight findings compiled from seven independent
   review runs, all dispositioned (2026-09-23 UTC).** Copilot (4),
   CodeRabbit (3 + 1 pre-merge check), Sourcery (declined — diff over its

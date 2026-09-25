@@ -5,6 +5,18 @@
 //! - [`HopfOscillator`]: bifurcation-driven polar coordinate dynamics.
 //!
 //! Coupling mode is an enum ([`CouplingMode`]), never a string.
+//!
+//! # Derivative clamping
+//!
+//! As in PRINet 3.0 (`oscillator_models.py`), only the sparse k-NN coupling
+//! paths clamp derivatives to `±DERIV_CLAMP` (the reference's `_clamp_finite`,
+//! via [`StateDerivatives::new`]). Full and mean-field Kuramoto/Hopf, every
+//! Stuart–Landau path with a PRINet 3.0 counterpart, and the `N ≤ 1` shortcut
+//! return derivatives exactly as computed ([`StateDerivatives::unclamped`]).
+//! Stuart–Landau sparse k-NN has no PRINet 3.0 counterpart and keeps the
+//! clamp. A consumer that wants every derivative bounded selects
+//! [`GuardPolicy::Bounded`](crate::integrate::GuardPolicy::Bounded) on the
+//! integrator.
 
 use num_complex::Complex64;
 use serde::{Deserialize, Serialize};
@@ -322,7 +334,7 @@ impl KuramotoOscillator {
             dfrequency.push(self.freq_adaptation_rate * k_r * sin_diff * inv_n);
         }
 
-        StateDerivatives::new(dphase, damplitude, dfrequency)
+        StateDerivatives::unclamped(dphase, damplitude, dfrequency)
     }
 
     fn compute_full(
@@ -372,7 +384,7 @@ impl KuramotoOscillator {
             dfrequency.push(self.freq_adaptation_rate * sin_sum * inv_n);
         }
 
-        StateDerivatives::new(dphase, damplitude, dfrequency)
+        StateDerivatives::unclamped(dphase, damplitude, dfrequency)
     }
 
     fn compute_sparse_knn(
@@ -435,7 +447,7 @@ impl Dynamics for KuramotoOscillator {
                 .map(|&a| -self.decay_rate * a)
                 .collect();
             let dfrequency = vec![0.0; n];
-            return StateDerivatives::new(dphase, damplitude, dfrequency);
+            return StateDerivatives::unclamped(dphase, damplitude, dfrequency);
         }
 
         match &self.coupling_mode {
@@ -578,7 +590,7 @@ impl StuartLandauOscillator {
             damplitude.push(dr);
         }
 
-        StateDerivatives::new(dphase, damplitude, dfrequency)
+        StateDerivatives::unclamped(dphase, damplitude, dfrequency)
     }
 
     fn compute_full(
@@ -628,7 +640,7 @@ impl StuartLandauOscillator {
                     damplitude.push(dr);
                 }
 
-                StateDerivatives::new(dphase, damplitude, dfrequency)
+                StateDerivatives::unclamped(dphase, damplitude, dfrequency)
             }
         }
     }
@@ -703,7 +715,7 @@ impl Dynamics for StuartLandauOscillator {
                 .map(|&r| mu * r - r * r * r)
                 .collect();
             let dfrequency = vec![0.0; n];
-            return StateDerivatives::new(dphase, damplitude, dfrequency);
+            return StateDerivatives::unclamped(dphase, damplitude, dfrequency);
         }
 
         match &self.coupling_mode {
@@ -873,7 +885,7 @@ impl HopfOscillator {
             dfrequency.push(self.freq_adaptation_rate * k_r * sin_diff * inv_n);
         }
 
-        StateDerivatives::new(dphase, damplitude, dfrequency)
+        StateDerivatives::unclamped(dphase, damplitude, dfrequency)
     }
 
     fn compute_full(
@@ -926,7 +938,7 @@ impl HopfOscillator {
             dfrequency.push(self.freq_adaptation_rate * sin_sum * inv_n);
         }
 
-        StateDerivatives::new(dphase, damplitude, dfrequency)
+        StateDerivatives::unclamped(dphase, damplitude, dfrequency)
     }
 
     fn compute_sparse_knn(
@@ -993,7 +1005,7 @@ impl Dynamics for HopfOscillator {
                 .map(|&r| mu * r - r * r * r)
                 .collect();
             let dfrequency = vec![0.0; n];
-            return StateDerivatives::new(dphase, damplitude, dfrequency);
+            return StateDerivatives::unclamped(dphase, damplitude, dfrequency);
         }
 
         match &self.coupling_mode {
@@ -1035,6 +1047,102 @@ mod tests {
         let state = OscillatorState::new(vec![0.2], vec![1.0], vec![3.0], None).unwrap();
         let gradient = dynamics_vjp(&model, &state, &[0.0], &[1.0e6], &[0.0]).unwrap();
         assert_relative_eq!(gradient.damplitude[0], -1.0e5, epsilon = 1e-2);
+    }
+
+    // ------------------------------------------------------------------
+    // EXP-001 D1: derivative clamping matches PRINet 3.0 per coupling path
+    // ------------------------------------------------------------------
+    //
+    // PRINet 3.0 applies `_clamp_finite` (±1e4, NaN → 0) only inside the
+    // sparse k-NN paths (`oscillator_models.py` lines 505-507 and 872-874).
+    // Its full, mean-field, and Stuart–Landau derivatives are returned as
+    // computed.
+
+    /// Two oscillators whose natural frequencies exceed `DERIV_CLAMP`, so
+    /// `dφ/dt ≈ ω` lies outside `±1e4` on every coupling path.
+    fn fast_pair() -> OscillatorState {
+        OscillatorState::new(vec![0.0, 1.0], vec![1.0, 1.0], vec![2.0e4, 3.0e4], None).unwrap()
+    }
+
+    #[test]
+    fn non_sparse_derivatives_are_not_clamped_like_prinet() {
+        let full = || CouplingMode::Full { matrix: None };
+        let models: Vec<(&str, Box<dyn Dynamics>)> = vec![
+            (
+                "kuramoto/full",
+                Box::new(KuramotoOscillator::new(2, 1.0, 0.1, 0.0, full()).unwrap()),
+            ),
+            (
+                "kuramoto/mean_field",
+                Box::new(
+                    KuramotoOscillator::new(2, 1.0, 0.1, 0.0, CouplingMode::MeanField).unwrap(),
+                ),
+            ),
+            (
+                "hopf/full",
+                Box::new(HopfOscillator::new(2, 1.0, 1.0, 0.0, full()).unwrap()),
+            ),
+            (
+                "hopf/mean_field",
+                Box::new(HopfOscillator::new(2, 1.0, 1.0, 0.0, CouplingMode::MeanField).unwrap()),
+            ),
+            (
+                "stuart_landau/full",
+                Box::new(StuartLandauOscillator::new(2, 1.0, 1.0, full()).unwrap()),
+            ),
+        ];
+        let state = fast_pair();
+        for (label, model) in &models {
+            let d = model.compute_derivatives(&state).unwrap();
+            assert!(
+                d.dphase[1] > 2.9e4,
+                "{label}: dφ/dt = {} was clamped; PRINet 3.0 returns it unclamped",
+                d.dphase[1]
+            );
+        }
+    }
+
+    #[test]
+    fn single_oscillator_derivatives_are_not_clamped_like_prinet() {
+        // PRINet 3.0 has no N = 1 clamp on any path: its dense models see a
+        // zero coupling matrix and its sparse N <= 1 guard returns before
+        // `_clamp_finite`. So dφ/dt = ω, unclamped, in the N <= 1 shortcut.
+        let state = OscillatorState::new(vec![0.5], vec![1.0], vec![3.0e4], None).unwrap();
+        let models: Vec<Box<dyn Dynamics>> = vec![
+            Box::new(KuramotoOscillator::new(1, 1.0, 0.1, 0.0, CouplingMode::MeanField).unwrap()),
+            Box::new(StuartLandauOscillator::new(1, 1.0, 1.0, CouplingMode::MeanField).unwrap()),
+            Box::new(HopfOscillator::new(1, 1.0, 1.0, 0.0, CouplingMode::MeanField).unwrap()),
+        ];
+        for model in &models {
+            assert_eq!(model.compute_derivatives(&state).unwrap().dphase, [3.0e4]);
+        }
+    }
+
+    #[cfg(not(feature = "strict-checks"))]
+    #[test]
+    fn sparse_knn_derivatives_remain_clamped_like_prinet() {
+        let sparse = || CouplingMode::SparseKnn { k: Some(1) };
+        let models: Vec<Box<dyn Dynamics>> = vec![
+            Box::new(KuramotoOscillator::new(2, 1.0, 0.1, 0.0, sparse()).unwrap()),
+            Box::new(HopfOscillator::new(2, 1.0, 1.0, 0.0, sparse()).unwrap()),
+        ];
+        let state = fast_pair();
+        for model in &models {
+            let d = model.compute_derivatives(&state).unwrap();
+            assert_eq!(d.dphase[1], crate::state::DERIV_CLAMP);
+        }
+    }
+
+    #[cfg(feature = "strict-checks")]
+    #[test]
+    fn sparse_knn_out_of_range_derivatives_are_rejected_under_strict_checks() {
+        let model =
+            KuramotoOscillator::new(2, 1.0, 0.1, 0.0, CouplingMode::SparseKnn { k: Some(1) })
+                .unwrap();
+        assert!(matches!(
+            model.compute_derivatives(&fast_pair()),
+            Err(StateError::OutOfRange { .. })
+        ));
     }
 
     #[test]

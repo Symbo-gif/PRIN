@@ -64,12 +64,22 @@ def test_corpus_regenerates_identically(case_id: str) -> None:
 
 @pytest.mark.parametrize("case_id", _all_corpus_case_ids())
 def test_corpus_exhaustive_differential_parity(case_id: str) -> None:
-    """Exhaustive differential parity: every corpus case against PRINet 3.0.
+    """Reference self-consistency: PRINet 3.0 regenerates every corpus case.
 
-    Validates the full Python -> Rust -> reference pipeline for all 504
-    golden-trajectory cases.  This is the end-to-end validation that
-    complements the Rust-level parity tests (``parity_models.rs``,
-    ``parity_integrators.rs``, etc.).
+    Regenerates each of the 504 golden cases with PRINet 3.0 itself
+    (``parity.generate_corpus._run_case`` builds ``prinet`` models and
+    metrics) and compares the regeneration with the stored corpus, which is
+    also PRINet 3.0 output. No ``prin`` code runs on this path, so this test is
+    evidence that the corpus has not drifted from its reference, not of PRIN
+    parity. It is ``test_corpus_regenerates_identically`` extended to the whole
+    corpus; both compare at the registered tolerances, which hold across
+    platforms (amendments #16/#17).
+
+    PRIN-vs-corpus parity over all 504 cases is
+    ``parity/test_parity_prin_corpus.py``. This docstring previously claimed to
+    validate "the full Python -> Rust -> reference pipeline"; EXP-001 finding
+    EXP001-E5-F1 showed that claim was wrong, and the EXP-001 D1 correction
+    fixed it.
     """
     loader = CorpusLoader(_CORPUS_DIR)
     loaded = loader.load(case_id)

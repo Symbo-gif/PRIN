@@ -69,6 +69,41 @@ Parity Report
    Evidence: ``DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/report.md``
    §7–§8; ``EVIDENCE/0158-exp001-e5-parity-gate-coverage.json``.
 
+.. admonition:: Update — 2026-09-24 (EXP-001 D1 correction, S1 implementation)
+   :class: warning
+
+   The erratum above is retained verbatim. The correction cycle's S1 session
+   has since established the root cause of both refutations. The S2 audit, S3
+   remediation, S4 documentation and the ``EXP-001-r1`` re-run are still
+   ahead, so the golden-corpus section is **not yet** confirmatory evidence.
+
+   * **H1 (19/504) is entirely DV-007.** PRINet 3.0 evaluates its
+     Stuart–Landau and mean-field derivatives in ``complex64`` inside a float64
+     model. With only those casts widened to float64, the reference agrees with
+     PRIN to ``2.0e-15`` on all 504 cases. An arbitrary-precision (mpmath,
+     50-digit) evaluation of PRINet 3.0's own discrete map puts PRIN within
+     ``4.7e-14`` of it and the stored corpus up to ``6.2e-6`` away, so on these
+     cases the **corpus is the erroneous side** (campaign plan §10.4 item 3).
+   * **H2a (103/1,000) has two mechanisms, plus an ill-conditioned regime.**
+     38 breaches are DV-007 alone; 65, including all 33 at or above ``1e-3``,
+     come from PRIN's Euler/RK4 guard. PRIN had applied the ``[1e-6, 10]``
+     amplitude and ``±1e4`` derivative bounds of PRINet 3.0's fused-kernel and
+     OscilloSim paths to the ``OscillatorModel._step_euler``/``_step_rk4``
+     port. That reference path floors amplitude at exactly ``0``, has no
+     ceiling, and clamps derivatives only on sparse k-NN coupling. PRIN now
+     follows it by default (``GuardPolicy::NonNegative``). 22 of the 103 cases
+     are ill-conditioned: PRINet 3.0's own float64 map breaches the registered
+     tolerance there under a one-ulp change of its initial phases.
+   * **The missing gate now exists.** ``parity/test_parity_prin_corpus.py``
+     runs PRIN against all 504 stored cases at the registered tolerance, and
+     ``parity/test_parity_prin_fuzz.py`` replays the registered H2a stream.
+     Both run in the ``parity`` job. See the golden-corpus section and the
+     ``EXP-001 D1`` register entry below.
+
+   Evidence: ``EVIDENCE/exp001-d1-s1/`` (root-cause decomposition at the
+   pre-fix and post-fix builds; DV-007 exactness audit);
+   ``DOCS/audits/2026-09-24-exp001-d1-correction-audit.md``.
+
 How to read this report
 -----------------------
 
@@ -203,11 +238,33 @@ plants a deviation and asserts the harness rejects it. Without it, a green
 differential suite would be indistinguishable from a harness that never
 compares anything.
 
+The EXP-001 D1 correction (2026-09-24) added the PRIN-vs-reference gates the
+erratum found missing, in the same ``parity`` job:
+
+* ``parity/test_parity_prin_corpus.py::test_prin_reproduces_corpus_case`` —
+  **PRIN** re-integrated from every stored initial state (all 504 cases, the
+  EXP-001 H1 execution path), compared with the stored reference at the
+  registered tolerances. A breach passes only when the case is on a DV-007
+  ``complex64`` path **and** PRIN matches the reference re-evaluated with only
+  those casts widened to float64 (``parity/prinet_f64.py``) at the same
+  tolerance. That rule positively demonstrates the breach is DV-007 and
+  nothing else; no tolerance is widened and no case is skipped. Every other
+  breach fails the gate.
+* ``parity/test_parity_prin_fuzz.py`` — replays EXP-001 H2a's registered
+  ``Seed(0, 1)`` stream (1,000 cases, identity-checked against the committed
+  E3 artefact) and compares PRIN with a live PRINet 3.0 run within the
+  shadowing horizon under the same rule. The 22 ill-conditioned cases are
+  excluded from the pointwise check, and
+  ``test_reference_is_ill_conditioned`` re-proves on every run that PRINet 3.0
+  cannot reproduce its own output there under a one-ulp phase change.
+* ``parity/test_prinet_f64.py`` validates that instrument: it leaves every
+  non-DV-007 path bit-identical to a same-host native regeneration and
+  restores the archived methods on exit.
+
 The differential job installs the reference editable from the archived tree
-(``.github/workflows/parity.yml``) on every push and pull request, so
-**PRINet corpus self-consistency** is a merge gate rather than a periodic
-check — full-corpus **PRIN**-vs-reference trajectory parity is not (see the
-erratum at the top of this page).
+(``.github/workflows/parity.yml``) on every push and pull request, so both
+PRINet corpus self-consistency and full-corpus **PRIN**-vs-reference parity are
+merge gates once the correction merges.
 
 What the corpus does **not** cover, stated plainly: the oscillator counts are
 small (8–24) and the horizon is short (20 steps). That is deliberate — it is a
@@ -277,7 +334,10 @@ Where each class of claim in this report is backed:
      - Artefact
    * - Golden-corpus differential parity
      - ``parity/corpus/manifest.json``, ``parity/corpus/cases/`` (504 files),
-       ``parity/test_parity_differential.py``
+       ``parity/test_parity_differential.py`` (reference self-consistency),
+       ``parity/test_parity_prin_corpus.py`` (PRIN vs corpus, all 504 cases),
+       ``parity/test_parity_prin_fuzz.py`` (EXP-001 H2a registered stream),
+       ``EVIDENCE/exp001-d1-s1/``
    * - Subconscious-controller parity
      - ``parity/test_parity_subconscious.py`` (19 tests),
        ``EVIDENCE/0144U-wp036f-s1-controller-provider-report.json``,
@@ -329,6 +389,10 @@ This deviation is tracked and will be re-evaluated when a bit-for-bit f64
 reference corpus is regenerated or when an optional f32-complex reference path
 is added to ``prin-dynamics``.
 
+*2026-09-24 note:* EXP-001 measured the trajectory-level consequence of this
+entry (19 of 504 corpus cases outside the registered tolerance). The EXP-001 D1
+entry below records how the corpus gate now adjudicates it.
+
 WP-008 — Integrator trajectory parity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -344,6 +408,10 @@ and RK45 tolerance-property (tighter tolerance → smaller error) are asserted i
 both unit and parity tests. The adaptive RK45 (Dormand–Prince) integrator is
 validated by property and unit tests rather than direct PRINet trajectory
 parity, since PRINet 3.0 did not ship an adaptive RK45 reference path.
+
+*2026-09-24 note:* these fixtures never drive an amplitude outside
+``[1e-6, 10]``, so they could not detect the amplitude-guard divergence the
+EXP-001 D1 entry below records and corrects.
 
 WP-009 — PAC and coupling topology parity
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -926,3 +994,56 @@ case carries a governed ``pytest.mark.skip`` in ``tests/conftest.py`` citing
 this entry and the ``0144M5`` sub-pass disposition (WP036C-F3). It is a
 candidate to re-point at a regime-level property (e.g. per-seed mean over a
 seed sweep) in a later parity pass.
+
+EXP-001 D1 — Euler/RK4 guard semantics and trajectory-level DV-007
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Campaign experiment EXP-001 refuted H1 (19/504 corpus cases outside the
+registered tolerance) and H2a (103/1,000 fuzzed cases within the shadowing
+horizon). The EXP-001 D1 correction (S1, 2026-09-24) attributed every breach
+by controlled substitution. PRINet 3.0 was re-run with exactly one behaviour
+changed at a time — its DV-007 casts widened to float64, PRIN's pre-correction
+guard swapped in, or its initial phases moved by one ulp — and the effect on
+the registered comparison was measured at both the pre-fix and post-fix
+builds:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 14 56
+
+   * - Mechanism
+     - Cases
+     - Disposition
+   * - DV-007 ``complex64`` arithmetic in the reference (Stuart–Landau; Kuramoto
+       and Hopf mean-field)
+     - H1 19/19; H2a 38 alone, 29 together with the guard mechanism
+     - Reference-side. The corpus is the erroneous side (mpmath exactness
+       audit, campaign plan §10.4 item 3). The corpus and fuzz gates accept
+       such a breach only when PRIN matches the float64-evaluated reference at
+       the registered tolerance.
+   * - PRIN's Euler/RK4 guard: the fused-kernel/OscilloSim ``[1e-6, 10]`` and
+       ``±1e4`` bounds applied to the ``OscillatorModel`` port, whose reference
+       guard is ``max(·, 0)`` with no ceiling and a derivative clamp only on
+       sparse k-NN coupling
+     - H2a 65, including all 33 at or above ``1e-3``
+     - **PRIN defect, fixed.** ``EulerIntegrator``/``RK4Integrator`` default to
+       ``GuardPolicy::NonNegative``; ``GuardPolicy::Bounded`` (also the Python
+       ``guard="bounded"`` keyword) keeps the old bounds for the OscilloSim
+       ports. Non-sparse model derivatives are no longer clamped.
+   * - Ill-conditioning of the reference itself (an amplitude reaches exactly
+       ``0``, where the phase equation divides by ``max(r, 1e-8)``)
+     - H2a 22, all also guard- or DV-007-sensitive
+     - Pointwise parity is not a meaningful criterion here: PRINet 3.0's own
+       float64 map breaches the registered tolerance under a one-ulp phase
+       change. Excluded from the fuzz gate's pointwise comparison and
+       re-proven on every run.
+
+Before the fix, PRIN matched the reference re-evaluated in float64 with PRIN's
+old guard to ``3.3e-12`` on every well-conditioned fuzz case and to ``2.0e-15``
+on the corpus. After the fix, PRIN matches the float64 reference with its
+native guard on all 978 well-conditioned fuzz cases, 973 of them to
+``≤ 4e-14``. The other five sit in the amplitude-collapse or amplitude-growth
+regime and agree to ``1.9e-9``–``4.9e-7``, inside the registered tolerance.
+Evidence: ``EVIDENCE/exp001-d1-s1/`` and
+``DOCS/audits/2026-09-24-exp001-d1-correction-audit.md``. Project Plan
+amendment #47 makes the §5 preserved-hazard list path-specific.

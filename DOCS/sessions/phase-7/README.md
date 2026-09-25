@@ -61,3 +61,9 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 > returns a non-reversal verdict, or the maintainer records a Project Plan
 > §8.3 amendment accepting a changed conclusion. Planned session numbers do
 > not change.
+>
+> **Correction S1 complete, 2026-09-24 UTC** (draft PR #24; not merged).
+> Every H1/H2a breach is attributed. PRIN's Euler/RK4 guard divergence is
+> fixed; the reference's DV-007 `complex64` arithmetic is established as the
+> erroneous side (campaign plan §10.4 item 3); a full-corpus PRIN gate now
+> runs in `parity`. S2–S4 are pending; 0159 stays blocked.

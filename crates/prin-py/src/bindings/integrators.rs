@@ -7,8 +7,9 @@ use pyo3::prelude::*;
 use pyo3::types::PyList;
 
 use prin_dynamics::integrate::{
-    integrate_fixed, AdaptiveResult, EulerIntegrator, ExponentialIntegrator, IntegrateError,
-    Integrator, MultiRateIntegrator, MultiRateMethod, RK45Integrator, RK4Integrator,
+    integrate_fixed, AdaptiveResult, EulerIntegrator, ExponentialIntegrator, GuardPolicy,
+    IntegrateError, Integrator, MultiRateIntegrator, MultiRateMethod, RK45Integrator,
+    RK4Integrator,
 };
 use prin_dynamics::models::Dynamics;
 
@@ -17,6 +18,25 @@ use super::state::{PyOscillatorState, PyStateDerivatives};
 
 fn integrate_err_to_py(err: IntegrateError) -> PyErr {
     PyValueError::new_err(err.to_string())
+}
+
+/// Parse the Python `guard` keyword of the fixed-step integrators.
+fn parse_guard(guard: &str) -> PyResult<GuardPolicy> {
+    match guard {
+        "non_negative" => Ok(GuardPolicy::NonNegative),
+        "bounded" => Ok(GuardPolicy::Bounded),
+        other => Err(PyValueError::new_err(format!(
+            "guard must be 'non_negative' or 'bounded', got {other:?}"
+        ))),
+    }
+}
+
+/// The Python name of a [`GuardPolicy`].
+fn guard_name(guard: GuardPolicy) -> &'static str {
+    match guard {
+        GuardPolicy::NonNegative => "non_negative",
+        GuardPolicy::Bounded => "bounded",
+    }
 }
 
 /// Extract `&dyn Dynamics` from a Python object (any of the three model classes).
@@ -61,11 +81,26 @@ pub struct PyEulerIntegrator {
 
 #[pymethods]
 impl PyEulerIntegrator {
+    /// Create the integrator.
+    ///
+    /// ``guard="non_negative"`` (the default) is PRINet 3.0's
+    /// ``OscillatorModel`` guard: amplitude floored at exactly 0 with no
+    /// ceiling, derivatives as the model returns them. ``guard="bounded"``
+    /// clamps amplitude to ``[AMPLITUDE_MIN, AMPLITUDE_MAX]`` and every
+    /// derivative to ``±DERIV_CLAMP`` (PRINet 3.0's fused-kernel/OscilloSim
+    /// guard, and PRIN's behaviour before the EXP-001 D1 correction).
     #[new]
-    fn py_new() -> Self {
-        Self {
-            inner: EulerIntegrator::new(),
-        }
+    #[pyo3(signature = (guard="non_negative"))]
+    fn py_new(guard: &str) -> PyResult<Self> {
+        Ok(Self {
+            inner: EulerIntegrator::new().with_guard(parse_guard(guard)?),
+        })
+    }
+
+    /// The amplitude/derivative guard: ``"non_negative"`` or ``"bounded"``.
+    #[getter]
+    fn guard(&self) -> &'static str {
+        guard_name(self.inner.guard())
     }
 
     /// Advance state by one timestep dt.
@@ -114,8 +149,11 @@ impl PyEulerIntegrator {
         Ok((PyOscillatorState { inner: final_state }, traj_objs))
     }
 
-    fn __repr__(&self) -> &'static str {
-        "EulerIntegrator()"
+    fn __repr__(&self) -> String {
+        format!(
+            "EulerIntegrator(guard='{}')",
+            guard_name(self.inner.guard())
+        )
     }
 }
 
@@ -131,11 +169,26 @@ pub struct PyRK4Integrator {
 
 #[pymethods]
 impl PyRK4Integrator {
+    /// Create the integrator.
+    ///
+    /// ``guard="non_negative"`` (the default) is PRINet 3.0's
+    /// ``OscillatorModel`` guard: amplitude floored at exactly 0 with no
+    /// ceiling, derivatives as the model returns them. ``guard="bounded"``
+    /// clamps amplitude to ``[AMPLITUDE_MIN, AMPLITUDE_MAX]`` and every
+    /// derivative to ``±DERIV_CLAMP`` (PRINet 3.0's fused-kernel/OscilloSim
+    /// guard, and PRIN's behaviour before the EXP-001 D1 correction).
     #[new]
-    fn py_new() -> Self {
-        Self {
-            inner: RK4Integrator::new(),
-        }
+    #[pyo3(signature = (guard="non_negative"))]
+    fn py_new(guard: &str) -> PyResult<Self> {
+        Ok(Self {
+            inner: RK4Integrator::new().with_guard(parse_guard(guard)?),
+        })
+    }
+
+    /// The amplitude/derivative guard: ``"non_negative"`` or ``"bounded"``.
+    #[getter]
+    fn guard(&self) -> &'static str {
+        guard_name(self.inner.guard())
     }
 
     /// Advance state by one timestep dt.
@@ -181,8 +234,8 @@ impl PyRK4Integrator {
         Ok((PyOscillatorState { inner: final_state }, traj_objs))
     }
 
-    fn __repr__(&self) -> &'static str {
-        "RK4Integrator()"
+    fn __repr__(&self) -> String {
+        format!("RK4Integrator(guard='{}')", guard_name(self.inner.guard()))
     }
 }
 

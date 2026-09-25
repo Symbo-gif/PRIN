@@ -42,8 +42,9 @@ pub use bands::{
 };
 pub use coupling::{CouplingError, CouplingMode, Topology};
 pub use integrate::{
-    integrate_fixed, AdaptiveResult, EulerIntegrator, ExponentialIntegrator, IntegrateError,
-    Integrator, MultiRateIntegrator, MultiRateMethod, RK45Integrator, RK4Integrator,
+    integrate_fixed, AdaptiveResult, EulerIntegrator, ExponentialIntegrator, GuardPolicy,
+    IntegrateError, Integrator, MultiRateIntegrator, MultiRateMethod, RK45Integrator,
+    RK4Integrator,
 };
 pub use models::{Dynamics, HopfOscillator, KuramotoOscillator, StuartLandauOscillator};
 pub use pac::{PacError, PhaseAmplitudeCoupling};

@@ -180,7 +180,11 @@ The preserved numerical hazards — phase wrap ``% 2π``, amplitude clamp
 ``1/k``, the ``φ₁(λ)→1`` limit, the straight-through estimator's
 forward-hard/backward-soft identity, and the reference's ``torch.complex64``
 internal arithmetic — are enumerated in Project Plan §5 and measured in
-:doc:`parity_report`.
+:doc:`parity_report`. The two clamps are path-specific in PRINet 3.0 and
+therefore in PRIN (Project Plan amendment #47). The ``OscillatorModel``
+Euler/RK4 path floors amplitude at ``0`` with no ceiling and clamps derivatives
+only on sparse k-NN coupling; the ``[1e-6, 10]`` / ``±1e4`` bounds belong to
+the fused-kernel, OscilloSim, PAC, temporal and trainable-layer paths.
 
 Versioning
 ----------
