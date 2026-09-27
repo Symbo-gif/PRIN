@@ -167,7 +167,9 @@ class _ReNarrowToDtype(ast.NodeTransformer):
             ):
                 return ast.copy_location(
                     ast.Call(
-                        func=ast.Attribute(value=func.value, attr="float"),
+                        func=ast.Attribute(
+                            value=func.value, attr="float", ctx=ast.Load()
+                        ),
                         args=[],
                         keywords=[],
                     ),
