@@ -708,7 +708,19 @@ impl Dynamics for StuartLandauOscillator {
 
         if n <= 1 {
             let mu = self.bifurcation_param;
-            let dphase = state.frequency.clone();
+            // PRINet 3.0 has no N <= 1 early return here: the general path
+            // divides the rotated phase derivative by max(r, 1e-8), and at N = 1
+            // the coupling term vanishes, leaving dφ/dt = ω·r / max(r, 1e-8)
+            // (`oscillator_models.py`). Reproduce that exactly: under the
+            // default `GuardPolicy::NonNegative` an amplitude can be exactly
+            // 0, where a constant-ω shortcut would keep rotating a frozen
+            // oscillator against the reference.
+            let dphase: Vec<f64> = state
+                .frequency
+                .iter()
+                .zip(state.amplitude.iter())
+                .map(|(&omega, &r)| omega * r / r.max(1e-8))
+                .collect();
             let damplitude = state
                 .amplitude
                 .iter()
@@ -1106,15 +1118,53 @@ mod tests {
     fn single_oscillator_derivatives_are_not_clamped_like_prinet() {
         // PRINet 3.0 has no N = 1 clamp on any path: its dense models see a
         // zero coupling matrix and its sparse N <= 1 guard returns before
-        // `_clamp_finite`. So dφ/dt = ω, unclamped, in the N <= 1 shortcut.
+        // `_clamp_finite`. The shortcut is pinned for every output: the phase
+        // value is ω only because r = 1.0 ≥ 1e-8 (the Stuart–Landau phase
+        // carries the max(r, 1e-8) divisor; see the small-r test below), and
+        // the amplitudes pin the shortcut formulas — Kuramoto omits the
+        // mean-field self-term, so this is not a claim of full N = 1 parity
+        // with PRINet's mean-field path (audit S1.7 item 3).
         let state = OscillatorState::new(vec![0.5], vec![1.0], vec![3.0e4], None).unwrap();
         let models: Vec<Box<dyn Dynamics>> = vec![
             Box::new(KuramotoOscillator::new(1, 1.0, 0.1, 0.0, CouplingMode::MeanField).unwrap()),
             Box::new(StuartLandauOscillator::new(1, 1.0, 1.0, CouplingMode::MeanField).unwrap()),
             Box::new(HopfOscillator::new(1, 1.0, 1.0, 0.0, CouplingMode::MeanField).unwrap()),
         ];
-        for model in &models {
-            assert_eq!(model.compute_derivatives(&state).unwrap().dphase, [3.0e4]);
+        let expected_damplitude = [[-0.1], [0.0], [0.0]];
+        for (model, damplitude) in models.iter().zip(expected_damplitude) {
+            let d = model.compute_derivatives(&state).unwrap();
+            assert_eq!(d.dphase, [3.0e4]);
+            assert_eq!(d.damplitude, damplitude);
+            assert_eq!(d.dfrequency, [0.0]);
+        }
+    }
+
+    #[test]
+    fn stuart_landau_single_oscillator_phase_follows_the_safe_amplitude_divisor() {
+        // PRINet 3.0's Stuart–Landau path has no N <= 1 early return: at N = 1
+        // its general formula gives dφ/dt = ω·r / max(r, 1e-8), so the phase
+        // freezes as r → 0. Under the default NonNegative guard r can be
+        // exactly 0; a constant-ω shortcut would diverge from the reference
+        // there (audit S1.9).
+        let model = StuartLandauOscillator::new(1, 1.0, 1.0, CouplingMode::MeanField).unwrap();
+        for (amp, expected) in [(0.0, 0.0), (1.0e-9, 3.0e3), (1.0e-8, 3.0e4), (1.0, 3.0e4)] {
+            // Struct literal, not `OscillatorState::new`: the constructor
+            // guards amplitude into [1e-6, 10], but the default
+            // `GuardPolicy::NonNegative` lets integrated states sit at exactly
+            // 0 — the regime this test pins.
+            let state = OscillatorState {
+                phase: vec![0.5],
+                amplitude: vec![amp],
+                frequency: vec![3.0e4],
+                freq_band: None,
+            };
+            let d = model.compute_derivatives(&state).unwrap();
+            // Float-exact equality is not meaningful through the multiply and
+            // divide (ω·r / max(r, 1e-8) lands on 30000.000000000004 at r = 1e-8);
+            // the pinned values are the magnitudes, including the exact 0
+            // freeze at r = 0.
+            assert_relative_eq!(d.dphase[0], expected, epsilon = 1.0e-6);
+            assert_relative_eq!(d.damplitude[0], 1.0 * amp - amp * amp * amp);
         }
     }
 

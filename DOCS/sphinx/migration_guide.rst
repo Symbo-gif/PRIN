@@ -36,6 +36,22 @@ instead.
   ``[1e-6, 10]``, and ``RK45Integrator``, ``ExponentialIntegrator``, PAC,
   temporal propagation, GPU kernels and the trainable layers keep their
   bounded amplitude clamp.
+- **Also changed, by the model-level unclamp:** ``RK45Integrator`` and
+  ``ExponentialIntegrator`` (and the finite-difference Jacobian helper) now
+  consume model derivatives as returned — unclamped on the non-sparse paths.
+  Their amplitude clamp is unchanged, but a derivative outside ``±1e4`` is
+  no longer repaired or rejected on those paths. ``MultiRateIntegrator``
+  sub-steps with default-guard Euler/RK4, so it follows the new default too;
+  neither integrator has a guard option. Under ``strict-checks``, the
+  ``Bounded`` guard still raises the pre-correction out-of-range diagnostic;
+  the default guard does not range-check derivatives (matching PRINet 3.0's
+  ``OscillatorModel``).
+- **Deliberately on the new default:** the ``prin-sim`` band sweep behind
+  ``DeltaThetaGammaNetwork`` ports PRINet 3.0's continuous network path
+  rather than its OscilloSim, so it keeps the default ``OscilloModel`` guard;
+  every actual OscilloSim port (production, benches, and the engine's own
+  integration tests) is pinned to ``guard="bounded"`` and the engine rejects
+  a default-guard fixed-step integrator in debug builds.
 
 Evidence and rationale: :doc:`parity_report` (``EXP-001 D1`` register entry)
 and Project Plan amendment #47.

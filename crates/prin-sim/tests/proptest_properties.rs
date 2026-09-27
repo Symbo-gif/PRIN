@@ -10,7 +10,7 @@ use proptest::prelude::*;
 
 use prin_dynamics::models::{Dynamics, KuramotoOscillator};
 use prin_dynamics::state::OscillatorState;
-use prin_dynamics::{CouplingMode, Seed};
+use prin_dynamics::{CouplingMode, GuardPolicy, Seed};
 use prin_sim::{OscilloSim, SparseCoupling, SparseKuramoto};
 
 /// Build a dense coupling matrix for a ring topology.
@@ -110,8 +110,14 @@ proptest! {
         let state_a = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(seed_val, 0)).unwrap();
         let state_b = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(seed_val, 0)).unwrap();
 
-        let integrator_a = Box::new(prin_dynamics::RK4Integrator::new());
-        let integrator_b = Box::new(prin_dynamics::RK4Integrator::new());
+        // OscilloSim ports PRINet 3.0's bounded guard (engine.rs module docs);
+        // pin it explicitly rather than inheriting the prin-dynamics default.
+        let integrator_a = Box::new(
+            prin_dynamics::RK4Integrator::new().with_guard(GuardPolicy::Bounded),
+        );
+        let integrator_b = Box::new(
+            prin_dynamics::RK4Integrator::new().with_guard(GuardPolicy::Bounded),
+        );
         let mut engine_a = OscilloSim::new(state_a, coupling.clone(), integrator_a, 0.01).unwrap();
         let mut engine_b = OscilloSim::new(state_b, coupling, integrator_b, 0.01).unwrap();
 
@@ -132,7 +138,11 @@ proptest! {
         let coupling = SparseCoupling::from_ring(n, half_k, 1.0).unwrap();
         let model = SparseKuramoto::new(n, 0.1, 0.01, coupling.clone()).unwrap();
         let state = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(42, 0)).unwrap();
-        let integrator = Box::new(prin_dynamics::RK4Integrator::new());
+        // Never stepped — memory_bytes is guard-independent — but OscilloSim
+        // still asserts its bounded-guard contract at construction.
+        let integrator = Box::new(
+            prin_dynamics::RK4Integrator::new().with_guard(GuardPolicy::Bounded),
+        );
         let engine = OscilloSim::new(state, coupling.clone(), integrator, 0.01).unwrap();
 
         let expected = n * 3 * std::mem::size_of::<f64>() + coupling.memory_bytes();

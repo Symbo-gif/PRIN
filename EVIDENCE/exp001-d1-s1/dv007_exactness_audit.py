@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -41,10 +42,12 @@ from typing import Any
 import mpmath as mp
 import numpy as np
 import sympy as sp
+import torch
 
 _REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO))
 
+import prin  # noqa: E402
 from prin import _prin_core  # noqa: E402
 from prin.parity.harness import compare_arrays  # noqa: E402
 from prin.parity.loader import CorpusLoader  # noqa: E402
@@ -306,15 +309,21 @@ def audit_h1(decomposition: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def audit_h2a(decomposition: dict[str, Any]) -> list[dict[str, Any]]:
-    """Every H2a breach whose only mechanism is DV-007, within the horizon."""
+    """Every well-conditioned H2a breach on a DV-007 path, within the horizon.
+
+    Cases that are *also* guard-sensitive are included: the gates adjudicate
+    them under the float64-reference rule too, so the audit claim must cover
+    them (independent review of PR #24, finding B2/F-03/S3). Ill-conditioned
+    cases stay excluded — the reference is not pointwise-meaningful there for
+    any implementation, so "whose side is erroneous" is not decidable.
+    """
     wanted = {
         r["case_index"]
         for r in decomposition["fuzz"]
-        if r["e3_breach"]
-        and r["dv007_sensitive"]
-        and not r["guard_sensitive"]
-        and not r["ill_conditioned"]
+        if r["e3_breach"] and r["dv007_sensitive"] and not r["ill_conditioned"]
     }
+    if not wanted:
+        return []
     stream = _prin_core.Seed(0, 1)
     out = []
     for index in range(max(wanted) + 1):
@@ -406,12 +415,24 @@ def main(argv: list[str] | None = None) -> int:
     h2a = audit_h2a(decomposition)
     cases = h1 + h2a
     payload = {
+        "git_head": subprocess.run(
+            ["git", "rev-parse", "HEAD"],  # noqa: S607 - resolved from PATH
+            cwd=_REPO,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip(),
+        "prin_package": str(Path(prin.__file__).resolve().parent),
+        "prin_extension": str(Path(_prin_core.__file__).resolve()),
+        "torch": torch.__version__,
+        "numpy": np.__version__,
+        "platform": sys.platform,
         "mpmath_dps": mp.mp.dps,
         "phase_wrap_modulus": "float64 2.0*math.pi (PRINet 3.0 _TWO_PI)",
         "lemmas": lemmas(),
         "summary": {
             "h1_cases": len(h1),
-            "h2a_dv007_only_cases": len(h2a),
+            "h2a_dv007_path_cases": len(h2a),
             "reference_is_the_erroneous_side": sum(
                 c["reference_is_the_erroneous_side"] for c in cases
             ),

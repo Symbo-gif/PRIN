@@ -74,6 +74,7 @@ not checked here; this is a disclosed limitation, not silently skipped.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -1332,6 +1333,38 @@ def draw_fuzz_initial(
         _seed_vector(stream, 0.5, 1.5, n_oscillators),
         _seed_vector(stream, -1.0, 1.0, n_oscillators),
     )
+
+
+_H2ACase = tuple[
+    dict[str, Any],
+    NDArray[np.float64],
+    NDArray[np.float64],
+    NDArray[np.float64],
+]
+
+
+def h2a_stream_digest(cases: list[_H2ACase]) -> str:
+    """SHA-256 fingerprint of a replayed H2a case stream, in order.
+
+    Covers every spec *including* ``parameters`` and all three drawn initial
+    arrays — the identity fields the committed E3 artefact stores (model,
+    coupling, integrator, ``n_oscillators``, ``n_steps``, ``dt``) cannot see a
+    parameter-range or initial-condition change. The committed H2a gates and
+    the S1 evidence generator assert their replayed stream against the
+    registered digest (``parity/test_parity_prin_fuzz.py`` and
+    ``EVIDENCE/exp001-d1-s1/root_cause_decomposition.py``), so a change to
+    :func:`draw_fuzz_spec` or :func:`draw_fuzz_initial` fails loudly rather
+    than silently testing different physics. Floats serialise through
+    ``repr`` (exactly round-tripping binary64) and arrays through their raw
+    little-endian bytes, so the digest is platform-independent.
+    """
+    digest = hashlib.sha256()
+    for spec, phase, amplitude, frequency in cases:
+        digest.update(json.dumps(spec, sort_keys=True).encode("utf-8"))
+        for array in (phase, amplitude, frequency):
+            contiguous = np.ascontiguousarray(array, dtype=np.float64)
+            digest.update(contiguous.tobytes())
+    return digest.hexdigest()
 
 
 def run_prinet_trajectory(

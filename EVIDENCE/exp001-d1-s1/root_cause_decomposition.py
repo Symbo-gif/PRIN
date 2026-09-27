@@ -62,10 +62,16 @@ from benchmarks.campaign.exp001_driver import (  # noqa: E402
     T_STAR,
     draw_fuzz_initial,
     draw_fuzz_spec,
+    h2a_stream_digest,
     run_prin_trajectory,
     run_prinet_trajectory,
 )
 from parity.prinet_f64 import f64_corrected_reference, on_dv007_path  # noqa: E402
+
+#: The registered H2a stream fingerprint (identical constant and rationale in
+#: ``parity/test_parity_prin_fuzz.py``). ``_fuzz`` refuses to attribute
+#: mechanisms to a stream the samplers no longer reproduce.
+_H2A_STREAM_DIGEST = "9804fc09e4a510ef0c34dfa5b58c6639a62baf15cf4f38f481ed1c8b854cff76"
 
 _CORPUS_ARTEFACT = (
     _REPO
@@ -291,10 +297,26 @@ def _fuzz() -> list[dict[str, Any]]:
     recorded = json.loads(_FUZZ_ARTEFACT.read_text(encoding="utf-8"))
     cfg = recorded["config"]
     stream = _prin_core.Seed(cfg["seed_counter"], cfg["seed_key"])
-    rows = []
-    for index, case in enumerate(recorded["cases"]):
+    # Draw the whole stream up front and fingerprint it before running any
+    # reference: a sampler or parameter-range change must fail here, not
+    # silently attribute mechanisms to different physics (the E3 artefact
+    # stores only six scalar identity fields per case).
+    drawn: list[tuple[Any, ...]] = []
+    for _ in recorded["cases"]:
         spec = draw_fuzz_spec(stream)
         phase, amplitude, frequency = draw_fuzz_initial(stream, spec["n_oscillators"])
+        drawn.append((spec, phase, amplitude, frequency))
+    digest = h2a_stream_digest(drawn)
+    if digest != _H2A_STREAM_DIGEST:
+        raise RuntimeError(
+            "the replayed H2a stream does not match the committed fingerprint "
+            f"{_H2A_STREAM_DIGEST} (see parity/test_parity_prin_fuzz.py); a "
+            f"sampler or parameter-range change is in effect (got {digest})"
+        )
+    rows = []
+    for index, (case, (spec, phase, amplitude, frequency)) in enumerate(
+        zip(recorded["cases"], drawn, strict=True)
+    ):
         for field in ("model", "coupling", "integrator", "n_oscillators", "n_steps"):
             if spec[field] != case[field]:
                 raise RuntimeError(f"stream drift at case {index}: {field}")
@@ -398,16 +420,43 @@ def _git(*args: str) -> str:
     ).stdout.strip()
 
 
+def _derived_label() -> str:
+    """Classify the imported build by probing for the correction itself.
+
+    The pre-fix build has no ``guard`` keyword on its fixed-step integrators;
+    the post-fix build does. Deriving the label from the imported module —
+    rather than trusting ``--label`` — means a mislabelled run fails here
+    instead of writing a plausible-looking artefact (both builds can record
+    the same ``git_head`` when the script is newer than the build under
+    test).
+    """
+    try:
+        _prin_core.EulerIntegrator(guard="non_negative")
+    except TypeError:
+        return "prefix"
+    return "postfix"
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the decomposition and write the JSON evidence file."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--label", required=True, help="prefix or postfix")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args(argv)
+    derived = _derived_label()
+    if derived != args.label:
+        raise RuntimeError(
+            f"--label {args.label!r} does not match the imported build "
+            f"({_prin_core.__file__}): the guard keyword probe derived "
+            f"{derived!r}. Refusing to write a mislabelled artefact; point the "
+            "import at the intended build (see the README 'Regenerating' "
+            "section) and re-run."
+        )
     corpus = _corpus()
     fuzz = _fuzz()
     payload = {
-        "label": args.label,
+        "label": derived,
+        "label_flag": args.label,
         "git_head": _git("rev-parse", "HEAD"),
         "prin_package": str(Path(prin.__file__).resolve().parent),
         "prin_extension": str(Path(_prin_core.__file__).resolve()),

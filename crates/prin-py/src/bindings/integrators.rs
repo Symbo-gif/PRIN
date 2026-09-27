@@ -90,10 +90,13 @@ impl PyEulerIntegrator {
     /// derivative to ``±DERIV_CLAMP`` (PRINet 3.0's fused-kernel/OscilloSim
     /// guard, and PRIN's behaviour before the EXP-001 D1 correction).
     #[new]
-    #[pyo3(signature = (guard="non_negative"))]
-    fn py_new(guard: &str) -> PyResult<Self> {
+    #[pyo3(signature = (guard=None))]
+    fn py_new(guard: Option<&str>) -> PyResult<Self> {
+        // `None` takes the Rust `Default`, so the Python default cannot drift
+        // from the Rust one if the policy default ever changes.
+        let guard = guard.map(parse_guard).transpose()?.unwrap_or_default();
         Ok(Self {
-            inner: EulerIntegrator::new().with_guard(parse_guard(guard)?),
+            inner: EulerIntegrator::new().with_guard(guard),
         })
     }
 
@@ -178,10 +181,13 @@ impl PyRK4Integrator {
     /// derivative to ``±DERIV_CLAMP`` (PRINet 3.0's fused-kernel/OscilloSim
     /// guard, and PRIN's behaviour before the EXP-001 D1 correction).
     #[new]
-    #[pyo3(signature = (guard="non_negative"))]
-    fn py_new(guard: &str) -> PyResult<Self> {
+    #[pyo3(signature = (guard=None))]
+    fn py_new(guard: Option<&str>) -> PyResult<Self> {
+        // `None` takes the Rust `Default`, so the Python default cannot drift
+        // from the Rust one if the policy default ever changes.
+        let guard = guard.map(parse_guard).transpose()?.unwrap_or_default();
         Ok(Self {
-            inner: RK4Integrator::new().with_guard(parse_guard(guard)?),
+            inner: RK4Integrator::new().with_guard(guard),
         })
     }
 

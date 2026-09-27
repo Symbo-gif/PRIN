@@ -103,8 +103,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   above `10`. The previous `[1e-6, 10]` / `±1e4` guard remains available as
   `GuardPolicy::Bounded` (Rust `.with_guard(...)`, Python `guard="bounded"`,
   with a read-only `.guard` property); `prin-sim`'s OscilloSim ports use it.
-  `RK45Integrator`, `ExponentialIntegrator`, and `OscillatorState`
-  construction are unchanged. See the Migration Guide.
+  `RK45Integrator`, `ExponentialIntegrator`, and the finite-difference
+  Jacobian helper keep their own `[1e-6, 10]` amplitude clamp, but they now
+  consume model derivatives as returned (unclamped on the non-sparse paths);
+  neither has a `with_guard` option. `MultiRateIntegrator` sub-steps inherit
+  the new default-guard Euler/RK4 and also has no guard option.
+  `OscillatorState` construction is unchanged (still `[1e-6, 10]`), which is
+  why the torch compatibility models' `step()` re-guards the amplitude
+  between individual steps while `integrate()` does not. See the Migration
+  Guide.
+- **EXP-001 D1 review remediation (independent multi-agent review of PR #24,
+  2026-09-27; audit record §S1.9).** The `prin-sim` test ports that construct
+  an `OscilloSim` (six integrating sites plus the `memory_bytes`
+  constructor) are pinned to `GuardPolicy::Bounded` — the engine rejects a
+  default-guard fixed-step integrator in debug builds via the new
+  `Integrator::guard` trait method — and `prin-sim`'s `N ≤ 1` model
+  shortcuts no longer apply the derivative clamp, matching the archived
+  OscilloSim. Under `strict-checks`, `GuardPolicy::Bounded` again raises the
+  pre-correction `StateError::OutOfRange` diagnostic for out-of-range
+  derivatives instead of silently clamping. The Stuart–Landau `N ≤ 1`
+  shortcut reproduces PRINet 3.0's `max(r, 1e-8)` phase divisor, so the phase
+  freezes as the amplitude reaches exactly `0` instead of rotating at full
+  `ω`. The H2a registered-stream gate and the S1 evidence generator
+  fingerprint the full replayed stream (specs including `parameters` and all
+  three initial arrays) against a committed SHA-256; the 22 ill-conditioned
+  cases carry PRIN-side hazard-envelope and amplitude-floor assertions; and
+  the DV-007 exactness audit covers all 67 adjudicated cases (19 H1 + 48
+  H2a; previously 57 — the 10 well-conditioned DV-007+guard H2a cases are
+  audited too). The float64 instrument's three replacement methods are
+  pinned to the archived reference cast-for-cast by AST comparison.
 - **DV-040 opened (2026-09-23, session 0157).** Campaign plan §7.4 item 2
   prescribes the experiment record root for E4 analysis code, but
   `python.yml`'s lint job runs `ruff`, `mypy --strict`, `interrogate`, and

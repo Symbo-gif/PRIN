@@ -18,8 +18,9 @@ stored corpus carries float32 rounding that PRIN does not reproduce, and 19
 cases breach the registered tolerance for that reason alone (EXP-001 H1). The
 EXP-001 D1 correction established, to the campaign plan §10.4 item 3 standard,
 that the stored arrays are the erroneous side there: an arbitrary-precision
-evaluation of PRINet 3.0's own map puts PRIN within ``2e-15`` and the corpus
-outside tolerance (``EVIDENCE/exp001-d1-s1/dv007-exactness-audit.json``). A
+evaluation of PRINet 3.0's own map puts PRIN within ``3.6e-15`` of the exact
+map on all 19 corpus cases while the stored corpus is outside tolerance
+(``EVIDENCE/exp001-d1-s1/dv007-exactness-audit.json``). A
 breach therefore passes only when the case is on a DV-007 path **and** PRIN
 matches the reference re-evaluated with only those casts widened
 (:func:`parity.prinet_f64.f64_corrected_reference`) at the same registered

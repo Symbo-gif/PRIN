@@ -28,6 +28,9 @@ against the unmodified reference.
 
 from __future__ import annotations
 
+import ast
+import inspect
+import textwrap
 from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
@@ -131,6 +134,112 @@ _REPLACEMENTS: tuple[tuple[type[Any], str, Any], ...] = (
     ),
     (_om.HopfOscillator, "_compute_derivatives_mean_field", _hopf_mean_field_f64),
 )
+
+
+class _ReNarrowComplex(ast.NodeTransformer):
+    """Undo the ``complex64`` → ``complex128`` widening."""
+
+    def visit_Attribute(self, node: ast.Attribute) -> ast.AST:
+        self.generic_visit(node)
+        if node.attr == "complex128":
+            node.attr = "complex64"
+        return node
+
+
+class _ReNarrowToDtype(ast.NodeTransformer):
+    """Undo the ``.float()`` → ``.to(self._dtype)`` widening."""
+
+    def visit_Call(self, node: ast.Call) -> ast.AST:
+        self.generic_visit(node)
+        func = node.func
+        if (
+            isinstance(func, ast.Attribute)
+            and func.attr == "to"
+            and len(node.args) == 1
+            and not node.keywords
+        ):
+            (arg,) = node.args
+            if (
+                isinstance(arg, ast.Attribute)
+                and arg.attr == "_dtype"
+                and isinstance(arg.value, ast.Name)
+                and arg.value.id == "self"
+            ):
+                return ast.copy_location(
+                    ast.Call(
+                        func=ast.Attribute(value=func.value, attr="float"),
+                        args=[],
+                        keywords=[],
+                    ),
+                    node,
+                )
+        return node
+
+
+#: Which widening transforms each replacement applies, in the order they
+#: must be undone for the AST comparison. The Stuart-Landau copy keeps the
+#: archived ``.to(self._dtype)`` spelling, so only its complex casts widen;
+#: the mean-field copies also rename ``.float()``.
+_REVERSE_TRANSFORMS: dict[tuple[type[Any], str], tuple[ast.NodeTransformer, ...]] = {
+    (_om.StuartLandauOscillator, "compute_derivatives"): (_ReNarrowComplex(),),
+    (_om.KuramotoOscillator, "_compute_derivatives_mean_field"): (
+        _ReNarrowComplex(),
+        _ReNarrowToDtype(),
+    ),
+    (_om.HopfOscillator, "_compute_derivatives_mean_field"): (
+        _ReNarrowComplex(),
+        _ReNarrowToDtype(),
+    ),
+}
+
+
+def _function_body_dump(fn: Any, transforms: tuple[Any, ...] = ()) -> str:
+    """Return the ``ast.dump`` of ``fn``'s docstring-stripped body.
+
+    Applies each of ``transforms`` (in order) first. Comments and line
+    wrapping vanish under ``ast.dump``; only real semantic differences
+    survive.
+    """
+    tree = ast.parse(textwrap.dedent(inspect.getsource(fn)))
+    (defn,) = [node for node in tree.body if isinstance(node, ast.FunctionDef)]
+    body = defn.body
+    if (
+        body
+        and isinstance(body[0], ast.Expr)
+        and isinstance(body[0].value, ast.Constant)
+        and isinstance(body[0].value.value, str)
+    ):
+        body = body[1:]
+    for transform in transforms:
+        body = [transform.visit(stmt) for stmt in body]
+    module = ast.Module(body=body, type_ignores=[])
+    ast.fix_missing_locations(module)
+    return ast.dump(module, include_attributes=False)
+
+
+def assert_replacements_match_reference() -> None:
+    """Pin each replacement to the archived method, cast-for-cast.
+
+    The gates' explained-divergence rule trusts this instrument to change
+    *only* the DV-007 narrowing. A behavioural check ("the trajectory moved")
+    cannot distinguish a cast widening from any other edit, and a drifted
+    copy would make the rule compare PRIN with PRIN. So assert the defining
+    property directly: with that replacement's widening transforms undone,
+    its body must be exactly the archived method's body.
+    """
+    for cls, name, replacement in _REPLACEMENTS:
+        archived = cls.__dict__[name]
+        expected = _function_body_dump(archived)
+        got = _function_body_dump(
+            replacement, transforms=_REVERSE_TRANSFORMS[(cls, name)]
+        )
+        if expected != got:
+            raise AssertionError(
+                f"{cls.__name__}.{name}: the float64 replacement no longer "
+                "matches the archived reference statement for statement once "
+                "the cast widenings are undone; the instrument may be "
+                "mimicking PRIN instead of measuring the reference"
+            )
 
 
 @contextmanager

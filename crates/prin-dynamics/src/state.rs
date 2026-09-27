@@ -631,7 +631,11 @@ fn guard_amplitude_value(amp: f64, _index: usize, _name: &'static str) -> Result
 }
 
 #[cfg(feature = "strict-checks")]
-fn guard_derivative_value(d: f64, index: usize, name: &'static str) -> Result<f64, StateError> {
+pub(crate) fn guard_derivative_value(
+    d: f64,
+    index: usize,
+    name: &'static str,
+) -> Result<f64, StateError> {
     if !d.is_finite() {
         return Err(StateError::NonFiniteValue {
             name,
@@ -652,7 +656,11 @@ fn guard_derivative_value(d: f64, index: usize, name: &'static str) -> Result<f6
 }
 
 #[cfg(not(feature = "strict-checks"))]
-fn guard_derivative_value(d: f64, _index: usize, _name: &'static str) -> Result<f64, StateError> {
+pub(crate) fn guard_derivative_value(
+    d: f64,
+    _index: usize,
+    _name: &'static str,
+) -> Result<f64, StateError> {
     Ok(clamp_derivative(d))
 }
 

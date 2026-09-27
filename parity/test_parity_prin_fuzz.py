@@ -8,9 +8,13 @@ replays that stream through the same sampler (``draw_fuzz_spec`` /
 ``draw_fuzz_initial``) and the same two execution paths
 (``run_prinet_trajectory`` / ``run_prin_trajectory``) and repeats the
 comparison for every case, so the refutation's whole population stays under
-CI. Each replayed spec is checked against the committed E3 artefact, so a
-change to the sampler or the stream fails loudly rather than testing
-different cases.
+CI. Each replayed spec is checked against the committed E3 artefact, and the
+whole replayed stream — every spec *including* its drawn ``parameters`` and
+all three initial arrays — is fingerprinted by :func:`h2a_stream_digest`
+against a committed constant (the E3 artefact stores only the six scalar
+identity fields, so without the fingerprint a sampler change could keep
+every identity assertion green while testing different physics; see the
+independent review of this PR, finding S1).
 
 A breach on a DV-007 ``complex64`` path passes only when PRIN matches the
 reference re-evaluated in float64 (:mod:`parity.prinet_f64`) at the same
@@ -21,12 +25,17 @@ breach fails.
 Twenty-two cases are excluded from the pointwise comparison because the
 reference itself is not pointwise-reproducible there: evaluated in float64,
 PRINet 3.0's own map breaches the registered tolerance within the horizon
-when its initial phases move by one unit in the last place. In all 22 an
-amplitude reaches PRINet's floor of exactly zero, where the phase equation
-divides by ``max(r, 1e-8)``. Pointwise parity is not a meaningful criterion
-for such a case, for PRIN or for any other correct reimplementation.
-:func:`test_reference_is_ill_conditioned` re-proves the property for each of
-them on every run, so the exclusion cannot silently outlive its evidence.
+when its initial phases move by one unit in the last place. In 21 of the 22
+the committed decomposition records a native amplitude range bottoming out
+at exactly ``0.0`` (case 691 at ``5.6e-3``), the regime where the phase
+equation divides by ``max(r, 1e-8)``. Pointwise parity is not a meaningful
+criterion for such a case, for PRIN or for any other correct
+reimplementation. :func:`test_reference_is_ill_conditioned` re-proves the
+reference property for each of them on every run, and
+:func:`test_prin_output_on_ill_conditioned_cases_stays_valid` asserts the
+registered hazard envelope and the amplitude floor on PRIN's own output for
+each of them, so the exclusion removes the pointwise criterion only — never
+every PRIN assertion — and cannot silently outlive its evidence.
 """
 
 from __future__ import annotations
@@ -46,8 +55,10 @@ pytest.importorskip("prinet")
 
 from benchmarks.campaign.exp001_driver import (
     T_STAR,
+    _case_arrays_hazard_violation,
     draw_fuzz_initial,
     draw_fuzz_spec,
+    h2a_stream_digest,
     run_prin_trajectory,
     run_prinet_trajectory,
 )
@@ -68,6 +79,17 @@ _FUZZ_ARTEFACT = (
 _SEED_COUNTER = 0
 _SEED_KEY = 1
 _N_CASES = 1000
+
+#: SHA-256 of the full replayed stream — every spec including ``parameters``
+#: and all three initial arrays, in case order (``h2a_stream_digest``). This
+#: is the bind that the E3 artefact cannot provide (it stores only six scalar
+#: identity fields per case); a change to ``draw_fuzz_spec`` /
+#: ``draw_fuzz_initial`` (including a parameter-range change) fails loudly
+#: against it. The registered stream is immutable under the campaign
+#: preregistration, so this constant must not be updated to make a changed
+#: sampler pass; a registered stream change requires a new artefact and an
+#: amendment. Mirrored in ``EVIDENCE/exp001-d1-s1/root_cause_decomposition.py``.
+_H2A_STREAM_DIGEST = "9804fc09e4a510ef0c34dfa5b58c6639a62baf15cf4f38f481ed1c8b854cff76"
 
 #: Case indices where PRINet 3.0's float64 map is ill-conditioned within the
 #: horizon (see the module docstring). Evidence:
@@ -96,16 +118,31 @@ _StreamCase = tuple[
     dict[str, Any], NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]
 ]
 
+#: Cases compared pointwise: the full registered stream minus the 22 the
+#: reference cannot pointwise-reproduce (see the module docstring).
+_POINTWISE_CASES = [i for i in range(_N_CASES) if i not in _ILL_CONDITIONED]
+
 
 @pytest.fixture(scope="module")
 def stream_cases() -> list[_StreamCase]:
-    """Replay the registered stream exactly as ``run_fuzz_batch`` consumes it."""
+    """Replay the registered stream exactly as ``run_fuzz_batch`` consumes it.
+
+    The full replayed stream — specs with ``parameters`` and all three
+    initial arrays — is fingerprinted against the committed constant, so a
+    sampler change fails here before any case is integrated.
+    """
     stream = _prin_core.Seed(_SEED_COUNTER, _SEED_KEY)
     cases: list[_StreamCase] = []
     for _ in range(_N_CASES):
         spec = draw_fuzz_spec(stream)
         phase, amplitude, frequency = draw_fuzz_initial(stream, spec["n_oscillators"])
         cases.append((spec, phase, amplitude, frequency))
+    digest = h2a_stream_digest(cases)
+    assert digest == _H2A_STREAM_DIGEST, (
+        "the replayed H2a stream does not match the committed fingerprint "
+        f"{_H2A_STREAM_DIGEST}; a sampler or parameter-range change is "
+        f"testing different physics (got {digest})"
+    )
     return cases
 
 
@@ -171,9 +208,7 @@ def _describe(breaches: list[ComparisonResult]) -> str:
     )
 
 
-@pytest.mark.parametrize(
-    "case_index", [i for i in range(_N_CASES) if i not in _ILL_CONDITIONED]
-)
+@pytest.mark.parametrize("case_index", _POINTWISE_CASES)
 def test_prin_matches_prinet_within_horizon(
     stream_cases: list[_StreamCase],
     recorded_identities: list[dict[str, Any]],
@@ -217,7 +252,37 @@ def test_reference_is_ill_conditioned(
     )
 
 
+@pytest.mark.parametrize("case_index", sorted(_ILL_CONDITIONED))
+def test_prin_output_on_ill_conditioned_cases_stays_valid(
+    stream_cases: list[_StreamCase], case_index: int
+) -> None:
+    """PRIN's own output stays inside the registered hazard envelope here.
+
+    These 22 cases are excluded from *pointwise* parity because the float64
+    reference cannot reproduce itself on them — not from every PRIN
+    assertion. The residuals between PRIN and the float64 reference are O(1)
+    there (they sit in the reference's chaotic regime), so a residual ceiling
+    is not meaningful; what must hold for any faithful implementation is the
+    registered hazard envelope (finiteness, wrapped phase, metric ranges) and
+    the amplitude floor this correction redefined. Three of the 22
+    (330, 385, 841) are off the DV-007 paths entirely — their recorded E3
+    breach is the guard mechanism this PR changed — so without this test the
+    fuzz gate would place no constraint on PRIN for them at all.
+    """
+    spec, phase, amplitude, frequency = stream_cases[case_index]
+    produced = _run(run_prin_trajectory, spec, phase, amplitude, frequency)
+    violation = _case_arrays_hazard_violation(f"case {case_index}", produced)
+    assert violation is None, violation
+    assert np.all(produced.amplitude_traj >= 0.0), (
+        f"case {case_index}: negative amplitude in PRIN output under the "
+        "NonNegative guard"
+    )
+
+
 def test_every_registered_case_is_covered() -> None:
-    """The two parametrizations together cover the full registered stream."""
-    assert _ILL_CONDITIONED <= set(range(_N_CASES))
-    assert len(_ILL_CONDITIONED) == 22
+    """The parametrizations partition the registered stream exactly once."""
+    pointwise = set(_POINTWISE_CASES)
+    characterised = set(_ILL_CONDITIONED)
+    assert pointwise.isdisjoint(characterised)
+    assert pointwise | characterised == set(range(_N_CASES))
+    assert len(_POINTWISE_CASES) + len(_ILL_CONDITIONED) == _N_CASES

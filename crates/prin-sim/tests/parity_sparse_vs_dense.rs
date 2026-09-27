@@ -7,7 +7,7 @@
 use approx::assert_relative_eq;
 use prin_dynamics::models::{Dynamics, KuramotoOscillator, StuartLandauOscillator};
 use prin_dynamics::state::OscillatorState;
-use prin_dynamics::{CouplingMode, RK4Integrator, Seed};
+use prin_dynamics::{CouplingMode, GuardPolicy, RK4Integrator, Seed};
 use prin_sim::{OscilloSim, SparseCoupling, SparseKuramoto, SparseStuartLandau};
 
 /// Build a dense coupling matrix for a ring topology with `half_k` neighbours
@@ -241,7 +241,7 @@ fn engine_trajectory_parity_n16() {
     let mut engine = OscilloSim::new(
         state.clone(),
         sparse_coupling,
-        Box::new(RK4Integrator::new()),
+        Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded)),
         dt,
     )
     .unwrap();
@@ -340,8 +340,13 @@ fn oscillo_sim_n100k_kuramoto_deterministic_and_finite() {
         let coupling = SparseCoupling::from_ring(n, half_k, strength).unwrap();
         let model = SparseKuramoto::new(n, decay, freq_adapt, coupling.clone()).unwrap();
         let state = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(42, 0)).unwrap();
-        let mut engine =
-            OscilloSim::new(state, coupling, Box::new(RK4Integrator::new()), dt).unwrap();
+        let mut engine = OscilloSim::new(
+            state,
+            coupling,
+            Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded)),
+            dt,
+        )
+        .unwrap();
         engine.run(&model, n_steps, false).unwrap().0
     };
 
@@ -394,8 +399,13 @@ fn engine_deterministic_across_runs() {
         let coupling = SparseCoupling::from_ring(n, 4, 1.0).unwrap();
         let model = SparseKuramoto::new(n, 0.1, 0.01, coupling.clone()).unwrap();
         let state = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(42, 0)).unwrap();
-        let mut engine =
-            OscilloSim::new(state, coupling, Box::new(RK4Integrator::new()), dt).unwrap();
+        let mut engine = OscilloSim::new(
+            state,
+            coupling,
+            Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded)),
+            dt,
+        )
+        .unwrap();
         let (_, traj) = engine.run(&model, n_steps, true).unwrap();
         traj.unwrap().phases
     };
@@ -418,7 +428,7 @@ fn chimera_metrics_on_engine_trajectory() {
     let mut engine = OscilloSim::new(
         state,
         coupling.clone(),
-        Box::new(RK4Integrator::new()),
+        Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded)),
         0.01,
     )
     .unwrap();

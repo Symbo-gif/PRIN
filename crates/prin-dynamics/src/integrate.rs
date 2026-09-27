@@ -57,7 +57,8 @@ use thiserror::Error;
 
 use crate::models::Dynamics;
 use crate::state::{
-    clamp_amplitude, clamp_derivative, wrap_phase, OscillatorState, StateDerivatives, StateError,
+    clamp_amplitude, clamp_derivative, guard_derivative_value, wrap_phase, OscillatorState,
+    StateDerivatives, StateError,
 };
 
 /// Amplitude and derivative guard applied by [`EulerIntegrator`] and
@@ -100,12 +101,26 @@ impl GuardPolicy {
     }
 
     /// Guard a flat derivative buffer in place.
-    fn derivatives(self, buf: &mut [f64]) {
+    ///
+    /// # Errors
+    ///
+    /// With `strict-checks` enabled, a `Bounded` guard rejects a non-finite or
+    /// out-of-range value with [`StateError`] instead of repairing it: this
+    /// preserves the pre-correction diagnostic, which reached the same error
+    /// through [`StateDerivatives::new`]. (Without `strict-checks`, values are
+    /// clamped and repaired exactly as before the correction.)
+    fn derivatives(self, buf: &mut [f64]) -> Result<(), StateError> {
         if self == Self::Bounded {
-            for d in buf {
+            for (index, d) in buf.iter_mut().enumerate() {
+                // Under `strict-checks` this rejects a non-finite or
+                // out-of-range value with the pre-correction diagnostic;
+                // otherwise it repairs exactly like `clamp_derivative` (the
+                // extra clamp below is then a no-op).
+                guard_derivative_value(*d, index, "derivative")?;
                 *d = clamp_derivative(*d);
             }
         }
+        Ok(())
     }
 }
 
@@ -210,6 +225,17 @@ pub trait Integrator {
         state: &OscillatorState,
         dt: f64,
     ) -> Result<OscillatorState, IntegrateError>;
+
+    /// The fixed-step [`GuardPolicy`] this integrator applies, if it has one.
+    ///
+    /// [`EulerIntegrator`]/[`RK4Integrator`] report their configured policy;
+    /// other integrators (and foreign implementations) report `None`.
+    /// Callers that must reproduce a specific PRINet 3.0 guard path — e.g.
+    /// `prin-sim`'s `OscilloSim`, which requires [`GuardPolicy::Bounded`] —
+    /// can use this to assert the contract instead of relying on convention.
+    fn guard(&self) -> Option<GuardPolicy> {
+        None
+    }
 }
 
 /// Validate that `dt` is finite and positive.
@@ -401,7 +427,7 @@ impl Integrator for EulerIntegrator {
         self.deriv_buf.extend_from_slice(&k1.dphase);
         self.deriv_buf.extend_from_slice(&k1.damplitude);
         self.deriv_buf.extend_from_slice(&k1.dfrequency);
-        self.guard.derivatives(&mut self.deriv_buf);
+        self.guard.derivatives(&mut self.deriv_buf)?;
 
         let dphase = &self.deriv_buf[..n];
         let damplitude = &self.deriv_buf[n..2 * n];
@@ -416,6 +442,10 @@ impl Integrator for EulerIntegrator {
             .collect();
 
         make_final_state(state, phase, amplitude, frequency, self.guard)
+    }
+
+    fn guard(&self) -> Option<GuardPolicy> {
+        Some(self.guard)
     }
 }
 
@@ -503,13 +533,14 @@ impl RK4Integrator {
     }
 
     /// Flatten a [`StateDerivatives`] into a reusable `3N` buffer.
-    fn flatten(&mut self, deriv: &StateDerivatives, n: usize) {
+    fn flatten(&mut self, deriv: &StateDerivatives, n: usize) -> Result<(), StateError> {
         self.k1.clear();
         self.k1.reserve(3 * n);
         self.k1.extend_from_slice(&deriv.dphase);
         self.k1.extend_from_slice(&deriv.damplitude);
         self.k1.extend_from_slice(&deriv.dfrequency);
-        self.guard.derivatives(&mut self.k1);
+        self.guard.derivatives(&mut self.k1)?;
+        Ok(())
     }
 }
 
@@ -533,7 +564,7 @@ impl Integrator for RK4Integrator {
 
         // k1 = f(y_n)
         let d1 = model.compute_derivatives(state)?;
-        self.flatten(&d1, n);
+        self.flatten(&d1, n)?;
         let k1 = self.k1.clone();
 
         // k2 = f(y_n + h/2 · k1)
@@ -554,7 +585,7 @@ impl Integrator for RK4Integrator {
         self.k2.extend_from_slice(&d2.dphase);
         self.k2.extend_from_slice(&d2.damplitude);
         self.k2.extend_from_slice(&d2.dfrequency);
-        self.guard.derivatives(&mut self.k2);
+        self.guard.derivatives(&mut self.k2)?;
         let k2 = self.k2.clone();
 
         // k3 = f(y_n + h/2 · k2)
@@ -575,7 +606,7 @@ impl Integrator for RK4Integrator {
         self.k3.extend_from_slice(&d3.dphase);
         self.k3.extend_from_slice(&d3.damplitude);
         self.k3.extend_from_slice(&d3.dfrequency);
-        self.guard.derivatives(&mut self.k3);
+        self.guard.derivatives(&mut self.k3)?;
         let k3 = self.k3.clone();
 
         // k4 = f(y_n + h · k3)
@@ -596,7 +627,7 @@ impl Integrator for RK4Integrator {
         self.k4.extend_from_slice(&d4.dphase);
         self.k4.extend_from_slice(&d4.damplitude);
         self.k4.extend_from_slice(&d4.dfrequency);
-        self.guard.derivatives(&mut self.k4);
+        self.guard.derivatives(&mut self.k4)?;
         let k4 = &self.k4;
 
         // y_{n+1} = y_n + h/6 · (k1 + 2k2 + 2k3 + k4)
@@ -621,6 +652,10 @@ impl Integrator for RK4Integrator {
             .collect();
 
         make_final_state(state, phase, amplitude, frequency, self.guard)
+    }
+
+    fn guard(&self) -> Option<GuardPolicy> {
+        Some(self.guard)
     }
 }
 
@@ -2502,6 +2537,75 @@ mod tests {
                 .guard(),
             GuardPolicy::Bounded
         );
+        // The `Integrator` trait exposes the policy so guard-sensitive callers
+        // (e.g. `prin-sim`'s OscilloSim) can assert it instead of relying on
+        // convention; other integrators report `None`.
+        let boxed: Box<dyn Integrator> = Box::new(EulerIntegrator::new());
+        assert_eq!(boxed.guard(), Some(GuardPolicy::NonNegative));
+        let boxed: Box<dyn Integrator> =
+            Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
+        assert_eq!(boxed.guard(), Some(GuardPolicy::Bounded));
+        let boxed: Box<dyn Integrator> = Box::new(RK45Integrator::new(1e-6, 1e-9, 100).unwrap());
+        assert_eq!(boxed.guard(), None);
+    }
+
+    #[test]
+    fn rk45_and_exponential_use_model_derivatives_unclamped() {
+        // The model-level unclamp reaches every consumer of
+        // `Dynamics::compute_derivatives`, not only Euler/RK4: RK45 and the
+        // exponential integrator apply their `[1e-6, 10]` amplitude clamp but
+        // use derivatives as returned (documented in the module docs; flagged
+        // as the same defect class in the EXP-001 D1 audit S1.7 item 1, and
+        // now pinned here so the CHANGELOG "unchanged" wording cannot drift
+        // back). dφ/dt = 3e4 > DERIV_CLAMP: a clamp would advance the phase by
+        // only dt·1e4.
+        let model = KuramotoOscillator::new(1, 0.0, 0.0, 0.0, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(vec![0.0], vec![1.0], vec![3.0e4], None).unwrap();
+        let expected = (0.1 * 3.0e4) % TAU;
+
+        let mut rk45 = RK45Integrator::new(1e-6, 1e-9, 100).unwrap();
+        let result = rk45.step(&model, &state, 0.1).unwrap();
+        assert_relative_eq!(result.phase[0], expected, epsilon = 1e-9);
+        assert_eq!(result.amplitude, [1.0]);
+
+        let mut exponential = ExponentialIntegrator::new(3, 5, 100).unwrap();
+        let result = exponential.step(&model, &state, 0.1).unwrap();
+        assert_relative_eq!(result.phase[0], expected, epsilon = 1e-6);
+    }
+
+    #[cfg(not(feature = "strict-checks"))]
+    #[test]
+    fn bounded_guard_silently_clamps_large_derivatives_like_pre_correction() {
+        // Non-strict builds repair rather than reject, exactly as
+        // `StateDerivatives::new` did before the correction.
+        let model = KuramotoOscillator::new(1, 0.0, 0.0, 0.0, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(vec![0.0], vec![1.0], vec![3.0e4], None).unwrap();
+        let mut rk4 = RK4Integrator::new().with_guard(GuardPolicy::Bounded);
+        let result = rk4.step(&model, &state, 0.1).unwrap();
+        assert_relative_eq!(result.phase[0], (0.1 * DERIV_CLAMP) % TAU, epsilon = 1e-12);
+    }
+
+    #[cfg(feature = "strict-checks")]
+    #[test]
+    fn bounded_guard_rejects_out_of_range_derivatives_under_strict_checks() {
+        // Pre-correction, `StateDerivatives::new` raised OutOfRange here; the
+        // strict-checks diagnostic must survive the move of the clamp into
+        // `GuardPolicy::derivatives` (audit S1.9).
+        let model = KuramotoOscillator::new(1, 0.0, 0.0, 0.0, CouplingMode::MeanField).unwrap();
+        let state = OscillatorState::new(vec![0.0], vec![1.0], vec![3.0e4], None).unwrap();
+        let mut rk4 = RK4Integrator::new().with_guard(GuardPolicy::Bounded);
+        let err = rk4.step(&model, &state, 0.1).unwrap_err();
+        assert!(
+            matches!(
+                err,
+                IntegrateError::Dynamics(StateError::OutOfRange {
+                    value: 3.0e4,
+                    max: DERIV_CLAMP,
+                    ..
+                })
+            ),
+            "expected OutOfRange(3.0e4, max DERIV_CLAMP), got {err:?}"
+        );
     }
 
     #[test]
@@ -2524,22 +2628,48 @@ mod tests {
     #[test]
     fn bounded_guard_clamps_every_derivative() {
         // dφ/dt = ω = 3e4 on a full-coupling path, which the model leaves
-        // unclamped; the bounded guard clamps it to DERIV_CLAMP.
+        // unclamped; the bounded guard clamps it to DERIV_CLAMP — or, under
+        // strict-checks, rejects it with the pre-correction OutOfRange
+        // diagnostic instead of silently clamping (audit S1.9).
         let model = linear_amplitude(2, 0.0);
         let state = make_state(2, 0.0, 1.0, 3.0e4);
         let dt = 1e-6;
-        let bounded = EulerIntegrator::new()
-            .with_guard(GuardPolicy::Bounded)
-            .step(&model, &state, dt)
-            .unwrap();
-        assert_relative_eq!(bounded.phase[0], dt * DERIV_CLAMP, epsilon = 1e-15);
-        let rk4 = RK4Integrator::new()
-            .with_guard(GuardPolicy::Bounded)
-            .step(&model, &state, dt)
-            .unwrap();
-        assert_relative_eq!(rk4.phase[0], dt * DERIV_CLAMP, epsilon = 1e-15);
         let faithful = EulerIntegrator::new().step(&model, &state, dt).unwrap();
         assert_relative_eq!(faithful.phase[0], dt * 3.0e4, epsilon = 1e-15);
+        #[cfg(not(feature = "strict-checks"))]
+        {
+            let bounded = EulerIntegrator::new()
+                .with_guard(GuardPolicy::Bounded)
+                .step(&model, &state, dt)
+                .unwrap();
+            assert_relative_eq!(bounded.phase[0], dt * DERIV_CLAMP, epsilon = 1e-15);
+            let rk4 = RK4Integrator::new()
+                .with_guard(GuardPolicy::Bounded)
+                .step(&model, &state, dt)
+                .unwrap();
+            assert_relative_eq!(rk4.phase[0], dt * DERIV_CLAMP, epsilon = 1e-15);
+        }
+        #[cfg(feature = "strict-checks")]
+        {
+            for mut integrator in [
+                Box::new(EulerIntegrator::new().with_guard(GuardPolicy::Bounded))
+                    as Box<dyn Integrator>,
+                Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded)),
+            ] {
+                let err = integrator.step(&model, &state, dt).unwrap_err();
+                assert!(
+                    matches!(
+                        err,
+                        IntegrateError::Dynamics(StateError::OutOfRange {
+                            value: 3.0e4,
+                            max: DERIV_CLAMP,
+                            ..
+                        })
+                    ),
+                    "expected OutOfRange(3.0e4, max DERIV_CLAMP), got {err:?}"
+                );
+            }
+        }
     }
 
     /// Returns a `NaN` amplitude derivative, bypassing every constructor guard.
@@ -2915,10 +3045,17 @@ mod tests {
         ) {
             let model = uncoupled(1, omega);
             let state = make_state(1, phase, 1.0, omega);
+            // The default (OscillatorModel) guard floors amplitude at 0 with no
+            // ceiling; `Bounded` restores the pre-correction [1e-6, 10] bounds.
             let mut rk4 = RK4Integrator::new();
             let result = rk4.step(&model, &state, dt)?;
             prop_assert!(result.phase[0] >= 0.0 && result.phase[0] < TAU);
-            prop_assert!(result.amplitude[0] >= 0.0 && result.amplitude[0] <= 10.0);
+            prop_assert!(result.amplitude[0] >= 0.0 && result.amplitude[0].is_finite());
+            let mut bounded = RK4Integrator::new().with_guard(GuardPolicy::Bounded);
+            let result = bounded.step(&model, &state, dt)?;
+            prop_assert!(
+                (AMPLITUDE_MIN..=AMPLITUDE_MAX).contains(&result.amplitude[0])
+            );
         }
 
         #[test]

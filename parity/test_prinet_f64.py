@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import numpy as np
 import pytest
 from prin.parity.manifest import CorpusManifest, ManifestRecord
 from prin.parity.schema import CaseArrays
@@ -21,7 +20,11 @@ from prin.parity.schema import CaseArrays
 pytest.importorskip("prinet")
 
 from parity.generate_corpus import _run_case
-from parity.prinet_f64 import f64_corrected_reference, on_dv007_path
+from parity.prinet_f64 import (
+    assert_replacements_match_reference,
+    f64_corrected_reference,
+    on_dv007_path,
+)
 
 pytestmark = [pytest.mark.parity, pytest.mark.slow]
 
@@ -55,10 +58,24 @@ def _regenerate(record: ManifestRecord) -> CaseArrays:
 
 
 def _bit_identical(a: CaseArrays, b: CaseArrays) -> bool:
+    """Bit-true comparison: same dtype, same shape, same bytes.
+
+    ``np.array_equal`` is dtype-blind and treats ``+0.0 == -0.0``; under a
+    name reserved for a stricter check (``exp001_driver`` documents the
+    distinction) that is too weak for an instrument whose non-DV-007 paths
+    must stay bit-identical.
+    """
     return all(
-        np.array_equal(getattr(a, name), getattr(b, name))
+        getattr(a, name).dtype == getattr(b, name).dtype
+        and getattr(a, name).shape == getattr(b, name).shape
+        and getattr(a, name).tobytes() == getattr(b, name).tobytes()
         for name in CaseArrays._ARRAY_NAMES
     )
+
+
+def test_instrument_copies_match_the_archived_reference() -> None:
+    """Each replacement is a cast-widened copy, not merely a similar-looking one."""
+    assert_replacements_match_reference()
 
 
 def test_cells_cover_the_corpus_grid() -> None:

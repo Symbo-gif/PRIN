@@ -79,10 +79,16 @@ Supporting measurements:
   `dv007_exactness_audit.py` evaluates PRINet 3.0's own discrete map in 50-digit
   mpmath. That covers its equations, Euler/RK4 update, `max(·, 0)` and
   `max(r, 1e-8)` guards, phase wrap modulo the float64 `2π`, and metrics. It was
-  run for all 57 DV-007-only breaches (19 H1, 38 H2a). PRIN is within
-  `4.7e-14` of the exact map with no breach; the reference is outside the
-  registered tolerance (up to `6.2e-6`). **Reference is the erroneous side:
-  57/57.**
+  run for all 67 adjudicated DV-007 breaches (19 H1, 48 H2a — every
+  well-conditioned H2a case on a DV-007 path, including the 10 that are also
+  guard-sensitive; the 57-case scope of S1 omitted those 10 and was widened
+  in the S1.9 review remediation). PRIN is inside the registered tolerance
+  with no breach — within `3.6e-15` of the exact map on H1 and `4.7e-14` on
+  the DV-007-only cases, with the 10 combined amplitude-regime cases at worst
+  `7.6e-8` (rtol-dominated, zero breaches); the reference is outside the
+  registered tolerance (up to `5.05`). **Reference is the erroneous side:
+  67/67.** The artifact now also records `git_head`, `prin_package`,
+  `prin_extension`, `torch`, `numpy`, and `platform` provenance.
 - **SymPy lemmas.** L1: polar extraction `Re/Im(ż·e^{-iφ}) = ṙ, rφ̇`. L2:
   mean-field ≡ pairwise sum. L3: Stuart–Landau `Σ_{j≠i} (K/N)(z_j − z_i) =
   K(Z − z_i)`. Together these show PRIN and PRINet 3.0 evaluate one
@@ -111,7 +117,7 @@ Supporting measurements:
 | `34e8811` | **fix:** `GuardPolicy` (default `NonNegative`), `StateDerivatives::unclamped` on the non-sparse paths, OscilloSim ports pinned `Bounded`, Python `guard=` keyword and `.guard`, stub, and binding tests |
 | `45cca61` | **test:** DV-007 explained-divergence clause in both gates, plus the §10.4 item 3 evidence |
 | `e8841c1` | test: pins the unclamped `N ≤ 1` derivative shortcut (coverage) |
-| (docs commit) | Parity Report update and register entry, `test_corpus_exhaustive_differential_parity` docstring, Plan amendment #47, CHANGELOG, Migration Guide, Sphinx pages, this record, indexes |
+| `c825077` | Parity Report update and register entry, `test_corpus_exhaustive_differential_parity` docstring, Plan amendment #47, CHANGELOG, Migration Guide, Sphinx pages, this record, indexes |
 
 ### S1.4 Red → green transition (S1 acceptance)
 
@@ -136,6 +142,10 @@ cargo test --workspace                                      1594 passed, 0 faile
 CARGO_TARGET_DIR=target/strict cargo test --workspace --features strict-checks   1599 passed, 0 failed, 1 ignored
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps  clean
 cargo llvm-cov -p prin-dynamics --lib                       changed non-test lines 69/71 = 97.2%, then e8841c1 covers the 2 remaining
+                                                            (see the S1.9 caveat: an independent re-measurement with
+                                                            tools/coverage_changed_lines.py at BASE_REF=ce4049f gave 359/404 = 88.86%
+                                                            over all changed lines carrying DA records — the figures are not
+                                                            comparable without the exact invocation, scope, and tool version)
 ruff check / ruff format --check python/ tests/ benchmarks/ tools/ parity/ EVIDENCE/exp001-d1-s1/   clean
 mypy python/prin --strict                                   no issues (62 files)
 mypy --strict (parity/ new files, EVIDENCE scripts)          no issues
@@ -232,3 +242,66 @@ the runs settle. CI is the authoritative merge gate.
 
 **Not authorized by S1:** merging PR #24, `EXP-001-r1`, or releasing session
 `0159`. Session `0159` stays `BLOCKED`.
+
+### S1.9 Independent-review remediation (2026-09-27, after the S1 record)
+
+Four independent multi-agent reviews of this PR were posted on the PR
+(Copilot and CodeRabbit inline findings; Perplexity/Grok 4.7-Thinking;
+Gemini 3.8; GROK BOT; Qwen3.8-max-preview). A consolidated verification of
+every finding against the tree and the archived reference was performed the
+same day; the valid findings were remediated in the remediation commit on
+this branch (its SHA is recorded in the S1.3 table). Disposition summary
+(full matrix in the PR comment of 2026-09-27):
+
+- **Refuted by execution, no action:** Copilot's three E402/`I001` parity
+  findings (`ruff` clean, including under `--isolated --no-cache`); Grok
+  4.7's F1 (Stuart–Landau `exp` "runs in complex64" — torch promotes
+  `1j * float64` to `complex128` before the `exp`, verified bitwise; the
+  recommended rewrite would have *weakened* the evidence); Grok-bot's
+  caution against Gemini's F-02 (the archived `Oscillosim.py` has no
+  derivative clamp and no `N <= 1` return, so the unclamped switch is the
+  faithful one); CodeRabbit's docstring-coverage warning (`interrogate`
+  governs, 97.6%).
+- **Fixed in the remediation commit:** the seven unpinned OscilloSim test
+  ports (six integrating sites plus the `memory_bytes` constructor, which
+  the engine's construction-time assertion also covers; all now `Bounded`,
+  with a debug-build assertion on the new `Integrator::guard`); `prin-sim`'s
+  clamped `N <= 1` shortcuts; the
+  strict-checks `Bounded` silent clamp (restores `OutOfRange`); the
+  Stuart–Landau `N <= 1` `max(r, 1e-8)` phase divisor; the 57→67 exactness
+  audit scope (all 10 well-conditioned DV-007+guard H2a cases audited,
+  reference erroneous in 67/67, artifact regenerated with full provenance);
+  the H2a stream identity fingerprint (specs + parameters + initial arrays,
+  SHA-256, asserted in the gate and in the evidence generator); PRIN-side
+  hazard/floor assertions for the 22 ill-conditioned cases (three of which —
+  330, 385, 841 — are off the DV-007 paths entirely); the vacuous coverage
+  test (now enforces the partition); the CHANGELOG "unchanged" wording for
+  RK45/Exponential/MultiRate/Jacobian; the stale crate-root rustdoc; the
+  instrument's AST cast-for-cast pin; the Python-binding coverage gaps
+  (RK4 ceiling check, `integrate_fixed` with guards, read-only `.guard`);
+  the audit placeholder commit; the migration-guide MultiRate/`compat.rs`
+  notes; the pre-fix regeneration procedure (README) with the label now
+  *derived* from the imported build by probing for the correction, so a
+  mislabelled run fails instead of writing a plausible artefact; the
+  `evidence` extra declaring mpmath/sympy.
+- **Deferred to S2 with a recorded disposition:** `#[non_exhaustive]` on
+  `GuardPolicy` (would break ~13 downstream construction sites today —
+  belongs with the API freeze); threading `GuardPolicy` through
+  RK45/Exponential/the Jacobian (documented and pinned by regression tests
+  instead — same defect class as S1.7 item 1); the `prin-kernels` mean-field
+  RK4 Triton claim (S1.7 item 5, still unverified); the RK4 workspace-buffer
+  clone (pre-existing, performance only); the unexplained +9 pytest
+  collection drift noted by Qwen (environmental; suites themselves green).
+- **Record corrections:** the CI parity run cited in S1.4/S1.5
+  (`36083119713`) is at `45cca61`, two commits behind the reviewed head;
+  the head run is `36083847894` (`success` at `c825077`). The
+  69/71 = 97.2% changed-line coverage figure is retained as recorded here;
+  an independent re-measurement (359/404 over all changed lines with `DA`
+  records, using `tools/coverage_changed_lines.py` at `BASE_REF = ce4049f`)
+  differs by construction — no test-module exclusion, and a Windows
+  drive-letter-casing merge in the lcov can double-count `state.rs` — so
+  the figure is only reproducible with the exact invocation, scope, and
+  tool version recorded above.
+
+**Head CI at the remediation commit:** recorded by addendum below after the
+runs settle; CI is the authoritative merge gate.

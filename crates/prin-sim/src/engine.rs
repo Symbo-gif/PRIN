@@ -161,6 +161,10 @@ impl Dynamics for SparseKuramoto {
         }
 
         if n <= 1 {
+            // PRINet 3.0's OscilloSim has no derivative clamp and no N <= 1
+            // early return; at N = 1 its (zero) coupling contributes nothing,
+            // so the values below are the reference's own. Only the clamp
+            // differs: do not apply it here (EXP-001 D1 audit S1.9).
             let dphase = state.frequency.clone();
             let damplitude: Vec<f64> = state
                 .amplitude
@@ -168,7 +172,7 @@ impl Dynamics for SparseKuramoto {
                 .map(|&a| -self.decay_rate * a)
                 .collect();
             let dfrequency = vec![0.0; n];
-            return StateDerivatives::new(dphase, damplitude, dfrequency);
+            return StateDerivatives::unclamped(dphase, damplitude, dfrequency);
         }
 
         let (sin_sum, cos_sum) = self
@@ -270,6 +274,9 @@ impl Dynamics for SparseStuartLandau {
         }
 
         if n <= 1 {
+            // As in `SparseKuramoto`: the archived OscilloSim path clamps
+            // neither derivatives nor single oscillators, so return the
+            // reference values unclamped (EXP-001 D1 audit S1.9).
             let mu = self.bifurcation_param;
             let dphase = state.frequency.clone();
             let damplitude: Vec<f64> = state
@@ -278,7 +285,7 @@ impl Dynamics for SparseStuartLandau {
                 .map(|&r| mu * r - r * r * r)
                 .collect();
             let dfrequency = vec![0.0; n];
-            return StateDerivatives::new(dphase, damplitude, dfrequency);
+            return StateDerivatives::unclamped(dphase, damplitude, dfrequency);
         }
 
         let (c_re, c_im) = self
@@ -425,6 +432,21 @@ impl OscilloSim {
             });
         }
         validate_dt(dt)?;
+
+        // The engine ports PRINet 3.0's OscilloSim, whose guard bounds
+        // amplitude to `[1e-6, 10]`; the `prin-dynamics` default guard is the
+        // OscillatorModel's floor-at-0-no-ceiling. A fixed-step integrator
+        // configured with the default would silently change engine semantics
+        // (amplitudes of exactly 0 or above 10 inside the bounded engine), so
+        // reject that combination in debug builds. Integrators without a
+        // `GuardPolicy` (RK45, Exponential, foreign implementations) report
+        // `None` and remain the caller's responsibility.
+        debug_assert_ne!(
+            integrator.guard(),
+            Some(prin_dynamics::GuardPolicy::NonNegative),
+            "OscilloSim ports PRINet 3.0's bounded OscilloSim guard: construct \
+             its Euler/RK4 integrator with GuardPolicy::Bounded",
+        );
 
         Ok(Self {
             state,
