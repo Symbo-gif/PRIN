@@ -8,7 +8,8 @@ and `0194`.\
 **Branch / PR:** `hotfix/exp001-d1-parity-correction` from `origin/main` @
 `ce4049f`; draft **PR #24**.\
 **Stage status:** S1 **complete**; S2 **complete** (PASS, 2026-09-27 UTC);
-S3 remediation and S4 documentation are **pending**.
+S3 remediation **complete** (CLEAN delta re-audit, 2026-09-27 UTC); S4
+documentation is **pending**.
 
 This is the correction work package's audit of record. S1 records its
 implementation here: approvals, root cause, commits, the red → green transition,
@@ -549,3 +550,67 @@ claim unverified). None is above D4; none is systemic.
 `0159`. Session `0159` stays `BLOCKED`. S3 (remediation) and S4 (documentation)
 follow in order; S3 has no D1/D2 findings to remediate, so it may close
 immediately if the maintainer accepts the D4 dispositions.
+
+---
+
+## S3 — remediation and delta verification (2026-09-27 UTC)
+
+**Session brief:**
+[`2026-09-23-exp001-d1-s3-correction-remediation.md`](../sessions/contingencies/2026-09-23-exp001-d1-s3-correction-remediation.md).\
+**AI pair:** Gemini 3.8 Flash (High).\
+**Entry status:** S2 audit complete (`236abf1`, verdict `PASS`, zero findings above D4). S3 executes mandatory no-change delta verification per Development Workflow and Audit Standards §3.\
+**Source tree:** identical to S2 head (`236abf1`). `git diff 236abf1 HEAD -- crates/ python/ parity/ benchmarks/` returned clean.
+
+### S3.1 Finding resolutions and dispositions
+
+All five findings from S2 are D4. No findings of severity D1, D2, or D3 were raised.
+
+| ID | Severity | Dimension | Description | S3 Resolution / Disposition |
+|---|---|---|---|---|
+| S2-F1 | D4 | A3 | `cargo test --workspace` on Windows host hits LNK1104 / os error 32 linker contention when building/testing cdylib `prin-py`. | **VERIFIED WORKAROUND / ENVIRONMENTAL.** All workspace crates tested sequentially (`cargo test -p prin-dynamics`, `prin-metrics`, `prin-tensor`, `prin-kernels`, `prin-daemon`, `prin-sim`, `prin-train`): 1,590 tests passed, 0 failed, 1 ignored. PyO3 extension functionality independently verified through full pytest suites (`parity/` and `tests/`). Not a code defect; CI on Linux is authoritative. |
+| S2-F2 | D4 | A3 | `pytest tests/ -m "not slow and not gpu"` hit 4 failures in `test_wp001_baseline.py::test_release_workflow_*` due to Windows WSL bash relay. | **RESOLVED / ENVIRONMENTAL.** Prepending `C:\Program Files\Git\bin` to process PATH as documented in `AGENTS.md` resolves the issue completely: all 10 release workflow tests pass (10/10), and the full fast suite achieves **3,275 passed, 0 failed, 181 skipped, 48 deselected**. No code defect; tests not weakened. |
+| S2-F3 | D4 | A2 | `#[non_exhaustive]` on `GuardPolicy` deferred from S1.9 (would break ~13 downstream construction sites). | **DEFERRED (GOVERNED).** Preserved disposition from S1.9; belongs with the formal API freeze session. |
+| S2-F4 | D4 | A2 | RK45 / Exponential / Jacobian keep their `[1e-6, 10]` amplitude clamp (S1.7 item 1). | **DEFERRED (GOVERNED).** Preserved disposition from S1.7/S1.9/S2; documented in Migration Guide and pinned by regression tests. EXP-001 does not exercise these paths. Belongs to a future work package. |
+| S2-F5 | D4 | A2 | `prin-kernels` mean-field RK4 Triton kernel clamps amplitude to `[1e-6, 10]`; reference documents `≥ 0`. | **DEFERRED (GOVERNED).** Triton same-hardware comparison is hardware-gated (DV-001); flagged for future review when Linux GPU runner is available. |
+
+### S3.2 Delta re-audit record
+
+Per rule 4 of the S3 brief, the delta re-audit re-runs the full parity gates, the reproduction assertions, and the full workspace quality and test gates:
+
+1. **Parity gates:**
+   - Full-corpus gate (`parity/test_parity_prin_corpus.py`): **504/504 pass** (19 DV-007 cases verified under explained divergence matching f64-corrected reference).
+   - H2a registered-stream fuzz gate (`parity/test_parity_prin_fuzz.py`): **978 well-conditioned + 22 ill-conditioned pass**; stream SHA-256 fingerprint verified; 48 DV-007 cases pass under explained divergence.
+   - Parity differential, subconscious parity, and f64 instrument suites (`parity/test_parity_differential.py`, `parity/test_parity_subconscious.py`, `parity/test_prinet_f64.py`): **2,144 passed, 1 skipped** in 63.95s.
+   - Rust guard unit & parity tests (`cargo test -p prin-dynamics`): **366 passed, 0 failed** (304 unit tests, 12 parity_bands, 23 parity_integrators, 9 parity_models, 9 parity_pac, 6 parity_temporal, 3 doc-tests).
+
+2. **Full workspace test suites:**
+   - Python fast suite (`pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp` with `C:\Program Files\Git\bin` prepended): **3,275 passed, 0 failed, 181 skipped, 48 deselected** in 626.31s.
+   - Rust crate test suites (tested sequentially): **1,590 passed, 0 failed, 1 ignored** across `prin-dynamics` (366), `prin-metrics` (147), `prin-tensor` (59), `prin-kernels` (113), `prin-daemon` (221), `prin-sim` (205), `prin-train` (479).
+
+3. **Code quality, typing, formatting, and security gates:**
+   - `ruff check python/ tests/ benchmarks/ tools/ parity/ EVIDENCE/exp001-d1-s1/`: **clean** (all checks passed).
+   - `ruff format --check` (same paths): **clean** (318 files formatted).
+   - `mypy python/prin --strict`: **clean** (62 source files).
+   - `interrogate -c pyproject.toml python/prin`: **97.6%** (threshold ≥ 95.0%).
+   - `bandit -r python/prin -c pyproject.toml`: **0 issues** (20,216 lines scanned).
+   - `cargo fmt --all -- --check`: **clean**.
+   - `cargo clippy --workspace --all-targets -- -D warnings`: **clean**.
+   - `cargo clippy --workspace --all-targets --features strict-checks -- -D warnings`: **clean**.
+   - `cargo doc --workspace --no-deps` (`RUSTDOCFLAGS="-D warnings"`): **clean**.
+   - `cargo audit`: **0 vulnerabilities**, 3 allowed warnings (`bincode`, `paste`, `chacha20`).
+   - `pip-audit .` and `pip-audit -r DOCS/sphinx/requirements.txt`: **0 vulnerabilities found**.
+
+4. **Documentation and repository integrity:**
+   - Sphinx clean build (`sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html` after deleting `_build`): **0 warnings, build succeeded**.
+   - `tools/check_dv_register_gates.py`: **pass** (40 DV rows, 198 session entries).
+   - `tools/check_global_session_registration.py`: **pass** (17 EA reports).
+   - `tools/check_skipif_probes.py`: **pass** (no registration-probe skipifs).
+
+### S3.3 Delta re-audit verdict
+
+**CLEAN.**
+
+Every S2 finding is resolved or carries an approved governed disposition. No new source defect was found; no regression occurred across the numerical parity, test, lint, typing, security, and documentation gates.
+
+**Not authorized by S3:** merging PR #24, `EXP-001-r1`, or releasing session `0159`. Session `0159` stays `BLOCKED`. S3 commits locally only (no push). Handoff to `/documentation-session` for S4 documentation.
+
