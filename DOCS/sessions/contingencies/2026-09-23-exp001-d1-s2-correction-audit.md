@@ -1,6 +1,6 @@
 # EXP-001 D1 S2 — Correction audit
 
-**Status:** OPEN — blocked on S1\
+**Status:** COMPLETE (PASS, 2026-09-27 UTC; audit record in `DOCS/audits/2026-09-24-exp001-d1-correction-audit.md` §S2)\
 **Triggering deviation:** `EXP-001 H1/H2a REFUTED` (campaign plan §10.4 D1) and
 `EXP001-E5-F1` (D1)\
 **Blocked numbered session:** `0159`\
