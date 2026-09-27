@@ -41,17 +41,18 @@ issues all five verdicts in full — **H1 `REFUTED` (485/504)**, **H2a `REFUTED`
 (897/1,000)**, H2b/H3/H4 `CONFIRMED` — carries the §10.4 **D1** flag, and
 triggers the four-session contingency correction cycle
 ([S1](../sessions/contingencies/2026-09-23-exp001-d1-s1-correction-implementation.md)
-→ S2 → S3 → S4). It also raises a second D1, **EXP001-E5-F1**: the `parity` CI
-job's `test_corpus_exhaustive_differential_parity` regenerates each corpus case
-with PRINet 3.0, not PRIN, so **no CI gate performed the PRIN-vs-corpus
-trajectory comparison over the full 504-case corpus** — the only gate that runs
-PRIN against corpus trajectories covers 4 representative cases, none of them
-among H1's 19 breaching cases — and the Parity Report's published VALIDATION
-claim to the contrary is unsupported (erratum issued). **Session 0159 and every
-experiment downstream of EXP-001, plus 0194, are blocked** until the cycle
-closes and `EXP-001-r1` returns a non-reversal verdict. The E5 report was
-verified and accepted by the maintainer on 2026-09-23 UTC and its E1–E5 pull
-request approved; no root cause is claimed by any EXP-001 record.
+→ [S2](../sessions/contingencies/2026-09-23-exp001-d1-s2-correction-audit.md)
+→ [S3](../sessions/contingencies/2026-09-23-exp001-d1-s3-correction-remediation.md)
+→ [S4](../sessions/contingencies/2026-09-23-exp001-d1-s4-correction-documentation.md)).
+It also raises a second D1, **EXP001-E5-F1**: the `parity` CI gate did not
+exercise PRIN (erratum issued). **Correction cycle COMPLETE 2026-09-27 UTC**
+(S1–S4 all closed; S2 **PASS**, S3 delta re-audit **CLEAN**). `EXP-001-r1`
+authorized as a new experiment record
+([`EXP-001-r1`](EXP-001-r1-golden-trajectory-numerical-parity/README.md)) per
+campaign plan §10.4 item 4. **Session 0159 and every experiment downstream of
+EXP-001, plus 0194, remain BLOCKED** until `EXP-001-r1` returns a non-reversal
+verdict. The correction branch (PR #24) is not yet merged; CI-green evidence
+for the merge SHA is pending.
 
 ## Layout
 
@@ -73,6 +74,7 @@ regenerate from them via `prin.reporting`.
 | Experiment | Track | Record root |
 |---|---|---|
 | EXP-001 | C1 | [`EXP-001-golden-trajectory-numerical-parity/`](EXP-001-golden-trajectory-numerical-parity/README.md) |
+| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **AUTHORIZED, E1 NOT YET BEGUN** |
 | EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) |
 | EXP-003 | C2 | [`EXP-003-cpu-scaling-and-sweep-performance/`](EXP-003-cpu-scaling-and-sweep-performance/README.md) |
 | EXP-004 | C2 | [`EXP-004-gpu-kernels-and-torch-bridge-performance/`](EXP-004-gpu-kernels-and-torch-bridge-performance/README.md) |

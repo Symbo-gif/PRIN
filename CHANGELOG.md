@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001 D1 correction cycle S4 documentation (2026-09-27 UTC).** PSR-039
+  issued; all registers updated; erratum E-3 appended to the EXP-001 E5 report
+  naming `EXP-001-r1`; `EXP-001-r1` authorized as a new experiment record
+  (`DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/`) per
+  campaign plan §10.4 item 4. Session 0159 stays **BLOCKED** until
+  `EXP-001-r1` returns a non-reversal verdict. The correction branch
+  `hotfix/exp001-d1-parity-correction` (PR #24) is not yet merged; CI-green
+  evidence for the merge SHA will be recorded by the next governed session.
+
 - **Full-corpus PRIN-vs-corpus parity gate and the EXP-001 H2a registered-stream
   gate (EXP-001 D1 correction, S1, 2026-09-24 UTC).** These close finding
   EXP001-E5-F1. `parity/test_parity_prin_corpus.py` integrates PRIN from all

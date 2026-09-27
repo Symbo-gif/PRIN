@@ -9,7 +9,7 @@ and `0194`.\
 `ce4049f`; draft **PR #24**.\
 **Stage status:** S1 **complete**; S2 **complete** (PASS, 2026-09-27 UTC);
 S3 remediation **complete** (CLEAN delta re-audit, 2026-09-27 UTC); S4
-documentation is **pending**.
+documentation **complete** (2026-09-27 UTC).
 
 This is the correction work package's audit of record. S1 records its
 implementation here: approvals, root cause, commits, the red → green transition,
@@ -612,5 +612,48 @@ Per rule 4 of the S3 brief, the delta re-audit re-runs the full parity gates, th
 
 Every S2 finding is resolved or carries an approved governed disposition. No new source defect was found; no regression occurred across the numerical parity, test, lint, typing, security, and documentation gates.
 
-**Not authorized by S3:** merging PR #24, `EXP-001-r1`, or releasing session `0159`. Session `0159` stays `BLOCKED`. S3 commits locally only (no push). Handoff to `/documentation-session` for S4 documentation.
+**Not authorized by S3:** merging PR #24, `EXP-001-r1`, or releasing session `0159`. Session `0159` stays `BLOCKED`. S3 commits locally only (no push). Handoff to S4 documentation.
+
+---
+
+## S4 — documentation and closure (2026-09-27 UTC)
+
+**Session brief:**
+[`2026-09-23-exp001-d1-s4-correction-documentation.md`](../sessions/contingencies/2026-09-23-exp001-d1-s4-correction-documentation.md).\
+**AI pair:** Qwen Code (Qwen3.8-max-preview). Documentation-only; no source code changes.\
+**Entry status:** S3 complete (CLEAN delta re-audit).
+
+### S4.1 Closure checklist
+
+| # | Requirement | Status | Artefact |
+|---|---|---|---|
+| 1 | Project State Report issued | ✅ DONE | `DOCS/reports/039-project-state.md` |
+| 2a | `DEFERRED_VALIDATION_REGISTER.md` updated | ✅ DONE | Correction cycle resolved note appended |
+| 2b | `SESSION_REGISTER.md` contingency row set to COMPLETE | ✅ DONE | `EXP-001-D1` row updated |
+| 2c | `phase-7/README.md` updated | ✅ DONE | Correction cycle COMPLETE note |
+| 2d | `DOCS/experiments/README.md` updated | ✅ DONE | EXP-001 E5 status updated |
+| 2e | `contingencies/README.md` moved to "Closed corrections" | ✅ DONE | EXP-001 D1 under Closed corrections |
+| 3 | Parity Report aligned with corrected evidence | ✅ DONE | S1 already updated `parity_report.rst` with the root-cause explanation; no further changes needed |
+| 3b | CHANGELOG line recorded | ✅ DONE | `CHANGELOG.md` S4 entry added |
+| 4 | Erratum pointer appended to E5 report naming `EXP-001-r1` | ✅ DONE | Erratum E-3 in `report.md` §15 |
+| 5 | `EXP-001-r1` authorized as new experiment record | ✅ DONE | `DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/README.md` |
+| 6 | Return to 0159 conditions stated | ✅ DONE | PSR-039 §5, erratum E-3, all register updates explicitly state 0159 stays BLOCKED until EXP-001-r1 non-reversal |
+| 7 | CI-green evidence for merged correction | ⏳ PENDING | PR #24 not yet merged; `check_ci_green.py <merge-SHA>` to be recorded by the next governed session |
+
+### S4.2 Explicit statement on session 0159
+
+S4 closing on its own does **not** release session 0159 (campaign plan §10.4
+item 5). Session 0159 (EXP-002 E1) and every experiment downstream of EXP-001,
+plus 0194, remain **BLOCKED** until:
+
+1. `EXP-001-r1`'s E5 verdict is not a reversal, **or**
+2. The maintainer records a Project Plan §8.3 amendment accepting a changed
+   conclusion with full justification.
+
+### S4.3 Handoff
+
+The correction cycle is documentation-complete. The next maintainer action is
+the merge of PR #24 (`hotfix/exp001-d1-parity-correction` → `main`), after
+which `check_ci_green.py <merge-SHA>` evidence is recorded. The maintainer
+then declares the session for `EXP-001-r1` E1 (pre-registration).
 

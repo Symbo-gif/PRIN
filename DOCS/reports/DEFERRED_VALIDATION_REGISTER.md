@@ -395,14 +395,22 @@ PRIN-vs-corpus breach — in
 `EVIDENCE/0158-exp001-e5-parity-gate-coverage.json`. Severity D1 under
 Development Workflow §5 ("published-result reproducibility").
 
-**Consequences (campaign plan §3.3, §10.4).** Session `0158` completed and
-reported the negatives in full; **sessions `0159` through `0193` and `0194`
-are blocked**. The four contingency correction sessions
-(`DOCS/sessions/contingencies/2026-09-23-exp001-d1-s1…s4`) run in strict order
-first; after S4, EXP-001 is re-run as a **new** record `EXP-001-r1` with a new
-pre-registration and new run directories. The EXP-001 record is immutable;
-corrections to it are errata. **No root cause is claimed by any EXP-001
-record** — diagnosis belongs to the correction cycle's S1.
+**Correction cycle resolved (2026-09-27 UTC).** All four contingency sessions
+executed in S1→S2→S3→S4 order. S1 established root cause (PRIN guard
+divergence fixed; reference DV-007 `complex64` is the erroneous side per
+§10.4 item 3, 67/67 exactness audit); S2 audit **PASS**; S3 delta re-audit
+**CLEAN**; S4 documentation complete (PSR-039, `EXP-001-r1` authorized).
+Erratum E-3 appended to the E5 report naming `EXP-001-r1`. The correction
+branch (`hotfix/exp001-d1-parity-correction`, PR #24) is not yet merged;
+CI-green evidence for the merge SHA will be recorded by the next governed
+session.
+
+**Consequences (campaign plan §3.3, §10.4).** Sessions `0159` through `0193`
+and `0194` remain **BLOCKED** until `EXP-001-r1`
+(`DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/`) returns a
+non-reversal E5 verdict, or the maintainer records a Plan §8.3 amendment
+accepting a changed conclusion. S4 closing on its own does **not** release
+0159.
 
 **Unaffected open rows.** `DV-040` (campaign E4 analysis code outside the CI
 lint paths) remains OPEN with its EXP-002 E4 / session `0162` re-audit gate;

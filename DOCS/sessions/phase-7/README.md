@@ -62,8 +62,9 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 > §8.3 amendment accepting a changed conclusion. Planned session numbers do
 > not change.
 >
-> **Correction S1 complete, 2026-09-24 UTC** (draft PR #24; not merged).
-> Every H1/H2a breach is attributed. PRIN's Euler/RK4 guard divergence is
-> fixed; the reference's DV-007 `complex64` arithmetic is established as the
-> erroneous side (campaign plan §10.4 item 3); a full-corpus PRIN gate now
-> runs in `parity`. S2–S4 are pending; 0159 stays blocked.
+> **Correction cycle COMPLETE, 2026-09-27 UTC.** All four contingency sessions
+> (S1→S2→S3→S4) closed. S1: root cause established and fixed; S2: **PASS**;
+> S3: delta re-audit **CLEAN**; S4: PSR-039 issued, `EXP-001-r1` authorized.
+> The correction branch (`hotfix/exp001-d1-parity-correction`, PR #24) is not
+> yet merged; CI-green evidence for the merge SHA is pending. **0159 stays
+> BLOCKED** until `EXP-001-r1` returns a non-reversal verdict.
