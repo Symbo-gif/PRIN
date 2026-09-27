@@ -118,6 +118,7 @@ Supporting measurements:
 | `45cca61` | **test:** DV-007 explained-divergence clause in both gates, plus the §10.4 item 3 evidence |
 | `e8841c1` | test: pins the unclamped `N ≤ 1` derivative shortcut (coverage) |
 | `c825077` | Parity Report update and register entry, `test_corpus_exhaustive_differential_parity` docstring, Plan amendment #47, CHANGELOG, Migration Guide, Sphinx pages, this record, indexes |
+| `779b2ac` | **Independent-review remediation (S1.9):** consolidated verification of the six review bodies on the PR; every valid finding fixed (gate stream fingerprint, ill-conditioned PRIN assertions, 67-case exactness audit, OscilloSim pins and enforcement, strict-checks diagnostic, Stuart–Landau N ≤ 1 divisor, CHANGELOG/rustdoc/migration corrections, instrument AST pin, binding coverage), five findings refuted by execution, the rest deferred to S2 with dispositions |
 
 ### S1.4 Red → green transition (S1 acceptance)
 
@@ -249,9 +250,8 @@ Four independent multi-agent reviews of this PR were posted on the PR
 (Copilot and CodeRabbit inline findings; Perplexity/Grok 4.7-Thinking;
 Gemini 3.8; GROK BOT; Qwen3.8-max-preview). A consolidated verification of
 every finding against the tree and the archived reference was performed the
-same day; the valid findings were remediated in the remediation commit on
-this branch (its SHA is recorded in the S1.3 table). Disposition summary
-(full matrix in the PR comment of 2026-09-27):
+same day; the valid findings were remediated in `779b2ac`. Disposition
+summary (full matrix in the PR comment of 2026-09-27):
 
 - **Refuted by execution, no action:** Copilot's three E402/`I001` parity
   findings (`ruff` clean, including under `--isolated --no-cache`); Grok
@@ -262,7 +262,7 @@ this branch (its SHA is recorded in the S1.3 table). Disposition summary
   derivative clamp and no `N <= 1` return, so the unclamped switch is the
   faithful one); CodeRabbit's docstring-coverage warning (`interrogate`
   governs, 97.6%).
-- **Fixed in the remediation commit:** the seven unpinned OscilloSim test
+- **Fixed in `779b2ac`:** the seven unpinned OscilloSim test
   ports (six integrating sites plus the `memory_bytes` constructor, which
   the engine's construction-time assertion also covers; all now `Bounded`,
   with a debug-build assertion on the new `Integrator::guard`); `prin-sim`'s
@@ -303,5 +303,5 @@ this branch (its SHA is recorded in the S1.3 table). Disposition summary
   the figure is only reproducible with the exact invocation, scope, and
   tool version recorded above.
 
-**Head CI at the remediation commit:** recorded by addendum below after the
-runs settle; CI is the authoritative merge gate.
+**Head CI at `779b2ac`:** recorded by addendum below after the runs settle;
+CI is the authoritative merge gate.
