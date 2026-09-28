@@ -23,7 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wgpu legs can execute. `tests/_env.py::wgpu_kernel_executes()` adds the
   matching executability probe alongside the existing `cuda_kernel_executes()`.
   Live-verified on `PRIN-GPU-Runner` under both `--features cuda` and
-  `--features wgpu` builds on the same hardware.
+  `--features wgpu` builds on the same hardware. PR #25 code review (Devin
+  Review) found the host-slice fallback path could still report a stale
+  `"cpu-native"` on a build compiled with more than one GPU feature, since
+  its own priority-retry chain can pick a different backend than the
+  engine's persistent-client resolution assumed; fixed with a per-instance
+  last-observed-backend cache, empirically verified against the exact
+  scenario described. See `DOCS/audits/2026-09-28-dv041-wgpu-backend-identification-audit.md`
+  §6.1.
 
 - **Full-corpus PRIN-vs-corpus parity gate and the EXP-001 H2a registered-stream
   gate (EXP-001 D1 correction, S1, 2026-09-24 UTC).** These close finding

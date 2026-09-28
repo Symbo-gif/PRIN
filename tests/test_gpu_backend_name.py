@@ -114,6 +114,14 @@ def test_backend_name_is_one_of_the_registered_values(build: object) -> None:
     engine = build()  # type: ignore[operator]
     name = engine.backend_name
     assert isinstance(name, str) and name
+    # A `startswith("wgpu")` prefix check, not an exact `"wgpu<wgsl>"` match,
+    # is deliberate: wgpu can back onto a different shading IR per platform
+    # (Vulkan/Metal/DX12 GL backends can report a different `<...>` suffix
+    # than WGSL), and this vocabulary test's job is confirming the backend
+    # *family* is one of the documented ones, not reproducing today's exact
+    # CubeCL runtime-name string (considered during review; an exact-match
+    # assertion would make this test *more* brittle to legitimate
+    # cross-platform variation, not safer).
     assert name == "cpu-native" or name in ("cuda", "cpu") or name.startswith("wgpu")
 
 
