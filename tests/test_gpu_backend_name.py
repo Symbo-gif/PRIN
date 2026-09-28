@@ -63,11 +63,13 @@ def _needs_wgpu_dispatch(fn: object) -> object:
 
 
 def _sparse_kuramoto() -> object:
+    """Build a tiny `GpuSparseKuramoto` for `.backend_name` inspection."""
     phase = torch.zeros(4, dtype=torch.float32).contiguous()
     return _prin_core.GpuSparseKuramoto.from_knn_phase(4, 2, 0.5, 0.0, 0.0, phase)
 
 
 def _mean_field_engine() -> object:
+    """Build a tiny `GpuMeanFieldEngine` for `.backend_name` inspection."""
     n = 4
     phase = torch.linspace(0.0, 1.0, n, dtype=torch.float32)
     amp = torch.ones(n, dtype=torch.float32)
@@ -76,6 +78,7 @@ def _mean_field_engine() -> object:
 
 
 def _band_stepper() -> object:
+    """Build a tiny `GpuBandStepper` for `.backend_name` inspection."""
     n = 12
     phase = torch.zeros(n, dtype=torch.float32)
     amp = torch.ones(n, dtype=torch.float32)

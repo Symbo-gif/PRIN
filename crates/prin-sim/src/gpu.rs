@@ -461,7 +461,7 @@ impl GpuSparseKuramoto {
 
     /// The actual backend this instance dispatches derivatives through —
     /// `"cuda"`, `"wgpu<wgsl>"`, `"cpu"`, or `"cpu-native"` on host-slice
-    /// fallback (DV-041). See [`backend_name_of`].
+    /// fallback (DV-041). See `backend_name_of`.
     pub fn backend_name(&self) -> String {
         #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
         {
@@ -775,7 +775,7 @@ impl GpuMeanFieldEngine {
 
     /// The actual backend this instance dispatches through — `"cuda"`,
     /// `"wgpu<wgsl>"`, `"cpu"`, or `"cpu-native"` on host-slice fallback
-    /// (DV-041). See [`backend_name_of`].
+    /// (DV-041). See `backend_name_of`.
     pub fn backend_name(&self) -> String {
         match &self.inner {
             #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
@@ -1081,7 +1081,7 @@ impl GpuBandStepper {
 
     /// The actual backend this instance dispatches through — `"cuda"`,
     /// `"wgpu<wgsl>"`, `"cpu"`, or `"cpu-native"` on host-slice fallback
-    /// (DV-041). See [`backend_name_of`].
+    /// (DV-041). See `backend_name_of`.
     pub fn backend_name(&self) -> String {
         match &self.inner {
             #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
