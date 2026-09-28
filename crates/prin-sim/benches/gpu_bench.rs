@@ -47,7 +47,7 @@ mod imp {
 
     use prin_dynamics::coupling::CouplingMode;
     use prin_dynamics::models::KuramotoOscillator;
-    use prin_dynamics::{Integrator, OscillatorState, RK4Integrator, Seed};
+    use prin_dynamics::{GuardPolicy, Integrator, OscillatorState, RK4Integrator, Seed};
     use prin_kernels::mean_field_rk4::MeanFieldRk4Params;
     use prin_sim::csr_coupling::SparseCoupling;
     use prin_sim::engine::{OscilloSim, SparseKuramoto};
@@ -69,7 +69,7 @@ mod imp {
 
         group.bench_function("cpu_spmv", |b| {
             let cpu_model = SparseKuramoto::new(SPARSE_N, 0.1, 0.01, coupling.clone()).unwrap();
-            let integrator = Box::new(RK4Integrator::new());
+            let integrator = Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
             let mut engine =
                 OscilloSim::new(state.clone(), coupling.clone(), integrator, 0.01).unwrap();
             b.iter(|| {
@@ -81,7 +81,7 @@ mod imp {
         group.bench_function("gpu_kernel_dispatch", |b| {
             let gpu_model =
                 GpuSparseKuramoto::new(SPARSE_N, 0.1, 0.01, 2.0, coupling.clone()).unwrap();
-            let integrator = Box::new(RK4Integrator::new());
+            let integrator = Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
             let mut engine =
                 OscilloSim::new(state.clone(), coupling.clone(), integrator, 0.01).unwrap();
             b.iter(|| {
@@ -106,7 +106,7 @@ mod imp {
             let model =
                 KuramotoOscillator::new(MEAN_FIELD_N, 2.0, 0.1, 0.01, CouplingMode::MeanField)
                     .unwrap();
-            let mut integrator = RK4Integrator::new();
+            let mut integrator = RK4Integrator::new().with_guard(GuardPolicy::Bounded);
             let mut current = state.clone();
             b.iter(|| {
                 current = integrator.step(&model, &current, 0.01).unwrap();

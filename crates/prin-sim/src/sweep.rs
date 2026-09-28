@@ -22,7 +22,7 @@ use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use prin_dynamics::state::OscillatorState;
-use prin_dynamics::{Integrator, RK4Integrator, Seed};
+use prin_dynamics::{GuardPolicy, Integrator, RK4Integrator, Seed};
 use prin_metrics::order::kuramoto_order_parameter;
 
 use crate::csr_coupling::SparseCoupling;
@@ -302,7 +302,8 @@ fn run_single_config(config: &SweepConfig, config_idx: usize) -> Result<SweepRes
     let state = OscillatorState::create_random(config.n_oscillators, (0.5, 5.0), &mut seed)
         .map_err(SimError::Dynamics)?;
 
-    let integrator: Box<dyn Integrator> = Box::new(RK4Integrator::new());
+    let integrator: Box<dyn Integrator> =
+        Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
 
     let mut engine = OscilloSim::new(state, coupling, integrator, config.dt)?;
 

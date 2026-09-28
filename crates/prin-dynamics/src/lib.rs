@@ -21,8 +21,16 @@
 //! - [`temporal`] — complex-phasor phase blending + EMA amplitude blending.
 //!
 //! Numerical hazard invariants preserved from PRINet 3.0 (see the project plan §7):
-//! phase wrap via `% 2π` (not atan2 renormalization), amplitude clamp `[1e-6, 10]`,
-//! derivative clamp `±1e4`, coupling normalization `1/N` vs `1/k` per mode.
+//! phase wrap via `% 2π` (not atan2 renormalization), coupling normalization
+//! `1/N` vs `1/k` per mode, and the guard *helpers* (`clamp_amplitude`,
+//! `clamp_derivative`). Which guard applies where is path-specific, matching
+//! PRINet 3.0: the fixed-step [`integrate::EulerIntegrator`]/
+//! [`integrate::RK4Integrator`] default to the `OscillatorModel` guard
+//! ([`integrate::GuardPolicy::NonNegative`], amplitude floored at `0` with no
+//! ceiling, derivatives as the models return them), while
+//! [`integrate::GuardPolicy::Bounded`] reproduces the fused-kernel/OscilloSim
+//! `[1e-6, 10]` / `±1e4` guard; the models clamp derivatives only on their
+//! sparse k-NN paths (see [`state::StateDerivatives`]).
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -42,8 +50,9 @@ pub use bands::{
 };
 pub use coupling::{CouplingError, CouplingMode, Topology};
 pub use integrate::{
-    integrate_fixed, AdaptiveResult, EulerIntegrator, ExponentialIntegrator, IntegrateError,
-    Integrator, MultiRateIntegrator, MultiRateMethod, RK45Integrator, RK4Integrator,
+    integrate_fixed, AdaptiveResult, EulerIntegrator, ExponentialIntegrator, GuardPolicy,
+    IntegrateError, Integrator, MultiRateIntegrator, MultiRateMethod, RK45Integrator,
+    RK4Integrator,
 };
 pub use models::{Dynamics, HopfOscillator, KuramotoOscillator, StuartLandauOscillator};
 pub use pac::{PacError, PhaseAmplitudeCoupling};

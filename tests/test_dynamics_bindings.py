@@ -359,6 +359,82 @@ class TestIntegrators:
         assert "RK4Integrator" in repr(RK4Integrator())
         assert "RK45Integrator" in repr(RK45Integrator())
 
+    # EXP-001 D1: the fixed-step integrators default to PRINet 3.0's
+    # OscillatorModel guard; ``guard="bounded"`` restores [1e-6, 10] / ±1e4.
+
+    @staticmethod
+    def _linear_amplitude(decay: float) -> KuramotoOscillator:
+        """Uncoupled pair with dr/dt = -decay·r (negative decay is growth)."""
+        return KuramotoOscillator(2, 0.0, decay, 0.0, CouplingMode.full())
+
+    @pytest.mark.parametrize("integrator", [EulerIntegrator, RK4Integrator])
+    def test_guard_defaults_to_non_negative(self, integrator: type) -> None:
+        integ = integrator()
+        assert integ.guard == "non_negative"
+        assert repr(integ) == f"{integrator.__name__}(guard='non_negative')"
+
+    @pytest.mark.parametrize("integrator", [EulerIntegrator, RK4Integrator])
+    def test_default_guard_floors_amplitude_at_zero(self, integrator: type) -> None:
+        state = OscillatorState(
+            np.array([0.3, 0.6]), np.array([1.0, 1.0]), np.array([1.0, 1.0])
+        )
+        final = integrator().step(self._linear_amplitude(30.0), state, 0.1)
+        assert list(final.amplitude) == [0.0, 0.0]
+
+    @pytest.mark.parametrize("integrator", [EulerIntegrator, RK4Integrator])
+    def test_default_guard_has_no_amplitude_ceiling(self, integrator: type) -> None:
+        state = OscillatorState(
+            np.array([0.3, 0.6]), np.array([1.0, 1.0]), np.array([1.0, 1.0])
+        )
+        final = integrator().step(self._linear_amplitude(-120.0), state, 0.1)
+        # Above the old [.., 10] ceiling for both fixed-step integrators; the
+        # exact Euler first-order value pins the uncapped growth itself.
+        assert all(a > 10.0 for a in final.amplitude)
+        if integrator is EulerIntegrator:
+            assert final.amplitude == pytest.approx([13.0, 13.0], rel=1e-12)
+
+    @pytest.mark.parametrize("integrator", [EulerIntegrator, RK4Integrator])
+    def test_integrate_fixed_honours_the_guard(self, integrator: type) -> None:
+        """The guard applies across a whole ``integrate_fixed`` run, not one step."""
+        state = OscillatorState(
+            np.array([0.3, 0.6]), np.array([1.0, 1.0]), np.array([1.0, 1.0])
+        )
+        model = self._linear_amplitude(-120.0)  # r grows ~e^(120·t)
+        bounded = integrator(guard="bounded")
+        final, trajectory = bounded.integrate_fixed(model, state, 5, 0.1, True)
+        assert list(final.amplitude) == [AMPLITUDE_MAX, AMPLITUDE_MAX]
+        assert trajectory is not None
+        assert all(
+            AMPLITUDE_MIN <= a <= AMPLITUDE_MAX
+            for step in trajectory
+            for a in step.amplitude
+        )
+
+    @pytest.mark.parametrize("integrator", [EulerIntegrator, RK4Integrator])
+    def test_guard_property_is_read_only(self, integrator: type) -> None:
+        with pytest.raises(AttributeError):
+            integrator().guard = "bounded"
+
+    @pytest.mark.parametrize("integrator", [EulerIntegrator, RK4Integrator])
+    def test_bounded_guard_restores_the_amplitude_bounds(
+        self, integrator: type
+    ) -> None:
+        integ = integrator(guard="bounded")
+        assert integ.guard == "bounded"
+        assert repr(integ) == f"{integrator.__name__}(guard='bounded')"
+        state = OscillatorState(
+            np.array([0.3, 0.6]), np.array([1.0, 1.0]), np.array([1.0, 1.0])
+        )
+        low = integ.step(self._linear_amplitude(30.0), state, 0.1)
+        high = integ.step(self._linear_amplitude(-120.0), state, 0.1)
+        assert list(low.amplitude) == [AMPLITUDE_MIN, AMPLITUDE_MIN]
+        assert list(high.amplitude) == [AMPLITUDE_MAX, AMPLITUDE_MAX]
+
+    @pytest.mark.parametrize("integrator", [EulerIntegrator, RK4Integrator])
+    def test_unknown_guard_is_rejected(self, integrator: type) -> None:
+        with pytest.raises(ValueError, match="guard must be"):
+            integrator(guard="clamped")
+
 
 # ---------------------------------------------------------------------------
 # WP-012: ExponentialIntegrator bindings

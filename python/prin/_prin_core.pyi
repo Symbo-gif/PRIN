@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 from numpy.typing import NDArray
@@ -1004,7 +1004,11 @@ class HopfOscillator:
 
 # --- Integrators ---
 class EulerIntegrator:
-    def __init__(self) -> None: ...
+    def __init__(
+        self, guard: Literal["non_negative", "bounded"] = "non_negative"
+    ) -> None: ...
+    @property
+    def guard(self) -> Literal["non_negative", "bounded"]: ...
     def step(
         self, model: Any, state: OscillatorState, dt: float
     ) -> OscillatorState: ...
@@ -1018,7 +1022,11 @@ class EulerIntegrator:
     ) -> tuple[OscillatorState, list[OscillatorState] | None]: ...
 
 class RK4Integrator:
-    def __init__(self) -> None: ...
+    def __init__(
+        self, guard: Literal["non_negative", "bounded"] = "non_negative"
+    ) -> None: ...
+    @property
+    def guard(self) -> Literal["non_negative", "bounded"]: ...
     def step(
         self, model: Any, state: OscillatorState, dt: float
     ) -> OscillatorState: ...

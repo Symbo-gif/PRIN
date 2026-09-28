@@ -18,7 +18,7 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use rayon::ThreadPoolBuilder;
 
 use prin_dynamics::models::Dynamics;
-use prin_dynamics::{RK4Integrator, Seed};
+use prin_dynamics::{GuardPolicy, RK4Integrator, Seed};
 use prin_sim::csr_coupling::SparseCoupling;
 use prin_sim::engine::{OscilloSim, SparseKuramoto};
 use prin_sim::sweep::{run_sweep, SweepAxis, SweepConfig, SweepModel};
@@ -141,7 +141,7 @@ fn bench_engine_step_scaling(c: &mut Criterion) {
             &mut Seed::new(42, 0),
         )
         .unwrap();
-        let integrator = Box::new(RK4Integrator::new());
+        let integrator = Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
         let mut engine =
             OscilloSim::new(state.clone(), coupling.clone(), integrator, 0.01).unwrap();
 

@@ -8,19 +8,23 @@
 //! - A `prin_dynamics::Integrator` for time-stepping (Euler, RK4, RK45).
 //!
 //! The engine reuses the state, integrator, and numerical guards from
-//! `prin-dynamics` — it does not duplicate any dynamics logic.
+//! `prin-dynamics` — it does not duplicate any dynamics logic. PRINet 3.0's
+//! OscilloSim bounds amplitude to `[1e-6, 10]`, so construct the engine's
+//! Euler/RK4 integrator with `GuardPolicy::Bounded`; the `prin-dynamics`
+//! default is the PRINet 3.0 `OscillatorModel` guard.
 //!
 //! ## Usage
 //!
 //! ```rust,no_run
 //! use prin_sim::{OscilloSim, SparseCoupling, SparseKuramoto};
-//! use prin_dynamics::{OscillatorState, RK4Integrator, Integrator};
+//! use prin_dynamics::{GuardPolicy, Integrator, OscillatorState, RK4Integrator};
 //!
 //! # fn main() -> Result<(), prin_sim::SimError> {
 //! let coupling = SparseCoupling::from_ring(100, 4, 1.0)?;
 //! let model = SparseKuramoto::new(100, 0.1, 0.01, coupling.clone())?;
 //! let state = OscillatorState::create_random(100, (0.5, 5.0), &mut prin_dynamics::Seed::new(0, 0))?;
-//! let mut engine = OscilloSim::new(state, coupling, Box::new(RK4Integrator::new()), 0.01)?;
+//! let integrator = Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
+//! let mut engine = OscilloSim::new(state, coupling, integrator, 0.01)?;
 //! let (final_state, traj) = engine.run(&model, 1000, true)?;
 //! # Ok(())
 //! # }
@@ -157,6 +161,10 @@ impl Dynamics for SparseKuramoto {
         }
 
         if n <= 1 {
+            // PRINet 3.0's OscilloSim has no derivative clamp and no N <= 1
+            // early return; at N = 1 its (zero) coupling contributes nothing,
+            // so the values below are the reference's own. Only the clamp
+            // differs: do not apply it here (EXP-001 D1 audit S1.9).
             let dphase = state.frequency.clone();
             let damplitude: Vec<f64> = state
                 .amplitude
@@ -164,7 +172,7 @@ impl Dynamics for SparseKuramoto {
                 .map(|&a| -self.decay_rate * a)
                 .collect();
             let dfrequency = vec![0.0; n];
-            return StateDerivatives::new(dphase, damplitude, dfrequency);
+            return StateDerivatives::unclamped(dphase, damplitude, dfrequency);
         }
 
         let (sin_sum, cos_sum) = self
@@ -266,6 +274,9 @@ impl Dynamics for SparseStuartLandau {
         }
 
         if n <= 1 {
+            // As in `SparseKuramoto`: the archived OscilloSim path clamps
+            // neither derivatives nor single oscillators, so return the
+            // reference values unclamped (EXP-001 D1 audit S1.9).
             let mu = self.bifurcation_param;
             let dphase = state.frequency.clone();
             let damplitude: Vec<f64> = state
@@ -274,7 +285,7 @@ impl Dynamics for SparseStuartLandau {
                 .map(|&r| mu * r - r * r * r)
                 .collect();
             let dfrequency = vec![0.0; n];
-            return StateDerivatives::new(dphase, damplitude, dfrequency);
+            return StateDerivatives::unclamped(dphase, damplitude, dfrequency);
         }
 
         let (c_re, c_im) = self
@@ -422,6 +433,21 @@ impl OscilloSim {
         }
         validate_dt(dt)?;
 
+        // The engine ports PRINet 3.0's OscilloSim, whose guard bounds
+        // amplitude to `[1e-6, 10]`; the `prin-dynamics` default guard is the
+        // OscillatorModel's floor-at-0-no-ceiling. A fixed-step integrator
+        // configured with the default would silently change engine semantics
+        // (amplitudes of exactly 0 or above 10 inside the bounded engine), so
+        // reject that combination in debug builds. Integrators without a
+        // `GuardPolicy` (RK45, Exponential, foreign implementations) report
+        // `None` and remain the caller's responsibility.
+        debug_assert_ne!(
+            integrator.guard(),
+            Some(prin_dynamics::GuardPolicy::NonNegative),
+            "OscilloSim ports PRINet 3.0's bounded OscilloSim guard: construct \
+             its Euler/RK4 integrator with GuardPolicy::Bounded",
+        );
+
         Ok(Self {
             state,
             coupling,
@@ -539,11 +565,13 @@ impl OscilloSim {
     }
 }
 
-/// Apply numerical guards to an oscillator state: wrap phases, clamp amplitudes.
+/// Apply numerical guards to an oscillator state: wrap phases, clamp amplitudes
+/// to `[AMPLITUDE_MIN, AMPLITUDE_MAX]`.
 ///
-/// This is a convenience function for post-integration cleanup. The integrators
-/// in `prin-dynamics` already apply these guards, so this is only needed when
-/// implementing custom integration loops.
+/// This is a convenience function for post-integration cleanup. A
+/// `prin-dynamics` Euler/RK4 integrator built with `GuardPolicy::Bounded`
+/// already applies these guards, so this is only needed when implementing
+/// custom integration loops.
 pub fn apply_guards(state: &mut OscillatorState) {
     for p in &mut state.phase {
         *p = wrap_phase(*p);
@@ -556,14 +584,14 @@ pub fn apply_guards(state: &mut OscillatorState) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prin_dynamics::{RK4Integrator, Seed};
+    use prin_dynamics::{GuardPolicy, RK4Integrator, Seed};
     use std::f64::consts::TAU;
 
     fn make_engine(n: usize, dt: f64) -> (OscilloSim, SparseKuramoto) {
         let coupling = SparseCoupling::from_ring(n, 2, 1.0).unwrap();
         let model = SparseKuramoto::new(n, 0.1, 0.01, coupling.clone()).unwrap();
         let state = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(42, 0)).unwrap();
-        let integrator = Box::new(RK4Integrator::new());
+        let integrator = Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
         let engine = OscilloSim::new(state, coupling, integrator, dt).unwrap();
         (engine, model)
     }
@@ -675,7 +703,7 @@ mod tests {
         amplitudes[0] = prin_dynamics::state::AMPLITUDE_MIN;
         amplitudes[3] = prin_dynamics::state::AMPLITUDE_MIN;
         let state = OscillatorState::new(vec![0.0; n], amplitudes, vec![1.0; n], None).unwrap();
-        let integrator = Box::new(RK4Integrator::new());
+        let integrator = Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
         let mut engine = OscilloSim::new(state, coupling, integrator, 0.01).unwrap();
         engine.step(&model).unwrap();
         assert_eq!(engine.state().n_oscillators(), n);
@@ -795,7 +823,7 @@ mod tests {
     fn oscillo_sim_new_coupling_state_mismatch() {
         let coupling = SparseCoupling::from_ring(4, 1, 1.0).unwrap();
         let state = OscillatorState::create_random(8, (0.5, 5.0), &mut Seed::new(0, 0)).unwrap();
-        let integrator = Box::new(RK4Integrator::new());
+        let integrator = Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
         let result = OscilloSim::new(state, coupling, integrator, 0.01);
         assert!(matches!(
             result.err(),
@@ -807,7 +835,7 @@ mod tests {
     fn oscillo_sim_new_invalid_dt() {
         let coupling = SparseCoupling::from_ring(4, 1, 1.0).unwrap();
         let state = OscillatorState::create_random(4, (0.5, 5.0), &mut Seed::new(0, 0)).unwrap();
-        let integrator = Box::new(RK4Integrator::new());
+        let integrator = Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
         let result = OscilloSim::new(state, coupling, integrator, 0.0);
         assert!(matches!(
             result.err(),
@@ -819,7 +847,7 @@ mod tests {
     fn oscillo_sim_new_infinite_dt() {
         let coupling = SparseCoupling::from_ring(4, 1, 1.0).unwrap();
         let state = OscillatorState::create_random(4, (0.5, 5.0), &mut Seed::new(0, 0)).unwrap();
-        let integrator = Box::new(RK4Integrator::new());
+        let integrator = Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
         let result = OscilloSim::new(state, coupling, integrator, f64::INFINITY);
         assert!(matches!(
             result.err(),
@@ -856,7 +884,7 @@ mod tests {
         let coupling = SparseCoupling::from_ring(n, 2, 0.5).unwrap();
         let model = SparseStuartLandau::new(n, 1.0, coupling.clone()).unwrap();
         let state = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(42, 0)).unwrap();
-        let integrator = Box::new(RK4Integrator::new());
+        let integrator = Box::new(RK4Integrator::new().with_guard(GuardPolicy::Bounded));
         let mut engine = OscilloSim::new(state, coupling, integrator, 0.01).unwrap();
         let (final_state, traj) = engine.run(&model, 10, true).unwrap();
         assert_eq!(final_state.n_oscillators(), n);
@@ -887,7 +915,7 @@ mod tests {
         let coupling = SparseCoupling::from_ring(n, 2, 1.0).unwrap();
         let model = SparseKuramoto::new(n, 0.1, 0.01, coupling.clone()).unwrap();
         let state = OscillatorState::create_random(n, (0.5, 5.0), &mut Seed::new(42, 0)).unwrap();
-        let integrator = Box::new(EulerIntegrator::new());
+        let integrator = Box::new(EulerIntegrator::new().with_guard(GuardPolicy::Bounded));
         let mut engine = OscilloSim::new(state, coupling, integrator, 0.001).unwrap();
         engine.step(&model).unwrap();
         assert_eq!(engine.state().n_oscillators(), n);

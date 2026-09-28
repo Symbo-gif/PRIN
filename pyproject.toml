@@ -85,6 +85,15 @@ onnx = [
     "onnxruntime>=1.16; sys_platform != 'win32'",
     "onnxruntime-directml>=1.16; sys_platform == 'win32'",
 ]
+evidence = [
+    # Arbitrary-precision and symbolic evaluation for the campaign evidence
+    # generators (EVIDENCE/exp001-d1-s1/): 50-digit mpmath re-evaluation and
+    # SymPy lemmas. These packages reach a torch-installed venv transitively,
+    # but the generators are re-runnable evidence, so the dependency is
+    # declared explicitly (independent review of PR #24, finding S8).
+    "mpmath>=1.3",
+    "sympy>=1.12",
+]
 parity = [
     # PRINet 3.0.0 is installed from the archived source tree
     # in DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main.
