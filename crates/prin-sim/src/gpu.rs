@@ -161,6 +161,27 @@ fn try_create_client() -> Option<ComputeClient<SimRuntime>> {
     catch_unwind(AssertUnwindSafe(make)).ok()
 }
 
+/// The actual backend name behind a resolved [`SimRuntime`] device client, or
+/// `"cpu-native"` when no client initialised and the caller fell back to the
+/// host-slice path (DV-041).
+///
+/// Reuses `prin_kernels`' existing `StepReport::backend_name` convention
+/// (`R::name(client)` on the device path, e.g. `"cuda"`/`"wgpu<wgsl>"`/
+/// `"cpu"`; `"cpu-native"` on host-slice fallback — see
+/// `prin_kernels::mean_field_rk4::cubecl::step_cubecl_device`) instead of
+/// inventing a second naming scheme. This is the fact a CPU-resident DLPack
+/// capsule alone cannot reveal: the wgpu path and the host-slice fallback
+/// both copy their result back to host memory before export, so only the
+/// live client's own runtime name — never the capsule's device type — tells
+/// them apart.
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+fn backend_name_of(client: Option<&ComputeClient<SimRuntime>>) -> String {
+    match client {
+        Some(client) => SimRuntime::name(client).to_string(),
+        None => "cpu-native".to_string(),
+    }
+}
+
 fn to_f32(v: &[f64]) -> Vec<f32> {
     v.iter().map(|&x| x as f32).collect()
 }
@@ -436,6 +457,20 @@ impl GpuSparseKuramoto {
     /// Coupling strength `K`.
     pub fn k(&self) -> f64 {
         self.k
+    }
+
+    /// The actual backend this instance dispatches derivatives through —
+    /// `"cuda"`, `"wgpu<wgsl>"`, `"cpu"`, or `"cpu-native"` on host-slice
+    /// fallback (DV-041). See [`backend_name_of`].
+    pub fn backend_name(&self) -> String {
+        #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+        {
+            backend_name_of(self.device.as_ref().map(|d| &d.client))
+        }
+        #[cfg(not(any(feature = "cuda", feature = "wgpu", feature = "cpu")))]
+        {
+            "cpu-native".to_string()
+        }
     }
 
     /// Evaluate the sparse k-NN coupling derivative on the CUDA device and
@@ -738,6 +773,17 @@ impl GpuMeanFieldEngine {
         f64::from(self.params.dt)
     }
 
+    /// The actual backend this instance dispatches through — `"cuda"`,
+    /// `"wgpu<wgsl>"`, `"cpu"`, or `"cpu-native"` on host-slice fallback
+    /// (DV-041). See [`backend_name_of`].
+    pub fn backend_name(&self) -> String {
+        match &self.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            MeanFieldInner::Device(dev) => backend_name_of(Some(&dev.client)),
+            MeanFieldInner::Host { .. } => backend_name_of(None),
+        }
+    }
+
     /// Current state, converted back to `f64`.
     ///
     /// # Errors
@@ -1033,6 +1079,17 @@ impl GpuBandStepper {
         f64::from(self.params.dt)
     }
 
+    /// The actual backend this instance dispatches through — `"cuda"`,
+    /// `"wgpu<wgsl>"`, `"cpu"`, or `"cpu-native"` on host-slice fallback
+    /// (DV-041). See [`backend_name_of`].
+    pub fn backend_name(&self) -> String {
+        match &self.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            BandStepperInner::Device(dev) => backend_name_of(Some(&dev.client)),
+            BandStepperInner::Host { .. } => backend_name_of(None),
+        }
+    }
+
     /// Current state, converted back to `f64`.
     ///
     /// # Errors
@@ -1275,6 +1332,20 @@ mod tests {
         assert!((model.k() - 2.0).abs() < 1e-12);
     }
 
+    #[test]
+    fn gpu_sparse_kuramoto_backend_name_matches_device_presence() {
+        // DV-041: `backend_name()` must report `"cpu-native"` exactly when no
+        // device client initialised, and a non-"cpu-native" runtime name
+        // otherwise — never the other way around, on whatever hardware this
+        // test runs.
+        let coupling = SparseCoupling::from_ring(8, 2, 1.0).unwrap();
+        let model = GpuSparseKuramoto::new(8, 0.1, 0.01, 1.0, coupling).unwrap();
+        #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+        assert_eq!(model.device.is_some(), model.backend_name() != "cpu-native");
+        #[cfg(not(any(feature = "cuda", feature = "wgpu", feature = "cpu")))]
+        assert_eq!(model.backend_name(), "cpu-native");
+    }
+
     // ── GpuMeanFieldEngine ─────────────────────────────────────────────────
 
     fn mean_field_params() -> MeanFieldRk4Params {
@@ -1476,6 +1547,20 @@ mod tests {
         assert!(host.dphase.iter().all(|v| v.is_finite()));
     }
 
+    #[test]
+    fn gpu_mean_field_engine_backend_name_matches_device_presence() {
+        // DV-041, mirrored for the fused mean-field engine EXP-004's wgpu
+        // timing claim would use.
+        let state = OscillatorState::create_random(8, (0.5, 5.0), &mut Seed::new(3, 0)).unwrap();
+        let engine = GpuMeanFieldEngine::new(&state, mean_field_params()).unwrap();
+        let is_device = match &engine.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            MeanFieldInner::Device(_) => true,
+            MeanFieldInner::Host { .. } => false,
+        };
+        assert_eq!(is_device, engine.backend_name() != "cpu-native");
+    }
+
     // ── GpuBandStepper ─────────────────────────────────────────────────────
 
     fn discrete_step_params() -> DiscreteStepParams {
@@ -1610,6 +1695,20 @@ mod tests {
         assert_eq!(stepper.n_oscillators(), 12);
         assert_eq!(stepper.band_sizes(), band_sizes);
         assert!((stepper.dt() - 0.01).abs() < 1e-9);
+    }
+
+    #[test]
+    fn gpu_band_stepper_backend_name_matches_device_presence() {
+        // DV-041, mirrored for the fused band stepper.
+        let band_sizes = [4usize, 4, 4];
+        let state = band_state(band_sizes);
+        let stepper = GpuBandStepper::new(&state, band_sizes, discrete_step_params()).unwrap();
+        let is_device = match &stepper.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            BandStepperInner::Device(_) => true,
+            BandStepperInner::Host { .. } => false,
+        };
+        assert_eq!(is_device, stepper.backend_name() != "cpu-native");
     }
 
     /// Device-resident multi-step loop for the band stepper (WP-036E Q2).

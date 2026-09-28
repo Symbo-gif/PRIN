@@ -255,6 +255,17 @@ impl PyGpuSparseKuramoto {
     fn k(&self) -> f64 {
         self.inner.k()
     }
+
+    /// The actual backend this instance dispatches derivatives through:
+    /// `"cuda"`, `"wgpu<wgsl>"`, `"cpu"`, or `"cpu-native"` on host-slice
+    /// fallback (DV-041). Unlike the DLPack capsule's device type, this
+    /// distinguishes real wgpu dispatch from a silent host-slice CPU
+    /// fallback — both export a CPU-resident capsule, but only one of them
+    /// ran through the compiled wgpu backend.
+    #[getter]
+    fn backend_name(&self) -> String {
+        self.inner.backend_name()
+    }
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -338,6 +349,15 @@ impl PyGpuMeanFieldEngine {
     #[getter]
     fn dt(&self) -> f64 {
         self.inner.dt()
+    }
+
+    /// The actual backend this instance dispatches through: `"cuda"`,
+    /// `"wgpu<wgsl>"`, `"cpu"`, or `"cpu-native"` on host-slice fallback
+    /// (DV-041). Matches `step()`'s `backend_name` dict entry for the most
+    /// recent launch; this getter is available before any `step()` call.
+    #[getter]
+    fn backend_name(&self) -> String {
+        self.inner.backend_name()
     }
 }
 
@@ -463,6 +483,15 @@ impl PyGpuBandStepper {
     #[getter]
     fn dt(&self) -> f64 {
         self.inner.dt()
+    }
+
+    /// The actual backend this instance dispatches through: `"cuda"`,
+    /// `"wgpu<wgsl>"`, `"cpu"`, or `"cpu-native"` on host-slice fallback
+    /// (DV-041). Matches `step()`'s `backend_name` dict entry for the most
+    /// recent launch; this getter is available before any `step()` call.
+    #[getter]
+    fn backend_name(&self) -> String {
+        self.inner.backend_name()
     }
 }
 

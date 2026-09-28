@@ -100,3 +100,43 @@ def cuda_kernel_executes() -> bool:
         return all(from_dlpack(capsule).device.type == "cuda" for capsule in capsules)
     except Exception:
         return False
+
+
+@functools.lru_cache(maxsize=1)
+def wgpu_kernel_executes() -> bool:
+    """Whether ``prin._prin_core.GpuSparseKuramoto`` really dispatches via wgpu.
+
+    DV-041: unlike CUDA, a wgpu dispatch and the host-slice CPU fallback both
+    return a CPU-resident DLPack capsule (``crates/prin-py/src/bindings
+    /gpu.rs``'s module doc), so :func:`cuda_kernel_executes`'s trick of
+    checking capsule residency does not generalise to wgpu — there was no
+    Python-visible signal at all that told the two apart. This probe instead
+    reads the engine's own ``backend_name`` property
+    (``crates/prin-sim/src/gpu.rs::backend_name_of``: the live CubeCL runtime
+    name on the device-resident path, e.g. ``"wgpu<wgsl>"``; ``"cpu-native"``
+    on host-slice fallback), the same executability-over-registration rule as
+    :func:`directml_executes`/:func:`cuda_kernel_executes` — it reads a live
+    runtime fact, not just whether the binding was compiled in.
+
+    ``True`` only on a ``--features wgpu`` (without ``cuda``) build whose wgpu
+    adapter actually initialised; ``False`` on a binding-less build, a
+    ``--features cuda`` build (wgpu compiles out under
+    ``cfg(all(feature = "wgpu", not(feature = "cuda")))`` — CUDA takes
+    priority when both are enabled), or a wgpu build with no adapter.
+    """
+    try:
+        import torch
+        from prin import _prin_core
+    except ImportError:
+        return False
+
+    engine_cls = getattr(_prin_core, "GpuSparseKuramoto", None)
+    if engine_cls is None:
+        return False
+
+    try:
+        phase = torch.zeros(4, dtype=torch.float32).contiguous()
+        engine = engine_cls.from_knn_phase(4, 2, 0.5, 0.0, 0.0, phase)
+        return bool(engine.backend_name.startswith("wgpu"))
+    except Exception:
+        return False
