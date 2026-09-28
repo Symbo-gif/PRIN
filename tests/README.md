@@ -76,8 +76,15 @@ memory (DV-030). WP-036E (sessions `0144Q`–`0144T`) adds 5 further
 `@pytest.mark.gpu` tests in `test_wp036e_q3_zero_copy.py` (kDLCUDA capsule
 export, deterministic export, snapshot stability, sparse k-NN CUDA dispatch,
 device-end-to-end hook); the file's 6th test is a default-gate CPU regression
-check, not `gpu`-marked. **Total: 12 `@pytest.mark.gpu` tests** (7 ported
-acceptance + 5 WP-036E), selected by `pytest -m gpu`. The 1 psutil skip
+check, not `gpu`-marked. DV-041 (2026-09-28) adds
+`test_gpu_backend_name.py`: 10 tests, 6 `@pytest.mark.gpu` (live-dispatch
+`backend_name` assertions for `GpuSparseKuramoto`/`GpuMeanFieldEngine`/
+`GpuBandStepper` under a CUDA build and, separately, a wgpu build — one
+build runs 3, skips the other 3), 4 default-gate (vocabulary/presence and
+mutual-exclusivity checks, no live-device requirement). **Total: 18
+`@pytest.mark.gpu` tests** (7 ported acceptance + 5 WP-036E + 6 DV-041, of
+which the DV-041 file's build guard means only 3 of its 6 execute per
+build), selected by `pytest -m gpu`. The 1 psutil skip
 matches `pytest.skip("psutil not installed")` in the reference. No test
 carries `@pytest.mark.xfail`; no assertion is weakened; no tolerance
 annotation was required beyond the Parity Report entries for the GPU sparse
@@ -230,6 +237,13 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   (5 `@pytest.mark.gpu` CUDA: kDLCUDA capsule export, deterministic
   export, snapshot stability, sparse k-NN CUDA dispatch, device-end-to-end
   hook; 1 default-gate CPU regression).
+- `test_gpu_backend_name.py` — DV-041 positive backend-identification tests
+  for `GpuSparseKuramoto`/`GpuMeanFieldEngine`/`GpuBandStepper.backend_name`;
+  4 default-gate (vocabulary, mutual exclusivity) + 6 `@pytest.mark.gpu`
+  (3 assert `"cuda"` on a live CUDA dispatch, 3 assert a `"wgpu"`-prefixed
+  name on a live wgpu dispatch — build-guarded via
+  `tests/_env.py::cuda_kernel_executes`/`wgpu_kernel_executes`, so exactly
+  one triple runs per build and the other skips).
 - `test_wp036f_reexport.py` — 30 WP-036F tests for the re-exported
   controller graph (`tools/wp036f_reexport_controller.py`,
   `tools/wp036f_provider_latency.py`): three-input `Gemm` structure and

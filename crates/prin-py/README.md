@@ -261,6 +261,25 @@ whenever the extension API changes.
   export, snapshot stability, sparse k-NN CUDA dispatch, device-end-to-end
   hook) + 1 CPU regression test.
 
+### DV-041: Positive wgpu backend identification (hotfix `5d31295`/`96c1e39`)
+
+- **`bindings/gpu.rs`** — `GpuSparseKuramoto`, `GpuMeanFieldEngine`, and
+  `GpuBandStepper` each gain a `backend_name` getter: the live CubeCL
+  runtime name behind the engine's resolved `ComputeClient` (`"cuda"`,
+  `"wgpu<wgsl>"`, `"cpu"`) or `"cpu-native"` on host-slice fallback. Closes
+  a gap where a wgpu dispatch and the host-slice CPU fallback both returned
+  a CPU-resident DLPack capsule — only CUDA is zero-copy device-resident —
+  so neither the capsule's device type nor `torch.cuda.is_available()`
+  could prove wgpu code actually ran.
+- **`python/prin/_prin_core.pyi`** — `backend_name: str` property stub on
+  all three GPU engine classes.
+- `tests/_env.py::wgpu_kernel_executes()` — new executability probe
+  mirroring the existing `cuda_kernel_executes()`, for `skipif` guards on
+  tests that need a live wgpu dispatch, not just the binding compiled in.
+- `tests/test_gpu_backend_name.py` — live-verified on `PRIN-GPU-Runner`
+  under both `--features cuda` and `--features wgpu` builds, same
+  hardware. Evidence: `DOCS/audits/2026-09-28-dv041-wgpu-backend-identification-audit.md`.
+
 ### WP-028: Daemon bindings (sessions 0109–0112)
 
 - **`bindings/daemon.rs`** — PyO3 surface for the `prin-daemon` crate:

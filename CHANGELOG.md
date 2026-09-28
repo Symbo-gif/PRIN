@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Positive GPU backend identification — `backend_name` (DV-041, 2026-09-28
+  UTC).** `GpuSparseKuramoto`, `GpuMeanFieldEngine`, and `GpuBandStepper`
+  (`prin-sim`, with matching PyO3 getters in `prin-py`) each gain
+  `backend_name`: the live CubeCL runtime name behind the engine's resolved
+  compute client (`"cuda"`, `"wgpu<wgsl>"`, `"cpu"`) or `"cpu-native"` on
+  host-slice fallback — the same convention `prin_kernels`' fused
+  `StepReport.backend_name` already uses. Closes a gap where a genuine wgpu
+  dispatch and a silent host-slice CPU fallback both returned a CPU-resident
+  DLPack capsule (only CUDA is zero-copy device-resident), so neither the
+  capsule's device type nor `torch.cuda.is_available()` could prove wgpu
+  code actually ran — required before the campaign's EXP-001-r1/EXP-004
+  wgpu legs can execute. `tests/_env.py::wgpu_kernel_executes()` adds the
+  matching executability probe alongside the existing `cuda_kernel_executes()`.
+  Live-verified on `PRIN-GPU-Runner` under both `--features cuda` and
+  `--features wgpu` builds on the same hardware.
+
 - **Full-corpus PRIN-vs-corpus parity gate and the EXP-001 H2a registered-stream
   gate (EXP-001 D1 correction, S1, 2026-09-24 UTC).** These close finding
   EXP001-E5-F1. `parity/test_parity_prin_corpus.py` integrates PRIN from all

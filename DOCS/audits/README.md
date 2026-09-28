@@ -454,3 +454,18 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   `D4` governance-record consistency findings fixed; three items declined with
   rationale (§6). Same external-review event class as
   `PR017-devin-review-audit.md`.
+- [`2026-09-28-dv041-wgpu-backend-identification-audit.md`](2026-09-28-dv041-wgpu-backend-identification-audit.md) —
+  DV-041 wgpu backend-identification hotfix (`hotfix/dv041-wgpu-backend-identification`),
+  S2 initial verdict `FAIL` → `PASS-WITH-FINDINGS` after S3. One `D1`
+  (DV041-F1: commit claimed "Closes DV-041" without ever touching the DV
+  register on this branch — an unsupported-completion-claim) and one `D2`
+  (DV041-F2: three broken rustdoc intra-doc links) fixed in S3; a `D4`
+  (missing docstrings) fixed alongside; the delta re-audit then caught a new
+  `D2` (DV041-F4: the register row's own evidence prose self-asserted the
+  auditor's verdict before the delta re-audit had run), fixed in a follow-up
+  commit. The core technical fix (`GpuSparseKuramoto`/`GpuMeanFieldEngine`/
+  `GpuBandStepper::backend_name()`, positively distinguishing a real wgpu
+  dispatch from a silent host-slice CPU fallback) was independently
+  live-verified on `PRIN-GPU-Runner` under both a `--features cuda` and a
+  `--features wgpu` build by two different actors (implementer and
+  auditor).
