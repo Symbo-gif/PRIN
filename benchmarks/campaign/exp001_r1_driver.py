@@ -54,11 +54,17 @@ REFERENCE_SOURCE_SHA256 = (
 )
 INSTRUMENT_SHA256 = "c6972d5f1ca1380f0d80249034479ed2974a34d20c27b295ddf90f441c1631c2"
 
-# These limits remain the inherited, unamended limits. The E1 draft requests an
-# explicit E2 budget disposition; it does not grant one. The predecessor's
-# per-run fuzz waiver is not silently extended to a new experiment.
-RAW_ROOT_CAP_BYTES = 8 * 1024 * 1024
+# Approved by the maintainer at E2 (2026-09-28 UTC; campaign plan §14.2
+# amendment #7, DOCS/experiments/campaign-plan.md §11.8): the shared
+# `benchmarks/results/EXP-001/` root (original + new r1 runs) is capped at
+# 16 MiB; new r1 runs additionally have their own 8 MiB sub-allocation,
+# checked only against `RUN-*-r1-*/` directories; the r1 fuzz leg gets the
+# same 6 MiB per-run exception the predecessor's amendment 6 granted its own
+# fuzz leg; every other r1 run keeps the generic 2 MiB per-run cap.
+RAW_ROOT_CAP_BYTES = 16 * 1024 * 1024
+R1_ROOT_CAP_BYTES = 8 * 1024 * 1024
 RUN_CAP_BYTES = 2 * 1024 * 1024
+FUZZ_RUN_CAP_BYTES = 6 * 1024 * 1024
 CAMPAIGN_CAP_BYTES = 64 * 1024 * 1024
 MANIFEST_RESERVE_BYTES = 64 * 1024
 
@@ -650,9 +656,17 @@ def collect_cases(mode: str, corpus_dir: Path) -> list[dict[str, Any]]:
 
 
 def _storage_check(
-    run_dir: Path, result: dict[str, Any], sidecar: dict[str, Any]
+    run_dir: Path, result: dict[str, Any], sidecar: dict[str, Any], mode: str = ""
 ) -> None:
-    """Reject publication that would exceed the currently approved byte caps."""
+    """Reject publication that would exceed the currently approved byte caps.
+
+    Args:
+        run_dir: The new run's directory (not yet created when checked).
+        result: The result payload pending publication.
+        sidecar: The campaign-metadata sidecar pending publication.
+        mode: The registered leg name (``"fuzz"`` gets the approved 6 MiB
+            per-run exception; every other leg keeps the generic 2 MiB cap).
+    """
 
     def encoded_size(payload: dict[str, Any]) -> int:
         """Estimate the exact platform-newline JSON bytes before publication."""
@@ -665,8 +679,12 @@ def _storage_check(
         return len(text.replace("\n", os.linesep).encode("utf-8"))
 
     new_bytes = encoded_size(result) + encoded_size(sidecar) + MANIFEST_RESERVE_BYTES
+    run_cap = FUZZ_RUN_CAP_BYTES if mode == "fuzz" else RUN_CAP_BYTES
     root_bytes = sum(
         p.stat().st_size for p in run_dir.parent.glob("RUN-*/*") if p.is_file()
+    )
+    r1_bytes = sum(
+        p.stat().st_size for p in run_dir.parent.glob("RUN-*-r1-*/*") if p.is_file()
     )
     campaign_bytes = sum(
         p.stat().st_size
@@ -674,13 +692,14 @@ def _storage_check(
         if p.is_file()
     )
     if (
-        new_bytes > RUN_CAP_BYTES
+        new_bytes > run_cap
         or root_bytes + new_bytes > RAW_ROOT_CAP_BYTES
+        or ("-r1-" in run_dir.name and r1_bytes + new_bytes > R1_ROOT_CAP_BYTES)
         or campaign_bytes + new_bytes > CAMPAIGN_CAP_BYTES
     ):
         raise legacy.DriverMetadataError(
-            "registered storage cap would be exceeded; E2 must resolve the "
-            "r1 budget request before execution (no inherited fuzz waiver)"
+            "registered storage cap would be exceeded (campaign plan §14.2 "
+            "amendment #7 limits)"
         )
 
 
@@ -777,6 +796,7 @@ def main(argv: list[str] | None = None) -> int:
             run_dir,
             {"environment": environment, "config": config, "cases": cases},
             sidecar,
+            mode=args.mode,
         )
         metadata_path = legacy.write_campaign_metadata(run_dir, **sidecar)
         try:

@@ -4,9 +4,28 @@
 **Authors:** Devin (AI pair, protocol and driver); MichaelMaillet (maintainer,
 session declaration; E2 review pending).<br>
 **Date:** 2026-09-28 UTC (the session was declared on September 27 local time).<br>
-**Maintainer approval:** **PENDING E2.** Declaring E1 does not approve this
-protocol, its budget request, or execution. No r1 analysis has been verified
-by the maintainer.<br>
+**Maintainer approval:** **E2 PARTIAL APPROVAL — MichaelMaillet, 2026-09-28
+UTC.** Independent review conducted by Claude Sonnet 5 (did not draft E1;
+campaign plan §2.2), who re-derived every E1 provenance claim (corpus/
+reference/instrument hashes, the 1,000-case fuzz stream digest, the 22
+ill-conditioned indices, the fresh bootstrap seed, the built extension's
+default guard) from the repository rather than accepting them on assertion,
+and independently re-ran the driver's test suite, ruff, mypy --strict,
+`check_dv_register_gates.py` and `check_global_session_registration.py` —
+all reproduced exactly as E1 reported, zero discrepancies. Three of the four
+E2 gates below are **APPROVED**; the required wgpu coverage gate is **NOT**
+resolved and blocks E3. See `e2-review.md` for the full record.
+
+| E2 gate (§10) | Decision | Record |
+|---|---|---|
+| §7 single-stream (not ≥10 replications) sample-size justification | **APPROVED** | e2-review.md §2 |
+| §7 three-way H2b equivalence decision rule (replacing the predecessor's binary rule) | **APPROVED** | e2-review.md §2 |
+| §9 storage budget (16 MiB shared / 8 MiB new r1 / 6 MiB fuzz exception) | **APPROVED** — campaign plan §14.2 amendment #7 | e2-review.md §3; driver updated (`RAW_ROOT_CAP_BYTES`, new `R1_ROOT_CAP_BYTES`, new `FUZZ_RUN_CAP_BYTES`) |
+| §2 required wgpu driver/coverage gate | **NOT RESOLVED — blocks E3.** Maintainer selected "block on a coding fix first" over a gap disposition. A governed hotfix/correction session must add positive wgpu-dispatch identification to `crates/prin-py`'s GPU bindings (tracked as **DV-041**) before this pre-registration may freeze. | e2-review.md §4; `DEFERRED_VALIDATION_REGISTER.md` DV-041; campaign plan §11.7, §14.2 amendment #8 |
+
+**This pre-registration does not freeze and E3 does not start until DV-041
+closes.** No r1 analysis is confirmed by this approval; it approves protocol
+design choices only.<br>
 **Code version:** `prin-core` distribution `1.0.0rc1`, Rust `1.0.0-rc1`;
 E1 starting tree `a7ef308acffbf3ecd09aa1b4fbe55a9b09d09e74`, incorporating
 correction merge `149cf2d88ab6be401951b63d1d7e8fad209f52a5` and the correction's
@@ -133,6 +152,20 @@ dated, maintainer-approved campaign gap disposition that specifies the
 unexecuted leg and its `INCONCLUSIVE` reporting. Hardware is available;
 this must not be called a hardware-unavailability exception. E1 does not
 grant the disposition or authorize E3 with this gate open.
+
+**E2 resolution (2026-09-28 UTC):** confirmed by code review
+(`crates/prin-sim/src/gpu.rs`, `crates/prin-py/src/bindings/gpu.rs`) that
+no gap disposition is available either: a `--features wgpu`-only build's
+compute client is architecturally CPU-resident from Python's perspective
+(only the true CUDA path returns a zero-copy `kDLCUDA` capsule), so the
+present binding cannot distinguish real wgpu dispatch from a silent
+host-slice fallback at all — not merely in the Python driver layer. The
+maintainer declined the `INCONCLUSIVE`-reporting gap disposition and
+selected fixing the capability first. Tracked as **DV-041**
+(`DEFERRED_VALIDATION_REGISTER.md`); closure requires a governed
+hotfix/correction session adding a positive backend-identification
+accessor to the GPU bindings before this pre-registration freezes. See
+`e2-review.md` §4.
 
 ## 3. Expected results
 
@@ -438,6 +471,12 @@ DV-001, DV-003, DV-036 or DV-040.
   contributing cases in that ensemble; it does not estimate variation over
   independently rerun campaigns. E2 must explicitly approve this justification
   under campaign §6.3 / Experimentation Standards E1 item 8.
+
+  **E2 decision (2026-09-28 UTC): APPROVED** by MichaelMaillet. This is a
+  targeted verification of a correction against the exact previously-failing
+  population, not a fresh discovery study; re-testing that identified
+  population is the relevant confirmatory evidence for "did the fix work,"
+  and no result is reused as new measurement (§1). See `e2-review.md` §2.
 - **Deterministic rules:** H1/H2a/H3/H4 have no significance test. Counts,
   registered denominators, absolute/relative error maxima and distributions
   of per-case/array maxima are reported. A statistic cannot rescue a breach.
@@ -475,6 +514,12 @@ equivalence is not necessarily evidence of a non-equivalent mean. This
 change is prospective in a new draft, subject to E2 review; it does not
 reinterpret the old H2b verdict. The implementation is
 `exp001_r1_driver.adjudicate_h2b`, tested with synthetic interval boundaries.
+
+**E2 decision (2026-09-28 UTC): APPROVED** by MichaelMaillet. The three-way
+rule is standard TOST-style equivalence-test logic: it correctly separates
+"the data fail to demonstrate equivalence" (inconclusive) from "the data
+demonstrate non-equivalence" (refuted), which the predecessor's binary rule
+conflated. See `e2-review.md` §2.
 
 ## 8. Analysis plan
 
@@ -567,14 +612,20 @@ may be used. E2 must also account for original execution time against the
 shared CPU/GPU allocation; anticipated r1 work does not waive cumulative
 caps.
 
-Until that disposition, the driver enforces the inherited **8 MiB shared
-root** and **2 MiB per new run**, without inheriting the old fuzz exception.
-It estimates the exact writer serialization plus a conservative 64 KiB
-manifest reserve before publication, and checks the campaign-wide cap.
-Consequently, the full proposed run set is **not authorized to execute**
-under the current driver limits. Update the appropriate scoped limits only
-as part of the approved pre-execution budget amendment. Retain abandoned/
-aborted directories and do not reclaim the original evidence to make room.
+**E2 decision (2026-09-28 UTC): APPROVED as requested** by MichaelMaillet
+(campaign plan §14.2 amendment #7). The driver now enforces: **16 MiB**
+shared `EXP-001/` root (`RAW_ROOT_CAP_BYTES`, covering the original runs and
+all new r1 runs together); a separate **8 MiB** cap on new r1 runs alone
+(`R1_ROOT_CAP_BYTES`, checked only against `RUN-*-r1-*/` directories); a
+**6 MiB** per-run exception for the r1 fuzz leg (`FUZZ_RUN_CAP_BYTES`); and
+the generic **2 MiB** per-run cap (`RUN_CAP_BYTES`) for every other r1 run.
+The campaign-wide 64 MiB cap is unaffected. Each limit is independently
+tested (`tests/test_exp001_r1_driver.py`); the run set this pre-registration
+proposes is authorized against the storage caps alone (the wgpu gate,
+DV-041, remains the sole open blocker on execution). It estimates the exact
+writer serialization plus a conservative 64 KiB manifest reserve before
+publication. Retain abandoned/aborted directories and do not reclaim the
+original evidence to make room. See `e2-review.md` §3.
 
 ## 10. E2 handoff and execution gates
 
@@ -607,3 +658,17 @@ The campaign block on 0159 and downstream sessions remains in force until
 the r1 E5 non-reversal condition or a Project Plan §8.3 amendment is
 satisfied. Neither correction merge, E1 completion nor E2 approval alone
 releases it.
+
+### E2 outcome (2026-09-28 UTC)
+
+Items 1, 3, 4 above are **satisfied**: independent review completed (item
+4; see `e2-review.md`), the storage budget approved as requested (item 3;
+campaign plan §14.2 amendment #7), and the sample-size/H2b-rule
+justifications approved (item 1). Item 5 (freeze/build/CI/nightly currency)
+is carried forward to E3 start, unchanged from E1's own instruction. **Item
+2 is not satisfied**: the wgpu gate is neither closed with tested driver
+support nor resolved by a gap disposition — the maintainer chose to fix the
+underlying capability (DV-041) rather than accept either offered path. This
+pre-registration **does not freeze** and **E3 does not start** until DV-041
+closes and a follow-up E2 amendment (a normal pre-execution edit) records
+the tested wgpu leg.

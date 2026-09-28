@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001-r1 E2 independent review and partial approval (2026-09-28 UTC).**
+  Claude Sonnet 5 (did not draft E1) re-derived every E1 provenance and
+  machinery claim from the repository — corpus/reference/instrument hashes,
+  the 1,000-case fuzz stream digest, the 22 ill-conditioned indices, the
+  fresh bootstrap seed, the built extension's default guard, and the driver
+  test/lint/type-check results — with zero discrepancies. The maintainer
+  approved the single-stream sample-size justification, the H2b three-way
+  equivalence rule, and the storage budget request (campaign plan §14.2
+  amendment #7: shared root 8→16 MiB, new 8 MiB r1 sub-allocation, 6 MiB
+  fuzz exception), implemented and tested in
+  `benchmarks/campaign/exp001_r1_driver.py`. The required wgpu
+  driver/coverage gate is **not** resolved: rather than accept a dated gap
+  disposition, the maintainer chose to fix the underlying capability —
+  tracked as **DV-041** (`DEFERRED_VALIDATION_REGISTER.md`; campaign plan
+  §11.7, §14.2 amendment #8) — before this pre-registration may freeze or
+  session 0156-successor `EXP-001-r1` E3 may start.
+
 - **EXP-001-r1 E1 pre-registration (2026-09-28 UTC).** Drafted the
   correction re-run protocol and a separate CPU/CUDA evidence driver with
   positive DV-007 explanations, fixed ill-conditioned-case characterization,

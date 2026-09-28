@@ -599,8 +599,18 @@ introduction and are not retroactively added here; this table starts with
 | 0198 | 7 | WP-039 | S4 — Documentation and release | [Stable-release evidence closure](phase-7/0198-wp039-s4-stable-release-evidence-closure.md) | PLANNED |
 
 EXP-001-r1 E1 was declared by MichaelMaillet and completed as a committed
-DRAFT on 2026-09-28 UTC; E2 review/approval is next. See
-[draft](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/preregistration.md)
+DRAFT on 2026-09-28 UTC. EXP-001-r1 E2 followed the same day: independent
+review (Claude Sonnet 5) re-verified every E1 provenance/machinery claim
+against the repository (zero discrepancies); the maintainer approved the
+sample-size justification, the H2b three-way rule, and the storage budget
+(campaign plan §14.2 amendment #7). The required wgpu coverage gate is
+**not** resolved — the maintainer selected fixing the underlying binding
+capability (tracked as **DV-041**, `DEFERRED_VALIDATION_REGISTER.md`;
+campaign plan §11.7/§14.2 amendment #8) over a gap disposition. The
+pre-registration does **not** freeze and **E3 does not start** until
+DV-041 closes. See
+[draft](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/preregistration.md),
+[E1 handoff](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md)
 and
-[handoff](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md).
+[E2 review](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e2-review.md).
 This declaration does not release 0159.

@@ -641,6 +641,43 @@ def test_storage_caps_include_predecessor_files_and_reject_nonfinite_json(
     assert evidence.read_bytes() == b"original"
 
 
+def test_fuzz_leg_gets_the_approved_wider_per_run_cap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Campaign plan §14.2 amendment #7: fuzz keeps its own 6 MiB run cap."""
+    root = tmp_path / "EXP-001"
+    root.mkdir()
+    run_dir = root / "RUN-new-r1-fuzz-cpu"
+    monkeypatch.setattr(driver, "RUN_CAP_BYTES", 1000)
+    payload = {"value": "x" * 200}
+    # The manifest reserve alone (64 KiB) already exceeds the patched generic
+    # cap, so this payload only fits under the fuzz-specific 6 MiB exception.
+    driver._storage_check(run_dir, payload, {}, mode="fuzz")
+    with pytest.raises(legacy.DriverMetadataError, match="storage cap"):
+        driver._storage_check(run_dir, payload, {}, mode="corpus")
+
+
+def test_r1_subtree_cap_is_independent_of_the_shared_root_cap(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Campaign plan §14.2 amendment #7: the new 8 MiB r1 sub-allocation is
+    checked only against ``RUN-*-r1-*`` directories, separately from the
+    16 MiB shared-root cap that also covers the original EXP-001 runs."""
+    root = tmp_path / "EXP-001"
+    root.mkdir()
+    original = root / "RUN-old-corpus-cpu"
+    original.mkdir()
+    (original / "original.json").write_bytes(b"0" * 100)
+    prior_r1 = root / "RUN-prior-r1-corpus-cpu"
+    prior_r1.mkdir()
+    (prior_r1 / "prior.json").write_bytes(b"0" * 100)
+    monkeypatch.setattr(driver, "R1_ROOT_CAP_BYTES", 150)
+    with pytest.raises(legacy.DriverMetadataError, match="storage cap"):
+        driver._storage_check(root / "RUN-new-r1-fuzz-cpu", {}, {}, mode="fuzz")
+    # A non-r1 run directory of an equivalent size is unaffected by the r1 cap.
+    driver._storage_check(root / "RUN-new-corpus-cpu", {}, {}, mode="corpus")
+
+
 @pytest.mark.parametrize("failure", ["operator", "sha", "count", "write"])
 def test_cli_operational_failures_never_publish_accepted_evidence(
     publication: Path, monkeypatch: pytest.MonkeyPatch, failure: str
