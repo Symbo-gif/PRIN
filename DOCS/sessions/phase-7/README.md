@@ -65,6 +65,17 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 > **Correction cycle COMPLETE, 2026-09-27 UTC.** All four contingency sessions
 > (S1→S2→S3→S4) closed. S1: root cause established and fixed; S2: **PASS**;
 > S3: delta re-audit **CLEAN**; S4: PSR-039 issued, `EXP-001-r1` authorized.
-> The correction branch (`hotfix/exp001-d1-parity-correction`, PR #24) is not
-> yet merged; CI-green evidence for the merge SHA is pending. **0159 stays
+> The correction branch (`hotfix/exp001-d1-parity-correction`) merged as
+> PR #24 `149cf2d88ab6be401951b63d1d7e8fad209f52a5` (2026-09-28 UTC); all six
+> required workflows are green per the
+> [EXP-001-r1 E1 handoff](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md).
+> **0159 stays
 > BLOCKED** until `EXP-001-r1` returns a non-reversal verdict.
+>
+> **EXP-001-r1 E1 COMPLETE — DRAFT, 2026-09-28 UTC.** The maintainer declared
+> this E1 session. The [draft pre-registration](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/preregistration.md)
+> and [E1 handoff](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md)
+> record the prospective protocol and local validation. E2 must independently
+> review the protocol and resolve the required wgpu coverage and
+> shared-storage budget gates before execution. E1 does not approve E2,
+> execute E3, or release session 0159.

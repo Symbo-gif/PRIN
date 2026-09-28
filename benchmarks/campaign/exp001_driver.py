@@ -701,7 +701,9 @@ def _envelope_violation(path: Path, run_dir: Path, mode: str) -> str | None:
     return None
 
 
-def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
+def check_run_complete(
+    run_dir: Path, *, expected_exp_id: str = EXP_ID
+) -> dict[str, list[str]]:
     """Run-closure precondition: the sidecar and the directory's result files
     name each other exactly, with no path escapes either way.
 
@@ -733,7 +735,9 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
     and preregistration §5.3).
 
     The whole campaign plan §7.2 sidecar schema is validated, not only the
-    ``artefacts`` key: ``exp_id`` must be exactly :data:`EXP_ID`, ``run_id``
+    ``artefacts`` key: ``exp_id`` must equal the caller's ``expected_exp_id``
+    (``EXP-001`` by default; a re-run must name its own identity explicitly),
+    ``run_id``
     must equal ``run_dir.name``, ``session`` and ``operator`` must be
     non-empty strings, ``artefacts`` must be a non-empty object, and every
     entry must name a canonical ``<mode>_<label>.json`` result carrying
@@ -787,10 +791,10 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
             f"{sidecar} is missing required field(s) {', '.join(absent)} "
             "(campaign plan §7.2); not a closable run"
         )
-    if payload["exp_id"] != EXP_ID:
+    if payload["exp_id"] != expected_exp_id:
         raise IncompleteRunError(
-            f"{sidecar} declares exp_id {payload['exp_id']!r}, not {EXP_ID!r}; "
-            "not a closable run for this experiment"
+            f"{sidecar} declares exp_id {payload['exp_id']!r}, not "
+            f"{expected_exp_id!r}; not a closable run for this experiment"
         )
     if payload["run_id"] != run_dir.name:
         raise IncompleteRunError(

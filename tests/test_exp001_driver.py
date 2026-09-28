@@ -2371,3 +2371,29 @@ class TestCliExpectedFailures:
             driver.main(argv)
         # The sidecar is still rolled back on the way out.
         assert not (run_dir / "campaign-metadata.json").exists()
+
+
+@pytest.mark.parametrize("expected_id", ["EXP-001", "EXP-001-r1"])
+def test_run_closure_requires_the_explicit_experiment_identity(
+    run_root: Path, expected_id: str
+) -> None:
+    """A re-run cannot pass closure under its predecessor's identity."""
+    run_dir = _run_dir(run_root, "experiment-identity")
+    driver.write_campaign_metadata(
+        run_dir,
+        exp_id=expected_id,
+        run_id=run_dir.name,
+        session="EXP-001-r1-E3" if expected_id.endswith("r1") else "0156",
+        operator="synthetic-test",
+        artefacts={"corpus_smoke.json": ["H1"]},
+    )
+    _write_envelope(run_dir, "corpus_smoke.json")
+    assert driver.check_run_complete(run_dir, expected_exp_id=expected_id) == {
+        "corpus_smoke.json": ["H1"]
+    }
+    other_id = "EXP-001" if expected_id.endswith("r1") else "EXP-001-r1"
+    with pytest.raises(driver.IncompleteRunError, match="not a closable run"):
+        driver.check_run_complete(run_dir, expected_exp_id=other_id)
+    if expected_id == "EXP-001-r1":
+        with pytest.raises(driver.IncompleteRunError, match="not a closable run"):
+            driver.check_run_complete(run_dir)

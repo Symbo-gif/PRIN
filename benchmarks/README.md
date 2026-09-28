@@ -28,6 +28,14 @@ package's own README for what it measures and which Rust-backed `prin` API
 No numerical computation lives in this suite — every measured quantity comes
 from Rust.
 
+## Campaign drivers
+
+`campaign/` holds the Phase 7 campaign experiment drivers
+(`campaign-plan.md` §7 artefact contract): `exp001_driver.py` for the
+predecessor EXP-001 record and `exp001_r1_driver.py` for the correction
+re-run `EXP-001-r1` (E1 draft; no execution before E2 approval). See
+[`campaign/README.md`](campaign/README.md).
+
 ## Usage
 
 ```bash

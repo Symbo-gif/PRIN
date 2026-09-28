@@ -51,8 +51,10 @@ authorized as a new experiment record
 ([`EXP-001-r1`](EXP-001-r1-golden-trajectory-numerical-parity/README.md)) per
 campaign plan §10.4 item 4. **Session 0159 and every experiment downstream of
 EXP-001, plus 0194, remain BLOCKED** until `EXP-001-r1` returns a non-reversal
-verdict. The correction branch (PR #24) is not yet merged; CI-green evidence
-for the merge SHA is pending.
+verdict. PR #24 merged as `149cf2d88ab6be401951b63d1d7e8fad209f52a5`
+(2026-09-28 UTC); all six required workflows are green. `EXP-001-r1` E1
+entry evidence and its draft protocol are linked from the re-run record.
+Session 0159 remains BLOCKED.
 
 ## Layout
 
@@ -74,7 +76,7 @@ regenerate from them via `prin.reporting`.
 | Experiment | Track | Record root |
 |---|---|---|
 | EXP-001 | C1 | [`EXP-001-golden-trajectory-numerical-parity/`](EXP-001-golden-trajectory-numerical-parity/README.md) |
-| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **AUTHORIZED, E1 NOT YET BEGUN** |
+| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **E1 COMPLETE — DRAFT; E2 review pending** |
 | EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) |
 | EXP-003 | C2 | [`EXP-003-cpu-scaling-and-sweep-performance/`](EXP-003-cpu-scaling-and-sweep-performance/README.md) |
 | EXP-004 | C2 | [`EXP-004-gpu-kernels-and-torch-bridge-performance/`](EXP-004-gpu-kernels-and-torch-bridge-performance/README.md) |

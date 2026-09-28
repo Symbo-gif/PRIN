@@ -417,3 +417,17 @@ lint paths) remains OPEN with its EXP-002 E4 / session `0162` re-audit gate;
 it is a gate-coverage gap, not a blocker for this correction. `DV-036`'s
 reference-host re-baseline gates before `0168` and `0173`, and `DV036-F5` at
 `0166`, remain open and are now additionally gated behind this block.
+
+## EXP-001 D1 correction merged; EXP-001-r1 E1 draft — 2026-09-28 UTC
+
+The `hotfix/exp001-d1-parity-correction` branch merged to `main` as PR #24
+`149cf2d88ab6be401951b63d1d7e8fad209f52a5`; all six required workflows are
+green. The maintainer declared `EXP-001-r1` E1, which completed as a
+committed DRAFT: see the
+[draft pre-registration](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/preregistration.md)
+and
+[E1 handoff](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md).
+No deferred-validation row is closed by this note: `DV-040` retains its
+EXP-002 E4 re-audit gate, and the `DV-036`/`DV036-F5` gates remain open.
+Sessions `0159`–`0194` remain **BLOCKED** until `EXP-001-r1` returns a
+non-reversal verdict.

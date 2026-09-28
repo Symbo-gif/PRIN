@@ -672,3 +672,11 @@ independently validated after the merge:
   S1.9 (the `(z_j - z_i)` form naturally excludes self-coupling; only the
   phase divisor needed correction).
 
+### S4.4 — Merge CI evidence carried by EXP-001-r1 E1 (2026-09-28 UTC)
+
+PR #24's merge SHA `149cf2d88ab6be401951b63d1d7e8fad209f52a5` is green on all
+six required workflows (rust, python, parity, repro, snyk, gpu). The evidence
+is carried by the EXP-001-r1 E1 record:
+[`../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md`](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md).
+This does not release session 0159; `EXP-001-r1` E2 review remains the next
+gated step.

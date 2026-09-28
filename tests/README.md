@@ -262,6 +262,12 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   PRINet 3.0 JSON artefacts, exact LaTeX byte comparison, deterministic
   normalized PNG/PDF bytes, schema/missing-artefact errors, and output-path
   confinement.
+- `test_exp001_r1_driver.py` — synthetic tests for the `EXP-001-r1`
+  correction re-run driver (`../benchmarks/campaign/exp001_r1_driver.py`):
+  both oscillator implementations are replaced by explicit arrays and every
+  runner is stubbed, so the suite exercises the measurement, classification,
+  preflight-pin, storage-cap, and publication machinery without executing a
+  registered workload or producing campaign observations.
 - Differential parity tests live in `../parity/`.
 - Rust unit/property tests live next to each crate (`cargo test`).
 

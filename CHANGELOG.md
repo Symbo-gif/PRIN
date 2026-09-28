@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001-r1 E1 pre-registration (2026-09-28 UTC).** Drafted the
+  correction re-run protocol and a separate CPU/CUDA evidence driver with
+  positive DV-007 explanations, fixed ill-conditioned-case characterization,
+  provenance pins and synthetic validation. E2 approval, required wgpu
+  coverage and the shared-storage budget disposition remain pre-execution
+  gates; session 0159 stays blocked.
+
 - **EXP-001 D1 correction cycle S4 documentation (2026-09-27 UTC).** PSR-039
   issued; all registers updated; erratum E-3 appended to the EXP-001 E5 report
   naming `EXP-001-r1`; `EXP-001-r1` authorized as a new experiment record

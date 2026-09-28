@@ -1,23 +1,31 @@
 # EXP-001-r1 — Golden-trajectory numerical parity, re-run (track C1)
 
-**Status:** **AUTHORIZED — E1 NOT YET BEGUN** (2026-09-27 UTC, authorized by
-the EXP-001 D1 correction cycle's S4 documentation session). This is a new
-experiment record per campaign plan §10.4 item 4. The original EXP-001 record
-is immutable; corrections to it are errata.
+**Status:** **E1 COMPLETE — DRAFT PRE-REGISTRATION; E2 APPROVAL PENDING** (2026-09-28 UTC).
+This is a new experiment record per campaign plan §10.4 item 4. The original
+EXP-001 record is immutable; corrections to it are errata.
 **Predecessor:** [`EXP-001`](../EXP-001-golden-trajectory-numerical-parity/README.md)
 (E5 reported 2026-09-23; H1/H2a `REFUTED`, D1 raised).
 **Correction cycle:** [`DOCS/audits/2026-09-24-exp001-d1-correction-audit.md`](../../audits/2026-09-24-exp001-d1-correction-audit.md)
 (S1 complete, S2 PASS, S3 CLEAN, S4 complete).
 **Campaign plan row:** [`campaign-plan.md`](../campaign-plan.md) §2.1 EXP-001 / C1.
 
-## What this directory will hold
+The maintainer declared this E1 session. The [draft
+pre-registration](preregistration.md) and [E1 handoff](e1-handoff.md) record
+the prospective protocol and local validation. E2 must independently review
+the protocol and resolve the required wgpu coverage and shared-storage
+budget gates before execution. E1 does not approve E2, execute E3, or
+release session 0159.
+
+## What this directory holds
 
 | File | Created by | Frozen when |
 |---|---|---|
-| `preregistration.md` | E1 (from [`TEMPLATE_Preregistration.md`](../TEMPLATE_Preregistration.md)) | **FROZEN** at E3 start |
-| `log.md` | E3 | Written at E3; never edited after E3 close |
-| `report.md` | E5 | Written at E5; corrections are errata |
-| `report-manifest.json` | E4/E5 | Written at E4; SHA-256 of regenerated outputs |
+| `README.md` | E1 | This E1 brief; updated as the experiment progresses |
+| [`preregistration.md`](preregistration.md) | E1 (from [`TEMPLATE_Preregistration.md`](../TEMPLATE_Preregistration.md)) | **DRAFT** — freezes at E3 start |
+| [`e1-handoff.md`](e1-handoff.md) | E1 | Entry and verification evidence record |
+| `log.md` | E3 | *Not yet created* — written at E3; never edited after E3 close |
+| `report.md` | E5 | *Not yet created* — written at E5; corrections are errata |
+| `report-manifest.json` | E4/E5 | *Not yet created* — written at E4; SHA-256 of regenerated outputs |
 
 ## Rules inherited from the campaign plan
 
