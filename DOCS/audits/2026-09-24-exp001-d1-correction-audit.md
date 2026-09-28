@@ -650,10 +650,25 @@ plus 0194, remain **BLOCKED** until:
 2. The maintainer records a Project Plan §8.3 amendment accepting a changed
    conclusion with full justification.
 
-### S4.3 Handoff
+### S4.3 Handoff and merge
 
-The correction cycle is documentation-complete. The next maintainer action is
-the merge of PR #24 (`hotfix/exp001-d1-parity-correction` → `main`), after
-which `check_ci_green.py <merge-SHA>` evidence is recorded. The maintainer
-then declares the session for `EXP-001-r1` E1 (pre-registration).
+PR #24 merged to `main` as `149cf2d` (2026-09-27 UTC). CI is running on the
+merge SHA; `check_ci_green.py 149cf2d` will be recorded once all required
+workflows conclude. The maintainer then declares the session for `EXP-001-r1`
+E1 (pre-registration).
+
+**Devin review post-merge assessment.** Two Devin inline findings were
+independently validated after the merge:
+
+- **F1** (`engine.rs:449`, "release builds silently lose amplitude bounds"):
+  false positive in practice — all 11 `OscilloSim` construction sites
+  explicitly pin `GuardPolicy::Bounded`; the `debug_assert_ne!` is
+  defense-in-depth for external callers. Already deliberated at S1.9.
+- **F2** (`models.rs:450`, "single-oscillator mean-field amplitudes diverge"):
+  factually correct for Kuramoto/Hopf mean-field at N=1 (PRINet 3.0's order
+  parameter includes self-coupling; PRIN's N≤1 shortcut does not). Already
+  documented as S1.7 item 3; deliberately deferred — no experiment exercises
+  N=1 (corpus minimum N=8, fuzz minimum N=4). Stuart-Landau N≤1 was fixed at
+  S1.9 (the `(z_j - z_i)` form naturally excludes self-coupling; only the
+  phase divisor needed correction).
 
