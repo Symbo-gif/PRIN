@@ -100,3 +100,57 @@ def cuda_kernel_executes() -> bool:
         return all(from_dlpack(capsule).device.type == "cuda" for capsule in capsules)
     except Exception:
         return False
+
+
+@functools.lru_cache(maxsize=1)
+def wgpu_kernel_executes() -> bool:
+    """Whether ``prin._prin_core.GpuSparseKuramoto`` really dispatches via wgpu.
+
+    DV-041: unlike CUDA, a wgpu dispatch and the host-slice CPU fallback both
+    return a CPU-resident DLPack capsule (``crates/prin-py/src/bindings
+    /gpu.rs``'s module doc), so :func:`cuda_kernel_executes`'s trick of
+    checking capsule residency does not generalise to wgpu — there was no
+    Python-visible signal at all that told the two apart. This probe instead
+    reads the engine's own ``backend_name`` property
+    (``crates/prin-sim/src/gpu.rs::backend_name_of``: the live CubeCL runtime
+    name on the device-resident path, e.g. ``"wgpu<wgsl>"``; the backend
+    actually used by the most recent dispatch on the host-slice fallback
+    path, ``"cpu-native"`` before any call there — DV041-F5 follow-up), the
+    same executability-over-registration rule as
+    :func:`directml_executes`/:func:`cuda_kernel_executes` — it reads a live
+    runtime fact, not just whether the binding was compiled in.
+
+    A client that merely *initialises* is not proof a kernel actually
+    dispatches through it (DV041-F4 finding from code review: kernel
+    compilation or launch can still fail on an adapter that otherwise
+    reports ready), and on the host-slice fallback path `backend_name`
+    is stale until a call actually happens — so this probe calls
+    ``compute_derivatives`` once, matching :func:`cuda_kernel_executes`'s
+    own pattern, before trusting the result.
+
+    ``True`` only on a build with a live wgpu-dispatching adapter reachable
+    (typically a ``--features wgpu`` build without ``cuda`` — wgpu compiles
+    out under ``cfg(all(feature = "wgpu", not(feature = "cuda")))`` when
+    both are enabled, so a ``--features cuda,wgpu`` build only reports
+    `True` here if CUDA's own client failed to initialise while wgpu's did);
+    ``False`` on a binding-less build or a wgpu build with no adapter.
+    """
+    try:
+        import torch
+        from prin import _prin_core
+    except ImportError:
+        return False
+
+    engine_cls = getattr(_prin_core, "GpuSparseKuramoto", None)
+    if engine_cls is None:
+        return False
+
+    try:
+        phase = torch.zeros(4, dtype=torch.float32).contiguous()
+        amplitude = torch.ones(4, dtype=torch.float32).contiguous()
+        frequency = torch.zeros(4, dtype=torch.float32).contiguous()
+        engine = engine_cls.from_knn_phase(4, 2, 0.5, 0.0, 0.0, phase)
+        engine.compute_derivatives(phase, amplitude, frequency)
+        return bool(engine.backend_name.startswith("wgpu"))
+    except Exception:
+        return False

@@ -115,8 +115,18 @@ device-resident: state stays on-device between `step()` calls; explicit
   with no host round-trip. Per plan amendment #43 the *input* boundary
   stays a single host `float32` upload (CubeCL 0.10.0 cannot adopt an
   external CUDA device pointer as a kernel-input `Handle`).
+- **Positive backend identification** (DV-041): all three engines expose
+  `backend_name()`, the live CubeCL runtime name behind the resolved
+  `ComputeClient` (`"cuda"`, `"wgpu<wgsl>"`, `"cpu"`) or `"cpu-native"` on
+  host-slice fallback — the same convention `prin_kernels`' fused
+  `StepReport::backend_name` uses. Needed because a wgpu dispatch and the
+  host-slice fallback both return a CPU-resident result (only CUDA is
+  zero-copy device-resident), so neither the DLPack device type nor
+  `torch.cuda.is_available()` can tell a real wgpu dispatch apart from a
+  silent fallback.
 
 Evidence: `DOCS/audits/036e-wp036e-audit.md`;
+`DOCS/audits/2026-09-28-dv041-wgpu-backend-identification-audit.md`;
 `DOCS/reports/036e-project-state.md`.
 
 ## PRINet 3.0 Migration Notes

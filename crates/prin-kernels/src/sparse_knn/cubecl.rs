@@ -427,7 +427,9 @@ pub fn try_sparse_knn_coupling_cuda(
 /// Tries each backend from [`auto_detect_order`](crate::backend::auto_detect_order)
 /// in priority order (CUDA → wgpu → CPU). Falls back to the native CPU
 /// reference [`super::sparse_knn_derivatives_cpu`] if no CubeCL backend is
-/// available.
+/// available. Discards the winning backend's name; call
+/// [`sparse_knn_coupling_auto_with_backend`] when the caller needs it
+/// (DV-041 follow-up).
 pub fn sparse_knn_coupling_auto(
     phase: &[f32],
     amplitude: &[f32],
@@ -435,22 +437,49 @@ pub fn sparse_knn_coupling_auto(
     graph: &SparseKnnGraph,
     params: &SparseKnnParams,
 ) -> Result<SparseKnnCubeclOutput, SparseKnnError> {
+    sparse_knn_coupling_auto_with_backend(phase, amplitude, frequency, graph, params)
+        .map(|(output, _backend_name)| output)
+}
+
+/// Like [`sparse_knn_coupling_auto`], but additionally returns the name of
+/// the backend that actually produced the result — `"cuda"`, `"wgpu<wgsl>"`,
+/// or `"cpu"` for the branch that won, `"cpu-native"` for the final
+/// non-CubeCL fallback — the same convention
+/// [`crate::mean_field_rk4::cubecl::StepReport::backend_name`] and
+/// [`crate::discrete_step::cubecl::StepReport::backend_name`] already use.
+///
+/// DV-041 follow-up (finding DV041-F5): `sparse_knn_coupling_auto`'s bare
+/// tuple return carries no backend information, so a caller that separately
+/// caches an "expected" backend (e.g. from a different, persistent
+/// `ComputeClient` resolved once at construction) can silently drift from
+/// what *this specific call* actually dispatched through — most acutely in
+/// a build compiled with more than one of `cuda`/`wgpu`/`cpu` enabled, where
+/// this priority chain can pick a different backend call-to-call than a
+/// separately-cached, compile-time-preferred one would assume.
+pub fn sparse_knn_coupling_auto_with_backend(
+    phase: &[f32],
+    amplitude: &[f32],
+    frequency: &[f32],
+    graph: &SparseKnnGraph,
+    params: &SparseKnnParams,
+) -> Result<(SparseKnnCubeclOutput, String), SparseKnnError> {
     #[cfg(feature = "cuda")]
     if let Ok(output) = try_sparse_knn_coupling_cuda(phase, amplitude, frequency, graph, params) {
-        return Ok(output);
+        return Ok((output, "cuda".to_string()));
     }
 
     #[cfg(feature = "wgpu")]
     if let Ok(output) = try_sparse_knn_coupling_wgpu(phase, amplitude, frequency, graph, params) {
-        return Ok(output);
+        return Ok((output, "wgpu<wgsl>".to_string()));
     }
 
     #[cfg(feature = "cpu")]
     if let Ok(output) = try_sparse_knn_coupling_cpu(phase, amplitude, frequency, graph, params) {
-        return Ok(output);
+        return Ok((output, "cpu".to_string()));
     }
 
-    super::sparse_knn_derivatives_cpu(phase, amplitude, frequency, graph, params)
+    let output = super::sparse_knn_derivatives_cpu(phase, amplitude, frequency, graph, params)?;
+    Ok((output, "cpu-native".to_string()))
 }
 
 #[cfg(all(test, feature = "wgpu"))]

@@ -91,7 +91,7 @@ use prin_kernels::discrete_step::cubecl::{discrete_step_auto, StepReport as Disc
 use prin_kernels::discrete_step::DiscreteStepParams;
 use prin_kernels::mean_field_rk4::cubecl::{step_auto, StepReport as MeanFieldStepReport};
 use prin_kernels::mean_field_rk4::MeanFieldRk4Params;
-use prin_kernels::sparse_knn::cubecl::sparse_knn_coupling_auto;
+use prin_kernels::sparse_knn::cubecl::sparse_knn_coupling_auto_with_backend;
 use prin_kernels::sparse_knn::{SparseKnnGraph, SparseKnnParams};
 
 use crate::csr_coupling::SparseCoupling;
@@ -159,6 +159,27 @@ fn try_create_client() -> Option<ComputeClient<SimRuntime>> {
     };
 
     catch_unwind(AssertUnwindSafe(make)).ok()
+}
+
+/// The actual backend name behind a resolved [`SimRuntime`] device client, or
+/// `"cpu-native"` when no client initialised and the caller fell back to the
+/// host-slice path (DV-041).
+///
+/// Reuses `prin_kernels`' existing `StepReport::backend_name` convention
+/// (`R::name(client)` on the device path, e.g. `"cuda"`/`"wgpu<wgsl>"`/
+/// `"cpu"`; `"cpu-native"` on host-slice fallback — see
+/// `prin_kernels::mean_field_rk4::cubecl::step_cubecl_device`) instead of
+/// inventing a second naming scheme. This is the fact a CPU-resident DLPack
+/// capsule alone cannot reveal: the wgpu path and the host-slice fallback
+/// both copy their result back to host memory before export, so only the
+/// live client's own runtime name — never the capsule's device type — tells
+/// them apart.
+#[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+fn backend_name_of(client: Option<&ComputeClient<SimRuntime>>) -> String {
+    match client {
+        Some(client) => SimRuntime::name(client).to_string(),
+        None => "cpu-native".to_string(),
+    }
 }
 
 fn to_f32(v: &[f64]) -> Vec<f32> {
@@ -250,9 +271,9 @@ fn export_cuda_handle(
 ///
 /// Implements the same extended Kuramoto equations as
 /// [`crate::engine::SparseKuramoto`], but evaluates the coupling term via
-/// [`sparse_knn_coupling_auto`] (CUDA → wgpu → CPU-SIMD → native CPU
-/// fallback, per [`prin_kernels::backend::auto_detect_order`]) instead of
-/// [`SparseCoupling::kuramoto_coupling`]'s CSR SpMV.
+/// [`sparse_knn_coupling_auto_with_backend`] (CUDA → wgpu → CPU-SIMD →
+/// native CPU fallback, per [`prin_kernels::backend::auto_detect_order`])
+/// instead of [`SparseCoupling::kuramoto_coupling`]'s CSR SpMV.
 ///
 /// # Weight convention
 ///
@@ -275,7 +296,7 @@ fn export_cuda_handle(
 /// `(phase, amplitude, frequency)` is uploaded and the derivatives
 /// downloaded — the topology never moves again. See the module-level
 /// "Dynamics impl split" note for the partial-residency rationale.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct GpuSparseKuramoto {
     n: usize,
     decay_rate: f64,
@@ -284,9 +305,43 @@ pub struct GpuSparseKuramoto {
     graph: SparseKnnGraph,
     /// Device-resident CSR topology + client (WP-036E Q2). `None` when no
     /// CubeCL backend could be initialised — the `Dynamics` impl falls back
-    /// to the host-slice [`sparse_knn_coupling_auto`] path.
+    /// to the host-slice [`sparse_knn_coupling_auto_with_backend`] path.
     #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
     device: Option<SparseKnnDeviceResources>,
+    /// Backend actually used by the most recent host-slice-path
+    /// `compute_derivatives` call (DV-041 follow-up, finding DV041-F5). Not
+    /// feature-gated: the host-slice fallback (and therefore this field)
+    /// exists even in a build with none of `cuda`/`wgpu`/`cpu` enabled.
+    /// `compute_derivatives` takes `&self` ([`Dynamics`]'s required
+    /// signature), so this needs interior mutability — `std::sync::Mutex`,
+    /// not `RefCell`, because the PyO3 wrapper requires `Send + Sync` and
+    /// `RefCell` is not `Sync`. Irrelevant once `device.is_some()` (the
+    /// persistent client's identity is already exact); read by
+    /// [`GpuSparseKuramoto::backend_name`]. Starts at `"cpu-native"` before
+    /// any call — the same conservative default the device-absent case
+    /// always reported prior to this follow-up.
+    host_backend_name: std::sync::Mutex<String>,
+}
+
+/// Manual impl: `std::sync::Mutex` (needed for `Send + Sync`, see
+/// `host_backend_name`'s doc) has no `Clone` impl regardless of its
+/// contents, so this can no longer be `#[derive(Clone)]`. A clone gets a
+/// fresh, independent mutex seeded from `self.backend_name()` — the exact
+/// value a reader would currently observe — rather than sharing state with
+/// the original.
+impl Clone for GpuSparseKuramoto {
+    fn clone(&self) -> Self {
+        Self {
+            n: self.n,
+            decay_rate: self.decay_rate,
+            freq_adaptation_rate: self.freq_adaptation_rate,
+            k: self.k,
+            graph: self.graph.clone(),
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            device: self.device.clone(),
+            host_backend_name: std::sync::Mutex::new(self.backend_name()),
+        }
+    }
 }
 
 /// Device-resident CSR topology for [`GpuSparseKuramoto`].
@@ -415,6 +470,7 @@ impl GpuSparseKuramoto {
             graph,
             #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
             device,
+            host_backend_name: std::sync::Mutex::new("cpu-native".to_string()),
         })
     }
 
@@ -436,6 +492,30 @@ impl GpuSparseKuramoto {
     /// Coupling strength `K`.
     pub fn k(&self) -> f64 {
         self.k
+    }
+
+    /// The actual backend this instance dispatches derivatives through —
+    /// `"cuda"`, `"wgpu<wgsl>"`, `"cpu"`, or `"cpu-native"` on host-slice
+    /// fallback (DV-041). See `backend_name_of`.
+    ///
+    /// The persistent-client case (`device.is_some()`) is always exact. The
+    /// host-slice case reflects the backend actually used by the most
+    /// recent `compute_derivatives` call (DV041-F5 follow-up) — before any
+    /// call, or in a build compiled with more than one of
+    /// `cuda`/`wgpu`/`cpu`, the per-call priority-fallback chain
+    /// (`sparse_knn_coupling_auto_with_backend`) can pick a different
+    /// backend than this instance's own persistent-client resolution would
+    /// assume, so this value can only be trusted about a call that already
+    /// happened.
+    pub fn backend_name(&self) -> String {
+        #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+        if self.device.is_some() {
+            return backend_name_of(self.device.as_ref().map(|d| &d.client));
+        }
+        self.host_backend_name
+            .lock()
+            .expect("host_backend_name mutex is never held across a panic")
+            .clone()
     }
 
     /// Evaluate the sparse k-NN coupling derivative on the CUDA device and
@@ -568,9 +648,16 @@ impl Dynamics for GpuSparseKuramoto {
         }
 
         // Host-slice fallback (no CubeCL backend, or no CubeCL feature).
-        let (dphase32, damp32, dfreq32) =
-            sparse_knn_coupling_auto(&phase32, &amp32, &freq32, &self.graph, &params)
+        // DV041-F5: capture which backend this specific call actually used
+        // (may differ from a persistent client this instance never
+        // resolved) so `backend_name()` reports it truthfully.
+        let ((dphase32, damp32, dfreq32), backend_name) =
+            sparse_knn_coupling_auto_with_backend(&phase32, &amp32, &freq32, &self.graph, &params)
                 .expect("inputs validated by GpuSparseKuramoto::new and the length check above");
+        *self
+            .host_backend_name
+            .lock()
+            .expect("host_backend_name mutex is never held across a panic") = backend_name;
 
         StateDerivatives::new(to_f64(&dphase32), to_f64(&damp32), to_f64(&dfreq32))
     }
@@ -631,6 +718,10 @@ enum MeanFieldInner {
         phase: Vec<f32>,
         amplitude: Vec<f32>,
         frequency: Vec<f32>,
+        /// Backend actually used by the most recent `step()` call
+        /// (DV041-F5 follow-up); `"cpu-native"` before any call. See
+        /// [`GpuMeanFieldEngine::backend_name`].
+        last_backend_name: String,
     },
 }
 
@@ -720,6 +811,7 @@ impl GpuMeanFieldEngine {
                 phase,
                 amplitude,
                 frequency,
+                last_backend_name: "cpu-native".to_string(),
             },
         }
     }
@@ -736,6 +828,26 @@ impl GpuMeanFieldEngine {
     /// Timestep `dt`.
     pub fn dt(&self) -> f64 {
         f64::from(self.params.dt)
+    }
+
+    /// The actual backend this instance dispatches through — `"cuda"`,
+    /// `"wgpu<wgsl>"`, `"cpu"`, or `"cpu-native"` on host-slice fallback
+    /// (DV-041). See `backend_name_of`.
+    ///
+    /// The device-resident case is always exact. The host-slice case
+    /// reflects the backend actually used by the most recent `step()` call
+    /// (DV041-F5 follow-up) — before any call, or in a build compiled with
+    /// more than one of `cuda`/`wgpu`/`cpu`, `step_auto`'s per-call
+    /// priority-fallback chain can pick a different backend than this
+    /// instance's own persistent-client resolution would assume.
+    pub fn backend_name(&self) -> String {
+        match &self.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            MeanFieldInner::Device(dev) => backend_name_of(Some(&dev.client)),
+            MeanFieldInner::Host {
+                last_backend_name, ..
+            } => last_backend_name.clone(),
+        }
     }
 
     /// Current state, converted back to `f64`.
@@ -757,6 +869,7 @@ impl GpuMeanFieldEngine {
                 phase,
                 amplitude,
                 frequency,
+                ..
             } => OscillatorState::new(to_f64(phase), to_f64(amplitude), to_f64(frequency), None)
                 .map_err(SimError::from),
         }
@@ -809,9 +922,14 @@ impl GpuMeanFieldEngine {
                 phase,
                 amplitude,
                 frequency,
+                last_backend_name,
             } => {
                 let (out, report) = step_auto(phase, amplitude, frequency, &self.params)?;
                 (*phase, *amplitude, *frequency) = out;
+                // DV041-F5: this call's own report already carries the
+                // truth; cache it so `backend_name()` can be trusted
+                // without requiring the caller to hold onto the report.
+                *last_backend_name = report.backend_name.clone();
                 Ok(report)
             }
         }
@@ -916,6 +1034,10 @@ enum BandStepperInner {
         phase: Vec<f32>,
         amplitude: Vec<f32>,
         frequency: Vec<f32>,
+        /// Backend actually used by the most recent `step()` call
+        /// (DV041-F5 follow-up); `"cpu-native"` before any call. See
+        /// [`GpuBandStepper::backend_name`].
+        last_backend_name: String,
     },
 }
 
@@ -1010,6 +1132,7 @@ impl GpuBandStepper {
                 phase,
                 amplitude,
                 frequency,
+                last_backend_name: "cpu-native".to_string(),
             },
         }
     }
@@ -1033,6 +1156,26 @@ impl GpuBandStepper {
         f64::from(self.params.dt)
     }
 
+    /// The actual backend this instance dispatches through — `"cuda"`,
+    /// `"wgpu<wgsl>"`, `"cpu"`, or `"cpu-native"` on host-slice fallback
+    /// (DV-041). See `backend_name_of`.
+    ///
+    /// The device-resident case is always exact. The host-slice case
+    /// reflects the backend actually used by the most recent `step()` call
+    /// (DV041-F5 follow-up) — before any call, or in a build compiled with
+    /// more than one of `cuda`/`wgpu`/`cpu`, `discrete_step_auto`'s
+    /// per-call priority-fallback chain can pick a different backend than
+    /// this instance's own persistent-client resolution would assume.
+    pub fn backend_name(&self) -> String {
+        match &self.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            BandStepperInner::Device(dev) => backend_name_of(Some(&dev.client)),
+            BandStepperInner::Host {
+                last_backend_name, ..
+            } => last_backend_name.clone(),
+        }
+    }
+
     /// Current state, converted back to `f64`.
     ///
     /// # Errors
@@ -1052,6 +1195,7 @@ impl GpuBandStepper {
                 phase,
                 amplitude,
                 frequency,
+                ..
             } => OscillatorState::new(to_f64(phase), to_f64(amplitude), to_f64(frequency), None)
                 .map_err(SimError::from),
         }
@@ -1077,10 +1221,15 @@ impl GpuBandStepper {
                 phase,
                 amplitude,
                 frequency,
+                last_backend_name,
             } => {
                 let (out, report) =
                     discrete_step_auto(phase, amplitude, frequency, self.band_sizes, &self.params)?;
                 (*phase, *amplitude, *frequency) = out;
+                // DV041-F5: this call's own report already carries the
+                // truth; cache it so `backend_name()` can be trusted
+                // without requiring the caller to hold onto the report.
+                *last_backend_name = report.backend_name.clone();
                 Ok(report)
             }
         }
@@ -1273,6 +1422,20 @@ mod tests {
         assert!((model.decay_rate() - 0.2).abs() < 1e-12);
         assert!((model.freq_adaptation_rate() - 0.05).abs() < 1e-12);
         assert!((model.k() - 2.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn gpu_sparse_kuramoto_backend_name_matches_device_presence() {
+        // DV-041: `backend_name()` must report `"cpu-native"` exactly when no
+        // device client initialised, and a non-"cpu-native" runtime name
+        // otherwise — never the other way around, on whatever hardware this
+        // test runs.
+        let coupling = SparseCoupling::from_ring(8, 2, 1.0).unwrap();
+        let model = GpuSparseKuramoto::new(8, 0.1, 0.01, 1.0, coupling).unwrap();
+        #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+        assert_eq!(model.device.is_some(), model.backend_name() != "cpu-native");
+        #[cfg(not(any(feature = "cuda", feature = "wgpu", feature = "cpu")))]
+        assert_eq!(model.backend_name(), "cpu-native");
     }
 
     // ── GpuMeanFieldEngine ─────────────────────────────────────────────────
@@ -1476,6 +1639,20 @@ mod tests {
         assert!(host.dphase.iter().all(|v| v.is_finite()));
     }
 
+    #[test]
+    fn gpu_mean_field_engine_backend_name_matches_device_presence() {
+        // DV-041, mirrored for the fused mean-field engine EXP-004's wgpu
+        // timing claim would use.
+        let state = OscillatorState::create_random(8, (0.5, 5.0), &mut Seed::new(3, 0)).unwrap();
+        let engine = GpuMeanFieldEngine::new(&state, mean_field_params()).unwrap();
+        let is_device = match &engine.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            MeanFieldInner::Device(_) => true,
+            MeanFieldInner::Host { .. } => false,
+        };
+        assert_eq!(is_device, engine.backend_name() != "cpu-native");
+    }
+
     // ── GpuBandStepper ─────────────────────────────────────────────────────
 
     fn discrete_step_params() -> DiscreteStepParams {
@@ -1612,6 +1789,20 @@ mod tests {
         assert!((stepper.dt() - 0.01).abs() < 1e-9);
     }
 
+    #[test]
+    fn gpu_band_stepper_backend_name_matches_device_presence() {
+        // DV-041, mirrored for the fused band stepper.
+        let band_sizes = [4usize, 4, 4];
+        let state = band_state(band_sizes);
+        let stepper = GpuBandStepper::new(&state, band_sizes, discrete_step_params()).unwrap();
+        let is_device = match &stepper.inner {
+            #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
+            BandStepperInner::Device(_) => true,
+            BandStepperInner::Host { .. } => false,
+        };
+        assert_eq!(is_device, stepper.backend_name() != "cpu-native");
+    }
+
     /// Device-resident multi-step loop for the band stepper (WP-036E Q2).
     #[test]
     fn gpu_band_stepper_device_resident_multi_step() {
@@ -1674,9 +1865,20 @@ mod tests {
 
         let before = engine.state().unwrap();
         assert_eq!(before.n_oscillators(), n);
+        // DV041-F5: before any step, the Host path's cached backend name is
+        // the conservative default.
+        assert_eq!(engine.backend_name(), "cpu-native");
         let report = engine.step().unwrap();
         assert!(report.wall_time_seconds >= 0.0);
         assert_eq!(engine.state().unwrap().n_oscillators(), n);
+        // `backend_name()` must reflect exactly what this call's own report
+        // says — on a build with a working GPU feature, `host()`'s Host
+        // variant still dispatches through `step_auto`'s independent
+        // priority-fallback chain, so this is frequently NOT "cpu-native"
+        // even though this engine was never given a persistent device
+        // client. Before this fix, `backend_name()` would have wrongly
+        // reported "cpu-native" here.
+        assert_eq!(engine.backend_name(), report.backend_name);
 
         #[cfg(feature = "cuda")]
         assert!(engine.state_cuda_export().is_none());
@@ -1708,9 +1910,16 @@ mod tests {
         assert!(format!("{stepper:?}").contains("Host"));
 
         assert_eq!(stepper.state().unwrap().n_oscillators(), 15);
+        // DV041-F5: before any step, the Host path's cached backend name is
+        // the conservative default.
+        assert_eq!(stepper.backend_name(), "cpu-native");
         let report = stepper.step().unwrap();
         assert!(report.wall_time_seconds >= 0.0);
         assert_eq!(stepper.state().unwrap().n_oscillators(), 15);
+        // See the identical assertion in
+        // `mean_field_engine_host_fallback_arms_round_trip` for why this
+        // can legitimately differ from "cpu-native" on a GPU-feature build.
+        assert_eq!(stepper.backend_name(), report.backend_name);
     }
 
     /// [`GpuSparseKuramoto`] falls back to the host-slice derivative path when
@@ -1729,7 +1938,38 @@ mod tests {
         #[cfg(any(feature = "cuda", feature = "wgpu", feature = "cpu"))]
         {
             model.device = None;
+            // DV041-F5 regression: forcing `device = None` here does not
+            // disable whichever GPU feature this test binary was built
+            // with — `sparse_knn_coupling_auto_with_backend`'s own
+            // independent priority chain can (and, on this host with a
+            // working GPU feature, does) still dispatch through a real
+            // backend. Before this fix, `backend_name()` unconditionally
+            // reported "cpu-native" whenever `device` was `None`, which
+            // this assertion would have failed under exactly this
+            // scenario — a persistent client this instance never
+            // resolved, but a real per-call backend that did dispatch.
             let host_derivs = model.compute_derivatives(&st).unwrap();
+            // Independent oracle: a fresh direct call to the same
+            // dispatcher, with the same inputs, must agree on which
+            // backend actually won — this is not just checking the cache
+            // against itself.
+            let params = SparseKnnParams {
+                k: 2.0,
+                decay: 0.1,
+                gamma: 0.01,
+            };
+            let phase32 = to_f32(&st.phase);
+            let amp32 = to_f32(&st.amplitude);
+            let freq32 = to_f32(&st.frequency);
+            let (_, oracle_backend) = sparse_knn_coupling_auto_with_backend(
+                &phase32,
+                &amp32,
+                &freq32,
+                &model.graph,
+                &params,
+            )
+            .unwrap();
+            assert_eq!(model.backend_name(), oracle_backend);
             for i in 0..n {
                 assert!((device_derivs.dphase[i] - host_derivs.dphase[i]).abs() < 1e-4);
             }
