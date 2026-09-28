@@ -11,16 +11,22 @@ independently re-verified by the implementer, not taken on assertion.
 `python/prin/_prin_core.pyi`, `tests/_env.py`, `tests/test_gpu_backend_name.py`,
 `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` (DV-041, DV-042 rows).
 **Branch / commits:** `hotfix/dv041-wgpu-backend-identification` (base
-`origin/main` @ `149cf2d`) — S1 `5d31295`, S3 `96c1e39`, S3.2 closure, §6.1
-review-response commit (below).
+`origin/main` @ `149cf2d`) — S1 `5d31295`, S3 `96c1e39`, S3.2 closure
+`c422f34`, S4 docs `1f0b6cd`, §6.1 review-response `ba5c00f`.
 **Blocks:** EXP-001-r1 pre-registration freeze / E3; independently, EXP-004
 E1 (session `0169`).
-**Verdict:** **PASS-WITH-FINDINGS** (S2 initial verdict **FAIL**; delta
-re-audit **PASS-WITH-FINDINGS**; §6.1 post-merge-readiness pass found and
-fixed one further real D2 (DV041-F5) and one D3-class test-rigor gap
-(DV041-F6), declined one suggestion (DV041-F7) with recorded rationale, and
-logged one out-of-scope pre-existing defect (DV-042) rather than silently
-fixing or ignoring it).
+**Verdict:** **PASS-WITH-FINDINGS, all findings resolved** — three
+independent delta-audit rounds, no D1 open at any point. Round 1 (S2,
+initial **FAIL**): DV041-F1 (D1)/F2 (D2)/F3 (D4) found and fixed. Round 2:
+DV041-F4 (D2, a self-graded-verdict overstep) found and fixed. Round 3
+(post-merge-readiness pass responding to Sourcery/Devin Review/CodeRabbit):
+DV041-F5 (D2, a real correctness gap in a multi-GPU-feature build) and
+DV041-F6 (D2-class test rigor) found, fixed, and independently
+**reproduced** by the auditor (not just diff-read); DV041-F7 (a Sourcery
+suggestion) considered and declined with recorded rationale; DV041-F8 (D4,
+two prose nits in this report) found and fixed. `DV-042`, an unrelated
+pre-existing defect discovered incidentally, logged out-of-scope rather
+than fixed or ignored.
 
 ---
 
@@ -48,7 +54,7 @@ probe (ETCA-002 T-F3/G4).
 | Check | Result | Evidence |
 |---|---|---|
 | A1 Scope | PASS | Diff touches only the GPU binding layer and its tests/register row; no campaign experiment driver, no `DOCS/experiments/EXP-*` analysis code (campaign plan §12 rule 1 scope respected). |
-| A2 Architecture/method | PASS | `SimRuntime` confirmed compile-time-only (three mutually exclusive `#[cfg(...)]` arms, no runtime backend switch within one build); `device`/`inner` fields set once at construction and never reassigned — `backend_name()` cannot go stale or report a backend that didn't actually run. |
+| A2 Architecture/method | PASS | `SimRuntime` confirmed compile-time-only (three mutually exclusive `#[cfg(...)]` arms, no runtime backend switch within one build); `device`/`inner`'s *device-resident* case is set once at construction and never reassigned, so it can never go stale. (Superseded by §6.1/DV041-F5: the *host-slice* case's cache field — `host_backend_name`/`last_backend_name` — is deliberately mutated after construction, on every host-slice-path call, precisely so it reflects live dispatch instead of a stale assumption; this row described the pre-DV041-F5 code and was not updated when §6.1 was added — flagged by the second delta re-audit as DV041-F8, fixed here.) |
 | A3 Tests | PASS | 5 new Rust unit tests (36/36 in `gpu::tests` including the 3 new `backend_name_matches_device_presence` tests); 10 new/extended Python tests in `tests/test_gpu_backend_name.py`, live-verified under both `--features cuda` and `--features wgpu` builds on the same hardware (`PRIN-GPU-Runner`), independently reproduced by the auditor from a `cargo clean` state. |
 | A4 Numerical parity | UNAFFECTED | Pure marshalling/reporting addition; no derivative, kernel, or tolerance touched. |
 | A5 Quality | PASS | `cargo fmt --check`, `cargo clippy --all-targets -D warnings` clean across `cuda`/`wgpu`/`cpu`/no-GPU-feature builds (both `prin-sim` and `prin-py`); `ruff check`/`ruff format --check`/`mypy --strict` clean on all touched Python files. |
@@ -132,17 +138,18 @@ not yet done by this report.
 | DV041-F2 | FIXED | `96c1e39` | `cargo doc --features cuda` clean from a `cargo clean` state, `RUSTDOCFLAGS="-D warnings"`. |
 | DV041-F3 | FIXED | `96c1e39` | `interrogate` 100% on `tests/test_gpu_backend_name.py`. |
 | DV041-F4 | FIXED | this report's accompanying register-row edit | Register prose no longer self-asserts the auditor's verdict; states the real initial `FAIL` and points to this file. |
-| DV041-F5 | FIXED | §6.1 review-response commit | `report.backend_name == engine.backend_name()` after a real host-slice-path call, on this host `"cuda"` (not `"cpu-native"`) — empirically reproduced pre-fix-would-have-failed, post-fix passes; 200/200 under `--features cuda,wgpu`. |
-| DV041-F6 | FIXED | §6.1 review-response commit | `wgpu_kernel_executes()` re-verified live on both `--features cuda` and `--features wgpu` rebuilds; matches `cuda_kernel_executes()`'s established execute-before-trust pattern. |
-| DV041-F7 | DECLINED | §6.1 review-response commit (comment only) | Rationale recorded in-code at `tests/test_gpu_backend_name.py`'s vocabulary-test assertion. |
+| DV041-F5 | FIXED | `ba5c00f` | Third-round delta re-audit **reproduced the actual pre-fix failure itself** (reverted `backend_name()` locally, re-ran the host-fallback test, got `left: "cpu-native", right: "cuda"`) and **reproduced the `RefCell`-vs-`Mutex` compile error itself** (swapped the field type, got the exact `E0277`/`Sync` error) — not just diff-read. 200/200 under `--features cuda,wgpu --no-default-features`; 36/36 under `--features cuda`. |
+| DV041-F6 | FIXED | `ba5c00f` | Third-round delta re-audit re-verified live on a fresh `--features wgpu` rebuild: 7 passed/3 skipped with the 3 wgpu-specific tests passing for real. |
+| DV041-F7 | DECLINED | `ba5c00f` (comment only) | Third-round delta re-audit confirmed the rationale comment is present at the assertion site and reasonable. |
+| DV041-F8 | FIXED | this report, inline (round-3 follow-up) | A2 checklist row and the "six"→"five" feature-combination count corrected; both were this report's own prose describing pre-DV041-F5 state or over-claiming, not a code or test defect. |
 
-**Delta re-audit date:** 2026-09-28 UTC — **Result:** CLEAN (all findings
-fixed and independently reconfirmed; DV041-F4 fixed in this same closure
-pass, not yet independently re-verified by a further delta round — see §7).
-**§6.1 post-merge-readiness pass:** self-verified by the implementer with
-full local-gate and live-hardware re-verification (not yet re-confirmed by
-the independent S2/delta auditor in a further round — same disproportionate-
-further-round reasoning as §7, now applying to DV041-F5–F7 too).
+**Delta re-audit date:** 2026-09-28 UTC — **Result:** CLEAN across three
+independent rounds. Round 1 (commit `96c1e39`): DV041-F1/F2/F3 fixed. Round
+2 (commit `c422f34`): DV041-F4 fixed. Round 3 (commit `ba5c00f`): DV041-F5/
+F6 fixed and reproduced independently (not just read); DV041-F7 declined
+with confirmed rationale; DV-042 confirmed pre-existing/out-of-scope;
+DV041-F8 (this report's own prose) fixed inline. **No D1 open at any
+point.** Overall verdict: **PASS-WITH-FINDINGS**, all findings resolved.
 
 ## 6.1 External code review findings (PR #25) — post-merge-readiness pass
 
@@ -153,7 +160,7 @@ fix landed.
 
 | ID | Source | Claim | Verdict | Disposition |
 |---|---|---|---|---|
-| DV041-F5 | Devin Review | In a build compiled with more than one of `cuda`/`wgpu`/`cpu`, if the compile-time-preferred backend's persistent client fails to initialise (`self.device`/`self.inner` resolves to the host-slice case), `backend_name()` unconditionally reported `"cpu-native"` — but the host-slice fallback dispatches through `sparse_knn_coupling_auto`/`step_auto`/`discrete_step_auto`, which independently retry the remaining compiled-in backends (CUDA → wgpu → CPU) at runtime, so the *actual* backend used can differ from what the persistent-client resolution assumed. | **CONFIRMED — real, non-trivial.** Verified the dual-feature build is an established, tested configuration in this repository's own history (`cargo test -p prin-kernels --features cuda,wgpu`, WP-021/WP-036E precedent, "tests_priority" cases). Compiled and tested `--features cuda,wgpu` directly (200/200 passed). Empirically reproduced the exact defect class using the existing `GpuMeanFieldEngine::host()` test escape hatch and a temporary debug print: on this CUDA-capable host, forcing the Host/no-persistent-client path and calling `step()` yields `report.backend_name == "cuda"` — proving the pre-fix code would have wrongly reported `"cpu-native"` here. | **FIXED.** `GpuSparseKuramoto` gained a `host_backend_name: std::sync::Mutex<String>` cache (interior mutability required since `compute_derivatives` takes `&self`, per the `Dynamics` trait; `Mutex` not `RefCell` because the PyO3 wrapper requires `Send + Sync`), updated from a new `prin_kernels::sparse_knn::cubecl::sparse_knn_coupling_auto_with_backend` (additive, non-breaking — the original `sparse_knn_coupling_auto` now delegates to it and discards the name) on every host-slice call. `GpuMeanFieldEngine`/`GpuBandStepper`'s `Host` variant gained a `last_backend_name: String` field (no interior mutability needed, `step()` already takes `&mut self`), updated from `StepReport::backend_name` — information that already existed on the returned report and just wasn't being cached. Required a manual `Clone` impl for `GpuSparseKuramoto` (the derived one broke once a `Mutex` field was added; a clone gets an independent mutex seeded from `self.backend_name()`, not a shared one). Regression tests extended: `mean_field_engine_host_fallback_arms_round_trip`/`band_stepper_host_fallback_arms_round_trip` now assert `engine.backend_name() == report.backend_name` (an independent oracle, not the cache checked against itself); `sparse_kuramoto_host_fallback_and_debug` now compares against a fresh, separately-called `sparse_knn_coupling_auto_with_backend` oracle. Verified clean across all six feature combinations (`cuda`, `wgpu`, `cpu`, none, `cuda,wgpu`) for both `prin-sim` and `prin-kernels`: `cargo fmt`, `clippy -D warnings`, `cargo test` (200/200 under `cuda`, 200/200 under `cuda,wgpu`), `cargo test --workspace --features cuda` (0 failed). |
+| DV041-F5 | Devin Review | In a build compiled with more than one of `cuda`/`wgpu`/`cpu`, if the compile-time-preferred backend's persistent client fails to initialise (`self.device`/`self.inner` resolves to the host-slice case), `backend_name()` unconditionally reported `"cpu-native"` — but the host-slice fallback dispatches through `sparse_knn_coupling_auto`/`step_auto`/`discrete_step_auto`, which independently retry the remaining compiled-in backends (CUDA → wgpu → CPU) at runtime, so the *actual* backend used can differ from what the persistent-client resolution assumed. | **CONFIRMED — real, non-trivial.** Verified the dual-feature build is an established, tested configuration in this repository's own history (`cargo test -p prin-kernels --features cuda,wgpu`, WP-021/WP-036E precedent, "tests_priority" cases). Compiled and tested `--features cuda,wgpu` directly (200/200 passed). Empirically reproduced the exact defect class using the existing `GpuMeanFieldEngine::host()` test escape hatch and a temporary debug print: on this CUDA-capable host, forcing the Host/no-persistent-client path and calling `step()` yields `report.backend_name == "cuda"` — proving the pre-fix code would have wrongly reported `"cpu-native"` here. | **FIXED.** `GpuSparseKuramoto` gained a `host_backend_name: std::sync::Mutex<String>` cache (interior mutability required since `compute_derivatives` takes `&self`, per the `Dynamics` trait; `Mutex` not `RefCell` because the PyO3 wrapper requires `Send + Sync`), updated from a new `prin_kernels::sparse_knn::cubecl::sparse_knn_coupling_auto_with_backend` (additive, non-breaking — the original `sparse_knn_coupling_auto` now delegates to it and discards the name) on every host-slice call. `GpuMeanFieldEngine`/`GpuBandStepper`'s `Host` variant gained a `last_backend_name: String` field (no interior mutability needed, `step()` already takes `&mut self`), updated from `StepReport::backend_name` — information that already existed on the returned report and just wasn't being cached. Required a manual `Clone` impl for `GpuSparseKuramoto` (the derived one broke once a `Mutex` field was added; a clone gets an independent mutex seeded from `self.backend_name()`, not a shared one). Regression tests extended: `mean_field_engine_host_fallback_arms_round_trip`/`band_stepper_host_fallback_arms_round_trip` now assert `engine.backend_name() == report.backend_name` (an independent oracle, not the cache checked against itself); `sparse_kuramoto_host_fallback_and_debug` now compares against a fresh, separately-called `sparse_knn_coupling_auto_with_backend` oracle. Verified clean across five feature combinations (`cuda`, `wgpu`, `cpu`, none, `cuda,wgpu`) for both `prin-sim` and `prin-kernels`: `cargo fmt`, `clippy -D warnings`, `cargo test` (200/200 under `cuda`, 200/200 under `cuda,wgpu`), `cargo test --workspace --features cuda` (0 failed). |
 | DV041-F6 | Sourcery | `wgpu_kernel_executes()` (and, by extension, any caller reading `backend_name` right after construction) only proves the backend's `ComputeClient` *initialised*, not that a kernel actually *dispatches* on it — a client that inits but fails at kernel compile/launch time would be misreported as executing. | **CONFIRMED.** `cuda_kernel_executes()` (the existing, previously-audited sibling probe) already calls `compute_derivatives(...)` before trusting its result, specifically to satisfy this same executability-over-registration principle (ETCA-002 T-F3/G4) its own docstring states; `wgpu_kernel_executes()` (new in this PR) omitted that call — an inconsistency with the established pattern in the same file, not a deliberate deviation. | **FIXED.** `wgpu_kernel_executes()` now constructs a real `amplitude`/`frequency` input and calls `engine.compute_derivatives(...)` before reading `.backend_name`, matching `cuda_kernel_executes()` exactly. Re-verified live on both builds: 7 passed/3 skipped on `--features cuda` (wgpu tests skip), 7 passed/3 skipped on `--features wgpu` (cuda tests skip, wgpu tests pass for real) — rebuilt the extension for both to confirm, then rebuilt back to `--features cuda`. `ruff`/`mypy --strict` clean. |
 | DV041-F7 | Sourcery | `test_backend_name_is_one_of_the_registered_values` accepts any `"wgpu"`-prefixed string via `.startswith("wgpu")`, but the "documented" value is the exact string `"wgpu<wgsl>"`; suggested asserting the exact set instead. | **Considered, declined.** `R::name()`'s wgpu output includes the CubeCL shader-IR dialect suffix, which can legitimately differ by platform backend (Vulkan/Metal/DX12/GL can each report a different `<...>` suffix than WGSL) — the whole point of this particular test is confirming the backend *family*, not reproducing today's exact runtime-name string. An exact-match assertion would make the test *more* brittle to legitimate cross-platform variation, not safer; it would also duplicate what the two more specific, stronger tests already check (`test_backend_name_reports_{cuda,wgpu}_on_a_..._dispatching_build`, which assert exact values / a live dispatch respectively). | **Declined**, with rationale recorded as an in-code comment at the assertion site (not silently ignored) so a future reader — or reviewer — sees this was a considered decision. |
 
@@ -180,6 +187,73 @@ pre-existing on `origin/main` (unrelated to this diff) via `git show`; not
 caught by CI because `rust.yml`'s `docs` job never exercises a GPU feature
 (same blind-spot class as `DV-040`). See the `DEFERRED_VALIDATION_REGISTER.md`
 row for the full record and proposed remedy.
+
+### §6.1 third-round delta re-audit (commit `ba5c00f`)
+
+Same independent auditor, resumed with full context of both prior rounds.
+This round went further than reading the diff: it **reproduced the actual
+bug** by patching the pre-fix logic back in locally and re-running the
+exact scenario, and **reproduced the `RefCell`-vs-`Mutex` compile failure**
+by swapping the field type back and re-running `cargo check -p prin-py`
+— both reverted cleanly afterward (`git status --short` empty).
+
+- **DV041-F5 — CLOSED.** `cargo check -p prin-py --features cuda` with
+  `host_backend_name` reverted to `RefCell<String>` reproduces the exact
+  `E0277`/`Sync` error the fix claims to solve. `cargo test -p prin-sim
+  --features cuda,wgpu --no-default-features --lib
+  gpu::tests::sparse_kuramoto_host_fallback_and_debug` with
+  `backend_name()`'s host-slice arm reverted to unconditional
+  `backend_name_of(None)` fails with `left: "cpu-native", right: "cuda"` —
+  a real, self-caused, reproducible failure proving the pre-fix defect was
+  genuine and the new test is a real regression guard. Additionally
+  verified `sparse_knn_coupling_auto_with_backend` has exactly one other
+  caller in the repository (a test) and is unaffected by the delegation
+  change; verified the manual `Clone` impl field-by-field against the
+  struct definition. `cargo test -p prin-sim -p prin-kernels --features
+  cuda,wgpu --no-default-features --lib` → 200/200; `cargo test -p
+  prin-sim --features cuda --lib gpu::` → 36/36; `cargo fmt`/`clippy -D
+  warnings` clean under both `cuda` and `cuda,wgpu`; `cargo doc -D
+  warnings` clean from a full `cargo clean` (24.6 GiB); Snyk Code 0 issues
+  on the new `sparse_knn/cubecl.rs` addition.
+- **DV041-F6 — CLOSED.** Diff-confirmed `wgpu_kernel_executes()` now calls
+  `compute_derivatives()` before trusting `.backend_name`; live-reproduced
+  under a fresh `--features wgpu` rebuild — `pytest
+  tests/test_gpu_backend_name.py -v` → 7 passed/3 skipped, the 3
+  wgpu-specific tests passing for real this time. `ruff`/`mypy
+  --strict`/`interrogate` (100%) clean. Rebuilt back to `--features cuda`
+  and reconfirmed afterward.
+- **DV041-F7 — decline rationale confirmed present** at the assertion site.
+- **DV-042 — reconfirmed pre-existing**, via `git show
+  149cf2d:crates/prin-sim/src/gpu.rs` (the base commit, before any DV-041
+  work). `tools/check_dv_register_gates.py` → 42 rows, passes.
+- **DV041-F8 — D4, new.** Two prose accuracy nits found *in this Audit
+  Report itself*: the A2 checklist row (§2) hadn't been updated when §6.1
+  was added and read as though `backend_name()` could never go stale,
+  contradicting DV041-F5's whole premise; and the DV041-F5 disposition
+  cell claimed "six feature combinations" while listing five. **FIXED**
+  immediately following this round (A2 row corrected in place; "six" →
+  "five").
+- **Pre-existing, unrelated flake noted, not a regression:** a full
+  `cargo test --workspace --features cuda` run surfaced one failure,
+  `prin_daemon::daemon::tests::daemon_backend_errors_accumulate_in_the_dead_letter_queue`
+  (a timing-sensitive 2s-deadline poll) plus one flaked doctest in the same
+  crate. `git diff --stat` between base `149cf2d` and `ba5c00f` confirms
+  zero changes to `prin-daemon`; both passed 3/3 on immediate retry. Not
+  investigated further as part of this hotfix — out of scope, pre-existing,
+  and not reproducible on demand.
+- **Not re-verified this round** (disclosed by the auditor rather than
+  silently assumed): the full 3282-test pytest suite; `cargo
+  test`/`clippy` under `--features wgpu` alone, `--features cpu` alone, or
+  no-GPU-feature alone at the Rust level (the first round's own
+  independent pass already covered all of these individually; this round
+  targeted the specific `cuda,wgpu` scenario DV041-F5 is about, plus a
+  `cuda`-alone regression check).
+
+**Updated overall verdict after round 3: PASS-WITH-FINDINGS.** No D1 open
+at any point in this diff's history. DV041-F5/F6 closed with genuine
+independent bug reproduction (not just code/diff reading); DV041-F7's
+decline confirmed reasonable; DV-042 confirmed correctly out-of-scope;
+DV041-F8 (this report's own prose) fixed inline.
 
 ## 7. Note on DV041-F4's own closure
 
