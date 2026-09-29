@@ -290,7 +290,13 @@ class RunLeg:
         mode: The registered driver mode that produced it.
         backend: The ``environment.backend`` the envelope must carry.
         dtype: The ``environment.dtype`` the envelope must carry.
-        hypotheses: The sidecar hypothesis tags this artefact bears on.
+        hypotheses: The hypothesis tags the run's own
+            ``campaign-metadata.json`` sidecar carries for this artefact. These
+            are the campaign's registered tags (the driver's
+            ``_VALID_HYPOTHESES`` set: H1, H2, H3, H4), so the fuzz leg carries
+            ``H2`` and not its two sub-hypotheses; see
+            :data:`ADJUDICATED_HYPOTHESES` for what this analysis derives from
+            each leg.
         timed: Whether the sidecar entry is the GPU object form carrying
             ``timing_method`` (campaign plan §7.2, §11.5).
         extension_sha256: The E3 build-log extension hash this leg must carry.
@@ -361,7 +367,7 @@ RUN_LEGS: tuple[RunLeg, ...] = (
         mode="fuzz",
         backend="cpu",
         dtype="f64",
-        hypotheses=("H2a", "H2b"),
+        hypotheses=("H2",),
         timed=False,
         extension_sha256=CUDA_EXTENSION_SHA256,
     ),
@@ -377,6 +383,16 @@ RUN_LEGS: tuple[RunLeg, ...] = (
         extension_sha256=CUDA_EXTENSION_SHA256,
     ),
 )
+
+#: Run label to the pre-registration §2 hypotheses this analysis adjudicates
+#: from that leg. Identical to :attr:`RunLeg.hypotheses` except on the fuzz
+#: leg, whose sidecar carries the campaign's registered ``H2`` tag while §2
+#: splits it into the two separately decided H2a and H2b. Both are reported:
+#: the sidecar tag is what E3 committed, this mapping is what E4 derives.
+ADJUDICATED_HYPOTHESES: dict[str, tuple[str, ...]] = {
+    leg.label: (("H2a", "H2b") if leg.mode == "fuzz" else leg.hypotheses)
+    for leg in RUN_LEGS
+}
 
 
 class AnalysisError(RuntimeError):
@@ -3016,7 +3032,7 @@ def _summary_rows(adjudications: dict[str, Any]) -> list[str]:
                 if "ci_lower" in metrics[name]
             ]
             error = (
-                f"max |CI endpoint| {_render(max(endpoints))}"
+                f"max \\|CI endpoint\\| {_render(max(endpoints))}"
                 if endpoints
                 else "n/a (undersized sample)"
             )
@@ -3539,7 +3555,10 @@ def build_summary_json(
                 "label": leg.label,
                 "mode": leg.mode,
                 "backend": leg.backend,
-                "hypotheses": list(leg.hypotheses),
+                "sidecar_hypotheses": list(leg.hypotheses),
+                "adjudicated_hypotheses": list(ADJUDICATED_HYPOTHESES[leg.label]),
+                "operator": runs[leg.label].sidecar.get("operator"),
+                "session": runs[leg.label].sidecar.get("session"),
                 "manifest_bytes": runs[leg.label].manifest_bytes,
                 "manifest_sha256": runs[leg.label].manifest_sha256,
                 "files": runs[leg.label].files,
@@ -3706,7 +3725,8 @@ def write_report_manifest(
                 "label": leg.label,
                 "mode": leg.mode,
                 "backend": leg.backend,
-                "hypotheses": list(leg.hypotheses),
+                "sidecar_hypotheses": list(leg.hypotheses),
+                "adjudicated_hypotheses": list(ADJUDICATED_HYPOTHESES[leg.label]),
                 "manifest_bytes": runs[leg.label].manifest_bytes,
                 "manifest_sha256": runs[leg.label].manifest_sha256,
                 "files": runs[leg.label].files,
