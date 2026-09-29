@@ -233,7 +233,10 @@ IDs from PSR-038 are reported missing from PSR-039
 §3.1/§3.2 local finding tables for a cumulative table and
 never follows/combines its §3.3 PSR-038 delegation; PSR-038
 also lacks six machine-readable WP-038 delta rows. Tracked as
-**DV-044** (OPEN; no correction approved or executed). This
+**DV-044** (OPEN at discovery; **CLOSED 2026-09-29 UTC** via the
+separately governed S1–S4 correction on `hotfix/dv044-ledger-delta`,
+merged into this branch `9cda4e5` — exact 038→039 comparison green
+locally and on hosted CI). This
 pre-existing, untouched governance surface will fail the
 current `python.yml` ledger gate if the r1 branch merges
 as-is. It is not a wgpu-result finding and is not silently
@@ -342,14 +345,16 @@ controls, the E2 maintainer decision or the E3 source
 baseline.
 `tools/check_deviation_ledger.py 038 039` exits 1 as documented in §5
 (DV-044: pre-existing ledger/parser failure; 128 inherited rows
-are misreported missing). The DV-043 hotfix is not merged into `main`,
-so no CI on its merge SHA exists; the latest nightly was checked and
-remains failed (remote recheck below). The independent E2
-review/maintainer's dated approval of this amendment are pending.
-**No freeze or E3 execution is authorized by these local checks.**
+are misreported missing). At the time of this local-verification
+pass the DV-043 hotfix was unmerged and the nightly red; both have
+since closed (PR #26 merged `9b79d2e`; forced nightly
+`36525353031` attempt-2 `bench-regression` green), and DV-044
+closed via its governed S1–S4 correction.
+**No freeze or E3 execution was authorized by these local checks.**
 
 Subsequently approved as an E2 method decision on
-2026-09-29 UTC (§8); no E3 or freeze is implied.
+2026-09-29 UTC (§8); gates closed in order through the
+documented workflow — see the closing paragraph below.
 
 **Remote status recheck, 2026-09-28 UTC (read-only, authorized):**
 `gh api repos/Symbo-gif/PRIN/commits/main --jq .sha`
@@ -496,10 +501,19 @@ campaign §12. Whether this disclosed mechanical-applier
 review satisfies the independence bar is already
 recorded as a maintainer acceptance, above.
 
-**Hard gates still outstanding:** DV-043 hotfix merged
-to `main` with required CI green and its next
-`nightly.yml` `bench-regression` green; the separately
-governed DV-044 ledger correction independently
-audited with the previously failing comparison green;
-then M and R recorded and checked before E3. The
-pre-registration remains UNFROZEN; E3 has not started.
+**Hard gates — all CLOSED 2026-09-29 UTC:** DV-043 merged
+to `main` as `9b79d2e5b246bead1243074659dc99d049762a40`
+(PR #26, all required checks green incl. both GPU legs) and
+its forced `nightly.yml` `bench-regression` passed on
+attempt 2 (run `36525353031`; every target family inside
++10 %; the attempt-1 spmv_serial breach reproduced on the
+pre-fix nightly — runner noise); DV-044's governed ledger
+correction completed S1–S4 with the exact PSR-038→039
+comparison green locally and on hosted CI (PR #27
+`governance`); `M = 9b79d2e` is incorporated and an
+independent non-author M/R/F delta audit of the campaign
+checkout returned PASS-WITH-FINDINGS with the sole D3
+(stale gate-status text) remediated here. The
+pre-registration remains UNFROZEN until E3's first `RUN-`;
+`R` = the clean campaign checkout at E3 start; `F` is
+recorded on `log.md` line 1 at freeze.

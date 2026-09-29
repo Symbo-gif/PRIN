@@ -1,10 +1,16 @@
 # Pre-registration — EXP-001-r1: Golden-trajectory numerical parity
 
-**Status:** **E2 FOLLOW-UP H4 METHOD APPROVED 2026-09-29 UTC; NOT FROZEN
-AND NOT AUTHORIZED TO EXECUTE.** E3 remains BLOCKED on DV-043's
-merged-main CI/green-nightly closure, DV-044's separately governed
-ledger correction, and a recorded clean campaign execution checkout.
-Frozen only at E3's first `RUN-` creation.<br>
+**Status:** **E2 FOLLOW-UP H4 METHOD APPROVED 2026-09-29 UTC; ALL §10
+ENTRY GATES CLOSED 2026-09-29 UTC; NOT YET FROZEN.** DV-043 is CLOSED
+(merged `main` `9b79d2e`, required CI green, forced nightly
+`36525353031` attempt-2 `bench-regression` green with the step/sweep
+families inside the +10 % gate); DV-044 is CLOSED (S1–S4 governed
+correction, exact 038→039 ledger comparison green locally and on hosted
+CI); `M = 9b79d2e5b246bead1243074659dc99d049762a40` is incorporated
+into this campaign branch. E3 proceeds under the recorded protocol on
+the clean campaign execution checkout `R` (the campaign-branch HEAD at
+E3 start); freezing occurs only at the first `RUN-` creation, which
+records freeze-edit `F` on `log.md` line 1.<br>
 **Authors:** Devin (AI pair, protocol and driver); MichaelMaillet (maintainer,
 session declaration; E2 review pending).<br>
 **Date:** 2026-09-28 UTC (the session was declared on September 27 local time).<br>
@@ -19,9 +25,11 @@ and independently re-ran the driver's test suite, ruff, mypy --strict,
 all reproduced exactly as E1 reported, zero discrepancies. At the
 original 2026-09-28 E2 review, three of four gates were
 approved and the wgpu gate remained open. The 2026-09-29
-follow-up H4 method approval below closes that protocol-design
-gate only; E3 still waits for DV-043, DV-044 and the
-M/R/F execution identity. See `e2-review.md` for the full record.
+follow-up H4 method approval below closed that protocol-design
+gate; DV-043, DV-044 and the M/R/F execution identity have since
+closed in order (both CLOSED 2026-09-29 UTC; `M = 9b79d2e`
+incorporated; `R` = the clean campaign checkout at E3 start).
+See `e2-review.md` for the full record.
 
 **Follow-up E2 maintainer decision (2026-09-29 UTC):** MichaelMaillet
 approved the revised two-backend H4 design, two feature-exclusive
@@ -47,19 +55,22 @@ records the decision and evidence.
 | §7 single-stream (not ≥10 replications) sample-size justification | **APPROVED** | e2-review.md §2 |
 | §7 three-way H2b equivalence decision rule (replacing the predecessor's binary rule) | **APPROVED** | e2-review.md §2 |
 | §9 storage budget (16 MiB shared / 8 MiB new r1 / 6 MiB fuzz exception) | **APPROVED** — campaign plan §14.2 amendment #7 | e2-review.md §3; driver updated (`RAW_ROOT_CAP_BYTES`, new `R1_ROOT_CAP_BYTES`, new `FUZZ_RUN_CAP_BYTES`) |
-| §2 required wgpu driver/coverage gate | **APPROVED 2026-09-29 UTC (follow-up E2 method only; E3 blocked on DV-043/DV-044 and execution SHA gates)** | e2-review.md §§4–8; `DEFERRED_VALIDATION_REGISTER.md` DV-041; campaign plan §11.7, §14.2 amendment #8 |
+| §2 required wgpu driver/coverage gate | **APPROVED 2026-09-29 UTC (follow-up E2 method; all §10 entry gates now closed)** | e2-review.md §§4–8; `DEFERRED_VALIDATION_REGISTER.md` DV-041/DV-043/DV-044; campaign plan §11.7, §14.2 amendment #8 |
 
 DV-041's backend-identification hotfix merged as PR #25
 (`5615edab5b53afd6602907343a596cdc3f8dff4a`;
 six required CI workflows green per `triage-dv043-handoff.md`
 §2). MichaelMaillet approved this follow-up E2 H4
-**method** on 2026-09-29 UTC. No r1 result, analysis,
-main-branch DV-043 merge SHA, DV-044 correction, green
-post-hotfix nightly, or E3 freeze follows from that
-approval. The first E3 `RUN-` directory still freezes
-the last approved pre-registration edit; until all
-§10 entry gates close this record is unfrozen and E3
-does not start.<br>
+**method** on 2026-09-29 UTC. DV-043 merged to `main` as
+`9b79d2e5b246bead1243074659dc99d049762a40` (PR #26,
+2026-09-29T05:15:36Z) with a green forced-nightly
+`bench-regression` (run `36525353031`, attempt 2), and
+DV-044's governed correction closed S1–S4 with the hosted
+governance gate green on this branch. No r1 result,
+analysis, or E3 freeze follows from those closures:
+the first E3 `RUN-` directory still freezes the last
+approved pre-registration edit, and the record stays
+unfrozen until then.<br>
 **Code version:** `prin-core` distribution `1.0.0rc1`, Rust `1.0.0-rc1`;
 E1 starting tree `a7ef308acffbf3ecd09aa1b4fbe55a9b09d09e74`, incorporating
 correction merge `149cf2d88ab6be401951b63d1d7e8fad209f52a5` and the correction's
@@ -343,10 +354,13 @@ No Triton timing, NPU, DirectML, training or throughput claim is made.
 
 **Two mutually exclusive extension builds, one execution
 commit and a separately recorded main baseline.** Let
-`M` denote the *actual future* merged-main SHA carrying
+`M` denote the *actual* merged-main SHA carrying
 DV-043 with required CI green and a following green
-`nightly.yml` `bench-regression` (campaign plan §11.8);
-`M` is not yet known or claimed here. Let `R` denote a
+`nightly.yml` `bench-regression` (campaign plan §11.8):
+**`M = 9b79d2e5b246bead1243074659dc99d049762a40`**
+(PR #26 merged 2026-09-29T05:15:36Z; forced nightly run
+`36525353031` attempt 2 `bench-regression` PASSED — 63 gated
+benchmarks, none past +10 %). Let `R` denote a
 single, clean, committed EXP-001-r1 campaign-branch
 execution checkout that includes the approved
 pre-registration/driver and incorporates `M` **before**
@@ -860,13 +874,17 @@ The original three E2 approvals remain valid. The
 follow-up H4/two-build **method** is now approved
 by MichaelMaillet (2026-09-29 UTC) with the
 non-author technical review disclosed in
-`e2-review.md` §§6–8. Item 2 is closed as a
-*protocol-design* gate only. Item 5 and
-DV-043/DV-044 remain OPEN: no approved new
-main baseline `M`, clean campaign execution
-checkout `R`, green next nightly, first
-`RUN-` directory, freeze, E3 execution or
-scientific verdict exists yet. The separate
+`e2-review.md` §§6–8. Item 2 closed as a
+*protocol-design* gate; item 5 and
+DV-043/DV-044 have since closed in order
+(DV-043 merged `9b79d2e` + green forced
+nightly `36525353031` attempt 2; DV-044
+S1–S4 with hosted governance gate green;
+`M = 9b79d2e5b246bead1243074659dc99d049762a40`
+incorporated into this branch). Still absent
+by design: a first `RUN-` directory, freeze,
+E3 execution or scientific verdict — those
+happen only on the clean `R` checkout. The separate
 non-author E2 delta check of the corrected
 M/R/F roles completed 2026-09-29 UTC with no
 findings (`e2-review.md` §8). No prior

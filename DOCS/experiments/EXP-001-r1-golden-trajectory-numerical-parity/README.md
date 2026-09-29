@@ -8,13 +8,14 @@ and the storage budget (campaign plan §14.2 amendment #7). The DV-041
 binding capability is **CLOSED** on documented merge evidence (PR #25,
 `5615eda`, required CI green per `triage-dv043-handoff.md` §2); the
 wgpu H4 companion method and two-build order were **APPROVED as an E2
-method decision on 2026-09-29 UTC** (`e2-review.md` §8). DV-043
-remains **OPEN** pending its merge to `main`, required CI, and one green
-nightly `bench-regression`; DV-044's governed ledger correction and a
-clean M/R execution identity also remain open. See
-[`e2-review.md`](e2-review.md) §§5–8. **This
-pre-registration does not freeze and E3 does not start while any of those
-gates are open.**
+method decision on 2026-09-29 UTC** (`e2-review.md` §8). DV-043 is
+**CLOSED** (merged `main` `9b79d2e`, required CI green, forced nightly
+`36525353031` attempt-2 `bench-regression` green); DV-044's governed
+ledger correction is **CLOSED** (S1–S4, hosted governance gate green);
+`M = 9b79d2e5b246bead1243074659dc99d049762a40` is incorporated into this
+campaign branch. See [`e2-review.md`](e2-review.md) §§5–8. **The
+pre-registration freezes only at E3's first `RUN-` creation on the clean
+campaign execution checkout `R`.**
 This is a new experiment record per campaign plan §10.4 item 4. The original
 EXP-001 record is immutable; corrections to it are errata.
 **Predecessor:** [`EXP-001`](../EXP-001-golden-trajectory-numerical-parity/README.md)
@@ -28,18 +29,20 @@ pre-registration](preregistration.md), [E1 handoff](e1-handoff.md) and
 [E2 review](e2-review.md) record the prospective protocol, local
 validation, independent re-verification and the maintainer's E2 decisions.
 The original E2 approved three of
-four gates; the follow-up wgpu H4/two-build method was approved on 2026-09-29 UTC as a protocol-design gate only
-(`e2-review.md` §8), while DV-043's merge/nightly closure, DV-044's
-governed correction, and the clean M/R execution identity remain
-open — freeze/E3 stay blocked. Neither E1 nor this E2 method approval
-executes E3 or releases session 0159.
+four gates; the follow-up wgpu H4/two-build method was approved on
+2026-09-29 UTC (`e2-review.md` §8). DV-043's merge/nightly closure and
+DV-044's governed correction are **both CLOSED** (2026-09-29 UTC) and
+`M = 9b79d2e` is incorporated — every §10 entry gate is now closed; the
+first `RUN-` creation on `R` freezes the record and starts E3. Neither
+E1 nor the E2 method approvals themselves executed E3 or released
+session 0159.
 
 ## What this directory holds
 
 | File | Created by | Frozen when |
 |---|---|---|
 | `README.md` | E1 | Updated as the experiment progresses |
-| [`preregistration.md`](preregistration.md) | E1 (from [`TEMPLATE_Preregistration.md`](../TEMPLATE_Preregistration.md)) | **NOT FROZEN** — freezes at E3's first `RUN-`; E2 follow-up H4 method approved 2026-09-29 UTC; blocked on DV-043/DV-044 and clean M/R source identity |
+| [`preregistration.md`](preregistration.md) | E1 (from [`TEMPLATE_Preregistration.md`](../TEMPLATE_Preregistration.md)) | **NOT YET FROZEN** — freezes at E3's first `RUN-`; E2 follow-up H4 method approved 2026-09-29 UTC; all §10 entry gates closed (DV-043/DV-044 CLOSED, `M = 9b79d2e` incorporated, clean `R` = campaign HEAD at E3 start) |
 | [`e1-handoff.md`](e1-handoff.md) | E1 | Entry and verification evidence record |
 | [`e2-review.md`](e2-review.md) | E2 | Independent-review and maintainer-decision record |
 | `log.md` | E3 | *Not yet created* — written at E3; never edited after E3 close |
