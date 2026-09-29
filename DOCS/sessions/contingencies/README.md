@@ -8,26 +8,24 @@ numbered session. Copy each template to a dated/identified file before use.
 
 ## Open corrections
 
-DV-044 — **S1–S4 RECORDED 2026-09-29 UTC; merge + green CI pending.** PSR-039's
-cumulative deviation ledger was invisible to `tools/check_deviation_ledger.py`
-(eight local five-column rows mistaken for the six-column cumulative table;
-128 inherited IDs reported missing, `python.yml` gate exit 1) and PSR-038
-never supplied the six WP-038 rows its prose claims. Maintainer-authorized
-separately governed correction on `hotfix/dv044-ledger-delta`: an explicit
-canonical PSR-039 §3.4 delta (14 rows) plus a fail-closed parser/CLI —
-the exact failing comparison exits 0 (128→142). S2 independent audit:
-PASS-WITH-FINDINGS, seven findings (1×D3 code, 5×D4, 1×D3 index drift);
-all seven remediated in S3 with a sixth tandem test batch (12/12 pass) and
-Snyk Code clean. S4 documentation recorded with conditional status; merge to `main`,
-green governance CI and the register disposition remain required before
-closure; EXP-001-r1 E3 stays blocked meanwhile.
+(none)
+
+## Closed corrections
+
+DV-044 — **CLOSED 2026-09-29 UTC.** All four stages executed in S1→S4 order
+on `hotfix/dv044-ledger-delta` (merged into this campaign branch `9cda4e5`).
+PSR-039's cumulative deviation ledger is now represented by an explicit
+§3.4 canonical delta (14 rows) and `tools/check_deviation_ledger.py`
+merges marked deltas while rejecting five-column local tables as cumulative
+ledgers — the exact failing PSR-038→039 comparison exits 0 (128→142) locally
+and on hosted CI (PR #27 `governance` job, run `36526332612`). S2
+PASS-WITH-FINDINGS; all seven findings remediated in S3 (12/12 tests, Snyk
+clean). The refreshed tool reaches `main` with this amendment at E5.
 
 - [2026-09-29-dv044-s1-correction-implementation.md](2026-09-29-dv044-s1-correction-implementation.md)
 - [2026-09-29-dv044-s2-correction-audit.md](2026-09-29-dv044-s2-correction-audit.md)
 - [2026-09-29-dv044-s3-correction-remediation.md](2026-09-29-dv044-s3-correction-remediation.md)
 - [2026-09-29-dv044-s4-correction-documentation.md](2026-09-29-dv044-s4-correction-documentation.md)
-
-## Closed corrections
 
 EXP-001 D1 — **CLOSED 2026-09-27 UTC.** S1→S2→S3→S4 all completed; S2 PASS
 and S3 delta CLEAN
