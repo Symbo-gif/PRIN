@@ -220,7 +220,7 @@ entry check rather than absorbing a mid-run SHA change.
 
 **Pending:** maintainer determination that the disclosed non-author
 technical check in §7 meets the independent E2 review requirement
-(or a separate reviewer if required); Snyk Code result;
+(or a separate reviewer if required);
 DV-043 merge with required CI green and next green nightly;
 exact E3 main SHA; MichaelMaillet's explicit H4/two-build
 approval. No result, freeze or verdict is recorded here.
@@ -303,16 +303,64 @@ benchmarks/campaign --strict` (65 files), `git diff --check`,
 `tools/check_global_session_registration.py` (17 reports). No numeric
 threshold, seed, case selection or storage cap was changed.
 
-**Unclosed gates, not represented as successes:** Snyk Code (new/modified
-supported first-party source) has **not** run: external-network
-authorization is pending. No dependency/manifest changed; Snyk Open
-Source, `cargo audit` and `pip-audit` were not triggered by this amendment.
+**Post-commit security scan (2026-09-28 UTC).** The proposed
+instrument and tests were committed unchanged as local
+`1c4b814` after the reported verification; this is a
+candidate amendment SHA, **not** the E3 merged-main baseline
+or maintainer approval. With explicit network authorization,
+Snyk MCP `snyk_code_scan` (version `1.1304.2`,
+`severity_threshold="low"`) was run separately against all
+four modified Python files in this amendment:
+
+| Absolute worktree path suffix | Snyk Code result |
+|---|---|
+| `benchmarks/campaign/exp001_driver.py` | `success=true`, `issueCount=0` |
+| `benchmarks/campaign/exp001_r1_driver.py` | `success=true`, `issueCount=0` |
+| `tests/test_exp001_driver.py` | `success=true`, `issueCount=0` |
+| `tests/test_exp001_r1_driver.py` | `success=true`, `issueCount=0` |
+
+All four paths are under
+`C:\dev\PRIN-r1-amendment\`. There were **zero issues
+at the low scan threshold in the touched supported Python
+files**; this is not a whole-repository scan or an assertion
+about hosted CI. No dependency or manifest changed in this
+amendment, so Snyk Open Source and native dependency audits
+were not triggered. Ruff security rules are included in the
+targeted Ruff pass; Bandit's configured `python/prin` scope
+excludes `benchmarks` and `tests`, so it is not presented as
+a scan of these changed files. GitHub secret scanning and
+push protection are independent controls and have not been
+represented as passed by this Snyk result.
+
+**Unclosed gates, not represented as successes:** Snyk Code
+is now evidenced separately above; it does **not** close
+the PSR-039 governance/CI failure (DV-044), the DV-043
+merge/nightly requirement, GitHub's independent secret
+controls, the E2 maintainer decision or the E3 source
+baseline.
 `tools/check_deviation_ledger.py 038 039` exits 1 as documented in §5
 (DV-044: pre-existing ledger/parser failure; 128 inherited rows
-are misreported missing). The DV-043 hotfix is not merged into `main`, its required CI
-and next green nightly have not been checked, and the independent E2
+are misreported missing). The DV-043 hotfix is not merged into `main`,
+so no CI on its merge SHA exists; the latest nightly was checked and
+remains failed (remote recheck below). The independent E2
 review/maintainer's dated approval of this amendment are pending.
 **No freeze or E3 execution is authorized by these local checks.**
+
+**Remote status recheck, 2026-09-28 UTC (read-only, authorized):**
+`gh api repos/Symbo-gif/PRIN/commits/main --jq .sha`
+returned `5615edab5b53afd6602907343a596cdc3f8dff4a`;
+`gh pr list --repo Symbo-gif/PRIN --head
+hotfix/dv043-redundant-step-guard --state all --json
+number,state,mergedAt,mergeCommit,headRefName,headRefOid,url`
+returned `[]`; and `gh run list --repo Symbo-gif/PRIN
+--workflow=nightly.yml --limit 5 --json
+databaseId,headSha,conclusion,status,createdAt`
+showed the latest nightly `36380992897` completed
+**failure** on `149cf2d88ab6be401951b63d1d7e8fad209f52a5`.
+No new green nightly or DV-043 PR/merge was observed.
+This read-only check is not a replacement for required
+CI on a future merge SHA, nor is it a permission to
+push or execute the experiment.
 
 ## 7. Non-author technical check of the proposal (not maintainer approval)
 
@@ -366,12 +414,15 @@ approved storage caps are unchanged. E4's prospective rule
 checks saved comparison summaries; it does not claim to
 reconstruct raw derivatives it did not store.
 
-Remaining gates are not reviewer findings waved away: Snyk Code
-has not run; DV-044's pre-existing PSR-039 deviation-ledger CI gate
-fails as recorded in §5; DV-043 still needs a `main` merge,
-required CI, and the next green nightly; the exact E3 baseline
-SHA and E2 maintainer approval do not yet exist. No E3 execution
-or result was reviewed here. The independent DV-043
+Remaining gates are not reviewer findings waved away. Snyk Code
+subsequently passed on the four changed Python files at the
+low threshold (§6); GitHub secret scanning and push protection
+remain independent hosted controls, not verified by Snyk.
+DV-044's pre-existing PSR-039 deviation-ledger CI gate still
+fails (§5). DV-043 still needs a `main` merge, required CI
+and the next green nightly; the exact E3 baseline SHA and E2
+maintainer approval do not yet exist. No E3 execution or
+result was reviewed here. The independent DV-043
 retro-audit is recorded separately in
 `DOCS/audits/2026-09-28-dv043-redundant-step-guard-audit.md` §7,
 covering bit-identity, `n <= 1`, and the mutable-array caveat.
