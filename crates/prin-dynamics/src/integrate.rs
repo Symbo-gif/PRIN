@@ -57,8 +57,8 @@ use thiserror::Error;
 
 use crate::models::Dynamics;
 use crate::state::{
-    clamp_amplitude, clamp_derivative, guard_derivative_value, wrap_phase, OscillatorState,
-    StateDerivatives, StateError,
+    clamp_amplitude, guard_derivative_value, wrap_phase, OscillatorState, StateDerivatives,
+    StateError,
 };
 
 /// Amplitude and derivative guard applied by [`EulerIntegrator`] and
@@ -102,6 +102,17 @@ impl GuardPolicy {
 
     /// Guard a flat derivative buffer in place.
     ///
+    /// `source_guarded` is [`StateDerivatives::is_guarded`] for the derivatives
+    /// the buffer was flattened from. When it is `true`,
+    /// [`StateDerivatives::new`] has already clamped every value to
+    /// `±DERIV_CLAMP` and repaired non-finite ones — under both the default and
+    /// the `strict-checks` builds — so this pass could neither change a value
+    /// nor raise an error, and it is skipped. That skip is the whole of DV-043:
+    /// the sparse k-NN models clamp at construction, while `OscilloSim`, the
+    /// parameter sweep and their benchmarks all pin `Bounded`, so every RK4
+    /// step was re-walking four `3N` buffers to re-clamp values already inside
+    /// the bound (~25 ns per oscillator per step).
+    ///
     /// # Errors
     ///
     /// With `strict-checks` enabled, a `Bounded` guard rejects a non-finite or
@@ -109,16 +120,17 @@ impl GuardPolicy {
     /// preserves the pre-correction diagnostic, which reached the same error
     /// through [`StateDerivatives::new`]. (Without `strict-checks`, values are
     /// clamped and repaired exactly as before the correction.)
-    fn derivatives(self, buf: &mut [f64]) -> Result<(), StateError> {
-        if self == Self::Bounded {
-            for (index, d) in buf.iter_mut().enumerate() {
-                // Under `strict-checks` this rejects a non-finite or
-                // out-of-range value with the pre-correction diagnostic;
-                // otherwise it repairs exactly like `clamp_derivative` (the
-                // extra clamp below is then a no-op).
-                guard_derivative_value(*d, index, "derivative")?;
-                *d = clamp_derivative(*d);
-            }
+    fn derivatives(self, buf: &mut [f64], source_guarded: bool) -> Result<(), StateError> {
+        if source_guarded || self != Self::Bounded {
+            return Ok(());
+        }
+        for (index, d) in buf.iter_mut().enumerate() {
+            // Under `strict-checks` this rejects a non-finite or out-of-range
+            // value with the pre-correction diagnostic and returns the value
+            // unchanged; without it, it returns `clamp_derivative(*d)`. Either
+            // way the result is the guarded value, so assign it — the previous
+            // code discarded it and clamped the same input a second time.
+            *d = guard_derivative_value(*d, index, "derivative")?;
         }
         Ok(())
     }
@@ -427,7 +439,8 @@ impl Integrator for EulerIntegrator {
         self.deriv_buf.extend_from_slice(&k1.dphase);
         self.deriv_buf.extend_from_slice(&k1.damplitude);
         self.deriv_buf.extend_from_slice(&k1.dfrequency);
-        self.guard.derivatives(&mut self.deriv_buf)?;
+        self.guard
+            .derivatives(&mut self.deriv_buf, k1.is_guarded())?;
 
         let dphase = &self.deriv_buf[..n];
         let damplitude = &self.deriv_buf[n..2 * n];
@@ -539,7 +552,7 @@ impl RK4Integrator {
         self.k1.extend_from_slice(&deriv.dphase);
         self.k1.extend_from_slice(&deriv.damplitude);
         self.k1.extend_from_slice(&deriv.dfrequency);
-        self.guard.derivatives(&mut self.k1)?;
+        self.guard.derivatives(&mut self.k1, deriv.is_guarded())?;
         Ok(())
     }
 }
@@ -585,7 +598,7 @@ impl Integrator for RK4Integrator {
         self.k2.extend_from_slice(&d2.dphase);
         self.k2.extend_from_slice(&d2.damplitude);
         self.k2.extend_from_slice(&d2.dfrequency);
-        self.guard.derivatives(&mut self.k2)?;
+        self.guard.derivatives(&mut self.k2, d2.is_guarded())?;
         let k2 = self.k2.clone();
 
         // k3 = f(y_n + h/2 · k2)
@@ -606,7 +619,7 @@ impl Integrator for RK4Integrator {
         self.k3.extend_from_slice(&d3.dphase);
         self.k3.extend_from_slice(&d3.damplitude);
         self.k3.extend_from_slice(&d3.dfrequency);
-        self.guard.derivatives(&mut self.k3)?;
+        self.guard.derivatives(&mut self.k3, d3.is_guarded())?;
         let k3 = self.k3.clone();
 
         // k4 = f(y_n + h · k3)
@@ -627,7 +640,7 @@ impl Integrator for RK4Integrator {
         self.k4.extend_from_slice(&d4.dphase);
         self.k4.extend_from_slice(&d4.damplitude);
         self.k4.extend_from_slice(&d4.dfrequency);
-        self.guard.derivatives(&mut self.k4)?;
+        self.guard.derivatives(&mut self.k4, d4.is_guarded())?;
         let k4 = &self.k4;
 
         // y_{n+1} = y_n + h/6 · (k1 + 2k2 + 2k3 + k4)
@@ -2142,6 +2155,10 @@ impl MultiRateIntegrator {
             dphase: gradients[0].clone(),
             damplitude: gradients[1].clone(),
             dfrequency: gradients[2].clone(),
+            // Finite-checked only, never clamped to `±DERIV_CLAMP`, so report
+            // the gradient as unguarded and let a `Bounded` integrator apply
+            // its own bound (DV-043).
+            guarded: false,
         })
     }
 
@@ -2672,6 +2689,115 @@ mod tests {
         }
     }
 
+    /// Derivatives already clamped by construction, so a `Bounded` integrator
+    /// skips its own pass (DV-043).
+    struct PreClampedRate(f64);
+
+    impl Dynamics for PreClampedRate {
+        fn compute_derivatives(
+            &self,
+            state: &OscillatorState,
+        ) -> Result<StateDerivatives, StateError> {
+            let n = state.phase.len();
+            StateDerivatives::new(vec![self.0; n], vec![0.0; n], vec![0.0; n])
+        }
+    }
+
+    /// The same derivatives delivered unclamped, so a `Bounded` integrator
+    /// still applies its own pass.
+    struct RawRate(f64);
+
+    impl Dynamics for RawRate {
+        fn compute_derivatives(
+            &self,
+            state: &OscillatorState,
+        ) -> Result<StateDerivatives, StateError> {
+            let n = state.phase.len();
+            StateDerivatives::unclamped(vec![self.0; n], vec![0.0; n], vec![0.0; n])
+        }
+    }
+
+    /// Assert two states agree bit for bit, not merely to a tolerance.
+    fn assert_bit_identical(a: &OscillatorState, b: &OscillatorState, ctx: &str) {
+        for (name, x, y) in [
+            ("phase", &a.phase, &b.phase),
+            ("amplitude", &a.amplitude, &b.amplitude),
+            ("frequency", &a.frequency, &b.frequency),
+        ] {
+            assert_eq!(
+                x.iter().map(|v| v.to_bits()).collect::<Vec<_>>(),
+                y.iter().map(|v| v.to_bits()).collect::<Vec<_>>(),
+                "{ctx}: {name} differs"
+            );
+        }
+    }
+
+    #[test]
+    fn bounded_step_skips_the_redundant_pass_without_changing_any_value() {
+        // DV-043: `PreClampedRate` reports `is_guarded()`, so
+        // `GuardPolicy::derivatives` is skipped; `RawRate` does not, so it
+        // runs. For values already inside `±DERIV_CLAMP` the two paths must
+        // agree bit for bit. That identity is the entire claim the skip rests
+        // on, and it is what makes dropping four `3N` passes per RK4 step
+        // value-preserving rather than a numerical change. Values exactly at
+        // the bound are included: `clamp_derivative` must be the identity
+        // there too, not a one-ulp nudge. Signed zero is included because the
+        // comparison is on `to_bits()`, so a sign flip would fail rather than
+        // compare equal.
+        let state = make_state(3, 0.7, 1.5, 0.25);
+        for rate in [
+            0.0,
+            -0.0,
+            1.0,
+            -2.5,
+            0.5 * DERIV_CLAMP,
+            DERIV_CLAMP,
+            -DERIV_CLAMP,
+        ] {
+            let (pre, raw) = (PreClampedRate(rate), RawRate(rate));
+            assert!(pre.compute_derivatives(&state).unwrap().is_guarded());
+            assert!(!raw.compute_derivatives(&state).unwrap().is_guarded());
+            for dt in [1e-3, 0.1] {
+                let skipped = EulerIntegrator::new()
+                    .with_guard(GuardPolicy::Bounded)
+                    .step(&pre, &state, dt)
+                    .unwrap();
+                let applied = EulerIntegrator::new()
+                    .with_guard(GuardPolicy::Bounded)
+                    .step(&raw, &state, dt)
+                    .unwrap();
+                assert_bit_identical(&skipped, &applied, "euler");
+
+                let skipped = RK4Integrator::new()
+                    .with_guard(GuardPolicy::Bounded)
+                    .step(&pre, &state, dt)
+                    .unwrap();
+                let applied = RK4Integrator::new()
+                    .with_guard(GuardPolicy::Bounded)
+                    .step(&raw, &state, dt)
+                    .unwrap();
+                assert_bit_identical(&skipped, &applied, "rk4");
+            }
+        }
+    }
+
+    #[cfg(not(feature = "strict-checks"))]
+    #[test]
+    fn bounded_step_still_clamps_derivatives_the_model_left_unclamped() {
+        // The skip is keyed on provenance, not on the policy: `RawRate` reports
+        // `is_guarded() == false`, so an out-of-range derivative is still
+        // repaired by the integrator. DV-043 removes a redundant pass, never
+        // the guard itself.
+        let state = make_state(2, 0.0, 1.0, 0.0);
+        let raw = RawRate(3.0e4);
+        assert!(!raw.compute_derivatives(&state).unwrap().is_guarded());
+        let result = RK4Integrator::new()
+            .with_guard(GuardPolicy::Bounded)
+            .step(&raw, &state, 1e-6)
+            .unwrap();
+        assert_relative_eq!(result.phase[0], 1e-6 * DERIV_CLAMP, epsilon = 1e-15);
+    }
+
     /// Returns a `NaN` amplitude derivative, bypassing every constructor guard.
     #[cfg(not(feature = "strict-checks"))]
     struct NanAmplitudeRate;
@@ -2687,6 +2813,7 @@ mod tests {
                 dphase: vec![0.0; n],
                 damplitude: vec![f64::NAN; n],
                 dfrequency: vec![0.0; n],
+                guarded: false,
             })
         }
     }
@@ -2954,6 +3081,7 @@ mod tests {
                 dphase: vec![f64::NAN; n],
                 damplitude: vec![0.0; n],
                 dfrequency: vec![0.0; n],
+                guarded: false,
             })
         }
     }

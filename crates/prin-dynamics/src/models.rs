@@ -127,10 +127,14 @@ pub fn dynamics_vjp(
             }
         }
     }
+    // Finite-checked only, never clamped to `±DERIV_CLAMP`, so report the
+    // derivatives as unguarded and let a `Bounded` integrator apply its own
+    // bound (DV-043).
     Ok(StateDerivatives {
         dphase: gradients[0].clone(),
         damplitude: gradients[1].clone(),
         dfrequency: gradients[2].clone(),
+        guarded: false,
     })
 }
 
