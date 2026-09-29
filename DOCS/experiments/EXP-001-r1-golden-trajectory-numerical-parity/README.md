@@ -1,21 +1,28 @@
 # EXP-001-r1 — Golden-trajectory numerical parity, re-run (track C1)
 
-**Status:** **DRAFT — FOLLOW-UP E2 AMENDMENT AWAITS INDEPENDENT REVIEW AND
-MAINTAINER APPROVAL** (2026-09-28 UTC). Independent review (Claude Sonnet 5)
-verified every E1 provenance/machinery claim against the repository; the
-maintainer approved the sample-size justification, the H2b three-way rule,
-and the storage budget (campaign plan §14.2 amendment #7). The DV-041
-binding capability is **CLOSED** on documented merge evidence (PR #25,
-`5615eda`, required CI green per `triage-dv043-handoff.md` §2); the
-wgpu H4 companion method and two-build order were **APPROVED as an E2
-method decision on 2026-09-29 UTC** (`e2-review.md` §8). DV-043 is
-**CLOSED** (merged `main` `9b79d2e`, required CI green, forced nightly
-`36525353031` attempt-2 `bench-regression` green); DV-044's governed
-ledger correction is **CLOSED** (S1–S4, hosted governance gate green);
-`M = 9b79d2e5b246bead1243074659dc99d049762a40` is incorporated into this
-campaign branch. See [`e2-review.md`](e2-review.md) §§5–8. **The
-pre-registration freezes only at E3's first `RUN-` creation on the clean
-campaign execution checkout `R`.**
+**Status:** **E3 EXECUTED 2026-09-29 UTC — PRE-REGISTRATION FROZEN; E4
+ANALYSIS OPEN.** The pre-registration froze at its first `RUN-` creation on
+2026-09-29T09:17:35Z at `F = 5d5ae3521317af47a11afa8d689935ac2fc0f447`. All
+six registered runs then executed from the clean campaign execution checkout
+`R = 5d5ae35…` on the green-main baseline
+`M = 9b79d2e5b246bead1243074659dc99d049762a40`: 72-case wgpu kernel-path,
+72-case CUDA kernel-path, 504-case corpus, 2× 14-case repeatability and the
+1,000-draw fuzz leg — zero aborts, every directory manifested
+([`log.md`](log.md)). **No hypothesis verdict exists yet.** E3 computed none
+by design; a verdict is produced only when E4 applies the frozen §8 decision
+rule to those artefacts.
+Every §10 entry gate closed before execution. Independent review
+(Claude Sonnet 5) verified every E1 provenance/machinery claim against the
+repository; the maintainer approved the sample-size justification, the H2b
+three-way rule and the storage budget (campaign plan §14.2 amendment #7), and
+approved the wgpu H4 companion method and two-build order as a follow-up E2
+method decision on 2026-09-29 UTC ([`e2-review.md`](e2-review.md) §8). DV-041
+is **CLOSED** on documented merge evidence (PR #25, `5615eda`, required CI
+green per `triage-dv043-handoff.md` §2); DV-043 is **CLOSED** (merged `main`
+`9b79d2e`, required CI green, forced nightly `36525353031` attempt-2
+`bench-regression` green); DV-044's governed ledger correction is **CLOSED**
+(S1–S4, hosted governance gate green). See
+[`e2-review.md`](e2-review.md) §§5–8.
 This is a new experiment record per campaign plan §10.4 item 4. The original
 EXP-001 record is immutable; corrections to it are errata.
 **Predecessor:** [`EXP-001`](../EXP-001-golden-trajectory-numerical-parity/README.md)
@@ -24,18 +31,19 @@ EXP-001 record is immutable; corrections to it are errata.
 (S1 complete, S2 PASS, S3 CLEAN, S4 complete).
 **Campaign plan row:** [`campaign-plan.md`](../campaign-plan.md) §2.1 EXP-001 / C1.
 
-The maintainer declared this E1 session, then the E2 session. The [draft
-pre-registration](preregistration.md), [E1 handoff](e1-handoff.md) and
-[E2 review](e2-review.md) record the prospective protocol, local
-validation, independent re-verification and the maintainer's E2 decisions.
-The original E2 approved three of
-four gates; the follow-up wgpu H4/two-build method was approved on
-2026-09-29 UTC (`e2-review.md` §8). DV-043's merge/nightly closure and
-DV-044's governed correction are **both CLOSED** (2026-09-29 UTC) and
-`M = 9b79d2e` is incorporated — every §10 entry gate is now closed; the
-first `RUN-` creation on `R` freezes the record and starts E3. Neither
-E1 nor the E2 method approvals themselves executed E3 or released
-session 0159.
+The maintainer declared the E1 and E2 sessions, then declared E3 and E4 as
+separate sessions in turn — campaign plan §12 rule 2 allows one E-stage per
+session, and the r1 stages carry no integer session number, so the register's
+next numbered session (0159) is unaffected by them. The
+[pre-registration](preregistration.md), [E1 handoff](e1-handoff.md),
+[E2 review](e2-review.md) and [E3 log](log.md) record the prospective
+protocol, local validation, independent re-verification, the maintainer's E2
+decisions and the execution itself. Because every §10 entry gate had closed,
+the first `RUN-` creation on `R` froze the record and E3 ran to completion;
+the pre-registration is never edited after that point. Neither E1, the E2
+method approvals, nor E3's execution released session 0159: the block lifts
+only on a non-reversal E5 verdict or a Project Plan §8.3 amendment
+(campaign plan §10.4 item 5).
 
 ## What this directory holds
 
