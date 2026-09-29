@@ -668,10 +668,47 @@ so session 0159, every experiment downstream of EXP-001 and 0194 remain
 BLOCKED until E5 reports this non-reversal result. E5 must restate §4.2's
 clamp-trip limitation for the 22 characterized cases and list the
 `149cf2d..M` baseline delta as a deviation. EXP-001's own `REFUTED` verdicts
-are not revised by this record. Session 0159 remains BLOCKED. See
+are not revised by this record. See
 [preregistration](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/preregistration.md),
 [E1 handoff](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md),
 [E2 review](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e2-review.md)
 and
 [E3 log](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/log.md).
-This declaration does not release 0159.
+EXP-001-r1 **E5 reported on 2026-09-29 UTC** (declared by MichaelMaillet;
+branch `campaign/exp001-r1-e5`, AI pair Qwen Code):
+[report](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/report.md)
+restates all five `CONFIRMED` verdicts with the §3 expected-versus-observed
+table, both 72-case H4 GPU legs in full, PD-1 through PD-6 (PD-5 being the
+`149cf2d..M` baseline delta §10 item 5 requires — 23 files, 2,253 insertions,
+34 deletions, being exactly DV-041/PR #25 and DV-043/PR #26 plus their
+documentation, with `R` identified as the experiment's distinct source SHA and
+not a second mid-experiment `main` change), ten threats to validity including
+§4.2's clamp-trip limitation restated for the 22 characterized cases, and the
+complete artefact index with every input run manifest digest and the output
+manifest digest. E4's two E5 obligations are discharged. Regeneration was
+re-verified in the E5 checkout at `46fea62`: all four committed-manifest output
+digests reproduced byte-identically and `git status` reported no change, making
+five byte-identical reproductions across three checkouts and six processes.
+Budget: 6.855 MiB of the 8 MiB r1 allocation, 12.784 MiB of the 16 MiB shared
+root, 12.777 MiB of the 64 MiB campaign cap, ~13 minutes of E3 wall time
+against 8 CPU hours, and zero hosted-CI hours charged to r1.
+**The §10.4 item 5 non-reversal condition is SATISFIED and no D1 correction
+cycle is triggered.** EXP-001's record gains an append-only erratum (**E-4**)
+recording that the condition its own E-3 described is met; its H1/H2a
+`REFUTED` verdicts, digests and artefacts are **not** revised. The Parity
+Report gains a dated admonition stating precisely what the corpus evidence now
+supports (485/504 native, 19 accepted only via the registered DV-007 clause,
+978 + 22 for the fuzz population), retaining every earlier admonition verbatim;
+the `CONFIRMATORY` label row still reads "None." and correctly so, since that
+row is scoped to C2/C3 production-scale measurements. A `CHANGELOG` entry
+announces the report.
+**0159, EXP-002 … EXP-008 and 0194 are RELEASED ON THE MAINTAINER'S
+VERIFICATION of that report (§13) — and are NOT released yet.** The §13
+verification block is unfilled, and Experimentation Standards §2 E5's exit gate
+requires an *approved* report, so the release is not in force. Nothing was
+pushed and no PR exists: §12 item 3 makes the E5 PR carry the whole r1 E1–E5
+range (none of it is on `main` yet), and opening it is a shared-state action
+awaiting authorization. The report's §14 records exactly what that PR will
+carry and that neither a tested head SHA nor a merge SHA is claimed. The next
+Project State Report must announce this report (Experimentation Standards §2
+E5); issuing PSR-040 is not this session's to do.

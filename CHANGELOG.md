@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001-r1 executed, adjudicated and reported — all five hypotheses
+  `CONFIRMED`, no D1 (2026-09-29 UTC).** The campaign plan §10.4 item 4 re-run
+  of EXP-001 completed E3→E5 on a new pre-registration, six new run directories
+  and its own frozen decision rule. E3 executed all six registered legs from
+  `R = 5d5ae3521317af47a11afa8d689935ac2fc0f447` over green-main baseline
+  `M = 9b79d2e5b246bead1243074659dc99d049762a40` — 72-case wgpu kernel-path,
+  72-case CUDA kernel-path, 504-case corpus, 2× 14-case repeatability and the
+  1,000-draw fuzz leg — with zero aborts and every directory manifested. E4
+  committed its analysis module *before* adjudicating (campaign plan §7.4
+  item 2) and applied the frozen §8 rule: **H1** 504/504 accepted (485
+  native-parity + 19 explained under the registered DV-007 clause, **zero**
+  unexplained breaches); **H2a** reported as `978 pointwise + 22 characterized`,
+  never as 1,000 pointwise passes; **H2b** both coherence metrics' 95 %
+  bootstrap CIs strictly inside their ±δ margins on 657 contributors each
+  (10,000 resamples, α = 0.05, seed `12455822396014146421`); **H3** 14/14
+  byte-identical in each of two separately manifested invocations with identical
+  canonical projections; **H4** 72/72 on **each** of CUDA and wgpu with zero
+  failed derivative elements, the wgpu leg identified by a post-dispatch
+  `backend_name` rather than inferred from capsule residency. The §10.4 D1 flag
+  is **not raised**, so no correction cycle is triggered. Every stored decision
+  and every H2b paired summary was recomputed from the retained per-array
+  records before adjudication, the 1,000-draw input stream was replayed and
+  matched per case, and the four registered outputs regenerate byte-identically
+  from a clean checkout. **This is a non-reversal verdict, so the condition
+  blocking session 0159, EXP-002 … EXP-008 and 0194 is met** — the release takes
+  effect on the maintainer's verification of the report, which is E5's exit gate.
+  EXP-001's own record stays immutable and its H1/H2a `REFUTED` verdicts are
+  **not** revised; an append-only erratum (E-4) records that the condition its
+  E-3 described is now satisfied. See
+  `DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/report.md`,
+  `.../analysis.md` and `.../report-manifest.json`.
+
 - **EXP-001-r1 pre-execution H4/wgpu amendment (proposed 2026-09-28
   UTC; H4/two-build method approved 2026-09-29 UTC, E3 still blocked).** The previously approved CUDA 72-case
   H4 leg gains a separate, required wgpu 72-case companion

@@ -80,6 +80,24 @@ CUDA and wgpu with zero failed derivative elements; see the
 **E4 does not release 0159** — §10.4 item 5 keys the release to E5's verdict,
 so session 0159 and every experiment downstream of EXP-001, plus 0194, remain
 **BLOCKED** until `EXP-001-r1` E5 reports.
+**`EXP-001-r1` E5 REPORTED 2026-09-29 UTC — non-reversal; no D1 correction
+cycle is triggered.** The [E5 report](EXP-001-r1-golden-trajectory-numerical-parity/report.md)
+restates all five `CONFIRMED` verdicts against §3's frozen predictions, reports
+both 72-case H4 GPU legs in full, and records PD-1…PD-6 — including PD-5, the
+`149cf2d..M` baseline delta §10 item 5 requires (23 files, 2,253 insertions,
+34 deletions: exactly DV-041/PR #25 and DV-043/PR #26 plus their documentation,
+with `R` identified as the experiment's distinct source SHA rather than a second
+mid-experiment `main` change) — ten threats to validity including §4.2's
+clamp-trip limitation restated for the 22 characterized cases, and the complete
+artefact index. Regeneration was re-verified in the E5 checkout at `46fea62`:
+all four committed output digests reproduced byte-identically. EXP-001's own
+record gains append-only erratum **E-4** and the Parity Report gains a dated
+admonition; **neither revises EXP-001's `REFUTED` verdicts**, which stand
+exactly as issued. **The §10.4 item 5 release condition is met, but the release
+takes effect only on the maintainer's verification of that report (§13), which
+is E5's exit gate and is not yet recorded** — so 0159, EXP-002 … EXP-008 and
+0194 remain **BLOCKED** until then. Nothing was pushed; §12 item 3 makes the E5
+PR carry the whole r1 E1–E5 range, and opening it awaits authorization.
 
 ## Layout
 
@@ -103,7 +121,7 @@ regenerate from them via `prin.reporting`.
 | Experiment | Track | Record root |
 |---|---|---|
 | EXP-001 | C1 | [`EXP-001-golden-trajectory-numerical-parity/`](EXP-001-golden-trajectory-numerical-parity/README.md) |
-| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **E4 ANALYSED 2026-09-29 UTC: all five hypotheses `CONFIRMED`, D1 flag not raised (non-reversal); E5 report pending, 0159 still BLOCKED until E5** |
+| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **E5 REPORTED 2026-09-29 UTC: all five hypotheses `CONFIRMED`, D1 not raised (non-reversal); maintainer verification pending, so 0159 stays BLOCKED until it is recorded** |
 | EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) |
 | EXP-003 | C2 | [`EXP-003-cpu-scaling-and-sweep-performance/`](EXP-003-cpu-scaling-and-sweep-performance/README.md) |
 | EXP-004 | C2 | [`EXP-004-gpu-kernels-and-torch-bridge-performance/`](EXP-004-gpu-kernels-and-torch-bridge-performance/README.md) |
