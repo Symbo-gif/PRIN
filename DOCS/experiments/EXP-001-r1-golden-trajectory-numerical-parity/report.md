@@ -303,7 +303,24 @@ leg's sits just *above* it and still passes, because
 `numpy.isclose(reference, produced, rtol, atol)` admits
 `|diff| <= atol + rtol * |produced|` rather than `atol` alone. Over each case's
 worst per-array absolute error the CUDA leg distributes `1e-7`=72 and the wgpu
-leg `1e-7`=67, `1e-6`=5.
+leg `1e-7`=67, `1e-6`=5 (72 cases each; `error-distributions.json` strata
+`kernel-cuda/derivative` and `kernel-wgpu/derivative`).
+
+**Two different decade histograms exist for these legs, and they are not the
+same quantity.** The figures just quoted are over each **case's worst** of its
+three arrays — 72 values per leg. `summary.json`'s
+`h4_backends[*].abs_diff_decade_histogram` is instead over **every retained
+comparator record** — 216 values per leg (72 cases × 3 arrays) — and so spreads
+across `0`, `1e-11`…`1e-7`. The `0` bucket holds **36** records on each leg,
+and all 36 are `dfrequency`: exactly half of that array's 72 records agree with
+the CPU reference bit-for-bit, while no `dphase` or `damplitude` record is
+exactly zero on either leg. *Why* half of the `dfrequency` records are exactly
+zero is not established here and no mechanism is asserted — that would be a
+kernel-implementation finding outside this protocol's scope. Both histograms are
+legitimate registered statistics under campaign plan §9.1 and both are reported,
+but the shared field name does not carry its unit. Nothing in a verdict depends
+on either; §9 item 11 records the ambiguity so the next analysis module labels
+it.
 
 **What E4 verified, and what it did not.** The driver retained comparator
 records, not the raw float32 derivative arrays, and §8 rule 7 forbids claiming
@@ -355,7 +372,7 @@ reuses none of EXP-001's run IDs or artefacts (campaign plan §10.4 item 4).
 | r1 fuzz leg, per-run exception | 6 MiB | **5,017,696 B = 4.785 MiB** | within |
 | Every other r1 run, generic per-run cap | 2 MiB each | corpus 1.836 MiB; wgpu 0.085; cuda 0.082; repeatability 0.033 each | within |
 | Campaign-wide tracked artefacts | 64 MiB | **13,397,377 B = 12.777 MiB** | within |
-| Generated reports / untracked diagnostics | 64 MiB working-space estimate | **10,506,347 B = 10.02 MiB** (four E4 outputs) | within |
+| Generated reports / untracked diagnostics | 64 MiB working-space estimate | **10,506,349 B = 10.02 MiB** (four E4 outputs; see erratum E-1) | within |
 | CPU wall time | 8 CPU hours (shared with EXP-001) | E3's six invocations span 09:17:35Z–09:30:39Z = **13 m 04 s**, plus two `maturin develop` builds (leg 2 recorded at 3 m 12 s); E4's analysis runs in seconds | far within |
 | GPU time | 2 GPU hours | The two kernel-path legs are single-derivative-step comparisons over 72 cases; the CUDA leg occupied 09:30:35Z–09:30:39Z. Minutes at most | far within |
 | Hosted-CI hours | 3 hours | **0** charged to r1 — no hosted campaign run was scheduled. The forced `nightly.yml` dispatch `36525353031` that gated DV-043's closure is a hotfix-session cost, disclosed here rather than silently attributed | within |
@@ -624,6 +641,18 @@ Consequences:
     input change there. That is a statement about the reference's conditioning.
     It is **not** evidence that PRIN reproduces those trajectories, and ill
     conditioning alone is not proof of chaos.
+11. **One output field name does not carry its unit.** `summary.json`'s
+    `h4_backends[*].abs_diff_decade_histogram` /
+    `rel_diff_decade_histogram` are decade histograms over **all 216 retained
+    comparator records** per leg, while `error-distributions.json`'s
+    `kernel-*/derivative` strata histograms of the same name are over the **72
+    per-case worst** values. Both are correct and both are registered §9.1
+    statistics, but a reader who assumes one unit will mis-read the other by a
+    factor of three in sample size. §4.5 states both explicitly. No verdict
+    depends on either. This is a naming defect in the E4 module rather than a
+    numerical one, and it is recorded here so that DV-040's re-audit gate
+    (EXP-002 E4, session 0162) — the next session to commit an analysis module
+    under the same §7.4 item 2 rule — labels histogram units in field names.
 
 ---
 
@@ -839,7 +868,8 @@ checkout:
 | DV-register gate | `python tools/check_dv_register_gates.py` | passed (44 DV rows against 198 session-register entries) |
 | skipif-guard executability | `python tools/check_skipif_probes.py` | passed |
 | Deviation-ledger consistency | `python tools/check_deviation_ledger.py DOCS/reports/038-project-state.md DOCS/reports/039-project-state.md` | passed (128 → 142 rows; no PSR is issued here, so this confirms the existing ledger is undisturbed) |
-| Documentation links | mechanical resolution of every relative link in the eight touched Markdown documents | **492 checked, 0 broken**; the RST admonition's cited repo paths and `report.md`'s in-page anchor also resolve |
+| Documentation links | mechanical resolution of every relative link in the eight touched Markdown documents | **494 checked, 0 broken**; the RST admonition's cited repo paths and `report.md`'s in-page anchor also resolve |
+| Report-figure cross-check | every quantitative claim in this report re-read from `summary.json`, `error-distributions.json`, `case-comparisons.json`, `report-manifest.json` and the on-disk artefact sizes, and compared programmatically | **194 assertions, all matching** — after correcting the one discrepancy it found (erratum **E-1**, a 2-byte stale total). Also surfaced the histogram-unit ambiguity now recorded as §9 item 11 and `analysis.md` erratum A-2 |
 
 ---
 
@@ -890,7 +920,9 @@ corrects and the original text is retained verbatim.
 
 | # | Date (UTC) | Corrects | Substance | Raised by |
 |---|---|---|---|---|
-| — | — | — | **None at issue.** No erratum has been raised against this report. | — |
+| **E-1** | 2026-09-29 | §5.2's "Generated reports / untracked diagnostics" row (and the same total quoted in [`analysis.md`](analysis.md), corrected there under its own erratum A-1) | The four generated outputs total **10,506,349 bytes**, not the 10,506,347 originally stated. The figure had been copied from a `dir` total taken *before* commit `f966921` added two backslash escapes to `summary.md`, which grew it from 14,035 to 14,037 bytes; every individual output digest and size quoted in §11.2 was and is correct, so the total simply disagreed with its own parts. Found by a mechanical cross-check of all 194 figures in this report against the committed artefacts, run before maintainer verification. **No verdict, digest, denominator, statistic or budget conclusion changes**: 10,506,349 B = 10.02 MiB, still far inside §9's 64 MiB working-space estimate. | This session's pre-verification figure cross-check |
+
+No other erratum has been raised against this report.
 
 Related append-only errata elsewhere, for traceability:
 
@@ -898,6 +930,9 @@ Related append-only errata elsewhere, for traceability:
   condition E-3 described — 0159 blocked until `EXP-001-r1`'s E5 verdict is not
   a reversal — has been met by this report, subject to §13's verification.
   EXP-001's own verdicts, digests and artefacts are **not** edited.
+- **[`analysis.md`](analysis.md) erratum A-1** (added by this session): the same
+  10,506,347 → 10,506,349 byte-total correction as E-1 above, in the E4 record
+  where the figure also appeared.
 
 ---
 

@@ -576,8 +576,9 @@ chaos, and no such claim is made.
 Generated deterministically into the gitignored
 `DOCS/test_and_benchmark_results/EXP-001-r1/` (campaign plan §7.4 item 4) and
 digested in the committed [`report-manifest.json`](report-manifest.json). The
-four outputs are §8's fixed set; total generated size 10,506,347 bytes, inside
-§9's 64 MiB working-space estimate, and nothing in the tracked tree grew.
+four outputs are §8's fixed set; total generated size 10,506,349 bytes (see
+erratum **A-1**), inside §9's 64 MiB working-space estimate, and nothing in the
+tracked tree grew.
 
 | Output | bytes | SHA-256 |
 |---|---|---|
@@ -671,3 +672,15 @@ input index reproduces every digest.
   its own D1 history are **not** revised by this experiment; r1 is a new record
   on a new population of runs, and any statement about the predecessor belongs
   in its erratum pointer, not here.
+
+## Errata
+
+Corrections to this record are errata, never silent edits (Experimentation
+Standards §1.3/§4; campaign plan §12 item 6). No erratum below changes a
+hypothesis verdict, denominator, tolerance, seed or decision rule — all five
+verdicts and the "D1 not raised" determination stand exactly as issued.
+
+| # | Date (UTC) | Corrects | Substance | Raised by |
+|---|---|---|---|---|
+| **A-1** | 2026-09-29 | "Outputs and regeneration": the four generated outputs' total size | The total is **10,506,349 bytes**, not the 10,506,347 originally written here. The figure was copied from a `dir` total taken *before* commit `f966921` added two backslash escapes to `summary.md`, growing it from 14,035 to 14,037 bytes. The per-output sizes and digests in the table immediately above were always correct — `case-comparisons.json` 5,897,415 + `error-distributions.json` 4,558,744 + `summary.json` 36,153 + `summary.md` 14,037 = 10,506,349 — so the stated total simply disagreed with its own parts. **No verdict, digest, denominator or statistic changes**, and 10.02 MiB remains far inside §9's 64 MiB working-space estimate. The same figure was repeated in `report.md` §5.2 and is corrected there under that report's erratum E-1. | E5's mechanical cross-check of all 194 figures in `report.md` against the committed artefacts (2026-09-29, before maintainer verification) |
+| **A-2** | 2026-09-29 | A clarification, not a correction: the H4 decade histograms in `summary.json` | `summary.json`'s `h4_backends[*].abs_diff_decade_histogram` and `rel_diff_decade_histogram` are computed over **all 216 retained comparator records** per leg (72 cases × 3 arrays), whereas `error-distributions.json`'s `kernel-*/derivative` strata histograms of the same name are over the **72 per-case worst** values. Both are correct registered §9.1 statistics and the analysis module's code and docstrings describe each accurately, but the shared field name does not carry its unit, and this record's H4 section quotes the per-case form without saying that the `summary.json` field differs. Nothing in this record is numerically wrong and no verdict depends on either; recorded so a reader comparing the two files is not misled, and so DV-040's re-audit gate (EXP-002 E4, session 0162) — the next session to commit an analysis module under the same §7.4 item 2 rule — labels histogram units in field names. `report.md` §4.5 and §9 item 11 state both forms explicitly. | E5's mechanical cross-check, which flagged the two histograms as disagreeing before the difference in unit was established |
