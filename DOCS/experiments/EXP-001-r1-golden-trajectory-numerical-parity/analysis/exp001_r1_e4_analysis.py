@@ -526,6 +526,28 @@ def _canonical_bytes(payload: Any) -> bytes:
     return (text + "\n").encode("utf-8")
 
 
+def _path_tail(value: str) -> str:
+    r"""Return the final component of a stored path, under either separator.
+
+    The E3 artefacts record absolute Windows paths (``config.out_dir``,
+    ``config.prin_extension``). ``pathlib.Path`` is platform-aware, so on a POSIX
+    host ``Path("C:\\a\\RUN-x").name`` returns the *whole* string as a single
+    component and a basename comparison silently fails — which would make this
+    analysis unrunnable off Windows and break campaign plan §7.4 step 5's
+    clean-checkout regeneration on the campaign's optional cross-OS legs. Only
+    the final component is ever wanted here, never the prefix, so the separators
+    are normalized explicitly instead of delegated to ``Path``.
+
+    Args:
+        value: A stored path string, Windows- or POSIX-style.
+
+    Returns:
+        The final non-empty path component, or ``""`` for a value that has none.
+    """
+    normalized = value.replace("\\", "/").rstrip("/")
+    return normalized.rsplit("/", 1)[-1]
+
+
 def _safe_temp_root(repository_root: Path) -> tuple[Path, ...]:
     """The system temp directory, omitted if it would legitimize the checkout.
 
@@ -980,14 +1002,15 @@ def _verify_envelope(payload: dict[str, Any], leg: RunLeg) -> None:
     )
     out_dir = config.get("out_dir")
     _require(
-        isinstance(out_dir, str) and Path(out_dir).name == leg.run_id,
+        isinstance(out_dir, str) and _path_tail(out_dir) == leg.run_id,
         f"{leg.run_id}: config.out_dir {out_dir!r} does not name this run "
-        "directory (only its basename is checked; the absolute prefix is the "
-        "E3 execution checkout, not this one)",
+        "directory (only its final path component is checked, under either "
+        "separator convention, because the absolute prefix is the E3 execution "
+        "checkout and may be from another platform)",
     )
     extension = config.get("prin_extension")
     _require(
-        isinstance(extension, str) and Path(extension).name == "_prin_core.pyd",
+        isinstance(extension, str) and _path_tail(extension) == "_prin_core.pyd",
         f"{leg.run_id}: config.prin_extension {extension!r} does not name the "
         "built extension",
     )

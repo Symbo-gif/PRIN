@@ -1221,11 +1221,42 @@ def test_verify_envelope_rejects_an_iteration_count_contradicting_the_cases():
 
 
 def test_verify_envelope_checks_the_basename_of_the_execution_out_dir():
-    """Only the basename is checked; the absolute prefix is E3's checkout."""
+    """Only the final component is checked; the absolute prefix is E3's checkout."""
     payload = _payload()
     payload["config"]["out_dir"] = "D:\\elsewhere\\some-other-run"
     with pytest.raises(analysis.AnalysisError, match="out_dir"):
         analysis._verify_envelope(payload, _corpus_leg())
+
+
+def test_path_tail_reads_a_final_component_under_either_separator():
+    """The E3 artefacts store Windows paths; the analysis must also run on POSIX.
+
+    ``pathlib.Path`` is platform-aware, so on Linux ``Path("C:\\\\a\\\\RUN-x").name``
+    returns the whole string as one component. Hosted CI caught this: the
+    envelope check passed on the Windows host that produced the artefacts and
+    failed on every ubuntu leg.
+    """
+    assert analysis._path_tail("C:\\dev\\PRIN-r1\\benchmarks\\RUN-1") == "RUN-1"
+    assert analysis._path_tail("/home/runner/work/PRIN/benchmarks/RUN-1") == "RUN-1"
+    assert analysis._path_tail("C:\\a\\b\\_prin_core.pyd") == "_prin_core.pyd"
+    assert analysis._path_tail("/a/b/_prin_core.pyd") == "_prin_core.pyd"
+    assert analysis._path_tail("RUN-1") == "RUN-1"
+    assert analysis._path_tail("C:\\a\\RUN-1\\") == "RUN-1"
+    assert analysis._path_tail("") == ""
+
+
+def test_verify_envelope_accepts_a_posix_recorded_out_dir_and_extension():
+    """A cross-OS regeneration must not fail on the platform that reads it."""
+    leg = _corpus_leg()
+    payload = _payload()
+    payload["config"]["out_dir"] = f"/home/runner/work/PRIN/PRIN/{leg.run_id}"
+    payload["config"]["prin_extension"] = (
+        "/home/runner/work/PRIN/PRIN/python/prin/_prin_core.pyd"
+    )
+    analysis._verify_envelope(payload, leg)
+    payload["config"]["out_dir"] = "/home/runner/work/some-other-run"
+    with pytest.raises(analysis.AnalysisError, match="out_dir"):
+        analysis._verify_envelope(payload, leg)
 
 
 def test_verify_envelope_requires_the_fuzz_stream_fingerprint():

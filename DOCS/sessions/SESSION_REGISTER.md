@@ -560,7 +560,7 @@ introduction and are not retroactively added here; this table starts with
 | 0156 | 7 | EXP-001/C1 | E3 — Execution | [Golden-trajectory numerical parity](phase-7/0156-exp001-e3-golden-trajectory-numerical-parity.md) | COMPLETE |
 | 0157 | 7 | EXP-001/C1 | E4 — Analysis | [Golden-trajectory numerical parity](phase-7/0157-exp001-e4-golden-trajectory-numerical-parity.md) | COMPLETE |
 | 0158 | 7 | EXP-001/C1 | E5 — Report | [Golden-trajectory numerical parity](phase-7/0158-exp001-e5-golden-trajectory-numerical-parity.md) | COMPLETE |
-| 0159 | 7 | EXP-002/C1 | E1 — Pre-registration | [API, benchmark-result, and reproduction parity](phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md) | BLOCKED |
+| 0159 | 7 | EXP-002/C1 | E1 — Pre-registration | [API, benchmark-result, and reproduction parity](phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md) | READY |
 | 0160 | 7 | EXP-002/C1 | E2 — Review and approval | [API, benchmark-result, and reproduction parity](phase-7/0160-exp002-e2-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
 | 0161 | 7 | EXP-002/C1 | E3 — Execution | [API, benchmark-result, and reproduction parity](phase-7/0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
 | 0162 | 7 | EXP-002/C1 | E4 — Analysis | [API, benchmark-result, and reproduction parity](phase-7/0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
