@@ -56,13 +56,30 @@ verdict. PR #24 merged as `149cf2d88ab6be401951b63d1d7e8fad209f52a5`
 entry evidence and its draft protocol are linked from the re-run record.
 `EXP-001-r1` E2 (2026-09-28 UTC) independently re-verified E1's claims
 (zero discrepancies) and the maintainer approved the sample-size,
-statistics-rule, and storage-budget gates; **E2 follow-up H4 method
-APPROVED 2026-09-29 UTC; NOT FROZEN; E3 BLOCKED on DV-043/DV-044 and
-clean M/R source identity.** DV-041 binding capability closed on
-PR #25/required CI. DV-043 is local and OPEN pending
-required-CI merge plus a green nightly; DV-044's governed ledger
-correction is also open. No E3 run/freeze; session 0159
-remains BLOCKED (see `e2-review.md` §8 in the re-run record).
+statistics-rule, and storage-budget gates; the **E2 follow-up H4 method was
+APPROVED 2026-09-29 UTC**, closing the last §10 entry gate. DV-041's binding
+capability closed on PR #25/required CI; DV-043 merged to `main` as `9b79d2e`
+(PR #26) with a green forced-nightly `bench-regression` (`36525353031`
+attempt 2); DV-044 closed through its own S1→S4 cycle; and
+`M = 9b79d2e…` was incorporated with `check_ci_green.py` green on all six
+required workflows (see `e2-review.md` §8 in the re-run record).
+**`EXP-001-r1` E3 EXECUTED 2026-09-29 UTC**: the pre-registration froze at its
+first `RUN-` creation at `F = 5d5ae35…` and all six registered runs executed
+from the clean campaign checkout `R = 5d5ae35…` — 72-case wgpu kernel-path
+(`wgpu<wgsl>` proven per case), 72-case CUDA kernel-path, 504-case corpus,
+2× 14-case repeatability and the 1,000-draw fuzz leg. Zero aborts, all
+manifested; see the [E3 log](EXP-001-r1-golden-trajectory-numerical-parity/log.md).
+**`EXP-001-r1` E4 ANALYSED 2026-09-29 UTC — all five hypotheses `CONFIRMED`,
+campaign plan §10.4 D1 flag NOT raised (a non-reversal detection)**: H1
+504/504 accepted (485 native-parity + 19 explained-dv007, zero unexplained
+breaches), H2a **978 pointwise + 22 characterized**, H2b both metrics' 95 % CIs
+strictly inside ±δ on 657 contributors each, H3 14/14 byte-identical in both
+invocations with identical separate-run projections, H4 72/72 on **each** of
+CUDA and wgpu with zero failed derivative elements; see the
+[E4 analysis record](EXP-001-r1-golden-trajectory-numerical-parity/analysis.md).
+**E4 does not release 0159** — §10.4 item 5 keys the release to E5's verdict,
+so session 0159 and every experiment downstream of EXP-001, plus 0194, remain
+**BLOCKED** until `EXP-001-r1` E5 reports.
 
 ## Layout
 
@@ -73,6 +90,8 @@ experiments/
     ├── README.md                 # skeleton: status, sessions, inherited rules (E0)
     ├── preregistration.md        # frozen at execution start (E1/E2)
     ├── log.md                    # execution log (E3)
+    ├── analysis/                 # committed E4 analysis code (campaign plan §7.4 item 2)
+    ├── analysis.md               # E4 analysis record: verdicts, deviations, threats
     ├── report.md                 # results vs expectations (E5)
     └── report-manifest.json      # SHA-256 of regenerated figures/tables (E4/E5)
 ```
@@ -84,7 +103,7 @@ regenerate from them via `prin.reporting`.
 | Experiment | Track | Record root |
 |---|---|---|
 | EXP-001 | C1 | [`EXP-001-golden-trajectory-numerical-parity/`](EXP-001-golden-trajectory-numerical-parity/README.md) |
-| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **E2 follow-up H4 method APPROVED 2026-09-29 UTC; NOT FROZEN; E3 BLOCKED on DV-043/DV-044 and clean M/R source identity** |
+| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **E4 ANALYSED 2026-09-29 UTC: all five hypotheses `CONFIRMED`, D1 flag not raised (non-reversal); E5 report pending, 0159 still BLOCKED until E5** |
 | EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) |
 | EXP-003 | C2 | [`EXP-003-cpu-scaling-and-sweep-performance/`](EXP-003-cpu-scaling-and-sweep-performance/README.md) |
 | EXP-004 | C2 | [`EXP-004-gpu-kernels-and-torch-bridge-performance/`](EXP-004-gpu-kernels-and-torch-bridge-performance/README.md) |

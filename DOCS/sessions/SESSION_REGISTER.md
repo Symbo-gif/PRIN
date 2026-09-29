@@ -624,9 +624,54 @@ proven per case), 72-case CUDA kernel-path, 504-case corpus,
 2×14 repeatability and 1,000-draw fuzz — zero aborts, all manifested;
 see [log](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/log.md).
 No verdict was computed at E3; E4 adjudication is a separate session.
-Session 0159 remains BLOCKED. See
+EXP-001-r1 **E4 analysed on 2026-09-29 UTC**: the r1-specific analysis
+module was committed at `f057ef0` **before** any adjudication ran (campaign
+plan §7.4 item 2 — the ordering the predecessor recorded as its PD-2 is met
+literally this time), then applied the frozen §8 rule to all six immutable
+E3 artefacts through an explicit run index, never a `RUN-*` glob:
+`verify_manifest` on every run directory, `environment.git_commit = R` on
+every record, each leg matched to its own E3 build-log extension hash, the
+corpus-manifest and 1,000-draw stream fingerprints re-derived (each fuzz
+case's `input_sha256` and spec checked against a replay of the pinned
+stream), every stored native/corrected/sensitivity decision and every H2b
+paired summary recomputed from the retained per-array records, and H2b
+delegated verbatim to `exp001_r1_driver.adjudicate_h2b`. **All five
+hypotheses are `CONFIRMED` and the §10.4 D1 flag is NOT raised — a
+non-reversal detection.** H1 504/504 accepted (485 native-parity + 19
+explained-dv007, zero unexplained breaches); H2a **978 pointwise + 22
+characterized**, zero unexplained eligible breaches; H2b both metrics' 95 %
+CIs strictly inside ±δ on 657 contributors each (bootstrap seed
+`12455822396014146421` = `Seed(0, 1).next_u64()`); H3 14/14 byte-identical in
+both invocations with identical separate-run projections; H4 72/72 on **each**
+of CUDA and wgpu with zero failed derivative elements, verified from the
+retained per-case `dlpack_devices`/`backend_name` proofs — no kernel re-run
+and no claimed independent `isclose` re-evaluation, per §8 rule 7. Zero cases
+aborted in any run. The four §8 outputs regenerate byte-identically from a
+clean detached checkout at `f966921` (campaign plan §7.4 step 5) and are
+digested in `report-manifest.json`. Local gate on the new code: ruff,
+`ruff format --check`, `mypy --strict`, interrogate 100 % (87/87), bandit and
+`snyk code test --severity-threshold=medium` all clean; 89 new tests in
+`tests/test_exp001_r1_e4_analysis.py` (DV-040's compensating control). Four
+deviations recorded: PD-1 (`prin.reporting`'s legacy-schema aggregators cannot
+render a hypothesis × verdict × denominator table, so it renders the
+output-summary section and the committed module renders the two registered
+tables), PD-2 (no figures, as §8 registers), PD-3 (the fuzz sidecar carries
+the campaign's registered `H2` tag while §2 splits it into H2a/H2b — the first
+adjudication attempt failed closed on the index, not the evidence), PD-4 (E4
+ran from a linked worktree on `campaign/exp001-r1-e4` because this session
+cannot run `git` in the E3 checkout; `python/`, `benchmarks/campaign/`,
+`tools/`, `parity/` and `crates/` are byte-identical to `R` and the `R`-built
+`_prin_core.pyd` was imported, not rebuilt). See
+[analysis record](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis.md).
+**E4 does not release 0159.** §10.4 item 5 keys the release to E5's verdict,
+so session 0159, every experiment downstream of EXP-001 and 0194 remain
+BLOCKED until E5 reports this non-reversal result. E5 must restate §4.2's
+clamp-trip limitation for the 22 characterized cases and list the
+`149cf2d..M` baseline delta as a deviation. EXP-001's own `REFUTED` verdicts
+are not revised by this record. Session 0159 remains BLOCKED. See
 [preregistration](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/preregistration.md),
-[E1 handoff](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md)
+[E1 handoff](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md),
+[E2 review](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e2-review.md)
 and
-[E2 review](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e2-review.md).
+[E3 log](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/log.md).
 This declaration does not release 0159.

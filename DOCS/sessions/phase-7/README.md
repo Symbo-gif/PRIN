@@ -86,3 +86,31 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 > OPEN pending required-CI merge plus a green nightly; DV-044's governed
 > ledger correction is also open. No E3 run/freeze; session 0159
 > remains BLOCKED.
+>
+> **EXP-001-r1 E3 EXECUTED 2026-09-29 UTC.** Every §10 entry gate closed
+> first: DV-043 merged to `main` as `9b79d2e` (PR #26) with a green forced
+> nightly `bench-regression` (`36525353031` attempt 2), DV-044 closed through
+> its own S1→S4 cycle, and `M = 9b79d2e…` was incorporated with
+> `check_ci_green.py` green on all six required workflows. The
+> pre-registration then froze at its first `RUN-` creation at
+> `F = 5d5ae35…`, and all six registered runs executed from the clean campaign
+> checkout `R = 5d5ae35…` — 72-case wgpu kernel-path (`wgpu<wgsl>` proven per
+> case), 72-case CUDA kernel-path, 504-case corpus, 2× 14-case repeatability
+> and the 1,000-draw fuzz leg. Zero aborts, every directory manifested; see
+> the [E3 log](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/log.md).
+> E3 computed no verdict. Session 0159 remains BLOCKED.
+>
+> **EXP-001-r1 E4 ANALYSED 2026-09-29 UTC — ALL FIVE HYPOTHESES `CONFIRMED`,
+> D1 FLAG NOT RAISED.** The r1-specific analysis module was committed before
+> adjudication (campaign plan §7.4 item 2) and applied the frozen §8 rule to
+> all six artefacts: H1 504/504 accepted (485 native-parity + 19
+> explained-dv007, zero unexplained breaches), H2a **978 pointwise + 22
+> characterized**, H2b both metrics' 95 % CIs strictly inside ±δ on 657
+> contributors each, H3 14/14 byte-identical in both invocations with
+> identical separate-run projections, H4 72/72 on **each** of CUDA and wgpu
+> with zero failed derivative elements. Zero cases aborted anywhere. The four
+> §8 outputs regenerate byte-identically from a clean checkout at `f966921`;
+> see the [E4 analysis record](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis.md).
+> **This is a non-reversal detection, but it does not release 0159**: §10.4
+> item 5 keys the release to E5's verdict. **0159 stays BLOCKED until
+> EXP-001-r1 E5 reports.**
