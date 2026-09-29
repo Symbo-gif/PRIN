@@ -1,16 +1,15 @@
 # EXP-001-r1 — E5 report: Golden-trajectory numerical parity, re-run (track C1)
 
-**Status:** **REPORT ISSUED — MAINTAINER VERIFICATION PENDING** (§13). The
-campaign plan §10.4 item 5 non-reversal condition is **satisfied** by the
-verdicts below; the release of session 0159 and every experiment downstream of
-EXP-001, plus 0194, takes effect on the maintainer's verification recorded in
-§13, which is this session's exit gate. Until then they remain **BLOCKED**.
+**Status:** **VERIFIED AND ACCEPTED** — maintainer verification recorded
+2026-09-29 UTC (MichaelMaillet); see §13. E5's exit gate is met. **Session
+0159, EXP-002 … EXP-008 and 0194 are RELEASED** from that verification, per
+campaign plan §10.4 item 5.
 **Verdicts:** **H1 `CONFIRMED`**, **H2a `CONFIRMED`**, **H2b `CONFIRMED`**,
 **H3 `CONFIRMED`**, **H4 `CONFIRMED`**.
 **Campaign plan §10.4 D1 flag: NOT RAISED.** No C1 conclusion reversal was
 detected at E4, so no correction cycle is triggered and nothing is blocked by
 this report.
-**Report date:** 2026-09-29 UTC.
+**Report date:** 2026-09-29 UTC (issued and verified the same day).
 **Session:** `EXP-001-r1-E5`, declared by MichaelMaillet. **Branch:**
 `campaign/exp001-r1-e5`, off `campaign/exp001-r1-e4` @ `46fea62`.
 **Operator / maintainer:** MichaelMaillet.
@@ -540,14 +539,16 @@ Consequences:
 2. **The block's condition is satisfied.** Session 0159 (EXP-002 E1), every
    experiment downstream of EXP-001 (EXP-002 … EXP-008) and session 0194 were
    blocked solely on this verdict being a non-reversal.
-3. **Release takes effect on the §13 verification, not on this sentence.**
+3. **Release took effect on the §13 verification, not on this report's issue.**
    Experimentation Standards §2 E5 and the E5 exit gate require an *approved*
-   report; §10.4 item 5 keys the release to "E5's verdict", and the verdict is
-   this report's. To keep the two requirements from being conflated, this report
-   records the condition as satisfied and the release as **pending the
-   maintainer's verification in §13**. The register and the phase-7 index say
-   the same, so no downstream session can read a release that has not been
-   granted.
+   report, and §10.4 item 5 keys the release to "E5's verdict". To keep the two
+   requirements from being conflated, this report as issued recorded the
+   condition as satisfied and the release as pending; the maintainer then
+   verified and accepted it on **2026-09-29 UTC** (§13), and **0159, EXP-002 …
+   EXP-008 and 0194 are released from that verification**. The register, the
+   phase-7 index and the record README were all written to say "released on
+   verification" while the block was unfilled, so no downstream session could
+   read a release that had not been granted.
 4. **The predecessor's record is not revised.** EXP-001's H1 and H2a remain
    `REFUTED` in its own immutable record; r1 is a separate experiment on
    separate runs, per §10.4 item 4. An append-only erratum (**E-4**) is added to
@@ -823,27 +824,36 @@ performed**, and §8 forbids any from changing these verdicts.
 | §10 item 5's both-72-case H4 GPU legs reported | AI pair | **done** — §7, under PD-6's stated reading |
 | Parity Report admonition + CHANGELOG note | AI pair | **done** — this session's commit |
 | EXP-001 erratum E-4 (append-only; no verdict changed) | AI pair | **done** — this session's commit |
-| **Maintainer verification of the analysis and acceptance of the E5 verdicts** | MichaelMaillet | **PENDING** — the block below is unfilled |
-| **Release of 0159 / EXP-002…EXP-008 / 0194** | MichaelMaillet | **PENDING §13 verification** — condition satisfied (§8), release not yet in force |
-| **E1–E5 pull request; PR head SHA + required-check results recorded** | MichaelMaillet / AI pair | **OPEN** — nothing pushed; §14 records why and what it will need |
+| **Maintainer verification of the analysis and acceptance of the E5 verdicts** | MichaelMaillet | **DONE — 2026-09-29 UTC.** Verified and accepted as reported; see the completed block below |
+| **Release of 0159 / EXP-002…EXP-008 / 0194** | MichaelMaillet | **DONE — IN FORCE 2026-09-29 UTC** on the verification below. Campaign plan §10.4 item 5's non-reversal condition is satisfied and E5's exit gate is now met, so the block is lifted |
+| **E1–E5 pull request; PR head SHA + required-check results recorded** | MichaelMaillet / AI pair | **AUTHORISED 2026-09-29 UTC, not yet opened** — nothing has been pushed. §14 records the range the PR will carry and the fact that neither a tested head SHA nor a merge SHA is claimed; §14.1 is completed by a docs-only addendum once the checks report |
 | Announcement of this report in the next Project State Report | next PSR session | **OPEN** — Experimentation Standards §2 E5; PSR-040 is not this session's to issue |
-| Fresh-context independent review of this report before approval | recommended | **OPEN** — §9 item 9; not required by the plan, offered because E4 and E5 share one AI pair |
+| Fresh-context independent review of this report | recommended | **NOT TAKEN UP before verification.** §9 item 9 remains a standing limitation: E4 and E5 share one AI pair, so the maintainer verified without a separate fresh-context review having been run. The compensating controls in §9 item 9 stand, and a post-hoc review remains available and would be recorded as an erratum if it found anything |
 
-**Maintainer verification block** — to be completed at acceptance:
+**Maintainer verification block** — completed at acceptance:
 
 ```text
-Verified by: MichaelMaillet           Date (UTC): ____________
-Verdicts accepted as reported (H1/H2a/H2b/H3/H4 all CONFIRMED):              [ ]
-"No D1 raised" and the non-reversal determination in §8 accepted:            [ ]
-PD-6's reading of §10 item 5 (report both legs; execute none at E5) accepted:[ ]
-Release of 0159, EXP-002…EXP-008 and 0194 authorised on that verification:   [ ]
-Opening the E1–E5 pull request authorised:                                   [ ]
+Verified by: MichaelMaillet           Date (UTC): 2026-09-29
+Verdicts accepted as reported (H1/H2a/H2b/H3/H4 all CONFIRMED):              [x]
+"No D1 raised" and the non-reversal determination in §8 accepted:            [x]
+PD-6's reading of §10 item 5 (report both legs; execute none at E5) accepted:[x]
+Release of 0159, EXP-002…EXP-008 and 0194 authorised on that verification:   [x]
+Opening the E1–E5 pull request authorised:                                   [x]
 ```
 
-Recorded in-session by the maintainer (Experimentation Standards §2 E5 and §4
-"reports state which analyses were drafted by the AI pair and verified by the
-maintainer"; campaign plan §2.2). **Acceptance of the verdicts is what releases
-the block**: §8 item 3 explains why this report does not release it by itself.
+Recorded in-session by the maintainer on 2026-09-29 UTC, in response to this
+session's request that he complete the block (Experimentation Standards §2 E5
+and §4 "reports state which analyses were drafted by the AI pair and verified by
+the maintainer"; campaign plan §2.2 "every E5 verdict acceptance"). **Acceptance
+of the verdicts is what releases the block**: §8 item 3 explains why this report
+did not release it by itself, and the release is therefore in force from this
+verification rather than from the report's issue.
+
+The PR authorization is recorded as given but **not exercised**: pushing to a
+remote and opening a pull request are shared-state actions, and this session
+committed to a separate explicit confirmation before performing them even though
+the authorization is on file. §14 states exactly what the PR will carry so that
+confirmation can be given against a known scope.
 
 **Security and quality gates for this session.** No first-party source in any
 Snyk-supported language and no dependency manifest changed in this session — the
@@ -875,12 +885,14 @@ checkout:
 
 ## 14. Pull request and CI record (campaign plan §12 item 3)
 
-**No pull request exists yet and nothing has been pushed.** Campaign plan §12
-item 3 requires each E-session to commit locally at its exit gate on its own
+**Opening the pull request is AUTHORISED (§13, 2026-09-29 UTC) but has NOT been
+done: nothing has been pushed and no PR exists.** Campaign plan §12 item 3
+requires each E-session to commit locally at its exit gate on its own
 `campaign/<session>-<exp>-<stage>` branch, with `main` PR-only under ruleset
 `22150076`, and the E5 session's PR to carry the E1–E5 range. Pushing and
-opening that PR are shared-state actions this session was not authorized to
-take, so they are recorded here as the next step rather than performed.
+opening that PR are shared-state actions; the authorization is on file in §13,
+and this session committed to a separate explicit confirmation before exercising
+it, against the scope stated here.
 
 **Range the PR will carry.** Unlike the predecessor — whose E1/E2 reached `main`
 early through PR #20 — **none** of EXP-001-r1's stages is on `main` yet. The PR

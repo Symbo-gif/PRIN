@@ -1,9 +1,17 @@
 # Session 0159 — EXP-002 / C1 E1: Pre-registration — API, benchmark-result, and reproduction parity
 
-**Status:** BLOCKED — EXP-001 raised a campaign plan §10.4 D1 at E5
-(session 0158); this session is released only after the four contingency
-correction sessions close and `EXP-001-r1` returns a non-reversal verdict
-(campaign plan §3.3, §10.4 items 2–5)  
+**Status:** RELEASED 2026-09-29 UTC — may begin. This session had been blocked
+by the campaign plan §10.4 D1 that EXP-001 raised at E5 (session 0158). Both
+release conditions are now met: the four contingency correction sessions closed
+(S1→S4, 2026-09-27), and `EXP-001-r1` returned a **non-reversal** E5 verdict —
+all five hypotheses `CONFIRMED`, D1 flag not raised — which MichaelMaillet
+verified and accepted on 2026-09-29 UTC, meeting E5's exit gate (campaign plan
+§3.3, §10.4 items 2–5). No Project Plan §8.3 amendment was needed. See
+[`EXP-001-r1/report.md`](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/report.md)
+§1, §8 and §13. **Note for this session's entry evidence:** DV-040's re-audit
+gate falls at EXP-002 E4 (session 0162), and `EXP-001-r1`'s report §9 item 11
+records a histogram-unit labelling defect that 0162's analysis module should not
+repeat.  
 **Roadmap phase:** 7 — Experimentation campaign and stable release  
 **Execution unit:** EXP-002 / C1  
 **Session type:** E1 — Pre-registration  

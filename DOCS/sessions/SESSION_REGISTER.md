@@ -712,3 +712,27 @@ awaiting authorization. The report's §14 records exactly what that PR will
 carry and that neither a tested head SHA nor a merge SHA is claimed. The next
 Project State Report must announce this report (Experimentation Standards §2
 E5); issuing PSR-040 is not this session's to do.
+**EXP-001-r1 E5 VERIFIED AND ACCEPTED 2026-09-29 UTC — THE CAMPAIGN BLOCK IS
+LIFTED.** MichaelMaillet completed the report's §13 verification block on
+2026-09-29 UTC, accepting all five `CONFIRMED` verdicts, the "no D1 raised"
+non-reversal determination, and PD-6's reading of §10 item 5 (report both
+72-case H4 legs; execute none at E5). E5's exit gate is therefore met and,
+under campaign plan §10.4 item 5, **session 0159 (EXP-002 E1), every experiment
+downstream of EXP-001 (EXP-002 … EXP-008) and session 0194 are RELEASED** and
+may proceed in campaign plan §3's dependency order. No Project Plan §8.3
+amendment was needed: a confirmed parity result is not a changed conclusion. The
+same verification **authorizes opening the E1–E5 pull request**, which has not
+been exercised — nothing is pushed and no PR exists, and the report's §14
+records the exact range that PR will carry (the whole r1 E1–E5 span; none of it
+is on `main` yet, and DV-041/DV-043 are not in its delta because the campaign
+branch already incorporated `M` via `b3b4a92`). Before verification the report's
+194 quoted figures were cross-checked programmatically against the committed
+artefacts, which found one real error — the four generated outputs total
+10,506,349 bytes, not 10,506,347 — corrected in both this record and
+`analysis.md` under errata **E-1**/**A-1** with the original figures retained in
+the erratum text, plus a histogram-unit ambiguity recorded as report §9 item 11
+and `analysis.md` **A-2** for DV-040's re-audit gate at EXP-002 E4. §9 item 9
+stands as a disclosed limitation: E4 and E5 share one AI pair, and no
+fresh-context independent review was run before verification. Still open: the
+E1–E5 PR and its §14.1 tested-head-SHA/required-check addendum, and announcement
+of the report in the next Project State Report. **EXP-001-r1 is COMPLETE.**

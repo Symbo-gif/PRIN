@@ -435,3 +435,54 @@ No deferred-validation row is closed by this note: `DV-040` retains its
 EXP-002 E4 re-audit gate, and the `DV-036`/`DV036-F5` gates remain open.
 Sessions `0159`–`0194` remain **BLOCKED** until `EXP-001-r1` returns a
 non-reversal verdict.
+
+## EXP-001-r1 E3–E5 complete — non-reversal; sessions 0159–0194 released — 2026-09-29 UTC
+
+`EXP-001-r1` executed (E3, six runs from `R = 5d5ae35…` over baseline
+`M = 9b79d2e…`, zero aborts), was adjudicated (E4, analysis code committed
+before adjudication per campaign plan §7.4 item 2) and reported (E5) on
+2026-09-29 UTC. **All five hypotheses are `CONFIRMED` and the campaign plan
+§10.4 D1 flag is not raised** — H1 504/504 accepted (485 native-parity + 19
+explained-dv007, zero unexplained breaches), H2a 978 pointwise + 22
+characterized, H2b both metrics' 95 % CIs strictly inside ±δ on 657
+contributors each, H3 14/14 byte-identical across two separately manifested
+invocations, H4 72/72 on **each** of CUDA and wgpu. MichaelMaillet verified and
+accepted the report the same day, completing its §13 block and meeting E5's exit
+gate.
+
+**The block recorded in the two notes above is lifted.** Sessions `0159`–`0194`
+are **RELEASED** under campaign plan §10.4 item 5 and may proceed in §3's
+dependency order; no Project Plan §8.3 amendment was needed, because a confirmed
+parity result is not a changed conclusion. `EXP-001`'s own record is **not**
+revised — its H1/H2a `REFUTED` verdicts stand exactly as issued, and it gains
+only the append-only errata E-4 and E-5.
+
+**No deferred-validation row is closed by this note.**
+
+* `DV-040` remains **OPEN** with its EXP-002 E4 / session `0162` re-audit gate,
+  and gains a **second instance**: `EXP-001-r1`'s E4 analysis module
+  (`DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py`)
+  is again a record-root module outside `python.yml`'s lint/type/SAST paths,
+  again gated only locally (ruff, `ruff format --check`, `mypy --strict`,
+  interrogate 100 % (87/87), bandit, `snyk code test --severity-threshold=medium`
+  0 issues), again compensated by placing its 89 tests in `tests/`. Two
+  consecutive experiments producing the same gap is the evidence `0162`'s
+  re-audit exists to weigh. `0162` also inherits one concrete item: `EXP-001-r1`
+  report §9 item 11 and `analysis.md` erratum A-2 record that
+  `summary.json`'s `h4_backends[*].abs_diff_decade_histogram` is over all 216
+  retained comparator records while `error-distributions.json`'s same-named
+  strata histogram is over the 72 per-case worst values — correct statistics,
+  but a field name that carries no unit. The next analysis module should label
+  histogram units in its field names.
+* `DV-036`'s reference-host re-baseline gates before `0168` and `0173`, and
+  `DV036-F5` at `0166`, remain **OPEN** — but they are no longer additionally
+  gated behind the EXP-001 block, so those sessions are now reachable.
+* `DV-042` (`crates/prin-sim/src/gpu.rs` module-doc links fail
+  `cargo doc --features wgpu`) remains OPEN and is untouched by this note.
+
+The E1–E5 pull request that campaign plan §12 item 3 requires is **authorized by
+the same verification but not yet opened**: nothing has been pushed, none of the
+r1 range is on `main`, and `report.md` §14 records the exact range that PR will
+carry. The report must still be announced in the next Project State Report
+(Experimentation Standards §2 E5); PSR-039's "r1 verification pending" entries
+are point-in-time and are superseded there, not edited here.
