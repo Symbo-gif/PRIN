@@ -1134,10 +1134,12 @@ def _comparison_violation(
     re-evaluation of ``numpy.isclose``: the raw arrays are absent by design and
     §8 rule 7 forbids claiming otherwise. What the registered rule soundly
     implies is checked — ``within_tolerance`` must equal ``failed_count == 0``;
-    a breach means at least one element exceeded ``atol + rtol * |operand|``,
-    which is never below ``atol``, so ``max_abs_diff`` must exceed ``atol``; a
-    zero maximum absolute difference must force every relative difference to
-    zero; counts must be non-negative, ordered and bounded by the case shape.
+    a breach means at least one element exceeded
+    ``atol + rtol * abs(produced)`` (pre-registration §1.1: the relative term
+    uses ``isclose``'s **second** operand), which is never below ``atol``, so
+    ``max_abs_diff`` must exceed ``atol``; a zero maximum absolute difference
+    must force every relative difference to zero; counts must be non-negative,
+    ordered and bounded by the case shape.
 
     Args:
         record: One stored comparison object.

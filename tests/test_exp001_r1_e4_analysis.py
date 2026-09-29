@@ -277,6 +277,19 @@ def test_extension_hashes_are_distinct_and_bound_to_their_own_backend_label():
         assert by_label[label].extension_sha256 == analysis.CUDA_EXTENSION_SHA256
 
 
+def test_fuzz_sidecar_tag_is_h2_while_the_analysis_adjudicates_h2a_and_h2b():
+    """The sidecar carries the campaign's registered tag; §2 splits it."""
+    by_label = {leg.label: leg for leg in analysis.RUN_LEGS}
+    assert by_label["r1-fuzz-cpu"].hypotheses == ("H2",)
+    assert analysis.ADJUDICATED_HYPOTHESES["r1-fuzz-cpu"] == ("H2a", "H2b")
+    assert set(analysis.legacy._VALID_HYPOTHESES) == {"H1", "H2", "H3", "H4"}
+    for leg in analysis.RUN_LEGS:
+        assert set(leg.hypotheses) <= analysis.legacy._VALID_HYPOTHESES
+    for label in by_label:
+        if by_label[label].mode != "fuzz":
+            assert analysis.ADJUDICATED_HYPOTHESES[label] == by_label[label].hypotheses
+
+
 def test_main_baseline_and_execution_commit_are_distinct():
     """§5.1 keeps M, R and F as distinct roles that are never casually equated."""
     assert analysis.MAIN_BASELINE != analysis.EXECUTION_COMMIT
