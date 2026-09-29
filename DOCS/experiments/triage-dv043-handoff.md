@@ -334,6 +334,16 @@ claim is that it changes no value.
 | Sphinx `-W --keep-going -b html`, `DOCS/sphinx/_build` deleted first | build succeeded, `[new config] 35 added, 0 changed, 0 removed`, all 35 sources read and written — closes DV043-F1's Sphinx half |
 | `cargo llvm-cov -p prin-dynamics` | exit 0; 309 lib + 59 integration parity tests pass instrumented; table in §9.3 |
 
+The 59 integration tests are worth naming, because they are independent
+evidence on precisely the path this fix touches and they were not written for
+it: `parity_models` covers `parity_kuramoto_sparse_knn_matches_prinet`,
+`parity_hopf_sparse_knn_matches_prinet` and
+`parity_stuart_landau_sparse_knn_matches_prinet` — the three sparse k-NN models
+whose `StateDerivatives::new` clamp now makes the integrator skip its pass —
+and `parity_integrators` covers 23 Euler/RK4/RK45/Exponential/MultiRate cases
+against PRINet 3.0 references. All pass, instrumented, after the change. They
+also ran in the pre-remediation `cargo test --workspace` at 1603/0/1.
+
 The first Sphinx attempt exited 0 but was **not** a clean build — its log read
 "loading pickled environment … 0 added, 2 changed", so it had reused
 `_build/doctrees`. `AGENTS.md` forbids reporting a Sphinx result from a reused
