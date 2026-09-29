@@ -826,7 +826,7 @@ performed**, and §8 forbids any from changing these verdicts.
 | EXP-001 erratum E-4 (append-only; no verdict changed) | AI pair | **done** — this session's commit |
 | **Maintainer verification of the analysis and acceptance of the E5 verdicts** | MichaelMaillet | **DONE — 2026-09-29 UTC.** Verified and accepted as reported; see the completed block below |
 | **Release of 0159 / EXP-002…EXP-008 / 0194** | MichaelMaillet | **DONE — IN FORCE 2026-09-29 UTC** on the verification below. Campaign plan §10.4 item 5's non-reversal condition is satisfied and E5's exit gate is now met, so the block is lifted |
-| **E1–E5 pull request; PR head SHA + required-check results recorded** | MichaelMaillet / AI pair | **AUTHORISED 2026-09-29 UTC, not yet opened** — nothing has been pushed. §14 records the range the PR will carry and the fact that neither a tested head SHA nor a merge SHA is claimed; §14.1 is completed by a docs-only addendum once the checks report |
+| **E1–E5 pull request; PR head SHA + required-check results recorded** | MichaelMaillet / AI pair | **DONE — PR #28 opened and green 2026-09-29 UTC.** §14.1 records the tested head SHA `ce8b656` and `check_ci_green.py`'s verbatim `RESULT: all required workflows green` (rust, python, parity, repro, snyk, gpu), 27 checks successful, 1 skipped, 0 failed, PR `MERGEABLE`/`CLEAN`. No merge SHA is claimed — §12 item 3 assigns that to the next governed session |
 | Announcement of this report in the next Project State Report | next PSR session | **OPEN** — Experimentation Standards §2 E5; PSR-040 is not this session's to issue |
 | Fresh-context independent review of this report | recommended | **NOT TAKEN UP before verification.** §9 item 9 remains a standing limitation: E4 and E5 share one AI pair, so the maintainer verified without a separate fresh-context review having been run. The compensating controls in §9 item 9 stand, and a post-hoc review remains available and would be recorded as an erratum if it found anything |
 
@@ -886,42 +886,111 @@ checkout:
 
 ## 14. Pull request and CI record (campaign plan §12 item 3)
 
-**Opening the pull request is AUTHORISED (§13, 2026-09-29 UTC) but has NOT been
-done: nothing has been pushed and no PR exists.** Campaign plan §12 item 3
-requires each E-session to commit locally at its exit gate on its own
-`campaign/<session>-<exp>-<stage>` branch, with `main` PR-only under ruleset
-`22150076`, and the E5 session's PR to carry the E1–E5 range. Pushing and
-opening that PR are shared-state actions; the authorization is on file in §13,
-and this session committed to a separate explicit confirmation before exercising
-it, against the scope stated here.
+**PR #28 is OPEN** — <https://github.com/Symbo-gif/PRIN/pull/28>, base `main`,
+head `campaign/exp001-r1-e5`, opened 2026-09-29 UTC under the §13
+authorization. Campaign plan §12 item 3 requires each E-session to commit
+locally at its exit gate on its own `campaign/<session>-<exp>-<stage>` branch,
+with `main` PR-only under ruleset `22150076`, and the E5 session's PR to carry
+the E1–E5 range; this PR is that PR. The authorization was exercised only after
+a separate explicit confirmation, as §13 records.
 
-**Range the PR will carry.** Unlike the predecessor — whose E1/E2 reached `main`
-early through PR #20 — **none** of EXP-001-r1's stages is on `main` yet. The PR
-will carry the whole r1 range: E1 (`3f04460`), E2 (`f68f9d0`), the pre-execution
-amendments and gate closures through `5d5ae35`, E3's six run directories
-(`2036870`), the DV-044 correction merged into the campaign branch (`9cda4e5`),
-E4 (`f057ef0`, `f966921`, `3270699`, `46fea62`) and E5 (this session). Its base
-is `origin/main`; note that the campaign branch already incorporated
-`M = 9b79d2e` via `b3b4a92`, so the PR's own delta against `main` is the r1
-record, driver, artefacts and the DV-044 tool correction — not DV-041 or DV-043,
-which reached `main` through PRs #25 and #26.
+**Range the PR carries.** Unlike the predecessor — whose E1/E2 reached `main`
+early through PR #20 — **none** of EXP-001-r1's stages was on `main` before this
+PR. It carries the whole r1 range: E1 (`3f04460`), E2 (`f68f9d0`), the
+pre-execution amendments and gate closures through `5d5ae35`, E3's six run
+directories (`2036870`), the DV-044 correction merged into the campaign branch
+(`9cda4e5`), E4 (`f057ef0`, `f966921`, `3270699`, `46fea62`) and E5
+(`cdefab3`, `1857a3a`, `0fff397`, `ce8b656`) — 31 commits at first push against
+`origin/main` @ `9b79d2e`, which is an ancestor of the head, so the branch was
+fast-forwardable and needed no rebase or merge. Note that the campaign branch
+already incorporated `M = 9b79d2e` via `b3b4a92`, so the PR's own delta against
+`main` is the r1 record, driver, artefacts and the DV-044 tool correction —
+**not** DV-041 or DV-043, which reached `main` through PRs #25 and #26.
 
-**What the report must not claim.** Per §12 item 3, the report records the
-**tested PR head SHA** and the required-check results available before approval;
-it must not claim the not-yet-created merge SHA. Neither exists, so neither is
-stated. When the PR is opened, this section is completed by a docs-only addendum
-commit naming the head the recorded checks actually ran against — the pattern
-the predecessor's §14.1 established, including its note that later review-response
-commits move the head and the *final* head's checks are the operative ones.
+**What this report does not claim.** Per §12 item 3 it records the **tested PR
+head SHA** and the required-check results available before approval; it never
+claims the not-yet-created merge SHA. No merge SHA exists and none is stated
+anywhere in this record.
 
-**Local branch state at issue of this report.**
+### 14.1 Tested head SHA and required-check results
+
+**Tested head SHA:** `ce8b65656131ee14c63e305adac6912d791da74b` (`ce8b656`,
+"fix(exp001-r1): PR #28 CI found two defects — POSIX paths and an invalid 0159
+status"), the head of `campaign/exp001-r1-e5`. Base: `origin/main` @ `9b79d2e`.
+**This is a tested head SHA, not a merge SHA.**
+
+This PR has had two heads, and the first one's failures are recorded rather than
+dropped:
+
+| Head | What it is | Check outcome |
+|---|---|---|
+| `0fff397` | the E5 report as issued and verified | **5 `test` legs FAILED** — `ubuntu-latest` 3.11/3.12/3.13 and `windows-latest` 3.11/3.13. Two distinct causes, both now errata: the analysis module was Windows-only (E-2 / `analysis.md` A-3), and session 0159's brief carried `RELEASED`, a status `tools/wp001_baseline.py`'s `validate_session_plan` does not allow, which broke three baseline validators with `session 0159: brief/register status mismatch` |
+| `ce8b656` | the fix for both, plus the errata | **27 success, 0 failed, 1 skipped — all required workflows green** |
+
+Green at `ce8b656`: `lint`, `governance`, `security`, `docs` (python), `fmt`,
+`clippy`, `clippy-strict`, `docs` (rust), `audit`, `bench-smoke`, `test-strict`,
+`test` (ubuntu 3.11/3.12/3.13), `test` (ubuntu rust), `test` (macos rust),
+`test` (windows 3.11/3.12/3.13), `test` (windows rust), `parity`,
+`detect_corpus`, `reproduce`, `Snyk Code`, `Secret Scan`, `gpu-cuda`,
+`gpu-wgpu`. Skipped: `Sourcery review` (the diff exceeds Sourcery's
+150,000-character limit — expected for an artefact-heavy PR; it produced no
+findings). Non-required and skipped for account reasons, producing no findings:
+`CodeRabbit` (this repository does not receive automatic reviews) and
+`Devin Review` (trial expired). **No review posted any inline finding**, so
+there was nothing to triage before merge. **Every leg that failed at `0fff397`
+is green at `ce8b656`**, including all three ubuntu Python legs that the
+POSIX-path fix addressed and the `governance` leg that the `READY` status fix
+addressed.
+
+The repository's own gate, verbatim:
+
+```text
+CI-green check — branch 'campaign/exp001-r1-e5', commit ce8b65656131ee14c63e305adac6912d791da74b
+  rust       green     — run 36614808149
+  python     green     — run 36614807911
+  parity     green     — run 36614807752
+  repro      green     — run 36614807682
+  snyk       green     — run 36614807669
+  gpu        green     — run 36614808081
+RESULT: all required workflows green
+```
+
+(`python tools/check_ci_green.py ce8b65656131ee14c63e305adac6912d791da74b
+--branch campaign/exp001-r1-e5 --limit 120`, exit `0`.) GitHub reported the PR
+`MERGEABLE` / `CLEAN` at the same head.
+
+An intermediate reading of this same head, taken while `gpu-wgpu` and the Rust
+Windows leg were still queued, reported `rust PENDING`, `gpu PENDING` and
+`RESULT: NOT green`. That was accurate then and is superseded now; it is
+mentioned only because "not green because two legs are queued" and "green" are
+different claims, and this subsection was written to the first one before the
+second became measurable. `gpu-wgpu` had been waiting on the campaign's single
+self-hosted `PRIN-GPU-Runner`, which `gpu-cuda` occupied from 19:09:37Z until it
+completed green.
+
+**Head supersession.** This §14.1 is itself a docs-only addendum commit, so it
+necessarily moves the branch head past `ce8b656` — exactly the situation the
+predecessor's §14.1 anticipated and named rather than hid. The SHA above is the
+head the tabulated checks actually ran against. **The head the maintainer
+approves for merge is the final head, and its check results are the operative
+ones**; the addendum changes no code, no artefact and no generated output, so
+its own run re-validates the same tree.
+
+**Obligation passed to the next governed session.** This report claims no merge
+SHA, because none existed when it was written. Per §12 item 3, after the merge
+the next governed session — session 0159 (EXP-002 E1), now `READY` — records the
+final merge SHA and pastes `check_ci_green.py <merge-SHA>` output into its own
+dependency/entry evidence, and a red merge push is dispositioned before that
+session proceeds.
+
+**Local branch state.**
 
 | Branch | Tip | Contents |
 |---|---|---|
 | `campaign/exp001-r1-e1` | `f68f9d0` | E1 pre-registration, E2 review (historical; superseded by the preexecution branch) |
 | `campaign/exp001-r1-preexecution` | `541fbfe` | E2 amendments, DV-043/DV-044 closure, `M` incorporated, E3 execution + log. Left untouched: this is the checkout `log.md` cites |
 | `campaign/exp001-r1-e4` | `46fea62` | E4 analysis code, tests, record, output manifest, status reconciliations |
-| `campaign/exp001-r1-e5` | this session | E5 report, erratum E-4, Parity Report admonition, CHANGELOG, register/index updates |
+| `campaign/exp001-r1-e5` | `ce8b656` (+ this addendum, committed locally) | E5 report, errata E-1/E-2, EXP-001 errata E-4/E-5, Parity Report admonition, CHANGELOG, register/index updates, and the two CI-found fixes. **This is PR #28's head branch** |
 
 ---
 
