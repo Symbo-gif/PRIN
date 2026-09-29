@@ -3,7 +3,10 @@
 
 This tool implements Phase 2 analytics recommendation R17. It parses the
 cumulative deviation-ledger table from one or two PRIN Project State Reports
-(``DOCS/reports/NNN-project-state.md``) and checks:
+(``DOCS/reports/NNN-project-state.md``) and checks. A report may carry a
+canonical six-column full snapshot or an explicitly marked six-column
+*delta* that is merged with its delegated ancestor; five-column local
+finding tables never stand in for the cumulative ledger (DV-044):
 
 1. Every commit hash referenced in a ledger row resolves via
    ``git cat-file -t``.
@@ -49,70 +52,127 @@ COMMIT_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
 
 _DELEGATION_RE = re.compile(r"PSR[- ]?0?(\d+[a-z]?)\s*§\s*3", re.IGNORECASE)
 
+_CANONICAL_HEADER = "| ID | Raised (cycle) | Severity | Summary | Status | Reference |"
+_LOCAL_HEADER = "| ID | Severity | Summary | Status | Reference |"
+_DELTA_MARKER = "**Cumulative ledger delta:**"
+_SEVERITIES = frozenset({"D1", "D2", "D3", "D4", "—"})
 
-def parse_ledger(path: Path) -> list[LedgerRow]:
-    """Parse the deviation-ledger table from a PSR file.
 
-    If the section contains no table rows but includes a delegation
-    pointer (e.g. "The full cumulative deviation ledger is maintained in
-    PSR-036 §3"), the canonical PSR is resolved relative to the same
-    ``DOCS/reports/`` directory and parsed instead.
+def _markdown_cells(line: str) -> list[str]:
+    """Split columns on unescaped pipes and retain escaped ones as content."""
+    return [cell.strip().replace(r"\|", "|") for cell in re.split(r"(?<!\\)\|", line)]
+
+
+def parse_ledger(path: Path, _seen: frozenset[Path] = frozenset()) -> list[LedgerRow]:
+    """Parse a canonical six-column ledger or an explicit inherited delta.
+
+    A full snapshot uses the `ID | Raised (cycle) | ...` header. A report
+    with only a PSR-NNN §3 pointer delegates to that report; a report with
+    a canonical table AND the explicit `Cumulative ledger delta` marker
+    merges its local rows with the ancestor. Five-column finding summaries
+    never masquerade as a complete cumulative table (DV-044).
+
+    Args:
+        path: Project State Report whose §3 ledger is to be read.
+        _seen: Ancestor paths already visited; guards delegation cycles.
+
+    Returns:
+        One row per finding ID, preserving inherited order and applying
+        only explicitly declared same-summary status updates.
+
+    Raises:
+        ValueError: For absent/cyclic delegation, missing canonical data,
+            duplicate IDs, malformed six-column rows, or changed summaries.
+        OSError: If a report cannot be read.
     """
+    resolved = path.resolve()
+    if resolved in _seen:
+        raise ValueError(f"cyclic PSR §3 delegation at {path}")
     text = path.read_text(encoding="utf-8")
-
-    # Locate the deviation-ledger section.
     section_match = re.search(r"##\s*3\.\s*Deviation ledger.*?\n", text)
     if section_match is None:
         raise ValueError(f"could not find '## 3. Deviation ledger' in {path}")
-
-    start = section_match.end()
-    remaining = text[start:]
-
-    # The table ends at the next level-2 heading or a completely blank line
-    # before one, or at the end of the file.
+    remaining = text[section_match.end() :]
     end_match = re.search(r"\n##\s+", remaining)
     if end_match is not None:
         remaining = remaining[: end_match.start()]
 
     rows: list[LedgerRow] = []
+    ids: set[str] = set()
+    in_canonical_table = False
+    has_local_finding_table = False
     for raw_line in remaining.splitlines():
         line = raw_line.strip()
+        if line == _CANONICAL_HEADER:
+            in_canonical_table = True
+            continue
+        if line == _LOCAL_HEADER:
+            has_local_finding_table = True
+            in_canonical_table = False
+            continue
+        if not in_canonical_table:
+            continue
         if not line.startswith("|"):
+            in_canonical_table = False
             continue
-        # Skip header and separator rows.
-        if line.startswith("|---") or re.match(r"\|\s*ID\s*\|", line):
+        if line.startswith("|---"):
             continue
-
-        cells = [cell.strip() for cell in line.split("|")]
-        # Markdown tables yield an empty leading and trailing cell.
-        if len(cells) < 7:
-            continue
-
-        finding_id = cells[1]
-        if not finding_id or finding_id.lower() == "id":
-            continue
-
+        cells = _markdown_cells(line)
+        if len(cells) != 8 or cells[0] or cells[-1]:
+            raise ValueError(f"{path}: malformed canonical ledger row {line[:100]!r}")
+        finding_id, raised, severity, summary, status, reference = cells[1:-1]
+        if (
+            not finding_id
+            or not raised
+            or severity not in _SEVERITIES
+            or not summary
+            or not status
+        ):
+            raise ValueError(f"{path}: incomplete canonical ledger row {line[:100]!r}")
+        if finding_id in ids:
+            raise ValueError(f"{path}: duplicate ledger ID {finding_id}")
+        ids.add(finding_id)
         rows.append(
             LedgerRow(
                 finding_id=finding_id,
-                raised=cells[2],
-                severity=cells[3],
-                summary=cells[4],
-                status=cells[5],
-                reference=cells[6],
+                raised=raised,
+                severity=severity,
+                summary=summary,
+                status=status,
+                reference=reference,
                 source=str(path),
             )
         )
 
+    delegation = _DELEGATION_RE.search(remaining)
+    delta = _DELTA_MARKER in remaining
+    if rows and not delta:
+        return rows
+    if delta and not rows:
+        raise ValueError(f"{path}: cumulative delta marker has no canonical rows")
+    if not rows and has_local_finding_table:
+        raise ValueError(
+            f"{path}: local finding tables require a canonical cumulative delta"
+        )
+    if delegation is None:
+        raise ValueError(f"{path}: no canonical ledger or PSR §3 delegation")
+    canonical_id = delegation.group(1).zfill(3)
+    canonical_path = path.parent / f"{canonical_id}-project-state.md"
+    if not canonical_path.is_file():
+        raise ValueError(f"{path}: missing delegated ledger {canonical_path}")
+    inherited = parse_ledger(canonical_path, _seen | {resolved})
     if not rows:
-        delegation_match = _DELEGATION_RE.search(remaining)
-        if delegation_match is not None:
-            canonical_id = delegation_match.group(1).zfill(3)
-            canonical_path = path.parent / f"{canonical_id}-project-state.md"
-            if canonical_path.is_file():
-                return parse_ledger(canonical_path)
-
-    return rows
+        return inherited
+    by_id = {row.finding_id: row for row in inherited}
+    for row in rows:
+        previous = by_id.get(row.finding_id)
+        if previous is not None and previous.summary != row.summary:
+            raise ValueError(
+                f"{path}: {row.finding_id} changes an inherited summary "
+                "without a new finding ID"
+            )
+        by_id[row.finding_id] = row
+    return list(by_id.values())
 
 
 def collect_commit_hashes(text: str) -> list[str]:
@@ -221,11 +281,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    previous_rows = parse_ledger(args.previous)
+    try:
+        previous_rows = parse_ledger(args.previous)
+        current_rows = parse_ledger(args.current) if args.current is not None else None
+    except (OSError, ValueError) as exc:
+        print(f"Ledger parse error: {exc}", file=sys.stderr)
+        return 2
     errors = validate_commits(previous_rows, args.repo)
-
-    if args.current is not None:
-        current_rows = parse_ledger(args.current)
+    if current_rows is not None:
         errors.extend(validate_commits(current_rows, args.repo))
         errors.extend(diff_ledgers(previous_rows, current_rows))
 
@@ -236,7 +299,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     print("Ledger consistency check passed.")
-    if args.current is not None:
+    if current_rows is not None:
         print(
             f"  Compared {len(previous_rows)} rows in {args.previous} "
             f"with {len(current_rows)} rows in {args.current}."

@@ -93,6 +93,49 @@ appends the three D1 rows above (all RESOLVED) and the five D4 rows (all
 resolved or deferred with governed dispositions). No earlier finding was
 reopened.
 
+### 3.4 DV-044 corrective cumulative-ledger delta (2026-09-29 UTC)
+
+This is an **append-only erratum** to the machine-readable cumulative
+ledger; §3.1/§3.2 and the historically approved PSR-038/PSR-039 prose are
+not rewritten. PSR-038 §3 delegated 128 prior rows to PSR-037 §3 but
+claimed six WP-038 rows without actually listing them as data; PSR-039
+§3.3 then delegated to PSR-038 §3 while its two five-column local-finding
+tables were incorrectly mistaken by the checker for a complete cumulative
+ledger. No finding ID is discarded. This table supplies the six missing
+WP-038 entries from `DOCS/audits/038-wp038-audit.md` §7 and the eight
+PSR-039 entries already stated in §3.1/§3.2, as six-column canonical
+*delta* records. The summaries of the eight PSR-039 entries are copied
+verbatim from those local tables; their statuses are spelled in the
+standard cumulative vocabulary (`FIXED | AMENDED | CARRIED(1)`) while
+the original local status prose remains unchanged above. `CARRIED(1)`
+is not permanent approval: the two deferred D4 entries must be
+resolved or explicitly governed before a later cycle declares them
+closed.
+
+**Cumulative ledger delta:** Inherit PSR-038 §3 (which inherits
+PSR-037 §3); append these fourteen rows. The checker must parse the
+canonical header, merge only this explicitly marked delta with its
+predecessor, and fail on a missing ancestor, malformed row, or changed
+summary for an existing finding ID. No full 128-row snapshot is
+duplicated here.
+
+| ID | Raised (cycle) | Severity | Summary | Status | Reference |
+|---|---|---|---|---|---|
+| WP038-F1 | 038 | D2 | Windows self-hosted release wheel smoke used Bash where WSL was absent | FIXED | `663e3cf`; `DOCS/audits/038-wp038-audit.md` §7, PowerShell wheel smoke and regression tests |
+| WP038-F2 | 038 | D2 | Hosted Linux wheel smoke resolved the large CUDA PyTorch stack and exhausted disk | FIXED | `663e3cf`; `DOCS/audits/038-wp038-audit.md` §7, disk cleanup and CPU-index torch smoke |
+| WP038-F3 | 038 | D2 | Workspace dependency pins lacked version requirements for crates.io publication | FIXED | `663e3cf`; `DOCS/audits/038-wp038-audit.md` §7, seven version pins and baseline tests |
+| WP038-F4 | 038 | D1 | PyPI project name `prin` was unavailable for the PRIN distribution | AMENDED | Plan amendment #46; `663e3cf`; distribution `prin-core`, import `prin` unchanged |
+| WP038-F5 | 038 | D2 | Cargo registry token absent, blocking crates.io publication | AMENDED | Plan amendment #46; DV-037; `DOCS/audits/038-wp038-audit.md` §7; publication subsequently completed |
+| WP038-F6 | 038 | D2 | Protected `release` environment absent, so publication approval gate was missing | AMENDED | Plan amendment #46; DV-037; `DOCS/audits/038-wp038-audit.md` §7; publication subsequently completed |
+| EXP001-D1-H1 | 039 | D1 | EXP-001 H1 `REFUTED` (485/504): 19 corpus cases breach registered tolerance | AMENDED | §3.1; DV-007 reference defect established by exactness audit; original E5 result remains immutable; r1 verification pending |
+| EXP001-D1-H2a | 039 | D1 | EXP-001 H2a `REFUTED` (897/1,000): 103 fuzz cases breach | FIXED | §3.1; PRIN guard corrected and DV-007/ill-conditioned cases adjudicated; r1 verification pending |
+| EXP001-E5-F1 | 039 | D1 | `parity` CI corpus gate does not exercise PRIN | FIXED | §3.1; `bd737e1`, `45cca61`; real PRIN corpus/fuzz CI gates |
+| S2-F1 | 039 | D4 | Windows linker contention (LNK1104) | AMENDED | §3.2; S3 §3.1, sequential per-crate workaround; no product-code change claimed |
+| S2-F2 | 039 | D4 | WSL bash relay (4 test failures) | FIXED | §3.2; S3 §3.1, Git Bash before WSL relay on test-process PATH |
+| S2-F3 | 039 | D4 | `#[non_exhaustive]` on `GuardPolicy` deferred | CARRIED(1) | §3.2; S3 §3.1, API-freeze decision outstanding; not silently marked fixed |
+| S2-F4 | 039 | D4 | RK45/Exponential/Jacobian guard clamp | CARRIED(1) | §3.2; S3 §3.1, deferred to future WP; documented and regression-pinned |
+| S2-F5 | 039 | D4 | `prin-kernels` Triton RK4 clamp unverified | AMENDED | §3.2; S3 §3.1, DV-001 hardware-gated standing disposition; not claimed tested |
+
 ---
 
 ## 4. Plan amendments this cycle
