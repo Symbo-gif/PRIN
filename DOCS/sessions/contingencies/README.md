@@ -8,7 +8,7 @@ numbered session. Copy each template to a dated/identified file before use.
 
 ## Open corrections
 
-DV-044 — **S1–S3 COMPLETE 2026-09-29 UTC; S4 pending.** PSR-039's
+DV-044 — **S1–S4 RECORDED 2026-09-29 UTC; merge + green CI pending.** PSR-039's
 cumulative deviation ledger was invisible to `tools/check_deviation_ledger.py`
 (eight local five-column rows mistaken for the six-column cumulative table;
 128 inherited IDs reported missing, `python.yml` gate exit 1) and PSR-038
@@ -18,12 +18,14 @@ canonical PSR-039 §3.4 delta (14 rows) plus a fail-closed parser/CLI —
 the exact failing comparison exits 0 (128→142). S2 independent audit:
 PASS-WITH-FINDINGS, seven findings (1×D3 code, 5×D4, 1×D3 index drift);
 all seven remediated in S3 with a sixth tandem test batch (12/12 pass) and
-Snyk Code clean. S4 record, register disposition and a green governance CI
-gate remain required before closure; EXP-001-r1 E3 stays blocked meanwhile.
+Snyk Code clean. S4 documentation recorded with conditional status; merge to `main`,
+green governance CI and the register disposition remain required before
+closure; EXP-001-r1 E3 stays blocked meanwhile.
 
 - [2026-09-29-dv044-s1-correction-implementation.md](2026-09-29-dv044-s1-correction-implementation.md)
 - [2026-09-29-dv044-s2-correction-audit.md](2026-09-29-dv044-s2-correction-audit.md)
 - [2026-09-29-dv044-s3-correction-remediation.md](2026-09-29-dv044-s3-correction-remediation.md)
+- [2026-09-29-dv044-s4-correction-documentation.md](2026-09-29-dv044-s4-correction-documentation.md)
 
 ## Closed corrections
 
