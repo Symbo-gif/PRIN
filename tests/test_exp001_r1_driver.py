@@ -19,7 +19,10 @@ from typing import Any
 
 import numpy as np
 import pytest
+import torch
+from _env import wgpu_kernel_executes
 from prin.parity.schema import CaseArrays, CaseSpec
+from torch.utils.dlpack import to_dlpack
 
 from benchmarks._common import result as result_writer
 from benchmarks.campaign import exp001_driver as legacy
@@ -64,6 +67,62 @@ def _phase_breach(arrays: CaseArrays, step: int = 1) -> CaseArrays:
     changed = copy.deepcopy(arrays)
     changed.phase_traj[step, 0] += 0.01
     return changed
+
+
+def _sparse_loader() -> Any:
+    """Supply one synthetic sparse case, not a registered EXP-001-r1 input."""
+    arrays = _arrays()
+    spec = CaseSpec(
+        case_id="synthetic-wgpu",
+        seed=0,
+        model="kuramoto",
+        coupling="sparse_knn",
+        integrator="euler",
+        n_oscillators=8,
+        n_steps=24,
+        dt=0.01,
+        parameters={
+            "coupling_strength": 0.5,
+            "sparse_k": 2,
+            "decay_rate": 0.0,
+            "freq_adaptation_rate": 0.0,
+        },
+    )
+    return SimpleNamespace(load=lambda _: SimpleNamespace(spec=spec, arrays=arrays))
+
+
+def _fake_sparse_backend(
+    monkeypatch: pytest.MonkeyPatch, reported_after_dispatch: str | None
+) -> None:
+    """Stub numerical runners but retain the real CPU DLPack export check."""
+    outputs = tuple(torch.zeros(8, dtype=torch.float64) for _ in range(3))
+    monkeypatch.setattr(
+        legacy,
+        "TorchKuramotoOscillator",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            compute_derivatives=lambda _state: outputs
+        ),
+    )
+    engine = SimpleNamespace(backend_name="wgpu<wgsl>")
+
+    def compute(
+        phase: torch.Tensor, amplitude: torch.Tensor, frequency: torch.Tensor
+    ) -> tuple[Any, Any, Any]:
+        engine.backend_name = reported_after_dispatch
+        return (
+            to_dlpack(torch.zeros_like(phase)),
+            to_dlpack(torch.zeros_like(phase)),
+            to_dlpack(torch.zeros_like(phase)),
+        )
+
+    engine.compute_derivatives = compute
+    monkeypatch.setattr(
+        legacy,
+        "_prin_core",
+        SimpleNamespace(
+            GpuSparseKuramoto=SimpleNamespace(from_knn_phase=lambda *_: engine)
+        ),
+    )
 
 
 @pytest.fixture
@@ -565,6 +624,111 @@ def test_leg_dispatch_keeps_registered_selections(
         driver.collect_cases("invented", Path("unused"))
 
 
+def test_wgpu_dispatch_keeps_the_cuda_case_selection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    rows = [
+        SimpleNamespace(case_id="sparse", model="kuramoto", coupling="sparse_knn"),
+        SimpleNamespace(case_id="dense", model="hopf", coupling="full"),
+    ]
+    monkeypatch.setattr(
+        driver,
+        "CorpusLoader",
+        lambda _: SimpleNamespace(manifest=SimpleNamespace(cases=rows)),
+    )
+    calls: list[tuple[list[str], str]] = []
+
+    def compare(
+        _loader: Any, ids: list[str], *, backend: str = "cuda"
+    ) -> list[dict[str, Any]]:
+        calls.append((ids, backend))
+        return [{"case_id": cid} for cid in ids]
+
+    monkeypatch.setattr(legacy, "compare_kernel_path_subset", compare)
+    assert driver.collect_cases("kernel-path", Path("unused")) == [
+        {"case_id": "sparse"}
+    ]
+    assert driver.collect_cases("kernel-path", Path("unused"), backend="wgpu") == [
+        {"case_id": "sparse"}
+    ]
+    assert calls == [(["sparse"], "cuda"), (["sparse"], "wgpu")]
+
+
+def test_wgpu_requires_backend_identification_after_dispatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _fake_sparse_backend(monkeypatch, "wgpu<wgsl>")
+    row = legacy.compare_kernel_path_case(
+        _sparse_loader(), "synthetic-wgpu", backend="wgpu"
+    )
+    assert row["backend_name"] == "wgpu<wgsl>"
+    assert row["within_tolerance"] is True
+    assert row["dlpack_devices"] == {
+        "dphase": "cpu",
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+    }
+    assert [item["array_name"] for item in row["comparisons"]] == [
+        "dphase",
+        "damplitude",
+        "dfrequency",
+    ]
+
+
+def test_wgpu_hazard_abort_retains_backend_provenance(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A measured but invalid case retains proof of its actual backend."""
+    _fake_sparse_backend(monkeypatch, "wgpu<wgsl>")
+
+    def synthetic_hazard(source: str, name: str, _array: Any) -> str | None:
+        if (source, name) == ("gpu", "dphase"):
+            return "synthetic invalid gpu dphase"
+        return None
+
+    monkeypatch.setattr(legacy, "_finite_violation", synthetic_hazard)
+    row = legacy.compare_kernel_path_case(
+        _sparse_loader(), "synthetic-wgpu", backend="wgpu"
+    )
+    assert row["aborted"] is True
+    assert row["abort_reason"] == "synthetic invalid gpu dphase"
+    assert row["backend_name"] == "wgpu<wgsl>"
+    assert row["dlpack_devices"] == {
+        "dphase": "cpu",
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+    }
+    assert "comparisons" not in row
+
+
+@pytest.mark.parametrize("actual_backend", ["cpu-native", "cuda", None])
+def test_wgpu_rejects_fallback_even_with_cpu_resident_capsules(
+    monkeypatch: pytest.MonkeyPatch, actual_backend: str | None
+) -> None:
+    _fake_sparse_backend(monkeypatch, actual_backend)
+    with pytest.raises(legacy.GpuBindingUnavailableError, match="wgpu requested"):
+        legacy.compare_kernel_path_case(
+            _sparse_loader(), "synthetic-wgpu", backend="wgpu"
+        )
+
+
+@pytest.mark.gpu
+@pytest.mark.skipif(not wgpu_kernel_executes(), reason="requires live wgpu dispatch")
+def test_wgpu_synthetic_sparse_comparison_on_real_adapter() -> None:
+    """Exercise the driver on a synthetic input, not the registered corpus."""
+    row = legacy.compare_kernel_path_case(
+        _sparse_loader(), "synthetic-wgpu", backend="wgpu"
+    )
+    assert row["backend_name"].startswith("wgpu")
+    assert row["dlpack_devices"] == {
+        "dphase": "cpu",
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+    }
+    assert row["within_tolerance"] is True
+    assert all(item["failed_count"] == 0 for item in row["comparisons"])
+
+
 def test_repeatability_aborts_an_invalid_member(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -720,13 +884,87 @@ def test_cuda_metadata_is_explicit_and_untimed(
     assert entry == {"hypotheses": ["H4"], "timing_method": "not-timed"}
 
 
+def test_wgpu_metadata_and_closure_reject_backend_mismatch(
+    publication: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    args = _argv(publication, "r1-kernel-path-wgpu")
+    args[1] = "kernel-path"
+    cases = [
+        {
+            "case_id": str(i),
+            "aborted": False,
+            "backend_name": "wgpu<wgsl>",
+            "dlpack_devices": {
+                "dphase": "cpu",
+                "damplitude": "cpu",
+                "dfrequency": "cpu",
+            },
+        }
+        for i in range(72)
+    ]
+    monkeypatch.setattr(driver, "collect_cases", lambda *_a, **_k: cases)
+    closure_backends: list[str] = []
+
+    def close_for_test(path: Path, *, expected_backend: str = "cuda") -> None:
+        assert path == Path(args[3])
+        closure_backends.append(expected_backend)
+
+    monkeypatch.setattr(driver, "close_run", close_for_test)
+    assert driver.main(args) == 0
+    assert closure_backends == ["wgpu"]
+    run_dir = Path(args[3])
+    name = "kernel-path_r1-kernel-path-wgpu.json"
+    sidecar = json.loads((run_dir / "campaign-metadata.json").read_text())
+    assert sidecar["artefacts"] == {
+        name: {"hypotheses": ["H4"], "timing_method": "not-timed"}
+    }
+    result_path = run_dir / name
+    envelope = json.loads(result_path.read_text())
+    assert envelope["cases"][0]["backend_name"] == "wgpu<wgsl>"
+    assert envelope["cases"][0]["dlpack_devices"] == cases[0]["dlpack_devices"]
+    assert envelope["environment"]["backend"] == "wgpu"
+    assert envelope["environment"]["dtype"] == "f32"
+    assert legacy.check_run_complete(
+        run_dir, expected_exp_id=driver.EXP_ID, expected_backend="wgpu"
+    ) == {name: ["H4"]}
+    with pytest.raises(legacy.IncompleteRunError, match="registered cuda"):
+        legacy.check_run_complete(run_dir, expected_exp_id=driver.EXP_ID)
+    envelope["environment"]["backend"] = "cuda"
+    result_path.write_text(json.dumps(envelope))
+    with pytest.raises(legacy.IncompleteRunError, match="backend"):
+        legacy.check_run_complete(
+            run_dir, expected_exp_id=driver.EXP_ID, expected_backend="wgpu"
+        )
+
+
+def test_wgpu_fallback_aborts_without_publishing(
+    publication: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    args = _argv(publication, "r1-kernel-path-wgpu")
+    args[1] = "kernel-path"
+
+    def unavailable(*_args: Any, **_kwargs: Any) -> list[dict[str, Any]]:
+        raise legacy.GpuBindingUnavailableError("cpu-native fallback")
+
+    monkeypatch.setattr(driver, "collect_cases", unavailable)
+    assert driver.main(args) == 2
+    run_dir = Path(args[3])
+    assert run_dir.is_dir()
+    assert not (run_dir / "campaign-metadata.json").exists()
+    assert not list(run_dir.glob("*.json"))
+
+
 def test_closure_invokes_identity_gate_then_manifest_then_verification(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     calls: list[str] = []
 
-    def closure(path: Path, *, expected_exp_id: str) -> dict[str, list[str]]:
-        assert path == tmp_path and expected_exp_id == "EXP-001-r1"
+    def closure(
+        path: Path, *, expected_exp_id: str, expected_backend: str
+    ) -> dict[str, list[str]]:
+        assert path == tmp_path
+        assert expected_exp_id == "EXP-001-r1"
+        assert expected_backend == "cuda"
         calls.append("closure")
         return {}
 
@@ -748,4 +986,31 @@ def test_closure_invokes_identity_gate_then_manifest_then_verification(
     monkeypatch.setattr(reproduce, "append_manifest", append)
     monkeypatch.setattr(reproduce, "verify_manifest", verify)
     driver.close_run(tmp_path)
+    assert calls == ["closure", "manifest", "verify"]
+
+
+def test_wgpu_closure_requires_matching_backend_before_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[str] = []
+
+    def closure(
+        path: Path, *, expected_exp_id: str, expected_backend: str
+    ) -> dict[str, list[str]]:
+        assert path == tmp_path
+        assert expected_exp_id == driver.EXP_ID
+        assert expected_backend == "wgpu"
+        calls.append("closure")
+        return {}
+
+    def append(**_kwargs: Any) -> None:
+        calls.append("manifest")
+
+    def verify(**_kwargs: Any) -> None:
+        calls.append("verify")
+
+    monkeypatch.setattr(legacy, "check_run_complete", closure)
+    monkeypatch.setattr(reproduce, "append_manifest", append)
+    monkeypatch.setattr(reproduce, "verify_manifest", verify)
+    driver.close_run(tmp_path, expected_backend="wgpu")
     assert calls == ["closure", "manifest", "verify"]

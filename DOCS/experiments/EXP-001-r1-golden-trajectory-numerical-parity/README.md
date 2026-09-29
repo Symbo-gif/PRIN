@@ -1,14 +1,18 @@
 # EXP-001-r1 — Golden-trajectory numerical parity, re-run (track C1)
 
-**Status:** **E2 PARTIAL APPROVAL — WGPU CAPABILITY GAP (DV-041) BLOCKS E3**
-(2026-09-28 UTC). Independent review (Claude Sonnet 5) verified every E1
-provenance/machinery claim against the repository; the maintainer approved
-the sample-size justification, the H2b three-way rule, and the storage
-budget (campaign plan §14.2 amendment #7). The required wgpu leg is not
-approved: the maintainer chose to fix the underlying binding capability
-(DV-041) rather than accept a gap disposition. See
-[`e2-review.md`](e2-review.md). **This pre-registration does not freeze and
-E3 does not start until DV-041 closes.**
+**Status:** **DRAFT — FOLLOW-UP E2 AMENDMENT AWAITS INDEPENDENT REVIEW AND
+MAINTAINER APPROVAL** (2026-09-28 UTC). Independent review (Claude Sonnet 5)
+verified every E1 provenance/machinery claim against the repository; the
+maintainer approved the sample-size justification, the H2b three-way rule,
+and the storage budget (campaign plan §14.2 amendment #7). The DV-041
+binding capability is **CLOSED** on documented merge evidence (PR #25,
+`5615eda`, required CI green per `triage-dv043-handoff.md` §2); the
+proposed wgpu H4 companion amendment and two-build order await independent
+follow-up E2 review and MichaelMaillet's explicit dated approval. DV-043
+remains **OPEN** pending its merge to `main`, required CI, and one green
+nightly `bench-regression`. See [`e2-review.md`](e2-review.md) §§5–7. **This
+pre-registration does not freeze and E3 does not start while any of those
+gates are open.**
 This is a new experiment record per campaign plan §10.4 item 4. The original
 EXP-001 record is immutable; corrections to it are errata.
 **Predecessor:** [`EXP-001`](../EXP-001-golden-trajectory-numerical-parity/README.md)
@@ -21,8 +25,10 @@ The maintainer declared this E1 session, then the E2 session. The [draft
 pre-registration](preregistration.md), [E1 handoff](e1-handoff.md) and
 [E2 review](e2-review.md) record the prospective protocol, local
 validation, independent re-verification and the maintainer's E2 decisions.
-Three of the four E2 gates are approved; the required wgpu coverage gate is
-open (DV-041) and blocks freeze/E3. Neither E1 nor this partial E2 approval
+Three of the four E2 gates are approved; the wgpu coverage gate is a
+proposed follow-up amendment awaiting independent review and maintainer
+approval, and DV-043's merge/nightly closure is still open — both block
+freeze/E3. Neither E1 nor this partial E2 approval
 executes E3 or releases session 0159.
 
 ## What this directory holds
@@ -30,7 +36,7 @@ executes E3 or releases session 0159.
 | File | Created by | Frozen when |
 |---|---|---|
 | `README.md` | E1 | Updated as the experiment progresses |
-| [`preregistration.md`](preregistration.md) | E1 (from [`TEMPLATE_Preregistration.md`](../TEMPLATE_Preregistration.md)) | **DRAFT** — freezes at E3 start; blocked on DV-041 |
+| [`preregistration.md`](preregistration.md) | E1 (from [`TEMPLATE_Preregistration.md`](../TEMPLATE_Preregistration.md)) | **DRAFT** — freezes at E3 start; blocked on the unapproved wgpu amendment and DV-043's merge/nightly closure |
 | [`e1-handoff.md`](e1-handoff.md) | E1 | Entry and verification evidence record |
 | [`e2-review.md`](e2-review.md) | E2 | Independent-review and maintainer-decision record |
 | `log.md` | E3 | *Not yet created* — written at E3; never edited after E3 close |

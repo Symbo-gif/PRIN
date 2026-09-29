@@ -21,11 +21,22 @@ resolved and blocks E3. See `e2-review.md` for the full record.
 | §7 single-stream (not ≥10 replications) sample-size justification | **APPROVED** | e2-review.md §2 |
 | §7 three-way H2b equivalence decision rule (replacing the predecessor's binary rule) | **APPROVED** | e2-review.md §2 |
 | §9 storage budget (16 MiB shared / 8 MiB new r1 / 6 MiB fuzz exception) | **APPROVED** — campaign plan §14.2 amendment #7 | e2-review.md §3; driver updated (`RAW_ROOT_CAP_BYTES`, new `R1_ROOT_CAP_BYTES`, new `FUZZ_RUN_CAP_BYTES`) |
-| §2 required wgpu driver/coverage gate | **NOT RESOLVED — blocks E3.** Maintainer selected "block on a coding fix first" over a gap disposition. A governed hotfix/correction session must add positive wgpu-dispatch identification to `crates/prin-py`'s GPU bindings (tracked as **DV-041**) before this pre-registration may freeze. | e2-review.md §4; `DEFERRED_VALIDATION_REGISTER.md` DV-041; campaign plan §11.7, §14.2 amendment #8 |
+| §2 required wgpu driver/coverage gate | **PROPOSED / NOT APPROVED — tested implementation submitted for follow-up E2 independent review and MichaelMaillet's explicit approval; no E3 or freeze** | e2-review.md §§4–7; `DEFERRED_VALIDATION_REGISTER.md` DV-041; campaign plan §11.7, §14.2 amendment #8 |
 
-**This pre-registration does not freeze and E3 does not start until DV-041
-closes.** No r1 analysis is confirmed by this approval; it approves protocol
-design choices only.<br>
+DV-041's backend-identification hotfix was merged as PR #25
+(`5615edab5b53afd6602907343a596cdc3f8dff4a`; required CI was recorded green
+in `triage-dv043-handoff.md` §2). This proposal adds a measured wgpu
+companion to H4 before execution. It is a **follow-up E2 pre-execution
+amendment, NOT YET APPROVED**: MichaelMaillet must approve the revised H4
+rule, the two-build order and the driver validation in writing after an
+independent reviewer checks them. DV-043's fix is only local on the
+`hotfix/dv043-redundant-step-guard` branch at drafting time; its merged
+`main` SHA, required CI, green-nightly closure and this protocol's approval
+are E3 prerequisites. This pre-registration is DRAFT; it does not freeze
+and **E3 must not start** while any of those gates are open. The previous
+E2 approvals of the sample-size, H2b and storage decisions still stand.
+No r1 analysis is confirmed by this approval; it approves protocol design
+choices only.<br>
 **Code version:** `prin-core` distribution `1.0.0rc1`, Rust `1.0.0-rc1`;
 E1 starting tree `a7ef308acffbf3ecd09aa1b4fbe55a9b09d09e74`, incorporating
 correction merge `149cf2d88ab6be401951b63d1d7e8fad209f52a5` and the correction's
@@ -136,36 +147,36 @@ cases in §5.2 produces identical dtype, shape and bytes on two integrations.
 Two separately manifested E3 invocations also produce identical canonical
 scientific result projections, including per-array digests.
 
-**H4 — CUDA derivative-kernel agreement.** All **72/72**
-`kuramoto_sparse_knn_*` corpus cases match the CPU derivative reference at
-the registered float32 tolerance. Every result must prove actual CUDA
-dispatch through all three returned DLPack capsules.
+**H4 — CUDA and wgpu derivative-kernel agreement.** Each backend
+independently executes the same **72/72** `kuramoto_sparse_knn_*` corpus
+cases from their stored initial states, comparing three float32 GPU
+derivative arrays against the same float64 Rust CPU reference with
+`rtol=1e-5, atol=1e-6` (Testing Standards §3). A CUDA result requires all
+three raw DLPack capsules to be CUDA-resident. A wgpu result requires all
+three capsules to be host-exported (the binding's documented behavior)
+**and** `GpuSparseKuramoto.backend_name` read **after each actual kernel
+dispatch** to report the wgpu backend family. `"cpu-native"`, `"cuda"`,
+an absent getter or an unexpected capsule device is a build/backend
+**abort**, not a passing or refuting wgpu case. Each H4 case record
+retains a three-key `dlpack_devices` mapping (`dphase`, `damplitude`,
+`dfrequency`) with the raw capsule device types; the wgpu record also
+retains `backend_name` after that case's dispatch. E4 can verify those
+proofs without re-running a kernel. The two results have
+different registered labels and manifests; a CUDA result never counts
+as the wgpu run. H4 `CONFIRMED` requires 72 valid passing cases on each
+backend; any valid breach on either backend `REFUTES` H4 (D1); absent,
+invalid or partial coverage without a valid breach is `INCONCLUSIVE`.
 
-**Required wgpu coverage remains an E2 execution gate.** Campaign plan
-§5.2 requires H1-host wgpu coverage. The present Python driver cannot prove
-that a CPU-resident capsule came from wgpu rather than a fallback, so H4
-does not stand in for that leg. The proposed wgpu comparison is the same
-72 corpus initial states, three derivative arrays, and float32 tolerance,
-on a positively identified wgpu adapter with fallback rejected. E2 must
-either close and test that driver capability before freeze or obtain a
-dated, maintainer-approved campaign gap disposition that specifies the
-unexecuted leg and its `INCONCLUSIVE` reporting. Hardware is available;
-this must not be called a hardware-unavailability exception. E1 does not
-grant the disposition or authorize E3 with this gate open.
-
-**E2 resolution (2026-09-28 UTC):** confirmed by code review
-(`crates/prin-sim/src/gpu.rs`, `crates/prin-py/src/bindings/gpu.rs`) that
-no gap disposition is available either: a `--features wgpu`-only build's
-compute client is architecturally CPU-resident from Python's perspective
-(only the true CUDA path returns a zero-copy `kDLCUDA` capsule), so the
-present binding cannot distinguish real wgpu dispatch from a silent
-host-slice fallback at all — not merely in the Python driver layer. The
-maintainer declined the `INCONCLUSIVE`-reporting gap disposition and
-selected fixing the capability first. Tracked as **DV-041**
-(`DEFERRED_VALIDATION_REGISTER.md`); closure requires a governed
-hotfix/correction session adding a positive backend-identification
-accessor to the GPU bindings before this pre-registration freezes. See
-`e2-review.md` §4.
+**E2 amendment gate, pending:** DV-041 supplied this capability on
+`main` at PR #25. The four-mode r1 driver now has a second
+`kernel-path` label for the wgpu companion (not a new mode or tolerance),
+positive per-case backend identification, and a fail-closed run-closure
+check. Only the existing 72 manifest-selected configurations are
+scheduled; no r1 outcome has been inspected to select a case, bound, or
+exclusion. Its code and tests, including a *synthetic* live-adapter
+smoke check, require independent follow-up E2 review and maintainer
+approval before the hypothesis or driver freezes. This is not a
+§5.4 unavailable-hardware disposition.
 
 ## 3. Expected results
 
@@ -177,8 +188,7 @@ These are predictions based on prior governed evidence, not r1 results.
 | H2a | Confirmed with the fixed characterization stratum | 978 accepted pointwise; 22 sensitivity proofs and valid PRIN outputs; zero unexplained eligible breaches | Same audit; the corrected guard addresses the PRIN mechanism and the corrected reference isolates DV-007 |
 | H2b | Equivalent ensemble means | Each mean difference near zero, with both CI endpoints strictly inside its margin; no directional bias predicted | Original H2b confirmed; the corrected guard and published sensitivity evidence motivate remeasurement, without guaranteeing its outcome |
 | H3 | Identical | 14/14 byte-identical within each invocation; zero separate-run digest differences | Explicit-state deterministic Rust integration; original H3 and existing repeatability controls |
-| H4 | Within tolerance | 72/72, zero failed derivative elements | Existing kernel-equivalence controls and original H4; no new CUDA outcome was inspected |
-| Proposed wgpu leg | Within tolerance if its capability gate closes | 72/72 under the proposed same-input comparison | Existing required `gpu-wgpu` CI is supporting engineering evidence, not this unexecuted campaign leg |
+| H4 | Both backends within the same kernel tolerance | CUDA 72/72 and wgpu 72/72, zero failed derivative elements on either | Prior CUDA kernel-equivalence controls and DV-041's live backend-identification tests; no r1 case result has been examined |
 
 H2b's margins retain the predecessor's choice of 1% of each metric's bounded
 range. They are engineering equivalence margins; a difference below them does
@@ -195,7 +205,7 @@ change.
 | H2a | At least one valid case outside the fixed 22-case set fails the native-or-explained rule within the horizon |
 | H2b | With complete valid sampling and at least 30 contributors, at least one metric's entire 95% CI lies strictly above `+margin` or strictly below `-margin` |
 | H3 | Any valid within-invocation byte mismatch or mismatch between the two validated canonical result projections |
-| H4 | Any valid CUDA derivative comparison fails its registered tolerance |
+| H4 | Any valid derivative comparison on either CUDA or wgpu fails the unchanged float32 tolerance |
 
 Every such C1 refutation carries a D1 under campaign plan §10.4. E4 applies
 the rule; E5 reports the negative result in full and preserves the block on
@@ -222,7 +232,10 @@ The following invalidate the affected run/case and are reported distinctly:
 4. Required environment fields are missing; a GPU leg lacks GPU/VRAM
    metadata; any CUDA capsule is not `kDLCUDA`; or the required feature/
    device path cannot execute. No fallback is published as the requested
-   backend.
+   backend. A wgpu kernel returning a non-wgpu `backend_name` after dispatch
+   (or no getter) or a non-host-exported capsule is also an
+   environment/backend abort. The wgpu client must execute, not merely
+   exist; a host-slice CPU or CUDA fallback may not publish a wgpu result.
 5. Run-ID/label/SHA/session mismatch, reused directory, incomplete sidecar,
    manifest failure, unexpected result inventory or corrupted evidence.
 6. The approved CPU/GPU/storage budget is exceeded. All preserved original
@@ -281,6 +294,7 @@ regenerated or replaced for r1.
 | Fuzz initial state | Direct `Seed` draws: phase `[0,2π)`, amplitude `[0.5,1.5)`, frequency `[-1,1)`; identical explicit arrays supplied to both implementations |
 | CPU path | `legacy.run_prin_trajectory` → `prin.dynamics` → Rust; float64; corrected Euler/RK4 default |
 | CUDA path | Existing `compare_kernel_path_subset` → raw `GpuSparseKuramoto`; three float32 derivative arrays, actual CUDA residency checked |
+| wgpu path | The same 72 corpus initial states and CPU reference as H4 CUDA, direct raw `GpuSparseKuramoto` call, f32 CubeCL computation; all three outputs are host-exported and `backend_name` proves wgpu after dispatch |
 
 The first **exactly 1,000** spec/initial-state draws are pinned by the
 existing `h2a_stream_digest` encoding:
@@ -294,16 +308,55 @@ integration**. Each fuzz record also retains all parameters and a per-input
 digest. It neither reads predecessor result JSON nor uses a prior verdict
 to decide which new inputs run.
 
-CPU and CUDA use campaign host **H1**, the registered Windows workstation /
+CPU, CUDA and wgpu use campaign host **H1**, the registered Windows workstation /
 `PRIN-GPU-Runner`. Record the actual environment at execution; the campaign's
 historical OS/driver versions are not assumed current. H2/H3/H4 hosted
 cross-OS runs are optional and unscheduled. wgpu is separately gated above.
 No Triton timing, NPU, DirectML, training or throughput claim is made.
 
-Before E3, build the approved extension from the clean execution checkout
-using the existing project command
-`.venv\Scripts\python.exe -m maturin develop -m crates/prin-py/Cargo.toml --features cuda`.
-Record the build command, checkout SHA, imported extension path and hash.
+**Two mutually exclusive extension builds, one source SHA.** On H1,
+start E3 only after the maintainer approves the amended protocol and the
+DV-043 hotfix is merged on a required-CI-green `main` with the next
+`nightly.yml` `bench-regression` green per campaign plan §11.8. Start
+from a clean execution checkout of that approved `main` SHA; freeze
+`preregistration.md` at the first `RUN-` creation and record its last-edit
+SHA on line 1 of `log.md`. With **no source change between builds**, run
+these two commands sequentially in the SAME checkout:
+
+```powershell
+.venv\Scripts\python.exe -m maturin develop -m crates/prin-py/Cargo.toml --features wgpu
+# Start a fresh Python process, assert tests/_env.py::wgpu_kernel_executes()
+# actually ran a kernel and reports true, record extension path and SHA-256;
+# execute only the registered r1-kernel-path-wgpu label.
+.venv\Scripts\python.exe -m maturin develop -m crates/prin-py/Cargo.toml --features cuda
+# Start a DIFFERENT fresh Python process, assert cuda_kernel_executes()
+# reports true, record extension path and SHA-256; execute the CPU and
+# r1-kernel-path-cuda labels under this extension.
+```
+
+In each new process, verify that `prin.__file__` resolves under the clean
+execution checkout's `python/prin` directory and that
+`_prin_core.__file__` resolves to the freshly built feature variant; log
+both paths and the extension SHA-256. `maturin develop` can update
+`prin_core.pth` without replacing an older `prin.pth` in a shared venv, so
+an alternate worktree may import the wrong source unless `PYTHONPATH` is
+set to that checkout's `python` directory. Abort on any path or
+backend-probe disagreement rather than treating a successful build as
+proof of the imported extension.
+
+`crates/prin-py/Cargo.toml` has `default=[]`, and `wgpu` is selected under
+`cfg(all(feature = "wgpu", not(feature = "cuda")))`; combining the flags
+(`--features cuda,wgpu`) is **not** a wgpu build. Cargo fingerprints each
+feature set, but the second `maturin develop` replaces the installed
+`prin._prin_core`: no Python process may retain the old import after a
+rebuild. Both variants come from the same unchanged checkout/`git_commit`
+and have individually recorded build command, feature set, imported
+extension path and binary SHA-256 in `log.md` and the run `config`;
+hashes may differ by design and E4 must verify each against its own log
+entry, not demand binary identity. Verify current source status and SHA
+before **each** build and run; output directories are append-only and
+do not license a source edit. A missing/failed build or either probe
+aborts that leg; do not substitute the already-installed other backend.
 The driver records the binary hash and checks the default guard, but those
 checks alone cannot prove that every compiled source line corresponds to
 the checkout; the clean-build record is therefore mandatory.
@@ -407,6 +460,11 @@ with the execution checkout's short SHA. The driver checks both SHA and
 label against the directory name.
 
 ```powershell
+# Build --features wgpu first, assert the live kernel probe, then run:
+.venv\Scripts\python.exe -m benchmarks.campaign.exp001_r1_driver --mode kernel-path --out benchmarks/results/EXP-001/RUN-<UTC>-<SHA>-r1-kernel-path-wgpu --label r1-kernel-path-wgpu --session EXP-001-r1-E3 --operator MichaelMaillet
+# Rebuild --features cuda; assert the live CUDA probe, then run the
+# existing corpus, repeatability (twice), fuzz and CUDA kernel-path commands.
+
 # Full corpus: H1
 .venv\Scripts\python.exe -m benchmarks.campaign.exp001_r1_driver --mode corpus --corpus-dir parity/corpus --out benchmarks/results/EXP-001/RUN-<UTC>-<SHA>-r1-corpus-cpu --label r1-corpus-cpu --session EXP-001-r1-E3 --operator MichaelMaillet
 
@@ -420,6 +478,18 @@ label against the directory name.
 # CUDA derivative kernel: H4
 .venv\Scripts\python.exe -m benchmarks.campaign.exp001_r1_driver --mode kernel-path --out benchmarks/results/EXP-001/RUN-<UTC>-<SHA>-r1-kernel-path-cuda --label r1-kernel-path-cuda --session EXP-001-r1-E3 --operator MichaelMaillet
 ```
+
+Six new run directories are registered: one wgpu, one CUDA, one corpus,
+one fuzz and two repeatability; each GPU invocation contains 72 cases
+independently, tags H4 and uses `timing_method="not-timed"`. The wgpu
+record carries its post-dispatch `backend_name` per case and identifies
+`environment.backend="wgpu"`; the CUDA record carries
+`environment.backend="cuda"`. Both CUDA and wgpu per-case records retain
+`dlpack_devices` for all three output capsules; the wgpu record
+additionally retains `backend_name` read after its kernel call. The
+run-closure validator rejects a
+mismatched label/backend pair before manifest generation. The two
+extension hashes intentionally need not match; the git source SHA must.
 
 Every invocation reserves a fresh direct child of the raw root, writes one
 `<mode>_<label>.json` result using `write_result`, and writes a metadata
@@ -461,8 +531,9 @@ DV-001, DV-003, DV-036 or DV-040.
 ## 7. Sample plan and statistics
 
 - **Seeds:** the only case-generation pair is **`(counter=0, key=1)`**,
-  directly through `prin._prin_core.Seed`. All five implemented invocations
-  record `(0,1)`; corpus/CUDA/H3 consume stored inputs and perform no new
+  directly through `prin._prin_core.Seed`. All six implemented invocations
+  record `(0,1)`; corpus/kernel-path/H3 consume stored inputs and perform
+  no new
   random draw. There is no optional second fuzz batch.
 - **Sample-size exception for E2 review:** deterministic H1/H3/H4 exhaust
   their registered populations. H2 uses one fixed stream with 1,000 case
@@ -480,6 +551,10 @@ DV-001, DV-003, DV-036 or DV-040.
 - **Deterministic rules:** H1/H2a/H3/H4 have no significance test. Counts,
   registered denominators, absolute/relative error maxima and distributions
   of per-case/array maxima are reported. A statistic cannot rescue a breach.
+- **H4:** two separately manifested runs of the same 72 case IDs, 72 CUDA
+  and 72 wgpu, with the same three f32-derivative tolerances and CPU
+  reference. Each backend must supply its full valid denominator for a
+  combined H4 confirmation; no pooling.
 - **H2b unit:** one equal-weight paired summary per valid case with
   `n_steps > 20`, separately for each metric:
   `mean(produced[21:] - native_reference[21:])`. Serial time points are
@@ -534,7 +609,18 @@ retargeted or imported as a source of r1 verdicts.
    revision, seed, backend/dtype, input fingerprints, full case inventory
    and uniqueness. Reject missing/extra/duplicate cases and non-finite
    scientific fields. Abort an invalid analysis instead of inferring a
-   result from a partial or mixed experiment.
+   result from a partial or mixed experiment. An admissible H4 analysis
+   requires **six distinct r1 run IDs overall**, including exactly one
+   `r1-kernel-path-wgpu` and one `r1-kernel-path-cuda` label, separate
+   manifest-verified environments, per-case positive backend proofs, and
+   two E3 build-log extension hashes associated with those backend labels
+   on **one actual merged-main source SHA**; the hashes need not match
+   across feature variants. For each GPU case, require exactly three
+   stored `dlpack_devices` (`dphase`, `damplitude`, `dfrequency`), each
+   `cuda` in the CUDA run and `cpu` in the wgpu run; require the wgpu
+   `backend_name` to start with `wgpu`. Absent or conflicting proof
+   invalidates that case/run, never confirms H4. Reject an extra,
+   duplicated, mismatched or unverified run.
 2. Re-evaluate each native/corrected/sensitivity decision from its retained
    per-array records. Recompute H2b's registered summaries from the stored
    paired metric arrays before applying the committed statistical helper.
@@ -552,10 +638,22 @@ retargeted or imported as a source of r1 verdicts.
    projections after removing only `environment`, `config.out_dir` and
    any per-run `run_id`; no scientific field or array digest is removed.
    Any valid mismatch refutes; missing/aborted coverage is inconclusive.
-7. **H4:** any valid CUDA breach refutes; confirmation requires all 72
-   valid cases and proven CUDA residency. An unexecuted/invalid leg is
-   inconclusive. Carry the separately approved wgpu disposition/result
-   explicitly; CUDA is never relabeled as both backends.
+7. **H4:** validate both complete 72-case inventories and their per-case
+   backend proofs separately; E4 verifies the retained per-case
+   `dlpack_devices` keys/values and the wgpu `backend_name`; the live
+   driver already rejected any wrong export/backend before publishing the
+   result. E4 verifies each stored `comparisons` entry (`dphase`,
+   `damplitude`, `dfrequency`, `within_tolerance`, `failed_count`, and
+   error maxima) against the registered decision rule and the complete
+   72-case inventory for each backend. The E3 driver computed the
+   unchanged `rtol=1e-5, atol=1e-6` checks before publication; it retains
+   these comparator records, not the raw derivative arrays. E4 must not
+   claim an independent numerical `isclose` re-evaluation from absent raw
+   arrays or run any new kernel to construct one. One valid breach on
+   either backend refutes (D1);
+   confirmation requires all 72 non-aborted comparisons on **both**
+   backends; missing/aborted coverage without a valid breach is
+   inconclusive. Never relabel CUDA as wgpu or pool the case counts.
 
 Produce these fixed outputs under
 `DOCS/test_and_benchmark_results/EXP-001-r1/`:
@@ -599,10 +697,10 @@ new result.
 
 | Proposed allocation for E2 review | Limit |
 |---|---|
-| New r1 tracked run artefacts, including manifests | 8 MiB total |
+| New r1 tracked run artefacts — all six registered runs, including manifests | 8 MiB total |
 | Shared `benchmarks/results/EXP-001/` allocation | 16 MiB total, explicitly including the original runs |
 | New r1 fuzz run | 6 MiB exception to the generic 2 MiB per-run rule |
-| Other r1 runs | 2 MiB each, still bounded by the r1 aggregate |
+| Other r1 runs, including the wgpu kernel-path leg | 2 MiB each, still bounded by the r1 aggregate |
 | Campaign-wide tracked artefacts | 64 MiB unchanged |
 | Generated reports / optional untracked diagnostics | 64 MiB working-space estimate; authoritative decisions remain in tracked JSON |
 
@@ -616,13 +714,16 @@ caps.
 (campaign plan §14.2 amendment #7). The driver now enforces: **16 MiB**
 shared `EXP-001/` root (`RAW_ROOT_CAP_BYTES`, covering the original runs and
 all new r1 runs together); a separate **8 MiB** cap on new r1 runs alone
-(`R1_ROOT_CAP_BYTES`, checked only against `RUN-*-r1-*/` directories); a
+(`R1_ROOT_CAP_BYTES`, checked only against `RUN-*-r1-*/` directories,
+including the sixth wgpu kernel-path run); a
 **6 MiB** per-run exception for the r1 fuzz leg (`FUZZ_RUN_CAP_BYTES`); and
-the generic **2 MiB** per-run cap (`RUN_CAP_BYTES`) for every other r1 run.
+the generic **2 MiB** per-run cap (`RUN_CAP_BYTES`) for every other r1 run,
+the wgpu leg included.
 The campaign-wide 64 MiB cap is unaffected. Each limit is independently
 tested (`tests/test_exp001_r1_driver.py`); the run set this pre-registration
-proposes is authorized against the storage caps alone (the wgpu gate,
-DV-041, remains the sole open blocker on execution). It estimates the exact
+proposes is authorized against the storage caps alone. Storage was
+approved at E2; the follow-up E2 wgpu-protocol decision and DV-043's
+main/nightly closure remain open. It estimates the exact
 writer serialization plus a conservative 64 KiB manifest reserve before
 publication. Retain abandoned/aborted directories and do not reclaim the
 original evidence to make room. See `e2-review.md` §3.
@@ -639,9 +740,10 @@ E2 must:
    DV-007 positive explanation, fixed 22-case handling, single-stream
    sample justification and prospective H2b three-way rule. Record
    MichaelMaillet's approval by name and date only after that review.
-2. Resolve the **required wgpu driver/coverage gate** in §2 with executable,
-   tested support before freeze or an explicitly approved campaign gap
-   disposition. The present CUDA driver does not discharge it.
+2. Obtain an independent follow-up review and MichaelMaillet's explicit
+   dated approval for the now-implemented wgpu kernel-path leg in §2 —
+   the tested driver support and the two-build order — before freeze.
+   The original CUDA driver alone does not discharge it.
 3. Approve or revise the **storage budget request** through campaign §14.2,
    record the dated amendment and align the driver's scoped limits.
    Reducing cases or dropping evidence to fit storage is not permitted.
@@ -650,9 +752,19 @@ E2 must:
    reviewed pre-execution amendment; no r1 pilot or outcome inspection is
    permitted to choose thresholds, inputs or exclusions.
 5. Before E3, ensure the exact freeze/driver commits, clean extension build,
-   required main CI and latest nightly disposition are recorded. New
-   numeric baseline changes follow campaign §10.2; do not assume E1's
-   green merge remains current.
+   required main CI and latest nightly disposition are recorded — including
+   DV-043's actual merged `main` SHA (a hotfix-branch SHA does not
+   substitute) and one green `nightly.yml` `bench-regression` after that
+   merge. New numeric baseline changes follow campaign §10.2; do not
+   assume E1's green merge remains current. The pre-existing PSR-039
+   deviation-ledger CI gate (DV-044), found at the follow-up
+   E2 amendment, must also be corrected and independently
+   reviewed; its failure is not an E3 waiver. At E5, list the
+   exact E2 baseline-to-E3-main code diff
+   (`149cf2d..E3_SHA`) as a protocol deviation and report
+   fresh results of both 72-case H4 GPU regression legs.
+   A later numeric edit before E3 reopens the baseline entry
+   check; it cannot be absorbed mid-experiment.
 
 The campaign block on 0159 and downstream sessions remains in force until
 the r1 E5 non-reversal condition or a Project Plan §8.3 amendment is
@@ -665,10 +777,18 @@ Items 1, 3, 4 above are **satisfied**: independent review completed (item
 4; see `e2-review.md`), the storage budget approved as requested (item 3;
 campaign plan §14.2 amendment #7), and the sample-size/H2b-rule
 justifications approved (item 1). Item 5 (freeze/build/CI/nightly currency)
-is carried forward to E3 start, unchanged from E1's own instruction. **Item
-2 is not satisfied**: the wgpu gate is neither closed with tested driver
-support nor resolved by a gap disposition — the maintainer chose to fix the
-underlying capability (DV-041) rather than accept either offered path. This
-pre-registration **does not freeze** and **E3 does not start** until DV-041
-closes and a follow-up E2 amendment (a normal pre-execution edit) records
-the tested wgpu leg.
+is carried forward to E3 start, unchanged from E1's own instruction. At the
+original E2 exit, item 2 was unsatisfied and DV-041's capability fix had not
+yet merged. The follow-up proposed amendment now has live-tested, synthetic
+wgpu support; independent review and explicit maintainer approval of the
+revised H4/two-build protocol remain outstanding. This pre-registration
+**does not freeze** and **E3 does not start**; the follow-up state is
+recorded here.
+
+The original three E2 approvals remain valid. DV-041's binding fix merged
+in PR #25, and a proposed follow-up amendment implements the required wgpu
+result before freeze. **The revised H4 protocol and two-build execution
+order still require independent E2 review and MichaelMaillet's explicit
+dated approval.** The DV-043 hotfix is not recorded here as merged. No
+pre-registration freeze, `RUN-` directory, E3 execution or scientific
+verdict is authorized by this proposal.

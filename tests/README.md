@@ -81,10 +81,15 @@ check, not `gpu`-marked. DV-041 (2026-09-28) adds
 `backend_name` assertions for `GpuSparseKuramoto`/`GpuMeanFieldEngine`/
 `GpuBandStepper` under a CUDA build and, separately, a wgpu build — one
 build runs 3, skips the other 3), 4 default-gate (vocabulary/presence and
-mutual-exclusivity checks, no live-device requirement). **Total: 18
+mutual-exclusivity checks, no live-device requirement). The EXP-001-r1
+pre-execution amendment adds one further `@pytest.mark.gpu` test,
+`test_wgpu_synthetic_sparse_comparison_on_real_adapter` in
+`test_exp001_r1_driver.py` — a synthetic (non-corpus) wgpu dispatch that
+skips on a CUDA-only build via the live `wgpu_kernel_executes()`
+executability probe and runs on a wgpu-only build. **Total: 19
 `@pytest.mark.gpu` tests** (7 ported acceptance + 5 WP-036E + 6 DV-041, of
 which the DV-041 file's build guard means only 3 of its 6 execute per
-build), selected by `pytest -m gpu`. The 1 psutil skip
+build, + 1 r1 live-wgpu synthetic smoke), selected by `pytest -m gpu`. The 1 psutil skip
 matches `pytest.skip("psutil not installed")` in the reference. No test
 carries `@pytest.mark.xfail`; no assertion is weakened; no tolerance
 annotation was required beyond the Parity Report entries for the GPU sparse

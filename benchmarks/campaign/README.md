@@ -10,11 +10,12 @@ sidecar and a per-run `manifest.json`) under `benchmarks/results/`.
 | File | Experiment record | Role |
 |---|---|---|
 | `exp001_driver.py` | [`EXP-001`](../../DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/README.md) (E5 reported 2026-09-23; H1/H2a `REFUTED`, D1 raised) | Predecessor driver and the shared primitives both records build on (run-directory contract, campaign-metadata writer, environment capture, closure gate). Its default behavior is unchanged: `check_run_complete` still expects `EXP-001` unless a caller explicitly names another identity via `expected_exp_id`. |
-| `exp001_r1_driver.py` | [`EXP-001-r1`](../../DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **E1 COMPLETE, DRAFT; E2 review pending** | New, separately identified correction re-run protocol (positive DV-007 explanations, fixed ill-conditioned-case characterization, provenance pins, storage caps). |
+| `exp001_r1_driver.py` | [`EXP-001-r1`](../../DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **E2 partial approval; wgpu H4 amendment proposed; DV-043 open; E3 blocked** | New, separately identified correction re-run protocol (positive DV-007 explanations, fixed ill-conditioned-case characterization, provenance pins, storage caps). |
 
-`EXP-001-r1` E3 execution must not run before E2 approval and resolution of
-the required wgpu-coverage and shared-storage budget gates recorded in the
-draft pre-registration. The E1 state is validated only by synthetic tests,
-[`tests/test_exp001_r1_driver.py`](../../tests/test_exp001_r1_driver.py),
-which stub both numerical implementations; no registered workload was
-executed.
+`EXP-001-r1` E3 execution must not run before approval of the proposed
+follow-up wgpu amendment and the remaining gates recorded in the draft
+pre-registration. The proposed new wgpu leg has mocked synthetic tests
+([`tests/test_exp001_r1_driver.py`](../../tests/test_exp001_r1_driver.py))
+and a live single-configuration synthetic N=8 wgpu dispatch smoke on H1.
+The previously registered predecessor H4 regression tests also run
+through their original driver; no EXP-001-r1 E3 run has executed.

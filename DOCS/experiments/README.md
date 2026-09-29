@@ -56,9 +56,12 @@ verdict. PR #24 merged as `149cf2d88ab6be401951b63d1d7e8fad209f52a5`
 entry evidence and its draft protocol are linked from the re-run record.
 `EXP-001-r1` E2 (2026-09-28 UTC) independently re-verified E1's claims
 (zero discrepancies) and the maintainer approved the sample-size,
-statistics-rule, and storage-budget gates; the required wgpu gate is open
-as **DV-041** and blocks freeze/E3 (see `e2-review.md` in the re-run
-record). Session 0159 remains BLOCKED.
+statistics-rule, and storage-budget gates; **E2 partial approval; follow-up wgpu amendment PROPOSED, NOT YET
+APPROVED.** DV-041 binding capability closed on PR #25/required CI; the
+r1 driver's wgpu leg and two-build H4 protocol require independent E2
+review and MichaelMaillet approval. DV-043 is local and OPEN pending
+required-CI merge plus a green nightly. No E3 run/freeze; session 0159
+remains BLOCKED (see `e2-review.md` in the re-run record).
 
 ## Layout
 
@@ -80,7 +83,7 @@ regenerate from them via `prin.reporting`.
 | Experiment | Track | Record root |
 |---|---|---|
 | EXP-001 | C1 | [`EXP-001-golden-trajectory-numerical-parity/`](EXP-001-golden-trajectory-numerical-parity/README.md) |
-| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **E2 partial approval; wgpu gate (DV-041) blocks E3** |
+| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **E2 partial approval; wgpu H4 amendment proposed; DV-043 open; E3 blocked** |
 | EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) |
 | EXP-003 | C2 | [`EXP-003-cpu-scaling-and-sweep-performance/`](EXP-003-cpu-scaling-and-sweep-performance/README.md) |
 | EXP-004 | C2 | [`EXP-004-gpu-kernels-and-torch-bridge-performance/`](EXP-004-gpu-kernels-and-torch-bridge-performance/README.md) |

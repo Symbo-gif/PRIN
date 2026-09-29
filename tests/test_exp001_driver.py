@@ -592,6 +592,11 @@ class TestKernelPath:
         assert record["aborted"] is False
         assert record["within_tolerance"] is True
         assert record["case_id"] == case_id
+        assert record["dlpack_devices"] == {
+            "dphase": "cuda",
+            "damplitude": "cuda",
+            "dfrequency": "cuda",
+        }
         assert {c["array_name"] for c in record["comparisons"]} == {
             "dphase",
             "damplitude",

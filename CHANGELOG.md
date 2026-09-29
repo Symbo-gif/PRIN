@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001-r1 pre-execution H4/wgpu amendment (proposed,
+  2026-09-28 UTC).** The previously approved CUDA 72-case
+  H4 leg gains a separate, required wgpu 72-case companion
+  using DV-041's post-dispatch `backend_name` with host-slice
+  fallback rejected; both use unchanged f32 tolerance and
+  one source SHA with two sequential feature builds.
+  The new r1-driver tests use synthetic inputs; the
+  predecessor's 72-case H4 acceptance test also runs
+  as a code-regression check, not as an EXP-001-r1
+  E3 result or a new campaign run artefact. The
+  independent follow-up E2 review and
+  MichaelMaillet's explicit dated approval remain pending;
+  no E3 run or freeze has started. The DV-043 hotfix must
+  still merge with required CI and green nightly.
+
 - **EXP-001-r1 E2 independent review and partial approval (2026-09-28 UTC).**
   Claude Sonnet 5 (did not draft E1) re-derived every E1 provenance and
   machinery claim from the repository — corpus/reference/instrument hashes,
@@ -39,8 +54,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/`) per
   campaign plan §10.4 item 4. Session 0159 stays **BLOCKED** until
   `EXP-001-r1` returns a non-reversal verdict. The correction branch
-  `hotfix/exp001-d1-parity-correction` (PR #24) is not yet merged; CI-green
-  evidence for the merge SHA will be recorded by the next governed session.
+  `hotfix/exp001-d1-parity-correction` (PR #24) is not yet merged (true at
+  S4; PR #24 subsequently merged as `149cf2d` on 2026-09-28 UTC, and its
+  required CI was verified green in EXP-001-r1's E1 handoff). The
+  EXP-001-r1 E1 handoff subsequently records the merge SHA and six green
+  required workflows.
 
 - **`StateDerivatives::is_guarded()` (Rust, `prin-dynamics`) — derivative guard
   provenance (DV-043, 2026-09-28 UTC).** Reports whether a container's values

@@ -79,3 +79,10 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 > review the protocol and resolve the required wgpu coverage and
 > shared-storage budget gates before execution. E1 does not approve E2,
 > execute E3, or release session 0159.
+>
+> **E2 partial approval; follow-up wgpu amendment PROPOSED, NOT YET
+> APPROVED.** DV-041 binding capability closed on PR #25/required CI; the
+> r1 driver's wgpu leg and two-build H4 protocol require independent E2
+> review and MichaelMaillet approval. DV-043 is local and OPEN pending
+> required-CI merge plus a green nightly. No E3 run/freeze; session 0159
+> remains BLOCKED.

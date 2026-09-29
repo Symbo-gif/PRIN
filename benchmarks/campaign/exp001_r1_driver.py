@@ -119,7 +119,7 @@ LABELS: dict[str, tuple[str, ...]] = {
     "corpus": ("r1-corpus-cpu",),
     "fuzz": ("r1-fuzz-cpu",),
     "repeatability": ("r1-repeatability-cpu", "r1-seedrep0-cpu"),
-    "kernel-path": ("r1-kernel-path-cuda",),
+    "kernel-path": ("r1-kernel-path-cuda", "r1-kernel-path-wgpu"),
 }
 DENOMINATORS = {"corpus": 504, "fuzz": 1000, "repeatability": 14, "kernel-path": 72}
 
@@ -557,7 +557,7 @@ def preflight(mode: str, corpus_dir: Path) -> dict[str, Any]:
     """Validate the registered corpus, guard policy and reference instrument.
 
     Args:
-        mode: One of the four implemented leg names.
+        mode: One of the four registered modes (kernel-path has two GPU labels).
         corpus_dir: Directory containing the registered manifest and cases.
 
     Returns:
@@ -623,21 +623,28 @@ def preflight(mode: str, corpus_dir: Path) -> dict[str, Any]:
     return metadata
 
 
-def collect_cases(mode: str, corpus_dir: Path) -> list[dict[str, Any]]:
+def collect_cases(
+    mode: str, corpus_dir: Path, *, backend: str = "cuda"
+) -> list[dict[str, Any]]:
     """Collect precisely the registered case population for one implemented leg.
 
     Args:
-        mode: One of the four implemented leg names.
+        mode: One of the four registered modes (kernel-path has two GPU labels).
         corpus_dir: Registered corpus directory.
+        backend: GPU backend name for the ``kernel-path`` leg
+            (``"cuda"`` or ``"wgpu"``).
 
     Returns:
         The selected population, including any per-case abort records.
 
     Raises:
-        legacy.DriverMetadataError: If the requested mode is unregistered.
+        legacy.DriverMetadataError: If the requested mode or backend is
+            unregistered.
     """
     if mode not in LABELS:
         raise legacy.DriverMetadataError(f"unregistered mode: {mode}")
+    if backend not in ("cuda", "wgpu"):
+        raise legacy.DriverMetadataError(f"unregistered GPU backend: {backend}")
     if mode == "fuzz":
         return run_fuzz_batch()
     loader = CorpusLoader(corpus_dir)
@@ -652,6 +659,8 @@ def collect_cases(mode: str, corpus_dir: Path) -> list[dict[str, Any]]:
         for row in loader.manifest.cases
         if row.model == "kuramoto" and row.coupling == "sparse_knn"
     ]
+    if backend == "wgpu":
+        return legacy.compare_kernel_path_subset(loader, case_ids, backend="wgpu")
     return legacy.compare_kernel_path_subset(loader, case_ids)
 
 
@@ -703,11 +712,13 @@ def _storage_check(
         )
 
 
-def close_run(run_dir: Path) -> None:
+def close_run(run_dir: Path, *, expected_backend: str = "cuda") -> None:
     """Validate the r1 identity, then manifest and verify this new run only.
 
     Args:
         run_dir: Fresh run directory containing the result and metadata sidecar.
+        expected_backend: GPU backend name the result label and envelope must
+            carry (``"cuda"`` or ``"wgpu"``).
 
     Raises:
         legacy.IncompleteRunError: If the declared experiment identity or
@@ -715,13 +726,15 @@ def close_run(run_dir: Path) -> None:
     """
     from tools.reproduce import append_manifest, verify_manifest
 
-    legacy.check_run_complete(run_dir, expected_exp_id=EXP_ID)
+    legacy.check_run_complete(
+        run_dir, expected_exp_id=EXP_ID, expected_backend=expected_backend
+    )
     append_manifest(results_dir=run_dir, manifest_path=run_dir / "manifest.json")
     verify_manifest(results_dir=run_dir, manifest_path=run_dir / "manifest.json")
 
 
 def _parser() -> argparse.ArgumentParser:
-    """Build the CLI for the four implemented, explicitly identified r1 legs."""
+    """Build the CLI for four modes and six registered r1 run directories."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=tuple(LABELS), required=True)
     parser.add_argument("--corpus-dir", type=Path, default=Path("parity/corpus"))
@@ -751,10 +764,14 @@ def main(argv: list[str] | None = None) -> int:
         if not args.operator.strip():
             raise legacy.DriverMetadataError("operator must be non-empty")
         legacy._validate_label(args.label)
-        metadata = preflight(args.mode, args.corpus_dir)
-        backend, dtype = (
-            ("cuda", "f32") if args.mode == "kernel-path" else ("cpu", "f64")
+        gpu_backend = (
+            ("wgpu" if args.label == "r1-kernel-path-wgpu" else "cuda")
+            if args.mode == "kernel-path"
+            else None
         )
+        metadata = preflight(args.mode, args.corpus_dir)
+        backend = gpu_backend if gpu_backend is not None else "cpu"
+        dtype = "f32" if gpu_backend is not None else "f64"
         environment = capture_environment(backend=backend, dtype=dtype, seed=0)
         legacy._validate_environment(args.mode, environment)
         match = legacy._RUN_ID_RE.fullmatch(run_dir.name)
@@ -767,7 +784,10 @@ def main(argv: list[str] | None = None) -> int:
                 "run ID must match this code SHA and registered label"
             )
         legacy._reserve_run_dir(run_dir)
-        cases = collect_cases(args.mode, args.corpus_dir)
+        if gpu_backend == "wgpu":
+            cases = collect_cases(args.mode, args.corpus_dir, backend="wgpu")
+        else:
+            cases = collect_cases(args.mode, args.corpus_dir)
         if len(cases) != DENOMINATORS[args.mode]:
             raise legacy.DriverMetadataError("incomplete registered case population")
         config = {
@@ -809,7 +829,10 @@ def main(argv: list[str] | None = None) -> int:
         except BaseException:
             metadata_path.unlink(missing_ok=True)
             raise
-        close_run(run_dir)
+        if gpu_backend == "wgpu":
+            close_run(run_dir, expected_backend="wgpu")
+        else:
+            close_run(run_dir)
         abort_count = sum(case.get("aborted") is True for case in cases)
         if abort_count:
             raise legacy.DriverError(

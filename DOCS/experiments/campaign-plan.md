@@ -732,6 +732,15 @@ reference-host re-baseline gates before 0168 and 0173, and DV036-F5's fix at
   *timing* claim (§2.1 EXP-004 row, §5.2). Full detail: EXP-001-r1
   `e2-review.md` §4.
 
+**Core capability closure, 2026-09-28 UTC:** DV-041's Rust/PyO3
+`backend_name` accessor merged as PR #25 `5615eda`; the required
+workflows were verified green during `Hotfix-DV043`'s entry
+(`triage-dv043-handoff.md` §2). This closes the binding capability
+gap and the DV-041 register row, **not** the r1 follow-up E2
+driver/protocol sign-off or any EXP-001-r1 execution. The driver
+amendment and the two-build H4 plan remain a separate
+pre-execution E2 approval gate.
+
 ### 11.8 DV-043 — the EXP-001 D1 correction left a redundant derivative guard on the fixed-step path
 
 - **Discovered:** 2026-09-28 UTC, at the EXP-001-r1 E3 entry check §10.2
@@ -828,6 +837,12 @@ reference-host re-baseline gates before 0168 and 0173, and DV036-F5's fix at
   `main`. Subsection and amendment numbers are global, so this row takes §11.8
   and #9 rather than reusing them; the apparent gap closes when that branch
   merges.
+- **Branch reconciliation (this amendment branch):** the r1 branch's
+  §11.7 and campaign amendments #7/#8 and the DV-043 branch's
+  §11.8/amendment #9 now coexist here; #7/#8 were not replaced
+  by #9. `main` must carry all three after the requisite PR
+  merges. This text does not claim the DV-043 hotfix has
+  merged or its nightly closure was observed.
 
 ---
 

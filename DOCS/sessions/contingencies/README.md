@@ -12,17 +12,16 @@ None.
 
 ## Closed corrections
 
-EXP-001 D1 — **CLOSED 2026-09-27 UTC.** All four conditional sessions executed
-in S1→S2→S3→S4 order. S1 established root cause (PRIN guard divergence fixed;
-reference DV-007 `complex64` is the erroneous side, 67/67 exactness audit);
-S2 audit **PASS** (zero findings above D4); S3 delta re-audit **CLEAN**; S4
-documentation complete (PSR-039, registers updated, `EXP-001-r1` authorized).
-See the [correction audit](../../audits/2026-09-24-exp001-d1-correction-audit.md).
-**Session `0159` (EXP-002 E1) and every experiment downstream of EXP-001,
-plus `0194`, stay BLOCKED until `EXP-001-r1` returns a non-reversal verdict**
-(campaign plan §10.4 item 5). The correction branch
-(`hotfix/exp001-d1-parity-correction`, PR #24) is not yet merged; CI-green
-evidence for the merge SHA will be recorded by the next governed session.
+EXP-001 D1 — **CLOSED 2026-09-27 UTC.** S1→S2→S3→S4 all completed; S2 PASS
+and S3 delta CLEAN
+([`2026-09-24-exp001-d1-correction-audit.md`](../../audits/2026-09-24-exp001-d1-correction-audit.md));
+S4 issued PSR-039 and authorized EXP-001-r1. PR #24 merged to `main` as
+`149cf2d88ab6be401951b63d1d7e8fad209f52a5` (2026-09-28 UTC); six required CI
+workflows green
+([`EXP-001-r1/e1-handoff.md`](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md)).
+Session 0159 and later dependencies remain blocked until r1 E5 returns a
+non-reversal verdict (or approved Project Plan §8.3 amendment). No r1 run is
+authorized by this correction closure.
 
 - [2026-09-23-exp001-d1-s1-correction-implementation.md](2026-09-23-exp001-d1-s1-correction-implementation.md)
 - [2026-09-23-exp001-d1-s2-correction-audit.md](2026-09-23-exp001-d1-s2-correction-audit.md)
