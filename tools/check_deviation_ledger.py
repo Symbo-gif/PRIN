@@ -59,8 +59,30 @@ _SEVERITIES = frozenset({"D1", "D2", "D3", "D4", "—"})
 
 
 def _markdown_cells(line: str) -> list[str]:
-    """Split columns on unescaped pipes and retain escaped ones as content."""
-    return [cell.strip().replace(r"\|", "|") for cell in re.split(r"(?<!\\)\|", line)]
+    r"""Split columns on unescaped pipes and retain escaped ones as content.
+
+    An odd run of backslashes before ``|`` escapes it (``\\|`` is literal
+    backslash + delimiter); consumed escapes are unescaped in the cell.
+    """
+    cells: list[str] = []
+    buf: list[str] = []
+    escapes = 0
+    for char in line:
+        if char == "\\":
+            escapes += 1
+            continue
+        buf.append("\\" * (escapes // 2))
+        if char == "|" and escapes % 2 == 0:
+            cells.append("".join(buf))
+            buf = []
+        elif char == "|":
+            buf.append("|")
+        else:
+            buf.append("\\" * (escapes % 2) + char)
+        escapes = 0
+    buf.append("\\" * escapes)
+    cells.append("".join(buf))
+    return [cell.strip() for cell in cells]
 
 
 def parse_ledger(path: Path, _seen: frozenset[Path] = frozenset()) -> list[LedgerRow]:
@@ -101,10 +123,12 @@ def parse_ledger(path: Path, _seen: frozenset[Path] = frozenset()) -> list[Ledge
     ids: set[str] = set()
     in_canonical_table = False
     has_local_finding_table = False
+    saw_canonical_header = False
     for raw_line in remaining.splitlines():
         line = raw_line.strip()
         if line == _CANONICAL_HEADER:
             in_canonical_table = True
+            saw_canonical_header = True
             continue
         if line == _LOCAL_HEADER:
             has_local_finding_table = True
@@ -144,19 +168,36 @@ def parse_ledger(path: Path, _seen: frozenset[Path] = frozenset()) -> list[Ledge
             )
         )
 
-    delegation = _DELEGATION_RE.search(remaining)
-    delta = _DELTA_MARKER in remaining
+    # Delegation pointers and the delta marker are read from non-table lines
+    # only, so a PSR-NNN or marker literal inside a cell cannot redirect or
+    # force the merge path.
+    nontable = "\n".join(
+        raw_line
+        for raw_line in remaining.splitlines()
+        if not raw_line.strip().startswith("|")
+    )
+    delegation = _DELEGATION_RE.search(nontable)
+    delta = any(
+        raw_line.strip().startswith(_DELTA_MARKER)
+        for raw_line in remaining.splitlines()
+    )
     if rows and not delta:
         return rows
     if delta and not rows:
         raise ValueError(f"{path}: cumulative delta marker has no canonical rows")
+    if saw_canonical_header and not delta:
+        raise ValueError(f"{path}: canonical table has no rows and no delta marker")
     if not rows and has_local_finding_table:
         raise ValueError(
             f"{path}: local finding tables require a canonical cumulative delta"
         )
     if delegation is None:
         raise ValueError(f"{path}: no canonical ledger or PSR §3 delegation")
-    canonical_id = delegation.group(1).zfill(3)
+    # `PSR-036a` must resolve `036a-project-state.md`: zero-pad the numeric
+    # part, then re-attach the single-letter suffix.
+    delegate_id = delegation.group(1).lower()
+    numeric = delegate_id.rstrip("abcdefghijklmnopqrstuvwxyz")
+    canonical_id = numeric.zfill(3) + delegate_id[len(numeric) :]
     canonical_path = path.parent / f"{canonical_id}-project-state.md"
     if not canonical_path.is_file():
         raise ValueError(f"{path}: missing delegated ledger {canonical_path}")
@@ -284,13 +325,13 @@ def main(argv: list[str] | None = None) -> int:
     try:
         previous_rows = parse_ledger(args.previous)
         current_rows = parse_ledger(args.current) if args.current is not None else None
+        errors = validate_commits(previous_rows, args.repo)
+        if current_rows is not None:
+            errors.extend(validate_commits(current_rows, args.repo))
+            errors.extend(diff_ledgers(previous_rows, current_rows))
     except (OSError, ValueError) as exc:
-        print(f"Ledger parse error: {exc}", file=sys.stderr)
+        print(f"Ledger check error: {exc}", file=sys.stderr)
         return 2
-    errors = validate_commits(previous_rows, args.repo)
-    if current_rows is not None:
-        errors.extend(validate_commits(current_rows, args.repo))
-        errors.extend(diff_ledgers(previous_rows, current_rows))
 
     if errors:
         print("Ledger consistency check failed:", file=sys.stderr)
