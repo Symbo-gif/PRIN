@@ -42,6 +42,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `hotfix/exp001-d1-parity-correction` (PR #24) is not yet merged; CI-green
   evidence for the merge SHA will be recorded by the next governed session.
 
+- **`StateDerivatives::is_guarded()` (Rust, `prin-dynamics`) — derivative guard
+  provenance (DV-043, 2026-09-28 UTC).** Reports whether a container's values
+  were clamped to `±1e4` at construction: `true` from `StateDerivatives::new`;
+  `false` from `StateDerivatives::unclamped`, from the two finite-difference
+  gradient sites, and from a deserialized value. `EulerIntegrator` and
+  `RK4Integrator` configured with `GuardPolicy::Bounded` read it and skip their
+  own derivative pass when it is set. The flag is recorded at the construction
+  site rather than declared per model, because the sparse k-NN models return
+  `unclamped` at `n <= 1` and `new` above it — a static per-model declaration
+  could drift from the branch actually taken and silently drop the guard. Not
+  exposed to Python. See Fixed below and the Migration Guide.
+
+- **Positive GPU backend identification — `backend_name` (DV-041, 2026-09-28
+  UTC).** `GpuSparseKuramoto`, `GpuMeanFieldEngine`, and `GpuBandStepper`
+  (`prin-sim`, with matching PyO3 getters in `prin-py`) each gain
+  `backend_name`: the live CubeCL runtime name behind the engine's resolved
+  compute client (`"cuda"`, `"wgpu<wgsl>"`, `"cpu"`) or `"cpu-native"` on
+  host-slice fallback — the same convention `prin_kernels`' fused
+  `StepReport.backend_name` already uses. Closes a gap where a genuine wgpu
+  dispatch and a silent host-slice CPU fallback both returned a CPU-resident
+  DLPack capsule (only CUDA is zero-copy device-resident), so neither the
+  capsule's device type nor `torch.cuda.is_available()` could prove wgpu
+  code actually ran — required before the campaign's EXP-001-r1/EXP-004
+  wgpu legs can execute. `tests/_env.py::wgpu_kernel_executes()` adds the
+  matching executability probe alongside the existing `cuda_kernel_executes()`.
+  Live-verified on `PRIN-GPU-Runner` under both `--features cuda` and
+  `--features wgpu` builds on the same hardware. PR #25 code review (Devin
+  Review) found the host-slice fallback path could still report a stale
+  `"cpu-native"` on a build compiled with more than one GPU feature, since
+  its own priority-retry chain can pick a different backend than the
+  engine's persistent-client resolution assumed; fixed with a per-instance
+  last-observed-backend cache, empirically verified against the exact
+  scenario described. See `DOCS/audits/2026-09-28-dv041-wgpu-backend-identification-audit.md`
+  §6.1.
+
 - **Full-corpus PRIN-vs-corpus parity gate and the EXP-001 H2a registered-stream
   gate (EXP-001 D1 correction, S1, 2026-09-24 UTC).** These close finding
   EXP001-E5-F1. `parity/test_parity_prin_corpus.py` integrates PRIN from all
@@ -126,6 +161,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking (Rust): `StateDerivatives` is no longer exhaustively constructible
+  or destructurable outside `prin-dynamics` (DV-043, 2026-09-28 UTC).** The
+  three derivative arrays stay public; the new `guarded` provenance field is
+  private. Build one with `StateDerivatives::new` (clamped) or
+  `StateDerivatives::unclamped` (exactly as computed) instead of a struct
+  literal. Equality and the serialized form are unchanged — `PartialEq` is now
+  a manual implementation over the three arrays and the flag is
+  `#[serde(skip)]` — so a deserialized value reports `is_guarded() == false`
+  and is still guarded by its integrator. Permitted at `1.0.0-rc1` under
+  Versioning and Release Standards §1's **pre-1.0** bullet ("Pre-1.0: minor
+  bumps may break API; each roadmap phase exit is tagged as a pre-release
+  (`v0.Y.0-alpha.N` / `-rc.N`)"): the workspace is at a pre-release and `1.0.0`
+  — the feature-complete milestone — has not shipped, so the *post*-1.0
+  stability regime (major bump, ≥1-minor `_deprecation` cycle, Migration Guide
+  entry) is not yet in force. That post-1.0 clause is not the authority here and
+  would forbid this change as implemented. A Migration Guide entry is supplied
+  regardless. No Python surface changes. See the Migration Guide.
+
 - **Behaviour change — `EulerIntegrator`/`RK4Integrator` now use PRINet 3.0's
   `OscillatorModel` guard by default (EXP-001 D1 correction, S1, Project Plan
   amendment #47).** Stage and output amplitudes are floored at exactly `0`
@@ -185,6 +238,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   campaign-wide 64 MiB cap is unchanged.
 
 ### Fixed
+
+- **Redundant `±1e4` derivative guard on the fixed-step path — the
+  `nightly.yml` `bench-regression` breach the EXP-001 D1 correction introduced
+  (DV-043, campaign plan §11.8 / amendment #9, 2026-09-28 UTC).** `34e8811`
+  moved the derivative guard into `EulerIntegrator`/`RK4Integrator`, where it is
+  load-bearing for the models the same commit switched to
+  `StateDerivatives::unclamped`. The sparse k-NN models kept their own clamp at
+  construction, and `OscilloSim`, the parameter sweep and `sweep_bench` all pin
+  `GuardPolicy::Bounded` over exactly those models, so every RK4 step re-walked
+  four `3N` buffers to re-clamp values already inside the bound — and, in the
+  default non-`strict-checks` build, evaluated `clamp_derivative` twice per
+  element and discarded the first result. Nightly run `36380992897` at
+  `149cf2d` reported ten gated breaches (+10.1 %…+28.8 %), all in
+  `engine_step/step_parallel/*` and `sweep_parallel/*`, while the
+  derivative-only arms of the *same* criterion group — same `SparseKuramoto`,
+  same N, same state, no integrator — stayed flat at 0.983–1.036. Both
+  integrators now skip the pass when the source is already guarded, and
+  otherwise assign `guard_derivative_value`'s result instead of clamping a
+  second time. **No integrated value changes:** the skipped and applied paths
+  are pinned bit-identical by
+  `bounded_step_skips_the_redundant_pass_without_changing_any_value` at values
+  inside and exactly at the bound, and the guard still runs for every
+  `unclamped` source including the sparse models' own `n <= 1` branch
+  (`sparse_models_report_the_guard_they_actually_applied`). Attribution, the
+  ~25 ns-per-oscillator-per-step fingerprint and the reference-host A/B are
+  recorded in campaign plan §11.8; the `step_parallel/16384` +28.8 % magnitude
+  is explicitly *not* claimed as explained, since it did not reproduce on the
+  reference host.
 
 - **EXP-001 H1/H2a refutations root-caused (EXP-001 D1 correction, S1,
   2026-09-24 UTC).** Every breach is attributed.

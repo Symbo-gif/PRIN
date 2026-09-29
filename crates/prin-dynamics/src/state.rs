@@ -412,7 +412,13 @@ pub fn guard_derivatives(derivatives: &[f64], name: &'static str) -> Result<Vec<
 }
 
 /// Container for oscillator state time derivatives: `dphase/dt`, `damplitude/dt`, `dfrequency/dt`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+///
+/// Equality and serialization cover the three derivative arrays only. The
+/// `guarded` provenance flag is excluded from both: it records how a value was
+/// constructed, not what it holds, so two containers carrying identical
+/// derivatives compare equal and serialize identically whichever constructor
+/// produced them.
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StateDerivatives {
     /// Time derivative of phase (`dφ/dt`) for each oscillator.
     pub dphase: Vec<f64>,
@@ -422,6 +428,40 @@ pub struct StateDerivatives {
 
     /// Time derivative of frequency (`dω/dt`) for each oscillator.
     pub dfrequency: Vec<f64>,
+
+    /// Whether every value already satisfies the `±DERIV_CLAMP` guard.
+    ///
+    /// Set at the point of construction — `true` from
+    /// [`StateDerivatives::new`], `false` from
+    /// [`StateDerivatives::unclamped`] — so it cannot drift from the guard the
+    /// model actually applied the way a per-model declaration could. A
+    /// `GuardPolicy::Bounded` fixed-step integrator reads it through
+    /// [`StateDerivatives::is_guarded`] and skips re-clamping a buffer whose
+    /// values are already finite and within `±DERIV_CLAMP` (DV-043: four
+    /// redundant `3N` passes per RK4 step, ~25 ns per oscillator per step,
+    /// were the `nightly.yml` `bench-regression` breach introduced by the
+    /// EXP-001 D1 correction).
+    ///
+    /// Skipped by serde, so a deserialized container reports `false` — the
+    /// conservative answer, which leaves its integrator guarding every value.
+    ///
+    /// The flag is a construction-time fact, not an invariant maintained across
+    /// mutation: the three arrays are public, so a caller that edits them after
+    /// construction invalidates it. Nothing in this workspace does, and the
+    /// `Dynamics` contract is that `compute_derivatives` returns the values it
+    /// just built.
+    #[serde(skip)]
+    pub(crate) guarded: bool,
+}
+
+impl PartialEq for StateDerivatives {
+    /// Compare the derivative arrays only, ignoring the `guarded` provenance
+    /// flag, so equality stays a statement about values.
+    fn eq(&self, other: &Self) -> bool {
+        self.dphase == other.dphase
+            && self.damplitude == other.damplitude
+            && self.dfrequency == other.dfrequency
+    }
 }
 
 impl StateDerivatives {
@@ -454,6 +494,7 @@ impl StateDerivatives {
             dphase,
             damplitude,
             dfrequency,
+            guarded: true,
         })
     }
 
@@ -492,12 +533,28 @@ impl StateDerivatives {
             dphase,
             damplitude,
             dfrequency,
+            guarded: false,
         })
     }
 
     /// Number of oscillators in the system.
     pub fn n_oscillators(&self) -> usize {
         self.dphase.len()
+    }
+
+    /// Whether every value already satisfies the `±DERIV_CLAMP` guard.
+    ///
+    /// `true` only for a container built by [`StateDerivatives::new`], which
+    /// clamps every value to `±DERIV_CLAMP` and repairs non-finite ones under
+    /// both the default and the `strict-checks` builds. A caller that would
+    /// apply the same bound — a `GuardPolicy::Bounded` fixed-step integrator —
+    /// can therefore skip its own pass without changing a single value
+    /// (DV-043).
+    ///
+    /// [`StateDerivatives::unclamped`] and a deserialized container report
+    /// `false`, so those values are still guarded by the caller.
+    pub fn is_guarded(&self) -> bool {
+        self.guarded
     }
 }
 
@@ -696,6 +753,68 @@ mod tests {
         assert_eq!(clamped.unwrap().dphase, [DERIV_CLAMP]);
         #[cfg(feature = "strict-checks")]
         assert!(clamped.is_err());
+    }
+
+    #[test]
+    fn guarded_flag_records_which_constructor_ran() {
+        // DV-043: a `Bounded` fixed-step integrator skips its own derivative
+        // pass exactly when this flag is set, so the flag must track the
+        // constructor that actually applied the `±DERIV_CLAMP` guard.
+        let (dp, da, df) = (vec![0.5], vec![-0.25], vec![1.0]);
+        assert!(StateDerivatives::new(dp.clone(), da.clone(), df.clone())
+            .unwrap()
+            .is_guarded());
+        assert!(!StateDerivatives::unclamped(dp, da, df)
+            .unwrap()
+            .is_guarded());
+    }
+
+    #[test]
+    fn guarded_flag_is_provenance_and_changes_no_public_contract() {
+        // The flag records how a value was built, not what it holds: two
+        // containers with identical in-range derivatives stay equal, serialize
+        // identically, and round-trip to the conservative `false`.
+        let clamped = StateDerivatives::new(vec![0.5], vec![-0.25], vec![1.0]).unwrap();
+        let raw = StateDerivatives::unclamped(vec![0.5], vec![-0.25], vec![1.0]).unwrap();
+        assert!(clamped.is_guarded() && !raw.is_guarded());
+        assert_eq!(clamped, raw);
+
+        let encoded = serde_json::to_string(&clamped).unwrap();
+        assert_eq!(encoded, serde_json::to_string(&raw).unwrap());
+        assert!(
+            !encoded.contains("guarded"),
+            "the serialized form gained a field: {encoded}"
+        );
+
+        let restored: StateDerivatives = serde_json::from_str(&encoded).unwrap();
+        assert!(!restored.is_guarded());
+        assert_eq!(restored, clamped);
+    }
+
+    #[test]
+    fn clamp_derivative_is_idempotent_where_the_guard_skip_relies_on_it() {
+        // DV-043: a `Bounded` integrator skipping its pass over a `new()`-built
+        // container is only value-preserving if re-applying the clamp cannot
+        // change anything the constructor already produced — including the
+        // signed-zero, at-bound and non-finite repairs the docs cite.
+        for value in [
+            0.0,
+            -0.0,
+            1.0,
+            -2.5,
+            DERIV_CLAMP,
+            -DERIV_CLAMP,
+            f64::NAN,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+        ] {
+            let once = clamp_derivative(value);
+            assert_eq!(
+                once.to_bits(),
+                clamp_derivative(once).to_bits(),
+                "clamp_derivative is not idempotent at {value}"
+            );
+        }
     }
 
     #[test]

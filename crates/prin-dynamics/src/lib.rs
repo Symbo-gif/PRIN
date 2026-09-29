@@ -30,7 +30,10 @@
 //! ceiling, derivatives as the models return them), while
 //! [`integrate::GuardPolicy::Bounded`] reproduces the fused-kernel/OscilloSim
 //! `[1e-6, 10]` / `±1e4` guard; the models clamp derivatives only on their
-//! sparse k-NN paths (see [`state::StateDerivatives`]).
+//! sparse k-NN paths, and report that through
+//! [`state::StateDerivatives::is_guarded`] so a `Bounded` integrator does not
+//! re-clamp a buffer the model already guarded (see
+//! [`state::StateDerivatives`]).
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]

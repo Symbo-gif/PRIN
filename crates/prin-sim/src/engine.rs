@@ -807,6 +807,37 @@ mod tests {
     }
 
     #[test]
+    fn sparse_models_report_the_guard_they_actually_applied() {
+        // DV-043: a `Bounded` fixed-step integrator skips its own derivative
+        // pass when `StateDerivatives::is_guarded` is set, so the flag has to
+        // track the branch each model actually takes. For `n > 1` the sparse
+        // k-NN paths clamp through `StateDerivatives::new` (PRINet 3.0's
+        // `_clamp_finite`) — the path `OscilloSim`, the parameter sweep and
+        // `sweep_bench` all exercise, and the one the redundant pass was
+        // re-clamping. At `n <= 1` they return the reference's unclamped
+        // single-oscillator values (EXP-001 D1 audit S1.9), so the integrator's
+        // guard must still run there.
+        let coupling = SparseCoupling::from_ring(4, 1, 1.0).unwrap();
+        let state = OscillatorState::new(vec![0.5; 4], vec![1.0; 4], vec![0.1; 4], None).unwrap();
+        let kuramoto = SparseKuramoto::new(4, 0.1, 0.01, coupling.clone()).unwrap();
+        assert!(kuramoto.compute_derivatives(&state).unwrap().is_guarded());
+        let landau = SparseStuartLandau::new(4, 1.0, coupling).unwrap();
+        assert!(landau.compute_derivatives(&state).unwrap().is_guarded());
+
+        // `from_ring(1, 0, _)` fails because degree 0 is invalid, so build the
+        // empty single-oscillator coupling manually as the n=1 tests above do.
+        let indptr = vec![0, 0];
+        let indices: Vec<usize> = vec![];
+        let data: Vec<f64> = vec![];
+        let single = SparseCoupling::from_csr(&indptr, &indices, &data, 1).unwrap();
+        let one = OscillatorState::new(vec![0.5], vec![1.0], vec![3.0], None).unwrap();
+        let kuramoto1 = SparseKuramoto::new(1, 0.1, 0.01, single.clone()).unwrap();
+        assert!(!kuramoto1.compute_derivatives(&one).unwrap().is_guarded());
+        let landau1 = SparseStuartLandau::new(1, 1.0, single).unwrap();
+        assert!(!landau1.compute_derivatives(&one).unwrap().is_guarded());
+    }
+
+    #[test]
     fn sparse_kuramoto_state_dimension_mismatch() {
         let n = 4;
         let coupling = SparseCoupling::from_ring(n, 1, 1.0).unwrap();
