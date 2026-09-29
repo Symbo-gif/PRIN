@@ -13,7 +13,7 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0156 | EXP-001 | E3 — Execution | [Golden-trajectory numerical parity](0156-exp001-e3-golden-trajectory-numerical-parity.md) | COMPLETE — 4/4 runs, 0 aborted; H1/H2a breaches escalated to E4 |
 | 0157 | EXP-001 | E4 — Analysis | [Golden-trajectory numerical parity](0157-exp001-e4-golden-trajectory-numerical-parity.md) | COMPLETE — §8 rule applied: H1 `REFUTED` (485/504), H2a `REFUTED` (897/1,000), H2b/H3/H4 `CONFIRMED`; **campaign plan §10.4 D1 raised**; analysis code + `report-manifest.json` committed; DV-040 opened |
 | 0158 | EXP-001 | E5 — Report | [Golden-trajectory numerical parity](0158-exp001-e5-golden-trajectory-numerical-parity.md) | **COMPLETE — report issued 2026-09-23; exit gate open on the correction cycle.** All five verdicts reported (H1/H2a `REFUTED`, H2b/H3/H4 `CONFIRMED`); §10.4 **D1** carried; second D1 **EXP001-E5-F1** raised (the `parity` CI corpus gate does not exercise PRIN, and no gate covers the full 504-case corpus — the only PRIN-vs-corpus gate covers 4 representative cases, none breaching) with a Parity Report erratum; four contingency sessions instantiated; **verified and accepted by the maintainer 2026-09-23 UTC**, E1–E5 PR approved |
-| 0159 | EXP-002 | E1 — Pre-registration | [API, benchmark-result, and reproduction parity](0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md) | **BLOCKED** — EXP-001 D1 (campaign plan §10.4 item 2, §3.3); released only after the [correction cycle](../contingencies/2026-09-23-exp001-d1-s1-correction-implementation.md) S1→S4 closes and `EXP-001-r1` returns a non-reversal verdict |
+| 0159 | EXP-002 | E1 — Pre-registration | [API, benchmark-result, and reproduction parity](0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md) | **READY — released 2026-09-29 UTC, may begin.** The [correction cycle](../contingencies/2026-09-23-exp001-d1-s1-correction-implementation.md) S1→S4 closed 2026-09-27, `EXP-001-r1` returned a **non-reversal** E5 verdict (all five hypotheses `CONFIRMED`, D1 not raised), and MichaelMaillet verified and accepted that report on 2026-09-29 UTC, meeting E5's exit gate. Campaign plan §10.4 item 5's condition is discharged; no Project Plan §8.3 amendment was needed. Proceed in §3's dependency order |
 | 0160 | EXP-002 | E2 — Review and approval | [API, benchmark-result, and reproduction parity](0160-exp002-e2-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
 | 0161 | EXP-002 | E3 — Execution | [API, benchmark-result, and reproduction parity](0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
 | 0162 | EXP-002 | E4 — Analysis | [API, benchmark-result, and reproduction parity](0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
@@ -62,8 +62,98 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 > §8.3 amendment accepting a changed conclusion. Planned session numbers do
 > not change.
 >
-> **Correction S1 complete, 2026-09-24 UTC** (draft PR #24; not merged).
-> Every H1/H2a breach is attributed. PRIN's Euler/RK4 guard divergence is
-> fixed; the reference's DV-007 `complex64` arithmetic is established as the
-> erroneous side (campaign plan §10.4 item 3); a full-corpus PRIN gate now
-> runs in `parity`. S2–S4 are pending; 0159 stays blocked.
+> **Correction cycle COMPLETE, 2026-09-27 UTC.** All four contingency sessions
+> (S1→S2→S3→S4) closed. S1: root cause established and fixed; S2: **PASS**;
+> S3: delta re-audit **CLEAN**; S4: PSR-039 issued, `EXP-001-r1` authorized.
+> The correction branch (`hotfix/exp001-d1-parity-correction`) merged as
+> PR #24 `149cf2d88ab6be401951b63d1d7e8fad209f52a5` (2026-09-28 UTC); all six
+> required workflows are green per the
+> [EXP-001-r1 E1 handoff](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md).
+> **0159 stays
+> BLOCKED** until `EXP-001-r1` returns a non-reversal verdict.
+>
+> **EXP-001-r1 E1 COMPLETE — DRAFT, 2026-09-28 UTC.** The maintainer declared
+> this E1 session. The [draft pre-registration](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/preregistration.md)
+> and [E1 handoff](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md)
+> record the prospective protocol and local validation. E2 must independently
+> review the protocol and resolve the required wgpu coverage and
+> shared-storage budget gates before execution. E1 does not approve E2,
+> execute E3, or release session 0159.
+>
+> **E2 follow-up H4 method APPROVED 2026-09-29 UTC; NOT FROZEN; E3
+> BLOCKED on DV-043/DV-044 and clean M/R source identity.** DV-041
+> binding capability closed on PR #25/required CI. DV-043 is local and
+> OPEN pending required-CI merge plus a green nightly; DV-044's governed
+> ledger correction is also open. No E3 run/freeze; session 0159
+> remains BLOCKED.
+>
+> **EXP-001-r1 E3 EXECUTED 2026-09-29 UTC.** Every §10 entry gate closed
+> first: DV-043 merged to `main` as `9b79d2e` (PR #26) with a green forced
+> nightly `bench-regression` (`36525353031` attempt 2), DV-044 closed through
+> its own S1→S4 cycle, and `M = 9b79d2e…` was incorporated with
+> `check_ci_green.py` green on all six required workflows. The
+> pre-registration then froze at its first `RUN-` creation at
+> `F = 5d5ae35…`, and all six registered runs executed from the clean campaign
+> checkout `R = 5d5ae35…` — 72-case wgpu kernel-path (`wgpu<wgsl>` proven per
+> case), 72-case CUDA kernel-path, 504-case corpus, 2× 14-case repeatability
+> and the 1,000-draw fuzz leg. Zero aborts, every directory manifested; see
+> the [E3 log](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/log.md).
+> E3 computed no verdict. Session 0159 remains BLOCKED.
+>
+> **EXP-001-r1 E4 ANALYSED 2026-09-29 UTC — ALL FIVE HYPOTHESES `CONFIRMED`,
+> D1 FLAG NOT RAISED.** The r1-specific analysis module was committed before
+> adjudication (campaign plan §7.4 item 2) and applied the frozen §8 rule to
+> all six artefacts: H1 504/504 accepted (485 native-parity + 19
+> explained-dv007, zero unexplained breaches), H2a **978 pointwise + 22
+> characterized**, H2b both metrics' 95 % CIs strictly inside ±δ on 657
+> contributors each, H3 14/14 byte-identical in both invocations with
+> identical separate-run projections, H4 72/72 on **each** of CUDA and wgpu
+> with zero failed derivative elements. Zero cases aborted anywhere. The four
+> §8 outputs regenerate byte-identically from a clean checkout at `3270699`;
+> see the [E4 analysis record](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis.md).
+> **This is a non-reversal detection, but it does not release 0159**: §10.4
+> item 5 keys the release to E5's verdict. **0159 stays BLOCKED until
+> EXP-001-r1 E5 reports.**
+>
+> **EXP-001-r1 E5 REPORTED 2026-09-29 UTC — non-reversal; 0159's release
+> condition MET, release pending maintainer verification.** The
+> [E5 report](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/report.md)
+> restates all five `CONFIRMED` verdicts with the expected-versus-observed
+> table, both 72-case H4 GPU legs in full, PD-1…PD-6 (PD-5 is the
+> `149cf2d..M` baseline delta §10 item 5 requires: 23 files, 2,253 insertions,
+> 34 deletions — exactly DV-041/PR #25 and DV-043/PR #26 plus their
+> documentation, with `R` identified as the experiment's distinct source SHA),
+> ten threats to validity including §4.2's clamp-trip limitation restated for
+> the 22 characterized cases, and the full artefact index. Regeneration was
+> re-verified in the E5 checkout: all four committed output digests reproduced
+> byte-identically. **No D1 correction cycle is triggered.** EXP-001's record
+> gains append-only erratum **E-4** and the Parity Report gains a dated
+> admonition; neither revises EXP-001's own `REFUTED` verdicts. Budget: 6.855
+> of 8 MiB (r1), 12.784 of 16 MiB (shared root), 12.777 of 64 MiB (campaign),
+> ~13 min E3 wall time of 8 CPU hours, zero hosted-CI hours charged to r1.
+> **0159, EXP-002 … EXP-008 and 0194 are released on the maintainer's
+> verification of that report (§13), which is E5's exit gate and is not yet
+> recorded — they remain BLOCKED until it is.** Nothing was pushed and no PR
+> exists; §12 item 3 makes the E5 PR carry the whole r1 E1–E5 range, and
+> opening it awaits authorization.
+>
+> **EXP-001-r1 E5 VERIFIED AND ACCEPTED 2026-09-29 UTC — THE CAMPAIGN BLOCK IS
+> LIFTED; EXP-001-r1 IS COMPLETE.** MichaelMaillet completed the report's §13
+> verification block, accepting all five `CONFIRMED` verdicts, the "no D1
+> raised" non-reversal determination, and PD-6's reading of §10 item 5 (report
+> both 72-case H4 legs; execute none at E5). E5's exit gate is met, so under
+> campaign plan §10.4 item 5 **session 0159 (EXP-002 E1), every experiment
+> downstream of EXP-001 and session 0194 are RELEASED** and may proceed in §3's
+> dependency order. No Project Plan §8.3 amendment was needed — a confirmed
+> parity result is not a changed conclusion. Before verification the report's
+> 194 quoted figures were cross-checked programmatically against the committed
+> artefacts; that found one real error (the four generated outputs total
+> 10,506,349 bytes, not 10,506,347), corrected under errata **E-1**/**A-1** with
+> the original figures retained, plus a histogram-unit ambiguity recorded as
+> report §9 item 11 and `analysis.md` **A-2** for DV-040's re-audit gate at
+> EXP-002 E4. Disclosed and not remediated: §9 item 9 — E4 and E5 share one AI
+> pair, and no fresh-context independent review was run before verification.
+> **Still open:** opening the E1–E5 pull request (authorized by the same
+> verification, not yet exercised — nothing is pushed) and its §14.1
+> tested-head-SHA/required-check addendum; and announcing the report in the next
+> Project State Report, which is not an experiment session's to issue.

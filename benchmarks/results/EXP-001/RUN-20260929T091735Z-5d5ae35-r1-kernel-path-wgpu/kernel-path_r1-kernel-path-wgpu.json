@@ -1,0 +1,2984 @@
+{
+  "cases": [
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_005_K0_5_seed1400000",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.435762145898025e-07,
+          "max_rel_diff": 1.1610392156371711e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 6.42952464602331e-08,
+          "max_rel_diff": 2.3281010057918323e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_01_K0_5_seed1400001",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 1.9284252239515354e-07,
+          "max_rel_diff": 2.6038992547911272e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.4627154032442746e-07,
+          "max_rel_diff": 3.2227683861047455e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 2.3665101697928695e-10,
+          "max_rel_diff": 1.5452922453186188e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_02_K0_5_seed1400002",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.2017644979731585e-07,
+          "max_rel_diff": 9.355812566547466e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.094350183891926e-08,
+          "max_rel_diff": 8.45417094304111e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_005_K1_seed1400003",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 2.6940424158183873e-07,
+          "max_rel_diff": 2.0885489477705417e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.6494086013674192e-07,
+          "max_rel_diff": 2.6476826826851465e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 7.230277255612671e-10,
+          "max_rel_diff": 1.2151343265023117e-05,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_01_K1_seed1400004",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.131471893018215e-07,
+          "max_rel_diff": 8.271107465461216e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.107162948572494e-07,
+          "max_rel_diff": 2.387271424192352e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_02_K1_seed1400005",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.5351765276535616e-07,
+          "max_rel_diff": 3.061352150559647e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.1941362187961602e-07,
+          "max_rel_diff": 5.8971426409985565e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.0637663549507848e-09,
+          "max_rel_diff": 1.3878291464051803e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_005_K2_seed1400006",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.504949995265406e-07,
+          "max_rel_diff": 1.0657160080492709e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 6.346305227999949e-07,
+          "max_rel_diff": 6.167887067251753e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_01_K2_seed1400007",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 9.648613605861556e-07,
+          "max_rel_diff": 1.3352437244155706e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.4561855538916006e-07,
+          "max_rel_diff": 7.059711322014134e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.1714015768667096e-09,
+          "max_rel_diff": 0.00030307759809374745,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n8_s20_dt0_02_K2_seed1400008",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.264897880470244e-07,
+          "max_rel_diff": 2.0087363257555983e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.0445495918508527e-07,
+          "max_rel_diff": 3.7900272746162706e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_005_K0_5_seed1400009",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.195096862171567e-07,
+          "max_rel_diff": 7.519797020040443e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 9.025027503106742e-08,
+          "max_rel_diff": 3.5173240410147997e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 4.85876319429937e-10,
+          "max_rel_diff": 5.422497275608797e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_01_K0_5_seed1400010",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.4517266140076117e-07,
+          "max_rel_diff": 1.8670510045316596e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 8.93981112609632e-08,
+          "max_rel_diff": 8.37706574953849e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_02_K0_5_seed1400011",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.7985642187265967e-07,
+          "max_rel_diff": 1.0505087049695669e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.6322060594764487e-07,
+          "max_rel_diff": 1.1966372500860102e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 2.1159680812929882e-10,
+          "max_rel_diff": 4.8077137720195895e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_005_K1_seed1400012",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.885597958472545e-07,
+          "max_rel_diff": 7.655615037218723e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.43403067368142e-07,
+          "max_rel_diff": 8.229660909756986e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_01_K1_seed1400013",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.691068108466425e-07,
+          "max_rel_diff": 2.4904466518989796e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.594890861074006e-07,
+          "max_rel_diff": 1.5890913157952652e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.1749394966610767e-09,
+          "max_rel_diff": 2.1784451436939134e-05,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_02_K1_seed1400014",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.64949547868332e-07,
+          "max_rel_diff": 1.5711635726132905e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.2054886361644321e-07,
+          "max_rel_diff": 2.8982140900236683e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_005_K2_seed1400015",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 1.008891326037542e-06,
+          "max_rel_diff": 2.4371366152540945e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.8832332810146966e-07,
+          "max_rel_diff": 1.6768651147089224e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.5831713522616864e-09,
+          "max_rel_diff": 7.024872664939901e-05,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_01_K2_seed1400016",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 1.345382083073332e-06,
+          "max_rel_diff": 8.704292670620537e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.198769423258142e-07,
+          "max_rel_diff": 4.985706741208584e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n12_s20_dt0_02_K2_seed1400017",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 8.811681428966267e-07,
+          "max_rel_diff": 1.3989140781394955e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.2844879155623516e-07,
+          "max_rel_diff": 4.6768771485344747e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 2.0178714785256194e-09,
+          "max_rel_diff": 4.41329077658756e-05,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_005_K0_5_seed1400018",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.80683520262437e-07,
+          "max_rel_diff": 1.5169963837691426e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.285677381224204e-07,
+          "max_rel_diff": 6.514170295821637e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_01_K0_5_seed1400019",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.8772797594788244e-07,
+          "max_rel_diff": 9.159850682391484e-08,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.3265813544882654e-07,
+          "max_rel_diff": 8.55183055839335e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 2.5411261956416117e-10,
+          "max_rel_diff": 1.4507802180330894e-05,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_02_K0_5_seed1400020",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.554856326028812e-07,
+          "max_rel_diff": 8.7081273866661e-08,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.496310416126967e-07,
+          "max_rel_diff": 4.092105420595054e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_005_K1_seed1400021",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.852364684561962e-07,
+          "max_rel_diff": 2.8694769446923403e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.8599587003897966e-07,
+          "max_rel_diff": 2.914834176008092e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 9.404596867977968e-10,
+          "max_rel_diff": 4.447269580790341e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_01_K1_seed1400022",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.845856764276959e-07,
+          "max_rel_diff": 9.719641012378887e-08,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 3.0056332622763193e-07,
+          "max_rel_diff": 1.6122868443513755e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_02_K1_seed1400023",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.252467876777246e-07,
+          "max_rel_diff": 1.7535806131911406e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.5476272680347023e-07,
+          "max_rel_diff": 7.818663881374837e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 4.85672797985448e-10,
+          "max_rel_diff": 7.831789310811875e-05,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_005_K2_seed1400024",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 8.714422996547455e-07,
+          "max_rel_diff": 7.483290341782451e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 5.211727489573548e-07,
+          "max_rel_diff": 3.14259796078466e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_01_K2_seed1400025",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.206730083808566e-07,
+          "max_rel_diff": 5.064299501414945e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.820103478575533e-07,
+          "max_rel_diff": 2.774979783735002e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.324294515844468e-09,
+          "max_rel_diff": 8.876435214950083e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n16_s20_dt0_02_K2_seed1400026",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 9.86382307388567e-07,
+          "max_rel_diff": 6.038531725444423e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 7.273959494735749e-07,
+          "max_rel_diff": 7.984627459231757e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_005_K0_5_seed1400027",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.798797779732467e-07,
+          "max_rel_diff": 4.764883299987734e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.4291571850955087e-07,
+          "max_rel_diff": 8.172351763237722e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 3.1392591218188217e-10,
+          "max_rel_diff": 1.4713733527908075e-05,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_01_K0_5_seed1400028",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 2.485716015243611e-07,
+          "max_rel_diff": 8.350300924791877e-08,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 8.440038390400417e-08,
+          "max_rel_diff": 1.956921827146689e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_02_K0_5_seed1400029",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.942877375706644e-07,
+          "max_rel_diff": 3.3527155199054185e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.267899206180978e-07,
+          "max_rel_diff": 3.5044193429105157e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 3.7993840967923175e-10,
+          "max_rel_diff": 2.505054235918935e-05,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_005_K1_seed1400030",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.541801240127597e-07,
+          "max_rel_diff": 6.689136577368229e-08,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 3.115846752832496e-07,
+          "max_rel_diff": 3.9025715478781656e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_01_K1_seed1400031",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.0315092730836e-07,
+          "max_rel_diff": 3.468744101330725e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 3.0819023699724113e-07,
+          "max_rel_diff": 3.521151335718024e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 5.910099608059244e-10,
+          "max_rel_diff": 1.9598216896095656e-05,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_02_K1_seed1400032",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.167127579142061e-07,
+          "max_rel_diff": 3.951176946649456e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.449290604777943e-07,
+          "max_rel_diff": 3.5598055456167934e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_005_K2_seed1400033",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.844647995052355e-07,
+          "max_rel_diff": 2.3497474780978727e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 5.863276475448487e-07,
+          "max_rel_diff": 3.5750009892156677e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.7008963104614937e-09,
+          "max_rel_diff": 1.1355410446681451e-05,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_01_K2_seed1400034",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 1.1435824522898486e-06,
+          "max_rel_diff": 5.454478693728658e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 8.206607360339291e-07,
+          "max_rel_diff": 6.615593636250121e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_euler_n24_s20_dt0_02_K2_seed1400035",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 1.0883777186165844e-06,
+          "max_rel_diff": 2.0968048803277237e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 5.908335245496943e-07,
+          "max_rel_diff": 3.498813741062953e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.408566229800512e-09,
+          "max_rel_diff": 5.762544757088617e-05,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_005_K0_5_seed1500000",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.529945905635714e-07,
+          "max_rel_diff": 2.682196043687586e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.5415830784126783e-07,
+          "max_rel_diff": 7.200022233772208e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_01_K0_5_seed1500001",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 2.820477038589786e-07,
+          "max_rel_diff": 8.962714503659742e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 9.295425873467877e-08,
+          "max_rel_diff": 7.295163054452196e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 3.5986135512450224e-10,
+          "max_rel_diff": 1.1678138240953423e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_02_K0_5_seed1500002",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.591515535030567e-07,
+          "max_rel_diff": 9.623715970264959e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 8.028309983476589e-08,
+          "max_rel_diff": 7.473934692126045e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_005_K1_seed1500003",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.1978050902002906e-07,
+          "max_rel_diff": 1.968765757387004e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.710247311021874e-07,
+          "max_rel_diff": 1.613052251522516e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 5.930109567460484e-10,
+          "max_rel_diff": 1.397762782248701e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_01_K1_seed1500004",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 2.959919900291652e-07,
+          "max_rel_diff": 2.0446804427799833e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.847402484322913e-07,
+          "max_rel_diff": 5.114233498668398e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_02_K1_seed1500005",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 2.997714174668431e-07,
+          "max_rel_diff": 5.618161664505104e-08,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.324173529189011e-07,
+          "max_rel_diff": 5.10925546843672e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 2.96678682272164e-10,
+          "max_rel_diff": 2.7368299127507336e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_005_K2_seed1500006",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.3395121895883904e-07,
+          "max_rel_diff": 1.3598943480464676e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.020495528722634e-07,
+          "max_rel_diff": 1.0334346586173753e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_01_K2_seed1500007",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.954110111616728e-07,
+          "max_rel_diff": 1.89727301448413e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 3.463760008537431e-07,
+          "max_rel_diff": 5.973894512088832e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 8.339900490041477e-10,
+          "max_rel_diff": 1.4422567511700608e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n8_s20_dt0_02_K2_seed1500008",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 1.2015375627782987e-06,
+          "max_rel_diff": 1.2143261176917383e-07,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 7.7272830023567e-07,
+          "max_rel_diff": 2.495645618426122e-06,
+          "total_count": 8,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 8,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 8,
+      "sparse_k": 3,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_005_K0_5_seed1500009",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.37987854592825e-07,
+          "max_rel_diff": 6.987421414298564e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.0462291044621708e-07,
+          "max_rel_diff": 1.9789773458954395e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.8125169483243324e-10,
+          "max_rel_diff": 1.2879238131398929e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_01_K0_5_seed1500010",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.5976003271164245e-07,
+          "max_rel_diff": 9.061386442957546e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.435435097729698e-07,
+          "max_rel_diff": 1.907730945078024e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_02_K0_5_seed1500011",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.395419050950977e-07,
+          "max_rel_diff": 2.494206343948017e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 8.224257375122335e-08,
+          "max_rel_diff": 8.54184164699191e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 4.917097724827505e-10,
+          "max_rel_diff": 5.9211478745047524e-05,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_005_K1_seed1500012",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.606459169664845e-07,
+          "max_rel_diff": 1.1413619445607846e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.604446093235069e-07,
+          "max_rel_diff": 6.05789454074913e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_01_K1_seed1500013",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.862033013390942e-07,
+          "max_rel_diff": 2.3607800192267842e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.707937582473562e-07,
+          "max_rel_diff": 3.2048313301654547e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 7.831671999282419e-10,
+          "max_rel_diff": 8.628463086139867e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_02_K1_seed1500014",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.067256486692486e-07,
+          "max_rel_diff": 1.2704521697708032e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.7035614691417464e-07,
+          "max_rel_diff": 5.515638759359281e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_005_K2_seed1500015",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.238544412757619e-07,
+          "max_rel_diff": 6.137137894162374e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 5.00453419594038e-07,
+          "max_rel_diff": 3.6703721962182987e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.586302490405589e-09,
+          "max_rel_diff": 1.4222999867197485e-05,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_01_K2_seed1500016",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.295504609785894e-07,
+          "max_rel_diff": 6.794019495878796e-08,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 5.681133260493354e-07,
+          "max_rel_diff": 6.179698711825975e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n12_s20_dt0_02_K2_seed1500017",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.424705508185525e-07,
+          "max_rel_diff": 2.712687437364696e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 3.74733130747984e-07,
+          "max_rel_diff": 6.653029308046232e-07,
+          "total_count": 12,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.144843794526236e-09,
+          "max_rel_diff": 3.8831582984944306e-06,
+          "total_count": 12,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 12,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_005_K0_5_seed1500018",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.923800815959112e-07,
+          "max_rel_diff": 6.579684464597759e-08,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.2447702002482686e-07,
+          "max_rel_diff": 4.3510450016032083e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_01_K0_5_seed1500019",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.796832329707513e-07,
+          "max_rel_diff": 8.460981697092721e-08,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.2711558572409132e-07,
+          "max_rel_diff": 7.762834584924873e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 3.3705872628012577e-10,
+          "max_rel_diff": 9.871474852898558e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_02_K0_5_seed1500020",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.77899169126772e-07,
+          "max_rel_diff": 1.3924123912566953e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.1124393439754243e-07,
+          "max_rel_diff": 2.9494817525586994e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_005_K1_seed1500021",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.515101685280797e-07,
+          "max_rel_diff": 1.8826391117131699e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.4109196794519505e-07,
+          "max_rel_diff": 7.233259473863231e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 6.422828804724355e-10,
+          "max_rel_diff": 3.792611796448214e-05,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_01_K1_seed1500022",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.307542829096178e-07,
+          "max_rel_diff": 2.0846640068030545e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 3.083209509924245e-07,
+          "max_rel_diff": 2.151087176225812e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_02_K1_seed1500023",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 3.899425484732433e-07,
+          "max_rel_diff": 1.9460514304981346e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.8199827561969926e-07,
+          "max_rel_diff": 5.520374792953511e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 9.49164285647783e-10,
+          "max_rel_diff": 1.3063387803699508e-05,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_005_K2_seed1500024",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 8.967652074254318e-07,
+          "max_rel_diff": 6.763269613210417e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.866539642378598e-07,
+          "max_rel_diff": 4.350237353037279e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_01_K2_seed1500025",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 9.271033789559624e-07,
+          "max_rel_diff": 5.958633589993598e-06,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.484815743222015e-07,
+          "max_rel_diff": 3.5944102702119236e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 9.664770342539264e-10,
+          "max_rel_diff": 5.8430283356545524e-05,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n16_s20_dt0_02_K2_seed1500026",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.24764472156869e-07,
+          "max_rel_diff": 2.743351219109675e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 6.232212372836443e-07,
+          "max_rel_diff": 5.258394893076379e-07,
+          "total_count": 16,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 16,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 16,
+      "sparse_k": 4,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_005_K0_5_seed1500027",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.70226927571116e-07,
+          "max_rel_diff": 1.4768186963716297e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.1240290143099685e-07,
+          "max_rel_diff": 3.7812354401098214e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 4.216089897720373e-10,
+          "max_rel_diff": 3.239131069209911e-05,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_01_K0_5_seed1500028",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.755567945049279e-07,
+          "max_rel_diff": 8.495148572431834e-08,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 9.932651662269976e-08,
+          "max_rel_diff": 2.9911753508611255e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_02_K0_5_seed1500029",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 6.688217020212051e-07,
+          "max_rel_diff": 1.8358736234631636e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 1.3880877081096088e-07,
+          "max_rel_diff": 3.792422442679474e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 2.7592024292536627e-10,
+          "max_rel_diff": 8.424072980335721e-06,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_005_K1_seed1500030",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 8.977523560105283e-07,
+          "max_rel_diff": 3.970501057960964e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 2.19565028602986e-07,
+          "max_rel_diff": 2.7320300438003094e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_01_K1_seed1500031",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 4.4730102466417065e-07,
+          "max_rel_diff": 4.3328932354794965e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 3.3078921291007646e-07,
+          "max_rel_diff": 5.806670472612839e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 6.621534568142739e-10,
+          "max_rel_diff": 1.6352632407326273e-05,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_02_K1_seed1500032",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 8.46386686959022e-07,
+          "max_rel_diff": 2.0981608717538225e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.2012572443184126e-07,
+          "max_rel_diff": 5.450831694787553e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_005_K2_seed1500033",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 5.306521670966902e-07,
+          "max_rel_diff": 5.877195001857845e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 5.191855934061351e-07,
+          "max_rel_diff": 3.025876367500508e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.118569174568193e-09,
+          "max_rel_diff": 3.98495845505924e-06,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_01_K2_seed1500034",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 8.197835565937339e-07,
+          "max_rel_diff": 5.664281352220739e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 4.815689536030732e-07,
+          "max_rel_diff": 2.6408332371910265e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 0.0,
+          "max_rel_diff": 0.0,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    },
+    {
+      "aborted": false,
+      "backend_name": "wgpu<wgsl>",
+      "case_id": "kuramoto_sparse_knn_rk4_n24_s20_dt0_02_K2_seed1500035",
+      "comparisons": [
+        {
+          "array_name": "dphase",
+          "failed_count": 0,
+          "max_abs_diff": 7.872849181467245e-07,
+          "max_rel_diff": 1.0625196327104773e-06,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "damplitude",
+          "failed_count": 0,
+          "max_abs_diff": 5.028053315925263e-07,
+          "max_rel_diff": 3.2226775733772924e-07,
+          "total_count": 24,
+          "within_tolerance": true
+        },
+        {
+          "array_name": "dfrequency",
+          "failed_count": 0,
+          "max_abs_diff": 1.2468025928098064e-09,
+          "max_rel_diff": 8.149260043102461e-06,
+          "total_count": 24,
+          "within_tolerance": true
+        }
+      ],
+      "coupling": "sparse_knn",
+      "dlpack_devices": {
+        "damplitude": "cpu",
+        "dfrequency": "cpu",
+        "dphase": "cpu"
+      },
+      "model": "kuramoto",
+      "n_oscillators": 24,
+      "sparse_k": 5,
+      "within_tolerance": true
+    }
+  ],
+  "config": {
+    "corpus_manifest_sha256": "fcbaad1cb16edb3445c9b9ce122131bf4361d9c4ce17c4bc67edd74c62edd2cf",
+    "experiment_id": "EXP-001-r1",
+    "guard_policy": "non_negative",
+    "iterations": 72,
+    "mode": "kernel-path",
+    "out_dir": "C:\\dev\\PRIN-r1-amendment\\benchmarks\\results\\EXP-001\\RUN-20260929T091735Z-5d5ae35-r1-kernel-path-wgpu",
+    "prin_extension": "C:\\dev\\PRIN-r1-amendment\\python\\prin\\_prin_core.pyd",
+    "prin_extension_sha256": "2f902e806a3cab860f3fbdf9b4e7ad7d4928329df63aaf46df4010ed430e748b",
+    "protocol_revision": 1,
+    "seed_counter": 0,
+    "seed_key": 1,
+    "warmup": 0
+  },
+  "environment": {
+    "backend": "wgpu",
+    "dtype": "f32",
+    "git_commit": "5d5ae3521317af47a11afa8d689935ac2fc0f447",
+    "gpu": "NVIDIA GeForce RTX 4060",
+    "gpu_vram_mb": 8188,
+    "logical_cpus": 16,
+    "platform": "Windows-11-10.0.26200-SP0",
+    "prin_version": "1.0.0rc1",
+    "processor": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+    "python_version": "3.14.0",
+    "rust_version": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "seed": 0
+  }
+}

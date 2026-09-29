@@ -8,32 +8,40 @@ numbered session. Copy each template to a dated/identified file before use.
 
 ## Open corrections
 
-EXP-001 D1 — **OPEN, opened 2026-09-23 UTC by session `0158` (EXP-001 E5).**
-Triggered by campaign plan §10.4: EXP-001's H1 (`REFUTED`, 485/504) and H2a
-(`REFUTED`, 897/1,000) are C1 parity reversals, and finding `EXP001-E5-F1`
-(the `parity` CI corpus gate regenerates with PRINet 3.0, not PRIN, so no CI
-gate performs the PRIN-vs-corpus trajectory comparison over the full 504-case
-corpus; the only gate that runs PRIN against corpus trajectories covers 4
-representative cases, none of them among H1's 19 breaching cases) is a second
-D1. The four sessions below run in strict S1 → S2 → S3 → S4 order.
-**S1 complete 2026-09-24 UTC** (draft PR #24): the root cause is a PRIN
-Euler/RK4 guard divergence (fixed) plus the reference's DV-007 `complex64`
-arithmetic (the corpus is the erroneous side, campaign plan §10.4 item 3), and
-a full-corpus PRIN gate now runs in the `parity` job. See the
-[correction audit](../../audits/2026-09-24-exp001-d1-correction-audit.md).
-S2 is next. **Session `0159`
-(EXP-002 E1) and every experiment downstream of EXP-001, plus `0194`, stay
-blocked until S4 closes and `EXP-001-r1` returns a non-reversal verdict.** No
-root cause is claimed by the triggering record; S1 owns it. See the
-[EXP-001 E5 report](../../experiments/EXP-001-golden-trajectory-numerical-parity/report.md)
-§7–§8.
+(none)
+
+## Closed corrections
+
+DV-044 — **CLOSED 2026-09-29 UTC.** All four stages executed in S1→S4 order
+on `hotfix/dv044-ledger-delta` (merged into this campaign branch `9cda4e5`).
+PSR-039's cumulative deviation ledger is now represented by an explicit
+§3.4 canonical delta (14 rows) and `tools/check_deviation_ledger.py`
+merges marked deltas while rejecting five-column local tables as cumulative
+ledgers — the exact failing PSR-038→039 comparison exits 0 (128→142) locally
+and on hosted CI (PR #27 `governance` job, run `36526332612`). S2
+PASS-WITH-FINDINGS; all seven findings remediated in S3 (12/12 tests, Snyk
+clean). The refreshed tool reaches `main` with this amendment at E5.
+
+- [2026-09-29-dv044-s1-correction-implementation.md](2026-09-29-dv044-s1-correction-implementation.md)
+- [2026-09-29-dv044-s2-correction-audit.md](2026-09-29-dv044-s2-correction-audit.md)
+- [2026-09-29-dv044-s3-correction-remediation.md](2026-09-29-dv044-s3-correction-remediation.md)
+- [2026-09-29-dv044-s4-correction-documentation.md](2026-09-29-dv044-s4-correction-documentation.md)
+
+EXP-001 D1 — **CLOSED 2026-09-27 UTC.** S1→S2→S3→S4 all completed; S2 PASS
+and S3 delta CLEAN
+([`2026-09-24-exp001-d1-correction-audit.md`](../../audits/2026-09-24-exp001-d1-correction-audit.md));
+S4 issued PSR-039 and authorized EXP-001-r1. PR #24 merged to `main` as
+`149cf2d88ab6be401951b63d1d7e8fad209f52a5` (2026-09-28 UTC); six required CI
+workflows green
+([`EXP-001-r1/e1-handoff.md`](../../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md)).
+Session 0159 and later dependencies remain blocked until r1 E5 returns a
+non-reversal verdict (or approved Project Plan §8.3 amendment). No r1 run is
+authorized by this correction closure.
 
 - [2026-09-23-exp001-d1-s1-correction-implementation.md](2026-09-23-exp001-d1-s1-correction-implementation.md)
 - [2026-09-23-exp001-d1-s2-correction-audit.md](2026-09-23-exp001-d1-s2-correction-audit.md)
 - [2026-09-23-exp001-d1-s3-correction-remediation.md](2026-09-23-exp001-d1-s3-correction-remediation.md)
 - [2026-09-23-exp001-d1-s4-correction-documentation.md](2026-09-23-exp001-d1-s4-correction-documentation.md)
-
-## Closed corrections
 
 DV-036 — **CLOSED 2026-09-23 UTC.** All four conditional sessions executed in
 S1→S2→S3→S4 order. Merged to `main` as `b434554`; nightly run `35847692136`

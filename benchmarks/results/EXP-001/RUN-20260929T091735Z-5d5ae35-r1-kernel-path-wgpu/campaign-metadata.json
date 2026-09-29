@@ -1,0 +1,14 @@
+{
+  "artefacts": {
+    "kernel-path_r1-kernel-path-wgpu.json": {
+      "hypotheses": [
+        "H4"
+      ],
+      "timing_method": "not-timed"
+    }
+  },
+  "exp_id": "EXP-001-r1",
+  "operator": "MichaelMaillet",
+  "run_id": "RUN-20260929T091735Z-5d5ae35-r1-kernel-path-wgpu",
+  "session": "EXP-001-r1-E3"
+}

@@ -123,7 +123,12 @@ starts by reading it (Development Workflow Standards §6).
   a CLEAN delta re-audit; `1.0.0-rc1` published to PyPI (`prin-core`) and
   crates.io (DV-010 CLOSED); every Deferred Validation item closed or
   dispositioned; **Phase 6 complete**.
-
+- [`039-project-state.md`](039-project-state.md) — Phase 7 cycle: EXP-001
+  golden-trajectory parity experiment closed REFUTED by the D1 correction
+  audit; D1 integrator defect fixed; DV-041 (wgpu fallback), DV-043
+  (redundant step guard), and DV-044 (ledger delegation parser) raised;
+  EXP-001-r1 declared; the §3.4 canonical ledger delta inherits PSR-038
+  (first delegated-delta form; 142 cumulative rows).
 
 The [`DEFERRED_VALIDATION_REGISTER.md`](DEFERRED_VALIDATION_REGISTER.md)
 consolidates all formally deferred validation items (DV-NNN) and analytics

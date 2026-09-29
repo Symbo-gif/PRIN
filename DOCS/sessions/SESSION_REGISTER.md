@@ -335,10 +335,11 @@ introduction and are not retroactively added here; this table starts with
 | `Hotfix-DV019` | 2026-08-26 | Dedicated hotfix/correction session for **DV-019** (`DEFERRED_VALIDATION_REGISTER.md`), executing Phase 5 analytics recommendation R33 (P0) and satisfying the hard entry-condition gate EA-006 added to WP-033 S1's session brief. Handoff note: `DOCS/experiments/hotfix-dv019-handoff.md`. Reproduced the flake on demand for the first time (9/12 `cargo test -p prin-train --lib` runs failed at default concurrency; 0/N failed at `--test-threads=1`), correcting the leading root-cause hypothesis: not a rayon summation-order artifact in three specific tests' fixtures, but a confirmed cross-thread graph-server interaction in `burn-autodiff` 0.16.1's default runtime (one process-global `AutodiffServer` shared by every `Autodiff<B>` graph, with no per-graph isolation). Fixed via a `prin-train`-private, test-only serialization mutex (`crate::support::autodiff_test_guard`) applied to all 42 autodiff-graph-touching tests across 14 files (not only the 3 originally-named modules); kept the fixture-hardening attempted first (batch/step-count/distinct-input changes to `bands.rs`/`hybrid.rs`/`phase_tracker.rs`) as independently-justified defense in depth, having directly confirmed it alone does not close the defect. | `main` @ `5fdfeb0` + session commit | COMPLETE — DV-019 `CLOSED`; 51 consecutive clean `cargo test -p prin-train --lib`-class runs plus the 10-concurrent-process contention scenario that reproduced the pre-fix defect; Python-side DV-019 sub-item re-confirmed clean (15/15) but its own root-cause-confirmation question remains open per DV-019's existing text |
 | `PR017-devin-review` | 2026-09-18 | Ad hoc audit + same-session remediation of two `devin-ai-integration[bot]` automated findings on open PR #17 (`docs/era-001-readability-audit` → `main`), pre-Phase-7-start gate. Both findings independently re-verified against the repository (not taken on the bot's assertion) and reproduced with a failing test before any fix landed. Report `DOCS/audits/PR017-devin-review-audit.md` (`PASS-WITH-FINDINGS` → remediated `PASS`, findings PR017-F1/F2, both D2). PR017-F1: `tools/code-intelligence/ci_indexer/python_adapter.py` class-level call collection re-walked every method body already covered by that method's own collection, double-recording calls against the class and inflating `call_site_frequency` enough to drop real `CALLS` edges past the resolution cap — fixed by scoping class-level collection to direct, non-definition class-body statements. PR017-F2: `tools/code-intelligence/ci_telemetry/summary.py::operation_stats` drew `error_count` from an unbounded all-time query while `count` came from a globally-bounded recent sample, letting `error_rate` exceed `1.0` — fixed by deriving both from one bounded `GraphStore.spans_by_operation` query. Scope confined to the opt-in `tools/code-intelligence/` devtools add-on (outside the Session Cycle/WP process); no governed WP/crate touched. | `docs/era-001-readability-audit` @ `aecd61b` + session commit | COMPLETE — verdict `PASS`; both findings FIXED, CLEAN delta re-audit, full subsystem suite 64/64, `ruff`/`mypy --strict`/Snyk Code clean |
 | `Hotfix-DV036` | 2026-09-23 UTC | Governed same-job nightly reference/candidate comparison correction; campaign §11.6 / amendment 3; [S1](contingencies/2026-09-23-dv036-s1-correction-implementation.md) → [S2](contingencies/2026-09-23-dv036-s2-correction-audit.md) → [S3](contingencies/2026-09-23-dv036-s3-correction-remediation.md) → [S4](contingencies/2026-09-23-dv036-s4-correction-documentation.md). | merged to `main` @ `b434554` (PR #21, PR #22) | **COMPLETE 2026-09-23 UTC** — S1–S4 all closed; nightly `35847692136` wholly green under the amendment-4 counterbalanced design and independently re-verified from its preserved evidence; DV036-F1/F2/F3 FIXED, F4 CLOSED, F5 deferred to 0166; 0156 released |
-| `EXP-001-D1` | 2026-09-23 UTC | Conditional correction cycle for the **EXP-001 campaign plan §10.4 D1** (H1 `REFUTED` 485/504, H2a `REFUTED` 897/1,000) and finding **EXP001-E5-F1** (the `parity` CI corpus gate regenerates with PRINet 3.0, not PRIN, so no CI gate performed the PRIN-vs-corpus trajectory comparison over the full 504-case corpus — the only gate that runs PRIN against corpus trajectories covers 4 representative cases, none of them among H1's 19 breaching cases; Parity Report erratum issued). Opened by session `0158` (EXP-001 E5). [S1](contingencies/2026-09-23-exp001-d1-s1-correction-implementation.md) → [S2](contingencies/2026-09-23-exp001-d1-s2-correction-audit.md) → [S3](contingencies/2026-09-23-exp001-d1-s3-correction-remediation.md) → [S4](contingencies/2026-09-23-exp001-d1-s4-correction-documentation.md). No root cause is claimed by the triggering record. | `campaign/0158-exp001-e5` pushed; **PR #23** carries E3–E5 + `6b9d6b6` to `main` (E1/E2 already merged via PR #20 `e997431`) | **OPEN — S1 COMPLETE 2026-09-24 UTC** (hotfix branch `hotfix/exp001-d1-parity-correction`, draft **PR #24**, not merged): root cause established and fixed. PRIN's Euler/RK4 guard divergence is fixed; the reference's DV-007 `complex64` arithmetic is shown to be the erroneous side (§10.4 item 3); full-corpus PRIN gate added to `parity`. See [correction audit](../audits/2026-09-24-exp001-d1-correction-audit.md). S2–S4 pending. Blocks `0159` and every experiment downstream of EXP-001 plus `0194`; EXP-001 is re-run as `EXP-001-r1` after S4 |
+| `EXP-001-D1` | 2026-09-23 UTC | Conditional correction cycle for the **EXP-001 campaign plan §10.4 D1** (H1 `REFUTED` 485/504, H2a `REFUTED` 897/1,000) and finding **EXP001-E5-F1** (the `parity` CI corpus gate regenerates with PRINet 3.0, not PRIN, so no CI gate performed the PRIN-vs-corpus trajectory comparison over the full 504-case corpus — the only gate that runs PRIN against corpus trajectories covers 4 representative cases, none of them among H1's 19 breaching cases; Parity Report erratum issued). Opened by session `0158` (EXP-001 E5). [S1](contingencies/2026-09-23-exp001-d1-s1-correction-implementation.md) → [S2](contingencies/2026-09-23-exp001-d1-s2-correction-audit.md) → [S3](contingencies/2026-09-23-exp001-d1-s3-correction-remediation.md) → [S4](contingencies/2026-09-23-exp001-d1-s4-correction-documentation.md). No root cause is claimed by the triggering record. | `campaign/0158-exp001-e5` pushed; **PR #23** carries E3–E5 + `6b9d6b6` to `main` (E1/E2 already merged via PR #20 `e997431`) | **COMPLETE 2026-09-27 UTC** — S1–S4 all closed. S1: root cause established (PRIN guard divergence fixed; reference DV-007 `complex64` is the erroneous side, 67/67 exactness audit); full-corpus PRIN gate added. S2: **PASS** (zero findings above D4). S3: delta re-audit **CLEAN**. S4: PSR-039 issued, registers updated, `EXP-001-r1` authorized. Hotfix branch `hotfix/exp001-d1-parity-correction` merged as **PR #24** `149cf2d88ab6be401951b63d1d7e8fad209f52a5` (2026-09-28 UTC); all required CI green per `EXP-001-r1` `e1-handoff.md`. Blocks `0159` and every experiment downstream of EXP-001 plus `0194` until `EXP-001-r1` returns a non-reversal verdict. See [correction audit](../audits/2026-09-24-exp001-d1-correction-audit.md) |
 | `PR023-multi-review` | 2026-09-23 UTC | Ad hoc audit + same-round remediation of **seven independent code review runs** on open PR #23 (`campaign/0158-exp001-e5` → `main`): Copilot (4 findings), CodeRabbit (3 + 1 pre-merge check), Sourcery (declined — diff over its 150,000-character limit), and four independent LLM reviews (Qwen, Devin, Kimi, Cline). De-duplicated into eight findings `PR23-F1`…`PR23-F8`, each re-derived from the repository rather than taken on the reviewer's assertion. Report [`DOCS/audits/PR023-multi-review-audit.md`](../audits/PR023-multi-review-audit.md) (`PASS-WITH-FINDINGS` → all eight FIXED; **no D1**). Two D2: **PR23-F1** — `tools/reproduce.py::verify_manifest`/`append_manifest` followed symbolic links, so a symlinked `manifest.json` or artefact verified clean (content integrity checked, path provenance not; CWE-59, the shared-tool half of the class `exp001_driver::check_run_complete` had already closed) — fixed with no-follow `_reject_symlink` guards and 5 regression tests, 4 proven to fail against the pre-fix source, EXP-001 E4 regeneration still byte-identical; **PR23-F8** — the published "no CI gate integrates PRIN's dynamics over the golden corpus" claim was too absolute (a 4-case PRIN-vs-corpus gate runs in every required `test` leg), corrected to *the full 504-case corpus* at all 10 sites, which **strengthens** `EXP001-E5-F1` because none of the 4 cases is among H1's 19 breaching cases. Three D3 and three D4 governance-record consistency findings fixed; E5 report errata **E-1**/**E-2** appended and §14.1 filled with the tested head SHA `60cc387` and its 24/24 green required checks. Three items declined with rationale (audit §6). Same external-review event class as `PR017-devin-review`; no numbered Session Cycle, so the audit is the report of record. | `campaign/0158-exp001-e5` @ `60cc387` + review-response commits; **PR #23** | COMPLETE — verdict `PASS-WITH-FINDINGS` → all findings FIXED, CLEAN delta re-audit; **does not release session `0159`**, which stays BLOCKED on the `EXP-001-D1` correction cycle |
-| `Hotfix-DV041` | 2026-09-28 UTC | Governed hotfix session for **DV-041** (`DEFERRED_VALIDATION_REGISTER.md`), opened at EXP-001-r1 E2 (maintainer selected fixing the underlying capability over a gap disposition). Adds `GpuSparseKuramoto`/`GpuMeanFieldEngine`/`GpuBandStepper::backend_name()` (`prin-sim`) and matching PyO3 getters (`prin-py`), positively distinguishing a real wgpu dispatch from a silent host-slice CPU fallback (both previously returned an indistinguishable CPU-resident DLPack capsule). S1 `5d31295`; S2 independent subagent audit, initial verdict `FAIL` (DV041-F1 D1: commit claimed "Closes DV-041" without touching the register on this branch); S3 `96c1e39` fixed F1–F3; delta re-audit raised DV041-F4 (D2, a self-graded verdict claim in the register prose), fixed in a follow-up commit. Report: [`DOCS/audits/2026-09-28-dv041-wgpu-backend-identification-audit.md`](../audits/2026-09-28-dv041-wgpu-backend-identification-audit.md). Core fix live-verified on `PRIN-GPU-Runner` under both `--features cuda` and `--features wgpu` builds by two independent actors. | `hotfix/dv041-wgpu-backend-identification` @ local commits, not yet pushed | **S1–S4 COMPLETE 2026-09-28 UTC (local); PR not yet opened.** DV-041 register status `OPEN — FIX COMMITTED`; closes on PR merge with required CI green, per the DV-038/DV-039 precedent. Blocks EXP-001-r1's pre-registration freeze/E3 and, independently, EXP-004 E1 (session `0169`) until then |
-| `Hotfix-DV043` | 2026-09-28 UTC | Governed hotfix/triage session for **DV-043** (`DEFERRED_VALIDATION_REGISTER.md`), opened when a maintainer-declared **EXP-001-r1 E3** entry check found E3 blocked on four independent conditions and the maintainer selected triaging the red nightly over the wgpu-leg amendment. `nightly.yml` run `36380992897` (2026-09-28, `main` @ `149cf2d`) reported `full-suite` green and `bench-regression` **FAILED** with ten gated breaches (+10.1 %…+28.8 %), undispositioned anywhere. Root-caused to `34e8811` (the EXP-001 D1 correction), **not** to the DV-036 host-variance class: the new integrator-level `GuardPolicy::derivatives` pass re-clamps four `3N` derivative buffers per RK4 step that the sparse k-NN models already clamped at construction, on exactly the `GuardPolicy::Bounded`-over-sparse-model path that `OscilloSim`, `run_single_config` and `sweep_bench` all pin — provably value-identical dead work, ~25 ns per oscillator per step, corroborated by four identities across two benchmark families and by the flat `derivatives_*` control arms in the same criterion group. Fixed by recording guard provenance at the construction site (`StateDerivatives::is_guarded()`, `#[serde(skip)]` private field, manual `PartialEq` so equality and the wire format are preserved) so both fixed-step integrators skip the redundant pass, and by assigning `guard_derivative_value`'s result instead of discarding it and clamping a second time. Six tests in tandem (including the post-audit clamp idempotency test), the load-bearing one pinning **bit-identity** between the skipped and applied paths. Independent fresh-context review confirmed the root cause, refuted competing explanations inside PR #24, and surfaced the accepted mutation-robustness trade-off; a four-pass counterbalanced A/B on reference host H1 reproduced the family selectivity (median 1.075 over 15 integrator-path identities vs 1.023 over 7 controls) but **not** the `step_parallel/16384` +28.8 % magnitude, which is recorded as a hosted-runner artefact and explicitly not claimed as explained. Handoff: [`DOCS/experiments/triage-dv043-handoff.md`](../experiments/triage-dv043-handoff.md); campaign plan §11.8 and §14.2 amendment #9. | `hotfix/dv043-redundant-step-guard` off `main` @ `5615eda`; local commits, **not pushed, no PR** | **Implementation complete (local); retro-audit pending** — Development Workflow Standards §7 requires a hotfix to be retro-audited in the next S2. DV-043 register status `OPEN — FIX COMMITTED`; closes on merge with required CI green **plus** one green nightly `bench-regression`. Does **not** release EXP-001-r1 E3, which stays blocked on the wgpu-leg pre-execution amendment (preregistration §10 item 2) and on campaign plan §10.2's baseline-change record for `5615eda`. Deliberately did **not** record DV-041's now-satisfiable closure or refresh the stale `EXP-001-D1`/`Hotfix-DV041` rows and `contingencies/README.md` — scope discipline (§7); carried to the next EXP-001-r1 session |
+| `Hotfix-DV041` | 2026-09-28 UTC | Governed hotfix session for **DV-041** (`DEFERRED_VALIDATION_REGISTER.md`), opened at EXP-001-r1 E2 (maintainer selected fixing the underlying capability over a gap disposition). Adds `GpuSparseKuramoto`/`GpuMeanFieldEngine`/`GpuBandStepper::backend_name()` (`prin-sim`) and matching PyO3 getters (`prin-py`), positively distinguishing a real wgpu dispatch from a silent host-slice CPU fallback (both previously returned an indistinguishable CPU-resident DLPack capsule). S1 `5d31295`; S2 independent subagent audit, initial verdict `FAIL` (DV041-F1 D1: commit claimed "Closes DV-041" without touching the register on this branch); S3 `96c1e39` fixed F1–F3; delta re-audit raised DV041-F4 (D2, a self-graded verdict claim in the register prose), fixed in a follow-up commit. Report: [`DOCS/audits/2026-09-28-dv041-wgpu-backend-identification-audit.md`](../audits/2026-09-28-dv041-wgpu-backend-identification-audit.md). Core fix live-verified on `PRIN-GPU-Runner` under both `--features cuda` and `--features wgpu` builds by two independent actors. | `main` merge `5615edab5b53afd6602907343a596cdc3f8dff4a` (PR #25, 2026-09-28 UTC); required CI green (`triage-dv043-handoff.md` §2) | **S1–S4 COMPLETE; DV-041 CLOSED on merge + required CI.** The binding accessor is live-tested on both feature builds; r1's follow-up E2 wgpu H4 **method** was approved 2026-09-29 UTC (`e2-review.md` §8); freeze/E3 still gated on DV-043/DV-044 and the clean M/R source identity |
+| `Hotfix-DV043` | 2026-09-28 UTC | Governed hotfix/triage session for **DV-043** (`DEFERRED_VALIDATION_REGISTER.md`), opened when a maintainer-declared **EXP-001-r1 E3** entry check found E3 blocked on four independent conditions and the maintainer selected triaging the red nightly over the wgpu-leg amendment. `nightly.yml` run `36380992897` (2026-09-28, `main` @ `149cf2d`) reported `full-suite` green and `bench-regression` **FAILED** with ten gated breaches (+10.1 %…+28.8 %), undispositioned anywhere. Root-caused to `34e8811` (the EXP-001 D1 correction), **not** to the DV-036 host-variance class: the new integrator-level `GuardPolicy::derivatives` pass re-clamps four `3N` derivative buffers per RK4 step that the sparse k-NN models already clamped at construction, on exactly the `GuardPolicy::Bounded`-over-sparse-model path that `OscilloSim`, `run_single_config` and `sweep_bench` all pin — provably value-identical dead work, ~25 ns per oscillator per step, corroborated by four identities across two benchmark families and by the flat `derivatives_*` control arms in the same criterion group. Fixed by recording guard provenance at the construction site (`StateDerivatives::is_guarded()`, `#[serde(skip)]` private field, manual `PartialEq` so equality and the wire format are preserved) so both fixed-step integrators skip the redundant pass, and by assigning `guard_derivative_value`'s result instead of discarding it and clamping a second time. Six tests in tandem (including the post-audit clamp idempotency test), the load-bearing one pinning **bit-identity** between the skipped and applied paths. Independent fresh-context review confirmed the root cause, refuted competing explanations inside PR #24, and surfaced the accepted mutation-robustness trade-off; a four-pass counterbalanced A/B on reference host H1 reproduced the family selectivity (median 1.075 over 15 integrator-path identities vs 1.023 over 7 controls) but **not** the `step_parallel/16384` +28.8 % magnitude, which is recorded as a hosted-runner artefact and explicitly not claimed as explained. Handoff: [`DOCS/experiments/triage-dv043-handoff.md`](../experiments/triage-dv043-handoff.md); campaign plan §11.8 and §14.2 amendment #9. | `hotfix/dv043-redundant-step-guard` off `main` @ `5615eda`; local commits, **not pushed, no PR** | **Independent delta retro-audit complete 2026-09-28 UTC; implementation committed, DV-043 OPEN.** Initial audit `PASS-WITH-FINDINGS` F1–F7, second reviewer found F8/F9 D4, corrected and lead-reviewed; F2 workspace-wide strict-checks remains unrun (LNK1104). Hotfix is local, not merged; DV-043 closure requires required CI green on the merge SHA and the next green nightly `bench-regression`. EXP-001-r1 E3 is still blocked on that closure, DV-044's governed correction and the clean M/R execution SHA (the follow-up E2 H4 method was approved 2026-09-29 UTC); 0159 remains BLOCKED |
+| `Hotfix-DV044` | 2026-09-29 UTC | Governed correction session for **DV-044** (`DEFERRED_VALIDATION_REGISTER.md`), authorized by MichaelMaillet at the EXP-001-r1 follow-up E2. PSR-039's cumulative ledger was invisible to `tools/check_deviation_ledger.py` (8 local rows vs 128 inherited, exit 1); PSR-038 claimed six WP-038 rows without supplying them. S1 ([`2026-09-29-dv044-s1-correction-implementation.md`](contingencies/2026-09-29-dv044-s1-correction-implementation.md), `hotfix/dv044-ledger-delta`): explicit PSR-039 §3.4 canonical delta (14 rows), fail-closed parser/CLI + escaped-pipe cell handling, six tandem tests; exact failing comparison now exits 0 (128→142). S2 independent audit ([`2026-09-29-dv044-s2-correction-audit.md`](contingencies/2026-09-29-dv044-s2-correction-audit.md)): PASS-WITH-FINDINGS, seven findings — all remediated in S3 ([`2026-09-29-dv044-s3-correction-remediation.md`](contingencies/2026-09-29-dv044-s3-correction-remediation.md), 12/12 tests, Snyk clean). S4 recorded ([`2026-09-29-dv044-s4-correction-documentation.md`](contingencies/2026-09-29-dv044-s4-correction-documentation.md)); merged into the campaign branch `9cda4e5`; hosted `governance` gate green on PR #27 (run `36526332612`) — **DV-044 CLOSED 2026-09-29 UTC** (tool reaches `main` with the amendment at E5). |
 
 
 | Seq | Phase | Unit | Type | Session brief | Current status |
@@ -559,7 +560,7 @@ introduction and are not retroactively added here; this table starts with
 | 0156 | 7 | EXP-001/C1 | E3 — Execution | [Golden-trajectory numerical parity](phase-7/0156-exp001-e3-golden-trajectory-numerical-parity.md) | COMPLETE |
 | 0157 | 7 | EXP-001/C1 | E4 — Analysis | [Golden-trajectory numerical parity](phase-7/0157-exp001-e4-golden-trajectory-numerical-parity.md) | COMPLETE |
 | 0158 | 7 | EXP-001/C1 | E5 — Report | [Golden-trajectory numerical parity](phase-7/0158-exp001-e5-golden-trajectory-numerical-parity.md) | COMPLETE |
-| 0159 | 7 | EXP-002/C1 | E1 — Pre-registration | [API, benchmark-result, and reproduction parity](phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md) | BLOCKED |
+| 0159 | 7 | EXP-002/C1 | E1 — Pre-registration | [API, benchmark-result, and reproduction parity](phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md) | READY |
 | 0160 | 7 | EXP-002/C1 | E2 — Review and approval | [API, benchmark-result, and reproduction parity](phase-7/0160-exp002-e2-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
 | 0161 | 7 | EXP-002/C1 | E3 — Execution | [API, benchmark-result, and reproduction parity](phase-7/0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
 | 0162 | 7 | EXP-002/C1 | E4 — Analysis | [API, benchmark-result, and reproduction parity](phase-7/0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
@@ -599,3 +600,139 @@ introduction and are not retroactively added here; this table starts with
 | 0196 | 7 | WP-039 | S2 — Comprehensive audit | [Stable-release evidence closure](phase-7/0196-wp039-s2-stable-release-evidence-closure.md) | PLANNED |
 | 0197 | 7 | WP-039 | S3 — Remediation | [Stable-release evidence closure](phase-7/0197-wp039-s3-stable-release-evidence-closure.md) | PLANNED |
 | 0198 | 7 | WP-039 | S4 — Documentation and release | [Stable-release evidence closure](phase-7/0198-wp039-s4-stable-release-evidence-closure.md) | PLANNED |
+
+EXP-001-r1 E1 was declared by MichaelMaillet and completed as a committed
+DRAFT on 2026-09-28 UTC. EXP-001-r1 E2 followed the same day: independent
+review (Claude Sonnet 5) re-verified every E1 provenance/machinery claim
+against the repository (zero discrepancies); the maintainer approved the
+sample-size justification, the H2b three-way rule, and the storage budget
+(campaign plan §14.2 amendment #7). The required wgpu coverage gate is
+**not** resolved — the maintainer selected fixing the underlying binding
+capability (tracked as **DV-041**, `DEFERRED_VALIDATION_REGISTER.md`;
+campaign plan §11.7/§14.2 amendment #8) over a gap disposition.
+DV-041's binding capability closed on PR #25 / required-CI evidence. The
+follow-up wgpu H4/two-build **method** was APPROVED by MichaelMaillet on
+2026-09-29 UTC as an E2 protocol-design gate only (`e2-review.md` §8);
+DV-043 merged to `main` as `9b79d2e` (PR #26; forced nightly
+`36525353031` attempt 2 `bench-regression` green) and DV-044 closed
+through its own S1–S4 cycle. `M = 9b79d2e…` was incorporated and
+`check_ci_green.py` returned all six required workflows green on it.
+EXP-001-r1 **E3 executed on 2026-09-29 UTC**: the pre-registration
+froze at `F = 5d5ae3521317af47a11afa8d689935ac2fc0f447`, all six runs
+ran from `R = 5d5ae35…` — 72-case wgpu kernel-path (`wgpu<wgsl>`
+proven per case), 72-case CUDA kernel-path, 504-case corpus,
+2×14 repeatability and 1,000-draw fuzz — zero aborts, all manifested;
+see [log](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/log.md).
+No verdict was computed at E3; E4 adjudication is a separate session.
+EXP-001-r1 **E4 analysed on 2026-09-29 UTC**: the r1-specific analysis
+module was committed at `f057ef0` **before** any adjudication ran (campaign
+plan §7.4 item 2 — the ordering the predecessor recorded as its PD-2 is met
+literally this time), then applied the frozen §8 rule to all six immutable
+E3 artefacts through an explicit run index, never a `RUN-*` glob:
+`verify_manifest` on every run directory, `environment.git_commit = R` on
+every record, each leg matched to its own E3 build-log extension hash, the
+corpus-manifest and 1,000-draw stream fingerprints re-derived (each fuzz
+case's `input_sha256` and spec checked against a replay of the pinned
+stream), every stored native/corrected/sensitivity decision and every H2b
+paired summary recomputed from the retained per-array records, and H2b
+delegated verbatim to `exp001_r1_driver.adjudicate_h2b`. **All five
+hypotheses are `CONFIRMED` and the §10.4 D1 flag is NOT raised — a
+non-reversal detection.** H1 504/504 accepted (485 native-parity + 19
+explained-dv007, zero unexplained breaches); H2a **978 pointwise + 22
+characterized**, zero unexplained eligible breaches; H2b both metrics' 95 %
+CIs strictly inside ±δ on 657 contributors each (bootstrap seed
+`12455822396014146421` = `Seed(0, 1).next_u64()`); H3 14/14 byte-identical in
+both invocations with identical separate-run projections; H4 72/72 on **each**
+of CUDA and wgpu with zero failed derivative elements, verified from the
+retained per-case `dlpack_devices`/`backend_name` proofs — no kernel re-run
+and no claimed independent `isclose` re-evaluation, per §8 rule 7. Zero cases
+aborted in any run. The four §8 outputs regenerate byte-identically from a
+clean detached checkout at `f966921` (campaign plan §7.4 step 5) and are
+digested in `report-manifest.json`. Local gate on the new code: ruff,
+`ruff format --check`, `mypy --strict`, interrogate 100 % (87/87), bandit and
+`snyk code test --severity-threshold=medium` all clean; 89 new tests in
+`tests/test_exp001_r1_e4_analysis.py` (DV-040's compensating control). Four
+deviations recorded: PD-1 (`prin.reporting`'s legacy-schema aggregators cannot
+render a hypothesis × verdict × denominator table, so it renders the
+output-summary section and the committed module renders the two registered
+tables), PD-2 (no figures, as §8 registers), PD-3 (the fuzz sidecar carries
+the campaign's registered `H2` tag while §2 splits it into H2a/H2b — the first
+adjudication attempt failed closed on the index, not the evidence), PD-4 (E4
+ran from a linked worktree on `campaign/exp001-r1-e4` because this session
+cannot run `git` in the E3 checkout; `python/`, `benchmarks/campaign/`,
+`tools/`, `parity/` and `crates/` are byte-identical to `R` and the `R`-built
+`_prin_core.pyd` was imported, not rebuilt). See
+[analysis record](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis.md).
+**E4 does not release 0159.** §10.4 item 5 keys the release to E5's verdict,
+so session 0159, every experiment downstream of EXP-001 and 0194 remain
+BLOCKED until E5 reports this non-reversal result. E5 must restate §4.2's
+clamp-trip limitation for the 22 characterized cases and list the
+`149cf2d..M` baseline delta as a deviation. EXP-001's own `REFUTED` verdicts
+are not revised by this record. See
+[preregistration](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/preregistration.md),
+[E1 handoff](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md),
+[E2 review](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e2-review.md)
+and
+[E3 log](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/log.md).
+EXP-001-r1 **E5 reported on 2026-09-29 UTC** (declared by MichaelMaillet;
+branch `campaign/exp001-r1-e5`, AI pair Qwen Code):
+[report](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/report.md)
+restates all five `CONFIRMED` verdicts with the §3 expected-versus-observed
+table, both 72-case H4 GPU legs in full, PD-1 through PD-6 (PD-5 being the
+`149cf2d..M` baseline delta §10 item 5 requires — 23 files, 2,253 insertions,
+34 deletions, being exactly DV-041/PR #25 and DV-043/PR #26 plus their
+documentation, with `R` identified as the experiment's distinct source SHA and
+not a second mid-experiment `main` change), ten threats to validity including
+§4.2's clamp-trip limitation restated for the 22 characterized cases, and the
+complete artefact index with every input run manifest digest and the output
+manifest digest. E4's two E5 obligations are discharged. Regeneration was
+re-verified in the E5 checkout at `46fea62`: all four committed-manifest output
+digests reproduced byte-identically and `git status` reported no change, making
+five byte-identical reproductions across three checkouts and six processes.
+Budget: 6.855 MiB of the 8 MiB r1 allocation, 12.784 MiB of the 16 MiB shared
+root, 12.777 MiB of the 64 MiB campaign cap, ~13 minutes of E3 wall time
+against 8 CPU hours, and zero hosted-CI hours charged to r1.
+**The §10.4 item 5 non-reversal condition is SATISFIED and no D1 correction
+cycle is triggered.** EXP-001's record gains an append-only erratum (**E-4**)
+recording that the condition its own E-3 described is met; its H1/H2a
+`REFUTED` verdicts, digests and artefacts are **not** revised. The Parity
+Report gains a dated admonition stating precisely what the corpus evidence now
+supports (485/504 native, 19 accepted only via the registered DV-007 clause,
+978 + 22 for the fuzz population), retaining every earlier admonition verbatim;
+the `CONFIRMATORY` label row still reads "None." and correctly so, since that
+row is scoped to C2/C3 production-scale measurements. A `CHANGELOG` entry
+announces the report.
+**0159, EXP-002 … EXP-008 and 0194 are RELEASED ON THE MAINTAINER'S
+VERIFICATION of that report (§13) — and are NOT released yet.** The §13
+verification block is unfilled, and Experimentation Standards §2 E5's exit gate
+requires an *approved* report, so the release is not in force. Nothing was
+pushed and no PR exists: §12 item 3 makes the E5 PR carry the whole r1 E1–E5
+range (none of it is on `main` yet), and opening it is a shared-state action
+awaiting authorization. The report's §14 records exactly what that PR will
+carry and that neither a tested head SHA nor a merge SHA is claimed. The next
+Project State Report must announce this report (Experimentation Standards §2
+E5); issuing PSR-040 is not this session's to do.
+**EXP-001-r1 E5 VERIFIED AND ACCEPTED 2026-09-29 UTC — THE CAMPAIGN BLOCK IS
+LIFTED.** MichaelMaillet completed the report's §13 verification block on
+2026-09-29 UTC, accepting all five `CONFIRMED` verdicts, the "no D1 raised"
+non-reversal determination, and PD-6's reading of §10 item 5 (report both
+72-case H4 legs; execute none at E5). E5's exit gate is therefore met and,
+under campaign plan §10.4 item 5, **session 0159 (EXP-002 E1), every experiment
+downstream of EXP-001 (EXP-002 … EXP-008) and session 0194 are RELEASED** and
+may proceed in campaign plan §3's dependency order. No Project Plan §8.3
+amendment was needed: a confirmed parity result is not a changed conclusion. The
+same verification **authorizes opening the E1–E5 pull request**, which has not
+been exercised — nothing is pushed and no PR exists, and the report's §14
+records the exact range that PR will carry (the whole r1 E1–E5 span; none of it
+is on `main` yet, and DV-041/DV-043 are not in its delta because the campaign
+branch already incorporated `M` via `b3b4a92`). Before verification the report's
+194 quoted figures were cross-checked programmatically against the committed
+artefacts, which found one real error — the four generated outputs total
+10,506,349 bytes, not 10,506,347 — corrected in both this record and
+`analysis.md` under errata **E-1**/**A-1** with the original figures retained in
+the erratum text, plus a histogram-unit ambiguity recorded as report §9 item 11
+and `analysis.md` **A-2** for DV-040's re-audit gate at EXP-002 E4. §9 item 9
+stands as a disclosed limitation: E4 and E5 share one AI pair, and no
+fresh-context independent review was run before verification. Still open: the
+E1–E5 PR and its §14.1 tested-head-SHA/required-check addendum, and announcement
+of the report in the next Project State Report. **EXP-001-r1 is COMPLETE.**

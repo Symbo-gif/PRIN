@@ -644,7 +644,9 @@ def _declared_tags_violation(mode: str, value: object) -> tuple[list[str], str |
     return tags, None
 
 
-def _envelope_violation(path: Path, run_dir: Path, mode: str) -> str | None:
+def _envelope_violation(
+    path: Path, run_dir: Path, mode: str, *, expected_backend: str = "cuda"
+) -> str | None:
     """Return why a declared result's envelope is unacceptable, else ``None``.
 
     Campaign plan §7.2 fixes the result envelope: an ``environment`` block
@@ -653,8 +655,8 @@ def _envelope_violation(path: Path, run_dir: Path, mode: str) -> str | None:
     ``seed_key``, and ``out_dir``. Closure validates that schema and
     cross-checks the two values that tie an envelope to the sidecar it is
     being closed against: ``config.out_dir`` must resolve to this run
-    directory, and a GPU entry's ``environment.backend`` must be the ``cuda``
-    backend that entry asserts.
+    directory, and a GPU entry's ``environment.backend`` must be the caller's
+    expected GPU backend that entry asserts.
 
     The required-field set and the null/empty rule mirror
     :func:`_validate_environment` exactly — a GPU mode additionally requires
@@ -693,15 +695,18 @@ def _envelope_violation(path: Path, run_dir: Path, mode: str) -> str | None:
             f"declares config.out_dir {out_dir!r}, which does not resolve to "
             f"the run directory being closed ({run_dir})"
         )
-    if mode in _GPU_MODES and environment.get("backend") != "cuda":
+    if mode in _GPU_MODES and environment.get("backend") != expected_backend:
         return (
             f"declares environment.backend {environment.get('backend')!r}, not "
-            "the 'cuda' backend a GPU result entry asserts (campaign plan §5.2)"
+            f"the {expected_backend!r} backend the GPU result label requires "
+            "(campaign plan §5.2)"
         )
     return None
 
 
-def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
+def check_run_complete(
+    run_dir: Path, *, expected_exp_id: str = EXP_ID, expected_backend: str = "cuda"
+) -> dict[str, list[str]]:
     """Run-closure precondition: the sidecar and the directory's result files
     name each other exactly, with no path escapes either way.
 
@@ -733,7 +738,9 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
     and preregistration §5.3).
 
     The whole campaign plan §7.2 sidecar schema is validated, not only the
-    ``artefacts`` key: ``exp_id`` must be exactly :data:`EXP_ID`, ``run_id``
+    ``artefacts`` key: ``exp_id`` must equal the caller's ``expected_exp_id``
+    (``EXP-001`` by default; a re-run must name its own identity explicitly),
+    ``run_id``
     must equal ``run_dir.name``, ``session`` and ``operator`` must be
     non-empty strings, ``artefacts`` must be a non-empty object, and every
     entry must name a canonical ``<mode>_<label>.json`` result carrying
@@ -741,7 +748,8 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
     entry, a registered ``timing_method``. Each declared result's own
     envelope is validated against campaign plan §7.2 and cross-checked
     against the sidecar (``config.out_dir`` resolves to this directory; a GPU
-    entry's ``environment.backend`` is ``cuda``). Nothing is coerced: a
+    entry's ``environment.backend`` is the caller's expected GPU backend).
+    Nothing is coerced: a
     malformed value is a closure failure, never repaired into a
     valid-looking one.
 
@@ -756,6 +764,13 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
             envelope is missing or disagrees with the sidecar; or if the
             directory holds a result JSON the sidecar does not name.
     """
+    if expected_backend not in ("cuda", "wgpu") or (
+        expected_backend == "wgpu" and expected_exp_id != "EXP-001-r1"
+    ):
+        raise IncompleteRunError(
+            f"unregistered closure backend {expected_backend!r} for "
+            f"experiment {expected_exp_id!r}"
+        )
     resolved_run_dir = run_dir.resolve()
     sidecar = run_dir / "campaign-metadata.json"
     # Checked with is_symlink() (no-follow) *before* is_file()/read_text(),
@@ -787,10 +802,10 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
             f"{sidecar} is missing required field(s) {', '.join(absent)} "
             "(campaign plan §7.2); not a closable run"
         )
-    if payload["exp_id"] != EXP_ID:
+    if payload["exp_id"] != expected_exp_id:
         raise IncompleteRunError(
-            f"{sidecar} declares exp_id {payload['exp_id']!r}, not {EXP_ID!r}; "
-            "not a closable run for this experiment"
+            f"{sidecar} declares exp_id {payload['exp_id']!r}, not "
+            f"{expected_exp_id!r}; not a closable run for this experiment"
         )
     if payload["run_id"] != run_dir.name:
         raise IncompleteRunError(
@@ -853,6 +868,14 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
         if mode is None:  # pragma: no cover - guaranteed by the check above
             violations.append(f"{name!r} is not a registered result name")
             continue
+        if expected_exp_id == "EXP-001-r1" and mode in _GPU_MODES:
+            expected_name = f"kernel-path_r1-kernel-path-{expected_backend}.json"
+            if name != expected_name:
+                violations.append(
+                    f"{name!r} is not the registered {expected_backend} "
+                    f"artefact {expected_name!r} for EXP-001-r1"
+                )
+                continue
         tags, tag_violation = _declared_tags_violation(mode, value)
         if tag_violation is not None:
             violations.append(f"{name!r} {tag_violation}")
@@ -901,7 +924,15 @@ def check_run_complete(run_dir: Path) -> dict[str, list[str]]:
     envelope_violations = sorted(
         f"{name!r} {violation}"
         for name, violation in (
-            (name, _envelope_violation(run_dir / name, resolved_run_dir, modes[name]))
+            (
+                name,
+                _envelope_violation(
+                    run_dir / name,
+                    resolved_run_dir,
+                    modes[name],
+                    expected_backend=expected_backend,
+                ),
+            )
             for name in artefacts
         )
         if violation is not None
@@ -1779,8 +1810,10 @@ def _compare_kernel_array(
     }
 
 
-def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, Any]:
-    """Compare the GPU sparse-k-NN derivative kernel against the CPU reference (H4).
+def compare_kernel_path_case(
+    loader: CorpusLoader, case_id: str, *, backend: str = "cuda"
+) -> dict[str, Any]:
+    """Compare CUDA or positively identified wgpu derivatives to the CPU reference.
 
     Builds a ``prin._torch_compat.KuramotoOscillator`` from one
     ``kuramoto_sparse_knn_*`` corpus case's stored parameters and initial
@@ -1794,9 +1827,10 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
 
     Raises:
         GpuBindingUnavailableError: If the extension lacks
-            ``GpuSparseKuramoto`` (no ``cuda``/``wgpu``-feature build), or if
-            any of the three returned capsules does not confirm true CUDA
-            execution (see note below).
+            ``GpuSparseKuramoto`` (no ``cuda``/``wgpu``-feature build), or
+            if any capsule lacks the registered CUDA or wgpu export
+            residency, or wgpu's ``backend_name`` after dispatch is
+            absent/non-wgpu (fallback) (see note below).
         DriverMetadataError: If ``case_id`` does not name a
             ``kuramoto``/``sparse_knn`` case — an operator error that aborts
             the run, not an unexpected programming fault.
@@ -1813,13 +1847,18 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
         path is the only one that returns a zero-copy ``kDLCUDA`` capsule
         (WP-036E Q3); everything else (wgpu, CPU-SIMD, host-slice fallback)
         returns a CPU-resident capsule (module docstring,
-        ``crates/prin-py/src/bindings/gpu.rs``). This function therefore
-        calls the binding directly and checks the *raw* result's
-        ``.device.type`` — the only ground-truth signal — instead of relying
-        on ``prin._torch_compat``'s dispatch hook, whose ``_from_gpu`` always
-        normalizes the result to the input tensor's device and would hide
-        this distinction either way.
+        ``crates/prin-py/src/bindings/gpu.rs``). For CUDA, all three raw
+        capsules must be CUDA-resident; for wgpu, all three must be
+        host-exported AND the ``backend_name`` getter read after dispatch
+        must report the wgpu family. The identical input, numerical
+        comparison and registered f32 tolerance are shared; any fallback
+        raises before a result can be written. Both GPU arms record the
+        three raw DLPack device types per case for E4 verification; a wgpu
+        case additionally records its post-dispatch ``backend_name``. This
+        evidence does not replace the live abort checks.
     """
+    if backend not in ("cuda", "wgpu"):
+        raise DriverMetadataError(f"unregistered GPU backend: {backend!r}")
     if not hasattr(_prin_core, "GpuSparseKuramoto"):
         raise GpuBindingUnavailableError(
             "prin._prin_core.GpuSparseKuramoto is absent (extension built "
@@ -1870,6 +1909,15 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
     gpu_dphase_capsule, gpu_damplitude_capsule, gpu_dfrequency_capsule = (
         engine.compute_derivatives(phase_f32, amplitude_f32, frequency_f32)
     )
+    backend_name = getattr(engine, "backend_name", None) if backend == "wgpu" else None
+    if backend == "wgpu" and (
+        not isinstance(backend_name, str) or not backend_name.startswith("wgpu")
+    ):
+        raise GpuBindingUnavailableError(
+            f"wgpu requested for case {case_id!r}, but the backend after "
+            f"compute_derivatives was {backend_name!r}; no CUDA or host-slice "
+            "fallback may be recorded as a wgpu result"
+        )
     # Every returned capsule is checked, not just the first: the three
     # derivative outputs are separate DLPack capsules and nothing in the
     # binding's contract guarantees they share a device, so validating only
@@ -1881,21 +1929,17 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
         "damplitude": from_dlpack(gpu_damplitude_capsule),
         "dfrequency": from_dlpack(gpu_dfrequency_capsule),
     }
-    non_cuda = sorted(
+    required_device = "cuda" if backend == "cuda" else "cpu"
+    wrong_device = sorted(
         f"{name}={tensor.device.type!r}"
         for name, tensor in gpu_raw.items()
-        if tensor.device.type != "cuda"
+        if tensor.device.type != required_device
     )
-    if non_cuda:
+    if wrong_device:
         raise GpuBindingUnavailableError(
-            "GpuSparseKuramoto.compute_derivatives returned non-CUDA-resident "
-            f"result(s) ({', '.join(non_cuda)}) for case {case_id!r}, not the "
-            "zero-copy kDLCUDA capsule the true CUDA device-resident path "
-            "returns. This means the call did not actually dispatch through "
-            "CUDA here — a --features wgpu-only build, or a CUDA client that "
-            "failed to initialise and fell back to prin-sim's host-slice path "
-            "— so H4 aborts rather than record a non-CUDA result as cuda "
-            "(preregistration §5.1)"
+            f"GpuSparseKuramoto returned a non-{required_device} DLPack result "
+            f"({', '.join(wrong_device)}) for {case_id!r}; a {backend} result "
+            "requires all three capsules on the registered export device"
         )
     gpu_dphase_raw = gpu_raw["dphase"]
     gpu_damplitude_raw = gpu_raw["damplitude"]
@@ -1908,6 +1952,11 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
         "n_oscillators": spec.n_oscillators,
         "sparse_k": int(parameters["sparse_k"]),
     }
+    identity["dlpack_devices"] = {
+        name: tensor.device.type for name, tensor in gpu_raw.items()
+    }
+    if backend == "wgpu":
+        identity["backend_name"] = backend_name
     pairs = [
         (
             "dphase",
@@ -1943,10 +1992,13 @@ def compare_kernel_path_case(loader: CorpusLoader, case_id: str) -> dict[str, An
 
 
 def compare_kernel_path_subset(
-    loader: CorpusLoader, case_ids: Sequence[str]
+    loader: CorpusLoader, case_ids: Sequence[str], *, backend: str = "cuda"
 ) -> list[dict[str, Any]]:
-    """Compare every case in ``case_ids`` (see :func:`compare_kernel_path_case`)."""
-    return [compare_kernel_path_case(loader, case_id) for case_id in case_ids]
+    """Compare every requested case on the positively identified GPU backend."""
+    return [
+        compare_kernel_path_case(loader, case_id, backend=backend)
+        for case_id in case_ids
+    ]
 
 
 class EnvironmentIncompleteError(DriverError):

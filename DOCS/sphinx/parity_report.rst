@@ -104,6 +104,58 @@ Parity Report
    pre-fix and post-fix builds; DV-007 exactness audit);
    ``DOCS/audits/2026-09-24-exp001-d1-correction-audit.md``.
 
+.. admonition:: Update — 2026-09-29 (EXP-001-r1 E5: the re-run confirms parity under its registered rule)
+   :class: note
+
+   The two admonitions above are retained verbatim. ``EXP-001-r1`` — the
+   campaign plan §10.4 item 4 re-run of EXP-001, on a new pre-registration, six
+   new run directories and its own frozen decision rule — executed and reported
+   on 2026-09-29 UTC. **All five of its hypotheses are ``CONFIRMED`` and its
+   campaign plan §10.4 D1 flag is not raised**, so the re-run condition the
+   correction cycle set is met and the campaign block on session 0159 is
+   released on the maintainer's verification of that report.
+
+   What the golden-corpus evidence now supports, stated precisely:
+
+   * **485 of the 504 corpus cases reproduce the stored PRINet-3.0-authored
+     reference within the registered tolerance natively** (trajectories
+     ``rtol=1e-6``/``atol=1e-8``; metrics ``rtol=2e-6``/``atol=1e-12``).
+   * **The remaining 19 are accepted only through the re-run's registered
+     DV-007 clause** — a positive float64-reference explanation, not native
+     agreement. With only the three adjudicated derivative methods' narrowing
+     casts widened, that reference agrees with PRIN to ``8.9e-16`` on those
+     cases. They are the same 19 case IDs, in the same four grid cells, that
+     refuted EXP-001's H1.
+   * So the corpus section is confirmatory of parity **under that rule**. It is
+     still not evidence that all 504 cases match the *stored* arrays natively,
+     and the correction cycle's finding stands unchanged: on those 19 cases the
+     corpus is the erroneous side (campaign plan §10.4 item 3; 50-digit mpmath
+     exactness audit, 67/67).
+   * Hypothesis-fuzzed parity within the 20-step horizon is reported as
+     **978 pointwise accepted + 22 characterized**, never as 1,000 pointwise
+     passes. The 22 are ill-conditioned in PRINet 3.0's *own* float64 map — its
+     reference breaches the registered tolerance under a one-ulp change of its
+     initial phases — so that stratum is a statement about the reference's
+     conditioning, not a parity success.
+   * Beyond-horizon ensemble-mean equivalence of the two coherence metrics
+     (H2b), bit-level seeded repeatability (H3, 14/14 in each of two separately
+     manifested invocations) and the GPU sparse k-NN derivative kernel (H4) are
+     confirmed, with H4 now proven on **both** CUDA (72/72) and wgpu (72/72)
+     against the same float64 CPU reference at ``rtol=1e-5``/``atol=1e-6``, the
+     wgpu leg identified positively by a post-dispatch ``backend_name`` rather
+     than inferred from capsule residency.
+
+   These are C1 parity confirmations. The ``CONFIRMATORY`` row of the label
+   table below still reads **None.**, and correctly so: that row is scoped to
+   production-scale measurements of PRIN's own behaviour — throughput,
+   capacity, accuracy, scaling — which remain unmeasured until the C2 and C3
+   experiments (EXP-002 … EXP-008) run. Nothing here substitutes a parity
+   result for a performance one.
+
+   Evidence: ``DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/report.md``
+   (§1, §4, §7), ``.../EXP-001-r1-golden-trajectory-numerical-parity/analysis.md``,
+   ``.../EXP-001-r1-golden-trajectory-numerical-parity/report-manifest.json``.
+
 How to read this report
 -----------------------
 
