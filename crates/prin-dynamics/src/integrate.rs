@@ -2741,9 +2741,10 @@ mod tests {
         // on, and it is what makes dropping four `3N` passes per RK4 step
         // value-preserving rather than a numerical change. Values exactly at
         // the bound are included: `clamp_derivative` must be the identity
-        // there too, not a one-ulp nudge. Signed zero is included because the
-        // comparison is on `to_bits()`, so a sign flip would fail rather than
-        // compare equal.
+        // there too, not a one-ulp nudge.
+        // Signed zero exercises this branch, but a step from a nonzero state
+        // can hide a derivative sign flip. The direct clamp_derivative
+        // idempotency test checks -0.0 with to_bits() instead.
         let state = make_state(3, 0.7, 1.5, 0.25);
         for rate in [
             0.0,

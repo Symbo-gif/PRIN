@@ -101,14 +101,166 @@ which recorded the same reasoning. Snyk **Code** was run, at
 
 ## 7. Delta re-audit
 
-**Pending.** Per Development Workflow and Audit Standards §7 a hotfix is
-retro-audited, and per the DV041-F4 lesson this report does not grade its own
-remediation. A delta re-audit should target, at minimum: the two new tests
-(`clamp_derivative_is_idempotent_where_the_guard_skip_relies_on` and the
-`-0.0` addition) and whether they are non-vacuous; the four re-cited Versioning
-clauses and whether the pre-1.0 bullet genuinely authorises this break at
-`1.0.0-rc1`; the corrected `models.rs` line numbers; the `lib.rs` crate-doc
-wording; and the Sphinx `-W` build result now that it has been run.
+**Complete — `PASS-WITH-FINDINGS`, no D1/D2/D3.** Performed 2026-09-28 UTC by
+a second independent fresh-context reviewer that did not author the commits
+and did not contribute to the S2 remediation, on the committed tree `1f57c45`
+(`hotfix/dv043-redundant-step-guard`, clean worktree; four commits `e4f5b4e`,
+`f0a7079`, `eca0f5d`, `1f57c45` over `main` @ `5615eda`). §1–§6 and §8 record
+the original auditor's verdict and stand unmodified; this section is the
+independent delta and does not retrograde or restate that verdict. The S3
+correction applied on top of this audit is recorded separately in §7.4 and is
+**not** self-cleared here — the F8/F9 edits were lead-reviewed on 2026-09-28
+UTC for exact textual corrections only; no full-suite rerun or CI claim.
+
+Nothing in this section infers numeric performance or CI status from prose.
+Every benchmark magnitude (the ~25 ns/oscillator fingerprint, the 1.075 vs
+1.023 A/B medians, the ten nightly breaches and the `step_parallel/16384`
++28.8 %), the nightly run contents, required-CI status, Snyk results, the
+`pytest` 3277+5 tally, the 2144-case parity run and all `llvm-cov` coverage
+numbers remain **unverified** — not re-run by this reviewer.
+
+### 7.1 Gates run independently
+
+The Rust tests ran sequentially with `-j 1`; the Sphinx build followed.
+Logs are local scratch under the gitignored `.qwen/tmp/` (`.gitignore:59`).
+
+| Command (verbatim) | Result | Exit |
+|---|---|---|
+| `cargo test -p prin-dynamics -j 1 --lib` | 309 passed / 0 failed; all five lib tests this change ships are named and green — `integrate::tests::bounded_step_skips_the_redundant_pass_without_changing_any_value`, `integrate::tests::bounded_step_still_clamps_derivatives_the_model_left_unclamped`, `state::tests::clamp_derivative_is_idempotent_where_the_guard_skip_relies_on_it`, `state::tests::guarded_flag_records_which_constructor_ran`, `state::tests::guarded_flag_is_provenance_and_changes_no_public_contract` | 0 |
+| `cargo test -p prin-dynamics -j 1 --lib --features strict-checks` | 310 passed / 0 failed; the bit-identity test (not cfg-gated) also passes in the strict configuration | 0 |
+| `cargo test -p prin-sim -j 1 --lib --features prin-dynamics/strict-checks` | 165 passed / 0 failed; `engine::tests::sparse_models_report_the_guard_they_actually_applied` green where `new()` can raise | 0 |
+| `.venv/Scripts/python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx .qwen/tmp/sphinx-audit-html` | `build succeeded`, **0 warnings**, `updating environment: [new config] 35 added, 0 changed, 0 removed`, all 35 sources read and written | 0 |
+
+Log files: `.qwen/tmp/dv043-delta-audit-prin-dynamics-lib.log`,
+`dv043-delta-audit-prin-dynamics-strict-lib.log`,
+`dv043-delta-audit-prin-sim-strict-lib.log`, `dv043-delta-audit-sphinx.log`.
+The Sphinx build targeted a *freshly created* output directory — the
+`AGENTS.md`-sanctioned alternative to deleting `DOCS/sphinx/_build` — so the
+`[new config] … 35 added` line is a genuinely clean environment, not a reused
+pickled one. This independently confirms the post-deletion run §4 records for
+DV043-F1.
+
+**Not run, not claimed:** the workspace-wide `cargo test --workspace
+--features strict-checks` that DV043-F2 asked for remains unrun (the `LNK1104`
+host-linker blockers recorded in handoff §9.4); `cargo llvm-cov`,
+`cargo audit`, `pip-audit`, Snyk, and any pytest/parity leg were not re-run
+here.
+
+### 7.2 Technical claims re-derived at `1f57c45`
+
+- **Bit-identity — holds, replayed at source.** `GuardPolicy::derivatives`
+  (`integrate.rs:120-138`) returns early on `source_guarded || self !=
+  Bounded`, else assigns `guard_derivative_value`'s result per element.
+  `StateDerivatives::new` (`state.rs:482-499`) routes all three arrays through
+  `guard_derivatives` *before* the `guarded: true` literal, so the skipped pass
+  is bitwise identity on a `new()` output in both configurations: the default
+  build needs `clamp_derivative ∘ clamp_derivative == clamp_derivative`
+  bitwise — exactly what
+  `clamp_derivative_is_idempotent_where_the_guard_skip_relies_on_it` asserts on
+  `to_bits()` over `{0.0, -0.0, 1.0, -2.5, ±DERIV_CLAMP, NaN, ±Inf}` — and the
+  strict build needs nothing (the pass returns `Ok(d)` unmodified on `new()`
+  outputs). Error paths are equivalent: on `Err` at index *i* neither version
+  writes element *i* and the `0..i` prefix writes are identical. The flat
+  buffers are `clear()`ed and re-`extend_from_slice`d before every pass
+  (`integrate.rs:436-441`, `550-555`, `596-600`, `617-621`, `638-642`), so no
+  stale element survives. `assert_bit_identical` (`integrate.rs:2721-2733`)
+  compares `to_bits()` across all three state arrays: **non-vacuous** — it
+  fails if the skipped pass would have altered any in-range or at-bound value,
+  and the `is_guarded()`/`!is_guarded()` asserts pin provenance both ways. The
+  NaN/Inf and out-of-range cases are covered by the idempotency test plus the
+  paired pre-existing guards (`bounded_step_still_clamps…` non-strict,
+  `bounded_guard_rejects_out_of_range_derivatives_under_strict_checks` strict —
+  both observed passing). See **DV043-F9** for the one caveat on the `-0.0`
+  row.
+- **`n <= 1` provenance — no false-positive `guarded=true` on an unguarded
+  branch, no missing guard.** Both `prin-sim` sparse models early-return `unclamped` at `n <= 1`
+  (`engine.rs:163-176`, `276-289`) and `new` above it (`:191`, `:329`);
+  `models.rs:454`/`:734`/`:1024` do the same. `guarded: true` exists only at
+  `state.rs:497`; the four struct literals are all `false` (`models.rs:137`,
+  `integrate.rs:2161` — both verified finite-checked-only — and the test models
+  `integrate.rs:2816`/`:3084`); serde deserializes to `false`. The only
+  `derivatives` consumers are `integrate.rs:443` (Euler) and `555`/`601`/`622`/
+  `643` (RK4 k1–k4); RK45/Exponential never had the pass and
+  `MultiRateIntegrator` delegates to inner integrators at default
+  `NonNegative`, which early-returns either way — identical to the old
+  `self == Bounded` gate. End-to-end confirmation came free: the pre-existing
+  pair `bounded_guard_silently_clamps_large_derivatives_like_pre_correction`
+  (default) and `bounded_guard_rejects_out_of_range_derivatives_under_strict_checks`
+  (strict) drive an out-of-range `3e4` derivative through a `Bounded` RK4 step
+  over the n=1 `unclamped` branch — both passed, so the guard still fires
+  exactly where the flag says it should.
+- **Public-array mutation — invariant is construction-time, and the documents
+  say so.** Zero post-construction writes to a `StateDerivatives`' fields exist
+  in the workspace (field assignment, `iter_mut`, `push`/`extend`/`clear`/
+  `truncate`/`resize` on `dphase`/`damplitude`/`dfrequency` were all grepped;
+  `bands.rs:529-580` writes only local `Vec`s before `new`; PyO3 exposes
+  clone-out getters and no `#[new]`). The invariant is *"is_guarded ⇒ the
+  arrays **as constructed** passed `±DERIV_CLAMP` + finite"* — a
+  construction-time fact, not a mutation invariant. What remains unproven is
+  the deliberate residual: an external caller can edit the `pub` arrays after
+  construction, the stale `true` flag survives (it is `pub(crate)`, so it
+  cannot even be corrected from outside), and a `Bounded` integrator then
+  silently skips — whereas the pre-change unconditional pass was robust to
+  that. Accepted and recorded at `state.rs:448-452`, the register row and
+  campaign plan §11.8; nothing in this workspace does it.
+
+### 7.3 F1–F7 delta status
+
+| ID | Delta status (verified at `1f57c45`) |
+|---|---|
+| **DV043-F1** | **Closed (Sphinx half).** Independently re-run clean to a fresh output dir — 0 warnings, `[new config] 35 added` (§7.1). `llvm-cov`/`cargo audit`/`pip-audit` not re-run by this reviewer and not claimed. |
+| **DV043-F2** | **Partially closed — residual stands.** The crate-scoped strict runs are re-verified green (310 + 165); the workspace-wide `--features strict-checks` run remains unrun on the recorded `LNK1104` blockers — **not claimed**. |
+| **DV043-F3** | **Closed.** The prose is now true: four commits exist on the branch, `git status` clean; the statements were fixed by committing rather than reworded. |
+| **DV043-F4** | **Closed.** All four documents (`CHANGELOG` Changed block, `migration_guide.rst:150-181`, `campaign-plan.md` §11.8, the DV-043 register row) cite Versioning §1's **pre-1.0** bullet and explicitly state the post-1.0 clause is not the authority and would forbid the change as implemented; checked against `Versioning_and_Release_Standards.md:12-19` and `Cargo.toml:15` (`1.0.0-rc1`). |
+| **DV043-F5** | **Closed.** `models.rs:431`/`:698`/`:1000`, `engine.rs:191`/`:329`, `bands.rs:580`, `gpu.rs:616`/`:647`/`:662` are all `StateDerivatives::new`; `sweep.rs:305-308` and `sweep_bench.rs:144` pin `GuardPolicy::Bounded`. |
+| **DV043-F6** | **Closed.** `-0.0` is in the step test's rate list (`integrate.rs:2750`) and the direct idempotency test exists (`state.rs:794-818`); both pass in both configurations. The `-0.0` row's residual caveat is carried as F9 below. |
+| **DV043-F7** | **Closed.** `lib.rs:32-36` names `state::StateDerivatives::is_guarded` and states the `Bounded` skip. |
+
+**A1–A10 scoped assessment.** The checklist always applies; this table scopes
+each item to what was actually done and no full-checklist PASS is implied.
+
+| Item | This delta's status |
+|---|---|
+| A1/A2 scope and plan | Traced to source — the rubric items were re-derived from the committed tree at `1f57c45`, and campaign plan §11.8/amendment #9 were read against the committed text. |
+| A3 scoped tests | The prescribed crate-scoped runs pass (309/310/165, §7.1); the ≥95 % changed-line coverage expectation is **unmeasured** — no `llvm-cov` run here. |
+| A4 numerical invariants | Bit-identity and guard-provenance invariants verified at source and by test; the corpus parity legs were **not** re-run. |
+| A5 lint gates | `cargo fmt --all -- --check` passed (exit 0) on the Rust comment edit; `clippy`, `ruff`, `mypy` not re-run. |
+| A6 security gates | The S3 delta is comment/doc-only — no dependency or `unsafe` change — but `cargo audit`, `pip-audit` and Snyk were **not** re-run: unverified, not claimed clean. |
+| A7 docs build | Fresh-output-dir Sphinx `-W --keep-going` run independently: 0 warnings, 35/35 sources (§7.1). |
+| A8 worktree | Tracked worktree clean at `1f57c45` when audited; the only subsequent edits are this §7/S3 recording pass. |
+| A9 integration and CI | Local targeted tests only; merge CI and the closing green nightly remain **OPEN** — not claimed. |
+| A10 record consistency | Audit/handoff/register consistency checked; two stale enumerations found and corrected as DV043-F8/F9. |
+
+Amendment #9 (campaign plan §14.2) remains the authorisation of record; no new
+amendment is proposed or implied.
+
+### 7.4 New findings and the S3 remediation applied on top of this audit
+
+| ID | Sev | Location | Finding |
+|---|---|---|---|
+| **DV043-F8** | D4 | `SESSION_REGISTER.md` `Hotfix-DV043` row; DV-043 register row | "Five tests in tandem" / a five-name enumeration predates the F6 remediation; six new tests actually ship — `state::clamp_derivative_is_idempotent_where_the_guard_skip_relies_on_it` was absent from both (named only in handoff §9.3). |
+| **DV043-F9** | D4 | `integrate.rs` `bounded_step_skips_the_redundant_pass_without_changing_any_value` comment | The comment claimed a `-0.0` sign flip "would fail rather than compare equal", but `assert_bit_identical` compares the *stepped* state and `x + dt·(∓0.0) = x` bitwise on this nonzero starting state — a derivative sign flip cannot reach the comparison, so that row is individually non-discriminating. The direct `clamp_derivative` idempotency test is what pins `-0.0`. |
+
+**S3 remediation applied** (by this reviewer, mechanically; **lead-reviewed on
+2026-09-28 UTC for exact textual corrections only — the F8/F9 four-file
+delta confirmed six test names now enumerated, the comment now accurately
+noting `-0.0` can be masked, no executable code, `git diff --check` clean; no
+full-suite rerun or CI claim — this report does not grade them**):
+
+1. `crates/prin-dynamics/src/integrate.rs` — the signed-zero sentence of the
+   test comment replaced with: *"Signed zero exercises this branch, but a step
+   from a nonzero state can hide a derivative sign flip. The direct
+   clamp_derivative idempotency test checks -0.0 with to_bits() instead."*
+   Comment only; no executable code touched.
+2. `DOCS/sessions/SESSION_REGISTER.md` — `Hotfix-DV043` row: "Five tests in
+   tandem" → "Six tests in tandem (including the post-audit clamp idempotency
+   test)".
+3. `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md` — DV-043 row's
+   Tests-in-tandem list gained
+   `state::clamp_derivative_is_idempotent_where_the_guard_skip_relies_on_it`.
+
+F8/F9 are additive corrections to the record; they do not reopen the reviewed
+code, and the original §1–§6 verdict provenance is untouched.
 
 ## 8. Verification ledger
 

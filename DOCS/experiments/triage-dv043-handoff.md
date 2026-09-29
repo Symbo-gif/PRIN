@@ -15,7 +15,10 @@ and the fix that disposition selected. **Not** an experiment result, **not** a
 campaign verdict, and **not** an EXP-001-r1 E-stage.<br>
 **Independent audit:** [`DOCS/audits/2026-09-28-dv043-redundant-step-guard-audit.md`](../audits/2026-09-28-dv043-redundant-step-guard-audit.md)
 — verdict `PASS-WITH-FINDINGS`, no D1, seven findings `DV043-F1`…`DV043-F7`,
-all remediated; delta re-audit pending.
+all remediated; delta re-audit pending.<br>
+*Post-session, 2026-09-28 UTC:* Subsequent independent delta re-audit is
+recorded in the audit report §7 (F8/F9 D4 fixed; full-workspace
+strict-checks, hotfix merge and green nightly are not claimed).
 
 ---
 

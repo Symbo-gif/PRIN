@@ -493,5 +493,7 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   workspace-wide `--features strict-checks` run remains blocked by this host's
   `LNK1104` contention, and the report says so rather than claiming it. The
   report records the auditor's verdict as the auditor's and deliberately does
-  **not** self-grade the remediation, per the DV041-F4 precedent. Delta
-  re-audit pending.
+  **not** self-grade the remediation, per the DV041-F4 precedent. Independent
+  delta re-audit in §7: `PASS-WITH-FINDINGS`, no new D1/D2/D3; F8/F9 D4
+  documentation corrections applied and lead-reviewed. Full-workspace
+  strict-checks, merge CI and green-nightly closure remain open.
