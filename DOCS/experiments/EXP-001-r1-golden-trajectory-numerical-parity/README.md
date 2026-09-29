@@ -42,10 +42,10 @@ session 0159.
 | File | Created by | Frozen when |
 |---|---|---|
 | `README.md` | E1 | Updated as the experiment progresses |
-| [`preregistration.md`](preregistration.md) | E1 (from [`TEMPLATE_Preregistration.md`](../TEMPLATE_Preregistration.md)) | **NOT YET FROZEN** — freezes at E3's first `RUN-`; E2 follow-up H4 method approved 2026-09-29 UTC; all §10 entry gates closed (DV-043/DV-044 CLOSED, `M = 9b79d2e` incorporated, clean `R` = campaign HEAD at E3 start) |
+| [`preregistration.md`](preregistration.md) | E1 (from [`TEMPLATE_Preregistration.md`](../TEMPLATE_Preregistration.md)) | **FROZEN 2026-09-29T09:17:35Z** at `F = 5d5ae3521317af47a11afa8d689935ac2fc0f447` (first `RUN-` created); E2 follow-up H4 method approved 2026-09-29 UTC; executed from `R = 5d5ae35…` on baseline `M = 9b79d2e…` — never edited after freeze |
 | [`e1-handoff.md`](e1-handoff.md) | E1 | Entry and verification evidence record |
 | [`e2-review.md`](e2-review.md) | E2 | Independent-review and maintainer-decision record |
-| `log.md` | E3 | *Not yet created* — written at E3; never edited after E3 close |
+| [`log.md`](log.md) | E3 | **written** — 6/6 registered runs executed 2026-09-29 (one wgpu + one CUDA kernel-path, corpus, 2× repeatability, fuzz), 0 aborted, all manifested; never edited after E3 close |
 | `report.md` | E5 | *Not yet created* — written at E5; corrections are errata |
 | `report-manifest.json` | E4/E5 | *Not yet created* — written at E4; SHA-256 of regenerated outputs |
 

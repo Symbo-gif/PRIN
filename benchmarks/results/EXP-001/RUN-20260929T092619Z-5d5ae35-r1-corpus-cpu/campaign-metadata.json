@@ -1,0 +1,11 @@
+{
+  "artefacts": {
+    "corpus_r1-corpus-cpu.json": [
+      "H1"
+    ]
+  },
+  "exp_id": "EXP-001-r1",
+  "operator": "MichaelMaillet",
+  "run_id": "RUN-20260929T092619Z-5d5ae35-r1-corpus-cpu",
+  "session": "EXP-001-r1-E3"
+}

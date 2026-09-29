@@ -1,0 +1,11 @@
+{
+  "artefacts": {
+    "fuzz_r1-fuzz-cpu.json": [
+      "H2"
+    ]
+  },
+  "exp_id": "EXP-001-r1",
+  "operator": "MichaelMaillet",
+  "run_id": "RUN-20260929T092641Z-5d5ae35-r1-fuzz-cpu",
+  "session": "EXP-001-r1-E3"
+}

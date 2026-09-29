@@ -613,11 +613,19 @@ campaign plan §11.7/§14.2 amendment #8) over a gap disposition.
 DV-041's binding capability closed on PR #25 / required-CI evidence. The
 follow-up wgpu H4/two-build **method** was APPROVED by MichaelMaillet on
 2026-09-29 UTC as an E2 protocol-design gate only (`e2-review.md` §8);
-the DV-043 hotfix remains unmerged with its green-nightly closure
-pending, DV-044's governed ledger correction is open, and the clean
-M/R execution identity is not yet recorded. The pre-registration has
-NOT frozen and E3 has NOT started. Session 0159 remains BLOCKED. See
-[draft](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/preregistration.md),
+DV-043 merged to `main` as `9b79d2e` (PR #26; forced nightly
+`36525353031` attempt 2 `bench-regression` green) and DV-044 closed
+through its own S1–S4 cycle. `M = 9b79d2e…` was incorporated and
+`check_ci_green.py` returned all six required workflows green on it.
+EXP-001-r1 **E3 executed on 2026-09-29 UTC**: the pre-registration
+froze at `F = 5d5ae3521317af47a11afa8d689935ac2fc0f447`, all six runs
+ran from `R = 5d5ae35…` — 72-case wgpu kernel-path (`wgpu<wgsl>`
+proven per case), 72-case CUDA kernel-path, 504-case corpus,
+2×14 repeatability and 1,000-draw fuzz — zero aborts, all manifested;
+see [log](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/log.md).
+No verdict was computed at E3; E4 adjudication is a separate session.
+Session 0159 remains BLOCKED. See
+[preregistration](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/preregistration.md),
 [E1 handoff](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e1-handoff.md)
 and
 [E2 review](../experiments/EXP-001-r1-golden-trajectory-numerical-parity/e2-review.md).
