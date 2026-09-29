@@ -54,6 +54,8 @@ only on a non-reversal E5 verdict or a Project Plan §8.3 amendment
 | [`e1-handoff.md`](e1-handoff.md) | E1 | Entry and verification evidence record |
 | [`e2-review.md`](e2-review.md) | E2 | Independent-review and maintainer-decision record |
 | [`log.md`](log.md) | E3 | **written** — 6/6 registered runs executed 2026-09-29 (one wgpu + one CUDA kernel-path, corpus, 2× repeatability, fuzz), 0 aborted, all manifested; never edited after E3 close |
+| [`analysis/`](analysis/README.md) | E4 | Committed **before** adjudication (campaign plan §7.4 item 2). Never edited to change a verdict; a needed fix is a new commit recorded in `analysis.md` |
+| `analysis.md` | E4 | *Not yet created* — written at E4 close; the analysis record |
 | `report.md` | E5 | *Not yet created* — written at E5; corrections are errata |
 | `report-manifest.json` | E4/E5 | *Not yet created* — written at E4; SHA-256 of regenerated outputs |
 
