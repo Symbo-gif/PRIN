@@ -56,6 +56,39 @@ instead.
 Evidence and rationale: :doc:`parity_report` (``EXP-001 D1`` register entry)
 and Project Plan amendment #47.
 
+Rust API change: ``StateDerivatives`` guard provenance (DV-043)
+-----------------------------------------------------------------
+
+``prin_dynamics::StateDerivatives`` gains a private field recording whether its
+values were clamped to ``±1e4`` at construction, exposed read-only as
+``is_guarded()``. ``EulerIntegrator`` and ``RK4Integrator`` configured with
+``GuardPolicy::Bounded`` skip their own derivative pass when it is set: the
+sparse k-NN models already clamp through ``StateDerivatives::new``, so that
+pass could not change a value and cost four redundant ``3N`` traversals per
+RK4 step — the ``nightly.yml`` ``bench-regression`` breach recorded as DV-043
+and campaign plan §11.8. No integrated value changes:
+``bounded_step_skips_the_redundant_pass_without_changing_any_value`` pins
+bit-identity between the skipped and applied paths at values inside and exactly
+at the bound, and the guard still runs for every ``unclamped`` source,
+including the sparse models' own ``n <= 1`` branch.
+
+**Breaking for Rust consumers.** The three derivative arrays remain public, but
+the struct is no longer exhaustively constructible or destructurable from
+outside ``prin-dynamics``. Build one with ``StateDerivatives::new`` (clamped)
+or ``StateDerivatives::unclamped`` (exactly as computed) instead of a struct
+literal. Equality and the serialized form are unchanged — ``PartialEq``
+compares the three arrays only and the flag is ``#[serde(skip)]`` — so a
+deserialized value reports ``is_guarded() == false`` and is still guarded by
+its integrator. Permitted at ``1.0.0-rc1`` under Versioning and Release
+Standards §1's **pre-1.0** bullet ("Pre-1.0: minor bumps may break API; each
+roadmap phase exit is tagged as a pre-release"): the workspace is at a
+pre-release and ``1.0.0``, the feature-complete milestone, has not shipped, so
+the *post*-1.0 stability regime (major bump, a deprecation cycle of ≥1 minor
+release through the ``_deprecation`` machinery, and Migration Guide entries) is
+not yet in force. That post-1.0 clause is not the authority here and would
+forbid this change as implemented. This entry is supplied regardless. No Python
+surface changes: ``prin.dynamics`` exposes the derivative arrays, not this flag.
+
 New PRIN-only symbols
 ---------------------
 

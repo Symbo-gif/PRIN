@@ -469,3 +469,31 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   live-verified on `PRIN-GPU-Runner` under both a `--features cuda` and a
   `--features wgpu` build by two different actors (implementer and
   auditor).
+- [`2026-09-28-dv043-redundant-step-guard-audit.md`](2026-09-28-dv043-redundant-step-guard-audit.md) —
+  DV-043 redundant fixed-step derivative guard hotfix
+  (`hotfix/dv043-redundant-step-guard`), independent audit verdict
+  **`PASS-WITH-FINDINGS`**, **no D1**. The auditor confirmed the numerical
+  equivalence in both feature configurations *including the error path*,
+  enumerated all 20 `StateDerivatives` construction sites and confirmed no
+  unguarded value can carry `guarded: true` (noting that `true` at either
+  finite-difference gradient site **would have been a D1**), confirmed the
+  `n <= 1` branch is handled because the flag rides the constructor, and
+  confirmed all four pre-existing guard tests still exercise the guard. Seven
+  findings: two `D2` (Sphinx `-W` / `llvm-cov` / audit gates not run; the
+  workspace-wide `--features strict-checks` suite not run, only
+  `-p prin-dynamics --lib`), two `D3` — **DV043-F3**, register/session/handoff
+  prose said "FIX COMMITTED" and "local commits" while nothing was committed
+  (same class as DV041-F4), and **DV043-F4**, the breaking public-API change
+  was justified by citing Versioning and Release Standards' *post*-1.0
+  stability clause, which is the restrictive one and would **forbid** the
+  change as implemented (correct authority is the adjacent pre-1.0 bullet) —
+  and three `D4` (stale `models.rs` line numbers, `-0.0` missing from the
+  bit-identity test's rate list, crate doc silent on the provenance skip). Six
+  of the seven remediated and one (**F2**) only **partially** — the
+  workspace-wide `--features strict-checks` run remains blocked by this host's
+  `LNK1104` contention, and the report says so rather than claiming it. The
+  report records the auditor's verdict as the auditor's and deliberately does
+  **not** self-grade the remediation, per the DV041-F4 precedent. Independent
+  delta re-audit in §7: `PASS-WITH-FINDINGS`, no new D1/D2/D3; F8/F9 D4
+  documentation corrections applied and lead-reviewed. Full-workspace
+  strict-checks, merge CI and green-nightly closure remain open.

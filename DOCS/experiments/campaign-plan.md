@@ -688,6 +688,103 @@ hosted job's own verdict. **The §11.6 correction is closed;** §11.3's
 reference-host re-baseline gates before 0168 and 0173, and DV036-F5's fix at
 0166, are unaffected and remain open.
 
+### 11.8 DV-043 — the EXP-001 D1 correction left a redundant derivative guard on the fixed-step path
+
+- **Discovered:** 2026-09-28 UTC, at the EXP-001-r1 E3 entry check §10.2
+  requires ("Red `nightly.yml` not dispositioned (fixed or dated DV row) at an
+  E3 start → Disposition first"). `nightly.yml` run
+  [`36380992897`](https://github.com/Symbo-gif/PRIN/actions/runs/36380992897)
+  (2026-09-28, `main` at `149cf2d88ab6be401951b63d1d7e8fad209f52a5`) reported
+  `full-suite` green and **`bench-regression` FAILED** with ten gated breaches,
+  and nothing in `DOCS/` or the DV register dispositioned it.
+- **Not the DV-036 class.** Attribution is a single commit: the nightlies at
+  `ce4049f` on 09-25/26/27 were green against the same fixed reference
+  `4590d611`, and `git log ce4049f..149cf2d` is PR #24 alone. Stronger still,
+  `git log 4590d611..ce4049f -- <the eight step/sweep hot-path files>` is
+  **empty** — across the whole 69-commit measured range the hot path was
+  bit-identical until PR #24 — and `Cargo.lock`, `rust-toolchain.toml`,
+  `nightly.yml` and `tools/check_bench_regression.py` are unchanged in
+  `ce4049f..149cf2d`.
+- **Original fact:** `34e8811` moved the `±DERIV_CLAMP` derivative guard out of
+  `StateDerivatives::new` and *additionally* into the fixed-step integrators
+  (`GuardPolicy::derivatives`, called from `EulerIntegrator::step` and from
+  RK4's k1–k4). That pass is load-bearing for the models the same commit
+  switched to `StateDerivatives::unclamped`. But the sparse k-NN paths kept
+  their own clamp at construction, and `OscilloSim`, `run_single_config` and
+  `sweep_bench` all pin `GuardPolicy::Bounded` over exactly those sparse
+  models — so every RK4 step re-walked four `3N` buffers to re-clamp values
+  already inside the bound. The second pass is provably value-identical: both
+  sites use the same `guard_derivative_value`/`clamp_derivative` and the same
+  `±DERIV_CLAMP`; `clamp_derivative` is idempotent across `NaN`, `±Inf`, `-0.0`
+  and values exactly at the bound; and nothing mutates the buffer between
+  construction and the pass. Under the default (non-`strict-checks`) build —
+  which is what `nightly.yml` builds — the loop also evaluated
+  `clamp_derivative` twice per element, discarding the first result.
+- **The breach/flat split matches the mechanism exactly.** All ten breaches are
+  in `engine_step/step_parallel/*` and `sweep_parallel/*`, the two families
+  that enter an integrator. `engine_step/derivatives_{parallel,serial}/*` —
+  the same criterion group, the same `SparseKuramoto`, the same N and state,
+  calling `compute_derivatives` with no integrator — stayed flat at
+  0.983–1.036, as did `spmv_coupling/*`, both bridge groups and every
+  `pytest/*` group. Converted to per-oscillator-per-step deltas, four
+  identities across two benchmark families agree on **~25 ns**
+  (`step_parallel/1024` 25.5, `/4096` 25.3, `run_sweep_serial/32` 25.9, `/64`
+  24.8) ≈ 2.1 ns per guard element-visit over the 12 visits per RK4 step.
+- **One magnitude is not explained, and is not claimed.** `step_parallel/16384`
+  reads 73 ns per oscillator, 2.9× that constant, and is the largest breach
+  (+28.8%). The `PARALLEL_LEN_THRESHOLD = 32_768` boundary does not explain it
+  (it predicts ratios *rising* above the threshold; they fall), and a
+  four-pass counterbalanced A/B on reference host H1 (`arms/reference` @
+  `ce4049f` vs `arms/candidate` @ `149cf2d`, equal-length siblings, separate
+  cold target dirs) **did not reproduce it** — local ratio 1.023. That A/B did
+  reproduce the family selectivity (median 1.075 across the 15 integrator-path
+  identities against 1.023 across the 7 derivative-only controls), but its own
+  within-arm pass-to-pass drift reached ±13% and
+  `run_sweep_parallel/16_configs` was bimodal (982 ms vs 1556 ms inside one
+  arm), so it cannot resolve a ~10% effect per identity. The +28.8% is
+  therefore treated as a hosted-runner cache/measurement artefact on top of a
+  real ~+10%, and the fix is validated per identity rather than by the
+  aggregate gate.
+- **Disposition (this row): fix, not acceptance.** `StateDerivatives` now
+  records at its construction site whether the `±DERIV_CLAMP` guard was applied
+  (`new` → guarded; `unclamped` and the two finite-difference gradient sites →
+  not), exposed as `is_guarded()`. `GuardPolicy::derivatives` takes that flag
+  and returns immediately when it is set; otherwise it assigns
+  `guard_derivative_value`'s result instead of discarding it and clamping a
+  second time. Carrying the flag on the value rather than declaring it per
+  model is deliberate: the sparse models return `unclamped` at `n <= 1` and
+  `new` above it, so a static per-model declaration could drift from the branch
+  actually taken and silently drop the guard — the failure class the EXP-001 D1
+  correction exists to prevent.
+- **Closure gate:** the fix merges to `main` with required CI green, and the
+  next `nightly.yml` `bench-regression` is green with `engine_step/step_parallel/*`
+  and `sweep_parallel/*` back inside the +10% gate. Until then this row is the
+  dated disposition §10.2 asks for, and EXP-001-r1's E3 entry check cites it.
+  Re-audit gate: **before EXP-001-r1 E3** (the gate the red nightly blocks)
+  and, independently, **before session 0166 (EXP-003 E3)**, whose
+  reference-host CPU re-baseline would otherwise capture a knowingly degraded
+  step path as its baseline.
+- **Public API:** `StateDerivatives` gains a private field, so downstream
+  struct-literal construction and exhaustive destructuring no longer compile;
+  the constructors are unaffected, and equality and the serialized form are
+  unchanged (manual `PartialEq` over the three arrays, `#[serde(skip)]` on the
+  flag). Permissible at `1.0.0-rc1` under Versioning and Release Standards §1's
+  **pre-1.0** bullet ("Pre-1.0: minor bumps may break API; each roadmap phase
+  exit is tagged as a pre-release"): the workspace is at a pre-release and
+  `1.0.0`, the feature-complete milestone, has not shipped, so the *post*-1.0
+  regime (major bump, ≥1-minor `_deprecation` cycle, Migration Guide entry) is
+  not yet in force — that clause is not the authority here and would forbid this
+  change as implemented (independent audit finding DV043-F4, D3). A Migration
+  Guide entry is supplied regardless, and the change is recorded in the
+  CHANGELOG. The flag is a construction-time fact, not an invariant
+  maintained across mutation — the three arrays stay public, so a caller that
+  edits them afterwards invalidates it. Nothing in this workspace does.
+- **Numbering note:** §11.7 (DV-041) and §14.2 amendments #7 and #8 were
+  allocated at EXP-001-r1 E2 on `campaign/exp001-r1-e1` and are not yet on
+  `main`. Subsection and amendment numbers are global, so this row takes §11.8
+  and #9 rather than reusing them; the apparent gap closes when that branch
+  merges.
+
 ---
 
 ## 12. Campaign rules that E1–E5 briefs do not spell out (adopted here)
@@ -766,3 +863,4 @@ Hypotheses are never in this document.
 | 4 | 2026-09-23 UTC | §11.6 (gap disposition, hosted validation round 2) | After main nightly `35826531821` breached on identical-source measurements: equal-length sibling checkouts for both arms; fixed counterbalanced reference→candidate→candidate→reference order with per-arm mean of both passes; `control_buffer_read_under_contention` group measured and reported but advisory on hosted runners (reference-host gate at EXP-003 E3, 0166, with its harness defect DV036-F5); job timeout 90→180 min. 10% threshold, fixed reference SHA, matched dependencies, all eight Rust targets, Python selection, and fail-closed evidence rules unchanged. | MichaelMaillet (selected the symmetric + counterbalanced + contention-advisory option in session, 2026-09-23 UTC) |
 | 5 | 2026-09-23 UTC | §11.1, §11.2, §11.6 (gap dispositions) | Records terminal closure of three gap dispositions on verified evidence: DV-038 closed (PR #19 merged `90c0334`, required CI green), DV-039 closed (same merge plus wholly green nightly `35847692136`), and the §11.6 hosted-CI comparison correction closed (nightly `35847692136` at `main` `b434554` green under the amendment-4 counterbalanced design, independently re-derived from the preserved evidence artefact). No target, threshold, benchmark selection, reference SHA, experiment order, seed policy, statistics policy, or stop rule changes. §11.3's reference-host gates before 0168/0173 and DV036-F5's 0166 fix remain open. | MichaelMaillet (A2 closure conditions met as written; no new approval required — each gate's own pre-approved evidence standard is satisfied) |
 | 6 | 2026-09-23 UTC | §8 (budget caps), §7.5 (storage rules) | **Budget amendment requested and granted during EXP-001 E3 (session 0156).** The four registered runs produced 5.921 MiB of raw artefacts: `corpus-cpu` 1.645 MiB, `repeatability-cpu` 0.004 MiB, `fuzz-cpu` **4.199 MiB**, `kernel-path-cuda` 0.073 MiB. This exceeds §8's ≤ 5 MiB EXP-001 tracked cap and §7.5's ≤ 2 MiB per-run cap (the 1,000-case fuzz artefact carries per-case beyond-horizon arrays that H2b's registered E4 analysis consumes, so it cannot be reduced without changing the registered protocol). EXP-001's tracked cap is raised **5 → 8 MiB** and the §7.5 per-run cap is waived for this experiment's `fuzz` leg; all four runs are committed as written. The campaign-wide 64 MiB cap (§7.5) is unchanged and remains far from binding. No hypothesis, tolerance, seed, statistic, driver, run ID, or experiment-order change; §10.1 item 5's abort criterion is discharged by this amendment rather than by invalidating a completed run. | MichaelMaillet (2026-09-23 UTC, in-session decision on the E3 escalation) |
+| 9 | 2026-09-28 UTC | §11.8 (gap disposition) | **DV-043 opened and fixed: the nightly `bench-regression` gate went red on the first night after the EXP-001 D1 correction merged.** Run `36380992897` at `149cf2d` reported ten gated breaches (+10.1 %…+28.8 %), all in `engine_step/step_parallel/*` and `sweep_parallel/*`, attributed to one commit by two independent windows: the green→red night contains PR #24 alone, and the entire step/sweep hot path is bit-identical from the fixed reference `4590d611` through the last green night `ce4049f`. Cause: `34e8811` added an integrator-level `±DERIV_CLAMP` pass that the sparse k-NN models already perform at construction, so every `GuardPolicy::Bounded` RK4 step re-clamped four `3N` buffers it provably could not change (~25 ns per oscillator per step, corroborated by four identities across two benchmark families); the derivative-only arms in the same criterion group stayed flat. Disposition is a **fix, not an acceptance**: `StateDerivatives::is_guarded()` records the guard at its construction site so the integrator skips the value-identical pass, and the non-strict path stops evaluating `clamp_derivative` twice per element. No hypothesis, tolerance, seed, statistic, benchmark selection, threshold, reference SHA, experiment order, or normative target changes; the +10 % gate and the fixed reference are untouched. The `step_parallel/16384` +28.8 % magnitude is explicitly **not** claimed as explained — it did not reproduce on H1 and is recorded as a hosted-runner artefact on top of the real ~+10 %. §11.7 and amendments #7–#8 are on `campaign/exp001-r1-e1`, hence the §11.8/#9 numbering. | MichaelMaillet (selected "Fix now, before the E3 freeze" via the session's `AskUserQuestion`, 2026-09-28 UTC) |
