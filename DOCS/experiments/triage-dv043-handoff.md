@@ -476,12 +476,18 @@ step is compute-bound and breaks down where memory bandwidth and rayon scaling
 dominate — at N=1,000,000 it implies a fixed-arm overhead *above* both other
 arms, which the bit-identity tests make impossible. Those rows are omitted
 rather than explained away. The `sweep_parallel` identities were measured in the
-same two passes and are preserved in the criterion output under
-`.qwen/tmp/arms/corrected/target/criterion/`, but `sweep_parallel` has no
-derivative-only control in its own group, so no within-run decomposition is
-available for it; its recovery rests on sharing the identical code path
-(`OscilloSim` + `GuardPolicy::Bounded` RK4 + sparse model) with `engine_step`,
-and on the nightly gate that closes DV-043.
+same two passes, but `sweep_parallel` has no derivative-only control in its own
+group, so no within-run decomposition is available for it; its recovery rests on
+sharing the identical code path (`OscilloSim` + `GuardPolicy::Bounded` RK4 +
+sparse model) with `engine_step`, and on the nightly gate that closes DV-043.
+
+**Evidence-of-record caveat, applying to §7 and §10 alike.** All three arms were
+built and measured under `.qwen/tmp/arms/{reference,candidate,corrected}`, which
+`.gitignore` excludes. The raw criterion output is therefore local scratch that
+does not survive cleanup and was never committed; the tables transcribed in §7
+and §10 are the evidence of record, and the authoritative confirmation of the
+fix is the closure gate in §12 — a green `nightly.yml` `bench-regression` on the
+merged SHA, whose own evidence artefact the workflow preserves.
 
 ## 11. Scope boundary — what this session deliberately did not do
 
