@@ -9,20 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **EXP-001-r1 pre-execution H4/wgpu amendment (proposed,
-  2026-09-28 UTC).** The previously approved CUDA 72-case
+- **EXP-001-r1 pre-execution H4/wgpu amendment (proposed 2026-09-28
+  UTC; H4/two-build method approved 2026-09-29 UTC, E3 still blocked).** The previously approved CUDA 72-case
   H4 leg gains a separate, required wgpu 72-case companion
   using DV-041's post-dispatch `backend_name` with host-slice
   fallback rejected; both use unchanged f32 tolerance and
-  one source SHA with two sequential feature builds.
+  one campaign execution SHA R for two sequential feature builds,
+  with upstream main baseline M recorded separately.
   The new r1-driver tests use synthetic inputs; the
   predecessor's 72-case H4 acceptance test also runs
   as a code-regression check, not as an EXP-001-r1
   E3 result or a new campaign run artefact. The
-  independent follow-up E2 review and
-  MichaelMaillet's explicit dated approval remain pending;
-  no E3 run or freeze has started. The DV-043 hotfix must
-  still merge with required CI and green nightly.
+  follow-up E2 H4 method was **APPROVED by MichaelMaillet
+  on 2026-09-29 UTC** (`e2-review.md` §8) as a
+  protocol-design gate only; no E3 run or freeze has
+  started. The DV-043 hotfix must still merge with
+  required CI and green nightly, DV-044's governed
+  correction is open, and a clean M/R execution
+  identity must be recorded before E3.
 
 - **EXP-001-r1 E2 independent review and partial approval (2026-09-28 UTC).**
   Claude Sonnet 5 (did not draft E1) re-derived every E1 provenance and

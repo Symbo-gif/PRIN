@@ -1,6 +1,10 @@
 # Pre-registration — EXP-001-r1: Golden-trajectory numerical parity
 
-**Status:** **DRAFT — E1; NOT APPROVED FOR EXECUTION.** Frozen only at E3 start.<br>
+**Status:** **E2 FOLLOW-UP H4 METHOD APPROVED 2026-09-29 UTC; NOT FROZEN
+AND NOT AUTHORIZED TO EXECUTE.** E3 remains BLOCKED on DV-043's
+merged-main CI/green-nightly closure, DV-044's separately governed
+ledger correction, and a recorded clean campaign execution checkout.
+Frozen only at E3's first `RUN-` creation.<br>
 **Authors:** Devin (AI pair, protocol and driver); MichaelMaillet (maintainer,
 session declaration; E2 review pending).<br>
 **Date:** 2026-09-28 UTC (the session was declared on September 27 local time).<br>
@@ -12,31 +16,50 @@ ill-conditioned indices, the fresh bootstrap seed, the built extension's
 default guard) from the repository rather than accepting them on assertion,
 and independently re-ran the driver's test suite, ruff, mypy --strict,
 `check_dv_register_gates.py` and `check_global_session_registration.py` —
-all reproduced exactly as E1 reported, zero discrepancies. Three of the four
-E2 gates below are **APPROVED**; the required wgpu coverage gate is **NOT**
-resolved and blocks E3. See `e2-review.md` for the full record.
+all reproduced exactly as E1 reported, zero discrepancies. At the
+original 2026-09-28 E2 review, three of four gates were
+approved and the wgpu gate remained open. The 2026-09-29
+follow-up H4 method approval below closes that protocol-design
+gate only; E3 still waits for DV-043, DV-044 and the
+M/R/F execution identity. See `e2-review.md` for the full record.
+
+**Follow-up E2 maintainer decision (2026-09-29 UTC):** MichaelMaillet
+approved the revised two-backend H4 design, two feature-exclusive
+builds from one execution commit, and the disclosed non-author
+technical review's adequacy for E2. In direct response to those
+presented decisions and a separately governed DV-044 correction,
+the maintainer wrote: "I approve everything that keeps this
+project going, i approve a forced nightly for faster results on
+progress, and anything that stays true to established goals."
+Approval is scoped to the reviewed pre-execution method and a
+prospective DV-044 correction; it does not mark DV-043 merged,
+close DV-044, accept a failed nightly, authorize E3, or freeze
+the protocol. A forced `nightly.yml` dispatch on **main after
+DV-043 merges** is approved, subject to its actual result.
+The corrected M/R/F source identity in §5.1/§8 is part of this
+approval because campaign plan §12 forbids E3 on main without
+the r1 driver; it changes no science, denominator, tolerance,
+seed, hypothesis or backend inclusion. `e2-review.md` §8
+records the decision and evidence.
 
 | E2 gate (§10) | Decision | Record |
 |---|---|---|
 | §7 single-stream (not ≥10 replications) sample-size justification | **APPROVED** | e2-review.md §2 |
 | §7 three-way H2b equivalence decision rule (replacing the predecessor's binary rule) | **APPROVED** | e2-review.md §2 |
 | §9 storage budget (16 MiB shared / 8 MiB new r1 / 6 MiB fuzz exception) | **APPROVED** — campaign plan §14.2 amendment #7 | e2-review.md §3; driver updated (`RAW_ROOT_CAP_BYTES`, new `R1_ROOT_CAP_BYTES`, new `FUZZ_RUN_CAP_BYTES`) |
-| §2 required wgpu driver/coverage gate | **PROPOSED / NOT APPROVED — tested implementation submitted for follow-up E2 independent review and MichaelMaillet's explicit approval; no E3 or freeze** | e2-review.md §§4–7; `DEFERRED_VALIDATION_REGISTER.md` DV-041; campaign plan §11.7, §14.2 amendment #8 |
+| §2 required wgpu driver/coverage gate | **APPROVED 2026-09-29 UTC (follow-up E2 method only; E3 blocked on DV-043/DV-044 and execution SHA gates)** | e2-review.md §§4–8; `DEFERRED_VALIDATION_REGISTER.md` DV-041; campaign plan §11.7, §14.2 amendment #8 |
 
-DV-041's backend-identification hotfix was merged as PR #25
-(`5615edab5b53afd6602907343a596cdc3f8dff4a`; required CI was recorded green
-in `triage-dv043-handoff.md` §2). This proposal adds a measured wgpu
-companion to H4 before execution. It is a **follow-up E2 pre-execution
-amendment, NOT YET APPROVED**: MichaelMaillet must approve the revised H4
-rule, the two-build order and the driver validation in writing after an
-independent reviewer checks them. DV-043's fix is only local on the
-`hotfix/dv043-redundant-step-guard` branch at drafting time; its merged
-`main` SHA, required CI, green-nightly closure and this protocol's approval
-are E3 prerequisites. This pre-registration is DRAFT; it does not freeze
-and **E3 must not start** while any of those gates are open. The previous
-E2 approvals of the sample-size, H2b and storage decisions still stand.
-No r1 analysis is confirmed by this approval; it approves protocol design
-choices only.<br>
+DV-041's backend-identification hotfix merged as PR #25
+(`5615edab5b53afd6602907343a596cdc3f8dff4a`;
+six required CI workflows green per `triage-dv043-handoff.md`
+§2). MichaelMaillet approved this follow-up E2 H4
+**method** on 2026-09-29 UTC. No r1 result, analysis,
+main-branch DV-043 merge SHA, DV-044 correction, green
+post-hotfix nightly, or E3 freeze follows from that
+approval. The first E3 `RUN-` directory still freezes
+the last approved pre-registration edit; until all
+§10 entry gates close this record is unfrozen and E3
+does not start.<br>
 **Code version:** `prin-core` distribution `1.0.0rc1`, Rust `1.0.0-rc1`;
 E1 starting tree `a7ef308acffbf3ecd09aa1b4fbe55a9b09d09e74`, incorporating
 correction merge `149cf2d88ab6be401951b63d1d7e8fad209f52a5` and the correction's
@@ -167,16 +190,20 @@ as the wgpu run. H4 `CONFIRMED` requires 72 valid passing cases on each
 backend; any valid breach on either backend `REFUTES` H4 (D1); absent,
 invalid or partial coverage without a valid breach is `INCONCLUSIVE`.
 
-**E2 amendment gate, pending:** DV-041 supplied this capability on
-`main` at PR #25. The four-mode r1 driver now has a second
-`kernel-path` label for the wgpu companion (not a new mode or tolerance),
-positive per-case backend identification, and a fail-closed run-closure
-check. Only the existing 72 manifest-selected configurations are
-scheduled; no r1 outcome has been inspected to select a case, bound, or
-exclusion. Its code and tests, including a *synthetic* live-adapter
-smoke check, require independent follow-up E2 review and maintainer
-approval before the hypothesis or driver freezes. This is not a
-§5.4 unavailable-hardware disposition.
+**E2 follow-up H4 method approval (2026-09-29 UTC):**
+DV-041 supplied the `backend_name` capability on
+`main` at PR #25. The four-mode r1 driver has a
+second `kernel-path` label for the wgpu companion
+(not a new mode or tolerance), positive per-case
+backend identification, and fail-closed run closure.
+The same 72 manifest-selected configurations run on
+each backend; no r1 outcome selected a case, bound
+or exclusion. Synthetic and live-adapter tests were
+independently inspected, and MichaelMaillet accepted
+the disclosed non-author review as sufficient for the
+method decision (`e2-review.md` §§6–8). This is
+*not* a §5.4 hardware-unavailability disposition
+or permission to execute before §10's other gates.
 
 ## 3. Expected results
 
@@ -314,14 +341,32 @@ historical OS/driver versions are not assumed current. H2/H3/H4 hosted
 cross-OS runs are optional and unscheduled. wgpu is separately gated above.
 No Triton timing, NPU, DirectML, training or throughput claim is made.
 
-**Two mutually exclusive extension builds, one source SHA.** On H1,
-start E3 only after the maintainer approves the amended protocol and the
-DV-043 hotfix is merged on a required-CI-green `main` with the next
-`nightly.yml` `bench-regression` green per campaign plan §11.8. Start
-from a clean execution checkout of that approved `main` SHA; freeze
-`preregistration.md` at the first `RUN-` creation and record its last-edit
-SHA on line 1 of `log.md`. With **no source change between builds**, run
-these two commands sequentially in the SAME checkout:
+**Two mutually exclusive extension builds, one execution
+commit and a separately recorded main baseline.** Let
+`M` denote the *actual future* merged-main SHA carrying
+DV-043 with required CI green and a following green
+`nightly.yml` `bench-regression` (campaign plan §11.8);
+`M` is not yet known or claimed here. Let `R` denote a
+single, clean, committed EXP-001-r1 campaign-branch
+execution checkout that includes the approved
+pre-registration/driver and incorporates `M` **before**
+E3. Campaign plan §12 rule 3 retains E1–E5 on the
+campaign branch until its E5 PR, so **E3 cannot execute
+from `main` directly**: `main` does not carry this r1
+driver yet. Do not merge a newer numeric baseline or
+edit source mid-experiment; a new `main` change before
+E3 triggers the §10.2 entry check again. E3 logs
+`M` (upstream baseline), `R` (the only execution
+`git_commit`/run-directory SHA for all six runs),
+and `F` (the last pre-registration-edit SHA, recorded
+on `log.md` line 1 at the first `RUN-` creation).
+`F`, `M` and `R` have different roles; they are not
+casually equated. Start from the clean `R` checkout
+after DV-044's independent correction and E2's
+approval have been recorded. With **no tracked
+source change between builds or runs**, use the
+following two commands sequentially in the SAME
+execution checkout:
 
 ```powershell
 .venv\Scripts\python.exe -m maturin develop -m crates/prin-py/Cargo.toml --features wgpu
@@ -349,8 +394,15 @@ proof of the imported extension.
 (`--features cuda,wgpu`) is **not** a wgpu build. Cargo fingerprints each
 feature set, but the second `maturin develop` replaces the installed
 `prin._prin_core`: no Python process may retain the old import after a
-rebuild. Both variants come from the same unchanged checkout/`git_commit`
-and have individually recorded build command, feature set, imported
+rebuild. Both variants come from the same unchanged
+campaign execution checkout R; both run environments record R,
+while E3 separately records main baseline M and the pre-registration
+freeze edit SHA F. The Git-commit source-status check
+applies to TRACKED CODE; append-only `RUN-` output directories
+created after the first run must be accounted for as output,
+not treated as permission for a code change or discarded to
+force `git status` to look clean. The two builds
+have individually recorded build command, feature set, imported
 extension path and binary SHA-256 in `log.md` and the run `config`;
 hashes may differ by design and E4 must verify each against its own log
 entry, not demand binary identity. Verify current source status and SHA
@@ -458,6 +510,12 @@ These are **prospective E3 commands**, executable only after §10's gates
 close. Replace `<UTC>` with a fresh `yyyyMMddTHHmmssZ` timestamp and `<SHA>`
 with the execution checkout's short SHA. The driver checks both SHA and
 label against the directory name.
+Here `<SHA>` is the short hash of the committed campaign
+**execution** checkout `R`, not the separately recorded
+green-main baseline `M`; the r1 driver must actually
+exist and import from `R`. Every one of the six commands
+must use the same `R` value. Log the full `R` alongside
+the full `M` and freeze-edit `F` before the first run.
 
 ```powershell
 # Build --features wgpu first, assert the live kernel probe, then run:
@@ -614,13 +672,17 @@ retargeted or imported as a source of r1 verdicts.
    `r1-kernel-path-wgpu` and one `r1-kernel-path-cuda` label, separate
    manifest-verified environments, per-case positive backend proofs, and
    two E3 build-log extension hashes associated with those backend labels
-   on **one actual merged-main source SHA**; the hashes need not match
+   on **one campaign execution source SHA R**, plus the
+   distinct, already-merged green-main baseline M recorded
+   in the E3 log; the hashes need not match
    across feature variants. For each GPU case, require exactly three
    stored `dlpack_devices` (`dphase`, `damplitude`, `dfrequency`), each
    `cuda` in the CUDA run and `cpu` in the wgpu run; require the wgpu
    `backend_name` to start with `wgpu`. Absent or conflicting proof
    invalidates that case/run, never confirms H4. Reject an extra,
-   duplicated, mismatched or unverified run.
+   duplicated, mismatched or unverified run — including any
+   `environment.git_commit` that differs from `R` or a run ID
+   whose `<sha>` does not prefix `R`.
 2. Re-evaluate each native/corrected/sensitivity decision from its retained
    per-array records. Recompute H2b's registered summaries from the stored
    paired metric arrays before applying the committed statistical helper.
@@ -755,13 +817,22 @@ E2 must:
    required main CI and latest nightly disposition are recorded — including
    DV-043's actual merged `main` SHA (a hotfix-branch SHA does not
    substitute) and one green `nightly.yml` `bench-regression` after that
-   merge. New numeric baseline changes follow campaign §10.2; do not
+   merge. Before the first `RUN-`, incorporate the green-main
+   baseline M into the committed r1 execution checkout R
+   and record both full SHAs; all six `environment.git_commit`
+   values and RUN IDs must identify R, not M. Verify
+   a clean tracked-source state at R. The last
+   pre-registration edit F is independently recorded
+   on line 1 of `log.md` at freeze.
+   New numeric baseline changes follow campaign §10.2; do not
    assume E1's green merge remains current. The pre-existing PSR-039
    deviation-ledger CI gate (DV-044), found at the follow-up
    E2 amendment, must also be corrected and independently
    reviewed; its failure is not an E3 waiver. At E5, list the
    exact E2 baseline-to-E3-main code diff
-   (`149cf2d..E3_SHA`) as a protocol deviation and report
+   (`149cf2d..M`, the main baseline delta) as a protocol
+   deviation — identifying `R` as the experiment's distinct
+   source SHA, not a second mid-experiment main change — and report
    fresh results of both 72-case H4 GPU regression legs.
    A later numeric edit before E3 reopens the baseline entry
    check; it cannot be absorbed mid-experiment.
@@ -771,7 +842,7 @@ the r1 E5 non-reversal condition or a Project Plan §8.3 amendment is
 satisfied. Neither correction merge, E1 completion nor E2 approval alone
 releases it.
 
-### E2 outcome (2026-09-28 UTC)
+### Original E2 outcome (2026-09-28 UTC; follow-up approval above and in e2-review.md §8)
 
 Items 1, 3, 4 above are **satisfied**: independent review completed (item
 4; see `e2-review.md`), the storage budget approved as requested (item 3;
@@ -785,10 +856,18 @@ revised H4/two-build protocol remain outstanding. This pre-registration
 **does not freeze** and **E3 does not start**; the follow-up state is
 recorded here.
 
-The original three E2 approvals remain valid. DV-041's binding fix merged
-in PR #25, and a proposed follow-up amendment implements the required wgpu
-result before freeze. **The revised H4 protocol and two-build execution
-order still require independent E2 review and MichaelMaillet's explicit
-dated approval.** The DV-043 hotfix is not recorded here as merged. No
-pre-registration freeze, `RUN-` directory, E3 execution or scientific
-verdict is authorized by this proposal.
+The original three E2 approvals remain valid. The
+follow-up H4/two-build **method** is now approved
+by MichaelMaillet (2026-09-29 UTC) with the
+non-author technical review disclosed in
+`e2-review.md` §§6–8. Item 2 is closed as a
+*protocol-design* gate only. Item 5 and
+DV-043/DV-044 remain OPEN: no approved new
+main baseline `M`, clean campaign execution
+checkout `R`, green next nightly, first
+`RUN-` directory, freeze, E3 execution or
+scientific verdict exists yet. The separate
+non-author E2 delta check of the corrected
+M/R/F roles completed 2026-09-29 UTC with no
+findings (`e2-review.md` §8). No prior
+EXP-001 result is changed.

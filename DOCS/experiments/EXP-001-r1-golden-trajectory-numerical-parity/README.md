@@ -7,10 +7,12 @@ maintainer approved the sample-size justification, the H2b three-way rule,
 and the storage budget (campaign plan §14.2 amendment #7). The DV-041
 binding capability is **CLOSED** on documented merge evidence (PR #25,
 `5615eda`, required CI green per `triage-dv043-handoff.md` §2); the
-proposed wgpu H4 companion amendment and two-build order await independent
-follow-up E2 review and MichaelMaillet's explicit dated approval. DV-043
+wgpu H4 companion method and two-build order were **APPROVED as an E2
+method decision on 2026-09-29 UTC** (`e2-review.md` §8). DV-043
 remains **OPEN** pending its merge to `main`, required CI, and one green
-nightly `bench-regression`. See [`e2-review.md`](e2-review.md) §§5–7. **This
+nightly `bench-regression`; DV-044's governed ledger correction and a
+clean M/R execution identity also remain open. See
+[`e2-review.md`](e2-review.md) §§5–8. **This
 pre-registration does not freeze and E3 does not start while any of those
 gates are open.**
 This is a new experiment record per campaign plan §10.4 item 4. The original
@@ -25,10 +27,11 @@ The maintainer declared this E1 session, then the E2 session. The [draft
 pre-registration](preregistration.md), [E1 handoff](e1-handoff.md) and
 [E2 review](e2-review.md) record the prospective protocol, local
 validation, independent re-verification and the maintainer's E2 decisions.
-Three of the four E2 gates are approved; the wgpu coverage gate is a
-proposed follow-up amendment awaiting independent review and maintainer
-approval, and DV-043's merge/nightly closure is still open — both block
-freeze/E3. Neither E1 nor this partial E2 approval
+The original E2 approved three of
+four gates; the follow-up wgpu H4/two-build method was approved on 2026-09-29 UTC as a protocol-design gate only
+(`e2-review.md` §8), while DV-043's merge/nightly closure, DV-044's
+governed correction, and the clean M/R execution identity remain
+open — freeze/E3 stay blocked. Neither E1 nor this E2 method approval
 executes E3 or releases session 0159.
 
 ## What this directory holds
@@ -36,7 +39,7 @@ executes E3 or releases session 0159.
 | File | Created by | Frozen when |
 |---|---|---|
 | `README.md` | E1 | Updated as the experiment progresses |
-| [`preregistration.md`](preregistration.md) | E1 (from [`TEMPLATE_Preregistration.md`](../TEMPLATE_Preregistration.md)) | **DRAFT** — freezes at E3 start; blocked on the unapproved wgpu amendment and DV-043's merge/nightly closure |
+| [`preregistration.md`](preregistration.md) | E1 (from [`TEMPLATE_Preregistration.md`](../TEMPLATE_Preregistration.md)) | **NOT FROZEN** — freezes at E3's first `RUN-`; E2 follow-up H4 method approved 2026-09-29 UTC; blocked on DV-043/DV-044 and clean M/R source identity |
 | [`e1-handoff.md`](e1-handoff.md) | E1 | Entry and verification evidence record |
 | [`e2-review.md`](e2-review.md) | E2 | Independent-review and maintainer-decision record |
 | `log.md` | E3 | *Not yet created* — written at E3; never edited after E3 close |

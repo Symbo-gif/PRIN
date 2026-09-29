@@ -171,7 +171,7 @@ session does not create any `RUN-` directory, execute any case, or freeze
 the pre-registration. The next unit of work is the DV-041 hotfix session;
 this review does not start it.
 
-## 5. Follow-up E2 pre-execution amendment (proposed, not approved)
+## 5. Follow-up E2 pre-execution amendment (original proposal; method approved in §8)
 
 The earlier independent E2 review and MichaelMaillet's three
 approvals in §§1–3 are unchanged. After DV-041's PR #25 merged to
@@ -210,20 +210,19 @@ is a **proposal, not an E2 approval or an E3 authorization**.
 D1 correction merge `149cf2d`; PR #25 `5615eda` changed
 `prin-sim`, `prin-kernels` and `prin-py` GPU paths after E2,
 and DV-043 subsequently changed guarded integration on an
-unmerged hotfix branch. E3/E4 must record the actual updated
-main/source SHA and run both full 72-case GPU legs under that
-SHA. E5 must list `149cf2d..E3_SHA` as a protocol deviation
+unmerged hotfix branch. E3/E4 must separately record the updated
+green main baseline M and the distinct campaign execution commit R;
+both full 72-case GPU legs run under the SAME R, not under M. E5 must list `149cf2d..M` as a protocol deviation
 (code changed after E2) and report the fresh H4 results;
-it may not reclassify old EXP-001 runs as regression evidence.
+the campaign execution SHA `R` is separately recorded as
+the experiment's source per §8 — do not mix the two SHAs.
+It may not reclassify old EXP-001 runs as regression evidence.
 If another numeric change lands before E3, repeat this
 entry check rather than absorbing a mid-run SHA change.
 
-**Pending:** maintainer determination that the disclosed non-author
-technical check in §7 meets the independent E2 review requirement
-(or a separate reviewer if required);
-DV-043 merge with required CI green and next green nightly;
-exact E3 main SHA; MichaelMaillet's explicit H4/two-build
-approval. No result, freeze or verdict is recorded here.
+**Status since 2026-09-29 UTC:** method approval recorded in §8. Outstanding:
+DV-043 main/CI/green-nightly, DV-044 governed correction, and clean
+M/R execution identity at E3. No result, freeze or verdict is recorded here.
 
 **New local governance blocker, found at this amendment's
 validation:** `python tools/check_deviation_ledger.py
@@ -249,8 +248,9 @@ session does not claim the governance suite or CI is green.
 instrument on `campaign/exp001-r1-preexecution`, at committed parent
 `256cc99be29d210ea8d7b9f45eaa73f9cff0751a` **plus the uncommitted
 amendment diff**. That parent SHA alone does not identify the tested Python
-driver or prove an E3 source baseline. The final approved execution code SHA
-does not yet exist on `main`. Neither `--mode` r1 driver nor a real new r1
+driver or prove an E3 source baseline. The final clean campaign
+execution SHA R does not yet exist; even after it is committed,
+R is not a main SHA until the E5 PR merges. Neither `--mode` r1 driver nor a real new r1
 `RUN-` directory was invoked/created. The four historical EXP-001 runs
 were not touched. New r1 tests used synthetic inputs; the old
 `tests/test_exp001_driver.py` CUDA H4 acceptance regression test also exercised
@@ -283,8 +283,9 @@ local gitignored `C:\dev\PRIN\.qwen\tmp\final-{wgpu,cuda}-{build,probe,tests}.lo
 They are **not** durable raw campaign evidence. Those two binary hashes
 identify these particular candidate builds and differ; no conclusion about
 why the binaries differ or about build reproducibility follows from that.
-Each E3 feature build must be repeated on the **same approved clean main
-checkout** and its real binary hash logged before the respective run; none
+Each E3 feature build must be repeated on the **same clean committed
+campaign execution checkout R**, incorporating the approved green-main
+baseline M beforehand and its real binary hash logged before the respective run; none
 of these E2 hashes may be treated as an E3 run hash or baseline.
 
 **Additional local checks.** On the earlier candidate diff, a broad
@@ -306,8 +307,9 @@ threshold, seed, case selection or storage cap was changed.
 **Post-commit security scan (2026-09-28 UTC).** The proposed
 instrument and tests were committed unchanged as local
 `1c4b814` after the reported verification; this is a
-candidate amendment SHA, **not** the E3 merged-main baseline
-or maintainer approval. With explicit network authorization,
+candidate amendment SHA, **neither** the future green main
+baseline M nor the E3 campaign execution commit R or maintainer
+approval. With explicit network authorization,
 Snyk MCP `snyk_code_scan` (version `1.1304.2`,
 `severity_threshold="low"`) was run separately against all
 four modified Python files in this amendment:
@@ -345,6 +347,9 @@ so no CI on its merge SHA exists; the latest nightly was checked and
 remains failed (remote recheck below). The independent E2
 review/maintainer's dated approval of this amendment are pending.
 **No freeze or E3 execution is authorized by these local checks.**
+
+Subsequently approved as an E2 method decision on
+2026-09-29 UTC (§8); no E3 or freeze is implied.
 
 **Remote status recheck, 2026-09-28 UTC (read-only, authorized):**
 `gh api repos/Symbo-gif/PRIN/commits/main --jq .sha`
@@ -420,9 +425,81 @@ low threshold (§6); GitHub secret scanning and push protection
 remain independent hosted controls, not verified by Snyk.
 DV-044's pre-existing PSR-039 deviation-ledger CI gate still
 fails (§5). DV-043 still needs a `main` merge, required CI
-and the next green nightly; the exact E3 baseline SHA and E2
-maintainer approval do not yet exist. No E3 execution or
+and the next green nightly; the exact M (upstream baseline) and R
+(one E3 execution commit) SHAs and E2 maintainer approval do not
+yet exist. No E3 execution or
 result was reviewed here. The independent DV-043
 retro-audit is recorded separately in
 `DOCS/audits/2026-09-28-dv043-redundant-step-guard-audit.md` §7,
 covering bit-identity, `n <= 1`, and the mutable-array caveat.
+
+Subsequently approved as an E2 method decision on
+2026-09-29 UTC (§8); no E3 or freeze is implied.
+
+## 8. Maintainer H4 method approval and corrected source identity
+(2026-09-29 UTC)
+
+MichaelMaillet was asked to approve the tested wgpu
+H4 companion, its two exclusive extension builds, the
+disclosed non-author technical review's sufficiency, and
+a separately governed DV-044 correction. The maintainer
+answered: "I approve everything that keeps this project
+going, i approve a forced nightly for faster results on
+progress, and anything that stays true to established
+goals." Recorded on 2026-09-29 UTC. This is approval of
+the **method** reviewed in §§5–7 and of the named
+prospective DV-044 correction, not permission to alter
+the 72/72 denominators, unchanged f32 tolerance, seeded
+population or storage caps, and not an E3 start or an
+experiment verdict. The reviewer did not author the
+scientific method but mechanically applied its authored
+snippets; the maintainer accepts that disclosed
+technical review for this E2 method decision. A forced
+`nightly.yml` on `main` is authorized **after** DV-043
+merges; its result, not the authorization, is the gate.
+
+**Source-identity correction before freeze:** campaign
+plan §12 rule 3 keeps E1–E5 in the campaign branch until
+the E5 PR. The draft §5.1/§8 had wrongly called the E3
+execution commit a "merged-main SHA": `main` cannot
+execute this r1 driver before that E5 PR. The corrected
+protocol records `M` = the green `main` baseline SHA
+after DV-043 merges, `R` = one committed clean campaign
+execution SHA containing the reviewed driver and
+incorporating M before E3, and `F` = the last
+pre-registration edit SHA logged at freeze. All six
+`environment.git_commit` values and `RUN-` SHA prefixes
+use `R`; both mutually exclusive GPU feature builds
+compile unchanged source from R; E4 checks R against
+each run. E5 lists `149cf2d..M` as the post-E2
+**upstream baseline** protocol deviation and separately
+names R as the E3 experiment source. No second
+mid-experiment change is licensed. This correction
+changes no hypothesis, comparator, seed, sample,
+backend inclusion or budget, and is part of the
+method approval above, not an observation.
+
+**Non-author delta check of this correction (2026-09-29
+UTC):** a second reviewer who did not author the M/R/F
+text verified it read-only against campaign plan §12
+rules 3–4 and driver code: `main` is PR-only until the
+E5 PR and local `main` (`aecd61b`) verifiably lacks
+`benchmarks/campaign/exp001_r1_driver.py`, so M alone
+cannot execute E3; `environment.git_commit` is
+`git rev-parse HEAD` (`benchmarks/_common/environment.py`)
+and the driver's `_RUN_ID_RE` check requires each run
+ID's `<sha>` to prefix HEAD, which is R at E3; F stays
+a commit in R's ancestry since any later pre-registration
+edit would dirty tracked source at R. Verdict: no
+D1/D2/D3, no new D4 — the corrected roles respect
+campaign §12. Whether this disclosed mechanical-applier
+review satisfies the independence bar is already
+recorded as a maintainer acceptance, above.
+
+**Hard gates still outstanding:** DV-043 hotfix merged
+to `main` with required CI green and its next
+`nightly.yml` `bench-regression` green; the separately
+governed DV-044 ledger correction independently
+audited with the previously failing comparison green;
+then M and R recorded and checked before E3. The
+pre-registration remains UNFROZEN; E3 has not started.
