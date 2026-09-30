@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/Symbo-gif/PRIN/discussions
+    about: Ask a usage or design question that is not a bug or a feature request.
+  - name: Security report
+    url: https://github.com/Symbo-gif/PRIN/security/policy
+    about: Report a vulnerability in private. Do not open a public issue.
