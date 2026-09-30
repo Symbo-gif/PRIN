@@ -215,6 +215,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Community health files.** Issue forms and a pull request template now live
+  under `.github/`. `SECURITY.md` records support for the latest `1.0.0-rc*`
+  pre-release, and for the latest stable release only once `1.0.0` ships.
+  `CODE_OF_CONDUCT.md` includes the Contributor Covenant 2.1 enforcement
+  guidelines. `.github/README.md` is removed so GitHub community health uses
+  the project README.
+
 - **Breaking (Rust): `StateDerivatives` is no longer exhaustively constructible
   or destructurable outside `prin-dynamics` (DV-043, 2026-09-28 UTC).** The
   three derivative arrays stay public; the new `guarded` provenance field is

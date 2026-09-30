@@ -1,0 +1,33 @@
+name: Question
+description: Ask how to use PRIN, or how a design choice works.
+title: "Question: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For open-ended discussion, GitHub Discussions may be a better fit
+        than an issue. Security reports go to therealmichaelmaillet@gmail.com
+        (see SECURITY.md), not here.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What you are trying to do, and what is unclear.
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you already tried
+      description: Docs, notebooks, or commands you looked at.
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: PRIN version
+      description: If the question depends on a specific release.
+      placeholder: 1.0.0rc1
+    validations:
+      required: false

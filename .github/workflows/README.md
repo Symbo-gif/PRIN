@@ -16,3 +16,8 @@
 unavailable for this private repository, so plan amendment #5 governs the
 required Gitleaks and branch-protection substitute until native controls become
 available.
+
+Copilot repository instructions are in
+[`.github/copilot-instructions.md`](../copilot-instructions.md). Hosted checks
+mirror the Session Cycle and Coding Standards §6. Local or branch evidence does
+not replace a required green check on `main`.
