@@ -84,6 +84,65 @@ declared closed, its PSR issued, or any DV item / plan amendment discharged.
 A red `nightly.yml` conclusion is dispositioned like a red push — fixed, or
 given a dated DV row, before the next WP closes.
 
+### Local-validation regime (Plan amendment #48) — in force until the maintainer lifts it
+
+By maintainer direction (2026-10-01) the hosted GitHub Actions check workflows
+are **disabled** and **every validation gate is run locally on the maintainer's
+Windows device** ("local-only regime"). This supersedes, for as long as the
+regime is in force, every provision of this document, the other standards, and
+the session briefs that names a hosted CI run, a green `origin/main` CI result,
+or `tools/check_ci_green.py` as an exit criterion. Specifically:
+
+1. **Scope of the pause.** Disabled: `rust`, `python`, `parity`, `repro`,
+   `snyk`, `gpu`, `nightly`. Not disabled: the tag-triggered `release.yml` (a
+   publication path, not a check; it must not be pushed a `v*` tag while this
+   regime is in force without the maintainer's explicit instruction) and the
+   manual-only `gpu-triton.yml`. The workflow files are retained unchanged so
+   the regime can be lifted by re-enabling them.
+2. **The gate is the same; only where it runs changes.** The commands each
+   disabled workflow ran (see `.github/workflows/*.yml`, Testing Standards §6,
+   Coding Standards §5/§6) define the local gate. A session runs the subset
+   applicable to its diff at S1–S3 as before, and the **full** gate at S4,
+   in a clean checkout of the exact commit being closed. Snyk, `cargo audit`,
+   `pip-audit` and the other §6 controls are still mandatory and are reported
+   as *blocked* — never as passed — when they cannot be run locally.
+3. **Evidence replaces CI.** Where a rule required "CI green" (S4 exit
+   criteria, PSR verification block, DV closures, plan-amendment discharges),
+   the session instead records the verbatim local command lines, exit codes,
+   commit SHA and host (OS, toolchain versions) in the report. A local result
+   is not described as "CI green" and is not evidence about any other platform.
+4. **Platform coverage is reduced.** Linux and macOS are **not tested** during
+   this regime; Windows x86_64 is the only validated platform. No report, PSR,
+   or release note may claim Linux/macOS behaviour was verified. Requirements
+   that mandate Linux/macOS validation (e.g. Definition of Done items on
+   Linux + Windows and the three-OS wheel matrix) are **suspended, not
+   satisfied**: they remain open and must be re-validated before `1.0.0` or
+   any release, after the regime is lifted.
+5. **Branch protection.** `main` stays PR-only (ruleset 22150076: no deletion,
+   no force-push, pull request required). Its required-status-check rule was
+   removed because the checks it named can no longer report. Merge decisions
+   rest on the local evidence in the PR description. The removed contexts were:
+   `lint`, `governance`, `security`, `test (ubuntu-latest|windows-latest,
+   3.11|3.12|3.13)` ×6, `fmt`, `clippy`, `clippy-strict`, `test-strict`,
+   `docs`, `audit`, `test (ubuntu-latest|macos-latest|windows-latest, same)`
+   ×3, `parity`, `reproduce`, `Snyk Code`, `Secret Scan`, `gpu-cuda`,
+   `gpu-wgpu`.
+6. **Secret controls.** GitHub-native secret scanning (not an Actions feature)
+   remains enabled and is unaffected. The `Secret Scan` workflow job that
+   amendment #5 required is paused with the rest; as a compensating control
+   every session runs a local full-history secret scan before pushing, and the
+   maintainer should enable native push protection (currently disabled) if
+   GitHub makes it available.
+7. **Nightly regression gates** (`nightly.yml` benchmarks, DV-036 ABBA
+   measurement) are suspended; DV-036 and other items that depend on a hosted
+   or reference-host run stay OPEN and are not closed by local runs unless
+   their own acceptance text allows it.
+8. **Lifting.** The regime ends only on the maintainer's explicit instruction,
+   recorded as a later Plan amendment. Lifting means: re-enable the seven
+   workflows (`gh workflow enable <name>`), restore the required-status-check
+   rule above on ruleset 22150076, and run one fully green hosted run of the
+   head commit before the next WP closes.
+
 ### S1 — Coding session
 
 **Entry:** WP declared; previous cycle fully closed (S4 artefacts committed).
@@ -210,7 +269,9 @@ cadence" above).
 
 **Exit criteria:** all four artefact classes committed; the S4 commit — the
 cycle's sole push, carrying the full S1–S4 commit range (see "Push and CI
-cadence" above) — is pushed to `origin/main`; CI is fully green on that push.
+cadence" above) — is pushed to `origin/main`; CI is fully green on that push
+(or, while the local-validation regime is in force, the full local gate is
+green with its evidence recorded — see "Local-validation regime").
 The cycle is then **closed** and the next WP may begin S1.
 
 ### Campaign trigger

@@ -249,4 +249,7 @@ dependency or manifest change additionally runs the applicable Snyk Open Source
 scan and every ecosystem-native audit in §6.2. Findings are never suppressed,
 ignored, or excluded without evidence and an approved deviation or amendment.
 If Snyk is unavailable, the agent records the blocked validation and must not
-represent the change as Snyk-validated; CI remains the authoritative merge gate.
+represent the change as Snyk-validated. CI remains the authoritative merge gate
+except while the Plan amendment #48 local-validation regime is in force (see the
+Development Workflow and Audit Standards §3), when the full local gate on the
+maintainer's Windows device is authoritative and Linux/macOS are not tested.

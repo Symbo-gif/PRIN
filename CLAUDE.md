@@ -23,7 +23,9 @@ Follow Coding Standards §6, including these mandatory controls:
 4. Treat GitHub secret scanning and push protection as independent mandatory
    controls; Snyk does not replace them.
 5. If Snyk is unavailable, report the validation as blocked and do not claim it
-   passed. CI is the authoritative merge gate.
+   passed. The authoritative merge gate is the full local gate on the maintainer's
+   Windows device while the Plan amendment #48 local-validation regime is in
+   force (hosted CI paused; Linux/macOS not tested); otherwise CI.
 
 Use the repository skill `snyk-secure-development` when its workflow applies.
 Do not emit unverifiable safety badges; cite actual command or scan evidence.

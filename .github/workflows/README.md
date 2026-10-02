@@ -1,5 +1,11 @@
 # .github/workflows/ — hosted CI/CD gates
 
+> **PAUSED (Plan amendment #48, 2026-10-01).** `rust`, `python`, `parity`,
+> `repro`, `snyk`, `gpu` and `nightly` are disabled on GitHub; all gates run
+> locally on Windows until the maintainer lifts the regime. The files below are
+> retained unchanged and describe the gates the local run must reproduce. See
+> Development Workflow and Audit Standards §3 "Local-validation regime".
+
 | Workflow | Current role |
 |---|---|
 | `rust.yml` | Formatting, Clippy, cross-platform tests, rustdoc, Cargo Audit, and CubeCL CPU kernel-equivalence tests (`cargo test -p prin-kernels --features cpu`) |
