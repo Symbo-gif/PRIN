@@ -18,6 +18,15 @@ fix findings attributable to the change and rescan. Snyk is additive and does
 not replace `cargo audit`, `pip-audit`, GitHub secret scanning, or push
 protection. Never claim a scan passed when it was unavailable or not run.
 
+## Local-validation regime (Plan amendment #48)
+
+Hosted GitHub Actions check workflows are disabled until the maintainer says
+otherwise. Run every gate locally on this Windows device, record verbatim
+commands/exit codes/SHA as evidence, and never describe local results as "CI
+green". Do not test or claim Linux/macOS behaviour. Do not re-enable workflows,
+restore required checks, or push `v*` tags unless the maintainer instructs it.
+See Development Workflow and Audit Standards §3 "Local-validation regime".
+
 `DOCS/archive/` is historical and non-authoritative. Do not use retired
 VibeCheck state as current project truth and do not emit safety badges without
 real evidence.
