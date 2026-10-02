@@ -22,3 +22,11 @@
 unavailable for this private repository, so plan amendment #5 governs the
 required Gitleaks and branch-protection substitute until native controls become
 available.
+
+Copilot repository instructions are in
+[`.github/copilot-instructions.md`](../copilot-instructions.md). The hosted
+security checks are `cargo audit` (`rust.yml`), `pip-audit` and Snyk Open
+Source (`python.yml`), and Snyk Code plus full-history Gitleaks (`snyk.yml`).
+Gitleaks is the documented substitute while native GitHub secret scanning is
+unavailable (Coding Standards §6.2, plan amendment #5). Local or branch
+evidence does not replace a required green check on `main`.

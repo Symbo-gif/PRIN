@@ -1,0 +1,209 @@
+{
+  "d1_flag": false,
+  "decision_rule": "preregistration.md \u00a78, frozen at F = 5d5ae3521317af47a11afa8d689935ac2fc0f447",
+  "denominators": {
+    "H1": 504,
+    "H2a_characterized": 22,
+    "H2a_eligible": 978,
+    "H3": 14,
+    "H4_per_backend": 72
+  },
+  "execution_commit": "5d5ae3521317af47a11afa8d689935ac2fc0f447",
+  "experiment": "EXP-001-r1",
+  "freeze_commit": "5d5ae3521317af47a11afa8d689935ac2fc0f447",
+  "generated_at": "2026-09-29T12:00:00Z",
+  "generator": "DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py",
+  "inputs": [
+    {
+      "adjudicated_hypotheses": [
+        "H4"
+      ],
+      "backend": "wgpu",
+      "files": [
+        {
+          "bytes": 320,
+          "path": "campaign-metadata.json",
+          "sha256": "a8ba61dffd1716d1d581ff768345ea3783b670607d1d0875ac5691e05df77051"
+        },
+        {
+          "bytes": 87848,
+          "path": "kernel-path_r1-kernel-path-wgpu.json",
+          "sha256": "3d7b89a11c6e27ba39cc190999f8d39752d0b3a4669b3622f81ac8b43f10e0fe"
+        }
+      ],
+      "label": "r1-kernel-path-wgpu",
+      "manifest_bytes": 582,
+      "manifest_sha256": "cb278646c61381099801cd60f970d89abb94e2f14085b635964f570ae8302884",
+      "mode": "kernel-path",
+      "run_id": "RUN-20260929T091735Z-5d5ae35-r1-kernel-path-wgpu",
+      "sidecar_hypotheses": [
+        "H4"
+      ]
+    },
+    {
+      "adjudicated_hypotheses": [
+        "H1"
+      ],
+      "backend": "cpu",
+      "files": [
+        {
+          "bytes": 232,
+          "path": "campaign-metadata.json",
+          "sha256": "69ff2baa9d006f20f68601836ff6ffbb182ab19e9f269dd83f1495f8ad1bf426"
+        },
+        {
+          "bytes": 1924815,
+          "path": "corpus_r1-corpus-cpu.json",
+          "sha256": "d2b979ab9ba68d9a86446f7e05be243444a333599c42a4c2fe794c1ce457828b"
+        }
+      ],
+      "label": "r1-corpus-cpu",
+      "manifest_bytes": 573,
+      "manifest_sha256": "93514868caa9fed4d7719b29846c7ea485ce1a4b94f47687109c3c3d1e9155a0",
+      "mode": "corpus",
+      "run_id": "RUN-20260929T092619Z-5d5ae35-r1-corpus-cpu",
+      "sidecar_hypotheses": [
+        "H1"
+      ]
+    },
+    {
+      "adjudicated_hypotheses": [
+        "H3"
+      ],
+      "backend": "cpu",
+      "files": [
+        {
+          "bytes": 253,
+          "path": "campaign-metadata.json",
+          "sha256": "e597422ce5e01dce89d1ad121db78205f23fb54d8a66c88466f2399276958751"
+        },
+        {
+          "bytes": 34236,
+          "path": "repeatability_r1-repeatability-cpu.json",
+          "sha256": "37bce03dfaac80984fe846232901bf4882cf0fc73ebad69fd582748e9d661d63"
+        }
+      ],
+      "label": "r1-repeatability-cpu",
+      "manifest_bytes": 585,
+      "manifest_sha256": "b7f9e1b6ed94d77c742fc186829082b5f030d3822abc0ff032f876d201328ec6",
+      "mode": "repeatability",
+      "run_id": "RUN-20260929T092626Z-5d5ae35-r1-repeatability-cpu",
+      "sidecar_hypotheses": [
+        "H3"
+      ]
+    },
+    {
+      "adjudicated_hypotheses": [
+        "H3"
+      ],
+      "backend": "cpu",
+      "files": [
+        {
+          "bytes": 243,
+          "path": "campaign-metadata.json",
+          "sha256": "250446df71763318f13d37fd7fa7c067bfdfef865835cda8504c6d977aeaba62"
+        },
+        {
+          "bytes": 34231,
+          "path": "repeatability_r1-seedrep0-cpu.json",
+          "sha256": "62aed160185e5888ef0605cee3d416b66b6ec21318ec14c5f8a843e382880aaf"
+        }
+      ],
+      "label": "r1-seedrep0-cpu",
+      "manifest_bytes": 580,
+      "manifest_sha256": "91066059c792216da290aa3061473940e601b7e25f7d4bafbae67ac0b5605bfd",
+      "mode": "repeatability",
+      "run_id": "RUN-20260929T092631Z-5d5ae35-r1-seedrep0-cpu",
+      "sidecar_hypotheses": [
+        "H3"
+      ]
+    },
+    {
+      "adjudicated_hypotheses": [
+        "H2a",
+        "H2b"
+      ],
+      "backend": "cpu",
+      "files": [
+        {
+          "bytes": 226,
+          "path": "campaign-metadata.json",
+          "sha256": "b7d2c668f9a5720a10820dcf7c3bf3497d2c9bd4e879d29c42d6c5ce1ab52b5e"
+        },
+        {
+          "bytes": 5016901,
+          "path": "fuzz_r1-fuzz-cpu.json",
+          "sha256": "6ca06f3dbb44f237aa85d780e82997f3cc228e2c10b26861a8e16294286fde57"
+        }
+      ],
+      "label": "r1-fuzz-cpu",
+      "manifest_bytes": 569,
+      "manifest_sha256": "388072ee5efb38e25f360027b380777890d010639377dde3105ab3d397b467c0",
+      "mode": "fuzz",
+      "run_id": "RUN-20260929T092641Z-5d5ae35-r1-fuzz-cpu",
+      "sidecar_hypotheses": [
+        "H2"
+      ]
+    },
+    {
+      "adjudicated_hypotheses": [
+        "H4"
+      ],
+      "backend": "cuda",
+      "files": [
+        {
+          "bytes": 320,
+          "path": "campaign-metadata.json",
+          "sha256": "aa95f4dfec77c42538c83a7e260fa093eda6b29a01d90081b349ddd12abc25da"
+        },
+        {
+          "bytes": 85410,
+          "path": "kernel-path_r1-kernel-path-cuda.json",
+          "sha256": "43c7d4c1751e13d2393d75b3968053ab2ca2bc2221013766e94021091e21eeff"
+        }
+      ],
+      "label": "r1-kernel-path-cuda",
+      "manifest_bytes": 582,
+      "manifest_sha256": "73edce4a6560fe50d27a7a426da43353462cba66cedc75d78b7b645e8de9d07b",
+      "mode": "kernel-path",
+      "run_id": "RUN-20260929T093035Z-5d5ae35-r1-kernel-path-cuda",
+      "sidecar_hypotheses": [
+        "H4"
+      ]
+    }
+  ],
+  "main_baseline": "9b79d2e5b246bead1243074659dc99d049762a40",
+  "output_root": "DOCS/test_and_benchmark_results/EXP-001-r1",
+  "outputs": [
+    {
+      "bytes": 5897415,
+      "path": "case-comparisons.json",
+      "sha256": "9962628f71bdb4013e0f92da3507bd2f87d769016785fad3cc3e48d92559d0e9"
+    },
+    {
+      "bytes": 4558744,
+      "path": "error-distributions.json",
+      "sha256": "c1d2ed994716001ec542f08d1583f849de66f4fbe5892a3806ad884deec50223"
+    },
+    {
+      "bytes": 36153,
+      "path": "summary.json",
+      "sha256": "dd0240dbfae531b5c1d79e5c22dd05bf4e8912659ec10b16c39884e0abc64292"
+    },
+    {
+      "bytes": 14037,
+      "path": "summary.md",
+      "sha256": "38d8d8e35fdbeebb7488a0c738d6febc7cee8228c592488df5516aca564f7ba5"
+    }
+  ],
+  "schema_version": 1,
+  "session": "EXP-001-r1-E4",
+  "stage": "E4",
+  "verdicts": {
+    "H1": "CONFIRMED",
+    "H2a": "CONFIRMED",
+    "H2b": "CONFIRMED",
+    "H3": "CONFIRMED",
+    "H4": "CONFIRMED"
+  }
+}

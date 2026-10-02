@@ -1,0 +1,97 @@
+name: Bug report
+description: Report a defect with versions, environment, and a minimal reproduction.
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues before filing, and reproduce the problem on the
+        latest PRIN release with the smallest example you can.
+
+        Do not report security vulnerabilities here. Email
+        therealmichaelmaillet@gmail.com (see SECURITY.md).
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before you file
+      options:
+        - label: I searched existing issues and could not find a duplicate.
+          required: true
+        - label: I reproduced this on the latest version of PRIN.
+          required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Output of `python --version`.
+      placeholder: 3.12.x
+    validations:
+      required: true
+  - type: input
+    id: prin-version
+    attributes:
+      label: PRIN version
+      description: Package version (`prin.__version__` or the installed distribution).
+      placeholder: 1.0.0rc1
+    validations:
+      required: true
+  - type: input
+    id: pytorch-version
+    attributes:
+      label: PyTorch version
+      description: Output of `python -c "import torch; print(torch.__version__)"`. Use `n/a` if PyTorch is not involved.
+      placeholder: 2.x.x or n/a
+    validations:
+      required: true
+  - type: input
+    id: rust-version
+    attributes:
+      label: Rust toolchain version
+      description: Output of `rustc --version`.
+      placeholder: rustc 1.xx.x
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: Ubuntu 24.04 / Windows 11 / macOS 15
+    validations:
+      required: true
+  - type: input
+    id: cuda
+    attributes:
+      label: CUDA version
+      description: If applicable. Leave blank for a CPU-only run.
+      placeholder: 12.x or n/a
+    validations:
+      required: false
+  - type: textarea
+    id: traceback
+    attributes:
+      label: Traceback
+      description: Complete error traceback or panic backtrace.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproducible example
+      description: The smallest program or command that shows the bug.
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that would help a maintainer reproduce this.
+    validations:
+      required: false

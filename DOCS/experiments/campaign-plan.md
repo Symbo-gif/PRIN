@@ -688,6 +688,59 @@ hosted job's own verdict. **The §11.6 correction is closed;** §11.3's
 reference-host re-baseline gates before 0168 and 0173, and DV036-F5's fix at
 0166, are unaffected and remain open.
 
+### 11.7 DV-041 — EXP-001-r1 required wgpu leg: no positive dispatch-identification capability
+
+- **Discovered:** EXP-001-r1 E2 (2026-09-28 UTC), reviewing the pre-registration's
+  own flagged gap (§2, "Required wgpu coverage remains an E2 execution gate").
+- **Original fact:** the campaign's kernel-path driver
+  (`benchmarks/campaign/exp001_driver.py::compare_kernel_path_case`) proves
+  true CUDA dispatch by checking for a zero-copy `kDLCUDA` DLPack capsule —
+  the only device-resident export the binding produces. E2 confirmed by
+  reading `crates/prin-sim/src/gpu.rs` and
+  `crates/prin-py/src/bindings/gpu.rs`/`mod.rs` that this is not a Python
+  driver limitation to work around: in a `--features wgpu`-only build the
+  compute client (`SimRuntime`) is a `cubecl::wgpu::WgpuRuntime` by
+  compile-time construction, but its result is copied back to host memory
+  before export by design, identically to the host-slice fallback taken
+  when `try_create_client()` fails to initialise a device. No signal
+  currently crosses the Python boundary that distinguishes "wgpu executed"
+  from "client creation failed, fell back to host-slice." Hardware (the
+  DirectML/wgpu-capable adapter, WP-036F) is present, so this is **not** a
+  §5.4 hardware-unavailability condition — it is a capability gap in the
+  measurement instrument itself.
+- **Why a §11 disposition:** campaign plan §5.2 marks the wgpu leg
+  "● required" for EXP-001 (and, independently, for EXP-004's wgpu timing
+  claim), and the pre-registration explicitly reserves resolving this gate
+  to E2 (§2, §10 item 2) with two named options — close it with tested
+  driver support, or obtain a dated gap disposition. Neither path was
+  taken as originally framed; the maintainer instead chose to fix the
+  underlying capability, which is itself a disposition on how the gap is
+  closed and belongs in this register alongside §11.1/§11.2/§11.5.
+- **Disposition:** MichaelMaillet, 2026-09-28 UTC (EXP-001-r1 E2, presented
+  with a gap-disposition option, a coding-fix option, and a re-scope
+  option): **selected the coding fix.** A governed hotfix/correction
+  session (opened only when actually started, per the ad hoc
+  hotfix/correction table's own rule against pre-reserving names) will add
+  a positive backend-identification accessor to the GPU bindings — exposing
+  whether `try_create_client()` actually produced a device client rather
+  than falling back — with tests in tandem, a full local gate, and Snyk
+  Code, following the normal S1→S2→S3→S4 rigor. Tracked as **DV-041**
+  (`DEFERRED_VALIDATION_REGISTER.md`).
+- **Closure gate:** before **EXP-001-r1 E3** (the pre-registration cannot
+  freeze with this leg unresolved) and, independently, before **EXP-004 E1**
+  (session `0169`), which needs the identical capability for its own wgpu
+  *timing* claim (§2.1 EXP-004 row, §5.2). Full detail: EXP-001-r1
+  `e2-review.md` §4.
+
+**Core capability closure, 2026-09-28 UTC:** DV-041's Rust/PyO3
+`backend_name` accessor merged as PR #25 `5615eda`; the required
+workflows were verified green during `Hotfix-DV043`'s entry
+(`triage-dv043-handoff.md` §2). This closes the binding capability
+gap and the DV-041 register row, **not** the r1 follow-up E2
+driver/protocol sign-off or any EXP-001-r1 execution. The driver
+amendment and the two-build H4 plan remain a separate
+pre-execution E2 approval gate.
+
 ### 11.8 DV-043 — the EXP-001 D1 correction left a redundant derivative guard on the fixed-step path
 
 - **Discovered:** 2026-09-28 UTC, at the EXP-001-r1 E3 entry check §10.2
@@ -784,6 +837,12 @@ reference-host re-baseline gates before 0168 and 0173, and DV036-F5's fix at
   `main`. Subsection and amendment numbers are global, so this row takes §11.8
   and #9 rather than reusing them; the apparent gap closes when that branch
   merges.
+- **Branch reconciliation (this amendment branch):** the r1 branch's
+  §11.7 and campaign amendments #7/#8 and the DV-043 branch's
+  §11.8/amendment #9 now coexist here; #7/#8 were not replaced
+  by #9. `main` must carry all three after the requisite PR
+  merges. This text does not claim the DV-043 hotfix has
+  merged or its nightly closure was observed.
 
 ---
 
@@ -863,4 +922,6 @@ Hypotheses are never in this document.
 | 4 | 2026-09-23 UTC | §11.6 (gap disposition, hosted validation round 2) | After main nightly `35826531821` breached on identical-source measurements: equal-length sibling checkouts for both arms; fixed counterbalanced reference→candidate→candidate→reference order with per-arm mean of both passes; `control_buffer_read_under_contention` group measured and reported but advisory on hosted runners (reference-host gate at EXP-003 E3, 0166, with its harness defect DV036-F5); job timeout 90→180 min. 10% threshold, fixed reference SHA, matched dependencies, all eight Rust targets, Python selection, and fail-closed evidence rules unchanged. | MichaelMaillet (selected the symmetric + counterbalanced + contention-advisory option in session, 2026-09-23 UTC) |
 | 5 | 2026-09-23 UTC | §11.1, §11.2, §11.6 (gap dispositions) | Records terminal closure of three gap dispositions on verified evidence: DV-038 closed (PR #19 merged `90c0334`, required CI green), DV-039 closed (same merge plus wholly green nightly `35847692136`), and the §11.6 hosted-CI comparison correction closed (nightly `35847692136` at `main` `b434554` green under the amendment-4 counterbalanced design, independently re-derived from the preserved evidence artefact). No target, threshold, benchmark selection, reference SHA, experiment order, seed policy, statistics policy, or stop rule changes. §11.3's reference-host gates before 0168/0173 and DV036-F5's 0166 fix remain open. | MichaelMaillet (A2 closure conditions met as written; no new approval required — each gate's own pre-approved evidence standard is satisfied) |
 | 6 | 2026-09-23 UTC | §8 (budget caps), §7.5 (storage rules) | **Budget amendment requested and granted during EXP-001 E3 (session 0156).** The four registered runs produced 5.921 MiB of raw artefacts: `corpus-cpu` 1.645 MiB, `repeatability-cpu` 0.004 MiB, `fuzz-cpu` **4.199 MiB**, `kernel-path-cuda` 0.073 MiB. This exceeds §8's ≤ 5 MiB EXP-001 tracked cap and §7.5's ≤ 2 MiB per-run cap (the 1,000-case fuzz artefact carries per-case beyond-horizon arrays that H2b's registered E4 analysis consumes, so it cannot be reduced without changing the registered protocol). EXP-001's tracked cap is raised **5 → 8 MiB** and the §7.5 per-run cap is waived for this experiment's `fuzz` leg; all four runs are committed as written. The campaign-wide 64 MiB cap (§7.5) is unchanged and remains far from binding. No hypothesis, tolerance, seed, statistic, driver, run ID, or experiment-order change; §10.1 item 5's abort criterion is discharged by this amendment rather than by invalidating a completed run. | MichaelMaillet (2026-09-23 UTC, in-session decision on the E3 escalation) |
+| 7 | 2026-09-28 UTC | §8 (budget caps), §7.5 (storage rules) | **EXP-001-r1 storage budget approved as requested at E2.** Shared `benchmarks/results/EXP-001/` allocation raised to **16 MiB** (covers the 4 original runs, verified at exactly 6,208,871 bytes, plus new r1 runs together); new r1 runs additionally capped at **8 MiB** in aggregate; the new r1 fuzz run gets a **6 MiB** per-run exception (same rationale as amendment 6); every other new r1 run keeps the generic **2 MiB** per-run cap. Campaign-wide 64 MiB cap unchanged. Implemented and tested in `benchmarks/campaign/exp001_r1_driver.py` (`RAW_ROOT_CAP_BYTES`, new `R1_ROOT_CAP_BYTES`, new `FUZZ_RUN_CAP_BYTES`); full local gate re-run clean (58 tests, ruff/mypy --strict/bandit/Snyk Code all clean). No hypothesis, tolerance, seed, statistic, or experiment-order change. | MichaelMaillet (selected "Approve as requested" via the session's `AskUserQuestion`, 2026-09-28 UTC) |
+| 8 | 2026-09-28 UTC | §11.7 (gap disposition) | **DV-041 opened and its remediation path selected at EXP-001-r1 E2.** The campaign's kernel-path measurement instrument cannot positively identify wgpu dispatch versus a silent host-slice CPU fallback (§11.7 has the full technical finding). Presented with a dated `INCONCLUSIVE`-reporting gap disposition, fixing the underlying binding capability first, or dropping the requirement, the maintainer selected fixing the capability. No gap disposition is adopted; EXP-001-r1's pre-registration does not freeze and its E3 does not start until DV-041 closes via a governed hotfix/correction session. No hypothesis, tolerance, seed, statistic, experiment order, or normative requirement changes. | MichaelMaillet (selected "Block on a coding fix first" via the session's `AskUserQuestion`, 2026-09-28 UTC) |
 | 9 | 2026-09-28 UTC | §11.8 (gap disposition) | **DV-043 opened and fixed: the nightly `bench-regression` gate went red on the first night after the EXP-001 D1 correction merged.** Run `36380992897` at `149cf2d` reported ten gated breaches (+10.1 %…+28.8 %), all in `engine_step/step_parallel/*` and `sweep_parallel/*`, attributed to one commit by two independent windows: the green→red night contains PR #24 alone, and the entire step/sweep hot path is bit-identical from the fixed reference `4590d611` through the last green night `ce4049f`. Cause: `34e8811` added an integrator-level `±DERIV_CLAMP` pass that the sparse k-NN models already perform at construction, so every `GuardPolicy::Bounded` RK4 step re-clamped four `3N` buffers it provably could not change (~25 ns per oscillator per step, corroborated by four identities across two benchmark families); the derivative-only arms in the same criterion group stayed flat. Disposition is a **fix, not an acceptance**: `StateDerivatives::is_guarded()` records the guard at its construction site so the integrator skips the value-identical pass, and the non-strict path stops evaluating `clamp_derivative` twice per element. No hypothesis, tolerance, seed, statistic, benchmark selection, threshold, reference SHA, experiment order, or normative target changes; the +10 % gate and the fixed reference are untouched. The `step_parallel/16384` +28.8 % magnitude is explicitly **not** claimed as explained — it did not reproduce on H1 and is recorded as a hosted-runner artefact on top of the real ~+10 %. §11.7 and amendments #7–#8 are on `campaign/exp001-r1-e1`, hence the §11.8/#9 numbering. | MichaelMaillet (selected "Fix now, before the E3 freeze" via the session's `AskUserQuestion`, 2026-09-28 UTC) |

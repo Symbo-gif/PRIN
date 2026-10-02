@@ -1,0 +1,46 @@
+name: Feature request
+description: Propose a change with a motivating use case and a proposed API.
+title: "Feature: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the use case, the API you have in mind, and whether you
+        intend to implement it. Search existing issues first.
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Motivating use case
+      description: What problem this solves, and who hits it.
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-api
+    attributes:
+      label: Proposed API
+      description: Suggested function, type, or CLI shape. Note numerical or compatibility constraints if you know them.
+    validations:
+      required: true
+  - type: dropdown
+    id: implement
+    attributes:
+      label: Do you intend to implement this?
+      options:
+        - "Yes, I plan to open a pull request"
+        - "No, this is a request only"
+        - "Unsure"
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+    validations:
+      required: false

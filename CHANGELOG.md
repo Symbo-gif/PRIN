@@ -9,6 +9,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-001-r1 executed, adjudicated and reported — all five hypotheses
+  `CONFIRMED`, no D1 (2026-09-29 UTC).** The campaign plan §10.4 item 4 re-run
+  of EXP-001 completed E3→E5 on a new pre-registration, six new run directories
+  and its own frozen decision rule. E3 executed all six registered legs from
+  `R = 5d5ae3521317af47a11afa8d689935ac2fc0f447` over green-main baseline
+  `M = 9b79d2e5b246bead1243074659dc99d049762a40` — 72-case wgpu kernel-path,
+  72-case CUDA kernel-path, 504-case corpus, 2× 14-case repeatability and the
+  1,000-draw fuzz leg — with zero aborts and every directory manifested. E4
+  committed its analysis module *before* adjudicating (campaign plan §7.4
+  item 2) and applied the frozen §8 rule: **H1** 504/504 accepted (485
+  native-parity + 19 explained under the registered DV-007 clause, **zero**
+  unexplained breaches); **H2a** reported as `978 pointwise + 22 characterized`,
+  never as 1,000 pointwise passes; **H2b** both coherence metrics' 95 %
+  bootstrap CIs strictly inside their ±δ margins on 657 contributors each
+  (10,000 resamples, α = 0.05, seed `12455822396014146421`); **H3** 14/14
+  byte-identical in each of two separately manifested invocations with identical
+  canonical projections; **H4** 72/72 on **each** of CUDA and wgpu with zero
+  failed derivative elements, the wgpu leg identified by a post-dispatch
+  `backend_name` rather than inferred from capsule residency. The §10.4 D1 flag
+  is **not raised**, so no correction cycle is triggered. Every stored decision
+  and every H2b paired summary was recomputed from the retained per-array
+  records before adjudication, the 1,000-draw input stream was replayed and
+  matched per case, and the four registered outputs regenerate byte-identically
+  from a clean checkout. **This is a non-reversal verdict, so the condition
+  blocking session 0159, EXP-002 … EXP-008 and 0194 is met** — the release takes
+  effect on the maintainer's verification of the report, which is E5's exit gate.
+  EXP-001's own record stays immutable and its H1/H2a `REFUTED` verdicts are
+  **not** revised; an append-only erratum (E-4) records that the condition its
+  E-3 described is now satisfied. See
+  `DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/report.md`,
+  `.../analysis.md` and `.../report-manifest.json`.
+
+- **EXP-001-r1 pre-execution H4/wgpu amendment (proposed 2026-09-28
+  UTC; H4/two-build method approved 2026-09-29 UTC, E3 still blocked).** The previously approved CUDA 72-case
+  H4 leg gains a separate, required wgpu 72-case companion
+  using DV-041's post-dispatch `backend_name` with host-slice
+  fallback rejected; both use unchanged f32 tolerance and
+  one campaign execution SHA R for two sequential feature builds,
+  with upstream main baseline M recorded separately.
+  The new r1-driver tests use synthetic inputs; the
+  predecessor's 72-case H4 acceptance test also runs
+  as a code-regression check, not as an EXP-001-r1
+  E3 result or a new campaign run artefact. The
+  follow-up E2 H4 method was **APPROVED by MichaelMaillet
+  on 2026-09-29 UTC** (`e2-review.md` §8) as a
+  protocol-design gate only; no E3 run or freeze has
+  started. The DV-043 hotfix must still merge with
+  required CI and green nightly, DV-044's governed
+  correction is open, and a clean M/R execution
+  identity must be recorded before E3.
+
+- **EXP-001-r1 E2 independent review and partial approval (2026-09-28 UTC).**
+  Claude Sonnet 5 (did not draft E1) re-derived every E1 provenance and
+  machinery claim from the repository — corpus/reference/instrument hashes,
+  the 1,000-case fuzz stream digest, the 22 ill-conditioned indices, the
+  fresh bootstrap seed, the built extension's default guard, and the driver
+  test/lint/type-check results — with zero discrepancies. The maintainer
+  approved the single-stream sample-size justification, the H2b three-way
+  equivalence rule, and the storage budget request (campaign plan §14.2
+  amendment #7: shared root 8→16 MiB, new 8 MiB r1 sub-allocation, 6 MiB
+  fuzz exception), implemented and tested in
+  `benchmarks/campaign/exp001_r1_driver.py`. The required wgpu
+  driver/coverage gate is **not** resolved: rather than accept a dated gap
+  disposition, the maintainer chose to fix the underlying capability —
+  tracked as **DV-041** (`DEFERRED_VALIDATION_REGISTER.md`; campaign plan
+  §11.7, §14.2 amendment #8) — before this pre-registration may freeze or
+  session 0156-successor `EXP-001-r1` E3 may start.
+
+- **EXP-001-r1 E1 pre-registration (2026-09-28 UTC).** Drafted the
+  correction re-run protocol and a separate CPU/CUDA evidence driver with
+  positive DV-007 explanations, fixed ill-conditioned-case characterization,
+  provenance pins and synthetic validation. E2 approval, required wgpu
+  coverage and the shared-storage budget disposition remain pre-execution
+  gates; session 0159 stays blocked.
+
+- **EXP-001 D1 correction cycle S4 documentation (2026-09-27 UTC).** PSR-039
+  issued; all registers updated; erratum E-3 appended to the EXP-001 E5 report
+  naming `EXP-001-r1`; `EXP-001-r1` authorized as a new experiment record
+  (`DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/`) per
+  campaign plan §10.4 item 4. Session 0159 stays **BLOCKED** until
+  `EXP-001-r1` returns a non-reversal verdict. The correction branch
+  `hotfix/exp001-d1-parity-correction` (PR #24) is not yet merged (true at
+  S4; PR #24 subsequently merged as `149cf2d` on 2026-09-28 UTC, and its
+  required CI was verified green in EXP-001-r1's E1 handoff). The
+  EXP-001-r1 E1 handoff subsequently records the merge SHA and six green
+  required workflows.
+
 - **`StateDerivatives::is_guarded()` (Rust, `prin-dynamics`) — derivative guard
   provenance (DV-043, 2026-09-28 UTC).** Reports whether a container's values
   were clamped to `±1e4` at construction: `true` from `StateDerivatives::new`;
@@ -127,6 +214,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   campaign plan §10.4, and E3 records the facts without diagnosis or verdict.
 
 ### Changed
+
+- **Community health files.** Issue forms and a pull request template now live
+  under `.github/`. `SECURITY.md` records support for the latest `1.0.0-rc*`
+  pre-release, and for the latest stable release only once `1.0.0` ships.
+  `CODE_OF_CONDUCT.md` includes the Contributor Covenant 2.1 enforcement
+  guidelines. `.github/README.md` is removed so GitHub community health uses
+  the project README. Follow-up: pull request template links use
+  repository-rooted GitHub paths; `.github/workflows/snyk.yml` runs on every
+  branch push so full-history Gitleaks matches Coding Standards §6.2; the
+  workflows README names the hosted security checks (`cargo audit`,
+  `pip-audit`, Snyk Code, Snyk Open Source, Gitleaks) instead of claiming
+  they mirror Coding Standards §6 in full.
 
 - **Breaking (Rust): `StateDerivatives` is no longer exhaustively constructible
   or destructurable outside `prin-dynamics` (DV-043, 2026-09-28 UTC).** The

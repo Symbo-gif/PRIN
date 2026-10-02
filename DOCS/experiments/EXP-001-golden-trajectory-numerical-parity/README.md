@@ -1,23 +1,19 @@
 # EXP-001 — Golden-trajectory numerical parity (track C1)
 
-**Status:** **E5 REPORTED — CAMPAIGN BLOCKED** (2026-09-23 UTC, session
-0158). The [E5 report](report.md) issues all five verdicts in full, carries
-the campaign plan §10.4 **D1** flag, raises a second D1 (**EXP001-E5-F1** —
-the `parity` CI corpus gate regenerates with PRINet 3.0, not PRIN, so no CI
-gate performed the PRIN-vs-corpus trajectory comparison over the full 504-case
-corpus — the only gate that runs PRIN against corpus trajectories covers 4
-representative cases, none of them among H1's 19 breaching cases; erratum
-issued against the Parity Report), and **triggers the four-session contingency
-correction cycle**
-([S1](../../sessions/contingencies/2026-09-23-exp001-d1-s1-correction-implementation.md)
-→ [S2](../../sessions/contingencies/2026-09-23-exp001-d1-s2-correction-audit.md)
-→ [S3](../../sessions/contingencies/2026-09-23-exp001-d1-s3-correction-remediation.md)
-→ [S4](../../sessions/contingencies/2026-09-23-exp001-d1-s4-correction-documentation.md)).
-Session 0159 and every downstream experiment, plus 0194, are blocked until the
-cycle closes and `EXP-001-r1` returns a non-reversal verdict. The report was
-**verified and accepted by the maintainer (MichaelMaillet) on 2026-09-23 UTC**,
-and the E1–E5 pull request is approved. This record is immutable from here;
-corrections are errata.
+**Status:** **E5 REPORTED — CORRECTION CYCLE COMPLETE** (2026-09-23 UTC,
+session 0158; correction cycle closed 2026-09-27 UTC). The [E5
+report](report.md) issues all five verdicts in full, carries the campaign plan
+§10.4 **D1** flag, raises a second D1 (**EXP001-E5-F1**), and triggered the
+four-session contingency correction cycle (S1→S2→S3→S4, all complete; S2
+**PASS**, S3 delta re-audit **CLEAN**). `EXP-001-r1` has been authorized as a
+new experiment record
+([`EXP-001-r1`](../EXP-001-r1-golden-trajectory-numerical-parity/README.md))
+per campaign plan §10.4 item 4. Session 0159 and every downstream experiment,
+plus 0194, remain **BLOCKED** until `EXP-001-r1` returns a non-reversal
+verdict. The report was **verified and accepted by the maintainer
+(MichaelMaillet) on 2026-09-23 UTC**, and the E1–E5 pull request is approved.
+This record is immutable from here; corrections are errata (latest: **E-3**,
+2026-09-27, naming `EXP-001-r1`).
 
 **Prior status (E4, retained):** E4 ANALYSED (2026-09-23 UTC). The frozen pre-registration §8
 decision rule has been applied to all four immutable E3 run artefacts at code

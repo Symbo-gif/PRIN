@@ -31,6 +31,17 @@
 
 ## 3. Deviation ledger (cumulative)
 
+Two accepted forms (enforced by `tools/check_deviation_ledger.py`):
+
+- **Full snapshot** — carry every prior row plus this cycle's additions in
+  the six-column table below.
+- **Delegated delta** — state `**Cumulative ledger delta:** Inherit
+  PSR-NNN §3` in prose, then list ONLY this cycle's new/updated rows in the
+  six-column table below. An inherited ID may be restated only to update
+  Status/Reference; its Summary must stay identical or the row is a new
+  finding with a new ID. A five-column `ID | Severity | ...` table is a
+  local finding summary, never a ledger.
+
 | ID | Raised (cycle) | Severity | Summary | Status | Reference |
 |---|---|---|---|---|---|
 | WPNNN-F1 | NNN | D2 | | FIXED / AMENDED / CARRIED(1) | commit/amendment |

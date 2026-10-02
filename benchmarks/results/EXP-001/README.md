@@ -17,6 +17,9 @@ never edited; the re-run after the correction cycle gets a new experiment record
 (`EXP-001-r1`) with new `RUN-` directories. Record root:
 [`DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/`](../../../DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/README.md).
 
+The six `EXP-001-r1` runs are prospective only and the first wgpu run freezes
+the approved pre-registration; no old run is touched.
+
 ## Run-directory rule (campaign plan §7.1, §7.3)
 
 Every execution uses the committed campaign driver named in the approved
