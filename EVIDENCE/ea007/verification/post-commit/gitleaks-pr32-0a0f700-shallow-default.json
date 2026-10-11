@@ -1,0 +1,23 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 68,
+  "EndLine": 68,
+  "StartColumn": 5,
+  "EndColumn": 97,
+  "Match": "y3q45_api_stability.json\": \"REDACTED\"",
+  "Secret": "REDACTED",
+  "File": "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/benchmarks/results/sha256_manifest.json",
+  "SymlinkFile": "",
+  "Commit": "7ca051ebe9e86507e2b48ed77ca862650ea33f92",
+  "Link": "https://github.com/Symbo-gif/PRIN/blob/7ca051ebe9e86507e2b48ed77ca862650ea33f92/DOCS/archive%20and%20reference%20from%20PRINet%203.0/PRINet-3.0.0-main/benchmarks/results/sha256_manifest.json#L68",
+  "Entropy": 3.8649616,
+  "Author": "MichaelMaillet",
+  "Email": "michaelmaillet238@gmail.com",
+  "Date": "2026-08-31T13:20:19Z",
+  "Message": "feat(WP-036B S1 0144E4): strict-port q3_new, nn, and scalr_enhanced acceptance tests\n\nSub-pass 4/6 of the WP-036B strict-port decomposition (amendment #35).\nImport-only ports of the three PRINet 3.0 reference tests\n(test_q3_new.py 31/389, test_nn.py 30/712, test_scalr_enhanced.py 14/649 —\n75 functions / 1,750 lines); all 75 collect and pass with 0 skips, 0\ntolerance annotations. Missing compatibility behaviour is rebuilt behind\nRust-backed owners with thin Python delegation:\n\n- nn/optimizers.py: new SynchronizedGradientDescent / RIPOptimizer /\n  SCALROptimizer classes reproducing the full PRINet 3.0 nn.optimizers API\n  (metric histories, compute_sync_penalty, per-frequency order-parameter\n  dicts, EMA-adaptive r_min). Every parameter tensor update delegates to the\n  SyncGdBridge / RipBridge / ScalrBridge; only scalar order-parameter\n  feedback bookkeeping is mirrored in Python (round-tripped through the\n  ScalrBridge JSON state), the same split as the existing compute_lr_scale\n  helper. prin._compat re-exports these instead of aliasing Scalr/Rip/SyncGd.\n- prin-dynamics integrate.rs: overflow-safe adaptive_krylov_dim (saturating\n  cast/add before the existing clamp) so ExponentialIntegrator stiff_mode\n  no longer panics.\n- _torch_compat.ExponentialIntegrator: stiff_mode property; treat dim as\n  PRINet 3.0's advisory Krylov-threshold hint and build the Rust owner\n  lazily from the real 3*n state size.\n- prin-py train.rs: ResonanceLayerBridge.order_parameter (Rust-owned\n  Kuramoto order parameter via prin_metrics); ResonanceLayer gains\n  get_order_parameter, unbatched forward, and PRINet-3.0 parameter mirrors.\n- DentateGyrusConverter re-exported from _torch_compat.\n- DGLayer / PhaseToRateAutoencoder / PRINetModel gain value-preserving\n  torch.nn.Parameter mirrors for introspection / oscillatory_weight_init.\n- benchmarks/oscillobench.py: import-adapted support module for\n  test_q3_new's OscilloBench cases (clevr_n import stays lazy for 0144E5).\n\nLegacy-test updates for the widened surface (E3 precedent):\ntest_train_bridge 1d-input test now asserts acceptance; test_api_surface\npure-rename test reflects the three optimizers as standalone\ntorch.optim.Optimizer subclasses. Migration guide symbol wording updated.\nCorrected 0144E3's stale brief status (PLANNED -\u003e COMPLETE), restoring the\nsession-plan validator gate.\n\nGates: pytest 1,684 passed / 8 skipped (fast); ruff check + format; mypy\n--strict; bandit; check_no_python_numerics; cargo fmt/clippy --workspace;\ncargo test --workspace; interrogate 97.2%; cargo audit (3 pre-existing\nallowed); Snyk Code 0 issues on changed surface. Committed locally; not\npushed.\n\nCo-Authored-By: Claude Sonnet 5 \u003cnoreply@anthropic.com\u003e",
+  "Tags": [],
+  "Fingerprint": "7ca051ebe9e86507e2b48ed77ca862650ea33f92:DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/benchmarks/results/sha256_manifest.json:generic-api-key:68"
+ }
+]

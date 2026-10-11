@@ -1,0 +1,55 @@
+COMMAND: .venv/Scripts/python -m ruff check tests/test_campaign_quality_gates.py && .venv/Scripts/python -m ruff format --check tests/test_campaign_quality_gates.py
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  BRANCH: audit/ea007-exp002-readiness  DATE: 2026-10-11T03:56:06Z
+---
+All checks passed!
+RUFF_CHECK_EXIT=0
+unformatted: File would be reformatted
+   --> tests\test_campaign_quality_gates.py:76:14
+    |
+75  |         and _tool_name(command) == tool
+    -         and (
+    -             subcommand is None or (len(command) > 1 and command[1] == subcommand)
+    -         )
+76  +         and (subcommand is None or (len(command) > 1 and command[1] == subcommand))
+77  |         and any(token.rstrip("/") == CAMPAIGN_TOKEN for token in command)
+--------------------------------------------------------------------------------
+86  |     assert matches, f"python.yml has no `{tool}` gate covering {CAMPAIGN_TOKEN}"
+    -     assert any(
+    -         required <= set(command) for command in matches
+    -     ), f"no `{tool}` campaign command carries the required options {required}"
+87  +     assert any(required <= set(command) for command in matches), (
+88  +         f"no `{tool}` campaign command carries the required options {required}"
+89  +     )
+90  |
+--------------------------------------------------------------------------------
+97  |     assert matches, f"AGENTS.md has no `{tool}` gate covering {CAMPAIGN_TOKEN}"
+    -     assert any(
+    -         required <= set(command) for command in matches
+    -     ), f"no `{tool}` campaign command carries the required options {required}"
+98  +     assert any(required <= set(command) for command in matches), (
+99  +         f"no `{tool}` campaign command carries the required options {required}"
+100 +     )
+101 |
+--------------------------------------------------------------------------------
+110 |             and any(
+    -                 token.startswith("include") and "*.py" in token
+    -                 for token in command
+111 +                 token.startswith("include") and "*.py" in token for token in command
+112 |             )
+--------------------------------------------------------------------------------
+175 |     path = relpath if not absolute else str(REPO_ROOT / relpath)
+    -     assert not _is_file_included(
+    -         os.path.normpath(path), ["*.py"], bandit_exclusions
+    -     )
+176 +     assert not _is_file_included(os.path.normpath(path), ["*.py"], bandit_exclusions)
+177 |
+--------------------------------------------------------------------------------
+184 |     path = relpath if not absolute else str(REPO_ROOT / relpath)
+    -     assert _is_file_included(
+    -         os.path.normpath(path), ["*.py"], bandit_exclusions
+    -     )
+185 +     assert _is_file_included(os.path.normpath(path), ["*.py"], bandit_exclusions)
+    |
+
+1 file would be reformatted
+RUFF_FORMAT_EXIT=1

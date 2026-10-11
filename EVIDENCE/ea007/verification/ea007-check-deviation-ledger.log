@@ -1,0 +1,6 @@
+COMMAND: .venv/Scripts/python tools/check_deviation_ledger.py DOCS/reports/038-project-state.md DOCS/reports/039-project-state.md
+HOST: HP  SHA: cb40584a7754ece83071cc609190fa915bff0b56  BRANCH: audit/ea007-exp002-readiness  DATE: 2026-10-11T03:41:08Z
+---
+Ledger consistency check passed.
+  Compared 128 rows in DOCS\reports\038-project-state.md with 142 rows in DOCS\reports\039-project-state.md.
+EXIT_CODE=0

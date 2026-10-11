@@ -133,6 +133,11 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Rustdoc gate (100% public-item docs, no warnings)
         run: cargo doc --workspace --no-deps
+      # DV-042 / PR32-F9: prin-sim's `gpu` module only exists under a backend
+      # feature (default = []), so the workspace leg above never documents it.
+      # `cpu` is the cheapest feature that compiles it on a hosted runner.
+      - name: Rustdoc gate (feature-gated prin-sim gpu module)
+        run: cargo doc -p prin-sim --no-deps --features cpu
 
   audit:
     runs-on: ubuntu-latest

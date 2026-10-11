@@ -1,0 +1,185 @@
+COMMAND: cargo test -p prin-kernels --features cpu
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  DATE: 2026-10-11T05:11:59Z
+---
+   Compiling prin-dynamics v1.0.0-rc1 (C:\dev\PRIN\crates\prin-dynamics)
+   Compiling prin-kernels v1.0.0-rc1 (C:\dev\PRIN\crates\prin-kernels)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.45s
+     Running unittests src\lib.rs (target\debug\deps\prin_kernels-e92cc0c5d77df6be.exe)
+
+running 142 tests
+test backend::tests::auto_detect_always_ends_with_cpu ... ok
+test backend::tests::auto_detect_starts_with_cuda ... ok
+test backend::tests::priority_lists_are_non_empty ... ok
+test buffers::tests::cpu_pool_all_buffers_have_same_capacity ... ok
+test buffers::tests::cpu_pool_reuse_after_clear ... ok
+test backend::tests::device_clone_and_eq ... ok
+test backend::tests::priority_lists_always_end_with_cpu ... ok
+test backend::tests::wgpu_priority_falls_back_to_cpu_only ... ok
+test buffers::tests::cpu_pool_clear_resets_lengths ... ok
+test backend::tests::cpu_priority_is_cpu_only ... ok
+test buffers::tests::cpu_pool_new_allocates_correct_capacity ... ok
+test buffers::tests::cpu_pool_zero_sized ... ok
+test backend::tests::cuda_priority_includes_all_backends ... ok
+test backend::tests::device_debug_format ... ok
+test backend::tests::backend_error_display ... ok
+test buffers::tests::num_blocks_for_matches_ceil_div_256 ... ok
+test compat::tests::all_pairs_zero_coupling_has_archived_closed_form ... ok
+test compat::tests::cross_band_matches_archived_formula_and_clamps ... ok
+test compat::tests::dense_step_matches_direct_archived_formula ... ok
+test compat::tests::dense_validation_rejects_dimensions_and_nonfinite_values ... ok
+test compat::tests::derivatives_override_base_frequency_and_match_identity ... ok
+test compat::tests::full_step_zero_projection_uses_half_sigmoid_gate ... ok
+test compat::tests::fused_sub_step_is_deterministic_and_preserves_invariants ... ok
+test compat::tests::hierarchical_matches_archived_formula ... ok
+test compat::tests::multi_rate_mean_field_reuses_repeated_authority_steps ... ok
+test compat::tests::validation_errors_cover_public_boundaries ... ok
+test discrete_step::tests::pac_gate_modulates_fast_band_amplitude ... ok
+test discrete_step::tests::rejects_invalid_modulation_depth ... ok
+test discrete_step::tests::rejects_inverted_clamp_range ... ok
+test discrete_step::tests::rejects_mismatched_lengths ... ok
+test discrete_step::tests::rejects_non_finite_band_parameter ... ok
+test discrete_step::tests::rejects_non_finite_pac_phase_offset ... ok
+test discrete_step::tests::rejects_non_finite_dt ... ok
+test discrete_step::tests::rejects_non_finite_state ... ok
+test discrete_step::tests::rejects_population_mismatch ... ok
+test discrete_step::tests::rejects_non_positive_dt ... ok
+test discrete_step::tests::rejects_zero_size_band ... ok
+test discrete_step::tests::single_oscillator_bands_have_no_self_coupling ... ok
+test discrete_step::tests::step_preserves_shape_and_invariants ... ok
+test discrete_step::tests::zero_coupling_and_decay_delta_band_is_free_run ... ok
+test discrete_step::tests::zero_pac_depth_gates_to_identity ... ok
+test equivalence::tests::assert_allclose_exact_match ... ok
+test equivalence::tests::assert_allclose_detects_mismatch ... ok
+test equivalence::tests::assert_allclose_length_mismatch ... ok
+test equivalence::tests::assert_allclose_within_tolerance ... ok
+test equivalence::tests::custom_cases_harness ... ok
+test equivalence::tests::harness_default_cases_are_non_empty ... ok
+test equivalence::tests::harness_default_impl ... ok
+test equivalence::tests::verify_detects_genuine_backend_mismatch ... ok
+test mean_field_rk4::cubecl::tests_common::timing_method_display_matches_variant ... ok
+test equivalence::tests::harness_cpu_reference_runs_all_cases ... ok
+test equivalence::tests::verify_with_tolerance_propagates_backend_error ... ok
+test equivalence::tests::cpu_self_equivalence ... ok
+test discrete_step::proptests::zero_coupling_all_bands_is_free_run ... ok
+test discrete_step::proptests::output_invariants_always_hold ... ok
+test discrete_step::cubecl::tests_cpu::cubecl_pool_rejects_size_mismatch_via_population_check ... ok
+test buffers::tests::cubecl_pool_num_blocks_is_at_least_one_for_tiny_n ... ok
+test mean_field_rk4::cubecl::tests_cpu::cpu_matches_cpu_reference_for_non_block_aligned_n ... ok
+test mean_field_rk4::proptests::order_parameter_magnitude_is_bounded ... ok
+test mean_field_rk4::proptests::phase_and_amplitude_invariants_are_preserved ... ok
+test mean_field_rk4::proptests::pool_matches_fresh_allocation_across_random_inputs ... ok
+test mean_field_rk4::proptests::zero_coupling_is_free_run ... ok
+test mean_field_rk4::tests::cpu_rk4_amplitude_error_scales_like_dt_to_the_fifth ... ok
+test mean_field_rk4::tests::cpu_step_perserves_invariants_for_small_n ... ok
+test mean_field_rk4::tests::cpu_step_phase_wrap_keeps_small_dt_stable ... ok
+test mean_field_rk4::tests::cpu_step_rejects_empty ... ok
+test mean_field_rk4::tests::cpu_step_rejects_mismatched_lengths ... ok
+test mean_field_rk4::tests::cpu_step_rejects_non_finite_dt ... ok
+test mean_field_rk4::tests::cpu_step_zero_coupling_is_free_run ... ok
+test mean_field_rk4::tests::step_cpu_with_pool_matches_step_cpu ... ok
+test mean_field_rk4::tests::step_cpu_with_pool_rejects_size_mismatch ... ok
+test mean_field_rk4::tests::step_cpu_with_pool_reuse_across_steps ... ok
+test ops::tests::negate_f32_empty_is_empty ... ok
+test ops::tests::negate_f32_preserves_sign_flips ... ok
+test ops::tests::negate_f64_preserves_sign_flips ... ok
+test buffers::tests::cubecl_pool_sizes_reduction_buffers_by_num_blocks has been running for over 60 seconds
+test discrete_step::cubecl::tests_cpu::cpu_backend_is_deterministic_across_repeated_calls has been running for over 60 seconds
+test discrete_step::cubecl::tests_cpu::cpu_backend_matches_cpu_reference_multi_block has been running for over 60 seconds
+test discrete_step::cubecl::tests_cpu::device_dispatch_matches_cpu_reference_across_a_stepping_loop has been running for over 60 seconds
+test discrete_step::cubecl::tests_cpu::device_dispatch_rejects_bad_bands_and_params has been running for over 60 seconds
+test discrete_step::cubecl::tests_cpu::device_state_from_parts_adopts_per_band_handles has been running for over 60 seconds
+test discrete_step::cubecl::tests_cpu::discrete_step_auto_falls_back_to_available_backend has been running for over 60 seconds
+test mean_field_rk4::cubecl::tests_cpu::cpu_matches_cpu_reference_for_small_n has been running for over 60 seconds
+test mean_field_rk4::cubecl::tests_cpu::cubecl_pool_rejects_size_mismatch has been running for over 60 seconds
+test mean_field_rk4::cubecl::tests_cpu::device_dispatch_matches_cpu_reference_across_a_stepping_loop has been running for over 60 seconds
+test mean_field_rk4::cubecl::tests_cpu::device_dispatch_rejects_empty_population has been running for over 60 seconds
+test mean_field_rk4::cubecl::tests_cpu::device_dispatch_rejects_pool_mismatch_and_non_finite_param has been running for over 60 seconds
+test mean_field_rk4::cubecl::tests_cpu::device_state_from_parts_adopts_handles_without_transfer has been running for over 60 seconds
+test mean_field_rk4::cubecl::tests_cpu::order_param_device_matches_host_per_block_sums_for_multi_block_n has been running for over 60 seconds
+test mean_field_rk4::cubecl::tests_cpu::step_auto_falls_back_to_available_backend has been running for over 60 seconds
+test mean_field_rk4::cubecl::tests_cpu::cpu_matches_cpu_reference_for_small_n ... ok
+test mean_field_rk4::cubecl::tests_cpu::device_state_from_parts_adopts_handles_without_transfer ... ok
+test pac::cubecl::tests_cpu::cpu_backend_matches_cpu_reference_multi_block ... ok
+test buffers::tests::cubecl_pool_sizes_reduction_buffers_by_num_blocks ... ok
+test discrete_step::cubecl::tests_cpu::cpu_backend_matches_cpu_reference_multi_block ... ok
+test mean_field_rk4::cubecl::tests_cpu::device_dispatch_rejects_pool_mismatch_and_non_finite_param ... ok
+test mean_field_rk4::cubecl::tests_cpu::device_dispatch_rejects_empty_population ... ok
+test pac::tests::modulate_clamps_output ... ok
+test pac::tests::allows_equal_clamp_bounds ... ok
+test pac::proptests::modulate_output_in_clamp_range ... ok
+test pac::proptests::zero_depth_is_identity_within_clamp ... ok
+test pac::tests::new_uses_standard_clamp ... ok
+test pac::tests::modulate_basic_matches_closed_form ... ok
+test pac::tests::parity_against_prin_dynamics_phase_amplitude_coupling ... ok
+test pac::tests::rejects_empty_fast_amplitude ... ok
+test pac::tests::rejects_empty_slow_phase ... ok
+test pac::tests::rejects_non_finite_clamp_bounds ... ok
+test pac::tests::rejects_inverted_clamp_range ... ok
+test pac::tests::rejects_non_finite_fast_amplitude ... ok
+test pac::tests::rejects_non_finite_modulation_depth ... ok
+test pac::tests::rejects_non_finite_phase_offset ... ok
+test pac::tests::rejects_non_finite_slow_phase ... ok
+test pac::tests::zero_depth_is_identity_within_clamp ... ok
+test pac::cubecl::tests_cpu::cpu_backend_reduction_is_deterministic_across_repeated_calls has been running for over 60 seconds
+test pac::cubecl::tests_cpu::pac_modulate_auto_falls_back_to_available_backend has been running for over 60 seconds
+test mean_field_rk4::cubecl::tests_cpu::cubecl_pool_rejects_size_mismatch ... ok
+test pac::cubecl::tests_cpu::pac_modulate_auto_falls_back_to_available_backend ... ok
+test discrete_step::cubecl::tests_cpu::discrete_step_auto_falls_back_to_available_backend ... ok
+test sparse_knn::proptests::derivative_outputs_are_always_finite ... ok
+test sparse_knn::proptests::zero_coupling_matches_free_run_analytically ... ok
+test sparse_knn::tests::from_csr_allows_empty_rows ... ok
+test sparse_knn::tests::from_csr_basic_ring ... ok
+test sparse_knn::tests::from_csr_rejects_decreasing_indptr ... ok
+test sparse_knn::tests::from_csr_rejects_empty ... ok
+test sparse_knn::tests::from_csr_rejects_indptr_indices_mismatch ... ok
+test sparse_knn::tests::from_csr_rejects_nonzero_start ... ok
+test sparse_knn::tests::from_csr_rejects_out_of_range_index ... ok
+test sparse_knn::tests::from_csr_rejects_wrong_indptr_length ... ok
+test sparse_knn::tests::from_phase_knn_k_zero_isolates_all ... ok
+test sparse_knn::tests::from_phase_knn_matches_uniform_degree ... ok
+test sparse_knn::tests::from_phase_knn_rejects_empty ... ok
+test sparse_knn::tests::from_phase_knn_rejects_k_ge_n ... ok
+test sparse_knn::tests::from_phase_knn_rejects_non_finite_phase ... ok
+test sparse_knn::tests::isolated_node_has_zero_derivative_contribution ... ok
+test sparse_knn::tests::matches_uniform_degree_k_normalization ... ok
+test sparse_knn::tests::parity_against_prin_dynamics_kuramoto_sparse_knn ... ok
+test sparse_knn::tests::rejects_empty_population ... ok
+test sparse_knn::tests::rejects_graph_size_mismatch ... ok
+test sparse_knn::tests::rejects_mismatched_lengths ... ok
+test sparse_knn::tests::rejects_non_finite_decay ... ok
+test sparse_knn::tests::rejects_non_finite_gamma ... ok
+test sparse_knn::tests::rejects_non_finite_k ... ok
+test sparse_knn::tests::synchronized_state_has_zero_sin_sum_and_max_cos_sum ... ok
+test sparse_knn::tests::zero_coupling_derivative_is_free_run ... ok
+test discrete_step::cubecl::tests_cpu::device_state_from_parts_adopts_per_band_handles ... ok
+test mean_field_rk4::cubecl::tests_cpu::step_auto_falls_back_to_available_backend ... ok
+test sparse_knn::cubecl::tests_cpu::device_derivs_from_parts_adopts_handles ... ok
+test sparse_knn::cubecl::tests_cpu::cpu_backend_handles_all_isolated_graph has been running for over 60 seconds
+test sparse_knn::cubecl::tests_cpu::cpu_backend_matches_cpu_reference has been running for over 60 seconds
+test sparse_knn::cubecl::tests_cpu::device_dispatch_handles_no_edge_graph has been running for over 60 seconds
+test sparse_knn::cubecl::tests_cpu::device_dispatch_matches_cpu_reference_and_host_wrapper has been running for over 60 seconds
+test sparse_knn::cubecl::tests_cpu::device_dispatch_rejects_buffer_mismatch_and_non_finite_param has been running for over 60 seconds
+test sparse_knn::cubecl::tests_cpu::sparse_knn_coupling_auto_falls_back_to_available_backend has been running for over 60 seconds
+test mean_field_rk4::cubecl::tests_cpu::order_param_device_matches_host_per_block_sums_for_multi_block_n ... ok
+test sparse_knn::cubecl::tests_cpu::cpu_backend_handles_all_isolated_graph ... ok
+test sparse_knn::cubecl::tests_cpu::cpu_backend_matches_cpu_reference ... ok
+test pac::cubecl::tests_cpu::cpu_backend_reduction_is_deterministic_across_repeated_calls ... ok
+test sparse_knn::cubecl::tests_cpu::device_dispatch_handles_no_edge_graph ... ok
+test discrete_step::cubecl::tests_cpu::device_dispatch_rejects_bad_bands_and_params ... ok
+test sparse_knn::cubecl::tests_cpu::device_dispatch_rejects_buffer_mismatch_and_non_finite_param ... ok
+test sparse_knn::cubecl::tests_cpu::sparse_knn_coupling_auto_falls_back_to_available_backend ... ok
+test sparse_knn::cubecl::tests_cpu::device_dispatch_matches_cpu_reference_and_host_wrapper ... ok
+test mean_field_rk4::cubecl::tests_cpu::device_dispatch_matches_cpu_reference_across_a_stepping_loop ... ok
+test discrete_step::cubecl::tests_cpu::device_dispatch_matches_cpu_reference_across_a_stepping_loop ... ok
+test discrete_step::cubecl::tests_cpu::cpu_backend_is_deterministic_across_repeated_calls ... ok
+
+test result: ok. 142 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 459.63s
+
+   Doc-tests prin_kernels
+
+running 1 test
+test crates\prin-kernels\src\backend.rs - backend::backend_priority (line 48) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.53s
+
+EXIT_CODE=0

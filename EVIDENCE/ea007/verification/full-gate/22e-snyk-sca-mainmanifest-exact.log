@@ -1,0 +1,28 @@
+COMMAND: npx --yes snyk@1.1304.2 test --file=DOCS/test_and_benchmark_results/ea007/full-gate/prin-resolved/requirements.txt --package-manager=pip --severity-threshold=low --fail-on=all --policy-path=C:/dev/PRIN/.snyk  (exact CI form; audit env = resolved pins; EA003-E-F7 dispositions expected to apply)
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  DATE: 2026-10-11T05:48:33Z
+---
+
+Testing C:\dev\PRIN...
+
+Organization:      symbo-gif
+Package manager:   pip
+Target file:       DOCS/test_and_benchmark_results/ea007/full-gate/prin-resolved/requirements.txt
+Project name:      prin-resolved
+Open source:       no
+Project path:      C:\dev\PRIN
+Local Snyk policy: found
+Licenses:          enabled
+
+✔ Tested 100 dependencies for known issues, no vulnerable paths found.
+
+Tip: Detected multiple supported manifests (1), use --all-projects to scan all of them at once.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+
+
+You are approaching your monthly limit of 200 private tests for your symbo-gif org.
+To learn more about our plans and increase your tests limit visit https://snyk.io/plans.
+EXIT_CODE=0

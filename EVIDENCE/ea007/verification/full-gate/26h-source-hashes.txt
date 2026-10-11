@@ -1,0 +1,9 @@
+# Source-hash manifest — binds verified source/config to the eventual commit
+# HOST: HP | SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9 | UTC: 2026-10-11T06:36:36Z
+# Algorithm: SHA-256 over working-tree blobs of the files this diff touches
+6f4288fe4a2eb5520ac1d391bd69cc74c2ea9bb2aa906acf707fdc7497dead46 *crates/prin-sim/src/gpu.rs
+f97f81561abeffb78b2613f53e8a15244e4ce7f316a98703a260256bebd25d2b *tests/test_campaign_quality_gates.py
+20a1a2d959bbb2c58e4322f89aa5c8ad562658cfe1cc7df6c9cac6436e2666f7 *.github/workflows/python.yml
+be047023bc9b2edd75d8d57bf9a61cc9b26ff8e20538b103ac165b3d3b5ef34f *pyproject.toml
+7b6fef41db9be20310575c30d430df2fa39425134b01c1fd0e0b4e19ccb1cf4d *DOCS/sphinx/requirements.txt
+e625c43863464f97c77a2f40ff378a0a0799f564b7bb6802bbd0493e55f1f742 *AGENTS.md

@@ -83,6 +83,16 @@ To find evidence for a specific work package, look for files matching
   50-digit mpmath evaluation of PRINet 3.0's own map, plus SymPy lemmas, puts
   the reference on the erroneous side in 57/57 DV-007 breaches. Both generator
   scripts are included; see that directory's `README.md`.
+- [`ea007/`](ea007/) — EA-007 (2026-10-11) readiness evidence: the frozen
+  `readiness-state.json` snapshot (maintainer approval verbatim, GitHub
+  observations, runner/secret-scanning state, carry-forward gates), the
+  EXP-001-r1 merge `check_ci_green` output, and the latest pre-pause
+  nightly capture. Frozen input evidence; not regenerated.
+  [`ea007/verification/`](ea007/verification/) preserves the full local
+  gate's per-command logs, its post-commit secret scans, the PR #32 review
+  round's gate log, and a `SHA256SUMS.txt` integrity inventory (executed by
+  `tests/test_ea007_manifest.py`)
+  (logs/text artifacts only — see that directory's `README.md`).
 
 ## Rules
 

@@ -39,17 +39,34 @@
 //! panic), the engine falls back to the host-slice path (the pre-Q2
 //! behaviour) transparently.
 //!
-//! ## Zero-copy `kDLCUDA` export (WP-036E Q3)
-//!
-//! On the CUDA device-resident path, [`GpuMeanFieldEngine::state_cuda_export`]
-//! and [`GpuSparseKuramoto::compute_derivatives_cuda_export`] hand out the
-//! current device buffers as raw `CUdeviceptr`s plus [`Handle`] pins
-//! ([`CudaStateExport`]); `prin-py` builds a `kDLCUDA` `DLManagedTensor` over
-//! each that Torch adopts with no copy. [`GpuBandStepper`] has no equivalent:
-//! its device state is three per-band `[Handle; 3]` triples (a cubecl-0.10
-//! `min_storage_buffer_offset_alignment` constraint, WP-036E Q1), not a single
-//! contiguous `N`-length buffer, so its `state()` stays on the host-`f32`
-//! download path.
+#![cfg_attr(
+    feature = "cuda",
+    doc = r"## Zero-copy `kDLCUDA` export (WP-036E Q3)
+
+On the CUDA device-resident path, [`GpuMeanFieldEngine::state_cuda_export`]
+and [`GpuSparseKuramoto::compute_derivatives_cuda_export`] hand out the
+current device buffers as raw `CUdeviceptr`s plus [`Handle`] pins
+([`CudaStateExport`]); `prin-py` builds a `kDLCUDA` `DLManagedTensor` over
+each that Torch adopts with no copy. [`GpuBandStepper`] has no equivalent:
+its device state is three per-band `[Handle; 3]` triples (a cubecl-0.10
+`min_storage_buffer_offset_alignment` constraint, WP-036E Q1), not a single
+contiguous `N`-length buffer, so its `state()` stays on the host-`f32`
+download path."
+)]
+#![cfg_attr(
+    not(feature = "cuda"),
+    doc = r"## Zero-copy `kDLCUDA` export (WP-036E Q3)
+
+The `cuda` feature is required for the zero-copy `kDLCUDA` device-buffer
+export — `CudaStateExport` plus `GpuMeanFieldEngine::state_cuda_export`
+and `GpuSparseKuramoto::compute_derivatives_cuda_export`, which hand the
+current device buffers to `prin-py` as raw `CUdeviceptr`s that Torch
+adopts with no copy — so it is absent from this build. `GpuBandStepper`
+has no equivalent on any feature: its device state is three per-band
+`[Handle; 3]` triples (a cubecl-0.10 `min_storage_buffer_offset_alignment`
+constraint, WP-036E Q1), not a single contiguous `N`-length buffer, so
+its `state()` stays on the host-`f32` download path."
+)]
 //!
 //! ## `Dynamics` impl split (`GpuSparseKuramoto`)
 //!

@@ -1,0 +1,9 @@
+GITLEAKS PROVISIONING (session-local, network-approved 2026-10-11)
+release metadata: https://api.github.com/repos/gitleaks/gitleaks/releases/latest -> tag v8.30.1
+asset: https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_windows_x64.zip
+checksums: https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_checksums.txt
+sha256 official:  d29144deff3a68aa93ced33dddf84b7fdc26070add4aa0f4513094c8332afc4e
+sha256 downloaded: d29144deff3a68aa93ced33dddf84b7fdc26070add4aa0f4513094c8332afc4e
+match: YES
+installed: DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe (session-local, no PATH change)
+8.30.1

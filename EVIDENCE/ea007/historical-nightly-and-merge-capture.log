@@ -1,0 +1,579 @@
+{"attempt":1,"conclusion":"success","createdAt":"2026-10-01T05:13:10Z","headSha":"bbf97dcef0beadc0bc62b21bb5e27808a92d0bd6","jobs":[{"completedAt":"2026-10-01T05:28:52Z","conclusion":"success","databaseId":110229417119,"name":"full-suite","startedAt":"2026-10-01T05:13:14Z","status":"completed","steps":[{"completedAt":"2026-10-01T05:13:16Z","conclusion":"success","name":"Set up job","number":1,"startedAt":"2026-10-01T05:13:15Z","status":"completed"},{"completedAt":"2026-10-01T05:13:19Z","conclusion":"success","name":"Run actions/checkout@v4","number":2,"startedAt":"2026-10-01T05:13:16Z","status":"completed"},{"completedAt":"2026-10-01T05:13:19Z","conclusion":"success","name":"Run actions/setup-python@v5","number":3,"startedAt":"2026-10-01T05:13:19Z","status":"completed"},{"completedAt":"2026-10-01T05:13:20Z","conclusion":"success","name":"Run dtolnay/rust-toolchain@stable","number":4,"startedAt":"2026-10-01T05:13:19Z","status":"completed"},{"completedAt":"2026-10-01T05:13:43Z","conclusion":"success","name":"Run Swatinem/rust-cache@v2","number":5,"startedAt":"2026-10-01T05:13:20Z","status":"completed"},{"completedAt":"2026-10-01T05:15:21Z","conclusion":"success","name":"Free disk space","number":6,"startedAt":"2026-10-01T05:13:43Z","status":"completed"},{"completedAt":"2026-10-01T05:18:28Z","conclusion":"success","name":"Build and install (CPU-only torch)","number":7,"startedAt":"2026-10-01T05:15:21Z","status":"completed"},{"completedAt":"2026-10-01T05:27:10Z","conclusion":"success","name":"Full Python suite (including slow + parity)","number":8,"startedAt":"2026-10-01T05:18:28Z","status":"completed"},{"completedAt":"2026-10-01T05:28:50Z","conclusion":"success","name":"Rust workspace tests (strict-checks)","number":9,"startedAt":"2026-10-01T05:27:10Z","status":"completed"},{"completedAt":"2026-10-01T05:28:50Z","conclusion":"success","name":"Post Run Swatinem/rust-cache@v2","number":16,"startedAt":"2026-10-01T05:28:50Z","status":"completed"},{"completedAt":"2026-10-01T05:28:50Z","conclusion":"success","name":"Post Run actions/setup-python@v5","number":17,"startedAt":"2026-10-01T05:28:50Z","status":"completed"},{"completedAt":"2026-10-01T05:28:50Z","conclusion":"success","name":"Post Run actions/checkout@v4","number":18,"startedAt":"2026-10-01T05:28:50Z","status":"completed"},{"completedAt":"2026-10-01T05:28:50Z","conclusion":"success","name":"Complete job","number":19,"startedAt":"2026-10-01T05:28:50Z","status":"completed"}],"url":"https://github.com/Symbo-gif/PRIN/actions/runs/36818721762/job/110229417119"},{"completedAt":"2026-10-01T06:49:19Z","conclusion":"success","databaseId":110229417267,"name":"bench-regression","startedAt":"2026-10-01T05:13:14Z","status":"completed","steps":[{"completedAt":"2026-10-01T05:13:16Z","conclusion":"success","name":"Set up job","number":1,"startedAt":"2026-10-01T05:13:15Z","status":"completed"},{"completedAt":"2026-10-01T05:13:19Z","conclusion":"success","name":"Run actions/checkout@v4","number":2,"startedAt":"2026-10-01T05:13:16Z","status":"completed"},{"completedAt":"2026-10-01T05:13:21Z","conclusion":"success","name":"Run actions/checkout@v4","number":3,"startedAt":"2026-10-01T05:13:19Z","status":"completed"},{"completedAt":"2026-10-01T05:13:21Z","conclusion":"success","name":"Run actions/setup-python@v5","number":4,"startedAt":"2026-10-01T05:13:21Z","status":"completed"},{"completedAt":"2026-10-01T05:13:29Z","conclusion":"success","name":"Run dtolnay/rust-toolchain@1.98.1","number":5,"startedAt":"2026-10-01T05:13:21Z","status":"completed"},{"completedAt":"2026-10-01T05:13:52Z","conclusion":"success","name":"Run Swatinem/rust-cache@v2","number":6,"startedAt":"2026-10-01T05:13:29Z","status":"completed"},{"completedAt":"2026-10-01T05:16:02Z","conclusion":"success","name":"Free disk space","number":7,"startedAt":"2026-10-01T05:13:52Z","status":"completed"},{"completedAt":"2026-10-01T05:21:13Z","conclusion":"success","name":"Build matched candidate and reference environments","number":8,"startedAt":"2026-10-01T05:16:02Z","status":"completed"},{"completedAt":"2026-10-01T06:49:09Z","conclusion":"success","name":"Measure reference and candidate in counterbalanced order","number":9,"startedAt":"2026-10-01T05:21:13Z","status":"completed"},{"completedAt":"2026-10-01T06:49:09Z","conclusion":"success","name":"Compare against baseline (>10% mean regression fails)","number":10,"startedAt":"2026-10-01T06:49:09Z","status":"completed"},{"completedAt":"2026-10-01T06:49:15Z","conclusion":"success","name":"Preserve benchmark evidence even on failure","number":11,"startedAt":"2026-10-01T06:49:09Z","status":"completed"},{"completedAt":"2026-10-01T06:49:15Z","conclusion":"success","name":"Post Run Swatinem/rust-cache@v2","number":19,"startedAt":"2026-10-01T06:49:15Z","status":"completed"},{"completedAt":"2026-10-01T06:49:16Z","conclusion":"success","name":"Post Run actions/setup-python@v5","number":20,"startedAt":"2026-10-01T06:49:15Z","status":"completed"},{"completedAt":"2026-10-01T06:49:16Z","conclusion":"success","name":"Post Run actions/checkout@v4","number":21,"startedAt":"2026-10-01T06:49:16Z","status":"completed"},{"completedAt":"2026-10-01T06:49:16Z","conclusion":"success","name":"Post Run actions/checkout@v4","number":22,"startedAt":"2026-10-01T06:49:16Z","status":"completed"},{"completedAt":"2026-10-01T06:49:16Z","conclusion":"success","name":"Complete job","number":23,"startedAt":"2026-10-01T06:49:16Z","status":"completed"}],"url":"https://github.com/Symbo-gif/PRIN/actions/runs/36818721762/job/110229417267"}]}
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:21.1203386Z Or undo this operation with:
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:21.5212417Z ##[end-action id=__dtolnay_rust-toolchain.parse;outcome=success;conclusion=success;duration_ms=85]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:21.5414713Z ##[end-action id=__dtolnay_rust-toolchain.flags;outcome=success;conclusion=success;duration_ms=19]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:21.5602434Z ##[end-action id=__dtolnay_rust-toolchain.__run;outcome=success;conclusion=success;duration_ms=18]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:21.5795512Z ##[end-action id=__dtolnay_rust-toolchain.__run_2;outcome=success;conclusion=success;duration_ms=18]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:21.5804710Z ##[end-action id=__dtolnay_rust-toolchain.__run_3;outcome=skipped;conclusion=skipped;duration_ms=0]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:29.3620794Z ##[end-action id=__dtolnay_rust-toolchain.__run_4;outcome=success;conclusion=success;duration_ms=7780]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:29.3926148Z ##[end-action id=__dtolnay_rust-toolchain.__run_5;outcome=success;conclusion=success;duration_ms=29]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:29.4378456Z ##[end-action id=__dtolnay_rust-toolchain.rustc-version;outcome=success;conclusion=success;duration_ms=44]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:29.4546850Z ##[end-action id=__dtolnay_rust-toolchain.__run_6;outcome=success;conclusion=success;duration_ms=16]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:29.4709307Z ##[end-action id=__dtolnay_rust-toolchain.__run_7;outcome=success;conclusion=success;duration_ms=15]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:29.5101440Z ##[end-action id=__dtolnay_rust-toolchain.__run_8;outcome=success;conclusion=success;duration_ms=38]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:29.5379618Z ##[end-action id=__dtolnay_rust-toolchain.__run_9;outcome=success;conclusion=success;duration_ms=27]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:29.5664310Z ##[end-action id=__dtolnay_rust-toolchain.__run_10;outcome=success;conclusion=success;duration_ms=28]
+bench-regression	UNKNOWN STEP	2026-10-01T05:13:30.9545552Z ##[group]Cache Configuration
+bench-regression	UNKNOWN STEP	2026-10-01T05:23:29.6769984Z Benchmarking control_buffer_read_under_contention/lock_free/0: Collecting 100 samples in estimated 5.0000 s (569M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:23:39.4663263Z Benchmarking control_buffer_read_under_contention/mutex/0: Collecting 100 samples in estimated 5.0000 s (872M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:23:49.2547067Z Benchmarking control_buffer_read_under_contention/lock_free/1: Collecting 100 samples in estimated 5.0001 s (54M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:24:01.6939741Z Benchmarking control_buffer_read_under_contention/mutex/1: Collecting 100 samples in estimated 5.0003 s (64M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:24:12.5179038Z Benchmarking control_buffer_read_under_contention/lock_free/4: Collecting 100 samples in estimated 5.0000 s (106M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:24:24.7439124Z Benchmarking control_buffer_read_under_contention/mutex/4: Collecting 100 samples in estimated 5.0004 s (39M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:24:38.2940132Z Benchmarking training_hooks_on_step_end/0: Collecting 100 samples in estimated 5.0000 s (654M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:24:48.4696253Z Benchmarking training_hooks_on_step_end/8: Collecting 100 samples in estimated 5.0000 s (402M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:24:58.5865688Z Benchmarking training_hooks_on_step_end/64: Collecting 100 samples in estimated 5.0002 s (104M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:25:10.3778365Z Benchmarking training_hooks_on_epoch_end: Collecting 100 samples in estimated 5.0003 s (8.0M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:25:20.1523703Z Benchmarking discrete_step_3band/fused_cpu_native: Collecting 10 samples in estimated 5.0317 s (1705 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:25:32.5673728Z Benchmarking discrete_step_3band/unfused_cpu_native: Collecting 10 samples in estimated 5.0342 s (440 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:25:43.1821233Z Benchmarking mean_field_rk4_n1m/cpu_native: Collecting 10 samples in estimated 7.1623 s (55 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:25:56.6931919Z Benchmarking sparse_knn_n16k_k14/cpu_native: Collecting 20 samples in estimated 5.3246 s (2310 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:03.5736315Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:03.5737217Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:07.3219052Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs: Collecting 10 samples in estimated 5.3504 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:12.9259193Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:12.9506539Z sweep_parallel/run_sweep_parallel/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:14.3626752Z Benchmarking sweep_parallel/run_sweep_serial/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:14.3627306Z Benchmarking sweep_parallel/run_sweep_serial/4_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:18.4228186Z Benchmarking sweep_parallel/run_sweep_serial/4_configs: Collecting 10 samples in estimated 13.533 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:31.8152276Z Benchmarking sweep_parallel/run_sweep_serial/4_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:31.8335231Z sweep_parallel/run_sweep_serial/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:33.1294555Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:33.1295925Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:36.3828914Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs: Collecting 10 samples in estimated 10.826 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:47.1271009Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:47.1467292Z sweep_parallel/run_sweep_parallel/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:48.4765151Z Benchmarking sweep_parallel/run_sweep_serial/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:48.4765679Z Benchmarking sweep_parallel/run_sweep_serial/8_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:26:56.6065392Z Benchmarking sweep_parallel/run_sweep_serial/8_configs: Collecting 10 samples in estimated 27.099 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:27:23.7651662Z Benchmarking sweep_parallel/run_sweep_serial/8_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:27:23.7829793Z sweep_parallel/run_sweep_serial/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:27:25.1468940Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:27:25.1528730Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:27:31.6359124Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs: Collecting 10 samples in estimated 21.621 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:27:53.2119506Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:27:53.2315047Z sweep_parallel/run_sweep_parallel/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:27:54.5941894Z Benchmarking sweep_parallel/run_sweep_serial/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:27:54.5942460Z Benchmarking sweep_parallel/run_sweep_serial/16_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:27:59.8759743Z Benchmarking sweep_parallel/run_sweep_serial/16_configs: Collecting 10 samples in estimated 52.815 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:28:51.6570309Z Benchmarking sweep_parallel/run_sweep_serial/16_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:28:51.6750595Z sweep_parallel/run_sweep_serial/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:28:52.9989133Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:28:52.9998897Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:28:57.2483848Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs: Collecting 10 samples in estimated 42.521 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:29:39.5304636Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:29:39.5487834Z sweep_parallel/run_sweep_parallel/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:29:40.8997282Z Benchmarking sweep_parallel/run_sweep_serial/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:29:40.8997820Z Benchmarking sweep_parallel/run_sweep_serial/32_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:29:50.9145100Z Benchmarking sweep_parallel/run_sweep_serial/32_configs: Collecting 10 samples in estimated 100.15 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:31:34.2128092Z Benchmarking sweep_parallel/run_sweep_serial/32_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:31:34.2307030Z sweep_parallel/run_sweep_serial/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:31:35.5457076Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:31:35.5458638Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:31:43.6300368Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs: Collecting 10 samples in estimated 80.840 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:33:04.8193950Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:33:04.8381639Z sweep_parallel/run_sweep_parallel/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:33:06.1737590Z Benchmarking sweep_parallel/run_sweep_serial/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:33:06.1738472Z Benchmarking sweep_parallel/run_sweep_serial/64_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:33:25.6160802Z Benchmarking sweep_parallel/run_sweep_serial/64_configs: Collecting 10 samples in estimated 194.42 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:36:40.0768488Z Benchmarking sweep_parallel/run_sweep_serial/64_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:36:40.0948909Z sweep_parallel/run_sweep_serial/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:36:44.4608438Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/256: Collecting 10 samples in estimated 3.0003 s (258k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:36:52.1873513Z Benchmarking spmv_coupling/kuramoto_coupling_serial/256: Collecting 10 samples in estimated 3.0009 s (123k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:37:02.3901639Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/1024: Collecting 10 samples in estimated 3.0006 s (67k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:37:10.9621971Z Benchmarking spmv_coupling/kuramoto_coupling_serial/1024: Collecting 10 samples in estimated 3.0020 s (50k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:37:21.5150809Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/4096: Collecting 10 samples in estimated 3.0009 s (17k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:37:29.3571826Z Benchmarking spmv_coupling/kuramoto_coupling_serial/4096: Collecting 10 samples in estimated 3.0019 s (15k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:37:39.7672650Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/16384: Collecting 10 samples in estimated 3.0295 s (4235 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:37:47.2812736Z Benchmarking spmv_coupling/kuramoto_coupling_serial/16384: Collecting 10 samples in estimated 3.0329 s (4125 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:37:55.4420059Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/65536: Collecting 10 samples in estimated 3.0160 s (1760 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:38:03.1532113Z Benchmarking spmv_coupling/kuramoto_coupling_serial/65536: Collecting 10 samples in estimated 3.0033 s (990 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:38:11.4579281Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/262144: Collecting 10 samples in estimated 3.0943 s (440 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:38:19.3416955Z Benchmarking spmv_coupling/kuramoto_coupling_serial/262144: Collecting 10 samples in estimated 3.5008 s (275 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:38:29.8940516Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/1000000: Collecting 10 samples in estimated 4.3007 s (110 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:38:39.4187731Z Benchmarking spmv_coupling/kuramoto_coupling_serial/1000000: Collecting 10 samples in estimated 3.1705 s (55 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:38:44.1429152Z Benchmarking engine_step/step_parallel/256
+bench-regression	UNKNOWN STEP	2026-10-01T05:38:44.1429890Z Benchmarking engine_step/step_parallel/256: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:38:48.3827509Z Benchmarking engine_step/step_parallel/256: Collecting 10 samples in estimated 3.0003 s (46k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:38:51.3831158Z Benchmarking engine_step/step_parallel/256: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:38:51.4035428Z engine_step/step_parallel/256
+bench-regression	UNKNOWN STEP	2026-10-01T05:38:56.6219564Z Benchmarking engine_step/derivatives_parallel/256: Collecting 10 samples in estimated 3.0006 s (213k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:04.6613344Z Benchmarking engine_step/derivatives_serial/256: Collecting 10 samples in estimated 3.0007 s (113k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:09.3794412Z Benchmarking engine_step/step_parallel/1024
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:09.3795174Z Benchmarking engine_step/step_parallel/1024: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:13.3185863Z Benchmarking engine_step/step_parallel/1024: Collecting 10 samples in estimated 3.0018 s (12k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:16.3229449Z Benchmarking engine_step/step_parallel/1024: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:16.3436711Z engine_step/step_parallel/1024
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:21.2441869Z Benchmarking engine_step/derivatives_parallel/1024: Collecting 10 samples in estimated 3.0020 s (59k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:30.1046680Z Benchmarking engine_step/derivatives_serial/1024: Collecting 10 samples in estimated 3.0007 s (46k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:34.7455904Z Benchmarking engine_step/step_parallel/4096
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:34.7456424Z Benchmarking engine_step/step_parallel/4096: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:38.7015373Z Benchmarking engine_step/step_parallel/4096: Collecting 10 samples in estimated 3.0284 s (3135 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:41.6960147Z Benchmarking engine_step/step_parallel/4096: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:41.7157566Z engine_step/step_parallel/4096
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:46.5773094Z Benchmarking engine_step/derivatives_parallel/4096: Collecting 10 samples in estimated 3.0021 s (15k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:54.8504578Z Benchmarking engine_step/derivatives_serial/4096: Collecting 10 samples in estimated 3.0015 s (13k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:59.4540591Z Benchmarking engine_step/step_parallel/16384
+bench-regression	UNKNOWN STEP	2026-10-01T05:39:59.4541058Z Benchmarking engine_step/step_parallel/16384: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:04.3627091Z Benchmarking engine_step/step_parallel/16384: Collecting 10 samples in estimated 3.1668 s (660 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:07.1083866Z Benchmarking engine_step/step_parallel/16384: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:07.1310797Z engine_step/step_parallel/16384
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:13.4051367Z Benchmarking engine_step/derivatives_parallel/16384: Collecting 10 samples in estimated 3.0489 s (2640 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:22.8899739Z Benchmarking engine_step/derivatives_serial/16384: Collecting 10 samples in estimated 3.0035 s (2530 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:27.4049190Z Benchmarking engine_step/step_parallel/65536
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:27.4050837Z Benchmarking engine_step/step_parallel/65536: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:30.6204987Z Benchmarking engine_step/step_parallel/65536: Collecting 10 samples in estimated 3.4683 s (275 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:34.0113775Z Benchmarking engine_step/step_parallel/65536: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:34.0311015Z engine_step/step_parallel/65536
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:40.8017530Z Benchmarking engine_step/derivatives_parallel/65536: Collecting 10 samples in estimated 3.0662 s (1210 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:50.5362253Z Benchmarking engine_step/derivatives_serial/65536: Collecting 10 samples in estimated 3.2722 s (660 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:55.5349113Z Benchmarking engine_step/step_parallel/262144
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:55.5350284Z Benchmarking engine_step/step_parallel/262144: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:40:58.7185456Z Benchmarking engine_step/step_parallel/262144: Collecting 10 samples in estimated 5.5623 s (110 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:41:04.2407034Z Benchmarking engine_step/step_parallel/262144: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:41:04.2635399Z engine_step/step_parallel/262144
+bench-regression	UNKNOWN STEP	2026-10-01T05:41:10.9853705Z Benchmarking engine_step/derivatives_parallel/262144: Collecting 10 samples in estimated 3.3285 s (330 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:41:21.0834690Z Benchmarking engine_step/derivatives_serial/262144: Collecting 10 samples in estimated 3.3739 s (165 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:41:26.5602646Z Benchmarking engine_step/step_parallel/1000000
+bench-regression	UNKNOWN STEP	2026-10-01T05:41:26.5604216Z Benchmarking engine_step/step_parallel/1000000: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:41:29.8439522Z Benchmarking engine_step/step_parallel/1000000: Collecting 10 samples in estimated 4.3773 s (20 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:41:34.1957558Z Benchmarking engine_step/step_parallel/1000000: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:41:34.2143353Z engine_step/step_parallel/1000000
+bench-regression	UNKNOWN STEP	2026-10-01T05:41:40.6463783Z Benchmarking engine_step/derivatives_parallel/1000000: Collecting 10 samples in estimated 4.3872 s (110 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:41:52.0682728Z Benchmarking engine_step/derivatives_serial/1000000: Collecting 10 samples in estimated 4.7522 s (55 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:42:11.3021676Z Benchmarking phase_tracker_bridge_baseline/small_4obj_28osc: Collecting 100 samples in estimated 9.3324 s (5050 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:42:18.0708233Z Benchmarking phase_tracker_bridge_baseline/moderate_32obj_28osc: Collecting 100 samples in estimated 5.4714 s (1100 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:42:27.5483152Z Benchmarking resonance_layer_bridge_baseline/small_32osc_16dims_8batch: Collecting 100 samples in estimated 5.9020 s (500 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:42:39.1469706Z Benchmarking resonance_layer_bridge_baseline/moderate_128osc_64dims_32batch: Collecting 100 samples in estimated 58.652 s (100 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:44:08.2922206Z benchmark: 5.3.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+bench-regression	UNKNOWN STEP	2026-10-01T05:44:15.5073262Z Name (time in us)                                                              Min                     Max                    Mean                 StdDev                  Median                   IQR            Outliers           OPS            Rounds  Iterations
+bench-regression	UNKNOWN STEP	2026-10-01T05:44:15.5093900Z   OPS: Operations Per Second, computed as 1 / Mean
+bench-regression	UNKNOWN STEP	2026-10-01T05:46:38.3334714Z Benchmarking control_buffer_read_under_contention/lock_free/0: Collecting 100 samples in estimated 5.0000 s (570M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:46:48.1312084Z Benchmarking control_buffer_read_under_contention/mutex/0: Collecting 100 samples in estimated 5.0000 s (877M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:46:58.3954892Z Benchmarking control_buffer_read_under_contention/lock_free/1: Collecting 100 samples in estimated 5.0004 s (48M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:47:10.4419953Z Benchmarking control_buffer_read_under_contention/mutex/1: Collecting 100 samples in estimated 5.0002 s (69M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:47:22.0519067Z Benchmarking control_buffer_read_under_contention/lock_free/4: Collecting 100 samples in estimated 5.0002 s (107M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:47:35.4739086Z Benchmarking control_buffer_read_under_contention/mutex/4: Collecting 100 samples in estimated 5.0003 s (35M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:47:49.3885106Z Benchmarking training_hooks_on_step_end/0: Collecting 100 samples in estimated 5.0000 s (654M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:47:59.4608508Z Benchmarking training_hooks_on_step_end/8: Collecting 100 samples in estimated 5.0000 s (402M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:48:09.3026322Z Benchmarking training_hooks_on_step_end/64: Collecting 100 samples in estimated 5.0000 s (108M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:48:21.3835981Z Benchmarking training_hooks_on_epoch_end: Collecting 100 samples in estimated 5.0006 s (7.9M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:48:31.1360946Z Benchmarking discrete_step_3band/fused_cpu_native: Collecting 10 samples in estimated 5.0516 s (1705 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:48:43.7019614Z Benchmarking discrete_step_3band/unfused_cpu_native: Collecting 10 samples in estimated 5.1211 s (440 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:48:54.4442576Z Benchmarking mean_field_rk4_n1m/cpu_native: Collecting 10 samples in estimated 7.2072 s (55 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:07.8534599Z Benchmarking sparse_knn_n16k_k14/cpu_native: Collecting 20 samples in estimated 5.3797 s (2310 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:14.7573280Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:14.7573984Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:19.1508785Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs: Collecting 10 samples in estimated 6.2603 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:24.6758970Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:24.6916603Z sweep_parallel/run_sweep_parallel/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:26.0219904Z Benchmarking sweep_parallel/run_sweep_serial/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:26.0220884Z Benchmarking sweep_parallel/run_sweep_serial/4_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:30.1710130Z Benchmarking sweep_parallel/run_sweep_serial/4_configs: Collecting 10 samples in estimated 13.829 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:43.8303449Z Benchmarking sweep_parallel/run_sweep_serial/4_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:43.8502649Z sweep_parallel/run_sweep_serial/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:45.1880361Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:45.1881311Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:48.5498846Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs: Collecting 10 samples in estimated 11.186 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:59.6709060Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:49:59.6853884Z sweep_parallel/run_sweep_parallel/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:50:01.0129388Z Benchmarking sweep_parallel/run_sweep_serial/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:50:01.0130096Z Benchmarking sweep_parallel/run_sweep_serial/8_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:50:09.1532444Z Benchmarking sweep_parallel/run_sweep_serial/8_configs: Collecting 10 samples in estimated 27.137 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:50:36.2054095Z Benchmarking sweep_parallel/run_sweep_serial/8_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:50:36.2226148Z sweep_parallel/run_sweep_serial/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:50:37.4979056Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:50:37.5038791Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:50:44.1858994Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs: Collecting 10 samples in estimated 22.253 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:51:06.4146180Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:51:06.4330148Z sweep_parallel/run_sweep_parallel/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:51:07.7504354Z Benchmarking sweep_parallel/run_sweep_serial/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:51:07.7505762Z Benchmarking sweep_parallel/run_sweep_serial/16_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:51:13.0348423Z Benchmarking sweep_parallel/run_sweep_serial/16_configs: Collecting 10 samples in estimated 52.842 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:52:06.0309559Z Benchmarking sweep_parallel/run_sweep_serial/16_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:52:06.0490116Z sweep_parallel/run_sweep_serial/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:52:07.3569169Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:52:07.3570211Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:52:11.7230862Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs: Collecting 10 samples in estimated 43.680 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:52:54.9209329Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:52:54.9417724Z sweep_parallel/run_sweep_parallel/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:52:56.2647175Z Benchmarking sweep_parallel/run_sweep_serial/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:52:56.2648353Z Benchmarking sweep_parallel/run_sweep_serial/32_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:53:06.5784331Z Benchmarking sweep_parallel/run_sweep_serial/32_configs: Collecting 10 samples in estimated 103.14 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:54:49.1408436Z Benchmarking sweep_parallel/run_sweep_serial/32_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:54:49.1584818Z sweep_parallel/run_sweep_serial/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:54:50.4909021Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:54:50.4910389Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:54:58.9298875Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs: Collecting 10 samples in estimated 84.344 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T05:56:23.1667364Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T05:56:23.1845890Z sweep_parallel/run_sweep_parallel/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:56:24.5209105Z Benchmarking sweep_parallel/run_sweep_serial/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T05:56:24.5209646Z Benchmarking sweep_parallel/run_sweep_serial/64_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T05:56:44.4532443Z Benchmarking sweep_parallel/run_sweep_serial/64_configs: Collecting 10 samples in estimated 199.32 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:00:06.7679109Z Benchmarking sweep_parallel/run_sweep_serial/64_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:00:06.7851047Z sweep_parallel/run_sweep_serial/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:00:11.1735806Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/256: Collecting 10 samples in estimated 3.0006 s (257k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:00:19.0183623Z Benchmarking spmv_coupling/kuramoto_coupling_serial/256: Collecting 10 samples in estimated 3.0004 s (118k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:00:29.5410188Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/1024: Collecting 10 samples in estimated 3.0018 s (67k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:00:38.1256368Z Benchmarking spmv_coupling/kuramoto_coupling_serial/1024: Collecting 10 samples in estimated 3.0001 s (48k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:00:48.5709185Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/4096: Collecting 10 samples in estimated 3.0054 s (17k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:00:56.3883507Z Benchmarking spmv_coupling/kuramoto_coupling_serial/4096: Collecting 10 samples in estimated 3.0077 s (15k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:01:06.7732934Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/16384: Collecting 10 samples in estimated 3.0176 s (4235 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:01:14.4386918Z Benchmarking spmv_coupling/kuramoto_coupling_serial/16384: Collecting 10 samples in estimated 3.0226 s (4070 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:01:22.6678774Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/65536: Collecting 10 samples in estimated 3.0046 s (1705 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:01:30.4264072Z Benchmarking spmv_coupling/kuramoto_coupling_serial/65536: Collecting 10 samples in estimated 3.0969 s (990 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:01:39.1234180Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/262144: Collecting 10 samples in estimated 3.4098 s (440 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:01:47.5485559Z Benchmarking spmv_coupling/kuramoto_coupling_serial/262144: Collecting 10 samples in estimated 3.6440 s (275 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:01:58.4080090Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/1000000: Collecting 10 samples in estimated 4.4483 s (110 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:08.0627281Z Benchmarking spmv_coupling/kuramoto_coupling_serial/1000000: Collecting 10 samples in estimated 3.1798 s (55 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:12.8119175Z Benchmarking engine_step/step_parallel/256
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:12.8119909Z Benchmarking engine_step/step_parallel/256: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:17.0970084Z Benchmarking engine_step/step_parallel/256: Collecting 10 samples in estimated 3.0001 s (46k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:20.0950393Z Benchmarking engine_step/step_parallel/256: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:20.1152560Z engine_step/step_parallel/256
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:25.2597380Z Benchmarking engine_step/derivatives_parallel/256: Collecting 10 samples in estimated 3.0007 s (216k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:33.6557588Z Benchmarking engine_step/derivatives_serial/256: Collecting 10 samples in estimated 3.0011 s (102k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:37.7997728Z Benchmarking engine_step/step_parallel/1024
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:37.7998538Z Benchmarking engine_step/step_parallel/1024: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:41.9079810Z Benchmarking engine_step/step_parallel/1024: Collecting 10 samples in estimated 3.0065 s (12k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:44.9171574Z Benchmarking engine_step/step_parallel/1024: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:44.9371800Z engine_step/step_parallel/1024
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:49.8167229Z Benchmarking engine_step/derivatives_parallel/1024: Collecting 10 samples in estimated 3.0005 s (58k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:02:58.8251448Z Benchmarking engine_step/derivatives_serial/1024: Collecting 10 samples in estimated 3.0038 s (43k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:03.3808999Z Benchmarking engine_step/step_parallel/4096
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:03.3810175Z Benchmarking engine_step/step_parallel/4096: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:07.5416038Z Benchmarking engine_step/step_parallel/4096: Collecting 10 samples in estimated 3.0177 s (2970 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:10.5131505Z Benchmarking engine_step/step_parallel/4096: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:10.5327802Z engine_step/step_parallel/4096
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:15.3564610Z Benchmarking engine_step/derivatives_parallel/4096: Collecting 10 samples in estimated 3.0096 s (15k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:23.6180481Z Benchmarking engine_step/derivatives_serial/4096: Collecting 10 samples in estimated 3.0085 s (13k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:28.1125030Z Benchmarking engine_step/step_parallel/16384
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:28.1125778Z Benchmarking engine_step/step_parallel/16384: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:33.3268635Z Benchmarking engine_step/step_parallel/16384: Collecting 10 samples in estimated 3.0836 s (605 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:35.9945831Z Benchmarking engine_step/step_parallel/16384: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:36.0172927Z engine_step/step_parallel/16384
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:42.3342662Z Benchmarking engine_step/derivatives_parallel/16384: Collecting 10 samples in estimated 3.0639 s (2585 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:51.8256837Z Benchmarking engine_step/derivatives_serial/16384: Collecting 10 samples in estimated 3.0037 s (2530 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:56.4280111Z Benchmarking engine_step/step_parallel/65536
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:56.4281554Z Benchmarking engine_step/step_parallel/65536: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:03:59.6728591Z Benchmarking engine_step/step_parallel/65536: Collecting 10 samples in estimated 3.4993 s (275 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:03.0887960Z Benchmarking engine_step/step_parallel/65536: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:03.1088871Z engine_step/step_parallel/65536
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:09.9147218Z Benchmarking engine_step/derivatives_parallel/65536: Collecting 10 samples in estimated 3.0876 s (1210 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:19.6200161Z Benchmarking engine_step/derivatives_serial/65536: Collecting 10 samples in estimated 3.2622 s (660 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:24.6432613Z Benchmarking engine_step/step_parallel/262144
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:24.6433113Z Benchmarking engine_step/step_parallel/262144: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:27.8997792Z Benchmarking engine_step/step_parallel/262144: Collecting 10 samples in estimated 5.6896 s (110 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:33.7558116Z Benchmarking engine_step/step_parallel/262144: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:33.7760258Z engine_step/step_parallel/262144
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:40.5653116Z Benchmarking engine_step/derivatives_parallel/262144: Collecting 10 samples in estimated 3.3922 s (330 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:50.8220385Z Benchmarking engine_step/derivatives_serial/262144: Collecting 10 samples in estimated 3.3954 s (165 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:56.3644683Z Benchmarking engine_step/step_parallel/1000000
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:56.3668894Z Benchmarking engine_step/step_parallel/1000000: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:04:59.6979472Z Benchmarking engine_step/step_parallel/1000000: Collecting 10 samples in estimated 4.4409 s (20 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:05:04.1928177Z Benchmarking engine_step/step_parallel/1000000: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:05:04.2098624Z engine_step/step_parallel/1000000
+bench-regression	UNKNOWN STEP	2026-10-01T06:05:10.5730048Z Benchmarking engine_step/derivatives_parallel/1000000: Collecting 10 samples in estimated 4.3680 s (110 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:05:22.0247369Z Benchmarking engine_step/derivatives_serial/1000000: Collecting 10 samples in estimated 4.7483 s (55 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:05:32.2213877Z Benchmarking phase_tracker_bridge_baseline/small_4obj_28osc: Collecting 100 samples in estimated 9.4772 s (5050 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:05:46.2360199Z Benchmarking phase_tracker_bridge_baseline/moderate_32obj_28osc: Collecting 100 samples in estimated 5.4271 s (900 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:05:57.8110840Z Benchmarking resonance_layer_bridge_baseline/small_32osc_16dims_8batch: Collecting 100 samples in estimated 5.9034 s (500 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:06:09.6335217Z Benchmarking resonance_layer_bridge_baseline/moderate_128osc_64dims_32batch: Collecting 100 samples in estimated 60.171 s (100 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:07:30.0606903Z benchmark: 5.3.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+bench-regression	UNKNOWN STEP	2026-10-01T06:07:37.1200205Z Name (time in us)                                                              Min                     Max                    Mean                 StdDev                  Median                    IQR            Outliers           OPS            Rounds  Iterations
+bench-regression	UNKNOWN STEP	2026-10-01T06:07:37.1214252Z   OPS: Operations Per Second, computed as 1 / Mean
+bench-regression	UNKNOWN STEP	2026-10-01T06:07:43.4306613Z Benchmarking control_buffer_read_under_contention/lock_free/0: Collecting 100 samples in estimated 5.0000 s (571M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:07:53.2765974Z Benchmarking control_buffer_read_under_contention/mutex/0: Collecting 100 samples in estimated 5.0000 s (872M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:08:05.8395753Z Benchmarking control_buffer_read_under_contention/lock_free/1: Collecting 100 samples in estimated 5.0000 s (58M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:08:16.5171453Z Benchmarking control_buffer_read_under_contention/mutex/1: Collecting 100 samples in estimated 5.0004 s (49M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:08:29.9579302Z Benchmarking control_buffer_read_under_contention/lock_free/4: Collecting 100 samples in estimated 5.0001 s (121M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:08:43.9585154Z Benchmarking control_buffer_read_under_contention/mutex/4: Collecting 100 samples in estimated 5.0003 s (39M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:08:56.4859585Z Benchmarking training_hooks_on_step_end/0: Collecting 100 samples in estimated 5.0000 s (655M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:09:06.5968685Z Benchmarking training_hooks_on_step_end/8: Collecting 100 samples in estimated 5.0000 s (400M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:09:16.4422195Z Benchmarking training_hooks_on_step_end/64: Collecting 100 samples in estimated 5.0002 s (108M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:09:28.5158266Z Benchmarking training_hooks_on_epoch_end: Collecting 100 samples in estimated 5.0022 s (7.9M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:09:38.3333236Z Benchmarking discrete_step_3band/fused_cpu_native: Collecting 10 samples in estimated 5.0474 s (1705 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:09:50.8319713Z Benchmarking discrete_step_3band/unfused_cpu_native: Collecting 10 samples in estimated 5.1002 s (440 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:01.4232450Z Benchmarking mean_field_rk4_n1m/cpu_native: Collecting 10 samples in estimated 7.1644 s (55 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:14.7855225Z Benchmarking sparse_knn_n16k_k14/cpu_native: Collecting 20 samples in estimated 5.3388 s (2310 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:21.7027632Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:21.7029068Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:25.5690194Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs: Collecting 10 samples in estimated 5.5145 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:31.1123763Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:31.1301770Z sweep_parallel/run_sweep_parallel/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:32.3018166Z Benchmarking sweep_parallel/run_sweep_serial/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:32.3019090Z Benchmarking sweep_parallel/run_sweep_serial/4_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:36.3641316Z Benchmarking sweep_parallel/run_sweep_serial/4_configs: Collecting 10 samples in estimated 13.541 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:49.6998822Z Benchmarking sweep_parallel/run_sweep_serial/4_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:49.7172300Z sweep_parallel/run_sweep_serial/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:50.9568945Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:50.9588658Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:10:54.3000199Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs: Collecting 10 samples in estimated 11.138 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:11:05.4127271Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:11:05.4315928Z sweep_parallel/run_sweep_parallel/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:11:06.7607469Z Benchmarking sweep_parallel/run_sweep_serial/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:11:06.7608477Z Benchmarking sweep_parallel/run_sweep_serial/8_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:11:14.9810075Z Benchmarking sweep_parallel/run_sweep_serial/8_configs: Collecting 10 samples in estimated 27.400 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:11:42.2931925Z Benchmarking sweep_parallel/run_sweep_serial/8_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:11:42.3110815Z sweep_parallel/run_sweep_serial/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:11:43.6306156Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:11:43.6338831Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:11:50.2149007Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs: Collecting 10 samples in estimated 21.910 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:12:12.2458920Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:12:12.2605168Z sweep_parallel/run_sweep_parallel/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:12:13.5946189Z Benchmarking sweep_parallel/run_sweep_serial/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:12:13.5946739Z Benchmarking sweep_parallel/run_sweep_serial/16_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:12:18.9784523Z Benchmarking sweep_parallel/run_sweep_serial/16_configs: Collecting 10 samples in estimated 53.835 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:13:11.9552745Z Benchmarking sweep_parallel/run_sweep_serial/16_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:13:11.9739735Z sweep_parallel/run_sweep_serial/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:13:13.3161291Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:13:13.3163050Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:13:17.6302911Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs: Collecting 10 samples in estimated 43.138 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:14:00.4982536Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:14:00.5162047Z sweep_parallel/run_sweep_parallel/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:14:01.8564167Z Benchmarking sweep_parallel/run_sweep_serial/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:14:01.8565085Z Benchmarking sweep_parallel/run_sweep_serial/32_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:14:12.1747455Z Benchmarking sweep_parallel/run_sweep_serial/32_configs: Collecting 10 samples in estimated 103.18 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:15:54.8492536Z Benchmarking sweep_parallel/run_sweep_serial/32_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:15:54.8664355Z sweep_parallel/run_sweep_serial/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:15:56.1739691Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:15:56.1740871Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:16:04.5998805Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs: Collecting 10 samples in estimated 84.274 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:17:29.1972340Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:17:29.2144785Z sweep_parallel/run_sweep_parallel/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:17:30.5385218Z Benchmarking sweep_parallel/run_sweep_serial/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:17:30.5386147Z Benchmarking sweep_parallel/run_sweep_serial/64_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:17:50.4773415Z Benchmarking sweep_parallel/run_sweep_serial/64_configs: Collecting 10 samples in estimated 199.39 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:21:13.4066655Z Benchmarking sweep_parallel/run_sweep_serial/64_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:21:13.4261777Z sweep_parallel/run_sweep_serial/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:21:17.8208668Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/256: Collecting 10 samples in estimated 3.0001 s (256k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:21:25.6914871Z Benchmarking spmv_coupling/kuramoto_coupling_serial/256: Collecting 10 samples in estimated 3.0002 s (120k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:21:36.2353684Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/1024: Collecting 10 samples in estimated 3.0008 s (67k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:21:44.7717270Z Benchmarking spmv_coupling/kuramoto_coupling_serial/1024: Collecting 10 samples in estimated 3.0023 s (50k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:21:55.3440522Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/4096: Collecting 10 samples in estimated 3.0091 s (17k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:22:03.0750749Z Benchmarking spmv_coupling/kuramoto_coupling_serial/4096: Collecting 10 samples in estimated 3.0094 s (16k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:22:13.6059784Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/16384: Collecting 10 samples in estimated 3.0283 s (4235 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:22:21.2312249Z Benchmarking spmv_coupling/kuramoto_coupling_serial/16384: Collecting 10 samples in estimated 3.0349 s (4125 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:22:29.4543211Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/65536: Collecting 10 samples in estimated 3.0027 s (1705 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:22:37.1260142Z Benchmarking spmv_coupling/kuramoto_coupling_serial/65536: Collecting 10 samples in estimated 3.0291 s (990 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:22:45.4086582Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/262144: Collecting 10 samples in estimated 3.0473 s (440 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:22:53.2788606Z Benchmarking spmv_coupling/kuramoto_coupling_serial/262144: Collecting 10 samples in estimated 3.4976 s (275 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:03.5591149Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/1000000: Collecting 10 samples in estimated 4.0469 s (110 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:12.7604294Z Benchmarking spmv_coupling/kuramoto_coupling_serial/1000000: Collecting 10 samples in estimated 3.1472 s (55 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:17.4639113Z Benchmarking engine_step/step_parallel/256
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:17.4639867Z Benchmarking engine_step/step_parallel/256: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:21.7637308Z Benchmarking engine_step/step_parallel/256: Collecting 10 samples in estimated 3.0024 s (46k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:24.7649392Z Benchmarking engine_step/step_parallel/256: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:24.7854738Z engine_step/step_parallel/256
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:29.9543562Z Benchmarking engine_step/derivatives_parallel/256: Collecting 10 samples in estimated 3.0007 s (217k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:37.9806095Z Benchmarking engine_step/derivatives_serial/256: Collecting 10 samples in estimated 3.0003 s (114k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:42.8246461Z Benchmarking engine_step/step_parallel/1024
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:42.8247194Z Benchmarking engine_step/step_parallel/1024: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:46.9475446Z Benchmarking engine_step/step_parallel/1024: Collecting 10 samples in estimated 3.0034 s (12k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:49.9434815Z Benchmarking engine_step/step_parallel/1024: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:49.9657407Z engine_step/step_parallel/1024
+bench-regression	UNKNOWN STEP	2026-10-01T06:23:54.9435484Z Benchmarking engine_step/derivatives_parallel/1024: Collecting 10 samples in estimated 3.0011 s (58k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:04.1548576Z Benchmarking engine_step/derivatives_serial/1024: Collecting 10 samples in estimated 3.0004 s (42k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:08.6931504Z Benchmarking engine_step/step_parallel/4096
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:08.6932362Z Benchmarking engine_step/step_parallel/4096: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:12.8199743Z Benchmarking engine_step/step_parallel/4096: Collecting 10 samples in estimated 3.0484 s (3025 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:15.8052187Z Benchmarking engine_step/step_parallel/4096: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:15.8253689Z engine_step/step_parallel/4096
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:20.7401374Z Benchmarking engine_step/derivatives_parallel/4096: Collecting 10 samples in estimated 3.0056 s (15k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:28.9146202Z Benchmarking engine_step/derivatives_serial/4096: Collecting 10 samples in estimated 3.0072 s (14k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:33.5188698Z Benchmarking engine_step/step_parallel/16384
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:33.5189466Z Benchmarking engine_step/step_parallel/16384: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:38.7010219Z Benchmarking engine_step/step_parallel/16384: Collecting 10 samples in estimated 3.0647 s (605 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:41.3506444Z Benchmarking engine_step/step_parallel/16384: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:41.3704499Z engine_step/step_parallel/16384
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:47.6959090Z Benchmarking engine_step/derivatives_parallel/16384: Collecting 10 samples in estimated 3.0592 s (2640 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:24:57.2749264Z Benchmarking engine_step/derivatives_serial/16384: Collecting 10 samples in estimated 3.0638 s (2530 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:01.9802466Z Benchmarking engine_step/step_parallel/65536
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:01.9808222Z Benchmarking engine_step/step_parallel/65536: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:05.2059054Z Benchmarking engine_step/step_parallel/65536: Collecting 10 samples in estimated 3.4780 s (275 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:08.6619071Z Benchmarking engine_step/step_parallel/65536: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:08.6823410Z engine_step/step_parallel/65536
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:15.4028276Z Benchmarking engine_step/derivatives_parallel/65536: Collecting 10 samples in estimated 3.0513 s (1210 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:25.2139413Z Benchmarking engine_step/derivatives_serial/65536: Collecting 10 samples in estimated 3.0750 s (605 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:29.9869095Z Benchmarking engine_step/step_parallel/262144
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:29.9870305Z Benchmarking engine_step/step_parallel/262144: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:33.1770985Z Benchmarking engine_step/step_parallel/262144: Collecting 10 samples in estimated 5.5701 s (110 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:38.7606296Z Benchmarking engine_step/step_parallel/262144: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:38.7808283Z engine_step/step_parallel/262144
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:45.2539524Z Benchmarking engine_step/derivatives_parallel/262144: Collecting 10 samples in estimated 3.1852 s (330 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:25:55.2750099Z Benchmarking engine_step/derivatives_serial/262144: Collecting 10 samples in estimated 3.3482 s (165 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:26:00.7414213Z Benchmarking engine_step/step_parallel/1000000
+bench-regression	UNKNOWN STEP	2026-10-01T06:26:00.7414933Z Benchmarking engine_step/step_parallel/1000000: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:26:03.9749443Z Benchmarking engine_step/step_parallel/1000000: Collecting 10 samples in estimated 4.3104 s (20 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:26:08.3256536Z Benchmarking engine_step/step_parallel/1000000: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:26:08.3422511Z engine_step/step_parallel/1000000
+bench-regression	UNKNOWN STEP	2026-10-01T06:26:14.6178865Z Benchmarking engine_step/derivatives_parallel/1000000: Collecting 10 samples in estimated 4.2996 s (110 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:26:25.8239279Z Benchmarking engine_step/derivatives_serial/1000000: Collecting 10 samples in estimated 4.7013 s (55 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:26:35.9268422Z Benchmarking phase_tracker_bridge_baseline/small_4obj_28osc: Collecting 100 samples in estimated 9.3172 s (5050 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:26:51.5754847Z Benchmarking phase_tracker_bridge_baseline/moderate_32obj_28osc: Collecting 100 samples in estimated 5.2628 s (1100 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:27:03.8496543Z Benchmarking resonance_layer_bridge_baseline/small_32osc_16dims_8batch: Collecting 100 samples in estimated 5.8000 s (500 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:27:15.1269314Z Benchmarking resonance_layer_bridge_baseline/moderate_128osc_64dims_32batch: Collecting 100 samples in estimated 59.061 s (100 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:28:22.4683510Z benchmark: 5.3.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+bench-regression	UNKNOWN STEP	2026-10-01T06:28:29.2536993Z Name (time in us)                                                              Min                     Max                    Mean                StdDev                  Median                    IQR            Outliers           OPS            Rounds  Iterations
+bench-regression	UNKNOWN STEP	2026-10-01T06:28:29.2551482Z   OPS: Operations Per Second, computed as 1 / Mean
+bench-regression	UNKNOWN STEP	2026-10-01T06:28:35.4076134Z Benchmarking control_buffer_read_under_contention/lock_free/0: Collecting 100 samples in estimated 5.0000 s (568M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:28:45.2149605Z Benchmarking control_buffer_read_under_contention/mutex/0: Collecting 100 samples in estimated 5.0000 s (871M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:28:57.7965652Z Benchmarking control_buffer_read_under_contention/lock_free/1: Collecting 100 samples in estimated 5.0001 s (57M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:29:09.9226407Z Benchmarking control_buffer_read_under_contention/mutex/1: Collecting 100 samples in estimated 5.0002 s (69M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:29:23.2199070Z Benchmarking control_buffer_read_under_contention/lock_free/4: Collecting 100 samples in estimated 5.0001 s (120M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:29:37.2088814Z Benchmarking control_buffer_read_under_contention/mutex/4: Collecting 100 samples in estimated 5.0000 s (36M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:29:49.3882177Z Benchmarking training_hooks_on_step_end/0: Collecting 100 samples in estimated 5.0000 s (653M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:29:59.4208797Z Benchmarking training_hooks_on_step_end/8: Collecting 100 samples in estimated 5.0001 s (407M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:30:09.2560437Z Benchmarking training_hooks_on_step_end/64: Collecting 100 samples in estimated 5.0002 s (108M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:30:21.3734867Z Benchmarking training_hooks_on_epoch_end: Collecting 100 samples in estimated 5.0003 s (8.1M iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:30:34.1894425Z Benchmarking discrete_step_3band/fused_cpu_native: Collecting 10 samples in estimated 5.1560 s (1760 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:30:46.7507053Z Benchmarking discrete_step_3band/unfused_cpu_native: Collecting 10 samples in estimated 5.6215 s (495 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:30:57.9872895Z Benchmarking mean_field_rk4_n1m/cpu_native: Collecting 10 samples in estimated 7.1493 s (55 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:11.4460695Z Benchmarking sparse_knn_n16k_k14/cpu_native: Collecting 20 samples in estimated 5.3209 s (2310 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:18.3478265Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:18.3478995Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:22.1098769Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs: Collecting 10 samples in estimated 5.3527 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:27.4782102Z Benchmarking sweep_parallel/run_sweep_parallel/4_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:27.4969574Z sweep_parallel/run_sweep_parallel/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:28.8345090Z Benchmarking sweep_parallel/run_sweep_serial/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:28.8345981Z Benchmarking sweep_parallel/run_sweep_serial/4_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:32.9067256Z Benchmarking sweep_parallel/run_sweep_serial/4_configs: Collecting 10 samples in estimated 13.574 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:46.2415880Z Benchmarking sweep_parallel/run_sweep_serial/4_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:46.2594293Z sweep_parallel/run_sweep_serial/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:47.5959053Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:47.6019223Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:31:50.8350287Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs: Collecting 10 samples in estimated 10.777 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:32:01.5898138Z Benchmarking sweep_parallel/run_sweep_parallel/8_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:32:01.6073803Z sweep_parallel/run_sweep_parallel/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:32:02.9368625Z Benchmarking sweep_parallel/run_sweep_serial/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:32:02.9369727Z Benchmarking sweep_parallel/run_sweep_serial/8_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:32:11.0695663Z Benchmarking sweep_parallel/run_sweep_serial/8_configs: Collecting 10 samples in estimated 27.108 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:32:38.3691563Z Benchmarking sweep_parallel/run_sweep_serial/8_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:32:38.3886120Z sweep_parallel/run_sweep_serial/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:32:39.7061250Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:32:39.7062858Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:32:46.0970910Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs: Collecting 10 samples in estimated 21.294 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:33:07.4268631Z Benchmarking sweep_parallel/run_sweep_parallel/16_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:33:07.4441475Z sweep_parallel/run_sweep_parallel/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:33:08.7733968Z Benchmarking sweep_parallel/run_sweep_serial/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:33:08.7734876Z Benchmarking sweep_parallel/run_sweep_serial/16_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:33:14.0960080Z Benchmarking sweep_parallel/run_sweep_serial/16_configs: Collecting 10 samples in estimated 53.225 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:34:05.8850241Z Benchmarking sweep_parallel/run_sweep_serial/16_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:34:05.9018627Z sweep_parallel/run_sweep_serial/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:34:07.2369266Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:34:07.2370840Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:34:11.3805312Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs: Collecting 10 samples in estimated 41.458 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:34:52.7653640Z Benchmarking sweep_parallel/run_sweep_parallel/32_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:34:52.7827546Z sweep_parallel/run_sweep_parallel/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:34:54.1170653Z Benchmarking sweep_parallel/run_sweep_serial/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:34:54.1171784Z Benchmarking sweep_parallel/run_sweep_serial/32_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:35:04.1270868Z Benchmarking sweep_parallel/run_sweep_serial/32_configs: Collecting 10 samples in estimated 100.10 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:36:44.6947563Z Benchmarking sweep_parallel/run_sweep_serial/32_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:36:44.7135362Z sweep_parallel/run_sweep_serial/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:36:46.0779013Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:36:46.0780101Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:36:54.1769349Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs: Collecting 10 samples in estimated 81.013 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:38:14.4822351Z Benchmarking sweep_parallel/run_sweep_parallel/64_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:38:14.5006426Z sweep_parallel/run_sweep_parallel/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:38:15.8169566Z Benchmarking sweep_parallel/run_sweep_serial/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:38:15.8170170Z Benchmarking sweep_parallel/run_sweep_serial/64_configs: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:38:35.0766004Z Benchmarking sweep_parallel/run_sweep_serial/64_configs: Collecting 10 samples in estimated 192.59 s (10 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:41:52.1341112Z Benchmarking sweep_parallel/run_sweep_serial/64_configs: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:41:52.1516438Z sweep_parallel/run_sweep_serial/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:41:56.5735710Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/256: Collecting 10 samples in estimated 3.0004 s (257k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:42:04.2748854Z Benchmarking spmv_coupling/kuramoto_coupling_serial/256: Collecting 10 samples in estimated 3.0012 s (125k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:42:14.8900089Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/1024: Collecting 10 samples in estimated 3.0005 s (66k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:42:23.2318781Z Benchmarking spmv_coupling/kuramoto_coupling_serial/1024: Collecting 10 samples in estimated 3.0017 s (52k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:42:33.7345546Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/4096: Collecting 10 samples in estimated 3.0025 s (17k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:42:41.5925323Z Benchmarking spmv_coupling/kuramoto_coupling_serial/4096: Collecting 10 samples in estimated 3.0012 s (15k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:42:51.9959809Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/16384: Collecting 10 samples in estimated 3.0337 s (4235 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:42:59.6236682Z Benchmarking spmv_coupling/kuramoto_coupling_serial/16384: Collecting 10 samples in estimated 3.0019 s (4070 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:43:07.7248214Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/65536: Collecting 10 samples in estimated 3.0055 s (1705 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:43:15.4787411Z Benchmarking spmv_coupling/kuramoto_coupling_serial/65536: Collecting 10 samples in estimated 3.0421 s (990 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:43:23.6719300Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/262144: Collecting 10 samples in estimated 3.3606 s (495 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:43:31.9931819Z Benchmarking spmv_coupling/kuramoto_coupling_serial/262144: Collecting 10 samples in estimated 3.5459 s (275 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:43:42.7349981Z Benchmarking spmv_coupling/kuramoto_coupling_parallel/1000000: Collecting 10 samples in estimated 4.4306 s (110 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:43:52.6932734Z Benchmarking spmv_coupling/kuramoto_coupling_serial/1000000: Collecting 10 samples in estimated 3.1936 s (55 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:43:57.5169539Z Benchmarking engine_step/step_parallel/256
+bench-regression	UNKNOWN STEP	2026-10-01T06:43:57.5170067Z Benchmarking engine_step/step_parallel/256: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:01.7275761Z Benchmarking engine_step/step_parallel/256: Collecting 10 samples in estimated 3.0035 s (47k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:04.7166470Z Benchmarking engine_step/step_parallel/256: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:04.7381972Z engine_step/step_parallel/256
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:09.9443291Z Benchmarking engine_step/derivatives_parallel/256: Collecting 10 samples in estimated 3.0003 s (215k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:18.0301509Z Benchmarking engine_step/derivatives_serial/256: Collecting 10 samples in estimated 3.0006 s (108k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:22.6463242Z Benchmarking engine_step/step_parallel/1024
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:22.6464158Z Benchmarking engine_step/step_parallel/1024: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:26.6112133Z Benchmarking engine_step/step_parallel/1024: Collecting 10 samples in estimated 3.0082 s (12k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:29.6233080Z Benchmarking engine_step/step_parallel/1024: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:29.6437423Z engine_step/step_parallel/1024
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:34.4951020Z Benchmarking engine_step/derivatives_parallel/1024: Collecting 10 samples in estimated 3.0014 s (58k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:43.4537185Z Benchmarking engine_step/derivatives_serial/1024: Collecting 10 samples in estimated 3.0004 s (45k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:47.9609365Z Benchmarking engine_step/step_parallel/4096
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:47.9610283Z Benchmarking engine_step/step_parallel/4096: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:52.0432367Z Benchmarking engine_step/step_parallel/4096: Collecting 10 samples in estimated 3.0155 s (3025 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:55.0087794Z Benchmarking engine_step/step_parallel/4096: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:55.0300605Z engine_step/step_parallel/4096
+bench-regression	UNKNOWN STEP	2026-10-01T06:44:59.9020750Z Benchmarking engine_step/derivatives_parallel/4096: Collecting 10 samples in estimated 3.0103 s (15k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:08.0727797Z Benchmarking engine_step/derivatives_serial/4096: Collecting 10 samples in estimated 3.0031 s (14k iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:12.6453334Z Benchmarking engine_step/step_parallel/16384
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:12.6453920Z Benchmarking engine_step/step_parallel/16384: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:17.5272136Z Benchmarking engine_step/step_parallel/16384: Collecting 10 samples in estimated 3.1495 s (660 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:20.2209115Z Benchmarking engine_step/step_parallel/16384: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:20.2410854Z engine_step/step_parallel/16384
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:26.5035900Z Benchmarking engine_step/derivatives_parallel/16384: Collecting 10 samples in estimated 3.0384 s (2640 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:35.9721427Z Benchmarking engine_step/derivatives_serial/16384: Collecting 10 samples in estimated 3.0627 s (2585 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:40.6204939Z Benchmarking engine_step/step_parallel/65536
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:40.6206224Z Benchmarking engine_step/step_parallel/65536: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:43.7441101Z Benchmarking engine_step/step_parallel/65536: Collecting 10 samples in estimated 3.3691 s (275 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:47.0223097Z Benchmarking engine_step/step_parallel/65536: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:47.0425916Z engine_step/step_parallel/65536
+bench-regression	UNKNOWN STEP	2026-10-01T06:45:53.8731045Z Benchmarking engine_step/derivatives_parallel/65536: Collecting 10 samples in estimated 3.1104 s (1210 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:03.6299226Z Benchmarking engine_step/derivatives_serial/65536: Collecting 10 samples in estimated 3.0016 s (605 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:08.2829094Z Benchmarking engine_step/step_parallel/262144
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:08.2834963Z Benchmarking engine_step/step_parallel/262144: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:11.4386497Z Benchmarking engine_step/step_parallel/262144: Collecting 10 samples in estimated 5.5129 s (110 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:16.8944353Z Benchmarking engine_step/step_parallel/262144: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:16.9150816Z engine_step/step_parallel/262144
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:23.5129334Z Benchmarking engine_step/derivatives_parallel/262144: Collecting 10 samples in estimated 3.2448 s (330 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:33.4479396Z Benchmarking engine_step/derivatives_serial/262144: Collecting 10 samples in estimated 3.3207 s (165 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:38.8829323Z Benchmarking engine_step/step_parallel/1000000
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:38.8830994Z Benchmarking engine_step/step_parallel/1000000: Warming up for 3.0000 s
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:42.0929267Z Benchmarking engine_step/step_parallel/1000000: Collecting 10 samples in estimated 4.2769 s (20 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:46.3472896Z Benchmarking engine_step/step_parallel/1000000: Analyzing
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:46.3635801Z engine_step/step_parallel/1000000
+bench-regression	UNKNOWN STEP	2026-10-01T06:46:52.6958981Z Benchmarking engine_step/derivatives_parallel/1000000: Collecting 10 samples in estimated 4.3261 s (110 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:47:04.2853522Z Benchmarking engine_step/derivatives_serial/1000000: Collecting 10 samples in estimated 4.8942 s (55 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:47:14.4956770Z Benchmarking phase_tracker_bridge_baseline/small_4obj_28osc: Collecting 100 samples in estimated 9.1915 s (5050 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:47:30.2053367Z Benchmarking phase_tracker_bridge_baseline/moderate_32obj_28osc: Collecting 100 samples in estimated 5.4067 s (1100 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:47:42.5806168Z Benchmarking resonance_layer_bridge_baseline/small_32osc_16dims_8batch: Collecting 100 samples in estimated 5.8521 s (500 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:47:54.0811616Z Benchmarking resonance_layer_bridge_baseline/moderate_128osc_64dims_32batch: Collecting 100 samples in estimated 59.378 s (100 iterations)
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:01.4689612Z benchmark: 5.3.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:08.3202427Z Name (time in us)                                                              Min                     Max                    Mean                StdDev                  Median                   IQR            Outliers           OPS            Rounds  Iterations
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:08.3216174Z   OPS: Operations Per Second, computed as 1 / Mean
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7168354Z   1.028  2.152e+08 -> 2.212e+08  criterion/engine_step/step_parallel/1000000
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7168802Z   1.039  2.414e+05 -> 2.508e+05  criterion/engine_step/step_parallel/1024
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7169233Z   1.063  4.147e+06 -> 4.408e+06  criterion/engine_step/step_parallel/16384
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7169652Z   1.018  6.434e+04 -> 6.547e+04  criterion/engine_step/step_parallel/256
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7170072Z   1.046  4.982e+07 -> 5.211e+07  criterion/engine_step/step_parallel/262144
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7170498Z   1.028  9.667e+05 -> 9.936e+05  criterion/engine_step/step_parallel/4096
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7170925Z   1.027  1.218e+07 -> 1.251e+07  criterion/engine_step/step_parallel/65536
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7181876Z   1.032  2.146e+09 -> 2.214e+09  criterion/sweep_parallel/run_sweep_parallel/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7182352Z   1.029  4.183e+09 -> 4.303e+09  criterion/sweep_parallel/run_sweep_parallel/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7182831Z   1.008  5.495e+08 -> 5.541e+08  criterion/sweep_parallel/run_sweep_parallel/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7183313Z   1.045  8.075e+09 -> 8.442e+09  criterion/sweep_parallel/run_sweep_parallel/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7183797Z   1.034  1.076e+09 -> 1.112e+09  criterion/sweep_parallel/run_sweep_parallel/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7184492Z   1.023  5.179e+09 -> 5.299e+09  criterion/sweep_parallel/run_sweep_serial/16_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7184967Z   1.007  1.019e+10 -> 1.026e+10  criterion/sweep_parallel/run_sweep_serial/32_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7185434Z   1.010  1.336e+09 -> 1.35e+09  criterion/sweep_parallel/run_sweep_serial/4_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7185920Z   1.035  1.958e+10 -> 2.026e+10  criterion/sweep_parallel/run_sweep_serial/64_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7186405Z   0.998  2.723e+09 -> 2.718e+09  criterion/sweep_parallel/run_sweep_serial/8_configs
+bench-regression	UNKNOWN STEP	2026-10-01T06:49:09.7195690Z Benchmark regression check passed: 69 benchmarks (63 gated, 6 advisory), none gated past +10%; 2 reference and 2 candidate runs.
+CI-green check — branch 'main', commit 32cfed8a0b4d915a04e18efbfadd146a2ecb7e32
+  rust       green     — run 36641713788
+  python     green     — run 36641713282
+  parity     green     — run 36641713312
+  repro      green     — run 36641713284
+  snyk       green     — run 36641713362
+  gpu        green     — run 36641713384
+RESULT: all required workflows green
+[]

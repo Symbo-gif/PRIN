@@ -228,7 +228,26 @@ exclude = ["python/prin/_prin_core.pyi"]
 verbose = 1
 
 [tool.bandit]
-exclude_dirs = ["tests", "benchmarks", ".venv", "target", "parity", "archive and reference from PRINet 3.0"]
+# DV-040: bandit matches excluded entries both by fnmatch and by bare substring
+# (`x in path`, bandit/core/manager.py `_is_file_included`), so bare directory
+# names also exclude any path whose *components* merely contain the string —
+# e.g. `parity`/`tests` skipped every file under `EXP-*-numerical-parity/` or a
+# future `EXP-999-tests-parity/` record slug. Entries are therefore directory
+# component globs: `d/*` for a top-level dir and `*/d/*` at any depth.
+exclude_dirs = [
+    "tests/*",
+    "*/tests/*",
+    "benchmarks/*",
+    "*/benchmarks/*",
+    ".venv/*",
+    "*/.venv/*",
+    "target/*",
+    "*/target/*",
+    "parity/*",
+    "*/parity/*",
+    "archive and reference from PRINet 3.0/*",
+    "*/archive and reference from PRINet 3.0/*",
+]
 
 [tool.mypy]
 strict = true

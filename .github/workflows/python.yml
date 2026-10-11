@@ -25,13 +25,17 @@ jobs:
       # `mypy --strict` can follow `import torch`.
       - run: pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch
       - run: pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis
-      - run: ruff check python/ tests/ benchmarks/ tools/
+      - run: ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/
       - run: ruff format --check python/ tests/ benchmarks/ tools/
+      # DV-040: campaign records embed Python fences in immutable Markdown;
+      # the campaign format leg positively selects source files only.
+      - run: ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'
       - run: mypy python/prin --strict
+      - run: mypy DOCS/experiments/ --strict
       - name: Docstring coverage gate (>=95% overall; public API at 100% via ruff D)
         run: interrogate -c pyproject.toml python/prin
       - name: Security SAST (bandit)
-        run: bandit -r python/prin -c pyproject.toml
+        run: bandit -r python/prin DOCS/experiments -c pyproject.toml
 
   # ETCA-001 T-F1: the R17 deviation-ledger and R34 DV-register gates ran as
   # the last two steps of the `lint` job, so any earlier lint-step failure

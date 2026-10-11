@@ -1691,6 +1691,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   describe the same sample. Both independently reproduced with a failing
   test before the fix and confirmed to pass after; full subsystem suite
   64/64, `ruff`/`mypy --strict`/Snyk Code clean.
+- **DV-040: campaign analysis code now inside the quality gates (EA-007,
+  2026-10-11 UTC).** `python.yml`'s lint job and the `AGENTS.md` local
+  equivalents now cover `DOCS/experiments/`: the `ruff check` root is
+  extended, a separate source-only `ruff format --check` campaign leg is
+  added (`--config 'include = ["*.py", "*.pyi", "*.ipynb"]'`),
+  `mypy DOCS/experiments/ --strict` is added, and `bandit` recurses both
+  `python/prin` and `DOCS/experiments`. `[tool.bandit] exclude_dirs` is
+  tightened from bare substring names to `d/*`/`*/d/*` component globs —
+  bandit's substring exclusion matching had silently skipped every `*.py`
+  under the `EXP-*-numerical-parity` record roots, making the campaign leg
+  vacuous (0 LOC). Verified non-vacuous (24,864 LOC) and pinned by
+  `tests/test_campaign_quality_gates.py` (19 tests total — 18 quality-gate
+  tests, of which 13 failed against the pre-change configuration).
+- **DV-042: `prin-sim` module docs no longer break non-CUDA rustdoc
+  (EA-007, 2026-10-11 UTC).** `crates/prin-sim/src/gpu.rs`'s `kDLCUDA`
+  export section is `#![cfg_attr]`-gated: identical prose/links under the
+  `cuda` feature, an accurate absent-feature description otherwise.
+  `RUSTDOCFLAGS="-D warnings" cargo doc -p prin-sim` now exits 0 on the
+  `wgpu`, `cpu`, and `cuda` legs (was exit 101 with three unresolved
+  intra-doc links on non-CUDA legs). No runtime change.
+- **EA007-E-F4 (D2): doc-build `urllib3` floor raised to `>=2.8.0`
+  (2026-10-11 UTC).** Snyk SCA flagged `urllib3` 2.7.0 in
+  `DOCS/sphinx/requirements.txt` under three advisories
+  (CVE-2026-97687/-88/-89, fixedIn 2.8.0). The minimum pin was raised, the
+  verification venv upgraded 2.7.0→2.8.0, and a scoped file-level Snyk SCA
+  rescan plus both `pip_audit` legs re-verified clean; a regression
+  assertion in `tests/test_campaign_quality_gates.py` pins the floor.
 
 ### Added
 
@@ -1750,6 +1777,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `EDA-001` row from `SESSION_REGISTER.md`'s EMA table. See
   `DOCS/audits/EXECUTIVE_DOCUMENTATION_AUDIT_REPORT_002.md` §7 closure
   table.
+- **EA-007 Executive Audit artefacts (2026-10-11 UTC).** Seventh
+  project-level executive audit — a global EXP-002 readiness audit outside
+  the planned session sequence, verdict `PASS-WITH-REMEDIATION` (all four
+  findings EA007-E-F1..F4 fixed locally; main delivery via PR pending).
+  `DOCS/audits/EXECUTIVE_AUDIT_REPORT_007.md`,
+  `DOCS/reports/040-project-state.md` (issued), the
+  frozen `EVIDENCE/ea007/readiness-state.json` snapshot, the
+  `EVIDENCE/ea007/verification/` evidence bundle, the
+  `SESSION_REGISTER.md` EA-007 row, and
+  `tests/test_campaign_quality_gates.py` (19 tests total — 18 quality-gate
+  tests plus the EA007-E-F4 dependency-floor regression).
+- **Raw EA-007 evidence is now byte-exact in git (EA-007, `0738714` /
+  `add7386`, 2026-10-11 UTC).** `.gitattributes` gains
+  `EVIDENCE/ea007/** -text whitespace=-trailing-space`. The repository's
+  `* text=auto eol=lf` default rewrites Windows CRLF tool output at `git add`
+  time, so a committed evidence log would no longer match its SHA-256 in
+  `EVIDENCE/ea007/verification/SHA256SUMS.txt`; the rule follows the
+  `benchmarks/results/**` precedent (session 0156). The rule landed in the same
+  commit as the files it protects, so 36 of the 82 manifest entries failed at
+  `0738714`; `add7386` re-staged 38 files byte-exact (end-of-line only,
+  +13,420 / −13,420) and the head verifies. The EA-007 artefacts entry above
+  also covers, unlisted there: the seven DV-register dispositions
+  (`DV-024`, `DV-033`, `DV-034`, `DV-040`, `DV-042`, `DV-043`, `DV-044`),
+  `DOCS/sessions/TRACEABILITY.md`, the `DOCS/audits`, `DOCS/reports`,
+  `DOCS/sessions` and `EVIDENCE` README indexes, `crates/prin-sim/README.md`
+  and `tests/README.md`.
+- **PR #32 multi-review round — fifteen findings compiled from seven
+  independent review runs, all dispositioned (2026-10-11 UTC).** Sourcery,
+  CodeRabbit, Devin Review (one flag, not published to GitHub), and four
+  independent LLM reviews (Kimi, Perplexity, Qwen, SWE-2-High) on PR #32 were
+  de-duplicated into `PR32-F1`…`PR32-F15` and audited in
+  `DOCS/audits/PR032-multi-review-audit.md`, which follows the
+  `PR023-multi-review-audit.md` / `PR017-devin-review-audit.md` precedent. Each
+  claim was re-derived from the repository. **No D1; the EA-007 verdict is
+  unchanged**; the EA-007 report is amended by appended errata only.
+  - **`PR32-F1` (D2) — the `AGENTS.md` local gate failed on Windows PowerShell
+    5.1.** The campaign-format line `--config 'include = ["*.py", …]'` reaches
+    ruff as invalid TOML under 5.1 (it strips embedded double quotes): exit 2 on a
+    clean gate. Now `--config "include = ['*.py', '*.pyi', '*.ipynb']"`, exit 0
+    on 5.1, PowerShell 7 and Git Bash; guarded by a test.
+  - **`PR32-F2` (D2) — the final secret scans had no repository-resident
+    evidence.** The 706-commit (`0738714`) and 707-commit (`add7386a`) gitleaks
+    scans lived only in a gitignored tree; committed byte-exact under
+    `EVIDENCE/ea007/verification/post-commit/` and recorded in PSR-040, with the
+    704-commit scan kept as historical.
+  - **`PR32-F3`–`PR32-F7` (D3)** — `GATE-STATUS.md` misquoted legs 19 (145, not
+    146) and 22 (100 pins, not 274), left leg 15 unscoped and two
+    `EXIT_CODE=2` logs unindexed (corrected, manifest regenerated); PSR-040's
+    ledger row repeated the previous cycle (now 039→040, 142 → 146) and dropped
+    the seven template metric rows including the unmeasured `≥95 %` coverage
+    gate (restored); five citation sites across four records cited a gitignored tree as
+    evidence (repointed); the evidence manifest is now executed fail-closed by
+    `tests/test_ea007_manifest.py` and covers the three top-level artefacts.
+  - **`PR32-F9` (D3) — the rustdoc gate could not catch DV-042's class again.**
+    `prin_sim::gpu` only exists under a backend feature (`default = []`); the
+    `AGENTS.md` local gate and `rust.yml` now also run
+    `cargo doc -p prin-sim --no-deps --features cpu` under `-D warnings`
+    (hosted step not run — workflows paused).
+  - **`PR32-F8`, `F10`–`F12`, `F14`, `F15` (D4)** — a vacuous rustdoc leg cited
+    as DV-042 validation; no dated EA-007 section in the DV register; wording /
+    currency defects (13-of-18, future tense, stale git state); duplicate
+    campaign analysis basenames abort `mypy DOCS/experiments/ --strict` (rule
+    in `DOCS/experiments/README.md` plus a test); a suffix-only bandit-exclusion
+    test replaced by a truth table; a brittle `urllib3` floor regex.
+  - **Declined with rationale:** `PR32-F13` (hosted `test` job leaves bandit
+    unpinned — the proposed constraint file also pins `torch`, unvalidatable
+    while workflows are paused; fails loudly, never falsely passes), CodeRabbit's
+    docstring-coverage check (not a project gate), and the home-directory path
+    in one raw cargo-audit log. CodeRabbit's `GATE-STATUS.md` headline was
+    rejected while its instruction (clarify scope, keep the 704 result) was kept.
+  - **Verification** (local, Windows; hosted CI paused): ruff, mypy `--strict`
+    ×2, bandit (24,864 LOC), interrogate 97.6 %, Sphinx `-W` (CHANGELOG is a
+    docs source), 25 targeted tests, 63/63 defect-catching expectations,
+    rustdoc `--features cpu`, Snyk Code (0 issues), gitleaks staged scan,
+    governance checkers (142 → 146; 44 DV / 198 sessions); on the remediation
+    head `0a0f700`: full-history gitleaks (709 commits, no leaks) and the full
+    suite (5,673 passed / 184 skipped / 0 failed / 61 warnings in 1,631.03 s (0:27:11), exit 0). Observation: the local repository is shallow
+    since 07:05Z (audit `OBS-3`).
 
 ## [1.0.0-rc1] — 2026-09-15
 

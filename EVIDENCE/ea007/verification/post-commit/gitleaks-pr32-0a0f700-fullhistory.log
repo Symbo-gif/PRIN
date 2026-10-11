@@ -1,0 +1,14 @@
+COMMAND: GIT_SHALLOW_FILE=<empty file> gitleaks git C:/dev/PRIN --redact --report-format json --report-path gitleaks-pr32-0a0f700-fullhistory.json
+HOST: HP | SHA: 0a0f7009ab9f3994e5ec4d45dced805db127839f | UTC: 2026-10-11T10:23:38Z
+TOOL: gitleaks 8.30.1 (pinned, checksum-verified, session-local binary)
+VIEW: full history. The working repository has been shallow since 2026-10-11T07:05Z (.git/shallow lists boundary commits 7ca051e and cfc8ff6; the parents are still present, so history is intact locally). GIT_SHALLOW_FILE pointing at an empty file makes git ignore the boundary for this one process, which reproduces the view of the EA-007 scans (704 / 706 / 707 commits); 709 = 707 + the two remediation commits.
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+7:23AM INF 709 commits scanned.
+7:23AM INF scanned ~76241006 bytes (76.24 MB) in 9.71s
+7:23AM INF no leaks found
+EXIT_CODE=0

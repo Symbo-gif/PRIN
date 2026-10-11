@@ -1,0 +1,96 @@
+{
+  "session": "EA-007",
+  "observed_utc_date": "2026-10-11",
+  "host": "HP",
+  "base_main_sha": "fdd28d88e4c57d544e5d30fa52cce85807ab15a9",
+  "branch": "audit/ea007-exp002-readiness",
+  "approval": {
+    "maintainer": "MichaelMaillet",
+    "utc_date": "2026-10-11",
+    "verbatim": "I approve whatever you need to do, you have full access. keep in mind, we are no longer running github hosted checks, that is on pause until further notice. in the meantime we will run local equivequivalent checks. complete your tasks with that in mind.",
+    "selected_dv040_option": "a: extend existing quality gates to DOCS/experiments/",
+    "new_plan_amendment": false
+  },
+  "github_observations": {
+    "commands": [
+      "gh api repos/Symbo-gif/PRIN/commits/main --jq .sha",
+      "gh api repos/Symbo-gif/PRIN/actions/workflows",
+      "gh api repos/Symbo-gif/PRIN/actions/runners",
+      "gh api repos/Symbo-gif/PRIN/rulesets/22150076",
+      "gh api repos/Symbo-gif/PRIN --jq '{visibility,security_and_analysis}'",
+      "gh api repos/Symbo-gif/PRIN/secret-scanning/alerts --jq 'map({number,state,secret_type_display_name,resolution})'",
+      "gh run list --workflow nightly.yml --branch main --limit 5 --json databaseId,headSha,conclusion,status,createdAt",
+      "gh run view 36818721762 --json jobs,headSha,conclusion,attempt,createdAt",
+      "gh run view 36818721762 --job 110229417267 --log"
+    ],
+    "disabled_manually": ["rust", "python", "parity", "repro", "snyk", "gpu", "nightly"],
+    "release_and_manual_gpu_triton_left_unchanged": true,
+    "ruleset_id": 22150076,
+    "ruleset_enforcement": "active",
+    "ruleset_rules": ["deletion", "non_fast_forward", "pull_request"],
+    "required_status_checks_rule_present": false,
+    "runners": [{"name": "PRIN-GPU-Runner", "status": "online", "busy": false, "os": "Windows"}],
+    "runner_count": 1,
+    "secret_scanning": "enabled",
+    "push_protection": "disabled",
+    "secret_scanning_alerts": [],
+    "no_remote_configuration_modified": true
+  },
+  "exp001_r1_entry_evidence": {
+    "pull_request": 28,
+    "merge_sha": "32cfed8a0b4d915a04e18efbfadd146a2ecb7e32",
+    "command": "C:\\dev\\PRIN\\.venv\\Scripts\\python tools/check_ci_green.py 32cfed8a0b4d915a04e18efbfadd146a2ecb7e32",
+    "exit_code": 0,
+    "verbatim_output": "exp001-r1-merge-ci-green.log",
+    "historical_only_not_current_branch_validation": true
+  },
+  "latest_pre_pause_nightly": {
+    "run_id": 36818721762,
+    "attempt": 1,
+    "created_at": "2026-10-01T05:13:10Z",
+    "head_sha": "bbf97dcef0beadc0bc62b21bb5e27808a92d0bd6",
+    "conclusion": "success",
+    "full_suite": "success",
+    "bench_regression": "success",
+    "bench_job_id": 110229417267,
+    "step_parallel_ratios": {
+      "256": 1.018,
+      "1024": 1.039,
+      "4096": 1.028,
+      "16384": 1.063,
+      "65536": 1.027,
+      "262144": 1.046,
+      "1000000": 1.028
+    },
+    "sweep_parallel_ratios": {
+      "parallel/4_configs": 1.008,
+      "parallel/8_configs": 1.034,
+      "parallel/16_configs": 1.032,
+      "parallel/32_configs": 1.029,
+      "parallel/64_configs": 1.045,
+      "serial/4_configs": 1.010,
+      "serial/8_configs": 0.998,
+      "serial/16_configs": 1.023,
+      "serial/32_configs": 1.007,
+      "serial/64_configs": 1.035
+    },
+    "verbatim_gate": "Benchmark regression check passed: 69 benchmarks (63 gated, 6 advisory), none gated past +10%; 2 reference and 2 candidate runs.",
+    "raw_capture": "historical-nightly-and-merge-capture.log",
+    "current_main_nightly_validated": false,
+    "disposition": "DV-043 historical closure remains supported; current-main nightly suspended by Plan amendment #48; independent re-audit before 0166 retained"
+  },
+  "carry_forward": {
+    "0159_status": "READY",
+    "figure_count": 14,
+    "figure_formats": 2,
+    "table_count": 11,
+    "generated_files": 39,
+    "paper_manifest_records": 172,
+    "prin_all_symbols": 175,
+    "reference_all_symbols": 172,
+    "seed_key": 2,
+    "budget": {"cpu_hours_max": 12, "gpu_hours_max": 2, "ci_hours_max": 2, "tracked_mib_max": 10},
+    "histogram_caution": "EXP-001-r1 report section 9 item 11: distinguish 216 retained comparator records from 72 per-case worst values in field names",
+    "downstream_gates_not_actioned": ["DV036-F5 at 0166", "DV-036 before 0168", "DV-036 before 0173", "EXP-004+ hardware gates"]
+  }
+}

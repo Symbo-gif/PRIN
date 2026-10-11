@@ -1,0 +1,14 @@
+COMMAND: gitleaks git C:/dev/PRIN --redact --report-format json --report-path DOCS/test_and_benchmark_results/ea007/post-commit/gitleaks-redacted.json
+HOST: HP | SHA: 073871430024f8b4fd2b05bbad54eabea1047618 | UTC: 2026-10-11T06:45:21Z
+TOOL: gitleaks 8.30.1 (pinned, checksum-verified, session-local binary)
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+[90m3:45AM[0m [32mINF[0m [1m706 commits scanned.[0m
+[90m3:45AM[0m [32mINF[0m [1mscanned ~74660300 bytes (74.66 MB) in 20.7s[0m
+[90m3:45AM[0m [32mINF[0m [1mno leaks found[0m
+EXIT_CODE=0

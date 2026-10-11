@@ -1,0 +1,44 @@
+=== EA-007 FULL LOCAL GATE — ENVIRONMENT & STATE CAPTURE ===
+HOST: HP
+DATE_UTC: 2026-10-11T04:00:04Z
+BASE_SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9
+BRANCH: audit/ea007-exp002-readiness
+
+--- worktree status (porcelain) ---
+ M .github/workflows/python.yml
+ M AGENTS.md
+ M crates/prin-sim/src/gpu.rs
+ M pyproject.toml
+?? tests/test_campaign_quality_gates.py
+
+--- worktree diff digest (tracked changes vs HEAD) ---
+ .github/workflows/python.yml |  8 ++++++--
+ AGENTS.md                    |  6 ++++--
+ crates/prin-sim/src/gpu.rs   | 39 ++++++++++++++++++++++++++++-----------
+ pyproject.toml               | 21 ++++++++++++++++++++-
+ 4 files changed, 58 insertions(+), 16 deletions(-)
+git-diff-HEAD sha256: ca23629b43ec66e6a4dfca92ab05702d12a18175c186c9bc77690458eb0744f9
+untracked tests/test_campaign_quality_gates.py sha256: fb537f5ea1cc1bba19a3d547e1d0d121dbd87142f4062290c7cce4042c6a4204
+
+--- tool versions ---
+Python 3.14.0
+ruff 0.16.1
+mypy 2.3.0 (compiled: yes)
+python.exe -m bandit 1.9.4
+interrogate, version 1.7.0
+pytest 9.1.1
+python.exe -m sphinx.cmd.build 9.1.0
+pip-audit 2.10.1
+cargo 1.98.1 (797e8a9bc 2026-08-05)
+rustc 1.98.1 (48a229cea 2026-09-01)
+rustfmt 1.9.0-stable (48a229ceae 2026-09-01)
+clippy 0.1.98 (48a229ceae 2026-09-01)
+cargo-llvm-cov 0.8.7
+cargo-audit-audit 0.22.2
+gitleaks: NOT INSTALLED (PATH/.venv/tools/common dirs checked; CI control is gitleaks-action@v2 in snyk.yml — paused under #48)
+
+--- installed extension path + backend probes ---
+extension: C:\dev\PRIN\python\prin\_prin_core.pyd
+cuda_kernel_executes: True
+wgpu_kernel_executes: False
+directml_executes: True

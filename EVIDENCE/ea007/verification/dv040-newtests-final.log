@@ -1,0 +1,12 @@
+COMMAND: .venv/Scripts/python -m pytest tests/test_campaign_quality_gates.py --basetemp=.pytest_basetemp  (post-ruff-format re-run)
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  BRANCH: audit/ea007-exp002-readiness  DATE: 2026-10-11T03:56:22Z
+---
+============================== warnings summary ===============================
+.venv\Lib\site-packages\stevedore\extension.py:185
+.venv\Lib\site-packages\stevedore\extension.py:185
+.venv\Lib\site-packages\stevedore\extension.py:185
+  The verify_requirements argument is now a no-op and is deprecated for removal. Remove the argument from calls.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 18 passed, 3 warnings in 0.69s ========================
+EXIT_CODE=0

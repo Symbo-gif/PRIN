@@ -129,6 +129,13 @@ starts by reading it (Development Workflow Standards §6).
   (redundant step guard), and DV-044 (ledger delegation parser) raised;
   EXP-001-r1 declared; the §3.4 canonical ledger delta inherits PSR-038
   (first delegated-delta form; 142 cumulative rows).
+- [`040-project-state.md`](040-project-state.md) — EA-007 global Executive
+  Audit / pre-EXP-002 readiness cycle (**ISSUED** — local validation
+  complete; DV-033 coverage open, hosted/platform gates suspended):
+  post-PSR-039 closures re-verified (EXP-001-r1 E5 accepted
+  with all five hypotheses `CONFIRMED` → 0159 READY); DV-040 option (a),
+  DV-042 and EA007-E-F4 dependency-floor remediations; §3.4 canonical delta
+  (4 new EA-007 findings, 5 updated rows).
 
 The [`DEFERRED_VALIDATION_REGISTER.md`](DEFERRED_VALIDATION_REGISTER.md)
 consolidates all formally deferred validation items (DV-NNN) and analytics

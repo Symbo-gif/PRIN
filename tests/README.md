@@ -287,6 +287,34 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   runner is stubbed, so the suite exercises the measurement, classification,
   preflight-pin, storage-cap, and publication machinery without executing a
   registered workload or producing campaign observations.
+- `test_campaign_quality_gates.py` — 22 DV-040/EA007-E-F4/PR #32 regression tests (EA-007):
+  the `python.yml` lint job and the AGENTS.md local gate must lint,
+  format-check, type-check, and SAST-scan `DOCS/experiments/` (shlex
+  tokenization of each single-line `run:` command and each `.venv`-prefixed
+  line); the normal `python/prin` gates stay intact; and `[tool.bandit]
+  exclude_dirs` must use directory-component globs — verified by in-process
+  `BanditConfig`/`BanditManager` discovery plus parametrized
+  `_is_file_included` legs that fail on exclusion-named record slugs
+  (`EXP-999-tests-parity`). Thirteen legs fail against the pre-DV-040
+  configuration, proving they catch the gap. The PR #32 review round
+  (`PR32-F1`/`F9`/`F12`/`F14`/`F15`) added: the AGENTS.md `powershell` block
+  must carry no double quote inside a single-quoted argument (tokenized left to
+  right; Windows PowerShell 5.1 strips it); `rust.yml` (with `-D warnings` set
+  in that job's job-level `env`) and AGENTS.md must both rustdoc `prin-sim`
+  with a `cpu`/`cuda`/`wgpu` feature (the `gpu` module is feature-gated, so
+  another feature compiles nothing); campaign Python module names (`.py` and
+  `.pyi`, computed the way mypy crawls packages) must be unique (`Duplicate
+  module`); the bandit exclusions are exercised as a truth table (top-level,
+  nested and slug-substring paths) rather than checked for a suffix; and the
+  urllib3 floor test parses each entry as a PEP 508 requirement (specifier
+  order, extras, markers and comments are handled) and checks every one.
+- `test_ea007_manifest.py` — 3 `PR32-F7` tests: the manifest
+  `EVIDENCE/ea007/verification/SHA256SUMS.txt` is parsed fail-closed (malformed line, duplicate, absolute or
+  escaping path, missing file or wrong letter case, digest mismatch), must list
+  every other file under `EVIDENCE/ea007/` (OS metadata such as `.DS_Store` is
+  ignored), and every hashed file must be tracked by git (`*.log` is
+  gitignored, so an evidence log needs `git add -f`). The same test would have failed 36 of 82 entries at
+  commit `0738714`.
 - Differential parity tests live in `../parity/`.
 - Rust unit/property tests live next to each crate (`cargo test`).
 

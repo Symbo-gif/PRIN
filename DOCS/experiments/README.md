@@ -125,6 +125,14 @@ experiments/
     └── report-manifest.json      # SHA-256 of regenerated figures/tables (E4/E5)
 ```
 
+Analysis scripts under `analysis/` must carry **globally unique file names**
+(prefix with the campaign id, e.g. `exp001_e4_analysis.py`). The record roots
+are sibling directories without `__init__.py`, so the `mypy DOCS/experiments/
+--strict` local/CI gate derives bare module names from file names and aborts
+with `Duplicate module named ...` (not a typing error) if two campaigns ship the
+same basename; `--explicit-package-bases` does not help.
+`tests/test_campaign_quality_gates.py` enforces this (PR32-F12).
+
 Raw run artefacts live under `benchmarks/results/EXP-NNN/RUN-<UTC>-<SHA>-<label>/`
 (JSON, tracked, one per-run `manifest.json`; campaign plan §7); figures/tables
 regenerate from them via `prin.reporting`.

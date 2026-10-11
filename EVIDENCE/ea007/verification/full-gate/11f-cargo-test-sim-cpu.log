@@ -1,0 +1,295 @@
+COMMAND: cargo test -p prin-sim --features cpu -- --test-threads=1
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  DATE: 2026-10-11T05:20:01Z
+---
+   Compiling tracel-llvm-bundler v20.1.4-7
+   Compiling ndarray v0.16.1
+   Compiling cubecl-opt v0.10.0
+   Compiling sprs v0.11.4
+   Compiling prin-dynamics v1.0.0-rc1 (C:\dev\PRIN\crates\prin-dynamics)
+   Compiling tracel-tblgen-rs v20.1.4-7
+   Compiling tracel-mlir-sys v20.1.4-7
+   Compiling tracel-mlir-rs-macros v20.1.4-7
+   Compiling cubecl-cpu v0.10.0
+   Compiling prin-metrics v1.0.0-rc1 (C:\dev\PRIN\crates\prin-metrics)
+   Compiling tracel-mlir-rs v20.1.4-7
+   Compiling tracel-llvm v20.1.4-7
+   Compiling cubecl v0.10.0
+   Compiling prin-kernels v1.0.0-rc1 (C:\dev\PRIN\crates\prin-kernels)
+   Compiling prin-sim v1.0.0-rc1 (C:\dev\PRIN\crates\prin-sim)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 32.64s
+     Running unittests src\lib.rs (target\debug\deps\prin_sim-d57065c6de5731e9.exe)
+
+running 198 tests
+test chimera::tests::chimera_metrics_serialization_round_trip ... ok
+test chimera::tests::chimera_metrics_with_desynchronized_phases ... ok
+test chimera::tests::dimension_mismatch_rejected ... ok
+test chimera::tests::n2_si_zero_even_with_window ... ok
+test chimera::tests::small_system_si_zero ... ok
+test chimera::tests::synchronized_has_no_chimera ... ok
+test chimera::tests::trajectory_dimension_mismatch ... ok
+test chimera::tests::trajectory_metrics_empty_phases ... ok
+test chimera::tests::trajectory_metrics_length ... ok
+test chimera::tests::trajectory_si_zero_when_window_zero ... ok
+test compat::tests::coupling_param_sweep_has_order_shape_ranges_and_seed_determinism ... ok
+test compat::tests::coupling_param_sweep_rejects_invalid_configuration ... ok
+test compat::tests::csr_coupling_step_matches_closed_form ... ok
+test compat::tests::knn_neighbors_are_seeded_unique_and_non_self ... ok
+test compat::tests::knn_neighbors_from_indices_validates_rows ... ok
+test compat::tests::knn_neighbors_reject_invalid_counts_and_overflow ... ok
+test compat::tests::phase_to_rate_hard_and_annealed_match_archive ... ok
+test compat::tests::phase_to_rate_rejects_every_invalid_input_class ... ok
+test compat::tests::phase_to_rate_soft_matches_exact_formula ... ok
+test compat::tests::sparse_knn_step_matches_archived_phase_only_formula ... ok
+test compat::tests::sparse_knn_step_rejects_boundary_errors ... ok
+test compat::tests::sparse_matrix_directed_zero_and_singleton_paths ... ok
+test compat::tests::sparse_matrix_is_deterministic_symmetric_and_convertible ... ok
+test compat::tests::sparse_matrix_rejects_invalid_inputs_and_overflow ... ok
+test csr_coupling::tests::as_csr_returns_inner ... ok
+test csr_coupling::tests::from_csr_indices_length_mismatch ... ok
+test csr_coupling::tests::from_csr_indptr_length_mismatch ... ok
+test csr_coupling::tests::from_csr_n_zero ... ok
+test csr_coupling::tests::from_csr_non_finite_data ... ok
+test csr_coupling::tests::from_csr_round_trip ... ok
+test csr_coupling::tests::from_dense_length_mismatch ... ok
+test csr_coupling::tests::from_dense_n_zero ... ok
+test csr_coupling::tests::from_dense_non_finite_entry ... ok
+test csr_coupling::tests::from_dense_threshold_drops_zeros ... ok
+test csr_coupling::tests::from_dense_with_threshold ... ok
+test csr_coupling::tests::from_knn_basic ... ok
+test csr_coupling::tests::from_knn_empty_phases ... ok
+test csr_coupling::tests::from_knn_k_ge_n ... ok
+test csr_coupling::tests::from_knn_k_zero ... ok
+test csr_coupling::tests::from_knn_non_finite_phase ... ok
+test csr_coupling::tests::from_knn_non_finite_strength ... ok
+test csr_coupling::tests::from_knn_weight_matches_strength_over_k ... ok
+test csr_coupling::tests::from_ring_basic ... ok
+test csr_coupling::tests::from_ring_degree_ge_n ... ok
+test csr_coupling::tests::from_ring_degree_zero ... ok
+test csr_coupling::tests::from_ring_non_finite_strength ... ok
+test csr_coupling::tests::kuramoto_coupling_amplitudes_mismatch ... ok
+test csr_coupling::tests::kuramoto_coupling_dimension_mismatch ... ok
+test csr_coupling::tests::kuramoto_coupling_synchronized ... ok
+test csr_coupling::tests::memory_bytes_positive ... ok
+test csr_coupling::tests::neighbor_list_isolated_oscillator ... ok
+test csr_coupling::tests::neighbor_list_ring ... ok
+test csr_coupling::tests::new_rejects_empty_csr ... ok
+test csr_coupling::tests::new_rejects_non_finite_data ... ok
+test csr_coupling::tests::new_rejects_non_square_csr ... ok
+test csr_coupling::tests::prune_all_entries_removed_leaves_empty_then_errors ... ok
+test csr_coupling::tests::prune_preserves_large_entries ... ok
+test csr_coupling::tests::prune_removes_small_entries ... ok
+test csr_coupling::tests::reject_empty_population ... ok
+test csr_coupling::tests::reject_non_square ... ok
+test csr_coupling::tests::sparsity_ring ... ok
+test csr_coupling::tests::stuart_landau_coupling_amplitudes_mismatch ... ok
+test csr_coupling::tests::stuart_landau_coupling_phases_mismatch ... ok
+test csr_coupling::tests::stuart_landau_coupling_synchronized ... ok
+test csr_coupling::tests::stuart_landau_coupling_synchronized_at_parallel_threshold ... ok
+test csr_coupling::tests::submatrix_empty_kept ... ok
+test csr_coupling::tests::submatrix_out_of_range_index ... ok
+test csr_coupling::tests::submatrix_ring ... ok
+test csr_coupling::tests::submatrix_single_element ... ok
+test dispatch::tests::map_dispatch_default_threshold_matches_reference ... ok
+test dispatch::tests::map_dispatch_empty_slice ... ok
+test dispatch::tests::map_dispatch_parallel_matches_reference ... ok
+test dispatch::tests::map_dispatch_sequential_matches_reference ... ok
+test dispatch::tests::zip_map_dispatch_parallel_matches_reference ... ok
+test dispatch::tests::zip_map_dispatch_sequential_matches_reference ... ok
+test engine::tests::apply_guards_wraps_phases ... ok
+test engine::tests::engine_deterministic ... ok
+test engine::tests::engine_memory_bytes_positive ... ok
+test engine::tests::engine_run_no_trajectory ... ok
+test engine::tests::engine_run_records_trajectory ... ok
+test engine::tests::engine_run_stuart_landau ... ok
+test engine::tests::engine_step_advances_state ... ok
+test engine::tests::engine_with_euler_integrator ... ok
+test engine::tests::engine_with_low_amplitude_state ... ok
+test engine::tests::engine_zero_steps_error ... ok
+test engine::tests::oscillo_sim_new_coupling_state_mismatch ... ok
+test engine::tests::oscillo_sim_new_infinite_dt ... ok
+test engine::tests::oscillo_sim_new_invalid_dt ... ok
+test engine::tests::set_dt_validates ... ok
+test engine::tests::sparse_kuramoto_accessors ... ok
+test engine::tests::sparse_kuramoto_dimension_mismatch ... ok
+test engine::tests::sparse_kuramoto_n1_derivatives ... ok
+test engine::tests::sparse_kuramoto_n1_free_streaming ... ok
+test engine::tests::sparse_kuramoto_n_zero ... ok
+test engine::tests::sparse_kuramoto_non_finite_decay_rate ... ok
+test engine::tests::sparse_kuramoto_non_finite_freq_adaptation_rate ... ok
+test engine::tests::sparse_kuramoto_state_dimension_mismatch ... ok
+test engine::tests::sparse_models_report_the_guard_they_actually_applied ... ok
+test engine::tests::sparse_stuart_landau_accessors ... ok
+test engine::tests::sparse_stuart_landau_basic ... ok
+test engine::tests::sparse_stuart_landau_coupling_dimension_mismatch ... ok
+test engine::tests::sparse_stuart_landau_n1_free_streaming ... ok
+test engine::tests::sparse_stuart_landau_n_zero ... ok
+test engine::tests::sparse_stuart_landau_non_finite_bifurcation ... ok
+test engine::tests::sparse_stuart_landau_state_dimension_mismatch ... ok
+test engine::tests::trajectory_empty_n_oscillators ... ok
+test engine::tests::trajectory_memory_bytes ... ok
+test gpu::tests::band_stepper_host_fallback_arms_round_trip ... ok
+test gpu::tests::gpu_band_stepper_accessors ... ok
+test gpu::tests::gpu_band_stepper_backend_name_matches_device_presence ... ok
+test gpu::tests::gpu_band_stepper_device_resident_multi_step ... ok
+test gpu::tests::gpu_band_stepper_rejects_band_size_mismatch ... ok
+test gpu::tests::gpu_band_stepper_rejects_non_positive_dt ... ok
+test gpu::tests::gpu_band_stepper_rejects_zero_band ... ok
+test gpu::tests::gpu_band_stepper_rejects_zero_steps ... ok
+test gpu::tests::gpu_band_stepper_run_no_trajectory ... ok
+test gpu::tests::gpu_band_stepper_run_records_trajectory ... ok
+test gpu::tests::gpu_band_stepper_step_matches_kernel_cpu_reference_loop ... ok
+test gpu::tests::gpu_mean_field_engine_accessors ... ok
+test gpu::tests::gpu_mean_field_engine_backend_name_matches_device_presence ... ok
+test gpu::tests::gpu_mean_field_engine_device_resident_multi_step ... ok
+test gpu::tests::gpu_mean_field_engine_rejects_empty_state ... ok
+test gpu::tests::gpu_mean_field_engine_rejects_non_finite_dt ... ok
+test gpu::tests::gpu_mean_field_engine_rejects_non_positive_dt ... ok
+test gpu::tests::gpu_mean_field_engine_rejects_zero_steps ... ok
+test gpu::tests::gpu_mean_field_engine_run_no_trajectory ... ok
+test gpu::tests::gpu_mean_field_engine_run_records_trajectory ... ok
+test gpu::tests::gpu_mean_field_engine_step_matches_kernel_cpu_reference_loop ... ok
+test gpu::tests::gpu_sparse_kuramoto_accessors ... ok
+test gpu::tests::gpu_sparse_kuramoto_backend_name_matches_device_presence ... ok
+test gpu::tests::gpu_sparse_kuramoto_drives_oscillo_sim_via_integrator ... ok
+test gpu::tests::gpu_sparse_kuramoto_matches_cpu_dynamics_reference ... ok
+test gpu::tests::gpu_sparse_kuramoto_n1_free_streaming ... ok
+test gpu::tests::gpu_sparse_kuramoto_rejects_dimension_mismatch ... ok
+test gpu::tests::gpu_sparse_kuramoto_rejects_empty_population ... ok
+test gpu::tests::gpu_sparse_kuramoto_rejects_non_finite_k ... ok
+test gpu::tests::gpu_sparse_kuramoto_rejects_non_uniform_weights ... ok
+test gpu::tests::gpu_sparse_kuramoto_state_dimension_mismatch ... ok
+test gpu::tests::mean_field_engine_host_fallback_arms_round_trip ... ok
+test gpu::tests::sparse_kuramoto_host_fallback_and_debug ... ok
+test oscillo_compat::tests::cosine_kernel_normalised_and_symmetric ... ok
+test oscillo_compat::tests::csr_runs ... ok
+test oscillo_compat::tests::ics_are_finite_and_bounded ... ok
+test oscillo_compat::tests::mean_field_runs ... ok
+test oscillo_compat::tests::ring_rejects_odd ... ok
+test oscillo_compat::tests::ring_run_is_finite_and_deterministic ... ok
+test oscillo_compat::tests::ring_shape_and_bounds ... ok
+test oscillo_compat::tests::rk4_ring_bounded ... ok
+test oscillo_compat::tests::small_world_reproducible ... ok
+test oscillo_compat::tests::weighted_coupling_dimension_check ... ok
+test oscillo_compat::tests::zero_rewire_equals_ring ... ok
+test pruning::tests::all_pruned_is_error ... ok
+test pruning::tests::amplitude_threshold_prunes_low ... ok
+test pruning::tests::apply_and_restore_round_trip ... ok
+test pruning::tests::apply_dimension_mismatch ... ok
+test pruning::tests::apply_with_freq_band ... ok
+test pruning::tests::default_strategy_is_none ... ok
+test pruning::tests::invalid_threshold_rejected ... ok
+test pruning::tests::n_total_and_accessors ... ok
+test pruning::tests::no_pruning_is_not_pruned ... ok
+test pruning::tests::no_pruning_keeps_all ... ok
+test pruning::tests::pruning_serialization_round_trip ... ok
+test pruning::tests::restore_dimension_mismatch ... ok
+test pruning::tests::restore_with_freq_band ... ok
+test pruning::tests::strategy_serialization_round_trip ... ok
+test pruning::tests::threshold_at_boundary_prunes ... ok
+test pruning::tests::validate_above_max_threshold ... ok
+test pruning::tests::validate_infinity_threshold ... ok
+test pruning::tests::validate_nan_threshold ... ok
+test pruning::tests::validate_none_strategy_ok ... ok
+test pruning::tests::validate_valid_threshold_ok ... ok
+test sweep::tests::detect_oscillation_oscillating ... ok
+test sweep::tests::detect_oscillation_short_history ... ok
+test sweep::tests::detect_oscillation_stable ... ok
+test sweep::tests::detect_oscillation_zero_window ... ok
+test sweep::tests::expand_config_multi_axis ... ok
+test sweep::tests::expand_config_single_axis ... ok
+test sweep::tests::sweep_axis_name ... ok
+test sweep::tests::sweep_config_n_configs_multi_axis ... ok
+test sweep::tests::sweep_config_n_configs_single_axis ... ok
+test sweep::tests::sweep_config_validate_empty_axes ... ok
+test sweep::tests::sweep_config_validate_non_finite_value ... ok
+test sweep::tests::sweep_deterministic ... ok
+test sweep::tests::sweep_kuramoto_basic ... ok
+test sweep::tests::sweep_multi_axis_cartesian_product ... ok
+test sweep::tests::sweep_no_trajectory ... ok
+test sweep::tests::sweep_stuart_landau_basic ... ok
+test y4q1_stats::tests::bootstrap_constant_is_narrow ... ok
+test y4q1_stats::tests::bootstrap_reproducible ... ok
+test y4q1_stats::tests::cohens_d_signs ... ok
+test y4q1_stats::tests::polyfit_linear_recovers_slope_intercept ... ok
+test y4q1_stats::tests::polyfit_quadratic_recovers_coeffs ... ok
+test y4q1_stats::tests::polyfit_rejects_singular_and_short ... ok
+test y4q1_stats::tests::spatial_corr_clips_max_lag ... ok
+test y4q1_stats::tests::spatial_corr_constant ... ok
+test y4q1_stats::tests::spatial_corr_lag0_is_one ... ok
+test y4q1_stats::tests::welch_identical_high_p ... ok
+test y4q1_stats::tests::welch_separated_low_p ... ok
+
+test result: ok. 198 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 198.61s
+
+     Running tests\parity_detect_oscillation.rs (target\debug\deps\parity_detect_oscillation-963dd6de2cd30ff5.exe)
+
+running 7 tests
+test matches_prinet_docstring_example ... ok
+test matches_reference_across_grid ... ok
+test matches_reference_exact_window_boundary ... ok
+test matches_reference_on_empty_history ... ok
+test matches_reference_on_oscillating_history ... ok
+test matches_reference_on_short_history ... ok
+test matches_reference_on_stable_history ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\parity_sparse_vs_dense.rs (target\debug\deps\parity_sparse_vs_dense-6552cc127bad41c9.exe)
+
+running 22 tests
+test chimera_metrics_on_engine_trajectory ... ok
+test engine_deterministic_across_runs ... ok
+test engine_rejects_coupling_state_size_mismatch ... ok
+test engine_rejects_negative_dt ... ok
+test engine_trajectory_parity_n16 ... ok
+test from_csr_n_zero_rejected ... ok
+test from_dense_wrong_length_rejected ... ok
+test from_knn_empty_rejected ... ok
+test from_knn_k_too_large_rejected ... ok
+test from_ring_infinite_strength_rejected ... ok
+test kuramoto_parity_n256_ring ... ok
+test kuramoto_parity_n64_ring ... ok
+test kuramoto_parity_n8_ring ... ok
+test large_n_memory_bounded ... ok
+test oscillo_sim_n100k_kuramoto_deterministic_and_finite ... ok
+test prune_reduces_nnz ... ok
+test prune_zero_threshold_keeps_all ... ok
+test pruning_strategy_validates_range ... ok
+test stuart_landau_parity_n16_ring ... ok
+test stuart_landau_parity_n8_ring ... ok
+test submatrix_out_of_range_rejected ... ok
+test submatrix_preserves_weights ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.03s
+
+     Running tests\proptest_properties.rs (target\debug\deps\proptest_properties-8dcdd150efaf7b9c.exe)
+
+running 4 tests
+test determinism_arbitrary_n_and_seed ... ok
+test engine_memory_bytes_consistent ... ok
+test kuramoto_parity_arbitrary_n ... ok
+test memory_bytes_correct_for_ring ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.23s
+
+     Running tests\proptest_sweep.rs (target\debug\deps\proptest_sweep-ef97450a50b6faba.exe)
+
+running 5 tests
+test detect_oscillation_constant_history_is_stable ... ok
+test detect_oscillation_high_variance_is_flagged ... ok
+test sweep_is_deterministic ... ok
+test sweep_result_count_matches_config ... ok
+test sweep_results_have_valid_order_parameters ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+   Doc-tests prin_sim
+
+running 3 tests
+test crates\prin-sim\src\engine.rs - engine (line 18) - compile ... ok
+test crates\prin-sim\src\sweep.rs - sweep::detect_oscillation (line 203) ... ok
+test crates\prin-sim\src\sweep.rs - sweep::run_sweep (line 248) - compile ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.08s
+
+EXIT_CODE=0

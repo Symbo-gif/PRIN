@@ -1,0 +1,16 @@
+COMMAND: .venv/Scripts/python -m ruff format --check DOCS/experiments/
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  BRANCH: audit/ea007-exp002-readiness  DATE: 2026-10-11T03:48:49Z
+---
+unformatted: File would be reformatted
+   --> DOCS\experiments\EXP-001-golden-trajectory-numerical-parity\report.md:428:11
+    |
+427 | # run from the repository root with the project venv
+    - import sys; sys.path.insert(0, ".")
+428 + import sys
+429 +
+430 + sys.path.insert(0, ".")
+431 | from pathlib import Path
+    |
+
+1 file would be reformatted, 68 files already formatted
+EXIT_CODE=1

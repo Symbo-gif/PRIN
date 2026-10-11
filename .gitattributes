@@ -16,3 +16,6 @@
 # preserved CR of each CRLF line as trailing whitespace; the bytes are
 # deliberate evidence, not a style defect.
 benchmarks/results/** -text whitespace=-trailing-space
+
+# EA-007 raw verification evidence is byte-exact; preserve SHA-256 inputs.
+EVIDENCE/ea007/** -text whitespace=-trailing-space
