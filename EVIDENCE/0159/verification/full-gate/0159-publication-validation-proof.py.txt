@@ -1,0 +1,147 @@
+"""Lead-authored synthetic proof; no campaign inputs, runs or generators."""
+
+from __future__ import annotations
+
+import importlib.util
+import re
+import struct
+import zlib
+from pathlib import Path
+
+from benchmarks.campaign.exp002_driver import DriverError, normalized_bytes
+
+PROPOSAL = Path(__file__).with_name("0159-publication-validation-proposal.py")
+SPEC = importlib.util.spec_from_file_location("publication_proposal", PROPOSAL)
+assert SPEC is not None and SPEC.loader is not None
+proposal = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(proposal)
+
+
+def pdf_fixture(
+    creator: bytes,
+    producer: bytes,
+    date: bytes,
+    identifier: bytes,
+    label: bytes = b"SCIENCE",
+    title: bytes = b"unchanged",
+) -> bytes:
+    """Build a classic-xref PDF with a real page, stream, Info and font."""
+    stream = (
+        b"/Artifact <</Creator (SCIENTIFIC PROPERTY)>> BDC\n"
+        b"BT /F1 8 Tf 2 2 Td (" + label + b") Tj ET\nEMC\n"
+    )
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 10 10] "
+        b"/Contents 4 0 R /Resources << /Font << /F1 6 0 R >> >> >>",
+        b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n"
+        + stream + b"endstream",
+        b"<< /Creator (" + creator + b") /Producer (" + producer
+        + b") /CreationDate (" + date + b") /ModDate (" + date
+        + b") /Title (" + title + b") >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    payload = bytearray(b"%PDF-1.4\n%\xff\xfe\n")
+    offsets = []
+    for number, value in enumerate(objects, 1):
+        offsets.append(len(payload))
+        payload += f"{number} 0 obj\n".encode() + value + b"\nendobj\n"
+    xref = len(payload)
+    payload += b"xref\n0 7\n0000000000 65535 f \n"
+    for offset in offsets:
+        payload += f"{offset:010d} 00000 n \n".encode()
+    payload += (
+        b"trailer\n<< /Size 7 /Root 1 0 R /Info 5 0 R /ID [<"
+        + identifier + b"> <" + identifier + b">] >>\nstartxref\n"
+        + str(xref).encode() + b"\n%%EOF\n"
+    )
+    return bytes(payload)
+
+
+def png_fixture(chunks: list[tuple[bytes, bytes]]) -> bytes:
+    """Build CRC-correct PNG chunks around a real one-pixel RGB image."""
+    payload = bytearray(b"\x89PNG\r\n\x1a\n")
+    for kind, data in chunks:
+        payload += (
+            struct.pack(">I", len(data)) + kind + data
+            + struct.pack(">I", zlib.crc32(kind + data))
+        )
+    return bytes(payload)
+
+
+def rejects(function: object, payload: bytes) -> None:
+    """An invalid container must fail as a DriverError, not a mismatch."""
+    try:
+        function(payload)
+    except DriverError:
+        return
+    raise AssertionError("malformed publication was admitted")
+
+
+pdf_a = pdf_fixture(b"PRIN", b"Matplotlib", b"D:20000101", b"11" * 16)
+pdf_b = pdf_fixture(
+    b"A much longer Matplotlib creator", b"Longer producer metadata",
+    b"D:20201011130000Z", b"22" * 16,
+)
+pdf_c = pdf_fixture(
+    b"PRIN", b"Matplotlib", b"D:20000101", b"11" * 16, label=b"CHANGED"
+)
+pdf_title = pdf_fixture(
+    b"PRIN", b"Matplotlib", b"D:20000101", b"11" * 16, title=b"CHANGED"
+)
+assert normalized_bytes(pdf_a, ".pdf") != normalized_bytes(pdf_b, ".pdf")
+assert normalized_bytes(b"%PDF-1.4\njunk", ".pdf")
+assert proposal._normalized_pdf(pdf_a) == proposal._normalized_pdf(pdf_b)
+assert proposal._normalized_pdf(pdf_a) != proposal._normalized_pdf(pdf_c)
+assert proposal._normalized_pdf(pdf_a) != proposal._normalized_pdf(pdf_title)
+assert b"/Creator (SCIENTIFIC PROPERTY)" in proposal._normalized_pdf(pdf_a)
+for malformed in (
+    b"not-pdf",
+    b"%PDF-1.4\njunk",
+    pdf_a.replace(b"%%EOF", b"BROKEN"),
+    re.sub(rb"(?m)^startxref\n[0-9]+", b"startxref\n1", pdf_a),
+    pdf_a.replace(b"0000000000 65535 f", b"invalid-xref-entry"),
+    pdf_a.replace(b"/Root 1 0 R", b"/Root 99 0 R"),
+):
+    rejects(proposal._normalized_pdf, malformed)
+
+ihdr = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
+red = zlib.compress(b"\x00\xff\x00\x00")
+blue = zlib.compress(b"\x00\x00\x00\xff")
+png_a = png_fixture([
+    (b"IHDR", ihdr), (b"tEXt", b"Software\x00first"),
+    (b"IDAT", red), (b"IEND", b""),
+])
+png_b = png_fixture([
+    (b"IHDR", ihdr), (b"tEXt", b"Software\x00a longer creator"),
+    (b"IDAT", red), (b"IEND", b""),
+])
+png_c = png_fixture([(b"IHDR", ihdr), (b"IDAT", blue), (b"IEND", b"")])
+for valid in (png_a, png_b, png_c):
+    proposal._validate_png(valid)
+assert normalized_bytes(png_a, ".png") == normalized_bytes(png_b, ".png")
+assert normalized_bytes(png_a, ".png") != normalized_bytes(png_c, ".png")
+assert normalized_bytes(b"\x89PNG\r\n\x1a\n", ".png")
+for malformed in (
+    b"not-png",
+    b"\x89PNG\r\n\x1a\n",
+    png_a[:-12],
+    png_a + b"garbage",
+    png_a[:-1] + bytes([png_a[-1] ^ 1]),
+    png_fixture([(b"IHDR", ihdr), (b"IEND", b"")]),
+    png_fixture([(b"IHDR", ihdr), (b"IDAT", b"not-zlib"), (b"IEND", b"")]),
+    png_fixture([
+        (b"IHDR", ihdr), (b"IDAT", red[:2]), (b"tEXt", b"key\x00value"),
+        (b"IDAT", red[2:]), (b"IEND", b""),
+    ]),
+    png_fixture([
+        (b"IHDR", ihdr), (b"JUNK", b"x"), (b"IDAT", red), (b"IEND", b""),
+    ]),
+):
+    rejects(proposal._validate_png, malformed)
+
+print("PASS: synthetic valid-container metadata/offset changes canonicalize equally")
+print("PASS: changed scientific stream/pixels and unregistered Info fields remain unequal")
+print("PASS: malformed PDF/PNG containers, CRCs and image data fail closed")
+print("No registered input, publication generator, RUN directory or scientific outcome used.")

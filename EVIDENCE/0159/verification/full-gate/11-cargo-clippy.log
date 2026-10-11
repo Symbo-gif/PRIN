@@ -1,0 +1,15 @@
+COMMAND: cargo clippy --workspace --all-targets -- -D warnings
+UTC-START: 2026-10-11T12:50:12Z
+HOST: HP (Microsoft Windows NT 10.0.26300.0)
+HEAD: 78590305e1c0a78d92153ef2a55a9e76aeb7af79
+WORKTREE: clean
+
+   Compiling pyo3-ffi v0.29.0
+   Compiling pyo3 v0.29.0
+   Compiling numpy v0.29.0
+    Checking prin-py v1.0.0-rc1 (C:\dev\PRIN\crates\prin-py)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.67s
+
+UTC-END: 2026-10-11T12:50:20Z
+ELAPSED-SECONDS: 8
+EXIT_CODE: 0

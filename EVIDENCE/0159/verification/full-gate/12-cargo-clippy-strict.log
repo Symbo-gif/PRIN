@@ -1,0 +1,12 @@
+COMMAND: cargo clippy --workspace --all-targets --features strict-checks -- -D warnings
+UTC-START: 2026-10-11T12:50:20Z
+HOST: HP (Microsoft Windows NT 10.0.26300.0)
+HEAD: 78590305e1c0a78d92153ef2a55a9e76aeb7af79
+WORKTREE: clean
+
+    Checking prin-py v1.0.0-rc1 (C:\dev\PRIN\crates\prin-py)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.69s
+
+UTC-END: 2026-10-11T12:50:23Z
+ELAPSED-SECONDS: 3.1
+EXIT_CODE: 0

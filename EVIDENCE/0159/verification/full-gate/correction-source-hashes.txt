@@ -1,0 +1,22 @@
+0159 publication-correction source-hashes (final test-source freeze)
+UTC: 2026-10-11T14:33:55Z
+SOURCE HEAD: 78590305e1c0a78d92153ef2a55a9e76aeb7af79
+WORKTREE-DIFF:
+ M CHANGELOG.md
+ M DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md
+ M DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md
+ M benchmarks/campaign/exp002_driver.py
+ M tests/test_0159_manifest.py
+ M tests/test_exp002_driver.py
+TOOL-VERSIONS:
+Python 3.14.0
+ruff 0.16.1
+mypy 2.3.0 (compiled: yes)
+pytest 9.1.1
+git version 2.51.2.windows.1
+snyk CLI (24c leg; version in log scope is authenticated account symbo-gif)
+WORKING-TREE SHA-256:
+52edad9291a475f702182a78ff7cc738fa7e94875e0ba9a9d1da2d368f3c59f6 *benchmarks/campaign/exp002_driver.py
+0fd1367aa0ded0e78b65778c9bdbb001abd2a210f766f6521afce5dd6a2c2529 *tests/test_exp002_driver.py
+1a60650e5e73d3a82d937a1d7dca7875e19391ff2f5b05cfa1c56522781df5ae *tests/test_0159_manifest.py
+847c54c0ed77fa7908f8426b6178d02eec77dde000bbb52df5a4c0ac33addd52 *DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md

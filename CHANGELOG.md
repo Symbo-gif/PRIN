@@ -22,8 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Standards §7 and cross-references): no arbitrary whole-run wall-clock
   kill while a run is demonstrably progressing, evidence-based finite
   bounds, and no retroactive satisfaction of interrupted coverage.
-  No experiment results are recorded: the protocol is DRAFT, no EXP-002
-  execution or pilot has run, and the final full local gate is pending.
+  A post-review lead-authored correction hardened the H3 publication
+  format guards from magic-byte checks to registered-container
+  validation (Matplotlib single-revision classic-xref PDF structure;
+  PNG CRC, critical-chunk and decoded-image checks) with xref/startxref
+  pointer canonicalization, and the synthetic fixtures were upgraded to
+  structurally valid containers accordingly. No experiment results are
+  recorded: the protocol is DRAFT, no EXP-002 execution or pilot has
+  run, and the final full local gate is pending.
 
 - **EXP-001-r1 executed, adjudicated and reported — all five hypotheses
   `CONFIRMED`, no D1 (2026-09-29 UTC).** The campaign plan §10.4 item 4 re-run

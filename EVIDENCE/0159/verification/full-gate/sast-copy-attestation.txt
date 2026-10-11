@@ -1,0 +1,20 @@
+SAST byte-identical copy attestation — 0159 publication-correction scope
+UTC: 2026-10-11T14:34:08Z
+Scope: benchmarks/campaign/exp002_driver.py, tests/test_exp002_driver.py, tests/test_0159_manifest.py
+Method: SHA-256 of repo source and of the isolated copy scanned by the Snyk CLI; equal digests prove the scanned bytes are the reviewed bytes.
+
+== sast-input-c (scanned by 24b-snyk-code-correction.log) ==
+52edad9291a475f702182a78ff7cc738fa7e94875e0ba9a9d1da2d368f3c59f6 */c/dev/PRIN/benchmarks/campaign/exp002_driver.py
+52edad9291a475f702182a78ff7cc738fa7e94875e0ba9a9d1da2d368f3c59f6 *sast-input-c/benchmarks/campaign/exp002_driver.py
+5d68c94a92b84a1cb72820fbee28d609e85b4b8dcffa2abac5b5e17bb01fcfac */c/dev/PRIN/tests/test_exp002_driver.py
+5d68c94a92b84a1cb72820fbee28d609e85b4b8dcffa2abac5b5e17bb01fcfac *sast-input-c/tests/test_exp002_driver.py
+c637330e2cdc72f239d5e2213e8cce53e7d7051e3b859af2bbcec7ef6ed35a63 */c/dev/PRIN/tests/test_0159_manifest.py
+c637330e2cdc72f239d5e2213e8cce53e7d7051e3b859af2bbcec7ef6ed35a63 *sast-input-c/tests/test_0159_manifest.py
+
+== sast-input-d (scanned by 24c-snyk-code-final.log) ==
+52edad9291a475f702182a78ff7cc738fa7e94875e0ba9a9d1da2d368f3c59f6 */c/dev/PRIN/benchmarks/campaign/exp002_driver.py
+52edad9291a475f702182a78ff7cc738fa7e94875e0ba9a9d1da2d368f3c59f6 *sast-input-d/benchmarks/campaign/exp002_driver.py
+0fd1367aa0ded0e78b65778c9bdbb001abd2a210f766f6521afce5dd6a2c2529 */c/dev/PRIN/tests/test_exp002_driver.py
+0fd1367aa0ded0e78b65778c9bdbb001abd2a210f766f6521afce5dd6a2c2529 *sast-input-d/tests/test_exp002_driver.py
+1a60650e5e73d3a82d937a1d7dca7875e19391ff2f5b05cfa1c56522781df5ae */c/dev/PRIN/tests/test_0159_manifest.py
+1a60650e5e73d3a82d937a1d7dca7875e19391ff2f5b05cfa1c56522781df5ae *sast-input-d/tests/test_0159_manifest.py

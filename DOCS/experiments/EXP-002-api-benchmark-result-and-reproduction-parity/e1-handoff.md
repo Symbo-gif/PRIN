@@ -34,7 +34,7 @@ including the completed `[]` native open-alert read — do not re-query).
 | Artefact | State |
 |---|---|
 | [`preregistration.md`](preregistration.md) | Lead-authored **DRAFT**; the E2 review items of its §10 are open for session 0160 and the maintainer |
-| [`benchmarks/campaign/exp002_driver.py`](../../../benchmarks/campaign/exp002_driver.py) | Lead-authored, including the post-review fixes (PDF-magic rejection; exact-`APPROVED` status match); working-tree bytes SHA-256 `848fab7c821fd4c79062e575a81f9fbb53808b3ba89fb6cb1ba1e4ed3ecc3a04` (997 lines; refresh if the source changes before commit — the full hash set is in `EVIDENCE/0159/verification/source-hashes.txt`) |
+| [`benchmarks/campaign/exp002_driver.py`](../../../benchmarks/campaign/exp002_driver.py) | Lead-authored, including the post-review publication-container correction (classic-xref PDF validation + xref/startxref canonicalization; PNG CRC/critical-chunk/decoded-image validation; nonregular-output rejection; exact-`APPROVED` status match); working-tree bytes SHA-256 `52edad9291a475f702182a78ff7cc738fa7e94875e0ba9a9d1da2d368f3c59f6` (1178 lines; refresh if the source changes before commit — the prior hash set is in `EVIDENCE/0159/verification/source-hashes.txt` and the post-correction set (same driver hash, updated test hash) in `EVIDENCE/0159/verification/full-gate/correction-source-hashes.txt`) |
 | [`tests/test_exp002_driver.py`](../../../tests/test_exp002_driver.py) | Synthetic-fixture regression tests (no archived inputs, no real generators, no execution) |
 | [`tests/test_0159_manifest.py`](../../../tests/test_0159_manifest.py) | `EVIDENCE/0159` manifest regression tests reusing the EA-007 validators |
 | [`EVIDENCE/0159/`](../../../EVIDENCE/0159/) | Packaging in progress; raw captures immutable, index narrative mutable, `SHA256SUMS.txt` regenerated in the same change |
@@ -48,6 +48,11 @@ including the completed `[]` native open-alert read — do not re-query).
   `n=1`/no-inference exception, and the driver/review finding closure.
 - Independent review of the driver against the protocol; approval cannot
   precede closure of driver/review findings.
+- The H3 publication normalization policy — registered-container
+  validation (classic-xref PDF structure; PNG CRC, critical-chunk and
+  decoded-image checks) including xref/startxref pointer-field
+  canonicalization — is a metadata-only policy that needs explicit E2
+  approval (protocol §5.4); the pointer fields are inside that review.
 - Scientific approval is recorded only by 0160; freeze occurs at the first
   E3 run.
 
@@ -67,6 +72,12 @@ including the completed `[]` native open-alert read — do not re-query).
 - **Record closure:** storage-cap/closure failures can leave a raw
   `status=COMPLETED` result while the run exits non-zero; such a run is
   inadmissible — status alone never constitutes a pass.
+- **Fixture format gap closed:** the earlier synthetic PDF/PNG fixtures
+  deliberately lacked xref structure and valid CRCs, matching the former
+  magic-byte-only guards. The corrected driver validates the registered
+  containers, so the fixtures were upgraded to structurally valid
+  classic-xref PDFs and CRC-correct PNGs (lead-authored recipes);
+  malformed containers now fail as `DriverError` before comparison.
 - Historical predecessor evidence for the record — verbatim frozen output
   of the EXP-001-r1 merge CI check (source:
   [`EVIDENCE/ea007/exp001-r1-merge-ci-green.log`](../../../EVIDENCE/ea007/exp001-r1-merge-ci-green.log);

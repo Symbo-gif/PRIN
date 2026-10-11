@@ -1,0 +1,183 @@
+"""Lead-authored EXP-002 format/canonicalization proposal, synthetic inputs only.
+
+The PDF subset is Matplotlib's single-revision, classic-xref output. This is
+container validation, not a general PDF interpreter. Canonical comparison bytes
+are not promised to be renderable: raw bytes remain the H4/reconstruction input.
+"""
+
+from __future__ import annotations
+
+import re
+import zlib
+from io import BytesIO
+
+from PIL import Image
+
+from benchmarks.campaign.exp002_driver import DriverError
+
+
+def _pdf_parts(payload: bytes) -> tuple[bytes, list[tuple[int, bytes]], int | None, bytes, bytes]:
+    """Validate the registered classic-xref container and locate its objects."""
+    error = "malformed PDF publication output (classic-xref container required)"
+    if re.match(rb"%PDF-(?:1\.[0-7]|2\.0)[\r\n]", payload) is None:
+        raise DriverError(error)
+    footer = re.search(
+        rb"(?m)^startxref[ \t]*[\r\n]+([0-9]+)[ \t]*[\r\n]+%%EOF[ \t\r\n]*\Z",
+        payload,
+    )
+    if footer is None:
+        raise DriverError(error)
+    offset = int(footer.group(1))
+    if not 0 < offset < footer.start():
+        raise DriverError(error)
+    lines = payload[offset : footer.start()].splitlines(keepends=True)
+    if not lines or lines[0].strip() != b"xref":
+        raise DriverError(error)
+    entries: dict[tuple[int, int], tuple[int, bytes]] = {}
+    canonical = [lines[0]]
+    index = 1
+    while index < len(lines) and lines[index].strip() != b"trailer":
+        subsection = re.fullmatch(rb"([0-9]+)[ \t]+([0-9]+)", lines[index].strip())
+        if subsection is None:
+            raise DriverError(error)
+        first, count = (int(value) for value in subsection.groups())
+        if count < 1 or count > len(lines) - index - 1:
+            raise DriverError(error)
+        canonical.append(lines[index])
+        index += 1
+        for number in range(first, first + count):
+            line = lines[index]
+            entry = re.fullmatch(
+                rb"([0-9]{10})[ \t]([0-9]{5})[ \t]([nf])[ \t]*",
+                line.strip(),
+            )
+            if entry is None:
+                raise DriverError(error)
+            position, generation, kind = entry.groups()
+            key = (number, int(generation))
+            if key in entries:
+                raise DriverError(error)
+            entries[key] = (int(position), kind)
+            canonical.append(b"0000000000" + line[10:] if kind == b"n" else line)
+            index += 1
+    if index >= len(lines):
+        raise DriverError(error)
+    trailer = b"".join(lines[index:])
+    dictionary = re.fullmatch(rb"trailer\s*<<(.*)>>\s*", trailer, re.S)
+    if dictionary is None or not entries:
+        raise DriverError(error)
+    size = re.search(rb"/Size\s+([0-9]+)\b", dictionary.group(1))
+    root = re.search(rb"/Root\s+([0-9]+)\s+([0-9]+)\s+R\b", dictionary.group(1))
+    if (
+        size is None
+        or int(size.group(1)) != max(number for number, _ in entries) + 1
+        or root is None
+    ):
+        raise DriverError(error)
+    root_key = (int(root.group(1)), int(root.group(2)))
+    if entries.get(root_key, (0, b"f"))[1] != b"n":
+        raise DriverError(error)
+    info = re.search(rb"/Info\s+([0-9]+)\s+([0-9]+)\s+R\b", dictionary.group(1))
+    info_number = None
+    if info is not None:
+        info_key = (int(info.group(1)), int(info.group(2)))
+        if entries.get(info_key, (0, b"f"))[1] != b"n":
+            raise DriverError(error)
+        info_number = info_key[0]
+    in_use = sorted(
+        (position, number, generation)
+        for (number, generation), (position, kind) in entries.items()
+        if kind == b"n"
+    )
+    if not in_use or len({position for position, _, _ in in_use}) != len(in_use):
+        raise DriverError(error)
+    objects = []
+    for item, (position, number, generation) in enumerate(in_use):
+        end = in_use[item + 1][0] if item + 1 < len(in_use) else offset
+        segment = payload[position:end]
+        header = f"{number} {generation} obj".encode("ascii")
+        if (
+            not 0 < position < end <= offset
+            or not segment.startswith(header)
+            or segment[len(header) : len(header) + 1] not in {b" ", b"\r", b"\n"}
+            or not segment.rstrip().endswith(b"endobj")
+        ):
+            raise DriverError(error)
+        if number == info_number and re.search(rb"(?m)^stream[\r\n]", segment):
+            raise DriverError(error)
+        objects.append((number, segment))
+    trailer = re.sub(
+        rb"/ID\s*\[\s*<[0-9a-fA-F]+>\s*<[0-9a-fA-F]+>\s*\]",
+        b"/ID [<normalized> <normalized>]",
+        trailer,
+    )
+    canonical.append(trailer)
+    canonical_footer = re.sub(rb"[0-9]+", b"0", payload[footer.start() :], count=1)
+    return payload[: in_use[0][0]], objects, info_number, b"".join(canonical), canonical_footer
+
+
+def _normalized_pdf(payload: bytes) -> bytes:
+    """Mask only registered Info fields, document ID and relocation offsets."""
+    prefix, objects, info_number, xref, footer = _pdf_parts(payload)
+    parts = [prefix]
+    for number, segment in objects:
+        if number == info_number:
+            segment = re.sub(
+                rb"/(CreationDate|ModDate|Creator|Producer)\s+\((?:\\.|[^\\)])*\)",
+                rb"/\1 (normalized)",
+                segment,
+            )
+        parts.append(segment)
+    return b"".join(parts) + xref + footer
+
+
+def _validate_png(payload: bytes) -> None:
+    """Reject missing/invalid critical chunks, bad CRCs and undecodable pixels."""
+    error = "malformed PNG publication output"
+    if not payload.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise DriverError(error)
+    offset = 8
+    chunks = []
+    while offset < len(payload):
+        if offset + 12 > len(payload):
+            raise DriverError(error)
+        length = int.from_bytes(payload[offset : offset + 4], "big")
+        end = offset + 12 + length
+        if end > len(payload):
+            raise DriverError(error)
+        kind = payload[offset + 4 : offset + 8]
+        data = payload[offset + 8 : end - 4]
+        crc = int.from_bytes(payload[end - 4 : end], "big")
+        if (
+            re.fullmatch(rb"[A-Za-z]{4}", kind) is None
+            or kind[2] & 32
+            or not kind[0] & 32 and kind not in {b"IHDR", b"PLTE", b"IDAT", b"IEND"}
+            or zlib.crc32(kind + data) != crc
+        ):
+            raise DriverError(error)
+        chunks.append(kind)
+        if kind == b"IEND" and (length != 0 or end != len(payload)):
+            raise DriverError(error)
+        offset = end
+    if (
+        not chunks
+        or chunks[0] != b"IHDR"
+        or chunks.count(b"IHDR") != 1
+        or b"IDAT" not in chunks
+        or chunks[-1] != b"IEND"
+        or chunks.count(b"IEND") != 1
+        or chunks.count(b"PLTE") > 1
+    ):
+        raise DriverError(error)
+    data_indices = [index for index, kind in enumerate(chunks) if kind == b"IDAT"]
+    if data_indices != list(range(data_indices[0], data_indices[-1] + 1)):
+        raise DriverError(error)
+    try:
+        with Image.open(BytesIO(payload)) as image:
+            if image.format != "PNG":
+                raise DriverError(error)
+            image.verify()
+        with Image.open(BytesIO(payload)) as image:
+            image.load()
+    except (OSError, SyntaxError, ValueError, Image.DecompressionBombError) as exc:
+        raise DriverError(error) from exc

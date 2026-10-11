@@ -307,16 +307,24 @@ tab_supercritical
 tab_geometry
 ```
 
-H3 compares tables as raw bytes, including their LF line endings.
-For figures use the existing `normalize_matplotlib_output` policy: PNG retains
-IHDR/PLTE/tRNS/IDAT/IEND chunks; PDF masks CreationDate, ModDate and document
-ID. Additionally canonicalize PDF Creator and Producer metadata fields only,
-because the PRIN writer explicitly identifies itself as PRIN whereas the
-frozen writer uses Matplotlib's defaults. Preserve every drawing/image/font
-stream and every scientific label/value; no pixel tolerance, raster
-resampling, whitespace stripping, numeric rounding, or content masking.
-Record raw and normalized byte sizes/digests separately. This metadata-only
-departure needs explicit E2 approval. It never applies to H4.
+H3 compares tables as raw bytes, including their LF line endings. PNG
+comparison retains IHDR/PLTE/tRNS/IDAT/IEND under the existing
+`normalize_matplotlib_output` policy, after CRC, critical-chunk and
+decoded-image validation. PDF comparison admits the registered Matplotlib
+single-revision classic-xref container, validating its EOF/startxref,
+cross-reference entries, object boundaries and Root/Info references. It is
+container validation, not a general PDF interpreter. Mask CreationDate,
+ModDate, Creator and Producer only within the referenced Info object, and
+document ID only in the trailer. Canonicalize in-use xref byte offsets and
+the startxref pointer to zero: metadata-field length changes relocate
+objects, and those offsets are structural addresses, not scientific content.
+Preserve object identities/generations/status, every drawing/image/font
+stream, other Info fields, and every scientific label/value. No pixel
+tolerance, raster resampling, whitespace stripping, numeric rounding or
+scientific-content masking. Record raw and normalized byte sizes/digests
+separately. This metadata-only policy, including pointer canonicalization,
+needs explicit E2 approval. It never applies to H4; raw files are retained
+unchanged.
 
 The 11 archived table files supply an additional independent raw-byte
 reference in H3. If a reference-generator table differs from its frozen

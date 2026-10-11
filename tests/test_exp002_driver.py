@@ -17,15 +17,17 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import runpy
+import struct
 import sys
 import tempfile
+import zlib
 from pathlib import Path
 from types import ModuleType
 from typing import Any
 
 import pytest
-from prin.reporting.figure_generation import NormalizationError
 
 import benchmarks._common.result as result_module
 import tools.reproduce as reproduce
@@ -72,51 +74,156 @@ _needs_symlink_support = pytest.mark.skipif(
 )
 
 
-def _png_bytes(chunks: list[tuple[bytes, bytes]]) -> bytes:
-    """Minimal PNG container; CRC bytes are placeholders the parser ignores."""
-    payload = bytearray(b"\x89PNG\r\n\x1a\n")
-    for kind, data in chunks:
-        payload += len(data).to_bytes(4, "big") + kind + data + b"\x00" * 4
+def _pdf_assemble(objects: list[bytes], identifier: bytes) -> bytes:
+    """Assemble the lead recipe's classic-xref container around ``objects``."""
+    payload = bytearray(b"%PDF-1.4\n%\xff\xfe\n")
+    offsets = []
+    for number, value in enumerate(objects, 1):
+        offsets.append(len(payload))
+        payload += f"{number} 0 obj\n".encode() + value + b"\nendobj\n"
+    xref = len(payload)
+    payload += b"xref\n0 7\n0000000000 65535 f \n"
+    for offset in offsets:
+        payload += f"{offset:010d} 00000 n \n".encode()
+    payload += (
+        b"trailer\n<< /Size 7 /Root 1 0 R /Info 5 0 R /ID [<"
+        + identifier
+        + b"> <"
+        + identifier
+        + b">] >>\nstartxref\n"
+        + str(xref).encode()
+        + b"\n%%EOF\n"
+    )
     return bytes(payload)
 
 
-IHDR = b"\x00" * 13
-PNG_A = _png_bytes(
-    [(b"IHDR", IHDR), (b"tEXt", b"meta-1"), (b"IDAT", b"image-a"), (b"IEND", b"")]
-)
-PNG_B = _png_bytes(
-    [(b"IHDR", IHDR), (b"tIME", b"meta-2"), (b"IDAT", b"image-a"), (b"IEND", b"")]
-)
-PNG_C = _png_bytes([(b"IHDR", IHDR), (b"IDAT", b"image-c"), (b"IEND", b"")])
+def _pdf_fixture(
+    creator: bytes,
+    producer: bytes,
+    date: bytes,
+    identifier: bytes,
+    label: bytes = b"SCIENCE",
+    title: bytes = b"unchanged",
+) -> bytes:
+    """Lead-authored classic-xref PDF with a real page, stream, Info and font."""
+    stream = (
+        b"/Artifact <</Creator (SCIENTIFIC PROPERTY)>> BDC\n"
+        b"BT /F1 8 Tf 2 2 Td (" + label + b") Tj ET\nEMC\n"
+    )
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 10 10] "
+        b"/Contents 4 0 R /Resources << /Font << /F1 6 0 R >> >> >>",
+        b"<< /Length "
+        + str(len(stream)).encode()
+        + b" >>\nstream\n"
+        + stream
+        + b"endstream",
+        b"<< /Creator ("
+        + creator
+        + b") /Producer ("
+        + producer
+        + b") /CreationDate ("
+        + date
+        + b") /ModDate ("
+        + date
+        + b") /Title ("
+        + title
+        + b") >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    return _pdf_assemble(objects, identifier)
 
-PDF_TEMPLATE = (
-    b"%%PDF-1.4\n"
-    b"/CreationDate (%s)\n"
-    b"/ModDate (%s)\n"
-    b"/ID [<%s> <%s>]\n"
-    b"/Creator (%s)\n"
-    b"/Producer (%s)\n"
-    b"stream %s endstream\n%%%%EOF\n"
+
+def _pdf_fixture_info_stream() -> bytes:
+    """Lead-layout PDF whose referenced Info object carries a stream member."""
+    stream = b"BT /F1 8 Tf 2 2 Td (SCIENCE) Tj ET\n"
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 10 10] "
+        b"/Contents 4 0 R /Resources << /Font << /F1 6 0 R >> >> >>",
+        b"<< /Length "
+        + str(len(stream)).encode()
+        + b" >>\nstream\n"
+        + stream
+        + b"endstream",
+        b"<< /Creator (ToolOne) /Producer (ToolTwo) /Title (unchanged) >>"
+        b"\nstream\nx\nendstream",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    return _pdf_assemble(objects, b"11" * 16)
+
+
+def _png_fixture(chunks: list[tuple[bytes, bytes]]) -> bytes:
+    """Lead-authored CRC-correct PNG chunks around a real one-pixel RGB image."""
+    payload = bytearray(b"\x89PNG\r\n\x1a\n")
+    for kind, data in chunks:
+        payload += (
+            struct.pack(">I", len(data))
+            + kind
+            + data
+            + struct.pack(">I", zlib.crc32(kind + data))
+        )
+    return bytes(payload)
+
+
+IHDR = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
+IDAT_RED = zlib.compress(b"\x00\xff\x00\x00")
+IDAT_BLUE = zlib.compress(b"\x00\x00\x00\xff")
+
+PNG_A = _png_fixture(
+    [
+        (b"IHDR", IHDR),
+        (b"tEXt", b"Software\x00first"),
+        (b"IDAT", IDAT_RED),
+        (b"IEND", b""),
+    ]
 )
-PDF_A = PDF_TEMPLATE % (
-    b"D:20200101",
-    b"D:20200101",
-    b"aaaa",
-    b"bbbb",
-    b"ToolOne",
-    b"ToolTwo",
-    b"BODY",
+PNG_B = _png_fixture(
+    [
+        (b"IHDR", IHDR),
+        (b"tEXt", b"Software\x00a longer creator"),
+        (b"IDAT", IDAT_RED),
+        (b"IEND", b""),
+    ]
 )
-PDF_B = PDF_TEMPLATE % (
-    b"D:19991231",
-    b"D:20010202",
-    b"cccc",
-    b"dddd",
-    b"OtherTool",
-    b"OtherProducer",
-    b"BODY",
+PNG_C = _png_fixture([(b"IHDR", IHDR), (b"IDAT", IDAT_BLUE), (b"IEND", b"")])
+
+PDF_A = _pdf_fixture(b"ToolOne", b"ToolTwo", b"D:20200101", b"11" * 16)
+PDF_B = _pdf_fixture(
+    b"A much longer Matplotlib creator",
+    b"Longer producer metadata",
+    b"D:20201011130000Z",
+    b"22" * 16,
 )
-PDF_C = PDF_B.replace(b"BODY", b"CHANGED")
+PDF_C = _pdf_fixture(
+    b"ToolOne", b"ToolTwo", b"D:20200101", b"11" * 16, label=b"CHANGED"
+)
+PDF_TITLE = _pdf_fixture(
+    b"ToolOne", b"ToolTwo", b"D:20200101", b"11" * 16, title=b"CHANGED"
+)
+PDF_ESCAPED = _pdf_fixture(b"Cr\\(x\\)eator", b"ToolTwo", b"D:20200101", b"11" * 16)
+PDF_NO_INFO = PDF_A.replace(b" /Info 5 0 R", b"")
+PDF_DUP_OFFSET = PDF_A.replace(
+    re.findall(rb"\n([0-9]{10}) 00000 n ", PDF_A)[3],
+    re.findall(rb"\n([0-9]{10}) 00000 n ", PDF_A)[2],
+)
+# A second subsection that relists object 1 produces a genuine duplicate
+# cross-reference entry rather than a parse-level failure.
+_PDF_N_ENTRY_LINES = re.findall(rb"[0-9]{10} 00000 n ", PDF_A)
+PDF_DUP_ENTRY = PDF_A.replace(b"xref\n0 7\n", b"xref\n0 2\n").replace(
+    _PDF_N_ENTRY_LINES[1], b"1 1\n" + _PDF_N_ENTRY_LINES[1]
+)
+PDF_NO_TRAILER = PDF_A.replace(
+    b"trailer\n<< /Size 7 /Root 1 0 R /Info 5 0 R /ID [<"
+    + b"11" * 16
+    + b"> <"
+    + b"11" * 16
+    + b">] >>\n",
+    b"",
+)
 
 TEX_A = b"% synthetic table a\n"
 
@@ -857,6 +964,9 @@ class TestNormalizedBytes:
         )
 
     def test_pdf_metadata_only_difference_normalizes_equal(self) -> None:
+        # Different-length Creator/Producer/dates/ID relocate objects and
+        # shift every xref offset; canonicalization must still compare equal.
+        assert PDF_A != PDF_B
         assert driver.normalized_bytes(PDF_A, ".pdf") == (
             driver.normalized_bytes(PDF_B, ".pdf")
         )
@@ -870,10 +980,76 @@ class TestNormalizedBytes:
             driver.normalized_bytes(PDF_C, ".pdf")
         )
 
-    def test_pdf_bad_magic_rejected(self) -> None:
-        """Invalid format must abort, not normalize to garbage."""
+    def test_pdf_unregistered_info_field_stays_significant(self) -> None:
+        # /Title is not a registered masked field: changing it must matter.
+        assert driver.normalized_bytes(PDF_A, ".pdf") != (
+            driver.normalized_bytes(PDF_TITLE, ".pdf")
+        )
+
+    def test_pdf_creator_inside_content_stream_retained(self) -> None:
+        normalized = driver.normalized_bytes(PDF_A, ".pdf")
+        assert b"/Creator (SCIENTIFIC PROPERTY)" in normalized
+
+    def test_pdf_escaped_info_parentheses_normalize(self) -> None:
+        assert driver.normalized_bytes(PDF_A, ".pdf") == (
+            driver.normalized_bytes(PDF_ESCAPED, ".pdf")
+        )
+
+    def test_pdf_without_info_is_valid_and_not_blind_masked(self) -> None:
+        # /Info is optional; without it nothing is masked, so the Creator
+        # bytes inside the unreferenced Info-like object are preserved.
+        normalized = driver.normalized_bytes(PDF_NO_INFO, ".pdf")
+        assert b"ToolOne" in normalized
+
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            b"not-pdf",
+            b"%PDF-1.4\njunk",
+            PDF_A.replace(b"%%EOF", b"BROKEN"),
+            re.sub(rb"(?m)^startxref\n[0-9]+", b"startxref\n1", PDF_A),
+            re.sub(rb"(?m)^startxref\n[0-9]+", b"startxref\n999999", PDF_A),
+            PDF_A.replace(b"0000000000 65535 f", b"invalid-xref-entry"),
+            PDF_A.replace(b"/Root 1 0 R", b"/Root 99 0 R"),
+            PDF_A.replace(b"/Info 5 0 R", b"/Info 99 0 R"),
+            PDF_DUP_ENTRY,
+            PDF_DUP_OFFSET,
+            PDF_A.replace(b"2 0 obj", b"9 0 obj"),
+            PDF_A.replace(b"endobj", b"endobX", 1),
+            PDF_A.replace(b"xref\n0 7\n", b"xref\n0 99\n"),
+            PDF_A.replace(b"xref\n0 7\n", b"xref\n0 2\n"),
+            PDF_NO_TRAILER,
+            PDF_A.replace(b"trailer\n<<", b"trailer\n>>"),
+            _pdf_fixture_info_stream(),
+            PDF_A.replace(b"/Size 7 ", b""),
+            PDF_A.replace(b"/Root 1 0 R ", b""),
+        ],
+        ids=[
+            "bad-magic",
+            "bare-header-junk",
+            "missing-eof",
+            "invalid-startxref-pointer",
+            "startxref-out-of-bounds",
+            "invalid-xref-entry",
+            "missing-root-ref",
+            "missing-info-ref",
+            "duplicate-xref-entry",
+            "duplicate-xref-offset",
+            "mismatched-object-header",
+            "missing-endobj",
+            "truncated-xref-subsection",
+            "unexpected-line-after-subsection",
+            "xref-without-trailer",
+            "trailer-not-a-dictionary",
+            "info-object-with-stream",
+            "trailer-without-size",
+            "trailer-without-root",
+        ],
+    )
+    def test_malformed_pdf_rejected(self, payload: bytes) -> None:
+        """Invalid registered containers must abort, not normalize."""
         with pytest.raises(driver.DriverError, match="malformed PDF"):
-            driver.normalized_bytes(b"not-a-pdf-payload", ".pdf")
+            driver.normalized_bytes(payload, ".pdf")
 
     def test_png_ancillary_difference_normalizes_equal(self) -> None:
         assert driver.normalized_bytes(PNG_A, ".png") == (
@@ -892,11 +1068,82 @@ class TestNormalizedBytes:
 
     @pytest.mark.parametrize(
         "payload",
-        [b"not-a-png", b"\x89PNG\r\n\x1a\n" + b"\x00" * 5],
-        ids=["bad-magic", "truncated-chunk"],
+        [
+            b"not-a-png",
+            b"\x89PNG\r\n\x1a\n",
+            b"\x89PNG\r\n\x1a\n" + b"\x00" * 5,
+            PNG_A[:-12] + b"\x00\x00\x10\x00" + PNG_A[-8:],
+            _png_fixture([(b"IDAT", IDAT_RED), (b"IEND", b"")]),
+            _png_fixture([(b"IHDR", IHDR), (b"IEND", b"")]),
+            _png_fixture([(b"IHDR", IHDR), (b"IDAT", IDAT_RED)]),
+            _png_fixture([(b"IHDR", b""), (b"IDAT", IDAT_RED), (b"IEND", b"")]),
+            _png_fixture(
+                [
+                    (b"IHDR", struct.pack(">IIBBBBB", 0, 1, 8, 2, 0, 0, 0)),
+                    (b"IDAT", IDAT_RED),
+                    (b"IEND", b""),
+                ]
+            ),
+            PNG_A[:-1] + bytes([PNG_A[-1] ^ 1]),
+            _png_fixture([(b"IHDR", IHDR), (b"IDAT", b"not-zlib"), (b"IEND", b"")]),
+            PNG_A + b"garbage",
+            PNG_A[:-12],
+            _png_fixture(
+                [
+                    (b"IHDR", IHDR),
+                    (b"IHDR", IHDR),
+                    (b"IDAT", IDAT_RED),
+                    (b"IEND", b""),
+                ]
+            ),
+            _png_fixture(
+                [
+                    (b"IHDR", IHDR),
+                    (b"IDAT", IDAT_RED),
+                    (b"IEND", b""),
+                    (b"IEND", b""),
+                ]
+            ),
+            _png_fixture(
+                [
+                    (b"IHDR", IHDR),
+                    (b"IDAT", IDAT_RED[:2]),
+                    (b"tEXt", b"key\x00value"),
+                    (b"IDAT", IDAT_RED[2:]),
+                    (b"IEND", b""),
+                ]
+            ),
+            _png_fixture(
+                [
+                    (b"IHDR", IHDR),
+                    (b"JUNK", b"x"),
+                    (b"IDAT", IDAT_RED),
+                    (b"IEND", b""),
+                ]
+            ),
+        ],
+        ids=[
+            "bad-magic",
+            "signature-only",
+            "partial-chunk-header",
+            "declared-length-overrun",
+            "missing-ihdr",
+            "missing-idat",
+            "missing-iend",
+            "empty-ihdr",
+            "zero-width-ihdr",
+            "bad-crc",
+            "correct-crc-invalid-zlib",
+            "trailing-bytes",
+            "truncated-iend",
+            "duplicate-ihdr",
+            "duplicate-iend",
+            "noncontiguous-idat",
+            "unknown-critical-chunk",
+        ],
     )
     def test_malformed_png_rejected(self, payload: bytes) -> None:
-        with pytest.raises(NormalizationError):
+        with pytest.raises(driver.DriverError, match="malformed PNG"):
             driver.normalized_bytes(payload, ".png")
 
 
@@ -1213,6 +1460,35 @@ class TestCollectReproduction:
 
         monkeypatch.setattr(driver, "run_reproduction", symlink_render)
         with pytest.raises(driver.DriverError, match="symlink"):
+            driver.collect_reproduction(
+                "prin", workspace / "snapshot", workspace / "generated" / "out"
+            )
+
+    def test_nonregular_output_rejected_before_format_read(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _archived_tables(workspace)
+        self._renderer(monkeypatch)
+        monkeypatch.setattr(
+            driver,
+            "run_reproduction",
+            lambda **kwargs: _write_rendered_output(kwargs["output_dir"]),
+        )
+        monkeypatch.setattr(driver, "verify_manifest", lambda *args: ())
+        abnormal = "fig2_clevr_n_capacity.pdf"
+        real_is_file = Path.is_file
+        real_is_dir = Path.is_dir
+        monkeypatch.setattr(
+            Path,
+            "is_file",
+            lambda path: False if path.name == abnormal else real_is_file(path),
+        )
+        monkeypatch.setattr(
+            Path,
+            "is_dir",
+            lambda path: False if path.name == abnormal else real_is_dir(path),
+        )
+        with pytest.raises(driver.DriverError, match="not a regular file"):
             driver.collect_reproduction(
                 "prin", workspace / "snapshot", workspace / "generated" / "out"
             )

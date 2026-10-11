@@ -1,0 +1,20 @@
+COMMAND: GIT_SHALLOW_FILE=<empty SESSION> gitleaks git C:/dev/PRIN --redact --log-opts=--all --report-format json --report-path <scratch>/gitleaks-7859030.json (is-shallow-repository=false; fsck --connectivity-only --no-dangling exit 0)
+UTC-START: 2026-10-11T13:02:30Z
+HOST: HP (Microsoft Windows NT 10.0.26300.0)
+HEAD: 78590305e1c0a78d92153ef2a55a9e76aeb7af79
+WORKTREE: clean
+
+
+    Γùï
+    ΓöéΓò▓
+    Γöé Γùï
+    Γùï Γûæ
+    Γûæ    gitleaks
+
+10:02AM INF 712 commits scanned.
+10:02AM INF scanned ~77240072 bytes (77.24 MB) in 11s
+10:02AM WRN leaks found: 1
+
+UTC-END: 2026-10-11T13:02:41Z
+ELAPSED-SECONDS: 11.8
+EXIT_CODE: 1

@@ -1,0 +1,35 @@
+COMMAND: snyk code test C:\dev\PRIN\DOCS\test_and_benchmark_results\0159-full-gate\sast-input --severity-threshold=medium --org=symbo-gif (isolated byte-identical copies: exp002_driver.py, test_exp002_driver.py, test_0159_manifest.py; source SHA256 recorded in log preamble)
+UTC-START: 2026-10-11T13:02:02Z
+HOST: HP (Microsoft Windows NT 10.0.26300.0)
+HEAD: 78590305e1c0a78d92153ef2a55a9e76aeb7af79
+WORKTREE: clean
+
+
+Testing C:\dev\PRIN\DOCS\test_and_benchmark_results\0159-full-gate\sast-input ...
+
+        
+≡ƒÆí Tip
+
+   You are currently viewing results with --severity-threshold applied.
+   To view all issues, remove the --severity-threshold flag            
+                                                                       
+
+Γò¡ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò«
+Γöé Test Summary                                                                                  Γöé
+Γöé                                                                                               Γöé
+Γöé   Organization:      symbo-gif                                                                Γöé
+Γöé   Test type:         Static code analysis                                                     Γöé
+Γöé   Project path:      C:\dev\PRIN\DOCS\test_and_benchmark_results\0159-full-gate\sast-input    Γöé
+Γöé                                                                                               Γöé
+Γöé   Total issues:   0                                                                           Γöé
+Γò░ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓò»
+    
+≡ƒÆí Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+
+
+UTC-END: 2026-10-11T13:02:15Z
+ELAPSED-SECONDS: 13.1
+EXIT_CODE: 0
