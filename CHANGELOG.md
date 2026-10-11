@@ -27,9 +27,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   validation (Matplotlib single-revision classic-xref PDF structure;
   PNG CRC, critical-chunk and decoded-image checks) with xref/startxref
   pointer canonicalization, and the synthetic fixtures were upgraded to
-  structurally valid containers accordingly. No experiment results are
-  recorded: the protocol is DRAFT, no EXP-002 execution or pilot has
-  run, and the final full local gate is pending.
+  structurally valid containers accordingly. The final local gate ran on
+  checkpoint `63145325`: FAST 3710 passed / 178 skipped / 55 deselected
+  (exit 0), FULL 5904 passed / 184 skipped (exit 0 after one preserved
+  WinError-32 setup-lock attempt), focused driver gate 256 passed at
+  99.61 % changed-driver coverage (whole-`prin` coverage 94.810405 %
+  unrounded; the rounded `95` is not an unrounded ≥95 claim), Sphinx
+  `-W` clean, governance battery green, Snyk Code 0 medium-or-higher on
+  the changed Python scope. The full-history secret scan is a real
+  exit 1 — one known noncredential checksum finding whose exception is
+  pending maintainer approval — and publication (push/PR) is also
+  pending. No experiment results are recorded: the protocol is DRAFT
+  and no EXP-002 execution or pilot has run.
 
 - **EXP-001-r1 executed, adjudicated and reported — all five hypotheses
   `CONFIRMED`, no D1 (2026-09-29 UTC).** The campaign plan §10.4 item 4 re-run

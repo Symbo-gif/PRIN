@@ -34,6 +34,26 @@ all recorded legs: `78590305e1c0a78d92153ef2a55a9e76aeb7af79` (baseline
 | Governance battery (deviation ledger, DV gates, session registration, skipif probes, wp001 check) | **PENDING** on clean source |
 | Full pytest final run | **PENDING** — must log outside repo, no in-repo writes during run |
 
+## Validated result on source 6314532
+
+The final legs ran on `63145325c01fd837fd55e2796ea0fa34aa7eb234` and are
+archived in `../final-6314532/` (external-root copies; all pytest legs
+with zero in-repo writes during runs). The 7859030 legs above remain
+valid for their unchanged scopes (Rust untouched; static legs on
+unchanged files; native audits on unchanged lockfiles).
+
+| Leg | Check | Result |
+|---|---|---|
+| narrow ruff | check + format, 3 changed files | PASS — exit 0 / 0 |
+| focused gate | 4-file pytest + driver coverage | **256 passed, exit 0**; driver coverage 99.61% (changed-driver scope; DV-033 stays OPEN) |
+| FAST | `pytest tests/ -m "not slow and not gpu"` | **3710 passed, 178 skipped, 55 deselected, 59 warnings, 995.73s — exit 0** |
+| FULL (04c) | `pytest tests/ parity/` | **5904 passed, 184 skipped, 61 warnings, 1621.36s — exit 0**; whole-`prin` coverage 7326/7727 = **94.810405%** (terminal `95` is rounded; not an unrounded ≥95 claim) |
+| FULL (04) | first attempt | exit 1 — WinError-32 fixture-setup lock (holder unproven); isolated node rerun passed (diagnostic only) |
+| Sphinx | `-W --keep-going` fresh external output | PASS — exit 0 |
+| governance | ledger / DV gates / registration / skipif / wp001 / diff-check | PASS — all exit 0 (44 DV rows / 197 entries; 18 reports; 146 ledger rows) |
+| gitleaks | full history on 6314532, 713 commits | **EXIT 1 — not a pass**: exactly the one known noncredential checksum finding (`entry-state.json:87`); exception pending maintainer approval |
+| Snyk Code | corrected + final 3-file scopes (24b/24c) | PASS — 0 medium-or-higher; byte-identity attested |
+
 ## Standing constraints
 
 - GitHub hosted workflows: **PAUSED** (amendment #48); Linux/macOS/wheel

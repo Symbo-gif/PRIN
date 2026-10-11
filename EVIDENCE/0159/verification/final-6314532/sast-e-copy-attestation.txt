@@ -1,0 +1,2 @@
+86e06981f79e08d5dbb0852ffa9943c58eb87d8f08b0228ae40790e54f31caa5 *tests/test_0159_manifest.py
+86e06981f79e08d5dbb0852ffa9943c58eb87d8f08b0228ae40790e54f31caa5 */c/Users/there/AppData/Local/Temp/prin-0159-final-6314532-20261011T144627Z/sast-input-e/tests/test_0159_manifest.py

@@ -103,6 +103,25 @@ REQUIRED_BUNDLE = {
     f"{MANIFEST_DIR}/full-gate/0159-publication-validation-proposal.py.txt",
     f"{MANIFEST_DIR}/full-gate/0159-publication-validation-proof.py.txt",
     f"{MANIFEST_DIR}/full-gate/0159-publication-validation-proof.log",
+    # Final local-gate capture set on source 6314532
+    # (EVIDENCE/0159/verification/final-6314532/): headed leg logs from the
+    # external capture root, both FULL attempts plus the isolated
+    # diagnostic, the coverage JSON, the gitleaks report with its empty
+    # SESSION shallow-file, and the nested index.
+    f"{MANIFEST_DIR}/final-6314532/00-environment.log",
+    f"{MANIFEST_DIR}/final-6314532/01-ruff-narrow.log",
+    f"{MANIFEST_DIR}/final-6314532/02-focused-pytest.log",
+    f"{MANIFEST_DIR}/final-6314532/03-pytest-fast.log",
+    f"{MANIFEST_DIR}/final-6314532/04-pytest-full.log",
+    f"{MANIFEST_DIR}/final-6314532/04b-error-diagnostic.log",
+    f"{MANIFEST_DIR}/final-6314532/04c-pytest-full-isolated.log",
+    f"{MANIFEST_DIR}/final-6314532/05-sphinx.log",
+    f"{MANIFEST_DIR}/final-6314532/06-governance.log",
+    f"{MANIFEST_DIR}/final-6314532/07-gitleaks.log",
+    f"{MANIFEST_DIR}/final-6314532/focused-coverage.json",
+    f"{MANIFEST_DIR}/final-6314532/gitleaks-6314532.json",
+    f"{MANIFEST_DIR}/final-6314532/SESSION",
+    f"{MANIFEST_DIR}/final-6314532/README.md",
 }
 
 

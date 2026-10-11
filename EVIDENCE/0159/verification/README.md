@@ -46,6 +46,28 @@ governance). Text artefacts only.
   `0159-driver-final-coverage.json` — the post-review focused batch on the
   lead-corrected source (PDF-magic rejection and exact-`APPROVED` status
   match): 218 passed, 99.75 % coverage; see each log's header.
+- `full-gate/` — the complete 7859030 local-gate capture set plus the
+  publication-correction evidence: legs 01–25 (static, Rust, native
+  audits, Snyk Code scans and copy attestations, the failed/interrupted
+  fast/full attempts with diagnostics, the redacted gitleaks report),
+  the c01–c05 correction-verification runs, `GATE-STATUS.md` per-leg
+  matrix, `correction-source-hashes.txt`, the verbatim 09c inventory
+  root-cause facts, and the lead-authored validation recipes/proof log.
+  See `full-gate/README.md` for the per-file index.
+- `final-6314532/` — the final local-validation captures on source
+  `63145325c01fd837fd55e2796ea0fa34aa7eb234`, byte-exact copies of the
+  external-run artifacts (external root stated in `final-6314532/README.md`):
+  ruff/focused gate (256 passed, driver 99.61%), FAST (3710/178/55d, exit 0),
+  FULL (04 exit 1 setup-lock error; 04c **5904 passed, 184 skipped,
+  61 warnings, exit 0**; whole-`prin` coverage 7326/7727 = 94.810405% —
+  the rounded `95` shown is not an unrounded ≥95 pass), Sphinx `-W` build,
+  governance battery (all exit 0) and the full-history gitleaks scan
+  (exit 1 — one known checksum finding, exception pending). The
+  post-packaging control records (manifest test run, the
+  manifest-test-file Snyk Code scan with its byte-identity attestation,
+  and the Sphinx builds — `09` a retained tail excerpt, `10` the
+  authoritative full capture) are indexed inside
+  `final-6314532/README.md`.
 - `source-hashes.txt` — working-tree SHA-256 byte hashes of the driver,
   the two new test files, and the lead-authored pre-registration, plus
   tool versions and the `git status` surface at capture. Working-tree

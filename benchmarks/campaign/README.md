@@ -29,7 +29,10 @@ lead-authored E1 collection driver for EXP-002. The pre-registration is
 maintainer scientific approval — and no EXP-002 execution, pilot, or real
 reference-input collection has run. Its regression coverage uses synthetic
 fixtures only (fake `prin` namespaces, fabricated conclusion JSON, mocked
-renderers/snapshots/git); see `tests/test_exp002_driver.py`.
+renderers/snapshots/git); see `tests/test_exp002_driver.py`. The
+lead-authored maintainer-review packet for 0160 is
+[`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md`](../../DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md)
+(PREPARED FOR REVIEW — NOT APPROVED).
 
 **Dated delta for the `EXP-001-r1` row above (2026-10-11, session 0159):**
 the row's "E3 BLOCKED" wording is its point-in-time record. Since then

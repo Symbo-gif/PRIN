@@ -17,12 +17,12 @@ Public API mapping, legacy benchmark conclusion equivalence, and byte-comparable
 
 ## Contract
 
-- **Acceptance:** 175+ mapped symbols pass; all historical scientific conclusion orderings remain unchanged; 15 figures/11 tables match the manifest.
+- **Acceptance:** PRIN's public surface satisfies its own frozen contract — `verify_api_surface(__all__)` returns empty missing and extra sets for the frozen 175-symbol `prin.__all__` — and, as a separately required comparison, all 175 symbols are mapped against the frozen PRINet 3.0 canonical `__all__` (172 symbols); all historical scientific conclusion orderings remain unchanged; the 14 figures × 2 formats + 11 tables = 39 generated files are compared exactly, and the 172 legacy JSON inputs are verified against the `paper/artefact_manifest.json` records.
 - **Non-goals:** Any non-pre-registered analysis may appear only as explicitly exploratory; no silent protocol changes.
 
 ## Scientific contract
 
-- **Registered expectation to formalize:** 175+ mapped symbols pass; all historical scientific conclusion orderings remain unchanged; 15 figures/11 tables match the manifest.
+- **Registered expectation to formalize:** PRIN's public surface satisfies its own frozen contract — `verify_api_surface(__all__)` = `(set(), set())` for the frozen 175-symbol `prin.__all__` — and, as a separately required comparison, all 175 symbols are mapped against the frozen PRINet 3.0 canonical `__all__` (172 symbols); all historical scientific conclusion orderings remain unchanged; the 14 figures × 2 formats + 11 tables = 39 generated files are compared exactly, and the 172 legacy JSON inputs are verified against the `paper/artefact_manifest.json` records (campaign plan §2.1).
 - **Failure/abort boundary to formalize:** Missing symbols, changed scientific conclusions, or unexplained artefact mismatch is a D1; corrupt source artefacts abort.
 - **Raw artefact root:** `benchmarks/results/EXP-002/`
 - **Record root:** `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/`
@@ -43,7 +43,11 @@ contract versus the separate frozen 172-name PRINet 3.0 reference contract
 output census versus the 172-record `paper/artefact_manifest.json` input
 population; the tested driver's provenance/admission/abort guards; and the
 scientific review requirements of §10 (approval cannot precede closure of
-driver/review findings).
+driver/review findings). The lead-authored
+[e2-review-packet](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md)
+assembles the reviewed source, hashes, methods, validation results and the
+five decision gates for the maintainer's independent review (PREPARED FOR
+REVIEW — NOT APPROVED; its existence does not start E2 or approve E1).
 
 ## Expected work — independent review
 

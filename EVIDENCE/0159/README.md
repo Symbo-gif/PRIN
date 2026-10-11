@@ -37,14 +37,24 @@ artefacts, no preregistration or analysis content.
 
 ## Status
 
-The session's final full local gate is **pending**; no final full-gate
-pass is asserted. `verification/` preserves two classes of closed logs:
-prior unheaded tool captures (raw tool output with no command/host/UTC/exit
-header — labelled as such in its index) and the two headed focused
-driver-validation batches (`0159-driver-*` — the pre-review run, and
-`0159-driver-final-*` — the post-review run on the corrected source), plus
-`source-hashes.txt`, each headed log carrying
-command/source/UTC/host/actual-exit metadata.
+The session's local validation is **complete on source
+`63145325c01fd837fd55e2796ea0fa34aa7eb234`** (`verification/final-6314532/`):
+FAST 3710 passed / 178 skipped / 55 deselected (exit 0), FULL 5904 passed /
+184 skipped / 61 warnings (exit 0, leg `04c`; the earlier `04` attempt's
+WinError-32 fixture-setup error is preserved, holder unproven), Sphinx
+`-W` build exit 0, governance battery exit 0, ruff/focused driver gate
+256 passed at 99.61% changed-driver coverage. The full-history secret
+scan is a real **exit 1** (one known noncredential checksum finding,
+`entry-state.json` line 87) — the exception is **pending explicit
+maintainer approval**; it blocks E1 exit and is not treated as a pass.
+`verification/` preserves three classes of closed logs: prior unheaded
+tool captures (raw tool output with no command/host/UTC/exit header —
+labelled as such), the headed focused driver-validation batches
+(`0159-driver-*`), and the `full-gate/` + `final-6314532/` leg sets.
+Headed logs aim to carry command/source/UTC/host/actual-exit metadata,
+but capture limitations exist and are recorded per index (a partial
+environment capture, one approximate start time, and one tail-excerpt
+log) — no claim that every header is complete.
 
 **Packaging:** `.gitattributes` marks `EVIDENCE/0159/**` as
 `-text whitespace=-trailing-space` so committed blobs stay byte-exact

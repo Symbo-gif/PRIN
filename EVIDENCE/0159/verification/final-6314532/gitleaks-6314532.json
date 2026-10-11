@@ -1,0 +1,23 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 87,
+  "EndLine": 87,
+  "StartColumn": 7,
+  "EndColumn": 95,
+  "Match": "reference_api_sha256\": \"REDACTED\"",
+  "Secret": "REDACTED",
+  "File": "EVIDENCE/0159/entry-state.json",
+  "SymlinkFile": "",
+  "Commit": "78590305e1c0a78d92153ef2a55a9e76aeb7af79",
+  "Link": "https://github.com/Symbo-gif/PRIN/blob/78590305e1c0a78d92153ef2a55a9e76aeb7af79/EVIDENCE/0159/entry-state.json#L87",
+  "Entropy": 3.7880487,
+  "Author": "MichaelMaillet",
+  "Email": "michaelmaillet238@gmail.com",
+  "Date": "2026-10-11T12:30:20Z",
+  "Message": "docs(0159): preregister EXP-002 E1 and adopt validation timeout amendment 49\n\nKeep EXP-002 DRAFT for independent 0160 review. Prepare its guarded collection driver with fixture-only tests; preserve the historical predecessor and interrupted verification evidence. Hosted checks stay paused under amendment 48; no experiment execution.",
+  "Tags": [],
+  "Fingerprint": "78590305e1c0a78d92153ef2a55a9e76aeb7af79:EVIDENCE/0159/entry-state.json:generic-api-key:87"
+ }
+]

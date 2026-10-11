@@ -1,0 +1,20 @@
+COMMAND: .venv/Scripts/python -m pytest tests/test_0159_manifest.py::TestControlledNegatives::test_changed_bytes_fail --basetemp=.pytest_basetemp -o faulthandler_timeout=300
+SOURCE: 63145325c01fd837fd55e2796ea0fa34aa7eb234
+UTC-START: 2026-10-11T15:40:53Z
+HOST: HP
+PURPOSE: isolated diagnostic for the WinError-32 fixture-cleanup error in 04-pytest-full.log (known transient per AGENTS.md/EA-002 F-13); does not substitute for the leg.
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 1 item
+
+tests/test_0159_manifest.py::TestControlledNegatives::test_changed_bytes_fail PASSED [100%]
+
+============================== 1 passed in 1.43s ==============================
+EXIT_CODE: 0
+UTC-END: 2026-10-11T15:40:56Z

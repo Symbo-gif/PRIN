@@ -1,0 +1,36 @@
+COMMAND: snyk code test /c/Users/there/AppData/Local/Temp/prin-0159-final-6314532-20261011T144627Z/sast-input-e --severity-threshold=medium --org=symbo-gif
+SOURCE: 63145325c01fd837fd55e2796ea0fa34aa7eb234 + working diff; scope: tests/test_0159_manifest.py only (changed supported source); copy attestation in sast-e-copy-attestation.txt
+UTC-START: 2026-10-11T16:26:45Z
+HOST: HP
+
+Testing C:/Users/there/AppData/Local/Temp/prin-0159-final-6314532-20261011T144627Z/sast-input-e ...
+
+        
+💡 Tip
+
+   You are currently viewing results with --severity-threshold applied.
+   To view all issues, remove the --severity-threshold flag            
+                                                                       
+
+╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Test Summary                                                                                                    │
+│                                                                                                                 │
+│   Organization:      symbo-gif                                                                                  │
+│   Test type:         Static code analysis                                                                       │
+│   Project path:      C:/Users/there/AppData/Local/Temp/prin-0159-final-6314532-20261011T144627Z/sast-input-e    │
+│                                                                                                                 │
+│   Total issues:   0                                                                                             │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+    
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+
+
+💡 Tip
+
+   Some capabilities, including the ability to apply ignores, are unavailable. Retest the project with the --remote-repo-url parameter or from within a repository to enable full functionality.
+                                                                                                                                                                                                
+EXIT_CODE: 0
+UTC-END: 2026-10-11T16:27:11Z
