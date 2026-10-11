@@ -505,3 +505,29 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   delta re-audit in §7: `PASS-WITH-FINDINGS`, no new D1/D2/D3; F8/F9 D4
   documentation corrections applied and lead-reviewed. Full-workspace
   strict-checks, merge CI and green-nightly closure remain open.
+- [`PR032-multi-review-audit.md`](PR032-multi-review-audit.md) — External
+  code-review audit of PR #32 (the EA-007 EXP-002 readiness audit),
+  2026-10-11, `PASS-WITH-FINDINGS` → 14 of 15 findings remediated in the same
+  round, one declined and carried. Seven independent review runs — Sourcery,
+  CodeRabbit, Devin Review (one unpublished flag, not reviewable), and four
+  independent LLM reviews (Kimi, Perplexity, Qwen, SWE-2-High) — fourteen
+  GitHub artefacts de-duplicated into `PR32-F1`…`PR32-F15`, each re-derived
+  from the repository rather than taken on the reviewer's assertion. **No D1.**
+  Two `D2`: PR32-F1 (the `AGENTS.md` local-gate campaign-format line exited 2
+  on Windows PowerShell 5.1, which strips double quotes inside a single-quoted
+  argument — missed by four reviews because Git Bash and PowerShell 7 accept
+  it; fixed with TOML literal-string quoting and a regression test) and
+  PR32-F2 (the final 706- and 707-commit gitleaks scans existed only under a
+  gitignored scratch tree; committed byte-exact, hashed and recorded, with the
+  rule that a scan of a commit can only be recorded by a later commit). Six
+  `D3` and seven `D4` evidence/record/test-hardening findings: evidence-index
+  misquotes, a stale PSR metric, dropped template rows, citations into a
+  gitignored tree, an SHA-256 manifest that nothing executed and that failed 36
+  of 82 entries at one intermediate commit (now guarded by
+  `tests/test_ea007_manifest.py`, which also catches the repository-wide
+  `*.log` ignore rule), and a rustdoc gate that could not catch DV-042's class
+  again. CodeRabbit's `GATE-STATUS.md` headline was rejected while its
+  instruction was kept (Qwen's and SWE-2's blanket rejection was itself
+  imprecise), and its docstring-coverage check waived with evidence. The
+  EA-007 report is amended by appended errata (§7 of that report) only. Same
+  external-review event class as `PR023-multi-review-audit.md`.

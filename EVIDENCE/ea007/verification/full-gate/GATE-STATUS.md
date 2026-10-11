@@ -3,7 +3,30 @@
 Host: HP (Windows) | Base SHA: `fdd28d88e4c57d544e5d30fa52cce85807ab15a9`
 | Branch: `audit/ea007-exp002-readiness` | Plan amendment #48 regime:
 local validation authoritative; hosted CI paused (not satisfied).
-All commands serial; logs embed verbatim command/host/SHA/UTC/exit code.
+All commands serial; every log embeds its command, host and UTC time, and most also embed the SHA and an `EXIT_CODE` (see the census in the correction note below).
+
+> **Correction note (PR #32 review round, 2026-10-11 UTC).** This index was
+> corrected in place and `../SHA256SUMS.txt` regenerated in the same commit;
+> the before/after of each cell is recorded in
+> `DOCS/audits/PR032-multi-review-audit.md` §4 (`PR32-F3`). Scope facts the
+> original header did not state:
+>
+> - **Recorded-SHA census (the 77 original `.log` files, before this round's
+>   additions):** 66 record the base
+>   `fdd28d88`; 8 (`dv042-*.log` ×5, `ea007-check-*.log` ×3, all
+>   03:37–03:41Z) record `cb40584a`, the tip of the merged PR #31 branch and
+>   second parent of the `fdd28d88` merge commit; 3 record no SHA (the two
+>   historical GitHub captures under `EVIDENCE/ea007/` and
+>   `14-gitleaks-install.log`). `crates/prin-sim/src/gpu.rs` is byte-identical
+>   at both SHAs, so no conclusion depends on the difference. 5 logs carry no
+>   `EXIT_CODE` (`00-environment`, `14-gitleaks-install`, `dv040-newtest-lint`,
+>   `dv040-snyk-code`, the historical nightly capture), and two header formats
+>   coexist (`HOST: HP  SHA: … DATE: …` for legs 01–25,
+>   `HOST: HP | SHA: … | UTC: …` for legs 26a–26h).
+> - **No log in this directory covers head `add7386a` or any later commit.**
+>   The secret scan of leg 15 ran before any of this PR's three commits
+>   existed. The post-commit scans (706 commits @ `0738714`, 707 commits @
+>   `add7386a`) are preserved verbatim in `../post-commit/`.
 
 ## Completed legs
 
@@ -38,14 +61,14 @@ All commands serial; logs embed verbatim command/host/SHA/UTC/exit code.
 | 13g | `pip_audit .` (rescan) | `13g-pip-audit-repo-post.log` | PASS — no known vulnerabilities (exit 0) |
 | 13h | Snyk SCA scoped file rescan (`all_projects=false`, file=`DOCS/sphinx/requirements.txt`, severity low) | `13h-snyk-sca-rescan.log` | PASS — **issueCount=0**; E-F4 FIXED at repository-manifest scope (repo-wide scan still sees foreign `.kilo`/`.qwen` copies — out of repo scope, no exclusions added) |
 | 14 | Gitleaks provisioning (pinned v8.30.1, SHA-256 verified, session-local) | `14-gitleaks-install.log` | installed; official checksum match |
-| 15 | `gitleaks git C:/dev/PRIN --redact` full history | `15-gitleaks-scan.log`, `gitleaks-redacted.json` | PASS — 704 commits / 72.4 MB scanned, **no leaks found** (exit 0; report `[]`) |
+| 15 | `gitleaks git C:/dev/PRIN --redact` full history | `15-gitleaks-scan.log`, `gitleaks-redacted.json` | PASS — 704 commits / 72.4 MB scanned, **no leaks found** (exit 0; report `[]`). **Scope: history through base `fdd28d88` only** — the PR's own commits were scanned afterwards, see `../post-commit/` (706 commits @ `0738714`, 707 commits @ `add7386a`, both no leaks, exit 0) |
 | 16 | `tools/wp001_baseline.py check` | `16-wp001-baseline.log` | PASS (exit 0) |
 | 17 | `check_global_session_registration.py` | `17-global-session-registration.log` | PASS — 18 EA reports incl. EA-007 (exit 0) |
 | 18 | `check_dv_register_gates.py` | `18-dv-register-gates.log` | PASS — 44 rows / 198 entries (exit 0) |
-| 19 | `check_deviation_ledger.py 039 → 040` | `19-deviation-ledger-039-040.log` | PASS — 142 → 146 rows after E-F4 append (exit 0) |
+| 19 | `check_deviation_ledger.py 039 → 040` | `19-deviation-ledger-039-040.log` | PASS — 142 → 145 rows at this leg (04:08Z, before the E-F4 ledger row was appended; exit 0); the final 142 → 146 result is leg 26a |
 | 20 | Sphinx clean build `-W --keep-going` to fresh `sphinx-html/` | `20-sphinx.log` | PASS — build succeeded, 0 warnings (exit 0) |
 | 21 | Focused `pytest tests/test_campaign_quality_gates.py` + ruff (post-E-F4, strict 3-part version regex) | `21-focused-tests-post-ef4.log` | PASS — 19/19 (exit 0); Snyk Code on test file: 0 issues |
-| 22 | `uv pip compile pyproject.toml --extra dev` → resolved manifest | `22-uv-compile.log`, `prin-requirements.txt` | DONE — 274 pins (exit 0); direct Snyk scans of the file failed SNYK-OS-PYTHON-0013 (env/pin mismatch) |
+| 22 | `uv pip compile pyproject.toml --extra dev` → resolved manifest | `22-uv-compile.log`, `prin-requirements.txt`, `22-snyk-sca-mainmanifest.log`, `22b-snyk-sca-mainmanifest.log` | DONE — 100 pinned packages (exit 0; the resolved manifest is 274 lines because it also holds 174 comment lines — 100 `# via` headers, 72 continuations and 2 header lines); the two direct Snyk scans of the file (`22-…`, `22b-…`, both `EXIT_CODE=2`) failed SNYK-OS-PYTHON-0013 (env/pin mismatch) |
 | 22c | Session-local audit venv at resolved pins | `22c-audit-env-install.log` | DONE — governed resolved-input env (`.audit-venv`, mirrors CI "Install Snyk audit environments"; `.venv` untouched) |
 | 22d | `snyk test --file=prin-resolved/requirements.txt --package-manager=pip --severity-threshold=low` (CLI 1.1304.2, governed workflow form) | `22d-snyk-sca-mainmanifest.log` | **FINDINGS (exit 1) — torch@2.14.1, all "no upgrade or patch available":** SNYK-PYTHON-TORCH-10332643 (MED), 10337825 (MED), 10337826 (MED), 10337834 (MED), 15746467 (HIGH, deserialization). **Pre-existing platform exposure — NOT attributable to this diff** (torch pin unchanged; PyPA DB does not carry these, consistent with clean pip_audit). Reported for lead judgment; no suppressions |
 | 22e | `snyk test --file=prin-resolved/requirements.txt --package-manager=pip --severity-threshold=low --fail-on=all --policy-path=.snyk` (exact CI form, resolved audit env) | `22e-snyk-sca-mainmanifest-exact.log` | **PASS — 100 dependencies, no vulnerable paths found (exit 0).** Local policy found; the five torch advisories of 22d are the pre-existing EA003-E-F7 governed dispositions (expires 2026-11-14). No new ignore added |

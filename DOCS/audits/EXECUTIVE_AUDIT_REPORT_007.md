@@ -321,3 +321,21 @@ Main delivery via PR is pending — no merge-to-main or current hosted CI
 green is claimed, and no new maintainer report acceptance is inferred.
 **Auditor:** Devin (AI pair of record), 2026-10-11 UTC.
 **0159:** READY; not started by EA-007.
+
+## 7. Post-review errata (PR #32 review round, 2026-10-11 UTC)
+
+Appended under the append-only rule for committed audits
+(`DOCS/audits/README.md`); the report body above is unchanged. Each erratum
+quotes the statement it supersedes and points at the finding in
+`DOCS/audits/PR032-multi-review-audit.md`, which re-derived every PR #32 review
+claim from the repository. **None changes this report's verdict, any EA007
+finding, or its zero-unresolved-D1/D2 count.**
+
+| ID | Supersedes | Correction |
+|---|---|---|
+| ER-1 (`PR32-F2`) | §2 E4: "scanned all 704 commits / 72.4 MB … This scan ran before any new commit; a post-commit scan remains required." and the §5 *Secret scan* row | The 704-commit result is the **historical** scan of base `fdd28d88` and stands. The required post-commit scans were run and are now committed verbatim in `EVIDENCE/ea007/verification/post-commit/`: **706 commits @ `0738714`** and **707 commits @ `add7386a`** (2026-10-11T06:47:37Z, 76.07 MB, no leaks, exit 0; 704 + the PR's 3 commits). Each result is about the commit it names; a later commit needs its own scan (`PR032-multi-review-audit.md` §6). |
+| ER-2 (`PR32-F11`) | §2 E3: "The 18 quality-gate tests failed against the old configuration (13 failed, 5 passed)" | Thirteen of the 18 quality-gate tests failed and five passed against the old configuration (`dv040-newtests-oldconfig.log`: `13 failed, 5 passed`); the nineteenth test (the `urllib3` floor) has no old-configuration leg. |
+| ER-3 (`PR32-F11`, `PR32-F7`) | §2 E6 packaging note: "the staged-log blobs will be re-staged byte-exact under the new rule" | Done in `add7386` (38 pure end-of-line rewrites, 13,420 insertions / 13,420 deletions); the head verifies 82/82 against `SHA256SUMS.txt`. History is not rewritten: at `0738714` 36 of the 82 entries did not match, because the `.gitattributes` rule landed in the same commit as the files it protects. |
+| ER-4 (`PR32-F6`) | §5 intro: "Raw commands/outputs live in `DOCS/test_and_benchmark_results/ea007/full-gate/` (index `GATE-STATUS.md`)" | That tree is gitignored and local to the maintainer workstation. The **committed** record is `EVIDENCE/ea007/verification/` (index `full-gate/GATE-STATUS.md`, inventory `SHA256SUMS.txt`). |
+| ER-5 (`PR32-F8`, `PR32-F9`) | §2 E5: "The optional hosted workflow doc leg is not added …" and the §5 *Workspace docs* row (`cargo doc --workspace --no-deps`, exit 0) | The workspace leg cannot document `prin_sim::gpu` (`#[cfg(any(cpu, cuda, wgpu))]`, `default = []`) and exited 0 at the defective base (`full-gate/24-rustdoc-workspace.log`), so it is not evidence for DV-042; the three feature legs are. Review of PR #32 reversed the "not added" decision as a root-cause fix: `rust.yml` and the `AGENTS.md` local gate gain `cargo doc -p prin-sim --no-deps --features cpu` (hosted run not performed — paused under #48). |
+| ER-6 (`PR32-F3`) | `full-gate/GATE-STATUS.md` leg 19 ("142 → 146 rows after E-F4 append") and leg 22 ("274 pins") | The index cells were corrected in place against their logs (leg 19 log: 142 → 145; the final 146 is leg 26a; leg 22: 100 pinned packages in a 274-line resolved manifest) and `SHA256SUMS.txt` regenerated in the same commit. This report's own "142→146" and "100 dependencies" figures were already correct. |

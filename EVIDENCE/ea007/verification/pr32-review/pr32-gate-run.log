@@ -1,0 +1,599 @@
+PR #32 review-round local gate (PR032-multi-review-audit.md section 6) - Windows, Plan amendment #48 regime.
+Hosted workflows are paused; nothing here is a hosted/CI result and Linux/macOS are not tested.
+Output is verbatim except that the local user-profile path prefix is replaced by %USERPROFILE% (applied by the runner).
+
+=== LEG L00 - environment (build facts only) ===
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:41Z
+---
+OS: Windows-11-10.0.26300-SP0
+Python: 3.14.0 (interpreter running this gate)
+ruff: ruff 0.16.1 (exit 0)
+mypy: mypy 2.3.0 (compiled: yes) (exit 0)
+bandit: python.exe -m bandit 1.9.4 (exit 0)
+pytest: pytest 9.1.1 (exit 0)
+cargo: cargo 1.98.1 (797e8a9bc 2026-08-05) (exit 0)
+rustc: rustc 1.98.1 (48a229cea 2026-09-01) (exit 0)
+snyk: 1.1306.2 (exit 0)
+gitleaks: 8.30.1 (exit 0)
+Windows PowerShell: 5.1.26100.9549 (exit 0)
+pwsh: 7.6.6 (exit 0)
+git: git version 2.51.2.windows.1 (exit 0)
+
+=== LEG L01 - ruff check (AGENTS.md roots) ===
+COMMAND: .venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:41Z
+---
+All checks passed!
+EXIT_CODE=0
+
+=== LEG L02 - ruff format --check (normal roots) ===
+COMMAND: .venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:41Z
+---
+323 files already formatted
+EXIT_CODE=0
+
+=== LEG L03a - AGENTS.md campaign format line, add7386a (pre-fix), Windows PowerShell 5.1 ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File run_agents_line.ps1 -AgentsFile <add7386a (pre-fix)>
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:41Z
+---
+PSVersion=5.1.26100.9549
+LINE: .venv\Scripts\ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'
+exit=2
+error: invalid value 'include = [*.py, *.pyi, *.ipynb]' for '--config <CONFIG_OPTION>'
+
+  tip: A `--config` flag must either be a path to a `.toml` configuration file
+       or a TOML `<KEY> = <VALUE>` pair overriding a specific configuration
+       option
+
+The supplied argument is not valid TOML:
+
+TOML parse error at line 1, column 12
+  |
+1 | include = [*.py, *.pyi, *.ipynb]
+  |            ^^^^
+string values must be quoted, expected literal string
+
+For more information, try '--help'.
+EXIT_CODE=2
+
+=== LEG L03b - AGENTS.md campaign format line, working tree (post-fix), Windows PowerShell 5.1 ===
+COMMAND: powershell.exe -NoProfile -ExecutionPolicy Bypass -File run_agents_line.ps1 -AgentsFile <working tree (post-fix)>
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:41Z
+---
+PSVersion=5.1.26100.9549
+LINE: .venv\Scripts\ruff format --check DOCS/experiments/ --config "include = ['*.py', '*.pyi', '*.ipynb']"
+2 files already formatted
+exit=0
+EXIT_CODE=0
+
+=== LEG L04a - AGENTS.md campaign format line, add7386a (pre-fix), PowerShell 7 ===
+COMMAND: pwsh -NoProfile -ExecutionPolicy Bypass -File run_agents_line.ps1 -AgentsFile <add7386a (pre-fix)>
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:41Z
+---
+PSVersion=7.6.6
+LINE: .venv\Scripts\ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'
+2 files already formatted
+exit=0
+EXIT_CODE=0
+
+=== LEG L04b - AGENTS.md campaign format line, working tree (post-fix), PowerShell 7 ===
+COMMAND: pwsh -NoProfile -ExecutionPolicy Bypass -File run_agents_line.ps1 -AgentsFile <working tree (post-fix)>
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:42Z
+---
+PSVersion=7.6.6
+LINE: .venv\Scripts\ruff format --check DOCS/experiments/ --config "include = ['*.py', '*.pyi', '*.ipynb']"
+2 files already formatted
+exit=0
+EXIT_CODE=0
+
+=== LEG L05 - python.yml bash form of the campaign format line (unchanged) ===
+COMMAND: .venv/Scripts/ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:42Z
+---
+2 files already formatted
+EXIT_CODE=0
+
+=== LEG L06 - mypy python/prin --strict ===
+COMMAND: .venv\Scripts\mypy python/prin --strict
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:42Z
+---
+Success: no issues found in 62 source files
+EXIT_CODE=0
+
+=== LEG L07 - mypy DOCS/experiments/ --strict ===
+COMMAND: .venv\Scripts\mypy DOCS/experiments/ --strict
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:43Z
+---
+Success: no issues found in 2 source files
+EXIT_CODE=0
+
+=== LEG L08 - interrogate (python/prin) ===
+COMMAND: .venv\Scripts\python -m interrogate -c pyproject.toml python/prin
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:44Z
+---
+==================== Coverage for C:\dev\PRIN\python\prin\ ====================
+----------------------------------- Summary -----------------------------------
+| Name                                |   Total |   Miss |   Cover |   Cover% |
+|-------------------------------------|---------|--------|---------|----------|
+| __init__.py                         |       1 |      0 |       1 |     100% |
+| _compat.py                          |      14 |      0 |      14 |     100% |
+| _deprecation.py                     |       8 |      0 |       8 |     100% |
+| _ort.py                             |      13 |      0 |      13 |     100% |
+| _phase0.py                          |      12 |      0 |      12 |     100% |
+| _public_api.py                      |       1 |      0 |       1 |     100% |
+| _torch_compat.py                    |     106 |      5 |     101 |      95% |
+| adversarial_tools.py                |       5 |      0 |       5 |     100% |
+| daemon.py                           |      33 |      0 |      33 |     100% |
+| datasets.py                         |       5 |      0 |       5 |     100% |
+| dlpack.py                           |       4 |      0 |       4 |     100% |
+| dynamics.py                         |       1 |      0 |       1 |     100% |
+| kernels.py                          |      28 |      0 |      28 |     100% |
+| metrics.py                          |       3 |      0 |       3 |     100% |
+| simulation.py                       |      27 |      1 |      26 |      96% |
+| simulation_experiments.py           |       7 |      0 |       7 |     100% |
+| solvers.py                          |       8 |      0 |       8 |     100% |
+| subconscious_compat.py              |      40 |      0 |      40 |     100% |
+| temporal_metrics.py                 |      11 |      0 |      11 |     100% |
+| temporal_training.py                |      22 |      0 |      22 |     100% |
+| tensor.py                           |      23 |      0 |      23 |     100% |
+| topology.py                         |       3 |      0 |       3 |     100% |
+| train.py                            |       4 |      0 |       4 |     100% |
+| training_hooks.py                   |      37 |      1 |      36 |      97% |
+| y4q1_tools.py                       |      44 |      1 |      43 |      98% |
+| eval\__init__.py                    |       1 |      0 |       1 |     100% |
+| experiments\__init__.py             |       3 |      0 |       3 |     100% |
+| nn\__init__.py                      |      17 |      0 |      17 |     100% |
+| nn\_bridge.py                       |       5 |      0 |       5 |     100% |
+| nn\ablation.py                      |      29 |      0 |      29 |     100% |
+| nn\ablation_variants.py             |      33 |      0 |      33 |     100% |
+| nn\activations.py                   |       8 |      0 |       8 |     100% |
+| nn\allocation.py                    |      15 |      0 |      15 |     100% |
+| nn\attention.py                     |       7 |      0 |       7 |     100% |
+| nn\autoencoders.py                  |      26 |      0 |      26 |     100% |
+| nn\deferred_layers.py               |       1 |      0 |       1 |     100% |
+| nn\energy.py                        |      17 |      0 |      17 |     100% |
+| nn\hierarchical_layers.py           |      38 |      0 |      38 |     100% |
+| nn\hybrid.py                        |      14 |      0 |      14 |     100% |
+| nn\hybrid_compat.py                 |      24 |      0 |      24 |     100% |
+| nn\inhibition.py                    |       6 |      0 |       6 |     100% |
+| nn\inhibition_layers.py             |      23 |      0 |      23 |     100% |
+| nn\model.py                         |      15 |      0 |      15 |     100% |
+| nn\mot_evaluation.py                |      11 |      0 |      11 |     100% |
+| nn\optimizers.py                    |      33 |      0 |      33 |     100% |
+| nn\phase_tracker.py                 |      18 |      0 |      18 |     100% |
+| nn\slot_attention.py                |      20 |      0 |      20 |     100% |
+| nn\subconscious_model.py            |       1 |      0 |       1 |     100% |
+| nn\temporal_compat.py               |      14 |      0 |      14 |     100% |
+| parity\__init__.py                  |       1 |      0 |       1 |     100% |
+| parity\harness.py                   |      10 |      0 |      10 |     100% |
+| parity\loader.py                    |       9 |      0 |       9 |     100% |
+| parity\manifest.py                  |      15 |      0 |      15 |     100% |
+| parity\schema.py                    |      21 |      0 |      21 |     100% |
+| parity\strategies.py                |      13 |      0 |      13 |     100% |
+| reporting\__init__.py               |       1 |      0 |       1 |     100% |
+| reporting\_artifacts.py             |      15 |      7 |       8 |      53% |
+| reporting\benchmark_reporting.py    |      22 |      0 |      22 |     100% |
+| reporting\figure_generation.py      |      21 |      2 |      19 |      90% |
+| reporting\profiler.py               |      24 |      0 |      24 |     100% |
+| reporting\table_generation.py       |      20 |      7 |      13 |      65% |
+|-------------------------------------|---------|--------|---------|----------|
+| TOTAL                               |    1011 |     24 |     987 |    97.6% |
+--------------- RESULT: PASSED (minimum: 95.0%, actual: 97.6%) ----------------
+EXIT_CODE=0
+
+=== LEG L09 - bandit python/prin + DOCS/experiments (non-vacuous) ===
+COMMAND: .venv\Scripts\python -m bandit -r python/prin DOCS/experiments -c pyproject.toml
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:45Z
+---
+Working... ---------------------------------------- 100% 0:00:00
+Run started:2026-10-11 09:51:46.323322+00:00
+
+Test results:
+	No issues identified.
+
+Code scanned:
+	Total lines of code: 24864
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 3
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+Files skipped (0):
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	using config: pyproject.toml
+[main]	INFO	running on Python 3.14.0
+[manager]	WARNING	Test in comment: subprocess is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: use is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: is is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: confined is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: to is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: the is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: vswhere is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: exe is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: lookup is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: in is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: _find_msvc_cl is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: see is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: the is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: justification is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: there is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: constant is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: args is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: absolute is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: path is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: to is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: the is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: MS is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: signed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: vswhere is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: exe is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: existence is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: checked is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: above is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: constant is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: list is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: args is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: user is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: input is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: best is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: effort is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: daemon is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: control is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: a is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: failure is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: here is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: is is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: intentionally is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: swallowed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: so is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: training is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: continues is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: without is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: subconscious is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: control is not a test name or id, ignoring
+EXIT_CODE=0
+
+=== LEG L10 - pytest new/updated gate + manifest tests ===
+COMMAND: .venv\Scripts\python -m pytest tests/test_campaign_quality_gates.py tests/test_ea007_manifest.py -v -p no:cacheprovider
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:46Z
+---
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 25 items
+
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[ruff-check] PASSED [  4%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[ruff-format] PASSED [  8%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[mypy-strict] PASSED [ 12%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[bandit-recursive] PASSED [ 16%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[ruff-check] PASSED [ 20%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[ruff-format] PASSED [ 24%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[mypy-strict] PASSED [ 28%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[bandit-recursive] PASSED [ 32%]
+tests/test_campaign_quality_gates.py::test_campaign_format_selects_source_files_only PASSED [ 36%]
+tests/test_campaign_quality_gates.py::test_normal_typing_and_sast_gates_retained PASSED [ 40%]
+tests/test_campaign_quality_gates.py::test_bandit_exclusions_are_component_globs PASSED [ 44%]
+tests/test_campaign_quality_gates.py::test_bandit_discovers_every_campaign_source PASSED [ 48%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[relative-top-level-parity] PASSED [ 52%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[relative-top-level-tests] PASSED [ 56%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[absolute-top-level-parity] PASSED [ 60%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[absolute-top-level-tests] PASSED [ 64%]
+tests/test_campaign_quality_gates.py::test_bandit_includes_campaign_files_under_exclusion_like_slugs[relative] PASSED [ 68%]
+tests/test_campaign_quality_gates.py::test_bandit_includes_campaign_files_under_exclusion_like_slugs[absolute] PASSED [ 72%]
+tests/test_campaign_quality_gates.py::test_sphinx_requirements_urllib3_minimum_patched PASSED [ 76%]
+tests/test_campaign_quality_gates.py::test_agents_powershell_block_has_no_embedded_double_quotes PASSED [ 80%]
+tests/test_campaign_quality_gates.py::test_rustdoc_gate_documents_the_feature_gated_gpu_module PASSED [ 84%]
+tests/test_campaign_quality_gates.py::test_campaign_analysis_script_basenames_are_unique PASSED [ 88%]
+tests/test_ea007_manifest.py::test_every_manifest_entry_matches_the_committed_bytes PASSED [ 92%]
+tests/test_ea007_manifest.py::test_manifest_covers_every_evidence_file PASSED [ 96%]
+tests/test_ea007_manifest.py::test_every_hashed_evidence_file_is_tracked_by_git PASSED [100%]
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\stevedore\extension.py:185
+.venv\Lib\site-packages\stevedore\extension.py:185
+.venv\Lib\site-packages\stevedore\extension.py:185
+  The verify_requirements argument is now a no-op and is deprecated for removal. Remove the argument from calls.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 25 passed, 3 warnings in 0.49s ========================
+EXIT_CODE=0
+
+=== LEG L11 - defect-catching proof (new tests vs pre-fix/mutated inputs) ===
+COMMAND: .venv\Scripts\python proof_defect_catching.py  (committed afterwards as EVIDENCE/ea007/verification/pr32-review/proof_defect_catching.py, identical bytes)
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:47Z
+---
+[ok] F1 quoting test vs add7386a AGENTS.md                              must FAIL  -> FAIL (AssertionError: .venv\Scripts\ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]')
+[ok] F1 quoting test vs working-tree AGENTS.md                          must PASS  -> PASS
+[ok] F1 quoting test: `cmd 'a' "b" 'c'` is NOT a false fail             must PASS  -> PASS
+[ok] F1 quoting test: TOML-literal form passes                          must PASS  -> PASS
+[ok] F1 quoting test: double quote inside single quotes fails           must FAIL  -> FAIL (AssertionError: tool --config 'include = ["*.py"]')
+[ok] F1 quoting test: bad segment between good ones fails               must FAIL  -> FAIL (AssertionError: tool 'a' --config 'x = "y"' 'c')
+[ok] F1 quoting test: CRLF checkout (universal newlines)                must PASS  -> PASS
+[ok] F1 quoting test: an apostrophe in a comment line is not a segment  must PASS  -> PASS
+[ok] F1 quoting test: PowerShell doubled-quote escape inside "..."      must PASS  -> PASS
+[ok] F9 rustdoc test vs add7386a rust.yml (no leg)                      must FAIL  -> FAIL (AssertionError: rust.yml has no `cargo doc -p prin-sim --features <backend>` leg)
+[ok] F9 rustdoc test vs working-tree rust.yml + AGENTS.md               must PASS  -> PASS
+[ok] F9 rustdoc test: non-backend feature `strict-checks`               must FAIL  -> FAIL (AssertionError: rust.yml has no `cargo doc -p prin-sim --features <backend>` leg)
+[ok] F9 rustdoc test: backend feature inside a list is accepted         must PASS  -> PASS
+[ok] F9 rustdoc test: job env lost, a comment still mentions it         must FAIL  -> FAIL (AssertionError: the rust.yml job running the prin-sim rustdoc leg must set RUSTDOCFLAGS: "-D warnings" in its job-level env)
+[ok] F9 rustdoc test: flag moved to ANOTHER step's env (prin-sim step unflagged) must FAIL  -> FAIL (AssertionError: the rust.yml job running the prin-sim rustdoc leg must set RUSTDOCFLAGS: "-D warnings" in its job-level env)
+[ok] F9 rustdoc test: YAML single-quoted flag value is accepted         must PASS  -> PASS
+[ok] F9 rustdoc test: `--package prin-sim` and `--features=cpu` spellings must PASS  -> PASS
+[ok] F9 rustdoc test: `-F cpu` spelling                                 must PASS  -> PASS
+[ok] F9 rustdoc test: a repeated --features flag is read in full        must PASS  -> PASS
+[ok] F9 rustdoc test: a SECOND job runs the leg without the job-level flag must FAIL  -> FAIL (AssertionError: the rust.yml job running the prin-sim rustdoc leg must set RUSTDOCFLAGS: "-D warnings" in its job-level env)
+[ok] F9 rustdoc test: a comment/blank line inside the job-level env block must PASS  -> PASS
+[ok] F9 rustdoc test: AGENTS.md line with `--package` and reordered options must PASS  -> PASS
+[ok] F9 rustdoc test: AGENTS.md local leg deleted                       must FAIL  -> FAIL (AssertionError: AGENTS.md has no `RUSTDOCFLAGS='-D warnings'; cargo doc -p prin-sim --features <backend>` line)
+[ok] F12 module-name test: two campaigns sharing quality.py             must FAIL  -> FAIL (AssertionError: duplicate campaign module name: %USERPROFILE%\AppData\Local\Temp\pr32proof-v2hh3de8\dup\EXP-A\analysis\qualit)
+[ok] F12 module-name test: both ship package `util` (real duplicate)    must FAIL  -> FAIL (AssertionError: duplicate campaign module name: %USERPROFILE%\AppData\Local\Temp\pr32proof-v2hh3de8\pkgdup\EXP-A\analysis\uti)
+[ok] F12 module-name test: differently named packages (no false fail)   must PASS  -> PASS
+[ok] F12 module-name test: a stub in another campaign duplicates the module must FAIL  -> FAIL (AssertionError: duplicate campaign module name: %USERPROFILE%\AppData\Local\Temp\pr32proof-v2hh3de8\pyidup\EXP-A\analysis\run)
+[ok] F12 module-name test: a module beside its own stub is one module   must PASS  -> PASS
+[ok] F12 module-name test: both ship a stub-only package `stubs`        must FAIL  -> FAIL (AssertionError: duplicate campaign module name: %USERPROFILE%\AppData\Local\Temp\pr32proof-v2hh3de8\stubdup\EXP-A\analysis\st)
+[ok] F12 module-name test: differently named stub-only packages (no false fail) must PASS  -> PASS
+[ok] F12 module-name test vs real DOCS/experiments                      must PASS  -> PASS
+[ok] F15 urllib3 test: a plain >=2.8.0 floor                            must PASS  -> PASS
+[ok] F15 urllib3 test: trailing CVE comment is tolerated (old regex failed) must PASS  -> PASS
+[ok] F15 urllib3 test: the vulnerable 2.7.0 floor fails                 must FAIL  -> FAIL (AssertionError: urllib3>=2.7.0 still admits ['2.7.0', '2.7.99'])
+[ok] F15 urllib3 test: a commented-out entry cannot satisfy it          must FAIL  -> FAIL (AssertionError: requirements.txt must pin a minimum urllib3 version)
+[ok] F15 urllib3 test: every match is checked, not just the first       must FAIL  -> FAIL (AssertionError: urllib3>=2.0.0 still admits ['2.7.0', '2.7.99', '2.0.0'])
+[ok] F15 urllib3 test: a compound specifier `>=2.8.0,<3` is accepted    must PASS  -> PASS
+[ok] F15 urllib3 test: an environment marker is accepted                must PASS  -> PASS
+[ok] F15 urllib3 test: a vulnerable floor with an upper bound still fails must FAIL  -> FAIL (AssertionError: urllib3<3,>=2.7.0 still admits ['2.7.0', '2.7.99'])
+[ok] F15 urllib3 test: specifier order is irrelevant (`<3,>=2.8.0`)     must PASS  -> PASS
+[ok] F15 urllib3 test: a two-segment floor `>=2.8`                      must PASS  -> PASS
+[ok] F15 urllib3 test: an extras requirement                            must PASS  -> PASS
+[ok] F15 urllib3 test: an unpinned requirement admits the vulnerable release must FAIL  -> FAIL (AssertionError: urllib3 still admits ['2.7.0', '2.7.99', '2.0.0', '1.26.20'])
+[ok] F15 urllib3 test vs the real DOCS/sphinx/requirements.txt          must PASS  -> PASS
+[ok] F14 truth table vs the shipped-shape list                          must PASS  -> PASS
+[ok] F14 truth table vs escaping glob `../../*` (old suffix check passed it) must FAIL  -> FAIL (AssertionError: not a single-component glob (`d/*` or `*/d/*`): ../../*)
+      (pre-change suffix-only check would have PASSED this list)
+[ok] F14 truth table vs top-level glob without its `*/d/*` twin         must FAIL  -> FAIL (AssertionError: missing twin glob */zzz/*)
+      (pre-change suffix-only check would have PASSED this list)
+[ok] F14 truth table vs substring-style glob `*parity*/*`               must FAIL  -> FAIL (AssertionError: not a single-component glob (`d/*` or `*/d/*`): *parity*/*)
+      (pre-change suffix-only check would have PASSED this list)
+[ok] F14 truth table vs Windows spelling `.venv\*`                      must FAIL  -> FAIL (AssertionError: not a single-component glob (`d/*` or `*/d/*`): .venv\*)
+      (pre-change suffix-only check would have PASSED this list)
+[ok] F14 truth table vs required component `parity` dropped             must FAIL  -> FAIL (AssertionError: required exclusions dropped: ['parity'])
+      (pre-change suffix-only check would have PASSED this list)
+[ok] F7 digest test vs real committed evidence (matches)                must PASS  -> PASS
+[ok] F7 coverage test vs real committed evidence (complete)             must PASS  -> PASS
+[ok] F7 digest test vs one drifted byte (the 0738714 failure)           must FAIL  -> FAIL (AssertionError: digest mismatch (manifest stale or bytes altered): ['verification/full-gate/25-pytest-final.log'])
+[ok] F7 coverage test vs an evidence file the manifest omits            must FAIL  -> FAIL (AssertionError: evidence files absent from SHA256SUMS.txt: ['verification/full-gate/99-extra.log'])
+[ok] F7 coverage test tolerates OS junk (.DS_Store, Thumbs.db, *.swp)   must PASS  -> PASS
+[ok] F7 coverage test: the unhashed-by-design README.md deleted         must FAIL  -> FAIL (AssertionError: the unhashed-by-design files must exist: ['README.md'])
+[ok] F7 digest test vs a manifest entry whose file is gone              must FAIL  -> FAIL (AssertionError: manifest lists a missing file (check the letter case): verification/full-gate/01-ruff-check.log)
+[ok] F7 digest test vs a path escaping EVIDENCE/ea007/                  must FAIL  -> FAIL (AssertionError: line 94: ../../pyproject.toml escapes EVIDENCE/ea007/)
+[ok] F7 digest test vs a malformed manifest line                        must FAIL  -> FAIL (AssertionError: SHA256SUMS.txt:94: malformed entry: 'not a digest line')
+[ok] F7 digest test vs wrong letter case (fails on Windows too)         must FAIL  -> FAIL (AssertionError: manifest lists a missing file (check the letter case): verification/full-gate/gate-status.md)
+[ok] F7 digest test vs a duplicated manifest line                       must FAIL  -> FAIL (AssertionError: line 94: duplicate entry ./README.md)
+[ok] F7 tracked-by-git test vs the real index (everything tracked)      must PASS  -> PASS
+[ok] F7 tracked-by-git test vs a hashed-but-untracked log (ignored *.log) must FAIL  -> FAIL (AssertionError: evidence files not tracked by git (use `git add -f` for ignored *.log): ['verification/post-commit/gitleaks-fi)
+
+63/63 expectations met
+EXIT_CODE=0
+
+=== LEG L12 - rustdoc gate, feature-gated prin-sim gpu module (the new CI/local leg) ===
+COMMAND: $env:RUSTDOCFLAGS='-D warnings'; cargo doc -p prin-sim --no-deps --features cpu
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:49Z
+---
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.53s
+   Generated C:\dev\PRIN\target\doc\prin_sim\index.html
+EXIT_CODE=0
+
+=== LEG L12b - non-vacuity: the cpu rustdoc leg emitted the feature-gated gpu module page ===
+COMMAND: test -f target/doc/prin_sim/gpu/index.html && echo gpu-module-page-emitted && ls -l target/doc/prin_sim/gpu/index.html
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:50Z
+---
+gpu-module-page-emitted
+-rw-r--r-- 1 there 197609 12698 Oct 11 05:54 target/doc/prin_sim/gpu/index.html
+EXIT_CODE=0
+
+=== LEG L12c - rust.yml parses as YAML; the docs job carries RUSTDOCFLAGS and the new step ===
+COMMAND: .venv\Scripts\python -c "import yaml; d = yaml.safe_load(open('.github/workflows/rust.yml', encoding='utf-8')); j = d['jobs']['docs']; print('docs job env:', j.get('env')); [print('step:', s.get('name') or s.get('uses'), '=>', s.get('run')) for s in j['steps']]"
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:50Z
+---
+docs job env: {'RUSTDOCFLAGS': '-D warnings'}
+step: actions/checkout@v4 => None
+step: dtolnay/rust-toolchain@stable => None
+step: Swatinem/rust-cache@v2 => None
+step: Rustdoc gate (100% public-item docs, no warnings) => cargo doc --workspace --no-deps
+step: Rustdoc gate (feature-gated prin-sim gpu module) => cargo doc -p prin-sim --no-deps --features cpu
+EXIT_CODE=0
+
+=== LEG L13a - check_deviation_ledger 039 -> 040 ===
+COMMAND: .venv\Scripts\python tools/check_deviation_ledger.py DOCS/reports/039-project-state.md DOCS/reports/040-project-state.md
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:50Z
+---
+Ledger consistency check passed.
+  Compared 142 rows in DOCS\reports\039-project-state.md with 146 rows in DOCS\reports\040-project-state.md.
+EXIT_CODE=0
+
+=== LEG L13b - check_dv_register_gates ===
+COMMAND: .venv\Scripts\python tools/check_dv_register_gates.py
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:53Z
+---
+DV-register gate check passed.
+  Checked 44 DV register rows against 198 session-register entries.
+EXIT_CODE=0
+
+=== LEG L13c - check_global_session_registration ===
+COMMAND: .venv\Scripts\python tools/check_global_session_registration.py
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:53Z
+---
+Global-session registration check passed.
+  Checked 18 Executive Audit reports.
+EXIT_CODE=0
+
+=== LEG L13d - check_skipif_probes ===
+COMMAND: .venv\Scripts\python tools/check_skipif_probes.py
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:53Z
+---
+check_skipif_probes: no registration-probe skipif guards
+EXIT_CODE=0
+
+=== LEG L13e - wp001_baseline check ===
+COMMAND: .venv\Scripts\python tools/wp001_baseline.py check
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:53Z
+---
+WP-001 baseline validation passed.
+EXIT_CODE=0
+
+=== LEG L14 - git diff --check (staged tree vs HEAD) ===
+COMMAND: git diff --check --cached
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:54Z
+---
+
+EXIT_CODE=0
+
+=== LEG L15 - documented manifest check: sha256sum -c SHA256SUMS.txt (from verification/) ===
+COMMAND: cd EVIDENCE/ea007/verification && sha256sum -c SHA256SUMS.txt | awk '{print $NF}' | sort | uniq -c; sha256sum -c SHA256SUMS.txt >/dev/null && echo ALL-OK
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:54Z
+---
+     93 OK
+ALL-OK
+EXIT_CODE=0
+
+=== LEG L20 - hidden/bidirectional Unicode control scan of every file changed vs the PR base (index vs fdd28d88) ===
+COMMAND: .venv\Scripts\python -c <scan: U+202A-202E, U+2066-2069, U+200B-200F, U+2060, U+00AD, interior U+FEFF>
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:54Z
+---
+not UTF-8 (skipped): EVIDENCE/ea007/historical-nightly-and-merge-capture.log
+files changed vs base fdd28d88: 118 | scanned: 117 | hidden/bidi control hits: 0
+EXIT_CODE=0
+
+=== LEG L19 - Sphinx clean build, warnings as errors (DOCS/sphinx/changelog.rst includes CHANGELOG.md) ===
+COMMAND: .venv\Scripts\python -m sphinx.cmd.build -W --keep-going -b html -d <tmp>/doctrees DOCS/sphinx <tmp>/html
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:51:55Z
+---
+[01mRunning Sphinx v9.1.0[39;49;00m
+[01mloading translations [en]... [39;49;00mdone
+[01mmaking output directory... [39;49;00mdone
+[autosummary] generating autosummary for: api\adversarial.rst, api\compat.rst, api\core.rst, api\daemon.rst, api\datasets.rst, api\dlpack.rst, api\dynamics.rst, api\eval.rst, api\experiment_tools.rst, api\experiments.rst, ..., changelog.rst, coupling_topologies.rst, getting_started.rst, index.rst, kernel_architecture.rst, migration_guide.rst, notebooks.rst, paper.rst, parity_report.rst, rust_api.rst
+loading intersphinx inventory 'python' from https://docs.python.org/3/objects.inv ...
+loading intersphinx inventory 'numpy' from https://numpy.org/doc/stable/objects.inv ...
+loading intersphinx inventory 'torch' from https://pytorch.org/docs/stable/objects.inv ...
+loading intersphinx inventory 'matplotlib' from https://matplotlib.org/stable/objects.inv ...
+intersphinx inventory has moved: https://pytorch.org/docs/stable/objects.inv -> https://docs.pytorch.org/docs/stable/objects.inv
+[01mmyst v5.1.0:[39;49;00m MdParserConfig(commonmark_only=False, gfm_only=False, enable_extensions=set(), disable_syntax=[], all_links_external=False, links_external_new_tab=False, url_schemes=('http', 'https', 'mailto', 'ftp'), ref_domains=None, fence_as_directive=set(), number_code_blocks=[], title_to_header=False, heading_anchors=0, heading_slug_func=None, html_meta={}, footnote_sort=True, footnote_transition=True, words_per_minute=200, substitutions={}, linkify_fuzzy_links=True, dmath_allow_labels=True, dmath_allow_space=True, dmath_allow_digits=True, dmath_double_inline=False, update_mathjax=True, mathjax_classes='tex2jax_process|mathjax_process|math|output_area', enable_checkboxes=False, strikethrough_single_tilde=False, colon_fence_exact_match=False, suppress_warnings=[], highlight_code_blocks=True)
+[01mbuilding [mo]: [39;49;00mtargets for 0 po files that are out of date
+[01mwriting output... [39;49;00m
+[01mbuilding [html]: [39;49;00mtargets for 35 source files that are out of date
+[01mupdating environment: [39;49;00m[new config] 35 added, 0 changed, 0 removed
+[2K[01mreading sources... [39;49;00m[  3%] [35mapi/adversarial[39;49;00m[2K[01mreading sources... [39;49;00m[  6%] [35mapi/compat[39;49;00m[2K[01mreading sources... [39;49;00m[  9%] [35mapi/core[39;49;00m[2K[01mreading sources... [39;49;00m[ 11%] [35mapi/daemon[39;49;00m[2K[01mreading sources... [39;49;00m[ 14%] [35mapi/datasets[39;49;00m[2K[01mreading sources... [39;49;00m[ 17%] [35mapi/dlpack[39;49;00m[2K[01mreading sources... [39;49;00m[ 20%] [35mapi/dynamics[39;49;00m[2K[01mreading sources... [39;49;00m[ 23%] [35mapi/eval[39;49;00m[2K[01mreading sources... [39;49;00m[ 26%] [35mapi/experiment_tools[39;49;00m[2K[01mreading sources... [39;49;00m[ 29%] [35mapi/experiments[39;49;00m[2K[01mreading sources... [39;49;00m[ 31%] [35mapi/kernels[39;49;00m[2K[01mreading sources... [39;49;00m[ 34%] [35mapi/metrics[39;49;00m[2K[01mreading sources... [39;49;00m[ 37%] [35mapi/nn[39;49;00m[2K[01mreading sources... [39;49;00m[ 40%] [35mapi/parity[39;49;00m[2K[01mreading sources... [39;49;00m[ 43%] [35mapi/reporting[39;49;00m[2K[01mreading sources... [39;49;00m[ 46%] [35mapi/simulation[39;49;00m[2K[01mreading sources... [39;49;00m[ 49%] [35mapi/solvers[39;49;00m[2K[01mreading sources... [39;49;00m[ 51%] [35mapi/subconscious[39;49;00m[2K[01mreading sources... [39;49;00m[ 54%] [35mapi/temporal[39;49;00m[2K[01mreading sources... [39;49;00m[ 57%] [35mapi/tensor[39;49;00m[2K[01mreading sources... [39;49;00m[ 60%] [35mapi/topology[39;49;00m[2K[01mreading sources... [39;49;00m[ 63%] [35mapi/train[39;49;00m[2K[01mreading sources... [39;49;00m[ 66%] [35mapi/utils[39;49;00m[2K[01mreading sources... [39;49;00m[ 69%] [35marchitecture[39;49;00m[2K[01mreading sources... [39;49;00m[ 71%] [35mcapacity_analysis[39;49;00m[2K[01mreading sources... [39;49;00m[ 74%] [35mchangelog[39;49;00m[2K[01mreading sources... [39;49;00m[ 77%] [35mcoupling_topologies[39;49;00m[2K[01mreading sources... [39;49;00m[ 80%] [35mgetting_started[39;49;00m[2K[01mreading sources... [39;49;00m[ 83%] [35mindex[39;49;00m[2K[01mreading sources... [39;49;00m[ 86%] [35mkernel_architecture[39;49;00m[2K[01mreading sources... [39;49;00m[ 89%] [35mmigration_guide[39;49;00m[2K[01mreading sources... [39;49;00m[ 91%] [35mnotebooks[39;49;00m[2K[01mreading sources... [39;49;00m[ 94%] [35mpaper[39;49;00m[2K[01mreading sources... [39;49;00m[ 97%] [35mparity_report[39;49;00m[2K[01mreading sources... [39;49;00m[100%] [35mrust_api[39;49;00m
+[01mlooking for now-outdated files... [39;49;00mnone found
+[01mpickling environment... [39;49;00mdone
+[01mchecking consistency... [39;49;00mC:\dev\PRIN\DOCS\sphinx\api\adversarial.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/adversarial
+C:\dev\PRIN\DOCS\sphinx\api\compat.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/compat
+C:\dev\PRIN\DOCS\sphinx\api\datasets.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/datasets
+C:\dev\PRIN\DOCS\sphinx\api\experiment_tools.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/experiment_tools
+C:\dev\PRIN\DOCS\sphinx\api\kernels.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/kernels
+C:\dev\PRIN\DOCS\sphinx\api\simulation.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/simulation
+C:\dev\PRIN\DOCS\sphinx\api\solvers.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/solvers
+C:\dev\PRIN\DOCS\sphinx\api\subconscious.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/subconscious
+C:\dev\PRIN\DOCS\sphinx\api\temporal.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/temporal
+done
+[01mpreparing documents... [39;49;00mdone
+[01mcopying assets... [39;49;00m
+[01mcopying static files... [39;49;00m
+Writing evaluated template result to %USERPROFILE%\AppData\Local\Temp\pr32gate-9wvgyfdq\sphinx\html\_static\basic.css
+Writing evaluated template result to %USERPROFILE%\AppData\Local\Temp\pr32gate-9wvgyfdq\sphinx\html\_static\documentation_options.js
+Writing evaluated template result to %USERPROFILE%\AppData\Local\Temp\pr32gate-9wvgyfdq\sphinx\html\_static\language_data.js
+[01mcopying static files: [39;49;00mdone
+[01mcopying extra files... [39;49;00m
+[01mcopying extra files: [39;49;00mdone
+[01mcopying assets: [39;49;00mdone
+[2K[01mwriting output... [39;49;00m[  3%] [32mapi/adversarial[39;49;00m[2K[01mwriting output... [39;49;00m[  6%] [32mapi/compat[39;49;00m[2K[01mwriting output... [39;49;00m[  9%] [32mapi/core[39;49;00m[2K[01mwriting output... [39;49;00m[ 11%] [32mapi/daemon[39;49;00m[2K[01mwriting output... [39;49;00m[ 14%] [32mapi/datasets[39;49;00m[2K[01mwriting output... [39;49;00m[ 17%] [32mapi/dlpack[39;49;00m[2K[01mwriting output... [39;49;00m[ 20%] [32mapi/dynamics[39;49;00m[2K[01mwriting output... [39;49;00m[ 23%] [32mapi/eval[39;49;00m[2K[01mwriting output... [39;49;00m[ 26%] [32mapi/experiment_tools[39;49;00m[2K[01mwriting output... [39;49;00m[ 29%] [32mapi/experiments[39;49;00m[2K[01mwriting output... [39;49;00m[ 31%] [32mapi/kernels[39;49;00m[2K[01mwriting output... [39;49;00m[ 34%] [32mapi/metrics[39;49;00m[2K[01mwriting output... [39;49;00m[ 37%] [32mapi/nn[39;49;00m[2K[01mwriting output... [39;49;00m[ 40%] [32mapi/parity[39;49;00m[2K[01mwriting output... [39;49;00m[ 43%] [32mapi/reporting[39;49;00m[2K[01mwriting output... [39;49;00m[ 46%] [32mapi/simulation[39;49;00m[2K[01mwriting output... [39;49;00m[ 49%] [32mapi/solvers[39;49;00m[2K[01mwriting output... [39;49;00m[ 51%] [32mapi/subconscious[39;49;00m[2K[01mwriting output... [39;49;00m[ 54%] [32mapi/temporal[39;49;00m[2K[01mwriting output... [39;49;00m[ 57%] [32mapi/tensor[39;49;00m[2K[01mwriting output... [39;49;00m[ 60%] [32mapi/topology[39;49;00m[2K[01mwriting output... [39;49;00m[ 63%] [32mapi/train[39;49;00m[2K[01mwriting output... [39;49;00m[ 66%] [32mapi/utils[39;49;00m[2K[01mwriting output... [39;49;00m[ 69%] [32marchitecture[39;49;00m[2K[01mwriting output... [39;49;00m[ 71%] [32mcapacity_analysis[39;49;00m[2K[01mwriting output... [39;49;00m[ 74%] [32mchangelog[39;49;00m[2K[01mwriting output... [39;49;00m[ 77%] [32mcoupling_topologies[39;49;00m[2K[01mwriting output... [39;49;00m[ 80%] [32mgetting_started[39;49;00m[2K[01mwriting output... [39;49;00m[ 83%] [32mindex[39;49;00m[2K[01mwriting output... [39;49;00m[ 86%] [32mkernel_architecture[39;49;00m[2K[01mwriting output... [39;49;00m[ 89%] [32mmigration_guide[39;49;00m[2K[01mwriting output... [39;49;00m[ 91%] [32mnotebooks[39;49;00m[2K[01mwriting output... [39;49;00m[ 94%] [32mpaper[39;49;00m[2K[01mwriting output... [39;49;00m[ 97%] [32mparity_report[39;49;00m[2K[01mwriting output... [39;49;00m[100%] [32mrust_api[39;49;00m
+[01mgenerating indices... [39;49;00mgenindex py-modindex done
+[2K[01mhighlighting module code... [39;49;00m[  2%] [94mprin._compat[39;49;00m[2K[01mhighlighting module code... [39;49;00m[  4%] [94mprin._deprecation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[  6%] [94mprin._prin_core[39;49;00m[2K[01mhighlighting module code... [39;49;00m[  8%] [94mprin._torch_compat[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 10%] [94mprin.adversarial_tools[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 12%] [94mprin.daemon[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 13%] [94mprin.datasets[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 15%] [94mprin.dlpack[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 17%] [94mprin.experiments[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 19%] [94mprin.kernels[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 21%] [94mprin.metrics[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 23%] [94mprin.nn[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 25%] [94mprin.nn._bridge[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 27%] [94mprin.nn.ablation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 29%] [94mprin.nn.ablation_variants[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 31%] [94mprin.nn.activations[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 33%] [94mprin.nn.allocation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 35%] [94mprin.nn.attention[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 37%] [94mprin.nn.autoencoders[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 38%] [94mprin.nn.energy[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 40%] [94mprin.nn.hierarchical_layers[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 42%] [94mprin.nn.hybrid[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 44%] [94mprin.nn.hybrid_compat[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 46%] [94mprin.nn.inhibition[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 48%] [94mprin.nn.inhibition_layers[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 50%] [94mprin.nn.model[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 52%] [94mprin.nn.mot_evaluation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 54%] [94mprin.nn.optimizers[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 56%] [94mprin.nn.phase_tracker[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 58%] [94mprin.nn.slot_attention[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 60%] [94mprin.nn.temporal_compat[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 62%] [94mprin.parity.harness[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 63%] [94mprin.parity.loader[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 65%] [94mprin.parity.manifest[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 67%] [94mprin.parity.schema[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 69%] [94mprin.parity.strategies[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 71%] [94mprin.reporting._artifacts[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 73%] [94mprin.reporting.benchmark_reporting[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 75%] [94mprin.reporting.figure_generation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 77%] [94mprin.reporting.profiler[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 79%] [94mprin.reporting.table_generation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 81%] [94mprin.simulation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 83%] [94mprin.simulation_experiments[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 85%] [94mprin.solvers[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 87%] [94mprin.subconscious_compat[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 88%] [94mprin.temporal_metrics[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 90%] [94mprin.temporal_training[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 92%] [94mprin.tensor[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 94%] [94mprin.topology[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 96%] [94mprin.train[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 98%] [94mprin.training_hooks[39;49;00m[2K[01mhighlighting module code... [39;49;00m[100%] [94mprin.y4q1_tools[39;49;00m
+[01mwriting additional pages... [39;49;00msearch done
+[01mdumping search index in English (code: en)... [39;49;00mdone
+[01mdumping object inventory... [39;49;00mdone
+[01mbuild succeeded.[39;49;00m
+
+The HTML pages are in ..\..\Users\there\AppData\Local\Temp\pr32gate-9wvgyfdq\sphinx\html.
+EXIT_CODE=0
+
+=== LEG L16 - Snyk Code on the new/modified first-party Python in the commit (two test modules + the proof harness, copied to an isolated dir) ===
+COMMAND: snyk code test <dir with test_campaign_quality_gates.py, test_ea007_manifest.py, proof_defect_catching.py> --severity-threshold=low
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:52:17Z
+---
+
+Testing %USERPROFILE%\AppData\Local\Temp\pr32gate-9wvgyfdq\snyk ...
+
+        
+💡 Tip
+
+   You are currently viewing results with --severity-threshold applied.
+   To view all issues, remove the --severity-threshold flag            
+                                                                       
+
+╭──────────────────────────────────────────────────────────────────────────────────╮
+│ Test Summary                                                                     │
+│                                                                                  │
+│   Organization:      symbo-gif                                                   │
+│   Test type:         Static code analysis                                        │
+│   Project path:      %USERPROFILE%\AppData\Local\Temp\pr32gate-9wvgyfdq\snyk    │
+│                                                                                  │
+│   Total issues:   0                                                              │
+╰──────────────────────────────────────────────────────────────────────────────────╯
+    
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+
+
+💡 Tip
+
+   Some capabilities, including the ability to apply ignores, are unavailable. Retest the project with the --remote-repo-url parameter or from within a repository to enable full functionality.
+                                                                                                                                                                                                
+EXIT_CODE=0
+
+=== LEG L17 - source-hash manifest written to pr32-source-hashes.txt ===
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:52:29Z
+---
+03e721db7925462fa99ddcade4970ca9bbe0f12605ac0654eac138dd9d358f0d *AGENTS.md
+2d0cd3728e1f1f70a15f723312bd43a99822f8df94fb82f7d797486a937d973d *.github/workflows/rust.yml
+b20405d00ffc41ab78af81e796d5d12f50142647a3c67ebc78efb26aa1066de0 *tests/test_campaign_quality_gates.py
+0095cf3969bfef5b1f202de2f7c3464cd55cebe44e9b924bb6bc7b1d8ab7ca3c *tests/test_ea007_manifest.py
+cef4341a2aa87323f9ced3ae881df33475307cc951115b772c088e24d266bd59 *DOCS/experiments/README.md
+# Proof harness (file bytes; committed beside the gate log under pr32-review/):
+a1baefc6d313967e9cdf2dde2bbf2774374f8637ef61f5b3eb2e22dfbf9314f4 *proof_defect_catching.py
+# Serial runner that produced pr32-gate-run.log (evidence tooling, NOT committed - host-specific paths; each leg's COMMAND line is the reproducible unit):
+b47cbf49b9f21784141c645e6ba0cc4f369ae788c0f1dc78e7f769a23fb28150 *run_gate.py
+EXIT_CODE=0
+
+=== LEG L18 - gitleaks 8.30.1 staged-diff scan (content of the remediation commit, redacted) ===
+COMMAND: gitleaks git --staged --redact --no-banner --report-format json --report-path pr32-staged-gitleaks.json .
+HOST: HP | SHA: add7386a996d85a558ca798229db05560026c456 + working tree | UTC: 2026-10-11T09:52:29Z
+---
+[90m6:52AM[0m [32mINF[0m [1m0 commits scanned.[0m
+[90m6:52AM[0m [32mINF[0m [1mscanned ~164943 bytes (164.94 KB) in 173ms[0m
+[90m6:52AM[0m [32mINF[0m [1mno leaks found[0m
+EXIT_CODE=0
+

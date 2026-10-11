@@ -1788,6 +1788,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SESSION_REGISTER.md` EA-007 row, and
   `tests/test_campaign_quality_gates.py` (19 tests total — 18 quality-gate
   tests plus the EA007-E-F4 dependency-floor regression).
+- **Raw EA-007 evidence is now byte-exact in git (EA-007, `0738714` /
+  `add7386`, 2026-10-11 UTC).** `.gitattributes` gains
+  `EVIDENCE/ea007/** -text whitespace=-trailing-space`. The repository's
+  `* text=auto eol=lf` default rewrites Windows CRLF tool output at `git add`
+  time, so a committed evidence log would no longer match its SHA-256 in
+  `EVIDENCE/ea007/verification/SHA256SUMS.txt`; the rule follows the
+  `benchmarks/results/**` precedent (session 0156). The rule landed in the same
+  commit as the files it protects, so 36 of the 82 manifest entries failed at
+  `0738714`; `add7386` re-staged 38 files byte-exact (end-of-line only,
+  +13,420 / −13,420) and the head verifies. The EA-007 artefacts entry above
+  also covers, unlisted there: the seven DV-register dispositions
+  (`DV-024`, `DV-033`, `DV-034`, `DV-040`, `DV-042`, `DV-043`, `DV-044`),
+  `DOCS/sessions/TRACEABILITY.md`, the `DOCS/audits`, `DOCS/reports`,
+  `DOCS/sessions` and `EVIDENCE` README indexes, `crates/prin-sim/README.md`
+  and `tests/README.md`.
+- **PR #32 multi-review round — fifteen findings compiled from seven
+  independent review runs, all dispositioned (2026-10-11 UTC).** Sourcery,
+  CodeRabbit, Devin Review (one flag, not published to GitHub), and four
+  independent LLM reviews (Kimi, Perplexity, Qwen, SWE-2-High) on PR #32 were
+  de-duplicated into `PR32-F1`…`PR32-F15` and audited in
+  `DOCS/audits/PR032-multi-review-audit.md`, which follows the
+  `PR023-multi-review-audit.md` / `PR017-devin-review-audit.md` precedent. Each
+  claim was re-derived from the repository. **No D1; the EA-007 verdict is
+  unchanged**; the EA-007 report is amended by appended errata only.
+  - **`PR32-F1` (D2) — the `AGENTS.md` local gate failed on Windows PowerShell
+    5.1.** The campaign-format line `--config 'include = ["*.py", …]'` reaches
+    ruff as invalid TOML under 5.1 (it strips embedded double quotes): exit 2 on a
+    clean gate. Now `--config "include = ['*.py', '*.pyi', '*.ipynb']"`, exit 0
+    on 5.1, PowerShell 7 and Git Bash; guarded by a test.
+  - **`PR32-F2` (D2) — the final secret scans had no repository-resident
+    evidence.** The 706-commit (`0738714`) and 707-commit (`add7386a`) gitleaks
+    scans lived only in a gitignored tree; committed byte-exact under
+    `EVIDENCE/ea007/verification/post-commit/` and recorded in PSR-040, with the
+    704-commit scan kept as historical.
+  - **`PR32-F3`–`PR32-F7` (D3)** — `GATE-STATUS.md` misquoted legs 19 (145, not
+    146) and 22 (100 pins, not 274), left leg 15 unscoped and two
+    `EXIT_CODE=2` logs unindexed (corrected, manifest regenerated); PSR-040's
+    ledger row repeated the previous cycle (now 039→040, 142 → 146) and dropped
+    the seven template metric rows including the unmeasured `≥95 %` coverage
+    gate (restored); five citation sites across four records cited a gitignored tree as
+    evidence (repointed); the evidence manifest is now executed fail-closed by
+    `tests/test_ea007_manifest.py` and covers the three top-level artefacts.
+  - **`PR32-F9` (D3) — the rustdoc gate could not catch DV-042's class again.**
+    `prin_sim::gpu` only exists under a backend feature (`default = []`); the
+    `AGENTS.md` local gate and `rust.yml` now also run
+    `cargo doc -p prin-sim --no-deps --features cpu` under `-D warnings`
+    (hosted step not run — workflows paused).
+  - **`PR32-F8`, `F10`–`F12`, `F14`, `F15` (D4)** — a vacuous rustdoc leg cited
+    as DV-042 validation; no dated EA-007 section in the DV register; wording /
+    currency defects (13-of-18, future tense, stale git state); duplicate
+    campaign analysis basenames abort `mypy DOCS/experiments/ --strict` (rule
+    in `DOCS/experiments/README.md` plus a test); a suffix-only bandit-exclusion
+    test replaced by a truth table; a brittle `urllib3` floor regex.
+  - **Declined with rationale:** `PR32-F13` (hosted `test` job leaves bandit
+    unpinned — the proposed constraint file also pins `torch`, unvalidatable
+    while workflows are paused; fails loudly, never falsely passes), CodeRabbit's
+    docstring-coverage check (not a project gate), and the home-directory path
+    in one raw cargo-audit log. CodeRabbit's `GATE-STATUS.md` headline was
+    rejected while its instruction (clarify scope, keep the 704 result) was kept.
+  - **Verification** (local, Windows; hosted CI paused): ruff, mypy `--strict`
+    ×2, bandit (24,864 LOC), interrogate 97.6 %, Sphinx `-W` (CHANGELOG is a
+    docs source), 25 targeted tests, 63/63 defect-catching expectations,
+    rustdoc `--features cpu`, Snyk Code (0 issues), gitleaks staged scan,
+    governance checkers (142 → 146; 44 DV / 198 sessions).
 
 ## [1.0.0-rc1] — 2026-09-15
 

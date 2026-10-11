@@ -3,9 +3,15 @@
 **Date:** 2026-10-11 UTC
 **Cycle:** 040 (EA-007 global Executive Audit and pre-EXP-002 readiness —
 global session outside the planned 0001–0198 and campaign E-stage sequences)
-**Author:** Devin (AI pair)
-**Git state:** `audit/ea007-exp002-readiness` @ `fdd28d88e4c57d544e5d30fa52cce85807ab15a9`
-+ worktree changes under local verification
+**Completed sessions:** EA-007 (global session; no planned-trajectory
+session 0001–0198 or campaign E-stage is completed by this cycle — 0159
+remains READY, not started)
+**Author:** Devin (AI pair); PR #32 review-round corrections by Claude Sonnet 5.5
+(AI pair), `DOCS/audits/PR032-multi-review-audit.md`
+**Git state:** `audit/ea007-exp002-readiness` — issued at base
+`fdd28d88e4c57d544e5d30fa52cce85807ab15a9` + the three EA-007 commits
+(`199b82a`, `0738714`, `add7386a`); the PR #32 review-round remediation commits
+follow (no commit SHA claimed here — a commit cannot name itself)
 **Status:** **ISSUED** — local validation complete under the Plan amendment
 #48 regime (hosted CI paused; Linux/macOS suspended). Python per-change
 coverage remains unmeasured (DV-033 open); the platform/hosted gates stay
@@ -62,10 +68,17 @@ suspended. Audit verdict `PASS-WITH-REMEDIATION` per
 
 | Metric | Previous (PSR-039) | Current (PSR-040) | Gate |
 |---|---|---|---|
-| New gate tests | — | **19 passed** (`tests/test_campaign_quality_gates.py`; 13 of the original 18 legs failed against pre-change config — defect-catching proof) | 100% |
+| Rust tests passing (default) | 1,590 passed, 0 failed, 1 ignored | **1,604 passed, 0 failed, 1 ignored** (`cargo test --workspace`, leg 11a); strict 1,608, cuda 1,659, wgpu 1,675, kernels-cpu 143, sim-cpu 239 — all 0 failed | 100% where defined |
+| Python tests passing | 3,275 passed / 181 skipped (fast suite) + 2,144 passed / 1 skipped (parity suite) | **5,667 passed / 184 skipped / 0 failed / 61 warnings** (`pytest tests/ parity/`, leg 25, 29:42, exit 0; includes the 19 gate tests that existed at gate time — 22 after the PR #32 round) | 100% |
+| Coverage (new/changed code) | 95% total | **not measured — DV-033 OPEN.** The coverage-mode attempt timed out, so no Python percentage is claimed. Rust raw line totals (87.18% kernels wgpu/cpu, 63.59% dynamics default, 63.67% strict) are totals, not ≥95% assertions; this diff adds no executable production lines | ≥95% — **NOT MET (unmeasured)** |
+| Docstring coverage (interrogate) | 97.6% | **97.6%** (`interrogate -c pyproject.toml python/prin`, leg 06) | ≥95% overall, 100% public |
+| Parity cases passing / total defined | 504/504 corpus; 978+22 fuzz | **`parity/` suite 2,144 passed / 1 skipped / 0 failed** inside leg 25 (counted from the log's node ids); corpus and fuzz case counts were not re-derived this cycle | 100% at tolerance |
+| Clippy/ruff/mypy/bandit/audit findings | 0 findings; cargo audit 3 governed warnings | **0 findings** (clippy default+strict, ruff, mypy ×2, non-vacuous bandit); `cargo audit` 0 vulnerabilities / 3 governed warnings; `pip-audit` ×2 clean; Snyk Code clean at governed thresholds; Snyk SCA doc manifest 0 issues, main manifest passed with the 5 no-fix Torch advisories under EA-003's disposition | 0 (governed warnings only) |
+| Benchmark regression gates | — | **not exercised** — the nightly workflow is paused (#48); audit §E8 transcribes the last pre-pause nightly | none tripped |
+| New gate tests | — | **19 passed** at gate time (`tests/test_campaign_quality_gates.py`; 13 of the original 18 legs failed against pre-change config — defect-catching proof); 22 after the PR #32 round | 100% |
 | `cargo doc -p prin-sim` wgpu leg (`RUSTDOCFLAGS="-D warnings"`) | exit 101 (3 unresolved intra-doc links, DV-042) | **exit 0**; cpu leg exit 0; cuda leg exit 0 | 0 warnings |
-| Deviation-ledger checker 038→039 | exit 0 (128 → 142 rows) | **exit 0** (128 inherited → 142 rows) | pass |
-| Full local gate (pytest+cov, cargo matrix, audits, Sphinx, governance) | PSR-039 §7 | **Executable checks PASS; coverage-mode attempt timed out — DV-033 OPEN.** Full pytest 5,667 passed / 184 skipped / 0 failed / 61 warnings (29:42, exit 0); coverage leg blocked per DV-033; evidence `DOCS/test_and_benchmark_results/ea007/full-gate/` | — |
+| `check_deviation_ledger.py` | 038→039: exit 0 (128 → 142 rows) | **039→040: exit 0 (142 → 146 rows)** | pass |
+| Full local gate (pytest+cov, cargo matrix, audits, Sphinx, governance) | PSR-039 §7 | **Executable checks PASS; coverage-mode attempt timed out — DV-033 OPEN.** Full pytest as above; coverage leg blocked per DV-033; evidence `EVIDENCE/ea007/verification/full-gate/` (index `GATE-STATUS.md`) | — |
 
 ## 3. Deviation ledger (cumulative)
 
@@ -123,8 +136,16 @@ verbatim; recorded maintainer approval
   future-WP dispositions retained.
 - **Native push protection** remains disabled (pre-existing, flagged at #48);
   the full-history local secret scan (pinned, checksum-verified gitleaks
-  8.30.1, session-local) completed — 704 commits scanned, **no leaks found**.
-  A post-commit rescan remains required if new commits are added.
+  8.30.1, session-local) completed — 704 commits scanned, **no leaks found**
+  (historical: base `fdd28d88`, before any commit of this PR existed).
+  Post-commit scans, preserved in `EVIDENCE/ea007/verification/post-commit/`:
+  706 commits @ `0738714` and **707 commits @ `add7386a`**
+  (2026-10-11T06:47:37Z, 76.07 MB, **no leaks**, exit 0) — each result is about
+  the commit it names. The PR #32 review-round commit that follows `add7386a`
+  has a staged-diff scan (leg L18 of
+  `EVIDENCE/ea007/verification/pr32-review/pr32-gate-run.log`) and a post-commit
+  full-history scan reported in the PR description (a document cannot contain
+  the result of a scan of itself); any further commit needs its own rescan.
 - **Linux/macOS and the three-OS wheel matrix** stay suspended, not
   satisfied (DoD items 2 and 4 remain open until the regime lifts).
 
@@ -152,10 +173,11 @@ checkers), including the final uninterrupted full pytest — **5,667 passed /
 184 skipped / 0 failed / 61 warnings in 1,782.21 s (exit 0)**; the
 coverage-mode attempt exhausted its bound and is reported blocked per
 DV-033, not failed.
-Per-command logs (command/host/SHA/UTC/exit code) live in
-`DOCS/test_and_benchmark_results/ea007/full-gate/` with a status index
-(`GATE-STATUS.md`); the SHA256-inventoried evidence copy, including the
-final governance check logs, lives in `EVIDENCE/ea007/verification/` (see
-`EVIDENCE/ea007/verification/README.md` and `SHA256SUMS.txt`). See §5 for
+Per-command logs (command/host/UTC, and in most the SHA and exit code) are
+committed under `EVIDENCE/ea007/verification/` with a status index
+(`full-gate/GATE-STATUS.md`) and a SHA-256 inventory (see
+`EVIDENCE/ea007/verification/README.md` and `SHA256SUMS.txt`); the scratch
+originals in the gitignored `DOCS/test_and_benchmark_results/ea007/` are
+local to the maintainer workstation and are not part of the record. See §5 for
 retained open items and `DOCS/audits/EXECUTIVE_AUDIT_REPORT_007.md` for the
 audit record.

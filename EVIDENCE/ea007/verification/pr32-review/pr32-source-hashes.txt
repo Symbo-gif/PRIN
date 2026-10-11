@@ -1,0 +1,13 @@
+# Source-hash manifest for the PR #32 review-round remediation (first-party source/config edited by the round)
+# HOST: HP | base SHA: add7386a996d85a558ca798229db05560026c456 | UTC: 2026-10-11T09:52:29Z
+# Algorithm: SHA-256 over the STAGED (index, LF-normalized) blob of each file - the bytes the remediation commit records.
+# Gate-time record: later edits to these files invalidate the corresponding gate results.
+03e721db7925462fa99ddcade4970ca9bbe0f12605ac0654eac138dd9d358f0d *AGENTS.md
+2d0cd3728e1f1f70a15f723312bd43a99822f8df94fb82f7d797486a937d973d *.github/workflows/rust.yml
+b20405d00ffc41ab78af81e796d5d12f50142647a3c67ebc78efb26aa1066de0 *tests/test_campaign_quality_gates.py
+0095cf3969bfef5b1f202de2f7c3464cd55cebe44e9b924bb6bc7b1d8ab7ca3c *tests/test_ea007_manifest.py
+cef4341a2aa87323f9ced3ae881df33475307cc951115b772c088e24d266bd59 *DOCS/experiments/README.md
+# Proof harness (file bytes; committed beside the gate log under pr32-review/):
+a1baefc6d313967e9cdf2dde2bbf2774374f8637ef61f5b3eb2e22dfbf9314f4 *proof_defect_catching.py
+# Serial runner that produced pr32-gate-run.log (evidence tooling, NOT committed - host-specific paths; each leg's COMMAND line is the reproducible unit):
+b47cbf49b9f21784141c645e6ba0cc4f369ae788c0f1dc78e7f769a23fb28150 *run_gate.py

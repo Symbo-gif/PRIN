@@ -486,3 +486,38 @@ r1 range is on `main`, and `report.md` §14 records the exact range that PR will
 carry. The report must still be announced in the next Project State Report
 (Experimentation Standards §2 E5); PSR-039's "r1 verification pending" entries
 are point-in-time and are superseded there, not edited here.
+
+## EA-007 PR #32 review round — 2026-10-11 UTC
+
+Every review and audit comment on PR #32 was re-derived from the repository
+(`DOCS/audits/PR032-multi-review-audit.md`; findings `PR32-F1`–`PR32-F15`, no
+D1). **No deferred-validation row is opened, closed, or re-scoped by this
+round**: `DV-033` (Python per-change coverage) and `DV-034` (single-runner
+SPOF) stay OPEN; `DV-036`, `DV036-F5` and the EXP-004+ hardware gates are
+untouched. The earlier EA-007 in-cell deltas (seven rows, provably
+append-only) are not edited; their corrections are recorded here instead.
+
+- **DV-042** (CLOSED — IMPLEMENTED AND LOCALLY VALIDATED). The EA-007 delta's
+  sentence "the workspace `cargo doc --workspace --no-deps` leg also exits 0"
+  is true but **non-evidential**: `prin_sim::gpu` is gated on
+  `cpu`/`cuda`/`wgpu` and `default = []`, and that leg also exited 0 at the
+  defective base (`PR32-F8`). The three feature legs carry the evidence. The
+  root-cause remediation the row names as an alternative is now implemented
+  (`PR32-F9`): `rust.yml` and the `AGENTS.md` local gate run
+  `cargo doc -p prin-sim --no-deps --features cpu` under
+  `RUSTDOCFLAGS="-D warnings"`, pinned by a regression test. The hosted leg was
+  not run (workflows paused, amendment #48).
+- **DV-033**. The EA-007 delta cites its evidence in the gitignored
+  `DOCS/test_and_benchmark_results/ea007/full-gate/`; the committed record is
+  `EVIDENCE/ea007/verification/full-gate/` (`PR32-F6`).
+- **DV-040**. The `AGENTS.md` campaign-format line is now valid under Windows
+  PowerShell 5.1 (`PR32-F1`); the bandit-exclusion regression test is a truth
+  table rather than a suffix check (`PR32-F14`); unique campaign analysis
+  script basenames are required and tested (`PR32-F12`). The EXP-002 E4
+  re-audit gate is unchanged.
+- **Review-log convention** (`PR32-F10`). Since the Review log lapsed on
+  2026-09-18, cycles record a dated `##` narrative section; EA-007's session
+  updated seven DV rows in-cell but recorded none. This section is that
+  record. A proposal to extend `tools/check_global_session_registration.py` to
+  require it was declined: the dated section is a convention, not a normative
+  requirement, and the checker's scope is `SESSION_REGISTER.md` registration.

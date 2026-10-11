@@ -89,7 +89,9 @@ To find evidence for a specific work package, look for files matching
   EXP-001-r1 merge `check_ci_green` output, and the latest pre-pause
   nightly capture. Frozen input evidence; not regenerated.
   [`ea007/verification/`](ea007/verification/) preserves the full local
-  gate's per-command logs and a `SHA256SUMS.txt` integrity inventory
+  gate's per-command logs, its post-commit secret scans, the PR #32 review
+  round's gate log, and a `SHA256SUMS.txt` integrity inventory (executed by
+  `tests/test_ea007_manifest.py`)
   (logs/text artifacts only — see that directory's `README.md`).
 
 ## Rules
