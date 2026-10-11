@@ -19,3 +19,6 @@ benchmarks/results/** -text whitespace=-trailing-space
 
 # EA-007 raw verification evidence is byte-exact; preserve SHA-256 inputs.
 EVIDENCE/ea007/** -text whitespace=-trailing-space
+
+# Session-0159 local verification evidence is byte-exact; preserve SHA-256 inputs.
+EVIDENCE/0159/** -text whitespace=-trailing-space
