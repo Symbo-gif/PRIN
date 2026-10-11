@@ -31,11 +31,13 @@ do not change global PATH or weaken the tests.
 ## Local verification one-liner (Python + Rust + security)
 
 ```powershell
-.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/
+.venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/
 .venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/
+.venv\Scripts\ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'
 .venv\Scripts\mypy python/prin --strict
+.venv\Scripts\mypy DOCS/experiments/ --strict
 .venv\Scripts\python -m interrogate -c pyproject.toml python/prin
-.venv\Scripts\python -m bandit -r python/prin -c pyproject.toml
+.venv\Scripts\python -m bandit -r python/prin DOCS/experiments -c pyproject.toml
 .venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp
 .venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp
 cargo fmt --all -- --check

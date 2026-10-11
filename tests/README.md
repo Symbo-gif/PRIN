@@ -287,6 +287,16 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   runner is stubbed, so the suite exercises the measurement, classification,
   preflight-pin, storage-cap, and publication machinery without executing a
   registered workload or producing campaign observations.
+- `test_campaign_quality_gates.py` — 19 DV-040/EA007-E-F4 regression tests (EA-007):
+  the `python.yml` lint job and the AGENTS.md local gate must lint,
+  format-check, type-check, and SAST-scan `DOCS/experiments/` (shlex
+  tokenization of each single-line `run:` command and each `.venv`-prefixed
+  line); the normal `python/prin` gates stay intact; and `[tool.bandit]
+  exclude_dirs` must use directory-component globs — verified by in-process
+  `BanditConfig`/`BanditManager` discovery plus parametrized
+  `_is_file_included` legs that fail on exclusion-named record slugs
+  (`EXP-999-tests-parity`). Thirteen legs fail against the pre-DV-040
+  configuration, proving they catch the gap.
 - Differential parity tests live in `../parity/`.
 - Rust unit/property tests live next to each crate (`cargo test`).
 

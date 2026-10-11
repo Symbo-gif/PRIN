@@ -133,3 +133,9 @@ The Session Plan is structurally complete only if all remain true:
    before their S4 closes.
 
 Violating any invariant is at least a D2 governance finding.
+
+**EA-007 (2026-10-11 UTC):** a global Executive Audit / pre-EXP-002
+readiness session is registered in `SESSION_REGISTER.md` under "Global
+sessions — Executive Audits". It is outside the planned sequence — the
+0001–0198 integer chain remains unique and gap-free (invariant 4
+unchanged).

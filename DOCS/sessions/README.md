@@ -165,6 +165,11 @@ Unexpected correction sessions use [`contingencies/`](contingencies/README.md).
 Inserted sessions receive a correction WP ID and dated copied briefs; they do
 not renumber the 198 planned sessions.
 
+EA-007 (2026-10-11 UTC) — a global Executive Audit / pre-EXP-002 readiness
+session — is registered in [`SESSION_REGISTER.md`](SESSION_REGISTER.md)
+under "Global sessions — Executive Audits". It is outside the planned
+0001–0198 sequence and renumbers nothing.
+
 ## 8. Navigation
 
 - [`SESSION_REGISTER.md`](SESSION_REGISTER.md) — exact global order and links.

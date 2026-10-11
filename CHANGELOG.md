@@ -1691,6 +1691,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   describe the same sample. Both independently reproduced with a failing
   test before the fix and confirmed to pass after; full subsystem suite
   64/64, `ruff`/`mypy --strict`/Snyk Code clean.
+- **DV-040: campaign analysis code now inside the quality gates (EA-007,
+  2026-10-11 UTC).** `python.yml`'s lint job and the `AGENTS.md` local
+  equivalents now cover `DOCS/experiments/`: the `ruff check` root is
+  extended, a separate source-only `ruff format --check` campaign leg is
+  added (`--config 'include = ["*.py", "*.pyi", "*.ipynb"]'`),
+  `mypy DOCS/experiments/ --strict` is added, and `bandit` recurses both
+  `python/prin` and `DOCS/experiments`. `[tool.bandit] exclude_dirs` is
+  tightened from bare substring names to `d/*`/`*/d/*` component globs —
+  bandit's substring exclusion matching had silently skipped every `*.py`
+  under the `EXP-*-numerical-parity` record roots, making the campaign leg
+  vacuous (0 LOC). Verified non-vacuous (24,864 LOC) and pinned by
+  `tests/test_campaign_quality_gates.py` (19 tests total — 18 quality-gate
+  tests, of which 13 failed against the pre-change configuration).
+- **DV-042: `prin-sim` module docs no longer break non-CUDA rustdoc
+  (EA-007, 2026-10-11 UTC).** `crates/prin-sim/src/gpu.rs`'s `kDLCUDA`
+  export section is `#![cfg_attr]`-gated: identical prose/links under the
+  `cuda` feature, an accurate absent-feature description otherwise.
+  `RUSTDOCFLAGS="-D warnings" cargo doc -p prin-sim` now exits 0 on the
+  `wgpu`, `cpu`, and `cuda` legs (was exit 101 with three unresolved
+  intra-doc links on non-CUDA legs). No runtime change.
+- **EA007-E-F4 (D2): doc-build `urllib3` floor raised to `>=2.8.0`
+  (2026-10-11 UTC).** Snyk SCA flagged `urllib3` 2.7.0 in
+  `DOCS/sphinx/requirements.txt` under three advisories
+  (CVE-2026-97687/-88/-89, fixedIn 2.8.0). The minimum pin was raised, the
+  verification venv upgraded 2.7.0→2.8.0, and a scoped file-level Snyk SCA
+  rescan plus both `pip_audit` legs re-verified clean; a regression
+  assertion in `tests/test_campaign_quality_gates.py` pins the floor.
 
 ### Added
 
@@ -1750,6 +1777,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `EDA-001` row from `SESSION_REGISTER.md`'s EMA table. See
   `DOCS/audits/EXECUTIVE_DOCUMENTATION_AUDIT_REPORT_002.md` §7 closure
   table.
+- **EA-007 Executive Audit artefacts (2026-10-11 UTC).** Seventh
+  project-level executive audit — a global EXP-002 readiness audit outside
+  the planned session sequence, verdict `PASS-WITH-REMEDIATION` (all four
+  findings EA007-E-F1..F4 fixed locally; main delivery via PR pending).
+  `DOCS/audits/EXECUTIVE_AUDIT_REPORT_007.md`,
+  `DOCS/reports/040-project-state.md` (issued), the
+  frozen `EVIDENCE/ea007/readiness-state.json` snapshot, the
+  `EVIDENCE/ea007/verification/` evidence bundle, the
+  `SESSION_REGISTER.md` EA-007 row, and
+  `tests/test_campaign_quality_gates.py` (19 tests total — 18 quality-gate
+  tests plus the EA007-E-F4 dependency-floor regression).
 
 ## [1.0.0-rc1] — 2026-09-15
 

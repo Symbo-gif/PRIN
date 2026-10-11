@@ -124,6 +124,12 @@ device-resident: state stays on-device between `step()` calls; explicit
   zero-copy device-resident), so neither the DLPack device type nor
   `torch.cuda.is_available()` can tell a real wgpu dispatch apart from a
   silent fallback.
+- **Feature-accurate module documentation** (DV-042): the `gpu` module's
+  `kDLCUDA` export section is `#![cfg_attr]`-gated, so rustdoc renders the
+  CUDA export prose and links only under `--features cuda` and an accurate
+  absent-feature note otherwise. Locally validated warning-free
+  (`RUSTDOCFLAGS="-D warnings"`) across the `wgpu`, `cpu`, and `cuda`
+  feature legs on the audit host (EA-007).
 
 Evidence: `DOCS/audits/036e-wp036e-audit.md`;
 `DOCS/audits/2026-09-28-dv041-wgpu-backend-identification-audit.md`;
