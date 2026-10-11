@@ -108,7 +108,20 @@ experiment downstream of EXP-001, and 0194 are RELEASED** under campaign plan
 amendment was needed, because a confirmed parity result is not a changed
 conclusion. Opening the E1–E5 pull request is authorized but **not yet done** —
 nothing has been pushed. `EXP-002` may now begin in campaign plan §3's
-dependency order.
+dependency order. *(Dated correction, 2026-10-11 UTC: the E1–E5 pull
+request was subsequently opened and merged as **PR #28**; the sentence
+above is retained as its point-in-time record.)*
+
+**EXP-002 E1 PREPARATION IN PROGRESS — session 0159, 2026-10-11 UTC.** The
+lead-authored DRAFT pre-registration
+([`EXP-002` record](EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md))
+and the necessary E1 collection driver
+(`benchmarks/campaign/exp002_driver.py`, with synthetic-fixture regression
+tests) are in place on `campaign/0159-exp002-e1`. Project Plan amendment
+#49 adopted supervised-local-validation timeout governance within the
+declared 0159 scope. Scientific approval belongs to session 0160; no
+EXP-002 execution, pilot or reference-input collection has run and the
+final full local gate is pending.
 
 ## Layout
 

@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-002 E1 preparation — DRAFT protocol, collection driver and timeout
+  governance (session 0159, 2026-10-11 UTC).** The lead-authored DRAFT
+  pre-registration
+  `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md`
+  and the necessary E1 collection driver
+  `benchmarks/campaign/exp002_driver.py` (with synthetic-fixture regression
+  tests `tests/test_exp002_driver.py` and `EVIDENCE/0159` manifest
+  regression tests `tests/test_0159_manifest.py`) are prepared for
+  independent E2 review at session 0160. Project Plan amendment #49
+  adopted supervised-local-validation timeout governance (Testing
+  Standards §7 and cross-references): no arbitrary whole-run wall-clock
+  kill while a run is demonstrably progressing, evidence-based finite
+  bounds, and no retroactive satisfaction of interrupted coverage.
+  No experiment results are recorded: the protocol is DRAFT, no EXP-002
+  execution or pilot has run, and the final full local gate is pending.
+
 - **EXP-001-r1 executed, adjudicated and reported — all five hypotheses
   `CONFIRMED`, no D1 (2026-09-29 UTC).** The campaign plan §10.4 item 4 re-run
   of EXP-001 completed E3→E5 on a new pre-registration, six new run directories

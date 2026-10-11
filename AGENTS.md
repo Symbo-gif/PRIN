@@ -28,6 +28,36 @@ distribution passes `shutil.which("bash")` but cannot run the test scripts.
 On this workstation, prepend `C:\Program Files\Git\bin` for the test process;
 do not change global PATH or weaken the tests.
 
+## Supervised local validation (Testing Standards §7, Plan amendment #49)
+
+Required local checks run to completion under supervision — no arbitrary
+whole-run wall-clock limit while a run is demonstrably progressing (full
+policy: `DOCS/standards/Testing_Standards.md` §7). The normal required full
+pytest invocation runs **without** a shell `timeout` wrapper and carries
+faulthandler plus slowest-durations instrumentation:
+
+```powershell
+.venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20
+```
+
+`-o faulthandler_timeout=300` is a per-test timer that dumps all thread
+stacks after a test has been running for 300 s — it is not a kill, and its
+output alone is not proof of a hang. Confirm with a second timestamped
+observation before stopping anything (Testing Standards §7 item 3). Run
+pytest and cargo sequentially (see above) and keep the exact
+`.pytest_basetemp` name.
+
+Where Git Bash must precede the Windows WSL `bash.exe` relay (see above),
+set it process-locally rather than touching global PATH:
+
+```powershell
+$previousPath=$env:PATH; try { $env:PATH='C:\Program Files\Git\bin;'+$previousPath; & .venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20; $pytestExit=$LASTEXITCODE } finally { $env:PATH=$previousPath }
+```
+
+Record the captured `$pytestExit` as the run's exit status. This example is
+the same required full-suite invocation shown with the process-local PATH
+wrapper — not a second required run.
+
 ## Local verification one-liner (Python + Rust + security)
 
 ```powershell

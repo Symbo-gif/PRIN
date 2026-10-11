@@ -93,6 +93,13 @@ To find evidence for a specific work package, look for files matching
   round's gate log, and a `SHA256SUMS.txt` integrity inventory (executed by
   `tests/test_ea007_manifest.py`)
   (logs/text artifacts only — see that directory's `README.md`).
+- [`0159/`](0159/) — session 0159 (EXP-002 E1, 2026-10-11) preparation
+  evidence: the frozen `entry-state.json` (source baseline, GitHub
+  observations, settled `[]` native open-alert read) and the
+  `verification/` focused-check captures plus `SHA256SUMS.txt` integrity
+  inventory (executed by `tests/test_0159_manifest.py`). Verification
+  evidence only — no final full-gate pass is asserted and no EXP-002
+  execution has run (see that directory's `README.md`).
 
 ## Rules
 

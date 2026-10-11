@@ -521,3 +521,26 @@ append-only) are not edited; their corrections are recorded here instead.
   record. A proposal to extend `tools/check_global_session_registration.py` to
   require it was declined: the dated section is a convention, not a normative
   requirement, and the checker's scope is `SESSION_REGISTER.md` registration.
+
+## Session-0159 E1 currency — 2026-10-11 UTC
+
+Project Plan amendment #49 (supervised local validation / timeout
+governance) was adopted this session: required local checks run to
+completion under supervision without arbitrary whole-run wall-clock kills
+(Testing Standards §7). **No deferred-validation row is opened, closed, or
+re-scoped by this session.**
+
+- **DV-033** (Python per-change coverage) stays **OPEN**. The session's
+  focused whole-new-driver coverage run
+  (`benchmarks/campaign/exp002_driver.py` at 99.75 %,
+  `EVIDENCE/0159/verification/0159-driver-coverage.json`) is
+  package-scoped evidence for the new driver only — it is not the
+  per-change `prin` coverage the row requires, the hosted upload gap is
+  unchanged, and the originally interrupted coverage attempts are not
+  satisfied by it.
+- **DV-034** (single-runner SPOF) stays **OPEN**.
+- **DV-040** stays as recorded: option (a) quality-root coverage and the
+  PR #32 strengthening are retained; the re-audit gate remains at EXP-002
+  E4 (session 0162).
+- **DV-036** / `DV036-F5` (re-audit at 0166), **DV-036** closure windows
+  before 0168/0173, and the EXP-004+ hardware gates: unchanged.

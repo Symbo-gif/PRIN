@@ -1,0 +1,17 @@
+COMMAND: .venv/Scripts/ruff check + ruff format --check + mypy --strict on benchmarks/campaign/exp002_driver.py tests/test_exp002_driver.py tests/test_0159_manifest.py
+SOURCE: 85b779297be0642f5c64853c1590ef341e7ff77e + uncommitted session-0159 working changes
+HOST: HP (Microsoft Windows NT 10.0.26300.0)
+DATE: 2026-10-11T12:19:55Z
+
+$ .venv/Scripts/ruff check benchmarks/campaign/exp002_driver.py tests/test_exp002_driver.py tests/test_0159_manifest.py
+All checks passed!
+EXIT=0
+
+$ .venv/Scripts/ruff format --check benchmarks/campaign/exp002_driver.py tests/test_exp002_driver.py tests/test_0159_manifest.py
+3 files already formatted
+EXIT=0
+
+$ .venv/Scripts/mypy benchmarks/campaign/exp002_driver.py --strict
+Success: no issues found in 1 source file
+EXIT=0
+GATE_EXIT=0

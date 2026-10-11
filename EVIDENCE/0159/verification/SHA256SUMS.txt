@@ -1,0 +1,14 @@
+e4bda13e3d34e5b17cf2e38721ffe28fd6b4e2f5cfd8516d79ab2ee9109377b5 *./README.md
+52ad700cc8436d20583451b8674b56e003dfac1c06d006687091f56db721ba61 *./source-hashes.txt
+e147c52bed8d8df032240f154b486cab643988bc1e4b33952db48e8cced8f7db *./0159-driver-final-lint-type.log
+4ed35c4a2f37283f1b13e221fa12aac96a75c37eed5c9b1d852e68a5f069b843 *./0159-driver-final-pytest-coverage.log
+3c88875e855f901780b97ffefc3f45cc00c2a9fc1059b79d5b1ec222fab85aa4 *./0159-driver-initial-red-run.log
+90bf038db76cd5e472a5395e3a91be75406e4d742751524d652cae4d0cfffa58 *./0159-driver-lint-type.log
+7bd2f92b59f7c372c64ea77935a8cc5864e9574b88d11e33bdc4b6c5bafd8042 *./0159-driver-pytest-coverage.log
+4403060b42641cb96e790892b0be5c593ee51a69eeffba252a89fb8bfffa459d *./0159-focused-campaign-quality-gates.log
+22224e7b2486b3975ac96fb9ffb4720685d5f21c4593c56ca6baf9d7caa4253d *./0159-focused-ea007-manifest.log
+6605d402b360fc64869f948346d1d69dc853ac38f01aca90d95f156c1814ab48 *./0159-ps51-parse-check.log
+1ac893898a0740e3ca50c1076e49e5858bba5366800318faece1fdadf247d807 *./0159-ps51-parse-check.ps1
+dc8d76db8b2f6dc36d0ffc64801e5df2943535a385e2ff484823bbde303e705d *./0159-driver-coverage.json
+a8e2cd04d9c1a3229796ad5bbb3cb7a0b17b19b19b9e143107883776b328d45a *./0159-driver-final-coverage.json
+08c8f78478cc7afaf71619a77cee16ff91a0b9500e4e45c55d5a97da3639e05a *../entry-state.json

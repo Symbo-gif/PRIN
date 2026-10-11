@@ -9,7 +9,7 @@ All contributions are governed by these documents:
 - `Executive_Testing_and_CI_Audit_Governance_and_Methodology.md` — Executive Testing and CI Audit (ETCA) Session governance: in-depth verification of the test suite and CI/CD gate machinery (EA dimensions E3/E9) across 8 dimensions T1–T8, typically mid-phase or at phase boundaries.
 - `Executive_Readability_Audit_Governance_and_Methodology.md` — Executive Readability Audit (ERA) Session governance: human-centered evaluation of documentation accessibility, density, audience segmentation, and navigational coherence across 8 dimensions R1–R8.
 - `Coding_Standards.md` — Rust/Python design, quality, and security controls.
-- `Testing_Standards.md` — test layers, tolerances, and coverage.
+- `Testing_Standards.md` — test layers, tolerances, coverage, and supervised-local-validation timeout governance.
 - `Documentation_Standards.md` — API/project documentation and S4 closure.
 - `Benchmarking_and_Reproducibility_Standards.md` — performance evidence.
 - `Experimentation_Standards.md` — pre-registration and scientific integrity.

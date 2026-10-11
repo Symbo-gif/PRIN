@@ -1,0 +1,10 @@
+COMMAND: powershell -NoProfile -ExecutionPolicy Bypass -File DOCS/test_and_benchmark_results/0159-ps51-parse-check.ps1
+HOST: HP  SHA: 85b779297be0642f5c64853c1590ef341e7ff77e  DATE: 2026-10-11T11:20:18Z
+---
+PSVersion: 5.1.26100.9549
+example_lines=1 config_lines=1
+example_parse_errors=0
+config_parse_errors=0
+STUB-RAN
+stub_exit=0 path_restored=True
+EXIT_CODE=0

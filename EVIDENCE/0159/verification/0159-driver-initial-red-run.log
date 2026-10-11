@@ -1,0 +1,422 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 215 items
+
+tests/test_exp002_driver.py::TestHelpers::test_git_reports_version PASSED [  0%]
+tests/test_exp002_driver.py::TestHelpers::test_git_missing_executable PASSED [  0%]
+tests/test_exp002_driver.py::TestHelpers::test_mapping_rejects_non_object PASSED [  1%]
+tests/test_exp002_driver.py::TestHelpers::test_list_rejects_non_array PASSED [  1%]
+tests/test_exp002_driver.py::TestHelpers::test_number_rejects_non_finite_and_bool[True] PASSED [  2%]
+tests/test_exp002_driver.py::TestHelpers::test_number_rejects_non_finite_and_bool[1.0] PASSED [  2%]
+tests/test_exp002_driver.py::TestHelpers::test_number_rejects_non_finite_and_bool[nan] PASSED [  3%]
+tests/test_exp002_driver.py::TestHelpers::test_number_rejects_non_finite_and_bool[inf] PASSED [  3%]
+tests/test_exp002_driver.py::TestHelpers::test_number_rejects_non_finite_and_bool[-inf] PASSED [  4%]
+tests/test_exp002_driver.py::TestHelpers::test_number_accepts_finite PASSED [  4%]
+tests/test_exp002_driver.py::TestHelpers::test_render_environment_reports_versions PASSED [  5%]
+tests/test_exp002_driver.py::TestCollectApi::test_expected_observed_and_rows PASSED [  5%]
+tests/test_exp002_driver.py::TestCollectApi::test_wrong_module_origin_rejected PASSED [  6%]
+tests/test_exp002_driver.py::TestCollectApi::test_missing_guide_aborts PASSED [  6%]
+tests/test_exp002_driver.py::TestCollectApi::test_missing_consolidated_table_marks_no_ownership PASSED [  6%]
+tests/test_exp002_driver.py::TestLegacyNames::test_frozen_list_returned PASSED [  7%]
+tests/test_exp002_driver.py::TestLegacyNames::test_wrong_digest_rejected PASSED [  7%]
+tests/test_exp002_driver.py::TestLegacyNames::test_literal_missing_rejected PASSED [  8%]
+tests/test_exp002_driver.py::TestLegacyNames::test_non_literal_rejected PASSED [  8%]
+tests/test_exp002_driver.py::TestLegacyNames::test_non_list_literal_rejected PASSED [  9%]
+tests/test_exp002_driver.py::TestLegacyNames::test_duplicate_names_rejected PASSED [  9%]
+tests/test_exp002_driver.py::TestLegacyNames::test_wrong_cardinality_rejected[171] PASSED [ 10%]
+tests/test_exp002_driver.py::TestLegacyNames::test_wrong_cardinality_rejected[173] PASSED [ 10%]
+tests/test_exp002_driver.py::TestCollectConclusions::test_exactly_62_labelled_cases PASSED [ 11%]
+tests/test_exp002_driver.py::TestCollectConclusions::test_strict_boundary_at_point_555 PASSED [ 11%]
+tests/test_exp002_driver.py::TestCollectConclusions::test_strict_boundary_at_point_5 PASSED [ 12%]
+tests/test_exp002_driver.py::TestCollectConclusions::test_inverted_c04_widths_stay_observed_false PASSED [ 12%]
+tests/test_exp002_driver.py::TestCollectConclusions::test_c05_onset_tie_stays_observed_false PASSED [ 13%]
+tests/test_exp002_driver.py::TestCollectConclusions::test_opposite_c02_historical_boolean_retained PASSED [ 13%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[missing-file] PASSED [ 13%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[non-mapping-doc] PASSED [ 14%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[short-raw] PASSED [ 14%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[wrong-nseq] PASSED [ 15%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[raw-not-array] PASSED [ 15%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[short-grid] PASSED [ 16%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[duplicate-grid] PASSED [ 16%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[non-bool-flag] PASSED [ 17%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[grid-row-non-mapping] PASSED [ 17%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[duplicate-n] PASSED [ 18%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[wrong-n] PASSED [ 18%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[bool-n] PASSED [ 19%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[extra-sweep] PASSED [ 19%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[bad-topology] PASSED [ 20%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[wrong-device] PASSED [ 20%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[wrong-regime] PASSED [ 20%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[nan-operand] PASSED [ 21%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[inf-operand] PASSED [ 21%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[bool-operand] PASSED [ 22%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[missing-zone] PASSED [ 22%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[missing-mean] PASSED [ 23%]
+tests/test_exp002_driver.py::TestConclusionValidation::test_invalid_input_fails_closed[missing-ci] PASSED [ 23%]
+tests/test_exp002_driver.py::TestNormalizedBytes::test_tex_is_compared_raw PASSED [ 24%]
+tests/test_exp002_driver.py::TestNormalizedBytes::test_pdf_metadata_only_difference_normalizes_equal PASSED [ 24%]
+tests/test_exp002_driver.py::TestNormalizedBytes::test_pdf_content_difference_stays_significant PASSED [ 25%]
+tests/test_exp002_driver.py::TestNormalizedBytes::test_png_ancillary_difference_normalizes_equal PASSED [ 25%]
+tests/test_exp002_driver.py::TestNormalizedBytes::test_png_image_data_difference_stays_significant PASSED [ 26%]
+tests/test_exp002_driver.py::TestNormalizedBytes::test_unsupported_suffix_rejected[.csv] PASSED [ 26%]
+tests/test_exp002_driver.py::TestNormalizedBytes::test_unsupported_suffix_rejected[.svg] PASSED [ 26%]
+tests/test_exp002_driver.py::TestNormalizedBytes::test_unsupported_suffix_rejected[.jpg] PASSED [ 27%]
+tests/test_exp002_driver.py::TestNormalizedBytes::test_unsupported_suffix_rejected[] PASSED [ 27%]
+tests/test_exp002_driver.py::TestNormalizedBytes::test_malformed_png_rejected[bad-magic] PASSED [ 28%]
+tests/test_exp002_driver.py::TestNormalizedBytes::test_malformed_png_rejected[truncated-chunk] PASSED [ 28%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_prin_arm_inventory PASSED [ 29%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_reference_arm_inventory PASSED [ 29%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_unregistered_implementation_rejected PASSED [ 30%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_output_outside_root_rejected PASSED [ 30%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_existing_output_rejected PASSED [ 31%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_output_symlink_ancestor_rejected PASSED [ 31%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_generator_failure_propagates PASSED [ 32%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_renderer_change_aborts PASSED [ 32%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_reference_origin_and_digest_guards PASSED [ 33%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_missing_and_extra_outputs_are_retained PASSED [ 33%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_unregistered_output_format_aborts PASSED [ 33%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_symlinked_output_rejected PASSED [ 34%]
+tests/test_exp002_driver.py::TestCollectReproduction::test_manifest_verification_failure_propagates PASSED [ 34%]
+tests/test_exp002_driver.py::TestSnapshot::test_snapshot_writes_every_verified_byte PASSED [ 35%]
+tests/test_exp002_driver.py::TestSnapshot::test_manifest_digest_mismatch_aborts PASSED [ 35%]
+tests/test_exp002_driver.py::TestSnapshot::test_wrong_record_count_aborts PASSED [ 36%]
+tests/test_exp002_driver.py::TestSnapshot::test_failed_record_read_aborts_without_rewriting_source PASSED [ 36%]
+tests/test_exp002_driver.py::TestAdmission::test_draft_protocol_refused_before_any_work PASSED [ 37%]
+tests/test_exp002_driver.py::TestAdmission::test_draft_header_not_overridden_by_later_approved_example PASSED [ 37%]
+tests/test_exp002_driver.py::TestAdmission::test_missing_dated_approval_refused PASSED [ 38%]
+tests/test_exp002_driver.py::TestAdmission::test_invalid_approval_date_refused PASSED [ 38%]
+tests/test_exp002_driver.py::TestAdmission::test_source_sha_rejected PASSED [ 39%]
+tests/test_exp002_driver.py::TestAdmission::test_uncommitted_changes_refused[dirty-tracked] PASSED [ 39%]
+tests/test_exp002_driver.py::TestAdmission::test_uncommitted_changes_refused[untracked-source] PASSED [ 40%]
+tests/test_exp002_driver.py::TestAdmission::test_benchmark_results_untracked_is_exempt FAILED [ 40%]
+tests/test_exp002_driver.py::TestAdmission::test_working_protocol_divergence_refused PASSED [ 40%]
+tests/test_exp002_driver.py::TestAdmission::test_seed_and_operator_guards FAILED [ 41%]
+tests/test_exp002_driver.py::TestReserve::test_happy_path_creates_directory PASSED [ 41%]
+tests/test_exp002_driver.py::TestReserve::test_invalid_names_rejected[wrong-label] PASSED [ 42%]
+tests/test_exp002_driver.py::TestReserve::test_invalid_names_rejected[wrong-sha] PASSED [ 42%]
+tests/test_exp002_driver.py::TestReserve::test_invalid_names_rejected[newline] PASSED [ 43%]
+tests/test_exp002_driver.py::TestReserve::test_invalid_names_rejected[case] PASSED [ 43%]
+tests/test_exp002_driver.py::TestReserve::test_invalid_names_rejected[empty-label] PASSED [ 44%]
+tests/test_exp002_driver.py::TestReserve::test_unknown_mode_rejected PASSED [ 44%]
+tests/test_exp002_driver.py::TestReserve::test_parent_escape_rejected PASSED [ 45%]
+tests/test_exp002_driver.py::TestReserve::test_existing_directory_never_reused PASSED [ 45%]
+tests/test_exp002_driver.py::TestReserve::test_missing_raw_root_rejected PASSED [ 46%]
+tests/test_exp002_driver.py::TestReserve::test_bad_timestamp_rejected PASSED [ 46%]
+tests/test_exp002_driver.py::TestReserve::test_symlink_ancestor_rejected PASSED [ 46%]
+tests/test_exp002_driver.py::TestRunRegistered::test_successful_run_writes_exact_inventory[api] FAILED [ 47%]
+tests/test_exp002_driver.py::TestRunRegistered::test_successful_run_writes_exact_inventory[conclusions] FAILED [ 47%]
+tests/test_exp002_driver.py::TestRunRegistered::test_successful_run_writes_exact_inventory[prin] FAILED [ 48%]
+tests/test_exp002_driver.py::TestRunRegistered::test_successful_run_writes_exact_inventory[reference] FAILED [ 48%]
+tests/test_exp002_driver.py::TestRunRegistered::test_successful_run_writes_exact_inventory[repeatability] FAILED [ 49%]
+tests/test_exp002_driver.py::TestRunRegistered::test_generated_output_root_reuse_rejected FAILED [ 49%]
+tests/test_exp002_driver.py::TestRunRegistered::test_collector_crash_retains_aborted_run FAILED [ 50%]
+tests/test_exp002_driver.py::TestRunRegistered::test_environment_mismatch_refused FAILED [ 50%]
+tests/test_exp002_driver.py::TestRunRegistered::test_cpu_wall_cap_records_aborted_run FAILED [ 51%]
+tests/test_exp002_driver.py::TestRunRegistered::test_output_root_symlink_ancestor_rejected FAILED [ 51%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_valid_run_passes PASSED [ 52%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_relocation_path_spelling_accepted PASSED [ 52%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_non_run_name_rejected PASSED [ 53%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_wrong_parent_rejected PASSED [ 53%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[status-aborted] PASSED [ 53%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[env-sha-malformed] PASSED [ 54%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[env-sha-mismatch] PASSED [ 54%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[identity-sha] PASSED [ 55%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[identity-manifest] PASSED [ 55%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[prereg-sha-malformed] PASSED [ 56%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[prereg-commit-malformed] PASSED [ 56%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[record-count] PASSED [ 57%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[seed-counter-bool] PASSED [ 57%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[seed-counter-float] PASSED [ 58%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[seed-counter-value] PASSED [ 58%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[seed-key-bool] PASSED [ 59%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[seed-key-value] PASSED [ 59%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[iterations-type] PASSED [ 60%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[iterations-value] PASSED [ 60%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[warmup-value] PASSED [ 60%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[replicates-value] PASSED [ 61%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[measurement-kind] PASSED [ 61%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[out-dir-wrong-tail] PASSED [ 62%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[out-dir-parent-escape] PASSED [ 62%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[out-dir-non-str] PASSED [ 63%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[env-seed-bool] PASSED [ 63%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[env-seed-value] PASSED [ 64%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[env-backend] PASSED [ 64%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[env-dtype] PASSED [ 65%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[env-prin-version] PASSED [ 65%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[seed-used] PASSED [ 66%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_metadata_mutations_rejected[mode-invalid] PASSED [ 66%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_metadata_mutations_rejected[mode-non-str] PASSED [ 66%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_metadata_mutations_rejected[exp-id] PASSED [ 67%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_metadata_mutations_rejected[session] PASSED [ 67%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_metadata_mutations_rejected[run-id] PASSED [ 68%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_metadata_mutations_rejected[artefacts] PASSED [ 68%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_metadata_mutations_rejected[operator-blank] PASSED [ 69%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_metadata_mutations_rejected[operator-non-str] PASSED [ 69%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_required_environment_fields[rust] PASSED [ 70%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_required_environment_fields[python] PASSED [ 70%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_required_environment_fields[platform] PASSED [ 71%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_required_environment_fields[processor] PASSED [ 71%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_logical_cpus_invalid[zero] PASSED [ 72%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_logical_cpus_invalid[str] PASSED [ 72%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_logical_cpus_invalid[neg] PASSED [ 73%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_extra_manifested_file_rejected PASSED [ 73%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_unmanifested_file_rejected PASSED [ 73%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_missing_result_rejected PASSED [ 74%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_missing_manifest_rejected PASSED [ 74%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_label_mismatch_rejected PASSED [ 75%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_changed_bytes_rejected PASSED [ 75%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_non_mapping_result_rejected PASSED [ 76%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_storage_caps[per-run-cap] PASSED [ 76%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_storage_caps[raw-cap] PASSED [ 77%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_campaign_storage_cap PASSED [ 77%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_symlinked_run_dir_rejected PASSED [ 78%]
+tests/test_exp002_driver.py::TestCheckRunComplete::test_symlinked_manifested_artefact_rejected PASSED [ 78%]
+tests/test_exp002_driver.py::TestMain::test_success_returns_zero PASSED  [ 79%]
+tests/test_exp002_driver.py::TestMain::test_driver_error_returns_one PASSED [ 79%]
+tests/test_exp002_driver.py::TestMain::test_invalid_mode_argparse_exits PASSED [ 80%]
+tests/test_exp002_driver.py::TestMain::test_module_main_guard PASSED     [ 80%]
+tests/test_0159_manifest.py::TestRealBundle::test_required_files_present_with_exact_case FAILED [ 80%]
+tests/test_0159_manifest.py::TestRealBundle::test_manifest_entries_cover_required_files FAILED [ 81%]
+tests/test_0159_manifest.py::TestRealBundle::test_every_manifest_entry_matches_the_committed_bytes FAILED [ 81%]
+tests/test_0159_manifest.py::TestRealBundle::test_manifest_covers_every_evidence_file FAILED [ 82%]
+tests/test_0159_manifest.py::TestRealBundle::test_every_hashed_evidence_file_is_tracked_by_git FAILED [ 82%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_changed_bytes_fail PASSED [ 83%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_omitted_file_fails PASSED [ 83%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_wrong_case_fails PASSED [ 84%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_malformed_manifest_lines_fail[malformed] PASSED [ 84%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_malformed_manifest_lines_fail[absolute] PASSED [ 85%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_malformed_manifest_lines_fail[escaping] PASSED [ 85%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_malformed_manifest_lines_fail[windows-separator] PASSED [ 86%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_duplicate_entry_fails PASSED [ 86%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_parent_relative_entry_reaches_top_level PASSED [ 86%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_missing_file_fails PASSED [ 87%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_unhashed_narrative_absent_fails PASSED [ 87%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_hashed_but_untracked_log_fails PASSED [ 88%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[ruff-check] PASSED [ 88%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[ruff-format] PASSED [ 89%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[mypy-strict] PASSED [ 89%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[bandit-recursive] PASSED [ 90%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[ruff-check] PASSED [ 90%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[ruff-format] PASSED [ 91%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[mypy-strict] PASSED [ 91%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[bandit-recursive] PASSED [ 92%]
+tests/test_campaign_quality_gates.py::test_campaign_format_selects_source_files_only PASSED [ 92%]
+tests/test_campaign_quality_gates.py::test_normal_typing_and_sast_gates_retained PASSED [ 93%]
+tests/test_campaign_quality_gates.py::test_bandit_exclusions_are_component_globs PASSED [ 93%]
+tests/test_campaign_quality_gates.py::test_bandit_discovers_every_campaign_source PASSED [ 93%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[relative-top-level-parity] PASSED [ 94%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[relative-top-level-tests] PASSED [ 94%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[absolute-top-level-parity] PASSED [ 95%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[absolute-top-level-tests] PASSED [ 95%]
+tests/test_campaign_quality_gates.py::test_bandit_includes_campaign_files_under_exclusion_like_slugs[relative] PASSED [ 96%]
+tests/test_campaign_quality_gates.py::test_bandit_includes_campaign_files_under_exclusion_like_slugs[absolute] PASSED [ 96%]
+tests/test_campaign_quality_gates.py::test_sphinx_requirements_urllib3_minimum_patched PASSED [ 97%]
+tests/test_campaign_quality_gates.py::test_agents_powershell_block_has_no_embedded_double_quotes PASSED [ 97%]
+tests/test_campaign_quality_gates.py::test_rustdoc_gate_documents_the_feature_gated_gpu_module PASSED [ 98%]
+tests/test_campaign_quality_gates.py::test_campaign_analysis_script_basenames_are_unique PASSED [ 98%]
+tests/test_ea007_manifest.py::test_every_manifest_entry_matches_the_committed_bytes PASSED [ 99%]
+tests/test_ea007_manifest.py::test_manifest_covers_every_evidence_file PASSED [ 99%]
+tests/test_ea007_manifest.py::test_every_hashed_evidence_file_is_tracked_by_git PASSED [100%]
+ERROR: Coverage failure: total of 88 is less than fail-under=95
+
+
+================================== FAILURES ===================================
+__________ TestAdmission.test_benchmark_results_untracked_is_exempt ___________
+tests\test_exp002_driver.py:1409: in test_benchmark_results_untracked_is_exempt
+    run = driver.run_registered(
+benchmarks\campaign\exp002_driver.py:880: in run_registered
+    identity = _admission(source_sha)
+               ^^^^^^^^^^^^^^^^^^^^^^
+benchmarks\campaign\exp002_driver.py:687: in _admission
+    raise DriverError("working pre-registration differs from its committed bytes")
+E   benchmarks.campaign.exp002_driver.DriverError: working pre-registration differs from its committed bytes
+_________________ TestAdmission.test_seed_and_operator_guards _________________
+tests\test_exp002_driver.py:1442: in test_seed_and_operator_guards
+    with pytest.raises(driver.DriverError, match="seed pair"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'seed pair'
+E     Actual message: 'working pre-registration differs from its committed bytes'
+______ TestRunRegistered.test_successful_run_writes_exact_inventory[api] ______
+tests\test_exp002_driver.py:1530: in test_successful_run_writes_exact_inventory
+    run = driver.run_registered(mode, run_dir, "devin", SHA)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+benchmarks\campaign\exp002_driver.py:880: in run_registered
+    identity = _admission(source_sha)
+               ^^^^^^^^^^^^^^^^^^^^^^
+benchmarks\campaign\exp002_driver.py:687: in _admission
+    raise DriverError("working pre-registration differs from its committed bytes")
+E   benchmarks.campaign.exp002_driver.DriverError: working pre-registration differs from its committed bytes
+__ TestRunRegistered.test_successful_run_writes_exact_inventory[conclusions] __
+tests\test_exp002_driver.py:1530: in test_successful_run_writes_exact_inventory
+    run = driver.run_registered(mode, run_dir, "devin", SHA)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+benchmarks\campaign\exp002_driver.py:880: in run_registered
+    identity = _admission(source_sha)
+               ^^^^^^^^^^^^^^^^^^^^^^
+benchmarks\campaign\exp002_driver.py:687: in _admission
+    raise DriverError("working pre-registration differs from its committed bytes")
+E   benchmarks.campaign.exp002_driver.DriverError: working pre-registration differs from its committed bytes
+_____ TestRunRegistered.test_successful_run_writes_exact_inventory[prin] ______
+tests\test_exp002_driver.py:1530: in test_successful_run_writes_exact_inventory
+    run = driver.run_registered(mode, run_dir, "devin", SHA)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+benchmarks\campaign\exp002_driver.py:880: in run_registered
+    identity = _admission(source_sha)
+               ^^^^^^^^^^^^^^^^^^^^^^
+benchmarks\campaign\exp002_driver.py:687: in _admission
+    raise DriverError("working pre-registration differs from its committed bytes")
+E   benchmarks.campaign.exp002_driver.DriverError: working pre-registration differs from its committed bytes
+___ TestRunRegistered.test_successful_run_writes_exact_inventory[reference] ___
+tests\test_exp002_driver.py:1530: in test_successful_run_writes_exact_inventory
+    run = driver.run_registered(mode, run_dir, "devin", SHA)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+benchmarks\campaign\exp002_driver.py:880: in run_registered
+    identity = _admission(source_sha)
+               ^^^^^^^^^^^^^^^^^^^^^^
+benchmarks\campaign\exp002_driver.py:687: in _admission
+    raise DriverError("working pre-registration differs from its committed bytes")
+E   benchmarks.campaign.exp002_driver.DriverError: working pre-registration differs from its committed bytes
+_ TestRunRegistered.test_successful_run_writes_exact_inventory[repeatability] _
+tests\test_exp002_driver.py:1530: in test_successful_run_writes_exact_inventory
+    run = driver.run_registered(mode, run_dir, "devin", SHA)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+benchmarks\campaign\exp002_driver.py:880: in run_registered
+    identity = _admission(source_sha)
+               ^^^^^^^^^^^^^^^^^^^^^^
+benchmarks\campaign\exp002_driver.py:687: in _admission
+    raise DriverError("working pre-registration differs from its committed bytes")
+E   benchmarks.campaign.exp002_driver.DriverError: working pre-registration differs from its committed bytes
+_________ TestRunRegistered.test_generated_output_root_reuse_rejected _________
+tests\test_exp002_driver.py:1571: in test_generated_output_root_reuse_rejected
+    with pytest.raises(driver.DriverError, match="never reused"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'never reused'
+E     Actual message: 'working pre-registration differs from its committed bytes'
+_________ TestRunRegistered.test_collector_crash_retains_aborted_run __________
+tests\test_exp002_driver.py:1584: in test_collector_crash_retains_aborted_run
+    with pytest.raises(driver.DriverError, match="aborted run retained"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'aborted run retained'
+E     Actual message: 'working pre-registration differs from its committed bytes'
+_____________ TestRunRegistered.test_environment_mismatch_refused _____________
+tests\test_exp002_driver.py:1601: in test_environment_mismatch_refused
+    with pytest.raises(driver.DriverError, match="source/version"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'source/version'
+E     Actual message: 'working pre-registration differs from its committed bytes'
+___________ TestRunRegistered.test_cpu_wall_cap_records_aborted_run ___________
+tests\test_exp002_driver.py:1613: in test_cpu_wall_cap_records_aborted_run
+    with pytest.raises(driver.DriverError, match="aborted run retained"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'aborted run retained'
+E     Actual message: 'working pre-registration differs from its committed bytes'
+________ TestRunRegistered.test_output_root_symlink_ancestor_rejected _________
+tests\test_exp002_driver.py:1629: in test_output_root_symlink_ancestor_rejected
+    with pytest.raises(driver.DriverError, match="symlink ancestor"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'symlink ancestor'
+E     Actual message: 'working pre-registration differs from its committed bytes'
+_________ TestRealBundle.test_required_files_present_with_exact_case __________
+tests\test_0159_manifest.py:87: in test_required_files_present_with_exact_case
+    assert not missing, f"bundle files missing: {missing}"
+E   AssertionError: bundle files missing: ['verification/0159-driver-pytest-coverage.log', 'verification/0159-driver-lint-type.log', 'verification/0159-driver-coverage.json']
+E   assert not ['verification/0159-driver-pytest-coverage.log', 'verification/0159-driver-lint-type.log', 'verification/0159-driver-coverage.json']
+__________ TestRealBundle.test_manifest_entries_cover_required_files __________
+tests\test_0159_manifest.py:93: in test_manifest_entries_cover_required_files
+    assert not missing, f"required files absent from manifest: {missing}"
+E   AssertionError: required files absent from manifest: {'verification/0159-driver-pytest-coverage.log', 'verification/0159-driver-lint-type.log', 'entry-state.json', 'verification/0159-driver-coverage.json', 'verification/0159-ps51-parse-check.ps1'}
+E   assert not {'entry-state.json', 'verification/0159-driver-coverage.json', 'verification/0159-driver-lint-type.log', 'verification/0159-driver-pytest-coverage.log', 'verification/0159-ps51-parse-check.ps1'}
+____ TestRealBundle.test_every_manifest_entry_matches_the_committed_bytes _____
+tests\test_0159_manifest.py:98: in test_every_manifest_entry_matches_the_committed_bytes
+    ea007.test_every_manifest_entry_matches_the_committed_bytes()
+tests\test_ea007_manifest.py:86: in test_every_manifest_entry_matches_the_committed_bytes
+    assert not mismatched, (
+E   AssertionError: digest mismatch (manifest stale or bytes altered): ['verification/README.md']
+E   assert not ['verification/README.md']
+___________ TestRealBundle.test_manifest_covers_every_evidence_file ___________
+tests\test_0159_manifest.py:101: in test_manifest_covers_every_evidence_file
+    ea007.test_manifest_covers_every_evidence_file()
+tests\test_ea007_manifest.py:98: in test_manifest_covers_every_evidence_file
+    assert not unhashed, (
+E   AssertionError: evidence files absent from SHA256SUMS.txt: ['entry-state.json', 'verification/0159-ps51-parse-check.ps1']
+E   assert not {'entry-state.json', 'verification/0159-ps51-parse-check.ps1'}
+______ TestRealBundle.test_every_hashed_evidence_file_is_tracked_by_git _______
+tests\test_0159_manifest.py:104: in test_every_hashed_evidence_file_is_tracked_by_git
+    ea007.test_every_hashed_evidence_file_is_tracked_by_git()
+tests\test_ea007_manifest.py:133: in test_every_hashed_evidence_file_is_tracked_by_git
+    assert not missing, (
+E   AssertionError: evidence files not tracked by git (use `git add -f` for ignored *.log): ['README.md', 'verification/0159-focused-campaign-quality-gates.log', 'verification/0159-focused-ea007-manifest.log', 'verification/0159-ps51-parse-check.log', 'verification/README.md', 'verification/SHA256SUMS.txt']
+E   assert not {'README.md', 'verification/0159-focused-campaign-quality-gates.log', 'verification/0159-focused-ea007-manifest.log', 'verification/0159-ps51-parse-check.log', 'verification/README.md', 'verification/SHA256SUMS.txt'}
+============================== warnings summary ===============================
+.venv\Lib\site-packages\stevedore\extension.py:185
+.venv\Lib\site-packages\stevedore\extension.py:185
+.venv\Lib\site-packages\stevedore\extension.py:185
+  The verify_requirements argument is now a no-op and is deprecated for removal. Remove the argument from calls.
+
+tests/test_exp002_driver.py::TestMain::test_module_main_guard
+  'benchmarks.campaign.exp002_driver' found in sys.modules after import of package 'benchmarks.campaign', but prior to execution of 'benchmarks.campaign.exp002_driver'; this may result in unpredictable behaviour
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.14.0-final-0 _______________
+
+Name                                   Stmts   Miss  Cover   Missing
+--------------------------------------------------------------------
+benchmarks\campaign\exp002_driver.py     394     46    88%   688, 763, 881-966
+--------------------------------------------------------------------
+TOTAL                                    394     46    88%
+Coverage JSON written to file DOCS/test_and_benchmark_results/0159-driver-coverage.json
+FAIL Required test coverage of 95% not reached. Total coverage: 88.32%
+============================ slowest 20 durations =============================
+1.63s setup    tests/test_exp002_driver.py::TestCollectApi::test_expected_observed_and_rows
+1.01s call     tests/test_0159_manifest.py::TestRealBundle::test_every_hashed_evidence_file_is_tracked_by_git
+0.34s call     tests/test_exp002_driver.py::TestHelpers::test_git_reports_version
+0.27s call     tests/test_exp002_driver.py::TestCheckRunComplete::test_campaign_storage_cap
+0.24s call     tests/test_exp002_driver.py::TestSnapshot::test_snapshot_writes_every_verified_byte
+0.19s call     tests/test_ea007_manifest.py::test_every_hashed_evidence_file_is_tracked_by_git
+0.11s call     tests/test_exp002_driver.py::TestSnapshot::test_failed_record_read_aborts_without_rewriting_source
+0.10s call     tests/test_exp002_driver.py::TestCollectReproduction::test_missing_and_extra_outputs_are_retained
+0.10s call     tests/test_exp002_driver.py::TestCollectReproduction::test_reference_arm_inventory
+0.09s call     tests/test_exp002_driver.py::TestCollectReproduction::test_prin_arm_inventory
+0.09s call     tests/test_exp002_driver.py::TestCollectReproduction::test_renderer_change_aborts
+0.09s call     tests/test_exp002_driver.py::TestCollectReproduction::test_manifest_verification_failure_propagates
+0.08s call     tests/test_exp002_driver.py::TestCollectReproduction::test_symlinked_output_rejected
+0.06s call     tests/test_exp002_driver.py::TestCheckRunComplete::test_metadata_mutations_rejected[operator-blank]
+0.05s call     tests/test_exp002_driver.py::TestCheckRunComplete::test_symlinked_manifested_artefact_rejected
+0.05s call     tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[out-dir-non-str]
+0.05s call     tests/test_exp002_driver.py::TestCheckRunComplete::test_result_mutations_rejected[env-seed-bool]
+0.04s call     tests/test_exp002_driver.py::TestCheckRunComplete::test_relocation_path_spelling_accepted
+0.04s call     tests/test_exp002_driver.py::TestCheckRunComplete::test_storage_caps[per-run-cap]
+0.04s call     tests/test_exp002_driver.py::TestCheckRunComplete::test_required_environment_fields[processor]
+=========================== short test summary info ===========================
+FAILED tests/test_exp002_driver.py::TestAdmission::test_benchmark_results_untracked_is_exempt
+FAILED tests/test_exp002_driver.py::TestAdmission::test_seed_and_operator_guards
+FAILED tests/test_exp002_driver.py::TestRunRegistered::test_successful_run_writes_exact_inventory[api]
+FAILED tests/test_exp002_driver.py::TestRunRegistered::test_successful_run_writes_exact_inventory[conclusions]
+FAILED tests/test_exp002_driver.py::TestRunRegistered::test_successful_run_writes_exact_inventory[prin]
+FAILED tests/test_exp002_driver.py::TestRunRegistered::test_successful_run_writes_exact_inventory[reference]
+FAILED tests/test_exp002_driver.py::TestRunRegistered::test_successful_run_writes_exact_inventory[repeatability]
+FAILED tests/test_exp002_driver.py::TestRunRegistered::test_generated_output_root_reuse_rejected
+FAILED tests/test_exp002_driver.py::TestRunRegistered::test_collector_crash_retains_aborted_run
+FAILED tests/test_exp002_driver.py::TestRunRegistered::test_environment_mismatch_refused
+FAILED tests/test_exp002_driver.py::TestRunRegistered::test_cpu_wall_cap_records_aborted_run
+FAILED tests/test_exp002_driver.py::TestRunRegistered::test_output_root_symlink_ancestor_rejected
+FAILED tests/test_0159_manifest.py::TestRealBundle::test_required_files_present_with_exact_case
+FAILED tests/test_0159_manifest.py::TestRealBundle::test_manifest_entries_cover_required_files
+FAILED tests/test_0159_manifest.py::TestRealBundle::test_every_manifest_entry_matches_the_committed_bytes
+FAILED tests/test_0159_manifest.py::TestRealBundle::test_manifest_covers_every_evidence_file
+FAILED tests/test_0159_manifest.py::TestRealBundle::test_every_hashed_evidence_file_is_tracked_by_git
+================= 17 failed, 198 passed, 4 warnings in 15.68s =================
+PYTEST_EXIT=1

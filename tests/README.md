@@ -315,6 +315,23 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   ignored), and every hashed file must be tracked by git (`*.log` is
   gitignored, so an evidence log needs `git add -f`). The same test would have failed 36 of 82 entries at
   commit `0738714`.
+- `test_exp002_driver.py` — synthetic regression tests for the lead-authored
+  `EXP-002` E1 collection driver
+  (`../benchmarks/campaign/exp002_driver.py`, session 0159): a fake `prin`
+  namespace and pinned fake reference `__all__` exercise the API census; five
+  fabricated conclusion JSON files exercise the 62-predicate census;
+  controlled PDF/PNG/TEX byte fixtures exercise metadata-only normalization;
+  mocked renderers, snapshots and git/env calls exercise the reproduction
+  arms, admission, reservation, storage caps and closure. Negative cases are
+  parametrized defect-catching fixtures. No test reads archived PRINet 3.0
+  inputs, imports the real reference generators, renders the 172-record
+  manifest, or executes an EXP-002 leg; the protocol stays DRAFT.
+- `test_0159_manifest.py` — session-0159 evidence-bundle manifest tests that
+  reuse the `test_ea007_manifest.py` validators against `EVIDENCE/0159/`
+  (same verification directory, same unhashed-by-design exemptions, a
+  0159-prefixed Git-tracking lookup, plus controlled negative fixtures for
+  changed bytes, omitted files, wrong case, malformed/duplicate/escaping
+  paths and hashed-but-untracked logs).
 - Differential parity tests live in `../parity/`.
 - Rust unit/property tests live next to each crate (`cargo test`).
 

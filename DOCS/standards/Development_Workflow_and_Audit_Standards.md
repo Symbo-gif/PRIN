@@ -142,6 +142,11 @@ or `tools/check_ci_green.py` as an exit criterion. Specifically:
    workflows (`gh workflow enable <name>`), restore the required-status-check
    rule above on ruleset 22150076, and run one fully green hosted run of the
    head commit before the next WP closes.
+9. **Timeout governance.** Local runs under this regime are supervised per
+   Testing Standards §7 (Plan amendment #49): no arbitrary whole-run
+   wall-clock kill while a check is demonstrably progressing; finite bounds,
+   stall diagnosis, wait-expiry semantics, cleanup limits, and incomplete-run
+   reporting follow that section.
 
 ### S1 — Coding session
 
