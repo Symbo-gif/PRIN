@@ -33,7 +33,7 @@ do not change global PATH or weaken the tests.
 ```powershell
 .venv\Scripts\ruff check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/
 .venv\Scripts\ruff format --check python/ tests/ benchmarks/ tools/ parity/
-.venv\Scripts\ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'
+.venv\Scripts\ruff format --check DOCS/experiments/ --config "include = ['*.py', '*.pyi', '*.ipynb']"
 .venv\Scripts\mypy python/prin --strict
 .venv\Scripts\mypy DOCS/experiments/ --strict
 .venv\Scripts\python -m interrogate -c pyproject.toml python/prin
@@ -47,6 +47,7 @@ cargo llvm-cov -p prin-kernels --features wgpu,cpu
 cargo llvm-cov -p prin-dynamics
 cargo llvm-cov -p prin-dynamics --features strict-checks
 $env:RUSTDOCFLAGS='-D warnings'; cargo doc --workspace --no-deps
+$env:RUSTDOCFLAGS='-D warnings'; cargo doc -p prin-sim --no-deps --features cpu
 cargo audit
 .venv\Scripts\python -m pip_audit .
 .venv\Scripts\python -m pip_audit -r DOCS/sphinx/requirements.txt
