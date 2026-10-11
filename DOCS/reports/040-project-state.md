@@ -144,8 +144,11 @@ verbatim; recorded maintainer approval
   the commit it names. The PR #32 review-round commit that follows `add7386a`
   has a staged-diff scan (leg L18 of
   `EVIDENCE/ea007/verification/pr32-review/pr32-gate-run.log`) and a post-commit
-  full-history scan reported in the PR description (a document cannot contain
-  the result of a scan of itself); any further commit needs its own rescan.
+  full-history scan of its head `0a0f700` (709 commits, no leaks, committed in
+  `EVIDENCE/ea007/verification/post-commit/` by a later record commit — a
+  document cannot contain the result of a scan of itself); the record commit and
+  any further commit need their own rescan. The local repository being shallow
+  (`PR032-multi-review-audit.md` `OBS-3`) changes what a default scan reports.
 - **Linux/macOS and the three-OS wheel matrix** stay suspended, not
   satisfied (DoD items 2 and 4 remain open until the regime lifts).
 

@@ -203,8 +203,9 @@ Not every statement needed action, but each was verified rather than assumed:
   the `gpu` module page is emitted and rustdoc exits 0 with `-D warnings`
   (L12, L12b).
 - `26h-source-hashes.txt`: 6/6 entries match the `add7386a` blobs.
-- `SHA256SUMS.txt`: 82/82 at `add7386a` (recomputed); 93 entries after this
-  round, all matching. The committed leg L15 (`sha256sum -c`, 93 OK) ran
+- `SHA256SUMS.txt`: 82/82 at `add7386a` (recomputed); 93 entries at the
+  remediation head `0a0f700` (98 once the follow-up record commit adds the
+  post-commit scan and full-suite files), all matching. The committed leg L15 (`sha256sum -c`, 93 OK) ran
   against the manifest as it stood before the last packaging pass; the four
   `pr32-review/` files it lists are replaced by this log's final bytes after
   the run and the manifest regenerated, and that last re-verification
@@ -373,8 +374,7 @@ case fails on Windows and macOS exactly as it does on Linux. The third test
 exists because `*.log` is gitignored repository-wide: **this round almost
 committed the post-commit gitleaks logs hashed but unstaged** — locally green,
 absent from every clone. The manifest now also lists `../readiness-state.json`
-and the two `../*.log` captures (93 entries once this round's four evidence
-files are added). Each test fails against the matching mutation (L11: drifted
+and the two `../*.log` captures (93 entries at the remediation head, 98 after the follow-up record commit). Each test fails against the matching mutation (L11: drifted
 byte, omitted file, missing file, wrong letter case, escaping path, malformed
 line, duplicate line, hashed-but-untracked log).
 
@@ -552,18 +552,41 @@ committed. It supersedes `26h-source-hashes.txt` for the files it lists
 (`AGENTS.md` and the gate-test module are in both; `26h` remains the record of
 the EA-007 gate-time bytes and is not rewritten).
 
-**Secret scanning of this round's own commit.** L18 scans the staged diff;
-the post-commit **full-history** scan of the resulting head is run after the
-commits and its result is reported in the hand-off and belongs in the PR
-description, **not here** — a document cannot contain the result of a scan of itself, the
-rule `PR32-F2` records. This report therefore makes no claim about the head
-that contains it.
+**Secret scanning of this round's own commits.** L18 scans the staged diff
+before the commit. The post-commit **full-history** scan of the resulting head
+`0a0f700` was run afterwards and is committed by a *later* commit — a commit
+cannot contain the scan of itself, the rule `PR32-F2` records:
+`EVIDENCE/ea007/verification/post-commit/gitleaks-pr32-0a0f700-fullhistory.log`
+(2026-10-11T10:23Z) — **709 commits** (707 + the two remediation commits),
+76.24 MB, **no leaks**, exit 0. This report therefore makes no claim about the
+head that contains it; the follow-up record commit and anything after it need
+their own scan.
+
+**Observation `OBS-3` — the maintainer's working repository is shallow.**
+`.git/shallow` (boundary commits `7ca051e` and `cfc8ff6`) was last written at
+2026-10-11 04:05 local (07:05Z) — after the EA-007 final scan (06:47Z) and before
+this audit round began; this round did not create or alter it. History is
+intact locally: the boundary commits' parents are present, and with the graft
+ignored `HEAD` has 495 ancestors instead of 237 and `--all` 745 instead of 498.
+Consequence: a *default* `gitleaks git` run now scans 465 commits and reports
+**one** finding — `generic-api-key` on a SHA-256 value in the archived
+`…/PRINet-3.0.0-main/benchmarks/results/sha256_manifest.json:68`, the
+already-approved false positive (`.gitleaksignore`, approved 2026-08-06),
+re-keyed to the boundary commit `7ca051e` instead of the original `655521d`, so
+the ignore entry no longer matches. Both views are committed
+(`gitleaks-pr32-0a0f700-shallow-default.log` / `.json` beside the full-history
+pair). Not changed here: restoring the full local history (`git fetch
+--unshallow`, or deleting `.git/shallow` since the objects are present) is the
+maintainer's decision (§8).
+
+**Full Python suite on the remediation head.** `timeout 5400 .venv/Scripts/python
+-m pytest tests/ parity/ --basetemp=.pytest_basetemp -o faulthandler_timeout=300
+--durations=20` on commit `0a0f700` (clean tree, Windows only): **5,673 passed / 184 skipped / 0 failed / 61 warnings in 1,631.03 s (0:27:11), exit 0**. The verbatim output (user-profile paths redacted) is
+`EVIDENCE/ea007/verification/pr32-review/full-suite-0a0f700.log`, committed by the
+follow-up record commit.
 
 **Not run, and why.**
 
-- The full Python suite (`pytest tests/ parity/`, ≈ 30 minutes) — run on the
-  committed head after the commit; its result is reported with the post-commit
-  scan, not pre-claimed here.
 - Rust `cargo test`, `clippy`, `llvm-cov` — no Rust source changed in this
   round (`gpu.rs` is untouched; EA-007's runs stand).
 - The hosted `rust.yml` step — workflows are paused (#48); never executed.
@@ -639,11 +662,16 @@ The EA-007 verdict `PASS-WITH-REMEDIATION` stands.
    `rust.yml` step, tests and evidence, and `26h` binds only the EA-007
    gate-time bytes.
 2. Record the post-commit full-history gitleaks result and the full-suite
-   result reported with the commit in the PR description.
-3. Native push protection remains the maintainer's call (#48).
+   result (both committed, §6) in the PR description, and note that the
+   follow-up record commit and anything pushed after it need their own scan.
+3. Decide on `OBS-3`: restore the full local history (`git fetch --unshallow`)
+   so a default `gitleaks git` run again matches `.gitleaksignore`; until then
+   use the full-history view (`GIT_SHALLOW_FILE` pointing at an empty file).
+4. Native push protection remains the maintainer's call (#48).
 
 **Carried forward (not this round's work):** `PR32-F13` and `OBS-1`/`OBS-2`
-to the hosted-workflow re-enable checklist; the unvalidated hosted `rust.yml`
+to the hosted-workflow re-enable checklist (`OBS-3` is the maintainer's local
+repository state, §6); the unvalidated hosted `rust.yml`
 step to the first hosted run after the regime lifts; `DV-033`, `DV-034`, and
 the downstream hardware/reference-host gates unchanged.
 

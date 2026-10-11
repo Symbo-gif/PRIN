@@ -20,11 +20,14 @@ generated HTML are committed here.
 - `ea007-check-*.log` — offline governance checkers (deviation ledger
   038→039, DV-register gates, global session registration).
 - `post-commit/` — the verbatim post-commit full-history gitleaks scans
-  (706 commits @ `0738714`, 707 commits @ `add7386a`; both no leaks, exit 0),
+  (706 commits @ `0738714`, 707 commits @ `add7386a`, 709 commits @ `0a0f700`; all
+  no leaks, exit 0; plus the default-view scan of `0a0f700` that reports the one
+  already-approved false positive in a shallow repository),
   copied byte-exact from the gitignored local scratch tree (PR #32 review
   round, `PR32-F2`).
 - `pr32-review/` — the PR #32 review round's local gate (`PR32-F1`…`PR32-F15`):
-  `pr32-gate-run.log` (legs L00–L19, verbatim, user-profile paths redacted),
+  `pr32-gate-run.log` (legs L00–L20, verbatim, user-profile paths redacted),
+  `full-suite-0a0f700.log` (the full Python suite on the remediation head),
   `pr32-source-hashes.txt` (SHA-256 of the edited first-party files, the proof
   harness, and the uncommitted serial runner), `pr32-staged-gitleaks.json`
   (`[]`), and `proof_defect_catching.py` (the host-specific harness behind leg

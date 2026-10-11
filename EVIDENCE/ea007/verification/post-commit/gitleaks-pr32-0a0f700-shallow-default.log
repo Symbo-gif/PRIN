@@ -1,0 +1,14 @@
+COMMAND: gitleaks git C:/dev/PRIN --redact --report-format json --report-path gitleaks-pr32-0a0f700-shallow-default.json
+HOST: HP | SHA: 0a0f7009ab9f3994e5ec4d45dced805db127839f | UTC: 2026-10-11T10:23:48Z
+TOOL: gitleaks 8.30.1 (pinned, checksum-verified, session-local binary)
+VIEW: default (shallow) view of the working repository. In this view the archived benchmark checksum file first appears at the shallow boundary commit 7ca051e, so the single finding is the SAME already-approved false positive that .gitleaksignore keys to the original commit 655521d (a SHA-256 value in DOCS/archive and reference from PRINet 3.0/.../benchmarks/results/sha256_manifest.json:68, rule generic-api-key, approved 2026-08-06) under a different commit hash; it is not a new secret.
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+7:24AM INF 465 commits scanned.
+7:24AM INF scanned ~98434108 bytes (98.43 MB) in 17.3s
+7:24AM WRN leaks found: 1
+EXIT_CODE=1

@@ -1,4 +1,4 @@
-8753c9ef00d28f6816046f21ae9c908f74a709d5c581eeed348002578a341160 *./README.md
+7e0d18ce657f5815eeffa6d8438de52f786f9aa0790c3a706137bb60afdcfd0b *./README.md
 45963d8ab68bb17420c7858992088175e192c7c12f8715250812d1c50a7b758f *./dv040-bandit-expanded.log
 b050b4fc899d0ba67688e651be973633d7f5757a69a54479940688159e43b543 *./dv040-bandit-experiments-prefix.log
 8f985315c0776c5850984b25158939a217047bee60e0c642893c1c4e7946f25f *./dv040-mypy-campaign.log
@@ -82,8 +82,13 @@ db830e09c39749a16703b1b2b35cbd9cfcc6c29f24634c18bfc6006845777f1c *./full-gate/26
 47f804fb0a9ca4c912c30e55a0c3cf752a981a1ff8ea60e454aa9e04a898e0aa *./full-gate/prin-resolved/requirements.txt
 7dc9eeb3178fe56f29cc293c8441b911328c3aeef1f679be7ff0277472b575ee *./post-commit/gitleaks-final-add7386.log
 c352394ad121f3d2075104813c5e9b597d2fb89d9fb9c43c76135f374e08ef26 *./post-commit/gitleaks-postcommit.log
+37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570 *./post-commit/gitleaks-pr32-0a0f700-fullhistory.json
+cfccb5a3366ba27036805c6e80f1f7f01ac76dc4227e2db07d824b86539729cc *./post-commit/gitleaks-pr32-0a0f700-fullhistory.log
+1f986eb0e52b085cb70b21ba923ff3a109dff33eff95fb4f6187a6ce55d015dd *./post-commit/gitleaks-pr32-0a0f700-shallow-default.json
+773a385241ad0b55f6368c8e04ed41725913bfbf2d4d72292e67c27799777d4f *./post-commit/gitleaks-pr32-0a0f700-shallow-default.log
 37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570 *./post-commit/gitleaks-redacted-add7386.json
 37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570 *./post-commit/gitleaks-redacted.json
+de0a0790bc2227175baae65f0a8d210c21257eba05e6cc3b0ff9ef656d410397 *./pr32-review/full-suite-0a0f700.log
 d6bddfc3f511a13f6bfbcdca20941d09c0322159a0ccaac079cd2cb3df73598a *./pr32-review/pr32-gate-run.log
 5bcec4ab7839da14f8e7b995dae1ae061332f9d746b3db37925be57567479003 *./pr32-review/pr32-source-hashes.txt
 37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570 *./pr32-review/pr32-staged-gitleaks.json

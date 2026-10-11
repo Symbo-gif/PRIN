@@ -27,9 +27,12 @@ This directory contains audit evidence, not experiment runs or E-stage work.
   about the then-current head. Commits added after `add7386a` need their own
   scan: the PR #32 review-round commit's staged-diff scan is leg L18 of
   `verification/pr32-review/pr32-gate-run.log`, and the post-commit
-  full-history scan of the resulting head is reported in the PR description,
-  not in the repository (a document cannot contain the result of a scan of
-  itself).
+  full-history scan of the resulting head `0a0f700` is committed here by a later
+  record commit as `gitleaks-pr32-0a0f700-fullhistory.log` (709 commits, no
+  leaks) beside a default-view scan, `gitleaks-pr32-0a0f700-shallow-default.log`,
+  that shows why the local repository being shallow matters (audit `OBS-3`); a
+  document cannot contain the result of a scan of itself, so the record commit
+  needs its own scan.
 
 The `main` SHA is `fdd28d88e4c57d544e5d30fa52cce85807ab15a9`.
 Hosted workflows remain disabled under Plan amendment #48. Historical success

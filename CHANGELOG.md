@@ -1851,7 +1851,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     ×2, bandit (24,864 LOC), interrogate 97.6 %, Sphinx `-W` (CHANGELOG is a
     docs source), 25 targeted tests, 63/63 defect-catching expectations,
     rustdoc `--features cpu`, Snyk Code (0 issues), gitleaks staged scan,
-    governance checkers (142 → 146; 44 DV / 198 sessions).
+    governance checkers (142 → 146; 44 DV / 198 sessions); on the remediation
+    head `0a0f700`: full-history gitleaks (709 commits, no leaks) and the full
+    suite (5,673 passed / 184 skipped / 0 failed / 61 warnings in 1,631.03 s (0:27:11), exit 0). Observation: the local repository is shallow
+    since 07:05Z (audit `OBS-3`).
 
 ## [1.0.0-rc1] — 2026-09-15
 
