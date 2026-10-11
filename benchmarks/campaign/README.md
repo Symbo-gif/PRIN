@@ -32,7 +32,13 @@ fixtures only (fake `prin` namespaces, fabricated conclusion JSON, mocked
 renderers/snapshots/git); see `tests/test_exp002_driver.py`. The
 lead-authored maintainer-review packet for 0160 is
 [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md`](../../DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md)
-(PREPARED FOR REVIEW — NOT APPROVED).
+(PREPARED FOR REVIEW — NOT APPROVED). *PR #33 review round (2026-10-11,
+`DOCS/audits/PR033-multi-review-audit.md`):* tables are now compared after
+CRLF-to-LF canonicalization and PDFs after removing the four registered Info
+entries (both pending E2 approval); closure re-derives pre-registration
+provenance from git and checks each mode's observation schema; reservation
+never leaves an unrecorded RUN directory; admission covers the whole
+checkout. The driver still refuses to run while the protocol is DRAFT.
 
 **Dated delta for the `EXP-001-r1` row above (2026-10-11, session 0159):**
 the row's "E3 BLOCKED" wording is its point-in-time record. Since then

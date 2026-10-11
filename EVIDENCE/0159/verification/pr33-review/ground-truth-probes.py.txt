@@ -1,0 +1,242 @@
+"""PR #33 ground-truth probes. Synthetic inputs only: no registered EXP-002
+input, no real publication generator over the archived snapshot, no run.
+
+Usage: <repo>/.venv/Scripts/python probe_ground_truth.py <repo-root>
+"""
+
+from __future__ import annotations
+
+import io
+import json
+import struct
+import sys
+import tempfile
+import zlib
+from pathlib import Path
+
+REPO = Path(sys.argv[1]).resolve()
+sys.path.insert(0, str(REPO))
+
+import matplotlib  # noqa: E402
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt  # noqa: E402
+
+import benchmarks._common.result as result_module  # noqa: E402
+import tools.reproduce as reproduce  # noqa: E402
+from benchmarks.campaign import exp002_driver as driver  # noqa: E402
+
+
+def show(label: str, value: object) -> None:
+    print(f"[{label}] {value}")
+
+
+# ---------------------------------------------------------------- P1 / C1
+def p1_tables() -> None:
+    from prinet.utils import table_generation as ref_tables
+
+    from prin.reporting import table_generation as prin_tables
+
+    content = "\\begin{tabular}{ll}\nA & B \\\\\n\\end{tabular}\n"
+    with tempfile.TemporaryDirectory() as tmp:
+        ref = ref_tables._save_table(content, "t", Path(tmp) / "ref").read_bytes()
+        prin = prin_tables._save_table(content, "t", Path(tmp) / "prin").read_bytes()
+    show("P1 ref bytes/CRLF", (len(ref), ref.count(b"\r\n")))
+    show("P1 prin bytes/CRLF", (len(prin), prin.count(b"\r\n")))
+    show("P1 normalized equal", driver.normalized_bytes(ref, ".tex") == driver.normalized_bytes(prin, ".tex"))
+    show("P1 equal after CRLF->LF only", ref.replace(b"\r\n", b"\n") == prin)
+    archived = sorted((driver.REFERENCE / "paper" / "tables").glob("*.tex"))
+    show(
+        "P1 archived tables count / any CR byte (bytes only, no content compared)",
+        (len(archived), any(b"\r" in p.read_bytes() for p in archived)),
+    )
+
+
+# ---------------------------------------------------------------- P2 / C2
+def _figure() -> plt.Figure:
+    fig, ax = plt.subplots(figsize=(3, 2))
+    ax.plot([0, 1, 2], [0, 1, 0], label="synthetic")
+    ax.set_xlabel("x")
+    ax.legend()
+    return fig
+
+
+def p2_pdf_info() -> None:
+    from prinet.utils import figure_generation as ref_figures
+
+    from prin.reporting import figure_generation as prin_figures
+
+    with tempfile.TemporaryDirectory() as tmp:
+        ref = ref_figures._save_fig(_figure(), "f", Path(tmp) / "ref", ("pdf",))[0].read_bytes()
+        prin = prin_figures._save_fig(_figure(), "f", Path(tmp) / "prin", ("pdf",))[0].read_bytes()
+    rn, pn = driver._normalized_pdf(ref), driver._normalized_pdf(prin)
+    show("P2 normalized equal (real writers, synthetic figure)", rn == pn)
+    _, ref_objects, ref_info, *_ = driver._pdf_parts(ref)
+    _, prin_objects, prin_info, *_ = driver._pdf_parts(prin)
+    show("P2 ref Info", dict(ref_objects)[ref_info])
+    show("P2 prin Info", dict(prin_objects)[prin_info])
+
+    # same key set, different value lengths -> wrap residue?
+    def save(meta: dict[str, object]) -> bytes:
+        buf = io.BytesIO()
+        fig = _figure()
+        fig.savefig(buf, format="pdf", metadata=meta)
+        plt.close(fig)
+        return buf.getvalue()
+
+    short = save({"Creator": "A", "Producer": "B"})
+    long = save({"Creator": "A" * 60, "Producer": "B" * 70})
+    show(
+        "P2 same keys, different lengths -> normalized equal",
+        driver._normalized_pdf(short) == driver._normalized_pdf(long),
+    )
+    _, so, si, *_ = driver._pdf_parts(short)
+    _, lo, li, *_ = driver._pdf_parts(long)
+    show("P2 short Info", dict(so)[si])
+    show("P2 long Info", dict(lo)[li])
+
+
+# ---------------------------------------------------------------- P4 / V07
+def p4_pdf_int() -> None:
+    payload = b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\nstartxref\n" + b"9" * 5000 + b"\n%%EOF\n"
+    try:
+        driver._pdf_parts(payload)
+        show("P4 oversized startxref", "accepted?!")
+    except Exception as exc:  # noqa: BLE001 - probe reports the type
+        show("P4 oversized startxref raises", type(exc).__name__)
+
+
+# ---------------------------------------------------------------- P5 / V08
+def _chunk(kind: bytes, data: bytes) -> bytes:
+    return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+
+
+def p5_png_plte() -> None:
+    ihdr = struct.pack(">IIBBBBB", 2, 2, 8, 3, 0, 0, 0)  # indexed colour
+    raw = b"".join(b"\x00" + bytes([0, 1]) for _ in range(2))
+    idat = zlib.compress(raw)
+    plte = bytes([0, 0, 0, 255, 255, 255])
+    good = b"\x89PNG\r\n\x1a\n" + _chunk(b"IHDR", ihdr) + _chunk(b"PLTE", plte) + _chunk(b"IDAT", idat) + _chunk(b"IEND", b"")
+    bad = b"\x89PNG\r\n\x1a\n" + _chunk(b"IHDR", ihdr) + _chunk(b"IDAT", idat) + _chunk(b"PLTE", plte) + _chunk(b"IEND", b"")
+    for label, payload in (("PLTE before IDAT", good), ("PLTE after IDAT", bad)):
+        try:
+            driver._validate_png(payload)
+            show(f"P5 {label}", "ACCEPTED")
+        except driver.DriverError:
+            show(f"P5 {label}", "rejected")
+
+
+# ---------------------------------------------------------------- P6 / V15
+def p6_exceptions() -> None:
+    caught = (driver.DriverError, OSError, ValueError, driver.subprocess.SubprocessError)
+    for cls in (
+        reproduce.ManifestMismatchError,
+        reproduce.ManifestFormatError,
+        reproduce.ReproductionError,
+    ):
+        show(f"P6 {cls.__name__} mro", [c.__name__ for c in cls.__mro__])
+        show(f"P6 {cls.__name__} caught by main", issubclass(cls, caught))
+
+
+# ---------------------------------------------------- closure-side workspace
+SHA = "a" * 40
+
+
+def _workspace(root: Path) -> None:
+    result_module._ALLOWED_ROOTS = (root,)
+    reproduce.ALLOWED_MANIFEST_ROOTS = (root,)
+    driver.ROOT = root
+    driver.RAW_ROOT = root / "benchmarks" / "results" / "EXP-002"
+    driver.OUTPUT_ROOT = root / "generated"
+    driver.PROTOCOL = root / "record" / "preregistration.md"
+    driver.RAW_ROOT.mkdir(parents=True)
+    (root / "generated").mkdir()
+    (root / "record").mkdir()
+
+
+def _valid_run(mode: str = "api", stamp: str = "120000", identity: dict | None = None, observations: object = None) -> Path:
+    run = driver.RAW_ROOT / f"RUN-20261011T{stamp}Z-{SHA[:7]}-{driver.MODE_LABELS[mode]}"
+    run.mkdir()
+    name = f"{mode}.json" if mode in {"api", "conclusions"} else "reproduction.json"
+    (run / "campaign-metadata.json").write_text(json.dumps({
+        "exp_id": "EXP-002", "session": "0161", "run_id": run.name, "operator": "op",
+        "mode": mode, "artefacts": {name: driver.MODE_TAGS[mode]}}), encoding="utf-8")
+    env = {"prin_version": "1.0.0rc1", "git_commit": SHA, "rust_version": "r", "python_version": "p",
+           "platform": "w", "processor": "x", "logical_cpus": 8, "backend": "cpu", "dtype": "f64", "seed": 0}
+    ident = identity if identity is not None else {
+        "source_sha": SHA, "preregistration_sha256": "f" * 64, "preregistration_commit": "0" * 40,
+        "input_manifest_sha256": driver.INPUT_MANIFEST_SHA, "input_record_count": 172}
+    doc = {"environment": env, "config": {"iterations": 10, "warmup": 0, "seed_counter": 0, "seed_key": 2,
+           "out_dir": str(run), "measurement_kind": "deterministic_census", "replicates": 1},
+           "identity": ident, "status": "COMPLETED", "seed_used": False}
+    if observations is not None:
+        doc["observations"] = observations
+    (run / name).write_text(json.dumps(doc), encoding="utf-8")
+    reproduce.append_manifest(run, run / "manifest.json")
+    return run
+
+
+def p7_closure() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        _workspace(Path(tmp).resolve())
+        run = _valid_run(observations=None)
+        try:
+            driver.check_run_complete(run)
+            show("P7 fabricated prereg digest/commit, no approval date, NO observations", "ACCEPTED")
+        except Exception as exc:  # noqa: BLE001
+            show("P7 closure", f"rejected {type(exc).__name__}: {exc}")
+        run2 = _valid_run(mode="reference", stamp="120001", observations={"implementation": "prin", "files": []})
+        try:
+            driver.check_run_complete(run2)
+            show("P8 reference-mode run carrying implementation=prin", "ACCEPTED")
+        except Exception as exc:  # noqa: BLE001
+            show("P8 closure", f"rejected {type(exc).__name__}: {exc}")
+        # P9 sibling coupling: poison an unrelated run with an unreadable/odd entry
+        sibling = _valid_run(mode="conclusions", stamp="120002", observations={"cases": []})
+        (sibling / "manifest.json").write_text("not json", encoding="utf-8")
+        try:
+            driver.check_run_complete(run)
+            show("P9 closure of untouched run with damaged sibling manifest", "ACCEPTED")
+        except Exception as exc:  # noqa: BLE001
+            show("P9 closure of untouched run with damaged sibling manifest", f"rejected {type(exc).__name__}")
+        # sibling with a symlink/hardlink file (reproduce refuses st_nlink>1)
+        import os
+        target = sibling / "conclusions.json"
+        try:
+            os.link(target, sibling / "hl.json")
+            try:
+                driver.check_run_complete(run)
+                show("P9b closure with hard-linked file in sibling", "ACCEPTED")
+            except Exception as exc:  # noqa: BLE001
+                show("P9b closure with hard-linked file in sibling", f"rejected {type(exc).__name__}: {exc}")
+        except OSError as exc:
+            show("P9b", f"could not create hard link: {exc}")
+
+
+# ---------------------------------------------------------------- P3 / V05
+def p3_orphan() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp).resolve()
+        _workspace(root)
+        driver._admission = lambda sha: {"source_sha": sha, "preregistration_sha256": "d" * 64,
+                                          "preregistration_commit": "c" * 40, "approval_date_utc": "2026-10-11"}
+        env = {"prin_version": "1.0.0rc1", "git_commit": SHA}
+        driver.capture_environment = lambda **kwargs: dict(env)
+        name = f"RUN-20261011T120000Z-{SHA[:7]}-api-cpu"
+        (driver.OUTPUT_ROOT / name).mkdir()
+        try:
+            driver.run_registered("api", driver.RAW_ROOT / name, "op", SHA)
+        except Exception as exc:  # noqa: BLE001
+            show("P3 run_registered with colliding output root raises", f"{type(exc).__name__}: {exc}")
+        run = driver.RAW_ROOT / name
+        show("P3 orphan RUN dir exists / contents", (run.exists(), sorted(p.name for p in run.iterdir()) if run.exists() else None))
+
+
+if __name__ == "__main__":
+    p1_tables()
+    p2_pdf_info()
+    p4_pdf_int()
+    p5_png_plte()
+    p6_exceptions()
+    p7_closure()
+    p3_orphan()

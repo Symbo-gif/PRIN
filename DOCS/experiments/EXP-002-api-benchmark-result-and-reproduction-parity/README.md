@@ -10,6 +10,7 @@
 |---|---|---|
 | `preregistration.md` | E1, lead-authored ([`preregistration.md`](preregistration.md)) | E3 start (first `RUN-` directory created) |
 | `e1-handoff.md` | E1 ([`e1-handoff.md`](e1-handoff.md)) | living handoff skeleton until E1 close |
+| `e2-review-packet.md` | E1, lead-authored ([`e2-review-packet.md`](e2-review-packet.md)) | PREPARED FOR REVIEW — NOT APPROVED; superseded by the 0160 record |
 | `log.md` | E3 | never edited after E3 close; aborted runs stay |
 | `report.md` | E5 | after E5 approval; corrections are errata |
 | `report-manifest.json` | E4/E5 | SHA-256 of every regenerated figure/table (campaign plan §7.4) |
@@ -19,7 +20,9 @@ The lead-authored collection driver is
 its synthetic regression tests are
 [`tests/test_exp002_driver.py`](../../../tests/test_exp002_driver.py). The
 driver refuses admission while `preregistration.md` is DRAFT; no E3 run,
-pilot, or real reference-input collection is authorized.
+pilot, or real reference-input collection is authorized. The PR #33 review
+round amended the DRAFT and the driver before E2 (protocol section 11;
+[`PR033-multi-review-audit.md`](../../audits/PR033-multi-review-audit.md)).
 
 ## Sessions
 

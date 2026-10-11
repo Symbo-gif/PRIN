@@ -124,3 +124,30 @@ including the completed `[]` native open-alert read — do not re-query).
 The 0159 branch is unpushed; no PR is opened. Publication (push/PR),
 GitHub queries and the security re-scan belong to the lead after E1 lead
 code review of the source head.
+
+## Dated corrections — PR #33 review round (2026-10-11 UTC)
+
+The sections above are kept as written at `78d3600`. These corrections
+supersede them where they conflict (PR33-F10,
+[`PR033-multi-review-audit.md`](../../audits/PR033-multi-review-audit.md)):
+
+- **Publication:** the branch was pushed and opened as PR #33 on
+  2026-10-11. The "Outstanding publication" section and the publication
+  part of "Remaining E1 work" are historical.
+- **Evidence packaging** of the final-gate captures was already complete at
+  `78d3600` (`verification/final-6314532/`, manifested). The "Remaining E1
+  work" bullet contradicted the deliverables table above.
+- **Checksum exception:** MichaelMaillet approved the exact fingerprint
+  exception on 2026-10-11, and `.gitleaksignore` records it. The review
+  round's full-history scan is in `EVIDENCE/0159/verification/pr33-review/`.
+- **Source changed after review:** the driver, its tests and the DRAFT
+  protocol were amended to resolve the review findings (protocol section 11).
+  The driver hash in the deliverables table describes the pre-review
+  checkpoint. The current reviewed hashes, and the gate that covers them,
+  are in [`e2-review-packet.md`](e2-review-packet.md) section 1.
+- **Outcome exposure:** before E2, two independent reviews posted H2/H3
+  outcome information from real-input runs. See protocol section 11.2 and
+  section 10 item 9.
+- **E1 status:** the exit conditions in the session brief are met by
+  committed evidence. Session 0159 stays `IN_PROGRESS` until the maintainer
+  accepts the E1 exit. No scientific approval is implied.

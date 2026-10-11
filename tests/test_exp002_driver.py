@@ -20,6 +20,7 @@ import json
 import re
 import runpy
 import struct
+import subprocess
 import sys
 import tempfile
 import zlib
@@ -27,6 +28,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+import matplotlib
 import pytest
 
 import benchmarks._common.result as result_module
@@ -48,6 +50,7 @@ PROTOCOL_APPROVED = (
     "**Maintainer approval:** MichaelMaillet, 2026-10-11 UTC\n"
 )
 PROTOCOL_DRAFT = PROTOCOL_APPROVED.replace("APPROVED", "DRAFT")
+PROTOCOL_APPROVED_SHA = hashlib.sha256(PROTOCOL_APPROVED.encode("utf-8")).hexdigest()
 
 
 def _sha256(payload: bytes) -> str:
@@ -281,6 +284,7 @@ def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setattr(driver, "OUTPUT_ROOT", root / "generated")
     monkeypatch.setattr(driver, "PROTOCOL", root / "record" / "preregistration.md")
     monkeypatch.setattr(driver, "INPUT_MANIFEST", root / "manifest.json")
+    monkeypatch.setattr(driver, "_git_bytes", _fake_git())
     driver.RAW_ROOT.mkdir(parents=True)
     (root / "generated").mkdir()
     (root / "record").mkdir()
@@ -311,12 +315,74 @@ def _fake_environment(sha: str = SHA) -> dict[str, Any]:
 def _fake_identity(sha: str = SHA) -> dict[str, Any]:
     return {
         "source_sha": sha,
-        "preregistration_sha256": "d" * 64,
+        "preregistration_sha256": PROTOCOL_APPROVED_SHA,
         "preregistration_commit": COMMIT,
         "input_manifest_sha256": driver.INPUT_MANIFEST_SHA,
         "input_record_count": 172,
         "approval_date_utc": "2026-10-11",
         "input_records": [],
+    }
+
+
+def _fake_observations(mode: str) -> dict[str, Any]:
+    """Schema-valid synthetic observations for each registered mode."""
+    if mode == "api":
+        names = sorted(f"name_{index:03d}" for index in range(175))
+        return {
+            "expected_names": names,
+            "legacy_names": names[:172],
+            "observed_names": names,
+            "frozen_missing": [],
+            "frozen_extra": [],
+            "rows": [
+                {
+                    "name": name,
+                    "resolved": True,
+                    "callable": True,
+                    "defining_module": "prin",
+                    "type": "function",
+                    "error": None,
+                    "legacy": True,
+                    "ownership_present": True,
+                }
+                for name in names
+            ],
+            "unit": "api_symbol",
+        }
+    if mode == "conclusions":
+        return {
+            "cases": [
+                {
+                    "case_id": f"C00:{index}",
+                    "family": "C00",
+                    "input_file": "synthetic.json",
+                    "left_path": "/value",
+                    "right_path": None,
+                    "left": 1.0,
+                    "operator": ">",
+                    "right": 0.5,
+                    "operand_unit": "BC",
+                    "expected": True,
+                    "observed": True,
+                }
+                for index in range(62)
+            ],
+            "unit": "claim_comparator_record",
+        }
+    return {
+        "implementation": "reference" if mode == "reference" else "prin",
+        "renderer": {"matplotlib": "synthetic"},
+        "expected_files": sorted(EXPECTED_PUBLICATION_FILES),
+        "files": [
+            {
+                "path": "tables/tab_ablation.tex",
+                "raw_bytes": 3,
+                "raw_sha256": "0" * 64,
+                "normalized_bytes": 3,
+                "normalized_sha256": "0" * 64,
+            }
+        ],
+        "unit": "generated_file",
     }
 
 
@@ -360,7 +426,7 @@ def _write_valid_run(
                 "identity": _fake_identity(sha),
                 "status": "COMPLETED",
                 "seed_used": False,
-                "observations": {"unit": "api_symbol"},
+                "observations": _fake_observations(mode),
             }
         ),
         encoding="utf-8",
@@ -394,24 +460,31 @@ def _fake_git(
     *,
     changed: str = "",
     untracked: str = "",
-    committed: str | None = None,
+    shadowing: str = "",
+    committed: bytes | None = None,
     commit: str = COMMIT,
+    merge_base: str | None = None,
 ) -> Any:
-    def fake(*args: str) -> str:
+    """Fake ``_git_bytes``: raw stdout bytes, as the real helper returns."""
+
+    def fake(*args: str) -> bytes:
         if args == ("rev-parse", "HEAD"):
-            return sha
+            return sha.encode()
         if args[0] == "diff":
-            return changed
+            return changed.encode()
         if args[0] == "ls-files":
-            return untracked
+            glob = any(arg.startswith(":(glob)") for arg in args)
+            return (shadowing if glob else untracked).encode()
         if args[0] == "show":
-            return (
-                committed
-                if committed is not None
-                else driver.PROTOCOL.read_bytes().decode("utf-8").strip()
-            )
+            if committed is not None:
+                return committed
+            if driver.PROTOCOL.exists():
+                return driver.PROTOCOL.read_bytes()
+            return PROTOCOL_APPROVED.encode("utf-8")
         if args[0] == "log":
-            return commit
+            return commit.encode()
+        if args[0] == "merge-base":
+            return (merge_base if merge_base is not None else commit).encode()
         raise AssertionError(f"unexpected git invocation: {args}")
 
     return fake
@@ -421,7 +494,7 @@ def _fake_git(
 def admitted(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Fully fake admission: APPROVED protocol, clean git, matching env."""
     _protocol_file(workspace)
-    monkeypatch.setattr(driver, "_git", _fake_git())
+    monkeypatch.setattr(driver, "_git_bytes", _fake_git())
     monkeypatch.setattr(
         driver, "capture_environment", lambda **kwargs: _fake_environment()
     )
@@ -932,9 +1005,9 @@ def _conclusion_mutations() -> list[tuple[str, Any, type[Exception]]]:
         ("nan-operand", nan_operand, driver.DriverError),
         ("inf-operand", inf_operand, driver.DriverError),
         ("bool-operand", bool_operand, driver.DriverError),
-        ("missing-zone", missing_zone, KeyError),
-        ("missing-mean", missing_mean, KeyError),
-        ("missing-ci", missing_ci, KeyError),
+        ("missing-zone", missing_zone, driver.DriverError),
+        ("missing-mean", missing_mean, driver.DriverError),
+        ("missing-ci", missing_ci, driver.DriverError),
     ]
 
 
@@ -957,10 +1030,24 @@ class TestConclusionValidation:
 
 
 class TestNormalizedBytes:
-    def test_tex_is_compared_raw(self) -> None:
+    def test_tex_crlf_canonicalizes_to_lf(self) -> None:
+        # PR33-F1: the pinned reference writer's Windows text mode emits CRLF.
         assert driver.normalized_bytes(TEX_A, ".tex") == TEX_A
-        assert driver.normalized_bytes(TEX_A, ".tex") != (
-            driver.normalized_bytes(TEX_A.replace(b"\n", b"\r\n"), ".tex")
+        assert driver.normalized_bytes(TEX_A.replace(b"\n", b"\r\n"), ".tex") == (TEX_A)
+
+    @pytest.mark.parametrize(
+        "variant",
+        [
+            TEX_A.replace(b"\n", b"\r"),
+            TEX_A.replace(b"\n", b" \n"),
+            TEX_A.replace(b"table a", b"table b"),
+            TEX_A + b"\n",
+        ],
+        ids=["lone-cr", "trailing-space", "content", "extra-line"],
+    )
+    def test_tex_other_bytes_stay_significant(self, variant: bytes) -> None:
+        assert driver.normalized_bytes(variant, ".tex") != (
+            driver.normalized_bytes(TEX_A, ".tex")
         )
 
     def test_pdf_metadata_only_difference_normalizes_equal(self) -> None:
@@ -1657,7 +1744,7 @@ class TestAdmission:
             "example only:\n\n**Status:** APPROVED\n\n"
             "**Maintainer approval:** MichaelMaillet, 2026-10-11 UTC\n",
         )
-        monkeypatch.setattr(driver, "_git", _fake_git())
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git())
         run = driver.RAW_ROOT / _run_name("api")
         with pytest.raises(driver.DriverError, match="not APPROVED"):
             driver.run_registered("api", run, "devin", SHA)
@@ -1672,7 +1759,7 @@ class TestAdmission:
             "**Status:** APPROVED | DRAFT\n\n"
             "**Maintainer approval:** MichaelMaillet, 2026-10-11 UTC\n",
         )
-        monkeypatch.setattr(driver, "_git", _fake_git())
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git())
         monkeypatch.setattr(
             driver,
             "_snapshot",
@@ -1699,7 +1786,7 @@ class TestAdmission:
                 "**Maintainer approval:** NOT GRANTED",
             ),
         )
-        monkeypatch.setattr(driver, "_git", _fake_git())
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git())
         run = driver.RAW_ROOT / _run_name("api")
         with pytest.raises(driver.DriverError, match="approval is missing"):
             driver.run_registered("api", run, "devin", SHA)
@@ -1712,7 +1799,7 @@ class TestAdmission:
             workspace,
             PROTOCOL_APPROVED.replace("2026-10-11", "2026-13-45"),
         )
-        monkeypatch.setattr(driver, "_git", _fake_git())
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git())
         with pytest.raises((driver.DriverError, ValueError)):
             driver.run_registered(
                 "api", driver.RAW_ROOT / _run_name("api"), "devin", SHA
@@ -1722,7 +1809,7 @@ class TestAdmission:
         self, workspace: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         _protocol_file(workspace)
-        monkeypatch.setattr(driver, "_git", _fake_git())
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git())
         for bad in ("abc", OTHER_SHA, "Z" * 40):
             with pytest.raises(driver.DriverError, match="40-character HEAD"):
                 driver.run_registered(
@@ -1744,7 +1831,7 @@ class TestAdmission:
         dirty: dict[str, str],
     ) -> None:
         _protocol_file(workspace)
-        monkeypatch.setattr(driver, "_git", _fake_git(**dirty))
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git(**dirty))
         with pytest.raises(driver.DriverError, match="uncommitted"):
             driver.run_registered(
                 "api", driver.RAW_ROOT / _run_name("api"), "devin", SHA
@@ -1756,14 +1843,14 @@ class TestAdmission:
         _protocol_file(workspace)
         monkeypatch.setattr(
             driver,
-            "_git",
+            "_git_bytes",
             _fake_git(untracked="benchmarks/results/EXP-002/x.json\n"),
         )
         monkeypatch.setattr(
             driver, "capture_environment", lambda **kw: _fake_environment()
         )
         monkeypatch.setattr(driver, "_snapshot", lambda dest: ({}, _fake_identity()))
-        monkeypatch.setattr(driver, "collect_api", lambda: {"unit": "api_symbol"})
+        monkeypatch.setattr(driver, "collect_api", lambda: _fake_observations("api"))
         run = driver.run_registered(
             "api", driver.RAW_ROOT / _run_name("api"), "devin", SHA
         )
@@ -1774,7 +1861,7 @@ class TestAdmission:
     ) -> None:
         _protocol_file(workspace)
         monkeypatch.setattr(
-            driver, "_git", _fake_git(committed="different committed bytes")
+            driver, "_git_bytes", _fake_git(committed=b"different committed bytes")
         )
         with pytest.raises(driver.DriverError, match="committed bytes"):
             driver.run_registered(
@@ -1870,19 +1957,16 @@ class TestRunRegistered:
             "_snapshot",
             lambda dest: snapshot_calls.append(dest) or ({"d": {}}, _fake_identity()),
         )
-        monkeypatch.setattr(driver, "collect_api", lambda: {"unit": "api_symbol"})
+        monkeypatch.setattr(driver, "collect_api", lambda: _fake_observations("api"))
         monkeypatch.setattr(
             driver,
             "collect_conclusions",
-            lambda docs: {"cases": [], "unit": "claim_comparator_record"},
+            lambda docs: _fake_observations("conclusions"),
         )
         monkeypatch.setattr(
             driver,
             "collect_reproduction",
-            lambda implementation, snapshot, output: {
-                "implementation": implementation,
-                "unit": "generated_file",
-            },
+            lambda implementation, snapshot, output: _fake_observations(implementation),
         )
         run_dir = driver.RAW_ROOT / _run_name(mode)
         run = driver.run_registered(mode, run_dir, "devin", SHA)
@@ -1930,6 +2014,8 @@ class TestRunRegistered:
         stale.mkdir()
         with pytest.raises(driver.DriverError, match="never reused"):
             driver.run_registered("api", run_dir, "devin", SHA)
+        # PR33-F5: the guard runs before the raw directory is reserved.
+        assert not run_dir.exists()
 
     def test_collector_crash_retains_aborted_run(
         self, admitted: Path, monkeypatch: pytest.MonkeyPatch
@@ -1967,7 +2053,7 @@ class TestRunRegistered:
         self, admitted: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(driver, "_snapshot", lambda dest: ({}, _fake_identity()))
-        monkeypatch.setattr(driver, "collect_api", lambda: {"unit": "api_symbol"})
+        monkeypatch.setattr(driver, "collect_api", lambda: _fake_observations("api"))
         monkeypatch.setattr(driver, "CPU_WALL_CAP", -1)
         run_dir = driver.RAW_ROOT / _run_name("api")
         with pytest.raises(driver.DriverError, match="aborted run retained"):
@@ -2020,6 +2106,15 @@ _RESULT_MUTATIONS: list[tuple[str, Any]] = [
     ("identity-manifest", _edit_identity("input_manifest_sha256", "0" * 64)),
     ("prereg-sha-malformed", _edit_identity("preregistration_sha256", "x")),
     ("prereg-commit-malformed", _edit_identity("preregistration_commit", "y")),
+    # PR33-F3: shape-valid but fabricated provenance must not close.
+    ("prereg-sha-fabricated", _edit_identity("preregistration_sha256", "f" * 64)),
+    ("approval-date-missing", lambda d: d["identity"].pop("approval_date_utc")),
+    ("approval-date-mismatch", _edit_identity("approval_date_utc", "2026-10-12")),
+    ("approval-date-not-a-date", _edit_identity("approval_date_utc", "not-a-date")),
+    ("approval-date-non-str", _edit_identity("approval_date_utc", 20261011)),
+    # PR33-F4: the scientific payload is schema-checked at closure.
+    ("observations-missing", lambda d: d.pop("observations")),
+    ("observations-non-mapping", lambda d: d.update(observations=[])),
     ("record-count", _edit_identity("input_record_count", 171)),
     ("seed-counter-bool", _edit_config("seed_counter", False)),
     ("seed-counter-float", _edit_config("seed_counter", 0.0)),
@@ -2309,3 +2404,949 @@ class TestMain:
         with pytest.raises(SystemExit) as excinfo:
             runpy.run_module("benchmarks.campaign.exp002_driver", run_name="__main__")
         assert excinfo.value.code == 2
+
+
+# ---------------------------------------------------------------------------
+# PR #33 review remediation (PR33-F*). Synthetic fixtures only: no registered
+# input, no archived publication data and no EXP-002 run are touched.
+# ---------------------------------------------------------------------------
+
+
+def _pdf_with_info(info: bytes, label: bytes = b"SCIENCE") -> bytes:
+    """The lead classic-xref layout with an arbitrary Info dictionary body."""
+    stream = b"BT /F1 8 Tf 2 2 Td (" + label + b") Tj ET\n"
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 10 10] "
+        b"/Contents 4 0 R /Resources << /Font << /F1 6 0 R >> >> >>",
+        b"<< /Length "
+        + str(len(stream)).encode()
+        + b" >>\nstream\n"
+        + stream
+        + b"endstream",
+        info,
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    return _pdf_assemble(objects, b"11" * 16)
+
+
+# PRIN's writer: four registered keys on one line. The reference writer:
+# Matplotlib's default three keys (no ModDate), wrapped onto separate lines.
+PDF_PRIN_INFO = _pdf_with_info(
+    b"<< /Creator (PRIN) /Producer (Matplotlib)\n"
+    b"/CreationDate (D:20000101000000Z) /ModDate (D:20000101000000Z) >>"
+)
+PDF_REFERENCE_INFO = _pdf_with_info(
+    b"<< /Creator (Matplotlib v3.11.1, https://matplotlib.org)\n"
+    b"/Producer (Matplotlib pdf backend v3.11.1)\n"
+    b"/CreationDate (D:20261011170217-03'00') >>"
+)
+
+
+class TestPdfInfoCanonicalization:
+    """PR33-F2: Info key-set and line-wrap differences are metadata only."""
+
+    def test_key_set_and_wrap_asymmetry_normalizes_equal(self) -> None:
+        assert PDF_PRIN_INFO != PDF_REFERENCE_INFO
+        assert driver.normalized_bytes(PDF_PRIN_INFO, ".pdf") == (
+            driver.normalized_bytes(PDF_REFERENCE_INFO, ".pdf")
+        )
+
+    def test_hex_string_registered_values_are_removed(self) -> None:
+        hexed = _pdf_with_info(b"<< /Creator <FEFF0041> /Producer (x) >>")
+        assert driver.normalized_bytes(hexed, ".pdf") == (
+            driver.normalized_bytes(PDF_REFERENCE_INFO, ".pdf")
+        )
+
+    def test_unregistered_entries_retained_in_order(self) -> None:
+        base = _pdf_with_info(b"<< /Title (T) /Creator (A) /Subject (S) >>")
+        normalized = driver.normalized_bytes(base, ".pdf")
+        assert b"<< /Title (T) /Subject (S) >>" in normalized
+        reordered = _pdf_with_info(b"<< /Subject (S) /Creator (A) /Title (T) >>")
+        assert driver.normalized_bytes(reordered, ".pdf") != normalized
+        changed = _pdf_with_info(b"<< /Title (U) /Creator (A) /Subject (S) >>")
+        assert driver.normalized_bytes(changed, ".pdf") != normalized
+
+    def test_direct_value_kinds_are_tokenized(self) -> None:
+        info = (
+            b"<< /Trapped /False /Count 3 /Ratio -0.5 /Ref 6 0 R /Flag true "
+            b"/Nested (a (b) \\) c) /Hex <0a 0B> /Creator (x) >>"
+        )
+        normalized = driver.normalized_bytes(_pdf_with_info(info), ".pdf")
+        assert (
+            b"<< /Trapped /False /Count 3 /Ratio -0.5 /Ref 6 0 R /Flag true "
+            b"/Nested (a (b) \\) c) /Hex <0a 0B> >>"
+        ) in normalized
+
+    def test_content_difference_stays_significant(self) -> None:
+        assert driver.normalized_bytes(PDF_PRIN_INFO, ".pdf") != (
+            driver.normalized_bytes(
+                _pdf_with_info(
+                    b"<< /Creator (PRIN) /Producer (Matplotlib) >>", b"OTHER"
+                ),
+                ".pdf",
+            )
+        )
+
+    @pytest.mark.parametrize(
+        "info",
+        [
+            b"<< /Creator (A) /Creator (B) >>",
+            b"<< /Keywords [1 2] >>",
+            b"<< /Nested << /A 1 >> >>",
+            b"<< /Creator (unterminated >>",
+            b"<< Creator (A) >>",
+            b"<< /Creator >>",
+            b"(not a dictionary)",
+            b"<< /Creator (A) >> /Extra 1 >>",
+        ],
+        ids=[
+            "duplicate-key",
+            "array-value",
+            "dictionary-value",
+            "unterminated-string",
+            "bare-key",
+            "missing-value",
+            "non-dictionary",
+            "content-after-close",
+        ],
+    )
+    def test_malformed_info_rejected(self, info: bytes) -> None:
+        with pytest.raises(driver.DriverError, match="Info dictionary"):
+            driver.normalized_bytes(_pdf_with_info(info), ".pdf")
+
+    def test_real_matplotlib_writers_compare_equal(self) -> None:
+        """Real backend output: PRIN-style metadata vs Matplotlib defaults."""
+        import datetime
+        import io
+
+        import matplotlib.pyplot as plt
+
+        def render(metadata: dict[str, Any] | None, values: list[float]) -> bytes:
+            figure, axes = plt.subplots(figsize=(2, 2))
+            axes.plot([0, 1, 2], values)
+            buffer = io.BytesIO()
+            try:
+                if metadata is None:
+                    figure.savefig(buffer, format="pdf")
+                else:
+                    figure.savefig(buffer, format="pdf", metadata=metadata)
+            finally:
+                plt.close(figure)
+            return buffer.getvalue()
+
+        fixed = datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC)
+        prin_style = {
+            "Creator": "PRIN",
+            "Producer": "Matplotlib",
+            "CreationDate": fixed,
+            "ModDate": fixed,
+        }
+        first = render(prin_style, [0.0, 1.0, 0.0])
+        second = render(None, [0.0, 1.0, 0.0])
+        assert driver.normalized_bytes(first, ".pdf") == (
+            driver.normalized_bytes(second, ".pdf")
+        )
+        changed = render(None, [0.0, 2.0, 0.0])
+        assert driver.normalized_bytes(changed, ".pdf") != (
+            driver.normalized_bytes(second, ".pdf")
+        )
+
+
+class TestPdfDecimalBounds:
+    """PR33-F7: oversized decimal fields fail as DriverError, never ValueError."""
+
+    @pytest.mark.parametrize(
+        "mutate",
+        [
+            lambda p: re.sub(rb"startxref\n[0-9]+", b"startxref\n" + b"9" * 5000, p),
+            lambda p: re.sub(rb"startxref\n[0-9]+", b"startxref\n" + b"1" * 11, p),
+            lambda p: p.replace(b"xref\n0 7\n", b"xref\n" + b"0" * 5000 + b" 7\n"),
+            lambda p: p.replace(b"/Size 7", b"/Size " + b"7" * 5000),
+            lambda p: p.replace(b"/Root 1 0 R", b"/Root " + b"1" * 5000 + b" 0 R"),
+            lambda p: p.replace(b"/Root 1 0 R", b"/Root 1 " + b"0" * 6 + b" R"),
+            lambda p: p.replace(b"/Info 5 0 R", b"/Info " + b"5" * 5000 + b" 0 R"),
+        ],
+        ids=[
+            "startxref-5000",
+            "startxref-11",
+            "subsection",
+            "size",
+            "root-number",
+            "root-generation",
+            "info-number",
+        ],
+    )
+    def test_oversized_field_is_driver_error(self, mutate: Any) -> None:
+        payload = mutate(PDF_A)
+        assert payload != PDF_A
+        with pytest.raises(driver.DriverError):
+            driver.normalized_bytes(payload, ".pdf")
+
+
+def _png_rgb_ok() -> bytes:
+    return _png_fixture([(b"IHDR", IHDR), (b"IDAT", IDAT_RED), (b"IEND", b"")])
+
+
+INDEXED_IHDR = struct.pack(">IIBBBBB", 1, 1, 8, 3, 0, 0, 0)
+GREY_IHDR = struct.pack(">IIBBBBB", 1, 1, 8, 0, 0, 0, 0)
+RGBA_IHDR = struct.pack(">IIBBBBB", 1, 1, 8, 6, 0, 0, 0)
+PALETTE = b"\x00\x00\x00\xff\xff\xff"
+IDAT_INDEX = zlib.compress(b"\x00\x01")
+IDAT_GREY = zlib.compress(b"\x00\x80")
+IDAT_RGBA = zlib.compress(b"\x00\xff\x00\x00\xff")
+
+
+class TestPngColourRules:
+    """PR33-F8: IHDR is parsed and PLTE/tRNS placement is enforced."""
+
+    def test_valid_indexed_png_accepted(self) -> None:
+        payload = _png_fixture(
+            [
+                (b"IHDR", INDEXED_IHDR),
+                (b"PLTE", PALETTE),
+                (b"tRNS", b"\x00"),
+                (b"IDAT", IDAT_INDEX),
+                (b"IEND", b""),
+            ]
+        )
+        driver.normalized_bytes(payload, ".png")
+        driver.normalized_bytes(_png_rgb_ok(), ".png")
+
+    @pytest.mark.parametrize(
+        "chunks",
+        [
+            [
+                (b"IHDR", INDEXED_IHDR),
+                (b"IDAT", IDAT_INDEX),
+                (b"PLTE", PALETTE),
+                (b"IEND", b""),
+            ],
+            [(b"IHDR", INDEXED_IHDR), (b"IDAT", IDAT_INDEX), (b"IEND", b"")],
+            [
+                (b"IHDR", GREY_IHDR),
+                (b"PLTE", PALETTE),
+                (b"IDAT", IDAT_GREY),
+                (b"IEND", b""),
+            ],
+            [
+                (b"IHDR", INDEXED_IHDR),
+                (b"PLTE", PALETTE),
+                (b"IDAT", IDAT_INDEX),
+                (b"tRNS", b"\x00"),
+                (b"IEND", b""),
+            ],
+            [
+                (b"IHDR", INDEXED_IHDR),
+                (b"tRNS", b"\x00"),
+                (b"PLTE", PALETTE),
+                (b"IDAT", IDAT_INDEX),
+                (b"IEND", b""),
+            ],
+            [
+                (b"IHDR", RGBA_IHDR),
+                (b"tRNS", b"\x00\x00\x00\x00\x00\x00"),
+                (b"IDAT", IDAT_RGBA),
+                (b"IEND", b""),
+            ],
+            [
+                (b"IHDR", INDEXED_IHDR),
+                (b"PLTE", PALETTE[:4]),
+                (b"IDAT", IDAT_INDEX),
+                (b"IEND", b""),
+            ],
+            [(b"IHDR", IHDR[:12]), (b"IDAT", IDAT_RED), (b"IEND", b"")],
+            [
+                (b"IHDR", struct.pack(">IIBBBBB", 1, 1, 16, 3, 0, 0, 0)),
+                (b"PLTE", PALETTE),
+                (b"IDAT", IDAT_INDEX),
+                (b"IEND", b""),
+            ],
+            [
+                (b"IHDR", struct.pack(">IIBBBBB", 0, 1, 8, 2, 0, 0, 0)),
+                (b"IDAT", IDAT_RED),
+                (b"IEND", b""),
+            ],
+            [
+                (b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 2, 1, 0, 0)),
+                (b"IDAT", IDAT_RED),
+                (b"IEND", b""),
+            ],
+        ],
+        ids=[
+            "plte-after-idat",
+            "indexed-without-plte",
+            "plte-in-greyscale",
+            "trns-after-idat",
+            "trns-before-plte",
+            "trns-with-alpha",
+            "plte-not-multiple-of-3",
+            "short-ihdr",
+            "invalid-depth",
+            "zero-width",
+            "bad-compression",
+        ],
+    )
+    def test_colour_rule_violations_rejected(
+        self, chunks: list[tuple[bytes, bytes]]
+    ) -> None:
+        with pytest.raises(driver.DriverError, match="malformed PNG"):
+            driver.normalized_bytes(_png_fixture(chunks), ".png")
+
+
+class TestApiCensusInvariants:
+    """PR33-F21: uniform rows and the fixed 172 + 3 population."""
+
+    def test_unresolved_row_has_the_resolved_row_schema(
+        self, api_env: ModuleType
+    ) -> None:
+        rows = {row["name"]: row for row in driver.collect_api()["rows"]}
+        # legacy_100 is absent from the fake package; legacy_alpha resolves.
+        assert set(rows["legacy_100"]) == set(rows["legacy_alpha"])
+        assert rows["legacy_100"]["resolved"] is False
+        assert rows["legacy_100"]["callable"] is None
+        assert rows["legacy_100"]["defining_module"] is None
+        assert rows["legacy_100"]["type"] is None
+
+    def test_overlapping_additions_rejected(
+        self, api_env: ModuleType, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        legacy_name = driver._legacy_names()[0]
+        monkeypatch.setattr(
+            driver, "PRIN_ADDITIONS", {legacy_name, "__version__", "core_version"}
+        )
+        with pytest.raises(driver.DriverError, match="172 \\+ 3"):
+            driver.collect_api()
+
+
+def _closure_run(mode: str) -> Path:
+    run = _write_valid_run(mode)
+    driver.check_run_complete(run)
+    return run
+
+
+class TestClosureProvenance:
+    """PR33-F3: closure re-derives the protocol identity from git."""
+
+    def test_draft_protocol_at_recorded_commit_rejected(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        run = _closure_run("api")
+        draft = PROTOCOL_DRAFT.encode("utf-8")
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git(committed=draft))
+        _rewrite_json(
+            run,
+            "api.json",
+            lambda d: d["identity"].update(preregistration_sha256=_sha256(draft)),
+        )
+        with pytest.raises(driver.DriverError, match="not APPROVED"):
+            driver.check_run_complete(run)
+
+    def test_non_utf8_committed_protocol_rejected(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        run = _closure_run("api")
+        undecodable = b"**Status:** APPROVED\xff\n"
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git(committed=undecodable))
+        _rewrite_json(
+            run,
+            "api.json",
+            lambda d: d["identity"].update(preregistration_sha256=_sha256(undecodable)),
+        )
+        with pytest.raises(driver.DriverError, match="UTF-8"):
+            driver.check_run_complete(run)
+
+    def test_non_ancestor_commit_rejected(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        run = _closure_run("api")
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git(merge_base="e" * 40))
+        with pytest.raises(driver.DriverError, match="ancestor"):
+            driver.check_run_complete(run)
+
+    def test_unresolvable_commit_rejected(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        run = _closure_run("api")
+
+        def missing(*args: str) -> bytes:
+            raise subprocess.CalledProcessError(128, ["git", *args])
+
+        monkeypatch.setattr(driver, "_git_bytes", missing)
+        with pytest.raises(driver.DriverError, match="cannot be resolved"):
+            driver.check_run_complete(run)
+
+    def test_real_git_resolves_committed_protocol(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """End to end with real git in a throwaway repository."""
+        import shutil
+
+        git = shutil.which("git")
+        if git is None:
+            pytest.skip("git unavailable")
+
+        def run_git(*args: str) -> str:
+            return subprocess.run(
+                [git, "-c", "core.autocrlf=false", "-c", "commit.gpgsign=false", *args],
+                cwd=workspace,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+
+        run_git("init", "-q")
+        run_git("config", "user.email", "fixture@example.invalid")
+        run_git("config", "user.name", "fixture")
+        _protocol_file(workspace)
+        run_git("add", "record/preregistration.md")
+        run_git("commit", "-q", "-m", "protocol")
+        commit = run_git("rev-parse", "HEAD")
+        monkeypatch.undo()
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (workspace,))
+        monkeypatch.setattr(reproduce, "ALLOWED_MANIFEST_ROOTS", (workspace,))
+        monkeypatch.setattr(driver, "ROOT", workspace)
+        monkeypatch.setattr(
+            driver, "RAW_ROOT", workspace / "benchmarks" / "results" / "EXP-002"
+        )
+        monkeypatch.setattr(driver, "OUTPUT_ROOT", workspace / "generated")
+        monkeypatch.setattr(
+            driver, "PROTOCOL", workspace / "record" / "preregistration.md"
+        )
+        run = _write_valid_run("api", commit)
+        _rewrite_json(
+            run,
+            "api.json",
+            lambda d: d["identity"].update(preregistration_commit=commit),
+        )
+        driver.check_run_complete(run)
+        _rewrite_json(
+            run,
+            "api.json",
+            lambda d: d["identity"].update(preregistration_sha256="f" * 64),
+        )
+        with pytest.raises(driver.DriverError, match="digest"):
+            driver.check_run_complete(run)
+
+
+def _observation_mutations() -> list[tuple[str, str, Any]]:
+    def obs(mutate: Any) -> Any:
+        return lambda d: mutate(d["observations"])
+
+    return [
+        ("api-unit", "api", obs(lambda o: o.update(unit="x"))),
+        ("api-short-expected", "api", obs(lambda o: o["expected_names"].pop())),
+        ("api-row-missing", "api", obs(lambda o: o["rows"].pop())),
+        (
+            "api-row-schema",
+            "api",
+            obs(lambda o: o["rows"][0].pop("callable")),
+        ),
+        ("api-names-non-str", "api", obs(lambda o: o.update(observed_names=[1]))),
+        ("cases-short", "conclusions", obs(lambda o: o["cases"].pop())),
+        (
+            "cases-duplicate-id",
+            "conclusions",
+            obs(lambda o: o["cases"][1].update(case_id=o["cases"][0]["case_id"])),
+        ),
+        (
+            "cases-id-non-str",
+            "conclusions",
+            obs(lambda o: o["cases"][0].update(case_id=["x"])),
+        ),
+        (
+            "cases-observed-non-bool",
+            "conclusions",
+            obs(lambda o: o["cases"][0].update(observed=1)),
+        ),
+        (
+            "cases-missing-key",
+            "conclusions",
+            obs(lambda o: o["cases"][0].pop("operator")),
+        ),
+        (
+            "reference-carries-prin",
+            "reference",
+            obs(lambda o: o.update(implementation="prin")),
+        ),
+        (
+            "prin-carries-reference",
+            "prin",
+            obs(lambda o: o.update(implementation="reference")),
+        ),
+        (
+            "expected-files-changed",
+            "prin",
+            obs(lambda o: o["expected_files"].pop()),
+        ),
+        ("renderer-missing", "repeatability", obs(lambda o: o.pop("renderer"))),
+        (
+            "duplicate-path",
+            "prin",
+            obs(lambda o: o["files"].append(dict(o["files"][0]))),
+        ),
+        (
+            "negative-size",
+            "prin",
+            obs(lambda o: o["files"][0].update(raw_bytes=-1)),
+        ),
+        (
+            "bad-digest",
+            "reference",
+            obs(lambda o: o["files"][0].update(normalized_sha256="z")),
+        ),
+    ]
+
+
+class TestClosureObservations:
+    """PR33-F4: schema/identity checks at closure, never outcome checks."""
+
+    @pytest.mark.parametrize(
+        "mode,mutate",
+        [(mode, mutate) for _, mode, mutate in _observation_mutations()],
+        ids=[label for label, _, _ in _observation_mutations()],
+    )
+    def test_schema_violation_rejected(
+        self, workspace: Path, mode: str, mutate: Any
+    ) -> None:
+        run = _closure_run(mode)
+        _rewrite_json(run, RESULT_NAMES[mode], mutate)
+        with pytest.raises(driver.DriverError, match=r"observations|expected"):
+            driver.check_run_complete(run)
+
+    def test_incomplete_render_stays_admissible(self, workspace: Path) -> None:
+        """An omitted/added publication file is an H3 falsifier, not invalid."""
+        run = _closure_run("prin")
+        _rewrite_json(
+            run,
+            "reproduction.json",
+            lambda d: d["observations"].update(
+                files=[
+                    {
+                        "path": "figures/unexpected.png",
+                        "raw_bytes": 1,
+                        "raw_sha256": "1" * 64,
+                        "normalized_bytes": 1,
+                        "normalized_sha256": "1" * 64,
+                    }
+                ]
+            ),
+        )
+        driver.check_run_complete(run)
+
+
+class TestClosureDirectoryHygiene:
+    """PR33-F23: closure is as strict as reservation about the run path."""
+
+    @pytest.mark.parametrize(
+        "name,payload",
+        [("notes.txt", b"x"), ("stray.bin", b"\x00")],
+        ids=["text", "binary"],
+    )
+    def test_stray_non_json_entry_rejected(
+        self, workspace: Path, name: str, payload: bytes
+    ) -> None:
+        run = _closure_run("api")
+        (run / name).write_bytes(payload)
+        with pytest.raises(driver.DriverError, match="undeclared"):
+            driver.check_run_complete(run)
+
+    def test_subdirectory_rejected(self, workspace: Path) -> None:
+        run = _closure_run("api")
+        (run / "nested").mkdir()
+        with pytest.raises(driver.DriverError, match="undeclared"):
+            driver.check_run_complete(run)
+
+    def test_impossible_utc_stamp_rejected(self, workspace: Path) -> None:
+        run = _write_valid_run(name="RUN-20261345T120000Z-aaaaaaa-api-cpu")
+        with pytest.raises(driver.DriverError, match="real registered time"):
+            driver.check_run_complete(run)
+
+    @_needs_symlink_support
+    def test_symlinked_ancestor_above_raw_root_rejected(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        real = workspace / "real-results"
+        (real / "EXP-002").mkdir(parents=True)
+        link = workspace / "linked-results"
+        link.symlink_to(real, target_is_directory=True)
+        monkeypatch.setattr(driver, "RAW_ROOT", link / "EXP-002")
+        monkeypatch.setattr(result_module, "_ALLOWED_ROOTS", (workspace, real))
+        monkeypatch.setattr(reproduce, "ALLOWED_MANIFEST_ROOTS", (workspace, real))
+        run = _write_valid_run("api")
+        with pytest.raises(driver.DriverError, match="symlink ancestor"):
+            driver.check_run_complete(run)
+
+
+class TestStorageMeasurement:
+    """PR33-F14: an unmeasurable sibling entry is a reported DriverError."""
+
+    def test_unmeasurable_sibling_is_driver_error(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        run = _closure_run("api")
+        sibling = _write_valid_run(
+            "conclusions", name="RUN-20261011T130000Z-aaaaaaa-conclusions-cpu"
+        )
+        original = reproduce.stat_size_and_hash_no_follow
+
+        def measure(path: Path, role: str) -> tuple[int, str]:
+            if sibling in path.parents:
+                raise reproduce.ManifestMismatchError(f"{role} {path} is a symlink")
+            return original(path, role)
+
+        monkeypatch.setattr(driver, "stat_size_and_hash_no_follow", measure)
+        with pytest.raises(driver.DriverError, match="cannot be measured"):
+            driver.check_run_complete(run)
+
+    @_needs_symlink_support
+    def test_real_symlink_in_sibling_is_driver_error(self, workspace: Path) -> None:
+        run = _closure_run("api")
+        sibling = _write_valid_run(
+            "conclusions", name="RUN-20261011T130000Z-aaaaaaa-conclusions-cpu"
+        )
+        outside = workspace / "outside.txt"
+        outside.write_text("x", encoding="utf-8")
+        (sibling / "stray.txt").symlink_to(outside)
+        with pytest.raises(driver.DriverError, match="cannot be measured"):
+            driver.check_run_complete(run)
+
+
+class TestReservationAtomicity:
+    """PR33-F5: no unrecorded RUN directory is ever left behind."""
+
+    def test_reserve_refuses_reused_generated_root_before_mkdir(
+        self, workspace: Path
+    ) -> None:
+        run = driver.RAW_ROOT / _run_name("api")
+        (driver.OUTPUT_ROOT / run.name).mkdir()
+        with pytest.raises(driver.DriverError, match="never reused"):
+            driver._reserve("api", run, SHA)
+        assert not run.exists()
+
+    def test_sidecar_failure_is_recorded_as_aborted(
+        self, admitted: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        def refuse(*args: Any, **kwargs: Any) -> None:
+            raise OSError("sidecar write refused")
+
+        monkeypatch.setattr(driver, "write_json_exclusive", refuse)
+        run_dir = driver.RAW_ROOT / _run_name("api")
+        with pytest.raises(driver.DriverError, match="aborted run retained"):
+            driver.run_registered("api", run_dir, "devin", SHA)
+        result = json.loads((run_dir / "api.json").read_text(encoding="utf-8"))
+        assert result["status"] == "ABORTED"
+        assert "sidecar write refused" in result["abort_reason"]
+        assert (run_dir / "manifest.json").is_file()
+
+    def test_generated_root_creation_failure_is_recorded_as_aborted(
+        self, admitted: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        blocker = admitted / "blocked-output"
+        blocker.write_text("not a directory", encoding="utf-8")
+        monkeypatch.setattr(driver, "OUTPUT_ROOT", blocker)
+        run_dir = driver.RAW_ROOT / _run_name("api")
+        with pytest.raises(driver.DriverError, match="aborted run retained"):
+            driver.run_registered("api", run_dir, "devin", SHA)
+        result = json.loads((run_dir / "api.json").read_text(encoding="utf-8"))
+        assert result["status"] == "ABORTED"
+        assert (run_dir / "campaign-metadata.json").is_file()
+
+
+class TestAdmissionScope:
+    """PR33-F30: the clean-tree guarantee covers the whole checkout."""
+
+    @pytest.mark.parametrize(
+        "dirty",
+        [
+            {"untracked": "DOCS/notes.md\n"},
+            {"untracked": "tests/rogue_test.py\n"},
+            {"shadowing": "json.py\n"},
+            {"shadowing": "sitecustomize.py\n"},
+        ],
+        ids=["docs", "tests", "shadow-json", "shadow-sitecustomize"],
+    )
+    def test_untracked_or_shadowing_file_refused(
+        self,
+        workspace: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        dirty: dict[str, Any],
+    ) -> None:
+        _protocol_file(workspace)
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git(**dirty))
+        with pytest.raises(driver.DriverError, match="uncommitted"):
+            driver.run_registered(
+                "api", driver.RAW_ROOT / _run_name("api"), "devin", SHA
+            )
+
+    def test_committed_bytes_must_match_exactly(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A trailing-newline-only difference was hidden by the old strip()."""
+        _protocol_file(workspace)
+        monkeypatch.setattr(
+            driver,
+            "_git_bytes",
+            _fake_git(committed=PROTOCOL_APPROVED.encode("utf-8") + b"\n"),
+        )
+        with pytest.raises(driver.DriverError, match="committed bytes"):
+            driver.run_registered(
+                "api", driver.RAW_ROOT / _run_name("api"), "devin", SHA
+            )
+
+    def test_real_git_shadow_pathspec_is_top_level_only(self, tmp_path: Path) -> None:
+        """The ``:(glob)*.py`` pathspec matches top-level files, dotfiles too."""
+        import shutil
+
+        git = shutil.which("git")
+        if git is None:
+            pytest.skip("git unavailable")
+        subprocess.run([git, "init", "-q"], cwd=tmp_path, check=True)
+        (tmp_path / "json.py").write_text("", encoding="utf-8")
+        (tmp_path / ".hidden.py").write_text("", encoding="utf-8")
+        (tmp_path / "pkg").mkdir()
+        (tmp_path / "pkg" / "deep.py").write_text("", encoding="utf-8")
+        listing = subprocess.run(
+            [git, "ls-files", "--others", "--", ":(glob)*.py", ":(glob)*.pth"],
+            cwd=tmp_path,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.split()
+        assert sorted(listing) == [".hidden.py", "json.py"]
+
+
+class TestRenderEnvironment:
+    """PR33-F29: the matched font-cache state is recorded."""
+
+    def test_font_cache_state_recorded(self) -> None:
+        state = driver._render_environment()["font_cache"]
+        assert state["name"].startswith("fontlist-v")
+        assert state["sha256"] is None or re.fullmatch(r"[0-9a-f]{64}", state["sha256"])
+
+    def test_missing_cache_is_recorded_not_invented(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setattr(matplotlib, "get_cachedir", lambda: str(tmp_path))
+        assert driver._font_cache_state()["sha256"] is None
+
+
+class TestArchivedTableNormalization:
+    """PR33-F1: archived LF tables gain a normalized digest for E4."""
+
+    def test_reference_crlf_table_matches_lf_archive(self) -> None:
+        archived = b"\\begin{tabular}\nA & B \\\\\n\\end{tabular}\n"
+        rendered = archived.replace(b"\n", b"\r\n")
+        assert _sha256(driver.normalized_bytes(rendered, ".tex")) == _sha256(
+            driver.normalized_bytes(archived, ".tex")
+        )
+
+
+class TestMainReporting:
+    """PR33-F15: every failure reaches the registered NOT COMPLETED line."""
+
+    @pytest.mark.parametrize(
+        "error",
+        [
+            reproduce.ManifestMismatchError("manifest mismatch"),
+            reproduce.ReproductionError("reproduction failure"),
+        ],
+        ids=["manifest-mismatch", "reproduction-error"],
+    )
+    def test_reproduction_errors_are_reported(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: Any,
+        tmp_path: Path,
+        error: Exception,
+    ) -> None:
+        def failing(*args: Any, **kwargs: Any) -> Path:
+            raise error
+
+        monkeypatch.setattr(driver, "run_registered", failing)
+        argv = [
+            "--mode",
+            "api",
+            "--run-dir",
+            str(tmp_path / "run"),
+            "--operator",
+            "devin",
+            "--source-sha",
+            SHA,
+        ]
+        assert driver.main(argv) == 1
+        assert "EXP-002 NOT COMPLETED" in capsys.readouterr().err
+
+
+def test_generated_output_root_is_gitignored() -> None:
+    """PR33-F26: the generated-output root can never be committed silently."""
+    import shutil
+
+    git = shutil.which("git")
+    if git is None:
+        pytest.skip("git unavailable")
+    repository = Path(driver.__file__).resolve().parents[2]
+    probe = "DOCS/test_and_benchmark_results/EXP-002/RUN-x/publication/a.pdf"
+    result = subprocess.run(
+        [git, "check-ignore", "-q", "--no-index", probe],
+        cwd=repository,
+        check=False,
+    )
+    assert result.returncode == 0
+
+
+# ---------------------------------------------------------------------------
+# Self-audit round (cold review of the PR #33 remediation, 2026-10-11).
+# ---------------------------------------------------------------------------
+
+
+def _pdf_with_objects(
+    objects: list[tuple[int, int, bytes]], trailer: bytes = b"/Info 5 0 R"
+) -> bytes:
+    """Classic-xref PDF with explicit (number, generation) objects."""
+    payload = bytearray(b"%PDF-1.4\n%\xff\xfe\n")
+    offsets: list[tuple[int, int, int]] = []
+    for number, generation, value in objects:
+        offsets.append((number, generation, len(payload)))
+        payload += f"{number} {generation} obj\n".encode() + value + b"\nendobj\n"
+    xref = len(payload)
+    payload += b"xref\n"
+    for number, generation, offset in offsets:
+        payload += f"{number} 1\n{offset:010d} {generation:05d} n \n".encode()
+    size = max(number for number, _, _ in objects) + 1
+    payload += (
+        b"trailer\n<< /Size "
+        + str(size).encode()
+        + b" /Root 1 0 R "
+        + trailer
+        + b" >>\nstartxref\n"
+        + str(xref).encode()
+        + b"\n%%EOF\n"
+    )
+    return bytes(payload)
+
+
+class TestSelfAuditPdf:
+    """Cold-review findings on the remediated PDF canonicalization."""
+
+    def test_same_number_other_generation_is_not_info(self) -> None:
+        def build(creator: bytes) -> bytes:
+            return _pdf_with_objects(
+                [
+                    (1, 0, b"<< /Type /Catalog >>"),
+                    (5, 0, b"<< /Producer (x) >>"),
+                    (5, 1, b"<< /Creator (" + creator + b") >>"),
+                ]
+            )
+
+        assert driver.normalized_bytes(build(b"PRIN"), ".pdf") != (
+            driver.normalized_bytes(build(b"reference"), ".pdf")
+        )
+
+    def test_flush_hex_value_before_close_is_accepted(self) -> None:
+        flush = _pdf_with_objects(
+            [(1, 0, b"<< /Type /Catalog >>"), (5, 0, b"<< /Creator (A) /X <AB>>>")]
+        )
+        spaced = _pdf_with_objects(
+            [(1, 0, b"<< /Type /Catalog >>"), (5, 0, b"<< /X <AB> >>")]
+        )
+        assert driver.normalized_bytes(flush, ".pdf") == (
+            driver.normalized_bytes(spaced, ".pdf")
+        )
+
+    @pytest.mark.parametrize(
+        "trailer",
+        [
+            b"/Info 5 0 R /Note (see /Info 1 0 R)",
+            b"/Info 5 0 R /Root 1 0 R",
+        ],
+        ids=["info-inside-string", "repeated-root"],
+    )
+    def test_repeated_structural_key_rejected(self, trailer: bytes) -> None:
+        payload = _pdf_with_objects(
+            [(1, 0, b"<< /Type /Catalog >>"), (5, 0, b"<< /Creator (A) >>")],
+            trailer,
+        )
+        with pytest.raises(driver.DriverError, match="classic-xref"):
+            driver.normalized_bytes(payload, ".pdf")
+
+
+class TestSelfAuditPng:
+    """PLTE and tRNS lengths must fit the declared colour type and depth."""
+
+    @pytest.mark.parametrize(
+        "chunks",
+        [
+            [
+                (b"IHDR", struct.pack(">IIBBBBB", 1, 1, 1, 3, 0, 0, 0)),
+                (b"PLTE", b"\x00" * 9),
+                (b"IDAT", zlib.compress(b"\x00\x00")),
+                (b"IEND", b""),
+            ],
+            [
+                (b"IHDR", INDEXED_IHDR),
+                (b"PLTE", PALETTE),
+                (b"tRNS", b"\x00\x00\x00"),
+                (b"IDAT", IDAT_INDEX),
+                (b"IEND", b""),
+            ],
+            [
+                (b"IHDR", GREY_IHDR),
+                (b"tRNS", b"\x00"),
+                (b"IDAT", IDAT_GREY),
+                (b"IEND", b""),
+            ],
+            [
+                (b"IHDR", IHDR),
+                (b"tRNS", b"\x00\x00"),
+                (b"IDAT", IDAT_RED),
+                (b"IEND", b""),
+            ],
+        ],
+        ids=[
+            "palette-exceeds-depth",
+            "trns-exceeds-palette",
+            "grey-trns-length",
+            "rgb-trns-length",
+        ],
+    )
+    def test_length_violations_rejected(
+        self, chunks: list[tuple[bytes, bytes]]
+    ) -> None:
+        with pytest.raises(driver.DriverError, match="malformed PNG"):
+            driver.normalized_bytes(_png_fixture(chunks), ".png")
+
+
+class TestSelfAuditAdmissionAndClosure:
+    def test_only_new_exp002_raw_files_are_exempt(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Other campaigns' raw roots and tracked raw records are not exempt."""
+        _protocol_file(workspace)
+        seen: list[tuple[str, ...]] = []
+        fake = _fake_git(untracked="benchmarks/results/EXP-001/stray.json\n")
+
+        def recording(*args: str) -> bytes:
+            seen.append(args)
+            return fake(*args)
+
+        monkeypatch.setattr(driver, "_git_bytes", recording)
+        with pytest.raises(driver.DriverError, match="uncommitted"):
+            driver.run_registered(
+                "api", driver.RAW_ROOT / _run_name("api"), "devin", SHA
+            )
+        diff = next(args for args in seen if args[0] == "diff")
+        assert not any("benchmarks/results" in arg for arg in diff)
+
+    def test_git_timeout_at_closure_is_driver_error(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        run = _closure_run("api")
+
+        def hung(*args: str) -> bytes:
+            raise subprocess.TimeoutExpired(["git", *args], 30)
+
+        monkeypatch.setattr(driver, "_git_bytes", hung)
+        with pytest.raises(driver.DriverError, match="cannot be resolved"):
+            driver.check_run_complete(run)

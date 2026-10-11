@@ -1,0 +1,188 @@
+I'll read the task file first.I'll read the review text and all primary files in parallel.I have the first chunks. Now reading the remaining portions of all files in parallel.I have most of the core code. Now I need the tail of `run_registered`/`main()` in the driver, `verify_manifest`/`run_reproduction`/`main` in reproduce.py, plus targeted greps for several claims.Key structures confirmed. Now let me check the preregistration §5.4 for the "font-cache" claim (K15), and scan the review text for the original claim phrasings — especially K17 and the `newline=""` claim.Nearly all claims are verified. Let me check the remaining details: the original K4/K11 claim phrasing in the review, whether the driver asserts `len(expected)`, and the preregistration §5.4 text.All claims verified against the code at HEAD. Here is the full report.
+
+---
+
+# Read-only verification report — PR #33 driver/test claims
+
+Repository: `C:\dev\PRIN` (HEAD `78d3600`). Method: static reads only; no commands executed, no files modified. All line numbers are from my own reads, not the reviewers'.
+
+## K1 — Reference `.tex` writer uses default text-mode newline (CRLF on Windows); PRIN uses `newline="\n"`; driver returns `.tex` unchanged. Any `newline=""` in reference? No.
+
+**Verdict: CONFIRMED** (and the prior Devin CLI `newline=""` claim is **refuted** — no `newline=` argument exists anywhere in the reference writer).
+
+- `DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/utils/table_generation.py:62-63` — `with open(path, "w", encoding="utf-8") as f:` / `f.write(content)`. No `newline=` argument, so Windows text mode translates `\n` → CRLF. A full-file search for `newline` in that file returns zero matches; the claimed `newline=""` does not exist.
+- `python/prin/reporting/table_generation.py:49` — `path.write_text(content, encoding="utf-8", newline="\n")` (LF preserved on every platform).
+- `benchmarks/campaign/exp002_driver.py:702-703` — `if suffix == ".tex": return payload` (payload returned unchanged; no newline canonicalization).
+
+Reason: reference bytes and PRIN bytes can differ by line-ending alone on Windows, and the driver compares them without `.tex` normalization — a real asymmetric comparison hazard.
+
+## K2 — PRIN `_save_fig` passes PDF metadata (Creator/Producer/CreationDate/ModDate); reference `savefig` passes none; `_normalized_pdf` substitutes only those four Info values.
+
+**Verdict: CONFIRMED.**
+
+- `python/prin/reporting/figure_generation.py:127-136` — `metadata = {"Creator": "PRIN", "Producer": "Matplotlib", "CreationDate": _FIXED_DATE, "ModDate": _FIXED_DATE}` then `fig.savefig(path, format=fmt, metadata=metadata)`.
+- `DOCS/.../prinet/utils/figure_generation.py:134` — `fig.savefig(str(p), format=fmt)`; the token `metadata` does not appear anywhere in the reference file.
+- `benchmarks/campaign/exp002_driver.py:626-631` — `re.sub(rb"/(CreationDate|ModDate|Creator|Producer)\s+\((?:\\.|[^\\)])*\)", rb"/\1 (normalized)", segment)` applied only when `number == info_number`.
+
+Reason: the normalizer rewrites values of four keys inside the referenced Info object and nothing else — a key absent in one arm stays absent, an extra key (e.g. `/Title`) stays extra, and fixed `(normalized)` substitution cannot re-flow the original line wrapping. This matches the claim's limitations exactly.
+
+## K3 — `check_run_complete` shape-checks `preregistration_sha256`/`preregistration_commit` only; `approval_date_utc` is written and never read.
+
+**Verdict: CONFIRMED.**
+
+- `exp002_driver.py:994-999` — `re.fullmatch(r"[0-9a-f]{64}", str(identity.get("preregistration_sha256", "")))` and `re.fullmatch(r"[0-9a-f]{40}", str(identity.get("preregistration_commit", "")))` — regex shape only. Contrast `:993` `identity.get("input_manifest_sha256") != INPUT_MANIFEST_SHA` and `:1000` `identity.get("input_record_count") != 172`, which are value-checked.
+- `exp002_driver.py:877` — `"approval_date_utc": approval.group(1)` (written by `_admission`). The only other repo occurrence is `tests/test_exp002_driver.py:318`, where it is *set* in a fixture, not asserted; `check_run_complete` never reads it.
+
+Reason: closure accepts any hash-shaped provenance pair and never requires or validates the approval date — the record is not bound to the protocol that authorized the run.
+
+## K4 — `check_run_complete` never inspects `observations`.
+
+**Verdict: CONFIRMED.**
+
+- `exp002_driver.py:975-1036` — the function reads `metadata`, `environment`, `config`, `identity`, `status`, `seed_used`, and `config.out_dir`; the token `observations` does not appear in `check_run_complete` (its only occurrences are at `:1119-1128`, where `run_registered` *writes* `payload["observations"]`).
+
+Reason: existence, type, mode-specific keys, and `observations.implementation` versus the mode label are all unchecked — a `COMPLETED` envelope with a missing/wrong-mode observations payload is admissible at closure.
+
+## K5 — `_reserve` mkdir precedes the generated-output-root reuse guard; `generated.mkdir` and the sidecar write are outside the try/ABORTED block.
+
+**Verdict: CONFIRMED.**
+
+- `exp002_driver.py:1077` — `run = _reserve(mode, run_dir, source_sha)` (the `run.mkdir()` inside `_reserve` at `:897` fires here).
+- `exp002_driver.py:1079-1081` — `if generated.exists() or generated.is_symlink(): raise DriverError(...)` then `generated.mkdir(parents=True)` — the guard runs after the raw directory already exists.
+- `exp002_driver.py:1085-1096` — `write_json_exclusive(run / "campaign-metadata.json", ...)` — also before the try.
+- `exp002_driver.py:1115` — `try:` only begins here; `except Exception` at `:1132` is what records `ABORTED`.
+
+Reason: a collision on `generated` (or a failure in `generated.mkdir`/the sidecar write) raises before the try, leaving an empty, unrecorded, non-reusable RUN directory under the append-only raw root.
+
+## K6 — `REQUIRED_BUNDLE` omits exactly six manifest entries; no manifest ⊆ REQUIRED_BUNDLE assertion.
+
+**Verdict: CONFIRMED.** Counted myself: `REQUIRED_BUNDLE` = **77** entries (16 pre-full-gate at `tests/test_0159_manifest.py:36-51`, 47 full-gate at `:59-105`, 14 final-6314532 at `:111-124`); `SHA256SUMS.txt` = **81** entries (80 under `verification/` plus `../entry-state.json`). Removing the 2 unhashed-by-design (`README.md`, `verification/SHA256SUMS.txt`) gives 75 required-hashed; 81 − 75 = 6 manifest entries absent from `REQUIRED_BUNDLE`, exactly:
+
+- `final-6314532/08-manifest-tests-postpackage.log` (SHA256SUMS:23)
+- `final-6314532/08b-snyk-manifest-test.log` (:24)
+- `final-6314532/09-sphinx-postchangelog.log` (:25)
+- `final-6314532/10-sphinx-final-fullcapture.log` (:26)
+- `final-6314532/11-manifest-tests-final.log` (:27)
+- `final-6314532/sast-e-copy-attestation.txt` (:32)
+
+Subset check: **none.** `test_manifest_entries_cover_required_files` (`tests/test_0159_manifest.py:167-173`) asserts only `REQUIRED_BUNDLE − _UNHASHED ⊆ manifest entries` plus disjointness from unhashed; `test_manifest_covers_every_evidence_file`/`test_every_hashed_evidence_file_is_tracked_by_git` compare against the filesystem/Git index, not `REQUIRED_BUNDLE`. Deleting one of the six files together with its manifest line passes every test.
+
+## K7 — `_pdf_parts` converts unbounded decimal captures with `int()` and does not translate `ValueError` to `DriverError`.
+
+**Verdict: CONFIRMED.**
+
+- `exp002_driver.py:526` `offset = int(footer.group(1))` (startxref); `:539` `first, count = (int(value) for value in subsection.groups())`; `:553-556` `int(generation)`/`int(position)`; `:569` `int(size.group(1))` (/Size); `:573` `int(root.group(1)), int(root.group(2))` (/Root); `:579` `int(info.group(1)), int(info.group(2))` (/Info).
+
+Reason: every capture pattern is unbounded `[0-9]+`; Python's 4300-digit `int()` conversion limit makes `ValueError` reachable on adversarial input, and no `try`/`except` wraps any conversion. (`main()` catches `ValueError` at `:1171`, so it exits — but as the wrong exception type, escaping the `DriverError` contract.)
+
+## K8 — `_validate_png` does not reject PLTE after the first IDAT and never parses IHDR data.
+
+**Verdict: CONFIRMED.**
+
+- `exp002_driver.py:636-685` validates signature, chunk framing/CRC (`:652-657`), chunk-kind rules (`kind[2] & 32` reserved bit, critical-chunk allowlist), IHDR-first/exactly-once (`:665-667`), IDAT presence and consecutiveness (`:668`, `:674-676`), IEND-last/once, and `chunks.count(b"PLTE") > 1` (`:671`).
+
+Reason: `data` is read only for the CRC; IHDR contents are never decoded, so no color-type-dependent rule can fire, and no check compares `chunks.index(b"PLTE")` against `data_indices[0]` — a PLTE placed after the first IDAT passes the manual validator.
+
+## K9 — `ManifestMismatchError` escapes `main()`'s catch list and can be raised by `verify_manifest`/`append_manifest` outside `run_registered`'s try.
+
+**Verdict: CONFIRMED.**
+
+- Hierarchy (`tools/reproduce.py:68-81`): `ManifestMismatchError → ReproductionError → Exception`. It is **not** a `ValueError` — unlike sibling classes `ReproductionConfigurationError(ReproductionError, ValueError)` and `ManifestFormatError(ReproductionError, ValueError)`.
+- `exp002_driver.py:1171` — `except (DriverError, OSError, ValueError, subprocess.SubprocessError)`: `ManifestMismatchError` is none of these.
+- Outside-try raisers: `append_manifest(run, run / "manifest.json")` at `exp002_driver.py:1145` and `check_run_complete(run)` at `:1148` (→ `verify_manifest` at `:940`) both follow the `try`/`except` ending at `:1135`; both raise `ManifestMismatchError` on manifest defects.
+
+Reason: an unhandled `ManifestMismatchError` propagates out of `main()` itself — an uncaught traceback rather than the `EXP-002 NOT COMPLETED` exit-1 path.
+
+## K10 — `_storage_check` sizes every file under `RAW_ROOT`, so a damaged sibling run can fail an unrelated closure.
+
+**Verdict: CONFIRMED.**
+
+- `exp002_driver.py:903-920` — `size(RAW_ROOT)` (`:914`) iterates `root.rglob("*")` over the whole EXP-002 raw tree, plus `size(PROTOCOL.parent)` and every `EXP-*` sibling at `:916-918`, calling `stat_size_and_hash_no_follow` per file (`:906`).
+- `tools/reproduce.py:613-646` — `stat_size_and_hash_no_follow` → `_open_no_follow`, which raises `ManifestMismatchError` (symlink/non-regular, `:389-401`, `:315-343`) and `OSError` (unreadable/unopenable file, plus `os.fstat`/`os.fdopen` failures).
+
+Reason: closure of run A hashes every file of sibling run B; an unreadable, symlinked, or non-regular file anywhere under `RAW_ROOT` (or under `PROTOCOL.parent`/`EXP-*`) aborts the unrelated closure — and note the `ManifestMismatchError` variant additionally escapes `main()` per K9.
+
+## K11 — `collect_api` error-branch row lacks `callable`/`defining_module`/`type`; no `len(expected) == 175`/disjointness check in the driver.
+
+**Verdict: CONFIRMED** (for the driver; caveat: the unit test does assert cardinality).
+
+- `exp002_driver.py:254-261` — success row has `name, resolved, callable, defining_module, type, error`; `:263` — `except AttributeError` row is `{"name": name, "resolved": False, "error": str(exc)}` (then `legacy`/`ownership_present` are added to both at `:264-267` → 8-key vs 5-key rows).
+- `exp002_driver.py:225` — `expected = legacy | PRIN_ADDITIONS` with no `len(expected) == 175` assertion and no `PRIN_ADDITIONS ∩ legacy = ∅` check anywhere in the driver (`_legacy_names` enforces 172 unique legacy names at `:203-209` only).
+- Caveat: `tests/test_exp002_driver.py:537` does `assert len(expected) == 175` and `:575` asserts `rows["__version__"]["legacy"] is False` — the test suite covers the count, but `collect_api` itself does not.
+
+Reason: error rows are schema-non-uniform with success rows, and a hypothetical overlap between `PRIN_ADDITIONS` and legacy would silently shrink `expected` below 175 inside the driver.
+
+## K12 — No `strptime` of run-name UTC in `check_run_complete`; symlink checks only on `run_dir` and `RAW_ROOT` (not ancestors); `verify_manifest` inventories only `*.json`.
+
+**Verdict: CONFIRMED.**
+
+- `exp002_driver.py:932-939` — `check_run_complete` does `RUN_PATTERN.fullmatch`, parent equality, `run_dir.is_symlink()` (`:936`), `RAW_ROOT.is_symlink()` (`:937`). `datetime.strptime` occurs only at `:832` (`_admission`) and `:892` (`_reserve`) — never here; `_no_symlink_ancestors` is likewise not called (used only at `:753`, `:893`, `:1076`).
+- `tools/reproduce.py:975` — `candidates = sorted(results.glob("*.json"))`: stray non-JSON files in a run dir are never inventoried, and `exp002_driver.py:963`'s `set(inventory)` comparison is over manifest records, not directory contents.
+
+Reason: a run named `RUN-99999999T999999Z-…` (invalid date but regex-valid) passes the name check at closure; a symlinked ancestor above `RAW_ROOT` (e.g. `benchmarks/results`) passes both symlink checks; a stray `notes.txt`/`evil.bin` inside a run dir is invisible to verification.
+
+## K13 — `_admission` untracked scan pathspec omits repo root.
+
+**Verdict: CONFIRMED.**
+
+- `exp002_driver.py:848-860` — `git ls-files --others --exclude-standard -- "crates" "python" "benchmarks" "parity" "tools" "paper" <protocol_relative>`.
+
+Reason: the untracked-source scan covers only those six directory pathspecs plus the protocol file, so an untracked import-shadowing file at the repo root (`sitecustomize.py`, `json.py`, a `.pth`) would not be detected. (The *tracked-modification* scan at `:839-847` does use `-- .` and would catch modifications anywhere, but that is a different check.)
+
+## K14 — TOCTOU: `_no_symlink_ancestors(OUTPUT_ROOT)` checked before `generated.mkdir(parents=True)` with no re-check.
+
+**Verdict: CONFIRMED.**
+
+- `exp002_driver.py:1076` — `_no_symlink_ancestors(OUTPUT_ROOT)`; `:1081` — `generated.mkdir(parents=True)`. Nothing re-walks `OUTPUT_ROOT`'s ancestors between the check and the create (nor between the check and the later writes inside the run).
+
+Reason: the symlink-ancestor guarantee is check-then-use on the same pattern the codebase itself flags elsewhere (CWE-59); the only later ancestor walk is on the leaf `output` inside `collect_reproduction` (`:753`), not on `OUTPUT_ROOT` at create time. (Impact is bounded by the documented governed-checkout threat model, but the code fact is exactly as claimed.)
+
+## K15 — `_render_environment` logs versions and font digests but no font-cache state, though preregistration §5.4 names it.
+
+**Verdict: CONFIRMED.**
+
+- `exp002_driver.py:717-729` — `_render_environment` returns `matplotlib`, `numpy`, `pillow`, `freetype`, `backend`, and `font_sha256` digests of `*.ttf` files only. The pre/post comparison at `:804` (`renderer != _render_environment()`) re-checks the same six keys.
+- `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md:263-264` — "Use matched Python/Matplotlib/NumPy versions, Agg renderer, font files and **font-cache state** for both implementations."
+
+Reason: font-cache state is a registered matched control that is neither captured nor compared anywhere in the driver.
+
+## K16 — `_snapshot`/`collect_conclusions` index dicts directly instead of raising `DriverError`.
+
+**Verdict: CONFIRMED** (mechanism nuance: `collect_conclusions` raises `KeyError`; `_snapshot`'s analogous escape is `json.JSONDecodeError`).
+
+- `collect_conclusions`: direct indexing throughout — `document(0)["bimodality_coefficient"]` (`:331`), `bc["raw_values"]`/`bc["n_sequences"]` (`:333`), `document(1)["grid"]` (`:347`), `row["K"]`/`row["alpha"]`/`row["chimera_detected"]`/`row["bc_mean"]` (`:353-365`), `document(2)["sweep"]` (`:374`), `row["n_oscillators"]`/`row["bc_stats"]`/`stats["mean"]` (`:378-388`), `document(3)["topologies"]` (`:396`), `row["bc_ci"]["ci_width"]` (`:401`), `rows["ring"]["bc_mean"]` (`:410`), `document(4)["zones"]` (`:439`), `zones[f"{name}_cpu"]` (`:441`), `row["device"]`/`row["regime"]` (`:445`), `cpu["csr"]["zone_width"]` (`:454`), `cpu["full"]["K_c"]` (`:466`). Any missing key propagates `KeyError`, not `DriverError`.
+- `_snapshot` (`:475-504`) does not index dict keys (records are dataclass attributes, and `documents[record.path]` is a write), but `json.loads(payload)` at `:495` raises `json.JSONDecodeError` — a `ValueError`, also not `DriverError`.
+
+Reason: both functions escape the `DriverError` contract on malformed/missing input; `collect_conclusions` does so via `KeyError` exactly as claimed, `_snapshot` via `JSONDecodeError`.
+
+## K17 — `expected_tail`/`stored_parts[-4:]` drive-letter dependence spot check.
+
+**Verdict: the prior dependence claim is REFUTED — the check is location-independent.**
+
+- `exp002_driver.py:986` — `expected_tail = (*RAW_ROOT.parts[-3:], run_dir.name)`; `:981-985` — `stored_parts = PurePosixPath(stored_out.replace("\\", "/")).parts`; `:1013` — `stored_parts[-4:] != expected_tail`.
+
+Reason: `RAW_ROOT.parts[-3:]` counts from the end, so it is always `('benchmarks', 'results', 'EXP-002')` for any checkout whose raw root keeps that registered tail — regardless of drive letter or checkout depth. `stored_parts[-4:]` compares only the last four components of the stored `out_dir`; fewer than four components or a divergent tail fails closed. The comparison is drive-letter/location independent, so the refutation stands.
+
+---
+
+## Summary table
+
+| Claim | Verdict | Evidence |
+|---|---|---|
+| K1 | CONFIRMED (prior `newline=""` claim refuted) | ref `table_generation.py:62-63` (no `newline` anywhere); PRIN `table_generation.py:49` `newline="\n"`; driver `:702-703` `.tex` passthrough |
+| K2 | CONFIRMED | PRIN `figure_generation.py:127-136` metadata; ref `figure_generation.py:134` bare `savefig`; driver `:626-631` four-key value substitution only |
+| K3 | CONFIRMED | `exp002_driver.py:994-999` regex-only; `approval_date_utc` written `:877`, read nowhere |
+| K4 | CONFIRMED | `check_run_complete` `:923-1036`; `observations` only written `:1128`, never read |
+| K5 | CONFIRMED | `_reserve` `:1077` (mkdir `:897`) precedes guard `:1079-1080`; `generated.mkdir` `:1081`, sidecar `:1085-1096` before `try:` `:1115` |
+| K6 | CONFIRMED | `REQUIRED_BUNDLE`=77 (`test_0159_manifest.py:35-125`), manifest=81 (`SHA256SUMS.txt:1-81`); six named files omitted; no manifest⊆REQUIRED_BUNDLE assertion (`:167-173` is one-directional) |
+| K7 | CONFIRMED | `int()` on unbounded captures `:526, :539, :553-556, :569, :573, :579`; no ValueError→DriverError translation |
+| K8 | CONFIRMED | `_validate_png` `:636-685`: no PLTE-vs-IDAT position check, IHDR data never decoded |
+| K9 | CONFIRMED | `ManifestMismatchError→ReproductionError→Exception` (`reproduce.py:68-81`); `main()` catch `:1171`; outside-try raisers `:1145`, `:1148`→`reproduce.py:940` |
+| K10 | CONFIRMED | `_storage_check` `:903-920` rglobs all of `RAW_ROOT`; `stat_size_and_hash_no_follow` raises `ManifestMismatchError`/`OSError` (`reproduce.py:613-646`) |
+| K11 | CONFIRMED | success row `:254-261` (6 keys) vs error row `:263` (3 keys); no `len(expected)==175`/disjoint check in driver (test asserts count at `test_exp002_driver.py:537`) |
+| K12 | CONFIRMED | no `strptime` in `check_run_complete` (only `:832`, `:892`); symlink checks `:936-937` non-ancestral; `verify_manifest` `glob("*.json")` `reproduce.py:975` |
+| K13 | CONFIRMED | untracked pathspec `:848-860` limited to crates/python/benchmarks/parity/tools/paper+protocol |
+| K14 | CONFIRMED | `_no_symlink_ancestors(OUTPUT_ROOT)` `:1076` → `generated.mkdir` `:1081`, no re-check |
+| K15 | CONFIRMED | `_render_environment` `:717-729` (versions+font digests only); preregistration `§5.4` lines 263-264 names "font-cache state" |
+| K16 | CONFIRMED | `collect_conclusions` `KeyError` paths throughout (`:331-471`); `_snapshot` escapes via `json.JSONDecodeError` at `:495` rather than KeyError — same non-DriverError defect |
+| K17 | Prior claim REFUTED (check is location-independent) | `expected_tail` `:986` uses `parts[-3:]` tail; `stored_parts[-4:]` `:1013` compares tails only — fails closed, drive/depth agnostic |

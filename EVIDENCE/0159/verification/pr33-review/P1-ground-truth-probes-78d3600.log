@@ -1,0 +1,36 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/probes/probe_ground_truth.py C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/wt-78d3600
+CWD: C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/wt-78d3600
+SOURCE: 78d360029028c0571bdc272bef39e901c85f09da (clean detached worktree, pre-remediation driver)
+UTC-START: 2026-10-11T20:34:59Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+[P1 ref bytes/CRLF] (46, 3)
+[P1 prin bytes/CRLF] (43, 0)
+[P1 normalized equal] False
+[P1 equal after CRLF->LF only] True
+[P1 archived tables count / any CR byte (bytes only, no content compared)] (11, False)
+[P2 normalized equal (real writers, synthetic figure)] False
+[P2 ref Info] b"33 0 obj\n<< /Creator (Matplotlib v3.11.1, https://matplotlib.org)\n/Producer (Matplotlib pdf backend v3.11.1)\n/CreationDate (D:20261011173503-03'00') >>\nendobj\n"
+[P2 prin Info] b'33 0 obj\n<< /Creator (PRIN) /Producer (Matplotlib)\n/CreationDate (D:20000101000000Z) /ModDate (D:20000101000000Z) >>\nendobj\n'
+[P2 same keys, different lengths -> normalized equal] False
+[P2 short Info] b"33 0 obj\n<< /Creator (A) /Producer (B) /CreationDate (D:20261011173503-03'00') >>\nendobj\n"
+[P2 long Info] b"33 0 obj\n<< /Creator (AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)\n/Producer (BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB)\n/CreationDate (D:20261011173503-03'00') >>\nendobj\n"
+[P4 oversized startxref raises] ValueError
+[P5 PLTE before IDAT] ACCEPTED
+[P5 PLTE after IDAT] ACCEPTED
+[P6 ManifestMismatchError mro] ['ManifestMismatchError', 'ReproductionError', 'Exception', 'BaseException', 'object']
+[P6 ManifestMismatchError caught by main] False
+[P6 ManifestFormatError mro] ['ManifestFormatError', 'ReproductionError', 'ValueError', 'Exception', 'BaseException', 'object']
+[P6 ManifestFormatError caught by main] True
+[P6 ReproductionError mro] ['ReproductionError', 'Exception', 'BaseException', 'object']
+[P6 ReproductionError caught by main] False
+[P7 fabricated prereg digest/commit, no approval date, NO observations] ACCEPTED
+[P8 reference-mode run carrying implementation=prin] ACCEPTED
+[P9 closure of untouched run with damaged sibling manifest] ACCEPTED
+[P9b closure with hard-linked file in sibling] ACCEPTED
+[P3 run_registered with colliding output root raises] DriverError: generated-output run root is never reused
+[P3 orphan RUN dir exists / contents] (True, [])
+----
+ELAPSED_SECONDS: 5.5
+EXIT_CODE: 0

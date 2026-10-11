@@ -325,8 +325,16 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   arms, admission, reservation, storage caps and closure. Negative cases are
   parametrized defect-catching fixtures. No test reads archived PRINet 3.0
   inputs, imports the real reference generators, renders the 172-record
-  manifest, or executes an EXP-002 leg; the protocol stays DRAFT.
+  manifest, or executes an EXP-002 leg; the protocol stays DRAFT. The PR #33
+  review round (`PR33-F*`, `DOCS/audits/PR033-multi-review-audit.md`) added
+  table CRLF and PDF Info-dictionary canonicalization cases (one renders a
+  synthetic Matplotlib figure, not a registered input), oversized-decimal
+  and PNG colour-rule rejections, closure provenance checks against a fake
+  and a throwaway real git repository, closure observation-schema,
+  directory-hygiene and storage-measurement cases, reservation atomicity,
+  whole-checkout admission, and `main()` reporting of reproduction errors.
 - `test_0159_manifest.py` — session-0159 evidence-bundle manifest tests that
+  require the manifest to equal `REQUIRED_BUNDLE` exactly (PR33-F6) and
   reuse the `test_ea007_manifest.py` validators against `EVIDENCE/0159/`
   (same verification directory, same unhashed-by-design exemptions, a
   0159-prefixed Git-tracking lookup, plus controlled negative fixtures for

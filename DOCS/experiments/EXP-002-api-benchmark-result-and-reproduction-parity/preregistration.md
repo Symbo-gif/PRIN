@@ -3,6 +3,7 @@
 **Status:** DRAFT
 **Authors:** MichaelMaillet (maintainer); Devin (AI pair of record, drafting)
 **Date:** 2026-10-11 UTC
+**Pre-E2 amendments:** section 11 (PR #33 review remediation, 2026-10-11 UTC)
 **Maintainer approval:** NOT GRANTED - reserved for session 0160
 **Code version:** `prin-core 1.0.0rc1` / Rust `1.0.0-rc1`
 **Source baseline:** `da53ea11a3f38cd0d5c27c40bbefbeaf6d6dbf53`
@@ -95,11 +96,15 @@ Changes to the baseline follow campaign section 10.2 and are reported at E5.
   list has exactly 175 entries and no duplicates, removals or additions;
   the frozen-contract missing and extra sets are both empty.
 - **H2 - Historical conclusion preservation:** all 62 registered elementary
-  direction/threshold predicates in section 5.2 agree with their independent
-  historical predictions. Zero disagreements are allowed.
+  direction/threshold predicates in section 5.2 agree with their registered
+  historical predictions: independent published claims for C01 and C03-C05,
+  and for C02 each grid row's previously stored `chimera_detected`
+  classification (archival self-consistency, not an independent
+  prediction; section 3). Zero disagreements are allowed.
 - **H3 - Publication fidelity:** one PRIN render and an independent frozen
   reference-generator render produce the exact 39-file publication inventory;
-  all 11 table byte strings and all 28 normalized figure byte strings agree.
+  all 11 line-terminator-canonical table byte strings and all 28 normalized
+  figure byte strings agree (section 5.4).
 - **H4 - Deterministic reproduction:** two separate PRIN render processes,
   including the campaign replicate-0 rerun, produce the same 39 filenames,
   raw byte sizes and raw SHA-256 digests, and identical canonical scientific
@@ -214,7 +219,7 @@ operator, independent expected Boolean, observed Boolean and units.
 |---|---|---:|---|
 | C01 | `phase1_chimera_seeds.json`: each indexed `bimodality_coefficient.raw_values[i] > 0.555`, i=0..4 | 5 | Each true; `paper/main.tex` section `sec:chimera`: all five sequences exceed the published BC threshold |
 | C02 | `benchmark_y4q1_3_k_alpha_sensitivity.json`: each of the 42 distinct `(K,alpha)` rows, `bc_mean > 0.555` | 42 | Equal to that row's previously stored `chimera_detected` Boolean; the historical Fig. 4 threshold/contour classification, not a newly selected favorable region |
-| C03 | `phase2_chimera_nsweep.json`: `sweep` rows labelled N=128/256/512/1024, `bc_stats.mean > 0.5` | 4 | Each true; `paper/main.tex` Analysis, "Chimera as computational primitive", strength persists above 0.5 at all four sizes |
+| C03 | `phase2_chimera_nsweep.json`: the four `sweep` rows whose `n_oscillators` is 128/256/512/1024, `bc_stats.mean > 0.5` | 4 | Each true; `paper/main.tex` Analysis, "Chimera as computational primitive", strength persists above 0.5 at all four sizes |
 | C04 | `y4q1_8_topology_comparison.json`: ring `bc_mean` greater than each community mean (2 predicates); ring `bc_ci.ci_width` greater than each community width (2); 2community width greater than 4community width (1) | 5 | Each true; `paper/supplementary.tex` table `tab:topology`: ring highest mean/widest interval, 4-community narrowest. No ordering of the two rounded community means is asserted |
 | C05 | `y3q49_goldilocks_zones.json`: only `csr_cpu`, `full_cpu`, `mean_field_cpu`, `sparse_knn_cpu`; CSR `zone_width` greater than each other width (3); full `K_c` less than each other onset (3) | 6 | Each true; Supplementary table `tab:goldilocks` and coupling-mode heuristic, CSR widest operating zone and full lowest onset. The CPU entries, not CUDA entries, are the registered archival comparator |
 
@@ -261,8 +266,9 @@ to call a report-rendering exercise the full PRIN benchmark re-run.
 ### 5.4 Publication census, reference arm and comparison
 
 Use matched Python/Matplotlib/NumPy versions, Agg renderer, font files and
-font-cache state for both implementations. Log exact versions and font-file
-digests before rendering. The reference arm imports the frozen `prinet`
+font-cache state for both implementations. Log exact versions, font-file
+digests and the Matplotlib font-cache file digest before rendering; a change
+during generation aborts the run. The reference arm imports the frozen `prinet`
 publication modules, verifies their source paths/digests, and calls only
 their figure/table generators with explicit snapshot and output paths.
 It never calls a reference benchmark/training entry point.
@@ -307,15 +313,28 @@ tab_supercritical
 tab_geometry
 ```
 
-H3 compares tables as raw bytes, including their LF line endings. PNG
+H3 compares tables after line-terminator canonicalization only: every CRLF
+pair becomes LF, identically in both arms and in the archived baseline. The
+pinned reference writer opens each table in text mode with no `newline=`
+argument, so the Windows I/O layer writes CRLF, while PRIN's writer passes
+`newline="\n"`; the line terminator is a property of the host I/O layer, not
+of the generated table. A lone CR, all other whitespace and every content
+byte stay significant, raw sizes/digests are recorded unchanged, and H4
+compares raw bytes. PNG
 comparison retains IHDR/PLTE/tRNS/IDAT/IEND under the existing
 `normalize_matplotlib_output` policy, after CRC, critical-chunk and
 decoded-image validation. PDF comparison admits the registered Matplotlib
 single-revision classic-xref container, validating its EOF/startxref,
 cross-reference entries, object boundaries and Root/Info references. It is
-container validation, not a general PDF interpreter. Mask CreationDate,
-ModDate, Creator and Producer only within the referenced Info object, and
-document ID only in the trailer. Canonicalize in-use xref byte offsets and
+container validation, not a general PDF interpreter. Within the referenced
+Info object only, parse a flat dictionary of direct values and remove the
+four registered entries CreationDate, ModDate, Creator and Producer - key
+and value - whichever of them each arm wrote: PRIN's writer sets all four,
+while the pinned reference writer passes no metadata, so Matplotlib writes
+only Creator, Producer and CreationDate. Re-serialize the remaining entries
+in their original order with single-space separators, so the original value
+lengths leave no line-wrap residue; an Info object that is not such a
+dictionary is malformed. Mask document ID only in the trailer. Canonicalize in-use xref byte offsets and
 the startxref pointer to zero: metadata-field length changes relocate
 objects, and those offsets are structural addresses, not scientific content.
 Preserve object identities/generations/status, every drawing/image/font
@@ -326,8 +345,9 @@ separately. This metadata-only policy, including pointer canonicalization,
 needs explicit E2 approval. It never applies to H4; raw files are retained
 unchanged.
 
-The 11 archived table files supply an additional independent raw-byte
-reference in H3. If a reference-generator table differs from its frozen
+The 11 archived table files supply an additional independent reference in
+H3, compared under the same line-terminator canonicalization (their raw
+digests are recorded too). If a reference-generator table differs from its frozen
 archived table, report that inconsistency; do not silently redefine the
 baseline to the new render. Archived figure digests are provenance, not an
 unmatched-renderer comparison substituted for the matched reference arm.
@@ -336,8 +356,11 @@ unmatched-renderer comparison substituted for the matched reference arm.
 
 The committed driver accepts `--mode`, `--run-dir`, `--operator`,
 `--source-sha`, `--seed-counter`, and `--seed-key`. It refuses execution while
-this document is DRAFT, checks committed approval/source identity, reserves
-each new run directory, captures campaign metadata, collects the selected
+this document is DRAFT, checks committed approval/source identity and a
+clean checkout (no tracked change; no untracked, non-ignored file outside
+the raw record root and the E3 operator log; no untracked top-level
+`*.py`/`*.pth`, even if ignored, that could shadow a module), reserves
+each new run directory only after refusing a reused generated-output root, captures campaign metadata, collects the selected
 leg, writes through `write_result`, and closes a per-run manifest. It
 collects observations only; hypothesis verdicts are E4 work.
 
@@ -348,6 +371,18 @@ execution. The driver checks a per-leg wall overrun and storage at closure;
 the E3 operator must enforce the unchanged <=12 h aggregate CPU cap across
 all attempts, including invalid/incomplete ones. A nonzero closure exit
 renders a record inadmissible even if its raw status says `COMPLETED`.
+Every failure after a run directory is reserved, including sidecar or
+output-root creation, is retained as an `ABORTED` record.
+
+Closure re-derives provenance from git: the recorded protocol digest must
+be the protocol blob at the recorded commit, that blob must be `APPROVED`
+with the recorded dated approval, and the commit must be an ancestor of the
+execution source. Closure validates each mode's observation schema and
+identifiers, including the full 175-name and 62-case populations of the
+`api` and `conclusions` legs, whose collectors refuse anything else. It never
+counts publication files: an omitted or added output is H3's registered
+falsifier, not an invalid record. The run directory may hold only its
+sidecar, result and manifest.
 
 Run each row once, in a separate interpreter process, in the listed order:
 
@@ -548,6 +583,19 @@ not at E1 draft completion or timeout-policy adoption.
 6. The tested driver, source provenance/admission/abort guards, actual reviewed
    execution baseline, local evidence and publication status. Approval cannot
    precede closure of driver/review findings.
+7. The two pre-E2 H3 comparison amendments of section 11 (table CRLF
+   canonicalization; PDF Info-dictionary canonicalization): approve them,
+   amend them, or declare the affected H3 leg unrunnable on the registered
+   Windows host. Without them H3 would report every table and every PDF
+   unequal for host-I/O and metadata reasons alone.
+8. Raw publication-byte verification: each run manifest covers only the
+   sidecar and result JSON, while the generated PDF/PNG/table bytes live in
+   the gitignored output root, so section 8.2's clean-checkout byte check
+   depends on reconstruction under a matched renderer. Decide whether that
+   suffices or whether the generated bytes must also be preserved and hashed
+   outside git before E3.
+9. Pre-E2 outcome exposure (section 11.2): decide whether H2 and H3 may still
+   be reported as confirmatory, and record the decision and its reason.
 
 Carry forward, do not action or close here: DV-033 per-change coverage and
 its historical incomplete attempts; DV-034 single-runner SPOF; DV-040's 0162
@@ -558,5 +606,52 @@ OBS-3 is historical: this E1 checkout was already non-shallow before work
 and no history restoration or ignore-fingerprint change was performed.
 Native push protection remains a flagged external control, not a pass.
 
-**No EXP-002 experiment execution occurs in session 0159. Hosted checks
-remain paused under Plan amendment #48. This protocol remains DRAFT.**
+## 11. Pre-E2 amendment log
+
+### 11.1 PR #33 review remediation (session 0159, 2026-10-11 UTC)
+
+Seven review sources on PR #33 were adjudicated in
+`DOCS/audits/PR033-multi-review-audit.md`. These DRAFT edits answer its
+findings; each needs E2 review under section 10. Every basis is a static
+reading of the committed source plus synthetic fixtures. No registered input,
+no real generator run over the input snapshot, and no EXP-002 outcome was
+used.
+
+| Change | Finding | Basis |
+|---|---|---|
+| Section 5.4: tables compared after CRLF to LF canonicalization in both arms and the archived baseline | PR33-F1 | The pinned reference `_save_table` uses `open(path, "w")` with no `newline=`; PRIN's uses `newline="\n"`. A synthetic table written by both writers on Windows differs only in CRLF |
+| Section 5.4: registered Info entries removed, not value-masked; remaining entries re-serialized | PR33-F2 | PRIN `_save_fig` passes four metadata keys; the reference passes none. Synthetic Matplotlib PDFs differ only in Info key set and line wrapping after value masking |
+| Section 5.4: font-cache digest logged | PR33-F29 | The registered control was named but not captured |
+| Section 5.2 C03: selected by `n_oscillators` | PR33-F22 | The input schema key, as the driver already reads it |
+| Section 2 H2: C02 basis described as archival self-consistency | PR33-F24 | Matches section 3; no predicate, expected value or population changes |
+| Section 5.5: admission scope, reservation order, abort retention, closure provenance/schema | PR33-F3/F4/F5/F23/F30 | Driver guards; no scientific parameter changes |
+| Section 10 items 7-9 | PR33-F1/F2/F9/F38 | Decisions that belong to E2 |
+
+No hypothesis, predicted direction or magnitude, population or denominator,
+threshold, tolerance, sample/seed plan, statistic, budget or abort criterion
+changes. H4 still compares raw bytes, so neither canonicalization can rescue
+it.
+
+### 11.2 Disclosure: outcome information was published before E2
+
+Two independent PR #33 reviews posted outcome information on the public PR
+thread before E2. One executed the real reference and PRIN publication
+generators over the verified 172-input snapshot. It reported per-file H3
+table and figure comparison results, including which PDFs it attributed to
+metadata and which to content. It also evaluated all 62 H2 predicates
+against the archived inputs and reported that they hold. Another reported
+the C03 N=128 operand margin. Section 4.1's decision rules and section 3's
+predictions were committed at `7859030` and unchanged since; the protocol's
+last pre-review change (`6314532`, section 5.4 only) also predates those
+reviews. Session 0159's entry condition, "No result from this experiment has
+been inspected," was true at entry, but E2's entry condition no longer holds
+as written. The remediation auditor read those outcomes only as review text;
+it did not reproduce them, run any generator over registered inputs, or use
+them to choose a change. Its
+section 5.4 changes rest only on the bases in section 11.1, and each is a
+symmetric, metadata-only canonicalization that does not depend on which
+files would match. E2 records the disposition under section 10 item 9.
+
+**No EXP-002 experiment execution occurs in session 0159. This protocol
+remains DRAFT. Hosted checks follow Plan amendment #50's EXP-002-scoped
+window (amendment #48 otherwise remains in force).**

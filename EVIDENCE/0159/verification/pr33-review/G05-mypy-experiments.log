@@ -1,0 +1,11 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/mypy.exe DOCS/experiments/ --strict
+CWD: C:/dev/PRIN
+SOURCE: campaign/0159-exp002-e1 working tree: 78d360029028c0571bdc272bef39e901c85f09da + uncommitted PR #33 remediation incl. self-audit fixes and the .gitleaksignore guard-test update (final pre-commit source; new evidence staged)
+UTC-START: 2026-10-11T21:45:01Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+Success: no issues found in 2 source files
+----
+ELAPSED_SECONDS: 1.1
+EXIT_CODE: 0

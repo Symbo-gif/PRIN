@@ -68,8 +68,8 @@ wrapper — not a second required run.
 .venv\Scripts\mypy DOCS/experiments/ --strict
 .venv\Scripts\python -m interrogate -c pyproject.toml python/prin
 .venv\Scripts\python -m bandit -r python/prin DOCS/experiments -c pyproject.toml
-.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp
-.venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp
+.venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20
+.venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace

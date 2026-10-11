@@ -1,0 +1,78 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe -m interrogate -c pyproject.toml python/prin
+CWD: C:/dev/PRIN
+SOURCE: campaign/0159-exp002-e1 working tree: 78d360029028c0571bdc272bef39e901c85f09da + uncommitted PR #33 remediation incl. self-audit fixes and the .gitleaksignore guard-test update (final pre-commit source; new evidence staged)
+UTC-START: 2026-10-11T21:45:03Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+==================== Coverage for C:\dev\PRIN\python\prin\ ====================
+----------------------------------- Summary -----------------------------------
+| Name                                |   Total |   Miss |   Cover |   Cover% |
+|-------------------------------------|---------|--------|---------|----------|
+| __init__.py                         |       1 |      0 |       1 |     100% |
+| _compat.py                          |      14 |      0 |      14 |     100% |
+| _deprecation.py                     |       8 |      0 |       8 |     100% |
+| _ort.py                             |      13 |      0 |      13 |     100% |
+| _phase0.py                          |      12 |      0 |      12 |     100% |
+| _public_api.py                      |       1 |      0 |       1 |     100% |
+| _torch_compat.py                    |     106 |      5 |     101 |      95% |
+| adversarial_tools.py                |       5 |      0 |       5 |     100% |
+| daemon.py                           |      33 |      0 |      33 |     100% |
+| datasets.py                         |       5 |      0 |       5 |     100% |
+| dlpack.py                           |       4 |      0 |       4 |     100% |
+| dynamics.py                         |       1 |      0 |       1 |     100% |
+| kernels.py                          |      28 |      0 |      28 |     100% |
+| metrics.py                          |       3 |      0 |       3 |     100% |
+| simulation.py                       |      27 |      1 |      26 |      96% |
+| simulation_experiments.py           |       7 |      0 |       7 |     100% |
+| solvers.py                          |       8 |      0 |       8 |     100% |
+| subconscious_compat.py              |      40 |      0 |      40 |     100% |
+| temporal_metrics.py                 |      11 |      0 |      11 |     100% |
+| temporal_training.py                |      22 |      0 |      22 |     100% |
+| tensor.py                           |      23 |      0 |      23 |     100% |
+| topology.py                         |       3 |      0 |       3 |     100% |
+| train.py                            |       4 |      0 |       4 |     100% |
+| training_hooks.py                   |      37 |      1 |      36 |      97% |
+| y4q1_tools.py                       |      44 |      1 |      43 |      98% |
+| eval\__init__.py                    |       1 |      0 |       1 |     100% |
+| experiments\__init__.py             |       3 |      0 |       3 |     100% |
+| nn\__init__.py                      |      17 |      0 |      17 |     100% |
+| nn\_bridge.py                       |       5 |      0 |       5 |     100% |
+| nn\ablation.py                      |      29 |      0 |      29 |     100% |
+| nn\ablation_variants.py             |      33 |      0 |      33 |     100% |
+| nn\activations.py                   |       8 |      0 |       8 |     100% |
+| nn\allocation.py                    |      15 |      0 |      15 |     100% |
+| nn\attention.py                     |       7 |      0 |       7 |     100% |
+| nn\autoencoders.py                  |      26 |      0 |      26 |     100% |
+| nn\deferred_layers.py               |       1 |      0 |       1 |     100% |
+| nn\energy.py                        |      17 |      0 |      17 |     100% |
+| nn\hierarchical_layers.py           |      38 |      0 |      38 |     100% |
+| nn\hybrid.py                        |      14 |      0 |      14 |     100% |
+| nn\hybrid_compat.py                 |      24 |      0 |      24 |     100% |
+| nn\inhibition.py                    |       6 |      0 |       6 |     100% |
+| nn\inhibition_layers.py             |      23 |      0 |      23 |     100% |
+| nn\model.py                         |      15 |      0 |      15 |     100% |
+| nn\mot_evaluation.py                |      11 |      0 |      11 |     100% |
+| nn\optimizers.py                    |      33 |      0 |      33 |     100% |
+| nn\phase_tracker.py                 |      18 |      0 |      18 |     100% |
+| nn\slot_attention.py                |      20 |      0 |      20 |     100% |
+| nn\subconscious_model.py            |       1 |      0 |       1 |     100% |
+| nn\temporal_compat.py               |      14 |      0 |      14 |     100% |
+| parity\__init__.py                  |       1 |      0 |       1 |     100% |
+| parity\harness.py                   |      10 |      0 |      10 |     100% |
+| parity\loader.py                    |       9 |      0 |       9 |     100% |
+| parity\manifest.py                  |      15 |      0 |      15 |     100% |
+| parity\schema.py                    |      21 |      0 |      21 |     100% |
+| parity\strategies.py                |      13 |      0 |      13 |     100% |
+| reporting\__init__.py               |       1 |      0 |       1 |     100% |
+| reporting\_artifacts.py             |      15 |      7 |       8 |      53% |
+| reporting\benchmark_reporting.py    |      22 |      0 |      22 |     100% |
+| reporting\figure_generation.py      |      21 |      2 |      19 |      90% |
+| reporting\profiler.py               |      24 |      0 |      24 |     100% |
+| reporting\table_generation.py       |      20 |      7 |      13 |      65% |
+|-------------------------------------|---------|--------|---------|----------|
+| TOTAL                               |    1011 |     24 |     987 |    97.6% |
+--------------- RESULT: PASSED (minimum: 95.0%, actual: 97.6%) ----------------
+----
+ELAPSED_SECONDS: 0.4
+EXIT_CODE: 0

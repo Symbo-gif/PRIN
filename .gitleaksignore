@@ -1,2 +1,6 @@
 # Approved 2026-08-06: archived benchmark SHA-256 checksum, not an API key.
 655521df49b0f2088190f244d98ef65043243bc8:DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/benchmarks/results/sha256_manifest.json:generic-api-key:68
+# Approved 2026-10-11 by MichaelMaillet (PR #33 review audit, PR33-F34): the
+# SHA-256 checksum of the frozen reference API source recorded as
+# `reference_api_sha256` in byte-frozen E1 entry evidence, not a credential.
+78590305e1c0a78d92153ef2a55a9e76aeb7af79:EVIDENCE/0159/entry-state.json:generic-api-key:87

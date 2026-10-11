@@ -25,7 +25,10 @@ Follow Coding Standards §6, including these mandatory controls:
 5. If Snyk is unavailable, report the validation as blocked and do not claim it
    passed. The authoritative merge gate is the full local gate on the maintainer's
    Windows device while the Plan amendment #48 local-validation regime is in
-   force (hosted CI paused; Linux/macOS not tested); otherwise CI.
+   force (hosted CI paused; Linux/macOS not tested); otherwise CI. Plan
+   amendment #50 re-enables the hosted checks for the EXP-002 experiments only
+   (sessions 0159–0163); hosted results there are additional evidence, and the
+   local gate stays authoritative.
 
 Use the repository skill `snyk-secure-development` when its workflow applies.
 Do not emit unverifiable safety badges; cite actual command or scan evidence.

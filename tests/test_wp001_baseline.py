@@ -982,14 +982,20 @@ def test_secret_scan_is_blocking_and_covers_full_history() -> None:
     assert "gitleaks/gitleaks-action@v2" in secret_job
     assert "continue-on-error" not in secret_job
     assert "|| true" not in secret_job
-    ignored = [
-        line
-        for line in (ROOT / ".gitleaksignore").read_text(encoding="utf-8").splitlines()
-        if line and not line.startswith("#")
+    text = (ROOT / ".gitleaksignore").read_text(encoding="utf-8")
+    ignored = [line for line in text.splitlines() if line and not line.startswith("#")]
+    # Exactly the maintainer-approved exact fingerprints, each a noncredential
+    # SHA-256 checksum, and nothing else: approved 2026-08-06 and, for the
+    # E1 entry evidence, 2026-10-11 (PR #33 review audit, PR33-F34).
+    assert ignored == [
+        "655521df49b0f2088190f244d98ef65043243bc8:DOCS/archive and reference "
+        "from PRINet 3.0/PRINet-3.0.0-main/benchmarks/results/"
+        "sha256_manifest.json:generic-api-key:68",
+        "78590305e1c0a78d92153ef2a55a9e76aeb7af79:EVIDENCE/0159/"
+        "entry-state.json:generic-api-key:87",
     ]
-    assert len(ignored) == 1
-    assert ":generic-api-key:68" in ignored[0]
-    assert "sha256_manifest.json" in ignored[0]
+    assert "# Approved 2026-08-06" in text
+    assert "# Approved 2026-10-11 by MichaelMaillet" in text
 
 
 def test_session_plan_validator_reports_metadata_and_link_drift(

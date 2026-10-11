@@ -145,7 +145,7 @@ def compute_binding_strength(
 ## 5. Local gate (must pass before pushing)
 
 Run under the supervised-local-validation timeout governance of Testing
-Standards §7 (Plan amendment #49): these commands run to completion, with no
+Standards §7 (Project Plan §8.3, amendment #49): these commands run to completion, with no
 arbitrary whole-run wall-clock kill while a command is demonstrably
 progressing.
 

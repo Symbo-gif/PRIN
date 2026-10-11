@@ -38,7 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   exit 1 — one known noncredential checksum finding whose exception is
   pending maintainer approval — and publication (push/PR) is also
   pending. No experiment results are recorded: the protocol is DRAFT
-  and no EXP-002 execution or pilot has run.
+  and no EXP-002 execution or pilot has run. *(Dated correction,
+  2026-10-11: published as PR #33; the maintainer then approved the
+  exact checksum fingerprint exception — see the PR #33 entry under
+  Fixed.)*
 
 - **EXP-001-r1 executed, adjudicated and reported — all five hypotheses
   `CONFIRMED`, no D1 (2026-09-29 UTC).** The campaign plan §10.4 item 4 re-run
@@ -335,6 +338,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   campaign-wide 64 MiB cap is unchanged.
 
 ### Fixed
+
+- **PR #33 review round — EXP-002 driver, DRAFT protocol and evidence
+  records (session 0159, 2026-10-11 UTC).** Seven review sources were
+  adjudicated against executed probes in
+  `DOCS/audits/PR033-multi-review-audit.md`, which records 38 findings
+  (`PR33-F1`…`PR33-F38`). Two DRAFT-protocol defects would have made H3
+  report every table and every PDF unequal on the registered Windows host.
+  The pinned reference table writer emits CRLF through text mode
+  (`PR33-F1`), and the reference PDF Info dictionary lacks `ModDate` and
+  wraps differently (`PR33-F2`). The protocol now registers symmetric
+  CRLF-to-LF table canonicalization and removes the four registered
+  Info entries; both are flagged as E2 decisions. Run closure now
+  re-derives pre-registration provenance from git (`PR33-F3`) and checks
+  each mode's observation schema without counting publication files
+  (`PR33-F4`). A reused output root no longer leaves an unrecorded RUN
+  directory (`PR33-F5`). `tests/test_0159_manifest.py` now requires the
+  manifest to equal its required set (`PR33-F6`). Oversized PDF decimals
+  and PNG PLTE/tRNS order now fail closed (`PR33-F7`/`F8`), every failure
+  reaches the registered `NOT COMPLETED` line (`PR33-F15`), and admission
+  covers the whole checkout, including top-level module shadowing
+  (`PR33-F30`). Stale status lines carry dated corrections, and the
+  `GATE-STATUS.md` mislabel is corrected. Plan amendment #50 opens an
+  EXP-002-scoped hosted-check window, amendment #51 reconciles F4 to 14
+  figures, and the maintainer-approved exact gitleaks fingerprint is
+  recorded. Disclosure: two reviews published H2/H3 outcome information
+  from real-input runs before E2 (`PR33-F38`; protocol section 11.2). No
+  EXP-002 execution occurred, and the protocol remains DRAFT.
 
 - **Redundant `±1e4` derivative guard on the fixed-step path — the
   `nightly.yml` `bench-regression` breach the EXP-001 D1 correction introduced

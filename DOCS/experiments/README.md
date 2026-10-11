@@ -121,7 +121,15 @@ tests) are in place on `campaign/0159-exp002-e1`. Project Plan amendment
 #49 adopted supervised-local-validation timeout governance within the
 declared 0159 scope. Scientific approval belongs to session 0160; no
 EXP-002 execution, pilot or reference-input collection has run and the
-final full local gate is pending.
+final full local gate is pending. *(Dated correction, 2026-10-11 UTC,
+PR33-F10: the final local gate then completed on checkpoint `63145325` —
+FAST, FULL, Sphinx and the governance battery all exit 0
+(`EVIDENCE/0159/verification/final-6314532/`). The branch was published as
+PR #33, whose seven review sources are adjudicated in
+[`PR033-multi-review-audit.md`](../audits/PR033-multi-review-audit.md); that
+round amended the DRAFT protocol (its section 11) and the driver, and the
+maintainer approved the gitleaks checksum exception. EXP-002 remains
+DRAFT, with no execution.)*
 
 ## Layout
 
@@ -153,7 +161,7 @@ regenerate from them via `prin.reporting`.
 | Experiment | Track | Record root |
 |---|---|---|
 | EXP-001 | C1 | [`EXP-001-golden-trajectory-numerical-parity/`](EXP-001-golden-trajectory-numerical-parity/README.md) |
-| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **COMPLETE: E5 VERIFIED AND ACCEPTED 2026-09-29 UTC. All five hypotheses `CONFIRMED`, D1 not raised (non-reversal); 0159 and every experiment downstream of EXP-001, plus 0194, are RELEASED. E1–E5 PR authorized, not yet opened** |
+| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **COMPLETE: E5 VERIFIED AND ACCEPTED 2026-09-29 UTC. All five hypotheses `CONFIRMED`, D1 not raised (non-reversal); 0159 and every experiment downstream of EXP-001, plus 0194, are RELEASED. E1–E5 PR authorized, not yet opened** *(dated correction, 2026-10-11: opened and merged as PR #28)* |
 | EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) |
 | EXP-003 | C2 | [`EXP-003-cpu-scaling-and-sweep-performance/`](EXP-003-cpu-scaling-and-sweep-performance/README.md) |
 | EXP-004 | C2 | [`EXP-004-gpu-kernels-and-torch-bridge-performance/`](EXP-004-gpu-kernels-and-torch-bridge-performance/README.md) |

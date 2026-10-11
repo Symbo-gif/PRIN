@@ -101,14 +101,15 @@ pytest tests/ parity/ -v
 
 ## 7. Supervised local validation — timeout governance (Plan amendment #49)
 
-Adopted 2026-10-11 within the existing session-0159 E1 scope. This section is
+Adopted 2026-10-11 (Project Plan §8.3, amendment #49) within the existing session-0159 E1 scope. This section is
 the normative policy for how required local validation runs are supervised;
 Development Workflow and Audit Standards §3, Coding Standards §5, the
 Benchmarking and Experimentation Standards, and `AGENTS.md` cross-reference it.
 
 1. **Required checks run to completion.** Supervised local validation checks
-   (the Coding Standards §5 local gate and the §6 suite invocations) run to
-   their actual completion. No arbitrary whole-run wall-clock limit may kill
+   (every leg of the Coding Standards §5 local gate, including the Sphinx `-W`
+   build, `cargo audit`, `pip-audit` and `cargo llvm-cov`, and the suite
+   invocations of this document's §6) run to their actual completion. No arbitrary whole-run wall-clock limit may kill
    a run that is demonstrably making productive progress.
 2. **Finite bounds are workload- and evidence-based.** Where a finite bound
    is unavoidable or retained (an outer harness limit, an infrastructure

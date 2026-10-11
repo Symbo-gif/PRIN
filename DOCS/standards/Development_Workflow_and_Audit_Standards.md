@@ -142,7 +142,16 @@ or `tools/check_ci_green.py` as an exit criterion. Specifically:
    workflows (`gh workflow enable <name>`), restore the required-status-check
    rule above on ruleset 22150076, and run one fully green hosted run of the
    head commit before the next WP closes.
-9. **Timeout governance.** Local runs under this regime are supervised per
+9. **EXP-002 hosted-check window (Plan amendment #50).** By maintainer
+   direction (2026-10-11) the seven workflows are re-enabled for the EXP-002
+   experiments only (sessions 0159–0163), with a forced `nightly.yml` run
+   before E3. The required-status-check rule stays removed. Hosted results
+   are recorded verbatim as additional evidence for the exact SHA they ran
+   on; the Windows full local gate stays authoritative; Linux/macOS and
+   wheel-matrix items stay suspended. When EXP-002 E5 closes, or on maintainer
+   instruction, the workflows are disabled again. This window is not the
+   item 8 lift.
+10. **Timeout governance.** Local runs under this regime are supervised per
    Testing Standards §7 (Plan amendment #49): no arbitrary whole-run
    wall-clock kill while a check is demonstrably progressing; finite bounds,
    stall diagnosis, wait-expiry semantics, cleanup limits, and incomplete-run

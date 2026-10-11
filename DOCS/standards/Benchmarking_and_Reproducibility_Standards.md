@@ -43,7 +43,7 @@ evidence-based.
   budgets (ported fair-training framework).
 - Statistical claims require multi-seed runs with bootstrap CIs; significance
   via Welch t-tests.
-- Validation supervision under Testing Standards §7 (Plan amendment #49)
+- Validation supervision under Testing Standards §7 (Project Plan §8.3, amendment #49)
   applies to local validation and code-check runs only: no arbitrary
   whole-run wall-clock kill while a check is demonstrably progressing.
   Supervised scientific campaign measurements are not covered — their

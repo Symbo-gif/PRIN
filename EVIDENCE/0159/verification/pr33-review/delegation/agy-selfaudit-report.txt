@@ -1,0 +1,271 @@
+# Cold Self-Audit Report — PR #33 Remediation Records
+
+**Date:** 2026-10-11 UTC  
+**Auditor:** Antigravity (`gemini-1.5-pro` / `gemini-3.1-pro-high` agent)  
+**Regime:** Strictly read-only; no shell commands executed, no files edited, all citations verified against repository files at commit `78d3600` plus the uncommitted remediation records diff.  
+**Audited Inputs:**
+- Records diff: `C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/delta-docs.diff`
+- Untracked audit report: [`DOCS/audits/PR033-multi-review-audit.md`](file:///C:/dev/PRIN/DOCS/audits/PR033-multi-review-audit.md)
+- Untracked evidence index: [`EVIDENCE/0159/verification/pr33-review/README.md`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/pr33-review/README.md)
+- Governing standards: [`DOCS/standards/Experimentation_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Experimentation_Standards.md), [`DOCS/standards/Development_Workflow_and_Audit_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Development_Workflow_and_Audit_Standards.md) (§3, §5)
+- Original review text: `...\scratchpad\pr33\all_reviews.md`
+
+---
+
+## Part 1. Numbered Defects and Inconsistencies
+
+### Finding 1: `REQUIRED_BUNDLE` in `tests/test_0159_manifest.py` omits `pr33-review/`, directly contradicting audit claim and breaking manifest tests
+- **Location:** [`DOCS/audits/PR033-multi-review-audit.md:243-247`](file:///C:/dev/PRIN/DOCS/audits/PR033-multi-review-audit.md#L243-L247) vs [`tests/test_0159_manifest.py:35-134`](file:///C:/dev/PRIN/tests/test_0159_manifest.py#L35-L134)
+- **Verbatim Quote (`DOCS/audits/PR033-multi-review-audit.md:243-247`):**
+```markdown
+- New evidence is `pr33-review/`: the gate captures, the probe source and
+  output, the mutation-proof harness and log, and the delegation reports. It is
+  added to `REQUIRED_BUNDLE` and the manifest, and force-added because `*.log`
+  is ignored.
+```
+- **Verbatim Quote (`tests/test_0159_manifest.py:125-134`):**
+```python
+    ROOT / "verification/final-6314532/04c-pytest-full-0.log",
+    ROOT / "verification/final-6314532/05-sphinx-build.log",
+    ROOT / "verification/final-6314532/06-governance-battery.log",
+    ROOT / "verification/final-6314532/07-gitleaks.json",
+    ROOT / "verification/final-6314532/final-gate-summary.md",
+    ROOT / "verification/SHA256SUMS.txt",
+}
+```
+- **Why it is wrong:**
+  1. `PR033-multi-review-audit.md` explicitly asserts that `pr33-review/` "is added to `REQUIRED_BUNDLE` and the manifest".
+  2. While 13 files in `pr33-review/` were added to [`EVIDENCE/0159/verification/SHA256SUMS.txt`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/SHA256SUMS.txt#L83-L95), `REQUIRED_BUNDLE` in [`tests/test_0159_manifest.py`](file:///C:/dev/PRIN/tests/test_0159_manifest.py#L35-L134) was **not** updated and contains only the 81 pre-review entries ending at `ROOT / "verification/SHA256SUMS.txt"`.
+  3. Consequently, running the newly added test `test_manifest_entries_are_all_required` ([`tests/test_0159_manifest.py:186-194`](file:///C:/dev/PRIN/tests/test_0159_manifest.py#L186-L194)), which asserts `unrequired = manifest_paths - REQUIRED_BUNDLE; assert not unrequired`, will **fail** because `_unrequired_entries` flags all 13 `pr33-review/` entries in `SHA256SUMS.txt`.
+- **Suggested Correction:**
+  Update `REQUIRED_BUNDLE` in [`tests/test_0159_manifest.py`](file:///C:/dev/PRIN/tests/test_0159_manifest.py) to include all files located under `EVIDENCE/0159/verification/pr33-review/`, and update the count expectation in `test_manifest_has_exact_required_count` ([`tests/test_0159_manifest.py:175-184`](file:///C:/dev/PRIN/tests/test_0159_manifest.py#L175-L184)) from 81 to match the expanded bundle size.
+
+---
+
+### Finding 2: Premature assertion and unhashed/uncreated logs in `EVIDENCE/0159/verification/pr33-review/README.md`
+- **Location:** [`EVIDENCE/0159/verification/pr33-review/README.md:3-4, 35-38`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/pr33-review/README.md#L3-L4)
+- **Verbatim Quote (`EVIDENCE/0159/verification/pr33-review/README.md:3-4`):**
+```markdown
+Evidence for [`DOCS/audits/PR033-multi-review-audit.md`](../../../../DOCS/audits/PR033-multi-review-audit.md).
+Every file here is hashed in `../SHA256SUMS.txt`. Captures are headed with their
+```
+- **Verbatim Quote (`EVIDENCE/0159/verification/pr33-review/README.md:35-38`):**
+```markdown
+  `P2-mutation-proof.log` records the result.
+- `G*.log` — the local gate legs on the remediation source (see the audit §6
+  for the leg table).
+- `gitleaks-*.json` — redacted secret-scan reports.
+```
+- **Why it is wrong:**
+  Lines 3–4 state: *"Every file here is hashed in `../SHA256SUMS.txt`."* However, `P2-mutation-proof.log`, `G*.log`, and `gitleaks-*.json` (as well as `P1-ground-truth-probes-78d3600.log`, `P1b-...`, `P1c-...`, `P1d-...` listed in lines 16–25) do not exist on disk under `EVIDENCE/0159/verification/pr33-review/` and are not hashed in [`EVIDENCE/0159/verification/SHA256SUMS.txt`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/SHA256SUMS.txt). Claiming that every file described is already hashed is an over-claim relative to the current checkout state.
+- **Suggested Correction:**
+  Clarify in `README.md` that execution logs (`P1*.log`, `P2*.log`, `G*.log`, `gitleaks-*.json`) are captured during the gate execution pass and hashed in `SHA256SUMS.txt` immediately prior to commit, or generate and hash them before committing this `README.md`.
+
+---
+
+### Finding 3: Premature claim of remediation gate completion in `e2-review-packet.md`
+- **Location:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md:263-267`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md#L263-L267) (via `delta-docs.diff:263-267`)
+- **Verbatim Quote (`e2-review-packet.md:263-267`):**
+```markdown
+The table above records the pre-review checkpoint. The remediation's own
+local gate (focused 323 tests including the 20 manifest tests, a
+mutation proof catching 19/19 pre-fix behaviours, FAST and FULL suites, and
+static and security legs) is in
+`EVIDENCE/0159/verification/pr33-review/`. The commit that contains these
+bytes is named in its record commit, because a commit cannot name itself.
+```
+- **Why it is wrong:**
+  The remediation local gate has not completed yet. In [`DOCS/audits/PR033-multi-review-audit.md`](file:///C:/dev/PRIN/DOCS/audits/PR033-multi-review-audit.md), Section 6 is `<<GATES>>`, Section 8 is `<<SELFAUDIT>>`, and Section 11 is `<<CLOSURE>>`. The gate log files `G*.log` and mutation proof log `P2-mutation-proof.log` do not yet exist under `EVIDENCE/0159/verification/pr33-review/`. Asserting in the present tense that the local gate *"is in `EVIDENCE/0159/verification/pr33-review/`"* is premature.
+- **Suggested Correction:**
+  Phrase this as a prospective commitment (e.g., *"will be recorded in..."*) or only commit this text once the gate legs and mutation proof logs have been executed and placed in `EVIDENCE/0159/verification/pr33-review/`.
+
+---
+
+### Finding 4: Misstatement of secret scan exception storage in `EVIDENCE/README.md`
+- **Location:** [`EVIDENCE/README.md:816-818`](file:///C:/dev/PRIN/EVIDENCE/README.md#L816-L818) (via `delta-docs.diff:816-818`)
+- **Verbatim Quote (`EVIDENCE/README.md:816-818`):**
+```markdown
+The full-history secret
+scan's one checksum finding is resolved by the maintainer-approved
+fingerprint exception recorded in `pr33-review/`.
+```
+- **Why it is wrong:**
+  The maintainer-approved fingerprint exception is recorded exclusively in [`.gitleaksignore`](file:///C:/dev/PRIN/.gitleaksignore), **not** in `pr33-review/`. The folder `pr33-review/` is intended to hold the resulting clean scan report (`gitleaks-*.json`), which does not exist yet.
+- **Suggested Correction:**
+  Change *"fingerprint exception recorded in `pr33-review/`"* to *"fingerprint exception recorded in `.gitleaksignore` (with the review-round rescan recorded in `pr33-review/`)"*.
+
+---
+
+### Finding 5: Premature assertion of clean secret rescan in `e1-handoff.md` and `GATE-STATUS.md`
+- **Location:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md:230-232`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md#L230-L232) and [`EVIDENCE/0159/verification/full-gate/GATE-STATUS.md:789-791`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/GATE-STATUS.md#L789-L791)
+- **Verbatim Quote (`e1-handoff.md:230-232`):**
+```markdown
+MichaelMaillet approved the exact fingerprint
+exception on 2026-10-11, and `.gitleaksignore` records it. The review
+round's full-history scan is in `EVIDENCE/0159/verification/pr33-review/`.
+```
+- **Verbatim Quote (`GATE-STATUS.md:789-791`):**
+```markdown
+The checksum exception that row 24 and the 6314532 gitleaks row record as
+pending was approved by MichaelMaillet on 2026-10-11. The review round's
+clean full-history scan is in `../pr33-review/`.
+```
+- **Why it is wrong:**
+  As established in Finding 2, no secret scan report (`gitleaks-*.json`) exists in `EVIDENCE/0159/verification/pr33-review/` or in `SHA256SUMS.txt`. The clean full-history scan has not been executed on the remediation tree yet.
+- **Suggested Correction:**
+  Ensure the clean full-history scan is run, saved to `EVIDENCE/0159/verification/pr33-review/gitleaks-remediated.json`, and added to `SHA256SUMS.txt` before finalizing and committing these statements.
+
+---
+
+## Part 2. Detailed Verification of the Seven Task Checks
+
+### Check 1: Over-claims
+- **Audit Placeholders:** The uncommitted audit [`DOCS/audits/PR033-multi-review-audit.md`](file:///C:/dev/PRIN/DOCS/audits/PR033-multi-review-audit.md) contains placeholders `<<GATES>>` (line 232), `<<SELFAUDIT>>` (line 250), and `<<CLOSURE>>` (line 279). Per task instructions, these are intentionally unfilled pending gate completion and are not reported as defects.
+- **Evidence Over-claims:** As documented in Findings 1, 2, 3, and 5, multiple narrative records (`pr33-review/README.md`, `e2-review-packet.md`, `e1-handoff.md`, `GATE-STATUS.md`) claim that the gate logs, mutation proof logs, and clean gitleaks scan already exist and are hashed in `SHA256SUMS.txt`, whereas only the input probes, delegation texts, and mutation scripts currently exist.
+- **Approvals & Counts:** The maintainer's approval of amendments #50, #51, and the gitleaks exception is quoted verbatim. Test counts (89 new driver tests, 214 → 303; 3 new manifest tests, 17 → 20) accurately reflect the test files.
+
+---
+
+### Check 2: Consistency of Finding IDs `PR33-F1`…`PR33-F38` and Severities
+A complete cross-verification was performed across the following documents:
+- Audit §4 Master Findings Ledger ([`DOCS/audits/PR033-multi-review-audit.md:145-192`](file:///C:/dev/PRIN/DOCS/audits/PR033-multi-review-audit.md#L145-L192))
+- Audit §1 Executive Summary table and §4 totals ([`PR033-multi-review-audit.md:59, 193-196`](file:///C:/dev/PRIN/DOCS/audits/PR033-multi-review-audit.md#L59))
+- Audits README ([`DOCS/audits/README.md:534-551`](file:///C:/dev/PRIN/DOCS/audits/README.md#L534-L551))
+- Protocol §11.1 table ([`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md:504-512`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L504-L512))
+- Test docstrings in [`tests/test_exp002_driver.py`](file:///C:/dev/PRIN/tests/test_exp002_driver.py) and [`tests/test_0159_manifest.py`](file:///C:/dev/PRIN/tests/test_0159_manifest.py)
+- `CHANGELOG.md` dated entry
+
+**Findings breakdown:**
+- **Audit §4 Ledger:**
+  - Total findings: **38** (`PR33-F1` through `PR33-F38`).
+  - **D2 (6 findings):** `PR33-F1`, `PR33-F2`, `PR33-F3`, `PR33-F6`, `PR33-F34`, `PR33-F38`.
+  - **D3 (7 findings):** `PR33-F4`, `PR33-F5`, `PR33-F9`, `PR33-F15`, `PR33-F16`, `PR33-F17`, `PR33-F30`.
+  - **D4 (19 findings):** `PR33-F7`, `PR33-F8`, `PR33-F10`, `PR33-F11`, `PR33-F12`, `PR33-F13`, `PR33-F14`, `PR33-F18`, `PR33-F19`, `PR33-F21`, `PR33-F22`, `PR33-F23`, `PR33-F24`, `PR33-F25`, `PR33-F26`, `PR33-F27`, `PR33-F29`, `PR33-F31`, `PR33-F33`.
+  - **Unclassified / No severity (6 items):** `PR33-F20` (Not a defect), `PR33-F28` (Refuted), `PR33-F32` (Not a defect), `PR33-F35` (Waived), `PR33-F36` (Redirected to live driver), `PR33-F37` (No review).
+  - Sum: $6 + 7 + 19 + 6 = 38$. This precisely matches Audit §1 line 59 (*"6 × D2, 7 × D3, 19 × D4; 6 without severity"*), Audit §4 lines 193–196, and [`DOCS/audits/README.md:540`](file:///C:/dev/PRIN/DOCS/audits/README.md#L540).
+- **Protocol §11.1 Table:**
+  - Explicitly lists only the 12 findings that drove protocol document modifications: `PR33-F1`, `PR33-F2`, `PR33-F29`, `PR33-F22`, `PR33-F24`, `PR33-F3/F4/F5/F23/F30`, `PR33-F1/F2/F9/F38`. This is consistent with its stated scope.
+- **Driver and Manifest Test Docstrings:**
+  - `PR33-F1`: `TestArchivedTableNormalization` ([`test_exp002_driver.py:3134`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L3134))
+  - `PR33-F2`: `TestPdfInfoCanonicalization` ([`test_exp002_driver.py:2448`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L2448))
+  - `PR33-F3`: `TestClosureProvenance` ([`test_exp002_driver.py:2728`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L2728))
+  - `PR33-F4`: `TestClosureObservations` ([`test_exp002_driver.py:2901`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L2901))
+  - `PR33-F5`: `TestReservationAtomicity` ([`test_exp002_driver.py:3015`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L3015))
+  - `PR33-F6`: `test_manifest_entries_are_all_required` ([`test_0159_manifest.py:187, 196`](file:///C:/dev/PRIN/tests/test_0159_manifest.py#L187))
+  - `PR33-F7`: `TestPdfDecimalBounds` ([`test_exp002_driver.py:2556`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L2556))
+  - `PR33-F8`: `TestPngColourRules` ([`test_exp002_driver.py:2600`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L2600))
+  - `PR33-F14`: `TestStorageMeasurement` ([`test_exp002_driver.py:2981`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L2981))
+  - `PR33-F15`: `TestMainReporting` ([`test_exp002_driver.py:3145`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L3145))
+  - `PR33-F21`: `TestApiCensusInvariants` ([`test_exp002_driver.py:2697`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L2697))
+  - `PR33-F23`: `TestClosureDirectoryHygiene` ([`test_exp002_driver.py:2938`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L2938))
+  - `PR33-F26`: `test_generated_output_root_is_gitignored` ([`test_exp002_driver.py:3181`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L3181))
+  - `PR33-F29`: `TestRenderEnvironment` ([`test_exp002_driver.py:3119`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L3119))
+  - `PR33-F30`: `TestAdmissionScope` ([`test_exp002_driver.py:3056`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L3056))
+  - All test docstring citations are 100% consistent with the master findings ledger.
+
+---
+
+### Check 3: Pre-registration Integrity
+- **Scientific Invariants:** Inspected [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md) across sections 2, 5.2, 5.4, 5.5, 10, and 11.
+  - Hypotheses H1, H2, H3, and H4 definitions retain their exact formal structures.
+  - Predictions are unchanged (e.g., zero disagreements across all 62 predicates; exact 39-file census).
+  - Populations remain strictly pinned: 175 PRIN exports, 172 reference names + 3 PRIN additions; 62 evaluation cases across C01–C05; 39 publication files (14 figures in PDF + PNG, 11 LaTeX tables).
+  - Budgets (CPU $\le 12\text{ h}$, GPU $\le 2\text{ h}$, run $\le 2\text{ MiB}$, campaign $\le 64\text{ MiB}$) and abort criteria are completely preserved.
+  - The changes to §5.4 introduce symmetric, metadata-only normalizations (CRLF $\to$ LF for tables, removal of four registered metadata keys for PDF Info dictionaries) necessitated by host I/O differences and Matplotlib defaults. H4 raw-byte identity comparison is explicitly unmodified.
+- **Section 11.2 Outcome Disclosure:**
+  - Audited against raw review texts in `all_reviews.md`.
+  - Qwen review (`qwen-3.6-plus`, issue comment `3390236058`): verbatim text proves Qwen executed the real reference and PRIN publication generators over the 172-input snapshot, evaluated all 62 H2 predicates against archival JSON files, reported that all 62 hold, and posted per-file table and figure outcomes publicly.
+  - SWE-2 HIGH review (issue comment `3390236066`): independently corroborated and published the C03 $N=128$ operand margin (`bc_stats.mean = 0.540707 > 0.5`).
+  - Section 11.2 accurately and completely discloses these premature outcome publications.
+
+---
+
+### Check 4: Governance and Plan Amendments #49, #50, #51
+- **Plan Amendment #50:**
+  - Verbatim maintainer directive matches the text in `DOCS/PRIN_Project_Plan.md`:
+    > “Once you are done remediation, I approve hosted CI checks and forced nightly check prior to running e3 officially. Hosted checks are only cleared to run for the purpose of these EXP-002 experiments, afterwards they will be paused again. we are running on my windows desktop. Let all of the CI checks run to completion, I will monitor their progress personally and let you know if anything is needed.”
+  - The amendment does **not** lift amendment #48 and does **not** restore required status checks on branch ruleset 22150076 (which the maintainer declined).
+  - Consistent with [`DOCS/standards/Development_Workflow_and_Audit_Standards.md:142-152`](file:///C:/dev/PRIN/DOCS/standards/Development_Workflow_and_Audit_Standards.md#L142-L152) (§3 item 9), `CLAUDE.md`, and `.claude/CLAUDE.md`.
+- **Plan Amendment #51:**
+  - Formally documents the reconciliation of the F4 reproducibility requirement to 14 verifiable figures (figures 2–15; no figure 1 ever existed), matching campaign plan §2.1 and WP034-F1. Flagged for explicit maintainer ratification.
+- **Amendment #49 Errata:**
+  - Accurately records the missing standards documents (Benchmarking §2.2, Experimentation §2, standards `README.md`) and disambiguates the table evidence paths with the `ea007/` prefix.
+
+---
+
+### Check 5: Dated Corrections and Historical Logs
+- **`GATE-STATUS.md` Table Row Corrections:**
+  - Raw logs in `EVIDENCE/0159/verification/full-gate/` confirm:
+    - `c01-pytest-driver-coverage.log`: `EXIT_CODE: 1` (1 failed, 247 passed).
+    - `c02-pytest-driver-coverage.log`: `EXIT_CODE: 0` (248 passed).
+    - `c03-pytest-driver-coverage.log`: `EXIT_CODE: 0` (255 passed).
+    - `c04-pytest-driver-coverage.log`: `EXIT_CODE: 0` (255 passed).
+    - `c05-focused-gate.log`: `EXIT_CODE: 1` (253 passed, 3 failures).
+  - The dated correction to row `c01–c04` ([`GATE-STATUS.md:760`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/GATE-STATUS.md#L760)) properly corrected the historical misstatement that `c02` had failed.
+- **Historical Preservation:**
+  - Historical sections in `e1-handoff.md`, `DOCS/experiments/README.md`, `SESSION_REGISTER.md`, and `CHANGELOG.md` are appended as dated errata and corrections rather than rewritten in place, maintaining full audit trail integrity.
+
+---
+
+### Check 6: Check for Stale Statements Across the Repository
+- **"15 figures" vs "14 figures":**
+  - Updated in `DOCS/PRIN_Project_Plan.md:48` (F4).
+  - Updated in briefs 0161, 0162, 0163 (`Contract` and `Scientific contract`).
+  - Briefs 0159 and 0160 were already updated in preceding commits.
+  - `DOCS/experiments/campaign-plan.md:64` already specifies 14 figures.
+  - `tools/reproduce.py:4` already specifies 14 verifiable figures.
+  - No unreconciled occurrences of "15 figures" remain for EXP-002.
+- **"Raw-byte tables":**
+  - Updated in protocol §2 (H3), §5.4, §10, and §11.1 to "line-terminator-canonical table byte strings".
+  - Updated in `e2-review-packet.md:278`.
+  - H4 correctly continues to mandate raw-byte comparison.
+- **"Hosted checks remain paused":**
+  - All documents updated with the amendment #50 EXP-002-scoped window qualification (`DOCS/PRIN_Project_Plan.md`, `Development_Workflow_and_Audit_Standards.md`, `preregistration.md`, `e2-review-packet.md`, `DEFERRED_VALIDATION_REGISTER.md`).
+- **"Push/PR pending":**
+  - Updated in `e1-handoff.md:224-226` and `DOCS/experiments/README.md:121-128` noting that PR #33 was opened and reviewed on 2026-10-11 UTC.
+
+---
+
+### Check 7: Markdown Relative Link Validation
+All relative links in new and modified markdown files were checked against filesystem paths:
+1. **`DOCS/audits/PR033-multi-review-audit.md`:**
+   - Line 7: `TEMPLATE_Audit_Report.md` $\to$ [`DOCS/audits/TEMPLATE_Audit_Report.md`](file:///C:/dev/PRIN/DOCS/audits/TEMPLATE_Audit_Report.md) (**EXISTS**)
+   - Line 8: `../standards/Development_Workflow_and_Audit_Standards.md` $\to$ [`DOCS/standards/Development_Workflow_and_Audit_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Development_Workflow_and_Audit_Standards.md) (**EXISTS**)
+   - Line 10: `PR032-multi-review-audit.md` $\to$ [`DOCS/audits/PR032-multi-review-audit.md`](file:///C:/dev/PRIN/DOCS/audits/PR032-multi-review-audit.md) (**EXISTS**)
+   - Line 11: `PR023-multi-review-audit.md` $\to$ [`DOCS/audits/PR023-multi-review-audit.md`](file:///C:/dev/PRIN/DOCS/audits/PR023-multi-review-audit.md) (**EXISTS**)
+   - Line 12: `PR017-devin-review-audit.md` $\to$ [`DOCS/audits/PR017-devin-review-audit.md`](file:///C:/dev/PRIN/DOCS/audits/PR017-devin-review-audit.md) (**EXISTS**)
+   - Line 35: `../sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md` $\to$ [`DOCS/sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md) (**EXISTS**)
+2. **`EVIDENCE/0159/verification/pr33-review/README.md`:**
+   - Line 3: `../../../../DOCS/audits/PR033-multi-review-audit.md` $\to$ [`DOCS/audits/PR033-multi-review-audit.md`](file:///C:/dev/PRIN/DOCS/audits/PR033-multi-review-audit.md) (Depth: 4 levels up to repository root, **EXISTS**)
+3. **`DOCS/audits/README.md`:**
+   - Line 534: `PR033-multi-review-audit.md` $\to$ [`DOCS/audits/PR033-multi-review-audit.md`](file:///C:/dev/PRIN/DOCS/audits/PR033-multi-review-audit.md) (**EXISTS**)
+4. **`DOCS/experiments/README.md`:**
+   - Line 556: `../audits/PR033-multi-review-audit.md` $\to$ [`DOCS/audits/PR033-multi-review-audit.md`](file:///C:/dev/PRIN/DOCS/audits/PR033-multi-review-audit.md) (**EXISTS**)
+   - Line 568: `EXP-001-r1-golden-trajectory-numerical-parity/README.md` (**EXISTS**)
+5. **`DOCS/experiments/EXP-002-.../e1-handoff.md` & `e2-review-packet.md`:**
+   - Links to `../../audits/PR033-multi-review-audit.md` (**EXISTS**)
+   - Links to `e2-review-packet.md` (**EXISTS**)
+   - Links to `preregistration.md` (**EXISTS**)
+6. **`benchmarks/campaign/README.md`:**
+   - Line 830: `../../DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md` (**EXISTS**)
+7. **`DOCS/sessions/SESSION_REGISTER.md`:**
+   - Line 606: `phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md` (**EXISTS**)
+
+---
+
+## Part 3. Areas Checked and Found Sound
+
+The following areas were independently verified and found completely sound, rigorous, and compliant with all project standards:
+
+1. **Pre-registration Mathematical and Methodological Invariants:**
+   No post-hoc alteration of any hypothesis, prediction, population size, threshold, sample, budget, or abort criterion occurred. Canonicalizations for H3 are strictly symmetric, metadata-level accommodations for host OS and library defaults; raw byte identity in H4 remains the uncompromised standard.
+2. **Outcome Disclosure Transparency (§11.2):**
+   Full, prompt disclosure of external reviews executing real generators on the 172-input snapshot prior to E2 was documented without altering registered decision rules or cherry-picking outcomes.
+3. **Governance and Authority Alignment:**
+   Plan amendments #50 and #51 precisely reflect maintainer directives, maintain the separation of powers between AI pairs and maintainer sign-off, preserve the paused status of hosted check rules on ruleset 22150076, and do not conflate the temporary EXP-002 window with lifting amendment #48.
+4. **Master Findings Ledger and Severity Classification:**
+   All 38 findings (`PR33-F1` through `PR33-F38`) are accounted for, correctly cross-referenced, and adhere to the severity taxonomy of Development Workflow and Audit Standards §5.
+5. **Driver and Test Invariants:**
+   Regression tests added to `tests/test_exp002_driver.py` directly and rigorously cover the remediated failure modes (bounds checking, reservation atomicity, closure provenance, observation validation, output directory gitignore assertion) using isolated synthetic fixtures without touching real registered inputs.
+6. **Preservation of Historical Integrity:**
+   All historical records, including previously failed and interrupted gate legs (`c01`, `c05`, leg 25), are scrupulously preserved, with subsequent updates strictly appended as dated corrections.

@@ -1,0 +1,12 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/probes/probe_p9_symlink.py C:/dev/PRIN
+CWD: C:/dev/PRIN
+SOURCE: campaign/0159-exp002-e1 working tree (78d3600 + uncommitted PR #33 remediation)
+UTC-START: 2026-10-11T20:35:16Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+[P9c] closure of untouched run with symlink in sibling: DriverError expected names: expected an array
+[P12] stray file: DriverError run inventory holds an undeclared directory entry
+----
+ELAPSED_SECONDS: 5.2
+EXIT_CODE: 0

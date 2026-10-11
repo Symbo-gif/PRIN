@@ -531,3 +531,21 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   imprecise), and its docstring-coverage check waived with evidence. The
   EA-007 report is amended by appended errata (§7 of that report) only. Same
   external-review event class as `PR023-multi-review-audit.md`.
+- [`PR033-multi-review-audit.md`](PR033-multi-review-audit.md) — External
+  review audit of PR #33 (session 0159, EXP-002 E1), 2026-10-11,
+  `PASS-WITH-FINDINGS`, remediated in the same round. Seven sources (Devin
+  Review, Copilot, CodeRabbit, Sourcery with no review, and three independent
+  LLM reviews: Perplexity, qwen-3.6-plus and SWE-2 HIGH) were de-duplicated
+  into `PR33-F1`…`PR33-F38`, each re-derived by synthetic executed probes or
+  quoted lines. **No D1**; 6 × D2, 7 × D3, 19 × D4. Two DRAFT-protocol
+  defects would have made H3 report every table and PDF unequal on Windows:
+  the reference CRLF table writer and the asymmetric PDF Info dictionary.
+  Both now have symmetric canonicalizations, pending E2. Run closure now
+  re-derives pre-registration provenance from git and schema-checks
+  observations without counting publication files. `REQUIRED_BUNDLE` must
+  now equal the manifest. A mutation proof catches 24/24 pre-fix behaviours.
+  The maintainer approved the gitleaks checksum fingerprint, the
+  EXP-002-scoped hosted window (amendment #50) and amendment #51 (F4 = 14
+  figures). PR33-F38 discloses that two reviews published H2/H3 outcome
+  information from real-input runs before E2. Same external-review event
+  class as `PR032-multi-review-audit.md`.

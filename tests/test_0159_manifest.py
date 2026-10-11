@@ -122,7 +122,75 @@ REQUIRED_BUNDLE = {
     f"{MANIFEST_DIR}/final-6314532/gitleaks-6314532.json",
     f"{MANIFEST_DIR}/final-6314532/SESSION",
     f"{MANIFEST_DIR}/final-6314532/README.md",
+    # Post-packaging controls captured on 6314532 after the bundle/index was
+    # completed (PR33-F6: omitted here before the PR #33 review audit, which
+    # let a file be deleted together with its manifest line undetected).
+    f"{MANIFEST_DIR}/final-6314532/08-manifest-tests-postpackage.log",
+    f"{MANIFEST_DIR}/final-6314532/08b-snyk-manifest-test.log",
+    f"{MANIFEST_DIR}/final-6314532/09-sphinx-postchangelog.log",
+    f"{MANIFEST_DIR}/final-6314532/10-sphinx-final-fullcapture.log",
+    f"{MANIFEST_DIR}/final-6314532/11-manifest-tests-final.log",
+    f"{MANIFEST_DIR}/final-6314532/sast-e-copy-attestation.txt",
+    # PR #33 review-round evidence (EVIDENCE/0159/verification/pr33-review/):
+    # ground-truth probes before/after the fix, the mutation proof, the local
+    # gate captures and the read-only delegated reviews.
+    f"{MANIFEST_DIR}/pr33-review/G01-ruff-check.log",
+    f"{MANIFEST_DIR}/pr33-review/G02-ruff-format-check.log",
+    f"{MANIFEST_DIR}/pr33-review/G03-ruff-format-check-experiments.log",
+    f"{MANIFEST_DIR}/pr33-review/G04-mypy-prin.log",
+    f"{MANIFEST_DIR}/pr33-review/G05-mypy-experiments.log",
+    f"{MANIFEST_DIR}/pr33-review/G06-mypy-exp002-driver.log",
+    f"{MANIFEST_DIR}/pr33-review/G07-interrogate.log",
+    f"{MANIFEST_DIR}/pr33-review/G08-bandit.log",
+    f"{MANIFEST_DIR}/pr33-review/G09-focused-coverage.json",
+    f"{MANIFEST_DIR}/pr33-review/G09-focused-pytest.log",
+    f"{MANIFEST_DIR}/pr33-review/G09a-focused-pytest-winerror32.log",
+    f"{MANIFEST_DIR}/pr33-review/G10-governance-deviation-ledger.log",
+    f"{MANIFEST_DIR}/pr33-review/G10b-governance-dv-gates.log",
+    f"{MANIFEST_DIR}/pr33-review/G10c-governance-session-registration.log",
+    f"{MANIFEST_DIR}/pr33-review/G10d-governance-skipif-probes.log",
+    f"{MANIFEST_DIR}/pr33-review/G10e-governance-wp001.log",
+    f"{MANIFEST_DIR}/pr33-review/G10f-git-diff-check.log",
+    f"{MANIFEST_DIR}/pr33-review/G11-sphinx.log",
+    f"{MANIFEST_DIR}/pr33-review/G12-pytest-fast.log",
+    f"{MANIFEST_DIR}/pr33-review/G12a-pytest-fast-ignore-guard-failure.log",
+    f"{MANIFEST_DIR}/pr33-review/G13-pytest-full.log",
+    f"{MANIFEST_DIR}/pr33-review/G13a-error-node-diagnostic.log",
+    f"{MANIFEST_DIR}/pr33-review/G13b-pytest-full-rerun.log",
+    f"{MANIFEST_DIR}/pr33-review/G14-sast-copy-attestation.txt",
+    f"{MANIFEST_DIR}/pr33-review/G14-snyk-code.log",
+    f"{MANIFEST_DIR}/pr33-review/G14a-sast-copy-attestation.txt",
+    f"{MANIFEST_DIR}/pr33-review/G14a-snyk-code-initial.log",
+    f"{MANIFEST_DIR}/pr33-review/G15-gitleaks-full-history.log",
+    f"{MANIFEST_DIR}/pr33-review/G15b-gitleaks-staged.log",
+    f"{MANIFEST_DIR}/pr33-review/G16-postpackage-manifest-and-driver-tests.log",
+    f"{MANIFEST_DIR}/pr33-review/G16a-postpackage-wrong-interpreter.log",
+    f"{MANIFEST_DIR}/pr33-review/P1-ground-truth-probes-78d3600.log",
+    f"{MANIFEST_DIR}/pr33-review/P1b-ground-truth-probes-p9-symlink-78d3600.log",
+    f"{MANIFEST_DIR}/pr33-review/P1c-ground-truth-probes-remediated.log",
+    f"{MANIFEST_DIR}/pr33-review/P1d-ground-truth-probes-p9-symlink-remediated.log",
+    f"{MANIFEST_DIR}/pr33-review/P2-mutation-proof.log",
+    f"{MANIFEST_DIR}/pr33-review/README.md",
+    f"{MANIFEST_DIR}/pr33-review/delegation/agy-ground-truth-docs-report.txt",
+    f"{MANIFEST_DIR}/pr33-review/delegation/agy-ground-truth-task.md",
+    f"{MANIFEST_DIR}/pr33-review/delegation/agy-selfaudit-report.txt",
+    f"{MANIFEST_DIR}/pr33-review/delegation/agy-selfaudit-task.md",
+    f"{MANIFEST_DIR}/pr33-review/delegation/devin-ground-truth-code-report.txt",
+    f"{MANIFEST_DIR}/pr33-review/delegation/devin-ground-truth-task.md",
+    f"{MANIFEST_DIR}/pr33-review/delegation/devin-selfaudit-report.txt",
+    f"{MANIFEST_DIR}/pr33-review/delegation/devin-selfaudit-task.md",
+    f"{MANIFEST_DIR}/pr33-review/gitleaks-history-78d3600.json",
+    f"{MANIFEST_DIR}/pr33-review/gitleaks-staged-remediation.json",
+    f"{MANIFEST_DIR}/pr33-review/ground-truth-probes-p9-symlink.py.txt",
+    f"{MANIFEST_DIR}/pr33-review/ground-truth-probes.py.txt",
+    f"{MANIFEST_DIR}/pr33-review/proof_defect_catching.py",
+    f"{MANIFEST_DIR}/pr33-review/proof_plugin.py",
 }
+
+
+def _unrequired_entries(entries: set[str], required: set[str]) -> set[str]:
+    """Manifest entries that the immutable required set does not name."""
+    return entries - (required - _UNHASHED_BY_DESIGN)
 
 
 def _git_tracked_0159() -> set[str] | None:
@@ -171,6 +239,16 @@ class TestRealBundle:
         assert not missing, f"required files absent from manifest: {missing}"
         # The unhashed-by-design narrative and manifest are never hashed.
         assert entries.isdisjoint(_UNHASHED_BY_DESIGN)
+
+    def test_manifest_entries_are_all_required(self) -> None:
+        """PR33-F6: the manifest may hash nothing ``REQUIRED_BUNDLE`` omits.
+
+        Together with ``test_manifest_entries_cover_required_files`` this makes
+        the manifest exactly the required hashed set, so deleting a file *and*
+        its manifest line can no longer pass unnoticed.
+        """
+        extra = _unrequired_entries(set(ea007._entries()), REQUIRED_BUNDLE)
+        assert not extra, f"manifest entries missing from REQUIRED_BUNDLE: {extra}"
 
     def test_every_manifest_entry_matches_the_committed_bytes(self) -> None:
         ea007.test_every_manifest_entry_matches_the_committed_bytes()
@@ -333,6 +411,35 @@ class TestControlledNegatives:
         )
         with pytest.raises(AssertionError, match="unhashed-by-design"):
             ea007.test_manifest_covers_every_evidence_file()
+
+    def test_double_deletion_is_caught(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """PR33-F6 regression: a required file deleted with its manifest line."""
+        _fixture_bundle(
+            tmp_path,
+            monkeypatch,
+            files={"README.md": b"i", "verification/kept.log": b"k"},
+            manifest_lines=[_line("kept.log", b"k")],
+        )
+        required = {"README.md", "verification/kept.log", "verification/gone.log"}
+        entries = set(ea007._entries())
+        assert required - _UNHASHED_BY_DESIGN - entries == {"verification/gone.log"}
+        # The superset direction alone (the pre-fix state) would not notice:
+        assert not _unrequired_entries(entries, required)
+
+    def test_unrequired_manifest_entry_is_caught(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _fixture_bundle(
+            tmp_path,
+            monkeypatch,
+            files={"verification/a.log": b"a", "verification/late.log": b"l"},
+            manifest_lines=[_line("a.log", b"a"), _line("late.log", b"l")],
+        )
+        assert _unrequired_entries(set(ea007._entries()), {"verification/a.log"}) == {
+            "verification/late.log"
+        }
 
     def test_hashed_but_untracked_log_fails(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

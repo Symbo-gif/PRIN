@@ -30,7 +30,7 @@ from typing import Any, cast
 import matplotlib
 import numpy
 import prin
-from matplotlib import ft2font
+from matplotlib import font_manager, ft2font
 from PIL import Image
 from PIL import __version__ as pillow_version
 from prin._deprecation import verify_api_surface
@@ -41,6 +41,7 @@ from benchmarks._common.environment import capture_environment
 from benchmarks._common.result import write_json_exclusive, write_result
 from tools.reproduce import (
     ManifestRecord,
+    ReproductionError,
     append_manifest,
     read_no_follow,
     read_verified_no_follow,
@@ -132,25 +133,72 @@ RUN_PATTERN = re.compile(
 RUN_CAP = 2 * 1024 * 1024
 RAW_CAP = 10 * 1024 * 1024
 CPU_WALL_CAP = 12 * 60 * 60
+API_SYMBOL_COUNT = 175
+CLAIM_CASE_COUNT = 62
+# Registered Info entries removed (key and value) before PDF comparison.
+PDF_INFO_MASKED_KEYS = frozenset({b"CreationDate", b"ModDate", b"Creator", b"Producer"})
+_PDF_NAME = re.compile(rb"/[^\x00\t\n\x0c\r ()<>\[\]{}/%]+")
+_PDF_TOKEN_END = rb"(?![^\x00\t\n\x0c\r ()<>\[\]{}/%])"
+_PDF_REFERENCE = re.compile(
+    rb"[0-9]{1,10}[\x00\t\n\x0c\r ]+[0-9]{1,5}[\x00\t\n\x0c\r ]+R" + _PDF_TOKEN_END
+)
+_PDF_ATOM = re.compile(
+    rb"(?:true|false|null|[+-]?(?:[0-9]+\.?[0-9]*|\.[0-9]+))" + _PDF_TOKEN_END
+)
+_PDF_HEX = re.compile(rb"<[0-9A-Fa-f\x00\t\n\x0c\r ]*>")
+_PDF_WHITESPACE = b"\x00\t\n\x0c\r "
+# Per-mode observation keys every genuine COMPLETED record carries.
+_API_ROW_KEYS = frozenset(
+    {
+        "name",
+        "resolved",
+        "callable",
+        "defining_module",
+        "type",
+        "error",
+        "legacy",
+        "ownership_present",
+    }
+)
+_CASE_KEYS = frozenset(
+    {
+        "case_id",
+        "family",
+        "input_file",
+        "left_path",
+        "right_path",
+        "left",
+        "operator",
+        "right",
+        "operand_unit",
+        "expected",
+        "observed",
+    }
+)
+_FILE_INT_KEYS = ("raw_bytes", "normalized_bytes")
+_FILE_DIGEST_KEYS = ("raw_sha256", "normalized_sha256")
 
 
 class DriverError(RuntimeError):
     """Report an invalid or unavailable registered collection operation."""
 
 
-def _git(*args: str) -> str:
+def _git_bytes(*args: str) -> bytes:
     executable = shutil.which("git")
     if executable is None:
         raise DriverError("git is unavailable; source identity cannot be established")
     result = subprocess.run(
         [executable, *args],
         cwd=ROOT,
-        text=True,
         capture_output=True,
         check=True,
         timeout=30,
     )
-    return result.stdout.strip()
+    return result.stdout
+
+
+def _git(*args: str) -> str:
+    return _git_bytes(*args).decode("utf-8").strip()
 
 
 def _mapping(value: object, context: str) -> dict[str, Any]:
@@ -223,6 +271,8 @@ def collect_api() -> dict[str, Any]:
     _check_origin(prin, ROOT / "python/prin/__init__.py")
     legacy = set(_legacy_names())
     expected = legacy | PRIN_ADDITIONS
+    if legacy & PRIN_ADDITIONS or len(expected) != API_SYMBOL_COUNT:
+        raise DriverError("expected API population is not the registered 172 + 3")
     guide = read_no_follow(ROOT / "DOCS/sphinx/migration_guide.rst", "Migration Guide")
     baseline = read_no_follow(
         ROOT / "DOCS/baselines/wp001_api_traceability.md", "API ownership"
@@ -260,7 +310,16 @@ def collect_api() -> dict[str, Any]:
                 "error": None,
             }
         except AttributeError as exc:
-            row = {"name": name, "resolved": False, "error": str(exc)}
+            # Same schema as a resolved row: an absent export has no
+            # callable/module/type observation, which is not ``False``.
+            row = {
+                "name": name,
+                "resolved": False,
+                "callable": None,
+                "defining_module": None,
+                "type": None,
+                "error": str(exc),
+            }
         row["legacy"] = name in legacy
         row["ownership_present"] = name not in legacy or (
             name in owned and name in guide_names
@@ -288,8 +347,18 @@ def collect_conclusions(documents: Mapping[str, dict[str, Any]]) -> dict[str, An
         Labelled operands, independent predictions and observed predicate values.
 
     Raises:
-        DriverError: If the registered input schema or population is invalid.
+        DriverError: If the registered input schema or population is invalid,
+            including a missing key or a wrongly typed container.
     """
+    try:
+        return _collect_conclusions(documents)
+    except (KeyError, TypeError, IndexError) as exc:
+        raise DriverError(
+            f"registered historical input schema invalid: {exc!r}"
+        ) from exc
+
+
+def _collect_conclusions(documents: Mapping[str, dict[str, Any]]) -> dict[str, Any]:
     cases: list[dict[str, Any]] = []
 
     def add(
@@ -469,6 +538,11 @@ def collect_conclusions(documents: Mapping[str, dict[str, Any]]) -> dict[str, An
             "stored_coupling_K",
             right_path=f"/zones/{name}_cpu/K_c",
         )
+    if (
+        len(cases) != CLAIM_CASE_COUNT
+        or len({case["case_id"] for case in cases}) != CLAIM_CASE_COUNT
+    ):
+        raise DriverError("registered claim population is not 62 unique cases")
     return {"cases": cases, "unit": "claim_comparator_record"}
 
 
@@ -506,7 +580,9 @@ def _snapshot(destination: Path) -> tuple[dict[str, dict[str, Any]], dict[str, A
 
 def _pdf_parts(
     payload: bytes,
-) -> tuple[bytes, list[tuple[int, bytes]], int | None, bytes, bytes]:
+) -> tuple[
+    bytes, list[tuple[tuple[int, int], bytes]], tuple[int, int] | None, bytes, bytes
+]:
     """Validate the registered classic-xref container and locate its objects.
 
     The PDF subset is Matplotlib's single-revision, classic-xref output. This
@@ -517,8 +593,12 @@ def _pdf_parts(
     error = "malformed PDF publication output (classic-xref container required)"
     if re.match(rb"%PDF-(?:1\.[0-7]|2\.0)[\r\n]", payload) is None:
         raise DriverError(error)
+    # Every decimal capture is bounded (offsets/object numbers to 10 digits,
+    # generations to 5, as in a classic xref entry) so an adversarial
+    # oversized field fails the match, and therefore raises DriverError,
+    # instead of reaching int()'s digit limit as a ValueError.
     footer = re.search(
-        rb"(?m)^startxref[ \t]*[\r\n]+([0-9]+)[ \t]*[\r\n]+%%EOF[ \t\r\n]*\Z",
+        rb"(?m)^startxref[ \t]*[\r\n]+([0-9]{1,10})[ \t]*[\r\n]+%%EOF[ \t\r\n]*\Z",
         payload,
     )
     if footer is None:
@@ -533,7 +613,9 @@ def _pdf_parts(
     canonical = [lines[0]]
     index = 1
     while index < len(lines) and lines[index].strip() != b"trailer":
-        subsection = re.fullmatch(rb"([0-9]+)[ \t]+([0-9]+)", lines[index].strip())
+        subsection = re.fullmatch(
+            rb"([0-9]{1,10})[ \t]+([0-9]{1,10})", lines[index].strip()
+        )
         if subsection is None:
             raise DriverError(error)
         first, count = (int(value) for value in subsection.groups())
@@ -562,8 +644,18 @@ def _pdf_parts(
     dictionary = re.fullmatch(rb"trailer\s*<<(.*)>>\s*", trailer, re.S)
     if dictionary is None or not entries:
         raise DriverError(error)
-    size = re.search(rb"/Size\s+([0-9]+)\b", dictionary.group(1))
-    root = re.search(rb"/Root\s+([0-9]+)\s+([0-9]+)\s+R\b", dictionary.group(1))
+    # Each structural key appears exactly once in Matplotlib's flat trailer;
+    # a second occurrence (e.g. inside a string value) could otherwise steer
+    # which object is treated as Info, so it is malformed.
+    if any(
+        len(re.findall(key, dictionary.group(1))) > 1
+        for key in (rb"/Size\b", rb"/Root\b", rb"/Info\b")
+    ):
+        raise DriverError(error)
+    size = re.search(rb"/Size\s+([0-9]{1,10})\b", dictionary.group(1))
+    root = re.search(
+        rb"/Root\s+([0-9]{1,10})\s+([0-9]{1,5})\s+R\b", dictionary.group(1)
+    )
     if (
         size is None
         or int(size.group(1)) != max(number for number, _ in entries) + 1
@@ -573,13 +665,19 @@ def _pdf_parts(
     root_key = (int(root.group(1)), int(root.group(2)))
     if entries.get(root_key, (0, b"f"))[1] != b"n":
         raise DriverError(error)
-    info = re.search(rb"/Info\s+([0-9]+)\s+([0-9]+)\s+R\b", dictionary.group(1))
-    info_number = None
+    info = re.search(
+        rb"/Info\s+([0-9]{1,10})\s+([0-9]{1,5})\s+R\b", dictionary.group(1)
+    )
+    info_key: tuple[int, int] | None = None
+    if info is None and re.search(rb"/Info\b", dictionary.group(1)):
+        # A present but unparseable/oversized /Info is malformed, not absent.
+        raise DriverError(error)
     if info is not None:
+        # The full (number, generation) key, so a same-number object of
+        # another generation is never canonicalized as Info.
         info_key = (int(info.group(1)), int(info.group(2)))
         if entries.get(info_key, (0, b"f"))[1] != b"n":
             raise DriverError(error)
-        info_number = info_key[0]
     in_use = sorted(
         (position, number, generation)
         for (number, generation), (position, kind) in entries.items()
@@ -587,7 +685,7 @@ def _pdf_parts(
     )
     if not in_use or len({position for position, _, _ in in_use}) != len(in_use):
         raise DriverError(error)
-    objects: list[tuple[int, bytes]] = []
+    objects: list[tuple[tuple[int, int], bytes]] = []
     for item, (position, number, generation) in enumerate(in_use):
         end = in_use[item + 1][0] if item + 1 < len(in_use) else offset
         segment = payload[position:end]
@@ -599,9 +697,10 @@ def _pdf_parts(
             or not segment.rstrip().endswith(b"endobj")
         ):
             raise DriverError(error)
-        if number == info_number and re.search(rb"(?m)^stream[\r\n]", segment):
+        key = (number, generation)
+        if key == info_key and re.search(rb"(?m)^stream[\r\n]", segment):
             raise DriverError(error)
-        objects.append((number, segment))
+        objects.append((key, segment))
     trailer = re.sub(
         rb"/ID\s*\[\s*<[0-9a-fA-F]+>\s*<[0-9a-fA-F]+>\s*\]",
         b"/ID [<normalized> <normalized>]",
@@ -612,24 +711,88 @@ def _pdf_parts(
     return (
         payload[: in_use[0][0]],
         objects,
-        info_number,
+        info_key,
         b"".join(canonical),
         canonical_footer,
     )
 
 
+def _pdf_value_end(body: bytes, start: int, error: str) -> int:
+    """Return the end of one direct PDF value (no arrays/dictionaries)."""
+    if body[start : start + 1] == b"(":
+        depth = 0
+        index = start
+        while index < len(body):
+            character = body[index]
+            if character == 0x5C:  # backslash: the next byte is escaped
+                index += 2
+                continue
+            if character == 0x28:
+                depth += 1
+            elif character == 0x29:
+                depth -= 1
+                if depth == 0:
+                    return index + 1
+            index += 1
+        raise DriverError(error)
+    if body[start : start + 2] != b"<<":
+        for pattern in (_PDF_HEX, _PDF_NAME, _PDF_REFERENCE, _PDF_ATOM):
+            match = pattern.match(body, start)
+            if match is not None:
+                return match.end()
+    raise DriverError(error)
+
+
+def _canonical_info(segment: bytes) -> bytes:
+    """Remove the registered Info entries and re-serialize the rest.
+
+    The Info object is parsed as a flat dictionary of direct values. The
+    four registered metadata keys are removed *with* their values, so an
+    arm that never wrote a key (the reference writes no ``ModDate``) and an
+    arm that did compare equal, and the original value lengths cannot leave
+    line-wrap residue. Every other entry is retained byte-exactly, in its
+    original order, with single-space separators.
+    """
+    error = "malformed PDF Info dictionary (flat direct-value dictionary required)"
+    match = re.match(rb"([0-9]{1,10}) ([0-9]{1,5}) obj[\x00\t\n\x0c\r ]*<<", segment)
+    if match is None:
+        raise DriverError(error)
+    # Tokenize forward to the dictionary's own closing ">>" (a regex split on
+    # the last ">>" would mis-split a final hex value such as "<AB>>>").
+    body = segment
+    kept: list[bytes] = []
+    seen: set[bytes] = set()
+    index = match.end()
+    while True:
+        while index < len(body) and body[index] in _PDF_WHITESPACE:
+            index += 1
+        if body[index : index + 2] == b">>":
+            if re.fullmatch(
+                rb"[\x00\t\n\x0c\r ]*endobj[\x00\t\n\x0c\r ]*", body[index + 2 :]
+            ):
+                break
+            raise DriverError(error)
+        name = _PDF_NAME.match(body, index)
+        if name is None or name.group() in seen:
+            raise DriverError(error)
+        seen.add(name.group())
+        index = name.end()
+        while index < len(body) and body[index] in _PDF_WHITESPACE:
+            index += 1
+        end = _pdf_value_end(body, index, error)
+        if name.group()[1:] not in PDF_INFO_MASKED_KEYS:
+            kept.append(name.group() + b" " + body[index:end])
+        index = end
+    entries = b"".join(b" " + entry for entry in kept)
+    return b"%s %s obj\n<<%s >>\nendobj\n" % (match.group(1), match.group(2), entries)
+
+
 def _normalized_pdf(payload: bytes) -> bytes:
-    """Mask only registered Info fields, document ID and relocation offsets."""
-    prefix, objects, info_number, xref, footer = _pdf_parts(payload)
+    """Canonicalize only the registered Info entries, document ID and offsets."""
+    prefix, objects, info_key, xref, footer = _pdf_parts(payload)
     parts = [prefix]
-    for number, segment in objects:
-        if number == info_number:
-            segment = re.sub(
-                rb"/(CreationDate|ModDate|Creator|Producer)\s+\((?:\\.|[^\\)])*\)",
-                rb"/\1 (normalized)",
-                segment,
-            )
-        parts.append(segment)
+    for key, segment in objects:
+        parts.append(_canonical_info(segment) if key == info_key else segment)
     return b"".join(parts) + xref + footer
 
 
@@ -640,6 +803,9 @@ def _validate_png(payload: bytes) -> None:
         raise DriverError(error)
     offset = 8
     chunks: list[bytes] = []
+    ihdr = b""
+    palette_entries = 0
+    transparency_length = 0
     while offset < len(payload):
         if offset + 12 > len(payload):
             raise DriverError(error)
@@ -660,6 +826,14 @@ def _validate_png(payload: bytes) -> None:
         chunks.append(kind)
         if kind == b"IEND" and (length != 0 or end != len(payload)):
             raise DriverError(error)
+        if kind == b"IHDR":
+            ihdr = data
+        elif kind == b"PLTE":
+            if length == 0 or length % 3 or length > 768:
+                raise DriverError(error)
+            palette_entries = length // 3
+        elif kind == b"tRNS":
+            transparency_length = length
         offset = end
     if (
         not chunks
@@ -673,6 +847,43 @@ def _validate_png(payload: bytes) -> None:
         raise DriverError(error)
     data_indices = [index for index, kind in enumerate(chunks) if kind == b"IDAT"]
     if data_indices != list(range(data_indices[0], data_indices[-1] + 1)):
+        raise DriverError(error)
+    # IHDR fields and the colour-type rules for the retained PLTE/tRNS chunks
+    # (PNG spec 11.2.2-11.3.2): both precede the first IDAT, tRNS follows
+    # PLTE, PLTE is required for indexed and forbidden for greyscale images,
+    # and tRNS is forbidden where a full alpha channel exists.
+    valid_depths = {
+        0: {1, 2, 4, 8, 16},
+        2: {8, 16},
+        3: {1, 2, 4, 8},
+        4: {8, 16},
+        6: {8, 16},
+    }
+    if len(ihdr) != 13:
+        raise DriverError(error)
+    width = int.from_bytes(ihdr[:4], "big")
+    height = int.from_bytes(ihdr[4:8], "big")
+    depth, colour, compression, filtering, interlace = ihdr[8:13]
+    palette = b"PLTE" in chunks
+    transparency = b"tRNS" in chunks
+    if (
+        not 0 < width < 2**31
+        or not 0 < height < 2**31
+        or depth not in valid_depths.get(colour, set())
+        or (compression, filtering) != (0, 0)
+        or interlace not in {0, 1}
+        or (colour == 3 and not palette)
+        or (colour in {0, 4} and palette)
+        or (colour in {4, 6} and transparency)
+        or chunks.count(b"tRNS") > 1
+        or (palette and chunks.index(b"PLTE") > data_indices[0])
+        or (transparency and chunks.index(b"tRNS") > data_indices[0])
+        or (palette and transparency and chunks.index(b"tRNS") < chunks.index(b"PLTE"))
+        or (colour == 3 and palette_entries > 2**depth)
+        or (colour == 3 and transparency and transparency_length > palette_entries)
+        or (colour == 0 and transparency and transparency_length != 2)
+        or (colour == 2 and transparency and transparency_length != 6)
+    ):
         raise DriverError(error)
     try:
         with Image.open(BytesIO(payload)) as image:
@@ -700,7 +911,11 @@ def normalized_bytes(payload: bytes, suffix: str) -> bytes:
             malformed.
     """
     if suffix == ".tex":
-        return payload
+        # Line-terminator canonicalization only: the pinned reference writer
+        # opens tables in text mode, so Windows translates LF to CRLF in the
+        # I/O layer; PRIN writes LF. A lone CR and every other byte, including
+        # all other whitespace, stays significant.
+        return payload.replace(b"\r\n", b"\n")
     if suffix == ".pdf":
         return _normalized_pdf(payload)
     if suffix != ".png":
@@ -714,9 +929,20 @@ def normalized_bytes(payload: bytes, suffix: str) -> bytes:
         return normalize_matplotlib_output(snapshot)
 
 
+def _font_cache_state() -> dict[str, Any]:
+    cache = (
+        Path(matplotlib.get_cachedir())
+        / f"fontlist-v{font_manager.FontManager.__version__}.json"
+    )
+    if not cache.exists():
+        return {"name": cache.name, "sha256": None}
+    return {"name": cache.name, "sha256": _digest(read_no_follow(cache, "font cache"))}
+
+
 def _render_environment() -> dict[str, Any]:
     fonts = Path(matplotlib.get_data_path()) / "fonts/ttf"
     return {
+        "font_cache": _font_cache_state(),
         "matplotlib": matplotlib.__version__,
         "numpy": numpy.__version__,
         "pillow": pillow_version,
@@ -797,8 +1023,11 @@ def collect_reproduction(
         }
         if name.startswith("tables/") and name in EXPECTED_FILES:
             archived = read_no_follow(REFERENCE / "paper" / name, "archived table")
+            archived_normalized = normalized_bytes(archived, ".tex")
             record["archived_bytes"] = len(archived)
             record["archived_sha256"] = _digest(archived)
+            record["archived_normalized_bytes"] = len(archived_normalized)
+            record["archived_normalized_sha256"] = _digest(archived_normalized)
         files.append(record)
     verify_manifest(snapshot, INPUT_MANIFEST)
     if renderer != _render_environment():
@@ -812,9 +1041,12 @@ def collect_reproduction(
     }
 
 
-def _admission(source_sha: str) -> dict[str, Any]:
-    protocol_bytes = read_no_follow(PROTOCOL, "pre-registration")
-    protocol = protocol_bytes.decode("utf-8")
+def _approval_date(protocol_bytes: bytes) -> str:
+    """Return the dated MichaelMaillet approval of an APPROVED protocol."""
+    try:
+        protocol = protocol_bytes.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise DriverError("pre-registration is not UTF-8 text") from exc
     status = re.search(r"^\*\*Status:\*\*[ \t]*([^\r\n]+)", protocol, re.M)
     if status is None or status.group(1).strip() != "APPROVED":
         raise DriverError("EXP-002 is not APPROVED; E1 must not execute")
@@ -829,44 +1061,56 @@ def _admission(source_sha: str) -> dict[str, Any]:
     )
     if approval is None:
         raise DriverError("dated MichaelMaillet scientific approval is missing")
-    datetime.strptime(approval.group(1), "%Y-%m-%d")
+    try:
+        datetime.strptime(approval.group(1), "%Y-%m-%d")
+    except ValueError as exc:
+        raise DriverError("dated MichaelMaillet approval is not a real date") from exc
+    return approval.group(1)
+
+
+def _admission(source_sha: str) -> dict[str, Any]:
+    protocol_bytes = read_no_follow(PROTOCOL, "pre-registration")
+    approval_date = _approval_date(protocol_bytes)
     if (
         not re.fullmatch(r"[0-9a-f]{40}", source_sha)
         or _git("rev-parse", "HEAD") != source_sha
     ):
         raise DriverError("--source-sha must be the current full 40-character HEAD")
     protocol_relative = PROTOCOL.relative_to(ROOT).as_posix()
+    log_relative = PROTOCOL.parent.relative_to(ROOT).as_posix() + "/log.md"
     changed = _git(
         "diff",
         "--name-only",
         "HEAD",
         "--",
         ".",
-        ":!benchmarks/results",
-        ":!DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md",
+        f":!{log_relative}",
     )
+    # Any modified tracked file blocks execution, including committed raw
+    # records. Every untracked, non-ignored file anywhere in the checkout
+    # invalidates execution (only new files under the EXP-002 raw record root
+    # and the E3 operator log are exempt), and so does any untracked top-level
+    # ``*.py``/``*.pth`` even if ignored: ``python -m`` puts the checkout root
+    # first on ``sys.path``, so such a file could shadow a standard-library or
+    # governed module.
     untracked = _git(
         "ls-files",
         "--others",
         "--exclude-standard",
         "--",
-        "crates",
-        "python",
-        "benchmarks",
-        "parity",
-        "tools",
-        "paper",
-        protocol_relative,
+        ".",
+        ":!benchmarks/results/EXP-002",
+        f":!{log_relative}",
     )
+    shadowing = _git("ls-files", "--others", "--", ":(glob)*.py", ":(glob)*.pth")
     source_untracked = [
         path
         for path in untracked.splitlines()
-        if not path.startswith("benchmarks/results/")
+        if not path.startswith("benchmarks/results/EXP-002/")
     ]
-    if changed or source_untracked:
+    if changed or source_untracked or shadowing:
         raise DriverError("uncommitted source/protocol changes invalidate execution")
-    committed = _git("show", f"HEAD:{protocol_relative}")
-    if committed != protocol.strip():
+    if _git_bytes("show", f"HEAD:{protocol_relative}") != protocol_bytes:
         raise DriverError("working pre-registration differs from its committed bytes")
     return {
         "source_sha": source_sha,
@@ -874,8 +1118,15 @@ def _admission(source_sha: str) -> dict[str, Any]:
         "preregistration_commit": _git(
             "log", "-1", "--format=%H", "--", protocol_relative
         ),
-        "approval_date_utc": approval.group(1),
+        "approval_date_utc": approval_date,
     }
+
+
+def _utc_stamp(stamp: str) -> None:
+    try:
+        datetime.strptime(stamp, "%Y%m%dT%H%M%SZ")
+    except ValueError as exc:
+        raise DriverError("run name UTC stamp is not a real registered time") from exc
 
 
 def _reserve(mode: str, run_dir: Path, source_sha: str) -> Path:
@@ -889,10 +1140,16 @@ def _reserve(mode: str, run_dir: Path, source_sha: str) -> Path:
         or run.parent != RAW_ROOT.absolute()
     ):
         raise DriverError("run path/label/SHA is not the registered direct-child path")
-    datetime.strptime(match.group("utc"), "%Y%m%dT%H%M%SZ")
+    _utc_stamp(match.group("utc"))
     _no_symlink_ancestors(run)
     if not run.parent.is_dir():
         raise DriverError("EXP-002 raw root is missing")
+    # Refuse a reused generated-output root *before* creating the raw run
+    # directory, so a rejected attempt leaves no empty, unrecorded RUN entry
+    # in the append-only raw tree.
+    generated = OUTPUT_ROOT / run.name
+    if generated.exists() or generated.is_symlink():
+        raise DriverError("generated-output run root is never reused")
     try:
         run.mkdir()
     except FileExistsError as exc:
@@ -908,20 +1165,142 @@ def _storage_check(run: Path) -> None:
             if path.is_file() and "__pycache__" not in path.parts
         )
 
-    if size(run) > RUN_CAP:
-        raise DriverError("registered 2 MiB per-run cap exceeded")
-    record_root = PROTOCOL.parent
-    if size(RAW_ROOT) + size(record_root) > RAW_CAP:
-        raise DriverError("registered EXP-002 10 MiB tracked-storage cap exceeded")
-    campaign_total = sum(
-        size(root) for root in RAW_ROOT.parent.glob("EXP-*") if root.is_dir()
-    )
+    # The registered caps are campaign-wide, so every run's closure measures
+    # the whole tracked record. An entry that cannot be measured (a symlink,
+    # an unreadable file) anywhere in it therefore fails closure — as a
+    # reported DriverError, never an unhandled traceback.
+    try:
+        if size(run) > RUN_CAP:
+            raise DriverError("registered 2 MiB per-run cap exceeded")
+        record_root = PROTOCOL.parent
+        if size(RAW_ROOT) + size(record_root) > RAW_CAP:
+            raise DriverError("registered EXP-002 10 MiB tracked-storage cap exceeded")
+        campaign_total = sum(
+            size(root) for root in RAW_ROOT.parent.glob("EXP-*") if root.is_dir()
+        )
+    except (OSError, ReproductionError) as exc:
+        raise DriverError(f"tracked storage cannot be measured: {exc}") from exc
     if campaign_total > 64 * 1024 * 1024:
         raise DriverError("campaign-wide 64 MiB tracked-storage cap exceeded")
 
 
+def _check_provenance(identity: Mapping[str, Any], source_sha: str) -> None:
+    """Bind a presented record to the committed protocol that authorized it."""
+    digest = identity.get("preregistration_sha256")
+    commit = identity.get("preregistration_commit")
+    approval_date = identity.get("approval_date_utc")
+    if (
+        not isinstance(digest, str)
+        or not re.fullmatch(r"[0-9a-f]{64}", digest)
+        or not isinstance(commit, str)
+        or not re.fullmatch(r"[0-9a-f]{40}", commit)
+        or not isinstance(approval_date, str)
+    ):
+        raise DriverError("pre-registration provenance fields are missing or malformed")
+    protocol_relative = PROTOCOL.relative_to(ROOT).as_posix()
+    try:
+        committed = _git_bytes("show", f"{commit}:{protocol_relative}")
+        merge_base = _git("merge-base", commit, source_sha)
+    except subprocess.SubprocessError as exc:
+        raise DriverError(
+            "recorded pre-registration commit cannot be resolved"
+        ) from exc
+    if _digest(committed) != digest:
+        raise DriverError(
+            "recorded pre-registration digest is not the committed protocol"
+        )
+    if _approval_date(committed) != approval_date:
+        raise DriverError("recorded approval date is not the committed protocol's")
+    if merge_base != commit:
+        raise DriverError("pre-registration commit is not an ancestor of the source")
+
+
+def _string_list(value: object, context: str) -> list[str]:
+    items = _list(value, context)
+    if not all(isinstance(item, str) for item in items):
+        raise DriverError(f"{context}: expected strings")
+    return cast("list[str]", items)
+
+
+def _check_observations(mode: str, value: object) -> None:
+    """Validate the collected payload's schema and identities, not its outcome.
+
+    A genuine COMPLETED api/conclusions record always carries the full
+    registered population (the collectors refuse anything else), so those
+    counts are enforced. A publication arm's file list is *not* counted: a
+    valid completed render that omits or adds an output is H3's registered
+    falsifier and must stay admissible for E4 to report it.
+    """
+    observations = _mapping(value, "observations")
+    if mode == "api":
+        expected = _string_list(observations.get("expected_names"), "expected names")
+        _string_list(observations.get("legacy_names"), "legacy names")
+        _string_list(observations.get("observed_names"), "observed names")
+        _string_list(observations.get("frozen_missing"), "frozen missing")
+        _string_list(observations.get("frozen_extra"), "frozen extra")
+        rows = [
+            _mapping(row, "API row")
+            for row in _list(observations.get("rows"), "API rows")
+        ]
+        if (
+            observations.get("unit") != "api_symbol"
+            or len(expected) != API_SYMBOL_COUNT
+            or len(set(expected)) != API_SYMBOL_COUNT
+            or any(set(row) != _API_ROW_KEYS for row in rows)
+            or [row["name"] for row in rows] != sorted(expected)
+        ):
+            raise DriverError("api observations are not the registered census schema")
+    elif mode == "conclusions":
+        cases = [
+            _mapping(case, "claim case")
+            for case in _list(observations.get("cases"), "claim cases")
+        ]
+        if (
+            observations.get("unit") != "claim_comparator_record"
+            or len(cases) != CLAIM_CASE_COUNT
+            or any(not _CASE_KEYS <= set(case) for case in cases)
+            or any(not isinstance(case["case_id"], str) for case in cases)
+            or len({case["case_id"] for case in cases}) != CLAIM_CASE_COUNT
+            or any(type(case["observed"]) is not bool for case in cases)
+            or any(type(case["expected"]) is not bool for case in cases)
+        ):
+            raise DriverError("claim observations are not the registered census schema")
+    else:
+        files = [
+            _mapping(item, "publication file")
+            for item in _list(observations.get("files"), "publication files")
+        ]
+        paths = [item.get("path") for item in files]
+        if (
+            observations.get("unit") != "generated_file"
+            or observations.get("implementation")
+            != ("reference" if mode == "reference" else "prin")
+            or observations.get("expected_files") != sorted(EXPECTED_FILES)
+            or not isinstance(observations.get("renderer"), dict)
+            or not all(isinstance(path, str) for path in paths)
+            or len(set(paths)) != len(paths)
+            or any(
+                type(item.get(key)) is not int or item[key] < 0
+                for item in files
+                for key in _FILE_INT_KEYS
+            )
+            or any(
+                not isinstance(item.get(key), str)
+                or not re.fullmatch(r"[0-9a-f]{64}", item[key])
+                for item in files
+                for key in _FILE_DIGEST_KEYS
+            )
+        ):
+            raise DriverError("publication observations are not the registered schema")
+
+
 def check_run_complete(run_dir: Path) -> None:
     """Validate a run's manifest, sidecar, envelope and completion status.
+
+    Closure also re-derives provenance: the recorded protocol digest must be
+    the committed protocol at the recorded commit, that protocol must carry
+    the recorded dated approval, and the commit must be an ancestor of the
+    recorded execution source.
 
     Args:
         run_dir: The direct-child registered run directory.
@@ -937,6 +1316,8 @@ def check_run_complete(run_dir: Path) -> None:
         or RAW_ROOT.is_symlink()
     ):
         raise DriverError("invalid registered run directory")
+    _utc_stamp(match.group("utc"))
+    _no_symlink_ancestors(run_dir)
     records = verify_manifest(run_dir, run_dir / "manifest.json")
     inventory = {record.path: record for record in records}
 
@@ -962,6 +1343,14 @@ def check_run_complete(run_dir: Path) -> None:
     )
     if set(inventory) != {"campaign-metadata.json", result_name}:
         raise DriverError("run inventory is not exactly the declared sidecar/result")
+    # verify_manifest inventories only *.json; the exact declared artefact
+    # mapping also admits no other directory entry of any kind.
+    if {entry.name for entry in run_dir.iterdir()} != {
+        "campaign-metadata.json",
+        result_name,
+        "manifest.json",
+    }:
+        raise DriverError("run inventory holds an undeclared directory entry")
     if (
         metadata.get("exp_id") != "EXP-002"
         or metadata.get("session") != "0161"
@@ -991,12 +1380,6 @@ def check_run_complete(run_dir: Path) -> None:
         or source_sha[:7] != match.group("sha")
         or identity.get("source_sha") != source_sha
         or identity.get("input_manifest_sha256") != INPUT_MANIFEST_SHA
-        or not re.fullmatch(
-            r"[0-9a-f]{64}", str(identity.get("preregistration_sha256", ""))
-        )
-        or not re.fullmatch(
-            r"[0-9a-f]{40}", str(identity.get("preregistration_commit", ""))
-        )
         or identity.get("input_record_count") != 172
         or type(config.get("seed_counter")) is not int
         or type(config.get("seed_key")) is not int
@@ -1033,6 +1416,8 @@ def check_run_complete(run_dir: Path) -> None:
         or environment["logical_cpus"] < 1
     ):
         raise DriverError("required logical CPU count is invalid")
+    _check_observations(mode, result.get("observations"))
+    _check_provenance(identity, source_sha)
     _storage_check(run_dir)
 
 
@@ -1045,6 +1430,12 @@ def run_registered(
     seed_key: int = 2,
 ) -> Path:
     """Collect one approved leg, preserving aborted and incomplete attempts.
+
+    Every failure after the RUN directory is reserved and before the result
+    is written — including creating the generated-output root or writing the
+    campaign sidecar — is recorded as an ``ABORTED`` result and manifested
+    before it is re-raised. A failure while writing that record itself
+    leaves an unmanifested directory, which closure rejects.
 
     Args:
         mode: One of the five registered mode names.
@@ -1076,23 +1467,8 @@ def run_registered(
     _no_symlink_ancestors(OUTPUT_ROOT)
     run = _reserve(mode, run_dir, source_sha)
     generated = OUTPUT_ROOT / run.name
-    if generated.exists() or generated.is_symlink():
-        raise DriverError("generated-output run root is never reused")
-    generated.mkdir(parents=True)
     result_name = (
         f"{mode}.json" if mode in {"api", "conclusions"} else "reproduction.json"
-    )
-    write_json_exclusive(
-        run / "campaign-metadata.json",
-        {
-            "exp_id": "EXP-002",
-            "session": "0161",
-            "run_id": run.name,
-            "operator": operator,
-            "mode": mode,
-            "artefacts": {result_name: MODE_TAGS[mode]},
-        },
-        conflict_message="campaign sidecar already exists",
     )
     config_object = BenchmarkConfig(
         iterations=10,
@@ -1113,6 +1489,23 @@ def run_registered(
     payload: dict[str, Any] = {"identity": identity, "seed_used": False}
     failed: Exception | None = None
     try:
+        write_json_exclusive(
+            run / "campaign-metadata.json",
+            {
+                "exp_id": "EXP-002",
+                "session": "0161",
+                "run_id": run.name,
+                "operator": operator,
+                "mode": mode,
+                "artefacts": {result_name: MODE_TAGS[mode]},
+            },
+            conflict_message="campaign sidecar already exists",
+        )
+        OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        generated.mkdir()
+        # Re-check after creation: narrows the window in which an ancestor
+        # could have been swapped for a symlink since the pre-reserve check.
+        _no_symlink_ancestors(generated)
         documents, input_identity = _snapshot(generated / "inputs")
         identity.update(input_identity)
         if mode == "api":
@@ -1168,7 +1561,13 @@ def main(argv: list[str] | None = None) -> int:
             args.seed_counter,
             args.seed_key,
         )
-    except (DriverError, OSError, ValueError, subprocess.SubprocessError) as exc:
+    except (
+        DriverError,
+        OSError,
+        ValueError,
+        ReproductionError,
+        subprocess.SubprocessError,
+    ) as exc:
         print(f"EXP-002 NOT COMPLETED: {exc}", file=sys.stderr)
         return 1
     return 0

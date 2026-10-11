@@ -1,0 +1,12 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe tools/check_deviation_ledger.py DOCS/reports/039-project-state.md DOCS/reports/040-project-state.md
+CWD: C:/dev/PRIN
+SOURCE: campaign/0159-exp002-e1 working tree: 78d360029028c0571bdc272bef39e901c85f09da + uncommitted PR #33 remediation incl. self-audit fixes and the .gitleaksignore guard-test update (final pre-commit source; new evidence staged)
+UTC-START: 2026-10-11T21:53:01Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+Ledger consistency check passed.
+  Compared 142 rows in DOCS\reports\039-project-state.md with 146 rows in DOCS\reports\040-project-state.md.
+----
+ELAPSED_SECONDS: 10.2
+EXIT_CODE: 0

@@ -1,0 +1,40 @@
+COMMAND: C:/Users/there/AppData/Roaming/npm/snyk.cmd code test C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/sast-input-final --severity-threshold=medium --org=symbo-gif
+CWD: C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/sast-input-final
+SOURCE: byte-identical copies of the 6 changed first-party Python files (G14-sast-copy-attestation.txt)
+UTC-START: 2026-10-11T23:18:36Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+
+Testing C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/sast-input-final ...
+
+        
+💡 Tip
+
+   You are currently viewing results with --severity-threshold applied.
+   To view all issues, remove the --severity-threshold flag            
+                                                                       
+
+╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Test Summary                                                                                                                                       │
+│                                                                                                                                                    │
+│   Organization:      symbo-gif                                                                                                                     │
+│   Test type:         Static code analysis                                                                                                          │
+│   Project path:      C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/sast-input-final    │
+│                                                                                                                                                    │
+│   Total issues:   0                                                                                                                                │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+    
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+
+
+💡 Tip
+
+   Some capabilities, including the ability to apply ignores, are unavailable. Retest the project with the --remote-repo-url parameter or from within a repository to enable full functionality.
+                                                                                                                                                                                                
+----
+ELAPSED_SECONDS: 25.4
+EXIT_CODE: 0

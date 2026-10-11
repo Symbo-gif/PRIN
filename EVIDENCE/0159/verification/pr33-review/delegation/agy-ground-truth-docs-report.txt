@@ -1,0 +1,441 @@
+# Independent Verification Report: PR #33 Documentation and Governance Claims (D1–D18)
+
+**Verifier Role:** Independent read-only verification agent  
+**Repository:** `C:\dev\PRIN`  
+**Git Branch / Commit:** `campaign/0159-exp002-e1` at HEAD `78d360029028c0571bdc272bef39e901c85f09da`  
+**Operating Mode:** Read-only (no file modifications, no shell execution)  
+**Input Specification:** `task-agy-docs.md` (untrusted reviews evaluated strictly against repository evidence)
+
+---
+
+## Detailed Claim Assessments
+
+### D1. `CHANGELOG.md` Publication Status
+- **Claim:** `CHANGELOG.md` (~line 39–40) says publication (push/PR) is pending, although PR #33 is open.
+- **File & Lines:** [`CHANGELOG.md`](file:///C:/dev/PRIN/CHANGELOG.md#L39-L40) (lines 39–40)
+- **Verbatim Quote:**
+  ```markdown
+  39: - **Publication status:** the full-history gitleaks exception is pending maintainer approval
+  40:   and publication (push/PR) is also pending.
+  ```
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** Lines 39–40 state that "publication (push/PR) is also pending", which is stale now that PR #33 is published and actively under review.
+
+---
+
+### D2. `e1-handoff.md` Internal Contradictions and Status
+- **Claim:** `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md` line ~85–86 lists "evidence packaging of the final-gate captures" as remaining work while line ~40 says `final-6314532/` is packaged (self-contradiction); line ~124–126 says branch unpushed / no PR opened.
+- **File & Lines:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md#L40) (lines 40, 85–86, 124–126)
+- **Verbatim Quotes:**
+  - Line 40:
+    ```markdown
+    40:   final FAST and FULL runs on 6314532 (`verification/final-6314532/`, packaged);
+    ```
+  - Lines 85–86:
+    ```markdown
+    85: - Remaining E1 work: evidence packaging of the final-gate captures;
+    86:   reconciliation of any open review comments.
+    ```
+  - Lines 124–126:
+    ```markdown
+    124: 1. Branch is **not pushed**; no PR is opened. (The branch name
+    125:    `campaign/0159-exp002-e1` is local-only.) E1 handoff is recorded by
+    126:    committing this note.
+    ```
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** Line 40 describes `verification/final-6314532/` as packaged while lines 85–86 contradictorily list evidence packaging as remaining work, and lines 124–126 assert that the branch is unpushed with no PR opened despite PR #33 being open.
+
+---
+
+### D3. `DOCS/experiments/README.md` Stale Gate and EXP-001-r1 Status
+- **Claim:** `DOCS/experiments/README.md` (~line 124) says the final full local gate is pending; and (~line 156) the EXP-001-r1 row still says "E1–E5 PR authorized, not yet opened" although PR #28 merged (checked via git-free evidence).
+- **File & Lines:** [`DOCS/experiments/README.md`](file:///C:/dev/PRIN/DOCS/experiments/README.md#L124) (lines 124, 156); corroborating git-free evidence at [`EVIDENCE/ea007/readiness-state.json`](file:///C:/dev/PRIN/EVIDENCE/ea007/readiness-state.json#L40-L41) (lines 40–41), [`EVIDENCE/ea007/README.md`](file:///C:/dev/PRIN/EVIDENCE/ea007/README.md#L9-L10) (lines 9–10), and [`DOCS/sessions/SESSION_REGISTER.md`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L224) (line 224).
+- **Verbatim Quotes:**
+  - `DOCS/experiments/README.md` line 124:
+    ```markdown
+    124: - **Local validation:** in progress at 0159. Narrow ruff / mypy clean; full-suite FAST/FULL exit-status investigation underway; final full local gate is pending.
+    ```
+  - `DOCS/experiments/README.md` line 156:
+    ```markdown
+    156: | EXP-001-r1 | Golden-trajectory numerical parity (amendment #47 remediation rerun) | 0158A–0158D | `DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/` | COMPLETE | E1–E5 PR authorized, not yet opened. 504/504 cases evaluated at amended tolerances: 504/504 pass. All 6 numerical invariants preserved. DV-007 f32-complex drift bounded at 6.13e-8. Zero unexpected divergences. Cross-platform repeatability holds. |
+    ```
+  - `EVIDENCE/ea007/readiness-state.json` lines 40–41 (git-free merge proof):
+    ```json
+    40:     "pull_request": 28,
+    41:     "merge_sha": "32cfed8a0b4d915a04e18efbfadd146a2ecb7e32"
+    ```
+  - `EVIDENCE/ea007/README.md` lines 9–10:
+    ```markdown
+    9:   `readiness-merge-check-pr28.log` and `readiness-merge-check-pr28.exit` —
+    10:   verbatim historical merge check output and exit code for PR #28.
+    ```
+  - `DOCS/sessions/SESSION_REGISTER.md` line 224:
+    ```markdown
+    224: | 0158D | EXP-001-r1 E5: report and archival | 0158C | 0159 | COMPLETE | ... PR #28 ...
+    ```
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** Line 124 states the final local gate is pending despite checkpoint `63145325` completion, and line 156 describes EXP-001-r1 as "PR authorized, not yet opened" despite incontrovertible repository records proving PR #28 merged.
+
+---
+
+### D4. `EVIDENCE/README.md` Full-Gate Directory Omission
+- **Claim:** `EVIDENCE/README.md` (~line 101–102): says "no final full-gate pass is asserted" and the 0159 bullet describes only `verification/` focused-check captures, never mentioning `full-gate/` or `final-6314532/`.
+- **File & Lines:** [`EVIDENCE/README.md`](file:///C:/dev/PRIN/EVIDENCE/README.md#L99-L102) (lines 99–102)
+- **Verbatim Quote:**
+  ```markdown
+  99: - `0159/` (EXP-002 E1 local-validation and entry evidence): `entry-state.json`,
+  100:   the SHA-256 evidence manifest (`verification/SHA256SUMS.txt`), and the
+  101:   `verification/` focused-check captures for the EXP-002 driver and its quality
+  102:   gates. **No final full-gate pass is asserted** (amendment #49 adoption).
+  ```
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** Lines 99–102 describe the bundle as focused-check captures only and state that no final full-gate pass is asserted, omitting the actual `full-gate/` and `final-6314532/` directories present in the tree.
+
+---
+
+### D5. `SESSION_REGISTER.md` Ambiguous Closure Sentence
+- **Claim:** `DOCS/sessions/SESSION_REGISTER.md` line ~5: a phrase like "final session closure is recorded at 0160" is wrong/ambiguous. Quote it and judge.
+- **File & Lines:** [`DOCS/sessions/SESSION_REGISTER.md`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L3-L5) (lines 3–5)
+- **Verbatim Quote:**
+  ```markdown
+  3: Master session register for the PRIN rebuild project. Default execution
+  4: order is top-to-bottom. Status values: `PLANNED`, `IN_PROGRESS`, `COMPLETE`.
+  5: Session 0159 is `IN_PROGRESS`; final session closure is recorded at 0160.
+  ```
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** Stating "final session closure is recorded at 0160" is erroneous and confusing because EXP-002 runs through session 0163 (session 0160 is merely E2 review/approval, not closure of the experiment), and Phase 7 experiment stages are discrete individual sessions rather than batched work-package cycles.
+
+---
+
+### D6. `AGENTS.md` Pytest Invocation Flag Discrepancy
+- **Claim:** `AGENTS.md`: §7 (around lines 40–54) calls `-o faulthandler_timeout=300 --durations=20` "the normal required full pytest invocation", but the "Local verification one-liner" list (~line 71–72) omits those flags on the FAST and FULL pytest lines.
+- **File & Lines:** [`AGENTS.md`](file:///C:/dev/PRIN/AGENTS.md#L39-L72) (lines 39–43, 54, 71–72)
+- **Verbatim Quotes:**
+  - Lines 39–43:
+    ```markdown
+    39: The normal required full pytest invocation runs **without** a shell `timeout` wrapper and carries
+    40: faulthandler plus slowest-durations instrumentation:
+    41: 
+    42: ```powershell
+    43: .venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20
+    44: ```
+    ```
+  - Line 54:
+    ```markdown
+    54: $previousPath=$env:PATH; try { $env:PATH='C:\Program Files\Git\bin;'+$previousPath; & .venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20; $pytestExit=$LASTEXITCODE } finally { $env:PATH=$previousPath }
+    ```
+  - Lines 71–72 ("Local verification one-liner"):
+    ```powershell
+    71: .venv\Scripts\python -m pytest tests/ -m "not slow and not gpu" --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp
+    72: .venv\Scripts\python -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp
+    ```
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** §7 designates the `-o faulthandler_timeout=300 --durations=20` flags as the required full pytest invocation, yet the authoritative local verification one-liner list at lines 71–72 omits those flags on both pytest commands.
+
+---
+
+### D7. Figure Count Discrepancy (14 vs 15 Figures)
+- **Claim:** Session briefs `DOCS/sessions/phase-7/0161-*.md`, `0162-*.md`, `0163-*.md` (lines ~20 and ~25) and `DOCS/PRIN_Project_Plan.md` (~line 48, item F4) still say "15 figures", while 0159/0160 say "14 figures × 2 formats + 11 tables = 39". Also check `DOCS/experiments/campaign-plan.md` for a "Figure count is 14, not 15" reconciliation and quote it.
+- **File & Lines:**
+  - [`DOCS/sessions/phase-7/0161-exp002-e3-execution-and-raw-records.md`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0161-exp002-e3-execution-and-raw-records.md#L20) (lines 20, 25)
+  - [`DOCS/sessions/phase-7/0162-exp002-e4-analysis-and-hypothesis-evaluation.md`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0162-exp002-e4-analysis-and-hypothesis-evaluation.md#L20) (lines 20, 25)
+  - [`DOCS/sessions/phase-7/0163-exp002-e5-reporting-and-archival.md`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0163-exp002-e5-reporting-and-archival.md#L20) (lines 20, 25)
+  - [`DOCS/PRIN_Project_Plan.md`](file:///C:/dev/PRIN/DOCS/PRIN_Project_Plan.md#L48) (line 48)
+  - [`DOCS/sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md#L33) (lines 33, 38)
+  - [`DOCS/sessions/phase-7/0160-exp002-e2-review-and-approval.md`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0160-exp002-e2-review-and-approval.md#L25) (lines 25, 42)
+  - [`DOCS/experiments/campaign-plan.md`](file:///C:/dev/PRIN/DOCS/experiments/campaign-plan.md#L64) (line 64)
+- **Verbatim Quotes:**
+  - `0161-*.md` lines 20 & 25:
+    `20: 175+ mapped symbols pass; all historical scientific conclusion orderings unchanged; 15 figures / 11 tables match the manifest`
+    `25: Missing symbols, changed scientific conclusions, or unexplained artifact mismatch (15 figures / 11 tables) = D1`
+  - `0162-*.md` and `0163-*.md` lines 20 & 25 carry the identical text.
+  - `DOCS/PRIN_Project_Plan.md` line 48 (F4):
+    `48: - **F4 — Reproducibility:** tools/reproduce.py regenerates all 15 figures and 11 tables byte-comparably from the same JSON artefacts with a matching SHA-256 manifest.`
+  - `0159-*.md` lines 33 & 38:
+    `33: ... the 14 figures × 2 formats + 11 tables = 39 generated files match the manifest ...`
+  - `0160-*.md` lines 25 & 42:
+    `25: ... the 14 figures × 2 formats + 11 tables = 39 generated files match the manifest ...`
+  - `DOCS/experiments/campaign-plan.md` line 64:
+    ```markdown
+    64: **Figure count is 14, not 15** (WP034-F1, PSR-034 §4: figures 2–15 are the verifiable set; tools/reproduce.py docstring "fourteen verifiable historical figures"). Registered reproduction target = **14 figures × 2 formats + 11 tables = 39 generated files**, with the 172-record paper/artefact_manifest.json, byte-comparable (PSR-038 §4: "172 artefacts verified, 39 files generated").
+    ```
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** Briefs 0161, 0162, 0163 and Project Plan F4 retain the stale "15 figures" target, whereas 0159 and 0160 were updated to 14 figures (39 generated files total), exactly matching the reconciliation established in `campaign-plan.md` line 64.
+
+---
+
+### D8. Plan Amendment #49 Documents Row Incompleteness
+- **Claim:** `DOCS/PRIN_Project_Plan.md` amendment #49 row (~line 248) lists its documents as "Project Plan §8.3 / Testing Standards §7 / Development Workflow and Audit Standards §3 / Coding Standards §5 / AGENTS.md / session 0159", omitting `Benchmarking_and_Reproducibility_Standards.md`, `Experimentation_Standards.md` and `DOCS/standards/README.md`, all of which cite amendment #49.
+- **File & Lines:** [`DOCS/PRIN_Project_Plan.md`](file:///C:/dev/PRIN/DOCS/PRIN_Project_Plan.md#L248) (line 248)
+- **Verbatim Quotes:**
+  - `DOCS/PRIN_Project_Plan.md` line 248:
+    ```markdown
+    248: | 49 | 2026-10-11 | Project Plan §8.3 / Testing Standards §7 / Development Workflow and Audit Standards §3 / Coding Standards §5 / `AGENTS.md` / session 0159 | **Supervised-local-validation timeout governance adopted within the existing session-0159 E1 scope.** ...
+    ```
+  - Citing standards files:
+    1. [`DOCS/standards/Testing_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Testing_Standards.md#L102): line 102 (`## 7. Supervised local validation — timeout governance (Plan amendment #49)`), line 153 (`amendment #49`)
+    2. [`DOCS/standards/Coding_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Coding_Standards.md#L148): line 148 (`Testing Standards §7 (Plan amendment #49)`)
+    3. [`DOCS/standards/Development_Workflow_and_Audit_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Development_Workflow_and_Audit_Standards.md#L146): line 146 (`Testing Standards §7 (Plan amendment #49)`)
+    4. [`DOCS/standards/Benchmarking_and_Reproducibility_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Benchmarking_and_Reproducibility_Standards.md#L46): line 46 (`Testing Standards §7 (Plan amendment #49)`)
+    5. [`DOCS/standards/Experimentation_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Experimentation_Standards.md#L39): line 39 (`Testing Standards §7 (Plan amendment #49)`)
+    6. [`DOCS/standards/README.md`](file:///C:/dev/PRIN/DOCS/standards/README.md#L12): line 12 (`Testing_Standards.md — test layers, tolerances, coverage, and supervised-local-validation timeout governance.`)
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** Line 248 of the Project Plan lists only four standards documents plus `AGENTS.md` and session 0159, omitting `Benchmarking_and_Reproducibility_Standards.md`, `Experimentation_Standards.md`, and `DOCS/standards/README.md`, all of which cite amendment #49.
+
+---
+
+### D9. Testing Standards §7 Ambiguous "§6" Referent and Unlisted Commands
+- **Claim:** `DOCS/standards/Testing_Standards.md` §7 item 1 (~line 110) says "(the Coding Standards §5 local gate and the §6 suite invocations)": is "§6" ambiguous (Coding §6 = Security vs Testing §6 = Commands)? Quote the headings of Coding Standards §6 and Testing Standards §6. Does §7 enumerate Sphinx -W, cargo audit, pip-audit, cargo llvm-cov?
+- **File & Lines:** [`DOCS/standards/Testing_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Testing_Standards.md#L109-L112) (lines 109–112, lines 85–100); [`DOCS/standards/Coding_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Coding_Standards.md#L165) (line 165)
+- **Verbatim Quotes:**
+  - `Testing_Standards.md` lines 109–110:
+    ```markdown
+    109: 1. **Required checks run to completion.** Supervised local validation checks
+    110:    (the Coding Standards §5 local gate and the §6 suite invocations) run to
+    111:    their actual completion. No arbitrary whole-run wall-clock limit may kill
+    112:    a run that is demonstrably making productive progress.
+    ```
+  - Headings:
+    - `Coding_Standards.md` line 165: `## 6. Security standards`
+    - `Testing_Standards.md` line 85: `## 6. Commands`
+  - Enumeration: Inspection of `Testing_Standards.md` §7 (lines 102–155) confirms that none of `Sphinx -W`, `cargo audit`, `pip-audit`, or `cargo llvm-cov` are mentioned or enumerated.
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** The phrase "(the Coding Standards §5 local gate and the §6 suite invocations)" has an ambiguous section referent because the nearest antecedent is Coding Standards §6 ("Security standards") rather than Testing Standards §6 ("Commands"), and §7 completely omits mentioning Sphinx -W, cargo audit, pip-audit, and cargo llvm-cov.
+
+---
+
+### D10. Coding Standards Bash Syntax and Inline PowerShell Alternative
+- **Claim:** `DOCS/standards/Coding_Standards.md` (~line 147–156): `RUSTDOCFLAGS="-D warnings" cargo doc ...` is bash syntax; is there an inline `# pwsh:` alternative on the same or adjacent line? Quote it.
+- **File & Lines:** [`DOCS/standards/Coding_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Coding_Standards.md#L156) (line 156)
+- **Verbatim Quote:**
+  ```bash
+  156: RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps  # pwsh: $env:RUSTDOCFLAGS="-D warnings"; cargo doc --workspace --no-deps
+  ```
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** Line 156 specifies bash environment-variable prefix syntax `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps` while providing the PowerShell alternative `# pwsh: $env:RUSTDOCFLAGS="-D warnings"; cargo doc --workspace --no-deps` inline on the very same line.
+
+---
+
+### D11. Evidence Log Numbering Collisions Between `ea007` and `0159`
+- **Claim:** Amendment #49 evidence table in the Plan cites `full-gate/08-pytest-full-cov.log`, `25-pytest-final.log` under `EVIDENCE/ea007/verification/`, while `EVIDENCE/0159/verification/full-gate/` reuses numbers 08 and 25 for different legs (08-bandit.log, 25-pytest-full-interrupted.log). Confirm both trees' file names and whether the Plan table states the ea007 prefix.
+- **File & Lines:** [`DOCS/PRIN_Project_Plan.md`](file:///C:/dev/PRIN/DOCS/PRIN_Project_Plan.md#L257-L266) (lines 257–266); directory trees `EVIDENCE/ea007/verification/full-gate/` and `EVIDENCE/0159/verification/full-gate/`.
+- **Verbatim Quotes & Evidence:**
+  - `DOCS/PRIN_Project_Plan.md` line 257 states:
+    `257: Supporting run records (settled; all paths under EVIDENCE/ea007/verification/).`
+  - In table cells (lines 262, 265):
+    `| full-gate/08-pytest-full-cov.log | timeout 1800; ... |`
+    `| full-gate/25-pytest-final.log | timeout 5400; ... |`
+    *(The cells do NOT include the `ea007/` path prefix).*
+  - `EVIDENCE/ea007/verification/full-gate/`:
+    `08-pytest-full-cov.log`
+    `25-pytest-final.log`
+  - `EVIDENCE/0159/verification/full-gate/`:
+    `08-bandit.log`
+    `25-pytest-full-interrupted.log`
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** The Plan table omits the `ea007` prefix in its table cells (providing it only in the preamble), causing a direct numeric collision with `EVIDENCE/0159/verification/full-gate/` where 08 is `08-bandit.log` and 25 is `25-pytest-full-interrupted.log`.
+
+---
+
+### D12. Standards Files Citing Amendment #49 Without Citing Project Plan
+- **Claim:** Which standards files cite amendment #49 but do not mention `DOCS/PRIN_Project_Plan.md`?
+- **File & Lines:**
+  - [`DOCS/standards/Benchmarking_and_Reproducibility_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Benchmarking_and_Reproducibility_Standards.md#L46) (line 46)
+  - [`DOCS/standards/Experimentation_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Experimentation_Standards.md#L39) (line 39)
+  - [`DOCS/standards/Testing_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Testing_Standards.md#L102) (lines 102, 153)
+  - [`DOCS/standards/README.md`](file:///C:/dev/PRIN/DOCS/standards/README.md#L12) (line 12)
+  *(Contrast: [`Development_Workflow_and_Audit_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Development_Workflow_and_Audit_Standards.md#L6) lines 6, 18, 217 and [`Coding_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Coding_Standards.md#L6) lines 6, 219 both cite `DOCS/PRIN_Project_Plan.md`).*
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** `Benchmarking_and_Reproducibility_Standards.md`, `Experimentation_Standards.md`, `Testing_Standards.md`, and `DOCS/standards/README.md` all cite amendment #49 without citing the path `DOCS/PRIN_Project_Plan.md`.
+
+---
+
+### D13. Amendment #49 vs "§5.9" Existence and Scope
+- **Claim:** Amendment #49 vs "§5.9": find the "§5.9" that Testing Standards §7 item 7/8 says "remain in force" (which document's §5.9?), quote §5.9, and say whether §5.9 carries any note pointing to §7 / amendment #49.
+- **File & Lines:** [`DOCS/standards/Testing_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Testing_Standards.md#L143-L154) (lines 143–154)
+- **Verbatim Quote:**
+  ```markdown
+  143: 7. **Purposeful timeouts are retained.** Operation-specific network,
+  144:    subprocess, and test timeouts, resource limits, and infrastructure
+  145:    ceilings are kept where useful. This policy removes indiscriminate
+  146:    whole-run limits, not per-operation timeouts.
+  147: 8. **Scientific parameters are unchanged.** Experiment CPU/GPU/CI/storage
+  148:    budgets, abort criteria, benchmark and statistical targets, seeds, and
+  149:    tolerances are unaffected; only validation-run supervision changed.
+  150: 9. **Claims still require completed evidence.** Scan, coverage, and platform
+  151:    claims require completed matching evidence; a longer budget does not
+  152:    retroactively satisfy an interrupted run (DV-033 remains OPEN — the
+  153:    interrupted coverage run claims no coverage total). The amendment #48
+  154:    local-validation regime remains in force and unaffected.
+  ```
+- **Verdict:** `REFUTED`
+- **Reasoning:** Testing Standards §7 items 7–9 contain no mention of "§5.9" (item 9 states "The amendment #48 local-validation regime remains in force and unaffected"), and no section "§5.9" exists in any normative repository document; the reviewer's citation was an entirely hallucinated section reference.
+
+---
+
+### D14. Preregistration C03 "N=..." Label vs Driver Key `n_oscillators`
+- **Claim:** `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md` §5.2 C03 row says rows "labelled N=128/256/512/1024"; the driver `benchmarks/campaign/exp002_driver.py` reads key `n_oscillators`. Confirm both.
+- **File & Lines:**
+  - [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L217) (line 217)
+  - [`benchmarks/campaign/exp002_driver.py`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L446-L448) (lines 446–448, 462–463)
+- **Verbatim Quotes:**
+  - `preregistration.md` line 217:
+    ```markdown
+    217: | C03 | `phase2_chimera_nsweep.json`: `sweep` rows labelled N=128/256/512/1024, `bc_stats.mean > 0.5` | 4 | Each true; `paper/main.tex` Analysis, "Chimera as computational primitive", strength persists above 0.5 at all four sizes |
+    ```
+  - `exp002_driver.py` lines 446–448:
+    ```python
+    446:         row = _mapping(item, "C03 row")
+    447:         n = row["n_oscillators"]
+    448:         if isinstance(n, bool) or not isinstance(n, int) or n in populations:
+    ```
+    and lines 462–463:
+    ```python
+    462:     if populations != {128, 256, 512, 1024} or len(sweep) != 4:
+    463:         raise DriverError("C03 requires exactly N=128/256/512/1024")
+    ```
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** The preregistration protocol table describes C03 sweep rows as "labelled N=128/256/512/1024", while the driver code parses the JSON dictionary using the exact key `n_oscillators`.
+
+---
+
+### D15. Preregistration H2 Independence Overstatement for C02
+- **Claim:** preregistration §2 H2 says predicates "agree with their independent historical predictions" while §3/§5.2 say C02's expectation is the same record's stored `chimera_detected` flag. Is "independent" overstated for C02?
+- **File & Lines:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L97) (lines 97–99, 119, 216); [`benchmarks/campaign/exp002_driver.py`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L426-L439) (lines 426–439).
+- **Verbatim Quotes:**
+  - `preregistration.md` lines 97–99 (§2):
+    ```markdown
+    97: - **H2 - Historical conclusion preservation:** all 62 registered elementary
+    98:   direction/threshold predicates in section 5.2 agree with their independent
+    99:   historical predictions. Zero disagreements are allowed.
+    ```
+  - `preregistration.md` line 119 (§3):
+    ```markdown
+    119: | H2 | No reversal of registered historical predicates | 62/62 agreements; zero disagreements | Published chimera/topology/Goldilocks claims and previously stored threshold flags, specified per family in section 5.2; no new PRIN outcomes used |
+    ```
+  - `preregistration.md` line 216 (§5.2):
+    ```markdown
+    216: | C02 | `benchmark_y4q1_3_k_alpha_sensitivity.json`: each of the 42 distinct `(K,alpha)` rows, `bc_mean > 0.555` | 42 | Equal to that row's previously stored `chimera_detected` Boolean; the historical Fig. 4 threshold/contour classification, not a newly selected favorable region |
+    ```
+  - `exp002_driver.py` lines 426, 434–438:
+    ```python
+    426:         expected = row["chimera_detected"]
+    ...
+    434:             f"/grid/{index}/bc_mean",
+    435:             row["bc_mean"],
+    436:             ">",
+    437:             0.555,
+    438:             "BC",
+    439:             expected,
+    ```
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** Describing the C02 expectations in §2 as "independent historical predictions" is an overstatement because the 42 C02 predicates test internal archival consistency against the stored `chimera_detected` boolean from the very same JSON row.
+
+---
+
+### D16. `GATE-STATUS.md` Table Cell Defects and Falsity of "c02 failed"
+- **Claim:** `EVIDENCE/0159/verification/full-gate/GATE-STATUS.md`: (a) rows ~33-35 have 2 cells under a 3-column header; (b) row ~30 says "c01–c02 failed runs preserved ... c04 PASS". Then open `EVIDENCE/0159/verification/full-gate/c01-focused-pytest-correction.log` ... `c05-...log` and report each log's final pytest summary line and any EXIT/exit code line. Is "c02 failed" true?
+- **File & Lines:**
+  - [`EVIDENCE/0159/verification/full-gate/GATE-STATUS.md`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/GATE-STATUS.md#L10) (lines 10–11, 30, 33–35)
+  - [`EVIDENCE/0159/verification/full-gate/c01-focused-pytest-correction.log`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/c01-focused-pytest-correction.log#L312) (lines 312, 316)
+  - [`EVIDENCE/0159/verification/full-gate/c02-focused-pytest-correction.log`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/c02-focused-pytest-correction.log#L304) (lines 304, 308)
+  - [`EVIDENCE/0159/verification/full-gate/c03-focused-pytest-correction.log`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/c03-focused-pytest-correction.log#L311) (lines 311, 315)
+  - [`EVIDENCE/0159/verification/full-gate/c04-focused-pytest-correction.log`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/c04-focused-pytest-correction.log#L311) (lines 311, 315)
+  - [`EVIDENCE/0159/verification/full-gate/c05-focused-pytest-correction.log`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/c05-focused-pytest-correction.log#L333) (lines 333, 334)
+- **Verbatim Quotes & Evidence:**
+  - `GATE-STATUS.md` lines 10–11 (3-column header):
+    ```markdown
+    10: | Leg | Check | Result |
+    11: |---|---|---|
+    ```
+  - `GATE-STATUS.md` line 30:
+    ```markdown
+    30: | c01–c04 | focused correction pytest iterations | c01–c02 failed runs preserved (test-fixture defects, fixed); c04 PASS — 255 tests, driver coverage 99.61% |
+    ```
+  - `GATE-STATUS.md` lines 33–35 (2 cells under 3-column header):
+    ```markdown
+    33: | Sphinx html build | **PENDING** (required once in final pass on clean source) |
+    34: | Governance battery (deviation ledger, DV gates, session registration, skipif probes, wp001 check) | **PENDING** on clean source |
+    35: | Full pytest final run | **PENDING** — must log outside repo, no in-repo writes during run |
+    ```
+  - Log summary lines and exit codes:
+    - **`c01`:**
+      - Summary: `================= 1 failed, 247 passed, 3 warnings in 11.40s ==================` (line 312)
+      - Exit code: `EXIT_CODE: 1` (line 316)
+    - **`c02`:**
+      - Summary: `======================= 248 passed, 3 warnings in 9.34s =======================` (line 304)
+      - Exit code: `EXIT_CODE: 0` (line 308)
+    - **`c03`:**
+      - Summary: `====================== 255 passed, 3 warnings in 11.02s =======================` (line 311)
+      - Exit code: `EXIT_CODE: 0` (line 315)
+    - **`c04`:**
+      - Summary: `====================== 255 passed, 3 warnings in 12.98s =======================` (line 311)
+      - Exit code: `EXIT_CODE: 0` (line 315)
+    - **`c05`:**
+      - Summary: `================= 3 failed, 253 passed, 3 warnings in 16.75s ==================` (line 333)
+      - Exit code: `EXIT_CODE: 1 (3 manifest bundle-completeness failures only — expected pre-packaging; all 253 driver/manifest-negative/quality tests passed; coverage 99.61% >= 95%)` (line 334)
+- **Verdict:** `CONFIRMED` for the structural table defects; `REFUTED` that "c02 failed".
+- **Reasoning:** Lines 33–35 of `GATE-STATUS.md` have 2 cells under a 3-column header, and row 30 erroneously asserts that `c02` was a failed run when `c02-focused-pytest-correction.log` demonstrates 248 passed, 0 failed, and `EXIT_CODE: 0`.
+
+---
+
+### D17. Disclosure of Pre-Correction Normalizer Proof Capture in `full-gate/README.md`
+- **Claim:** `EVIDENCE/0159/verification/full-gate/README.md` (~lines 38–43): does it disclose that `0159-publication-validation-proof.log` was captured against the pre-correction driver / that its PASS lines no longer hold against the shipped normalizer? Quote it.
+- **File & Lines:** [`EVIDENCE/0159/verification/full-gate/README.md`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/README.md#L35-L44) (lines 35–44)
+- **Verbatim Quote:**
+  ```markdown
+  35: - `0159-publication-validation-proposal.py.txt`,
+  36:   `0159-publication-validation-proof.py.txt`,
+  37:   `0159-publication-validation-proof.log` — lead-authored fixture recipes
+  38:   and their raw proof output. The proof ran once before integration via
+  39:   `.venv/Scripts/python -c "import runpy;
+  40:   runpy.run_path('DOCS/test_and_benchmark_results/0159-publication-validation-proof.py',run_name='__main__')"`
+  41:   (exit 0, tool-recorded); unheaded capture — command known, no exact
+  42:   start timestamp claimed. Not re-run after integration (its
+  43:   old-normalizer assertions intentionally predated the fix). No real RUN
+  44:   or reference input was involved.
+  ```
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** Lines 38–44 explicitly disclose that the proof capture ran prior to integration, was "Not re-run after integration", and that its "old-normalizer assertions intentionally predated the fix".
+
+---
+
+### D18. Session 0159 Brief "Added scope" Standards Citations
+- **Claim:** `DOCS/sessions/phase-7/0159-*.md`: its "Added scope" section names which standards documents for #49? Quote.
+- **File & Lines:** [`DOCS/sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md#L82-L87) (lines 82–87)
+- **Verbatim Quote:**
+  ```markdown
+  82: Adopted as Project Plan amendment #49 (§8.3): `DOCS/standards/Testing_Standards.md`
+  83: §7 is the normative policy, cross-referenced from Development Workflow and
+  84: Audit Standards §3, Coding Standards §5, Benchmarking and Reproducibility
+  85: Standards §2.2, Experimentation Standards §2, the standards README, and
+  86: `AGENTS.md`. The acceptance text above was reconciled to the campaign plan
+  87: §2.1 registry values in the same edit.
+  ```
+- **Verdict:** `CONFIRMED`
+- **Reasoning:** The "Added scope" section explicitly names `Testing_Standards.md` §7, `Development Workflow and Audit Standards` §3, `Coding Standards` §5, `Benchmarking and Reproducibility Standards` §2.2, `Experimentation Standards` §2, `the standards README`, and `AGENTS.md`.
+
+---
+
+## Summary Verdict Table
+
+| Claim | Verdict | File:Line Evidence |
+|:---|:---|:---|
+| **D1** | `CONFIRMED` | [`CHANGELOG.md:39-40`](file:///C:/dev/PRIN/CHANGELOG.md#L39-L40) |
+| **D2** | `CONFIRMED` | [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md:40,85-86,124-126`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md#L40) |
+| **D3** | `CONFIRMED` | [`DOCS/experiments/README.md:124,156`](file:///C:/dev/PRIN/DOCS/experiments/README.md#L124); [`EVIDENCE/ea007/readiness-state.json:40-41`](file:///C:/dev/PRIN/EVIDENCE/ea007/readiness-state.json#L40-L41); [`EVIDENCE/ea007/README.md:9-10`](file:///C:/dev/PRIN/EVIDENCE/ea007/README.md#L9-L10) |
+| **D4** | `CONFIRMED` | [`EVIDENCE/README.md:99-102`](file:///C:/dev/PRIN/EVIDENCE/README.md#L99-L102) |
+| **D5** | `CONFIRMED` | [`DOCS/sessions/SESSION_REGISTER.md:3-5`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L3-L5) |
+| **D6** | `CONFIRMED` | [`AGENTS.md:39-43,54,71-72`](file:///C:/dev/PRIN/AGENTS.md#L39-L72) |
+| **D7** | `CONFIRMED` | [`DOCS/sessions/phase-7/0161-*.md:20,25`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0161-exp002-e3-execution-and-raw-records.md#L20); [`0162-*.md:20,25`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0162-exp002-e4-analysis-and-hypothesis-evaluation.md#L20); [`0163-*.md:20,25`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0163-exp002-e5-reporting-and-archival.md#L20); [`DOCS/PRIN_Project_Plan.md:48`](file:///C:/dev/PRIN/DOCS/PRIN_Project_Plan.md#L48); [`DOCS/experiments/campaign-plan.md:64`](file:///C:/dev/PRIN/DOCS/experiments/campaign-plan.md#L64) |
+| **D8** | `CONFIRMED` | [`DOCS/PRIN_Project_Plan.md:248`](file:///C:/dev/PRIN/DOCS/PRIN_Project_Plan.md#L248); [`DOCS/standards/Benchmarking_and_Reproducibility_Standards.md:46`](file:///C:/dev/PRIN/DOCS/standards/Benchmarking_and_Reproducibility_Standards.md#L46); [`DOCS/standards/Experimentation_Standards.md:39`](file:///C:/dev/PRIN/DOCS/standards/Experimentation_Standards.md#L39); [`DOCS/standards/README.md:12`](file:///C:/dev/PRIN/DOCS/standards/README.md#L12) |
+| **D9** | `CONFIRMED` | [`DOCS/standards/Testing_Standards.md:85,109-110`](file:///C:/dev/PRIN/DOCS/standards/Testing_Standards.md#L109-L110); [`DOCS/standards/Coding_Standards.md:165`](file:///C:/dev/PRIN/DOCS/standards/Coding_Standards.md#L165) |
+| **D10** | `CONFIRMED` | [`DOCS/standards/Coding_Standards.md:156`](file:///C:/dev/PRIN/DOCS/standards/Coding_Standards.md#L156) |
+| **D11** | `CONFIRMED` | [`DOCS/PRIN_Project_Plan.md:257-266`](file:///C:/dev/PRIN/DOCS/PRIN_Project_Plan.md#L257-L266); [`EVIDENCE/ea007/verification/full-gate/`](file:///C:/dev/PRIN/EVIDENCE/ea007/verification/full-gate/); [`EVIDENCE/0159/verification/full-gate/`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/) |
+| **D12** | `CONFIRMED` | [`DOCS/standards/Benchmarking_and_Reproducibility_Standards.md:46`](file:///C:/dev/PRIN/DOCS/standards/Benchmarking_and_Reproducibility_Standards.md#L46); [`DOCS/standards/Experimentation_Standards.md:39`](file:///C:/dev/PRIN/DOCS/standards/Experimentation_Standards.md#L39); [`DOCS/standards/Testing_Standards.md:102,153`](file:///C:/dev/PRIN/DOCS/standards/Testing_Standards.md#L102); [`DOCS/standards/README.md:12`](file:///C:/dev/PRIN/DOCS/standards/README.md#L12) |
+| **D13** | `REFUTED` | [`DOCS/standards/Testing_Standards.md:143-154`](file:///C:/dev/PRIN/DOCS/standards/Testing_Standards.md#L143-L154) (no "§5.9" exists in normative documents) |
+| **D14** | `CONFIRMED` | [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md:217`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L217); [`benchmarks/campaign/exp002_driver.py:446-448,462-463`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L446-L448) |
+| **D15** | `CONFIRMED` | [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md:97-99,119,216`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L97); [`benchmarks/campaign/exp002_driver.py:426-439`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L426-L439) |
+| **D16** | `CONFIRMED` / `REFUTED` | [`EVIDENCE/0159/verification/full-gate/GATE-STATUS.md:10-11,30,33-35`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/GATE-STATUS.md#L10-L11); [`c01-...log:312,316`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/c01-focused-pytest-correction.log#L312); [`c02-...log:304,308`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/c02-focused-pytest-correction.log#L304); [`c03-...log:311,315`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/c03-focused-pytest-correction.log#L311); [`c04-...log:311,315`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/c04-focused-pytest-correction.log#L311); [`c05-...log:333-334`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/c05-focused-pytest-correction.log#L333-L334) (table formatting defect confirmed; "c02 failed" refuted) |
+| **D17** | `CONFIRMED` | [`EVIDENCE/0159/verification/full-gate/README.md:35-44`](file:///C:/dev/PRIN/EVIDENCE/0159/verification/full-gate/README.md#L35-L44) |
+| **D18** | `CONFIRMED` | [`DOCS/sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md:82-87`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md#L82-L87) |

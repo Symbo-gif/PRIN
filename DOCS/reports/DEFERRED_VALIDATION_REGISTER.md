@@ -544,3 +544,20 @@ re-scoped by this session.**
   E4 (session 0162).
 - **DV-036** / `DV036-F5` (re-audit at 0166), **DV-036** closure windows
   before 0168/0173, and the EXP-004+ hardware gates: unchanged.
+
+## Session-0159 PR #33 review round and hosted-check window — 2026-10-11 UTC
+
+The PR #33 review audit (`DOCS/audits/PR033-multi-review-audit.md`) and
+Plan amendment #50, the EXP-002-scoped hosted-check window, **open, close
+and re-scope no deferred-validation row.**
+
+- **DV-033** stays **OPEN**. The remediated driver's focused coverage is
+  driver-scoped evidence only, as before.
+- **DV-034** stays **OPEN**. Re-enabling the hosted workflows for EXP-002
+  does not remove the single self-hosted GPU runner dependency.
+- **DV-036** / `DV036-F5` and the other hosted or reference-host items stay
+  as recorded. The forced `nightly.yml` run of the window, dispatched on the
+  PR #33 head branch, is recorded as evidence for the exact SHA it ran on.
+  It closes nothing unless a row's own acceptance text allows it, and any
+  such closure needs its own dated entry.
+- **DV-040**: unchanged; its re-audit gate remains at EXP-002 E4 (0162).

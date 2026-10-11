@@ -27,12 +27,12 @@ all recorded legs: `78590305e1c0a78d92153ef2a55a9e76aeb7af79` (baseline
 | 24b | Snyk Code, corrected 3-file scope (sast-input-c) | PASS — 0 issues at medium threshold; copy attestation recorded |
 | 24c | Snyk Code, final frozen test source (sast-input-d) | PASS — 0 issues at medium threshold; copy attestation recorded |
 | 25 | pytest full (`tests/ parity/ --cov=prin`) | **INCOMPLETE — unknown exit**; raw capture ends at 53% with no exit trailer; cause not attributed (see `25-pytest-full-resumption-note.md`) |
-| c01–c04 | focused correction pytest iterations | c01–c02 failed runs preserved (test-fixture defects, fixed); c04 PASS — 255 tests, driver coverage 99.61% |
+| c01–c04 | focused correction pytest iterations | c01 FAILED (exit 1; 1 failed, 247 passed — test-fixture defect, fixed) and preserved; c02 PASS (248 passed, exit 0); c03 and c04 PASS (255 passed each, exit 0); c04 driver coverage 99.61% *(corrected 2026-10-11, PR33-F12 — formerly "c01–c02 failed runs preserved")* |
 | c05 | focused combined gate, final frozen test source | FAILED (exit 1) — 253 passed, 3 pre-packaging manifest-completeness failures, 3 warnings; driver coverage 99.61%. Preserved, not relabeled as a pass. |
 | Post-packaging manifest check | `tests/test_0159_manifest.py` | 17 passed after the bundle/index was completed; a separate scope, not a rewritten c05 result. |
-| Sphinx html build | **PENDING** (required once in final pass on clean source) |
-| Governance battery (deviation ledger, DV gates, session registration, skipif probes, wp001 check) | **PENDING** on clean source |
-| Full pytest final run | **PENDING** — must log outside repo, no in-repo writes during run |
+| Sphinx | html build | **PENDING** at 7859030 (required once in final pass on clean source) — superseded by the 6314532 result below |
+| Governance | battery (deviation ledger, DV gates, session registration, skipif probes, wp001 check) | **PENDING** at 7859030 on clean source — superseded by the 6314532 result below |
+| Full pytest | final run | **PENDING** at 7859030 — must log outside repo, no in-repo writes during run; superseded by the 6314532 FULL (04c) result below |
 
 ## Validated result on source 6314532
 
@@ -53,6 +53,23 @@ unchanged files; native audits on unchanged lockfiles).
 | governance | ledger / DV gates / registration / skipif / wp001 / diff-check | PASS — all exit 0 (44 DV rows / 197 entries; 18 reports; 146 ledger rows) |
 | gitleaks | full history on 6314532, 713 commits | **EXIT 1 — not a pass**: exactly the one known noncredential checksum finding (`entry-state.json:87`); exception pending maintainer approval |
 | Snyk Code | corrected + final 3-file scopes (24b/24c) | PASS — 0 medium-or-higher; byte-identity attested |
+
+## Corrections — PR #33 review audit (2026-10-11 UTC)
+
+- Row `c01–c04` misstated `c02` as failed. Its log shows 248 passed and
+  `EXIT_CODE: 0`; only `c01` and `c05` exited 1 (PR33-F12).
+- Rows Sphinx, Governance and Full pytest had two cells under a
+  three-column header (MD056). Their 7859030 `PENDING` status is kept and
+  marked as superseded by the 6314532 table (PR33-F11).
+- `0159-publication-validation-proof.log` records the proof's `PASS` lines
+  against the pre-correction driver. Three of its live-driver assertions no
+  longer hold against the shipped normalizer. That is intended, and
+  `README.md` already records that the proof was not re-run after
+  integration (PR33-F13). The current driver is covered by
+  `tests/test_exp002_driver.py`.
+- The checksum exception that row 24 and the 6314532 gitleaks row record as
+  pending was approved by MichaelMaillet on 2026-10-11. The review round's
+  clean full-history scan is in `../pr33-review/`.
 
 ## Standing constraints
 
