@@ -1,0 +1,21 @@
+COMMAND: RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  DATE: 2026-10-11T05:46:24Z
+---
+    Checking prin-dynamics v1.0.0-rc1 (C:\dev\PRIN\crates\prin-dynamics)
+ Documenting prin-dynamics v1.0.0-rc1 (C:\dev\PRIN\crates\prin-dynamics)
+    Checking prin-metrics v1.0.0-rc1 (C:\dev\PRIN\crates\prin-metrics)
+    Checking prin-kernels v1.0.0-rc1 (C:\dev\PRIN\crates\prin-kernels)
+    Checking prin-tensor v1.0.0-rc1 (C:\dev\PRIN\crates\prin-tensor)
+    Checking prin-daemon v1.0.0-rc1 (C:\dev\PRIN\crates\prin-daemon)
+ Documenting prin-daemon v1.0.0-rc1 (C:\dev\PRIN\crates\prin-daemon)
+ Documenting prin-tensor v1.0.0-rc1 (C:\dev\PRIN\crates\prin-tensor)
+ Documenting prin-kernels v1.0.0-rc1 (C:\dev\PRIN\crates\prin-kernels)
+ Documenting prin-metrics v1.0.0-rc1 (C:\dev\PRIN\crates\prin-metrics)
+    Checking prin-sim v1.0.0-rc1 (C:\dev\PRIN\crates\prin-sim)
+    Checking prin-train v1.0.0-rc1 (C:\dev\PRIN\crates\prin-train)
+ Documenting prin-train v1.0.0-rc1 (C:\dev\PRIN\crates\prin-train)
+ Documenting prin-sim v1.0.0-rc1 (C:\dev\PRIN\crates\prin-sim)
+ Documenting prin-py v1.0.0-rc1 (C:\dev\PRIN\crates\prin-py)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.56s
+   Generated C:\dev\PRIN\target\doc\prin_daemon\index.html and 7 other files
+EXIT_CODE=0

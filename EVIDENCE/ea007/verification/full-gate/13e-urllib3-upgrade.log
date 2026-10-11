@@ -1,0 +1,20 @@
+COMMAND: .venv/Scripts/python -m pip install 'urllib3>=2.8.0'  (EA007-E-F4 remediation; venv urllib3 BEFORE=2.7.0)
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  DATE: 2026-10-11T04:51:29Z
+---
+WARNING: Ignoring invalid distribution ~nnx (C:\dev\PRIN\.venv\Lib\site-packages)
+Collecting urllib3>=2.8.0
+  Using cached urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
+Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)
+WARNING: Ignoring invalid distribution ~nnx (C:\dev\PRIN\.venv\Lib\site-packages)
+Installing collected packages: urllib3
+  Attempting uninstall: urllib3
+    Found existing installation: urllib3 2.7.0
+    Uninstalling urllib3-2.7.0:
+      Successfully uninstalled urllib3-2.7.0
+WARNING: Ignoring invalid distribution ~nnx (C:\dev\PRIN\.venv\Lib\site-packages)
+Successfully installed urllib3-2.8.0
+
+[notice] A new release of pip is available: 25.2 -> 26.2.1
+[notice] To update, run: C:\dev\PRIN\.venv\Scripts\python.exe -m pip install --upgrade pip
+EXIT_CODE=0
+AFTER urllib3 2.8.0

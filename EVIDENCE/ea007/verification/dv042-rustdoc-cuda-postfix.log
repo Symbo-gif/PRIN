@@ -1,0 +1,10 @@
+COMMAND: RUSTDOCFLAGS="-D warnings" cargo doc --offline -p prin-sim --no-deps --no-default-features --features cuda
+HOST: HP  SHA: cb40584a7754ece83071cc609190fa915bff0b56 (post-edit worktree)  DATE: 2026-10-11T03:39:05Z
+---
+    Checking prin-dynamics v1.0.0-rc1 (C:\dev\PRIN\crates\prin-dynamics)
+    Checking prin-metrics v1.0.0-rc1 (C:\dev\PRIN\crates\prin-metrics)
+    Checking prin-kernels v1.0.0-rc1 (C:\dev\PRIN\crates\prin-kernels)
+ Documenting prin-sim v1.0.0-rc1 (C:\dev\PRIN\crates\prin-sim)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.70s
+   Generated C:\dev\PRIN\target\doc\prin_sim\index.html
+EXIT_CODE=0

@@ -1,0 +1,10 @@
+CI-green check — branch 'main', commit 32cfed8a0b4d915a04e18efbfadd146a2ecb7e32
+  rust       green     — run 36641713788
+  python     green     — run 36641713282
+  parity     green     — run 36641713312
+  repro      green     — run 36641713284
+  snyk       green     — run 36641713362
+  gpu        green     — run 36641713384
+RESULT: all required workflows green
+
+EXIT_CODE=0

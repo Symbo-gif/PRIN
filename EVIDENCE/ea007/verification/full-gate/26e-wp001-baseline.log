@@ -1,0 +1,4 @@
+COMMAND: .venv/Scripts/python tools/wp001_baseline.py check
+HOST: HP | SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9 | UTC: 2026-10-11T06:36:05Z
+WP-001 baseline validation passed.
+EXIT_CODE=0

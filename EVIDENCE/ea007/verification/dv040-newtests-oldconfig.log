@@ -1,0 +1,131 @@
+COMMAND: .venv/Scripts/python -m pytest tests/test_campaign_quality_gates.py --basetemp=.pytest_basetemp
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  BRANCH: audit/ea007-exp002-readiness  DATE: 2026-10-11T03:54:51Z
+NOTE: expected to FAIL against pre-edit workflow/AGENTS/pyproject (proof the assertions catch the missing coverage)
+---
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 18 items
+
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[ruff-check] FAILED [  5%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[ruff-format] FAILED [ 11%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[mypy-strict] FAILED [ 16%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[bandit-recursive] FAILED [ 22%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[ruff-check] FAILED [ 27%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[ruff-format] FAILED [ 33%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[mypy-strict] FAILED [ 38%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[bandit-recursive] FAILED [ 44%]
+tests/test_campaign_quality_gates.py::test_campaign_format_selects_source_files_only FAILED [ 50%]
+tests/test_campaign_quality_gates.py::test_normal_typing_and_sast_gates_retained PASSED [ 55%]
+tests/test_campaign_quality_gates.py::test_bandit_exclusions_are_component_globs FAILED [ 61%]
+tests/test_campaign_quality_gates.py::test_bandit_discovers_every_campaign_source FAILED [ 66%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[relative-top-level-parity] PASSED [ 72%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[relative-top-level-tests] PASSED [ 77%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[absolute-top-level-parity] PASSED [ 83%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[absolute-top-level-tests] PASSED [ 88%]
+tests/test_campaign_quality_gates.py::test_bandit_includes_campaign_files_under_exclusion_like_slugs[relative] FAILED [ 94%]
+tests/test_campaign_quality_gates.py::test_bandit_includes_campaign_files_under_exclusion_like_slugs[absolute] FAILED [100%]
+
+================================== FAILURES ===================================
+_____________ test_workflow_lint_covers_campaign_root[ruff-check] _____________
+tests\test_campaign_quality_gates.py:88: in test_workflow_lint_covers_campaign_root
+    assert matches, f"python.yml has no `{tool}` gate covering {CAMPAIGN_TOKEN}"
+E   AssertionError: python.yml has no `ruff` gate covering DOCS/experiments
+E   assert []
+____________ test_workflow_lint_covers_campaign_root[ruff-format] _____________
+tests\test_campaign_quality_gates.py:88: in test_workflow_lint_covers_campaign_root
+    assert matches, f"python.yml has no `{tool}` gate covering {CAMPAIGN_TOKEN}"
+E   AssertionError: python.yml has no `ruff` gate covering DOCS/experiments
+E   assert []
+____________ test_workflow_lint_covers_campaign_root[mypy-strict] _____________
+tests\test_campaign_quality_gates.py:88: in test_workflow_lint_covers_campaign_root
+    assert matches, f"python.yml has no `{tool}` gate covering {CAMPAIGN_TOKEN}"
+E   AssertionError: python.yml has no `mypy` gate covering DOCS/experiments
+E   assert []
+__________ test_workflow_lint_covers_campaign_root[bandit-recursive] __________
+tests\test_campaign_quality_gates.py:88: in test_workflow_lint_covers_campaign_root
+    assert matches, f"python.yml has no `{tool}` gate covering {CAMPAIGN_TOKEN}"
+E   AssertionError: python.yml has no `bandit` gate covering DOCS/experiments
+E   assert []
+___________ test_agents_local_gate_covers_campaign_root[ruff-check] ___________
+tests\test_campaign_quality_gates.py:99: in test_agents_local_gate_covers_campaign_root
+    assert matches, f"AGENTS.md has no `{tool}` gate covering {CAMPAIGN_TOKEN}"
+E   AssertionError: AGENTS.md has no `ruff` gate covering DOCS/experiments
+E   assert []
+__________ test_agents_local_gate_covers_campaign_root[ruff-format] ___________
+tests\test_campaign_quality_gates.py:99: in test_agents_local_gate_covers_campaign_root
+    assert matches, f"AGENTS.md has no `{tool}` gate covering {CAMPAIGN_TOKEN}"
+E   AssertionError: AGENTS.md has no `ruff` gate covering DOCS/experiments
+E   assert []
+__________ test_agents_local_gate_covers_campaign_root[mypy-strict] ___________
+tests\test_campaign_quality_gates.py:99: in test_agents_local_gate_covers_campaign_root
+    assert matches, f"AGENTS.md has no `{tool}` gate covering {CAMPAIGN_TOKEN}"
+E   AssertionError: AGENTS.md has no `mypy` gate covering DOCS/experiments
+E   assert []
+________ test_agents_local_gate_covers_campaign_root[bandit-recursive] ________
+tests\test_campaign_quality_gates.py:99: in test_agents_local_gate_covers_campaign_root
+    assert matches, f"AGENTS.md has no `{tool}` gate covering {CAMPAIGN_TOKEN}"
+E   AssertionError: AGENTS.md has no `bandit` gate covering DOCS/experiments
+E   assert []
+_______________ test_campaign_format_selects_source_files_only ________________
+tests\test_campaign_quality_gates.py:109: in test_campaign_format_selects_source_files_only
+    assert matches
+E   assert []
+_________________ test_bandit_exclusions_are_component_globs __________________
+tests\test_campaign_quality_gates.py:153: in test_bandit_exclusions_are_component_globs
+    assert pattern.endswith("/*") or pattern.endswith("\\*"), pattern
+E   AssertionError: tests
+E   assert (False or False)
+E    +  where False = <built-in method endswith of str object at 0x0000019AA55A9C50>('/*')
+E    +    where <built-in method endswith of str object at 0x0000019AA55A9C50> = 'tests'.endswith
+E    +  and   False = <built-in method endswith of str object at 0x0000019AA55A9C50>('\\*')
+E    +    where <built-in method endswith of str object at 0x0000019AA55A9C50> = 'tests'.endswith
+_________________ test_bandit_discovers_every_campaign_source _________________
+tests\test_campaign_quality_gates.py:165: in test_bandit_discovers_every_campaign_source
+    assert discovered, "bandit discovered no files under the campaign root"
+E   AssertionError: bandit discovered no files under the campaign root
+E   assert set()
+__ test_bandit_includes_campaign_files_under_exclusion_like_slugs[relative] ___
+tests\test_campaign_quality_gates.py:190: in test_bandit_includes_campaign_files_under_exclusion_like_slugs
+    assert _is_file_included(
+E   AssertionError: assert False
+E    +  where False = _is_file_included('DOCS\\experiments\\EXP-999-tests-parity\\analysis\\quality.py', ['*.py'], ['tests', 'benchmarks', '.venv', 'target', 'parity', 'archive and reference from PRINet 3.0'])
+E    +    where 'DOCS\\experiments\\EXP-999-tests-parity\\analysis\\quality.py' = <built-in function _path_normpath>('DOCS/experiments/EXP-999-tests-parity/analysis/quality.py')
+E    +      where <built-in function _path_normpath> = <module 'ntpath' (frozen)>.normpath
+E    +        where <module 'ntpath' (frozen)> = os.path
+__ test_bandit_includes_campaign_files_under_exclusion_like_slugs[absolute] ___
+tests\test_campaign_quality_gates.py:190: in test_bandit_includes_campaign_files_under_exclusion_like_slugs
+    assert _is_file_included(
+E   AssertionError: assert False
+E    +  where False = _is_file_included('C:\\dev\\PRIN\\DOCS\\experiments\\EXP-999-tests-parity\\analysis\\quality.py', ['*.py'], ['tests', 'benchmarks', '.venv', 'target', 'parity', 'archive and reference from PRINet 3.0'])
+E    +    where 'C:\\dev\\PRIN\\DOCS\\experiments\\EXP-999-tests-parity\\analysis\\quality.py' = <built-in function _path_normpath>('C:\\dev\\PRIN\\DOCS\\experiments\\EXP-999-tests-parity\\analysis\\quality.py')
+E    +      where <built-in function _path_normpath> = <module 'ntpath' (frozen)>.normpath
+E    +        where <module 'ntpath' (frozen)> = os.path
+============================== warnings summary ===============================
+.venv\Lib\site-packages\stevedore\extension.py:185
+.venv\Lib\site-packages\stevedore\extension.py:185
+.venv\Lib\site-packages\stevedore\extension.py:185
+  The verify_requirements argument is now a no-op and is deprecated for removal. Remove the argument from calls.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[ruff-check]
+FAILED tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[ruff-format]
+FAILED tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[mypy-strict]
+FAILED tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[bandit-recursive]
+FAILED tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[ruff-check]
+FAILED tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[ruff-format]
+FAILED tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[mypy-strict]
+FAILED tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[bandit-recursive]
+FAILED tests/test_campaign_quality_gates.py::test_campaign_format_selects_source_files_only
+FAILED tests/test_campaign_quality_gates.py::test_bandit_exclusions_are_component_globs
+FAILED tests/test_campaign_quality_gates.py::test_bandit_discovers_every_campaign_source
+FAILED tests/test_campaign_quality_gates.py::test_bandit_includes_campaign_files_under_exclusion_like_slugs[relative]
+FAILED tests/test_campaign_quality_gates.py::test_bandit_includes_campaign_files_under_exclusion_like_slugs[absolute]
+================== 13 failed, 5 passed, 3 warnings in 1.18s ===================
+EXIT_CODE=1

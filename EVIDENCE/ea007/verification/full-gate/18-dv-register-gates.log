@@ -1,0 +1,6 @@
+COMMAND: .venv/Scripts/python tools/check_dv_register_gates.py
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  DATE: 2026-10-11T04:08:19Z
+---
+DV-register gate check passed.
+  Checked 44 DV register rows against 198 session-register entries.
+EXIT_CODE=0

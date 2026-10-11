@@ -1,0 +1,16 @@
+COMMAND: cargo clippy --workspace --all-targets -- -D warnings
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  DATE: 2026-10-11T05:03:02Z
+---
+    Checking prin-dynamics v1.0.0-rc1 (C:\dev\PRIN\crates\prin-dynamics)
+   Compiling pyo3-ffi v0.29.0
+   Compiling pyo3 v0.29.0
+    Checking prin-metrics v1.0.0-rc1 (C:\dev\PRIN\crates\prin-metrics)
+    Checking prin-kernels v1.0.0-rc1 (C:\dev\PRIN\crates\prin-kernels)
+    Checking prin-daemon v1.0.0-rc1 (C:\dev\PRIN\crates\prin-daemon)
+    Checking prin-tensor v1.0.0-rc1 (C:\dev\PRIN\crates\prin-tensor)
+   Compiling numpy v0.29.0
+    Checking prin-train v1.0.0-rc1 (C:\dev\PRIN\crates\prin-train)
+    Checking prin-sim v1.0.0-rc1 (C:\dev\PRIN\crates\prin-sim)
+    Checking prin-py v1.0.0-rc1 (C:\dev\PRIN\crates\prin-py)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 8.69s
+EXIT_CODE=0

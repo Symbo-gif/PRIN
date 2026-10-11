@@ -1,0 +1,33 @@
+COMMAND: timeout 600 .venv/Scripts/python -m pytest tests/test_wp001_baseline.py::test_repository_inventory_is_deterministic_and_separates_archive tests/test_autoencoders.py::test_phase_to_rate_converter_soft_gradcheck tests/test_train_bridge.py::TestTrainBridgeBenchmarks::test_resonance_layer_forward_backward_round_trip_latency_moderate --basetemp=.pytest_basetemp -o faulthandler_timeout=120 --durations=3
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  DATE: 2026-10-11T05:44:26Z
+---
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 3 items
+
+tests/test_wp001_baseline.py::test_repository_inventory_is_deterministic_and_separates_archive PASSED [ 33%]
+tests/test_autoencoders.py::test_phase_to_rate_converter_soft_gradcheck PASSED [ 66%]
+tests/test_train_bridge.py::TestTrainBridgeBenchmarks::test_resonance_layer_forward_backward_round_trip_latency_moderate PASSED [100%]
+
+
+------------------------------------------------------------------- benchmark: 1 tests -------------------------------------------------------------------
+Name (time in s)                                                         Min     Max    Mean  StdDev  Median     IQR  Outliers     OPS  Rounds  Iterations
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+test_resonance_layer_forward_backward_round_trip_latency_moderate     5.4381  5.4755  5.4517  0.0159  5.4440  0.0241       1;0  0.1834       5           1
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Legend:
+  Outliers: 1 Standard Deviation from Mean; 1.5 IQR (InterQuartile Range) from 1st Quartile and 3rd Quartile.
+  OPS: Operations Per Second, computed as 1 / Mean
+============================= slowest 3 durations =============================
+66.51s call     tests/test_wp001_baseline.py::test_repository_inventory_is_deterministic_and_separates_archive
+39.34s call     tests/test_train_bridge.py::TestTrainBridgeBenchmarks::test_resonance_layer_forward_backward_round_trip_latency_moderate
+0.67s call     tests/test_autoencoders.py::test_phase_to_rate_converter_soft_gradcheck
+======================== 3 passed in 108.90s (0:01:48) ========================
+EXIT_CODE=0

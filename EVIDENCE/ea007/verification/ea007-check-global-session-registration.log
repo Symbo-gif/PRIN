@@ -1,0 +1,6 @@
+COMMAND: .venv/Scripts/python tools/check_global_session_registration.py
+HOST: HP  SHA: cb40584a7754ece83071cc609190fa915bff0b56  BRANCH: audit/ea007-exp002-readiness  DATE: 2026-10-11T03:41:24Z
+---
+Global-session registration check passed.
+  Checked 17 Executive Audit reports.
+EXIT_CODE=0

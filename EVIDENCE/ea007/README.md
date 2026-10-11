@@ -21,3 +21,9 @@ The `main` SHA is `fdd28d88e4c57d544e5d30fa52cce85807ab15a9`.
 Hosted workflows remain disabled under Plan amendment #48. Historical success
 is not a green-CI assertion about EA-007 or current `main`; local commands and
 their actual results govern this Windows session.
+
+**Packaging:** `.gitattributes` marks `EVIDENCE/ea007/**` as
+`-text whitespace=-trailing-space` so committed blobs stay byte-exact against
+`verification/SHA256SUMS.txt` — raw CRLF tool output is evidence, not a style
+defect (same pattern as `benchmarks/results/**`). This note lives outside the
+hashed bundle; the manifest and its inputs are unchanged.

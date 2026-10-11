@@ -1,8 +1,8 @@
 # PRIN Master Session Register
 
-**Register version:** 1.4
+**Register version:** 1.4  
 **Planned sessions:** 198 integer sessions + 8 sub-sessions (`0144A`–`0144H`, plan amendment #31) + 6 sub-sessions (`0141A`–`0141C`, `0141D1`, `0141D2`, `0141E`, plan amendment #32 — `0141D` split into `0141D1`/`0141D2` under Development Workflow §7, 2026-08-27) + 4 sub-sessions (`0144A`–`0144D`, plan amendment #33, WP-036A, mechanical renumber executed 2026-08-29) + 4 sub-sessions (`0144A1`–`0144A4`, plan amendment #34, WP-036A S1 decomposition, 2026-08-30) + 6 sub-sessions (`0144E1`–`0144E6`, plan amendment #35, WP-036B strict-port decomposition, 2026-08-31) + 7 sub-sessions (WP-036D at `0144I`–`0144L` with S1 decomposed into `0144I1`–`0144I3`, plan amendment #36, "GPU execution path for the ported acceptance suite", 2026-08-31; the WP-036C block shifted `0144I`–`0144L` → `0144M`–`0144P`) + 12 sub-sessions (`0144Q`–`0144AB`, plan amendment #38, WP-036E/F/G Deferred-Validation closure block, 2026-08-31) + 8 sub-sessions (`0144M1`–`0144M8`, plan amendment #39, WP-036C S1 strict-port decomposition, 2026-08-31) + 3 sub-sessions (`0144Q1`–`0144Q3`, plan amendment #43, WP-036E S1 decomposition + zero-copy re-scope, 2026-09-02) = **256**
-**Current entry point:** Session 0001
+**Current entry point:** Session 0001  
 **Status authority:** the latest approved Project State Report; this register
 is updated during S4 only from committed evidence.
 

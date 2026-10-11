@@ -1,0 +1,423 @@
+COMMAND: cargo llvm-cov -p prin-dynamics
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  DATE: 2026-10-11T05:32:05Z
+---
+info: cargo-llvm-cov currently setting cfg(coverage); you can opt-out it by passing --no-cfg-coverage
+   Compiling prin-dynamics v1.0.0-rc1 (C:\dev\PRIN\crates\prin-dynamics)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.93s
+     Running unittests src\lib.rs (target\llvm-cov-target\debug\deps\prin_dynamics-bf0c442dacdd9e57.exe)
+
+running 309 tests
+test bands::tests::band_params_defaults_to_mean_field_without_frequency_adaptation ... ok
+test bands::tests::create_band_state_wrong_ranges_rejected ... ok
+test bands::tests::accessors_expose_configuration ... ok
+test bands::tests::capacity_single_band_is_zero ... ok
+test bands::tests::create_band_state_correct_labels ... ok
+test bands::tests::compute_derivatives_without_band_labels_is_a_typed_error ... ok
+test bands::tests::compute_derivatives_population_mismatch_is_a_typed_error ... ok
+test bands::tests::delta_theta_gamma_capacity_uses_extreme_bands ... ok
+test bands::tests::capacity_zero_for_non_positive_slow_frequency ... ok
+test bands::tests::coupling_modes_produce_different_dynamics ... ok
+test bands::tests::band_derivatives_match_standalone_kuramoto_per_mode ... ok
+test bands::tests::band_network_integrates_with_rk4 ... ok
+test bands::tests::band_network_integrates_with_multi_rate ... ok
+test bands::tests::delta_theta_gamma_construction ... ok
+test bands::tests::delta_theta_gamma_derivatives_finite ... ok
+test bands::tests::derivatives_respect_clamp ... ok
+test bands::tests::empty_band_rejected ... ok
+test bands::tests::frequency_adaptation_propagates_to_dfrequency ... ok
+test bands::tests::invalid_sparse_k_rejected_at_construction ... ok
+test bands::tests::mean_frequency_of_empty_index_set_is_zero ... ok
+test bands::tests::mismatched_params_length_rejected ... ok
+test bands::tests::no_bands_rejected_with_dedicated_variant ... ok
+test bands::tests::non_finite_band_params_rejected ... ok
+test bands::tests::non_adjacent_pac_pair_accepted ... ok
+test bands::tests::non_finite_phase_offset_rejected ... ok
+test bands::tests::pac_pair_invalid_band_rejected ... ok
+test bands::tests::pac_pair_out_of_range_slow_band_rejected ... ok
+test bands::tests::pac_pair_slow_ge_fast_rejected ... ok
+test bands::tests::partition_band_size_mismatch_rejected ... ok
+test bands::tests::partition_invalid_label_rejected ... ok
+test bands::tests::partition_missing_labels_rejected ... ok
+test bands::tests::partition_valid_state ... ok
+test bands::tests::partition_wrong_population_rejected ... ok
+test bands::tests::single_oscillator_band_has_no_self_coupling ... ok
+test bands::tests::serialization_roundtrip ... ok
+test bands::tests::synchronized_state_has_zero_phase_derivative_spread ... ok
+test bands::tests::theta_gamma_capacity_matches_frequency_ratio ... ok
+test bands::tests::theta_gamma_construction ... ok
+test bands::tests::theta_gamma_derivatives_finite ... ok
+test bands::tests::zero_pac_does_not_change_intra_band_structure ... ok
+test coupling::tests::coupling_mode_default_is_full_no_matrix ... ok
+test coupling::tests::topology_all_to_all_matches_default_full_matrix ... ok
+test coupling::tests::topology_all_to_all_rejects_empty ... ok
+test coupling::tests::topology_rejects_non_finite_coupling_strength ... ok
+test coupling::tests::topology_ring_basic ... ok
+test coupling::tests::topology_ring_clamps_k_to_n_minus_1 ... ok
+test coupling::tests::topology_ring_diagonal_is_zero ... ok
+test coupling::tests::topology_ring_odd_clamp_preserves_k_over_degree_invariant ... ok
+test coupling::tests::topology_ring_rejects_k_too_small ... ok
+test coupling::tests::topology_ring_rejects_odd_k ... ok
+test coupling::tests::topology_ring_small_n_falls_back_to_all_to_all ... ok
+test coupling::tests::topology_serialization_roundtrip ... ok
+test coupling::tests::topology_small_world_deterministic_with_seed ... ok
+test coupling::tests::topology_small_world_diagonal_is_zero ... ok
+test coupling::tests::topology_small_world_odd_clamp_preserves_edge_count_and_energy ... ok
+test coupling::tests::topology_small_world_preserves_edge_count ... ok
+test coupling::tests::topology_small_world_validates_rewire_prob ... ok
+test coupling::tests::topology_small_world_zero_rewire_equals_ring ... ok
+test coupling::tests::validate_coupling_matrix_rejects_non_finite ... ok
+test coupling::tests::validate_coupling_matrix_rejects_wrong_length ... ok
+test integrate::tests::_const_pi_half_used ... ok
+test integrate::tests::bounded_guard_clamps_every_derivative ... ok
+test integrate::tests::bounded_guard_keeps_the_pre_correction_amplitude_bounds ... ok
+test integrate::tests::bounded_guard_silently_clamps_large_derivatives_like_pre_correction ... ok
+test integrate::tests::bounded_step_still_clamps_derivatives_the_model_left_unclamped ... ok
+test integrate::tests::euler_amplitude_clamped ... ok
+test integrate::tests::euler_amplitude_floor_is_exactly_zero_like_prinet_model ... ok
+test integrate::tests::euler_amplitude_has_no_ceiling_like_prinet_model ... ok
+test integrate::tests::euler_phase_wraps_to_0_2pi ... ok
+test integrate::tests::euler_rejects_invalid_dt ... ok
+test integrate::tests::euler_single_oscillator_constant_frequency ... ok
+test integrate::tests::bounded_step_skips_the_redundant_pass_without_changing_any_value ... ok
+test integrate::tests::euler_with_capacity_matches_new ... ok
+test integrate::tests::exp_integrator_dim_mismatch_returns_typed_error ... ok
+test integrate::tests::exp_integrator_init_valid ... ok
+test integrate::tests::exp_integrator_integrate_dim_mismatch_returns_typed_error ... ok
+test integrate::tests::exp_integrator_invalid_dim ... ok
+test integrate::tests::exp_integrator_invalid_krylov_rank ... ok
+test integrate::tests::exp_integrator_rejects_invalid_dt ... ok
+test bands::proptests::capacity_positive_for_valid_frequencies ... ok
+test integrate::tests::guard_policy_default_and_builders ... ok
+test integrate::tests::integrate_fixed_no_trajectory ... ok
+test integrate::tests::integrate_fixed_records_trajectory ... ok
+test integrate::tests::integrate_fixed_rejects_zero_steps ... ok
+test integrate::tests::matrix_exp_diagonal ... ok
+test integrate::tests::matrix_exp_singular_denominator_returns_typed_error ... ok
+test integrate::tests::krylov_exp_vec_matches_direct_small ... ok
+test integrate::tests::matrix_exp_zero_is_identity ... ok
+test integrate::tests::multi_rate_convergence_order ... ok
+test integrate::tests::multi_rate_euler_method ... ok
+test integrate::tests::multi_rate_freq_band_preserved ... ok
+test integrate::tests::multi_rate_init_valid ... ok
+test integrate::tests::multi_rate_init_zero_substeps ... ok
+test integrate::tests::multi_rate_output_shape ... ok
+test integrate::tests::multi_rate_integrate_trajectory ... ok
+test integrate::tests::multi_rate_rejects_invalid_dt ... ok
+test integrate::tests::multi_rate_step_vjp_does_not_apply_derivative_clamp_to_state_gradient ... ok
+test integrate::tests::multi_rate_step_vjp_rejects_gradient_length_mismatch ... ok
+test integrate::tests::multi_rate_step_vjp_matches_uncoupled_euler_amplitude ... ok
+test integrate::tests::multi_rate_step_vjp_rejects_invalid_dt_before_perturbation ... ok
+test integrate::tests::exp_integrator_krylov_path ... ok
+test integrate::tests::multi_rate_substeps_1_matches_rk4 ... ok
+test integrate::tests::multirate_sub_steps_with_the_prinet_model_guard ... ok
+test integrate::tests::non_negative_guard_keeps_negative_zero_like_torch_clamp ... ok
+test integrate::tests::non_negative_guard_propagates_nan_like_torch_clamp ... ok
+test integrate::tests::phi1_zero_is_identity ... ok
+test integrate::tests::rk45_and_exponential_use_model_derivatives_unclamped ... ok
+test coupling::proptests::ring_matrix_shape_and_diagonal ... ok
+test integrate::tests::rk45_rejects_invalid_tolerances ... ok
+test integrate::tests::rk45_step_matches_fixed_dopri5 ... ok
+test integrate::tests::rk45_getters ... ok
+test integrate::tests::rk45_step_size_grows_on_easy_step ... ok
+test integrate::tests::rk45_tolerance_not_met_error ... ok
+test bands::proptests::theta_gamma_derivatives_always_finite ... ok
+test integrate::tests::rk45_trajectory_recorded ... ok
+test integrate::tests::rk4_amplitude_has_no_ceiling_like_prinet_model ... ok
+test integrate::tests::exp_integrator_step_finite_stuart_landau ... ok
+test integrate::tests::rk4_final_amplitude_floor_is_exactly_zero_like_prinet_model ... ok
+test integrate::tests::rk45_fsal_cache_invalidated_on_reuse ... ok
+test integrate::tests::rk4_matches_euler_for_constant_derivative ... ok
+test integrate::tests::rk4_freq_band_preserved ... ok
+test coupling::proptests::small_world_deterministic_same_seed ... ok
+test integrate::tests::rk4_order_h4_convergence ... ok
+test integrate::tests::rk4_rejects_invalid_dt ... ok
+test integrate::tests::rk4_single_oscillator_exact_for_linear ... ok
+test coupling::proptests::all_to_all_matrix_shape_and_diagonal ... ok
+test integrate::tests::rk4_stage_amplitude_floor_matches_prinet_model_oracle ... ok
+test integrate::tests::rk4_with_capacity_matches_new ... ok
+test models::tests::dynamics_vjp_does_not_apply_time_derivative_clamp ... ok
+test models::tests::dynamics_vjp_matches_singleton_kuramoto_derivatives ... ok
+test models::tests::dynamics_vjp_rejects_each_gradient_length_mismatch ... ok
+test models::tests::knn_index_has_exact_k_neighbors_no_self_loops ... ok
+test models::tests::knn_index_neighbors_are_phase_nearest ... ok
+test models::tests::knn_index_symmetric_neighbor_property ... ok
+test integrate::tests::exp_integrator_stiff_mode ... ok
+test models::tests::knn_index_wraps_around_circle ... ok
+test models::tests::non_sparse_derivatives_are_not_clamped_like_prinet ... ok
+test models::tests::normalization_one_over_n_explicit_in_mean_field ... ok
+test models::tests::normalization_one_over_k_explicit_in_sparse ... ok
+test models::tests::single_oscillator_derivatives_are_not_clamped_like_prinet ... ok
+test models::tests::sparse_knn_derivatives_remain_clamped_like_prinet ... ok
+test models::tests::sparse_knn_k_equals_n_minus_1_equals_full_default ... ok
+test models::tests::stuart_landau_single_oscillator_phase_follows_the_safe_amplitude_divisor ... ok
+test integrate::tests::rk45_tolerance_property ... ok
+test models::tests::test_coupling_mode_default ... ok
+test models::tests::test_hopf_constructor_getters_setters ... ok
+test models::tests::test_hopf_coupled_reference_values ... ok
+test models::tests::test_hopf_custom_matrix_and_sparse_knn ... ok
+test models::tests::test_hopf_limit_cycle_and_amplitude ... ok
+test models::tests::test_hopf_setters_and_invalid_matrix_reject ... ok
+test models::tests::test_kuramoto_all_setters_and_sparse_default_k ... ok
+test models::tests::test_kuramoto_constructor_and_getters_setters ... ok
+test models::tests::test_kuramoto_full_default_no_matrix ... ok
+test models::tests::test_kuramoto_custom_coupling_matrix ... ok
+test models::tests::test_kuramoto_mean_field_and_full_equivalence_n2 ... ok
+test models::tests::test_kuramoto_n1_uncoupled ... ok
+test models::tests::test_kuramoto_sparse_knn ... ok
+test models::tests::test_kuramoto_sparse_knn_n1_uses_k_zero_path ... ok
+test models::tests::test_model_helper_validation_and_resolution ... ok
+test models::tests::test_state_length_mismatch_for_hopf_and_stuart_landau ... ok
+test models::tests::test_state_length_mismatch_rejected ... ok
+test models::tests::test_stuart_landau_and_hopf_set_coupling_mode_error ... ok
+test integrate::tests::exp_integrator_step_finite_kuramoto ... ok
+test models::tests::test_stuart_landau_constructor_getters_setters ... ok
+test models::tests::test_stuart_landau_coupled_reference_values ... ok
+test models::tests::test_stuart_landau_custom_matrix_and_sparse_knn ... ok
+test models::tests::test_stuart_landau_setters_and_invalid_matrix_reject ... ok
+test models::tests::test_stuart_landau_uncoupled_limit_cycle ... ok
+test models::tests::topology_all_to_all_matrix_matches_full_default ... ok
+test bands::proptests::phase_continuity_under_small_perturbation ... ok
+test models::tests::topology_ring_matrix_produces_valid_kuramoto_derivatives ... ok
+test models::tests::topology_small_world_matrix_produces_valid_kuramoto_derivatives ... ok
+test pac::tests::clamp_amplitude_to_repairs_non_finite ... ok
+test pac::tests::default_matches_prinet ... ok
+test pac::tests::modulate_basic_matches_prinet_reference ... ok
+test pac::tests::modulate_clamps_large_amplitude ... ok
+test pac::tests::modulate_clamps_tiny_amplitude ... ok
+test pac::tests::modulate_default_depth_matches_prinet_reference ... ok
+test pac::tests::modulate_different_sizes_matches_prinet_reference ... ok
+test pac::tests::modulate_max_depth_matches_prinet_reference ... ok
+test pac::tests::modulate_preserves_clamp_invariant ... ok
+test pac::tests::modulate_rejects_empty_fast_amplitude ... ok
+test pac::tests::modulate_rejects_empty_slow_phase ... ok
+test pac::tests::modulate_rejects_non_finite_fast_amplitude ... ok
+test pac::tests::modulate_rejects_non_finite_phase_offset ... ok
+test pac::tests::modulate_rejects_non_finite_slow_phase ... ok
+test pac::tests::modulate_single_oscillator_matches_prinet_reference ... ok
+test pac::tests::modulate_with_offset_matches_prinet_reference ... ok
+test pac::tests::modulate_zero_depth_is_identity ... ok
+test pac::tests::new_validates_modulation_depth ... ok
+test pac::tests::serialization_roundtrip ... ok
+test pac::tests::set_modulation_depth_validates ... ok
+test pac::tests::with_clamp_allows_custom_range ... ok
+test pac::tests::with_clamp_allows_equal_bounds ... ok
+test pac::tests::with_clamp_rejects_inverted_range ... ok
+test pac::tests::with_clamp_rejects_non_finite_bounds ... ok
+test seed::tests::counter_increments_per_draw ... ok
+test seed::tests::different_counters_are_different_offsets ... ok
+test seed::tests::different_keys_produce_different_streams ... ok
+test seed::tests::fill_bytes_is_reproducible ... ok
+test seed::tests::jump_matches_sequential_advance ... ok
+test seed::tests::key_returns_stream_key ... ok
+test seed::tests::new_with_same_counter_and_key_is_reproducible ... ok
+test seed::tests::next_f64_is_in_unit_interval ... ok
+test seed::tests::next_f64_range_honours_bounds ... ok
+test seed::tests::next_f64_range_0_1_matches_next_f64 ... ok
+test seed::tests::next_f64_range_rejects_invalid_range ... ok
+test seed::tests::next_u32_is_reproducible ... ok
+test seed::tests::rng_gen_is_reproducible ... ok
+test seed::tests::serialization_round_trips ... ok
+test seed::tests::next_f64_range_max_draw_stays_strictly_below_hi ... ok
+test seed::tests::try_fill_bytes_is_reproducible ... ok
+test integrate::tests::exp_integrator_integrate_no_trajectory ... ok
+test integrate::tests::prop_phase_in_range_after_rk4_step ... ok
+test models::tests::proptest_kuramoto_derivatives_finite ... ok
+test pac::proptests::zero_depth_is_identity ... ok
+test pac::proptests::modulate_output_in_clamp_range ... ok
+test state::tests::clamp_amplitude_repairs_and_clamps ... ok
+test state::tests::clamp_derivative_is_idempotent_where_the_guard_skip_relies_on_it ... ok
+test state::tests::clamp_derivative_repairs_and_clamps ... ok
+test state::tests::clamp_finite_rejects_invalid_limits ... ok
+test state::tests::clamp_finite_repairs_non_finite_and_bounds_finite_values ... ok
+test state::tests::create_random_is_reproducible ... ok
+test state::tests::create_random_rejects_empty_population ... ok
+test state::tests::create_random_rejects_invalid_frequency_range ... ok
+test state::tests::create_random_uses_seed ... ok
+test state::tests::create_synchronized_rejects_empty_population ... ok
+test state::tests::create_synchronized_rejects_non_finite_base_frequency ... ok
+test seed::proptests::jump_preserves_counter_increments ... ok
+test state::tests::create_synchronized_uses_base_frequency ... ok
+test seed::proptests::next_f64_is_uniform_in_0_1 ... ok
+test state::tests::guarded_flag_is_provenance_and_changes_no_public_contract ... ok
+test state::tests::guarded_flag_records_which_constructor_ran ... ok
+test state::tests::knn_index_k_zero_returns_empty_rows ... ok
+test state::tests::knn_index_rejects_empty_phase ... ok
+test state::tests::knn_index_rejects_invalid_k ... ok
+test state::tests::knn_index_rejects_non_finite_phase ... ok
+test state::tests::knn_index_returns_k_neighbours_per_oscillator ... ok
+test state::tests::knn_index_wraps_across_tau ... ok
+test models::tests::proptest_hopf_derivatives_finite ... ok
+test state::tests::n_bands_counts_unique_labels ... ok
+test state::tests::n_bands_zero_without_freq_band ... ok
+test state::tests::new_accepts_n1 ... ok
+test state::tests::new_rejects_empty ... ok
+test state::tests::new_rejects_freq_band_length_mismatch ... ok
+test state::tests::new_rejects_mismatched_frequency_length ... ok
+test state::tests::new_rejects_mismatched_lengths ... ok
+test state::tests::non_strict_guard_amplitude_returns_clamped ... ok
+test state::tests::non_strict_guard_derivative_returns_clamped ... ok
+test state::tests::non_strict_new_clamps_amplitude ... ok
+test state::tests::non_strict_new_repairs_non_finite_phase ... ok
+test state::tests::phase_knn_index_delegates_to_build_index ... ok
+test state::tests::safe_phase_diff_is_shortest_angular_distance ... ok
+test state::tests::safe_phase_diffs_elementwise ... ok
+test state::tests::safe_phase_diffs_rejects_mismatched_lengths ... ok
+test state::tests::unclamped_derivatives_keep_finite_values_of_any_magnitude ... ok
+test state::tests::unclamped_derivatives_pass_non_finite_values_through ... ok
+test state::tests::unclamped_derivatives_validate_lengths ... ok
+test state::tests::wrap_phase_maps_to_tau_interval ... ok
+test state::tests::wrap_phases_elementwise ... ok
+test temporal::tests::clamp_amp_repairs_non_finite ... ok
+test temporal::tests::ema_blender_alpha_one_returns_new ... ok
+test state::proptests::safe_phase_diff_in_closed_pi_interval ... ok
+test state::proptests::clamp_derivative_is_finite_and_in_range ... ok
+test state::proptests::clamp_amplitude_is_finite_and_in_range ... ok
+test temporal::tests::ema_blender_clamps_output ... ok
+test temporal::tests::ema_blender_empty_rejected ... ok
+test temporal::tests::ema_blender_exposes_clamp_range ... ok
+test temporal::tests::ema_blender_half_half ... ok
+test state::proptests::wrap_phase_maps_to_tau_interval ... ok
+test temporal::tests::ema_blender_rejects_invalid_alpha ... ok
+test temporal::tests::ema_blender_length_mismatch_rejected ... ok
+test temporal::tests::ema_blender_non_finite_rejected ... ok
+test temporal::tests::ema_blender_set_alpha_validates ... ok
+test temporal::tests::ema_blender_serialization ... ok
+test temporal::tests::ema_blender_with_clamp ... ok
+test temporal::tests::phasor_blender_alpha_one_returns_new ... ok
+test temporal::tests::phasor_blender_empty_input_rejected ... ok
+test integrate::tests::exp_integrator_integrate_trajectory ... ok
+test temporal::tests::phasor_blender_handles_wrap_around ... ok
+test temporal::tests::phasor_blender_length_mismatch_rejected ... ok
+test temporal::tests::phasor_blender_non_finite_rejected ... ok
+test temporal::tests::phasor_blender_opposite_phases_gives_finite_result ... ok
+test temporal::tests::phasor_blender_rejects_invalid_alpha ... ok
+test temporal::tests::phasor_blender_same_phase_preserved ... ok
+test temporal::tests::phasor_blender_scalar_non_finite_rejected ... ok
+test temporal::tests::phasor_blender_serialization ... ok
+test temporal::tests::phasor_blender_set_alpha_validates ... ok
+test temporal::tests::propagator_empty_input_rejected ... ok
+test temporal::tests::propagator_first_call_initializes ... ok
+test temporal::tests::propagator_length_mismatch_rejected ... ok
+test temporal::tests::propagator_non_finite_rejected ... ok
+test temporal::tests::propagator_multiple_frames_converge ... ok
+test temporal::tests::propagator_propagate_init_sets_state ... ok
+test temporal::tests::propagator_reset_clears_state ... ok
+test temporal::tests::propagator_second_call_blends ... ok
+test temporal::tests::propagator_separate_alpha ... ok
+test temporal::tests::propagator_serialization_preserves_state ... ok
+test temporal::tests::propagator_state_size_change_rejected ... ok
+test temporal::proptests::phase_continuity_small_perturbation ... ok
+test integrate::tests::prop_rk45_error_within_tolerance ... ok
+test temporal::proptests::phasor_blend_output_is_wrapped ... ok
+test temporal::proptests::ema_blend_output_in_clamp_range ... ok
+test state::proptests::create_random_is_reproducible ... ok
+test integrate::tests::prop_rk4_order_h4 ... ok
+test state::proptests::knn_index_has_k_entries_and_no_self ... ok
+test integrate::tests::exp_integrator_recompute_jacobian ... ok
+test state::proptests::new_accepts_random_valid_state ... ok
+test temporal::proptests::propagator_converges_to_constant_input ... ok
+
+test result: ok. 309 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests\parity_bands.rs (target\llvm-cov-target\debug\deps\parity_bands-6b916490f1ad4f1c.exe)
+
+running 12 tests
+test parity_intra_band_mean_field_matches_prinet_kuramoto ... ok
+test parity_composed_delta_theta_gamma_cascade ... ok
+test parity_composed_theta_gamma_mean_field ... ok
+test parity_composed_theta_gamma_sparse_knn ... ok
+test parity_intra_band_full_matches_prinet_kuramoto ... ok
+test parity_intra_band_sparse_knn_matches_prinet_kuramoto ... ok
+test parity_capacity_matches_prinet_sub_step_count ... ok
+test parity_golden_trajectory_theta_gamma_mean_field_1_step ... ok
+test parity_golden_trajectory_theta_gamma_sparse_knn_1_step ... ok
+test parity_golden_trajectory_theta_gamma_mean_field_10_steps ... ok
+test parity_golden_trajectory_delta_theta_gamma_10_steps ... ok
+test parity_golden_trajectory_theta_gamma_sparse_knn_10_steps ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\parity_integrators.rs (target\llvm-cov-target\debug\deps\parity_integrators-1bc1f0eb4455c86e.exe)
+
+running 23 tests
+test parity_integrator_invalid_dt_returns_typed_error ... ok
+test parity_euler_kuramoto_mean_field_1_step ... ok
+test parity_euler_hopf_mean_field_5_steps ... ok
+test parity_euler_kuramoto_mean_field_10_steps ... ok
+test parity_euler_kuramoto_mean_field_5_steps ... ok
+test parity_integrate_fixed_zero_steps_returns_typed_error ... ok
+test parity_euler_kuramoto_full_5_steps ... ok
+test parity_euler_stuart_landau_full_5_steps ... ok
+test parity_multirate_kuramoto_mean_field_5_steps_euler ... ok
+test parity_multirate_kuramoto_full_5_steps_rk4 ... ok
+test parity_rk4_hopf_mean_field_5_steps ... ok
+test parity_multirate_kuramoto_mean_field_5_steps_rk4 ... ok
+test parity_rk4_kuramoto_full_5_steps ... ok
+test parity_rk4_kuramoto_mean_field_10_steps ... ok
+test parity_rk4_kuramoto_mean_field_1_step ... ok
+test parity_rk4_kuramoto_mean_field_5_steps ... ok
+test parity_rk4_order_h4_on_amplitude_decay ... ok
+test parity_rk4_stuart_landau_full_5_steps ... ok
+test parity_exp_kuramoto_mean_field_1_step ... ok
+test parity_rk45_tolerance_property_on_amplitude_decay ... ok
+test parity_exp_kuramoto_mean_field_5_steps ... ok
+test parity_exp_stuart_landau_full_5_steps ... ok
+test parity_exp_kuramoto_full_5_steps ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests\parity_models.rs (target\llvm-cov-target\debug\deps\parity_models-f3bee530bbb6f828.exe)
+
+running 9 tests
+test parity_kuramoto_mean_field_matches_prinet ... ok
+test parity_hopf_full_matches_prinet ... ok
+test parity_hopf_mean_field_matches_prinet ... ok
+test parity_kuramoto_full_matches_prinet ... ok
+test parity_stuart_landau_mean_field_matches_prinet ... ok
+test parity_stuart_landau_full_matches_prinet ... ok
+test parity_hopf_sparse_knn_matches_prinet ... ok
+test parity_kuramoto_sparse_knn_matches_prinet ... ok
+test parity_stuart_landau_sparse_knn_matches_prinet ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\parity_pac.rs (target\llvm-cov-target\debug\deps\parity_pac-25a70f6d98140338.exe)
+
+running 9 tests
+test parity_pac_basic_modulation_matches_prinet ... ok
+test parity_pac_different_sizes_matches_prinet ... ok
+test parity_pac_clamps_tiny_amplitude_matches_prinet ... ok
+test parity_pac_clamps_large_amplitude_matches_prinet ... ok
+test parity_pac_single_oscillator_matches_prinet ... ok
+test parity_pac_with_offset_matches_prinet ... ok
+test parity_pac_zero_depth_matches_prinet ... ok
+test parity_pac_default_depth_matches_prinet ... ok
+test parity_pac_max_depth_matches_prinet ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests\parity_temporal.rs (target\llvm-cov-target\debug\deps\parity_temporal-3aacc32011bf2f69.exe)
+
+running 6 tests
+test parity_amplitude_clamp_matches_prinet ... ok
+test parity_reversed_convention_does_not_match ... ok
+test parity_propagator_reproduces_prinet_single_blend ... ok
+test parity_golden_five_frame_sequence ... ok
+test parity_single_blend_matches_prinet_propagate ... ok
+test parity_wrap_around_blend_matches_prinet ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+Filename                      Regions    Missed Regions     Cover   Functions  Missed Functions  Executed       Lines      Missed Lines     Cover    Branches   Missed Branches     Cover
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+bands.rs                         1396                23    98.35%          76                 1    98.68%         774                 4    99.48%           0                 0         -
+coupling.rs                       514                 5    99.03%          37                 0   100.00%         330                 1    99.70%           0                 0         -
+integrate.rs                     6686              2540    62.01%         266                91    65.79%        3586              1399    60.99%           0                 0         -
+models.rs                        5909              3168    46.39%         245               144    41.22%        3379              1844    45.43%           0                 0         -
+pac.rs                            516                 5    99.03%          37                 0   100.00%         287                 0   100.00%           0                 0         -
+seed.rs                           391                 9    97.70%          28                 0   100.00%         201                 1    99.50%           0                 0         -
+state.rs                         1537               576    62.52%         136                51    62.50%         981               395    59.73%           0                 0         -
+temporal.rs                       884                 8    99.10%          58                 0   100.00%         471                 0   100.00%           0                 0         -
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+TOTAL                           17833              6334    64.48%         883               287    67.50%       10009              3644    63.59%           0                 0         -
+EXIT_CODE=0

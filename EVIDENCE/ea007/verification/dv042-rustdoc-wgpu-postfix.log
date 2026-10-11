@@ -1,0 +1,7 @@
+COMMAND: RUSTDOCFLAGS="-D warnings" cargo doc --offline -p prin-sim --no-deps --no-default-features --features wgpu
+HOST: HP  SHA: cb40584a7754ece83071cc609190fa915bff0b56 (post-edit worktree)  DATE: 2026-10-11T03:38:41Z
+---
+ Documenting prin-sim v1.0.0-rc1 (C:\dev\PRIN\crates\prin-sim)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.47s
+   Generated C:\dev\PRIN\target\doc\prin_sim\index.html
+EXIT_CODE=0

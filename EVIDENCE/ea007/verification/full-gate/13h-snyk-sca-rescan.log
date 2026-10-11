@@ -1,0 +1,19 @@
+COMMAND: snyk MCP snyk_sca_scan path=C:\dev\PRIN file=C:\dev\PRIN\DOCS\sphinx\requirements.txt all_projects=false severity_threshold=low command=C:\dev\PRIN\.venv\Scripts\python  (post-E-F4 scoped rescan)
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  DATE: 2026-10-11T04:53Z
+---
+RESULT: success, issueCount=0
+
+The three urllib3 2.7.0 advisories from 13d-snyk-sca.log
+(SNYK-PYTHON-URLLIB3-20302844/CVE-2026-97687 HIGH,
+SNYK-PYTHON-URLLIB3-20302845/CVE-2026-97688 MEDIUM,
+SNYK-PYTHON-URLLIB3-20302846/CVE-2026-97689 HIGH, all fixedIn 2.8.0)
+are resolved on the repository manifest: pin raised urllib3>=2.7.0 ->
+>=2.8.0 and venv upgraded 2.7.0 -> 2.8.0 (13e-urllib3-upgrade.log).
+
+Scope truthfulness: this is a file-scoped rescan. A repo-wide
+all_projects=true scan still reports the SAME advisories on copies of
+this file inside foreign untracked agent worktrees (.kilo/, .qwen/) and a
+zod advisory in .kilo/package.json — those are not repository manifests
+and no exclusion/ignore was added. EA007-E-F4 is FIXED at the
+repository-manifest scope; foreign-worktree copies are out of repo scope.
+EXIT_CODE=0

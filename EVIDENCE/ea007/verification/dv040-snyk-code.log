@@ -1,0 +1,14 @@
+COMMAND: snyk_code_scan (Snyk MCP, authenticated repo account) on each touched
+         Snyk-supported source file, severity_threshold=low
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9 (+ worktree edits)
+BRANCH: audit/ea007-exp002-readiness  DATE: 2026-10-11T03:57Z
+---
+snyk_code_scan path=C:\dev\PRIN\tests\test_campaign_quality_gates.py severity_threshold=low
+  -> {"success":true,"issueCount":0,"issues":null}
+
+snyk_code_scan path=C:\dev\PRIN\crates\prin-sim\src\gpu.rs severity_threshold=low
+  -> {"success":true,"issueCount":0,"issues":null}
+
+Snyk Open Source / cargo audit / pip-audit: NOT TRIGGERED — pyproject.toml edit
+touches only [tool.bandit] exclude_dirs globs; no dependency or manifest
+dependency change (DV-041 audit §A6 precedent).

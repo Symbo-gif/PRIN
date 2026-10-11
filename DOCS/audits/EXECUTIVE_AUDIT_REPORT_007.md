@@ -156,6 +156,17 @@ This discharges campaign plan section 12 item 3's **historical entry evidence**,
 not current-branch CI validation. The UTF-8 log is preserved under
 `EVIDENCE/ea007/exp001-r1-merge-ci-green.log`.
 
+**Packaging note (2026-10-11 UTC):** `.gitattributes` carries
+`EVIDENCE/ea007/** -text whitespace=-trailing-space` so the committed blobs
+are byte-exact copies of the raw captured logs — the bytes whose SHA-256 is
+inventoried in `EVIDENCE/ea007/verification/SHA256SUMS.txt`. Without it, the
+`* text=auto eol=lf` default would rewrite Windows CRLF tool output on a
+clean checkout and the manifest would not verify. This is raw-output
+byte-preservation under the existing `benchmarks/results/**` campaign
+precedent, not a source-quality suppression. The `verification/` manifest
+was generated before this attribute existed; the staged-log blobs will be
+re-staged byte-exact under the new rule.
+
 ### E7: Session Cycle and Governance Traceability
 
 Before closure edits, the PSR-038/039 consistency checker exits 0 (128 to 142

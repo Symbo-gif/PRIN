@@ -1,0 +1,33 @@
+COMMAND: snyk MCP snyk_sca_scan path=C:\dev\PRIN all_projects=true severity_threshold=low command=C:\dev\PRIN\.venv\Scripts\python
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  DATE: 2026-10-11T04:33Z
+---
+RESULT: success, issueCount=16 (severity_threshold=low)
+
+Distinct findings (deduplicated):
+- SNYK-PYTHON-URLLIB3-20302844 / CVE-2026-97687 (HIGH, CWE-295 Improper
+  Certificate Validation), urllib3 2.7.0, fixedIn 2.8.0 —
+  DOCS\sphinx\requirements.txt (plus 4 copies under foreign agent
+  worktrees .kilo/, .qwen/ inside the repo dir — not repository files).
+- SNYK-PYTHON-URLLIB3-20302845 / CVE-2026-97688 (MEDIUM, CWE-835 Infinite
+  loop), urllib3 2.7.0, fixedIn 2.8.0 — same paths.
+- SNYK-PYTHON-URLLIB3-20302846 / CVE-2026-97689 (HIGH, CWE-770
+  Allocation of Resources Without Limits or Throttling), urllib3 2.7.0,
+  fixedIn 2.8.0 — same paths.
+- SNYK-JS-ZOD-20510278 / CVE-2023-54404 (HIGH, CWE-770), zod 4.1.8 —
+  .kilo\package.json (foreign tool worktree, not a repository manifest).
+
+Attribution: NOT attributable to this change — pyproject.toml diff touches
+only [tool.bandit] exclude_dirs; DOCS/sphinx/requirements.txt is unmodified
+(urllib3>=2.7.0 pin present since a354a2d, 2026-08-09); .kilo/.qwen paths
+are non-repository agent worktrees. Pre-existing exposure reported for
+lead judgment; no manifest edits, suppressions, or ignores made.
+Complement: pip_audit on the same requirements.txt reports clean
+(PyPA advisory DB does not yet carry these 2026 CVEs) — see
+13c-pip-audit-sphinx.log. Divergence recorded, not resolved.
+
+COMMAND: snyk MCP snyk_code_scan path=C:\dev\PRIN\crates\prin-sim\src\gpu.rs
+---
+RESULT: success, issueCount=0 (Rust supported-language scan of the only
+modified supported source file; Python test file scanned earlier —
+see ../dv040-snyk-code.log)
+EXIT_CODE=0

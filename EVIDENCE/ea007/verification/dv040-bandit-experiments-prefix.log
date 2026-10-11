@@ -1,0 +1,32 @@
+COMMAND: .venv/Scripts/python -m bandit -r DOCS/experiments -c pyproject.toml
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  BRANCH: audit/ea007-exp002-readiness  DATE: 2026-10-11T03:49:17Z
+---
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	using config: pyproject.toml
+[main]	INFO	running on Python 3.14.0
+Run started:2026-10-11 03:49:18.253951+00:00
+
+Test results:
+	No issues identified.
+
+Code scanned:
+	Total lines of code: 0
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+Files skipped (0):
+EXIT_CODE=0

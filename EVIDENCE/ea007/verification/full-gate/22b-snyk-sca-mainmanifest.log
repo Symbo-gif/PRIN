@@ -1,0 +1,13 @@
+COMMAND: PATH=venv npx --yes snyk@1.1304.2 test --file=DOCS/test_and_benchmark_results/ea007/full-gate/prin-resolved/requirements.txt --package-manager=pip --severity-threshold=low  (venv python first on PATH for env inspection)
+HOST: HP  SHA: fdd28d88e4c57d544e5d30fa52cce85807ab15a9  DATE: 2026-10-11T05:37:44Z
+---
+
+ ERROR   Missing required packages (SNYK-OS-PYTHON-0013)
+                                                                                        
+           Missing required packages                                                    
+
+Status:  422 Unprocessable Entity 
+Docs:    https://docs.snyk.io/scan-with-snyk/error-catalog#snyk-os-python-0013 
+                                                                               
+ID:      urn:snyk:interaction:9c31ea14-4f6a-4942-b209-3629c5d3c488 
+EXIT_CODE=2
