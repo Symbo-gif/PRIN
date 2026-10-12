@@ -1,0 +1,107 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe EVIDENCE/0160/verification/test-reliability/winerror32-repro.py.txt C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/winerror32/w1 C:/dev/PRIN/.venv/Scripts/python.exe none 4
+CWD: C:/dev/PRIN
+SOURCE: pytest 9.1.1; synthetic --basetemp holding a leftover file open for 4 s from another process; no hook (pre-fix behaviour)
+UTC-START: 2026-10-12T06:07:35Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+conftest='none' holder=4.0s pytest_exit=1 elapsed=5.2s
+    =================================== ERRORS ====================================
+    ________________________ ERROR at setup of test_first _________________________
+    path = '\\\\?\\C:\\Users\\there\\AppData\\Local\\Temp\\claude\\c--dev-PRIN\\caa74057-f2dc-43bd-8cf8-b18f5c141339\\scratchpad\\pr33\\winerror32\\w1\\basetemp'
+    onexc = functools.partial(<function on_rm_rf_error at 0x0000019CF487B320>, start_path=WindowsPath('//?/C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratch
+    raise NotImplementedError("dir_fd unavailable on this platform")
+    except OSError as err:
+    raise OSError("Cannot call rmtree on a symbolic link")
+    except OSError as err:
+    def onerror(err):
+    if not isinstance(err, FileNotFoundError):
+    results = os.walk(path, topdown=False, onerror=onerror, followlinks=os._walk_symlinks_as_files)
+    except FileNotFoundError:
+    except OSError as err:
+    E                   PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: '\\\\?\\C:\\Users\\there\\AppData\\Local\\Temp\\claude\\c--dev-PRIN\\
+    C:\Python314\Lib\shutil.py:701: PermissionError
+    path = '\\\\?\\C:\\Users\\there\\AppData\\Local\\Temp\\claude\\c--dev-PRIN\\caa74057-f2dc-43bd-8cf8-b18f5c141339\\scratchpad\\pr33\\winerror32\\w1\\basetemp'
+    ignore_errors = False, onerror = None
+    onexc = functools.partial(<function on_rm_rf_error at 0x0000019CF487B320>, start_path=WindowsPath('//?/C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratch
+    def rmtree(path, ignore_errors=False, onerror=None, *, onexc=None, dir_fd=None):
+    If it is unavailable, using it will raise a NotImplementedError.
+    If ignore_errors is set, errors are ignored; otherwise, if onexc or
+    onerror is set, it is called to handle the error with arguments (func,
+    exception instance, and for onerror it is a tuple as returned by
+    sys.exc_info().  If ignore_errors is false and both onexc and
+    onerror are None, the exception is reraised.
+    onerror is deprecated and only remains for backwards compatibility.
+    If both onerror and onexc are set, onerror is ignored and onexc is used.
+    if ignore_errors:
+    elif onerror is None and onexc is None:
+    if onerror is None:
+    # delegate to onerror
+    return onerror(func, path, exc_info)
+    path = '\\\\?\\C:\\Users\\there\\AppData\\Local\\Temp\\claude\\c--dev-PRIN\\caa74057-f2dc-43bd-8cf8-b18f5c141339\\scratchpad\\pr33\\winerror32\\w1\\basetemp'
+    onexc = functools.partial(<function on_rm_rf_error at 0x0000019CF487B320>, start_path=WindowsPath('//?/C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratch
+    raise NotImplementedError("dir_fd unavailable on this platform")
+    except OSError as err:
+    raise OSError("Cannot call rmtree on a symbolic link")
+    except OSError as err:
+    def onerror(err):
+    if not isinstance(err, FileNotFoundError):
+    results = os.walk(path, topdown=False, onerror=onerror, followlinks=os._walk_symlinks_as_files)
+    except FileNotFoundError:
+    except OSError as err:
+    except FileNotFoundError:
+    except OSError as err:
+    E                   PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: '\\\\?\\C:\\Users\\there\\AppData\\Local\\Temp\\claude\\c--dev-PRIN\\
+    C:\Python314\Lib\shutil.py:705: PermissionError
+    ________________________ ERROR at setup of test_second ________________________
+    path = '\\\\?\\C:\\Users\\there\\AppData\\Local\\Temp\\claude\\c--dev-PRIN\\caa74057-f2dc-43bd-8cf8-b18f5c141339\\scratchpad\\pr33\\winerror32\\w1\\basetemp'
+    onexc = functools.partial(<function on_rm_rf_error at 0x0000019CF487B320>, start_path=WindowsPath('//?/C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratch
+    raise NotImplementedError("dir_fd unavailable on this platform")
+    except OSError as err:
+    raise OSError("Cannot call rmtree on a symbolic link")
+    except OSError as err:
+    def onerror(err):
+    if not isinstance(err, FileNotFoundError):
+    results = os.walk(path, topdown=False, onerror=onerror, followlinks=os._walk_symlinks_as_files)
+    except FileNotFoundError:
+    except OSError as err:
+    E                   PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: '\\\\?\\C:\\Users\\there\\AppData\\Local\\Temp\\claude\\c--dev-PRIN\\
+    C:\Python314\Lib\shutil.py:701: PermissionError
+    path = '\\\\?\\C:\\Users\\there\\AppData\\Local\\Temp\\claude\\c--dev-PRIN\\caa74057-f2dc-43bd-8cf8-b18f5c141339\\scratchpad\\pr33\\winerror32\\w1\\basetemp'
+    ignore_errors = False, onerror = None
+    onexc = functools.partial(<function on_rm_rf_error at 0x0000019CF487B320>, start_path=WindowsPath('//?/C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratch
+    def rmtree(path, ignore_errors=False, onerror=None, *, onexc=None, dir_fd=None):
+    If it is unavailable, using it will raise a NotImplementedError.
+    If ignore_errors is set, errors are ignored; otherwise, if onexc or
+    onerror is set, it is called to handle the error with arguments (func,
+    exception instance, and for onerror it is a tuple as returned by
+    sys.exc_info().  If ignore_errors is false and both onexc and
+    onerror are None, the exception is reraised.
+    onerror is deprecated and only remains for backwards compatibility.
+    If both onerror and onexc are set, onerror is ignored and onexc is used.
+    if ignore_errors:
+    elif onerror is None and onexc is None:
+    if onerror is None:
+    # delegate to onerror
+    return onerror(func, path, exc_info)
+    path = '\\\\?\\C:\\Users\\there\\AppData\\Local\\Temp\\claude\\c--dev-PRIN\\caa74057-f2dc-43bd-8cf8-b18f5c141339\\scratchpad\\pr33\\winerror32\\w1\\basetemp'
+    onexc = functools.partial(<function on_rm_rf_error at 0x0000019CF487B320>, start_path=WindowsPath('//?/C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratch
+    raise NotImplementedError("dir_fd unavailable on this platform")
+    except OSError as err:
+    raise OSError("Cannot call rmtree on a symbolic link")
+    except OSError as err:
+    def onerror(err):
+    if not isinstance(err, FileNotFoundError):
+    results = os.walk(path, topdown=False, onerror=onerror, followlinks=os._walk_symlinks_as_files)
+    except FileNotFoundError:
+    except OSError as err:
+    except FileNotFoundError:
+    except OSError as err:
+    E                   PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: '\\\\?\\C:\\Users\\there\\AppData\\Local\\Temp\\claude\\c--dev-PRIN\\
+    C:\Python314\Lib\shutil.py:705: PermissionError
+    ERROR tests/test_uses_tmp_path.py::test_first - PermissionError: [WinError 32...
+    ERROR tests/test_uses_tmp_path.py::test_second - PermissionError: [WinError 3...
+    2 errors in 0.59s
+----
+ELAPSED_SECONDS: 7.9
+EXIT_CODE: 0

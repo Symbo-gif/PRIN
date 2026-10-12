@@ -1,0 +1,80 @@
+"""Reproduce the WinError-32 tmp_path setup errors deterministically.
+
+Mechanism under test: with ``--basetemp=X`` pytest deletes the *previous*
+session's ``X`` lazily, inside ``TempPathFactory.getbasetemp()``, i.e. during
+the setup of the first test that requests ``tmp_path``. If another process
+holds an open handle on a file in a leftover directory, ``shutil.rmtree``
+raises ``PermissionError [WinError 32]`` and that test errors at setup; the
+factory's ``_basetemp`` stays unset, so following tests retry and may error
+too until the holder lets go.
+
+Usage: python repro.py <work-dir> <python-for-pytest> <conftest-dir-or-"none"> [hold-seconds]
+"""
+
+from __future__ import annotations
+
+import subprocess
+import sys
+import textwrap
+import time
+from pathlib import Path
+
+work = Path(sys.argv[1]).resolve()
+python = sys.argv[2]
+conftest = sys.argv[3]
+work.mkdir(parents=True, exist_ok=True)
+basetemp = work / "basetemp"
+leftover = basetemp / "test_old_session0" / "RUN-x"
+leftover.mkdir(parents=True, exist_ok=True)
+held = leftover / "held.json"
+held.write_text("{}", encoding="utf-8")
+tests = work / "tests"
+tests.mkdir(exist_ok=True)
+(tests / "test_uses_tmp_path.py").write_text(
+    textwrap.dedent(
+        """
+        def test_first(tmp_path):
+            assert tmp_path.is_dir()
+
+        def test_second(tmp_path):
+            assert tmp_path.is_dir()
+        """
+    ),
+    encoding="utf-8",
+)
+if conftest != "none":
+    source = Path(conftest) / "conftest.py"
+    (tests / "conftest.py").write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+    helper = Path(conftest) / "_basetemp.py"
+    (tests / "_basetemp.py").write_text(helper.read_text(encoding="utf-8"), encoding="utf-8")
+elif (tests / "conftest.py").exists():
+    (tests / "conftest.py").unlink()
+
+# The holder keeps the file open (Python opens without FILE_SHARE_DELETE on
+# Windows) for HOLD seconds, then exits — like a transient scanner/indexer.
+hold = float(sys.argv[4]) if len(sys.argv) > 4 else 4.0
+holder = subprocess.Popen(
+    [
+        sys.executable,
+        "-c",
+        f"import time; f=open(r'{held}','rb'); time.sleep({hold}); f.close()",
+    ]
+)
+time.sleep(1.0)
+started = time.monotonic()
+result = subprocess.run(
+    [python, "-m", "pytest", "-q", "-p", "no:cacheprovider", f"--basetemp={basetemp}", str(tests)],
+    cwd=work,
+    capture_output=True,
+    text=True,
+    check=False,
+)
+holder.wait()
+print(f"conftest={conftest!r} holder={hold}s pytest_exit={result.returncode} "
+      f"elapsed={time.monotonic() - started:.1f}s")
+for line in result.stdout.splitlines():
+    if "WinError" in line or "passed" in line or "error" in line.lower():
+        print("   ", line.strip()[:200])
+for line in result.stderr.splitlines():
+    if "basetemp" in line or "UsageError" in line or "ERROR" in line:
+        print("    stderr:", line.strip()[:220])

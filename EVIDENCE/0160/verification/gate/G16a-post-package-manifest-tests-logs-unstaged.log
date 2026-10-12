@@ -1,0 +1,33 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe -m pytest tests/test_0160_manifest.py tests/test_0159_manifest.py tests/test_ea007_manifest.py -p no:cacheprovider --basetemp=.pytest_basetemp -q
+CWD: C:/dev/PRIN
+SOURCE: staged final bundle after packaging the gate logs
+UTC-START: 2026-10-12T10:15:31Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 28 items
+
+tests\test_0160_manifest.py ....F                                        [ 17%]
+tests\test_0159_manifest.py ....................                         [ 89%]
+tests\test_ea007_manifest.py ...                                         [100%]
+
+================================== FAILURES ===================================
+______ TestRealBundle.test_every_hashed_evidence_file_is_tracked_by_git _______
+tests\test_0160_manifest.py:156: in test_every_hashed_evidence_file_is_tracked_by_git
+    ea007.test_every_hashed_evidence_file_is_tracked_by_git()
+tests\test_ea007_manifest.py:133: in test_every_hashed_evidence_file_is_tracked_by_git
+    assert not missing, (
+E   AssertionError: evidence files not tracked by git (use `git add -f` for ignored *.log): ['verification/gate/G01-ruff-check.log', 'verification/gate/G02-ruff-format-check.log', 'verification/gate/G03-ruff-format-check-experiments.log', 'verification/gate/G04-mypy-prin.log', 'verification/gate/G05-mypy-experiments.log', 'verification/gate/G06-mypy-exp002-driver.log', 'verification/gate/G07-interrogate.log', 'verification/gate/G08-bandit.log', 'verification/gate/G09-focused-pytest.log', 'verification/gate/G09a-focused-pytest-unpackaged-round3.log', 'verification/gate/G10-governance-deviation-ledger.log', 'verification/gate/G10b-governance-dv-gates.log', 'verification/gate/G10c-governance-session-registration.log', 'verification/gate/G10d-governance-skipif-probes.log', 'verification/gate/G10e-governance-wp001.log', 'verification/gate/G10f-git-diff-check.log', 'verification/gate/G10fa-git-diff-check-trailing-space.log', 'verification/gate/G11-sphinx.log', 'verification/gate/G11a-sphinx-changelog-link.log', 'verification/gate/G12-pytest-fast.log', 'verification/gate/G12a-pytest-fast-access-violation.log', 'verification/gate/G12b-pytest-fast-contended.log', 'verification/gate/G13-pytest-full.log', 'verification/gate/G13b-pytest-full-void-run4.log', 'verification/gate/G14-snyk-code.log', 'verification/gate/G14b-snyk-code-low-threshold.log', 'verification/gate/G14c-snyk-code-low-threshold-HEAD-baseline.log', 'verification/gate/G15-pip-audit-numpy-pin.log', 'verification/gate/G15b-snyk-open-source-numpy-pin.log', 'verification/gate/G17-gitleaks-full-history.log', 'verification/gate/G18-gitleaks-staged.log', 'verification/gate/R01-cargo-version.log', 'verification/gate/R02-cargo-fmt.log', 'verification/gate/R03-cargo-clippy.log', 'verification/gate/R04-cargo-clippy-strict.log', 'verification/gate/R05-cargo-test.log', 'verification/gate/R06-cargo-test-strict.log', 'verification/gate/R07-cargo-llvm-cov-kernels.log']
+E   assert not {'verification/gate/G01-ruff-check.log', 'verification/gate/G02-ruff-format-check.log', 'verification/gate/G03-ruff-fo.../G04-mypy-prin.log', 'verification/gate/G05-mypy-experiments.log', 'verification/gate/G06-mypy-exp002-driver.log', ...}
+=========================== short test summary info ===========================
+FAILED tests/test_0160_manifest.py::TestRealBundle::test_every_hashed_evidence_file_is_tracked_by_git
+======================== 1 failed, 27 passed in 1.45s =========================
+----
+ELAPSED_SECONDS: 7.7
+EXIT_CODE: 1

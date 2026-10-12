@@ -1,6 +1,6 @@
 # Session 0160 — EXP-002 / C1 E2: Review and approval — API, benchmark-result, and reproduction parity
 
-**Status:** PLANNED
+**Status:** COMPLETE — EXP-002 APPROVED 2026-10-12 UTC under the maintainer's delegated E2 decision authority; decisions, reasons and the E3 entry checklist in [e2-review.md](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md)
 **Roadmap phase:** 7 — Experimentation campaign and stable release
 **Execution unit:** EXP-002 / C1
 **Session type:** E2 — Review and approval

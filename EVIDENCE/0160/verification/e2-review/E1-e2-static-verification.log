@@ -1,0 +1,39 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe EVIDENCE/0160/verification/e2-review/e2_static_verification.py
+CWD: C:/dev/PRIN
+SOURCE: working tree: ed993e9 + staged session-0160 changes after the first cold-review fixes
+UTC-START: 2026-10-12T04:52:51Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+PASS  s1.1 digest REFERENCE/src/prinet/__init__.py                    ede92afc6771f2e2
+PASS  s1.1 digest REFERENCE/src/prinet/utils/figure_generation.py     575eca5a6436a25f
+PASS  s1.1 digest REFERENCE/src/prinet/utils/table_generation.py      9ac382c487f71774
+PASS  s1.1 digest paper/artefact_manifest.json                        300cdc094d2b7d27
+PASS  s1.1 digest python/prin/__init__.py                             cd43a8ff75422f8b
+PASS  s1.1 digest python/prin/_deprecation.py                         132e86e991669d0a
+PASS  s1.1 digest python/prin/_public_api.py                          dd5745ababa80948
+PASS  s1.1 digest python/prin/reporting/figure_generation.py          e0f59253202746e0
+PASS  s1.1 digest python/prin/reporting/table_generation.py           1593f52d9a652842
+PASS  s1.1 digest tools/reproduce.py                                  12333a02e18f29ff
+PASS  driver INPUT_MANIFEST_SHA                                       300cdc094d2b7d27
+PASS  driver pin src/prinet/__init__.py                               ede92afc6771f2e2
+PASS  driver pin src/prinet/utils/figure_generation.py                575eca5a6436a25f
+PASS  driver pin src/prinet/utils/table_generation.py                 9ac382c487f71774
+PASS  reference __all__ = 172 unique                                  172
+PASS  PRIN __all__ = 175 unique (static)                              175
+PASS  PRIN additions disjoint from reference                          BackendUnavailableError, __version__, core_version
+PASS  172 reference names + 3 additions = 175 expected                175
+PASS  PRIN literal __all__ = reference + additions (E1 static basis)  set equality
+PASS  input manifest has 172 records                                  172
+PASS  5 conclusion inputs are manifested                              phase1_chimera_seeds.json, benchmark_y4q1_3_k_alpha_sensitivity.json, phase2_chimera_nsweep.json, y4q1_8_topology_comparison.json, y3q49_goldilocks_zones.json
+PASS  14 figure stems, figures 2-15                                   14
+PASS  39 registered publication files                                 39
+PASS  11 archived tables present                                      11
+PASS  reference defines 14 figure generators (amendment #51)          14
+PASS  protocol header status                                          APPROVED
+PASS  protocol SHA-256                                                0f3073dd2ed73b64071bcf3ae182510a69a26bd575b81b5a97cc5a1f9bbc8c8b
+PASS  driver SHA-256                                                  5e9187744e5236a271f05558952fdc028869a1b8f25a0d57a84e246e8a71d25d
+RESULT: 28/28 checks passed
+----
+ELAPSED_SECONDS: 3.8
+EXIT_CODE: 0

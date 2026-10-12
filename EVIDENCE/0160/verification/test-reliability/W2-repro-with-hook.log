@@ -1,0 +1,12 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe EVIDENCE/0160/verification/test-reliability/winerror32-repro.py.txt C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/winerror32/w2 C:/dev/PRIN/.venv/Scripts/python.exe C:/dev/PRIN/tests 4
+CWD: C:/dev/PRIN
+SOURCE: same scenario with the repository's final tests/conftest.py + tests/_basetemp.py
+UTC-START: 2026-10-12T06:07:44Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+conftest='C:/dev/PRIN/tests' holder=4.0s pytest_exit=0 elapsed=3.6s
+    2 passed in 0.17s
+----
+ELAPSED_SECONDS: 5.4
+EXIT_CODE: 0

@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-002 approved at E2; E3 ready (sessions 0159–0160, 2026-10-12 UTC).**
+  The maintainer accepted the E1 exit and delegated the E2 decisions. E2
+  (`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md`)
+  re-derived every E1 provenance and population claim statically (28/28),
+  proved in Lean 4 that the table canonicalization exactly inverts Windows
+  text-mode newline translation, and checked with Z3 that the driver's PNG
+  colour rules equal the PNG specification. It approved H1–H4 and the PR #33
+  comparison amendments. Because H2/H3 outcome information had been
+  published before E2, it registered three procedures: a pre-exposure
+  sensitivity digest per publication file, with H3 reported under both
+  policies; retention of the generated publication bytes until E5; and
+  hosted-CI accounting. Plan amendment #51 (F4 = 14 figures) is ratified.
+  Session 0161 (E3) is READY; no experiment leg has executed.
+
 - **EXP-002 E1 preparation — DRAFT protocol, collection driver and timeout
   governance (session 0159, 2026-10-11 UTC).** The lead-authored DRAFT
   pre-registration
@@ -338,6 +352,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   campaign-wide 64 MiB cap is unchanged.
 
 ### Fixed
+
+- **Hosted-check failures and a flaky local test fixture (2026-10-12).**
+  Rust 1.99's clippy rejects a single-element `for` loop in
+  `crates/prin-kernels/src/compat.rs` (behaviour unchanged). The `python`
+  lint job lacked numpy, so `mypy DOCS/experiments/ --strict` saw `Any`;
+  `ci/lint-constraints.txt` now pins the `.venv` numpy. The intermittent
+  `WinError 32` `tmp_path` setup errors were reproduced: pytest deletes the
+  previous session's `--basetemp` lazily, inside the first `tmp_path` setup,
+  with no retry. A `tests/conftest.py` session-start hook now deletes it up
+  front, retrying sharing violations and clearing read-only bits. The
+  fast suite twice crashed with an access violation in `os.walk` inside the
+  WP-001 inventory test. The crash has no reproduced root cause. Inside a git
+  work tree, `tools/wp001_baseline.py inventory` now lists git-visible files
+  only (about 4,500 rather than about 110,800). Git-ignored scratch is
+  therefore no longer counted as project state.
 
 - **PR #33 review round — EXP-002 driver, DRAFT protocol and evidence
   records (session 0159, 2026-10-11 UTC).** Seven review sources were

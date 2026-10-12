@@ -131,6 +131,13 @@ round amended the DRAFT protocol (its section 11) and the driver, and the
 maintainer approved the gitleaks checksum exception. EXP-002 remains
 DRAFT, with no execution.)*
 
+**EXP-002 APPROVED AT E2 — sessions 0159 and 0160 COMPLETE, 2026-10-12 UTC.**
+The maintainer accepted the E1 exit and delegated the E2 decisions, recorded
+with their reasons in
+[`e2-review.md`](EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md).
+Session 0161 (E3) is READY under that record's §8 entry checklist. No EXP-002
+experiment leg has executed.
+
 ## Layout
 
 ```

@@ -380,6 +380,171 @@ def test_api_traceability_fails_closed_on_unowned_module(tmp_path: Path) -> None
         collect_api_traceability(ROOT, ownership)
 
 
+_HAS_GIT = shutil.which("git") is not None
+
+
+def _git(repo: Path, *args: str) -> None:
+    # Isolated from the host's system and global git configuration.
+    env = dict(os.environ, GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull)
+    subprocess.run(  # nosec B603
+        [str(shutil.which("git")), "-C", str(repo), *args],
+        check=True,
+        capture_output=True,
+        env=env,
+    )
+
+
+def _scratch_repo(tmp_path: Path) -> Path:
+    repo = tmp_path / "repo"
+    (repo / "src").mkdir(parents=True)
+    (repo / "scratch").mkdir()
+    (repo / ".gitignore").write_text("scratch/\n", encoding="utf-8")
+    (repo / "src" / "tracked.py").write_text("x = 1\n", encoding="utf-8")
+    (repo / "src" / "untracked.py").write_text("y = 2\n", encoding="utf-8")
+    (repo / "scratch" / "ignored.txt").write_text("noise\n", encoding="utf-8")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".gitignore", "src/tracked.py")
+    return repo
+
+
+def _relative(root: Path, files: list[Path]) -> list[str]:
+    return [path.relative_to(root).as_posix() for path in files]
+
+
+@pytest.mark.skipif(not _HAS_GIT, reason="git executable not on PATH")
+def test_inventory_skips_git_ignored_scratch(tmp_path: Path) -> None:
+    repo = _scratch_repo(tmp_path)
+
+    files = wp001_baseline._active_project_files(repo)
+
+    assert _relative(repo, files) == [
+        ".gitignore",
+        "src/tracked.py",
+        "src/untracked.py",
+    ]
+
+
+@pytest.mark.skipif(not _HAS_GIT, reason="git executable not on PATH")
+def test_inventory_walks_a_directory_nested_in_another_work_tree(
+    tmp_path: Path,
+) -> None:
+    repo = _scratch_repo(tmp_path)
+
+    assert wp001_baseline._git_visible_files(repo / "scratch") is None
+    files = wp001_baseline._active_project_files(repo / "scratch")
+    assert _relative(repo / "scratch", files) == ["ignored.txt"]
+
+
+@pytest.mark.skipif(not _HAS_GIT, reason="git executable not on PATH")
+def test_inventory_skips_deleted_tracked_files(tmp_path: Path) -> None:
+    repo = _scratch_repo(tmp_path)
+    (repo / "src" / "tracked.py").unlink()
+
+    files = wp001_baseline._active_project_files(repo)
+
+    assert _relative(repo, files) == [".gitignore", "src/untracked.py"]
+
+
+@pytest.mark.skipif(not _HAS_GIT, reason="git executable not on PATH")
+def test_inventory_applies_exclusions_to_git_listing(tmp_path: Path) -> None:
+    repo = _scratch_repo(tmp_path)
+    (repo / "target").mkdir()
+    (repo / "target" / "build.o").write_text("o\n", encoding="utf-8")
+    (repo / "coverage.xml").write_text("<x/>\n", encoding="utf-8")
+    (repo / ".coverage.host.1").write_text("c\n", encoding="utf-8")
+
+    files = wp001_baseline._active_project_files(repo)
+
+    assert _relative(repo, files) == [
+        ".gitignore",
+        "src/tracked.py",
+        "src/untracked.py",
+    ]
+
+
+def test_inventory_walks_without_git(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "a.txt").write_text("a\n", encoding="utf-8")
+    (tmp_path / ".coverage.host.1").write_text("c\n", encoding="utf-8")
+    (tmp_path / "target").mkdir()
+    (tmp_path / "target" / "build.o").write_text("o\n", encoding="utf-8")
+    monkeypatch.setattr(wp001_baseline.shutil, "which", lambda name: None)
+
+    assert wp001_baseline._git_visible_files(tmp_path) is None
+    assert _relative(tmp_path, wp001_baseline._active_project_files(tmp_path)) == [
+        "a.txt"
+    ]
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        OSError("cannot start git"),
+        subprocess.TimeoutExpired("git", 60),
+        subprocess.CalledProcessError(128, "git"),
+    ],
+)
+def test_git_listing_failures_fall_back_to_walking(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, error: Exception
+) -> None:
+    def fail(*args: Any, **kwargs: Any) -> Any:
+        raise error
+
+    monkeypatch.setattr(wp001_baseline.shutil, "which", lambda name: "git")
+    monkeypatch.setattr(wp001_baseline.subprocess, "run", fail)
+
+    assert wp001_baseline._git_visible_files(tmp_path) is None
+
+
+def test_undecodable_git_listing_falls_back_to_walking(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def run(argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[Any]:
+        if "rev-parse" in argv:
+            return subprocess.CompletedProcess(argv, 0, stdout=f"{tmp_path}\n".encode())
+        return subprocess.CompletedProcess(argv, 0, stdout=b"bad\xff\0")
+
+    monkeypatch.setattr(wp001_baseline.shutil, "which", lambda name: "git")
+    monkeypatch.setattr(wp001_baseline.subprocess, "run", run)
+
+    assert wp001_baseline._git_visible_files(tmp_path) is None
+
+
+@pytest.mark.parametrize("name", ["/etc/passwd", "../outside.txt", "C:evil.txt"])
+def test_unsafe_git_names_fall_back_to_walking(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str
+) -> None:
+    def run(argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[Any]:
+        if "rev-parse" in argv:
+            return subprocess.CompletedProcess(argv, 0, stdout=f"{tmp_path}\n".encode())
+        listing = f"ok.txt\0{name}\0".encode()
+        return subprocess.CompletedProcess(argv, 0, stdout=listing)
+
+    monkeypatch.setattr(wp001_baseline.shutil, "which", lambda name: "git")
+    monkeypatch.setattr(wp001_baseline.subprocess, "run", run)
+
+    assert wp001_baseline._git_visible_files(tmp_path) is None
+
+
+def test_safe_git_listing_is_returned_sorted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def run(argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[Any]:
+        assert kwargs["stdin"] is subprocess.DEVNULL
+        if "rev-parse" in argv:
+            return subprocess.CompletedProcess(argv, 0, stdout=f"{tmp_path}\n".encode())
+        listing = b"b.txt\0a/c.txt\0b.txt\0"
+        return subprocess.CompletedProcess(argv, 0, stdout=listing)
+
+    monkeypatch.setattr(wp001_baseline.shutil, "which", lambda name: "git")
+    monkeypatch.setattr(wp001_baseline.subprocess, "run", run)
+
+    files = wp001_baseline._git_visible_files(tmp_path)
+    assert files is not None
+    assert _relative(tmp_path, files) == ["a/c.txt", "b.txt"]
+
+
 def test_repository_inventory_is_deterministic_and_separates_archive() -> None:
     first = collect_repository_inventory(ROOT)
     second = collect_repository_inventory(ROOT)

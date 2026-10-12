@@ -1,6 +1,6 @@
 # Session 0159 — EXP-002 / C1 E1: Pre-registration — API, benchmark-result, and reproduction parity
 
-**Status:** IN_PROGRESS — **released 2026-09-29 UTC; began 2026-10-11 UTC.** This session had been
+**Status:** COMPLETE — **E1 exit accepted by MichaelMaillet 2026-10-12 UTC** ("Accept the E1 exit."; record: [e2-review.md](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md) §5). **Released 2026-09-29 UTC; began 2026-10-11 UTC.** This session had been
 blocked by the campaign plan §10.4 D1 that EXP-001 raised at E5 (session 0158).
 Both release conditions are now met: the four contingency correction sessions
 closed (S1→S4, 2026-09-27), and `EXP-001-r1` returned a **non-reversal** E5

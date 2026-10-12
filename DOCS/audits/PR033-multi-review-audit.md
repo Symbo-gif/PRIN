@@ -372,3 +372,58 @@ broke `tests/test_wp001_baseline.py::test_secret_scan_is_blocking_and_covers_ful
 which pinned `.gitleaksignore` to exactly one entry (leg G12a). The fix keeps
 the guard: the test now pins the *exact* two approved fingerprints and their
 approval comments, so any unapproved addition still fails.
+
+## 12. Addendum (2026-10-12): kept failures diagnosed, hosted results
+
+Appended after the maintainer asked for the kept failures to be diagnosed
+and, where possible, fixed. The text above is unchanged.
+
+- **`WinError 32` (G09a, G13; also `final-6314532/04`).** The cause is now
+  reproduced, so the earlier "holder unproven" no longer applies to the
+  mechanism. With `--basetemp=X`, pytest deletes the *previous* session's
+  `X` lazily inside `TempPathFactory.getbasetemp()` — the setup of the
+  first test that requests `tmp_path` — with no retry. A transient handle
+  on any leftover file makes that test error. The factory stays unset, so
+  the next tests retry and may error too. That matches both captures: the
+  errored nodes were the session's first `tmp_path` users, and the
+  directories named belonged to the previous session. A synthetic
+  reproduction (`EVIDENCE/0160/verification/test-reliability/W1`) gives the
+  same errors. The fix is a `tests/conftest.py` session-start hook
+  (`tests/_basetemp.py`) that deletes the same directory up front. It
+  retries sharing violations within a bounded budget, clears read-only bits
+  (git objects), refuses the rootdir and its ancestors, and turns a
+  persistent holder into one clear usage error (`W2` passes; `W3` exits
+  4 with the message). The external holder process itself is still not
+  identified, and does not need to be.
+- **G12a** was a real defect (SA-6), already fixed. **G14a** was a real
+  Snyk finding, already fixed. **G16a** was an operator error (a relative
+  interpreter path in the scratch runner); the runner now takes an absolute
+  path.
+- **Hosted results for `0d4278d`** (amendment #50 window): `gpu`, `parity`,
+  `repro`, `snyk` (push and pull_request) and the forced `nightly`
+  (`38184198596`; `bench-regression` and `full-suite`) succeeded. Two jobs
+  failed:
+  - `python` (`38184181265`), `lint` job: `mypy DOCS/experiments/
+    --strict`, `no-any-return` in `exp001_driver.py:1230`. The lint job
+    never installed numpy, so `np` resolved to `Any`. The step was added
+    while hosted checks were paused, so it had never run hosted.
+    Reproduced exactly in a venv that mirrors the job, and fixed by
+    pinning the `.venv` numpy (`EVIDENCE/0160/verification/ci-fixes/C3*`).
+  - `rust` (`38184181298`), `clippy` / `clippy-strict`: hosted stable
+    Rust 1.99 flags a single-element `for` loop in
+    `crates/prin-kernels/src/compat.rs`. Local Rust was 1.98; it was
+    updated to 1.99, the failure reproduced, and the loop was rewritten
+    with identical behaviour.
+
+  These are latent pre-existing defects that hosted CI exposed, not
+  regressions from this round's change.
+- **Access violation in the fast suite (leg 09 of the 0159 bundle; also
+  `EVIDENCE/0160/verification/gate/G12a`).** Both crashes happened in
+  `os.walk`, called from the WP-001 repository-inventory test. Standalone
+  reruns, with and without coverage, did not reproduce the crash, so its
+  native root cause is **not proven**. The walk crossed about 110,800
+  files (4.2 GB), mostly git-ignored scratch. Inside a work tree,
+  `tools/wp001_baseline.py` now lists only git-visible files (about 4,500),
+  and it still walks the tree outside git. Regression tests cover both
+  paths. This removes most of the code path that crashed, but the root
+  cause is still open.

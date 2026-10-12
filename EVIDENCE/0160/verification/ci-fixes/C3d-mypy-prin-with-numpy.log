@@ -1,0 +1,11 @@
+COMMAND: C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/ci-lint-venv/Scripts/mypy.exe python/prin --strict
+CWD: C:/dev/PRIN
+SOURCE: working tree; scratch venv mirroring the hosted lint job: Python 3.12, mypy 2.3.0, hypothesis 6.165.2, torch 2.13.0+cpu (ci/lint-constraints.txt); numpy==2.5.1 (the fix)
+UTC-START: 2026-10-12T04:25:59Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+Success: no issues found in 62 source files
+----
+ELAPSED_SECONDS: 1.1
+EXIT_CODE: 0

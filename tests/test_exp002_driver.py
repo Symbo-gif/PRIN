@@ -380,6 +380,8 @@ def _fake_observations(mode: str) -> dict[str, Any]:
                 "raw_sha256": "0" * 64,
                 "normalized_bytes": 3,
                 "normalized_sha256": "0" * 64,
+                "sensitivity_bytes": 3,
+                "sensitivity_sha256": "0" * 64,
             }
         ],
         "unit": "generated_file",
@@ -1357,9 +1359,14 @@ class TestCollectReproduction:
         assert figure["normalized_sha256"] == _sha256(
             driver.normalized_bytes(PDF_A, ".pdf")
         )
+        sensitivity = driver.sensitivity_bytes(PDF_A, ".pdf")
+        assert figure["sensitivity_bytes"] == len(sensitivity)
+        assert figure["sensitivity_sha256"] == _sha256(sensitivity)
         table = records["tables/tab_ablation.tex"]
         assert table["raw_sha256"] == _sha256(TEX_A)
         assert table["normalized_sha256"] == _sha256(TEX_A)
+        assert table["sensitivity_bytes"] == len(TEX_A)
+        assert table["sensitivity_sha256"] == _sha256(TEX_A)
         assert table["archived_sha256"] == _sha256(b"% archived tab_ablation\n")
         # Normalization must never rewrite the captured source bytes.
         assert (output / "figures" / "fig2_clevr_n_capacity.pdf").read_bytes() == PDF_A
@@ -2929,6 +2936,8 @@ class TestClosureObservations:
                         "raw_sha256": "1" * 64,
                         "normalized_bytes": 1,
                         "normalized_sha256": "1" * 64,
+                        "sensitivity_bytes": 1,
+                        "sensitivity_sha256": "1" * 64,
                     }
                 ]
             ),
@@ -3350,3 +3359,76 @@ class TestSelfAuditAdmissionAndClosure:
         monkeypatch.setattr(driver, "_git_bytes", hung)
         with pytest.raises(driver.DriverError, match="cannot be resolved"):
             driver.check_run_complete(run)
+
+
+class TestSensitivityPolicy:
+    """E2 decision 9: the pre-exposure comparison is recorded for every file."""
+
+    def test_tables_keep_raw_line_terminators(self) -> None:
+        crlf = TEX_A.replace(b"\n", b"\r\n")
+        assert driver.normalized_bytes(crlf, ".tex") == (
+            driver.normalized_bytes(TEX_A, ".tex")
+        )
+        assert driver.sensitivity_bytes(crlf, ".tex") == crlf
+        assert driver.sensitivity_bytes(crlf, ".tex") != (
+            driver.sensitivity_bytes(TEX_A, ".tex")
+        )
+
+    def test_pdf_values_masked_but_key_set_kept(self) -> None:
+        assert driver.normalized_bytes(PDF_PRIN_INFO, ".pdf") == (
+            driver.normalized_bytes(PDF_REFERENCE_INFO, ".pdf")
+        )
+        assert driver.sensitivity_bytes(PDF_PRIN_INFO, ".pdf") != (
+            driver.sensitivity_bytes(PDF_REFERENCE_INFO, ".pdf")
+        )
+        # Same key set, different value lengths: the old policy masked them.
+        assert driver.sensitivity_bytes(PDF_A, ".pdf") == (
+            driver.sensitivity_bytes(PDF_B, ".pdf")
+        )
+        assert b"ToolOne" not in driver.sensitivity_bytes(PDF_A, ".pdf")
+
+    def test_pdf_content_still_significant(self) -> None:
+        assert driver.sensitivity_bytes(PDF_A, ".pdf") != (
+            driver.sensitivity_bytes(PDF_C, ".pdf")
+        )
+
+    def test_png_policy_unchanged(self) -> None:
+        assert driver.sensitivity_bytes(PNG_A, ".png") == (
+            driver.normalized_bytes(PNG_A, ".png")
+        )
+
+    def test_unregistered_suffix_rejected(self) -> None:
+        with pytest.raises(driver.DriverError, match="unregistered"):
+            driver.sensitivity_bytes(b"x", ".svg")
+
+    def test_missing_sensitivity_digest_rejected_at_closure(
+        self, workspace: Path
+    ) -> None:
+        run = _closure_run("prin")
+        _rewrite_json(
+            run,
+            "reproduction.json",
+            lambda d: d["observations"]["files"][0].pop("sensitivity_sha256"),
+        )
+        with pytest.raises(driver.DriverError, match="observations"):
+            driver.check_run_complete(run)
+
+
+def test_sensitivity_selects_info_by_number_like_6314532() -> None:
+    """The pre-exposure policy masked every object numbered like Info."""
+    pdf = _pdf_with_objects(
+        [
+            (1, 0, b"<< /Type /Catalog >>"),
+            (5, 0, b"<< /Producer (x) >>"),
+            (5, 1, b"<< /Creator (PRIN) >>"),
+        ]
+    )
+    masked = driver.sensitivity_bytes(pdf, ".pdf")
+    assert b"/Creator (normalized)" in masked
+    assert b"/Producer (normalized)" in masked
+    # The approved policy keeps the other generation significant.
+    assert b"/Creator (PRIN)" in driver.normalized_bytes(pdf, ".pdf")
+
+
+def test_reproduction_records_sensitivity_size() -> None:
+    assert "sensitivity_bytes" in driver._FILE_INT_KEYS

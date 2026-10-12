@@ -1,0 +1,11 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/mypy.exe python/prin --strict
+CWD: C:/dev/PRIN
+SOURCE: working tree: ed993e9 + staged session-0160 changes (final candidate after cold-review rounds 1-3 and evidence packaging; gate run 5, host otherwise idle)
+UTC-START: 2026-10-12T09:03:01Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+Success: no issues found in 62 source files
+----
+ELAPSED_SECONDS: 2.7
+EXIT_CODE: 0

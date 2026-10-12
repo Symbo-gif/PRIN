@@ -1,0 +1,87 @@
+I'll start by reading the round-1 reports, adjudication, and diffs in parallel.Now I'll read the rest of the diffs and the adjudication section.Let me read the rest of the records diff and the current source files.Now I need the current tree files and the installed pytest `pathlib.py` (for `rm_rf` semantics).Now the current protocol file, supporting records, and remaining evidence files.xdist isn't installed under `.venv` (both paths not found) — the `workerinput` skip is the standard xdist idiom regardless. Let me verify the `_pdf_with_objects` helper exists in the test file.Helpers all exist. Let me spot-check that a few manifest-listed files actually exist on disk (paths cited in findings).Let me check `DOCS/experiments/README.md` around the retained "DRAFT" parenthetical.All verification complete. Here is the report.
+
+---
+
+# Cold self-audit round 2 (read-only) — verification of round-1 fixes
+
+**Repository:** `C:\dev\PRIN` (commit `ed993e9` + staged changes)  
+**Mode:** read-only; file reads only, no shell, no edits.  
+**Sources checked:** current `tests/_basetemp.py`, `tests/conftest.py`, `tests/test_basetemp.py`, `tests/test_0160_manifest.py`, `benchmarks/campaign/exp002_driver.py`, `tests/test_exp002_driver.py`, `preregistration.md`, `e2-review.md` §7, `e1-handoff.md`, `e2-review-packet.md`, `benchmarks/campaign/README.md`, `tests/README.md`, `DOCS/PRIN_Project_Plan.md`, `DOCS/experiments/README.md`, `EVIDENCE/0160/README.md`, `EVIDENCE/0160/verification/SHA256SUMS.txt`, `EVIDENCE/0160/verification/delegation/{agy,devin}-e2-{task.md,report.txt}`, `EVIDENCE/0160/verification/ci-fixes/H1-forced-nightly-38184198596.json`, `EVIDENCE/0160/verification/test-reliability/W3-*.log`, `EVIDENCE/0160/verification/e2-review/e2_static_verification.py`, and the installed `_pytest/{tmpdir,pathlib}.py`. (`pytest-xdist` is not installed under `.venv`; the `workerinput` skip is the standard xdist idiom regardless.)
+
+## 1. Verdicts on each round-1 finding
+
+### Devin F1 — relative `--basetemp` resolution — **FIXED** (with a corrected premise)
+
+`tests/_basetemp.py:86` now reads `target = Path(os.path.abspath(basetemp))`, which is byte-for-byte the same semantics as installed pytest `_pytest/tmpdir.py:74`: `self._given_basetemp = Path(os.path.abspath(str(given_basetemp)))` — both resolve a relative `--basetemp` against the **invocation cwd**, not `rootpath`. Round-1's scenario premise ("pytest resolves relative basetemp as `config.rootpath / basetemp`") was incorrect, and the adjudication records that honestly: `e2-review.md:331` "pytest uses `os.path.abspath` (the invocation directory), not the rootpath Devin assumed, but the hook's `resolve()` could still diverge on a symlink". The real residual (round-1's `basetemp.resolve()` followed symlinks while `abspath` does not) is gone: the hook now deletes exactly the lexical path pytest will target, and leaves symlinks, plain files and missing paths to pytest (`_basetemp.py:93` `if target.is_symlink() or not target.is_dir(): break`; docstring :72-76 states this). Coverage: `test_basetemp.py:116-128` (`test_relative_path_is_resolved_like_pytest`, whose docstring correctly attributes abspath to the invocation directory).
+
+### Devin F2 — non-`PermissionError` crashes / races — **PARTIAL** (substantially fixed, two residuals)
+
+- **Scenario A (directory vanishes mid-delete): FIXED.** `_basetemp.py:98` `except (FileNotFoundError, NotADirectoryError): continue` re-enters the loop, where `:93` sees the directory gone and breaks. Test: `test_basetemp.py:96-106`.
+- **Scenario B (pytest-xdist race): FIXED at the hook level.** `conftest.py:234-237`: `# pytest-xdist workers share the controller's --basetemp; only the controller (no ``workerinput``) may delete it.` / `if not given or hasattr(session.config, "workerinput"): return`. Workers skipping the hook prevents the session-start race. (Workers' own lazy `getbasetemp()` on a shared `--basetemp` is stock pytest+xdist behaviour, unchanged by the hook; the only `-n` invocation in the repo passes no `--basetemp`, so it is latent.)
+- **Scenario C (plain file): FIXED.** `:93` `not target.is_dir()` → break → left for pytest's own handling. Test: `test_basetemp.py:109-113`.
+- **Unbounded loop: FIXED.** `for _ in range(attempts)` at `:92` bounds every path (successful and failed), and the `for/else` at `:104-106` raises `PermissionError(f"{target} still exists after {attempts} attempts")` if a directory survives the budget. Test: `test_basetemp.py:131-138`.
+- **Residual A — other `OSError`s still abort the session at startup.** The catch list covers `FileNotFoundError`, `NotADirectoryError`, `PermissionError` only. A different transient — e.g. WinError 145 `ERROR_DIR_NOT_EMPTY` when a background process writes into the tree mid-delete — propagates out of `pytest_sessionstart` and aborts the whole session, where stock pytest's `rm_rf` treats any non-`PermissionError` as warn-and-continue-best-effort (`_pytest/pathlib.py:94-98` warns `(rm_rf) error removing …` and proceeds). Narrower than round-1 but not closed; `test_basetemp.py:74-81` pins the propagation as intended.
+- **Residual B — eager deletion (unchanged by design).** The hook still deletes at session start even when no collected test would ever call `getbasetemp()` (e.g. `--collect-only`, or a `-k`/`-m` filter deselecting all `tmp_path` users); pytest's deletion is lazy inside the first `tmp_path` setup (`_pytest/tmpdir.py:145-158`). Same caveat round-1 noted; still a real divergence.
+
+### Devin F3 — no `sensitivity_bytes` size — **FIXED**
+
+`_FILE_INT_KEYS` now `("raw_bytes", "normalized_bytes", "sensitivity_bytes")` (`exp002_driver.py:178`) and `_FILE_DIGEST_KEYS` includes `sensitivity_sha256` (`:179`). `collect_reproduction` records `"sensitivity_bytes": len(sensitivity)` and `"sensitivity_sha256": _digest(sensitivity)` unconditionally (`:1064-1065`). Closure enforces both via the `_FILE_INT_KEYS`/`_FILE_DIGEST_KEYS` checks at `:1326-1335` (a missing key hits `item.get(key)` → `None` → `DriverError`). The amended §8.1 row (`preregistration.md:511`, "raw, normalized and sensitivity sizes/digests") is now satisfiable entirely from manifested records. Tests: `test_exp002_driver.py:1362-1364`, `1368-1369`, `3411`, `3433-3434`.
+
+### Devin F4 — `(number, generation)` vs number-only Info selection — **FIXED**
+
+`sensitivity_bytes` at `exp002_driver.py:962` masks every in-use object with `key[0] == info_key[0]` — object **number only**, matching the `6314532` policy's number-based selection quoted in round 1 (the comment at :958-961 says this verbatim). `test_sensitivity_selects_info_by_number_like_6314532` (`:3417-3430`) builds `(1,0)/(5,0)/(5,1)` with `/Info 5 0 R` and asserts both `5 0` and `5 1` are masked under `sensitivity_bytes` while `normalized_bytes` keeps `/Creator (PRIN)` in `5 1`. `_pdf_with_objects` (`:3213-3236`) produces a valid container for this. The companion acceptance-set point is now registered in §11.3 (`preregistration.md:672-674` "Containers are validated as under the approved policy, so this digest never aborts a run the approved policy accepts") — verified accurate: `normalized_bytes` runs first at `:1055`, and `sensitivity_bytes` (`:1056`) only exercises `_pdf_parts`, `_validate_png`/`normalized_bytes`, or no validation (`.tex` → `return payload`, `:951-952`), so it cannot raise where the approved policy succeeded.
+
+### Devin F5 — nonexistent evidence paths — **FIXED** (one new instance found elsewhere, see N1)
+
+`e2-review.md:20` and `:122-123` now cite `EVIDENCE/0160/verification/delegation/` — all four files exist (`agy-e2-task.md`, `agy-e2-report.txt`, `devin-e2-task.md`, `devin-e2-report.txt`, hashed at `SHA256SUMS.txt:8-11`). `e2-review.md:29-30` cites `EVIDENCE/0160/verification/e2-review/e2_static_verification.py` — the file exists there (verified directly). `DOCS/PRIN_Project_Plan.md:250` (amendment #51 row) now cites `EVIDENCE/0160/verification/e2-review/`. §7 adjudication is populated (`e2-review.md:126-139`). `verification/gate/` remains empty pending the gate per instruction — packaging in progress, not re-flagged.
+
+### Antigravity F1 — nightly durations unsupported — **FIXED**
+
+`EVIDENCE/0160/verification/ci-fixes/H1-forced-nightly-38184198596.json` exists (SHA256SUMS:7; manifest `test_0160_manifest.py:36`): `databaseId:38184198596`, `headSha:"0d4278d484e1fb5e55cd510991f6c8d4bf4374ae"`, `bench-regression` 23:25:08→00:52:07 (~87 min), `full-suite` 23:25:08→23:38:57 (~14 min) — matching `e2-review.md:99`'s "87 min, 14 min".
+
+### Antigravity F2 — premature gate evidence — **PARTIAL / pending by instruction**
+
+`EVIDENCE/0160/README.md:32-33` and `e2-review.md:111-116` still describe `verification/gate/` contents ("the approved source's Windows local gate (G*), Snyk Code and gitleaks"); the directory is intentionally empty until the gate finishes, so the premature-claim half remains open until packaging completes (adjudication: "`gate/` and `delegation/` are packaged before the commit"). Cannot fully verify; residual pending.
+
+### Antigravity F3 — premature delegation/adjudication claim — **FIXED**
+
+`EVIDENCE/0160/verification/delegation/` exists with all four files hashed in `SHA256SUMS.txt:8-11`; `e2-review.md` §7 (`:118-139`) contains the adjudication table; the path is harmonized to `verification/delegation/` in `e2-review.md:20,122-123` and `EVIDENCE/0160/README.md:34-35`.
+
+### Antigravity F4 — campaign README DRAFT text — **FIXED** (superseding-note style)
+
+The DRAFT sentences remain verbatim at `benchmarks/campaign/README.md:27-28` ("The pre-registration is **DRAFT**") and `:41` ("The driver still refuses to run while the protocol is DRAFT"), but are immediately followed by the dated note at `:42-46`: "*Session 0160 (2026-10-12):* the protocol is APPROVED at E2 and both comparison amendments were approved…". Row :23 updated to "APPROVED at E2 (2026-10-12); E3 (0161) READY".
+
+### Antigravity F5 — e2-review-packet pending text — **FIXED**
+
+`e2-review-packet.md:3` carries `*(superseded 2026-10-12: E2 decided and APPROVED in e2-review.md…)*`; `:6-7` carry `*(historical; …)*` annotations; the closing banner at `:173-174` is prefixed `*(Historical banner — superseded 2026-10-12: EXP-002 is APPROVED in e2-review.md.)*`.
+
+### Antigravity F6 — tests/README "protocol stays DRAFT" — **FIXED**
+
+`tests/README.md:328-329`: "executes an EXP-002 leg (the protocol was DRAFT when these were written and is APPROVED since 2026-10-12; no test depends on its status)".
+
+### Antigravity F7 — "hosted checks remain paused" without #50 — **FIXED**
+
+`e1-handoff.md:151-153` adds the bullet "**Hosted checks:** the "hosted checks remain paused" wording above is qualified by Plan amendment #50, which re-enables the hosted checks for the EXP-002 experiments only."
+
+### Antigravity F8 — pending-publication text in e1-handoff — **CORRECTLY DECLINED**
+
+`e1-handoff.md:82-86` is unchanged, but `:130-132` states "The sections above are kept as written at `78d3600`. These corrections supersede them where they conflict", the publication bullet at `:134-136` records the PR #33 push, and `:158-159` records the 2026-10-12 E1-exit acceptance. The adjudication's "no change" is correct.
+
+### Antigravity F9 — §8 omits amendment #50 window — **FIXED**
+
+`preregistration.md:491-492`: "The retained prospective workflows are hosted-validated only inside Plan amendment #50's EXP-002 window while amendment #48 is otherwise in force."
+
+## 2. New defects introduced by the fixes
+
+- **N1 — LOW: another missing-`verification/` evidence path.** `tests/README.md:341` (the new `test_basetemp.py` bullet) says "reproduction in `EVIDENCE/0160/test-reliability/`"; the real path is `EVIDENCE/0160/verification/test-reliability/` (`test_0160_manifest.py:49-52`; `EVIDENCE/0160/README.md:24`; `SHA256SUMS.txt:20-23`). Same defect class as round-1 Devin F5, introduced in this round.
+- **N2 — LOW/latent: read-only retry differs from pytest on POSIX.** `_make_writable_and_retry` (`_basetemp.py:36`) replaces the mode with `stat.S_IWRITE | stat.S_IREAD` (0600) and does not chmod ancestor directories; pytest's `on_rm_rf_error` ORs `mode | S_IRUSR | S_IWUSR` and walks parents (`_pytest/pathlib.py:112-125`). Identical effect on the registered Windows host; on POSIX a read-only directory would keep failing (0600 has no execute bit). Unreachable in governed use today (no hosted invocation passes `--basetemp`), so latent.
+- Residual (also see F2): a non-`PermissionError` `OSError` (e.g. `ERROR_DIR_NOT_EMPTY` under concurrent writes) still aborts the session at startup where stock pytest warns and continues; and the hook still deletes eagerly even when the run would never touch `basetemp`. These are narrowed-but-unfixed parts of F2, not new.
+- Cosmetic nit (not a defect): a `--basetemp` equal to or an ancestor of rootdir raises `ValueError`, which escapes `pytest_sessionstart` as an internal error rather than a `UsageError`; the refusal itself is correct (pytest would otherwise delete the rootdir).
+
+No E3-relevant defect found: `sensitivity_bytes` cannot raise where `normalized_bytes` succeeded on the same payload (called second at `:1056`, same parsers), so it introduces no new abort path for a genuine run.
+
+## 3. Header admission and parameter freeze
+
+- **Admission — CONFIRMED.** `_approval_date` (`exp002_driver.py:1087-1111`) reads `^\*\*Status:\*\*[ \t]*([^\r\n]+)` with `re.M`; the first match is `preregistration.md:3` `**Status:** APPROVED` → `.strip() == "APPROVED"` passes. The approval field at `:7` (`**Maintainer approval:** MichaelMaillet, 2026-10-12 UTC - E2 decisions…`) satisfies `re.match(r"MichaelMaillet, (\d{4}-\d{2}-\d{2}) UTC\b", …)` (`\b` holds before ` -`), and `datetime.strptime("2026-10-12")` is a real date. The header still admits.
+- **No scientific-parameter change — CONFIRMED.** The protocol diff touches only: the header (`:3`, `:7-9`), the §8 prose qualifier (`:491-492`), the §8.1 reporting rows (`:508` adds "the H3 verdict under the section 11.3 sensitivity policy"; `:511` adds "and sensitivity sizes/digests … equality under both comparison policies"), the §8.2 retained-bytes note (`:541-544`), the §9 hosted-accounting wording (`:552`; cap retained `<=2 h`), new §11.3 (`:661-698`), and the closing banner (`:700-703`). Sections 3–7 (predictions, decision rules, methods, abort, execution) are untouched. Every cap is retained verbatim (`<=2 h` :551-552, `<=10 MiB` :553, `<=2 MiB`/`<=64 MiB` :555-556). The code diff adds record fields (`sensitivity_bytes`/`sensitivity_sha256`), the conftest hook, the lint pin, and the `compat.rs` unrolling — no change to `EXPECTED_FILES`, populations (175/172/62/39), seeds `(0,2)`, thresholds, the three-way statistic, abort criteria, or any cap. The §8.1 additions are reporting requirements (new output fields), not changes to a hypothesis, prediction, population, threshold, sample, seed, statistic, abort criterion or cap — matching §11.3's own claim at `preregistration.md:696-697`.
+DEVIN-DONE

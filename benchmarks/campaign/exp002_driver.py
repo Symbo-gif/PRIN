@@ -175,8 +175,8 @@ _CASE_KEYS = frozenset(
         "observed",
     }
 )
-_FILE_INT_KEYS = ("raw_bytes", "normalized_bytes")
-_FILE_DIGEST_KEYS = ("raw_sha256", "normalized_sha256")
+_FILE_INT_KEYS = ("raw_bytes", "normalized_bytes", "sensitivity_bytes")
+_FILE_DIGEST_KEYS = ("raw_sha256", "normalized_sha256", "sensitivity_sha256")
 
 
 class DriverError(RuntimeError):
@@ -929,6 +929,46 @@ def normalized_bytes(payload: bytes, suffix: str) -> bytes:
         return normalize_matplotlib_output(snapshot)
 
 
+def sensitivity_bytes(payload: bytes, suffix: str) -> bytes:
+    """Compare bytes under the pre-exposure section 5.4 policy (E2 decision 9).
+
+    The policy committed at ``6314532``, before PR #33's reviews published
+    outcome information: tables as raw bytes, PDFs with the four registered
+    Info values masked in place (key set and line wrapping kept), PNGs
+    unchanged. E4 reports H3 under this policy beside the approved one, so a
+    verdict that depends on the post-exposure amendment is visible.
+
+    Args:
+        payload: The same raw bytes used for the raw-size/digest observation.
+        suffix: One of ``.tex``, ``.pdf`` or ``.png``.
+
+    Returns:
+        Format-specific bytes under the pre-exposure comparison policy.
+
+    Raises:
+        DriverError: If a suffix is unregistered or a container is malformed.
+    """
+    if suffix == ".tex":
+        return payload
+    if suffix != ".pdf":
+        return normalized_bytes(payload, suffix)
+    prefix, objects, info_key, xref, footer = _pdf_parts(payload)
+    parts = [prefix]
+    for key, segment in objects:
+        # Faithful to 6314532, which selected the Info object by number only;
+        # Matplotlib writes generation 0 throughout, so this differs from the
+        # approved policy's (number, generation) selection only on crafted
+        # files, and only in this secondary digest.
+        if info_key is not None and key[0] == info_key[0]:
+            segment = re.sub(
+                rb"/(CreationDate|ModDate|Creator|Producer)\s+\((?:\\.|[^\\)])*\)",
+                rb"/\1 (normalized)",
+                segment,
+            )
+        parts.append(segment)
+    return b"".join(parts) + xref + footer
+
+
 def _font_cache_state() -> dict[str, Any]:
     cache = (
         Path(matplotlib.get_cachedir())
@@ -1013,6 +1053,7 @@ def collect_reproduction(
             raise DriverError(f"publication output is not a regular file: {path}")
         payload = read_no_follow(path, "generated publication")
         normalized = normalized_bytes(payload, path.suffix)
+        sensitivity = sensitivity_bytes(payload, path.suffix)
         name = path.relative_to(output).as_posix()
         record = {
             "path": name,
@@ -1020,6 +1061,8 @@ def collect_reproduction(
             "raw_sha256": _digest(payload),
             "normalized_bytes": len(normalized),
             "normalized_sha256": _digest(normalized),
+            "sensitivity_bytes": len(sensitivity),
+            "sensitivity_sha256": _digest(sensitivity),
         }
         if name.startswith("tables/") and name in EXPECTED_FILES:
             archived = read_no_follow(REFERENCE / "paper" / name, "archived table")

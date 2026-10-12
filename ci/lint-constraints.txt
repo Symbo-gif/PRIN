@@ -21,3 +21,10 @@ hypothesis==6.165.2
 # torch is needed only so `mypy --strict` can follow `import torch`; the CPU
 # wheel avoids dragging the ~5 GB CUDA 13 stack onto the hosted runner.
 torch==2.13.0
+# numpy is a declared runtime dependency (`pyproject.toml`: numpy>=1.24) and is
+# installed in the maintainer .venv. Without it the lint job's `mypy` resolved
+# `import numpy` to `Any` (ignore_missing_imports), so `mypy DOCS/experiments/
+# --strict` reported no-any-return in benchmarks/campaign/exp001_driver.py
+# while the local gate passed (PR #33 hosted run 38184181265). Pinned to the
+# .venv version so local == CI.
+numpy==2.5.1

@@ -1,0 +1,13 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe -m pip_audit -r C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/e2/numpy-req.txt --no-deps --disable-pip
+CWD: C:/dev/PRIN
+SOURCE: the one dependency pin this round adds (ci/lint-constraints.txt: numpy==2.5.1, already the .venv version)
+UTC-START: 2026-10-12T04:56:31Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+WARNING:pip_audit._cli:--no-deps is supported, but users are encouraged to fully hash their pinned dependencies
+WARNING:pip_audit._cli:Consider using a tool like `pip-compile`: https://pip-tools.readthedocs.io/en/latest/#using-hashes
+No known vulnerabilities found
+----
+ELAPSED_SECONDS: 6.7
+EXIT_CODE: 0

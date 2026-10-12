@@ -1,0 +1,11 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe EVIDENCE/0160/verification/e2-review/crlf_model_crosscheck.py
+CWD: C:/dev/PRIN
+SOURCE: working tree: ed993e9 + staged session-0160 changes after the first cold-review fixes; Windows 11 host (os.linesep CR LF)
+UTC-START: 2026-10-12T04:52:56Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+RESULT: 29524 strings; canon == bytes.replace, translate == Windows text-mode write, canon(translate(x)) == x on real I/O
+----
+ELAPSED_SECONDS: 21.1
+EXIT_CODE: 0

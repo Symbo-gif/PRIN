@@ -1,0 +1,57 @@
+COMMAND: C:/Users/there/AppData/Roaming/npm/snyk.cmd code test C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/e2/sast-head --severity-threshold=low --org=symbo-gif
+CWD: C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/e2/sast-head
+SOURCE: git show ed993e9:tools/wp001_baseline.py (pre-change baseline for the three Low findings in G14b)
+UTC-START: 2026-10-12T07:30:30Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+
+Testing C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/e2/sast-head ...
+
+Open Issues
+
+ ✗ [LOW] Path Traversal
+   Path: tools/wp001_baseline.py, line 457
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Path: tools/wp001_baseline.py, line 520
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Path: tools/wp001_baseline.py, line 1026
+   Info: Unsanitized input from a command line argument flows into os.walk, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+
+        
+💡 Tip
+
+   You are currently viewing results with --severity-threshold applied.
+   To view all issues, remove the --severity-threshold flag            
+                                                                       
+
+╭───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Test Summary                                                                                                                              │
+│                                                                                                                                           │
+│   Organization:      symbo-gif                                                                                                            │
+│   Test type:         Static code analysis                                                                                                 │
+│   Project path:      C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/e2/sast-head    │
+│                                                                                                                                           │
+│   Total issues:   3                                                                                                                       │
+│   Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]                                                                                           │
+│   Open issues:    3 [ 0 HIGH  0 MEDIUM  3 LOW ]                                                                                           │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+    
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+
+
+💡 Tip
+
+   Some capabilities, including the ability to apply ignores, are unavailable. Retest the project with the --remote-repo-url parameter or from within a repository to enable full functionality.
+                                                                                                                                                                                                
+----
+ELAPSED_SECONDS: 15.3
+EXIT_CODE: 1

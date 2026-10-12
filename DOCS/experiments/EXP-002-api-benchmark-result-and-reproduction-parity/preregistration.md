@@ -1,10 +1,12 @@
 # Pre-registration - EXP-002: API, benchmark-result, and reproduction parity
 
-**Status:** DRAFT
+**Status:** APPROVED
 **Authors:** MichaelMaillet (maintainer); Devin (AI pair of record, drafting)
 **Date:** 2026-10-11 UTC
 **Pre-E2 amendments:** section 11 (PR #33 review remediation, 2026-10-11 UTC)
-**Maintainer approval:** NOT GRANTED - reserved for session 0160
+**Maintainer approval:** MichaelMaillet, 2026-10-12 UTC - E2 decisions
+delegated to the AI pair by maintainer directive; record and reasons in
+[`e2-review.md`](e2-review.md); E2 amendments in section 11.3
 **Code version:** `prin-core 1.0.0rc1` / Rust `1.0.0-rc1`
 **Source baseline:** `da53ea11a3f38cd0d5c27c40bbefbeaf6d6dbf53`
 **Session briefs:** 0159 E1, 0160 E2, 0161 E3, 0162 E4, 0163 E5
@@ -486,7 +488,8 @@ this record root. No such module is created or executed by session 0159.
 DV-040 option (a), strengthened by PR #32, governs the module: source-only
 Ruff formatting, Ruff lint, strict mypy and non-vacuous Bandit include
 `DOCS/experiments/`; Snyk Code applies. The retained prospective workflows
-are not hosted-validated while amendment #48 is in force.
+are hosted-validated only inside Plan amendment #50's EXP-002 window
+while amendment #48 is otherwise in force.
 
 The analysis accepts exactly the five registered run records and their
 manifests, verifies provenance and input-byte identity before reading, and
@@ -502,10 +505,10 @@ Seven analysis outputs regenerate deterministically under
 
 | File | Required contents and units |
 |---|---|
-| `summary.json` | H1-H4 three-way verdicts, expected/observed denominators, aborts, D1 flag, input/source/protocol/manifest digests; distinct `api_symbol_count`, `claim_comparator_record_count`, `generated_file_count` |
+| `summary.json` | H1-H4 three-way verdicts, the H3 verdict under the section 11.3 sensitivity policy, expected/observed denominators, aborts, D1 flag, input/source/protocol/manifest digests; distinct `api_symbol_count`, `claim_comparator_record_count`, `generated_file_count` |
 | `api-mapping.csv` | Exactly one row per independently expected export plus separately labelled unexpected exports; defining module/type, callable/constant, ownership, resolution failure |
 | `conclusion-comparisons.csv` | All 62 uniquely labelled predicates, with family, input JSON path, operands/operator, expected/observed Boolean and `operand_unit`; BC dimensionless, K in the stored coupling convention |
-| `reproduction-comparisons.csv` | All 39 output identities; reference/PRIN/repeat raw and normalized sizes/digests, format, equality and missing/extra-output diagnostics; sizes in bytes |
+| `reproduction-comparisons.csv` | All 39 output identities; reference/PRIN/repeat raw, normalized and sensitivity sizes/digests (section 11.3), format, equality under both comparison policies and missing/extra-output diagnostics; sizes in bytes |
 | `error-distributions.json` | Separate categorical pass/fail/missing populations by symbol, claim family and file format; no pooled histogram with an ambiguous denominator |
 | `expected-vs-observed.md` | Side-by-side section 3 predictions and observed values/verdicts; deterministic uncertainty explicitly N/A |
 | `coverage-and-deferrals.md` | Section 5.3 owner matrix, invalid/unavailable coverage, hardware/hosted/coverage limits and downstream gates, with no silently closed obligation |
@@ -535,7 +538,10 @@ All raw output digests must match `report-manifest.json`. Reference/PRIN
 arm generation is not to be repeated merely to reformat an already captured
 summary; presentation reads frozen observations.
 Any unavailable reconstruction requirement is disclosed as a limitation
-and cannot be called byte-verified.
+and cannot be called byte-verified. Under E2 decision 8 (section 11.3) the
+primary byte verification is of the retained generated files against the
+raw digests already manifested in each run's `reproduction.json`;
+reconstruction is the secondary check.
 
 ## 9. Resource budget
 
@@ -543,7 +549,7 @@ and cannot be called byte-verified.
 |---|---|---|
 | H1 Windows CPU wall | Namespace walk and frozen JSON predicates; three publication renders; budget expectation under 1 h, not a measured E1 duration | <=12 h |
 | GPU wall | 0 h planned; no GPU leg | <=2 h, retained but unused |
-| Hosted CI wall | 0 h while amendment #48 is in force | <=2 h, retained, not permission to dispatch workflows |
+| Hosted CI wall | 0 h of experiment legs: the cross-OS reproduce.py leg stays suspended; amendment #50 validation runs (PR checks, forced nightly) are source validation, not EXP-002 legs, and are logged but not charged (E2 decision 10) | <=2 h, retained, not permission to dispatch workflows |
 | New tracked raw/record artefacts | Text/JSON/CSV inventories and digests only; no tracked publication binaries/checkpoints/snapshots | <=10 MiB |
 
 Keep the generic <=2 MiB tracked-JSON per-run cap and the campaign-wide
@@ -652,6 +658,46 @@ section 5.4 changes rest only on the bases in section 11.1, and each is a
 symmetric, metadata-only canonicalization that does not depend on which
 files would match. E2 records the disposition under section 10 item 9.
 
-**No EXP-002 experiment execution occurs in session 0159. This protocol
-remains DRAFT. Hosted checks follow Plan amendment #50's EXP-002-scoped
-window (amendment #48 otherwise remains in force).**
+### 11.3 E2 decisions and amendments (session 0160, 2026-10-12 UTC)
+
+E2 reviewed this protocol and recorded each decision with its reasons in
+[`e2-review.md`](e2-review.md). Three decisions add registered procedure:
+
+1. **Sensitivity comparison (decision 9).** Every publication file record
+   also carries `sensitivity_bytes` and `sensitivity_sha256`: its size and
+   digest under the section 5.4 policy as committed at `6314532`, before
+   outcome information was published. That policy compared tables as raw
+   bytes, masked the four registered PDF Info values in place (key set and
+   line wrapping kept) in every object numbered like the trailer's `/Info`
+   reference, and left PNG unchanged. Containers are validated as under the
+   approved policy, so this digest never aborts a run the approved policy
+   accepts. E4 computes the H3 verdict under the approved
+   policy as the primary verdict, and computes it again under the
+   sensitivity policy. Both are reported side by side in `summary.json`,
+   `reproduction-comparisons.csv` and the E5 report. If the two verdicts
+   differ, E5 must state that H3's verdict depends on a comparison
+   amendment made after outcome exposure, and must not report either
+   verdict alone. H1, H2 and H4 are unaffected.
+2. **Retained publication bytes (decision 8).** The generated output roots
+   `DOCS/test_and_benchmark_results/EXP-002/<run-id>/publication/` are
+   retained unmodified, outside git, until the E5 report is accepted. The
+   E3 log records, per publication leg, the SHA-256 of a deterministic
+   listing of the root (one `path size sha256` line per file, sorted by
+   path). E5 first verifies the retained bytes against the raw digests in
+   the manifested `reproduction.json`, then performs the section 8.2
+   reconstruction. A reconstruction difference with verified retained
+   bytes is reported as a reconstruction limitation, never as a new H3/H4
+   observation.
+3. **Hosted CI accounting (decision 10).** Amendment #50 PR checks and the
+   forced nightly validate the source; they are not EXP-002 legs and are
+   not charged to section 9's hosted cap. Their run IDs, head SHAs and
+   durations are recorded in the E3 log.
+
+No hypothesis, prediction, population, threshold, tolerance, sample, seed,
+statistic, abort criterion or cap changes at E2. The protocol is frozen at
+the first `RUN-` creation in session 0161.
+
+**APPROVED at E2 (session 0160, 2026-10-12 UTC). No EXP-002 experiment
+execution occurred in sessions 0159 or 0160. Hosted checks follow Plan
+amendment #50's EXP-002-scoped window (amendment #48 otherwise remains in
+force).**

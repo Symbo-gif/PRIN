@@ -1,0 +1,223 @@
+diff --git a/tests/test_wp001_baseline.py b/tests/test_wp001_baseline.py
+index 858b2e3..97a9dcf 100644
+--- a/tests/test_wp001_baseline.py
++++ b/tests/test_wp001_baseline.py
+@@ -380,6 +380,117 @@ def test_api_traceability_fails_closed_on_unowned_module(tmp_path: Path) -> None
+         collect_api_traceability(ROOT, ownership)
+ 
+ 
++_HAS_GIT = shutil.which("git") is not None
++
++
++def _git(repo: Path, *args: str) -> None:
++    subprocess.run(  # nosec B603
++        [str(shutil.which("git")), "-C", str(repo), *args],
++        check=True,
++        capture_output=True,
++    )
++
++
++def _scratch_repo(tmp_path: Path) -> Path:
++    repo = tmp_path / "repo"
++    (repo / "src").mkdir(parents=True)
++    (repo / "scratch").mkdir()
++    (repo / ".gitignore").write_text("scratch/\n", encoding="utf-8")
++    (repo / "src" / "tracked.py").write_text("x = 1\n", encoding="utf-8")
++    (repo / "src" / "untracked.py").write_text("y = 2\n", encoding="utf-8")
++    (repo / "scratch" / "ignored.txt").write_text("noise\n", encoding="utf-8")
++    _git(repo, "init", "-q")
++    _git(repo, "add", ".gitignore", "src/tracked.py")
++    return repo
++
++
++def _relative(root: Path, files: list[Path]) -> list[str]:
++    return [path.relative_to(root).as_posix() for path in files]
++
++
++@pytest.mark.skipif(not _HAS_GIT, reason="git executable not on PATH")
++def test_inventory_skips_git_ignored_scratch(tmp_path: Path) -> None:
++    repo = _scratch_repo(tmp_path)
++
++    files = wp001_baseline._active_project_files(repo)
++
++    assert _relative(repo, files) == [
++        ".gitignore",
++        "src/tracked.py",
++        "src/untracked.py",
++    ]
++
++
++@pytest.mark.skipif(not _HAS_GIT, reason="git executable not on PATH")
++def test_inventory_walks_a_directory_nested_in_another_work_tree(
++    tmp_path: Path,
++) -> None:
++    repo = _scratch_repo(tmp_path)
++
++    assert wp001_baseline._git_visible_files(repo / "scratch") is None
++    files = wp001_baseline._active_project_files(repo / "scratch")
++    assert _relative(repo / "scratch", files) == ["ignored.txt"]
++
++
++@pytest.mark.skipif(not _HAS_GIT, reason="git executable not on PATH")
++def test_inventory_skips_deleted_tracked_files(tmp_path: Path) -> None:
++    repo = _scratch_repo(tmp_path)
++    (repo / "src" / "tracked.py").unlink()
++
++    files = wp001_baseline._active_project_files(repo)
++
++    assert _relative(repo, files) == [".gitignore", "src/untracked.py"]
++
++
++def test_inventory_walks_without_git(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    (tmp_path / "a.txt").write_text("a\n", encoding="utf-8")
++    (tmp_path / ".coverage.host.1").write_text("c\n", encoding="utf-8")
++    (tmp_path / "target").mkdir()
++    (tmp_path / "target" / "build.o").write_text("o\n", encoding="utf-8")
++    monkeypatch.setattr(wp001_baseline.shutil, "which", lambda name: None)
++
++    assert wp001_baseline._git_visible_files(tmp_path) is None
++    assert _relative(tmp_path, wp001_baseline._active_project_files(tmp_path)) == [
++        "a.txt"
++    ]
++
++
++@pytest.mark.parametrize(
++    "error",
++    [
++        OSError("cannot start git"),
++        subprocess.TimeoutExpired("git", 60),
++        subprocess.CalledProcessError(128, "git"),
++    ],
++)
++def test_git_listing_failures_fall_back_to_walking(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, error: Exception
++) -> None:
++    def fail(*args: Any, **kwargs: Any) -> Any:
++        raise error
++
++    monkeypatch.setattr(wp001_baseline.shutil, "which", lambda name: "git")
++    monkeypatch.setattr(wp001_baseline.subprocess, "run", fail)
++
++    assert wp001_baseline._git_visible_files(tmp_path) is None
++
++
++def test_undecodable_git_listing_falls_back_to_walking(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    def run(argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[Any]:
++        if "rev-parse" in argv:
++            return subprocess.CompletedProcess(argv, 0, stdout=f"{tmp_path}\n")
++        return subprocess.CompletedProcess(argv, 0, stdout=b"bad\xff\0")
++
++    monkeypatch.setattr(wp001_baseline.shutil, "which", lambda name: "git")
++    monkeypatch.setattr(wp001_baseline.subprocess, "run", run)
++
++    assert wp001_baseline._git_visible_files(tmp_path) is None
++
++
+ def test_repository_inventory_is_deterministic_and_separates_archive() -> None:
+     first = collect_repository_inventory(ROOT)
+     second = collect_repository_inventory(ROOT)
+diff --git a/tools/wp001_baseline.py b/tools/wp001_baseline.py
+index 4cf735a..874dc60 100644
+--- a/tools/wp001_baseline.py
++++ b/tools/wp001_baseline.py
+@@ -8,6 +8,8 @@ import ast
+ import json
+ import os
+ import re
++import shutil
++import subprocess  # nosec B404
+ import sys
+ import tomllib
+ from collections import Counter
+@@ -1019,10 +1021,73 @@ def _count_text_lines(path: Path) -> int:
+     return content.count(b"\n") + int(bool(content) and not content.endswith(b"\n"))
+ 
+ 
++def _git_visible_files(root: Path) -> list[Path] | None:
++    """Tracked plus untracked-but-not-ignored files, or None outside git.
++
++    Git-ignored content (pytest base directories, tool worktrees, generated
++    results, build output) is scratch, not active project state. Walking it
++    made the inventory scan ~110,000 files / ~4 GB, so files appearing there
++    during the scan broke the determinism check (EVIDENCE/0159 leg 09c), and
++    it is where the intermittent access-violation crashes of the fast suite
++    occurred (0159 leg 09; EVIDENCE/0160 gate G12a).
++    """
++    executable = shutil.which("git")
++    if executable is None:
++        return None
++    try:
++        toplevel = subprocess.run(  # noqa: S603  # nosec B603
++            [executable, "-C", str(root), "rev-parse", "--show-toplevel"],
++            capture_output=True,
++            check=True,
++            text=True,
++            timeout=60,
++        ).stdout.strip()
++        # Only a work-tree root is inventoried through git; a directory nested
++        # in some other repository (e.g. a test's tmp_path) is walked instead.
++        if Path(toplevel).resolve() != root.resolve():
++            return None
++        listing = subprocess.run(  # noqa: S603  # nosec B603
++            [
++                executable,
++                "-C",
++                str(root),
++                "ls-files",
++                "-z",
++                "--cached",
++                "--others",
++                "--exclude-standard",
++            ],
++            capture_output=True,
++            check=True,
++            timeout=120,
++        ).stdout
++        names = sorted({name for name in listing.decode("utf-8").split("\0") if name})
++    except (OSError, subprocess.SubprocessError, UnicodeDecodeError):
++        return None
++    return [root / name for name in names]
++
++
+ def _active_project_files(root: Path) -> list[Path]:
+     files: list[Path] = []
+     archive_root = (root / "DOCS/archive and reference from PRINet 3.0").resolve()
+     evidence_root = (root / _EVIDENCE_OUTPUT).resolve()
++    visible = _git_visible_files(root)
++    if visible is not None:
++        for path in visible:
++            relative = path.relative_to(root)
++            if (
++                any(part in _EXCLUDED_DIRECTORIES for part in relative.parts[:-1])
++                or path.name in _EXCLUDED_FILES
++                or path.name.startswith(".coverage.")
++                or path.is_symlink()
++                or not path.is_file()
++            ):
++                continue
++            resolved = path.resolve()
++            if archive_root in resolved.parents or evidence_root in resolved.parents:
++                continue
++            files.append(path)
++        return sorted(files, key=lambda path: path.relative_to(root).as_posix())
+     for current, directory_names, file_names in os.walk(root):
+         current_path = Path(current)
+         directory_names[:] = sorted(
+@@ -1063,7 +1128,12 @@ def _file_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
+ 
+ 
+ def collect_repository_inventory(root: Path) -> dict[str, Any]:
+-    """Collect a deterministic, archive-separated repository-state inventory."""
++    """Collect a deterministic, archive-separated repository-state inventory.
++
++    In a git work tree the active-repository counts cover tracked and
++    untracked-but-not-ignored files only; git-ignored scratch is not project
++    state. Outside git (or without a ``git`` executable) the tree is walked.
++    """
+     root = _validate_root_path(root)
+     cargo = _read_toml(root / "Cargo.toml")
+     pyproject = _read_toml(root / "pyproject.toml")

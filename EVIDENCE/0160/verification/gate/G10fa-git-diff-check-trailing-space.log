@@ -1,0 +1,12 @@
+COMMAND: git diff --cached --check
+CWD: C:/dev/PRIN
+SOURCE: working tree: ed993e9 + staged session-0160 changes (final pre-commit candidate after cold-review round 1)
+UTC-START: 2026-10-12T05:05:36Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+DOCS/sessions/phase-7/0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md:3: trailing whitespace.
++**Status:** READY — E2 approval recorded 2026-10-12 UTC; execute only when the [E3 entry checklist](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md) §8 holds  
+----
+ELAPSED_SECONDS: 0.9
+EXIT_CODE: 2

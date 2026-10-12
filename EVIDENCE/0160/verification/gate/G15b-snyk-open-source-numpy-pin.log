@@ -1,0 +1,33 @@
+COMMAND: C:/Users/there/AppData/Roaming/npm/snyk.cmd test --file=C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/e2/numpy-req.txt --package-manager=pip --command=C:/dev/PRIN/.venv/Scripts/python.exe --severity-threshold=low --org=symbo-gif
+CWD: C:/dev/PRIN
+SOURCE: the one dependency pin this round adds (ci/lint-constraints.txt: numpy==2.5.1), resolved against the .venv interpreter
+UTC-START: 2026-10-12T10:14:29Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+
+Testing C:\dev\PRIN...
+
+Organization:      symbo-gif
+Package manager:   pip
+Target file:       C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/e2/numpy-req.txt
+Project name:      e2
+Open source:       no
+Project path:      C:\dev\PRIN
+Licenses:          enabled
+
+✔ Tested 1 dependencies for known issues, no vulnerable paths found.
+
+Tip: Detected multiple supported manifests (1), use --all-projects to scan all of them at once.
+
+Next steps:
+- Run `snyk monitor` to be notified about new related vulnerabilities.
+- Run `snyk test` as part of your CI/test.
+
+
+
+You have reached your monthly limit of 200 private tests for your symbo-gif org.
+To learn more about our plans and increase your tests limit visit https://snyk.io/plans.
+----
+ELAPSED_SECONDS: 53.6
+EXIT_CODE: 0

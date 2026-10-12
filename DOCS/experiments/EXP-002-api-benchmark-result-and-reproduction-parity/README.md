@@ -1,6 +1,6 @@
 # EXP-002 — API, benchmark-result, and reproduction parity (track C1)
 
-**Status:** DRAFT — E1 preparation in progress; nothing may execute.
+**Status:** APPROVED at E2 (session 0160, 2026-10-12 UTC) — E3 (session 0161) is READY; the protocol freezes at the first `RUN-` creation.
 **Campaign plan row:** [`DOCS/experiments/campaign-plan.md`](../campaign-plan.md) §2.1 (EXP-002).
 **Raw artefact root:** [`benchmarks/results/EXP-002/`](../../../benchmarks/results/EXP-002/README.md)
 
@@ -10,7 +10,8 @@
 |---|---|---|
 | `preregistration.md` | E1, lead-authored ([`preregistration.md`](preregistration.md)) | E3 start (first `RUN-` directory created) |
 | `e1-handoff.md` | E1 ([`e1-handoff.md`](e1-handoff.md)) | living handoff skeleton until E1 close |
-| `e2-review-packet.md` | E1, lead-authored ([`e2-review-packet.md`](e2-review-packet.md)) | PREPARED FOR REVIEW — NOT APPROVED; superseded by the 0160 record |
+| `e2-review-packet.md` | E1, lead-authored ([`e2-review-packet.md`](e2-review-packet.md)) | historical decision packet; superseded by `e2-review.md` |
+| `e2-review.md` | E2 ([`e2-review.md`](e2-review.md)) | decisions, reasons, E3 entry checklist; frozen with the protocol at E3 start |
 | `log.md` | E3 | never edited after E3 close; aborted runs stay |
 | `report.md` | E5 | after E5 approval; corrections are errata |
 | `report-manifest.json` | E4/E5 | SHA-256 of every regenerated figure/table (campaign plan §7.4) |
@@ -19,8 +20,8 @@ The lead-authored collection driver is
 [`benchmarks/campaign/exp002_driver.py`](../../../benchmarks/campaign/exp002_driver.py);
 its synthetic regression tests are
 [`tests/test_exp002_driver.py`](../../../tests/test_exp002_driver.py). The
-driver refuses admission while `preregistration.md` is DRAFT; no E3 run,
-pilot, or real reference-input collection is authorized. The PR #33 review
+driver admits only the APPROVED, committed protocol on a clean checkout;
+E3 runs only under the e2-review.md §8 entry checklist. The PR #33 review
 round amended the DRAFT and the driver before E2 (protocol section 11;
 [`PR033-multi-review-audit.md`](../../audits/PR033-multi-review-audit.md)).
 
@@ -28,9 +29,9 @@ round amended the DRAFT and the driver before E2 (protocol section 11;
 
 | Session | Stage | Brief | Status |
 |---|---|---|---|
-| 0159 | E1 — Pre-registration | [`0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md) | IN_PROGRESS |
-| 0160 | E2 — Review and approval | [`0160-exp002-e2-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0160-exp002-e2-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
-| 0161 | E3 — Execution | [`0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
+| 0159 | E1 — Pre-registration | [`0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md) | COMPLETE |
+| 0160 | E2 — Review and approval | [`0160-exp002-e2-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0160-exp002-e2-api-benchmark-result-and-reproduction-parity.md) | COMPLETE |
+| 0161 | E3 — Execution | [`0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md) | READY |
 | 0162 | E4 — Analysis | [`0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
 | 0163 | E5 — Report | [`0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
 

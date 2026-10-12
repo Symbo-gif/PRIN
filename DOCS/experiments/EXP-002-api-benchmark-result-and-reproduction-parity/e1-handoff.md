@@ -148,6 +148,12 @@ supersede them where they conflict (PR33-F10,
 - **Outcome exposure:** before E2, two independent reviews posted H2/H3
   outcome information from real-input runs. See protocol section 11.2 and
   section 10 item 9.
+- **Hosted checks:** the "hosted checks remain paused" wording above is
+  qualified by Plan amendment #50, which re-enables the hosted checks for
+  the EXP-002 experiments only.
 - **E1 status:** the exit conditions in the session brief are met by
   committed evidence. Session 0159 stays `IN_PROGRESS` until the maintainer
   accepts the E1 exit. No scientific approval is implied.
+
+**E1 exit (2026-10-12 UTC).** MichaelMaillet accepted the E1 exit ("Accept the E1 exit."). Session 0159 is COMPLETE; E2 (session 0160)
+approved the protocol the same day ([e2-review.md](e2-review.md)).

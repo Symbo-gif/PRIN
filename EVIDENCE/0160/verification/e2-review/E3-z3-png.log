@@ -1,0 +1,22 @@
+COMMAND: C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/ci-lint-venv/Scripts/python.exe EVIDENCE/0160/verification/e2-review/z3_png_colour_rules.py
+CWD: C:/dev/PRIN
+SOURCE: working tree: ed993e9 + staged session-0160 changes after the first cold-review fixes; z3-solver 5.1.0 in a scratch venv
+UTC-START: 2026-10-12T04:53:17Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+z3 5.1.0: driver_rejects == spec_valid is unsat
+RESULT: the driver's PNG colour rule equals the specification on the domain
+non-vacuity: removing the PLTE-before-IDAT term yields a counterexample: [trns_length = 2,
+ trns_index = 2,
+ transparency = False,
+ palette_length = 3,
+ trns_count = 0,
+ plte_index = 3,
+ colour = 2,
+ first_idat = 1,
+ palette = True,
+ depth = 16]
+----
+ELAPSED_SECONDS: 1.2
+EXIT_CODE: 0

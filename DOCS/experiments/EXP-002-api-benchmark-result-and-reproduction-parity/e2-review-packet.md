@@ -1,10 +1,10 @@
 # EXP-002 - Maintainer review packet for session 0160
 
-**Status:** PREPARED FOR REVIEW - NOT APPROVED
+**Status:** PREPARED FOR REVIEW - NOT APPROVED *(superseded 2026-10-12: E2 decided and APPROVED in [e2-review.md](e2-review.md); this packet is kept as the historical input)*
 **Prepared by:** Devin, E1 drafting AI pair
 **Date:** 2026-10-11 UTC
-**Independent reviewer:** MichaelMaillet - review/decision pending
-**Active stage:** 0159 E1 evidence/closure; 0160 remains PLANNED
+**Independent reviewer:** MichaelMaillet - review/decision pending *(historical; decided 2026-10-12 under delegation, see e2-review.md)*
+**Active stage:** 0159 E1 evidence/closure; 0160 remains PLANNED *(historical; 0159 and 0160 COMPLETE, 0161 READY)*
 **Protocol:** [preregistration.md](preregistration.md)
 
 This is an author-prepared decision packet, not an independent non-author
@@ -170,6 +170,7 @@ protection is a separate flagged external control. Windows validation
 does not satisfy Linux/macOS or the wheel matrix; lifting the pause alone
 does not validate them.
 
+*(Historical banner — superseded 2026-10-12: EXP-002 is APPROVED in [e2-review.md](e2-review.md).)*
 **EXP-002 remains DRAFT. E2 approval is pending. No experiment execution
 occurred. Hosted checks and nightly run only inside the amendment #50
 EXP-002 window.**

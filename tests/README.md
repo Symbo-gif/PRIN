@@ -186,8 +186,10 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
 
 ## Additional PRIN-specific suites (per the Testing Standards)
 
-- `test_wp001_baseline.py` — 44 fail-closed metadata, session-ledger,
-  traceability, CI, release-guard, and security-control tests. Validates that
+- `test_wp001_baseline.py` — 55 fail-closed metadata, session-ledger,
+  traceability, CI, release-guard, security-control and repository-inventory
+  test functions (the inventory lists git-visible files inside a work tree and
+  walks the tree otherwise). Validates that
   `rust-toolchain.toml` includes `rustfmt` and `clippy`, optionally `llvm-tools`
   for `cargo-llvm-cov`.
 - `test_dynamics_bindings.py` — 90 tests across 19 test classes covering the
@@ -325,7 +327,8 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   arms, admission, reservation, storage caps and closure. Negative cases are
   parametrized defect-catching fixtures. No test reads archived PRINet 3.0
   inputs, imports the real reference generators, renders the 172-record
-  manifest, or executes an EXP-002 leg; the protocol stays DRAFT. The PR #33
+  manifest, or executes an EXP-002 leg (the protocol was DRAFT when these were
+  written and is APPROVED since 2026-10-12; no test depends on its status). The PR #33
   review round (`PR33-F*`, `DOCS/audits/PR033-multi-review-audit.md`) added
   table CRLF and PDF Info-dictionary canonicalization cases (one renders a
   synthetic Matplotlib figure, not a registered input), oversized-decimal
@@ -333,6 +336,15 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   and a throwaway real git repository, closure observation-schema,
   directory-hygiene and storage-measurement cases, reservation atomicity,
   whole-checkout admission, and `main()` reporting of reproduction errors.
+- `test_basetemp.py` — tests for `_basetemp.py`, the `tests/conftest.py`
+  session-start hook. It deletes a stale `--basetemp` before pytest's own lazy
+  deletion, which runs inside the first `tmp_path` setup with no retry, so a
+  transient Windows sharing violation became setup errors (PR #33 G09a/G13;
+  reproduction in `EVIDENCE/0160/verification/test-reliability/`). The hook retries
+  sharing violations, clears read-only bits, and refuses to delete the
+  rootdir or any ancestor of it.
+- `test_0160_manifest.py` — session-0160 evidence-bundle manifest tests
+  (same validators, `EVIDENCE/0160/`).
 - `test_0159_manifest.py` — session-0159 evidence-bundle manifest tests that
   require the manifest to equal `REQUIRED_BUNDLE` exactly (PR33-F6) and
   reuse the `test_ea007_manifest.py` validators against `EVIDENCE/0159/`

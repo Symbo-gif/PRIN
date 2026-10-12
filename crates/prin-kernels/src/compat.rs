@@ -564,14 +564,12 @@ pub fn cross_band_coupling_cpu(
 ) -> Result<(Vec<f32>, Vec<f32>), CompatError> {
     require_nonempty("slow_phase", slow_phase)?;
     require_nonempty("fast_phase", fast_phase)?;
-    for (name, values) in [("fast_amplitude", fast_amplitude)] {
-        if values.len() != fast_phase.len() {
-            return Err(CompatError::LengthMismatch {
-                name,
-                expected: fast_phase.len(),
-                got: values.len(),
-            });
-        }
+    if fast_amplitude.len() != fast_phase.len() {
+        return Err(CompatError::LengthMismatch {
+            name: "fast_amplitude",
+            expected: fast_phase.len(),
+            got: fast_amplitude.len(),
+        });
     }
     if parent_idx.len() != fast_phase.len() {
         return Err(CompatError::LengthMismatch {

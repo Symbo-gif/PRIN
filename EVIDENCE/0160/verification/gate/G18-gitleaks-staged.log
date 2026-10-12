@@ -1,0 +1,13 @@
+COMMAND: C:/dev/PRIN/DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git C:/dev/PRIN --pre-commit --staged --redact --no-banner --report-format json --report-path C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/e2/gitleaks-staged-0160.json
+CWD: C:/dev/PRIN
+SOURCE: staged session-0160 diff (pre-commit, before final evidence packaging)
+UTC-START: 2026-10-12T10:14:10Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+[90m7:14AM[0m [32mINF[0m [1m0 commits scanned.[0m
+[90m7:14AM[0m [32mINF[0m [1mscanned ~502458 bytes (502.46 KB) in 225ms[0m
+[90m7:14AM[0m [32mINF[0m [1mno leaks found[0m
+----
+ELAPSED_SECONDS: 0.6
+EXIT_CODE: 0

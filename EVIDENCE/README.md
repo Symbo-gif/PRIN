@@ -107,6 +107,12 @@ To find evidence for a specific work package, look for files matching
   fingerprint exception in the repository's `.gitleaksignore`; the
   review round's clean rescan is recorded in `pr33-review/`. Verification evidence
   only: no EXP-002 execution has run (see that directory's `README.md`).
+- [`0160/`](0160/) — session 0160 (EXP-002 E2, 2026-10-12): the E2
+  review's static re-derivation, Lean 4 proof and Z3 check; the `WinError 32`
+  reproduction and fix check; the hosted-failure reproductions and fixes;
+  the approved source's local gate; and the read-only cold reviews, all
+  covered by `verification/SHA256SUMS.txt` (executed by
+  `tests/test_0160_manifest.py`). No EXP-002 execution has run.
 
 ## Rules
 

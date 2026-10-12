@@ -1,6 +1,6 @@
 # Session 0161 — EXP-002 / C1 E3: Execution — API, benchmark-result, and reproduction parity
 
-**Status:** PLANNED  
+**Status:** READY — E2 approval recorded 2026-10-12 UTC; execute only when the [E3 entry checklist](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md) §8 holds
 **Roadmap phase:** 7 — Experimentation campaign and stable release  
 **Execution unit:** EXP-002 / C1  
 **Session type:** E3 — Execution  
