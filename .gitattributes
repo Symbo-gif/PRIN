@@ -22,3 +22,6 @@ EVIDENCE/ea007/** -text whitespace=-trailing-space
 
 # Session-0159 local verification evidence is byte-exact; preserve SHA-256 inputs.
 EVIDENCE/0159/** -text whitespace=-trailing-space
+
+# Session-0160 (EXP-002 E2) review evidence is byte-exact; preserve SHA-256 inputs.
+EVIDENCE/0160/** -text whitespace=-trailing-space
