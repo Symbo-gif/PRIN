@@ -136,7 +136,21 @@ The maintainer accepted the E1 exit and delegated the E2 decisions, recorded
 with their reasons in
 [`e2-review.md`](EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md).
 Session 0161 (E3) is READY under that record's §8 entry checklist. No EXP-002
-experiment leg has executed.
+experiment leg has executed. *(Dated update, 2026-10-12 UTC: E3 then executed —
+see the next entry; this paragraph is retained as its point-in-time record.)*
+
+**EXP-002 E3 EXECUTED — session 0161, 2026-10-12 UTC.** All five registered legs
+(`api`, `conclusions`, `reference`, `prin`, `repeatability`) ran once each at source
+`fae24c4`, in the registered order, through the committed driver
+`benchmarks/campaign/exp002_driver.py`: five immutable, manifested `RUN-` directories under
+`benchmarks/results/EXP-002/`, every exit code 0, **0 aborted, no rerun, no D1 condition**,
+aggregate CPU wall 63.821 s against the 12 h cap. The protocol froze at the first `RUN-`
+(2026-10-12T21:27:05Z). Each record was validated independently for structure and identity;
+**no hypothesis verdict was computed** and no observation payload was examined — adjudication,
+the H3 dual-policy report and any D1 determination belong to E4 (session 0162, now READY). The
+generated publication roots are retained, unmodified and untracked, until the E5 report is accepted.
+Record: [`log.md`](EXP-002-api-benchmark-result-and-reproduction-parity/log.md) and the
+[E3-to-E4 handoff](EXP-002-api-benchmark-result-and-reproduction-parity/README.md#e3-to-e4-handoff-session-0161-2026-10-12-utc).
 
 ## Layout
 

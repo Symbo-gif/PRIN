@@ -1,0 +1,127 @@
+RE-CAPTURE of the E3 pre-flight facts, taken after leg 5 and before any tracked file was edited.
+The original pre-flight (2026-10-12T21:15Z-21:30Z) is transcribed in DOCS/experiments/EXP-002-.../log.md section 2.
+UTC-START: 2026-10-12T21:46:04Z
+HOST: HP  CWD: C:\dev\PRIN
+
+=== git rev-parse HEAD; git branch --show-current ===
+fae24c4393c7a0232e6c8f0a6388b1775aa5fc05
+campaign/0159-exp002-e1
+
+
+=== git status --porcelain=v1 --untracked-files=all  (expect only the E3 log and RUN- files) ===
+?? DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md
+?? benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/api.json
+?? benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/campaign-metadata.json
+?? benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/manifest.json
+?? benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu/campaign-metadata.json
+?? benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu/conclusions.json
+?? benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu/manifest.json
+?? benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/campaign-metadata.json
+?? benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/manifest.json
+?? benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/reproduction.json
+?? benchmarks/results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/campaign-metadata.json
+?? benchmarks/results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/manifest.json
+?? benchmarks/results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/reproduction.json
+?? benchmarks/results/EXP-002/RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu/campaign-metadata.json
+?? benchmarks/results/EXP-002/RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu/manifest.json
+?? benchmarks/results/EXP-002/RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu/reproduction.json
+exit=0
+
+
+=== git ls-files --others -- ":(glob)*.py" ":(glob)*.pth"  (expect empty) ===
+exit=0
+
+
+=== admission dry check (read-only), command exactly as in the session brief ===
+{"approval_date_utc": "2026-10-12", "preregistration_commit": "9a9889d08dcaf2ad0ce31659ed67721b54b114d0", "preregistration_sha256": "0f3073dd2ed73b64071bcf3ae182510a69a26bd575b81b5a97cc5a1f9bbc8c8b", "source_sha": "fae24c4393c7a0232e6c8f0a6388b1775aa5fc05"}
+exit=0
+
+
+=== git diff --name-status 9a9889d fae24c4  (R against the approval commit) ===
+M	DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md
+M	EVIDENCE/0160/README.md
+M	EVIDENCE/0160/verification/SHA256SUMS.txt
+A	EVIDENCE/0160/verification/ci-fixes/H2-forced-nightly-38238913518.json
+A	EVIDENCE/0160/verification/ci-fixes/H2a-forced-nightly-38238913518-attempt1-bench-regression.log
+A	EVIDENCE/0160/verification/ci-fixes/H2b-forced-nightly-38238913518-attempt2-bench-regression.log
+A	EVIDENCE/0160/verification/ci-fixes/H3-hosted-runs-9a9889d.json
+M	tests/test_0160_manifest.py
+ancestor check:
+exit=0
+
+
+=== Host: OS / CPU / RAM ===
+
+Caption              : Microsoft Windows 11 Home
+Version              : 10.0.26300
+BuildNumber          : 26300
+OSArchitecture       : 64-bit
+TotalVisibleMemoryMB : 32355
+FreePhysicalMemoryMB : 6965
+
+
+Name                      : AMD Ryzen 7 8700F 8-Core Processor             
+NumberOfCores             : 8
+NumberOfLogicalProcessors : 16
+MaxClockSpeed             : 4101
+
+
+Manufacturer           : HP
+Model                  : OMEN 16L Gaming Desktop TG03-0xxx
+TotalPhysicalMemoryGiB : 31.6
+
+
+
+=== Toolchain: python / rustc / cargo / nvidia-smi ===
+Python 3.14.0
+C:\dev\PRIN\.venv\Scripts\python.exe
+3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]
+Windows-11-10.0.26300-SP0
+AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD
+cpu_count 16
+rustc 1.99.0 (b940084d7 2026-09-28)
+cargo 1.99.0 (5f94df478 2026-08-27)
+NVIDIA GeForce RTX 4060, 8188
+
+
+=== Packages (importlib.metadata) and Matplotlib state ===
+matplotlib 3.11.1
+numpy 2.5.1
+pillow 12.3.0
+prin-core 1.0.0rc1
+prinet 3.0.0
+maturin 1.14.1
+pytest 9.1.1
+torch 2.11.0+cu128
+fonttools 4.63.0
+kiwisolver 1.5.0
+contourpy 1.3.3
+cycler 0.12.1
+pyparsing 3.3.2
+packaging 26.3
+python-dateutil 2.9.0.post0
+mpl_cachedir C:\Users\there\.matplotlib
+mpl_data_path C:\dev\PRIN\.venv\Lib\site-packages\matplotlib\mpl-data
+fontcache C:\Users\there\.matplotlib\fontlist-v3.11.0.json 146692 9c00441405ce72925562e017858a729b402612a203b0682b2e7fd79329c8f6bb
+
+
+=== Installed extension (file facts only; nothing rebuilt) ===
+64ea1a2cf38cdbe43fc029c55e791e244b771b2909360c3890ae6f9224b47349  62792192 bytes  mtimeUtc=2026-09-28T23:01:06.1803371Z
+commits touching crates/ since 2026-09-28T00:00Z:
+9a9889d 2026-10-12T07:17:24-03:00 docs(0160): EXP-002 E2 review and approval; fix hosted failures and flaky fixtures
+199b82a 2026-10-11T03:41:11-03:00 audit(ea007): close local EXP-002 readiness audit and remediate gate gaps
+4219efe 2026-09-28T22:43:12-03:00 docs(dv043): record independent delta audit and correct guard evidence
+e4f5b4e 2026-09-28T21:48:50-03:00 perf(dynamics): DV-043 — stop re-clamping derivatives the model already clamped
+ba5c00f 2026-09-28T15:00:45-03:00 fix(gpu): PR #25 review response — DV041-F5/F6/F7
+1f0b6cd 2026-09-28T08:00:25-03:00 docs: DV041 S4 — READMEs, CHANGELOG, audit index, session register
+96c1e39 2026-09-28T07:49:46-03:00 fix: DV041-F1/F2/F3 — register evidence, doc links, test docstrings
+5d31295 2026-09-28T07:29:01-03:00 fix(gpu): DV-041 — positive wgpu-dispatch identification for GPU bindings
+
+
+=== Pre-existing roots before the legs (from git): raw root tracked files ===
+benchmarks/results/EXP-002/README.md
+
+
+=== gh run list --commit fae24c4393c7a0232e6c8f0a6388b1775aa5fc05  (saved verbatim as hosted-runs-fae24c4.json) ===
+exit=0; bytes=2274
+UTC-END: 2026-10-12T21:46:24Z

@@ -1,0 +1,48 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe -m pytest tests/test_exp002_driver.py tests/test_0159_manifest.py tests/test_0160_manifest.py tests/test_basetemp.py tests/test_ea007_manifest.py tests/test_campaign_quality_gates.py tests/test_wp001_baseline.py -p no:cacheprovider --cov=benchmarks.campaign.exp002_driver --cov-report=term-missing --cov-report=json:C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/8a021180-4f6b-439e-9fe7-62b13011e219/scratchpad/e3/G09-focused-coverage.json --basetemp=.pytest_basetemp -q
+CWD: C:/dev/PRIN
+SOURCE: working tree: 92cf696 (fae24c4 + .gitattributes rule) + staged session-0161 changes (E3 records, raw run records, evidence), candidate corrected after the G10fa trailing-space finding; gate run 3 from Git Bash (bash on PATH is Git's, as in 0159/0160), host otherwise idle
+UTC-START: 2026-10-12T22:18:18Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 460 items
+
+tests\test_exp002_driver.py ............................................ [  9%]
+........................................................................ [ 25%]
+........................................................................ [ 40%]
+........................................................................ [ 56%]
+...............................................................          [ 70%]
+tests\test_0159_manifest.py ....................                         [ 74%]
+tests\test_0160_manifest.py .....                                        [ 75%]
+tests\test_basetemp.py .............                                     [ 78%]
+tests\test_ea007_manifest.py ...                                         [ 79%]
+tests\test_campaign_quality_gates.py ......................              [ 83%]
+tests\test_wp001_baseline.py ........................................... [ 93%]
+...............................                                          [100%]
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\stevedore\extension.py:185
+.venv\Lib\site-packages\stevedore\extension.py:185
+.venv\Lib\site-packages\stevedore\extension.py:185
+  The verify_requirements argument is now a no-op and is deprecated for removal. Remove the argument from calls.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.14.0-final-0 _______________
+
+Name                                   Stmts   Miss  Cover   Missing
+--------------------------------------------------------------------
+benchmarks\campaign\exp002_driver.py     706      3    99%   545, 891, 1370
+--------------------------------------------------------------------
+TOTAL                                    706      3    99%
+Coverage JSON written to file C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/8a021180-4f6b-439e-9fe7-62b13011e219/scratchpad/e3/G09-focused-coverage.json
+================= 460 passed, 3 warnings in 260.15s (0:04:20) =================
+----
+ELAPSED_SECONDS: 289.1
+EXIT_CODE: 0

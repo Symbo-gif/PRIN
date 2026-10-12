@@ -1,6 +1,6 @@
 # Session 0162 — EXP-002 / C1 E4: Analysis — API, benchmark-result, and reproduction parity
 
-**Status:** PLANNED  
+**Status:** READY — E3 closed 2026-10-12 UTC (session 0161); commit the E4 analysis module before analysis starts (protocol §8)
 **Roadmap phase:** 7 — Experimentation campaign and stable release  
 **Execution unit:** EXP-002 / C1  
 **Session type:** E4 — Analysis  

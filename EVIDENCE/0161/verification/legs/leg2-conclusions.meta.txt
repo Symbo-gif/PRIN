@@ -1,0 +1,21 @@
+TAG=leg2-conclusions
+MODE=conclusions
+RUN_ID=RUN-20261012T213054Z-fae24c4-conclusions-cpu
+COMMAND=.venv\Scripts\python -m benchmarks.campaign.exp002_driver --mode conclusions --run-dir "benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu" --operator MichaelMaillet --source-sha fae24c4393c7a0232e6c8f0a6388b1775aa5fc05 --seed-counter 0 --seed-key 2
+UTC_START=2026-10-12T21:30:54.253Z
+UTC_END=2026-10-12T21:31:04.800Z
+EXIT_CODE=0
+WALL_SECONDS=10.521
+--- git status --porcelain=v1 --untracked-files=all (after the leg) ---
+?? DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md
+?? benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/api.json
+?? benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/campaign-metadata.json
+?? benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/manifest.json
+?? benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu/campaign-metadata.json
+?? benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu/conclusions.json
+?? benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu/manifest.json
+--- run directory entries ---
+campaign-metadata.json  239 bytes
+conclusions.json  59206 bytes
+manifest.json  562 bytes
+DONE

@@ -1,0 +1,12 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe tools/check_dv_register_gates.py
+CWD: C:/dev/PRIN
+SOURCE: working tree: 92cf696 (fae24c4 + .gitattributes rule) + staged session-0161 changes (E3 records, raw run records, evidence), candidate corrected after the G10fa trailing-space finding; gate run 3 from Git Bash (bash on PATH is Git's, as in 0159/0160), host otherwise idle
+UTC-START: 2026-10-12T22:17:50Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+DV-register gate check passed.
+  Checked 44 DV register rows against 198 session-register entries.
+----
+ELAPSED_SECONDS: 0.5
+EXIT_CODE: 0

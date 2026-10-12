@@ -1,0 +1,14 @@
+Per-run tracked bytes (registered cap: 2 MiB = 2,097,152 B per run):
+  RUN-20261012T212705Z-fae24c4-api-cpu: 97,963 B (0.0934 MiB), 3 entries, headroom 1,999,189 B
+  RUN-20261012T213054Z-fae24c4-conclusions-cpu: 60,007 B (0.0572 MiB), 3 entries, headroom 2,037,145 B
+  RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu: 60,396 B (0.0576 MiB), 3 entries, headroom 2,036,756 B
+  RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu: 60,387 B (0.0576 MiB), 3 entries, headroom 2,036,765 B
+  RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu: 60,375 B (0.0576 MiB), 3 entries, headroom 2,036,777 B
+New raw run records, all five legs: 339,128 B (0.3234 MiB)
+EXP-002 raw root (runs + README.md): 340,902 B (0.3251 MiB)
+EXP-002 record root (incl. log.md at this instant): 123,011 B (0.1173 MiB)
+Driver closure measure, raw root + record root: 463,913 B (0.4424 MiB) vs cap 10 MiB = 10,485,760 B; headroom 10,021,847 B
+Campaign total benchmarks/results/EXP-*: 13,756,033 B (13.119 MiB) vs cap 64 MiB; headroom 50.881 MiB
+  of which EXP-001: 13,404,517 B
+log.md bytes at this instant: 33,275
+Currently untracked new files in those roots: 16 files, 372,403 B (0.3552 MiB) vs new-tracked-artefacts cap 10 MiB

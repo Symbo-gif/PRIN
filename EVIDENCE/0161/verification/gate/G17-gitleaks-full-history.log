@@ -1,0 +1,13 @@
+COMMAND: C:/dev/PRIN/DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git C:/dev/PRIN --redact --no-banner --report-format json --report-path C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/8a021180-4f6b-439e-9fe7-62b13011e219/scratchpad/e3/gitleaks-history.json
+CWD: C:/dev/PRIN
+SOURCE: working tree: 92cf696 (fae24c4 + .gitattributes rule) + staged session-0161 changes (E3 records, raw run records, evidence), candidate corrected after the G10fa trailing-space finding; gate run 3 from Git Bash, host otherwise idle
+UTC-START: 2026-10-12T23:18:11Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+[90m8:18PM[0m [32mINF[0m [1m719 commits scanned.[0m
+[90m8:18PM[0m [32mINF[0m [1mscanned ~87661921 bytes (87.66 MB) in 10.1s[0m
+[90m8:18PM[0m [32mINF[0m [1mno leaks found[0m
+----
+ELAPSED_SECONDS: 10.4
+EXIT_CODE: 0

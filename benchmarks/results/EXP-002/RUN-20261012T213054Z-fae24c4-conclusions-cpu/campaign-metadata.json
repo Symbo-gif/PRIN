@@ -1,0 +1,12 @@
+{
+  "artefacts": {
+    "conclusions.json": [
+      "H2"
+    ]
+  },
+  "exp_id": "EXP-002",
+  "mode": "conclusions",
+  "operator": "MichaelMaillet",
+  "run_id": "RUN-20261012T213054Z-fae24c4-conclusions-cpu",
+  "session": "0161"
+}

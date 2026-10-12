@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-002 E3 executed — five registered runs, no verdict (session 0161,
+  2026-10-12 UTC).** The committed driver `benchmarks/campaign/exp002_driver.py`
+  ran the five registered legs once each, in the registered order, at source
+  `fae24c4`: `api`, `conclusions`, `reference`, `prin` and `repeatability`. The
+  result is five immutable, manifested `RUN-` directories under
+  `benchmarks/results/EXP-002/` — every exit code 0, **0 aborted, no rerun, no D1
+  condition** — in 63.821 s of aggregate CPU wall (cap 12 h) and 339,128 tracked
+  bytes. The protocol froze at the first run (2026-10-12T21:27:05Z). Each record
+  was validated independently for structure and identity (69, 67, 73, 73 and 73
+  checks, all passing), and the generated publication roots are retained,
+  untracked, until E5. **No hypothesis verdict was computed and no observation
+  payload was examined:** H1–H4, the H3 dual-policy report and any D1
+  determination belong to E4 (session 0162, now READY). The execution log is
+  `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md`.
+
 - **EXP-002 approved at E2; E3 ready (sessions 0159–0160, 2026-10-12 UTC).**
   The maintainer accepted the E1 exit and delegated the E2 decisions. E2
   (`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md`)
@@ -21,7 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sensitivity digest per publication file, with H3 reported under both
   policies; retention of the generated publication bytes until E5; and
   hosted-CI accounting. Plan amendment #51 (F4 = 14 figures) is ratified.
-  Session 0161 (E3) is READY; no experiment leg has executed.
+  Session 0161 (E3) is READY; no experiment leg has executed. *(Dated update,
+  2026-10-12 UTC: E3 then executed; see the entry above.)*
 
 - **EXP-002 E1 preparation — DRAFT protocol, collection driver and timeout
   governance (session 0159, 2026-10-11 UTC).** The lead-authored DRAFT

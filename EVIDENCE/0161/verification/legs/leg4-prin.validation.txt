@@ -1,0 +1,75 @@
+LISTING-DIGEST (validator, formula of e2-review.md section 8): c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669 (39 listed entries; no expectation applied)
+PASS  A1 run directory name matches RUN-<UTC>-<R7>-<label>                             
+PASS  A1 label is the registered label for the mode                                      [reproduction-prin-cpu vs reproduction-prin-cpu]
+PASS  A1 embedded SHA is the first 7 characters of R                                     [fae24c4]
+PASS  A1 embedded UTC stamp is a real timestamp                                          [20261012T213936Z]
+PASS  A2 run directory is a direct child of benchmarks/results/EXP-002                   [C:\dev\PRIN\benchmarks\results\EXP-002]
+PASS  A2 run directory is a real directory (not a link)                                
+PASS  A3 directory holds exactly sidecar, result and manifest                            [['campaign-metadata.json', 'manifest.json', 'reproduction.json']]
+PASS  A3 every entry is a plain regular file                                           
+PASS  B1 manifest schema_version == 1                                                  
+PASS  B1 manifest has a files list                                                     
+PASS  B1 manifest lists exactly sidecar and result (not itself)                          [['campaign-metadata.json', 'reproduction.json']]
+PASS  B2 campaign-metadata.json size equals manifest bytes                               [252 vs 252]
+PASS  B2 campaign-metadata.json SHA-256 equals manifest sha256 (recomputed)              [6316a9e03f53cc966d70f8c83d1d70f7962857edc09f7dc8b4c6d4fe507d0e7e]
+PASS  B2 reproduction.json size equals manifest bytes                                    [59572 vs 59572]
+PASS  B2 reproduction.json SHA-256 equals manifest sha256 (recomputed)                   [776a926df8edb333e38d61e9fc4ba2966385df56bcfc3d9eda6540c7c47b590e]
+PASS  C1 sidecar keys are exactly the registered set                                     [['artefacts', 'exp_id', 'mode', 'operator', 'run_id', 'session']]
+PASS  C1 exp_id == EXP-002                                                             
+PASS  C1 session == 0161                                                               
+PASS  C1 run_id == directory name                                                      
+PASS  C1 operator == MichaelMaillet                                                    
+PASS  C1 mode == requested mode                                                        
+PASS  C1 artefact mapping is exactly {result: tags}                                      [{'reproduction.json': ['H3', 'H4']}]
+PASS  D1 top-level keys are exactly the registered envelope                              [['config', 'elapsed_seconds', 'environment', 'identity', 'observations', 'recorded_at_utc', 'seed_used', 'started_at_utc', 'status']]
+PASS  D1 no abort_reason present                                                       
+PASS  D2 status == COMPLETED                                                             [COMPLETED]
+PASS  D2 seed_used is False                                                            
+PASS  D3 environment/config/identity are objects                                       
+PASS  D3 environment keys are exactly the standard capture                               [[]]
+PASS  D3 prin_version == 1.0.0rc1                                                      
+PASS  D3 git_commit == R                                                               
+PASS  D3 environment.rust_version is a non-empty string                                  [rustc 1.99.0 (b940084d7 2026-09-28)]
+PASS  D3 environment.python_version is a non-empty string                                [3.14.0]
+PASS  D3 environment.platform is a non-empty string                                      [Windows-11-10.0.26300-SP0]
+PASS  D3 environment.processor is a non-empty string                                     [AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD]
+PASS  D3 logical_cpus is an int >= 1                                                     [16]
+PASS  D3 backend == cpu                                                                
+PASS  D3 dtype == f64                                                                  
+PASS  D3 environment.seed == 0 (int)                                                   
+PASS  D4 config keys are exactly the registered set                                      [['iterations', 'measurement_kind', 'out_dir', 'replicates', 'seed_counter', 'seed_key', 'warmup']]
+PASS  D4 seed pair (counter,key) == (0,2), both int                                      [(0,2)]
+PASS  D4 iterations==10, warmup==0, replicates==1 (envelope metadata)                  
+PASS  D4 measurement_kind == deterministic_census                                      
+PASS  D4 out_dir ends benchmarks/results/EXP-002/<run name>, no '..'                     [C:\dev\PRIN\benchmarks\results\EXP-002\RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu]
+PASS  D5 repository HEAD == R at validation time                                         [fae24c4393c7a0232e6c8f0a6388b1775aa5fc05]
+PASS  D5 identity.source_sha == R                                                      
+PASS  D5 preregistration_commit is the expected approval commit                          [9a9889d08dcaf2ad0ce31659ed67721b54b114d0]
+PASS  D5 preregistration_sha256 == digest of the blob at that commit (recomputed)        [0f3073dd2ed73b64071bcf3ae182510a69a26bd575b81b5a97cc5a1f9bbc8c8b]
+PASS  D5 preregistration_commit is an ancestor of R                                    
+PASS  D5 protocol blob at R is byte-identical to the blob at the approval commit       
+PASS  D5 protocol blob is APPROVED with the dated MichaelMaillet approval              
+PASS  D5 approval_date_utc == 2026-10-12                                                 [2026-10-12]
+PASS  D5 paper/artefact_manifest.json at R has the pinned digest                       
+PASS  D5 identity.input_manifest_sha256 == pinned digest                               
+PASS  D5 input_record_count == 172 == len(input_records)                               
+PASS  D5 input_records equal the committed input manifest's records exactly            
+PASS  D6 timestamps parse, are UTC and ordered; elapsed_seconds is a finite number     
+PASS  E0 observations is an object                                                     
+PASS  E3 unit == generated_file                                                        
+PASS  E3 implementation == prin                                                          [prin]
+PASS  E3 expected_files is exactly the registered 39-file list parsed from the protocol
+PASS  E3 renderer capture carries the registered keys (font cache, versions, fonts)    
+PASS  E3 font cache digest was captured (not null) and fonts were hashed                 [font_cache={'name': 'fontlist-v3.11.0.json', 'sha256': '9c00441405ce72925562e017858a729b402612a203b0682b2e7fd79329c8f6bb'}]
+PASS  E3 files is a list of objects                                                    
+PASS  E3 file paths are unique strings                                                 
+PASS  E3 raw/normalized/sensitivity byte sizes are non-negative ints                   
+PASS  E3 raw/normalized/sensitivity digests are 64-hex                                 
+PASS  G1 only EXP-002 raw records and the E3 log differ from the clean checkout          [[]]
+PASS  G2 no tracked file differs from HEAD                                             
+PASS  G3 no untracked top-level *.py / *.pth (ignored or not)                          
+PASS  F1 generated-output root, publication/ and inputs/ exist and are not links       
+PASS  F2 retained file set equals the record's file set (retention check only)           [disk-only=[] record-only=[]]
+PASS  F3 every retained file matches its own recorded raw size and SHA-256               [mismatched=[]]
+PASS  F4 retained input snapshot equals the 172 recorded input records                   [snapshot files=172]
+SUMMARY: 73 passed, 0 failed of 73 checks

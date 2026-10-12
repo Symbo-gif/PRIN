@@ -1,0 +1,10 @@
+COMMAND: C:/Users/there/.cargo/bin/cargo.exe fmt --all -- --check
+CWD: C:/dev/PRIN
+SOURCE: working tree: 92cf696 (fae24c4 + .gitattributes rule) + staged session-0161 changes (E3 records, raw run records, evidence), candidate corrected after the G10fa trailing-space finding; gate run 3 from Git Bash, host otherwise idle
+UTC-START: 2026-10-12T23:18:21Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+----
+ELAPSED_SECONDS: 0.8
+EXIT_CODE: 0
