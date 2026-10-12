@@ -28,7 +28,11 @@ never relabelled.
 - `verification/ci-fixes/` — the two failed hosted jobs on `0d4278d`
   (verbatim `--log-failed`), and `mypy` in a venv that mirrors the hosted
   lint job: without numpy (C3a fails exactly as CI did) and with the
-  pinned numpy (C3c passes).
+  pinned numpy (C3c passes). H1 is the green forced nightly on `0d4278d`.
+  For `9a9889d`: H3 lists the hosted runs (every pull-request workflow
+  green), H2 is the forced nightly's metadata, and H2a/H2b are its failed
+  `bench-regression` step in attempts 1 and 2 (verbatim `--log-failed`;
+  dispositioned as measurement variance in `e2-review.md` §6).
 - `verification/gate/` — the approved source's Windows local gate (G* and
   Rust R*), Snyk Code (G14; G14b/G14c show three pre-existing Low findings
   below the governed Medium threshold), pip-audit and Snyk Open Source for

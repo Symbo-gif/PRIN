@@ -5,6 +5,10 @@ f4bf6b8b3f43b0835015e1bfda6144f6e11397fd8270e235119de8e33cbcf59f *./ci-fixes/C2-
 cb6faa8df22f7fbd40b2ada53830dc9fd754b67a2043f8e9ff93214ecdce0dbc *./ci-fixes/C3c-mypy-experiments-with-numpy.log
 af177e1623dbead9175e0b8efb6c7ef6ab850c1a7ca16e2c1c0a3ff4d3b354c1 *./ci-fixes/C3d-mypy-prin-with-numpy.log
 b09e226f4fdbaa06e131ae09fbeda5201e5ac584fa94db82b9bfe05a47908e48 *./ci-fixes/H1-forced-nightly-38184198596.json
+c4ca3a2bb620049d0bb1fb5458ac2449465ade3a1faa0dfe2fa935e07a65c812 *./ci-fixes/H2-forced-nightly-38238913518.json
+c99212380cb5217c3d781699e9d49fa3e0716a4af6763ccfc34cd2f440f65dcc *./ci-fixes/H2a-forced-nightly-38238913518-attempt1-bench-regression.log
+1bf329275803044b154e9c1ca6bff6e62af6d34318b197b5ed7238e607a2c633 *./ci-fixes/H2b-forced-nightly-38238913518-attempt2-bench-regression.log
+62ff83c3722148b217898550a664f411e79d06dd5f1131932a9756b0da9e8063 *./ci-fixes/H3-hosted-runs-9a9889d.json
 3c3d5babcd2d211a06149da71f9e3173068ac16617594fc8fe46f93a4aa55cb4 *./delegation/agy-e2-report.txt
 b5f93cba8437659ce70724d5bbac01c7c3022f98a40ae1ecd909e9b872611ae5 *./delegation/agy-e2-task.md
 040ea79091aeb1adda1d8196d0f890bd5d49e4d99f82e300e4141db92c4fba85 *./delegation/agy-round2-report.txt

@@ -115,6 +115,31 @@ the forced nightly are recorded in `EVIDENCE/0160/` and in the E3 entry
 checklist below. No E2 claim depends on a hosted result. The Windows
 local gate is authoritative.
 
+**Hosted results for `9a9889d` (2026-10-12; `ci-fixes/H2*`, `H3`).** Every
+pull-request workflow succeeded: `python`, `rust` (all ten jobs, including
+`clippy` on Rust 1.99), `gpu`, `parity`, `repro` and `snyk`. The forced
+`nightly` (`38238913518`) passed `full-suite` and failed `bench-regression`
+in both attempts, each time on one gated benchmark:
+
+| Attempt | Gated breach (> +10 % mean) | Same benchmark in the other attempt |
+|---|---|---|
+| 1 | `engine_step/derivatives_serial/256` +10.7 % | +2.0 % |
+| 2 | `spmv_coupling/kuramoto_coupling_serial/256` +11.4 % | +4.6 % |
+
+**Disposition: measurement variance, not a regression.** The breaching
+benchmark differs between the two attempts. Each breach is a smallest-size
+case of about 27 µs, and it stays within threshold in the other attempt. No
+`prin-sim`, `prin-dynamics` or `prin-core` source changed between `0d4278d`,
+whose forced nightly passed, and `9a9889d`. The only Rust change is
+argument validation in `cross_band_coupling_cpu`, which neither benchmark
+calls. The reference arm also shifted between runners: on
+`engine_step/derivatives_serial/256` it measured 21.3 µs on `0d4278d` and
+26.6 µs here. This nightly is therefore not green. It is dispositioned for
+E3 checklist item 3. The disposition applies to any E3 source whose
+difference from `9a9889d` is documents or evidence only. Whether to open a
+Deferred Validation item for the nightly's sensitivity at small sizes is
+left to the maintainer.
+
 ## 7. Cold review of this record
 
 Antigravity (`gemini-3.8-flash-high`) and Devin (`swe-2-high`) ran read-only
