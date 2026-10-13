@@ -1,0 +1,14 @@
+COMMAND: C:/dev/PRIN/DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git C:/dev/PRIN --pre-commit --staged --redact --no-banner --report-format json --report-path C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/5e1d6deb-495c-48f1-bf1a-4c8ad51472b3/scratchpad/e4/gateC/gitleaks-staged.json
+CWD: C:/dev/PRIN
+SOURCE: Final candidate: HEAD 42f0eb3 + staged E4 records, docs and EVIDENCE/0162 (product/test/Rust trees identical to the Phase-A commit 3731fc2); G13 restarted after the void first attempt
+HEAD: 42f0eb3ea0b580e7c41a8fa9d7ae9679166df2ca
+UTC-START: 2026-10-13T18:15:04Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+[90m3:15PM[0m [32mINF[0m [1m0 commits scanned.[0m
+[90m3:15PM[0m [32mINF[0m [1mscanned ~1995730 bytes (2 MB) in 329ms[0m
+[90m3:15PM[0m [32mINF[0m [1mno leaks found[0m
+----
+UTC-END: 2026-10-13T18:15:11Z
+ELAPSED_S: 0
+EXIT_CODE: 0

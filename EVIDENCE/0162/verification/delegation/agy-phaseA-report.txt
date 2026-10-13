@@ -1,0 +1,176 @@
+# Cold Review Report: EXP-002 E4 Analysis Module and Tests
+
+**Module under review:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py)  
+**Tests under review:** [`tests/test_exp002_e4_analysis.py`](file:///C:/dev/PRIN/tests/test_exp002_e4_analysis.py)  
+**Governing protocols:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md), [`e2-review.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md), and [`DOCS/experiments/campaign-plan.md`](file:///C:/dev/PRIN/DOCS/experiments/campaign-plan.md)  
+**Review mode:** Read-only static cold review. No shell commands executed; no files edited; no real experiment outcomes inspected.
+
+---
+
+## 1. Executive Summary & Findings
+
+A comprehensive static audit was performed across all 3,185 lines of the analysis module and 1,782 lines of its unit tests against the frozen contracts in `preregistration.md` (§2, §3, §4.1–§4.3, §5.1–§5.5, §7, §8.1–§8.2, §11.3), `e2-review.md` (decisions 1–10), `campaign-plan.md` (§7.4, §9.1, §10.4, §12), and the schema producer [`benchmarks/campaign/exp002_driver.py`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py).
+
+### Summary of Findings
+| Finding ID | Severity | File:Line | Description | Status |
+|:---|:---:|:---|:---|:---:|
+| — | — | — | **No defects found** | **PASS** |
+
+The analysis module and its test suite strictly adhere to all registered governance policies, failure conditions, schema invariants, security controls, and reporting constraints. All decision branches correctly enforce the valid-counterexample rule prior to complete coverage, no driver status is trusted without independent re-derivation, and all outputs are deterministic and unit-labelled.
+
+---
+
+## 2. In-Depth Verification of In-Scope Areas
+
+### 2.1 Decision Rules (§4.1)
+- **Counterexample Priority over Coverage:** Verified in [`_verdict`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py#L1870-L1875):
+  ```python
+  if counterexamples:
+      return REFUTED
+  return CONFIRMED if complete else INCONCLUSIVE
+  ```
+  For all hypotheses (H1–H4), counterexamples are counted and evaluated first. Any positive counterexample count immediately short-circuits to `REFUTED`, regardless of completeness or missing coverage.
+- **Incomplete Coverage Safeguard:** No hypothesis can return `CONFIRMED` with incomplete coverage:
+  - **H1:** Requires `not unverifiable` and that all 175 expected symbols resolve without missing names.
+  - **H2:** Requires `complete = len(record.cases) == 62 and all(block["missing_claim_comparator_records"] == 0 for block in families.values())`.
+  - **H3:** Requires `complete = equal_registered == 39 and archived_equal == 11`.
+  - **H4:** Requires `complete = registered <= set(first) and set(first) == set(second)`.
+- **Inadmissible Record Handling:** Any inadmissible record (aborted, tampered, schema violation, or unverified origin) sets `record.census`, `record.cases`, or `record.arm` to `None`. In all adjudication functions, a missing arm/census returns `INCONCLUSIVE` (with diagnostic reasons preserved in `summary.json` and Markdown tables); an inadmissible record never returns `REFUTED` or `CONFIRMED`.
+- **Zero Trust in Driver Status / Booleans:** The analysis does not consume driver success Booleans as verdicts:
+  - H1 re-derives row classification from retained `type`, `callable`, and `error` attributes and validates legacy ownership against git blobs at commit $R$.
+  - H2 re-evaluates all 62 predicates from the manifest-verified frozen JSON inputs, comparing operands directly.
+  - H3 and H4 re-compare hashes and sizes directly across arms and against the 11 archived tables.
+
+---
+
+### 2.2 H1: API Mapping Census (§2, §5.1)
+- **Population:** Correctly enforces exactly 175 expected names: 172 legacy names from `REFERENCE/src/prinet/__init__.py::__all__` plus the three registered PRIN additions (`BackendUnavailableError`, `__version__`, `core_version`). Disjointness is explicitly asserted.
+- **Ownership Re-derivation:** Independently parses the Migration Guide table (`DOCS/sphinx/migration_guide.rst`) and WP-001 baseline (`DOCS/baselines/wp001_api_traceability.md`) directly from commit $R$ via git blobs (`_git_blob`). It requires every legacy symbol to be present in both.
+- **Row Classification ([`_classify_row`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py#L1059-L1102)):
+  - Missing exports (`error is not None`): strictly checks `resolved is False`, `callable is None`, `defining_module is None`, `type is None`, returning `"unresolved"`.
+  - `NoneType`: requires `not resolved`, returning `"none"`.
+  - `callable`: requires `resolved is True`, returning `"callable"`.
+  - Built-in scalars (`SCALAR_TYPE_NAMES = frozenset({"int", "float", "str", "bool", "bytes"})`): requires `resolved is True`, returning `"constant"`.
+  - Subclasses / other objects: if marked resolved, returns `"unverifiable"` (a coverage gap leading to `INCONCLUSIVE` unless another counterexample refutes, as specified by design); if marked unresolved, returns `"unsupported"` (a refutation).
+- **Census Invariants:** Duplicate export occurrences, unexpected exports, removed exports, and non-empty `frozen_contract_missing` / `frozen_contract_extra` sets each increment `counterexamples` and refute H1.
+
+---
+
+### 2.3 H2: Historical Conclusion Preservation (§2, §5.2)
+- **Predicate Fidelity ([`derive_claim_cases`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py#L1189-L1381)):
+  - **C01 (5 cases):** `phase1_chimera_seeds.json` — all 5 sequences `bimodality_coefficient.raw_values[i] > 0.555`. Unit: `BC`. Expected: `True`.
+  - **C02 (42 cases):** `benchmark_y4q1_3_k_alpha_sensitivity.json` — all 42 distinct $(K, \alpha)$ grid rows `bc_mean > 0.555`. Unit: `BC`. Expected: matches the row's stored `chimera_detected` Boolean (archival self-consistency). Operands $K$ and $\alpha_{\text{radians}}$ are preserved.
+  - **C03 (4 cases):** `phase2_chimera_nsweep.json` — exactly $N \in \{128, 256, 512, 1024\}$ selected by `n_oscillators`, `bc_stats.mean > 0.5`. Unit: `BC`. Expected: `True`.
+  - **C04 (5 cases):** `y4q1_8_topology_comparison.json` — ring mean greater than 2-community and 4-community means (2 cases, unit `BC`); ring CI width greater than 2-community and 4-community widths (2 cases, unit `historical_BC_CI_width`); 2-community width greater than 4-community width (1 case, unit `historical_BC_CI_width`). Expected: `True`.
+  - **C05 (6 cases):** `y3q49_goldilocks_zones.json` — restricted strictly to CPU regimes (`csr_cpu`, `full_cpu`, `mean_field_cpu`, `sparse_knn_cpu`). CSR width greater than full, mean-field, sparse-kNN widths (3 cases, operator `>`, unit `stored_coupling_K`); full onset less than CSR, mean-field, sparse-kNN onsets (3 cases, operator `<`, unit `stored_coupling_K`). Expected: `True`.
+- **Tamper Resistance:** `check_conclusions` verifies every single field of the record (`left`, `right`, `operator`, `expected`, `observed`, `operand_unit`, paths, $K$, $\alpha$) against `derive_claim_cases`. Any record discrepancy raises `RecordError`, making the record inadmissible rather than passing. A genuine contradiction in the frozen inputs yields an admissible record whose `case.observed != case.expected` and refutes H2.
+
+---
+
+### 2.4 H3: Publication Fidelity (§2, §5.4, §11.3, E2 Decision 9)
+- **Approved vs. Sensitivity Policies:**
+  - **Approved policy:** Tables canonicalized CRLF $\to$ LF; PDFs evaluated with registered Info metadata keys stripped and xref offsets canonicalized to 0; PNGs normalized.
+  - **Sensitivity policy:** Tables compared raw; PDFs evaluated with Info values masked in place (object number match per commit `6314532`); PNGs normalized.
+  - Both policies are evaluated in parallel: primary verdict is under the approved policy; sensitivity verdict is reported alongside it in `summary.json`, `expected-vs-observed.md`, `error-distributions.json`, and `report-manifest.json`. If they diverge, `summary["h3_policies_agree"]` is `False`, and reports flag that the verdict depends on the post-exposure comparison amendment.
+- **Inventory and Archival Cross-Check:**
+  - Complete 39-file inventory (14 figures $\times$ 2 formats + 11 tables) must match. Missing or extra files increment `counterexamples` and refute.
+  - All 11 tables are compared against the independent archived `.tex` baselines (`tables_equal_to_archived == 11`). Any PRIN divergence from the archived baseline increments `counterexamples` and refutes.
+  - Divergence between the frozen reference generator and archived tables is tracked and reported separately (`reference_tables_inconsistent_with_archived`).
+  - Renderer/font environment differences between compared arms return `INCONCLUSIVE` per §4.2 item 3.
+
+---
+
+### 2.5 H4: Deterministic Reproduction (§2, §5.5, E2 Decision 4)
+- **Strict Byte-Level Identity:** Evaluates raw bytes only (`first[path].raw != second[path].raw`). No normalization is applied; normalization cannot rescue H4.
+- **Canonical Result Projection ([`reproduction_projection`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py#L1842-L1863)):
+  - Correctly strips non-reproducible / execution-specific fields: `environment`, `started_at_utc`, `recorded_at_utc`, `elapsed_seconds`, and `config.out_dir`.
+  - Retains all scientific configuration, seed parameters, identity blocks, filenames, raw/normalized/sensitivity sizes and digests, and observation payloads.
+  - Encoded using `_canonical_json` (sorted keys, no NaN).
+- **Asymmetric Inventory Handling:**
+  - Extra identical outputs in both PRIN runs do not refute H4 (`set(first) == set(second)` holds, covered by H3).
+  - A registered file missing from both runs causes `registered <= set(first)` to be `False`, yielding `complete = False` and `INCONCLUSIVE` for H4 (while H3 refutes).
+
+---
+
+### 2.6 Admissibility Before Payload Verification (§4.1, §4.2, §5.5)
+- **Execution Ordering ([`load_record`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py#L1795-L1840)):
+  1. `run_dir` ancestor link and junction checks (`_check_no_links`).
+  2. Inventory verified to contain exactly `manifest.json`, `campaign-metadata.json`, and the mode's result file.
+  3. `manifest.json` digest verified against `REGISTERED.runs[i].manifest_sha256`.
+  4. Manifest parsed; verifies sidecar and result file names, sizes, and digests against `REGISTERED`.
+  5. Files read via single descriptor (`_read_verified`) and verified against pins.
+  6. Strict JSON validation (no BOM, valid UTF-8, no duplicate keys, no non-finite numbers).
+  7. Sidecar schema and metadata verified (`exp_id`, `session`, `run_id`, `operator`, `mode`, `artefacts`).
+  8. Result envelope validated: `status == "COMPLETED"` (aborts reject immediately), `seed_used is False`, finite elapsed time, timestamps, environment capture (CPU, f64, commit $R$, version `1.0.0rc1`), deterministic config (`(0,2)`, 10 iterations, 0 warmup, 1 replicate), and identity block (matching commit $R$, protocol commit $F$, protocol digest, approval date, and 172-record input manifest digest and records).
+  9. **Only after all preceding checks pass** is `result["observations"]` accessed and parsed.
+
+---
+
+### 2.7 Campaign D1 Escalation Flag (§4.3, Campaign Plan §10.4)
+- **Computation ([`is_d1`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py#L2204-L2213)):
+  - Evaluated strictly over primary verdicts: `any(verdicts[name] == REFUTED for name in ("H1", "H2", "H3", "H4"))`.
+  - An `INCONCLUSIVE` or `CONFIRMED` verdict does not raise D1.
+  - The H3 sensitivity verdict is logged alongside primary verdicts (`h3_sensitivity_policy_refuted`) and cannot be concealed.
+
+---
+
+### 2.8 Outputs & Report Manifest (§8.1, Campaign Plan §7.4)
+- **Required Artefact Inventory:** Generates all 7 registered files in `DOCS/test_and_benchmark_results/EXP-002/analysis/`:
+  1. `summary.json`
+  2. `api-mapping.csv`
+  3. `conclusion-comparisons.csv`
+  4. `reproduction-comparisons.csv`
+  5. `error-distributions.json`
+  6. `expected-vs-observed.md`
+  7. `coverage-and-deferrals.md`
+  plus `report-manifest.json` in the record root.
+- **Population Separation:** The 39 generated publication files and 7 analysis outputs are kept distinct across all summaries and manifests; denominators are explicitly labelled (`api_symbol_count: 175`, `claim_comparator_record_count: 62`, `generated_file_count: 39`, `analysis_output_file_count: 7`).
+- **Determinism:**
+  - No wall-clock times are embedded; date is pinned to `2026-10-13`.
+  - JSON keys sorted; indentation fixed at 2 spaces; LF line endings.
+  - CSV files use `lineterminator="\n"`.
+- **Confinement:** Writes are strictly confined to `OUTPUT_DIR` and `REPORT_MANIFEST_PATH`. Parent directories and destination files are verified free of symlinks and reparse points (`_check_no_links`), written to temporary files in the same directory, and published via `os.replace`.
+
+---
+
+### 2.9 Architectural Isolation & Import Purity (§8)
+- **Dependency Purity:** The module imports only standard library packages (`argparse`, `ast`, `csv`, `hashlib`, `io`, `json`, `math`, `os`, `re`, `shutil`, `stat`, `subprocess`, `sys`, `tempfile`, `collections.abc`, `dataclasses`, `pathlib`, `typing`).
+- **Isolation:** It never imports `prin`, `prinet`, `exp002_driver`, `tools.reproduce`, `numpy`, or `matplotlib`.
+- **Subprocess Check:** Subprocess isolation is verified by unit test `test_module_never_imports_prin_prinet_driver_or_reproduce`.
+- **No Direct Rendering or Publication Root Reads:** Does not render figures or tables, and never accesses `DOCS/test_and_benchmark_results/EXP-002/<run-id>/publication` on disk (byte verification of those outputs is left to E5 per §11.3 item 2).
+
+---
+
+### 2.10 Test Suite Rigor & Branch Coverage
+- **Coverage of Failure Branches:** The 87 test functions in `tests/test_exp002_e4_analysis.py` cover every failure condition and decision branch:
+  - H1: unresolved exports, NoneType, unsupported types, duplicates, removals, unexpected exports, missing ownership rows, ownership flag disagreements, unverifiable rows, and contract differences.
+  - H2: published direction contradictions (C01), C02 flag mismatches, negative C02 classifications, operand disagreements with frozen inputs, unit disagreements, and integer-float equivalence.
+  - H3: missing outputs in PRIN/reference, extra outputs, normalized figure mismatches, CRLF table sensitivity divergence, divergence from archived tables, archived field discrepancies across arms, aborted reference runs, and renderer environment changes.
+  - H4: raw byte differences, projection mismatches with identical raw bytes, projection invariance to per-run fields, single-arm outputs, and mutual omissions.
+  - Global preconditions: unindexed run directories, tampered/resized/unmanifested frozen inputs, manifest mismatches, modified working protocols, protocol digest discrepancies, undated approvals, unancestored commits, and git invocation failures.
+- **Fixture Integrity:** Synthetic fixtures in `Builder` strictly follow the driver schemas and pass `driver._check_observations`. Global context caching in `base_context` accelerates test execution without bypassing precondition validation.
+
+---
+
+### 2.11 Security & System Integrity
+- **Command Injection:** All git queries use list-based argument arrays without shell invocation (`shell=False`). Subprocess input is directed to `DEVNULL`. Git arguments are restricted to fixed constants and 40-character hexadecimal SHAs validated by `_HEX40.fullmatch`.
+- **Path Traversal:** File paths in manifests and observation records are sanitized: absolute paths, parent directory traversals (`..`), and backward slashes (`\`) are rejected.
+- **Link & Junction Rejection:** Windows directory junctions and symlinks across all path ancestors are detected via `stat.S_ISLNK` and `FILE_ATTRIBUTE_REPARSE_POINT` (0x400) and rejected.
+- **TOCTOU Protection:** File descriptors are opened with `O_NOFOLLOW` / `O_BINARY` and verified against pre-open `lstat` attributes (`st_dev`, `st_ino`) prior to reading.
+
+---
+
+## 3. Compliance with Hard Rule
+
+In strict accordance with the session mandate:
+1. No file under `benchmarks/results/EXP-002/RUN-*` was opened or inspected.
+2. No file under `DOCS/test_and_benchmark_results/` was opened or inspected.
+3. No file under `DOCS/archive and reference from PRINet 3.0/` was opened or inspected.
+4. No verification transcripts in `EVIDENCE/0161/verification/legs/` or PR #33 review comments were accessed.
+5. No experimental outcome data was viewed, quoted, summarized, or reasoned from.
+
+---
+
+## 4. Conclusion & Recommendation
+
+The `exp002_e4_analysis.py` module and `tests/test_exp002_e4_analysis.py` test suite are structurally sound, scientifically faithful to the pre-registered protocol, and free of defects. The codebase is fully prepared for clean commit and execution in session 0162 (E4).

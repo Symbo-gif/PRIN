@@ -1,0 +1,13 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe tools/check_deviation_ledger.py DOCS/reports/039-project-state.md DOCS/reports/040-project-state.md
+CWD: C:/dev/PRIN
+SOURCE: Final candidate: HEAD 42f0eb3 + staged E4 records, docs and EVIDENCE/0162 (product/test/Rust trees identical to the Phase-A commit 3731fc2)
+HEAD: 42f0eb3ea0b580e7c41a8fa9d7ae9679166df2ca
+UTC-START: 2026-10-13T17:04:25Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+Ledger consistency check passed.
+  Compared 142 rows in DOCS\reports\039-project-state.md with 146 rows in DOCS\reports\040-project-state.md.
+----
+UTC-END: 2026-10-13T17:10:26Z
+ELAPSED_S: 354
+EXIT_CODE: 0

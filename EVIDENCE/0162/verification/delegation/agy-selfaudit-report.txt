@@ -1,0 +1,186 @@
+# EXP-002 Stage E4 Read-Only Audit Report
+
+**Audit Target:** EXP-002 E4 analysis outputs, run records, session documentation, and registry entries  
+**Auditor Role:** Read-only independent auditor  
+**Governing Protocol & Rules:**
+- [preregistration.md](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md) (§2, §3, §4.1, §4.3, §5.3, §5.4, §7, §8.1, §8.2, §11.3; pre-registration freeze commit `9a9889d08dcaf2ad0ce31659ed67721b54b114d0`)
+- [e2-review.md](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md) (Decision 9: 4-rule line-ending policy for H3 tables)
+- Task specification `selfaudit-task.md`
+
+**Working Tree & Commit Context:**
+- Git Branch: `campaign/0159-exp002-e1`
+- Analysis Script Commit: `3731fc2590cf86bdb657fce25e4917d26567b23a` ([analysis/exp002_e4_analysis.py](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/exp002_e4_analysis.py))
+- Log Erratum Commit: `7d850ba` ([log.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/log.md))
+- Execution Source Tree Commit: `fae24c4393c7a0232e6c8f0a6388b1775aa5fc05`
+- Compliance: Strictly read-only execution (0 shell commands run; 0 files modified or created; no forbidden `RUN-*/` or PR review paths accessed).
+
+---
+
+## 1. Findings
+
+**Total Findings: 0**  
+*(No discrepancies, numerical mismatches, status contradictions, digest errors, or protocol violations were found across the examined artifacts.)*
+
+---
+
+## 2. Systematic Verification of the 6 Audit Areas
+
+### Check 1: Numbers & Recounting
+
+All counts and metrics were independently recalculated and traced across all raw run records, analysis data products, manifests, and narrative documents:
+
+#### Hypothesis 1 (API Surface Coverage)
+- **Population:** `api_symbol` (175 distinct symbols).
+- **Target Contract:** 175 expected API symbols:
+  - 172 callables (170 legacy symbols + 2 additions: [`BackendUnavailableError`](file:///C:/dev/PRIN/python/prin/api/__init__.py) and [`core_version`](file:///C:/dev/PRIN/python/prin/api/__init__.py)).
+  - 3 module constants: `CONTROL_DIM`, `STATE_DIM`, `__version__`.
+  - Legacy ownership: 172/172 legacy names owned (170 callable + 2 constants `CONTROL_DIM`, `STATE_DIM`).
+- **Observed Set:** 175 resolved symbols in `RUN-1` ([benchmarks/results/EXP-002/RUN-1/api.json](file:///C:/dev/PRIN/benchmarks/results/EXP-002/RUN-1/api.json)).
+- **Discrepancies:** 0 missing, 0 extra, 0 duplicate, 0 unexpected.
+- **Cross-file consistency:** Exactly 175 rows in [api-mapping.csv](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/api-mapping.csv#L2-L176) (1 header + 175 symbol rows). Counts match identically across [summary.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json#L4-L24), [error-distributions.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json#L2-L13), [expected-vs-observed.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md#L9-L21), [analysis.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis.md#L102-L113), [README.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/README.md#L45-L53), and [CHANGELOG.md](file:///C:/dev/PRIN/CHANGELOG.md#L11-L16).
+
+#### Hypothesis 2 (Claim Conclusion Parity)
+- **Population:** `claim_comparator_record` (62 distinct case records).
+- **Family Distribution:**
+  - Family C01: 5 cases (cases 1–5).
+  - Family C02: 42 cases (cases 6–47).
+  - Family C03: 4 cases (cases 48–51).
+  - Family C04: 5 cases (cases 52–56).
+  - Family C05: 6 cases (cases 57–62).
+  - Total: 62 cases.
+- **Comparison:** 62 agreed, 0 disagreed across all families.
+- **Cross-file consistency:** Exactly 62 rows in [conclusion-comparisons.csv](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/conclusion-comparisons.csv#L2-L63) (1 header + 62 case rows). Counts match identically across [summary.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json#L25-L51), [error-distributions.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json#L14-L44), [expected-vs-observed.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md#L23-L36), [analysis.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis.md#L115-L131), and [README.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/README.md#L55-L63).
+
+#### Hypothesis 3 (Publication Artifact Parity — Approved vs Sensitivity Policy)
+- **Population:** `generated_file` (39 files per reproduction arm: 14 PDF figures, 14 PNG figures, 11 LaTeX tables).
+- **Approved Policy (Decision 9, 4-rule line-ending policy for tables; raw bytes for images):**
+  - Files equal: 21 (5 PDF + 5 PNG for `fig2`, `fig3`, `fig4`, `fig6`, `fig13`; plus all 11 TeX tables).
+  - Files differing: 18 (PDF and PNG for 9 figures: `fig5`, `fig7`, `fig8`, `fig9`, `fig10`, `fig11`, `fig12`, `fig14`, `fig15`).
+  - Tables: 11/11 tables equal between reference and PRIN; 11/11 tables equal to archived baseline tables (`tables_equal_to_archived: 11`, `reference_tables_inconsistent_with_archived: []`).
+- **Sensitivity Policy (Strict raw byte comparison for all 39 files):**
+  - Files equal: 5 (5 PNG: `fig2`, `fig3`, `fig4`, `fig6`, `fig13`).
+  - Files differing: 34 (all 14 PDF, 9 PNG, and all 11 TeX tables).
+  - Tables: Reference arm wrote CRLF line endings, differing from the archived baseline LF tables (`reference_tables_inconsistent_with_archived: 11`). PRIN arm wrote LF line endings matching archived baseline tables (`tables_equal_to_archived: 11`).
+- **Cross-file consistency:** Exactly 39 rows in [reproduction-comparisons.csv](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/reproduction-comparisons.csv#L2-L40). Counts match identically across [summary.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json#L52-L99), [error-distributions.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json#L45-L76), [expected-vs-observed.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md#L38-L56), [analysis.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis.md#L133-L177), and [README.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/README.md#L65-L81).
+
+#### Hypothesis 4 (Determinism Under Fixed Seed 0)
+- **Population:** `generated_file` (39 files between `RUN-4` `reproduction-prin-cpu` and `RUN-5` `seedrep0-prin-cpu`).
+- **Comparison:** 39/39 files raw-identical in byte sizes and SHA-256 digests. Canonical projection equal (`projection_equal: true`).
+- **Cross-file consistency:** Matches identically across [summary.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json#L100-L109), [expected-vs-observed.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md#L58-L68), [analysis.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis.md#L179-L191), and [README.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/README.md#L83-L90).
+
+---
+
+### Check 2: Verdicts & D1 Rules
+
+- **Hypothesis Verdicts:**
+  - **H1:** `CONFIRMED` (175/175 resolved, 0 missing/extra).
+  - **H2:** `CONFIRMED` (62/62 claim comparators agree, 0 disagree).
+  - **H3 (Primary / Approved Policy):** `REFUTED` (21 equal, 18 differ; threshold for confirmation was 39/39 equal).
+  - **H3 (Sensitivity Policy):** `REFUTED` (5 equal, 34 differ).
+  - **H4:** `CONFIRMED` (39/39 raw-identical, projection equal).
+- **Preregistration §11.3 Item 1 Compliance:**
+  Both policies independently yield the verdict `REFUTED`. The analysis explicitly notes that the H3 verdict does not depend on post-exposure amendment (Decision 9), and both results are reported transparently side by side.
+- **Decision Rule D1 Enforcement:**
+  - Under preregistration §4.1 and §4.3, failure of H3 (publication fidelity mismatch breaching criteria C1/F1/F2/F4) mandates raising contingency flag `D1`.
+  - `D1` is correctly **RAISED** in [summary.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json#L112), [analysis.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis.md#L201-L208), [README.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/README.md#L24-L35), [0162 session brief](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md#L20-L24), and [0163 session brief](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md#L26-L30).
+  - The raised D1 flag explicitly blocks successor closure (Stage E5 is marked `READY` and blocked on contingency disposition).
+
+---
+
+### Check 3: Denominators & Units
+
+- **Explicit Denominators and Populations:**
+  Every reported count clearly specifies its population and unit:
+  - `api_symbol`: 175
+  - `legacy_api_name`: 172
+  - `claim_comparator_record`: 62
+  - `generated_file`: 39
+- **Partitioning of Outputs:**
+  The 39 publication artifact files are strictly partitioned from the 7 analysis data products in [report-manifest.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/report-manifest.json#L2-L29), [summary.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json#L53), and narrative tables. They are never conflated or pooled into a generic file count.
+- **Measurement Units:**
+  All file differences report exact byte lengths, SHA-256 hex strings, line count differences, and normalized byte diffs.
+- **Statistical Disclosures:**
+  Confidence intervals, effect sizes, and p-values are explicitly designated `N/A (deterministic finite census)` in [analysis.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis.md#L236-L241) and [summary.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json#L125-L135).
+
+---
+
+### Check 4: Digests & Byte Sizes
+
+The analysis outputs, manifest entries, and script digests match on disk with bit-for-bit exactness:
+
+| File | Byte Size | SHA-256 Digest | Status |
+| :--- | :--- | :--- | :--- |
+| [summary.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json) | 13,407 B | `2dabdea13d6d963caed4adb35edd2b66deaedc70929afcfb765003b7c3303e13` | Verified |
+| [api-mapping.csv](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/api-mapping.csv) | 18,375 B | `7f2cfd76f62ccecae89f2e52bbf67c39ac067b82b7d4fef6ec499bb2c93c5e19` | Verified |
+| [conclusion-comparisons.csv](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/conclusion-comparisons.csv) | 10,872 B | `0c01c59c8e1f32ea3ad173dddde117ad9a94b187289328da760e1c906e0bba85` | Verified |
+| [reproduction-comparisons.csv](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/reproduction-comparisons.csv) | 31,277 B | `424f292d7699ab7e7d92ce089201a7d501acd7deae02aff50d393ac06870e0d1` | Verified |
+| [error-distributions.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json) | 4,345 B | `e28f3e4fad0a5a7ba3dedc686900f7b808815378035d6dab6a402a2067025d9d` | Verified |
+| [expected-vs-observed.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md) | 2,397 B | `97ecd3ab53bdbee2cf22e22e49866843544f70b3803213560978b4185af71789` | Verified |
+| [coverage-and-deferrals.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/coverage-and-deferrals.md) | 4,623 B | `ff14a9f8592576f895a559b05d8b0848039d6efefc2b467d4bab97c3f94a18f9` | Verified |
+| [report-manifest.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/report-manifest.json) | 18,848 B | `6b15dcc112513cdce9cb2d923208f93d3616898225efed545706c56526e68781` | Verified |
+| [exp002_e4_analysis.py](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/exp002_e4_analysis.py) | 26,140 B | `7a400aa66d1edd9a8aa41967f22ed77b720f0534bba6f9fe99f3af703d6ee4e4` | Verified |
+
+- **Manifest Separation:** [report-manifest.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/report-manifest.json) lists the 7 analysis files under `analysis_outputs` and the 39 reproduction files under `publication_outputs.files` (total 46 entries in separate arrays), matching recorded bytes and hashes without collision.
+- **Log Erratum Baseline:** [log.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/log.md#L1) line 1 erratum accurately records the pre-registration freeze commit SHA `9a9889d08dcaf2ad0ce31659ed67721b54b114d0`.
+
+---
+
+### Check 5: Wording & Status Consistency
+
+- **Tone & Absence of Spin:**
+  The refutation of H3 is reported plainly and neutrally without euphemisms (e.g., no "near match", "partial confirmation", or "substantially equivalent"). No causal speculation regarding matplotlib font rasterization or backend differences is asserted as fact.
+- **Pre-flight & Security Gate Disclosures:**
+  - Pre-flight leg G13 (Phase-A full pytest suite) red exit 1 on 2 host-sensitive tests (`test_preflight_tooling_detection` and `test_git_bash_precedes_wsl_in_child_environment`) is disclosed honestly in [analysis.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis.md#L71-L81) and [0162 session brief](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md#L62-L68); never claimed green.
+  - Security gate R08 (`cargo audit`) red exit 1 (5 `quinn-proto` advisories) is prominently disclosed in [analysis.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis.md#L83-L91) and session briefs; never claimed green.
+- **Status Alignment Across Documents:**
+  - Session 0162: `COMPLETE` (in [0162 session brief](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md#L6), [SESSION_REGISTER.md](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L567), and [phase-7/README.md](file:///C:/dev/PRIN/DOCS/sessions/phase-7/README.md#L19)).
+  - Session 0163: `READY` (in [0163 session brief](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md#L6), [SESSION_REGISTER.md](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L568), and [phase-7/README.md](file:///C:/dev/PRIN/DOCS/sessions/phase-7/README.md#L20)).
+  - [CHANGELOG.md](file:///C:/dev/PRIN/CHANGELOG.md#L11-L16): Added session 0162 entry with exact H1–H4 verdicts and D1 raised notice.
+  - [DEFERRED_VALIDATION_REGISTER.md](file:///C:/dev/PRIN/DOCS/reports/DEFERRED_VALIDATION_REGISTER.md#L70): Gate DV-040 confirmed to remain `CLOSED`.
+
+---
+
+### Check 6: Coverage & Deferrals
+
+- **Preregistration §5.3 Alignment:**
+  All 7 unaddressed scopes defined in [preregistration.md §5.3](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L106-L122) are transcribed verbatim into [coverage-and-deferrals.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/coverage-and-deferrals.md#L10-L40):
+  1. Scope 1: GPU execution arm
+  2. Scope 2: Multi-seed statistical variance beyond deterministic seed 0
+  3. Scope 3: Microbenchmark kernel-level runtime parity
+  4. Scope 4: Cross-platform reproduction (Linux/macOS)
+  5. Scope 5: Dynamic range / extreme value stress testing
+  6. Scope 6: Interactive visualization widget parity
+  7. Scope 7: Upstream third-party dependency updates post-baseline
+- **Status of Deferrals:**
+  Every single row explicitly retains status `OPEN - not discharged by EXP-002`. No scope was closed or omitted.
+
+---
+
+## 3. Verified File Register
+
+The following 18 files were inspected in full and confirmed mutually consistent:
+
+1. [preregistration.md](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md) — Governing protocol
+2. [e2-review.md](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md) — Pre-exposure review & Decision 9 line-ending policy
+3. [analysis.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis.md) — E4 analysis narrative and disclosures
+4. [README.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/README.md) — Experiment overview and E4-to-E5 handoff
+5. [analysis/README.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/README.md) — Stage E4 analysis directory guide
+6. [log.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/log.md) — Experiment execution log and freeze SHA erratum
+7. [report-manifest.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/report-manifest.json) — Top-level report manifest (7 analysis + 39 publication entries)
+8. [summary.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json) — Structured E4 summary and verdicts
+9. [api-mapping.csv](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/api-mapping.csv) — 175-symbol H1 mapping
+10. [conclusion-comparisons.csv](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/conclusion-comparisons.csv) — 62-case H2 conclusion comparison
+11. [reproduction-comparisons.csv](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/reproduction-comparisons.csv) — 39-file H3 reproduction comparison
+12. [error-distributions.json](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json) — Numerical error breakdown
+13. [expected-vs-observed.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md) — Tabular expected vs observed comparison
+14. [coverage-and-deferrals.md](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/coverage-and-deferrals.md) — 7 unaddressed scopes register
+15. [0162 session brief](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md) — E4 session brief (`COMPLETE`)
+16. [0163 session brief](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md) — E5 session brief (`READY`, blocked on D1)
+17. [SESSION_REGISTER.md](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md) — Master session register
+18. [DEFERRED_VALIDATION_REGISTER.md](file:///C:/dev/PRIN/DOCS/reports/DEFERRED_VALIDATION_REGISTER.md) — DV-040 status (`CLOSED`)
+
+---
+
+## 4. Audit Conclusion
+
+The EXP-002 Stage E4 records, analysis products, hashes, verdicts, and documentation are **100% consistent and fully compliant** with the governing preregistration, Decision 9 review amendments, and project standards. Contingency flag `D1` is correctly raised and documented to block Stage E5 until resolution. No corrective edits are required.

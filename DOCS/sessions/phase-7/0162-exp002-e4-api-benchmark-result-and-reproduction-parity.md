@@ -1,6 +1,6 @@
 # Session 0162 — EXP-002 / C1 E4: Analysis — API, benchmark-result, and reproduction parity
 
-**Status:** READY — E3 closed 2026-10-12 UTC (session 0161); commit the E4 analysis module before analysis starts (protocol §8)
+**Status:** COMPLETE — analysed 2026-10-13 UTC with the committed module `3731fc2`: H1 CONFIRMED, H2 CONFIRMED, H3 REFUTED (approved and §11.3 sensitivity policies), H4 CONFIRMED; **D1 flag raised (H3)**; see the [analysis record](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis.md) and the [E4 handoff](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#e4-to-e5-handoff-session-0162-2026-10-13-utc)
 **Roadmap phase:** 7 — Experimentation campaign and stable release  
 **Execution unit:** EXP-002 / C1  
 **Session type:** E4 — Analysis  

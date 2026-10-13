@@ -1,0 +1,12 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe tools/check_skipif_probes.py
+CWD: C:/dev/PRIN
+SOURCE: Phase-A candidate: HEAD 7d850ba (STEP 0) + staged exp002_e4_analysis.py and tests/test_exp002_e4_analysis.py
+HEAD: 7d850babf173c9987fbb34d80af9e4be8238b304
+UTC-START: 2026-10-13T12:27:42Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+check_skipif_probes: no registration-probe skipif guards
+----
+UTC-END: 2026-10-13T12:27:54Z
+ELAPSED_S: 9
+EXIT_CODE: 0

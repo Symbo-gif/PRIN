@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-002 E4 analysed — H3 refuted, D1 flag raised (session 0162,
+  2026-10-13 UTC).** The registered analysis module
+  `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py`
+  was committed and pushed (`3731fc2`) before its first real run, then applied
+  the frozen decision rules to the five E3 records (all admissible, none
+  aborted; two runs byte-identical). **H1 CONFIRMED** (175/175 exports
+  resolved, 172/172 legacy names owned), **H2 CONFIRMED** (62/62 historical
+  conclusion predicates agree), **H3 REFUTED** (21/39 publication files equal
+  under the approved comparison: the PDF and PNG of nine figures differ, while
+  all 11 tables match each other and the archived tables; also refuted under
+  the registered sensitivity policy, so the verdict does not depend on the
+  post-exposure amendment), **H4 CONFIRMED** (39/39 raw-identical between two
+  PRIN renders). The publication-fidelity mismatch is a **D1** under campaign
+  plan section 10.4: E5 (session 0163, now READY) reports it in full and then
+  blocks its successor. No cause is asserted at E4 and no tolerance or policy
+  changed. Record: `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis.md`.
+  A one-line erratum quotes the freeze SHA on line 1 of the E3 log (campaign
+  plan section 12.4).
+
 - **EXP-002 E3 executed — five registered runs, no verdict (session 0161,
   2026-10-12 UTC).** The committed driver `benchmarks/campaign/exp002_driver.py`
   ran the five registered legs once each, in the registered order, at source

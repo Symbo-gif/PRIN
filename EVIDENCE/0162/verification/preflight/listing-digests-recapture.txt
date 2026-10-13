@@ -1,0 +1,6 @@
+COMMAND (e2-review.md section 8, verbatim, PowerShell): .venv\Scripts\python -c "import hashlib,pathlib,sys; r=pathlib.Path(sys.argv[1]); print(hashlib.sha256(''.join(f'{p.relative_to(r).as_posix()} {p.stat().st_size} {hashlib.sha256(p.read_bytes()).hexdigest()}\n' for p in sorted(r.rglob('*')) if p.is_file()).encode()).hexdigest())" DOCS/test_and_benchmark_results/EXP-002/<run-id>/publication
+NOTE: the pre-flight run at 2026-10-13T10:2xZ printed the same three values to the session console; this file is a re-capture after the analysis run (the analysis never reads these roots).
+UTC: 2026-10-13T16:31:48Z
+RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu d674de7d4b5830c9abf525fcc484a5ebc01e3620ca38b63badd037e289487323 exit=0
+RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669 exit=0
+RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669 exit=0

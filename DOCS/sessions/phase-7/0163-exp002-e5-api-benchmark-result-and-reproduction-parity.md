@@ -1,6 +1,6 @@
 # Session 0163 — EXP-002 / C1 E5: Report — API, benchmark-result, and reproduction parity
 
-**Status:** PLANNED  
+**Status:** READY — E4 closed 2026-10-13 UTC (session 0162) with a D1 flag on H3; E5 reports in full, then blocks its successor (campaign plan §10.4); first verify the retained publication bytes (protocol §8.2, §11.3 item 2)
 **Roadmap phase:** 7 — Experimentation campaign and stable release  
 **Execution unit:** EXP-002 / C1  
 **Session type:** E5 — Report  

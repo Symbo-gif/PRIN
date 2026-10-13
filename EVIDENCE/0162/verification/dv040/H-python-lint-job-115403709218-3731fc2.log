@@ -1,0 +1,617 @@
+lint	Set up job	﻿2026-10-13T16:11:06.7183108Z Current runner version: '2.337.0'
+lint	Set up job	2026-10-13T16:11:06.7288025Z ##[group]Runner Image Provisioner
+lint	Set up job	2026-10-13T16:11:06.7289124Z Hosted Compute Agent
+lint	Set up job	2026-10-13T16:11:06.7289744Z Version: 20261002.596
+lint	Set up job	2026-10-13T16:11:06.7290431Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+lint	Set up job	2026-10-13T16:11:06.7291270Z Build Date: 2026-10-02T22:28:27Z
+lint	Set up job	2026-10-13T16:11:06.7291983Z Worker ID: {c8fa2433-9a5e-444f-94b2-1307412387d5}
+lint	Set up job	2026-10-13T16:11:06.7292764Z Region: eastus2
+lint	Set up job	2026-10-13T16:11:06.7293388Z Cloud: Azure
+lint	Set up job	2026-10-13T16:11:06.7294004Z ##[endgroup]
+lint	Set up job	2026-10-13T16:11:06.7295448Z ##[group]Operating System
+lint	Set up job	2026-10-13T16:11:06.7296090Z Ubuntu
+lint	Set up job	2026-10-13T16:11:06.7296930Z 24.04.5
+lint	Set up job	2026-10-13T16:11:06.7297472Z LTS
+lint	Set up job	2026-10-13T16:11:06.7298054Z ##[endgroup]
+lint	Set up job	2026-10-13T16:11:06.7298644Z ##[group]Runner Image
+lint	Set up job	2026-10-13T16:11:06.7299267Z Image: ubuntu-24.04
+lint	Set up job	2026-10-13T16:11:06.7299925Z Version: 20261004.327.1
+lint	Set up job	2026-10-13T16:11:06.7301059Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+lint	Set up job	2026-10-13T16:11:06.7302925Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+lint	Set up job	2026-10-13T16:11:06.7303936Z ##[endgroup]
+lint	Set up job	2026-10-13T16:11:06.7305208Z ##[group]GITHUB_TOKEN Permissions
+lint	Set up job	2026-10-13T16:11:06.7382370Z Contents: read
+lint	Set up job	2026-10-13T16:11:06.7383166Z Metadata: read
+lint	Set up job	2026-10-13T16:11:06.7383740Z ##[endgroup]
+lint	Set up job	2026-10-13T16:11:06.7386206Z Secret source: Actions
+lint	Set up job	2026-10-13T16:11:06.7387496Z Cache mode: write
+lint	Set up job	2026-10-13T16:11:06.7388347Z Prepare workflow directory
+lint	Set up job	2026-10-13T16:11:06.8788717Z Prepare all required actions
+lint	Set up job	2026-10-13T16:11:06.8985411Z Getting action download info
+lint	Set up job	2026-10-13T16:11:07.3634838Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+lint	Set up job	2026-10-13T16:11:07.5630356Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+lint	Set up job	2026-10-13T16:11:08.1859055Z Complete job name: lint
+lint	Run actions/checkout@v4	﻿2026-10-13T16:11:08.5814721Z ##[group]Run actions/checkout@v4
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5815875Z with:
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5816375Z   fetch-depth: 0
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5817146Z   repository: Symbo-gif/PRIN
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5822171Z   token: ***
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5822665Z   ssh-strict: true
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5823166Z   ssh-user: git
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5823672Z   persist-credentials: true
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5824241Z   clean: true
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5824736Z   sparse-checkout-cone-mode: true
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5825342Z   fetch-tags: false
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5825847Z   show-progress: true
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5826398Z   lfs: false
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5827068Z   submodules: false
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5827601Z   set-safe-directory: true
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5828194Z   allow-unsafe-pr-checkout: false
+lint	Run actions/checkout@v4	2026-10-13T16:11:08.5829038Z ##[endgroup]
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1006941Z Syncing repository: Symbo-gif/PRIN
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1010084Z ##[group]Getting Git version info
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1011393Z Working directory is '/home/runner/work/PRIN/PRIN'
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1013246Z [command]/usr/bin/git version
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1116790Z git version 2.55.0
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1212552Z ##[endgroup]
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1309055Z Temporarily overriding HOME='/home/runner/work/_temp/3a1e291b-7402-4c53-a059-3feb4b4aea3b' before making global git config changes
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1312328Z Adding repository directory to the temporary git global config as a safe directory
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1315314Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PRIN/PRIN
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1513592Z Deleting the contents of '/home/runner/work/PRIN/PRIN'
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1519567Z ##[group]Initializing the repository
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1604761Z [command]/usr/bin/git init /home/runner/work/PRIN/PRIN
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1820134Z hint: Using 'master' as the name for the initial branch. This default branch name
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1822590Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1824875Z hint: to use in all of your new repositories, which will suppress this warning,
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1905073Z hint: call:
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1906411Z hint:
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1908146Z hint: 	git config --global init.defaultBranch <name>
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1909487Z hint:
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1910637Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1912556Z hint: 'development'. The just-created branch can be renamed via this command:
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1914071Z hint:
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1914825Z hint: 	git branch -m <name>
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1915943Z hint:
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1917315Z hint: Disable this message with "git config set advice.defaultBranchName false"
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1918601Z Initialized empty Git repository in /home/runner/work/PRIN/PRIN/.git/
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.1920661Z [command]/usr/bin/git remote add origin https://github.com/Symbo-gif/PRIN
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.2121449Z ##[endgroup]
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.2123038Z ##[group]Disabling automatic garbage collection
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.2125417Z [command]/usr/bin/git config --local gc.auto 0
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.2313382Z ##[endgroup]
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.2314794Z ##[group]Setting up auth
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.2321072Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.2516709Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.3917546Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.4209076Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.6308685Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.6525045Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.7907422Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.8029104Z ##[endgroup]
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.8030402Z ##[group]Fetching the repository
+lint	Run actions/checkout@v4	2026-10-13T16:11:09.8209756Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +2c894080db7ac55c4a6b870ac5fdaabab6c699c2:refs/remotes/pull/33/merge
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.0983487Z From https://github.com/Symbo-gif/PRIN
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.0985540Z  * [new branch]      audit/ea007-exp002-readiness             -> origin/audit/ea007-exp002-readiness
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.0987170Z  * [new branch]      campaign/0153-e0-planning                -> origin/campaign/0153-e0-planning
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.0988290Z  * [new branch]      campaign/0154-exp001-e1                  -> origin/campaign/0154-exp001-e1
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.0989510Z  * [new branch]      campaign/0155-exp001-e2                  -> origin/campaign/0155-exp001-e2
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.0990527Z  * [new branch]      campaign/0158-exp001-e5                  -> origin/campaign/0158-exp001-e5
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.0991548Z  * [new branch]      campaign/0159-exp002-e1                  -> origin/campaign/0159-exp002-e1
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.0992666Z  * [new branch]      campaign/exp001-r1-e5                    -> origin/campaign/exp001-r1-e5
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.0993913Z  * [new branch]      campaign/exp001-r1-preexecution          -> origin/campaign/exp001-r1-preexecution
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.0995392Z  * [new branch]      consolidate/wp001-wp011                  -> origin/consolidate/wp001-wp011
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.0997272Z  * [new branch]      copilot/apply-build-limit-windows-test-leg -> origin/copilot/apply-build-limit-windows-test-leg
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.0998911Z  * [new branch]      cursor/community-standards-d405          -> origin/cursor/community-standards-d405
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1000878Z  * [new branch]      etca-002/runner-service-script-hardening -> origin/etca-002/runner-service-script-hardening
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1002336Z  * [new branch]      etca-002/rust-windows-self-hosted        -> origin/etca-002/rust-windows-self-hosted
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1047334Z  * [new branch]      feat/wp001-foundation-baseline           -> origin/feat/wp001-foundation-baseline
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1048776Z  * [new branch]      feat/wp004-cubecl-fused-rk4-spike        -> origin/feat/wp004-cubecl-fused-rk4-spike
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1050128Z  * [new branch]      feat/wp005-ort-backends-wheel-matrix     -> origin/feat/wp005-ort-backends-wheel-matrix
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1051428Z  * [new branch]      feat/wp006-oscillator-state              -> origin/feat/wp006-oscillator-state
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1052621Z  * [new branch]      fix/workflow-pip-build-isolation         -> origin/fix/workflow-pip-build-isolation
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1054360Z  * [new branch]      hotfix/dv036-f4-counterbalanced-nightly  -> origin/hotfix/dv036-f4-counterbalanced-nightly
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1056209Z  * [new branch]      hotfix/dv036-nightly-comparable-baseline -> origin/hotfix/dv036-nightly-comparable-baseline
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1058207Z  * [new branch]      hotfix/dv038-dv039-artefact-guard-nightly-provisioning -> origin/hotfix/dv038-dv039-artefact-guard-nightly-provisioning
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1059627Z  * [new branch]      hotfix/dv041-wgpu-backend-identification -> origin/hotfix/dv041-wgpu-backend-identification
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1060500Z  * [new branch]      hotfix/dv043-redundant-step-guard        -> origin/hotfix/dv043-redundant-step-guard
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1061326Z  * [new branch]      hotfix/exp001-d1-parity-correction       -> origin/hotfix/exp001-d1-parity-correction
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1062063Z  * [new branch]      main                                     -> origin/main
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1062622Z  * [new tag]         v1.0.0-rc1                               -> v1.0.0-rc1
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1063455Z  * [new ref]         2c894080db7ac55c4a6b870ac5fdaabab6c699c2 -> pull/33/merge
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1065148Z ##[endgroup]
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1065673Z ##[group]Determining the checkout info
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1066352Z ##[endgroup]
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1067022Z [command]/usr/bin/git sparse-checkout disable
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1279857Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1385975Z ##[group]Checking out the ref
+lint	Run actions/checkout@v4	2026-10-13T16:11:14.1390182Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/33/merge
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.1705331Z Updating files:  40% (2121/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.1809036Z Updating files:  41% (2128/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.1990813Z Updating files:  42% (2179/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.2102430Z Updating files:  43% (2231/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.2215381Z Updating files:  44% (2283/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.2314882Z Updating files:  45% (2335/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.2495902Z Updating files:  46% (2387/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.2601211Z Updating files:  47% (2439/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.2705656Z Updating files:  48% (2491/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.2809425Z Updating files:  49% (2543/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.3002682Z Updating files:  50% (2594/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.3107671Z Updating files:  51% (2646/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.3213123Z Updating files:  52% (2698/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.3395513Z Updating files:  53% (2750/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.3503151Z Updating files:  54% (2802/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.3803582Z Updating files:  55% (2854/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.3804199Z Updating files:  56% (2906/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.3905516Z Updating files:  57% (2958/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.4007405Z Updating files:  58% (3010/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.4109877Z Updating files:  59% (3061/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.4214244Z Updating files:  60% (3113/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.4391760Z Updating files:  61% (3165/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.4496300Z Updating files:  62% (3217/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.4600588Z Updating files:  63% (3269/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.4704675Z Updating files:  64% (3321/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.4815695Z Updating files:  65% (3373/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.4992302Z Updating files:  66% (3425/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.5097451Z Updating files:  67% (3476/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.5200266Z Updating files:  68% (3528/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.5305445Z Updating files:  69% (3580/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.5408008Z Updating files:  70% (3632/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.5513151Z Updating files:  71% (3684/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.5615935Z Updating files:  72% (3736/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.5719233Z Updating files:  73% (3788/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.5818886Z Updating files:  74% (3840/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.5999014Z Updating files:  75% (3891/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.6111743Z Updating files:  76% (3943/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.6298981Z Updating files:  77% (3995/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.6509271Z Updating files:  78% (4047/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.7802740Z Updating files:  79% (4099/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.7918920Z Updating files:  80% (4151/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.8299261Z Updating files:  81% (4203/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.8504328Z Updating files:  82% (4255/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.8716064Z Updating files:  83% (4307/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.9220861Z Updating files:  84% (4358/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.9408995Z Updating files:  85% (4410/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.9599265Z Updating files:  86% (4462/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.9713502Z Updating files:  87% (4514/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:15.9903413Z Updating files:  88% (4566/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.0019684Z Updating files:  89% (4618/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.0210247Z Updating files:  90% (4670/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.0401504Z Updating files:  91% (4722/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.0514357Z Updating files:  92% (4773/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.0704925Z Updating files:  93% (4825/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.0905781Z Updating files:  94% (4877/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.1113550Z Updating files:  95% (4929/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.1410031Z Updating files:  96% (4981/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.1619342Z Updating files:  97% (5033/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.1700101Z Updating files:  98% (5085/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.1812481Z Updating files:  98% (5088/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2001170Z Updating files:  99% (5137/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2001926Z Updating files: 100% (5188/5188)
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2002399Z Updating files: 100% (5188/5188), done.
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2305220Z Note: switching to 'refs/remotes/pull/33/merge'.
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2305631Z 
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2305992Z You are in 'detached HEAD' state. You can look around, make experimental
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2306904Z changes and commit them, and you can discard any commits you make in this
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2307640Z state without impacting any branches by switching back to a branch.
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2308058Z 
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2308347Z If you want to create a new branch to retain commits you create, you may
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2308991Z do so (now or later) by using -c with the switch command. Example:
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2309432Z 
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2309599Z   git switch -c <new-branch-name>
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2309867Z 
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2310017Z Or undo this operation with:
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2310254Z 
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2310368Z   git switch -
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2310548Z 
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2310848Z Turn off this advice by setting config variable advice.detachedHead to false
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2311332Z 
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2311886Z HEAD is now at 2c89408 Merge 3731fc2590cf86bdb657fce25e4917d26567b23a into da53ea11a3f38cd0d5c27c40bbefbeaf6d6dbf53
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2425244Z ##[endgroup]
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2547712Z [command]/usr/bin/git log -1 --format=%H
+lint	Run actions/checkout@v4	2026-10-13T16:11:16.2645831Z 2c894080db7ac55c4a6b870ac5fdaabab6c699c2
+lint	Run actions/setup-python@v5	﻿2026-10-13T16:11:16.3817975Z ##[group]Run actions/setup-python@v5
+lint	Run actions/setup-python@v5	2026-10-13T16:11:16.3818277Z with:
+lint	Run actions/setup-python@v5	2026-10-13T16:11:16.3818496Z   python-version: 3.12
+lint	Run actions/setup-python@v5	2026-10-13T16:11:16.3818742Z   check-latest: false
+lint	Run actions/setup-python@v5	2026-10-13T16:11:16.3820982Z   token: ***
+lint	Run actions/setup-python@v5	2026-10-13T16:11:16.3821404Z   update-environment: true
+lint	Run actions/setup-python@v5	2026-10-13T16:11:16.3821657Z   allow-prereleases: false
+lint	Run actions/setup-python@v5	2026-10-13T16:11:16.3821891Z   freethreaded: false
+lint	Run actions/setup-python@v5	2026-10-13T16:11:16.3822115Z ##[endgroup]
+lint	Run actions/setup-python@v5	2026-10-13T16:11:17.1038009Z ##[group]Installed versions
+lint	Run actions/setup-python@v5	2026-10-13T16:11:17.1424523Z (node:2331) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+lint	Run actions/setup-python@v5	2026-10-13T16:11:17.1425261Z (Use `node --trace-deprecation ...` to show where the warning was created)
+lint	Run actions/setup-python@v5	2026-10-13T16:11:17.1426286Z Successfully set up CPython (3.12.15)
+lint	Run actions/setup-python@v5	2026-10-13T16:11:17.1427143Z ##[endgroup]
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	﻿2026-10-13T16:11:17.2429512Z ##[group]Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:17.2430383Z ^[[36;1mpip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch^[[0m
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:17.3946070Z shell: /usr/bin/bash -e {0}
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:17.3946395Z env:
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:17.3946881Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:17.3947396Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:17.3947838Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:17.3948219Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:17.3948599Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:17.3948974Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:17.3949300Z ##[endgroup]
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:22.1533672Z Looking in indexes: https://download.pytorch.org/whl/cpu
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:22.6648194Z Collecting torch
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:22.8908332Z   Downloading torch-2.13.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl.metadata (37 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:22.9891369Z Collecting filelock (from torch)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.1459868Z   Downloading filelock-3.32.3-py3-none-any.whl.metadata (2.0 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.2497255Z Collecting typing-extensions>=4.10.0 (from torch)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.2648759Z   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.2801090Z Collecting setuptools>=77.0.3 (from torch)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.2967425Z   Downloading setuptools-78.1.0-py3-none-any.whl.metadata (6.6 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.3594241Z Collecting sympy>=1.13.3 (from torch)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.3684404Z   Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.4335654Z Collecting networkx>=2.5.1 (from torch)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.4498962Z   Downloading networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.4848882Z Collecting jinja2 (from torch)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.5001673Z   Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.6128825Z Collecting fsspec>=0.8.5 (from torch)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.6221967Z   Downloading fsspec-2026.7.0-py3-none-any.whl.metadata (10 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.7242092Z Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.7435717Z   Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.8043040Z Collecting MarkupSafe>=2.0 (from jinja2->torch)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.8134385Z   Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:23.8459138Z Downloading torch-2.13.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl (191.8 MB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.1306088Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 191.8/191.8 MB 85.2 MB/s  0:00:02
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.1394730Z Downloading fsspec-2026.7.0-py3-none-any.whl (206 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.1692072Z Downloading networkx-3.6.1-py3-none-any.whl (2.1 MB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.2787377Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 19.7 MB/s  0:00:00
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.2948381Z Downloading setuptools-78.1.0-py3-none-any.whl (1.3 MB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.3361798Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 27.3 MB/s  0:00:00
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.3476751Z Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.4893659Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 48.2 MB/s  0:00:00
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.5041217Z Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.5230828Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 23.4 MB/s  0:00:00
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.5305464Z Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.5494721Z Downloading filelock-3.32.3-py3-none-any.whl (98 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.5609476Z Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:26.5715447Z Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:11:28.2052330Z Installing collected packages: mpmath, typing-extensions, sympy, setuptools, networkx, MarkupSafe, fsspec, filelock, jinja2, torch
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:13:23.8978717Z 
+lint	Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch	2026-10-13T16:13:23.8995674Z Successfully installed MarkupSafe-3.0.3 filelock-3.32.3 fsspec-2026.7.0 jinja2-3.1.6 mpmath-1.3.0 networkx-3.6.1 setuptools-78.1.0 sympy-1.14.0 torch-2.13.0+cpu typing-extensions-4.16.0
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	﻿2026-10-13T16:13:24.2581653Z ##[group]Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:24.2582423Z ^[[36;1mpip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy^[[0m
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:24.2883575Z shell: /usr/bin/bash -e {0}
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:24.2883861Z env:
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:24.2884143Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:24.2884599Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:24.2885027Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:24.2885404Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:24.2885771Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:24.2886143Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:24.2886606Z ##[endgroup]
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:28.4911504Z Collecting ruff
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:28.6997103Z   Downloading ruff-0.16.1-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (26 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:29.1397710Z Collecting mypy
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:29.1495893Z   Downloading mypy-2.3.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:29.1897052Z Collecting interrogate
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:29.1991585Z   Downloading interrogate-1.7.0-py3-none-any.whl.metadata (37 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:30.6182659Z Collecting hypothesis
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:30.6284512Z   Downloading hypothesis-6.165.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.7 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:31.5300224Z Collecting numpy
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:31.5465117Z   Downloading numpy-2.5.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:31.5903862Z Collecting bandit[toml]
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:31.6057817Z   Downloading bandit-1.9.4-py3-none-any.whl.metadata (7.1 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:31.6296180Z Requirement already satisfied: typing_extensions>=4.6.0 in /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages (from mypy) (4.16.0)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:31.6499852Z Collecting mypy_extensions>=1.0.0 (from mypy)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:31.6662504Z   Downloading mypy_extensions-1.1.0-py3-none-any.whl.metadata (1.1 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:31.6997136Z Collecting pathspec>=1.0.0 (from mypy)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:31.7160921Z   Downloading pathspec-1.1.1-py3-none-any.whl.metadata (14 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.2796832Z Collecting librt>=0.13.0 (from mypy)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.2965922Z   Downloading librt-0.16.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (1.3 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.5285807Z Collecting ast-serialize<1.0.0,>=0.6.0 (from mypy)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.5387747Z   Downloading ast_serialize-0.13.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.4 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.5814996Z Collecting attrs (from interrogate)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.5968090Z   Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.6512891Z Collecting click>=7.1 (from interrogate)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.6684279Z   Downloading click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.7108226Z Collecting colorama (from interrogate)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.7279087Z   Downloading colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.7803860Z Collecting py (from interrogate)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.7986975Z   Downloading py-1.11.0-py2.py3-none-any.whl.metadata (2.8 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.8391273Z Collecting tabulate (from interrogate)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:32.8535520Z   Downloading tabulate-0.10.0-py3-none-any.whl.metadata (40 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.0319195Z Collecting PyYAML>=5.3.1 (from bandit[toml])
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.0420868Z   Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.1220822Z Collecting stevedore>=1.20.0 (from bandit[toml])
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.1319889Z   Downloading stevedore-5.9.1-py3-none-any.whl.metadata (2.3 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.2724582Z Collecting rich (from bandit[toml])
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.2907561Z   Downloading rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.3509671Z Collecting sortedcontainers<3.0.0,>=2.1.0 (from hypothesis)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.3659954Z   Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl.metadata (10 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.4405666Z Collecting markdown-it-py>=2.2.0 (from rich->bandit[toml])
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.4504815Z   Downloading markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.5219299Z Collecting pygments<3.0.0,>=2.13.0 (from rich->bandit[toml])
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.5372079Z   Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.5711153Z Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich->bandit[toml])
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.5806249Z   Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.6085575Z Downloading ruff-0.16.1-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.5 MB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.7950306Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.5/11.5 MB 69.0 MB/s  0:00:00
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:33.8113406Z Downloading mypy-2.3.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (15.3 MB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.0264488Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.3/15.3 MB 72.7 MB/s  0:00:00
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.0413010Z Downloading ast_serialize-0.13.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.3 MB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.0712137Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 55.6 MB/s  0:00:00
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.0803770Z Downloading interrogate-1.7.0-py3-none-any.whl (46 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.0990665Z Downloading bandit-1.9.4-py3-none-any.whl (134 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.1251103Z Downloading hypothesis-6.165.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.2 MB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.1577151Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 44.1 MB/s  0:00:00
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.1672624Z Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl (29 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.1850460Z Downloading numpy-2.5.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.4258154Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 71.4 MB/s  0:00:00
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.4405248Z Downloading click-8.5.0-py3-none-any.whl (125 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.4537859Z Downloading librt-0.16.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (531 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.4726431Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 532.0/532.0 kB 27.4 MB/s  0:00:00
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.4816459Z Downloading mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.4976029Z Downloading pathspec-1.1.1-py3-none-any.whl (57 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.5106171Z Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.5315362Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.9/807.9 kB 29.1 MB/s  0:00:00
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.5461377Z Downloading stevedore-5.9.1-py3-none-any.whl (54 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.5591184Z Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.5759428Z Downloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.5885666Z Downloading py-1.11.0-py2.py3-none-any.whl (98 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.6074536Z Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.6264337Z Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.6578493Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 49.7 MB/s  0:00:00
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.6656458Z Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.6820838Z Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:34.6950114Z Downloading tabulate-0.10.0-py3-none-any.whl (39 kB)
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:13:35.6798928Z Installing collected packages: sortedcontainers, tabulate, stevedore, ruff, PyYAML, pygments, py, pathspec, numpy, mypy_extensions, mdurl, librt, hypothesis, colorama, click, attrs, ast-serialize, mypy, markdown-it-py, interrogate, rich, bandit
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:14:01.1181915Z 
+lint	Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy	2026-10-13T16:14:01.1293163Z Successfully installed PyYAML-6.0.3 ast-serialize-0.13.0 attrs-26.1.0 bandit-1.9.4 click-8.5.0 colorama-0.4.6 hypothesis-6.165.2 interrogate-1.7.0 librt-0.16.0 markdown-it-py-4.2.0 mdurl-0.1.2 mypy-2.3.0 mypy_extensions-1.1.0 numpy-2.5.1 pathspec-1.1.1 py-1.11.0 pygments-2.21.0 rich-15.0.0 ruff-0.16.1 sortedcontainers-2.4.0 stevedore-5.9.1 tabulate-0.10.0
+lint	Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/	﻿2026-10-13T16:14:01.8701912Z ##[group]Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/
+lint	Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/	2026-10-13T16:14:01.8702474Z ^[[36;1mruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/^[[0m
+lint	Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/	2026-10-13T16:14:01.9090163Z shell: /usr/bin/bash -e {0}
+lint	Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/	2026-10-13T16:14:01.9090444Z env:
+lint	Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/	2026-10-13T16:14:01.9090741Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/	2026-10-13T16:14:01.9091202Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/	2026-10-13T16:14:01.9091631Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/	2026-10-13T16:14:01.9092006Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/	2026-10-13T16:14:01.9092387Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/	2026-10-13T16:14:01.9092766Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/	2026-10-13T16:14:01.9093091Z ##[endgroup]
+lint	Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/	2026-10-13T16:14:02.4798125Z All checks passed!
+lint	Run ruff format --check python/ tests/ benchmarks/ tools/	﻿2026-10-13T16:14:02.5006402Z ##[group]Run ruff format --check python/ tests/ benchmarks/ tools/
+lint	Run ruff format --check python/ tests/ benchmarks/ tools/	2026-10-13T16:14:02.5007246Z ^[[36;1mruff format --check python/ tests/ benchmarks/ tools/^[[0m
+lint	Run ruff format --check python/ tests/ benchmarks/ tools/	2026-10-13T16:14:02.5390098Z shell: /usr/bin/bash -e {0}
+lint	Run ruff format --check python/ tests/ benchmarks/ tools/	2026-10-13T16:14:02.5390408Z env:
+lint	Run ruff format --check python/ tests/ benchmarks/ tools/	2026-10-13T16:14:02.5390701Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run ruff format --check python/ tests/ benchmarks/ tools/	2026-10-13T16:14:02.5391151Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	Run ruff format --check python/ tests/ benchmarks/ tools/	2026-10-13T16:14:02.5391894Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run ruff format --check python/ tests/ benchmarks/ tools/	2026-10-13T16:14:02.5392276Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run ruff format --check python/ tests/ benchmarks/ tools/	2026-10-13T16:14:02.5392648Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run ruff format --check python/ tests/ benchmarks/ tools/	2026-10-13T16:14:02.5393015Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	Run ruff format --check python/ tests/ benchmarks/ tools/	2026-10-13T16:14:02.5393345Z ##[endgroup]
+lint	Run ruff format --check python/ tests/ benchmarks/ tools/	2026-10-13T16:14:03.0409557Z 322 files already formatted
+lint	Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'	﻿2026-10-13T16:14:03.0704809Z ##[group]Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'
+lint	Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'	2026-10-13T16:14:03.0705541Z ^[[36;1mruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'^[[0m
+lint	Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'	2026-10-13T16:14:03.1103579Z shell: /usr/bin/bash -e {0}
+lint	Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'	2026-10-13T16:14:03.1103863Z env:
+lint	Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'	2026-10-13T16:14:03.1104144Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'	2026-10-13T16:14:03.1104593Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'	2026-10-13T16:14:03.1105168Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'	2026-10-13T16:14:03.1105568Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'	2026-10-13T16:14:03.1105944Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'	2026-10-13T16:14:03.1106313Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'	2026-10-13T16:14:03.1106868Z ##[endgroup]
+lint	Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'	2026-10-13T16:14:03.2400254Z 3 files already formatted
+lint	Run mypy python/prin --strict	﻿2026-10-13T16:14:03.2616332Z ##[group]Run mypy python/prin --strict
+lint	Run mypy python/prin --strict	2026-10-13T16:14:03.2696381Z ^[[36;1mmypy python/prin --strict^[[0m
+lint	Run mypy python/prin --strict	2026-10-13T16:14:03.3111318Z shell: /usr/bin/bash -e {0}
+lint	Run mypy python/prin --strict	2026-10-13T16:14:03.3111740Z env:
+lint	Run mypy python/prin --strict	2026-10-13T16:14:03.3112171Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run mypy python/prin --strict	2026-10-13T16:14:03.3112886Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	Run mypy python/prin --strict	2026-10-13T16:14:03.3113579Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run mypy python/prin --strict	2026-10-13T16:14:03.3114190Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run mypy python/prin --strict	2026-10-13T16:14:03.3114836Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run mypy python/prin --strict	2026-10-13T16:14:03.3115467Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	Run mypy python/prin --strict	2026-10-13T16:14:03.3115991Z ##[endgroup]
+lint	Run mypy python/prin --strict	2026-10-13T16:16:42.3847179Z Success: no issues found in 62 source files
+lint	Run mypy DOCS/experiments/ --strict	﻿2026-10-13T16:16:42.7479344Z ##[group]Run mypy DOCS/experiments/ --strict
+lint	Run mypy DOCS/experiments/ --strict	2026-10-13T16:16:42.7479717Z ^[[36;1mmypy DOCS/experiments/ --strict^[[0m
+lint	Run mypy DOCS/experiments/ --strict	2026-10-13T16:16:42.7980024Z shell: /usr/bin/bash -e {0}
+lint	Run mypy DOCS/experiments/ --strict	2026-10-13T16:16:42.7980308Z env:
+lint	Run mypy DOCS/experiments/ --strict	2026-10-13T16:16:42.7980583Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run mypy DOCS/experiments/ --strict	2026-10-13T16:16:42.7981027Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	Run mypy DOCS/experiments/ --strict	2026-10-13T16:16:42.7981448Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run mypy DOCS/experiments/ --strict	2026-10-13T16:16:42.7981856Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run mypy DOCS/experiments/ --strict	2026-10-13T16:16:42.7982238Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Run mypy DOCS/experiments/ --strict	2026-10-13T16:16:42.7982610Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	Run mypy DOCS/experiments/ --strict	2026-10-13T16:16:42.7982947Z ##[endgroup]
+lint	Run mypy DOCS/experiments/ --strict	2026-10-13T16:16:53.5183766Z Success: no issues found in 3 source files
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	﻿2026-10-13T16:16:53.6198151Z ##[group]Run interrogate -c pyproject.toml python/prin
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:53.6198606Z ^[[36;1minterrogate -c pyproject.toml python/prin^[[0m
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:53.6688072Z shell: /usr/bin/bash -e {0}
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:53.6688546Z env:
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:53.6688982Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:53.6689676Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:53.6690336Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:53.6691005Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:53.6691711Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:53.6692374Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:53.6692810Z ##[endgroup]
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:55.9972452Z ============ Coverage for /home/runner/work/PRIN/PRIN/python/prin/ =============
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:55.9973514Z ----------------------------------- Summary ------------------------------------
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0168672Z | Name                                 |   Total |   Miss |   Cover |   Cover% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0169495Z |--------------------------------------|---------|--------|---------|----------|
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0170388Z | __init__.py                          |       1 |      0 |       1 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0573820Z | _compat.py                           |      14 |      0 |      14 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0574649Z | _deprecation.py                      |       8 |      0 |       8 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0575260Z | _ort.py                              |      13 |      0 |      13 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0575835Z | _phase0.py                           |      12 |      0 |      12 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0576399Z | _public_api.py                       |       1 |      0 |       1 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0577537Z | _torch_compat.py                     |     106 |      5 |     101 |      95% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0578164Z | adversarial_tools.py                 |       5 |      0 |       5 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0578746Z | daemon.py                            |      33 |      0 |      33 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0579296Z | datasets.py                          |       5 |      0 |       5 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0663167Z | dlpack.py                            |       4 |      0 |       4 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0663818Z | dynamics.py                          |       1 |      0 |       1 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0664423Z | kernels.py                           |      28 |      0 |      28 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0665015Z | metrics.py                           |       3 |      0 |       3 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0665609Z | simulation.py                        |      27 |      1 |      26 |      96% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0666279Z | simulation_experiments.py            |       7 |      0 |       7 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0667107Z | solvers.py                           |       8 |      0 |       8 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0667755Z | subconscious_compat.py               |      40 |      0 |      40 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0668419Z | temporal_metrics.py                  |      11 |      0 |      11 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0669071Z | temporal_training.py                 |      22 |      0 |      22 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0669699Z | tensor.py                            |      23 |      0 |      23 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0670284Z | topology.py                          |       3 |      0 |       3 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0670851Z | train.py                             |       4 |      0 |       4 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0671461Z | training_hooks.py                    |      37 |      1 |      36 |      97% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0672104Z | y4q1_tools.py                        |      44 |      1 |      43 |      98% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0672713Z | eval/__init__.py                     |       1 |      0 |       1 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0673899Z | experiments/__init__.py              |       3 |      0 |       3 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0674530Z | nn/__init__.py                       |      17 |      0 |      17 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0675122Z | nn/_bridge.py                        |       5 |      0 |       5 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0675725Z | nn/ablation.py                       |      29 |      0 |      29 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0676396Z | nn/ablation_variants.py              |      33 |      0 |      33 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0677288Z | nn/activations.py                    |       8 |      0 |       8 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0677940Z | nn/allocation.py                     |      15 |      0 |      15 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0678558Z | nn/attention.py                      |       7 |      0 |       7 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0679407Z | nn/autoencoders.py                   |      26 |      0 |      26 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0763089Z | nn/deferred_layers.py                |       1 |      0 |       1 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0763746Z | nn/energy.py                         |      17 |      0 |      17 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0764367Z | nn/hierarchical_layers.py            |      38 |      0 |      38 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0764991Z | nn/hybrid.py                         |      14 |      0 |      14 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0765571Z | nn/hybrid_compat.py                  |      24 |      0 |      24 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0766176Z | nn/inhibition.py                     |       6 |      0 |       6 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0767000Z | nn/inhibition_layers.py              |      23 |      0 |      23 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0767609Z | nn/model.py                          |      15 |      0 |      15 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0768189Z | nn/mot_evaluation.py                 |      11 |      0 |      11 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0768737Z | nn/optimizers.py                     |      33 |      0 |      33 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0769296Z | nn/phase_tracker.py                  |      18 |      0 |      18 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0769840Z | nn/slot_attention.py                 |      20 |      0 |      20 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0770427Z | nn/subconscious_model.py             |       1 |      0 |       1 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0771058Z | nn/temporal_compat.py                |      14 |      0 |      14 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0771736Z | parity/__init__.py                   |       1 |      0 |       1 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0772379Z | parity/harness.py                    |      10 |      0 |      10 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0772985Z | parity/loader.py                     |       9 |      0 |       9 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0773631Z | parity/manifest.py                   |      15 |      0 |      15 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0774246Z | parity/schema.py                     |      21 |      0 |      21 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0774842Z | parity/strategies.py                 |      13 |      0 |      13 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0775485Z | reporting/__init__.py                |       1 |      0 |       1 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0776135Z | reporting/_artifacts.py              |      15 |      7 |       8 |      53% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0776977Z | reporting/benchmark_reporting.py     |      22 |      0 |      22 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0777685Z | reporting/figure_generation.py       |      21 |      2 |      19 |      90% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0778351Z | reporting/profiler.py                |      24 |      0 |      24 |     100% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0779032Z | reporting/table_generation.py        |      20 |      7 |      13 |      65% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0779853Z |--------------------------------------|---------|--------|---------|----------|
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0863531Z | TOTAL                                |    1011 |     24 |     987 |    97.6% |
+lint	Docstring coverage gate (>=95% overall; public API at 100% via ruff D)	2026-10-13T16:16:56.0864640Z ---------------- RESULT: PASSED (minimum: 95.0%, actual: 97.6%) ----------------
+lint	Security SAST (bandit)	﻿2026-10-13T16:16:56.1669232Z ##[group]Run bandit -r python/prin DOCS/experiments -c pyproject.toml
+lint	Security SAST (bandit)	2026-10-13T16:16:56.1669768Z ^[[36;1mbandit -r python/prin DOCS/experiments -c pyproject.toml^[[0m
+lint	Security SAST (bandit)	2026-10-13T16:16:56.2070002Z shell: /usr/bin/bash -e {0}
+lint	Security SAST (bandit)	2026-10-13T16:16:56.2070282Z env:
+lint	Security SAST (bandit)	2026-10-13T16:16:56.2070581Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Security SAST (bandit)	2026-10-13T16:16:56.2071035Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	Security SAST (bandit)	2026-10-13T16:16:56.2071461Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Security SAST (bandit)	2026-10-13T16:16:56.2071848Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Security SAST (bandit)	2026-10-13T16:16:56.2072222Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	Security SAST (bandit)	2026-10-13T16:16:56.2072826Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	Security SAST (bandit)	2026-10-13T16:16:56.2073155Z ##[endgroup]
+lint	Security SAST (bandit)	2026-10-13T16:16:57.4489731Z [main]	INFO	profile include tests: None
+lint	Security SAST (bandit)	2026-10-13T16:16:57.4490310Z [main]	INFO	profile exclude tests: None
+lint	Security SAST (bandit)	2026-10-13T16:16:57.4490809Z [main]	INFO	cli include tests: None
+lint	Security SAST (bandit)	2026-10-13T16:16:57.4491339Z [main]	INFO	cli exclude tests: None
+lint	Security SAST (bandit)	2026-10-13T16:16:57.4492162Z [main]	INFO	using config: pyproject.toml
+lint	Security SAST (bandit)	2026-10-13T16:16:57.4492633Z [main]	INFO	running on Python 3.12.15
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3464915Z [manager]	WARNING	Test in comment: subprocess is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3465871Z [manager]	WARNING	Test in comment: use is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3466778Z [manager]	WARNING	Test in comment: is is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3467530Z [manager]	WARNING	Test in comment: confined is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3468274Z [manager]	WARNING	Test in comment: to is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3469008Z [manager]	WARNING	Test in comment: the is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3551465Z [manager]	WARNING	Test in comment: vswhere is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3552295Z [manager]	WARNING	Test in comment: exe is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3553071Z [manager]	WARNING	Test in comment: lookup is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3553803Z [manager]	WARNING	Test in comment: in is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3554577Z [manager]	WARNING	Test in comment: _find_msvc_cl is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3555340Z [manager]	WARNING	Test in comment: see is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3555922Z [manager]	WARNING	Test in comment: the is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3556386Z [manager]	WARNING	Test in comment: justification is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3557064Z [manager]	WARNING	Test in comment: there is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3557533Z [manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3557987Z [manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3558446Z [manager]	WARNING	Test in comment: constant is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3558914Z [manager]	WARNING	Test in comment: args is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3752584Z [manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3753436Z [manager]	WARNING	Test in comment: absolute is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3754196Z [manager]	WARNING	Test in comment: path is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3754911Z [manager]	WARNING	Test in comment: to is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3755616Z [manager]	WARNING	Test in comment: the is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3756334Z [manager]	WARNING	Test in comment: MS is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3757240Z [manager]	WARNING	Test in comment: signed is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3757995Z [manager]	WARNING	Test in comment: vswhere is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3759279Z [manager]	WARNING	Test in comment: exe is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3760021Z [manager]	WARNING	Test in comment: existence is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3760786Z [manager]	WARNING	Test in comment: checked is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3761517Z [manager]	WARNING	Test in comment: above is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3762242Z [manager]	WARNING	Test in comment: constant is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3762848Z [manager]	WARNING	Test in comment: list is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3763291Z [manager]	WARNING	Test in comment: args is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3763906Z [manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3764351Z [manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3764795Z [manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3765241Z [manager]	WARNING	Test in comment: user is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:02.3765679Z [manager]	WARNING	Test in comment: input is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8884579Z [manager]	WARNING	Test in comment: best is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8885513Z [manager]	WARNING	Test in comment: effort is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8886268Z [manager]	WARNING	Test in comment: daemon is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8887205Z [manager]	WARNING	Test in comment: control is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8887939Z [manager]	WARNING	Test in comment: a is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8888689Z [manager]	WARNING	Test in comment: failure is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8889421Z [manager]	WARNING	Test in comment: here is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8890127Z [manager]	WARNING	Test in comment: is is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8890902Z [manager]	WARNING	Test in comment: intentionally is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8891441Z [manager]	WARNING	Test in comment: swallowed is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8891902Z [manager]	WARNING	Test in comment: so is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8892344Z [manager]	WARNING	Test in comment: training is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8892804Z [manager]	WARNING	Test in comment: continues is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8893259Z [manager]	WARNING	Test in comment: without is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8893740Z [manager]	WARNING	Test in comment: subconscious is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:03.8894207Z [manager]	WARNING	Test in comment: control is not a test name or id, ignoring
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3838717Z Working... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:10
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3841369Z Run started:2026-10-13 16:17:08.383996+00:00
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3841697Z 
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3841809Z Test results:
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3842090Z 	No issues identified.
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3842308Z 
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3842432Z Code scanned:
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3842730Z 	Total lines of code: 27804
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3843120Z 	Total lines skipped (#nosec): 0
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3843750Z 	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 5
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3844278Z 
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3844398Z Run metrics:
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3844690Z 	Total issues (by severity):
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3845012Z 		Undefined: 0
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3845296Z 		Low: 0
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3845541Z 		Medium: 0
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3925940Z 		High: 0
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3926272Z 	Total issues (by confidence):
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3926825Z 		Undefined: 0
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3927099Z 		Low: 0
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3927343Z 		Medium: 0
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3927585Z 		High: 0
+lint	Security SAST (bandit)	2026-10-13T16:17:08.3928230Z Files skipped (0):
+lint	Post Run actions/setup-python@v5	﻿2026-10-13T16:17:09.4253813Z Post job cleanup.
+lint	Post Run actions/setup-python@v5	2026-10-13T16:17:10.2066448Z (node:2541) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+lint	Post Run actions/setup-python@v5	2026-10-13T16:17:10.2067788Z (Use `node --trace-deprecation ...` to show where the warning was created)
+lint	Post Run actions/checkout@v4	﻿2026-10-13T16:17:10.3767481Z Post job cleanup.
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.0257262Z [command]/usr/bin/git version
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.0552187Z git version 2.55.0
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.0756347Z Temporarily overriding HOME='/home/runner/work/_temp/9663b07f-7cf1-4ab5-9e97-77046df2d695' before making global git config changes
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.0757839Z Adding repository directory to the temporary git global config as a safe directory
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.0763244Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PRIN/PRIN
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.1056131Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.1264960Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.2771064Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.3052506Z http.https://github.com/.extraheader
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.3062960Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.3256744Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.4867429Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+lint	Post Run actions/checkout@v4	2026-10-13T16:17:11.5067576Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+lint	Complete job	﻿2026-10-13T16:17:11.7569024Z Cleaning up orphan processes
+lint	Complete job	2026-10-13T16:17:11.9680291Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

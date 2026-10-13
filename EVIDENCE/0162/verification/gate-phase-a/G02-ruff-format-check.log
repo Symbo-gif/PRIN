@@ -1,0 +1,12 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/ruff.exe format --check python/ tests/ benchmarks/ tools/ parity/
+CWD: C:/dev/PRIN
+SOURCE: Phase-A candidate: HEAD 7d850ba (STEP 0) + staged exp002_e4_analysis.py and tests/test_exp002_e4_analysis.py
+HEAD: 7d850babf173c9987fbb34d80af9e4be8238b304
+UTC-START: 2026-10-13T12:23:27Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+330 files already formatted
+----
+UTC-END: 2026-10-13T12:23:32Z
+ELAPSED_S: 8
+EXIT_CODE: 0

@@ -1,0 +1,23 @@
+COMMAND: .venv/Scripts/python.exe -I DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py
+CWD: C:/dev/PRIN
+HEAD: 3731fc2590cf86bdb657fce25e4917d26567b23a
+TREE: only report-manifest.json from run 1 is untracked
+UTC-START: 2026-10-13T16:12:54.139Z
+----
+H1: CONFIRMED
+H2: CONFIRMED
+H3: REFUTED
+H4: CONFIRMED
+H3_sensitivity_policy: REFUTED
+D1 flag: True
+DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json 2dabdea13d6d963caed4adb35edd2b66deaedc70929afcfb765003b7c3303e13
+DOCS/test_and_benchmark_results/EXP-002/analysis/api-mapping.csv 7f2cfd76f62ccecae89f2e52bbf67c39ac067b82b7d4fef6ec499bb2c93c5e19
+DOCS/test_and_benchmark_results/EXP-002/analysis/conclusion-comparisons.csv 0c01c59c8e1f32ea3ad173dddde117ad9a94b187289328da760e1c906e0bba85
+DOCS/test_and_benchmark_results/EXP-002/analysis/reproduction-comparisons.csv 424f292d7699ab7e7d92ce089201a7d501acd7deae02aff50d393ac06870e0d1
+DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json e28f3e4fad0a5a7ba3dedc686900f7b808815378035d6dab6a402a2067025d9d
+DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md 97ecd3ab53bdbee2cf22e22e49866843544f70b3803213560978b4185af71789
+DOCS/test_and_benchmark_results/EXP-002/analysis/coverage-and-deferrals.md ff14a9f8592576f895a559b05d8b0848039d6efefc2b467d4bab97c3f94a18f9
+DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report-manifest.json 6b15dcc112513cdce9cb2d923208f93d3616898225efed545706c56526e68781
+----
+UTC-END: 2026-10-13T16:12:58.578Z
+EXIT_CODE: 0

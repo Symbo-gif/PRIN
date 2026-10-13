@@ -1,6 +1,6 @@
 # EXP-002 — API, benchmark-result, and reproduction parity (track C1)
 
-**Status:** E3 EXECUTED (session 0161, 2026-10-12 UTC) — five registered runs at source `fae24c4`, 0 aborted; the protocol is FROZEN since the first `RUN-` was created (2026-10-12T21:27:05Z). E4 (session 0162) is READY. **No H1–H4 verdict has been computed.** (Approved at E2, session 0160, 2026-10-12 UTC.)
+**Status:** E4 ANALYSED (session 0162, 2026-10-13 UTC) — H1 CONFIRMED, H2 CONFIRMED, **H3 REFUTED** (approved and §11.3 sensitivity policies), H4 CONFIRMED; **D1 flag RAISED** (campaign plan §10.4). E5 (session 0163) is READY: it reports in full and then blocks its successor. The protocol is FROZEN since the first `RUN-` (2026-10-12T21:27:05Z). (E3 executed at source `fae24c4` in session 0161; approved at E2, session 0160, 2026-10-12 UTC.)
 **Campaign plan row:** [`DOCS/experiments/campaign-plan.md`](../campaign-plan.md) §2.1 (EXP-002).
 **Raw artefact root:** [`benchmarks/results/EXP-002/`](../../../benchmarks/results/EXP-002/README.md)
 
@@ -12,11 +12,14 @@
 | `e1-handoff.md` | E1 ([`e1-handoff.md`](e1-handoff.md)) | living handoff skeleton until E1 close |
 | `e2-review-packet.md` | E1, lead-authored ([`e2-review-packet.md`](e2-review-packet.md)) | historical decision packet; superseded by `e2-review.md` |
 | `e2-review.md` | E2 ([`e2-review.md`](e2-review.md)) | decisions, reasons, E3 entry checklist; frozen with the protocol at E3 start |
-| `log.md` | E3 ([`log.md`](log.md)) | **written and closed at E3**; append-only, never edited after E3 close; aborted runs stay (none occurred) |
+| `log.md` | E3 ([`log.md`](log.md)) | **written and closed at E3**; append-only, never edited after E3 close; aborted runs stay (none occurred). One erratum at E4: the freeze SHA quoted on line 1 (campaign plan §12.4; commit `7d850ba`) |
+| `analysis/exp002_e4_analysis.py` | E4 ([`analysis/`](analysis/README.md)) | committed and pushed (`3731fc2`) before its first real run; unchanged afterwards |
+| `analysis.md` | E4 ([`analysis.md`](analysis.md)) | the E4 record: pre-flight, gate, verdicts, D1, deviations, threats |
 | `benchmarks/results/EXP-002/RUN-*` (five run directories) | E3 ([raw root](../../../benchmarks/results/EXP-002/README.md)) | immutable from creation; each closed by its own `manifest.json` |
 | `EVIDENCE/0161/` | E3 ([`README.md`](../../../EVIDENCE/0161/README.md)) | byte-exact evidence: launch records, independent validation transcripts and tools, local gate, hosted results, cold reviews |
 | `report.md` | E5 | after E5 approval; corrections are errata |
-| `report-manifest.json` | E4/E5 | SHA-256 of every regenerated figure/table (campaign plan §7.4) |
+| `report-manifest.json` | E4 ([`report-manifest.json`](report-manifest.json)) | raw size and SHA-256 of the 7 analysis outputs and, separately, the 39 PRIN-arm publication files; input index of every run manifest, `R`, `F` and the input manifest (campaign plan §7.4) |
+| `EVIDENCE/0162/` | E4 ([`README.md`](../../../EVIDENCE/0162/README.md)) | pre-flight, gates, cold reviews, run logs, DV-040 re-audit, hosted results |
 
 The lead-authored collection driver is
 [`benchmarks/campaign/exp002_driver.py`](../../../benchmarks/campaign/exp002_driver.py);
@@ -34,8 +37,8 @@ round amended the DRAFT and the driver before E2 (protocol section 11;
 | 0159 | E1 — Pre-registration | [`0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md) | COMPLETE |
 | 0160 | E2 — Review and approval | [`0160-exp002-e2-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0160-exp002-e2-api-benchmark-result-and-reproduction-parity.md) | COMPLETE |
 | 0161 | E3 — Execution | [`0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md) | COMPLETE |
-| 0162 | E4 — Analysis | [`0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md) | READY |
-| 0163 | E5 — Report | [`0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md) | PLANNED |
+| 0162 | E4 — Analysis | [`0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md) | COMPLETE |
+| 0163 | E5 — Report | [`0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md`](../../sessions/phase-7/0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md) | READY |
 
 ## Rules inherited from the campaign plan
 
@@ -112,3 +115,35 @@ side by side. Preserve any negative result, and flag a D1 under campaign plan §
    no resolved dependency graph) entered the advisory database after the previous green run. `Cargo.lock`
    is unchanged and E3 touched no dependency; it was not remediated here and awaits the maintainer's
    decision (`log.md` §9).
+
+## E4 to E5 handoff (session 0162, 2026-10-13 UTC)
+
+**Verdicts** (pre-registration §4.1; exact counts; CIs and effect sizes not applicable):
+
+| Hypothesis | Verdict | Observed |
+|---|---|---|
+| H1 | **CONFIRMED** | 175/175 api_symbols resolved; 172/172 legacy_api_names owned; 0 duplicate, removed or unexpected names; frozen-contract sets empty |
+| H2 | **CONFIRMED** | 62/62 claim_comparator_records agree (C01 5/5, C02 42/42, C03 4/4, C04 5/5, C05 6/6) |
+| H3, approved policy (primary) | **REFUTED** | 21/39 generated_files equal; 18 differ (PDF and PNG of figures 5, 7, 8, 9, 10, 11, 12, 14, 15); 0 missing, 0 extra; tables 11/11 equal and equal to the archived tables |
+| H3, §11.3 sensitivity policy | **REFUTED** | 5/39 generated_files equal; 34 differ — the two policies agree, so H3 does not depend on the post-exposure amendment |
+| H4 | **CONFIRMED** | 39/39 generated_files raw-identical between the two PRIN processes; canonical projection equal |
+
+**D1 flag: RAISED** on H3, a publication-fidelity mismatch (pre-registration §4.3; campaign plan §10.4).
+No cause is asserted at E4. E5 still completes and reports it in full, then blocks its successor; the
+four contingency correction sessions and a new `EXP-002-r1` record follow. No correction session was
+started, and no tolerance, policy or artefact changed.
+
+**Analysis code:** `analysis/exp002_e4_analysis.py` at **`3731fc2`** (SHA-256 `7a400aa6…6ee4e4`),
+committed and pushed before the first real run. Two runs produced byte-identical outputs.
+**`report-manifest.json`** SHA-256 `6b15dcc112513cdce9cb2d923208f93d3616898225efed545706c56526e68781`.
+All five records were admissible and none was aborted. Full record: [`analysis.md`](analysis.md).
+
+**E5 must first** verify the retained publication bytes under
+`DOCS/test_and_benchmark_results/EXP-002/<run-id>/publication/` against the raw digests manifested in each
+`reproduction.json` (pre-registration §11.3 item 2), and **only then** reconstruct from a clean checkout of
+the recorded source (§8.2). A reconstruction difference with verified retained bytes is a reconstruction
+limitation, never a new H3/H4 observation. E5 regenerates the seven analysis outputs with the module at
+`3731fc2` and matches `report-manifest.json`. The disclosures in `analysis.md` (stale extension, `R`
+versus `F`, the pre-E2 exposure, the loaded host and the red Phase-A full-suite leg, `cargo audit`) carry
+forward. Effect sizes and confidence intervals are not applicable (protocol §7), whatever the generic
+wording of the 0163 brief. In the generated outputs, "tables equal to archived" counts the PRIN arm.

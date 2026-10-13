@@ -1,0 +1,79 @@
+COMMAND: C:/Users/there/.cargo/bin/cargo.exe audit
+CWD: C:/dev/PRIN
+SOURCE: Final candidate: HEAD 42f0eb3 + staged E4 records, docs and EVIDENCE/0162 (product/test/Rust trees identical to the Phase-A commit 3731fc2); G13 restarted after the void first attempt
+HEAD: 42f0eb3ea0b580e7c41a8fa9d7ae9679166df2ca
+UTC-START: 2026-10-13T18:14:28Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+    Fetching advisory database from `https://github.com/RustSec/advisory-db.git`
+      Loaded 1310 security advisories (from C:\Users\there\.cargo\advisory-db)
+    Updating crates.io index
+    Scanning Cargo.lock for vulnerabilities (621 crate dependencies)
+Crate:     quinn-proto
+Version:   0.11.16
+Title:     Remote peer can panic quinn-proto with zero-length STREAM frames during unordered reads
+Date:      2026-09-14
+ID:        RUSTSEC-2026-0338
+URL:       https://rustsec.org/advisories/RUSTSEC-2026-0338
+Solution:  Upgrade to >=0.11.18
+
+Crate:     quinn-proto
+Version:   0.11.16
+Title:     Unbounded growth of pending connection ID retirements in quinn-proto
+Date:      2026-08-17
+ID:        RUSTSEC-2026-0339
+URL:       https://rustsec.org/advisories/RUSTSEC-2026-0339
+Solution:  Upgrade to >=0.11.17
+
+Crate:     quinn-proto
+Version:   0.11.16
+Title:     Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled
+Date:      2026-09-14
+ID:        RUSTSEC-2026-0340
+URL:       https://rustsec.org/advisories/RUSTSEC-2026-0340
+Severity:  7.5 (high)
+Solution:  Upgrade to >=0.11.18
+
+Crate:     quinn-proto
+Version:   0.11.16
+Title:     Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed
+Date:      2026-08-17
+ID:        RUSTSEC-2026-0341
+URL:       https://rustsec.org/advisories/RUSTSEC-2026-0341
+Severity:  7.5 (high)
+Solution:  Upgrade to >=0.11.17
+
+Crate:     quinn-proto
+Version:   0.11.16
+Title:     Zero-length DATAGRAM frames bypass the receive buffer limit in quinn-proto
+Date:      2026-08-17
+ID:        RUSTSEC-2026-0342
+URL:       https://rustsec.org/advisories/RUSTSEC-2026-0342
+Solution:  Upgrade to >=0.11.17
+
+Crate:     bincode
+Version:   2.0.1
+Warning:   unmaintained
+Title:     Bincode is unmaintained
+Date:      2025-12-16
+ID:        RUSTSEC-2025-0141
+URL:       https://rustsec.org/advisories/RUSTSEC-2025-0141
+
+Crate:     paste
+Version:   1.0.15
+Warning:   unmaintained
+Title:     paste - no longer maintained
+Date:      2024-10-07
+ID:        RUSTSEC-2024-0436
+URL:       https://rustsec.org/advisories/RUSTSEC-2024-0436
+
+Crate:     chacha20
+Version:   0.10.1
+Warning:   yanked
+
+error: 5 vulnerabilities found!
+warning: 3 allowed warnings found
+----
+UTC-END: 2026-10-13T18:14:46Z
+ELAPSED_S: 17
+EXIT_CODE: 1

@@ -1,0 +1,47 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe -m pytest tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression tests/test_notebooks.py::test_notebook_executes_end_to_end[02_clevr_n_binding.ipynb] -p no:cacheprovider --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -v
+CWD: C:/dev/PRIN
+SOURCE: Phase-A candidate (as G13)
+HEAD: 7d850babf173c9987fbb34d80af9e4be8238b304
+UTC-START: 2026-10-13T16:06:44Z
+PURPOSE: diagnostic isolated rerun of the two G13 failures; G13 stays a failed capture
+----
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 2 items
+
+tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression FAILED [ 50%]
+tests/test_notebooks.py::test_notebook_executes_end_to_end[02_clevr_n_binding.ipynb] PASSED [100%]
+
+================================== FAILURES ===================================
+______________ TestIntegration.test_no_gpu_throughput_regression ______________
+tests\test_acceptance_subconscious.py:608: in test_no_gpu_throughput_regression
+    assert ratio < 1.30, f"Throughput ratio {ratio:.2f} > 1.30"
+E   AssertionError: Throughput ratio 3.32 > 1.30
+E   assert 3.3218770415873538 < 1.3
+============================== warnings summary ===============================
+tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression
+  C:\dev\PRIN\python\prin\subconscious_compat.py:397: DeprecationWarning: You are using the legacy TorchScript-based ONNX export. Starting in PyTorch 2.9, the new torch.export-based ONNX exporter has become the default. Learn more about the new export logic: https://docs.pytorch.org/docs/stable/onnx_export.html. For exporting control flow: https://pytorch.org/tutorials/beginner/onnx/export_control_flow_model_to_onnx_tutorial.html
+    torch.onnx.export(
+
+tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression
+  C:\dev\PRIN\.venv\Lib\site-packages\torch\onnx\_internal\torchscript_exporter\utils.py:218: DeprecationWarning: The feature will be removed. Please remove usage of this function
+    setup_onnx_logging(verbose) as log_ctx,
+
+tests/test_notebooks.py::test_notebook_executes_end_to_end[02_clevr_n_binding.ipynb]
+  C:\dev\PRIN\.venv\Lib\site-packages\zmq\_future.py:718: RuntimeWarning: Proactor event loop does not implement add_reader family of methods required for zmq. Registering an additional selector thread for add_reader support via tornado. Use `asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())` to avoid this warning.
+    self._get_loop()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression - AssertionError: Throughput ratio 3.32 > 1.30
+assert 3.3218770415873538 < 1.3
+============= 1 failed, 1 passed, 3 warnings in 165.25s (0:02:45) =============
+----
+UTC-END: 2026-10-13T16:09:51Z
+ELAPSED_S: 187
+EXIT_CODE: 1

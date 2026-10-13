@@ -1,0 +1,214 @@
+diff --git a/C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/5e1d6deb-495c-48f1-bf1a-4c8ad51472b3/scratchpad/e4/sast-input/test_exp002_e4_analysis.py b/tests/test_exp002_e4_analysis.py
+index 184aeb0..fbbd0af 100644
+--- a/C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/5e1d6deb-495c-48f1-bf1a-4c8ad51472b3/scratchpad/e4/sast-input/test_exp002_e4_analysis.py
++++ b/tests/test_exp002_e4_analysis.py
+@@ -116,8 +116,17 @@ def _commit_sources(
+     repo: Path,
+     guide_names: tuple[str, ...] = LEGACY,
+     baseline_names: tuple[str, ...] = LEGACY,
++    rc1: tuple[str, ...] = tuple(EXPECTED),
+ ) -> str:
+     _write(repo / analysis.REFERENCE_API_PATH, f"__all__ = {list(LEGACY)!r}\n")
++    _write(
++        repo / analysis.PUBLIC_API_PATH,
++        f"RC1_PUBLIC_API: tuple[str, ...] = {rc1!r}\n",
++    )
++    _write(
++        repo / analysis.DEPRECATION_PATH,
++        "FROZEN_PUBLIC_API = frozenset(RC1_PUBLIC_API)\n",
++    )
+     _write(repo / analysis.MIGRATION_GUIDE_PATH, _guide(guide_names))
+     _write(repo / analysis.OWNERSHIP_BASELINE_PATH, _baseline(baseline_names))
+     _git(repo, "add", "-A")
+@@ -217,6 +226,14 @@ def api_observations() -> dict[str, Any]:
+     }
+ 
+ 
++def _sync_frozen(observations: dict[str, Any], rc1: Any = None) -> None:
++    """Recompute the frozen-contract sets as ``verify_api_surface`` would."""
++    contract = set(EXPECTED if rc1 is None else rc1)
++    observed = set(observations["observed_names"])
++    observations["frozen_missing"] = sorted(contract - observed)
++    observations["frozen_extra"] = sorted(observed - contract)
++
++
+ def _digest(text: str) -> str:
+     return _sha(text.encode("utf-8"))
+ 
+@@ -438,6 +455,10 @@ class Builder:
+             reference_api_sha256=_sha(
+                 (self.repo / analysis.REFERENCE_API_PATH).read_bytes()
+             ),
++            public_api_sha256=_sha((self.repo / analysis.PUBLIC_API_PATH).read_bytes()),
++            deprecation_sha256=_sha(
++                (self.repo / analysis.DEPRECATION_PATH).read_bytes()
++            ),
+             runs=specs,
+         )
+ 
+@@ -476,12 +497,9 @@ def _run(builder: Builder) -> dict[str, Any]:
+     """Run the analysis; reuse the verified context when the globals match."""
+     registration = builder.write()
+     context = builder.base_context
+-    if (
+-        context is not None
+-        and registration.source_sha == context.registration.source_sha
+-        and registration.input_manifest_sha256
+-        == context.registration.input_manifest_sha256
+-    ):
++    if context is not None and dataclasses.replace(
++        registration, runs=()
++    ) == dataclasses.replace(context.registration, runs=()):
+         fast = dataclasses.replace(
+             context, repository_root=builder.repo, registration=registration
+         )
+@@ -790,14 +808,13 @@ def test_h1_unsupported_export_refutes(builder: Builder) -> None:
+         (lambda obs: obs["observed_names"].append("Legacy001"), "duplicate_exports"),
+         (lambda obs: obs["observed_names"].append("Surprise"), "unexpected_exports"),
+         (lambda obs: obs["observed_names"].remove("Legacy002"), "removed_exports"),
+-        (lambda obs: obs["frozen_missing"].append("x"), "frozen_contract_missing"),
+-        (lambda obs: obs["frozen_extra"].append("y"), "frozen_contract_extra"),
+     ],
+ )
+ def test_h1_export_list_counterexamples_refute(
+     builder: Builder, mutation: Callable[[dict[str, Any]], None], field: str
+ ) -> None:
+     mutation(builder.observations["api"])
++    _sync_frozen(builder.observations["api"])
+     record = _h1(builder)
+     assert record["verdict"] == "REFUTED"
+     assert record[field]
+@@ -806,6 +823,7 @@ def test_h1_export_list_counterexamples_refute(
+ 
+ def test_h1_unexpected_export_is_listed_separately(builder: Builder) -> None:
+     builder.observations["api"]["observed_names"].append("Surprise")
++    _sync_frozen(builder.observations["api"])
+     _run(builder)
+     rows = _output(builder, "api-mapping.csv").splitlines()
+     assert rows[-1].startswith("unexpected_export,Surprise,")
+@@ -842,7 +860,7 @@ def test_h1_counterexample_outranks_an_unverifiable_row(builder: Builder) -> Non
+     _row(builder.observations["api"], "Legacy012").update(
+         {"resolved": True, "callable": False, "type": "VersionString"}
+     )
+-    builder.observations["api"]["frozen_extra"].append("z")
++    builder.observations["api"]["observed_names"].append("Legacy000")
+     assert _h1(builder)["verdict"] == "REFUTED"
+ 
+ 
+@@ -1779,3 +1797,116 @@ def test_git_launch_failure_aborts(
+ 
+     monkeypatch.setattr(analysis.subprocess, "run", refuse)
+     _assert_aborts(builder, registration, "git query failed")
++
++
++@pytest.mark.parametrize(
++    ("rc1", "field", "names"),
++    [
++        (
++            tuple(name for name in EXPECTED if name != "Legacy003"),
++            "frozen_contract_extra",
++            ["Legacy003"],
++        ),
++        ((*EXPECTED, "Ghost"), "frozen_contract_missing", ["Ghost"]),
++    ],
++)
++def test_h1_frozen_contract_difference_refutes(
++    builder: Builder, rc1: tuple[str, ...], field: str, names: list[str]
++) -> None:
++    builder.source = _commit_sources(builder.repo, rc1=rc1)
++    _sync_frozen(builder.observations["api"], rc1)
++    record = _h1(builder)
++    assert record["verdict"] == "REFUTED"
++    assert record[field] == names
++
++
++@pytest.mark.parametrize("field", ["frozen_missing", "frozen_extra"])
++def test_h1_frozen_sets_disagreeing_with_rc1_are_inadmissible(
++    builder: Builder, field: str
++) -> None:
++    builder.observations["api"][field].append("Legacy004")
++    summary = _summary(builder)
++    assert summary["verdicts"]["H1"] == "INCONCLUSIVE"
++    assert "frozen-contract" in summary["inadmissible_runs"][0]["reason"]
++
++
++def test_frozen_contract_digest_mismatch_aborts(builder: Builder) -> None:
++    registration = builder.write()
++    registration = analysis.Registration(
++        **{**registration.__dict__, "deprecation_sha256": "3" * 64}
++    )
++    _assert_aborts(builder, registration, "section 1.1 digests")
++
++
++@pytest.mark.parametrize(
++    ("payload", "message"),
++    [
++        (b"RC1_PUBLIC_API = ['a']\n", "not a tuple"),
++        (b"RC1_PUBLIC_API = (name,)\n", "not a literal"),
++        (b"RC1_PUBLIC_API = (\n", "does not parse"),
++        (b"OTHER = ()\n", "missing"),
++    ],
++)
++def test_frozen_contract_source_must_be_a_literal_tuple(
++    payload: bytes, message: str
++) -> None:
++    with pytest.raises(analysis.AnalysisError, match=message):
++        analysis._frozen_contract(payload)
++
++
++def test_ambient_git_overrides_are_ignored(
++    builder: Builder, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
++) -> None:
++    registration = builder.write()
++    monkeypatch.setenv("GIT_DIR", str(tmp_path / "not-a-repository"))
++    monkeypatch.setenv("GIT_WORK_TREE", str(tmp_path))
++    outcome = analysis.run_analysis(builder.repo, registration)
++    assert outcome["summary"]["verdicts"]["H1"] == "CONFIRMED"
++
++
++def test_calendar_dates_are_validated() -> None:
++    assert analysis._real_time("2026-10-12", "%Y-%m-%d")
++    assert not analysis._real_time("2026-13-45", "%Y-%m-%d")
++    with pytest.raises(analysis.AnalysisError, match="dated approval"):
++        analysis._approval_date(PROTOCOL.replace("2026-10-12", "2026-02-30").encode())
++    good = analysis.REGISTERED
++    first = good.runs[0]
++    bad = analysis.RunSpec(
++        **{**first.__dict__, "run_id": first.run_id.replace("20261012T", "20261312T")}
++    )
++    with pytest.raises(analysis.AnalysisError, match="registered run name"):
++        analysis._check_registration(
++            analysis.Registration(**{**good.__dict__, "runs": (bad, *good.runs[1:])})
++        )
++
++
++def test_unlistable_run_directory_is_inadmissible(
++    builder: Builder, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    target = builder.run_id("api")
++    original = Path.iterdir
++
++    def iterdir(self: Path) -> Any:
++        if self.name == target:
++            raise PermissionError("synthetic listing failure")
++        return original(self)
++
++    monkeypatch.setattr(Path, "iterdir", iterdir)
++    summary = _summary(builder)
++    assert summary["verdicts"]["H1"] == "INCONCLUSIVE"
++    assert "cannot list run directory" in summary["inadmissible_runs"][0]["reason"]
++
++
++def test_owner_matrix_is_the_registered_section_5_3_matrix() -> None:
++    protocol = (_REPOSITORY_ROOT / analysis.PROTOCOL_PATH).read_text(encoding="utf-8")
++    section = protocol.split("### 5.3", 1)[1].split("### 5.4", 1)[0]
++    rows = [
++        line
++        for line in section.splitlines()
++        if line.startswith("| ") and "---" not in line
++    ][1:]
++    assert len(rows) == len(analysis.OWNER_MATRIX) == 7
++    for line, (claim, owner) in zip(rows, analysis.OWNER_MATRIX, strict=True):
++        cells = [cell.strip() for cell in line.strip("|").split(" | ")]
++        assert cells[0] == claim
++        assert cells[1] == owner

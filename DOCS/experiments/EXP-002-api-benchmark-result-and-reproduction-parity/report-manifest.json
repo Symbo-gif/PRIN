@@ -1,0 +1,397 @@
+{
+  "analysis_output_file_count": 7,
+  "analysis_outputs": [
+    {
+      "bytes": 13407,
+      "path": "DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json",
+      "sha256": "2dabdea13d6d963caed4adb35edd2b66deaedc70929afcfb765003b7c3303e13"
+    },
+    {
+      "bytes": 18375,
+      "path": "DOCS/test_and_benchmark_results/EXP-002/analysis/api-mapping.csv",
+      "sha256": "7f2cfd76f62ccecae89f2e52bbf67c39ac067b82b7d4fef6ec499bb2c93c5e19"
+    },
+    {
+      "bytes": 10872,
+      "path": "DOCS/test_and_benchmark_results/EXP-002/analysis/conclusion-comparisons.csv",
+      "sha256": "0c01c59c8e1f32ea3ad173dddde117ad9a94b187289328da760e1c906e0bba85"
+    },
+    {
+      "bytes": 31277,
+      "path": "DOCS/test_and_benchmark_results/EXP-002/analysis/reproduction-comparisons.csv",
+      "sha256": "424f292d7699ab7e7d92ce089201a7d501acd7deae02aff50d393ac06870e0d1"
+    },
+    {
+      "bytes": 4345,
+      "path": "DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json",
+      "sha256": "e28f3e4fad0a5a7ba3dedc686900f7b808815378035d6dab6a402a2067025d9d"
+    },
+    {
+      "bytes": 2397,
+      "path": "DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md",
+      "sha256": "97ecd3ab53bdbee2cf22e22e49866843544f70b3803213560978b4185af71789"
+    },
+    {
+      "bytes": 4623,
+      "path": "DOCS/test_and_benchmark_results/EXP-002/analysis/coverage-and-deferrals.md",
+      "sha256": "ff14a9f8592576f895a559b05d8b0848039d6efefc2b467d4bab97c3f94a18f9"
+    }
+  ],
+  "d1_flag": true,
+  "decision_rule": "preregistration.md sections 4.1, 5.2, 5.4, 5.5 and 11.3, frozen at F = 9a9889d08dcaf2ad0ce31659ed67721b54b114d0",
+  "execution_commit": "fae24c4393c7a0232e6c8f0a6388b1775aa5fc05",
+  "experiment": "EXP-002",
+  "freeze_commit": "9a9889d08dcaf2ad0ce31659ed67721b54b114d0",
+  "generator": "DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py",
+  "generator_commit": "3731fc2590cf86bdb657fce25e4917d26567b23a",
+  "generator_sha256": "7a400aa66d1edd9a8aa41967f22ed77b720f0534bba6f9fe99f3af703d6ee4e4",
+  "input_manifest": {
+    "path": "paper/artefact_manifest.json",
+    "record_count": 172,
+    "sha256": "300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5"
+  },
+  "inputs": [
+    {
+      "admissible": true,
+      "files": [
+        {
+          "bytes": 97194,
+          "path": "benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/api.json",
+          "sha256": "b76aedab424582dec72ede165c6a136e62c802b395519cba56975fa75f0fade9"
+        },
+        {
+          "bytes": 215,
+          "path": "benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/campaign-metadata.json",
+          "sha256": "d51f9c7b4ae1f9b32e20cf211a55bfc416470eae1e332c823df645ead8b5e355"
+        }
+      ],
+      "hypotheses": [
+        "H1"
+      ],
+      "label": "api-cpu",
+      "manifest": {
+        "bytes": 554,
+        "path": "benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/manifest.json",
+        "sha256": "d4eee92905addee67c210192a7a97a35b4e52e5f623f1fe34b04fcae9f8eaa90"
+      },
+      "mode": "api",
+      "run_id": "RUN-20261012T212705Z-fae24c4-api-cpu"
+    },
+    {
+      "admissible": true,
+      "files": [
+        {
+          "bytes": 239,
+          "path": "benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu/campaign-metadata.json",
+          "sha256": "1f59f1e078fce9154703feb93499da62f8d3c183406de9e3ebfded3cc2a04756"
+        },
+        {
+          "bytes": 59206,
+          "path": "benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu/conclusions.json",
+          "sha256": "2d1cdc5fa76b247da1b8544606708b6fa0ffe9afaaf274604bc4c1115e9bed84"
+        }
+      ],
+      "hypotheses": [
+        "H2"
+      ],
+      "label": "conclusions-cpu",
+      "manifest": {
+        "bytes": 562,
+        "path": "benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu/manifest.json",
+        "sha256": "d5247c24728c26d21bc4677036091ac4665888a526b9825df231ff5ef2439bd9"
+      },
+      "mode": "conclusions",
+      "run_id": "RUN-20261012T213054Z-fae24c4-conclusions-cpu"
+    },
+    {
+      "admissible": true,
+      "files": [
+        {
+          "bytes": 249,
+          "path": "benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/campaign-metadata.json",
+          "sha256": "722fc141089fc0ece7fb043cb67b0bba574beca85fc3b45c5fceacb8b60b25c2"
+        },
+        {
+          "bytes": 59584,
+          "path": "benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/reproduction.json",
+          "sha256": "70f9677c7523c2decf3dc0b9e3e1ba8763ee56838ff63deca93587b42c89e7e3"
+        }
+      ],
+      "hypotheses": [
+        "H3"
+      ],
+      "label": "reproduction-reference-cpu",
+      "manifest": {
+        "bytes": 563,
+        "path": "benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/manifest.json",
+        "sha256": "f5410f4f0d5d3f6835575b377e211d6e704b0759f0457df4751a6ad0abee9d6d"
+      },
+      "mode": "reference",
+      "run_id": "RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu"
+    },
+    {
+      "admissible": true,
+      "files": [
+        {
+          "bytes": 252,
+          "path": "benchmarks/results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/campaign-metadata.json",
+          "sha256": "6316a9e03f53cc966d70f8c83d1d70f7962857edc09f7dc8b4c6d4fe507d0e7e"
+        },
+        {
+          "bytes": 59572,
+          "path": "benchmarks/results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/reproduction.json",
+          "sha256": "776a926df8edb333e38d61e9fc4ba2966385df56bcfc3d9eda6540c7c47b590e"
+        }
+      ],
+      "hypotheses": [
+        "H3",
+        "H4"
+      ],
+      "label": "reproduction-prin-cpu",
+      "manifest": {
+        "bytes": 563,
+        "path": "benchmarks/results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/manifest.json",
+        "sha256": "0213ac284abf55b04a6cd5641abecb4b25d00be1b8e488e562c9b6cb399e18c8"
+      },
+      "mode": "prin",
+      "run_id": "RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu"
+    },
+    {
+      "admissible": true,
+      "files": [
+        {
+          "bytes": 244,
+          "path": "benchmarks/results/EXP-002/RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu/campaign-metadata.json",
+          "sha256": "77cf576fb454cd32b9247e1392112d1a67c0a927ab4707c45393e091554a25ec"
+        },
+        {
+          "bytes": 59568,
+          "path": "benchmarks/results/EXP-002/RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu/reproduction.json",
+          "sha256": "ec615eb48008bcc112ad73a10fc6ea42ddf5619ecb33b87e880a1e7977084127"
+        }
+      ],
+      "hypotheses": [
+        "H4"
+      ],
+      "label": "seedrep0-prin-cpu",
+      "manifest": {
+        "bytes": 563,
+        "path": "benchmarks/results/EXP-002/RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu/manifest.json",
+        "sha256": "5722cb93ac87c4bf448ee76b53721c0d030bc0b0d3a465db7ab6db403db78388"
+      },
+      "mode": "repeatability",
+      "run_id": "RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu"
+    }
+  ],
+  "protocol_sha256": "0f3073dd2ed73b64071bcf3ae182510a69a26bd575b81b5a97cc5a1f9bbc8c8b",
+  "publication_outputs": {
+    "files": [
+      {
+        "bytes": 25743,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig10_statistical_summary.pdf",
+        "sha256": "ececc23729b8ef127ae0b6deea98a0ca230be6b1ea44fb36c77050c02c186ba3"
+      },
+      {
+        "bytes": 44196,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig10_statistical_summary.png",
+        "sha256": "5861904e4720ea2cb38e691aeae8d40dae16914c9dee0497e88b6c6543a5f586"
+      },
+      {
+        "bytes": 19616,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig11_flops_scaling.pdf",
+        "sha256": "40c837b6ce8dc74653a3cfa78864d5f726cb86e262159129ea0d69a4d64f67b8"
+      },
+      {
+        "bytes": 43947,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig11_flops_scaling.png",
+        "sha256": "445aaff7468a8592b37cda592e5d57b1bca6887497fd821a9cff1f3bdbaa0e3e"
+      },
+      {
+        "bytes": 22050,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig12_supercritical_regime.pdf",
+        "sha256": "47dec514d12703724efb336cec5bd73999c84886ecf9e065881ef1113f8e329f"
+      },
+      {
+        "bytes": 71479,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig12_supercritical_regime.png",
+        "sha256": "fa60b3a79ac9588b6565b779664498fdb0b9541631d157a52119cc364483c59e"
+      },
+      {
+        "bytes": 23547,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig13_representation_geometry.pdf",
+        "sha256": "feb091dac8433bf32794b59b11a1942a1138d43ac292a04e6e0fb96625aa204f"
+      },
+      {
+        "bytes": 200927,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig13_representation_geometry.png",
+        "sha256": "50bf5e632d71a43555b7465b39e1d1a2792f497afedd16b60f5fcbf8f59b6f6f"
+      },
+      {
+        "bytes": 19597,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig14_gradient_flow.pdf",
+        "sha256": "6353380cae5bd81b48c02ee690cc103d7114912b2b76de017339a1c217037689"
+      },
+      {
+        "bytes": 84199,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig14_gradient_flow.png",
+        "sha256": "78a5e84e5b0bdabf9fe77d788fe631143b90d2efe7e6973b886f84178b29c277"
+      },
+      {
+        "bytes": 24574,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig15_noise_velocity.pdf",
+        "sha256": "35df866dbe7b59cadb338fef43bc05b556e3584a249dee1faca1cc5bc0b30c66"
+      },
+      {
+        "bytes": 180139,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig15_noise_velocity.png",
+        "sha256": "b65776187cf7f75a1d93cf11dd2e4ce39e5700e9bb6ffa4f484305cc4b3ef67b"
+      },
+      {
+        "bytes": 16509,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig2_clevr_n_capacity.pdf",
+        "sha256": "7062dec7e1372648aaaccf12cd9a637c8aebb69fb5d88e189344c22acafd6711"
+      },
+      {
+        "bytes": 55441,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig2_clevr_n_capacity.png",
+        "sha256": "e236d4a0c24c2dc5843caf442a544f93cc451b7ed29e5498809b3205e25fda27"
+      },
+      {
+        "bytes": 16197,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig3_chimera_metrics.pdf",
+        "sha256": "7bc8d01e1dcc323dd4e957961f975eb7f2d1c09e382bfe54bed6650749dfbdab"
+      },
+      {
+        "bytes": 49168,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig3_chimera_metrics.png",
+        "sha256": "6739bb8b68cdfe3a840ceae965ac46a767473a9cc3f9a6ce6f90d69879932b6f"
+      },
+      {
+        "bytes": 21991,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig4_chimera_k_alpha_heatmap.pdf",
+        "sha256": "45dcc99280aef70b19ab417bf6eae2907d7363ec54523eb7b8c75d15fca6852d"
+      },
+      {
+        "bytes": 83636,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig4_chimera_k_alpha_heatmap.png",
+        "sha256": "4d17454423a08566feea02e827b7f91ed0f0dcf8b74fe910e4bd9d202747c8d9"
+      },
+      {
+        "bytes": 17359,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig5_mot_occlusion_comparison.pdf",
+        "sha256": "98782ebc7e8943e745ecb00fe878230a9a3a14be12d9cea0e654ee1998748195"
+      },
+      {
+        "bytes": 66032,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig5_mot_occlusion_comparison.png",
+        "sha256": "bedc09f42dd043aec8bdf583de552d542ff125a299609f804c70b8f8cc2300c0"
+      },
+      {
+        "bytes": 21559,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig6_oscillosim_scaling.pdf",
+        "sha256": "6571744fd41b325c1ac12c2c743673cc66ad6d2523f5d16bb076e809050b0e99"
+      },
+      {
+        "bytes": 71764,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig6_oscillosim_scaling.png",
+        "sha256": "5190aafd2faf1a63ad711d3ceb61c0b0d209486641fe9eb4b54ed70558139df0"
+      },
+      {
+        "bytes": 17223,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig7_ablation_results.pdf",
+        "sha256": "60715b92f7c1a4f2c9989de217348c1f0eb5e68b3be28356837ae73f694daa8a"
+      },
+      {
+        "bytes": 88155,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig7_ablation_results.png",
+        "sha256": "0178a3071c938bf38c740c0bd81f40af654bc8f1706b39ede1947584796f3897"
+      },
+      {
+        "bytes": 19790,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig8_parameter_efficiency.pdf",
+        "sha256": "86a46d43e090e87407a5c21498c547cf695497ad5a6255016666e7157d6924d9"
+      },
+      {
+        "bytes": 74815,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig8_parameter_efficiency.png",
+        "sha256": "7f234c085263ae521c7baa1d701a0f38aab26e29e03e86145c296d2106b0e3f9"
+      },
+      {
+        "bytes": 18236,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig9_training_curves.pdf",
+        "sha256": "a4b90271708cc51d191657666133feb2f16cce02f57254cb1e8c0111456ef7a7"
+      },
+      {
+        "bytes": 96317,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/figures/fig9_training_curves.png",
+        "sha256": "1d6e5890b2e17e5200779cec70e91a7984f68bdfece0a188a6681e3a7477e665"
+      },
+      {
+        "bytes": 477,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/tables/tab_ablation.tex",
+        "sha256": "8ad01a7d8edb5035cdfd976cca4fa8dbe161c32c493d66948750c329c2f0c323"
+      },
+      {
+        "bytes": 998,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/tables/tab_binding_params.tex",
+        "sha256": "fb973c7ed6f92f4cd371954c827b42fd0adef3ef472f6bb511fa0e7a7ce71f55"
+      },
+      {
+        "bytes": 473,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/tables/tab_chimera.tex",
+        "sha256": "07b41a007e7be0e198f0122953837c4d7c383c280dddaabb8da8433e6a12cfbe"
+      },
+      {
+        "bytes": 746,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/tables/tab_efficiency.tex",
+        "sha256": "0fa031409a67d4f476c2823a22ee05f4132627f43568084d44effb3ae96f4a38"
+      },
+      {
+        "bytes": 410,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/tables/tab_geometry.tex",
+        "sha256": "9a9a6c8998e8308e2b1120a68ce96673954f9f50e46eb9708b34a41ac6465956"
+      },
+      {
+        "bytes": 752,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/tables/tab_occlusion.tex",
+        "sha256": "d607a64511a6854950503f3de899d1bdcfdd0a46f25b328ebd09f79cfeae3b3c"
+      },
+      {
+        "bytes": 516,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/tables/tab_oscillosim.tex",
+        "sha256": "437874f76450b5be44d667594b109a28923b972543bd375d05019bdbf8abd7fb"
+      },
+      {
+        "bytes": 438,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/tables/tab_param_efficiency.tex",
+        "sha256": "5802ddaf98876226fce2b22ff7b46d3c0165fafda539c3034a28f5d81b940720"
+      },
+      {
+        "bytes": 690,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/tables/tab_statistical.tex",
+        "sha256": "4fbc55a824b405bda9dc3fa47bda40e13057dcecdb1b43d5da32e54a27882e0b"
+      },
+      {
+        "bytes": 468,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/tables/tab_stress.tex",
+        "sha256": "c920b4dde9295d18b12f797a45d9d867fc4a386652462ccb47c2982fc86dd410"
+      },
+      {
+        "bytes": 531,
+        "path": "DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication/tables/tab_supercritical.tex",
+        "sha256": "6d52fe322626486839c4f9763458432ac22eb7d8ca4146df8d52050f4562eb90"
+      }
+    ],
+    "generated_file_count": 39,
+    "note": "Raw size and SHA-256 of each generated publication file of the PRIN arm, as manifested in its reproduction.json. These 39 registered files are separate from the 7 analysis outputs. E5 verifies the retained bytes first, then reconstructs (pre-registration sections 8.2 and 11.3 item 2).",
+    "source_run_id": "RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu"
+  },
+  "session": "0162",
+  "verdicts": {
+    "H1": "CONFIRMED",
+    "H2": "CONFIRMED",
+    "H3": "REFUTED",
+    "H3_sensitivity_policy": "REFUTED",
+    "H4": "CONFIRMED"
+  }
+}
