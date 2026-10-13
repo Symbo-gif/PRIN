@@ -28,3 +28,6 @@ EVIDENCE/0160/** -text whitespace=-trailing-space
 
 # Session-0161 (EXP-002 E3) execution evidence is byte-exact; preserve SHA-256 inputs.
 EVIDENCE/0161/** -text whitespace=-trailing-space
+
+# Session-0162 (EXP-002 E4) analysis evidence is byte-exact; preserve SHA-256 inputs.
+EVIDENCE/0162/** -text whitespace=-trailing-space
