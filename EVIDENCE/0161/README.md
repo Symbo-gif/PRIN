@@ -26,24 +26,29 @@ never relabelled.
   - `legN-<mode>.stdout.txt` / `.stderr.txt` — the child's output (all ten are empty);
   - `legN-<mode>.validation.txt` — the independent per-record validation transcript. For
     legs 1–2 this is validator **revision 1**; `*.validation.rev2.txt` is revision 2 on the
-    same record (byte-identical output). Legs 3–5 were validated with revision 2 only;
+    same record (byte-identical output). Legs 3–5 were validated with revision 2 only. After
+    the cold review (below) **all five records were re-validated with revision 3**
+    (`*.validation.rev3.txt`: 81, 80, 87, 87, 87 checks, 0 failed);
   - `leg1-api.mutation-selftest*.txt`, `leg2-conclusions.mutation-selftest*.txt` — the
     validator's mutation self-test on scratch copies of the leg-1 and leg-2 records. The
     unsuffixed leg-2 transcript is revision 1 and **keeps its one `BAD` case** (a result file
     corrupted into invalid JSON made revision 1 crash instead of failing a check); the
-    `.rev2` transcripts are 17/17;
+    `.rev2` transcripts are 17/17. `legN-*.mutation-selftest.rev3.txt` are the revision-3
+    self-tests for every mode (40, 41, 49, 49 and 49 cases, all as expected), including the
+    publication modes and the retention checks;
   - `leg3/4/5-*.listing-digest.txt` — the publication listing digest of each publication
     root (the e2-review.md §8 command, verbatim output);
   - `crossleg.txt` — metadata-only consistency across the five records (environment,
     identity, config, renderer / font stack); no observation payload is read;
   - `bytes-after-legs.txt` — tracked-byte totals against the registered caps.
-- `verification/tools/` — `run_leg.ps1` (launcher), `validate_run_record.py` (revision 2) and
+- `verification/tools/` — `run_leg.ps1` (launcher), `validate_run_record.py` (revision 2),
   `validate_run_record.rev1.py` (revision 1, reconstructed by `reconstruct_rev1.py` and
   accepted only because its SHA-256 equals the digest recorded in `log.md`),
-  `mutation_test.py`, `crossleg_consistency.py`, `measure_bytes.py`,
-  `preflight_recapture.ps1` and `make_sha256sums.py` (writes `SHA256SUMS.txt`). The
-  validators validate record structure and identity only and never evaluate or compare an
-  outcome.
+  `validate_run_record_rev3.py` (revision 3: the strictness the cold review found missing),
+  `mutation_test.py` and `mutation_test_rev3.py`, `crossleg_consistency.py`,
+  `measure_bytes.py`, `staged_bytes_check.py`, `preflight_recapture.ps1` and
+  `make_sha256sums.py` (writes `SHA256SUMS.txt`). The validators validate record structure and
+  identity only and never evaluate or compare an outcome.
 - `verification/preflight/` — `preflight-recapture.txt` (the read-only pre-flight facts
   re-captured after leg 5 while the tracked tree was still clean, including a second
   passing admission dry check) and `hosted-runs-fae24c4.json` (the verbatim
@@ -79,3 +84,29 @@ never relabelled.
   `G09-focused-coverage.json` is the focused leg's coverage report for
   `benchmarks.campaign.exp002_driver`. `G14*-sast-copy-attestation*.txt` list the SHA-256 of the
   exact files each Snyk scan read.
+
+  Captured after the commit `89f21f5` was pushed:
+  - `G14c` — Snyk Code over the ten committed scripts (adds validator rev3 and its self-test):
+    0 issues at the governed `medium` threshold;
+  - `G17b` — gitleaks over the full history at `89f21f5`: 720 commits, no leaks;
+  - `R08` — **`cargo audit` on the unchanged `Cargo.lock`: exit 1, five vulnerabilities, all
+    `quinn-proto 0.11.16`** (RUSTSEC-2026-0338/-0339/-0340/-0341/-0342, new in the advisory
+    database since the earlier hosted run on `R`: 1,299 → 1,307 advisories). It reproduces the
+    failed hosted `audit` job. `quinn-proto` is in the lockfile only through the optional
+    `quinn` dependency of `reqwest` (via `tracel-llvm-bundler`); `cargo tree` finds no path to it
+    in any feature set or target of the workspace. It is **not attributable to this session, not
+    remediated here** (a dependency change is outside E3's remit) and is reported to the
+    maintainer for a decision. `R08` is not part of the 0160 leg list; it was added because the
+    hosted audit failed.
+  - `gate/delta-follow-up/` — the documentation delta gate on the follow-up commit that carries
+    the rev3 evidence, the cold-review record and log sections 8–11: governance legs `G10`–`G10f`,
+    the Sphinx `-W` full rebuild `G11`, gitleaks on the staged diff `G18` and the staged byte check
+    `G16b`, all exit 0. Only documents and evidence changed, so the product, test and Rust trees are
+    byte-identical to the fully gated candidate and the pytest and cargo legs were not repeated.
+- `verification/hosted/` — the hosted results (Plan amendment #50, additional evidence only):
+  `hosted-runs-89f21f5.json` (all seven runs for the pushed head), `H1-…audit-failed-…log` (the
+  verbatim `--log-failed` of the one red job) and `H2-…advisory-counts.txt` (the earlier passing
+  `audit` job on `R`, for the advisory counts).
+- `verification/delegation/` — the Antigravity and Devin cold reviews: task files, verbatim stdout,
+  run windows, the diffs given to them, and `adjudication.md` (every finding verified before any
+  action; no finding implicated the protocol, the driver, the registered inputs or the data).

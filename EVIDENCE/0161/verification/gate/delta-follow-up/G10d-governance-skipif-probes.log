@@ -1,0 +1,11 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe tools/check_skipif_probes.py
+CWD: C:/dev/PRIN
+SOURCE: documentation/evidence-only follow-up commit C on top of 89f21f5: staged index (rev3 validator and self-tests, delegation, hosted captures, G14c/G17b/R08, log sections 8-11, README/CHANGELOG notes); delta gate = the legs that read documentation and governance records (the product, test and Rust trees are byte-identical to the fully gated candidate 89f21f5); Git Bash, host otherwise idle
+UTC-START: 2026-10-13T00:32:04Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+check_skipif_probes: no registration-probe skipif guards
+----
+ELAPSED_SECONDS: 0.2
+EXIT_CODE: 0

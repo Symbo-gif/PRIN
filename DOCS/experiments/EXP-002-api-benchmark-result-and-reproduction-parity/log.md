@@ -524,4 +524,103 @@ governed `medium` threshold. Nothing was suppressed or excluded.
   Largest single run 97,963 B (cap 2 MiB per run); campaign-wide `benchmarks/results/EXP-*` 13,756,033 B = 13.119 MiB
   (cap 64 MiB). No cap is near its limit and none was breached.
 
+## 8. Hosted results for the E3 commit `89f21f5` (Plan amendment #50; additional evidence only)
+
+Entered 2026-10-13T00:31Z. `92cf696` and `89f21f5` were pushed at about 2026-10-12T23:33:55Z
+(`fae24c4..89f21f5`, branch `campaign/0159-exp002-e1`, PR #33). Nothing was merged, no tag was pushed, no
+workflow was changed and no nightly was dispatched. All seven runs below are head SHA
+`89f21f5b42c195e46d172808fb39941c47451de8`, attempt 1; the duration is `updatedAt − startedAt`
+(`EVIDENCE/0161/verification/hosted/hosted-runs-89f21f5.json`). They are not charged to the protocol §9 cap.
+
+| Run ID | Workflow | Event | Conclusion | Started (2026-10-12) | Updated (end) | Duration |
+|---|---|---|---|---|---|---|
+| 38322795453 | snyk | push | success | 23:33:55Z | 23:34:47Z | 52 s |
+| 38322799666 | snyk | pull_request | success | 23:33:58Z | 23:34:40Z | 42 s |
+| 38322799631 | parity | pull_request | success | 23:33:58Z | 23:38:50Z | 4 m 52 s |
+| 38322799707 | repro | pull_request | success | 23:33:58Z | 23:39:17Z | 5 m 19 s |
+| 38322799742 | python | pull_request | success | 23:33:58Z | 23:48:07Z | 14 m 09 s |
+| 38322799650 | rust | pull_request | **failure** | 23:33:58Z | 23:54:23Z | 20 m 25 s |
+| 38322799687 | gpu | pull_request | success | 23:33:58Z | 00:29:16Z (2026-10-13) | 55 m 18 s |
+
+The `rust` run failed in exactly one of its ten jobs, `audit` (job 115054529384, 23:34:01Z → 23:37:08Z); `fmt`,
+`docs`, `clippy`, `clippy-strict`, `test-strict`, `bench-smoke` and `test` on ubuntu, macOS and Windows all succeeded
+(`H3-hosted-rust-jobs-38322799650.json`). The `gpu` run's `gpu-cuda` job started at 23:54:23Z, twenty minutes after the
+run began; the wait was not investigated. The failure is discussed in §9. The hosted runs of any later commit are reported to the
+maintainer and are not written here: a document cannot contain the result of its own commit's checks.
+
+## 9. `cargo audit` — the one red check: new external advisories, not attributable to this session, not remediated here
+
+- **Hosted.** `rust` job `audit` failed with "error: 5 vulnerabilities found!" and "3 allowed warnings found". All five are
+  `quinn-proto 0.11.16`: RUSTSEC-2026-0341 (severity 7.5, fixed in ≥ 0.11.17), -0339 and -0342 (≥ 0.11.17), -0340 (severity 7.5,
+  ≥ 0.11.18) and -0338 (≥ 0.11.18). Verbatim log: `EVIDENCE/0161/verification/hosted/H1-…`.
+- **It is new since the previous hosted run.** The same job passed on `R` (job 114849834855, 14:07:32Z → 14:10:36Z) after loading
+  **1,299** advisories and reporting only the 3 allowed warnings; at 23:37Z the database held **1,307** (`H2-…`).
+- **Reproduced locally** (`R08`, `cargo audit` at `89f21f5`, exit 1): the same five vulnerabilities and the same three allowed warnings
+  (bincode RUSTSEC-2025-0141, paste RUSTSEC-2024-0436, chacha20 yanked: the standing DV-008, DV-017 and DV-035 dispositions). Its
+  yank check also timed out on the network ("request could not be completed in the allotted timeframe"), which does not change the result.
+- **Not attributable.** `Cargo.lock` and every `Cargo.toml` are unchanged since `R` (the diff `fae24c4..89f21f5` touches no dependency
+  manifest), and E3 adds no dependency. `cargo audit` is not one of the legs the 0160 gate listed because no dependency changed; it
+  is a periodic control whose result can change without a change to the repository, and this is such a change.
+- **Reachability.** The lockfile records `reqwest 0.12.28 → quinn 0.11.11 → quinn-proto 0.11.16`, and `reqwest` is reached through
+  `tracel-llvm-bundler` (the MLIR toolchain of `cubecl-cpu`). `cargo tree --workspace --all-features --target all -e all -i quinn-proto`
+  prints "nothing to print": the package is in no resolved dependency graph of any workspace feature set or target, so no PRIN build compiles or
+  links it. `cargo audit` flags it because it is in the lockfile.
+- **Disposition: not remediated in E3.** Changing a dependency is outside an execution-only session and is the maintainer's decision.
+  Options for the maintainer: (a) a governed, lockfile-only update (`cargo update -p quinn-proto`, to ≥ 0.11.18) with `cargo audit`, Snyk
+  Open Source and the full gate; or (b) a dated Deferred Validation row carrying the non-reachability evidence above. Plan amendment
+  #50 says a red hosted job is dispositioned like a red local leg, and Development Workflow §3 dispositions a red nightly like a red
+  push: fixed, or given a dated DV row, before the next work package closes. I opened no DV row and changed no file for it.
+- **Effect on EXP-002:** none. The five records were produced before the advisories entered the database, EXP-002 exercises no Rust numerics,
+  and no EXP-002 input depends on the lockfile.
+
+## 10. Cold reviews, adjudication, validator revision 3, and a clarification of "not examined"
+
+Entered 2026-10-13T00:31Z. Two read-only cold reviews ran on `89f21f5`: **Antigravity**
+(`gemini-3.8-flash-high`, 2026-10-12 23:35Z → 23:50Z, report with no finding) and **Devin** (`swe-2-high`, 23:35Z → 23:42Z, twelve items
+F-01…F-12, none High). Both were forbidden from
+opening the raw result files and the retained roots and from comparing digests across arms; I scanned both reports and neither contains
+outcome content or a statement about equality or difference of digests. Task files, verbatim reports and the adjudication are in
+`EVIDENCE/0161/verification/delegation/`. I checked every item against the repository before acting on it.
+
+- **What was real.** Validator revisions 1–2 were less strict than the driver's own closure in several details, and their self-tests did not
+  cover the publication modes or the retention checks (F-01 symlink/junction ancestors; F-02 `10.0` and `true` accepted as integers; F-03 duplicate
+  JSON keys; F-04 subset instead of exact key sets below the envelope; F-05 UTC offset, finite and consistent timing; F-06 manifest typing and a
+  tail-only `out_dir`; F-07 missing mutations). None of this could have changed an admissibility result here, because the driver's closure had
+  already passed on every record (exit 0), but it weakened the claim that the validation was independent.
+- **What I did.** Validator **revision 3** (SHA-256 `310e1c21a231cc72955a1942c6ae1bc8b6aad37d8d6efe54983e183384617c87`) adds checks S1–S6
+  for those items. It **re-validated all five records: 81, 80, 87, 87 and 87 checks, 0 failed**
+  (`*.validation.rev3.txt`). A new self-test (`mutation_test_rev3.py`, SHA-256 `a5aabc9682cf3c3f59bc1022cc14a42fb452a7587bab70026de06f6d4422d199`)
+  runs 40, 41, 49, 49 and 49 cases per mode, covering the publication modes, the retention checks (F1–F4), duplicate keys, a junction ancestor, a
+  wrong label and a stale manifest digest: every case behaved as expected and none was skipped. Snyk Code over the ten committed Python scripts
+  is clean at the governed threshold (`G14c`). Revisions 1 and 2 and their transcripts are kept. No record, registered input, protocol text or
+  driver changed, and no admissibility outcome changed.
+- **What I did not change.** `crossleg_consistency.py`, `staged_bytes_check.py`, `measure_bytes.py` and `run_leg.ps1` are unchanged because
+  their captures are bound to the committed files; the limitations Devin found in them (F-08…F-11) are recorded in the adjudication and none
+  affects a result here. The driver's own gaps (junction ancestors, last-wins JSON, subset key checks) are frozen with the driver; they are
+  disclosed here for E4/E5, and rev3 shows that none occurs in these records.
+- **Antigravity's citations.** Accurate except two imprecise line references (the freeze statement is at `log.md:204-207`, and the Rust test
+  total is a sum, not one line); recorded in the adjudication, no action.
+
+**Clarification (2026-10-13T00:31Z) of an earlier phrase.** Entries §4–§5 say the observation payloads "were not examined at E3" and that
+a cross-leg script "never opened an observation payload". Precisely: no person and no tool compared, printed, summarised or interpreted any
+observation **value**. The validators and scripts did parse the complete JSON documents; the validators read observation **structure**
+(key sets, types, cardinalities, identities, and the Boolean *types* of each claim case's `expected` and `observed`, never their values);
+`crossleg_consistency.py` also read the `renderer` capture on the three publication legs and nothing else from `observations`; and the
+retention checks read the retained publication bytes only to hash them against the record's own digests. Nothing in this clarification
+changes any other statement.
+
+## 11. State at the close of E3
+
+- **Commits.** `92cf696` (`.gitattributes` rule only) and `89f21f5` (records, log, evidence, gate) are pushed; the commit that carries §8–§11 and
+  the rev3 evidence follows them and cannot name itself.
+- **Sessions.** 0161 `COMPLETE`; 0162 `READY`. The E3 exit gate is met: all five registered runs are logged, none was aborted or rerun, and the raw
+  records are manifested and byte-exact in git (`G16`, and rev3 validation of every record).
+- **Caps at the close.** EXP-002 raw/record artefacts newly tracked: 392,132 B in `89f21f5` (§7) plus about 11 kB in the follow-up
+  commit (this log's §8–§11 and the README / CHANGELOG notes), about 0.38 MiB of the 10 MiB cap; the per-run and campaign-wide figures
+  of §7 are unchanged. The evidence bundle grows by about 0.36 MiB in the follow-up and is not an EXP-002 raw/record artefact.
+- **Open items carried, none an experiment matter:** the red hosted/local `cargo audit` (§9, maintainer decision); the installed extension that
+  predates three Rust commits (§2.6); DV-033 and the standing Deferred Validation items, unchanged.
+- **Not run:** a forced nightly; Linux and macOS; `pip-audit` and Snyk Open Source (no dependency change).
+- **No verdict.** No hypothesis verdict was computed or implied anywhere in this log.
+
 <!-- LOG-TAIL: append new entries above this line -->

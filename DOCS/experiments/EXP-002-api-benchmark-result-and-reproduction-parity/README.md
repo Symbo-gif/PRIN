@@ -53,7 +53,8 @@ round amended the DRAFT and the driver before E2 (protocol section 11;
 **No hypothesis verdict was computed at E3.** The five records were validated for structure and
 identity only (metadata, result envelope, declared artefact mapping, manifest, source / protocol /
 input identity, seed pair `(0, 2)`, directory inventory). Their observation payloads (API rows,
-claim cases, publication file records) were not examined, no arm was compared with another, and no
+claim cases, publication file records) were not examined (no value was compared, printed or interpreted;
+`log.md` §10 states exactly what the tools parsed), no arm was compared with another, and no
 analysis code was written. H1–H4 verdicts, the H3 report under both comparison policies (protocol
 §11.3 item 1), every D1 determination and the exploratory analyses belong to E4 (session 0162).
 
@@ -101,4 +102,13 @@ side by side. Preserve any negative result, and flag a D1 under campaign plan §
 4. The pre-E2 outcome exposure (protocol §11.2) and its disposition (e2-review.md decision 9) stand unchanged.
    E3 did not examine any observation payload.
 5. The first revision of the E3 per-record validator crashed, instead of failing a check, on a corrupted
-   result file; it was fixed and every record was re-validated (see `log.md` §4.2). No outcome changed.
+   result file; it was fixed (revision 2, `log.md` §4.2). A read-only cold review then found the validator
+   less strict than the driver's closure in several details, and revision 3 closed them: every record was
+   re-validated (81, 80, 87, 87 and 87 checks, 0 failed) and each mode's mutation self-test passes
+   (`log.md` §10). No admissibility outcome changed, and no driver gap that the review also found
+   (junction ancestors, last-wins JSON, subset key checks) occurs in these records.
+6. Not an experiment matter, but open: the hosted `rust` run on the E3 commit is red in one job, `audit`,
+   because five new RustSec advisories (`quinn-proto 0.11.16`, an inactive optional dependency that is in
+   no resolved dependency graph) entered the advisory database after the previous green run. `Cargo.lock`
+   is unchanged and E3 touched no dependency; it was not remediated here and awaits the maintainer's
+   decision (`log.md` §9).

@@ -1,0 +1,88 @@
+COMMAND: gh run view 38322799650 -R Symbo-gif/PRIN --log-failed
+CWD: C:/dev/PRIN
+SOURCE: hosted rust workflow, pull_request, head SHA 89f21f5b42c195e46d172808fb39941c47451de8 (job audit 115054529384, started 2026-10-12T23:34:01Z, completed 2026-10-12T23:37:08Z)
+UTC-START: 2026-10-13T00:18:24Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+NOTE: verbatim output, ANSI colour codes kept
+----
+audit	Run cargo audit	﻿2026-10-12T23:37:00.9819765Z ##[group]Run cargo audit
+audit	Run cargo audit	2026-10-12T23:37:00.9820090Z ^[[36;1mcargo audit^[[0m
+audit	Run cargo audit	2026-10-12T23:37:00.9882890Z shell: /usr/bin/bash -e {0}
+audit	Run cargo audit	2026-10-12T23:37:00.9883159Z env:
+audit	Run cargo audit	2026-10-12T23:37:00.9883358Z   CARGO_TERM_COLOR: always
+audit	Run cargo audit	2026-10-12T23:37:00.9883604Z   RUSTFLAGS: -D warnings
+audit	Run cargo audit	2026-10-12T23:37:00.9883838Z   CARGO_BUILD_JOBS: default
+audit	Run cargo audit	2026-10-12T23:37:00.9884082Z   CARGO_HOME: /home/runner/.cargo
+audit	Run cargo audit	2026-10-12T23:37:00.9884334Z   CARGO_INCREMENTAL: 0
+audit	Run cargo audit	2026-10-12T23:37:00.9884548Z ##[endgroup]
+audit	Run cargo audit	2026-10-12T23:37:01.0484079Z ^[[0m^[[0m^[[1m^[[32m    Fetching^[[0m advisory database from `https://github.com/RustSec/advisory-db.git`
+audit	Run cargo audit	2026-10-12T23:37:05.6135973Z ^[[0m^[[0m^[[1m^[[32m      Loaded^[[0m 1307 security advisories (from /home/runner/.cargo/advisory-db)
+audit	Run cargo audit	2026-10-12T23:37:05.6137092Z ^[[0m^[[0m^[[1m^[[32m    Updating^[[0m crates.io index
+audit	Run cargo audit	2026-10-12T23:37:05.6330581Z ^[[0m^[[0m^[[1m^[[32m    Scanning^[[0m Cargo.lock for vulnerabilities (621 crate dependencies)
+audit	Run cargo audit	2026-10-12T23:37:06.0346028Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m quinn-proto
+audit	Run cargo audit	2026-10-12T23:37:06.0346611Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.11.16
+audit	Run cargo audit	2026-10-12T23:37:06.0347398Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed
+audit	Run cargo audit	2026-10-12T23:37:06.0348293Z ^[[0m^[[0m^[[1m^[[31mDate:     ^[[0m 2026-08-17
+audit	Run cargo audit	2026-10-12T23:37:06.0348921Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0341
+audit	Run cargo audit	2026-10-12T23:37:06.0349739Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0341
+audit	Run cargo audit	2026-10-12T23:37:06.0350488Z ^[[0m^[[0m^[[1m^[[31mSeverity: ^[[0m 7.5 (high)
+audit	Run cargo audit	2026-10-12T23:37:06.0351069Z ^[[0m^[[0m^[[1m^[[31mSolution: ^[[0m Upgrade to >=0.11.17
+audit	Run cargo audit	2026-10-12T23:37:06.0351668Z 
+audit	Run cargo audit	2026-10-12T23:37:06.0351924Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m quinn-proto
+audit	Run cargo audit	2026-10-12T23:37:06.0352571Z ^[[0m^[[0m^[[1m^[[31merror:^[[0m 5 vulnerabilities found!
+audit	Run cargo audit	2026-10-12T23:37:06.0353197Z ^[[0m^[[0m^[[1m^[[33mwarning:^[[0m 3 allowed warnings found
+audit	Run cargo audit	2026-10-12T23:37:06.0353763Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.11.16
+audit	Run cargo audit	2026-10-12T23:37:06.0354497Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Unbounded growth of pending connection ID retirements in quinn-proto
+audit	Run cargo audit	2026-10-12T23:37:06.0355030Z ^[[0m^[[0m^[[1m^[[31mDate:     ^[[0m 2026-08-17
+audit	Run cargo audit	2026-10-12T23:37:06.0355367Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0339
+audit	Run cargo audit	2026-10-12T23:37:06.0355819Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0339
+audit	Run cargo audit	2026-10-12T23:37:06.0356277Z ^[[0m^[[0m^[[1m^[[31mSolution: ^[[0m Upgrade to >=0.11.17
+audit	Run cargo audit	2026-10-12T23:37:06.0356487Z 
+audit	Run cargo audit	2026-10-12T23:37:06.0356631Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m quinn-proto
+audit	Run cargo audit	2026-10-12T23:37:06.0356948Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.11.16
+audit	Run cargo audit	2026-10-12T23:37:06.0357476Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Zero-length DATAGRAM frames bypass the receive buffer limit in quinn-proto
+audit	Run cargo audit	2026-10-12T23:37:06.0357984Z ^[[0m^[[0m^[[1m^[[31mDate:     ^[[0m 2026-08-17
+audit	Run cargo audit	2026-10-12T23:37:06.0358303Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0342
+audit	Run cargo audit	2026-10-12T23:37:06.0358729Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0342
+audit	Run cargo audit	2026-10-12T23:37:06.0359500Z ^[[0m^[[0m^[[1m^[[31mSolution: ^[[0m Upgrade to >=0.11.17
+audit	Run cargo audit	2026-10-12T23:37:06.0359706Z 
+audit	Run cargo audit	2026-10-12T23:37:06.0359841Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m quinn-proto
+audit	Run cargo audit	2026-10-12T23:37:06.0360145Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.11.16
+audit	Run cargo audit	2026-10-12T23:37:06.0360701Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled
+audit	Run cargo audit	2026-10-12T23:37:06.0361231Z ^[[0m^[[0m^[[1m^[[31mDate:     ^[[0m 2026-09-14
+audit	Run cargo audit	2026-10-12T23:37:06.0361790Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0340
+audit	Run cargo audit	2026-10-12T23:37:06.0362215Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0340
+audit	Run cargo audit	2026-10-12T23:37:06.0362619Z ^[[0m^[[0m^[[1m^[[31mSeverity: ^[[0m 7.5 (high)
+audit	Run cargo audit	2026-10-12T23:37:06.0362942Z ^[[0m^[[0m^[[1m^[[31mSolution: ^[[0m Upgrade to >=0.11.18
+audit	Run cargo audit	2026-10-12T23:37:06.0363137Z 
+audit	Run cargo audit	2026-10-12T23:37:06.0363270Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m quinn-proto
+audit	Run cargo audit	2026-10-12T23:37:06.0363568Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.11.16
+audit	Run cargo audit	2026-10-12T23:37:06.0364123Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Remote peer can panic quinn-proto with zero-length STREAM frames during unordered reads
+audit	Run cargo audit	2026-10-12T23:37:06.0364969Z ^[[0m^[[0m^[[1m^[[31mDate:     ^[[0m 2026-09-14
+audit	Run cargo audit	2026-10-12T23:37:06.0365284Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0338
+audit	Run cargo audit	2026-10-12T23:37:06.0365698Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0338
+audit	Run cargo audit	2026-10-12T23:37:06.0366117Z ^[[0m^[[0m^[[1m^[[31mSolution: ^[[0m Upgrade to >=0.11.18
+audit	Run cargo audit	2026-10-12T23:37:06.0366317Z 
+audit	Run cargo audit	2026-10-12T23:37:06.0366441Z ^[[0m^[[0m^[[1m^[[33mCrate:    ^[[0m bincode
+audit	Run cargo audit	2026-10-12T23:37:06.0366736Z ^[[0m^[[0m^[[1m^[[33mVersion:  ^[[0m 2.0.1
+audit	Run cargo audit	2026-10-12T23:37:06.0367033Z ^[[0m^[[0m^[[1m^[[33mWarning:  ^[[0m unmaintained
+audit	Run cargo audit	2026-10-12T23:37:06.0367381Z ^[[0m^[[0m^[[1m^[[33mTitle:    ^[[0m Bincode is unmaintained
+audit	Run cargo audit	2026-10-12T23:37:06.0367707Z ^[[0m^[[0m^[[1m^[[33mDate:     ^[[0m 2025-12-16
+audit	Run cargo audit	2026-10-12T23:37:06.0368015Z ^[[0m^[[0m^[[1m^[[33mID:       ^[[0m RUSTSEC-2025-0141
+audit	Run cargo audit	2026-10-12T23:37:06.0368424Z ^[[0m^[[0m^[[1m^[[33mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2025-0141
+audit	Run cargo audit	2026-10-12T23:37:06.0368698Z 
+audit	Run cargo audit	2026-10-12T23:37:06.0368824Z ^[[0m^[[0m^[[1m^[[33mCrate:    ^[[0m paste
+audit	Run cargo audit	2026-10-12T23:37:06.0369109Z ^[[0m^[[0m^[[1m^[[33mVersion:  ^[[0m 1.0.15
+audit	Run cargo audit	2026-10-12T23:37:06.0369406Z ^[[0m^[[0m^[[1m^[[33mWarning:  ^[[0m unmaintained
+audit	Run cargo audit	2026-10-12T23:37:06.0369762Z ^[[0m^[[0m^[[1m^[[33mTitle:    ^[[0m paste - no longer maintained
+audit	Run cargo audit	2026-10-12T23:37:06.0370114Z ^[[0m^[[0m^[[1m^[[33mDate:     ^[[0m 2024-10-07
+audit	Run cargo audit	2026-10-12T23:37:06.0370423Z ^[[0m^[[0m^[[1m^[[33mID:       ^[[0m RUSTSEC-2024-0436
+audit	Run cargo audit	2026-10-12T23:37:06.0370836Z ^[[0m^[[0m^[[1m^[[33mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2024-0436
+audit	Run cargo audit	2026-10-12T23:37:06.0371095Z 
+audit	Run cargo audit	2026-10-12T23:37:06.0371223Z ^[[0m^[[0m^[[1m^[[33mCrate:    ^[[0m chacha20
+audit	Run cargo audit	2026-10-12T23:37:06.0372024Z ^[[0m^[[0m^[[1m^[[33mVersion:  ^[[0m 0.10.1
+audit	Run cargo audit	2026-10-12T23:37:06.0372539Z ^[[0m^[[0m^[[1m^[[33mWarning:  ^[[0m yanked
+audit	Run cargo audit	2026-10-12T23:37:06.0372813Z 
+audit	Run cargo audit	2026-10-12T23:37:06.0485709Z ##[error]Process completed with exit code 1.
+----
+EXIT_CODE: 0

@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   payload was examined:** H1–H4, the H3 dual-policy report and any D1
   determination belong to E4 (session 0162, now READY). The execution log is
   `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md`.
+  Unrelated to the experiment: the hosted `cargo audit` job went red on the E3
+  commit because five new RustSec advisories (`quinn-proto 0.11.16`, which is in
+  `Cargo.lock` only as an inactive optional dependency) entered the advisory
+  database; the lockfile is unchanged and the finding awaits the maintainer's
+  decision (log §9).
 
 - **EXP-002 approved at E2; E3 ready (sessions 0159–0160, 2026-10-12 UTC).**
   The maintainer accepted the E1 exit and delegated the E2 decisions. E2

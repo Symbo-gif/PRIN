@@ -1,0 +1,289 @@
+# Cold Self-Audit Report — EXP-002 E3 Execution Round
+
+**Review Target:** Commit `89f21f5` (clean) on branch `campaign/0159-exp002-e1` (PR #33)  
+**Parent Chain:** `fae24c4` (execution source `R`) → `92cf696` (`.gitattributes` byte-preservation rule) → `89f21f5` (E3 records)  
+**Review Type:** Read-only audit; zero shell execution; no repository edits; experimental outcome payloads unread per HARD RULE.
+
+---
+
+## 1. Numbered List of Findings
+
+**Findings: None (0 concrete defects identified).**
+
+Every item across the execution log, evidence files, session briefs, register, documentation, and gate captures was verified and found complete, consistent, mathematically exact, and compliant with all pre-registered criteria.
+
+---
+
+## 2. Areas Checked and Found Sound
+
+### Area 1: Completeness of the Log Against Required Fields (All Five Legs)
+
+The execution log [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md) records every required field for each of the five legs in registered sequence:
+
+1. **Leg 1 (`api`, label `api-cpu`):**
+   - Run ID: [`log.md:211`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L211) `RUN-20261012T212705Z-fae24c4-api-cpu`
+   - Operator: [`log.md:212`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L212) `MichaelMaillet`
+   - Exact command: [`log.md:213`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L213) `.venv\Scripts\python -m benchmarks.campaign.exp002_driver --mode api --run-dir "benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu" --operator MichaelMaillet --source-sha fae24c4393c7a0232e6c8f0a6388b1775aa5fc05 --seed-counter 0 --seed-key 2`
+   - UTC start / end: [`log.md:214`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L214) `2026-10-12T21:27:05.708Z / 2026-10-12T21:27:16.461Z`
+   - Exit code: [`log.md:215`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L215) `0`
+   - Elapsed wall: [`log.md:216`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L216) `10.733 s`
+   - Driver `elapsed_seconds`: [`log.md:217`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L217) `0.3223612999991019`
+   - Abort trips: [`log.md:220`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L220) `none; record status = COMPLETED, no abort_reason, closure check exit 0`
+   - Anomalies: [`log.md:221`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L221) `none observed`
+   - Publication listing digest: [`log.md:225`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L225) `not applicable (no publication output)`
+
+2. **Leg 2 (`conclusions`, label `conclusions-cpu`):**
+   - Run ID: [`log.md:255`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L255) `RUN-20261012T213054Z-fae24c4-conclusions-cpu`
+   - Operator: [`log.md:256`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L256) `MichaelMaillet`
+   - Exact command: [`log.md:257`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L257) `.venv\Scripts\python -m benchmarks.campaign.exp002_driver --mode conclusions --run-dir "benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu" --operator MichaelMaillet --source-sha fae24c4393c7a0232e6c8f0a6388b1775aa5fc05 --seed-counter 0 --seed-key 2`
+   - UTC start / end: [`log.md:258`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L258) `2026-10-12T21:30:54.253Z / 2026-10-12T21:31:04.800Z`
+   - Exit code: [`log.md:259`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L259) `0`
+   - Elapsed wall: [`log.md:260`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L260) `10.521 s`
+   - Driver `elapsed_seconds`: [`log.md:261`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L261) `0.2889907000007952`
+   - Abort trips: [`log.md:264`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L264) `none; status = COMPLETED, no abort_reason, closure check exit 0`
+   - Anomalies: [`log.md:265`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L265) `none observed`
+   - Publication listing digest: [`log.md:268`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L268) `not applicable`
+
+3. **Leg 3 (`reference`, label `reproduction-reference-cpu`):**
+   - Run ID: [`log.md:293`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L293) `RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu`
+   - Operator: [`log.md:294`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L294) `MichaelMaillet`
+   - Exact command: [`log.md:295`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L295) `.venv\Scripts\python -m benchmarks.campaign.exp002_driver --mode reference --run-dir "benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu" --operator MichaelMaillet --source-sha fae24c4393c7a0232e6c8f0a6388b1775aa5fc05 --seed-counter 0 --seed-key 2`
+   - UTC start / end: [`log.md:296`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L296) `2026-10-12T21:38:21.711Z / 2026-10-12T21:38:35.945Z`
+   - Exit code: [`log.md:297`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L297) `0`
+   - Elapsed wall: [`log.md:298`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L298) `14.212 s`
+   - Driver `elapsed_seconds`: [`log.md:299`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L299) `4.004785899998751`
+   - Abort trips: [`log.md:302`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L302) `none; status = COMPLETED, no abort_reason, closure check exit 0`
+   - Anomalies: [`log.md:303`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L303) `none observed`
+   - Publication listing digest: [`log.md:307`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L307) `d674de7d4b5830c9abf525fcc484a5ebc01e3620ca38b63badd037e289487323`
+
+4. **Leg 4 (`prin`, label `reproduction-prin-cpu`):**
+   - Run ID: [`log.md:324`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L324) `RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu`
+   - Operator: [`log.md:325`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L325) `MichaelMaillet`
+   - Exact command: [`log.md:326`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L326) `.venv\Scripts\python -m benchmarks.campaign.exp002_driver --mode prin --run-dir "benchmarks/results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu" --operator MichaelMaillet --source-sha fae24c4393c7a0232e6c8f0a6388b1775aa5fc05 --seed-counter 0 --seed-key 2`
+   - UTC start / end: [`log.md:327`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L327) `2026-10-12T21:39:36.175Z / 2026-10-12T21:39:50.366Z`
+   - Exit code: [`log.md:328`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L328) `0`
+   - Elapsed wall: [`log.md:329`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L329) `14.172 s`
+   - Driver `elapsed_seconds`: [`log.md:330`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L330) `4.082989100001214`
+   - Abort trips: [`log.md:333`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L333) `none; status = COMPLETED, no abort_reason, closure check exit 0`
+   - Anomalies: [`log.md:334`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L334) `none observed`
+   - Publication listing digest: [`log.md:338`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L338) `c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669`
+
+5. **Leg 5 (`repeatability`, label `seedrep0-prin-cpu`):**
+   - Run ID: [`log.md:352`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L352) `RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu`
+   - Operator: [`log.md:353`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L353) `MichaelMaillet`
+   - Exact command: [`log.md:354`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L354) `.venv\Scripts\python -m benchmarks.campaign.exp002_driver --mode repeatability --run-dir "benchmarks/results/EXP-002/RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu" --operator MichaelMaillet --source-sha fae24c4393c7a0232e6c8f0a6388b1775aa5fc05 --seed-counter 0 --seed-key 2`
+   - UTC start / end: [`log.md:355`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L355) `2026-10-12T21:40:40.138Z / 2026-10-12T21:40:54.339Z`
+   - Exit code: [`log.md:356`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L356) `0`
+   - Elapsed wall: [`log.md:357`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L357) `14.183 s`
+   - Driver `elapsed_seconds`: [`log.md:358`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L358) `4.172898700000587`
+   - Abort trips: [`log.md:361`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L361) `none; status = COMPLETED, no abort_reason, closure check exit 0`
+   - Anomalies: [`log.md:362`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L362) `none observed`
+   - Publication listing digest: [`log.md:366`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L366) `c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669`
+
+6. **Hosted Run IDs, Head SHAs, and Durations for Source `R`:**
+   Fully tabulated in [`log.md:84-90`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L84-L90) with all 7 jobs matching [`EVIDENCE/0161/verification/preflight/hosted-runs-fae24c4.json`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/preflight/hosted-runs-fae24c4.json):
+   - 38260606024 (`snyk`, push, 14:07:24Z → 14:08:35Z, 1 m 11 s)
+   - 38260614029 (`rust`, pull_request, 14:07:27Z → 15:05:30Z, 58 m 03 s)
+   - 38260614031 (`gpu`, pull_request, 14:07:27Z → 14:49:41Z, 42 m 14 s)
+   - 38260614034 (`repro`, pull_request, 14:07:27Z → 14:12:03Z, 4 m 36 s)
+   - 38260614092 (`snyk`, pull_request, 14:07:27Z → 14:08:13Z, 46 s)
+   - 38260614099 (`parity`, pull_request, 14:07:27Z → 14:12:45Z, 5 m 18 s)
+   - 38260614101 (`python`, pull_request, 14:07:27Z → 14:22:38Z, 15 m 11 s)
+
+7. **Caps Accounting & Integrity Commitments:**
+   - Aggregate CPU wall against $\le 12\text{ h}$ cap: [`log.md:405`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L405) $63.821\text{ s}$ of $43,200\text{ s}$ ($0.15\%$).
+   - Tracked byte totals: Largest run $97,963\text{ B}$ ($\le 2\text{ MiB}$); all 5 runs $339,128\text{ B}$ ($\le 10\text{ MiB}$); campaign total $13,756,033\text{ B}$ ($\le 64\text{ MiB}$).
+   - No protocol, driver, hypothesis, or scientific-input change.
+   - Zero cherry-picking, zero deleted/edited runs, and zero hypothesis verdicts computed.
+
+---
+
+### Area 2: Consistency Between Log Numbers/Hashes/Times and Evidence Files
+
+All values across the log and evidence files reconcile to the exact character:
+
+1. **Cumulative Wall Arithmetic:**
+   - Leg 1: $10.733\text{ s}$
+   - Leg 2: $10.733 + 10.521 = 21.254\text{ s}$ (recomputed match)
+   - Leg 3: $21.254 + 14.212 = 35.466\text{ s}$ (recomputed match)
+   - Leg 4: $35.466 + 14.172 = 49.638\text{ s}$ (recomputed match)
+   - Leg 5: $49.638 + 14.183 = 63.821\text{ s}$ (recomputed match)
+   - Sum of driver `elapsed_seconds`:
+     $$0.3223612999991019 + 0.2889907000007952 + 4.004785899998751 + 4.082989100001214 + 4.172898700000587 = 12.87202570000045\text{ s}$$
+     Matches [`log.md:406`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L406): `"The drivers' own elapsed_seconds sum to 12.872 s"`.
+
+2. **Run Directory Files, Sizes, and SHA-256 Hashes:**
+   - **Leg 1 (`api-cpu`):**
+     - `api.json`: 97,194 B, `b76aedab424582dec72ede165c6a136e62c802b395519cba56975fa75f0fade9`
+     - `campaign-metadata.json`: 215 B, `d51f9c7b4ae1f9b32e20cf211a55bfc416470eae1e332c823df645ead8b5e355`
+     - `manifest.json`: 554 B, `d4eee92905addee67c210192a7a97a35b4e52e5f623f1fe34b04fcae9f8eaa90`
+     - Run total: $97,194 + 215 + 554 = 97,963\text{ B}$. Headroom: $2,097,152 - 97,963 = 1,999,189\text{ B}$.
+   - **Leg 2 (`conclusions-cpu`):**
+     - `conclusions.json`: 59,206 B, `2d1cdc5fa76b247da1b8544606708b6fa0ffe9afaaf274604bc4c1115e9bed84`
+     - `campaign-metadata.json`: 239 B, `1f59f1e078fce9154703feb93499da62f8d3c183406de9e3ebfded3cc2a04756`
+     - `manifest.json`: 562 B, `d5247c24728c26d21bc4677036091ac4665888a526b9825df231ff5ef2439bd9`
+     - Run total: $59,206 + 239 + 562 = 60,007\text{ B}$. Headroom: $2,097,152 - 60,007 = 2,037,145\text{ B}$.
+   - **Leg 3 (`reproduction-reference-cpu`):**
+     - `reproduction.json`: 59,584 B, `70f9677c7523c2decf3dc0b9e3e1ba8763ee56838ff63deca93587b42c89e7e3`
+     - `campaign-metadata.json`: 249 B, `722fc141089fc0ece7fb043cb67b0bba574beca85fc3b45c5fceacb8b60b25c2`
+     - `manifest.json`: 563 B, `f5410f4f0d5d3f6835575b377e211d6e704b0759f0457df4751a6ad0abee9d6d`
+     - Run total: $59,584 + 249 + 563 = 60,396\text{ B}$. Headroom: $2,097,152 - 60,396 = 2,036,756\text{ B}$.
+   - **Leg 4 (`reproduction-prin-cpu`):**
+     - `reproduction.json`: 59,572 B, `776a926df8edb333e38d61e9fc4ba2966385df56bcfc3d9eda6540c7c47b590e`
+     - `campaign-metadata.json`: 252 B, `6316a9e03f53cc966d70f8c83d1d70f7962857edc09f7dc8b4c6d4fe507d0e7e`
+     - `manifest.json`: 563 B, `0213ac284abf55b04a6cd5641abecb4b25d00be1b8e488e562c9b6cb399e18c8`
+     - Run total: $59,572 + 252 + 563 = 60,387\text{ B}$. Headroom: $2,097,152 - 60,387 = 2,036,765\text{ B}$.
+   - **Leg 5 (`seedrep0-prin-cpu`):**
+     - `reproduction.json`: 59,568 B, `ec615eb48008bcc112ad73a10fc6ea42ddf5619ecb33b87e880a1e7977084127`
+     - `campaign-metadata.json`: 244 B, `77cf576fb454cd32b9247e1392112d1a67c0a927ab4707c45393e091554a25ec`
+     - `manifest.json`: 563 B, `5722cb93ac87c4bf448ee76b53721c0d030bc0b0d3a465db7ab6db403db78388`
+     - Run total: $59,568 + 244 + 563 = 60,375\text{ B}$. Headroom: $2,097,152 - 60,375 = 2,036,777\text{ B}$.
+   - **Tracked Bytes Sum across All Five Runs:**
+     $$97,963 + 60,007 + 60,396 + 60,387 + 60,375 = 339,128\text{ B}$$
+     Exact match in [`log.md:417`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L417), [`README.md:65`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#L65), [`CHANGELOG.md:26`](file:///C:/dev/PRIN/CHANGELOG.md#L26), and [`EVIDENCE/0161/verification/legs/bytes-after-legs.txt:7`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/legs/bytes-after-legs.txt#L7).
+
+3. **Per-Record Independent Validation Check Counts:**
+   - Leg 1: 69 passed / 0 failed of 69 checks ([`leg1-api.validation.txt:70`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/legs/leg1-api.validation.txt#L70))
+   - Leg 2: 67 passed / 0 failed of 67 checks ([`leg2-conclusions.validation.txt:68`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/legs/leg2-conclusions.validation.txt#L68))
+   - Leg 3: 73 passed / 0 failed of 73 checks ([`leg3-reference.validation.txt:75`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/legs/leg3-reference.validation.txt#L75))
+   - Leg 4: 73 passed / 0 failed of 73 checks ([`leg4-prin.validation.txt:75`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/legs/leg4-prin.validation.txt#L75))
+   - Leg 5: 73 passed / 0 failed of 73 checks ([`leg5-repeatability.validation.txt:75`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/legs/leg5-repeatability.validation.txt#L75))
+   - Total checks: $69 + 67 + 73 + 73 + 73 = 355$ checks, all passing.
+
+4. **Gate Log Checks and Totals:**
+   - `G01`: All checks passed ([`G01-ruff-check.log:8`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G01-ruff-check.log#L8))
+   - `G02` / `G03`: 329 / 2 files formatted ([`G02-ruff-format-check.log:8`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G02-ruff-format-check.log#L8), [`G03-ruff-format-check-experiments.log:8`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G03-ruff-format-check-experiments.log#L8))
+   - `G04` / `G05` / `G06`: no issues in 62 / 2 / 1 files ([`G04-mypy-prin.log:8`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G04-mypy-prin.log#L8), [`G05-mypy-experiments.log:8`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G05-mypy-experiments.log#L8), [`G06-mypy-exp002-driver.log:8`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G06-mypy-exp002-driver.log#L8))
+   - `G07`: 97.6% (1011 total, 24 miss, 987 cover) ([`G07-interrogate.log:74-75`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G07-interrogate.log#L74-L75))
+   - `G08`: 24,864 lines scanned, 0 issues ([`G08-bandit.log:73`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G08-bandit.log#L73), [`L76`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G08-bandit.log#L76))
+   - `G09`: 460 passed in 260.15 s; driver 99% (706 stmts, 3 missed: 545, 891, 1370) ([`G09-focused-pytest.log:41`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G09-focused-pytest.log#L41), [`L45`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G09-focused-pytest.log#L45))
+   - `G10`: 142 compared to 146 rows ([`G10-governance-deviation-ledger.log:9`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G10-governance-deviation-ledger.log#L9))
+   - `G10b`: 44 DV rows against 198 session entries ([`G10b-governance-dv-gates.log:9`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G10b-governance-dv-gates.log#L9))
+   - `G10c`: 18 EA reports ([`G10c-governance-session-registration.log:9`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G10c-governance-session-registration.log#L9))
+   - `G10f`: clean exit 0 ([`G10f-git-diff-check.log:10`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G10f-git-diff-check.log#L10))
+   - `G11`: 35 sources, build succeeded ([`G11-sphinx.log:20`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G11-sphinx.log#L20), [`L51`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G11-sphinx.log#L51))
+   - `G12`: 3,853 passed, 178 skipped, 55 deselected, 59 warnings in 1,170.71 s ([`G12-pytest-fast.log:4219`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G12-pytest-fast.log#L4219))
+   - `G13`: 6,047 passed, 184 skipped, 61 warnings in 1,985.99 s ([`G13-pytest-full.log:6444`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G13-pytest-full.log#L6444))
+   - `G14`: 0 issues across 8 files ([`G14-snyk-code.log:25`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G14-snyk-code.log#L25))
+   - `G16`: 191 comparisons, 0 failed ([`G16-staged-bytes-check.txt:15`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G16-staged-bytes-check.txt#L15))
+   - `G17`: 719 commits scanned, no leaks ([`G17-gitleaks-full-history.log:8`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G17-gitleaks-full-history.log#L8), [`L10`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G17-gitleaks-full-history.log#L10))
+   - `G18`: 2.41 MB scanned, no leaks ([`G18-gitleaks-staged.log:9-10`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G18-gitleaks-staged.log#L9-L10))
+   - `R01`–`R04`: cargo version, fmt, clippy clean ([`R01-R04`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/R01-cargo-version.log))
+   - `R05` / `R06`: 1,604 / 1,608 passed, 0 failed, 1 ignored ([`R05-cargo-test.log:1905`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/R05-cargo-test.log#L1905), [`R06-cargo-test-strict.log:1906`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/R06-cargo-test-strict.log#L1906))
+   - `R07`: TOTAL regions 85.10%, functions 88.54%, lines 84.24% ([`R07-cargo-llvm-cov-kernels.log:219`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/R07-cargo-llvm-cov-kernels.log#L219))
+
+---
+
+### Area 3: Claims Without Support & Absence of Result / Verdict Leakage
+
+1. **Support for Claims in Log §2, §6, §7 and README Handoff:**
+   - All environmental, hardware, OS, toolchain, and pre-existing directory facts in log §2 are supported by [`EVIDENCE/0161/verification/preflight/preflight-recapture.txt`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/preflight/preflight-recapture.txt) and [`hosted-runs-fae24c4.json`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/preflight/hosted-runs-fae24c4.json).
+   - All gate results in log §6 are supported by verbatim captures in [`EVIDENCE/0161/verification/gate/`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/).
+   - All staged byte and cap figures in log §7 and the README handoff are supported by [`EVIDENCE/0161/verification/legs/bytes-after-legs.txt`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/legs/bytes-after-legs.txt) and [`G16-staged-bytes-check.txt`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G16-staged-bytes-check.txt).
+
+2. **Absence of Results, Interpretations, or Verdicts:**
+   - No H1–H4 hypothesis verdict is computed, stated, or implied anywhere in the records or log.
+   - The log explicitly enforces execution-only scope:
+     > [!NOTE] Verbatim Quote ([`log.md:6-7`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L6-L7)):  
+     > `"No hypothesis verdict is computed, stated or implied in this log — E3 is execution; H1–H4 are adjudicated at E4 (session 0162)."`
+   - Per-record validators assert structural validity only and do not evaluate observations ([`log.md:238-240`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L238-L240), [`L274-275`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L274-L275), [`L317-318`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L317-L318), [`L343-344`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L343-L344)).
+   - Publication listing digests are recorded as measured without comparison between publication arms.
+
+---
+
+### Area 4: Scientific Integrity & Source Freeze
+
+1. **No Changes to Governed Scientific Inputs:**
+   Review of `delta-name-status.txt` and `delta-records.diff` from source `R` (`fae24c4`) to `89f21f5` confirms that:
+   - Zero files under `python/`, `crates/`, `tests/`, `benchmarks/campaign/exp002_driver.py`, or `paper/` were added, modified, or deleted.
+   - Zero changes were made to `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md` or `e2-review.md`.
+   - Zero hypotheses, predictions, populations, thresholds, seeds, statistics, abort criteria, or caps were modified.
+
+2. **Correctness of the Protocol Freeze:**
+   The protocol was correctly declared frozen at the exact UTC instant the first run directory was created:
+   > [!NOTE] Verbatim Quote ([`log.md:355-358`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L355-L358)):  
+   > `"The first RUN- directory of the experiment was created at 2026-10-12T21:27:05Z, so preregistration.md (SHA-256 0f3073dd…, last commit F = 9a9889d08dcaf2ad0ce31659ed67721b54b114d0) is frozen from this instant (Experimentation Standards §1.3; protocol §11.3)."`
+
+3. **Support for "No Rerun, No Abort, No D1":**
+   - Exactly five run directories exist under `benchmarks/results/EXP-002/`.
+   - Incremental `git status` captures in `leg1` through `leg5` `.meta.txt` files demonstrate strictly sequential creation of each run directory with no intermediate, unrecorded, retried, or deleted run directories.
+   - All five exit codes are 0, all five envelopes carry `status: "COMPLETED"`, and no D1 condition was tripped.
+
+---
+
+### Area 5: Consistency of Session Statuses Across Documents
+
+All session statuses and references across the repository are in complete harmony:
+
+1. **Session Briefs:**
+   - `0161` brief: [`0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md:3`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md#L3) `**Status:** COMPLETE — executed 2026-10-12 UTC at source fae24c4: five registered runs, 0 aborted...`
+   - `0162` brief: [`0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md:3`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md#L3) `**Status:** READY — E3 closed 2026-10-12 UTC (session 0161); commit the E4 analysis module before analysis starts (protocol §8)`
+
+2. **Master Session Register:**
+   - Current entry point: [`DOCS/sessions/SESSION_REGISTER.md:5`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L5) `Session 0162 — EXP-002 / C1 E4, READY since 2026-10-12 UTC... 0161 (E3) is COMPLETE...`
+   - Table rows: [`SESSION_REGISTER.md:566-567`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L566-L567) 0161 is `COMPLETE`, 0162 is `READY`.
+
+3. **Phase-7 README:**
+   - Table rows: [`DOCS/sessions/phase-7/README.md:18-19`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/README.md#L18-L19) 0161 is `COMPLETE`, 0162 is `READY`.
+
+4. **EXP-002 README:**
+   - Header status: [`EXP-002/README.md:3`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#L3) `**Status:** E3 EXECUTED (session 0161, 2026-10-12 UTC)... E4 (session 0162) is READY.`
+   - Sessions table: [`EXP-002/README.md:36-37`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#L36-L37) 0161 is `COMPLETE`, 0162 is `READY`.
+
+5. **Raw Results README:**
+   - Header status: [`benchmarks/results/EXP-002/README.md:3`](file:///C:/dev/PRIN/benchmarks/results/EXP-002/README.md#L3) `**Status:** E3 EXECUTED 2026-10-12 UTC (session 0161) — five RUN- directories, all COMPLETED and manifested, none aborted...`
+
+6. **Campaign Drivers README:**
+   - Table row: [`benchmarks/campaign/README.md:14`](file:///C:/dev/PRIN/benchmarks/campaign/README.md#L14) `exp002_driver.py` is `E3 (0161) EXECUTED 2026-10-12 — five records, 0 aborted, no verdict computed; E4 (0162) READY`
+   - Currency note: [`benchmarks/campaign/README.md:47-51`](file:///C:/dev/PRIN/benchmarks/campaign/README.md#L47-L51) updated for session 0161 execution.
+
+7. **Historical 0160-Era Paragraphs and Dated Updates:**
+   - In [`CHANGELOG.md:39-40`](file:///C:/dev/PRIN/CHANGELOG.md#L39-L40):  
+     `Session 0161 (E3) is READY; no experiment leg has executed. *(Dated update, 2026-10-12 UTC: E3 then executed; see the entry above.)*`
+   - In [`DOCS/experiments/README.md:139-140`](file:///C:/dev/PRIN/DOCS/experiments/README.md#L139-L140):  
+     `Session 0161 (E3) is READY under that record's §8 entry checklist. No EXP-002 experiment leg has executed. *(Dated update, 2026-10-12 UTC: E3 then executed — see the next entry; this paragraph is retained as its point-in-time record.)*`  
+   These dated updates provide an exact, tamper-evident audit trail while pointing forward to the newly executed state.
+
+---
+
+### Area 6: Relative Markdown Links and Anchors
+
+All relative Markdown links in new and modified files point to valid filesystem targets:
+
+- `0161` brief:
+  - Link: `../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md` resolves to [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md).
+  - Link: `../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#e3-to-e4-handoff-session-0161-2026-10-12-utc` resolves to [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md).
+  - The anchor `#e3-to-e4-handoff-session-0161-2026-10-12-utc` exactly matches the GitHub-slugged heading in [`README.md:51`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#L51):  
+    `## E3 to E4 handoff (session 0161, 2026-10-12 UTC)`.
+- All inter-document relative links across `SESSION_REGISTER.md`, `CHANGELOG.md`, `benchmarks/campaign/README.md`, `benchmarks/results/EXP-002/README.md`, `EVIDENCE/0161/README.md`, and `DOCS/experiments/README.md` resolve to valid files.
+
+---
+
+### Area 7: Honesty of Disclosures
+
+All required disclosures are recorded with full transparency and verified against committed evidence:
+
+1. **Operator and Executor Statement:**
+   [`log.md:9-11`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L9-L11) explicitly attributes operator of record MichaelMaillet and issuing pair Claude Sonnet 5.5 in Claude Code on Windows.
+
+2. **Source `R` vs Approval Commit `9a9889d`:**
+   [`log.md:33-55`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L33-L55) discloses that `R` (`fae24c4`) is a descendant of `9a9889d` differing by one docs/evidence commit affecting 8 files (including 4 lines added to `tests/test_0160_manifest.py`), explains why the nightly disposition holds, and explicitly notes the classification for maintainer review.
+
+3. **Pre-Flight Host & Environment Disclosures (§2.6):**
+   - The compiled extension `_prin_core.pyd` (mtime 2026-09-28T23:01:06Z, SHA-256 `64ea1a2c...`) predates three subsequent Rust commits (`e4f5b4e`, `199b82a`, `9a9889d`); log §2.6 explains why it was not rebuilt (to avoid altering the environment validated by the approved E2 gate, noting EXP-002 exercises no Rust numerics).
+   - Discloses the presence of `site-packages/prin_core.pth` pointing to an external worktree (`C:\dev\PRIN-r1-amendment\python`) alongside `prin.pth`, and confirms that `prin` resolves to `C:\dev\PRIN\python` under the driver's origin check.
+   - Discloses all read-only pre-flight import probes.
+
+4. **Validator Revision Disclosure (§4.2):**
+   Discloses that validator revision 1 (`5703fad4...`) terminated with an uncaught exception on invalid JSON during the `conclusions` mode mutation test. Explains that revision 2 (`34fa0c95...`) trapped unexpected exceptions as a formal `FAIL Z0` check, was used to re-validate leg 1 and leg 2 without change to any record validity, and that both revisions and transcripts are preserved in `EVIDENCE/0161/`.
+
+5. **Local Gate Diagnostics and Failed Runs (§6, §6.1):**
+   - Discloses kept failed candidate capture `G10fa` (`git diff --cached --check` trailing whitespace on 0162 brief line 3).
+   - Discloses kept failed attempts `G09a` and `G12a` caused by PowerShell defaulting to WSL `bash.exe` and encountering `HCS_E_CONNECTION_TIMEOUT` on release workflow tests, prompting restart from Git Bash.
+   - Discloses Snyk Code scan history: `G14a` clean over 7 scripts; `G14b` catching a Medium Command Injection finding on scratch harness `run_gate.py`; explains that the uncommitted scratch harness had its SHA-256 recorded (`0488b6b2...`) and that committed scripts were rescanned clean under `G14`.
+
+---
+
+## 3. Summary Verdict
+
+The EXP-002 E3 execution records, execution log, evidence bundle, and repository state at commit `89f21f5` strictly obey all experimentation standards, campaign rules, and the read-only non-interpretation mandate. The execution round is complete, mathematically verified, and fully ready for handoff to Session 0162 (E4 Analysis).
