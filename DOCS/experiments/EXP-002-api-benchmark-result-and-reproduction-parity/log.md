@@ -623,4 +623,29 @@ changes any other statement.
 - **Not run:** a forced nightly; Linux and macOS; `pip-audit` and Snyk Open Source (no dependency change).
 - **No verdict.** No hypothesis verdict was computed or implied anywhere in this log.
 
+## 12. Round 2 of the cold reviews (follow-up commit `e425971`) and what it changed
+
+Entered 2026-10-13T00:45Z. The same two reviewers, with the same read-only rules, reviewed the follow-up commit between 00:34Z and 00:42Z:
+**Antigravity** reported one item and **Devin** eight (none High); neither report contains outcome content. Task files, verbatim reports,
+the diffs they were given and the adjudication (a new "Round 2" section) are in `EVIDENCE/0161/verification/delegation/`. Antigravity
+recomputed every duration, sum and count in §8–§11 and found them exact, and confirmed the `cargo audit` narrative against the cited files. I verified each item before
+acting:
+
+- **Fixed (documentation).** The adjudication cited the "not examined" clarification at log "§8"; it is in §10 (Antigravity). Corrected in the
+  adjudication.
+- **Checked on the real tree instead of changing the validator.** Devin noted that validator revision 3's link checks (S1) cover the retained
+  root's ancestors but not `publication/`, `inputs/` or entries inside them (R2-01). A reparse-point scan of the raw record root, the retained
+  generated-output root and the evidence bundle, and of every ancestor of each, found **no reparse point** (`legs/reparse-point-scan.txt`).
+- **Disclosed.** Revision 3's repository-state check differs from revision 2's: it compares the frozen paths (product, driver, shared benchmark
+  code, tests, tools, paper, parity, the protocol and e2-review) with `R` instead of requiring a clean tree, because after the E3 commit the tree is
+  legitimately no longer "`R` plus the record". It no longer reports dirty or untracked files elsewhere. The stricter revision-2 checks passed on every
+  record at its leg, and the full `git status` was recorded after every leg (R2-02).
+- **Accepted as limitations, with reasons in the adjudication:** retention lines are absent when a relocated publication copy is validated without
+  `--generated-root` (R2-03); a genuine record with a null font-cache digest is rejected on purpose, because protocol §5.4 requires that digest
+  (R2-04); a wall-clock step of more than 1 s would false-fail S5 (R2-05); mutation-test precision and extra ideas (R2-06); two `merge-base`
+  calls without a timeout (R2-07); the harness's `mklink` and `rmtree` behaviour on my own scratch path (R2-08).
+
+No record, registered input, protocol text or driver changed in this round, and no admissibility outcome changed. This entry and the
+evidence it cites are carried by the commit that follows `e425971`.
+
 <!-- LOG-TAIL: append new entries above this line -->

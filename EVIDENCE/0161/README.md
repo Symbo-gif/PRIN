@@ -103,10 +103,16 @@ never relabelled.
     the Sphinx `-W` full rebuild `G11`, gitleaks on the staged diff `G18` and the staged byte check
     `G16b`, all exit 0. Only documents and evidence changed, so the product, test and Rust trees are
     byte-identical to the fully gated candidate and the pytest and cargo legs were not repeated.
+    `gate/delta-follow-up-2/` — the same kind of check (`G18`, `G16c`) on the next commit, which
+    carries the round-2 review record and log section 12.
 - `verification/hosted/` — the hosted results (Plan amendment #50, additional evidence only):
   `hosted-runs-89f21f5.json` (all seven runs for the pushed head), `H1-…audit-failed-…log` (the
   verbatim `--log-failed` of the one red job) and `H2-…advisory-counts.txt` (the earlier passing
   `audit` job on `R`, for the advisory counts).
-- `verification/delegation/` — the Antigravity and Devin cold reviews: task files, verbatim stdout,
-  run windows, the diffs given to them, and `adjudication.md` (every finding verified before any
-  action; no finding implicated the protocol, the driver, the registered inputs or the data).
+- `verification/delegation/` — the Antigravity and Devin cold reviews, two rounds (`*-task.md`,
+  `*-report.txt`, `*-run.txt` for the run windows, and the diffs given to them), and
+  `adjudication.md` (every finding verified before any action; no finding implicated the
+  protocol, the driver, the registered inputs or the data). Round 2 reviewed the follow-up
+  commit `e425971`. `legs/reparse-point-scan.txt` answers one round-2 item on the real tree: no
+  symlink or junction in the raw record root, the retained roots or the evidence bundle, nor in
+  any of their ancestors.

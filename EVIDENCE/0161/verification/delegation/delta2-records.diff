@@ -1,0 +1,224 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 21d249d..6dbd02e 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+   payload was examined:** H1–H4, the H3 dual-policy report and any D1
+   determination belong to E4 (session 0162, now READY). The execution log is
+   `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md`.
++  Unrelated to the experiment: the hosted `cargo audit` job went red on the E3
++  commit because five new RustSec advisories (`quinn-proto 0.11.16`, which is in
++  `Cargo.lock` only as an inactive optional dependency) entered the advisory
++  database; the lockfile is unchanged and the finding awaits the maintainer's
++  decision (log §9).
+ 
+ - **EXP-002 approved at E2; E3 ready (sessions 0159–0160, 2026-10-12 UTC).**
+   The maintainer accepted the E1 exit and delegated the E2 decisions. E2
+diff --git a/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md b/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md
+index b5daf7f..0ef246e 100644
+--- a/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md
++++ b/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md
+@@ -53,7 +53,8 @@ round amended the DRAFT and the driver before E2 (protocol section 11;
+ **No hypothesis verdict was computed at E3.** The five records were validated for structure and
+ identity only (metadata, result envelope, declared artefact mapping, manifest, source / protocol /
+ input identity, seed pair `(0, 2)`, directory inventory). Their observation payloads (API rows,
+-claim cases, publication file records) were not examined, no arm was compared with another, and no
++claim cases, publication file records) were not examined (no value was compared, printed or interpreted;
++`log.md` §10 states exactly what the tools parsed), no arm was compared with another, and no
+ analysis code was written. H1–H4 verdicts, the H3 report under both comparison policies (protocol
+ §11.3 item 1), every D1 determination and the exploratory analyses belong to E4 (session 0162).
+ 
+@@ -101,4 +102,13 @@ side by side. Preserve any negative result, and flag a D1 under campaign plan §
+ 4. The pre-E2 outcome exposure (protocol §11.2) and its disposition (e2-review.md decision 9) stand unchanged.
+    E3 did not examine any observation payload.
+ 5. The first revision of the E3 per-record validator crashed, instead of failing a check, on a corrupted
+-   result file; it was fixed and every record was re-validated (see `log.md` §4.2). No outcome changed.
++   result file; it was fixed (revision 2, `log.md` §4.2). A read-only cold review then found the validator
++   less strict than the driver's closure in several details, and revision 3 closed them: every record was
++   re-validated (81, 80, 87, 87 and 87 checks, 0 failed) and each mode's mutation self-test passes
++   (`log.md` §10). No admissibility outcome changed, and no driver gap that the review also found
++   (junction ancestors, last-wins JSON, subset key checks) occurs in these records.
++6. Not an experiment matter, but open: the hosted `rust` run on the E3 commit is red in one job, `audit`,
++   because five new RustSec advisories (`quinn-proto 0.11.16`, an inactive optional dependency that is in
++   no resolved dependency graph) entered the advisory database after the previous green run. `Cargo.lock`
++   is unchanged and E3 touched no dependency; it was not remediated here and awaits the maintainer's
++   decision (`log.md` §9).
+diff --git a/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md b/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md
+index 0647b8c..dfb6c1f 100644
+--- a/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md
++++ b/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md
+@@ -524,4 +524,103 @@ governed `medium` threshold. Nothing was suppressed or excluded.
+   Largest single run 97,963 B (cap 2 MiB per run); campaign-wide `benchmarks/results/EXP-*` 13,756,033 B = 13.119 MiB
+   (cap 64 MiB). No cap is near its limit and none was breached.
+ 
++## 8. Hosted results for the E3 commit `89f21f5` (Plan amendment #50; additional evidence only)
++
++Entered 2026-10-13T00:31Z. `92cf696` and `89f21f5` were pushed at about 2026-10-12T23:33:55Z
++(`fae24c4..89f21f5`, branch `campaign/0159-exp002-e1`, PR #33). Nothing was merged, no tag was pushed, no
++workflow was changed and no nightly was dispatched. All seven runs below are head SHA
++`89f21f5b42c195e46d172808fb39941c47451de8`, attempt 1; the duration is `updatedAt − startedAt`
++(`EVIDENCE/0161/verification/hosted/hosted-runs-89f21f5.json`). They are not charged to the protocol §9 cap.
++
++| Run ID | Workflow | Event | Conclusion | Started (2026-10-12) | Updated (end) | Duration |
++|---|---|---|---|---|---|---|
++| 38322795453 | snyk | push | success | 23:33:55Z | 23:34:47Z | 52 s |
++| 38322799666 | snyk | pull_request | success | 23:33:58Z | 23:34:40Z | 42 s |
++| 38322799631 | parity | pull_request | success | 23:33:58Z | 23:38:50Z | 4 m 52 s |
++| 38322799707 | repro | pull_request | success | 23:33:58Z | 23:39:17Z | 5 m 19 s |
++| 38322799742 | python | pull_request | success | 23:33:58Z | 23:48:07Z | 14 m 09 s |
++| 38322799650 | rust | pull_request | **failure** | 23:33:58Z | 23:54:23Z | 20 m 25 s |
++| 38322799687 | gpu | pull_request | success | 23:33:58Z | 00:29:16Z (2026-10-13) | 55 m 18 s |
++
++The `rust` run failed in exactly one of its ten jobs, `audit` (job 115054529384, 23:34:01Z → 23:37:08Z); `fmt`,
++`docs`, `clippy`, `clippy-strict`, `test-strict`, `bench-smoke` and `test` on ubuntu, macOS and Windows all succeeded
++(`H3-hosted-rust-jobs-38322799650.json`). The `gpu` run's `gpu-cuda` job started at 23:54:23Z, twenty minutes after the
++run began; the wait was not investigated. The failure is discussed in §9. The hosted runs of any later commit are reported to the
++maintainer and are not written here: a document cannot contain the result of its own commit's checks.
++
++## 9. `cargo audit` — the one red check: new external advisories, not attributable to this session, not remediated here
++
++- **Hosted.** `rust` job `audit` failed with "error: 5 vulnerabilities found!" and "3 allowed warnings found". All five are
++  `quinn-proto 0.11.16`: RUSTSEC-2026-0341 (severity 7.5, fixed in ≥ 0.11.17), -0339 and -0342 (≥ 0.11.17), -0340 (severity 7.5,
++  ≥ 0.11.18) and -0338 (≥ 0.11.18). Verbatim log: `EVIDENCE/0161/verification/hosted/H1-…`.
++- **It is new since the previous hosted run.** The same job passed on `R` (job 114849834855, 14:07:32Z → 14:10:36Z) after loading
++  **1,299** advisories and reporting only the 3 allowed warnings; at 23:37Z the database held **1,307** (`H2-…`).
++- **Reproduced locally** (`R08`, `cargo audit` at `89f21f5`, exit 1): the same five vulnerabilities and the same three allowed warnings
++  (bincode RUSTSEC-2025-0141, paste RUSTSEC-2024-0436, chacha20 yanked: the standing DV-008, DV-017 and DV-035 dispositions). Its
++  yank check also timed out on the network ("request could not be completed in the allotted timeframe"), which does not change the result.
++- **Not attributable.** `Cargo.lock` and every `Cargo.toml` are unchanged since `R` (the diff `fae24c4..89f21f5` touches no dependency
++  manifest), and E3 adds no dependency. `cargo audit` is not one of the legs the 0160 gate listed because no dependency changed; it
++  is a periodic control whose result can change without a change to the repository, and this is such a change.
++- **Reachability.** The lockfile records `reqwest 0.12.28 → quinn 0.11.11 → quinn-proto 0.11.16`, and `reqwest` is reached through
++  `tracel-llvm-bundler` (the MLIR toolchain of `cubecl-cpu`). `cargo tree --workspace --all-features --target all -e all -i quinn-proto`
++  prints "nothing to print": the package is in no resolved dependency graph of any workspace feature set or target, so no PRIN build compiles or
++  links it. `cargo audit` flags it because it is in the lockfile.
++- **Disposition: not remediated in E3.** Changing a dependency is outside an execution-only session and is the maintainer's decision.
++  Options for the maintainer: (a) a governed, lockfile-only update (`cargo update -p quinn-proto`, to ≥ 0.11.18) with `cargo audit`, Snyk
++  Open Source and the full gate; or (b) a dated Deferred Validation row carrying the non-reachability evidence above. Plan amendment
++  #50 says a red hosted job is dispositioned like a red local leg, and Development Workflow §3 dispositions a red nightly like a red
++  push: fixed, or given a dated DV row, before the next work package closes. I opened no DV row and changed no file for it.
++- **Effect on EXP-002:** none. The five records were produced before the advisories entered the database, EXP-002 exercises no Rust numerics,
++  and no EXP-002 input depends on the lockfile.
++
++## 10. Cold reviews, adjudication, validator revision 3, and a clarification of "not examined"
++
++Entered 2026-10-13T00:31Z. Two read-only cold reviews ran on `89f21f5`: **Antigravity**
++(`gemini-3.8-flash-high`, 2026-10-12 23:35Z → 23:50Z, report with no finding) and **Devin** (`swe-2-high`, 23:35Z → 23:42Z, twelve items
++F-01…F-12, none High). Both were forbidden from
++opening the raw result files and the retained roots and from comparing digests across arms; I scanned both reports and neither contains
++outcome content or a statement about equality or difference of digests. Task files, verbatim reports and the adjudication are in
++`EVIDENCE/0161/verification/delegation/`. I checked every item against the repository before acting on it.
++
++- **What was real.** Validator revisions 1–2 were less strict than the driver's own closure in several details, and their self-tests did not
++  cover the publication modes or the retention checks (F-01 symlink/junction ancestors; F-02 `10.0` and `true` accepted as integers; F-03 duplicate
++  JSON keys; F-04 subset instead of exact key sets below the envelope; F-05 UTC offset, finite and consistent timing; F-06 manifest typing and a
++  tail-only `out_dir`; F-07 missing mutations). None of this could have changed an admissibility result here, because the driver's closure had
++  already passed on every record (exit 0), but it weakened the claim that the validation was independent.
++- **What I did.** Validator **revision 3** (SHA-256 `310e1c21a231cc72955a1942c6ae1bc8b6aad37d8d6efe54983e183384617c87`) adds checks S1–S6
++  for those items. It **re-validated all five records: 81, 80, 87, 87 and 87 checks, 0 failed**
++  (`*.validation.rev3.txt`). A new self-test (`mutation_test_rev3.py`, SHA-256 `a5aabc9682cf3c3f59bc1022cc14a42fb452a7587bab70026de06f6d4422d199`)
++  runs 40, 41, 49, 49 and 49 cases per mode, covering the publication modes, the retention checks (F1–F4), duplicate keys, a junction ancestor, a
++  wrong label and a stale manifest digest: every case behaved as expected and none was skipped. Snyk Code over the ten committed Python scripts
++  is clean at the governed threshold (`G14c`). Revisions 1 and 2 and their transcripts are kept. No record, registered input, protocol text or
++  driver changed, and no admissibility outcome changed.
++- **What I did not change.** `crossleg_consistency.py`, `staged_bytes_check.py`, `measure_bytes.py` and `run_leg.ps1` are unchanged because
++  their captures are bound to the committed files; the limitations Devin found in them (F-08…F-11) are recorded in the adjudication and none
++  affects a result here. The driver's own gaps (junction ancestors, last-wins JSON, subset key checks) are frozen with the driver; they are
++  disclosed here for E4/E5, and rev3 shows that none occurs in these records.
++- **Antigravity's citations.** Accurate except two imprecise line references (the freeze statement is at `log.md:204-207`, and the Rust test
++  total is a sum, not one line); recorded in the adjudication, no action.
++
++**Clarification (2026-10-13T00:31Z) of an earlier phrase.** Entries §4–§5 say the observation payloads "were not examined at E3" and that
++a cross-leg script "never opened an observation payload". Precisely: no person and no tool compared, printed, summarised or interpreted any
++observation **value**. The validators and scripts did parse the complete JSON documents; the validators read observation **structure**
++(key sets, types, cardinalities, identities, and the Boolean *types* of each claim case's `expected` and `observed`, never their values);
++`crossleg_consistency.py` also read the `renderer` capture on the three publication legs and nothing else from `observations`; and the
++retention checks read the retained publication bytes only to hash them against the record's own digests. Nothing in this clarification
++changes any other statement.
++
++## 11. State at the close of E3
++
++- **Commits.** `92cf696` (`.gitattributes` rule only) and `89f21f5` (records, log, evidence, gate) are pushed; the commit that carries §8–§11 and
++  the rev3 evidence follows them and cannot name itself.
++- **Sessions.** 0161 `COMPLETE`; 0162 `READY`. The E3 exit gate is met: all five registered runs are logged, none was aborted or rerun, and the raw
++  records are manifested and byte-exact in git (`G16`, and rev3 validation of every record).
++- **Caps at the close.** EXP-002 raw/record artefacts newly tracked: 392,132 B in `89f21f5` (§7) plus about 11 kB in the follow-up
++  commit (this log's §8–§11 and the README / CHANGELOG notes), about 0.38 MiB of the 10 MiB cap; the per-run and campaign-wide figures
++  of §7 are unchanged. The evidence bundle grows by about 0.36 MiB in the follow-up and is not an EXP-002 raw/record artefact.
++- **Open items carried, none an experiment matter:** the red hosted/local `cargo audit` (§9, maintainer decision); the installed extension that
++  predates three Rust commits (§2.6); DV-033 and the standing Deferred Validation items, unchanged.
++- **Not run:** a forced nightly; Linux and macOS; `pip-audit` and Snyk Open Source (no dependency change).
++- **No verdict.** No hypothesis verdict was computed or implied anywhere in this log.
++
+ <!-- LOG-TAIL: append new entries above this line -->
+diff --git a/EVIDENCE/0161/README.md b/EVIDENCE/0161/README.md
+index da8afe6..a5f1f01 100644
+--- a/EVIDENCE/0161/README.md
++++ b/EVIDENCE/0161/README.md
+@@ -26,24 +26,29 @@ never relabelled.
+   - `legN-<mode>.stdout.txt` / `.stderr.txt` — the child's output (all ten are empty);
+   - `legN-<mode>.validation.txt` — the independent per-record validation transcript. For
+     legs 1–2 this is validator **revision 1**; `*.validation.rev2.txt` is revision 2 on the
+-    same record (byte-identical output). Legs 3–5 were validated with revision 2 only;
++    same record (byte-identical output). Legs 3–5 were validated with revision 2 only. After
++    the cold review (below) **all five records were re-validated with revision 3**
++    (`*.validation.rev3.txt`: 81, 80, 87, 87, 87 checks, 0 failed);
+   - `leg1-api.mutation-selftest*.txt`, `leg2-conclusions.mutation-selftest*.txt` — the
+     validator's mutation self-test on scratch copies of the leg-1 and leg-2 records. The
+     unsuffixed leg-2 transcript is revision 1 and **keeps its one `BAD` case** (a result file
+     corrupted into invalid JSON made revision 1 crash instead of failing a check); the
+-    `.rev2` transcripts are 17/17;
++    `.rev2` transcripts are 17/17. `legN-*.mutation-selftest.rev3.txt` are the revision-3
++    self-tests for every mode (40, 41, 49, 49 and 49 cases, all as expected), including the
++    publication modes and the retention checks;
+   - `leg3/4/5-*.listing-digest.txt` — the publication listing digest of each publication
+     root (the e2-review.md §8 command, verbatim output);
+   - `crossleg.txt` — metadata-only consistency across the five records (environment,
+     identity, config, renderer / font stack); no observation payload is read;
+   - `bytes-after-legs.txt` — tracked-byte totals against the registered caps.
+-- `verification/tools/` — `run_leg.ps1` (launcher), `validate_run_record.py` (revision 2) and
++- `verification/tools/` — `run_leg.ps1` (launcher), `validate_run_record.py` (revision 2),
+   `validate_run_record.rev1.py` (revision 1, reconstructed by `reconstruct_rev1.py` and
+   accepted only because its SHA-256 equals the digest recorded in `log.md`),
+-  `mutation_test.py`, `crossleg_consistency.py`, `measure_bytes.py`,
+-  `preflight_recapture.ps1` and `make_sha256sums.py` (writes `SHA256SUMS.txt`). The
+-  validators validate record structure and identity only and never evaluate or compare an
+-  outcome.
++  `validate_run_record_rev3.py` (revision 3: the strictness the cold review found missing),
++  `mutation_test.py` and `mutation_test_rev3.py`, `crossleg_consistency.py`,
++  `measure_bytes.py`, `staged_bytes_check.py`, `preflight_recapture.ps1` and
++  `make_sha256sums.py` (writes `SHA256SUMS.txt`). The validators validate record structure and
++  identity only and never evaluate or compare an outcome.
+ - `verification/preflight/` — `preflight-recapture.txt` (the read-only pre-flight facts
+   re-captured after leg 5 while the tracked tree was still clean, including a second
+   passing admission dry check) and `hosted-runs-fae24c4.json` (the verbatim
+@@ -79,3 +84,29 @@ never relabelled.
+   `G09-focused-coverage.json` is the focused leg's coverage report for
+   `benchmarks.campaign.exp002_driver`. `G14*-sast-copy-attestation*.txt` list the SHA-256 of the
+   exact files each Snyk scan read.
++
++  Captured after the commit `89f21f5` was pushed:
++  - `G14c` — Snyk Code over the ten committed scripts (adds validator rev3 and its self-test):
++    0 issues at the governed `medium` threshold;
++  - `G17b` — gitleaks over the full history at `89f21f5`: 720 commits, no leaks;
++  - `R08` — **`cargo audit` on the unchanged `Cargo.lock`: exit 1, five vulnerabilities, all
++    `quinn-proto 0.11.16`** (RUSTSEC-2026-0338/-0339/-0340/-0341/-0342, new in the advisory
++    database since the earlier hosted run on `R`: 1,299 → 1,307 advisories). It reproduces the
++    failed hosted `audit` job. `quinn-proto` is in the lockfile only through the optional
++    `quinn` dependency of `reqwest` (via `tracel-llvm-bundler`); `cargo tree` finds no path to it
++    in any feature set or target of the workspace. It is **not attributable to this session, not
++    remediated here** (a dependency change is outside E3's remit) and is reported to the
++    maintainer for a decision. `R08` is not part of the 0160 leg list; it was added because the
++    hosted audit failed.
++  - `gate/delta-follow-up/` — the documentation delta gate on the follow-up commit that carries
++    the rev3 evidence, the cold-review record and log sections 8–11: governance legs `G10`–`G10f`,
++    the Sphinx `-W` full rebuild `G11`, gitleaks on the staged diff `G18` and the staged byte check
++    `G16b`, all exit 0. Only documents and evidence changed, so the product, test and Rust trees are
++    byte-identical to the fully gated candidate and the pytest and cargo legs were not repeated.
++- `verification/hosted/` — the hosted results (Plan amendment #50, additional evidence only):
++  `hosted-runs-89f21f5.json` (all seven runs for the pushed head), `H1-…audit-failed-…log` (the
++  verbatim `--log-failed` of the one red job) and `H2-…advisory-counts.txt` (the earlier passing
++  `audit` job on `R`, for the advisory counts).
++- `verification/delegation/` — the Antigravity and Devin cold reviews: task files, verbatim stdout,
++  run windows, the diffs given to them, and `adjudication.md` (every finding verified before any
++  action; no finding implicated the protocol, the driver, the registered inputs or the data).

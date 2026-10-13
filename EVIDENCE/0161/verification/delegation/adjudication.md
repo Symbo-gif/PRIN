@@ -34,7 +34,7 @@ figure). No action.
 | F-05 | Low | **Confirmed** (offset of `recorded_at_utc` unchecked; `Infinity` accepted; elapsed vs timestamps never compared) | **Fixed (S5):** both offsets must be zero, `elapsed_seconds` finite and ≥ 0, and within 1 s of the timestamp difference. The five records agree to within 2 µs (largest difference 0.0013 ms, computed from the timestamp fields only) |
 | F-06 | Low | **Confirmed** (manifest key set, `True == 1`, `215.0 == 215`, tail-only `out_dir`) | **Fixed:** exact manifest keys, `type(...) is int` for `schema_version` and `bytes` (B1, B2, S6), and `out_dir` must equal the absolute run directory (S6). All five records have exactly that |
 | F-07 | Medium | **Confirmed.** The earlier self-tests covered only `api` and `conclusions` and none of the retention checks | **Fixed:** `mutation_test_rev3.py` runs 40–49 cases per mode, including the publication modes, the retention checks (F1–F4), duplicate keys, a junction ancestor, a wrong label and a stale manifest digest. Results: api 40/40, conclusions 41/41, reference 49/49, prin 49/49, repeatability 49/49 behave as expected (no case skipped) |
-| F-08 | Low | **Partly confirmed.** `crossleg_consistency.py` parses each whole result file into memory although it only reads metadata and, on the publication legs, the `renderer` capture; the docstring and log say it "never opened" payloads. The whole-`environment` equality is a conservative superset and cannot assert absolute values — the per-record validator does that | **Wording corrected by a clarification entry in the log (§8)**; the tool is unchanged because its capture is bound to the committed file. See the clarification on what "not examined" means |
+| F-08 | Low | **Partly confirmed.** `crossleg_consistency.py` parses each whole result file into memory although it only reads metadata and, on the publication legs, the `renderer` capture; the docstring and log say it "never opened" payloads. The whole-`environment` equality is a conservative superset and cannot assert absolute values — the per-record validator does that | **Wording corrected by a clarification entry in the log (§10)**; the tool is unchanged because its capture is bound to the committed file. See the clarification on what "not examined" means |
 | F-09 | Low | **Confirmed** (staged files outside a `RUN-` directory are skipped; a manifest-only staged run passes the file-set test vacuously; a missing working file skips its comparison) | **No tool change.** Impact is nil here: every `RUN-` directory's three-file set is verified on disk by the validators (A3, B1) and the same check at `--head` compares committed blobs with the working tree. Recorded as a known limitation |
 | F-10 | Low | **Confirmed** (`stat` follows links; `split()` breaks on spaces) | **No tool change.** The numbers it produced are reproduced by the driver's own closure measure; rev3 S1/A3 show no link exists in the tree and no measured name contains a space |
 | F-11 | Low | **Confirmed in principle** (`$LASTEXITCODE` could be stale if the interpreter failed to launch) | **No change.** The interpreter launched on all five legs: each run directory was created and each driver wrote its own `COMPLETED` record. Recorded as a limitation |
@@ -49,3 +49,32 @@ figure). No action.
   outcome.
 - Snyk Code over the ten committed Python scripts (including the two new ones): 0 issues at the
   governed threshold (`G14c`).
+
+---
+
+# Round 2 — the follow-up commit `e425971` (2026-10-13)
+
+Same reviewers, same invocations and the same read-only rules; task files `agy-e3-round2-task.md` and
+`devin-e3-round2-task.md`, verbatim stdout `agy-e3-round2-report.txt` and `devin-e3-round2-report.txt`, windows in
+`*-round2-run.txt` (both 2026-10-13, 00:34:37Z → 00:42:41Z and → 00:41:38Z, exit 0). The diffs given to them are
+`delta2-name-status.txt` and `delta2-records.diff`. I again scanned both reports for outcome content and found none.
+Antigravity reviewed the new text and numbers; Devin reviewed validator revision 3 and its self-test. Antigravity found one
+item, Devin eight (none High). Each was checked against the files before any action.
+
+| # | Reviewer | Sev. | Verified? | Disposition |
+|---|---|---|---|---|
+| A2-1 | Antigravity | Low | **Confirmed.** The F-08 row above said the clarification is in log "§8"; it is in §10 | **Fixed** in this file |
+| R2-01 | Devin | Medium | **Confirmed as a validator gap.** S1 tests the generated root and its ancestors only; F1's `is_symlink()` is false for a junction at `publication/` or `inputs/`; the inventories follow links | The validator is **not** revised again (a fourth revision for a condition that does not exist here). I checked the real tree instead: a reparse-point scan of the raw record root, the retained generated-output root and the evidence bundle, and of every ancestor of each, found **none** (`legs/reparse-point-scan.txt`) |
+| R2-02 | Devin | Medium | **Confirmed.** Revision 3 replaced revision 2's "no stray file, no modified tracked file" repository-state checks (G1, G2) with a comparison of the frozen paths against `R`, because after the E3 commit the tree is legitimately no longer "`R` plus the record". The new check does not report dirty or untracked files elsewhere. `LOG_REL` is now unused | **Disclosed** here and in log §12. What admissibility depends on is the frozen set (product, driver, shared benchmark code, tests, tools, paper, parity, protocol, e2-review against `R`) and the record's own files; the full `git status` was recorded after every leg and the stricter revision-2 G1/G2 passed on every record at its leg. The unused constant is left, because the file's SHA-256 is cited elsewhere |
+| R2-03 | Devin | Low | **Confirmed.** A relocated publication-mode copy validated without `--generated-root` emits no F-lines | Accepted limitation. On the real records F1–F4 do appear (87 checks against 81 and 80 for the non-publication modes) |
+| R2-04 | Devin | Low | **Confirmed.** The driver can emit `font_cache.sha256: null` when the cache file is absent; revision 3 requires a digest | **Intentional.** Protocol §5.4 requires the font-cache digest to be logged, so a null digest is an incomplete required capture (§4.2 item 3). On this host the cache exists |
+| R2-05 | Devin | Low | **Confirmed** (a wall-clock step of more than 1 s between the two timestamps would false-fail S5) | Accepted; rare. The largest observed difference is 0.0013 ms |
+| R2-06 | Devin | Low | **Confirmed against the transcripts**: `flipped_byte_without_manifest_update` fires S3 (invalid JSON) in every mode, not B2; `case_family_changed` lists a dead `S4` expectation; `label_renamed` also trips C1; further mutations are possible | Accepted. B2's content path is exercised by `manifest_stale_digest`, `manifest_bytes_float` and `manifest_missing_entry`; the extra mutation ideas are noted and not added |
+| R2-07 | Devin | Low | **Confirmed** (two `merge-base` calls without timeout or capture; an unvalidated value reaches argv) | Accepted: list argv, no shell, and a bad value fails closed |
+| R2-08 | Devin | Low | **Confirmed** (`cmd /c mklink` with an operator-supplied scratch path; `rmtree` recursing through the junction) | Accepted: a local self-test run on my own scratch path, and the junction's target lies inside the scratch root |
+
+Devin also re-verified that every round-1 fix (F-01…F-07) is present and non-vacuous, that the hard-coded key sets are
+identical to the driver's emitted structures (the one mismatch is R2-04), that revision 3 judges no outcome, and that
+the counts and SHA-256 values quoted in the log and in this file agree with the transcripts. Antigravity recomputed every
+duration, sum and count in log §8–§11 and found them exact. No item changed an admissibility result, the protocol, the driver,
+a registered input or a record.

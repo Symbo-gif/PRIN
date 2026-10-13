@@ -1,0 +1,13 @@
+COMMAND: C:/dev/PRIN/DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git C:/dev/PRIN --pre-commit --staged --redact --no-banner --report-format json --report-path C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/8a021180-4f6b-439e-9fe7-62b13011e219/scratchpad/e3/gitleaks-staged.json
+CWD: C:/dev/PRIN
+SOURCE: documentation/evidence-only follow-up commit D on top of e425971 (round-2 cold-review record, adjudication, reparse-point scan, log section 12); the product, test and Rust trees are byte-identical to the fully gated candidate 89f21f5; Git Bash, host otherwise idle
+UTC-START: 2026-10-13T00:45:29Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+[90m9:45PM[0m [32mINF[0m [1m0 commits scanned.[0m
+[90m9:45PM[0m [32mINF[0m [1mscanned ~76307 bytes (76.31 KB) in 2.02s[0m
+[90m9:45PM[0m [32mINF[0m [1mno leaks found[0m
+----
+ELAPSED_SECONDS: 2.6
+EXIT_CODE: 0

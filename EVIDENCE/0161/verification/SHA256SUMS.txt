@@ -1,10 +1,18 @@
-e00322c45ee3d469b25836a334e4d145b30b4844a25552db71f9687138ab32ac *./delegation/adjudication.md
+1cbeacfc933205d7745c4ef2f360c05cd5d65880d9e6c38eabdd57710f0d8521 *./delegation/adjudication.md
 06f73e1ba9f6d5c6a4a143cc2309826f8140e931a6ba0743f406957e5d4e75df *./delegation/agy-e3-report.txt
+3678d7153e24f25ca1eb6bed241dcfc07e108c01fd420b65946c65a1ec450770 *./delegation/agy-e3-round2-report.txt
+7b19a9da0489ce067354c7f9f09553566b96d6bfd454cd2487499622c9a273a5 *./delegation/agy-e3-round2-run.txt
+8daf6a4ead879a2b02aa0ea57e32c79a8ad726f815065e4d080a2ae5a5584e34 *./delegation/agy-e3-round2-task.md
 3b68cd44ea3fb973b5dd59792b7b746d1d720f961d7d7574b8a4641dc6a42ec3 *./delegation/agy-e3-run.txt
 d3e8e8711505c22143659fec62a94ec57e13cba5752491552cce42d59ada00a9 *./delegation/agy-e3-task.md
 461c90463008ebe1d30c9f5bae1e59d1336e6d62029b910ff39fe25204daaefe *./delegation/delta-name-status.txt
 dab62ec5b3ee29afc85dc82f396b2721c459f20496d6c7ec1ae2a1299a1ad717 *./delegation/delta-records.diff
+d1d392847bea696280b2a0ab31301f79b5464916c345666bfb46e26a441bd6f3 *./delegation/delta2-name-status.txt
+f35ddfbf42ca530e4c9dfbdad31519ef38492f0737a14c47c559da9647655e2d *./delegation/delta2-records.diff
 32468526520efd926f0f4e2d26ae7a98943f5650862f59d63ddcd70c3d8e55e9 *./delegation/devin-e3-report.txt
+18af80c307ec4aea414abb902fbd614ac53692b1a83acbee3f45ebdb344d4124 *./delegation/devin-e3-round2-report.txt
+e9b359b4a89ba56b2a350e559443287fe1ee539f989345c57c3a969dfea9bbc9 *./delegation/devin-e3-round2-run.txt
+4b0a4d1dedc1da14b6760c8273577f03727af712a21b38efb40162b85c1ff340 *./delegation/devin-e3-round2-task.md
 bf426b85dcfd72800d850f031bd90e76b5101a5cf3a0648a5b9ce2f7787d2fd1 *./delegation/devin-e3-run.txt
 70fecb3a458d70b7fbb43f25b62c5bf28702b572abffb1844df1586dcfc3cfb5 *./delegation/devin-e3-task.md
 18d47044cadbdcdf3e58b6ce5ca9e7277b7dc0bb9072310f4ece9acfbb5e5669 *./gate/delta-follow-up/G10-governance-deviation-ledger.log
@@ -16,6 +24,8 @@ bf426b85dcfd72800d850f031bd90e76b5101a5cf3a0648a5b9ce2f7787d2fd1 *./delegation/d
 5d4ac2a2cdd5aee4d5656a7a0196601e17e60e7d52fd8903c930468f71d29c59 *./gate/delta-follow-up/G11-sphinx.log
 e3d1aec0db82bdb2856ce9151e158d8050748ee78c8a18f2f461403055457628 *./gate/delta-follow-up/G16b-staged-bytes-check.txt
 730b4694be0e54c54afbafeb01dde28c3e49b26e4d1a039f7f6110891a58e3a5 *./gate/delta-follow-up/G18-gitleaks-staged.log
+81bb15a7dfed3054890435662e04c4a4f1024ef2f4df596cb3493888fa6eebca *./gate/delta-follow-up-2/G16c-staged-bytes-check.txt
+3dbab11b5c2bbd1e60754af42deffb0d8a36380f42316df376d18d28547dc1b0 *./gate/delta-follow-up-2/G18-gitleaks-staged.log
 2610d525d31e6d2ed75b806953bf154bd4aa567a1103e03c8173a5fd66c96fc8 *./gate/G01-ruff-check.log
 de1fd52ee99b7c47276f79f76a7ade25ed6cdc7f386055ce8f9a7762404cd2b7 *./gate/G02-ruff-format-check.log
 295fc155ac5f12f85901e7ff8eb41c02cbdd9794f1d8f968255a31bed9b0cc5f *./gate/G03-ruff-format-check-experiments.log
@@ -104,6 +114,7 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 *./legs/leg5-re
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 *./legs/leg5-repeatability.stdout.txt
 d04d0e81fcfb0ad60a0400c549adab91f88e2ecdeb5db0a53bf3f3469222df38 *./legs/leg5-repeatability.validation.rev3.txt
 7472298c16188bdaa563ffbbfc1f5d1a789ea2316077d20191190863308a72e5 *./legs/leg5-repeatability.validation.txt
+7ae68cfd71ef70793cd8a64deaaaeddfecebb28d41fa798ab25e1cc2da633f52 *./legs/reparse-point-scan.txt
 44c33322e64375977ca476b7d61ce4dbc8dfd09229bcb1600a6b003024f5d26d *./preflight/hosted-runs-fae24c4.json
 96d620206bbc6d04b87858e4de0e2e71d5fdd362571a8eff231fa3428fe72515 *./preflight/preflight-recapture.txt
 8e5e7089bdfb82dc553ec0a41190df2e11f1c7e13cb31f7f12e62a8328e8e985 *./tools/crossleg_consistency.py
