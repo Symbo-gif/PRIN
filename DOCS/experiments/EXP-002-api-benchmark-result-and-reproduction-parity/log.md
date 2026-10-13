@@ -1,3 +1,5 @@
+Pre-registration freeze: **`9a9889d08dcaf2ad0ce31659ed67721b54b114d0`** - the git SHA of the last `preregistration.md` edit, recorded at the creation of the first `RUN-` directory (2026-10-12T21:27:05Z; campaign plan section 12.4); the pre-registration is frozen from that point. (Line added at session 0162 as an erratum.)
+
 # EXP-002 — E3 execution log (session 0161)
 
 **Append-only.** An entry is never edited after it is written; a mistake is
