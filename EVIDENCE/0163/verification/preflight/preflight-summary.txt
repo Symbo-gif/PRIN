@@ -1,0 +1,54 @@
+# Session 0163 (EXP-002 E5) — Read-Only Pre-Flight Summary
+UTC-START: 2026-10-14T19:01:34Z
+WORKDIR: C:\dev\PRIN
+
+## 1. Repository and PR #33 State
+- HEAD at session entry: cad9a8c502bfd38800594336663f621990bb8b22 (cad9a8c)
+- Branch: campaign/0159-exp002-e1 (equal to origin/campaign/0159-exp002-e1)
+- git status --porcelain at entry: empty (exit 0)
+- git log --oneline cad9a8c..HEAD: empty
+- git log --oneline HEAD..origin/campaign/0159-exp002-e1: empty
+- git diff --stat fae24c4 HEAD -- python crates tools paper parity Cargo.toml Cargo.lock pyproject.toml benchmarks/campaign benchmarks/_common:
+   benchmarks/campaign/README.md | 7 ++++++-
+   1 file changed, 6 insertions(+), 1 deletion(-)
+- PR #33 state: OPEN, mergeable: MERGEABLE, headRefOid: cad9a8c502bfd38800594336663f621990bb8b22, updatedAt: 2026-10-13T18:29:36Z
+  - Issue comments: 9 (last: 2026-10-11T23:25:34Z)
+  - Reviews: 4 (last: 2026-10-11T17:48:59Z)
+  - Inline review comments: 14 (last: 2026-10-11T17:25:49Z)
+  - No new comments or reviews since E2 (2026-10-12 UTC).
+
+## 2. Host, Toolchain, and Renderer Environment
+- OS: Microsoft Windows 11 Home 10.0.26300 (Build 26300), Windows-11-10.0.26300-SP0
+- CPU: AMD Ryzen 7 8700F 8-Core Processor (8 physical cores, 16 logical processors; AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD)
+- RAM: 32,355 MiB total visible; 5,034 MiB free at pre-flight
+- CPU LoadPercentage at pre-flight: 15 %
+- Python: 3.14.0 (tags/v3.14.0:ebf955d, Oct 7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)] (C:\dev\PRIN\.venv\Scripts\python.exe)
+- NumPy: 2.5.1
+- Matplotlib: 3.11.1 (backend Agg)
+- Pillow: 12.3.0
+- FreeType: 2.14.3
+- Font cache: C:\Users\there\.matplotlib\fontlist-v3.11.0.json (146,692 bytes, SHA-256 9c00441405ce72925562e017858a729b402612a203b0682b2e7fd79329c8f6bb)
+- Bundled fonts: 40 .ttf files under C:\dev\PRIN\.venv\Lib\site-packages\matplotlib\mpl-data\fonts\ttf (canonical font-map SHA-256 168e1aee710ca4496f65d7dc0689ed93257ed3e1ab3711dad4494940b51c8189)
+- Rust: rustc 1.99.0 (b940084d7 2026-09-28), cargo 1.99.0 (5f94df478 2026-08-27)
+- Ruff: 0.16.1
+- Mypy: 2.3.0 (compiled: yes)
+- Bandit: 1.9.4
+- Pytest: 9.1.1
+- Snyk CLI: 1.1306.2
+- Gitleaks (pinned): 8.30.1 (DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe)
+- Installed extension: python/prin/_prin_core.pyd (62,792,192 bytes, SHA-256 64ea1a2cf38cdbe43fc029c55e791e244b771b2909360c3890ae6f9224b47349, written 2026-09-28T23:01:06Z)
+
+## 3. GitHub Workflows (gh workflow list -R Symbo-gif/PRIN)
+- gpu-triton	active	359247968
+- gpu	active	314286526
+- nightly	active	347955033
+- parity	active	314286527
+- python	active	314286528
+- release	active	314286529
+- repro	active	314286530
+- rust	active	314286531
+- snyk	active	328599929
+- Copilot	active	363553452
+- Copilot cloud agent	active	330307035
+- Dependabot Updates	active	314928187
+- Dependency Graph	active	314648760

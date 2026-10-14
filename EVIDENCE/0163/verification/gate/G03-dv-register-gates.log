@@ -1,0 +1,13 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe tools/check_dv_register_gates.py
+CWD: C:/dev/PRIN
+SOURCE: 79a91a6 + staged session-0163 E5 report, D1 briefs, Parity Report erratum, and EVIDENCE/0163
+HEAD: 79a91a60d1f27be64317083d94003381f1ac19d6
+UTC-START: 2026-10-14T20:57:02Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+DV-register gate check passed.
+  Checked 44 DV register rows against 198 session-register entries.
+----
+UTC-END: 2026-10-14T20:57:06Z
+ELAPSED_S: 4
+EXIT_CODE: 0

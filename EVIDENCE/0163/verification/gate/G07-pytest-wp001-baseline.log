@@ -1,0 +1,97 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe -m pytest tests/test_wp001_baseline.py --basetemp=.pytest_basetemp -o faulthandler_timeout=300
+CWD: C:/dev/PRIN
+SOURCE: 79a91a6 + staged session-0163 E5 report, D1 briefs, Parity Report erratum, and EVIDENCE/0163
+HEAD: 79a91a60d1f27be64317083d94003381f1ac19d6
+UTC-START: 2026-10-14T20:57:26Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 74 items
+
+tests/test_wp001_baseline.py::test_current_baseline_automation_is_green PASSED [  1%]
+tests/test_wp001_baseline.py::test_metadata_validator_detects_version_drift PASSED [  2%]
+tests/test_wp001_baseline.py::test_metadata_validator_detects_missing_workspace_manifest PASSED [  4%]
+tests/test_wp001_baseline.py::test_metadata_validator_detects_unpublishable_workspace_dependency PASSED [  5%]
+tests/test_wp001_baseline.py::test_metadata_validator_detects_stale_workspace_dependency_pin PASSED [  6%]
+tests/test_wp001_baseline.py::test_metadata_validator_rejects_reverting_the_distribution_name PASSED [  8%]
+tests/test_wp001_baseline.py::test_metadata_validator_rejects_self_referencing_extra_by_import_name PASSED [  9%]
+tests/test_wp001_baseline.py::test_session_plan_validator_detects_missing_brief PASSED [ 10%]
+tests/test_wp001_baseline.py::test_session_plan_validator_detects_duplicate_sequence_ids PASSED [ 12%]
+tests/test_wp001_baseline.py::test_session_plan_validator_accepts_additive_subsessions PASSED [ 13%]
+tests/test_wp001_baseline.py::test_session_plan_validator_rejects_misplaced_subsession PASSED [ 14%]
+tests/test_wp001_baseline.py::test_api_traceability_covers_archive_without_importing_it PASSED [ 16%]
+tests/test_wp001_baseline.py::test_baseline_validator_enforces_exact_module_symbol_contract PASSED [ 17%]
+tests/test_wp001_baseline.py::test_api_traceability_is_deterministic PASSED [ 18%]
+tests/test_wp001_baseline.py::test_api_traceability_rejects_invalid_future_wp[WP-001] PASSED [ 20%]
+tests/test_wp001_baseline.py::test_api_traceability_rejects_invalid_future_wp[WP-999] PASSED [ 21%]
+tests/test_wp001_baseline.py::test_api_traceability_rejects_invalid_future_wp[not-a-wp] PASSED [ 22%]
+tests/test_wp001_baseline.py::test_api_traceability_fails_closed_on_unowned_module PASSED [ 24%]
+tests/test_wp001_baseline.py::test_inventory_skips_git_ignored_scratch PASSED [ 25%]
+tests/test_wp001_baseline.py::test_inventory_walks_a_directory_nested_in_another_work_tree PASSED [ 27%]
+tests/test_wp001_baseline.py::test_inventory_skips_deleted_tracked_files PASSED [ 28%]
+tests/test_wp001_baseline.py::test_inventory_applies_exclusions_to_git_listing PASSED [ 29%]
+tests/test_wp001_baseline.py::test_inventory_walks_without_git PASSED    [ 31%]
+tests/test_wp001_baseline.py::test_git_listing_failures_fall_back_to_walking[error0] PASSED [ 32%]
+tests/test_wp001_baseline.py::test_git_listing_failures_fall_back_to_walking[error1] PASSED [ 33%]
+tests/test_wp001_baseline.py::test_git_listing_failures_fall_back_to_walking[error2] PASSED [ 35%]
+tests/test_wp001_baseline.py::test_undecodable_git_listing_falls_back_to_walking PASSED [ 36%]
+tests/test_wp001_baseline.py::test_unsafe_git_names_fall_back_to_walking[/etc/passwd] PASSED [ 37%]
+tests/test_wp001_baseline.py::test_unsafe_git_names_fall_back_to_walking[../outside.txt] PASSED [ 39%]
+tests/test_wp001_baseline.py::test_unsafe_git_names_fall_back_to_walking[C:evil.txt] PASSED [ 40%]
+tests/test_wp001_baseline.py::test_safe_git_listing_is_returned_sorted PASSED [ 41%]
+tests/test_wp001_baseline.py::test_repository_inventory_is_deterministic_and_separates_archive PASSED [ 43%]
+tests/test_wp001_baseline.py::test_traceability_renderer_contains_summary_and_every_row PASSED [ 44%]
+tests/test_wp001_baseline.py::test_cli_emits_machine_readable_inventory PASSED [ 45%]
+tests/test_wp001_baseline.py::test_cli_emits_traceability_markdown PASSED [ 47%]
+tests/test_wp001_baseline.py::test_cli_check_reports_validation_errors PASSED [ 48%]
+tests/test_wp001_baseline.py::test_cli_check_reports_success PASSED      [ 50%]
+tests/test_wp001_baseline.py::test_api_discovery_rejects_non_static_contracts[names = ['item']\n__all__ = names\n-static list or tuple] PASSED [ 51%]
+tests/test_wp001_baseline.py::test_api_discovery_rejects_non_static_contracts[__all__ = {'item'}\n-static list or tuple] PASSED [ 52%]
+tests/test_wp001_baseline.py::test_api_discovery_rejects_non_static_contracts[__all__ = ['item', 'item']\n-contains duplicates] PASSED [ 54%]
+tests/test_wp001_baseline.py::test_api_discovery_rejects_non_static_contracts[from .leaf import *\n__all__ = []\n-wildcard imports] PASSED [ 55%]
+tests/test_wp001_baseline.py::test_api_discovery_rejects_non_static_contracts[__all__: list[str]\n-has no value] PASSED [ 56%]
+tests/test_wp001_baseline.py::test_api_discovery_rejects_unresolvable_reexports[sources0-no static definition or import] PASSED [ 58%]
+tests/test_wp001_baseline.py::test_api_discovery_rejects_unresolvable_reexports[sources1-source module is absent] PASSED [ 59%]
+tests/test_wp001_baseline.py::test_api_discovery_rejects_unresolvable_reexports[sources2-cyclic archived re-export] PASSED [ 60%]
+tests/test_wp001_baseline.py::test_ownership_schema_fails_closed[payload0-schema_version] PASSED [ 62%]
+tests/test_wp001_baseline.py::test_ownership_schema_fails_closed[payload1-object-valued] PASSED [ 63%]
+tests/test_wp001_baseline.py::test_ownership_schema_fails_closed[payload2-unknown module] PASSED [ 64%]
+tests/test_wp001_baseline.py::test_ownership_schema_fails_closed[payload3-must be an object] PASSED [ 66%]
+tests/test_wp001_baseline.py::test_ownership_schema_fails_closed[payload4-basis must be non-empty] PASSED [ 67%]
+tests/test_wp001_baseline.py::test_ownership_schema_fails_closed[payload5-unknown symbol override] PASSED [ 68%]
+tests/test_wp001_baseline.py::test_metadata_validator_reports_comprehensive_drift PASSED [ 70%]
+tests/test_wp001_baseline.py::test_metadata_validator_reports_missing_required_file PASSED [ 71%]
+tests/test_wp001_baseline.py::test_python_dependency_audits_are_complete_and_gating PASSED [ 72%]
+tests/test_wp001_baseline.py::test_python_workflow_limits_default_github_token_permissions PASSED [ 74%]
+tests/test_wp001_baseline.py::test_python_docs_job_installs_mot_extra_for_notebook_execution PASSED [ 75%]
+tests/test_wp001_baseline.py::test_release_workflow_publishes_workspace_crates PASSED [ 77%]
+tests/test_wp001_baseline.py::test_release_workflow_publish_or_skip_checks_exact_version PASSED [ 78%]
+tests/test_wp001_baseline.py::test_release_workflow_publish_or_skip_continues_under_errexit[error: crate version `1.2.3` is already uploaded] PASSED [ 79%]
+tests/test_wp001_baseline.py::test_release_workflow_publish_or_skip_continues_under_errexit[error: crate version 1.2.3 already exists on crates.io index] PASSED [ 81%]
+tests/test_wp001_baseline.py::test_release_workflow_publish_or_skip_continues_under_errexit[error: crate prin-dynamics@1.2.3 already published] PASSED [ 82%]
+tests/test_wp001_baseline.py::test_release_workflow_publish_or_skip_fails_on_unrelated_error PASSED [ 83%]
+tests/test_wp001_baseline.py::test_release_workflow_smoke_test_never_uses_bash_on_the_self_hosted_leg PASSED [ 85%]
+tests/test_wp001_baseline.py::test_release_workflow_windows_smoke_test_names_its_shell_and_isolates PASSED [ 86%]
+tests/test_wp001_baseline.py::test_release_workflow_reclaims_disk_before_the_hosted_build PASSED [ 87%]
+tests/test_wp001_baseline.py::test_release_workflow_smoke_test_satisfies_torch_from_the_cpu_index PASSED [ 89%]
+tests/test_wp001_baseline.py::test_repro_workflow_runs_wp035_pipeline_and_tamper_tests PASSED [ 90%]
+tests/test_wp001_baseline.py::test_python_ci_builds_inside_explicit_virtual_environments PASSED [ 91%]
+tests/test_wp001_baseline.py::test_secret_scan_is_blocking_and_covers_full_history PASSED [ 93%]
+tests/test_wp001_baseline.py::test_session_plan_validator_reports_metadata_and_link_drift PASSED [ 94%]
+tests/test_wp001_baseline.py::test_missing_frozen_api_export_fails_closed PASSED [ 95%]
+tests/test_wp001_baseline.py::test_invalid_ownership_json_fails_closed PASSED [ 97%]
+tests/test_wp001_baseline.py::test_missing_session_register_fails_closed PASSED [ 98%]
+tests/test_wp001_baseline.py::test_cli_reports_invalid_root PASSED       [100%]
+
+======================= 74 passed in 167.05s (0:02:47) ========================
+----
+UTC-END: 2026-10-14T21:01:21Z
+ELAPSED_S: 234
+EXIT_CODE: 0

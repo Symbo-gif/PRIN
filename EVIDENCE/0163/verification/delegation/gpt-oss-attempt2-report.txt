@@ -1,0 +1,3 @@
+warning: --mode auto is not available for this account; continuing in the default mode.
+error: Our servers are experiencing high traffic right now, please try again in a minute. (UNAVAILABLE (code 503): No capacity available for model gpt-oss-120b-medium on the server)
+AGY_ERROR: {"short_error":"UNAVAILABLE (code 503): No capacity available for model gpt-oss-120b-medium on the server","status":"UNAVAILABLE","error_code":503,"code_kind":"http","retryable":true,"error_id":"c8059c79-188e-4aad-b95c-2a0164076863-5-2010"}

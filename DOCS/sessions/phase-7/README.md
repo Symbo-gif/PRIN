@@ -17,8 +17,8 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 | 0160 | EXP-002 | E2 — Review and approval | [API, benchmark-result, and reproduction parity](0160-exp002-e2-api-benchmark-result-and-reproduction-parity.md) | COMPLETE — EXP-002 APPROVED 2026-10-12 UTC |
 | 0161 | EXP-002 | E3 — Execution | [API, benchmark-result, and reproduction parity](0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md) | COMPLETE — 5/5 registered runs executed 2026-10-12 UTC at `fae24c4`, 0 aborted, all manifested and independently validated; no verdict computed (E4 owns it) |
 | 0162 | EXP-002 | E4 — Analysis | [API, benchmark-result, and reproduction parity](0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md) | COMPLETE — analysed 2026-10-13 UTC with the committed module `3731fc2`; H1/H2/H4 CONFIRMED, H3 REFUTED (both policies); D1 flag raised |
-| 0163 | EXP-002 | E5 — Report | [API, benchmark-result, and reproduction parity](0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md) | READY — E4 closed 2026-10-13 UTC with a D1 flag; reports in full, then blocks its successor |
-| 0164 | EXP-003 | E1 — Pre-registration | [CPU scaling and sweep performance](0164-exp003-e1-cpu-scaling-and-sweep-performance.md) | PLANNED |
+| 0163 | EXP-002 | E5 — Report | [API, benchmark-result, and reproduction parity](0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md) | **COMPLETE — report issued 2026-10-14 UTC; exit gate open on the triggered D1 correction cycle.** All verdicts reported in full (H1/H2/H4 `CONFIRMED`, H3 `REFUTED` under both approved `21/39` and sensitivity `5/39` policies); §10.4 **D1** carried; retained bytes verified `39/39`, E4 outputs regenerated `8/8` byte-identically, §8.2 reconstruction completed (`prin` `39/39` raw-identical, `reference` `25/39` raw / `39/39` normalized); Parity Report erratum issued; four contingency sessions (`2026-10-14-exp002-d1-s1..s4`) instantiated; awaiting maintainer verification |
+| 0164 | EXP-003 | E1 — Pre-registration | [CPU scaling and sweep performance](0164-exp003-e1-cpu-scaling-and-sweep-performance.md) | **BLOCKED** — EXP-002 D1 (campaign plan §10.4 items 2 & 5, §3.3); released only after the [correction cycle](../contingencies/2026-10-14-exp002-d1-s1-correction-implementation.md) S1→S4 closes and `EXP-002-r1` returns a non-reversal verdict (or a Project Plan §8.3 amendment is adopted) |
 | 0165 | EXP-003 | E2 — Review and approval | [CPU scaling and sweep performance](0165-exp003-e2-cpu-scaling-and-sweep-performance.md) | PLANNED |
 | 0166 | EXP-003 | E3 — Execution | [CPU scaling and sweep performance](0166-exp003-e3-cpu-scaling-and-sweep-performance.md) | PLANNED |
 | 0167 | EXP-003 | E4 — Analysis | [CPU scaling and sweep performance](0167-exp003-e4-cpu-scaling-and-sweep-performance.md) | PLANNED |
@@ -156,4 +156,40 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 > **Still open:** opening the E1–E5 pull request (authorized by the same
 > verification, not yet exercised — nothing is pushed) and its §14.1
 > tested-head-SHA/required-check addendum; and announcing the report in the next
-> Project State Report, which is not an experiment session's to issue.
+> Project State Report, which is not an experiment session's to issue. *(Dated
+> update, 2026-10-11 UTC: the EXP-001-r1 E1–E5 pull request was opened and
+> merged as PR #28 `32cfed8`, and PSR-040 was issued at EA-007 via PR #32
+> `da53ea1`.)*
+>
+> **EXP-002 E5 REPORTED 2026-10-14 UTC (session 0163) — D1 RAISED ON H3;
+> CAMPAIGN BLOCKED AT SESSION 0164.** The
+> [EXP-002 E5 report](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md)
+> issues all verdicts in full: **H1 `CONFIRMED`** (`175/175` `api_symbols`
+> resolved, `172/172` `legacy_api_names` owned, `0` duplicate/removed/unexpected,
+> frozen sets empty), **H2 `CONFIRMED`** (`62/62` `claim_comparator_records`
+> agree across `C01`–`C05`), **H3 `REFUTED` (D1)** under both the approved §5.4
+> policy (`21/39` `generated_files` equal, `18/39` differing: `.pdf` and `.png`
+> of figures 5, 7, 8, 9, 10, 11, 12, 14, and 15, while all `11/11` `.tex` tables
+> and `5/14` figures match) and the §11.3 sensitivity policy (`5/39` equal,
+> `34/39` differing), and **H4 `CONFIRMED`** (`39/39` `generated_files`
+> raw-identical across two PRIN processes, canonical projections equal). In
+> session `0163`, the retained E3 publication bytes (`39/39` per run) and input
+> snapshots (`172/172` per run) were verified first against their manifested
+> digests, the 7 E4 analysis outputs and `report-manifest.json` regenerated
+> byte-identically (`8/8`) in a detached worktree outside the repository, the
+> §8.2 reconstruction reproduced `39/39` PRIN-arm raw files and `39/39`
+> normalized/sensitivity digests on both arms (`25/39` reference-arm raw files,
+> disclosed as the unpinned reference PDF `CreationDate` limitation under §11.3
+> item 2), and an independent recount matched E4 with zero discrepancies.
+> **Per campaign plan §3.3 and §10.4 items 2–5, session `0164` (EXP-003 E1) and
+> every later campaign session (`0165`–`0194`, covering EXP-003 … EXP-008 and
+> Campaign E6 synthesis) inherit the block** until the four contingency
+> correction sessions
+> ([`2026-10-14-exp002-d1-s1..s4`](../contingencies/2026-10-14-exp002-d1-s1-correction-implementation.md))
+> close and `EXP-002-r1` returns a non-reversal E5 verdict (or the maintainer
+> adopts a Project Plan §8.3 amendment; note that while campaign plan §3.2 lists
+> only EXP-001 as EXP-003's hard prerequisite, §3.3 and §10.4 items 2 & 5 block
+> the immediate numbered successor `0164`, and running EXP-003 in parallel would
+> require a Plan §8.3 amendment). Planned session numbers do not change.
+> Maintainer verification of the EXP-002 E5 report and approval of the S1
+> correction scope remain open (`report.md` §14).

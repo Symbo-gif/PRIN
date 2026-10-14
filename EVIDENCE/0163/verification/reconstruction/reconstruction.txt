@@ -1,0 +1,16 @@
+# Step 3 — Protocol Section 8.2 Reconstruction of the 39 Publication Files
+UTC-START: 2026-10-14T19:15:01.340Z
+UTC-END: 2026-10-14T19:15:32.582Z
+ELAPSED_S: 31.242
+WORKDIR: C:\dev\PRIN (clean checkout at HEAD = cad9a8c502bfd38800594336663f621990bb8b22)
+SCRATCH OUTPUT ROOT: DOCS/test_and_benchmark_results/EXP-002-e5-reconstruction/ (removed after verification)
+
+Limitation disclosed (protocol section 8.2):
+Executed in the maintainer's main checkout C:\dev\PRIN because the compiled extension python/prin/_prin_core.pyd is gitignored and .venv's editable .pth files point at C:\dev\PRIN\python and the reference tree; a separate git worktree has no _prin_core.pyd.
+
+OUTPUT:
+PRE-RECON RENDER ENV: {"backend": "Agg", "font_cache": {"name": "fontlist-v3.11.0.json", "sha256": "9c00441405ce72925562e017858a729b402612a203b0682b2e7fd79329c8f6bb"}, "freetype": "2.14.3", "matplotlib": "3.11.1", "numpy": "2.5.1", "pillow": "12.3.0"} font_map_sha256= 168e1aee710ca4496f65d7dc0689ed93257ed3e1ab3711dad4494940b51c8189
+RECON reference: raw_equal=25/39, normalized_equal=39/39, sensitivity_equal=39/39, full_record_equal=25/39, listing_sha=22dc4d76132d21753dc57a05afdbe1f61f2330830539d44f5bd2bf7f39949ff1
+  raw_diffs (14): ['figures/fig10_statistical_summary.pdf', 'figures/fig11_flops_scaling.pdf', 'figures/fig12_supercritical_regime.pdf', 'figures/fig13_representation_geometry.pdf', 'figures/fig14_gradient_flow.pdf', 'figures/fig15_noise_velocity.pdf', 'figures/fig2_clevr_n_capacity.pdf', 'figures/fig3_chimera_metrics.pdf', 'figures/fig4_chimera_k_alpha_heatmap.pdf', 'figures/fig5_mot_occlusion_comparison.pdf', 'figures/fig6_oscillosim_scaling.pdf', 'figures/fig7_ablation_results.pdf', 'figures/fig8_parameter_efficiency.pdf', 'figures/fig9_training_curves.pdf']
+RECON prin: raw_equal=39/39, normalized_equal=39/39, sensitivity_equal=39/39, full_record_equal=39/39, listing_sha=c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669
+EXIT_CODE: 0

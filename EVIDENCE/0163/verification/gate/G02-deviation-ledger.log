@@ -1,0 +1,13 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe tools/check_deviation_ledger.py DOCS/reports/039-project-state.md DOCS/reports/040-project-state.md
+CWD: C:/dev/PRIN
+SOURCE: 79a91a6 + staged session-0163 E5 report, D1 briefs, Parity Report erratum, and EVIDENCE/0163
+HEAD: 79a91a60d1f27be64317083d94003381f1ac19d6
+UTC-START: 2026-10-14T20:56:11Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+Ledger consistency check passed.
+  Compared 142 rows in DOCS\reports\039-project-state.md with 146 rows in DOCS\reports\040-project-state.md.
+----
+UTC-END: 2026-10-14T20:56:57Z
+ELAPSED_S: 47
+EXIT_CODE: 0

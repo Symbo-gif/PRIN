@@ -1,0 +1,46 @@
+# Step 2 — Clean-Worktree Regeneration of the Seven E4 Analysis Outputs
+WORKDIR: C:\dev\PRIN
+DETACHED WORKTREE: C:\dev\PRIN-0163-e5-wt (HEAD = cad9a8c502bfd38800594336663f621990bb8b22)
+
+COMMAND 1:
+git worktree add --detach C:/dev/PRIN-0163-e5-wt HEAD
+UTC-START: 2026-10-14T19:12:29.263Z
+UTC-END: 2026-10-14T19:12:37.329Z
+EXIT_CODE: 0
+
+COMMAND 2:
+C:/dev/PRIN/.venv/Scripts/python.exe -I C:/dev/PRIN-0163-e5-wt/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py
+UTC-START: 2026-10-14T19:12:37.329Z
+UTC-END: 2026-10-14T19:13:26.731Z
+ELAPSED_S: 49.402
+EXIT_CODE: 0
+
+STDOUT:
+H1: CONFIRMED
+H2: CONFIRMED
+H3: REFUTED
+H4: CONFIRMED
+H3_sensitivity_policy: REFUTED
+D1 flag: True
+DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json 2dabdea13d6d963caed4adb35edd2b66deaedc70929afcfb765003b7c3303e13
+DOCS/test_and_benchmark_results/EXP-002/analysis/api-mapping.csv 7f2cfd76f62ccecae89f2e52bbf67c39ac067b82b7d4fef6ec499bb2c93c5e19
+DOCS/test_and_benchmark_results/EXP-002/analysis/conclusion-comparisons.csv 0c01c59c8e1f32ea3ad173dddde117ad9a94b187289328da760e1c906e0bba85
+DOCS/test_and_benchmark_results/EXP-002/analysis/reproduction-comparisons.csv 424f292d7699ab7e7d92ce089201a7d501acd7deae02aff50d393ac06870e0d1
+DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json e28f3e4fad0a5a7ba3dedc686900f7b808815378035d6dab6a402a2067025d9d
+DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md 97ecd3ab53bdbee2cf22e22e49866843544f70b3803213560978b4185af71789
+DOCS/test_and_benchmark_results/EXP-002/analysis/coverage-and-deferrals.md ff14a9f8592576f895a559b05d8b0848039d6efefc2b467d4bab97c3f94a18f9
+DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report-manifest.json 6b15dcc112513cdce9cb2d923208f93d3616898225efed545706c56526e68781
+
+BYTE-FOR-BYTE COMPARISON (worktree outputs vs committed report-manifest.json and main-tree E4 outputs):
+MATCH report-manifest.json (18848 B) 6b15dcc112513cdce9cb2d923208f93d3616898225efed545706c56526e68781
+MATCH DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json (13407 B) 2dabdea13d6d963caed4adb35edd2b66deaedc70929afcfb765003b7c3303e13
+MATCH DOCS/test_and_benchmark_results/EXP-002/analysis/api-mapping.csv (18375 B) 7f2cfd76f62ccecae89f2e52bbf67c39ac067b82b7d4fef6ec499bb2c93c5e19
+MATCH DOCS/test_and_benchmark_results/EXP-002/analysis/conclusion-comparisons.csv (10872 B) 0c01c59c8e1f32ea3ad173dddde117ad9a94b187289328da760e1c906e0bba85
+MATCH DOCS/test_and_benchmark_results/EXP-002/analysis/reproduction-comparisons.csv (31277 B) 424f292d7699ab7e7d92ce089201a7d501acd7deae02aff50d393ac06870e0d1
+MATCH DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json (4345 B) e28f3e4fad0a5a7ba3dedc686900f7b808815378035d6dab6a402a2067025d9d
+MATCH DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md (2397 B) 97ecd3ab53bdbee2cf22e22e49866843544f70b3803213560978b4185af71789
+MATCH DOCS/test_and_benchmark_results/EXP-002/analysis/coverage-and-deferrals.md (4623 B) ff14a9f8592576f895a559b05d8b0848039d6efefc2b467d4bab97c3f94a18f9
+
+CLEANUP:
+git worktree remove --force C:/dev/PRIN-0163-e5-wt
+EXIT_CODE: 0 (main checkout git status --porcelain empty; report-manifest.json untouched)

@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-002 E5 reported — H1, H2, H4 confirmed; H3 refuted, D1 correction cycle
+  opened, session 0164 blocked (session 0163, 2026-10-14 UTC).** The E5 report
+  `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md`
+  issues all verdicts in full from the five immutable E3 records at source
+  `fae24c4` (freeze commit `9a9889d`): **H1 CONFIRMED** (175/175 `api_symbols`
+  resolved, 172/172 `legacy_api_names` owned, 0 duplicate/removed/unexpected,
+  frozen-contract sets empty), **H2 CONFIRMED** (62/62
+  `claim_comparator_records` agree across families C01–C05), **H3 REFUTED (D1)**
+  under both the approved section 5.4 comparison policy (21/39 `generated_files`
+  equal, 18/39 differing: the PDF and PNG of figures 5, 7, 8, 9, 10, 11, 12,
+  14, and 15, while all 11/11 LaTeX tables and 5/14 figures match) and the
+  section 11.3 pre-exposure sensitivity policy (5/39 equal, 34/39 differing),
+  and **H4 CONFIRMED** (39/39 `generated_files` raw-byte-identical between two
+  separate PRIN processes, canonical projections equal). In session 0163, the
+  retained E3 publication bytes (39/39 per run) and input snapshots (172/172
+  per run) were verified first against their manifested digests, the seven E4
+  analysis outputs and `report-manifest.json` (`6b15dcc1…68781`) regenerated
+  byte-identically (8/8) in a clean detached worktree outside the repository,
+  the protocol section 8.2 reconstruction reproduced 39/39 PRIN-arm raw files
+  and 39/39 normalized/sensitivity digests on both arms (25/39 reference-arm
+  raw files, due to the unpinned reference PDF `CreationDate` timestamp,
+  recorded as a reconstruction limitation under section 11.3 item 2), and an
+  independent recount matched E4 with zero discrepancies. Per campaign plan
+  sections 3.3 and 10.4, the four conditional correction session briefs
+  `DOCS/sessions/contingencies/2026-10-14-exp002-d1-s1-correction-implementation.md`
+  through `s4-correction-documentation.md` (`EXP-002-D1`) are instantiated, an
+  erratum admonition is added to the Parity Report (`DOCS/sphinx/parity_report.rst`)
+  qualifying cross-generator figure parity on the 9 differing figures, and
+  session 0164 (EXP-003 E1) and downstream campaign sessions are set to
+  `BLOCKED` until S1–S4 close and `EXP-002-r1` returns a non-reversal verdict
+  (or a Project Plan section 8.3 amendment is adopted). No root cause is
+  claimed at E5. Maintainer verification of the report and approval of the S1
+  scope remain open.
+
 - **EXP-002 E4 analysed — H3 refuted, D1 flag raised (session 0162,
   2026-10-13 UTC).** The registered analysis module
   `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py`

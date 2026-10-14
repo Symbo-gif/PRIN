@@ -1,0 +1,28 @@
+# Step 1(a) — Publication Listing Digests (e2-review.md section 8 command, verbatim from PowerShell)
+UTC: 2026-10-14T19:06:58Z
+SHELL: PowerShell
+WORKDIR: C:\dev\PRIN
+
+COMMAND (reference):
+.venv\Scripts\python -c "import hashlib,pathlib,sys; r=pathlib.Path(sys.argv[1]); print(hashlib.sha256(''.join(f'{p.relative_to(r).as_posix()} {p.stat().st_size} {hashlib.sha256(p.read_bytes()).hexdigest()}\n' for p in sorted(r.rglob('*')) if p.is_file()).encode()).hexdigest())" DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/publication
+OUTPUT:
+d674de7d4b5830c9abf525fcc484a5ebc01e3620ca38b63badd037e289487323
+EXPECTED:
+d674de7d4b5830c9abf525fcc484a5ebc01e3620ca38b63badd037e289487323
+EXIT_CODE: 0 (MATCH)
+
+COMMAND (prin):
+.venv\Scripts\python -c "import hashlib,pathlib,sys; r=pathlib.Path(sys.argv[1]); print(hashlib.sha256(''.join(f'{p.relative_to(r).as_posix()} {p.stat().st_size} {hashlib.sha256(p.read_bytes()).hexdigest()}\n' for p in sorted(r.rglob('*')) if p.is_file()).encode()).hexdigest())" DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/publication
+OUTPUT:
+c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669
+EXPECTED:
+c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669
+EXIT_CODE: 0 (MATCH)
+
+COMMAND (repeatability):
+.venv\Scripts\python -c "import hashlib,pathlib,sys; r=pathlib.Path(sys.argv[1]); print(hashlib.sha256(''.join(f'{p.relative_to(r).as_posix()} {p.stat().st_size} {hashlib.sha256(p.read_bytes()).hexdigest()}\n' for p in sorted(r.rglob('*')) if p.is_file()).encode()).hexdigest())" DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu/publication
+OUTPUT:
+c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669
+EXPECTED:
+c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669
+EXIT_CODE: 0 (MATCH)

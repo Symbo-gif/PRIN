@@ -1,11 +1,11 @@
 # Session 0163 — EXP-002 / C1 E5: Report — API, benchmark-result, and reproduction parity
 
-**Status:** READY — E4 closed 2026-10-13 UTC (session 0162) with a D1 flag on H3; E5 reports in full, then blocks its successor (campaign plan §10.4); first verify the retained publication bytes (protocol §8.2, §11.3 item 2)
-**Roadmap phase:** 7 — Experimentation campaign and stable release  
-**Execution unit:** EXP-002 / C1  
-**Session type:** E5 — Report  
-**Predecessor:** [0162 — Analysis](0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md)  
-**Successor:** [0164 — Pre-registration](0164-exp003-e1-cpu-scaling-and-sweep-performance.md)  
+**Status:** COMPLETE — report issued; exit gate open on the triggered D1 correction cycle (see [`report.md`](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md) §8 and §14)
+**Roadmap phase:** 7 — Experimentation campaign and stable release
+**Execution unit:** EXP-002 / C1
+**Session type:** E5 — Report
+**Predecessor:** [0162 — Analysis](0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md)
+**Successor:** [0164 — Pre-registration](0164-exp003-e1-cpu-scaling-and-sweep-performance.md)
 **Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and

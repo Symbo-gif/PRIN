@@ -1,0 +1,17 @@
+# Step 4 — Independent Recount from the Five Raw Records
+UTC: 2026-10-14T19:15:01Z
+WORKDIR: C:\dev\PRIN
+
+Method:
+Standalone stdlib Python script reading the five raw JSON records directly (without importing exp002_e4_analysis.py, exp002_driver.py, prin, or prinet) and cross-checking against summary.json, the three CSVs, error-distributions.json, expected-vs-observed.md, coverage-and-deferrals.md, and report-manifest.json.
+
+OUTPUT:
+H1: rows=175, resolved=175, callable=172, constants=3 (['CONTROL_DIM', 'STATE_DIM', '__version__']), legacy=172, owned_legacy=172, observed=175 (unique=175), frozen_missing=[], frozen_extra=[]
+H2: total=62, fam_counts={'C01': 5, 'C02': 42, 'C03': 4, 'C04': 5, 'C05': 6}, fam_agree={'C01': 5, 'C02': 42, 'C03': 4, 'C04': 5, 'C05': 6}, C02 true=26, false=16
+H3 approved: equal=21/39, differ=18/39, prin_arch=11/11, ref_arch=11/11
+  H3 approved differing (18): ['figures/fig10_statistical_summary.pdf', 'figures/fig10_statistical_summary.png', 'figures/fig11_flops_scaling.pdf', 'figures/fig11_flops_scaling.png', 'figures/fig12_supercritical_regime.pdf', 'figures/fig12_supercritical_regime.png', 'figures/fig14_gradient_flow.pdf', 'figures/fig14_gradient_flow.png', 'figures/fig15_noise_velocity.pdf', 'figures/fig15_noise_velocity.png', 'figures/fig5_mot_occlusion_comparison.pdf', 'figures/fig5_mot_occlusion_comparison.png', 'figures/fig7_ablation_results.pdf', 'figures/fig7_ablation_results.png', 'figures/fig8_parameter_efficiency.pdf', 'figures/fig8_parameter_efficiency.png', 'figures/fig9_training_curves.pdf', 'figures/fig9_training_curves.png']
+H3 sensitivity: equal=5/39, differ=34/39, prin_arch=11/11, ref_arch=0/11
+  H3 sensitivity equal (5): ['figures/fig13_representation_geometry.png', 'figures/fig2_clevr_n_capacity.png', 'figures/fig3_chimera_metrics.png', 'figures/fig4_chimera_k_alpha_heatmap.png', 'figures/fig6_oscillosim_scaling.png']
+H4 raw: equal=39/39, differ=0/39
+CROSS-CHECK against 7 E4 outputs and report-manifest.json: ALL EXACT MATCH
+EXIT_CODE: 0

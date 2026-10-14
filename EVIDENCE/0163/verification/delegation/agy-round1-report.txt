@@ -1,0 +1,204 @@
+# Cold Review and Self-Audit Report: EXP-002 E5 Report, D1 Records, and Independent Recount
+
+**Reviewer mode:** Read-only cold review and self-audit  
+**Target repository:** `C:\dev\PRIN`  
+**Target branch:** `campaign/0159-exp002-e1`  
+**Execution scope:** Read-only audit across 29 permitted path specifications. Zero shell commands executed, zero directory listings performed, zero files modified.
+
+---
+
+## 1. Findings
+
+### [AUDIT-EXP002-F1] Overstated retention scope for `inputs/` in report narrative
+- **Severity:** `Low`
+- **Location:** [`report.md:212`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L212)
+- **What is wrong:**  
+  The Step 1 narrative in `report.md` §6.1 states:
+  > *"For each of the three publication runs (and additionally for the api and conclusions runs, which also retain `inputs/`), walked `inputs/` and compared the on-disk file set, byte sizes, and SHA-256 digests against the 172 records in `paper/artefact_manifest.json` (`300cdc09…`): `172/172` files present, `0` missing, `0` extra, `172/172` exact byte-size and SHA-256 matches (`16,047,018 B` per run)."*
+  
+  This is factually inaccurate in two respects:
+  1. The `api` run (`RUN-20261012T212705Z-fae24c4-api-cpu`) does not use, copy, or retain an `inputs/` directory. Table 12.3 in [`report.md:411`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L411) explicitly registers `| RUN-20261012T212705Z-fae24c4-api-cpu | — | — | n/a |`, and [`report-manifest.json:56-67`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report-manifest.json#L56-L67) indexes only `api.json`, `campaign-metadata.json`, and `manifest.json`.
+  2. The underlying Step 1 verification record [`retained-bytes-verification.txt:7-15`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/retained-bytes/retained-bytes-verification.txt#L7-L15) explicitly documents that read-only no-follow byte verification was executed on the three publication runs (`reference`, `prin`, and `repeatability`), containing no verification record for `api` or `conclusions`.
+- **Evidence:**  
+  - [`report.md:411`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L411)
+  - [`report-manifest.json:56-78`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report-manifest.json#L56-L78)
+  - [`retained-bytes-verification.txt:7-15`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/retained-bytes/retained-bytes-verification.txt#L7-L15)
+- **Exact fix:**  
+  Amend line 212 of [`report.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L212) to remove the reference to the `api` run:
+  ```markdown
+  - For each of the three publication runs (which retain inputs/, as does the conclusions run), walked inputs/ and compared the on-disk file set, byte sizes, and SHA-256 digests against the 172 records in paper/artefact_manifest.json (300cdc09…): 172/172 files present, 0 missing, 0 extra, 172/172 exact byte-size and SHA-256 matches (16,047,018 B per run).
+  ```
+
+---
+
+### [AUDIT-EXP002-F2] Stray markdown backtick in README reconstruction summary
+- **Severity:** `Info`
+- **Location:** [`README.md:160`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#L160)
+- **What is wrong:**  
+  A trailing backtick follows `sensitivity-identical` without an opening backtick inside the bold markup, producing malformed markdown rendering:
+  `**`39/39` sensitivity-identical`**.`
+- **Evidence:**  
+  [`README.md:160`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#L160):
+  ```markdown
+    - `reference` arm: **`25/39` raw-identical** (`14/14` PNGs, `11/11` tables; `0/14` PDFs because the pinned reference generator passes no fixed `CreationDate` to Matplotlib), **`39/39` normalized-identical**, **`39/39` sensitivity-identical`**.
+  ```
+  Compare with line 159 above it: `**`39/39` sensitivity-identical**`.
+- **Exact fix:**  
+  Remove the stray trailing backtick on line 160:
+  ```markdown
+    - `reference` arm: **`25/39` raw-identical** (`14/14` PNGs, `11/11` tables; `0/14` PDFs because the pinned reference generator passes no fixed `CreationDate` to Matplotlib), **`39/39` normalized-identical**, **`39/39` sensitivity-identical**.
+  ```
+
+---
+
+### [AUDIT-EXP002-F3] Typographical missing whitespace in report maintainer options
+- **Severity:** `Info`
+- **Location:** [`report.md:499`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L499)
+- **What is wrong:**  
+  Missing space between `"the"` and `"DV-008"` in parenthetical prose: `(in theDV-008/DV-017/DV-035 third-party class)`.
+- **Evidence:**  
+  [`report.md:499`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L499):
+  ```markdown
+  or **(b)** authorize a dated Deferred Validation register row (in theDV-008/DV-017/DV-035 third-party class) recording the non-reachability evidence.
+  ```
+- **Exact fix:**  
+  Insert a space: `(in the DV-008/DV-017/DV-035 third-party class)`.
+
+---
+
+## 2. Verification of Consistency Across Permitted Sources
+
+### 2.1 Numbers, Denominators, and Units
+Every count, denominator, digest, and classification was re-verified against [`summary.json`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json), [`reproduction-comparisons.csv`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/reproduction-comparisons.csv), [`report-manifest.json`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report-manifest.json), and [`independent-recount.txt`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/regeneration/independent-recount.txt):
+
+1. **H1 — API Mapping Census (`CONFIRMED`):**
+   - Population denominator: `175` `api_symbols` (`175/175` resolved, `0` unresolved, `0` none, `0` unsupported, `0` unverifiable).
+   - Symbol classification: `172` `callable` + `3` scalar `constant` (`CONTROL_DIM` [int], `STATE_DIM` [int], `__version__` [str]).
+   - Legacy ownership denominator: `172` `legacy_api_names` (`172/172` owned in Migration Guide and WP-001 matrix, `0` unowned).
+   - Observed export list: `175` entries (`175` unique, `0` duplicates, `0` removed, `0` unexpected).
+   - Frozen contract check against `FROZEN_PUBLIC_API`: `frozen_contract_missing = []`, `frozen_contract_extra = []`.
+   - Verified consistent in: [`summary.json:20-46`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json#L20-L46), [`error-distributions.json:2-23`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json#L2-L23), [`expected-vs-observed.md:7`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md#L7), [`independent-recount.txt:9`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/regeneration/independent-recount.txt#L9), [`report.md:39, 55, 69-81`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L39), [`analysis.md:201-209`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis.md#L201-L209), [`parity_report.rst:167-172`](file:///C:/dev/PRIN/DOCS/sphinx/parity_report.rst#L167-L172), [`CHANGELOG.md:16-18`](file:///C:/dev/PRIN/CHANGELOG.md#L16-L18), [`SESSION_REGISTER.md:746-748`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L746-L748), and contingency briefs.
+
+2. **H2 — Historical Conclusion Preservation (`CONFIRMED`):**
+   - Population denominator: `62` `claim_comparator_records` (`62/62` agree, `0` disagree).
+   - Breakdown by family:
+     - `C01`: `5/5` agree (`0` disagree, `0` missing)
+     - `C02`: `42/42` agree (`26` true, `16` false; archival self-consistency on `chimera_detected`)
+     - `C03`: `4/4` agree (`0` disagree, `0` missing)
+     - `C04`: `5/5` agree (`0` disagree, `0` missing)
+     - `C05`: `6/6` agree (`0` disagree, `0` missing)
+   - Verified consistent in: [`summary.json:47-92`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json#L47-L92), [`error-distributions.json:24-64`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json#L24-L64), [`expected-vs-observed.md:8`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md#L8), [`independent-recount.txt:10`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/regeneration/independent-recount.txt#L10), [`report.md:40, 56, 82-97`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L40), [`analysis.md:210-216`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis.md#L210-L216), [`parity_report.rst:173-179`](file:///C:/dev/PRIN/DOCS/sphinx/parity_report.rst#L173-L179), [`CHANGELOG.md:18-19`](file:///C:/dev/PRIN/CHANGELOG.md#L18-L19), and [`SESSION_REGISTER.md:748-749`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L748-L749).
+
+3. **H3 — Publication Fidelity under Approved Policy (`REFUTED`, D1 raised):**
+   - Population denominator: `39` `generated_files` (`14` PDF, `14` PNG, `11` TeX tables).
+   - Equal: `21/39` files (`5/14` PDF, `5/14` PNG, `11/11` TeX).
+   - Differing (counterexamples): `18/39` files (`9/14` PDF, `9/14` PNG).
+   - Stems differing: Figures 5, 7, 8, 9, 10, 11, 12, 14, and 15 (in both `.pdf` and `.png`).
+   - Stems equal: Figures 2, 3, 4, 6, and 13 (in both `.pdf` and `.png`).
+   - Tables vs archived baseline: `11/11` PRIN tables equal archived; `0/11` reference tables differ from archived (`reference_tables_inconsistent_with_archived = []`).
+   - Verified consistent in: [`summary.json:93-152`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json#L93-L152), [`error-distributions.json:65-88`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json#L65-L88), [`expected-vs-observed.md:9`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md#L9), [`reproduction-comparisons.csv:2-40`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/reproduction-comparisons.csv#L2-L40), [`independent-recount.txt:11-12`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/regeneration/independent-recount.txt#L11-L12), [`report.md:41, 57, 98-133`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L41), [`analysis.md:217-235`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis.md#L217-L235), [`parity_report.rst:185-200`](file:///C:/dev/PRIN/DOCS/sphinx/parity_report.rst#L185-L200), [`CHANGELOG.md:19-23`](file:///C:/dev/PRIN/CHANGELOG.md#L19-L23), and [`SESSION_REGISTER.md:749-753`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L749-L753).
+
+4. **H3 — Publication Fidelity under §11.3 Sensitivity Policy (`REFUTED`):**
+   - Population denominator: `39` `generated_files`.
+   - Equal: `5/39` files (`0/14` PDF, `5/14` PNG, `0/11` TeX).
+   - Differing: `34/39` files (`14/14` PDF, `9/14` PNG, `11/11` TeX).
+   - Tables vs archived baseline: `11/11` PRIN tables equal archived; `11/11` reference tables differ from archived due to CRLF vs LF (`reference_tables_inconsistent_with_archived` lists all 11 tables).
+   - Agreement: Both policies agree on `REFUTED` (`h3_policies_agree = true`). Pre-registration §11.3 item 1 conditional disclosure ("depends on post-exposure amendment") is not triggered.
+   - Verified consistent in: [`summary.json:153-240`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json#L153-L240), [`error-distributions.json:89-110`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json#L89-L110), [`expected-vs-observed.md:10`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md#L10), [`independent-recount.txt:13-14`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/regeneration/independent-recount.txt#L13-L14), [`report.md:42, 58, 134-139`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L42), [`analysis.md:236-247`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis.md#L236-L247), [`parity_report.rst:197-200`](file:///C:/dev/PRIN/DOCS/sphinx/parity_report.rst#L197-L200), [`CHANGELOG.md:23-24`](file:///C:/dev/PRIN/CHANGELOG.md#L23-L24), and [`SESSION_REGISTER.md:752-753`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L752-L753).
+
+5. **H4 — Deterministic Reproduction (`CONFIRMED`):**
+   - Population denominator: `39` `generated_files`.
+   - Raw byte identity: `39/39` files identical across separate interpreter processes (`prin` vs `repeatability`).
+   - Raw differences: `0` (`raw_differing_generated_files = []`).
+   - Format breakdown: `14/14` PDF, `14/14` PNG, `11/11` TeX.
+   - Canonical projection equal: `true`.
+   - Verified consistent in: [`summary.json:241-276`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json#L241-L276), [`error-distributions.json:111-134`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json#L111-L134), [`expected-vs-observed.md:11`](file:///C:/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md#L11), [`independent-recount.txt:15`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/regeneration/independent-recount.txt#L15), [`report.md:43, 59, 140-148`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L43), [`analysis.md:248-253`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis.md#L248-L253), [`parity_report.rst:180-184`](file:///C:/dev/PRIN/DOCS/sphinx/parity_report.rst#L180-L184), [`CHANGELOG.md:24-25`](file:///C:/dev/PRIN/CHANGELOG.md#L24-L25), and [`SESSION_REGISTER.md:753-755`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L753-L755).
+
+6. **Population Separation and Statistics:**
+   - The `39` publication files and `7` analysis files are maintained strictly as separate populations and are never summed (`summary.json:286`, `report-manifest.json:386`, `report.md:45`).
+   - Effect sizes, confidence intervals, and significance tests are uniformly recorded as "not applicable (deterministic census; pre-registration section 7)" (`summary.json:362-365`, `expected-vs-observed.md:13`, `report.md:45`).
+
+---
+
+### 2.2 Reconstruction and Retained-Bytes Accuracy
+
+1. **Step 1 — Verification of Retained Bytes:**
+   - Publication listing digests verified against the PowerShell formula:
+     - `reference`: `d674de7d4b5830c9abf525fcc484a5ebc01e3620ca38b63badd037e289487323`
+     - `prin`: `c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669`
+     - `repeatability`: `c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669`
+     - Matches across [`listing-digests.txt:7-28`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/retained-bytes/listing-digests.txt#L7-L28), [`retained-bytes-verification.txt:13-15`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/retained-bytes/retained-bytes-verification.txt#L13-L15), [`report.md:201-207`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L201-L207), and [`analysis.md:57`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis.md#L57).
+   - Retained file verification:
+     - Publication: `39/39` files per run (`1,502,048 B` reference; `1,500,705 B` prin/repeatability).
+     - Inputs: `172/172` files per publication run (`16,047,018 B` per run, matching `paper/artefact_manifest.json` digest `300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5`).
+     - Matches across [`retained-bytes-verification.txt:6-15`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/retained-bytes/retained-bytes-verification.txt#L6-L15) and [`report.md:208-212`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L208-L212) (noting finding `AUDIT-EXP002-F1`).
+
+2. **Step 2 — Clean-Worktree Regeneration of E4 Analysis Outputs:**
+   - Detached worktree created at `C:\dev\PRIN-0163-e5-wt` (HEAD = `cad9a8c502bfd38800594336663f621990bb8b22`).
+   - Module executed: `analysis/exp002_e4_analysis.py` (`3731fc2590cf86bdb657fce25e4917d26567b23a`).
+   - Regeneration match: All `7` analysis outputs (`summary.json`, `api-mapping.csv`, `conclusion-comparisons.csv`, `reproduction-comparisons.csv`, `error-distributions.json`, `expected-vs-observed.md`, `coverage-and-deferrals.md`) + `report-manifest.json` (`6b15dcc112513cdce9cb2d923208f93d3616898225efed545706c56526e68781`, `18,848 B`) matched byte-for-byte (`8/8` identical).
+   - Clean worktree removed cleanly without modifying `C:\dev\PRIN`.
+   - Matches across [`worktree-regeneration.txt:3-46`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/regeneration/worktree-regeneration.txt#L3-L46) and [`report.md:218-226`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L218-L226).
+
+3. **Step 3 — Protocol §8.2 Reconstruction:**
+   - Renderer environment matched: Python 3.14.0, Matplotlib 3.11.1, NumPy 2.5.1, Pillow 12.3.0, FreeType 2.14.3, backend `Agg`, font cache `9c00441405ce72925562e017858a729b402612a203b0682b2e7fd79329c8f6bb`, font map `168e1aee710ca4496f65d7dc0689ed93257ed3e1ab3711dad4494940b51c8189`.
+   - Checkout limitation disclosed: Executed in maintainer checkout `C:\dev\PRIN` due to compiled extension `python/prin/_prin_core.pyd` and `.pth` links.
+   - Results:
+     - `prin` arm: `39/39` raw-identical, `39/39` normalized-identical, `39/39` sensitivity-identical (listing digest `c1ca4ada…`).
+     - `reference` arm: `25/39` raw-identical (`14/14` PNGs, `11/11` tables), `0/14` raw PDFs identical due to unpinned Matplotlib timestamp in reference generator; `39/39` normalized-identical, `39/39` sensitivity-identical.
+     - Properly characterized as a reconstruction limitation under protocol §11.3 item 2 without altering any observation or verdict.
+     - Matches across [`reconstruction.txt:5-16`](file:///C:/dev/PRIN/EVIDENCE/0163/verification/reconstruction/reconstruction.txt#L5-L16) and [`report.md:230-246`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L230-L246).
+
+---
+
+### 2.3 Wording, Spin, and Negative Evidence Integrity
+
+1. **No Root Cause Asserted:**
+   - Neither PRIN nor PRINet 3.0 is declared erroneous or defective.
+   - Root-cause determination is uniformly designated as work for the D1 correction cycle S1 session.
+   - Campaign plan §10.4 item 3's requirement (EMA-style mathematical audit verified with Z3/SymPy before declaring PRINet 3.0 defective) is explicitly acknowledged in [`report.md:284`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L284) and [`2026-10-14-exp002-d1-s1-correction-implementation.md:36`](file:///C:/dev/PRIN/DOCS/sessions/contingencies/2026-10-14-exp002-d1-s1-correction-implementation.md#L36).
+
+2. **Absence of Euphemisms:**
+   - No differing figure or table is characterized as "explained", "benign", or "cosmetic". Every differing file is reported strictly as a quantitative difference and counterexample.
+
+3. **Plan / DoD Claims Calibrated:**
+   - Project Plan §3.1 requirements (`F1`, `F2`, `F4`), §5 items 4–5, and DoD items (`1`, `3`, `5`, `12`) are reviewed in [`report.md:151-166`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L151-L166). None is over-claimed as fully satisfied; each explicitly delineates what EXP-002 supports (namespace census, archival predicates, PRIN repeatability) from what remains open or refuted.
+
+4. **Maintainer Verification Status:**
+   - Maintainer verification is explicitly **not** claimed. The verification block in [`report.md:292-299`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L292-L299) remains unchecked, and all summary documents record `awaiting maintainer verification`.
+
+5. **Honest Reporting of Red Checks:**
+   - `cargo audit` is reported honestly as red (`exit 1` on 5 `quinn-proto 0.11.16` advisories `RUSTSEC-2026-0338`..`0342`).
+   - Hosted PR check `gpu-cuda` (job `115468476990` in run `38447171376`) on `cad9a8c` is reported honestly as failed on `prin-train` `flops::tests::measure_wall_time_calls_warmup_and_runs_exact_counts`.
+   - Local validation on Windows is explicitly identified as local validation under Plan amendment #48 and is never described as "CI green" ([`report.md:301`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L301)).
+
+---
+
+### 2.4 D1 and Register Consistency
+
+1. **Session 0163 Status:**
+   - Recorded as `COMPLETE` in [`SESSION_REGISTER.md:569`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L569), with line 5 noting the exit gate remains open on the triggered D1 correction cycle.
+   - Recorded as `COMPLETE` in [`0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md:3`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md#L3) and [`phase-7/README.md:20`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/README.md#L20).
+
+2. **Session 0164 Status:**
+   - Recorded as `BLOCKED` in [`SESSION_REGISTER.md:570`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L570), [`0164-exp003-e1-cpu-scaling-and-sweep-performance.md:3`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0164-exp003-e1-cpu-scaling-and-sweep-performance.md#L3), and [`phase-7/README.md:21`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/README.md#L21).
+   - Documented consistently that `0165`–`0194` inherit the block under campaign plan §3.3 and §10.4 items 2 and 5.
+
+3. **Correction Cycle Alignment:**
+   - The four conditional briefs (`2026-10-14-exp002-d1-s1..s4`) and [`contingencies/README.md`](file:///C:/dev/PRIN/DOCS/sessions/contingencies/README.md) agree:
+     - S1: `OPEN — not started` (awaiting maintainer approval of scope)
+     - S2: `OPEN — blocked on S1`
+     - S3: `OPEN — blocked on S2`
+     - S4: `OPEN — blocked on S3`
+   - All links between predecessor and successor briefs and to [`report.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md) are valid.
+
+4. **Parity Report Erratum and Table Qualifications:**
+   - Dated erratum added at [`parity_report.rst:159-215`](file:///C:/dev/PRIN/DOCS/sphinx/parity_report.rst#L159-L215).
+   - `REFERENCE-HISTORICAL` table row qualified at [`parity_report.rst:243-251`](file:///C:/dev/PRIN/DOCS/sphinx/parity_report.rst#L243-L251).
+   - Benchmark re-run comparison table qualified at [`parity_report.rst:413-433`](file:///C:/dev/PRIN/DOCS/sphinx/parity_report.rst#L413-L433) for both `paper/artefact_manifest.json` and `tools/reproduce.py, repro.yml`. Statements distinguish same-implementation determinism (`39/39`) from cross-generator figure differences (`18/39`).
+
+---
+
+## 3. Summary Assessment
+
+The EXP-002 E5 reporting package, D1 contingency briefs, independent recount records, and register updates demonstrate exemplary rigor, strict numerical consistency, and scientific honesty. The three findings noted above are minor documentation and formatting items (`Low` and `Info`) that do not impair any registered count, digest, execution check, or verdict.

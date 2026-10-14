@@ -1,0 +1,16 @@
+# Step 1(b)-(c) — Read-Only No-Follow Retained-Bytes Verification
+UTC: 2026-10-14T19:10:12Z
+WORKDIR: C:\dev\PRIN
+
+Method:
+- Verified paper/artefact_manifest.json (SHA-256 300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5, 172 records, 16,047,018 bytes total).
+- For each of the three publication runs (reference, prin, repeatability), verified with os.lstat (S_ISLNK == False and st_reparse_tag == 0 on every file and ancestor):
+  1. manifest.json entries match campaign-metadata.json and reproduction.json in byte size and SHA-256, and reproduction.json matches its pinned E3 digest.
+  2. Retained publication/ directory contains exactly the 39 file paths recorded in reproduction.json (0 missing, 0 extra), and every file's raw byte size and raw SHA-256 equal its recorded raw_bytes and raw_sha256.
+  3. Retained inputs/ directory contains exactly the 172 file paths recorded in paper/artefact_manifest.json (0 missing, 0 extra), and every file's byte size and SHA-256 equal its manifest record (16,047,018 bytes total).
+
+OUTPUT:
+OK reference (RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu): 39/39 publication files (1502048 B), listing=d674de7d4b5830c9abf525fcc484a5ebc01e3620ca38b63badd037e289487323, 172/172 input files (16047018 B)
+OK prin (RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu): 39/39 publication files (1500705 B), listing=c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669, 172/172 input files (16047018 B)
+OK repeatability (RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu): 39/39 publication files (1500705 B), listing=c1ca4ada167c50a28db2dfe4365d004cdb3621903f43e38cc6de75c2e4904669, 172/172 input files (16047018 B)
+EXIT_CODE: 0

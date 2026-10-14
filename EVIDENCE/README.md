@@ -113,6 +113,21 @@ To find evidence for a specific work package, look for files matching
   the approved source's local gate; and the read-only cold reviews, all
   covered by `verification/SHA256SUMS.txt` (executed by
   `tests/test_0160_manifest.py`). No EXP-002 execution has run.
+- [`0161/`](0161/) — session 0161 (EXP-002 E3, 2026-10-12): launch records
+  and independent per-record validation (revisions 1–3) of the five E3 legs,
+  the Windows local gate, hosted results and two read-only cold-review rounds,
+  covered by `verification/SHA256SUMS.txt`.
+- [`0162/`](0162/) — session 0162 (EXP-002 E4, 2026-10-13): pre-flight,
+  Phase-A gate of the registered analysis module, two pre-run cold-review
+  rounds, the two byte-identical analysis runs, the post-run self-audit, the
+  DV-040 re-audit, the final-candidate gate and hosted results, covered by
+  `verification/SHA256SUMS.txt`.
+- [`0163/`](0163/) — session 0163 (EXP-002 E5, 2026-10-14): pre-flight,
+  retained-bytes verification (Step 1), detached-worktree regeneration of the
+  seven E4 outputs (Step 2), protocol §8.2 reconstruction of the 39
+  publication files (Step 3), independent recount (Step 4), cold reviews and
+  self-audit, documentation/evidence delta gate and hosted results, covered by
+  `verification/SHA256SUMS.txt`.
 
 ## Rules
 

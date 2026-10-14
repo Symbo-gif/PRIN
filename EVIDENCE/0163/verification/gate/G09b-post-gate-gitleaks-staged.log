@@ -1,0 +1,14 @@
+COMMAND: C:/dev/PRIN/DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git C:/dev/PRIN --pre-commit --staged --redact --no-banner
+CWD: C:/dev/PRIN
+SOURCE: 79a91a6 + staged session-0163 changes + gate logs
+HEAD: 79a91a60d1f27be64317083d94003381f1ac19d6
+UTC-START: 2026-10-14T21:11:42Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+[90m6:11PM[0m [32mINF[0m [1m0 commits scanned.[0m
+[90m6:11PM[0m [32mINF[0m [1mscanned ~357698 bytes (357.70 KB) in 2.22s[0m
+[90m6:11PM[0m [32mINF[0m [1mno leaks found[0m
+----
+UTC-END: 2026-10-14T21:11:56Z
+ELAPSED_S: 14
+EXIT_CODE: 0
