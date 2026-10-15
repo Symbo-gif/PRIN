@@ -1,6 +1,6 @@
 # EXP-002 D1 S1 — Correction implementation
 
-**Status:** OPEN — not started; scope approved 2026-10-15 UTC (see "Approved scope and decisions")
+**Status:** IN PROGRESS — started 2026-10-15 UTC on branch `hotfix/exp002-d1-figure-parity`; scope approved 2026-10-15 UTC (see "Approved scope and decisions")
 **Triggering deviation:** `EXP-002 H3 REFUTED` (campaign plan §10.4 D1; pre-registration §4.3)
 **Blocked numbered session:** `0164` (EXP-003 E1), and every later campaign session (`0165`–`0194`, per campaign plan §3.3 and §10.4 items 2 and 5)
 **Opened by:** session `0163` (EXP-002 E5), 2026-10-14 UTC
@@ -68,3 +68,18 @@ Related decisions recorded at the same time:
   established governance, for a dedicated hotfix or a maintainer-authorized
   session. Any pull of those items into S1 would itself need an explicit
   maintainer scope extension.
+- **Push and draft PR pre-authorized** (MichaelMaillet, 2026-10-15 UTC, in
+  the instruction that started this S1 session; mirrors the 2026-09-23
+  EXP-001 S1 brief's approved decision 3). The hotfix branch
+  `hotfix/exp002-d1-figure-parity` is created from `origin/main` @
+  `fd8854ed87a21e01f16e2f7128b431e74085a26e` (the PR #33 merge) and pushed,
+  and a **draft** PR is opened. The failing-test commit is pushed before the
+  fix commit, so the red → green transition is recorded on the remote. The
+  seven hosted check workflows are disabled (`gh workflow list --all`:
+  `rust`, `python`, `parity`, `repro`, `snyk`, `gpu`, `nightly` all
+  `disabled_manually`; the Plan amendment #50 window closed at the PR #33
+  merge), so **no hosted check runs** on these pushes; the Windows local gate
+  stays authoritative under Plan amendment #48, and a local full-history
+  secret scan precedes every push (amendment #48 item 6). Merging stays with
+  the maintainer. This authorizes neither a merge, `EXP-002-r1`, nor the
+  release of session `0164`.
