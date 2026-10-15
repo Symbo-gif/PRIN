@@ -115,9 +115,20 @@ No plotted value differs and no reference calculation is implicated.
   that already matched stay raw-byte-identical to E3, and H4's two-process
   raw identity holds (`root-cause-decomposition-postfix.json`). Nine new
   fast-gate tests fail on the pre-fix module and pass after the fix.
-- [x] Affected local gates green under Plan amendment #48. The verbatim
-  record is in [`EVIDENCE/exp002-d1-s1/local-gate.txt`](../../../EVIDENCE/exp002-d1-s1/local-gate.txt)
-  and summarized in the audit record §S1.7.
+- [x] Affected local gates, under Plan amendment #48, on `af89499`:
+  - Green: ruff, ruff format, `mypy --strict`, interrogate, bandit, the four
+    governance checkers, the Sphinx `-W` clean build, `cargo fmt`, `cargo
+    clippy`, gitleaks (history and staged), and Snyk Code (0 findings in
+    changed files).
+  - The fast and full pytest suites both **exited 1**: 4,037 passed with 1
+    failure, and 6,323 passed with 2 failures. The three failures are in code
+    this change does not touch. Two are Windows `WinError 5` file-contention
+    errors and one is a load-induced notebook cell timeout. All three pass
+    when re-run alone on the same commit.
+  - The verbatim record is in
+    [`EVIDENCE/exp002-d1-s1/local-gate.txt`](../../../EVIDENCE/exp002-d1-s1/local-gate.txt),
+    summarized in the audit record §S1.7. A clean single-pass suite run on
+    an idle host is left for S2's reproduction.
 
 **Evidence:**
 

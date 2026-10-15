@@ -176,6 +176,7 @@ Tests in tandem:
 | `9371596` | test: in a postfix run, the decomposition compares A against the committed prefix artefact (prefix behaviour unchanged) |
 | `10d196c` | test: post-fix decomposition artefact and green-gate record |
 | S1 documentation commit (follows `10d196c`) | docs: this record, the evidence README, the Snyk Code record, the S1 brief completion, CHANGELOG, `SESSION_REGISTER.md`, the contingencies, phase-7, audits and EVIDENCE indexes |
+| `af89499` | test: the fast-gate argument tests made `mypy --strict` clean (no assertion changed), plus the record of the nine tests failing against the pre-fix module |
 | local-gate record commit (last S1 commit) | test: `EVIDENCE/exp002-d1-s1/local-gate.txt` and the §S1.7 summary, for the gate run on the documentation commit. It adds evidence text only. |
 
 ### S1.6 Red → green transition (S1 acceptance)
@@ -192,9 +193,84 @@ unchanged.
 
 ### S1.7 Local verification (Windows host, project venv)
 
-Recorded verbatim in
+Recorded verbatim, with commands, start and end times and exit codes, in
 [`EVIDENCE/exp002-d1-s1/local-gate.txt`](../../EVIDENCE/exp002-d1-s1/local-gate.txt).
-Pending: the gate block is appended when the runs complete.
+The run was on commit `af89499` (0 tracked changes), from Git Bash with
+`C:\Program Files\Git\bin` prepended process-locally.
+
+Host and toolchain:
+
+- Windows 11 (`MINGW64_NT-10.0-26300`), Python 3.14.0,
+  `rustc 1.99.0 (b940084d7 2026-09-28)`;
+- Matplotlib 3.11.1, NumPy 2.5.1.
+
+This is local evidence only. It is not a hosted CI result, and Linux and
+macOS were not tested.
+
+```text
+ruff check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/ EVIDENCE/exp002-d1-s1/   exit 0
+ruff format --check python/ tests/ benchmarks/ tools/ parity/ EVIDENCE/exp002-d1-s1/            exit 0
+ruff format --check DOCS/experiments/ (source-only include)                                       exit 0
+mypy python/prin --strict                                                                         exit 0
+mypy DOCS/experiments/ --strict                                                                   exit 0
+mypy --strict parity/test_parity_publication.py tests/test_publication_figure_arguments.py \
+              EVIDENCE/exp002-d1-s1/root_cause_decomposition.py                                   exit 0
+interrogate -c pyproject.toml python/prin                                                         exit 0
+bandit -r python/prin DOCS/experiments -c pyproject.toml   (+ the evidence script)                exit 0, no issues
+tools/check_deviation_ledger.py 039 040, check_dv_register_gates.py,
+  check_skipif_probes.py, check_global_session_registration.py                                    exit 0 (all four)
+pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -o faulthandler_timeout=300
+    exit 1: 4037 passed, 178 skipped, 55 deselected, 1 failed (1:00:43)
+pytest tests/ parity/ --basetemp=.pytest_basetemp -o faulthandler_timeout=300
+    exit 1: 6323 passed, 184 skipped, 2 failed (4:11:33)
+isolated re-runs of the 3 failed tests (same commit, sequential)                                  exit 0, 3/3 passed
+sphinx -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html (after rm -rf DOCS/sphinx/_build)   exit 0
+cargo fmt --all -- --check                                                                        exit 0
+cargo clippy --workspace --all-targets -- -D warnings                                             exit 0
+gitleaks git . (full history, 737 commits) / gitleaks git . --staged                             exit 0, no leaks
+git diff --stat fd8854ed HEAD -- EXP-002 record, benchmarks/results/EXP-002/, .github/,
+  dependency manifests                                                                            empty
+coverage (path-form, targeted): python/prin/reporting/figure_generation.py 99% (missed 191, 196:
+  untouched malformed-PNG branches); every line changed by 10d84f2 executed
+snyk code test . --severity-threshold=low   0 findings in the 4 new/modified source files
+                                            (75 LOW repository-wide, all in untouched files; 0 medium/high)
+```
+
+**The three suite failures** were all in code this change does not touch,
+and each passed when re-run alone on the same commit:
+
+- `tests/test_exp002_e4_analysis.py::test_linked_raw_root_aborts` (fast
+  suite): `PermissionError [WinError 5]` renaming a directory inside
+  `.pytest_basetemp`. It passed in the full suite and passed alone (55 s).
+- `tests/test_reproduce.py::TestWriteNoFollow::test_does_not_corrupt_a_hard_linked_sibling`
+  (full suite): `PermissionError [WinError 5]` on an atomic rename inside
+  `.pytest_basetemp`. It passed in the fast suite and passed alone (27 s).
+- `tests/test_notebooks.py::test_notebook_executes_end_to_end[02_clevr_n_binding.ipynb]`
+  (full suite, `slow`): `nbclient` `CellTimeoutError` after the 900 s
+  per-cell limit, in the notebook's training cell. It passed alone (232 s).
+
+The two `WinError 5` failures are the Windows file-handle contention class
+that `AGENTS.md` documents, and the notebook timeout is load-induced. The
+host was heavily loaded (S1.10 item 4): the full suite took 4 h 11 m against
+about 30 min on an idle host. Per Testing Standards §7 item 6, the two suite
+runs are recorded as **exit 1**, not as passes. The isolated re-runs are
+supplementary evidence. A clean single-pass full-suite run on an idle host
+remains open for S2's own reproduction.
+
+**Not run, with reasons:**
+
+- `cargo test` and `cargo doc`: no Rust source changed.
+- Snyk Open Source, `pip-audit` and `cargo audit`: no dependency or lockfile
+  changed (`cargo audit` red is DV-045, out of scope).
+- `--cov=prin` across the full suite: the known host coverage limitation,
+  DV-033.
+
+**Aborted first gate run.** A first run on `50d302d` was stopped by this
+session at the start of the fast suite. Its extra `mypy --strict` leg over the
+new test files had failed with 4 typing errors in
+`tests/test_publication_figure_arguments.py`. They were fixed in `af89499`
+with no assertion changed, and the gate restarted from the beginning.
+Only the session-owned process tree was terminated.
 
 ### S1.8 EXP-002 record immutability
 
