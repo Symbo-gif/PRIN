@@ -416,8 +416,15 @@ def _git(*args: str) -> str:
     ).stdout.strip()
 
 
-def decompose(work: Path) -> dict[str, Any]:
-    """Run the full decomposition in ``work`` and return the artefact payload."""
+def decompose(
+    work: Path, prefix_port: dict[str, dict[str, str]] | None = None
+) -> dict[str, Any]:
+    """Run the full decomposition in ``work`` and return the artefact payload.
+
+    ``prefix_port`` maps each stem to the pre-fix port's normalized digests
+    from the committed prefix artefact. A post-fix run passes it, so A is
+    compared against the measured pre-fix port rather than the live, fixed one.
+    """
     verify_manifest(RESULTS, driver.INPUT_MANIFEST)
     e3_reference = _e3_files(E3_RUNS["reference"])
     e3_prin = _e3_files(E3_RUNS["prin"])
@@ -452,8 +459,9 @@ def decompose(work: Path) -> dict[str, Any]:
                 a = _render(reference, stem, base / "A")
             if any(count == 0 for count in fired.values()):
                 raise SystemExit(f"{stem}: a divergence never fired: {fired}")
+            target = _normalized(p) if prefix_port is None else prefix_port[stem]
             entry["all_divergences_applied_equals_prefix_port"] = {
-                fmt: _normalized(a)[fmt] == _normalized(p)[fmt] for fmt in FORMATS
+                fmt: _normalized(a)[fmt] == target[fmt] for fmt in FORMATS
             }
             entry["all_divergences_applied_normalized_sha256"] = _normalized(a)
             for divergence in own:
@@ -554,6 +562,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--label", choices=("prefix", "postfix"))
     parser.add_argument("--out", type=Path)
+    parser.add_argument(
+        "--prefix",
+        type=Path,
+        default=Path(__file__).resolve().parent
+        / "root-cause-decomposition-prefix.json",
+        help="committed prefix artefact (postfix runs compare A against it)",
+    )
     parser.add_argument("--render-prin", type=Path, help=argparse.SUPPRESS)
     options = parser.parse_args(argv)
     if options.render_prin is not None:
@@ -561,8 +576,17 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if options.label is None or options.out is None:
         parser.error("--label and --out are required")
+    prefix_port = None
+    if options.label == "postfix":
+        prefix = json.loads(options.prefix.read_text("utf-8"))
+        if prefix["label"] != "prefix":
+            parser.error(f"{options.prefix} is not a prefix artefact")
+        prefix_port = {
+            stem: entry["port_normalized_sha256"]
+            for stem, entry in prefix["stems"].items()
+        }
     with tempfile.TemporaryDirectory(prefix="prin-exp002-d1-") as directory:
-        payload = decompose(Path(directory))
+        payload = decompose(Path(directory), prefix_port)
     summary = _summary(payload)
     derived = "prefix" if summary["port_vs_reference_differing_count"] else "postfix"
     if derived != options.label:
