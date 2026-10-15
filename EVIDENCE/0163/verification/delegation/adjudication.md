@@ -28,3 +28,28 @@ Every finding from Round 1 and Round 2 was verified against the repository befor
 | `FINDING-EXP002-E5-02` | Round 2 (`agy`) | Info | `DOCS/sessions/SESSION_REGISTER.md:343` | **Confirmed, declined (out of scope)** | The pre-existing `Hotfix-DV044` row (committed in session `0158`/`0159` history) has 3 pipe-delimited cells instead of 5. The new `EXP-002-D1` row at line 344 has all 5 columns. Editing historical non-EXP-002 register rows is outside session `0163` scope; left untouched. |
 
 No finding implicated the E4 analysis module, the frozen protocol, the raw records, or any hypothesis verdict.
+
+## 3. Acceptance-Propagation Round (Read-Only, 2026-10-15 UTC)
+
+After the maintainer's six E5 close-out decisions (2026-10-15 UTC,
+`../acceptance/maintainer-decisions-2026-10-15.md`), decision 5 directed
+`devin --model swe-2-high` and `agy --model gemini-3.8-flash-high` CLI cold
+reviews of the acceptance-propagation records
+(`cold-review-task-acceptance.md`, 10 permitted file paths).
+
+| Round / Attempt | Reviewer | Invocation | Window (UTC, `2026-10-15`) | Exit | Result |
+|---|---|---|---|---:|---|
+| Acceptance round | Devin CLI (`swe-2-high`) | `devin --model swe-2-high --respect-workspace-trust false -p …` | `07:22:27Z` → `07:22:32Z` | `1` | **BLOCKED** on CLI authentication again (`devin-acceptance-report.txt`): `Error: Not logged in. Run devin.exe auth login to authenticate.` — unchanged from attempt 1; authentication is a maintainer-side action |
+| Acceptance round | Antigravity (`gemini-3.8-flash-high`, same-family — not model-family independent) | `agy -p … --model gemini-3.8-flash-high --mode plan --output-format text` | `07:22:35Z` → `07:30:13Z` | `0` | Completed (`agy-acceptance-report.txt`): 4 findings (1 Low, 3 Info); consistency of every date, verdict, count, run ID, SHA, advisory ID, version, and DV ID confirmed across all 10 files |
+
+Verification and disposition of the acceptance-round findings:
+
+| ID | Severity | Location | Verified? | Substance and Disposition |
+|---|---|---|---|---|
+| ACC-F1 | Low | `DOCS/experiments/EXP-002-…/README.md:163` | **Confirmed** | The "Open for maintainer action" bullet still listed the six questions without recording that all six were decided on 2026-10-15 UTC. **Fixed** — the bullet now records the six dated maintainer decisions verbatim-class. |
+| ACC-F2 | Info | `2026-10-14-exp002-d1-s1-correction-implementation.md:31` | **Confirmed** | The `## Scope (to be approved by the maintainer before work starts)` heading predated the 2026-10-15 approval. **Fixed** — heading now reads `## Scope (approved by the maintainer 2026-10-15 UTC — see "Approved scope and decisions")`. |
+| ACC-F3 | Info | `DEFERRED_VALIDATION_REGISTER.md:586-587` | **Confirmed** | The `flops::tests::` code span was split across a line boundary, rendering a stray space inside the identifier. **Fixed** — re-wrapped so the identifier is unbroken. |
+| ACC-F4 | Info | `report.md:29` | **Confirmed** | The header summary table still read `Errata … none at initial issue` after §15 gained Erratum 1. **Fixed** — now reads `Erratum 1 (2026-10-15): post-issue acceptance propagation`. |
+
+No finding implicated the E4 analysis module, the frozen protocol, the raw
+records, any hypothesis verdict, or the maintainer's recorded decisions.

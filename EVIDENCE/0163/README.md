@@ -35,4 +35,12 @@ Every file under `verification/` is hashed in `verification/SHA256SUMS.txt` (`sh
   - `G08-sphinx-html.log` — `sphinx.cmd.build -W --keep-going -b html DOCS/sphinx <fresh dir>` (exit `0`, 0 warnings);
   - `G09-gitleaks-staged.log` and `G10-gitleaks-history.log` — pinned `gitleaks` `8.30.1` on the staged diff and full history (exit `0`, 0 leaks);
   - `R08-cargo-audit.log` — `cargo audit` recorded verbatim (exit `1`, **not green**: 9 vulnerabilities — the 5 `quinn-proto 0.11.16` advisories `RUSTSEC-2026-0338`..`0342` and 4 new `2026-10-14` `rustls 0.23.45` advisories `RUSTSEC-2026-0346`..`0349` — plus 3 standing allowed warnings);
-  - `G01b-post-gate-git-diff-check.log` and `G09b-post-gate-gitleaks-staged.log` — post-gate `git diff --cached --check` and staged-diff `gitleaks` after the gate captures themselves were staged (both exit `0`).
+  - `G01b-post-gate-git-diff-check.log` and `G09b-post-gate-gitleaks-staged.log` — post-gate `git diff --cached --check` and staged-diff `gitleaks` after the gate captures themselves were staged (both exit `0`);
+  - `A01`–`A11` logs — the acceptance-propagation delta gate re-run on 2026-10-15 UTC after the §13.2/§13.3/§14 updates and `DV-045`–`DV-047` rows: same legs as `G01`–`G10`/`R08`, all exit `0` except `A11` `cargo audit` (exit `1`, same 9 advisories — see `DV-045`).
+- `verification/hosted/` — hosted-run captures for the pushed E5 head `6a5ed72a5374c0f47478957e30e8c872d6a14fb5` (additional evidence only under Plan amendment #50):
+  - `hosted-6a5ed72.json` — `gh run list --commit 6a5ed72…`: all 7 runs completed (`snyk` push/PR, `repro`, `parity`, `python`, `gpu` `success`; `rust` `failure` in `audit` only);
+  - `pr33-statusCheckRollup-6a5ed72.json` — PR #33 `statusCheckRollup` at `6a5ed72`;
+  - `rust-38638690641-jobs.json`, `gpu-38638690606-jobs.json` — per-job results (`rust`: 9/10 jobs `success`, `audit` job `116108362002` `failure`; `gpu`: `gpu-wgpu` `116108361327` and `gpu-cuda` `116108361806` both `success`);
+  - `rust-38638690641-audit-job116108362002-findings.txt` and `…-tail.txt` — the `audit` job's `cargo audit` findings (5 `quinn-proto 0.11.16` + 4 `rustls 0.23.45` advisories, 3 warnings) and job-log tail.
+- `verification/acceptance/` — maintainer acceptance and decisions (2026-10-15 UTC):
+  - `maintainer-decisions-2026-10-15.md` — verbatim record of the six E5 close-out answers: verdicts verified and accepted, `EXP-002-D1` S1 scope approved, hosted workflows remain until PR #33 merge (then disabled per amendment #50), retained roots kept until S1 completes, `DV-045`/`DV-046`/`DV-047` opened under established governance, and PR #33 merge authorized.

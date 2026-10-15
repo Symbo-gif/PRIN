@@ -40,8 +40,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   session 0164 (EXP-003 E1) and downstream campaign sessions are set to
   `BLOCKED` until S1–S4 close and `EXP-002-r1` returns a non-reversal verdict
   (or a Project Plan section 8.3 amendment is adopted). No root cause is
-  claimed at E5. Maintainer verification of the report and approval of the S1
-  scope remain open.
+  claimed at E5. The report was verified and accepted by the maintainer and
+  the S1 scope approved on 2026-10-15 UTC (see the following entry).
+
+- **EXP-002 E5 verified and accepted; correction-cycle scope approved
+  (session 0163, 2026-10-15 UTC).** The maintainer (`MichaelMaillet`)
+  verified and accepted the E4/E5 verdicts, completing `report.md` section
+  14's verification block; acceptance does not release session `0164` or the
+  `EXP-002-D1` correction cycle. The S1 correction scope was approved as
+  written. Decisions recorded at the same close-out
+  (`EVIDENCE/0163/verification/acceptance/maintainer-decisions-2026-10-15.md`):
+  the retained `DOCS/test_and_benchmark_results/EXP-002/RUN-*/` roots stay on
+  disk until S1 completes; the seven Plan-amendment-#50 hosted workflows
+  (`rust`, `python`, `parity`, `repro`, `snyk`, `gpu`, `nightly`) remain
+  enabled until PR #33 merges and are disabled after the merge per amendment
+  #50's end-of-window clause; and under established governance three dated
+  Deferred Validation Register rows were opened — `DV-045` (`cargo audit` red
+  on transitive `quinn-proto 0.11.16` `RUSTSEC-2026-0338..0342` and
+  `rustls 0.23.45` `RUSTSEC-2026-0346..0349` advisories; governed lockfile
+  update gated to a dedicated hotfix or authorized session), `DV-046`
+  (`gpu-cuda` `flops.rs:400:9` intermittent `mean_ms <= max_ms` assertion,
+  observed once on `cad9a8c`, passing on `3731fc2` and `6a5ed72`), and
+  `DV-047` (stale `python/prin/_prin_core.pyd` and `prin_core.pth`; rebuild
+  gated before `EXP-002-r1`'s E3 run). The E5 report head `6a5ed72`'s hosted
+  results are recorded in `report.md` section 13.2's post-issue addendum
+  (6 of 7 workflows green; `rust` red in `audit` only, the DV-045 advisories;
+  `gpu-cuda` green).
 
 - **EXP-002 E4 analysed — H3 refuted, D1 flag raised (session 0162,
   2026-10-13 UTC).** The registered analysis module

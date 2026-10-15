@@ -1,0 +1,60 @@
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2135160Z ^[[0m^[[0m^[[1m^[[31mSeverity: ^[[0m 3.7 (low)
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2135487Z ^[[0m^[[0m^[[1m^[[31mSolution: ^[[0m Upgrade to >=0.23.46
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2135693Z 
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2135811Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m rustls
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2136099Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.23.45
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2136703Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Unauthenticated ServerHello can downgrade later connections to classical key exchange
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2137257Z ^[[0m^[[0m^[[1m^[[31mDate:     ^[[0m 2026-10-14
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2137574Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0349
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2137992Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0349
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2138643Z ^[[0m^[[0m^[[1m^[[31mSeverity: ^[[0m 3.7 (low)
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2138976Z ^[[0m^[[0m^[[1m^[[31mSolution: ^[[0m Upgrade to >=0.23.46
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2139179Z 
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2139298Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m rustls
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2139582Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.23.45
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2140022Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m `Debug` impls for client session values expose TLS secrets
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2140458Z ^[[0m^[[0m^[[1m^[[31mDate:     ^[[0m 2026-10-14
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2140773Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0346
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2141195Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0346
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2141596Z ^[[0m^[[0m^[[1m^[[31mSeverity: ^[[0m 4 (medium)
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2142083Z ^[[0m^[[0m^[[1m^[[31mSolution: ^[[0m Upgrade to >=0.23.46
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2142289Z 
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2142414Z ^[[0m^[[0m^[[1m^[[33mCrate:    ^[[0m bincode
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2142702Z ^[[0m^[[0m^[[1m^[[33mVersion:  ^[[0m 2.0.1
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2143006Z ^[[0m^[[0m^[[1m^[[33mWarning:  ^[[0m unmaintained
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2143357Z ^[[0m^[[0m^[[1m^[[33mTitle:    ^[[0m Bincode is unmaintained
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2143690Z ^[[0m^[[0m^[[1m^[[33mDate:     ^[[0m 2025-12-16
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2144004Z ^[[0m^[[0m^[[1m^[[33mID:       ^[[0m RUSTSEC-2025-0141
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2144424Z ^[[0m^[[0m^[[1m^[[33mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2025-0141
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2144703Z 
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2144832Z ^[[0m^[[0m^[[1m^[[33mCrate:    ^[[0m paste
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2145120Z ^[[0m^[[0m^[[1m^[[33mVersion:  ^[[0m 1.0.15
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2145420Z ^[[0m^[[0m^[[1m^[[33mWarning:  ^[[0m unmaintained
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2145792Z ^[[0m^[[0m^[[1m^[[33mTitle:    ^[[0m paste - no longer maintained
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2146292Z ^[[0m^[[0m^[[1m^[[33mDate:     ^[[0m 2024-10-07
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2146619Z ^[[0m^[[0m^[[1m^[[33mID:       ^[[0m RUSTSEC-2024-0436
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2147049Z ^[[0m^[[0m^[[1m^[[33mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2024-0436
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2147322Z 
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2147449Z ^[[0m^[[0m^[[1m^[[33mCrate:    ^[[0m chacha20
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2147745Z ^[[0m^[[0m^[[1m^[[33mVersion:  ^[[0m 0.10.1
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2148031Z ^[[0m^[[0m^[[1m^[[33mWarning:  ^[[0m yanked
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2148429Z 
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2148624Z ^[[0m^[[0m^[[1m^[[31merror:^[[0m 9 vulnerabilities found!
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2149009Z ^[[0m^[[0m^[[1m^[[33mwarning:^[[0m 3 allowed warnings found
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2232784Z ##[error]Process completed with exit code 1.
+audit	UNKNOWN STEP	2026-10-14T21:17:41.2367099Z Post job cleanup.
+audit	UNKNOWN STEP	2026-10-14T21:17:41.3221444Z [command]/usr/bin/git version
+audit	UNKNOWN STEP	2026-10-14T21:17:41.3266122Z git version 2.55.0
+audit	UNKNOWN STEP	2026-10-14T21:17:41.3310837Z Temporarily overriding HOME='/home/runner/work/_temp/1479e272-831e-45a5-9177-227b0601cdb5' before making global git config changes
+audit	UNKNOWN STEP	2026-10-14T21:17:41.3311924Z Adding repository directory to the temporary git global config as a safe directory
+audit	UNKNOWN STEP	2026-10-14T21:17:41.3316850Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PRIN/PRIN
+audit	UNKNOWN STEP	2026-10-14T21:17:41.3359653Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+audit	UNKNOWN STEP	2026-10-14T21:17:41.3396978Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+audit	UNKNOWN STEP	2026-10-14T21:17:41.3662721Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+audit	UNKNOWN STEP	2026-10-14T21:17:41.3688639Z http.https://github.com/.extraheader
+audit	UNKNOWN STEP	2026-10-14T21:17:41.3701335Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+audit	UNKNOWN STEP	2026-10-14T21:17:41.3738348Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+audit	UNKNOWN STEP	2026-10-14T21:17:41.4021265Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+audit	UNKNOWN STEP	2026-10-14T21:17:41.4063139Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+audit	UNKNOWN STEP	2026-10-14T21:17:41.4477906Z Cleaning up orphan processes
+audit	UNKNOWN STEP	2026-10-14T21:17:41.4852944Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

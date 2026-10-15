@@ -1,6 +1,6 @@
 # EXP-002 D1 S1 — Correction implementation
 
-**Status:** OPEN — not started
+**Status:** OPEN — not started; scope approved 2026-10-15 UTC (see "Approved scope and decisions")
 **Triggering deviation:** `EXP-002 H3 REFUTED` (campaign plan §10.4 D1; pre-registration §4.3)
 **Blocked numbered session:** `0164` (EXP-003 E1), and every later campaign session (`0165`–`0194`, per campaign plan §3.3 and §10.4 items 2 and 5)
 **Opened by:** session `0163` (EXP-002 E5), 2026-10-14 UTC
@@ -28,7 +28,7 @@ At EXP-002 E4 (session `0162`) and E5 (session `0163`), applying the frozen deci
 
 **No root cause is claimed by E3, E4, or E5.** Establishing the root cause of the 9-figure (`18`-file) divergence is this S1 session's work. Neither PRIN nor the PRINet 3.0 reference generator has been declared erroneous.
 
-## Scope (to be approved by the maintainer before work starts)
+## Scope (approved by the maintainer 2026-10-15 UTC — see "Approved scope and decisions")
 
 In scope:
 
@@ -49,3 +49,22 @@ Out of scope (explicitly, to keep the correction bounded):
 - Root cause of all 9 differing figure stems (`18` files) is identified with evidence, or the campaign plan §10.4 item 3 alternative is established to its own stricter EMA mathematical-audit standard.
 - All affected gates pass locally under the Plan amendment #48 local-validation regime.
 - Neither S1 completion nor a green local gate authorizes `EXP-002-r1` or releases session `0164`; S2, S3, and S4 must close in order first, followed by a non-reversal `EXP-002-r1` E5 report (or a Project Plan §8.3 amendment; campaign plan §10.4 items 3–5).
+
+## Approved scope and decisions
+
+MichaelMaillet, 2026-10-15 UTC, in answer to the E5 close-out questions
+(verbatim: "approve correction cycle scope"; recorded in
+`EVIDENCE/0163/verification/acceptance/maintainer-decisions-2026-10-15.md`).
+The scope above is **approved as written**; no refinements were stated.
+
+Related decisions recorded at the same time:
+
+- The `DOCS/test_and_benchmark_results/EXP-002/RUN-*/{inputs,publication}`
+  retained roots stay on disk until this S1 completes, so the exact
+  E3-rendered bytes are available to the failing-test reproduction.
+- `cargo audit` (`quinn-proto`/`rustls`), the `gpu-cuda` `flops` test, and the
+  stale `python/prin/_prin_core.pyd` are **not** folded into this scope: they
+  are dispositioned as dated DV register rows `DV-045`/`DV-046`/`DV-047` under
+  established governance, for a dedicated hotfix or a maintainer-authorized
+  session. Any pull of those items into S1 would itself need an explicit
+  maintainer scope extension.
