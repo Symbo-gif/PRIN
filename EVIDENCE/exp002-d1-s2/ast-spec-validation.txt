@@ -1,0 +1,114 @@
+# EXP-002 D1 S2 - static cross-validation of the 34 divergence specs against both sources
+# date (UTC): 2026-10-15T19:19:07Z
+# git HEAD: 8fd0ecc9949a607f2a7090fe39205f00bb0078c9
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# python: Python 3.14.0
+# instrument: EVIDENCE/exp002-d1-s2/ast_spec_validation.py
+# command: .venv/Scripts/python EVIDENCE/exp002-d1-s2/ast_spec_validation.py 
+#
+reference module : C:\dev\PRIN\DOCS\archive and reference from PRINet 3.0\PRINet-3.0.0-main\src\prinet\utils\figure_generation.py
+port module      : C:\dev\PRIN\python\prin\reporting\figure_generation.py
+registry module  : C:\dev\PRIN\EVIDENCE\exp002-d1-s1\root_cause_decomposition.py
+registry size    : 34   (S1 claims 34)
+STEMS map identical to the audit's: True
+
+==============================================================================
+PART B -- each spec names an argument the REFERENCE source really carries
+==============================================================================
+[OK  ] D5.1     errorbar         kind=drop ref_calls= 1 indices=[0]  linewidth=1.5
+[OK  ] D5.2     errorbar         kind=drop ref_calls= 1 indices=[0]  markersize=4
+[OK  ] D5.3     plot             kind=drop ref_calls= 1 indices=[0]  linewidth=1.5
+[OK  ] D5.4     plot             kind=drop ref_calls= 1 indices=[0]  markersize=4
+[OK  ] D7.1     text             kind=drop ref_calls= 1 indices=[0]  va="bottom"
+[OK  ] D8.1     scatter          kind=drop ref_calls= 1 indices=[0]  zorder=5
+[OK  ] D9.1     plot             kind=drop ref_calls= 4 indices=[0, 1, 2, 3]  linewidth=1.2
+[OK  ] D9.2     legend           kind=drop ref_calls= 1 indices=[0]  loc="upper right"
+[OK  ] D9.3     text             kind=drop ref_calls= 1 indices=[0]  va="bottom"
+[OK  ] D10.1    annotate         kind=drop ref_calls= 1 indices=[0]  bbox=null
+[OK  ] D11.1    bar              kind=drop ref_calls= 2 indices=[0, 1]  edgecolor="black"
+[OK  ] D11.2    bar              kind=drop ref_calls= 2 indices=[0, 1]  linewidth=0.5
+[OK  ] D11.3    set_ylabel       kind=arg  ref_calls= 1 indices=[0]  arg0="FLOPs (\u00d710\u00b3)" contains "FLOPs (\u00d710\u00b3)"
+[OK  ] D11.4    legend           kind=drop ref_calls= 1 indices=[0]  framealpha=0.8
+[OK  ] D11.5    annotate         kind=arg  ref_calls= 1 indices=[0]  arg0="\u2026\u00d7" contains "\u00d7"
+[OK  ] D11.6    annotate         kind=drop ref_calls= 1 indices=[0]  va="bottom"
+[OK  ] D12.1    bar              kind=drop ref_calls= 1 indices=[0]  linewidth=0.5
+[OK  ] D12.2    set_xticklabels  kind=arg  ref_calls= 1 indices=[0]  arg0=["\u03b4 (1\u20134 Hz)", "\u03b8 (4\u20138 Hz)", "\u03b3 (25\u2013100 Hz)"]
+[OK  ] D12.3    axhline          kind=drop ref_calls= 1 indices=[0]  linewidth=0.8
+[OK  ] D12.4    axhline          kind=drop ref_calls= 1 indices=[0]  alpha=0.7
+[OK  ] D12.5    plot             kind=drop ref_calls= 1 indices=[0]  markersize=5
+[OK  ] D12.6    plot             kind=drop ref_calls= 1 indices=[0]  linewidth=1.2
+[OK  ] D12.7    plot             kind=drop ref_calls= 1 indices=[0]  label="$\\lambda$ (convergence)"
+[OK  ] D12.8    tick_params      kind=omit ref_calls= 1 indices=[0]  call present
+[OK  ] D12.9    text             kind=arg  ref_calls= 1 indices=[0]  arg2="\u2026\u00d7" contains "\u00d7"
+[OK  ] D12.10   text             kind=drop ref_calls= 1 indices=[0]  va="bottom"
+[OK  ] D14.1    barh             kind=drop ref_calls= 1 indices=[0]  alpha=0.85
+[OK  ] D15.1    plot             kind=drop ref_calls= 5 indices=[0, 1]  markersize=3
+[OK  ] D15.2    plot             kind=drop ref_calls= 5 indices=[2]  alpha=0.5
+[OK  ] D15.3    plot             kind=drop ref_calls= 5 indices=[2]  linewidth=1
+[OK  ] D15.4    legend           kind=drop ref_calls= 2 indices=[0]  loc="lower left"
+[OK  ] D15.5    plot             kind=drop ref_calls= 5 indices=[3, 4]  markersize=4
+[OK  ] D15.6    set_xlabel       kind=arg  ref_calls= 2 indices=[1]  arg0="Speed Multiplier (\u00d7)" contains "Speed Multiplier (\u00d7)"
+[OK  ] D15.7    legend           kind=drop ref_calls= 2 indices=[1]  loc="lower left"
+
+PART B: 34 specs, 0 validation failures
+
+==============================================================================
+PART C -- the FIXED PORT carries the reference value for each spec
+          (static literal counts: see the module docstring on loop
+           multiplicity, which makes a lower port count an
+           observation rather than a defect)
+==============================================================================
+[OK  ] D5.1     errorbar(linewidth=) ref=1 port=1
+[OK  ] D5.2     errorbar(markersize=) ref=1 port=1
+[OK  ] D5.3     plot(linewidth=) ref=1 port=1
+[OK  ] D5.4     plot(markersize=) ref=1 port=1
+[OK  ] D7.1     text(va=) ref=1 port=1
+[OK  ] D8.1     scatter(zorder=) ref=1 port=1
+[OK  ] D9.1     plot(linewidth=) ref=4 port=2
+[OK  ] D9.2     legend(loc=) ref=1 port=1
+[OK  ] D9.3     text(va=) ref=1 port=1
+[OK  ] D10.1    annotate(bbox=) ref=1 port=1
+[OK  ] D11.1    bar(edgecolor=) ref=2 port=2
+[OK  ] D11.2    bar(linewidth=) ref=2 port=2
+[OK  ] D11.3    "FLOPs (\u00d710\u00b3)":ref=1,port=1
+[OK  ] D11.4    legend(framealpha=) ref=1 port=1
+[OK  ] D11.5    "\u00d7":ref=3,port=3 | mathtext "$\\times$" in port=0
+[OK  ] D11.6    annotate(va=) ref=1 port=1
+[OK  ] D12.1    bar(linewidth=) ref=1 port=1
+[OK  ] D12.2    "\u03b4 (1\u20134 Hz)":ref=1,port=1 "\u03b8 (4\u20138 Hz)":ref=1,port=1 "\u03b3 (25\u2013100 Hz)":ref=1,port=1
+[OK  ] D12.3    axhline(linewidth=) ref=1 port=1
+[OK  ] D12.4    axhline(alpha=) ref=1 port=1
+[OK  ] D12.5    plot(markersize=) ref=1 port=1
+[OK  ] D12.6    plot(linewidth=) ref=1 port=1
+[OK  ] D12.7    plot(label=) ref=1 port=1
+[OK  ] D12.8    tick_params() calls ref=1 port=1
+[OK  ] D12.9    "\u00d7":ref=2,port=2 | mathtext "$\\times$" in port=0
+[OK  ] D12.10   text(va=) ref=1 port=1
+[OK  ] D14.1    barh(alpha=) ref=1 port=1
+[OK  ] D15.1    plot(markersize=) ref=4 port=4
+[OK  ] D15.2    plot(alpha=) ref=1 port=1
+[OK  ] D15.3    plot(linewidth=) ref=1 port=1
+[OK  ] D15.4    legend(loc=) ref=2 port=2
+[OK  ] D15.5    plot(markersize=) ref=4 port=4
+[OK  ] D15.6    "Speed Multiplier (\u00d7)":ref=1,port=1
+[OK  ] D15.7    legend(loc=) ref=2 port=2
+
+PART C: 34 specs, 0 restoration failures
+PART C static-count observations (loop multiplicity; resolved by
+artist_level_equivalence.py, not defects):
+  D9.1: plot(linewidth=) ref=4 port=2
+
+==============================================================================
+PART D -- the \N{...} escape claim: do the port's decoded strings
+          equal the reference's literal Unicode strings?
+==============================================================================
+  [OK  ] fig11_flops_scaling: "FLOPs (\u00d710\u00b3)" reference=True port=True
+  [OK  ] fig12_supercritical_regime: "\u03b4 (1\u20134 Hz)" reference=True port=True
+  [OK  ] fig15_noise_velocity: "Speed Multiplier (\u00d7)" reference=True port=True
+  port source uses \N{...} escapes: True
+  port source contains a raw multiplication sign: False
+
+==============================================================================
+SUMMARY  B_fail=0  C_fail=0  D_fail=0
+==============================================================================
+# exit code: 0

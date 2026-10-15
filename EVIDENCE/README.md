@@ -76,6 +76,20 @@ To find evidence for a specific work package, look for files matching
   changed-code coverage 94 % → 100 % on the two new tools after nine added
   tests) and WP036F-F2 (D4, `mypy --strict` on both tools 3 errors → 0), plus
   the touched-area delta re-audit gate re-run.
+- [`exp002-d1-s2/`](exp002-d1-s2/) — EXP-002 D1 correction, S2 (the read-only
+  correction audit). Six committed instruments and their verbatim outputs,
+  re-executing every S1 claim rather than accepting it: the pre-fix reproduction
+  (18 failed on exactly the E3 set, plus all 9 fast-gate argument tests), an
+  independent decomposition re-run compared field-for-field with the committed
+  artefacts, a static AST cross-validation of all 34 divergence specifications
+  against the frozen reference source, an artist-level comparison of all 14
+  stems (**14/14 EQUAL**, so no plotted value differs), a re-derivation of H3
+  under **both** registered comparison policies with every residual classified,
+  `verify_manifest` over all five `RUN-*` records, the frozen E4 module
+  reproducing all seven outputs and `report-manifest.json` byte-for-byte from a
+  clean worktree outside the repository, both Snyk Code legs (MCP completed,
+  CLI **blocked** on expired credentials), the full local gate, and a retained
+  Testing Standards §7 stall diagnostic. See its `README.md`.
 - [`exp002-d1-s1/`](exp002-d1-s1/) — EXP-002 D1 correction, S1 (an unnumbered
   contingency session). It holds the failing-test-first red and green gate
   runs, and a root-cause decomposition of the 18-file H3 divergence at the

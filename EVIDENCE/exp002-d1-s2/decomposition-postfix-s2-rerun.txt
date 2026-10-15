@@ -1,0 +1,55 @@
+# EXP-002 D1 S2 - independent re-run of the root-cause decomposition
+# date (UTC): 2026-10-15T18:22:25Z
+# git HEAD: 8fd0ecc9949a607f2a7090fe39205f00bb0078c9
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# sha256(python/prin/reporting/figure_generation.py) = b41dfc137d1d10f0f9b60452f0f23093ed4ad6e9369f34343d96695957e6c048
+# output written OUTSIDE the repository (scratch), per the S2 instruction:
+#   /c/Users/there/prin-s2-scratch/root-cause-decomposition-postfix-s2.json
+# command: .venv/Scripts/python EVIDENCE/exp002-d1-s1/root_cause_decomposition.py --label postfix --out /c/Users/there/prin-s2-scratch/root-cause-decomposition-postfix-s2.json
+{
+  "port_vs_reference_differing_files": [],
+  "port_vs_reference_differing_count": 0,
+  "divergences_registered": 34,
+  "divergences_byte_material": [
+    "D5.2",
+    "D5.4",
+    "D7.1",
+    "D8.1",
+    "D9.1",
+    "D9.3",
+    "D10.1",
+    "D11.1",
+    "D11.2",
+    "D11.3",
+    "D11.5",
+    "D11.6",
+    "D12.1",
+    "D12.2",
+    "D12.3",
+    "D12.4",
+    "D12.6",
+    "D12.8",
+    "D12.9",
+    "D12.10",
+    "D14.1",
+    "D15.1",
+    "D15.2",
+    "D15.3",
+    "D15.5",
+    "D15.6"
+  ],
+  "divergences_byte_immaterial": [
+    "D5.1",
+    "D5.3",
+    "D9.2",
+    "D11.4",
+    "D12.5",
+    "D12.7",
+    "D15.4",
+    "D15.7"
+  ],
+  "completeness_all_applied_equals_prefix_port": true,
+  "unexplained_stems": [],
+  "reference_reproduces_e3_reference_arm_all": true
+}
+# exit code: 0

@@ -1,0 +1,59 @@
+# EXP-002 D1 S2 - phase 2 sequencer
+# started (UTC): 2026-10-15T20:37:10Z
+# waiting for the phase-1 pytest legs to write their completion marker...
+#   still waiting after 15 min; last test line:
+#     tests/test_exp002_e4_analysis.py::test_resized_frozen_input_aborts #   still waiting after 30 min; last test line:
+#     tests/test_notebooks.py::test_notebook_executes_end_to_end[01_oscillosim_quickstart.ipynb] #   still waiting after 45 min; last test line:
+#       File "<frozen runpy>", line 198 in _run_module_as_main
+#   still waiting after 60 min; last test line:
+#     tests/test_sphinx_examples.py::test_sphinx_guide_examples_execute[coupling_topologies.rst] # pytest legs completed at 2026-10-15T21:55:11Z after 71 min of waiting
+--- phase-1 pytest leg results ---
+16:LEG: P1 fast suite
+4319:exit code: 0
+4320:elapsed: 3136 s
+4324:LEG: P2 full suite
+11230:exit code: 1
+11231:elapsed: 7567 s
+11235:LEG: P3 targeted coverage (path form, per the S2 instruction)
+11380:exit code: 0
+11381:elapsed: 209 s
+11385:LEG: P4 changed-lines coverage vs the branch base fd8854ed
+11411:exit code: 1
+11412:elapsed: 0 s
+4247:============================== warnings summary ===============================
+4317:= 4038 passed, 178 skipped, 55 deselected, 59 warnings in 3098.17s (0:51:38) ==
+11144:============================== warnings summary ===============================
+11228:==== 1 failed, 6324 passed, 184 skipped, 61 warnings in 7415.80s (2:03:35) ====
+11378:======================= 115 passed in 170.67s (0:02:50) =======================
+
+# running static gate at 2026-10-15T21:55:11Z
+L01 ruff check (all quality-gate roots incl. both EVIDENCE dirs) exit=1 elapsed=0s
+L02 ruff format --check exit=1 elapsed=0s
+L03 ruff format --check DOCS/experiments (source-only include) exit=0 elapsed=0s
+L04 mypy python/prin --strict exit=0 elapsed=1s
+L05 mypy DOCS/experiments --strict exit=0 elapsed=1s
+L06 mypy --strict on the changed and new first-party files exit=0 elapsed=1s
+L07 interrogate python/prin exit=0 elapsed=1s
+L08 bandit (python/prin + DOCS/experiments) exit=0 elapsed=1s
+L09 bandit (both EVIDENCE instrument directories) exit=1 elapsed=0s
+L10 check_deviation_ledger.py 039 040 exit=2 elapsed=0s
+L11 check_dv_register_gates.py exit=0 elapsed=1s
+L12 check_skipif_probes.py exit=0 elapsed=0s
+L13 check_global_session_registration.py exit=0 elapsed=0s
+L14 cargo fmt --all -- --check exit=0 elapsed=1s
+L15 cargo clippy --workspace --all-targets -- -D warnings exit=0 elapsed=8s
+L16 cargo test --workspace exit=101 elapsed=12s
+L17 remove DOCS/sphinx/_build (clean-build discipline, PA4-F2) exit=0 elapsed=1s
+L18 sphinx -W --keep-going -b html exit=0 elapsed=30s
+L19 gitleaks full history exit=0 elapsed=9s
+L20 gitleaks staged exit=0 elapsed=1s
+L21 EXP-002 record / CI / dependency immutability (expect empty) exit=0 elapsed=0s
+STATIC_GATE_DONE
+# static gate returned: 0
+# running coverage leg at 2026-10-15T21:56:22Z
+PYTEST_EXIT=0 COVERAGE_EXIT=2
+# coverage leg returned: 0
+# running rendering instruments at 2026-10-15T21:56:56Z
+ARTIST_EXIT=0 BOTH_POLICIES_EXIT=0
+# instruments returned: 0
+# ALL PHASE 2 DONE at 2026-10-15T21:57:22Z

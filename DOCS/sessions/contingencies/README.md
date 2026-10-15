@@ -31,7 +31,28 @@ byte with 0 unexplained. The failing-test-first gate went from 18 failures
 to green, and all 39 outputs now equal the reference (campaign plan §10.4
 item 3 not invoked;
 [correction audit](../../audits/2026-10-15-exp002-d1-correction-audit.md)).
-S2 is next. See the
+**S2 COMPLETE 2026-10-15 UTC** — read-only audit of `ab9e4225..8fd0ecc9`,
+verdict **`PASS-WITH-FINDINGS`**: one D2, one D3, five D4, **no D1**, no
+systemic drift. All five brief-specific items were **VERIFIED** by independent
+re-execution rather than accepted on authority — the pre-fix gate red on
+exactly the 18 E3 files and all 9 argument tests; the decomposition reproducing
+field-for-field; **34/34** divergence specifications validated statically
+against the frozen reference source; an artist-level comparison **14/14 EQUAL**
+so no plotted value differs; `verify_manifest` green on all five runs; the
+frozen E4 module reproducing all seven outputs and `report-manifest.json`
+`6b15dcc1…68781` byte-for-byte from a clean worktree outside the repository;
+and Snyk Code **0 findings** in the four changed files, with the expired-CLI
+leg reported **blocked** and never as passed. The fast suite achieved the clean
+single pass S1 handed over (4038 passed, 0 failed); the full suite is
+**exit 1** on a pre-existing notebook cell timeout (`EXP002D1-S2-F2`, D2). The
+D3 (`EXP002D1-S2-F1`) is that the two registered H3 policies now disagree about
+the verdict — approved §5.4 **39/39 equal**, §11.3 sensitivity **14/39 equal**,
+with all 25 residuals classified as writer/host properties (PDF Info key sets,
+`.tex` line terminators) and 0 unclassified — which S4 must carry into the
+`EXP-002-r1` authorization so its E1/E2 registers both policies deliberately.
+Evidence: [`EVIDENCE/exp002-d1-s2/`](../../../EVIDENCE/exp002-d1-s2/README.md).
+Committed locally only; **nothing pushed**. S3 is next and is mandatory even
+though no D1 was found. See the
 [EXP-002 E5 report](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md)
 §§3, 6, 8, 11, 14.
 

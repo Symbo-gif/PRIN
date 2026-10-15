@@ -1,0 +1,56 @@
+# EXP-002 D1 S2 - verify_manifest over the five EXP-002 RUN-* records
+# date (UTC): 2026-10-15T18:38:47Z
+# git HEAD: 8fd0ecc9949a607f2a7090fe39205f00bb0078c9
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# tool: tools.reproduce.verify_manifest (the registered read-only verifier)
+# pattern: verify_manifest(run_dir, run_dir/"manifest.json"), as
+#          benchmarks/campaign/exp002_driver.py:1364 calls it
+# NOTE: read-only. No file under benchmarks/results/EXP-002/ or
+#       DOCS/test_and_benchmark_results/EXP-002/ is written or modified.
+#
+raw record root : C:\dev\PRIN\benchmarks\results\EXP-002
+RUN-* directories: 5
+
+[PASS] RUN-20261012T212705Z-fae24c4-api-cpu
+       manifest.json exists=True  records=2  *.json present=3
+       manifested entries: ['api.json', 'campaign-metadata.json']
+
+[PASS] RUN-20261012T213054Z-fae24c4-conclusions-cpu
+       manifest.json exists=True  records=2  *.json present=3
+       manifested entries: ['campaign-metadata.json', 'conclusions.json']
+
+[PASS] RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu
+       manifest.json exists=True  records=2  *.json present=3
+       manifested entries: ['campaign-metadata.json', 'reproduction.json']
+
+[PASS] RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu
+       manifest.json exists=True  records=2  *.json present=3
+       manifested entries: ['campaign-metadata.json', 'reproduction.json']
+
+[PASS] RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu
+       manifest.json exists=True  records=2  *.json present=3
+       manifested entries: ['campaign-metadata.json', 'reproduction.json']
+
+==========================================================================
+Frozen input manifest (paper/artefact_manifest.json) against the reference
+results root -- the 172-input inventory both arms were rendered from.
+==========================================================================
+INPUT_MANIFEST     : C:\dev\PRIN\paper\artefact_manifest.json
+INPUT_MANIFEST_SHA : 300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5
+recomputed sha256  : 300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5
+manifest digest matches the pinned constant: True
+[PASS] verify_manifest(reference results, INPUT_MANIFEST): 172 records
+
+==========================================================================
+Retained (untracked, read-only) roots under DOCS/test_and_benchmark_results/
+==========================================================================
+  [dir ] analysis  entries=7
+  [dir ] RUN-20261012T212705Z-fae24c4-api-cpu  entries=173
+  [dir ] RUN-20261012T213054Z-fae24c4-conclusions-cpu  entries=173
+  [dir ] RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu  entries=215
+  [dir ] RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu  entries=215
+  [dir ] RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu  entries=215
+(listed only; not modified, not deleted)
+
+TOTAL FAILURES: 0
+# exit code: 0

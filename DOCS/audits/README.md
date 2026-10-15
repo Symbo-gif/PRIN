@@ -445,14 +445,31 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   plan §10.4 item 3 standard), commits, the red → green transition on draft
   PR #24, and handoff. The S2 audit, S3 closure and S4 closure are pending.
 - [`2026-10-15-exp002-d1-correction-audit.md`](2026-10-15-exp002-d1-correction-audit.md) —
-  EXP-002 D1 correction cycle (H3 `REFUTED`, 18/39 files). So far it holds
-  the **S1 implementation record**: the failing-test-first reproduction
-  (18 failed, exactly the E3 set) and the root cause. The root cause is on
-  the PRIN side: 34 drawing arguments dropped or re-encoded by the WP-034
-  figure port, all bytes explained by controlled substitution on the frozen
-  reference, and campaign plan §10.4 item 3 not invoked. The record also
-  covers the fix, the red → green transition on draft PR #34, the local
-  gate and the handoff. The S2 audit, S3 closure and S4 closure are pending.
+  EXP-002 D1 correction cycle (H3 `REFUTED`, 18/39 files). It holds the **S1
+  implementation record** and the **S2 audit record**. S1: the
+  failing-test-first reproduction (18 failed, exactly the E3 set) and the root
+  cause, which is on the PRIN side — 34 drawing arguments dropped or re-encoded
+  by the WP-034 figure port, all bytes explained by controlled substitution on
+  the frozen reference, campaign plan §10.4 item 3 not invoked — plus the fix,
+  the red → green transition on draft PR #34, the local gate and the handoff.
+  **S2 (2026-10-15 UTC, verdict `PASS-WITH-FINDINGS`):** a read-only audit of
+  `ab9e4225..8fd0ecc9` that re-executed all five brief-specific items rather
+  than accepting them — the pre-fix gate red on exactly the 18 E3 files and all
+  9 argument tests; the decomposition reproducing field-for-field; **34/34**
+  divergence specifications validated statically against the frozen reference;
+  an artist-level comparison **14/14 EQUAL**, so no plotted value differs;
+  `verify_manifest` green on all five runs and the frozen E4 module reproducing
+  all seven outputs plus `report-manifest.json` byte-for-byte from a clean
+  worktree; and Snyk Code **0 findings** in the four changed files, with the
+  expired-CLI leg reported **blocked**, never as passed. Seven findings
+  (`EXP002D1-S2-F1`…`-F7`): one **D2** (the required full suite is red on a
+  pre-existing notebook cell timeout, reproduced in two consecutive sessions),
+  one **D3** (the two registered H3 policies now disagree about the verdict —
+  approved §5.4 39/39 equal vs §11.3 sensitivity 14/39 equal, all 25 residuals
+  classified as writer/host properties — which S4 must carry into the
+  `EXP-002-r1` E1/E2 registration), and five D4. **No D1, no systemic drift.**
+  Evidence: [`EVIDENCE/exp002-d1-s2/`](../../EVIDENCE/exp002-d1-s2/README.md).
+  The S3 closure and S4 closure are pending.
 - [`PR023-multi-review-audit.md`](PR023-multi-review-audit.md) — External
   code review audit of PR #23 (EXP-001 E3–E5), 2026-09-23,
   `PASS-WITH-FINDINGS` → all findings remediated in the same round. Seven

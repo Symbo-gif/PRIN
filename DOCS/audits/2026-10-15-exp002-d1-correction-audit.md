@@ -344,3 +344,583 @@ re-derivation rather than acceptance:
 
 **Not authorized by S1:** merging PR #34, `EXP-002-r1`, or releasing session
 `0164`. Session `0164` stays `BLOCKED`.
+
+---
+
+## S2 — audit record (2026-10-15 UTC)
+
+**Session brief:**
+[`2026-10-14-exp002-d1-s2-correction-audit.md`](../sessions/contingencies/2026-10-14-exp002-d1-s2-correction-audit.md).\
+**AI pair:** Qwen Code. Read-only audit: no source, test, S1-evidence or
+S1-record change was committed. Nothing was fixed; every defect found is
+recorded as a finding for S3.\
+**Audited range:** `ab9e4225..8fd0ecc9` on `hotfix/exp002-d1-figure-parity`
+(9 commits, 23 files, +4,261 / −19).\
+**Provenance:** `git fetch --all --prune` run first. Local `HEAD` =
+`8fd0ecc9949a607f2a7090fe39205f00bb0078c9` = `origin/hotfix/exp002-d1-figure-parity`
+= `PRIN/hotfix/exp002-d1-figure-parity`; working tree clean (0 tracked
+changes) at audit start. Branch point `fd8854ed` (the PR #33 merge). Draft
+**PR #34** `OPEN`, `isDraft: true`, `headRefOid: 8fd0ecc9…`, `mergeable:
+MERGEABLE` — left untouched.\
+**Host:** `MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64`, Python `3.14.0`,
+pytest `9.1.1`, project venv. Windows x86_64 only; Linux/macOS not tested
+(amendment #48 item 4).\
+**Evidence:** [`EVIDENCE/exp002-d1-s2/`](../../EVIDENCE/exp002-d1-s2/README.md).
+Every command below is recorded there verbatim with its exit code.
+
+**Host load before starting** (brief item g): measured ~89 % idle
+(`\Process(*)\% Processor Time`: `_total` 1589.4, `idle` 1416.8). The IDE
+`snyk-win` language server S1 reported as pegging the CPU (PID 5912) is still
+resident with ~18,207 s accumulated CPU, but advanced only ~4 s over a 20-minute
+window — resident, **not** currently consuming. Also resident and not started by
+this session: three `Devin` processes (~5,928 / ~3,348 / ~3,182 s), `java`
+(~5,999 s), `pyrefly`, `kilo`. **Reported, not killed**, per the brief.
+
+### S2.0 The five brief-specific verification items
+
+#### Item 1 — The reproduction came first. ✅ VERIFIED
+
+Re-run by this session, not accepted on authority.
+
+`parity/test_parity_publication.py` is **byte-identical between `d90eeab` and
+`HEAD`** — `git diff --name-only d90eeabb..HEAD --
+parity/test_parity_publication.py` returns empty. The only functional file in
+`d90eeab..HEAD` is `python/prin/reporting/figure_generation.py`, so restoring
+that one module into `HEAD` reproduces the exact pre-fix state the gate saw at
+`d90eeab`. (The brief's alternative — a separate `d90eeab` worktree — was not
+needed, and this route avoids the `.venv` `.pth` resolution hazard that a
+sibling worktree carries.)
+
+| Step | Command | Result |
+|---|---|---|
+| restore pre-fix module | `git restore --source d90eeabb -- python/prin/reporting/figure_generation.py` | `sha256 = e0f59253…d533` — **equals the `port_module_sha256` recorded in S1's prefix artefact**; `git diff d90eeabb -- <file>` empty |
+| red gate | `.venv/Scripts/python -m pytest parity/test_parity_publication.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider` | **18 failed, 75 passed** in 14.14 s, **exit 1** |
+| red fast-gate tests | same flags, `tests/test_publication_figure_arguments.py` | **9 failed** in 3.52 s, **exit 1** |
+| restore | `git restore python/prin/reporting/figure_generation.py` | `sha256 = b41dfc13…c048`; `git status --porcelain` clean |
+| green | both files together | **102 passed** in 14.69 s, **exit 0** |
+
+The 18 failures are **exactly** the E3 population — the `.pdf` and `.png` of
+`fig5`, `fig7`, `fig8`, `fig9`, `fig10`, `fig11`, `fig12`, `fig14`, `fig15` —
+and each failure names its normalized-digest pair. All 9 fast-gate argument
+tests failed, each on the specific restored argument (`5.0 == 4`,
+`{'baseline'} == {'bottom'}`, `{1} == {5}`, `{1.5} == {1.2}`, `None is not
+None`, `1.0 == 0.5`, `{None} == {0.85}`, …).
+
+The gate was committed at `d90eeab` and **pushed before** the fix at `10d84f2`
+(commit order verified in `git log`), so the red → green transition is recorded
+on the remote. Development Workflow §3 and Testing Standards §1.2/§1.3 are
+satisfied: reproduction first, tests in tandem.
+
+Evidence: [`prefix-gate-d90eeab-module.txt`](../../EVIDENCE/exp002-d1-s2/prefix-gate-d90eeab-module.txt),
+[`postfix-gate-8fd0ecc9.txt`](../../EVIDENCE/exp002-d1-s2/postfix-gate-8fd0ecc9.txt).
+
+#### Item 2 — The root cause is established, not asserted. ✅ VERIFIED
+
+Re-derived three independent ways, none of which relies on S1's runtime
+monkeypatching being correct.
+
+**(a) The decomposition reproduces.**
+`.venv/Scripts/python EVIDENCE/exp002-d1-s1/root_cause_decomposition.py
+--label postfix --out <scratch outside the repository>` → **exit 0**, printing
+`port_vs_reference_differing_count: 0`, `divergences_registered: 34`, 26
+byte-material, 8 immaterial, `completeness_all_applied_equals_prefix_port:
+true`, `unexplained_stems: []`, `reference_reproduces_e3_reference_arm_all:
+true`. Compared field-by-field with the committed postfix artefact
+([`decomposition_rerun_check.py`](../../EVIDENCE/exp002-d1-s2/decomposition_rerun_check.py)):
+**every field `SAME`** — `stems` (17,818 chars), `summary`, `prin_tree`,
+`e3_records`, `comparison`, all four module digests — except `generated_utc`
+and `git_head`, which necessarily differ (this run is at `8fd0ecc9`, S1's at
+`93715964`). The scratch output was written **outside** the repository, so the
+committed artefacts were never at risk.
+
+**(b) The 34 specifications match the reference source call for call** —
+statically, without executing matplotlib
+([`ast_spec_validation.py`](../../EVIDENCE/exp002-d1-s2/ast_spec_validation.py)).
+This is the check that the transforms are not self-confirming:
+
+- **Part B — 34/34 OK, 0 failures.** Each spec names a method the frozen
+  reference actually calls, and the claimed argument is present at exactly the
+  call indices the spec restricts: `errorbar(linewidth=1.5, markersize=4)`,
+  `text(va="bottom")`, `scatter(zorder=5)`, `plot(linewidth=1.2)` ×4,
+  `legend(loc="upper right", framealpha=0.8)`, `annotate(bbox=…, va="bottom")`,
+  `bar(edgecolor="black", linewidth=0.5)` ×2, `axhline(linewidth=0.8,
+  alpha=0.7)`, `plot(markersize=5, linewidth=1.2, label="$\lambda$
+  (convergence)")`, `barh(alpha=0.85)`, `plot(markersize=3/4, alpha=0.5,
+  linewidth=1)`, `legend(loc="lower left")` ×2, `tick_params` present,
+  `set_ylabel("FLOPs (×10³)")`, `set_xticklabels(["δ (1–4 Hz)", …])`,
+  `set_xlabel("Speed Multiplier (×)")`, and the two f-string `×` labels.
+  An earlier draft of this instrument reported three false failures
+  (`D11.5`, `D12.2`, `D12.9`) because it resolved only bare constants; the
+  shipped version resolves f-strings by their literal parts and simple local
+  name bindings, which is what the reference actually uses
+  (`annotate(f"{ratio:.0f}×", …)` at line 807, `set_xticklabels(band_labels, …)`
+  at line 866 with `band_labels = ["δ (1–4 Hz)", …]` at line 845,
+  `text(i, r + 2, f"{r:.0f}×", …)` at line 886).
+- **Part C — 34/34 restored, 0 failures.** The fixed port carries the
+  reference's value for every spec, and **no mathtext rewrite survives**.
+- **Part D — the `\N{...}` claim holds.** The port's *decoded* strings equal
+  the reference's literal Unicode strings for all three re-encoded labels, the
+  port source **does** use `\N{...}` escapes and contains **no raw**
+  multiplication sign — so `ruff` `RUF001` is satisfied without changing the
+  rendered text.
+
+One Part C row is an **observation, not a defect**: `D9.1 plot(linewidth=)
+ref=4 port=2`. The reference writes four separate `plot(..., linewidth=1.2)`
+calls; the port emits two inside a two-iteration loop, i.e. four runtime calls.
+A static literal count cannot see loop multiplicity. It is settled by (c).
+
+**(c) No divergence alters a plotted value**
+([`artist_level_equivalence.py`](../../EVIDENCE/exp002-d1-s2/artist_level_equivalence.py)).
+All 14 stems were rendered from both modules and compared at matplotlib's own
+object model — `Line2D` x/y data (SHA-256 over the `float64` buffer plus shape),
+linewidth, markersize, marker, linestyle, alpha, zorder, colour, label;
+`Collection` offsets and styling; `Patch` path vertices and styling; `Text`
+string, position, alignment, size, rotation, colour; `Axes` limits, scales,
+title, axis labels, tick positions and tick-label strings, legend texts.
+Result: **14/14 stems EQUAL**. The only differences anywhere are drawing-call
+*multisets* — the reference's `set_xlabel`/`set_ylabel` versus the port's
+`ax.set(...)` grouping — which produce identical artists. The imported
+reference's digest is `575eca5a…1520`, equal to `REFERENCE_PINS`.
+
+**(d) The fix changes nothing else.** `git diff 10d84f2b^ 10d84f2b` touches
+exactly 2 files. Every hunk of `figure_generation.py` is a restored drawing
+keyword argument, a `\N{...}`-escaped label string, the added
+`tick_params(axis="y", labelcolor="#AA3377")` call, or the module docstring.
+No data expression, plotted value, other generator, table, normalizer or public
+symbol changes.
+
+**Campaign plan §10.4 item 3 is correctly not invoked.** Every one of the 34
+divergences is a drawing argument the WP-034 port changed relative to the
+frozen reference function it ports; (c) shows no computed quantity differs, so
+no reference calculation is implicated and no claim is made that the reference
+is defective. No EMA-style mathematical audit is therefore required, and none
+was substituted for one. The brief's escalation condition ("any evidence
+suggests the reference side, not PRIN, is defective") was **not** met.
+
+Evidence: [`decomposition-postfix-s2-rerun.txt`](../../EVIDENCE/exp002-d1-s2/decomposition-postfix-s2-rerun.txt),
+[`decomposition-rerun-vs-committed.txt`](../../EVIDENCE/exp002-d1-s2/decomposition-rerun-vs-committed.txt),
+[`ast-spec-validation.txt`](../../EVIDENCE/exp002-d1-s2/ast-spec-validation.txt),
+[`artist-level-equivalence.txt`](../../EVIDENCE/exp002-d1-s2/artist-level-equivalence.txt).
+
+#### Item 3 — No regression on the already-matching outputs. ✅ VERIFIED
+
+- **11/11 `.tex` tables** equal both the reference arm and the archived PRINet
+  3.0 tables (the gate's `test_prin_tables_match_archived_tables` and
+  `test_prin_matches_reference_under_registered_comparison`, both green).
+- **The 5 already-matching figures** (`fig2`, `fig3`, `fig4`, `fig6`, `fig13`
+  — 10 files) equal the reference, and are **raw-byte-identical to E3's PRIN
+  arm**.
+- The postfix artefact's `prin_tree` gives `raw_equal_to_e3_prin_arm` = **21**
+  files (11 tables + those 10 figure files) and `raw_differing_from_e3_prin_arm`
+  = exactly the **18** D1 files. So the correction changed *only* what it had
+  to, and changed it to the reference's bytes.
+- **H4 holds**: `two_process_raw_identical: true` in the artefact (two separate
+  PRIN processes), independently corroborated in-process by the gate's
+  `test_prin_rerender_is_raw_byte_identical`.
+- **Retained E3 roots intact**: all three legs report `retained_root_present:
+  true`, `retained_files: 39`, `39/39` raw and `39/39` normalized digests
+  matching their manifested `reproduction.json`, and each `reproduction.json`
+  matches its run `manifest.json`. Read only; never modified or deleted.
+- **No suite regression**: the fast suite completed a **clean single pass** —
+  `4038 passed, 178 skipped, 55 deselected, 0 failed`, exit 0. S1 recorded
+  `4037 passed … 1 failed`, i.e. the *same* 4,038-test population with one
+  environmental failure; that failure did not reproduce here.
+
+Evidence: [`postfix-artefact-summary-dump.txt`](../../EVIDENCE/exp002-d1-s2/postfix-artefact-summary-dump.txt),
+[`pytest-suites.txt`](../../EVIDENCE/exp002-d1-s2/pytest-suites.txt).
+
+#### Item 4 — EXP-002's record is untouched. ✅ VERIFIED
+
+- **Diff is empty.** `git diff --stat fd8854ed..HEAD --
+  DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/
+  benchmarks/results/EXP-002/` → no output. Also empty for `.github/`,
+  `Cargo.lock`, `Cargo.toml`, `pyproject.toml`. No `.tex`/`.md`/`.json` in the
+  immutable record changed, so no erratum was appended and none was needed.
+- **`verify_manifest` passes on all five `RUN-*` directories** (the registered
+  read-only verifier, invoked as `verify_manifest(run_dir,
+  run_dir/"manifest.json")` per `exp002_driver.py:1364`): `api-cpu`,
+  `conclusions-cpu`, `reproduction-reference-cpu`, `reproduction-prin-cpu`,
+  `seedrep0-prin-cpu` — each **PASS**, 2 manifested records, no missing,
+  modified or unmanifested entry. The frozen 172-input
+  `paper/artefact_manifest.json` recomputes to `300cdc09…2cce5`, equal to
+  `INPUT_MANIFEST_SHA`, and verifies **172 records** against the reference
+  results root.
+- **The E4 analysis still reproduces byte-for-byte — the check S1 did not
+  re-run.** A detached worktree of `HEAD` was created **outside** the
+  repository (`git worktree add --detach C:/dev/PRIN-s2-e4wt HEAD`), and the
+  frozen module was executed there with `-I`:
+  `.venv/Scripts/python.exe -I C:/dev/PRIN-s2-e4wt/DOCS/experiments/…/analysis/exp002_e4_analysis.py`
+  → **exit 0** in ~2 s, printing `H1: CONFIRMED / H2: CONFIRMED / H3: REFUTED
+  / H4: CONFIRMED / H3_sensitivity_policy: REFUTED / D1 flag: True`. The
+  worktree copy's digest `7a400aa6…4e4` equals the main checkout's, and the
+  module was last touched by `3731fc2` — so the *frozen* analysis ran, not a
+  modified one. All **seven** generated outputs are byte-identical to the
+  retained copies, and the regenerated `report-manifest.json` equals
+  **`6b15dcc112513cdce9cb2d923208f93d3616898225efed545706c56526e68781`** —
+  identical to the committed file and to the digest E5 §6.2 records. The
+  worktree was removed (`git worktree remove --force`); `git worktree list`
+  confirms it is gone; the main tree stayed clean and the retained
+  `DOCS/test_and_benchmark_results/EXP-002/` roots (5 `RUN-*` + `analysis`)
+  were left in place, unmodified.
+- No EXP-002 leg, no `EXP-002-r1` run and no other campaign execution took
+  place. `DV-045`, `DV-046`, `DV-047` were not touched or pulled into scope.
+
+Evidence: [`verify-manifest-five-runs.txt`](../../EVIDENCE/exp002-d1-s2/verify-manifest-five-runs.txt),
+[`e4-analysis-clean-worktree-reproduction.txt`](../../EVIDENCE/exp002-d1-s2/e4-analysis-clean-worktree-reproduction.txt).
+
+#### Item 5 — Coding Standards §6 evidence is real. ✅ VERIFIED (one leg BLOCKED, reported not claimed)
+
+**CLI leg — BLOCKED.** `snyk code test . --severity-threshold=low
+--sarif-file-output=<scratch>` (snyk `1.1306.2`) returned `ERROR Authentication
+error (SNYK-0005) … Status: 401 Unauthorized`, **exit 2**, and wrote **no
+SARIF**. The local CLI token has expired; `snyk auth` only prints a browser
+redirect, so recovery needs an interactive login by the maintainer, which this
+session did not perform and could not. **This leg is recorded as blocked, not
+as passed** (amendment #48 item 2).
+
+**MCP leg — COMPLETED.** Coding Standards §6.4 permits Snyk Code "through the
+configured IDE or MCP integration". The authenticated Snyk MCP server
+(`mcp__snyk__snyk_code_scan`) was used, and the scan really ran:
+
+| Scope | Threshold | Result |
+|---|---|---|
+| `C:\dev\PRIN` (whole repository) | `medium` | `{"success":true,"issueCount":0}` |
+| `python/prin/reporting/figure_generation.py` | `low` | `{"success":true,"issueCount":0}` |
+| `tests/test_publication_figure_arguments.py` | `low` | `{"success":true,"issueCount":0}` |
+| `parity/test_parity_publication.py` | `low` | `{"success":true,"issueCount":0}` |
+| `EVIDENCE/exp002-d1-s1/root_cause_decomposition.py` | `low` | `{"success":true,"issueCount":0}` |
+
+**0 findings in all four changed first-party source files**, and 0 repo-wide at
+`medium` — which is the §6.2 gate ("0 medium+ findings"). The repository-wide
+**LOW** total was **not re-derived**: the MCP tool returns findings inline
+rather than as SARIF, so enumerating 75+ low findings was not attempted. S1's
+figure of 75 LOW is therefore *carried, not re-verified*, and is not claimed
+here.
+
+**Not triggered:** no dependency or lockfile changed in the audited range (the
+diff over `Cargo.lock`, `Cargo.toml`, `pyproject.toml` is empty), so Snyk Open
+Source, `pip-audit` and `cargo audit` are not triggered by this correction.
+`cargo audit` red is **DV-045**, explicitly out of scope.
+
+Evidence: [`snyk-code.txt`](../../EVIDENCE/exp002-d1-s2/snyk-code.txt) (both
+legs, with the scanned files' SHA-256s).
+
+### S2.1 A1 — WP scope
+
+✅ **PASS.** The 23 files in `ab9e4225..HEAD` are all inside the approved
+scope: the reproduction gate, the decomposition instrument and its two
+artefacts, the fix, the 9 fast-gate tests, the S1 record and brief updates, the
+registers and indexes, `CHANGELOG.md`, and `EVIDENCE/exp002-d1-s1/`. **Nothing
+undeclared shipped**: no dependency manifest, no `.github/workflows/`, no
+EXP-002 record file, no Rust source, no unrelated refactor or performance work.
+The out-of-scope items S1 listed (`DV-045`/`046`/`047`, the Parity Report, the
+PSR and ledger) were correctly left alone. No scope creep (Development
+Workflow §7).
+
+### S2.2 A2 — Plan conformance
+
+✅ **PASS**, with one observation. No numerics were added to Python: the fix
+restores drawing arguments and label strings only. "One algorithm, one
+implementation" holds — the port renders, it does not re-implement. No crate
+layering is touched (no Rust changed). Explicit state/seeding is unaffected.
+
+*Observation (not a finding against this correction):* the module evaluates a
+stored exponential fit over a fine grid (`fit["IP_0"] * np.exp(-fine /
+fit["sigma_c"])`, line 1079). This is **pre-existing from WP-034**, mirrors the
+frozen reference exactly (line 1053), and byte parity with the reference
+*requires* it. WP-034's audit already classified this module as
+"reporting/rendering … No scientific computation" (`034-wp034-audit.md` §3.2),
+so the question is adjudicated; it is restated here only because the wording
+interacts with finding `EXP002D1-S2-F7`.
+
+### S2.3 A3 — Test conformance
+
+⚠️ **PASS WITH FINDINGS** (`EXP002D1-S2-F2`, `-F5`).
+
+- **Tests in tandem:** the failing gate was committed at `d90eeab` *before* the
+  fix at `10d84f2`, and the fix commit itself carries its 9 tests. Verified by
+  commit order and by re-running both (item 1).
+- **Every bug fix ships a regression test that fails before the fix**
+  (Testing Standards §4): confirmed by direct re-execution — 18 failed and 9
+  failed pre-fix, 102 passed post-fix.
+- **Changed-code coverage ≥95%:** measured with the **path** form
+  (`--cov=python/prin/reporting`); the module form `--cov=prin` fails on this
+  host with the PyO3 "cannot load module more than once" error (**DV-033**), so
+  no module-form coverage is claimed. `figure_generation.py` whole-file
+  **99.41 %** (340 statements, 2 missed: lines 191 and 196, the untouched
+  malformed-PNG branches — matching S1's figure exactly). Changed-line
+  analysis against base `fd8854ed`: of 82 added/changed lines, **11 are
+  executable statements and 11 are executed — 100.00 %**, 0 uncovered.
+  ([`changed_line_coverage.py`](../../EVIDENCE/exp002-d1-s2/changed_line_coverage.py);
+  `tools/coverage_changed_lines.py` was *not* usable for this — it unions Rust
+  `cargo-llvm-cov` lcov runs and does not read Python coverage data.)
+- **No test weakened:** no `skip`, `skipif` or `xfail` marker in either new
+  test file; no assertion deleted; no tolerance loosened. The parity gate
+  compares all 39 files under the registered rule with nothing skipped,
+  sampled or toleranced.
+- **The fast gate genuinely protects the fix.** Because
+  `parity/test_parity_publication.py` is marked `parity` + `slow`, the default
+  fast gate never runs it. Measured directly
+  ([`fast_gate_divergence_coverage.py`](../../EVIDENCE/exp002-d1-s2/fast_gate_divergence_coverage.py)):
+  the 9 tests cite **34/34** registered divergences — all 26 byte-material
+  *and* all 8 byte-immaterial — with no unknown IDs. So a re-dropped argument
+  fails the default `tests/` run, not just the parity suite.
+- **Gap:** the required full suite is **red** — see S2.9 and `EXP002D1-S2-F2`.
+
+### S2.4 A4 — Numerical parity
+
+✅ **PASS**, with one protocol-registration finding (`EXP002D1-S2-F1`).
+
+Under the registered H3 rule all **39/39** publication files now equal the
+frozen reference (`port_vs_reference_differing_count: 0`; the gate is green on
+all 39 parametrizations). The 21 previously matching outputs are raw-identical
+to E3's PRIN arm, and H4's raw determinism holds across two processes. Artist
+comparison is 14/14 EQUAL, so no plotted value, limit, tick, label, colour,
+alpha or z-order differs. Tables match the archived PRINet 3.0 tables 11/11.
+
+Independently re-derived for this audit
+([`both_policies_post_fix.py`](../../EVIDENCE/exp002-d1-s2/both_policies_post_fix.py)),
+H3 on the corrected tree under **both** registered policies:
+
+| Comparison | Equal | Differ |
+|---|---|---|
+| raw bytes (H4's rule) | 0/39 | 39/39 |
+| **approved §5.4 policy (H3 primary)** | **39/39** | **0/39** |
+| **§11.3 sensitivity policy (pre-exposure `6314532`)** | **14/39** | **25/39** |
+
+All 25 sensitivity-policy residuals are **classified, with 0 unclassified**:
+
+- **14 PDFs — Info key set only.** Reference writes 3 keys
+  (`Creator`, `Producer`, `CreationDate`, the last wall-clock); PRIN writes 4
+  (`Creator`, `Producer`, `CreationDate`, `ModDate`), all fixed. Every one is
+  equal under the approved policy. PRIN's fixed metadata is what makes H4 hold,
+  so S1 was right not to change it.
+- **11 `.tex` tables — line terminators only.** Equal after CRLF→LF in both
+  arms; the reference's text-mode writer emits 13–25 CRLF sequences per table
+  on Windows, PRIN emits 0.
+
+This confirms S1.10 item 1 exactly, and confirms it is a **writer/host
+property**, not a scientific difference — which is why it is an `EXP-002-r1`
+E1/E2 *registration* matter and **not an S1 defect**. It is raised as a finding
+only because the two policies now disagree about the verdict, which the
+registered text does not govern (see `EXP002D1-S2-F1`).
+
+### S2.5 A5 — Code quality gates
+
+✅ **PASS.** Reproduced locally on `8fd0ecc9`, sequentially (never pytest
+concurrently with cargo, per `AGENTS.md`):
+
+| Leg | Result |
+|---|---|
+| `ruff check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/ EVIDENCE/exp002-d1-s1/ EVIDENCE/exp002-d1-s2/` | exit 0, all checks passed |
+| `ruff format --check` (same roots) | exit 0 |
+| `ruff format --check DOCS/experiments/` (source-only include) | exit 0 |
+| `mypy python/prin --strict` | exit 0 |
+| `mypy DOCS/experiments/ --strict` | exit 0 |
+| `mypy --strict` on the changed + new first-party files (7 files) | exit 0 |
+| `cargo fmt --all -- --check` | exit 0 |
+| `cargo clippy --workspace --all-targets -- -D warnings` | exit 0 |
+| `cargo test --workspace` | exit 0, every suite `ok … 0 failed` |
+| `sphinx -W --keep-going -b html` after `rm -rf DOCS/sphinx/_build` | exit 0, clean build from scratch (PA4-F2 discipline) |
+
+Two legs initially failed and were **corrected and re-run**, with both attempts
+recorded: the first `ruff`/`bandit` failures were caused by two S2 instruments
+this session added after its own earlier lint pass (now clean), and the first
+`cargo test` died with `os error 32` (`ERROR_SHARING_VIOLATION` building
+`lib_prin_core.rlib`) — the documented Windows AV/file-handle contention class,
+not a code defect. It passed on re-run in 56 s without needing `-j 1`.
+
+### S2.6 A6 — Security
+
+✅ **PASS**, with one blocked-leg finding (`EXP002D1-S2-F3`).
+
+- `bandit -r python/prin DOCS/experiments -c pyproject.toml` → exit 0, no
+  issues. `bandit -r EVIDENCE/exp002-d1-s1 EVIDENCE/exp002-d1-s2` → exit 0,
+  **0 issues at every severity**.
+- Snyk Code: 0 findings in the four changed files, 0 repo-wide at `medium`
+  (MCP leg; CLI leg **BLOCKED** on expired credentials — reported, not claimed).
+- **gitleaks** (pinned binary
+  `DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe`):
+  full history **738 commits**, ~94.76 MB, **no leaks found**, exit 0;
+  `--staged` exit 0. Run although no push is authorized, so the branch is
+  known clean.
+- No `unsafe` Rust introduced (no Rust changed). No `eval`/`exec`/`compile` of
+  dynamic strings, no `pickle.load`, no `shell=True` in any changed file
+  (grepped). The single `subprocess.run` in the new S2 coverage instrument uses
+  a fixed argv list and carries `# nosec B603 B607` in S1's instrument's style.
+- Not triggered: Snyk Open Source, `pip-audit`, `cargo audit` (no dependency or
+  lockfile change). `cargo audit` red is DV-045, out of scope.
+
+### S2.7 A7 — Docstring/doc coverage
+
+✅ **PASS.** `interrogate -c pyproject.toml python/prin` → **97.6 %**
+(1,011 total, 24 missed) ≥ the 95 % floor. Sphinx `-W --keep-going` clean build
+exit 0 from a deleted `_build`. All six new S2 instruments carry module and
+public-function docstrings and pass `mypy --strict`. One wording imprecision in
+the touched module docstring is recorded as `EXP002D1-S2-F7` (D4).
+
+### S2.8 A8 — Repository hygiene
+
+✅ **PASS**, with one artefact-index finding (`EXP002D1-S2-F4`).
+
+- No `TODO`/`FIXME`/`XXX`/`HACK`/`stub`/`NotImplementedError` marker in
+  `python/prin/reporting/figure_generation.py`, and no
+  `skip`/`skipif`/`xfail` in either new test file.
+- `__all__` unchanged by the fix; the frozen-public-surface tests pass inside
+  both suites.
+- Gitignore respected: `.pytest_basetemp/`, `.coverage`, `DOCS/sphinx/_build/`,
+  `target/` all untracked; the decomposition's scratch output and all S2 runner
+  scripts were written **outside** the repository
+  (`C:\Users\there\prin-s2-scratch`), so no scratch artefact entered the tree.
+  `git status --porcelain` shows only `?? EVIDENCE/exp002-d1-s2/`.
+- No orphan files in the audited range — but one committed **S1** evidence file
+  is not indexed by its own README (`EXP002D1-S2-F4`).
+
+### S2.9 A9 — CI
+
+✅ **PASS as local gate reproduction. No CI is claimed.**
+
+Amendment #48's local-validation regime is in force and amendment #50's
+EXP-002 hosted-check window **closed** when E5 closed. Verified live:
+`gh workflow list --all` reports `rust`, `python`, `parity`, `repro`, `snyk`,
+`gpu`, `nightly` all **`disabled_manually`** (only the tag-triggered `release`,
+manual `gpu-triton`, and GitHub's own Copilot/Dependabot/Dependency-Graph apps
+are active). **No hosted check ran on this branch and none is cited.** A9 rests
+on local reproduction only, and this record is not evidence about Linux or
+macOS.
+
+Reproduced local gate on `8fd0ecc9` (Git Bash with `C:\Program Files\Git\bin`
+prepended process-locally; `bash` resolved to `/usr/bin/bash`, so the WSL relay
+was not on the path):
+
+| Leg | Result |
+|---|---|
+| **P1** `pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20` | **exit 0** — `4038 passed, 178 skipped, 55 deselected, 59 warnings in 3098.17 s (0:51:38)`. **Clean single pass** — the result S1 could not obtain and handed to S2. |
+| **P2** `pytest tests/ parity/ --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20` | **exit 1** — `1 failed, 6324 passed, 184 skipped, 61 warnings in 7415.80 s (2:03:35)`. The single failure is `tests/test_notebooks.py::test_notebook_executes_end_to_end[02_clevr_n_binding.ipynb]`, `nbclient.exceptions.CellTimeoutError` after the 900 s per-cell limit. See `EXP002D1-S2-F2`. |
+| **P3** targeted coverage run (`--cov=python/prin/reporting`, path form) | **exit 0** — `115 passed`; `figure_generation.py` 99.41 %, changed executable lines 11/11 = **100 %** |
+| governance checkers (`check_dv_register_gates.py`, `check_skipif_probes.py`, `check_global_session_registration.py`, `check_deviation_ledger.py DOCS/reports/039-… DOCS/reports/040-…`) | exit 0, all four |
+
+Supervised per Testing Standards §7. **No run was killed.** One faulthandler
+`Timeout (0:05:00)!` dump appeared on
+`test_acceptance_y2q1.py::…::test_clevr6_no_nan` and a second on the notebook
+leg; per §7 item 3 these were **not** treated as hangs. Two timestamped
+observations 151 s apart were taken (same PID 37760 alive, process CPU
+**+35.8 s**, working set **+338 MB**, stack inside
+`prin/nn/_bridge.py:108 backward` under `torch.autograd`), and the node's
+expected duration was established from committed evidence — S1's own
+`--durations=20` records `1086.16 s` for `test_clevr6_no_nan`, ~3.6× the 300 s
+threshold, and it is `@pytest.mark.slow` so the fast suite never reaches it.
+That test subsequently **passed**. The diagnostic is retained at
+[`stall-diagnosis-clevr6-no-nan.txt`](../../EVIDENCE/exp002-d1-s2/stall-diagnosis-clevr6-no-nan.txt).
+Per §7 item 6 the full suite is recorded at its **actual exit status 1**; the
+incomplete/failed leg is never reported as a pass, and no test was deselected,
+skipped or weakened to obtain a green result.
+
+Benchmark regression gates: not tripped and not exercisable — `nightly.yml` is
+paused under amendment #48; the in-suite `pytest-benchmark` table recorded no
+gate failure.
+
+### S2.10 A10 — Artefact trail
+
+✅ **PASS**, with one index gap (`EXP002D1-S2-F4`).
+
+The prior cycle's artefacts exist and are consistent: PSR-040 is issued; the
+EXP-001 D1 precedent (`2026-09-24-exp001-d1-correction-audit.md`, S1→S4
+complete) is intact; `EVIDENCE/exp001-d1-s1/` and `EVIDENCE/ea007/` are
+present. Within this cycle: `EVIDENCE/exp002-d1-s1/` holds the generator, both
+artefacts and the verbatim gate records, and its README indexes **10 of 11**
+files. The S1 record (§S1.1–§S1.11) was **read but not edited** by this
+session, as the brief requires. The E4 clean-worktree reproduction
+independently confirms the record chain end-to-end: frozen module digest →
+seven outputs → `report-manifest.json` `6b15dcc1…68781`.
+
+This S2 record adds [`EVIDENCE/exp002-d1-s2/`](../../EVIDENCE/exp002-d1-s2/README.md):
+23 files plus its README — six executable instruments and their verbatim
+outputs, each indexed with the command that produced it. Every output is
+reproducible from a committed instrument; two files whose generators were
+uncommitted scratch drafts were deleted rather than indexed, and one superseded
+attempt is retained and labelled as such.
+
+### S2.11 Findings
+
+| ID | Severity | Dimension | Description | Disposition |
+|---|---|---|---|---|
+| `EXP002D1-S2-F1` | **D3** | A4 | **The two registered H3 comparison policies now disagree about the verdict.** Post-correction the approved §5.4 policy gives **39/39 equal** (H3 would be `CONFIRMED`) while the §11.3 sensitivity policy gives **14/39 equal** (H3 would still be `REFUTED`). Independently re-derived with all 25 residuals classified and **0 unclassified**: 14 PDFs differ only in the Info **key set** (reference 3 keys incl. a wall-clock `CreationDate`; PRIN 4 fixed keys incl. `ModDate`), and 11 `.tex` tables differ only in **line terminators** (reference CRLF from its text-mode writer on Windows, PRIN LF). Both are writer/host properties the approved policy registers as non-scientific and E2 decision 9 already disclosed. Pre-registration §11.3 item 1's clause — "If the two verdicts differ, E5 must state that H3's verdict depends on a comparison amendment made after outcome exposure" — was drafted for the pre-correction state, where *both* policies refuted; it does not govern a *corrected* generator, whose sensitivity-policy residual is no longer about outcome exposure at all. **This is not an S1 defect**: S1 disclosed it (S1.10 item 1) and correctly assigned it to `EXP-002-r1`. It is raised because the registered text and the post-correction reality have diverged, and because if both policies were carried into `EXP-002-r1` unchanged its E5 could return a policy-dependent verdict and re-block the campaign. | **S3** records the assignment explicitly against this ID; **S4** carries it into the `EXP-002-r1` authorization so that its **E1/E2 deliberately registers** how the two policies are to be read for the re-run (e.g. approve §5.4 as sole primary and retain §11.3 as a disclosed writer-property sensitivity, or register a corrected sensitivity policy). `EXP-002`'s frozen pre-registration is **not** edited — the change belongs in the new record. |
+| `EXP002D1-S2-F2` | **D2** | A3 | **The required full suite is red, and the same node has now failed in two consecutive sessions.** `pytest tests/ parity/` exits **1**: `1 failed, 6324 passed, 184 skipped (2:03:35)`. The failure is `tests/test_notebooks.py::test_notebook_executes_end_to_end[02_clevr_n_binding.ipynb]` — `nbclient.exceptions.CellTimeoutError: A cell timed out … after 900 seconds`, in the notebook's training cell. S1 recorded the identical failure and reported it passing alone in 232 s. **S2's run does not support a purely load-induced attribution**: it was far less contended than S1's (2:03:35 vs 4:11:33, ~89 % idle at start, this session deliberately added no concurrent load), S1's two `WinError 5` failures both **passed** here, and the other three notebooks passed in both sessions — yet this node still exceeded 900 s in-suite. Testing Standards §1.5 treats flaky tests as bugs and §4 requires tests be independent and order-insensitive; §7 item 2 requires a finite bound be sized from cited evidence with substantial margin, and 900 s is not sufficient for this cell under full-suite conditions. Not caused by this correction and unrelated to figure generation, but it leaves the cycle unable to record a green full local gate. | **S3** must disposition it, in one of three governed ways: (a) re-size the per-cell bound from cited in-suite evidence per §7 item 2; (b) run the notebook leg as a separately documented workload with its own evidenced bound; or (c) open a **dated DV register row** on the DV-046 precedent (an intermittent, host-sensitive node with a standing disposition). Recorded at its **actual exit status 1** per §7 item 6 — never as a pass. No test may be deselected or weakened to green it. |
+| `EXP002D1-S2-F3` | **D4** | A6 | **The local `snyk` CLI's credentials have expired**, so the CLI route to the §6.2 Snyk Code gate is unavailable: `snyk code test . --severity-threshold=low --sarif-file-output=…` → `SNYK-0005`, `401 Unauthorized`, exit **2**, **no SARIF written**. `snyk auth` only prints a browser redirect, so recovery needs an interactive login by the maintainer. The control itself **was** satisfied this session through the MCP integration that §6.4 expressly permits (0 findings in all four changed files; 0 repo-wide at `medium`), so no gate went unmet — but S4's full gate will hit the same wall on the CLI route, and amendment #48 item 2 requires an unavailable control be reported as *blocked*, never as passed. | **S3** notes it; **S4** runs Snyk Code via the MCP integration and records the route used, or the maintainer re-authenticates the CLI first. Recorded here as a blocked leg alongside the completed MCP leg, not as a substitution that hides it. |
+| `EXP002D1-S2-F4` | **D4** | A10 | **A committed S1 evidence file is not indexed by its own README.** `EVIDENCE/exp002-d1-s1/` contains 11 files but its README's index table lists 10 — `fast-tests-against-prefix-module.txt` (the record of the 9 fast-gate tests failing against the pre-fix module) is absent. The file's content is genuine and this session **reproduced it exactly** (9 failed, exit 1), so the evidence is sound; only the index is incomplete, which weakens the artefact trail a reader relies on to know the bundle is complete. That directory carries **no `SHA256SUMS.txt`**, so adding an index row breaks no hash freeze (contrast the manifested `EVIDENCE/ea007/` bundles). | **S3** adds the missing README row. README edit only — the evidence file's bytes are **not** touched, and no S1 evidence is re-manifested. |
+| `EXP002D1-S2-F5` | **D4** | A3 | **The fast-gate module docstring understates its own scope.** `tests/test_publication_figure_arguments.py` says the tests "pin each **byte-material** argument", but they pin **all 34** registered divergences, including the 8 byte-immaterial ones (`D5.1`, `D5.3`, `D9.2`, `D11.4`, `D12.5`, `D12.7`, `D15.4`, `D15.7`) — measured at 34/34 with no unknown IDs. The protection is stronger than documented, so a future reader could wrongly conclude the immaterial arguments are unguarded and "tidy" them away. | **S3** corrects the docstring wording. Comment-only; **no assertion changes**, so no test behaviour moves. |
+| `EXP002D1-S2-F6` | **D4** | A2 | **One known argument infidelity survives the fix.** The reference's fig13 per-series `label=f"Obj {lbl}"` (with `if j < 5 else None`) is still omitted by the port. It is byte-immaterial because fig13 draws no legend, it was never a registered divergence, and this session's artist-level comparison reports fig13 **EQUAL**. S1 disclosed it (S1.10 item 5) and left it unchanged. It is raised only because the correction's stated principle is an *argument-faithful* port, so a surviving known omission is an inconsistency worth an explicit decision rather than silence. | **S3** either restores it for argument-faithfulness (with a byte-identity re-check, since it must stay immaterial) or records why it is deliberately left. Either outcome closes it. |
+| `EXP002D1-S2-F7` | **D4** | A7 | **An absolute claim in the touched module docstring is imprecise.** `python/prin/reporting/figure_generation.py` states "Stored benchmark values are only rendered; **no scientific quantity is recomputed**" — a sentence this fix *expanded*. The module does evaluate a stored exponential fit over a fine grid (`fit["IP_0"] * np.exp(-fine / fit["sigma_c"])`, line 1079), mirroring the frozen reference (line 1053). The behaviour is correct and byte parity **requires** it, and WP-034's audit already classified the module as reporting/rendering, so nothing here is a defect — but the unqualified wording would mislead a reader applying Coding Standards §1.2 ("no numerics in Python"). | **S3** qualifies the wording (e.g. note that stored fit parameters are evaluated for rendering, mirroring the reference) or records the exception. Documentation-only; no behaviour change. |
+
+**Not raised as findings** (verified and dispositioned here so they do not drift
+untracked, per Development Workflow §1.3):
+
+- **Gate coupling** (S1.10 item 3): the gate imports the frozen EXP-002 driver
+  and reads committed E3 records. Deliberate, mirrors the EXP-001 D1 gates, and
+  **durable** — everything it reads is *tracked* (`benchmarks/results/EXP-002/`,
+  the archived reference, `paper/artefact_manifest.json`); only the
+  *decomposition* script uses the untracked retained roots, and it reports
+  `retained_root_present: false` once they are removed.
+- **`pytest.importorskip("prinet")`**: if the editable `prinet` install were
+  absent, the gate's 93 tests would silently skip. This follows an established
+  repository-wide convention (4 other modules do the same), and it is
+  **mitigated**: the 9 fast-gate tests import only `prin.reporting`, so all 34
+  divergences stay pinned even without the reference installed. Not a finding.
+- **Parity Report staleness** (S1.10 item 2): `DOCS/sphinx/parity_report.rst`
+  still describes the E5 state (9/14 figures differ). The S4 brief already
+  assigns this alignment to S4, so it is tracked there, not raised twice.
+- **PSR, deviation ledger, Parity Report** deliberately left to S4 under the
+  `DOCS/reports/README.md` one-report-per-closed-cycle rule. Correct.
+
+### S2.12 Verdict
+
+**`PASS-WITH-FINDINGS`.**
+
+Per the brief's rule: `PASS` requires no finding above D4, `FAIL` requires a D1
+or systemic drift. This audit raises **one D2, one D3 and five D4** findings and
+**no D1**, and finds **no systemic drift** — so the verdict is
+`PASS-WITH-FINDINGS`.
+
+All **five** brief-specific items are **VERIFIED**, each by independent
+re-execution rather than by accepting S1's record:
+
+1. the reproduction came first — 18 failed / 75 passed and 9 failed on the
+   restored pre-fix module, 102 passed after;
+2. the root cause is established — the decomposition reproduces field-for-field,
+   all 34 specifications validate statically against the reference source, the
+   fix diff contains nothing but drawing arguments and label strings, and
+   artist-level comparison is 14/14 EQUAL so no plotted value differs;
+   §10.4 item 3 correctly not invoked;
+3. no regression — 11/11 tables, the 5 already-matching figures, the 21
+   raw-identical outputs and H4 all intact, with a clean single-pass fast suite;
+4. EXP-002's record is untouched — empty diffs, `verify_manifest` green on all
+   five runs and the 172-input manifest, and the frozen E4 module reproducing
+   all seven outputs plus `report-manifest.json` `6b15dcc1…68781` byte-for-byte
+   from a clean worktree outside the repository;
+5. the §6 evidence is real — 0 Snyk Code findings in the four changed files via
+   the MCP integration, with the expired-CLI leg reported as **blocked**, never
+   as passed.
+
+The correction itself is sound and is corroborated by three independent methods
+that agree. **Neither red leg reflects on it**: the full suite's sole failure is
+a pre-existing notebook-cell timeout in code this change does not touch
+(`EXP002D1-S2-F2`), and the blocked Snyk leg is a host credential expiry
+(`EXP002D1-S2-F3`).
+
+`EXP002D1-S2-F1` is the finding that matters beyond this cycle: post-correction
+the two registered H3 policies point at different verdicts, and that must be
+resolved by registration in `EXP-002-r1`'s own E1/E2 — not by editing
+`EXP-002`'s frozen record.
+
+**A `PASS-WITH-FINDINGS` releases nothing.** S3 is mandatory even though no D1
+was found, and must resolve `EXP002D1-S2-F2` (D2) first, then `-F1` (D3), then
+the five D4 items in order; S4 follows; and session `0164` stays **BLOCKED**
+until all four conditional sessions close **and** `EXP-002-r1`'s E5 returns a
+non-reversal verdict verified and accepted by the maintainer (or a Project Plan
+§8.3 amendment is adopted).
+
+**Not authorized by S2:** merging PR #34, marking it ready for review,
+`EXP-002-r1`, or releasing session `0164`. **Nothing was pushed** — S1's
+pre-authorization covered the S1 push only, and no push authorization was given
+in this session; the S2 commit is local.

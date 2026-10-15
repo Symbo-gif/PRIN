@@ -1,0 +1,21 @@
+# EXP-002 D1 S2 - post-fix green confirmation
+# date (UTC): 2026-10-15T18:22:08Z
+# git HEAD: 8fd0ecc9949a607f2a7090fe39205f00bb0078c9
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# tracked changes: 0
+# sha256(python/prin/reporting/figure_generation.py) = b41dfc137d1d10f0f9b60452f0f23093ed4ad6e9369f34343d96695957e6c048
+# command: .venv/Scripts/python -m pytest parity/test_parity_publication.py tests/test_publication_figure_arguments.py -q --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 102 items
+
+parity\test_parity_publication.py ...................................... [ 37%]
+.......................................................                  [ 91%]
+tests\test_publication_figure_arguments.py .........                     [100%]
+
+============================ 102 passed in 14.69s =============================
+# exit code: 0
