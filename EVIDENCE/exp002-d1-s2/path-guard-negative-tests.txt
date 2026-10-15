@@ -1,0 +1,46 @@
+# EXP-002 D1 S2 - negative tests for the CWE-23 input-path guard
+# date (UTC): 2026-10-15T23:07:43Z
+# git HEAD: fadc8ce8ba8ef8e650ec5531446a1846092e81a3
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# PRIN_S2_SCRATCH: C:\Users\there\prin-s2-scratch
+#
+# Snyk Code reported two LOW python/PT (CWE-23 Path Traversal) findings in
+# the S2 instruments: an unsanitised argv path flowing into pathlib.Path.
+# Both were remediated with a no-follow, regular-file, root-confined guard
+# mirroring tools/reproduce.py::_reject_symlink (the PR23-F1 discipline).
+# These negative tests prove the guard actually refuses, rather than being
+# a no-op that merely silences the scanner.
+#
+PRIN_S2_SCRATCH = C:\Users\there\prin-s2-scratch
+temp root       = C:\Users\there\AppData\Local\Temp
+
+=== changed_line_coverage.py ===
+  allowed roots: ['C:\\dev\\PRIN', 'C:\\Users\\there\\AppData\\Local\\Temp', 'C:\\Users\\there\\prin-s2-scratch']
+    REFUSED as required: path outside every allowed root
+      reason: test: C:\dev\definitely-outside-any-allowed-root.json is outside the allowed roots (C:\dev\PRIN, C:\Users\there\AppData\Local\Temp, C:\Users\there\prin-s2-scratch)
+    REFUSED as required: a directory, not a regular file
+      reason: test: C:\dev\PRIN\EVIDENCE is not a regular file
+    REFUSED as required: a '..' traversal component
+      reason: test: refusing a path containing a '..' component: C:\dev\PRIN\EVIDENCE\..\..\pyproject.toml
+    REFUSED as required: symbolic link to a real artefact
+      reason: test: refusing symbolic link C:\Users\there\AppData\Local\Temp\tmphgdbzs2x\link.json
+    ACCEPTED positive control: C:\dev\PRIN\EVIDENCE\exp002-d1-s1\root-cause-decomposition-postfix.json
+
+=== decomposition_rerun_check.py ===
+  allowed roots: ['C:\\dev\\PRIN', 'C:\\Users\\there\\AppData\\Local\\Temp', 'C:\\Users\\there\\prin-s2-scratch']
+    REFUSED as required: path outside every allowed root
+      reason: test: C:\dev\definitely-outside-any-allowed-root.json is outside the allowed roots (C:\dev\PRIN, C:\Users\there\AppData\Local\Temp, C:\Users\there\prin-s2-scratch)
+    REFUSED as required: a directory, not a regular file
+      reason: test: C:\dev\PRIN\EVIDENCE is not a regular file
+    REFUSED as required: a '..' traversal component
+      reason: test: refusing a path containing a '..' component: C:\dev\PRIN\EVIDENCE\..\..\pyproject.toml
+    REFUSED as required: symbolic link to a real artefact
+      reason: test: refusing symbolic link C:\Users\there\AppData\Local\Temp\tmpu6vphcrd\link.json
+    ACCEPTED positive control: C:\dev\PRIN\EVIDENCE\exp002-d1-s1\root-cause-decomposition-postfix.json
+
+ACCEPTED the declared scratch root file: C:\Users\there\prin-s2-scratch\coverage-reporting.json
+
+======================================================================
+guard negative-test failures: 0
+======================================================================
+# exit code: 0

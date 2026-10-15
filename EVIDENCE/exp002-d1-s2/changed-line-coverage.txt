@@ -1,0 +1,48 @@
+# EXP-002 D1 S2 - changed-line coverage for the corrected figure module
+# date (UTC): 2026-10-15T23:07:44Z
+# git HEAD: fadc8ce8ba8ef8e650ec5531446a1846092e81a3
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# python: Python 3.14.0
+# diff base (branch point): fd8854ed
+# target source: python/prin/reporting/figure_generation.py
+# PRIN_S2_SCRATCH: C:\Users\there\prin-s2-scratch
+# instrument: EVIDENCE/exp002-d1-s2/changed_line_coverage.py (path-guarded)
+#
+# Coverage form: PATH form (--cov=python/prin/reporting). The module form
+# (--cov=prin) fails on this host with the PyO3 "cannot load module more
+# than once" error (DV-033), so no module-form coverage is claimed.
+# The coverage JSON was produced by leg R07 of static-gate-reruns.txt.
+#
+# Note: tools/coverage_changed_lines.py is a Rust cargo-llvm-cov lcov union
+# tool and does not read Python coverage data; the analysis below uses the
+# S2 instrument, which applies the same added-line algorithm to a coverage
+# JSON report.
+#
+# command: PRIN_S2_SCRATCH=... .venv/Scripts/python \
+#            EVIDENCE/exp002-d1-s2/changed_line_coverage.py \
+#            C:/Users/there/prin-s2-scratch/coverage-reporting.json fd8854ed python/prin/reporting/figure_generation.py
+#
+coverage report : C:\Users\there\prin-s2-scratch\coverage-reporting.json
+  resolved+confined, no symlink followed; sha256 1f0611271823b45d37aa7afcd891c3e78fd90da064e59e0bb975902086f937d7
+source file     : python/prin/reporting/figure_generation.py
+diff base       : fd8854ed
+
+=== whole-file coverage (as reported) ===
+  num_statements : 340
+  covered_lines  : 338
+  missing_lines  : 2
+  percent_covered: 99.41176470588235
+  missing line numbers: [191, 196]
+
+=== changed-line coverage (the A3 gate) ===
+  lines added/changed by the diff : 82
+  of those, executable statements : 11
+  executed                        : 11
+  NOT executed                    : 0 
+  non-executable (docstring/blank/continuation/decorator): 71
+  changed-executable coverage     : 100.00% (gate >= 95.0%)
+
+==========================================================================
+RESULT: PASS -- 11/11 changed executable lines covered (100.00%)
+==========================================================================
+# exit code: 0

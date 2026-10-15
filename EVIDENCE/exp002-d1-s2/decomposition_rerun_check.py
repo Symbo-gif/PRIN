@@ -33,7 +33,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +43,68 @@ ROOT = Path(__file__).resolve().parents[2]
 EVIDENCE = ROOT / "EVIDENCE/exp002-d1-s1"
 COMMITTED_POSTFIX = EVIDENCE / "root-cause-decomposition-postfix.json"
 COMMITTED_PREFIX = EVIDENCE / "root-cause-decomposition-prefix.json"
+
+
+def allowed_roots() -> tuple[Path, ...]:
+    """Return the roots a caller-supplied input path may resolve inside.
+
+    Returns:
+        The repository root, the platform temporary root, and — when set —
+        the directory named by ``PRIN_S2_SCRATCH``, each fully resolved.
+    """
+    roots = [ROOT, Path(tempfile.gettempdir()).resolve()]
+    extra = os.environ.get("PRIN_S2_SCRATCH")
+    if extra:
+        roots.append(Path(extra).resolve())
+    return tuple(roots)
+
+
+def is_within(path: Path, root: Path) -> bool:
+    """Return whether ``path`` is ``root`` itself or lives beneath it."""
+    return path == root or root in path.parents
+
+
+def guarded_input_path(raw: str, role: str) -> Path:
+    """Resolve a caller-supplied input path safely and return it.
+
+    Snyk Code flags an unsanitised ``argv`` path flowing into
+    :class:`pathlib.Path` as CWE-23 path traversal. For an
+    **evidence-producing** tool the sharper risk is integrity, not
+    confidentiality: ``Path.is_file`` and ``Path.read_text`` follow symbolic
+    links, so a linked input would be compared while the evidence named a
+    different file — the "content verified, path provenance not" failure mode
+    that audit finding ``PR23-F1`` fixed in ``tools/reproduce.py``. This guard
+    mirrors that module's no-follow discipline and confines the *resolved*
+    path to :func:`allowed_roots`, so a symlinked parent directory pointing
+    outside is refused too.
+
+    Args:
+        raw: The path exactly as passed on the command line.
+        role: Human-readable role used in any failure message.
+
+    Returns:
+        The resolved, confined path to a regular file.
+
+    Raises:
+        SystemExit: If the path is a symbolic link, is not a regular file, or
+            resolves outside every allowed root.
+    """
+    candidate = Path(raw)
+    if ".." in raw.replace("\\", "/").split("/"):
+        raise SystemExit(f"{role}: refusing a path containing a '..' component: {raw}")
+    if candidate.is_symlink():
+        raise SystemExit(f"{role}: refusing symbolic link {candidate}")
+    if candidate.exists() and not candidate.is_file():
+        raise SystemExit(f"{role}: {candidate} is not a regular file")
+    resolved = candidate.resolve()
+    roots = allowed_roots()
+    if not any(is_within(resolved, root) for root in roots):
+        listed = ", ".join(str(root) for root in roots)
+        raise SystemExit(f"{role}: {resolved} is outside the allowed roots ({listed})")
+    if not resolved.is_file():
+        raise SystemExit(f"{role}: no regular file at {resolved}")
+    return resolved
+
 
 #: Fields that legitimately differ between two runs of the same generator.
 EXPECTED_PROVENANCE_DIFFERENCES = frozenset({"generated_utc", "git_head"})
@@ -91,10 +155,7 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         print("usage: decomposition_rerun_check.py <scratch-json>")
         return 2
-    rerun_path = Path(argv[0])
-    if not rerun_path.is_file():
-        print(f"ABORT: re-run artefact not found at {rerun_path}")
-        return 2
+    rerun_path = guarded_input_path(argv[0], "re-run artefact")
 
     committed = load(COMMITTED_POSTFIX)
     rerun = load(rerun_path)

@@ -739,6 +739,12 @@ not a code defect. It passed on re-run in 56 s without needing `-j 1`.
   **0 issues at every severity**.
 - Snyk Code: 0 findings in the four changed files, 0 repo-wide at `medium`
   (MCP leg; CLI leg **BLOCKED** on expired credentials — reported, not claimed).
+  Per §6.4 the six new S2 instruments were then scanned as new first-party code:
+  **2 LOW `python/PT` findings**, remediated twice with a `PR23-F1`-style guard
+  and proven non-vacuous by negative tests, but not cleared because Snyk's model
+  does not recognise the sanitizer. Recorded as `EXP002D1-S2-F8` with a full
+  threat assessment rather than suppressed; the applicable "0 medium+" gate
+  stays clean.
 - **gitleaks** (pinned binary
   `DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe`):
   full history **738 commits**, ~94.76 MB, **no leaks found**, exit 0;
@@ -835,8 +841,8 @@ independently confirms the record chain end-to-end: frozen module digest →
 seven outputs → `report-manifest.json` `6b15dcc1…68781`.
 
 This S2 record adds [`EVIDENCE/exp002-d1-s2/`](../../EVIDENCE/exp002-d1-s2/README.md):
-23 files plus its README — six executable instruments and their verbatim
-outputs, each indexed with the command that produced it. Every output is
+27 files plus its README — six executable instruments, their verbatim outputs,
+and the §6.2 threat assessment behind `EXP002D1-S2-F8`. Every output is
 reproducible from a committed instrument; two files whose generators were
 uncommitted scratch drafts were deleted rather than indexed, and one superseded
 attempt is retained and labelled as such.
@@ -852,6 +858,7 @@ attempt is retained and labelled as such.
 | `EXP002D1-S2-F5` | **D4** | A3 | **The fast-gate module docstring understates its own scope.** `tests/test_publication_figure_arguments.py` says the tests "pin each **byte-material** argument", but they pin **all 34** registered divergences, including the 8 byte-immaterial ones (`D5.1`, `D5.3`, `D9.2`, `D11.4`, `D12.5`, `D12.7`, `D15.4`, `D15.7`) — measured at 34/34 with no unknown IDs. The protection is stronger than documented, so a future reader could wrongly conclude the immaterial arguments are unguarded and "tidy" them away. | **S3** corrects the docstring wording. Comment-only; **no assertion changes**, so no test behaviour moves. |
 | `EXP002D1-S2-F6` | **D4** | A2 | **One known argument infidelity survives the fix.** The reference's fig13 per-series `label=f"Obj {lbl}"` (with `if j < 5 else None`) is still omitted by the port. It is byte-immaterial because fig13 draws no legend, it was never a registered divergence, and this session's artist-level comparison reports fig13 **EQUAL**. S1 disclosed it (S1.10 item 5) and left it unchanged. It is raised only because the correction's stated principle is an *argument-faithful* port, so a surviving known omission is an inconsistency worth an explicit decision rather than silence. | **S3** either restores it for argument-faithfulness (with a byte-identity re-check, since it must stay immaterial) or records why it is deliberately left. Either outcome closes it. |
 | `EXP002D1-S2-F7` | **D4** | A7 | **An absolute claim in the touched module docstring is imprecise.** `python/prin/reporting/figure_generation.py` states "Stored benchmark values are only rendered; **no scientific quantity is recomputed**" — a sentence this fix *expanded*. The module does evaluate a stored exponential fit over a fine grid (`fit["IP_0"] * np.exp(-fine / fit["sigma_c"])`, line 1079), mirroring the frozen reference (line 1053). The behaviour is correct and byte parity **requires** it, and WP-034's audit already classified the module as reporting/rendering, so nothing here is a defect — but the unqualified wording would mislead a reader applying Coding Standards §1.2 ("no numerics in Python"). | **S3** qualifies the wording (e.g. note that stored fit parameters are evaluated for rendering, mirroring the reference) or records the exception. Documentation-only; no behaviour change. |
+| `EXP002D1-S2-F8` | **D4** | A6 | **Two residual Snyk Code `python/PT` (CWE-23) LOW findings in S2's own instruments**, raised after §6.4's rescan of the new first-party code this session added: `changed_line_coverage.py:98` and `decomposition_rerun_check.py:92`, both "unsanitized input from a command line argument flows into `pathlib.Path`". **Remediated twice, not suppressed**: a guard was added mirroring `tools/reproduce.py`'s `PR23-F1` discipline — `..`-component rejection, no-follow symlink refusal, regular-file check, resolve-and-confine to an explicit root allowlist, and the resolved path plus SHA-256 recorded in the output. Both instruments were then proven non-vacuous by negative tests (out-of-root, directory, `..`, and a **real symlink** all refused; positive controls accepted; `0 failures`). Snyk still reports both, with the dataflow now pointing *inside* the guard at `candidate = Path(raw)` — its `python/PT` model does not recognise those checks as sanitizers. Clearing it further would require removing the tools' ability to read an out-of-tree scratch artefact, which this brief mandates. Exploit prerequisites: an attacker able to supply argv to a process already running as the auditor, i.e. existing code execution as that user — **no privilege boundary crossed**, read-only sinks, non-shipped tooling under `EVIDENCE/`. The applicable §6.2 gate is **"0 medium+"** and repo-wide at `medium` is **0**, so the gate is met; `bandit` reports 0 issues on the same files. Full assessment: [`snyk-low-findings-threat-assessment.md`](../../EVIDENCE/exp002-d1-s2/snyk-low-findings-threat-assessment.md). | **ACCEPTED WITH ASSESSMENT**, flagged for maintainer ratification (§6.2's recorded-threat-assessment route contemplates maintainer approval; the maintainer delegated this call in-session). Nothing added to `.snyk`, no ignore or severity exclusion, no scan skipped. **Re-check at S3's delta re-audit and S4's full gate**, per §6.2's requirement that accepted items stay visible and be re-checked every cycle. |
 
 **Not raised as findings** (verified and dispositioned here so they do not drift
 untracked, per Development Workflow §1.3):
@@ -878,7 +885,7 @@ untracked, per Development Workflow §1.3):
 **`PASS-WITH-FINDINGS`.**
 
 Per the brief's rule: `PASS` requires no finding above D4, `FAIL` requires a D1
-or systemic drift. This audit raises **one D2, one D3 and five D4** findings and
+or systemic drift. This audit raises **one D2, one D3 and six D4** findings and
 **no D1**, and finds **no systemic drift** — so the verdict is
 `PASS-WITH-FINDINGS`.
 
@@ -915,12 +922,100 @@ resolved by registration in `EXP-002-r1`'s own E1/E2 — not by editing
 
 **A `PASS-WITH-FINDINGS` releases nothing.** S3 is mandatory even though no D1
 was found, and must resolve `EXP002D1-S2-F2` (D2) first, then `-F1` (D3), then
-the five D4 items in order; S4 follows; and session `0164` stays **BLOCKED**
+the six D4 items in order; S4 follows; and session `0164` stays **BLOCKED**
 until all four conditional sessions close **and** `EXP-002-r1`'s E5 returns a
 non-reversal verdict verified and accepted by the maintainer (or a Project Plan
 §8.3 amendment is adopted).
 
 **Not authorized by S2:** merging PR #34, marking it ready for review,
-`EXP-002-r1`, or releasing session `0164`. **Nothing was pushed** — S1's
-pre-authorization covered the S1 push only, and no push authorization was given
-in this session; the S2 commit is local.
+`EXP-002-r1`, or releasing session `0164`. Session `0164` stays `BLOCKED`.
+
+### S2.13 Addendum — two calls delegated to this session (2026-10-15 UTC)
+
+After the record above was committed as `fadc8ce8`, the maintainer answered the
+two items S2 had escalated with a delegation rather than a decision:
+
+> "i authorize you to make the call that follows etablished methodologies and
+> governance rigorously to meet the standards, goals, and plans in project."
+
+Both calls are therefore made here on the governance record, with their
+reasoning, and are flagged for ratification.
+
+**Call 1 — the Snyk route, and two findings in S2's own code.**
+Coding Standards §6.4 requires that *new or modified first-party code* be
+scanned and that findings attributable to the change be remediated and rescanned
+until the applicable gate is clean. S2's original scan predated six of its own
+instruments, so that obligation was unmet. Scanning them raised **2 LOW
+`python/PT` (CWE-23) findings** — in `changed_line_coverage.py` and
+`decomposition_rerun_check.py`, both S2-authored, neither shipped.
+
+The call: **remediate for real, then record an assessment — do not suppress.**
+A guard was added on the repository's own audited `PR23-F1` pattern
+(`tools/reproduce.py::_reject_symlink`/`_reject_non_regular`): `..`-component
+rejection, no-follow symlink refusal, regular-file check, resolve-and-confine to
+an explicit root allowlist, and the resolved path plus SHA-256 recorded in the
+output. This matters beyond confidentiality, because these are
+**evidence-producing** tools — a symlinked input would be compared while the
+evidence named a different path, which is exactly `PR23-F1`'s "content verified,
+provenance not" failure mode. The guard was proven non-vacuous by negative tests
+(out-of-root, directory, `..`, and a **real symlink** all refused; positive
+controls accepted; `0 failures`). Two remediation iterations were rescanned;
+Snyk still reports both, with the dataflow now pointing *inside* the guard at
+`candidate = Path(raw)`, so its `python/PT` model does not treat those checks as
+sanitizers.
+
+The applicable §6.2 gate is **"0 medium+ findings"**, and repo-wide at `medium`
+is **0** — the gate is met. The residual is recorded as
+**`EXP002D1-S2-F8` (D4), ACCEPTED WITH ASSESSMENT**, with a full threat
+assessment naming the finding, affected API, exploit prerequisites and
+compensating controls, per §6.2's pattern for items with no available fix.
+Nothing was added to `.snyk`; no ignore or severity exclusion was created; no
+scan was skipped. The **CLI leg stays recorded as BLOCKED** (`401 SNYK-0005`) —
+the MCP route §6.4 permits is the governing route for this cycle, and
+re-authenticating the CLI remains a maintainer-only action.
+
+**Call 2 — do not push at S2.** S2's commit stays **local**.
+
+The governing text is explicit and points one way. Development Workflow §3's S2
+rules state: "Commit the Audit Report locally; do **not** push." Amendment #28
+states that "Every session **commits** locally at its own exit gate. Only the
+**S4** commit that closes a cycle is **pushed**," and that "S1, S2, and S3 exit
+gates are satisfied by the **local** gate … they do not push." The §7 hotfix
+exception *permits* an immediate push but does not require one.
+
+S1's push is not a precedent that carries forward: it was a **specific**
+maintainer pre-authorization taken for a **specific** evidentiary purpose — "The
+failing-test commit is pushed before the fix commit, so the red → green
+transition is recorded on the remote." That purpose does not recur at S2; the
+audit record is documentation, not a state transition anyone needs to observe on
+the remote mid-cycle.
+
+Three further reasons reinforce the rule rather than merely permitting it:
+
+1. **Pushing now would publish an audit with eight unremediated findings** —
+   including a **D2** whose required full-suite gate is red — to PR #34's
+   reviewers before S3 has recorded any disposition. Amendment #28's design is
+   that a cycle's diff is reviewed **once**, at S4, over the whole S1–S4 range.
+2. **No hosted check would run.** All seven check workflows are verified
+   `disabled_manually` and amendment #50's window is closed, so a push buys no CI
+   evidence — only partial visibility of an incomplete cycle.
+3. **Amendment #48 item 6** requires a full-history secret scan before *every*
+   push. Deferring avoids a push/scan cycle that governance does not ask for.
+   (The branch is nonetheless known clean: 738 commits scanned, no leaks.)
+
+So the cycle's push point remains **S4**, which will carry S1's already-pushed
+commits plus S2's, S3's and its own in one range. The full-history gitleaks scan
+will be re-run at that push, since a scan result is about the commit it names.
+
+**Ratification.** Both calls are recorded as flagged defaults under the
+maintainer's delegation, not as settled exemptions. `EXP002D1-S2-F8` in
+particular invites reversal: if the maintainer prefers the two LOW findings
+cleared over the instruments' ability to read an out-of-tree scratch artefact —
+which this brief mandates — the alternative is to confine them to the repository
+and the platform temp root and move the scratch location, a usability change to
+the documented regeneration workflow rather than a security improvement.
+
+Evidence added by this addendum:
+[`snyk-low-findings-threat-assessment.md`](../../EVIDENCE/exp002-d1-s2/snyk-low-findings-threat-assessment.md),
+[`path-guard-negative-tests.txt`](../../EVIDENCE/exp002-d1-s2/path-guard-negative-tests.txt),
+[`changed-line-coverage.txt`](../../EVIDENCE/exp002-d1-s2/changed-line-coverage.txt).

@@ -1,6 +1,6 @@
 # EXP-002 D1 S2 — Correction audit
 
-**Status:** COMPLETE (S2, 2026-10-15 UTC; verdict **PASS-WITH-FINDINGS**, one D2 + one D3 + five D4, no D1, no systemic drift — recorded in the [correction audit](../../audits/2026-10-15-exp002-d1-correction-audit.md) §S2.0–§S2.12); committed locally only, nothing pushed; **S3 is next**
+**Status:** COMPLETE (S2, 2026-10-15 UTC; verdict **PASS-WITH-FINDINGS**, one D2 + one D3 + six D4, no D1, no systemic drift — recorded in the [correction audit](../../audits/2026-10-15-exp002-d1-correction-audit.md) §S2.0–§S2.13); committed locally only, **not pushed** (a delegated decision, §S2.13 call 2); **S3 is next**
 **Triggering deviation:** `EXP-002 H3 REFUTED` (campaign plan §10.4 D1; pre-registration §4.3)
 **Blocked numbered session:** `0164` (EXP-003 E1), and every later campaign session (`0165`–`0194`)
 **Opened by:** session `0163` (EXP-002 E5), 2026-10-14 UTC
@@ -38,7 +38,7 @@ Beyond the standard checklist A1–A10, the audit independently verifies:
 PR #34), local `HEAD` confirmed equal to `origin` and the tree clean after
 `git fetch --all --prune`.
 
-**Verdict: `PASS-WITH-FINDINGS`** — one D2, one D3, five D4, **no D1**, no
+**Verdict: `PASS-WITH-FINDINGS`** — one D2, one D3, six D4, **no D1**, no
 systemic drift. All five audit-scope items are **VERIFIED** by independent
 re-execution, not by accepting S1's record:
 
@@ -84,6 +84,7 @@ re-execution, not by accepting S1's record:
 | `EXP002D1-S2-F5` | D4 | The fast-gate docstring says "each byte-material argument" but the tests pin **all 34**; comment-only correction, no assertion changes. |
 | `EXP002D1-S2-F6` | D4 | fig13's per-series `label=f"Obj {lbl}"` is still omitted — byte-immaterial, artist-level EQUAL, but inconsistent with an argument-faithful port. Restore or record why not. |
 | `EXP002D1-S2-F7` | D4 | The touched module docstring's absolute "no scientific quantity is recomputed" sits against its stored-fit `np.exp` evaluation (mirroring the reference, required for byte parity). Qualify the wording. |
+| `EXP002D1-S2-F8` | D4 | Two residual Snyk Code **LOW** `python/PT` (CWE-23) findings in S2's own instruments, surfaced by §6.4's rescan of the new first-party code. **Remediated twice, not suppressed** — a `..` / no-follow-symlink / regular-file / resolve-and-confine guard on the `PR23-F1` pattern, proven non-vacuous by negative tests including a real symlink — but Snyk's model does not recognise the sanitizer, so both persist. The applicable §6.2 gate is "0 medium+" and repo-wide at `medium` is **0**, so the gate is met. **ACCEPTED WITH ASSESSMENT**, flagged for maintainer ratification; re-check at S3 and S4. Full record: [`snyk-low-findings-threat-assessment.md`](../../../EVIDENCE/exp002-d1-s2/snyk-low-findings-threat-assessment.md). |
 
 **Local gate reproduced** on `8fd0ecc9` under amendment #48, sequentially, from
 Git Bash: `ruff check`/`format --check` (every root including both EVIDENCE
@@ -106,13 +107,26 @@ deselected or weakened.
 source, test, S1-evidence or S1-record change was committed.
 
 **Handoff.** S3
-([brief](2026-10-14-exp002-d1-s3-correction-remediation.md)) resolves all seven
+([brief](2026-10-14-exp002-d1-s3-correction-remediation.md)) resolves all eight
 findings in D1→D4 order (so `EXP002D1-S2-F2` first), each commit naming its
 finding ID, then obtains a `CLEAN` delta re-audit that re-verifies the pre-fix
 failing reproduction, the post-fix passing parity tests and the immutability of
 the EXP-002 record. S3 is **mandatory** even though no D1 was found.
 
 **Not authorized by S2:** merging PR #34, marking it ready for review,
-`EXP-002-r1`, or releasing session `0164`. **Nothing was pushed** — S1's
-pre-authorization covered the S1 push only, and no push authorization was given
-this session; the S2 commit is local. Session `0164` stays `BLOCKED`.
+`EXP-002-r1`, or releasing session `0164`. Session `0164` stays `BLOCKED`.
+
+**Nothing was pushed — a delegated decision, not an omission.** The maintainer
+answered S2's escalation by delegating the call ("i authorize you to make the
+call that follows etablished methodologies and governance rigorously"). Applied
+to the push question, governance points one way: Development Workflow §3's S2
+rules say "Commit the Audit Report locally; do **not** push", and amendment #28
+says only the **S4** commit that closes a cycle is pushed, carrying the whole
+S1–S4 range. The §7 hotfix exception *permits* an early push but does not
+require one, and S1's push was a specific pre-authorization taken for a specific
+evidentiary purpose — recording the red → green transition on the remote — which
+does not recur for a documentation commit. Deferring also avoids publishing an
+audit whose eight findings S3 has not yet dispositioned, and avoids a push that
+would run no hosted check (all seven workflows are `disabled_manually`). S4
+remains the cycle's push point and will re-run the full-history secret scan,
+since a scan result is about the commit it names. Full reasoning: audit §S2.13.

@@ -36,9 +36,12 @@ Exit status is ``0`` when every changed executable line is covered, else ``1``.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import subprocess  # nosec B404
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -46,6 +49,67 @@ ROOT = Path(__file__).resolve().parents[2]
 
 #: The gate from Testing Standards section 4 and audit checklist A3.
 THRESHOLD = 95.0
+
+
+def allowed_roots() -> tuple[Path, ...]:
+    """Return the roots a caller-supplied input path may resolve inside.
+
+    Returns:
+        The repository root, the platform temporary root, and — when set —
+        the directory named by ``PRIN_S2_SCRATCH``, each fully resolved.
+    """
+    roots = [ROOT, Path(tempfile.gettempdir()).resolve()]
+    extra = os.environ.get("PRIN_S2_SCRATCH")
+    if extra:
+        roots.append(Path(extra).resolve())
+    return tuple(roots)
+
+
+def is_within(path: Path, root: Path) -> bool:
+    """Return whether ``path`` is ``root`` itself or lives beneath it."""
+    return path == root or root in path.parents
+
+
+def guarded_input_path(raw: str, role: str) -> Path:
+    """Resolve a caller-supplied input path safely and return it.
+
+    Snyk Code flags an unsanitised ``argv`` path flowing into
+    :class:`pathlib.Path` as CWE-23 path traversal. For an
+    **evidence-producing** tool the sharper risk is integrity, not
+    confidentiality: ``Path.is_file`` and ``Path.read_text`` follow symbolic
+    links, so a linked input would be measured while the evidence named a
+    different file — the "content verified, path provenance not" failure mode
+    that audit finding ``PR23-F1`` fixed in ``tools/reproduce.py``. This guard
+    therefore mirrors that module's no-follow discipline and additionally
+    confines the *resolved* path to :func:`allowed_roots`, so a symlinked
+    parent directory pointing outside is also refused.
+
+    Args:
+        raw: The path exactly as passed on the command line.
+        role: Human-readable role used in any failure message.
+
+    Returns:
+        The resolved, confined path to a regular file.
+
+    Raises:
+        SystemExit: If the path is a symbolic link, is not a regular file, or
+            resolves outside every allowed root.
+    """
+    candidate = Path(raw)
+    if ".." in raw.replace("\\", "/").split("/"):
+        raise SystemExit(f"{role}: refusing a path containing a '..' component: {raw}")
+    if candidate.is_symlink():
+        raise SystemExit(f"{role}: refusing symbolic link {candidate}")
+    if candidate.exists() and not candidate.is_file():
+        raise SystemExit(f"{role}: {candidate} is not a regular file")
+    resolved = candidate.resolve()
+    roots = allowed_roots()
+    if not any(is_within(resolved, root) for root in roots):
+        listed = ", ".join(str(root) for root in roots)
+        raise SystemExit(f"{role}: {resolved} is outside the allowed roots ({listed})")
+    if not resolved.is_file():
+        raise SystemExit(f"{role}: no regular file at {resolved}")
+    return resolved
 
 
 def added_lines(base_ref: str, relative_path: str) -> set[int]:
@@ -78,6 +142,11 @@ def added_lines(base_ref: str, relative_path: str) -> set[int]:
         elif line.startswith(" ") and current is not None:
             current += 1
     return out
+
+
+def sha256(path: Path) -> str:
+    """Return the SHA-256 of a file's bytes, to tie evidence to exact content."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def load_report(path: Path) -> dict[str, Any]:
@@ -123,7 +192,8 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         print("usage: changed_line_coverage.py <coverage.json> <base-ref> <path>")
         return 2
-    report_path, base_ref, relative_path = Path(argv[0]), argv[1], argv[2]
+    base_ref, relative_path = argv[1], argv[2]
+    report_path = guarded_input_path(argv[0], "coverage report")
     if not report_path.is_file():
         print(f"ABORT: coverage report not found at {report_path}")
         return 2
@@ -142,6 +212,7 @@ def main(argv: list[str]) -> int:
     non_executable = sorted(changed - instrumented - excluded)
 
     print(f"coverage report : {report_path}")
+    print(f"  resolved+confined, no symlink followed; sha256 {sha256(report_path)}")
     print(f"source file     : {relative_path}")
     print(f"diff base       : {base_ref}")
     print()

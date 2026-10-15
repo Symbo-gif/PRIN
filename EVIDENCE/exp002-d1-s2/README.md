@@ -36,10 +36,36 @@ and is the committed generator for the output file beside it.
 |---|---|
 | [`ast_spec_validation.py`](ast_spec_validation.py) | **Brief item 2, statically.** Cross-validates all 34 registered divergences against the *source text* of both modules, without executing matplotlib. **Part B:** each specification names an argument the frozen reference really carries, at the call indices it restricts — the check that S1's runtime transforms are not self-confirming. **Part C:** the fixed port carries the reference's value for each specification, and no mathtext rewrite survives. **Part D:** the `\N{...}` escape claim — the port's *decoded* strings equal the reference's literal Unicode strings while its source stays ASCII (which is what satisfies `ruff` `RUF001`). Resolves constants, lists, f-strings (by literal parts) and simple local name bindings; its docstring records the two things a static count cannot see. |
 | [`artist_level_equivalence.py`](artist_level_equivalence.py) | **Brief item 2, "no divergence alters a plotted value".** Renders all 14 stems from both modules, intercepts each `Figure` at `savefig`, and compares the full artist inventory — `Line2D` x/y data (SHA-256 over the `float64` buffer plus shape), linewidth, markersize, marker, linestyle, alpha, zorder, colour, label; `Collection` offsets and styling; `Patch` vertices and styling; `Text` string, position, alignment, size, rotation, colour; `Axes` limits, scales, title, labels, ticks, tick labels, legend. Also counts drawing calls made directly by each generator, which is what separates a real argument divergence from harmless restructuring. |
-| [`decomposition_rerun_check.py`](decomposition_rerun_check.py) | **Brief item 2, "re-run the decomposition".** Compares an independent re-run of S1's generator with the committed postfix artefact field by field, treating `generated_utc` and `git_head` as the only expected differences; prints the prefix/postfix red → green transition, the full 21-file no-regression set and 18-file changed set (**brief item 3**), and the retained-E3-root verification. |
+| [`decomposition_rerun_check.py`](decomposition_rerun_check.py) | **Brief item 2, "re-run the decomposition".** Compares an independent re-run of S1's generator with the committed postfix artefact field by field, treating `generated_utc` and `git_head` as the only expected differences; prints the prefix/postfix red → green transition, the full 21-file no-regression set and 18-file changed set (**brief item 3**), and the retained-E3-root verification. Its input path goes through `guarded_input_path` (see below). |
 | [`both_policies_post_fix.py`](both_policies_post_fix.py) | **S1.10 item 1, independently re-derived.** Renders both arms once on the corrected tree and computes raw, approved-§5.4 and §11.3-sensitivity digests for all 39 files, then **classifies** every sensitivity-policy residual rather than counting it: line terminators for `.tex`, Info key set for `.pdf`, critical chunks for `.png`. Writes only to a temporary directory. |
 | [`fast_gate_divergence_coverage.py`](fast_gate_divergence_coverage.py) | **A3.** The parity gate is marked `parity` + `slow`, so the default fast gate never runs it. This measures how much of the 34-divergence population the nine `tests/test_publication_figure_arguments.py` tests actually pin, split by byte-materiality, per test function. |
-| [`changed_line_coverage.py`](changed_line_coverage.py) | **A3's ≥95 % changed-code gate.** Intersects `git diff -U0 fd8854ed` added lines with a path-form coverage JSON report. Written because `tools/coverage_changed_lines.py` unions **Rust** `cargo-llvm-cov` lcov runs and does not read Python coverage data, and because the `--cov=prin` module form fails on this host (**DV-033**). |
+| [`changed_line_coverage.py`](changed_line_coverage.py) | **A3's ≥95 % changed-code gate.** Intersects `git diff -U0 fd8854ed` added lines with a path-form coverage JSON report. Written because `tools/coverage_changed_lines.py` unions **Rust** `cargo-llvm-cov` lcov runs and does not read Python coverage data, and because the `--cov=prin` module form fails on this host (**DV-033**). Its input path goes through `guarded_input_path` (see below). |
+
+### The input-path guard in the two instruments that take a path argument
+
+`decomposition_rerun_check.py` and `changed_line_coverage.py` each accept a
+caller-supplied path. Snyk Code reports that as `python/PT` (CWE-23, **Low**) in
+both, and it was **remediated rather than suppressed**, on the repository's own
+audited `PR23-F1` pattern (`tools/reproduce.py::_reject_symlink` /
+`_reject_non_regular`). `guarded_input_path()` rejects a `..` component, refuses
+a symbolic link **without following it**, refuses anything that is not a regular
+file, then resolves the path and confines it to an explicit allowlist — the
+repository root, the platform temp root, and `PRIN_S2_SCRATCH` when set — so a
+symlinked *parent* directory is refused too. The resolved path and its SHA-256
+are printed into the evidence, tying each artefact to the exact bytes measured.
+
+This is an **evidence-integrity** control, not only a confidentiality one: these
+are verification tools, so a symlinked input would be compared while the
+evidence named a different file — precisely `PR23-F1`'s "content verified, path
+provenance not" failure mode.
+
+Snyk still reports both findings after two remediation iterations, with its
+dataflow pointing *inside* the guard at `candidate = Path(raw)`; its `python/PT`
+model does not treat those checks as sanitizers. The residual is recorded as
+audit finding **`EXP002D1-S2-F8`** with a full threat assessment in
+[`snyk-low-findings-threat-assessment.md`](snyk-low-findings-threat-assessment.md).
+The applicable Coding Standards §6.2 gate is "0 medium+ findings" and repo-wide
+at `medium` is **0**, so the gate is met.
 
 ## Verification outputs
 
@@ -60,7 +86,10 @@ and is the committed generator for the output file beside it.
 | [`stall-diagnosis-clevr6-no-nan.txt`](stall-diagnosis-clevr6-no-nan.txt) | **Testing Standards §7 item 3.** The retained stall diagnostic for the first faulthandler dump: two timestamped observations 151 s apart (same PID alive, CPU **+35.8 s**, working set **+338 MB**, stack in `prin/nn/_bridge.py:108 backward`), plus the node's expected duration from S1's own `--durations=20` (`1086.16 s`, ~3.6× the 300 s threshold). Conclusion: **not a stall**; nothing killed, re-run, deselected or weakened. |
 | [`static-gate.txt`](static-gate.txt) | **A5/A6/A7/A9.** The static, quality, security, documentation and cargo legs L01–L21 with exit codes: `ruff`, `mypy --strict` ×3, `interrogate` (**97.6 %**), `bandit` ×2, the four governance checkers, `cargo fmt`/`clippy -D warnings`/`test`, a from-scratch Sphinx `-W --keep-going` build, `gitleaks` full history (**738 commits, no leaks**) and `--staged`, and the empty EXP-002/CI/dependency immutability diff. Five legs exited non-zero here; each is diagnosed in `static-gate-reruns.txt`. |
 | [`static-gate-reruns.txt`](static-gate-reruns.txt) | **A5/A6/A3.** The corrected re-runs R01–R08, **all exit 0**: `ruff check`/`format --check` over every root including both EVIDENCE dirs, `bandit` over both instrument dirs (**0 issues**), `check_deviation_ledger.py` with report paths (the phase-2 `039 040` form was an auditor error), `cargo test --workspace` (the phase-2 `os error 32` `ERROR_SHARING_VIOLATION` was the documented Windows contention class, and it passed on re-run in 56 s without `-j 1`), the targeted coverage re-run, and the **changed-line coverage analysis: 11/11 changed executable lines = 100 %**, whole-file 99.41 % (missed 191, 196). |
-| [`targeted-coverage-phase2-attempt.txt`](targeted-coverage-phase2-attempt.txt) | **Superseded, retained for honesty.** The phase-2 coverage leg: its `pytest --cov=python/prin/reporting --cov-report=term-missing` half is valid and shows `figure_generation.py` at 99 % missing 191, 196, but its analysis half **aborted** because an MSYS `/c/...` path was passed to a native Windows Python, so the JSON was never written (an auditor error, not a repository defect). Superseded by `static-gate-reruns.txt` R07/R08. |
+| [`targeted-coverage-phase2-attempt.txt`](targeted-coverage-phase2-attempt.txt) | **Superseded, retained for honesty.** The phase-2 coverage leg: its `pytest --cov=python/prin/reporting --cov-report=term-missing` half is valid and shows `figure_generation.py` at 99 % missing 191, 196, but its analysis half **aborted** because an MSYS `/c/...` path was passed to a native Windows Python, so the JSON was never written (an auditor error, not a repository defect). Superseded by `static-gate-reruns.txt` R07/R08 and by `changed-line-coverage.txt`. |
+| [`changed-line-coverage.txt`](changed-line-coverage.txt) | **A3's ≥95 % gate, authoritative.** `changed_line_coverage.py` run against the R07 coverage JSON: whole-file **99.41 %** (340 statements, missed 191 and 196), and of the 82 lines the diff added, **11 are executable and 11 executed — 100.00 %**, 0 uncovered. Records the resolved-and-confined input path and its SHA-256. Regenerated after the CWE-23 guard was added, so the committed output matches the committed instrument. |
+| [`path-guard-negative-tests.txt`](path-guard-negative-tests.txt) | **Proof the CWE-23 guard is not vacuous.** Exercises `guarded_input_path` in both instruments: a path outside every allowed root, a directory, a `..` traversal component, and a **real symbolic link** to a live artefact are all **REFUSED**; a legitimate in-repo artefact and the declared `PRIN_S2_SCRATCH` file are **ACCEPTED**. `guard negative-test failures: 0`, exit 0. |
+| [`snyk-low-findings-threat-assessment.md`](snyk-low-findings-threat-assessment.md) | **Coding Standards §6.2/§6.4 record for finding `EXP002D1-S2-F8`.** Names the two residual LOW `python/PT` findings, the affected API and data flow, the exploit prerequisites (argv control implies existing code execution as the auditor — no privilege boundary crossed), both remediation iterations, the negative-test proof, the compensating controls, and the ACCEPTED-WITH-ASSESSMENT disposition flagged for maintainer ratification. Nothing was added to `.snyk`; no ignore or severity exclusion was created. |
 | [`phase2-sequencer.txt`](phase2-sequencer.txt) | The sequencing record: the wait for the phase-1 pytest legs to complete before any cargo or second pytest leg started (`AGENTS.md` forbids running them concurrently on this host), the phase-1 leg results, and the order the remaining legs ran in. |
 
 ## Results in one place
@@ -91,6 +120,11 @@ render both arms and take one to two minutes.
 .venv/Scripts/python EVIDENCE/exp002-d1-s2/both_policies_post_fix.py
 .venv/Scripts/python EVIDENCE/exp002-d1-s2/fast_gate_divergence_coverage.py
 
+# The two path-taking instruments confine their input to the repository root,
+# the platform temp root, and PRIN_S2_SCRATCH when set. Declare the scratch root
+# first, or the guard refuses the out-of-tree artefact (as it is designed to).
+export PRIN_S2_SCRATCH='C:\Users\there\prin-s2-scratch'
+
 # the decomposition re-run: write the JSON OUTSIDE the repository, then compare
 .venv/Scripts/python EVIDENCE/exp002-d1-s1/root_cause_decomposition.py \
     --label postfix --out /c/Users/there/prin-s2-scratch/root-cause-decomposition-postfix-s2.json
@@ -107,6 +141,9 @@ render both arms and take one to two minutes.
     C:/Users/there/prin-s2-scratch/coverage-reporting.json fd8854ed \
     python/prin/reporting/figure_generation.py
 ```
+
+Alternatively put the scratch artefacts under the platform temp root, which is
+allowed by default, and omit `PRIN_S2_SCRATCH`.
 
 The pre-fix reproduction requires temporarily restoring the pre-fix module and
 restoring it afterwards; the exact commands are in the header of

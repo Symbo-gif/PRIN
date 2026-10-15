@@ -32,7 +32,7 @@ to green, and all 39 outputs now equal the reference (campaign plan §10.4
 item 3 not invoked;
 [correction audit](../../audits/2026-10-15-exp002-d1-correction-audit.md)).
 **S2 COMPLETE 2026-10-15 UTC** — read-only audit of `ab9e4225..8fd0ecc9`,
-verdict **`PASS-WITH-FINDINGS`**: one D2, one D3, five D4, **no D1**, no
+verdict **`PASS-WITH-FINDINGS`**: one D2, one D3, six D4, **no D1**, no
 systemic drift. All five brief-specific items were **VERIFIED** by independent
 re-execution rather than accepted on authority — the pre-fix gate red on
 exactly the 18 E3 files and all 9 argument tests; the decomposition reproducing
