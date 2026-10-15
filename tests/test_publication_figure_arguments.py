@@ -12,12 +12,16 @@ argument on the live Figure objects instead, so a regression fails the default
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
+from operator import attrgetter
 from pathlib import Path
 from typing import Any
 
+import matplotlib.pyplot as plt
 import pytest
 from matplotlib.colors import to_hex
+from matplotlib.container import ErrorbarContainer
 from matplotlib.figure import Figure
+from matplotlib.legend import Legend
 from prin.reporting import figure_generation as figures
 
 RESULTS = (
@@ -33,6 +37,12 @@ UPPER_RIGHT = 1
 LOWER_LEFT = 3
 
 Generator = Callable[[Path | None, Path | None], list[Path]]
+
+
+def _legend_loc(legend: Legend | None) -> int:
+    """Return a legend's resolved location code (Matplotlib has no getter)."""
+    assert legend is not None
+    return int(attrgetter("_loc")(legend))
 
 
 @pytest.fixture
@@ -55,12 +65,14 @@ def render(
         return captured.pop()
 
     yield run
-    figures.plt.close("all")
+    plt.close("all")
 
 
 def test_fig5_marker_sizes(render: Callable[[Generator], Figure]) -> None:
     ax = render(figures.fig_mot_identity_preservation).axes[0]
-    data_line = ax.containers[0].lines[0]
+    container = ax.containers[0]
+    assert isinstance(container, ErrorbarContainer)
+    data_line = container.lines[0]
     sa_line = next(line for line in ax.lines if line.get_label() == "Slot Attention")
     for line in (data_line, sa_line):
         assert line.get_markersize() == 4  # D5.2, D5.4
@@ -87,9 +99,7 @@ def test_fig9_curve_widths_legend_and_labels(
     curves, bars = render(figures.fig_training_curves).axes
     assert len(curves.lines) == 4
     assert {line.get_linewidth() for line in curves.lines} == {1.2}  # D9.1
-    legend = curves.get_legend()
-    assert legend is not None
-    assert legend._loc == UPPER_RIGHT  # D9.2
+    assert _legend_loc(curves.get_legend()) == UPPER_RIGHT  # D9.2
     assert {text.get_verticalalignment() for text in bars.texts} == {"bottom"}  # D9.3
 
 
@@ -160,6 +170,4 @@ def test_fig15_marker_sizes_fit_and_legends(
     assert {line.get_markersize() for line in velocity.lines} == {4}  # D15.5
     assert velocity.get_xlabel() == f"Speed Multiplier ({TIMES})"  # D15.6
     for ax in (noise, velocity):
-        legend = ax.get_legend()
-        assert legend is not None
-        assert legend._loc == LOWER_LEFT  # D15.4, D15.7
+        assert _legend_loc(ax.get_legend()) == LOWER_LEFT  # D15.4, D15.7
