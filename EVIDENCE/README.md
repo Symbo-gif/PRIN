@@ -76,6 +76,14 @@ To find evidence for a specific work package, look for files matching
   changed-code coverage 94 % → 100 % on the two new tools after nine added
   tests) and WP036F-F2 (D4, `mypy --strict` on both tools 3 errors → 0), plus
   the touched-area delta re-audit gate re-run.
+- [`exp002-d1-s1/`](exp002-d1-s1/) — EXP-002 D1 correction, S1 (an unnumbered
+  contingency session). It holds the failing-test-first red and green gate
+  runs, and a root-cause decomposition of the 18-file H3 divergence at the
+  pre-fix and post-fix ports. The decomposition uses controlled substitution
+  on the frozen PRINet 3.0 generator, and the 34 registered divergences
+  explain every differing byte with 0 unexplained (PRIN side). The directory
+  also holds the verification of the retained E3 bytes, the verbatim local
+  gate and the secret scans; see its `README.md`.
 - [`exp001-d1-s1/`](exp001-d1-s1/) — EXP-001 D1 correction, S1 (an unnumbered
   contingency session). A root-cause decomposition of every H1/H2a breach at
   the pre-fix and post-fix builds, attributing each by controlled substitution

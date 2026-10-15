@@ -451,6 +451,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Publication figures match the frozen PRINet 3.0 generator again
+  (EXP-002 D1 S1, 2026-10-15 UTC).** EXP-002 H3 was refuted because 18 of the
+  39 publication files differed: the PDF and PNG of figures 5, 7, 8, 9, 10,
+  11, 12, 14 and 15. The WP-034 port in
+  `prin.reporting.figure_generation` had dropped or re-encoded 34 drawing
+  arguments of the reference generators. These were keyword arguments such
+  as `markersize`, `linewidth`, `alpha`, `zorder`, `va`, `bbox`, `edgecolor`
+  and legend `loc`, plus an omitted `tick_params` call, and Unicode labels
+  (`×`, `³`, δ/θ/γ, en dash) rewritten as mathtext. Those nine generators now
+  pass the reference's exact arguments and label strings, using `\N{...}`
+  escapes so that `ruff` `RUF001` stays clean. Figure appearance therefore
+  changes to the reference's. No plotted value, table or public symbol
+  changes.
+
+  A new gate, `parity/test_parity_publication.py`, renders both generators
+  and compares all 39 files under the registered H3 rule. It was committed
+  failing first (18 failed) and now passes. Nine fast-gate tests in
+  `tests/test_publication_figure_arguments.py` pin the restored arguments.
+  A controlled-substitution decomposition in `EVIDENCE/exp002-d1-s1/`
+  explains every differing byte, with 0 unexplained. Record:
+  `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`. This does not
+  authorize `EXP-002-r1` or release session 0164.
+
 - **Hosted-check failures and a flaky local test fixture (2026-10-12).**
   Rust 1.99's clippy rejects a single-element `for` loop in
   `crates/prin-kernels/src/compat.rs` (behaviour unchanged). The `python`

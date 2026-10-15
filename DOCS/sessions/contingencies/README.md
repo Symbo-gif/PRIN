@@ -22,7 +22,16 @@ S1 scope. **Session `0164` (EXP-003 E1) and every later campaign session
 (`0165`–`0194`) stay blocked until S4 closes and `EXP-002-r1` returns a
 non-reversal verdict** (or the maintainer adopts a Project Plan §8.3
 amendment; campaign plan §3.3, §10.4 items 2–5). No root cause is claimed by
-the triggering record; S1 owns it. See the
+the triggering record; S1 owns it.
+**S1 COMPLETE 2026-10-15 UTC** on `hotfix/exp002-d1-figure-parity` (draft
+PR #34). The root cause is on the PRIN side: the WP-034 port dropped or
+re-encoded 34 drawing arguments in the nine figure generators, and
+controlled substitution on the frozen reference explains every differing
+byte with 0 unexplained. The failing-test-first gate went from 18 failures
+to green, and all 39 outputs now equal the reference (campaign plan §10.4
+item 3 not invoked;
+[correction audit](../../audits/2026-10-15-exp002-d1-correction-audit.md)).
+S2 is next. See the
 [EXP-002 E5 report](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md)
 §§3, 6, 8, 11, 14.
 

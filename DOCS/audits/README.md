@@ -444,6 +444,15 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   arithmetic, with the corpus shown to be the erroneous side to the campaign
   plan §10.4 item 3 standard), commits, the red → green transition on draft
   PR #24, and handoff. The S2 audit, S3 closure and S4 closure are pending.
+- [`2026-10-15-exp002-d1-correction-audit.md`](2026-10-15-exp002-d1-correction-audit.md) —
+  EXP-002 D1 correction cycle (H3 `REFUTED`, 18/39 files). So far it holds
+  the **S1 implementation record**: the failing-test-first reproduction
+  (18 failed, exactly the E3 set) and the root cause. The root cause is on
+  the PRIN side: 34 drawing arguments dropped or re-encoded by the WP-034
+  figure port, all bytes explained by controlled substitution on the frozen
+  reference, and campaign plan §10.4 item 3 not invoked. The record also
+  covers the fix, the red → green transition on draft PR #34, the local
+  gate and the handoff. The S2 audit, S3 closure and S4 closure are pending.
 - [`PR023-multi-review-audit.md`](PR023-multi-review-audit.md) — External
   code review audit of PR #23 (EXP-001 E3–E5), 2026-09-23,
   `PASS-WITH-FINDINGS` → all findings remediated in the same round. Seven

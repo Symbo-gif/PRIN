@@ -195,3 +195,10 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 > 2026-10-15 UTC** and the `EXP-002-D1` S1 correction scope approved as
 > written (`report.md` §14); acceptance does not release `0164` or the
 > correction cycle.
+> **`EXP-002-D1` S1 COMPLETE 2026-10-15 UTC** (draft PR #34): root cause on
+> the PRIN side, namely 34 drawing arguments dropped or re-encoded by the
+> WP-034 port of nine figure generators, with 0 unexplained. The
+> failing-test-first gate went red → green, and all 39 outputs now equal the
+> frozen reference
+> ([correction audit](../../audits/2026-10-15-exp002-d1-correction-audit.md)).
+> S2 is next; `0164` stays BLOCKED.

@@ -1,8 +1,10 @@
 # EXP-002 D1 correction — S1 evidence
 
-Status: **pre-fix evidence** (reproduction and root-cause decomposition at the
-failing-test commit `d90eeab`; the post-fix artefacts are added by the fix
-commit).
+Status: **current** (S1 complete, 2026-10-15 UTC). This directory holds the
+pre-fix reproduction and decomposition at the failing-test commit `d90eeab`,
+and the post-fix decomposition and green gate at `9371596`. The record of
+this S1 is
+[`DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`](../../DOCS/audits/2026-10-15-exp002-d1-correction-audit.md).
 
 Root-cause evidence for the EXP-002 D1 correction cycle, session S1
 ([brief](../../DOCS/sessions/contingencies/2026-10-14-exp002-d1-s1-correction-implementation.md)).
@@ -17,6 +19,11 @@ and font cache), run from the repository root.
 | [`decomposition-prefix-run.txt`](decomposition-prefix-run.txt) | Verbatim console output and exit code of the prefix run. |
 | [`gate-red-d90eeab.txt`](gate-red-d90eeab.txt) | Verbatim run of `parity/test_parity_publication.py` at the failing-test commit: **18 failed, 75 passed**. The 18 failures are exactly the E3 population (failure tracebacks trimmed; the summary is verbatim). |
 | [`gitleaks-history-d90eeab.txt`](gitleaks-history-d90eeab.txt) | Pre-push full-history secret scan (Plan amendment #48 item 6): 731 commits, no leaks, exit 0. |
+| [`root-cause-decomposition-postfix.json`](root-cause-decomposition-postfix.json) | The same run against the **post-fix** port at `9371596` (`port_module_sha256` `b41dfc13…c048`, identical to the fix commit `10d84f2`). 0 of 39 files differ from the reference. A, the reference with all 34 divergences applied, still equals the pre-fix port digests in the committed prefix artefact, and the divergence and materiality results equal the prefix run's. The 21 files that matched at E3 stay raw-identical to E3's PRIN arm, and exactly the 18 D1 files changed. Two separate PRIN processes agree on every raw byte (H4). |
+| [`decomposition-postfix-run.txt`](decomposition-postfix-run.txt) | Verbatim console output and exit code of the postfix run. |
+| [`gate-green-9371596.txt`](gate-green-9371596.txt) | Verbatim run of `parity/test_parity_publication.py` plus the nine fast-gate argument tests (`tests/test_publication_figure_arguments.py`) on the post-fix tree: **102 passed**, exit 0. |
+| [`snyk-code.txt`](snyk-code.txt) | Snyk Code (`snyk code test . --severity-threshold=low`) summary and a SARIF filter: **0 findings** in the four new or modified first-party source files. The repository has 75 LOW findings in total, all in files this change does not touch, and 0 medium or high. |
+| [`local-gate.txt`](local-gate.txt) | Verbatim local gate (Plan amendment #48): the commands, their exit codes, and the commit and host they ran on. |
 
 ## Method: controlled substitution on the frozen reference
 
@@ -32,7 +39,7 @@ argument it changes is present in the reference call, and each divergence
 must fire at least once. A specification that does not match the reference
 source therefore aborts the run.
 
-## Result (pre-fix)
+## Result (pre-fix, `root-cause-decomposition-prefix.json`)
 
 - **Reproduction.** In-process, the reference arm equals E3's reference arm
   on all 39 normalized digests. PRIN's tree equals E3's PRIN arm on all 39
@@ -80,6 +87,15 @@ condensation during the port. No test compared figure bytes with the
 reference, because `tests/test_publication_generation.py` asserts figure
 completeness and normalization only. That is the gap the new gate closes.
 
+## Result (post-fix, `root-cause-decomposition-postfix.json`)
+
+All 39 publication files equal the reference under the registered H3
+comparison (`port_vs_reference_differing_count: 0`, PNG pixels differing 0
+on every stem). The 21 outputs that matched at E3 are raw-byte-identical to
+E3's PRIN arm. Two separate PRIN processes still agree on every raw byte. A
+still equals the pre-fix port digests recorded in the prefix artefact, and
+every divergence's materiality is unchanged.
+
 ## Regenerating
 
 From the repository root with the project venv (the retained E3 roots under
@@ -87,14 +103,18 @@ From the repository root with the project venv (the retained E3 roots under
 reports `retained_root_present: false` once they are removed):
 
 ```bash
-python EVIDENCE/exp002-d1-s1/root_cause_decomposition.py --label prefix \
-    --out EVIDENCE/exp002-d1-s1/root-cause-decomposition-prefix.json
+python EVIDENCE/exp002-d1-s1/root_cause_decomposition.py --label postfix \
+    --out EVIDENCE/exp002-d1-s1/root-cause-decomposition-postfix.json
 ```
 
-The label is derived from the imported build: `prefix` if any stem differs
-from the reference, `postfix` otherwise. A mismatched `--label` exits 2 and
-writes nothing. The port is pure Python, so the prefix artefact can be
-regenerated after the fix by temporarily restoring the pre-fix module:
+A postfix run compares A against the pre-fix port digests in the committed
+prefix artefact (`--prefix`, which defaults to the sibling
+`root-cause-decomposition-prefix.json`). The label is derived from the
+imported build: `prefix` if any stem differs from the reference, `postfix`
+otherwise. A mismatched `--label` exits 2 and writes nothing. The port is
+pure Python, so the prefix artefact can be regenerated after the fix with
+`--label prefix --out …/root-cause-decomposition-prefix.json` by
+temporarily restoring the pre-fix module:
 `git restore --source d90eeab -- python/prin/reporting/figure_generation.py`.
 Run the command above, then `git restore python/prin/reporting/figure_generation.py`.
 The artefact's `port_module_sha256` identifies the module that was measured.
