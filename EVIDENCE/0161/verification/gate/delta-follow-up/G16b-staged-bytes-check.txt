@@ -1,0 +1,18 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe -I EVIDENCE/0161/verification/tools/staged_bytes_check.py 0161
+CWD: C:/dev/PRIN
+SOURCE: staged index of follow-up commit C on top of 89f21f5 (same state G18 scanned); captured before this file and G18 were added to the index
+UTC-START: 2026-10-13T00:32:39Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+Byte-exactness check of the git index against the working tree and manifests
+  RUN-20261012T212705Z-fae24c4-api-cpu: 3 files checked
+  RUN-20261012T213054Z-fae24c4-conclusions-cpu: 3 files checked
+  RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu: 3 files checked
+  RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu: 3 files checked
+  RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu: 3 files checked
+  EVIDENCE/0161/verification: 111 files checked against 111 manifest entries
+SUMMARY: 253 comparisons, 0 failed
+----
+ELAPSED_SECONDS: 8 (whole seconds, bash SECONDS)
+EXIT_CODE: 0

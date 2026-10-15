@@ -1,0 +1,375 @@
+lint	UNKNOWN STEP	﻿2026-10-11T23:24:52.7819630Z Current runner version: '2.337.0'
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7846522Z ##[group]Runner Image Provisioner
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7847406Z Hosted Compute Agent
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7848005Z Version: 20261002.596
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7848742Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7849464Z Build Date: 2026-10-02T22:28:27Z
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7850193Z Worker ID: {66e1d6f4-f0c6-4707-a415-bdae533983c8}
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7851006Z Region: westus3
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7851543Z Cloud: Azure
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7852430Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7853935Z ##[group]Operating System
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7854569Z Ubuntu
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7855182Z 24.04.5
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7855691Z LTS
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7856263Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7856822Z ##[group]Runner Image
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7857401Z Image: ubuntu-24.04
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7858051Z Version: 20261004.327.1
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7859282Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7860908Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7862398Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7863698Z ##[group]GITHUB_TOKEN Permissions
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7865697Z Contents: read
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7866420Z Metadata: read
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7866992Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7869169Z Secret source: Actions
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7870197Z Cache mode: write
+lint	UNKNOWN STEP	2026-10-11T23:24:52.7870937Z Prepare workflow directory
+lint	UNKNOWN STEP	2026-10-11T23:24:52.8232028Z Prepare all required actions
+lint	UNKNOWN STEP	2026-10-11T23:24:52.8283074Z Getting action download info
+lint	UNKNOWN STEP	2026-10-11T23:24:53.1541120Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+lint	UNKNOWN STEP	2026-10-11T23:24:53.2516528Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+lint	UNKNOWN STEP	2026-10-11T23:24:53.4400599Z Complete job name: lint
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5306832Z ##[group]Run actions/checkout@v4
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5307750Z with:
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5308174Z   fetch-depth: 0
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5308642Z   repository: Symbo-gif/PRIN
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5312640Z   token: ***
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5313076Z   ssh-strict: true
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5313505Z   ssh-user: git
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5313943Z   persist-credentials: true
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5314410Z   clean: true
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5314841Z   sparse-checkout-cone-mode: true
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5315355Z   fetch-tags: false
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5315784Z   show-progress: true
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5316221Z   lfs: false
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5316631Z   submodules: false
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5317063Z   set-safe-directory: true
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5317555Z   allow-unsafe-pr-checkout: false
+lint	UNKNOWN STEP	2026-10-11T23:24:53.5318343Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6384588Z Syncing repository: Symbo-gif/PRIN
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6386559Z ##[group]Getting Git version info
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6387337Z Working directory is '/home/runner/work/PRIN/PRIN'
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6388373Z [command]/usr/bin/git version
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6508563Z git version 2.55.0
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6534283Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6551398Z Temporarily overriding HOME='/home/runner/work/_temp/ec79e5e8-aaba-45e2-ab64-5725dc97c9df' before making global git config changes
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6554696Z Adding repository directory to the temporary git global config as a safe directory
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6558923Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PRIN/PRIN
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6619458Z Deleting the contents of '/home/runner/work/PRIN/PRIN'
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6628791Z ##[group]Initializing the repository
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6629915Z [command]/usr/bin/git init /home/runner/work/PRIN/PRIN
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6790633Z hint: Using 'master' as the name for the initial branch. This default branch name
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6792674Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6794327Z hint: to use in all of your new repositories, which will suppress this warning,
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6795958Z hint: call:
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6796647Z hint:
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6797514Z hint: 	git config --global init.defaultBranch <name>
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6798520Z hint:
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6799503Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6801123Z hint: 'development'. The just-created branch can be renamed via this command:
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6802592Z hint:
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6803244Z hint: 	git branch -m <name>
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6803990Z hint:
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6804998Z hint: Disable this message with "git config set advice.defaultBranchName false"
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6806661Z Initialized empty Git repository in /home/runner/work/PRIN/PRIN/.git/
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6809849Z [command]/usr/bin/git remote add origin https://github.com/Symbo-gif/PRIN
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6870835Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6872371Z ##[group]Disabling automatic garbage collection
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6874949Z [command]/usr/bin/git config --local gc.auto 0
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6914737Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6916180Z ##[group]Setting up auth
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6925682Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+lint	UNKNOWN STEP	2026-10-11T23:24:53.6973683Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+lint	UNKNOWN STEP	2026-10-11T23:24:53.7401447Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+lint	UNKNOWN STEP	2026-10-11T23:24:53.7438353Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+lint	UNKNOWN STEP	2026-10-11T23:24:53.7690282Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+lint	UNKNOWN STEP	2026-10-11T23:24:53.7728661Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+lint	UNKNOWN STEP	2026-10-11T23:24:53.7959806Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+lint	UNKNOWN STEP	2026-10-11T23:24:53.8004203Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:53.8005011Z ##[group]Fetching the repository
+lint	UNKNOWN STEP	2026-10-11T23:24:53.8015165Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +6d79be61b73741cbd247af6e8d22df324031152a:refs/remotes/pull/33/merge
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7592390Z From https://github.com/Symbo-gif/PRIN
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7595258Z  * [new branch]      audit/ea007-exp002-readiness             -> origin/audit/ea007-exp002-readiness
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7598324Z  * [new branch]      campaign/0153-e0-planning                -> origin/campaign/0153-e0-planning
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7602000Z  * [new branch]      campaign/0154-exp001-e1                  -> origin/campaign/0154-exp001-e1
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7603848Z  * [new branch]      campaign/0155-exp001-e2                  -> origin/campaign/0155-exp001-e2
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7605737Z  * [new branch]      campaign/0158-exp001-e5                  -> origin/campaign/0158-exp001-e5
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7607810Z  * [new branch]      campaign/0159-exp002-e1                  -> origin/campaign/0159-exp002-e1
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7609877Z  * [new branch]      campaign/exp001-r1-e5                    -> origin/campaign/exp001-r1-e5
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7612470Z  * [new branch]      campaign/exp001-r1-preexecution          -> origin/campaign/exp001-r1-preexecution
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7614769Z  * [new branch]      consolidate/wp001-wp011                  -> origin/consolidate/wp001-wp011
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7617422Z  * [new branch]      copilot/apply-build-limit-windows-test-leg -> origin/copilot/apply-build-limit-windows-test-leg
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7620395Z  * [new branch]      cursor/community-standards-d405          -> origin/cursor/community-standards-d405
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7624171Z  * [new branch]      etca-002/runner-service-script-hardening -> origin/etca-002/runner-service-script-hardening
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7627723Z  * [new branch]      etca-002/rust-windows-self-hosted        -> origin/etca-002/rust-windows-self-hosted
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7632176Z  * [new branch]      feat/wp001-foundation-baseline           -> origin/feat/wp001-foundation-baseline
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7636371Z  * [new branch]      feat/wp004-cubecl-fused-rk4-spike        -> origin/feat/wp004-cubecl-fused-rk4-spike
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7640007Z  * [new branch]      feat/wp005-ort-backends-wheel-matrix     -> origin/feat/wp005-ort-backends-wheel-matrix
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7643920Z  * [new branch]      feat/wp006-oscillator-state              -> origin/feat/wp006-oscillator-state
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7647090Z  * [new branch]      fix/workflow-pip-build-isolation         -> origin/fix/workflow-pip-build-isolation
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7650668Z  * [new branch]      hotfix/dv036-f4-counterbalanced-nightly  -> origin/hotfix/dv036-f4-counterbalanced-nightly
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7654663Z  * [new branch]      hotfix/dv036-nightly-comparable-baseline -> origin/hotfix/dv036-nightly-comparable-baseline
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7658884Z  * [new branch]      hotfix/dv038-dv039-artefact-guard-nightly-provisioning -> origin/hotfix/dv038-dv039-artefact-guard-nightly-provisioning
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7663572Z  * [new branch]      hotfix/dv041-wgpu-backend-identification -> origin/hotfix/dv041-wgpu-backend-identification
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7667153Z  * [new branch]      hotfix/dv043-redundant-step-guard        -> origin/hotfix/dv043-redundant-step-guard
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7670535Z  * [new branch]      hotfix/exp001-d1-parity-correction       -> origin/hotfix/exp001-d1-parity-correction
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7673463Z  * [new branch]      main                                     -> origin/main
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7675859Z  * [new tag]         v1.0.0-rc1                               -> v1.0.0-rc1
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7678177Z  * [new ref]         6d79be61b73741cbd247af6e8d22df324031152a -> pull/33/merge
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7683104Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7685439Z ##[group]Determining the checkout info
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7687847Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7689393Z [command]/usr/bin/git sparse-checkout disable
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7702139Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7740013Z ##[group]Checking out the ref
+lint	UNKNOWN STEP	2026-10-11T23:24:55.7742176Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/33/merge
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2508648Z Note: switching to 'refs/remotes/pull/33/merge'.
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2510285Z 
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2510783Z You are in 'detached HEAD' state. You can look around, make experimental
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2512167Z changes and commit them, and you can discard any commits you make in this
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2513249Z state without impacting any branches by switching back to a branch.
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2513830Z 
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2514195Z If you want to create a new branch to retain commits you create, you may
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2515119Z do so (now or later) by using -c with the switch command. Example:
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2515635Z 
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2515876Z   git switch -c <new-branch-name>
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2516233Z 
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2516491Z Or undo this operation with:
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2516819Z 
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2517025Z   git switch -
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2517311Z 
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2517828Z Turn off this advice by setting config variable advice.detachedHead to false
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2518461Z 
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2519157Z HEAD is now at 6d79be6 Merge 0d4278d484e1fb5e55cd510991f6c8d4bf4374ae into da53ea11a3f38cd0d5c27c40bbefbeaf6d6dbf53
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2587341Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2590686Z [command]/usr/bin/git log -1 --format=%H
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2618607Z 6d79be61b73741cbd247af6e8d22df324031152a
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2957456Z ##[group]Run actions/setup-python@v5
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2957998Z with:
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2958262Z   python-version: 3.12
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2958563Z   check-latest: false
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2961209Z   token: ***
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2961498Z   update-environment: true
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2962139Z   allow-prereleases: false
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2962456Z   freethreaded: false
+lint	UNKNOWN STEP	2026-10-11T23:24:56.2962758Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:56.4307616Z ##[group]Installed versions
+lint	UNKNOWN STEP	2026-10-11T23:24:56.4405908Z (node:2294) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+lint	UNKNOWN STEP	2026-10-11T23:24:56.4406827Z (Use `node --trace-deprecation ...` to show where the warning was created)
+lint	UNKNOWN STEP	2026-10-11T23:24:56.4407977Z Successfully set up CPython (3.12.15)
+lint	UNKNOWN STEP	2026-10-11T23:24:56.4408998Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:56.4694168Z ##[group]Run pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch
+lint	UNKNOWN STEP	2026-10-11T23:24:56.4695285Z ^[[36;1mpip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch^[[0m
+lint	UNKNOWN STEP	2026-10-11T23:24:56.5031082Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-10-11T23:24:56.5031498Z env:
+lint	UNKNOWN STEP	2026-10-11T23:24:56.5032127Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:24:56.5032751Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	UNKNOWN STEP	2026-10-11T23:24:56.5033320Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:24:56.5033825Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:24:56.5034350Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:24:56.5034860Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	UNKNOWN STEP	2026-10-11T23:24:56.5035248Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:24:57.9661883Z Looking in indexes: https://download.pytorch.org/whl/cpu
+lint	UNKNOWN STEP	2026-10-11T23:24:58.1076535Z Collecting torch
+lint	UNKNOWN STEP	2026-10-11T23:24:58.3247222Z   Downloading torch-2.13.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl.metadata (37 kB)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.3590914Z Collecting filelock (from torch)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.4089497Z   Downloading filelock-3.32.3-py3-none-any.whl.metadata (2.0 kB)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.4281786Z Collecting typing-extensions>=4.10.0 (from torch)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.4323294Z   Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.4423664Z Collecting setuptools>=77.0.3 (from torch)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.4463843Z   Downloading setuptools-78.1.0-py3-none-any.whl.metadata (6.6 kB)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.4698979Z Collecting sympy>=1.13.3 (from torch)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.4745283Z   Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.5000255Z Collecting networkx>=2.5.1 (from torch)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.5037602Z   Downloading networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.5179297Z Collecting jinja2 (from torch)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.5228646Z   Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.5583101Z Collecting fsspec>=0.8.5 (from torch)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.5621690Z   Downloading fsspec-2026.7.0-py3-none-any.whl.metadata (10 kB)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.5973567Z Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.6017273Z   Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.6239943Z Collecting MarkupSafe>=2.0 (from jinja2->torch)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.6280787Z   Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+lint	UNKNOWN STEP	2026-10-11T23:24:58.6519981Z Downloading torch-2.13.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl (191.8 MB)
+lint	UNKNOWN STEP	2026-10-11T23:24:59.9461074Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 191.8/191.8 MB 150.7 MB/s  0:00:01
+lint	UNKNOWN STEP	2026-10-11T23:24:59.9502429Z Downloading fsspec-2026.7.0-py3-none-any.whl (206 kB)
+lint	UNKNOWN STEP	2026-10-11T23:24:59.9656404Z Downloading networkx-3.6.1-py3-none-any.whl (2.1 MB)
+lint	UNKNOWN STEP	2026-10-11T23:24:59.9927307Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 80.9 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-10-11T23:24:59.9973624Z Downloading setuptools-78.1.0-py3-none-any.whl (1.3 MB)
+lint	UNKNOWN STEP	2026-10-11T23:25:00.0073259Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 153.4 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-10-11T23:25:00.0109926Z Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+lint	UNKNOWN STEP	2026-10-11T23:25:00.0533002Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 159.2 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-10-11T23:25:00.0576794Z Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:00.0640819Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 72.2 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-10-11T23:25:00.0689244Z Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:00.0767231Z Downloading filelock-3.32.3-py3-none-any.whl (98 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:00.0833026Z Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:00.0898695Z Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:00.4682624Z Installing collected packages: mpmath, typing-extensions, sympy, setuptools, networkx, MarkupSafe, fsspec, filelock, jinja2, torch
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1019886Z 
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1038183Z Successfully installed MarkupSafe-3.0.3 filelock-3.32.3 fsspec-2026.7.0 jinja2-3.1.6 mpmath-1.3.0 networkx-3.6.1 setuptools-78.1.0 sympy-1.14.0 torch-2.13.0+cpu typing-extensions-4.16.0
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1840898Z ##[group]Run pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1841960Z ^[[36;1mpip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis^[[0m
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1908046Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1908300Z env:
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1908575Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1909031Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1909470Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1909870Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1910288Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1910686Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	UNKNOWN STEP	2026-10-11T23:25:22.1911022Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:25:23.5900319Z Collecting ruff
+lint	UNKNOWN STEP	2026-10-11T23:25:23.6388167Z   Downloading ruff-0.16.1-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (26 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:23.7662494Z Collecting mypy
+lint	UNKNOWN STEP	2026-10-11T23:25:23.7707317Z   Downloading mypy-2.3.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:23.7914081Z Collecting interrogate
+lint	UNKNOWN STEP	2026-10-11T23:25:23.7959850Z   Downloading interrogate-1.7.0-py3-none-any.whl.metadata (37 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.1312661Z Collecting hypothesis
+lint	UNKNOWN STEP	2026-10-11T23:25:24.1365136Z   Downloading hypothesis-6.165.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.7 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.1617680Z Collecting bandit[toml]
+lint	UNKNOWN STEP	2026-10-11T23:25:24.1657458Z   Downloading bandit-1.9.4-py3-none-any.whl.metadata (7.1 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.1720242Z Requirement already satisfied: typing_extensions>=4.6.0 in /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages (from mypy) (4.16.0)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.1858656Z Collecting mypy_extensions>=1.0.0 (from mypy)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.1894268Z   Downloading mypy_extensions-1.1.0-py3-none-any.whl.metadata (1.1 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.2079075Z Collecting pathspec>=1.0.0 (from mypy)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.2117728Z   Downloading pathspec-1.1.1-py3-none-any.whl.metadata (14 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.3560558Z Collecting librt>=0.13.0 (from mypy)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.3601236Z   Downloading librt-0.16.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (1.3 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.4150120Z Collecting ast-serialize<1.0.0,>=0.6.0 (from mypy)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.4186480Z   Downloading ast_serialize-0.12.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.4 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.4409896Z Collecting attrs (from interrogate)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.4495081Z   Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.4719838Z Collecting click>=7.1 (from interrogate)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.4756050Z   Downloading click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.4959525Z Collecting colorama (from interrogate)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.4997306Z   Downloading colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.5216333Z Collecting py (from interrogate)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.5254278Z   Downloading py-1.11.0-py2.py3-none-any.whl.metadata (2.8 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.5429671Z Collecting tabulate (from interrogate)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.5468451Z   Downloading tabulate-0.10.0-py3-none-any.whl.metadata (40 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.5927845Z Collecting PyYAML>=5.3.1 (from bandit[toml])
+lint	UNKNOWN STEP	2026-10-11T23:25:24.5962062Z   Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.6210272Z Collecting stevedore>=1.20.0 (from bandit[toml])
+lint	UNKNOWN STEP	2026-10-11T23:25:24.6245448Z   Downloading stevedore-5.9.1-py3-none-any.whl.metadata (2.3 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.6662729Z Collecting rich (from bandit[toml])
+lint	UNKNOWN STEP	2026-10-11T23:25:24.6699722Z   Downloading rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.6916767Z Collecting sortedcontainers<3.0.0,>=2.1.0 (from hypothesis)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.6950692Z   Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl.metadata (10 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.7198788Z Collecting markdown-it-py>=2.2.0 (from rich->bandit[toml])
+lint	UNKNOWN STEP	2026-10-11T23:25:24.7240150Z   Downloading markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.7506824Z Collecting pygments<3.0.0,>=2.13.0 (from rich->bandit[toml])
+lint	UNKNOWN STEP	2026-10-11T23:25:24.7544771Z   Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.7722321Z Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich->bandit[toml])
+lint	UNKNOWN STEP	2026-10-11T23:25:24.7758192Z   Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.7836560Z Downloading ruff-0.16.1-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.5 MB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.8725736Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.5/11.5 MB 137.9 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-10-11T23:25:24.8769992Z Downloading mypy-2.3.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (15.3 MB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.9676115Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.3/15.3 MB 173.6 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-10-11T23:25:24.9710839Z Downloading ast_serialize-0.12.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.3 MB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.9778009Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 230.2 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-10-11T23:25:24.9813603Z Downloading interrogate-1.7.0-py3-none-any.whl (46 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.9868072Z Downloading bandit-1.9.4-py3-none-any.whl (134 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:24.9924260Z Downloading hypothesis-6.165.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.2 MB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0011988Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 186.2 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0074321Z Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl (29 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0131587Z Downloading click-8.5.0-py3-none-any.whl (125 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0188681Z Downloading librt-0.16.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (531 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0237193Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 532.0/532.0 kB 104.1 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0269815Z Downloading mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0323691Z Downloading pathspec-1.1.1-py3-none-any.whl (57 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0374910Z Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0433917Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.9/807.9 kB 165.1 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0467898Z Downloading stevedore-5.9.1-py3-none-any.whl (54 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0518348Z Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0578178Z Downloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0630004Z Downloading py-1.11.0-py2.py3-none-any.whl (98 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0683643Z Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0746615Z Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0813879Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 230.5 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0852421Z Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0909559Z Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.0961470Z Downloading tabulate-0.10.0-py3-none-any.whl (39 kB)
+lint	UNKNOWN STEP	2026-10-11T23:25:25.2555357Z Installing collected packages: sortedcontainers, tabulate, stevedore, ruff, PyYAML, pygments, py, pathspec, mypy_extensions, mdurl, librt, hypothesis, colorama, click, attrs, ast-serialize, mypy, markdown-it-py, interrogate, rich, bandit
+lint	UNKNOWN STEP	2026-10-11T23:25:28.8740597Z 
+lint	UNKNOWN STEP	2026-10-11T23:25:28.8773888Z Successfully installed PyYAML-6.0.3 ast-serialize-0.12.1 attrs-26.1.0 bandit-1.9.4 click-8.5.0 colorama-0.4.6 hypothesis-6.165.2 interrogate-1.7.0 librt-0.16.0 markdown-it-py-4.2.0 mdurl-0.1.2 mypy-2.3.0 mypy_extensions-1.1.0 pathspec-1.1.1 py-1.11.0 pygments-2.21.0 rich-15.0.0 ruff-0.16.1 sortedcontainers-2.4.0 stevedore-5.9.1 tabulate-0.10.0
+lint	UNKNOWN STEP	2026-10-11T23:25:28.9744252Z ##[group]Run ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/
+lint	UNKNOWN STEP	2026-10-11T23:25:28.9744826Z ^[[36;1mruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/^[[0m
+lint	UNKNOWN STEP	2026-10-11T23:25:28.9807414Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-10-11T23:25:28.9807665Z env:
+lint	UNKNOWN STEP	2026-10-11T23:25:28.9807932Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:28.9808381Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	UNKNOWN STEP	2026-10-11T23:25:28.9808819Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:28.9809212Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:28.9809613Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:28.9810004Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	UNKNOWN STEP	2026-10-11T23:25:28.9810334Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:25:29.0889804Z All checks passed!
+lint	UNKNOWN STEP	2026-10-11T23:25:29.0942348Z ##[group]Run ruff format --check python/ tests/ benchmarks/ tools/
+lint	UNKNOWN STEP	2026-10-11T23:25:29.0942882Z ^[[36;1mruff format --check python/ tests/ benchmarks/ tools/^[[0m
+lint	UNKNOWN STEP	2026-10-11T23:25:29.1009316Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-10-11T23:25:29.1009572Z env:
+lint	UNKNOWN STEP	2026-10-11T23:25:29.1009843Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:29.1010296Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	UNKNOWN STEP	2026-10-11T23:25:29.1010735Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:29.1011166Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:29.1011871Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:29.1012325Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	UNKNOWN STEP	2026-10-11T23:25:29.1012656Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:25:29.1937599Z 318 files already formatted
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2008739Z ##[group]Run ruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2009467Z ^[[36;1mruff format --check DOCS/experiments/ --config 'include = ["*.py", "*.pyi", "*.ipynb"]'^[[0m
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2075616Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2075873Z env:
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2076146Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2076608Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2077051Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2077448Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2077836Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2078408Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2078735Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2321410Z 2 files already formatted
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2360775Z ##[group]Run mypy python/prin --strict
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2361117Z ^[[36;1mmypy python/prin --strict^[[0m
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2423768Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2424028Z env:
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2424303Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2424757Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2425200Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2425605Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2426016Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2426416Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	UNKNOWN STEP	2026-10-11T23:25:29.2426747Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:25:50.5420959Z Success: no issues found in 62 source files
+lint	UNKNOWN STEP	2026-10-11T23:25:50.5902374Z ##[group]Run mypy DOCS/experiments/ --strict
+lint	UNKNOWN STEP	2026-10-11T23:25:50.5902769Z ^[[36;1mmypy DOCS/experiments/ --strict^[[0m
+lint	UNKNOWN STEP	2026-10-11T23:25:50.5965979Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-10-11T23:25:50.5966231Z env:
+lint	UNKNOWN STEP	2026-10-11T23:25:50.5966501Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:50.5966961Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib/pkgconfig
+lint	UNKNOWN STEP	2026-10-11T23:25:50.5967454Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:50.5967849Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:50.5968243Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.15/x64
+lint	UNKNOWN STEP	2026-10-11T23:25:50.5968635Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.15/x64/lib
+lint	UNKNOWN STEP	2026-10-11T23:25:50.5968960Z ##[endgroup]
+lint	UNKNOWN STEP	2026-10-11T23:25:51.5563897Z benchmarks/campaign/exp001_driver.py:1230: error: Returning Any from function declared to return "bool"  [no-any-return]
+lint	UNKNOWN STEP	2026-10-11T23:25:51.7967320Z Found 1 error in 1 file (checked 2 source files)
+lint	UNKNOWN STEP	2026-10-11T23:25:51.8107855Z ##[error]Process completed with exit code 1.
+lint	UNKNOWN STEP	2026-10-11T23:25:51.8258328Z Post job cleanup.
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9134386Z [command]/usr/bin/git version
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9182409Z git version 2.55.0
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9227559Z Temporarily overriding HOME='/home/runner/work/_temp/d0a1ddb5-3dcf-4b89-9e2d-d537bd1444cb' before making global git config changes
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9228951Z Adding repository directory to the temporary git global config as a safe directory
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9233856Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/PRIN/PRIN
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9274354Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9311396Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9575736Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9605765Z http.https://github.com/.extraheader
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9617516Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9656333Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9950716Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+lint	UNKNOWN STEP	2026-10-11T23:25:51.9991525Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+lint	UNKNOWN STEP	2026-10-11T23:25:52.0394084Z Cleaning up orphan processes
+lint	UNKNOWN STEP	2026-10-11T23:25:52.0697737Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

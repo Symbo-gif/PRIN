@@ -1,0 +1,9 @@
+PASS  environment identical on all five legs (hardware, OS, interpreter, backend, dtype, SHA)  [legs=['api', 'conclusions', 'prin', 'reference', 'repeatability']]
+PASS  source/protocol/input identity identical on all five legs  [legs=['api', 'conclusions', 'prin', 'reference', 'repeatability']]
+PASS  config identical on all five legs apart from out_dir  [legs=['api', 'conclusions', 'prin', 'reference', 'repeatability']]
+PASS  seed pair (counter,key) == (0,2) on all five legs  [legs=['api', 'conclusions', 'prin', 'reference', 'repeatability']]
+PASS  seed pair value
+PASS  renderer / font-stack capture identical on the three publication legs (reference, prin, repeatability)  [legs=['prin', 'reference', 'repeatability']]
+PASS  five distinct run directories  [RUN-20261012T212705Z-fae24c4-api-cpu, RUN-20261012T213054Z-fae24c4-conclusions-cpu, RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu, RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu, RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu]
+PASS  run UTC stamps strictly increase in registered order  [20261012T212705Z, 20261012T213054Z, 20261012T213821Z, 20261012T213936Z, 20261012T214040Z]
+SUMMARY: 0 failed

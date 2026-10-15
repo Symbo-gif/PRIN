@@ -1,0 +1,4 @@
+2026-10-15T07:22:27Z
+devin --model swe-2-high --respect-workspace-trust false -p <cold-review-task-acceptance.md>
+devin exit=1
+2026-10-15T07:22:32Z

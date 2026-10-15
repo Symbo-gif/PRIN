@@ -1,0 +1,23 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe -m pytest tests/test_0160_manifest.py tests/test_0159_manifest.py tests/test_ea007_manifest.py -p no:cacheprovider --basetemp=.pytest_basetemp -q
+CWD: C:/dev/PRIN
+SOURCE: staged final bundle after packaging the gate logs and force-adding the ignored *.log files
+UTC-START: 2026-10-12T10:16:02Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 28 items
+
+tests\test_0160_manifest.py .....                                        [ 17%]
+tests\test_0159_manifest.py ....................                         [ 89%]
+tests\test_ea007_manifest.py ...                                         [100%]
+
+============================= 28 passed in 3.25s ==============================
+----
+ELAPSED_SECONDS: 10.6
+EXIT_CODE: 0

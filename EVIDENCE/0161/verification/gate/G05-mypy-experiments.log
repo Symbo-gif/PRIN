@@ -1,0 +1,11 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/mypy.exe DOCS/experiments/ --strict
+CWD: C:/dev/PRIN
+SOURCE: working tree: 92cf696 (fae24c4 + .gitattributes rule) + staged session-0161 changes (E3 records, raw run records, evidence), candidate corrected after the G10fa trailing-space finding; gate run 3 from Git Bash (bash on PATH is Git's, as in 0159/0160), host otherwise idle
+UTC-START: 2026-10-12T22:16:16Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+Success: no issues found in 2 source files
+----
+ELAPSED_SECONDS: 10.6
+EXIT_CODE: 0

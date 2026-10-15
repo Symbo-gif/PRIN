@@ -1,0 +1,35 @@
+COMMAND: .venv/Scripts/python -m pytest tests/test_0159_manifest.py -v --basetemp=.pytest_basetemp
+SOURCE: 63145325c01fd837fd55e2796ea0fa34aa7eb234 + working diff (REQUIRED_BUNDLE +14 final-6314532 names; test SHA in 08b attestation)
+UTC-START: 2026-10-11T16:26:19Z
+HOST: HP
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 17 items
+
+tests/test_0159_manifest.py::TestRealBundle::test_required_files_present_with_exact_case PASSED [  5%]
+tests/test_0159_manifest.py::TestRealBundle::test_manifest_entries_cover_required_files PASSED [ 11%]
+tests/test_0159_manifest.py::TestRealBundle::test_every_manifest_entry_matches_the_committed_bytes PASSED [ 17%]
+tests/test_0159_manifest.py::TestRealBundle::test_manifest_covers_every_evidence_file PASSED [ 23%]
+tests/test_0159_manifest.py::TestRealBundle::test_every_hashed_evidence_file_is_tracked_by_git PASSED [ 29%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_changed_bytes_fail PASSED [ 35%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_omitted_file_fails PASSED [ 41%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_wrong_case_fails PASSED [ 47%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_malformed_manifest_lines_fail[malformed] PASSED [ 52%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_malformed_manifest_lines_fail[absolute] PASSED [ 58%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_malformed_manifest_lines_fail[escaping] PASSED [ 64%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_malformed_manifest_lines_fail[windows-separator] PASSED [ 70%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_duplicate_entry_fails PASSED [ 76%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_parent_relative_entry_reaches_top_level PASSED [ 82%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_missing_file_fails PASSED [ 88%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_unhashed_narrative_absent_fails PASSED [ 94%]
+tests/test_0159_manifest.py::TestControlledNegatives::test_hashed_but_untracked_log_fails PASSED [100%]
+
+============================= 17 passed in 4.03s ==============================
+EXIT_CODE: 0
+UTC-END: 2026-10-11T16:26:29Z

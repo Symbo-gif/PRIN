@@ -1,0 +1,12 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe tools/wp001_baseline.py check
+CWD: C:/dev/PRIN
+SOURCE: Phase-A candidate: HEAD 7d850ba (STEP 0) + staged exp002_e4_analysis.py and tests/test_exp002_e4_analysis.py
+HEAD: 7d850babf173c9987fbb34d80af9e4be8238b304
+UTC-START: 2026-10-13T12:28:02Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+WP-001 baseline validation passed.
+----
+UTC-END: 2026-10-13T12:28:16Z
+ELAPSED_S: 10
+EXIT_CODE: 0

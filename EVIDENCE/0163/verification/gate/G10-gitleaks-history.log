@@ -1,0 +1,14 @@
+COMMAND: C:/dev/PRIN/DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git C:/dev/PRIN --redact --no-banner --report-format json --report-path C:/Users/there/AppData/Local/Temp/prin-0163-gate/gitleaks-history.json
+CWD: C:/dev/PRIN
+SOURCE: 79a91a6 + staged session-0163 E5 report, D1 briefs, Parity Report erratum, and EVIDENCE/0163
+HEAD: 79a91a60d1f27be64317083d94003381f1ac19d6
+UTC-START: 2026-10-14T21:08:59Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+[90m6:09PM[0m [32mINF[0m [1m727 commits scanned.[0m
+[90m6:09PM[0m [32mINF[0m [1mscanned ~94116596 bytes (94.12 MB) in 21.2s[0m
+[90m6:09PM[0m [32mINF[0m [1mno leaks found[0m
+----
+UTC-END: 2026-10-14T21:09:23Z
+ELAPSED_S: 24
+EXIT_CODE: 0

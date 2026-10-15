@@ -1,0 +1,13 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe tools/check_dv_register_gates.py
+CWD: C:/dev/PRIN
+SOURCE: Final candidate: HEAD 42f0eb3 + staged E4 records, docs and EVIDENCE/0162 (product/test/Rust trees identical to the Phase-A commit 3731fc2)
+HEAD: 42f0eb3ea0b580e7c41a8fa9d7ae9679166df2ca
+UTC-START: 2026-10-13T17:10:38Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+DV-register gate check passed.
+  Checked 44 DV register rows against 198 session-register entries.
+----
+UTC-END: 2026-10-13T17:10:56Z
+ELAPSED_S: 18
+EXIT_CODE: 0

@@ -35,6 +35,11 @@ E1 Pre-registration ──► E2 Review/approval ──► E3 Execution ──�
         (frozen)            (maintainer)          (logged)        (per plan)      (archived)
 ```
 
+Validation-run supervision at every stage follows Testing Standards §7
+(Project Plan §8.3, amendment #49): no arbitrary whole-run wall-clock kill while a run is
+demonstrably progressing. Pre-registered resource budgets, abort criteria,
+and statistical parameters (E1 items 5 and 10) are unchanged by it.
+
 ### E1 — Pre-registration
 
 Create `DOCS/experiments/EXP-NNN-<slug>/preregistration.md` from

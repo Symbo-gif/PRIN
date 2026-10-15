@@ -1,0 +1,97 @@
+bench-regression	Compare against baseline (>10% mean regression fails)	﻿2026-10-12T12:26:16.4907513Z ##[group]Run set -euo pipefail
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.4907908Z ^[[36;1mset -euo pipefail^[[0m
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.4908401Z ^[[36;1marms/candidate/.venv/bin/python arms/candidate/tools/check_bench_regression.py \^[[0m
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.4909088Z ^[[36;1m  --reference "$EVIDENCE_DIR/reference-1" "$EVIDENCE_DIR/reference-2" \^[[0m
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.4909720Z ^[[36;1m  --candidate "$EVIDENCE_DIR/candidate-1" "$EVIDENCE_DIR/candidate-2" \^[[0m
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.4910293Z ^[[36;1m  --advisory criterion/control_buffer_read_under_contention/ \^[[0m
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.4910818Z ^[[36;1m  --threshold 0.10 2>&1 | tee "$EVIDENCE_DIR/comparison.txt"^[[0m
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5061720Z shell: /usr/bin/bash -e {0}
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5062137Z env:
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5062466Z   REFERENCE_SHA: 4590d611f34eae5dfcdadb99b562aacf998d6e94
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5062888Z   RUSTUP_TOOLCHAIN: 1.98.1
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5063389Z   PIP_CONSTRAINT: /home/runner/work/PRIN/PRIN/arms/candidate/ci/docs-constraints.txt
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5064214Z   EVIDENCE_DIR: /home/runner/work/PRIN/PRIN/benchmarks/results/nightly-38238913518-1
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5065011Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5065746Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5066289Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5066761Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5067233Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5067709Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5068292Z   CARGO_HOME: /home/runner/.cargo
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5068601Z   CARGO_INCREMENTAL: 0
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5068867Z   CARGO_TERM_COLOR: always
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5069140Z   CACHE_ON_FAILURE: false
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.5069414Z ##[endgroup]
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7363828Z Benchmark regression check FAILED (threshold +10% mean runtime):
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7365100Z   - criterion/engine_step/derivatives_serial/256: 2.664e+04 -> 2.947e+04 (+10.7%)
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7366251Z   1.002  8.785 -> 8.801  criterion/control_buffer_read_under_contention/lock_free/0  ADVISORY
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7367309Z   0.911  100.5 -> 91.59  criterion/control_buffer_read_under_contention/lock_free/1  ADVISORY
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7368323Z   0.969  45.72 -> 44.3  criterion/control_buffer_read_under_contention/lock_free/4  ADVISORY
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7369308Z   1.000  5.719 -> 5.721  criterion/control_buffer_read_under_contention/mutex/0  ADVISORY
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7370228Z   1.131  73.57 -> 83.21  criterion/control_buffer_read_under_contention/mutex/1  ADVISORY
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7371146Z   1.084  123.4 -> 133.8  criterion/control_buffer_read_under_contention/mutex/4  ADVISORY
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7372098Z   0.999  2.946e+06 -> 2.942e+06  criterion/discrete_step_3band/fused_cpu_native
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7372936Z   1.006  1.144e+07 -> 1.151e+07  criterion/discrete_step_3band/unfused_cpu_native
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7373782Z   1.006  3.969e+07 -> 3.992e+07  criterion/engine_step/derivatives_parallel/1000000
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7374824Z   1.004  5.104e+04 -> 5.125e+04  criterion/engine_step/derivatives_parallel/1024
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7375689Z   1.006  1.155e+06 -> 1.163e+06  criterion/engine_step/derivatives_parallel/16384
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7376538Z   0.998  1.384e+04 -> 1.382e+04  criterion/engine_step/derivatives_parallel/256
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7377414Z   1.008  9.846e+06 -> 9.92e+06  criterion/engine_step/derivatives_parallel/262144
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7378267Z   0.998  2.025e+05 -> 2.022e+05  criterion/engine_step/derivatives_parallel/4096
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7379109Z   0.976  2.573e+06 -> 2.512e+06  criterion/engine_step/derivatives_parallel/65536
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7379974Z   1.004  8.577e+07 -> 8.614e+07  criterion/engine_step/derivatives_serial/1000000
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7380820Z   1.005  6.801e+04 -> 6.833e+04  criterion/engine_step/derivatives_serial/1024
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7381657Z   1.001  1.196e+06 -> 1.197e+06  criterion/engine_step/derivatives_serial/16384
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7382856Z   1.107  2.664e+04 -> 2.947e+04  criterion/engine_step/derivatives_serial/256
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7383759Z   1.012  2.015e+07 -> 2.039e+07  criterion/engine_step/derivatives_serial/262144
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7384855Z   1.000  2.242e+05 -> 2.242e+05  criterion/engine_step/derivatives_serial/4096
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7385769Z   0.998  5.032e+06 -> 5.024e+06  criterion/engine_step/derivatives_serial/65536
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7386608Z   1.022  2.139e+08 -> 2.186e+08  criterion/engine_step/step_parallel/1000000
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7387388Z   1.025  2.45e+05 -> 2.512e+05  criterion/engine_step/step_parallel/1024
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7388191Z   1.041  4.126e+06 -> 4.294e+06  criterion/engine_step/step_parallel/16384
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7389023Z   1.033  6.371e+04 -> 6.579e+04  criterion/engine_step/step_parallel/256
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7389882Z   1.030  5.033e+07 -> 5.182e+07  criterion/engine_step/step_parallel/262144
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7390758Z   1.016  9.894e+05 -> 1.005e+06  criterion/engine_step/step_parallel/4096
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7391593Z   1.043  1.223e+07 -> 1.276e+07  criterion/engine_step/step_parallel/65536
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7392678Z   0.998  1.3e+08 -> 1.297e+08  criterion/mean_field_rk4_n1m/cpu_native
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7393577Z   0.991  4.081e+06 -> 4.046e+06  criterion/phase_tracker_bridge_baseline/moderate_32obj_28osc
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7394847Z   0.996  1.755e+06 -> 1.747e+06  criterion/phase_tracker_bridge_baseline/small_4obj_28osc
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7396213Z   1.087  5.411e+08 -> 5.883e+08  criterion/resonance_layer_bridge_baseline/moderate_128osc_64dims_32batch
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7397444Z   1.030  1.153e+07 -> 1.188e+07  criterion/resonance_layer_bridge_baseline/small_32osc_16dims_8batch
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7398563Z   1.000  2.305e+06 -> 2.306e+06  criterion/sparse_knn_n16k_k14/cpu_native
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7399517Z   0.987  4.02e+07 -> 3.966e+07  criterion/spmv_coupling/kuramoto_coupling_parallel/1000000
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7400594Z   1.004  4.464e+04 -> 4.481e+04  criterion/spmv_coupling/kuramoto_coupling_parallel/1024
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7401670Z   1.000  7.164e+05 -> 7.163e+05  criterion/spmv_coupling/kuramoto_coupling_parallel/16384
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7402690Z   1.004  1.162e+04 -> 1.167e+04  criterion/spmv_coupling/kuramoto_coupling_parallel/256
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7403711Z   0.999  6.897e+06 -> 6.893e+06  criterion/spmv_coupling/kuramoto_coupling_parallel/262144
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7404913Z   1.005  1.78e+05 -> 1.79e+05  criterion/spmv_coupling/kuramoto_coupling_parallel/4096
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7405954Z   0.998  1.755e+06 -> 1.752e+06  criterion/spmv_coupling/kuramoto_coupling_parallel/65536
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7406863Z   0.997  5.885e+07 -> 5.87e+07  criterion/spmv_coupling/kuramoto_coupling_serial/1000000
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7407811Z   1.038  5.95e+04 -> 6.177e+04  criterion/spmv_coupling/kuramoto_coupling_serial/1024
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7408818Z   1.013  7.319e+05 -> 7.413e+05  criterion/spmv_coupling/kuramoto_coupling_serial/16384
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7409820Z   1.046  2.516e+04 -> 2.632e+04  criterion/spmv_coupling/kuramoto_coupling_serial/256
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7410818Z   1.014  1.271e+07 -> 1.289e+07  criterion/spmv_coupling/kuramoto_coupling_serial/262144
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7411804Z   0.996  1.965e+05 -> 1.958e+05  criterion/spmv_coupling/kuramoto_coupling_serial/4096
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7412879Z   0.997  3.067e+06 -> 3.057e+06  criterion/spmv_coupling/kuramoto_coupling_serial/65536
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7413852Z   1.034  2.149e+09 -> 2.223e+09  criterion/sweep_parallel/run_sweep_parallel/16_configs
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7415056Z   1.020  4.226e+09 -> 4.309e+09  criterion/sweep_parallel/run_sweep_parallel/32_configs
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7416076Z   1.083  5.374e+08 -> 5.822e+08  criterion/sweep_parallel/run_sweep_parallel/4_configs
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7417071Z   1.024  8.177e+09 -> 8.369e+09  criterion/sweep_parallel/run_sweep_parallel/64_configs
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7418057Z   1.033  1.092e+09 -> 1.128e+09  criterion/sweep_parallel/run_sweep_parallel/8_configs
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7419347Z   0.998  5.181e+09 -> 5.171e+09  criterion/sweep_parallel/run_sweep_serial/16_configs
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7420336Z   1.010  9.995e+09 -> 1.01e+10  criterion/sweep_parallel/run_sweep_serial/32_configs
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7421290Z   0.996  1.338e+09 -> 1.333e+09  criterion/sweep_parallel/run_sweep_serial/4_configs
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7422225Z   1.026  1.953e+10 -> 2.004e+10  criterion/sweep_parallel/run_sweep_serial/64_configs
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7423172Z   0.993  2.714e+09 -> 2.696e+09  criterion/sweep_parallel/run_sweep_serial/8_configs
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7424065Z   1.010  630 -> 636.3  criterion/training_hooks_on_epoch_end
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7425086Z   0.983  7.763 -> 7.634  criterion/training_hooks_on_step_end/0
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7425901Z   1.002  46.25 -> 46.33  criterion/training_hooks_on_step_end/64
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7426681Z   1.055  12.51 -> 13.2  criterion/training_hooks_on_step_end/8
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7427902Z   1.016  3.557e-05 -> 3.614e-05  pytest/tests/test_dlpack_bridge.py::TestDlpackBenchmarks::test_negate_batched_latency[float32]
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7429495Z   0.921  4.442e-05 -> 4.093e-05  pytest/tests/test_dlpack_bridge.py::TestDlpackBenchmarks::test_negate_batched_latency[float64]
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7431305Z   1.012  6.039e-06 -> 6.108e-06  pytest/tests/test_dlpack_bridge.py::TestDlpackBenchmarks::test_negate_round_trip_latency[float32]
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7432838Z   0.977  8.359e-06 -> 8.169e-06  pytest/tests/test_dlpack_bridge.py::TestDlpackBenchmarks::test_negate_round_trip_latency[float64]
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7434571Z   0.985  0.599 -> 0.5902  pytest/tests/test_train_bridge.py::TestTrainBridgeBenchmarks::test_resonance_layer_forward_backward_round_trip_latency_moderate
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7436737Z   1.020  0.0124 -> 0.01265  pytest/tests/test_train_bridge.py::TestTrainBridgeBenchmarks::test_resonance_layer_forward_backward_round_trip_latency_small
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7438363Z ADVISORY (not gating) past threshold: criterion/control_buffer_read_under_contention/mutex/1: 73.57 -> 83.21 (+13.1%)
+bench-regression	Compare against baseline (>10% mean regression fails)	2026-10-12T12:26:16.7517024Z ##[error]Process completed with exit code 1.

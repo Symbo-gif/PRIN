@@ -1,0 +1,49 @@
+I'll read the named files for this read-only audit.Now I'll read the remaining named records.Now the two record files — reading the relevant sections (end of §7 in e2-review.md and end of §12 in the audit).I have the diff, the code, and all four records. To check the test branch claims properly, I'll read the named test file's relevant portion and the exclusion constants in the same named tool file.Let me get exact line numbers for the new tests.All named files reviewed. Report follows.
+
+---
+
+# Cold self-audit round 3 — git-scoped WP-001 inventory
+
+Scope read: `delta-code-r3.diff`, `tools/wp001_baseline.py:1000-1140`, `tests/test_wp001_baseline.py:380-510` (named in the task context), `e2-review.md` §7 end (lines 118-169), `PR033-multi-review-audit.md` §12 end (lines 376-429), `CHANGELOG.md` first Fixed bullet (lines 356-369), `EVIDENCE/0160/README.md`.
+
+## Findings
+
+**1. Medium — the inventory now depends on per-user git configuration.**
+`tools/wp001_baseline.py:1049-1059` runs `git ls-files --others --exclude-standard`. `--exclude-standard` honors `.gitignore` **plus** `.git/info/exclude` and the user-global `core.excludesFile` (`~/.config/git/ignore`). Neither auxiliary file is versioned. Failure scenario: the maintainer's global excludes match `.env*` or a scratch pattern; a fresh clone or another machine without that file lists extra `--others` entries → `active_repository.file_count`/`files_by_*` differ across hosts for the same checkout. The records describe the inventory as deterministic project state; it is deterministic only per-machine now. The walk path had no such variance.
+
+**2. Medium — git path and walk path disagree on symlinks and embedded repositories.**
+`tools/wp001_baseline.py:1082` adds `path.is_symlink()` to the git path only; the walk path (`:1099-1102`) appends file symlinks unconditionally and `_file_inventory` `stat()`s through them (`:1116`). A submodule gitlink (`--cached`, mode 160000) and an untracked embedded repo both produce no file entries — `is_file()` at `:1083` is False for the directory — while the walk path descends and counts their contents. Failure scenario: the repo gains a checked-out submodule or a `.git`-bearing tool directory that is not git-ignored → git-enabled hosts silently stop counting those files while git-less hosts keep counting them. Same tree, different inventory depending on where the gate runs.
+
+**3. Low — uncaught `ValueError` in the git branch escapes the "fail → walk" contract.**
+`tools/wp001_baseline.py:1047` `Path(toplevel).resolve()` raises `ValueError` on an embedded NUL; `:1077` `path.relative_to(root)` raises `ValueError` if `git` ever emits an absolute or `..` name. The `except` at `:1065` covers `OSError`, `SubprocessError`, `UnicodeDecodeError` only. Scenario: a `git` shim/wrapper ahead of the real one on PATH emits a malformed or absolute path → `collect_repository_inventory` raises instead of degrading to the walk, despite the function's stated design of total fallback.
+
+**4. Low — asymmetric decoding silently disables the mitigation.**
+`rev-parse` uses `text=True` (`:1038-1044`, locale encoding — e.g. cp1252 on this host); `ls-files` output is decoded UTF-8 (`:1064`). A repo root with non-ASCII characters decodes to mojibake → toplevel mismatch → silent fallback to the full ~110k-file walk — precisely the code path that crashed — with no signal that the mitigation was skipped. Same effect from a single non-UTF-8 tracked filename. Graceful, but invisible.
+
+**5. Low — subprocess hygiene nits.** `tools/wp001_baseline.py:1038-1063`.
+`stdin` is inherited on both calls: a `git` wrapper that prompts blocks until the 60/120 s timeout instead of failing fast (`stdin=subprocess.DEVNULL` would close this). The hard 120 s `ls-files` ceiling means a sufficiently large tree abandons the fast path for the very walk it exists to avoid — graceful but self-defeating at scale. argv/no-shell/`check=True`/`capture_output`/absolute executable from `shutil.which` are otherwise sound.
+
+**6. Low — scratch-repo tests are ambient-config sensitive.**
+`tests/test_wp001_baseline.py:394-404` runs real `git init`/`git add` with no config isolation (`GIT_CONFIG_NOSYSTEM`, `-c core.excludesFile=`). The `skipif` at `:411` only checks `shutil.which`. A user-global `core.excludesFile` matching `.gitignore`/`*.py`, or an `init.templateDir` hook, breaks `test_inventory_skips_git_ignored_scratch` (`:412`) and `test_inventory_skips_deleted_tracked_files` (`:436`) on an affected machine. Environment-dependent, not currently flaky here.
+
+**7. Low — git-path filters are never exercised; monkeypatching mutates global modules.**
+No test pushes a symlink, a `_EXCLUDED_FILES` name, a `.coverage.*` name, or a file inside a `_EXCLUDED_DIRECTORIES` directory through the git branch (`:1078-1084`); those filters are exercised only on the walk branch (`test_inventory_walks_without_git`, `:445`). Also `monkeypatch.setattr(wp001_baseline.subprocess, "run", ...)` at `:475` and the same pattern at `:489` patch the *global* `subprocess`/`shutil` modules — any other in-process caller during those tests sees the mock.
+
+## Branch coverage check (question 3)
+
+Confirmed exercised: success path (`:412`), toplevel-mismatch → walk (`:425`), deleted-but-tracked via `not is_file()` (`:436`), `executable is None` (`:445`), the three `except` error classes (`:460-477`), `UnicodeDecodeError` (`:480-491`). The end-to-end determinism test (`:494-510`) exercises the git path on the real repo — including the EVIDENCE exclusion — whenever the suite runs inside a work tree; it pins no `active_repository` count, so the ~110,800→~4,500 shift cannot break it.
+
+## Honesty of the records (question 4)
+
+No overclaim found. `e2-review.md:163` "the native root cause is **not proven**", `:168-169` "This narrows the code path that crashed. It does not prove the crash is gone." `PR033-multi-review-audit.md:424-429` mirrors this ("the root cause is still open"). `CHANGELOG.md:366` "The crash has no reproduced root cause." `EVIDENCE/0160/README.md:35-36` "native root cause not proven, mitigated by the git-scoped inventory." Consistent.
+
+One unverifiable citation: the docstring (`tools/wp001_baseline.py:1030`) attributes the determinism break to "EVIDENCE/0159 leg 09c" while the named records cite leg "09" only for the crash; leg "09c" cannot be confirmed from the named files.
+
+## EXP-002 protocol/driver/registered inputs (question 5)
+
+None altered. The diff touches only `tools/wp001_baseline.py` and `tests/test_wp001_baseline.py`; no protocol, driver, or registered input is modified. The disclosed consequence — `active_repository` counts cover git-visible files only — is recorded in the docstring (`:1131-1136`), CHANGELOG (`:367-369`), and both review records.
+
+## Summary
+
+No High findings. Two Medium (per-user git-config variance; git/walk divergence on symlinks and embedded repos), five Low. The design is sound for this host — ASCII path, top-level checkout, no submodules — and every failure mode I found degrades toward the walk rather than corrupting output, except finding 3 which raises.
+devin exit 0

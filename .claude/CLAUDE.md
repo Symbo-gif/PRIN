@@ -26,6 +26,10 @@ commands/exit codes/SHA as evidence, and never describe local results as "CI
 green". Do not test or claim Linux/macOS behaviour. Do not re-enable workflows,
 restore required checks, or push `v*` tags unless the maintainer instructs it.
 See Development Workflow and Audit Standards §3 "Local-validation regime".
+Exception: Plan amendment #50 (2026-10-11) re-enables the seven workflows for
+the EXP-002 experiments only (sessions 0159–0163). Record hosted results
+verbatim as additional evidence, keep the local gate authoritative, and disable
+the workflows again when EXP-002 E5 closes or the maintainer says so.
 
 `DOCS/archive/` is historical and non-authoritative. Do not use retired
 VibeCheck state as current project truth and do not emit safety badges without

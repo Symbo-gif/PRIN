@@ -1,0 +1,25 @@
+COMMAND: .venv/Scripts/ruff.exe check --show-files python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/ | grep DOCS
+UTC: 2026-10-13T16:15:11Z  HEAD: 3731fc2590cf86bdb657fce25e4917d26567b23a
+C:\dev\PRIN\DOCS\experiments\EXP-001-golden-trajectory-numerical-parity\analysis\exp001_e4_analysis.py
+C:\dev\PRIN\DOCS\experiments\EXP-001-r1-golden-trajectory-numerical-parity\analysis\exp001_r1_e4_analysis.py
+C:\dev\PRIN\DOCS\experiments\EXP-002-api-benchmark-result-and-reproduction-parity\analysis\exp002_e4_analysis.py
+C:\dev\PRIN\tests\test_sphinx_docs.py
+--
+COMMAND: .venv/Scripts/ruff.exe format --check DOCS/experiments/ --config "include = ['*.py', '*.pyi', '*.ipynb']" -v (files formatted)
+3 files already formatted
+exit=0
+--
+COMMAND: .venv/Scripts/mypy.exe DOCS/experiments/ --strict -v (sources)
+LOG:  Found source:           BuildSource(path='DOCS\\experiments\\EXP-001-golden-trajectory-numerical-parity\\analysis\\exp001_e4_analysis.py', module='exp001_e4_analysis', has_text=False, base_dir='C:\\dev\\PRIN\\DOCS\\experiments\\EXP-001-golden-trajectory-numerical-parity\\analysis', followed=False)
+LOG:  Found source:           BuildSource(path='DOCS\\experiments\\EXP-001-r1-golden-trajectory-numerical-parity\\analysis\\exp001_r1_e4_analysis.py', module='exp001_r1_e4_analysis', has_text=False, base_dir='C:\\dev\\PRIN\\DOCS\\experiments\\EXP-001-r1-golden-trajectory-numerical-parity\\analysis', followed=False)
+LOG:  Found source:           BuildSource(path='DOCS\\experiments\\EXP-002-api-benchmark-result-and-reproduction-parity\\analysis\\exp002_e4_analysis.py', module='exp002_e4_analysis', has_text=False, base_dir='C:\\dev\\PRIN\\DOCS\\experiments\\EXP-002-api-benchmark-result-and-reproduction-parity\\analysis', followed=False)
+LOG:  Metadata fresh for exp001_e4_analysis: file DOCS\experiments\EXP-001-golden-trajectory-numerical-parity\analysis\exp001_e4_analysis.py
+LOG:  Metadata fresh for exp001_r1_e4_analysis: file DOCS\experiments\EXP-001-r1-golden-trajectory-numerical-parity\analysis\exp001_r1_e4_analysis.py
+Success: no issues found in 3 source files
+exit=0
+--
+COMMAND: .venv/Scripts/python.exe -m bandit -r DOCS/experiments -c pyproject.toml -f json  (per-file LOC)
+DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py 1226
+DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py 3422
+DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py 2940
+_totals loc 7588 issues 0

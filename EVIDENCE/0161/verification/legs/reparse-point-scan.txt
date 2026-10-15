@@ -1,0 +1,15 @@
+COMMAND: Get-ChildItem -LiteralPath <root> -Recurse -Force | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint }   (for each root below), plus the same test on every ancestor of each root up to the drive root
+CWD: C:/dev/PRIN
+SOURCE: HEAD e425971 (working tree clean); retained generated-output roots, raw record root and evidence bundle
+UTC-START: 2026-10-13T00:43:32Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PURPOSE: answer Devin round-2 item R2-01 for the real tree: a symlink or junction at or inside the retained roots, or above them, is invisible to validator rev3 checks F1/S1 (which test the generated root and its ancestors only)
+----
+benchmarks\results\EXP-002: 21 entries scanned (16 files, 5 directories); reparse points inside: 0; root itself reparse point: False
+   ancestors (including the root) that are reparse points: 0
+DOCS\test_and_benchmark_results\EXP-002: 996 entries scanned (977 files, 19 directories); reparse points inside: 0; root itself reparse point: False
+   ancestors (including the root) that are reparse points: 0
+EVIDENCE\0161: 130 entries scanned (122 files, 8 directories); reparse points inside: 0; root itself reparse point: False
+   ancestors (including the root) that are reparse points: 0
+----
+EXIT_CODE: 0

@@ -1,0 +1,23 @@
+COMMAND: .venv/Scripts/python -m pytest tests/test_wp001_baseline.py::test_repository_inventory_is_deterministic_and_separates_archive --basetemp=.pytest_basetemp -o faulthandler_timeout=300 (isolated diagnostic for 09c determinism failure)
+UTC-START: 2026-10-11T13:58:51Z
+HOST: HP (Microsoft Windows NT 10.0.26300.0)
+HEAD: 78590305e1c0a78d92153ef2a55a9e76aeb7af79
+WORKTREE: clean
+
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 1 item
+
+tests/test_wp001_baseline.py::test_repository_inventory_is_deterministic_and_separates_archive PASSED [100%]
+
+======================== 1 passed in 79.92s (0:01:19) =========================
+
+UTC-END: 2026-10-11T14:00:12Z
+ELAPSED-SECONDS: 81.4
+EXIT_CODE: 0

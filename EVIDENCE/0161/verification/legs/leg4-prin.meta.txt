@@ -1,0 +1,27 @@
+TAG=leg4-prin
+MODE=prin
+RUN_ID=RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu
+COMMAND=.venv\Scripts\python -m benchmarks.campaign.exp002_driver --mode prin --run-dir "benchmarks/results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu" --operator MichaelMaillet --source-sha fae24c4393c7a0232e6c8f0a6388b1775aa5fc05 --seed-counter 0 --seed-key 2
+UTC_START=2026-10-12T21:39:36.175Z
+UTC_END=2026-10-12T21:39:50.366Z
+EXIT_CODE=0
+WALL_SECONDS=14.172
+--- git status --porcelain=v1 --untracked-files=all (after the leg) ---
+?? DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md
+?? benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/api.json
+?? benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/campaign-metadata.json
+?? benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/manifest.json
+?? benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu/campaign-metadata.json
+?? benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu/conclusions.json
+?? benchmarks/results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu/manifest.json
+?? benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/campaign-metadata.json
+?? benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/manifest.json
+?? benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/reproduction.json
+?? benchmarks/results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/campaign-metadata.json
+?? benchmarks/results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/manifest.json
+?? benchmarks/results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu/reproduction.json
+--- run directory entries ---
+campaign-metadata.json  252 bytes
+manifest.json  563 bytes
+reproduction.json  59572 bytes
+DONE

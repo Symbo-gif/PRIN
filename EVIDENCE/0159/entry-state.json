@@ -1,0 +1,105 @@
+{
+  "kind": "frozen E1 entry observations, not experiment outcomes",
+  "captured_at_utc": "2026-10-11T11:32:04Z",
+  "captured_by": "Devin",
+  "session": "0159",
+  "stage": "E1",
+  "source_baseline": "da53ea11a3f38cd0d5c27c40bbefbeaf6d6dbf53",
+  "initial_checkout": {
+    "branch": "audit/ea007-exp002-readiness",
+    "head": "8b4d1803c050058c115e74258423f42414e994e2",
+    "worktree_clean": true,
+    "is_shallow_repository": false,
+    "local_main_stale": true
+  },
+  "session_branch": "campaign/0159-exp002-e1",
+  "attribute_commit": "85b779297be0642f5c64853c1590ef341e7ff77e",
+  "live_github_observations": {
+    "pr32": {
+      "state": "MERGED",
+      "merge_sha": "da53ea11a3f38cd0d5c27c40bbefbeaf6d6dbf53",
+      "merged_at": "2026-10-11T10:39:51Z",
+      "head_sha": "8b4d1803c050058c115e74258423f42414e994e2",
+      "published_inline_comments": 5,
+      "published_reviews": 4,
+      "published_issue_comments": 5,
+      "additional_published_findings_beyond_recorded_round": false,
+      "unpublished_devin_flag": "not reviewable; no published finding text",
+      "review_dispositions": {
+        "recorded_findings": 15,
+        "fixed": 14,
+        "declined_carried": "PR32-F13",
+        "subsequent_self_review": "PR032-multi-review-audit.md section 9"
+      }
+    },
+    "fetched_origin_main": "da53ea11a3f38cd0d5c27c40bbefbeaf6d6dbf53",
+    "later_main_commits_at_entry": 0,
+    "check_workflows": {
+      "rust": "disabled_manually",
+      "python": "disabled_manually",
+      "parity": "disabled_manually",
+      "repro": "disabled_manually",
+      "snyk": "disabled_manually",
+      "gpu": "disabled_manually",
+      "nightly": "disabled_manually"
+    },
+    "release_and_manual_gpu_triton": "active, unchanged; not dispatched",
+    "ruleset_22150076": {
+      "enforcement": "active",
+      "bypass_actors": [],
+      "rules": ["deletion", "non_fast_forward", "pull_request"],
+      "required_status_checks": false
+    },
+    "native_secret_scanning": "enabled",
+    "open_native_secret_alerts": [],
+    "native_push_protection": "disabled, standing external control flag"
+  },
+  "read_only_commands": [
+    "gh pr view 32 --repo Symbo-gif/PRIN --json number,title,state,mergedAt,mergeCommit,headRefName,headRefOid,baseRefName,updatedAt,reviewDecision,statusCheckRollup",
+    "gh api repos/Symbo-gif/PRIN/pulls/32/comments --paginate",
+    "gh api repos/Symbo-gif/PRIN/pulls/32/reviews --paginate",
+    "gh api repos/Symbo-gif/PRIN/issues/32/comments --paginate",
+    "gh api repos/Symbo-gif/PRIN/actions/workflows",
+    "gh api repos/Symbo-gif/PRIN/rulesets/22150076",
+    "gh api repos/Symbo-gif/PRIN",
+    "gh api 'repos/Symbo-gif/PRIN/secret-scanning/alerts?state=open'",
+    "git rev-parse --is-shallow-repository",
+    "git rev-parse HEAD origin/main",
+    "git rev-list --left-right --count HEAD...origin/main",
+    "git log -10 origin/main --format='%h %cI %s'"
+  ],
+  "authorized_ref_refresh": "git fetch origin --prune; no history restoration",
+  "static_source_inspection": {
+    "method": "AST literal inspection and file hashing; no imports, API census execution, rendering, simulation or hypothesis adjudication",
+    "prin_all_literal_count": 175,
+    "prin_all_unique_literal_count": 175,
+    "prin_rc1_tuple_count": 175,
+    "literal_vs_tuple_symmetric_difference": [],
+    "reference_all_literal_count": 172,
+    "reference_names_missing_from_prin_literal": [],
+    "prin_additional_literal_names": [
+      "BackendUnavailableError",
+      "__version__",
+      "core_version"
+    ],
+    "paper_manifest_record_count": 172,
+    "paper_manifest_sha256": "300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5",
+    "reference_api_sha256": "ede92afc6771f2e29206534905e2820598ba841662a93d59f669f803a382f182",
+    "reference_figure_generator_sha256": "575eca5a6436a25f957702091a6a0b5b7f3d77f1f496f9e6b423550cf79e1520",
+    "reference_table_generator_sha256": "9ac382c487f7177465805a49686568b8ac323128cebeae342cca2b05814704cc"
+  },
+  "historical_predecessor": {
+    "exp001_r1_merge": "32cfed8a0b4d915a04e18efbfadd146a2ecb7e32",
+    "verbatim_checker_evidence": "EVIDENCE/ea007/exp001-r1-merge-ci-green.log",
+    "classification": "historical predecessor evidence, not current CI validation"
+  },
+  "scope": {
+    "exp002_execution": false,
+    "pilot_or_new_outcome_inspection": false,
+    "scientific_approval": false,
+    "hosted_workflows_changed_or_dispatched": false,
+    "history_or_ignore_fingerprints_changed": false,
+    "future_session_ids_or_order_changed": false
+  },
+  "scan_scope_warning": "The repository-resident PR32 full-history scan names 0a0f700, not later 8b4d180, the merge or any session-0159 commit. Later heads require their own scan."
+}

@@ -1,0 +1,463 @@
+# Cold Self-Audit Round 2 (Read-Only) — Verification of Round-1 Fixes
+
+**Auditor:** Antigravity (`gemini-3.8-flash-high`, read-only cold review)  
+**Date:** 2026-10-12 UTC  
+**Target:** Repository `C:\dev\PRIN` at commit `ed993e9` + staged changes; diffs `delta-code-r2.diff` and `delta-records-r2.diff` since `0d4278d`.  
+**Execution mode:** Read-only (no shell commands executed, no repository files modified).  
+
+---
+
+## Executive Summary
+
+1. **Round-1 findings:** All 5 findings from Devin's round-1 audit (Devin F1–F5) and all 9 findings from Antigravity's round-1 audit (Antigravity F1–F9) were evaluated against the live repository tree and diffs.
+   - **FIXED:** 12 findings (Devin F1, F2, F3, F4; Antigravity F1, F3, F4, F5, F6, F7, F9; and the Devin F5 evidence path citations).
+   - **PARTIAL (staged/pre-commit):** 1 finding (Antigravity F2 / Devin F5 packaging of `verification/gate/` — paths are harmonized to `EVIDENCE/0160/verification/gate/` and `delegation/` is fully packaged on disk and in the manifest; `gate/` is pending execution and packaging on the final approved tree before commit, as documented in [`e2-review.md:132`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L132)).
+   - **CORRECTLY DECLINED:** 1 finding (Antigravity F8 — [`e1-handoff.md:82-86`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md#L82-L86) is a living document whose dated-corrections section at lines 144–159 explicitly supersedes earlier text without rewriting draft prose).
+   - **NOT FIXED:** 0 findings.
+2. **New defects:** Zero new defects were introduced by the round-1 fixes. In particular, [`tests/_basetemp.py`](file:///C:/dev/PRIN/tests/_basetemp.py), [`tests/conftest.py`](file:///C:/dev/PRIN/tests/conftest.py), and `sensitivity_bytes` in [`benchmarks/campaign/exp002_driver.py`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py) were exhaustively analyzed under concrete failure scenarios (abspath resolution, bounded loops, vanished/symlink/file paths, Python 3.11 `onerror` vs Python 3.12+ `onexc`, pytest-xdist worker concurrency, and PDF Info object masking).
+3. **Protocol admission and invariant preservation:** 
+   - **CONFIRMED:** The protocol header in [`preregistration.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L1-L15) is admitted cleanly by `exp002_driver.py::_approval_date()`, returning approval date `"2026-10-12"`.
+   - **CONFIRMED:** Zero changes were made to any hypothesis (H1–H4), prediction, population (175 PRIN / 172 reference / 62 predicates / 39 publication files), threshold, tolerance, sample plan (n = 1 deterministic census), seed `(0, 2)`, statistic, abort criterion, or resource cap (12 h CPU wall, 2 h GPU, 2 h hosted CI, 10 MiB storage).
+
+---
+
+## 1. Verification of Round-1 Findings
+
+### 1.1 Devin Round-1 Findings
+
+#### Devin F1: Relative `--basetemp` resolved against cwd, not pytest's `rootpath`
+- **Status:** **FIXED**
+- **Evidence:** [`tests/_basetemp.py:86-90`](file:///C:/dev/PRIN/tests/_basetemp.py#L86-L90), [`tests/test_basetemp.py:577-590`](file:///C:/dev/PRIN/tests/test_basetemp.py#L577-L590), and [`e2-review.md:128`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L128).
+- **Verbatim quote ([`tests/_basetemp.py:86-90`](file:///C:/dev/PRIN/tests/_basetemp.py#L86-L90)):**
+  ```python
+  target = Path(os.path.abspath(basetemp))
+  root = rootdir.resolve()
+  resolved = target.resolve()
+  if resolved == root or resolved in root.parents:
+      raise ValueError(f"refusing to delete {target}: it contains {root}")
+  ```
+- **Evaluation:** As adjudicated in `e2-review.md:128`, pytest's own `TempPathFactory.getbasetemp()` resolves relative basetemp via `os.path.abspath(basetemp)` from the invocation directory (cwd), not `config.rootpath`. [`tests/_basetemp.py:86`](file:///C:/dev/PRIN/tests/_basetemp.py#L86) now uses `os.path.abspath(basetemp)`, matching pytest's exact directory semantics. The guard resolves both paths against `rootdir.resolve()` to safely reject root or its ancestors. Regression test `test_relative_path_is_resolved_like_pytest` covers this behavior.
+
+---
+
+#### Devin F2: Non-`PermissionError` races could crash session at startup; xdist workers race
+- **Status:** **FIXED**
+- **Evidence:** [`tests/_basetemp.py:91-106`](file:///C:/dev/PRIN/tests/_basetemp.py#L91-L106), [`tests/conftest.py:233-237`](file:///C:/dev/PRIN/tests/conftest.py#L233-L237), [`tests/test_basetemp.py:557-568`](file:///C:/dev/PRIN/tests/test_basetemp.py#L557-L568), and [`tests/test_basetemp.py:592-600`](file:///C:/dev/PRIN/tests/test_basetemp.py#L592-L600).
+- **Verbatim quote ([`tests/_basetemp.py:91-106`](file:///C:/dev/PRIN/tests/_basetemp.py#L91-L106)):**
+  ```python
+  failures = 0
+  for _ in range(attempts):
+      if target.is_symlink() or not target.is_dir():
+          break
+      try:
+          remove(target)
+      except (FileNotFoundError, NotADirectoryError):
+          continue
+      except PermissionError:
+          failures += 1
+          if failures >= attempts:
+              raise
+          sleep(delay)
+  else:
+      if target.is_dir() and not target.is_symlink():
+          raise PermissionError(f"{target} still exists after {attempts} attempts")
+  ```
+- **Verbatim quote ([`tests/conftest.py:233-237`](file:///C:/dev/PRIN/tests/conftest.py#L233-L237)):**
+  ```python
+  given = session.config.option.basetemp
+  # pytest-xdist workers share the controller's --basetemp; only the
+  # controller (no ``workerinput``) may delete it.
+  if not given or hasattr(session.config, "workerinput"):
+      return
+  ```
+- **Evaluation:**
+  - **Vanished directory race:** `except (FileNotFoundError, NotADirectoryError): continue` handles concurrent deletion by an external process or scanner; the loop immediately detects `not target.is_dir()` and breaks with success. Covered by `test_directory_vanishing_mid_delete_counts_as_done`.
+  - **Bounded iterations:** The former unbounded `while target.exists():` loop is replaced by `for _ in range(attempts):` (default 30 attempts, 0.5 s delay), with the `for...else` block enforcing bounded termination if the directory continuously reappears. Covered by `test_bounded_when_directory_keeps_reappearing`.
+  - **pytest-xdist workers:** In [`tests/conftest.py:236`](file:///C:/dev/PRIN/tests/conftest.py#L236), `hasattr(session.config, "workerinput")` returns `True` exclusively on xdist worker processes. Workers return immediately, so only the master controller process performs the pre-clean before workers are initialized, eliminating worker races.
+
+---
+
+#### Devin F3: `sensitivity_bytes` size was never recorded, leaving §8.1's CSV requirement unsatisfiable
+- **Status:** **FIXED**
+- **Evidence:** [`benchmarks/campaign/exp002_driver.py:178`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L178), [`exp002_driver.py:1056-1065`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L1056-L1065), [`exp002_driver.py:1325-1329`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L1325-L1329), [`tests/test_exp002_driver.py:712-714`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L712-L714), and [`preregistration.md:406`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L406).
+- **Verbatim quote ([`benchmarks/campaign/exp002_driver.py:178`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L178)):**
+  ```python
+  _FILE_INT_KEYS = ("raw_bytes", "normalized_bytes", "sensitivity_bytes")
+  _FILE_DIGEST_KEYS = ("raw_sha256", "normalized_sha256", "sensitivity_sha256")
+  ```
+- **Verbatim quote ([`benchmarks/campaign/exp002_driver.py:1064-1065`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L1064-L1065)):**
+  ```python
+  "sensitivity_bytes": len(sensitivity),
+  "sensitivity_sha256": _digest(sensitivity),
+  ```
+- **Evaluation:** `sensitivity_bytes` is added to `_FILE_INT_KEYS`, recorded in every `collect_reproduction` file record, validated at closure in `_check_observations()` (requiring a non-negative integer), and registered in protocol §8.1 for `reproduction-comparisons.csv`.
+
+---
+
+#### Devin F4: `sensitivity_bytes` selected Info by `(number, generation)`, whereas commit `6314532` selected by object number
+- **Status:** **FIXED**
+- **Evidence:** [`benchmarks/campaign/exp002_driver.py:957-968`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L957-L968), [`tests/test_exp002_driver.py:696-710`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L696-L710), and [`preregistration.md:670-672`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L670-L672).
+- **Verbatim quote ([`benchmarks/campaign/exp002_driver.py:957-968`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L957-L968)):**
+  ```python
+  for key, segment in objects:
+      # Faithful to 6314532, which selected the Info object by number only;
+      # Matplotlib writes generation 0 throughout, so this differs from the
+      # approved policy's (number, generation) selection only on crafted
+      # files, and only in this secondary digest.
+      if info_key is not None and key[0] == info_key[0]:
+          segment = re.sub(
+              rb"/(CreationDate|ModDate|Creator|Producer)\s+\((?:\\.|[^\\)])*\)",
+              rb"/\1 (normalized)",
+              segment,
+          )
+      parts.append(segment)
+  ```
+- **Evaluation:** Line 962 checks `if info_key is not None and key[0] == info_key[0]:`, matching the object number irrespective of generation, exactly replicating the pre-exposure `6314532` regex masking behavior. Protocol §11.3 item 1 documents this verbatim: *"in every object numbered like the trailer's `/Info` reference"*. Tested in `test_sensitivity_selects_info_by_number_like_6314532()`.
+
+---
+
+#### Devin F5: `e2-review.md` cited evidence paths that did not exist
+- **Status:** **FIXED**
+- **Evidence:** [`e2-review.md:20`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L20), [`e2-review.md:29`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L29), [`e2-review.md:122`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L122), and [`DOCS/PRIN_Project_Plan.md:250`](file:///C:/dev/PRIN/DOCS/PRIN_Project_Plan.md#L250).
+- **Verbatim quotes:**
+  - [`e2-review.md:20`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L20): ``Their reports are in `EVIDENCE/0160/verification/delegation/` and are adjudicated in §7.``
+  - [`e2-review.md:29`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L29): `` `EVIDENCE/0160/verification/e2-review/e2_static_verification.py` re-derives the E1 ``
+  - [`e2-review.md:122`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L122): ``Their task files and verbatim reports are in `EVIDENCE/0160/verification/delegation/`.``
+  - [`DOCS/PRIN_Project_Plan.md:250`](file:///C:/dev/PRIN/DOCS/PRIN_Project_Plan.md#L250): ``(`EVIDENCE/0160/verification/e2-review/`)``
+- **Evaluation:** All paths were corrected to include the `verification/` subdirectory path component, harmonizing citations with the actual disk layout.
+
+---
+
+### 1.2 Antigravity Round-1 Findings
+
+#### Antigravity F1: Nightly run 38184198596 duration numbers lacked an evidence log
+- **Status:** **FIXED**
+- **Evidence:** [`EVIDENCE/0160/verification/ci-fixes/H1-forced-nightly-38184198596.json:1`](file:///C:/dev/PRIN/EVIDENCE/0160/verification/ci-fixes/H1-forced-nightly-38184198596.json#L1), [`EVIDENCE/0160/verification/SHA256SUMS.txt:7`](file:///C:/dev/PRIN/EVIDENCE/0160/verification/SHA256SUMS.txt#L7), and [`tests/test_0160_manifest.py:383`](file:///C:/dev/PRIN/tests/test_0160_manifest.py#L383).
+- **Verbatim quote ([`EVIDENCE/0160/verification/ci-fixes/H1-forced-nightly-38184198596.json:1`](file:///C:/dev/PRIN/EVIDENCE/0160/verification/ci-fixes/H1-forced-nightly-38184198596.json#L1)):**
+  ```json
+  {"conclusion":"success","createdAt":"2026-10-11T23:25:04Z","databaseId":38184198596,"event":"workflow_dispatch","headBranch":"campaign/0159-exp002-e1","headSha":"0d4278d484e1fb5e55cd510991f6c8d4bf4374ae","jobs":[{"completedAt":"2026-10-12T00:52:07Z","conclusion":"success","name":"bench-regression","startedAt":"2026-10-11T23:25:08Z"},{"completedAt":"2026-10-11T23:38:57Z","conclusion":"success","name":"full-suite","startedAt":"2026-10-11T23:25:08Z"}],"updatedAt":"2026-10-12T00:52:08Z"}
+  ```
+- **Evaluation:** The exact GitHub API workflow run capture for run `38184198596` is present on disk, verifying the durations cited in `e2-review.md:102` (`bench-regression`: 23:25:08Z to 00:52:07Z = 86 min 59 s ≈ 87 min; `full-suite`: 23:25:08Z to 23:38:57Z = 13 min 49 s ≈ 14 min). The file is hashed in `SHA256SUMS.txt` (`b09e226f...`) and tested in `test_0160_manifest.py`.
+
+---
+
+#### Antigravity F2: Premature claim of local gate evidence in `EVIDENCE/0160/`
+- **Status:** **PARTIAL** (staged / pre-commit packaging)
+- **Evidence:** [`e2-review.md:113-116`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L113-L116), [`e2-review.md:132`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L132), and [`EVIDENCE/0160/README.md:102-103`](file:///C:/dev/PRIN/EVIDENCE/0160/README.md#L102-L103).
+- **Verbatim quote ([`e2-review.md:132`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L132)):**
+  ```markdown
+  | Devin F5 / Antigravity F2–F3: evidence paths and packaging | Paths confirmed wrong; packaging was in progress | Paths fixed; `gate/` and `delegation/` are packaged before the commit |
+  ```
+- **Evaluation:** The path was corrected to `EVIDENCE/0160/verification/gate/`. `delegation/` was packaged completely (all 4 files on disk, hashed in `SHA256SUMS.txt`, in `REQUIRED_BUNDLE`). As acknowledged in the §7 adjudication row above, local gate G* logs on the approved source are packaged immediately before creating the final session commit (once all code and reviews are frozen). On the current staged tree, `verification/gate/` has not yet been populated.
+
+---
+
+#### Antigravity F3: Premature claim that cold reviews are present and adjudicated
+- **Status:** **FIXED**
+- **Evidence:** [`e2-review.md:126-136`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L126-L136), [`EVIDENCE/0160/verification/delegation/`](file:///C:/dev/PRIN/EVIDENCE/0160/verification/delegation/), [`SHA256SUMS.txt:8-11`](file:///C:/dev/PRIN/EVIDENCE/0160/verification/SHA256SUMS.txt#L8-L11), and [`tests/test_0160_manifest.py:384-387`](file:///C:/dev/PRIN/tests/test_0160_manifest.py#L384-L387).
+- **Evaluation:** Both task files (`agy-e2-task.md`, `devin-e2-task.md`) and round-1 reports (`agy-e2-report.txt`, `devin-e2-report.txt`) are committed in `EVIDENCE/0160/verification/delegation/`, hashed in `SHA256SUMS.txt`, included in `test_0160_manifest.py::REQUIRED_BUNDLE`, and adjudicated point-by-point in `e2-review.md` §7.
+
+---
+
+#### Antigravity F4: Unsuperseded DRAFT currency note in `benchmarks/campaign/README.md`
+- **Status:** **FIXED**
+- **Evidence:** [`benchmarks/campaign/README.md:23`](file:///C:/dev/PRIN/benchmarks/campaign/README.md#L23) and [`benchmarks/campaign/README.md:42-46`](file:///C:/dev/PRIN/benchmarks/campaign/README.md#L42-L46).
+- **Verbatim quote ([`benchmarks/campaign/README.md:42-46`](file:///C:/dev/PRIN/benchmarks/campaign/README.md#L42-L46)):**
+  ```markdown
+  *Session 0160 (2026-10-12):* the protocol is APPROVED at E2 and both
+  comparison amendments were approved; the driver also records a pre-exposure
+  `sensitivity_sha256` per publication file (E2 decision 9). It admits only
+  the APPROVED, committed protocol on a clean checkout, and E3 (0161) runs
+  only under the `e2-review.md` §8 entry checklist.
+  ```
+- **Evaluation:** An explicit dated session-0160 superseding note was appended to the currency section, and the table entry at line 23 was updated to reflect E2 approval and E3 readiness.
+
+---
+
+#### Antigravity F5: Unsuperseded DRAFT and pending review text in `e2-review-packet.md`
+- **Status:** **FIXED**
+- **Evidence:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md:3-7`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md#L3-L7) and [`e2-review-packet.md:173-176`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md#L173-L176).
+- **Verbatim quotes:**
+  - Lines 3–7:
+    ```markdown
+    **Status:** PREPARED FOR REVIEW - NOT APPROVED *(superseded 2026-10-12: E2 decided and APPROVED in [e2-review.md](e2-review.md); this packet is kept as the historical input)*
+    ...
+    **Independent reviewer:** MichaelMaillet - review/decision pending *(historical; decided 2026-10-12 under delegation, see e2-review.md)*
+    **Active stage:** 0159 E1 evidence/closure; 0160 remains PLANNED *(historical; 0159 and 0160 COMPLETE, 0161 READY)*
+    ```
+  - Lines 173–174:
+    ```markdown
+    *(Historical banner — superseded 2026-10-12: EXP-002 is APPROVED in [e2-review.md](e2-review.md).)*
+    **EXP-002 remains DRAFT. E2 approval is pending. No experiment execution occurred...**
+    ```
+- **Evaluation:** Historical metadata fields and concluding banners carry explicit superseding qualifiers directing readers to `e2-review.md`.
+
+---
+
+#### Antigravity F6: Stale "protocol stays DRAFT" statement in `tests/README.md`
+- **Status:** **FIXED**
+- **Evidence:** [`tests/README.md:328-329`](file:///C:/dev/PRIN/tests/README.md#L328-L329).
+- **Verbatim quote ([`tests/README.md:328-329`](file:///C:/dev/PRIN/tests/README.md#L328-L329)):**
+  ```markdown
+  manifest, or executes an EXP-002 leg (the protocol was DRAFT when these were
+  written and is APPROVED since 2026-10-12; no test depends on its status).
+  ```
+- **Evaluation:** Line 328 was updated with an exact qualifying parenthetical documenting that the protocol is APPROVED as of 2026-10-12.
+
+---
+
+#### Antigravity F7: "hosted checks remain paused" without citing amendment #50 window in `e1-handoff.md`
+- **Status:** **FIXED**
+- **Evidence:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md:151-153`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md#L151-L153).
+- **Verbatim quote ([`e1-handoff.md:151-153`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md#L151-L153)):**
+  ```markdown
+  - **Hosted checks:** the "hosted checks remain paused" wording above is
+    qualified by Plan amendment #50, which re-enables the hosted checks for
+    the EXP-002 experiments only.
+  ```
+- **Evaluation:** The dated-corrections section explicitly qualifies the earlier text with Plan amendment #50's window.
+
+---
+
+#### Antigravity F8: Stale "pending publication" blocking note in `e1-handoff.md:82-86`
+- **Status:** **CORRECTLY DECLINED**
+- **Evidence:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md:144-159`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md#L144-L159) and [`e2-review.md:135`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L135).
+- **Verbatim quote ([`e2-review.md:135`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L135)):**
+  ```markdown
+  | Antigravity F8: E1 handoff body still lists publication as pending | Already superseded by that file's dated-corrections section, which states it overrides conflicting text | No change |
+  ```
+- **Evaluation:** `e1-handoff.md` is an immutable historical handoff skeleton with an explicit governing clause at lines 144–146 stating: *"The dated corrections below... record facts that changed after this handoff was drafted and supersede them where they conflict"*. Lines 158–159 record: `MichaelMaillet accepted the E1 exit ("Accept the E1 exit."). Session 0159 is COMPLETE`. Rewriting earlier historical sections would violate documentation integrity. Declining modification was correct.
+
+---
+
+#### Antigravity F9: Pre-registration §8 analysis plan omitted amendment #50 window
+- **Status:** **FIXED**
+- **Evidence:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md:490-492`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L490-L492).
+- **Verbatim quote ([`preregistration.md:490-492`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L490-L492)):**
+  ```markdown
+  The retained prospective workflows
+  are hosted-validated only inside Plan amendment #50's EXP-002 window
+  while amendment #48 is otherwise in force.
+  ```
+- **Evaluation:** Pre-registration §8 now harmonizes with §9 and §11.3 by explicitly qualifying amendment #48 with the amendment #50 EXP-002 window.
+
+---
+
+## 2. In-Depth Re-Check of Modified Components
+
+### 2.1 `tests/_basetemp.py`
+
+#### 1. Abspath Semantics
+[`tests/_basetemp.py:86`](file:///C:/dev/PRIN/tests/_basetemp.py#L86) executes:
+```python
+target = Path(os.path.abspath(basetemp))
+```
+Pytest's `TempPathFactory.getbasetemp()` resolves relative paths via `os.path.abspath(str(basetemp))` against the process current working directory (the invocation directory). By computing `os.path.abspath(basetemp)`, `clear_stale_basetemp` resolves the identical filesystem path that pytest's factory would otherwise delete lazily.
+
+#### 2. Root and Ancestor Protection
+[`tests/_basetemp.py:87-90`](file:///C:/dev/PRIN/tests/_basetemp.py#L87-L90):
+```python
+root = rootdir.resolve()
+resolved = target.resolve()
+if resolved == root or resolved in root.parents:
+    raise ValueError(f"refusing to delete {target}: it contains {root}")
+```
+- If `target` is the repository root (`resolved == root`), `ValueError` is raised immediately.
+- If `target` is a parent or ancestor directory containing the repository (`resolved in root.parents`), `ValueError` is raised immediately.
+- If `target` is an in-tree directory such as `.pytest_basetemp` (`resolved.parents` contains `root`), `resolved in root.parents` is `False`, allowing deletion of the intended directory.
+
+#### 3. Bounded Deletion Loop
+[`tests/_basetemp.py:91-106`](file:///C:/dev/PRIN/tests/_basetemp.py#L91-L106):
+- The loop is bounded by `for _ in range(attempts):` (default `attempts=30`).
+- If `remove(target)` succeeds, the subsequent loop iteration sees `not target.is_dir()` and breaks immediately without sleeping.
+- If `remove(target)` encounters `PermissionError` (sharing violation, WinError 32), `failures` increments. If `failures >= attempts`, the error is raised; otherwise, `sleep(delay)` is called.
+- If `remove(target)` does not raise but the directory continuously reappears (e.g. recreated immediately by an external process), the loop terminates after `attempts` iterations and executes the `else:` block:
+  ```python
+  else:
+      if target.is_dir() and not target.is_symlink():
+          raise PermissionError(f"{target} still exists after {attempts} attempts")
+  ```
+  Every execution path is strictly bounded.
+
+#### 4. Symlink, Plain-File, and Missing Path Handling
+[`tests/_basetemp.py:93-94`](file:///C:/dev/PRIN/tests/_basetemp.py#L93-L94):
+```python
+if target.is_symlink() or not target.is_dir():
+    break
+```
+- **Missing path:** `target.is_dir()` is `False` -> breaks on iteration 0, returns `failures = 0`.
+- **Plain file:** `target.is_dir()` is `False` -> breaks on iteration 0, leaving file for pytest to reject or report.
+- **Symbolic link / directory junction:** `target.is_symlink()` is `True` on Windows junctions and symlinks -> breaks on iteration 0, leaving link untouched.
+
+#### 5. Python 3.11 `onerror` Branch vs Python 3.12+ `onexc` Branch
+[`tests/_basetemp.py:40-50`](file:///C:/dev/PRIN/tests/_basetemp.py#L40-L50):
+```python
+def remove_tree(path: Path) -> None:
+    """``shutil.rmtree`` that also deletes read-only files."""
+    if sys.version_info >= (3, 12):
+        shutil.rmtree(path, onexc=_make_writable_and_retry)
+    else:  # pragma: no cover - Python 3.11 hosts (``onexc`` is 3.12+)
+        shutil.rmtree(
+            path,
+            onerror=lambda function, name, info: _make_writable_and_retry(
+                function, name, info[1]
+            ),
+        )
+```
+- In Python 3.12+, `shutil.rmtree` deprecated `onerror` in favor of `onexc(func, path, exc)`.
+- In Python 3.11, `shutil.rmtree` invokes `onerror(func, path, exc_info)` where `exc_info` is `sys.exc_info() = (type, value, traceback)`. `info[1]` extracts the exception instance `value`.
+- Both branches pass `(function, path, exception_instance)` to [`_make_writable_and_retry`](file:///C:/dev/PRIN/tests/_basetemp.py#L30-L37):
+  ```python
+  def _make_writable_and_retry(
+      function: Callable[..., Any], path: str, error: BaseException
+  ) -> None:
+      if not isinstance(error, PermissionError) or not os.path.lexists(path):
+          raise error
+      os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
+      function(path)
+  ```
+  If `error` is a `PermissionError` caused by a read-only bit (e.g. git object file), it clears the read-only attribute and retries `function(path)`. Any other exception re-raises immediately.
+
+---
+
+### 2.2 `tests/conftest.py` pytest-xdist Concurrency Guard
+[`tests/conftest.py:233-237`](file:///C:/dev/PRIN/tests/conftest.py#L233-L237):
+```python
+given = session.config.option.basetemp
+# pytest-xdist workers share the controller's --basetemp; only the
+# controller (no ``workerinput``) may delete it.
+if not given or hasattr(session.config, "workerinput"):
+    return
+```
+- Under `pytest-xdist`, the controller process initializes workers and attaches the `workerinput` dictionary to worker configurations (`session.config.workerinput`).
+- `hasattr(session.config, "workerinput")` is `True` on all worker processes and `False` on the controller.
+- Workers return immediately, ensuring that only the controller runs `clear_stale_basetemp()` prior to test distribution.
+- When `--basetemp` is omitted on the CLI, `session.config.option.basetemp` is `None` / empty, and the hook exits as a no-op.
+
+---
+
+### 2.3 `sensitivity_bytes` Implementation and Schema Validation
+
+#### 1. Number-Based Info Selection Faithful to Commit `6314532`
+[`benchmarks/campaign/exp002_driver.py:955-968`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L955-L968):
+```python
+prefix, objects, info_key, xref, footer = _pdf_parts(payload)
+parts = [prefix]
+for key, segment in objects:
+    if info_key is not None and key[0] == info_key[0]:
+        segment = re.sub(
+            rb"/(CreationDate|ModDate|Creator|Producer)\s+\((?:\\.|[^\\)])*\)",
+            rb"/\1 (normalized)",
+            segment,
+        )
+    parts.append(segment)
+return b"".join(parts) + xref + footer
+```
+- In commit `6314532`, the pre-exposure driver regex-masked every object whose object number matched the `/Info` trailer pointer.
+- `key` is `(number, generation)`. The condition `key[0] == info_key[0]` checks object numbers directly.
+- On standard single-generation Matplotlib outputs, this produces identical bytes to `(number, generation)`. On crafted multi-generation containers, it exactly reproduces the `6314532` masking policy.
+
+#### 2. Size Field Recording and Closure Validation
+- [`exp002_driver.py:178`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L178): `_FILE_INT_KEYS = ("raw_bytes", "normalized_bytes", "sensitivity_bytes")`.
+- [`exp002_driver.py:1064`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L1064): `"sensitivity_bytes": len(sensitivity)`.
+- [`exp002_driver.py:1325-1329`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L1325-L1329): `check_run_complete()` verifies that every item in `_FILE_INT_KEYS` is a non-negative integer.
+- The sensitivity byte size is permanently preserved in each run's `reproduction.json`, satisfying protocol §8.1's manifested requirements for `reproduction-comparisons.csv`.
+
+---
+
+### 2.4 Protocol §11.3 Text
+[`preregistration.md:661-704`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L661-L704) explicitly registers the decisions and amendments:
+1. **Item 1 (Sensitivity comparison):** Registers `sensitivity_bytes` and `sensitivity_sha256` under the `6314532` policy, mandates side-by-side reporting in `summary.json`, `reproduction-comparisons.csv`, and E5 report, and forbids reporting either verdict alone if they disagree.
+2. **Item 2 (Retained publication bytes):** Retains `DOCS/test_and_benchmark_results/EXP-002/<run-id>/publication/` roots outside git until E5 acceptance, with listing digests recorded in the E3 log.
+3. **Item 3 (Hosted CI accounting):** Mandates recording of amendment #50 workflow run IDs, head SHAs, and durations in the E3 log while exempting them from EXP-002 experiment caps.
+4. **Preservation statement:** Verbatim at line 696: *"No hypothesis, prediction, population, threshold, tolerance, sample, seed, statistic, abort criterion or cap changes at E2."*
+
+---
+
+## 3. Audit for New Defects Introduced by Round-1 Fixes
+
+A thorough examination of all changes across `delta-code-r2.diff` and `delta-records-r2.diff` was conducted against potential failure modes:
+
+| Component | Potential Risk / Scenario | Audit Outcome |
+|---|---|---|
+| `tests/_basetemp.py` | In-tree relative `--basetemp` deletion | **No defect.** `Path(os.path.abspath(basetemp))` exactly matches pytest's `TempPathFactory.getbasetemp()`. Guard correctly refuses root or ancestor while permitting `.pytest_basetemp`. |
+| `tests/_basetemp.py` | Reappearing / resurrected directory loop | **No defect.** `for _ in range(attempts)` guarantees loop termination within at most 30 attempts, raising `PermissionError` via the `else:` block. |
+| `tests/_basetemp.py` | Python 3.11 `onerror` callback crash | **No defect.** Lambda extracts `info[1]` (`sys.exc_info()[1]`), which is the exception instance, perfectly matching `_make_writable_and_retry(function, path, error)`. |
+| `tests/conftest.py` | xdist worker race condition | **No defect.** `hasattr(session.config, "workerinput")` correctly skips workers; only controller clears basetemp prior to worker spawn. |
+| `exp002_driver.py` | Malformed / non-Matplotlib PDF container in sensitivity check | **No defect.** `_pdf_parts` runs first with strict structure validation. `sensitivity_bytes` cannot raise on any payload that `normalized_bytes` accepts. |
+| `exp002_driver.py` | Schema key mismatch at closure | **No defect.** `sensitivity_bytes` and `sensitivity_sha256` are added to both `_FILE_INT_KEYS` and `_FILE_DIGEST_KEYS`, tested by closure fixtures. |
+| `compat.rs` | Clippy refactoring in `cross_band_coupling_cpu` | **No defect.** Replaced 1-element `for` loop with direct `if` length check; exact same error `CompatError::LengthMismatch` and control flow preserved. |
+| `python.yml` / `ci/lint-constraints.txt` | `numpy==2.5.1` pin | **No defect.** Resolves Python 3.12 hosted `mypy` missing-import regression, aligns CI environment with local `.venv`. |
+
+**Conclusion:** Zero new defects were introduced.
+
+---
+
+## 4. Confirmation of Protocol Admission and Invariant Preservation
+
+### 4.1 Admission under `_approval_date()`
+[`benchmarks/campaign/exp002_driver.py:1087-1111`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py#L1087-L1111) defines `_approval_date()`:
+```python
+def _approval_date(protocol_bytes: bytes) -> str:
+    protocol = protocol_bytes.decode("utf-8")
+    status = re.search(r"^\*\*Status:\*\*[ \t]*([^\r\n]+)", protocol, re.M)
+    if status is None or status.group(1).strip() != "APPROVED":
+        raise DriverError("EXP-002 is not APPROVED; E1 must not execute")
+    approval_field = re.search(
+        r"^\*\*Maintainer approval:\*\*[ \t]*([^\r\n]+)",
+        protocol,
+        re.M,
+    )
+    approval = re.match(
+        r"MichaelMaillet, (\d{4}-\d{2}-\d{2}) UTC\b",
+        approval_field.group(1) if approval_field else "",
+    )
+    if approval is None:
+        raise DriverError("dated MichaelMaillet scientific approval is missing")
+    datetime.strptime(approval.group(1), "%Y-%m-%d")
+    return approval.group(1)
+```
+
+Evaluation against [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md:3-9`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L3-L9):
+```markdown
+**Status:** APPROVED
+**Authors:** MichaelMaillet (maintainer); Devin (AI pair of record, drafting)
+**Date:** 2026-10-11 UTC
+**Pre-E2 amendments:** section 11 (PR #33 review remediation, 2026-10-11 UTC)
+**Maintainer approval:** MichaelMaillet, 2026-10-12 UTC - E2 decisions
+delegated to the AI pair by maintainer directive; record and reasons in
+[`e2-review.md`](e2-review.md); E2 amendments in section 11.3
+```
+1. `status.group(1).strip()` matches `"APPROVED"`.
+2. `approval_field.group(1)` matches `"MichaelMaillet, 2026-10-12 UTC - E2 decisions..."`.
+3. `approval.group(1)` matches `"2026-10-12"`.
+4. `datetime.strptime("2026-10-12", "%Y-%m-%d")` succeeds.
+5. Returns `"2026-10-12"`.
+
+**CONFIRMED: The protocol header admits cleanly under `_approval_date()`.**
+
+---
+
+### 4.2 Invariant Preservation
+All scientific and governance parameters across [`preregistration.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md) and [`e2-review.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md) remain byte-invariant:
+- **Hypotheses:** H1 (API namespace), H2 (historical conclusion predicates), H3 (publication reproduction), and H4 (repeatability) are unchanged.
+- **Predictions:** All 62 historical conclusion predicate expectations and 39 publication equality claims are unchanged.
+- **Populations:** 175 PRIN symbols, 172 reference symbols, 62 claim predicates, 39 publication files (14 figures in 2 formats + 11 tables) are unchanged.
+- **Thresholds & Tolerances:** Zero numerical tolerance (deterministic censuses) unchanged.
+- **Sample Plan:** Single deterministic census run ($n = 1$) per leg; envelope fields `iterations=10` remain marked unused; seeds fixed at `(0, 2)`.
+- **Statistics:** Censuses report exact counts without statistical testing; confidence intervals remain marked `N/A`.
+- **Abort Criteria:** Unhandled exceptions, malformed containers, and missing/extra outputs remain strictly fail-closed.
+- **Resource Caps:** 12 h CPU wall, 2 h GPU wall (unused), 2 h hosted CI (unused for experiment legs), 10 MiB new tracked raw/record artifacts, 2 MiB per run JSON cap remain unchanged.
+
+**CONFIRMED: Zero changes to hypotheses, predictions, populations, thresholds, samples, seeds, statistics, abort criteria, or resource caps.**
+
+---
+
+## 5. Audit Conclusion
+
+The round-1 fixes have been verified:
+- All defect findings from both round-1 reviews have been addressed accurately.
+- No new defects have been introduced.
+- Protocol admission and all experimental invariants remain fully intact.
+- The repository state satisfies all E2 review criteria, with session 0161 (E3 execution) ready to proceed once the pre-commit gate packaging checklist in [`e2-review.md:143-164`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L143-L164) is executed.
+AGY-DONE

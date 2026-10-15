@@ -1,0 +1,13 @@
+{
+  "artefacts": {
+    "reproduction.json": [
+      "H3",
+      "H4"
+    ]
+  },
+  "exp_id": "EXP-002",
+  "mode": "prin",
+  "operator": "MichaelMaillet",
+  "run_id": "RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu",
+  "session": "0161"
+}

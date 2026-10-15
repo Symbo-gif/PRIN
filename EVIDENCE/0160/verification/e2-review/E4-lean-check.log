@@ -1,0 +1,11 @@
+COMMAND: C:/Users/there/.elan/bin/lean.exe EVIDENCE/0160/verification/e2-review/CrlfCanonical.lean
+CWD: C:/dev/PRIN
+SOURCE: working tree: ed993e9 + staged session-0160 changes after the first cold-review fixes; Lean 4.34.1 (core only, no Mathlib)
+UTC-START: 2026-10-12T04:53:20Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+
+----
+ELAPSED_SECONDS: 10.6
+EXIT_CODE: 0

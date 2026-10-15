@@ -1,0 +1,11 @@
+COMMAND: .venv/Scripts/ruff format --check DOCS/experiments/ --config "include = ['*.py', '*.pyi', '*.ipynb']"
+UTC-START: 2026-10-11T12:33:51Z
+HOST: HP (Microsoft Windows NT 10.0.26300.0)
+HEAD: 78590305e1c0a78d92153ef2a55a9e76aeb7af79
+WORKTREE: clean
+
+2 files already formatted
+
+UTC-END: 2026-10-11T12:33:51Z
+ELAPSED-SECONDS: 0.2
+EXIT_CODE: 0

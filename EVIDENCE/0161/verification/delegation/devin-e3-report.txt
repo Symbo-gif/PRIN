@@ -1,0 +1,122 @@
+I'll read the task file first.This is a read-only audit task. I'll locate the named files first, then read them — no shell commands, no edits.Now I'll read the validator (both revisions) and the test/consistency tools.Let me read the remaining portions of both validator revisions.Now the remaining tools.Now the context documents — log.md and preregistration.md sections, plus the driver functions.Continuing with preregistration §5.5 and the rest of log.md §3–§7.Now I need the driver functions. Let me locate them in the named file.Now the captured outputs — launch records and validation transcripts first.Launch records match the log. Now the validation and mutation-test transcripts.Now the remaining captured outputs: stdout/stderr, listing digests, preflight, and G16.All the named files are read. Let me check two driver helpers (`_no_symlink_ancestors`, `verify_manifest`) that `check_run_complete` calls — needed only to judge validator-vs-closure strictness parity.All named files are read. Below is the complete report.
+
+---
+
+# Cold self-audit — EXP-002 E3 execution round: per-record validation tooling and raw-record structure
+
+Scope performed: read-only review of the ten tools under `EVIDENCE/0161/verification/tools/`, their captured outputs under `legs/`, `preflight/`, `gate/G16-staged-bytes-check.txt`, plus `EVIDENCE/0161/README.md`, `verification/SHA256SUMS.txt`, the `G14*` attestations, log.md §1–§7, preregistration.md §4.2/§5.5, and `exp002_driver.py` `_admission`/`check_run_complete`/`run_registered` (plus the directly-called helpers needed for strictness parity: `_mapping`, `_list`, `_no_symlink_ancestors`, `main`). No result payloads, no `DOCS/test_and_benchmark_results/` contents, no arm-to-arm comparisons were opened or made.
+
+---
+
+## Findings
+
+### F-01 — Medium — validator does not check symlink ancestors; weaker than driver closure
+`EVIDENCE/0161/verification/tools/validate_run_record.py:204-222`
+
+The A2/A3 block checks `run.parent == raw_root` (textual), `run.is_dir() and not run.is_symlink()` on the run directory itself, and `is_plain_file` (incl. `is_junction`) on the three entries. It never walks ancestors. The driver's `check_run_complete` calls `_no_symlink_ancestors(run_dir)` — which checks the path *and every parent* — plus `RAW_ROOT.is_symlink()` (`benchmarks/campaign/exp002_driver.py:1359-1363`, `234-237`).
+
+*Scenario:* `benchmarks/results` (or `EXP-002`) is a symlink/junction to a staged tree. `run.parent` still textually equals `raw_root`, so A2 passes; `run.is_symlink()` tests only the final component. The validator recomputes digests through the redirected path and reports a fully admissible record — one the driver's own closure would reject. Additionally, both validator and driver share a junction blind spot: `Path.is_symlink()` is `False` for junctions, so a *junctioned run directory itself* passes `run.is_dir() and not run.is_symlink()` — junctions can only be caught at the *entries* level (`is_junction` in `is_plain_file`), not for `run` or its ancestors.
+
+*Fix:* mirror `_no_symlink_ancestors` — iterate `run.absolute()` and its `.parents`, rejecting `is_symlink()` **and** `is_junction()` at each level (covering the ancestor case and the shared junction gap).
+
+### F-02 — Medium — `config.iterations`/`warmup`/`replicates` pass as float/bool
+`validate_run_record.py:346-349`
+
+```python
+(cfg.get("iterations"), cfg.get("warmup"), cfg.get("replicates")) == (10, 0, 1)
+```
+Tuple equality admits `10.0`, `0.0`, and `True` (`True == 1`). The driver enforces `type(...) is int` for all three (`exp002_driver.py:1431-1436`). A record with `"iterations": 10.0` or `"replicates": true` fails driver closure yet passes the validator — a record admissible under the independent check that the driver's own closure rejects. The validator correctly uses `type() is int` for `seed_counter`, `seed_key`, `environment.seed`, and `logical_cpus`, so this is an internal strictness inconsistency too.
+
+*Fix:* `type(cfg.get(k)) is int and cfg[k] == v` for `(iterations,10)`, `(warmup,0)`, `(replicates,1)`.
+
+### F-03 — Medium — duplicate JSON keys never rejected (last-wins ambiguity)
+`validate_run_record.py:141-142` (`load_json`), applied to result, sidecar and manifest
+
+`json.loads` silently keeps the last duplicate member. A crafted `reproduction.json` containing `{"status": "ABORTED", "status": "COMPLETED"}` parses to `COMPLETED`; a different conforming reader (or one taking the first member) sees `ABORTED`. The manifest recompute checks (B2) pose no barrier because `manifest.json` itself is not digest-pinned inside the run directory — a tamperer who rewrites both files consistently satisfies every hash check. The brief explicitly says an aborted record must not be admissible "merely because it hashes"; duplicate keys are exactly the ambiguity that lets a textually-aborted record hash and pass. (The driver shares `json.loads` last-wins, so this is a *shared* gap, but the independent validator is the right place to close it.)
+
+*Fix:* `json.loads(..., object_pairs_hook=...)` with a hook that rejects duplicate keys, in the validator and ideally in the driver's `check_run_complete`.
+
+### F-04 — Medium — exact-key discipline dropped below the envelope top level
+`validate_run_record.py:493-495, 505-510, 543-547, 559-585`
+
+- E2 case objects use `CASE_KEYS <= set(c)` — a **subset** test. A case carrying an extra unregistered member (e.g. `"note"`, `"verdict"`, a shadowing annotation field) passes "cases … carrying the registered keys", even though cases elsewhere are a fixed registered schema and the API-row check one block earlier uses exact `set(r) == API_ROW_KEYS`.
+- `identity`, `observations`, `renderer`, and per-file records are never exact-key checked: an `identity` block with extra members, an `observations` object carrying a spurious top-level member, a `renderer` dict with extra keys (`RENDERER_KEYS <= set(renderer)`), or a file record with arbitrary extra fields all pass. The D1 check is strict on the *result's* top-level keys while everything below is open.
+
+*Scenario:* a COMPLETED record whose `observations` or each case carries an extra key is malformed relative to the fixed registered schema yet validates. Consistent with the driver (which is also subset-only), but "at least as strict as" is undermined by the asymmetry.
+
+*Fix:* exact-set checks: `set(c) == CASE_KEYS`, `set(ident)` against the driver's emitted identity keys, `set(renderer) == RENDERER_KEYS`, and a per-mode registered key set for `observations` and file records.
+
+### F-05 — Low — D6 checks half of what it claims
+`validate_run_record.py:431-449`
+
+Three gaps in one check, whose name claims "timestamps parse, are UTC and ordered; elapsed_seconds is a finite number":
+1. Only `started`'s offset is asserted (`started.utcoffset().total_seconds() == 0`); `recorded`'s offset is never checked — `recorded_at_utc` at `+02:00` passes if still ordered.
+2. `elapsed` needs `isinstance(int|float) and not bool and >= 0` — Python's `json.loads` accepts the literal `Infinity`, so `"elapsed_seconds": Infinity` parses to `inf` and passes `inf >= 0`; there is no `math.isfinite` despite the "finite" claim. (`NaN` fails, but only incidentally.)
+3. `wall = (recorded - started)` is computed only for the detail string — a record claiming `elapsed_seconds = 0` with stamps an hour apart, or `elapsed = 99999` with stamps 0.3 s apart, passes. The timestamps-vs-elapsed consistency is never asserted.
+
+*Fix:* check `recorded.utcoffset() == 0`, `math.isfinite(elapsed)`, and a tolerance assertion like `elapsed <= wall + ε`.
+
+### F-06 — Low — manifest object laxity
+`validate_run_record.py:229-258`
+
+- `manifest` top-level keys are never checked for exactness — extra members pass.
+- `manifest.get("schema_version") == 1` admits `true` (`True == 1`).
+- `item["bytes"] == len(data)` admits `215.0` (float equal to int).
+- `out_dir` check anchors only `parts[-4:]` (`:354-362`): `D:\mirror\benchmarks\results\EXP-002\<run>` or a relative `benchmarks\results\EXP-002\<run>` passes — a wrong-but-plausible `out_dir`. (The driver has the same tail-only test, so parity, but a record produced at a different root with the same tail is admitted.)
+
+*Fix:* exact key-set for the manifest object; `type(...) is int` for `schema_version` and `bytes`; consider requiring `Path(out_dir)` to equal `run` rather than matching a suffix.
+
+### F-07 — Medium — mutation-test coverage gaps; reproduction-mode branch unexercised in evidence
+`mutation_test.py:73-215`; `legs/*.mutation-selftest*.txt`
+
+The harness is sound as far as it goes — every shipped mutation hits the check it names (verified against both transcripts: e.g. `seed_counter_bool` → D4, `flipped_byte_without_manifest_update` → B2; the leg-2 rev1 `BAD` case correctly exposed the crash that became Z0 in rev2). But the evidence only shows self-tests for `api` and `conclusions` modes — no transcript exercises the reproduction-mode path (`observation_population_broken`'s `expected_files` branch, `E3` checks) or any `F1–F4` retention check. Missing mutations worth adding: A1 (renamed dir/label/SHA), C1 `run_id`/`session`/`exp_id` or a *missing* sidecar key, D1 extra-envelope-key-only, D2 `seed_used: 0`/`true`, D4 `out_dir`/iterations-type, D5 a *different* valid ancestor commit, D6 out-of-order/non-UTC/floaty timestamps, a duplicate-JSON-key record, an extra `observations` key, a junction/symlinked entry, and a retained-publication-file tamper for F3. None of these currently have demonstrated failure evidence.
+
+### F-08 — Low — `crossleg_consistency.py` is consistency-only and slightly overclaims
+`crossleg_consistency.py:27, 40-55`
+
+- `json.loads` parses each whole result document — including observation payloads — into memory; the docstring says it "never opens … any observation payload". It *accesses* only `observations["renderer"]` on the publication legs (the sanctioned exception) and never touches `observations` on api/conclusions — no outcome is compared or printed — but the file-level claim is looser than what the code does. 
+- "environment identical on all five legs" detects *between-run differences* but asserts no value: a uniformly wrong `backend`/`dtype` on all five legs passes. The abort criterion "wrong backend/dtype" is only covered because the per-record validator also runs — the script alone cannot detect it.
+- On FAIL, `same()` prints only `legs=[...]` names, not the differing values — poor diagnosability.
+- Sound parts: the stamps/distinct-dir checks (`:56-59`) correctly catch swapped or duplicated argv slots, and whole-`environment` equality is a conservative superset for the renderer/font-stack criterion (a benign `gpu_vram_mb` change would false-*fail*, the safe direction).
+
+### F-09 — Low — `staged_bytes_check.py` coverage and vacuous edges
+`staged_bytes_check.py:59-81, 96-107`
+
+- Only staged paths containing `"/RUN-"` are checked (`:59`): a staged file directly under `benchmarks/results/EXP-002/` (outside a RUN dir) is silently skipped — `README.md` and any stray staged file escape the byte-exactness check.
+- A RUN dir staged with only a `manifest.json` whose `files` is `[]` passes the file-set verdict vacuously (`sorted(["manifest.json"]) == sorted([] + ["manifest.json"])`) — a partial staging goes unflagged by this script (the on-disk A3 validator check would catch the incomplete record; the gap is only in the staging check).
+- Evidence files missing from the worktree are skipped by `if work.exists()` (`:106-107`) — a staged-but-deleted evidence file still satisfies the SHA256SUMS comparison but never gets a worktree comparison (a `git status` `D` would surface elsewhere, so impact is low).
+- `--head` is correct: `ls-tree -r HEAD` + `git show HEAD:path` compare committed blobs against the worktree — genuinely distinct sources, no blob-with-itself comparison. CRLF/`-text` handling is byte-exact: stored blob bytes vs `read_bytes()` verbatim, no newline translation on either side — correct under the recorded `.gitattributes` policy.
+
+### F-10 — Low — `measure_bytes.py` diverges from the driver's measurement in two details
+`measure_bytes.py:12-17, 48-55`
+
+- `size()` uses `p.stat().st_size`, which follows links; the driver's `_storage_check` uses `stat_size_and_hash_no_follow`. A symlinked entry would be measured at target size here while the driver would fail — the tool could report "under cap" where the driver errors. (Read-only measurement; the actual run showed no links, so no impact on the recorded numbers.)
+- `untracked = ...stdout.split()` breaks on filenames containing spaces — it would crash (non-silent), not mis-measure.
+
+### F-11 — Low — `run_leg.ps1` records `$LASTEXITCODE` without guaranteeing a launch
+`run_leg.ps1:31-35`
+
+If the interpreter itself fails to launch (missing `.venv\Scripts\python`), PowerShell raises an error but `$LASTEXITCODE` may retain a stale/`$null` value — `EXIT_CODE=` could be mis-recorded rather than the abort it is. Otherwise the script matches protocol §5.5 exactly: run ID computed as `RUN-<yyyyMMddTHHmmssZ>-<R7>-<label>` from launch UTC, the driver invoked as `-m benchmarks.campaign.exp002_driver --mode … --run-dir … --operator MichaelMaillet --source-sha <R40> --seed-counter 0 --seed-key 2`, wall via `Stopwatch` around the process, UTC start/end via `ToUniversalTime()`, child stdout/stderr captured outside the repo, and post-leg `git status` + directory entries appended. The `COMMAND=` text differs from the actual argv only in quoting (cosmetic).
+
+### F-12 — Informational — environment trust
+All shipped Python invokes bare `git` (`validate_run_record.py:127-130`, `staged_bytes_check.py`, `measure_bytes.py`) — a PATH-hijacked `git` could feed forged output; same trust model as the driver. `REPO` is hard-pinned to `C:\dev\PRIN` and `D5` requires `HEAD == R` at validation time, so the validator is single-session tooling — records cannot be re-validated after HEAD moves or with a dirty tree (intended, but worth noting for E4/E5 rerunability).
+
+---
+
+## Areas checked and found sound
+
+- **Validator independence and strictness vs driver closure** — imports nothing from the driver (stdlib + `git` only); re-derives the protocol blob, the reference `__all__` and the 39-file registered list from pinned git objects; exact key-sets on sidecar/result/environment/config, `operator == MichaelMaillet`, `HEAD == R`, D6 ordering, input_records multiset equality, family cardinalities — all *stricter* than `check_run_complete` except for F-01/F-02 above (and per-record storage caps, which the validator does not re-measure — covered separately by `measure_bytes.py` and the launch `EXIT_CODE=0`).
+- **No outcome judged** — `resolved`/`callable`/`observed`-vs-`expected`/publication digests are never compared; `expected_names`, `expected_files`, `legacy_names` checks are registration/identity; `frozen_missing`/`frozen_extra`/`observed_names` are checked only as list-of-strings. F3 compares each retained file to *its own* recorded digest — retention integrity, not an arm comparison.
+- **Every check really evaluated** — no vacuous `all([])` false-pass found (A3 name equality fails first); rev2 wraps all exceptions into `Z0` FAIL (the disclosed rev1 crash→traceback path is fixed and the rev1 `BAD` transcript is preserved un-relabelled); `finish()`/early-return paths still emit failures.
+- **Mutation harness correctness** — each mutation trips the check it claims (verified line-by-line in both modes' transcripts); baseline control passes; `run_validator` requires nonzero exit *and* a `FAIL <letter>` line, so a crash-only failure is caught as `BAD` (demonstrated by the leg-2 rev1 transcript).
+- **`run_leg.ps1` ↔ protocol §5.5** — command shape, run-ID derivation, seed pair and operator exactly as registered.
+- **Launch records ↔ log agreement** — all five `leg*.meta.txt` agree with log §4/§5 on command, RUN_ID, UTC start/end, exit 0, wall (10.733/10.521/14.212/14.172/14.183 s) and the three entry sizes; post-leg `git status` shows only log.md + accumulated RUN files. All ten stdout/stderr captures are empty as recorded.
+- **`preflight_recapture.ps1`** — captures HEAD, clean status, admission JSON, ancestor check, host/toolchain/fonts consistent with log §2; `hosted-runs-fae24c4.json` consistent with the §2.2 table (all seven runs, R, success). Minor: `bytes=` counts the `Out-File`-encoded file, not raw stdout — cosmetic.
+- **`reconstruct_rev1.py`** — accepting a reconstruction only on a pinned SHA-256 match is sound: wrong output cannot match `5703fad4…`, the assert on the rev2 wrapper plus count-1 replacement makes the inversion faithful, and SHA256SUMS confirms the shipped rev1 file carries exactly that digest.
+- **`make_sha256sums.py`** — `digest *./<posix>` format, LF, sorted, excludes itself; consistent with SHA256SUMS.txt as committed.
+- **`staged_bytes_check.py --head`** — correct committed-vs-worktree semantics; index mode reads `:path` vs worktree — no self-comparison defect; G16 transcript (191 comparisons, 0 failed; 15 record files + 80 evidence files) is internally consistent.
+- **`measure_bytes.py`** — output matches log §5/§7 totals (339,128 B raw records; 463,913 B closure measure; 13,756,033 B campaign); it reports rather than gates — no exit-on-breach, consistent with its purpose.
+- **`crossleg_consistency.py`** — correctly checks renderer capture only on the three publication legs, config-minus-`out_dir`, distinct dirs, strictly increasing stamps in registered order; transcript shows 0 failures; it accesses no observation field other than `renderer`.
+- **Injection/traversal/unsafe-write review (item 9)** — all `subprocess` calls use list argv with literal arguments; no shell interpolation; `str(commit)` into `git merge-base` is a single argv element (cannot inject); all writes are confined to argv-supplied scratch paths or `SHA256SUMS.txt`; `ast.literal_eval` on a digest-pinned blob; `run_dir`/`name` joins use literal filenames. Consistent with the clean G14 Snyk result.
+
+No High-severity findings. The top remediable items are F-01 (ancestor link check parity with the driver), F-02/F-03 (type and duplicate-key strictness), F-04 (below-top-level key exactness) and F-07 (mutation coverage for the reproduction-mode and retention checks).

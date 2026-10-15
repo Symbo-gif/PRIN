@@ -1,0 +1,231 @@
+# Cold Self-Audit Report (Read-Only) — EXP-002 E2 Approval Round, Records and Governance
+
+**Auditor:** Antigravity (Gemini Flash, read-only cold review)  
+**Date:** 2026-10-12 UTC  
+**Target:** Repository `C:\dev\PRIN` at commit `ed993e9` plus staged session-0160 changes; diffs `delta-records.diff` and `delta-code.diff`.  
+**Execution mode:** Read-only (no shell commands executed, no repository files modified).
+
+---
+
+## 1. Audit Check Areas and Findings
+
+### Check 1: Authority
+- **Verbatim maintainer approvals:**
+  - **E2 decision delegation:** Recorded in [`e2-review.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L8-L12):
+    ```markdown
+    > "I authorize for you to make the E2 decisions that are most in line with the
+    > established plans, governance, methodologies, established goals, is grounded
+    > in thruth, and is scientifically rigorous."
+    >
+    > — MichaelMaillet, 2026-10-12 UTC
+    ```
+  - **E1 exit acceptance:** Recorded in [`e2-review.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L104), [`e1-handoff.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md#L155), and brief 0159 ([`0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md#L3)): `"Accept the E1 exit."` (MichaelMaillet, 2026-10-12 UTC).
+  - **Amendment #51 ratification:** Recorded in [`e2-review.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L106-L107) and [`DOCS/PRIN_Project_Plan.md`](file:///C:/dev/PRIN/DOCS/PRIN_Project_Plan.md#L250): `"Ratify figure count if that reflects the truth."` (MichaelMaillet, 2026-10-12 UTC).
+- **Scope of quotes:** The quotes cover delegating the E2 decisions, accepting the E1 exit, and ratifying the figure count amendment. No ungranted scientific approvals are claimed.
+- **Delegation disclosure:**
+  - [`e2-review.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L14-L18) honestly identifies Claude Opus 5.5 (AI pair) as the reviewer of record, and discloses that it is not independent on the PR #33 amendments it drafted.
+  - *Defect found (Finding 3):* [`e2-review.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L18-L20) prematurely asserts that cold review reports are already in `EVIDENCE/0160/delegation/` and adjudicated in §7, when this audit is currently executing and the directory does not exist.
+
+### Check 2: Consistency
+- **Session statuses:** 
+  - `0159 COMPLETE`, `0160 COMPLETE`, `0161 READY` are synchronized across:
+    - [`DOCS/sessions/SESSION_REGISTER.md`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L5) (line 5 and rows 0159–0161 at lines 564–566)
+    - [`DOCS/sessions/phase-7/README.md`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/README.md#L21-L23)
+    - [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#L3) (and lines 149–151)
+    - [`CHANGELOG.md`](file:///C:/dev/PRIN/CHANGELOG.md#L12-L24)
+    - Briefs [`0159`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md#L3), [`0160`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0160-exp002-e2-api-benchmark-result-and-reproduction-parity.md#L3), and [`0161`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md#L3).
+- *Defects found:* Unsuperseded stale references to DRAFT / PLANNED remain in [`benchmarks/campaign/README.md`](file:///C:/dev/PRIN/benchmarks/campaign/README.md#L27-L41) (Finding 4), [`e2-review-packet.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md#L6-L7) (Finding 5), and [`tests/README.md`](file:///C:/dev/PRIN/tests/README.md#L328) (Finding 6).
+
+### Check 3: Scientific Integrity
+- **Hypotheses and parameters:** No E2 change modified any hypothesis (H1–H4), prediction, population (175 PRIN / 172 reference / 62 predicates / 39 publication files), threshold, tolerance, sample plan, seed `(0, 2)`, statistic, abort criterion, or cap.
+- **Sensitivity binding:** [`preregistration.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L665-L676) (§11.3 item 1) and §8.1 fully bind E4/E5 to evaluate and report both the approved and pre-exposure (`6314532`) policies side by side in `summary.json`, `reproduction-comparisons.csv`, and the E5 report, and forbids reporting either alone if they differ.
+- **HARKing & post-hoc labeling:** Decision 9's reasoning in [`e2-review.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L98) conforms to Experimentation Standards §1 and §4. H2's predictions and rules were frozen at `7859030` before outcome exposure and remained untouched. H3's sensitivity analysis guarantees that any dependence of the verdict on post-exposure amendments is visible and reported.
+
+### Check 4: Evidence
+- **Verification log numbers:**
+  - `28/28 checks pass`: Confirmed in [`E1-e2-static-verification.log`](file:///C:/dev/PRIN/EVIDENCE/0160/verification/e2-review/E1-e2-static-verification.log#L36).
+  - `29,524 strings`: Confirmed in [`E2-crlf-crosscheck.log`](file:///C:/dev/PRIN/EVIDENCE/0160/verification/e2-review/E2-crlf-crosscheck.log#L8).
+  - `Lean 4.34.1`: Confirmed in [`E4-lean-check.log`](file:///C:/dev/PRIN/EVIDENCE/0160/verification/e2-review/E4-lean-check.log#L3).
+  - `Z3 5.1.0`: Confirmed in [`E3-z3-png.log`](file:///C:/dev/PRIN/EVIDENCE/0160/verification/e2-review/E3-z3-png.log#L8).
+- *Defects found:*
+  - Nightly `38184198596` durations (87 min, 14 min) stated in [`e2-review.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L99) have no supporting log file under [`EVIDENCE/0160/verification/`](file:///C:/dev/PRIN/EVIDENCE/0160/verification/) (Finding 1).
+  - Local gate G* logs claimed in [`e2-review.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L113-L115) and [`EVIDENCE/0160/README.md`](file:///C:/dev/PRIN/EVIDENCE/0160/README.md#L32) do not exist in the evidence bundle (Finding 2).
+
+### Check 5: Stale Text
+- **Hosted checks remain paused:** Stale occurrences without citing the Plan amendment #50 window appear in [`e1-handoff.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md#L106-L107) (Finding 7) and [`preregistration.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L490-L491) (Finding 9).
+- **15 figures:** Reconciled to 14 figures across Plan F4, amendment #51, `campaign-plan.md` §2.1 reconciliation column, `preregistration.md`, and all Phase 7 session briefs. No unreconciled occurrences remain.
+- **Pending publication:** Stale text in [`e1-handoff.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md#L82-L86) stating publication blocks E1 exit remains un-annotated in the section body (Finding 8).
+
+### Check 6: Relative Links
+- All relative Markdown links across changed and new documents resolve to valid existing files.
+
+---
+
+## 2. Concrete Findings
+
+### Finding 1: Nightly run 38184198596 duration numbers lack an evidence log in EVIDENCE/0160/
+- **File and line:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md:99`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L99)
+- **Verbatim quote:**
+  ```markdown
+  and their run IDs and durations are logged (nightly `38184198596`: `bench-regression` 87 min, `full-suite` 14 min).
+  ```
+- **Why wrong:** There is no log file or verification record covering nightly run `38184198596` or its job durations (87 min, 14 min) in [`EVIDENCE/0160/verification/`](file:///C:/dev/PRIN/EVIDENCE/0160/verification/) or [`verification/SHA256SUMS.txt`](file:///C:/dev/PRIN/EVIDENCE/0160/verification/SHA256SUMS.txt).
+- **Fix:** Download or export the verbatim hosted run summary/log for run `38184198596` into `EVIDENCE/0160/verification/`, add its checksum to `SHA256SUMS.txt`, and include it in [`tests/test_0160_manifest.py`](file:///C:/dev/PRIN/tests/test_0160_manifest.py).
+
+---
+
+### Finding 2: Premature claim of local gate evidence in EVIDENCE/0160/
+- **File and line:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md:113-115`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L113-L115) and [`EVIDENCE/0160/README.md:32-33`](file:///C:/dev/PRIN/EVIDENCE/0160/README.md#L32-L33)
+- **Verbatim quote ([`e2-review.md:113-115`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L113-L115)):**
+  ```markdown
+  The approved source's local gate, its hosted results under amendment #50 and
+  the forced nightly are recorded in `EVIDENCE/0160/` and in the E3 entry
+  checklist below.
+  ```
+- **Verbatim quote ([`EVIDENCE/0160/README.md:32-33`](file:///C:/dev/PRIN/EVIDENCE/0160/README.md#L32-L33)):**
+  ```markdown
+  - `verification/gate/` — the approved source's Windows local gate (G*),
+    Snyk Code and gitleaks.
+  ```
+- **Why wrong:** Neither `verification/gate/` nor any Windows local gate (G*) logs exist on disk under `EVIDENCE/0160/` or in `SHA256SUMS.txt`. The text asserts evidence is present that has not yet been executed or packaged into the bundle.
+- **Fix:** Execute the local gate on the approved source, commit the resulting logs under `EVIDENCE/0160/verification/gate/`, regenerate `SHA256SUMS.txt`, and update `test_0160_manifest.py`.
+
+---
+
+### Finding 3: Premature claim that cold reviews are present and adjudicated
+- **File and line:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md:18-20`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L18-L20), [`e2-review.md:120-123`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L120-L123), and [`EVIDENCE/0160/README.md:34-35`](file:///C:/dev/PRIN/EVIDENCE/0160/README.md#L34-L35)
+- **Verbatim quote ([`e2-review.md:18-20`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L18-L20)):**
+  ```markdown
+  Two read-only cold reviewers that drafted no part of E1 checked this
+  record and the decisions it contains. Their reports are in
+  `EVIDENCE/0160/delegation/` and are adjudicated in §7.<br>
+  ```
+- **Verbatim quote ([`e2-review.md:120-123`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L120-L123)):**
+  ```markdown
+  Antigravity (Gemini Flash) and Devin (SWE-2 High), both read-only, reviewed
+  the decisions, the protocol diff and the driver diff. Their reports and the
+  adjudication of every point are in `EVIDENCE/0160/delegation/` and in
+  `EVIDENCE/0160/README.md`.
+  ```
+- **Verbatim quote ([`EVIDENCE/0160/README.md:34-35`](file:///C:/dev/PRIN/EVIDENCE/0160/README.md#L34-L35)):**
+  ```markdown
+  - `verification/delegation/` — task files and verbatim stdout of the
+    Antigravity and Devin read-only cold reviews, and the adjudication notes.
+  ```
+- **Why wrong:** `EVIDENCE/0160/delegation/` and `verification/delegation/` do not exist on disk, and `e2-review.md` §7 contains no adjudication of findings. Furthermore, `e2-review.md` cites `EVIDENCE/0160/delegation/` while `EVIDENCE/0160/README.md` cites `verification/delegation/`.
+- **Fix:** Harmonize the delegation path, place the task files and stdout reports into that directory, and populate `e2-review.md` §7 with the actual adjudication.
+
+---
+
+### Finding 4: Unsuperseded DRAFT currency note in benchmarks/campaign/README.md
+- **File and line:** [`benchmarks/campaign/README.md:27-29`](file:///C:/dev/PRIN/benchmarks/campaign/README.md#L27-L29) and [`line 41`](file:///C:/dev/PRIN/benchmarks/campaign/README.md#L41)
+- **Verbatim quote ([lines 27–29](file:///C:/dev/PRIN/benchmarks/campaign/README.md#L27-L29)):**
+  ```markdown
+  The pre-registration is
+  **DRAFT** — the driver refuses admission until 0160 records dated
+  maintainer scientific approval — and no EXP-002 execution, pilot, or real
+  reference-input collection has run.
+  ```
+- **Verbatim quote ([line 41](file:///C:/dev/PRIN/benchmarks/campaign/README.md#L41)):**
+  ```markdown
+  The driver still refuses to run while the protocol is DRAFT.
+  ```
+- **Why wrong:** Line 23 was updated to say `EXP-002 — APPROVED at E2 (2026-10-12); E3 (0161) READY`, but the currency note immediately below (lines 26–41) was left un-updated, continuing to assert that the pre-registration is DRAFT and that the driver refuses to run without any superseding note.
+- **Fix:** Append a session 0160 dated note or update the note to state that EXP-002 was APPROVED at E2 on 2026-10-12 and that the protocol is now APPROVED.
+
+---
+
+### Finding 5: Unsuperseded DRAFT and pending review text in e2-review-packet.md
+- **File and line:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md:6-7`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md#L6-L7) and [`lines 173-174`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md#L173-L174)
+- **Verbatim quote ([lines 6–7](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md#L6-L7)):**
+  ```markdown
+  **Independent reviewer:** MichaelMaillet - review/decision pending
+  **Active stage:** 0159 E1 evidence/closure; 0160 remains PLANNED
+  ```
+- **Verbatim quote ([lines 173–174](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review-packet.md#L173-L174)):**
+  ```markdown
+  **EXP-002 remains DRAFT. E2 approval is pending. No experiment execution
+  occurred. Hosted checks and nightly run only inside the amendment #50
+  EXP-002 window.**
+  ```
+- **Why wrong:** While line 3 was updated with a superseding parenthetical, lines 6–7 and the concluding banner at lines 173–174 still assert that review is pending, 0160 is PLANNED, and the protocol remains DRAFT without a superseding note.
+- **Fix:** Add a note or qualifier to lines 6–7 and 173–174 clarifying that this reflects historical E1 state superseded by `e2-review.md`.
+
+---
+
+### Finding 6: Stale "protocol stays DRAFT" statement in tests/README.md
+- **File and line:** [`tests/README.md:328`](file:///C:/dev/PRIN/tests/README.md#L328)
+- **Verbatim quote:**
+  ```markdown
+  manifest, or executes an EXP-002 leg; the protocol stays DRAFT. The PR #33
+  ```
+- **Why wrong:** The section describing `test_exp002_driver.py` asserts that "the protocol stays DRAFT", which is stale following E2 approval.
+- **Fix:** Update line 328 to reflect that the protocol is APPROVED at E2 and that the tests verify driver behavior without executing experiment legs.
+
+---
+
+### Finding 7: "hosted checks remain paused" without citing amendment #50 window
+- **File and line:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md:106-107`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md#L106-L107)
+- **Verbatim quote:**
+  ```markdown
+  hosted checks remain paused under amendment #48 and it asserts nothing
+  about current CI):
+  ```
+- **Why wrong:** The text asserts that hosted checks remain paused under amendment #48 without acknowledging the active Plan amendment #50 EXP-002-scoped window.
+- **Fix:** Annotate lines 106–107 to qualify that amendment #48 is subject to the amendment #50 window for EXP-002.
+
+---
+
+### Finding 8: Stale "pending publication" blocking note in e1-handoff.md
+- **File and line:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md:82-86`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md#L82-L86)
+- **Verbatim quote:**
+  ```markdown
+  This decision plus publication is what blocks E1 exit — E1 stays
+  IN_PROGRESS; there is no scientific approval.
+  - **Remaining E1 work:** evidence packaging of the final-gate captures,
+    the checksum-finding decision, then publication/PR (lead action).
+  ```
+- **Why wrong:** PR #33 was published, the checksum finding approved, and the E1 exit accepted by the maintainer on 2026-10-12 (recorded on line 155). The body text at lines 82–86 remains un-annotated, asserting that publication is still pending and blocks exit.
+- **Fix:** Add a dated note clarifying that publication occurred as PR #33 and the E1 exit was accepted on 2026-10-12.
+
+---
+
+### Finding 9: Pre-registration §8 analysis plan omits amendment #50 window
+- **File and line:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md:490-491`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L490-L491)
+- **Verbatim quote:**
+  ```markdown
+  The retained prospective workflows
+  are not hosted-validated while amendment #48 is in force.
+  ```
+- **Why wrong:** Omits the amendment #50 window, unlike §9 (line 551) and §11.3 (lines 697–699) which explicitly cite amendment #50.
+- **Fix:** Update line 491 to qualify amendment #48 with the amendment #50 EXP-002-scoped window.
+
+---
+
+## 3. Areas Checked and Found Sound
+
+1. **Maintainer Authority and Delegation:**
+   - Verbatim maintainer directives for E2 decision delegation, E1 exit acceptance, and Amendment #51 figure count ratification are accurately quoted with exact dates (2026-10-12 UTC).
+   - Reviewer identity (Claude Opus 5.5, AI pair) and its non-independence regarding PR #33 remediation are clearly disclosed in [`e2-review.md:14-18`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L14-L18).
+
+2. **Core Session Status Synchronization:**
+   - Statuses for sessions 0159 (`COMPLETE`), 0160 (`COMPLETE`), and 0161 (`READY`) are aligned across [`DOCS/sessions/SESSION_REGISTER.md`](file:///C:/dev/PRIN/DOCS/sessions/SESSION_REGISTER.md#L5), [`DOCS/sessions/phase-7/README.md`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/README.md#L21-L23), [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#L3), [`CHANGELOG.md`](file:///C:/dev/PRIN/CHANGELOG.md#L12-L24), and the three session briefs.
+
+3. **Scientific Integrity and Pre-registration Preservation:**
+   - Zero changes made to hypotheses H1–H4, predictions, populations (175, 172, 62, 39), thresholds, tolerances, seed `(0, 2)`, statistics, abort criteria, or resource caps.
+   - Pre-registration §11.3 item 1 and §8.1 strictly bind E4 and E5 to report H3 under both the approved policy and pre-exposure sensitivity policy side by side, prohibiting reporting either alone if they differ.
+   - Decision 9 reasoning avoids HARKing and satisfies Experimentation Standards §1 and §4.
+
+4. **Static and Formal Verification Metrics:**
+   - 28/28 static re-derivation checks pass (`E1-e2-static-verification.log:36`).
+   - 29,524 CRLF test strings verified (`E2-crlf-crosscheck.log:8`).
+   - Lean 4.34.1 proof verified with no errors (`E4-lean-check.log:3`).
+   - Z3 5.1.0 PNG color rules equivalence and non-vacuity verified (`E3-z3-png.log:8`).
+   - Driver implementation and test suite properly enforce `sensitivity_sha256` collection and closure checks ([`tests/test_exp002_driver.py:523-574`](file:///C:/dev/PRIN/tests/test_exp002_driver.py#L523-L574)).
+
+5. **Figure Count Reconciliation:**
+   - Figure count of 14 figures (figures 2–15; 39 total files) is consistently documented across [`DOCS/PRIN_Project_Plan.md:48`](file:///C:/dev/PRIN/DOCS/PRIN_Project_Plan.md#L48) (F4), [`DOCS/PRIN_Project_Plan.md:250`](file:///C:/dev/PRIN/DOCS/PRIN_Project_Plan.md#L250) (amendment row 51), [`DOCS/experiments/campaign-plan.md:64`](file:///C:/dev/PRIN/DOCS/experiments/campaign-plan.md#L64), [`preregistration.md:46-47`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md#L46-L47), and briefs 0159 through 0163.
+
+6. **Markdown Link Integrity:**
+   - All relative hyperlinks in the modified and newly introduced Markdown files resolve to existing files.
+AGY-DONE

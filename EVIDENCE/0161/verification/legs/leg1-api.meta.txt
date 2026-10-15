@@ -1,0 +1,18 @@
+TAG=leg1-api
+MODE=api
+RUN_ID=RUN-20261012T212705Z-fae24c4-api-cpu
+COMMAND=.venv\Scripts\python -m benchmarks.campaign.exp002_driver --mode api --run-dir "benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu" --operator MichaelMaillet --source-sha fae24c4393c7a0232e6c8f0a6388b1775aa5fc05 --seed-counter 0 --seed-key 2
+UTC_START=2026-10-12T21:27:05.708Z
+UTC_END=2026-10-12T21:27:16.461Z
+EXIT_CODE=0
+WALL_SECONDS=10.733
+--- git status --porcelain=v1 --untracked-files=all (after the leg) ---
+?? DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md
+?? benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/api.json
+?? benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/campaign-metadata.json
+?? benchmarks/results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu/manifest.json
+--- run directory entries ---
+api.json  97194 bytes
+campaign-metadata.json  215 bytes
+manifest.json  554 bytes
+DONE

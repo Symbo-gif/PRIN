@@ -1,0 +1,93 @@
+I'll continue reading both diffs.Now let me read the current driver file and the audit document.Now the audit doc §4 and the supporting files.Now the driver test file — it's large, let me read it in chunks.Let me check `.gitignore`, `test_ea007_manifest.py` (for `_entries`/`_UNHASHED_BY_DESIGN`), and `capture_environment` briefly.Let me verify whether the `pr33-review` evidence files are in the manifest, and check `benchmarks/results` tracking and the EVIDENCE tree.The task is read-only — I'll use file tools instead. Let me check the manifest contents and the evidence directory listing.Now let me check what's tracked under `benchmarks/results` and look at a few remaining details.The glob tool may filter gitignored `*.log` files — let me verify the pr33-review `P1*.log` files actually exist on disk before drawing conclusions.I have the full picture now. Let me do a few final targeted verifications — checking `capture_environment` for `git_commit` provenance, and confirming the `benchmarks/results` tracked-file situation (which matters for the `git diff` exclusion semantics).I now have everything needed. Compiling the audit report.
+
+One more cross-check on the headline finding — the manifest's `pr33-review/` entries versus `REQUIRED_BUNDLE`:
+
+- `EVIDENCE/0159/verification/SHA256SUMS.txt` lines 80–92 hash **13** `pr33-review/` files.
+- `REQUIRED_BUNDLE` in `tests/test_0159_manifest.py` contains none of them.
+
+So `test_manifest_entries_are_all_required` must compute a non-empty `extra` set and fail on the real bundle — contradicting the stated "20 manifest tests pass". That's the headline finding.
+
+Here is the report.
+
+---
+
+# Cold self-audit — PR #33 remediation (driver + tests), commit 78d3600 + remediation
+
+Scope: `benchmarks/campaign/exp002_driver.py`, `tests/test_exp002_driver.py`, `tests/test_0159_manifest.py`, `tools/reproduce.py`, `benchmarks/_common/result.py`, the two `pr33-review` proof scripts, `DOCS/audits/PR033-multi-review-audit.md` §4, and both delta diffs. Read-only review; no commands run, no files edited.
+
+## Findings
+
+### F-A — `REQUIRED_BUNDLE` omits the 13 hashed `pr33-review/` entries; the new subset test fails on the real bundle — **High**
+
+`tests/test_0159_manifest.py:35-134`, check at `:189-197` (`test_manifest_entries_are_all_required`).
+
+`SHA256SUMS.txt` lines 80–92 hash 13 files under `verification/pr33-review/` (four `P1*.log` probe logs, `README.md`, four `delegation/*` files, two `ground-truth-probes*.py.txt`, `proof_defect_catching.py`, `proof_plugin.py`). None of these paths appears in `REQUIRED_BUNDLE`. `_unrequired_entries(entries, required)` = `entries - (required - _UNHASHED_BY_DESIGN)` therefore returns all 13 `verification/pr33-review/*` keys, and `assert not extra` fails. The audit's §7 states the bundle "is added to `REQUIRED_BUNDLE` and the manifest" — the manifest half happened; the `REQUIRED_BUNDLE` half did not. Either the required set must gain these 13 names, or the claim "20 manifest tests pass" does not hold for this tree. This is exactly the failure mode PR33-F6 was meant to close, now exercised against the remediation itself.
+
+### F-B — `_canonical_info` is applied by object number only; a same-number different-generation object is also rewritten — **Medium**
+
+`benchmarks/campaign/exp002_driver.py:669` (`info_number = info_key[0]`) and `:782` (`number == info_number`).
+
+Xref entries are keyed `(number, generation)`; overlapping subsections can legally produce two in-use entries `5 0 obj` and `5 1 obj` in one revision (the duplicate check at `:634` only rejects an exact `(n, g)` repeat). With trailer `/Info 5 0 R`, `info_number == 5` matches *both* objects, so `_canonical_info` strips `/Creator`/`/Producer`/`/CreationDate`/`/ModDate` from the unrelated `5 1` object as well. Two PDFs that differ only inside that second object (e.g. a `5 1 obj` catalog carrying `/Creator (PRIN)` vs `/Creator (reference)`) then normalize equal — different non-Info content comparing equal, the property the driver must never produce. Crafted-only (Matplotlib emits generation 0 exclusively), but concrete. Fix: carry `(number, generation)` — i.e. keep `info_key`, not `info_key[0]` — through to `_normalized_pdf` and the `^stream` check at `:689`.
+
+### F-C — `git diff` exclusion `:!benchmarks/results` silently exempts *modified tracked* files — **Low/Medium**
+
+`exp002_driver.py:1058-1066`.
+
+`git diff --name-only HEAD` never lists untracked files, so in the `changed` check the `:!benchmarks/results` pathspec can only exempt **modified tracked files** — and tracked files do exist under `benchmarks/results/` (all committed EXP-001 run records and READMEs; `.gitattributes:18` marks the tree `-text`). A working-tree modification to a committed historical run record would not block admission. The untracked-side exemption is needed for run output; the diff-side one only narrows the clean-tree guarantee. If the intent is "the raw record root may receive writes", the pathspec should be `:!benchmarks/results/EXP-002` (or dropped from `git diff` entirely).
+
+### F-D — `TimeoutExpired` (and `CalledProcessError` at admission) escape as non-`DriverError` — **Low**
+
+`_git_bytes` uses `subprocess.run(..., check=True, timeout=30)` (`:190-196`). `_check_provenance` catches only `subprocess.CalledProcessError` (`:1180`); a hung git raises `TimeoutExpired`, which propagates out of `check_run_complete` as a bare `SubprocessError`. That call site is `run_registered:1515` — *after* the ABORTED-recording `try` — so a git timeout during closure leaves a run dir whose result claims `COMPLETED` but that was never closed, reported to stderr via `main()`'s `SubprocessError` catch but not as a `DriverError`. Likewise `_admission`'s `rev-parse`/`diff`/`ls-files`/`log` failures escape as `CalledProcessError` rather than `DriverError` (pre-existing shape, unchanged by the remediation but now relied on more heavily). Impact is reporting-contract level; nothing is silently accepted.
+
+### F-E — Post-`try` writers can still leave a RUN directory with no `ABORTED` record — **Low**
+
+`run_registered:1506-1515`. `write_result` and `append_manifest` sit outside the `try/except`. An `OSError` or `ArtefactExistsError` there leaves a reserved RUN dir containing (at most) the sidecar and a staging `.tmp` remnant — no `ABORTED` result, no manifest. The docstring (`:1410-1412`) claims *every* post-reserve failure is recorded as `ABORTED` and manifested, which is false for the recording step itself. Detectable at closure (missing manifest / undeclared entry → `DriverError`), so fail-closed, but the claim overstates coverage. Either soften the docstring or wrap the write with a best-effort fallback record.
+
+### F-F — Greedy `<<(.*)>>` in `_canonical_info` mis-splits a valid dict ending in a flush hex string — **Low**
+
+`exp002_driver.py:745-750`. For `<< /X <AB>>` (a legal Info dict: `<AB>` is a valid hex string, `>>` closes the dict with no intervening whitespace), the last `>>` pair *is* the hex close plus dict close, so `group(3)` = ` /X <AB` and `_pdf_value_end` sees an unterminated hex string → `DriverError`. Same for `/X <4>>` etc. False rejection of spec-valid input; direction is fail-closed, and no real writer (Matplotlib emits whitespace before `>>`) produces it. Note, not urgent.
+
+### F-G — PNG colour rules: PLTE length is not bounded by bit depth — **Low**
+
+`exp002_driver.py:816` enforces `length % 3 == 0` and `length <= 768`, but PNG spec requires indexed PLTE to hold at most `2**bit_depth` entries. A depth-1 indexed PNG with a 768-byte PLTE (256 entries) is spec-invalid yet accepted by the chunk rules (Pillow's `verify`/`load` may or may not catch it — unverified here, no shell). Lenient direction only; no equality impact since it is accept/reject validation. Similarly tRNS length is unchecked against palette size for colour type 3.
+
+### F-H — `_check_provenance`/`_pdf_parts` can pick `/Info` out of a trailer *string value* — **Low**
+
+`exp002_driver.py:658-664`: the `/Info\s+N\s+G\s+R` and `/Info\b` searches run on the raw trailer-dict bytes. A trailer containing `/X (see /Info 9 9 R)` yields a spurious Info reference: if `(9,9)` is in-use, the *wrong* object is Info-canonicalized (false-equality vector); if not, `DriverError` (false rejection). Crafted-only — Matplotlib trailers are flat with no string values. Related: `(?m)^stream[\r\n]` at `:689` false-rejects an Info string value containing a newline followed by `stream\n`. Both fail-closed or crafted; Low.
+
+### F-I — Font-cache drift check can false-abort a cold-environment run once — **Low**
+
+`exp002_driver.py:909-916`, used at `:959`/`:1010`. `renderer` is captured before generation and compared after. If the matplotlib `fontlist-v*.json` does not exist at capture (`sha256: None`) and matplotlib creates it during the render, `renderer != _render_environment()` raises `DriverError` on a genuine run — a one-time false abort on a cold cache dir; a retry passes. Realistically rare (`font_manager` instantiates `FontManager` at import and usually writes the list then), but the scenario is concrete. Consider treating `None → digest` (cache *created* during render) as non-drift, or documenting the first-run caveat.
+
+### F-J — Controlled negatives for PR33-F6 exercise `_unrequired_entries`, not the real test — **Low**
+
+`test_0159_manifest.py:361-388`. `test_double_deletion_is_caught` and `test_unrequired_manifest_entry_is_caught` call the helper on fixtures; `test_manifest_entries_are_all_required` itself has no negative fixture that would prove it executes the subset check on real manifest input. Combined with F-A, this is moot until the real bundle passes. Low.
+
+### F-K — Real-git tests depend on ambient git behaviour — **Low (informational)**
+
+`test_exp002_driver.py:2778+` (`test_real_git_resolves_committed_protocol`) and `:1136+`-equivalent (`test_real_git_shadow_pathspec_is_top_level_only`, current `:~2690` in diff numbering / `test_real_git_shadow_pathspec_is_top_level_only`). They `pytest.skip` only when `git` is absent — on ubuntu-latest/windows-latest they run. Two residual risks: `git commit` fails if the runner sets `commit.gpgsign=true` globally (no `-c commit.gpgsign=false` guard), and the shadow-pathspec test relies on `:(glob)*.py` matching `.hidden.py` (wildmatch without period-flag semantics — correct, and asserted against real git). Neither is Windows-only; no test in the new set depends on Windows behaviour that would fail on Linux — the symlink tests gate on an import-time capability probe. No action needed beyond optionally adding `-c commit.gpgsign=false`.
+
+## Areas checked — no finding
+
+- **`_pdf_value_end` token swallowing:** a masked key removes exactly one parsed value (`(…)` with escape/depth counting, `<…>` hex, `/name`, `n g R`, atom). Under-consumption leaves a non-`/` byte → next loop iteration raises `DriverError`; over-consumption can only be inside a string value, which is semantically part of that value anyway. `>>` inside strings is handled (greedy split lands on the dict's terminal `>>`); unterminated strings, duplicate keys, `<<` values, arrays, dangling names all raise `DriverError`. `#xx`-escaped masked names (`/Cr#65ator`) are *retained* — conservative direction, no false equality.
+- **`_canonical_info` order/twice-parse:** values are parsed before the masked-key check, so malformed bytes can't hide under a masked key; kept entries are byte-exact; name↔value whitespace canonicalized symmetrically.
+- **`_pdf_parts`:** all decimal captures bounded to ≤10 digits (≤5 for generations) — oversized fields fail the match and raise `DriverError`, not `ValueError`; count bound `count > len(lines) - index - 1` prevents `IndexError`; present-but-unparseable `/Info` is rejected; present `/Info\b` substring in `/Information` correctly does *not* match.
+- **`_validate_png` spec rules:** bit-depth table, compression/filter 0, interlace ∈ {0,1}, PLTE required for colour 3 and forbidden for 0/4, tRNS allowed for 0/2/3 and forbidden for 4/6, single PLTE/tRNS, PLTE+tRNS before first IDAT, tRNS after PLTE — all correctly stated for a Matplotlib RGBA/RGB emitter. IHDR-count and IDAT-contiguity enforced before IHDR parsing (ordering is safe).
+- **`_check_provenance` logic:** `merge-base commit sha == commit` is a correct ancestry test; unknown `source_sha` or unresolvable `commit` → `CalledProcessError` → `DriverError`; committed non-UTF-8 protocol → `DriverError` (the new `UnicodeDecodeError` catch at `:1023-1026` covers the asked-about case); digest checked before approval-date parsing; approval mismatch catches a non-date recorded string. Ordering inside `check_run_complete` (manifest → inventory → dir entries → metadata → envelope → observations → provenance → storage) is safe — every `case["…"]`/`row["…"]`/`item[key]` access is guarded by an earlier short-circuited `or` term, so no `KeyError`/`TypeError` escapes `_check_observations`.
+- **`_check_observations` vs genuine records:** API rows have exactly the 8 `_API_ROW_KEYS` (unresolved rows now padded with `None`s); `sorted(expected)` row order matches `collect_api`'s `sorted(expected)` iteration; `_CASE_KEYS <= set(case)` admits C02's extra `K`/`alpha_radians` keys and `right_path: None`; publication file records allow the `archived_*` extras; `implementation` is `"reference"` for `reference` and `"prin"` for `prin`/`repeatability`, matching `run_registered`'s dispatch; publication file counts are deliberately uncounted (H3 falsifier stays admissible, tested).
+- **`_admission`:** `ls-files --others --exclude-standard -- . ':!benchmarks/results' ':!log.md'` correctly covers the whole checkout while exempting the raw record root and operator log; the driver writes nothing before admission, and its later writes land only in exempt (`benchmarks/results`) or ignored (`DOCS/test_and_benchmark_results`, `*.log`) paths — E3 is not made impossible. `:(glob)*.py`/`*.pth` top-level-only matching is asserted by a real-git test including a dotfile; ignored top-level `*.py` shadowers are caught because `--others` without `--exclude-standard` lists ignored files. Reserved-only gap: an *ignored directory* acting as a shadow package is not covered by the glob, but no `.gitignore`d top-level name collides with an imported module.
+- **`run_registered` restructure:** generated-root reuse is now checked inside `_reserve` after name validation and before `mkdir` (the CodeRabbit ordering complaint resolved); sidecar + `OUTPUT_ROOT.mkdir` + `generated.mkdir` + post-creation symlink re-check are all inside the abort block; a genuine closed run contains exactly `{campaign-metadata.json, <result>, manifest.json}`, so the `iterdir` inventory cannot reject a real run (`__pycache__`/staging temps are either absent or cleaned); `check_run_complete` correctly rejects ABORTED records via `status`.
+- **Mutation proof (`proof_defect_catching.py`/`proof_plugin.py`):** a mutant cannot be counted caught for unrelated reasons — `caught` requires `base_code == 0`, `mutant_code == 1`, *and* `"failed"` in the final summary line; a plugin exec error or collection error exits 2/3 with an `"errors"` summary and is scored NOT-CAUGHT, and anchors must match exactly once (`ANCHOR-ERROR` otherwise). Mutant `-k` selector rewriting (`A::B` → `A and B`) is correct.
+- **Manifest test semantics:** `_unrequired_entries` + `test_manifest_entries_cover_required_files` jointly enforce manifest = required hashed set; the `_line`/`_fixture_bundle` helpers produce EA-007-format lines and the negative fixtures exercise the helper correctly (the only break is F-A — the required set itself is incomplete).
+- **Cross-platform tests:** no new test depends on Windows-only behaviour; byte fixtures are platform-neutral, symlink tests probe capability at import, and `check-ignore`/`git init` invocations work on ubuntu-latest.
+
+## Summary
+
+| Sev | Count | IDs |
+|---|---|---|
+| High | 1 | F-A (manifest `REQUIRED_BUNDLE` vs `pr33-review/` mismatch → failing gate test) |
+| Medium | 1 | F-B (Info canonicalization keyed by object number, not `(n, g)`) |
+| Low/Medium | 1 | F-C (diff exclusion covers tracked files) |
+| Low | 7 | F-D, F-E, F-F, F-G, F-H, F-I, F-J, F-K |
+
+The two that matter before merge: **F-A** (a required gate test currently fails — either extend `REQUIRED_BUNDLE` with the 13 `verification/pr33-review/*` paths or the stated green status is wrong) and **F-B** (the one remaining path where content outside the Info object can normalize equal).

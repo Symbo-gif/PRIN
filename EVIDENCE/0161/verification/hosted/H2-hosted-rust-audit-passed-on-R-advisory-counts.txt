@@ -1,0 +1,6 @@
+COMMAND: gh run view 38260614029 -R Symbo-gif/PRIN --job 114849834855 --log   (filtered to the advisory-count lines)
+SOURCE: hosted rust workflow audit job on fae24c4 (R), conclusion success, 2026-10-12T14:07:32Z -> 14:10:36Z
+UTC-START: 2026-10-13T00:18:25Z
+----
+audit	UNKNOWN STEP	2026-10-12T14:10:33.8271177Z ^[[0m^[[0m^[[1m^[[32m      Loaded^[[0m 1299 security advisories (from /home/runner/.cargo/advisory-db)
+audit	UNKNOWN STEP	2026-10-12T14:10:34.4049916Z ^[[0m^[[0m^[[1m^[[33mwarning:^[[0m 3 allowed warnings found

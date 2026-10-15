@@ -1,0 +1,20 @@
+An implementation plan artifact summarizing the verification methodology and observations has been created at [implementation_plan.md](file:///C:/Users/there/.gemini/antigravity-cli/brain/8ccc8d7c-201c-4b73-95ca-137d5624d330/implementation_plan.md).
+
+### Cold-Review Findings
+
+1. **Low** — [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md:163`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#L163)
+   Line 163 retains the pre-acceptance bullet text `- **Open for maintainer action (`report.md` §§13.3, 14):** (1) Verify and accept... (2) approve... (3) decide... (4) keep... (5) select... (6) PR #33 merge` without a dated update or note recording that all six items were decided by the maintainer on 2026-10-15 UTC.
+2. **Info** — [`DOCS/sessions/contingencies/2026-10-14-exp002-d1-s1-correction-implementation.md:31`](file:///C:/dev/PRIN/DOCS/sessions/contingencies/2026-10-14-exp002-d1-s1-correction-implementation.md#L31)
+   Section heading retains `## Scope (to be approved by the maintainer before work starts)` despite the scope having been approved as written on 2026-10-15 UTC (per line 3 and line 53).
+3. **Info** — [`DOCS/reports/DEFERRED_VALIDATION_REGISTER.md:586-587`](file:///C:/dev/PRIN/DOCS/reports/DEFERRED_VALIDATION_REGISTER.md#L586-L587)
+   Breaking `flops::tests::` across a line boundary inside an inline code span causes CommonMark renderers to display an unwanted space (`flops::tests:: measure_wall_time...`).
+4. **Info** — [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md:29`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md#L29)
+   Header summary table states `[§15](#15-errata) — none at initial issue` for Errata, whereas §15 now records post-issue Erratum 1 (2026-10-15 UTC).
+
+---
+
+### Verification Summary
+
+- **Consistency:** Dates (2026-10-15 UTC), verdicts (H1/H2/H4 `CONFIRMED`, H3 `REFUTED` under both approved `21/39` and sensitivity `5/39` policies), counts (`21/39`, `5/39`, `18/39`, `34/39`, `39/39`, `175/175`, `172/172`, `62/62`), run IDs (`38638690511`, `38638690614`, `38638690459`, `38638690490`, `38638690641`, `38638690606`, `38638683317`, `38447171376`, `115468476990`, `116108361806`, `116108361327`, `116108362002`), commit SHAs (`6a5ed72`, `cad9a8c`, `3731fc2`, `fae24c4`, `9a9889d`), advisory IDs (`RUSTSEC-2026-0338`..`0342`, `RUSTSEC-2026-0346`..`0349`), versions (`quinn-proto 0.11.16` / `>= 0.11.18`; `rustls 0.23.45` / `>= 0.23.46`), and DV IDs (`DV-045`, `DV-046`, `DV-047`) agree across all 10 files.
+- **Wording & Governance:** No root cause is claimed for H3; PR #33 merge is not claimed done prematurely; workflows are correctly stated as remaining enabled until merge then disabled; DV items are explicitly bounded outside the approved S1 scope; `cargo audit` is accurately reported as red (`exit 1`); and acceptance explicitly does not release session `0164`.
+- **Decisions & Markdown:** All six maintainer decisions are recorded against their primary artefacts; table cells are balanced in the DV rows and §13.2 addendum; all relative links are valid.

@@ -1,0 +1,31 @@
+COMMAND: .venv/Scripts/python.exe -m pytest tests/test_0159_manifest.py tests/test_exp002_driver.py tests/test_wp001_baseline.py -p no:cacheprovider -q --basetemp=C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/g16-basetemp
+CWD: C:/dev/PRIN
+SOURCE: final staged tree after evidence packaging (REQUIRED_BUNDLE and SHA256SUMS.txt updated for the pr33-review captures; no other source change since G13b)
+UTC-START: 2026-10-11T23:20:29Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+============================= test session starts =============================
+platform win32 -- Python 3.12.9, pytest-8.4.2, pluggy-1.6.0
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+collected 81 items / 1 error
+
+=================================== ERRORS ====================================
+________________ ERROR collecting tests/test_exp002_driver.py _________________
+ImportError while importing test module 'C:\dev\PRIN\tests\test_exp002_driver.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\there\AppData\Local\Programs\Python\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_exp002_driver.py:31: in <module>
+    import matplotlib
+E   ModuleNotFoundError: No module named 'matplotlib'
+=========================== short test summary info ===========================
+ERROR tests/test_exp002_driver.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+============================== 1 error in 0.81s ===============================
+----
+ELAPSED_SECONDS: 1.6
+EXIT_CODE: 2

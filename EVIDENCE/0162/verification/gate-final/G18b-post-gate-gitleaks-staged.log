@@ -1,0 +1,14 @@
+COMMAND: C:/dev/PRIN/DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git C:/dev/PRIN --pre-commit --staged --redact --no-banner --report-format json --report-path C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/5e1d6deb-495c-48f1-bf1a-4c8ad51472b3/scratchpad/e4/gatePost/gitleaks-staged.json
+CWD: C:/dev/PRIN
+SOURCE: Post-gate delta: final candidate with the gate-final logs, README and SHA256SUMS staged
+HEAD: 42f0eb3ea0b580e7c41a8fa9d7ae9679166df2ca
+UTC-START: 2026-10-13T18:26:27Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+[90m3:26PM[0m [32mINF[0m [1m0 commits scanned.[0m
+[90m3:26PM[0m [32mINF[0m [1mscanned ~3382298 bytes (3.38 MB) in 347ms[0m
+[90m3:26PM[0m [32mINF[0m [1mno leaks found[0m
+----
+UTC-END: 2026-10-13T18:26:39Z
+ELAPSED_S: 9
+EXIT_CODE: 0

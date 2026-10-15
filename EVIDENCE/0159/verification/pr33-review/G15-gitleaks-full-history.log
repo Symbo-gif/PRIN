@@ -1,0 +1,13 @@
+COMMAND: C:/dev/PRIN/DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git C:/dev/PRIN --redact --no-banner --report-format json --report-path C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/gate/gitleaks-history-78d3600.json
+CWD: C:/dev/PRIN
+SOURCE: committed history through 78d360029028c0571bdc272bef39e901c85f09da, with the working-tree .gitleaksignore carrying the approved fingerprint
+UTC-START: 2026-10-11T23:19:29Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+[90m8:20PM[0m [32mINF[0m [1m714 commits scanned.[0m
+[90m8:20PM[0m [32mINF[0m [1mscanned ~81228356 bytes (81.23 MB) in 39.4s[0m
+[90m8:20PM[0m [32mINF[0m [1mno leaks found[0m
+----
+ELAPSED_SECONDS: 40.0
+EXIT_CODE: 0

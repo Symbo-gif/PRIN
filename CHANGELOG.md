@@ -9,6 +9,152 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-002 E5 reported — H1, H2, H4 confirmed; H3 refuted, D1 correction cycle
+  opened, session 0164 blocked (session 0163, 2026-10-14 UTC).** The E5 report
+  `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md`
+  issues all verdicts in full from the five immutable E3 records at source
+  `fae24c4` (freeze commit `9a9889d`): **H1 CONFIRMED** (175/175 `api_symbols`
+  resolved, 172/172 `legacy_api_names` owned, 0 duplicate/removed/unexpected,
+  frozen-contract sets empty), **H2 CONFIRMED** (62/62
+  `claim_comparator_records` agree across families C01–C05), **H3 REFUTED (D1)**
+  under both the approved section 5.4 comparison policy (21/39 `generated_files`
+  equal, 18/39 differing: the PDF and PNG of figures 5, 7, 8, 9, 10, 11, 12,
+  14, and 15, while all 11/11 LaTeX tables and 5/14 figures match) and the
+  section 11.3 pre-exposure sensitivity policy (5/39 equal, 34/39 differing),
+  and **H4 CONFIRMED** (39/39 `generated_files` raw-byte-identical between two
+  separate PRIN processes, canonical projections equal). In session 0163, the
+  retained E3 publication bytes (39/39 per run) and input snapshots (172/172
+  per run) were verified first against their manifested digests, the seven E4
+  analysis outputs and `report-manifest.json` (`6b15dcc1…68781`) regenerated
+  byte-identically (8/8) in a clean detached worktree outside the repository,
+  the protocol section 8.2 reconstruction reproduced 39/39 PRIN-arm raw files
+  and 39/39 normalized/sensitivity digests on both arms (25/39 reference-arm
+  raw files, due to the unpinned reference PDF `CreationDate` timestamp,
+  recorded as a reconstruction limitation under section 11.3 item 2), and an
+  independent recount matched E4 with zero discrepancies. Per campaign plan
+  sections 3.3 and 10.4, the four conditional correction session briefs
+  `DOCS/sessions/contingencies/2026-10-14-exp002-d1-s1-correction-implementation.md`
+  through `s4-correction-documentation.md` (`EXP-002-D1`) are instantiated, an
+  erratum admonition is added to the Parity Report (`DOCS/sphinx/parity_report.rst`)
+  qualifying cross-generator figure parity on the 9 differing figures, and
+  session 0164 (EXP-003 E1) and downstream campaign sessions are set to
+  `BLOCKED` until S1–S4 close and `EXP-002-r1` returns a non-reversal verdict
+  (or a Project Plan section 8.3 amendment is adopted). No root cause is
+  claimed at E5. The report was verified and accepted by the maintainer and
+  the S1 scope approved on 2026-10-15 UTC (see the following entry).
+
+- **EXP-002 E5 verified and accepted; correction-cycle scope approved
+  (session 0163, 2026-10-15 UTC).** The maintainer (`MichaelMaillet`)
+  verified and accepted the E4/E5 verdicts, completing `report.md` section
+  14's verification block; acceptance does not release session `0164` or the
+  `EXP-002-D1` correction cycle. The S1 correction scope was approved as
+  written. Decisions recorded at the same close-out
+  (`EVIDENCE/0163/verification/acceptance/maintainer-decisions-2026-10-15.md`):
+  the retained `DOCS/test_and_benchmark_results/EXP-002/RUN-*/` roots stay on
+  disk until S1 completes; the seven Plan-amendment-#50 hosted workflows
+  (`rust`, `python`, `parity`, `repro`, `snyk`, `gpu`, `nightly`) remain
+  enabled until PR #33 merges and are disabled after the merge per amendment
+  #50's end-of-window clause; and under established governance three dated
+  Deferred Validation Register rows were opened — `DV-045` (`cargo audit` red
+  on transitive `quinn-proto 0.11.16` `RUSTSEC-2026-0338..0342` and
+  `rustls 0.23.45` `RUSTSEC-2026-0346..0349` advisories; governed lockfile
+  update gated to a dedicated hotfix or authorized session), `DV-046`
+  (`gpu-cuda` `flops.rs:400:9` intermittent `mean_ms <= max_ms` assertion,
+  observed once on `cad9a8c`, passing on `3731fc2` and `6a5ed72`), and
+  `DV-047` (stale `python/prin/_prin_core.pyd` and `prin_core.pth`; rebuild
+  gated before `EXP-002-r1`'s E3 run). The E5 report head `6a5ed72`'s hosted
+  results are recorded in `report.md` section 13.2's post-issue addendum
+  (6 of 7 workflows green; `rust` red in `audit` only, the DV-045 advisories;
+  `gpu-cuda` green).
+
+- **EXP-002 E4 analysed — H3 refuted, D1 flag raised (session 0162,
+  2026-10-13 UTC).** The registered analysis module
+  `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py`
+  was committed and pushed (`3731fc2`) before its first real run, then applied
+  the frozen decision rules to the five E3 records (all admissible, none
+  aborted; two runs byte-identical). **H1 CONFIRMED** (175/175 exports
+  resolved, 172/172 legacy names owned), **H2 CONFIRMED** (62/62 historical
+  conclusion predicates agree), **H3 REFUTED** (21/39 publication files equal
+  under the approved comparison: the PDF and PNG of nine figures differ, while
+  all 11 tables match each other and the archived tables; also refuted under
+  the registered sensitivity policy, so the verdict does not depend on the
+  post-exposure amendment), **H4 CONFIRMED** (39/39 raw-identical between two
+  PRIN renders). The publication-fidelity mismatch is a **D1** under campaign
+  plan section 10.4: E5 (session 0163, now READY) reports it in full and then
+  blocks its successor. No cause is asserted at E4 and no tolerance or policy
+  changed. Record: `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis.md`.
+  A one-line erratum quotes the freeze SHA on line 1 of the E3 log (campaign
+  plan section 12.4).
+
+- **EXP-002 E3 executed — five registered runs, no verdict (session 0161,
+  2026-10-12 UTC).** The committed driver `benchmarks/campaign/exp002_driver.py`
+  ran the five registered legs once each, in the registered order, at source
+  `fae24c4`: `api`, `conclusions`, `reference`, `prin` and `repeatability`. The
+  result is five immutable, manifested `RUN-` directories under
+  `benchmarks/results/EXP-002/` — every exit code 0, **0 aborted, no rerun, no D1
+  condition** — in 63.821 s of aggregate CPU wall (cap 12 h) and 339,128 tracked
+  bytes. The protocol froze at the first run (2026-10-12T21:27:05Z). Each record
+  was validated independently for structure and identity (69, 67, 73, 73 and 73
+  checks, all passing), and the generated publication roots are retained,
+  untracked, until E5. **No hypothesis verdict was computed and no observation
+  payload was examined:** H1–H4, the H3 dual-policy report and any D1
+  determination belong to E4 (session 0162, now READY). The execution log is
+  `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md`.
+  Unrelated to the experiment: the hosted `cargo audit` job went red on the E3
+  commit because five new RustSec advisories (`quinn-proto 0.11.16`, which is in
+  `Cargo.lock` only as an inactive optional dependency) entered the advisory
+  database; the lockfile is unchanged and the finding awaits the maintainer's
+  decision (log §9).
+
+- **EXP-002 approved at E2; E3 ready (sessions 0159–0160, 2026-10-12 UTC).**
+  The maintainer accepted the E1 exit and delegated the E2 decisions. E2
+  (`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md`)
+  re-derived every E1 provenance and population claim statically (28/28),
+  proved in Lean 4 that the table canonicalization exactly inverts Windows
+  text-mode newline translation, and checked with Z3 that the driver's PNG
+  colour rules equal the PNG specification. It approved H1–H4 and the PR #33
+  comparison amendments. Because H2/H3 outcome information had been
+  published before E2, it registered three procedures: a pre-exposure
+  sensitivity digest per publication file, with H3 reported under both
+  policies; retention of the generated publication bytes until E5; and
+  hosted-CI accounting. Plan amendment #51 (F4 = 14 figures) is ratified.
+  Session 0161 (E3) is READY; no experiment leg has executed. *(Dated update,
+  2026-10-12 UTC: E3 then executed; see the entry above.)*
+
+- **EXP-002 E1 preparation — DRAFT protocol, collection driver and timeout
+  governance (session 0159, 2026-10-11 UTC).** The lead-authored DRAFT
+  pre-registration
+  `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md`
+  and the necessary E1 collection driver
+  `benchmarks/campaign/exp002_driver.py` (with synthetic-fixture regression
+  tests `tests/test_exp002_driver.py` and `EVIDENCE/0159` manifest
+  regression tests `tests/test_0159_manifest.py`) are prepared for
+  independent E2 review at session 0160. Project Plan amendment #49
+  adopted supervised-local-validation timeout governance (Testing
+  Standards §7 and cross-references): no arbitrary whole-run wall-clock
+  kill while a run is demonstrably progressing, evidence-based finite
+  bounds, and no retroactive satisfaction of interrupted coverage.
+  A post-review lead-authored correction hardened the H3 publication
+  format guards from magic-byte checks to registered-container
+  validation (Matplotlib single-revision classic-xref PDF structure;
+  PNG CRC, critical-chunk and decoded-image checks) with xref/startxref
+  pointer canonicalization, and the synthetic fixtures were upgraded to
+  structurally valid containers accordingly. The final local gate ran on
+  checkpoint `63145325`: FAST 3710 passed / 178 skipped / 55 deselected
+  (exit 0), FULL 5904 passed / 184 skipped (exit 0 after one preserved
+  WinError-32 setup-lock attempt), focused driver gate 256 passed at
+  99.61 % changed-driver coverage (whole-`prin` coverage 94.810405 %
+  unrounded; the rounded `95` is not an unrounded ≥95 claim), Sphinx
+  `-W` clean, governance battery green, Snyk Code 0 medium-or-higher on
+  the changed Python scope. The full-history secret scan is a real
+  exit 1 — one known noncredential checksum finding whose exception is
+  pending maintainer approval — and publication (push/PR) is also
+  pending. No experiment results are recorded: the protocol is DRAFT
+  and no EXP-002 execution or pilot has run. *(Dated correction,
+  2026-10-11: published as PR #33; the maintainer then approved the
+  exact checksum fingerprint exception — see the PR #33 entry under
+  Fixed.)*
+
 - **EXP-001-r1 executed, adjudicated and reported — all five hypotheses
   `CONFIRMED`, no D1 (2026-09-29 UTC).** The campaign plan §10.4 item 4 re-run
   of EXP-001 completed E3→E5 on a new pre-registration, six new run directories
@@ -304,6 +450,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   campaign-wide 64 MiB cap is unchanged.
 
 ### Fixed
+
+- **Hosted-check failures and a flaky local test fixture (2026-10-12).**
+  Rust 1.99's clippy rejects a single-element `for` loop in
+  `crates/prin-kernels/src/compat.rs` (behaviour unchanged). The `python`
+  lint job lacked numpy, so `mypy DOCS/experiments/ --strict` saw `Any`;
+  `ci/lint-constraints.txt` now pins the `.venv` numpy. The intermittent
+  `WinError 32` `tmp_path` setup errors were reproduced: pytest deletes the
+  previous session's `--basetemp` lazily, inside the first `tmp_path` setup,
+  with no retry. A `tests/conftest.py` session-start hook now deletes it up
+  front, retrying sharing violations and clearing read-only bits. The
+  fast suite twice crashed with an access violation in `os.walk` inside the
+  WP-001 inventory test. The crash has no reproduced root cause. Inside a git
+  work tree, `tools/wp001_baseline.py inventory` now lists git-visible files
+  only (about 4,500 rather than about 110,800). Git-ignored scratch is
+  therefore no longer counted as project state.
+
+- **PR #33 review round — EXP-002 driver, DRAFT protocol and evidence
+  records (session 0159, 2026-10-11 UTC).** Seven review sources were
+  adjudicated against executed probes in
+  `DOCS/audits/PR033-multi-review-audit.md`, which records 38 findings
+  (`PR33-F1`…`PR33-F38`). Two DRAFT-protocol defects would have made H3
+  report every table and every PDF unequal on the registered Windows host.
+  The pinned reference table writer emits CRLF through text mode
+  (`PR33-F1`), and the reference PDF Info dictionary lacks `ModDate` and
+  wraps differently (`PR33-F2`). The protocol now registers symmetric
+  CRLF-to-LF table canonicalization and removes the four registered
+  Info entries; both are flagged as E2 decisions. Run closure now
+  re-derives pre-registration provenance from git (`PR33-F3`) and checks
+  each mode's observation schema without counting publication files
+  (`PR33-F4`). A reused output root no longer leaves an unrecorded RUN
+  directory (`PR33-F5`). `tests/test_0159_manifest.py` now requires the
+  manifest to equal its required set (`PR33-F6`). Oversized PDF decimals
+  and PNG PLTE/tRNS order now fail closed (`PR33-F7`/`F8`), every failure
+  reaches the registered `NOT COMPLETED` line (`PR33-F15`), and admission
+  covers the whole checkout, including top-level module shadowing
+  (`PR33-F30`). Stale status lines carry dated corrections, and the
+  `GATE-STATUS.md` mislabel is corrected. Plan amendment #50 opens an
+  EXP-002-scoped hosted-check window, amendment #51 reconciles F4 to 14
+  figures, and the maintainer-approved exact gitleaks fingerprint is
+  recorded. Disclosure: two reviews published H2/H3 outcome information
+  from real-input runs before E2 (`PR33-F38`; protocol section 11.2). No
+  EXP-002 execution occurred, and the protocol remains DRAFT.
 
 - **Redundant `±1e4` derivative guard on the fixed-step path — the
   `nightly.yml` `bench-regression` breach the EXP-001 D1 correction introduced

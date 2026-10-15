@@ -8,7 +8,28 @@ numbered session. Copy each template to a dated/identified file before use.
 
 ## Open corrections
 
-(none)
+EXP-002 D1 — **OPEN, opened 2026-10-14 UTC by session `0163` (EXP-002 E5).**
+Triggered by campaign plan §10.4 (pre-registration §4.3): EXP-002's H3 is
+`REFUTED` under both the approved §5.4 comparison policy (`21/39`
+`generated_files` equal, `18/39` differing: both the `.pdf` and `.png` of
+figures 5, 7, 8, 9, 10, 11, 12, 14, and 15, while all `11/11` `.tex` tables
+and `5/14` figures match) and the §11.3 sensitivity policy (`5/39` equal,
+`34/39` differing), while H1 (`175/175` `api_symbols`, `172/172`
+`legacy_api_names`), H2 (`62/62` `claim_comparator_records`), and H4 (`39/39`
+raw-identical across two PRIN processes) are `CONFIRMED`. The four sessions
+below run in strict `S1 → S2 → S3 → S4` order after maintainer approval of the
+S1 scope. **Session `0164` (EXP-003 E1) and every later campaign session
+(`0165`–`0194`) stay blocked until S4 closes and `EXP-002-r1` returns a
+non-reversal verdict** (or the maintainer adopts a Project Plan §8.3
+amendment; campaign plan §3.3, §10.4 items 2–5). No root cause is claimed by
+the triggering record; S1 owns it. See the
+[EXP-002 E5 report](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md)
+§§3, 6, 8, 11, 14.
+
+- [2026-10-14-exp002-d1-s1-correction-implementation.md](2026-10-14-exp002-d1-s1-correction-implementation.md)
+- [2026-10-14-exp002-d1-s2-correction-audit.md](2026-10-14-exp002-d1-s2-correction-audit.md)
+- [2026-10-14-exp002-d1-s3-correction-remediation.md](2026-10-14-exp002-d1-s3-correction-remediation.md)
+- [2026-10-14-exp002-d1-s4-correction-documentation.md](2026-10-14-exp002-d1-s4-correction-documentation.md)
 
 ## Closed corrections
 

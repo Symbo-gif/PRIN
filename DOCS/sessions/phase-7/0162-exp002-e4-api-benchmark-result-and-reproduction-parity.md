@@ -1,6 +1,6 @@
 # Session 0162 — EXP-002 / C1 E4: Analysis — API, benchmark-result, and reproduction parity
 
-**Status:** PLANNED  
+**Status:** COMPLETE — analysed 2026-10-13 UTC with the committed module `3731fc2`: H1 CONFIRMED, H2 CONFIRMED, H3 REFUTED (approved and §11.3 sensitivity policies), H4 CONFIRMED; **D1 flag raised (H3)**; see the [analysis record](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis.md) and the [E4 handoff](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#e4-to-e5-handoff-session-0162-2026-10-13-utc)
 **Roadmap phase:** 7 — Experimentation campaign and stable release  
 **Execution unit:** EXP-002 / C1  
 **Session type:** E4 — Analysis  
@@ -17,12 +17,12 @@ Public API mapping, legacy benchmark conclusion equivalence, and byte-comparable
 
 ## Contract
 
-- **Acceptance:** 175+ mapped symbols pass; all historical scientific conclusion orderings remain unchanged; 15 figures/11 tables match the manifest.
+- **Acceptance:** 175+ mapped symbols pass; all historical scientific conclusion orderings remain unchanged; the 14 figures × 2 formats + 11 tables = 39 generated files match the manifest (reconciled to campaign plan §2.1, Plan amendment #51, 2026-10-11).
 - **Non-goals:** Any non-pre-registered analysis may appear only as explicitly exploratory; no silent protocol changes.
 
 ## Scientific contract
 
-- **Registered expectation to formalize:** 175+ mapped symbols pass; all historical scientific conclusion orderings remain unchanged; 15 figures/11 tables match the manifest.
+- **Registered expectation to formalize:** 175+ mapped symbols pass; all historical scientific conclusion orderings remain unchanged; the 14 figures × 2 formats + 11 tables = 39 generated files match the manifest (reconciled to campaign plan §2.1, Plan amendment #51, 2026-10-11).
 - **Failure/abort boundary to formalize:** Missing symbols, changed scientific conclusions, or unexplained artefact mismatch is a D1; corrupt source artefacts abort.
 - **Raw artefact root:** `benchmarks/results/EXP-002/`
 - **Record root:** `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/`

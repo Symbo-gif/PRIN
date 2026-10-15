@@ -1,0 +1,14 @@
+COMMAND: RUSTDOCFLAGS=-D warnings cargo doc --workspace --no-deps
+UTC-START: 2026-10-11T13:00:47Z
+HOST: HP (Microsoft Windows NT 10.0.26300.0)
+HEAD: 78590305e1c0a78d92153ef2a55a9e76aeb7af79
+WORKTREE: clean
+
+ Documenting prin-sim v1.0.0-rc1 (C:\dev\PRIN\crates\prin-sim)
+ Documenting prin-py v1.0.0-rc1 (C:\dev\PRIN\crates\prin-py)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.49s
+   Generated C:\dev\PRIN\target\doc\prin_daemon\index.html and 7 other files
+
+UTC-END: 2026-10-11T13:00:52Z
+ELAPSED-SECONDS: 4.8
+EXIT_CODE: 0

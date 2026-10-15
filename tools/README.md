@@ -9,7 +9,8 @@ or execute archived reference code.
 ### Validation & Baselines
 - `wp001_baseline.py` — statically validates project metadata, session briefs,
   the 43-module/657-symbol PRINet 3.0 ownership contract, and the
-  `rust-toolchain.toml` profile; emits repository inventory JSON and API
+  `rust-toolchain.toml` profile; emits repository inventory JSON (git-visible
+  files only inside a work tree) and API
   traceability Markdown.
 - `wp001_ownership.json` — declarative module/symbol-to-WP ownership source.
 - `check_deviation_ledger.py` — validates cumulative deviation-ledger tables

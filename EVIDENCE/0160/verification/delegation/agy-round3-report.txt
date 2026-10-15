@@ -1,0 +1,193 @@
+# Cold self-audit round 3 (read-only) — git-scoped WP-001 inventory
+
+**Target Repository:** `C:\dev\PRIN` (commit `ed993e9` + staged changes)  
+**Audit Scope:**
+- Diff: `C:\Users\there\AppData\Local\Temp\claude\c--dev-PRIN\caa74057-f2dc-43bd-8cf8-b18f5c141339\scratchpad\e2\delta-code-r3.diff`
+- Code: [`tools/wp001_baseline.py`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1000-L1140) and [`tests/test_wp001_baseline.py`](file:///C:/dev/PRIN/tests/test_wp001_baseline.py#L380-L495)
+- Records: [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L159-L169), [`DOCS/audits/PR033-multi-review-audit.md`](file:///C:/dev/PRIN/DOCS/audits/PR033-multi-review-audit.md#L420-L430), [`CHANGELOG.md`](file:///C:/dev/PRIN/CHANGELOG.md#L365-L370), and [`EVIDENCE/0160/README.md`](file:///C:/dev/PRIN/EVIDENCE/0160/README.md#L34-L36)
+
+---
+
+## Findings Summary
+
+| ID | Category | Severity | File:Line | Description |
+|---|---|---|---|---|
+| — | — | None | — | No defects, vulnerabilities, omissions, or misleading claims found |
+
+---
+
+## Section-by-Section Audit
+
+### 1. Correctness of `_git_visible_files` and `_active_project_files`
+
+**Verdict:** Correct. No defects found.
+
+#### A. Windows Toplevel Comparison
+- **Implementation:** [`tools/wp001_baseline.py:1038-1048`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1038-L1048):
+  ```python
+  1038:         toplevel = subprocess.run(  # noqa: S603  # nosec B603
+  1039:             [executable, "-C", str(root), "rev-parse", "--show-toplevel"],
+  1040:             capture_output=True,
+  1041:             check=True,
+  1042:             text=True,
+  1043:             timeout=60,
+  1044:         ).stdout.strip()
+  1045:         # Only a work-tree root is inventoried through git; a directory nested
+  1046:         # in some other repository (e.g. a test's tmp_path) is walked instead.
+  1047:         if Path(toplevel).resolve() != root.resolve():
+  1048:             return None
+  ```
+- **Forward vs back slashes:** `git rev-parse --show-toplevel` on Windows produces POSIX-style paths (e.g. `C:/dev/PRIN`). Passing this into `Path(toplevel).resolve()` normalizes all separators to Windows native backslashes (`C:\dev\PRIN`).
+- **Drive-letter case & 8.3 short names:** In Python on Windows, `Path.resolve()` invokes `os.path.realpath`, which queries `GetFinalPathNameByHandleW`. This canonicalizes drive letters to uppercase (e.g. `C:\...`) and resolves short 8.3 names (e.g. `PROGRA~1`) to long path names on both `toplevel` and `root`.
+- **Symlinked roots:** `Path.resolve()` resolves filesystem symlinks/junctions on both sides to the target directory.
+- **Nested directories:** When `root` is a subdirectory within a git work-tree (such as a test's `tmp_path` under `.pytest_basetemp`), `Path(toplevel).resolve() != root.resolve()` evaluates to `True`, correctly returning `None` and falling back to `os.walk(root)` ([`tools/wp001_baseline.py:1047-1048`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1047-L1048)).
+
+#### B. Deleted-but-Tracked Files
+- **Implementation:** [`tools/wp001_baseline.py:1083`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1083):
+  ```python
+  1083:                 or not path.is_file()
+  ```
+- `git ls-files --cached` outputs all files present in the Git index, including files unlinked from the filesystem without staging.
+- Line 1083 checks `not path.is_file()`. If a tracked file has been deleted from disk in the working copy, `path.is_file()` returns `False` and the file is omitted. This prevents nonexistent paths from entering the inventory and avoids `FileNotFoundError` during subsequent stat/line counts.
+
+#### C. Submodules and Nested Repositories
+- Git submodules are registered as gitlink entries in the index. `git ls-files` without `--recurse-submodules` prints only the submodule root directory path.
+- On disk, `(root / name)` is a directory, not a regular file; `path.is_file()` ([`tools/wp001_baseline.py:1083`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1083)) evaluates to `False`, skipping it. Submodule contents are not traversed. (PRIN has no submodules; all workspace members are monorepo directories).
+- Untracked nested repositories are directories and are likewise skipped by `not path.is_file()`.
+
+#### D. Non-UTF-8 Filenames and `core.quotepath`
+- **Quoting:** Passing `-z` ([`tools/wp001_baseline.py:1055`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1055)) instructs `git ls-files` to emit NUL-terminated unquoted paths. Git disables C-style octal quoting and escaping regardless of `core.quotepath`.
+- **Encoding & Fallback:** [`tools/wp001_baseline.py:1064-1066`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1064-L1066):
+  ```python
+  1064:         names = sorted({name for name in listing.decode("utf-8").split("\0") if name})
+  1065:     except (OSError, subprocess.SubprocessError, UnicodeDecodeError):
+  1066:         return None
+  ```
+  If any filename contains un-decodable bytes, `listing.decode("utf-8")` raises `UnicodeDecodeError`. This is explicitly caught at line 1065, returning `None` and safely falling back to `os.walk(root)`.
+
+#### E. Excluded Directories, Files, and Archive/Evidence Roots
+- **Excluded Directories:** [`tools/wp001_baseline.py:1079`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1079):
+  `any(part in _EXCLUDED_DIRECTORIES for part in relative.parts[:-1])`
+  This checks all directory components along the path from `root`, excluding files within directories such as `.git`, `target`, `.venv`, and `__pycache__`.
+- **Excluded Files:** [`tools/wp001_baseline.py:1080-1082`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1080-L1082) skips files named in `_EXCLUDED_FILES` (`.coverage`, `coverage.xml`), files starting with `.coverage.`, and symlinks via `path.is_symlink()`.
+- **Archive and Evidence Roots:** [`tools/wp001_baseline.py:1072-1073, 1086-1088`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1072-L1073):
+  ```python
+  1072:     archive_root = (root / "DOCS/archive and reference from PRINet 3.0").resolve()
+  1073:     evidence_root = (root / _EVIDENCE_OUTPUT).resolve()
+  ...
+  1086:             resolved = path.resolve()
+  1087:             if archive_root in resolved.parents or evidence_root in resolved.parents:
+  1088:                 continue
+  ```
+  Both `archive_root` and `evidence_root` (`DOCS/baselines`) are resolved to absolute paths. Any file having either as an ancestor (`resolved.parents`) is excluded, maintaining exact parity with `os.walk` directory pruning ([`tools/wp001_baseline.py:1097`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1097)).
+
+#### F. Sort Order and Determinism
+- Names from git are deduplicated and sorted at [`tools/wp001_baseline.py:1064`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1064).
+- The final file list in the git branch is sorted at [`tools/wp001_baseline.py:1090`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1090):
+  ```python
+  1090:         return sorted(files, key=lambda path: path.relative_to(root).as_posix())
+  ```
+  This is identical to the `os.walk` fallback sort key at [`tools/wp001_baseline.py:1103`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1103):
+  ```python
+  1103:     return sorted(files, key=lambda path: path.relative_to(root).as_posix())
+  ```
+  Using `as_posix()` guarantees consistent, deterministic, forward-slash ordering across both platforms.
+
+#### G. Fallback Paths
+Every failure mode returns `None` and falls back to `os.walk(root)`:
+1. `shutil.which("git") is None` ([`line 1035`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1035)).
+2. `Path(toplevel).resolve() != root.resolve()` ([`line 1047`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1047)).
+3. `OSError`, `subprocess.SubprocessError` (including `TimeoutExpired`, `CalledProcessError`), and `UnicodeDecodeError` ([`line 1065`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1065)).
+
+---
+
+### 2. Subprocess Safety
+
+**Verdict:** Safe. No defects found.
+
+- **`argv` Construction:**
+  - Call 1 ([`tools/wp001_baseline.py:1038-1044`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1038-L1044)):
+    `[executable, "-C", str(root), "rev-parse", "--show-toplevel"]`
+  - Call 2 ([`tools/wp001_baseline.py:1049-1063`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1049-L1063)):
+    `[executable, "-C", str(root), "ls-files", "-z", "--cached", "--others", "--exclude-standard"]`
+  - Both pass argument vectors as lists of strings with no shell interpolation.
+  - `-C` is immediately followed by `str(root)` as a flag argument, preventing path strings from being interpreted as git options.
+- **No Shell:** Neither call uses `shell=True`. Annotated with `# noqa: S603  # nosec B603` after static analysis review.
+- **Timeouts:** Call 1 specifies `timeout=60`; Call 2 specifies `timeout=120`. Any hang raises `subprocess.TimeoutExpired`, which subclasses `subprocess.SubprocessError` and is caught at line 1065, falling back to walking.
+- **PATH Lookup:** Line 1034 calls `executable = shutil.which("git")`. If `git` is absent, it returns `None` without invoking `subprocess.run`. The absolute path to the binary is passed as the first element of argv.
+
+---
+
+### 3. Test Coverage and Flakiness
+
+**Verdict:** Thorough and non-flaky. No defects found.
+
+#### Branch Coverage in [`tests/test_wp001_baseline.py`](file:///C:/dev/PRIN/tests/test_wp001_baseline.py#L411-L492):
+1. [`test_inventory_skips_git_ignored_scratch`](file:///C:/dev/PRIN/tests/test_wp001_baseline.py#L411-L422):
+   - Sets up a real git scratch repo with `.gitignore`, tracked files, and ignored scratch.
+   - Exercises the main git path (`_git_visible_files`) and verifies ignored files are skipped.
+2. [`test_inventory_walks_a_directory_nested_in_another_work_tree`](file:///C:/dev/PRIN/tests/test_wp001_baseline.py#L424-L433):
+   - Passes `repo / "scratch"` (a subdirectory within a work-tree).
+   - Verifies `_git_visible_files` returns `None` via the `Path(toplevel).resolve() != root.resolve()` check and falls back to `os.walk`.
+3. [`test_inventory_skips_deleted_tracked_files`](file:///C:/dev/PRIN/tests/test_wp001_baseline.py#L435-L443):
+   - Unlinks `src/tracked.py` while it remains in the Git index.
+   - Verifies that `_active_project_files` skips the missing file via `not path.is_file()`.
+4. [`test_inventory_walks_without_git`](file:///C:/dev/PRIN/tests/test_wp001_baseline.py#L445-L458):
+   - Monkeypatches `shutil.which` to return `None`.
+   - Exercises the `executable is None` branch and verifies `os.walk` filtering.
+5. [`test_git_listing_failures_fall_back_to_walking`](file:///C:/dev/PRIN/tests/test_wp001_baseline.py#L460-L478):
+   - Parametrized over `OSError`, `subprocess.TimeoutExpired`, and `subprocess.CalledProcessError(128, "git")`.
+   - Verifies that `_git_visible_files` catches each exception and returns `None`.
+6. [`test_undecodable_git_listing_falls_back_to_walking`](file:///C:/dev/PRIN/tests/test_wp001_baseline.py#L480-L492):
+   - Mocks `rev-parse` success and `ls-files` returning `b"bad\xff\0"`.
+   - Verifies that `_git_visible_files` catches `UnicodeDecodeError` and returns `None`.
+
+#### Flakiness and Environment Dependencies:
+- The three tests invoking real git commands carry `@pytest.mark.skipif(not _HAS_GIT, reason="git executable not on PATH")` ([`lines 411, 424, 435`](file:///C:/dev/PRIN/tests/test_wp001_baseline.py#L411)).
+- `_scratch_repo` calls `git init -q` and `git add`, avoiding `git commit` and eliminating any dependency on configured `user.name` or `user.email`.
+- File writes use `write_text(..., encoding="utf-8")` which close immediately; `unlink()` operates without Windows file-handle contention.
+- The three mock/monkeypatch tests do not touch subprocesses or external tools.
+
+---
+
+### 4. Honesty of Records Describing Crash and Mitigation
+
+**Verdict:** Honest and accurate. No claims of proven root cause or complete resolution.
+
+Verbatim record citations:
+
+1. [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md:159-169`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md#L159-L169):
+   > "A later gate run's fast suite then stopped with a Windows access violation (exit `3221225477`) inside `os.walk`, called by the WP-001 repository-inventory test (`gate/G12a`). The full suite in the same run passed. Session 0159's leg 09 crashed the same way in the same test. Standalone reruns, with and without coverage, did not reproduce it, so the native root cause is **not proven**. The walk covered about 110,800 files (4.2 GB), mostly git-ignored scratch such as tool worktrees and pytest base directories. The inventory now lists only git-visible files inside a work tree (about 4,500 files, 58 MB, about 2.5 s), and it still walks the tree outside git. Regression tests cover both paths. This narrows the code path that crashed. It does not prove the crash is gone. The final gate below is the evidence for this candidate."
+
+2. [`DOCS/audits/PR033-multi-review-audit.md:420-430`](file:///C:/dev/PRIN/DOCS/audits/PR033-multi-review-audit.md#L420-L430):
+   > "Access violation in the fast suite (leg 09 of the 0159 bundle; also `EVIDENCE/0160/verification/gate/G12a`). Both crashes happened in `os.walk`, called from the WP-001 repository-inventory test. Standalone reruns, with and without coverage, did not reproduce the crash, so its native root cause is **not proven**. The walk crossed about 110,800 files (4.2 GB), mostly git-ignored scratch. Inside a work tree, `tools/wp001_baseline.py` now lists only git-visible files (about 4,500), and it still walks the tree outside git. Regression tests cover both paths. This removes most of the code path that crashed, but the root cause is still open."
+
+3. [`CHANGELOG.md:365-369`](file:///C:/dev/PRIN/CHANGELOG.md#L365-L369):
+   > "The fast suite twice crashed with an access violation in `os.walk` inside the WP-001 inventory test. The crash has no reproduced root cause. Inside a git work tree, `tools/wp001_baseline.py inventory` now lists git-visible files only (about 4,500 rather than about 110,800). Git-ignored scratch is therefore no longer counted as project state."
+
+4. [`EVIDENCE/0160/README.md:34-36`](file:///C:/dev/PRIN/EVIDENCE/0160/README.md#L34-L36):
+   > "G12a (an access violation in `os.walk` in the WP-001 inventory test; native root cause not proven, mitigated by the git-scoped inventory)."
+
+5. [`tools/wp001_baseline.py:1027-1032`](file:///C:/dev/PRIN/tools/wp001_baseline.py#L1027-L1032):
+   > "Git-ignored content (pytest base directories, tool worktrees, generated results, build output) is scratch, not active project state. Walking it made the inventory scan ~110,000 files / ~4 GB, so files appearing there during the scan broke the determinism check (EVIDENCE/0159 leg 09c), and it is where the intermittent access-violation crashes of the fast suite occurred (0159 leg 09; EVIDENCE/0160 gate G12a)."
+
+Across all documents, the native root cause is explicitly stated to be "not proven", "has no reproduced root cause", and "still open". The change is described strictly as a mitigation that narrows the code path without claiming the crash is eliminated.
+
+---
+
+### 5. Impact on EXP-002 Protocol, Driver, and Registered Inputs
+
+**Verdict:** Zero impact. No changes made.
+
+- Diff [`delta-code-r3.diff`](file:///C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/e2/delta-code-r3.diff) modifies only [`tools/wp001_baseline.py`](file:///C:/dev/PRIN/tools/wp001_baseline.py) and [`tests/test_wp001_baseline.py`](file:///C:/dev/PRIN/tests/test_wp001_baseline.py).
+- EXP-002 pre-registration protocol ([`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md)): Unchanged.
+- EXP-002 driver ([`benchmarks/campaign/exp002_driver.py`](file:///C:/dev/PRIN/benchmarks/campaign/exp002_driver.py)): Unchanged.
+- EXP-002 registered inputs (`paper/artefact_manifest.json`, `REFERENCE_PINS`, `benchmarks/campaign/exp002_inputs.json`): Unchanged.
+- `wp001_baseline.py` is a repository validation tool for WP-001 foundation baselines; it is not called by the EXP-002 driver or collection pipeline.
+
+---
+
+## Conclusion
+
+The git-scoped inventory mitigation in `tools/wp001_baseline.py` and its accompanying test suite in `tests/test_wp001_baseline.py` are correct, safe, robustly tested, and honestly documented across all project records. No defects were found.
+agy exit 0

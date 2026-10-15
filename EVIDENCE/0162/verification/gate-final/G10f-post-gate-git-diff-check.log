@@ -1,0 +1,11 @@
+COMMAND: git diff --cached --check
+CWD: C:/dev/PRIN
+SOURCE: Post-gate delta: final candidate with the gate-final logs, README and SHA256SUMS staged
+HEAD: 42f0eb3ea0b580e7c41a8fa9d7ae9679166df2ca
+UTC-START: 2026-10-13T18:26:04Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+----
+UTC-END: 2026-10-13T18:26:15Z
+ELAPSED_S: 6
+EXIT_CODE: 0

@@ -1,0 +1,82 @@
+PASS  A1 run directory name matches RUN-<UTC>-<R7>-<label>                                                                                 
+PASS  A1 label is the registered label for the mode                                                                                          [api-cpu vs api-cpu]
+PASS  A1 embedded SHA is the first 7 characters of R                                                                                         [fae24c4]
+PASS  A1 embedded UTC stamp is a real timestamp                                                                                              [20261012T212705Z]
+PASS  A2 run directory is a direct child of benchmarks/results/EXP-002                                                                       [C:\dev\PRIN\benchmarks\results\EXP-002]
+PASS  A2 run directory is a real directory (not a link)                                                                                    
+PASS  S1 neither the run directory nor any ancestor is a symlink or junction                                                                 [[]]
+PASS  A3 directory holds exactly sidecar, result and manifest                                                                                [['api.json', 'campaign-metadata.json', 'manifest.json']]
+PASS  A3 every entry is a plain regular file                                                                                               
+PASS  S3 manifest.json is strict JSON (UTF-8, no BOM, no duplicate key, no NaN/Infinity)                                                   
+PASS  S3 campaign-metadata.json is strict JSON (UTF-8, no BOM, no duplicate key, no NaN/Infinity)                                          
+PASS  S3 api.json is strict JSON (UTF-8, no BOM, no duplicate key, no NaN/Infinity)                                                        
+PASS  B1 manifest is a JSON object                                                                                                         
+PASS  S6 manifest keys are exactly schema_version, description, source, files                                                                [[]]
+PASS  B1 manifest schema_version is the integer 1                                                                                          
+PASS  B1 manifest has a files list                                                                                                         
+PASS  B1 manifest lists exactly sidecar and result (not itself), each with exact keys                                                        [['api.json', 'campaign-metadata.json']]
+PASS  B2 campaign-metadata.json size equals manifest bytes (integer)                                                                         [215 vs 215]
+PASS  B2 campaign-metadata.json SHA-256 equals manifest sha256 (recomputed)                                                                  [d51f9c7b4ae1f9b32e20cf211a55bfc416470eae1e332c823df645ead8b5e355]
+PASS  B2 api.json size equals manifest bytes (integer)                                                                                       [97194 vs 97194]
+PASS  B2 api.json SHA-256 equals manifest sha256 (recomputed)                                                                                [b76aedab424582dec72ede165c6a136e62c802b395519cba56975fa75f0fade9]
+PASS  C1 sidecar is a JSON object                                                                                                          
+PASS  C1 sidecar keys are exactly the registered set                                                                                         [['artefacts', 'exp_id', 'mode', 'operator', 'run_id', 'session']]
+PASS  C1 exp_id == EXP-002                                                                                                                 
+PASS  C1 session == 0161                                                                                                                   
+PASS  C1 run_id == directory name                                                                                                          
+PASS  C1 operator == MichaelMaillet                                                                                                        
+PASS  C1 mode == requested mode                                                                                                            
+PASS  C1 artefact mapping is exactly {result: tags}                                                                                          [{'api.json': ['H1']}]
+PASS  D1 result is a JSON object                                                                                                           
+PASS  D1 top-level keys are exactly the registered envelope                                                                                  [['config', 'elapsed_seconds', 'environment', 'identity', 'observations', 'recorded_at_utc', 'seed_used', 'started_at_utc', 'status']]
+PASS  D1 no abort_reason present                                                                                                           
+PASS  D2 status == COMPLETED                                                                                                                 [COMPLETED]
+PASS  D2 seed_used is False                                                                                                                
+PASS  D3 environment/config/identity are objects                                                                                           
+PASS  D3 environment keys are exactly the standard capture                                                                                   [[]]
+PASS  D3 prin_version == 1.0.0rc1                                                                                                          
+PASS  D3 git_commit == R                                                                                                                   
+PASS  D3 environment.rust_version is a non-empty string                                                                                      [rustc 1.99.0 (b940084d7 2026-09-28)]
+PASS  D3 environment.python_version is a non-empty string                                                                                    [3.14.0]
+PASS  D3 environment.platform is a non-empty string                                                                                          [Windows-11-10.0.26300-SP0]
+PASS  D3 environment.processor is a non-empty string                                                                                         [AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD]
+PASS  D3 logical_cpus is an int >= 1                                                                                                         [16]
+PASS  D3 backend == cpu                                                                                                                    
+PASS  D3 dtype == f64                                                                                                                      
+PASS  D3 environment.seed == 0 (int)                                                                                                       
+PASS  D4 config keys are exactly the registered set                                                                                          [['iterations', 'measurement_kind', 'out_dir', 'replicates', 'seed_counter', 'seed_key', 'warmup']]
+PASS  D4 seed pair (counter,key) == (0,2), both int                                                                                          [(0,2)]
+PASS  S2 iterations, warmup and replicates are integers equal to 10, 0 and 1                                                                 [[10, 0, 1]]
+PASS  D4 measurement_kind == deterministic_census                                                                                          
+PASS  D4 out_dir ends benchmarks/results/EXP-002/<run name>, no '..'                                                                         [C:\dev\PRIN\benchmarks\results\EXP-002\RUN-20261012T212705Z-fae24c4-api-cpu]
+PASS  S6 out_dir is exactly the absolute run directory                                                                                     
+PASS  D5 repository HEAD descends from R (HEAD == R, or R is an ancestor of HEAD)                                                            [73dd6dafc6a4f2fad88f06be04dba6fc7011e920]
+PASS  D5 identity.source_sha == R                                                                                                          
+PASS  S4 identity keys are exactly the registered seven                                                                                      [[]]
+PASS  D5 preregistration_commit is the expected approval commit                                                                              [9a9889d08dcaf2ad0ce31659ed67721b54b114d0]
+PASS  D5 preregistration_sha256 == digest of the blob at that commit (recomputed)                                                            [0f3073dd2ed73b64071bcf3ae182510a69a26bd575b81b5a97cc5a1f9bbc8c8b]
+PASS  D5 preregistration_commit is an ancestor of R                                                                                        
+PASS  D5 protocol blob at R is byte-identical to the blob at the approval commit                                                           
+PASS  D5 protocol blob is APPROVED with the dated MichaelMaillet approval                                                                  
+PASS  D5 approval_date_utc == 2026-10-12                                                                                                     [2026-10-12]
+PASS  D5 paper/artefact_manifest.json at R has the pinned digest                                                                           
+PASS  D5 identity.input_manifest_sha256 == pinned digest                                                                                   
+PASS  D5 input_record_count == 172 == len(input_records)                                                                                   
+PASS  S4 every input record has exactly the keys path, bytes, sha256                                                                       
+PASS  D5 input_records equal the committed input manifest's records exactly                                                                
+PASS  S5 both timestamps carry a zero UTC offset and are ordered; elapsed_seconds is a finite number >= 0                                    [started=2026-10-12T21:27:15.465014+00:00 recorded=2026-10-12T21:27:15.787374+00:00 elapsed_seconds=0.3223612999991019]
+PASS  S5 elapsed_seconds agrees with the timestamps (within 1 s)                                                                             [timestamp difference 0.322 s vs elapsed_seconds 0.3223612999991019]
+PASS  E0 observations is an object                                                                                                         
+PASS  S4 api observations have exactly the registered seven keys                                                                             [[]]
+PASS  E1 frozen reference __all__ has 172 unique names; with the 3 PRIN additions the population is 175                                    
+PASS  E1 observations.expected_names is exactly that registered 175-name population                                                        
+PASS  E1 unit == api_symbol                                                                                                                
+PASS  E1 rows: one per expected name, in sorted order, with exactly the registered row keys                                                
+PASS  E1 legacy_names is a list of strings (content not judged)                                                                            
+PASS  E1 observed_names is a list of strings (content not judged)                                                                          
+PASS  E1 frozen_missing is a list of strings (content not judged)                                                                          
+PASS  E1 frozen_extra is a list of strings (content not judged)                                                                            
+PASS  E1 legacy_names equals the pinned reference __all__ (as a set)                                                                       
+PASS  G1 no product, driver, shared-benchmark, test, tool, paper, parity, protocol or e2-review file differs between R and the working tree  [[]]
+PASS  G3 no untracked top-level *.py / *.pth (ignored or not)                                                                              
+SUMMARY: 81 passed, 0 failed of 81 checks

@@ -1,7 +1,21 @@
 # benchmarks/results/EXP-002/ — raw artefacts for EXP-002 (API, benchmark-result, and reproduction parity)
 
-**Status:** SKELETON — no run has executed. Record root:
+**Status:** E3 EXECUTED 2026-10-12 UTC (session 0161), E4 ANALYSED 2026-10-13 UTC
+(session 0162), **E5 REPORTED 2026-10-14 UTC (session 0163)** — five `RUN-`
+directories, all `COMPLETED` and manifested, none aborted; they are immutable
+(the table below lists them). Verdicts: H1 `CONFIRMED`, H2 `CONFIRMED`, **H3
+`REFUTED` (D1)**, H4 `CONFIRMED`; conditional correction cycle `EXP-002-D1` open,
+after which the re-run uses new `RUN-` directories under a new `EXP-002-r1`
+record and never modifies or reuses the five directories below. Record root:
 [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/`](../../../DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md).
+
+| Run directory | Mode / label |
+|---|---|
+| `RUN-20261012T212705Z-fae24c4-api-cpu` | `api` / `api-cpu` |
+| `RUN-20261012T213054Z-fae24c4-conclusions-cpu` | `conclusions` / `conclusions-cpu` |
+| `RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu` | `reference` / `reproduction-reference-cpu` |
+| `RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu` | `prin` / `reproduction-prin-cpu` |
+| `RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu` | `repeatability` / `seedrep0-prin-cpu` |
 
 ## Run-directory rule (campaign plan §7.1, §7.3)
 

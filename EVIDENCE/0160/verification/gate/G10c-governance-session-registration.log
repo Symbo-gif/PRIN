@@ -1,0 +1,12 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe tools/check_global_session_registration.py
+CWD: C:/dev/PRIN
+SOURCE: working tree: ed993e9 + staged session-0160 changes (final candidate after cold-review rounds 1-3 and evidence packaging; gate run 5, host otherwise idle)
+UTC-START: 2026-10-12T09:08:59Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+Global-session registration check passed.
+  Checked 18 Executive Audit reports.
+----
+ELAPSED_SECONDS: 2.5
+EXIT_CODE: 0

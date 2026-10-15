@@ -1,0 +1,97 @@
+I'll read the named files. First, let me enumerate the leg transcript files and locate `log.md`.Now let me locate `log.md` and read the two new scripts plus revision 2.Reading the rest of rev3 and revision 2 for comparison.Now the rest of rev2 and the driver's emitted structures.Now the driver's envelope, observations checkers, and manifest writer.Case/row/renderer/file key sets confirmed against the driver. Now the driver's observation-closure and provenance checks.Now I'll read the ten rev3 transcripts.Legs 1–2 match the adjudicated counts (81, 80). Now the publication-leg validation transcripts.Validation counts confirmed (81, 80, 87, 87, 87). Now the five mutation self-test transcripts.All mutation counts match (40/40, 41/41, 49/49 ×3). Now log.md §10 to check the quoted counts and SHA-256 values.All named files are read. Report below.
+
+---
+
+# Cold self-audit, round 2 — EXP-002 E3: validator revision 3 and its self-test
+
+Scope performed: read-only review of `EVIDENCE/0161/verification/tools/validate_run_record_rev3.py`, `mutation_test_rev3.py`, `validate_run_record.py` (rev2), the ten `legs/*.rev3.txt` transcripts, `EVIDENCE/0161/verification/delegation/{devin-e3-report.txt,adjudication.md}`, `benchmarks/campaign/exp002_driver.py`, and log.md §10. No result payloads, no `DOCS/test_and_benchmark_results/` contents, no arm-to-arm digest comparisons.
+
+## Findings
+
+### R2-01 — Medium — junction/link coverage inside the retained generated root is still incomplete
+`validate_run_record_rev3.py:820-829` (F1, S1 on `generated`), `:830-833`, `:859-863`
+
+`linked_ancestors` is applied to `generated` itself and its ancestors, but `pub` (`generated/publication`) and `inputs` (`generated/inputs`) are descendants — not ancestors — so a junction **at** `generated/publication` or `generated/inputs` is invisible to S1, while F1's `p.is_dir() and not p.is_symlink()` is `True` for a junction (`Path.is_symlink()` is `False` for junctions — the same blind spot F-01 documented in the driver). Inside the trees, `pub.rglob("*")` / `inputs.rglob("*")` keep only `p.is_file()`, which follows links: a symlinked *file* inside `publication/` is inventoried and hashed through the link, and a junction *directory* inside it is recursed into as a normal directory.
+
+*Scenario:* `generated/publication` is replaced by a junction to a staging tree holding byte-identical files. F1 passes (junction is a dir, not a symlink); S1 passes (`publication` is not an ancestor of `generated`); F2/F3 pass (each file still matches its own recorded digest). Every F-check green, yet the retained root is not the real directory F1's name claims. The recorded-digest binding limits this to a structural — not content — forgery, but S1 was specifically introduced to close link substitution and does not cover the roots' own level or contents.
+
+*Fix:* in the F block, reject `is_symlink()` **or** `is_junction()` on `generated`, `pub`, `inputs` (or run `linked_ancestors` on `pub` and `inputs`), and while inventorying `rglob` entries reject `entry.is_symlink() or entry.is_junction()` rather than relying on `p.is_file()`.
+
+### R2-02 — Medium — rev3's narrower G1 silently accepts dirty/untracked files rev2 rejected
+`validate_run_record_rev3.py:785-809`, replacing rev2 `:587-612`
+
+Rev2's G1 parsed `git status` and failed on *any* difference except untracked `benchmarks/results/EXP-002/` and the log; G2 required no tracked file to differ from HEAD. Rev3 replaces both with `git diff --name-only SOURCE_SHA -- <frozen_paths>` where `frozen_paths` = `python`, `crates`, the driver file, `benchmarks/_common`, `tests`, `tools`, `paper`, `parity`, `preregistration.md`, `e2-review.md`. Consequently a modified tracked file outside that list — `.github/`, `pyproject.toml`, other `benchmarks/campaign/` modules, `benchmarks/results/EXP-001/*`, or the validator itself under `EVIDENCE/` — and any untracked non-`*.py`/`*.pth` file anywhere in the checkout now pass validation unremarked. `LOG_REL` (`:46-48`) is now dead code.
+
+*Scenario:* re-validating at a descendant commit while `benchmarks/campaign/exp001_driver.py` and an untracked `notes.txt` are modified: rev2 reported them as stray; rev3 reports a clean G1. This does not affect record admissibility (the frozen set covers everything that can influence a record — driver, inputs, protocol — and the relaxation to descendant HEADs is adjudicated), but the coverage drop is a quiet semantic change beyond what the adjudication states ("accepts any HEAD that descends from R"), and a modified copy of the validator itself is now invisible to it.
+
+*Fix:* disclose the reduced scope explicitly, or add a second, non-fatal drift report for non-frozen paths; delete the unused `LOG_REL`.
+
+### R2-03 — Low — retention checks are silently absent on relocated validation
+`validate_run_record_rev3.py:812-813`
+
+`publication and (not args.allow_outside_raw_root or args.generated_root is not None)` — a publication-mode copy validated with `--allow-outside-raw-root` and no `--generated-root` emits **no** F1–F4 lines at all; the summary simply reports fewer checks as all-pass. Nothing in the output indicates retention was never checked. Similarly, without `--exact-out-dir`, S6's exact-`out_dir` check is dropped and only the rev2 tail rule (`parts[-4:]`, `:484-488`) applies — a wrong-but-plausible `out_dir` still passes.
+
+*Fix:* emit an explicit `F0 retention checks not applicable/skipped` result line so an absent check cannot masquerade as a pass.
+
+### R2-04 — Low — `font_cache.sha256: null` is a genuine driver output that rev3 rejects
+`validate_run_record_rev3.py:736-748` vs `exp002_driver.py:972-979`
+
+`_font_cache_state` returns `{"name": cache.name, "sha256": None}` when the fontlist JSON does not exist — a legitimate driver emission. Rev3's E3 requires `fc["sha256"]` to be a 64-hex string, so a genuine record rendered on a machine without a font cache file would fail. Inherited from rev2 (the check is unchanged in intent), but it remains a hard-coded-schema-versus-emitter mismatch worth recording for E4/E5.
+
+*Fix:* either keep and document the "a font cache must exist" policy, or accept `sha256: null` (still requiring the `name`/`sha256` key set) — noting it weakens the "fonts were hashed" half of the same check anyway.
+
+### R2-05 — Low — S5 elapsed-vs-wall tolerance can false-fail a genuine record on clock adjustment
+`validate_run_record_rev3.py:585-606`
+
+`elapsed_seconds` is a `time.monotonic()` delta; `started/recorded_at_utc` are wall-clock `datetime.now(UTC)`. `abs(wall - elapsed) <= 1.0` is correct for the recorded runs (largest observed difference 0.0013 ms), but a >1 s system-clock step (NTP slew) between `started_at` and `recorded_at` would make a genuine record fail. Rare; a wider tolerance or a documented assumption would make the failure mode explicit rather than surprising.
+
+### R2-06 — Low — mutation-test evidence gaps and loose expectations
+`mutation_test_rev3.py:146-152`, `:439-446`, `:139-143`, `:574-579`
+
+- `flipped_byte_without_manifest_update` names B2 but fired **S3** in all five transcripts — the mid-file XOR broke JSON before the digest recompute ran. The "content tampered, manifest unchanged → B2" path is therefore not directly demonstrated (B2 is exercised only manifest-side: `manifest_stale_digest`, `manifest_bytes_float`, `manifest_missing_entry`). A flip inside a string value (keeping JSON valid) would exercise it.
+- `case_family_changed` expects `["E2","S4"]`, but changing `family` to `C09` cannot trip S4 — the key set is unchanged; only E2 fired. The `S4` expectation is dead weight.
+- `label_renamed` expects `["A1"]` and also trips C1 `run_id` (shown in transcripts) — the `any()` rule tolerates the collateral, which is acceptable but means "the check it names" is only weakly bound.
+- Still unexercised: run directory itself a link (only an ancestor is tested), `approval_date_utc`, out-of-order/naive timestamps, `elapsed_seconds: true`, a non-C02 case carrying `K`/`alpha_radians`, a C02 case missing them, file-record `raw_bytes: true`/non-hex digest, duplicate keys inside `manifest.json`, and a record-side `files[]` shrink (F2 `record-only`). The D5-HEAD and G1 checks are inherently unmutable (bound to the real repository) — worth stating as a limitation rather than a gap.
+
+### R2-07 — Low — `merge-base` calls have no timeout/capture and pass `commit` unvalidated
+`validate_run_record_rev3.py:497-505`, `:527-529`
+
+Both `subprocess.run(["git","merge-base","--is-ancestor",...])` calls omit `timeout` (the `git()` helper uses 60 s) and `capture_output`, and `str(commit)` reaches git argv before any hex validation — a non-hex value is interpreted as a git *option* (e.g. `--all`), not injected (list argv, no shell), and the outcome still fails closed. Cosmetic robustness, inconsistent with the helper.
+
+### R2-08 — Low — `cmd /c mklink /J` and junction-unaware `rmtree` in the harness
+`mutation_test_rev3.py:392-405`, `:96-99`
+
+- `cmd /c` receives `mklink /J <path> <target>` via list argv; `list2cmdline` quotes only whitespace-containing args, so a scratch path containing `&`, `^` or `%` but no spaces would be interpolated into the cmd line unquoted — a command-chaining surface. Operator-supplied path, local self-test only, but a `win32`-native junction call or explicit quoting removes it.
+- `fresh()`'s `shutil.rmtree(root)` cleanup runs after `junction_ancestor` leaves `root/benchmarks` as a junction. Junctions are not symlinks; `rmtree` recurses through them and deletes the *target's* contents. Contained here (`real_benchmarks` sits inside `root`), but fragile — a junction pointing outside the scratch root would produce out-of-scope deletion on the next case's cleanup.
+
+## F-01…F-07 fixes: verified real and non-vacuous
+
+- **F-01 → S1** (`:182-190`, `:293-298`, `:824-829`): `linked_ancestors` walks the path *and every parent* testing `is_symlink()` **or** `is_junction()`, applied to the run dir and the generated root — strictly stronger than the driver (`exp002_driver.py:234-237`, symlink only, and it also tests the run dir itself, which the driver's `is_symlink` misses for junctions). Demonstrated: `junction_ancestor` fails S1 in all five transcripts. Residual: R2-01.
+- **F-02 → S2** (`:234-235`, `:470-475`): `type(v) is int` for iterations/warmup/replicates; `10.0` and `true` mutations fail S2 in every transcript.
+- **F-03 → S3** (`:193-211`, `:315-330`): strict loader rejects duplicate keys at *every* level (`object_pairs_hook`), `NaN`/`Infinity` (`parse_constant`), and a UTF-8 BOM; three mutations fire it. Applied to all three record files; the pinned git blobs rightly still use plain `json.loads`.
+- **F-04 → S4/S6** (`:337-341`, `:509-512`, `:569-572`, `:626-629`, `:658-661`, `:668-675`, `:714-717`, `:730-732`, `:737-747`, `:761-766`): exact key sets for manifest, identity, input records, per-mode observations, cases (C02 extras keyed on `family == "C02"`, precedence correct: `(CASE_KEYS | C02_EXTRA_CASE_KEYS) if … else CASE_KEYS`), renderer, font cache, and file records (table-keyed `archived_*`). Each has a failing mutation.
+- **F-05 → S5** (`:582-608`): both offsets `== timedelta(0)` (naive stamps rejected), ordered, `elapsed` non-bool numeric finite ≥0, and `|wall − elapsed| ≤ 1 s`; offset/inconsistent/negative mutations fire.
+- **F-06 → S6/B1/B2** (`:337-345`, `:361-373`, `:489-494`): exact manifest keys, `is_int` schema_version/bytes, exact `out_dir` equality. Mutations fire each.
+- **F-07**: `mutation_test_rev3.py` now covers all five modes including publication and F1–F4 retention on **private copies** (`gen=True` → `copytree` under the scratch root; the real retained root is only ever read — `fresh`/`invoke` at `:96-124`). 40/41/49/49/49 cases per mode, all OK, no SKIP.
+
+## Schema vs driver: verified identical
+
+Sidecar 6, envelope 9, config 7 (`run_registered` `:1523-1531`), identity 7 (`_admission` + `_snapshot` `:571-578`), input records 3, API observations 7 + row 8 (`collect_api` `:304-337`), conclusions observations 2 + case 11 (+`K`,`alpha_radians` only for C02, `:440-441`), publication observations 5 + renderer 7 + font_cache 2 (`_render_environment` `:982-995`) + file record 7 (+4 `archived_*` for `tables/*.tex ∈ EXPECTED_FILES`, `:1067-1073`), manifest 4 (empirically, via S6 passes). One mismatch: R2-04 (`font_cache.sha256` nullable). `FAMILY_COUNTS` (5/42/4/5/6 = 62) and the 39-file list (14 fig stems ×2 + 11 table stems) agree with driver constants; the deliberately uncounted `files[]` population mirrors the driver's registered-falsifier design (`_check_observations` docstring `:1268-1275`), which is by design and not reported as a defect.
+
+## No outcome judged
+
+`resolved`/`callable`/`error`/`type`/`defining_module` values are never read; `expected`/`observed` checked for `type is bool` only; file digests checked for *format*; F3 binds each retained file to its own recorded digest; the `LISTING-DIGEST` print carries "no expectation applied" and is not compared to anything inside the tool. Rev3 judges structure and identity only.
+
+## Transcripts ↔ log §10 ↔ adjudication
+
+- Validation SUMMARY lines: **81, 80, 87, 87, 87 checks, 0 failed** — match both documents.
+- Mutation summaries: **40/40, 41/41, 49/49, 49/49, 49/49, none skipped** — match.
+- S5 details recompute to a largest wall-vs-elapsed difference of 0.0013 ms (leg 1), consistent with the adjudication's "within 2 µs … 0.0013 ms".
+- Validation transcripts record HEAD `89f21f5…` under the descendant-HEAD rule — consistent with log §10's review commit.
+- Rev3 validator SHA-256 `310e1c21…617c87` and self-test SHA-256 `a5aabc96…d199` appear identically in log §10 and the adjudication; under the read-only constraint I cannot recompute the file digests, so agreement between the two documents is verified but the digest-to-file binding is taken on trust.
+
+## Injection/traversal/unsafe-write review
+
+All subprocess calls use list argv without shell; the validator performs no writes; all harness writes/rmtree are confined to the operator-supplied scratch tree, and `python -I` blocks module shadowing. Exceptions noted as R2-07/R2-08.
+
+No High-severity findings. Top items: R2-01 (junctions/symlinks inside the retained roots pass F1/S1), R2-02 (narrowed G1 vs rev2, undisclosed coverage drop), then the evidence/precision items R2-03–R2-08.

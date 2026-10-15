@@ -156,6 +156,63 @@ Parity Report
    (§1, §4, §7), ``.../EXP-001-r1-golden-trajectory-numerical-parity/analysis.md``,
    ``.../EXP-001-r1-golden-trajectory-numerical-parity/report-manifest.json``.
 
+.. admonition:: Erratum — 2026-10-14 (EXP-002 E5: H1, H2, H4 CONFIRMED; H3 REFUTED — D1 raised)
+   :class: error
+
+   **Phase 7 experiment EXP-002 (track C1) confirmed API mapping (H1), archival
+   conclusion preservation (H2), and PRIN-versus-PRIN deterministic reproduction
+   (H4), but refuted PRIN-versus-reference-generator publication fidelity (H3),
+   raising a campaign plan §10.4 D1.**
+
+   * **H1 ``CONFIRMED`` (API mapping census):** ``175/175`` expected ``prin``
+     symbols resolve (``172`` callables, ``3`` scalar constants); ``172/172``
+     legacy ``prinet`` names have Migration Guide and WP-001 ownership rows;
+     ``0`` duplicate, removed, or unexpected exports; ``FROZEN_PUBLIC_API``
+     missing and extra sets are both empty. (Namespace/ownership census only;
+     no runtime behavioural or numerical claim.)
+   * **H2 ``CONFIRMED`` (historical conclusion preservation):** ``62/62``
+     registered elementary direction/threshold predicates across families
+     ``C01``–``C05`` in the frozen 172-record JSON set agree with their
+     registered expectations (``C01`` ``5/5``, ``C02`` ``42/42`` archival
+     self-consistency against stored ``chimera_detected``, ``C03`` ``4/4``,
+     ``C04`` ``5/5``, ``C05`` ``6/6``). This is an archival JSON census, not a
+     fresh benchmark re-run; claims owned by EXP-003–EXP-008 remain open.
+   * **H4 ``CONFIRMED`` (deterministic PRIN-versus-PRIN reproduction):** Two
+     separate invocations of ``tools/reproduce.py`` (and the E5 §8.2
+     reconstruction) produce all ``39/39`` registered publication files (``14``
+     figures × 2 formats + ``11`` LaTeX tables) with identical raw byte sizes,
+     identical raw SHA-256 digests, and identical canonical result projections.
+   * **H3 ``REFUTED`` (publication fidelity vs the frozen ``prinet==3.0.0``
+     reference generator — campaign plan §10.4 D1):** Under the approved §5.4
+     comparison policy, ``21/39`` generated files are equal — all ``11/11``
+     LaTeX tables (which also match the ``11/11`` archived tables) and both the
+     ``.pdf`` and ``.png`` of ``5/14`` figures (``fig2_clevr_n_capacity``,
+     ``fig3_chimera_metrics``, ``fig4_chimera_k_alpha_heatmap``,
+     ``fig6_oscillosim_scaling``, ``fig13_representation_geometry``) — while
+     **``18/39`` generated files differ**: both the ``.pdf`` and ``.png`` of
+     ``9/14`` figures (``fig5_mot_occlusion_comparison``,
+     ``fig7_ablation_results``, ``fig8_parameter_efficiency``,
+     ``fig9_training_curves``, ``fig10_statistical_summary``,
+     ``fig11_flops_scaling``, ``fig12_supercritical_regime``,
+     ``fig14_gradient_flow``, ``fig15_noise_velocity``). H3 is also ``REFUTED``
+     under the §11.3 pre-exposure sensitivity policy (``5/39`` equal, ``34/39``
+     differing), so the verdict does not depend on the post-exposure amendment.
+
+   Accordingly, statements below that ``tools/reproduce.py`` reproduces the 39
+   publication files "byte-comparably" hold for **PRIN-versus-PRIN**
+   repeatability (``39/39``, H4) and for all ``11/11`` LaTeX tables and ``5/14``
+   figures against the reference generator, **not** for the remaining ``9/14``
+   figures (``18/39`` files) against the ``prinet==3.0.0`` reference generator.
+   No root cause is asserted by the EXP-002 record; the four-session
+   conditional correction cycle ``EXP-002-D1``
+   (``DOCS/sessions/contingencies/2026-10-14-exp002-d1-s1..s4``) is open, and
+   session ``0164`` (EXP-003 E1) and downstream campaign sessions are blocked
+   until S1→S4 close and ``EXP-002-r1`` returns a non-reversal verdict.
+
+   Evidence:
+   ``DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md``
+   (§§1–8, 11–14), ``.../analysis.md``, and ``.../report-manifest.json``.
+
 How to read this report
 -----------------------
 
@@ -185,8 +242,13 @@ claim requiring pre-registration.
        explicitly rather than substituting a pilot.
    * - **REFERENCE-HISTORICAL**
      - A number measured by the PRINet 3.0 implementation and stored as an
-       immutable artefact. Reproduced byte-comparably by ``tools/reproduce.py``,
-       but it describes the reference, not PRIN.
+       immutable artefact. Rendered deterministically by ``tools/reproduce.py``
+       (``39/39`` raw-byte-identical across PRIN runs, ``EXP-002`` H4
+       ``CONFIRMED``; ``11/11`` tables and ``5/14`` figures match the frozen
+       ``prinet==3.0.0`` reference generator under the approved §5.4 policy,
+       while ``9/14`` figures — ``18/39`` files — differ and are under the open
+       ``EXP-002-D1`` correction cycle; see the 2026-10-14 erratum above), and
+       it describes the reference, not PRIN.
      - Present in :doc:`capacity_analysis` and :doc:`paper`, both labelled there.
 
 Tolerance register
@@ -350,13 +412,25 @@ What exists today, and what each piece is:
    * - ``paper/artefact_manifest.json`` (172 records)
      - REFERENCE-HISTORICAL
      - SHA-256 manifest for the *stored PRINet 3.0* benchmark artefacts. These
-       are the reference implementation's measurements; ``tools/reproduce.py``
-       renders them byte-comparably. They are not PRIN results.
+       are the reference implementation's measurements (``EXP-002`` H2 confirmed
+       all ``62/62`` registered archival predicates on them); ``tools/reproduce.py``
+       renders them deterministically across PRIN runs (``39/39`` raw-identical,
+       H4 ``CONFIRMED``), matching the frozen ``prinet==3.0.0`` generator on
+       ``11/11`` tables and ``5/14`` figures while ``9/14`` figures (``18/39``
+       files) differ (``EXP-002`` H3 ``REFUTED``, ``EXP-002-D1`` open; see the
+       2026-10-14 erratum above). They are not PRIN results.
    * - ``tools/reproduce.py``, ``repro.yml``
      - VALIDATION
-     - The reproduction pipeline and its CI gate: byte-comparable regeneration
-       from manifest-verified inputs. This validates the *pipeline*, not any
-       scientific claim.
+     - The reproduction pipeline and its CI gate: deterministic PRIN-versus-PRIN
+       regeneration from manifest-verified inputs (``EXP-002`` H4 ``CONFIRMED``,
+       ``39/39`` raw-byte-identical). **Qualified 2026-10-14 (see the erratum at
+       the top of this page):** against an independent render by the frozen
+       ``prinet==3.0.0`` reference generators, ``21/39`` files match under the
+       approved §5.4 policy (``11/11`` tables and ``5/14`` figures) and
+       ``18/39`` files (``9/14`` figures) differ (``EXP-002`` H3 ``REFUTED``;
+       correction cycle ``EXP-002-D1`` open). This validates the pipeline's
+       same-implementation determinism, not cross-generator figure parity on the
+       9 differing figures or any new scientific claim.
    * - ``EVIDENCE/0125-wp032-s1-daemon-latency.json``,
        ``EVIDENCE/0144U-wp036f-s1-controller-provider-report.json``
      - VALIDATION

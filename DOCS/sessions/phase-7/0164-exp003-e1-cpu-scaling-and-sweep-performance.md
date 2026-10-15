@@ -1,11 +1,11 @@
 # Session 0164 — EXP-003 / C2 E1: Pre-registration — CPU scaling and sweep performance
 
-**Status:** PLANNED  
-**Roadmap phase:** 7 — Experimentation campaign and stable release  
-**Execution unit:** EXP-003 / C2  
-**Session type:** E1 — Pre-registration  
-**Predecessor:** [0163 — Report](0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md)  
-**Successor:** [0165 — Review and approval](0165-exp003-e2-cpu-scaling-and-sweep-performance.md)  
+**Status:** BLOCKED — EXP-002 raised a campaign plan §10.4 D1 on H3 at E5 (session 0163, 2026-10-14 UTC); this session is released only after the four contingency correction sessions close and `EXP-002-r1` returns a non-reversal verdict (campaign plan §3.3, §10.4 items 2–5; see [`EXP-002/report.md`](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md) §8)
+**Roadmap phase:** 7 — Experimentation campaign and stable release
+**Execution unit:** EXP-003 / C2
+**Session type:** E1 — Pre-registration
+**Predecessor:** [0163 — Report](0163-exp002-e5-api-benchmark-result-and-reproduction-parity.md)
+**Successor:** [0165 — Review and approval](0165-exp003-e2-cpu-scaling-and-sweep-performance.md)
 **Authority:** Project Plan §6/§8; the applicable normative standards. If this brief conflicts with a normative standard, the standard wins.
 
 > This is a prospective execution contract, not completion evidence. Status and

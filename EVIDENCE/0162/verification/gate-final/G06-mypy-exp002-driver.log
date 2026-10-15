@@ -1,0 +1,12 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/mypy.exe benchmarks/campaign/exp002_driver.py --strict
+CWD: C:/dev/PRIN
+SOURCE: Final candidate: HEAD 42f0eb3 + staged E4 records, docs and EVIDENCE/0162 (product/test/Rust trees identical to the Phase-A commit 3731fc2)
+HEAD: 42f0eb3ea0b580e7c41a8fa9d7ae9679166df2ca
+UTC-START: 2026-10-13T17:02:00Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+Success: no issues found in 1 source file
+----
+UTC-END: 2026-10-13T17:02:28Z
+ELAPSED_S: 22
+EXIT_CODE: 0

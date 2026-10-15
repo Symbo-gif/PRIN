@@ -1,0 +1,90 @@
+COMMAND: environment/tool-version capture (read-only)
+SOURCE: 63145325c01fd837fd55e2796ea0fa34aa7eb234
+UTC-START: 2026-10-11T14:46:37Z
+HOST: HP
+== git ==
+git version 2.51.2.windows.1
+63145325c01fd837fd55e2796ea0fa34aa7eb234
+== python ==
+Python 3.14.0
+== ruff ==
+ruff 0.16.1
+== mypy ==
+mypy 2.3.0 (compiled: yes)
+== pytest ==
+pytest 9.1.1
+== rust ==
+rustc 1.98.1 (48a229cea 2026-09-01)
+binary: rustc
+commit-hash: 48a229ceaefd4985c50990b14116b6d856af0985
+commit-date: 2026-09-01
+host: x86_64-pc-windows-msvc
+release: 1.98.1
+LLVM version: 22.1.8
+cargo 1.98.1 (797e8a9bc 2026-08-05)
+== cargo tools ==
+cargo-llvm-cov 0.8.7
+cargo-audit-audit 0.22.2
+== python tools ==
+pip-audit 2.10.1
+python.exe -m bandit 1.9.4
+  python version = 3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]
+interrogate, version 1.7.0
+== snyk ==
+1.1306.2
+== sphinx ==
+python.exe -m sphinx.cmd.build 9.1.0
+== powershell ==
+5.1.26100.9549
+== os/hardware ==
+At line:1 char:50
++ (Get-CimInstance Win32_OperatingSystem).Caption + \" \" + (Get-CimIns ...
++                                                  ~
+You must provide a value expression following the '+' operator.
+At line:1 char:51
++ (Get-CimInstance Win32_OperatingSystem).Caption + \" \" + (Get-CimIns ...
++                                                   ~~~~~
+Unexpected token '\" \"' in expression or statement.
+At line:1 char:240
++ ... Win32_ComputerSystem).TotalPhysicalMemory/1GB,1).ToString() + \" GB R ...
++                                                                  ~
+You must provide a value expression following the '+' operator.
+At line:1 char:241
++ ... 2_ComputerSystem).TotalPhysicalMemory/1GB,1).ToString() + \" GB RAM\"
++                                                               ~~~~~~~~~~~
+Unexpected token '\" GB RAM\"' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : ExpectedValueExpression
+ 
+UTC-END: 2026-10-11T14:46:43Z
+
+== os/hardware ==
+=Get-CimInstance : The term '=Get-CimInstance' is not recognized as the name of a cmdlet, function, script file, or 
+operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try 
+again.
+At line:1 char:1
++ =Get-CimInstance Win32_OperatingSystem; .Caption + ' ' + .Version; (G ...
++ ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (=Get-CimInstance:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+.Caption : The term '.Caption' is not recognized as the name of a cmdlet, function, script file, or operable program. 
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:41
++ =Get-CimInstance Win32_OperatingSystem; .Caption + ' ' + .Version; (G ...
++                                         ~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (.Caption:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+AMD Ryzen 7 8700F 8-Core Processor             
+31.6 GB RAM
+
+== os/hardware (corrected) ==
+
+
+Caption        : Microsoft Windows 11 Home
+Version        : 10.0.26300
+OSArchitecture : 64-bit
+
+
+

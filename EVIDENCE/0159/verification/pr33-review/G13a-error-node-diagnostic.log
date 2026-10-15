@@ -1,0 +1,21 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe -m pytest tests/test_0159_manifest.py -p no:cacheprovider --basetemp=C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/diag-basetemp -q
+CWD: C:/dev/PRIN
+SOURCE: same final pre-commit source as G13; diagnostic only, not a substitute for the FULL leg; basetemp outside the repository
+UTC-START: 2026-10-11T22:44:38Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 20 items
+
+tests\test_0159_manifest.py ....................                         [100%]
+
+============================= 20 passed in 0.35s ==============================
+----
+ELAPSED_SECONDS: 1.2
+EXIT_CODE: 0

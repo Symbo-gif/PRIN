@@ -1,0 +1,13 @@
+COMMAND: RUSTDOCFLAGS=-D warnings cargo doc -p prin-sim --no-deps --features cpu
+UTC-START: 2026-10-11T13:00:52Z
+HOST: HP (Microsoft Windows NT 10.0.26300.0)
+HEAD: 78590305e1c0a78d92153ef2a55a9e76aeb7af79
+WORKTREE: clean
+
+ Documenting prin-sim v1.0.0-rc1 (C:\dev\PRIN\crates\prin-sim)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.40s
+   Generated C:\dev\PRIN\target\doc\prin_sim\index.html
+
+UTC-END: 2026-10-11T13:00:56Z
+ELAPSED-SECONDS: 3.7
+EXIT_CODE: 0

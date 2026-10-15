@@ -1,0 +1,11 @@
+COMMAND: C:/Users/there/.cargo/bin/cargo.exe clippy --workspace --all-targets --features strict-checks -- -D warnings
+CWD: C:/dev/PRIN
+SOURCE: working tree: ed993e9 + staged session-0160 changes (final candidate incl. git-scoped WP-001 inventory; Rust sources as staged)
+UTC-START: 2026-10-12T07:31:36Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.55s
+----
+ELAPSED_SECONDS: 1.1
+EXIT_CODE: 0

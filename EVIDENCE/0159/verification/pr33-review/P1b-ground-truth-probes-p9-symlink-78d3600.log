@@ -1,0 +1,12 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/probes/probe_p9_symlink.py C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/wt-78d3600
+CWD: C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/wt-78d3600
+SOURCE: 78d360029028c0571bdc272bef39e901c85f09da (clean detached worktree, pre-remediation driver)
+UTC-START: 2026-10-11T20:35:05Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+[P9c] closure of untouched run with symlink in sibling: ManifestMismatchError campaign storage C:\Users\there\AppData\Local\Temp\tmp90aromoq\benchmarks\results\EXP-002\RUN-20261011T120002Z-aaaaaaa-c
+[P12] stray non-JSON file in run dir: ACCEPTED
+----
+ELAPSED_SECONDS: 5.4
+EXIT_CODE: 0

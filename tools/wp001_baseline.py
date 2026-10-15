@@ -8,11 +8,13 @@ import ast
 import json
 import os
 import re
+import shutil
+import subprocess  # nosec B404
 import sys
 import tomllib
 from collections import Counter
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 _ARCHIVE = Path(
@@ -1019,10 +1021,71 @@ def _count_text_lines(path: Path) -> int:
     return content.count(b"\n") + int(bool(content) and not content.endswith(b"\n"))
 
 
+def _git_visible_files(root: Path) -> list[Path] | None:
+    """Tracked plus untracked-but-not-ignored files, or None outside git.
+
+    Git-ignored content (pytest base directories, tool worktrees, generated
+    results, build output) is scratch, not active project state. Walking it
+    made the inventory scan ~110,000 files / ~4 GB, and it is where the
+    intermittent access-violation crashes of the fast suite occurred (0159
+    leg 09; EVIDENCE/0160 gate G12a). "Ignored" means git's standard rules,
+    including the host's ``.git/info/exclude`` and ``core.excludesFile``;
+    untracked content was always host-specific. Unlike the walk, an untracked
+    nested repository is not descended into. Any unexpected git output makes
+    the caller walk the tree instead.
+    """
+    executable = shutil.which("git")
+    if executable is None:
+        return None
+
+    def git(*args: str, timeout: float) -> str:
+        return subprocess.run(  # noqa: S603  # nosec B603
+            [executable, "-C", str(root), *args],
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            check=True,
+            timeout=timeout,
+        ).stdout.decode("utf-8")
+
+    try:
+        toplevel = git("rev-parse", "--show-toplevel", timeout=60).strip()
+        # Only a work-tree root is inventoried through git; a directory nested
+        # in some other repository (e.g. a test's tmp_path) is walked instead.
+        if Path(toplevel).resolve() != root.resolve():
+            return None
+        listing = git(
+            "ls-files", "-z", "--cached", "--others", "--exclude-standard", timeout=120
+        )
+        names = sorted({name for name in listing.split("\0") if name})
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+    for name in names:
+        relative = PurePosixPath(name)
+        if relative.is_absolute() or ".." in relative.parts or ":" in name:
+            return None
+    return [root / name for name in names]
+
+
 def _active_project_files(root: Path) -> list[Path]:
     files: list[Path] = []
     archive_root = (root / "DOCS/archive and reference from PRINet 3.0").resolve()
     evidence_root = (root / _EVIDENCE_OUTPUT).resolve()
+    visible = _git_visible_files(root)
+    if visible is not None:
+        for path in visible:
+            relative = path.relative_to(root)
+            if (
+                any(part in _EXCLUDED_DIRECTORIES for part in relative.parts[:-1])
+                or path.name in _EXCLUDED_FILES
+                or path.name.startswith(".coverage.")
+                or not path.is_file()
+            ):
+                continue
+            resolved = path.resolve()
+            if archive_root in resolved.parents or evidence_root in resolved.parents:
+                continue
+            files.append(path)
+        return sorted(files, key=lambda path: path.relative_to(root).as_posix())
     for current, directory_names, file_names in os.walk(root):
         current_path = Path(current)
         directory_names[:] = sorted(
@@ -1063,7 +1126,12 @@ def _file_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
 
 
 def collect_repository_inventory(root: Path) -> dict[str, Any]:
-    """Collect a deterministic, archive-separated repository-state inventory."""
+    """Collect a deterministic, archive-separated repository-state inventory.
+
+    In a git work tree the active-repository counts cover tracked and
+    untracked-but-not-ignored files only; git-ignored scratch is not project
+    state. Outside git (or without a ``git`` executable) the tree is walked.
+    """
     root = _validate_root_path(root)
     cargo = _read_toml(root / "Cargo.toml")
     pyproject = _read_toml(root / "pyproject.toml")

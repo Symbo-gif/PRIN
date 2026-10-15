@@ -1,0 +1,4 @@
+PASS: synthetic valid-container metadata/offset changes canonicalize equally
+PASS: changed scientific stream/pixels and unregistered Info fields remain unequal
+PASS: malformed PDF/PNG containers, CRCs and image data fail closed
+No registered input, publication generator, RUN directory or scientific outcome used.

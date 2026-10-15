@@ -93,6 +93,41 @@ To find evidence for a specific work package, look for files matching
   round's gate log, and a `SHA256SUMS.txt` integrity inventory (executed by
   `tests/test_ea007_manifest.py`)
   (logs/text artifacts only — see that directory's `README.md`).
+- [`0159/`](0159/) — session 0159 (EXP-002 E1, 2026-10-11) preparation
+  evidence: the frozen `entry-state.json` (source baseline, GitHub
+  observations, settled `[]` native open-alert read) and, under
+  `verification/`, the focused driver captures, the `full-gate/` legs on
+  `7859030` (failed and interrupted attempts preserved), the
+  `final-6314532/` final local gate on checkpoint `63145325` (FAST and FULL
+  exit 0, Sphinx and governance exit 0), and the `pr33-review/` PR #33
+  review-round gate and probes, all covered by the `SHA256SUMS.txt`
+  integrity inventory (executed by `tests/test_0159_manifest.py`). Each leg
+  set's claims are scoped to the source it ran on. The full-history secret
+  scan's one checksum finding is resolved by the maintainer-approved exact
+  fingerprint exception in the repository's `.gitleaksignore`; the
+  review round's clean rescan is recorded in `pr33-review/`. Verification evidence
+  only: no EXP-002 execution has run (see that directory's `README.md`).
+- [`0160/`](0160/) — session 0160 (EXP-002 E2, 2026-10-12): the E2
+  review's static re-derivation, Lean 4 proof and Z3 check; the `WinError 32`
+  reproduction and fix check; the hosted-failure reproductions and fixes;
+  the approved source's local gate; and the read-only cold reviews, all
+  covered by `verification/SHA256SUMS.txt` (executed by
+  `tests/test_0160_manifest.py`). No EXP-002 execution has run.
+- [`0161/`](0161/) — session 0161 (EXP-002 E3, 2026-10-12): launch records
+  and independent per-record validation (revisions 1–3) of the five E3 legs,
+  the Windows local gate, hosted results and two read-only cold-review rounds,
+  covered by `verification/SHA256SUMS.txt`.
+- [`0162/`](0162/) — session 0162 (EXP-002 E4, 2026-10-13): pre-flight,
+  Phase-A gate of the registered analysis module, two pre-run cold-review
+  rounds, the two byte-identical analysis runs, the post-run self-audit, the
+  DV-040 re-audit, the final-candidate gate and hosted results, covered by
+  `verification/SHA256SUMS.txt`.
+- [`0163/`](0163/) — session 0163 (EXP-002 E5, 2026-10-14): pre-flight,
+  retained-bytes verification (Step 1), detached-worktree regeneration of the
+  seven E4 outputs (Step 2), protocol §8.2 reconstruction of the 39
+  publication files (Step 3), independent recount (Step 4), cold reviews and
+  self-audit, documentation/evidence delta gate and hosted results, covered by
+  `verification/SHA256SUMS.txt`.
 
 ## Rules
 

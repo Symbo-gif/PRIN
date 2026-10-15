@@ -1,0 +1,19 @@
+COMMAND: C:/Users/there/.cargo/bin/cargo.exe --version --verbose
+CWD: C:/dev/PRIN
+SOURCE: Phase-A candidate: HEAD 7d850ba (STEP 0) + staged exp002_e4_analysis.py and tests/test_exp002_e4_analysis.py
+HEAD: 7d850babf173c9987fbb34d80af9e4be8238b304
+UTC-START: 2026-10-13T15:52:33Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+cargo 1.99.0 (5f94df478 2026-08-27)
+release: 1.99.0
+commit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e
+commit-date: 2026-08-27
+host: x86_64-pc-windows-msvc
+libgit2: 1.9.6 (sys:0.21.0 vendored)
+libcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:Schannel)
+os: Windows 10.0.26300 (Windows 11 Core) [64-bit]
+----
+UTC-END: 2026-10-13T15:52:39Z
+ELAPSED_S: 7
+EXIT_CODE: 0

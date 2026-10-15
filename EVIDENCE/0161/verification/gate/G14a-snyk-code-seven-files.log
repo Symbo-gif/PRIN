@@ -1,0 +1,40 @@
+COMMAND: cmd /c C:/Users/there/AppData/Roaming/npm/snyk.cmd code test C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/8a021180-4f6b-439e-9fe7-62b13011e219/scratchpad/e3/sast-input --severity-threshold=medium --org=symbo-gif
+CWD: C:/dev/PRIN
+SOURCE: working tree: 92cf696 (fae24c4 + .gitattributes rule) + staged session-0161 changes (E3 records, raw run records, evidence), candidate corrected after the G10fa trailing-space finding; gate run 3 from Git Bash, host otherwise idle
+UTC-START: 2026-10-12T23:17:58Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+
+Testing C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/8a021180-4f6b-439e-9fe7-62b13011e219/scratchpad/e3/sast-input ...
+
+        
+💡 Tip
+
+   You are currently viewing results with --severity-threshold applied.
+   To view all issues, remove the --severity-threshold flag            
+                                                                       
+
+╭────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Test Summary                                                                                                                               │
+│                                                                                                                                            │
+│   Organization:      symbo-gif                                                                                                             │
+│   Test type:         Static code analysis                                                                                                  │
+│   Project path:      C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/8a021180-4f6b-439e-9fe7-62b13011e219/scratchpad/e3/sast-input    │
+│                                                                                                                                            │
+│   Total issues:   0                                                                                                                        │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+    
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+
+
+💡 Tip
+
+   Some capabilities, including the ability to apply ignores, are unavailable. Retest the project with the --remote-repo-url parameter or from within a repository to enable full functionality.
+                                                                                                                                                                                                
+----
+ELAPSED_SECONDS: 13.0
+EXIT_CODE: 0

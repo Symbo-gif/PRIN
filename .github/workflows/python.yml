@@ -24,7 +24,7 @@ jobs:
       # from the CPU index first (no CUDA stack) and is needed only so
       # `mypy --strict` can follow `import torch`.
       - run: pip install --index-url https://download.pytorch.org/whl/cpu -c ci/lint-constraints.txt torch
-      - run: pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis
+      - run: pip install -c ci/lint-constraints.txt ruff mypy interrogate "bandit[toml]" hypothesis numpy
       - run: ruff check python/ tests/ benchmarks/ tools/ DOCS/experiments/
       - run: ruff format --check python/ tests/ benchmarks/ tools/
       # DV-040: campaign records embed Python fences in immutable Markdown;

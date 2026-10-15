@@ -1,0 +1,12 @@
+{
+  "artefacts": {
+    "api.json": [
+      "H1"
+    ]
+  },
+  "exp_id": "EXP-002",
+  "mode": "api",
+  "operator": "MichaelMaillet",
+  "run_id": "RUN-20261012T212705Z-fae24c4-api-cpu",
+  "session": "0161"
+}

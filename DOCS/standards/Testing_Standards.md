@@ -98,3 +98,58 @@ pytest parity/ -v -m parity
 # Full suite
 pytest tests/ parity/ -v
 ```
+
+## 7. Supervised local validation — timeout governance (Plan amendment #49)
+
+Adopted 2026-10-11 (Project Plan §8.3, amendment #49) within the existing session-0159 E1 scope. This section is
+the normative policy for how required local validation runs are supervised;
+Development Workflow and Audit Standards §3, Coding Standards §5, the
+Benchmarking and Experimentation Standards, and `AGENTS.md` cross-reference it.
+
+1. **Required checks run to completion.** Supervised local validation checks
+   (every leg of the Coding Standards §5 local gate, including the Sphinx `-W`
+   build, `cargo audit`, `pip-audit` and `cargo llvm-cov`, and the suite
+   invocations of this document's §6) run to their actual completion. No arbitrary whole-run wall-clock limit may kill
+   a run that is demonstrably making productive progress.
+2. **Finite bounds are workload- and evidence-based.** Where a finite bound
+   is unavoidable or retained (an outer harness limit, an infrastructure
+   ceiling), it is documented per workload and sized from cited
+   completed/incomplete evidence for that workload, plus substantial margin
+   for setup, instrumentation/coverage overhead, compilation, and host
+   variability. A generic 30-minute bound on the full suite is unjustified by
+   the evidence (the recorded completed no-coverage full runs took
+   ~27–30 minutes). **90 minutes is an evidenced initial allowance for the
+   full suite, not a universal ceiling**; coverage-instrumented and other
+   heavier runs are sized separately from their own evidence.
+3. **Stall diagnosis requires multiple observations.** Quiet output, a
+   repeated stack sample, or a faulthandler `Timeout` message alone is not
+   proof of a hang. A stall claim needs at least two timestamped observations
+   and must distinguish process identity/status, whether the completed-work
+   count is changing, stack contents, CPU-time and I/O counters, and the
+   expected known behaviour of the node under observation. Diagnostics are
+   retained; a guessed attribution is never recorded as cause.
+4. **A wait expiring is not a process deadline or failure.** Expiry of a
+   tool/agent wait is a property of the waiter, not of the subprocess. The
+   session retains handles/PIDs/log offsets and resumes observation of the
+   live run; it never starts a duplicate of a run that may still be live.
+5. **Stop conditions are real faults.** A failing assertion, crash, deadlock,
+   resource exhaustion, or work verified stalled under item 3 requires stop
+   or escalation. Before termination the session preserves diagnostics, and
+   any cleanup is restricted to the session-owned process tree — never a
+   blanket kill of all `python`/`cargo` processes on the host.
+6. **Incomplete is not pass.** A killed or incomplete run is recorded with
+   its actual exit status and the scope it did not cover, and is never
+   reported as a pass. No session may skip tests, weaken assertions, shorten
+   scientific samples, or suppress warnings to obtain a green result.
+7. **Purposeful timeouts are retained.** Operation-specific network,
+   subprocess, and test timeouts, resource limits, and infrastructure
+   ceilings are kept where useful. This policy removes indiscriminate
+   whole-run limits, not per-operation timeouts.
+8. **Scientific parameters are unchanged.** Experiment CPU/GPU/CI/storage
+   budgets, abort criteria, benchmark and statistical targets, seeds, and
+   tolerances are unaffected; only validation-run supervision changed.
+9. **Claims still require completed evidence.** Scan, coverage, and platform
+   claims require completed matching evidence; a longer budget does not
+   retroactively satisfy an interrupted run (DV-033 remains OPEN — the
+   interrupted coverage run claims no coverage total). The amendment #48
+   local-validation regime remains in force and unaffected.

@@ -108,7 +108,55 @@ experiment downstream of EXP-001, and 0194 are RELEASED** under campaign plan
 amendment was needed, because a confirmed parity result is not a changed
 conclusion. Opening the E1–E5 pull request is authorized but **not yet done** —
 nothing has been pushed. `EXP-002` may now begin in campaign plan §3's
-dependency order.
+dependency order. *(Dated correction, 2026-10-11 UTC: the E1–E5 pull
+request was subsequently opened and merged as **PR #28**; the sentence
+above is retained as its point-in-time record.)*
+
+**EXP-002 E1 PREPARATION IN PROGRESS — session 0159, 2026-10-11 UTC.** The
+lead-authored DRAFT pre-registration
+([`EXP-002` record](EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md))
+and the necessary E1 collection driver
+(`benchmarks/campaign/exp002_driver.py`, with synthetic-fixture regression
+tests) are in place on `campaign/0159-exp002-e1`. Project Plan amendment
+#49 adopted supervised-local-validation timeout governance within the
+declared 0159 scope. Scientific approval belongs to session 0160; no
+EXP-002 execution, pilot or reference-input collection has run and the
+final full local gate is pending. *(Dated correction, 2026-10-11 UTC,
+PR33-F10: the final local gate then completed on checkpoint `63145325` —
+FAST, FULL, Sphinx and the governance battery all exit 0
+(`EVIDENCE/0159/verification/final-6314532/`). The branch was published as
+PR #33, whose seven review sources are adjudicated in
+[`PR033-multi-review-audit.md`](../audits/PR033-multi-review-audit.md); that
+round amended the DRAFT protocol (its section 11) and the driver, and the
+maintainer approved the gitleaks checksum exception. EXP-002 remains
+DRAFT, with no execution.)*
+
+**EXP-002 APPROVED AT E2 — sessions 0159 and 0160 COMPLETE, 2026-10-12 UTC.**
+The maintainer accepted the E1 exit and delegated the E2 decisions, recorded
+with their reasons in
+[`e2-review.md`](EXP-002-api-benchmark-result-and-reproduction-parity/e2-review.md).
+Session 0161 (E3) is READY under that record's §8 entry checklist. No EXP-002
+experiment leg has executed. *(Dated update, 2026-10-12 UTC: E3 then executed —
+see the next entry; this paragraph is retained as its point-in-time record.)*
+
+**EXP-002 E3 EXECUTED — session 0161, 2026-10-12 UTC.** All five registered legs
+(`api`, `conclusions`, `reference`, `prin`, `repeatability`) ran once each at source
+`fae24c4`, in the registered order, through the committed driver
+`benchmarks/campaign/exp002_driver.py`: five immutable, manifested `RUN-` directories under
+`benchmarks/results/EXP-002/`, every exit code 0, **0 aborted, no rerun, no D1 condition**,
+aggregate CPU wall 63.821 s against the 12 h cap. The protocol froze at the first `RUN-`
+(2026-10-12T21:27:05Z). Each record was validated independently for structure and identity;
+**no hypothesis verdict was computed** and no observation payload was examined — adjudication,
+the H3 dual-policy report and any D1 determination belong to E4 (session 0162, now READY). The
+generated publication roots are retained, unmodified and untracked, until the E5 report is accepted.
+Record: [`log.md`](EXP-002-api-benchmark-result-and-reproduction-parity/log.md) and the
+[E3-to-E4 handoff](EXP-002-api-benchmark-result-and-reproduction-parity/README.md#e3-to-e4-handoff-session-0161-2026-10-12-utc).
+
+**EXP-002 E4 ANALYSED — session 0162, 2026-10-13 UTC — H1, H2, H4 `CONFIRMED`; H3 `REFUTED` (both policies); D1 flag RAISED.** The registered analysis module [`analysis/exp002_e4_analysis.py`](EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py) was committed and pushed (`3731fc2`) before any real record was analysed, then applied the frozen decision rules to the five E3 records (all admissible, 0 aborted; two runs byte-identical): **H1 `CONFIRMED`** (`175/175` `api_symbols` resolved, `172/172` `legacy_api_names` owned, `0` duplicate/removed/unexpected, frozen sets empty), **H2 `CONFIRMED`** (`62/62` `claim_comparator_records` agree across `C01`–`C05`), **H3 `REFUTED`** (`21/39` `generated_files` equal under the approved §5.4 policy, `18/39` differing: `.pdf` and `.png` of figures 5, 7, 8, 9, 10, 11, 12, 14, and 15, while all `11/11` tables match each other and the archived tables; also `REFUTED` at `5/39` under the §11.3 sensitivity policy), and **H4 `CONFIRMED`** (`39/39` `generated_files` raw-identical across two PRIN processes, canonical projections equal). Record: [`analysis.md`](EXP-002-api-benchmark-result-and-reproduction-parity/analysis.md) and [`report-manifest.json`](EXP-002-api-benchmark-result-and-reproduction-parity/report-manifest.json).
+
+**EXP-002 E5 REPORTED — session 0163, 2026-10-14 UTC — D1 RAISED ON H3; CAMPAIGN BLOCKED AT SESSION 0164.** The [E5 report](EXP-002-api-benchmark-result-and-reproduction-parity/report.md) issues all verdicts in full (**H1 `CONFIRMED`**, **H2 `CONFIRMED`**, **H3 `REFUTED` (D1)** under both the approved `21/39` and sensitivity `5/39` policies, **H4 `CONFIRMED`**), verifies the retained publication bytes (`39/39` per run) and input snapshots (`172/172` per run) first against their manifested digests, regenerates the 7 E4 analysis outputs and `report-manifest.json` (`6b15dcc1…68781`) byte-identically (`8/8`) in a clean detached worktree outside the repository, completes the protocol §8.2 reconstruction (`39/39` PRIN-arm raw files and `39/39` normalized/sensitivity digests on both arms; `25/39` reference-arm raw files due to the unpinned reference PDF `CreationDate` timestamp, recorded as a reconstruction limitation under §11.3 item 2), and confirms zero discrepancies on an independent recount. It opens (and does not execute) the four-session conditional correction cycle **`EXP-002-D1`** ([`2026-10-14-exp002-d1-s1..s4`](../sessions/contingencies/2026-10-14-exp002-d1-s1-correction-implementation.md)), adds an erratum admonition to the Parity Report, and sets session **`0164` (EXP-003 E1) to `BLOCKED`** (with every later campaign session `0165`–`0194` inheriting the block under campaign plan §3.3 and §10.4 items 2–5 until S1→S4 close and `EXP-002-r1` returns a non-reversal verdict, or a Plan §8.3 amendment is adopted). The report was **verified and accepted by the maintainer
+(MichaelMaillet) 2026-10-15 UTC** and the `EXP-002-D1` S1 correction scope was
+approved as written (`report.md` §14); acceptance does not release `0164`.
 
 ## Layout
 
@@ -140,8 +188,8 @@ regenerate from them via `prin.reporting`.
 | Experiment | Track | Record root |
 |---|---|---|
 | EXP-001 | C1 | [`EXP-001-golden-trajectory-numerical-parity/`](EXP-001-golden-trajectory-numerical-parity/README.md) |
-| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **COMPLETE: E5 VERIFIED AND ACCEPTED 2026-09-29 UTC. All five hypotheses `CONFIRMED`, D1 not raised (non-reversal); 0159 and every experiment downstream of EXP-001, plus 0194, are RELEASED. E1–E5 PR authorized, not yet opened** |
-| EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) |
+| EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **COMPLETE: E5 VERIFIED AND ACCEPTED 2026-09-29 UTC. All five hypotheses `CONFIRMED`, D1 not raised (non-reversal); 0159 and every experiment downstream of EXP-001, plus 0194, are RELEASED. E1–E5 PR authorized, not yet opened** *(dated correction, 2026-10-11: opened and merged as PR #28)* |
+| EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) — **E5 VERIFIED AND ACCEPTED 2026-10-15 UTC (reported 2026-10-14 UTC): H1, H2, H4 `CONFIRMED`; H3 `REFUTED` (`21/39` approved, `5/39` sensitivity) — campaign plan §10.4 D1 RAISED; correction cycle `EXP-002-D1` open with S1 scope approved; session `0164` and downstream campaign sessions BLOCKED** |
 | EXP-003 | C2 | [`EXP-003-cpu-scaling-and-sweep-performance/`](EXP-003-cpu-scaling-and-sweep-performance/README.md) |
 | EXP-004 | C2 | [`EXP-004-gpu-kernels-and-torch-bridge-performance/`](EXP-004-gpu-kernels-and-torch-bridge-performance/README.md) |
 | EXP-005 | C3 | [`EXP-005-dynamics-chimera-and-capacity-replication/`](EXP-005-dynamics-chimera-and-capacity-replication/README.md) |

@@ -1,0 +1,147 @@
+# EXP-002 E4 Analysis Module & Test Suite: Cold Review (Round 2)
+
+**Review Type:** Read-Only Static Review (Round 2 post-remediation)  
+**Governance:** Pre-registration sections 1.1, 2, 3, 4.1, 4.2, 4.3, 5.1–5.5, 7, 8.1, 8.2, 11.3; `campaign-plan.md` sections 7.4, 9.1, 10.4, 12  
+**Constraints Enforced:** Read-only, no file modifications, no shell executions, zero inspection of `benchmarks/results/EXP-002/RUN-*`, `DOCS/test_and_benchmark_results/`, `DOCS/archive and reference from PRINet 3.0/`, or validation transcripts.
+
+---
+
+## 1. Evaluation of Round 1 Fixes (F1–F8)
+
+### F1: Test Fast-Path Invalidation on Global Registration Fields
+- **Status:** Correct implementation; **Test coverage gap identified (R2-F1)**.
+- **Code:** In [`tests/test_exp002_e4_analysis.py`](file:///C:/dev/PRIN/tests/test_exp002_e4_analysis.py#L500-L502), `_run(builder)` now verifies:
+  ```python
+  if context is not None and dataclasses.replace(
+      registration, runs=()
+  ) == dataclasses.replace(context.registration, runs=()):
+  ```
+  This blanks `runs` and compares all other global fields (`source_sha`, `protocol_commit`, `protocol_sha256`, `approval_date_utc`, `input_manifest_sha256`, `reference_api_sha256`, `public_api_sha256`, `deprecation_sha256`).
+- **Test evaluation:** Every existing negative test for global precondition aborts uses `_assert_aborts(builder, registration, ...)`, which directly calls `analysis.run_analysis(builder.repo, registration)`. None invokes `_run(builder)`. Consequently, if F1 is reverted back to checking only `source_sha` and `input_manifest_sha256`, the entire test suite still passes. See Finding R2-F1 below.
+
+### F2: `*.json` Inventory Rule
+- **Status:** Correct & complete (declined in code with rationale documented).
+- **Code & Docstring:** [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py#L12-L16) docstring item 1 explicitly notes that checking `present = sorted(path.name for path in results_dir.glob("*.json"))` follows the inventory rule of `tools.reproduce.verify_manifest` as executed by the driver.
+
+### F3: Re-derivation of Frozen Contract Sets (`frozen_missing`, `frozen_extra`)
+- **Status:** Correct & complete.
+- **Code:**
+  - `Registration` and `REGISTERED` include `public_api_sha256` and `deprecation_sha256` pinned to the section 1.1 digests (`dd5745ab...` and `132e86e9...`).
+  - `verify_context` verifies both blobs at `R` against these pinned digests.
+  - `_literal` parses `RC1_PUBLIC_API` as an AST literal tuple without module execution.
+  - `check_api` re-derives `missing = sorted(context.frozen_contract - set(observed))` and `extra = sorted(set(observed) - context.frozen_contract)`, asserting exact equality with the record's sorted lists, failing closed with `RecordError` on any disagreement.
+  - `build_summary` records both digests in `identities`.
+- **Tests:** `test_h1_frozen_contract_difference_refutes`, `test_h1_frozen_sets_disagreeing_with_rc1_are_inadmissible`, `test_frozen_contract_digest_mismatch_aborts`, and `test_frozen_contract_source_must_be_a_literal_tuple` fail if F3 is reverted or mutated.
+
+### F4: Verbatim Section 5.3 Owner Matrix Row 4
+- **Status:** Correct & complete.
+- **Code:** [`exp002_e4_analysis.py`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py#L370-L380) row 4 matches `preregistration.md` Section 5.3 verbatim:
+  `"CUDA-tagged y3q49_finite_size_scaling.json fit ranking and y3q49_phase_coherence.json lifetime ranking"` -> `"EXP-004 backend qualification and EXP-005 scientific replication; their CUDA-derived directions are not substituted with CPU measurements here"`.
+- **Tests:** [`tests/test_exp002_e4_analysis.py`](file:///C:/dev/PRIN/tests/test_exp002_e4_analysis.py#L202-L215) `test_owner_matrix_is_the_registered_section_5_3_matrix` parses Section 5.3 from the working protocol and asserts exact markdown cell matches for all 7 rows using `strict=True`.
+
+### F5: Wrapped `OSError`s into `AnalysisError` / `RecordError`
+- **Status:** Correct & complete.
+- **Code:**
+  - `_read_regular`: `stream.read()` wrapped into `error(f"cannot read {path}: {exc}")`.
+  - `_ownership_sources`: UTF-8 decoding wrapped into `AnalysisError("ownership sources are not UTF-8")`.
+  - `_load_verified_files`: `run_dir.iterdir()` wrapped into `RecordError(f"cannot list run directory: {exc}")`.
+- **Tests:** `test_unlistable_run_directory_is_inadmissible` asserts that a directory listing permission error marks the run as inadmissible (`RecordError`) and renders H1 `INCONCLUSIVE` rather than crashing the process.
+
+### F6: Calendar Date Validation
+- **Status:** Correct & complete.
+- **Code:** Helper `_real_time(value, layout)` validates timestamps via `datetime.strptime(value, layout)`. Invoked in `_check_registration` on run name timestamp `utc` (`%Y%m%dT%H%M%SZ`) and in `_approval_date` (`%Y-%m-%d`).
+- **Tests:** `test_calendar_dates_are_validated` tests leap year/invalid days ("2026-13-45", "2026-02-30"), invalid run name timestamps, and asserts `AnalysisError`.
+
+### F7: Removal of Ambient `GIT_*` Environment Overrides
+- **Status:** Correct & complete.
+- **Code:** `_git_environment()` strips all environment variables starting with `GIT_`. Passed to `subprocess.run(..., env=_git_environment())` across every git query in `_git()`.
+- **Tests:** `test_ambient_git_overrides_are_ignored` sets `GIT_DIR` and `GIT_WORK_TREE` to invalid non-repo paths and asserts analysis completes with `H1: CONFIRMED`.
+
+### F8: Registered Claim-Case Exact Key Sets
+- **Status:** Correct & complete.
+- **Code:** In `check_conclusions`:
+  ```python
+  keys = _CASE_KEYS | (_C02_EXTRA_KEYS if expected["family"] == "C02" else set())
+  _exact_keys(case, keys, f"claim case {expected['case_id']}", RecordError)
+  ```
+  Validates against frozen schema sets `_CASE_KEYS` and `_C02_EXTRA_KEYS` rather than dynamically derived dictionary keys.
+- **Tests:** `test_registered_populations_match_the_frozen_driver` asserts `driver._CASE_KEYS == analysis._CASE_KEYS`. `test_h2_record_disagreeing_with_the_frozen_inputs_is_inadmissible` asserts rejection on unexpected keys (`extra=1`) or missing keys (`pop("case_id")`).
+
+---
+
+## 2. In-Depth Analysis of F3 Re-Derivation (Ordering, Duplicates, Sets)
+
+Per Section 2 of the Round 2 brief:
+
+### Could F3 reject a genuine driver record?
+**No.**
+1. **Ordering of `observed_names`:**  
+   The driver records `"observed_names": list(prin.__all__)`. In `check_api`, analysis casts this to a set via `set(observed)`. Set difference operations `context.frozen_contract - set(observed)` and `set(observed) - context.frozen_contract` are completely order-independent.
+2. **Duplicates in `observed_names`:**  
+   In the driver, `verify_api_surface(prin.__all__)` converts `module_all` to `current = set(module_all)` before computing `FROZEN_PUBLIC_API - current` and `current - FROZEN_PUBLIC_API`. In `check_api`, analysis computes `context.frozen_contract - set(observed)` and `set(observed) - context.frozen_contract`. Because both driver and analysis deduplicate via `set()`, identical set differences are produced. The record passes admissibility checks in `check_api`. In `adjudicate_h1`, duplicate names are caught by `duplicates = sorted(name for name, count in counts.items() if count > 1)`, contributing to `counterexamples` and resulting in `REFUTED`, strictly satisfying Pre-registration Section 4.1.
+3. **The `sorted()` of a set:**  
+   The driver performs `sorted(missing)` and `sorted(extra)`. In `check_api`, analysis checks against `sorted(context.frozen_contract - set(observed))` and `sorted(set(observed) - context.frozen_contract)`. Both driver and analysis execute Python 3's built-in `sorted()` over `set[str]`, which relies on deterministic lexicographical Unicode code-point ordering. The resulting lists are identical in content and order.
+
+### Could F3 accept an inconsistent record?
+**No.**
+- If a corrupted or tampered record carries forged `frozen_missing` or `frozen_extra` (e.g. asserting `[]` despite missing exports, unsorted lists, or duplicate items), `missing == sorted(...)` or `extra == sorted(...)` evaluates to `False`, immediately raising `RecordError` and marking the record inadmissible.
+- If `observed_names` deviates from the 175 expected symbols, `adjudicate_h1` catches the discrepancy via `unexpected_exports`, `removed_exports`, or `frozen_contract_{missing,extra}` and issues a `REFUTED` verdict.
+
+---
+
+## 3. Findings
+
+### [R2-F1] Low: Tests' fast path invalidation (F1) is unexercised by any negative test
+- **Location:** [`tests/test_exp002_e4_analysis.py:500-502`](file:///C:/dev/PRIN/tests/test_exp002_e4_analysis.py#L500-L502)
+- **Concrete Scenario:**  
+  The fast-path check in `_run(builder)` was improved in round 2 to invalidate whenever any global registration field differs:
+  ```python
+  if context is not None and dataclasses.replace(
+      registration, runs=()
+  ) == dataclasses.replace(context.registration, runs=()):
+  ```
+  However, all existing tests verifying that global registration mismatches abort call `_assert_aborts(builder, registration, ...)`, which directly invokes `analysis.run_analysis(...)`, completely bypassing `_run(builder)`. No test in the suite mutates a global registration field (such as `deprecation_sha256`, `public_api_sha256`, or `reference_api_sha256`) and then runs `_run(builder)`. If line 500 were reverted to the round-1 condition (`registration.source_sha == ... and registration.input_manifest_sha256 == ...`), all tests in the test suite would still pass.
+- **Suggested Fix:**  
+  Add an explicit test asserting that `_run(builder)` bypasses `builder.base_context` when a global registration field changes:
+  ```python
+  def test_run_fast_path_invalidates_on_global_registration_change(
+      builder: Builder,
+  ) -> None:
+      registration = builder.write()
+      bad = dataclasses.replace(registration, deprecation_sha256="0" * 64)
+      # Invoking _run or monkeypatching builder.write to return `bad` must
+      # trigger full run_analysis and abort, rather than reusing base_context.
+      with pytest.raises(analysis.AnalysisError, match="section 1.1 digests"):
+          analysis.run_analysis(builder.repo, bad)
+  ```
+
+---
+
+## 4. What Was Checked and Found Sound
+
+1. **Decision Rules (Section 4.1):**
+   - For all hypotheses (H1–H4), valid counterexamples take precedence over coverage gaps: `counterexamples > 0` immediately yields `REFUTED` regardless of unverifiable rows or missing comparisons.
+   - An inadmissible arm or missing record yields `INCONCLUSIVE`, never a false `REFUTED` or false `CONFIRMED`.
+   - No driver status label is trusted as a verdict; verdicts are entirely re-derived from observations and verified inputs.
+2. **H1 API Mapping Census:**
+   - Population is exactly 175 names (172 reference canonical `__all__` + 3 PRIN additions `BackendUnavailableError`, `__version__`, `core_version`).
+   - Ownership flags are re-derived against `MIGRATION_GUIDE_PATH` and `OWNERSHIP_BASELINE_PATH` at `R`.
+   - Row classifications (`callable`, `constant`, `none`, `unsupported`, `unresolved`, `unverifiable`) are re-derived statically.
+3. **H2 Historical Conclusions Preservation:**
+   - 62 predicates across 5 families (C01: 5 seeds, C02: 42 grid rows, C03: 4 sweep rows, C04: 5 topology comparisons, C05: 6 CPU Goldilocks zone comparisons) are re-derived exactly from the manifest-verified frozen JSON documents.
+   - Exact threshold checks (0.555 for C01/C02, 0.5 for C03) and operators are preserved.
+   - `C02` requires exact preservation of `(K, alpha)` float labels; `C05` compares CPU entries only.
+4. **H3 Publication Fidelity:**
+   - Evaluated under both `approved` (line-terminator canonical tables, normalized PNGs/PDFs) and `sensitivity` (raw tables, masked-in-place PDFs, normalized PNGs) policies side by side.
+   - 11 archived tables are verified as an independent baseline.
+   - `h3_policies_agree` and `h3_sensitivity_policy_refuted` are faithfully rendered in `summary.json` and markdown outputs.
+5. **H4 Deterministic Reproduction:**
+   - Raw bytes and canonical scientific projections are verified across the two independent PRIN runs.
+   - Raw output mismatches refute; normalization cannot rescue H4.
+6. **Isolation & Confinement:**
+   - The analysis module imports neither `prin`, `prinet`, `exp002_driver`, nor `tools.reproduce`.
+   - Outputs are strictly confined to the two registered destinations: `DOCS/test_and_benchmark_results/EXP-002/analysis/` and `benchmarks/results/EXP-002/report-manifest.json`. Writes use atomic tempfile replacement with no-link checks.
+7. **Security & Input Validation:**
+   - All subprocess calls pass explicit validated argvs with `env=_git_environment()`.
+   - No path traversal or symlink vulnerabilities; link ancestors are checked before any file open.
+   - `_strict_json` rejects byte-order marks, duplicate keys, and non-finite numbers.

@@ -1,0 +1,10 @@
+COMMAND: git diff --cached --check
+CWD: C:/dev/PRIN
+SOURCE: documentation/evidence-only follow-up commit C on top of 89f21f5: staged index (rev3 validator and self-tests, delegation, hosted captures, G14c/G17b/R08, log sections 8-11, README/CHANGELOG notes); delta gate = the legs that read documentation and governance records (the product, test and Rust trees are byte-identical to the fully gated candidate 89f21f5); Git Bash, host otherwise idle
+UTC-START: 2026-10-13T00:32:05Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+----
+ELAPSED_SECONDS: 0.1
+EXIT_CODE: 0

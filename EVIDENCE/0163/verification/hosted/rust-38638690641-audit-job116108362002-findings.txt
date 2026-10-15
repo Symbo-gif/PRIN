@@ -1,0 +1,60 @@
+4:audit	UNKNOWN STEP	2026-10-14T21:14:31.4230091Z Version: 20261002.596
+7:audit	UNKNOWN STEP	2026-10-14T21:14:31.4232305Z Worker ID: {0e506b6c-7151-4d15-ba2b-ca3c98227daa}
+18:audit	UNKNOWN STEP	2026-10-14T21:14:31.4240368Z Version: 20261004.327.1
+1026:audit	UNKNOWN STEP	2026-10-14T21:17:41.2106483Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m quinn-proto
+1027:audit	UNKNOWN STEP	2026-10-14T21:17:41.2108722Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.11.16
+1028:audit	UNKNOWN STEP	2026-10-14T21:17:41.2109756Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed
+1030:audit	UNKNOWN STEP	2026-10-14T21:17:41.2111322Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0341
+1031:audit	UNKNOWN STEP	2026-10-14T21:17:41.2112098Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0341
+1035:audit	UNKNOWN STEP	2026-10-14T21:17:41.2114057Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m quinn-proto
+1036:audit	UNKNOWN STEP	2026-10-14T21:17:41.2114608Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.11.16
+1037:audit	UNKNOWN STEP	2026-10-14T21:17:41.2115526Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Unbounded growth of pending connection ID retirements in quinn-proto
+1039:audit	UNKNOWN STEP	2026-10-14T21:17:41.2117041Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0339
+1040:audit	UNKNOWN STEP	2026-10-14T21:17:41.2117519Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0339
+1043:audit	UNKNOWN STEP	2026-10-14T21:17:41.2118721Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m quinn-proto
+1044:audit	UNKNOWN STEP	2026-10-14T21:17:41.2119325Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.11.16
+1045:audit	UNKNOWN STEP	2026-10-14T21:17:41.2120199Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Zero-length DATAGRAM frames bypass the receive buffer limit in quinn-proto
+1047:audit	UNKNOWN STEP	2026-10-14T21:17:41.2121042Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0342
+1048:audit	UNKNOWN STEP	2026-10-14T21:17:41.2121509Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0342
+1051:audit	UNKNOWN STEP	2026-10-14T21:17:41.2122641Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m quinn-proto
+1052:audit	UNKNOWN STEP	2026-10-14T21:17:41.2122966Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.11.16
+1053:audit	UNKNOWN STEP	2026-10-14T21:17:41.2123537Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled
+1055:audit	UNKNOWN STEP	2026-10-14T21:17:41.2124403Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0340
+1056:audit	UNKNOWN STEP	2026-10-14T21:17:41.2124845Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0340
+1060:audit	UNKNOWN STEP	2026-10-14T21:17:41.2125975Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m quinn-proto
+1061:audit	UNKNOWN STEP	2026-10-14T21:17:41.2126280Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.11.16
+1062:audit	UNKNOWN STEP	2026-10-14T21:17:41.2126858Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Remote peer can panic quinn-proto with zero-length STREAM frames during unordered reads
+1064:audit	UNKNOWN STEP	2026-10-14T21:17:41.2127966Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0338
+1065:audit	UNKNOWN STEP	2026-10-14T21:17:41.2128778Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0338
+1068:audit	UNKNOWN STEP	2026-10-14T21:17:41.2129569Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m rustls
+1069:audit	UNKNOWN STEP	2026-10-14T21:17:41.2129860Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.23.45
+1070:audit	UNKNOWN STEP	2026-10-14T21:17:41.2130344Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Buffered application data sent to outer server after ECH rejection
+1072:audit	UNKNOWN STEP	2026-10-14T21:17:41.2131143Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0347
+1073:audit	UNKNOWN STEP	2026-10-14T21:17:41.2131580Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0347
+1077:audit	UNKNOWN STEP	2026-10-14T21:17:41.2132651Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m rustls
+1078:audit	UNKNOWN STEP	2026-10-14T21:17:41.2132944Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.23.45
+1079:audit	UNKNOWN STEP	2026-10-14T21:17:41.2133488Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Brotli certificate decompression can allocate up to 1 GiB before authentication
+1081:audit	UNKNOWN STEP	2026-10-14T21:17:41.2134331Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0348
+1082:audit	UNKNOWN STEP	2026-10-14T21:17:41.2134758Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0348
+1086:audit	UNKNOWN STEP	2026-10-14T21:17:41.2135811Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m rustls
+1087:audit	UNKNOWN STEP	2026-10-14T21:17:41.2136099Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.23.45
+1088:audit	UNKNOWN STEP	2026-10-14T21:17:41.2136703Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m Unauthenticated ServerHello can downgrade later connections to classical key exchange
+1090:audit	UNKNOWN STEP	2026-10-14T21:17:41.2137574Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0349
+1091:audit	UNKNOWN STEP	2026-10-14T21:17:41.2137992Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0349
+1095:audit	UNKNOWN STEP	2026-10-14T21:17:41.2139298Z ^[[0m^[[0m^[[1m^[[31mCrate:    ^[[0m rustls
+1096:audit	UNKNOWN STEP	2026-10-14T21:17:41.2139582Z ^[[0m^[[0m^[[1m^[[31mVersion:  ^[[0m 0.23.45
+1097:audit	UNKNOWN STEP	2026-10-14T21:17:41.2140022Z ^[[0m^[[0m^[[1m^[[31mTitle:    ^[[0m `Debug` impls for client session values expose TLS secrets
+1099:audit	UNKNOWN STEP	2026-10-14T21:17:41.2140773Z ^[[0m^[[0m^[[1m^[[31mID:       ^[[0m RUSTSEC-2026-0346
+1100:audit	UNKNOWN STEP	2026-10-14T21:17:41.2141195Z ^[[0m^[[0m^[[1m^[[31mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2026-0346
+1104:audit	UNKNOWN STEP	2026-10-14T21:17:41.2142414Z ^[[0m^[[0m^[[1m^[[33mCrate:    ^[[0m bincode
+1105:audit	UNKNOWN STEP	2026-10-14T21:17:41.2142702Z ^[[0m^[[0m^[[1m^[[33mVersion:  ^[[0m 2.0.1
+1107:audit	UNKNOWN STEP	2026-10-14T21:17:41.2143357Z ^[[0m^[[0m^[[1m^[[33mTitle:    ^[[0m Bincode is unmaintained
+1109:audit	UNKNOWN STEP	2026-10-14T21:17:41.2144004Z ^[[0m^[[0m^[[1m^[[33mID:       ^[[0m RUSTSEC-2025-0141
+1110:audit	UNKNOWN STEP	2026-10-14T21:17:41.2144424Z ^[[0m^[[0m^[[1m^[[33mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2025-0141
+1112:audit	UNKNOWN STEP	2026-10-14T21:17:41.2144832Z ^[[0m^[[0m^[[1m^[[33mCrate:    ^[[0m paste
+1113:audit	UNKNOWN STEP	2026-10-14T21:17:41.2145120Z ^[[0m^[[0m^[[1m^[[33mVersion:  ^[[0m 1.0.15
+1115:audit	UNKNOWN STEP	2026-10-14T21:17:41.2145792Z ^[[0m^[[0m^[[1m^[[33mTitle:    ^[[0m paste - no longer maintained
+1117:audit	UNKNOWN STEP	2026-10-14T21:17:41.2146619Z ^[[0m^[[0m^[[1m^[[33mID:       ^[[0m RUSTSEC-2024-0436
+1118:audit	UNKNOWN STEP	2026-10-14T21:17:41.2147049Z ^[[0m^[[0m^[[1m^[[33mURL:      ^[[0m https://rustsec.org/advisories/RUSTSEC-2024-0436
+1120:audit	UNKNOWN STEP	2026-10-14T21:17:41.2147449Z ^[[0m^[[0m^[[1m^[[33mCrate:    ^[[0m chacha20
+1121:audit	UNKNOWN STEP	2026-10-14T21:17:41.2147745Z ^[[0m^[[0m^[[1m^[[33mVersion:  ^[[0m 0.10.1

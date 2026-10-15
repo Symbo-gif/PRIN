@@ -1,0 +1,28 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe -m pytest tests/test_0159_manifest.py tests/test_exp002_driver.py tests/test_wp001_baseline.py -p no:cacheprovider -q --basetemp=C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/g16-basetemp
+CWD: C:/dev/PRIN
+SOURCE: final staged tree after evidence packaging (REQUIRED_BUNDLE and SHA256SUMS.txt updated for the pr33-review captures; no other source change since G13b)
+UTC-START: 2026-10-11T23:20:48Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 396 items
+
+tests\test_0159_manifest.py ....................                         [  5%]
+tests\test_exp002_driver.py ............................................ [ 16%]
+........................................................................ [ 34%]
+........................................................................ [ 52%]
+........................................................................ [ 70%]
+.......................................................                  [ 84%]
+tests\test_wp001_baseline.py ........................................... [ 95%]
+..................                                                       [100%]
+
+======================= 396 passed in 86.33s (0:01:26) ========================
+----
+ELAPSED_SECONDS: 89.9
+EXIT_CODE: 0

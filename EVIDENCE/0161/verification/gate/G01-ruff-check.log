@@ -1,0 +1,11 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/ruff.exe check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/
+CWD: C:/dev/PRIN
+SOURCE: working tree: 92cf696 (fae24c4 + .gitattributes rule) + staged session-0161 changes (E3 records, raw run records, evidence), candidate corrected after the G10fa trailing-space finding; gate run 3 from Git Bash (bash on PATH is Git's, as in 0159/0160), host otherwise idle
+UTC-START: 2026-10-12T22:15:42Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+All checks passed!
+----
+ELAPSED_SECONDS: 2.9
+EXIT_CODE: 0

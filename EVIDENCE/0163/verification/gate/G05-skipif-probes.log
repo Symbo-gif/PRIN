@@ -1,0 +1,12 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe tools/check_skipif_probes.py
+CWD: C:/dev/PRIN
+SOURCE: 79a91a6 + staged session-0163 E5 report, D1 briefs, Parity Report erratum, and EVIDENCE/0163
+HEAD: 79a91a60d1f27be64317083d94003381f1ac19d6
+UTC-START: 2026-10-14T20:57:15Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+check_skipif_probes: no registration-probe skipif guards
+----
+UTC-END: 2026-10-14T20:57:19Z
+ELAPSED_S: 3
+EXIT_CODE: 0

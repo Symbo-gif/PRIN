@@ -1,0 +1,12 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe tools/check_deviation_ledger.py DOCS/reports/039-project-state.md DOCS/reports/040-project-state.md
+CWD: C:/dev/PRIN
+SOURCE: working tree: ed993e9 + staged session-0160 changes (final candidate after cold-review rounds 1-3 and evidence packaging; gate run 5, host otherwise idle)
+UTC-START: 2026-10-12T09:05:25Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+Ledger consistency check passed.
+  Compared 142 rows in DOCS\reports\039-project-state.md with 146 rows in DOCS\reports\040-project-state.md.
+----
+ELAPSED_SECONDS: 202.2
+EXIT_CODE: 0

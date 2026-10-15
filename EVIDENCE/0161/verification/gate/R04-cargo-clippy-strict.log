@@ -1,0 +1,12 @@
+COMMAND: C:/Users/there/.cargo/bin/cargo.exe clippy --workspace --all-targets --features strict-checks -- -D warnings
+CWD: C:/dev/PRIN
+SOURCE: working tree: 92cf696 (fae24c4 + .gitattributes rule) + staged session-0161 changes (E3 records, raw run records, evidence), candidate corrected after the G10fa trailing-space finding; gate run 3 from Git Bash, host otherwise idle
+UTC-START: 2026-10-12T23:18:29Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+    Checking prin-py v1.0.0-rc1 (C:\dev\PRIN\crates\prin-py)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.56s
+----
+ELAPSED_SECONDS: 2.7
+EXIT_CODE: 0

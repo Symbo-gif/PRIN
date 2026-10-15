@@ -1,0 +1,11 @@
+COMMAND: git diff --check 78d3600
+CWD: C:/dev/PRIN
+SOURCE: campaign/0159-exp002-e1 working tree: 78d360029028c0571bdc272bef39e901c85f09da + uncommitted PR #33 remediation incl. self-audit fixes and the .gitleaksignore guard-test update (final pre-commit source; new evidence staged)
+UTC-START: 2026-10-11T21:53:13Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+
+----
+ELAPSED_SECONDS: 0.1
+EXIT_CODE: 0

@@ -1,0 +1,27 @@
+import sys, os, tempfile
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+sys.argv = [sys.argv[0], sys.argv[1]]
+import importlib.util
+spec = importlib.util.spec_from_file_location("pg", str(Path(__file__).with_name("probe_ground_truth.py")))
+pg = importlib.util.module_from_spec(spec); spec.loader.exec_module(pg)
+with tempfile.TemporaryDirectory() as tmp:
+    pg._workspace(Path(tmp).resolve())
+    run = pg._valid_run(observations={"unit": "api_symbol"})
+    sib = pg._valid_run(mode="conclusions", stamp="120002", observations={"cases": []})
+    outside = Path(tmp) / "outside.txt"; outside.write_text("x")
+    try:
+        os.symlink(outside, sib / "stray.txt")
+    except OSError as e:
+        print("symlink unsupported:", e); raise SystemExit
+    try:
+        pg.driver.check_run_complete(run); print("[P9c] ACCEPTED")
+    except Exception as e:
+        print("[P9c] closure of untouched run with symlink in sibling:", type(e).__name__, str(e)[:120])
+    # stray non-json file inside the run itself
+    os.unlink(sib / "stray.txt")
+    (run / "stray.bin").write_bytes(b"x")
+    try:
+        pg.driver.check_run_complete(run); print("[P12] stray non-JSON file in run dir: ACCEPTED")
+    except Exception as e:
+        print("[P12] stray file:", type(e).__name__, e)

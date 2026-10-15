@@ -1,0 +1,46 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 22 items
+
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[ruff-check] PASSED [  4%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[ruff-format] PASSED [  9%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[mypy-strict] PASSED [ 13%]
+tests/test_campaign_quality_gates.py::test_workflow_lint_covers_campaign_root[bandit-recursive] PASSED [ 18%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[ruff-check] PASSED [ 22%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[ruff-format] PASSED [ 27%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[mypy-strict] PASSED [ 31%]
+tests/test_campaign_quality_gates.py::test_agents_local_gate_covers_campaign_root[bandit-recursive] PASSED [ 36%]
+tests/test_campaign_quality_gates.py::test_campaign_format_selects_source_files_only PASSED [ 40%]
+tests/test_campaign_quality_gates.py::test_normal_typing_and_sast_gates_retained PASSED [ 45%]
+tests/test_campaign_quality_gates.py::test_bandit_exclusions_are_component_globs PASSED [ 50%]
+tests/test_campaign_quality_gates.py::test_bandit_discovers_every_campaign_source PASSED [ 54%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[relative-top-level-parity] PASSED [ 59%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[relative-top-level-tests] PASSED [ 63%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[absolute-top-level-parity] PASSED [ 68%]
+tests/test_campaign_quality_gates.py::test_bandit_still_excludes_excluded_dirs[absolute-top-level-tests] PASSED [ 72%]
+tests/test_campaign_quality_gates.py::test_bandit_includes_campaign_files_under_exclusion_like_slugs[relative] PASSED [ 77%]
+tests/test_campaign_quality_gates.py::test_bandit_includes_campaign_files_under_exclusion_like_slugs[absolute] PASSED [ 81%]
+tests/test_campaign_quality_gates.py::test_sphinx_requirements_urllib3_minimum_patched PASSED [ 86%]
+tests/test_campaign_quality_gates.py::test_agents_powershell_block_has_no_embedded_double_quotes PASSED [ 90%]
+tests/test_campaign_quality_gates.py::test_rustdoc_gate_documents_the_feature_gated_gpu_module PASSED [ 95%]
+tests/test_campaign_quality_gates.py::test_campaign_analysis_script_basenames_are_unique PASSED [100%]
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\stevedore\extension.py:185
+.venv\Lib\site-packages\stevedore\extension.py:185
+.venv\Lib\site-packages\stevedore\extension.py:185
+  The verify_requirements argument is now a no-op and is deprecated for removal. Remove the argument from calls.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================ slowest 20 durations =============================
+0.01s call     tests/test_campaign_quality_gates.py::test_bandit_discovers_every_campaign_source
+0.01s call     tests/test_campaign_quality_gates.py::test_campaign_analysis_script_basenames_are_unique
+
+(18 durations < 0.005s hidden.  Use -vv to show these durations.)
+======================= 22 passed, 3 warnings in 0.65s ========================

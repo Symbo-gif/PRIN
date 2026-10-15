@@ -1,0 +1,355 @@
+diff --git a/C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/5e1d6deb-495c-48f1-bf1a-4c8ad51472b3/scratchpad/e4/sast-input/exp002_e4_analysis.py b/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py
+index fb643ea..cb090cd 100644
+--- a/C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/5e1d6deb-495c-48f1-bf1a-4c8ad51472b3/scratchpad/e4/sast-input/exp002_e4_analysis.py
++++ b/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py
+@@ -14,9 +14,13 @@ What it does, in order:
+    ``HEAD`` descends from ``R``; that the protocol blob at ``F`` (and at ``R``,
+    and in the working tree) has the pinned SHA-256 and the dated
+    ``APPROVED`` header; that ``paper/artefact_manifest.json`` has its pinned
+-   digest; that the frozen reference result directory holds exactly the 172
+-   manifested JSON inputs with their manifested sizes and digests; and that
+-   the pinned reference ``__all__`` is the 172-name literal list. The raw
++   digest; that the ``*.json`` inventory of the frozen reference result
++   directory is exactly the 172 manifested inputs, with their manifested
++   sizes and digests (the inventory rule of ``tools.reproduce.verify_manifest``,
++   which the driver used); that the pinned reference ``__all__`` is the
++   172-name literal list; and that PRIN's frozen RC1 contract
++   (``_public_api.py`` and ``_deprecation.py`` at ``R``) has its
++   pre-registration section 1.1 digests. The raw
+    record root may hold only its ``README.md`` and the five indexed runs. Any
+    failure raises :class:`AnalysisError` and no output is written.
+ 2. **Per-record admissibility, before any observation is read.** Only the
+@@ -30,8 +34,10 @@ What it does, in order:
+    and never counted as a pass.
+ 3. **Re-derivation from retained data.** H1's expected population, legacy
+    flags and ownership rows are re-derived from the pinned reference source
+-   and the Migration Guide / WP-001 baseline at ``R``; each row's resolution
+-   class is re-derived from its retained type and callable fields. H2's 62
++   and the Migration Guide / WP-001 baseline at ``R``; the frozen-contract
++   missing/extra sets are re-derived from the observed export list and the
++   RC1 tuple at ``R``; each row's resolution class is re-derived from its
++   retained type and callable fields. H2's 62
+    claim-comparator records are re-derived from the manifest-verified frozen
+    inputs (operands, paths, units, operators, expected values) and must agree
+    with the record exactly. Publication file records are checked for internal
+@@ -81,6 +87,7 @@ import sys
+ import tempfile
+ from collections.abc import Iterable, Mapping, Sequence
+ from dataclasses import dataclass
++from datetime import datetime
+ from pathlib import Path, PurePosixPath
+ from typing import Any
+ 
+@@ -105,6 +112,8 @@ INPUT_MANIFEST_PATH = "paper/artefact_manifest.json"
+ REFERENCE_ROOT = "DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main"
+ REFERENCE_RESULTS = f"{REFERENCE_ROOT}/benchmarks/results"
+ REFERENCE_API_PATH = f"{REFERENCE_ROOT}/src/prinet/__init__.py"
++PUBLIC_API_PATH = "python/prin/_public_api.py"
++DEPRECATION_PATH = "python/prin/_deprecation.py"
+ MIGRATION_GUIDE_PATH = "DOCS/sphinx/migration_guide.rst"
+ OWNERSHIP_BASELINE_PATH = "DOCS/baselines/wp001_api_traceability.md"
+ 
+@@ -363,7 +372,9 @@ OWNER_MATRIX = (
+     (
+         "CUDA-tagged `y3q49_finite_size_scaling.json` fit ranking and "
+         "`y3q49_phase_coherence.json` lifetime ranking",
+-        "EXP-004 backend qualification and EXP-005 scientific replication",
++        "EXP-004 backend qualification and EXP-005 scientific replication; "
++        "their CUDA-derived directions are not substituted with CPU "
++        "measurements here",
+     ),
+     (
+         "CLEVR-N/IP accuracy, PT-versus-SA statistical equivalence, ablations, "
+@@ -431,6 +442,8 @@ class Registration:
+         approval_date_utc: Dated maintainer approval in the protocol header.
+         input_manifest_sha256: Pinned digest of ``paper/artefact_manifest.json``.
+         reference_api_sha256: Pinned digest of the reference ``__init__.py``.
++        public_api_sha256: Section 1.1 digest of ``_public_api.py`` (at ``R``).
++        deprecation_sha256: Section 1.1 digest of ``_deprecation.py`` (at ``R``).
+         runs: The explicit run index, in registered order.
+     """
+ 
+@@ -440,6 +453,8 @@ class Registration:
+     approval_date_utc: str
+     input_manifest_sha256: str
+     reference_api_sha256: str
++    public_api_sha256: str
++    deprecation_sha256: str
+     runs: tuple[RunSpec, ...]
+ 
+ 
+@@ -454,6 +469,12 @@ REGISTERED = Registration(
+     reference_api_sha256=(
+         "ede92afc6771f2e29206534905e2820598ba841662a93d59f669f803a382f182"
+     ),
++    public_api_sha256=(
++        "dd5745ababa809483b8d52198a096a1e9fa0de7e13e246245b13f47066853a6d"
++    ),
++    deprecation_sha256=(
++        "132e86e991669d0abe65d89b624227250bfd61e54c2f97cb814366a0012f4e9a"
++    ),
+     runs=(
+         RunSpec(
+             mode="api",
+@@ -590,6 +611,14 @@ def _finite_number(value: object, context: str, error: type[Exception]) -> float
+     return number
+ 
+ 
++def _real_time(value: str, layout: str) -> bool:
++    try:
++        datetime.strptime(value, layout)  # calendar validity only, no time zone
++    except ValueError:
++        return False
++    return True
++
++
+ def _check_registration(registration: Registration) -> None:
+     """Refuse a malformed registration before any git argv is built from it."""
+     for name in ("source_sha", "protocol_commit"):
+@@ -599,7 +628,13 @@ def _check_registration(registration: Registration) -> None:
+             f"registration {name} is not a 40-character SHA",
+             AnalysisError,
+         )
+-    for name in ("protocol_sha256", "input_manifest_sha256", "reference_api_sha256"):
++    for name in (
++        "protocol_sha256",
++        "input_manifest_sha256",
++        "reference_api_sha256",
++        "public_api_sha256",
++        "deprecation_sha256",
++    ):
+         _require(
+             _is_hex64(getattr(registration, name)),
+             f"registration {name} is not a SHA-256 digest",
+@@ -616,7 +651,8 @@ def _check_registration(registration: Registration) -> None:
+         _require(
+             match is not None
+             and match.group("label") == spec.label
+-            and match.group("sha") == registration.source_sha[:7],
++            and match.group("sha") == registration.source_sha[:7]
++            and _real_time(match.group("utc"), "%Y%m%dT%H%M%SZ"),
+             f"run index entry is not a registered run name: {spec.run_id}",
+             AnalysisError,
+         )
+@@ -674,7 +710,10 @@ def _read_regular(path: Path, error: type[Exception]) -> bytes:
+             before.st_ino,
+         ):
+             raise error(f"file changed identity while being opened: {path}")
+-        return stream.read()
++        try:
++            return stream.read()
++        except OSError as exc:
++            raise error(f"cannot read {path}: {exc}") from exc
+ 
+ 
+ def _read_verified(path: Path, size: int, digest: str, error: type[Exception]) -> bytes:
+@@ -766,6 +805,13 @@ def _parse_manifest(
+ # ---------------------------------------------------------------------------
+ 
+ 
++def _git_environment() -> dict[str, str]:
++    """Return the environment without ``GIT_*`` overrides (``GIT_DIR`` etc.)."""
++    return {
++        key: value for key, value in os.environ.items() if not key.startswith("GIT_")
++    }
++
++
+ def _git(repository_root: Path, *args: str) -> tuple[int, bytes]:
+     """Run one read-only git query; argv is fixed text plus validated SHAs."""
+     executable = shutil.which("git")
+@@ -777,6 +823,7 @@ def _git(repository_root: Path, *args: str) -> tuple[int, bytes]:
+         completed = subprocess.run(  # noqa: S603  # nosec B603
+             [executable, *args],
+             cwd=repository_root,
++            env=_git_environment(),
+             capture_output=True,
+             check=False,
+             timeout=120,
+@@ -807,7 +854,7 @@ def _approval_date(protocol: bytes) -> str:
+         text,
+         re.M,
+     )
+-    if approval is None:
++    if approval is None or not _real_time(approval.group(1), "%Y-%m-%d"):
+         raise AnalysisError("protocol has no dated approval")
+     return approval.group(1)
+ 
+@@ -829,6 +876,7 @@ class Context:
+         legacy_names: Reference ``__all__`` in source order.
+         guide_names: Names in the Migration Guide consolidated table at ``R``.
+         owned_names: ``prinet`` rows of the WP-001 baseline at ``R``.
++        frozen_contract: PRIN's frozen RC1 export contract at ``R``.
+         module_sha256: SHA-256 of this module's own bytes.
+         module_commit: Last commit touching this module, if it is tracked.
+         module_matches_commit: Whether the running bytes equal that commit.
+@@ -841,37 +889,72 @@ class Context:
+     legacy_names: tuple[str, ...]
+     guide_names: frozenset[str]
+     owned_names: frozenset[str]
++    frozen_contract: frozenset[str]
+     module_sha256: str
+     module_commit: str | None
+     module_matches_commit: bool
+ 
+ 
+-def _reference_names(payload: bytes) -> tuple[str, ...]:
+-    for node in ast.parse(payload).body:
+-        if isinstance(node, ast.Assign) and any(
+-            isinstance(target, ast.Name) and target.id == "__all__"
+-            for target in node.targets
++def _literal(payload: bytes, name: str, context: str) -> Any:
++    """Return the literal value assigned to ``name`` at module level."""
++    try:
++        tree = ast.parse(payload)
++    except (SyntaxError, ValueError) as exc:
++        raise AnalysisError(f"{context}: source does not parse") from exc
++    for node in tree.body:
++        targets: list[ast.expr]
++        value: ast.expr | None
++        if isinstance(node, ast.Assign):
++            targets, value = list(node.targets), node.value
++        elif isinstance(node, ast.AnnAssign):
++            targets, value = [node.target], node.value
++        else:
++            continue
++        if value is not None and any(
++            isinstance(target, ast.Name) and target.id == name for target in targets
+         ):
+-            names = ast.literal_eval(node.value)
+-            _require(
+-                isinstance(names, list)
+-                and all(isinstance(name, str) for name in names)
+-                and len(names) == LEGACY_NAME_COUNT
+-                and len(set(names)) == LEGACY_NAME_COUNT,
+-                "reference __all__ is not the frozen 172-name list",
+-                AnalysisError,
+-            )
+-            return tuple(names)
+-    raise AnalysisError("reference literal __all__ missing")
++            try:
++                return ast.literal_eval(value)
++            except (SyntaxError, ValueError, TypeError) as exc:
++                raise AnalysisError(f"{context}: {name} is not a literal") from exc
++    raise AnalysisError(f"{context}: literal {name} missing")
++
++
++def _frozen_contract(payload: bytes) -> frozenset[str]:
++    """Re-derive ``FROZEN_PUBLIC_API = frozenset(RC1_PUBLIC_API)`` at ``R``."""
++    names = _literal(payload, "RC1_PUBLIC_API", "PRIN public API")
++    _require(
++        isinstance(names, tuple) and all(isinstance(name, str) for name in names),
++        "RC1_PUBLIC_API is not a tuple of names",
++        AnalysisError,
++    )
++    return frozenset(names)
++
++
++def _reference_names(payload: bytes) -> tuple[str, ...]:
++    names = _literal(payload, "__all__", "reference API")
++    _require(
++        isinstance(names, list)
++        and all(isinstance(name, str) for name in names)
++        and len(names) == LEGACY_NAME_COUNT
++        and len(set(names)) == LEGACY_NAME_COUNT,
++        "reference __all__ is not the frozen 172-name list",
++        AnalysisError,
++    )
++    return tuple(names)
+ 
+ 
+ def _ownership_sources(
+     guide: bytes, baseline: bytes
+ ) -> tuple[frozenset[str], frozenset[str]]:
+     """Re-derive the Migration Guide and WP-001 ownership name sets."""
++    try:
++        guide_text, baseline_text = guide.decode("utf-8"), baseline.decode("utf-8")
++    except UnicodeDecodeError as exc:
++        raise AnalysisError("ownership sources are not UTF-8") from exc
+     table = re.search(
+         r"\.\. wp036-consolidated-table-begin(.*?)\.\. wp036-consolidated-table-end",
+-        guide.decode("utf-8"),
++        guide_text,
+         re.S,
+     )
+     guide_names = frozenset(
+@@ -880,7 +963,7 @@ def _ownership_sources(
+         )
+     )
+     owned = frozenset(
+-        re.findall(r"^\|\s*prinet\s*\|\s*([^| ]+)\s*\|", baseline.decode("utf-8"), re.M)
++        re.findall(r"^\|\s*prinet\s*\|\s*([^| ]+)\s*\|", baseline_text, re.M)
+     )
+     return guide_names, owned
+ 
+@@ -998,6 +1081,15 @@ def verify_context(repository_root: Path, registration: Registration) -> Context
+         _git_blob(root, source, MIGRATION_GUIDE_PATH),
+         _git_blob(root, source, OWNERSHIP_BASELINE_PATH),
+     )
++    public_api = _git_blob(root, source, PUBLIC_API_PATH)
++    _require(
++        _sha256(public_api) == registration.public_api_sha256
++        and _sha256(_git_blob(root, source, DEPRECATION_PATH))
++        == registration.deprecation_sha256,
++        "PRIN frozen-contract sources at R do not have their section 1.1 digests",
++        AnalysisError,
++    )
++    frozen_contract = _frozen_contract(public_api)
+ 
+     raw_root = root / RAW_ROOT
+     _check_no_links(raw_root, AnalysisError)
+@@ -1020,6 +1112,7 @@ def verify_context(repository_root: Path, registration: Registration) -> Context
+         legacy_names=legacy,
+         guide_names=guide_names,
+         owned_names=owned,
++        frozen_contract=frozen_contract,
+         module_sha256=module_sha,
+         module_commit=module_commit,
+         module_matches_commit=module_matches,
+@@ -1138,6 +1231,14 @@ def check_api(observations: Mapping[str, Any], context: Context) -> ApiCensus:
+         observations["frozen_missing"], "frozen_missing", RecordError
+     )
+     extra = _string_list(observations["frozen_extra"], "frozen_extra", RecordError)
++    # verify_api_surface(prin.__all__) = (FROZEN - observed, observed - FROZEN),
++    # FROZEN = frozenset(RC1_PUBLIC_API); the driver stored both sorted.
++    _require(
++        missing == sorted(context.frozen_contract - set(observed))
++        and extra == sorted(set(observed) - context.frozen_contract),
++        "frozen-contract missing/extra sets disagree with the RC1 tuple at R",
++        RecordError,
++    )
+     raw_rows = observations["rows"]
+     _require(isinstance(raw_rows, list), "api rows must be a list", RecordError)
+     rows = [_mapping(item, "api row", RecordError) for item in raw_rows]
+@@ -1454,9 +1555,8 @@ def check_conclusions(
+     verified = []
+     for expected in derived:
+         case = by_id[expected["case_id"]]
+-        _exact_keys(
+-            case, set(expected), f"claim case {expected['case_id']}", RecordError
+-        )
++        keys = _CASE_KEYS | (_C02_EXTRA_KEYS if expected["family"] == "C02" else set())
++        _exact_keys(case, keys, f"claim case {expected['case_id']}", RecordError)
+         for key, value in expected.items():
+             _require(
+                 _same_value(case[key], value),
+@@ -1752,7 +1852,10 @@ def _load_verified_files(
+ ) -> tuple[dict[str, Any], dict[str, Any]]:
+     _check_no_links(run_dir, RecordError)
+     _require(run_dir.is_dir(), f"run directory missing: {spec.run_id}", RecordError)
+-    entries = sorted(entry.name for entry in run_dir.iterdir())
++    try:
++        entries = sorted(entry.name for entry in run_dir.iterdir())
++    except OSError as exc:
++        raise RecordError(f"cannot list run directory: {exc}") from exc
+     _require(
+         entries == sorted({SIDECAR, spec.result_name, MANIFEST}),
+         f"run directory inventory is not exactly sidecar/result/manifest: {entries}",
+@@ -2878,6 +2981,8 @@ def build_summary(
+             "input_manifest_sha256": registration.input_manifest_sha256,
+             "input_record_count": len(context.input_records),
+             "reference_api_sha256": registration.reference_api_sha256,
++            "public_api_sha256": registration.public_api_sha256,
++            "deprecation_sha256": registration.deprecation_sha256,
+         },
+         "populations": {
+             "api_symbol_count": API_SYMBOL_COUNT,

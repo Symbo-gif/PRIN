@@ -25,6 +25,8 @@ Maintainer-approved: MichaelMaillet, 2026-09-01 (WP-036C S3 ``AskUserQuestion``)
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 # --- WP036C-F5 / plan amendment #41: PRIN is independently versioned ----------
@@ -216,3 +218,29 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
             item.add_marker(pytest.mark.skip(reason=reason))
         elif item.nodeid in _WP037_SLOW_NODES:
             item.add_marker(pytest.mark.slow)
+
+
+def pytest_sessionstart(session: pytest.Session) -> None:
+    """Delete a stale ``--basetemp`` up front, retrying sharing violations.
+
+    PR #33 review audit (G09a/G13): pytest's own lazy deletion of the previous
+    session's ``--basetemp`` runs inside the first ``tmp_path`` setup and has
+    no retry, so a transient Windows handle on a leftover file turned into
+    setup errors. See ``tests/_basetemp.py``.
+    """
+    from _basetemp import clear_stale_basetemp
+
+    given = session.config.option.basetemp
+    # pytest-xdist workers share the controller's --basetemp; only the
+    # controller (no ``workerinput``) may delete it.
+    if not given or hasattr(session.config, "workerinput"):
+        return
+    try:
+        clear_stale_basetemp(Path(given), Path(str(session.config.rootpath)))
+    except PermissionError as exc:
+        raise pytest.UsageError(
+            f"stale --basetemp {given} is still held by another process after "
+            f"retrying: {exc}"
+        ) from exc
+    except ValueError as exc:
+        raise pytest.UsageError(str(exc)) from exc

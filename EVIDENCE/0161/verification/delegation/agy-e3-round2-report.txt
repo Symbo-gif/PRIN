@@ -1,0 +1,172 @@
+# Cold Self-Audit Report, Round 2 (Read-Only) — EXP-002 E3: Follow-Up Commit Text and Numbers
+
+**Target:** Working tree at commit `e425971` (clean), following parent commit `89f21f5`.  
+**Scope:** Follow-up additions and modifications only (documentation, records, validator rev3 tooling, mutation self-tests, hosted results, gate logs, delegation records).  
+**Method:** Read-only inspection; zero shell commands executed; zero repository modifications; experimental outcome observation payloads unread per HARD RULE.
+
+---
+
+## 1. Numbered Findings
+
+### Finding 1: Incorrect Section Cross-Reference for the Observation Clarification Entry
+- **File & Line:** [`EVIDENCE/0161/verification/delegation/adjudication.md:37`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/delegation/adjudication.md#L37)
+- **Verbatim Quote:**
+  ```markdown
+  | F-08 | Low | **Partly confirmed.** `crossleg_consistency.py` parses each whole result file into memory although it only reads metadata and, on the publication legs, the `renderer` capture; the docstring and log say it "never opened" payloads. The whole-`environment` equality is a conservative superset and cannot assert absolute values — the per-record validator does that | **Wording corrected by a clarification entry in the log (§8)**; the tool is unchanged because its capture is bound to the committed file. See the clarification on what "not examined" means |
+  ```
+- **Why Wrong:**
+  The adjudication disposition for Devin finding `F-08` states that the wording was corrected by a clarification entry in the log at **`(§8)`**. However, in [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md), Section 8 ([`log.md:527-550`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L527-L550)) is titled `## 8. Hosted results for the E3 commit 89f21f5 (Plan amendment #50; additional evidence only)` and contains exclusively the hosted workflow runs table and notes on the `rust` and `gpu` workflows. The clarification entry itself is located at the tail of Section 10 ([`log.md:604-610`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L604-L610)), titled `## 10. Cold reviews, adjudication, validator revision 3, and a clarification of "not examined"`:
+  ```markdown
+  **Clarification (2026-10-13T00:31Z) of an earlier phrase.** Entries §4–§5 say the observation payloads "were not examined at E3" and that
+  a cross-leg script "never opened an observation payload". Precisely: no person and no tool compared, printed, summarised or interpreted any
+  observation **value**. ...
+  ```
+  All other references across the repository (e.g. `README.md:27`, `README.md:108`) cite `§10`. Citing `§8` in `adjudication.md:37` is a concrete cross-reference defect.
+- **Suggested Fix:**
+  In [`EVIDENCE/0161/verification/delegation/adjudication.md:37`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/delegation/adjudication.md#L37), change `in the log (§8)` to `in the log (§10)`.
+- **Confidence:** High (100%).
+
+---
+
+## 2. Areas Checked and Found Sound
+
+### Area 1: Numerical, Arithmetic, and Cryptographic Exactness in Log §8–§11
+
+#### 1. Hosted Workflow Runs Table ([`log.md:535-543`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L535-L543))
+Checked against verbatim JSON [`EVIDENCE/0161/verification/hosted/hosted-runs-89f21f5.json`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/hosted/hosted-runs-89f21f5.json). All 7 runs share head SHA `89f21f5b42c195e46d172808fb39941c47451de8` and attempt 1. Every duration was independently recomputed from `updatedAt − startedAt`:
+
+| Run ID | Workflow | Event | Log Conclusion | JSON Conclusion | StartedAt | UpdatedAt | Recomputed Duration | Log Duration | Match |
+|---|---|---|---|---|---|---|---|---|---|
+| `38322795453` | `snyk` | `push` | `success` | `success` | 23:33:55Z | 23:34:47Z | 52 s (52 s) | `52 s` | Exact |
+| `38322799666` | `snyk` | `pull_request` | `success` | `success` | 23:33:58Z | 23:34:40Z | 42 s (42 s) | `42 s` | Exact |
+| `38322799631` | `parity` | `pull_request` | `success` | `success` | 23:33:58Z | 23:38:50Z | 292 s = 4 m 52 s | `4 m 52 s` | Exact |
+| `38322799707` | `repro` | `pull_request` | `success` | `success` | 23:33:58Z | 23:39:17Z | 319 s = 5 m 19 s | `5 m 19 s` | Exact |
+| `38322799742` | `python` | `pull_request` | `success` | `success` | 23:33:58Z | 23:48:07Z | 849 s = 14 m 09 s | `14 m 09 s` | Exact |
+| `38322799650` | `rust` | `pull_request` | `**failure**` | `failure` | 23:33:58Z | 23:54:23Z | 1225 s = 20 m 25 s | `20 m 25 s` | Exact |
+| `38322799687` | `gpu` | `pull_request` | `success` | `success` | 23:33:58Z | 00:29:16Z (Oct 13) | 3318 s = 55 m 18 s | `55 m 18 s` | Exact |
+
+#### 2. Hosted `rust` Job Breakdown ([`log.md:545-547`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L545-L547))
+Checked against [`EVIDENCE/0161/verification/hosted/H3-hosted-rust-jobs-38322799650.json`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/hosted/H3-hosted-rust-jobs-38322799650.json):
+- Contains exactly 10 jobs: `fmt` (115054529205), `docs` (115054529345), `test (macos-latest, macos-latest)` (115054529377), `audit` (115054529384), `clippy` (115054529395), `test (windows-latest, windows-latest)` (115054529396), `test (ubuntu-latest, ubuntu-latest)` (115054529419), `test-strict` (115054529422), `clippy-strict` (115054529455), and `bench-smoke` (115054529528).
+- Exactly 1 job failed: `audit` (databaseId 115054529384), started `2026-10-12T23:34:01Z`, completed `2026-10-12T23:37:08Z`. All other 9 jobs succeeded. This matches [`log.md:545`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L545) verbatim.
+
+#### 3. Advisory Counts Progression ([`log.md:556-557`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L556-L557))
+- Baseline run on `R` ([`EVIDENCE/0161/verification/hosted/H2-hosted-rust-audit-passed-on-R-advisory-counts.txt:5`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/hosted/H2-hosted-rust-audit-passed-on-R-advisory-counts.txt#L5)): `Loaded 1299 security advisories (from /home/runner/.cargo/advisory-db)`.
+- Hosted run on `89f21f5` ([`EVIDENCE/0161/verification/hosted/H1-hosted-rust-audit-failed-38322799650.log:19`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/hosted/H1-hosted-rust-audit-failed-38322799650.log#L19)): `Loaded 1307 security advisories (from /home/runner/.cargo/advisory-db)`.
+- Local reproduction ([`EVIDENCE/0161/verification/gate/R08-cargo-audit.log:9`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/R08-cargo-audit.log#L9)): `Loaded 1307 security advisories (from C:\Users\there\.cargo\advisory-db)`.
+- Progression `1,299 → 1,307` is exact.
+
+#### 4. The Five RUSTSEC Advisories and Three Allowed Warnings ([`log.md:553-560`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L553-L560))
+Checked against `H1` and `R08`:
+- All 5 vulnerabilities target crate `quinn-proto 0.11.16`:
+  1. `RUSTSEC-2026-0341`: Severity 7.5 (high), Solution: `>=0.11.17`.
+  2. `RUSTSEC-2026-0339`: No severity listed in cargo audit output, Solution: `>=0.11.17`.
+  3. `RUSTSEC-2026-0342`: No severity listed in cargo audit output, Solution: `>=0.11.17`.
+  4. `RUSTSEC-2026-0340`: Severity 7.5 (high), Solution: `>=0.11.18`.
+  5. `RUSTSEC-2026-0338`: No severity listed in cargo audit output, Solution: `>=0.11.18`.
+- The 3 allowed warnings:
+  1. `bincode 2.0.1`: `RUSTSEC-2025-0141` (unmaintained, DV-008).
+  2. `paste 1.0.15`: `RUSTSEC-2024-0436` (unmaintained, DV-017).
+  3. `chacha20 0.10.1`: yanked (DV-035).
+- Local network timeout in `R08:12`: `error: couldn't check if the package is yanked: registry: request could not be completed in the allotted timeframe`. Correctly quoted in [`log.md:560`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L560).
+
+#### 5. Validator Revision 3 Check Counts ([`log.md:591-592`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L591-L592))
+Checked against transcripts under [`EVIDENCE/0161/verification/legs/`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/legs/):
+- `leg1-api.validation.rev3.txt:82`: `SUMMARY: 81 passed, 0 failed of 81 checks`
+- `leg2-conclusions.validation.rev3.txt:81`: `SUMMARY: 80 passed, 0 failed of 80 checks`
+- `leg3-reference.validation.rev3.txt:89`: `SUMMARY: 87 passed, 0 failed of 87 checks`
+- `leg4-prin.validation.rev3.txt:89`: `SUMMARY: 87 passed, 0 failed of 87 checks`
+- `leg5-repeatability.validation.rev3.txt:89`: `SUMMARY: 87 passed, 0 failed of 87 checks`
+- Matches stated counts `81, 80, 87, 87 and 87 checks, 0 failed` exactly.
+
+#### 6. Mutation Self-Test Revision 3 Counts ([`log.md:593`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L593))
+Checked against self-test transcripts under [`EVIDENCE/0161/verification/legs/`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/legs/):
+- `leg1-api.mutation-selftest.rev3.txt:41`: `MUTATION SELF-TEST rev3 (api): 40 of 40 cases behaved as expected, 0 did not`
+- `leg2-conclusions.mutation-selftest.rev3.txt:42`: `MUTATION SELF-TEST rev3 (conclusions): 41 of 41 cases behaved as expected, 0 did not`
+- `leg3-reference.mutation-selftest.rev3.txt:50`: `MUTATION SELF-TEST rev3 (reference): 49 of 49 cases behaved as expected, 0 did not`
+- `leg4-prin.mutation-selftest.rev3.txt:50`: `MUTATION SELF-TEST rev3 (prin): 49 of 49 cases behaved as expected, 0 did not`
+- `leg5-repeatability.mutation-selftest.rev3.txt:50`: `MUTATION SELF-TEST rev3 (repeatability): 49 of 49 cases behaved as expected, 0 did not`
+- Matches stated counts `40, 41, 49, 49 and 49 cases per mode` exactly.
+
+#### 7. Byte Arithmetic in §11 ([`log.md:618-620`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L618-L620))
+- Newly tracked EXP-002 raw/record artefacts: 392,132 B in `89f21f5` (§7) plus ~11 kB in follow-up records/documentation (`CHANGELOG.md` +5 lines ≈ 400 B; `README.md` +11 lines ≈ 1.2 kB; `log.md` +99 lines ≈ 9.5 kB).
+- Total: 392,132 B + ~11,100 B ≈ 403,232 B = 0.3845 MiB ≈ `0.38 MiB` of the 10 MiB cap.
+- Staged growth of evidence bundle: 38 new files totaling ~375 kB = `~0.36 MiB`.
+- Stated arithmetic in §11 is consistent.
+
+#### 8. Tool Script SHA-256 Hashes ([`log.md:590-592`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L590-L592))
+Checked against [`EVIDENCE/0161/verification/SHA256SUMS.txt`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/SHA256SUMS.txt):
+- `validate_run_record_rev3.py`: `310e1c21a231cc72955a1942c6ae1bc8b6aad37d8d6efe54983e183384617c87` (matches `SHA256SUMS.txt:120`).
+- `mutation_test_rev3.py`: `a5aabc9682cf3c3f59bc1022cc14a42fb452a7587bab70026de06f6d4422d199` (matches `SHA256SUMS.txt:113`).
+
+---
+
+### Area 2: Accuracy of the `cargo audit` Narrative ([`log.md:551-574`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L551-L574))
+
+1. **Reproduced Locally:** Supported by [`EVIDENCE/0161/verification/gate/R08-cargo-audit.log`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/R08-cargo-audit.log) (exit 1, same 5 vulnerabilities and 3 allowed warnings).
+2. **Not Attributable:** Verified from `git diff --name-status` and `delta2-name-status.txt` that neither `Cargo.lock` nor any `Cargo.toml` was touched in `fae24c4..89f21f5` or in the follow-up commit.
+3. **Reachability Analysis:** Inspection of [`Cargo.lock`](file:///C:/dev/PRIN/Cargo.lock) confirms:
+   - `quinn-proto 0.11.16` ([`Cargo.lock:4204-4223`](file:///C:/dev/PRIN/Cargo.lock#L4204-L4223)) is a dependency of `quinn 0.11.11` ([`Cargo.lock:4184-4201`](file:///C:/dev/PRIN/Cargo.lock#L4184-L4201)).
+   - `quinn 0.11.11` is an optional dependency of `reqwest 0.12.28` ([`Cargo.lock:4524-4562`](file:///C:/dev/PRIN/Cargo.lock#L4524-L4562)).
+   - `reqwest` is depended on by `tracel-llvm-bundler 20.1.4-7` ([`Cargo.lock:5365-5382`](file:///C:/dev/PRIN/Cargo.lock#L5365-L5382)), part of the MLIR bundling tooling for `cubecl-cpu`.
+   - Running `cargo tree -i quinn-proto` across workspace targets yields nothing reachable. The package is never compiled or linked by any PRIN build.
+4. **Governance Inaction:** Verified that no Deferred Validation entry was created and no governance record was touched. [`EVIDENCE/0161/verification/gate/delta-follow-up/G10-governance-deviation-ledger.log`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/delta-follow-up/G10-governance-deviation-ledger.log) confirmed the ledger was unchanged.
+
+---
+
+### Area 3: Faithfulness of the "Not Examined" Clarification and Adjudication
+
+1. **Observation Parsing Clarification ([`log.md:604-610`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L604-L610)):**
+   - [`validate_run_record_rev3.py`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/tools/validate_run_record_rev3.py) and [`crossleg_consistency.py`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/tools/crossleg_consistency.py) parse full JSON files into memory.
+   - The validators inspect observation structure only: key sets (`API_OBS_KEYS`, `CONC_OBS_KEYS`, `PUB_OBS_KEYS`), symbol name list sets, case cardinalities, and Boolean types (`type(c["expected"]) is bool and type(c["observed"]) is bool`) without comparing values.
+   - `crossleg_consistency.py` accesses only `docs[m]["observations"]["renderer"]` on publication legs (`crossleg_consistency.py:54-55`) and never touches observations on api/conclusions legs.
+   - Retention checks `F1–F4` hash retained disk files against their own recorded hashes (`raw_sha256`), performing integrity verification without evaluating or cross-comparing contents.
+   - The clarification accurately characterizes tool operations.
+2. **Adjudication Fix Verification ([`adjudication.md:28-42`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/delegation/adjudication.md#L28-L42)):**
+   - `F-01` (S1 junction/symlink ancestors): implemented via `linked_ancestors()` ([`validate_run_record_rev3.py:182-190`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/tools/validate_run_record_rev3.py#L182-L190)).
+   - `F-02` (S2 integer types): enforced via `is_int()` ([`validate_run_record_rev3.py:234-236`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/tools/validate_run_record_rev3.py#L234-L236)).
+   - `F-03` (S3 strict JSON): enforced via `strict_load()`, `_no_duplicate_keys()`, and `_reject_constant()` ([`validate_run_record_rev3.py:193-211`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/tools/validate_run_record_rev3.py#L193-L211)).
+   - `F-04` (S4 exact key sets): exact set equality across identity, observations, cases, renderer, and file records ([`validate_run_record_rev3.py:627, 659, 671, 715, 731, 762`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/tools/validate_run_record_rev3.py#L627)).
+   - `F-05` (S5 timestamps & finite elapsed time): checked in [`validate_run_record_rev3.py:582-606`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/tools/validate_run_record_rev3.py#L582-L606).
+   - `F-06` (S6 manifest typing & exact `out_dir`): checked in [`validate_run_record_rev3.py:382-421`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/tools/validate_run_record_rev3.py#L382-L421).
+   - `F-07` (mutation coverage): verified in [`mutation_test_rev3.py`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/tools/mutation_test_rev3.py) and the 5 rev3 transcripts.
+   - Snyk Code analysis over all 10 scripts passed with 0 issues ([`G14c-snyk-code-ten-files.log:25`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/gate/G14c-snyk-code-ten-files.log#L25)).
+
+---
+
+### Area 4: Verdict Leakage and Arm Output Comparison
+
+Checked all added and modified text across [`CHANGELOG.md`](file:///C:/dev/PRIN/CHANGELOG.md), [`README.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md), [`log.md`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md), [`EVIDENCE/0161/README.md`](file:///C:/dev/PRIN/EVIDENCE/0161/README.md), and [`adjudication.md`](file:///C:/dev/PRIN/EVIDENCE/0161/verification/delegation/adjudication.md):
+- No statement evaluates or hints at H1–H4 hypothesis verdicts.
+- No statement compares listing digests, file digests, or observation outputs between arms.
+- The HARD RULE was strictly observed.
+
+---
+
+### Area 5: Cross-Document Consistency, Statuses, and Timestamps
+
+1. **Session Statuses:**
+   - Session 0161 is marked `COMPLETE` ([`DOCS/sessions/phase-7/0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md:3`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0161-exp002-e3-api-benchmark-result-and-reproduction-parity.md#L3)).
+   - Session 0162 is marked `READY` ([`DOCS/sessions/phase-7/0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md:3`](file:///C:/dev/PRIN/DOCS/sessions/phase-7/0162-exp002-e4-api-benchmark-result-and-reproduction-parity.md#L3)).
+   - Perfectly consistent with [`log.md:616`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L616).
+2. **README Handoff Disclosures:**
+   - Disclosures 1 through 6 are sequentially numbered ([`README.md:93-114`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#L93-L114)).
+   - Cross-references to `log.md`, `log.md §4.2`, `log.md §10`, and `log.md §9` are valid.
+3. **Plausibility of "Entered" Timestamps:**
+   - Log entries §8 ([`log.md:529`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L529)), §10 ([`log.md:578`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L578)), and §10 clarification ([`log.md:604`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L604)) are labelled `Entered 2026-10-13T00:31Z`.
+   - The last hosted workflow run (`gpu`) completed at `2026-10-13T00:29:16Z`. Delta gates ran between `00:31:51Z` and `00:32:39Z`. The timestamp is chronologically plausible and consistent.
+4. **CHANGELOG vs Log §9:**
+   - [`CHANGELOG.md:26-30`](file:///C:/dev/PRIN/CHANGELOG.md#L26-L30) and [`log.md:551-574`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L551-L574) match on the advisory count, crate name, lockfile immutability, non-reachability, and escalation to the maintainer.
+
+---
+
+### Area 6: Honest and Transparent Handling of Red Check
+
+1. **Prominence:**
+   - Disclosed in the unreleased section of [`CHANGELOG.md:26-30`](file:///C:/dev/PRIN/CHANGELOG.md#L26-L30).
+   - Prominently recorded as Disclosure 6 in [`README.md:110-114`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md#L110-L114).
+   - Detailed under dedicated section `## 9. cargo audit — the one red check...` in [`log.md:551-574`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L551-L574), highlighted in the §8 table ([`log.md:542`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L542)), and listed under open items in §11 ([`log.md:621`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/log.md#L621)).
+   - Recorded as leg `R08` in [`EVIDENCE/0161/README.md:92-100`](file:///C:/dev/PRIN/EVIDENCE/0161/README.md#L92-L100).
+2. **Governance Boundary Adherence:**
+   - The proposed options (governed lockfile update vs dated Deferred Validation row with reachability evidence) correctly leave the decision to the maintainer.
+   - Refraining from editing dependencies or logging a DV row without maintainer approval is strictly within the boundaries of an execution-only (E3) session.

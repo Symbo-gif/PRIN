@@ -1,0 +1,48 @@
+# Session-0159 source hashes and tool versions — 2026-10-11 UTC
+# Captured on host HP under the session-0159 working tree.
+# SOURCE: HEAD 85b779297be0642f5c64853c1590ef341e7ff77e + uncommitted working changes.
+# The listed files are uncommitted/new — these are WORKING-TREE BYTE hashes,
+# not commit-object hashes. No scan or gate result is claimed by this file.
+
+## Tool versions
+Python 3.14.0
+ruff 0.16.1
+mypy 2.3.0 (compiled: yes)
+pytest 9.1.1
+git version 2.51.2.windows.1
+
+## Working-tree SHA-256
+848fab7c821fd4c79062e575a81f9fbb53808b3ba89fb6cb1ba1e4ed3ecc3a04 *benchmarks/campaign/exp002_driver.py
+a81f5dd4d456a0d1be38d931e0f5666dfe2148f974d941897b092b0a8017e326 *tests/test_exp002_driver.py
+4d49bee06b3786be0e6ec00ebf9915e8f888e5a22370cff4e18fd2eed9f14ed7 *tests/test_0159_manifest.py
+6bc6f9c2ca985f538544c05a3529ce82c747b9f57eb6c66b7d6b1b8b5bc5f245 *DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md
+
+## Working diff state
+git status --porcelain (uncommitted paths):
+ M AGENTS.md
+ M CHANGELOG.md
+ M DOCS/PRIN_Project_Plan.md
+ M DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/README.md
+ M DOCS/experiments/README.md
+ M DOCS/reports/DEFERRED_VALIDATION_REGISTER.md
+ M DOCS/sessions/SESSION_REGISTER.md
+ M DOCS/sessions/TRACEABILITY.md
+ M DOCS/sessions/phase-7/0159-exp002-e1-api-benchmark-result-and-reproduction-parity.md
+ M DOCS/sessions/phase-7/0160-exp002-e2-api-benchmark-result-and-reproduction-parity.md
+ M DOCS/sessions/phase-7/README.md
+ M DOCS/standards/Benchmarking_and_Reproducibility_Standards.md
+ M DOCS/standards/Coding_Standards.md
+ M DOCS/standards/Development_Workflow_and_Audit_Standards.md
+ M DOCS/standards/Experimentation_Standards.md
+ M DOCS/standards/README.md
+ M DOCS/standards/Testing_Standards.md
+AM EVIDENCE/0159/README.md
+ M EVIDENCE/README.md
+ M benchmarks/campaign/README.md
+ M tests/README.md
+?? DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/e1-handoff.md
+?? DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/preregistration.md
+?? EVIDENCE/0159/verification/source-hashes.txt
+?? benchmarks/campaign/exp002_driver.py
+?? tests/test_0159_manifest.py
+?? tests/test_exp002_driver.py

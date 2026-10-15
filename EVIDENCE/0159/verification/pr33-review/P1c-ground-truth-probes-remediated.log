@@ -1,0 +1,36 @@
+COMMAND: C:/dev/PRIN/.venv/Scripts/python.exe C:/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/caa74057-f2dc-43bd-8cf8-b18f5c141339/scratchpad/pr33/probes/probe_ground_truth.py C:/dev/PRIN
+CWD: C:/dev/PRIN
+SOURCE: campaign/0159-exp002-e1 working tree (78d3600 + uncommitted PR #33 remediation)
+UTC-START: 2026-10-11T20:35:10Z
+HOST: HP (Windows-11-10.0.26300-SP0)
+PYTHON: 3.14.0
+----
+[P1 ref bytes/CRLF] (46, 3)
+[P1 prin bytes/CRLF] (43, 0)
+[P1 normalized equal] True
+[P1 equal after CRLF->LF only] True
+[P1 archived tables count / any CR byte (bytes only, no content compared)] (11, False)
+[P2 normalized equal (real writers, synthetic figure)] True
+[P2 ref Info] b"33 0 obj\n<< /Creator (Matplotlib v3.11.1, https://matplotlib.org)\n/Producer (Matplotlib pdf backend v3.11.1)\n/CreationDate (D:20261011173515-03'00') >>\nendobj\n"
+[P2 prin Info] b'33 0 obj\n<< /Creator (PRIN) /Producer (Matplotlib)\n/CreationDate (D:20000101000000Z) /ModDate (D:20000101000000Z) >>\nendobj\n'
+[P2 same keys, different lengths -> normalized equal] True
+[P2 short Info] b"33 0 obj\n<< /Creator (A) /Producer (B) /CreationDate (D:20261011173515-03'00') >>\nendobj\n"
+[P2 long Info] b"33 0 obj\n<< /Creator (AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)\n/Producer (BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB)\n/CreationDate (D:20261011173515-03'00') >>\nendobj\n"
+[P4 oversized startxref raises] DriverError
+[P5 PLTE before IDAT] ACCEPTED
+[P5 PLTE after IDAT] rejected
+[P6 ManifestMismatchError mro] ['ManifestMismatchError', 'ReproductionError', 'Exception', 'BaseException', 'object']
+[P6 ManifestMismatchError caught by main] False
+[P6 ManifestFormatError mro] ['ManifestFormatError', 'ReproductionError', 'ValueError', 'Exception', 'BaseException', 'object']
+[P6 ManifestFormatError caught by main] True
+[P6 ReproductionError mro] ['ReproductionError', 'Exception', 'BaseException', 'object']
+[P6 ReproductionError caught by main] False
+[P7 closure] rejected DriverError: observations: expected a JSON object
+[P8 closure] rejected DriverError: publication observations are not the registered schema
+[P9 closure of untouched run with damaged sibling manifest] rejected DriverError
+[P9b closure with hard-linked file in sibling] rejected DriverError: observations: expected a JSON object
+[P3 run_registered with colliding output root raises] DriverError: generated-output run root is never reused
+[P3 orphan RUN dir exists / contents] (False, None)
+----
+ELAPSED_SECONDS: 5.4
+EXIT_CODE: 0

@@ -1,0 +1,31 @@
+COMMAND: snyk code test C:/dev/PRIN/DOCS/test_and_benchmark_results/0159-full-gate/sast-input-d --severity-threshold=medium --org=symbo-gif
+SOURCE: 78590305e1c0a78d92153ef2a55a9e76aeb7af79 + working diff (final corrected driver + test sources, byte-identical copies)
+UTC-START: 2026-10-11T14:33:24Z
+HOST: HP
+
+Testing C:/dev/PRIN/DOCS/test_and_benchmark_results/0159-full-gate/sast-input-d ...
+
+        
+💡 Tip
+
+   You are currently viewing results with --severity-threshold applied.
+   To view all issues, remove the --severity-threshold flag            
+                                                                       
+
+╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Test Summary                                                                                    │
+│                                                                                                 │
+│   Organization:      symbo-gif                                                                  │
+│   Test type:         Static code analysis                                                       │
+│   Project path:      C:/dev/PRIN/DOCS/test_and_benchmark_results/0159-full-gate/sast-input-d    │
+│                                                                                                 │
+│   Total issues:   0                                                                             │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+    
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+
+EXIT_CODE: 0
+UTC-END: 2026-10-11T14:33:46Z

@@ -1,0 +1,21 @@
+SOURCE: 63145325c01fd837fd55e2796ea0fa34aa7eb234
+UTC-START: 2026-10-11T15:42:47Z
+HOST: HP
+== shallow check ==
+false
+SHALLOW_EXIT: 0
+== connectivity ==
+FSCK_EXIT: 0
+COMMAND: GIT_SHALLOW_FILE=C:/Users/there/AppData/Local/Temp/prin-0159-final-6314532-20261011T144627Z/SESSION gitleaks git C:/dev/PRIN --redact --log-opts=--all --report-format json --report-path <EXT>/gitleaks-6314532.json
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+[90m12:43PM[0m [32mINF[0m [1m713 commits scanned.[0m
+[90m12:43PM[0m [32mINF[0m [1mscanned ~79314498 bytes (79.31 MB) in 12s[0m
+[90m12:43PM[0m [33mWRN[0m [1mleaks found: 1[0m
+EXIT_CODE: 1
+UTC-END: 2026-10-11T15:43:12Z

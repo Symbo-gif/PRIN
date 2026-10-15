@@ -1,0 +1,14 @@
+COMMAND: C:/dev/PRIN/DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git C:/dev/PRIN --redact --no-banner --report-format json --report-path /c/Users/there/AppData/Local/Temp/claude/c--dev-PRIN/5e1d6deb-495c-48f1-bf1a-4c8ad51472b3/scratchpad/e4/gateA/gitleaks-history.json
+CWD: C:/dev/PRIN
+SOURCE: Phase-A candidate: HEAD 7d850ba (STEP 0) + staged exp002_e4_analysis.py and tests/test_exp002_e4_analysis.py
+HEAD: 7d850babf173c9987fbb34d80af9e4be8238b304
+UTC-START: 2026-10-13T16:04:31Z
+HOST: HP (Windows-11-10.0.26300-SP0), Git Bash
+----
+[90m1:05PM[0m [32mINF[0m [1m723 commits scanned.[0m
+[90m1:05PM[0m [32mINF[0m [1mscanned ~90536803 bytes (90.54 MB) in 1m8.2s[0m
+[90m1:05PM[0m [32mINF[0m [1mno leaks found[0m
+----
+UTC-END: 2026-10-13T16:05:49Z
+ELAPSED_S: 74
+EXIT_CODE: 0
