@@ -1,0 +1,6 @@
+# HEAD d90eeabbee7a7c0d11dfd1389bb0c34444c2704c
+# command: DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git . --redact --no-banner --no-color
+8:02AM INF 731 commits scanned.
+8:02AM INF scanned ~94579187 bytes (94.58 MB) in 6.44s
+8:02AM INF no leaks found
+# exit code: 0

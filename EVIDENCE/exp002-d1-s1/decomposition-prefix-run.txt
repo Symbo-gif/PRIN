@@ -1,0 +1,68 @@
+# HEAD d90eeabbee7a7c0d11dfd1389bb0c34444c2704c (tracked tree clean: 0 changes)
+# command: .venv/Scripts/python EVIDENCE/exp002-d1-s1/root_cause_decomposition.py --label prefix --out EVIDENCE/exp002-d1-s1/root-cause-decomposition-prefix.json
+{
+  "port_vs_reference_differing_files": [
+    "figures/fig10_statistical_summary.pdf",
+    "figures/fig10_statistical_summary.png",
+    "figures/fig11_flops_scaling.pdf",
+    "figures/fig11_flops_scaling.png",
+    "figures/fig12_supercritical_regime.pdf",
+    "figures/fig12_supercritical_regime.png",
+    "figures/fig14_gradient_flow.pdf",
+    "figures/fig14_gradient_flow.png",
+    "figures/fig15_noise_velocity.pdf",
+    "figures/fig15_noise_velocity.png",
+    "figures/fig5_mot_occlusion_comparison.pdf",
+    "figures/fig5_mot_occlusion_comparison.png",
+    "figures/fig7_ablation_results.pdf",
+    "figures/fig7_ablation_results.png",
+    "figures/fig8_parameter_efficiency.pdf",
+    "figures/fig8_parameter_efficiency.png",
+    "figures/fig9_training_curves.pdf",
+    "figures/fig9_training_curves.png"
+  ],
+  "port_vs_reference_differing_count": 18,
+  "divergences_registered": 34,
+  "divergences_byte_material": [
+    "D5.2",
+    "D5.4",
+    "D7.1",
+    "D8.1",
+    "D9.1",
+    "D9.3",
+    "D10.1",
+    "D11.1",
+    "D11.2",
+    "D11.3",
+    "D11.5",
+    "D11.6",
+    "D12.1",
+    "D12.2",
+    "D12.3",
+    "D12.4",
+    "D12.6",
+    "D12.8",
+    "D12.9",
+    "D12.10",
+    "D14.1",
+    "D15.1",
+    "D15.2",
+    "D15.3",
+    "D15.5",
+    "D15.6"
+  ],
+  "divergences_byte_immaterial": [
+    "D5.1",
+    "D5.3",
+    "D9.2",
+    "D11.4",
+    "D12.5",
+    "D12.7",
+    "D15.4",
+    "D15.7"
+  ],
+  "completeness_all_applied_equals_prefix_port": true,
+  "unexplained_stems": [],
+  "reference_reproduces_e3_reference_arm_all": true
+}
+# exit code: 0
