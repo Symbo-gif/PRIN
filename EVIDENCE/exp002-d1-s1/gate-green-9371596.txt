@@ -1,0 +1,17 @@
+# git rev-parse HEAD: 937159645d1149032394fd965cb66c36f2029e76
+# git status --porcelain (tracked): 0 changes
+# command: .venv/Scripts/python -m pytest parity/test_parity_publication.py tests/test_publication_figure_arguments.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 102 items
+
+parity\test_parity_publication.py ...................................... [ 37%]
+.......................................................                  [ 91%]
+tests\test_publication_figure_arguments.py .........                     [100%]
+
+======================= 102 passed in 289.12s (0:04:49) =======================
+# exit code: 0
