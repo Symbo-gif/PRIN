@@ -1,0 +1,240 @@
+# EXP-002 D1 S4 - O-2 cold review reproductions
+# date (UTC): 2026-10-16T18:00:06Z
+# git HEAD: 6b55c6baa7b6832a50ff57fdd1a919171e9fb5de
+# tracked changes at start: 0
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0
+# bash: 5.2.37(1)-release
+
+==================================================================
+## C1  bash -n on the five committed shell instruments under review
+# started 2026-10-16T18:00:07Z
+  bash -n EVIDENCE/exp002-d1-s3/closing_gate.sh -> exit 0
+  bash -n EVIDENCE/exp002-d1-s3/final_legs.sh -> exit 0
+  bash -n EVIDENCE/exp002-d1-s3/delta_reaudit.sh -> exit 0
+  bash -n EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh -> exit 0
+  bash -n EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh -> exit 0
+
+==================================================================
+## C2  diagnostic_suite_run.sh with NO label (round-4 fix: must exit 2, not 1/127)
+# started 2026-10-16T18:00:07Z
+# command: bash EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh
+usage: diagnostic_suite_run.sh <label> [--lift-notebook-timeout] <pytest args...>
+# exit code: 2
+
+==================================================================
+## C3  diagnostic_suite_run.sh with a label that tries to climb out of scratch
+# started 2026-10-16T18:00:07Z
+# command: bash EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh ../evil tests/
+label must match [A-Za-z0-9][A-Za-z0-9_-]*
+# exit code: 2
+# command: bash EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh .hidden tests/
+label must match [A-Za-z0-9][A-Za-z0-9_-]*
+# exit code: 2
+  (a rejected label must not have created a directory:)
+    ls: cannot access '/c/Users/there/prin-s4-scratch/evil': No such file or directory
+    ls: cannot access '/c/Users/there/prin-s3-scratch/evil': No such file or directory
+
+==================================================================
+## C4  launch_round.sh argument validation (no reviewer is launched on these paths)
+# started 2026-10-16T18:00:08Z
+# command: bash EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh   (no argument)
+round name must match [A-Za-z0-9][A-Za-z0-9_-]*
+# exit code: 2
+# command: bash EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh ../evil
+round name must match [A-Za-z0-9][A-Za-z0-9_-]*
+# exit code: 2
+
+==================================================================
+## C5  launch_round.sh creates the round directory (round-4 fix) - stubbed copy
+# started 2026-10-16T18:00:08Z
+# the verbatim lines taken from the committed script:
+    #!/usr/bin/env bash
+    # Launch the three cold reviewers in parallel on the same brief. Usage: launch_round.sh <round-dir-name>
+    R=/c/Users/there/prin-s3-scratch/review
+    # The round name becomes a directory name under $R, so it must not be able to climb out of it.
+    [[ "$1" =~ ^[A-Za-z0-9][A-Za-z0-9_-]*$ ]] || { echo "round name must match [A-Za-z0-9][A-Za-z0-9_-]*"; exit 2; }
+    D="$R/$1"
+    mkdir -p "$D" || exit 2
+# command: bash <stub> round5
+stub: round directory exists -> yes
+stub: writable -> yes
+# exit code: 0
+  contents of /c/Users/there/prin-s4-scratch/o2/rounds/round5 :
+    agy.exit
+    agy-stdout.txt
+    devin.exit
+    devin-stdout.txt
+    qwen.exit
+    qwen-stdout.txt
+  --- negative control: the SAME stub with 'mkdir -p' removed (the pre-fix shape)
+# command: bash <stub-without-mkdir> round5
+stub: round directory exists -> NO
+stub: writable -> NO
+/c/Users/there/prin-s4-scratch/o2/launch_round_nofix.sh: line 9: /c/Users/there/prin-s4-scratch/o2/rounds/round5/devin-stdout.txt: No such file or directory
+/c/Users/there/prin-s4-scratch/o2/launch_round_nofix.sh: line 9: /c/Users/there/prin-s4-scratch/o2/rounds/round5/devin.exit: No such file or directory
+/c/Users/there/prin-s4-scratch/o2/launch_round_nofix.sh: line 10: /c/Users/there/prin-s4-scratch/o2/rounds/round5/agy-stdout.txt: No such file or directory
+/c/Users/there/prin-s4-scratch/o2/launch_round_nofix.sh: line 10: /c/Users/there/prin-s4-scratch/o2/rounds/round5/agy.exit: No such file or directory
+/c/Users/there/prin-s4-scratch/o2/launch_round_nofix.sh: line 11: /c/Users/there/prin-s4-scratch/o2/rounds/round5/qwen-stdout.txt: No such file or directory
+/c/Users/there/prin-s4-scratch/o2/launch_round_nofix.sh: line 11: /c/Users/there/prin-s4-scratch/o2/rounds/round5/qwen.exit: No such file or directory
+# exit code: 0
+  contents of /c/Users/there/prin-s4-scratch/o2/rounds afterwards:
+
+==================================================================
+## C6  b08dd574 (tests/test_notebooks.py) is comment-only: AST identity
+# started 2026-10-16T18:00:10Z
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check b08dd574^ b08dd574 tests/test_notebooks.py
+not a hexadecimal revision: 'b08dd574^'
+# exit code: 2
+  diff --numstat (added/deleted lines):
+    7	6	tests/test_notebooks.py
+  every changed line is a comment (no non-'#' line in the diff body):
+    non-comment changed lines: 0
+
+==================================================================
+## C7  docstring_only_check.py: the membership test really runs per revision
+# started 2026-10-16T18:00:11Z
+# a path tracked at HEAD but NOT at fd8854ed must be refused (exit 2), proving
+# the test is applied to revision A as well as revision B:
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check fd8854ed HEAD EVIDENCE/exp002-d1-s3/index_selfcheck.py
+'EVIDENCE/exp002-d1-s3/index_selfcheck.py' is not tracked at fd8854ed
+# exit code: 2
+  positive control - a path tracked at both revisions, docstring-only change:
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check 3bc12c7a^ 3bc12c7a EVIDENCE/exp002-d1-s3/docstring_only_check.py
+not a hexadecimal revision: '3bc12c7a^'
+# exit code: 2
+
+==================================================================
+## C8  delta_reaudit.sh trap order: red-before (pre-fix) / green-after (committed)
+# started 2026-10-16T18:00:11Z
+  the only difference between the pre-fix copy and the committed script:
+    24d23
+    < trap 'git restore -- "$MOD" 2>/dev/null' EXIT
+    34a34,36
+    > # Armed only AFTER the refusal above: on the refusal path the tree may hold the
+    > # caller's uncommitted edits to $MOD, and restoring it would destroy them.
+    > trap 'git restore -- "$MOD" 2>/dev/null' EXIT
+  HEAD blob sha256 of python/prin/reporting/figure_generation.py: e216fec4f45ab71cfc5ef1286701c920731df278120e0afa0d216515b4bb19a7
+
+  --- red before: the PRE-FIX copy (trap armed before the clean-tree guard)
+  [prefix] uncommitted edit applied; module sha256 8513275ab509b6d58d5ed5e6b810dc5fc79c42c4bb61bb0a034da556aa78d4eb
+  [prefix] command: bash /c/Users/there/prin-s4-scratch/o2/delta_reaudit_prefix.sh
+  [prefix] exit code: 2
+  [prefix] refusal message: tree is not clean; refusing to run
+  [prefix] module sha256 after the run: e216fec4f45ab71cfc5ef1286701c920731df278120e0afa0d216515b4bb19a7
+  [prefix] VERDICT: the uncommitted edit was DESTROYED (restored to HEAD)
+
+  --- green after: the COMMITTED script (trap armed after the guard)
+  [committed] uncommitted edit applied; module sha256 8513275ab509b6d58d5ed5e6b810dc5fc79c42c4bb61bb0a034da556aa78d4eb
+  [committed] command: bash EVIDENCE/exp002-d1-s3/delta_reaudit.sh
+  [committed] exit code: 2
+  [committed] refusal message: tree is not clean; refusing to run
+  [committed] module sha256 after the run: 8513275ab509b6d58d5ed5e6b810dc5fc79c42c4bb61bb0a034da556aa78d4eb
+  [committed] VERDICT: the uncommitted edit SURVIVED
+
+  tree restored. module sha256 now: e216fec4f45ab71cfc5ef1286701c920731df278120e0afa0d216515b4bb19a7
+  equals the HEAD blob: yes
+  git status --porcelain (tracked): ''
+
+==================================================================
+## C9  closing_gate.sh: every leg is aggregated, and 'overall' really propagates
+# started 2026-10-16T18:00:22Z
+  leg invocations in the committed script, and whether each is aggregated:
+    63:bash EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh gate-fast tests/ -m "not slow and not gpu"
+    67:bash EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh gate-full tests/ parity/
+    73:leg "targeted coverage run (path form)" $PY -m pytest tests/test_publication_figure_arguments.py tests/test_publication_generation.py parity/test_parity_publication.py --cov=python/prin/reporting "--cov-report=json:$COV" --cov-report=term-missing --basetemp=.pytest_basetemp -p no:cacheprovider || overall=1
+    74:leg "changed-line coverage against the S3 base 5ba0129e" env PYTHONIOENCODING=utf-8 $PY EVIDENCE/exp002-d1-s2/changed_line_coverage.py "$COV" 5ba0129e python/prin/reporting/figure_generation.py || overall=1
+    75:leg "changed-line coverage against the cycle base fd8854ed" env PYTHONIOENCODING=utf-8 $PY EVIDENCE/exp002-d1-s2/changed_line_coverage.py "$COV" fd8854ed python/prin/reporting/figure_generation.py || overall=1
+    78:leg "cargo fmt --all -- --check" cargo fmt --all -- --check || overall=1
+    79:leg "cargo clippy --workspace --all-targets -- -D warnings" cargo clippy --workspace --all-targets -- -D warnings || overall=1
+    80:if ! leg "cargo test --workspace (attempt 1)" cargo test --workspace; then
+    87:leg "sphinx -W --keep-going -b html (from a deleted _build)" $PY -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html || overall=1
+    90:leg "gitleaks, full history" $GITLEAKS git . --no-banner || overall=1
+    91:leg "gitleaks, --staged" $GITLEAKS git . --staged --no-banner || overall=1
+  count of leg/bash invocations            : 11
+  count carrying '|| overall=1' or rc=$? : 8
+  last two statements of the script:
+    echo "# overall: $overall (0 = every leg exited 0)" >> "$LEGS"
+    exit "$overall"
+
+  --- mechanism test: the committed leg() function verbatim, driven by stubs
+  extracted leg() definition:
+    leg() {
+      local title="$1"; shift
+      {
+        echo
+        echo "## $title"
+        echo "# command: $*"
+        echo "# started $(stamp)"
+      } >> "$LEGS"
+      "$@" >> "$LEGS" 2>&1
+      local rc=$?
+      { echo "# exit code: $rc"; echo "# ended $(stamp)"; } >> "$LEGS"
+      return "$rc"
+    }
+# command: bash <harness with one failing leg>
+# exit code: 1 (expect 1)
+  harness legs.txt:
+    
+    ## passing leg
+    # command: true
+    # started 2026-10-16T18:00:27Z
+    # exit code: 0
+    # ended 2026-10-16T18:00:27Z
+    
+    ## failing leg
+    # command: false
+    # started 2026-10-16T18:00:27Z
+    # exit code: 1
+    # ended 2026-10-16T18:00:27Z
+    
+    ## exit-2 leg
+    # command: bash -c exit 2
+    # started 2026-10-16T18:00:27Z
+    # exit code: 2
+    # ended 2026-10-16T18:00:28Z
+    # overall: 1
+# command: bash <harness with all legs passing>
+# exit code: 0 (expect 0)
+
+==================================================================
+## C10 the clean-tree guards compare $(... | wc -l) with -eq: does wc pad on this host?
+# started 2026-10-16T18:00:31Z
+  raw bytes of 'git status --porcelain --untracked-files=no | wc -l' on a clean tree:
+    0000000   0  \n
+    0000002
+  the guard as written, evaluated: PASSES
+  padded-input control: [ "   0" -eq 0 ] -> PASSES
+
+==================================================================
+## C11 tests/test_notebooks.py bound tests still pass after the comment change
+# started 2026-10-16T18:00:34Z
+# command: .venv/Scripts/python.exe -m pytest tests/test_notebooks.py -k 'timeout or contract or cells or directory' -q --basetemp=.pytest_basetemp -p no:cacheprovider
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 37 items / 30 deselected / 7 selected
+
+tests\test_notebooks.py .......                                          [100%]
+
+====================== 7 passed, 30 deselected in 0.24s =======================
+# exit code: 0
+
+==================================================================
+## C12 the numbers the b08dd574 comment cites, recomputed from the committed constants
+# started 2026-10-16T18:00:39Z
+  BOUND_MARGIN=3.0  BOUND_ROUNDING_SECONDS=900.0
+  notebook                              bound  recorded  rule  quiet  bound/quiet  in-suite/quiet
+  01_oscillosim_quickstart.ipynb         2700    800.07            OK   73.3       36.8            9.3
+  02_clevr_n_binding.ipynb              10800   3484.00            OK   71.1      151.9           41.8
+  03_custom_coupling.ipynb               1800    408.96            OK   44.5       40.4            8.3
+  04_torch_bridge.ipynb                  1800    389.81            OK   37.0       48.6           10.3
+  bound/quiet ratio range      : 36.8 - 151.9   comment claims '37-152'
+  in-suite/quiet slowdown range: 8.3 - 41.8   comment claims '8-42x'
+  paired-experiment slowdown   : 43.2x               comment claims '43x'
+  quiet-host duration range    : 37.0 - 73.3 s   comment claims '37-73 s'
+# exit code: 0
+
+==================================================================
+# O-2 reproduction script finished 2026-10-16T18:00:40Z
+# git HEAD at end: 6b55c6baa7b6832a50ff57fdd1a919171e9fb5de
+# tracked changes at end: ''
