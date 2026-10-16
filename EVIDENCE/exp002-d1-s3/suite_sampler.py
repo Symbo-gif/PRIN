@@ -40,6 +40,10 @@ output and the summariser reads standard input::
     .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/suite_sampler.py \
         --summarize < samples.jsonl
 
+``--timeline`` reads the same lines and prints one row per sample, putting the
+host's CPU utilisation next to the CPU seconds per second that pytest actually
+received and the largest other CPU users, which is the F2 correlation table.
+
 Windows only (it uses ``GlobalMemoryStatusEx`` and ``typeperf``).
 """
 
@@ -451,6 +455,50 @@ def summarise(lines: list[str]) -> int:
     return 0
 
 
+def timeline(lines: list[str]) -> int:
+    """Print one row per sample: host load next to what pytest managed to do.
+
+    The point of the table is the ratio between the two columns that matter for
+    the F2 question: the host's CPU utilisation, and the CPU seconds per second
+    that the pytest process tree actually received. A suite that is making
+    progress shows a healthy pytest rate; a suite waiting on a saturated host
+    shows a rate near zero beside a host at 100% and a list of other processes
+    that are using the CPU.
+
+    Args:
+        lines: JSON-lines produced by :func:`sample`.
+
+    Returns:
+        The process exit status.
+    """
+    records = [json.loads(line) for line in lines if line.strip()]
+    print(
+        "utc       host_cpu%  pytest_cpu_s/s  pytest_rss_mb  host_avail_mb  "
+        "kernels  largest other CPU users in the interval (CPU-seconds)"
+    )
+    previous_cpu: float | None = None
+    previous_t: float | None = None
+    for record in records:
+        pytest = record["pytest"] or {}
+        cpu = pytest.get("cpu_seconds")
+        rate = float("nan")
+        if cpu is not None and previous_cpu is not None and previous_t is not None:
+            rate = (cpu - previous_cpu) / max(record["t"] - previous_t, 1e-9)
+        if cpu is not None:
+            previous_cpu, previous_t = cpu, record["t"]
+        others = ", ".join(
+            f"{item['name']}={item['cpu_seconds']:.0f}"
+            for item in record.get("top_other_cpu_since_last_sample", [])[:3]
+        )
+        print(
+            f"{record['utc'][11:19]}  {record['host']['cpu_percent']:9.1f}  "
+            f"{rate:14.2f}  {pytest.get('rss_mb', float('nan')):13.0f}  "
+            f"{record['host']['available_mb']:13d}  "
+            f"{len(record['kernels']):7d}  {others}"
+        )
+    return 0
+
+
 def main(argv: list[str]) -> int:
     """Parse arguments and run the sampler or the summariser.
 
@@ -464,9 +512,12 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--period", type=float, default=30.0)
     parser.add_argument("--start-grace", type=float, default=300.0)
     parser.add_argument("--summarize", action="store_true")
+    parser.add_argument("--timeline", action="store_true")
     args = parser.parse_args(argv)
     if args.summarize:
         return summarise(sys.stdin.read().splitlines())
+    if args.timeline:
+        return timeline(sys.stdin.read().splitlines())
     return sample(args.period, args.start_grace)
 
 
