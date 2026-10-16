@@ -1,0 +1,49 @@
+# Snyk Code CLI
+# date (UTC): 2026-10-16T13:58:23Z
+# git HEAD: cad16b7c64f642313e1472bca6b350ca02941645   tracked changes: 0
+
+# snyk 1.1306.2
+# command: snyk whoami
+Symbo-gif
+# exit code: 0
+
+# command: snyk code test . --severity-threshold=low --sarif-file-output=C:/Users/there/AppData/Local/Temp/prin-s3-final.sarif
+# started 2026-10-16T13:58:33Z
+# exit code: 1 (1 = findings reported, not a scan failure; 2 or more = the scan did not run)
+# ended 2026-10-16T14:01:20Z
+# SARIF sha256: 9d85ee7f9b68ea090a475e09e3d7360ee84aaa53d61f7afc6702b3fd5d7f747a  size: 712616 bytes (kept outside the repository)
+
+## CLI Test Summary, verbatim
+│ Test Summary                                         │
+│                                                      │
+│   Organization:      symbo-gif                       │
+│   Test type:         Static code analysis            │
+│   Project path:      .                               │
+│                                                      │
+│   Total issues:   97                                 │
+│   Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]      │
+│   Open issues:    97 [ 0 HIGH  0 MEDIUM  97 LOW ]    │
+
+## Bucketed by snyk_s3_filter.py (SARIF on stdin)
+total findings (raw filesystem scan)      : 97
+findings in git-known paths               : 45
+findings only in untracked on-disk copies : 52
+result.level values (note=LOW, warning=MEDIUM): {'note': 97}
+
+=== ABOVE LOW anywhere in git-known paths (section 6.2 gate: must be 0): 0 finding(s) ===
+  NONE
+
+=== S3-changed first-party files: 0 finding(s) ===
+  NONE
+
+=== S3-added instruments (EVIDENCE/exp002-d1-s3/): 0 finding(s) ===
+  NONE
+
+=== F8 re-check: the two ratified S2 locations: 2 finding(s) ===
+  python/PT      EVIDENCE/exp002-d1-s2/changed_line_coverage.py:98
+  python/PT      EVIDENCE/exp002-d1-s2/decomposition_rerun_check.py:92
+
+=== F8 re-check: OTHER findings in S2 instruments (not in the F8 record): 1 finding(s) ===
+  python/PT      EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142
+
+# filter exit code: 0 (0 = nothing above LOW in any git-known path)

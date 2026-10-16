@@ -1,0 +1,80 @@
+# EXP-002 D1 S3 - delta re-audit
+# date (UTC): 2026-10-16T13:57:17Z
+# git HEAD: cad16b7c64f642313e1472bca6b350ca02941645   tracked changes at start: 0
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0
+
+## D1 figure_generation.py SHA-256 at the commits involved
+  d90eeabb (pre-fix, the failing-test commit) : e0f59253202746e0548fb9711229040ec7beeae05c3501fc0b3eca0cf997d533
+  10d84f2b (S1's fix)                          : b41dfc137d1d10f0f9b60452f0f23093ed4ad6e9369f34343d96695957e6c048
+  5ba0129e (S1/S2 head = S3 base)              : b41dfc137d1d10f0f9b60452f0f23093ed4ad6e9369f34343d96695957e6c048
+  HEAD (with S3's F6 label and F7 docstring)   : e216fec4f45ab71cfc5ef1286701c920731df278120e0afa0d216515b4bb19a7
+  on disk now                                  : e216fec4f45ab71cfc5ef1286701c920731df278120e0afa0d216515b4bb19a7
+  pre-fix commit's digest starts with the S1/S2-recorded e0f59253: yes
+  S1/S2 head's digest starts with the recorded b41dfc13                 : yes
+  NOTE: S3's F6 and F7 commits change the module, so its digest at HEAD is no longer b41dfc13.
+
+## D2 restore the PRE-FIX module and reproduce the regression (both runs must fail)
+# command: git restore --source d90eeabb -- python/prin/reporting/figure_generation.py
+# exit code: 0
+  module on disk now: e0f59253202746e0548fb9711229040ec7beeae05c3501fc0b3eca0cf997d533   (equals the pre-fix blob: yes)
+  git diff d90eeabb -- module (must be empty): 0 lines
+
+# command: .venv/Scripts/python.exe -m pytest parity/test_parity_publication.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+# started 2026-10-16T13:57:22Z
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig9_training_curves.png]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig9_training_curves.pdf]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig8_parameter_efficiency.png]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig8_parameter_efficiency.pdf]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig7_ablation_results.png]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig7_ablation_results.pdf]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig5_mot_occlusion_comparison.png]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig5_mot_occlusion_comparison.pdf]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig15_noise_velocity.png]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig15_noise_velocity.pdf]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig14_gradient_flow.png]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig14_gradient_flow.pdf]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig12_supercritical_regime.png]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig12_supercritical_regime.pdf]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig11_flops_scaling.png]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig11_flops_scaling.pdf]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig10_statistical_summary.png]
+      1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig10_statistical_summary.pdf]
+      1 ======================= 18 failed, 75 passed in 15.28s ========================
+# exit code: 1 (must be 1)
+# ended 2026-10-16T13:57:40Z
+
+# command: .venv/Scripts/python.exe -m pytest tests/test_publication_figure_arguments.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+# started 2026-10-16T13:57:41Z
+FAILED tests/test_publication_figure_arguments.py::test_fig5_marker_sizes - a...
+FAILED tests/test_publication_figure_arguments.py::test_fig7_accuracy_labels_bottom_aligned
+FAILED tests/test_publication_figure_arguments.py::test_fig8_markers_drawn_above_grid
+FAILED tests/test_publication_figure_arguments.py::test_fig9_curve_widths_legend_and_labels
+FAILED tests/test_publication_figure_arguments.py::test_fig10_outcome_note_has_reference_box
+FAILED tests/test_publication_figure_arguments.py::test_fig11_bars_labels_and_ratios
+FAILED tests/test_publication_figure_arguments.py::test_fig12_reference_styling
+FAILED tests/test_publication_figure_arguments.py::test_fig14_bar_transparency
+FAILED tests/test_publication_figure_arguments.py::test_fig15_marker_sizes_fit_and_legends
+FAILED tests/test_publication_figure_arguments.py::test_fig13_series_labels_follow_the_reference
+============================= 10 failed in 3.61s ==============================
+# exit code: 1 (must be 1)
+# ended 2026-10-16T13:57:50Z
+
+## D3 restore the module to HEAD
+# command: git restore -- python/prin/reporting/figure_generation.py
+# exit code: 0
+  module on disk now: e216fec4f45ab71cfc5ef1286701c920731df278120e0afa0d216515b4bb19a7   (equals the value before the restore: yes)
+  git status --porcelain (tracked): ''   CLEAN
+
+## D4 post-fix: both test files together on the current tree (must all pass)
+# command: .venv/Scripts/python.exe -m pytest tests/test_publication_figure_arguments.py parity/test_parity_publication.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+# started 2026-10-16T13:57:55Z
+
+tests\test_publication_figure_arguments.py ..........                    [  9%]
+parity\test_parity_publication.py ...................................... [ 46%]
+.......................................................                  [100%]
+
+============================ 103 passed in 15.65s =============================
+# exit code: 0 (must be 0)
+# ended 2026-10-16T13:58:16Z
+
+# overall: 0 (0 = the regression reproduced pre-fix, the module restored, and all tests pass post-fix)

@@ -1,0 +1,108 @@
+# sphinx -W --keep-going, from a deleted DOCS/sphinx/_build
+# date (UTC): 2026-10-16T13:56:21Z
+# git HEAD: cad16b7c64f642313e1472bca6b350ca02941645   tracked changes: 0
+
+# command: .venv/Scripts/python.exe -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
+# started 2026-10-16T13:56:22Z
+Writing evaluated template result to C:\dev\PRIN\DOCS\sphinx\_build\html\_static\documentation_options.js
+Writing evaluated template result to C:\dev\PRIN\DOCS\sphinx\_build\html\_static\language_data.js
+copying static files: done
+copying extra files... 
+copying extra files: done
+copying assets: done
+writing output... [  3%] api/adversarial
+writing output... [  6%] api/compat
+writing output... [  9%] api/core
+writing output... [ 11%] api/daemon
+writing output... [ 14%] api/datasets
+writing output... [ 17%] api/dlpack
+writing output... [ 20%] api/dynamics
+writing output... [ 23%] api/eval
+writing output... [ 26%] api/experiment_tools
+writing output... [ 29%] api/experiments
+writing output... [ 31%] api/kernels
+writing output... [ 34%] api/metrics
+writing output... [ 37%] api/nn
+writing output... [ 40%] api/parity
+writing output... [ 43%] api/reporting
+writing output... [ 46%] api/simulation
+writing output... [ 49%] api/solvers
+writing output... [ 51%] api/subconscious
+writing output... [ 54%] api/temporal
+writing output... [ 57%] api/tensor
+writing output... [ 60%] api/topology
+writing output... [ 63%] api/train
+writing output... [ 66%] api/utils
+writing output... [ 69%] architecture
+writing output... [ 71%] capacity_analysis
+writing output... [ 74%] changelog
+writing output... [ 77%] coupling_topologies
+writing output... [ 80%] getting_started
+writing output... [ 83%] index
+writing output... [ 86%] kernel_architecture
+writing output... [ 89%] migration_guide
+writing output... [ 91%] notebooks
+writing output... [ 94%] paper
+writing output... [ 97%] parity_report
+writing output... [100%] rust_api
+generating indices... genindex py-modindex done
+highlighting module code... [  2%] prin._compat
+highlighting module code... [  4%] prin._deprecation
+highlighting module code... [  6%] prin._prin_core
+highlighting module code... [  8%] prin._torch_compat
+highlighting module code... [ 10%] prin.adversarial_tools
+highlighting module code... [ 12%] prin.daemon
+highlighting module code... [ 13%] prin.datasets
+highlighting module code... [ 15%] prin.dlpack
+highlighting module code... [ 17%] prin.experiments
+highlighting module code... [ 19%] prin.kernels
+highlighting module code... [ 21%] prin.metrics
+highlighting module code... [ 23%] prin.nn
+highlighting module code... [ 25%] prin.nn._bridge
+highlighting module code... [ 27%] prin.nn.ablation
+highlighting module code... [ 29%] prin.nn.ablation_variants
+highlighting module code... [ 31%] prin.nn.activations
+highlighting module code... [ 33%] prin.nn.allocation
+highlighting module code... [ 35%] prin.nn.attention
+highlighting module code... [ 37%] prin.nn.autoencoders
+highlighting module code... [ 38%] prin.nn.energy
+highlighting module code... [ 40%] prin.nn.hierarchical_layers
+highlighting module code... [ 42%] prin.nn.hybrid
+highlighting module code... [ 44%] prin.nn.hybrid_compat
+highlighting module code... [ 46%] prin.nn.inhibition
+highlighting module code... [ 48%] prin.nn.inhibition_layers
+highlighting module code... [ 50%] prin.nn.model
+highlighting module code... [ 52%] prin.nn.mot_evaluation
+highlighting module code... [ 54%] prin.nn.optimizers
+highlighting module code... [ 56%] prin.nn.phase_tracker
+highlighting module code... [ 58%] prin.nn.slot_attention
+highlighting module code... [ 60%] prin.nn.temporal_compat
+highlighting module code... [ 62%] prin.parity.harness
+highlighting module code... [ 63%] prin.parity.loader
+highlighting module code... [ 65%] prin.parity.manifest
+highlighting module code... [ 67%] prin.parity.schema
+highlighting module code... [ 69%] prin.parity.strategies
+highlighting module code... [ 71%] prin.reporting._artifacts
+highlighting module code... [ 73%] prin.reporting.benchmark_reporting
+highlighting module code... [ 75%] prin.reporting.figure_generation
+highlighting module code... [ 77%] prin.reporting.profiler
+highlighting module code... [ 79%] prin.reporting.table_generation
+highlighting module code... [ 81%] prin.simulation
+highlighting module code... [ 83%] prin.simulation_experiments
+highlighting module code... [ 85%] prin.solvers
+highlighting module code... [ 87%] prin.subconscious_compat
+highlighting module code... [ 88%] prin.temporal_metrics
+highlighting module code... [ 90%] prin.temporal_training
+highlighting module code... [ 92%] prin.tensor
+highlighting module code... [ 94%] prin.topology
+highlighting module code... [ 96%] prin.train
+highlighting module code... [ 98%] prin.training_hooks
+highlighting module code... [100%] prin.y4q1_tools
+writing additional pages... search done
+dumping search index in English (code: en)... done
+dumping object inventory... done
+build succeeded.
+
+The HTML pages are in DOCS\sphinx\_build\html.
+# exit code: 0
+# ended 2026-10-16T13:56:48Z

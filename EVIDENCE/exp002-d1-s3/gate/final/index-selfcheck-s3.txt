@@ -1,0 +1,10 @@
+# index self-check of EVIDENCE/exp002-d1-s3/
+# date (UTC): 2026-10-16T13:58:21Z
+# git HEAD: cad16b7c64f642313e1472bca6b350ca02941645   tracked changes: 0
+
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-d1-s3
+bundle exp002-d1-s3: 99 files (README included)
+  nested READMEs used: ['cold-review/README.md', 'f2/README.md', 'gate/README.md']
+  unindexed files : none
+  dangling links  : none
+# exit code: 0

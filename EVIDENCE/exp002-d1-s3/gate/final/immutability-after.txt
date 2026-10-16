@@ -1,0 +1,22 @@
+# immutability diffs for the S3 delta, 5ba0129e..HEAD
+# date (UTC): 2026-10-16T13:57:11Z
+# git HEAD: cad16b7c64f642313e1472bca6b350ca02941645   tracked changes: 0
+
+range: 5ba0129e8f225c62de92593d329be63ca7e7cf7e..cad16b7c64f642313e1472bca6b350ca02941645   (HEAD now cad16b7c64f642313e1472bca6b350ca02941645)
+
+## I1 EXP-002 record, benchmarks/results/EXP-002/, .github/, dependency manifests (must be empty)
+(empty)
+
+## I2 EVIDENCE/exp002-d1-s1/ (S1 evidence; only the README may change, and only by added lines)
+  1	0	EVIDENCE/exp002-d1-s1/README.md
+  files other than README.md changed: 0
+  deleted lines in S1 evidence: 0
+  EVIDENCE/exp002-d1-s1/ has a SHA256SUMS or manifest file: 0
+  ENFORCED: holds
+
+## I3 correction audit is append-only (deleted lines must be 0)
+  added 401, deleted 0  DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+  deletions: 0
+
+# exit code: 0
+(script exit: 0)
