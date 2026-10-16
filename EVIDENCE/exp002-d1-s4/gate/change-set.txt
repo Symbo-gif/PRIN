@@ -1,0 +1,55 @@
+# copied from /c/Users/there/prin-s4-scratch/gate/change-set.txt at 2026-10-16T22:31:34Z
+# EXP-002 D1 S4 - measured change set, 6b55c6baa7b6832a50ff57fdd1a919171e9fb5de..HEAD
+# date (UTC): 2026-10-16T19:08:33Z
+# git HEAD: 157ce5bc27746a06e399344fd7b22174e0627662
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0   pytest pytest 9.1.1
+
+## every path changed in this range
+  +11     -4      .claude/CLAUDE.md
+  +55     -0      CHANGELOG.md
+  +10     -3      CLAUDE.md
+  +22     -0      DOCS/PRIN_Project_Plan.md
+  +2      -0      DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md
+  +192    -0      DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md
+  +76     -1      DOCS/experiments/README.md
+  +45     -0      DOCS/reports/DEFERRED_VALIDATION_REGISTER.md
+  +2      -2      DOCS/sessions/SESSION_REGISTER.md
+  +131    -2      DOCS/sessions/contingencies/2026-10-14-exp002-d1-s4-correction-documentation.md
+  +39     -3      DOCS/sessions/contingencies/README.md
+  +59     -0      DOCS/sessions/phase-7/README.md
+  +106    -17     DOCS/sphinx/parity_report.rst
+  +22     -0      DOCS/standards/Development_Workflow_and_Audit_Standards.md
+  +50     -0      EVIDENCE/exp002-d1-s4/collect_final.sh
+  +152    -0      EVIDENCE/exp002-d1-s4/final_legs.sh
+  +89     -0      EVIDENCE/exp002-d1-s4/immutability.sh
+  +114    -0      EVIDENCE/exp002-d1-s4/long_legs.sh
+  +133    -0      EVIDENCE/exp002-d1-s4/o2-review/failopen-red-green.sh
+  +61     -0      EVIDENCE/exp002-d1-s4/o2-review/failopen-red-green.txt
+  +260    -0      EVIDENCE/exp002-d1-s4/o2-review/reproduce-batch1.sh
+  +240    -0      EVIDENCE/exp002-d1-s4/o2-review/reproduce-batch1.txt
+  +210    -0      EVIDENCE/exp002-d1-s4/o2-review/reproduce-batch2.sh
+  +165    -0      EVIDENCE/exp002-d1-s4/o2-review/reproduce-batch2.txt
+  +151    -0      EVIDENCE/exp002-d1-s4/o2-review/reproduce-batch3.sh
+  +82     -0      EVIDENCE/exp002-d1-s4/o2-review/reproduce-batch3.txt
+  +101    -0      EVIDENCE/exp002-d1-s4/o2-review/triage.md
+  +80     -0      EVIDENCE/exp002-d1-s4/static_gate.sh
+  +69     -0      EVIDENCE/exp002-d1-s4/suite_run.sh
+  total files changed: 29
+
+## by kind (this decides which conditional legs apply)
+  Rust sources (.rs)                                  : 0
+  dependency manifests (Cargo.toml/lock, pyproject,   : 0
+    *requirements.txt)
+  first-party Python (outside EVIDENCE/ and           : 0
+    DOCS/experiments/)
+  any Python (.py)                                    : 0
+  .github/ workflow files                             : 0
+
+## conditional-leg decisions, from the counts above
+  cargo fmt / clippy / test        : NOT RUN - no Rust source changed
+  cargo audit / pip-audit / Snyk OS: NOT RUN - no dependency manifest changed
+  per-change Python coverage       : NOT RUN - no first-party Python changed, so there are no changed executable lines to cover
+  Snyk Code CLI                    : REQUIRED - run unconditionally in final_legs.sh (Coding Standards 6.2; cheap, and it also re-checks the three ratified python/PT locations)
+  Sphinx / gitleaks / governance   : REQUIRED - documentation and evidence changed
+
+## the Python files changed, listed explicitly so the coverage decision is checkable

@@ -1,0 +1,21 @@
+# copied from /c/Users/there/prin-s4-scratch/final/gitleaks.txt at 2026-10-16T22:31:36Z
+# gitleaks (pinned binary): full history, then --staged
+# date (UTC): 2026-10-16T22:22:58Z
+# git HEAD: 3b5d5c97eba05edd1fae0b93a1f2fe28985c052e   tracked changes: 0
+
+# command: DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git . --no-banner
+# started 2026-10-16T22:23:00Z
+7:23PM INF 777 commits scanned.
+7:23PM INF scanned ~104287872 bytes (104.29 MB) in 19.7s
+7:23PM INF no leaks found
+# exit code: 0
+# ended 2026-10-16T22:23:21Z
+
+# command: DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git . --staged --no-banner
+# started 2026-10-16T22:23:21Z
+7:23PM INF 0 commits scanned.
+7:23PM INF scanned ~0 bytes (0) in 229ms
+7:23PM INF no leaks found
+# exit code: 0
+# ended 2026-10-16T22:23:22Z
+

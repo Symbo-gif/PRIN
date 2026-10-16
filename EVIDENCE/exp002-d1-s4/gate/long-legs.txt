@@ -1,0 +1,11 @@
+# copied from /c/Users/there/prin-s4-scratch/gate/legs.txt at 2026-10-16T22:31:34Z
+# EXP-002 D1 S4 - closing gate, long legs
+# date (UTC): 2026-10-16T19:08:47Z
+# git HEAD: 157ce5bc27746a06e399344fd7b22174e0627662   tracked changes: 0   untracked: 0
+# base: 6b55c6baa7b6832a50ff57fdd1a919171e9fb5de
+fast suite exit: 0
+full suite exit: 0
+
+# all long legs finished 2026-10-16T21:33:59Z
+# git HEAD at end: 157ce5bc27746a06e399344fd7b22174e0627662   tracked changes: 0   untracked: 0
+# overall: 0 (0 = both suites exited 0)

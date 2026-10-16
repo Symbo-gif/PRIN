@@ -1,0 +1,42 @@
+# copied from /c/Users/there/prin-s4-scratch/final/immutability-after.txt at 2026-10-16T22:31:37Z
+# immutability diffs for the S4 delta, 6b55c6ba..HEAD
+# date (UTC): 2026-10-16T22:23:22Z
+# git HEAD: 3b5d5c97eba05edd1fae0b93a1f2fe28985c052e   tracked changes: 0
+
+# EXP-002 D1 S4 - immutability
+range: 6b55c6baa7b6832a50ff57fdd1a919171e9fb5de..3b5d5c97eba05edd1fae0b93a1f2fe28985c052e   (HEAD now 3b5d5c97eba05edd1fae0b93a1f2fe28985c052e)
+# date (UTC): 2026-10-16T22:23:23Z
+
+## I1a the EXP-002 record: only report.md may change, and only by appended lines
+  changed files: DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md
+  changed files other than report.md: 0
+  added 2, deleted 0  DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md
+  deleted lines in the EXP-002 record: 0 (must be 0)
+  the appended lines, verbatim, truncated to their first 90 characters:
+    +| 2 | 2026-10-16 | Post-issue status only — the `EXP-002-D1` correction cycle outcome a
+
+## I1b benchmarks/results/EXP-002/, .github/, Cargo.toml, Cargo.lock, pyproject.toml (must be empty)
+  (empty)
+
+## I2 EVIDENCE/exp002-d1-s1/, -s2/ and -s3/ must be unedited
+  EVIDENCE/exp002-d1-s1/: (empty)
+  EVIDENCE/exp002-d1-s2/: (empty)
+  EVIDENCE/exp002-d1-s3/: (empty)
+
+## I3 the correction audit is append-only (deleted lines must be 0)
+  added 711, deleted 0  DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+  deletions: 0
+
+## I4 the S4 brief's checklist and carried sections are byte-identical to the base
+  base section lines: 94   head section lines: 95
+  after trailing-blank-line normalisation: base 7921 bytes, head 7921 bytes
+  identical: yes (byte-for-byte after normalisation)
+  what the brief's diff does change (numstat, and every deleted line):
+    added 131, deleted 2
+    DELETED: -**Status:** OPEN — S3 complete (2026-10-16 UTC); S4 may start on maintainer instruction
+    DELETED: -**Blocked numbered session:** `0164` (EXP-003 E1), and every later campaign session (`0165`–`0194
+  (the two deleted lines above must be the Status and Blocked-numbered-session
+   header lines only, which the S4 session prompt directs S4 to update)
+
+# exit code: 0
+(script exit: 0)
