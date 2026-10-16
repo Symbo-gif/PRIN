@@ -61,3 +61,10 @@ $ head -3 <scratch>/gitleaks.txt   # the header now measures the tracked-change 
 # gitleaks (pinned binary): full history, then --staged
 # date (UTC): 2026-10-16T15:21:30Z
 # git HEAD: 3bc12c7ad24394380d98702adef3f1f801652092   tracked changes: 0
+
+## T4-9: the comment-only change leaves the executable code of tests/test_notebooks.py identical
+$ .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check 5eee9184 b08dd574 tests/test_notebooks.py
+tests/test_notebooks.py  5eee9184..b08dd574
+  ast identical outside the module docstring: True
+  module docstring changed                  : False
+(exit: 0)
