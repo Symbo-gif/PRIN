@@ -29,12 +29,16 @@ changed, (b) the instruments S3 added, and (c) the two S2 instruments that carry
 the ratified residual ``EXP002D1-S2-F8``, which Coding Standards section 6.2
 requires to be re-checked every cycle.
 
-Exit status is 0 when the report was read, 2 when stdin was empty or not SARIF.
+Exit status is 0 when the report was read and no git-known path has a finding
+above LOW (the section 6.2 gate), 1 when one does, 2 when stdin was empty or not
+SARIF (the leg is blocked, never clean). LOW findings are reported but do not
+fail the run: they stay visible and are re-checked every cycle.
 """
 
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess  # nosec B404 - fixed argv, no shell
 import sys
 from collections import Counter
@@ -42,6 +46,13 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
+
+#: ``git`` resolved once to an absolute path (Coding Standards section 6.1:
+#: "absolute executables"), as ``tools/check_deviation_ledger.py`` does.
+_GIT = shutil.which("git")
+if _GIT is None:
+    raise SystemExit("git was not found on PATH")
+GIT: str = _GIT
 
 #: First-party source files S3 changed.
 S3_CHANGED: tuple[str, ...] = (
@@ -80,8 +91,8 @@ def known_paths() -> set[str]:
     Returns:
         Repository-relative POSIX paths.
     """
-    done = subprocess.run(  # nosec B603 B607 - fixed argv, no shell
-        ["git", "ls-files", "--cached", "--others", "--exclude-standard"],  # noqa: S607
+    done = subprocess.run(  # noqa: S603  # nosec B603 - absolute git, fixed argv, no shell
+        [GIT, "ls-files", "--cached", "--others", "--exclude-standard"],
         cwd=ROOT,
         capture_output=True,
         check=True,
@@ -154,9 +165,9 @@ def main() -> int:
     levels = dict(Counter(f["level"] for f in findings))
     print(f"result.level values (note=LOW, warning=MEDIUM): {levels}")
     print()
+    above_low = [f for f in in_git if f["level"] != "note"]
     show(
-        "ABOVE LOW anywhere in git-known paths (section 6.2 gate: must be 0)",
-        [f for f in in_git if f["level"] != "note"],
+        "ABOVE LOW anywhere in git-known paths (section 6.2 gate: must be 0)", above_low
     )
     show(
         "S3-changed first-party files", [f for f in findings if f["path"] in S3_CHANGED]
@@ -177,7 +188,7 @@ def main() -> int:
             if f["path"].startswith(S2_INSTRUMENT_DIR) and f["path"] not in S2_F8
         ],
     )
-    return 0
+    return 1 if above_low else 0
 
 
 if __name__ == "__main__":

@@ -32,10 +32,18 @@ from __future__ import annotations
 import argparse
 import ast
 import re
+import shutil
 import subprocess  # nosec B404 - fixed argv, no shell
 import sys
 
 REVISION = re.compile(r"[0-9a-f]{7,40}")
+
+#: ``git`` resolved once to an absolute path (Coding Standards section 6.1:
+#: "absolute executables"), as ``tools/check_deviation_ledger.py`` does.
+_GIT = shutil.which("git")
+if _GIT is None:
+    raise SystemExit("git was not found on PATH")
+GIT: str = _GIT
 
 
 def git_bytes(*args: str) -> bytes:
@@ -50,8 +58,8 @@ def git_bytes(*args: str) -> bytes:
     Raises:
         subprocess.CalledProcessError: If git exits non-zero.
     """
-    return subprocess.run(  # noqa: S603  # nosec B603 B607 - fixed argv, no shell
-        ["git", *args],  # noqa: S607
+    return subprocess.run(  # noqa: S603  # nosec B603 - absolute git, fixed argv, no shell
+        [GIT, *args],
         capture_output=True,
         check=True,
     ).stdout
@@ -72,6 +80,9 @@ def source_at(revision: str, path: str) -> str:
     """
     if not REVISION.fullmatch(revision):
         raise SystemExit(f"not a hexadecimal revision: {revision!r}")
+    # git lists paths with forward slashes on every platform; accept the
+    # backslash form a Windows shell completes, then test membership as before.
+    path = path.replace("\\", "/")
     tracked = git_bytes("ls-tree", "-r", "--name-only", revision).decode("utf-8")
     if path not in tracked.splitlines():
         raise SystemExit(f"{path!r} is not tracked at {revision}")

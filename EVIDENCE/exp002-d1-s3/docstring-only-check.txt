@@ -1,32 +1,47 @@
-# EXP002D1-S2-F5 / -F7 - the two docstring-only commits changed no executable code
-# date (UTC): 2026-10-16T01:54:21Z
-# git HEAD: 9583eb4d9b21ab7a8b71160b910f3957b2221eb4
+# EXP002D1-S2-F5 / -F7 - the three docstring-only commits changed no executable code
+# date (UTC): 2026-10-16T03:12:31Z
+# git HEAD: 33923be51ea4dfefc62ef2c3f97a3158dd85c7ba
 # instrument: EVIDENCE/exp002-d1-s3/docstring_only_check.py (reads each file at both revisions from git as UTF-8 bytes, drops the module docstring, compares ast.dump)
+# Each check compares a commit with ITS OWN PARENT. (An earlier draft of this record compared the F7 follow-up with the first F7 commit, a range that also spans the F6 code change, and so correctly reported a difference; that was the wrong range, not a defect.)
 
-## F5 (2db18fc3, tests/test_publication_figure_arguments.py)
+## F5 (2db18fc3, tests/test_publication_figure_arguments.py; parent 5ba0129e)
 # command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check 5ba0129e 2db18fc3 tests/test_publication_figure_arguments.py
 tests/test_publication_figure_arguments.py  5ba0129e..2db18fc3
   ast identical outside the module docstring: True
   module docstring changed                  : True
 # exit code: 0
 
-## F7 (1403451c, python/prin/reporting/figure_generation.py)
+## F7 (1403451c, python/prin/reporting/figure_generation.py; parent 2db18fc3)
 # command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check 2db18fc3 1403451c python/prin/reporting/figure_generation.py
 python/prin/reporting/figure_generation.py  2db18fc3..1403451c
   ast identical outside the module docstring: True
   module docstring changed                  : True
 # exit code: 0
 
-## NEGATIVE CONTROL: S1's real fix commit changed code, so this must report a difference (expect exit 1)
+## F7 follow-up (33923be5, python/prin/reporting/figure_generation.py; parent 7dbfc546)
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check 7dbfc546 33923be5 python/prin/reporting/figure_generation.py
+python/prin/reporting/figure_generation.py  7dbfc546..33923be5
+  ast identical outside the module docstring: True
+  module docstring changed                  : True
+# exit code: 0
+
+## NEGATIVE CONTROL 1: S1's real fix commit changed code, so this must report a difference (expect exit 1)
 # command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check d90eeabb 10d84f2b python/prin/reporting/figure_generation.py
 python/prin/reporting/figure_generation.py  d90eeabb..10d84f2b
   ast identical outside the module docstring: False
   module docstring changed                  : True
 # exit code: 1
 
-## NEGATIVE CONTROL 2: the F6 commit (a restored keyword argument) must also report a difference (expect exit 1)
+## NEGATIVE CONTROL 2: the F6 commit (a restored keyword argument; parent d53ab885) must also report a difference (expect exit 1)
 # command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check d53ab885 2b8b7a55 python/prin/reporting/figure_generation.py
 python/prin/reporting/figure_generation.py  d53ab885..2b8b7a55
   ast identical outside the module docstring: False
   module docstring changed                  : False
 # exit code: 1
+
+## BACKSLASH PATH form accepted (a Windows shell completes tests\...; expect exit 0)
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check 5ba0129e 2db18fc3 tests\test_publication_figure_arguments.py
+tests\test_publication_figure_arguments.py  5ba0129e..2db18fc3
+  ast identical outside the module docstring: True
+  module docstring changed                  : True
+# exit code: 0

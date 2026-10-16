@@ -37,6 +37,7 @@ import argparse
 import hashlib
 import importlib.util
 import re
+import shutil
 import subprocess  # nosec B404 - fixed argv, no shell
 import sys
 import tempfile
@@ -57,6 +58,13 @@ RESULTS = (
 )
 REVISION = re.compile(r"[0-9a-f]{7,40}")
 
+#: ``git`` resolved once to an absolute path (Coding Standards section 6.1:
+#: "absolute executables"), as ``tools/check_deviation_ledger.py`` does.
+_GIT = shutil.which("git")
+if _GIT is None:
+    raise SystemExit("git was not found on PATH")
+GIT: str = _GIT
+
 
 def module_source(revision: str) -> bytes:
     """Return the module's source bytes at a revision (or on disk).
@@ -74,8 +82,8 @@ def module_source(revision: str) -> bytes:
         return MODULE_PATH.read_bytes()
     if not REVISION.fullmatch(revision):
         raise SystemExit(f"not a hexadecimal revision: {revision!r}")
-    return subprocess.run(  # noqa: S603  # nosec B603 B607 - fixed argv, no shell
-        ["git", "show", f"{revision}:{MODULE_REL}"],  # noqa: S607
+    return subprocess.run(  # noqa: S603  # nosec B603 - absolute git, fixed argv, no shell
+        [GIT, "show", f"{revision}:{MODULE_REL}"],
         cwd=ROOT,
         capture_output=True,
         check=True,

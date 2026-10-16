@@ -1,0 +1,44 @@
+# EXP-002 D1 S3 - Snyk Code CLI rescan after the round 2 instrument fixes (absolute git, argv-token detection, new exit statuses)
+# # started 2026-10-16T03:14:26Z # command: snyk code test . --severity-threshold=low --sarif-file-output=C:/Users/there/prin-s3-scratch/snyk-s3c.sarif # exit code: 1 # ended 2026-10-16T03:18:29Z 
+# snyk 1.1306.2; account: Symbo-gif
+# scanned tree: git HEAD 33923be5 + uncommitted edits to EVIDENCE/exp002-d1-s3/ (the instrument fixes and the cold-review records)
+# SARIF sha256: d1cedfc9cbf625fd8e2bf3dea3b9b3ffbb87fa3c19271f008f800eb985fbe7c6  size: 712616 bytes (kept outside the repository)
+
+## CLI Test Summary, verbatim (authoritative severity breakdown)
+│ Test Summary                                         │
+│                                                      │
+│   Organization:      symbo-gif                       │
+│   Test type:         Static code analysis            │
+│   Project path:      .                               │
+│                                                      │
+│   Total issues:   97                                 │
+│   Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]      │
+│   Open issues:    97 [ 0 HIGH  0 MEDIUM  97 LOW ]    │
+
+## Bucketed by EVIDENCE/exp002-d1-s3/snyk_s3_filter.py (SARIF on stdin)
+total findings (raw filesystem scan)      : 97
+findings in git-known paths               : 45
+findings only in untracked on-disk copies : 52
+result.level values (note=LOW, warning=MEDIUM): {'note': 97}
+
+=== ABOVE LOW anywhere in git-known paths (section 6.2 gate: must be 0): 0 finding(s) ===
+  NONE
+
+=== S3-changed first-party files: 0 finding(s) ===
+  NONE
+
+=== S3-added instruments (EVIDENCE/exp002-d1-s3/): 0 finding(s) ===
+  NONE
+
+=== F8 re-check: the two ratified S2 locations: 2 finding(s) ===
+  python/PT      EVIDENCE/exp002-d1-s2/changed_line_coverage.py:98
+  python/PT      EVIDENCE/exp002-d1-s2/decomposition_rerun_check.py:92
+
+=== F8 re-check: OTHER findings in S2 instruments (not in the F8 record): 1 finding(s) ===
+  python/PT      EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142
+
+# filter exit code: 0   (0 = no git-known path has a finding above LOW)
+
+## Reading
+Resolving git with shutil.which in four instruments did not introduce a finding: nothing above LOW anywhere, nothing in the S3-changed
+files, nothing in the S3-added instruments. The F8 locations are unchanged and the one S2-instrument finding outside the F8 record remains.

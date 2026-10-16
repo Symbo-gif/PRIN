@@ -6,17 +6,25 @@ delta verification` section of
 [`DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`](../../DOCS/audits/2026-10-15-exp002-d1-correction-audit.md).
 It is indexed here file by file; `index_selfcheck.py` checks that mechanically.
 
-S3 works only on S2's findings (`EXP002D1-S2-F1`…`-F8`), one commit per finding,
-and does not push (Plan amendment #28: the cycle's push point is S4). Every
+S3 works only on S2's findings (`EXP002D1-S2-F1`…`-F8`), with one remediation
+commit per finding (plus a follow-up commit where a cold review showed the first
+one incomplete, as for F7; this bundle's instruments and records are committed
+separately), and does not push (Plan amendment #28: the cycle's push point is S4). Every
 executable here ran from the repository root on the Windows host, Python 3.14.0,
 project venv, from Git Bash with `C:\Program Files\Git\bin` first on `PATH`.
 Windows x86_64 only — Linux and macOS were **not** tested (Plan amendment #48).
 
 ## Instruments
 
-Each is `ruff check`, `ruff format --check` and `mypy --strict` clean, and none
-takes a caller-supplied filesystem path (a closed set of names, a hexadecimal
-revision, or standard input), so Snyk Code reports nothing in any of them.
+Each was `ruff check`, `ruff format --check` and `mypy --strict` clean when it
+was written; the closing gate record (added when the gate has run) is the
+committed evidence for that. None turns a caller-supplied string into a filesystem
+path: they take a name from a closed set, a hexadecimal revision, a run label
+restricted to `[A-Za-z0-9][A-Za-z0-9_-]*`, a tracked file name that is only
+handed to `git show REV:PATH` after a membership test, or standard input. Every
+subprocess call uses a fixed argv with no shell and an absolute executable
+(`git` is resolved once with `shutil.which`; `typeperf.exe` is a fixed path).
+The Snyk Code rescan reports no finding in any of them.
 
 | File | What it establishes |
 |---|---|
@@ -24,24 +32,26 @@ revision, or standard input), so Snyk Code reports nothing in any of them.
 | [`raw_byte_identity.py`](raw_byte_identity.py) | **F6.** Renders all 14 historical figures from the module at two revisions (or the working tree) into temporary directories and compares the **raw** SHA-256 of every `.pdf` and `.png`. PRIN's raw output is deterministic (H4), so any difference is real. |
 | [`index_selfcheck.py`](index_selfcheck.py) | **F4**, and the S3 bundle itself. Reports files in an `EVIDENCE/<bundle>/` that its README does not link, and README links that do not resolve. |
 | [`immutability.sh`](immutability.sh) | **Immutability.** For a revision range: the EXP-002 record, `benchmarks/results/EXP-002/`, `.github/` and the dependency manifests must show an empty diff; S1's evidence may change only in its README; the correction audit must be a pure append (0 deleted lines). |
-| [`notebook_timing.py`](notebook_timing.py) | **F2.** Runs one shipped notebook exactly as `tests/test_notebooks.py` does and records per-cell wall time, the whole kernel process tree's CPU seconds, working set and page faults, and host CPU and available memory every 5 s. |
-| [`suite_sampler.py`](suite_sampler.py) | **F2.** An out-of-process sampler that watches a running pytest session (pytest tree, every notebook kernel, host CPU, available memory and commit, the `Pages Input/sec` hard-fault counter, the largest resident processes and the busiest non-test CPU consumers) every 30 s, and a `--summarize` mode that prints one row per notebook-kernel episode. It only reads the process table. |
-| [`diagnostic_suite_run.sh`](diagnostic_suite_run.sh) | **F2.** Starts the sampler, runs pytest with the required instrumentation and a UTC timestamp on every console line, and writes everything **outside** the repository so the run cannot change the tree it measures. |
+| [`notebook_timing.py`](notebook_timing.py) | **F2.** Runs one shipped notebook the way `tests/test_notebooks.py` does (the same client settings, plus `record_timing` for the per-cell times) and records per-cell wall time, the whole kernel process tree's CPU seconds, working set and page faults, and host CPU and available memory every 5 s. |
+| [`suite_sampler.py`](suite_sampler.py) | **F2.** An out-of-process sampler that watches a running pytest session (pytest tree, every notebook kernel, host CPU, available memory and commit, the `Pages Input/sec` hard-fault counter, the largest resident processes and the busiest non-test CPU consumers) every 30 s, and a `--summarize` mode that prints one row per notebook-kernel episode. It only reads the process table. It recognises pytest and kernels by their `-m pytest` / `-m ipykernel_launcher` argv tokens (an earlier substring match counted any shell whose command line merely mentioned pytest), exits when pytest has been gone for two samples, and gives up with status 3 if none appears within `--start-grace` seconds. |
+| [`diagnostic_suite_run.sh`](diagnostic_suite_run.sh) | **F2.** Starts the sampler, runs pytest with the required instrumentation and a UTC timestamp on every console line, and writes everything it records **outside** the repository (pytest's own mandated, gitignored `.pytest_basetemp` aside; the tracked-change and untracked-file counts before and after are recorded). The run label is restricted so it cannot climb out of the scratch directory, and the sampler is stopped after a bounded wait so the script cannot hang on it. |
 | [`diag_nb_timeout.py`](diag_nb_timeout.py) | **F2.** A diagnostic-only pytest plugin that lifts the notebook per-cell timeout to four hours so a slow leg is measured instead of killed at 900 s. Loaded only with `diagnostic_suite_run.sh --lift-notebook-timeout`; a run that loads it is a *diagnostic*, never the gate. `tests/test_notebooks.py` on disk is unchanged. |
-| [`snyk_s3_filter.py`](snyk_s3_filter.py) | **Coding Standards §6 / F8.** Buckets a Snyk Code SARIF report (read on standard input) into: anything above LOW, the files S3 changed, the instruments S3 added, and the F8 locations. Its docstring records a correction to S2's "SARIF carries no severity" conclusion (see below). |
+| [`snyk_s3_filter.py`](snyk_s3_filter.py) | **Coding Standards §6 / F8.** Buckets a Snyk Code SARIF report (read on standard input) into: anything above LOW, the files S3 changed, the instruments S3 added, and the F8 locations. Exit status is 1 if any git-known path has a finding above LOW (the §6.2 gate), 2 if the SARIF is missing or unreadable (blocked, never clean). Its docstring records a correction to S2's "SARIF carries no severity" conclusion: `note` = LOW and `warning` = MEDIUM on this session's evidence. |
 
 ## Verification outputs
 
 | File | What it is |
 |---|---|
-| [`docstring-only-check.txt`](docstring-only-check.txt) | **F5, F7.** `docstring_only_check.py` on the two docstring commits: AST identical outside the module docstring (exit 0 each). Two negative controls — S1's fix commit and S3's F6 commit — report a difference (exit 1), so the check can fail. |
+| [`docstring-only-check.txt`](docstring-only-check.txt) | **F5, F7.** `docstring_only_check.py` on the three docstring-only commits (F5 `2db18fc3`, F7 `1403451c`, and the F7 follow-up `33923be5`): AST identical outside the module docstring (exit 0 each). Two negative controls — S1's fix commit and S3's F6 commit — report a difference (exit 1), so the check can fail. |
 | [`index-selfcheck-s1.txt`](index-selfcheck-s1.txt) | **F4.** `index_selfcheck.py exp002-d1-s1` after the README row: 12 files, 0 unindexed, 0 dangling. Records that the pre-edit README at `5ba0129e` did not mention the file, that the evidence file's sha256 (`fdfa17cc…`) is unchanged, and that it was last touched by `af894998`. |
 | [`f6-test-red-before-fix.txt`](f6-test-red-before-fix.txt) | **F6, failing test first.** The new fig13-label regression test run against the unfixed module: **1 failed, 9 passed**, exit 1 (`'_child0' != 'Obj 0'`). |
 | [`f6-verification.txt`](f6-verification.txt) | **F6.** After the fix: **V1** 103 passed (10 fast-gate tests + the 93-test byte-level parity gate); **V2** artist-level equivalence 14/14 EQUAL; **V3** fast-gate divergence coverage still 34/34 and the docstring no longer claims byte-material only; **V4** raw-byte identity of all 28 files before vs after the F6 commit; **V5** negative control — the pre-fix port `d90eeabb` differs from the fixed tree on exactly the 18 D1 files (exit 1). V2's output is filtered to its result lines. |
 | [`immutability-before.txt`](immutability-before.txt) | The immutability diffs for `fd8854ed..5ba0129e`, the cycle's state before any S3 change: I1 empty, S1 evidence has 0 deleted lines and no `SHA256SUMS`/manifest, the audit shows 0 deletions. (Its I2 section lists S1's *additions* because the range starts before S1; the S3-only delta is recorded in the closing gate.) |
 | [`snyk-code-s3-first-scan-medium.txt`](snyk-code-s3-first-scan-medium.txt) | **Coding Standards §6, found and remediated.** The first Snyk Code CLI scan reported **1 MEDIUM** `Command Injection` in the new `suite_sampler.py` (the `typeperf.exe` path was built from an environment variable). Kept in the record, not overwritten. |
 | [`snyk-code-s3.txt`](snyk-code-s3.txt) | **Coding Standards §6 / F8 re-check.** The rescan after the fix: **0 HIGH / 0 MEDIUM / 97 LOW**; no finding in the files S3 changed or in the instruments it added; the F8 locations unchanged; and **one finding in an S2 instrument that the F8 record does not list**. The Snyk MCP route was not available in this session and is not claimed. |
-| [`f2-alone-01_oscillosim_quickstart.json`](f2-alone-01_oscillosim_quickstart.json), [`f2-alone-02_clevr_n_binding.json`](f2-alone-02_clevr_n_binding.json), [`f2-alone-03_custom_coupling.json`](f2-alone-03_custom_coupling.json), [`f2-alone-04_torch_bridge.json`](f2-alone-04_torch_bridge.json) | **F2, standalone baseline.** `notebook_timing.py` on each shipped notebook, one after another on a quiet host, no pytest: wall **73 / 71 / 45 / 37 s**, all completed with no error output. Notebooks 01, 03 and 04 are single-threaded (kernel CPU/wall 0.9–1.1); notebook 02 used **435 CPU-seconds in 71 s wall (6.1 cores) with a 3.2 GB working set** and drove host available memory down to 660 MB. |
+| [`snyk-code-s3-after-review-fixes.txt`](snyk-code-s3-after-review-fixes.txt) | **Coding Standards §6.** The rescan after the round 2 instrument fixes (absolute `git`, argv-token detection, new exit statuses): **0 HIGH / 0 MEDIUM / 97 LOW**, nothing in the S3-added instruments, the F8 locations unchanged. |
+| [`f2-alone-01_oscillosim_quickstart.json`](f2-alone-01_oscillosim_quickstart.json), [`f2-alone-02_clevr_n_binding.json`](f2-alone-02_clevr_n_binding.json), [`f2-alone-03_custom_coupling.json`](f2-alone-03_custom_coupling.json), [`f2-alone-04_torch_bridge.json`](f2-alone-04_torch_bridge.json) | **F2, standalone baseline.** `notebook_timing.py` on each shipped notebook, one after another on a quiet host, no pytest: wall **73 / 71 / 45 / 37 s**, all completed with no error output. Notebooks 01, 03 and 04 are single-threaded (kernel CPU/wall 0.89–1.13); notebook 02 used **435 CPU-seconds in 71 s wall (6.1 cores) with a 3.2 GB working set** and drove host available memory down to 660 MB. |
+| [`cold-review/README.md`](cold-review/README.md) | **The cold-review loop (S3 brief §6).** Index of the briefs, each reviewer's raw stdout and export, the launcher, and the caller's triage, by round. [`cold-review/triage.md`](cold-review/triage.md) classifies every reviewer claim CONFIRMED / REFUTED / NOT REPRODUCIBLE with the measurement behind it. |
 
 A first standalone run of notebook 02 (wall 69.0 s) is not committed: its kernel
 CPU and memory columns matched the Windows venv launcher stub instead of the

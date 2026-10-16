@@ -10,15 +10,21 @@
 # diag_nb_timeout.py is loaded so a slow notebook leg is measured instead of
 # killed at 900 s; a run that does so is a DIAGNOSTIC run, never the gate.
 #
-# All output goes OUTSIDE the repository, to ~/prin-s3-scratch/<label>/, so the
-# run cannot change the tree it is measuring:
+# Everything this script records goes OUTSIDE the repository, to
+# ~/prin-s3-scratch/<label>/, so it cannot change the tree it is measuring:
 #   console.log   timestamped pytest console output
 #   samples.jsonl sampler output (one JSON object per 30 s)
 #   run.txt       commands, UTC start/end, git HEAD, pytest exit status
+# The one in-repository write is pytest's own --basetemp=.pytest_basetemp, which
+# AGENTS.md mandates by that exact name and which is gitignored. run.txt records
+# the tracked-change and untracked-file counts before and after the run, so a
+# change to the tree would show.
 set -u
 LABEL="${1:?usage: diagnostic_suite_run.sh <label> [--lift-notebook-timeout] <pytest args...>}"
 shift
-case "$LABEL" in *[!A-Za-z0-9._-]*) echo "label must be [A-Za-z0-9._-]"; exit 2 ;; esac
+# A label is a directory name under ~/prin-s3-scratch, so it must not be able to
+# climb out of it: letters, digits, '_' and '-', not starting with '-' (no dots).
+[[ "$LABEL" =~ ^[A-Za-z0-9][A-Za-z0-9_-]*$ ]] || { echo "label must match [A-Za-z0-9][A-Za-z0-9_-]*"; exit 2; }
 LIFT=0
 if [ "${1:-}" = "--lift-notebook-timeout" ]; then LIFT=1; shift; fi
 
@@ -47,15 +53,21 @@ fi
 $PY -I EVIDENCE/exp002-d1-s3/suite_sampler.py --period 30 > "$OUT/samples.jsonl" 2> "$OUT/sampler.err" &
 SAMPLER=$!
 
-$PY -m pytest "$@" --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20 "${PLUGIN[@]}" 2>&1 \
+$PY -m pytest "$@" --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20 ${PLUGIN[@]+"${PLUGIN[@]}"} 2>&1 \
   | awk '{print strftime("%H:%M:%SZ", systime(), 1), $0; fflush()}' > "$OUT/console.log"
 STATUS=${PIPESTATUS[0]}
 
-# Let the sampler see pytest gone for two samples and exit by itself.
+# The sampler stops by itself once pytest has been gone for two samples (about
+# 60 s). Allow it 150 s, then stop it, so this script can never hang on it.
+for _ in $(seq 1 30); do kill -0 "$SAMPLER" 2>/dev/null || break; sleep 5; done
+if kill -0 "$SAMPLER" 2>/dev/null; then
+  kill "$SAMPLER" 2>/dev/null
+  echo "sampler did not exit by itself within 150 s and was stopped" >> "$OUT/run.txt"
+fi
 wait "$SAMPLER" 2>/dev/null
 {
   echo "pytest exit status: $STATUS"
   echo "ended: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  echo "git HEAD at end: $(git rev-parse HEAD)   tracked changes: $(git status --porcelain --untracked-files=no | wc -l)"
+  echo "git HEAD at end: $(git rev-parse HEAD)   tracked changes: $(git status --porcelain --untracked-files=no | wc -l)   untracked files: $(git status --porcelain | grep -c '^??')"
 } >> "$OUT/run.txt"
 exit "$STATUS"

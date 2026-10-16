@@ -1,4 +1,4 @@
-"""Time one shipped notebook exactly as ``tests/test_notebooks.py`` executes it.
+"""Time one shipped notebook the way ``tests/test_notebooks.py`` executes it.
 
 This instrument backs the disposition of audit finding ``EXP002D1-S2-F2``: the
 required full suite exceeded the 900 s per-cell bound on
@@ -12,8 +12,9 @@ inside the suite versus alone, so the instrument records, for one notebook:
   time) can be told apart from a starved or blocked one (CPU time << wall time);
 * host CPU utilisation and available memory at each sample.
 
-It runs the notebook the way the test does (same ``NotebookClient`` arguments,
-same ``kernel_name`` and working directory). It never modifies a notebook on
+It builds the same ``NotebookClient`` as the test (same ``timeout``,
+``kernel_name`` and working directory) with one addition, ``record_timing=True``,
+which is what yields the per-cell wall times. It never modifies a notebook on
 disk: nbclient executes an in-memory copy and the result is discarded.
 
 The notebook is selected by *name* from the closed set discovered under

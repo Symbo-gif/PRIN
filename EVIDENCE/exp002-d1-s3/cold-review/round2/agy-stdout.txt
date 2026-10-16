@@ -1,0 +1,197 @@
+# Cold Code Review Report: Changeset `5ba0129e..HEAD`
+
+**Review Target:** Git revision range `5ba0129e8f225c62de92593d329be63ca7e7cf7e..HEAD` (8 commits, 26 files changed, +2940 / -82 lines).  
+**Reviewer Role:** Independent cold code reviewer (zero prior session context, read-only mode).  
+**Repository:** `C:/dev/PRIN`  
+**Governing Specifications:** [`DOCS/standards/Coding_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Coding_Standards.md), [`DOCS/standards/Testing_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Testing_Standards.md), [`DOCS/standards/Development_Workflow_and_Audit_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Development_Workflow_and_Audit_Standards.md), [`CLAUDE.md`](file:///C:/dev/PRIN/CLAUDE.md), [`AGENTS.md`](file:///C:/dev/PRIN/AGENTS.md), [`DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`](file:///C:/dev/PRIN/DOCS/audits/2026-10-15-exp002-d1-correction-audit.md).
+
+---
+
+## 1. Executive Summary & Review Scope
+
+The change set under review encompasses session S3 of the `EXP-002-D1` remediation cycle. S3 was tasked with addressing findings `EXP002D1-S2-F1` through `EXP002D1-S2-F8` identified during the S2 audit ([`DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`](file:///C:/dev/PRIN/DOCS/audits/2026-10-15-exp002-d1-correction-audit.md)).
+
+The change set consists of 8 commits:
+1. `2db18fc3` — `fix(reporting): document and assert series-label arg on fig13 (EXP002D1-S2-F4)`
+2. `1403451c` — `docs(reporting): add missing docstrings to figure_generation.py (EXP002D1-S2-F7)`
+3. `d53ab885` — `test(reporting): add negative-control test for figure-arg docstrings (EXP002D1-S2-F5)`
+4. `2b8b7a55` — `fix(reporting): restore frozen-reference label filter on fig07 (EXP002D1-S2-F6)`
+5. `9583eb4d` — `docs(standards): document Snyk code-analysis baseline in Testing Standards (EXP002D1-S2-F1)`
+6. `742fb52c` — `test(reporting): capture Snyk CLI code-analysis baseline (EXP002D1-S2-F1)`
+7. `7dbfc546` — `evidence(exp002-d1-s3): capture full-suite diagnostic baselines (EXP002D1-S2-F2)`
+8. `33923be5` — `docs(reporting): restore module docstring in figure_generation.py (EXP002D1-S2-F7)`
+
+Production code modifications are strictly confined to [`python/prin/reporting/figure_generation.py`](file:///C:/dev/PRIN/python/prin/reporting/figure_generation.py). The remainder of the diff consists of tests ([`tests/test_publication_figure_arguments.py`](file:///C:/dev/PRIN/tests/test_publication_figure_arguments.py)), governance documentation ([`DOCS/standards/Testing_Standards.md`](file:///C:/dev/PRIN/DOCS/standards/Testing_Standards.md), [`DOCS/sessions/contingencies/`](file:///C:/dev/PRIN/DOCS/sessions/contingencies/)), and diagnostic instruments and baseline captures in [`EVIDENCE/exp002-d1-s3/`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/).
+
+---
+
+## 2. Review Criteria & Detailed Evaluation
+
+### Criterion 1: Scope Discipline & Non-Interference
+- **Frozen Artifacts:** Verified untouched. No changes were made to frozen experimental protocols, experimental data, `.github/` workflows, `pyproject.toml`, `Cargo.toml`, or lockfiles.
+- **Production Code Isolation:** Production modifications are strictly limited to `figure_generation.py`. The two logic edits restore verbatim compliance with frozen baseline `DOCS/experiments/EXP-002_report_figure_code.py` (restoring series label documentation/assertion for Fig 13, and restoring the `if index < 5 else None` label filter on Fig 07 at line 936).
+- **Finding Tracking:** Work maps directly to the S2 findings list, with the exception of structural/procedural variances noted below in Section 3.
+
+### Criterion 2: Correctness of Code Changes
+- **Figure Generation:**
+  - `fig07_scatter_matrix_of_state_transitions`: The restoration of `label=f"Obj {label}" if index < 5 else None` correctly limits the legend clutter to the first 5 objects, matching line 936 of the reference code.
+  - `fig13_distribution_of_step_sizes`: Correctly restores docstring documentation of the parameter `series_labels: Sequence[str] | None = None` and validates series labels against the number of series.
+- **Diagnostic Scripts (`EVIDENCE/exp002-d1-s3/`):**
+  - Scripts were built with strict execution modes (`python.exe -I`, `set -euo pipefail`).
+  - However, [`suite_sampler.py`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/suite_sampler.py) contains a liveness bug that causes indefinite hangs when pytest terminates before being observed (Finding 1).
+  - [`docstring_only_check.py`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/docstring_only_check.py) fails on native Windows backslash path separators when checking tracked paths (Finding 2).
+
+### Criterion 3: Test Suite Integrity & Soundness
+- **No Test Weakening:** No existing tests were modified, loosened, skipped, or removed.
+- **New Test Rigor:**
+  - `test_fig13_series_labels_follow_the_reference`: Verifies both docstring documentation and execution behavior with custom series labels.
+  - `test_negative_control_detects_deliberate_signature_drift`: Sound AST-based negative control testing that parameter mismatches fail verification.
+- **Full-Suite Passing:** Baseline evidence logs confirm that the 1,400-test suite passes cleanly across all targets.
+
+### Criterion 4: Determinism & Reproducer Fidelity
+- **Figure Byte Determinism:** Baseline evidence record [`figure-run.txt`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/figure-run.txt) confirms all 28 publication figures render with 0 failures and bit-for-bit identical outputs.
+- **Negative Controls:** Negative controls for docstrings and figure signatures demonstrably fail when mutations are introduced.
+
+### Criterion 5: Evidence & Artifact Completeness
+- All 11 baseline records referenced in [`EVIDENCE/exp002-d1-s3/README.md`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/README.md) exist on disk.
+- However, [`docstring-only-check.txt`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/docstring-only-check.txt) was captured prior to commit `33923be5` and does not cover the third docstring commit (Finding 4).
+
+### Criterion 6: Standards & Governance Compliance
+- Formatting, typing, docstrings, and linting comply with project standards across modified files.
+- Testing Standards §5 update correctly reflects the Snyk CLI exit code behavior (`exit 0` vs `exit 1` under `--severity-threshold=high`).
+
+### Criterion 7: Commit Hygiene & Documentation
+- Commit messages follow Conventional Commits and reference finding IDs.
+- However, documented claims regarding commit-to-finding mapping, docstring check coverage, and execution ordering deviate from the actual commit history (Findings 3, 5, 6).
+
+---
+
+## 3. Detailed Findings
+
+### Finding 1
+- **Severity:** `medium`
+- **Where:** [`EVIDENCE/exp002-d1-s3/suite_sampler.py:323`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/suite_sampler.py#L323)
+- **Quote:**
+  ```python
+  if seen and absent >= 2:
+      break
+  ```
+- **Claim:**
+  In `sample()`, termination relies entirely on `if seen and absent >= 2: break`. The variable `seen` is initialized to `False` (line 303) and only becomes `True` once `pytest_procs` yields at least one matching process. If `pytest` exits before `suite_sampler.py` samples it (for example, if pytest encounters an immediate argument/import error, executes a very short test subset, or exits during the initial sleep delay), `seen` remains `False` indefinitely. As a result, `absent` increments indefinitely without ever breaking out of the loop.
+  When executed via [`diagnostic_suite_run.sh:55`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh#L55), the shell script runs `wait "$SAMPLER" 2>/dev/null`, which hangs indefinitely in automated CI or runner environments if pytest finishes prior to the sampler's first successful detection.
+- **Reproduce:**
+  Run the sampler standalone when pytest is not running:
+  ```powershell
+  .venv\Scripts\python.exe -I EVIDENCE/exp002-d1-s3/suite_sampler.py --period 0.1
+  ```
+  The script loops indefinitely and never exits, requiring a manual `SIGINT` (Ctrl+C).
+
+---
+
+### Finding 2
+- **Severity:** `low`
+- **Where:** [`EVIDENCE/exp002-d1-s3/docstring_only_check.py:76`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/docstring_only_check.py#L76)
+- **Quote:**
+  ```python
+  tracked = git_bytes("ls-tree", "-r", "--name-only", revision).decode("utf-8")
+  if path not in tracked.splitlines():
+      raise SystemExit(f"{path!r} is not tracked at {revision}")
+  ```
+- **Claim:**
+  Git's `ls-tree -r --name-only` always outputs forward slashes `/` as path separators on all platforms, including Windows. The `source_at` function takes `path` directly without normalizing backslashes (e.g. via `path.replace("\\", "/")` or `Path(path).as_posix()`). Consequently, invoking the script from a Windows shell using tab-completed paths (such as `tests\test_publication_figure_arguments.py`) causes the check to fail with a false rejection: `'tests\\test_publication_figure_arguments.py' is not tracked at ...`.
+- **Reproduce:**
+  Run the check passing a Windows path separator:
+  ```powershell
+  .venv\Scripts\python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check 5ba0129e 2db18fc3 tests\test_publication_figure_arguments.py
+  ```
+  Output:
+  ```text
+  SystemExit: 'tests\\test_publication_figure_arguments.py' is not tracked at 5ba0129e
+  ```
+
+---
+
+### Finding 3
+- **Severity:** `low`
+- **Where:** [`EVIDENCE/exp002-d1-s3/README.md:9`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/README.md#L9)
+- **Quote:**
+  ```markdown
+  S3 works only on S2's findings (EXP002D1-S2-F1…-F8), one commit per finding, and does not push (Plan amendment #28: the cycle's push point is S4).
+  ```
+- **Claim:**
+  The statement "one commit per finding" is contradicted by the actual git history of the range (`5ba0129e..HEAD`). The range contains 8 commits, but they do not correspond 1:1 with findings:
+  - Finding `EXP002D1-S2-F7` has two separate commits: `1403451c` and `33923be5`.
+  - Finding `EXP002D1-S2-F1` has two commits: `9583eb4d` (documentation) and `742fb52c` (evidence capture).
+  - Finding `EXP002D1-S2-F2` (D2) has no remediation commit; its ID is attached to a diagnostic evidence bundle (`7dbfc546`).
+  - Findings `EXP002D1-S2-F3` and `F8` received no remediation commits in S3.
+- **Reproduce:**
+  Inspect the commit log across the range:
+  ```powershell
+  git log --oneline 5ba0129e..HEAD
+  ```
+
+---
+
+### Finding 4
+- **Severity:** `low`
+- **Where:** [`EVIDENCE/exp002-d1-s3/README.md:37`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/README.md#L37)
+- **Quote:**
+  ```markdown
+  | [`docstring-only-check.txt`](docstring-only-check.txt) | **F5, F7.** `docstring_only_check.py` on the two docstring commits: AST identical outside the module docstring (exit 0 each). Two negative controls — S1's fix commit and S3's F6 commit — report a difference (exit 1), so the check can fail. |
+  ```
+- **Claim:**
+  The baseline evidence file [`docstring-only-check.txt`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/docstring-only-check.txt) was captured and committed at commit `9583eb4d`. Later in S3, commit `33923be5` modified the module docstring of [`python/prin/reporting/figure_generation.py`](file:///C:/dev/PRIN/python/prin/reporting/figure_generation.py) to resolve a lint failure. Commit `33923be5` is thus a third docstring commit in S3 affecting `figure_generation.py`. Neither `docstring-only-check.txt` nor its documentation table in `README.md` was updated to verify that commit `33923be5` also modified only docstrings and preserved AST equivalence.
+- **Reproduce:**
+  Examine `EVIDENCE/exp002-d1-s3/docstring-only-check.txt`: it checks only revisions `2db18fc3` and `1403451c`, omitting `33923be5`.
+
+---
+
+### Finding 5
+- **Severity:** `low`
+- **Where:** [`DOCS/sessions/contingencies/2026-10-14-exp002-d1-s3-correction-remediation.md:24`](file:///C:/dev/PRIN/DOCS/sessions/contingencies/2026-10-14-exp002-d1-s3-correction-remediation.md#L24)
+- **Quote:**
+  ```markdown
+  - Work only on S2's findings, in severity order D1 → D4, each commit naming its finding ID.
+  ```
+- **Claim:**
+  The contingency brief explicitly mandated working "in severity order D1 → D4". According to the S2 audit severity breakdown ([`DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:951`](file:///C:/dev/PRIN/DOCS/audits/2026-10-15-exp002-d1-correction-audit.md#L951)):
+  - `EXP002D1-S2-F2` is severity D2.
+  - `EXP002D1-S2-F1` is severity D3.
+  - `EXP002D1-S2-F3` through `F8` are severity D4.
+  
+  In the actual execution:
+  1. Four D4 findings (`F4`, `F7`, `F5`, `F6`) were remediated and committed first (`2db18fc3` through `2b8b7a55`).
+  2. The D3 finding `F1` was addressed fifth (`9583eb4d`).
+  3. The D2 finding `F2` was not remediated at all in S3; only diagnostic baselines were captured in commit `7dbfc546`, deferring root-cause remediation to S4.
+  The execution inverted the required severity ordering without documenting a plan amendment or session variance.
+- **Reproduce:**
+  Compare the reverse commit history (`git log --reverse --oneline 5ba0129e..HEAD`) with the finding severity table in [`DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:951`](file:///C:/dev/PRIN/DOCS/audits/2026-10-15-exp002-d1-correction-audit.md#L951).
+
+---
+
+### Finding 6
+- **Severity:** `nit`
+- **Where:** [`DOCS/sessions/contingencies/2026-10-14-exp002-d1-s4-correction-documentation.md:28`](file:///C:/dev/PRIN/DOCS/sessions/contingencies/2026-10-14-exp002-d1-s4-correction-documentation.md#L28)
+- **Quote:**
+  ```markdown
+  S3 resolved this finding by **assignment**, not by plan amendment (correction audit §S3).
+  ```
+- **Claim:**
+  The S4 contingency brief references `(correction audit §S3)` to document the resolution of `EXP002D1-S2-F3`. However, [`DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`](file:///C:/dev/PRIN/DOCS/audits/2026-10-15-exp002-d1-correction-audit.md) currently ends at line 1131 (the conclusion of S2); section `§S3` does not yet exist in the file.
+- **Reproduce:**
+  Search for `## S3` or `§S3` in `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`.
+
+---
+
+## 4. Assessment & Recommendations for S4
+
+1. **Production Code Quality:** The production code changes in [`figure_generation.py`](file:///C:/dev/PRIN/python/prin/reporting/figure_generation.py) are correct, verified against frozen references, and maintain byte-level determinism of publication outputs.
+2. **Instrument Robustness:** Before diagnostic tools are reused in future cycles, add a maximum timeout/idle check to `suite_sampler.py` so that missing or quickly exiting processes do not cause deadlocks, and normalize path separators in `docstring_only_check.py` to POSIX slashes.
+3. **Audit Documentation (S4):** In S4, when drafting `§S3` of [`DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`](file:///C:/dev/PRIN/DOCS/audits/2026-10-15-exp002-d1-correction-audit.md), explicitly document:
+   - The rationale for deferring D2 (`F2`) remediation from S3 to S4 while capturing diagnostic baselines.
+   - The split commits on `F7` (`1403451c` and `33923be5`) and update `docstring-only-check.txt` to cover `33923be5`.
+   - The ordering deviation from the D1 → D4 mandate.
+
+---
+
+Summary: 0 critical, 0 high, 1 medium, 4 low, 1 nit; 0 UNVERIFIED.

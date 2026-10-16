@@ -1,0 +1,62 @@
+# Reproduction of the round 2 claims, run by the caller at HEAD 33923be5 (before any round 2 fix), tree clean, 2026-10-16 UTC.
+# Command output is verbatim.
+##### D1/Devin-F1  immutability.sh: is the I2 rule enforced in the exit status?
+$ rg -n "status=1" EVIDENCE/exp002-d1-s3/immutability.sh
+28:if [ -z "$out" ]; then echo "(empty)"; else echo "$out"; status=1; fi
+43:[ "$del" -eq 0 ] || status=1
+
+##### D2/Devin-F2  diagnostic_suite_run.sh label guard accepts '..'?
+$ bash -c 'case ".." in *[!A-Za-z0-9._-]*) echo rejected ;; *) echo accepted ;; esac'
+accepted
+
+##### D3/Devin-F3 + agy-F1  sampler never exits when pytest is never seen
+$ timeout 8 python -I EVIDENCE/exp002-d1-s3/suite_sampler.py --period 1   (no pytest running)
+samples printed in 8 s: 2
+timeout rc=124 (124 = killed by timeout = it did not exit on its own)
+$ rg -n 'seen and absent' EVIDENCE/exp002-d1-s3/suite_sampler.py
+321-        }
+322-        print(json.dumps(record), flush=True)
+323:        if seen and absent >= 2:
+324-            return 0
+325-        time.sleep(period)
+
+##### D4/Devin-F4,F5 + agy-F6  does a '## S3' section exist in the audit?
+$ rg -n "^## " DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+26:## S1 — implementation record (2026-10-15 UTC)
+350:## S2 — audit record (2026-10-15 UTC)
+
+##### D5/Devin-F6 + agy-F5  commit order vs the D1->D4 severity order
+$ git log --oneline --reverse 5ba0129e..HEAD
+2db18fc3 docs: EXP002D1-S2-F5 correct the fast-gate module docstring scope
+1403451c docs: EXP002D1-S2-F7 qualify the figure module's "nothing recomputed" claim
+d53ab885 docs: EXP002D1-S2-F4 index the S1 fast-gate pre-fix record in its README
+2b8b7a55 fix: EXP002D1-S2-F6 restore the reference fig13 per-series label
+9583eb4d docs: EXP002D1-S2-F1 assign the two-policy H3 registration to S4 and EXP-002-r1
+742fb52c test: EXP002D1-S3 evidence bundle, instruments and verification records
+7dbfc546 docs: mark the S3 brief IN PROGRESS
+33923be5 docs: EXP002D1-S2-F7 list the derived quantities by kind, not exhaustively
+
+##### D6/Devin-F7 + agy-F4  does docstring-only-check.txt cover the F7 follow-up 33923be5?
+$ rg -n "1403451c|33923be" EVIDENCE/exp002-d1-s3/docstring-only-check.txt
+13:## F7 (1403451c, python/prin/reporting/figure_generation.py)
+14:# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check 2db18fc3 1403451c python/prin/reporting/figure_generation.py
+15:python/prin/reporting/figure_generation.py  2db18fc3..1403451c
+
+##### D7/Devin-F8  notebook 03 cpu/wall vs the README range 0.9-1.1
+$ rg -n kernel_cpu_over_wall EVIDENCE/exp002-d1-s3/f2-alone-0*.json
+EVIDENCE/exp002-d1-s3/f2-alone-01_oscillosim_quickstart.json:11: "kernel_cpu_over_wall": 0.94,
+EVIDENCE/exp002-d1-s3/f2-alone-04_torch_bridge.json:11: "kernel_cpu_over_wall": 1.13,
+EVIDENCE/exp002-d1-s3/f2-alone-03_custom_coupling.json:11: "kernel_cpu_over_wall": 0.89,
+EVIDENCE/exp002-d1-s3/f2-alone-02_clevr_n_binding.json:11: "kernel_cpu_over_wall": 6.11,
+
+##### A2/agy-F2  docstring_only_check.py with a backslash path
+$ python -I docstring_only_check.py --check 5ba0129e 2db18fc3 tests\test_publication_figure_arguments.py
+'tests\\test_publication_figure_arguments.py' is not tracked at 5ba0129e
+
+##### A3/agy-F3  'one commit per finding' vs history: commits per finding id
+$ git log --format=%s 5ba0129e..HEAD | grep -o "EXP002D1-S2-F[0-9]" | sort | uniq -c
+      1 EXP002D1-S2-F1
+      1 EXP002D1-S2-F4
+      1 EXP002D1-S2-F5
+      1 EXP002D1-S2-F6
+      2 EXP002D1-S2-F7

@@ -1,0 +1,63 @@
+I'll start by reading the two provided files.Let me read the rest of the diff.I have the full diff. Now let me verify claims against the actual repository tree — starting with the changed code file and the reference it claims to match.Labels are 0–4 in the archived data — the fix and test are consistent with the reference. Now let me check `tests/test_notebooks.py` against `notebook_timing.py`'s claim that it runs the notebook "exactly as" the test does.The notebook instrument matches the test's `NotebookClient` invocation. Now checking the evidence files and audit doc that the READMEs link to.The audit file has no `## S3` section — noted. Now let me read the S2 findings to verify each disposition the diff claims to implement.F2 is a mandated-but-not-yet-dispositioned finding — consistent with S3 "IN PROGRESS". Now let me verify the S1 README index is complete and check the S3 README's claims against the audit file.Let me check the lint/typecheck configuration scope and the standards referenced by the change.The S3 brief mandates severity order D1→D4 — noted for the commit sequence check. Now verifying the S4 doc's quoted §11.3 clause against the frozen EXP-002 pre-registration.The quoted clause is verbatim-accurate. Now verifying the remaining docstring claims (Fig. 11 ratios, Fig. 12 ratio, Fig. 15 fit) against both port and reference.All docstring claims check out against the code. Let me confirm there's no `S3` section anywhere in the audit file and check the S4 doc's own reference to it.Let me verify the S1 evidence file content matches what the new README row claims.One more check — the truncated line in `f6-verification.txt` and the S2 instrument it ran.Verifying the line numbers in the committed instrument files and the S1 brief link target.Let me verify the claim about S2's SARIF filter conclusion and check the S2 instrument it references.I have now verified the changed code against the frozen reference, the tests, the standards, and every checkable claim in the changed documentation. Writing up the report.
+
+# Cold review — `5ba0129e..HEAD` (EXP-002 D1 S3 remediation, in progress)
+
+What I verified and found sound: the F6 `label=f"Obj {label}" if index < 5 else None` line is a verbatim-faithful port of the frozen reference (`src/prinet/utils/figure_generation.py:936`, `label=f"Obj {lbl}" if j < 5 else None`); the new test's expectations match the archived `labels_sample` values (0–4); the rewritten module docstring's derived-quantity claims all check out in code (Fig. 10 `diff ± 0.005` at lines 724–727, Fig. 11 `s / p` ratios at line 829, Fig. 12 `K_c_empirical / K_c_theory` at lines 868–870, Fig. 15 `fit["IP_0"] * np.exp(-fine / fit["sigma_c"])` at line 1090, stored `ci_low`/`ci_high` error bars); the §11.3 clause quoted in the S4 doc is verbatim (preregistration.md:677–680); `notebook_timing.py` matches `test_notebooks.py`'s `NotebookClient` invocation (timeout 900, `kernel_name="python3"`, resources path = repo root). No frozen artefact was touched (EXP-002 record, `benchmarks/results/EXP-002/`, `.github/`, manifests all absent from the diff; the S1 evidence edit is README-only, +1/−0 lines). No test was weakened — one was added, with recorded red→green evidence.
+
+**Finding 1**
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/immutability.sh:34`
+- **Quote:** `echo "  files other than README.md changed: $(git diff --name-only "$FROM..$TO" -- EVIDENCE/exp002-d1-s1/ | grep -vc 'README.md$')"`
+- **Claim:** The script's I2 rule — "S1's evidence may change only in its README, and only by added lines" (header, lines 9–10) — is computed and printed but never enforced: `status` is set to 1 only for a non-empty I1 diff (line 28) or I3 audit deletions (line 43). A change to a non-README S1 evidence file, or a deletion inside the README, still exits 0, so anyone gating on the exit code alone would miss the violation.
+- **Reproduce:** `rg -n "status=1" EVIDENCE/exp002-d1-s3/immutability.sh` — shows `status=1` appears only for I1 (line 28) and I3 (line 43), never for the I2 counts printed at lines 34–36.
+
+**Finding 2**
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh:21`
+- **Quote:** `case "$LABEL" in *[!A-Za-z0-9._-]*) echo "label must be [A-Za-z0-9._-]"; exit 2 ;; esac`
+- **Claim:** The label allowlist permits `".."`, so `OUT="$HOME/prin-s3-scratch/.."` (line 26) resolves to `$HOME` and `run.txt`, `console.log`, `samples.jsonl`, `sampler.err` are written outside the scratch root the header promises. It also makes the bundle README's claim "none takes a caller-supplied filesystem path (a closed set of names, a hexadecimal revision, or standard input)" inaccurate — `LABEL` is a caller-supplied string turned into a filesystem path, and `docstring_only_check.py`'s `PATH` argument is likewise outside the three enumerated kinds (it is a git pathspec, membership-tested, so that one is safe in substance).
+- **Reproduce:** `bash -c 'case ".." in *[!A-Za-z0-9._-]*) echo rejected ;; *) echo accepted ;; esac'` prints `accepted`, showing the guard passes a label that escapes `$HOME/prin-s3-scratch/`.
+
+**Finding 3**
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/suite_sampler.py:323`
+- **Quote:** `if seen and absent >= 2:`
+- **Claim:** `sample()` exits only after it has *seen* a pytest process and then missed it twice; if pytest exits before the sampler's first poll (e.g. bad pytest args → immediate exit) or is never detected, `seen` stays `False` and the loop never terminates. `diagnostic_suite_run.sh` then hangs forever at `wait "$SAMPLER"` (line 55) despite its comment "the sampler … exit[s] by itself".
+- **Reproduce:** `.venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/suite_sampler.py --period 1` with no pytest running prints samples indefinitely and never exits (interrupt to stop).
+
+**Finding 4**
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/README.md:4`
+- **Quote:** `evidence behind the S3 remediation record, which is the `## S3 — remediation and delta verification` section of`
+- **Claim:** States as fact that the S3 record is the `## S3` section of `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`, but that file contains only `## S1` and `## S2` sections (ending at `### S2.14`); no `## S3` section exists yet. A reader following the citation today finds nothing.
+- **Reproduce:** `rg -n "^## " DOCS/audits/2026-10-15-exp002-d1-correction-audit.md` — lists only `## S1` and `## S2` headings.
+
+**Finding 5**
+- **Severity:** low
+- **Where:** `DOCS/sessions/contingencies/2026-10-14-exp002-d1-s4-correction-documentation.md:32`
+- **Quote:** `S3 resolved this finding by **assignment**, not by plan amendment (correction`
+- **Claim:** Same forward reference: it cites "correction audit §S3" as the record of the resolution, and no `§S3`/`## S3` section exists in the audit. (Presumably resolved when S3 appends its closure table, but the citation is currently dangling.)
+- **Reproduce:** `rg -n "S3" DOCS/audits/2026-10-15-exp002-d1-correction-audit.md | head` — only references to S3 as pending/assignee; no S3 record section.
+
+**Finding 6**
+- **Severity:** low
+- **Where:** `DOCS/sessions/contingencies/2026-10-14-exp002-d1-s3-correction-remediation.md:24`
+- **Quote:** `- Work only on S2's findings, in severity order D1 → D4, each commit naming its finding ID.`
+- **Claim:** The mandated order (also S2.12: "resolve EXP002D1-S2-F2 (D2) first, then -F1 (D3), then the six D4 items in order") was not followed in the commit sequence: four D4 findings (F5, F7, F4, F6 — themselves out of order) were committed before the D3 (F1), and F2 (D2) remains undispositioned with only its measurement instruments landed. The deviation does not corrupt evidence, but the brief's ordering rule is normative and the commit history is immutable.
+- **Reproduce:** `git log --oneline --reverse 5ba0129e8f225c62de92593d329be63ca7e7cf7e..HEAD` — shows F5, F7, F4, F6 commits preceding F1, with no F2 disposition commit.
+
+**Finding 7**
+- **Severity:** nit
+- **Where:** `EVIDENCE/exp002-d1-s3/README.md:37`
+- **Quote:** `**F5, F7.** `docstring_only_check.py` on the two docstring commits: AST identical outside the module docstring (exit 0 each).`
+- **Claim:** Stale count: a second docstring-only commit for F7 (`33923be`, the "list by kind, not exhaustively" rewording) landed after `docstring-only-check.txt` was recorded (which covers `5ba0129e..2db18fc3` and `2db18fc3..1403451c` only). The `1403451c..33923be` "AST unchanged" claim in that commit message has no recorded instrument run, though the cumulative diff is consistent with it.
+- **Reproduce:** `rg -n "1403451c|33923be" EVIDENCE/exp002-d1-s3/docstring-only-check.txt` — only `1403451c` appears; `git show --stat 33923be` shows a third docstring-only commit the check never covered.
+
+**Finding 8**
+- **Severity:** nit
+- **Where:** `EVIDENCE/exp002-d1-s3/README.md:44`
+- **Quote:** `Notebooks 01, 03 and 04 are single-threaded (kernel CPU/wall 0.9–1.1);`
+- **Claim:** Notebook 03's recorded `kernel_cpu_over_wall` is `0.89`, just below the stated `0.9–1.1` range (it rounds to 0.9, but the claim as written excludes the recorded value).
+- **Reproduce:** `rg -n "kernel_cpu_over_wall" EVIDENCE/exp002-d1-s3/f2-alone-03_custom_coupling.json` — prints `0.89`.
+
+Summary: 8 findings — 6 low, 2 nit; 0 marked UNVERIFIED.

@@ -21,7 +21,10 @@ every ``--period`` seconds prints one JSON object per line with:
 * the five largest resident processes by name, so resident IDE or language
   server load is visible, plus the CPU share of the busiest non-pytest process.
 
-It stops when no pytest process has been present for two consecutive samples.
+It stops when no pytest process has been present for two consecutive samples,
+and gives up with exit status 3 if none appears within ``--start-grace`` seconds
+(default 300), so a pytest that exited early or never started cannot leave it
+looping forever.
 
 ``--summarize`` reads those lines on standard input and prints, for each
 notebook-kernel episode, its wall time, CPU seconds, CPU/wall ratio, peak
@@ -45,6 +48,7 @@ from __future__ import annotations
 import argparse
 import csv
 import ctypes
+import itertools
 import json
 import os
 import subprocess  # nosec B404 - fixed argv, no shell
@@ -123,19 +127,36 @@ def pages_input_per_second() -> float | None:
     return None
 
 
-def _cmdline(proc: psutil.Process) -> str:
-    """Return a process's command line, or an empty string if unreadable.
+def _argv(proc: psutil.Process) -> list[str]:
+    """Return a process's argument vector, or an empty list if unreadable.
 
     Args:
         proc: Process to inspect.
 
     Returns:
-        The space-joined command line.
+        The argv tokens.
     """
     try:
-        return " ".join(proc.cmdline())
+        return [str(token) for token in proc.cmdline()]
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-        return ""
+        return []
+
+
+def _runs_module(argv: list[str], module: str) -> bool:
+    """Say whether an argv is ``<interpreter> ... -m <module> ...``.
+
+    Matching argv tokens, not a substring of the joined command line, matters:
+    a shell, an editor or a reviewer tool whose command line merely *mentions*
+    pytest or a kernel launcher must not be mistaken for one.
+
+    Args:
+        argv: A process's argument vector.
+        module: The module name after ``-m``.
+
+    Returns:
+        ``True`` if ``-m`` is immediately followed by ``module``.
+    """
+    return any(a == "-m" and b == module for a, b in itertools.pairwise(argv))
 
 
 def _counters(procs: list[psutil.Process]) -> dict[str, Any]:
@@ -173,8 +194,9 @@ def _find_groups() -> tuple[list[psutil.Process], list[psutil.Process]]:
     """Locate the pytest process group and the notebook-kernel processes.
 
     Returns:
-        ``(pytest_processes, kernel_processes)``. A pytest process is one whose
-        command line contains ``pytest`` and that is not a kernel.
+        ``(pytest_processes, kernel_processes)``. A pytest process runs
+        ``-m pytest`` (or is a ``pytest`` launcher); a kernel runs
+        ``-m ipykernel_launcher``.
     """
     pytest_procs: list[psutil.Process] = []
     kernels: list[psutil.Process] = []
@@ -182,10 +204,12 @@ def _find_groups() -> tuple[list[psutil.Process], list[psutil.Process]]:
     for proc in psutil.process_iter():
         if proc.pid == own:
             continue
-        line = _cmdline(proc)
-        if "ipykernel_launcher" in line:
+        argv = _argv(proc)
+        if _runs_module(argv, "ipykernel_launcher"):
             kernels.append(proc)
-        elif "pytest" in line and "python" in line.lower():
+        elif _runs_module(argv, "pytest") or (
+            argv and Path(argv[0]).stem.lower() in {"pytest", "py.test"}
+        ):
             pytest_procs.append(proc)
     return pytest_procs, kernels
 
@@ -280,14 +304,19 @@ def _top_cpu(
     return top, current
 
 
-def sample(period: float) -> int:
+def sample(period: float, start_grace: float) -> int:
     """Print JSON-lines samples until pytest has been gone for two samples.
 
     Args:
         period: Seconds between samples.
+        start_grace: Seconds to wait for a pytest process to appear. If none has
+            been seen by then (pytest exited before the first sample, never
+            started, or was given bad arguments) the sampler gives up instead of
+            looping forever.
 
     Returns:
-        The process exit status (0 once the watched session has ended).
+        The process exit status: 0 once a watched session has ended, 3 if no
+        pytest process was ever seen within ``start_grace``.
     """
     psutil.cpu_percent(interval=None)
     absent = 0
@@ -322,6 +351,12 @@ def sample(period: float) -> int:
         print(json.dumps(record), flush=True)
         if seen and absent >= 2:
             return 0
+        if not seen and time.monotonic() - start >= start_grace:
+            print(
+                f"no pytest process seen within {start_grace:.0f} s; giving up",
+                file=sys.stderr,
+            )
+            return 3
         time.sleep(period)
 
 
@@ -427,11 +462,12 @@ def main(argv: list[str]) -> int:
     """
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n", maxsplit=1)[0])
     parser.add_argument("--period", type=float, default=30.0)
+    parser.add_argument("--start-grace", type=float, default=300.0)
     parser.add_argument("--summarize", action="store_true")
     args = parser.parse_args(argv)
     if args.summarize:
         return summarise(sys.stdin.read().splitlines())
-    return sample(args.period)
+    return sample(args.period, args.start_grace)
 
 
 if __name__ == "__main__":
