@@ -25,7 +25,9 @@ enforced in the brief and verified afterwards: `git status --porcelain` was empt
 before and after each round (`status-before.txt`; the post-round counts are
 recorded in the round tables below).
 
-[`launch_round.sh`](launch_round.sh) is the launcher used for both rounds.
+[`launch_round.sh`](launch_round.sh) is the launcher used for every round that
+launched all three reviewers together. [`launch_devin_attempt.sh`](launch_devin_attempt.sh)
+re-runs Devin alone on the same brief (round 4's second attempt).
 
 ## Briefs
 
@@ -72,6 +74,21 @@ After round 2, `git status --porcelain` was empty.
 | [`round3/triage-commands.txt`](round3/triage-commands.txt) | The caller's reproduction of every checkable round 3 claim, at the reviewed commit, with verbatim output. |
 
 After round 3, `git status --porcelain` was empty.
+
+## Round 4 — HEAD `5eee9184`, brief v3 — all three reviewed (Devin on its second attempt); the cap
+
+| File | What it is |
+|---|---|
+| [`round4/head.txt`](round4/head.txt), [`round4/status-before.txt`](round4/status-before.txt), [`round4/s3-excluded.txt`](round4/s3-excluded.txt) | The reviewed commit, an empty `git status --porcelain` before the round, and the list of files omitted from the diff file (with a header giving the sizes of the review files). The brief is [`reviewer-brief-v3.md`](reviewer-brief-v3.md), unchanged. |
+| [`round4/devin-attempt2-stdout.txt`](round4/devin-attempt2-stdout.txt), [`round4/devin-attempt2-export.md`](round4/devin-attempt2-export.md), [`round4/devin-attempt2.exit`](round4/devin-attempt2.exit) | Devin's report (7 findings) and its exported transcript. |
+| [`round4/devin-attempt1-stdout.txt`](round4/devin-attempt1-stdout.txt), [`round4/devin-attempt1-export.md`](round4/devin-attempt1-export.md), [`round4/devin-attempt1.exit`](round4/devin-attempt1.exit) | Attempt 1: ended on a rejected `ls -la` the brief had forbidden; no report. |
+| [`round4/agy-stdout.txt`](round4/agy-stdout.txt), [`round4/agy.exit`](round4/agy.exit) | agy's report (1 finding). |
+| [`round4/qwen-stdout.txt`](round4/qwen-stdout.txt), [`round4/qwen.exit`](round4/qwen.exit) | Qwen's report (10 findings and a "judgements that produced no finding" section), after about an hour. |
+| [`round4/triage-commands-a.txt`](round4/triage-commands-a.txt) | The documentation claims measured at the reviewed commit. |
+| [`round4/triage-commands-b-red.txt`](round4/triage-commands-b-red.txt) | The code-level claims reproduced before any fix (the module edit destroyed by the trap; the missing round directory; exit statuses). |
+| [`round4/triage-commands-c-green.txt`](round4/triage-commands-c-green.txt) | The same reproductions after the fixes, including `final_legs.sh` run against a stub Snyk CLI that writes no SARIF (exit 1, leg BLOCKED). |
+
+After round 4, `git status --porcelain` was empty (before any fix was applied).
 
 ## Protocol applied (section 6 of the S3 session prompt)
 

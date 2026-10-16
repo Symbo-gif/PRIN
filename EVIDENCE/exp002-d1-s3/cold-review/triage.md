@@ -128,3 +128,51 @@ reproduction and its output is in [`round3/triage-commands.txt`](round3/triage-c
 | T3-16 | `contention_experiment.sh` names files it does not write to that directory | Devin 7 | `OUT=` against the header | **CONFIRMED** | Header lists what is written where |
 | T3-17 | Usage errors exit 1, but the docstrings document 2 (`raise SystemExit("message")`) | Devin 8 (marked UNVERIFIED by the reviewer) | `docstring_only_check.py --check zzz …` and `raw_byte_identity.py --before zzz` both exited 1 | **CONFIRMED** | A `fail()` helper prints to stderr and exits 2 in three instruments; verified exit 2 |
 | T3-18 | The audit and four records cite "S3 brief §6.x" but the repository's S3 brief has no such sections | Devin attempt-3 narration | the brief is 27 lines with three `##` headings | **CONFIRMED** | Citations now say "the S3 session prompt" (not a repository file); its rules are summarised in `cold-review/README.md` |
+
+## Round 4 — brief v3 (unchanged), HEAD `5eee9184` — all three reviewed; the cap
+
+Round 4 used the same brief file as round 3 (sha256 `caff383a…`). Its diff file omits
+the same kind of raw records, and now also the final-gate records and JSON/console
+files over 8 KB, all listed with sizes and hashes in
+[`round4/s3-excluded.txt`](round4/s3-excluded.txt).
+
+**Availability.** agy and Qwen reported on their first run (Qwen after about an hour; its
+session log grew until the end, so it was not mistaken for a stall as in round 1).
+Devin's first attempt ended when `smart` mode rejected an `ls -la` the brief had
+forbidden; the second reported. Both attempts are kept. `git status --porcelain` was
+empty before and after the round.
+
+Claims made: **Devin 7, agy 1, Qwen 10** = 18 findings. After deduplication: **14
+distinct claims — 13 CONFIRMED (three of them only in part), 1 REFUTED, 0 NOT
+REPRODUCIBLE.** No claim concerned the correction itself, a frozen artefact, or a
+weakened test; the reviewers independently re-derived the F2 bound arithmetic, the
+suite counts, the cargo total, the coverage figures and the 55-of-90 saturation count
+and found them exact. Two claims were **medium**, both latent defects in gate scripts
+that did not fire in any recorded run. The red-before-fix and green-after-fix
+reproductions are in [`round4/triage-commands-a.txt`](round4/triage-commands-a.txt),
+[`round4/triage-commands-b-red.txt`](round4/triage-commands-b-red.txt) and
+[`round4/triage-commands-c-green.txt`](round4/triage-commands-c-green.txt).
+
+| # | Claim | Source | Measurement | Verdict | Disposition |
+|---|---|---|---|---|---|
+| T4-1 | `delta_reaudit.sh` arms its `git restore` EXIT trap before the clean-tree refusal, so the refusal path discards uncommitted edits to the module | Devin 1 (medium), Qwen 1 (medium) | with a one-line temporary edit to `figure_generation.py` the script printed "tree is not clean; refusing to run", exited 2, and `git diff` of the module was then empty: the edit was destroyed | **CONFIRMED** | Trap armed after the guard; the same experiment now leaves the edit in place (green record) |
+| T4-2 | `final_legs.sh` leaves `overall` at 0 when the Snyk leg writes no SARIF, so a leg that never ran reads as an all-clear | Devin 2 (medium), Qwen 2 (medium) | the pipeline `grep 'filter exit code' \| grep -qv ': 0 '` over a record containing only the BLOCKED line yields `overall=0` | **CONFIRMED** (latent: the SARIF was written in the recorded run) | A failed `whoami`, a scan exit above 1, a missing SARIF or a failing filter each set `overall=1`; a stub Snyk that authenticates but writes no SARIF now makes the script exit 1 and the record says BLOCKED |
+| T4-3 | `closing_gate.sh` discards every leg's exit code and always exits 0 | Devin 3 (low) | no `overall` in the script; last statement an `echo` | **CONFIRMED** | Legs and suites now aggregate into the exit status; `legs.txt` was always honest and is unchanged. The script was syntax-checked, **not re-run** (about 3 hours) |
+| T4-4 | The verdict says round 4 "is recorded" while the §S3.5 row says "to be recorded", and "four rounds triaged" appears in six records with no round 4 evidence | Devin 4 (low), Qwen 3 (low) | `rg` finds the placeholder row and the sentence; `cold-review/` had no round 4 section | **CONFIRMED (transient)** | Closes with this section, the README section, the audit row and `round4/` |
+| T4-5 | `launch_round.sh` never creates the round directory, so on a fresh round name all three redirections fail; and a stray space in the pointer string | Devin 5 (nit) | with stub reviewer CLIs, a fresh name gave six "No such file or directory" errors | **CONFIRMED in part** | `mkdir -p` added. The space in `"$BRIEF_WIN . Read"` is deliberate (it keeps the full stop out of the path) and harmless, not changed |
+| T4-6 | `${1:?…}` makes a missing label exit 1 where every sibling uses 2 | Devin 6 (nit) | `bash diagnostic_suite_run.sh` exit 1 | **CONFIRMED** | Explicit check, exit 2 |
+| T4-7 | `final_legs.sh`'s record headers print the literal "tracked changes: 0" | Devin 7 (nit) | the literal is in `hdr()` | **CONFIRMED** | Each header now measures the count |
+| T4-8 | `cold-review/README.md` says the launcher was "used for both rounds" while documenting three | agy 1 (nit), Qwen 8 (nit) | the sentence is at line 28; `## Round` headings at 38, 49, 62 | **CONFIRMED** | Reworded; the Devin-only re-run helper is indexed |
+| T4-9 | The bound comment in `tests/test_notebooks.py` attributes "8-43x" to the full suite | Qwen 4 (low) | the full-suite ratios are 9.3 / 41.8 / 8.3 / 10.3 (`f2/analysis-in-suite-vs-alone.txt`); 43.2 is the paired experiment | **CONFIRMED** | Comment now says 8-42x, and 43x beside only the `test_exp002_*` tests. Comment only; the 5 bound tests pass |
+| T4-10 | The per-cell bound is sized from whole-notebook durations and notebook 02's is 1.7× the 6,300 s a per-cell reading gives, with no stated reason for the looser unit | Qwen 5 (low; the reviewer rates it a design observation) | the conservatism is disclosed in the test comment and the audit (T3-6), and the 6,300 s figure is in `f2/README.md`; the *reason* for using the whole-notebook unit for all four was not stated | **CONFIRMED in part** | The reason is now stated: a contended per-cell measurement exists only for notebook 02, so one uniform rule over a quantity recorded for all four notebooks was preferred to a notebook-specific exception, at the stated cost of a 1.7× looser bound on 02. The bound is unchanged |
+| T4-11 | `snyk-code-s3-first-scan-medium.txt` prints a failing gate line beside `# filter exit code: 0` | Qwen 6 (nit) | the record shows `ABOVE LOW … 1 finding(s)` and exit code 0; the filter then returned 0 regardless | **CONFIRMED** | The bundle README row now says the exit-code line in that record predates the filter encoding its gate; the record is unchanged |
+| T4-12 | §S3.9 item 5 cites "lines 3–14" for header text at lines 15 and 17 | Qwen 7 (nit) | the stage-status sentence is at line **14** and the paragraph describing the document as written before S2 is at lines **16–22**; the reviewer's own numbers are off by one | **CONFIRMED in part** | Item 5 now names line 14 and lines 16–22 |
+| T4-13 | `docstring_only_check.py`'s docstring says the path must be tracked at revision B, but the code tests both revisions | Qwen 9 (nit) | `source_at()` runs the `ls-tree` test for whichever revision it is given, called for A and B | **CONFIRMED** | Docstring says both |
+| T4-14 | The `# nosec B603` at `index_selfcheck.py:77` suppresses nothing (bandit prints `nosec encountered (B603), but no failed test`) | Qwen 10 (nit) | on a copy with the `nosec B603` removed bandit reports `B603 … index_selfcheck.py:77:10` (Low); with it, 0 issues and 2 potential issues skipped, the same as `docstring_only_check.py`, which prints no warning | **REFUTED** | The annotation is needed. The warning is consistent with the chained `.stdout.decode(...)` call, a second AST node starting on the same line, but that explanation is an inference. Noted in the gate README |
+
+**Round 4 is the cap.** It returned CONFIRMED claims, so the loop did not converge to a
+round with none, and the S3 protocol (capped at four rounds, then disposition the
+residual rather than loop) applies. The residual and its measurement are recorded in the
+audit's §S3.5 and as observation **O-2** in §S3.9. Every CONFIRMED round 4 claim was fixed
+and re-verified by measurement (red before, green after), but **the fixes were not shown
+to a further cold reviewer**.

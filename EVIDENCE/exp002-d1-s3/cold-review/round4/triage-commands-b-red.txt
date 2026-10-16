@@ -1,0 +1,39 @@
+# Round 4 triage: reproductions of the code-level claims BEFORE any fix (HEAD 5eee91842adbb2ec0a44ba04072f212ca2077bdd)
+
+## T4-1 / Devin 1, Qwen 1: delta_reaudit.sh EXIT trap runs on the refusal path
+$ echo "# temporary edit" >> python/prin/reporting/figure_generation.py   # simulate uncommitted work in the module
+$ git diff --stat -- python/prin/reporting/figure_generation.py
+ python/prin/reporting/figure_generation.py | 1 +
+ 1 file changed, 1 insertion(+)
+$ bash EVIDENCE/exp002-d1-s3/delta_reaudit.sh | tail -3
+# git HEAD: 5eee91842adbb2ec0a44ba04072f212ca2077bdd   tracked changes at start: 1
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0
+tree is not clean; refusing to run
+(script exit: 2)
+$ git diff --stat -- python/prin/reporting/figure_generation.py   # empty = the edit was destroyed by the trap
+(tracked changes now: 0)
+
+## T4-6 / Devin 6: diagnostic_suite_run.sh with no label
+$ bash EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh; echo "exit=$?"
+EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh: line 23: 1: usage: diagnostic_suite_run.sh <label> [--lift-notebook-timeout] <pytest args...>
+exit=1
+
+## T4-3 / Devin 3: closing_gate.sh never sets an overall status
+$ grep -c overall EVIDENCE/exp002-d1-s3/closing_gate.sh
+0
+## T4-2 / Devin 2, Qwen 2: the BLOCKED Snyk leg leaves overall at 0
+$ printf '# NO SARIF WRITTEN: this leg is BLOCKED, not clean.\n' | { grep -a 'filter exit code' | grep -qv ': 0 ' && overall=1; echo overall=${overall:-0}; }
+overall=0
+
+## T4-7 / Devin 7: final_legs.sh header hard-codes 'tracked changes: 0'
+26:hdr() { echo "# $1"; echo "# date (UTC): $(stamp)"; echo "# git HEAD: $HEAD_SHA   tracked changes: 0"; echo; }
+
+## T4-5 / Devin 5: launch_round.sh does not create the round directory (stub reviewer CLIs, round name r4stub)
+$ PATH=<stubs>:$PATH bash EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh r4stub; ls review/r4stub
+EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh: line 10: /c/Users/there/prin-s3-scratch/review/r4stub/devin-stdout.txt: No such file or directory
+EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh: line 10: /c/Users/there/prin-s3-scratch/review/r4stub/devin.exit: No such file or directory
+EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh: line 11: /c/Users/there/prin-s3-scratch/review/r4stub/agy-stdout.txt: No such file or directory
+EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh: line 11: /c/Users/there/prin-s3-scratch/review/r4stub/agy.exit: No such file or directory
+EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh: line 12: /c/Users/there/prin-s3-scratch/review/r4stub/qwen-stdout.txt: No such file or directory
+EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh: line 12: /c/Users/there/prin-s3-scratch/review/r4stub/qwen.exit: No such file or directory
+ls: cannot access '/c/Users/there/prin-s3-scratch/review/r4stub': No such file or directory
