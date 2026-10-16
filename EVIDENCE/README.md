@@ -76,6 +76,29 @@ To find evidence for a specific work package, look for files matching
   changed-code coverage 94 % → 100 % on the two new tools after nine added
   tests) and WP036F-F2 (D4, `mypy --strict` on both tools 3 errors → 0), plus
   the touched-area delta re-audit gate re-run.
+- [`exp002-d1-s4/`](exp002-d1-s4/) — EXP-002 D1 correction, S4 (the
+  documentation and closure session). A **documentation-and-evidence** session
+  that changed no first-party source, so its bundle leads with a **measured**
+  change set (0 `.rs`, 0 dependency manifests, 0 first-party `.py`, 0 workflow
+  files) that decides which conditional gate legs apply rather than assuming it.
+  It holds: the cold review that S3's four-round cap left owing
+  ([`o2-review/`](exp002-d1-s4/o2-review/triage.md)) — performed read-only **by
+  measurement**, reproducing every suspected defect with a command and
+  classifying it CONFIRMED / REFUTED / NOT REPRODUCIBLE, which found **one
+  CONFIRMED defect** (`EXP002D1-S4-F1`, D2, **latent**: `final_legs.sh`
+  aggregated five legs with `grep MARKER | grep -qv OK && overall=1`, and
+  `grep -qv` exits 1 on empty input, so a leg whose record was missing, empty or
+  marker-less read as *passing*) with a red-before/green-after demonstration and
+  a fail-closed superseding copy — plus twelve checks verifying S3's round-4
+  fixes as claimed; the local gate under amendment #48 (fast suite 4044 passed
+  exit 0; the required full suite run **once**, **exit 0**, 6331 passed / 184
+  skipped / 0 failed in 1:43:09, under a measured host CPU median of 96.5 % with
+  pytest receiving 0.192 CPU-s per wall-second; static, governance, Sphinx,
+  gitleaks, Snyk Code, manifest verification and delta re-audit all exit 0);
+  five immutability rules including the one append this cycle is allowed to make
+  to the frozen EXP-002 record; and the `gh workflow list --all` listings before
+  and after Plan amendment #52 re-enabled the seven hosted check workflows, with
+  `.github/` verified unmodified. See its `README.md`.
 - [`exp002-d1-s3/`](exp002-d1-s3/) — EXP-002 D1 correction, S3 (the remediation
   session). The F2 measurement (standalone baselines, an observed full-suite run
   with the notebook timeout lifted, a paired contention experiment, and the

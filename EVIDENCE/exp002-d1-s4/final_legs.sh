@@ -40,7 +40,14 @@ OUT="${FINAL_LEGS_OUT:-$HOME/prin-s4-scratch/final}"
 mkdir -p "$OUT"
 [ -z "$(git status --porcelain --untracked-files=no)" ] || { echo "tracked tree is not clean; refusing to start"; exit 2; }
 GITLEAKS=DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe
-BUNDLES="exp002-d1-s1 exp002-d1-s2 exp002-d1-s3 exp002-d1-s4"
+# Index self-checks of the three PRE-EXISTING bundles only. This bundle's own
+# self-check cannot run here: it must index the gate/final records that this very
+# script is still producing, and they are copied in by collect_final.sh afterwards.
+# A bundle cannot index records that do not exist yet, so the s4 self-check is a
+# separate post-collection step (the S4 session prompt requires it explicitly),
+# recorded at gate/final/index-selfcheck-s4.txt. S3's final_legs.sh checked
+# s1/s2/s3 for the same reason.
+BUNDLES="exp002-d1-s1 exp002-d1-s2 exp002-d1-s3"
 stamp() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 HEAD_SHA=$(git rev-parse HEAD)
 overall=0

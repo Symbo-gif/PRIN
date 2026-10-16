@@ -1725,3 +1725,714 @@ amendment #28):
 **Not authorized by S3:** merging PR #34, marking it ready for review,
 `EXP-002-r1`, or releasing session `0164`. Session `0164` stays `BLOCKED`. S3 commits
 locally only; nothing is pushed. Amendments: none drafted, none adopted.
+
+---
+
+## S4 — closure (2026-10-16 UTC)
+
+Appended by S4. This document is append-only: **0 lines deleted** against
+`6b55c6ba`, verified mechanically by
+[`EVIDENCE/exp002-d1-s4/immutability.sh`](../../EVIDENCE/exp002-d1-s4/immutability.sh)
+rule I3 (§S4.7). The S1–S3 text above is unedited, including its point-in-time
+statements that nothing had been pushed; **S4's entries supersede them** rather
+than rewriting them. The header's stale "S1 complete; S2, S3, S4 pending" line
+stays, for the reason §S3.9 item 5 gives.
+
+### S4.0 Entry state and authority
+
+`git fetch --all --prune` was run first, and every assertion in the session
+prompt was measured rather than assumed.
+
+| Item | Observed |
+|---|---|
+| Branch / `HEAD` | `hotfix/exp002-d1-figure-parity` @ `6b55c6baa7b6832a50ff57fdd1a919171e9fb5de` (S3's last commit) |
+| Ahead of `origin` | **32 commits**; `origin/hotfix/exp002-d1-figure-parity` = `8fd0ecc9949a607f2a7090fe39205f00bb0078c9` |
+| Working tree | clean (`git status --porcelain` empty) |
+| PR #34 | `OPEN`, `isDraft: true`, `headRefOid` `8fd0ecc9…`, base `main` |
+| Self-hosted runner | `PRIN-GPU-Runner` **online**, `busy: false`, labels `self-hosted,Windows,X64,gpu` — checked before the push so the `gpu` legs would not queue indefinitely |
+| Host | `MINGW64_NT-10.0-26300`, 16 logical CPUs, Python 3.14.0, pytest 9.1.1 |
+
+All matched the session prompt's §1, so work proceeded. Windows x86_64 only;
+**Linux and macOS were not tested locally** (amendment #48 item 4).
+
+**Maintainer authorizations for this session**, given in chat 2026-10-16 UTC and
+quoted verbatim where the governed text requires it:
+
+- **A1** — push and merge of draft PR #34 (§S4.8).
+- **A2** — verbatim: *"I authorize for you to make appropriate decisions that are
+  true to the projects goals and that adhere to established projects standards
+  for these: O-1, O-2, F8 third location, [Project Plan or campaign-plan
+  amendments]"*. The four decisions are §S4.3 (O-1), §S4.4 (O-2), §S4.5 (F8's
+  third location) and §S4.6 (amendment #52). Each decision's stated conditions
+  were verified **by measurement** before it was applied, and every further
+  judgment call is listed in §S4.10.
+- **A3** — verbatim: *"authorize hosted workflows to merge and keep active until
+  experimentation is complete"*. This overrides the "do not re-enable workflows /
+  do not restore required checks" rule in `CLAUDE.md`, `.claude/CLAUDE.md` and
+  amendment #48, as recorded in **Plan amendment #52** (§S4.6).
+
+**Not authorized, and not done:** choosing `EXP-002-r1`'s H3 deciding rule
+(§S4.9), releasing session `0164` or any later campaign session, starting
+`EXP-002-r1`, running any experiment, pushing tags, force-pushing, modifying a
+branch ruleset, bypassing push protection or a required check, and
+`gh pr merge --admin`.
+
+### S4.1 Closure checklist
+
+All seven items of the S4 brief's closure checklist were delivered. Each is
+recorded where it belongs rather than restated here:
+
+| # | Item | Where it is recorded |
+|---|---|---|
+| 1 | **PSR-041 issued**, carrying the `EXP-002` D1 (`H3 REFUTED`) row, all eight `EXP002D1-S2-F1`..`-F8` rows at their final §S3.1 status, O-1, O-2, F8's third location and S4's own finding; and formally announcing the EXP-002 E5 report (Experimentation Standards §2 E5; campaign plan §10.4 item 3) | [`DOCS/reports/041-project-state.md`](../../reports/041-project-state.md) §1, §3.5 |
+| 2 | **Registers updated** — `SESSION_REGISTER.md` (entry-point line and the `EXP-002-D1` row set to `COMPLETE`), `phase-7/README.md`, `DOCS/experiments/README.md` (dated entry plus the `EXP-002-r1` record-root row), `contingencies/README.md` (moved to "Closed corrections", leaving "Open corrections" empty), `DEFERRED_VALIDATION_REGISTER.md` (a dated amendment-#52 section). **No new DV row** (§S4.3) | §S4.6, §S4.7; all four governance checkers exit 0 |
+| 3 | **Parity Report aligned** to what the corrected evidence supports, plus a CHANGELOG entry, verified by a Sphinx `-W` build from a **deleted** `_build` | `DOCS/sphinx/parity_report.rst` — a dated 2026-10-16 admonition, the 2026-10-14 erratum retained verbatim, and three current-state rows corrected; §S4.7 |
+| 4 | **Erratum appended** to the EXP-002 E5 report §15 naming `EXP-002-r1` — **append-only, 0 deleted lines**, proved by `git diff` | erratum **2**; §S4.7 rule I1a (**+2, −0**) |
+| 5 | **`EXP-002-r1` authorized** as a record skeleton with new run IDs, carrying `EXP002D1-S2-F1`, and **naming** the open decision rather than making it | [`EXP-002-r1/README.md`](../../experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md); §S4.9 |
+| 6 | **The non-release statement is explicit** in the PSR and in every register touched | PSR-041 §1/§5/§6; §S4.9 |
+| 7 | **Full local gate evidence recorded verbatim**, plus the hosted evidence | §S4.7; [`EVIDENCE/exp002-d1-s4/`](../../EVIDENCE/exp002-d1-s4/README.md) |
+
+### S4.2 The honesty rule, stated once and applied everywhere
+
+The corrected generator **equals the frozen reference under the approved §5.4
+policy (39/39)** and is **14/39 under the §11.3 sensitivity policy**, with all
+**25** residuals classified as writer or host properties and **0 unclassified**.
+**The `EXP-002` verdict nevertheless stays `H3 REFUTED`.** That verdict was
+computed from immutable, manifested `RUN-` artefacts at the source the record
+froze; the generator was corrected *after* E3, so a later correction cannot
+retroactively change it. **Only `EXP-002-r1` can produce a new H3 verdict.** No
+text written by this session states or implies that H3 is confirmed — the PSR,
+the Parity Report, the CHANGELOG, every register, the erratum and the r1
+skeleton each say so explicitly. `EXP-002`'s verdicts, tolerances, normalization
+policies, digests, protocol, `preregistration.md` and everything under
+`benchmarks/results/EXP-002/` are untouched (§S4.7).
+
+### S4.3 Decision 4A — observation O-1: **D3, premise discharged by measurement**
+
+**The condition measured.** O-1 as S3 recorded it (§S3.9 item 9): the required
+full suite "has not produced an exit 0 on this host in S3" — two runs, two
+*different* single failures, both host-contention-sensitive, both passing alone
+(a Windows `WinError 5` rename inside `.pytest_basetemp`; DV-032's registered
+`test_no_gpu_throughput_regression` ratio), and F2's notebook timeout recurring
+in neither.
+
+**What S4 ran, exactly as the decision directs.** The required full suite was
+run **once** — `pytest tests/ parity/ --basetemp=.pytest_basetemp -o
+faulthandler_timeout=300 --durations=20`, 2026-10-16T19:48:11Z →
+21:33:57Z — and its **actual exit status** is recorded:
+
+> **exit 0. `6331 passed, 184 skipped, 61 warnings in 6189.62s (1:43:09)`.**
+> **0** `FAILED`/`ERROR` lines. Tree clean before and after (0 tracked changes,
+> 0 untracked files).
+
+**No rerun-until-green was performed, and nothing was deselected, skipped,
+xfailed or weakened.** Because the run did not fail, the decision's
+supplementary isolation re-run of a failed node was **not needed and was not
+run**. The single run is evidenced by one `run.txt` (one start, one end) and one
+`full suite exit: 0` line in `long-legs.txt`.
+
+**It passed under heavy contention, which is the stronger result.** The
+out-of-process sampler took **111 samples** across the run:
+
+| Measure | Value |
+|---|---|
+| Host CPU | min **18.3 %**, median **96.5 %**, max **99.9 %**; **84 of 111** samples at or above 90 % |
+| pytest's share | median **0.192 CPU-s per wall-second** (about a fifth of one core) |
+| Available memory | min 3,600 MB, median 6,956 MB |
+| Largest non-PRIN CPU consumers over the run | `Devin.exe` **3,845.3** CPU-s, `mc-fw-host.exe` **2,978.5**, `System` **2,832.1**, `java.exe` **975.8**, `svchost.exe` **804.0**, `AppHelperCap.exe` **255.3**, `MsMpEng.exe` **98.2** |
+| Five faulthandler 300 s stack dumps | each **followed by a pass** — amendment #49: a dump is not a kill and not proof of a hang |
+| Slowest nodes | notebook 02 **1,199.85 s**, notebook 01 **594.63 s**, `test_checkpoint_vram_stays_bounded` 551.70 s, `test_ablation_oscillatory_bias` 352.13 s, notebook 03 329.71 s |
+
+So the notebooks ran **7–17× their quiet-host durations** (02: 1,199.85 s
+against 71.1 s alone) and still finished far inside the `EXP002D1-S2-F2` bounds
+(10,800 s and 2,700 s). **That is the F2 disposition working as designed**: the
+bounds absorbed real starvation without masking a hang, and the suite passed
+without a single deselection.
+
+**The severity, and why D3.** Development Workflow §5 was read first, as the
+decision requires. **D3** is used: §5 defines D2 as breaking a normative
+standard and D3 as "divergence between plan text and justified reality". The
+tests themselves all pass and each S3 failure was a host-contention artefact on
+a test unrelated to this change and passing in isolation — so the repository
+does not break the standard; the host prevented *demonstrating* it. **D2 was
+considered and rejected** on that basis, and the rejection is recorded in
+PSR-041 §5 rather than left implicit: a literal reading of §5's "quality gates"
+wording would support D2, and the maintainer may prefer that label.
+
+**Divergence from the decision's anticipated disposition, stated plainly.**
+Decision 4A anticipated that the local record would stay at **exit 1** and named
+a hosted pass as the closure evidence, with the disposition *"environmental:
+local gate is contention-sensitive …; local record stays at exit 1"*. **The
+measured local record is exit 0**, so that disposition text does not describe
+reality and was **not** copied into the record. O-1's defining premise — that
+the required full suite cannot be demonstrated green in one pass on this host —
+is **discharged by direct measurement**, and the ledger row says so with the
+numbers above. This is flagged for ratification (§S4.10 item 1); it is not a
+silent substitution of a more favourable outcome, since the single run and its
+exit status are exactly what the decision ordered S4 to record.
+
+**The hosted corroboration 4A names is still obtained.** Amendment #52 makes an
+independent hosted full-suite run at the PR #34 head commit possible on a quiet
+hosted runner, and it was dispatched (§S4.8). Because `main` is PR-only, **no
+post-merge record can be committed here**, and a second push would change the
+head SHA and restart the very checks being awaited; so the run's verbatim result
+(workflow, run ID, head SHA, conclusion) is reported in the **session record**,
+and the next governed session enters it alongside the merge SHA (campaign plan
+§12 item 3). **A hosted failure would be recorded as a failure** and would
+reopen the question; it is not pre-judged here.
+
+**What is *not* claimed.** The contention sensitivity is **not cured**. One
+green run under contention discharges the observation that no green run had been
+produced; it does not make the host quiet, and S3's two red runs remain in the
+record unchanged. A recurrence is a **new observation**, not a regression of
+this one.
+
+**DV-032 was NOT widened.** O-1's `WinError 5` rename is a different class from
+DV-032's host-sensitive *timing ratios* — it is the `AGENTS.md`-documented pytest
+temporary-directory contention class — and merging two distinct mechanisms under
+one disposition would obscure both.
+
+**No new DV row was opened.** The register consolidates "work … whose full
+validation is assigned to a future Work Package or phase"; O-1's evidence was
+obtained in *this* session. `tools/check_dv_register_gates.py` was run
+regardless and exits 0 (47 DV rows against 198 session-register entries). The
+reasoning is recorded in the register's dated section so the absence of a row is
+a decision, not an omission.
+
+**Operating guidance for the maintainer, recorded because S4 cannot change these
+settings and stopped or killed no process belonging to the maintainer.** The
+sampler above attributes the starvation to named non-PRIN processes. To make the
+local gate demonstrable more cheaply: run it with the IDE and security tooling
+quiet, and **exclude `.pytest_basetemp` from IDE workspace scanning and from
+security-software real-time scanning**. `AGENTS.md` mandates that exact in-repo
+basetemp name (reporting's pytest-only output allowlist recognizes it, not
+suffixed variants), so the directory cannot simply be moved outside the
+workspace. §S3.9 item 8(c)'s design question — whether the `tests/test_exp002_*`
+temporary trees could live outside the workspace — remains blocked by that
+mandate and is not resolved here.
+
+### S4.4 Decision 4B — observation O-2: **RESOLVED (D4)**, one CONFIRMED defect
+
+**The condition measured.** S3's cold-review loop hit its four-round cap; round
+4's fixes had no further cold review (§S3.5, §S3.9 item 11). S4 performed the
+missing review **read-only, by measurement**, on the committed S3 fixes:
+`closing_gate.sh`, `final_legs.sh`, `delta_reaudit.sh`,
+`diagnostic_suite_run.sh`, `cold-review/launch_round.sh`,
+`docstring_only_check.py`, and the comment change in `tests/test_notebooks.py`
+(`b08dd574`). Method: read the full diff of `3bc12c7a` (6 files, +41/−22) and
+`b08dd574` (1 file, +7/−6), suspect a defect, **reproduce it with a command**,
+and classify it **CONFIRMED / REFUTED / NOT REPRODUCIBLE** exactly as
+[`cold-review/triage.md`](../../EVIDENCE/exp002-d1-s3/cold-review/triage.md)
+does. Records:
+[`EVIDENCE/exp002-d1-s4/o2-review/`](../../EVIDENCE/exp002-d1-s4/o2-review/triage.md).
+
+**One CONFIRMED defect — `EXP002D1-S4-F1` (D2, latent).** `final_legs.sh`
+aggregates five of its legs with
+
+```
+grep -a '^# exit code' "$OUT/x.txt" | grep -qv ': 0$' && overall=1
+```
+
+`grep -qv P` exits 0 only if **some** input line does not match `P`; with **no**
+input lines it exits **1**, so the `&&` arm is skipped. A leg whose record file
+is missing, empty, or holds no marker line therefore leaves `overall=0` and
+**reads as passing**. Reproduced over seven record shapes (batch 3, C17): the two
+real marker shapes aggregate correctly, while *file missing*, *file present with
+no marker*, *empty file*, and the immutability leg's `script exit` variant with
+no marker all give `overall=0`. The mechanism is proven directly —
+`echo -n "" | grep -qv ': 0$'` exits **1**. It is the same class round 4 fixed
+for the Snyk leg alone (T4-2); the five grep-aggregated siblings were left
+unchanged.
+
+**Latent, and the latency was measured rather than asserted.** Re-applying a
+fail-closed check to all seven committed S3 final records gives **0 failures** —
+sphinx 1 marker, gitleaks 2, verify-manifest 1, the three index self-checks 1
+each, immutability-after 1 (`(script exit: 0)`) — so **no recorded S3 result was
+masked**, and every S3 leg's real exit code is honestly present in its record.
+
+**Severity, and the alternative considered.** **D2**: the defect is in a
+*quality-gate aggregator*, and the behaviour it permits contradicts Testing
+Standards §7 item 6 ("Incomplete is not pass") and amendment #48 item 2 (an
+unavailable control is "reported as *blocked*, never as passed"). S3's own
+round-4 reviewers rated the identical Snyk-leg instance "medium". **D4 was
+considered and rejected** — it is not a typo, stale comment or doc gap. The D2
+label is about the instrument's design and is **not** a claim that any S3 result
+is wrong; the latency measurement above shows none is. Flagged for ratification
+(§S4.10 item 2).
+
+**Disposition — superseded, not edited.** S3's evidence files were **not**
+touched (§S4.7 rule I2, verified empty). A corrected copy,
+[`EVIDENCE/exp002-d1-s4/final_legs.sh`](../../EVIDENCE/exp002-d1-s4/final_legs.sh),
+replaces the pattern with a fail-closed `require_marker` helper that fails on a
+missing record, an empty record, a record with no marker line, and any marker
+that is not the ok form; every other leg aggregates by direct `rc=$?` capture.
+[`o2-review/failopen-red-green.txt`](../../EVIDENCE/exp002-d1-s4/o2-review/failopen-red-green.txt)
+is the red-before / green-after demonstration, and S3's original is carried as
+superseded. **S4's own gate ran the corrected copy**, so the fix is exercised
+rather than merely written. O-2 closes on this: the review was performed and the
+one CONFIRMED defect is fixed.
+
+**Twelve checks verified the round-4 fixes as claimed**, each with a red/green or
+non-vacuity control rather than a read:
+
+- **`delta_reaudit.sh` trap order** — the two scripts differ only by the trap's
+  position. With a one-line uncommitted edit to `figure_generation.py`: the
+  **pre-fix** copy printed "tree is not clean; refusing to run", exited 2, and
+  the module's sha256 became the HEAD blob — **the edit was DESTROYED**; the
+  **committed** script printed the same refusal, exited 2, and the module kept
+  the edited sha256 — **the edit SURVIVED**. Tree restored and byte-verified
+  against the HEAD blob `e216fec4…19a7` afterwards; `git status --porcelain`
+  (tracked) empty.
+- **`launch_round.sh` `mkdir -p`** — a stubbed copy keeping the committed
+  validation and `mkdir` lines verbatim creates the round directory and writes
+  all six per-reviewer files, exit 0; the **negative control** with `mkdir -p`
+  removed produces six "No such file or directory" failures, exactly the pre-fix
+  behaviour round 4 described.
+- **`closing_gate.sh` aggregation** — census over the committed script: **11 legs
+  found, 11 with aggregation, 0 without** (an initial census of 8 was the
+  reviewer's own grep undercounting two legs that aggregate on the following
+  line; corrected in batch 2). A mechanism test driving the committed `leg()`
+  verbatim returns exit **1** with one failing leg and **0** when all pass.
+- **`diagnostic_suite_run.sh`** — no label → usage line, exit **2**; `../evil`
+  and `.hidden` labels → exit **2** with no directory created.
+- **`final_legs.sh` no-SARIF** — the committed Snyk block extracted verbatim and
+  driven by three stub `snyk` binaries: **no SARIF** → `overall=1`, exit **1**,
+  record says "NO SARIF WRITTEN: this leg is BLOCKED, not clean."; **valid empty
+  SARIF** → exit **0**; **`whoami` fails (the 401 class)** → exit **1**.
+- **`docstring_only_check.py`** — the per-revision membership test is real (a
+  path tracked at `HEAD` but not at `fd8854ed` is refused, exit 2), and the tool
+  is **non-vacuous**: over `d53ab885..2b8b7a55` (the F6 commit, which restores
+  `label=f"Obj {label}" if index < 5 else None`) it reports *ast identical:
+  **False***, exit **1** — so its exit 0 on `b08dd574` is meaningful.
+- **`b08dd574` is comment-only** — `git diff --numstat` 7/6, **0 non-comment
+  changed lines**, and *ast identical outside the module docstring: **True***,
+  *module docstring changed: **False***. Its arithmetic was recomputed
+  independently from the committed constants: all four bounds equal
+  `ceil(3.0 × recorded / 900) × 900` exactly; bound/quiet **36.8–151.9** against
+  the comment's "37-152"; in-suite slowdown **8.3–41.8** against "8-42x"; paired
+  experiment **43.2** against "43x"; quiet-host **37.0–73.3 s** against
+  "37-73 s". The 7 bound/contract tests still pass.
+- **The clean-tree guards** — `od -c` shows `wc -l` emits a bare `0\n` with **no
+  padding** on this host, and `-eq` tolerates padding anyway, so the guards are
+  sound.
+- **`bash -n`** on all five committed shell instruments → exit 0 each.
+
+**One claim REFUTED as a defect (C15):** `launch_round.sh`'s last statement is a
+bare `wait`, so the script's own exit status is 0 regardless of reviewer
+outcomes (demonstrated: two background jobs exiting 3 and 4, then `wait` → `$? =
+0`). But that is a **pre-existing design property unchanged by round 4**, and
+the per-reviewer `.exit` channel exists and was used — the committed round-4
+directory holds 4 `.exit` files, all `exit=0`. Not a defect in the fixes under
+review.
+
+**Two invocation errors of the reviewer's own, corrected rather than left
+standing:** batch 1 passed `b08dd574^` / `3bc12c7a^` to `docstring_only_check.py`,
+which rejects a non-hexadecimal revision **by design** (exit 2 — correct tool
+behaviour, not a defect), redone in batch 2 with `git rev-parse`-resolved hex;
+and batch 3's C18 used an anchored `re.match(r"script exit", …)` that missed the
+real marker `(script exit: 0)`, printing one spurious "FAIL-OPEN RISK" —
+corrected by the unanchored grep cross-check in the same record and by
+`failopen-red-green.sh`, which re-applies a fail-closed check to all seven
+committed records and reports **0 failures**.
+
+**The optional independent reviewer pass was not run, deliberately.** The session
+prompt permits at most one round with the `devin` and `agy` CLIs. It was declined
+because loading reviewer CLIs onto this host would directly worsen the
+contention O-1 is about, immediately before the required full-suite leg that
+O-1's disposition depends on — and the sampler above shows `Devin.exe` was
+already the **largest** non-PRIN CPU consumer (3,845 CPU-s) during that run.
+This triage is therefore **S4's own measurement and no external reviewer
+corroborates it**; that limitation is recorded rather than glossed. No bypass or
+dangerous-permission flag was used, since no reviewer CLI was invoked.
+
+### S4.5 Decision 4C — `EXP002D1-S2-F8`'s third location: **RATIFIED**
+
+**The finding.** `EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142`
+(`python/PT`, CWE-23, LOW) — S2's seventh instrument, written after S2's own CLI
+scan, so no S2 scan could have reported it (§S3.4).
+
+**All four ratification conditions were verified by reading the file and
+reproducing the finding**, not accepted on assertion:
+
+1. **The path comes only from a command-line argument.** Line 142 is
+   `sarif_path = Path(argv[0])`, and `argv` is `sys.argv[1:]` from the `__main__`
+   guard. Every use of the name is accounted for — lines 142, 143, 144, 149, 157
+   — and none introduces a second source.
+2. **The sink is read-only.** The five uses are `Path(argv[0])`, `.is_file()`
+   (143), two f-string prints (144, 157) and `.read_text("utf-8")` (149). A grep
+   for every write-class operation
+   (`write_text|open(|unlink|shutil|rmtree|rename|replace(|mkdir|touch`) returns
+   **one** hit: line 71's `uri.replace("\\", "/")` — a `str` method on a SARIF
+   URI, not `Path.replace`. There is no write, delete, rename or replace on that
+   path.
+3. **The file is a non-shipped evidence instrument under `EVIDENCE/`.**
+   `pyproject.toml`'s `[tool.maturin]` sets `python-source = "python"` and
+   `module-name = "prin._prin_core"`, so the wheel ships `python/prin` only; no
+   `packages`/`include`/`data` entry reaches `EVIDENCE/`.
+4. **Controlling its argv already implies the ability to run arbitrary code as
+   the invoking user.** The tool is invoked as `.venv/Scripts/python.exe
+   EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py <sarif>`; whoever supplies argv
+   already launches the process as that user, so **no privilege boundary is
+   crossed**.
+
+**The finding was confirmed against the recorded scan**, as the decision allows:
+`EVIDENCE/exp002-d1-s3/gate/final/snyk-code-s3-final.txt` line 47 reads
+`python/PT      EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142`. S4's own rescan
+re-confirms it (§S4.7): `snyk whoami` → `Symbo-gif`, exit 0, snyk `1.1306.2`,
+verified **before** the CLI was relied on (§S2.14's discipline).
+
+**Coding Standards §6.2 threat assessment**, in the form §S2.14 and §S3.4 record
+for the other two ratified locations:
+
+- **Rule:** Snyk Code `python/PT` (CWE-23, path traversal), severity **LOW**. The
+  applicable §6.2 gate is **"0 medium+ findings"**, which this does not affect —
+  S4's rescan is **0 HIGH / 0 MEDIUM / 97 LOW**.
+- **Affected API and dataflow:** `pathlib.Path(argv[0])` at line 142, on a path
+  supplied by the invoking auditor. Snyk's `python/PT` model treats
+  `pathlib.Path(user_input)` itself as the sink.
+- **Exploit prerequisites:** the ability to supply argv to a process already
+  running as the auditor — i.e. **existing code execution as that user**. No
+  privilege boundary is crossed and there is no remote or cross-user vector.
+- **Sink behaviour:** read-only (`is_file`, `read_text`, two prints). Nothing is
+  created, moved, renamed or removed on the path.
+- **Compensating controls:** non-shipped evidence tooling under `EVIDENCE/`,
+  outside the wheel; `bandit` reports **0 issues** over the 3,901 LOC of the four
+  evidence directories including this file; the §6.2 "0 medium+" gate is met
+  repo-wide; and the finding stays **visible** in the PSR-041 ledger and is
+  **re-checked every cycle**, as §6.2 requires of accepted items.
+- **Why the scanner is not chased further:** §S3.4 established, on the two
+  ratified siblings, that adding `..` rejection, a no-follow `is_symlink()`
+  check, a regular-file check and resolve-and-confine to a root allowlist did
+  **not** clear `python/PT` — the dataflow just pointed inside the guard. This
+  instrument is read-only by construction, so the guard class that protects a
+  *writing* tool (`PR23-F1`) has no sink here to protect.
+- **Disposition: ACCEPTED — RATIFIED** under the maintainer's 2026-10-16
+  authorization (A2), extending F8's ratification to this third location.
+  **This is not a suppression:** nothing was added to `.snyk`, no ignore or
+  severity exclusion was created, no scan was skipped, and **S2's file was not
+  edited** (§S4.7 rule I2). All three ratified locations stay visible — S4's
+  rescan reports `changed_line_coverage.py:98`,
+  `decomposition_rerun_check.py:92` and `snyk_sarif_filter.py:142` — and are
+  re-checked at every cycle's gate.
+
+### S4.6 Decision 4D — **Plan amendment #52** adopted
+
+Adopted on the maintainer's verbatim authority (A3): *"authorize hosted
+workflows to merge and keep active until experimentation is complete"*. It
+records that
+
+- the seven hosted check workflows (`rust`, `python`, `parity`, `repro`, `snyk`,
+  `gpu`, `nightly`) are **re-enabled by session S4 and stay active until
+  experimentation is complete**. The end condition was derived by **reading the
+  campaign plan**, not assumed: its final experiment session is **`0194`**
+  (Campaign E6 synthesis — `DOCS/sessions/phase-7/0194-campaign-e6-synthesis.md`
+  exists; §10.4 item 2 names "the next experiment's E1 or 0194" and §12 item 3
+  names "session 0194 after EXP-008"), or the maintainer's earlier instruction,
+  **whichever is first**. Sessions `0195`–`0198` are WP-039 (stable-release
+  evidence closure), not campaign experiment sessions, so they are outside the
+  end condition;
+- from the effective date, hosted results are recorded **verbatim** (workflow,
+  run ID, head SHA, conclusion, link) as evidence, the **local gate records stay
+  mandatory**, local results are **never** described as "CI green", and hosted
+  results are described only as what actually ran — **hosted runs do not
+  establish behaviour on platforms they did not run on**;
+- a **red hosted check is triaged and recorded, never waived, skipped,
+  deselected, or hidden** by editing workflows or removing a required check;
+- it **supersedes amendment #48's "hosted checks disabled" rule and amendment
+  #50's EXP-002-only window** from the effective date. It **does not alter the
+  ruleset** (22150076's `required_status_checks` rule stays removed), and it
+  **does not release `0164`**.
+
+**Footprint, mirroring #50's.** `grep -rn "amendment #50"` was run across
+`CLAUDE.md`, `.claude/CLAUDE.md`, `AGENTS.md`, the Plan, the standards and the
+registers, and the equivalent short exception or update was added in each place
+#50 touched: `DOCS/PRIN_Project_Plan.md` §8.3 (row **52** plus an
+"**Amendment #52 authority**" block quoting the directive verbatim, in #49/#50's
+format), Development Workflow and Audit Standards §3 **item 11**, `CLAUDE.md`
+(secure-development item 5), `.claude/CLAUDE.md` (the local-validation-regime
+exception paragraph), and a dated section in
+`DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`. **`AGENTS.md` needed no change** —
+#50 never touched it (it cites only #49), so mirroring #50's footprint means
+leaving it alone. **No historical session or audit text was edited**, and the
+frozen `EXP-002` record text that mentions #50 is untouched. **No file under
+`.github/` was modified** (§S4.7 rule I1b).
+
+**No other Plan or campaign-plan amendment was found necessary**, so none was
+drafted. In particular the `EXP002D1-S2-F1` registration needs none: campaign
+plan §10.4 item 4 already requires a new pre-registration for the re-run, and
+that document is the governed place for it (§S3.3, carried at §S4.9).
+
+### S4.7 The local gate
+
+Recorded verbatim — command, UTC start/end, exit code and `git rev-parse HEAD` —
+in [`EVIDENCE/exp002-d1-s4/gate/`](../../EVIDENCE/exp002-d1-s4/gate/). Legs ran
+**strictly sequentially** (pytest never concurrent with cargo or with another
+pytest, per `AGENTS.md`) and **before** any hosted workflow was enabled, so a
+self-hosted runner on this machine could not compete with the local gate. Tools:
+Python 3.14.0, pytest 9.1.1, ruff, mypy, snyk 1.1306.2, gitleaks 8.30.1, on
+`MINGW64_NT-10.0-26300`.
+
+**The change set was measured first, so the conditional legs are decisions and
+not assumptions** ([`gate/change-set.txt`](../../EVIDENCE/exp002-d1-s4/gate/change-set.txt)):
+`6b55c6ba..157ce5bc` is **29 files**, of which **0 `.rs`, 0 dependency
+manifests, 0 first-party `.py`, 0 `.github/` workflow files**.
+
+| Leg | Result |
+|---|---|
+| `ruff check` over `python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/` and the four `EVIDENCE/exp002-d1-s1..s4/` dirs | **exit 0**, `All checks passed!` |
+| `ruff format --check` over the source roots, and `DOCS/experiments/` separately under `AGENTS.md`'s source-only include | **exit 0** each — **370 files** and **3 files** already formatted |
+| `mypy python/prin --strict`; `mypy DOCS/experiments/ --strict`; `mypy --strict` over the cycle's changed first-party files and every bundle instrument | **exit 0** each — no issues in **62** and **3** source files |
+| `interrogate -c pyproject.toml python/prin` (floor 95 %) | **exit 0**, **97.6 %** (1,011 statements, 987 documented, 24 missing) |
+| `bandit -r python/prin DOCS/experiments -c pyproject.toml`, and over the four evidence dirs | **exit 0** each — **27,882** and **3,901** LOC, 0 issues |
+| The four governance checkers, `check_deviation_ledger.py` with **report paths** | **exit 0** each — global-session registration **18** Executive Audit reports; DV-register gates **47** DV rows against **198** session-register entries; skipif probes none; **`check_deviation_ledger.py DOCS/reports/040-project-state.md DOCS/reports/041-project-state.md` → 146 → 159 rows** |
+| **Fast suite** — `pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20` | **exit 0**, **4,044 passed, 178 skipped, 55 deselected, 59 warnings in 2,122.53 s (0:35:22)** — the required **clean single pass**. 19:08:57Z → 19:47:24Z; tree clean before and after (0 tracked, 0 untracked) |
+| **Required full suite** — `pytest tests/ parity/ …` (same options), run **ONCE** | **exit 0**, **6,331 passed, 184 skipped, 0 failed, 61 warnings in 6,189.62 s (1:43:09)**. 19:48:11Z → 21:33:57Z; **0** `FAILED`/`ERROR` lines; 5 faulthandler 300 s dumps each followed by a pass; tree clean before and after. **No rerun-until-green**; see §S4.3 for the contention it passed under |
+| Sphinx `-W --keep-going -b html` from a **deleted** `DOCS/sphinx/_build` | **exit 0**, `build succeeded` |
+| `gitleaks` (pinned binary 8.30.1), full history and `--staged` | **exit 0** each — **776 commits**, ~104.18 MB in 27.9 s, **no leaks found**; `--staged` 0 commits, **no leaks found** |
+| Snyk Code CLI, `snyk code test . --severity-threshold=low` (snyk `1.1306.2`, `snyk whoami` → `Symbo-gif` exit 0 verified first) | **0 HIGH / 0 MEDIUM / 97 LOW** (Total issues 97, Ignored 0). All **three** ratified `python/PT` locations visible: `changed_line_coverage.py:98`, `decomposition_rerun_check.py:92`, `snyk_sarif_filter.py:142`. The §6.2 "0 medium+" gate is **met** |
+| `verify_manifest` over all five `benchmarks/results/EXP-002/RUN-*` and the frozen input manifest | **exit 0**, **`TOTAL FAILURES: 0`** — the input manifest recomputes to the pinned `300cdc09…cce5` and `verify_manifest(reference results, INPUT_MANIFEST)` passes on **172** records |
+| Delta re-audit (S3's instrument, re-run on the S4 tree) | **exit 0**, **`# overall: 0`** — pre-fix digests confirm `e0f59253` and `b41dfc13`; the regression reproduces (**18 failed / 75 passed** in 43.93 s, and **10 failed** in 6.54 s, both exit 1 as required); the module restores byte-identically; post-fix **103 passed** in 23.75 s, exit 0 |
+| Evidence index self-checks, `index_selfcheck.py` over `exp002-d1-s1`, `-s2`, `-s3`, `-s4` | **exit 0** each — **12**, **30**, **129** files, **0 unindexed / 0 dangling**; `-s4` reported in the final pass |
+| `cargo fmt` / `clippy` / `test` | **NOT RUN — 0 `.rs` files changed** (measured, `change-set.txt`). Not skipped for convenience, and no contention retry was needed |
+| `cargo audit` / `pip-audit` / Snyk Open Source | **NOT RUN — 0 dependency manifests changed** (measured). `cargo audit` is separately red on **DV-045**, out of this cycle's bounded scope; no dependency, advisory ignore or audit configuration was touched |
+| Per-change Python coverage | **NOT APPLICABLE — 0 first-party Python lines changed**, so there are no changed executable lines to cover. **DV-033 stays OPEN** (per-change coverage remains unmeasurable on this host) |
+| Snyk Code through the MCP route | **not run** — no Snyk MCP tool was exposed in this session. Recorded as not run, never as passed; the CLI leg, which Coding Standards §6.4 also permits, completed |
+| `cargo doc`, `cargo llvm-cov`, hosted CI as a *local-gate substitute*, Linux, macOS | **not run / not claimed** (amendment #48 items 3–4) |
+
+**Nothing was weakened to obtain any result above:** no test skipped, deselected
+or xfailed, no assertion or tolerance changed, no lint or security suppression
+added, and **no process belonging to the maintainer stopped or killed**.
+
+**Immutability, before and after.** [`immutability.sh`](../../EVIDENCE/exp002-d1-s4/immutability.sh)
+is an adapted copy of S3's whose rule set differs in exactly one place, because
+closure item 4 *mandates* one append to the EXP-002 record:
+
+| Rule | Requirement | Result (`6b55c6ba..71d1c590`) |
+|---|---|---|
+| **I1a** | the EXP-002 record: the **only** changed file may be `report.md`, and its change must be a **pure append** | **holds** — 1 changed file (`report.md`), **0 others**, **+2 / −0**, deleted lines **0**; the appended line is erratum **2** |
+| **I1b** | `benchmarks/results/EXP-002/`, `.github/`, `Cargo.toml`, `Cargo.lock`, `pyproject.toml` | **empty** |
+| **I2** | `EVIDENCE/exp002-d1-s1/`, `-s2/`, `-s3/` unedited | **all three empty** |
+| **I3** | this correction audit append-only, **0 deleted lines** | **0 deletions** |
+| **I4** | the S4 brief's "Closure checklist" and "Carried from S3" sections byte-identical to the base | **identical** — base 94 lines / head 95 lines, both **7,921 bytes** after trailing-blank-line normalisation. The brief's diff is **+131 / −2**, and the two deleted lines are exactly the `**Status:**` and `**Blocked numbered session:**` headers this session is directed to update |
+| — | script exit | **0** |
+
+Run **before** the records were committed ([`gate/immutability-before.txt`](../../EVIDENCE/exp002-d1-s4/gate/immutability-before.txt))
+and **again on the final commit** ([`gate/final/immutability-after.txt`](../../EVIDENCE/exp002-d1-s4/gate/final/immutability-after.txt)).
+The first run also exposed an artifact in S4's **own** instrument — rule I4
+compared unnormalised, so the blank line separating the base section's EOF from
+the appended section reported a one-line difference the rule does not mean to
+catch. The instrument was corrected to normalise trailing blank lines and to say
+so in its own output, and **both runs are kept** rather than the earlier one
+being discarded. That correction is committed separately
+(`71d1c590`) and is the only change S4 made to its own instruments after first
+use.
+
+**Cheap legs repeated on the final commit**, as S3 did, because they are
+sensitive to documentation still being written while the long legs run
+([`gate/final/`](../../EVIDENCE/exp002-d1-s4/gate/final/)): the static gate,
+Sphinx from a deleted `_build`, gitleaks (both legs), both immutability diffs,
+the manifest verification, the delta re-audit, the four index self-checks, the
+Snyk Code CLI scan, `check_deviation_ledger.py 040 041` and the PR #34 / branch
+state. Each record's header names the commit it ran on. The rows above state the
+final run's figures.
+
+### S4.8 Push, PR #34, hosted checks and merge
+
+Executed in the session prompt's §7 order, which was **not** reordered. Because
+`main` is PR-only, **no post-merge record can be committed here**; the results of
+steps 6–10 are recorded in the **session report**, and campaign plan §12 item 3
+assigns the merge SHA plus `check_ci_green.py` output to the next governed
+session.
+
+1. **Documentation and evidence committed** in logical units with ID-prefixed
+   Conventional Commit messages, each ending with a `Co-Authored-By: Qwen3.8-max`
+   trailer naming this session's real model identity — not another model's.
+   `--no-verify` was never used and no published commit was amended. The working
+   tree was clean before the gate ran.
+2. **Every §5 gate leg run and recorded** at its real exit code (§S4.7).
+3. **Preconditions checked before pushing:** every local gate leg exited 0;
+   the required full suite exited **0** on a single run, so the O-1 flake did not
+   occur and no supplementary isolation re-run was needed; no new unexplained test
+   failure appeared (0 `FAILED`/`ERROR` lines); both immutability runs are empty
+   or hold; gitleaks reports no leaks on the full history and `--staged`; and
+   Snyk reports **nothing above LOW**, so nothing attributable to this change
+   exceeds the governed threshold.
+4. **Hosted workflows enabled.** State inspected first with
+   `gh workflow list --all` — all seven read `disabled_manually` — and recorded
+   **before** and **after** in
+   [`gate/workflows-before.txt`](../../EVIDENCE/exp002-d1-s4/gate/workflows-before.txt)
+   / [`gate/workflows-after.txt`](../../EVIDENCE/exp002-d1-s4/gate/workflows-after.txt).
+   Each was enabled with `gh workflow enable`. **This modified no file under
+   `.github/`** (rule I1b is empty), so enabling required no workflow edit and
+   **no STOP condition was reached**. The branch ruleset was not touched and no
+   required check was added, removed or marked non-required.
+5. **Enablement evidence committed**; the bundle README updated;
+   `index_selfcheck.py exp002-d1-s4`, the immutability diff and
+   `git status --porcelain` re-run; tree clean again.
+6. **Push:** `git push origin hotfix/exp002-d1-figure-parity` only — a plain
+   push, no `--force`, no other refs, **no tags**. Had it been rejected,
+   including by GitHub secret scanning or push protection, S4 would have stopped
+   and reported; push protection is never bypassed.
+7. **PR #34** description updated to be accurate and complete — root cause (34
+   drawing arguments dropped or re-encoded by the WP-034 figure port), the fix,
+   the S2 audit result, the S3 and S4 outcomes, the local-validation evidence
+   with its Windows-only scope stated and what the hosted runs do and do not
+   cover, and the O-1/O-2/F8 dispositions — then `gh pr ready 34`.
+   **"CI green" was not claimed before the hosted runs concluded.**
+8. **Hosted checks awaited** at the PR head SHA with `gh pr checks 34 --watch`,
+   long timeouts and no tight polling, each run recorded verbatim (workflow, run
+   ID, head SHA, conclusion) via `gh run list` / `gh run view`. The 4A rules
+   govern a failure in a registered flake class (at most one re-run of only the
+   failed job, both recorded); any other red check is triaged, recorded, and
+   **stops the merge**. No workflow was edited, no check marked non-required, and
+   no workflow disabled to get past a red check. A red `audit`/cargo-audit check
+   on the registered **DV-045** advisory set is recorded verbatim; whether it
+   blocks is decided by the ruleset, not by S4, and no dependency, advisory
+   ignore or audit configuration was changed. **`nightly.yml` has no
+   `pull_request` trigger**, so the hosted full-suite run O-1's corroboration
+   needs was obtained by dispatching it on the PR head branch — the explicit
+   amendment-#50 precedent ("`nightly.yml` is dispatched on the PR #33 head
+   branch"), authorized by A3 and flagged in §S4.10 item 7.
+9. **Merge.** How PR #33 was merged was inspected first:
+   `gh pr view 33 --json mergeCommit,mergedAt,state` gives merge commit
+   `fd8854ed87a21e01f16e2f7128b431e74085a26e`, merged 2026-10-15T08:37:18Z by
+   `Symbo-gif`; that commit has **two parents** (`da53ea11…`, `62d4a889…`) and
+   the subject `Merge pull request #33 from …`, so the method is a **merge
+   commit**, and the same method was used. Then
+   `gh pr view 34 --json state,isDraft,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup`
+   and `gh pr merge 34` **only if GitHub itself permitted the merge as the
+   repository is configured**. `--admin` was never used, the ruleset was never
+   altered, disabled or bypassed, nothing was force-pushed, and the branch was
+   not deleted.
+10. **After the merge:** no commit to `main`, no further PR. The merge commit SHA
+    and the final PR state are reported **in the session record only** (§6 of the
+    session prompt). **The hosted workflows stay enabled** under amendment #52.
+    **No tag was pushed.**
+
+### S4.9 What S4 did **not** do
+
+- **Did not choose `EXP-002-r1`'s H3 deciding rule.** The session prompt withholds
+  that authorization explicitly, and `EXP002D1-S2-F1` is the reason it matters.
+  `EXP-002-r1/README.md` **names** the open decision — which policy decides H3,
+  the status of the other, replacement or restatement of the §11.3 item 1 clause,
+  outcome-exposure disclosure, fixing the choice before the first `RUN-`
+  directory exists, and no writer changes to chase §11.3 equality — and records
+  it as needing the **maintainer's approval before r1's E1 starts**.
+- **Did not release session `0164`**, or `0165`–`0194`. Stated explicitly in
+  PSR-041 (§1, §5, §6) and in every register touched, in the erratum, and in the
+  r1 skeleton: S4 closing, the merge of PR #34 and the re-enabling of the hosted
+  workflows do **not** release them.
+- **Did not start `EXP-002-r1`** and **created no `RUN-` directory**. The r1
+  record is a skeleton; no pre-registration, driver, log, analysis or report
+  exists.
+- **Did not run any experiment**, and computed no verdict.
+- **Did not edit `EXP-002`'s record** beyond the single mandated §15 append:
+  verdicts, tolerances, normalization policies, digests, protocol,
+  `preregistration.md` and everything under `benchmarks/results/EXP-002/` are
+  untouched (§S4.7 rules I1a/I1b).
+- **Did not edit S1's, S2's or S3's evidence** (§S4.7 rule I2, all three empty),
+  and did not rewrite this audit's S1–S3 text (§S4.7 rule I3, 0 deletions).
+- **Did not suppress anything.** Nothing was added to `.snyk` or
+  `.gitleaksignore`, no ignore or severity exclusion was created, no test was
+  skipped, deselected or xfailed, and no tolerance was loosened.
+- **Did not touch the branch ruleset**, add or remove a required check, use
+  `--admin`, force-push, bypass push protection, or push a tag.
+- **Did not stop or kill any process belonging to the maintainer**, and cannot
+  change the IDE or security-software settings §S4.3 records as guidance.
+- **Did not rewrite the S4 brief's closure checklist** (§S4.7 rule I4 verifies it
+  byte-identical).
+
+### S4.10 Judgment calls flagged for the maintainer's review
+
+Each was taken under authorization A2 and is listed here so none is buried.
+
+1. **O-1's disposition diverges from the one decision 4A anticipated** (§S4.3).
+   4A expected the local record to stay at **exit 1** and named a hosted pass as
+   the closure evidence with the wording *"local record stays at exit 1"*. The
+   measured local record is **exit 0 on a single run**, so that wording was not
+   copied into any record; the ledger instead states the measurement and the
+   contention it was taken under. The hosted corroboration 4A names is still
+   obtained. **The severity is D3, not D2** — D2 was considered and rejected
+   because the tests all pass and each S3 failure was a host-contention artefact;
+   a literal reading of §5's "quality gates" wording would support D2.
+2. **`EXP002D1-S4-F1`'s severity is D2, not D4** (§S4.4). D4 was considered and
+   rejected because the defect is in a quality-gate aggregator, not a cosmetic
+   surface — while its *impact* is nil, which the latency measurement establishes.
+3. **No new DV row was opened for O-1, and DV-032 was not widened** (§S4.3), on
+   the reading that the register consolidates validation deferred to a future WP
+   or phase, while O-1's evidence was obtained in this session; and that the
+   `WinError 5` rename is a different class from DV-032's timing ratios.
+4. **O-1's hosted corroboration cannot be committed here** (§S4.3, §S4.8 item 10),
+   because `main` is PR-only and a second push would restart the awaited checks.
+   The verbatim hosted result is in the session record and the next governed
+   session should enter it.
+5. **Amendment #52's end condition is read as the close of session `0194`**
+   (§S4.6), derived from the campaign plan; `0195`–`0198` (WP-039) are treated as
+   outside "experimentation".
+6. **The optional `devin`/`agy` cold-review round was declined** (§S4.4) to avoid
+   loading the host immediately before the full-suite leg — the sampler shows
+   `Devin.exe` was already the largest non-PRIN CPU consumer during that run. The
+   O-2 review is therefore S4's own measurement, uncorroborated by an external
+   reviewer.
+7. **`nightly.yml` is dispatched on the PR head branch** to obtain the hosted
+   full-suite run O-1's corroboration names, since `nightly` has no
+   `pull_request` trigger and `gh pr checks` cannot surface it. This follows
+   amendment #50's explicit precedent and A3's authorization; it is flagged
+   because §7 step 4 names only `gh workflow enable`.
+8. **The Parity Report's 2026-10-14 erratum was retained verbatim and a new dated
+   admonition added**, rather than editing the old one — the EXP-001/EXP-001-r1
+   precedent on the same page. Three rows describing *current* repository state
+   were corrected, since leaving them stale would have misdescribed the shipped
+   generator.
+9. **The S4 brief's completion record was appended as a new section** and its
+   Status header updated, rather than replacing its "Exit evidence" prose, so the
+   brief's checklist is demonstrably unrewritten — enforced mechanically by
+   immutability rule I4.
+10. **`S2-F3` and `S2-F4` are past Development Workflow §5's one-carry limit**
+    (PSR-041 §3.5, §5). The automatic D2 escalation is **flagged, not applied**,
+    because this documentation cycle touches neither symbol and applying it would
+    change a finding's severity without the work that would justify it.
+11. **S4 corrected its own instrument mid-session** (§S4.7): immutability rule I4
+    reported a one-line difference caused by unnormalised trailing blank lines,
+    not by an edit to the brief's checklist. The rule was corrected, the reason
+    recorded inside the script, and **both runs kept**. Flagged because it is a
+    change to a gate instrument made by the session that the gate audits.
+
+### S4.11 Verdict and handoff
+
+**Verdict: `EXP-002-D1` S4 COMPLETE — the correction cycle is CLOSED.**
+
+All seven closure-checklist items are delivered (§S4.1). All eight S2 findings
+are dispositioned and none is silently dropped: `-F1` (D3) **AMENDED**, carried
+into the `EXP-002-r1` authorization; `-F2` (D2) **FIXED** and confirmed under
+real contention by S4's full-suite run; `-F3`…`-F7` (D4) **FIXED**; `-F8` (D4)
+**AMENDED/RATIFIED**, now including its third location. Both S3 observations are
+dispositioned: **O-1 (D3)** — its premise discharged by a single measured
+exit-0 run of the required full suite, with the contention sensitivity explicitly
+**not** claimed cured; **O-2 (D4) RESOLVED** — the owed review performed by
+measurement. S4's own review raised **one** finding, `EXP002D1-S4-F1` (D2,
+latent), **FIXED** by supersession with a red/green demonstration. The delta
+re-audit re-ran **`CLEAN`** on the S4 tree. Plan amendment **#52** is adopted.
+Every local gate leg is recorded at its real exit code, and **no result in this
+section is described as a pass it did not achieve**.
+
+**The correction itself is not reopened.** S1's fix, S2's audit and S3's
+remediation stand as verified by independent re-execution (§S3.8, §S3.10), and
+S4's delta re-audit reproduces the red/green transition again on the S4 tree.
+
+**Handoff.**
+
+1. **The next governed session** records the PR #34 merge SHA,
+   `tools/check_ci_green.py <merge-SHA>` output (campaign plan §12 item 3) and
+   the hosted full-suite result that corroborates **O-1**.
+2. **The maintainer** settles the open `EXP-002-r1` H3 comparison-policy decision
+   (§S4.9), then declares `EXP-002-r1` E1. **DV-047** gates its E3.
+3. **Session `0164` and `0165`–`0194` stay BLOCKED** until `EXP-002-r1`'s E5
+   verdict is a non-reversal, verified and accepted by the maintainer, or a
+   Project Plan §8.3 amendment is adopted (campaign plan §10.4 item 5).
+4. **Hosted workflows stay enabled** under amendment #52 until `0194` closes or
+   the maintainer instructs otherwise; the disabling is then recorded.
+5. **Carried, unchanged:** DV-033, DV-034, DV-036 (with `DV036-F5` at `0166` and
+   the re-baseline gates before `0168`/`0173`), DV-045, DV-046, DV-047, `S2-F3`
+   and `S2-F4` (past the one-carry limit, §S4.10 item 10), and the amendment-#48
+   platform suspension (DoD items 2 and 4).
