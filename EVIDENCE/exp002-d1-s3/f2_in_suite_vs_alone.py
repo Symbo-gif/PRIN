@@ -156,7 +156,9 @@ def main() -> int:
     print(
         "per-cell bound: the test was killed there, so the true duration is censored."
     )
-    print("S3 observed ran with the bound lifted (diagnostic plugin): uncensored.")
+    print("S3 observed is the run on standard input. The diagnostic run lifted the")
+    print("per-cell bound (uncensored); a gate run does not, so a notebook that")
+    print("finished there finished inside its shipped bound.")
     print(f"S3 observed run, final pytest summary: {summary}")
     return 0
 

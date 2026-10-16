@@ -1,0 +1,17 @@
+# F2 under the required full-suite invocation: each notebook leg, standalone versus in-suite, on the closing gate's first full-suite run
+# generated 2026-10-16T12:21:55Z at git HEAD 248bb586 by: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/f2_in_suite_vs_alone.py < EVIDENCE/exp002-d1-s3/gate/full-suite-1/console.txt
+# (--durations=20 lists only the slowest tests, so a notebook faster than the 20th-slowest test does not appear)
+
+notebook                           alone   S1 in-suite   S2 in-suite   S3 observed   S3/alone
+---------------------------------------------------------------------------------------------
+01_oscillosim_quickstart          73.3 s       639.6 s       800.1 s       562.2 s       7.7x
+02_clevr_n_binding                71.1 s>=    1052.8 s>=    1064.0 s      1636.2 s      23.0x
+03_custom_coupling                44.5 s       409.0 s       222.4 s       176.6 s       4.0x
+04_torch_bridge                   37.0 s       389.8 s        52.5 s             -          -
+
+'>=' marks an S1/S2 duration at or above the shipped 900 s
+per-cell bound: the test was killed there, so the true duration is censored.
+S3 observed is the run on standard input. The diagnostic run lifted the
+per-cell bound (uncensored); a gate run does not, so a notebook that
+finished there finished inside its shipped bound.
+S3 observed run, final pytest summary: 1 failed, 6330 passed, 184 skipped, 61 warnings in 7517.90s (2:05:17)
