@@ -1,0 +1,127 @@
+# EXP002D1-S2-F6 - restore the reference fig13 per-series label: verification
+# date (UTC): 2026-10-16T01:49:37Z
+# git HEAD (parent of the F6 commit): d53ab885144cf5c8ef4cf0fd3a947cf89d0e6b63
+# tracked changes vs HEAD (the F6 change, uncommitted at run time):
+#    M python/prin/reporting/figure_generation.py
+#    M tests/test_publication_figure_arguments.py
+# python/prin/reporting/figure_generation.py sha256: 822d8cad982e82badd6357b70988d975667e9be9d55245fafd916be14cbe517b
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0
+
+## V1 GREEN: the new regression test plus the nine fast-gate tests plus the byte-level parity gate (expect 10 + 93 = 103 passed)
+# started 2026-10-16T01:49:37Z
+# command: .venv/Scripts/python.exe -m pytest tests/test_publication_figure_arguments.py parity/test_parity_publication.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+
+tests\test_publication_figure_arguments.py ..........                    [  9%]
+parity\test_parity_publication.py ...................................... [ 46%]
+.......................................................                  [100%]
+
+============================ 103 passed in 16.34s =============================
+# exit code: 0
+# ended 2026-10-16T01:49:56Z
+
+## V2 artist-level equivalence, reference vs port (expect 14/14 EQUAL)
+# started 2026-10-16T01:49:56Z
+# command: .venv/Scripts/python.exe EVIDENCE/exp002-d1-s2/artist_level_equivalence.py
+[EQUAL ] fig2_clevr_n_capacity  axes=1  drawing-call multiset DIFFERS
+[EQUAL ] fig3_chimera_metrics  axes=1  drawing-call multiset DIFFERS
+[EQUAL ] fig4_chimera_k_alpha_heatmap  axes=2  drawing-call multiset DIFFERS
+[EQUAL ] fig5_mot_occlusion_comparison  axes=1  drawing-call multiset DIFFERS
+[EQUAL ] fig6_oscillosim_scaling  axes=1  drawing-call multiset DIFFERS
+[EQUAL ] fig7_ablation_results  axes=2  drawing-call multiset DIFFERS
+[EQUAL ] fig8_parameter_efficiency  axes=1  drawing-call multiset DIFFERS
+[EQUAL ] fig9_training_curves  axes=2  drawing-call multiset DIFFERS
+[EQUAL ] fig10_statistical_summary  axes=1  drawing-call multiset DIFFERS
+[EQUAL ] fig11_flops_scaling  axes=1  drawing-call multiset DIFFERS
+[EQUAL ] fig12_supercritical_regime  axes=2  drawing-call multiset DIFFERS
+[EQUAL ] fig13_representation_geometry  axes=2  drawing-call multiset DIFFERS
+[EQUAL ] fig14_gradient_flow  axes=2  drawing-call multiset DIFFERS
+[EQUAL ] fig15_noise_velocity  axes=2  drawing-call multiset DIFFERS
+artist-level equivalence: 14/14 EQUAL
+Every data-bearing artist attribute matches on all 14 stems, so no
+# exit code: 0
+# ended 2026-10-16T01:50:07Z
+
+## V3 fast-gate divergence coverage (expect 34/34, no unknown ids; the docstring no longer claims byte-material only)
+# started 2026-10-16T01:50:07Z
+# command: .venv/Scripts/python.exe EVIDENCE/exp002-d1-s2/fast_gate_divergence_coverage.py
+registered divergences               : 34
+divergence IDs cited in the test file : 34
+
+registered but NOT cited by a fast-gate assertion: none
+cited but not present in the registry            : none
+
+byte-material divergences   : 26; cited: 26
+byte-immaterial divergences : 8; cited: 8
+  material not cited  : none
+  immaterial not cited: none
+
+Test functions and the divergence IDs each names:
+  test_fig5_marker_sizes                            4  D5.1, D5.2, D5.3, D5.4
+  test_fig7_accuracy_labels_bottom_aligned          1  D7.1
+  test_fig8_markers_drawn_above_grid                1  D8.1
+  test_fig9_curve_widths_legend_and_labels          3  D9.1, D9.2, D9.3
+  test_fig10_outcome_note_has_reference_box         1  D10.1
+  test_fig11_bars_labels_and_ratios                 6  D11.1, D11.2, D11.3, D11.4, D11.5, D11.6
+  test_fig12_reference_styling                     10  D12.1, D12.2, D12.3, D12.4, D12.5, D12.6, D12.7, D12.8, D12.9, D12.10
+  test_fig14_bar_transparency                       1  D14.1
+  test_fig15_marker_sizes_fit_and_legends           7  D15.1, D15.2, D15.3, D15.4, D15.5, D15.6, D15.7
+  test_fig13_series_labels_follow_the_reference     0  
+
+=== module docstring accuracy ===
+  docstring contains 'pin each byte-material argument' (whitespace-normalised): False
+  tests also pin byte-immaterial divergences            : True
+    ['D5.1', 'D5.3', 'D9.2', 'D11.4', 'D12.5', 'D12.7', 'D15.4', 'D15.7']
+
+==========================================================================
+RESULT: fast-gate tests cite 34/34 registered divergences -> COMPLETE
+==========================================================================
+# exit code: 0
+# ended 2026-10-16T01:50:11Z
+
+## V4 raw-byte identity of all 14 figures, before (d53ab885) vs after the F6 change (expect 28/28 identical)
+# started 2026-10-16T01:50:11Z
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/raw_byte_identity.py --before d53ab885 --after worktree
+before: d53ab885   after: worktree
+files rendered: before 28, after 28
+raw-byte identical: 28
+raw-byte differing: 0 
+  79a657efc78bf0dfcc418825ae5ebc52a7361650f5f3e1eb4a36c7349c270c7f  fig10_statistical_summary.pdf
+  f02abaca7567cfe29c648c1abf45b210e60457436c28b2e9792f81073231d380  fig10_statistical_summary.png
+  421cb6da7c0f28a618469c81f8b9fd756a199c918dbbc9990c20ab971dfebf36  fig11_flops_scaling.pdf
+  b6b6f8343388d1bdb450859dfa04b95cf2665ea568ae92a2f7471d86b36bd8ee  fig11_flops_scaling.png
+  29ea846e116ae94c06c2c5be367286b2b66dbf27c506ee2d99827ca5d217895d  fig12_supercritical_regime.pdf
+  17ae666317dbfacb27d13e66b1f2297e9c91e11048ad3bbcf24f3ea047c3980f  fig12_supercritical_regime.png
+  feb091dac8433bf32794b59b11a1942a1138d43ac292a04e6e0fb96625aa204f  fig13_representation_geometry.pdf
+  50bf5e632d71a43555b7465b39e1d1a2792f497afedd16b60f5fcbf8f59b6f6f  fig13_representation_geometry.png
+  58fae2e62d0b7bfc2d4db8f48708a07a574dd6b29f4abb699b4f33163351c966  fig14_gradient_flow.pdf
+  45fe17201ea060fffbca3367cf500b5549ea7c12fe917071f39d66008f68e692  fig14_gradient_flow.png
+  b2995bd4f8c57d5df6ad06a90a68c1560bef56e5ef0c92c777d0a45a199c5197  fig15_noise_velocity.pdf
+  e09cc0b10e4ab4d18d95322543cb207a87898d820e7c0cd8f08a42cf0679ac94  fig15_noise_velocity.png
+  7062dec7e1372648aaaccf12cd9a637c8aebb69fb5d88e189344c22acafd6711  fig2_clevr_n_capacity.pdf
+  e236d4a0c24c2dc5843caf442a544f93cc451b7ed29e5498809b3205e25fda27  fig2_clevr_n_capacity.png
+  7bc8d01e1dcc323dd4e957961f975eb7f2d1c09e382bfe54bed6650749dfbdab  fig3_chimera_metrics.pdf
+  6739bb8b68cdfe3a840ceae965ac46a767473a9cc3f9a6ce6f90d69879932b6f  fig3_chimera_metrics.png
+  45dcc99280aef70b19ab417bf6eae2907d7363ec54523eb7b8c75d15fca6852d  fig4_chimera_k_alpha_heatmap.pdf
+  4d17454423a08566feea02e827b7f91ed0f0dcf8b74fe910e4bd9d202747c8d9  fig4_chimera_k_alpha_heatmap.png
+  78d8a6d7a6c3aeb8baeee780a0ffa9215d531d936cbf5ff07f1f481043ea6b61  fig5_mot_occlusion_comparison.pdf
+  3f49111e6406a1b5bb70305fcf09d1c449e40f4b98a25d16730de5704f660bc7  fig5_mot_occlusion_comparison.png
+  6571744fd41b325c1ac12c2c743673cc66ad6d2523f5d16bb076e809050b0e99  fig6_oscillosim_scaling.pdf
+  5190aafd2faf1a63ad711d3ceb61c0b0d209486641fe9eb4b54ed70558139df0  fig6_oscillosim_scaling.png
+  75632e3eff285db3b661ef2dbb3587921975cb3d29568742491c403a11cfc892  fig7_ablation_results.pdf
+  d628f167c25f1426e9e7039332421c8e5a928d9b0ffe3ed5859c8f8f69f8c28a  fig7_ablation_results.png
+  280a61936621bc6d9c0128d75519b9c79fa510891a73836ea54f7bbca98dfdbb  fig8_parameter_efficiency.pdf
+  0f030fc1a7cb0a00b38a22aa9c2e76dbcb0fc75c18f0b204b521d60e2bf2accc  fig8_parameter_efficiency.png
+  67615f1984143635a8f64ee819ed4294b33bfcfb107df6095bbcf9519799f0e1  fig9_training_curves.pdf
+  b8404314b328637dc81c880968b3f547aadbc94615046760f7b598600a4ee985  fig9_training_curves.png
+# exit code: 0
+# ended 2026-10-16T01:50:23Z
+
+## V5 NEGATIVE CONTROL: the pre-fix port d90eeabb vs the fixed tree must differ on exactly the 18 D1 files (expect exit 1)
+# started 2026-10-16T01:50:23Z
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/raw_byte_identity.py --before d90eeabb --after worktree
+before: d90eeabb   after: worktree
+files rendered: before 28, after 28
+raw-byte identical: 10
+raw-byte differing: 18 ['fig10_statistical_summary.pdf', 'fig10_statistical_summary.png', 'fig11_flops_scaling.pdf', 'fig11_flops_scaling.png', 'fig12_supercritical_regime.pdf', 'fig12_supercritical_regime.png', 'fig14_gradient_flow.pdf', 'fig14_gradient_flow.png', 'fig15_noise_velocity.pdf', 'fig15_noise_velocity.png', 'fig5_mot_occlusion_comparison.pdf', 'fig5_mot_occlusion_comparison.png', 'fig7_ablation_results.pdf', 'fig7_ablation_results.png', 'fig8_parameter_efficiency.pdf', 'fig8_parameter_efficiency.png', 'fig9_training_curves.pdf', 'fig9_training_curves.png']
+# exit code: 1
+# ended 2026-10-16T01:50:35Z

@@ -1,0 +1,15 @@
+# EXP002D1-S2-F4 - mechanical index self-check of EVIDENCE/exp002-d1-s1/ after the README row
+# date (UTC): 2026-10-16T01:54:26Z
+# git HEAD: 9583eb4d9b21ab7a8b71160b910f3957b2221eb4
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-d1-s1
+bundle exp002-d1-s1: 12 files (README included)
+  unindexed files : none
+  dangling links  : none
+# exit code: 0
+
+# Before the row was added (S2 measured 10 of 11 non-README files indexed; reproduced here with the pre-edit README from 5ba0129e):
+# command: git show 5ba0129e:EVIDENCE/exp002-d1-s1/README.md | grep -c 'fast-tests-against-prefix-module.txt'
+# output: 0 (0 = the file was not mentioned)
+# after: 1 mention(s) at d53ab885
+# evidence file sha256 (unchanged): fdfa17cc05ec263635273a3a24686522267b49ba1ff405f9cd16bbe5908d04dd
+# commits touching that evidence file: af894998 test(exp002-d1): make the fast-gate argument tests mypy --strict clean 

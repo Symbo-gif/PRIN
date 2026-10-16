@@ -1,0 +1,56 @@
+# EXP-002 D1 S3 - Snyk Code CLI rescan after remediating the MEDIUM in suite_sampler.py
+# # started 2026-10-16T01:59:49Z # command: snyk code test . --severity-threshold=low --sarif-file-output=C:/Users/there/prin-s3-scratch/snyk-s3b.sarif # exit code: 1 # ended 2026-10-16T02:02:54Z 
+# snyk 1.1306.2; account: Symbo-gif
+# scanned tree: git HEAD 9583eb4d + uncommitted EVIDENCE/exp002-d1-s3/ and the S3 brief status edit
+# SARIF sha256: ed798e7b5cd54b451b48b5bb5f8401cc595a9a1faeaa04260e948bdd7d6044f2  size: 712616 bytes (kept outside the repository)
+# Snyk MCP route (mcp__snyk__snyk_code_scan): NOT AVAILABLE in this session - no Snyk MCP tool is exposed. Not claimed.
+
+## CLI Test Summary, verbatim (authoritative severity breakdown)
+│ Test Summary                                         │
+│                                                      │
+│   Organization:      symbo-gif                       │
+│   Test type:         Static code analysis            │
+│   Project path:      .                               │
+│                                                      │
+│   Total issues:   97                                 │
+│   Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]      │
+│   Open issues:    97 [ 0 HIGH  0 MEDIUM  97 LOW ]    │
+
+## Bucketed by EVIDENCE/exp002-d1-s3/snyk_s3_filter.py (SARIF read on stdin)
+total findings (raw filesystem scan)      : 97
+findings in git-known paths               : 45
+findings only in untracked on-disk copies : 52
+result.level values (note=LOW, warning=MEDIUM): {'note': 97}
+
+=== ABOVE LOW anywhere in git-known paths (section 6.2 gate: must be 0): 0 finding(s) ===
+  NONE
+
+=== S3-changed first-party files: 0 finding(s) ===
+  NONE
+
+=== S3-added instruments (EVIDENCE/exp002-d1-s3/): 0 finding(s) ===
+  NONE
+
+=== F8 re-check: the two ratified S2 locations: 2 finding(s) ===
+  python/PT      EVIDENCE/exp002-d1-s2/changed_line_coverage.py:98
+  python/PT      EVIDENCE/exp002-d1-s2/decomposition_rerun_check.py:92
+
+=== F8 re-check: OTHER findings in S2 instruments (not in the F8 record): 1 finding(s) ===
+  python/PT      EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142
+
+# filter exit code: 0
+
+## The finding outside the F8 record, verbatim from the CLI console
+150-
+151- ✗ [LOW] Path Traversal
+152-   Finding ID: 306e2f4e-e98d-4bae-9a0b-a503b7aeab16
+153:   Path: EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py, line 142
+154-   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+155-
+
+## Comparison with S2's recorded numbers
+S2 (snyk-code-cli.txt): 77 raw / 44 git-tracked; 0 HIGH 0 MEDIUM 77 LOW; F8 = 2 locations.
+S3 now                : 97 raw / 45 git-known; 0 HIGH 0 MEDIUM 97 LOW; F8 locations unchanged (2),
+                        plus ONE python/PT LOW in EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142 that S2's F8 record does not list.
+The raw total rose by 20 because the filesystem scan counts gitignored agent-worktree copies (52 now; 33 in S2); git-known
+paths rose by 1 (the snyk_sarif_filter.py finding: that instrument was written after S2's own CLI scan ran, so no S2 scan could have seen it).
