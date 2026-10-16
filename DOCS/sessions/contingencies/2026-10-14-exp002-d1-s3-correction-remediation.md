@@ -1,6 +1,6 @@
 # EXP-002 D1 S3 — Correction remediation
 
-**Status:** OPEN — blocked on S2
+**Status:** IN PROGRESS (S2 complete; S3 started 2026-10-16 UTC on `hotfix/exp002-d1-figure-parity` from `5ba0129e`)
 **Triggering deviation:** `EXP-002 H3 REFUTED` (campaign plan §10.4 D1; pre-registration §4.3)
 **Blocked numbered session:** `0164` (EXP-003 E1), and every later campaign session (`0165`–`0194`)
 **Opened by:** session `0163` (EXP-002 E5), 2026-10-14 UTC
