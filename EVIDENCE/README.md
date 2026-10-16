@@ -76,6 +76,14 @@ To find evidence for a specific work package, look for files matching
   changed-code coverage 94 % → 100 % on the two new tools after nine added
   tests) and WP036F-F2 (D4, `mypy --strict` on both tools 3 errors → 0), plus
   the touched-area delta re-audit gate re-run.
+- [`exp002-d1-s3/`](exp002-d1-s3/) — EXP-002 D1 correction, S3 (the remediation
+  session). The F2 measurement (standalone baselines, an observed full-suite run
+  with the notebook timeout lifted, a paired contention experiment, and the
+  out-of-process sampler), the per-finding verification records for F4–F7, the
+  Snyk Code scans and the F8 re-check, the delta re-audit instruments, the
+  closing local gate (fast suite exit 0; the required full suite exit 1 twice on
+  host-contention tests that pass alone), and the cold-review loop (briefs, raw
+  reviewer output and the measured triage for four rounds). See its `README.md`.
 - [`exp002-d1-s2/`](exp002-d1-s2/) — EXP-002 D1 correction, S2 (the read-only
   correction audit). Six committed instruments and their verbatim outputs,
   re-executing every S1 claim rather than accepting it: the pre-fix reproduction

@@ -446,7 +446,8 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   PR #24, and handoff. The S2 audit, S3 closure and S4 closure are pending.
 - [`2026-10-15-exp002-d1-correction-audit.md`](2026-10-15-exp002-d1-correction-audit.md) —
   EXP-002 D1 correction cycle (H3 `REFUTED`, 18/39 files). It holds the **S1
-  implementation record** and the **S2 audit record**. S1: the
+  implementation record**, the **S2 audit record** and the **S3 remediation
+  record**. S1: the
   failing-test-first reproduction (18 failed, exactly the E3 set) and the root
   cause, which is on the PRIN side — 34 drawing arguments dropped or re-encoded
   by the WP-034 figure port, all bytes explained by controlled substitution on
@@ -478,7 +479,23 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   delegated and then ratified the push call, and Development Workflow §3 plus
   amendment #28 put the cycle's push point at S4 (§S2.13, §S2.14).
   Evidence: [`EVIDENCE/exp002-d1-s2/`](../../EVIDENCE/exp002-d1-s2/README.md).
-  The S3 closure and S4 closure are pending.
+  **S3 (2026-10-16 UTC, delta re-audit `CLEAN`):** `-F2` (D2) `FIXED` — the
+  notebook cell bounds are re-sized from measured contended durations (each
+  bound is 3× the recorded worst case, rounded up to 900 s, and a test ties the
+  two together in both directions) after a paired experiment showed the
+  slowdown to be CPU starvation by processes outside PRIN (notebook 02: 80.7 s
+  alone, 3,484 s beside only the `test_exp002_*` tests); `-F1` (D3) `ASSIGNED`
+  to S4 and `EXP-002-r1` with no amendment; `-F4`…`-F7` (D4) `FIXED`, F6 with
+  the restored fig13 label proved byte-immaterial on all 28 figure files; `-F8`
+  (D4) re-checked, with one further same-class `python/PT` LOW recorded for the
+  maintainer. The pre-fix reproduction (18 failed / 75 passed) and post-fix
+  pass (103 passed) were re-run, `verify_manifest` is 5/5 and the EXP-002 record
+  is untouched. Four cold-review rounds (Devin, Antigravity, Qwen) were triaged
+  by measurement. **The required full suite exited 1 in both of S3's runs on
+  two different single host-contention tests that pass alone (observation O-1,
+  carried to S4); the fast suite is a clean single pass.** Nothing pushed.
+  Evidence: [`EVIDENCE/exp002-d1-s3/`](../../EVIDENCE/exp002-d1-s3/README.md).
+  The S4 closure is pending.
 - [`PR023-multi-review-audit.md`](PR023-multi-review-audit.md) — External
   code review audit of PR #23 (EXP-001 E3–E5), 2026-09-23,
   `PASS-WITH-FINDINGS` → all findings remediated in the same round. Seven

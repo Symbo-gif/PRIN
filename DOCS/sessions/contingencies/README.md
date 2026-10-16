@@ -60,8 +60,8 @@ threat assessment), so **six remain for S3**.
 Evidence: [`EVIDENCE/exp002-d1-s2/`](../../../EVIDENCE/exp002-d1-s2/README.md).
 Committed locally only; **nothing pushed** — the maintainer delegated the push
 call and Development Workflow §3 plus amendment #28 put the cycle's push point
-at S4. S3 is next and is mandatory even
-though no D1 was found. See the
+at S4.
+**S3 COMPLETE 2026-10-16 UTC** — every open S2 finding dispositioned: `-F2` (D2) **FIXED** with evidence-sized per-notebook cell bounds, after the in-suite slowdown was measured as CPU starvation by processes outside PRIN (a controlled paired experiment: notebook 02 80.7 s alone versus 3,484 s beside only the `test_exp002_*` tests, 43×) and the F2 notebook timeout did not recur in any of three later runs; `-F1` (D3) **ASSIGNED** to S4 and `EXP-002-r1`, no amendment; `-F4`…`-F7` (D4) **FIXED**; `-F8` (D4) re-checked, with one further same-class LOW (`snyk_sarif_filter.py:142`) recorded for the maintainer. Delta re-audit **`CLEAN`** (pre-fix reproduction 18 failed / 75 passed, post-fix 103 passed, `verify_manifest` 5/5, the EXP-002 record and S1 evidence untouched). Four cold-review rounds (Devin, Antigravity, Qwen) triaged by measurement. Fast suite a clean single pass (4044 passed); **the required full suite exited 1 in both runs, on two different single host-contention-sensitive tests that pass alone (observation O-1, carried to S4)**; Snyk Code CLI 0 HIGH / 0 MEDIUM / 97 LOW; evidence in [`EVIDENCE/exp002-d1-s3/`](../../../EVIDENCE/exp002-d1-s3/README.md). **S4 is next.** See the
 [EXP-002 E5 report](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md)
 §§3, 6, 8, 11, 14.
 
