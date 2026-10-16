@@ -1540,7 +1540,7 @@ run. The tools were Python 3.14.0, ruff 0.16.1, mypy 2.3.0, pytest 9.1.1.
 | Leg | Result |
 |---|---|
 | `ruff check` over `python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/` and the three evidence directories | **exit 0**, `All checks passed!` |
-| `ruff format --check` over the same roots (and `DOCS/experiments/` under `AGENTS.md`'s source-only include) | **exit 0**, 367 files and 3 files already formatted |
+| `ruff format --check` over the same roots (and `DOCS/experiments/` under `AGENTS.md`'s source-only include) | **exit 0**, 369 files and 3 files already formatted |
 | `mypy python/prin --strict`; `mypy DOCS/experiments/ --strict`; `mypy --strict` over every changed first-party file and every S1/S2/S3 instrument | **exit 0** each: 62, 3 and 22 source files, no issues |
 | `interrogate -c pyproject.toml python/prin` | **exit 0**, 97.6% against the 95% floor |
 | `bandit -r python/prin DOCS/experiments -c pyproject.toml`, and over the three evidence directories | **exit 0** each, 0 issues of any severity |
@@ -1552,7 +1552,7 @@ run. The tools were Python 3.14.0, ruff 0.16.1, mypy 2.3.0, pytest 9.1.1.
 | Path-form coverage, `--cov=python/prin/reporting` (the module form fails on this host, DV-033), and `changed_line_coverage.py` | 116 passed; `figure_generation.py` **99.41%**. Against the cycle base `fd8854ed`: **11 of 11** changed executable lines executed (100%). Against the S3 base `5ba0129e`: 15 lines changed and **none is an executable statement** (docstring lines, and one keyword argument inside an executed `ax.scatter(…)` statement), so that 100% is **vacuous**; the line itself is exercised by the new fig13-label test. Exit 0 |
 | `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets -- -D warnings`; `cargo test --workspace` | **exit 0** each; `cargo test` passed on the first attempt (48 `test result: ok` lines summing to 1,604 passed, 0 failed), so no contention retry was needed |
 | Sphinx `-W --keep-going -b html` from a deleted `DOCS/sphinx/_build` | **exit 0**, `build succeeded` (long-leg run and final run) |
-| `gitleaks` (pinned binary 8.30.1), full history and `--staged` | **exit 0** each: no leaks (758 commits at the long-leg run; 761 at the final run); nothing staged |
+| `gitleaks` (pinned binary 8.30.1), full history and `--staged` | **exit 0** each: no leaks (758 commits at the long-leg run; 769 at the final run); nothing staged |
 | Snyk Code CLI, `snyk code test . --severity-threshold=low` (snyk `1.1306.2`, account `Symbo-gif`, `snyk whoami` exit 0) | exit 1 as the CLI reports any finding: Test Summary **0 HIGH / 0 MEDIUM / 97 LOW**; **0** findings above LOW in any git-known path, **0** in S3's three changed first-party files, **0** in S3's instruments; the F8 re-check is §S3.4 |
 | Snyk Open Source, `pip-audit`, `cargo audit` | **not run**: no dependency or lockfile changed (the manifests diff is empty); `cargo audit` is red on DV-045, out of scope |
 | Snyk Code through the MCP route | **blocked**: no Snyk MCP tool was exposed in this session. Not claimed |
@@ -1601,8 +1601,8 @@ Re-verified by re-execution, not by reading earlier records
 | **EXP-002 record immutability** (I1) | `git diff 5ba0129e..HEAD` over `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/`, `benchmarks/results/EXP-002/`, `.github/`, `Cargo.toml`, `Cargo.lock` and `pyproject.toml` is **empty**; `git diff --name-only` for the whole range lists no other manifest |
 | S1 evidence (I2) | only `EVIDENCE/exp002-d1-s1/README.md` changed: **+1, −0**; no `SHA256SUMS` or manifest in that directory; the enforced rule holds |
 | Audit text (I3) | this file: **0 lines deleted** against `5ba0129e`, so S1 and S2 text is unedited and §S3 is a pure append (`immutability-after.txt` gives the added-line count on the commit it ran on) |
-| Evidence indexes | `index_selfcheck.py`: `exp002-d1-s1` 12 files, `-s2` 30 files, `-s3` 99 files (at the commit the check ran on), each **0 unindexed, 0 dangling** |
-| Draft PR #34 | `OPEN`, `isDraft: true`, `headRefOid 8fd0ecc9…`, equal to `origin/hotfix/exp002-d1-figure-parity`; the branch is 23 commits ahead and 0 behind. **Nothing was pushed** |
+| Evidence indexes | `index_selfcheck.py`: `exp002-d1-s1` 12 files, `-s2` 30 files, `-s3` 129 files (at the commit the check ran on), each **0 unindexed, 0 dangling** |
+| Draft PR #34 | `OPEN`, `isDraft: true`, `headRefOid 8fd0ecc9…`, equal to `origin/hotfix/exp002-d1-figure-parity`; the branch is ahead of origin and 0 behind (31 commits when that record was written). **Nothing was pushed** |
 
 **Delta re-audit verdict: `CLEAN`.** The regression reproduces against the pre-fix
 module, vanishes with the fix, and the changes S3 made on top of the S1 fix are

@@ -1,6 +1,6 @@
 # EXP-002 D1 S3 - delta re-audit
-# date (UTC): 2026-10-16T13:57:17Z
-# git HEAD: cad16b7c64f642313e1472bca6b350ca02941645   tracked changes at start: 0
+# date (UTC): 2026-10-16T15:31:44Z
+# git HEAD: e844f54a06973a44d88bb011224a5885bfa67349   tracked changes at start: 0
 # host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0
 
 ## D1 figure_generation.py SHA-256 at the commits involved
@@ -20,7 +20,7 @@
   git diff d90eeabb -- module (must be empty): 0 lines
 
 # command: .venv/Scripts/python.exe -m pytest parity/test_parity_publication.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
-# started 2026-10-16T13:57:22Z
+# started 2026-10-16T15:31:53Z
       1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig9_training_curves.png]
       1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig9_training_curves.pdf]
       1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig8_parameter_efficiency.png]
@@ -39,12 +39,12 @@
       1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig11_flops_scaling.pdf]
       1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig10_statistical_summary.png]
       1 FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig10_statistical_summary.pdf]
-      1 ======================= 18 failed, 75 passed in 15.28s ========================
+      1 ======================= 18 failed, 75 passed in 15.45s ========================
 # exit code: 1 (must be 1)
-# ended 2026-10-16T13:57:40Z
+# ended 2026-10-16T15:32:13Z
 
 # command: .venv/Scripts/python.exe -m pytest tests/test_publication_figure_arguments.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
-# started 2026-10-16T13:57:41Z
+# started 2026-10-16T15:32:13Z
 FAILED tests/test_publication_figure_arguments.py::test_fig5_marker_sizes - a...
 FAILED tests/test_publication_figure_arguments.py::test_fig7_accuracy_labels_bottom_aligned
 FAILED tests/test_publication_figure_arguments.py::test_fig8_markers_drawn_above_grid
@@ -55,9 +55,9 @@ FAILED tests/test_publication_figure_arguments.py::test_fig12_reference_styling
 FAILED tests/test_publication_figure_arguments.py::test_fig14_bar_transparency
 FAILED tests/test_publication_figure_arguments.py::test_fig15_marker_sizes_fit_and_legends
 FAILED tests/test_publication_figure_arguments.py::test_fig13_series_labels_follow_the_reference
-============================= 10 failed in 3.61s ==============================
+============================= 10 failed in 3.51s ==============================
 # exit code: 1 (must be 1)
-# ended 2026-10-16T13:57:50Z
+# ended 2026-10-16T15:32:23Z
 
 ## D3 restore the module to HEAD
 # command: git restore -- python/prin/reporting/figure_generation.py
@@ -67,14 +67,14 @@ FAILED tests/test_publication_figure_arguments.py::test_fig13_series_labels_foll
 
 ## D4 post-fix: both test files together on the current tree (must all pass)
 # command: .venv/Scripts/python.exe -m pytest tests/test_publication_figure_arguments.py parity/test_parity_publication.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
-# started 2026-10-16T13:57:55Z
+# started 2026-10-16T15:32:28Z
 
 tests\test_publication_figure_arguments.py ..........                    [  9%]
 parity\test_parity_publication.py ...................................... [ 46%]
 .......................................................                  [100%]
 
-============================ 103 passed in 15.65s =============================
+============================ 103 passed in 15.81s =============================
 # exit code: 0 (must be 0)
-# ended 2026-10-16T13:58:16Z
+# ended 2026-10-16T15:32:50Z
 
 # overall: 0 (0 = the regression reproduced pre-fix, the module restored, and all tests pass post-fix)
