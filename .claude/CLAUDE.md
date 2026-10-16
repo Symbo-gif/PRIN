@@ -26,10 +26,17 @@ commands/exit codes/SHA as evidence, and never describe local results as "CI
 green". Do not test or claim Linux/macOS behaviour. Do not re-enable workflows,
 restore required checks, or push `v*` tags unless the maintainer instructs it.
 See Development Workflow and Audit Standards §3 "Local-validation regime".
-Exception: Plan amendment #50 (2026-10-11) re-enables the seven workflows for
-the EXP-002 experiments only (sessions 0159–0163). Record hosted results
-verbatim as additional evidence, keep the local gate authoritative, and disable
-the workflows again when EXP-002 E5 closes or the maintainer says so.
+Exception: Plan amendment #52 (2026-10-16) re-enables the seven check workflows
+and keeps them active until the campaign's experimentation is complete (the
+close of session `0194`, or earlier on maintainer instruction), superseding
+amendment #50's EXP-002-only window (sessions 0159–0163). Record each hosted
+result verbatim (workflow, run ID, head SHA, conclusion, link) as additional
+evidence for the exact SHA it ran on, keep the local gate mandatory and
+authoritative, never call a local result "CI green", and never claim behaviour
+on a platform a hosted run did not exercise. Triage and record a red hosted
+check; never waive, skip, deselect or hide one by editing a workflow or removing
+a required check. The ruleset's required-status-check rule stays removed, and
+disabling the workflows again at the end condition is recorded.
 
 `DOCS/archive/` is historical and non-authoritative. Do not use retired
 VibeCheck state as current project truth and do not emit safety badges without
