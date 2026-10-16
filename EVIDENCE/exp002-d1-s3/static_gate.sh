@@ -36,7 +36,10 @@ echo "# git HEAD: $(git rev-parse HEAD)   tracked changes: $(git status --porcel
 echo "# host: $(uname -srm)   $($PY -V 2>&1)   ruff $(.venv/Scripts/ruff.exe --version)   $(.venv/Scripts/mypy.exe --version)"
 
 leg "ruff check over every first-party root and evidence dir" .venv/Scripts/ruff.exe check "${ROOTS[@]}"
-leg "ruff format --check over the same roots" .venv/Scripts/ruff.exe format --check "${ROOTS[@]}"
+# DOCS/experiments is format-checked separately (next leg) with the source-only include,
+# as AGENTS.md documents: a plain `ruff format --check DOCS/experiments/` also formats the
+# Markdown code blocks of the frozen experiment reports, which are not source.
+leg "ruff format --check over the source roots" .venv/Scripts/ruff.exe format --check python/ tests/ benchmarks/ tools/ parity/ EVIDENCE/exp002-d1-s1/ EVIDENCE/exp002-d1-s2/ EVIDENCE/exp002-d1-s3/
 leg "ruff format --check DOCS/experiments (source-only include)" .venv/Scripts/ruff.exe format --check DOCS/experiments/ --config "include = ['*.py', '*.pyi', '*.ipynb']"
 leg "mypy python/prin --strict" .venv/Scripts/mypy.exe python/prin --strict
 leg "mypy DOCS/experiments/ --strict" .venv/Scripts/mypy.exe DOCS/experiments/ --strict

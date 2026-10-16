@@ -23,9 +23,11 @@ output behind each classification is in the round directories
 
 Tool-environment lesson: a denied command ends a headless reviewer's session.
 Brief v2 (rounds 2 onward) forbids shell commands for all three reviewers and
-supplies the change set as files. This departs from the Devin invocation named
-in the S3 brief (`smart`, which lets it run `git`), because that invocation
-cannot complete a review here; the brief text remains identical for all three.
+supplies the change set as files. The Devin invocation is unchanged
+(`--permission-mode smart`); what changed is the brief, which no longer permits
+any reviewer to run commands. That is stricter than the S3 brief's section 6.2,
+which allows read-only commands, because a denied command ended two reviewers'
+sessions in round 1. The brief file is identical for all three in each round.
 
 ## Round 2 — brief v2, HEAD `33923be5` — all three reviewers reported
 

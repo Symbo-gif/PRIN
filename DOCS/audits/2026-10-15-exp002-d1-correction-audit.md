@@ -1128,3 +1128,331 @@ will be carried in S4's single push with a fresh full-history secret scan.
 Evidence added by this addendum:
 [`snyk-code-cli.txt`](../../EVIDENCE/exp002-d1-s2/snyk-code-cli.txt),
 [`snyk_sarif_filter.py`](../../EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py).
+
+
+---
+
+## S3 — remediation and delta verification (2026-10-16 UTC)
+
+**Session brief:**
+[`2026-10-14-exp002-d1-s3-correction-remediation.md`](../sessions/contingencies/2026-10-14-exp002-d1-s3-correction-remediation.md).\
+**AI pair:** Claude Sonnet 5.5 (Claude Code), working to the maintainer's session
+prompt (the S3 execution contract). The cold reviewers were Devin `swe-2-high`,
+Antigravity `agy` (`gemini-3.8-flash-high`) and Qwen Code (`qwen3.8-max-preview`).\
+**Branch / PR:** `hotfix/exp002-d1-figure-parity`; draft **PR #34**, `OPEN`,
+`isDraft: true`, head `8fd0ecc9…` — not touched. **Nothing is pushed** (Development
+Workflow §3 and Plan amendment #28 put the cycle's push point at S4).\
+**Evidence:** [`EVIDENCE/exp002-d1-s3/`](../../EVIDENCE/exp002-d1-s3/README.md). Every
+command below is recorded there verbatim with its exit code.\
+**Status:** the resolutions, the F2 measurement and the review loop are recorded
+in §S3.1–§S3.6. The closing gate (§S3.7), the delta re-audit result (§S3.8) and the
+verdict (§S3.10) are appended to this section after the last review round has
+converged.
+
+### S3.0 Entry state
+
+`git fetch --all --prune` was run first. Everything the brief asserted was checked
+rather than assumed:
+
+| Item | Observed |
+|---|---|
+| Branch / `HEAD` | `hotfix/exp002-d1-figure-parity` @ `5ba0129e8f225c62de92593d329be63ca7e7cf7e` |
+| Ahead of `origin` | 4 commits (`fadc8ce8`, `9c3f5edd`, `eae1fab8`, `5ba0129e`); `origin/hotfix/exp002-d1-figure-parity` = `8fd0ecc9949a607f2a7090fe39205f00bb0078c9` |
+| Working tree | clean (`git status --porcelain` empty) |
+| PR #34 | `OPEN`, `isDraft: true`, `headRefOid` `8fd0ecc9…` |
+| Branch point | `fd8854ed87a21e01f16e2f7128b431e74085a26e` (the PR #33 merge) |
+| Host | HP OMEN 16L desktop, AMD Ryzen 7 8700F (8 cores / 16 threads), 31.6 GB RAM, Windows 11 (`MINGW64_NT-10.0-26300`), Python 3.14.0, pytest 9.1.1, Matplotlib 3.11.1, NumPy 2.5.1, torch 2.11.0+cu128, nbclient 0.11.0 |
+
+Windows x86_64 only; Linux and macOS were **not** tested (Plan amendment #48 item 4).
+No hosted check ran or is cited. The seven check workflows stay disabled.
+
+### S3.1 Finding resolutions
+
+Work started with F2, the finding the brief and §S2.12 order first. Its
+disposition needs an observed full-suite run of about three hours, so while the
+standalone measurements and then that run were in progress the independent
+findings were resolved; the **commit order therefore does not follow D1→D4**
+(see §S3.9, item 1).
+
+| ID | Severity | Resolution | Commit(s) | Evidence |
+|---|---|---|---|---|
+| `EXP002D1-S2-F2` | D2 | **FIXED** (route (a), re-size from cited evidence) | `91f3327a` | §S3.2; [`f2/README.md`](../../EVIDENCE/exp002-d1-s3/f2/README.md) |
+| `EXP002D1-S2-F1` | D3 | **ASSIGNED** to S4 and `EXP-002-r1` E1/E2; no amendment | `9583eb4d` | §S3.3; the S4 brief's "Carried from S3" section |
+| `EXP002D1-S2-F4` | D4 | **FIXED** | `d53ab885` | `index-selfcheck-s1.txt` |
+| `EXP002D1-S2-F5` | D4 | **FIXED** | `2db18fc3` | `docstring-only-check.txt`, `f6-verification.txt` V3 |
+| `EXP002D1-S2-F6` | D4 | **FIXED** (restored, byte-immateriality re-proved) | `2b8b7a55` | `f6-test-red-before-fix.txt`, `f6-verification.txt` |
+| `EXP002D1-S2-F7` | D4 | **FIXED**, then corrected after a cold review found the first rewording over-claimed | `1403451c`, `33923be5` | `docstring-only-check.txt`; `cold-review/triage.md` R1-1 |
+| `EXP002D1-S2-F8` | D4 | **RATIFIED**; standing re-check done, **one further same-class finding recorded** | none | §S3.4; `snyk-code-s3-after-review-fixes.txt` |
+| `EXP002D1-S2-F3` | D4 | **RESOLVED in §S2.14**; not reopened. `snyk whoami` → `Symbo-gif` (exit 0) was verified before the CLI was relied on | none | `snyk-code-s3.txt` |
+
+Per-finding detail for F4–F7:
+
+- **F4.** Before editing, `EVIDENCE/exp002-d1-s1/` was re-checked for a hash freeze:
+  12 tracked files, no `SHA256SUMS` or manifest. One README row was added
+  (+1 line, 0 deleted). The evidence file's bytes are untouched (sha256 `fdfa17cc…04dd`,
+  last modified by `af894998`). `index_selfcheck.py` reports the file unindexed
+  before the edit and 0 unindexed / 0 dangling after it.
+- **F5.** The module docstring now says the tests pin all 34 registered
+  divergences, including the 8 byte-immaterial ones. `docstring_only_check.py`
+  shows the AST is identical outside the module docstring; the file runs 9 passed
+  before and after; `fast_gate_divergence_coverage.py` still reports 34/34 and no
+  longer prints the "UNDERSTATES" line.
+- **F6.** Restored `label=f"Obj {label}" if index < 5 else None` in `fig13`. The
+  regression test was written first and failed (`'_child0' != 'Obj 0'`), then
+  passed. Matplotlib files an omitted label and `label=None` identically as
+  `_child<n>`, so the `index < 5` cut-off is observable only through a synthetic
+  seven-group copy of the archived data (the archived data has exactly five label
+  groups); the test builds one. Byte immateriality was re-proved rather than
+  assumed: `parity/test_parity_publication.py` 93 passed; artist-level
+  equivalence 14/14 EQUAL; and **all 28 figure files are raw-byte identical
+  before and after the change** (`raw_byte_identity.py`), with a negative control
+  (the pre-fix port) that differs on exactly the 18 D1 files.
+- **F7.** The docstring now lists the display-level arithmetic. The audit's example
+  named only the Fig. 15 fit; the module also plots Fig. 12's `K_c` ratio and
+  annotates Fig. 11's FLOPs ratios, so the first rewording ("the only arithmetic is
+  …") was itself an over-claim. A cold reviewer's transcript pointed at Fig. 10's
+  difference of means; reading the code confirmed it, and `33923be5` lists the
+  derived quantities by kind, explicitly not exhaustively. Both commits are
+  docstring-only (AST identical outside the module docstring).
+
+### S3.2 F2 — the required full suite
+
+**Disposition: route (a), re-size the per-cell bound from cited in-suite
+evidence.** No test was deselected, skipped, xfailed or shortened and no assertion
+changed. The route needs no register edit, so no maintainer-approval trail is
+needed or claimed.
+
+*What was measured* (all in [`f2/`](../../EVIDENCE/exp002-d1-s3/f2/README.md)):
+
+1. **The notebooks are not slow.** Alone on a quiet host the four complete in
+   73.3 / 71.1 / 44.5 / 37.0 s. Notebooks 01, 03, 04 are single-threaded; notebook
+   02 does 435 CPU-seconds across about six cores with a 3.2 GB working set.
+2. **Inside the full suite they take 8–42× longer.** An observed run of the
+   required `tests/ parity/` invocation on a clean tree (`2f796ddf`, 2026-10-16
+   03:20:04Z–06:03:32Z) with the notebook timeout lifted by a diagnostic plugin,
+   so nothing was killed, finished **exit 0, `6326 passed, 184 skipped`, 2 h 42 m**
+   and gave the first uncensored in-suite durations: 678.9 / **2975.0** / 367.3 /
+   382.1 s for notebooks 01 / 02 / 03 / 04 (9.3× / **41.8×** / 8.3× / 10.3× their
+   standalone time). S1 and S2's 02 durations (1052.8 s, 1064.0 s) were killed at
+   the 900 s bound and are censored.
+3. **The cause is CPU starvation by processes outside PRIN, not memory.** From the
+   moment the first `tests/test_exp002_*` tests began (03:33:47Z), all 102 samples to
+   06:00Z show the host at 98–100% CPU while pytest received a median **0.01
+   CPU-s/s** (it had received a median 2.8 before): a drop of about 280×. Over those
+   2 h 27 m the CPU was used by `System`, `mc-fw-host.exe`, `Devin.exe` and
+   `svchost.exe`, and by `rg.exe`: at 04:37Z there were **134 concurrent
+   `rg.exe --files --hidden …` processes, all children of one `Devin.exe` Node
+   service**, 2,093 cumulative CPU-seconds. The notebook kernels received 0.17–0.33
+   CPU-s per wall-second, host available memory never fell below 5.5 GB, and paging
+   averaged at most 26 pages/s. When pytest exited the host fell from 100% to 33%
+   within about a minute.
+4. **A smaller group reproduces it.** A paired experiment ran notebook 02 alone
+   (control: **80.7 s**, 5.8 cores) and again while only `tests/test_exp002_driver.py`
+   and `tests/test_exp002_e4_analysis.py` ran beside it (treatment: **3,484 s, 43.2×**,
+   0.32 CPU/wall, host 99.9%). The training cell went from 35.7 s to 1,926 s.
+
+*What is not established.* What starts the `rg.exe` scans, and why `System` and
+`mc-fw-host.exe` are busy: the timing puts the onset at the `test_exp002_*` group
+in both runs, but no process was stopped to test causation, and these are the
+maintainer's processes — they were observed, never killed. Why the contention
+drained within a minute of the end of the full suite but persisted for over 28
+minutes after the experiment's load generator exited is not explained. Nothing
+here implicates PRIN code.
+
+*The change* (`tests/test_notebooks.py`, `91f3327a`). Each notebook has its own
+per-cell bound: **3 × the largest completed contended duration recorded for it,
+rounded up to a multiple of 900 s**.
+
+| Notebook | Largest completed contended duration | Bound (was 900 s) |
+|---|---|---|
+| `01_oscillosim_quickstart` | 800.07 s (S2, full suite) | 2,700 s |
+| `02_clevr_n_binding` | 3,484.0 s (S3 experiment) | 10,800 s |
+| `03_custom_coupling` | 408.96 s (S1, full suite) | 1,800 s |
+| `04_torch_bridge` | 389.81 s (S1, full suite) | 1,800 s |
+
+Two fast tests pin each bound to its recorded worst case, so neither can move
+without the other. They **fail against the old 900 s bounds (4 failed) and pass
+after (33 passed, the 4 slow executing tests still collected)**
+(`f2/test-red-before-fix.txt`, `f2/test-green-after-fix.txt`). Three pre-existing
+`mypy --strict` errors in the same file (bare `dict` annotations) were fixed
+incidentally, typing only; they are present at `HEAD~` (`5ba0129e`).
+
+*The trade-off, stated plainly.* The bound is now a ceiling for a leg that is
+starved but progressing, not a performance check: the quiet-host durations are
+37–73 s. A genuine hang takes up to three hours to be caught by the bound, so hang
+detection in this suite rests, as Testing Standards §7 item 3 already requires,
+on supervised observation rather than on the timeout. Re-sizing is the route the
+audit offered and §7 item 2 prescribes ("sized from cited completed/incomplete
+evidence for that workload, plus substantial margin for … host variability"); it
+does not make the host quieter, and the required gate will be slow whenever the
+same tooling is active.
+
+### S3.3 F1 — the two registered H3 policies
+
+Resolved by **assignment**, as S2 specified; no plan amendment is requested and
+none is adopted. The S4 brief now carries the finding into the `EXP-002-r1`
+authorization (closure item 5, plus a "Carried from S3" section):
+
+1. `EXP-002-r1`'s pre-registration must **name the deciding rule** for H3 and the
+   status of the other policy. S3 does not choose.
+2. It must **replace or restate the §11.3 item 1 clause** ("if the two verdicts
+   differ, E5 must state that H3's verdict depends on a comparison amendment made
+   after outcome exposure, and must not report either verdict alone"), which was
+   written for a state in which both policies refuted, before any `r1` data exist.
+3. The choice must be **fixed before the first `RUN-` directory exists**, and
+   must **disclose outcome exposure**: it is made with knowledge of `EXP-002`'s
+   results and of S2's residual classification (14 PDF Info key sets, 11 table line
+   terminators, 0 unclassified).
+4. PRIN's fixed PDF metadata — what makes H4 hold — and the frozen reference must
+   **not** be altered to chase §11.3 equality.
+5. `EXP-002`'s frozen `preregistration.md` is never edited.
+
+Campaign plan §10.4 item 4 already requires a new pre-registration for the
+re-run, which is the governed place for this registration. If `EXP-002-r1`'s E1 or
+E2 finds the choice cannot be made inside a pre-registration (for example if the
+"not a reversal" test of §10.4 item 5 itself needed reinterpreting), that is an
+amendment matter to be drafted for maintainer approval.
+
+### S3.4 F8 — the standing Snyk re-check
+
+Coding Standards §6.2 requires accepted items to stay visible and be re-checked
+every cycle. `snyk code test . --severity-threshold=low` (snyk `1.1306.2`, account
+`Symbo-gif`) was run for the S3 tree. The Snyk MCP route was **not available** in
+this session (no Snyk MCP tool was exposed) and is not claimed. Nothing was added
+to `.snyk`; no ignore or severity exclusion was created.
+
+- **The gate holds:** Test Summary **0 HIGH / 0 MEDIUM / 97 LOW** on the final
+  rescan; 45 findings are in git-known paths and 52 in gitignored on-disk agent
+  worktree copies (the scan counts the filesystem, not git).
+- **S3's own code:** **0 findings** in the two changed first-party files and in the
+  S3-added instruments. The *first* scan had reported **one MEDIUM**,
+  `python/CommandInjection`, in the new `suite_sampler.py` (the `typeperf.exe` path
+  was built from an environment variable). It was remediated, not suppressed, by a
+  fixed absolute path, and the first-scan record is kept
+  (`snyk-code-s3-first-scan-medium.txt`). After the round 2 fixes the scan was
+  repeated (`snyk-code-s3-after-review-fixes.txt`): resolving `git` to an absolute
+  path with `shutil.which` introduced nothing.
+- **The two ratified locations are unchanged:** `changed_line_coverage.py:98` and
+  `decomposition_rerun_check.py:92` (`python/PT`, LOW).
+- **One further finding of the same class, not in the F8 record:**
+  `EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142` (`python/PT`, LOW, "unsanitized
+  input from a command line argument flows into `pathlib.Path`"). It is S2's
+  seventh instrument, written after S2's own CLI scan, so no S2 scan could have
+  reported it. Its dataflow, prerequisites (argv control implies existing code
+  execution as the auditor), read-only sink and non-shipped location match the
+  assessment ratified for the other two. **It is recorded here for the maintainer
+  to extend F8's ratification to a third location; S3 does not ratify it and did
+  not edit S2's instrument.** S3's own instruments avoid the class by reading
+  standard input or a closed set of names.
+- **A correction to a conclusion S2 drew.** S2 recorded that "Snyk Code's SARIF
+  carries no severity" because every `result.level` in its report was `note`. Its
+  report had no MEDIUM finding. S3's first scan had exactly one, and exactly one
+  result carried `warning` (the other 97 carried `note`), matching the console's
+  `0 HIGH 1 MEDIUM 97 LOW`. So `note` = LOW and `warning` = MEDIUM on the
+  evidence (`error` = HIGH is the SARIF convention and has not been observed). The
+  CLI's Test Summary remains the authoritative breakdown. S2's text is not edited.
+
+### S3.5 The cold review loop
+
+Three reviewers received an identical brief file and no account of what changed;
+the change set was supplied as `git diff` and `git log --stat` files. Interfaces
+were discovered from each tool's `--help` and model listing: Devin
+(`devin --model swe-2-high -p --prompt-file <brief> --permission-mode smart
+--export <out>`), `agy` (`--model gemini-3.8-flash-high --mode plan -p`), Qwen
+(`-m qwen3.8-max-preview -o text -p`). There is no sandbox on Windows, so
+read-only was enforced in the brief and checked afterwards: `git status
+--porcelain` was empty before and after each round. Full indexes, raw outputs and
+the triage are in [`cold-review/`](../../EVIDENCE/exp002-d1-s3/cold-review/README.md).
+
+| Round | Tree | Reviewers that reported | Claims | CONFIRMED | REFUTED | NOT REPRODUCIBLE |
+|---|---|---|---|---|---|---|
+| 1 — **degraded** | `7dbfc546`, brief v1 | none (see below) | 1 (Devin narration) | 1 | 0 | 0 |
+| 2 | `33923be5`, brief v2 | Devin 8, agy 6 (+9 refuted narrative assertions), Qwen 11 | 25 findings → 15 distinct | 15 | 9 | 0 |
+| 3 | to be recorded | | | | | |
+| 4 | to be recorded | | | | | |
+
+**Round 1** produced no reviewer report. Devin aborted when `--permission-mode
+smart` rejected a `git check-ignore` command; `agy` aborted at its first shell
+attempt (headless mode cannot prompt); Qwen was terminated by the caller after
+about 24 minutes with empty output. **That termination was premature**: Qwen's own
+session log was being written continuously until the moment it was killed, and `-o
+text` prints only at the end, so empty stdout and low CPU were the wrong signals;
+Testing Standards §7 item 3's "completed-work count" was not checked. Qwen
+delivered a full report in round 2. Round 1 did yield one claim worth measuring (Devin's
+narration that the F7 docstring's list of arithmetic omitted Fig. 10), which was
+**confirmed** and fixed in `33923be5`.
+
+**Round 2** used brief v2, which forbids shell commands for all three reviewers
+(a denied command ended two sessions in round 1). The Devin and `agy` flags are
+unchanged; the brief is stricter than the S3 brief's §6.2, which allows read-only
+commands. All three reported. The triage reproduced each checkable claim and
+searched for each thing agy named: **agy's report contained nine assertions that
+name commits, files, tests and a `Testing_Standards.md` edit which do not exist**
+(for example commit subjects such as `fix(reporting): document and assert
+series-label arg on fig13 (EXP002D1-S2-F4)` and a test
+`test_negative_control_detects_deliberate_signature_drift`); these are refuted by
+search, and the real findings it also made are kept. The 15 distinct confirmed
+claims, all fixed or dispositioned (some were transient and close with this
+section), included: the sampler could never exit if pytest was never seen — and, found
+while fixing it, it counted any shell whose command line merely mentioned pytest as
+a pytest process; the run label could climb out of the scratch directory;
+`immutability.sh` printed but did not enforce its S1-evidence rule; the Snyk
+filter's exit status did not encode its gate; four instruments called `git` by bare
+name against Coding Standards §6.1; and several README claims were stale or too
+strong. Qwen's explicit "checked, no finding" statements held.
+
+### S3.6 Evidence discipline
+
+`index_selfcheck.py` (every committed file indexed by its directory's README, every
+link resolving) reports **0 unindexed, 0 dangling** for `exp002-d1-s1` (after F4),
+`exp002-d1-s2` and `exp002-d1-s3`. It was used to catch two defects in S3's own
+bundle: `*.log` is gitignored, so two console logs would silently not have been
+committed (renamed `.txt`), and the first version of the README claimed lint
+cleanliness that no committed output evidenced (now evidenced by the closing gate).
+
+### S3.7 Closing gate
+
+*Appended after the last review round.*
+
+### S3.8 Delta re-audit
+
+*Appended after the last review round.*
+
+### S3.9 Deviations and observations
+
+1. **Commit order does not follow D1→D4.** F5, F7, F4 and F6 (D4) and F1 (D3) were
+   committed before F2's disposition (D2). The history is not rewritten. The
+   *work* order did start with F2: its standalone baselines ran 01:38Z–01:42Z, before
+   the first S3 commit at 01:43Z, and its disposition needed a roughly three-hour
+   observed run during which only independent changes could be made. The findings
+   are independent, so the order changed no content.
+2. **Qwen's round 1 termination was premature** (§S3.5). Recorded in the triage.
+3. **The brief was changed between rounds 1 and 2** (v1 → v2), stricter about
+   shell commands, for the reason in §S3.5. The Devin invocation (`--permission-mode
+   smart`) was kept.
+4. **S3 loaded the maintainer's machine for several hours**: the observed full suite
+   (2 h 42 m) and the contention experiment (about one hour, including the 499-test
+   load generator), in addition to the gates. Both were run on a clean tree, output
+   went outside the repository, and nothing belonging to the maintainer was stopped.
+5. **A process slip, caught and corrected:** a Python `write_text` edit on Windows
+   converted `tests/test_publication_figure_arguments.py` to CRLF in the working
+   copy. The committed blobs were LF (`.gitattributes` `text=auto eol=lf`); the
+   working copies were normalised and verified.
+6. **Out of scope, recorded as candidates and not done:** (a) operating guidance
+   for the gate (for example excluding `.pytest_basetemp` from IDE workspace
+   scanning and security-software real-time scanning, or asking the maintainer to
+   run the gate with those tools quiet) — `AGENTS.md` is the maintainer's;
+   (b) extending F8's ratification to `snyk_sarif_filter.py:142`; (c) the
+   `tests/test_exp002_*` tests are the heaviest file-churn tests in the suite and
+   the trigger in both observations; whether their temporary trees could live
+   outside the workspace is a design question, blocked by `AGENTS.md`'s mandated
+   in-repo basetemp name; (d) the Parity Report, the PSR, the deviation ledger and
+   the E5 erratum, which belong to S4.
+
+### S3.10 Verdict and handoff
+
+*Appended after the last review round.*
+
+**Not authorized by S3:** merging PR #34, marking it ready for review,
+`EXP-002-r1`, or releasing session `0164`. Session `0164` stays `BLOCKED`. S3 commits
+locally only; nothing is pushed.
