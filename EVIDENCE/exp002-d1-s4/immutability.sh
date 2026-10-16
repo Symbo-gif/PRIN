@@ -73,15 +73,27 @@ echo "## I4 the S4 brief's checklist and carried sections are byte-identical to 
 TMP=$(mktemp -d)
 git show "$FROM:$BRIEF" | sed -n '/^## Closure checklist/,$p' > "$TMP/base.txt"
 sed -n '/^## Closure checklist/,$p' "$BRIEF" | sed '/^## S4 completion and handoff/,$d' > "$TMP/head.txt"
+# Trailing blank lines are normalised before comparing, and the reason is recorded:
+# the base section ends at EOF, while the head section ends at the blank line that
+# separates it from the appended "## S4 completion and handoff" section. That blank
+# line is a consequence of appending a section, not an edit to the checklist, so
+# comparing without normalising reports a difference the rule does not mean to catch.
+# (The first run of this instrument did exactly that; this note and the
+# normalisation are the correction, and both runs are kept in gate/.)
+printf '%s' "$(cat "$TMP/base.txt")" > "$TMP/base.norm"
+printf '%s' "$(cat "$TMP/head.txt")" > "$TMP/head.norm"
 echo "  base section lines: $(wc -l < "$TMP/base.txt")   head section lines: $(wc -l < "$TMP/head.txt")"
-if diff -u "$TMP/base.txt" "$TMP/head.txt" > "$TMP/d.txt"; then
-  echo "  identical: yes"
+echo "  after trailing-blank-line normalisation: base $(wc -c < "$TMP/base.norm") bytes, head $(wc -c < "$TMP/head.norm") bytes"
+if cmp -s "$TMP/base.norm" "$TMP/head.norm"; then
+  echo "  identical: yes (byte-for-byte after normalisation)"
 else
-  echo "  identical: NO"; sed 's/^/    /' "$TMP/d.txt"; status=1
+  echo "  identical: NO"; diff -u "$TMP/base.norm" "$TMP/head.norm" | sed 's/^/    /'; status=1
 fi
 echo "  what the brief's diff does change (numstat, and every deleted line):"
 git diff --numstat "$FROM..$TO" -- "$BRIEF" | awk '{printf "    added %s, deleted %s\n",$1,$2}'
 git diff -U0 "$FROM..$TO" -- "$BRIEF" | grep -a '^-[^-]' | cut -c1-100 | sed 's/^/    DELETED: /'
+echo "  (the two deleted lines above must be the Status and Blocked-numbered-session"
+echo "   header lines only, which the S4 session prompt directs S4 to update)"
 rm -rf "$TMP"
 
 echo
