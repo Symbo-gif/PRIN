@@ -9,11 +9,15 @@ divergences on the live Figure objects instead, so a regression fails the
 default ``tests/`` run as well. That includes the 8 byte-immaterial ones (D5.1,
 D5.3, D9.2, D11.4, D12.5, D12.7, D15.4, D15.7): each equals an active rcParam
 or has no visible effect today, and a faithful port still mirrors it, so it
-stays pinned. The comment on each assertion names its divergence ID.
+stays pinned. The comment on each assertion names its divergence ID. One
+further test pins fig13's per-series labels: the reference sets them, they
+change no byte (fig13 draws no legend), and they are not a registered
+divergence, so it cites the audit finding instead of a divergence ID.
 """
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Iterator
 from operator import attrgetter
 from pathlib import Path
@@ -174,3 +178,39 @@ def test_fig15_marker_sizes_fit_and_legends(
     assert velocity.get_xlabel() == f"Speed Multiplier ({TIMES})"  # D15.6
     for ax in (noise, velocity):
         assert _legend_loc(ax.get_legend()) == LOWER_LEFT  # D15.4, D15.7
+
+
+def test_fig13_series_labels_follow_the_reference(
+    render: Callable[[Generator], Figure], tmp_path: Path
+) -> None:
+    # EXP002D1-S2-F6: the reference names the first five label groups
+    # "Obj <label>" (label=f"Obj {lbl}" if j < 5 else None). fig13 draws no
+    # legend, so this changes no byte and is not a registered divergence; it
+    # keeps the port argument-faithful. Matplotlib files an unlabelled
+    # collection under a private "_child<n>" name, so the cut-off is observed
+    # as "a private name from the sixth group on".
+    archived = render(figures.fig_representation_geometry)
+    for ax in archived.axes:
+        assert [c.get_label() for c in ax.collections] == [f"Obj {n}" for n in range(5)]
+
+    # The archived data has exactly five label groups, which never reaches the
+    # cut-off. A copy with seven groups does.
+    source = json.loads(
+        (RESULTS / "phase3_representation_geometry.json").read_text("utf-8")
+    )
+    for model in source["models"]:
+        model["labels_sample"] = [i % 7 for i in range(len(model["labels_sample"]))]
+    seven = tmp_path / "seven-groups"
+    seven.mkdir()
+    (seven / "phase3_representation_geometry.json").write_text(
+        json.dumps(source), "utf-8"
+    )
+
+    def seven_groups(_results: Path | None, output: Path | None) -> list[Path]:
+        return figures.fig_representation_geometry(seven, output)
+
+    for ax in render(seven_groups).axes:
+        labels = [c.get_label() for c in ax.collections]
+        assert len(labels) == 7
+        assert labels[:5] == [f"Obj {n}" for n in range(5)]
+        assert all(str(label).startswith("_") for label in labels[5:])

@@ -954,6 +954,7 @@ def fig_representation_geometry(
                 s=8,
                 alpha=0.6,
                 color=plt.get_cmap("tab10")(index % 10),
+                label=f"Obj {label}" if index < 5 else None,
             )
         purity = model["metrics"]["knn_purity"]
         dimension = model["metrics"]["intrinsic_dim_90pct"]
