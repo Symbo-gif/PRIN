@@ -4,9 +4,12 @@ EXP-002 H3 was refuted because the PRIN port of nine PRINet 3.0 figure
 generators dropped or re-encoded drawing arguments. The registered root-cause
 decomposition in ``EVIDENCE/exp002-d1-s1/`` lists them. The byte-level gate
 against the frozen reference is ``parity/test_parity_publication.py``, which
-runs in the parity suite only. These fast-gate tests pin each byte-material
-argument on the live Figure objects instead, so a regression fails the default
-``tests/`` run as well. The comment on each assertion names its divergence ID.
+runs in the parity suite only. These fast-gate tests pin all 34 registered
+divergences on the live Figure objects instead, so a regression fails the
+default ``tests/`` run as well. That includes the 8 byte-immaterial ones (D5.1,
+D5.3, D9.2, D11.4, D12.5, D12.7, D15.4, D15.7): each equals an active rcParam
+or has no visible effect today, and a faithful port still mirrors it, so it
+stays pinned. The comment on each assertion names its divergence ID.
 """
 
 from __future__ import annotations
