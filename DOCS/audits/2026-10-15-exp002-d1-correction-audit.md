@@ -1150,7 +1150,9 @@ the deviations in §S3.9 and the verdict in §S3.10. In one line: every open fin
 is `FIXED`, `ASSIGNED` or `RATIFIED`; the delta re-audit is `CLEAN`; every
 closing-gate leg exited 0 **except the required full suite, which exited 1 in both
 runs on a different single host-contention-sensitive test each time, neither of
-them F2's notebook timeout** (§S3.7).
+them F2's notebook timeout** (§S3.7). The cold-review loop reached its
+four-round cap without a round free of CONFIRMED findings; its residual is
+dispositioned as observation O-2 (§S3.5, §S3.9 item 11).
 
 ### S3.0 Entry state
 
@@ -1306,7 +1308,12 @@ collected)** (`f2/test-red-before-fix.txt`, `f2/test-green-after-fix.txt`). The
 recorded quantity is each notebook's whole duration, an upper bound on any single
 cell's, so each bound is conservative per cell; the one per-cell contended
 measurement (notebook 02's slowest cell, 1,926 s) would give a 6,300 s bound under
-the same rule. Three pre-existing
+the same rule. The whole-notebook unit is used for all four because it is the only
+contended quantity recorded for every notebook (a contended per-cell measurement
+exists for notebook 02 alone), and one uniform rule over a comparable quantity was
+preferred to a notebook-specific exception. The price is that notebook 02's bound is
+1.7 times the per-cell reading, and a genuine hang there can occupy the gate for up
+to three hours (below). Three pre-existing
 `mypy --strict` errors in the same file (bare `dict` annotations) were fixed
 incidentally, typing only; they are present at the S3 base (`5ba0129e`).
 
@@ -1417,7 +1424,7 @@ the triage are in [`cold-review/`](../../EVIDENCE/exp002-d1-s3/cold-review/READM
 | 1 — **degraded** | `7dbfc546`, brief v1 | none (see below) | 1 (Devin narration) | 1 | 0 | 0 |
 | 2 | `33923be5`, brief v2 | Devin 8, agy 6 (+9 refuted narrative assertions), Qwen 11 | 25 findings → 15 distinct | 15 | 9 | 0 |
 | 3 — **Devin needed four attempts** | `b2156918`, brief v3 | Devin 9 (attempt 4), agy 2, Qwen 13 | 24 findings + 1 claim from Devin's narration → 18 distinct | 18 (one only in part) | 1 assertion, within one of them | 0 |
-| 4 | to be recorded | | | | | |
+| 4 — **the cap**; Devin needed two attempts | `5eee9184`, brief v3 | Devin 7 (attempt 2), agy 1, Qwen 10 | 18 findings → 14 distinct | 13 (three only in part) | 1 | 0 |
 
 **Round 1** produced no reviewer report. Devin aborted when `--permission-mode
 smart` rejected a `git check-ignore` command; `agy` aborted at its first shell
@@ -1472,6 +1479,37 @@ so their failures are explained by consistency rather than measurement; and the
 bound for notebook 02 is a deliberate 12× loosening of a hang detector (2–3× for the
 others), justified by the evidence and by Testing Standards §7 item 2, not a free
 change.
+
+**Round 4** (tree `5eee9184`, brief v3 unchanged, Qwen's report after about an hour)
+raised no claim about the correction itself, a frozen artefact or a weakened test, and
+Qwen and Devin re-derived the F2 bound arithmetic, the suite counts, the cargo total, the
+coverage figures and the 55-of-90 saturation count and found them exact. It found 14
+distinct claims in the gate scripts, the records, comments and docstrings: 13 CONFIRMED
+(three only in part) and 1 REFUTED. As the reviewers rated them, the 13 are two
+medium, four low and seven nit. The two medium were latent defects in gate scripts
+that did not fire in any recorded run: `delta_reaudit.sh` armed its `git restore`
+trap before its clean-tree refusal, so the refusal path destroyed uncommitted edits
+to the module (reproduced: a one-line temporary edit was gone afterwards), and
+`final_legs.sh` counted a Snyk leg that wrote no SARIF as an all-clear. The others
+include a comment that attributed the 43× figure to the full suite (8–42×), a
+launcher that did not create its round directory, usage errors that exited 1, a
+header that printed a literal, stale wording in three records, an audit line number,
+and a docstring that named one revision where the code checks two. The refuted claim
+was that a `# nosec B603` suppresses nothing: removing it makes bandit report B603 at
+that line. Every CONFIRMED claim was fixed and each code-level fix was demonstrated red
+and then green (`cold-review/round4/triage-commands-*.txt`), including
+`final_legs.sh` run against a stub Snyk CLI that writes no SARIF, which now exits 1.
+
+**Residual of the loop: observation O-2.** Round 4 is the cap, and it returned
+CONFIRMED claims, so the loop did not converge to a round with none. The S3 contract
+for that case is to stop, report the residual with its measurement and disposition it,
+not to loop. The measurement: the distinct CONFIRMED claims per round were 1 (a degraded
+round), 15, 18 and 13, and round 4's were in scripts, records and comments, none in
+the product code or the correction, none in a frozen artefact. The residual is that
+**round 4's fixes were not shown to a further cold reviewer**; they were verified
+only by the reproductions above and by re-running the cheap legs on the final commit
+(§S3.7). It is dispositioned as a D4 observation carried to S4, which should include
+the S3 scripts and records in whatever review it runs (§S3.9 item 11).
 
 ### S3.6 Evidence discipline
 
@@ -1530,6 +1568,14 @@ to "carry a recorded, evidence-sized disposition" instead of passing; the F2
 disposition is §S3.2 and the residual flakiness is §S3.9 item 9. The fast suite is
 the clean single pass the cycle required.
 
+**Two gate scripts changed after they ran, on round 4's findings** (§S3.5): the
+exit status of `closing_gate.sh`, which had always been 0, now aggregates its legs, and
+`final_legs.sh` now exits 1 when the Snyk leg did not run. Neither change alters a
+recorded line: `gate/closing-gate-legs.txt` was written by the earlier `closing_gate.sh`
+(which recorded each leg's exit code honestly, and is **not** re-run, since its legs take
+about three hours), and the final-legs records below were written by the corrected
+`final_legs.sh`.
+
 **Cheap legs repeated on the final commit.** The static gate, Sphinx, gitleaks, both
 immutability diffs, the manifest verification, the delta re-audit, the three index
 self-checks, the Snyk scan and the PR #34 state were run again on the last commit
@@ -1581,9 +1627,9 @@ accounted for; the EXP-002 record, its manifests and the S1 evidence are untouch
    (2 h 42 m) and the contention experiment (about one hour, including the 499-test
    load generator), in addition to the gates. Both were run on a clean tree, output
    went outside the repository, and nothing belonging to the maintainer was stopped.
-5. **The audit's own header is stale and cannot be corrected here.** Lines 3–14
-   still say "S1 complete; S2, S3, S4 pending" and describe the document as written
-   before S2. The document is append-only, so the header stays; the authoritative
+5. **The audit's own header is stale and cannot be corrected here.** Line 14
+   still says "S1 complete; S2, S3, S4 pending", and lines 16–22 describe the document
+   as written before S2. The document is append-only, so the header stays; the authoritative
    status is the registers and this section.
 6. **Two of S3's own claims were corrected after cold review**: the first F7
    rewording and the first form of the F2 bound test (one-directional) each said more
@@ -1621,6 +1667,17 @@ accounted for; the EXP-002 record, its manifests and the S1 evidence are untouch
    carries the item.
 10. **The Snyk Code MCP route was unavailable** (no tool exposed); the CLI leg,
     which the brief named, completed. Nothing was added to `.snyk`.
+11. **The cold-review loop did not converge within its four-round cap: observation
+    O-2** (§S3.5). Severity D4. Round 4's 13 CONFIRMED claims were fixed and
+    re-verified by measurement, but no fifth round was run, so those fixes have had no
+    cold review. Carried to S4: its review should include `EVIDENCE/exp002-d1-s3/`'s
+    gate scripts and records, and the fixes in `tests/test_notebooks.py` (a comment),
+    `delta_reaudit.sh`, `final_legs.sh`, `closing_gate.sh`, `diagnostic_suite_run.sh`,
+    `docstring_only_check.py` and `cold-review/launch_round.sh`.
+12. **`closing_gate.sh` changed after the run it recorded** (§S3.7): only its exit
+    status. It has not been re-run end to end; it was syntax-checked and the change was
+    read. A future run will show `# overall:` as the last line of `legs.txt`; the
+    committed record does not have it.
 
 ### S3.10 Verdict and handoff
 
@@ -1628,30 +1685,35 @@ accounted for; the EXP-002 record, its manifests and the S1 evidence are untouch
 `EXP002D1-S2-F2` (D2) `FIXED`; `-F1` (D3) `ASSIGNED` to S4 and `EXP-002-r1`, no
 amendment needed; `-F4`, `-F5`, `-F6`, `-F7` (D4) `FIXED`; `-F8` (D4) `RATIFIED` with
 the standing re-check done and one further same-class LOW recorded for the
-maintainer; `-F3` already `RESOLVED`. One new observation, **O-1** (§S3.9 item 9),
-is carried to S4.
+maintainer; `-F3` already `RESOLVED`. Two new observations, **O-1** (the required
+full suite, §S3.9 item 9) and **O-2** (the cold-review loop's residual, §S3.9 item 11),
+are carried to S4.
 
 **Delta re-audit: `CLEAN`** (§S3.8).
 
-**Cold review.** Four rounds, the cap. See §S3.5 for each round's reviewers, claims
-and counts; every CONFIRMED claim in rounds 1–3 was fixed and re-verified. Round 4 is
-recorded there too.
+**Cold review.** Four rounds, the cap, and the loop **did not converge**: round 4
+still returned 13 CONFIRMED claims (two medium, in gate scripts; none in the correction
+or a frozen artefact). Every CONFIRMED claim in all four rounds was fixed and
+re-verified by measurement, but round 4's fixes had no further cold review (O-2). See
+§S3.5 for each round's reviewers, claims and counts.
 
 **Closing gate.** Every leg exited 0 **except the required full suite, which exited
 1 twice** (§S3.7, §S3.9 item 9). The fast suite is a clean single pass. Nothing was
 weakened to obtain any result.
 
-**Verdict: S3 COMPLETE, with residual O-1.** The correction itself (S1's fix,
-S2's audit, S3's remediation) is verified by independent re-execution and is not
-reopened; what remains is that the project's own required full-suite gate cannot yet
-be shown green in one pass on this host.
+**Verdict: S3 COMPLETE, with residuals O-1 and O-2.** The correction itself (S1's
+fix, S2's audit, S3's remediation) is verified by independent re-execution and is not
+reopened. What remains is that the project's own required full-suite gate cannot yet
+be shown green in one pass on this host (O-1), and that the last round of fixes to
+S3's own gate scripts and records has not had a cold review (O-2).
 
 **Handoff to S4** (documentation; the push point, Development Workflow §3 and
 amendment #28):
 
 1. Carry `-F1` into the `EXP-002-r1` authorization as the S4 brief now specifies.
 2. Decide O-1: its severity and which of the §S3.9 item 9 options to adopt, or run the
-   S4 gate with the IDE and security tooling quiet and record that.
+   S4 gate with the IDE and security tooling quiet and record that. Register O-2 and
+   include S3's scripts and records in S4's own review.
 3. Ratify, or not, `EXP-002D1-S2-F8`'s third location
    (`EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142`).
 4. Write the Project State Report, the Parity Report update and the `EXP-002` E5

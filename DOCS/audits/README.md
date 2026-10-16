@@ -491,7 +491,9 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   maintainer. The pre-fix reproduction (18 failed / 75 passed) and post-fix
   pass (103 passed) were re-run, `verify_manifest` is 5/5 and the EXP-002 record
   is untouched. Four cold-review rounds (Devin, Antigravity, Qwen) were triaged
-  by measurement. **The required full suite exited 1 in both of S3's runs on
+  by measurement; round 4, the cap, still returned CONFIRMED claims (none in the
+  correction, two medium in gate scripts), all fixed but not re-reviewed
+  (observation O-2). **The required full suite exited 1 in both of S3's runs on
   two different single host-contention tests that pass alone (observation O-1,
   carried to S4); the fast suite is a clean single pass.** Nothing pushed.
   Evidence: [`EVIDENCE/exp002-d1-s3/`](../../EVIDENCE/exp002-d1-s3/README.md).

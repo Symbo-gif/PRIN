@@ -99,3 +99,15 @@ tolerance and S4 must not either.
 (`python/PT`, LOW) matches the class the maintainer ratified for two other
 locations. S3 did not ratify it and did not edit S2's instrument; the PSR should
 carry it for the maintainer's decision.
+
+## Carried from S3 — observation O-2
+
+**O-2: the S3 cold-review loop did not converge within its four-round cap.** Round 4
+returned 13 CONFIRMED claims (two medium, in S3's own gate scripts; none in the
+correction, a frozen artefact or a test). All were fixed and re-verified by measurement,
+but no fifth round was run, so those fixes have had no cold review. S4's own review
+should cover `EVIDENCE/exp002-d1-s3/` (the gate scripts `closing_gate.sh`,
+`final_legs.sh`, `delta_reaudit.sh`, `diagnostic_suite_run.sh`, `cold-review/launch_round.sh`
+and the records they write) and the comment change in `tests/test_notebooks.py`.
+`closing_gate.sh` changed after the run it recorded and has not been re-run end to end
+(correction audit §S3.9 items 11 and 12). Severity D4; S4's ledger should register it.

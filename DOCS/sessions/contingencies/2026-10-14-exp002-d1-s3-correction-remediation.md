@@ -1,6 +1,6 @@
 # EXP-002 D1 S3 — Correction remediation
 
-**Status:** COMPLETE 2026-10-16 UTC (on `hotfix/exp002-d1-figure-parity` from `5ba0129e`; delta re-audit `CLEAN`; observation O-1 carried to S4; nothing pushed)
+**Status:** COMPLETE 2026-10-16 UTC (on `hotfix/exp002-d1-figure-parity` from `5ba0129e`; delta re-audit `CLEAN`; observations O-1 and O-2 carried to S4; nothing pushed)
 **Triggering deviation:** `EXP-002 H3 REFUTED` (campaign plan §10.4 D1; pre-registration §4.3)
 **Blocked numbered session:** `0164` (EXP-003 E1), and every later campaign session (`0165`–`0194`)
 **Opened by:** session `0163` (EXP-002 E5), 2026-10-14 UTC
@@ -46,7 +46,9 @@ PR #34 untouched at `8fd0ecc9…`).
 required full suite, which exited 1 in both runs on a different single
 host-contention-sensitive test each time (observation **O-1**, carried to S4); the
 F2 notebook timeout did not recur. **Cold review:** four rounds, triaged by
-measurement; see the audit's §S3.5.
+measurement; round 4, the cap, still returned 13 CONFIRMED claims (none in the
+correction), all fixed and re-verified but not re-reviewed (observation **O-2**,
+carried to S4); see the audit's §S3.5.
 
 **Handoff to S4:** see the audit's §S3.10 and the "Carried from S3" sections of the
 [S4 brief](2026-10-14-exp002-d1-s4-correction-documentation.md). Session `0164`

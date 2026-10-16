@@ -83,7 +83,8 @@ To find evidence for a specific work package, look for files matching
   Snyk Code scans and the F8 re-check, the delta re-audit instruments, the
   closing local gate (fast suite exit 0; the required full suite exit 1 twice on
   host-contention tests that pass alone), and the cold-review loop (briefs, raw
-  reviewer output and the measured triage for four rounds). See its `README.md`.
+  reviewer output and the measured triage for four rounds; round 4, the cap, still
+  returned CONFIRMED claims). See its `README.md`.
 - [`exp002-d1-s2/`](exp002-d1-s2/) — EXP-002 D1 correction, S2 (the read-only
   correction audit). Six committed instruments and their verbatim outputs,
   re-executing every S1 claim rather than accepting it: the pre-fix reproduction

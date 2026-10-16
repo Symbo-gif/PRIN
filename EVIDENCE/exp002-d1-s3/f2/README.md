@@ -121,7 +121,10 @@ now a ceiling for a leg that is starved but progressing, not a performance check
 (the quiet-host durations are 37–73 s; for notebook 02 the loosening is 12×). The
 recorded quantity is each notebook's whole duration, an upper bound on any one
 cell's, so each bound is conservative per cell (notebook 02's slowest contended cell,
-1,926 s, would give 6,300 s). Two new fast tests tie each bound to its recorded worst
+1,926 s, would give 6,300 s). The whole-notebook unit is used for all four because it is
+the only contended quantity recorded for every notebook (a contended per-cell measurement
+exists for notebook 02 alone), so one uniform rule was preferred to a notebook-specific
+exception; the cost is that notebook 02's bound is 1.7 times the per-cell reading. Two new fast tests tie each bound to its recorded worst
 case: the second asserts that the bound **equals** 3 × the worst case rounded up to a
 multiple of 900 s, so neither can move without the other. They fail against the old
 900 s bounds ([`test-red-before-fix.txt`](test-red-before-fix.txt): 4 failed, 1
