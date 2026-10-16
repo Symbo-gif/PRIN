@@ -48,10 +48,10 @@ puts the host's CPU next to the CPU seconds per second that pytest received:
 - during the notebook kernels ([`analysis-observed-run-kernels.txt`](analysis-observed-run-kernels.txt))
   the kernel received **0.17–0.33 CPU-s per wall-second**, `rg.exe` alone used
   202–8,799 CPU-seconds in the same windows, host available memory never fell
-  below **5.5 GB**, and hard-fault paging averaged **at most 26 pages/s**: not
+  below **5,476 MB**, and hard-fault paging averaged **at most 26 pages/s**: not
   memory pressure;
-- when pytest exited, the host fell from 100% to 33% within about a minute and
-  `rg.exe` processes fell from 116 to 2.
+- when pytest exited, the host fell from 100% to 33% within about a minute (the
+  last rows of the timeline: 97%, 83%, 71%, 39%, 33% between 06:01:10Z and 06:03:29Z).
 
 **4. A smaller group reproduces it.** `contention_experiment.sh` measured one
 notebook twice, changing only the company it kept
@@ -63,9 +63,13 @@ notebook twice, changing only the company it kept
 | treatment: notebook 02 while only `tests/test_exp002_driver.py` and `tests/test_exp002_e4_analysis.py` run | **3484.0 s (43.2×)** | 1116.9 s (2.4×) | 0.32 | 99.9% |
 
 The training cell alone went from 35.7 s to 1,926 s (54×). The 499-test load
-generator ran 30 m 37 s, and the host stayed at ~100% with 87 → 29 → 64 `rg.exe`
-processes for more than 28 minutes after it had exited
-([`analysis-contention-timeline.txt`](analysis-contention-timeline.txt)).
+generator ran 30 m 37 s ([`analysis-contention-timeline.txt`](analysis-contention-timeline.txt)).
+After its pytest had finished (06:39:06Z) the notebook ran on for another 27.9
+minutes, and **all 309 host samples taken in that time were at or above 90%**
+(mean 100.0%, minimum 92.3%; the last section of
+[`analysis-paired-comparison.txt`](analysis-paired-comparison.txt), computed from
+`treatment.json`). The kernel itself used about 0.3 cores of 16, so the saturation
+is not the notebook's own.
 
 ## What is measured and what is not
 
@@ -81,8 +85,18 @@ processes for more than 28 minutes after it had exited
   nothing here proves the IDE's scans, rather than another process, are what
   starve the kernel. These are the maintainer's processes and were observed, not
   killed. Why the contention drained within a minute of the end of the full suite
-  but persisted for over 28 minutes after the experiment's load generator exited
-  is not explained either.
+  but persisted for 27.9 minutes after the experiment's load generator's pytest
+  ended is not explained either.
+- **S1 and S2 had no telemetry**, so the cause of *their* failures is inferred.
+  It is consistent with what was measured (their completed notebook legs ran 1.4×
+  to 11× the standalone time and their `test_exp002_e4_analysis` tests took
+  40–165 s each) but not proved. S2's finding declined to attribute its failure to
+  load because the host was "~89% idle at start"; that was measured before the
+  suite began, and here the saturation began 13 minutes in (the host read 31% at the
+  start).
+- **Whose processes.** The `Devin.exe` / `rg.exe` load is the maintainer's resident
+  IDE, not the review tooling: S2 recorded three `Devin` processes resident before S3
+  began, and no reviewer CLI ran during the observed run or the experiment.
 - **Not PRIN code.** Nothing in the notebooks, the library or the tests is
   implicated by this evidence.
 
@@ -104,11 +118,18 @@ duration recorded. `tests/test_notebooks.py` now carries a per-notebook bound of
 No test was deselected, skipped, xfailed or shortened, and no assertion changed;
 the execution test still fails on any cell error output or timeout. The bound is
 now a ceiling for a leg that is starved but progressing, not a performance check
-(the quiet-host durations are 37–73 s). Two new fast tests pin the relationship
-so a bound cannot be lowered, or a slower worst case recorded, without the other
-moving: [`test-red-before-fix.txt`](test-red-before-fix.txt) (4 failed with the old
-900 s bounds) and [`test-green-after-fix.txt`](test-green-after-fix.txt)
-(33 passed, 4 slow executing tests still collected).
+(the quiet-host durations are 37–73 s; for notebook 02 the loosening is 12×). The
+recorded quantity is each notebook's whole duration, an upper bound on any one
+cell's, so each bound is conservative per cell (notebook 02's slowest contended cell,
+1,926 s, would give 6,300 s). Two new fast tests tie each bound to its recorded worst
+case: the second asserts that the bound **equals** 3 × the worst case rounded up to a
+multiple of 900 s, so neither can move without the other. They fail against the old
+900 s bounds ([`test-red-before-fix.txt`](test-red-before-fix.txt): 4 failed, 1
+passed), pass after ([`test-green-after-fix.txt`](test-green-after-fix.txt): 33
+passed, 4 slow executing tests still collected), and [`test-both-directions.txt`](test-both-directions.txt)
+shows two mutations failing: a bound raised to 18,000 s with no evidence, and a
+slower worst case recorded without raising the bound. (The first version asserted
+only `bound >= 3 × recorded`, which let a bound be raised; a cold review found it.)
 
 ## Files
 
@@ -126,6 +147,6 @@ The runner writes the console output as `console.log` under `~/prin-s3-scratch/`
 | [`analysis-in-suite-vs-alone.txt`](analysis-in-suite-vs-alone.txt) | `f2_in_suite_vs_alone.py` on the observed console log: the table above. |
 | [`analysis-observed-run-kernels.txt`](analysis-observed-run-kernels.txt) | `suite_sampler.py --summarize` on the observed samples: one row per notebook kernel. |
 | [`analysis-observed-run-timeline.txt`](analysis-observed-run-timeline.txt) | `suite_sampler.py --timeline` on the observed samples: the host-versus-pytest table. |
-| [`analysis-paired-comparison.txt`](analysis-paired-comparison.txt) | `paired_comparison.py`: control versus treatment. |
+| [`analysis-paired-comparison.txt`](analysis-paired-comparison.txt) | `paired_comparison.py`: control versus treatment, and the host's CPU over the minutes after the load generator's pytest ended. |
 | [`analysis-contention-timeline.txt`](analysis-contention-timeline.txt) | `suite_sampler.py --timeline` and `--summarize` on the load generator's samples. |
-| [`test-red-before-fix.txt`](test-red-before-fix.txt), [`test-green-after-fix.txt`](test-green-after-fix.txt) | The new bound tests failing against the old bounds, and passing after. |
+| [`test-red-before-fix.txt`](test-red-before-fix.txt), [`test-green-after-fix.txt`](test-green-after-fix.txt), [`test-both-directions.txt`](test-both-directions.txt) | The bound tests failing against the old bounds, passing after, and the two mutations (a bound raised without evidence; a slower worst case recorded without raising the bound) each failing. |

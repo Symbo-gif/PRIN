@@ -21,6 +21,7 @@ cheap and run in the default gate.
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -48,14 +49,17 @@ MIN_MARKDOWN_CELLS = 2
 #: EXP002D1-S2-F2. One bound of 900 s, sized from the notebooks' stated ~40 s
 #: runtime budget, was exceeded by ``02_clevr_n_binding`` in two consecutive
 #: full-suite runs. The notebook is not the cause: alone it completes in 71 s.
-#: Inside the full suite on the maintainer host the kernel receives a fifth to a
+#: Inside the full suite on the maintainer host the kernel receives a sixth to a
 #: third of one core while processes outside PRIN (an IDE's ripgrep scans and
 #: security software) hold the whole host at ~100% CPU, and the leg slows 8-43x
 #: (``EVIDENCE/exp002-d1-s3/f2/``). Each bound is BOUND_MARGIN x the largest
 #: *completed* contended duration recorded for that notebook, rounded up to a
-#: multiple of 900 s. They remain hang detectors (the quiet-host durations are
-#: 37-73 s, two orders of magnitude below), but no longer fail a leg that is
-#: merely starved.
+#: multiple of BOUND_ROUNDING_SECONDS. The recorded duration is the whole
+#: notebook's, which is an upper bound on any single cell's, so each bound is
+#: conservative per cell. Each bound stays 37-152 times above the notebook's
+#: quiet-host duration (37-73 s), so it still ends a genuine hang, but it no
+#: longer fails a leg that is merely starved. A test below ties each bound to its
+#: recorded worst case in both directions.
 NOTEBOOK_CELL_TIMEOUT_SECONDS = {
     "01_oscillosim_quickstart.ipynb": 2700,
     "02_clevr_n_binding.ipynb": 10800,
@@ -78,6 +82,9 @@ RECORDED_CONTENDED_MAX_SECONDS = {
 
 #: Safety factor between the recorded worst case and the bound.
 BOUND_MARGIN = 3.0
+
+#: Bounds are rounded up to a multiple of this many seconds.
+BOUND_ROUNDING_SECONDS = 900
 
 
 def _discover() -> list[Path]:
@@ -279,21 +286,32 @@ def test_every_notebook_has_a_sized_cell_timeout() -> None:
 
 
 @pytest.mark.parametrize("name", CONTRACT_NOTEBOOKS)
-def test_cell_timeout_has_margin_over_the_recorded_contended_maximum(name: str) -> None:
-    """Assert each bound is at least BOUND_MARGIN x the recorded worst case (F2).
+def test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum(
+    name: str,
+) -> None:
+    """Assert each bound is exactly the sizing rule applied to its recorded worst case.
 
     Testing Standards section 7 item 2 sizes a finite bound from cited evidence
-    plus substantial margin for host variability. Lowering a bound below that
-    margin, or recording a slower worst case without raising the bound, fails here.
+    plus substantial margin for host variability. The rule used here is
+    BOUND_MARGIN x the recorded worst case, rounded up to a multiple of
+    BOUND_ROUNDING_SECONDS. Asserting equality ties the two constants together in
+    both directions: a bound cannot be lowered below the margin, nor raised beyond
+    what the evidence supports, and a slower worst case cannot be recorded without
+    the bound following it.
 
     Args:
         name: Notebook filename.
     """
-    bound = NOTEBOOK_CELL_TIMEOUT_SECONDS[name]
     recorded = RECORDED_CONTENDED_MAX_SECONDS[name]
-    assert bound >= BOUND_MARGIN * recorded, (
-        f"{name}: bound {bound} s < {BOUND_MARGIN} x the recorded contended maximum "
-        f"{recorded} s; re-size it from new evidence (Testing Standards section 7)"
+    expected = (
+        math.ceil(BOUND_MARGIN * recorded / BOUND_ROUNDING_SECONDS)
+        * BOUND_ROUNDING_SECONDS
+    )
+    assert NOTEBOOK_CELL_TIMEOUT_SECONDS[name] == expected, (
+        f"{name}: bound {NOTEBOOK_CELL_TIMEOUT_SECONDS[name]} s != {expected} s "
+        f"({BOUND_MARGIN} x the recorded contended maximum {recorded} s, rounded "
+        f"up to a multiple of {BOUND_ROUNDING_SECONDS} s); re-size it from new "
+        "evidence (Testing Standards section 7)"
     )
 
 
