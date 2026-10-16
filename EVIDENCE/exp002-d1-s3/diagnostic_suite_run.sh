@@ -20,7 +20,8 @@
 # the tracked-change and untracked-file counts before and after the run, so a
 # change to the tree would show.
 set -u
-LABEL="${1:?usage: diagnostic_suite_run.sh <label> [--lift-notebook-timeout] <pytest args...>}"
+LABEL="${1:-}"
+[ -n "$LABEL" ] || { echo "usage: diagnostic_suite_run.sh <label> [--lift-notebook-timeout] <pytest args...>"; exit 2; }
 shift
 # A label is a directory name under ~/prin-s3-scratch, so it must not be able to
 # climb out of it: letters, digits, '_' and '-', not starting with '-' (no dots).

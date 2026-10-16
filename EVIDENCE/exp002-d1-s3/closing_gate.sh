@@ -19,6 +19,11 @@
 # The cheap legs that must be repeated on the final documentation commit (static
 # gate, Snyk, immutability, manifests, delta re-audit, index checks) are in
 # final_legs.sh.
+#
+# Exit status: 0 only if both suites and every other leg exited 0; 1 otherwise.
+# Every leg's own exit code is in legs.txt either way. (The aggregated status was
+# added after the run recorded in gate/closing-gate-legs.txt, on cold-review round
+# 4's finding that the script always exited 0; no recorded line changed.)
 set -u
 cd "$(git rev-parse --show-toplevel)" || exit 2
 export PATH="/c/Program Files/Git/bin:$PATH"
@@ -26,6 +31,7 @@ PY=.venv/Scripts/python.exe
 OUT="$HOME/prin-s3-scratch/gate"
 mkdir -p "$OUT"
 LEGS="$OUT/legs.txt"
+overall=0
 [ -z "$(git status --porcelain --untracked-files=no)" ] || { echo "tracked tree is not clean; refusing to start"; exit 2; }
 GITLEAKS=DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe
 
@@ -55,35 +61,37 @@ leg() {
 # 1. required fast suite (observed by the sampler; no diagnostic plugin)
 rm -rf "$HOME/prin-s3-scratch/gate-fast" "$HOME/prin-s3-scratch/gate-full"
 bash EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh gate-fast tests/ -m "not slow and not gpu"
-echo "fast suite exit: $?" >> "$LEGS"
+rc=$?; echo "fast suite exit: $rc" >> "$LEGS"; [ "$rc" -eq 0 ] || overall=1
 
 # 2. required full suite
 bash EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh gate-full tests/ parity/
-echo "full suite exit: $?" >> "$LEGS"
+rc=$?; echo "full suite exit: $rc" >> "$LEGS"; [ "$rc" -eq 0 ] || overall=1
 
 # 3. targeted coverage (path form: the module form fails on this host, DV-033) and
 #    the changed-line analysis against both the cycle base and the S3 base
 COV="$(cygpath -m "${TEMP:-/tmp}")/prin-s3-coverage.json"
-leg "targeted coverage run (path form)" $PY -m pytest tests/test_publication_figure_arguments.py tests/test_publication_generation.py parity/test_parity_publication.py --cov=python/prin/reporting "--cov-report=json:$COV" --cov-report=term-missing --basetemp=.pytest_basetemp -p no:cacheprovider
-leg "changed-line coverage against the S3 base 5ba0129e" env PYTHONIOENCODING=utf-8 $PY EVIDENCE/exp002-d1-s2/changed_line_coverage.py "$COV" 5ba0129e python/prin/reporting/figure_generation.py
-leg "changed-line coverage against the cycle base fd8854ed" env PYTHONIOENCODING=utf-8 $PY EVIDENCE/exp002-d1-s2/changed_line_coverage.py "$COV" fd8854ed python/prin/reporting/figure_generation.py
+leg "targeted coverage run (path form)" $PY -m pytest tests/test_publication_figure_arguments.py tests/test_publication_generation.py parity/test_parity_publication.py --cov=python/prin/reporting "--cov-report=json:$COV" --cov-report=term-missing --basetemp=.pytest_basetemp -p no:cacheprovider || overall=1
+leg "changed-line coverage against the S3 base 5ba0129e" env PYTHONIOENCODING=utf-8 $PY EVIDENCE/exp002-d1-s2/changed_line_coverage.py "$COV" 5ba0129e python/prin/reporting/figure_generation.py || overall=1
+leg "changed-line coverage against the cycle base fd8854ed" env PYTHONIOENCODING=utf-8 $PY EVIDENCE/exp002-d1-s2/changed_line_coverage.py "$COV" fd8854ed python/prin/reporting/figure_generation.py || overall=1
 
 # 4. Rust legs, sequential, after pytest has finished
-leg "cargo fmt --all -- --check" cargo fmt --all -- --check
-leg "cargo clippy --workspace --all-targets -- -D warnings" cargo clippy --workspace --all-targets -- -D warnings
+leg "cargo fmt --all -- --check" cargo fmt --all -- --check || overall=1
+leg "cargo clippy --workspace --all-targets -- -D warnings" cargo clippy --workspace --all-targets -- -D warnings || overall=1
 if ! leg "cargo test --workspace (attempt 1)" cargo test --workspace; then
   echo "# attempt 1 failed; the documented Windows contention class is os error 32 / LNK1104. Retrying once, both attempts recorded." >> "$LEGS"
-  leg "cargo test --workspace (attempt 2)" cargo test --workspace
+  leg "cargo test --workspace (attempt 2)" cargo test --workspace || overall=1
 fi
 
 # 5. Sphinx from a deleted _build (incremental builds mask autodoc warnings)
 rm -rf DOCS/sphinx/_build
-leg "sphinx -W --keep-going -b html (from a deleted _build)" $PY -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
+leg "sphinx -W --keep-going -b html (from a deleted _build)" $PY -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html || overall=1
 
 # 6. secret scans with the pinned binary
-leg "gitleaks, full history" $GITLEAKS git . --no-banner
-leg "gitleaks, --staged" $GITLEAKS git . --staged --no-banner
+leg "gitleaks, full history" $GITLEAKS git . --no-banner || overall=1
+leg "gitleaks, --staged" $GITLEAKS git . --staged --no-banner || overall=1
 
 echo >> "$LEGS"
 echo "# all long legs finished $(stamp)" >> "$LEGS"
 echo "# git HEAD at end: $(git rev-parse HEAD)   tracked changes: $(git status --porcelain --untracked-files=no | wc -l)   untracked: $(git status --porcelain | grep -c '^??')" >> "$LEGS"
+echo "# overall: $overall (0 = every leg exited 0)" >> "$LEGS"
+exit "$overall"

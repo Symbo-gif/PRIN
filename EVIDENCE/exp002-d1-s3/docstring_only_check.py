@@ -15,8 +15,9 @@ UTF-8 (a text-mode read would decode with the Windows locale codepage and turn
 a character such as ``R²`` into a different string, a false difference).
 
 Revisions must be hexadecimal commit ids, and the path must be a tracked file at
-revision B; the path is never turned into a filesystem path, it is only handed to
-``git show REV:PATH`` after that membership test.
+**both** revisions (the membership test runs once per revision); the path is never
+turned into a filesystem path, it is only handed to ``git show REV:PATH`` after
+that test.
 
 Run from the repository root::
 

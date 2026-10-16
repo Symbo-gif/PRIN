@@ -21,7 +21,6 @@ PARITY=parity/test_parity_publication.py
 FAST=tests/test_publication_figure_arguments.py
 FLAGS=(-q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider)
 overall=0
-trap 'git restore -- "$MOD" 2>/dev/null' EXIT
 
 stamp() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 sha() { sha256sum "$1" | cut -d' ' -f1; }
@@ -32,6 +31,9 @@ echo "# date (UTC): $(stamp)"
 echo "# git HEAD: $(git rev-parse HEAD)   tracked changes at start: $(git status --porcelain --untracked-files=no | wc -l)"
 echo "# host: $(uname -srm)   $($PY -V 2>&1)"
 [ "$(git status --porcelain --untracked-files=no | wc -l)" -eq 0 ] || { echo "tree is not clean; refusing to run"; exit 2; }
+# Armed only AFTER the refusal above: on the refusal path the tree may hold the
+# caller's uncommitted edits to $MOD, and restoring it would destroy them.
+trap 'git restore -- "$MOD" 2>/dev/null' EXIT
 
 echo
 echo "## D1 figure_generation.py SHA-256 at the commits involved"
