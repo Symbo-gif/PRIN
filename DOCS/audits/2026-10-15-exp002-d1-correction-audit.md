@@ -1144,10 +1144,13 @@ Antigravity `agy` (`gemini-3.8-flash-high`) and Qwen Code (`qwen3.8-max-preview`
 Workflow §3 and Plan amendment #28 put the cycle's push point at S4).\
 **Evidence:** [`EVIDENCE/exp002-d1-s3/`](../../EVIDENCE/exp002-d1-s3/README.md). Every
 command below is recorded there verbatim with its exit code.\
-**Status:** the resolutions, the F2 measurement and the review loop are recorded
-in §S3.1–§S3.6. The closing gate (§S3.7), the delta re-audit result (§S3.8) and the
-verdict (§S3.10) are appended to this section after the last review round has
-converged.
+**Status:** complete. The resolutions, the F2 measurement and the review loop are
+recorded in §S3.1–§S3.6, the closing gate in §S3.7, the delta re-audit in §S3.8,
+the deviations in §S3.9 and the verdict in §S3.10. In one line: every open finding
+is `FIXED`, `ASSIGNED` or `RATIFIED`; the delta re-audit is `CLEAN`; every
+closing-gate leg exited 0 **except the required full suite, which exited 1 in both
+runs on a different single host-contention-sensitive test each time, neither of
+them F2's notebook timeout** (§S3.7).
 
 ### S3.0 Entry state
 
@@ -1176,7 +1179,7 @@ findings were resolved; the **commit order therefore does not follow D1→D4**
 
 | ID | Severity | Resolution | Commit(s) | Evidence |
 |---|---|---|---|---|
-| `EXP002D1-S2-F2` | D2 | **FIXED** (route (a), re-size from cited evidence) | `91f3327a` | §S3.2; [`f2/README.md`](../../EVIDENCE/exp002-d1-s3/f2/README.md) |
+| `EXP002D1-S2-F2` | D2 | **FIXED** (route (a), re-size from cited evidence); the required full suite is nonetheless not green on this host for other reasons (§S3.7, §S3.9 item 9) | `91f3327a`, `94d049d3` | §S3.2; [`f2/README.md`](../../EVIDENCE/exp002-d1-s3/f2/README.md) |
 | `EXP002D1-S2-F1` | D3 | **ASSIGNED** to S4 and `EXP-002-r1` E1/E2; no amendment | `9583eb4d` | §S3.3; the S4 brief's "Carried from S3" section |
 | `EXP002D1-S2-F4` | D4 | **FIXED** | `d53ab885` | `index-selfcheck-s1.txt` |
 | `EXP002D1-S2-F5` | D4 | **FIXED** | `2db18fc3` | `docstring-only-check.txt`, `f6-verification.txt` V3 |
@@ -1279,7 +1282,8 @@ thousands of CPU-seconds, before S3 began; and no reviewer CLI was running durin
 the observed run (03:20–06:03Z) or the experiment (06:06–07:07Z) — the review
 rounds were 02:31–03:04Z (round 2) and from 07:41Z (round 3).
 
-*The change* (`tests/test_notebooks.py`, `91f3327a`). Each notebook has its own
+*The change* (`tests/test_notebooks.py`, `91f3327a`, strengthened by `94d049d3`
+after the third review round). Each notebook has its own
 per-cell bound: **3 × the largest completed contended duration recorded for it,
 rounded up to a multiple of 900 s**.
 
@@ -1315,6 +1319,18 @@ audit offered and §7 item 2 prescribes ("sized from cited completed/incomplete
 evidence for that workload, plus substantial margin for … host variability"); it
 does not make the host quieter, and the required gate will be slow whenever the
 same tooling is active.
+
+*What the closing gate then showed* (§S3.7; [`gate/`](../../EVIDENCE/exp002-d1-s3/gate/README.md)).
+With the shipped bounds and no diagnostic plugin, the required invocation was run
+twice more. **The notebook timeout that F2 reported did not fire in either run**:
+notebook 02 took 1,636.2 s and 1,326.5 s (it was killed at 900 s in S1 and S2), and
+the other three completed inside their bounds as well. **Neither run exited 0**,
+however, and each failed on a different single test that has nothing to do with F2
+or with this change and that passes alone: a Windows file-handle `WinError 5`, and
+the wall-clock throughput ratio that DV-032 registers as host-timing-sensitive
+(2.18 against a limit of 1.30, with the host saturated for 55 of 90 samples). F2's
+defect is fixed; the broader fact that this host does not yet give a clean required
+full-suite pass is recorded in §S3.9 item 9 and not claimed as resolved.
 
 ### S3.3 F1 — the two registered H3 policies
 
@@ -1473,11 +1489,78 @@ regenerated.
 
 ### S3.7 Closing gate
 
-*Appended after the last review round.*
+This is the local gate under Plan amendment #48: **not** a CI result, Windows
+x86_64 only, Linux and macOS untested, no hosted check run or cited. Every command
+is recorded verbatim, with UTC times and its exit code, in
+[`gate/`](../../EVIDENCE/exp002-d1-s3/gate/README.md) (the long legs) and
+[`gate/final/`](../../EVIDENCE/exp002-d1-s3/gate/final/) (the cheap legs, repeated
+on the final documentation commit). The long legs ran on a clean tree at `248bb586`
+(the full suite's second run at `76a97384`, which differs only by evidence files),
+strictly one after another, with an out-of-process sampler watching each pytest
+run. The tools were Python 3.14.0, ruff 0.16.1, mypy 2.3.0, pytest 9.1.1.
+
+| Leg | Result |
+|---|---|
+| `ruff check` over `python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/` and the three evidence directories | **exit 0**, `All checks passed!` |
+| `ruff format --check` over the same roots (and `DOCS/experiments/` under `AGENTS.md`'s source-only include) | **exit 0**, 367 files and 3 files already formatted |
+| `mypy python/prin --strict`; `mypy DOCS/experiments/ --strict`; `mypy --strict` over every changed first-party file and every S1/S2/S3 instrument | **exit 0** each: 62, 3 and 22 source files, no issues |
+| `interrogate -c pyproject.toml python/prin` | **exit 0**, 97.6% against the 95% floor |
+| `bandit -r python/prin DOCS/experiments -c pyproject.toml`, and over the three evidence directories | **exit 0** each, 0 issues of any severity |
+| `check_global_session_registration.py`; `check_dv_register_gates.py`; `check_skipif_probes.py`; `check_deviation_ledger.py DOCS/reports/039-project-state.md DOCS/reports/040-project-state.md` | **exit 0** each (18 audit reports; 47 DV rows against 198 session entries; no probe guards; 142 against 146 ledger rows) |
+| **Fast suite**, `pytest tests/ -m "not slow and not gpu" --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20` | **exit 0**, `4044 passed, 178 skipped, 55 deselected` in 53 m 45 s: a clean single pass (S2: 4038; S3 added six tests) |
+| **Full suite**, `pytest tests/ parity/ …` (same options), **run 1** (`248bb586`) | **exit 1**, `1 failed, 6330 passed, 184 skipped` in 2 h 05 m. The failure: `tests/test_exp002_driver.py::TestCheckRunComplete::test_wrong_parent_rejected`, `PermissionError: [WinError 5] Access is denied` on a `rename` inside `.pytest_basetemp`. Notebook 02 took 1,636.2 s, 01 562.2 s, 03 176.6 s |
+| **Full suite, run 2** (`76a97384`) | **exit 1**, `1 failed, 6330 passed, 184 skipped` in 1 h 25 m. The failure: `tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression`, `Throughput ratio 2.18 > 1.30` (DV-032). Notebook 02 took 1,326.5 s, 01 647.9 s, 03 49.2 s, 04 41.2 s |
+| Each run's failed node, and its whole file, re-run in isolation (supplementary) | all pass: `test_wrong_parent_rejected` 1 passed and `tests/test_exp002_driver.py` 323 passed; `test_no_gpu_throughput_regression` 1 passed and `tests/test_acceptance_subconscious.py` 49 passed. Both full-suite records stay at exit 1 |
+| Path-form coverage, `--cov=python/prin/reporting` (the module form fails on this host, DV-033), and `changed_line_coverage.py` | 116 passed; `figure_generation.py` **99.41%**. Against the cycle base `fd8854ed`: **11 of 11** changed executable lines executed (100%). Against the S3 base `5ba0129e`: 15 lines changed and **none is an executable statement** (docstring lines, and one keyword argument inside an executed `ax.scatter(…)` statement), so that 100% is **vacuous**; the line itself is exercised by the new fig13-label test. Exit 0 |
+| `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets -- -D warnings`; `cargo test --workspace` | **exit 0** each; `cargo test` passed on the first attempt (48 `test result: ok` lines summing to 1,604 passed, 0 failed), so no contention retry was needed |
+| Sphinx `-W --keep-going -b html` from a deleted `DOCS/sphinx/_build` | **exit 0**, `build succeeded` (long-leg run and final run) |
+| `gitleaks` (pinned binary 8.30.1), full history and `--staged` | **exit 0** each: no leaks (758 commits at the long-leg run; 761 at the final run); nothing staged |
+| Snyk Code CLI, `snyk code test . --severity-threshold=low` (snyk `1.1306.2`, account `Symbo-gif`, `snyk whoami` exit 0) | exit 1 as the CLI reports any finding: Test Summary **0 HIGH / 0 MEDIUM / 97 LOW**; **0** findings above LOW in any git-known path, **0** in S3's three changed first-party files, **0** in S3's instruments; the F8 re-check is §S3.4 |
+| Snyk Open Source, `pip-audit`, `cargo audit` | **not run**: no dependency or lockfile changed (the manifests diff is empty); `cargo audit` is red on DV-045, out of scope |
+| Snyk Code through the MCP route | **blocked**: no Snyk MCP tool was exposed in this session. Not claimed |
+| `cargo doc`, `cargo llvm-cov`, hosted CI, Linux, macOS | **not run** (not required by the brief; amendment #48) |
+
+**The required full suite is not green.** It exited 1 twice, on two different single
+tests, and S3 does not call that a pass. Both tests are unrelated to this change, both
+pass in isolation, both are host-contention sensitive on the evidence (§S3.2; the
+second is registered as such in DV-032), and the F2 notebook timeout fired in neither
+run. S3 also did not run the suite a third time hoping for a clean pass, which would
+select a favourable outcome rather than report one. The brief allows the full suite
+to "carry a recorded, evidence-sized disposition" instead of passing; the F2
+disposition is §S3.2 and the residual flakiness is §S3.9 item 9. The fast suite is
+the clean single pass the cycle required.
+
+**Cheap legs repeated on the final commit.** The static gate, Sphinx, gitleaks, both
+immutability diffs, the manifest verification, the delta re-audit, the three index
+self-checks, the Snyk scan and the PR #34 state were run again on the last commit
+before the closing-gate records were added (the header of each record in `gate/final/`
+names its commit). The Sphinx, gitleaks, Snyk and static rows above state the final
+run's figures.
 
 ### S3.8 Delta re-audit
 
-*Appended after the last review round.*
+Re-verified by re-execution, not by reading earlier records
+([`gate/final/delta-reaudit.txt`](../../EVIDENCE/exp002-d1-s3/gate/final/delta-reaudit.txt),
+[`verify-manifest.txt`](../../EVIDENCE/exp002-d1-s3/gate/final/verify-manifest.txt),
+[`immutability-after.txt`](../../EVIDENCE/exp002-d1-s3/gate/final/immutability-after.txt)):
+
+| Check | Result |
+|---|---|
+| Pre-fix module digest | `git restore --source d90eeabb -- python/prin/reporting/figure_generation.py` gives sha256 `e0f59253…d533` and an empty diff against `d90eeabb`, as recorded in S1 and S2 |
+| **Pre-fix failing reproduction** | `parity/test_parity_publication.py`: **18 failed, 75 passed**, exactly the E3 set (the `.pdf` and `.png` of figures 5, 7, 8, 9, 10, 11, 12, 14, 15), exit 1. `tests/test_publication_figure_arguments.py`: **10 failed**, exit 1. The brief expected 9; the tenth is `test_fig13_series_labels_follow_the_reference`, the test S3 added for F6, which correctly fails against the module that lacks the label |
+| Module restored | `git restore` back; sha256 equals the value before the restore; tracked `git status` clean |
+| **Post-fix passing parity tests** | both files together on the S3 tree: **103 passed**, exit 0 (the brief expected 102: 93 parity tests plus the 9 argument tests, and 103 includes S3's one added test) |
+| S1/S2's digest of the post-fix module | `b41dfc13…c048` at `10d84f2b` and `5ba0129e`. At `HEAD` it is `e216fec4…19a7`, because S3's F6 label and F7 docstring change the module; the change is docstring-only except one keyword argument whose byte-immateriality was re-proved (§S3.1, F6) |
+| `verify_manifest` over all five `benchmarks/results/EXP-002/RUN-*` and the frozen input manifest | **5/5 PASS**; the input manifest recomputes to the pinned `300cdc09…cce5`; `verify_manifest(reference results, INPUT_MANIFEST)` PASS (172); **0 failures** |
+| **EXP-002 record immutability** (I1) | `git diff 5ba0129e..HEAD` over `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/`, `benchmarks/results/EXP-002/`, `.github/`, `Cargo.toml`, `Cargo.lock` and `pyproject.toml` is **empty**; `git diff --name-only` for the whole range lists no other manifest |
+| S1 evidence (I2) | only `EVIDENCE/exp002-d1-s1/README.md` changed: **+1, −0**; no `SHA256SUMS` or manifest in that directory; the enforced rule holds |
+| Audit text (I3) | this file: **0 lines deleted** against `5ba0129e`, so S1 and S2 text is unedited and §S3 is a pure append (`immutability-after.txt` gives the added-line count on the commit it ran on) |
+| Evidence indexes | `index_selfcheck.py`: `exp002-d1-s1` 12 files, `-s2` 30 files, `-s3` 99 files (at the commit the check ran on), each **0 unindexed, 0 dangling** |
+| Draft PR #34 | `OPEN`, `isDraft: true`, `headRefOid 8fd0ecc9…`, equal to `origin/hotfix/exp002-d1-figure-parity`; the branch is 23 commits ahead and 0 behind. **Nothing was pushed** |
+
+**Delta re-audit verdict: `CLEAN`.** The regression reproduces against the pre-fix
+module, vanishes with the fix, and the changes S3 made on top of the S1 fix are
+accounted for; the EXP-002 record, its manifests and the S1 evidence are untouched.
 
 ### S3.9 Deviations and observations
 
@@ -1521,11 +1604,62 @@ regenerated.
    outside the workspace is a design question, blocked by `AGENTS.md`'s mandated
    in-repo basetemp name; (d) the Parity Report, the PSR, the deviation ledger and
    the E5 erratum, which belong to S4.
+9. **The required full suite has not produced an exit 0 on this host in S3.**
+   Two runs, two different single failures, both unrelated to this change and both
+   passing alone: a `WinError 5` rename inside `.pytest_basetemp` and the DV-032
+   throughput ratio (§S3.7). F2's own defect, the notebook timeout, did not recur
+   in three runs at the shipped bounds or lifted. This is **not an S2 finding** and
+   S3 does not resolve it: it is recorded as observation **O-1**, with severity left
+   to S4 and the maintainer (S3 suggests D3 if it persists: the cause is outside the
+   repository's code, but the required gate cannot currently be demonstrated green
+   in one pass). The evidence is that both host-saturation periods coincide with
+   `tests/test_exp002_*` and non-PRIN processes (§S3.2). The options are the
+   maintainer's: run the gate with the IDE and security tooling quiet, exclude
+   `.pytest_basetemp` from their scanning, or extend DV-032's host-timing
+   registration to the file-handle class with an approved disposition. S3 changed
+   none of these and added no skip, xfail, deselection or tolerance. The S4 brief
+   carries the item.
+10. **The Snyk Code MCP route was unavailable** (no tool exposed); the CLI leg,
+    which the brief named, completed. Nothing was added to `.snyk`.
 
 ### S3.10 Verdict and handoff
 
-*Appended after the last review round.*
+**Findings.** All open S2 findings are dispositioned; none is silently dropped.
+`EXP002D1-S2-F2` (D2) `FIXED`; `-F1` (D3) `ASSIGNED` to S4 and `EXP-002-r1`, no
+amendment needed; `-F4`, `-F5`, `-F6`, `-F7` (D4) `FIXED`; `-F8` (D4) `RATIFIED` with
+the standing re-check done and one further same-class LOW recorded for the
+maintainer; `-F3` already `RESOLVED`. One new observation, **O-1** (§S3.9 item 9),
+is carried to S4.
+
+**Delta re-audit: `CLEAN`** (§S3.8).
+
+**Cold review.** Four rounds, the cap. See §S3.5 for each round's reviewers, claims
+and counts; every CONFIRMED claim in rounds 1–3 was fixed and re-verified. Round 4 is
+recorded there too.
+
+**Closing gate.** Every leg exited 0 **except the required full suite, which exited
+1 twice** (§S3.7, §S3.9 item 9). The fast suite is a clean single pass. Nothing was
+weakened to obtain any result.
+
+**Verdict: S3 COMPLETE, with residual O-1.** The correction itself (S1's fix,
+S2's audit, S3's remediation) is verified by independent re-execution and is not
+reopened; what remains is that the project's own required full-suite gate cannot yet
+be shown green in one pass on this host.
+
+**Handoff to S4** (documentation; the push point, Development Workflow §3 and
+amendment #28):
+
+1. Carry `-F1` into the `EXP-002-r1` authorization as the S4 brief now specifies.
+2. Decide O-1: its severity and which of the §S3.9 item 9 options to adopt, or run the
+   S4 gate with the IDE and security tooling quiet and record that.
+3. Ratify, or not, `EXP-002D1-S2-F8`'s third location
+   (`EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142`).
+4. Write the Project State Report, the Parity Report update and the `EXP-002` E5
+   erratum (none of these belongs to S3); push the branch and update draft PR #34
+   only then.
+5. Re-run the cheap legs of the gate on the S4 commit; the instruments are in
+   `EVIDENCE/exp002-d1-s3/`.
 
 **Not authorized by S3:** merging PR #34, marking it ready for review,
 `EXP-002-r1`, or releasing session `0164`. Session `0164` stays `BLOCKED`. S3 commits
-locally only; nothing is pushed.
+locally only; nothing is pushed. Amendments: none drafted, none adopted.

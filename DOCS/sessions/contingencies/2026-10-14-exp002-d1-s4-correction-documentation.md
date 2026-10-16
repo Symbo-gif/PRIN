@@ -1,6 +1,6 @@
 # EXP-002 D1 S4 — Correction documentation
 
-**Status:** OPEN — blocked on S3
+**Status:** OPEN — S3 complete (2026-10-16 UTC); S4 may start on maintainer instruction
 **Triggering deviation:** `EXP-002 H3 REFUTED` (campaign plan §10.4 D1; pre-registration §4.3)
 **Blocked numbered session:** `0164` (EXP-003 E1), and every later campaign session (`0165`–`0194`)
 **Opened by:** session `0163` (EXP-002 E5), 2026-10-14 UTC
@@ -25,7 +25,7 @@ all four conditional sessions close.
 4. **Erratum pointer appended** to `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md` (§15) naming **`EXP-002-r1`**. The `EXP-002` record's verdicts, digests, and raw artefacts are **never** edited.
 5. **`EXP-002-r1` authorized:** create a new experiment record skeleton `DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md` with a new pre-registration (E1) and new `RUN-` directories, per campaign plan §10.4 item 4. The re-run never reuses `EXP-002`'s run IDs or artefacts. **Carry `EXP002D1-S2-F1` into this authorization** (see "Carried from S3" below): the authorization must require `EXP-002-r1`'s E1/E2 to register how its two H3 comparison policies are read.
 6. **Return to `0164` is authorized only after** `EXP-002-r1`'s E5 verdict is not a reversal and is verified/accepted by the maintainer, or the maintainer records a Project Plan §8.3 amendment accepting a changed conclusion with full justification (campaign plan §10.4 item 5). **S4 closing on its own does not release `0164`**; state that explicitly in the PSR and registers.
-7. **Full local gate evidence** recorded verbatim under the Plan amendment #48 local-validation regime (plus hosted CI evidence if a hosted window is active).
+7. **Full local gate evidence** recorded verbatim under the Plan amendment #48 local-validation regime (plus hosted CI evidence if a hosted window is active). **Carry S3's observation O-1** ("Carried from S3 — O-1" below): the required full suite did not exit 0 on this host in either of S3's runs.
 
 ## Carried from S3 — `EXP002D1-S2-F1` (D3): register both H3 policies in `EXP-002-r1`
 
@@ -76,3 +76,26 @@ registration. If `EXP-002-r1`'s E1 or E2 finds that the choice cannot be made
 inside a pre-registration (for instance, if §10.4 item 5's "not a reversal" test
 itself would need reinterpreting), that is an amendment matter: draft it for
 maintainer approval, do not adopt it.
+
+## Carried from S3 — observation O-1 and the third `python/PT` location
+
+**O-1: the required full suite has not given an exit 0 in one pass on this host.**
+S3 ran `pytest tests/ parity/ --basetemp=.pytest_basetemp -o faulthandler_timeout=300
+--durations=20` twice at the shipped notebook bounds. Run 1 failed
+`tests/test_exp002_driver.py::TestCheckRunComplete::test_wrong_parent_rejected` on a
+Windows `WinError 5` rename inside `.pytest_basetemp`; run 2 failed
+`tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression`
+(ratio 2.18 against 1.30, the host-timing-sensitive node DV-032 registers). Both pass
+alone, neither touches this change, and `EXP002D1-S2-F2`'s notebook timeout fired in
+neither (correction audit §S3.7, §S3.9 item 9; evidence in
+[`EVIDENCE/exp002-d1-s3/gate/`](../../../EVIDENCE/exp002-d1-s3/gate/README.md)).
+S4's gate must **record its own full-suite result at its actual exit status**, must
+not describe a rerun-until-green as a pass, and must either run with the IDE and
+security tooling quiet (recording that) or ask the maintainer to decide the
+severity of O-1 and the §S3.9 item 9 options. S3 added no skip, xfail, deselection or
+tolerance and S4 must not either.
+
+**`EXP002D1-S2-F8` has a third location.** `EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142`
+(`python/PT`, LOW) matches the class the maintainer ratified for two other
+locations. S3 did not ratify it and did not edit S2's instrument; the PSR should
+carry it for the maintainer's decision.
