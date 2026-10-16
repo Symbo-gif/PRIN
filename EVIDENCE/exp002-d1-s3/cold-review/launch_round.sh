@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Launch the three cold reviewers in parallel on the same brief. Usage: launch_round.sh <round-dir-name>
 R=/c/Users/there/prin-s3-scratch/review
+# The round name becomes a directory name under $R, so it must not be able to climb out of it.
+[[ "$1" =~ ^[A-Za-z0-9][A-Za-z0-9_-]*$ ]] || { echo "round name must match [A-Za-z0-9][A-Za-z0-9_-]*"; exit 2; }
 D="$R/$1"
 BRIEF_WIN='C:\Users\there\prin-s3-scratch\review\reviewer-brief.md'
 POINTER="Your complete instructions are in the file $BRIEF_WIN . Read that file in full and carry them out exactly. Print your complete report to standard output."

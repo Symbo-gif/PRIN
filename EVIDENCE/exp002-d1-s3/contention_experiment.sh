@@ -15,9 +15,10 @@
 #
 # The pytest subset is only a load generator: it is stopped (session-owned
 # process tree) when the treatment notebook finishes, and is never reported as a
-# gate. Everything is written OUTSIDE the repository, to
-# ~/prin-s3-scratch/contention/ (control.json, treatment.json, console.log,
-# samples.jsonl, run.txt).
+# gate. Everything is written OUTSIDE the repository: to ~/prin-s3-scratch/contention/
+# (run.txt, control.json, control.err, treatment.json, treatment.err,
+# load-runner.txt) and, by diagnostic_suite_run.sh for the load generator, to
+# ~/prin-s3-scratch/contention-load/ (run.txt, console.log, samples.jsonl).
 set -u
 cd "$(git rev-parse --show-toplevel)" || exit 2
 export PATH="/c/Program Files/Git/bin:$PATH"
@@ -60,11 +61,14 @@ $PY -I EVIDENCE/exp002-d1-s3/notebook_timing.py --notebook "$NB" --timeout 7200 
 echo "treatment exit: $?   end: $(stamp)" >> "$OUT/run.txt"
 
 # --- stop the load generator (it is not a gate) --------------------------------
+# Only the process tree this script started is stopped: the runner's Windows PID is
+# read from /proc and taskkill /T takes that runner and its children (pytest, the
+# sampler). Nothing is matched by command-line text, so no unrelated process of the
+# maintainer's can be hit.
 if kill -0 "$LOAD" 2>/dev/null; then
-  echo "load generator still running at treatment end: stopping the session-owned tree $(stamp)" >> "$OUT/run.txt"
-  # The patterns are assembled from fragments so this command's own text does not
-  # match them (it would otherwise kill itself).
-  powershell.exe -NoProfile -Command "\$a = 'suite_run.sh contention' + '-load'; \$b = 'test_exp002_' + 'driver.py'; Get-CimInstance Win32_Process | Where-Object { \$_.CommandLine -like ('*' + \$a + '*') -or \$_.CommandLine -like ('*' + \$b + '*') } | ForEach-Object { taskkill /PID \$_.ProcessId /T /F | Out-Null }" > /dev/null 2>&1
+  echo "load generator still running at treatment end: stopping its process tree $(stamp)" >> "$OUT/run.txt"
+  WINPID=$(cat "/proc/$LOAD/winpid" 2>/dev/null)
+  if [ -n "$WINPID" ]; then /c/Windows/System32/taskkill.exe //PID "$WINPID" //T //F > /dev/null 2>&1; fi
 fi
 wait "$LOAD" 2>/dev/null
 echo "finished: $(stamp)" >> "$OUT/run.txt"

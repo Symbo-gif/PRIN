@@ -33,17 +33,35 @@ import shutil
 import subprocess  # nosec B404 - fixed argv, no shell
 import sys
 from pathlib import Path
+from typing import NoReturn
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[2]
 EVIDENCE = ROOT / "EVIDENCE"
 LINK = re.compile(r"\]\(([^)\s]+)\)")
 
+
+def fail(message: str) -> NoReturn:
+    """Report a usage or environment error on standard error and exit with status 2.
+
+    ``fail("message")`` would exit with status 1, which these
+    instruments reserve for "the check ran and found a difference".
+
+    Args:
+        message: What went wrong.
+
+    Raises:
+        SystemExit: Always, with status 2.
+    """
+    print(message, file=sys.stderr)
+    raise SystemExit(2)
+
+
 #: ``git`` resolved once to an absolute path (Coding Standards section 6.1:
 #: "absolute executables"), as ``tools/check_deviation_ledger.py`` does.
 _GIT = shutil.which("git")
 if _GIT is None:
-    raise SystemExit("git was not found on PATH")
+    fail("git was not found on PATH")
 GIT: str = _GIT
 
 

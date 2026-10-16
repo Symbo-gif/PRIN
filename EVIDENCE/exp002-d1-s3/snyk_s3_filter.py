@@ -58,6 +58,7 @@ GIT: str = _GIT
 S3_CHANGED: tuple[str, ...] = (
     "python/prin/reporting/figure_generation.py",
     "tests/test_publication_figure_arguments.py",
+    "tests/test_notebooks.py",
 )
 
 #: Directory holding the instruments S3 added.

@@ -1,6 +1,6 @@
 # Cold review — triage record
 
-Protocol (S3 brief §6.3): every reviewer claim is reproduced or measured before
+Protocol (section 6.3 of the S3 session prompt, summarised in [`README.md`](README.md)): every reviewer claim is reproduced or measured before
 anything is fixed. **CONFIRMED** = reproduced; **REFUTED** = measured otherwise;
 **NOT REPRODUCIBLE** = could not be made to occur. Only CONFIRMED claims are
 fixed. Where reviewers conflict, the measurement decides. Claims are
@@ -25,7 +25,7 @@ Tool-environment lesson: a denied command ends a headless reviewer's session.
 Brief v2 (rounds 2 onward) forbids shell commands for all three reviewers and
 supplies the change set as files. The Devin invocation is unchanged
 (`--permission-mode smart`); what changed is the brief, which no longer permits
-any reviewer to run commands. That is stricter than the S3 brief's section 6.2,
+any reviewer to run commands. That is stricter than section 6.2 of the S3 session prompt,
 which allows read-only commands, because a denied command ended two reviewers'
 sessions in round 1. The brief file is identical for all three in each round.
 
@@ -84,3 +84,47 @@ code, the S4 brief's H3 numbers match `both-policies-post-fix.txt`, and
 `diag_nb_timeout.py` cannot activate in a gate run. Devin independently reached
 the same conclusions on the F6 port, the §11.3 quotation and the `NotebookClient`
 arguments.
+
+## Round 3 — brief v3, HEAD `b2156918` — all three reviewers reported
+
+Brief v3 is brief v2 plus one paragraph saying that the diff file omits some large
+raw-data files and the review records (listed in `s3-excluded.txt` with sizes and
+SHA-256, all present in the tree). That is neutral: it describes the diff file, not
+the change. The excluded review records also keep earlier reviewers' findings out
+of the diff, so the review stays cold.
+
+**Availability.** agy and Qwen reported on their first run. Devin needed four
+attempts: attempts 1 and 2 ended when `smart` mode rejected a `wc -l` / `ls`
+command the brief had forbidden (attempt 2 was made after the data file the
+reviewers read first gained a line giving the sizes of the review files, so no
+command was needed to learn them); attempt 3 read everything and ran out of output
+tokens before writing its report (exit 1); attempt 4 reported. The Devin invocation
+and the brief file are identical in all four attempts. Attempts 1–3 are kept in
+`round3/`.
+
+Claims made: **Devin 9, agy 2, Qwen 13** = 24 findings, plus one claim found in
+Devin's attempt-3 narration (that the audit cites section numbers the repository's S3
+brief does not have). After deduplication: **18 distinct claims, all CONFIRMED (one
+only in part), 1 assertion within one of them REFUTED, 0 NOT REPRODUCIBLE.** Every
+reproduction and its output is in [`round3/triage-commands.txt`](round3/triage-commands.txt).
+
+| # | Claim | Source | Measurement | Verdict | Disposition |
+|---|---|---|---|---|---|
+| T3-1 | `snyk_s3_filter.py`'s changed-file list omits `tests/test_notebooks.py`; the audit says "two changed first-party files" and the Snyk records predate the F2 commit | agy 1 and 2, Devin 1, Qwen 2 | `git diff --name-only 5ba0129e..HEAD -- python/ tests/` lists three files; the last scan started 03:14Z and `91f3327a` was committed at 04:34-03:00 (07:34Z) | **CONFIRMED** | List fixed; the audit says three files and cites a closing rescan (`snyk-code-s3-final.txt`) |
+| T3-2 | "host available memory never fell below 5.5 GB" | Devin 2 | minimum sample 5,476 MB | **CONFIRMED** | "5,476 MB" in the audit and the F2 README. The F2 commit message keeps the old figure (commit messages are not rewritten) |
+| T3-3 | "neither can move without the other" overstates a one-directional `>=` test; a bound can be raised with no evidence | Devin 3, Qwen 5 | the only assertion was `bound >= BOUND_MARGIN * recorded` | **CONFIRMED** | The test is now an equality with the rule (3 × recorded, rounded up to 900 s); `f2/test-both-directions.txt` shows a raised bound and a slower recorded worst case each failing; red and green re-recorded |
+| T3-4 | The 12× looser notebook-02 bound rests on a host state S1 and S2 never measured; S2 warned against a load-only attribution; the 3,484 s run was taken while the review session's own tooling saturated the host; the mitigation was "considered and not done"; no committed gate run exists at the new bounds | Qwen 1 | S1 and S2 have no sampler output (true); S2's "~89% idle at start" was measured before the suite began, and the S3 observed run read 31% at the start with saturation from minute 13 (true, and not previously addressed); **no reviewer CLI ran during 03:20–06:03Z (the observed run) or 06:06–07:07Z (the experiment)**, and S2 recorded three `Devin` processes resident before S3 began (so the "review tooling" attribution is false); the closing gate had not yet run | **CONFIRMED in part; one assertion REFUTED** | Added to the audit and the F2 README: the limits of what S1 and S2 can show, S2's idle-at-start point, whose processes these are, and that the bound is a deliberate 12× loosening for notebook 02. The gate run followed |
+| T3-5 | The `rg.exe` counts "87 → 29 → 64" and "116 to 2" cite artefacts that contain no process counts and that end before the period described | Qwen 3 | `analysis-contention-timeline.txt` ends at 06:41:55Z, before the load generator's runner ended (06:42:29Z; its pytest ended 06:39:06Z), and holds CPU-seconds by name; the only committed `rg.exe` count is the 134 snapshot | **CONFIRMED** | Counts removed. The post-load saturation is now computed from `treatment.json` by `paired_comparison.py` (309 of 309 samples at or above 90% over 27.9 minutes); the end-of-suite recovery cites the timeline rows (97% to 33%) |
+| T3-6 | A per-cell timeout is sized from whole-notebook durations | Qwen 4 | every recorded value is a test or notebook wall time; 02's slowest contended cell was 1,926 s | **CONFIRMED** (safe direction) | Stated in the constant's comment, the audit and the F2 README: a whole-notebook duration bounds any cell, so the bounds are conservative; the per-cell figure would give 6,300 s |
+| T3-7 | `immutability-before.txt` and `index-selfcheck-s1.txt` were produced by earlier versions of their instruments | Qwen 6, Devin 5 | the records lack lines the shipped instruments print | **CONFIRMED** | Both regenerated with the shipped instruments; the `-s2` and `-s3` records are produced with the closing gate |
+| T3-8 | `f6-test-red-before-fix.txt` cites line 191; the committed assertion is at 194 | Qwen 7 | `git show 2b8b7a55:tests/test_publication_figure_arguments.py \| grep -n` gives 194 | **CONFIRMED** (explained) | The red run preceded the three-line docstring sentence about fig13 that the same commit added afterwards (Qwen guessed the pre-F5 docstring; the F5 docstring was already in). Noted in the README row; the raw record is unchanged |
+| T3-9 | `notebook_timing.py` still says the test uses a 900 s timeout | Qwen 8, Devin 6 | the test uses `NOTEBOOK_CELL_TIMEOUT_SECONDS[name]`; `--timeout` defaults to 900 | **CONFIRMED** | Docstring and parameter text rewritten |
+| T3-10 | §S3.6 asserts 0/0 results for `exp002-d1-s2` and `-s3` with no committed record, and cites a closing gate that had not run | Qwen 9 | no `index-selfcheck-s2.txt` or `-s3.txt` | **CONFIRMED** (transient) | §S3.6 now names the three closing-gate records; they are produced with the gate |
+| T3-11 | The experiment's cleanup force-kills any process whose command line mentions a test file name | Qwen 10 | the recorded run did not reach that branch (there is no "load generator still running" line in its `run.txt`) | **CONFIRMED** | Cleanup now stops only the runner's own process tree, found from its Windows PID in `/proc/<pid>/winpid`; self-tested on a throwaway child |
+| T3-12 | The audit's header (lines 3–14) still says "S1 complete; S2, S3, S4 pending" | Qwen 11 | `sed -n 14p` | **CONFIRMED** (not correctable) | The document is append-only; noted in §S3.9 |
+| T3-13 | Comments say "two orders of magnitude" (true for 02 only: 152×; the others are 37–49×) and "a fifth to a third" of a core (0.17 is a sixth) | Qwen 12, Devin 9 | bounds divided by quiet-host durations; kernel CPU/wall 0.17–0.33 | **CONFIRMED** | Comments corrected ("37–152 times", "a sixth to a third") |
+| T3-14 | "`HEAD~` (`5ba0129e`)" names two different revisions | Qwen 13 | `git rev-parse HEAD~` is not `5ba0129e` | **CONFIRMED** | "the S3 base (`5ba0129e`)" |
+| T3-15 | `launch_round.sh` interpolates its argument into paths unvalidated | Devin 4 | no guard in the script | **CONFIRMED** | Round name restricted to `[A-Za-z0-9][A-Za-z0-9_-]*` (`../x` exits 2) |
+| T3-16 | `contention_experiment.sh` names files it does not write to that directory | Devin 7 | `OUT=` against the header | **CONFIRMED** | Header lists what is written where |
+| T3-17 | Usage errors exit 1, but the docstrings document 2 (`raise SystemExit("message")`) | Devin 8 (marked UNVERIFIED by the reviewer) | `docstring_only_check.py --check zzz …` and `raw_byte_identity.py --before zzz` both exited 1 | **CONFIRMED** | A `fail()` helper prints to stderr and exits 2 in three instruments; verified exit 2 |
+| T3-18 | The audit and four records cite "S3 brief §6.x" but the repository's S3 brief has no such sections | Devin attempt-3 narration | the brief is 27 lines with three `##` headings | **CONFIRMED** | Citations now say "the S3 session prompt" (not a repository file); its rules are summarised in `cold-review/README.md` |

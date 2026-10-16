@@ -35,14 +35,32 @@ import re
 import shutil
 import subprocess  # nosec B404 - fixed argv, no shell
 import sys
+from typing import NoReturn
 
 REVISION = re.compile(r"[0-9a-f]{7,40}")
+
+
+def fail(message: str) -> NoReturn:
+    """Report a usage or environment error on standard error and exit with status 2.
+
+    ``fail("message")`` would exit with status 1, which these
+    instruments reserve for "the check ran and found a difference".
+
+    Args:
+        message: What went wrong.
+
+    Raises:
+        SystemExit: Always, with status 2.
+    """
+    print(message, file=sys.stderr)
+    raise SystemExit(2)
+
 
 #: ``git`` resolved once to an absolute path (Coding Standards section 6.1:
 #: "absolute executables"), as ``tools/check_deviation_ledger.py`` does.
 _GIT = shutil.which("git")
 if _GIT is None:
-    raise SystemExit("git was not found on PATH")
+    fail("git was not found on PATH")
 GIT: str = _GIT
 
 
@@ -79,13 +97,13 @@ def source_at(revision: str, path: str) -> str:
         SystemExit: If the revision is malformed or the path is not tracked there.
     """
     if not REVISION.fullmatch(revision):
-        raise SystemExit(f"not a hexadecimal revision: {revision!r}")
+        fail(f"not a hexadecimal revision: {revision!r}")
     # git lists paths with forward slashes on every platform; accept the
     # backslash form a Windows shell completes, then test membership as before.
     path = path.replace("\\", "/")
     tracked = git_bytes("ls-tree", "-r", "--name-only", revision).decode("utf-8")
     if path not in tracked.splitlines():
-        raise SystemExit(f"{path!r} is not tracked at {revision}")
+        fail(f"{path!r} is not tracked at {revision}")
     return git_bytes("show", f"{revision}:{path}").decode("utf-8")
 
 

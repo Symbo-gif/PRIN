@@ -1,6 +1,6 @@
 # Cold review — S3 evidence
 
-Index of the cold-review loop (S3 brief §6): three independent reviewers receive
+Index of the cold-review loop (section 6 of the S3 session prompt): three independent reviewers receive
 an identical brief and no account of what changed, review the S3 diff from
 scratch, and every claim is then triaged by measurement. The triage, with the
 command and output behind each classification, is [`triage.md`](triage.md).
@@ -32,7 +32,8 @@ recorded in the round tables below).
 | File | What it is |
 |---|---|
 | [`reviewer-brief-v1.md`](reviewer-brief-v1.md) | Round 1 brief (sha256 `50b3a9bc…`). Allowed read-only shell commands. |
-| [`reviewer-brief-v2.md`](reviewer-brief-v2.md) | Round 2 onward (sha256 `126ed80f…`). Forbids shell commands for all three reviewers, because a denied command ended two reviewers' sessions in round 1; supplies the diff and commit list as files. |
+| [`reviewer-brief-v2.md`](reviewer-brief-v2.md) | Round 2 (sha256 `126ed80f…`). Forbids shell commands for all three reviewers, because a denied command ended two reviewers' sessions in round 1; supplies the diff and commit list as files. |
+| [`reviewer-brief-v3.md`](reviewer-brief-v3.md) | Round 3 (sha256 `caff383a…`). v2 plus one paragraph saying the diff file omits some large raw-data files and the review records, which are listed with sizes and hashes in `round3/s3-excluded.txt`. |
 
 ## Round 1 — HEAD `7dbfc546`, brief v1 — degraded, no reviewer produced a report
 
@@ -57,3 +58,39 @@ After round 1, `git status --porcelain` was empty (no reviewer modified the tree
 | [`round2/triage-commands-agy-fabrications.txt`](round2/triage-commands-agy-fabrications.txt) | Searches showing the things agy named do not exist in the repository, the diff or the commit log. |
 
 After round 2, `git status --porcelain` was empty.
+
+## Round 3 — HEAD `b2156918`, brief v3 — all three reviewed (Devin on its fourth attempt)
+
+| File | What it is |
+|---|---|
+| [`round3/head.txt`](round3/head.txt), [`round3/status-before.txt`](round3/status-before.txt), [`round3/s3-excluded.txt`](round3/s3-excluded.txt) | The reviewed commit, an empty `git status --porcelain` before the round, and the list of files omitted from the diff file (with a header giving the sizes of the review files). |
+| [`round3/devin-stdout.txt`](round3/devin-stdout.txt), [`round3/devin-export.md`](round3/devin-export.md) | Devin's report (attempt 4, 9 findings) and its exported transcript. |
+| [`round3/devin-attempt1-stdout.txt`](round3/devin-attempt1-stdout.txt), [`round3/devin-attempt1-export.md`](round3/devin-attempt1-export.md), [`round3/devin-attempt2-stdout.txt`](round3/devin-attempt2-stdout.txt), [`round3/devin-attempt2-export.md`](round3/devin-attempt2-export.md) | Attempts 1 and 2: each ended when `smart` mode rejected a command (`wc -l` / `ls`) despite the brief; no report. |
+| [`round3/devin-attempt3-stdout.txt`](round3/devin-attempt3-stdout.txt), [`round3/devin-attempt3-export.md`](round3/devin-attempt3-export.md) | Attempt 3: read everything, then hit the model's output-length limit before writing a report (exit 1). Its narration is where the citation problem T3-18 was noticed. |
+| [`round3/agy-stdout.txt`](round3/agy-stdout.txt) | agy's report (2 findings). |
+| [`round3/qwen-stdout.txt`](round3/qwen-stdout.txt) | Qwen's report (13 findings and a "checked, no finding" section). |
+| [`round3/triage-commands.txt`](round3/triage-commands.txt) | The caller's reproduction of every checkable round 3 claim, at the reviewed commit, with verbatim output. |
+
+After round 3, `git status --porcelain` was empty.
+
+## Protocol applied (section 6 of the S3 session prompt)
+
+The S3 session prompt is the maintainer's execution contract for this session; it is
+not a repository file, so the rules it set are summarised here:
+
+- three independent reviewers (Devin `swe-2-high`, Antigravity Gemini 3.8 Flash,
+  Qwen3.8-max), each given the **identical brief** and **no account** of what changed
+  or why, reviewing the current tree and the S3 diff from scratch;
+- reviewers are **read-only**, enforced in the brief and verified with
+  `git status --porcelain` after each round; a reviewer that modified the tree would
+  be a protocol breach (none did);
+- an unavailable CLI is recorded as unavailable, never simulated, and a round with a
+  reviewer missing is labelled degraded;
+- every claim is **reproduced or measured before anything is changed** and classified
+  CONFIRMED, REFUTED or NOT REPRODUCIBLE; only CONFIRMED claims are fixed; refutations
+  are recorded with their measurement; claims are deduplicated; where reviewers
+  conflict the measurement decides;
+- the loop runs until a round returns **zero CONFIRMED claims** from all available
+  reviewers, capped at **four rounds**, after which the residual is dispositioned with
+  its measurement; no test is weakened, no tolerance loosened, no skip or suppression
+  added to reach a clean round.

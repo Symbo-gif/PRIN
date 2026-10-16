@@ -43,7 +43,7 @@ import sys
 import tempfile
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import Any, NoReturn
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULE_REL = "python/prin/reporting/figure_generation.py"
@@ -58,11 +58,28 @@ RESULTS = (
 )
 REVISION = re.compile(r"[0-9a-f]{7,40}")
 
+
+def fail(message: str) -> NoReturn:
+    """Report a usage or environment error on standard error and exit with status 2.
+
+    ``fail("message")`` would exit with status 1, which these
+    instruments reserve for "the check ran and found a difference".
+
+    Args:
+        message: What went wrong.
+
+    Raises:
+        SystemExit: Always, with status 2.
+    """
+    print(message, file=sys.stderr)
+    raise SystemExit(2)
+
+
 #: ``git`` resolved once to an absolute path (Coding Standards section 6.1:
 #: "absolute executables"), as ``tools/check_deviation_ledger.py`` does.
 _GIT = shutil.which("git")
 if _GIT is None:
-    raise SystemExit("git was not found on PATH")
+    fail("git was not found on PATH")
 GIT: str = _GIT
 
 
@@ -81,7 +98,7 @@ def module_source(revision: str) -> bytes:
     if revision == "worktree":
         return MODULE_PATH.read_bytes()
     if not REVISION.fullmatch(revision):
-        raise SystemExit(f"not a hexadecimal revision: {revision!r}")
+        fail(f"not a hexadecimal revision: {revision!r}")
     return subprocess.run(  # noqa: S603  # nosec B603 - absolute git, fixed argv, no shell
         [GIT, "show", f"{revision}:{MODULE_REL}"],
         cwd=ROOT,
@@ -105,7 +122,7 @@ def load_variant(source: bytes, name: str, scratch: Path) -> ModuleType:
     path.write_bytes(source)
     spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
-        raise SystemExit(f"cannot import the {name} variant")
+        fail(f"cannot import the {name} variant")
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
     spec.loader.exec_module(module)

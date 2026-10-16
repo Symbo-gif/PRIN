@@ -17,14 +17,15 @@ Windows x86_64 only — Linux and macOS were **not** tested (Plan amendment #48)
 ## Instruments
 
 Each was `ruff check`, `ruff format --check` and `mypy --strict` clean when it
-was written; the closing gate record (added when the gate has run) is the
+was written; the closing gate's `static-gate.txt` is the
 committed evidence for that. None turns a caller-supplied string into a filesystem
 path: they take a name from a closed set, a hexadecimal revision, a run label
 restricted to `[A-Za-z0-9][A-Za-z0-9_-]*`, a tracked file name that is only
 handed to `git show REV:PATH` after a membership test, or standard input. Every
-subprocess call uses a fixed argv with no shell and an absolute executable
-(`git` is resolved once with `shutil.which`; `typeperf.exe` is a fixed path).
-The Snyk Code rescan reports no finding in any of them.
+Python subprocess call uses a fixed argv with no shell and an absolute executable
+(`git` is resolved once with `shutil.which`; `typeperf.exe` is a fixed path); the
+shell scripts call `git`, `bash` and `powershell` from `PATH`.
+The closing Snyk Code rescan (`snyk-code-s3-final.txt`) reports no finding in any of them.
 
 | File | What it establishes |
 |---|---|
@@ -50,14 +51,14 @@ The Snyk Code rescan reports no finding in any of them.
 |---|---|
 | [`docstring-only-check.txt`](docstring-only-check.txt) | **F5, F7.** `docstring_only_check.py` on the three docstring-only commits (F5 `2db18fc3`, F7 `1403451c`, and the F7 follow-up `33923be5`): AST identical outside the module docstring (exit 0 each). Two negative controls — S1's fix commit and S3's F6 commit — report a difference (exit 1), so the check can fail. |
 | [`index-selfcheck-s1.txt`](index-selfcheck-s1.txt) | **F4.** `index_selfcheck.py exp002-d1-s1` after the README row: 12 files, 0 unindexed, 0 dangling. Records that the pre-edit README at `5ba0129e` did not mention the file, that the evidence file's sha256 (`fdfa17cc…`) is unchanged, and that it was last touched by `af894998`. |
-| [`f6-test-red-before-fix.txt`](f6-test-red-before-fix.txt) | **F6, failing test first.** The new fig13-label regression test run against the unfixed module: **1 failed, 9 passed**, exit 1 (`'_child0' != 'Obj 0'`). |
+| [`f6-test-red-before-fix.txt`](f6-test-red-before-fix.txt) | **F6, failing test first.** The new fig13-label regression test run against the unfixed module: **1 failed, 9 passed**, exit 1 (`'_child0' != 'Obj 0'`). Its traceback cites line 191 of the test file, three lines above the committed assertion (194): the run preceded the three-line docstring sentence about fig13 that the same commit added afterwards. |
 | [`f6-verification.txt`](f6-verification.txt) | **F6.** After the fix: **V1** 103 passed (10 fast-gate tests + the 93-test byte-level parity gate); **V2** artist-level equivalence 14/14 EQUAL; **V3** fast-gate divergence coverage still 34/34 and the docstring no longer claims byte-material only; **V4** raw-byte identity of all 28 files before vs after the F6 commit; **V5** negative control — the pre-fix port `d90eeabb` differs from the fixed tree on exactly the 18 D1 files (exit 1). V2's output is filtered to its result lines. |
 | [`immutability-before.txt`](immutability-before.txt) | The immutability diffs for `fd8854ed..5ba0129e`, the cycle's state before any S3 change: I1 empty, S1 evidence has 0 deleted lines and no `SHA256SUMS`/manifest, the audit shows 0 deletions. (Its I2 section lists S1's *additions* because the range starts before S1; the S3-only delta is recorded in the closing gate.) |
 | [`snyk-code-s3-first-scan-medium.txt`](snyk-code-s3-first-scan-medium.txt) | **Coding Standards §6, found and remediated.** The first Snyk Code CLI scan reported **1 MEDIUM** `Command Injection` in the new `suite_sampler.py` (the `typeperf.exe` path was built from an environment variable). Kept in the record, not overwritten. |
 | [`snyk-code-s3.txt`](snyk-code-s3.txt) | **Coding Standards §6 / F8 re-check.** The rescan after the fix: **0 HIGH / 0 MEDIUM / 97 LOW**; no finding in the files S3 changed or in the instruments it added; the F8 locations unchanged; and **one finding in an S2 instrument that the F8 record does not list**. The Snyk MCP route was not available in this session and is not claimed. |
 | [`snyk-code-s3-after-review-fixes.txt`](snyk-code-s3-after-review-fixes.txt) | **Coding Standards §6.** The rescan after the round 2 instrument fixes (absolute `git`, argv-token detection, new exit statuses): **0 HIGH / 0 MEDIUM / 97 LOW**, nothing in the S3-added instruments, the F8 locations unchanged. |
 | [`f2/README.md`](f2/README.md) | **F2, the whole measurement.** The standalone baselines, the observed full-suite run (exit 0, `6326 passed`, 2 h 42 m, notebook timeout lifted) with its console log and 132 sampler samples, the `rg.exe` snapshot, the paired contention experiment (notebook 02: **80.7 s alone versus 3,484 s beside only the `test_exp002_*` tests, 43×**), the analysis outputs, and the new bound tests red then green. Its README holds the findings, what is and is not established, and the disposition. |
-| [`cold-review/README.md`](cold-review/README.md) | **The cold-review loop (S3 brief §6).** Index of the briefs, each reviewer's raw stdout and export, the launcher, and the caller's triage, by round. [`cold-review/triage.md`](cold-review/triage.md) classifies every reviewer claim CONFIRMED / REFUTED / NOT REPRODUCIBLE with the measurement behind it. |
+| [`cold-review/README.md`](cold-review/README.md) | **The cold-review loop (S3 session prompt §6).** Index of the briefs, each reviewer's raw stdout and export, the launcher, and the caller's triage, by round. [`cold-review/triage.md`](cold-review/triage.md) classifies every reviewer claim CONFIRMED / REFUTED / NOT REPRODUCIBLE with the measurement behind it. |
 
 A first standalone run of notebook 02 (wall 69.0 s) is not committed: its kernel
 CPU and memory columns matched the Windows venv launcher stub instead of the

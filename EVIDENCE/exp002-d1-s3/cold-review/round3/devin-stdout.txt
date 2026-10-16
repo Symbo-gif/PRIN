@@ -1,0 +1,90 @@
+I'll start by reading the review materials.Now the diff file — 5159 lines, reading in chunks.The diff contains large JSON data files. Let me find the key code sections directly.I've read the full diff. Now let me verify claims against the repository tree. Starting with the changed source/test files.Now let me look at `fig_representation_geometry` and the module docstring claims in figure_generation.py.The label restore is faithful. Now checking the archived label values and other referenced files.I should use only file-reading/search tools per the brief. Checking the JSON labels with the grep tool instead.The restore is faithful (labels 0–4 match). Now verifying referenced evidence files and directories.All files exist. Now checking key cross-references: index self-check record vs current script output, cold-review README coverage, and S1/S2 duration records.Records cross-check so far. Now verifying S3 observed durations in the committed console log and several more references.Verifying the figure docstring claims against the module code, and the F4 evidence file.Let me check how `prin` is importable (whether verify_manifest_runs.py can import the driver under `-I`), plus a few more records.Now checking Testing Standards §7 (the policy the F2 disposition cites) and the load-generator record.Verifying a few remaining details: `.gitignore`/`.gitattributes`, the alone JSONs, the S2 Snyk numbers, and the minimum host memory in the samples.One discrepancy surfaced: `alone-02` recorded `host_available_mb_min: 660`. Let me check the observed-run samples' true minimum for the "never below 5.5 GB" claim.Checking `generate_all_figures`'s signature, `launch_round.sh`, and the v2 brief briefly.Let me quickly check the reviewer brief v2 and the f2 README's file-index completeness, then compile findings.A few last consistency checks on the cold-review records and v1 brief.Getting exact line numbers in the current tree for the findings I've identified.One more check on the docstring's "fractions to percent" claim and the round-2 triage command records.Final check on the treatment record's key fields.Let me get the exact line numbers for the remaining quotes.One last check: the "172-input manifest" claim.# Cold review report — PRIN `5ba0129e..HEAD` (EXP-002 D1 S3)
+
+I reviewed the full diff, the commit list, the excluded-file list, and the surrounding repository (standards, audit file, evidence bundles, instruments, test files, and the frozen reference). The change set is disciplined overall: frozen artefacts are untouched (no `DOCS/experiments/EXP-002*`, `benchmarks/results/EXP-002/`, `.github/`, dependency manifests, or `SHA256SUMS` bundles appear in the diff; the correction audit is a pure append; `EVIDENCE/exp002-d1-s1/` changes only its README by +1/−0). No test was skipped, deselected, xfailed, or had an assertion weakened — the notebook-timeout change follows Testing Standards §7 item 2's prescribed route and is honestly disclosed. Every numeric claim I could check against committed records verified (durations 800.07/1052.84/1063.96/222.39/52.45/678.94/2974.97/367.30/382.10/3484.0, `6326 passed`, 9 failed, 18/75, 34/34, 39/39 vs 14/39, 97 LOW, digests `e0f59253`/`b41dfc13`, 172-input manifest, the `Obj <label>` reference line, and the fig10 ±0.005 difference-of-means).
+
+Findings below are all minor; none undermines a gate or a verdict.
+
+**Finding 1**
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/snyk_s3_filter.py:58`
+- **Quote:**
+  ```
+  S3_CHANGED: tuple[str, ...] = (
+      "python/prin/reporting/figure_generation.py",
+      "tests/test_publication_figure_arguments.py",
+  )
+  ```
+- **Claim:** The tuple is labelled "First-party source files S3 changed" but omits `tests/test_notebooks.py`, which S3 changed at `91f3327a` (the F2 bound re-size). Compounding it, all three committed Snyk scan records (`snyk-code-s3*.txt`, last one ending 03:18Z) predate that change (~07:3xZ), so no committed evidence shows a §6 scan of the F2-modified file; the audit §S3.4 "0 findings in the two changed first-party files" is literally accurate only because the third file did not exist in the scanned tree. The §6.2 above-LOW gate is unaffected (it covers every git-known path), and the closing gate is a declared placeholder, so coverage may yet come — but the constant itself is stale.
+- **Reproduce:** `rg -n "test_notebooks" EVIDENCE/exp002-d1-s3/snyk_s3_filter.py` (no match); `rg -n "scanned tree|started" EVIDENCE/exp002-d1-s3/snyk-code-s3*.txt` vs `git log -1 --format=%cI -- tests/test_notebooks.py`.
+
+**Finding 2**
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/f2/README.md:51` (and the same sentence at `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1246`)
+- **Quote:** `  below **5.5 GB**, and hard-fault paging averaged **at most 26 pages/s**: not`
+- **Claim:** The committed samples record a minimum `available_mb` of 5476 MB in the observed full-suite run (and the kernel-episode summary reports `host_avail_mb(min)` = 5476), so "never fell below 5.5 GB" is contradicted by the bundle's own data — 5476 MB is below 5.5 GB under either GB or GiB reading. The substantive conclusion (memory was not limiting) still stands; the number is just wrong.
+- **Reproduce:** `rg -o '"available_mb": [0-9]+' EVIDENCE/exp002-d1-s3/f2/diagnostic-full-suite/samples.jsonl | sort -n | head -3` (prints `5476` first); `rg "5476" EVIDENCE/exp002-d1-s3/f2/analysis-observed-run-kernels.txt`.
+
+**Finding 3**
+- **Severity:** nit
+- **Where:** `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1273`
+- **Quote:** `Two fast tests pin each bound to its recorded worst case, so neither can move`
+- **Claim:** Overstated. `tests/test_notebooks.py:294` asserts only `bound >= BOUND_MARGIN * recorded`; a bound may be raised arbitrarily, or set to a value that is not a multiple of 900 s, and a recorded worst case may be lowered, all without any test failing. The "rounded up to a multiple of 900 s" policy in the constant's comment is likewise unenforced. The safety-relevant direction (a bound lowered below the evidence margin, or a slower worst case recorded) is pinned; the audit's phrasing claims more.
+- **Reproduce:** `rg -n "assert bound|BOUND_MARGIN" tests/test_notebooks.py` — only the `>=` assertion exists.
+
+**Finding 4**
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh:4`
+- **Quote:**
+  ```
+  R=/c/Users/there/prin-s3-scratch/review
+  D="$R/$1"
+  ```
+- **Claim:** `$1` is interpolated unvalidated into filesystem paths (`$D/devin-stdout.txt`, the `--export` path), so a label like `../x` climbs out of the scratch directory — the exact defect class that was confirmed and fixed in `diagnostic_suite_run.sh` (triage T2-9, restricted to `[A-Za-z0-9][A-Za-z0-9_-]*`). The bundle README's claim that no executable here turns a caller-supplied string into a filesystem path (only a closed set, a hex revision, a restricted run label, a membership-tested name, or stdin) does not hold for this file.
+- **Reproduce:** `rg -n 'D="\$R/\$1"|=~ ' EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh` — there is no regex guard anywhere in the script.
+
+**Finding 5**
+- **Severity:** nit
+- **Where:** `EVIDENCE/exp002-d1-s3/index-selfcheck-s1.txt:5`
+- **Quote:**
+  ```
+  bundle exp002-d1-s1: 12 files (README included)
+    unindexed files : none
+    dangling links  : none
+  ```
+- **Claim:** The committed record lacks the `  nested READMEs used: none` line that the committed `index_selfcheck.py` prints unconditionally (line ~128 of the instrument, added in the round-2 fixes). The record was produced by an earlier version of the instrument and is stale relative to it — the verdict is unaffected, but the record is no longer the verbatim output of the shipped instrument.
+- **Reproduce:** `rg -n "nested READMEs" EVIDENCE/exp002-d1-s3/index_selfcheck.py EVIDENCE/exp002-d1-s3/index-selfcheck-s1.txt` — matched only in the `.py`.
+
+**Finding 6**
+- **Severity:** nit
+- **Where:** `EVIDENCE/exp002-d1-s3/notebook_timing.py:15`
+- **Quote:** `It builds the same ``NotebookClient`` as the test (same ``timeout``,`
+- **Claim:** Stale after the F2 change: the test now builds the client with per-notebook timeouts (`NOTEBOOK_CELL_TIMEOUT_SECONDS[name]`, 2700–10800 s) while this instrument's `--timeout` defaults to 900 s. The claim was true when written; it no longer matches the test it says it mirrors.
+- **Reproduce:** `rg -n "timeout=" tests/test_notebooks.py; rg -n "default=900" EVIDENCE/exp002-d1-s3/notebook_timing.py`.
+
+**Finding 7**
+- **Severity:** nit
+- **Where:** `EVIDENCE/exp002-d1-s3/contention_experiment.sh:19`
+- **Quote:**
+  ```
+  # Everything is written OUTSIDE the repository, to
+  # ~/prin-s3-scratch/contention/ (control.json, treatment.json, console.log,
+  # samples.jsonl, run.txt).
+  ```
+- **Claim:** The comment names files the script does not write to that directory. It writes `run.txt`, `control.json`, `control.err`, `treatment.json`, `treatment.err`, `load-runner.txt` to `~/prin-s3-scratch/contention/`; `console.log` and `samples.jsonl` are written by `diagnostic_suite_run.sh` to `~/prin-s3-scratch/contention-load/` instead.
+- **Reproduce:** `rg -n 'OUT=|console\.log|samples\.jsonl' EVIDENCE/exp002-d1-s3/contention_experiment.sh EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh`.
+
+**Finding 8**
+- **Severity:** nit
+- **Where:** `EVIDENCE/exp002-d1-s3/docstring_only_check.py:27`
+- **Quote:** `docstring, 1 when any differs, 2 on a usage error.`
+- **Claim:** `raise SystemExit(<string>)` at lines 82 and 88 (malformed revision, untracked path — both usage errors) exits with status 1, not the documented 2.
+- **Reproduce:** `python -c "import subprocess; r=subprocess.run(['.venv/Scripts/python.exe','-I','EVIDENCE/exp002-d1-s3/docstring_only_check.py','--check','zzz','2db18fc3','x.py'],capture_output=True); print(r.returncode)"` from the repo root — prints `1`, not `2` (UNVERIFIED by me: I did not execute it, but `SystemExit(msg)` exiting 1 is fixed Python semantics).
+
+**Finding 9**
+- **Severity:** nit
+- **Where:** `tests/test_notebooks.py:51`
+- **Quote:** `#: Inside the full suite on the maintainer host the kernel receives a fifth to a`
+- **Claim:** The committed kernel episodes recorded 0.17–0.33 CPU-s per wall-second; 0.17 is a sixth of a core, not a fifth. The audit text itself states the accurate 0.17–0.33 range; only this comment is loose.
+- **Reproduce:** `rg "0\.17|0\.33|0\.20|0\.18" EVIDENCE/exp002-d1-s3/f2/analysis-observed-run-kernels.txt` vs `rg "fifth to a third" tests/test_notebooks.py`.
+
+**Summary:** 9 findings — 0 critical, 0 high, 0 medium, 3 low, 6 nit; 1 marked `UNVERIFIED` (Finding 8's reproduce command, Python `SystemExit` exit-code semantics not executed).

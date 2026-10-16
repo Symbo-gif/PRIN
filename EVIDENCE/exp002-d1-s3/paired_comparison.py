@@ -16,7 +16,9 @@ Exit status is 0 when both records exist and both notebooks completed.
 from __future__ import annotations
 
 import json
+import re
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -49,6 +51,64 @@ def slowest_cell(record: dict[str, Any]) -> tuple[int, float]:
     """
     cells = [(c["cell"], c["wall_seconds"] or 0.0) for c in record["cells"]]
     return max(cells, key=lambda item: item[1])
+
+
+SUMMARY_TIME = re.compile(r"^(\d\d):(\d\d):(\d\d)Z =+ .*passed.* =+$")
+
+
+def load_generator_end(treatment_start: datetime) -> datetime | None:
+    """Return when the load generator's pytest finished, from its console log.
+
+    Each console line carries a ``HH:MM:SSZ`` prefix; the final summary line gives
+    the moment pytest itself ended (the runner's own ``ended:`` line is later,
+    because it also waits for the sampler to stop).
+
+    Args:
+        treatment_start: When the treatment notebook started, used for the date.
+
+    Returns:
+        The end instant, or ``None`` if no summary line is present.
+    """
+    console = EXPERIMENT / "load" / "console.txt"
+    end: datetime | None = None
+    for line in console.read_text(encoding="utf-8").splitlines():
+        match = SUMMARY_TIME.match(line.strip())
+        if match:
+            hour, minute, second = (int(group) for group in match.groups())
+            end = treatment_start.replace(
+                hour=hour, minute=minute, second=second, microsecond=0
+            )
+    return end
+
+
+def report_after_load(treatment: dict[str, Any]) -> None:
+    """Print the host's CPU while the notebook ran on after the load generator ended.
+
+    The treatment record samples the host every 5 s; the samples taken after the
+    load generator's pytest had finished show whether the contention ended with it.
+
+    Args:
+        treatment: The ``notebook_timing.py`` record of the treatment run.
+    """
+    start = datetime.fromisoformat(treatment["started_utc"]).astimezone(UTC)
+    end = load_generator_end(start)
+    if end is None:
+        print("load generator end: no summary line found in its console log")
+        return
+    offset = (end - start).total_seconds()
+    later = [s for s in treatment["samples"] if s["t_wall"] >= offset]
+    print()
+    print(f"load generator's pytest ended at {end:%H:%M:%S}Z ({offset:.0f} s in)")
+    if not later:
+        print("  no treatment samples after that moment")
+        return
+    cpu = [s["host_cpu_percent"] for s in later]
+    minutes = (later[-1]["t_wall"] - offset) / 60
+    saturated = sum(1 for value in cpu if value >= 90)
+    print(f"  {len(later)} host samples over the next {minutes:.1f} min, with the")
+    print("  notebook still running:")
+    print(f"    host CPU mean {sum(cpu) / len(cpu):.1f}%, min {min(cpu):.1f}%")
+    print(f"    samples at or above 90%: {saturated} of {len(cpu)}")
 
 
 def main() -> int:
@@ -108,6 +168,7 @@ def main() -> int:
     print(f"treatment / control kernel CPU time  : {cpu_ratio:.1f}x")
     print("  (more CPU for the same work: consistent with starved threads spinning,")
     print("   which this experiment did not measure directly)")
+    report_after_load(treatment)
     completed = control["outcome"] == treatment["outcome"] == "completed"
     return 0 if completed else 1
 

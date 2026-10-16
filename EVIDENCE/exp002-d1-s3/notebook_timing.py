@@ -12,10 +12,14 @@ inside the suite versus alone, so the instrument records, for one notebook:
   time) can be told apart from a starved or blocked one (CPU time << wall time);
 * host CPU utilisation and available memory at each sample.
 
-It builds the same ``NotebookClient`` as the test (same ``timeout``,
-``kernel_name`` and working directory) with one addition, ``record_timing=True``,
-which is what yields the per-cell wall times. It never modifies a notebook on
-disk: nbclient executes an in-memory copy and the result is discarded.
+It builds the same ``NotebookClient`` as the test (same ``kernel_name`` and
+working directory) with one addition, ``record_timing=True``, which is what yields
+the per-cell wall times. The per-cell ``timeout`` defaults to 900 s, the bound the
+test had when finding F2 was raised; the test now sets a per-notebook bound
+(``NOTEBOOK_CELL_TIMEOUT_SECONDS``), so pass ``--timeout`` to match it.
+
+It never modifies a notebook on disk: nbclient executes an in-memory copy and the
+result is discarded.
 
 The notebook is selected by *name* from the closed set discovered under
 ``notebooks/``, so no caller-supplied path is ever turned into a filesystem
@@ -191,7 +195,8 @@ def run(
 
     Args:
         name: Notebook file name; must be one of :func:`discovered_notebooks`.
-        timeout: nbclient per-cell timeout in seconds (the test uses 900).
+        timeout: nbclient per-cell timeout in seconds (the test now uses its
+            per-notebook ``NOTEBOOK_CELL_TIMEOUT_SECONDS``).
         period: Sampling cadence in seconds.
         label: Free-text label recorded in the output.
 

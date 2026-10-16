@@ -1243,7 +1243,7 @@ needed or claimed.
    `svchost.exe`, and by `rg.exe`: at 04:37Z there were **134 concurrent
    `rg.exe --files --hidden …` processes, all children of one `Devin.exe` Node
    service**, 2,093 cumulative CPU-seconds. The notebook kernels received 0.17–0.33
-   CPU-s per wall-second, host available memory never fell below 5.5 GB, and paging
+   CPU-s per wall-second, host available memory never fell below 5,476 MB, and paging
    averaged at most 26 pages/s. When pytest exited the host fell from 100% to 33%
    within about a minute.
 4. **A smaller group reproduces it.** A paired experiment ran notebook 02 alone
@@ -1255,9 +1255,29 @@ needed or claimed.
 `mc-fw-host.exe` are busy: the timing puts the onset at the `test_exp002_*` group
 in both runs, but no process was stopped to test causation, and these are the
 maintainer's processes — they were observed, never killed. Why the contention
-drained within a minute of the end of the full suite but persisted for over 28
-minutes after the experiment's load generator exited is not explained. Nothing
-here implicates PRIN code.
+drained within a minute of the end of the full suite but persisted after the
+experiment's load generator exited (all 309 host samples over the next 27.9 minutes
+were at or above 90%, mean 100.0%; `f2/analysis-paired-comparison.txt`) is not
+explained. Nothing here implicates PRIN code.
+
+*What S1 and S2 can and cannot show.* Neither session had host telemetry (the
+sampler is new in S3), so the cause of *their* failures is inferred, not measured.
+It is consistent with the S3 measurement: their completed notebook legs ranged from
+1.4× to 11× the standalone time (S2's `04_torch_bridge` leg, 52.5 s, was nearly
+unaffected), and their `test_exp002_e4_analysis` tests took
+40–165 s each; S1 also reported a resident IDE language server using the CPU. S2's
+finding text declines to attribute its failure purely to load because the host was
+"~89% idle at start". That figure was taken before the suite began; in the S3
+observed run the host read 31% at the start and the saturation began 13 minutes
+into the run, so an idle start is compatible with it. S2's caution was reasonable
+on the data it had. The S3 conclusion is stronger only because S3 measured during
+the run.
+
+*Whose processes.* The `Devin.exe` and `rg.exe` load is the maintainer's resident
+IDE, not the review tooling: S2 recorded three `Devin` processes resident, with
+thousands of CPU-seconds, before S3 began; and no reviewer CLI was running during
+the observed run (03:20–06:03Z) or the experiment (06:06–07:07Z) — the review
+rounds were 02:31–03:04Z (round 2) and from 07:41Z (round 3).
 
 *The change* (`tests/test_notebooks.py`, `91f3327a`). Each notebook has its own
 per-cell bound: **3 × the largest completed contended duration recorded for it,
@@ -1270,12 +1290,21 @@ rounded up to a multiple of 900 s**.
 | `03_custom_coupling` | 408.96 s (S1, full suite) | 1,800 s |
 | `04_torch_bridge` | 389.81 s (S1, full suite) | 1,800 s |
 
-Two fast tests pin each bound to its recorded worst case, so neither can move
-without the other. They **fail against the old 900 s bounds (4 failed) and pass
-after (33 passed, the 4 slow executing tests still collected)**
-(`f2/test-red-before-fix.txt`, `f2/test-green-after-fix.txt`). Three pre-existing
+Two fast tests tie each bound to its recorded worst case. The second asserts
+that each bound **equals** the rule (3 × the recorded worst case, rounded up to a
+multiple of 900 s), so neither constant can move without the other. (The first
+version asserted only `bound >= 3 × recorded`, which let a bound be raised without
+evidence; a cold review found that and `f2/test-both-directions.txt` now shows two
+mutations failing: a bound raised to 18,000 s, and a slower worst case recorded
+without raising the bound.) The tests **fail against the old 900 s bounds (4
+failed, 1 passed) and pass after (33 passed, the 4 slow executing tests still
+collected)** (`f2/test-red-before-fix.txt`, `f2/test-green-after-fix.txt`). The
+recorded quantity is each notebook's whole duration, an upper bound on any single
+cell's, so each bound is conservative per cell; the one per-cell contended
+measurement (notebook 02's slowest cell, 1,926 s) would give a 6,300 s bound under
+the same rule. Three pre-existing
 `mypy --strict` errors in the same file (bare `dict` annotations) were fixed
-incidentally, typing only; they are present at `HEAD~` (`5ba0129e`).
+incidentally, typing only; they are present at the S3 base (`5ba0129e`).
 
 *The trade-off, stated plainly.* The bound is now a ceiling for a leg that is
 starved but progressing, not a performance check: the quiet-host durations are
@@ -1324,8 +1353,11 @@ to `.snyk`; no ignore or severity exclusion was created.
 - **The gate holds:** Test Summary **0 HIGH / 0 MEDIUM / 97 LOW** on the final
   rescan; 45 findings are in git-known paths and 52 in gitignored on-disk agent
   worktree copies (the scan counts the filesystem, not git).
-- **S3's own code:** **0 findings** in the two changed first-party files and in the
-  S3-added instruments. The *first* scan had reported **one MEDIUM**,
+- **S3's own code:** **0 findings** in the three changed first-party files
+  (`figure_generation.py`, `test_publication_figure_arguments.py`,
+  `test_notebooks.py`) and in the S3-added instruments, on the closing rescan
+  (`snyk-code-s3-final.txt`, §S3.7). The two earlier rescans predate the F2 commit,
+  so they could not cover `test_notebooks.py`. The *first* scan had reported **one MEDIUM**,
   `python/CommandInjection`, in the new `suite_sampler.py` (the `typeperf.exe` path
   was built from an environment variable). It was remediated, not suppressed, by a
   fixed absolute path, and the first-scan record is kept
@@ -1368,7 +1400,7 @@ the triage are in [`cold-review/`](../../EVIDENCE/exp002-d1-s3/cold-review/READM
 |---|---|---|---|---|---|---|
 | 1 — **degraded** | `7dbfc546`, brief v1 | none (see below) | 1 (Devin narration) | 1 | 0 | 0 |
 | 2 | `33923be5`, brief v2 | Devin 8, agy 6 (+9 refuted narrative assertions), Qwen 11 | 25 findings → 15 distinct | 15 | 9 | 0 |
-| 3 | to be recorded | | | | | |
+| 3 — **Devin needed four attempts** | `b2156918`, brief v3 | Devin 9 (attempt 4), agy 2, Qwen 13 | 24 findings + 1 claim from Devin's narration → 18 distinct | 18 (one only in part) | 1 assertion, within one of them | 0 |
 | 4 | to be recorded | | | | | |
 
 **Round 1** produced no reviewer report. Devin aborted when `--permission-mode
@@ -1384,7 +1416,8 @@ narration that the F7 docstring's list of arithmetic omitted Fig. 10), which was
 
 **Round 2** used brief v2, which forbids shell commands for all three reviewers
 (a denied command ended two sessions in round 1). The Devin and `agy` flags are
-unchanged; the brief is stricter than the S3 brief's §6.2, which allows read-only
+unchanged; the brief is stricter than §6.2 of the S3 session prompt (the maintainer's execution
+contract for this session, not a repository file), which allows read-only
 commands. All three reported. The triage reproduced each checkable claim and
 searched for each thing agy named: **agy's report contained nine assertions that
 name commits, files, tests and a `Testing_Standards.md` edit which do not exist**
@@ -1401,14 +1434,42 @@ filter's exit status did not encode its gate; four instruments called `git` by b
 name against Coding Standards §6.1; and several README claims were stale or too
 strong. Qwen's explicit "checked, no finding" statements held.
 
+**Round 3** (tree `b2156918`, brief v3, which only adds that the diff file omits some
+raw-data files and review records, listed with sizes and hashes) found more than
+rounds 1 and 2 together, and almost all of it was real. Confirmed and fixed: the
+Snyk filter's list of changed files omitted `tests/test_notebooks.py`, and the
+closing Snyk scan was therefore still to run; the F2 bound test was one-directional,
+so a bound could be raised without evidence (now an equality, with two mutations
+shown failing); "never below 5.5 GB" was false against the data's own minimum of
+5,476 MB; two process-count claims cited artefacts that cannot contain them (the
+figures were dropped, and the post-load saturation is now computed from the
+committed treatment record); several committed records or instrument docstrings
+had gone stale against the instruments or the test they describe; usage errors
+exited 1 where 2 was documented; the cold-review launcher and the experiment's
+cleanup did not restrict what they touched to what they own; and the audit text
+cited section numbers of the S3 *session prompt* as though they were in the
+repository's S3 brief. One assertion was refuted in part: that the saturation was
+caused by the review session's own tooling (no reviewer was running during the
+observed run or the experiment, and the resident `Devin` processes pre-date S3).
+The same review made two points S3 now states plainly: S1 and S2 had no telemetry,
+so their failures are explained by consistency rather than measurement; and the
+bound for notebook 02 is a deliberate 12× loosening of a hang detector (2–3× for the
+others), justified by the evidence and by Testing Standards §7 item 2, not a free
+change.
+
 ### S3.6 Evidence discipline
 
 `index_selfcheck.py` (every committed file indexed by its directory's README, every
-link resolving) reports **0 unindexed, 0 dangling** for `exp002-d1-s1` (after F4),
-`exp002-d1-s2` and `exp002-d1-s3`. It was used to catch two defects in S3's own
-bundle: `*.log` is gitignored, so two console logs would silently not have been
-committed (renamed `.txt`), and the first version of the README claimed lint
-cleanliness that no committed output evidenced (now evidenced by the closing gate).
+link resolving; a subdirectory README counts only if the bundle README links to it)
+is run on `exp002-d1-s1` (after F4), `exp002-d1-s2` and `exp002-d1-s3`; the three
+outputs are the closing-gate records `index-selfcheck-s1.txt`, `-s2.txt` and
+`-s3.txt` (§S3.7). It already caught two defects in S3's own bundle: `*.log` is
+gitignored, so two console logs would silently not have been committed (renamed
+`.txt`), and the first version of the README claimed lint cleanliness that no
+committed output evidenced (now evidenced by the closing gate's `static-gate.txt`).
+Cold review also found three committed records that the shipped instruments could
+no longer reproduce verbatim (written by earlier versions of them); they were
+regenerated.
 
 ### S3.7 Closing gate
 
@@ -1427,6 +1488,9 @@ cleanliness that no committed output evidenced (now evidenced by the closing gat
    observed run during which only independent changes could be made. The findings
    are independent, so the order changed no content.
 2. **Qwen's round 1 termination was premature** (§S3.5). Recorded in the triage.
+   Devin needed four attempts in round 3: two ended on a denied command (`wc -l`, `ls`)
+   despite the brief, one on the model's output-length limit before it wrote its
+   report, and the fourth reported. The attempts are kept in the round's records.
 3. **The brief was changed between rounds 1 and 2** (v1 → v2), stricter about
    shell commands, for the reason in §S3.5. The Devin invocation (`--permission-mode
    smart`) was kept.
@@ -1434,11 +1498,20 @@ cleanliness that no committed output evidenced (now evidenced by the closing gat
    (2 h 42 m) and the contention experiment (about one hour, including the 499-test
    load generator), in addition to the gates. Both were run on a clean tree, output
    went outside the repository, and nothing belonging to the maintainer was stopped.
-5. **A process slip, caught and corrected:** a Python `write_text` edit on Windows
+5. **The audit's own header is stale and cannot be corrected here.** Lines 3–14
+   still say "S1 complete; S2, S3, S4 pending" and describe the document as written
+   before S2. The document is append-only, so the header stays; the authoritative
+   status is the registers and this section.
+6. **Two of S3's own claims were corrected after cold review**: the first F7
+   rewording and the first form of the F2 bound test (one-directional) each said more
+   than they delivered. The F2 commit message also still carries the one-directional
+   wording ("neither can move without the other") and a memory figure ("≥ 5.5 GB"; the
+   minimum sample is 5,476 MB); commit messages are not rewritten.
+7. **A process slip, caught and corrected:** a Python `write_text` edit on Windows
    converted `tests/test_publication_figure_arguments.py` to CRLF in the working
    copy. The committed blobs were LF (`.gitattributes` `text=auto eol=lf`); the
    working copies were normalised and verified.
-6. **Out of scope, recorded as candidates and not done:** (a) operating guidance
+8. **Out of scope, recorded as candidates and not done:** (a) operating guidance
    for the gate (for example excluding `.pytest_basetemp` from IDE workspace
    scanning and security-software real-time scanning, or asking the maintainer to
    run the gate with those tools quiet) — `AGENTS.md` is the maintainer's;

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # EXP-002 D1 S3 - delta re-audit: the pre-fix failing reproduction and the post-fix
-# passing parity tests (S3 brief section 7). Run from Git Bash at the repository root.
+# passing parity tests (S3 session prompt section 7). Run from Git Bash at the repository root.
 #
 #   bash EVIDENCE/exp002-d1-s3/delta_reaudit.sh
 #

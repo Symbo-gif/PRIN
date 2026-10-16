@@ -1,0 +1,61 @@
+# Cold Code Review Report: `git diff 5ba0129e8f225c62de92593d329be63ca7e7cf7e..HEAD`
+
+**Reviewer Context:** Cold review conducted in accordance with [`reviewer-brief.md`](file:///C:/Users/there/prin-s3-scratch/review/reviewer-brief.md) on the repository at `C:\dev\PRIN` (Windows x86_64, working tree clean at `b21569180b828837487dac428b8f683fb4ea1796`). All analyses were performed using read-only file inspections without running shell commands.
+
+---
+
+## Areas Verified Clean (Non-Findings)
+
+1. **Frozen and Immutable Artefacts (Item 6):**
+   - No files were modified under [`benchmarks/results/EXP-002/`](file:///C:/dev/PRIN/benchmarks/results/EXP-002/) or [`DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/`](file:///C:/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/).
+   - No workflow files under `.github/` were touched.
+   - Dependency manifests ([`Cargo.toml`](file:///C:/dev/PRIN/Cargo.toml), `Cargo.lock`, [`pyproject.toml`](file:///C:/dev/PRIN/pyproject.toml)) were untouched.
+   - [`EVIDENCE/exp002-d1-s1/`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s1/) was modified only by adding 1 line to its [`README.md`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s1/README.md) to index [`fast-tests-against-prefix-module.txt`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s1/fast-tests-against-prefix-module.txt) (resolving `EXP002D1-S2-F4`); no bytes in evidence files were touched.
+   - [`DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`](file:///C:/dev/PRIN/DOCS/audits/2026-10-15-exp002-d1-correction-audit.md) was modified as a strict append (+328 lines, 0 deletions) adding section `## S3 — remediation and delta verification`.
+
+2. **Test Preservation and Timeout Bounds (Items 4 & 5):**
+   - In [`tests/test_notebooks.py`](file:///C:/dev/PRIN/tests/test_notebooks.py), the per-cell timeout in [`test_notebook_executes_end_to_end`](file:///C:/dev/PRIN/tests/test_notebooks.py#L302-L330) was resized from a flat 900 s to per-notebook evidence-based bounds (`BOUND_MARGIN = 3.0` times recorded contended maximum duration) pursuant to Testing Standards §7 item 2 and finding `EXP002D1-S2-F2` route (a). All 4 notebooks still execute all cells end-to-end; no tests were skipped, deselected, xfailed, or weakened.
+   - Added two pinning tests ([`test_every_notebook_has_a_sized_cell_timeout`](file:///C:/dev/PRIN/tests/test_notebooks.py#L270-L279) and [`test_cell_timeout_has_margin_over_the_recorded_contended_maximum`](file:///C:/dev/PRIN/tests/test_notebooks.py#L281-L298)) preventing bounds from being lowered below the safety margin.
+
+3. **Production Figure Generation:**
+   - In [`python/prin/reporting/figure_generation.py`](file:///C:/dev/PRIN/python/prin/reporting/figure_generation.py#L936), the per-series label restoration for Fig. 13 (`label=f"Obj {lbl}" if j < 5 else None`) exactly matches line 936 of the reference `PRINet-3.0.0-main/src/prinet/utils/figure_generation.py` and produces bit-identical rendered figures (28/28 files raw SHA-256 identical).
+
+4. **Evidence Index Completeness:**
+   - All files in [`EVIDENCE/exp002-d1-s3/`](file:///C:/dev/PRIN/EVIDENCE/exp002-d1-s3/) and its subdirectories (`f2/`, `cold-review/`) are indexed with valid relative markdown links.
+
+---
+
+## Findings
+
+### Finding 1: `snyk_s3_filter.py` omits `tests/test_notebooks.py` from `S3_CHANGED`
+
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/snyk_s3_filter.py:58-61`
+- **Quote:**
+```python
+#: First-party source files S3 changed.
+S3_CHANGED: tuple[str, ...] = (
+    "python/prin/reporting/figure_generation.py",
+    "tests/test_publication_figure_arguments.py",
+)
+```
+- **Claim:** `S3_CHANGED` defines only two first-party files, omitting `tests/test_notebooks.py` which was modified in commit `91f3327a`. Consequently, `snyk_s3_filter.py` fails to filter or report any Snyk Code findings in `tests/test_notebooks.py` under the S3 changed-files bucket.
+- **Reproduce:** `git diff --name-only 5ba0129e8f225c62de92593d329be63ca7e7cf7e..HEAD -- python/ tests/`
+
+---
+
+### Finding 2: Audit section S3.4 undercounts changed first-party files and relies on a pre-F2 Snyk rescan
+
+- **Severity:** low
+- **Where:** `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1327-1328`
+- **Quote:**
+```markdown
+- **S3's own code:** **0 findings** in the two changed first-party files and in the
+  S3-added instruments.
+```
+- **Claim:** Audit section §S3.4 asserts that S3 changed only "two" first-party files, whereas S3 changed three first-party files (`figure_generation.py`, `test_publication_figure_arguments.py`, and `test_notebooks.py`). Furthermore, the cited rescan record (`snyk-code-s3-after-review-fixes.txt`) was executed at git HEAD `33923be5`, which preceded commit `91f3327a` (`tests/test_notebooks.py`) and the addition of later scripts and instruments (`static_gate.sh`, `delta_reaudit.sh`, `verify_manifest_runs.py`, `paired_comparison.py`).
+- **Reproduce:** `git diff --name-only 5ba0129e8f225c62de92593d329be63ca7e7cf7e..HEAD -- python/ tests/`
+
+---
+
+Summary: 0 critical, 0 high, 0 medium, 2 low, 0 nit (0 UNVERIFIED).

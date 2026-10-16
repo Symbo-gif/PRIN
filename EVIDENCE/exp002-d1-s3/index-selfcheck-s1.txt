@@ -1,8 +1,9 @@
 # EXP002D1-S2-F4 - mechanical index self-check of EVIDENCE/exp002-d1-s1/ after the README row
-# date (UTC): 2026-10-16T01:54:26Z
-# git HEAD: 9583eb4d9b21ab7a8b71160b910f3957b2221eb4
+# date (UTC): 2026-10-16T08:57:03Z
+# git HEAD: b21569180b828837487dac428b8f683fb4ea1796
 # command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-d1-s1
 bundle exp002-d1-s1: 12 files (README included)
+  nested READMEs used: none
   unindexed files : none
   dangling links  : none
 # exit code: 0
