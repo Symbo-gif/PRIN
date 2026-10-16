@@ -1,0 +1,11 @@
+label: gate-full-2
+git HEAD: 76a973841f381aa97588cb8291571ab3aaed212c
+tracked changes vs HEAD: 0
+untracked files: 0
+host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0   logical CPUs: 16
+diagnostic notebook-timeout plugin loaded: 0
+pytest args: tests/ parity/
+started: 2026-10-16T12:24:08Z
+pytest exit status: 1
+ended: 2026-10-16T13:50:35Z
+git HEAD at end: 76a973841f381aa97588cb8291571ab3aaed212c   tracked changes: 0   untracked files: 0

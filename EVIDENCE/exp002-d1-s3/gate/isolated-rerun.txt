@@ -22,3 +22,19 @@ tests\test_exp002_driver.py .                                            [100%]
 ============================ 323 passed in 21.74s =============================
 # exit code: 0
 # ended 2026-10-16T12:20:32Z
+
+######## second full-suite run (gate-full-2, commit 76a97384): its one failed node, re-run in isolation
+# date (UTC): 2026-10-16T13:51:27Z; git HEAD 76a973841f381aa97588cb8291571ab3aaed212c; tracked changes: 0
+# The run failed tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression with 'Throughput ratio 2.18 > 1.30'. That node is registered as host-timing-sensitive in DV-032 (measured ~1.28-1.32 under load there); the host was saturated by non-PRIN processes while the run was in progress (see full-suite-2/ timeline). An isolated re-run is supplementary evidence only; the full-suite record stays at exit 1.
+# command: .venv/Scripts/python.exe -m pytest tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 1 passed, 2 warnings in 9.75s ========================
+# exit code: 0
+# ended 2026-10-16T13:52:03Z
+# command: .venv/Scripts/python.exe -m pytest tests/test_acceptance_subconscious.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+====================== 49 passed, 28 warnings in 14.60s =======================
+# exit code: 0
+# ended 2026-10-16T13:52:21Z
