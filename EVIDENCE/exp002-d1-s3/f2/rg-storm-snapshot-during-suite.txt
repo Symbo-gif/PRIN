@@ -1,0 +1,8 @@
+# Snapshot of ripgrep processes during the observed full-suite run (read-only observation; nothing was stopped)
+# taken 2026-10-16T04:37:05Z UTC; console tail: 
+rg.exe processes: 134
+  parent pid 26780 (Devin.exe): 134 rg.exe children; parent cmd: "C:\Users\there\AppData\Local\Programs\Devin\Devin.exe" --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=n
+executable: c:\Users\there\AppData\Local\Programs\Devin\resources\app\node_modules\@vscode\ripgrep-universal\bin\win32-x64\rg.exe
+cumulative CPU of the rg.exe processes alive now: 2,093 s
+distinct first -g patterns: 37; most common: **/ARCHITECTURE.md x10; /README.*.md x10; **/.cursorrules x8; /README.md x8; **/PLAN.md x7; /SPEC.md x7; /SPECIFICATION.md x6; /plans/**/*.md x5
+all invocations use: --files --hidden --case-sensitive --no-require-git  (scan every file, git ignore rules not required)

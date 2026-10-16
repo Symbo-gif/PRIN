@@ -1,0 +1,17 @@
+# EXP002D1-S2-F2 - the same tests AFTER the bounds are raised, together with every other non-slow notebook test
+# started 2026-10-16T07:30:05Z
+# HEAD 0970c46734865aae2fef4a1bbf3a2742273553ca plus the F2 change to tests/test_notebooks.py
+# command: .venv/Scripts/python.exe -m pytest tests/test_notebooks.py -m "not slow" -q -rf --basetemp=.pytest_basetemp -p no:cacheprovider
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 37 items / 4 deselected / 33 selected
+
+tests\test_notebooks.py .................................                [100%]
+
+====================== 33 passed, 4 deselected in 0.49s =======================
+# exit code: 0
+# ended 2026-10-16T07:30:09Z

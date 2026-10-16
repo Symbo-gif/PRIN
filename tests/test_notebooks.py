@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -41,6 +42,43 @@ CONTRACT_NOTEBOOKS = (
 MIN_CODE_CELLS = 3
 MIN_MARKDOWN_CELLS = 2
 
+#: Per-notebook ``nbclient`` per-cell timeout, in seconds (Testing Standards
+#: section 7 item 2: finite bounds are workload- and evidence-based).
+#:
+#: EXP002D1-S2-F2. One bound of 900 s, sized from the notebooks' stated ~40 s
+#: runtime budget, was exceeded by ``02_clevr_n_binding`` in two consecutive
+#: full-suite runs. The notebook is not the cause: alone it completes in 71 s.
+#: Inside the full suite on the maintainer host the kernel receives a fifth to a
+#: third of one core while processes outside PRIN (an IDE's ripgrep scans and
+#: security software) hold the whole host at ~100% CPU, and the leg slows 8-43x
+#: (``EVIDENCE/exp002-d1-s3/f2/``). Each bound is BOUND_MARGIN x the largest
+#: *completed* contended duration recorded for that notebook, rounded up to a
+#: multiple of 900 s. They remain hang detectors (the quiet-host durations are
+#: 37-73 s, two orders of magnitude below), but no longer fail a leg that is
+#: merely starved.
+NOTEBOOK_CELL_TIMEOUT_SECONDS = {
+    "01_oscillosim_quickstart.ipynb": 2700,
+    "02_clevr_n_binding.ipynb": 10800,
+    "03_custom_coupling.ipynb": 1800,
+    "04_torch_bridge.ipynb": 1800,
+}
+
+#: Largest *completed* duration, in seconds, of each notebook's execution on this
+#: host while it was CPU-starved: S1 ``local-gate.txt`` and S2 ``pytest-suites.txt``
+#: (full suite), the S3 observed full-suite run, and, for notebook 02, the S3
+#: contention experiment (the notebook beside only the ``test_exp002_*`` tests),
+#: which was the slowest at 3484 s. Runs killed at the old 900 s bound are
+#: censored and are not used.
+RECORDED_CONTENDED_MAX_SECONDS = {
+    "01_oscillosim_quickstart.ipynb": 800.07,
+    "02_clevr_n_binding.ipynb": 3484.0,
+    "03_custom_coupling.ipynb": 408.96,
+    "04_torch_bridge.ipynb": 389.81,
+}
+
+#: Safety factor between the recorded worst case and the bound.
+BOUND_MARGIN = 3.0
+
 
 def _discover() -> list[Path]:
     """Return every notebook in ``notebooks/``, sorted by name.
@@ -52,7 +90,7 @@ def _discover() -> list[Path]:
     return sorted(NOTEBOOK_DIR.glob("*.ipynb"))
 
 
-def _load(path: Path) -> dict:
+def _load(path: Path) -> dict[str, Any]:
     """Read a notebook as raw JSON.
 
     Args:
@@ -61,10 +99,11 @@ def _load(path: Path) -> dict:
     Returns:
         The parsed notebook document.
     """
-    return json.loads(path.read_text(encoding="utf-8"))
+    document: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    return document
 
 
-def _cells(document: dict, cell_type: str) -> list[dict]:
+def _cells(document: dict[str, Any], cell_type: str) -> list[dict[str, Any]]:
     """Return the cells of one type.
 
     Args:
@@ -228,6 +267,36 @@ def test_notebook_decodes_under_the_windows_locale_encoding(name: str) -> None:
         )
 
 
+def test_every_notebook_has_a_sized_cell_timeout() -> None:
+    """Assert each shipped notebook has an evidence-sized per-cell bound (F2).
+
+    A notebook added without a recorded in-suite duration and a bound sized from
+    it would otherwise silently inherit nothing; this makes that a named failure.
+    """
+    contract = set(CONTRACT_NOTEBOOKS)
+    assert set(NOTEBOOK_CELL_TIMEOUT_SECONDS) == contract
+    assert set(RECORDED_CONTENDED_MAX_SECONDS) == contract
+
+
+@pytest.mark.parametrize("name", CONTRACT_NOTEBOOKS)
+def test_cell_timeout_has_margin_over_the_recorded_contended_maximum(name: str) -> None:
+    """Assert each bound is at least BOUND_MARGIN x the recorded worst case (F2).
+
+    Testing Standards section 7 item 2 sizes a finite bound from cited evidence
+    plus substantial margin for host variability. Lowering a bound below that
+    margin, or recording a slower worst case without raising the bound, fails here.
+
+    Args:
+        name: Notebook filename.
+    """
+    bound = NOTEBOOK_CELL_TIMEOUT_SECONDS[name]
+    recorded = RECORDED_CONTENDED_MAX_SECONDS[name]
+    assert bound >= BOUND_MARGIN * recorded, (
+        f"{name}: bound {bound} s < {BOUND_MARGIN} x the recorded contended maximum "
+        f"{recorded} s; re-size it from new evidence (Testing Standards section 7)"
+    )
+
+
 @pytest.mark.slow
 @pytest.mark.parametrize("name", _ids())
 def test_notebook_executes_end_to_end(name: str) -> None:
@@ -253,7 +322,7 @@ def test_notebook_executes_end_to_end(name: str) -> None:
     document = nbformat.read(path, as_version=4)
     client = NotebookClient(
         document,
-        timeout=900,
+        timeout=NOTEBOOK_CELL_TIMEOUT_SECONDS[name],
         kernel_name="python3",
         resources={"metadata": {"path": str(NOTEBOOK_DIR.parent)}},
     )

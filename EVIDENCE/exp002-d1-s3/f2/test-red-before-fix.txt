@@ -1,0 +1,43 @@
+# EXP002D1-S2-F2 - the new bound tests run BEFORE the bounds are raised (every per-notebook bound still the old 900 s)
+# started 2026-10-16T07:28:41Z
+# HEAD 0970c46734865aae2fef4a1bbf3a2742273553ca; tests/test_notebooks.py = HEAD plus the new constants (all bounds 900), the two new tests and typing-only annotations
+# command: .venv/Scripts/python.exe -m pytest tests/test_notebooks.py -k 'sized_cell_timeout or margin_over' -q -rf --basetemp=.pytest_basetemp -p no:cacheprovider
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 37 items / 32 deselected / 5 selected
+
+tests\test_notebooks.py .FFFF                                            [100%]
+
+================================== FAILURES ===================================
+_ test_cell_timeout_has_margin_over_the_recorded_contended_maximum[01_oscillosim_quickstart.ipynb] _
+tests\test_notebooks.py:294: in test_cell_timeout_has_margin_over_the_recorded_contended_maximum
+    assert bound >= BOUND_MARGIN * recorded, (
+E   AssertionError: 01_oscillosim_quickstart.ipynb: bound 900 s < 3.0 x the recorded contended maximum 800.07 s; re-size it from new evidence (Testing Standards section 7)
+E   assert 900 >= (3.0 * 800.07)
+_ test_cell_timeout_has_margin_over_the_recorded_contended_maximum[02_clevr_n_binding.ipynb] _
+tests\test_notebooks.py:294: in test_cell_timeout_has_margin_over_the_recorded_contended_maximum
+    assert bound >= BOUND_MARGIN * recorded, (
+E   AssertionError: 02_clevr_n_binding.ipynb: bound 900 s < 3.0 x the recorded contended maximum 3484.0 s; re-size it from new evidence (Testing Standards section 7)
+E   assert 900 >= (3.0 * 3484.0)
+_ test_cell_timeout_has_margin_over_the_recorded_contended_maximum[03_custom_coupling.ipynb] _
+tests\test_notebooks.py:294: in test_cell_timeout_has_margin_over_the_recorded_contended_maximum
+    assert bound >= BOUND_MARGIN * recorded, (
+E   AssertionError: 03_custom_coupling.ipynb: bound 900 s < 3.0 x the recorded contended maximum 408.96 s; re-size it from new evidence (Testing Standards section 7)
+E   assert 900 >= (3.0 * 408.96)
+_ test_cell_timeout_has_margin_over_the_recorded_contended_maximum[04_torch_bridge.ipynb] _
+tests\test_notebooks.py:294: in test_cell_timeout_has_margin_over_the_recorded_contended_maximum
+    assert bound >= BOUND_MARGIN * recorded, (
+E   AssertionError: 04_torch_bridge.ipynb: bound 900 s < 3.0 x the recorded contended maximum 389.81 s; re-size it from new evidence (Testing Standards section 7)
+E   assert 900 >= (3.0 * 389.81)
+=========================== short test summary info ===========================
+FAILED tests/test_notebooks.py::test_cell_timeout_has_margin_over_the_recorded_contended_maximum[01_oscillosim_quickstart.ipynb]
+FAILED tests/test_notebooks.py::test_cell_timeout_has_margin_over_the_recorded_contended_maximum[02_clevr_n_binding.ipynb]
+FAILED tests/test_notebooks.py::test_cell_timeout_has_margin_over_the_recorded_contended_maximum[03_custom_coupling.ipynb]
+FAILED tests/test_notebooks.py::test_cell_timeout_has_margin_over_the_recorded_contended_maximum[04_torch_bridge.ipynb]
+================= 4 failed, 1 passed, 32 deselected in 0.28s ==================
+# exit code: 1
+# ended 2026-10-16T07:29:06Z

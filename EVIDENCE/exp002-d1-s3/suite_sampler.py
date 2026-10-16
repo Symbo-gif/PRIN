@@ -390,7 +390,9 @@ def _episode_row(pid: int, rows: list[dict[str, Any]]) -> str:
     wall = (last["record"]["t"] - first["record"]["t"]) + (
         first["kernel"].get("age_seconds") or 0.0
     )
-    cpu = last["kernel"]["cpu_seconds"]
+    # The last sample can catch the kernel mid-exit with its counters already
+    # gone (0), so take the largest cumulative CPU seen, not the final one.
+    cpu = max(row["kernel"]["cpu_seconds"] for row in rows)
     hosts = [row["record"]["host"] for row in rows]
     avail = [float(h["available_mb"]) for h in hosts]
     pages = [

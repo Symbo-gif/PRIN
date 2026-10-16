@@ -1,0 +1,14 @@
+# F2: each notebook leg, standalone versus in-suite (S1, S2, and the S3 observed run)
+# generated 2026-10-16T07:33:53Z at git HEAD 0970c467 by: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/f2_in_suite_vs_alone.py < EVIDENCE/exp002-d1-s3/f2/diagnostic-full-suite/console.txt
+
+notebook                           alone   S1 in-suite   S2 in-suite   S3 observed   S3/alone
+---------------------------------------------------------------------------------------------
+01_oscillosim_quickstart          73.3 s       639.6 s       800.1 s       678.9 s       9.3x
+02_clevr_n_binding                71.1 s>=    1052.8 s>=    1064.0 s      2975.0 s      41.8x
+03_custom_coupling                44.5 s       409.0 s       222.4 s       367.3 s       8.3x
+04_torch_bridge                   37.0 s       389.8 s        52.5 s       382.1 s      10.3x
+
+'>=' marks an S1/S2 duration at or above the shipped 900 s
+per-cell bound: the test was killed there, so the true duration is censored.
+S3 observed ran with the bound lifted (diagnostic plugin): uncensored.
+S3 observed run, final pytest summary: 6326 passed, 184 skipped, 61 warnings in 9740.65s (2:42:20)

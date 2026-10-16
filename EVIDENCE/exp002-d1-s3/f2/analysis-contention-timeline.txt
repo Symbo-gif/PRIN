@@ -1,0 +1,36 @@
+# F2: contention experiment, the load generator's host timeline
+# generated 2026-10-16T07:19:19Z at git HEAD 0970c467 by: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/suite_sampler.py --timeline < EVIDENCE/exp002-d1-s3/f2/contention-experiment/load/samples.jsonl
+
+utc       host_cpu%  pytest_cpu_s/s  pytest_rss_mb  host_avail_mb  kernels  largest other CPU users in the interval (CPU-seconds)
+06:08:06       40.2             nan             46          10191        0  
+06:08:51       89.3            0.47            600           9842        0  System Idle Process=95, mc-fw-host.exe=48, Devin.exe=46
+06:09:49       96.6            0.08            602           9555        1  mc-fw-host.exe=44, System=44, Devin.exe=34
+06:10:49       97.2            0.13            602           8533        1  Devin.exe=45, System Idle Process=35, mc-fw-host.exe=24
+06:12:23      100.0            0.12            602           8419        1  Devin.exe=59, mc-fw-host.exe=40, System=30
+06:14:19      100.0            0.02            603           8318        1  System=54, Devin.exe=43, mc-fw-host.exe=38
+06:15:39      100.0            0.02            603           8256        1  System=37, mc-fw-host.exe=30, Devin.exe=25
+06:17:28      100.0            0.03            603           8185        1  System=48, Devin.exe=47, mc-fw-host.exe=38
+06:18:43      100.0            0.06            603           8345        1  Devin.exe=43, mc-fw-host.exe=37, System=36
+06:20:10      100.0            0.02            603           7998        1  System=43, mc-fw-host.exe=36, Devin.exe=28
+06:21:34      100.0            0.02            603           7638        1  System=42, mc-fw-host.exe=29, Devin.exe=29
+06:22:57      100.0            0.02            603           8354        1  mc-fw-host.exe=36, Devin.exe=35, System=35
+06:24:21      100.0            0.02            603           7877        1  System=41, Devin.exe=35, mc-fw-host.exe=30
+06:25:37      100.0            0.02            603           7646        1  System=52, mc-fw-host.exe=32, svchost.exe=23
+06:26:41      100.0            0.01            603           8332        1  System=27, mc-fw-host.exe=27, Devin.exe=25
+06:28:30       99.9            0.01            603           7590        1  System=43, Devin.exe=37, mc-fw-host.exe=36
+06:29:56      100.0            0.01            603           7514        1  System=39, Devin.exe=34, mc-fw-host.exe=34
+06:31:14      100.0            0.02            603           7639        1  rg.exe=48, mc-fw-host.exe=36, System=33
+06:32:43      100.0            0.01            603           7193        1  System=38, mc-fw-host.exe=34, Devin.exe=32
+06:34:06      100.0            0.02            603           7875        1  System=38, mc-fw-host.exe=36, Devin.exe=29
+06:35:21      100.0            0.02            603           6954        1  System=34, Devin.exe=28, mc-fw-host.exe=24
+06:36:46      100.0            0.01            603           7014        1  rg.exe=50, mc-fw-host.exe=38, System=36
+06:37:51      100.0            0.01            603           7336        1  rg.exe=74, System=31, mc-fw-host.exe=26
+06:39:12      100.0            0.04            523           7209        1  rg.exe=71, System=38, mc-fw-host.exe=32
+06:40:32      100.0             nan            nan           7329        1  rg.exe=158, mc-fw-host.exe=36, System=34
+06:41:55      100.0             nan            nan           7771        1  System=41, mc-fw-host.exe=28, svchost.exe=26
+
+# kernel episodes during the experiment
+samples: 26  kernel episodes: 1
+root_pid  first_seen_utc          wall_s  cpu_s  cpu/wall  peak_rss_mb  host_avail_mb(min/mean)  pages_in/s(mean/max)  pytest_rss_mb  host_cpu%(mean)
+   36560  2026-10-16T06:09:49+00:00    1975    611      0.31         2047       6954/7870              285/2347                  602        99.7
+          other processes' CPU while it ran: System=918s, mc-fw-host.exe=802s, Devin.exe=772s, svchost.exe=473s

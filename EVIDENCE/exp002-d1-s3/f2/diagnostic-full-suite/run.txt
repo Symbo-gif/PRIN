@@ -1,0 +1,11 @@
+label: diag-full
+git HEAD: 2f796ddfb2053d4cfc380906a1c0f17edfbc3f2e
+tracked changes vs HEAD: 0
+untracked files: 0
+host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0   logical CPUs: 16
+diagnostic notebook-timeout plugin loaded: 1
+pytest args: tests/ parity/
+started: 2026-10-16T03:20:04Z
+pytest exit status: 0
+ended: 2026-10-16T06:03:32Z
+git HEAD at end: 2f796ddfb2053d4cfc380906a1c0f17edfbc3f2e   tracked changes: 0   untracked files: 0

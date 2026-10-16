@@ -1,0 +1,136 @@
+# F2: host load versus the CPU pytest received, one row per sample, observed full-suite run
+# generated 2026-10-16T07:17:15Z at git HEAD 0970c467 by: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/suite_sampler.py --timeline < EVIDENCE/exp002-d1-s3/f2/diagnostic-full-suite/samples.jsonl
+
+utc       host_cpu%  pytest_cpu_s/s  pytest_rss_mb  host_avail_mb  kernels  largest other CPU users in the interval (CPU-seconds)
+03:20:06       31.4             nan             72          12439        0  
+03:20:40       73.2            1.00           1382          11082        0  System Idle Process=158, java.exe=29, mc-fw-host.exe=23
+03:21:14       89.1            1.59           1754          10657        0  System Idle Process=55, Devin.exe=21, System=20
+03:21:48       17.6            1.01           1696          10806        0  System Idle Process=442, AppHelperCap.exe=12, java.exe=11
+03:22:21       14.6            1.01           1696          10834        0  System Idle Process=455, AppHelperCap.exe=12, Devin.exe=6
+03:22:54       15.9            1.34           2610           9967        0  System Idle Process=450, AppHelperCap.exe=12, Devin.exe=6
+03:23:28       31.4            1.99           1827          10706        0  System Idle Process=370, System=30, java.exe=19
+03:24:01       27.4            2.85           2345          10224        0  System Idle Process=387, AppHelperCap.exe=11, Devin.exe=6
+03:24:34       24.8            2.78           2222          10278        0  System Idle Process=403, AppHelperCap.exe=11, Devin.exe=6
+03:25:07       25.1            2.82           1982          10941        0  System Idle Process=403, AppHelperCap.exe=11, Devin.exe=6
+03:25:41       25.0            2.80           2025          10888        0  System Idle Process=400, AppHelperCap.exe=11, Devin.exe=6
+03:26:14       24.9            2.76           1867          11089        0  System Idle Process=403, AppHelperCap.exe=11, Devin.exe=7
+03:26:47       27.4            2.81           2020          10835        0  System Idle Process=390, AppHelperCap.exe=12, java.exe=9
+03:27:21       25.9            2.88           2143          10813        0  System Idle Process=399, AppHelperCap.exe=12, Devin.exe=7
+03:27:54       25.7            2.91           1919          11011        0  System Idle Process=397, AppHelperCap.exe=11, Devin.exe=6
+03:28:27       25.9            2.82           2014          10795        0  System Idle Process=395, AppHelperCap.exe=12, Devin.exe=8
+03:29:01       26.4            2.84           2177          10656        0  System Idle Process=396, AppHelperCap.exe=11, Devin.exe=10
+03:29:34       27.6            2.81           2312          10573        0  System Idle Process=388, AppHelperCap.exe=12, java.exe=9
+03:30:07       25.4            2.87           2328          10591        0  System Idle Process=398, AppHelperCap.exe=11, Devin.exe=6
+03:30:41       36.0            4.68           1961          10881        0  System Idle Process=344, AppHelperCap.exe=12, Devin.exe=5
+03:31:14       35.5            4.44           2769          10091        0  System Idle Process=343, AppHelperCap.exe=12, Devin.exe=6
+03:31:47       32.0            2.68           3762           9056        0  System Idle Process=366, java.exe=14, AppHelperCap.exe=12
+03:32:21       17.9            1.13           2297          10537        0  System Idle Process=442, AppHelperCap.exe=13, Devin.exe=7
+03:32:55       32.6            0.84           2344          10264        0  System Idle Process=372, java.exe=30, mc-fw-host.exe=20
+03:33:47       93.5            0.64           2433           9230        0  System Idle Process=65, mc-fw-host.exe=62, java.exe=35
+03:35:38      100.0            0.06           2433           8720        0  mc-fw-host.exe=48, System=48, Devin.exe=39
+03:37:07      100.0            0.05           2433           9308        0  System=48, mc-fw-host.exe=37, Devin.exe=30
+03:38:34       99.8            0.06           2433           8582        0  System=50, Devin.exe=37, mc-fw-host.exe=29
+03:40:06      100.0            0.06           2433           9274        0  System=45, mc-fw-host.exe=33, Devin.exe=31
+03:41:24       99.8            0.08           2433           9111        0  System=48, Devin.exe=29, mc-fw-host.exe=26
+03:42:55       99.9            0.07           2433           8734        0  Devin.exe=45, System=43, mc-fw-host.exe=31
+03:44:21       99.9            0.03           2433           8425        0  System=47, mc-fw-host.exe=32, Devin.exe=32
+03:46:01       99.3            0.02           2433           8697        0  Devin.exe=51, System=47, mc-fw-host.exe=35
+03:47:47       99.9            0.03           2433           8306        0  System=50, svchost.exe=46, mc-fw-host.exe=46
+03:49:40       99.9            0.03           2433           7774        0  System=55, Devin.exe=46, mc-fw-host.exe=34
+03:51:40       99.9            0.03           2433           7573        0  mc-fw-host.exe=42, Devin.exe=38, System=33
+03:53:27      100.0            0.02           2433           7060        0  System=62, mc-fw-host.exe=52, Devin.exe=44
+03:54:56       99.3            0.02           2433           7627        0  System=44, mc-fw-host.exe=34, svchost.exe=29
+03:56:08      100.0            0.03           2433           7338        0  rg.exe=153, System=32, Devin.exe=24
+03:57:52       99.2            0.03           2433           7570        0  System=45, mc-fw-host.exe=36, Devin.exe=33
+03:59:25      100.0            0.02           2433           7178        0  System=44, rg.exe=32, mc-fw-host.exe=28
+04:00:52      100.0            0.02           2433           7421        0  System=42, mc-fw-host.exe=36, rg.exe=31
+04:02:11      100.0            0.02           2433           7531        0  rg.exe=50, System=42, svchost.exe=26
+04:03:27      100.0            0.02           2433           7112        0  rg.exe=338, System=36, mc-fw-host.exe=31
+04:04:44      100.0            0.02           2117           7507        0  System=41, rg.exe=35, svchost.exe=30
+04:05:55      100.0            0.01           2117           8248        0  rg.exe=253, System=35, mc-fw-host.exe=22
+04:07:22      100.0            0.02           2117           7687        0  rg.exe=383, System=37, mc-fw-host.exe=30
+04:08:46      100.0            0.01           2117           7402        0  rg.exe=256, System=38, mc-fw-host.exe=29
+04:10:15       99.6            0.03           2117           7519        0  System=56, mc-fw-host.exe=34, svchost.exe=30
+04:11:50      100.0            0.01           2117           7135        0  rg.exe=139, System=44, mc-fw-host.exe=27
+04:13:18       99.9            0.03           2117           8202        0  rg.exe=188, System=46, mc-fw-host.exe=37
+04:14:45       99.0            0.02           2117           7424        0  System=52, mc-fw-host.exe=23, svchost.exe=17
+04:16:04      100.0            0.02           2117           7697        0  rg.exe=326, System=35, Devin.exe=23
+04:17:44      100.0            0.01           2117           7636        0  rg.exe=558, System=42, mc-fw-host.exe=33
+04:19:19       98.6            0.13           2118           7693        0  System=39, svchost.exe=37, mc-fw-host.exe=32
+04:20:46      100.0            0.23           2122           7410        0  rg.exe=162, System=40, mc-fw-host.exe=23
+04:22:29      100.0            0.10           2128           7164        0  rg.exe=501, System=44, mc-fw-host.exe=38
+04:23:51       99.9            0.01           2128           8389        1  System=41, mc-fw-host.exe=38, svchost.exe=35
+04:25:11       99.9            0.01           2129           7685        1  System=41, mc-fw-host.exe=24, svchost.exe=18
+04:26:25      100.0            0.00           1540           7304        1  rg.exe=202, System=33, mc-fw-host.exe=20
+04:27:44      100.0            0.00           1540           7173        1  rg.exe=441, System=34, mc-fw-host.exe=29
+04:29:17      100.0            0.00           1540           7695        1  rg.exe=258, System=47, mc-fw-host.exe=33
+04:30:44      100.0            0.00           1540           7680        1  rg.exe=434, System=37, mc-fw-host.exe=32
+04:32:14       98.7            0.01           1540           7805        1  System=33, mc-fw-host.exe=32, svchost.exe=25
+04:33:54      100.0            0.01           1540           8654        0  System=46, mc-fw-host.exe=29, svchost.exe=21
+04:35:26      100.0            0.01           1540           7228        1  System=45, rg.exe=42, mc-fw-host.exe=32
+04:36:47      100.0            0.00           1540           6858        1  rg.exe=322, Devin.exe=32, System=30
+04:38:06      100.0            0.00           1540           7069        1  rg.exe=406, Devin.exe=35, System=35
+04:39:29      100.0            0.00           1540           7025        1  rg.exe=345, mc-fw-host.exe=32, System=31
+04:40:50      100.0            0.00           1540           7042        1  rg.exe=333, mc-fw-host.exe=36, System=34
+04:42:20      100.0            0.01           1540           6790        1  rg.exe=330, System=40, mc-fw-host.exe=38
+04:43:52      100.0            0.00           1540           7295        1  rg.exe=370, mc-fw-host.exe=39, System=35
+04:45:09      100.0            0.00           1540           7257        1  rg.exe=344, System=39, mc-fw-host.exe=33
+04:46:36      100.0            0.01           1177           7159        1  rg.exe=399, System=37, mc-fw-host.exe=34
+04:48:01      100.0            0.01           1177           7340        1  rg.exe=243, System=36, mc-fw-host.exe=30
+04:49:11      100.0            0.00           1177           7333        1  rg.exe=300, System=31, mc-fw-host.exe=29
+04:50:38      100.0            0.00           1177           7019        1  rg.exe=485, System=34, mc-fw-host.exe=32
+04:52:07      100.0            0.01           1177           7425        1  rg.exe=120, System=39, mc-fw-host.exe=38
+04:53:34      100.0            0.00           1177           6793        1  rg.exe=284, System=39, mc-fw-host.exe=29
+04:55:04      100.0            0.00           1177           7410        1  rg.exe=491, System=38, mc-fw-host.exe=35
+04:56:24      100.0            0.01           1177           7303        1  rg.exe=135, System=38, mc-fw-host.exe=27
+04:57:54      100.0            0.00           1177           7185        1  rg.exe=484, mc-fw-host.exe=35, System=34
+04:59:19       99.7            0.01           1177           6839        1  System=59, svchost.exe=36, mc-fw-host.exe=32
+05:00:28      100.0            0.00           1177           6834        1  rg.exe=149, System=30, mc-fw-host.exe=23
+05:01:28      100.0            0.00           1177           6868        1  rg.exe=374, mc-fw-host.exe=25, System=25
+05:02:50      100.0            0.00           1177           7557        1  mc-fw-host.exe=42, System=41, rg.exe=36
+05:04:25      100.0            0.01           1177           6523        1  System=45, mc-fw-host.exe=25, Devin.exe=16
+05:05:38      100.0            0.00           1177           6633        1  rg.exe=329, System=32, mc-fw-host.exe=22
+05:07:07      100.0            0.01           1177           7326        1  rg.exe=69, System=37, mc-fw-host.exe=34
+05:08:35      100.0            0.01           1177           6355        1  System=50, mc-fw-host.exe=27, Devin.exe=25
+05:09:35      100.0            0.00           1177           6690        1  rg.exe=298, System=26, mc-fw-host.exe=19
+05:10:46      100.0            0.00           1177           7114        1  rg.exe=482, System=31, mc-fw-host.exe=27
+05:11:43       99.8            0.01           1177           6362        1  System=35, svchost.exe=20, mc-fw-host.exe=16
+05:12:55      100.0            0.00           1177           6669        1  System=34, mc-fw-host.exe=33, Devin.exe=12
+05:14:16      100.0            0.01           1177           5780        1  rg.exe=450, System=30, Devin.exe=29
+05:15:32       99.6            0.01           1177           5825        1  System=40, mc-fw-host.exe=34, svchost.exe=27
+05:16:44      100.0            0.01           1177           5650        1  System=28, Devin.exe=20, mc-fw-host.exe=19
+05:18:00       99.9            0.01           1177           5966        1  rg.exe=451, System=28, Devin.exe=28
+05:19:34       99.4            0.01           1177           5476        1  System=44, mc-fw-host.exe=42, svchost.exe=38
+05:20:39      100.0            0.00           1177           5937        1  rg.exe=137, System=34, mc-fw-host.exe=23
+05:21:58      100.0            0.00           1177           5936        1  rg.exe=590, Devin.exe=33, mc-fw-host.exe=31
+05:23:05       98.3            0.01           1177           8674        1  System=30, svchost.exe=24, mc-fw-host.exe=24
+05:24:36      100.0            0.00           1177           7443        1  rg.exe=180, System=40, mc-fw-host.exe=33
+05:26:01      100.0            0.00           1177           7980        1  rg.exe=300, System=42, mc-fw-host.exe=40
+05:27:23      100.0            0.01           1178           7752        1  rg.exe=252, System=42, mc-fw-host.exe=35
+05:28:48      100.0            0.00           1178           7535        1  rg.exe=104, System=41, mc-fw-host.exe=34
+05:30:10      100.0            0.01           1178           7717        1  rg.exe=182, System=37, mc-fw-host.exe=30
+05:31:50       99.6            0.00           1178           7353        1  System=64, mc-fw-host.exe=35, svchost.exe=31
+05:33:18      100.0            0.00           1178           7674        1  System=47, mc-fw-host.exe=33, Devin.exe=32
+05:34:50      100.0            0.00           1178           7235        1  System=46, mc-fw-host.exe=35, svchost.exe=32
+05:36:06      100.0            0.08           1216           8426        0  rg.exe=195, System=36, Devin.exe=32
+05:37:29      100.0            0.22           1458           7687        0  System=44, mc-fw-host.exe=34, Devin.exe=29
+05:38:52      100.0            0.03           1430           8435        0  rg.exe=276, System=42, Devin.exe=34
+05:40:13      100.0            0.14           1492           8641        0  System=40, mc-fw-host.exe=28, Devin.exe=24
+05:41:42      100.0            0.19           1826           7811        0  System=43, Devin.exe=34, mc-fw-host.exe=33
+05:43:15       99.6            0.21           1838           7408        0  System=58, mc-fw-host.exe=32, svchost.exe=25
+05:44:37       98.8            0.17           1725           7589        0  System=42, mc-fw-host.exe=30, Devin.exe=30
+05:45:51       99.6            0.19           1894           7541        0  System=32, mc-fw-host.exe=32, Devin.exe=29
+05:47:11       99.9            0.20           1431           8124        0  System=42, mc-fw-host.exe=33, Devin.exe=27
+05:48:32      100.0            0.17           1433           8159        0  System=33, mc-fw-host.exe=30, Devin.exe=24
+05:49:50       99.7            0.16           1299           9014        0  System=42, Devin.exe=34, mc-fw-host.exe=30
+05:51:27       99.8            0.06           1301           8198        0  System=36, mc-fw-host.exe=35, Devin.exe=35
+05:52:57       98.8            0.11           1301           8901        0  System=71, mc-fw-host.exe=38, Devin.exe=35
+05:54:41       99.3            0.17           1343           8132        0  Devin.exe=38, System=38, mc-fw-host.exe=34
+05:56:22      100.0            0.12           1344           8059        0  System=50, mc-fw-host.exe=38, Devin.exe=38
+05:58:16       99.9            0.17           1343           8423        0  System=54, Devin.exe=49, mc-fw-host.exe=44
+06:00:09      100.0            0.11           1343           8238        0  System=74, Devin.exe=44, mc-fw-host.exe=43
+06:01:10       97.4            1.47           1342           8708        0  mc-fw-host.exe=48, System=46, Devin.exe=40
+06:01:45       82.9            7.18           1343           8630        0  System Idle Process=91, Devin.exe=45, mc-fw-host.exe=42
+06:02:20       70.6            5.91           1484           8415        0  System Idle Process=161, Devin.exe=43, mc-fw-host.exe=40
+06:02:54       39.3             nan            nan          10672        0  System Idle Process=335, Devin.exe=49, mc-fw-host.exe=39
+06:03:29       33.4             nan            nan          10574        0  System Idle Process=369, Devin.exe=45, mc-fw-host.exe=39

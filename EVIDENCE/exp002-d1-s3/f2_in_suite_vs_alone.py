@@ -3,7 +3,7 @@
 Backs the disposition of audit finding ``EXP002D1-S2-F2``. For each shipped
 notebook it tabulates:
 
-* **alone**: wall seconds from ``f2-alone-<notebook>.json`` (``notebook_timing.py``
+* **alone**: wall seconds from ``f2/alone-<notebook>.json`` (``notebook_timing.py``
   on a quiet host, no pytest);
 * **S1 in-suite** and **S2 in-suite**: the ``test_notebook_executes_end_to_end``
   ``--durations`` lines already committed by sessions S1
@@ -20,7 +20,7 @@ locations; the only variable input is standard input, so no caller-supplied
 string becomes a filesystem path::
 
     .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/f2_in_suite_vs_alone.py \
-        < ~/prin-s3-scratch/diag-full/console.log
+        < EVIDENCE/exp002-d1-s3/f2/diagnostic-full-suite/console.txt
 
 Exit status is 0 when the table was produced.
 """
@@ -96,9 +96,9 @@ def alone_wall(stem: str) -> float | None:
         stem: Notebook name without extension.
 
     Returns:
-        Wall seconds from its ``f2-alone-<stem>.json``.
+        Wall seconds from its ``f2/alone-<stem>.json``.
     """
-    path = BUNDLE / f"f2-alone-{stem}.json"
+    path = BUNDLE / "f2" / f"alone-{stem}.json"
     if not path.is_file():
         return None
     record = json.loads(path.read_text(encoding="utf-8"))
