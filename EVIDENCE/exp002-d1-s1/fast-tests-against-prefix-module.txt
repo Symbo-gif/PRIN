@@ -1,0 +1,13 @@
+# HEAD 50d302decdeb0615eea2503dc40e835df142e77b + tests/test_publication_figure_arguments.py (typing fix, uncommitted) with python/prin/reporting/figure_generation.py temporarily restored from d90eeab (pre-fix)
+# command: .venv/Scripts/python -m pytest tests/test_publication_figure_arguments.py -q -rf --basetemp=.pytest_basetemp -p no:cacheprovider
+FAILED tests/test_publication_figure_arguments.py::test_fig5_marker_sizes - a...
+FAILED tests/test_publication_figure_arguments.py::test_fig7_accuracy_labels_bottom_aligned
+FAILED tests/test_publication_figure_arguments.py::test_fig8_markers_drawn_above_grid
+FAILED tests/test_publication_figure_arguments.py::test_fig9_curve_widths_legend_and_labels
+FAILED tests/test_publication_figure_arguments.py::test_fig10_outcome_note_has_reference_box
+FAILED tests/test_publication_figure_arguments.py::test_fig11_bars_labels_and_ratios
+FAILED tests/test_publication_figure_arguments.py::test_fig12_reference_styling
+FAILED tests/test_publication_figure_arguments.py::test_fig14_bar_transparency
+FAILED tests/test_publication_figure_arguments.py::test_fig15_marker_sizes_fit_and_legends
+============================== 9 failed in 3.30s ==============================
+# exit code: 1

@@ -1,0 +1,44 @@
+# EXP002D1-S2-F2 - the bound tests run BEFORE the bounds are raised (every per-notebook bound still the old 900 s)
+# started 2026-10-16T08:56:00Z
+# HEAD b21569180b828837487dac428b8f683fb4ea1796; tests/test_notebooks.py = the final test module with the four bounds set back to 900 s
+# (This record replaces an earlier one made against the first, one-directional version of the test, which a cold review found overstated what it pinned.)
+# command: .venv/Scripts/python.exe -m pytest tests/test_notebooks.py -k "sized_cell_timeout or rule_applied" -q -rf --basetemp=.pytest_basetemp -p no:cacheprovider
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 37 items / 32 deselected / 5 selected
+
+tests\test_notebooks.py .FFFF                                            [100%]
+
+================================== FAILURES ===================================
+_ test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum[01_oscillosim_quickstart.ipynb] _
+tests\test_notebooks.py:310: in test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum
+    assert NOTEBOOK_CELL_TIMEOUT_SECONDS[name] == expected, (
+E   AssertionError: 01_oscillosim_quickstart.ipynb: bound 900 s != 2700 s (3.0 x the recorded contended maximum 800.07 s, rounded up to a multiple of 900 s); re-size it from new evidence (Testing Standards section 7)
+E   assert 900 == 2700
+_ test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum[02_clevr_n_binding.ipynb] _
+tests\test_notebooks.py:310: in test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum
+    assert NOTEBOOK_CELL_TIMEOUT_SECONDS[name] == expected, (
+E   AssertionError: 02_clevr_n_binding.ipynb: bound 900 s != 10800 s (3.0 x the recorded contended maximum 3484.0 s, rounded up to a multiple of 900 s); re-size it from new evidence (Testing Standards section 7)
+E   assert 900 == 10800
+_ test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum[03_custom_coupling.ipynb] _
+tests\test_notebooks.py:310: in test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum
+    assert NOTEBOOK_CELL_TIMEOUT_SECONDS[name] == expected, (
+E   AssertionError: 03_custom_coupling.ipynb: bound 900 s != 1800 s (3.0 x the recorded contended maximum 408.96 s, rounded up to a multiple of 900 s); re-size it from new evidence (Testing Standards section 7)
+E   assert 900 == 1800
+_ test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum[04_torch_bridge.ipynb] _
+tests\test_notebooks.py:310: in test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum
+    assert NOTEBOOK_CELL_TIMEOUT_SECONDS[name] == expected, (
+E   AssertionError: 04_torch_bridge.ipynb: bound 900 s != 1800 s (3.0 x the recorded contended maximum 389.81 s, rounded up to a multiple of 900 s); re-size it from new evidence (Testing Standards section 7)
+E   assert 900 == 1800
+=========================== short test summary info ===========================
+FAILED tests/test_notebooks.py::test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum[01_oscillosim_quickstart.ipynb]
+FAILED tests/test_notebooks.py::test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum[02_clevr_n_binding.ipynb]
+FAILED tests/test_notebooks.py::test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum[03_custom_coupling.ipynb]
+FAILED tests/test_notebooks.py::test_cell_timeout_is_the_rule_applied_to_the_recorded_contended_maximum[04_torch_bridge.ipynb]
+================= 4 failed, 1 passed, 32 deselected in 0.43s ==================
+# exit code: 1
+# ended 2026-10-16T08:56:06Z

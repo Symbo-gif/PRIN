@@ -1,0 +1,35 @@
+# git rev-parse HEAD: d90eeabbee7a7c0d11dfd1389bb0c34444c2704c
+# git status --porcelain (tracked): 0 changes
+# host: MINGW64_NT-10.0-26300 HP 3.6.5-22c95533.x86_64 2025-10-10 12:02 UTC x86_64 Msys
+# command: .venv/Scripts/python -m pytest parity/test_parity_publication.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 93 items
+parity\test_parity_publication.py ...................................... [ 40%]
+....FFFFFF..FFFF......FF..FFFFFF.......................                  [100%]
+================================== FAILURES ===================================
+=========================== short test summary info ===========================
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig10_statistical_summary.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig10_statistical_summary.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig11_flops_scaling.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig11_flops_scaling.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig12_supercritical_regime.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig12_supercritical_regime.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig14_gradient_flow.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig14_gradient_flow.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig15_noise_velocity.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig15_noise_velocity.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig5_mot_occlusion_comparison.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig5_mot_occlusion_comparison.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig7_ablation_results.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig7_ablation_results.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig8_parameter_efficiency.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig8_parameter_efficiency.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig9_training_curves.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig9_training_curves.png]
+======================= 18 failed, 75 passed in 16.58s ========================
+# exit code: 1

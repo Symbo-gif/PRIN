@@ -1,0 +1,14 @@
+# EXP002D1-S2-F2 - the bound test pins BOTH directions (two mutations of the final module, each reverted)
+# date 2026-10-16T08:56:24Z; HEAD b21569180b828837487dac428b8f683fb4ea1796 plus the round 3 follow-up
+
+## M1: notebook 02's bound RAISED to 18000 s with no new evidence (the direction the first version of the test did not catch)
+E   AssertionError: 02_clevr_n_binding.ipynb: bound 18000 s != 10800 s (3.0 x the recorded contended maximum 3484.0 s, rounded up to a multiple of 900 s); re-size it from new evidence (Testing Standards section
+================= 1 failed, 3 passed, 33 deselected in 0.30s ==================
+# exit code: 1 (expect 1)
+
+## M2: a SLOWER worst case recorded for notebook 03 (900 s) without raising its bound
+E   AssertionError: 03_custom_coupling.ipynb: bound 1800 s != 2700 s (3.0 x the recorded contended maximum 900.0 s, rounded up to a multiple of 900 s); re-size it from new evidence (Testing Standards section 7)
+================= 1 failed, 3 passed, 33 deselected in 0.29s ==================
+# exit code: 1 (expect 1)
+
+## module restored: identical-to-final

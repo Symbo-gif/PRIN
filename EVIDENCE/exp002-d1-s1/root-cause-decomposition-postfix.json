@@ -1,0 +1,1003 @@
+{
+  "comparison": "benchmarks.campaign.exp002_driver.normalized_bytes",
+  "e3_records": {
+    "e3_normalized_differing_files": [
+      "figures/fig10_statistical_summary.pdf",
+      "figures/fig10_statistical_summary.png",
+      "figures/fig11_flops_scaling.pdf",
+      "figures/fig11_flops_scaling.png",
+      "figures/fig12_supercritical_regime.pdf",
+      "figures/fig12_supercritical_regime.png",
+      "figures/fig14_gradient_flow.pdf",
+      "figures/fig14_gradient_flow.png",
+      "figures/fig15_noise_velocity.pdf",
+      "figures/fig15_noise_velocity.png",
+      "figures/fig5_mot_occlusion_comparison.pdf",
+      "figures/fig5_mot_occlusion_comparison.png",
+      "figures/fig7_ablation_results.pdf",
+      "figures/fig7_ablation_results.png",
+      "figures/fig8_parameter_efficiency.pdf",
+      "figures/fig8_parameter_efficiency.png",
+      "figures/fig9_training_curves.pdf",
+      "figures/fig9_training_curves.png"
+    ],
+    "prin": {
+      "reproduction_json_matches_manifest": true,
+      "retained_files": 39,
+      "retained_normalized_sha256_matching_record": 39,
+      "retained_raw_sha256_matching_record": 39,
+      "retained_root_present": true,
+      "run": "RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu"
+    },
+    "reference": {
+      "reproduction_json_matches_manifest": true,
+      "retained_files": 39,
+      "retained_normalized_sha256_matching_record": 39,
+      "retained_raw_sha256_matching_record": 39,
+      "retained_root_present": true,
+      "run": "RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu"
+    },
+    "seedrep0": {
+      "reproduction_json_matches_manifest": true,
+      "retained_files": 39,
+      "retained_normalized_sha256_matching_record": 39,
+      "retained_raw_sha256_matching_record": 39,
+      "retained_root_present": true,
+      "run": "RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu"
+    }
+  },
+  "environment": {
+    "matplotlib": "3.11.1",
+    "numpy": "2.5.1",
+    "pillow": "12.3.0",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.14.0",
+    "renderer": {
+      "backend": "Agg",
+      "font_cache": {
+        "name": "fontlist-v3.11.0.json",
+        "sha256": "9c00441405ce72925562e017858a729b402612a203b0682b2e7fd79329c8f6bb"
+      },
+      "font_sha256": {
+        "DejaVuSans-Bold.ttf": "b184b89e3c1075f22f6b71575b6fc20d4972b3cfd3b23322ca6fd596dcaef167",
+        "DejaVuSans-BoldOblique.ttf": "6edf0283160186af451cbee71e7b845f2e4cabf264bb992ce668c83c25465e6f",
+        "DejaVuSans-Oblique.ttf": "ccdf74b350f11fd3dd5774de50e5e6346a1a5da1f5b7d5fb83590665e97a5213",
+        "DejaVuSans.ttf": "3fdf69cabf06049ea70a00b5919340e2ce1e6d02b0cc3c4b44fb6801bd1e0d22",
+        "DejaVuSansDisplay.ttf": "82099dcfba5aa868cdfc27451989525fe3292f737fb3c9e0328ce9cef59652f6",
+        "DejaVuSansMono-Bold.ttf": "baada9a5172fe20886251aff0433fc38461912d5daf07287e7bee56620a8da96",
+        "DejaVuSansMono-BoldOblique.ttf": "a69081c15c76c827e0a27a5a7f5c74b6135c843499955495ffa8c20d3a98288b",
+        "DejaVuSansMono-Oblique.ttf": "28052813f7a709fc89f52d192dc995ef4f0fdc5c3d7b73a49d6849b1916d0cd0",
+        "DejaVuSansMono.ttf": "602ec86b8948cfcd956482fe64f94c36c867770149ef2f791d4613f443bcecb3",
+        "DejaVuSerif-Bold.ttf": "c3753f2ed6bc673f15846dc45addbeb3b9c872f32fb18fd53a21f1bef1ed7676",
+        "DejaVuSerif-BoldItalic.ttf": "d93efec7a9d2e826768d1a2ee95b95870e15e29599a84f3484af1de1cec2e181",
+        "DejaVuSerif-Italic.ttf": "3e7994fbc54fa10ce3352a42d548fadd7d9cadb69cb1109bc9d960f6dac57f04",
+        "DejaVuSerif.ttf": "107244956e9962b9e96faccdc551825e0ae0898ae13737133e1b921a2fd35ffa",
+        "DejaVuSerifDisplay.ttf": "2914f32e47c777c27be5677afae7db4de79f9e45de6fc9097d9949c23c14f7d5",
+        "LastResortHE-Regular.ttf": "60c48abfc05e9f2ba33599c4dcba40105d1ece71d3761f0b26f75a38b5b17895",
+        "STIXGeneral.ttf": "167378031e2dddc6216d67819c9260e9a06ffc4c478e4e23cb98a6fd44b183c2",
+        "STIXGeneralBol.ttf": "e8533dc7083fa346bda1933d60ea4a83b67d0945bceaf1b3541f82b4a0e2c6a0",
+        "STIXGeneralBolIta.ttf": "98788fd4ba48dfbb2bd026c0e20a247a8b06c7372879628b7a6bb0d5bb09736c",
+        "STIXGeneralItalic.ttf": "6cfcb333d22b7c3c623bdfd40174f14c85c3d6731ca6166c1edc80140eae8527",
+        "STIXNonUni.ttf": "5256f7e021335ac4854d180f0e8bf198964ec2fc820176276e16aabc6537bb57",
+        "STIXNonUniBol.ttf": "5d106a5b78d1ffc30174553439b86257bfa45f088120cb3b4150a51dc4f9b60b",
+        "STIXNonUniBolIta.ttf": "a5bdb60e76c37f6c90aa2ce8b5cdf0043a85182fe0dbb61c086262bc7f7e2def",
+        "STIXNonUniIta.ttf": "04cafda56881bf660865dab4e17e1cdc280be8d3cb50fae5eb8695d4de30f548",
+        "STIXSizFiveSymReg.ttf": "c18b87d60614a42baeb2a22d447e647fda7fb3a9940fef57dcbe51bd1b4a4b1b",
+        "STIXSizFourSymBol.ttf": "c8d76f8d4a129ac64250b983ed256af4769b9dd1bd3f874f85ba0bd49a407f4b",
+        "STIXSizFourSymReg.ttf": "fbdc553182f8ff5adc3bc16208aac27d1e0f69298ab40e3675d2c6ab0b5e8b5c",
+        "STIXSizOneSymBol.ttf": "7187b1ca8f2b65c76a325a5af5f345e5ad88a172d44d9b88be1d090f5429d22e",
+        "STIXSizOneSymReg.ttf": "d256c7ce99ddcc998ef12e369a5921b33e4d6ef24b402687e4c71ced06510f37",
+        "STIXSizThreeSymBol.ttf": "dde05cf95b586e1414dc19f18b2a5f3ba780cc4bbc05d0efb4825215b912da86",
+        "STIXSizThreeSymReg.ttf": "5c548a0a9b5b11233cbb11ed5054805767326f0c614a377c756541caae9fdf0d",
+        "STIXSizTwoSymBol.ttf": "3140981eb03466a162484fcf8c81a525980cbafefd694810a84ec3b6ede4ba8d",
+        "STIXSizTwoSymReg.ttf": "fec7710ee130043b400e9bbd0b221743157bb08a80d93655042522523ab95029",
+        "cmb10.ttf": "074497b50c43ea57597181591f9893d38fc12a87e95104f5657fc2481f61a23a",
+        "cmex10.ttf": "af28f0c170723ac776a71bfa595aca09e98d15ae5c3d54ce19afd5619c96a905",
+        "cmmi10.ttf": "3092965b8811fd6a6765799664845181fc1dd1330b937f915808c485d316234d",
+        "cmr10.ttf": "4dd9761b058c009db9b2145f55ee6617d093c273dd3d6c5b3e43ff6110fa9bf6",
+        "cmss10.ttf": "7df91a83d05b2e471ec638cb0b435a360a3c792b09fc42a7da67e91f2e79115a",
+        "cmsy10.ttf": "bb226ed932f3f100cd0e52f5e4912ee553b41b69e7bfdb8d3854db0eb6605232",
+        "cmti10.ttf": "f9f1f9f654308ae82f7be4441ae89b080896b34cc220bbea173c5e9adcfe3ef7",
+        "cmtt10.ttf": "6211f09ae93599991afda970c24669dad1a77e253d915624fbf212f702f071d7"
+      },
+      "freetype": "2.14.3",
+      "matplotlib": "3.11.1",
+      "numpy": "2.5.1",
+      "pillow": "12.3.0"
+    }
+  },
+  "generated_utc": "2026-10-15T12:05:58+00:00",
+  "git_head": "937159645d1149032394fd965cb66c36f2029e76",
+  "git_tracked_changes": "",
+  "label": "postfix",
+  "port_module": "python\\prin\\reporting\\figure_generation.py",
+  "port_module_sha256": "b41dfc137d1d10f0f9b60452f0f23093ed4ad6e9369f34343d96695957e6c048",
+  "prin_tree": {
+    "files": 39,
+    "raw_differing_from_e3_prin_arm": [
+      "figures/fig10_statistical_summary.pdf",
+      "figures/fig10_statistical_summary.png",
+      "figures/fig11_flops_scaling.pdf",
+      "figures/fig11_flops_scaling.png",
+      "figures/fig12_supercritical_regime.pdf",
+      "figures/fig12_supercritical_regime.png",
+      "figures/fig14_gradient_flow.pdf",
+      "figures/fig14_gradient_flow.png",
+      "figures/fig15_noise_velocity.pdf",
+      "figures/fig15_noise_velocity.png",
+      "figures/fig5_mot_occlusion_comparison.pdf",
+      "figures/fig5_mot_occlusion_comparison.png",
+      "figures/fig7_ablation_results.pdf",
+      "figures/fig7_ablation_results.png",
+      "figures/fig8_parameter_efficiency.pdf",
+      "figures/fig8_parameter_efficiency.png",
+      "figures/fig9_training_curves.pdf",
+      "figures/fig9_training_curves.png"
+    ],
+    "raw_equal_to_e3_prin_arm": [
+      "figures/fig13_representation_geometry.pdf",
+      "figures/fig13_representation_geometry.png",
+      "figures/fig2_clevr_n_capacity.pdf",
+      "figures/fig2_clevr_n_capacity.png",
+      "figures/fig3_chimera_metrics.pdf",
+      "figures/fig3_chimera_metrics.png",
+      "figures/fig4_chimera_k_alpha_heatmap.pdf",
+      "figures/fig4_chimera_k_alpha_heatmap.png",
+      "figures/fig6_oscillosim_scaling.pdf",
+      "figures/fig6_oscillosim_scaling.png",
+      "tables/tab_ablation.tex",
+      "tables/tab_binding_params.tex",
+      "tables/tab_chimera.tex",
+      "tables/tab_efficiency.tex",
+      "tables/tab_geometry.tex",
+      "tables/tab_occlusion.tex",
+      "tables/tab_oscillosim.tex",
+      "tables/tab_param_efficiency.tex",
+      "tables/tab_statistical.tex",
+      "tables/tab_stress.tex",
+      "tables/tab_supercritical.tex"
+    ],
+    "two_process_raw_identical": true
+  },
+  "reference_module_pin": "575eca5a6436a25f957702091a6a0b5b7f3d77f1f496f9e6b423550cf79e1520",
+  "reference_module_sha256": "575eca5a6436a25f957702091a6a0b5b7f3d77f1f496f9e6b423550cf79e1520",
+  "stems": {
+    "fig10_statistical_summary": {
+      "all_divergences_applied_equals_prefix_port": {
+        "pdf": true,
+        "png": true
+      },
+      "all_divergences_applied_normalized_sha256": {
+        "pdf": "5094cf43643eaf8d89b664809f197fc89df0fcda0af3b94e2e3611678d420f9b",
+        "png": "7fe738f69547359196091c5ed36c510aeba54f0b80748515723cadb80decca39"
+      },
+      "divergences": [
+        {
+          "calls_transformed": 1,
+          "id": "D10.1",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.annotate",
+          "pre_fix_port": "omitted",
+          "reference": "bbox=round,pad=0.3 lightyellow/gray on the outcome note"
+        }
+      ],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "cb2687a3ae912d7664d7591b0e5bb5c7676dc8140ba9f73b5c522a41d930c3de",
+        "png": "c3d089e311db1f7b547ccfbfbc3846890d95387c430448260cf5fcdb48bf22be"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": false,
+        "png": false
+      },
+      "reference_normalized_sha256": {
+        "pdf": "cb2687a3ae912d7664d7591b0e5bb5c7676dc8140ba9f73b5c522a41d930c3de",
+        "png": "c3d089e311db1f7b547ccfbfbc3846890d95387c430448260cf5fcdb48bf22be"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig11_flops_scaling": {
+      "all_divergences_applied_equals_prefix_port": {
+        "pdf": true,
+        "png": true
+      },
+      "all_divergences_applied_normalized_sha256": {
+        "pdf": "70cf46837813164c332f37c75c2d200a26eba7468039f0a5a872262d8dbb51a4",
+        "png": "6f8080fc95ca1cbe3d5ffce17d1860b370b0d277eac0a841f37a09a729e938d0"
+      },
+      "divergences": [
+        {
+          "calls_transformed": 2,
+          "id": "D11.1",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.bar",
+          "pre_fix_port": "omitted",
+          "reference": "edgecolor=\"black\""
+        },
+        {
+          "calls_transformed": 2,
+          "id": "D11.2",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.bar",
+          "pre_fix_port": "omitted",
+          "reference": "linewidth=0.5"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D11.3",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.set_ylabel",
+          "pre_fix_port": "'FLOPs ($\\\\times 10^3$)' (mathtext)",
+          "reference": "'FLOPs (×10³)' (Unicode)"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D11.4",
+          "material": {
+            "pdf": false,
+            "png": false
+          },
+          "method": "Axes.legend",
+          "pre_fix_port": "omitted (rc legend.framealpha=0.8)",
+          "reference": "framealpha=0.8"
+        },
+        {
+          "calls_transformed": 3,
+          "id": "D11.5",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.annotate",
+          "pre_fix_port": "'N$\\times$' (mathtext)",
+          "reference": "ratio label 'N×' (Unicode)"
+        },
+        {
+          "calls_transformed": 3,
+          "id": "D11.6",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.annotate",
+          "pre_fix_port": "omitted (baseline)",
+          "reference": "va=\"bottom\" on the ratio labels"
+        }
+      ],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "482737ec0be67f8569f24f78721495e06a3708752d16f79567fc0e7cc4e91612",
+        "png": "4aeca86979755822025874a57f80453e8dc414d776984f23e957f7c29d1e7812"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": false,
+        "png": false
+      },
+      "reference_normalized_sha256": {
+        "pdf": "482737ec0be67f8569f24f78721495e06a3708752d16f79567fc0e7cc4e91612",
+        "png": "4aeca86979755822025874a57f80453e8dc414d776984f23e957f7c29d1e7812"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig12_supercritical_regime": {
+      "all_divergences_applied_equals_prefix_port": {
+        "pdf": true,
+        "png": true
+      },
+      "all_divergences_applied_normalized_sha256": {
+        "pdf": "5fe0f10edf08a021ed7a51f8864c81e5ca9f64eb8fe5c12f49252f4ddd083629",
+        "png": "95b98ee584a68c769ce6654c1bc7fca1e0df49af490dcaa9ff05edfd603d63f6"
+      },
+      "divergences": [
+        {
+          "calls_transformed": 1,
+          "id": "D12.1",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.bar",
+          "pre_fix_port": "omitted (rc patch.linewidth=1.0)",
+          "reference": "linewidth=0.5"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D12.2",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.set_xticklabels",
+          "pre_fix_port": "mathtext ($\\delta$ ..., '--')",
+          "reference": "band labels in Unicode (δ/θ/γ, en dash)"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D12.3",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.axhline",
+          "pre_fix_port": "omitted",
+          "reference": "linewidth=0.8"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D12.4",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.axhline",
+          "pre_fix_port": "omitted",
+          "reference": "alpha=0.7"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D12.5",
+          "material": {
+            "pdf": false,
+            "png": false
+          },
+          "method": "Axes.plot",
+          "pre_fix_port": "omitted (rc lines.markersize=5)",
+          "reference": "markersize=5"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D12.6",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.plot",
+          "pre_fix_port": "omitted (rc lines.linewidth=1.5)",
+          "reference": "linewidth=1.2"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D12.7",
+          "material": {
+            "pdf": false,
+            "png": false
+          },
+          "method": "Axes.plot",
+          "pre_fix_port": "omitted (no legend is drawn)",
+          "reference": "label=\"$\\lambda$ (convergence)\""
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D12.8",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.tick_params",
+          "pre_fix_port": "call omitted",
+          "reference": "tick_params(axis=\"y\", labelcolor=\"#AA3377\") on the twin axis"
+        },
+        {
+          "calls_transformed": 3,
+          "id": "D12.9",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.text",
+          "pre_fix_port": "'N$\\times$' (mathtext)",
+          "reference": "ratio label 'N×' (Unicode)"
+        },
+        {
+          "calls_transformed": 3,
+          "id": "D12.10",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.text",
+          "pre_fix_port": "omitted (baseline)",
+          "reference": "va=\"bottom\" on the ratio labels"
+        }
+      ],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "b6ddf8a35460ecaf72484fc02fa01be5da0a3255882bbe84a81765ba1e55ebeb",
+        "png": "f45bdd344596559b9364ef41f4cebeaf8f46ccc4a3f30608f5a106821a1ac1b5"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": false,
+        "png": false
+      },
+      "reference_normalized_sha256": {
+        "pdf": "b6ddf8a35460ecaf72484fc02fa01be5da0a3255882bbe84a81765ba1e55ebeb",
+        "png": "f45bdd344596559b9364ef41f4cebeaf8f46ccc4a3f30608f5a106821a1ac1b5"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig13_representation_geometry": {
+      "divergences": [],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "67eca98a2bd59ebdd7c4eba6f15203172f0228942c6be8e4736266571668bcc9",
+        "png": "58adbab07374dca00d5e75aff342e4704839cd030661396f8817adad9003e4f7"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": true,
+        "png": true
+      },
+      "reference_normalized_sha256": {
+        "pdf": "67eca98a2bd59ebdd7c4eba6f15203172f0228942c6be8e4736266571668bcc9",
+        "png": "58adbab07374dca00d5e75aff342e4704839cd030661396f8817adad9003e4f7"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig14_gradient_flow": {
+      "all_divergences_applied_equals_prefix_port": {
+        "pdf": true,
+        "png": true
+      },
+      "all_divergences_applied_normalized_sha256": {
+        "pdf": "eabd519c85f5e96b28254e9bdd907b6b7225ee69f539c270e5103b99a8e1e04b",
+        "png": "bf8f21fb9242ca1e6f63fafff8f811888dd4566c2e0e48aec0f6901d5ecbb384"
+      },
+      "divergences": [
+        {
+          "calls_transformed": 2,
+          "id": "D14.1",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.barh",
+          "pre_fix_port": "omitted",
+          "reference": "alpha=0.85"
+        }
+      ],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "eee31a02c8d30e82c0f4ffc41aa2c04abcd79c611779c35badde7fa2d319d8aa",
+        "png": "54b504011f39334aede8d807502ad25fd430a5ac08e0e1982e283193859a7231"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": false,
+        "png": false
+      },
+      "reference_normalized_sha256": {
+        "pdf": "eee31a02c8d30e82c0f4ffc41aa2c04abcd79c611779c35badde7fa2d319d8aa",
+        "png": "54b504011f39334aede8d807502ad25fd430a5ac08e0e1982e283193859a7231"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig15_noise_velocity": {
+      "all_divergences_applied_equals_prefix_port": {
+        "pdf": true,
+        "png": true
+      },
+      "all_divergences_applied_normalized_sha256": {
+        "pdf": "efac9d9563c770c5cc66420c7f6d35a7488d2e3777cc09ed20c8f945cddeed13",
+        "png": "038e9862529eda6ebbfdc6360928212230e9930c07468994a713f89f3ba81c0e"
+      },
+      "divergences": [
+        {
+          "calls_transformed": 2,
+          "id": "D15.1",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.plot",
+          "pre_fix_port": "omitted (rc 5)",
+          "reference": "markersize=3 on the noise PT/SA lines"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D15.2",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.plot",
+          "pre_fix_port": "omitted",
+          "reference": "alpha=0.5 on the exponential fit"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D15.3",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.plot",
+          "pre_fix_port": "omitted (rc 1.5)",
+          "reference": "linewidth=1 on the exponential fit"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D15.4",
+          "material": {
+            "pdf": false,
+            "png": false
+          },
+          "method": "Axes.legend",
+          "pre_fix_port": "omitted (\"best\")",
+          "reference": "loc=\"lower left\" on the noise panel"
+        },
+        {
+          "calls_transformed": 2,
+          "id": "D15.5",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.plot",
+          "pre_fix_port": "omitted (rc 5)",
+          "reference": "markersize=4 on the velocity PT/SA lines"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D15.6",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.set_xlabel",
+          "pre_fix_port": "'Speed Multiplier ($\\\\times$)' (mathtext)",
+          "reference": "'Speed Multiplier (×)' (Unicode)"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D15.7",
+          "material": {
+            "pdf": false,
+            "png": false
+          },
+          "method": "Axes.legend",
+          "pre_fix_port": "omitted (\"best\")",
+          "reference": "loc=\"lower left\" on the velocity panel"
+        }
+      ],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "5ed3046bba41559a39d6eeb69925158dcc8d4521486ef4084b9b8717fad8763d",
+        "png": "98ed0d28c470fb1fded899783a8ca43b1c1bf3f269d606e9f5004669521a1523"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": false,
+        "png": false
+      },
+      "reference_normalized_sha256": {
+        "pdf": "5ed3046bba41559a39d6eeb69925158dcc8d4521486ef4084b9b8717fad8763d",
+        "png": "98ed0d28c470fb1fded899783a8ca43b1c1bf3f269d606e9f5004669521a1523"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig2_clevr_n_capacity": {
+      "divergences": [],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "df1f51b2f0db95bdf1a3006cb710f0525fa911e991241ab9b4009811e916b83c",
+        "png": "bbd5fd482012ac243de1f372e38d1c2f0f20f9ba7e2657aad3bc3e704d9a47dd"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": true,
+        "png": true
+      },
+      "reference_normalized_sha256": {
+        "pdf": "df1f51b2f0db95bdf1a3006cb710f0525fa911e991241ab9b4009811e916b83c",
+        "png": "bbd5fd482012ac243de1f372e38d1c2f0f20f9ba7e2657aad3bc3e704d9a47dd"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig3_chimera_metrics": {
+      "divergences": [],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "aa20e0149ef8ada3d304e4e63eeec99b904ed5c58d2349d2f04dfc90ea76ae5a",
+        "png": "61b4de3bc944bf6725bf86545a2524dde4a3eeb7adb05a80ef18dcbb314d5bd2"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": true,
+        "png": true
+      },
+      "reference_normalized_sha256": {
+        "pdf": "aa20e0149ef8ada3d304e4e63eeec99b904ed5c58d2349d2f04dfc90ea76ae5a",
+        "png": "61b4de3bc944bf6725bf86545a2524dde4a3eeb7adb05a80ef18dcbb314d5bd2"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig4_chimera_k_alpha_heatmap": {
+      "divergences": [],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "b095aeb578f19d61761c54e61c25e485bc5533a58af607f12355ba62c0d576b2",
+        "png": "1f63300938846d7e8b52d04fc9f7f2822fac72aa9ceee9295e8f1e5a5fea1bc0"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": true,
+        "png": true
+      },
+      "reference_normalized_sha256": {
+        "pdf": "b095aeb578f19d61761c54e61c25e485bc5533a58af607f12355ba62c0d576b2",
+        "png": "1f63300938846d7e8b52d04fc9f7f2822fac72aa9ceee9295e8f1e5a5fea1bc0"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig5_mot_occlusion_comparison": {
+      "all_divergences_applied_equals_prefix_port": {
+        "pdf": true,
+        "png": true
+      },
+      "all_divergences_applied_normalized_sha256": {
+        "pdf": "6cd8589937ba9e6e3dbc1ced4f40330f6b92564842419092c1843cd8ffb9c59e",
+        "png": "4f5b602ff5c077bcb9e85ef41cfa01f8607c82a96814f03e0e12ccefc687ac9f"
+      },
+      "divergences": [
+        {
+          "calls_transformed": 1,
+          "id": "D5.1",
+          "material": {
+            "pdf": false,
+            "png": false
+          },
+          "method": "Axes.errorbar",
+          "pre_fix_port": "omitted",
+          "reference": "linewidth=1.5"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D5.2",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.errorbar",
+          "pre_fix_port": "omitted (rc lines.markersize=5)",
+          "reference": "markersize=4"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D5.3",
+          "material": {
+            "pdf": false,
+            "png": false
+          },
+          "method": "Axes.plot",
+          "pre_fix_port": "omitted",
+          "reference": "linewidth=1.5"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D5.4",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.plot",
+          "pre_fix_port": "omitted (rc lines.markersize=5)",
+          "reference": "markersize=4"
+        }
+      ],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "be90146780bce84ae0cc7d6c355afae180a64eaf7480fbb158e57e6d4e7d721e",
+        "png": "f95d9c93e2f184961d2e99240302629590cdf0e6596cc663a5fb5e9fa13fe097"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": false,
+        "png": false
+      },
+      "reference_normalized_sha256": {
+        "pdf": "be90146780bce84ae0cc7d6c355afae180a64eaf7480fbb158e57e6d4e7d721e",
+        "png": "f95d9c93e2f184961d2e99240302629590cdf0e6596cc663a5fb5e9fa13fe097"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig6_oscillosim_scaling": {
+      "divergences": [],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "f594ffdfb2ddb4aaa5f415ac51e33430d2af0f71c416cde470153e89a6ea84ba",
+        "png": "5067c8147c963af49ea211cb84df1bf268401e0f540c4de5ffb69e7fc467067e"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": true,
+        "png": true
+      },
+      "reference_normalized_sha256": {
+        "pdf": "f594ffdfb2ddb4aaa5f415ac51e33430d2af0f71c416cde470153e89a6ea84ba",
+        "png": "5067c8147c963af49ea211cb84df1bf268401e0f540c4de5ffb69e7fc467067e"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig7_ablation_results": {
+      "all_divergences_applied_equals_prefix_port": {
+        "pdf": true,
+        "png": true
+      },
+      "all_divergences_applied_normalized_sha256": {
+        "pdf": "671d50d6880e06dfa7d1674078f0e99c817f128c76fe346c7fb39a93fad08d26",
+        "png": "43fb8ba38d4ba1a2252f6d0bed01113619b02d4aeed4e2e20c9f39b37f9553dc"
+      },
+      "divergences": [
+        {
+          "calls_transformed": 4,
+          "id": "D7.1",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.text",
+          "pre_fix_port": "omitted (baseline)",
+          "reference": "va=\"bottom\" on the accuracy labels"
+        }
+      ],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "2387b7146ee8a11687b80c83fc2010569bacefbbc06ec70db492635cf5f5da68",
+        "png": "f4188643dbe4f234fbfd0063e5707c0ef5429c7ba38f898b639691bfaa4573b2"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": false,
+        "png": false
+      },
+      "reference_normalized_sha256": {
+        "pdf": "2387b7146ee8a11687b80c83fc2010569bacefbbc06ec70db492635cf5f5da68",
+        "png": "f4188643dbe4f234fbfd0063e5707c0ef5429c7ba38f898b639691bfaa4573b2"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig8_parameter_efficiency": {
+      "all_divergences_applied_equals_prefix_port": {
+        "pdf": true,
+        "png": true
+      },
+      "all_divergences_applied_normalized_sha256": {
+        "pdf": "363822c7a648805f370a6c63b0c5ae6fc528fb8fff52cbdf7f85d94aaa5d602f",
+        "png": "31eee313a709f83c202c6cb40b3a328049d2a704b9fde49c3495fa68fbf22a2d"
+      },
+      "divergences": [
+        {
+          "calls_transformed": 3,
+          "id": "D8.1",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.scatter",
+          "pre_fix_port": "omitted (collection default 1, under the grid)",
+          "reference": "zorder=5"
+        }
+      ],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "7926cd87a5021d144285105c9eec2aa3cad274441e727661b7fdf401e9c0544f",
+        "png": "a0700b3139009406d4062d11468264589ad7e21da5028990bfacaa1384a3987e"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": false,
+        "png": false
+      },
+      "reference_normalized_sha256": {
+        "pdf": "7926cd87a5021d144285105c9eec2aa3cad274441e727661b7fdf401e9c0544f",
+        "png": "a0700b3139009406d4062d11468264589ad7e21da5028990bfacaa1384a3987e"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    },
+    "fig9_training_curves": {
+      "all_divergences_applied_equals_prefix_port": {
+        "pdf": true,
+        "png": true
+      },
+      "all_divergences_applied_normalized_sha256": {
+        "pdf": "512ae502551a514c54c5b02432daee05b5dfd89e8ee196d785adf1ab217e3af0",
+        "png": "960d6d141f16a682209182aac010aaa8cab8b59c2946492098a1bbe4c6f45798"
+      },
+      "divergences": [
+        {
+          "calls_transformed": 4,
+          "id": "D9.1",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.plot",
+          "pre_fix_port": "omitted (rc lines.linewidth=1.5)",
+          "reference": "linewidth=1.2 on all four loss curves"
+        },
+        {
+          "calls_transformed": 1,
+          "id": "D9.2",
+          "material": {
+            "pdf": false,
+            "png": false
+          },
+          "method": "Axes.legend",
+          "pre_fix_port": "omitted (\"best\")",
+          "reference": "loc=\"upper right\""
+        },
+        {
+          "calls_transformed": 2,
+          "id": "D9.3",
+          "material": {
+            "pdf": true,
+            "png": true
+          },
+          "method": "Axes.text",
+          "pre_fix_port": "omitted (baseline)",
+          "reference": "va=\"bottom\" on the IP labels"
+        }
+      ],
+      "png_pixels_differing_port_vs_reference": 0,
+      "port_equals_reference": {
+        "pdf": true,
+        "png": true
+      },
+      "port_normalized_sha256": {
+        "pdf": "345c4ba56fb0763ccb59b40f447ec3888927b34f63509e886ccd31c654c50197",
+        "png": "e83f4b2c1efe36a7d6ccde5f613127f63965f51c3e6e5febb76a93224ef0a136"
+      },
+      "port_raw_equals_e3_prin_arm": {
+        "pdf": false,
+        "png": false
+      },
+      "reference_normalized_sha256": {
+        "pdf": "345c4ba56fb0763ccb59b40f447ec3888927b34f63509e886ccd31c654c50197",
+        "png": "e83f4b2c1efe36a7d6ccde5f613127f63965f51c3e6e5febb76a93224ef0a136"
+      },
+      "reference_reproduces_e3_reference_arm": {
+        "pdf": true,
+        "png": true
+      }
+    }
+  },
+  "summary": {
+    "completeness_all_applied_equals_prefix_port": true,
+    "divergences_byte_immaterial": [
+      "D5.1",
+      "D5.3",
+      "D9.2",
+      "D11.4",
+      "D12.5",
+      "D12.7",
+      "D15.4",
+      "D15.7"
+    ],
+    "divergences_byte_material": [
+      "D5.2",
+      "D5.4",
+      "D7.1",
+      "D8.1",
+      "D9.1",
+      "D9.3",
+      "D10.1",
+      "D11.1",
+      "D11.2",
+      "D11.3",
+      "D11.5",
+      "D11.6",
+      "D12.1",
+      "D12.2",
+      "D12.3",
+      "D12.4",
+      "D12.6",
+      "D12.8",
+      "D12.9",
+      "D12.10",
+      "D14.1",
+      "D15.1",
+      "D15.2",
+      "D15.3",
+      "D15.5",
+      "D15.6"
+    ],
+    "divergences_registered": 34,
+    "port_vs_reference_differing_count": 0,
+    "port_vs_reference_differing_files": [],
+    "reference_reproduces_e3_reference_arm_all": true,
+    "unexplained_stems": []
+  }
+}

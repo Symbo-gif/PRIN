@@ -26,9 +26,16 @@ Follow Coding Standards §6, including these mandatory controls:
    passed. The authoritative merge gate is the full local gate on the maintainer's
    Windows device while the Plan amendment #48 local-validation regime is in
    force (hosted CI paused; Linux/macOS not tested); otherwise CI. Plan
-   amendment #50 re-enables the hosted checks for the EXP-002 experiments only
-   (sessions 0159–0163); hosted results there are additional evidence, and the
-   local gate stays authoritative.
+   amendment #52 (2026-10-16) re-enables the seven hosted check workflows and
+   keeps them active until the campaign's experimentation is complete (the close
+   of session `0194`, or earlier on maintainer instruction), superseding
+   amendment #50's EXP-002-only window. Hosted results are additional evidence,
+   recorded verbatim (workflow, run ID, head SHA, conclusion, link) for the exact
+   SHA they ran on; the local gate stays mandatory and authoritative, local
+   results are never called "CI green", and a hosted run does not establish
+   behaviour on platforms it did not run on. A red hosted check is triaged and
+   recorded, never waived, skipped, or hidden by editing a workflow or removing a
+   required check.
 
 Use the repository skill `snyk-secure-development` when its workflow applies.
 Do not emit unverifiable safety badges; cite actual command or scan evidence.

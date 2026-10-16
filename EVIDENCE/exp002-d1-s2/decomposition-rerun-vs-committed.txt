@@ -1,0 +1,130 @@
+# EXP-002 D1 S2 - independent decomposition re-run versus the committed S1 artefacts
+# date (UTC): 2026-10-15T23:07:44Z
+# git HEAD: fadc8ce8ba8ef8e650ec5531446a1846092e81a3
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# python: Python 3.14.0
+# instrument: EVIDENCE/exp002-d1-s2/decomposition_rerun_check.py (path-guarded)
+# PRIN_S2_SCRATCH: C:\Users\there\prin-s2-scratch
+# command: PRIN_S2_SCRATCH=... .venv/Scripts/python \
+#            EVIDENCE/exp002-d1-s2/decomposition_rerun_check.py \
+#            /c/Users/there/prin-s2-scratch/root-cause-decomposition-postfix-s2.json
+#
+# The re-run artefact itself was produced by:
+#   .venv/Scripts/python EVIDENCE/exp002-d1-s1/root_cause_decomposition.py \
+#       --label postfix --out /c/Users/there/prin-s2-scratch/root-cause-decomposition-postfix-s2.json
+# (recorded verbatim in decomposition-postfix-s2-rerun.txt). That --out path is
+# OUTSIDE the repository, so the committed S1 artefacts were never at risk.
+#
+committed postfix : C:\dev\PRIN\EVIDENCE\exp002-d1-s1\root-cause-decomposition-postfix.json
+                    sha256 1f445b9985188a6746325868e9fc4c6f4ec0f1eb88a3daad85c9d5fe0dc77418
+independent re-run: C:\Users\there\prin-s2-scratch\root-cause-decomposition-postfix-s2.json
+                    sha256 bc420acf0d729a548f64f043b5696e61b7b66920be69ebb2bb85823c7323924e
+committed prefix  : C:\dev\PRIN\EVIDENCE\exp002-d1-s1\root-cause-decomposition-prefix.json
+                    sha256 f210c2c57765e605cfb60bc8f7fb42a9ab86148483b26b5e9ce395fac1b07332
+
+=== top-level key sets ===
+committed only : none
+re-run only    : none
+
+=== field-by-field equality over shared keys ===
+SAME  comparison  (payload 52 chars)
+SAME  e3_records  (payload 1524 chars)
+SAME  environment  (payload 3999 chars)
+DIFF  generated_utc  (payload 27 chars)
+        committed: "2026-10-15T12:05:58+00:00"
+        re-run   : "2026-10-15T18:22:56+00:00"
+DIFF  git_head  (payload 42 chars)
+        committed: "937159645d1149032394fd965cb66c36f2029e76"
+        re-run   : "8fd0ecc9949a607f2a7090fe39205f00bb0078c9"
+SAME  git_tracked_changes  (payload 2 chars)
+SAME  label  (payload 9 chars)
+SAME  port_module  (payload 47 chars)
+SAME  port_module_sha256  (payload 66 chars)
+SAME  prin_tree  (payload 1533 chars)
+SAME  reference_module_pin  (payload 66 chars)
+SAME  reference_module_sha256  (payload 66 chars)
+SAME  stems  (payload 17818 chars)
+SAME  summary  (payload 602 chars)
+
+=== red to green transition, from the two committed artefacts ===
+  prefix   git_head=d90eeabb  port_sha256=e0f59253202746e0  differing=18/39  registered=34  material=26  unexplained=0
+  postfix  git_head=93715964  port_sha256=b41dfc137d1d10f0  differing=0/39  registered=34  material=26  unexplained=0
+
+=== H4 and the no-regression set, from the committed postfix ===
+  files                        : 39
+  two_process_raw_identical    : True
+  raw_equal_to_e3_prin_arm     : 21
+  raw_differing_from_e3_prin   : 18
+
+  the 21 previously matching outputs, raw-identical to E3's PRIN arm:
+    = figures/fig13_representation_geometry.pdf
+    = figures/fig13_representation_geometry.png
+    = figures/fig2_clevr_n_capacity.pdf
+    = figures/fig2_clevr_n_capacity.png
+    = figures/fig3_chimera_metrics.pdf
+    = figures/fig3_chimera_metrics.png
+    = figures/fig4_chimera_k_alpha_heatmap.pdf
+    = figures/fig4_chimera_k_alpha_heatmap.png
+    = figures/fig6_oscillosim_scaling.pdf
+    = figures/fig6_oscillosim_scaling.png
+    = tables/tab_ablation.tex
+    = tables/tab_binding_params.tex
+    = tables/tab_chimera.tex
+    = tables/tab_efficiency.tex
+    = tables/tab_geometry.tex
+    = tables/tab_occlusion.tex
+    = tables/tab_oscillosim.tex
+    = tables/tab_param_efficiency.tex
+    = tables/tab_statistical.tex
+    = tables/tab_stress.tex
+    = tables/tab_supercritical.tex
+  the outputs that changed (must be exactly the 18-file D1 set):
+    X figures/fig10_statistical_summary.pdf
+    X figures/fig10_statistical_summary.png
+    X figures/fig11_flops_scaling.pdf
+    X figures/fig11_flops_scaling.png
+    X figures/fig12_supercritical_regime.pdf
+    X figures/fig12_supercritical_regime.png
+    X figures/fig14_gradient_flow.pdf
+    X figures/fig14_gradient_flow.png
+    X figures/fig15_noise_velocity.pdf
+    X figures/fig15_noise_velocity.png
+    X figures/fig5_mot_occlusion_comparison.pdf
+    X figures/fig5_mot_occlusion_comparison.png
+    X figures/fig7_ablation_results.pdf
+    X figures/fig7_ablation_results.png
+    X figures/fig8_parameter_efficiency.pdf
+    X figures/fig8_parameter_efficiency.png
+    X figures/fig9_training_curves.pdf
+    X figures/fig9_training_curves.png
+
+=== the prefix artefact's differing set (the red population) ===
+    X figures/fig10_statistical_summary.pdf
+    X figures/fig10_statistical_summary.png
+    X figures/fig11_flops_scaling.pdf
+    X figures/fig11_flops_scaling.png
+    X figures/fig12_supercritical_regime.pdf
+    X figures/fig12_supercritical_regime.png
+    X figures/fig14_gradient_flow.pdf
+    X figures/fig14_gradient_flow.png
+    X figures/fig15_noise_velocity.pdf
+    X figures/fig15_noise_velocity.png
+    X figures/fig5_mot_occlusion_comparison.pdf
+    X figures/fig5_mot_occlusion_comparison.png
+    X figures/fig7_ablation_results.pdf
+    X figures/fig7_ablation_results.png
+    X figures/fig8_parameter_efficiency.pdf
+    X figures/fig8_parameter_efficiency.png
+    X figures/fig9_training_curves.pdf
+    X figures/fig9_training_curves.png
+
+=== retained E3 roots versus their manifested records ===
+  reference  present=True files=39 raw_matches=39 normalized_matches=39 manifest_ok=True
+  prin       present=True files=39 raw_matches=39 normalized_matches=39 manifest_ok=True
+  seedrep0   present=True files=39 raw_matches=39 normalized_matches=39 manifest_ok=True
+
+==============================================================================
+expected provenance differences : ['generated_utc', 'git_head']
+unexpected differences          : NONE
+==============================================================================
+# exit code: 0

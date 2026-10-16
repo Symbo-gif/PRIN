@@ -2,7 +2,20 @@
 
 The module preserves the fourteen historical generators for figures 2 through
 15. Figure 1 never existed in the reference implementation. Stored benchmark
-values are only rendered; no scientific quantity is recomputed.
+values are rendered, never re-measured: no benchmark, simulation or statistic
+is re-run or recomputed. Some displayed quantities are derived from stored ones
+for presentation, exactly as the frozen reference derives them. By kind, not as
+an exhaustive list: unit scaling (fractions to percent, FLOPs to thousands);
+error-bar extents taken from stored confidence limits; differences of stored
+values (Fig. 10 plots the difference of two stored means with a fixed drawn bar);
+ratios of stored values (Fig. 11 annotates FLOPs ratios, and Fig. 12 plots
+``K_c_empirical / K_c_theory`` per band); layout geometry such as label offsets
+and axis padding; and Fig. 15's stored exponential fit
+``IP_0 * exp(-x / sigma_c)``, which is evaluated on a fine grid to draw its
+curve. Every generator passes the reference's exact drawing arguments and
+label strings, so its output matches the frozen PRINet 3.0 generator under the
+registered publication comparison (EXP-002 D1;
+``parity/test_parity_publication.py``).
 """
 
 from __future__ import annotations
@@ -404,6 +417,8 @@ def fig_mot_identity_preservation(
         marker="o",
         label="PhaseTracker",
         capsize=3,
+        linewidth=1.5,
+        markersize=4,
     )
     ax.plot(
         rates,
@@ -411,6 +426,8 @@ def fig_mot_identity_preservation(
         color=COLORS["sa"],
         marker="s",
         label="Slot Attention",
+        linewidth=1.5,
+        markersize=4,
     )
     ax.set(
         xlabel="Occlusion Rate (%)",
@@ -531,6 +548,7 @@ def fig_ablation_results(
             bar.get_height() + 0.3,
             f"{v['test_accuracy'] * 100:.1f}",
             ha="center",
+            va="bottom",
             fontsize=6,
         )
     fig.tight_layout()
@@ -576,6 +594,7 @@ def fig_parameter_efficiency(
             model["mean_ip"],
             color=color,
             s=80,
+            zorder=5,
             edgecolors="black",
             linewidth=0.5,
             label=f"{model['model']} ({model['total_params']:,} params)",
@@ -631,16 +650,23 @@ def fig_training_curves(
     fig, (a, b) = plt.subplots(1, 2, figsize=(6.8, 2.5))
     for seed, color, prefix in ((pt, COLORS["pt"], ""), (sa, COLORS["sa"], "SA ")):
         epochs = range(1, len(seed["train_losses"]) + 1)
-        a.plot(epochs, seed["train_losses"], color=color, label=f"{prefix}Train")
+        a.plot(
+            epochs,
+            seed["train_losses"],
+            color=color,
+            label=f"{prefix}Train",
+            linewidth=1.2,
+        )
         a.plot(
             epochs,
             seed["val_losses"],
             color=color,
             linestyle="--",
             label=f"{prefix}Val",
+            linewidth=1.2,
         )
     a.set(xlabel="Epoch", ylabel="Loss", title="(a) Training Convergence")
-    a.legend(fontsize=6)
+    a.legend(fontsize=6, loc="upper right")
     ips = [comp["pt_stats"]["mean"], comp["sa_stats"]["mean"]]
     bars = b.bar(
         ["PT", "SA"],
@@ -660,6 +686,7 @@ def fig_training_curves(
             bar.get_height() + 0.0003,
             f"{ip:.4f}",
             ha="center",
+            va="bottom",
             fontsize=7,
         )
     fig.tight_layout()
@@ -727,6 +754,11 @@ def fig_statistical_summary(
         ha="center",
         fontsize=7,
         style="italic",
+        bbox={
+            "boxstyle": "round,pad=0.3",
+            "facecolor": "lightyellow",
+            "edgecolor": "gray",
+        },
     )
     fig.tight_layout()
     return _save_fig(fig, "fig10_statistical_summary", output)
@@ -765,24 +797,41 @@ def fig_flops_scaling(
     sf = np.array([p["flops"] for p in sa]) / 1e3
     fig, ax = plt.subplots(figsize=(3.3, 2.4))
     w = 0.35
-    ax.bar(x - w / 2, pf, w, label="PhaseTracker", color=COLORS["pt"])
-    ax.bar(x + w / 2, sf, w, label="SlotAttention", color=COLORS["sa"])
+    ax.bar(
+        x - w / 2,
+        pf,
+        w,
+        label="PhaseTracker",
+        color=COLORS["pt"],
+        edgecolor="black",
+        linewidth=0.5,
+    )
+    ax.bar(
+        x + w / 2,
+        sf,
+        w,
+        label="SlotAttention",
+        color=COLORS["sa"],
+        edgecolor="black",
+        linewidth=0.5,
+    )
     ax.set_xticks(x)
     ax.set_xticklabels([str(p["n_objects"]) for p in pt])
     ax.set_yscale("log")
     ax.set(
         xlabel="Number of Objects (N)",
-        ylabel=r"FLOPs ($\times 10^3$)",
+        ylabel="FLOPs (\N{MULTIPLICATION SIGN}10\N{SUPERSCRIPT THREE})",
         title="Computational Cost Scaling",
     )
-    ax.legend()
+    ax.legend(framealpha=0.8)
     for i, (p, s) in enumerate(zip(pf, sf, strict=True)):
         ax.annotate(
-            rf"{s / p:.0f}$\times$",
+            f"{s / p:.0f}\N{MULTIPLICATION SIGN}",
             xy=(i + w / 2, s),
             xytext=(0, 4),
             textcoords="offset points",
             ha="center",
+            va="bottom",
             fontsize=7,
         )
     fig.tight_layout()
@@ -828,21 +877,42 @@ def fig_supercritical_regime(
         0.6,
         color=[COLORS["pt"], COLORS["coherent"], COLORS["chimera"]],
         edgecolor="black",
+        linewidth=0.5,
     )
     a.set_xticks(x)
     a.set_xticklabels(
-        [r"$\delta$ (1--4 Hz)", r"$\theta$ (4--8 Hz)", r"$\gamma$ (25--100 Hz)"],
+        [
+            "\N{GREEK SMALL LETTER DELTA} (1\N{EN DASH}4 Hz)",
+            "\N{GREEK SMALL LETTER THETA} (4\N{EN DASH}8 Hz)",
+            "\N{GREEK SMALL LETTER GAMMA} (25\N{EN DASH}100 Hz)",
+        ],
         fontsize=7,
     )
-    a.axhline(1, color="gray", linestyle="--")
+    a.axhline(1, color="gray", linestyle="--", linewidth=0.8, alpha=0.7)
     a.set(
         ylabel=r"$K_{\mathrm{eff}} / K_c$ Ratio", title="Supercritical Coupling Regime"
     )
     b = a.twinx()
-    b.plot(x, rates, "D-", color="#AA3377")
+    b.plot(
+        x,
+        rates,
+        "D-",
+        color="#AA3377",
+        markersize=5,
+        linewidth=1.2,
+        label=r"$\lambda$ (convergence)",
+    )
     b.set_ylabel(r"Convergence Rate $\lambda$", color="#AA3377")
+    b.tick_params(axis="y", labelcolor="#AA3377")
     for i, value in enumerate(ratios):
-        a.text(i, value + 2, rf"{value:.0f}$\times$", ha="center", fontsize=7)
+        a.text(
+            i,
+            value + 2,
+            f"{value:.0f}\N{MULTIPLICATION SIGN}",
+            ha="center",
+            va="bottom",
+            fontsize=7,
+        )
     fig.tight_layout()
     return _save_fig(fig, "fig12_supercritical_regime", output)
 
@@ -887,6 +957,7 @@ def fig_representation_geometry(
                 s=8,
                 alpha=0.6,
                 color=plt.get_cmap("tab10")(index % 10),
+                label=f"Obj {label}" if index < 5 else None,
             )
         purity = model["metrics"]["knn_purity"]
         dimension = model["metrics"]["intrinsic_dim_90pct"]
@@ -945,6 +1016,7 @@ def fig_gradient_flow(
             edgecolor="black",
             linewidth=0.5,
             capsize=2,
+            alpha=0.85,
         )
         ax.set_yticks(y)
         ax.set_yticklabels([layer.split("/")[-1] for layer in layers], fontsize=6)
@@ -1000,6 +1072,7 @@ def fig_noise_velocity(
         [s["pt_stats"]["mean"] for s in ns],
         "o-",
         color=COLORS["pt"],
+        markersize=3,
         label="PhaseTracker",
     )
     a.plot(
@@ -1007,6 +1080,7 @@ def fig_noise_velocity(
         [s["sa_stats"]["mean"] for s in ns],
         "s-",
         color=COLORS["sa"],
+        markersize=3,
         label="SlotAttention",
     )
     fit = noise["exponential_fit"]["phase_tracker"]
@@ -1016,6 +1090,8 @@ def fig_noise_velocity(
         fit["IP_0"] * np.exp(-fine / fit["sigma_c"]),
         "--",
         color=COLORS["pt"],
+        alpha=0.5,
+        linewidth=1,
         label=f"Fit (R²={fit['R_squared']:.3f})",
     )
     a.set(
@@ -1024,7 +1100,7 @@ def fig_noise_velocity(
         title="Noise Degradation",
         ylim=(0.7, 1.02),
     )
-    a.legend(fontsize=6)
+    a.legend(fontsize=6, loc="lower left")
     vs = velocity["sweep"]
     x = [s["speed_multiplier"] for s in vs]
     b.fill_between(
@@ -1039,6 +1115,7 @@ def fig_noise_velocity(
         [s["pt_stats"]["mean"] for s in vs],
         "o-",
         color=COLORS["pt"],
+        markersize=4,
         label="PhaseTracker",
     )
     b.plot(
@@ -1046,15 +1123,16 @@ def fig_noise_velocity(
         [s["sa_stats"]["mean"] for s in vs],
         "s-",
         color=COLORS["sa"],
+        markersize=4,
         label="SlotAttention",
     )
     b.set(
-        xlabel=r"Speed Multiplier ($\times$)",
+        xlabel="Speed Multiplier (\N{MULTIPLICATION SIGN})",
         ylabel="Identity Preservation",
         title="Velocity Stress",
         ylim=(0.85, 1.02),
     )
-    b.legend(fontsize=6)
+    b.legend(fontsize=6, loc="lower left")
     fig.tight_layout()
     return _save_fig(fig, "fig15_noise_velocity", output)
 

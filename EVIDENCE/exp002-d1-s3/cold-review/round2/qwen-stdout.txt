@@ -1,0 +1,326 @@
+# Cold code review — `git diff 5ba0129e..HEAD` (branch `hotfix/exp002-d1-figure-parity`)
+
+Method: read `s3.diff` and `s3-commits.txt`, then read the "after" state of every
+changed file plus the frozen reference, the S1/S2 evidence bundles, the correction
+audit, `DOCS/standards/`, `pyproject.toml` and `.github/workflows/python.yml`. No
+commands were run. 11 findings.
+
+---
+
+## 1
+
+- **Severity:** medium
+- **Where:** `EVIDENCE/exp002-d1-s3/README.md:44`
+- **Quote:**
+```
+| [`f2-alone-01_oscillosim_quickstart.json`](f2-alone-01_oscillosim_quickstart.json), [`f2-alone-02_clevr_n_binding.json`](f2-alone-02_clevr_n_binding.json), [`f2-alone-03_custom_coupling.json`](f2-alone-03_custom_coupling.json), [`f2-alone-04_torch_bridge.json`](f2-alone-04_torch_bridge.json) | **F2, standalone baseline.** `notebook_timing.py` on each shipped notebook, one after another on a quiet host, no pytest: wall **73 / 71 / 45 / 37 s**, all completed with no error output. Notebooks 01, 03 and 04 are single-threaded (kernel CPU/wall 0.9–1.1); notebook 02 used **435 CPU-seconds in 71 s wall (6.1 cores) with a 3.2 GB working set** and drove host available memory down to 660 MB. |
+```
+- **Claim:** `EXP002D1-S2-F2` is the cycle's only **D2** finding and the one that leaves the
+  required full suite red, yet nothing in this range dispositions it. The audit's disposition
+  text requires one of three governed routes — (a) re-size the per-cell bound from cited
+  **in-suite** evidence, (b) run the leg as a separately documented workload with its own
+  evidenced bound, or (c) open a dated DV register row — and at HEAD none is taken:
+  `tests/test_notebooks.py:256` still reads `timeout=900`, `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`
+  is not in the diff, and the bundle contains **no in-suite artefact at all** (no `samples.jsonl`,
+  no `console.log`, no `--summarize` row) — only the four standalone runs, whose condition
+  ("completes alone in about a minute") the audit already recorded from S1. The instruments
+  are committed; the measurement that could actually size a bound is not. The numbers quoted
+  in the row are themselves accurate (verified against the JSONs: 73.3 / 71.1 / 44.5 / 37.0 s;
+  434.66 CPU-s, 6.11 ratio, 3208.7 MB, 660 MB min available).
+- **Reproduce:**
+```
+git diff --stat 5ba0129e..HEAD -- tests/test_notebooks.py pyproject.toml DOCS/reports/DEFERRED_VALIDATION_REGISTER.md
+rg -n "timeout=900" tests/test_notebooks.py
+ls EVIDENCE/exp002-d1-s3
+```
+
+---
+
+## 2
+
+- **Severity:** medium
+- **Where:** `EVIDENCE/exp002-d1-s3/README.md:4`
+- **Quote:**
+```
+evidence behind the S3 remediation record, which is the `## S3 — remediation and
+delta verification` section of
+```
+- **Claim:** The section this sentence names does not exist. `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`
+  is **not touched anywhere in this range**, and its last heading at HEAD is
+  `### S2.14 Addendum — ratification, and the CLI leg completed` (line 1050); there is no
+  `## S3` heading in the file. A reader following the bundle's own pointer to the record the
+  evidence backs finds nothing, so the 21 committed artefacts currently have no governing
+  record in the tree. (`index_selfcheck.py` cannot catch this: the link *target file* resolves,
+  only the section is absent.)
+- **Reproduce:**
+```
+rg -n "^## S3|^### S2\.14" DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+git diff --stat 5ba0129e..HEAD -- DOCS/audits/
+```
+
+---
+
+## 3
+
+- **Severity:** medium
+- **Where:** `EVIDENCE/exp002-d1-s3/README.md:17`
+- **Quote:**
+```
+Each is `ruff check`, `ruff format --check` and `mypy --strict` clean, and none
+```
+- **Claim:** This quality assertion is backed by no artefact in the bundle, and no standing
+  gate can confirm or refute it: `AGENTS.md`'s one-liner, Coding Standards §5 and
+  `.github/workflows/python.yml:28,33-34` all scope `ruff`/`mypy` to
+  `python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/` — never `EVIDENCE/`. S2 did run
+  these legs over its evidence directories and committed the output
+  (`EVIDENCE/exp002-d1-s2/post-record-gate.txt:374-405`, legs K01–K04); S3 committed no
+  equivalent, and `rg "ruff|mypy" EVIDENCE/exp002-d1-s3/*.txt` returns one hit, an unrelated
+  commit subject line. In a bundle whose entire purpose is that claims are measured rather than
+  asserted, this one is asserted. **UNVERIFIED** whether the claim is true — proving it needs
+  command output I cannot produce; what is verified is that nothing in the tree evidences it.
+- **Reproduce:**
+```
+rg -n "ruff|mypy|bandit|interrogate" EVIDENCE/exp002-d1-s3/*.txt
+rg -n "ruff check|mypy" .github/workflows/python.yml
+.venv\Scripts\ruff check EVIDENCE/exp002-d1-s3/ && .venv\Scripts\ruff format --check EVIDENCE/exp002-d1-s3/ && .venv\Scripts\mypy --strict EVIDENCE/exp002-d1-s3/
+```
+
+---
+
+## 4
+
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/suite_sampler.py:323`
+- **Quote:**
+```
+        if seen and absent >= 2:
+```
+- **Claim:** `sample()` has no termination path other than this one, and `seen` (line 294) is set
+  only at an instant when `_find_groups()` returns a non-empty pytest list. The loop at line 297
+  is `while True:` with a 30 s sleep (line 325), so a pytest run that finishes between two
+  samples — or never starts, e.g. a bad `$PY` or an argument error — is never observed, `seen`
+  stays `False`, and the sampler loops forever. `diagnostic_suite_run.sh:55` then blocks on
+  `wait "$SAMPLER"` indefinitely and never writes the closing block of `run.txt`. There is no
+  timeout on either side, which defeats the instrument for exactly the short, targeted runs one
+  uses when debugging a single slow node.
+- **Reproduce:**
+```
+rg -n "seen = False|while True:|seen = True|if seen and absent|time.sleep\(period\)|wait \"\$SAMPLER\"" EVIDENCE/exp002-d1-s3/suite_sampler.py EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh
+```
+
+---
+
+## 5
+
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/snyk_s3_filter.py:158`
+- **Quote:**
+```
+        "ABOVE LOW anywhere in git-known paths (section 6.2 gate: must be 0)",
+```
+- **Claim:** The bucket is labelled a gate that "must be 0", but `main()` returns `0` at line 180
+  unconditionally and `2` only on unparseable stdin (line 32 documents this). A caller or script
+  checking the exit status therefore sees success even when the §6.2 gate fails — which is what
+  happened in the first scan, where the MEDIUM was caught by a human reading
+  `snyk-code-s3-first-scan-medium.txt`, not by the tool ("`# filter exit code: 0`" with 1
+  above-LOW finding). Its sibling `immutability.sh` does encode its gates in `$status`; this one
+  cannot be used as a gate in a future cycle.
+- **Reproduce:**
+```
+rg -n "return 0|return 2|must be 0|Exit status is" EVIDENCE/exp002-d1-s3/snyk_s3_filter.py
+rg -n "filter exit code|ABOVE LOW" EVIDENCE/exp002-d1-s3/snyk-code-s3-first-scan-medium.txt
+```
+
+---
+
+## 6
+
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/README.md:37`
+- **Quote:**
+```
+| [`docstring-only-check.txt`](docstring-only-check.txt) | **F5, F7.** `docstring_only_check.py` on the two docstring commits: AST identical outside the module docstring (exit 0 each). Two negative controls — S1's fix commit and S3's F6 commit — report a difference (exit 1), so the check can fail. |
+```
+- **Claim:** There are three docstring commits in the range, not two: `2db18fc3` (F5), `1403451c`
+  (F7) and `33923be5` (F7 reword). `docstring-only-check.txt` was written at HEAD `9583eb4d`
+  (01:54:21Z) and covers only `5ba0129e..2db18fc3` and `2db18fc3..1403451c`; `33923be5` was
+  committed later (02:31:16Z) and its message asserts "the AST outside the module docstring is
+  unchanged from the previous commit" with no instrument output behind it. I confirmed the claim
+  is true by reading the combined diff (the only non-docstring change to `figure_generation.py` in
+  the whole range is F6's single `label=` line), but the bundle's own count and coverage are stale
+  at HEAD.
+- **Reproduce:**
+```
+git log --format="%h %ad %s" --date=iso 5ba0129e..HEAD -- python/prin/reporting/figure_generation.py
+rg -n "git HEAD|^## " EVIDENCE/exp002-d1-s3/docstring-only-check.txt
+```
+
+---
+
+## 7
+
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/README.md:9`
+- **Quote:**
+```
+S3 works only on S2's findings (`EXP002D1-S2-F1`…`-F8`), one commit per finding,
+```
+- **Claim:** The range contradicts "one commit per finding": `EXP002D1-S2-F7` has two commits
+  (`1403451c` and `33923be5`), `EXP002D1-S2-F2` has none of its own (its instruments and
+  baselines are inside `742fb52c`), and `742fb52c` is a single commit covering the evidence for
+  F1–F7. Development Workflow §S3 asks for "each fix commit\[ting\] with the finding ID in the
+  message", which the fix commits do satisfy — but the README's stronger statement is not what
+  `git log` shows.
+- **Reproduce:**
+```
+git log --format="%h %s" 5ba0129e..HEAD
+```
+
+---
+
+## 8
+
+- **Severity:** low
+- **Where:** `DOCS/standards/Development_Workflow_and_Audit_Standards.md:221`
+- **Quote:**
+```
+- Work **only** on audit findings, in severity order (D1 → D4). No new
+```
+- **Claim:** The commits were not made in severity order. From the audit's findings table
+  (lines 881-888) F1 is **D3** and F4–F7 are **D4**; the audit's own S2.14 addendum (line 1119-1120)
+  fixes the sequence as "-F2 (D2) first, then -F1 (D3), then -F4, -F5, -F6, -F7 (D4)". The actual
+  order is F5 (22:43:21), F7 (22:44:40), F4 (22:46:27), F6 (22:50:46), **then F1** (22:53:12) —
+  four D4 findings committed before the D3 one. The same rule is restated in the S3 brief
+  ("in severity order D1 → D4"). The ordering is already in history and cannot be corrected
+  without rewriting commits, so it needs an explicit note in the S3 closure record rather than
+  silence. (The *work* order looks compliant — the F2 baselines were captured at 01:39:40Z,
+  before the first commit at 01:43:21Z — so this is a commit-sequencing deviation, not a
+  scope deviation.)
+- **Reproduce:**
+```
+git log --format="%h %ad %s" --date=iso --reverse 5ba0129e..HEAD
+rg -n "^\| `EXP002D1-S2-F[0-9]` \| \*\*D" DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+```
+
+---
+
+## 9
+
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/docstring_only_check.py:54`
+- **Quote:**
+```
+        ["git", *args],  # noqa: S607
+```
+- **Claim:** Coding Standards §6.1 (`DOCS/standards/Coding_Standards.md:187`) requires "no
+  `shell=True`; **absolute executables**; arguments as lists". Four instruments added in this
+  range invoke `git` by bare name and suppress the ruff rule that encodes the requirement —
+  here, plus `raw_byte_identity.py:78`, `index_selfcheck.py:52` and `snyk_s3_filter.py:84`.
+  There is repo-wide precedent for the deviation (`tools/coverage_changed_lines.py:33`, "`git`
+  resolved via PATH by design"), but no recorded exception in §6.1, and the same commit
+  `742fb52c` went the other way for `suite_sampler.py`, hardening it to
+  `TYPEPERF = Path(r"C:\Windows\System32\typeperf.exe")` precisely to clear a Snyk MEDIUM. The
+  standard is being applied inconsistently inside one change set. Practical exploitability is
+  nil (the caller already has code execution as this user), which is why this is low.
+- **Reproduce:**
+```
+rg -n "noqa: S607" EVIDENCE/exp002-d1-s3/
+rg -n "absolute executables" DOCS/standards/Coding_Standards.md
+rg -n "^TYPEPERF" EVIDENCE/exp002-d1-s3/suite_sampler.py
+```
+
+---
+
+## 10
+
+- **Severity:** nit
+- **Where:** `EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh:13`
+- **Quote:**
+```
+# All output goes OUTSIDE the repository, to ~/prin-s3-scratch/<label>/, so the
+# run cannot change the tree it is measuring:
+```
+- **Claim:** Not all output goes outside the repository: line 50 passes
+  `--basetemp=.pytest_basetemp`, which pytest creates and empties **inside** the working tree on
+  every run (and `AGENTS.md` mandates that exact name, so it cannot be moved). The stated
+  invariant is therefore false as written. The mechanism the script actually relies on still
+  works — `.pytest_basetemp/` is gitignored (`.gitignore:42-43`), so the `tracked changes` and
+  `untracked files` counts recorded in `run.txt` stay clean — but the comment overstates what is
+  guaranteed.
+- **Reproduce:**
+```
+rg -n "OUTSIDE the repository|--basetemp" EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh
+rg -n "pytest_basetemp" .gitignore AGENTS.md
+```
+
+---
+
+## 11
+
+- **Severity:** nit
+- **Where:** `EVIDENCE/exp002-d1-s3/notebook_timing.py:208`
+- **Quote:**
+```
+        record_timing=True,
+```
+- **Claim:** `EVIDENCE/exp002-d1-s3/README.md:27` says this instrument "Runs one shipped notebook
+  **exactly as** `tests/test_notebooks.py` does", and the module docstring says "same
+  `NotebookClient` arguments". The test's client (`tests/test_notebooks.py:254-259`) passes
+  `timeout=900`, `kernel_name="python3"` and `resources={"metadata": {"path": str(NOTEBOOK_DIR.parent)}}`
+  and nothing else; this instrument adds `record_timing=True`. The working directory and kernel
+  do match (`NOTEBOOK_DIR.parent` == `REPO_ROOT`), and the extra argument is disclosed two
+  paragraphs earlier in the same docstring as the source of the per-cell timings, so the
+  measurement is sound — only the word "exactly" is wrong.
+- **Reproduce:**
+```
+rg -n "record_timing" EVIDENCE/exp002-d1-s3/notebook_timing.py tests/test_notebooks.py
+rg -n -A6 "client = NotebookClient\(" tests/test_notebooks.py
+```
+
+---
+
+## Checked, no finding
+
+- **Test weakening (brief item 5): none.** `tests/test_publication_figure_arguments.py` is purely
+  additive — a docstring reword and one new test (`test_fig13_series_labels_follow_the_reference`);
+  no assertion removed, loosened, skipped, deselected or xfailed. `pyproject.toml`, `.github/`,
+  `tests/test_notebooks.py` and every other test file are untouched by the range.
+  `diag_nb_timeout.py` does lift the notebook per-cell bound to 14400 s, but it is not collected by
+  pytest (no `test_` prefix, no `conftest.py`, no entry point) and is loaded only via an explicit
+  `-p diag_nb_timeout` plus a `PYTHONPATH` export inside `diagnostic_suite_run.sh`, so it cannot
+  activate in a gate run.
+- **Frozen artefacts (brief item 6): none touched.** The range touches only two
+  `DOCS/sessions/contingencies/` briefs, `EVIDENCE/exp002-d1-s1/README.md`, the new
+  `EVIDENCE/exp002-d1-s3/` bundle, `python/prin/reporting/figure_generation.py` and
+  `tests/test_publication_figure_arguments.py`. No `DOCS/experiments/EXP-002-…/`, no
+  `benchmarks/results/EXP-002/`, no `.github/`, no dependency manifest. `EVIDENCE/exp002-d1-s1/`
+  carries no `SHA256SUMS`/manifest (12 files + an ignored `__pycache__`), so the one-line README
+  addition breaks no hash freeze. The append-only correction audit is not in the diff.
+- **The F6 code change is a faithful port.** `figure_generation.py:960`
+  (`label=f"Obj {label}" if index < 5 else None`) matches the frozen reference at
+  `DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/utils/figure_generation.py:936`
+  exactly, including the `j < 5` cut-off and the loop being over `sorted(set(labels))`.
+- **Documentation claims that check out.** The F7 docstring's derived-quantity list is accurate
+  against the code (Fig. 10 `diff = pt["mean"] - sa["mean"]` with `± 0.005` and `ci_low`/`ci_high`
+  error-bar extents at lines 724-728; Fig. 12's `K_c_empirical / K_c_theory` at line 869; Fig. 15's
+  `fit["IP_0"] * np.exp(-fine / fit["sigma_c"])` at lines 1087-1090). The S4 brief's H3 numbers
+  (39/39 approved, 14/39 sensitivity, 25 residuals, 14 Info-key-set PDFs with reference 3 keys vs
+  PRIN 4, 11 CRLF-vs-LF `.tex` tables, 0 unclassified) match
+  `EVIDENCE/exp002-d1-s2/both-policies-post-fix.txt` line for line. The F4 README row matches
+  `EVIDENCE/exp002-d1-s1/fast-tests-against-prefix-module.txt` (9 failed, exit 1, tree `50d302d`
+  plus the uncommitted typing fix). `index-selfcheck-s1.txt`'s "12 files" and the Snyk records'
+  internal arithmetic (98 = 1 MEDIUM + 97 LOW; 97 = 45 git-known + 52 untracked copies) are
+  consistent, and `__pycache__/` is gitignored (`.gitignore:8`) as `index_selfcheck.py` claims.
+- **Injection surface of the new instruments is small and guarded.** Every subprocess call is a
+  fixed argv with no `shell=True`; `docstring_only_check.py` and `raw_byte_identity.py` validate
+  revisions against `re.compile(r"[0-9a-f]{7,40}")` with `fullmatch` before interpolation into
+  `git show REV:PATH`; `index_selfcheck.py` and `notebook_timing.py` select from a closed set
+  enumerated off disk; `snyk_s3_filter.py` reads only stdin. No secrets, no `pickle`/`eval`/`exec`,
+  no unsafe deserialisation. The `# noqa: S603` annotations are asymmetric between files
+  (`snyk_s3_filter.py` has none) but correctly so: its argv is fully literal, matching the
+  pre-existing `EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:76`, which passed
+  `ruff check EVIDENCE/exp002-d1-s2/` at `post-record-gate.txt:374-382`.
+
+---
+
+**Summary:** 11 findings — 0 critical, 0 high, 3 medium, 6 low, 2 nit; 1 partially `UNVERIFIED` (finding 3: whether the instruments are actually ruff/mypy-clean needs command output).

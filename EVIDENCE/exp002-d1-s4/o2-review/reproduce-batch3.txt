@@ -1,0 +1,82 @@
+# EXP-002 D1 S4 - O-2 cold review, batch 3
+# date (UTC): 2026-10-16T18:06:48Z
+# git HEAD: 6b55c6baa7b6832a50ff57fdd1a919171e9fb5de
+# tracked changes at start: 0
+
+==================================================================
+## C16 docstring_only_check.py is non-vacuous: a real code change must give exit 1
+# started 2026-10-16T18:06:48Z
+  F6 commit = 2b8b7a554b0b60852955cd1c70e1e6295112cc52   parent = d53ab885144cf5c8ef4cf0fd3a947cf89d0e6b63
+  F6 restored a real keyword argument (label=...) in fig13, so the AST must differ.
+  the changed hunk:
+    diff --git a/python/prin/reporting/figure_generation.py b/python/prin/reporting/figure_generation.py
+    index 57048aa2..70136482 100644
+    --- a/python/prin/reporting/figure_generation.py
+    +++ b/python/prin/reporting/figure_generation.py
+    @@ -956,2 +956,3 @@ def fig_representation_geometry(
+                     color=plt.get_cmap("tab10")(index % 10),
+    +                label=f"Obj {label}" if index < 5 else None,
+                 )
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check d53ab885144cf5c8ef4cf0fd3a947cf89d0e6b63 2b8b7a554b0b60852955cd1c70e1e6295112cc52 python/prin/reporting/figure_generation.py
+python/prin/reporting/figure_generation.py  d53ab885144cf5c8ef4cf0fd3a947cf89d0e6b63..2b8b7a554b0b60852955cd1c70e1e6295112cc52
+  ast identical outside the module docstring: False
+  module docstring changed                  : False
+# exit code: 1 (1 expected = the tool detects a genuine code change, so C6b's 0 is meaningful)
+
+==================================================================
+## C17 final_legs.sh grep-based aggregation: does a MISSING marker fail open?
+# started 2026-10-16T18:06:49Z
+  the aggregation lines in the committed script:
+    43:grep -a '^# exit code' "$OUT/sphinx.txt" | grep -qv ': 0$' && overall=1
+    52:grep -a '^# exit code' "$OUT/gitleaks.txt" | grep -qv ': 0$' && overall=1
+    57:grep -a 'script exit' "$OUT/immutability-after.txt" | grep -qv ': 0)' && overall=1
+    60:grep -a '^# exit code' "$OUT/verify-manifest.txt" | grep -qv ': 0$' && overall=1
+    67:  grep -a '^# exit code' "$OUT/index-selfcheck-${b#exp002-d1-}.txt" | grep -qv ': 0$' && overall=1
+
+    A marker 'exit code: 0'          -> overall=0 (expect 0)
+    B marker 'exit code: 1'          -> overall=1 (expect 1)
+    C record file MISSING            -> overall=0 (expect 1 if fail-closed)
+    D file present, NO marker line   -> overall=0 (expect 1 if fail-closed)
+    E record file EMPTY              -> overall=0 (expect 1 if fail-closed)
+    F immutability variant, no marker-> overall=0 (expect 1 if fail-closed)
+    G two markers 0 then 1           -> overall=1 (expect 1)
+
+  why: 'grep -qv P' returns 0 only if some line does NOT match P. With no input
+  lines at all it returns 1, so the '&& overall=1' arm is skipped.
+    empty-input 'grep -qv' exit = 1  (1 = no line selected = arm skipped)
+    empty-input 'grep -q'  exit = 1  (1 = nothing matched)
+
+==================================================================
+## C18 every marker the committed S3 final records rely on, actually present?
+# started 2026-10-16T18:06:51Z
+    record                        marker lines  values                          verdict
+    sphinx.txt                              1  ec: 0                                                        marker present
+    gitleaks.txt                            2  ec: 0; ec: 0                                                 marker present
+    immutability-after.txt                  0  (none)                           FAIL-OPEN RISK
+    verify-manifest.txt                     1  ec: 0                                                        marker present
+    index-selfcheck-s1.txt                  1  ec: 0                                                        marker present
+    index-selfcheck-s2.txt                  1  ec: 0                                                        marker present
+    index-selfcheck-s3.txt                  1  ec: 0                                                        marker present
+    snyk-code-s3-final.txt                  3  ec: 0; ec: 1 (1 = findings reported, not ; fec: 0 (0 = nothi marker present
+
+    records with a missing marker (i.e. where the fail-open could bite): 1
+# python exit code: 1 (0 = every committed record carries its marker, so no
+#   recorded S3 result was masked by the C17 fail-open; the defect is latent)
+
+  cross-check: the values those markers hold, read directly:
+    sphinx.txt               # exit code: 0|
+    gitleaks.txt             # exit code: 0|# exit code: 0|
+    immutability-after.txt   # exit code: 0|(script exit: 0)|
+    verify-manifest.txt      # exit code: 0|
+    index-selfcheck-s1.txt   # exit code: 0|
+    index-selfcheck-s2.txt   # exit code: 0|
+    index-selfcheck-s3.txt   # exit code: 0|
+  and the two legs final_legs.sh aggregates by direct rc, not by grep:
+    static-gate.txt          -> # overall: 0 (0 = every leg exited 0)
+    delta-reaudit.txt        -> # overall: 0 (0 = the regression reproduced pre-fix, the module restored, and all tests pass post-fix)
+    snyk filter exit code    -> # filter exit code: 0 (0 = nothing above LOW in any git-known path)
+
+==================================================================
+# batch 3 finished 2026-10-16T18:06:53Z
+# git HEAD at end: 6b55c6baa7b6832a50ff57fdd1a919171e9fb5de
+# tracked changes at end: ''

@@ -1,0 +1,31 @@
+Sizes of the review files (so no command is needed to learn them):
+  s3.diff            5159 lines, 241719 bytes
+  s3-commits.txt     421 lines, 23110 bytes
+  s3-excluded.txt    this file
+  reviewer-brief.md  the brief
+
+Files omitted from s3.diff (present in the working tree; names, sizes and SHA-256 of the committed content):
+      4647  51f4cb2b04d685d1  EVIDENCE/exp002-d1-s3/cold-review/README.md
+       965  3609a208cf5e0f49  EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh
+      4684  50b3a9bc1cb30a41  EVIDENCE/exp002-d1-s3/cold-review/reviewer-brief-v1.md
+      4365  126ed80f3711d86e  EVIDENCE/exp002-d1-s3/cold-review/reviewer-brief-v2.md
+       303  6f9b232ca1f3b43a  EVIDENCE/exp002-d1-s3/cold-review/round1/agy-stdout.txt
+    196708  99b06456fbf1c4f3  EVIDENCE/exp002-d1-s3/cold-review/round1/devin-export.md
+       955  617d10ae7c923860  EVIDENCE/exp002-d1-s3/cold-review/round1/devin-stdout.txt
+        41  4fda513fccbf5cba  EVIDENCE/exp002-d1-s3/cold-review/round1/head.txt
+       438  8a0153d64033e88b  EVIDENCE/exp002-d1-s3/cold-review/round1/qwen-terminated.txt
+         0  e3b0c44298fc1c14  EVIDENCE/exp002-d1-s3/cold-review/round1/status-before.txt
+     15188  3aba346b03339f1b  EVIDENCE/exp002-d1-s3/cold-review/round2/agy-stdout.txt
+    585263  5592f20758f32d7b  EVIDENCE/exp002-d1-s3/cold-review/round2/devin-export.md
+      9403  689371bf79eceb8b  EVIDENCE/exp002-d1-s3/cold-review/round2/devin-stdout.txt
+        41  828af9d90ce64bc0  EVIDENCE/exp002-d1-s3/cold-review/round2/head.txt
+     17146  3f8c5f28724fc907  EVIDENCE/exp002-d1-s3/cold-review/round2/qwen-stdout.txt
+         0  e3b0c44298fc1c14  EVIDENCE/exp002-d1-s3/cold-review/round2/status-before.txt
+      4061  5d052c005b87912b  EVIDENCE/exp002-d1-s3/cold-review/round2/triage-commands-agy-fabrications.txt
+      3490  499cc5681bc7b89e  EVIDENCE/exp002-d1-s3/cold-review/round2/triage-commands.txt
+     13705  db5167f1017ae6a4  EVIDENCE/exp002-d1-s3/cold-review/triage.md
+    809620  2c8d95f23d7f5d44  EVIDENCE/exp002-d1-s3/f2/diagnostic-full-suite/console.txt
+    112755  5f3e0d069e7172be  EVIDENCE/exp002-d1-s3/f2/diagnostic-full-suite/samples.jsonl
+    181775  c24eb42dfd27cc38  EVIDENCE/exp002-d1-s3/f2/contention-experiment/treatment.json
+      3637  c684851b653d9a55  EVIDENCE/exp002-d1-s3/f2/contention-experiment/load/console.txt
+     23599  3725e08197da2eb3  EVIDENCE/exp002-d1-s3/f2/contention-experiment/load/samples.jsonl

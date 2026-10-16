@@ -1,0 +1,13 @@
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-d1-s4
+# date (UTC): 2026-10-16T22:31:40Z
+# git HEAD: 3b5d5c97eba05edd1fae0b93a1f2fe28985c052e
+# run 2 of 2. Run 1 necessarily reports this file as a dangling link, because
+# the file does not exist until the run writes it; run 2 sees a stable file set.
+
+bundle exp002-d1-s4: 43 files (README included)
+  nested READMEs used: none
+  unindexed files : none
+  dangling links  : none
+
+# exit code: 0
+# ended 2026-10-16T22:31:41Z

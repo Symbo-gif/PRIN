@@ -1,0 +1,13 @@
+# F2: notebook-kernel episodes in the observed full-suite run
+# generated 2026-10-16T07:19:07Z at git HEAD 0970c467 by: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/suite_sampler.py --summarize < EVIDENCE/exp002-d1-s3/f2/diagnostic-full-suite/samples.jsonl
+
+samples: 132  kernel episodes: 4
+root_pid  first_seen_utc          wall_s  cpu_s  cpu/wall  peak_rss_mb  host_avail_mb(min/mean)  pages_in/s(mean/max)  pytest_rss_mb  host_cpu%(mean)
+   34284  2026-10-16T04:23:51+00:00     605    103      0.17          619       7173/7676                2/15                   2128        99.8
+          other processes' CPU while it ran: rg.exe=1357s, System=266s, mc-fw-host.exe=208s, svchost.exe=153s
+   36860  2026-10-16T04:35:26+00:00    2985    977      0.33         2985       5476/6826               14/121                  1540        99.9
+          other processes' CPU while it ran: rg.exe=8799s, System=1324s, mc-fw-host.exe=1105s, Devin.exe=930s
+   48380  2026-10-16T05:24:36+00:00     352     71      0.20          672       7443/7678               26/88                   1177       100.0
+          other processes' CPU while it ran: rg.exe=837s, System=165s, mc-fw-host.exe=141s, Devin.exe=114s
+   36424  2026-10-16T05:30:10+00:00     346     62      0.18          990       7235/7495                5/12                   1178        99.9
+          other processes' CPU while it ran: rg.exe=202s, System=194s, mc-fw-host.exe=133s, Devin.exe=118s

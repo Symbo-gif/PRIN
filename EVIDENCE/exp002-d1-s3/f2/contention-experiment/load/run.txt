@@ -1,0 +1,11 @@
+label: contention-load
+git HEAD: 0970c46734865aae2fef4a1bbf3a2742273553ca
+tracked changes vs HEAD: 0
+untracked files: 0
+host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0   logical CPUs: 16
+diagnostic notebook-timeout plugin loaded: 0
+pytest args: tests/test_exp002_driver.py tests/test_exp002_e4_analysis.py -q -p no:cacheprovider
+started: 2026-10-16T06:08:04Z
+pytest exit status: 0
+ended: 2026-10-16T06:42:29Z
+git HEAD at end: 0970c46734865aae2fef4a1bbf3a2742273553ca   tracked changes: 0   untracked files: 0

@@ -1,0 +1,80 @@
+# EXP-002 D1 S2 - supervised-validation stall diagnosis (Testing Standards section 7 item 3)
+
+Retained diagnostic for the faulthandler dump observed during the P2 full-suite
+leg. Recorded because section 7 item 3 requires diagnostics to be retained and
+forbids recording a guessed attribution as cause.
+
+## What was observed
+
+During leg P2 (`pytest tests/ parity/ --basetemp=.pytest_basetemp
+-o faulthandler_timeout=300 --durations=20`), the log stopped advancing at:
+
+    tests/test_acceptance_y2q1.py::TestInterleavedHybridPRINet::test_clevr6_no_nan
+
+followed by a faulthandler dump:
+
+    Timeout (0:05:00)!
+    Thread 0x00005c34 (most recent call first):
+      File "C:\dev\PRIN\python\prin\nn\_bridge.py", line 108 in backward
+      File ".../torch/autograd/function.py", line 317 in apply
+      File ".../torch/autograd/graph.py", line 869 in _engine_run_backward
+      File ".../torch/autograd/__init__.py", line 381 in backward
+      File ".../torch/_tensor.py", line 631 in backward
+      File "c:\dev\PRIN\tests\test_acceptance_y2q1.py", line 674 in test_clevr6_no_nan
+      ... pytest/pluggy frames ...
+
+`-o faulthandler_timeout=300` is a per-test timer that dumps all thread stacks
+after a test has been running for 300 s. It is **not** a kill, and its output
+alone is not proof of a hang (Testing Standards section 7 item 3; AGENTS.md).
+
+## Two timestamped observations, 151 s apart
+
+| Observation | UTC | log bytes | pytest PID | process CPU (s) | working set (MB) |
+|---|---|---|---|---|---|
+| A | 2026-10-15T20:31:03Z | 524835 | 37760 (started 16:45:32) | 569.2 | 1960 |
+| B | 2026-10-15T20:33:34Z | 524835 | 37760 (same process) | 605.0 | 2298 |
+| **delta** | **+151 s** | **+0** | **identity unchanged, alive** | **+35.8** | **+338** |
+
+Reading of each discriminator named in section 7 item 3:
+
+- **Process identity/status:** unchanged PID 37760, still running. Not exited,
+  not replaced.
+- **Completed-work count:** the log did not grow, but that is expected — pytest
+  writes a test's result line only when the test finishes, and this test had not
+  finished. Zero log growth therefore carries no information about progress here.
+- **Stack contents:** the dump places the main thread inside
+  `prin.nn._bridge.backward` under `torch.autograd` — i.e. inside a real Rust-backed
+  autograd backward, which is precisely the work this test does.
+- **CPU-time and I/O counters:** CPU time advanced by 35.8 s and the working set
+  grew by 338 MB across the interval. A deadlocked or spinning-on-a-lock thread
+  does not allocate 338 MB. The process is doing work.
+- **Expected known behaviour of the node under observation:** see below.
+
+## Expected duration of this node, from committed evidence
+
+`EVIDENCE/exp002-d1-s1/local-gate.txt` records S1's own `--durations=20` for the
+same host and the same suite:
+
+    1086.16s call     tests/test_acceptance_y2q1.py::TestInterleavedHybridPRINet::test_clevr6_no_nan
+     477.70s call     tests/test_acceptance_y2q1.py::TestInterleavedHybridPRINet::test_ablation_oscillatory_bias
+     170.74s call     tests/test_acceptance_y2q1.py::TestDiscreteDeltaThetaGamma::test_clevr6_convergence
+
+`test_clevr6_no_nan` is decorated `@pytest.mark.slow`
+(`tests/test_acceptance_y2q1.py:626-627`), so it is deselected by the fast suite
+(`-m "not slow and not gpu"`) and runs only in the full suite — which is why the
+P1 fast leg never reached it.
+
+Its **known-good duration is ~1086 s (18 minutes)**, i.e. roughly 3.6x the 300 s
+faulthandler threshold. A dump at 300 s for a test that legitimately takes
+~1086 s is the instrumentation behaving exactly as configured.
+
+## Conclusion
+
+**Not a stall.** Two timestamped observations show the same live process
+advancing CPU time and allocating memory inside the expected backward pass, and
+committed prior evidence establishes this node's normal duration at ~1086 s.
+
+Action taken: **none**. Per section 7 item 1 the run was left to complete — no
+wall-clock kill, no re-run, no deselection, no assertion weakened, and no
+duplicate of a possibly-live run started (item 4). Per item 6, had it been
+killed it would have been recorded as incomplete, never as a pass.

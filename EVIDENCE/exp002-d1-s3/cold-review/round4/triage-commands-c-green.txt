@@ -1,0 +1,70 @@
+# Round 4 triage: the same reproductions AFTER the fixes (tree has the uncommitted fixes; HEAD 5eee91842adbb2ec0a44ba04072f212ca2077bdd)
+
+## T4-1: delta_reaudit.sh, with uncommitted work in the module
+$ echo "# temporary edit" >> python/prin/reporting/figure_generation.py
+$ bash EVIDENCE/exp002-d1-s3/delta_reaudit.sh | tail -2
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0
+tree is not clean; refusing to run
+(script exit: 2)
+$ git diff --stat -- python/prin/reporting/figure_generation.py   # the edit is still there
+ python/prin/reporting/figure_generation.py | 1 +
+ 1 file changed, 1 insertion(+)
+(test edit removed by hand; module diff now: 0 lines)
+
+## T4-6: diagnostic_suite_run.sh with no label
+$ bash EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh; echo "exit=$?"
+usage: diagnostic_suite_run.sh <label> [--lift-notebook-timeout] <pytest args...>
+exit=2
+
+## T4-5: launch_round.sh creates the round directory (stub reviewer CLIs, round name r4stub)
+$ PATH=<stubs>:$PATH bash EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh r4stub; ls review/r4stub
+agy-stdout.txt
+agy.exit
+devin-stdout.txt
+devin.exit
+qwen-stdout.txt
+qwen.exit
+stub devin ran
+$ launch_round.sh ../x   # still rejected
+round name must match [A-Za-z0-9][A-Za-z0-9_-]*
+exit=2
+
+## T4-3: closing_gate.sh now carries an overall status
+$ grep -c "overall" EVIDENCE/exp002-d1-s3/closing_gate.sh; bash -n EVIDENCE/exp002-d1-s3/closing_gate.sh
+14
+syntax OK
+NOT re-run end to end: the script's legs take about 3 hours. The change adds only 'rc=$?; ...; || overall=1' after each leg and 'exit $overall' at the end.
+
+## T4-2 / T4-7: final_legs.sh with a stub Snyk CLI that authenticates but writes no SARIF
+(HEAD 3bc12c7ad24394380d98702adef3f1f801652092; the stub is a 6-line bash script named snyk that prints stub-1.0, stub-user, and exits 2 for 'code'; FINAL_LEGS_OUT points at a scratch directory)
+$ PATH=<stub>:$PATH FINAL_LEGS_OUT=<scratch> bash EVIDENCE/exp002-d1-s3/final_legs.sh
+static gate exit: 0
+delta re-audit exit: 0
+final legs overall: 1 (0 = every leg exited 0)
+EXIT 1
+$ cat <scratch>/snyk-code-s3-final.txt
+# Snyk Code CLI
+# date (UTC): 2026-10-16T15:24:00Z
+# git HEAD: 3bc12c7ad24394380d98702adef3f1f801652092   tracked changes: 0
+
+# snyk stub-1.0
+# command: snyk whoami
+stub-user
+# exit code: 0
+
+# command: snyk code test . --severity-threshold=low --sarif-file-output=C:/Users/there/AppData/Local/Temp/prin-s3-final.sarif
+# started 2026-10-16T15:24:03Z
+# exit code: 2 (1 = findings reported, not a scan failure; 2 or more = the scan did not run)
+# ended 2026-10-16T15:24:04Z
+# NO SARIF WRITTEN: this leg is BLOCKED, not clean.
+$ head -3 <scratch>/gitleaks.txt   # the header now measures the tracked-change count
+# gitleaks (pinned binary): full history, then --staged
+# date (UTC): 2026-10-16T15:21:30Z
+# git HEAD: 3bc12c7ad24394380d98702adef3f1f801652092   tracked changes: 0
+
+## T4-9: the comment-only change leaves the executable code of tests/test_notebooks.py identical
+$ .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check 5eee9184 b08dd574 tests/test_notebooks.py
+tests/test_notebooks.py  5eee9184..b08dd574
+  ast identical outside the module docstring: True
+  module docstring changed                  : False
+(exit: 0)

@@ -1,0 +1,85 @@
+# EXP-002 D1 S2 - H3 on the corrected tree under both registered policies
+# date (UTC): 2026-10-15T22:10:02Z
+# git HEAD: 8fd0ecc9949a607f2a7090fe39205f00bb0078c9
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# python: Python 3.14.0
+# instrument: EVIDENCE/exp002-d1-s2/both_policies_post_fix.py
+# command: .venv/Scripts/python EVIDENCE/exp002-d1-s2/both_policies_post_fix.py
+#
+# Independent re-derivation of S1.10 item 1: renders both arms once on the
+# corrected tree, computes raw / approved-section-5.4 / section-11.3
+# sensitivity digests for all 39 registered files, and CLASSIFIES every
+# residual sensitivity-policy difference (line terminators for .tex, Info key
+# set for .pdf, critical chunks for .png) instead of merely counting it.
+#
+# Writes only to a temporary directory. Never writes under
+# benchmarks/results/ or DOCS/test_and_benchmark_results/.
+#
+reference pin (src/prinet/utils/figure_generation.py) : 575eca5a6436a25f957702091a6a0b5b7f3d77f1f496f9e6b423550cf79e1520
+comparison functions       : benchmarks.campaign.exp002_driver.normalized_bytes
+                             benchmarks.campaign.exp002_driver.sensitivity_bytes
+
+=== H3 on the corrected tree, under both registered policies ===
+  raw bytes (H4's comparison)                      equal  0/39  differ 39/39
+  approved §5.4 policy (H3 primary)                equal 39/39  differ  0/39
+  §11.3 sensitivity policy (pre-exposure 6314532)  equal 14/39  differ 25/39
+
+=== residual classification, sensitivity policy (25) ===
+  x14  INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+  x 3  LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=13, PRIN CRLF=0)
+  x 2  LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=14, PRIN CRLF=0)
+  x 2  LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=19, PRIN CRLF=0)
+  x 2  LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=21, PRIN CRLF=0)
+  x 1  LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=25, PRIN CRLF=0)
+  x 1  LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=18, PRIN CRLF=0)
+
+UNCLASSIFIED residuals: none
+
+=== per-file detail (sensitivity policy) ===
+file                                           raw   appr  sens  classification
+figures/fig10_statistical_summary.pdf          X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig10_statistical_summary.png          X     =     =     
+figures/fig11_flops_scaling.pdf                X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig11_flops_scaling.png                X     =     =     
+figures/fig12_supercritical_regime.pdf         X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig12_supercritical_regime.png         X     =     =     
+figures/fig13_representation_geometry.pdf      X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig13_representation_geometry.png      X     =     =     
+figures/fig14_gradient_flow.pdf                X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig14_gradient_flow.png                X     =     =     
+figures/fig15_noise_velocity.pdf               X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig15_noise_velocity.png               X     =     =     
+figures/fig2_clevr_n_capacity.pdf              X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig2_clevr_n_capacity.png              X     =     =     
+figures/fig3_chimera_metrics.pdf               X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig3_chimera_metrics.png               X     =     =     
+figures/fig4_chimera_k_alpha_heatmap.pdf       X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig4_chimera_k_alpha_heatmap.png       X     =     =     
+figures/fig5_mot_occlusion_comparison.pdf      X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig5_mot_occlusion_comparison.png      X     =     =     
+figures/fig6_oscillosim_scaling.pdf            X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig6_oscillosim_scaling.png            X     =     =     
+figures/fig7_ablation_results.pdf              X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig7_ablation_results.png              X     =     =     
+figures/fig8_parameter_efficiency.pdf          X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig8_parameter_efficiency.png          X     =     =     
+figures/fig9_training_curves.pdf               X     =     X     INFO KEY SET ONLY: Info key sets differ: reference=['Creator', 'Producer', 'CreationDate'] PRIN=['Creator', 'Producer', 'CreationDate', 'ModDate']; equal under the approved policy=True
+figures/fig9_training_curves.png               X     =     =     
+tables/tab_ablation.tex                        X     =     X     LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=14, PRIN CRLF=0)
+tables/tab_binding_params.tex                  X     =     X     LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=25, PRIN CRLF=0)
+tables/tab_chimera.tex                         X     =     X     LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=19, PRIN CRLF=0)
+tables/tab_efficiency.tex                      X     =     X     LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=21, PRIN CRLF=0)
+tables/tab_geometry.tex                        X     =     X     LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=13, PRIN CRLF=0)
+tables/tab_occlusion.tex                       X     =     X     LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=21, PRIN CRLF=0)
+tables/tab_oscillosim.tex                      X     =     X     LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=18, PRIN CRLF=0)
+tables/tab_param_efficiency.tex                X     =     X     LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=13, PRIN CRLF=0)
+tables/tab_statistical.tex                     X     =     X     LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=19, PRIN CRLF=0)
+tables/tab_stress.tex                          X     =     X     LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=14, PRIN CRLF=0)
+tables/tab_supercritical.tex                   X     =     X     LINE TERMINATORS ONLY: equal after CRLF->LF in both arms (reference CRLF=13, PRIN CRLF=0)
+==========================================================================
+approved policy equal    : 39/39
+sensitivity policy equal : 14/39
+policies agree           : False
+unclassified residuals   : 0
+==========================================================================
+# exit code: 0

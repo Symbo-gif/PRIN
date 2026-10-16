@@ -598,3 +598,48 @@ re-baseline gates before `0168`/`0173`), DV-037, and the EXP-004+ hardware
 gates carry forward as recorded. DV-040's re-audit gate at EXP-002 E4
 (session `0162`) was reached and discharged in-session: its row records the
 `exp002_e4_analysis.py` gate evidence and stays CLOSED.
+
+## `EXP-002-D1` S4 and the amendment-#52 hosted-check window — 2026-10-16 UTC
+
+Plan amendment #52 re-enables the seven check workflows (`rust`, `python`,
+`parity`, `repro`, `snyk`, `gpu`, `nightly`) on the maintainer's authority
+until the campaign's experimentation is complete (the close of session `0194`,
+or earlier on maintainer instruction), superseding amendment #48's
+"hosted checks disabled" rule and amendment #50's EXP-002-only window from
+2026-10-16. Like the amendment-#50 window before it, this **opens, closes and
+re-scopes no deferred-validation row**:
+
+- **DV-033** stays **OPEN**. A hosted `python.yml` codecov leg running again
+  is not the closure this row names; per-change coverage on the maintainer
+  host is unchanged, and amendment #52 is not the amendment #48 lift.
+- **DV-034** stays **OPEN**. Re-enabling `gpu.yml` does not remove the single
+  self-hosted `PRIN-GPU-Runner` dependency, and the ruleset 22150076
+  `required_status_checks` rule stays removed, so `gpu-cuda`/`gpu-wgpu` are
+  recorded evidence rather than a hard merge gate.
+- **DV-036** / `DV036-F5` and the other hosted or reference-host items stay
+  as recorded. Hosted `nightly.yml` runs are evidence for the exact SHA they
+  ran on; they close nothing unless a row's own acceptance text allows it,
+  and any such closure needs its own dated entry.
+- **DV-045** stays **OPEN**. Amendment #52 makes a red hosted `audit` job
+  visible again; per the S4 session's rules a red hosted check is triaged and
+  recorded, never waived, and no dependency, advisory ignore or audit
+  configuration is changed by this correction cycle (its approved scope is
+  bounded to the H3 correction).
+- **DV-046** stays **OPEN** and its "re-check on every `gpu-cuda` run while
+  hosted workflows remain enabled" gate is now live again from 2026-10-16.
+- **DV-047** stays **OPEN**; its re-audit gate (rebuild and record the new
+  `.pyd` SHA-256 before `EXP-002-r1`'s E3) is unchanged and is carried into
+  the `EXP-002-r1` authorization issued by this session.
+
+**No new DV row is opened by this session.** Observation O-1 (the required
+full suite not demonstrated green in one pass on the maintainer host) is
+carried in the PSR-041 deviation ledger rather than here: its closure
+evidence is a hosted full-suite run in this same session, not validation
+deferred to a future work package or phase, which is what this register
+consolidates. DV-032 is deliberately **not** widened to cover the Windows
+`WinError 5` rename class — DV-032 registers host-sensitive *timing ratios*,
+while the rename class is the `AGENTS.md`-documented pytest
+temporary-directory contention class. Should the hosted full-suite run at the
+PR #34 head commit not pass, O-1 remains OPEN and the next governed session
+should open a dated row here for it.
+

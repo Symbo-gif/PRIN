@@ -213,6 +213,78 @@ Parity Report
    ``DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md``
    (§§1–8, 11–14), ``.../analysis.md``, and ``.../report-manifest.json``.
 
+.. admonition:: Update — 2026-10-16 (EXP-002-D1 correction cycle closed; the generator is corrected, the EXP-002 H3 verdict is not)
+   :class: note
+
+   The 2026-10-14 erratum above is retained verbatim. The four-session
+   conditional correction cycle ``EXP-002-D1`` closed at S4 on 2026-10-16 UTC
+   (S1 complete; S2 ``PASS-WITH-FINDINGS``, no D1; S3 delta re-audit ``CLEAN``;
+   ``DOCS/audits/2026-10-15-exp002-d1-correction-audit.md``).
+
+   The root cause was on the **PRIN side**: the WP-034 port of nine figure
+   generators dropped or re-encoded **34 drawing arguments**. Controlled
+   substitution on the frozen ``prinet==3.0.0`` reference explains every
+   differing byte with **0 unexplained**, so campaign plan §10.4 item 3 (the
+   "the 3.0 conclusion was itself the erroneous side" route, which requires an
+   EMA-style mathematical audit) was **not** invoked.
+
+   What the corrected generator now supports, stated precisely:
+
+   * Under the **approved §5.4 comparison policy**, all **39/39** registered
+     publication files (14 figures × 2 formats + 11 LaTeX tables) equal an
+     independent render by the frozen ``prinet==3.0.0`` reference generator.
+   * Under the **§11.3 pre-exposure sensitivity policy**, **14/39** are equal.
+     All **25** residuals are classified, **0 unclassified**, and every one is a
+     writer or host property rather than a scientific difference: **14 PDFs**
+     differ only in the Info **key set** (the reference writes 3 keys including
+     a wall-clock ``CreationDate``; PRIN writes 4 fixed keys including
+     ``ModDate``), and **11 ``.tex`` tables** differ only in **line
+     terminators** (the reference's text-mode writer on Windows emits CRLF;
+     PRIN emits LF).
+   * An artist-level comparison of all 14 figure stems reports **14/14 EQUAL**,
+     so no plotted value differs, and ``verify_manifest`` is green on all five
+     ``EXP-002`` ``RUN-`` records and the 172-record frozen input manifest.
+   * PRIN-versus-PRIN raw determinism (``EXP-002`` H4) is unchanged. PRIN's
+     fixed PDF metadata is what makes H4 hold, so **neither writer was
+     altered** to chase §11.3 equality.
+
+   **This does not change ``EXP-002``'s H3 verdict, and nothing on this page
+   should be read as confirming H3.** The ``EXP-002`` record stands exactly as
+   issued — H1 ``CONFIRMED``, H2 ``CONFIRMED``, H4 ``CONFIRMED``, **H3
+   ``REFUTED``** (``21/39`` under the approved policy, ``5/39`` under the
+   sensitivity policy) — because that verdict was computed from immutable,
+   manifested ``RUN-`` artefacts at the source the record froze. The generator
+   was corrected *after* E3, and a later correction cannot retroactively change
+   a verdict; ``EXP-002``'s frozen ``preregistration.md``, tolerances,
+   normalization policies, digests and raw artefacts are never edited (its only
+   post-issue change is the dated erratum pointer in ``report.md`` §15).
+
+   **Only ``EXP-002-r1`` can produce a new H3 verdict.** Per campaign plan
+   §10.4 item 4 the experiment is re-run as a new record,
+   ``DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/``,
+   authorized at S4 with a new pre-registration and new run IDs, never reusing
+   ``EXP-002``'s. **No r1 stage has run and no ``RUN-`` directory exists.**
+   Because the two registered policies now point at different verdicts on a
+   corrected generator, audit finding ``EXP002D1-S2-F1`` (D3) is carried into
+   that authorization: r1's E1/E2 must deliberately register which policy
+   decides H3, what status the other has, and what a disagreement means —
+   before its first ``RUN-`` directory exists, with outcome exposure disclosed.
+
+   **Session ``0164`` (EXP-003 E1) and every later campaign session
+   (``0165``–``0194``) remain ``BLOCKED``.** The S4 closure, the merge of the
+   correction pull request, and the re-enabling of the hosted check workflows
+   under Plan amendment #52 do **not** release them; they are released only when
+   ``EXP-002-r1``'s E5 verdict is not a reversal and is verified and accepted by
+   the maintainer, or the maintainer adopts a Project Plan §8.3 amendment
+   (campaign plan §10.4 item 5).
+
+   Evidence: ``EVIDENCE/exp002-d1-s1/`` (root-cause decomposition, red → green
+   gate), ``EVIDENCE/exp002-d1-s2/`` (independent re-execution of every S1
+   claim, both comparison policies post-fix with every residual classified),
+   ``EVIDENCE/exp002-d1-s3/`` (finding remediation, delta re-audit, cold-review
+   loop, closing local gate), ``EVIDENCE/exp002-d1-s4/`` (closure gate and the
+   S4 review).
+
 How to read this report
 -----------------------
 
@@ -244,11 +316,14 @@ claim requiring pre-registration.
      - A number measured by the PRINet 3.0 implementation and stored as an
        immutable artefact. Rendered deterministically by ``tools/reproduce.py``
        (``39/39`` raw-byte-identical across PRIN runs, ``EXP-002`` H4
-       ``CONFIRMED``; ``11/11`` tables and ``5/14`` figures match the frozen
-       ``prinet==3.0.0`` reference generator under the approved §5.4 policy,
-       while ``9/14`` figures — ``18/39`` files — differ and are under the open
-       ``EXP-002-D1`` correction cycle; see the 2026-10-14 erratum above), and
-       it describes the reference, not PRIN.
+       ``CONFIRMED``). Against the frozen ``prinet==3.0.0`` reference generator
+       the **corrected** generator matches ``39/39`` under the approved §5.4
+       policy and ``14/39`` under the §11.3 sensitivity policy, all ``25``
+       residuals being writer or host properties (PDF Info key sets, ``.tex``
+       line terminators) with ``0`` unclassified. ``EXP-002``'s own **H3
+       ``REFUTED``** verdict is unchanged by that correction and only
+       ``EXP-002-r1`` can produce a new one; see the 2026-10-14 erratum and the
+       2026-10-16 update above. Either way it describes the reference, not PRIN.
      - Present in :doc:`capacity_analysis` and :doc:`paper`, both labelled there.
 
 Tolerance register
@@ -415,22 +490,36 @@ What exists today, and what each piece is:
        are the reference implementation's measurements (``EXP-002`` H2 confirmed
        all ``62/62`` registered archival predicates on them); ``tools/reproduce.py``
        renders them deterministically across PRIN runs (``39/39`` raw-identical,
-       H4 ``CONFIRMED``), matching the frozen ``prinet==3.0.0`` generator on
-       ``11/11`` tables and ``5/14`` figures while ``9/14`` figures (``18/39``
-       files) differ (``EXP-002`` H3 ``REFUTED``, ``EXP-002-D1`` open; see the
-       2026-10-14 erratum above). They are not PRIN results.
+       H4 ``CONFIRMED``). Against the frozen ``prinet==3.0.0`` generator the
+       ``EXP-002`` E3 source matched on ``11/11`` tables and ``5/14`` figures
+       while ``9/14`` figures (``18/39`` files) differed — **H3 ``REFUTED``**,
+       which opened ``EXP-002-D1``. That correction cycle closed 2026-10-16: the
+       divergence was 34 drawing arguments dropped or re-encoded by the WP-034
+       port, and the corrected generator matches ``39/39`` under the approved
+       §5.4 policy (``14/39`` under the §11.3 sensitivity policy, all ``25``
+       residuals writer or host properties). ``EXP-002``'s H3 verdict is
+       unchanged and only ``EXP-002-r1`` can produce a new one; see the
+       2026-10-14 erratum and the 2026-10-16 update above. They are not PRIN
+       results.
    * - ``tools/reproduce.py``, ``repro.yml``
      - VALIDATION
      - The reproduction pipeline and its CI gate: deterministic PRIN-versus-PRIN
        regeneration from manifest-verified inputs (``EXP-002`` H4 ``CONFIRMED``,
-       ``39/39`` raw-byte-identical). **Qualified 2026-10-14 (see the erratum at
-       the top of this page):** against an independent render by the frozen
-       ``prinet==3.0.0`` reference generators, ``21/39`` files match under the
-       approved §5.4 policy (``11/11`` tables and ``5/14`` figures) and
-       ``18/39`` files (``9/14`` figures) differ (``EXP-002`` H3 ``REFUTED``;
-       correction cycle ``EXP-002-D1`` open). This validates the pipeline's
-       same-implementation determinism, not cross-generator figure parity on the
-       9 differing figures or any new scientific claim.
+       ``39/39`` raw-byte-identical). **Qualified 2026-10-14, corrected
+       2026-10-16 (see the erratum and update at the top of this page):**
+       against an independent render by the frozen ``prinet==3.0.0`` reference
+       generators, the ``EXP-002`` E3 source matched ``21/39`` files under the
+       approved §5.4 policy and differed on ``18/39`` (``9/14`` figures) — H3
+       ``REFUTED``. The ``EXP-002-D1`` correction restored 34 drawing arguments
+       the WP-034 port had dropped or re-encoded, and the corrected generator
+       now matches **``39/39`` under the approved §5.4 policy** and ``14/39``
+       under the §11.3 sensitivity policy, with all ``25`` residuals classified
+       as writer or host properties (PDF Info key sets, ``.tex`` line
+       terminators) and ``0`` unclassified. This validates the pipeline's
+       same-implementation determinism and, on the corrected generator,
+       cross-generator figure parity under the approved policy — **not** a new
+       scientific claim, and **not** a change to ``EXP-002``'s H3 verdict, which
+       stands ``REFUTED`` until ``EXP-002-r1`` reports.
    * - ``EVIDENCE/0125-wp032-s1-daemon-latency.json``,
        ``EVIDENCE/0144U-wp036f-s1-controller-provider-report.json``
      - VALIDATION

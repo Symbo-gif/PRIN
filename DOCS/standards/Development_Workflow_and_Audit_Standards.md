@@ -156,6 +156,28 @@ or `tools/check_ci_green.py` as an exit criterion. Specifically:
    wall-clock kill while a check is demonstrably progressing; finite bounds,
    stall diagnosis, wait-expiry semantics, cleanup limits, and incomplete-run
    reporting follow that section.
+11. **Hosted checks re-enabled until the campaign's experimentation is
+   complete (Plan amendment #52).** By maintainer direction (2026-10-16) the
+   seven check workflows (`rust`, `python`, `parity`, `repro`, `snyk`, `gpu`,
+   `nightly`) are re-enabled with `gh workflow enable` — workflow files
+   unchanged — and **stay active** until the campaign plan's final experiment
+   session `0194` (Campaign E6 synthesis) closes, or the maintainer instructs
+   otherwise, whichever is first; they are then disabled again and the
+   disabling is recorded. This **supersedes item 1's "Disabled" list and item
+   9's EXP-002-only window from 2026-10-16**, and it is still **not** the
+   item 8 lift. Governance effect: each hosted result is recorded verbatim
+   (workflow, run ID, head SHA, conclusion, link) as additional evidence for
+   the exact SHA it ran on; the Windows full local gate records stay
+   **mandatory** and remain the authoritative merge gate; a local result is
+   still never described as "CI green"; and a hosted result is described only
+   as what actually ran — a hosted run does not establish behaviour on
+   platforms it did not run on, so items 4's Linux/macOS suspension and the
+   three-OS wheel matrix stay **suspended, not satisfied** (DoD items 2 and
+   4). A red hosted check is **triaged and recorded, never waived, skipped,
+   deselected, or hidden** by editing a workflow or removing a required check.
+   The ruleset 22150076 `required_status_checks` rule stays removed (item 5);
+   this amendment does not alter the ruleset, does not restore any required
+   check, authorizes no `v*` tag push, and releases no blocked session.
 
 ### S1 — Coding session
 

@@ -76,6 +76,60 @@ To find evidence for a specific work package, look for files matching
   changed-code coverage 94 % → 100 % on the two new tools after nine added
   tests) and WP036F-F2 (D4, `mypy --strict` on both tools 3 errors → 0), plus
   the touched-area delta re-audit gate re-run.
+- [`exp002-d1-s4/`](exp002-d1-s4/) — EXP-002 D1 correction, S4 (the
+  documentation and closure session). A **documentation-and-evidence** session
+  that changed no first-party source, so its bundle leads with a **measured**
+  change set (0 `.rs`, 0 dependency manifests, 0 first-party `.py`, 0 workflow
+  files) that decides which conditional gate legs apply rather than assuming it.
+  It holds: the cold review that S3's four-round cap left owing
+  ([`o2-review/`](exp002-d1-s4/o2-review/triage.md)) — performed read-only **by
+  measurement**, reproducing every suspected defect with a command and
+  classifying it CONFIRMED / REFUTED / NOT REPRODUCIBLE, which found **one
+  CONFIRMED defect** (`EXP002D1-S4-F1`, D2, **latent**: `final_legs.sh`
+  aggregated five legs with `grep MARKER | grep -qv OK && overall=1`, and
+  `grep -qv` exits 1 on empty input, so a leg whose record was missing, empty or
+  marker-less read as *passing*) with a red-before/green-after demonstration and
+  a fail-closed superseding copy — plus twelve checks verifying S3's round-4
+  fixes as claimed; the local gate under amendment #48 (fast suite 4044 passed
+  exit 0; the required full suite run **once**, **exit 0**, 6331 passed / 184
+  skipped / 0 failed in 1:43:09, under a measured host CPU median of 96.5 % with
+  pytest receiving 0.192 CPU-s per wall-second; static, governance, Sphinx,
+  gitleaks, Snyk Code, manifest verification and delta re-audit all exit 0);
+  five immutability rules including the one append this cycle is allowed to make
+  to the frozen EXP-002 record; and the `gh workflow list --all` listings before
+  and after Plan amendment #52 re-enabled the seven hosted check workflows, with
+  `.github/` verified unmodified. See its `README.md`.
+- [`exp002-d1-s3/`](exp002-d1-s3/) — EXP-002 D1 correction, S3 (the remediation
+  session). The F2 measurement (standalone baselines, an observed full-suite run
+  with the notebook timeout lifted, a paired contention experiment, and the
+  out-of-process sampler), the per-finding verification records for F4–F7, the
+  Snyk Code scans and the F8 re-check, the delta re-audit instruments, the
+  closing local gate (fast suite exit 0; the required full suite exit 1 twice on
+  host-contention tests that pass alone), and the cold-review loop (briefs, raw
+  reviewer output and the measured triage for four rounds; round 4, the cap, still
+  returned CONFIRMED claims). See its `README.md`.
+- [`exp002-d1-s2/`](exp002-d1-s2/) — EXP-002 D1 correction, S2 (the read-only
+  correction audit). Six committed instruments and their verbatim outputs,
+  re-executing every S1 claim rather than accepting it: the pre-fix reproduction
+  (18 failed on exactly the E3 set, plus all 9 fast-gate argument tests), an
+  independent decomposition re-run compared field-for-field with the committed
+  artefacts, a static AST cross-validation of all 34 divergence specifications
+  against the frozen reference source, an artist-level comparison of all 14
+  stems (**14/14 EQUAL**, so no plotted value differs), a re-derivation of H3
+  under **both** registered comparison policies with every residual classified,
+  `verify_manifest` over all five `RUN-*` records, the frozen E4 module
+  reproducing all seven outputs and `report-manifest.json` byte-for-byte from a
+  clean worktree outside the repository, both Snyk Code legs (MCP completed,
+  CLI **blocked** on expired credentials), the full local gate, and a retained
+  Testing Standards §7 stall diagnostic. See its `README.md`.
+- [`exp002-d1-s1/`](exp002-d1-s1/) — EXP-002 D1 correction, S1 (an unnumbered
+  contingency session). It holds the failing-test-first red and green gate
+  runs, and a root-cause decomposition of the 18-file H3 divergence at the
+  pre-fix and post-fix ports. The decomposition uses controlled substitution
+  on the frozen PRINet 3.0 generator, and the 34 registered divergences
+  explain every differing byte with 0 unexplained (PRIN side). The directory
+  also holds the verification of the retained E3 bytes, the verbatim local
+  gate and the secret scans; see its `README.md`.
 - [`exp001-d1-s1/`](exp001-d1-s1/) — EXP-001 D1 correction, S1 (an unnumbered
   contingency session). A root-cause decomposition of every H1/H2a breach at
   the pre-fix and post-fix builds, attributing each by controlled substitution

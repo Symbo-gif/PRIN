@@ -1,0 +1,40 @@
+# EXP002D1 S3 closing gate - the one failed node of the full suite, re-run in isolation
+# date (UTC): 2026-10-16T12:20:03Z; git HEAD 248bb586c0017c0bbf061ea590517b2be0c400a9; tracked changes: 0
+# The full-suite run (full-suite-1/) failed this node with PermissionError [WinError 5] on a rename inside .pytest_basetemp: the Windows file-handle contention class AGENTS.md documents. An isolated re-run is supplementary evidence (AGENTS.md; S1 precedent); the full-suite record stays at exit 1.
+# command: .venv/Scripts/python.exe -m pytest tests/test_exp002_driver.py::TestCheckRunComplete::test_wrong_parent_rejected -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 1 item
+
+tests\test_exp002_driver.py .                                            [100%]
+
+============================== 1 passed in 2.34s ==============================
+# exit code: 0
+# ended 2026-10-16T12:20:08Z
+# the whole test class and file, also isolated (sequential, nothing else running)
+# command: .venv/Scripts/python.exe -m pytest tests/test_exp002_driver.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+...............................................................          [100%]
+
+============================ 323 passed in 21.74s =============================
+# exit code: 0
+# ended 2026-10-16T12:20:32Z
+
+######## second full-suite run (gate-full-2, commit 76a97384): its one failed node, re-run in isolation
+# date (UTC): 2026-10-16T13:51:27Z; git HEAD 76a973841f381aa97588cb8291571ab3aaed212c; tracked changes: 0
+# The run failed tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression with 'Throughput ratio 2.18 > 1.30'. That node is registered as host-timing-sensitive in DV-032 (measured ~1.28-1.32 under load there); the host was saturated by non-PRIN processes while the run was in progress (see full-suite-2/ timeline). An isolated re-run is supplementary evidence only; the full-suite record stays at exit 1.
+# command: .venv/Scripts/python.exe -m pytest tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 1 passed, 2 warnings in 9.75s ========================
+# exit code: 0
+# ended 2026-10-16T13:52:03Z
+# command: .venv/Scripts/python.exe -m pytest tests/test_acceptance_subconscious.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+====================== 49 passed, 28 warnings in 14.60s =======================
+# exit code: 0
+# ended 2026-10-16T13:52:21Z

@@ -1,0 +1,46 @@
+# copied from /c/Users/there/prin-s4-scratch/workflows-before.txt at 2026-10-16T22:31:40Z
+# gh workflow list --all, captured before the amendment-#52 enablement
+# date (UTC): 2026-10-16T22:14:25Z
+# git HEAD: 71d1c59071f1935e4c70975355d5289abec6e337
+# command: gh workflow list --all
+
+gpu-triton	active	359247968
+gpu	disabled_manually	314286526
+nightly	disabled_manually	347955033
+parity	disabled_manually	314286527
+python	disabled_manually	314286528
+release	active	314286529
+repro	disabled_manually	314286530
+rust	disabled_manually	314286531
+snyk	disabled_manually	328599929
+Copilot	active	363553452
+Copilot cloud agent	active	330307035
+Dependabot Updates	active	314928187
+Dependency Graph	active	314648760
+
+# the seven check workflows Plan amendment #52 re-enables:
+#   rust
+#   python
+#   parity
+#   repro
+#   snyk
+#   gpu
+#   nightly
+# release.yml is tag-triggered and gpu-triton.yml is manual-only; neither is
+# among the seven, neither is touched, and no v* tag is pushed.
+
+# per-workflow state, queried individually so the listing above is checkable:
+# command: gh api repos/Symbo-gif/PRIN/actions/workflows/<id> -q .state
+#   rust       (id 314286531) -> rust | state=disabled_manually | path=.github/workflows/rust.yml
+#   python     (id 314286528) -> python | state=disabled_manually | path=.github/workflows/python.yml
+#   parity     (id 314286527) -> parity | state=disabled_manually | path=.github/workflows/parity.yml
+#   repro      (id 314286530) -> repro | state=disabled_manually | path=.github/workflows/repro.yml
+#   snyk       (id 328599929) -> snyk | state=disabled_manually | path=.github/workflows/snyk.yml
+#   gpu        (id 314286526) -> gpu | state=disabled_manually | path=.github/workflows/gpu.yml
+#   nightly    (id 347955033) -> nightly | state=disabled_manually | path=.github/workflows/nightly.yml
+
+# no file under .github/ was modified by enabling or disabling:
+# command: git status --porcelain -- .github/
+#   <empty>
+# command: git diff --stat 6b55c6ba..HEAD -- .github/
+#   <empty>

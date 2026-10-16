@@ -1,0 +1,158 @@
+{
+ "label": "alone-baseline",
+ "notebook": "04_torch_bridge.ipynb",
+ "started_utc": "2026-10-16T01:41:39+00:00",
+ "per_cell_timeout_seconds": 900,
+ "sample_period_seconds": 5.0,
+ "outcome": "completed",
+ "error_outputs": [],
+ "wall_seconds": 37.0,
+ "kernel_cpu_seconds_last_sample": 41.72,
+ "kernel_cpu_over_wall": 1.13,
+ "kernel_peak_working_set_mb": 1001.3,
+ "host_cpu_percent_mean": 22.8,
+ "host_available_mb_min": 3268,
+ "logical_cpus": 16,
+ "cells": [
+  {
+   "cell": 1,
+   "wall_seconds": 1.96
+  },
+  {
+   "cell": 3,
+   "wall_seconds": 0.01
+  },
+  {
+   "cell": 5,
+   "wall_seconds": 0.0
+  },
+  {
+   "cell": 7,
+   "wall_seconds": 1.37
+  },
+  {
+   "cell": 9,
+   "wall_seconds": 0.41
+  },
+  {
+   "cell": 11,
+   "wall_seconds": 24.89
+  },
+  {
+   "cell": 13,
+   "wall_seconds": 2.01
+  },
+  {
+   "cell": 15,
+   "wall_seconds": 2.69
+  },
+  {
+   "cell": 17,
+   "wall_seconds": 1.51
+  },
+  {
+   "cell": 19,
+   "wall_seconds": 0.0
+  }
+ ],
+ "samples": [
+  {
+   "t_wall": 5.0,
+   "host_cpu_percent": 18.9,
+   "host_available_mb": 3660,
+   "host_memory_percent": 88.7,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 4.73,
+    "working_set_mb": 659.2,
+    "threads": 55,
+    "page_faults": 184683
+   }
+  },
+  {
+   "t_wall": 10.1,
+   "host_cpu_percent": 13.0,
+   "host_available_mb": 3434,
+   "host_memory_percent": 89.4,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 9.73,
+    "working_set_mb": 856.3,
+    "threads": 55,
+    "page_faults": 248190
+   }
+  },
+  {
+   "t_wall": 15.1,
+   "host_cpu_percent": 12.2,
+   "host_available_mb": 3268,
+   "host_memory_percent": 89.9,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 14.73,
+    "working_set_mb": 1001.3,
+    "threads": 55,
+    "page_faults": 325832
+   }
+  },
+  {
+   "t_wall": 20.1,
+   "host_cpu_percent": 14.6,
+   "host_available_mb": 3450,
+   "host_memory_percent": 89.3,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 19.77,
+    "working_set_mb": 803.1,
+    "threads": 55,
+    "page_faults": 332242
+   }
+  },
+  {
+   "t_wall": 25.2,
+   "host_cpu_percent": 15.0,
+   "host_available_mb": 3409,
+   "host_memory_percent": 89.5,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 24.8,
+    "working_set_mb": 803.1,
+    "threads": 55,
+    "page_faults": 332253
+   }
+  },
+  {
+   "t_wall": 30.2,
+   "host_cpu_percent": 32.4,
+   "host_available_mb": 3392,
+   "host_memory_percent": 89.5,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 29.86,
+    "working_set_mb": 812.6,
+    "threads": 54,
+    "page_faults": 334938
+   }
+  },
+  {
+   "t_wall": 35.3,
+   "host_cpu_percent": 53.2,
+   "host_available_mb": 3317,
+   "host_memory_percent": 89.7,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 41.72,
+    "working_set_mb": 874.5,
+    "threads": 61,
+    "page_faults": 361868
+   }
+  }
+ ]
+}

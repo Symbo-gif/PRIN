@@ -1,0 +1,50 @@
+# Reproduction of the round 2 claims, run by the caller at HEAD 33923be5 (before any round 2 fix), tree clean, 2026-10-16 UTC.
+# Command output is verbatim.
+##### agy claims that name things which should exist if the claim were true. Each is searched for in the repository (working tree == HEAD) and in the diff file.
+"test_negative_control_detects_deliberate_signature_drift"     repo-matches=0 diff-matches=0 commit-subject-matches=0
+"figure-run.txt"                                               repo-matches=0 diff-matches=0 commit-subject-matches=0
+"EXP-002_report_figure_code"                                   repo-matches=0 diff-matches=0 commit-subject-matches=0
+"fig07_scatter_matrix_of_state_transitions"                    repo-matches=0 diff-matches=0 commit-subject-matches=0
+"fig13_distribution_of_step_sizes"                             repo-matches=0 diff-matches=0 commit-subject-matches=0
+"series_labels: Sequence"                                      repo-matches=0 diff-matches=0 commit-subject-matches=0
+"document Snyk code-analysis baseline"                         repo-matches=0 diff-matches=0 commit-subject-matches=0
+"restore frozen-reference label filter on fig07"               repo-matches=0 diff-matches=0 commit-subject-matches=0
+"add missing docstrings to figure_generation"                  repo-matches=0 diff-matches=0 commit-subject-matches=0
+"capture full-suite diagnostic baselines"                      repo-matches=0 diff-matches=0 commit-subject-matches=0
+
+$ git diff --stat 5ba0129e..HEAD -- DOCS/standards/   (agy claims Testing_Standards.md section 5 was updated)
+lines of stat output (0 = no change to DOCS/standards): 0
+
+$ git diff --stat 5ba0129e..HEAD -- python/ | tail -3  (agy: 'the two logic edits ... fig07 and fig13 docstring/validation')
+-values are only rendered; no scientific quantity is recomputed. Every
+-generator passes the reference's exact drawing arguments and label strings, so
+-its output matches the frozen PRINet 3.0 generator under the registered
+-publication comparison (EXP-002 D1; ``parity/test_parity_publication.py``).
++values are rendered, never re-measured: no benchmark, simulation or statistic
++is re-run or recomputed. Some displayed quantities are derived from stored ones
++for presentation, exactly as the frozen reference derives them. By kind, not as
++an exhaustive list: unit scaling (fractions to percent, FLOPs to thousands);
++error-bar extents taken from stored confidence limits; differences of stored
++values (Fig. 10 plots the difference of two stored means with a fixed drawn bar);
++ratios of stored values (Fig. 11 annotates FLOPs ratios, and Fig. 12 plots
++``K_c_empirical / K_c_theory`` per band); layout geometry such as label offsets
++and axis padding; and Fig. 15's stored exponential fit
++``IP_0 * exp(-x / sigma_c)``, which is evaluated on a fine grid to draw its
++curve. Every generator passes the reference's exact drawing arguments and
++label strings, so its output matches the frozen PRINet 3.0 generator under the
++registered publication comparison (EXP-002 D1;
++``parity/test_parity_publication.py``).
++                label=f"Obj {label}" if index < 5 else None,
+
+$ git log --format='%h %s' 5ba0129e..HEAD   (agy lists 8 commit subjects of the form 'fix(reporting): ... (EXP002D1-S2-F4)'; the real subjects:)
+33923be5 docs: EXP002D1-S2-F7 list the derived quantities by kind, not exhaustively
+7dbfc546 docs: mark the S3 brief IN PROGRESS
+742fb52c test: EXP002D1-S3 evidence bundle, instruments and verification records
+9583eb4d docs: EXP002D1-S2-F1 assign the two-policy H3 registration to S4 and EXP-002-r1
+2b8b7a55 fix: EXP002D1-S2-F6 restore the reference fig13 per-series label
+d53ab885 docs: EXP002D1-S2-F4 index the S1 fast-gate pre-fix record in its README
+1403451c docs: EXP002D1-S2-F7 qualify the figure module's "nothing recomputed" claim
+2db18fc3 docs: EXP002D1-S2-F5 correct the fast-gate module docstring scope
+
+$ git diff --shortstat 5ba0129e..HEAD  (agy: '+2940 / -82' and '26 files')
+ 26 files changed, 2818 insertions(+), 9 deletions(-)

@@ -1,0 +1,52 @@
+# HEAD at scan: 10d196c6 (tree = fix + post-fix evidence; this file is recorded later)
+# command: snyk code test . --severity-threshold=low --sarif-file-output=<scratch>/snyk-code.sarif   (Snyk CLI 1.1306.2, org symbo-gif)
+# exit code: 1 (open LOW issues exist repository-wide)
+
+│ Test Summary                                         │
+│                                                      │
+│   Organization:      symbo-gif                       │
+│   Test type:         Static code analysis            │
+│   Project path:      .                               │
+│                                                      │
+│   Total issues:   75                                 │
+│   Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]      │
+│   Open issues:    75 [ 0 HIGH  0 MEDIUM  75 LOW ]    │
+╰──────────────────────────────────────────────────────╯
+
+# SARIF filter for the four first-party source files new or modified by this S1:
+results: 75 levels: {'note': 75}
+  python/prin/reporting/figure_generation.py: 0 findings
+  tests/test_publication_figure_arguments.py: 0 findings
+  parity/test_parity_publication.py: 0 findings
+  EVIDENCE/exp002-d1-s1/root_cause_decomposition.py: 0 findings
+files carrying findings (all untouched by this change):
+    5  .claude/worktrees/agent-a4d9724ca1ec2428b/tools/reproduce.py
+    3  .claude/worktrees/agent-a4d9724ca1ec2428b/tools/wp001_baseline.py
+    1  .claude/worktrees/agent-a4d9724ca1ec2428b/tools/wp030_mot_fixture.py
+    1  .claude/worktrees/agent-a4d9724ca1ec2428b/tools/wp031_stats_fixture.py
+    4  .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py
+    3  .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py
+    1  .kilo/worktrees/shorthaired-clownfish/benchmarks/benchrunner/__main__.py
+    2  .kilo/worktrees/shorthaired-clownfish/benchmarks/campaign/exp001_driver.py
+    3  .kilo/worktrees/shorthaired-clownfish/benchmarks/campaign/exp001_r1_driver.py
+    5  .kilo/worktrees/shorthaired-clownfish/tools/reproduce.py
+    3  .kilo/worktrees/shorthaired-clownfish/tools/wp001_baseline.py
+    1  .kilo/worktrees/shorthaired-clownfish/tools/wp030_mot_fixture.py
+    1  .kilo/worktrees/shorthaired-clownfish/tools/wp031_stats_fixture.py
+    4  DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py
+    3  DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py
+    3  DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py
+    1  EVIDENCE/0161/verification/tools/crossleg_consistency.py
+    1  EVIDENCE/0161/verification/tools/make_sha256sums.py
+    2  EVIDENCE/0161/verification/tools/mutation_test.py
+    4  EVIDENCE/0161/verification/tools/mutation_test_rev3.py
+    2  EVIDENCE/0161/verification/tools/reconstruct_rev1.py
+    1  EVIDENCE/0161/verification/tools/staged_bytes_check.py
+    1  benchmarks/benchrunner/__main__.py
+    2  benchmarks/campaign/exp001_driver.py
+    3  benchmarks/campaign/exp001_r1_driver.py
+    5  benchmarks/campaign/exp002_driver.py
+    5  tools/reproduce.py
+    3  tools/wp001_baseline.py
+    1  tools/wp030_mot_fixture.py
+    1  tools/wp031_stats_fixture.py

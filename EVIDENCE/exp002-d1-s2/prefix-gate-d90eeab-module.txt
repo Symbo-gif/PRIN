@@ -1,0 +1,296 @@
+# EXP-002 D1 S2 - independent re-run of the pre-fix reproduction
+# date (UTC): 2026-10-15T18:20:32Z
+# git HEAD: 8fd0ecc9949a607f2a7090fe39205f00bb0078c9
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# python: Python 3.14.0
+# working tree modification: python/prin/reporting/figure_generation.py restored from d90eeabb
+#   sha256(python/prin/reporting/figure_generation.py) = e0f59253202746e0548fb9711229040ec7beeae05c3501fc0b3eca0cf997d533
+#   git status --porcelain:
+#      M python/prin/reporting/figure_generation.py
+#     ?? EVIDENCE/exp002-d1-s2/
+#   git diff d90eeabb -- python/prin/reporting/figure_generation.py (expect empty):
+#
+# command 1: .venv/Scripts/python -m pytest parity/test_parity_publication.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 93 items
+
+parity\test_parity_publication.py ...................................... [ 40%]
+....FFFFFF..FFFF......FF..FFFFFF.......................                  [100%]
+
+================================== FAILURES ===================================
+_ test_prin_matches_reference_under_registered_comparison[figures/fig10_statistical_summary.pdf] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig10_statistical_summary.pdf: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '5094cf43643e...611678d420f9b' == 'cb2687a3ae91...22a41d930c3de'
+E     
+E     - cb2687a3ae912d7664d7591b0e5bb5c7676dc8140ba9f73b5c522a41d930c3de
+E     + 5094cf43643eaf8d89b664809f197fc89df0fcda0af3b94e2e3611678d420f9b
+_ test_prin_matches_reference_under_registered_comparison[figures/fig10_statistical_summary.png] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig10_statistical_summary.png: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '7fe738f69547...cadb80decca39' == 'c3d089e311db...5fcdb48bf22be'
+E     
+E     - c3d089e311db1f7b547ccfbfbc3846890d95387c430448260cf5fcdb48bf22be
+E     + 7fe738f69547359196091c5ed36c510aeba54f0b80748515723cadb80decca39
+_ test_prin_matches_reference_under_registered_comparison[figures/fig11_flops_scaling.pdf] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig11_flops_scaling.pdf: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '70cf46837813...2262d8dbb51a4' == '482737ec0be6...c0e7cc4e91612'
+E     
+E     - 482737ec0be67f8569f24f78721495e06a3708752d16f79567fc0e7cc4e91612
+E     + 70cf46837813164c332f37c75c2d200a26eba7468039f0a5a872262d8dbb51a4
+_ test_prin_matches_reference_under_registered_comparison[figures/fig11_flops_scaling.png] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig11_flops_scaling.png: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '6f8080fc95ca...a09a729e938d0' == '4aeca8697975...7f7c29d1e7812'
+E     
+E     - 4aeca86979755822025874a57f80453e8dc414d776984f23e957f7c29d1e7812
+E     + 6f8080fc95ca1cbe3d5ffce17d1860b370b0d277eac0a841f37a09a729e938d0
+_ test_prin_matches_reference_under_registered_comparison[figures/fig12_supercritical_regime.pdf] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig12_supercritical_regime.pdf: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '5fe0f10edf08...52f4ddd083629' == 'b6ddf8a35460...765ba1e55ebeb'
+E     
+E     - b6ddf8a35460ecaf72484fc02fa01be5da0a3255882bbe84a81765ba1e55ebeb
+E     + 5fe0f10edf08a021ed7a51f8864c81e5ca9f64eb8fe5c12f49252f4ddd083629
+_ test_prin_matches_reference_under_registered_comparison[figures/fig12_supercritical_regime.png] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig12_supercritical_regime.png: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '95b98ee584a6...5edfd603d63f6' == 'f45bdd344596...106821a1ac1b5'
+E     
+E     - f45bdd344596559b9364ef41f4cebeaf8f46ccc4a3f30608f5a106821a1ac1b5
+E     + 95b98ee584a68c769ce6654c1bc7fca1e0df49af490dcaa9ff05edfd603d63f6
+_ test_prin_matches_reference_under_registered_comparison[figures/fig14_gradient_flow.pdf] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig14_gradient_flow.pdf: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert 'eabd519c85f5...03b99a8e1e04b' == 'eee31a02c8d3...e7fa2d319d8aa'
+E     
+E     - eee31a02c8d30e82c0f4ffc41aa2c04abcd79c611779c35badde7fa2d319d8aa
+E     + eabd519c85f5e96b28254e9bdd907b6b7225ee69f539c270e5103b99a8e1e04b
+_ test_prin_matches_reference_under_registered_comparison[figures/fig14_gradient_flow.png] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig14_gradient_flow.png: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert 'bf8f21fb9242...6901d5ecbb384' == '54b504011f39...83193859a7231'
+E     
+E     - 54b504011f39334aede8d807502ad25fd430a5ac08e0e1982e283193859a7231
+E     + bf8f21fb9242ca1e6f63fafff8f811888dd4566c2e0e48aec0f6901d5ecbb384
+_ test_prin_matches_reference_under_registered_comparison[figures/fig15_noise_velocity.pdf] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig15_noise_velocity.pdf: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert 'efac9d9563c7...8f945cddeed13' == '5ed3046bba41...b8717fad8763d'
+E     
+E     - 5ed3046bba41559a39d6eeb69925158dcc8d4521486ef4084b9b8717fad8763d
+E     + efac9d9563c770c5cc66420c7f6d35a7488d2e3777cc09ed20c8f945cddeed13
+_ test_prin_matches_reference_under_registered_comparison[figures/fig15_noise_velocity.png] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig15_noise_velocity.png: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '038e9862529e...3f89f3ba81c0e' == '98ed0d28c470...04669521a1523'
+E     
+E     - 98ed0d28c470fb1fded899783a8ca43b1c1bf3f269d606e9f5004669521a1523
+E     + 038e9862529eda6ebbfdc6360928212230e9930c07468994a713f89f3ba81c0e
+_ test_prin_matches_reference_under_registered_comparison[figures/fig5_mot_occlusion_comparison.pdf] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig5_mot_occlusion_comparison.pdf: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '6cd8589937ba...43cd8ffb9c59e' == 'be90146780bc...57e6d4e7d721e'
+E     
+E     - be90146780bce84ae0cc7d6c355afae180a64eaf7480fbb158e57e6d4e7d721e
+E     + 6cd8589937ba9e6e3dbc1ced4f40330f6b92564842419092c1843cd8ffb9c59e
+_ test_prin_matches_reference_under_registered_comparison[figures/fig5_mot_occlusion_comparison.png] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig5_mot_occlusion_comparison.png: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '4f5b602ff5c0...2ccefc687ac9f' == 'f95d9c93e2f1...b5e9fa13fe097'
+E     
+E     - f95d9c93e2f184961d2e99240302629590cdf0e6596cc663a5fb5e9fa13fe097
+E     + 4f5b602ff5c077bcb9e85ef41cfa01f8607c82a96814f03e0e12ccefc687ac9f
+_ test_prin_matches_reference_under_registered_comparison[figures/fig7_ablation_results.pdf] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig7_ablation_results.pdf: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '671d50d6880e...39a93fad08d26' == '2387b7146ee8...2635cf5f5da68'
+E     
+E     - 2387b7146ee8a11687b80c83fc2010569bacefbbc06ec70db492635cf5f5da68
+E     + 671d50d6880e06dfa7d1674078f0e99c817f128c76fe346c7fb39a93fad08d26
+_ test_prin_matches_reference_under_registered_comparison[figures/fig7_ablation_results.png] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig7_ablation_results.png: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '43fb8ba38d4b...f39b37f9553dc' == 'f4188643dbe4...691bfaa4573b2'
+E     
+E     - f4188643dbe4f234fbfd0063e5707c0ef5429c7ba38f898b639691bfaa4573b2
+E     + 43fb8ba38d4ba1a2252f6d0bed01113619b02d4aeed4e2e20c9f39b37f9553dc
+_ test_prin_matches_reference_under_registered_comparison[figures/fig8_parameter_efficiency.pdf] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig8_parameter_efficiency.pdf: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '363822c7a648...5d94aaa5d602f' == '7926cd87a502...df401e9c0544f'
+E     
+E     - 7926cd87a5021d144285105c9eec2aa3cad274441e727661b7fdf401e9c0544f
+E     + 363822c7a648805f370a6c63b0c5ae6fc528fb8fff52cbdf7f85d94aaa5d602f
+_ test_prin_matches_reference_under_registered_comparison[figures/fig8_parameter_efficiency.png] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig8_parameter_efficiency.png: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '31eee313a709...5fa68fbf22a2d' == 'a0700b313900...caa1384a3987e'
+E     
+E     - a0700b3139009406d4062d11468264589ad7e21da5028990bfacaa1384a3987e
+E     + 31eee313a709f83c202c6cb40b3a328049d2a704b9fde49c3495fa68fbf22a2d
+_ test_prin_matches_reference_under_registered_comparison[figures/fig9_training_curves.pdf] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig9_training_curves.pdf: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '512ae502551a...df1ab217e3af0' == '345c4ba56fb0...d31c654c50197'
+E     
+E     - 345c4ba56fb0763ccb59b40f447ec3888927b34f63509e886ccd31c654c50197
+E     + 512ae502551a514c54c5b02432daee05b5dfd89e8ee196d785adf1ab217e3af0
+_ test_prin_matches_reference_under_registered_comparison[figures/fig9_training_curves.png] _
+parity\test_parity_publication.py:161: in test_prin_matches_reference_under_registered_comparison
+    assert _sha256(prin) == _sha256(reference), (
+E   AssertionError: figures/fig9_training_curves.png: PRIN differs from the frozen PRINet 3.0 generator under the registered H3 comparison
+E   assert '960d6d141f16...1bbe4c6f45798' == 'e83f4b2c1efe...a93224ef0a136'
+E     
+E     - e83f4b2c1efe36a7d6ccde5f613127f63965f51c3e6e5febb76a93224ef0a136
+E     + 960d6d141f16a682209182aac010aaa8cab8b59c2946492098a1bbe4c6f45798
+=========================== short test summary info ===========================
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig10_statistical_summary.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig10_statistical_summary.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig11_flops_scaling.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig11_flops_scaling.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig12_supercritical_regime.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig12_supercritical_regime.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig14_gradient_flow.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig14_gradient_flow.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig15_noise_velocity.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig15_noise_velocity.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig5_mot_occlusion_comparison.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig5_mot_occlusion_comparison.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig7_ablation_results.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig7_ablation_results.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig8_parameter_efficiency.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig8_parameter_efficiency.png]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig9_training_curves.pdf]
+FAILED parity/test_parity_publication.py::test_prin_matches_reference_under_registered_comparison[figures/fig9_training_curves.png]
+======================= 18 failed, 75 passed in 14.14s ========================
+# exit code (command 1): 1
+#
+# command 2: .venv/Scripts/python -m pytest tests/test_publication_figure_arguments.py -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 9 items
+
+tests\test_publication_figure_arguments.py FFFFFFFFF                     [100%]
+
+================================== FAILURES ===================================
+___________________________ test_fig5_marker_sizes ____________________________
+tests\test_publication_figure_arguments.py:78: in test_fig5_marker_sizes
+    assert line.get_markersize() == 4  # D5.2, D5.4
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   assert 5.0 == 4
+E    +  where 5.0 = get_markersize()
+E    +    where get_markersize = <matplotlib.lines.Line2D object at 0x0000024FC58056A0>.get_markersize
+__________________ test_fig7_accuracy_labels_bottom_aligned ___________________
+tests\test_publication_figure_arguments.py:87: in test_fig7_accuracy_labels_bottom_aligned
+    assert {text.get_verticalalignment() for text in texts} == {"bottom"}  # D7.1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: assert {'baseline'} == {'bottom'}
+E     
+E     Extra items in the left set:
+E     'baseline'
+E     Extra items in the right set:
+E     'bottom'
+E     Use -v to get more diff
+_____________________ test_fig8_markers_drawn_above_grid ______________________
+tests\test_publication_figure_arguments.py:93: in test_fig8_markers_drawn_above_grid
+    assert {collection.get_zorder() for collection in collections} == {5}  # D8.1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   assert {1} == {5}
+E     
+E     Extra items in the left set:
+E     1
+E     Extra items in the right set:
+E     5
+E     Use -v to get more diff
+__________________ test_fig9_curve_widths_legend_and_labels ___________________
+tests\test_publication_figure_arguments.py:101: in test_fig9_curve_widths_legend_and_labels
+    assert {line.get_linewidth() for line in curves.lines} == {1.2}  # D9.1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   assert {1.5} == {1.2}
+E     
+E     Extra items in the left set:
+E     1.5
+E     Extra items in the right set:
+E     1.2
+E     Use -v to get more diff
+__________________ test_fig10_outcome_note_has_reference_box __________________
+tests\test_publication_figure_arguments.py:111: in test_fig10_outcome_note_has_reference_box
+    assert box is not None  # D10.1
+    ^^^^^^^^^^^^^^^^^^^^^^
+E   assert None is not None
+______________________ test_fig11_bars_labels_and_ratios ______________________
+tests\test_publication_figure_arguments.py:121: in test_fig11_bars_labels_and_ratios
+    assert bar.get_linewidth() == 0.5  # D11.2
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   assert 1.0 == 0.5
+E    +  where 1.0 = get_linewidth()
+E    +    where get_linewidth = <matplotlib.patches.Rectangle object at 0x0000024FC8DE9A90>.get_linewidth
+________________________ test_fig12_reference_styling _________________________
+tests\test_publication_figure_arguments.py:135: in test_fig12_reference_styling
+    assert {bar.get_linewidth() for bar in bars.patches} == {0.5}  # D12.1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   assert {1.0} == {0.5}
+E     
+E     Extra items in the left set:
+E     1.0
+E     Extra items in the right set:
+E     0.5
+E     Use -v to get more diff
+_________________________ test_fig14_bar_transparency _________________________
+tests\test_publication_figure_arguments.py:159: in test_fig14_bar_transparency
+    assert {bar.get_alpha() for bar in ax.patches} == {0.85}  # D14.1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   assert {None} == {0.85}
+E     
+E     Extra items in the left set:
+E     None
+E     Extra items in the right set:
+E     0.85
+E     Use -v to get more diff
+___________________ test_fig15_marker_sizes_fit_and_legends ___________________
+tests\test_publication_figure_arguments.py:167: in test_fig15_marker_sizes_fit_and_legends
+    assert pt.get_markersize() == sa.get_markersize() == 3  # D15.1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   assert 5.0 == 3
+E    +  where 5.0 = get_markersize()
+E    +    where get_markersize = <matplotlib.lines.Line2D object at 0x0000024FCA6F7230>.get_markersize
+=========================== short test summary info ===========================
+FAILED tests/test_publication_figure_arguments.py::test_fig5_marker_sizes - a...
+FAILED tests/test_publication_figure_arguments.py::test_fig7_accuracy_labels_bottom_aligned
+FAILED tests/test_publication_figure_arguments.py::test_fig8_markers_drawn_above_grid
+FAILED tests/test_publication_figure_arguments.py::test_fig9_curve_widths_legend_and_labels
+FAILED tests/test_publication_figure_arguments.py::test_fig10_outcome_note_has_reference_box
+FAILED tests/test_publication_figure_arguments.py::test_fig11_bars_labels_and_ratios
+FAILED tests/test_publication_figure_arguments.py::test_fig12_reference_styling
+FAILED tests/test_publication_figure_arguments.py::test_fig14_bar_transparency
+FAILED tests/test_publication_figure_arguments.py::test_fig15_marker_sizes_fit_and_legends
+============================== 9 failed in 3.52s ==============================
+# exit code (command 2): 1

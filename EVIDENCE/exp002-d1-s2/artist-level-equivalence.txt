@@ -1,0 +1,71 @@
+# EXP-002 D1 S2 - artist-level equivalence, reference vs the fixed port
+# date (UTC): 2026-10-15T22:09:49Z
+# git HEAD: 8fd0ecc9949a607f2a7090fe39205f00bb0078c9
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# python: Python 3.14.0
+# instrument: EVIDENCE/exp002-d1-s2/artist_level_equivalence.py
+# command: .venv/Scripts/python EVIDENCE/exp002-d1-s2/artist_level_equivalence.py
+#
+# Renders all 14 registered stems from both the frozen PRINet 3.0 generator
+# and PRIN's port, intercepts each Figure at savefig, and compares the full
+# artist inventory (Line2D data/linewidth/markersize/marker/linestyle/alpha/
+# zorder/colour/label, Collection offsets and styling, Patch vertices and
+# styling, Text string/position/alignment/size/rotation/colour, and Axes
+# limits/scales/title/labels/ticks/tick-labels/legend).
+#
+reference module : C:\dev\PRIN\DOCS\archive and reference from PRINet 3.0\PRINet-3.0.0-main\src\prinet\utils\figure_generation.py
+  sha256         : 575eca5a6436a25f957702091a6a0b5b7f3d77f1f496f9e6b423550cf79e1520
+  pinned digest  : 575eca5a6436a25f957702091a6a0b5b7f3d77f1f496f9e6b423550cf79e1520
+  matches the pin: True
+port module      : C:\dev\PRIN\python\prin\reporting\figure_generation.py
+  sha256         : b41dfc137d1d10f0f9b60452f0f23093ed4ad6e9369f34343d96695957e6c048
+
+[EQUAL ] fig2_clevr_n_capacity  axes=1  drawing-call multiset DIFFERS
+    reference-only calls: {'set_ylabel': 1, 'set_title': 1, 'set_ylim': 1}
+    port-only calls:      {'set': 1}
+[EQUAL ] fig3_chimera_metrics  axes=1  drawing-call multiset DIFFERS
+    reference-only calls: {'set_ylabel': 1, 'set_title': 1}
+    port-only calls:      {'set': 1}
+[EQUAL ] fig4_chimera_k_alpha_heatmap  axes=2  drawing-call multiset DIFFERS
+    reference-only calls: {'set_xlabel': 1, 'set_ylabel': 1, 'set_title': 1}
+    port-only calls:      {'set': 1}
+[EQUAL ] fig5_mot_occlusion_comparison  axes=1  drawing-call multiset DIFFERS
+    reference-only calls: {'set_xlabel': 1, 'set_ylabel': 1, 'set_title': 1, 'set_ylim': 1}
+    port-only calls:      {'set': 1}
+[EQUAL ] fig6_oscillosim_scaling  axes=1  drawing-call multiset DIFFERS
+    reference-only calls: {'set_xlabel': 1, 'set_ylabel': 1, 'set_title': 1}
+    port-only calls:      {'set': 1}
+[EQUAL ] fig7_ablation_results  axes=2  drawing-call multiset DIFFERS
+    reference-only calls: {'set_ylabel': 2, 'set_title': 2}
+    port-only calls:      {'set': 2}
+[EQUAL ] fig8_parameter_efficiency  axes=1  drawing-call multiset DIFFERS
+    reference-only calls: {'set_xlabel': 1, 'set_ylabel': 1, 'set_title': 1, 'set_ylim': 1}
+    port-only calls:      {'set': 1}
+[EQUAL ] fig9_training_curves  axes=2  drawing-call multiset DIFFERS
+    reference-only calls: {'set_xlabel': 1, 'set_ylabel': 2, 'set_title': 2, 'set_ylim': 1}
+    port-only calls:      {'set': 2}
+[EQUAL ] fig10_statistical_summary  axes=1  drawing-call multiset DIFFERS
+    reference-only calls: {'set_xlabel': 1, 'set_title': 1}
+    port-only calls:      {'set': 1}
+[EQUAL ] fig11_flops_scaling  axes=1  drawing-call multiset DIFFERS
+    reference-only calls: {'set_xlabel': 1, 'set_ylabel': 1, 'set_title': 1}
+    port-only calls:      {'set': 1}
+[EQUAL ] fig12_supercritical_regime  axes=2  drawing-call multiset DIFFERS
+    reference-only calls: {'set_ylabel': 1, 'set_title': 1}
+    port-only calls:      {'set': 1}
+[EQUAL ] fig13_representation_geometry  axes=2  drawing-call multiset DIFFERS
+    reference-only calls: {'set_title': 2, 'set_xlabel': 2, 'set_ylabel': 2}
+    port-only calls:      {'set': 2}
+[EQUAL ] fig14_gradient_flow  axes=2  drawing-call multiset DIFFERS
+    reference-only calls: {'set_xlabel': 2, 'set_title': 2}
+    port-only calls:      {'set': 2}
+[EQUAL ] fig15_noise_velocity  axes=2  drawing-call multiset DIFFERS
+    reference-only calls: {'set_xlabel': 2, 'set_ylabel': 2, 'set_title': 2, 'set_ylim': 2}
+    port-only calls:      {'set': 2}
+
+==============================================================================
+artist-level equivalence: 14/14 EQUAL
+Every data-bearing artist attribute matches on all 14 stems, so no
+divergence altered a plotted value, a limit, a tick or a label.
+==============================================================================
+# exit code: 0

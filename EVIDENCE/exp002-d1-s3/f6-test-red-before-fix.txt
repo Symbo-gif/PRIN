@@ -1,0 +1,28 @@
+# EXP002D1-S2-F6 - the new regression test run BEFORE the fix
+# started 2026-10-16T01:47:36Z
+# HEAD d53ab885144cf5c8ef4cf0fd3a947cf89d0e6b63 (figure_generation.py sha256 98dad4365a7f69db...; fig13 label NOT yet restored)
+# tracked changes vs HEAD:  M tests/test_publication_figure_arguments.py 
+# command: .venv/Scripts/python.exe -m pytest tests/test_publication_figure_arguments.py -q -rf --basetemp=.pytest_basetemp -p no:cacheprovider
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 10 items
+
+tests\test_publication_figure_arguments.py .........F                    [100%]
+
+================================== FAILURES ===================================
+________________ test_fig13_series_labels_follow_the_reference ________________
+tests\test_publication_figure_arguments.py:191: in test_fig13_series_labels_follow_the_reference
+    assert [c.get_label() for c in ax.collections] == [f"Obj {n}" for n in range(5)]
+E   AssertionError: assert ['_child0', '...3', '_child4'] == ['Obj 0', 'Ob...j 3', 'Obj 4']
+E     
+E     At index 0 diff: '_child0' != 'Obj 0'
+E     Use -v to get more diff
+=========================== short test summary info ===========================
+FAILED tests/test_publication_figure_arguments.py::test_fig13_series_labels_follow_the_reference
+========================= 1 failed, 9 passed in 3.34s =========================
+# exit code: 1
+# ended 2026-10-16T01:47:43Z

@@ -1,0 +1,61 @@
+# EXP-002 D1 S4 - EXP002D1-S4-F1 red-before / green-after
+# date (UTC): 2026-10-16T18:54:54Z
+# defect location: EVIDENCE/exp002-d1-s3/final_legs.sh, the grep-aggregated legs
+# the five committed lines that carry the pattern:
+    43:grep -a '^# exit code' "$OUT/sphinx.txt" | grep -qv ': 0$' && overall=1
+    52:grep -a '^# exit code' "$OUT/gitleaks.txt" | grep -qv ': 0$' && overall=1
+    57:grep -a 'script exit' "$OUT/immutability-after.txt" | grep -qv ': 0)' && overall=1
+    60:grep -a '^# exit code' "$OUT/verify-manifest.txt" | grep -qv ': 0$' && overall=1
+    67:  grep -a '^# exit code' "$OUT/index-selfcheck-${b#exp002-d1-}.txt" | grep -qv ': 0$' && overall=1
+
+==================================================================
+## RED - the committed S3 aggregation pattern
+    fixture bytes, to show the marker form is the bare real one:
+      ok.txt     0000000   #       e   x   i   t       c   o   d   e   :       0  \n 0000017 
+      bad.txt    0000000   #       e   x   i   t       c   o   d   e   :       1  \n 0000017 
+      nomarker.txt 0000000   #       s   p   h   i   n   x       -   W       -   -   k   e 0000020   e   p   -   g   o   i   n   g  \n   #       d   a   t   e     
+      empty.txt  0000000 
+    marker '# exit code: 0'            overall=0  <- reads as PASS
+    marker '# exit code: 1'            overall=1  <- reads as FAIL
+    record file MISSING                overall=0  <- reads as PASS
+    record has NO marker line          overall=0  <- reads as PASS
+    record file EMPTY                  overall=0  <- reads as PASS
+    => the two real marker shapes aggregate correctly; the 3 shapes where a
+       leg produced no usable record all read as PASS. That is the defect.
+
+==================================================================
+## GREEN - the fail-closed require_marker helper (this bundle's final_legs.sh)
+    marker '# exit code: 0'            1 marker(s), all ok        -> PASS
+       (overall=0)
+    marker '# exit code: 1'            1 of 1 marker(s) not ok -> FAIL
+       (overall=1)
+    record file MISSING                NO RECORD (missing or empty)   -> FAIL (fail-closed)
+       (overall=1)
+    record has NO marker line          record has no marker line     -> FAIL (fail-closed)
+       (overall=1)
+    record file EMPTY                  NO RECORD (missing or empty)   -> FAIL (fail-closed)
+       (overall=1)
+
+==================================================================
+## the immutability leg's variant marker ('script exit'), same demonstration
+    RED   script-exit 0      overall=0
+    GREEN script-exit 0      overall=0
+    RED   script-exit 1      overall=1
+    GREEN script-exit 1      overall=1
+    RED   no marker          overall=0
+    GREEN no marker          overall=1
+
+==================================================================
+## was the defect latent? require_marker re-applied to the committed S3 records
+    sphinx.txt                         1 marker(s), all ok        -> PASS
+    gitleaks.txt                       2 marker(s), all ok        -> PASS
+    verify-manifest.txt                1 marker(s), all ok        -> PASS
+    index-selfcheck-s1.txt             1 marker(s), all ok        -> PASS
+    index-selfcheck-s2.txt             1 marker(s), all ok        -> PASS
+    index-selfcheck-s3.txt             1 marker(s), all ok        -> PASS
+    immutability-after.txt             1 marker(s), all ok        -> PASS
+    records failing the fail-closed check: 0
+    => 0 means every committed S3 record carries its marker, so no recorded
+       S3 result was masked. The defect is LATENT, not realised.
+
+# finished 2026-10-16T18:55:19Z

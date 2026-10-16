@@ -1,0 +1,58 @@
+# Round 4 triage commands (run from C:\dev\PRIN at HEAD 5eee91842adbb2ec0a44ba04072f212ca2077bdd)
+
+## T4-4 / Devin 4, Qwen 3: the round-4 row and the 'four rounds' wording
+$ rg -n "Round 4 is|^\| 4 \| to be recorded" DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+1420:| 4 | to be recorded | | | | | |
+1637:and counts; every CONFIRMED claim in rounds 1–3 was fixed and re-verified. Round 4 is
+$ rg -n "^## Round" EVIDENCE/exp002-d1-s3/cold-review/README.md
+38:## Round 1 — HEAD `7dbfc546`, brief v1 — degraded, no reviewer produced a report
+49:## Round 2 — HEAD `33923be5`, brief v2 — all three reviewed
+62:## Round 3 — HEAD `b2156918`, brief v3 — all three reviewed (Devin on its fourth attempt)
+$ git ls-files EVIDENCE/exp002-d1-s3/cold-review/round4 | wc -l
+0
+
+## T4-9 / Qwen 4: test_notebooks.py comment
+$ sed -n 50,62p tests/test_notebooks.py
+#: runtime budget, was exceeded by ``02_clevr_n_binding`` in two consecutive
+#: full-suite runs. The notebook is not the cause: alone it completes in 71 s.
+#: Inside the full suite on the maintainer host the kernel receives a sixth to a
+#: third of one core while processes outside PRIN (an IDE's ripgrep scans and
+#: security software) hold the whole host at ~100% CPU, and the leg slows 8-43x
+#: (``EVIDENCE/exp002-d1-s3/f2/``). Each bound is BOUND_MARGIN x the largest
+#: *completed* contended duration recorded for that notebook, rounded up to a
+#: multiple of BOUND_ROUNDING_SECONDS. The recorded duration is the whole
+#: notebook's, which is an upper bound on any single cell's, so each bound is
+#: conservative per cell. Each bound stays 37-152 times above the notebook's
+#: quiet-host duration (37-73 s), so it still ends a genuine hang, but it no
+#: longer fails a leg that is merely starved. A test below ties each bound to its
+#: recorded worst case in both directions.
+$ sed -n 5,12p EVIDENCE/exp002-d1-s3/f2/analysis-in-suite-vs-alone.txt
+---------------------------------------------------------------------------------------------
+01_oscillosim_quickstart          73.3 s       639.6 s       800.1 s       678.9 s       9.3x
+02_clevr_n_binding                71.1 s>=    1052.8 s>=    1064.0 s      2975.0 s      41.8x
+03_custom_coupling                44.5 s       409.0 s       222.4 s       367.3 s       8.3x
+04_torch_bridge                   37.0 s       389.8 s        52.5 s       382.1 s      10.3x
+
+'>=' marks an S1/S2 duration at or above the shipped 900 s
+per-cell bound: the test was killed there, so the true duration is censored.
+
+## T4-12 / Qwen 7: audit header lines
+$ sed -n 3,18p ... | cat -n | cut -c1-120
+     1	**Scope:** the EXP-002 D1 correction cycle (campaign plan §10.4). H3
+     2	publication fidelity is `REFUTED`: 18 of 39 registered `generated_files`
+     3	differ between PRIN and the frozen PRINet 3.0 reference generator under the
+     4	approved §5.4 policy, namely the `.pdf` and `.png` of figures 5, 7, 8, 9, 10,
+     5	11, 12, 14 and 15.\
+     6	**Opened by:** session `0163` (EXP-002 E5), 2026-10-14 UTC.\
+     7	**Blocked:** session `0164` (EXP-003 E1) and every later campaign session
+     8	(`0165`–`0194`).\
+     9	**Branch / PR:** `hotfix/exp002-d1-figure-parity` from `origin/main` @
+    10	`fd8854ed87a21e01f16e2f7128b431e74085a26e` (the PR #33 merge); draft
+    11	**PR #34**.\
+    12	**Stage status:** S1 **complete** (2026-10-15 UTC); S2, S3, S4 pending.
+    13	
+    14	This is the correction work package's audit of record. S1 records its
+    15	implementation here: approvals, the reproduction, the root cause, commits, the
+    16	red → green transition, commands, and handoff. S2 appends the audit proper
+$ rg -n "Lines 3.14" audit
+1584:5. **The audit's own header is stale and cannot be corrected here.** Lines 3–14
