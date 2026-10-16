@@ -460,19 +460,23 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   an artist-level comparison **14/14 EQUAL**, so no plotted value differs;
   `verify_manifest` green on all five runs and the frozen E4 module reproducing
   all seven outputs plus `report-manifest.json` byte-for-byte from a clean
-  worktree; and Snyk Code **0 findings** in the four changed files, with the
-  expired-CLI leg reported **blocked**, never as passed. Eight findings
+  worktree; and Snyk Code **0 findings** in the four changed files on **both**
+  the MCP route and — after the maintainer re-authenticated it — the CLI route
+  the brief named (Test Summary **0 HIGH / 0 MEDIUM / 77 LOW**, so the §6.2
+  "0 medium+" gate is met; the earlier blocked-CLI state is retained rather than
+  overwritten). Eight findings
   (`EXP002D1-S2-F1`…`-F8`): one **D2** (the required full suite is red on a
   pre-existing notebook cell timeout, reproduced in two consecutive sessions),
   one **D3** (the two registered H3 policies now disagree about the verdict —
   approved §5.4 39/39 equal vs §11.3 sensitivity 14/39 equal, all 25 residuals
   classified as writer/host properties — which S4 must carry into the
-  `EXP-002-r1` E1/E2 registration), and six D4 (including two residual Snyk
-  Code LOW `python/PT` findings in S2's own instruments, remediated twice on the
-  `PR23-F1` pattern and accepted with a recorded §6.2 threat assessment).
-  **No D1, no systemic drift.** S2's commit stays **local**: the maintainer
-  delegated the push call, and Development Workflow §3 plus amendment #28 put
-  the cycle's push point at S4 (§S2.13).
+  `EXP-002-r1` E1/E2 registration), and six D4. `-F3` (the expired Snyk CLI) is
+  **RESOLVED** and `-F8` (two residual Snyk Code LOW `python/PT` findings in S2's
+  own instruments, remediated twice on the `PR23-F1` pattern) is **RATIFIED**
+  with a recorded §6.2 threat assessment, so **six findings remain for S3**.
+  **No D1, no systemic drift.** S2's commits stay **local**: the maintainer
+  delegated and then ratified the push call, and Development Workflow §3 plus
+  amendment #28 put the cycle's push point at S4 (§S2.13, §S2.14).
   Evidence: [`EVIDENCE/exp002-d1-s2/`](../../EVIDENCE/exp002-d1-s2/README.md).
   The S3 closure and S4 closure are pending.
 - [`PR023-multi-review-audit.md`](PR023-multi-review-audit.md) — External

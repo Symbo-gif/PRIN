@@ -1,0 +1,553 @@
+# EXP-002 D1 S2 - Snyk Code CLI leg (unblocked: maintainer re-authenticated)
+# date (UTC): 2026-10-16T00:23:01Z
+# git HEAD: eae1fab89c938946963412b3cb8267e9067fc5fd
+# tracked changes: 0
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# snyk version: 1.1306.2
+# snyk whoami: Symbo-gif
+#
+# The original CLI attempt in snyk-code.txt returned 401 SNYK-0005 with no
+# SARIF and was recorded as BLOCKED. The maintainer re-authenticated the CLI
+# on 2026-10-15, so the leg the S2 brief specified is now run for real.
+#
+# command: snyk code test . --severity-threshold=low --sarif-file-output=C:/Users/there/prin-s2-scratch/snyk-code-s2.sarif
+#
+
+Testing . ...
+
+Open Issues
+
+ ✗ [LOW] Path Traversal
+   Finding ID: c8bee201-0990-4114-9e36-572cec8c3349
+   Path: .claude/worktrees/agent-a4d9724ca1ec2428b/tools/reproduce.py, line 382
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: fe97b604-b631-4514-83e4-4ce8cae1871f
+   Path: .claude/worktrees/agent-a4d9724ca1ec2428b/tools/reproduce.py, line 425
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 46d9acbb-0a09-4bc6-a5c1-fe9cd3cba38c
+   Path: .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py, line 996
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 6c628bfc-31b1-43bd-94aa-ec045f4207be
+   Path: .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py, line 1012
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 939d505b-c198-4ddf-9b36-c8d75806e524
+   Path: .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py, line 1088
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: f06efc61-9767-4330-88aa-d7907ad82756
+   Path: .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py, line 3762
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: c50e79c7-12a9-4f32-8354-d8f721f1e1b3
+   Path: .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py, line 3810
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 61afdd4f-fd9e-4081-bcce-9a5f79062e36
+   Path: .kilo/worktrees/shorthaired-clownfish/benchmarks/campaign/exp001_r1_driver.py, line 732
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 6ddb29b7-7dc0-4af6-9e10-4ac80c6ea0ba
+   Path: .kilo/worktrees/shorthaired-clownfish/tools/reproduce.py, line 382
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 4c0834c2-5182-4287-ba98-da41023bf708
+   Path: .kilo/worktrees/shorthaired-clownfish/tools/reproduce.py, line 425
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 9dd5f811-18a1-40ad-b957-6649a7160b0e
+   Path: DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py, line 996
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 42730d25-f3e1-4fd0-865b-f41bc34f502e
+   Path: DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py, line 1012
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 74c1f573-031c-4d69-90ac-9eb6b832c15c
+   Path: DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py, line 1088
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 50d70e55-f284-4b37-9a47-ebf6197631a4
+   Path: DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py, line 3762
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: c6dbdcf4-2df9-409e-a776-e32e4b91ebdf
+   Path: DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py, line 3810
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: fac89516-e416-4683-ab79-7416817d87c7
+   Path: benchmarks/campaign/exp001_r1_driver.py, line 732
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 498c5d06-2d24-4632-8d39-a47e285bfbbb
+   Path: benchmarks/campaign/exp002_driver.py, line 1054
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: ec8c7b8e-a590-46b7-9cb8-f92d2659bdd6
+   Path: benchmarks/campaign/exp002_driver.py, line 1068
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 97a7307f-82cf-4fc4-a8db-2a36ef0ace01
+   Path: benchmarks/campaign/exp002_driver.py, line 1581
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 4b00d4dc-263b-4fa2-a0b3-2fcb92d09fee
+   Path: tools/reproduce.py, line 382
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 1ec3beb1-9abe-421d-8f80-906593aa3fc0
+   Path: tools/reproduce.py, line 425
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: b1bf6d9d-856c-4946-9607-b7b9166b6240
+   Path: .claude/worktrees/agent-a4d9724ca1ec2428b/tools/reproduce.py, line 561
+   Info: Unsanitized input from a command line argument flows into os.rename, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 7750fe79-1110-473f-89e2-ca8d80795017
+   Path: .kilo/worktrees/shorthaired-clownfish/tools/reproduce.py, line 561
+   Info: Unsanitized input from a command line argument flows into os.rename, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 05c14038-baad-49c4-a5e1-0d74647cf542
+   Path: tools/reproduce.py, line 561
+   Info: Unsanitized input from a command line argument flows into os.rename, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: bd40dfa4-9142-4e3b-b7f2-4cca599cbd88
+   Path: EVIDENCE/exp002-d1-s2/changed_line_coverage.py, line 98
+   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: d5d2dd31-bb25-43b0-a9ed-ff3b7030b605
+   Path: EVIDENCE/exp002-d1-s2/decomposition_rerun_check.py, line 92
+   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 3965d959-0375-46e7-bf37-6628d978dd4a
+   Path: EVIDENCE/0161/verification/tools/mutation_test.py, line 39
+   Info: Unsanitized input from a command line argument flows into shutil.rmtree, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 463e4849-2d90-425a-b461-eb57ca903ce9
+   Path: EVIDENCE/0161/verification/tools/mutation_test_rev3.py, line 99
+   Info: Unsanitized input from a command line argument flows into shutil.rmtree, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 7dacf3c6-b2cb-4d00-9ebb-d66be0d440ef
+   Path: EVIDENCE/0161/verification/tools/mutation_test.py, line 42
+   Info: Unsanitized input from a command line argument flows into shutil.copytree, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 113bb1a3-2077-467d-b6f7-3f75779a99e4
+   Path: EVIDENCE/0161/verification/tools/mutation_test_rev3.py, line 104
+   Info: Unsanitized input from a command line argument flows into shutil.copytree, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 740f5d34-e1ef-4a5d-ab01-979584ff17a2
+   Path: EVIDENCE/0161/verification/tools/mutation_test_rev3.py, line 113
+   Info: Unsanitized input from a command line argument flows into shutil.copytree, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: f7bbd04f-a2e5-4309-84f1-efef8a60e6bd
+   Path: EVIDENCE/0161/verification/tools/mutation_test_rev3.py, line 97
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 1f5e8a9f-0600-4fa1-b3ed-1eb4f5e2d097
+   Path: .claude/worktrees/agent-a4d9724ca1ec2428b/tools/reproduce.py, line 568
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 34ccc576-d408-4239-ab18-7d591032735a
+   Path: .kilo/worktrees/shorthaired-clownfish/tools/reproduce.py, line 568
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: d9d38c5c-991a-4ebf-ad24-69336d50c8f6
+   Path: tools/reproduce.py, line 568
+   Info: Unsanitized input from a command line argument flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 750db98b-c04b-4cf6-8741-d4b15119271f
+   Path: .claude/worktrees/agent-a4d9724ca1ec2428b/tools/reproduce.py, line 581
+   Info: Unsanitized input from a command line argument flows into os.unlink, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 2ab21350-aee1-4237-9474-19d371edc5d1
+   Path: .kilo/worktrees/shorthaired-clownfish/tools/reproduce.py, line 581
+   Info: Unsanitized input from a command line argument flows into os.unlink, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: b5c33ba0-af8c-42f4-94ea-ef41bc5f50bf
+   Path: tools/reproduce.py, line 581
+   Info: Unsanitized input from a command line argument flows into os.unlink, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: b9bfa6fd-9c87-4ea3-ac54-61c703d2a8b0
+   Path: .claude/worktrees/agent-a4d9724ca1ec2428b/tools/wp001_baseline.py, line 457
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 795583b2-645e-403c-9c73-57e415dc87e5
+   Path: .claude/worktrees/agent-a4d9724ca1ec2428b/tools/wp001_baseline.py, line 520
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: ae536cb0-b7f8-4d5f-a5dc-7850f0f207d0
+   Path: .kilo/worktrees/shorthaired-clownfish/tools/wp001_baseline.py, line 457
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: f68d0d0d-40cf-4ca4-9c31-419ce0fe0e59
+   Path: .kilo/worktrees/shorthaired-clownfish/tools/wp001_baseline.py, line 520
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: d8a50ad3-ffd7-43ee-a657-3e12b86827bc
+   Path: EVIDENCE/0161/verification/tools/crossleg_consistency.py, line 27
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 91376f1b-b4fd-44fd-9abe-db51e0076a83
+   Path: EVIDENCE/0161/verification/tools/reconstruct_rev1.py, line 12
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 081a95a9-c028-475f-a565-99bcb6ffe1f3
+   Path: EVIDENCE/0161/verification/tools/staged_bytes_check.py, line 105
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 50b98453-e00f-42a9-9150-99d0eaabfd86
+   Path: tools/wp001_baseline.py, line 459
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 38d8ee19-a4d1-4cbd-aa6e-b7544542060a
+   Path: tools/wp001_baseline.py, line 522
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 0e7aef42-939c-4f1d-b44d-d02d2e795ad8
+   Path: .claude/worktrees/agent-a4d9724ca1ec2428b/tools/wp001_baseline.py, line 1026
+   Info: Unsanitized input from a command line argument flows into os.walk, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: c05e10eb-cb71-4e00-a4da-1ebbfa2d43a4
+   Path: .kilo/worktrees/shorthaired-clownfish/tools/wp001_baseline.py, line 1026
+   Info: Unsanitized input from a command line argument flows into os.walk, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 05a15df9-40b7-4fbf-ab95-c5c9d8aaf182
+   Path: tools/wp001_baseline.py, line 1089
+   Info: Unsanitized input from a command line argument flows into os.walk, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: aa9055c3-031d-4dee-b1b6-a5c2974879c1
+   Path: .claude/worktrees/agent-a4d9724ca1ec2428b/tools/wp030_mot_fixture.py, line 280
+   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: e9aa9137-b74f-4c66-b04c-940b6f4adce9
+   Path: .claude/worktrees/agent-a4d9724ca1ec2428b/tools/wp031_stats_fixture.py, line 97
+   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 5de1cb2d-1fc3-4bf1-a63f-5f17b3615d48
+   Path: .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py, line 1272
+   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 45c4ac17-426e-4911-b416-96467c517be8
+   Path: .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py, line 688
+   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 5ec2d042-ca2a-40b7-aeec-c3d9954f33d1
+   Path: .kilo/worktrees/shorthaired-clownfish/tools/wp030_mot_fixture.py, line 280
+   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: ff744430-eace-4dd8-90ac-bc8c83eec9f0
+   Path: .kilo/worktrees/shorthaired-clownfish/tools/wp031_stats_fixture.py, line 97
+   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 9690771e-855f-4ead-8e11-826d7377bc6b
+   Path: DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py, line 1272
+   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: c4ffe325-e787-449b-a92f-5979c5c88235
+   Path: DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py, line 688
+   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 5c0cdb5d-80fe-4754-bdbc-851270ac0b21
+   Path: tools/wp030_mot_fixture.py, line 280
+   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 22d1cf2e-3d42-42dd-9157-631a387a3af2
+   Path: tools/wp031_stats_fixture.py, line 97
+   Info: Unsanitized input from a command line argument flows into pathlib.Path, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 932431b8-fea8-4e4e-a758-b1cd6ddbc761
+   Path: .kilo/worktrees/shorthaired-clownfish/benchmarks/benchrunner/__main__.py, line 113
+   Info: Unsanitized input from a command line argument flows into os.link, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: fa705aa3-3d86-4a4e-8fbb-ac6b3bce2fd7
+   Path: .kilo/worktrees/shorthaired-clownfish/benchmarks/campaign/exp001_driver.py, line 2092
+   Info: Unsanitized input from a command line argument flows into os.link, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 349bbbf3-490d-4214-88cc-22275d187ad6
+   Path: .kilo/worktrees/shorthaired-clownfish/benchmarks/campaign/exp001_driver.py, line 2320
+   Info: Unsanitized input from a command line argument flows into os.link, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: f2cde9d7-04e7-461f-9e71-2c0726c79c49
+   Path: .kilo/worktrees/shorthaired-clownfish/benchmarks/campaign/exp001_r1_driver.py, line 821
+   Info: Unsanitized input from a command line argument flows into os.link, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: d26e053c-7e6f-457c-b4a3-69e6166f2913
+   Path: .kilo/worktrees/shorthaired-clownfish/benchmarks/campaign/exp001_r1_driver.py, line 823
+   Info: Unsanitized input from a command line argument flows into os.link, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: e25d1248-06bd-4bcc-b2ca-f543dbc397b6
+   Path: benchmarks/benchrunner/__main__.py, line 113
+   Info: Unsanitized input from a command line argument flows into os.link, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 2aebddc9-d3ce-4bda-a564-b41ae58c1127
+   Path: benchmarks/campaign/exp001_driver.py, line 2092
+   Info: Unsanitized input from a command line argument flows into os.link, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 34c34ac3-428d-4034-b1a6-e29dff84f2ad
+   Path: benchmarks/campaign/exp001_driver.py, line 2320
+   Info: Unsanitized input from a command line argument flows into os.link, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: a44af2be-ce84-475a-b565-19df9d44fc44
+   Path: benchmarks/campaign/exp001_r1_driver.py, line 821
+   Info: Unsanitized input from a command line argument flows into os.link, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 548c0116-f7b2-4c2c-b85e-525aedd9e4f0
+   Path: benchmarks/campaign/exp001_r1_driver.py, line 823
+   Info: Unsanitized input from a command line argument flows into os.link, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 186c1a46-ce06-4bc7-97be-a85ca73ebea7
+   Path: benchmarks/campaign/exp002_driver.py, line 1535
+   Info: Unsanitized input from a command line argument flows into os.link, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 325fcb31-af0f-4ccb-9681-269af477a314
+   Path: benchmarks/campaign/exp002_driver.py, line 1575
+   Info: Unsanitized input from a command line argument flows into os.link, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to remove arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 9af4c365-8790-4c89-8ca6-17d0cb02c9b2
+   Path: DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py, line 1095
+   Info: Unsanitized input from an environment variable flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: a15e30d1-c401-4df3-b396-387e09398ebe
+   Path: DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py, line 3224
+   Info: Unsanitized input from an environment variable flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 5014c1e1-be37-4868-993c-432b5e7b529a
+   Path: DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py, line 3242
+   Info: Unsanitized input from an environment variable flows into os.replace, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: e116abe0-b796-43ac-9b75-35e8a13ff18f
+   Path: EVIDENCE/0161/verification/tools/make_sha256sums.py, line 16
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+ ✗ [LOW] Path Traversal
+   Finding ID: 2e1caeb2-039f-4cba-862f-dd4c0de76137
+   Path: EVIDENCE/0161/verification/tools/reconstruct_rev1.py, line 52
+   Info: Unsanitized input from a command line argument flows into path concatenation, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to write arbitrary files.
+
+
+        
+💡 Tip
+
+   You are currently viewing results with --severity-threshold applied.
+   To view all issues, remove the --severity-threshold flag            
+                                                                       
+
+╭──────────────────────────────────────────────────────╮
+│ Test Summary                                         │
+│                                                      │
+│   Organization:      symbo-gif                       │
+│   Test type:         Static code analysis            │
+│   Project path:      .                               │
+│                                                      │
+│   Total issues:   77                                 │
+│   Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]      │
+│   Open issues:    77 [ 0 HIGH  0 MEDIUM  77 LOW ]    │
+╰──────────────────────────────────────────────────────╯
+    
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+
+
+# exit code: 1
+# (snyk code test exits 1 when it reports findings at or above the threshold,
+#  so the exit code alone is not the gate - the per-file filter below is.)
+# sarif written: YES
+# sarif sha256: ebc92c86e79bc7c2da25e8f09ccffddd3b1e07eb187a9252bca79b8ef8f6bb0d
+# sarif bytes: 530562
+
+=== SARIF filter ===
+SARIF runs: 1
+  tool: SnykCode 1.1306.2
+
+TOTAL findings at severity>=low, whole repository: 77
+by severity: {'note': 77}
+
+=== (1) the four changed first-party source files [brief item f] ===
+  NONE (0 findings)
+  -> 0 finding(s)
+
+=== (2) the six S2 audit instruments [finding EXP002D1-S2-F8] ===
+  NOTE     python/PT  EVIDENCE/exp002-d1-s2/changed_line_coverage.py:98
+  NOTE     python/PT  EVIDENCE/exp002-d1-s2/decomposition_rerun_check.py:92
+  -> 2 finding(s)
+
+=== top 12 files by finding count (context for the repo-wide total) ===
+     5  .claude/worktrees/agent-a4d9724ca1ec2428b/tools/reproduce.py
+     5  .kilo/worktrees/shorthaired-clownfish/tools/reproduce.py
+     5  benchmarks/campaign/exp002_driver.py
+     5  tools/reproduce.py
+     4  .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py
+     4  DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py
+     4  EVIDENCE/0161/verification/tools/mutation_test_rev3.py
+     3  .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py
+     3  .kilo/worktrees/shorthaired-clownfish/benchmarks/campaign/exp001_r1_driver.py
+     3  DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py
+     3  benchmarks/campaign/exp001_r1_driver.py
+     3  .claude/worktrees/agent-a4d9724ca1ec2428b/tools/wp001_baseline.py
+
+=== rules observed ===
+    71  python/PT
+     6  python/PT/test
+
+==========================================================================
+Coding Standards 6.2 gate '0 medium+ findings': medium+ total = 0
+repository-wide LOW total (previously carried, not re-derived): 0
+==========================================================================
+# filter exit code: 0
+
+########################################################################
+# CORRECTED SARIF FILTER (committed instrument, replaces the inline one)
+########################################################################
+# date (UTC): 2026-10-16T00:32:09Z
+# git HEAD: eae1fab89c938946963412b3cb8267e9067fc5fd
+# instrument: EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py
+# command: .venv/Scripts/python EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py /c/Users/there/prin-s2-scratch/snyk-code-s2.sarif
+#
+# Why this replaces the inline filter above: the first filter reported
+# 'by severity: {note: 77}' and 'repository-wide LOW total: 0'. Neither was
+# a usable severity figure, because Snyk Code's SARIF sets result.level to
+# 'note' for EVERY finding and stores no severity in result.properties or
+# rule.properties. The authoritative severity breakdown is the CLI's own
+# Test Summary block, transcribed verbatim above:
+#     Total issues:   77
+#     Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]
+#     Open issues:    77 [ 0 HIGH  0 MEDIUM  77 LOW ]
+# The corrected instrument also separates git-tracked findings from the
+# gitignored on-disk agent-worktree copies that 'snyk code test .' includes.
+#
+SARIF report   : C:\Users\there\prin-s2-scratch\snyk-code-s2.sarif
+tool           : SnykCode 1.1306.2
+total findings : 77
+result.level   : {'note': 77}
+
+NOTE: Snyk Code's SARIF sets result.level='note' for every finding and
+carries NO severity in result.properties or rule.properties. The
+authoritative severity breakdown is the CLI's own 'Test Summary' block,
+which is transcribed verbatim in snyk-code-cli.txt.
+
+findings in git-TRACKED paths      : 44
+findings in untracked on-disk paths: 33
+  untracked top-level roots: {'.claude': 10, '.kilo': 23}
+  (snyk scans the filesystem, not git, so gitignored agent worktrees
+   are counted; the same logical file is reported once per copy.)
+
+=== rules observed ===
+    71  python/PT
+     6  python/PT/test
+
+=== top 15 files by finding count ===
+     5  .claude/worktrees/agent-a4d9724ca1ec2428b/tools/reproduce.py   [untracked copy]
+     5  .kilo/worktrees/shorthaired-clownfish/tools/reproduce.py   [untracked copy]
+     5  benchmarks/campaign/exp002_driver.py
+     5  tools/reproduce.py
+     4  .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py   [untracked copy]
+     4  DOCS/experiments/EXP-001-golden-trajectory-numerical-parity/analysis/exp001_e4_analysis.py
+     4  EVIDENCE/0161/verification/tools/mutation_test_rev3.py
+     3  .kilo/worktrees/shorthaired-clownfish/DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py   [untracked copy]
+     3  .kilo/worktrees/shorthaired-clownfish/benchmarks/campaign/exp001_r1_driver.py   [untracked copy]
+     3  DOCS/experiments/EXP-001-r1-golden-trajectory-numerical-parity/analysis/exp001_r1_e4_analysis.py
+     3  benchmarks/campaign/exp001_r1_driver.py
+     3  .claude/worktrees/agent-a4d9724ca1ec2428b/tools/wp001_baseline.py   [untracked copy]
+     3  .kilo/worktrees/shorthaired-clownfish/tools/wp001_baseline.py   [untracked copy]
+     3  tools/wp001_baseline.py
+     3  DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py
+
+=== the four changed first-party source files (brief item f) ===
+  NONE (0 findings)
+  -> 0 finding(s)
+
+=== the six S2 audit instruments (finding EXP002D1-S2-F8) ===
+  python/PT        EVIDENCE/exp002-d1-s2/changed_line_coverage.py:98
+      level=note  (SARIF carries no severity; see above)
+  python/PT        EVIDENCE/exp002-d1-s2/decomposition_rerun_check.py:92
+      level=note  (SARIF carries no severity; see above)
+  -> 2 finding(s)
+
+==========================================================================
+changed first-party files : 0 finding(s)
+S2 audit instruments      : 2 finding(s)
+repository total (raw)    : 77
+repository total (tracked): 44
+Severity is NOT derivable from this SARIF; read the CLI Test Summary.
+==========================================================================
+# filter exit code: 0

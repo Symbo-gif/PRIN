@@ -41,8 +41,11 @@ against the frozen reference source; an artist-level comparison **14/14 EQUAL**
 so no plotted value differs; `verify_manifest` green on all five runs; the
 frozen E4 module reproducing all seven outputs and `report-manifest.json`
 `6b15dcc1…68781` byte-for-byte from a clean worktree outside the repository;
-and Snyk Code **0 findings** in the four changed files, with the expired-CLI
-leg reported **blocked** and never as passed. The fast suite achieved the clean
+and Snyk Code **0 findings** in the four changed files on **both** routes — the
+MCP integration, and the CLI leg the brief named once the maintainer
+re-authenticated it (Test Summary **0 HIGH / 0 MEDIUM / 77 LOW**, so the §6.2
+"0 medium+" gate is met; the earlier blocked-CLI state is retained in the record
+rather than overwritten). The fast suite achieved the clean
 single pass S1 handed over (4038 passed, 0 failed); the full suite is
 **exit 1** on a pre-existing notebook cell timeout (`EXP002D1-S2-F2`, D2). The
 D3 (`EXP002D1-S2-F1`) is that the two registered H3 policies now disagree about
@@ -50,8 +53,14 @@ the verdict — approved §5.4 **39/39 equal**, §11.3 sensitivity **14/39 equal
 with all 25 residuals classified as writer/host properties (PDF Info key sets,
 `.tex` line terminators) and 0 unclassified — which S4 must carry into the
 `EXP-002-r1` authorization so its E1/E2 registers both policies deliberately.
+Of the eight findings, `-F3` is **RESOLVED** (the CLI leg completed) and `-F8`
+is **RATIFIED** (two residual LOW `python/PT` findings in S2's own instruments,
+remediated twice on the `PR23-F1` pattern and accepted with a recorded §6.2
+threat assessment), so **six remain for S3**.
 Evidence: [`EVIDENCE/exp002-d1-s2/`](../../../EVIDENCE/exp002-d1-s2/README.md).
-Committed locally only; **nothing pushed**. S3 is next and is mandatory even
+Committed locally only; **nothing pushed** — the maintainer delegated the push
+call and Development Workflow §3 plus amendment #28 put the cycle's push point
+at S4. S3 is next and is mandatory even
 though no D1 was found. See the
 [EXP-002 E5 report](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md)
 §§3, 6, 8, 11, 14.

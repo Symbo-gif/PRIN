@@ -360,3 +360,374 @@ elapsed: 0 s
 ?? EVIDENCE/exp002-d1-s2/changed-line-coverage.txt
 ?? EVIDENCE/exp002-d1-s2/path-guard-negative-tests.txt
 ?? EVIDENCE/exp002-d1-s2/snyk-low-findings-threat-assessment.md
+
+##########################################################################
+# THIRD RUN - after the S2.14 addendum (F3 resolved, F8 ratified), the new
+# snyk_sarif_filter.py instrument, and the register/index tally updates.
+##########################################################################
+# date started (UTC): 2026-10-16T00:42:09Z
+# git HEAD: eae1fab89c938946963412b3cb8267e9067fc5fd
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# python: Python 3.14.0
+#
+==========================================================================
+LEG: K01 ruff check (all quality-gate roots incl. both EVIDENCE dirs)
+command: .venv/Scripts/ruff check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/ EVIDENCE/exp002-d1-s1/ EVIDENCE/exp002-d1-s2/
+start (UTC): 2026-10-16T00:42:10Z
+--------------------------------------------------------------------------
+All checks passed!
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 0 s
+
+==========================================================================
+LEG: K02 ruff format --check
+command: .venv/Scripts/ruff format --check python/ tests/ benchmarks/ tools/ parity/ EVIDENCE/exp002-d1-s1/ EVIDENCE/exp002-d1-s2/
+start (UTC): 2026-10-16T00:42:10Z
+--------------------------------------------------------------------------
+343 files already formatted
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 0 s
+
+==========================================================================
+LEG: K03 mypy --strict over all seven S2 instruments
+command: .venv/Scripts/mypy --strict EVIDENCE/exp002-d1-s2/
+start (UTC): 2026-10-16T00:42:10Z
+--------------------------------------------------------------------------
+Success: no issues found in 7 source files
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 1 s
+
+==========================================================================
+LEG: K04 bandit (both EVIDENCE instrument directories)
+command: .venv/Scripts/python -m bandit -r EVIDENCE/exp002-d1-s1 EVIDENCE/exp002-d1-s2 -c pyproject.toml
+start (UTC): 2026-10-16T00:42:12Z
+--------------------------------------------------------------------------
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	using config: pyproject.toml
+[main]	INFO	running on Python 3.14.0
+[tester]	WARNING	nosec encountered (B607), but no failed test on file EVIDENCE/exp002-d1-s1\root_cause_decomposition.py:410
+[tester]	WARNING	nosec encountered (B603), but no failed test on file EVIDENCE/exp002-d1-s1\root_cause_decomposition.py:410
+Run started:2026-10-16 00:42:12.438364+00:00
+
+Test results:
+	No issues identified.
+
+Code scanned:
+	Total lines of code: 2260
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 10
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+Files skipped (0):
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 0 s
+
+==========================================================================
+LEG: K05 interrogate python/prin
+command: .venv/Scripts/python -m interrogate -c pyproject.toml python/prin
+start (UTC): 2026-10-16T00:42:12Z
+--------------------------------------------------------------------------
+==================== Coverage for C:\dev\PRIN\python\prin\ ====================
+----------------------------------- Summary -----------------------------------
+| Name                                |   Total |   Miss |   Cover |   Cover% |
+|-------------------------------------|---------|--------|---------|----------|
+| __init__.py                         |       1 |      0 |       1 |     100% |
+| _compat.py                          |      14 |      0 |      14 |     100% |
+| _deprecation.py                     |       8 |      0 |       8 |     100% |
+| _ort.py                             |      13 |      0 |      13 |     100% |
+| _phase0.py                          |      12 |      0 |      12 |     100% |
+| _public_api.py                      |       1 |      0 |       1 |     100% |
+| _torch_compat.py                    |     106 |      5 |     101 |      95% |
+| adversarial_tools.py                |       5 |      0 |       5 |     100% |
+| daemon.py                           |      33 |      0 |      33 |     100% |
+| datasets.py                         |       5 |      0 |       5 |     100% |
+| dlpack.py                           |       4 |      0 |       4 |     100% |
+| dynamics.py                         |       1 |      0 |       1 |     100% |
+| kernels.py                          |      28 |      0 |      28 |     100% |
+| metrics.py                          |       3 |      0 |       3 |     100% |
+| simulation.py                       |      27 |      1 |      26 |      96% |
+| simulation_experiments.py           |       7 |      0 |       7 |     100% |
+| solvers.py                          |       8 |      0 |       8 |     100% |
+| subconscious_compat.py              |      40 |      0 |      40 |     100% |
+| temporal_metrics.py                 |      11 |      0 |      11 |     100% |
+| temporal_training.py                |      22 |      0 |      22 |     100% |
+| tensor.py                           |      23 |      0 |      23 |     100% |
+| topology.py                         |       3 |      0 |       3 |     100% |
+| train.py                            |       4 |      0 |       4 |     100% |
+| training_hooks.py                   |      37 |      1 |      36 |      97% |
+| y4q1_tools.py                       |      44 |      1 |      43 |      98% |
+| eval\__init__.py                    |       1 |      0 |       1 |     100% |
+| experiments\__init__.py             |       3 |      0 |       3 |     100% |
+| nn\__init__.py                      |      17 |      0 |      17 |     100% |
+| nn\_bridge.py                       |       5 |      0 |       5 |     100% |
+| nn\ablation.py                      |      29 |      0 |      29 |     100% |
+| nn\ablation_variants.py             |      33 |      0 |      33 |     100% |
+| nn\activations.py                   |       8 |      0 |       8 |     100% |
+| nn\allocation.py                    |      15 |      0 |      15 |     100% |
+| nn\attention.py                     |       7 |      0 |       7 |     100% |
+| nn\autoencoders.py                  |      26 |      0 |      26 |     100% |
+| nn\deferred_layers.py               |       1 |      0 |       1 |     100% |
+| nn\energy.py                        |      17 |      0 |      17 |     100% |
+| nn\hierarchical_layers.py           |      38 |      0 |      38 |     100% |
+| nn\hybrid.py                        |      14 |      0 |      14 |     100% |
+| nn\hybrid_compat.py                 |      24 |      0 |      24 |     100% |
+| nn\inhibition.py                    |       6 |      0 |       6 |     100% |
+| nn\inhibition_layers.py             |      23 |      0 |      23 |     100% |
+| nn\model.py                         |      15 |      0 |      15 |     100% |
+| nn\mot_evaluation.py                |      11 |      0 |      11 |     100% |
+| nn\optimizers.py                    |      33 |      0 |      33 |     100% |
+| nn\phase_tracker.py                 |      18 |      0 |      18 |     100% |
+| nn\slot_attention.py                |      20 |      0 |      20 |     100% |
+| nn\subconscious_model.py            |       1 |      0 |       1 |     100% |
+| nn\temporal_compat.py               |      14 |      0 |      14 |     100% |
+| parity\__init__.py                  |       1 |      0 |       1 |     100% |
+| parity\harness.py                   |      10 |      0 |      10 |     100% |
+| parity\loader.py                    |       9 |      0 |       9 |     100% |
+| parity\manifest.py                  |      15 |      0 |      15 |     100% |
+| parity\schema.py                    |      21 |      0 |      21 |     100% |
+| parity\strategies.py                |      13 |      0 |      13 |     100% |
+| reporting\__init__.py               |       1 |      0 |       1 |     100% |
+| reporting\_artifacts.py             |      15 |      7 |       8 |      53% |
+| reporting\benchmark_reporting.py    |      22 |      0 |      22 |     100% |
+| reporting\figure_generation.py      |      21 |      2 |      19 |      90% |
+| reporting\profiler.py               |      24 |      0 |      24 |     100% |
+| reporting\table_generation.py       |      20 |      7 |      13 |      65% |
+|-------------------------------------|---------|--------|---------|----------|
+| TOTAL                               |    1011 |     24 |     987 |    97.6% |
+--------------- RESULT: PASSED (minimum: 95.0%, actual: 97.6%) ----------------
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 1 s
+
+==========================================================================
+LEG: K06 check_global_session_registration.py
+command: .venv/Scripts/python tools/check_global_session_registration.py
+start (UTC): 2026-10-16T00:42:13Z
+--------------------------------------------------------------------------
+Global-session registration check passed.
+  Checked 18 Executive Audit reports.
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 0 s
+
+==========================================================================
+LEG: K07 check_dv_register_gates.py
+command: .venv/Scripts/python tools/check_dv_register_gates.py
+start (UTC): 2026-10-16T00:42:13Z
+--------------------------------------------------------------------------
+DV-register gate check passed.
+  Checked 47 DV register rows against 198 session-register entries.
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 0 s
+
+==========================================================================
+LEG: K08 check_skipif_probes.py
+command: .venv/Scripts/python tools/check_skipif_probes.py
+start (UTC): 2026-10-16T00:42:13Z
+--------------------------------------------------------------------------
+check_skipif_probes: no registration-probe skipif guards
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 1 s
+
+==========================================================================
+LEG: K09 check_deviation_ledger.py 039 -> 040
+command: .venv/Scripts/python tools/check_deviation_ledger.py DOCS/reports/039-project-state.md DOCS/reports/040-project-state.md
+start (UTC): 2026-10-16T00:42:14Z
+--------------------------------------------------------------------------
+Ledger consistency check passed.
+  Compared 142 rows in DOCS\reports\039-project-state.md with 146 rows in DOCS\reports\040-project-state.md.
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 16 s
+
+==========================================================================
+LEG: K10 remove DOCS/sphinx/_build (clean-build discipline, PA4-F2)
+command: rm -rf DOCS/sphinx/_build && echo removed
+start (UTC): 2026-10-16T00:42:30Z
+--------------------------------------------------------------------------
+removed
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 1 s
+
+==========================================================================
+LEG: K11 sphinx -W --keep-going -b html
+command: .venv/Scripts/python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
+start (UTC): 2026-10-16T00:42:31Z
+--------------------------------------------------------------------------
+[01mRunning Sphinx v9.1.0[39;49;00m
+[01mloading translations [en]... [39;49;00mdone
+[01mmaking output directory... [39;49;00mdone
+[autosummary] generating autosummary for: api\adversarial.rst, api\compat.rst, api\core.rst, api\daemon.rst, api\datasets.rst, api\dlpack.rst, api\dynamics.rst, api\eval.rst, api\experiment_tools.rst, api\experiments.rst, ..., changelog.rst, coupling_topologies.rst, getting_started.rst, index.rst, kernel_architecture.rst, migration_guide.rst, notebooks.rst, paper.rst, parity_report.rst, rust_api.rst
+loading intersphinx inventory 'python' from https://docs.python.org/3/objects.inv ...
+loading intersphinx inventory 'numpy' from https://numpy.org/doc/stable/objects.inv ...
+loading intersphinx inventory 'torch' from https://pytorch.org/docs/stable/objects.inv ...
+loading intersphinx inventory 'matplotlib' from https://matplotlib.org/stable/objects.inv ...
+intersphinx inventory has moved: https://pytorch.org/docs/stable/objects.inv -> https://docs.pytorch.org/docs/stable/objects.inv
+[01mmyst v5.1.0:[39;49;00m MdParserConfig(commonmark_only=False, gfm_only=False, enable_extensions=set(), disable_syntax=[], all_links_external=False, links_external_new_tab=False, url_schemes=('http', 'https', 'mailto', 'ftp'), ref_domains=None, fence_as_directive=set(), number_code_blocks=[], title_to_header=False, heading_anchors=0, heading_slug_func=None, html_meta={}, footnote_sort=True, footnote_transition=True, words_per_minute=200, substitutions={}, linkify_fuzzy_links=True, dmath_allow_labels=True, dmath_allow_space=True, dmath_allow_digits=True, dmath_double_inline=False, update_mathjax=True, mathjax_classes='tex2jax_process|mathjax_process|math|output_area', enable_checkboxes=False, strikethrough_single_tilde=False, colon_fence_exact_match=False, suppress_warnings=[], highlight_code_blocks=True)
+[01mbuilding [mo]: [39;49;00mtargets for 0 po files that are out of date
+[01mwriting output... [39;49;00m
+[01mbuilding [html]: [39;49;00mtargets for 35 source files that are out of date
+[01mupdating environment: [39;49;00m[new config] 35 added, 0 changed, 0 removed
+[2K[01mreading sources... [39;49;00m[  3%] [35mapi/adversarial[39;49;00m[2K[01mreading sources... [39;49;00m[  6%] [35mapi/compat[39;49;00m[2K[01mreading sources... [39;49;00m[  9%] [35mapi/core[39;49;00m[2K[01mreading sources... [39;49;00m[ 11%] [35mapi/daemon[39;49;00m[2K[01mreading sources... [39;49;00m[ 14%] [35mapi/datasets[39;49;00m[2K[01mreading sources... [39;49;00m[ 17%] [35mapi/dlpack[39;49;00m[2K[01mreading sources... [39;49;00m[ 20%] [35mapi/dynamics[39;49;00m[2K[01mreading sources... [39;49;00m[ 23%] [35mapi/eval[39;49;00m[2K[01mreading sources... [39;49;00m[ 26%] [35mapi/experiment_tools[39;49;00m[2K[01mreading sources... [39;49;00m[ 29%] [35mapi/experiments[39;49;00m[2K[01mreading sources... [39;49;00m[ 31%] [35mapi/kernels[39;49;00m[2K[01mreading sources... [39;49;00m[ 34%] [35mapi/metrics[39;49;00m[2K[01mreading sources... [39;49;00m[ 37%] [35mapi/nn[39;49;00m[2K[01mreading sources... [39;49;00m[ 40%] [35mapi/parity[39;49;00m[2K[01mreading sources... [39;49;00m[ 43%] [35mapi/reporting[39;49;00m[2K[01mreading sources... [39;49;00m[ 46%] [35mapi/simulation[39;49;00m[2K[01mreading sources... [39;49;00m[ 49%] [35mapi/solvers[39;49;00m[2K[01mreading sources... [39;49;00m[ 51%] [35mapi/subconscious[39;49;00m[2K[01mreading sources... [39;49;00m[ 54%] [35mapi/temporal[39;49;00m[2K[01mreading sources... [39;49;00m[ 57%] [35mapi/tensor[39;49;00m[2K[01mreading sources... [39;49;00m[ 60%] [35mapi/topology[39;49;00m[2K[01mreading sources... [39;49;00m[ 63%] [35mapi/train[39;49;00m[2K[01mreading sources... [39;49;00m[ 66%] [35mapi/utils[39;49;00m[2K[01mreading sources... [39;49;00m[ 69%] [35marchitecture[39;49;00m[2K[01mreading sources... [39;49;00m[ 71%] [35mcapacity_analysis[39;49;00m[2K[01mreading sources... [39;49;00m[ 74%] [35mchangelog[39;49;00m[2K[01mreading sources... [39;49;00m[ 77%] [35mcoupling_topologies[39;49;00m[2K[01mreading sources... [39;49;00m[ 80%] [35mgetting_started[39;49;00m[2K[01mreading sources... [39;49;00m[ 83%] [35mindex[39;49;00m[2K[01mreading sources... [39;49;00m[ 86%] [35mkernel_architecture[39;49;00m[2K[01mreading sources... [39;49;00m[ 89%] [35mmigration_guide[39;49;00m[2K[01mreading sources... [39;49;00m[ 91%] [35mnotebooks[39;49;00m[2K[01mreading sources... [39;49;00m[ 94%] [35mpaper[39;49;00m[2K[01mreading sources... [39;49;00m[ 97%] [35mparity_report[39;49;00m[2K[01mreading sources... [39;49;00m[100%] [35mrust_api[39;49;00m
+[01mlooking for now-outdated files... [39;49;00mnone found
+[01mpickling environment... [39;49;00mdone
+[01mchecking consistency... [39;49;00mC:\dev\PRIN\DOCS\sphinx\api\adversarial.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/adversarial
+C:\dev\PRIN\DOCS\sphinx\api\compat.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/compat
+C:\dev\PRIN\DOCS\sphinx\api\datasets.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/datasets
+C:\dev\PRIN\DOCS\sphinx\api\experiment_tools.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/experiment_tools
+C:\dev\PRIN\DOCS\sphinx\api\kernels.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/kernels
+C:\dev\PRIN\DOCS\sphinx\api\simulation.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/simulation
+C:\dev\PRIN\DOCS\sphinx\api\solvers.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/solvers
+C:\dev\PRIN\DOCS\sphinx\api\subconscious.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/subconscious
+C:\dev\PRIN\DOCS\sphinx\api\temporal.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/temporal
+done
+[01mpreparing documents... [39;49;00mdone
+[01mcopying assets... [39;49;00m
+[01mcopying static files... [39;49;00m
+Writing evaluated template result to C:\dev\PRIN\DOCS\sphinx\_build\html\_static\basic.css
+Writing evaluated template result to C:\dev\PRIN\DOCS\sphinx\_build\html\_static\documentation_options.js
+Writing evaluated template result to C:\dev\PRIN\DOCS\sphinx\_build\html\_static\language_data.js
+[01mcopying static files: [39;49;00mdone
+[01mcopying extra files... [39;49;00m
+[01mcopying extra files: [39;49;00mdone
+[01mcopying assets: [39;49;00mdone
+[2K[01mwriting output... [39;49;00m[  3%] [32mapi/adversarial[39;49;00m[2K[01mwriting output... [39;49;00m[  6%] [32mapi/compat[39;49;00m[2K[01mwriting output... [39;49;00m[  9%] [32mapi/core[39;49;00m[2K[01mwriting output... [39;49;00m[ 11%] [32mapi/daemon[39;49;00m[2K[01mwriting output... [39;49;00m[ 14%] [32mapi/datasets[39;49;00m[2K[01mwriting output... [39;49;00m[ 17%] [32mapi/dlpack[39;49;00m[2K[01mwriting output... [39;49;00m[ 20%] [32mapi/dynamics[39;49;00m[2K[01mwriting output... [39;49;00m[ 23%] [32mapi/eval[39;49;00m[2K[01mwriting output... [39;49;00m[ 26%] [32mapi/experiment_tools[39;49;00m[2K[01mwriting output... [39;49;00m[ 29%] [32mapi/experiments[39;49;00m[2K[01mwriting output... [39;49;00m[ 31%] [32mapi/kernels[39;49;00m[2K[01mwriting output... [39;49;00m[ 34%] [32mapi/metrics[39;49;00m[2K[01mwriting output... [39;49;00m[ 37%] [32mapi/nn[39;49;00m[2K[01mwriting output... [39;49;00m[ 40%] [32mapi/parity[39;49;00m[2K[01mwriting output... [39;49;00m[ 43%] [32mapi/reporting[39;49;00m[2K[01mwriting output... [39;49;00m[ 46%] [32mapi/simulation[39;49;00m[2K[01mwriting output... [39;49;00m[ 49%] [32mapi/solvers[39;49;00m[2K[01mwriting output... [39;49;00m[ 51%] [32mapi/subconscious[39;49;00m[2K[01mwriting output... [39;49;00m[ 54%] [32mapi/temporal[39;49;00m[2K[01mwriting output... [39;49;00m[ 57%] [32mapi/tensor[39;49;00m[2K[01mwriting output... [39;49;00m[ 60%] [32mapi/topology[39;49;00m[2K[01mwriting output... [39;49;00m[ 63%] [32mapi/train[39;49;00m[2K[01mwriting output... [39;49;00m[ 66%] [32mapi/utils[39;49;00m[2K[01mwriting output... [39;49;00m[ 69%] [32marchitecture[39;49;00m[2K[01mwriting output... [39;49;00m[ 71%] [32mcapacity_analysis[39;49;00m[2K[01mwriting output... [39;49;00m[ 74%] [32mchangelog[39;49;00m[2K[01mwriting output... [39;49;00m[ 77%] [32mcoupling_topologies[39;49;00m[2K[01mwriting output... [39;49;00m[ 80%] [32mgetting_started[39;49;00m[2K[01mwriting output... [39;49;00m[ 83%] [32mindex[39;49;00m[2K[01mwriting output... [39;49;00m[ 86%] [32mkernel_architecture[39;49;00m[2K[01mwriting output... [39;49;00m[ 89%] [32mmigration_guide[39;49;00m[2K[01mwriting output... [39;49;00m[ 91%] [32mnotebooks[39;49;00m[2K[01mwriting output... [39;49;00m[ 94%] [32mpaper[39;49;00m[2K[01mwriting output... [39;49;00m[ 97%] [32mparity_report[39;49;00m[2K[01mwriting output... [39;49;00m[100%] [32mrust_api[39;49;00m
+[01mgenerating indices... [39;49;00mgenindex py-modindex done
+[2K[01mhighlighting module code... [39;49;00m[  2%] [94mprin._compat[39;49;00m[2K[01mhighlighting module code... [39;49;00m[  4%] [94mprin._deprecation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[  6%] [94mprin._prin_core[39;49;00m[2K[01mhighlighting module code... [39;49;00m[  8%] [94mprin._torch_compat[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 10%] [94mprin.adversarial_tools[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 12%] [94mprin.daemon[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 13%] [94mprin.datasets[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 15%] [94mprin.dlpack[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 17%] [94mprin.experiments[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 19%] [94mprin.kernels[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 21%] [94mprin.metrics[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 23%] [94mprin.nn[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 25%] [94mprin.nn._bridge[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 27%] [94mprin.nn.ablation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 29%] [94mprin.nn.ablation_variants[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 31%] [94mprin.nn.activations[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 33%] [94mprin.nn.allocation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 35%] [94mprin.nn.attention[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 37%] [94mprin.nn.autoencoders[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 38%] [94mprin.nn.energy[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 40%] [94mprin.nn.hierarchical_layers[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 42%] [94mprin.nn.hybrid[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 44%] [94mprin.nn.hybrid_compat[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 46%] [94mprin.nn.inhibition[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 48%] [94mprin.nn.inhibition_layers[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 50%] [94mprin.nn.model[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 52%] [94mprin.nn.mot_evaluation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 54%] [94mprin.nn.optimizers[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 56%] [94mprin.nn.phase_tracker[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 58%] [94mprin.nn.slot_attention[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 60%] [94mprin.nn.temporal_compat[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 62%] [94mprin.parity.harness[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 63%] [94mprin.parity.loader[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 65%] [94mprin.parity.manifest[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 67%] [94mprin.parity.schema[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 69%] [94mprin.parity.strategies[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 71%] [94mprin.reporting._artifacts[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 73%] [94mprin.reporting.benchmark_reporting[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 75%] [94mprin.reporting.figure_generation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 77%] [94mprin.reporting.profiler[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 79%] [94mprin.reporting.table_generation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 81%] [94mprin.simulation[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 83%] [94mprin.simulation_experiments[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 85%] [94mprin.solvers[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 87%] [94mprin.subconscious_compat[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 88%] [94mprin.temporal_metrics[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 90%] [94mprin.temporal_training[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 92%] [94mprin.tensor[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 94%] [94mprin.topology[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 96%] [94mprin.train[39;49;00m[2K[01mhighlighting module code... [39;49;00m[ 98%] [94mprin.training_hooks[39;49;00m[2K[01mhighlighting module code... [39;49;00m[100%] [94mprin.y4q1_tools[39;49;00m
+[01mwriting additional pages... [39;49;00msearch done
+[01mdumping search index in English (code: en)... [39;49;00mdone
+[01mdumping object inventory... [39;49;00mdone
+[01mbuild succeeded.[39;49;00m
+
+The HTML pages are in DOCS\sphinx\_build\html.
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 27 s
+
+==========================================================================
+LEG: K12 EXP-002 record / CI / dependency immutability (expect empty)
+command: git diff --stat fd8854ed..HEAD -- DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/ benchmarks/results/EXP-002/ .github/ Cargo.lock Cargo.toml pyproject.toml && echo '(empty above == immutable)'
+start (UTC): 2026-10-16T00:42:58Z
+--------------------------------------------------------------------------
+(empty above == immutable)
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 1 s
+
+==========================================================================
+LEG: K13 S1 evidence and all source untouched by S2 (expect empty)
+command: git diff --stat 8fd0ecc9..HEAD -- EVIDENCE/exp002-d1-s1/ python/ tests/ parity/ benchmarks/ tools/ && echo '(empty above == S2 changed no source, test or S1 evidence)'
+start (UTC): 2026-10-16T00:42:59Z
+--------------------------------------------------------------------------
+(empty above == S2 changed no source, test or S1 evidence)
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 1 s
+
+==========================================================================
+LEG: K14 evidence-index self-check (every committed file indexed; no dangling links)
+command: bash /c/Users/there/prin-s2-scratch/check_evidence_index.sh
+start (UTC): 2026-10-16T00:43:00Z
+--------------------------------------------------------------------------
+=== committed files in EVIDENCE/exp002-d1-s2 (excluding the README itself) ===
+artist-level-equivalence.txt
+artist_level_equivalence.py
+ast-spec-validation.txt
+ast_spec_validation.py
+both-policies-post-fix.txt
+both_policies_post_fix.py
+changed-line-coverage.txt
+changed_line_coverage.py
+decomposition-postfix-s2-rerun.txt
+decomposition-rerun-vs-committed.txt
+decomposition_rerun_check.py
+e4-analysis-clean-worktree-reproduction.txt
+fast-gate-divergence-coverage.txt
+fast_gate_divergence_coverage.py
+path-guard-negative-tests.txt
+phase2-sequencer.txt
+post-record-gate.txt
+postfix-gate-8fd0ecc9.txt
+prefix-gate-d90eeab-module.txt
+pytest-suites.txt
+snyk-code.txt
+snyk-low-findings-threat-assessment.md
+stall-diagnosis-clevr6-no-nan.txt
+static-gate-reruns.txt
+static-gate.txt
+targeted-coverage-phase2-attempt.txt
+verify-manifest-five-runs.txt
+
+file count: 27
+
+=== index check ===
+  indexed     artist-level-equivalence.txt
+  indexed     artist_level_equivalence.py
+  indexed     ast-spec-validation.txt
+  indexed     ast_spec_validation.py
+  indexed     both-policies-post-fix.txt
+  indexed     both_policies_post_fix.py
+  indexed     changed-line-coverage.txt
+  indexed     changed_line_coverage.py
+  indexed     decomposition-postfix-s2-rerun.txt
+  indexed     decomposition-rerun-vs-committed.txt
+  indexed     decomposition_rerun_check.py
+  indexed     e4-analysis-clean-worktree-reproduction.txt
+  indexed     fast-gate-divergence-coverage.txt
+  indexed     fast_gate_divergence_coverage.py
+  indexed     path-guard-negative-tests.txt
+  indexed     phase2-sequencer.txt
+  indexed     post-record-gate.txt
+  indexed     postfix-gate-8fd0ecc9.txt
+  indexed     prefix-gate-d90eeab-module.txt
+  indexed     pytest-suites.txt
+  indexed     snyk-code.txt
+  indexed     snyk-low-findings-threat-assessment.md
+  indexed     stall-diagnosis-clevr6-no-nan.txt
+  indexed     static-gate-reruns.txt
+  indexed     static-gate.txt
+  indexed     targeted-coverage-phase2-attempt.txt
+  indexed     verify-manifest-five-runs.txt
+
+=== reverse check: names linked in the README that do not exist ===
+  (none)
+
+==========================================================================
+files: 27   not indexed: 0   dangling links: 0
+==========================================================================
+RESULT: PASS
+--------------------------------------------------------------------------
+exit code: 0
+elapsed: 6 s
+
+# date finished (UTC): 2026-10-16T00:43:06Z
+# tree state after the legs:
+ M DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+ M DOCS/audits/README.md
+ M DOCS/sessions/SESSION_REGISTER.md
+ M DOCS/sessions/contingencies/2026-10-14-exp002-d1-s2-correction-audit.md
+ M DOCS/sessions/contingencies/README.md
+ M EVIDENCE/exp002-d1-s2/README.md
+ M EVIDENCE/exp002-d1-s2/post-record-gate.txt
+?? EVIDENCE/exp002-d1-s2/snyk-code-cli.txt
+?? EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py

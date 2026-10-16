@@ -1,6 +1,6 @@
 # EXP-002 D1 S2 — Correction audit
 
-**Status:** COMPLETE (S2, 2026-10-15 UTC; verdict **PASS-WITH-FINDINGS**, one D2 + one D3 + six D4, no D1, no systemic drift — recorded in the [correction audit](../../audits/2026-10-15-exp002-d1-correction-audit.md) §S2.0–§S2.13); committed locally only, **not pushed** (a delegated decision, §S2.13 call 2); **S3 is next**
+**Status:** COMPLETE (S2, 2026-10-15/16 UTC; verdict **PASS-WITH-FINDINGS**, one D2 + one D3 + six D4, no D1, no systemic drift — recorded in the [correction audit](../../audits/2026-10-15-exp002-d1-correction-audit.md) §S2.0–§S2.14). Of the eight findings, `-F3` is **RESOLVED** (the maintainer re-authenticated the `snyk` CLI and the blocked leg was then run for real) and `-F8` is **RATIFIED**; **six remain for S3**. Committed locally only, **not pushed** (a delegated and ratified decision, §S2.13 call 2); **S3 is next**
 **Triggering deviation:** `EXP-002 H3 REFUTED` (campaign plan §10.4 D1; pre-registration §4.3)
 **Blocked numbered session:** `0164` (EXP-003 E1), and every later campaign session (`0165`–`0194`)
 **Opened by:** session `0163` (EXP-002 E5), 2026-10-14 UTC
@@ -79,7 +79,7 @@ re-execution, not by accepting S1's record:
 |---|---|---|
 | `EXP002D1-S2-F2` | **D2** | The required full suite is red (`exit 1`): `test_notebook_executes_end_to_end[02_clevr_n_binding.ipynb]` `CellTimeoutError` at the 900 s per-cell limit — the same node failed in S1's run, and S2's far less contended run (2:03:35 vs 4:11:33, with S1's two `WinError 5` failures passing here) no longer supports a purely load-induced attribution. S3 must re-size the bound from cited in-suite evidence, document the leg as its own workload, or open a dated DV row on the DV-046 precedent. |
 | `EXP002D1-S2-F1` | **D3** | The two registered H3 policies now disagree about the verdict: approved §5.4 **39/39 equal** (`CONFIRMED`) vs §11.3 sensitivity **14/39 equal** (`REFUTED`). All 25 residuals are writer/host properties — 14 PDF Info key sets, 11 `.tex` line terminators — with **0 unclassified**. Not an S1 defect; S3 records the assignment and **S4 carries it into the `EXP-002-r1` authorization** so its E1/E2 registers both policies deliberately. `EXP-002`'s frozen pre-registration is not edited. |
-| `EXP002D1-S2-F3` | D4 | Local `snyk` CLI credentials expired; S4 must use the MCP route or have the maintainer re-authenticate. |
+| `EXP002D1-S2-F3` | D4 | **RESOLVED 2026-10-16 UTC.** The local `snyk` CLI credentials had expired; the maintainer re-authenticated (`snyk whoami` → `Symbo-gif`, verified rather than assumed), and the leg the brief named then ran for real — SARIF written, Test Summary **0 HIGH / 0 MEDIUM / 77 LOW**, and **0 findings in the four changed files**, independently agreeing with the MCP route. This also re-derived the repo-wide LOW figure that had to be carried unverified while the CLI was blocked. The blocked state is retained in the record, not overwritten. **Nothing outstanding.** |
 | `EXP002D1-S2-F4` | D4 | `EVIDENCE/exp002-d1-s1/fast-tests-against-prefix-module.txt` is committed but absent from that README's index (10 of 11). No `SHA256SUMS.txt` there, so an added row breaks no hash freeze; evidence bytes untouched. |
 | `EXP002D1-S2-F5` | D4 | The fast-gate docstring says "each byte-material argument" but the tests pin **all 34**; comment-only correction, no assertion changes. |
 | `EXP002D1-S2-F6` | D4 | fig13's per-series `label=f"Obj {lbl}"` is still omitted — byte-immaterial, artist-level EQUAL, but inconsistent with an argument-faithful port. Restore or record why not. |
@@ -103,15 +103,18 @@ with two timestamped observations and the node's committed expected duration
 deselected or weakened.
 
 **Evidence:** [`EVIDENCE/exp002-d1-s2/`](../../../EVIDENCE/exp002-d1-s2/README.md)
-— six committed instruments and their verbatim outputs. S2 was read-only: no
+— seven committed instruments and their verbatim outputs. S2 was read-only: no
 source, test, S1-evidence or S1-record change was committed.
 
 **Handoff.** S3
-([brief](2026-10-14-exp002-d1-s3-correction-remediation.md)) resolves all eight
-findings in D1→D4 order (so `EXP002D1-S2-F2` first), each commit naming its
-finding ID, then obtains a `CLEAN` delta re-audit that re-verifies the pre-fix
-failing reproduction, the post-fix passing parity tests and the immutability of
-the EXP-002 record. S3 is **mandatory** even though no D1 was found.
+([brief](2026-10-14-exp002-d1-s3-correction-remediation.md)) resolves the
+**six findings still open** in D1→D4 order (so `EXP002D1-S2-F2` first, then
+`-F1`, then `-F4`…`-F7`), each commit naming its finding ID, then obtains a
+`CLEAN` delta re-audit that re-verifies the pre-fix failing reproduction, the
+post-fix passing parity tests and the immutability of the EXP-002 record.
+`-F3` is already RESOLVED and `-F8` is RATIFIED, so neither carries an S3 action
+beyond `-F8`'s standing §6.2 re-check. S3 is **mandatory** even though no D1 was
+found.
 
 **Not authorized by S2:** merging PR #34, marking it ready for review,
 `EXP-002-r1`, or releasing session `0164`. Session `0164` stays `BLOCKED`.

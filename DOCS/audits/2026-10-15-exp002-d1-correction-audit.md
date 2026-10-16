@@ -568,15 +568,22 @@ Evidence: [`postfix-artefact-summary-dump.txt`](../../EVIDENCE/exp002-d1-s2/post
 Evidence: [`verify-manifest-five-runs.txt`](../../EVIDENCE/exp002-d1-s2/verify-manifest-five-runs.txt),
 [`e4-analysis-clean-worktree-reproduction.txt`](../../EVIDENCE/exp002-d1-s2/e4-analysis-clean-worktree-reproduction.txt).
 
-#### Item 5 — Coding Standards §6 evidence is real. ✅ VERIFIED (one leg BLOCKED, reported not claimed)
+#### Item 5 — Coding Standards §6 evidence is real. ✅ VERIFIED (both legs completed)
 
-**CLI leg — BLOCKED.** `snyk code test . --severity-threshold=low
---sarif-file-output=<scratch>` (snyk `1.1306.2`) returned `ERROR Authentication
-error (SNYK-0005) … Status: 401 Unauthorized`, **exit 2**, and wrote **no
-SARIF**. The local CLI token has expired; `snyk auth` only prints a browser
-redirect, so recovery needs an interactive login by the maintainer, which this
-session did not perform and could not. **This leg is recorded as blocked, not
+**CLI leg — initially BLOCKED, then completed.** The first attempt,
+`snyk code test . --severity-threshold=low --sarif-file-output=<scratch>`
+(snyk `1.1306.2`), returned `ERROR Authentication error (SNYK-0005) … Status:
+401 Unauthorized`, **exit 2**, and wrote **no SARIF**. The local CLI token had
+expired and `snyk auth` only prints a browser redirect, so recovery needed an
+interactive login by the maintainer. That state was **recorded as blocked, not
 as passed** (amendment #48 item 2).
+
+**Resolution (2026-10-16 UTC).** The maintainer re-authenticated the CLI
+(`snyk whoami` → `Symbo-gif`, exit 0), and the leg the brief specified was then
+run for real: same command, snyk `1.1306.2`, **exit 1** (findings reported — not
+a scan failure), **SARIF written** (`sha256 ebc92c86…`, 530,562 B). Its Test
+Summary is authoritative for severity: **77 issues — 0 HIGH, 0 MEDIUM, 77 LOW**,
+so the §6.2 gate ("0 medium+ findings") is **met**.
 
 **MCP leg — COMPLETED.** Coding Standards §6.4 permits Snyk Code "through the
 configured IDE or MCP integration". The authenticated Snyk MCP server
@@ -591,19 +598,28 @@ configured IDE or MCP integration". The authenticated Snyk MCP server
 | `EVIDENCE/exp002-d1-s1/root_cause_decomposition.py` | `low` | `{"success":true,"issueCount":0}` |
 
 **0 findings in all four changed first-party source files**, and 0 repo-wide at
-`medium` — which is the §6.2 gate ("0 medium+ findings"). The repository-wide
-**LOW** total was **not re-derived**: the MCP tool returns findings inline
-rather than as SARIF, so enumerating 75+ low findings was not attempted. S1's
-figure of 75 LOW is therefore *carried, not re-verified*, and is not claimed
-here.
+`medium` — which is the §6.2 gate ("0 medium+ findings"). The CLI leg now
+confirms the same result for those four files **independently of the MCP route**,
+through the exact command the brief named.
+
+**The repository-wide LOW total, now re-derived.** The MCP tool returns findings
+inline rather than as SARIF, so while the CLI was blocked this figure was
+*carried from S1, not re-verified*, and was explicitly not claimed. The CLI leg
+supplies it: **77 LOW**, of which **44 are in git-tracked paths** and 33 are in
+gitignored on-disk agent-worktree copies (`.claude/worktrees/…`,
+`.kilo/worktrees/…`) of files already counted — `snyk code test .` scans the
+filesystem, not git. S1's recorded 75 plus the 2 findings in the instruments
+this session added accounts for the 77.
 
 **Not triggered:** no dependency or lockfile changed in the audited range (the
 diff over `Cargo.lock`, `Cargo.toml`, `pyproject.toml` is empty), so Snyk Open
 Source, `pip-audit` and `cargo audit` are not triggered by this correction.
 `cargo audit` red is **DV-045**, explicitly out of scope.
 
-Evidence: [`snyk-code.txt`](../../EVIDENCE/exp002-d1-s2/snyk-code.txt) (both
-legs, with the scanned files' SHA-256s).
+Evidence: [`snyk-code.txt`](../../EVIDENCE/exp002-d1-s2/snyk-code.txt) (the
+blocked CLI attempt and the MCP leg), [`snyk-code-cli.txt`](../../EVIDENCE/exp002-d1-s2/snyk-code-cli.txt)
+(the completed CLI leg and its SARIF filter), filtered by
+[`snyk_sarif_filter.py`](../../EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py).
 
 ### S2.1 A1 — WP scope
 
@@ -737,14 +753,21 @@ not a code defect. It passed on re-run in 56 s without needing `-j 1`.
 - `bandit -r python/prin DOCS/experiments -c pyproject.toml` → exit 0, no
   issues. `bandit -r EVIDENCE/exp002-d1-s1 EVIDENCE/exp002-d1-s2` → exit 0,
   **0 issues at every severity**.
-- Snyk Code: 0 findings in the four changed files, 0 repo-wide at `medium`
-  (MCP leg; CLI leg **BLOCKED** on expired credentials — reported, not claimed).
+- Snyk Code: **both routes now complete and agreeing.** The MCP leg reported 0
+  findings in the four changed files and 0 repo-wide at `medium`; after the
+  maintainer re-authenticated the CLI, the leg the brief named
+  (`snyk code test . --severity-threshold=low --sarif-file-output=…`) ran for
+  real and independently confirms **0 findings in the same four files**, with a
+  Test Summary of **0 HIGH / 0 MEDIUM / 77 LOW** — so the §6.2 "0 medium+" gate
+  is met on both routes. The blocked-CLI state was recorded as blocked while it
+  lasted, and its resolution is dated in §S2.0 item 5 (`EXP002D1-S2-F3`,
+  **RESOLVED**).
   Per §6.4 the six new S2 instruments were then scanned as new first-party code:
   **2 LOW `python/PT` findings**, remediated twice with a `PR23-F1`-style guard
   and proven non-vacuous by negative tests, but not cleared because Snyk's model
   does not recognise the sanitizer. Recorded as `EXP002D1-S2-F8` with a full
-  threat assessment rather than suppressed; the applicable "0 medium+" gate
-  stays clean.
+  threat assessment rather than suppressed, **ratified by the maintainer
+  2026-10-16 UTC**, and corroborated by the CLI leg at the same two locations.
 - **gitleaks** (pinned binary
   `DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe`):
   full history **738 commits**, ~94.76 MB, **no leaks found**, exit 0;
@@ -841,11 +864,15 @@ independently confirms the record chain end-to-end: frozen module digest →
 seven outputs → `report-manifest.json` `6b15dcc1…68781`.
 
 This S2 record adds [`EVIDENCE/exp002-d1-s2/`](../../EVIDENCE/exp002-d1-s2/README.md):
-27 files plus its README — six executable instruments, their verbatim outputs,
+29 files plus its README — seven executable instruments, their verbatim outputs,
 and the §6.2 threat assessment behind `EXP002D1-S2-F8`. Every output is
 reproducible from a committed instrument; two files whose generators were
 uncommitted scratch drafts were deleted rather than indexed, and one superseded
-attempt is retained and labelled as such.
+attempt is retained and labelled as such. A mechanical index self-check
+(every committed file named in the README, every README link resolving) reports
+**0 unindexed, 0 dangling** — the standard this audit applied to S1 in
+`EXP002D1-S2-F4`, applied to its own bundle, where it caught and fixed one
+missing row.
 
 ### S2.11 Findings
 
@@ -853,12 +880,12 @@ attempt is retained and labelled as such.
 |---|---|---|---|---|
 | `EXP002D1-S2-F1` | **D3** | A4 | **The two registered H3 comparison policies now disagree about the verdict.** Post-correction the approved §5.4 policy gives **39/39 equal** (H3 would be `CONFIRMED`) while the §11.3 sensitivity policy gives **14/39 equal** (H3 would still be `REFUTED`). Independently re-derived with all 25 residuals classified and **0 unclassified**: 14 PDFs differ only in the Info **key set** (reference 3 keys incl. a wall-clock `CreationDate`; PRIN 4 fixed keys incl. `ModDate`), and 11 `.tex` tables differ only in **line terminators** (reference CRLF from its text-mode writer on Windows, PRIN LF). Both are writer/host properties the approved policy registers as non-scientific and E2 decision 9 already disclosed. Pre-registration §11.3 item 1's clause — "If the two verdicts differ, E5 must state that H3's verdict depends on a comparison amendment made after outcome exposure" — was drafted for the pre-correction state, where *both* policies refuted; it does not govern a *corrected* generator, whose sensitivity-policy residual is no longer about outcome exposure at all. **This is not an S1 defect**: S1 disclosed it (S1.10 item 1) and correctly assigned it to `EXP-002-r1`. It is raised because the registered text and the post-correction reality have diverged, and because if both policies were carried into `EXP-002-r1` unchanged its E5 could return a policy-dependent verdict and re-block the campaign. | **S3** records the assignment explicitly against this ID; **S4** carries it into the `EXP-002-r1` authorization so that its **E1/E2 deliberately registers** how the two policies are to be read for the re-run (e.g. approve §5.4 as sole primary and retain §11.3 as a disclosed writer-property sensitivity, or register a corrected sensitivity policy). `EXP-002`'s frozen pre-registration is **not** edited — the change belongs in the new record. |
 | `EXP002D1-S2-F2` | **D2** | A3 | **The required full suite is red, and the same node has now failed in two consecutive sessions.** `pytest tests/ parity/` exits **1**: `1 failed, 6324 passed, 184 skipped (2:03:35)`. The failure is `tests/test_notebooks.py::test_notebook_executes_end_to_end[02_clevr_n_binding.ipynb]` — `nbclient.exceptions.CellTimeoutError: A cell timed out … after 900 seconds`, in the notebook's training cell. S1 recorded the identical failure and reported it passing alone in 232 s. **S2's run does not support a purely load-induced attribution**: it was far less contended than S1's (2:03:35 vs 4:11:33, ~89 % idle at start, this session deliberately added no concurrent load), S1's two `WinError 5` failures both **passed** here, and the other three notebooks passed in both sessions — yet this node still exceeded 900 s in-suite. Testing Standards §1.5 treats flaky tests as bugs and §4 requires tests be independent and order-insensitive; §7 item 2 requires a finite bound be sized from cited evidence with substantial margin, and 900 s is not sufficient for this cell under full-suite conditions. Not caused by this correction and unrelated to figure generation, but it leaves the cycle unable to record a green full local gate. | **S3** must disposition it, in one of three governed ways: (a) re-size the per-cell bound from cited in-suite evidence per §7 item 2; (b) run the notebook leg as a separately documented workload with its own evidenced bound; or (c) open a **dated DV register row** on the DV-046 precedent (an intermittent, host-sensitive node with a standing disposition). Recorded at its **actual exit status 1** per §7 item 6 — never as a pass. No test may be deselected or weakened to green it. |
-| `EXP002D1-S2-F3` | **D4** | A6 | **The local `snyk` CLI's credentials have expired**, so the CLI route to the §6.2 Snyk Code gate is unavailable: `snyk code test . --severity-threshold=low --sarif-file-output=…` → `SNYK-0005`, `401 Unauthorized`, exit **2**, **no SARIF written**. `snyk auth` only prints a browser redirect, so recovery needs an interactive login by the maintainer. The control itself **was** satisfied this session through the MCP integration that §6.4 expressly permits (0 findings in all four changed files; 0 repo-wide at `medium`), so no gate went unmet — but S4's full gate will hit the same wall on the CLI route, and amendment #48 item 2 requires an unavailable control be reported as *blocked*, never as passed. | **S3** notes it; **S4** runs Snyk Code via the MCP integration and records the route used, or the maintainer re-authenticates the CLI first. Recorded here as a blocked leg alongside the completed MCP leg, not as a substitution that hides it. |
+| `EXP002D1-S2-F3` | **D4** | A6 | **The local `snyk` CLI's credentials have expired**, so the CLI route to the §6.2 Snyk Code gate is unavailable: `snyk code test . --severity-threshold=low --sarif-file-output=…` → `SNYK-0005`, `401 Unauthorized`, exit **2**, **no SARIF written**. `snyk auth` only prints a browser redirect, so recovery needs an interactive login by the maintainer. The control itself **was** satisfied this session through the MCP integration that §6.4 expressly permits (0 findings in all four changed files; 0 repo-wide at `medium`), so no gate went unmet — but S4's full gate will hit the same wall on the CLI route, and amendment #48 item 2 requires an unavailable control be reported as *blocked*, never as passed. | **RESOLVED (2026-10-16 UTC).** The maintainer re-authenticated the CLI (`snyk whoami` → `Symbo-gif`, exit 0), and the leg the brief named was then run for real: `snyk code test . --severity-threshold=low --sarif-file-output=…`, exit 1 (findings reported, not a scan failure), SARIF written (`ebc92c86…`, 530,562 B), Test Summary **0 HIGH / 0 MEDIUM / 77 LOW**. It independently confirms **0 findings in the four changed files**, agreeing with the MCP route, and supplies the repo-wide LOW figure that could not be re-derived while the CLI was blocked (77 raw; 44 in git-tracked paths). The blocked state is retained in the record rather than overwritten: it was true when observed, and amendment #48 item 2 required it be reported as blocked and never as passed. **Nothing outstanding for S3 or S4.** |
 | `EXP002D1-S2-F4` | **D4** | A10 | **A committed S1 evidence file is not indexed by its own README.** `EVIDENCE/exp002-d1-s1/` contains 11 files but its README's index table lists 10 — `fast-tests-against-prefix-module.txt` (the record of the 9 fast-gate tests failing against the pre-fix module) is absent. The file's content is genuine and this session **reproduced it exactly** (9 failed, exit 1), so the evidence is sound; only the index is incomplete, which weakens the artefact trail a reader relies on to know the bundle is complete. That directory carries **no `SHA256SUMS.txt`**, so adding an index row breaks no hash freeze (contrast the manifested `EVIDENCE/ea007/` bundles). | **S3** adds the missing README row. README edit only — the evidence file's bytes are **not** touched, and no S1 evidence is re-manifested. |
 | `EXP002D1-S2-F5` | **D4** | A3 | **The fast-gate module docstring understates its own scope.** `tests/test_publication_figure_arguments.py` says the tests "pin each **byte-material** argument", but they pin **all 34** registered divergences, including the 8 byte-immaterial ones (`D5.1`, `D5.3`, `D9.2`, `D11.4`, `D12.5`, `D12.7`, `D15.4`, `D15.7`) — measured at 34/34 with no unknown IDs. The protection is stronger than documented, so a future reader could wrongly conclude the immaterial arguments are unguarded and "tidy" them away. | **S3** corrects the docstring wording. Comment-only; **no assertion changes**, so no test behaviour moves. |
 | `EXP002D1-S2-F6` | **D4** | A2 | **One known argument infidelity survives the fix.** The reference's fig13 per-series `label=f"Obj {lbl}"` (with `if j < 5 else None`) is still omitted by the port. It is byte-immaterial because fig13 draws no legend, it was never a registered divergence, and this session's artist-level comparison reports fig13 **EQUAL**. S1 disclosed it (S1.10 item 5) and left it unchanged. It is raised only because the correction's stated principle is an *argument-faithful* port, so a surviving known omission is an inconsistency worth an explicit decision rather than silence. | **S3** either restores it for argument-faithfulness (with a byte-identity re-check, since it must stay immaterial) or records why it is deliberately left. Either outcome closes it. |
 | `EXP002D1-S2-F7` | **D4** | A7 | **An absolute claim in the touched module docstring is imprecise.** `python/prin/reporting/figure_generation.py` states "Stored benchmark values are only rendered; **no scientific quantity is recomputed**" — a sentence this fix *expanded*. The module does evaluate a stored exponential fit over a fine grid (`fit["IP_0"] * np.exp(-fine / fit["sigma_c"])`, line 1079), mirroring the frozen reference (line 1053). The behaviour is correct and byte parity **requires** it, and WP-034's audit already classified the module as reporting/rendering, so nothing here is a defect — but the unqualified wording would mislead a reader applying Coding Standards §1.2 ("no numerics in Python"). | **S3** qualifies the wording (e.g. note that stored fit parameters are evaluated for rendering, mirroring the reference) or records the exception. Documentation-only; no behaviour change. |
-| `EXP002D1-S2-F8` | **D4** | A6 | **Two residual Snyk Code `python/PT` (CWE-23) LOW findings in S2's own instruments**, raised after §6.4's rescan of the new first-party code this session added: `changed_line_coverage.py:98` and `decomposition_rerun_check.py:92`, both "unsanitized input from a command line argument flows into `pathlib.Path`". **Remediated twice, not suppressed**: a guard was added mirroring `tools/reproduce.py`'s `PR23-F1` discipline — `..`-component rejection, no-follow symlink refusal, regular-file check, resolve-and-confine to an explicit root allowlist, and the resolved path plus SHA-256 recorded in the output. Both instruments were then proven non-vacuous by negative tests (out-of-root, directory, `..`, and a **real symlink** all refused; positive controls accepted; `0 failures`). Snyk still reports both, with the dataflow now pointing *inside* the guard at `candidate = Path(raw)` — its `python/PT` model does not recognise those checks as sanitizers. Clearing it further would require removing the tools' ability to read an out-of-tree scratch artefact, which this brief mandates. Exploit prerequisites: an attacker able to supply argv to a process already running as the auditor, i.e. existing code execution as that user — **no privilege boundary crossed**, read-only sinks, non-shipped tooling under `EVIDENCE/`. The applicable §6.2 gate is **"0 medium+"** and repo-wide at `medium` is **0**, so the gate is met; `bandit` reports 0 issues on the same files. Full assessment: [`snyk-low-findings-threat-assessment.md`](../../EVIDENCE/exp002-d1-s2/snyk-low-findings-threat-assessment.md). | **ACCEPTED WITH ASSESSMENT**, flagged for maintainer ratification (§6.2's recorded-threat-assessment route contemplates maintainer approval; the maintainer delegated this call in-session). Nothing added to `.snyk`, no ignore or severity exclusion, no scan skipped. **Re-check at S3's delta re-audit and S4's full gate**, per §6.2's requirement that accepted items stay visible and be re-checked every cycle. |
+| `EXP002D1-S2-F8` | **D4** | A6 | **Two residual Snyk Code `python/PT` (CWE-23) LOW findings in S2's own instruments**, raised after §6.4's rescan of the new first-party code this session added: `changed_line_coverage.py:98` and `decomposition_rerun_check.py:92`, both "unsanitized input from a command line argument flows into `pathlib.Path`". **Remediated twice, not suppressed**: a guard was added mirroring `tools/reproduce.py`'s `PR23-F1` discipline — `..`-component rejection, no-follow symlink refusal, regular-file check, resolve-and-confine to an explicit root allowlist, and the resolved path plus SHA-256 recorded in the output. Both instruments were then proven non-vacuous by negative tests (out-of-root, directory, `..`, and a **real symlink** all refused; positive controls accepted; `0 failures`). Snyk still reports both, with the dataflow now pointing *inside* the guard at `candidate = Path(raw)` — its `python/PT` model does not recognise those checks as sanitizers. Clearing it further would require removing the tools' ability to read an out-of-tree scratch artefact, which this brief mandates. Exploit prerequisites: an attacker able to supply argv to a process already running as the auditor, i.e. existing code execution as that user — **no privilege boundary crossed**, read-only sinks, non-shipped tooling under `EVIDENCE/`. The applicable §6.2 gate is **"0 medium+"** and repo-wide at `medium` is **0**, so the gate is met; `bandit` reports 0 issues on the same files. Full assessment: [`snyk-low-findings-threat-assessment.md`](../../EVIDENCE/exp002-d1-s2/snyk-low-findings-threat-assessment.md). | **ACCEPTED WITH ASSESSMENT — RATIFIED by the maintainer 2026-10-16 UTC** ("ratified"), which is the approval §6.2's recorded-threat-assessment route contemplates. Nothing added to `.snyk`, no ignore or severity exclusion, no scan skipped. The subsequently completed **CLI leg corroborates the MCP result at the same two locations** (`changed_line_coverage.py:98`, `decomposition_rerun_check.py:92`), so two independent Snyk routes agree on both the finding and its extent, and the repo-wide severity profile is **0 HIGH / 0 MEDIUM** — the applicable gate. **Re-check at S3's delta re-audit and S4's full gate**, per §6.2's requirement that accepted items stay visible and be re-checked every cycle. |
 
 **Not raised as findings** (verified and dispositioned here so they do not drift
 untracked, per Development Workflow §1.3):
@@ -1019,3 +1046,85 @@ Evidence added by this addendum:
 [`snyk-low-findings-threat-assessment.md`](../../EVIDENCE/exp002-d1-s2/snyk-low-findings-threat-assessment.md),
 [`path-guard-negative-tests.txt`](../../EVIDENCE/exp002-d1-s2/path-guard-negative-tests.txt),
 [`changed-line-coverage.txt`](../../EVIDENCE/exp002-d1-s2/changed-line-coverage.txt).
+
+### S2.14 Addendum — ratification, and the CLI leg completed (2026-10-16 UTC)
+
+The maintainer responded to §S2.13's two escalated calls with:
+
+> "ratified, and I believe snyk is authenticated now on cli. you are authorized
+> to complete the remaining s2 related work now on my behalf in preparation for
+> s3."
+
+Three things followed, all recorded here rather than folded silently into the
+sections above, so the sequence stays auditable.
+
+**1. `EXP002D1-S2-F8` is ratified.** The maintainer's "ratified" is the approval
+that Coding Standards §6.2's recorded-threat-assessment route contemplates, so
+the acceptance moves from *flagged default* to *approved*. The finding stays
+visible in the ledger and is re-checked at S3 and S4, per §6.2's requirement
+that accepted items not disappear.
+
+**2. `EXP002D1-S2-F3` is resolved, not merely noted.** Authentication was
+verified before being relied on — `snyk whoami` returns `Symbo-gif`, exit 0 —
+rather than accepting "I believe snyk is authenticated" on assertion. The leg the
+brief specified then ran for real:
+
+```text
+snyk code test . --severity-threshold=low --sarif-file-output=<scratch>
+  snyk 1.1306.2, exit 1 (findings reported — not a scan failure)
+  SARIF written: sha256 ebc92c86…bb0d, 530,562 bytes
+  Test Summary: Total issues 77 | Ignored 0 | Open 77 [ 0 HIGH  0 MEDIUM  77 LOW ]
+```
+
+Filtered by the new committed instrument
+[`snyk_sarif_filter.py`](../../EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py):
+
+| Bucket | Result |
+|---|---|
+| The **four changed first-party files** (brief item f) | **0 findings** — independently confirms S1's claim through the exact route the brief named, and agrees with the MCP leg |
+| The **six S2 instruments** (`EXP002D1-S2-F8`) | **2 findings**, `python/PT`, at `changed_line_coverage.py:98` and `decomposition_rerun_check.py:92` — the same two locations the MCP route reported |
+| Repository-wide | **77 raw**; **44 in git-tracked paths**; rules `python/PT` ×71, `python/PT/test` ×6 |
+| §6.2 gate ("0 medium+ findings") | **MET** — 0 HIGH, 0 MEDIUM |
+
+Two independent Snyk routes (MCP and CLI) now agree on both the clean result for
+the changed files and the exact extent of the F8 residual. The repo-wide LOW
+figure that §S2.0 item 5 had to leave as *carried, not re-verified* is now
+re-derived: **77**, against S1's recorded **75** — a delta of exactly the 2
+findings in the instruments this session added.
+
+**3. Two properties of Snyk's output were established by inspection and are
+recorded so the next gate does not misread them.** They are the reason a first
+inline filter produced an unusable severity line, and both are now documented in
+the committed instrument's docstring:
+
+- **Snyk Code's SARIF carries no severity.** Every `result.level` is `"note"`,
+  and neither `result.properties` (only `isAutofixable`, `priorityScore`,
+  `priorityScoreFactors`) nor `rule.properties` (only `tags`, `categories`,
+  `precision`, `cwe`, example fixes) holds a severity name or a
+  `security-severity` score. The authoritative severity breakdown is the CLI's
+  own `Test Summary` block, which must be transcribed from the console output.
+  An earlier filter reported `by severity: {note: 77}` and `LOW total: 0`; both
+  were artefacts of that, and are corrected here rather than left standing.
+- **`snyk code test .` scans the filesystem, not git.** This repository
+  directory also holds gitignored agent worktrees, so the same logical file is
+  reported once per copy — `tools/reproduce.py` appears three times (5 findings
+  each). Of the 77, **33 are such untracked copies** (`.claude` 10, `.kilo` 23).
+  A repo-wide total is therefore **not** a census of tracked files, and two
+  totals taken at different times are comparable only if the on-disk worktree
+  set is unchanged. This is why the filter reports tracked and raw totals
+  separately.
+
+**Verdict and tally.** Unchanged: **`PASS-WITH-FINDINGS`**, no D1, no systemic
+drift. Eight findings were raised; **`-F3` is now RESOLVED** and **`-F8` is
+RATIFIED**, leaving **six for S3**: `-F2` (D2) first, then `-F1` (D3), then
+`-F4`, `-F5`, `-F6`, `-F7` (D4). `-F8` carries no S3 action beyond the standing
+re-check.
+
+**Push.** Still **not pushed**, per §S2.13 call 2, which the maintainer's
+"ratified" confirms. Development Workflow §3's S2 rule and amendment #28 put the
+cycle's push point at S4; the branch is ahead of `origin` by the S2 commits and
+will be carried in S4's single push with a fresh full-history secret scan.
+
+Evidence added by this addendum:
+[`snyk-code-cli.txt`](../../EVIDENCE/exp002-d1-s2/snyk-code-cli.txt),
+[`snyk_sarif_filter.py`](../../EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py).
