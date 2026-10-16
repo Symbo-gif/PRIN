@@ -51,12 +51,13 @@ MIN_MARKDOWN_CELLS = 2
 #: full-suite runs. The notebook is not the cause: alone it completes in 71 s.
 #: Inside the full suite on the maintainer host the kernel receives a sixth to a
 #: third of one core while processes outside PRIN (an IDE's ripgrep scans and
-#: security software) hold the whole host at ~100% CPU, and the leg slows 8-43x
-#: (``EVIDENCE/exp002-d1-s3/f2/``). Each bound is BOUND_MARGIN x the largest
-#: *completed* contended duration recorded for that notebook, rounded up to a
-#: multiple of BOUND_ROUNDING_SECONDS. The recorded duration is the whole
-#: notebook's, which is an upper bound on any single cell's, so each bound is
-#: conservative per cell. Each bound stays 37-152 times above the notebook's
+#: security software) hold the whole host at ~100% CPU, and the leg slows 8-42x
+#: (43x beside only the ``test_exp002_*`` tests; ``EVIDENCE/exp002-d1-s3/f2/``).
+#: Each bound is BOUND_MARGIN x the largest *completed* contended duration
+#: recorded for that notebook, rounded up to a multiple of
+#: BOUND_ROUNDING_SECONDS. The recorded duration is the whole notebook's, which
+#: is an upper bound on any single cell's, so each bound is conservative per
+#: cell. Each bound stays 37-152 times above the notebook's
 #: quiet-host duration (37-73 s), so it still ends a genuine hang, but it no
 #: longer fails a leg that is merely starved. A test below ties each bound to its
 #: recorded worst case in both directions.
