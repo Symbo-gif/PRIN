@@ -9,6 +9,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-002 D1 correction cycle closed at S4; `EXP-002-r1` authorized; hosted
+  checks re-enabled until the campaign's experimentation is complete
+  (`EXP-002-D1` S4, 2026-10-16 UTC).** The four-session conditional correction
+  cycle mandated by campaign plan §10.4 is documentation-complete: S1 fixed the
+  34 dropped or re-encoded drawing arguments, S2 audited
+  (`PASS-WITH-FINDINGS`, one D2, one D3, six D4, **no D1**), S3 remediating
+  every open finding with a `CLEAN` delta re-audit, and S4 issuing
+  **PSR-041** (`DOCS/reports/041-project-state.md`), which announces the
+  EXP-002 E5 report and carries the cumulative deviation-ledger rows for the
+  `EXP-002` D1 (`H3 REFUTED`), all eight `EXP002D1-S2-F1`..`-F8` findings at
+  their final status, and observations O-1 and O-2.
+
+  **`EXP-002-r1` is authorized** as a new experiment record
+  (`DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md`)
+  per campaign plan §10.4 item 4 — new pre-registration, new run IDs, never
+  reusing `EXP-002`'s artefacts. **No r1 stage has run and no `RUN-` directory
+  exists.** Audit finding `EXP002D1-S2-F1` (D3) is carried into that
+  authorization: because the two registered H3 comparison policies now point at
+  different verdicts on a corrected generator (approved §5.4 **39/39** equal;
+  §11.3 sensitivity **14/39**, all 25 residuals writer or host properties, 0
+  unclassified), r1's E1/E2 must deliberately register which policy decides H3,
+  what status the other has, and what a disagreement means — fixed before its
+  first `RUN-` directory exists, with outcome exposure disclosed, and without
+  altering either writer. **S4 does not choose that rule**; it is an open item
+  needing the maintainer's approval before r1's E1 starts.
+
+  **Plan amendment #52** re-enables the seven hosted check workflows (`rust`,
+  `python`, `parity`, `repro`, `snyk`, `gpu`, `nightly`) on the maintainer's
+  authority and keeps them active until the campaign's experimentation is
+  complete — the close of session `0194` (Campaign E6 synthesis), or earlier on
+  maintainer instruction — superseding amendment #48's "hosted checks disabled"
+  rule and amendment #50's EXP-002-only window. Hosted results are additional
+  evidence recorded verbatim (workflow, run ID, head SHA, conclusion, link); the
+  Windows full local gate stays mandatory and authoritative, local results are
+  never described as "CI green", and a hosted run does not establish behaviour on
+  platforms it did not run on. A red hosted check is triaged and recorded, never
+  waived, skipped, deselected or hidden. The ruleset's required-status-check rule
+  stays removed, and this is **not** the amendment #48 lift: Linux/macOS and the
+  three-OS wheel matrix stay suspended, not satisfied.
+
+  The Parity Report gains a dated 2026-10-16 update admonition and its
+  reproduction-artefact rows are corrected to what the fixed generator supports;
+  the 2026-10-14 erratum is retained verbatim. The EXP-002 E5 report gains
+  append-only erratum **2** naming `EXP-002-r1`. **`EXP-002`'s verdicts are
+  unchanged — H3 stays `REFUTED`**, having been computed from immutable,
+  manifested `RUN-` artefacts at the source that record froze; only
+  `EXP-002-r1` can produce a new verdict, and nothing here confirms H3.
+
+  **Session `0164` (EXP-003 E1) and every later campaign session
+  (`0165`–`0194`) remain `BLOCKED`.** The S4 closure, the merge of PR #34, and
+  the re-enabling of the hosted workflows do **not** release them; they are
+  released only when `EXP-002-r1`'s E5 verdict is not a reversal and is verified
+  and accepted by the maintainer, or the maintainer adopts a Project Plan §8.3
+  amendment (campaign plan §10.4 item 5).
+
 - **EXP-002 E5 reported — H1, H2, H4 confirmed; H3 refuted, D1 correction cycle
   opened, session 0164 blocked (session 0163, 2026-10-14 UTC).** The E5 report
   `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md`
