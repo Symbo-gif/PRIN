@@ -1,8 +1,8 @@
 # EXP-002 D1 S4 — Correction documentation
 
-**Status:** OPEN — S3 complete (2026-10-16 UTC); S4 may start on maintainer instruction
+**Status:** COMPLETE (2026-10-16 UTC; closure record in [`DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`](../../audits/2026-10-15-exp002-d1-correction-audit.md) `## S4 — closure`, and "S4 completion and handoff" below)
 **Triggering deviation:** `EXP-002 H3 REFUTED` (campaign plan §10.4 D1; pre-registration §4.3)
-**Blocked numbered session:** `0164` (EXP-003 E1), and every later campaign session (`0165`–`0194`)
+**Blocked numbered session:** `0164` (EXP-003 E1), and every later campaign session (`0165`–`0194`) — **still BLOCKED; this session's closure does not release them**
 **Opened by:** session `0163` (EXP-002 E5), 2026-10-14 UTC
 **Predecessor:** [S3 — correction remediation](2026-10-14-exp002-d1-s3-correction-remediation.md)
 **Governing record:** [EXP-002 E5 report](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md) §8
@@ -111,3 +111,132 @@ should cover `EVIDENCE/exp002-d1-s3/` (the gate scripts `closing_gate.sh`,
 and the records they write) and the comment change in `tests/test_notebooks.py`.
 `closing_gate.sh` changed after the run it recorded and has not been re-run end to end
 (correction audit §S3.9 items 11 and 12). Severity D4; S4's ledger should register it.
+
+## S4 completion and handoff (2026-10-16 UTC)
+
+Added by S4. The checklist above is unchanged; this section records what was
+delivered against it and hands off what remains.
+
+**Closure checklist — all seven items delivered.**
+
+1. **PSR-041 issued** — [`DOCS/reports/041-project-state.md`](../../reports/041-project-state.md).
+   It carries the cumulative deviation-ledger delta inheriting PSR-040 §3 with
+   the `EXP-002` D1 (`EXP002-D1-H3`, D1) row, all eight
+   `EXP002D1-S2-F1`..`-F8` rows at their final §S3.1 status, the O-1 and O-2
+   rows, the third `EXP002D1-S2-F8` location, and the one finding S4's own
+   review raised. It formally announces the EXP-002 E5 report
+   (Experimentation Standards §2 E5; campaign plan §10.4 item 3). Validated with
+   `tools/check_deviation_ledger.py DOCS/reports/040-project-state.md
+   DOCS/reports/041-project-state.md`.
+2. **Registers updated** — `SESSION_REGISTER.md` (entry-point line and the
+   `EXP-002-D1` contingency row set to `COMPLETE`), `phase-7/README.md`,
+   `DOCS/experiments/README.md` (dated entry plus the `EXP-002-r1` record-root
+   row), `contingencies/README.md` (EXP-002 D1 moved to "Closed corrections"),
+   and `DEFERRED_VALIDATION_REGISTER.md` (a dated amendment-#52 section).
+   **No new DV row was opened**: O-1's closure evidence is a hosted run in this
+   same session, not validation deferred to a future work package or phase,
+   which is what that register consolidates. DV-032 was deliberately **not**
+   widened — it registers host-sensitive *timing ratios*, while the Windows
+   `WinError 5` rename is the `AGENTS.md`-documented pytest temporary-directory
+   contention class. All four governance checkers exit 0.
+3. **Parity Report aligned** — [`parity_report.rst`](../../sphinx/parity_report.rst)
+   gained a dated 2026-10-16 update admonition (the 2026-10-14 erratum is
+   retained verbatim) and its `REFERENCE-HISTORICAL` label row and two
+   reproduction-artefact rows were corrected to what the fixed generator
+   supports. **The honesty rule holds throughout: the corrected generator equals
+   the frozen reference under the approved §5.4 policy (39/39) and is 14/39
+   under the §11.3 sensitivity policy (all 25 residuals writer or host
+   properties, 0 unclassified), but `EXP-002`'s verdict stays `H3 REFUTED` and
+   nothing written here confirms H3.** CHANGELOG entry added; verified by a
+   `sphinx.cmd.build -W --keep-going` run from a deleted `DOCS/sphinx/_build`.
+4. **Erratum appended** — erratum **2** in the EXP-002 E5 report §15, naming
+   `EXP-002-r1`. **Append-only, proven by `git diff --numstat`: 2 added, 0
+   deleted.** No verdict, tolerance, normalization policy, digest, protocol,
+   `preregistration.md` or `benchmarks/results/EXP-002/` file was touched.
+5. **`EXP-002-r1` authorized** — record skeleton at
+   [`EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md`](../../experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md),
+   carrying `EXP002D1-S2-F1` exactly as the "Carried from S3" section above
+   states (all five of its requirements, verbatim in substance). It **names the
+   open decision** — which H3 comparison policy decides, the status of the
+   other, replacement of the §11.3 item 1 clause, outcome-exposure disclosure,
+   fixing the choice before the first `RUN-` directory exists, and no writer
+   changes to chase §11.3 equality — and records it as an **explicit open item
+   needing the maintainer's approval before r1's E1 starts**. **S4 did not
+   choose the deciding rule.** No experiment was executed and **no `RUN-`
+   directory was created**.
+6. **The non-release statement is explicit** in PSR-041 (§1, §5, §6), in every
+   register touched, in the erratum, in the `EXP-002-r1` skeleton, and in the
+   audit's S4 section: **S4 closing, the merge of PR #34, and the re-enabling of
+   the hosted workflows do NOT release session `0164`** (nor `0165`–`0194`).
+7. **Gate evidence recorded verbatim** in
+   [`EVIDENCE/exp002-d1-s4/`](../../../EVIDENCE/exp002-d1-s4/README.md), with
+   the hosted evidence named there and in the audit's S4 section.
+
+**The three carried items — dispositions.**
+
+- **O-1 (the required full suite).** Recorded as **D3** per Development
+  Workflow §5. The standard's D2 ("breaks a normative standard … quality gates")
+  was considered and rejected: the tests themselves all pass, each failure is a
+  host-contention artefact on a test unrelated to this change and passing in
+  isolation, so the repository does not break the standard — the host prevents
+  demonstrating it, which is §5's D3 "divergence between plan text and
+  justified reality". S4 ran the required full suite **once** and recorded its
+  **actual exit status**; no rerun-until-green was performed and none is
+  described as a pass. Closure evidence is named as an independent hosted
+  full-suite run at the PR #34 head commit (Plan amendment #52). Operating
+  guidance for the maintainer is recorded in PSR-041 §5 and the audit's S4
+  section: run the local gate with IDE and security tooling quiet, and exclude
+  `.pytest_basetemp` from IDE workspace scanning and security-software real-time
+  scanning. **No process belonging to the maintainer was stopped or killed, and
+  S4 cannot change those settings itself.**
+- **O-2 (the unreviewed round-4 fixes).** **RESOLVED (D4).** The missing review
+  was performed read-only, by measurement, on the committed S3 fixes
+  (`closing_gate.sh`, `final_legs.sh`, `delta_reaudit.sh`,
+  `diagnostic_suite_run.sh`, `cold-review/launch_round.sh`,
+  `docstring_only_check.py`, and the `b08dd574` comment change), reproducing
+  every suspected defect with a command and classifying it CONFIRMED / REFUTED /
+  NOT REPRODUCIBLE exactly as `EVIDENCE/exp002-d1-s3/cold-review/triage.md`
+  does. **One CONFIRMED defect**: `final_legs.sh`'s grep-based leg aggregation
+  (`grep -a '^# exit code' FILE | grep -qv ': 0$' && overall=1`) **fails open** —
+  when the record file is missing, empty, or holds no marker line, the second
+  `grep` sees no input and returns 1, so `overall` stays 0 and a leg that
+  produced no record reads as passing. It is the same class round 4 fixed for
+  the Snyk leg alone (T4-2); five sibling legs still had it. **Latent**: every
+  committed S3 record was verified to carry its marker, so no recorded S3 result
+  was masked. S3's file was **not edited**; a corrected copy with fail-closed
+  aggregation supersedes it in `EVIDENCE/exp002-d1-s4/`, with a red-before and
+  green-after demonstration. Everything else in the round-4 fix set verified as
+  claimed (see the bundle's `o2-review/triage.md`).
+- **`EXP002D1-S2-F8`'s third location.** **RATIFIED** as an accepted, visible
+  LOW. All four ratification conditions were verified by reading the file and
+  reproducing the finding, and a Coding Standards §6.2 threat assessment is
+  recorded in the audit's S4 section in the same form as §S2.14 and §S3.4.
+  **This is not a suppression**: nothing was added to `.snyk`, no ignore or
+  severity exclusion was created, and S2's file was not edited. The finding is
+  re-checked every cycle.
+
+**Plan amendment #52 adopted** (4D), on the maintainer's verbatim authority,
+with #50's footprint mirrored: `DOCS/PRIN_Project_Plan.md` §8.3 (row plus an
+"Amendment #52 authority" block), Development Workflow and Audit Standards §3
+item 11, `CLAUDE.md`, `.claude/CLAUDE.md`, and a dated section in
+`DEFERRED_VALIDATION_REGISTER.md`. `AGENTS.md` needed no change — a grep
+confirms amendment #50 never touched it (it cites only #49). No other Plan or
+campaign-plan amendment was found necessary, so none was drafted.
+
+**Handoff — what remains, and whose it is.**
+
+1. **The maintainer declares `EXP-002-r1` E1.** It cannot start until the open
+   H3 comparison-policy decision in that record is approved.
+2. **DV-047 gates r1's E3**: rebuild `python/prin/_prin_core.pyd`, remove the
+   stale `prin_core.pth`, and record the new `.pyd` SHA-256 in the driver.
+3. **Session `0164` and `0165`–`0194` stay BLOCKED** until r1's E5 verdict is a
+   non-reversal, verified and accepted by the maintainer, or a Project Plan
+   §8.3 amendment is adopted.
+4. **Hosted workflows stay enabled** under amendment #52 until `0194` closes or
+   the maintainer says otherwise; the disabling is then recorded.
+5. **O-1's closure evidence** is the hosted full-suite run at the PR #34 head
+   commit. Because `main` is PR-only, a post-merge record cannot be committed
+   here, so the run's verbatim result (workflow, run ID, head SHA, conclusion)
+   is reported in the session record and should be entered by the next governed
+   session, which is also where a DV row should be opened if that run did not
+   pass.

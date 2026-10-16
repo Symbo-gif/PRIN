@@ -202,3 +202,62 @@ sequence; actual evidence belongs in audits/reports/experiment records.
 > frozen reference
 > ([correction audit](../../audits/2026-10-15-exp002-d1-correction-audit.md)).
 > S2 is next; `0164` stays BLOCKED.
+> *(Retained as its point-in-time record; this index accumulates dated entries
+> rather than rewriting them. S2 and S3 completed later the same day and on
+> 2026-10-16 UTC — see the entry below.)*
+>
+> **`EXP-002-D1` CORRECTION CYCLE COMPLETE — S4 CLOSED 2026-10-16 UTC.**
+> All four contingency sessions ran in strict S1→S4 order. **S2 COMPLETE
+> 2026-10-15 UTC** — read-only audit of `ab9e4225..8fd0ecc9`, verdict
+> **`PASS-WITH-FINDINGS`** (one D2, one D3, six D4, **no D1**, no systemic
+> drift), all five brief-specific items **VERIFIED** by independent
+> re-execution. **S3 COMPLETE 2026-10-16 UTC** — every open S2 finding
+> dispositioned (`-F2` D2 **FIXED** with evidence-sized per-notebook cell
+> bounds; `-F1` D3 **ASSIGNED** to S4 and `EXP-002-r1`; `-F4`…`-F7` D4
+> **FIXED**; `-F8` D4 **RATIFIED** and re-checked; `-F3` already **RESOLVED**),
+> delta re-audit **`CLEAN`**, four cold-review rounds triaged by measurement,
+> and two observations carried to S4: **O-1** (the required full suite exited 1
+> in both S3 runs, on two different single host-contention-sensitive tests that
+> pass alone) and **O-2** (the cold-review loop reached its four-round cap with
+> round 4's fixes unreviewed). **S4 COMPLETE 2026-10-16 UTC** — **PSR-041**
+> issued ([`041-project-state.md`](../../reports/041-project-state.md)),
+> carrying the cumulative deviation-ledger rows for the `EXP-002` D1
+> (`H3 REFUTED`), all eight `EXP002D1-S2-F1`..`-F8` findings at their final
+> status, and O-1/O-2, and formally announcing the EXP-002 E5 report
+> (Experimentation Standards §2 E5; campaign plan §10.4 item 3). Registers
+> updated (this index, [`SESSION_REGISTER.md`](../SESSION_REGISTER.md),
+> [`DOCS/experiments/README.md`](../../experiments/README.md),
+> [`contingencies/README.md`](../contingencies/README.md) — EXP-002 D1 moved to
+> "Closed corrections", [`DEFERRED_VALIDATION_REGISTER.md`](../../reports/DEFERRED_VALIDATION_REGISTER.md));
+> the [Parity Report](../../sphinx/parity_report.rst) gained a dated
+> 2026-10-16 update and its reproduction rows were corrected to what the fixed
+> generator supports; append-only erratum **2** naming `EXP-002-r1` was added to
+> the [E5 report](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md)
+> §15; and **`EXP-002-r1` was authorized** as a new record
+> ([`EXP-002-r1`](../../experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md))
+> carrying `EXP002D1-S2-F1`. O-1 is recorded **D3** with its local full-suite
+> run at its actual exit status; O-2 is **RESOLVED (D4)** — the missing cold
+> review was performed by measurement on S3's committed round-4 fixes, finding
+> one latent fail-open in `final_legs.sh`'s grep-based leg aggregation,
+> superseded by a corrected copy in
+> [`EVIDENCE/exp002-d1-s4/`](../../../EVIDENCE/exp002-d1-s4/README.md); and
+> `EXP002D1-S2-F8`'s third location
+> (`EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142`) is **RATIFIED** as an
+> accepted, visible LOW with a Coding Standards §6.2 threat assessment.
+> **Plan amendment #52** was adopted on the maintainer's authority: the seven
+> hosted check workflows are re-enabled and stay active until the campaign's
+> experimentation is complete (the close of `0194`, or earlier on maintainer
+> instruction), superseding amendment #48's pause and amendment #50's
+> EXP-002-only window; the Windows local gate stays mandatory and
+> authoritative, and the branch ruleset is unchanged. PR #34's push and merge
+> are authorized by the maintainer for this session.
+> **`EXP-002`'s H3 verdict is unchanged — it stays `REFUTED`;** the correction
+> fixed the generator *after* E3, so only `EXP-002-r1` can produce a new
+> verdict, and **no r1 stage has run and no `RUN-` directory exists**.
+> **Session `0164` (EXP-003 E1) and every later campaign session
+> (`0165`–`0194`) remain BLOCKED.** The S4 closure, the merge of PR #34 and the
+> re-enabling of the hosted workflows do **not** release them; release requires
+> `EXP-002-r1`'s E5 verdict to be a non-reversal, verified and accepted by the
+> maintainer, or a Project Plan §8.3 amendment (campaign plan §10.4 item 5).
+> The next action is the maintainer's: declare `EXP-002-r1` E1, which must first
+> settle the open H3 comparison-policy decision named in that record.

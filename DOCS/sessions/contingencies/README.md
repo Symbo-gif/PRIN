@@ -8,7 +8,12 @@ numbered session. Copy each template to a dated/identified file before use.
 
 ## Open corrections
 
-EXP-002 D1 — **OPEN, opened 2026-10-14 UTC by session `0163` (EXP-002 E5).**
+None open.
+
+## Closed corrections
+
+EXP-002 D1 — **CLOSED 2026-10-16 UTC (S1→S4 all complete); opened 2026-10-14 UTC
+by session `0163` (EXP-002 E5).**
 Triggered by campaign plan §10.4 (pre-registration §4.3): EXP-002's H3 is
 `REFUTED` under both the approved §5.4 comparison policy (`21/39`
 `generated_files` equal, `18/39` differing: both the `.pdf` and `.png` of
@@ -64,13 +69,44 @@ at S4.
 **S3 COMPLETE 2026-10-16 UTC** — every open S2 finding dispositioned: `-F2` (D2) **FIXED** with evidence-sized per-notebook cell bounds, after the in-suite slowdown was measured as CPU starvation by processes outside PRIN (a controlled paired experiment: notebook 02 80.7 s alone versus 3,484 s beside only the `test_exp002_*` tests, 43×) and the F2 notebook timeout did not recur in any of three later runs; `-F1` (D3) **ASSIGNED** to S4 and `EXP-002-r1`, no amendment; `-F4`…`-F7` (D4) **FIXED**; `-F8` (D4) re-checked, with one further same-class LOW (`snyk_sarif_filter.py:142`) recorded for the maintainer. Delta re-audit **`CLEAN`** (pre-fix reproduction 18 failed / 75 passed, post-fix 103 passed, `verify_manifest` 5/5, the EXP-002 record and S1 evidence untouched). Four cold-review rounds (Devin, Antigravity, Qwen) triaged by measurement; round 4, the cap, still returned CONFIRMED claims (none in the correction), all fixed but not re-reviewed (observation O-2, carried to S4). Fast suite a clean single pass (4044 passed); **the required full suite exited 1 in both runs, on two different single host-contention-sensitive tests that pass alone (observation O-1, carried to S4)**; Snyk Code CLI 0 HIGH / 0 MEDIUM / 97 LOW; evidence in [`EVIDENCE/exp002-d1-s3/`](../../../EVIDENCE/exp002-d1-s3/README.md). **S4 is next.** See the
 [EXP-002 E5 report](../../experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md)
 §§3, 6, 8, 11, 14.
+**S4 COMPLETE 2026-10-16 UTC — the cycle is closed.** PSR-041 issued
+([`DOCS/reports/041-project-state.md`](../../reports/041-project-state.md)),
+carrying the cumulative deviation-ledger rows for the `EXP-002` D1
+(`H3 REFUTED`), all eight `EXP002D1-S2-F1`..`-F8` findings at their final
+status, and observations O-1 and O-2, and formally announcing the EXP-002 E5
+report. Registers updated (this directory, `SESSION_REGISTER.md`,
+`phase-7/README.md`, `DOCS/experiments/README.md`,
+`DEFERRED_VALIDATION_REGISTER.md`); the Parity Report gained a dated
+2026-10-16 update and its reproduction rows were corrected; append-only
+erratum **2** naming `EXP-002-r1` was added to the E5 report §15; and
+**`EXP-002-r1` was authorized** as a new record
+([`EXP-002-r1`](../../experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md))
+carrying `EXP002D1-S2-F1` — **no r1 stage has run and no `RUN-` directory
+exists**. O-1 is recorded **D3** with its local full-suite run at its actual
+exit status and its closure evidence named as an independent hosted full-suite
+run; O-2's missing cold review was performed by measurement on S3's committed
+round-4 fixes; and `EXP002D1-S2-F8`'s third location
+(`EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142`) is **RATIFIED** as an
+accepted, visible LOW with a Coding Standards §6.2 threat assessment.
+**Plan amendment #52** re-enables the seven hosted check workflows until the
+campaign's experimentation is complete (the close of session `0194`, or earlier
+on maintainer instruction). PR #34's merge is authorized by the maintainer for
+this session. **`EXP-002`'s H3 verdict is unchanged — it stays `REFUTED`; only
+`EXP-002-r1` can produce a new one, and nothing here confirms H3.**
+**Session `0164` (EXP-003 E1) and every later campaign session (`0165`–`0194`)
+remain `BLOCKED`**: the S4 closure, the merge of PR #34 and the re-enabling of
+the hosted workflows do **not** release them; they are released only when
+`EXP-002-r1`'s E5 verdict is not a reversal and is verified and accepted by the
+maintainer, or the maintainer adopts a Project Plan §8.3 amendment (campaign
+plan §10.4 item 5). Evidence:
+[`EVIDENCE/exp002-d1-s4/`](../../../EVIDENCE/exp002-d1-s4/README.md); closure
+record in the [correction audit](../../audits/2026-10-15-exp002-d1-correction-audit.md)
+`## S4 — closure`.
 
 - [2026-10-14-exp002-d1-s1-correction-implementation.md](2026-10-14-exp002-d1-s1-correction-implementation.md)
 - [2026-10-14-exp002-d1-s2-correction-audit.md](2026-10-14-exp002-d1-s2-correction-audit.md)
 - [2026-10-14-exp002-d1-s3-correction-remediation.md](2026-10-14-exp002-d1-s3-correction-remediation.md)
 - [2026-10-14-exp002-d1-s4-correction-documentation.md](2026-10-14-exp002-d1-s4-correction-documentation.md)
-
-## Closed corrections
 
 DV-044 — **CLOSED 2026-09-29 UTC.** All four stages executed in S1→S4 order
 on `hotfix/dv044-ledger-delta` (merged into this campaign branch `9cda4e5`).
