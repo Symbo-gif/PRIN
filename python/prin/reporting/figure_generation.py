@@ -3,13 +3,16 @@
 The module preserves the fourteen historical generators for figures 2 through
 15. Figure 1 never existed in the reference implementation. Stored benchmark
 values are rendered, never re-measured: no benchmark, simulation or statistic
-is re-run or recomputed. The only arithmetic is display-level arithmetic on
-stored values, performed exactly as the frozen reference performs it: unit
-scaling (fractions to percent, FLOPs to thousands), the per-band ratio
-``K_c_empirical / K_c_theory`` that Fig. 12 plots,
-the FLOPs ratios that Fig. 11 annotates, and Fig. 15's stored exponential fit
-``IP_0 * exp(-x / sigma_c)``, which is evaluated on a fine grid to draw the
-fit curve. Every generator passes the reference's exact drawing arguments and
+is re-run or recomputed. Some displayed quantities are derived from stored ones
+for presentation, exactly as the frozen reference derives them. By kind, not as
+an exhaustive list: unit scaling (fractions to percent, FLOPs to thousands);
+error-bar extents taken from stored confidence limits; differences of stored
+values (Fig. 10 plots the difference of two stored means with a fixed drawn bar);
+ratios of stored values (Fig. 11 annotates FLOPs ratios, and Fig. 12 plots
+``K_c_empirical / K_c_theory`` per band); layout geometry such as label offsets
+and axis padding; and Fig. 15's stored exponential fit
+``IP_0 * exp(-x / sigma_c)``, which is evaluated on a fine grid to draw its
+curve. Every generator passes the reference's exact drawing arguments and
 label strings, so its output matches the frozen PRINet 3.0 generator under the
 registered publication comparison (EXP-002 D1;
 ``parity/test_parity_publication.py``).
