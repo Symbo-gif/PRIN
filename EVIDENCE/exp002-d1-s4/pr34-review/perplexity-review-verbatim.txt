@@ -1,0 +1,75 @@
+# The Perplexity Deep-Research review of PR #34, verbatim as posted
+# copied from /c/Users/there/prin-s4-scratch/pr34-reviews.txt at 2026-10-17T19:03:59Z
+
+===== REVIEW by Symbo-gif (COMMENTED) at 2026-10-17T00:59:29Z =====
+## Independent review — PR #34
+
+**Verdict:** I did not find a confirmed product-code blocker in the substantive correction. The publication-generator changes are narrow, mostly restore explicit Matplotlib arguments from the frozen reference, and are backed by argument-spy tests plus an end-to-end 39-file parity gate. I would nevertheless keep this PR unmerged until the required hosted failures are either made green or explicitly dispositioned with retained evidence, because the current red checks mix one known dependency-security failure, one expected benchmark-policy failure, and two Python/parity failures whose exact failing node IDs are not surfaced in the check summary.
+
+### Scope reviewed
+
+- PR head `83bae4b1912c5cce6aa71ee228add986e0c54c08` against `main`.
+- Substantive code/tests: `python/prin/reporting/figure_generation.py`, `tests/test_publication_figure_arguments.py`, `parity/test_parity_publication.py`, and `tests/test_notebooks.py`.
+- Workflow definitions and hosted job/step metadata for `parity`, Rust `audit`, nightly `full-suite`, and nightly `bench-regression`.
+- Repository audit/session/deferred-validation records, including DV-036, DV-043, and DV-045.
+- Syntax compilation and `git diff --check` were clean. A fully independent local execution was not possible in my isolated checkout without first building the PyO3 extension and installing the frozen `prinet` reference; I did not alter the repository to do so.
+
+## Findings
+
+### 1. High — Rust audit is a real dependency gate failure, not runner flakiness
+
+The hosted `audit` job built `cargo-audit` successfully and failed four seconds into `cargo audit`. This matches the committed DV-045 diagnosis: nine transitive advisories — five affecting `quinn-proto 0.11.16` (`RUSTSEC-2026-0338` through `RUSTSEC-2026-0342`, fixed in `>=0.11.18`) and four affecting `rustls 0.23.45` (`RUSTSEC-2026-0346` through `RUSTSEC-2026-0349`, fixed in `>=0.23.46`). This check should not be rerun repeatedly without changing the dependency graph.
+
+**Recommended remediation:** update the transitive graph to at least those patched versions, inspect `cargo tree -i quinn-proto` and `cargo tree -i rustls` to identify the owning direct dependency, run `cargo update -p quinn-proto --precise <patched>` / `cargo update -p rustls --precise <patched>` where semver permits, then run the full Rust matrix and `cargo audit`. If an upstream crate prevents the update, document a narrowly scoped, expiring exception by advisory ID; do not blanket-ignore nine advisories. Add an automated dependency-update mechanism and/or a scheduled audit issue so newly published advisories do not first appear as unexplained merge-gate failures.
+
+### 2. High — parity and nightly full-suite need exact failing-node triage before merge
+
+The dedicated parity job completed installation successfully, then failed the 504-case pytest step after 49 seconds (annotation at step 9, line 4845). The nightly full-suite also installed successfully, then failed the Python suite after 10m27s (annotation at step 8, line 6984), skipping the subsequent Rust suite. The common failure surface is therefore Python tests, with parity the leading candidate, but the public check summary exposes only exit code 1—not the pytest short summary—so it would be unsafe to assert the precise test without the retained log.
+
+**Recommended remediation:** download the failed logs before rerunning and capture the final `short test summary info`; then rerun only the exact node(s) with `-vv -x --showlocals`. Because `parity/test_parity_publication.py` is marked both `parity` and `slow`, verify whether its new 39-file comparisons are included in the advertised “504 cases” or accidentally add unaccounted cases. Also determine whether the nightly failure is the same parity node or a notebook timeout: this PR raises one notebook base timeout from 180s to 600s, and the full suite has materially different contention than isolated notebook runs. If parity is the cause, preserve generated reference/PRIN files plus digest/comparison diagnostics on failure; if a notebook is the cause, report per-cell elapsed time and the selected timeout in CI rather than only the final nbclient exception.
+
+### 3. High — the benchmark check is behaving as configured, but the gate is too costly/noisy for hosted runners
+
+The benchmark job spent 1h29m43s measuring both arms and failed instantly in `check_bench_regression.py`, after which artifact upload succeeded. That means setup, builds, and all four measurements completed; the comparator found at least one non-advisory mean regression above 10%. This is consistent with the repository's DV-036/DV-043 history documenting repeated false or unstable failures on shared 4-vCPU GitHub runners. Counterbalancing helps linear drift, but averaging only two measurements per arm cannot reliably characterize multimodal throttling/noisy-neighbor effects, and a hard 10% threshold can still produce a red gate after consuming roughly 90 minutes.
+
+**Recommended remediation:** treat shared-runner results as advisory or use them as a trigger for confirmation on stable reference hardware. Prefer a two-stage policy: a short smoke/sentinel set on hosted CI, followed by the full benchmark set on the self-hosted reference runner only when sentinels breach or performance-sensitive paths change. For statistical gating, retain per-sample data and require a practically significant slowdown *and* an uncertainty criterion (for example, bootstrap CI or Mann–Whitney/Cliff's delta), with a confirmatory repeat on a fresh runner before blocking. Split Criterion and pytest-benchmark evidence, publish a concise Markdown summary to `$GITHUB_STEP_SUMMARY`, upload evidence unconditionally as already done, and add `concurrency` cancellation so superseded nightly/manual runs do not burn 90 minutes.
+
+### 4. Medium — CI diagnostics are insufficient for failures of this cost
+
+All four failed jobs expose only generic `Process completed with exit code 1` annotations. The nightly artifact is correctly uploaded on benchmark failure, but parity/full-suite do not upload pytest/JUnit output or generated parity diagnostics. This makes independent diagnosis depend on privileged raw logs and encourages blind reruns.
+
+**Recommended remediation:** run pytest with `--junitxml` and upload it under `if: always()`; preserve failed parity output trees/digests; write the last pytest summary, audit advisory list, and benchmark breach table into `$GITHUB_STEP_SUMMARY`. Consider splitting nightly into `python-non-parity`, `publication-parity`, `notebooks`, and `rust` jobs so one Python failure does not suppress Rust execution and so the failing domain is obvious.
+
+### 5. Medium — Actions runtime deprecations should be cleared before the runner-image migration
+
+The hosted pages warn that Node.js 20 actions are being forced onto Node.js 24, specifically `actions/checkout@v4` and `actions/setup-python@v5`. They also warn that `ubuntu-latest` begins migrating to Ubuntu 26 on 2026-10-19. The repository uses these older action majors broadly, and key jobs use `ubuntu-latest`, so toolchain/image drift can become another source of red checks during this correction.
+
+**Recommended remediation:** test and roll out Node-24-native action majors (`checkout` and `setup-python`) and pin hosted jobs to an explicit Ubuntu image during the migration window. Add a small canary matrix for the future image before changing the primary gate. Pinning the OS does not replace dependency/toolchain pins; keep Python/Rust/benchmark versions explicit as the nightly benchmark job already largely does.
+
+### 6. Medium — setup work is duplicated and largely uncached
+
+Parity and nightly each spend about 5–8 minutes recreating environments with `--no-cache-dir`, while parity also performs an 83-second disk purge. `rust-cache` cannot help Python wheels, and `--no-cache-dir` defeats pip caching. The jobs repeatedly reinstall large CPU Torch wheels and rebuild/install the extension.
+
+**Recommended remediation:** cache pip downloads/wheels keyed by OS, Python, lock/constraints, and relevant manifests; use a constraints-hashed wheelhouse or reusable prebuilt CPU CI image; cache/install `cargo-audit` rather than compiling it every run; and consider a reusable composite action for the repeated disk cleanup + venv + CPU-Torch setup. Keep caches immutable/keyed tightly so reproducibility does not regress.
+
+### 7. Low — workflow names/comments have drifted from actual scope
+
+The parity step still says “504 cases,” but the PR adds a parametrized publication module with a full 39-file inventory and additional tests. Even if the original differential corpus remains 504, the displayed count no longer describes everything executed by `pytest parity/ -m parity`. This hampers timing interpretation and future failure diagnosis.
+
+**Recommended remediation:** rename the step to avoid a fixed total, or assert and report each suite's collected count separately. A dedicated publication-parity job would make this correction's gate clearer and prevent the existing corpus count from becoming stale again.
+
+## Code-quality observations
+
+- The figure changes appear intentionally literal and are preferable to relying on Matplotlib defaults; the new spy tests are a good defense against future default/version drift.
+- The permanent gate is strongly tied to immutable E3 records and a frozen reference digest, which is good for provenance. Its top-level `pytest.importorskip("prinet")` is acceptable only because the authoritative parity/nightly workflows explicitly install that reference; otherwise a missing reference silently becomes a module skip. I recommend adding a CI preflight assertion or environment-controlled “reference required” mode so authoritative jobs fail rather than skip if installation/path resolution changes.
+- The full-suite job currently serializes Python and Rust in one job. Even apart from this PR, that reduces signal and wastes coverage whenever Python fails first; separate jobs are the cleaner design.
+
+## Suggested order
+
+1. Remediate DV-045 and make `cargo audit` green (or record an explicit, narrow, time-bounded exception if technically blocked).
+2. Retrieve the two pytest short summaries and isolate the exact parity/full-suite failing nodes; do not infer or blind-rerun.
+3. Inspect the uploaded benchmark `comparison.txt`, classify each breach, and confirm material regressions on stable hardware.
+4. Add failure artifacts/summaries and split independent suites so future hosted failures are self-diagnosing.
+5. Upgrade Node-runtime action majors and pin the Ubuntu image before the announced image migration.
+
+— **Perplexity Deep-Research**

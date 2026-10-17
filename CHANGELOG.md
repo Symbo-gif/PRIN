@@ -506,6 +506,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The publication parity gate no longer asserts a cross-platform byte identity
+  that was never true (`EXP-002-D1` S4, 2026-10-17 UTC).**
+  `parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm`
+  compared a fresh in-process render by the frozen `prinet==3.0.0` reference
+  generator against the `normalized_sha256` recorded in the committed EXP-002 E3
+  reference run, **on any platform**. Matplotlib typesets and rasterizes through
+  the host's FreeType build and font set, so that claim is false off the platform
+  that authored the record. The gate had never executed on Linux before: it was
+  added by this correction cycle and is not on `main`, and Plan amendment #48
+  suspends Linux/macOS validation. Re-enabling the hosted checks under Plan
+  amendment #52 surfaced it immediately — `parity` and `nightly full-suite` both
+  failed on the **same 28** parametrizations (14 figures × 2 formats) while **all
+  11 `.tex` tables passed** and every other test in the file passed.
+
+  **This was not a PRIN or reference defect.** Both arms shift together, which is
+  why the registered H3 comparison
+  (`test_prin_matches_reference_under_registered_comparison`) passes **39/39 on
+  Linux and on Windows** — it renders both arms in one process, so platform
+  effects cancel.
+
+  The byte-exact figure tie is now scoped to the platform the **frozen record
+  itself declares** (`environment.platform`, a field `exp002_driver` requires),
+  read from the artefact rather than hard-coded as an OS name, so the branch
+  cannot be relaxed by hand. On that platform — the maintainer's Windows host,
+  where the authoritative local gate runs — all 39 files are compared
+  byte-exactly, unchanged. Off it the 11 `.tex` tables are **still byte-exact**,
+  and each figure must still render, be non-empty and survive
+  `driver.normalized_bytes`, which validates PNG critical chunks and the PDF
+  Info/xref structure. A new test,
+  `test_digest_tie_is_scoped_by_the_records_own_platform`, pins the mechanism.
+
+  **No test was skipped, deselected or xfailed**, the collected count is
+  unchanged, the registered H3 rule and normalization policy are untouched, and
+  the frozen EXP-002 record is unedited. Non-vacuity is proven by four negative
+  controls, including the discriminating pair in which the identical corrupted
+  digest **fails** on the authoring platform and **passes** off it
+  (`EVIDENCE/exp002-d1-s4/pr34-review/negative-controls.txt`). Recorded as
+  `EXP002D1-S4-F2` (D2) and flagged for retro-audit at the next S2-class audit,
+  since it is a code change made in a documentation session under the
+  maintainer's explicit in-session authorization.
+
 - **Publication figures match the frozen PRINet 3.0 generator again
   (EXP-002 D1 S1, 2026-10-15 UTC).** EXP-002 H3 was refuted because 18 of the
   39 publication files differed: the PDF and PNG of figures 5, 7, 8, 9, 10,

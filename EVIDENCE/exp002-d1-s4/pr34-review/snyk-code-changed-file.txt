@@ -1,0 +1,28 @@
+# Snyk Code on the one changed file (bandit's configured exclude_dirs omits parity/*, so Snyk is the applicable SAST control here)
+# copied from /c/Users/there/prin-s4-scratch/snyk-changed-file.txt at 2026-10-17T19:03:58Z
+
+
+Testing parity/test_parity_publication.py ...
+
+        
+💡 Tip
+
+   You are currently viewing results with --severity-threshold applied.
+   To view all issues, remove the --severity-threshold flag            
+                                                                       
+
+╭───────────────────────────────────────────────────────────╮
+│ Test Summary                                              │
+│                                                           │
+│   Organization:      symbo-gif                            │
+│   Test type:         Static code analysis                 │
+│   Project path:      parity/test_parity_publication.py    │
+│                                                           │
+│   Total issues:   0                                       │
+╰───────────────────────────────────────────────────────────╯
+    
+💡 Tip
+
+   To view ignored issues, use the --include-ignores option.
+                                                            
+

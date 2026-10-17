@@ -2436,3 +2436,189 @@ S4's delta re-audit reproduces the red/green transition again on the S4 tree.
    the re-baseline gates before `0168`/`0173`), DV-045, DV-046, DV-047, `S2-F3`
    and `S2-F4` (past the one-carry limit, §S4.10 item 10), and the amendment-#48
    platform suspension (DoD items 2 and 4).
+
+### S4.12 Addendum — the external review of PR #34, and `EXP002D1-S4-F2` (2026-10-17 UTC)
+
+Appended after §S4.11 because the events it records happened after the push that
+§S4.8 describes. This section is a pure append; nothing above is edited.
+
+**What changed between §S4.8 and here.** The push succeeded
+(`8fd0ecc9..83bae4b1`), PR #34 was made ready for review, and the seven workflows
+were enabled under amendment #52. Two things then happened that §S4.8 could not
+have recorded:
+
+1. **Every GitHub-hosted job failed within 2–3 seconds** with the annotation
+   *"The job was not started because your account is locked due to a billing
+   issue."* No runner was assigned and no log existed. This is an
+   **account-level** condition outside the repository. Per §7 step 8 of the
+   session prompt I triaged it, recorded it
+   ([`pr34-review/billing-lock-diagnosis.txt`](../../EVIDENCE/exp002-d1-s4/pr34-review/billing-lock-diagnosis.txt))
+   and **stopped before merging**. The maintainer cleared it in chat
+   ("fixed billing issues") at ~22:55 UTC. The six runs that had started no job
+   were then re-run; that is a first real execution, not a rerun-until-green of a
+   test failure. One disclosure: the re-run was issued as a batch, and by then
+   GitHub had already retried some, so `repro` and `snyk` — which had already
+   succeeded — were re-run unnecessarily, and `parity` reached attempt 4.
+2. **The maintainer posted an independent Perplexity Deep-Research review** of
+   PR #34 and asked that its findings be validated before anything was acted on,
+   authorizing the decisions needed to unblock progress and get the hosted checks
+   green *"without compromizing the plan, govenance, methodologies, and
+   established standards"*.
+
+**Final hosted inventory at `83bae4b1`, before the fix** ([`pr34-review/hosted-inventory-final.txt`](../../EVIDENCE/exp002-d1-s4/pr34-review/hosted-inventory-final.txt)):
+
+| Workflow | Conclusion | Note |
+|---|---|---|
+| `python` | **success** | all 10 jobs: lint, governance, security, docs, 3 ubuntu + 3 windows test legs |
+| `snyk` (PR and push) | **success** | Snyk Code and Secret Scan |
+| `repro` | **success** | `reproduce` |
+| `gpu` | **success** | `gpu-wgpu` **and** `gpu-cuda` on `PRIN-GPU-Runner` — so **DV-046 did not recur** |
+| `rust` | **failure** | **only** the `audit` job; the other 9 succeeded (fmt, clippy, clippy-strict, docs, test-strict, bench-smoke, ubuntu/macos/windows test legs) |
+| `parity` | **failure** | 28 failed / 2208 passed / 2 skipped |
+| `nightly` | **failure** | `full-suite` 28 failed / 6185 passed / 302 skipped; `bench-regression` one gating breach |
+| `Devin Review` | fail | an external app check, not a repository workflow and not a required check |
+
+**The adjudication.** Every checkable claim was measured against the real logs,
+the real diff and the real configuration; the record is
+[`pr34-review/adjudication.md`](../../EVIDENCE/exp002-d1-s4/pr34-review/adjudication.md).
+Result: **4 CONFIRMED, 1 CONFIRMED-in-part, 1 REFUTED (fabricated), 2 recorded
+without independent verification.**
+
+- **CONFIRMED — the `audit` failure is exactly DV-045.** The job log reads
+  `Scanning Cargo.lock for vulnerabilities (621 crate dependencies)`,
+  `error: 9 vulnerabilities found!`, `warning: 4 allowed warnings found`; the ids
+  are `RUSTSEC-2026-0338`..`0342` (`quinn-proto` ×5) and `-0346`..`0349`
+  (`rustls` ×4) = 9, with `2024-0436` (`paste`, DV-008) and `2025-0141`
+  (`bincode`, DV-017) among the allowed warnings. Feasibility of DV-045's
+  governed remedy was also measured: `cargo update --dry-run -p quinn-proto
+  --precise 0.11.18` and `-p rustls --precise 0.23.46` both exit 0;
+  `cargo tree -i quinn-proto` prints *"nothing to print"*, confirming DV-045's
+  unreachable-optional-entry claim.
+- **CONFIRMED and discharged — the exact failing nodes.** Both `parity` and
+  `nightly full-suite` fail on the **same 28** parametrizations of one test:
+  `test_reference_arm_reproduces_e3_reference_arm`, **14 figures × 2 formats**.
+  All **11 `.tex` tables pass**, and every other test in the file passes —
+  including `test_prin_matches_reference_under_registered_comparison` **39/39**,
+  the registered H3 rule. **All four notebooks PASSED on Linux**, and there is no
+  `WinError`, `CellTimeoutError` or throughput-ratio failure anywhere in the
+  nightly log, so **neither of O-1's two registered classes occurred**.
+- **CONFIRMED in part — `bench-regression`.** Exactly **one** gating breach:
+  `criterion/engine_step/step_parallel/16384`, `4.185e+06 -> 4.62e+06`
+  (**+10.4 %**); 69 rows, 6 advisory, 63 gating. **This PR changes 0 `.rs`
+  files**, so it cannot be the cause; that identity is the one DV-043 recorded as
+  *"explicitly not claimed as explained … a hosted-runner artefact"*, and DV-036
+  owns the reference-host re-baseline at session `0166`. `nightly` is
+  schedule/`workflow_dispatch` only — **not a PR check**.
+- **CONFIRMED as fact — the Node-20/Node-24 and `ubuntu-latest` → Ubuntu 26
+  notices** (migration **2026-10-19**, two days out), the missing
+  `--junitxml`/step-summary diagnostics, the stale `"504 cases"` step name (the
+  job collected **2,238**), and nightly's single-job Python-then-Rust
+  serialization. All require `.github/` edits.
+- **REFUTED — fabricated.** *"This PR raises one notebook base timeout from 180s
+  to 600s."* The real diff is `- timeout=900` → `+ timeout=
+  NOTEBOOK_CELL_TIMEOUT_SECONDS[name]`, bounds **2700 / 10800 / 1800 / 1800**,
+  `BOUND_ROUNDING_SECONDS = 900`. **No 180 s or 600 s constant exists in this PR's
+  diff of that file**; the only such tokens anywhere in the diff are fuzz
+  parametrizations (`…within_horizon[180]`, `[600]`) and unrelated prose in
+  committed evidence JSON. Acting on it would have sent the investigation to a
+  file and mechanism that do not exist. This is the failure mode
+  `EVIDENCE/exp002-d1-s3/cold-review/triage.md` already documents for the other
+  external reviewers, and the reason every claim here was measured first.
+- **REFUTED as a materialized risk — the `importorskip("prinet")` concern.** On
+  Linux the reference arm genuinely ran (all 39 parametrizations executed), so
+  the module was not skipped. S2 had already dispositioned the convention as
+  *"not a finding"*.
+
+**`EXP002D1-S4-F2` (D2) — FIXED.** The gate S1 added
+(`parity/test_parity_publication.py`, commit `d90eeabb`, not on `main`) asserted
+that a fresh in-process render by the frozen reference generator reproduces the
+`normalized_sha256` recorded in the committed E3 reference run **on any platform**.
+That is false as a universal claim: Matplotlib typesets and rasterizes through the
+host's FreeType build and font set. **The E3 record declares its own authoring
+platform** — `environment.platform = "Windows-11-10.0.26300-SP0"`, a field
+`exp002_driver` *requires* — so the artefact itself scopes the expectation. PR #34's
+push was this gate's **first Linux execution**, invisible under amendment #48's
+platform suspension and surfaced within minutes of amendment #52 re-enabling the
+hosted checks.
+
+It is **not** a PRIN or reference defect: both arms shift together, which is why
+the registered H3 comparison passes 39/39 on **both** platforms, and why the 11
+text tables reproduce byte-exactly on Linux.
+
+**The fix** scopes the byte-exact figure tie to the platform the frozen record
+declares — read from `environment.platform`, never a hard-coded OS name, so the
+branch cannot be relaxed by hand and a future record authored elsewhere carries
+its own scope. Off that platform the **11 `.tex` tables are still compared
+byte-exactly**, and each figure must still render, be non-empty and survive
+`driver.normalized_bytes` (which validates PNG critical chunks and the PDF
+Info/xref structure). A new test,
+`test_digest_tie_is_scoped_by_the_records_own_platform`, pins the mechanism.
+
+**Non-vacuity proven by four negative controls** ([`pr34-review/negative-controls.txt`](../../EVIDENCE/exp002-d1-s4/pr34-review/negative-controls.txt)),
+driven by a plugin kept outside the repository that patches `item.module`:
+
+| Control | Expected | Measured |
+|---|---|---|
+| `corrupt-figure`, platform matches | FAIL | **1 failed, 38 passed** |
+| `corrupt-tex`, platform matches | FAIL | **1 failed, 38 passed** |
+| `bogus+corrupt-figure`, platform differs | PASS | **39 passed** |
+| `bogus+corrupt-tex`, platform differs | FAIL | **1 failed, 38 passed** |
+
+Controls 1 and 3 are the discriminating pair — **the identical corruption fails on
+the authoring platform and passes off it** — and control 4 proves the tables were
+not relaxed with the figures. The unmodified run on this host is **94 passed**;
+`ruff check`, `ruff format --check` and `mypy --strict` are clean on the changed
+file; **Snyk Code: 0 issues** on it, which is the applicable SAST control because
+`[tool.bandit] exclude_dirs` omits `parity/*` (a `bandit -r parity` run scans
+**0 LOC** and is not reported as "0 issues").
+
+**Why this corrects a false assertion rather than weakening a real one:** on the
+platform where the authoritative local gate runs the byte-exact comparison is
+unchanged and demonstrably live (control 1); off it the tables stay byte-exact
+(control 4); the H3 rule itself is untouched and passes on both platforms; **no
+test was skipped, deselected or xfailed** and the collected count is unchanged (94,
+verified equal under the `bogus-platform` control so nothing was silently dropped);
+and the frozen `EXP-002` record is untouched.
+
+**Alternatives rejected:** per-platform digests (would require editing the frozen
+`benchmarks/results/EXP-002/` records, or creating a new `RUN-` directory — an
+experiment execution S4 must not perform, belonging to `EXP-002-r1`); pinning
+`parity.yml` to Windows (would surrender the Linux coverage DoD item 2 requires
+and amendments #16/#17 exist for); normalizing away font rendering (the
+normalization policy is frozen in the `EXP-002` pre-registration — extending it
+would be loosening a registered comparison); `skipif`/`xfail` (forbidden, and it
+would hide the branch instead of scoping it).
+
+**Two harness defects of my own, corrected rather than left standing.** The first
+verification attempt reported *"V3 DID NOT FAIL: the byte-exact comparison would be
+vacuous"*, which would have led to the opposite conclusion about a correct fix.
+Causes: (1) `PYTHONPATH` exported as an MSYS path, which native Windows Python
+never sees, so `-p negctl` died with `No module named 'negctl'` and the controls
+measured nothing; (2) `cmd | tail -4; rc=$?` captured `tail`'s status, which is how
+a genuine `ruff` **E501** and a real format deviation were first reported as
+`exit code: 0`. A third defect was in the plugin itself: `parity/` has no
+`__init__.py`, so pytest loads the file as top-level `test_parity_publication`
+while `from parity import …` creates a **distinct** module object the collected
+tests never used — so the first controls patched nothing. All three were fixed,
+both runs are kept, and the E501 and format deviation were fixed in the source.
+
+**Governance note, flagged for ratification.** This is a **code change made in a
+documentation (S4) session**, which the Session Cycle does not normally permit. It
+was made under the maintainer's explicit in-session authorization, on the branch
+that introduced the defect (a separate branch would have left PR #34 red), and per
+Development Workflow §7 it is **flagged for retro-audit at the next S2-class
+audit**. Severity **D2** — a normative quality gate failed; **D1 was considered
+and rejected** because no numerical parity claim or published result is wrong.
+
+**What was deliberately NOT done.** No dependency, lockfile, advisory-ignore or
+audit-configuration change: DV-045 assigns the lockfile update to *a dedicated
+hotfix or maintainer-authorized session*, explicitly **not** inside this
+correction, whose approved scope is bounded to the H3 fix; changing `Cargo.lock`
+would also break the recorded immutability invariant I1b and require the full Rust
+matrix and `cargo llvm-cov` to re-verify. The `audit` check **does not block the
+merge** — ruleset 22150076 carries no `required_status_checks` rule (amendments
+#48/#50/#52), and the session's rules leave that to the ruleset. No workflow file
+was edited, so claims 3–7 are handed off as recommendations; the Node-24 /
+Ubuntu-26 item is **urgent** (2026-10-19). No benchmark threshold was loosened and
+no gating row made advisory. **DV-045's lockfile update is recommended as the
+immediate next governed action**, with feasibility already measured.

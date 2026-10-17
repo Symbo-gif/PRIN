@@ -1,0 +1,53 @@
+# the parity job's attempt-2 log, reduced to the failure evidence
+# source: gh api repos/Symbo-gif/PRIN/actions/runs/38976489909/attempts/2/logs
+# copied at 2026-10-17T19:03:59Z
+
+## summary line
+2026-10-16T23:04:32.3164997Z ================= 28 failed, 2208 passed, 2 skipped in 48.46s ==================
+
+## the short test summary section (first 40 lines)
+2026-10-16T23:04:32.2582832Z =========================== short test summary info ============================
+2026-10-16T23:04:32.2584088Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig10_statistical_summary.pdf] - AssertionError: assert '13016f7b18e04e281d5c34c8f0f67ccd6abed38a22068101d02441c27a2c5afa' == 'cb2687a3ae912d7664d7591b0e5bb5c7676dc8140ba9f73b5c522a41d930c3de'
+2026-10-16T23:04:32.2585236Z   
+2026-10-16T23:04:32.2585519Z   - cb2687a3ae912d7664d7591b0e5bb5c7676dc8140ba9f73b5c522a41d930c3de
+2026-10-16T23:04:32.2585985Z   + 13016f7b18e04e281d5c34c8f0f67ccd6abed38a22068101d02441c27a2c5afa
+2026-10-16T23:04:32.2587210Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig13_representation_geometry.pdf] - AssertionError: assert '97e30f8c793a974edb7b42d75af6b9e492df5dcc7a0f43235d4b1dbfbb106a9a' == '67eca98a2bd59ebdd7c4eba6f15203172f0228942c6be8e4736266571668bcc9'
+2026-10-16T23:04:32.2588332Z   
+2026-10-16T23:04:32.2588766Z   - 67eca98a2bd59ebdd7c4eba6f15203172f0228942c6be8e4736266571668bcc9
+2026-10-16T23:04:32.2589209Z   + 97e30f8c793a974edb7b42d75af6b9e492df5dcc7a0f43235d4b1dbfbb106a9a
+2026-10-16T23:04:32.2590578Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig10_statistical_summary.png] - AssertionError: assert '14ca6ffa9005af403a90047e4d9fc9a0b331c7ccb1648573956dbc4a632529c4' == 'c3d089e311db1f7b547ccfbfbc3846890d95387c430448260cf5fcdb48bf22be'
+2026-10-16T23:04:32.2591684Z   
+2026-10-16T23:04:32.2591943Z   - c3d089e311db1f7b547ccfbfbc3846890d95387c430448260cf5fcdb48bf22be
+2026-10-16T23:04:32.2592376Z   + 14ca6ffa9005af403a90047e4d9fc9a0b331c7ccb1648573956dbc4a632529c4
+2026-10-16T23:04:32.2593552Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig11_flops_scaling.pdf] - AssertionError: assert '438dbf36e5723dc23afd7d76451f9ee142543fa5ad01949ce7ca7fc5d9dc13c7' == '482737ec0be67f8569f24f78721495e06a3708752d16f79567fc0e7cc4e91612'
+2026-10-16T23:04:32.2594629Z   
+2026-10-16T23:04:32.2594882Z   - 482737ec0be67f8569f24f78721495e06a3708752d16f79567fc0e7cc4e91612
+2026-10-16T23:04:32.2595314Z   + 438dbf36e5723dc23afd7d76451f9ee142543fa5ad01949ce7ca7fc5d9dc13c7
+2026-10-16T23:04:32.2596493Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig11_flops_scaling.png] - AssertionError: assert '71ca631589e45165a80f11bbc4acbcc84a9a4b1257f3fc07582d7d02d6337ba5' == '4aeca86979755822025874a57f80453e8dc414d776984f23e957f7c29d1e7812'
+2026-10-16T23:04:32.2597562Z   
+2026-10-16T23:04:32.2597811Z   - 4aeca86979755822025874a57f80453e8dc414d776984f23e957f7c29d1e7812
+2026-10-16T23:04:32.2598232Z   + 71ca631589e45165a80f11bbc4acbcc84a9a4b1257f3fc07582d7d02d6337ba5
+2026-10-16T23:04:32.2599783Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig13_representation_geometry.png] - AssertionError: assert '8a01796206d7d5ca98037c2af77b45276de6c576292a5c24aacb45139d259a11' == '58adbab07374dca00d5e75aff342e4704839cd030661396f8817adad9003e4f7'
+2026-10-16T23:04:32.2600912Z   
+2026-10-16T23:04:32.2601180Z   - 58adbab07374dca00d5e75aff342e4704839cd030661396f8817adad9003e4f7
+2026-10-16T23:04:32.2601620Z   + 8a01796206d7d5ca98037c2af77b45276de6c576292a5c24aacb45139d259a11
+2026-10-16T23:04:32.2602954Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig12_supercritical_regime.pdf] - AssertionError: assert '4f852f42366991714762a2eafa42959d1a72619f75e4644a6bdfb26d6676adad' == 'b6ddf8a35460ecaf72484fc02fa01be5da0a3255882bbe84a81765ba1e55ebeb'
+2026-10-16T23:04:32.2604072Z   
+2026-10-16T23:04:32.2604347Z   - b6ddf8a35460ecaf72484fc02fa01be5da0a3255882bbe84a81765ba1e55ebeb
+2026-10-16T23:04:32.2604774Z   + 4f852f42366991714762a2eafa42959d1a72619f75e4644a6bdfb26d6676adad
+2026-10-16T23:04:32.2605959Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig14_gradient_flow.pdf] - AssertionError: assert '6e90093b1347748096b59e14bed7d22aa7964b6d2aae9b2035c2d0a8abbeb2d6' == 'eee31a02c8d30e82c0f4ffc41aa2c04abcd79c611779c35badde7fa2d319d8aa'
+2026-10-16T23:04:32.2607041Z   
+2026-10-16T23:04:32.2607355Z   - eee31a02c8d30e82c0f4ffc41aa2c04abcd79c611779c35badde7fa2d319d8aa
+2026-10-16T23:04:32.2607795Z   + 6e90093b1347748096b59e14bed7d22aa7964b6d2aae9b2035c2d0a8abbeb2d6
+2026-10-16T23:04:32.2609285Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig12_supercritical_regime.png] - AssertionError: assert '49e0c175083279ee859f05f0bad0555c0f6e6506dc0ab69f2f0dd198fe189767' == 'f45bdd344596559b9364ef41f4cebeaf8f46ccc4a3f30608f5a106821a1ac1b5'
+2026-10-16T23:04:32.2610406Z   
+2026-10-16T23:04:32.2610671Z   - f45bdd344596559b9364ef41f4cebeaf8f46ccc4a3f30608f5a106821a1ac1b5
+2026-10-16T23:04:32.2611099Z   + 49e0c175083279ee859f05f0bad0555c0f6e6506dc0ab69f2f0dd198fe189767
+2026-10-16T23:04:32.2612262Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig14_gradient_flow.png] - AssertionError: assert 'dca0301ebae12635b36348569c2d77a2531817af2085a4a5e9a8250612214bf7' == '54b504011f39334aede8d807502ad25fd430a5ac08e0e1982e283193859a7231'
+2026-10-16T23:04:32.2613471Z   
+2026-10-16T23:04:32.2613725Z   - 54b504011f39334aede8d807502ad25fd430a5ac08e0e1982e283193859a7231
+
+## environment
+linux -- Python 3.12.15
+Image: ubuntu-24.04
+matplotlib-3.11.2-cp312

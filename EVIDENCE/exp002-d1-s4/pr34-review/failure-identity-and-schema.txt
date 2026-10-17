@@ -1,0 +1,191 @@
+# Confirmation that the nightly full-suite's 28 failures are the same test the parity job fails, that all four notebooks PASSED on Linux, and the E3 record/driver schema showing environment.platform is a required, stored field
+# copied from /c/Users/there/prin-s4-scratch/confirm_and_schema.txt at 2026-10-17T19:03:56Z
+
+# nightly failure identity + E3 record/driver environment schema
+# date (UTC): 2026-10-17T18:10:24Z
+
+===== 1. nightly full-suite: the 28 failures =====
+  log: /c/Users/there/prin-s4-scratch/perplexity/nightly/1_full-suite.txt
+    2026-10-16T23:22:39.5348567Z ==== 28 failed, 6185 passed, 302 skipped, 57 warnings in 622.95s (0:10:22) =====
+  --- short test summary section ---
+    2026-10-16T23:22:38.7950490Z =========================== short test summary info ============================
+    2026-10-16T23:22:38.7951730Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig10_statistical_summary.pdf] - AssertionError: assert '13016f7b18e04e281d5c34c8f0f67ccd6abed38a22068101d02441c27a2c5afa' == 'cb2687a3ae912d7664d7591b0e5bb5c7676dc8140ba9f73b5c522a41d930c3de'
+    2026-10-16T23:22:38.7952858Z   
+    2026-10-16T23:22:38.7953138Z   - cb2687a3ae912d7664d7591b0e5bb5c7676dc8140ba9f73b5c522a41d930c3de
+    2026-10-16T23:22:38.7953592Z   + 13016f7b18e04e281d5c34c8f0f67ccd6abed38a22068101d02441c27a2c5afa
+    2026-10-16T23:22:38.7954815Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig10_statistical_summary.png] - AssertionError: assert '14ca6ffa9005af403a90047e4d9fc9a0b331c7ccb1648573956dbc4a632529c4' == 'c3d089e311db1f7b547ccfbfbc3846890d95387c430448260cf5fcdb48bf22be'
+    2026-10-16T23:22:38.7955928Z   
+    2026-10-16T23:22:38.7956195Z   - c3d089e311db1f7b547ccfbfbc3846890d95387c430448260cf5fcdb48bf22be
+    2026-10-16T23:22:38.7956637Z   + 14ca6ffa9005af403a90047e4d9fc9a0b331c7ccb1648573956dbc4a632529c4
+    2026-10-16T23:22:38.7957834Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig11_flops_scaling.pdf] - AssertionError: assert '438dbf36e5723dc23afd7d76451f9ee142543fa5ad01949ce7ca7fc5d9dc13c7' == '482737ec0be67f8569f24f78721495e06a3708752d16f79567fc0e7cc4e91612'
+    2026-10-16T23:22:38.7958922Z   
+    2026-10-16T23:22:38.7959178Z   - 482737ec0be67f8569f24f78721495e06a3708752d16f79567fc0e7cc4e91612
+    2026-10-16T23:22:38.7959870Z   + 438dbf36e5723dc23afd7d76451f9ee142543fa5ad01949ce7ca7fc5d9dc13c7
+    2026-10-16T23:22:38.7961217Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig11_flops_scaling.png] - AssertionError: assert '71ca631589e45165a80f11bbc4acbcc84a9a4b1257f3fc07582d7d02d6337ba5' == '4aeca86979755822025874a57f80453e8dc414d776984f23e957f7c29d1e7812'
+    2026-10-16T23:22:38.7962307Z   
+    2026-10-16T23:22:38.7962561Z   - 4aeca86979755822025874a57f80453e8dc414d776984f23e957f7c29d1e7812
+    2026-10-16T23:22:38.7962988Z   + 71ca631589e45165a80f11bbc4acbcc84a9a4b1257f3fc07582d7d02d6337ba5
+    2026-10-16T23:22:38.7964197Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig12_supercritical_regime.pdf] - AssertionError: assert '4f852f42366991714762a2eafa42959d1a72619f75e4644a6bdfb26d6676adad' == 'b6ddf8a35460ecaf72484fc02fa01be5da0a3255882bbe84a81765ba1e55ebeb'
+    2026-10-16T23:22:38.7965310Z   
+    2026-10-16T23:22:38.7965575Z   - b6ddf8a35460ecaf72484fc02fa01be5da0a3255882bbe84a81765ba1e55ebeb
+    2026-10-16T23:22:38.7966011Z   + 4f852f42366991714762a2eafa42959d1a72619f75e4644a6bdfb26d6676adad
+    2026-10-16T23:22:38.7967222Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig12_supercritical_regime.png] - AssertionError: assert '49e0c175083279ee859f05f0bad0555c0f6e6506dc0ab69f2f0dd198fe189767' == 'f45bdd344596559b9364ef41f4cebeaf8f46ccc4a3f30608f5a106821a1ac1b5'
+    2026-10-16T23:22:38.7968330Z   
+    2026-10-16T23:22:38.7968706Z   - f45bdd344596559b9364ef41f4cebeaf8f46ccc4a3f30608f5a106821a1ac1b5
+    2026-10-16T23:22:38.7969146Z   + 49e0c175083279ee859f05f0bad0555c0f6e6506dc0ab69f2f0dd198fe189767
+    2026-10-16T23:22:38.7970500Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig13_representation_geometry.pdf] - AssertionError: assert '97e30f8c793a974edb7b42d75af6b9e492df5dcc7a0f43235d4b1dbfbb106a9a' == '67eca98a2bd59ebdd7c4eba6f15203172f0228942c6be8e4736266571668bcc9'
+    2026-10-16T23:22:38.7971640Z   
+    2026-10-16T23:22:38.7971902Z   - 67eca98a2bd59ebdd7c4eba6f15203172f0228942c6be8e4736266571668bcc9
+    2026-10-16T23:22:38.7972345Z   + 97e30f8c793a974edb7b42d75af6b9e492df5dcc7a0f43235d4b1dbfbb106a9a
+    2026-10-16T23:22:38.7973564Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig13_representation_geometry.png] - AssertionError: assert '8a01796206d7d5ca98037c2af77b45276de6c576292a5c24aacb45139d259a11' == '58adbab07374dca00d5e75aff342e4704839cd030661396f8817adad9003e4f7'
+    2026-10-16T23:22:38.7974686Z   
+    2026-10-16T23:22:38.7974952Z   - 58adbab07374dca00d5e75aff342e4704839cd030661396f8817adad9003e4f7
+    2026-10-16T23:22:38.7975378Z   + 8a01796206d7d5ca98037c2af77b45276de6c576292a5c24aacb45139d259a11
+    2026-10-16T23:22:38.7976561Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig14_gradient_flow.pdf] - AssertionError: assert '6e90093b1347748096b59e14bed7d22aa7964b6d2aae9b2035c2d0a8abbeb2d6' == 'eee31a02c8d30e82c0f4ffc41aa2c04abcd79c611779c35badde7fa2d319d8aa'
+    2026-10-16T23:22:38.7977661Z   
+    2026-10-16T23:22:38.7977932Z   - eee31a02c8d30e82c0f4ffc41aa2c04abcd79c611779c35badde7fa2d319d8aa
+    2026-10-16T23:22:38.7978371Z   + 6e90093b1347748096b59e14bed7d22aa7964b6d2aae9b2035c2d0a8abbeb2d6
+    2026-10-16T23:22:38.7979678Z FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig14_gradient_flow.png] - AssertionError: assert 'dca0301ebae12635b36348569c2d77a2531817af2085a4a5e9a8250612214bf7' == '54b504011f39334aede8d807502ad25fd430a5ac08e0e1982e283193859a7231'
+    2026-10-16T23:22:38.7980753Z   
+    2026-10-16T23:22:38.7981007Z   - 54b504011f39334aede8d807502ad25fd430a5ac08e0e1982e283193859a7231
+  --- distinct failing test functions ---
+         28 test_reference_arm_reproduces_e3_reference_arm
+  --- distinct failing files ---
+    FAILED [ 96%]
+    FAILED [ 97%]
+    FAILED parity/test_parity_publication.py
+  --- extensions of the failing parametrizations ---
+         14 .pdf]
+         14 .png]
+  --- any WinError / notebook / throughput failure? (the two registered O-1 classes) ---
+    occurrences in the whole log: 1
+  --- did the notebooks pass on Linux? ---
+    test_notebook_executes_end_to_end[01_oscillosim_quickstart.ipynb] PASSED
+    test_notebook_executes_end_to_end[02_clevr_n_binding.ipynb] PASSED
+    test_notebook_executes_end_to_end[03_custom_coupling.ipynb] PASSED
+    test_notebook_executes_end_to_end[04_torch_bridge.ipynb] PASSED
+
+===== 2. what does the E3 reference RUN record store? =====
+    README.md
+    RUN-20261012T212705Z-fae24c4-api-cpu
+    RUN-20261012T213054Z-fae24c4-conclusions-cpu
+    RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu
+    RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu
+    RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu
+  --- the reference-arm run's result.json top-level keys ---
+    RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu:
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+    d=json.load(open(p,encoding='utf-8'))
+                ~~~~^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/result.json'
+  --- one file entry from the reference arm (what fields does each file carry?) ---
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+    d=json.load(open(r'benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/result.json',encoding='utf-8'))
+                ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'benchmarks/results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu/result.json'
+
+===== 3. the driver: normalization, pins and any environment capture =====
+    30:import matplotlib
+    33:from matplotlib import font_manager, ft2font
+    35:from PIL import __version__ as pillow_version
+    37:from prin.reporting.figure_generation import normalize_matplotlib_output
+    40:from benchmarks._common.environment import capture_environment
+    64:REFERENCE_PINS = {
+    75:PRIN_ADDITIONS = {"BackendUnavailableError", "__version__", "core_version"}
+    105:EXPECTED_FILES = frozenset(
+    243:    if _digest(payload) != REFERENCE_PINS["src/prinet/__init__.py"]:
+    899:def normalized_bytes(payload: bytes, suffix: str) -> bytes:
+    929:        return normalize_matplotlib_output(snapshot)
+    974:        Path(matplotlib.get_cachedir())
+    975:        / f"fontlist-v{font_manager.FontManager.__version__}.json"
+    982:def _render_environment() -> dict[str, Any]:
+    983:    fonts = Path(matplotlib.get_data_path()) / "fonts/ttf"
+    986:        "matplotlib": matplotlib.__version__,
+    987:        "numpy": numpy.__version__,
+    990:        "backend": str(matplotlib.get_backend()),
+    1022:    renderer = _render_environment()
+    1038:                != REFERENCE_PINS[relative]
+    1067:        if name.startswith("tables/") and name in EXPECTED_FILES:
+    1076:    if renderer != _render_environment():
+    1077:        raise DriverError("renderer/font environment changed during generation")
+    1081:        "expected_files": sorted(EXPECTED_FILES),
+    1321:            or observations.get("expected_files") != sorted(EXPECTED_FILES)
+    1408:    environment = _mapping(result.get("environment"), "environment")
+    1411:    source_sha = environment.get("git_commit")
+    1440:        or type(environment.get("seed")) is not int
+    1441:        or environment.get("seed") != 0
+    1442:        or environment.get("backend") != "cpu"
+    1443:        or environment.get("dtype") != "f64"
+    1444:        or environment.get("prin_version") != "1.0.0rc1"
+    1452:        "platform",
+    1455:        if not isinstance(environment.get(name), str) or not environment[name].strip():
+    1456:            raise DriverError(f"required environment field missing: {name}")
+    1458:        type(environment.get("logical_cpus")) is not int
+    1459:        or environment["logical_cpus"] < 1
+    1502:    environment = capture_environment(backend="cpu", dtype="f64", seed=0)
+    1504:        environment["git_commit"] != source_sha
+    1505:        or environment["prin_version"] != "1.0.0rc1"
+
+===== 4. the test file's imports and the E3 run constants =====
+    """Publication-fidelity gate: PRIN versus the frozen PRINet 3.0 generators.
+    
+    EXP-002 hypothesis H3 (pre-registration §2, §5.4) predicted that PRIN's
+    ``tools.reproduce.run_reproduction`` and the frozen PRINet 3.0 reference
+    generators render the same 39 registered ``generated_files`` from the archived
+    172-input set. E3 found 18 of 39 files different under the approved comparison
+    policy, the ``.pdf`` and ``.png`` of nine figures (EXP-002 E5 report §3.3,
+    campaign plan §10.4 D1). Before the EXP-002 D1 correction no gate compared the
+    two arms: ``tests/test_publication_generation.py`` checks table bytes against
+    the archived tables and figure completeness, not figure equality.
+    
+    This module is that comparison. In one process it renders the reference arm
+    (the frozen ``prinet.utils`` figure and table generators, origin and digest
+    pinned exactly as the E3 driver pins them) and the PRIN arm (the registered
+    ``run_reproduction`` call with ``verify=True``). It then compares every
+    registered file under the registered H3 rule,
+    :func:`benchmarks.campaign.exp002_driver.normalized_bytes`: tables after CRLF
+    to LF canonicalization only, PNG critical chunks after validation, and PDF
+    with only the four registered Info entries removed and xref offsets zeroed.
+    That is the function E4 applied. No file is skipped, sampled, or compared with
+    a tolerance.
+    
+    The gate deliberately imports the frozen EXP-002 driver and reads the
+    committed E3 run records. That couples a permanent gate to an immutable
+    campaign record, as the EXP-001 D1 gates do, and guarantees that it applies
+    H3's comparison exactly and that its reference arm is E3's reference arm.
+    """
+    
+    from __future__ import annotations
+    
+    import hashlib
+    import json
+    from pathlib import Path
+    from typing import Any
+    
+    import pytest
+    
+    pytest.importorskip("prinet")
+    
+    import prinet.utils.figure_generation as reference_figures
+    import prinet.utils.table_generation as reference_tables
+    
+    from benchmarks.campaign import exp002_driver as driver
+    from tools.reproduce import run_reproduction
+    
+    pytestmark = [pytest.mark.parity, pytest.mark.slow]
+    
+    _RESULTS = driver.REFERENCE / "benchmarks" / "results"
+    _RUN_ROOT = driver.RAW_ROOT
+    _E3_REFERENCE_RUN = "RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu"
+    _E3_PRIN_RUN = "RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu"
+    
+    #: The nine figure stems whose files differed at E3 (E5 report §3.3).
+    D1_FIGURE_STEMS = (
+        "fig5_mot_occlusion_comparison",
+        "fig7_ablation_results",
+        "fig8_parameter_efficiency",
+        "fig9_training_curves",
+        "fig10_statistical_summary",
+        "fig11_flops_scaling",

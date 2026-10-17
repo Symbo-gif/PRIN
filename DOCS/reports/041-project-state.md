@@ -94,16 +94,23 @@ on and establish nothing about platforms they did not exercise.
 
 ## 2. Metric trends
 
-This is a **documentation-and-evidence cycle**: the measured change set over
-`6b55c6ba..71d1c590` is **29 files, 0 `.rs`, 0 dependency manifests, 0
-first-party `.py`, 0 `.github/` workflow files**
-(`EVIDENCE/exp002-d1-s4/gate/change-set.txt`). Three conditional gate legs are
-therefore **not run, by measurement rather than by assumption**:
-`cargo fmt`/`clippy`/`test` (no Rust changed), `cargo audit`/`pip-audit`/Snyk
-Open Source (no dependency manifest changed; `cargo audit` is separately red on
-**DV-045**, out of this cycle's bounded scope), and per-change Python coverage
-(no first-party Python changed, so there are no changed executable lines to
-cover).
+This cycle began as a **documentation-and-evidence cycle** and ended with **one
+test-module change**. The measured change set over `6b55c6ba..HEAD` is
+**0 `.rs`, 0 dependency manifests, 0 `.github/` workflow files**, and exactly
+**one `.py` file** — `parity/test_parity_publication.py`, the `EXP002D1-S4-F2`
+fix (§3.5). `EVIDENCE/exp002-d1-s4/gate/change-set.txt` records the measurement
+and the conditional-leg decisions it drives.
+
+Three conditional gate legs are therefore **not run, by measurement rather than
+by assumption**: `cargo fmt`/`clippy`/`test` (no Rust changed);
+`cargo audit`/`pip-audit`/Snyk Open Source (no dependency manifest changed;
+`cargo audit` is separately red on **DV-045**, out of this cycle's bounded
+scope); and per-change Python coverage — the one changed `.py` is a **test
+module**, not production code, and this project measures coverage over `prin`
+(`--cov=prin` / `--cov=python/prin/reporting`), so there are **no changed
+production lines to cover**. That reasoning is stated rather than left implicit,
+because the raw count of changed `.py` files is 1 and a reader should not have to
+infer why it does not trigger the coverage leg. **DV-033 stays OPEN.**
 
 | Metric | Previous (PSR-040) | Current (PSR-041) | Gate |
 |---|---|---|---|
@@ -164,6 +171,7 @@ documentation cycle that touches neither symbol.
 | EXP002D1-S3-O1 | 041 | D3 | The required full suite had not produced an exit 0 in one pass on the maintainer host (S3: two runs, two different single host-contention failures, each passing alone) | AMENDED | **The premise is discharged by measurement, not by a policy change.** S4 ran the required full suite **exactly once** and it **exited 0** — 6,331 passed / 184 skipped / 0 failed in 1:43:09, tree clean before and after, **no rerun-until-green and nothing deselected, skipped or weakened**. It passed **under heavy contention**, which is the stronger result: host CPU median **96.5 %** (84 of 111 samples ≥ 90 %), pytest receiving a median **0.192 CPU-s per wall-second**, with `Devin.exe` (3,845 CPU-s), `mc-fw-host.exe` (2,979), `java.exe` (976) and `MsMpEng.exe` (98) among the non-PRIN consumers. **Note this diverges from decision 4A, which anticipated the local record staying at exit 1** and named a hosted pass as the closure evidence; the hosted corroboration is still obtained and reported in the session record. **The contention sensitivity is not cured** — the operating guidance in §5 stands, and a recurrence is a new observation, not a regression of this one. Correction audit §S3.7, §S3.9 item 9, `## S4 — closure` |
 | EXP002D1-S3-O2 | 041 | D4 | S3's cold-review loop reached its four-round cap, leaving round 4's fixes without a further cold review | FIXED | S4 performed the owed review **read-only and by measurement** on the committed round-4 fixes, reproducing every suspected defect with a command and classifying it CONFIRMED / REFUTED / NOT REPRODUCIBLE as S3's triage does. Result: 1 CONFIRMED defect (below), 12 checks verifying the fixes as claimed, 1 claim REFUTED as a defect. `EVIDENCE/exp002-d1-s4/o2-review/triage.md` |
 | EXP002D1-S4-F1 | 041 | D2 | `final_legs.sh` aggregated five legs with `grep -a MARKER FILE \| grep -qv OK && overall=1`, which **fails open**: with no input lines `grep -qv` exits 1, so a leg whose record is missing, empty, or holds no marker line reads as PASSING | FIXED | Found by S4's O-2 review and reproduced over seven record shapes. The same class round 4 fixed for the Snyk leg alone (S3 triage T4-2); five grep-aggregated siblings were left unchanged. **Latent**: a fail-closed check re-applied to all seven committed S3 records gives 0 failures, so **no recorded S3 result was masked**. S3's file is **not edited**; a corrected copy using a fail-closed `require_marker` helper supersedes it, with a red-before and green-after demonstration, and **S4's own gate ran the corrected copy**. Severity reasoning and the D4 alternative considered are in §5. `EVIDENCE/exp002-d1-s4/o2-review/` |
+| EXP002D1-S4-F2 | 041 | D2 | `parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm` asserted that a fresh in-process render by the frozen `prinet==3.0.0` reference generator reproduces the `normalized_sha256` recorded in the committed E3 reference run **on any platform**; Matplotlib typesets and rasterizes through the host FreeType build and font set, so that claim is false off the authoring platform | FIXED | Found by the **first Linux execution** of this gate, which PR #34's push made possible once amendment #52 re-enabled the hosted checks; the gate was added by S1 (`d90eeabb`) and is not on `main`. `parity` and `nightly full-suite` both failed on the **same 28** parametrizations (14 figures × 2 formats), while **all 11 `.tex` tables passed** and every other test in the file passed — including `test_prin_matches_reference_under_registered_comparison` **39/39**, the registered H3 rule, because it renders both arms in one process so platform effects cancel. **Not a PRIN or reference defect.** Fixed by scoping the byte-exact figure tie to the platform the frozen record **itself declares** (`environment.platform`, a field the driver requires) rather than a hard-coded OS name, keeping the 11 tables byte-exact on **every** platform, and requiring off-platform figures to render, be non-empty and survive `normalized_bytes` (which validates PNG critical chunks and PDF Info/xref). A new test pins the mechanism. **Non-vacuity proven by four negative controls**, including the discriminating pair where the identical corruption fails on the authoring platform and passes off it. **No test skipped, deselected or xfailed**; collected count unchanged; the frozen `EXP-002` record untouched. Four alternatives rejected (per-platform digests, pinning the runner to Windows, extending the frozen normalization policy, `skipif`/`xfail`). **This is a code change made in a documentation session**, under the maintainer's explicit in-session authorization, on the branch that introduced the defect, and is **flagged for retro-audit at the next S2-class audit** (Development Workflow §7). D1 considered and rejected: no numerical parity claim or published result is wrong. `EVIDENCE/exp002-d1-s4/pr34-review/adjudication.md` |
 
 ---
 

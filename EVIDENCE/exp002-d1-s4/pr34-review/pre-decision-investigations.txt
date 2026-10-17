@@ -1,0 +1,68 @@
+# Read-only investigations before any change: the bench-regression verdict block, and whether DV-045's governed lockfile-only update is feasible (cargo update --dry-run)
+# copied from /c/Users/there/prin-s4-scratch/pre_decision.txt at 2026-10-17T19:03:57Z
+
+# pre-decision investigations
+# date (UTC): 2026-10-17T18:16:00Z
+
+============================================================
+## 1. bench-regression: was there a GATING breach, or only advisory?
+  log: /c/Users/there/prin-s4-scratch/perplexity/nightly/0_bench-regression.txt
+  --- the comparator's own verdict lines ---
+    2026-10-17T00:45:00.4089116Z [36;1m  --advisory criterion/control_buffer_read_under_contention/ \[0m
+    2026-10-17T00:45:00.4089563Z [36;1m  --threshold 0.10 2>&1 | tee "$EVIDENCE_DIR/comparison.txt"[0m
+    2026-10-17T00:45:00.6912025Z Benchmark regression check FAILED (threshold +10% mean runtime):
+    2026-10-17T00:45:00.6913695Z   0.999  10.23 -> 10.22  criterion/control_buffer_read_under_contention/lock_free/0  ADVISORY
+    2026-10-17T00:45:00.6914499Z   1.001  71.45 -> 71.52  criterion/control_buffer_read_under_contention/lock_free/1  ADVISORY
+    2026-10-17T00:45:00.6915279Z   1.032  45.31 -> 46.77  criterion/control_buffer_read_under_contention/lock_free/4  ADVISORY
+    2026-10-17T00:45:00.6916045Z   1.000  6.422 -> 6.421  criterion/control_buffer_read_under_contention/mutex/0  ADVISORY
+    2026-10-17T00:45:00.6916804Z   1.143  52.36 -> 59.87  criterion/control_buffer_read_under_contention/mutex/1  ADVISORY
+    2026-10-17T00:45:00.6917537Z   1.068  108.1 -> 115.4  criterion/control_buffer_read_under_contention/mutex/4  ADVISORY
+    2026-10-17T00:45:00.6969863Z ADVISORY (not gating) past threshold: criterion/control_buffer_read_under_contention/mutex/1: 52.36 -> 59.87 (+14.3%)
+  --- every row in the comparison table, with its gating flag ---
+  --- count of GATED rows past threshold vs ADVISORY ---
+    total rows            : 0
+    rows marked ADVISORY  : 0
+    rows NOT marked ADVISORY (i.e. gating): 0
+    gating rows with ratio > 1.10 :
+  --- which identities breached, gated only ---
+
+============================================================
+## 2. DV-045: is the governed lockfile-only update even feasible?
+  (read-only: --dry-run, nothing written)
+  --- current locked versions ---
+    name = "quinn-proto"
+    version = "0.11.16"
+    name = "rustls"
+    version = "0.23.45"
+  --- who owns them ---
+    warning: nothing to print.
+    
+    To find dependencies that require specific target platforms, try to use option `--target all` first, and then narrow your search scope accordingly.
+    ...
+    rustls v0.23.45
+    └── hyper-rustls v0.27.9
+        ├── hyper-rustls feature "http1"
+        │   └── reqwest v0.12.28
+        │       ├── reqwest feature "__rustls"
+        │       │   └── reqwest feature "rustls-tls-webpki-roots-no-provider"
+        │       │       └── reqwest feature "rustls-tls-webpki-roots"
+        │       │           └── reqwest feature "rustls-tls"
+        │       │               └── tracel-llvm-bundler v20.1.4-7
+        │       │                   └── tracel-llvm-bundler feature "default"
+        │       │                       └── tracel-mlir-rs-macros v20.1.4-7 (proc-macro)
+        │       │                           └── tracel-mlir-rs-macros feature "default"
+  --- dry-run update to the patched floors named by DV-045 ---
+        Updating crates.io index
+        Updating quinn-proto v0.11.16 -> v0.11.18
+    note: pass `--verbose` to see 139 unchanged dependencies behind latest
+    warning: not updating lockfile due to dry run
+    exit: 0
+        Updating crates.io index
+        Updating rustls v0.23.45 -> v0.23.46
+    note: pass `--verbose` to see 139 unchanged dependencies behind latest
+    warning: not updating lockfile due to dry run
+    exit: 0
+  --- is Cargo.lock currently modified? (must be clean) ---
+    (empty = clean)
+
+# finished 2026-10-17T18:16:12Z

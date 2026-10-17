@@ -1,0 +1,119 @@
+# Final hosted inventory at the PR head before the parity fix
+# copied from /c/Users/there/prin-s4-scratch/final_hosted2.txt at 2026-10-17T19:03:59Z
+
+# final hosted inventory for PR #34 head 83bae4b1912c5cce6aa71ee228add986e0c54c08
+# date (UTC): 2026-10-16T23:22:37Z
+
+===== all runs on the branch, latest attempt =====
+38976820419	nightly	workflow_dispatch	in_progress		attempt 2	83bae4b1
+38976490069	gpu	pull_request	in_progress		attempt 1	83bae4b1
+38976489970	snyk	pull_request	completed	success	attempt 3	83bae4b1
+38976489950	repro	pull_request	completed	success	attempt 3	83bae4b1
+38976490004	python	pull_request	completed	success	attempt 2	83bae4b1
+38976489909	parity	pull_request	in_progress		attempt 4	83bae4b1
+38976490096	rust	pull_request	completed	failure	attempt 3	83bae4b1
+38976486742	snyk	push	completed	success	attempt 3	83bae4b1
+
+===== per-run job conclusions (latest attempt) =====
+--- run 38976820419
+    full-suite | in_progress | - | runner=GitHub Actions 1000007628
+    bench-regression | in_progress | - | runner=GitHub Actions 1000007629
+--- run 38976490069
+    gpu-wgpu | completed | success | runner=PRIN-GPU-Runner
+    gpu-cuda | in_progress | - | runner=PRIN-GPU-Runner
+--- run 38976489970
+    Secret Scan | completed | success | runner=GitHub Actions 1000007623
+    Snyk Code | completed | success | runner=GitHub Actions 1000007624
+--- run 38976489950
+    reproduce | completed | success | runner=GitHub Actions 1000007622
+--- run 38976490004
+    docs | completed | success | runner=GitHub Actions 1000007602
+    governance | completed | success | runner=GitHub Actions 1000007604
+    lint | completed | success | runner=GitHub Actions 1000007603
+    test (windows-latest, 3.12) | completed | success | runner=GitHub Actions 1000007605
+    security | completed | success | runner=GitHub Actions 1000007606
+    test (ubuntu-latest, 3.11) | completed | success | runner=GitHub Actions 1000007609
+    test (windows-latest, 3.13) | completed | success | runner=GitHub Actions 1000007610
+    test (ubuntu-latest, 3.13) | completed | success | runner=GitHub Actions 1000007608
+    test (ubuntu-latest, 3.12) | completed | success | runner=GitHub Actions 1000007607
+    test (windows-latest, 3.11) | completed | success | runner=GitHub Actions 1000007611
+--- run 38976489909
+    parity | in_progress | - | runner=GitHub Actions 1000007631
+    detect_corpus | completed | success | runner=GitHub Actions 1000007621
+--- run 38976490096
+    audit | completed | failure | runner=GitHub Actions 1000007630
+    test-strict | completed | success | runner=GitHub Actions 1000007612
+    docs | completed | success | runner=GitHub Actions 1000007615
+    fmt | completed | success | runner=GitHub Actions 1000007619
+    bench-smoke | completed | success | runner=GitHub Actions 1000007616
+    clippy-strict | completed | success | runner=GitHub Actions 1000007613
+    test (ubuntu-latest, ubuntu-latest) | completed | success | runner=GitHub Actions 1000007618
+    clippy | completed | success | runner=GitHub Actions 1000007614
+    test (macos-latest, macos-latest) | completed | success | runner=GitHub Actions 1000007620
+    test (windows-latest, windows-latest) | completed | success | runner=PRIN-GPU-Runner
+--- run 38976486742
+    Snyk Code | completed | success | runner=GitHub Actions 1000007625
+    Secret Scan | completed | success | runner=GitHub Actions 1000007626
+
+===== gh pr checks 34 =====
+Devin Review	fail	0	https://app.devin.ai/review/symbo-gif/prin/pull/34	Completed analysis in 3s
+audit	fail	3m1s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490096/job/117240658874	
+CodeRabbit	pass	0		Review skipped: manual review required for this OSS repository
+Secret Scan	pass	7s	https://github.com/Symbo-gif/PRIN/actions/runs/38976486742/job/117236703940	
+Secret Scan	pass	13s	https://github.com/Symbo-gif/PRIN/actions/runs/38976489970/job/117236695706	
+Snyk Code	pass	45s	https://github.com/Symbo-gif/PRIN/actions/runs/38976486742/job/117236703523	
+Snyk Code	pass	1m22s	https://github.com/Symbo-gif/PRIN/actions/runs/38976489970/job/117236696070	
+bench-smoke	pass	2m5s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490096/job/117240660918	
+clippy	pass	1m43s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490096/job/117240694799	
+clippy-strict	pass	1m35s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490096/job/117240687992	
+detect_corpus	pass	6s	https://github.com/Symbo-gif/PRIN/actions/runs/38976489909/job/117241048369	
+docs	pass	6m30s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490004/job/117234489417	
+docs	pass	2m43s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490096/job/117240660051	
+fmt	pass	20s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490096/job/117240660450	
+governance	pass	7s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490004/job/117234489591	
+gpu-wgpu	pass	5m14s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490069/job/117227075878	
+lint	pass	54s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490004/job/117234489608	
+reproduce	pass	4m23s	https://github.com/Symbo-gif/PRIN/actions/runs/38976489950/job/117236684633	
+security	pass	1m13s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490004/job/117234489742	
+parity	pending	0	https://github.com/Symbo-gif/PRIN/actions/runs/38976489909/job/117241047385	
+test (windows-latest, 3.11)	pass	20m56s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490004/job/117234489995	
+test (ubuntu-latest, 3.13)	pass	10m23s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490004/job/117234489954	
+test (ubuntu-latest, 3.11)	pass	9m10s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490004/job/117234489908	
+test (windows-latest, 3.12)	pass	14m57s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490004/job/117234489647	
+test (ubuntu-latest, 3.12)	pass	8m18s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490004/job/117234489963	
+test (windows-latest, 3.13)	pass	17m59s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490004/job/117234489940	
+gpu-cuda	pending	0	https://github.com/Symbo-gif/PRIN/actions/runs/38976490069/job/117227076346	
+test-strict	pass	3m4s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490096/job/117240659913	
+Sourcery review	skipping	0	https://sourcery.ai	
+test (windows-latest, windows-latest)	pass	18m43s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490096/job/117240704871	
+test (ubuntu-latest, ubuntu-latest)	pass	7m27s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490096/job/117240689097	
+test (macos-latest, macos-latest)	pass	17m26s	https://github.com/Symbo-gif/PRIN/actions/runs/38976490096/job/117240697848	
+
+===== the parity job's exact failing tests (attempt 2 log) =====
+  summary: 2026-10-16T23:04:32.3164997Z ================= 28 failed, 2208 passed, 2 skipped in 48.46s ==================
+  distinct failing test node ids:
+  count: 0
+  failing test FUNCTIONS (distinct):
+         56 test_reference_arm_reproduces_e3_reference_arm
+  any failure OUTSIDE test_parity_publication.py?
+    FAILED parity/test_parity_publication.py
+  runner + toolchain:
+    linux -- Python 3.12.15
+    Image: ubuntu-24.04
+    matplotlib wheel: matplotlib-3.11.2-cp312
+
+===== is the failing test file new in this PR? =====
+  parity/test_parity_publication.py first appears in:
+    d90eeabb test(exp002-d1): reproduce the H3 refutation as a failing parity gate
+  does it exist on origin/main?
+    NO - added by this correction cycle, never executed on Linux before
+
+===== what runner does parity.yml use? =====
+    1:name: parity
+    21:    runs-on: ubuntu-latest
+    35:    # [self-hosted, Linux, X64]) by changing runs-on below.
+    36:    runs-on: ubuntu-latest
+    44:      - name: Create virtual environment
+    56:      - name: Free disk space
+    64:      - name: Install new build + reference PRINet 3.0.0 in one venv
+    72:      - name: Run exhaustive differential parity suite (504 cases)

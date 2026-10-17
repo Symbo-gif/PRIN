@@ -108,6 +108,33 @@ and is **not** a claim that any S3 result is wrong.
 fail-closed `require_marker` helper, and **S4's own gate ran that corrected
 copy**, so the fix is exercised rather than merely written.
 
+### `pr34-review/` — adjudication of the external review, and the fix it prompted
+
+The maintainer posted an independent **Perplexity Deep-Research** review of PR #34
+and asked that its findings be validated before anything was acted on. Every
+checkable claim was **measured** against the real hosted logs, the real PR diff and
+the real repository configuration. Result: **4 CONFIRMED, 1 CONFIRMED-in-part, 1
+REFUTED (fabricated), 2 recorded without independent verification**; one CONFIRMED
+finding (`EXP002D1-S4-F2`, D2) was fixed, and the rest are out of this bounded
+correction's scope and are recorded rather than actioned.
+
+| File | What it is |
+|---|---|
+| [`pr34-review/adjudication.md`](pr34-review/adjudication.md) | **The adjudication record.** Claim-by-claim verdicts with the measurement behind each; the full `EXP002D1-S4-F2` finding (defect, why it is not a PRIN or reference defect, the fix, its four negative controls, why it corrects a false assertion rather than weakening a real one, and the four alternatives rejected); the two harness defects of my own that were corrected rather than left standing; and what was deliberately **not** done, with reasons. |
+| [`pr34-review/perplexity-review-verbatim.txt`](pr34-review/perplexity-review-verbatim.txt) | The review as posted, verbatim, so the adjudication can be checked against it. |
+| [`pr34-review/adjudication-evidence.txt`](pr34-review/adjudication-evidence.txt) | The measurement pass: hosted run inventory; the nightly full-suite failure; the `rust audit` advisory set; **the real `tests/test_notebooks.py` timeout diff** that refutes the "180 s to 600 s" claim; the parity step-name staleness; and the `importorskip` question. |
+| [`pr34-review/failure-identity-and-schema.txt`](pr34-review/failure-identity-and-schema.txt) | Proof that the nightly full-suite's 28 failures are the **same** test the parity job fails, that **all four notebooks PASSED on Linux**, and the E3 record/driver schema showing `environment.platform` is a **required, stored** field — the evidence base for the fix. |
+| [`pr34-review/parity-attempt2-failures.txt`](pr34-review/parity-attempt2-failures.txt) | The parity job's failure evidence reduced from its log: summary line, short-test-summary section, and the runner/toolchain (`linux -- Python 3.12.15`, `ubuntu-24.04`, `matplotlib-3.11.2-cp312`). |
+| [`pr34-review/bench-regression-rows.txt`](pr34-review/bench-regression-rows.txt) | The full bench-regression comparison table (timestamps and ANSI stripped): **69 rows, 6 advisory, 63 gating, exactly ONE gating row past +10 %** (`engine_step/step_parallel/16384`, +10.4 %). |
+| [`pr34-review/pre-decision-investigations.txt`](pr34-review/pre-decision-investigations.txt) | Read-only investigations taken **before** deciding: the bench-regression verdict block, and whether DV-045's governed lockfile-only update is feasible (`cargo update --dry-run` for both crates, `cargo tree -i` for both). |
+| [`pr34-review/fix-verification.sh`](pr34-review/fix-verification.sh) · [`.txt`](pr34-review/fix-verification.txt) | Verification of the fix on this host: the unmodified run (**94 passed**), the static gate, and the record of the **two harness bugs** found and fixed in the first attempt. |
+| [`pr34-review/negative-controls.sh`](pr34-review/negative-controls.sh) · [`.txt`](pr34-review/negative-controls.txt) | The **four negative controls** proving the platform-scoped digest tie is non-vacuous, including the discriminating pair (the identical corruption **fails** on the authoring platform and **passes** off it) and the control proving the tables were **not** relaxed. |
+| [`pr34-review/negctl.py`](pr34-review/negctl.py) | The pytest plugin that drives those controls. Kept **outside** the repository at run time and patching `item.module`, because `parity/` has no `__init__.py` and a `parity.*` import is a *distinct* module object the collected tests never use. |
+| [`pr34-review/snyk-code-changed-file.txt`](pr34-review/snyk-code-changed-file.txt) | Snyk Code on the one changed file: **Total issues 0**. This is the applicable SAST control here — `[tool.bandit] exclude_dirs` omits `parity/*`, so `bandit -r parity` scans **0 LOC** and must not be reported as "0 issues". |
+| [`pr34-review/billing-lock-diagnosis.txt`](pr34-review/billing-lock-diagnosis.txt) | The account billing-lock diagnosis: every GitHub-hosted job failed in 2–3 s with the annotation *"The job was not started because your account is locked due to a billing issue"*, no runner assigned and no logs. Cleared by the maintainer at ~22:55 UTC. |
+| [`pr34-review/hosted-run-triage.txt`](pr34-review/hosted-run-triage.txt) | The first triage of every hosted run on the PR head, before the billing lock was cleared. |
+| [`pr34-review/hosted-inventory-final.txt`](pr34-review/hosted-inventory-final.txt) | The final hosted inventory at the PR head **before** the parity fix, including the Node-20 and Ubuntu-26 migration notices that confirm claim 5. |
+
 ### `gate/` — the local gate, verbatim
 
 Long legs (the two required suites), run on the documentation commit
