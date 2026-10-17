@@ -1,0 +1,11 @@
+label: full
+git HEAD: 814b670c2aafa4b1e6b58e3f847613928c813e95
+tracked changes vs HEAD: 0
+untracked files: 0
+host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0   logical CPUs: 16
+pytest args: tests/ parity/
+command: .venv/Scripts/python.exe -m pytest tests/ parity/ --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20
+started: 2026-10-17T20:07:42Z
+pytest exit status: 1
+ended: 2026-10-17T21:44:05Z
+git HEAD at end: 814b670c2aafa4b1e6b58e3f847613928c813e95   tracked changes: 0   untracked files: 1

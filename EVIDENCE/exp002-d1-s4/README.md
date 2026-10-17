@@ -155,6 +155,33 @@ Long legs (the two required suites), run on the documentation commit
 | [`gate/isolated-rerun.txt`](gate/isolated-rerun.txt) | **Not-applicable record.** Decision 4A provides for a supplementary isolation re-run of a failed node when the full suite fails on a contention flake; the single run exited **0** with 0 `FAILED`/`ERROR` lines, so there was no failed node to re-run. **No rerun-until-green was performed and no result was selected for being favourable.** |
 | [`gate/immutability-before.txt`](gate/immutability-before.txt) | Rules I1a–I4 over `6b55c6ba..HEAD`, taken **before** the PSR/audit records were committed. This is also the run that exposed the trailing-blank-line artifact in S4's **own** rule I4; the instrument was corrected, the reason recorded inside it, and **both runs kept** rather than this one discarded. |
 
+### `gate/red-leg-814b670c/` — the RED required leg at the parity-fix commit, and why
+
+The two long-legs tables above record the run at `157ce5bc`, which was **green**.
+After that, `814b670c` landed the `EXP002D1-S4-F2` parity fix, and because it
+changed a file under `parity/` the required gate had to re-run on the exact
+commit being closed. **That re-run is RED**, and it is recorded here in full
+rather than being re-run until it went green. `gate/full/` above is the passing
+**control** and was deliberately **not** overwritten.
+
+| File | What it is |
+|---|---|
+| [`gate/red-leg-814b670c/FINDINGS.md`](gate/red-leg-814b670c/FINDINGS.md) | **The findings record.** What failed, the structural proof the change set is not the cause, the measured attribution, why a re-run is not available, the refutation of DV-032's hardening disposition, and the disposition (no merge). |
+| [`gate/red-leg-814b670c/run.txt`](gate/red-leg-814b670c/run.txt) | The red leg's identity block: `git HEAD 814b670c…`, the verbatim pytest command, UTC start/end, and **pytest exit status 1**. |
+| [`gate/red-leg-814b670c/console.txt`](gate/red-leg-814b670c/console.txt) | The red leg's full console, UTC-timestamped: **1 failed, 6331 passed, 184 skipped in 5613.67 s (1:33:33)**, the `FAILURES` block with `AssertionError: Throughput ratio 22.07 > 1.30`, three faulthandler 300 s dumps each followed by progress, and the slowest-20 durations. |
+| [`gate/red-leg-814b670c/long-legs.txt`](gate/red-leg-814b670c/long-legs.txt) | The aggregated legs record: `fast suite exit: 0`, **`full suite exit: 1`**, **`overall: 1`**. |
+| [`gate/red-leg-814b670c/samples.jsonl`](gate/red-leg-814b670c/samples.jsonl) | The red leg's sampler record, **108 samples** (byte-for-byte, no header). |
+| [`gate/red-leg-814b670c/sampler-err.txt`](gate/red-leg-814b670c/sampler-err.txt) | The red leg's sampler stderr. |
+| [`gate/red-leg-814b670c/attribution.txt`](gate/red-leg-814b670c/attribution.txt) | The structural proof: `157ce5bc` is an ancestor of HEAD, `git diff 157ce5bc..HEAD` over `python/ rust/ crates/ Cargo.toml Cargo.lock pyproject.toml tests/` is **empty** (so the test and the daemon it exercises are byte-identical to the version that passed), the full changed-file list, and the failing assertion verbatim. |
+| [`gate/red-leg-814b670c/contention_window.py`](gate/red-leg-814b670c/contention_window.py) | The instrument that measures host contention in a named window and across a whole leg. Read-only over a `samples.jsonl`. |
+| [`gate/red-leg-814b670c/contention-failing-leg.txt`](gate/red-leg-814b670c/contention-failing-leg.txt) | Contention of the **red** leg: median **96.2 %**, 79/108 samples ≥ 90 %, pytest 0.483 CPU-s/wall-s, and the samples bracketing the 20:28:54–20:29:07Z failure window (97.4 % → 92.4 %). |
+| [`gate/red-leg-814b670c/contention-passing-leg.txt`](gate/red-leg-814b670c/contention-passing-leg.txt) | Contention of the **passing control** leg: median **96.5 %**, 84/111 samples ≥ 90 %, pytest 0.422 CPU-s/wall-s. **The control was marginally more contended yet passed** — which is why whole-leg contention is *not* recorded as the cause (§7 item 3). |
+| [`gate/isolated-throughput.sh`](gate/isolated-throughput.sh) | The diagnostic that runs the one failing test five times, sampling host CPU before each iteration and recording **every** outcome whether it passes or fails. It does not touch the test or its `<1.30` tolerance (§7 items 6 and 8). |
+| [`gate/red-leg-814b670c/isolated/run2-captured.txt`](gate/red-leg-814b670c/isolated/run2-captured.txt) | **Authentic capture**, reproduction #2: host CPU 11.9–24.1 %, test wall time **4.1–4.3 s**, **5 passed / 0 failed**. The quiet-host control. |
+| [`gate/red-leg-814b670c/isolated/run1-transcribed.txt`](gate/red-leg-814b670c/isolated/run1-transcribed.txt) | Reproduction #1, a **verbatim transcription** (that execution had no redirection, so no capture file exists — labelled as such rather than passed off as a capture): host CPU 12.2 → **99.7 %**, test wall time 6.7–9.9 s, **3 passed / 2 failed**, measured ratios **2.13** and **3.42**. Retained because it holds the two failing iterations. |
+| [`gate/red-leg-814b670c/isolated/run2-iter1.txt`](gate/red-leg-814b670c/isolated/run2-iter1.txt), [`run2-iter2.txt`](gate/red-leg-814b670c/isolated/run2-iter2.txt), [`run2-iter3.txt`](gate/red-leg-814b670c/isolated/run2-iter3.txt), [`run2-iter4.txt`](gate/red-leg-814b670c/isolated/run2-iter4.txt), [`run2-iter5.txt`](gate/red-leg-814b670c/isolated/run2-iter5.txt) | The five per-iteration pytest records behind reproduction #2. |
+| [`gate/collect_red_leg.sh`](gate/collect_red_leg.sh) | The collection script that assembled this directory from scratch, including the regeneration of both contention records. |
+
 Cheap legs, run on the **final** documentation commit by
 [`final_legs.sh`](final_legs.sh) (each record's header names the commit it ran
 on), plus the hosted-workflow enablement listings:

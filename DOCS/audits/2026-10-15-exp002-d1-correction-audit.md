@@ -2622,3 +2622,143 @@ was edited, so claims 3–7 are handed off as recommendations; the Node-24 /
 Ubuntu-26 item is **urgent** (2026-10-19). No benchmark threshold was loosened and
 no gating row made advisory. **DV-045's lockfile update is recommended as the
 immediate next governed action**, with feasibility already measured.
+### S4.13 Addendum — the required gate re-run at `814b670c` is **RED** (2026-10-17 UTC)
+
+**This addendum qualifies §S4.7, §S4.8 and §S4.11.** Those sections record a
+green required gate; that gate ran on `157ce5bc`. §S4.12 then landed the
+`EXP002D1-S4-F2` parity fix as `814b670c`, which changes a file under `parity/`,
+so the required gate had to re-run on the exact commit being closed. **It did,
+and it is red.** Nothing in §S4.7/§S4.8/§S4.11 may be read as a green gate at
+`814b670c`. Evidence:
+[`EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/`](../../EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/),
+with the narrative in its `FINDINGS.md`.
+
+#### S4.13.1 The result, verbatim
+
+`long-legs.txt`: `fast suite exit: 0`, **`full suite exit: 1`**,
+**`overall: 1`**. The fast leg was green (4044 passed / 178 skipped /
+55 deselected, 0:40:22). The required full leg:
+
+```
+==== 1 failed, 6331 passed, 184 skipped, 61 warnings in 5613.67s (1:33:33) ====
+FAILED tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression
+```
+
+```
+tests\test_acceptance_subconscious.py:608: in test_no_gpu_throughput_regression
+    assert ratio < 1.30, f"Throughput ratio {ratio:.2f} > 1.30"
+E   AssertionError: Throughput ratio 22.07 > 1.30
+E   assert 22.074290046215165 < 1.3
+```
+
+It ran 20:28:54Z → 20:29:07Z, at 8% collection. Three faulthandler 300 s dumps
+fired during the leg (`test_checkpoint_vram_stays_bounded` 20:21:29Z,
+`test_ablation_oscillatory_bias` 20:37:15Z,
+`test_notebook_executes_end_to_end[01_oscillosim_quickstart.ipynb]` 21:14:25Z);
+**each was followed by further progress**, and per amendment #49 §7 item 3 a dump
+is not a kill and not proof of a hang. A stall was suspected once, at 55%, and
+**rejected on a second timestamped observation** — the sampler showed two live
+Jupyter kernels (`age_seconds: 844`, 507.5 CPU-s) and the console mtime advancing.
+Under `-v` a faulthandler dump displaces its test's outcome text, so those three
+verdicts are read from the summary counts, not asserted from the console lines.
+
+#### S4.13.2 The change set is not the cause (structural proof, not inference)
+
+`attribution.txt` records that `157ce5bc` — whose full-suite run **passed** this
+same test at the same 8% position (`gate/full/console.txt:618`, 20:07:49Z) — is an
+**ancestor** of `814b670c`, and that
+
+```
+git diff --name-only 157ce5bc..HEAD -- python/ rust/ crates/ Cargo.toml Cargo.lock pyproject.toml tests/
+```
+
+is **empty**. So the failing test *and the `SubconsciousDaemon` code it exercises*
+are byte-identical between the run that passed and the run that failed. The only
+intervening changes are documentation, evidence, and
+`parity/test_parity_publication.py`; parity collects at ~100% and cannot affect a
+test that ran at 8%.
+
+#### S4.13.3 Attribution measured, and the first hypothesis **rejected**
+
+§7 item 3 forbids recording a guessed attribution as cause, so two measurements
+were taken and they disagree — which is reported rather than smoothed over.
+
+**Whole-leg contention does *not* discriminate the two runs.** The passing control
+was marginally *more* contended and had *worse* pytest CPU efficiency:
+
+| | passed (`157ce5bc`) | failed (`814b670c`) |
+|---|---|---|
+| host `cpu_percent` median | **96.5 %** | **96.2 %** |
+| samples ≥ 90 % | 84 / 111 | 79 / 108 |
+| samples ≥ 95 % | 72 / 111 | 65 / 108 |
+| pytest CPU-s / wall-s median | 0.422 | **0.483** |
+| host CPU nearest the test | 94.9 % | 97.4 % |
+
+A 93-minute median cannot resolve the 13-second window this assertion measures
+in. "The host was busy" is therefore **not** recorded as the cause.
+
+**Isolated reproduction *does* discriminate.** `gate/isolated-throughput.sh` runs
+the single test five times, sampling host CPU before each iteration and recording
+every outcome, pass or fail:
+
+| reproduction | host CPU | test wall | outcome |
+|---|---|---|---|
+| #1 (`run1-transcribed.txt`, a labelled **transcription** — that run had no redirection) | 12.2, 57.7, 97.1, **99.7**, **97.2** % | 6.7–9.9 s | **3 passed / 2 failed**, ratios **2.13**, **3.42** |
+| #2 (`run2-captured.txt`, authentic capture) | 11.9–24.1 % | **4.1–4.3 s** | **5 passed / 0 failed** |
+
+The mechanism is therefore measured: the assertion's outcome tracks
+*instantaneous* host load, not the leg average. On a quiet host it takes ~4.2 s
+and passes 5/5; at 97–99.7 % it takes 7–10 s and fails intermittently. The
+in-suite 22.07 far exceeds the isolated 2.13/3.42, consistent with a full session
+carrying two pytest processes plus live Jupyter kernels.
+
+#### S4.13.4 Why the required leg was **not** re-run
+
+Reproduction #1 measured **3 passes / 2 failures on the same commit**, and the
+full suite generates most of its own ~96 % load, so ambient quiet cannot be
+arranged for it. Another required-leg run is therefore a **coin flip**, and
+repeating it to obtain green is the rerun-until-green §7 item 6 prohibits. The red
+leg is recorded **as red**, alongside the passing control, which was **not**
+overwritten.
+
+#### S4.13.5 DV-032's hardening disposition is **empirically refuted** — new finding `EXP002D1-S4-F3`
+
+`DEFERRED_VALIDATION_REGISTER.md` DV-032 states this test is **PARTIALLY HARDENED
+(2026-09-15, WP-036G S4)** — "runs fixed work after warm-up and compares
+seven-sample medians at the unchanged `<1.30` limit; **its quarantine is
+removed**" — and documents it measuring "**~1.28–1.32 under load**".
+
+Measured at `814b670c`: **2.13**, **3.42** (isolated, 97–99.7 % host CPU) and
+**22.07** (in-suite). The seven-sample-median hardening does **not** make the
+assertion robust, and the documented band is wrong by more than an order of
+magnitude in the in-suite case. **The quarantine was removed on a claim this
+session has directly falsified**, and the test now sits in the default required
+gate — which is why it, not a nightly-only check, turned the closing gate red.
+DV-032's own recorded fix path remains owed: "convert each to a seeded frame-count
+/ `pytest-benchmark` case with an explicit tolerance".
+
+This is recorded as a **register observation against DV-032** (dated, append-only,
+the DV-036 precedent), not as a new deviation of this correction cycle's work: the
+defect predates the cycle, is already registered, and the cycle's own change set is
+proven not to touch it. Severity of the *consequence* is nonetheless **D2** — a
+normative required gate is red at the commit S4 would close.
+
+#### S4.13.6 Disposition — **no merge**, escalated
+
+* **PR #34 was not merged and `814b670c` was not pushed.** A merge to `main` is
+  irreversible and shared-state, and authorization **A1** was premised on a green
+  required gate, which does not hold. Escalated to the maintainer with this
+  evidence rather than resolved unilaterally.
+* **No test was skipped, xfailed, re-quarantined or edited.** The `<1.30`
+  tolerance is untouched (§7 items 6 and 8).
+* Converting the test to DV-032's registered deterministic form is **S1-class code
+  work** owing its own S2 audit. It was deliberately **not** done inside this S4
+  documentation session: performing it *in order to turn this gate green* would
+  read as weakening an assertion to obtain a pass, and would break the session
+  discipline the maintainer directed be maintained.
+* Session `0164` remains **BLOCKED**. Closure items 1–7 stand as recorded except
+  that item 7's gate evidence is now **two** legs sets — green at `157ce5bc`, red
+  at `814b670c` — and the closure verdict in §S4.11 is **not** achievable at
+  `814b670c` until the maintainer decides between (a) authorizing the DV-032 fix
+  path as separate S1-class work, or (b) accepting a documented red required leg
+  for a pre-existing registered defect.

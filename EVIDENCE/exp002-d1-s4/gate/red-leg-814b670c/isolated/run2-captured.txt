@@ -1,0 +1,29 @@
+# isolated characterization of the failing throughput assertion
+# date (UTC): 2026-10-17T21:56:08Z
+# git HEAD: 814b670c2aafa4b1e6b58e3f847613928c813e95   tracked changes: 0   untracked: 2
+# test: tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression
+# note: the test asserts a wall-clock ratio, so ambient host load is part of
+#       the measurement.  Host CPU is sampled before each iteration.
+
+== iteration 1   host cpu before: 11.9%
+   exit: 0   wall: 6s
+   summary: ======================== 1 passed, 2 warnings in 4.31s ========================
+
+== iteration 2   host cpu before: 22.7%
+   exit: 0   wall: 7s
+   summary: ======================== 1 passed, 2 warnings in 4.06s ========================
+
+== iteration 3   host cpu before: 20.8%
+   exit: 0   wall: 6s
+   summary: ======================== 1 passed, 2 warnings in 4.24s ========================
+
+== iteration 4   host cpu before: 24.1%
+   exit: 0   wall: 6s
+   summary: ======================== 1 passed, 2 warnings in 4.09s ========================
+
+== iteration 5   host cpu before: 14.9%
+   exit: 0   wall: 7s
+   summary: ======================== 1 passed, 2 warnings in 4.31s ========================
+
+# iterations: 5   passed: 5   failed: 0
+# finished 2026-10-17T21:56:52Z

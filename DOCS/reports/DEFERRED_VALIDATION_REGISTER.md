@@ -643,3 +643,46 @@ temporary-directory contention class. Should the hosted full-suite run at the
 PR #34 head commit not pass, O-1 remains OPEN and the next governed session
 should open a dated row here for it.
 
+**DV-032 observation (2026-10-17, `EXP-002-D1` S4 addendum §S4.13): the
+"PARTIALLY HARDENED" disposition is empirically refuted.** Test (1),
+`test_no_gpu_throughput_regression`, turned the **required local full-suite leg
+RED** at `814b670c` with `AssertionError: Throughput ratio 22.07 > 1.30`
+(`1 failed, 6331 passed, 184 skipped`). The row's recorded band — "measures
+~1.28–1.32 under load" — is wrong by more than an order of magnitude for the
+in-suite case. Measured, not inferred:
+
+- **Reproduced in isolation at the same commit, 2 failures in 5 iterations**
+  (ratios **2.13** at 99.7 % host CPU and **3.42** at 97.2 %), and **5 passes in
+  5** on a quiet host (11.9–24.1 %), where the test takes 4.1–4.3 s instead of
+  6.7–9.9 s. The WP-036G hardening (fixed work, warm-up, seven-sample medians)
+  therefore does **not** make the assertion robust; its quarantine was removed on
+  a claim now directly falsified.
+- **Not caused by the change set.** `git diff 157ce5bc..814b670c` over `python/`,
+  `rust/`, `crates/`, `Cargo.toml`, `Cargo.lock`, `pyproject.toml` **and
+  `tests/`** is empty, so the test and the `SubconsciousDaemon` it exercises are
+  byte-identical to the ancestor run that passed the same test at the same 8 %
+  position.
+- **Whole-leg contention does not explain it** and is not recorded as the cause
+  (Testing Standards §7 item 3): the passing control leg had a *higher* median
+  host CPU (96.5 % vs 96.2 %) and *worse* pytest CPU efficiency (0.422 vs 0.483
+  CPU-s/wall-s). The discriminating variable is *instantaneous* load during the
+  assertion's own ~13 s window, which a 93-minute median cannot resolve.
+
+**Consequence, and why this matters beyond the row:** because the quarantine was
+removed, this test sits in the **default required gate**, not only in
+`nightly.yml`. It is therefore able to — and did — block a session's closure. Its
+outcome at high load is a coin flip (3/5 measured), so re-running the required leg
+to obtain green would be rerun-until-green, prohibited by §7 item 6; the red leg
+is recorded as red.
+
+**Status unchanged: OPEN.** The owed fix path is unchanged and now **blocking**:
+"convert each to a seeded frame-count / `pytest-benchmark` case with an explicit
+tolerance". That is **S1-class code work** owing its own S2 audit, and was
+deliberately **not** performed inside the S4 documentation session. No test was
+skipped, xfailed, re-quarantined or edited and the `<1.30` tolerance is untouched
+(§7 items 6 and 8). Evidence:
+`EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/` (`FINDINGS.md`,
+`attribution.txt`, `contention-{failing,passing}-leg.txt`, `isolated/`);
+audit §S4.13. **Flagged for the maintainer's decision** — PR #34 was **not**
+merged on a red required gate.
+
