@@ -1,0 +1,20 @@
+# ratio sensitivity under host saturation
+# date (UTC): 2026-10-18T00:08:55Z
+# git HEAD: ec005fac3bbb4c407e23d87188802d4428d876e2
+
+== quiet host ==
+  quiet-report : rc=1   host cpu 5.6%   overhead ratio 1.03
+  quiet-cpu-report : rc=1   host cpu 14.4%   overhead ratio 2.00
+
+== starting load: one busy process per logical CPU ==
+  host cpu under load: 100.0%   (spawned 16)
+  loaded-report : rc=1   host cpu 100.0%   overhead ratio 1.02
+  loaded-cpu-report : rc=1   host cpu 100.0%   overhead ratio 1.02
+
+  host cpu after load removed: 15.5%
+
+Reading: 'report' is the ratio with a normal daemon; 'cpu-report' adds a
+3.0 s-per-inference CPU hog.  The bound is 1.60.  If the hog does not lift
+the loaded ratio above the bound, the bound has reduced sensitivity under
+saturation and that must be recorded rather than claimed away.
+# finished 2026-10-18T00:11:00Z

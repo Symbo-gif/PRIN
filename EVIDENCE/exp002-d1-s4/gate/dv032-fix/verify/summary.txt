@@ -1,0 +1,44 @@
+# DV-032 fix verification
+# date (UTC): 2026-10-17T23:55:20Z
+# git HEAD: ec005fac3bbb4c407e23d87188802d4428d876e2   tracked changes: 1
+# test: tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression
+
+== 0. static checks on the changed file ==
+  ruff check rc=0 : All checks passed!
+  ruff format --check rc=0 : 1 file already formatted
+
+== 1. positive control: quiet host ==
+  host cpu: 25.1%
+  [OK] quiet-1  expected=pass  rc=0
+         ======================= 1 passed, 2 warnings in 12.37s ========================
+  [OK] quiet-2  expected=pass  rc=0
+         ======================= 1 passed, 2 warnings in 12.99s ========================
+  [OK] quiet-3  expected=pass  rc=0
+         ======================= 1 passed, 2 warnings in 12.65s ========================
+
+== 2. negative control: CPU-hogging daemon (must FAIL the ratio) ==
+  host cpu: 22.4%
+  [OK] negctl-cpu  expected=fail  rc=1
+         ======================= 1 failed, 2 warnings in 17.58s ========================
+         measured: Daemon process-CPU overhead ratio 2.03 > 1.6
+
+== 3. negative control: erroring daemon (must FAIL the error/dlq counts) ==
+  [OK] negctl-errors  expected=fail  rc=1
+         ======================= 1 failed, 2 warnings in 12.62s ========================
+         measured: daemon reported 3 inference errors
+
+== 4. positive control: SATURATED host (the condition that broke the original) ==
+  host cpu under generated load: 100.0%
+  [OK] loaded-1  expected=pass  rc=0
+         ======================= 1 passed, 2 warnings in 25.52s ========================
+  [OK] loaded-2  expected=pass  rc=0
+         ======================= 1 passed, 2 warnings in 25.36s ========================
+  [OK] loaded-3  expected=pass  rc=0
+         ======================= 1 passed, 2 warnings in 24.15s ========================
+  == 4b. negative control under the same load (must still FAIL) ==
+  [MISMATCH] loaded-negctl-cpu  expected=fail  rc=0
+         ======================= 1 passed, 2 warnings in 30.56s ========================
+  host cpu after load removed: 8.7%
+
+# overall: 1  (0 = every expectation matched)
+# finished 2026-10-18T00:00:31Z

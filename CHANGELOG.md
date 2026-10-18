@@ -506,6 +506,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A required-gate throughput assertion that could only ever measure host noise
+  now measures the daemon's own CPU cost (`EXP-002-D1` S4, 2026-10-18 UTC).**
+  `tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression`
+  asserted `median(with_daemon) / median(baseline) < 1.30` over **wall-clock**
+  timings of a fixed CPU-bound workload, and turned the required full-suite leg
+  red with `Throughput ratio 22.07 > 1.30`. Two measurements showed the assertion
+  was unusable rather than merely unlucky. First, its signal was **~27x below its
+  own tolerance**: the daemon blocks on its state queue and the test submits only
+  three states, so exactly 3 inferences of ~1.5 ms each run inside a ~420 ms
+  window — a maximum expressible effect of ~1.1 % against a 30 % allowance.
+  Second, a probe over four candidate clocks (blocked wall, interleaved paired
+  wall, `process_time`, `thread_time`) found that **none** detected a deliberately
+  CPU-hogging daemon, so no choice of clock could rescue it. The test is a
+  registered host-sensitive timing ratio (**DV-032** test (1)), whose
+  "PARTIALLY HARDENED" disposition and documented "~1.28–1.32 under load" band
+  this change **empirically refutes** — measured 2.13 and 3.42 in isolation at
+  97–99.7 % host CPU, and 22.07 in-suite. It is not caused by this cycle's
+  changes: the diff against the ancestor run that passed the same test is empty
+  across `python/`, `rust/`, `crates/`, `Cargo.*`, `pyproject.toml` and `tests/`.
+  Implementing DV-032's own registered fix path, overhead is now measured in
+  **`time.process_time()`**, which excludes time spent waiting for other processes
+  and so cannot be inflated by unrelated host load; the sample grew from
+  `n=1_000_000` (~60 ms) to `n=8_000_000` (~480 ms) because the ~15.6 ms Windows
+  process-time tick made a 60 ms sample quantise to ratios of 0.8000 / 0.8750 /
+  1.1429, one tick being ~25 % of the ratio (at ~480 ms, ~3 %) — a sample
+  **lengthened**, never shortened. Three **deterministic, load-invariant**
+  assertions now carry the real signal (`error_count == 0`, `dlq_size == 0`,
+  `inference_count >= submitted`), and the drain waits on every submitted state
+  being *handled* rather than on the queue reading empty, which happens once the
+  daemon dequeues an item and before it finishes inferring it. The bound is
+  **1.60**, sized from the worst observed normal-daemon ratio of 1.1429 rather
+  than inherited from the 1.30 it replaces. Verified in both directions: 3/3
+  passed on a quiet host and **3/3 passed on a host saturated at 100 % CPU** — the
+  condition that broke the original — with a normal-daemon ratio of **1.03 quiet /
+  1.02 saturated**; a CPU-hogging daemon **fails** the bound at 2.03 and an
+  erroring daemon **fails** the deterministic counts. Whole file 49 passed.
+  `pytest-benchmark` was **not** adopted: its default mode measures without
+  asserting, so a bare benchmark case passes unconditionally and would be a
+  vacuous gate. **Recorded limitation, measured rather than claimed away** — under
+  saturation a single in-process hog is itself starved, so the ratio stays at 1.02
+  and the bound does not fire; the ratio is a gross-regression detector and the
+  deterministic assertions are what retain sensitivity under load, consistent with
+  DV-032's disposition assigning the sensitive quantitative comparison to the
+  nightly benchmark gate. No test was skipped, xfailed or re-quarantined. Recorded
+  as `EXP002D1-S4-F3` (D2) and, like `EXP002D1-S4-F2`, flagged for retro-audit at
+  the next S2-class audit as a code change made in a documentation session under
+  the maintainer's explicit in-session authorization.
+
 - **The publication parity gate no longer asserts a cross-platform byte identity
   that was never true (`EXP-002-D1` S4, 2026-10-17 UTC).**
   `parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm`

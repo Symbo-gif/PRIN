@@ -1,0 +1,25 @@
+
+===== condition: quiet =====
+  host cpu: 15.6%
+
+===== condition: loaded =====
+  host cpu during load: 100.0%
+
+
+===== ratio table (1.00 = no measured overhead) =====
+condition  metric         idle arm  heavy arm  detects heavy?
+quiet      wall_block        1.016      0.957              no
+quiet      wall_paired       1.011      1.009              no
+quiet      process           1.000      1.000              no
+quiet      thread            1.000      1.000              no
+
+loaded     wall_block        1.018      0.709              no
+loaded     wall_paired       0.934      1.008              no
+loaded     process           1.143      1.143              no
+loaded     thread            1.143      1.143              no
+
+Interpretation guide:
+  * A usable metric is STABLE for the idle arm across quiet and loaded
+    (robust to external contention) AND shows heavy > idle (non-vacuous).
+  * wall_block reproducing a large idle ratio under load confirms the
+    registered DV-032 defect rather than asserting it.

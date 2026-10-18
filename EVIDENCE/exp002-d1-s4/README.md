@@ -182,6 +182,26 @@ rather than being re-run until it went green. `gate/full/` above is the passing
 | [`gate/red-leg-814b670c/isolated/run2-iter1.txt`](gate/red-leg-814b670c/isolated/run2-iter1.txt), [`run2-iter2.txt`](gate/red-leg-814b670c/isolated/run2-iter2.txt), [`run2-iter3.txt`](gate/red-leg-814b670c/isolated/run2-iter3.txt), [`run2-iter4.txt`](gate/red-leg-814b670c/isolated/run2-iter4.txt), [`run2-iter5.txt`](gate/red-leg-814b670c/isolated/run2-iter5.txt) | The five per-iteration pytest records behind reproduction #2. |
 | [`gate/collect_red_leg.sh`](gate/collect_red_leg.sh) | The collection script that assembled this directory from scratch, including the regeneration of both contention records. |
 
+### `gate/dv032-fix/` — the `EXP002D1-S4-F3` fix that cleared the red leg
+
+The maintainer chose "fix the test properly" over merging on a red gate or
+deferring, so DV-032's own registered fix path was implemented for
+`test_no_gpu_throughput_regression` (`67100a69`). This directory holds the probes
+that shaped the fix, the verification in **both** directions, the measured residual
+limitation, and **both** the superseded and corrected runs of each — the first
+attempts are the record of two real defects found in the fix and its harness
+rather than something to discard.
+
+| File | What it is |
+|---|---|
+| [`gate/dv032-fix/README.md`](gate/dv032-fix/README.md) | **The nested index for this directory** (36 files), with a one-line description of each. Its [`FIX.md`](gate/dv032-fix/FIX.md) is the narrative record. |
+| [`gate/dv032-fix-probe.py`](gate/dv032-fix-probe.py) | The metric probe: four candidate clocks × two host conditions × two daemon arms. Its output showed **no** metric detected the hog, which is what forced a change of *what* is measured. |
+| [`gate/dv032-bound-probe.py`](gate/dv032-bound-probe.py) | The bound-sizing probe. Its loaded arm never returned — the drain awaited an unreachable inference count — and that flaw is what produced the corrected drain in the test. |
+| [`gate/dv032-tolerance-probe.py`](gate/dv032-tolerance-probe.py) | The tolerance probe whose distribution sized `_DAEMON_CPU_RATIO_LIMIT = 1.60` from the worst observed normal-daemon ratio **1.1429** (Testing Standards §7 item 2). |
+| [`gate/verify-dv032-fix.sh`](gate/verify-dv032-fix.sh) | The two-directional verification: static checks, 3 quiet runs, 3 runs on a **saturated** host, and both negative controls. Aggregates fail-closed by direct `rc` capture, per the `EXP002D1-S4-F1` lesson. |
+| [`gate/measure-ratio-sensitivity.sh`](gate/measure-ratio-sensitivity.sh) | Measures the ratio bound's sensitivity by forcing the assertion to report its value in both host conditions — how the residual limitation was quantified instead of assumed. |
+| [`gate/collect_dv032_fix.sh`](gate/collect_dv032_fix.sh) | The collection script that assembled `gate/dv032-fix/` from scratch, reporting any missing source rather than skipping it silently. |
+
 Cheap legs, run on the **final** documentation commit by
 [`final_legs.sh`](final_legs.sh) (each record's header names the commit it ran
 on), plus the hosted-workflow enablement listings:

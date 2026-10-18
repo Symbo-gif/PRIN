@@ -2762,3 +2762,136 @@ normative required gate is red at the commit S4 would close.
   `814b670c` until the maintainer decides between (a) authorizing the DV-032 fix
   path as separate S1-class work, or (b) accepting a documented red required leg
   for a pre-existing registered defect.
+### S4.14 Addendum — `EXP002D1-S4-F3` remediated: the DV-032 fix path landed (2026-10-18 UTC)
+
+§S4.13 recorded a red required leg and escalated rather than merging. The
+maintainer was offered three dispositions and chose **"Fix the test properly"** —
+implement DV-032's own registered fix path rather than merge on a red gate or
+defer. This section records that work as **`EXP002D1-S4-F3`, D2, FIXED**.
+
+Authorizing directive, verbatim: the maintainer selected the option reading
+*"Implement DV-032's own registered fix path — convert
+`test_no_gpu_throughput_regression` from a wall-clock ratio to a deterministic
+seeded / pytest-benchmark measurement with an explicit tolerance — then re-run the
+required gate and merge."* This is the second code change made in an S4
+documentation session (after `EXP002D1-S4-F2`) and is **flagged for retro-audit at
+the next S2-class audit** on the same basis, per Development Workflow §7.
+
+#### S4.14.1 Why the old assertion could not be repaired by choosing a better clock
+
+Two measurements, not one, were needed, and the second overturned the obvious
+fix. A metric probe (`gate/dv032-fix-probe.py`) compared four candidate metrics —
+the current blocked wall-clock design, an interleaved paired wall-clock design,
+`time.process_time()` and `time.thread_time()` — under a quiet host and under a
+host saturated with one busy process per logical CPU, each against a normal daemon
+and against a deliberately CPU-hogging daemon.
+
+**No metric detected the hog.** Worse, `process` and `thread` returned *identical*
+values (1.000 quiet, 1.143 loaded) for both arms. Rather than accept that, the
+negative control itself was checked for engagement — the same class of error as the
+earlier `negctl.py` `PYTHONPATH` defect, where a control measured nothing and
+falsely reported success. `verify_negctl.py` confirmed the daemon **had** engaged
+(200/200 inferences, 0 errors, session initialised), and measured why the signal
+was absent:
+
+* one inference costs **1.491 ms**; `_dummy_work(n=1_000_000)` costs **60.13 ms**;
+* inside the test's real measurement window (**419.7 ms**) the daemon performs
+  exactly **3** inferences — **~1.1 %** of the window, against a **30 %**
+  allowance.
+
+So the assertion's maximum expressible signal sat **~27x below its own tolerance**.
+It could not detect daemon overhead at any tolerance; it only ever detected host
+noise. That is why no alternative clock rescues it, and why the fix had to change
+*what is measured*, not merely how it is timed.
+
+#### S4.14.2 The fix
+
+`tests/test_acceptance_subconscious.py`, one test, **89 insertions / 25 deletions**
+(`67100a69`):
+
+1. **Overhead is measured in `time.process_time()`**, which excludes time spent
+   waiting for other processes and so cannot be inflated by unrelated host load —
+   the mechanism that produced 22.07.
+2. **Sample size raised** from `n=1_000_000` (~60 ms) to `n=8_000_000` (~480 ms).
+   The measured ratios quantised to 0.8000 / 0.8750 / 1.1429 — ratios of small
+   integers — because the Windows process-time tick (~15.6 ms) was coarse relative
+   to a 60 ms sample, where one tick moves the ratio ~25 %. At ~480 ms it moves
+   ~3 %. This **lengthens** a sample; §7 item 6 forbids shortening one.
+3. **Three deterministic, load-invariant assertions** now carry the real signal:
+   `error_count == 0`, `dlq_size == 0`, `inference_count >= submitted`.
+4. **Bound `_DAEMON_CPU_RATIO_LIMIT = 1.60`**, sized from measurement (worst
+   observed normal-daemon ratio **1.1429**) rather than inherited from the 1.30 it
+   replaces (§7 item 2).
+
+#### S4.14.3 Two defects found in the fix itself, and corrected rather than left standing
+
+* **The drain was wrong.** The first implementation drained on the queue reading
+  *empty*. The queue is empty once the daemon **dequeues** an item, which is before
+  it finishes **inferring** it, so `inference_count` was read mid-flight. This made
+  the first CPU negative control fail on `daemon completed 2 inferences, want >= 3`
+  — the *wrong* assertion — which would have left the ratio's non-vacuity unproven
+  while appearing to pass. Corrected to drain on `inference_count + error_count >=
+  submitted`, which also stays fast when an inference errors.
+* **The harness patched the wrong module object.** `report` mode returned rc=0 with
+  no ratio, exposing that `import tests.test_acceptance_subconscious` binds a
+  *different* module than the one pytest collects: `tests/` has no `__init__.py`,
+  so under prepend import mode the collected module is top-level. Patched via
+  `item.module` in `pytest_runtest_setup` instead. This is the **same trap** as the
+  `parity/` plugin defect earlier in this session, recurring in a fresh harness.
+
+#### S4.14.4 Verification, in both directions
+
+`gate/verify-dv032-fix.sh` (`dv032-verify2.txt`), fail-closed by direct `rc`
+capture per the `EXP002D1-S4-F1` lesson:
+
+| check | result |
+|---|---|
+| `ruff check` / `ruff format --check` on the changed file | **rc=0** both, after fixing an `RUF002` EN DASH and a format deviation the first attempt had masked |
+| quiet host, 3 runs | **3 passed** (12.4–13.0 s) |
+| **saturated host (100 % CPU), 3 runs** | **3 passed** (24.2–25.5 s) |
+| negative control — CPU-hogging daemon | **FAILED as required**: `Daemon process-CPU overhead ratio 2.03 > 1.6` |
+| negative control — erroring daemon | **FAILED as required**: `daemon reported 3 inference errors` |
+| whole changed file | **49 passed** |
+
+Measured ratio with a **normal** daemon: **1.03 quiet, 1.02 saturated** —
+essentially load-invariant, against 22.07 / 2.13 / 3.42 for the old metric under
+the same saturation.
+
+#### S4.14.5 Known limitation, measured and recorded rather than claimed away
+
+`gate/measure-ratio-sensitivity.sh` forced the assertion to report its ratio under
+both conditions. With the CPU hog active the ratio is **2.00 quiet** but **1.02
+saturated** — the bound does **not** fire under saturation, because a single
+in-process hog is itself starved there and so accumulates almost no process CPU.
+The ratio bound is therefore a **gross-regression detector**, and the
+**deterministic assertions are what retain sensitivity under load**. This is
+consistent with DV-032's own disposition, which assigns the sensitive quantitative
+comparison to the nightly benchmark gate; it is recorded here so the bound is not
+later credited with sensitivity it was measured not to have.
+
+The first run of this instrument is retained alongside the corrected one
+(`dv032-sensitivity.txt`, then `dv032-sensitivity2.txt`) because the first is the
+record that exposed the module-patching defect.
+
+#### S4.14.6 What was deliberately NOT done
+
+* The `<1.30` wall-clock assertion was not merely widened or deleted; the property
+  is still asserted, on a clock that measures it.
+* No test was skipped, xfailed or re-quarantined (§7 item 6). DV-032's quarantine
+  stays removed.
+* `pytest-benchmark` was **not** adopted. Its default mode measures without
+  asserting, so a bare benchmark case would pass unconditionally — a vacuous gate.
+  DV-032's fix path offers "seeded frame-count **or** pytest-benchmark"; the
+  deterministic-count route was taken because it asserts.
+* The other two DV-032 tests (`test_deterministic_seed`,
+  `test_speed_vs_transformer`) were **not** touched: both remain under DV-032's
+  dated nightly/benchmark-authoritative quarantine and neither is in the required
+  gate, so neither can block closure. Widening scope to them was not authorized.
+
+#### S4.14.7 Consequence for closure
+
+The required gate re-ran on `67100a69`, the commit carrying this fix; its result is
+recorded in §S4.15 and in `gate/`. DV-032's status moves to **FIX PATH LANDED for
+test (1)**, with tests (2) and (3) unchanged. Session `0164`'s release condition is
+unaffected — it still requires a non-reversal `EXP-002-r1` E5 verified by the
+maintainer.
