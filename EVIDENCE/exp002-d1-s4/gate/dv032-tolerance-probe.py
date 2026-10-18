@@ -19,7 +19,7 @@ from __future__ import annotations
 import argparse
 import math
 import os
-import subprocess
+import subprocess  # nosec B404 - fixed argv, no shell
 import sys
 import tempfile
 import time
@@ -61,7 +61,9 @@ class Load:
         """
         for _ in range(os.cpu_count() or 4):
             self.procs.append(
-                subprocess.Popen([sys.executable, "-c", "while True:\n    pass"])
+                subprocess.Popen(  # nosec B603 - fixed literal argv, no shell
+                    [sys.executable, "-c", "while True:\n    pass"]
+                )
             )
         time.sleep(3.0)
         return self
