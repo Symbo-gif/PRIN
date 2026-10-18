@@ -1,0 +1,13 @@
+# copied from /c/Users/there/prin-s4-scratch/isolated-fast-console.txt at 2026-10-18T04:44:03Z
+# isolated re-run of the required fast suite (AGENTS.md / EA-002 E-F13)
+# date (UTC): 2026-10-18T02:35:44Z
+# git HEAD: 489f22708a49b474af01dffafb5b64514ea53846   tracked changes: 0   untracked: 0
+# reason: the fast leg exited 1 on a single PermissionError [WinError 5]
+#         directory-rename failure inside .pytest_basetemp, the documented
+#         Windows pytest lock class, in a test unrelated to this cycle's change.
+# scope: identical invocation to the required fast leg, run alone.
+
+run recorded in /c/Users/there/prin-s4-scratch/fast-isolated ; pytest exit status: 1
+
+# isolated fast-suite exit: 1
+# finished 2026-10-18T03:18:47Z

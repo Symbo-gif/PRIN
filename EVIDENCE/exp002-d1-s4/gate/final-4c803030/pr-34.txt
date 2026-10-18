@@ -1,0 +1,11 @@
+# copied from /c/Users/there/prin-s4-scratch/final/pr-34.txt at 2026-10-18T04:44:15Z
+# PR #34 and the branch
+# date (UTC): 2026-10-18T04:42:24Z
+# git HEAD: 4c8030303a8f9a3427ace7788fbfff47066476ce   tracked changes: 0
+
+# command: gh pr view 34 --json state,isDraft,headRefOid
+{"headRefOid":"83bae4b1912c5cce6aa71ee228add986e0c54c08","isDraft":false,"state":"OPEN"}
+# command: git fetch --all --prune
+# command: git rev-parse origin/hotfix/exp002-d1-figure-parity
+83bae4b1912c5cce6aa71ee228add986e0c54c08
+# commits ahead of origin: 8   behind: 0

@@ -1,0 +1,127 @@
+# copied from /c/Users/there/prin-s4-scratch/gate/change-set.txt at 2026-10-18T04:43:54Z
+# EXP-002 D1 S4 - measured change set, 6b55c6baa7b6832a50ff57fdd1a919171e9fb5de..HEAD
+# date (UTC): 2026-10-18T00:16:34Z
+# git HEAD: 67100a698469307da52956698f504df5251e5b0b
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0   pytest pytest 9.1.1
+
+## every path changed in this range
+  +11     -4      .claude/CLAUDE.md
+  +96     -0      CHANGELOG.md
+  +10     -3      CLAUDE.md
+  +22     -0      DOCS/PRIN_Project_Plan.md
+  +1037   -0      DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+  +2      -0      DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md
+  +192    -0      DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md
+  +76     -1      DOCS/experiments/README.md
+  +376    -0      DOCS/reports/041-project-state.md
+  +88     -0      DOCS/reports/DEFERRED_VALIDATION_REGISTER.md
+  +2      -2      DOCS/sessions/SESSION_REGISTER.md
+  +131    -2      DOCS/sessions/contingencies/2026-10-14-exp002-d1-s4-correction-documentation.md
+  +39     -3      DOCS/sessions/contingencies/README.md
+  +59     -0      DOCS/sessions/phase-7/README.md
+  +106    -17     DOCS/sphinx/parity_report.rst
+  +22     -0      DOCS/standards/Development_Workflow_and_Audit_Standards.md
+  +23     -0      EVIDENCE/README.md
+  +248    -0      EVIDENCE/exp002-d1-s4/README.md
+  +90     -0      EVIDENCE/exp002-d1-s4/collect_final.sh
+  +159    -0      EVIDENCE/exp002-d1-s4/final_legs.sh
+  +55     -0      EVIDENCE/exp002-d1-s4/gate/change-set.txt
+  +73     -0      EVIDENCE/exp002-d1-s4/gate/collect_red_leg.sh
+  +4305   -0      EVIDENCE/exp002-d1-s4/gate/fast/console.txt
+  +12     -0      EVIDENCE/exp002-d1-s4/gate/fast/run.txt
+  +1      -0      EVIDENCE/exp002-d1-s4/gate/fast/sampler-err.txt
+  +40     -0      EVIDENCE/exp002-d1-s4/gate/fast/samples.jsonl
+  +81     -0      EVIDENCE/exp002-d1-s4/gate/final/delta-reaudit.txt
+  +21     -0      EVIDENCE/exp002-d1-s4/gate/final/gitleaks.txt
+  +42     -0      EVIDENCE/exp002-d1-s4/gate/final/immutability-after.txt
+  +11     -0      EVIDENCE/exp002-d1-s4/gate/final/index-selfcheck-s1.txt
+  +11     -0      EVIDENCE/exp002-d1-s4/gate/final/index-selfcheck-s2.txt
+  +11     -0      EVIDENCE/exp002-d1-s4/gate/final/index-selfcheck-s3.txt
+  +13     -0      EVIDENCE/exp002-d1-s4/gate/final/index-selfcheck-s4.txt
+  +11     -0      EVIDENCE/exp002-d1-s4/gate/final/pr-34.txt
+  +30     -0      EVIDENCE/exp002-d1-s4/gate/final/snyk-code-s4-final.txt
+  +516    -0      EVIDENCE/exp002-d1-s4/gate/final/snyk-console.txt
+  +24     -0      EVIDENCE/exp002-d1-s4/gate/final/sphinx.txt
+  +333    -0      EVIDENCE/exp002-d1-s4/gate/final/static-gate.txt
+  +34     -0      EVIDENCE/exp002-d1-s4/gate/final/verify-manifest.txt
+  +6882   -0      EVIDENCE/exp002-d1-s4/gate/full/console.txt
+  +12     -0      EVIDENCE/exp002-d1-s4/gate/full/run.txt
+  +1      -0      EVIDENCE/exp002-d1-s4/gate/full/sampler-err.txt
+  +111    -0      EVIDENCE/exp002-d1-s4/gate/full/samples.jsonl
+  +45     -0      EVIDENCE/exp002-d1-s4/gate/immutability-before.txt
+  +12     -0      EVIDENCE/exp002-d1-s4/gate/isolated-rerun.txt
+  +50     -0      EVIDENCE/exp002-d1-s4/gate/isolated-throughput.sh
+  +11     -0      EVIDENCE/exp002-d1-s4/gate/long-legs.txt
+  +127    -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/FINDINGS.md
+  +77     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/attribution.txt
+  +6828   -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/console.txt
+  +17     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/contention-failing-leg.txt
+  +13     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/contention-passing-leg.txt
+  +73     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/contention_window.py
+  +41     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/isolated/run1-transcribed.txt
+  +29     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/isolated/run2-captured.txt
+  +22     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/isolated/run2-iter1.txt
+  +22     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/isolated/run2-iter2.txt
+  +22     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/isolated/run2-iter3.txt
+  +22     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/isolated/run2-iter4.txt
+  +22     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/isolated/run2-iter5.txt
+  +10     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/long-legs.txt
+  +11     -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/run.txt
+  +0      -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/sampler-err.txt
+  +108    -0      EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/samples.jsonl
+  +46     -0      EVIDENCE/exp002-d1-s4/gate/workflows-after.txt
+  +46     -0      EVIDENCE/exp002-d1-s4/gate/workflows-before.txt
+  +101    -0      EVIDENCE/exp002-d1-s4/immutability.sh
+  +114    -0      EVIDENCE/exp002-d1-s4/long_legs.sh
+  +133    -0      EVIDENCE/exp002-d1-s4/o2-review/failopen-red-green.sh
+  +61     -0      EVIDENCE/exp002-d1-s4/o2-review/failopen-red-green.txt
+  +260    -0      EVIDENCE/exp002-d1-s4/o2-review/reproduce-batch1.sh
+  +240    -0      EVIDENCE/exp002-d1-s4/o2-review/reproduce-batch1.txt
+  +210    -0      EVIDENCE/exp002-d1-s4/o2-review/reproduce-batch2.sh
+  +165    -0      EVIDENCE/exp002-d1-s4/o2-review/reproduce-batch2.txt
+  +151    -0      EVIDENCE/exp002-d1-s4/o2-review/reproduce-batch3.sh
+  +82     -0      EVIDENCE/exp002-d1-s4/o2-review/reproduce-batch3.txt
+  +101    -0      EVIDENCE/exp002-d1-s4/o2-review/triage.md
+  +182    -0      EVIDENCE/exp002-d1-s4/pr34-review/adjudication-evidence.txt
+  +175    -0      EVIDENCE/exp002-d1-s4/pr34-review/adjudication.md
+  +146    -0      EVIDENCE/exp002-d1-s4/pr34-review/bench-regression-rows.txt
+  +103    -0      EVIDENCE/exp002-d1-s4/pr34-review/billing-lock-diagnosis.txt
+  +191    -0      EVIDENCE/exp002-d1-s4/pr34-review/failure-identity-and-schema.txt
+  +104    -0      EVIDENCE/exp002-d1-s4/pr34-review/fix-verification.sh
+  +70     -0      EVIDENCE/exp002-d1-s4/pr34-review/fix-verification.txt
+  +119    -0      EVIDENCE/exp002-d1-s4/pr34-review/hosted-inventory-final.txt
+  +95     -0      EVIDENCE/exp002-d1-s4/pr34-review/hosted-run-triage.txt
+  +71     -0      EVIDENCE/exp002-d1-s4/pr34-review/negative-controls.sh
+  +70     -0      EVIDENCE/exp002-d1-s4/pr34-review/negative-controls.txt
+  +101    -0      EVIDENCE/exp002-d1-s4/pr34-review/negctl.py
+  +53     -0      EVIDENCE/exp002-d1-s4/pr34-review/parity-attempt2-failures.txt
+  +75     -0      EVIDENCE/exp002-d1-s4/pr34-review/perplexity-review-verbatim.txt
+  +68     -0      EVIDENCE/exp002-d1-s4/pr34-review/pre-decision-investigations.txt
+  +28     -0      EVIDENCE/exp002-d1-s4/pr34-review/snyk-code-changed-file.txt
+  +80     -0      EVIDENCE/exp002-d1-s4/static_gate.sh
+  +69     -0      EVIDENCE/exp002-d1-s4/suite_run.sh
+  +91     -4      parity/test_parity_publication.py
+  +89     -25     tests/test_acceptance_subconscious.py
+  total files changed: 97
+
+## by kind (this decides which conditional legs apply)
+  Rust sources (.rs)                                  : 0
+  dependency manifests (Cargo.toml/lock, pyproject,   : 0
+    *requirements.txt)
+  first-party Python (outside EVIDENCE/ and           : 2
+    DOCS/experiments/)
+  any Python (.py)                                    : 4
+  .github/ workflow files                             : 0
+
+## conditional-leg decisions, from the counts above
+  cargo fmt / clippy / test        : NOT RUN - no Rust source changed
+  cargo audit / pip-audit / Snyk OS: NOT RUN - no dependency manifest changed
+  per-change Python coverage       : REQUIRED
+  Snyk Code CLI                    : REQUIRED - run unconditionally in final_legs.sh (Coding Standards 6.2; cheap, and it also re-checks the three ratified python/PT locations)
+  Sphinx / gitleaks / governance   : REQUIRED - documentation and evidence changed
+
+## the Python files changed, listed explicitly so the coverage decision is checkable
+  EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/contention_window.py
+  EVIDENCE/exp002-d1-s4/pr34-review/negctl.py
+  parity/test_parity_publication.py
+  tests/test_acceptance_subconscious.py

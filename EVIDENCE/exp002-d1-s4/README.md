@@ -204,6 +204,43 @@ rather than something to discard.
 | [`gate/measure-ratio-sensitivity.sh`](gate/measure-ratio-sensitivity.sh) | Measures the ratio bound's sensitivity by forcing the assertion to report its value in both host conditions — how the residual limitation was quantified instead of assumed. |
 | [`gate/collect_dv032_fix.sh`](gate/collect_dv032_fix.sh) | The collection script that assembled `gate/dv032-fix/` from scratch, reporting any missing source rather than skipping it silently. |
 
+### The closing gate — three runs at three commits, all preserved
+
+The gate ran three times more after `157ce5bc`, and **every run is kept** rather
+than the favourable one being selected. Each directory is named from the commit in
+that leg's **own** `run.txt`, because the legs ran on *different* commits.
+
+| Run | Commit | Result |
+|---|---|---|
+| required **full** suite (`tests/ parity/`) | `67100a69` | **exit 0 — 6332 passed, 184 skipped, 0 failed, 1:35:49** |
+| required **fast** suite (`tests/ -m "not slow and not gpu"`) | `67100a69` | **exit 1** — `1 failed, 4043 passed`, `PermissionError: [WinError 5]` directory rename in `.pytest_basetemp` |
+| fast suite re-run **in isolation** (`AGENTS.md` / EA-002 E-F13) | `489f2270` | **exit 1** — `1 failed, 4043 passed`, the **same** `WinError 5` class on a **different** test |
+| cheap legs (static gate, Sphinx, gitleaks, immutability, manifest, delta re-audit, index self-checks, Snyk) | `4c803030` | **`final legs overall: 0`** — all ten aggregations PASS, static gate exit 0 with all 13 sub-legs clean |
+
+**Both fast-leg failures are the documented environmental class, and both failing
+tests PASSED in the full-suite run at `67100a69`** — which runs `tests/` with no
+marker filter and so is a strict superset of the fast leg:
+`test_exp002_e4_analysis.py::test_linked_raw_root_aborts` PASSED at 01:39:35Z and
+`test_exp002_driver.py::TestCheckRunComplete::test_wrong_parent_rejected` PASSED at
+01:28:01Z. Two *different* tests failing across two runs, both green in the
+superset, is the signature of the `AGENTS.md` Windows pytest lock class rather than
+a code defect. The prescribed isolation re-run was performed **once**; repeating it
+to obtain green would be rerun-until-green (§7 item 6), so all three results are
+recorded as they stand.
+
+| File | What it is |
+|---|---|
+| [`gate/long-legs-67100a69.txt`](gate/long-legs-67100a69.txt) | The aggregated long-legs record at `67100a69`: `fast suite exit: 1`, **`full suite exit: 0`**, `overall: 1`, with `git HEAD` identical at start and end (documentation edits landed during the run, so the tree shows `tracked changes: 5` at the end; no test file changed while it ran). |
+| [`gate/change-set-67100a69.txt`](gate/change-set-67100a69.txt) | The **measured** change set driving the conditional-leg decisions at `67100a69`. |
+| [`gate/full-67100a69/run.txt`](gate/full-67100a69/run.txt) · [`console.txt`](gate/full-67100a69/console.txt) · [`samples.jsonl`](gate/full-67100a69/samples.jsonl) · [`sampler-err.txt`](gate/full-67100a69/sampler-err.txt) | **The authoritative required full-suite run**: identity block with `pytest exit status: 0`; the full UTC-timestamped console ending `6332 passed, 184 skipped, 61 warnings in 5749.63s (1:35:49)` with **0 failed** — the DV-032 fix confirmed *inside* the suite under contention, not only in isolation; the sampler record byte-for-byte; and the sampler's stderr. |
+| [`gate/fast-67100a69/run.txt`](gate/fast-67100a69/run.txt) · [`console.txt`](gate/fast-67100a69/console.txt) · [`samples.jsonl`](gate/fast-67100a69/samples.jsonl) · [`sampler-err.txt`](gate/fast-67100a69/sampler-err.txt) | The required fast leg at `67100a69`, **exit 1**: `1 failed, 4043 passed, 178 skipped, 55 deselected in 1685.46s (0:28:05)`, the failure being `PermissionError: [WinError 5] Access is denied` on a `.pytest_basetemp` directory rename in `test_linked_raw_root_aborts`. |
+| [`gate/fast-isolated-489f2270/run.txt`](gate/fast-isolated-489f2270/run.txt) · [`console.txt`](gate/fast-isolated-489f2270/console.txt) · [`samples.jsonl`](gate/fast-isolated-489f2270/samples.jsonl) · [`sampler-err.txt`](gate/fast-isolated-489f2270/sampler-err.txt) · [`script-console.txt`](gate/fast-isolated-489f2270/script-console.txt) | The `AGENTS.md`-prescribed isolation re-run, **also exit 1**: `1 failed, 4043 passed, 178 skipped, 55 deselected in 2386.19s (0:39:46)`, the same `WinError 5` class on `test_wrong_parent_rejected`. `script-console.txt` is the driving script's own output, including its host-CPU readings and its concurrency guard. |
+| [`gate/final-4c803030/static-gate.txt`](gate/final-4c803030/static-gate.txt) | The static gate at the closing commit: **exit 0**, all 13 sub-legs clean — `ruff check` "All checks passed!", both `ruff format --check` forms (382 files already formatted), three `mypy --strict` legs, `interrogate`, two `bandit` legs (**0 issues** at every severity), and the four governance checkers including `check_deviation_ledger.py 040 041`. |
+| [`gate/final-4c803030/sphinx.txt`](gate/final-4c803030/sphinx.txt) · [`gitleaks.txt`](gate/final-4c803030/gitleaks.txt) · [`immutability-after.txt`](gate/final-4c803030/immutability-after.txt) · [`verify-manifest.txt`](gate/final-4c803030/verify-manifest.txt) · [`delta-reaudit.txt`](gate/final-4c803030/delta-reaudit.txt) | The remaining cheap legs at the closing commit, each aggregated PASS: the Sphinx `-W` build from a **deleted** `_build`; gitleaks over full history and `--staged`; immutability rules I1a–I4; the frozen EXP-002 manifest verification; and the S3 delta re-audit (which correctly **refuses to run on a dirty tree** — it did exactly that on an earlier attempt, which is why the record sits at `4c803030`). |
+| [`gate/final-4c803030/index-selfcheck-s1.txt`](gate/final-4c803030/index-selfcheck-s1.txt) · [`-s2.txt`](gate/final-4c803030/index-selfcheck-s2.txt) · [`-s3.txt`](gate/final-4c803030/index-selfcheck-s3.txt) | Index self-checks of the three pre-existing bundles, each 0 unindexed / 0 dangling. |
+| [`gate/final-4c803030/snyk-code-s4-final.txt`](gate/final-4c803030/snyk-code-s4-final.txt) · [`snyk-console.txt`](gate/final-4c803030/snyk-console.txt) | The Snyk Code CLI leg at the closing commit — `whoami` verified first, then the repo-wide scan, aggregated `present and not BLOCKED -> PASS`. See also [`gate/snyk-6.2-gate-3410278c.txt`](gate/snyk-6.2-gate-3410278c.txt), which records the **earlier** run at `3410278c` where the same CLI leg was **BLOCKED** (exit 2, no SARIF) and the §6.4-approved MCP route supplied the completed control. The block was transient and the CLI recovered; both states are retained rather than the recovered one replacing the blocked one. |
+| [`gate/final-4c803030/pr-34.txt`](gate/final-4c803030/pr-34.txt) | PR #34 and branch state at the closing commit, captured before the push. |
+
 Cheap legs, run on the **final** documentation commit by
 [`final_legs.sh`](final_legs.sh) (each record's header names the commit it ran
 on), plus the hosted-workflow enablement listings:

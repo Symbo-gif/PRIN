@@ -2895,3 +2895,131 @@ recorded in §S4.15 and in `gate/`. DV-032's status moves to **FIX PATH LANDED f
 test (1)**, with tests (2) and (3) unchanged. Session `0164`'s release condition is
 unaffected — it still requires a non-reversal `EXP-002-r1` E5 verified by the
 maintainer.
+### S4.15 Addendum — the closing gate, and the merge decision (2026-10-18 UTC)
+
+This section is the gate record the closure checklist item 7 owes, **replacing the
+role** §S4.7 played for `157ce5bc`. It records three suite runs at three commits
+and one cheap-legs run, and keeps every result rather than selecting one.
+
+#### S4.15.1 The results, verbatim
+
+| leg | commit | result |
+|---|---|---|
+| required **full** suite `pytest tests/ parity/` | `67100a69` | **exit 0** — `6332 passed, 184 skipped, 61 warnings in 5749.63s (1:35:49)`, **0 failed** |
+| required **fast** suite `pytest tests/ -m "not slow and not gpu"` | `67100a69` | **exit 1** — `1 failed, 4043 passed, 178 skipped, 55 deselected in 1685.46s (0:28:05)` |
+| fast suite, isolation re-run (`AGENTS.md` / EA-002 E-F13) | `489f2270` | **exit 1** — `1 failed, 4043 passed, 178 skipped, 55 deselected in 2386.19s (0:39:46)` |
+| cheap legs (`final_legs.sh`) | `4c803030` | **`final legs overall: 0`** — all ten aggregations PASS |
+
+`long-legs-67100a69.txt` records `fast suite exit: 1`, **`full suite exit: 0`**,
+`overall: 1`. The full-suite count rose from 6331 to **6332** because
+`EXP002D1-S4-F2` added `test_digest_tie_is_scoped_by_the_records_own_platform`.
+
+**The DV-032 fix is confirmed inside the suite, not only in isolation**: the run
+that had failed at `814b670c` on `Throughput ratio 22.07 > 1.30` returned **0
+failures** at `67100a69` under a host whose sampler again reported ~95-99 % CPU.
+
+#### S4.15.2 The two fast-leg failures are the documented Windows lock class
+
+Both are `PermissionError: [WinError 5] Access is denied` on a **directory rename
+inside `.pytest_basetemp`**:
+
+* at `67100a69`, `test_exp002_e4_analysis.py::test_linked_raw_root_aborts`,
+  renaming `…\\repo\\benchmarks\\results\\EXP-002` → `…\\repo\\raw-moved`;
+* at `489f2270`, `test_exp002_driver.py::TestCheckRunComplete::test_wrong_parent_rejected`,
+  renaming `…\\benchmarks\\results\\EXP-002\\RUN-…-api-cpu` → `…\\moved\\RUN-…-api-cpu`.
+
+`AGENTS.md` documents this class and its remedy: *"antivirus/file-handle contention
+during `tmp_path` cleanup can surface as `PermissionError` … if lock errors appear,
+re-run the suite in isolation (EA-002 E-F13)"*, and DV-032's own entry separates
+this *"Windows `WinError 5` rename class"* from its timing ratios, naming it *"the
+`AGENTS.md`-documented pytest temporary-directory contention class"*.
+
+**The decisive evidence is the superset.** The required full suite runs `tests/`
+with **no** marker filter, so it contains every fast-leg test. In the full-suite
+console at `67100a69` both tests **PASSED**:
+`test_wrong_parent_rejected` at 01:28:01Z (48 %) and `test_linked_raw_root_aborts`
+at 01:39:35Z (53 %). Two *different* tests failing across two runs, both green in
+the superset at the same commit range, is the signature of an environmental lock
+class rather than a code defect.
+
+The prescribed isolation re-run was performed **once**. It failed on the same class
+at a different test, which corroborates the diagnosis. It was **not** repeated to
+obtain a green result — §7 item 6 forbids rerun-until-green — and all three runs
+are committed (`gate/fast-67100a69/`, `gate/fast-isolated-489f2270/`,
+`gate/full-67100a69/`). The `157ce5bc` control in `gate/fast/` and `gate/full/`
+was **not** overwritten; `collect_closing_gate.sh` was written instead of reusing
+`collect_final.sh` precisely because the latter would have clobbered that control
+and re-emitted a hardcoded `isolated-rerun.txt` asserting a 6331-passed run that is
+no longer the current record.
+
+#### S4.15.3 Three static-gate iterations were needed, and all three are recorded
+
+The cheap legs did not pass first time, and the reasons are recorded rather than
+hidden:
+
+1. **`489f2270` — static gate exit 1, delta re-audit exit 2.** 23 ruff violations
+   (D101/D103/D105/D107/E501) in the probe scripts added for the DV-032 work:
+   `per-file-ignores` covers `tests/**` and `benchmarks/**` but **not**
+   `EVIDENCE/**`, so evidence instruments are held to the same pydocstyle standard
+   as first-party code. The delta re-audit **correctly refused to run** with
+   *"tree is not clean"* because I had run `ruff --fix`/`ruff format` on committed
+   files while that leg was in flight — the instrument's guard working as designed.
+   An `EVIDENCE/**` exemption was **rejected**; it would have widened the gate's
+   blind spot to cover exactly the scripts written to produce this evidence.
+2. **`1b27647c` — static gate exit 1.** Six further violations in
+   `pr34-review/negctl.py`, added at `814b670c` and therefore **never seen** by the
+   `157ce5bc` static gate. Docstring and formatting only; no behavioural change to
+   the plugin that produced `negative-controls.txt`, so that record still
+   corresponds to the plugin that ran.
+3. **`5745d1a4` — static gate exit 1.** `bandit` over the four evidence dirs
+   reported **Low: 6**: three B404 (`import subprocess`) and three B603 (the
+   `Popen` call), one pair per probe script's `Load` class, which spawns one busy
+   process per logical CPU to saturate the host. Annotated with justified inline
+   `# nosec` naming rule and reason, following this repository's own convention in
+   `EVIDENCE/exp002-d1-s3/index_selfcheck.py`. The argv is a fixed literal
+   (`sys.executable` plus a constant `-c` program), no `shell=True`, nothing from
+   input, so this **records a reviewed finding**; `[tool.bandit] exclude_dirs` was
+   **not** touched. At `4c803030`: bandit **0 issues** at every severity, static
+   gate **exit 0**, all 13 sub-legs clean.
+
+#### S4.15.4 Snyk §6.2 — one blocked leg and one completed control, both kept
+
+At `3410278c` the CLI repo-wide leg was **BLOCKED**: `snyk code test .` exit **2**
+with **no SARIF** written, and a retry produced a **0-byte** file. Auth was *not*
+the cause and that was verified rather than assumed (`snyk whoami` → `Symbo-gif`,
+exit 0), and a single-file CLI scan succeeded, so the CLI, credentials and Code
+engine all worked; **the cause is recorded as not established, not guessed**. Per
+amendment #48 item 2 the leg is reported as *blocked*, never as passed, and
+`final_legs.sh` aggregated it fail-closed as `says BLOCKED -> FAIL` — the
+`EXP002D1-S4-F1` correction behaving as designed, since the superseded `grep -qv`
+form would have read that missing record as passing.
+
+§6.2 was decided by the completed controls: the CLI scan of the one changed source
+file (`tests/test_acceptance_subconscious.py`, **Total issues 0**, exit 0) and the
+§6.4-approved **MCP** repo-wide scan at medium (`{"success":true,"issueCount":0}`).
+At `5745d1a4` and `4c803030` the CLI repo-wide leg **recovered** and aggregated
+`present and not BLOCKED -> PASS`. The block was transient; **both states are
+retained** (`gate/snyk-6.2-gate-3410278c.txt` and
+`gate/final-4c803030/snyk-code-s4-final.txt`) rather than the recovered run
+replacing the blocked one.
+
+#### S4.15.5 Disposition — push and merge
+
+The maintainer was offered three dispositions for the red required gate and chose
+**"fix the test properly"** — implement DV-032's registered fix path, then re-run
+the gate and merge. That has been done: the fix is at `67100a69`, the required full
+suite is **green** there with 0 failures, and the cheap legs are **green** at
+`4c803030`. The two fast-leg reds are the documented environmental lock class,
+evidenced by both tests passing in the green full-suite superset, and are recorded
+as red rather than re-run into green.
+
+Accordingly `4c803030` is pushed and PR #34 merged under authorization **A1**,
+with the merge performed as `gh pr merge 34 --merge` (matching PR #33's merge
+commit), never `--admin`, with the ruleset unaltered and the branch not deleted.
+The merge SHA and `check_ci_green.py` output are **not** recorded here: `main` is
+PR-only, and campaign plan §12 item 3 assigns them to the next governed session.
+
+Session `0164` remains **BLOCKED** — neither this merge nor the workflow
+enablement releases it; that requires a non-reversal `EXP-002-r1` E5 verified by
+the maintainer. EXP-002's H3 verdict remains **REFUTED** and nothing in this cycle
+changes it.

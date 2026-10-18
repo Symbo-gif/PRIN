@@ -1,0 +1,30 @@
+# copied from /c/Users/there/prin-s4-scratch/final/snyk-code-s4-final.txt at 2026-10-18T04:44:17Z
+# Snyk Code CLI
+# date (UTC): 2026-10-18T04:39:21Z
+# git HEAD: 4c8030303a8f9a3427ace7788fbfff47066476ce   tracked changes: 0
+
+# snyk 1.1306.2
+# command: snyk whoami
+Symbo-gif
+# exit code: 0
+
+# command: snyk code test . --severity-threshold=low --sarif-file-output=C:/Users/there/AppData/Local/Temp/prin-s4-final.sarif
+# started 2026-10-18T04:39:36Z
+# exit code: 1 (1 = findings reported, not a scan failure; 2 or more = the scan did not run)
+# ended 2026-10-18T04:42:18Z
+# SARIF sha256: b961dd36009ab055c853bc6db20d482ee636bfa8f0bca0d9e7ffd83c19ff4920  size: 715766 bytes (kept outside the repository)
+
+## CLI Test Summary, verbatim
+│ Test Summary                                         │
+│                                                      │
+│   Organization:      symbo-gif                       │
+│   Test type:         Static code analysis            │
+│   Project path:      .                               │
+│                                                      │
+│   Total issues:   98                                 │
+│   Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]      │
+│   Open issues:    98 [ 0 HIGH  0 MEDIUM  98 LOW ]    │
+
+## The ratified python/PT locations (F8, all three) and any finding above LOW
+│   Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]      │
+│   Open issues:    98 [ 0 HIGH  0 MEDIUM  98 LOW ]    │
