@@ -1,0 +1,25 @@
+# F2: contention experiment, control versus treatment
+# generated 2026-10-16T08:59:21Z at git HEAD b2156918 by: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/paired_comparison.py
+
+notebook: 02_clevr_n_binding.ipynb
+                                        control (quiet host)  treatment (exp002 tests)
+outcome                                            completed                 completed
+wall seconds                                            80.7                    3484.0
+kernel CPU seconds                                    465.69                   1116.91
+kernel CPU / wall                                       5.77                      0.32
+host CPU % (mean of samples)                            73.5                      99.9
+host available memory, MB (min)                         7076                      5659
+kernel peak working set, MB                           3120.2                    3216.6
+slowest cell (index, seconds)                     (7, 35.65)              (7, 1925.97)
+
+treatment / control wall time        : 43.2x
+treatment / control slowest-cell time: 54.0x
+treatment / control kernel CPU time  : 2.4x
+  (more CPU for the same work: consistent with starved threads spinning,
+   which this experiment did not measure directly)
+
+load generator's pytest ended at 06:39:06Z (1806 s in)
+  309 host samples over the next 27.9 min, with the
+  notebook still running:
+    host CPU mean 100.0%, min 92.3%
+    samples at or above 90%: 309 of 309

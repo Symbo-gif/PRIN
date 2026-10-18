@@ -1,0 +1,12 @@
+# no isolation re-run was performed
+#
+# Decision 4A provides for a supplementary re-run of a failed node and its
+# file in isolation when the required full suite fails on a contention
+# flake, with the local record kept at its actual exit status.
+#
+# S4's single required full-suite run exited 0 (6331 passed, 184 skipped,
+# 0 failed, 1:43:09), with 0 FAILED/ERROR lines in its console, so there was
+# no failed node to re-run. Nothing was rerun until green and no result was
+# selected for being favourable.
+#
+# See full/run.txt and full/console.txt.

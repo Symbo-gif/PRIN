@@ -9,6 +9,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **EXP-002 D1 correction cycle closed at S4; `EXP-002-r1` authorized; hosted
+  checks re-enabled until the campaign's experimentation is complete
+  (`EXP-002-D1` S4, 2026-10-16 UTC).** The four-session conditional correction
+  cycle mandated by campaign plan §10.4 is documentation-complete: S1 fixed the
+  34 dropped or re-encoded drawing arguments, S2 audited
+  (`PASS-WITH-FINDINGS`, one D2, one D3, six D4, **no D1**), S3 remediating
+  every open finding with a `CLEAN` delta re-audit, and S4 issuing
+  **PSR-041** (`DOCS/reports/041-project-state.md`), which announces the
+  EXP-002 E5 report and carries the cumulative deviation-ledger rows for the
+  `EXP-002` D1 (`H3 REFUTED`), all eight `EXP002D1-S2-F1`..`-F8` findings at
+  their final status, and observations O-1 and O-2.
+
+  **`EXP-002-r1` is authorized** as a new experiment record
+  (`DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md`)
+  per campaign plan §10.4 item 4 — new pre-registration, new run IDs, never
+  reusing `EXP-002`'s artefacts. **No r1 stage has run and no `RUN-` directory
+  exists.** Audit finding `EXP002D1-S2-F1` (D3) is carried into that
+  authorization: because the two registered H3 comparison policies now point at
+  different verdicts on a corrected generator (approved §5.4 **39/39** equal;
+  §11.3 sensitivity **14/39**, all 25 residuals writer or host properties, 0
+  unclassified), r1's E1/E2 must deliberately register which policy decides H3,
+  what status the other has, and what a disagreement means — fixed before its
+  first `RUN-` directory exists, with outcome exposure disclosed, and without
+  altering either writer. **S4 does not choose that rule**; it is an open item
+  needing the maintainer's approval before r1's E1 starts.
+
+  **Plan amendment #52** re-enables the seven hosted check workflows (`rust`,
+  `python`, `parity`, `repro`, `snyk`, `gpu`, `nightly`) on the maintainer's
+  authority and keeps them active until the campaign's experimentation is
+  complete — the close of session `0194` (Campaign E6 synthesis), or earlier on
+  maintainer instruction — superseding amendment #48's "hosted checks disabled"
+  rule and amendment #50's EXP-002-only window. Hosted results are additional
+  evidence recorded verbatim (workflow, run ID, head SHA, conclusion, link); the
+  Windows full local gate stays mandatory and authoritative, local results are
+  never described as "CI green", and a hosted run does not establish behaviour on
+  platforms it did not run on. A red hosted check is triaged and recorded, never
+  waived, skipped, deselected or hidden. The ruleset's required-status-check rule
+  stays removed, and this is **not** the amendment #48 lift: Linux/macOS and the
+  three-OS wheel matrix stay suspended, not satisfied.
+
+  The Parity Report gains a dated 2026-10-16 update admonition and its
+  reproduction-artefact rows are corrected to what the fixed generator supports;
+  the 2026-10-14 erratum is retained verbatim. The EXP-002 E5 report gains
+  append-only erratum **2** naming `EXP-002-r1`. **`EXP-002`'s verdicts are
+  unchanged — H3 stays `REFUTED`**, having been computed from immutable,
+  manifested `RUN-` artefacts at the source that record froze; only
+  `EXP-002-r1` can produce a new verdict, and nothing here confirms H3.
+
+  **Session `0164` (EXP-003 E1) and every later campaign session
+  (`0165`–`0194`) remain `BLOCKED`.** The S4 closure, the merge of PR #34, and
+  the re-enabling of the hosted workflows do **not** release them; they are
+  released only when `EXP-002-r1`'s E5 verdict is not a reversal and is verified
+  and accepted by the maintainer, or the maintainer adopts a Project Plan §8.3
+  amendment (campaign plan §10.4 item 5).
+
 - **EXP-002 E5 reported — H1, H2, H4 confirmed; H3 refuted, D1 correction cycle
   opened, session 0164 blocked (session 0163, 2026-10-14 UTC).** The E5 report
   `DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md`
@@ -450,6 +505,118 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   campaign-wide 64 MiB cap is unchanged.
 
 ### Fixed
+
+- **A required-gate throughput assertion that could only ever measure host noise
+  now measures the daemon's own CPU cost (`EXP-002-D1` S4, 2026-10-18 UTC).**
+  `tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression`
+  asserted `median(with_daemon) / median(baseline) < 1.30` over **wall-clock**
+  timings of a fixed CPU-bound workload, and turned the required full-suite leg
+  red with `Throughput ratio 22.07 > 1.30`. Two measurements showed the assertion
+  was unusable rather than merely unlucky. First, its signal was **~27x below its
+  own tolerance**: the daemon blocks on its state queue and the test submits only
+  three states, so exactly 3 inferences of ~1.5 ms each run inside a ~420 ms
+  window — a maximum expressible effect of ~1.1 % against a 30 % allowance.
+  Second, a probe over four candidate clocks (blocked wall, interleaved paired
+  wall, `process_time`, `thread_time`) found that **none** detected a deliberately
+  CPU-hogging daemon, so no choice of clock could rescue it. The test is a
+  registered host-sensitive timing ratio (**DV-032** test (1)), whose
+  "PARTIALLY HARDENED" disposition and documented "~1.28–1.32 under load" band
+  this change **empirically refutes** — measured 2.13 and 3.42 in isolation at
+  97–99.7 % host CPU, and 22.07 in-suite. It is not caused by this cycle's
+  changes: the diff against the ancestor run that passed the same test is empty
+  across `python/`, `rust/`, `crates/`, `Cargo.*`, `pyproject.toml` and `tests/`.
+  Implementing DV-032's own registered fix path, overhead is now measured in
+  **`time.process_time()`**, which excludes time spent waiting for other processes
+  and so cannot be inflated by unrelated host load; the sample grew from
+  `n=1_000_000` (~60 ms) to `n=8_000_000` (~480 ms) because the ~15.6 ms Windows
+  process-time tick made a 60 ms sample quantise to ratios of 0.8000 / 0.8750 /
+  1.1429, one tick being ~25 % of the ratio (at ~480 ms, ~3 %) — a sample
+  **lengthened**, never shortened. Three **deterministic, load-invariant**
+  assertions now carry the real signal (`error_count == 0`, `dlq_size == 0`,
+  `inference_count >= submitted`), and the drain waits on every submitted state
+  being *handled* rather than on the queue reading empty, which happens once the
+  daemon dequeues an item and before it finishes inferring it. The bound is
+  **1.60**, sized from the worst observed normal-daemon ratio of 1.1429 rather
+  than inherited from the 1.30 it replaces. Verified in both directions: 3/3
+  passed on a quiet host and **3/3 passed on a host saturated at 100 % CPU** — the
+  condition that broke the original — with a normal-daemon ratio of **1.03 quiet /
+  1.02 saturated**; a CPU-hogging daemon **fails** the bound at 2.03 and an
+  erroring daemon **fails** the deterministic counts. Whole file 49 passed.
+  `pytest-benchmark` was **not** adopted: its default mode measures without
+  asserting, so a bare benchmark case passes unconditionally and would be a
+  vacuous gate. **Recorded limitation, measured rather than claimed away** — under
+  saturation a single in-process hog is itself starved, so the ratio stays at 1.02
+  and the bound does not fire; the ratio is a gross-regression detector and the
+  deterministic assertions are what retain sensitivity under load, consistent with
+  DV-032's disposition assigning the sensitive quantitative comparison to the
+  nightly benchmark gate. No test was skipped, xfailed or re-quarantined. Recorded
+  as `EXP002D1-S4-F3` (D2) and, like `EXP002D1-S4-F2`, flagged for retro-audit at
+  the next S2-class audit as a code change made in a documentation session under
+  the maintainer's explicit in-session authorization.
+
+- **The publication parity gate no longer asserts a cross-platform byte identity
+  that was never true (`EXP-002-D1` S4, 2026-10-17 UTC).**
+  `parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm`
+  compared a fresh in-process render by the frozen `prinet==3.0.0` reference
+  generator against the `normalized_sha256` recorded in the committed EXP-002 E3
+  reference run, **on any platform**. Matplotlib typesets and rasterizes through
+  the host's FreeType build and font set, so that claim is false off the platform
+  that authored the record. The gate had never executed on Linux before: it was
+  added by this correction cycle and is not on `main`, and Plan amendment #48
+  suspends Linux/macOS validation. Re-enabling the hosted checks under Plan
+  amendment #52 surfaced it immediately — `parity` and `nightly full-suite` both
+  failed on the **same 28** parametrizations (14 figures × 2 formats) while **all
+  11 `.tex` tables passed** and every other test in the file passed.
+
+  **This was not a PRIN or reference defect.** Both arms shift together, which is
+  why the registered H3 comparison
+  (`test_prin_matches_reference_under_registered_comparison`) passes **39/39 on
+  Linux and on Windows** — it renders both arms in one process, so platform
+  effects cancel.
+
+  The byte-exact figure tie is now scoped to the platform the **frozen record
+  itself declares** (`environment.platform`, a field `exp002_driver` requires),
+  read from the artefact rather than hard-coded as an OS name, so the branch
+  cannot be relaxed by hand. On that platform — the maintainer's Windows host,
+  where the authoritative local gate runs — all 39 files are compared
+  byte-exactly, unchanged. Off it the 11 `.tex` tables are **still byte-exact**,
+  and each figure must still render, be non-empty and survive
+  `driver.normalized_bytes`, which validates PNG critical chunks and the PDF
+  Info/xref structure. A new test,
+  `test_digest_tie_is_scoped_by_the_records_own_platform`, pins the mechanism.
+
+  **No test was skipped, deselected or xfailed**, the collected count is
+  unchanged, the registered H3 rule and normalization policy are untouched, and
+  the frozen EXP-002 record is unedited. Non-vacuity is proven by four negative
+  controls, including the discriminating pair in which the identical corrupted
+  digest **fails** on the authoring platform and **passes** off it
+  (`EVIDENCE/exp002-d1-s4/pr34-review/negative-controls.txt`). Recorded as
+  `EXP002D1-S4-F2` (D2) and flagged for retro-audit at the next S2-class audit,
+  since it is a code change made in a documentation session under the
+  maintainer's explicit in-session authorization.
+
+- **Publication figures match the frozen PRINet 3.0 generator again
+  (EXP-002 D1 S1, 2026-10-15 UTC).** EXP-002 H3 was refuted because 18 of the
+  39 publication files differed: the PDF and PNG of figures 5, 7, 8, 9, 10,
+  11, 12, 14 and 15. The WP-034 port in
+  `prin.reporting.figure_generation` had dropped or re-encoded 34 drawing
+  arguments of the reference generators. These were keyword arguments such
+  as `markersize`, `linewidth`, `alpha`, `zorder`, `va`, `bbox`, `edgecolor`
+  and legend `loc`, plus an omitted `tick_params` call, and Unicode labels
+  (`×`, `³`, δ/θ/γ, en dash) rewritten as mathtext. Those nine generators now
+  pass the reference's exact arguments and label strings, using `\N{...}`
+  escapes so that `ruff` `RUF001` stays clean. Figure appearance therefore
+  changes to the reference's. No plotted value, table or public symbol
+  changes.
+
+  A new gate, `parity/test_parity_publication.py`, renders both generators
+  and compares all 39 files under the registered H3 rule. It was committed
+  failing first (18 failed) and now passes. Nine fast-gate tests in
+  `tests/test_publication_figure_arguments.py` pin the restored arguments.
+  A controlled-substitution decomposition in `EVIDENCE/exp002-d1-s1/`
+  explains every differing byte, with 0 unexplained. Record:
+  `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`. This does not
+  authorize `EXP-002-r1` or release session 0164.
 
 - **Hosted-check failures and a flaky local test fixture (2026-10-12).**
   Rust 1.99's clippy rejects a single-element `for` loop in

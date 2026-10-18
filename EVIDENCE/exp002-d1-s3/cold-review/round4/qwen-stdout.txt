@@ -1,0 +1,212 @@
+# Cold code review — PRIN `5ba0129e..HEAD` (`hotfix/exp002-d1-figure-parity`)
+
+Read: the full `s3.diff` (5,922 lines, 62 paths), `s3-commits.txt`, `s3-excluded.txt`, and — for the omitted paths — the working tree at `C:\dev\PRIN`. Standards read: `DOCS/standards/Testing_Standards.md` §7, `pyproject.toml` (ruff/bandit/mypy config), `AGENTS.md`. No shell command was run; nothing was modified.
+
+Ten findings. None is in shipped product logic except one documentation comment; the two `medium` items are both fail-open holes in gate/evidence scripts.
+
+---
+
+### 1. `delta_reaudit.sh` arms a destructive `EXIT` trap *before* its dirty-tree refusal, so the refusal path can discard uncommitted work
+
+- **Severity:** medium
+- **Where:** `EVIDENCE/exp002-d1-s3/delta_reaudit.sh:24`
+- **Quote:**
+  ```
+  trap 'git restore -- "$MOD" 2>/dev/null' EXIT
+  ```
+  (with `:19` `MOD=python/prin/reporting/figure_generation.py`, `:34` `[ "$(git status --porcelain --untracked-files=no | wc -l)" -eq 0 ] || { echo "tree is not clean; refusing to run"; exit 2; }`, and the first *intended* destructive restore at `:52`)
+- **Claim:** The trap is installed ten lines before the clean-tree guard, so when the script prints "tree is not clean; refusing to run" and exits 2, the `EXIT` trap still fires and runs `git restore -- python/prin/reporting/figure_generation.py` — irrecoverably discarding any *unstaged* edits to exactly the module under correction, in the one situation where the script has decided it must not touch the tree. `2>/dev/null` hides it. (Blast radius is one file: the guard trips on any tracked modification anywhere, but the restore only bites when that file itself is dirty — which is precisely the case a developer re-running the re-audit mid-edit would be in.) The two sibling gate scripts get this right: `closing_gate.sh:28` and `final_legs.sh:21` both check the clean tree *before* any `rm -rf` and install no trap.
+- **Reproduce:**
+  ```
+  rg -n "^trap |refusing to run|^git restore --source" EVIDENCE/exp002-d1-s3/delta_reaudit.sh
+  bash -c 'f(){ trap "echo TRAP-FIRED-ON-REFUSAL-PATH" EXIT; echo "refusing to run"; exit 2; }; f'
+  ```
+  (The second command is read-only; it shows bash runs the `EXIT` trap on the `exit 2` refusal path. Fix: arm the trap only after `:52` has actually run, e.g. a `RESTORED=0/1` flag tested inside the trap.)
+
+---
+
+### 2. `final_legs.sh` reports a **BLOCKED** Snyk leg as an all-clear in its overall status
+
+- **Severity:** medium
+- **Where:** `EVIDENCE/exp002-d1-s3/final_legs.sh:85`
+- **Quote:**
+  ```
+  grep -a 'filter exit code' "$OUT/snyk-code-s3-final.txt" | grep -qv ': 0 ' && overall=1
+  ```
+  (with `:83` `    echo "# NO SARIF WRITTEN: this leg is BLOCKED, not clean."` and `:93` `echo "final legs overall: $overall (0 = every leg exited 0)"`)
+- **Claim:** On the BLOCKED branch no `filter exit code` line is ever written, so the first `grep` emits nothing, `grep -qv` exits 1, the `&&` short-circuits, `overall` stays `0`, and the script prints "every leg exited 0" for a security scan that never ran. This defeats the guard the script itself announces at `:68` ("authentication verified first: an expired token gives 401 and no SARIF") and the filter's own contract (`snyk_s3_filter.py:29-31`, exit 2 = "the leg is blocked, never clean"); the same hole swallows the `snyk whoami` and `snyk code test` exit codes, which are echoed into the record at `:70`/`:76` but never folded into `overall`. It did not fire this cycle (the SARIF was written — `gate/final/snyk-code-s3-final.txt:12`), so no committed claim is false; the defect is latent, and expired Snyk auth is a recurring condition on this host.
+- **Reproduce:**
+  ```
+  printf '# NO SARIF WRITTEN: this leg is BLOCKED, not clean.\n' | { grep -a 'filter exit code' | grep -qv ': 0 '; echo "pipeline exit: $?  (1 => overall=1 is never executed)"; }
+  sed -n '68p;70p;76p;78,86p;93p' EVIDENCE/exp002-d1-s3/final_legs.sh
+  ```
+  (Read-only. Fix: assert positively — `grep -aq 'filter exit code: 0 ' "$OUT/snyk-code-s3-final.txt" || overall=1`.)
+
+---
+
+### 3. "Four cold-review rounds … triaged by measurement" is contradicted by the same audit, by the cold-review index, and by the tree
+
+- **Severity:** low
+- **Where:** `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1637`
+- **Quote:**
+  ```
+  and counts; every CONFIRMED claim in rounds 1–3 was fixed and re-verified. Round 4 is
+  recorded there too.
+  ```
+- **Claim:** §S3.5's own round table has `| 4 | to be recorded | | | | | |` at `:1420` — no reviewers, no claims, no counts; `EVIDENCE/exp002-d1-s3/cold-review/README.md` has sections for Round 1/2/3 only (`:38`, `:49`, `:62`) and no Round 4; and there is no `EVIDENCE/exp002-d1-s3/cold-review/round4/` directory in the tree. The same unsupported "four rounds triaged" claim is repeated in five further changed files (`DOCS/audits/README.md:493`, `DOCS/sessions/SESSION_REGISTER.md:5`, `DOCS/sessions/contingencies/README.md:64`, `DOCS/sessions/contingencies/2026-10-14-exp002-d1-s3-correction-remediation.md:48`, `EVIDENCE/README.md:86` — "the measured triage for four rounds"). This is the same over-claim class §S3.9 item 6 logs for two other cases ("said more than they delivered"); only three rounds are evidenced.
+- **Reproduce:**
+  ```
+  rg -n "Round 4 is recorded|^\| 4 \| to be recorded" DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+  rg -n "^## Round" EVIDENCE/exp002-d1-s3/cold-review/README.md
+  git ls-files EVIDENCE/exp002-d1-s3/cold-review/round4 ; echo "round4 tracked files: $(git ls-files EVIDENCE/exp002-d1-s3/cold-review/round4 | wc -l)"
+  rg -n "four rounds|Four cold-review rounds" DOCS EVIDENCE/README.md
+  ```
+
+---
+
+### 4. `tests/test_notebooks.py` attributes the 43× figure to the full suite; the full-suite range is 8–42×
+
+- **Severity:** low
+- **Where:** `tests/test_notebooks.py:54`
+- **Quote:**
+  ```
+  #: security software) hold the whole host at ~100% CPU, and the leg slows 8-43x
+  ```
+- **Claim:** The sentence begins "Inside the full suite on the maintainer host …", but the four full-suite ratios are 9.3× / 41.8× / 8.3× / 10.3× (`EVIDENCE/exp002-d1-s3/f2/analysis-in-suite-vs-alone.txt:7-10`), which `f2/README.md` correctly summarises as "8–42×"; 43.2× comes from the *separate* paired contention experiment (notebook 02 beside only the two `test_exp002_*` files, `f2/analysis-paired-comparison.txt`). The upper bound cited in shipped source is therefore not from the run it names — a small instance of the exact class of claim this change set otherwise machine-checks.
+- **Reproduce:**
+  ```
+  sed -n '5,12p' EVIDENCE/exp002-d1-s3/f2/analysis-in-suite-vs-alone.txt
+  rg -n "wall time|8–42" EVIDENCE/exp002-d1-s3/f2/analysis-paired-comparison.txt EVIDENCE/exp002-d1-s3/f2/README.md
+  rg -n "8-43x" tests/test_notebooks.py
+  ```
+
+---
+
+### 5. The per-**cell** bound is sized from whole-**notebook** durations, and notebook 02's is 1.7× looser than the per-cell evidence the same bundle already holds
+
+- **Severity:** low
+- **Where:** `tests/test_notebooks.py:65`
+- **Quote:**
+  ```
+      "02_clevr_n_binding.ipynb": 10800,
+  ```
+- **Claim:** `RECORDED_CONTENDED_MAX_SECONDS` holds whole-notebook durations (`:76-82`), `NOTEBOOK_CELL_TIMEOUT_SECONDS` feeds `NotebookClient(timeout=…)` per *cell* (`:343`), and `:310` pins the two by exact equality — so the whole-notebook unit is now locked in by a test. `DOCS/standards/Testing_Standards.md:114-118` requires a finite bound to be "documented per workload and sized from cited completed/incomplete evidence **for that workload**", and the workload here is one cell; the per-cell figure was measured and is committed (`f2/analysis-paired-comparison.txt`: slowest cell `(7, 1925.97)`), and `f2/README.md:123-124` itself computes that it "would give 6,300 s" — yet 10,800 s (3 h per cell, 12× the old bound, 152× the notebook's entire quiet-host runtime) ships with no stated reason for preferring the looser unit. Practical cost: a genuine hang in notebook 02 now blocks the required full-suite gate for up to 3 h per cell instead of 15 min, inside a gate that Plan amendment #49 requires to run to completion under supervision.
+  *Stated for balance, because it substantially answers this:* the choice is disclosed at `:57-59` ("an upper bound on any single cell's, so each bound is conservative per cell") and at `f2/README.md:121-124` ("for notebook 02 the loosening is 12×"); per-cell *contended* durations exist only for notebook 02 (the observed and gate runs recorded whole-notebook `--durations` only), so a per-cell rule cannot be applied uniformly to all four; and §7 item 2 does permit "substantial margin … for host variability". I rate this a design/conformance observation, not a factual error.
+- **Reproduce:**
+  ```
+  rg -n "10800|3484\.0" tests/test_notebooks.py
+  rg -n "slowest cell" EVIDENCE/exp002-d1-s3/f2/analysis-paired-comparison.txt
+  rg -n "1,926 s, would give 6,300 s|loosening is 12" EVIDENCE/exp002-d1-s3/f2/README.md
+  sed -n '114,118p' DOCS/standards/Testing_Standards.md
+  ```
+
+---
+
+### 6. A retained Snyk record shows the §6.2 gate failing next to `# filter exit code: 0`, with no note that the exit code predates the filter fix
+
+- **Severity:** nit
+- **Where:** `EVIDENCE/exp002-d1-s3/snyk-code-s3-first-scan-medium.txt:51`
+- **Quote:**
+  ```
+  # filter exit code: 0
+  ```
+  (immediately below `:35` `=== ABOVE LOW anywhere in git-known paths (section 6.2 gate: must be 0): 1 finding(s) ===`)
+- **Claim:** The record prints a failing gate result and a passing exit code side by side, because `snyk_s3_filter.py` did not yet encode the gate in its status at that scan (fixed in round 2; the three later records annotate the meaning — e.g. `gate/final/snyk-code-s3-final.txt:49`). The file's "Cause and remediation" section explains only the Command Injection fix, so anyone grepping `filter exit code` across the bundle reads a false all-clear for this scan.
+- **Reproduce:**
+  ```
+  rg -n "ABOVE LOW|filter exit code" EVIDENCE/exp002-d1-s3/snyk-code-s3*.txt EVIDENCE/exp002-d1-s3/gate/final/snyk-code-s3-final.txt
+  rg -n "return 1 if above_low" EVIDENCE/exp002-d1-s3/snyk_s3_filter.py
+  ```
+
+---
+
+### 7. §S3.9 item 5 cites "Lines 3–14" for header text that is at lines 15 and 17
+
+- **Severity:** nit
+- **Where:** `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1584`
+- **Quote:**
+  ```
+  5. **The audit's own header is stale and cannot be corrected here.** Lines 3–14
+  ```
+- **Claim:** The quoted stage-status sentence is at line **15** (`**Stage status:** S1 **complete** (2026-10-15 UTC); S2, S3, S4 pending.`) and the "written before S2" description begins at line **17**; lines 3–14 hold only Scope / Opened by / Blocked / Branch-PR. The numbering is stable across the range — the audit's diff is a single pure-append hunk (`@@ -1128,3 +1128,538 @@`), so lines 1–1127 are byte-identical to `5ba0129e`.
+- **Reproduce:**
+  ```
+  sed -n '3,18p' DOCS/audits/2026-10-15-exp002-d1-correction-audit.md | cat -n
+  git diff 5ba0129e..HEAD -- DOCS/audits/2026-10-15-exp002-d1-correction-audit.md | head -4
+  ```
+
+---
+
+### 8. `cold-review/README.md` still says the launcher was used for "both rounds" while documenting three
+
+- **Severity:** nit
+- **Where:** `EVIDENCE/exp002-d1-s3/cold-review/README.md:28`
+- **Quote:**
+  ```
+  [`launch_round.sh`](launch_round.sh) is the launcher used for both rounds.
+  ```
+- **Claim:** The same file documents Round 1 (`:38`), Round 2 (`:49`) and Round 3 (`:62`); "both rounds" is a stale count left over from the two-round state, of the kind the round-3 commit `fc57b341` says was swept ("several committed records or instrument docstrings had gone stale").
+- **Reproduce:**
+  ```
+  rg -n "both rounds|^## Round" EVIDENCE/exp002-d1-s3/cold-review/README.md
+  ```
+
+---
+
+### 9. `docstring_only_check.py`'s docstring understates its own path guard
+
+- **Severity:** nit
+- **Where:** `EVIDENCE/exp002-d1-s3/docstring_only_check.py:17`
+- **Quote:**
+  ```
+  Revisions must be hexadecimal commit ids, and the path must be a tracked file at
+  revision B; the path is never turned into a filesystem path, it is only handed to
+  ```
+- **Claim:** `source_at()` (`:104-107`) runs the `git ls-tree` membership test against *whichever* revision it is given and fails with `"{path!r} is not tracked at {revision}"`, so the path must be tracked at **both** A and B; naming only B understates the guard. The security property itself holds and is not weakened.
+- **Reproduce:**
+  ```
+  rg -n "is not tracked at|ls-tree|REVISION.fullmatch" EVIDENCE/exp002-d1-s3/docstring_only_check.py
+  ```
+
+---
+
+### 10. `index_selfcheck.py:77` carries a `# nosec B603` that suppresses nothing
+
+- **Severity:** nit
+- **Where:** `EVIDENCE/exp002-d1-s3/index_selfcheck.py:77`
+- **Quote:**
+  ```
+      out = subprocess.run(  # noqa: S603  # nosec B603 - absolute git, fixed argv, no shell
+  ```
+- **Claim:** The committed gate record shows bandit had no finding to suppress there — `[tester] WARNING nosec encountered (B603), but no failed test on file EVIDENCE/exp002-d1-s3\index_selfcheck.py:77` (`gate/final/static-gate.txt`, leg L09) — while the `# noqa: S603` on the same line *is* needed (ruff selects `S`, `pyproject.toml:169`). A nosec that suppresses nothing today will silently suppress a real future B603 at that line; the three sibling instruments' identical annotations produce no such warning, so this is specific to this call site.
+- **Reproduce:**
+  ```
+  rg -n "nosec encountered" EVIDENCE/exp002-d1-s3/gate/final/static-gate.txt
+  rg -n "^select" pyproject.toml
+  ```
+
+---
+
+## Judgements the brief asks for that produced no finding
+
+**Item 5 — was any test weakened?** No. The diff adds two tests to `tests/test_notebooks.py` and one to `tests/test_publication_figure_arguments.py`; the only change to an existing test is `timeout=900` → `timeout=NOTEBOOK_CELL_TIMEOUT_SECONDS[name]` (`tests/test_notebooks.py:343`) plus three typing-only annotations (`dict` → `dict[str, Any]`). A diff-wide search for added `skip`/`xfail`/`deselect`/`approx`/`atol`/`rtol`/`tolerance` returns only prose and rule-specific `# noqa`/`# nosec` annotations. Fast-suite counts confirm it: S2 `4038 passed, 178 skipped, 55 deselected` → S3 `4044 passed, 178 skipped, 55 deselected` (`gate/fast-suite/console.txt:4304` vs `EVIDENCE/exp002-d1-s2/pytest-suites.txt:4317`) — the +6 is exactly the new tests, skips and deselections unchanged. Both full-suite failures were left failing, re-run in isolation as *supplementary* evidence only, and the records stay at exit 1.
+
+**Item 6 — frozen artefacts.** Untouched. The range's 62 changed paths include nothing under `DOCS/experiments/EXP-002-…/`, `benchmarks/results/EXP-002/`, `.github/`, `Cargo.toml`, `Cargo.lock` or `pyproject.toml`; `immutability.sh` I1 reports `(empty)` and *enforces* it (`immutability.sh:32`, `:36`). None of the six bundles that carry a `SHA256SUMS*` (`EVIDENCE/{0159,0160,0161,0162,0163,ea007}/verification/`) is in the diff. The correction audit is a genuine pure append: one hunk `@@ -1128,3 +1128,538 @@` and zero `-` lines anywhere in its section of the diff. `EVIDENCE/exp002-d1-s1/` changed by `README.md` +1/−0 only, with the rule enforced, not just printed (`immutability.sh:50-56`).
+
+**Item 4 — does the F6 code change genuinely fix the finding?** Yes, and it is faithful to the frozen reference. `python/prin/reporting/figure_generation.py:960` `label=f"Obj {label}" if index < 5 else None,` matches `DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/utils/figure_generation.py:936` `label=f"Obj {lbl}" if j < 5 else None,` with the same loop shape (`enumerate(sorted(set(labels.tolist())))` vs `enumerate(unique_labels)`). The test's comment quotes the reference correctly. Red-before-fix (`f6-test-red-before-fix.txt`: 1 failed, 9 passed, `'_child0' != 'Obj 0'`, traceback at test line 191 — three lines above the committed assertion at `:194`, as the bundle README explains) and byte-immateriality (`f6-verification.txt` V4: 28/28 raw-byte identical, with a negative control differing on exactly 18 files) are both recorded.
+
+**Item 7 — does the F7 docstring reword a claim instead of making it true?** It makes it true. Every derived quantity the new module docstring (`figure_generation.py:2-21`) names exists in the port *and* in the frozen reference: percent scaling `:241`/`:407`/`:528`/`:549` (ref `:168`/`:294`/`:417`), FLOPs-to-thousands `:796-797` (ref `:771-772`), Fig. 10's fixed drawn bar `:726` (ref `:695`), Fig. 12's `K_c_empirical / K_c_theory` `:869` (ref `:849`), Fig. 15's fine-grid `IP_0 * exp(-x / sigma_c)` `:1087`/`:1090` (ref `:1052`/`:1053`); Fig. 11's ratio annotation `:829` I did not line-match in the reference, but it is pinned by `test_fig11_bars_labels_and_ratios` (D11.1–D11.6) and covered by the 39/39 byte-level parity gate. The previous sentence ("no scientific quantity is recomputed") was genuinely false, and the follow-up commit `33923be5` corrects the *first* rewording's over-claim too — both proven docstring-only by AST comparison with two negative controls (`docstring-only-check.txt`).
+
+**Item 7 — the F5 docstring's counts.** "all 34 registered divergences … the 8 byte-immaterial ones (D5.1, D5.3, D9.2, D11.4, D12.5, D12.7, D15.4, D15.7)" checks out three ways: my own count of distinct asserted divergence IDs in the file is 34 (4+1+1+3+1+6+10+1+7); the registered decomposition in `EVIDENCE/exp002-d1-s1/README.md` gives 26 material + 8 immaterial = 34 with an identical immaterial list; and `f6-verification.txt` V3 reports `34/34`, `material 26; cited 26`, `immaterial 8; cited 8`.
+
+**Item 7 — the F2 numbers.** Every cited duration reconciles. `RECORDED_CONTENDED_MAX_SECONDS` = the maxima of S1 `639.6/—/409.0/389.8`, S2 `800.1/—/222.4/52.5`, S3 observed `678.9/2975.0/367.3/382.1` and the experiment's `3484.0` (`f2/analysis-in-suite-vs-alone.txt`, `f2/analysis-paired-comparison.txt`), with the S1/S2 notebook-02 values correctly excluded as censored. The sizing rule reproduces all four bounds exactly (`ceil(3×800.07/900)×900 = 2700`, `3484.0 → 10800`, `408.96 → 1800`, `389.81 → 1800`), and "37-152 times above the quiet-host duration (37-73 s)" is right (2700/73.3 = 36.8; 10800/71.1 = 151.9). `3484.0` is not a suspiciously round fabrication — it is `notebook_timing.py`'s `round(wall, 1)` (`:245`), and `treatment.json` records `"wall_seconds": 3484.0`. The two-direction test is real: `f2/test-both-directions.txt` shows a bound raised to 18,000 s *and* a slower recorded worst case both failing.
+
+**Item 7 — gate and register claims, spot-checked numerically and all exact.** Fast suite `4044 passed … in 3225.14s`; static gate 13/13 legs exit 0 with `367 files`/`3 files` formatted, mypy `62`/`3`/`22` source files, interrogate `97.6%` vs the 95% floor, bandit `0` issues on both scopes; `figure_generation.py` `99.41176…%` of `340` statements missing exactly lines `201, 206` (both `raise NormalizationError(f"malformed PNG file: {path}")`, shifted from 191/196 by the docstring's net +10 lines); changed-line coverage `11/11` vs `fd8854ed` and a correctly-labelled **vacuous** `0/0` vs `5ba0129e`; `cargo test` **48** `test result: ok` lines summing to **1,604** passed / 0 failed (I summed them); gitleaks `758` then `761` commits, no leaks; Sphinx `build succeeded` exit 0 from a deleted `_build`; `verify_manifest` `5/5 PASS`, 172 records; Snyk `0 HIGH / 0 MEDIUM / 97 LOW`, 45 git-known + 52 untracked copies, SARIF sha256 `9d85ee7f…747a` / 712,616 bytes; PR #34 `OPEN`/`isDraft`/head `8fd0ecc9…` = origin, 23 ahead 0 behind; full-suite-2's "55 of 90 samples at or above 95% CPU … median 0.02 CPU-s/s" — I counted the rows in `gate/analysis-full-suite-2-timeline.txt` and got exactly 55 of 90, and the 28th smallest `pytest_cpu_s/s` in that window is 0.02. The DV-032 quote "measures ~1.28–1.32 under load" is verbatim from `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md:62`, a file this diff does not touch, so the registration predates the failure it is used to explain.
+
+**Item 3 — security.** All Python subprocess use in the new instruments is `git` (resolved once via `shutil.which`, per Coding Standards §6.1) or the literal `C:\Windows\System32\typeperf.exe`, fixed argv, no shell; no `eval`/`exec`/`pickle`/`yaml.load` anywhere in `EVIDENCE/exp002-d1-s3/`. No caller-supplied string becomes a filesystem path: `index_selfcheck.py` selects a bundle from `EVIDENCE.iterdir()`, `notebook_timing.py` uses `argparse choices=`, `docstring_only_check.py`/`raw_byte_identity.py` require `[0-9a-f]{7,40}` `fullmatch` before `git show` and membership-test the path, `snyk_s3_filter.py`/`f2_in_suite_vs_alone.py` read stdin, and `diagnostic_suite_run.sh:26` rejects any label not matching `^[A-Za-z0-9][A-Za-z0-9_-]*`. `raw_byte_identity.py:122`'s `write_bytes` targets a `tempfile.TemporaryDirectory` under two hard-coded module names. The one MEDIUM Snyk ever reported here (`suite_sampler.py:106`, env-var-derived executable path) was remediated by the literal path, kept in the record rather than overwritten, and rescanned clean. Cleanup is restricted to owned process trees (`contention_experiment.sh` reads `/proc/$LOAD/winpid` and `taskkill /T` — no command-line matching), matching Testing Standards §7 item 5.
+
+**One inference I want to flag as such.** `diagnostic_suite_run.sh:41` builds `PYTHONPATH` with a `:` separator and a POSIX path under Git Bash for a native Windows interpreter; I did not verify that MSYS2 path translation reaches it. It clearly worked: `f2/diagnostic-full-suite/run.txt` records `diagnostic notebook-timeout plugin loaded: 1` and `pytest exit status: 0`, and a missing plugin module would have aborted collection rather than passed 6,326 tests. Recorded here as reasoning, not observation.
+
+---
+
+**Summary: 10 findings — 0 critical, 0 high, 2 medium, 3 low, 5 nit; 0 marked `UNVERIFIED`.**

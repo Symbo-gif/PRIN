@@ -1,0 +1,20 @@
+# gitleaks (pinned binary): full history, then --staged
+# date (UTC): 2026-10-16T15:30:31Z
+# git HEAD: e844f54a06973a44d88bb011224a5885bfa67349   tracked changes: 0
+
+# command: DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git . --no-banner
+# started 2026-10-16T15:30:32Z
+12:31PM INF 769 commits scanned.
+12:31PM INF scanned ~103986744 bytes (103.99 MB) in 49.8s
+12:31PM INF no leaks found
+# exit code: 0
+# ended 2026-10-16T15:31:23Z
+
+# command: DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git . --staged --no-banner
+# started 2026-10-16T15:31:23Z
+12:31PM INF 0 commits scanned.
+12:31PM INF scanned ~0 bytes (0) in 1.12s
+12:31PM INF no leaks found
+# exit code: 0
+# ended 2026-10-16T15:31:25Z
+

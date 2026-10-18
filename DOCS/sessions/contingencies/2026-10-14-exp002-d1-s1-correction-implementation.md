@@ -1,6 +1,6 @@
 # EXP-002 D1 S1 — Correction implementation
 
-**Status:** OPEN — not started; scope approved 2026-10-15 UTC (see "Approved scope and decisions")
+**Status:** COMPLETE (S1, 2026-10-15 UTC; pushed to draft PR #34 as authorized) — scope approved 2026-10-15 UTC (see "Approved scope and decisions"); S2 is next
 **Triggering deviation:** `EXP-002 H3 REFUTED` (campaign plan §10.4 D1; pre-registration §4.3)
 **Blocked numbered session:** `0164` (EXP-003 E1), and every later campaign session (`0165`–`0194`, per campaign plan §3.3 and §10.4 items 2 and 5)
 **Opened by:** session `0163` (EXP-002 E5), 2026-10-14 UTC
@@ -68,3 +68,87 @@ Related decisions recorded at the same time:
   established governance, for a dedicated hotfix or a maintainer-authorized
   session. Any pull of those items into S1 would itself need an explicit
   maintainer scope extension.
+- **Push and draft PR pre-authorized** (MichaelMaillet, 2026-10-15 UTC, in
+  the instruction that started this S1 session; mirrors the 2026-09-23
+  EXP-001 S1 brief's approved decision 3). The hotfix branch
+  `hotfix/exp002-d1-figure-parity` is created from `origin/main` @
+  `fd8854ed87a21e01f16e2f7128b431e74085a26e` (the PR #33 merge) and pushed,
+  and a **draft** PR is opened. The failing-test commit is pushed before the
+  fix commit, so the red → green transition is recorded on the remote. The
+  seven hosted check workflows are disabled (`gh workflow list --all`:
+  `rust`, `python`, `parity`, `repro`, `snyk`, `gpu`, `nightly` all
+  `disabled_manually`; the Plan amendment #50 window closed at the PR #33
+  merge), so **no hosted check runs** on these pushes; the Windows local gate
+  stays authoritative under Plan amendment #48, and a local full-history
+  secret scan precedes every push (amendment #48 item 6). Merging stays with
+  the maintainer. This authorizes neither a merge, `EXP-002-r1`, nor the
+  release of session `0164`.
+
+## Completion and handoff (2026-10-15 UTC)
+
+**Root cause (PRIN side; campaign plan §10.4 item 3 not invoked).** The
+WP-034 S1 port (`d88a331`) of the nine PRINet 3.0 figure generators dropped
+or re-encoded 34 drawing arguments. These were keyword arguments such as
+`markersize`, `linewidth`, `alpha`, `zorder`, `va`, `bbox`, `edgecolor` and
+legend `loc`, plus an omitted `tick_params` call. Unicode label strings
+(`×`, `³`, δ/θ/γ, en dash) were rewritten as mathtext, in line with `ruff`
+`RUF001`. Controlled substitution on the frozen reference shows that these
+34, and nothing else, explain every differing byte:
+
+- the reference with all 34 applied equals the pre-fix port on 9/9 stems
+  and 18/18 files;
+- 26 of the 34 are byte-material alone;
+- 0 stems are unexplained.
+
+No plotted value differs and no reference calculation is implicated.
+
+**Acceptance.**
+
+- [x] H3 refutation reproduced by a committed failing test before the fix:
+  `parity/test_parity_publication.py` at `d90eeab`. It failed exactly the
+  18 E3 files and was pushed before the fix.
+- [x] Root cause of all 9 stems (18 files) evidenced by controlled
+  substitution, with 0 unexplained
+  (`EVIDENCE/exp002-d1-s1/root-cause-decomposition-prefix.json`).
+- [x] Fix with tests in tandem (`10d84f2`). All 39 publication outputs equal
+  the frozen reference under the registered H3 comparison. The 21 outputs
+  that already matched stay raw-byte-identical to E3, and H4's two-process
+  raw identity holds (`root-cause-decomposition-postfix.json`). Nine new
+  fast-gate tests fail on the pre-fix module and pass after the fix.
+- [x] Affected local gates, under Plan amendment #48, on `af89499`:
+  - Green: ruff, ruff format, `mypy --strict`, interrogate, bandit, the four
+    governance checkers, the Sphinx `-W` clean build, `cargo fmt`, `cargo
+    clippy`, gitleaks (history and staged), and Snyk Code (0 findings in
+    changed files).
+  - The fast and full pytest suites both **exited 1**: 4,037 passed with 1
+    failure, and 6,323 passed with 2 failures. The three failures are in code
+    this change does not touch. Two are Windows `WinError 5` file-contention
+    errors and one is a load-induced notebook cell timeout. All three pass
+    when re-run alone on the same commit.
+  - The verbatim record is in
+    [`EVIDENCE/exp002-d1-s1/local-gate.txt`](../../../EVIDENCE/exp002-d1-s1/local-gate.txt),
+    summarized in the audit record §S1.7. A clean single-pass suite run on
+    an idle host is left for S2's reproduction.
+
+**Evidence:**
+
+- reproduction `d90eeab`;
+- decomposition `dd05afa`;
+- fix `10d84f2`;
+- post-fix evidence `9371596`/`10d196c`;
+- the [correction audit](../../audits/2026-10-15-exp002-d1-correction-audit.md) S1 record, which covers approvals, root
+  cause, commits, the red → green transition, the local gate, out-of-scope
+  observations and the S2 handoff;
+- [`EVIDENCE/exp002-d1-s1/`](../../../EVIDENCE/exp002-d1-s1/README.md).
+
+**Records not changed by S1.** The Project State Report, its cumulative
+deviation ledger and the Parity Report stay as they are. Under the
+`DOCS/reports/README.md` rule (one report per closed cycle, written in S4,
+append-only), S4 issues the next PSR, which carries this cycle's ledger row;
+the S4 brief also assigns it the Parity Report alignment.
+
+**Handoff.** S2
+([brief](2026-10-14-exp002-d1-s2-correction-audit.md)) audits `ab9e422..HEAD`
+read-only. S1 completion releases nothing: merging PR #34 stays with the
+maintainer, `EXP-002-r1` is authorized only at S4, and session `0164` stays
+`BLOCKED`.

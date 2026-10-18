@@ -1,0 +1,8 @@
+
+===== condition: quiet =====
+  host cpu: 17.7%
+  inferences completed: 500   errors: 0
+  daemon CPU ms per inference: min 1.5625  median 2.5000  max 2.6562
+
+===== condition: loaded =====
+  host cpu: 100.0%

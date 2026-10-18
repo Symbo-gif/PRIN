@@ -1,0 +1,95 @@
+# First triage of every hosted run on the PR head, before the billing lock was cleared
+# copied from /c/Users/there/prin-s4-scratch/triage_hosted.txt at 2026-10-17T19:03:58Z
+
+# hosted-run triage for PR #34 head 83bae4b1
+# date (UTC): 2026-10-16T22:39:33Z
+
+===== run inventory =====
+38976820419	nightly	workflow_dispatch	completed	failure	83bae4b1	2026-10-16T22:37:06Z
+38976489970	snyk	pull_request	completed	failure	83bae4b1	2026-10-16T22:33:46Z
+38976489950	repro	pull_request	completed	failure	83bae4b1	2026-10-16T22:33:46Z
+38976489909	parity	pull_request	completed	failure	83bae4b1	2026-10-16T22:33:46Z
+38976490069	gpu	pull_request	queued		83bae4b1	2026-10-16T22:33:46Z
+38976490004	python	pull_request	completed	failure	83bae4b1	2026-10-16T22:33:46Z
+38976490096	rust	pull_request	in_progress		83bae4b1	2026-10-16T22:33:46Z
+38976486742	snyk	push	completed	failure	83bae4b1	2026-10-16T22:33:44Z
+
+==============================================================
+===== run 38976820419 =====
+workflow: nightly  event: workflow_dispatch  status: completed  conclusion: failure
+  job: full-suite | failure | started 2026-10-16T22:37:08Z | completed 2026-10-16T22:37:10Z | runner: 
+  job: bench-regression | failure | started 2026-10-16T22:37:08Z | completed 2026-10-16T22:37:11Z | runner: 
+  --- failed-step log excerpt ---
+    log not found: 117228147878
+
+==============================================================
+===== run 38976489970 =====
+workflow: snyk  event: pull_request  status: completed  conclusion: failure
+  job: Snyk Code | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: Secret Scan | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  --- failed-step log excerpt ---
+    log not found: 117227074368
+
+==============================================================
+===== run 38976489950 =====
+workflow: repro  event: pull_request  status: completed  conclusion: failure
+  job: reproduce | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  --- failed-step log excerpt ---
+    log not found: 117227074446
+
+==============================================================
+===== run 38976489909 =====
+workflow: parity  event: pull_request  status: completed  conclusion: failure
+  job: detect_corpus | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: parity | skipped | started 2026-10-16T22:33:49Z | completed 2026-10-16T22:33:49Z | runner: 
+  --- failed-step log excerpt ---
+    log not found: 117227073841
+
+==============================================================
+===== run 38976490069 =====
+workflow: gpu  event: pull_request  status: queued  conclusion: 
+  job: gpu-wgpu |  | started 2026-10-16T22:33:47Z | completed 0001-01-01T00:00:00Z | runner: 
+  job: gpu-cuda |  | started 2026-10-16T22:33:47Z | completed 0001-01-01T00:00:00Z | runner: 
+  --- failed-step log excerpt ---
+    run 38976490069 is still in progress; logs will be available when it is complete
+
+==============================================================
+===== run 38976490004 =====
+workflow: python  event: pull_request  status: completed  conclusion: failure
+  job: docs | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: governance | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: test (windows-latest, 3.13) | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: test (ubuntu-latest, 3.13) | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: security | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: test (windows-latest, 3.11) | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: test (ubuntu-latest, 3.11) | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: lint | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: test (ubuntu-latest, 3.12) | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: test (windows-latest, 3.12) | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:57Z | runner: 
+  --- failed-step log excerpt ---
+    log not found: 117227074383
+
+==============================================================
+===== run 38976490096 =====
+workflow: rust  event: pull_request  status: in_progress  conclusion: 
+  job: clippy-strict | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: test (macos-latest, macos-latest) | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:56Z | runner: 
+  job: clippy | failure | started 2026-10-16T22:33:46Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: docs | failure | started 2026-10-16T22:33:47Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: fmt | failure | started 2026-10-16T22:33:47Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: test (windows-latest, windows-latest) |  | started 2026-10-16T22:33:49Z | completed 0001-01-01T00:00:00Z | runner: 
+  job: audit | failure | started 2026-10-16T22:33:47Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: bench-smoke | failure | started 2026-10-16T22:33:47Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: test (ubuntu-latest, ubuntu-latest) | failure | started 2026-10-16T22:33:47Z | completed 2026-10-16T22:33:49Z | runner: 
+  job: test-strict | failure | started 2026-10-16T22:33:47Z | completed 2026-10-16T22:33:50Z | runner: 
+  --- failed-step log excerpt ---
+    run 38976490096 is still in progress; logs will be available when it is complete
+
+==============================================================
+===== run 38976486742 =====
+workflow: snyk  event: push  status: completed  conclusion: failure
+  job: Secret Scan | failure | started 2026-10-16T22:33:44Z | completed 2026-10-16T22:33:47Z | runner: 
+  job: Snyk Code | failure | started 2026-10-16T22:33:44Z | completed 2026-10-16T22:33:47Z | runner: 
+  --- failed-step log excerpt ---
+    log not found: 117227063896
+

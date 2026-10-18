@@ -1,0 +1,11 @@
+started: 2026-10-16T06:06:33Z
+git HEAD: 0970c46734865aae2fef4a1bbf3a2742273553ca   tracked changes: 0
+notebook: 02_clevr_n_binding.ipynb   treatment load: tests/test_exp002_driver.py tests/test_exp002_e4_analysis.py
+control host cpu% (5 s mean): 31.1
+control start: 2026-10-16T06:06:39Z
+control exit: 0   end: 2026-10-16T06:08:00Z
+load generator started: 2026-10-16T06:08:00Z
+saturation reached: yes   at 2026-10-16T06:08:53Z   (last host cpu% 100.0)
+treatment start: 2026-10-16T06:08:55Z
+treatment exit: 0   end: 2026-10-16T07:07:12Z
+finished: 2026-10-16T07:07:15Z

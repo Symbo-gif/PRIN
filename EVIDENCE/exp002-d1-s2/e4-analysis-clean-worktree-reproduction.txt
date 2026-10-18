@@ -1,0 +1,107 @@
+# EXP-002 D1 S2 - clean-worktree reproduction of the seven E4 analysis outputs
+# date (UTC): 2026-10-15T18:40:34Z
+# git HEAD: 8fd0ecc9949a607f2a7090fe39205f00bb0078c9
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# python: Python 3.14.0
+# expected committed report-manifest.json sha256: 6b15dcc112513cdce9cb2d923208f93d3616898225efed545706c56526e68781
+#
+# procedure (mirrors EXP-002 E5 report section 6.2):
+#   git worktree add --detach /c/dev/PRIN-s2-e4wt HEAD
+#   /c/dev/PRIN/.venv/Scripts/python.exe -I /c/dev/PRIN-s2-e4wt/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py
+#
+--- pre-flight: worktree must not already exist ---
+ok: /c/dev/PRIN-s2-e4wt does not exist
+--- git worktree add ---
+Preparing worktree (detached HEAD 8fd0ecc9)
+Updating files:  43% (2354/5377)Updating files:  44% (2366/5377)Updating files:  45% (2420/5377)Updating files:  46% (2474/5377)Updating files:  47% (2528/5377)Updating files:  48% (2581/5377)Updating files:  49% (2635/5377)Updating files:  50% (2689/5377)Updating files:  51% (2743/5377)Updating files:  52% (2797/5377)Updating files:  53% (2850/5377)Updating files:  54% (2904/5377)Updating files:  55% (2958/5377)Updating files:  56% (3012/5377)Updating files:  57% (3065/5377)Updating files:  58% (3119/5377)Updating files:  59% (3173/5377)Updating files:  60% (3227/5377)Updating files:  61% (3280/5377)Updating files:  62% (3334/5377)Updating files:  63% (3388/5377)Updating files:  64% (3442/5377)Updating files:  65% (3496/5377)Updating files:  66% (3549/5377)Updating files:  67% (3603/5377)Updating files:  68% (3657/5377)Updating files:  69% (3711/5377)Updating files:  70% (3764/5377)Updating files:  71% (3818/5377)Updating files:  72% (3872/5377)Updating files:  73% (3926/5377)Updating files:  74% (3979/5377)Updating files:  75% (4033/5377)Updating files:  76% (4087/5377)Updating files:  77% (4141/5377)Updating files:  78% (4195/5377)Updating files:  79% (4248/5377)Updating files:  80% (4302/5377)Updating files:  81% (4356/5377)Updating files:  82% (4410/5377)Updating files:  83% (4463/5377)Updating files:  84% (4517/5377)Updating files:  85% (4571/5377)Updating files:  86% (4625/5377)Updating files:  87% (4678/5377)Updating files:  88% (4732/5377)Updating files:  88% (4742/5377)Updating files:  89% (4786/5377)Updating files:  90% (4840/5377)Updating files:  91% (4894/5377)Updating files:  92% (4947/5377)Updating files:  93% (5001/5377)Updating files:  94% (5055/5377)Updating files:  95% (5109/5377)Updating files:  96% (5162/5377)Updating files:  97% (5216/5377)Updating files:  98% (5270/5377)Updating files:  99% (5324/5377)Updating files: 100% (5377/5377)Updating files: 100% (5377/5377), done.
+HEAD is now at 8fd0ecc9 test(exp002-d1): record the S1 local gate
+# exit: 0
+--- worktree HEAD and cleanliness ---
+8fd0ecc9949a607f2a7090fe39205f00bb0078c9
+# (empty status above == clean checkout of HEAD)
+--- frozen analysis module identity (worktree copy) ---
+7a400aa66d1edd9a8aa41967f22ed77b720f0534bba6f9fe99f3af703d6ee4e4 */c/dev/PRIN-s2-e4wt/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py
+--- frozen analysis module identity (main checkout) ---
+7a400aa66d1edd9a8aa41967f22ed77b720f0534bba6f9fe99f3af703d6ee4e4 */c/dev/PRIN/DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/analysis/exp002_e4_analysis.py
+# last commit touching the analysis module:
+3731fc2590cf86bdb657fce25e4917d26567b23a 2026-10-13 13:10:42 -0300 feat(0162): EXP-002 E4 registered analysis module and synthetic tests
+
+--- running the frozen E4 analysis module in the worktree (-I isolated) ---
+H1: CONFIRMED
+H2: CONFIRMED
+H3: REFUTED
+H4: CONFIRMED
+H3_sensitivity_policy: REFUTED
+D1 flag: True
+DOCS/test_and_benchmark_results/EXP-002/analysis/summary.json 2dabdea13d6d963caed4adb35edd2b66deaedc70929afcfb765003b7c3303e13
+DOCS/test_and_benchmark_results/EXP-002/analysis/api-mapping.csv 7f2cfd76f62ccecae89f2e52bbf67c39ac067b82b7d4fef6ec499bb2c93c5e19
+DOCS/test_and_benchmark_results/EXP-002/analysis/conclusion-comparisons.csv 0c01c59c8e1f32ea3ad173dddde117ad9a94b187289328da760e1c906e0bba85
+DOCS/test_and_benchmark_results/EXP-002/analysis/reproduction-comparisons.csv 424f292d7699ab7e7d92ce089201a7d501acd7deae02aff50d393ac06870e0d1
+DOCS/test_and_benchmark_results/EXP-002/analysis/error-distributions.json e28f3e4fad0a5a7ba3dedc686900f7b808815378035d6dab6a402a2067025d9d
+DOCS/test_and_benchmark_results/EXP-002/analysis/expected-vs-observed.md 97ecd3ab53bdbee2cf22e22e49866843544f70b3803213560978b4185af71789
+DOCS/test_and_benchmark_results/EXP-002/analysis/coverage-and-deferrals.md ff14a9f8592576f895a559b05d8b0848039d6efefc2b467d4bab97c3f94a18f9
+DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report-manifest.json 6b15dcc112513cdce9cb2d923208f93d3616898225efed545706c56526e68781
+# start (UTC): 2026-10-15T18:40:37Z
+# end   (UTC): 2026-10-15T18:40:39Z
+# exit code: 0
+
+--- byte-for-byte comparison: worktree outputs vs the main checkout ---
+analysis run exit code: 0
+
+=== the seven generated analysis outputs ===
+file                               regenerated (worktree) retained (main)    identical
+summary.json                       2dabdea13d6d963c  2dabdea13d6d963c  YES
+api-mapping.csv                    7f2cfd76f62cceca  7f2cfd76f62cceca  YES
+conclusion-comparisons.csv         0c01c59c8e1f32ea  0c01c59c8e1f32ea  YES
+reproduction-comparisons.csv       424f292d7699ab7e  424f292d7699ab7e  YES
+error-distributions.json           e28f3e4fad0a5a7b  e28f3e4fad0a5a7b  YES
+expected-vs-observed.md            97ecd3ab53bdbee2  97ecd3ab53bdbee2  YES
+coverage-and-deferrals.md          ff14a9f8592576f8  ff14a9f8592576f8  YES
+
+=== report-manifest.json ===
+committed (main checkout) sha256 : 6b15dcc112513cdce9cb2d923208f93d3616898225efed545706c56526e68781
+regenerated (worktree)  sha256   : 6b15dcc112513cdce9cb2d923208f93d3616898225efed545706c56526e68781
+expected (E5 report 6.2)         : 6b15dcc112513cdce9cb2d923208f93d3616898225efed545706c56526e68781
+committed matches the expected digest        : True
+regenerated matches the expected digest      : True
+regenerated byte-identical to committed      : True
+
+=== do the regenerated outputs match what report-manifest.json records? ===
+  summary.json: no 64-hex digest recorded in report-manifest.json
+  api-mapping.csv: no 64-hex digest recorded in report-manifest.json
+  conclusion-comparisons.csv: no 64-hex digest recorded in report-manifest.json
+  reproduction-comparisons.csv: no 64-hex digest recorded in report-manifest.json
+  error-distributions.json: no 64-hex digest recorded in report-manifest.json
+  expected-vs-observed.md: no 64-hex digest recorded in report-manifest.json
+  coverage-and-deferrals.md: no 64-hex digest recorded in report-manifest.json
+  recorded-digest checks: 0/0 matched
+
+TOTAL FAILURES: 0
+
+--- removing the worktree ---
+# exit: 0
+# worktree exists after removal: NO
+C:/dev/PRIN                                        8fd0ecc9 [hotfix/exp002-d1-figure-parity]
+C:/dev/PRIN/.kilo/worktrees/shorthaired-clownfish  da53ea11 (detached HEAD)
+C:/dev/PRIN/.qwen/tmp/review-pr-20                 8f911202 [qwen-review/pr-20]
+C:/dev/PRIN/.qwen/worktrees/exp001-r1-e4           46fea62d [campaign/exp001-r1-e4]
+C:/dev/PRIN/.qwen/worktrees/exp001-r1-e5           4dce0542 [campaign/exp001-r1-e5]
+C:/dev/PRIN-dv044                                  5ccf2bab [hotfix/dv044-ledger-delta]
+C:/dev/PRIN-r1-amendment                           541fbfe0 [campaign/exp001-r1-preexecution]
+
+--- main checkout still clean, retained roots untouched ---
+?? EVIDENCE/exp002-d1-s2/
+# retained analysis outputs still present:
+api-mapping.csv
+conclusion-comparisons.csv
+coverage-and-deferrals.md
+error-distributions.json
+expected-vs-observed.md
+reproduction-comparisons.csv
+summary.json
+/c/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T212705Z-fae24c4-api-cpu
+/c/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213054Z-fae24c4-conclusions-cpu
+/c/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu
+/c/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu
+/c/dev/PRIN/DOCS/test_and_benchmark_results/EXP-002/RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu
+# comparison exit code: 0

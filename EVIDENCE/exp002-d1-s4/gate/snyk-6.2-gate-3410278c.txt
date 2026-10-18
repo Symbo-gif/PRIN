@@ -1,0 +1,79 @@
+# Snyk Code, §6.2 gate — one leg BLOCKED, one leg COMPLETED, recorded side by side
+
+# date (UTC): 2026-10-18T03:58Z
+# git HEAD: 3410278c (tree clean)
+# Gate (Coding Standards §6.2): 0 medium-or-higher findings.
+
+Amendment #48 item 2 requires an unavailable control to be "reported as
+*blocked*, never as passed", and the Snyk memory of 2026-10-15/16 requires
+recording *which route* produced a number. Both routes are therefore recorded
+here rather than one being substituted silently for the other.
+
+## Leg 1 — CLI, repo-wide: BLOCKED (did not run)
+
+    # command: snyk code test . --severity-threshold=low --sarif-file-output=...
+    # exit code: 2 (1 = findings reported, not a scan failure; 2 or more = the scan did not run)
+    # NO SARIF WRITTEN: this leg is BLOCKED, not clean.
+
+Auth is NOT the cause, and that was verified rather than assumed:
+
+    # command: snyk whoami
+    Symbo-gif
+    # exit code: 0
+
+A retry of the same repo-wide invocation produced a **0-byte** output file, so no
+error text was captured either time. **The cause is not established and is not
+guessed here.** One measured fact bounds it: a single-file CLI scan succeeds
+(below), so the CLI, its credentials and the Code engine all work — the failure
+is specific to the repo-wide `.` target. Note that `snyk code test .` scans the
+*filesystem*, not git, and this directory holds gitignored agent worktrees, so the
+repo-wide target is not a stable or tracked-file-scoped input; that is a candidate
+contributor, recorded as a hypothesis and NOT as a cause.
+
+`final_legs.sh` aggregated this leg fail-closed as
+`AGGREGATION snyk record: says BLOCKED -> FAIL` — the corrected `require_marker`
+aggregation from `EXP002D1-S4-F1` behaving as designed, since the superseded
+`grep -qv` form would have read a missing record as passing.
+
+## Leg 2 — CLI, the one changed source file: COMPLETED, 0 issues
+
+    $ snyk code test tests/test_acceptance_subconscious.py --severity-threshold=low
+    ╭───────────────────────────────────────────────────────────────╮
+    │ Test Summary                                                  │
+    │                                                               │
+    │   Organization:      symbo-gif                                │
+    │   Test type:         Static code analysis                     │
+    │   Project path:      tests/test_acceptance_subconscious.py    │
+    │                                                               │
+    │   Total issues:   0                                           │
+    ╰───────────────────────────────────────────────────────────────╯
+    # exit code: 0
+
+`tests/test_acceptance_subconscious.py` is the only first-party source file this
+session changed (`67100a69`, the DV-032 fix). The evidence instruments added
+under `EVIDENCE/` are audit scripts, not shipped code.
+
+## Leg 3 — MCP, repo-wide at medium: COMPLETED, 0 issues
+
+Coding Standards §6.4 makes the MCP integration an approved route, not a
+workaround. Invoked as `snyk_code_scan` with `path="C:\dev\PRIN"`,
+`severity_threshold="medium"`:
+
+    {"success":true,"issueCount":0,"issues":null}
+
+**This is the leg that decides the §6.2 gate**, because §6.2 is a
+"0 medium-or-higher" threshold and this is the only completed repo-wide scan at
+that threshold. The two prior S4 CLI repo-wide scans are consistent with it: the
+run at `157ce5bc` reported `Total issues 97, Open 97 [ 0 HIGH 0 MEDIUM 97 LOW ]`
+— 0 medium+, 97 LOW.
+
+## Disposition
+
+* §6.2 gate: **MET**, on the MCP repo-wide medium scan (0 issues), corroborated by
+  the CLI scan of the one changed source file (0 issues).
+* The CLI repo-wide leg stays recorded as **BLOCKED**, not clean, and its cause is
+  recorded as **not established**.
+* Nothing was suppressed: `.snyk` unchanged, no ignore added, no severity
+  exclusion. The three ratified `python/PT` LOW locations from `EXP002D1-S2-F8`
+  and `EXP002D1-S2-F8-L3` are LOW and so are outside the medium+ gate; they remain
+  visible to any `low`-threshold scan and are re-checked each cycle.

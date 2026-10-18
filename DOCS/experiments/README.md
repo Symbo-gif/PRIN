@@ -158,6 +158,80 @@ Record: [`log.md`](EXP-002-api-benchmark-result-and-reproduction-parity/log.md) 
 (MichaelMaillet) 2026-10-15 UTC** and the `EXP-002-D1` S1 correction scope was
 approved as written (`report.md` §14); acceptance does not release `0164`.
 
+**`EXP-002-D1` CORRECTION CYCLE COMPLETE — S4 CLOSED 2026-10-16 UTC; `EXP-002-r1`
+AUTHORIZED; SESSION `0164` STILL BLOCKED.** All four contingency sessions ran in
+strict S1→S4 order
+([`2026-10-14-exp002-d1-s1..s4`](../sessions/contingencies/2026-10-14-exp002-d1-s1-correction-implementation.md);
+closure record in the
+[correction audit](../audits/2026-10-15-exp002-d1-correction-audit.md)
+`## S4 — closure`). The root cause of H3's refutation was on the **PRIN side**:
+the WP-034 port of nine figure generators dropped or re-encoded **34 drawing
+arguments**, and controlled substitution on the frozen `prinet==3.0.0` reference
+explains every differing byte with **0 unexplained** — so campaign plan §10.4
+item 3 (the "the 3.0 conclusion was itself the erroneous side" route) was **not**
+invoked. S2 audited (`PASS-WITH-FINDINGS`: one D2, one D3, six D4, **no D1**);
+S3 dispositioned every open finding with a `CLEAN` delta re-audit; S4 issued
+**PSR-041** ([`041-project-state.md`](../reports/041-project-state.md)), updated
+every register, added a dated 2026-10-16 update to the
+[Parity Report](../sphinx/parity_report.rst), and appended **append-only erratum
+2** naming `EXP-002-r1` to the [E5 report](EXP-002-api-benchmark-result-and-reproduction-parity/report.md)
+§15.
+
+On the corrected generator the approved §5.4 comparison policy gives **39/39
+equal** and the §11.3 pre-exposure sensitivity policy gives **14/39 equal**, with
+all **25** residuals classified, **0 unclassified**, and every one a writer or
+host property (14 PDFs differing only in the Info **key set** — the reference
+writes 3 keys including a wall-clock `CreationDate`, PRIN 4 fixed keys including
+`ModDate`; 11 `.tex` tables differing only in **line terminators** — reference
+CRLF from its text-mode writer on Windows, PRIN LF).
+
+**`EXP-002`'s verdicts are unchanged: H1 `CONFIRMED`, H2 `CONFIRMED`, H4
+`CONFIRMED`, and H3 `REFUTED`.** That verdict was computed from immutable,
+manifested `RUN-` artefacts at the source the record froze; the generator was
+corrected *after* E3, so a later correction cannot retroactively change it.
+`EXP-002`'s frozen `preregistration.md`, tolerances, normalization policies,
+digests and everything under `benchmarks/results/EXP-002/` are never edited.
+**Nothing in this correction confirms H3 — only `EXP-002-r1` can produce a new
+verdict.**
+
+Per campaign plan §10.4 item 4 the experiment is therefore re-run as a **new
+record**, [`EXP-002-r1`](EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md),
+authorized at S4 with a new pre-registration and new run IDs, never reusing
+`EXP-002`'s run IDs or artefacts. **This is a record skeleton only: no r1
+E-stage has run, no `RUN-` directory exists, and no r1 run is authorized by this
+closure** — the maintainer declares each E-stage session in turn. Audit finding
+**`EXP002D1-S2-F1`** (D3) is carried into that authorization: because the two
+registered H3 comparison policies now point at different verdicts on a corrected
+generator, r1's E1/E2 must deliberately register which policy decides H3, what
+status the other has, and what a disagreement means — replacing or restating
+`EXP-002`'s §11.3 item 1 clause in the new record, fixed **before its first
+`RUN-` directory exists**, with outcome exposure disclosed, and **without
+altering either writer** to chase §11.3 equality (PRIN's fixed PDF metadata is
+what makes H4 hold). **S4 does not choose that rule**; it is an open item
+requiring the maintainer's approval before r1's E1 starts. `EXP-002-r1`'s E3 is
+additionally gated by **DV-047** (rebuild `python/prin/_prin_core.pyd` and record
+its new SHA-256 so a new observation does not record stale-binary provenance).
+
+**Plan amendment #52** was adopted on the maintainer's authority: the seven
+hosted check workflows (`rust`, `python`, `parity`, `repro`, `snyk`, `gpu`,
+`nightly`) are re-enabled and stay active until the campaign's experimentation is
+complete — the close of session `0194` (Campaign E6 synthesis), or earlier on
+maintainer instruction — superseding amendment #48's "hosted checks disabled"
+rule and amendment #50's EXP-002-only window. Hosted results are additional
+evidence recorded verbatim (workflow, run ID, head SHA, conclusion, link) for the
+exact SHA they ran on; the Windows full local gate stays **mandatory and
+authoritative**, local results are never described as "CI green", and a hosted
+run does not establish behaviour on platforms it did not run on. A red hosted
+check is triaged and recorded, never waived, skipped, deselected or hidden. The
+branch ruleset is unchanged and this is **not** the amendment #48 lift.
+
+**Session `0164` (EXP-003 E1) and every later campaign session (`0165`–`0194`)
+remain `BLOCKED`.** The S4 closure, the merge of PR #34 and the re-enabling of
+the hosted workflows do **not** release them; under campaign plan §10.4 item 5
+release requires `EXP-002-r1`'s E5 verdict to be a non-reversal, verified and
+accepted by the maintainer, or a Project Plan §8.3 amendment accepting a changed
+conclusion with full justification.
+
 ## Layout
 
 ```
@@ -189,7 +263,8 @@ regenerate from them via `prin.reporting`.
 |---|---|---|
 | EXP-001 | C1 | [`EXP-001-golden-trajectory-numerical-parity/`](EXP-001-golden-trajectory-numerical-parity/README.md) |
 | EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **COMPLETE: E5 VERIFIED AND ACCEPTED 2026-09-29 UTC. All five hypotheses `CONFIRMED`, D1 not raised (non-reversal); 0159 and every experiment downstream of EXP-001, plus 0194, are RELEASED. E1–E5 PR authorized, not yet opened** *(dated correction, 2026-10-11: opened and merged as PR #28)* |
-| EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) — **E5 VERIFIED AND ACCEPTED 2026-10-15 UTC (reported 2026-10-14 UTC): H1, H2, H4 `CONFIRMED`; H3 `REFUTED` (`21/39` approved, `5/39` sensitivity) — campaign plan §10.4 D1 RAISED; correction cycle `EXP-002-D1` open with S1 scope approved; session `0164` and downstream campaign sessions BLOCKED** |
+| EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) — **E5 VERIFIED AND ACCEPTED 2026-10-15 UTC (reported 2026-10-14 UTC): H1, H2, H4 `CONFIRMED`; H3 `REFUTED` (`21/39` approved, `5/39` sensitivity) — campaign plan §10.4 D1 RAISED. Correction cycle `EXP-002-D1` CLOSED 2026-10-16 UTC (S1→S4); these verdicts are UNCHANGED and immutable — erratum 2 in `report.md` §15 points at the re-run. Session `0164` and downstream campaign sessions remain BLOCKED** |
+| EXP-002-r1 | C1 | [`EXP-002-r1-api-benchmark-result-and-reproduction-parity/`](EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md) — **AUTHORIZED 2026-10-16 UTC by `EXP-002-D1` S4; RECORD SKELETON ONLY. No E-stage has run, no pre-registration exists, no `RUN-` directory exists, and no run is authorized by the correction closure.** Carries `EXP002D1-S2-F1`: E1/E2 must register which H3 comparison policy decides and what the other's status is, before the first `RUN-`, with outcome exposure disclosed — **S4 did not choose that rule; it needs the maintainer's approval before E1 starts.** E3 is additionally gated by DV-047 (rebuild `_prin_core.pyd`). New run IDs only; never reuses `EXP-002`'s |
 | EXP-003 | C2 | [`EXP-003-cpu-scaling-and-sweep-performance/`](EXP-003-cpu-scaling-and-sweep-performance/README.md) |
 | EXP-004 | C2 | [`EXP-004-gpu-kernels-and-torch-bridge-performance/`](EXP-004-gpu-kernels-and-torch-bridge-performance/README.md) |
 | EXP-005 | C3 | [`EXP-005-dynamics-chimera-and-capacity-replication/`](EXP-005-dynamics-chimera-and-capacity-replication/README.md) |

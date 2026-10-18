@@ -1,0 +1,11 @@
+# copied from /c/Users/there/prin-s4-scratch/final/index-selfcheck-s3.txt at 2026-10-18T04:44:15Z
+# index self-check of EVIDENCE/exp002-d1-s3/
+# date (UTC): 2026-10-18T04:39:17Z
+# git HEAD: 4c8030303a8f9a3427ace7788fbfff47066476ce   tracked changes: 0
+
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-d1-s3
+bundle exp002-d1-s3: 129 files (README included)
+  nested READMEs used: ['cold-review/README.md', 'f2/README.md', 'gate/README.md']
+  unindexed files : none
+  dangling links  : none
+# exit code: 0

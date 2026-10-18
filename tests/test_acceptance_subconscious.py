@@ -533,6 +533,23 @@ class TestCollectSystemState:
 # ======================================================================
 
 
+#: Work per timing sample for :meth:`TestIntegration.test_no_gpu_throughput_regression`.
+#: Sized so the Windows process-time clock tick (~15.6 ms) is fine relative to
+#: each sample: at the previous ``n=1_000_000`` (~60 ms) a single tick moved the
+#: ratio by ~25 %, which is why measured ratios quantised to 0.8000 / 0.8750 /
+#: 1.1429. At ~480 ms the same tick moves it ~3 %.
+_DAEMON_WORK_N = 8_000_000
+
+#: Upper bound on the daemon's process-CPU-time overhead ratio. Sized from
+#: measurement (worst observed **1.1429** with a host saturated by one busy
+#: process per logical CPU), not from the 1.30 wall-clock allowance it replaces.
+#: This is a gross-regression detector — a daemon thread that busy-waits or runs
+#: a pathologically expensive loop lands far above it — not a sensitive one;
+#: DV-032 assigns the sensitive quantitative comparison to the nightly benchmark
+#: gate.
+_DAEMON_CPU_RATIO_LIMIT = 1.60
+
+
 class TestIntegration:
     """End-to-end integration tests."""
 
@@ -573,39 +590,86 @@ class TestIntegration:
         daemon.stop(timeout=5.0)
 
     def test_no_gpu_throughput_regression(self, tmp_onnx: Path) -> None:
-        """Daemon should not significantly affect CPU-bound work."""
+        """Daemon must serve its queue without erroring or hogging process CPU.
+
+        DV-032 / ``EXP002D1-S4-F3``. This previously asserted
+        ``median(with_daemon) / median(baseline) < 1.30`` over **wall-clock**
+        timings. Two measured facts made that assertion unusable in a required
+        gate:
+
+        * **It carried no signal.** The daemon blocks on ``_state_queue.get`` and
+          this test submits only three states, so exactly **3** inferences
+          (~1.5 ms each) run inside a **~420 ms** window — a maximum expressible
+          effect of ~1.1 % against a 30 % allowance, ~27x below tolerance.
+        * **So it measured only host noise.** At ``814b670c`` it returned
+          **22.07** in-suite and **2.13 / 3.42** in isolation at 97-99.7 % host
+          CPU while passing 5/5 on a quiet host, turning a required gate leg red
+          on a commit whose diff did not touch it.
+
+        Overhead is now measured in **process CPU time**, which excludes time
+        spent waiting for other processes and so cannot be inflated by unrelated
+        host load, over samples large enough that the platform clock tick is fine
+        relative to each one (see ``_DAEMON_WORK_N``). The deterministic
+        assertions carry the real signal; the ratio is a gross-regression
+        detector, and DV-032 assigns the sensitive quantitative comparison to the
+        nightly benchmark gate.
+        """
         daemon = SubconsciousDaemon(tmp_onnx, backend="cpu", interval=0.5, warmup=True)
 
+        def sample_cpu() -> float:
+            start = time.process_time()
+            _dummy_work(n=_DAEMON_WORK_N)
+            return time.process_time() - start
+
         # Baseline: compute without daemon
-        _dummy_work(n=1_000_000)
-        baseline_samples = []
-        for _ in range(3):
-            t0 = time.perf_counter()
-            _dummy_work(n=1_000_000)
-            baseline_samples.append(time.perf_counter() - t0)
+        _dummy_work(n=_DAEMON_WORK_N)
+        baseline_samples = [sample_cpu() for _ in range(3)]
 
         # With daemon running
         daemon.start()
-        time.sleep(0.5)
-        for _ in range(3):
-            daemon.submit_state(SubconsciousState.default())
-        _dummy_work(n=1_000_000)
-        with_daemon_samples = []
-        for _ in range(7):
-            t0 = time.perf_counter()
-            _dummy_work(n=1_000_000)
-            with_daemon_samples.append(time.perf_counter() - t0)
+        try:
+            time.sleep(0.5)
+            for _ in range(3):
+                daemon.submit_state(SubconsciousState.default())
+            _dummy_work(n=_DAEMON_WORK_N)
+            with_daemon_samples = [sample_cpu() for _ in range(7)]
 
-        daemon.stop(timeout=5.0)
-        _dummy_work(n=1_000_000)
-        for _ in range(4):
-            t0 = time.perf_counter()
-            _dummy_work(n=1_000_000)
-            baseline_samples.append(time.perf_counter() - t0)
+            # Drain on every submitted state being HANDLED, not on the queue
+            # reading empty: the queue is empty once the daemon dequeues an item,
+            # which is before it finishes inferring it, so an emptiness-based
+            # drain can observe inference_count mid-flight.  Counting errors too
+            # keeps this fast when an inference fails.  The target is reachable
+            # because submit_state only drops when its queue is full
+            # (maxsize=100) and three states are submitted.
+            submitted = 3
+            deadline = time.perf_counter() + 30.0
+            while (
+                daemon.inference_count + daemon.error_count < submitted
+                and time.perf_counter() < deadline
+            ):
+                time.sleep(0.01)
+            inferences = daemon.inference_count
+            errors = daemon.error_count
+            dlq = daemon.dlq_size
+        finally:
+            daemon.stop(timeout=5.0)
 
-        # Daemon should add < 30% overhead (generous margin for CI / background load)
+        _dummy_work(n=_DAEMON_WORK_N)
+        baseline_samples.extend(sample_cpu() for _ in range(4))
+
+        # Deterministic: the daemon must have served every submitted state
+        # without error. A deadlocked, crashed or hung daemon fails here, which
+        # no timing ratio can report reliably.
+        assert errors == 0, f"daemon reported {errors} inference errors"
+        assert dlq == 0, f"daemon dead-lettered {dlq} states"
+        assert inferences >= submitted, (
+            f"daemon completed {inferences} inferences, want >= {submitted}"
+        )
+
         ratio = median(with_daemon_samples) / max(median(baseline_samples), 1e-9)
-        assert ratio < 1.30, f"Throughput ratio {ratio:.2f} > 1.30"
+        assert ratio < _DAEMON_CPU_RATIO_LIMIT, (
+            f"Daemon process-CPU overhead ratio {ratio:.2f} > {_DAEMON_CPU_RATIO_LIMIT}"
+        )
 
 
 def _dummy_work(n: int) -> float:

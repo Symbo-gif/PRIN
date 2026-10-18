@@ -1,0 +1,11 @@
+# copied from /c/Users/there/prin-s4-scratch/final/index-selfcheck-s1.txt at 2026-10-18T04:44:09Z
+# index self-check of EVIDENCE/exp002-d1-s1/
+# date (UTC): 2026-10-18T04:39:08Z
+# git HEAD: 4c8030303a8f9a3427ace7788fbfff47066476ce   tracked changes: 0
+
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-d1-s1
+bundle exp002-d1-s1: 12 files (README included)
+  nested READMEs used: none
+  unindexed files : none
+  dangling links  : none
+# exit code: 0

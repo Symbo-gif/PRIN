@@ -1,0 +1,70 @@
+# The four negative controls proving the platform-scoped digest tie is non-vacuous
+# copied from /c/Users/there/prin-s4-scratch/negcontrols.txt at 2026-10-17T19:03:57Z
+
+# negative controls for the platform-scoped digest tie
+# date (UTC): 2026-10-17T18:58:08Z
+# git HEAD: 83bae4b1912c5cce6aa71ee228add986e0c54c08
+# module sha256: f9657aa66f764cc906e6b0a603322d99de2e209eec7993c36326680fbf5de56b
+# host platform: Windows-11-10.0.26300-SP0
+
+==================================================================
+## NEGCTL=corrupt-figure   (expected exit 1)
+## proves: the byte-exact comparison is live on the authoring platform (not a no-op)
+# command: NEGCTL=corrupt-figure .venv/Scripts/python.exe -m pytest parity/test_parity_publication.py -k reference_arm_reproduces -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider -p negctl
+# started 2026-10-17T18:58:09Z
+  # NEGCTL selected: corrupt-figure
+  FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig10_statistical_summary.png]
+  FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[figures/fig10_statistical_summary.png]
+  ================= 1 failed, 38 passed, 55 deselected in 9.28s =================
+# exit code: 1 (expected 1)
+# ended 2026-10-17T18:58:22Z
+  RESULT: as expected
+
+==================================================================
+## NEGCTL=corrupt-tex   (expected exit 1)
+## proves: tables are byte-exact on the authoring platform
+# command: NEGCTL=corrupt-tex .venv/Scripts/python.exe -m pytest parity/test_parity_publication.py -k reference_arm_reproduces -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider -p negctl
+# started 2026-10-17T18:58:23Z
+  # NEGCTL selected: corrupt-tex
+  FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[tables/tab_ablation.tex]
+  FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[tables/tab_ablation.tex]
+  ================= 1 failed, 38 passed, 55 deselected in 9.38s =================
+# exit code: 1 (expected 1)
+# ended 2026-10-17T18:58:36Z
+  RESULT: as expected
+
+==================================================================
+## NEGCTL=bogus+corrupt-figure   (expected exit 0)
+## proves: off-platform the figure tie is correctly relaxed to the structural branch
+# command: NEGCTL=bogus+corrupt-figure .venv/Scripts/python.exe -m pytest parity/test_parity_publication.py -k reference_arm_reproduces -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider -p negctl
+# started 2026-10-17T18:58:36Z
+  # NEGCTL selected: bogus+corrupt-figure
+  
+  ====================== 39 passed, 55 deselected in 9.43s ======================
+# exit code: 0 (expected 0)
+# ended 2026-10-17T18:58:49Z
+  RESULT: as expected
+
+==================================================================
+## NEGCTL=bogus+corrupt-tex   (expected exit 1)
+## proves: off-platform the TABLE tie is still byte-exact - tables were not relaxed
+# command: NEGCTL=bogus+corrupt-tex .venv/Scripts/python.exe -m pytest parity/test_parity_publication.py -k reference_arm_reproduces -q -rf --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider -p negctl
+# started 2026-10-17T18:58:50Z
+  # NEGCTL selected: bogus+corrupt-tex
+  FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[tables/tab_ablation.tex]
+  FAILED parity/test_parity_publication.py::test_reference_arm_reproduces_e3_reference_arm[tables/tab_ablation.tex]
+  ================= 1 failed, 38 passed, 55 deselected in 9.54s =================
+# exit code: 1 (expected 1)
+# ended 2026-10-17T18:59:03Z
+  RESULT: as expected
+
+==================================================================
+## V1 the unmodified run on this host (all 94 tests, no control)
+# started 2026-10-17T18:59:03Z
+  ........................................................                 [100%]
+  
+  ============================= 94 passed in 13.09s =============================
+# exit code: 0 (must be 0)
+
+# overall: 0 (0 = every control produced its expected outcome)
+# finished 2026-10-17T18:59:20Z   tracked changes: 1

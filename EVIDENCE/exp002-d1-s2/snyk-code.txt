@@ -1,0 +1,91 @@
+# EXP-002 D1 S2 - Snyk Code re-scan (Coding Standards section 6)
+# date (UTC): 2026-10-15T18:42:08Z
+# git HEAD: 8fd0ecc9949a607f2a7090fe39205f00bb0078c9
+# tracked changes: 0
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# snyk binary: /c/Users/there/AppData/Roaming/npm/snyk
+# snyk version: 1.1306.2
+# snyk auth:  Now redirecting you to our auth page, go ahead and log in, and once the auth is complete, return to this prompt and you'll 
+#
+# command: snyk code test . --severity-threshold=low --sarif-file-output=/c/Users/there/prin-s2-scratch/snyk-code-s2.sarif
+#
+
+ ERROR   Authentication error (SNYK-0005)
+         Authentication credentials not recognized, or user access is not provisioned.  
+         Revise credentials and try again, or request access from your Snyk             
+         administrator.                                                                 
+                                                                                        
+           Use `snyk auth` to authenticate.                                             
+
+Status:  401 Unauthorized 
+Docs:    https://docs.snyk.io/scan-with-snyk/error-catalog#snyk-0005 
+Tip:     Try snyk doctor: `snyk <command> -d 2>&1 | snyk doctor --stdin` 
+                                                                         
+ID:      urn:snyk:interaction:d3553b42-861c-4692-babf-7e39148000e6 
+
+# exit code: 2
+# (snyk code test exits 1 when it reports findings at or above the threshold,
+#  so the exit code alone is not the gate -- the per-file filter below is.)
+# sarif written: NO
+
+=== filter: the four new/modified first-party source files ===
+SARIF MISSING at C:\Users\there\prin-s2-scratch\snyk-code-s2.sarif -- Snyk Code did not produce a machine-readable result.
+Record this leg as BLOCKED, not as a pass.
+# filter exit code: 2
+
+########################################################################
+# LEG 2 - Snyk Code via the configured MCP integration (Snyk MCP server)
+########################################################################
+# The CLI leg above is BLOCKED: the local 'snyk' CLI token has expired
+# (HTTP 401, SNYK-0005). Re-authenticating the CLI needs an interactive
+# browser login by the maintainer, which this read-only audit session
+# cannot and did not perform.
+#
+# Coding Standards section 6.4 permits Snyk Code through 'the configured
+# IDE or MCP integration'. The MCP server (server_name 'snyk', tool
+# snyk_code_scan) is authenticated and was used instead. The scan really
+# ran; it was not inferred from the CLI attempt.
+#
+# date (UTC): 2026-10-15T18:50:21Z
+# git HEAD: 8fd0ecc9949a607f2a7090fe39205f00bb0078c9
+# tracked changes: 0
+#
+# Scanned bytes (sha256 of each file as scanned):
+#   b41dfc137d1d10f0f9b60452f0f23093ed4ad6e9369f34343d96695957e6c048  python/prin/reporting/figure_generation.py
+#   4beafa0aa92f31edc10d695b23a4d874360fd04eb50fe3cf6264b3687195e607  tests/test_publication_figure_arguments.py
+#   3121610d9151ebb5fa4949e74ac90c689519b25b7566fc9e2f829a074b9b9e92  parity/test_parity_publication.py
+#   a1ad1d652210de3771a897643d3ecce649592a07404138e985a01f565b0edb69  EVIDENCE/exp002-d1-s1/root_cause_decomposition.py
+#
+# invocations and verbatim results:
+#
+#   mcp__snyk__snyk_code_scan {path: "C:\\dev\\PRIN", severity_threshold: "medium"}
+#     -> {"success":true,"issueCount":0,"issues":null}
+#
+#   mcp__snyk__snyk_code_scan {path: "C:\\dev\\PRIN\\python\\prin\\reporting\\figure_generation.py", severity_threshold: "low"}
+#     -> {"success":true,"issueCount":0,"issues":null}
+#
+#   mcp__snyk__snyk_code_scan {path: "C:\\dev\\PRIN\\tests\\test_publication_figure_arguments.py", severity_threshold: "low"}
+#     -> {"success":true,"issueCount":0,"issues":null}
+#
+#   mcp__snyk__snyk_code_scan {path: "C:\\dev\\PRIN\\parity\\test_parity_publication.py", severity_threshold: "low"}
+#     -> {"success":true,"issueCount":0,"issues":null}
+#
+#   mcp__snyk__snyk_code_scan {path: "C:\\dev\\PRIN\\EVIDENCE\\exp002-d1-s1\\root_cause_decomposition.py", severity_threshold: "low"}
+#     -> {"success":true,"issueCount":0,"issues":null}
+#
+==========================================================================
+RESULT
+==========================================================================
+  Snyk Code, the four changed first-party source files, severity>=low : 0 findings
+  Snyk Code, whole repository, severity>=medium (the Coding Standards
+  section 6.2 gate is '0 medium+ findings')                          : 0 findings
+  Repository-wide LOW total                                            : NOT re-derived
+    (S1 recorded 75 LOW repo-wide, all in untouched files. The MCP tool
+     returns findings inline rather than a SARIF file, so a repo-wide
+     low-severity enumeration was not re-counted this session. The
+     gate-relevant medium+ threshold was re-verified repo-wide and is 0.)
+
+  LEG STATUS: CLI leg BLOCKED (expired credentials, 401 SNYK-0005);
+              MCP leg COMPLETED. No dependency or lockfile changed in this
+              range, so Snyk Open Source, pip-audit and cargo audit are not
+              triggered by it. cargo audit red is DV-045 and out of scope.

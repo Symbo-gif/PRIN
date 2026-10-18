@@ -1,0 +1,57 @@
+# EXP-002 D1 S3 - Snyk Code, FIRST scan: one MEDIUM in a NEW S3 instrument (found, then remediated)
+# # started 2026-10-16T01:54:01Z # command: snyk code test . --severity-threshold=low --sarif-file-output=C:/Users/there/prin-s3-scratch/snyk-s3.sarif # exit code: 1 # ended 2026-10-16T01:57:01Z 
+# snyk 1.1306.2; account: Symbo-gif
+# scanned tree: git HEAD 9583eb4d + uncommitted EVIDENCE/exp002-d1-s3/ (the new instruments)
+# SARIF sha256: edf6f48a59e0f93b7f027be125fbe4e033f19328d68726d712ff9bdad68724ce  size: 718374 bytes (kept outside the repository)
+
+## The MEDIUM finding, verbatim from the CLI console
+490-
+491: ✗ [MEDIUM] Command Injection
+492-   Finding ID: d2315877-c328-4806-9a85-2c7b03da53e2
+493-   Path: EVIDENCE/exp002-d1-s3/suite_sampler.py, line 106
+494:   Info: Unsanitized input from an environment variable flows into subprocess.run, where it is used as a shell command. This may result in a Command Injection vulnerability.
+495-
+496-
+497-        
+498-💡 Tip
+
+## CLI Test Summary, verbatim
+│ Test Summary                                         │
+│                                                      │
+│   Organization:      symbo-gif                       │
+│   Test type:         Static code analysis            │
+│   Project path:      .                               │
+│                                                      │
+│   Total issues:   98                                 │
+│   Ignored issues: 0 [ 0 HIGH  0 MEDIUM  0 LOW ]      │
+│   Open issues:    98 [ 0 HIGH  1 MEDIUM  97 LOW ]    │
+
+## Bucketed by EVIDENCE/exp002-d1-s3/snyk_s3_filter.py (reads the SARIF on stdin)
+total findings (raw filesystem scan)      : 98
+findings in git-known paths               : 46
+findings only in untracked on-disk copies : 52
+result.level values (note=LOW, warning=MEDIUM): {'warning': 1, 'note': 97}
+
+=== ABOVE LOW anywhere in git-known paths (section 6.2 gate: must be 0): 1 finding(s) ===
+  python/CommandInjection EVIDENCE/exp002-d1-s3/suite_sampler.py:106
+
+=== S3-changed first-party files: 0 finding(s) ===
+  NONE
+
+=== S3-added instruments (EVIDENCE/exp002-d1-s3/): 1 finding(s) ===
+  python/CommandInjection EVIDENCE/exp002-d1-s3/suite_sampler.py:106
+
+=== F8 re-check: the two ratified S2 locations: 2 finding(s) ===
+  python/PT      EVIDENCE/exp002-d1-s2/changed_line_coverage.py:98
+  python/PT      EVIDENCE/exp002-d1-s2/decomposition_rerun_check.py:92
+
+=== F8 re-check: OTHER findings in S2 instruments (not in the F8 record): 1 finding(s) ===
+  python/PT      EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py:142
+
+# filter exit code: 0
+
+## Cause and remediation
+suite_sampler.py built the typeperf.exe path from os.environ['SystemRoot'] and passed it to subprocess.run;
+Snyk Code classified that environment-variable-to-subprocess flow as python/CommandInjection (MEDIUM).
+Remediation (not suppression): the executable is now the fixed absolute path C:\Windows\System32\typeperf.exe,
+and the counter is reported as null when that file is absent. See snyk-code-s3.txt for the rescan.

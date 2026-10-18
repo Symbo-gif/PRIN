@@ -1,0 +1,146 @@
+# The full bench-regression comparison table with timestamps and ANSI stripped: 69 rows, 6 advisory, 63 gating, and exactly ONE gating row past the +10% threshold
+# copied from /c/Users/there/prin-s4-scratch/bench_rows.txt at 2026-10-17T19:03:57Z
+
+# bench-regression gating analysis (corrected extraction)
+# date (UTC): 2026-10-17T18:18:05Z
+
+===== the comparator's verdict block, in full =====
+  Benchmark regression check FAILED (threshold +10% mean runtime):
+    - criterion/engine_step/step_parallel/16384: 4.185e+06 -> 4.62e+06 (+10.4%)
+    0.999  10.23 -> 10.22  criterion/control_buffer_read_under_contention/lock_free/0  ADVISORY
+    1.001  71.45 -> 71.52  criterion/control_buffer_read_under_contention/lock_free/1  ADVISORY
+    1.032  45.31 -> 46.77  criterion/control_buffer_read_under_contention/lock_free/4  ADVISORY
+    1.000  6.422 -> 6.421  criterion/control_buffer_read_under_contention/mutex/0  ADVISORY
+    1.143  52.36 -> 59.87  criterion/control_buffer_read_under_contention/mutex/1  ADVISORY
+    1.068  108.1 -> 115.4  criterion/control_buffer_read_under_contention/mutex/4  ADVISORY
+    1.005  2.843e+06 -> 2.858e+06  criterion/discrete_step_3band/fused_cpu_native
+    1.006  1.093e+07 -> 1.1e+07  criterion/discrete_step_3band/unfused_cpu_native
+    0.983  4.122e+07 -> 4.051e+07  criterion/engine_step/derivatives_parallel/1000000
+    1.003  5.22e+04 -> 5.237e+04  criterion/engine_step/derivatives_parallel/1024
+    0.993  1.338e+06 -> 1.329e+06  criterion/engine_step/derivatives_parallel/16384
+    0.999  1.449e+04 -> 1.447e+04  criterion/engine_step/derivatives_parallel/256
+    1.004  1.072e+07 -> 1.076e+07  criterion/engine_step/derivatives_parallel/262144
+    0.998  2.073e+05 -> 2.068e+05  criterion/engine_step/derivatives_parallel/4096
+    0.998  2.805e+06 -> 2.8e+06  criterion/engine_step/derivatives_parallel/65536
+    1.019  9.523e+07 -> 9.706e+07  criterion/engine_step/derivatives_serial/1000000
+    0.983  6.76e+04 -> 6.649e+04  criterion/engine_step/derivatives_serial/1024
+    1.001  1.342e+06 -> 1.344e+06  criterion/engine_step/derivatives_serial/16384
+    1.021  2.647e+04 -> 2.701e+04  criterion/engine_step/derivatives_serial/256
+    1.012  2.315e+07 -> 2.343e+07  criterion/engine_step/derivatives_serial/262144
+    1.015  2.253e+05 -> 2.287e+05  criterion/engine_step/derivatives_serial/4096
+    1.021  5.622e+06 -> 5.743e+06  criterion/engine_step/derivatives_serial/65536
+    1.010  2.178e+08 -> 2.2e+08  criterion/engine_step/step_parallel/1000000
+    1.028  2.465e+05 -> 2.535e+05  criterion/engine_step/step_parallel/1024
+    1.104  4.185e+06 -> 4.62e+06  criterion/engine_step/step_parallel/16384
+    1.038  6.639e+04 -> 6.888e+04  criterion/engine_step/step_parallel/256
+    1.002  5.19e+07 -> 5.2e+07  criterion/engine_step/step_parallel/262144
+    1.013  9.924e+05 -> 1.005e+06  criterion/engine_step/step_parallel/4096
+    0.993  1.358e+07 -> 1.349e+07  criterion/engine_step/step_parallel/65536
+    1.006  1.199e+08 -> 1.206e+08  criterion/mean_field_rk4_n1m/cpu_native
+    0.985  3.957e+06 -> 3.896e+06  criterion/phase_tracker_bridge_baseline/moderate_32obj_28osc
+    0.991  1.742e+06 -> 1.726e+06  criterion/phase_tracker_bridge_baseline/small_4obj_28osc
+    1.074  5.875e+08 -> 6.309e+08  criterion/resonance_layer_bridge_baseline/moderate_128osc_64dims_32batch
+    0.985  1.113e+07 -> 1.096e+07  criterion/resonance_layer_bridge_baseline/small_32osc_16dims_8batch
+    0.991  2.061e+06 -> 2.043e+06  criterion/sparse_knn_n16k_k14/cpu_native
+    0.997  4.007e+07 -> 3.996e+07  criterion/spmv_coupling/kuramoto_coupling_parallel/1000000
+    1.000  4.651e+04 -> 4.652e+04  criterion/spmv_coupling/kuramoto_coupling_parallel/1024
+    0.998  7.427e+05 -> 7.411e+05  criterion/spmv_coupling/kuramoto_coupling_parallel/16384
+    1.007  1.211e+04 -> 1.219e+04  criterion/spmv_coupling/kuramoto_coupling_parallel/256
+    1.024  7.269e+06 -> 7.442e+06  criterion/spmv_coupling/kuramoto_coupling_parallel/262144
+    0.999  1.857e+05 -> 1.855e+05  criterion/spmv_coupling/kuramoto_coupling_parallel/4096
+    0.992  1.901e+06 -> 1.886e+06  criterion/spmv_coupling/kuramoto_coupling_parallel/65536
+    1.036  5.943e+07 -> 6.156e+07  criterion/spmv_coupling/kuramoto_coupling_serial/1000000
+    1.024  6.089e+04 -> 6.238e+04  criterion/spmv_coupling/kuramoto_coupling_serial/1024
+    0.988  7.695e+05 -> 7.604e+05  criterion/spmv_coupling/kuramoto_coupling_serial/16384
+    1.008  2.479e+04 -> 2.499e+04  criterion/spmv_coupling/kuramoto_coupling_serial/256
+    1.038  1.35e+07 -> 1.402e+07  criterion/spmv_coupling/kuramoto_coupling_serial/262144
+    1.009  2.024e+05 -> 2.042e+05  criterion/spmv_coupling/kuramoto_coupling_serial/4096
+    1.088  3.203e+06 -> 3.485e+06  criterion/spmv_coupling/kuramoto_coupling_serial/65536
+    1.030  2.182e+09 -> 2.249e+09  criterion/sweep_parallel/run_sweep_parallel/16_configs
+    1.026  4.218e+09 -> 4.327e+09  criterion/sweep_parallel/run_sweep_parallel/32_configs
+    0.993  5.807e+08 -> 5.768e+08  criterion/sweep_parallel/run_sweep_parallel/4_configs
+    1.023  8.207e+09 -> 8.392e+09  criterion/sweep_parallel/run_sweep_parallel/64_configs
+    1.024  1.117e+09 -> 1.144e+09  criterion/sweep_parallel/run_sweep_parallel/8_configs
+    1.008  4.988e+09 -> 5.027e+09  criterion/sweep_parallel/run_sweep_serial/16_configs
+    1.019  9.766e+09 -> 9.95e+09  criterion/sweep_parallel/run_sweep_serial/32_configs
+    1.004  1.279e+09 -> 1.284e+09  criterion/sweep_parallel/run_sweep_serial/4_configs
+    1.021  1.925e+10 -> 1.965e+10  criterion/sweep_parallel/run_sweep_serial/64_configs
+    1.011  2.531e+09 -> 2.558e+09  criterion/sweep_parallel/run_sweep_serial/8_configs
+    0.996  675.6 -> 672.7  criterion/training_hooks_on_epoch_end
+    1.000  7.789 -> 7.788  criterion/training_hooks_on_step_end/0
+    1.000  50.27 -> 50.28  criterion/training_hooks_on_step_end/64
+    0.996  10.95 -> 10.9  criterion/training_hooks_on_step_end/8
+    0.996  3.343e-05 -> 3.331e-05  pytest/tests/test_dlpack_bridge.py::TestDlpackBenchmarks::test_negate_batched_latency[float32]
+    0.988  3.752e-05 -> 3.707e-05  pytest/tests/test_dlpack_bridge.py::TestDlpackBenchmarks::test_negate_batched_latency[float64]
+    1.002  5.615e-06 -> 5.625e-06  pytest/tests/test_dlpack_bridge.py::TestDlpackBenchmarks::test_negate_round_trip_latency[float32]
+    0.995  7.105e-06 -> 7.069e-06  pytest/tests/test_dlpack_bridge.py::TestDlpackBenchmarks::test_negate_round_trip_latency[float64]
+    0.952  0.6444 -> 0.6133  pytest/tests/test_train_bridge.py::TestTrainBridgeBenchmarks::test_resonance_layer_forward_backward_round_trip_latency_moderate
+    0.941  0.01253 -> 0.01178  pytest/tests/test_train_bridge.py::TestTrainBridgeBenchmarks::test_resonance_layer_forward_backward_round_trip_latency_small
+  ADVISORY (not gating) past threshold: criterion/control_buffer_read_under_contention/mutex/1: 52.36 -> 59.87 (+14.3%)
+  ##[error]Process completed with exit code 1.
+  ##[group]Run actions/upload-artifact@v4
+  with:
+    name: nightly-benchmarks-38976820419-2
+    path: /home/runner/work/PRIN/PRIN/benchmarks/results/nightly-38976820419-2
+    if-no-files-found: error
+    retention-days: 30
+    compression-level: 6
+    overwrite: false
+    include-hidden-files: false
+  env:
+    REFERENCE_SHA: 4590d611f34eae5dfcdadb99b562aacf998d6e94
+    RUSTUP_TOOLCHAIN: 1.98.1
+    PIP_CONSTRAINT: /home/runner/work/PRIN/PRIN/arms/candidate/ci/docs-constraints.txt
+    EVIDENCE_DIR: /home/runner/work/PRIN/PRIN/benchmarks/results/nightly-38976820419-2
+    pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+    PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+    Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+    Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+    Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+    LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+    CARGO_HOME: /home/runner/.cargo
+    CARGO_INCREMENTAL: 0
+    CARGO_TERM_COLOR: always
+    CACHE_ON_FAILURE: false
+  ##[endgroup]
+  (node:20700) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+  (Use `node --trace-deprecation ...` to show where the warning was created)
+
+===== row census =====
+  total comparison rows        : 69
+  rows marked ADVISORY         : 6
+  rows NOT marked ADVISORY     : 63
+
+===== GATING rows past the +10% threshold (the ones that failed the job) =====
+  ratio=1.104  4.185e+06 -> 4.62e+06 criterion/engine_step/step_parallel/16384
+  count: 1
+
+===== all gating rows, worst 25 by ratio =====
+    1.104  4.185e+06 -> 4.62e+06  criterion/engine_step/step_parallel/16384
+    1.088  3.203e+06 -> 3.485e+06  criterion/spmv_coupling/kuramoto_coupling_serial/65536
+    1.074  5.875e+08 -> 6.309e+08  criterion/resonance_layer_bridge_baseline/moderate_128osc_64dims_32batch
+    1.038  6.639e+04 -> 6.888e+04  criterion/engine_step/step_parallel/256
+    1.038  1.35e+07 -> 1.402e+07  criterion/spmv_coupling/kuramoto_coupling_serial/262144
+    1.036  5.943e+07 -> 6.156e+07  criterion/spmv_coupling/kuramoto_coupling_serial/1000000
+    1.030  2.182e+09 -> 2.249e+09  criterion/sweep_parallel/run_sweep_parallel/16_configs
+    1.028  2.465e+05 -> 2.535e+05  criterion/engine_step/step_parallel/1024
+    1.026  4.218e+09 -> 4.327e+09  criterion/sweep_parallel/run_sweep_parallel/32_configs
+    1.024  7.269e+06 -> 7.442e+06  criterion/spmv_coupling/kuramoto_coupling_parallel/262144
+    1.024  6.089e+04 -> 6.238e+04  criterion/spmv_coupling/kuramoto_coupling_serial/1024
+    1.024  1.117e+09 -> 1.144e+09  criterion/sweep_parallel/run_sweep_parallel/8_configs
+    1.023  8.207e+09 -> 8.392e+09  criterion/sweep_parallel/run_sweep_parallel/64_configs
+    1.021  5.622e+06 -> 5.743e+06  criterion/engine_step/derivatives_serial/65536
+    1.021  2.647e+04 -> 2.701e+04  criterion/engine_step/derivatives_serial/256
+    1.021  1.925e+10 -> 1.965e+10  criterion/sweep_parallel/run_sweep_serial/64_configs
+    1.019  9.766e+09 -> 9.95e+09  criterion/sweep_parallel/run_sweep_serial/32_configs
+    1.019  9.523e+07 -> 9.706e+07  criterion/engine_step/derivatives_serial/1000000
+    1.015  2.253e+05 -> 2.287e+05  criterion/engine_step/derivatives_serial/4096
+    1.013  9.924e+05 -> 1.005e+06  criterion/engine_step/step_parallel/4096
+    1.012  2.315e+07 -> 2.343e+07  criterion/engine_step/derivatives_serial/262144
+    1.011  2.531e+09 -> 2.558e+09  criterion/sweep_parallel/run_sweep_serial/8_configs
+    1.010  2.178e+08 -> 2.2e+08  criterion/engine_step/step_parallel/1000000
+    1.009  2.024e+05 -> 2.042e+05  criterion/spmv_coupling/kuramoto_coupling_serial/4096
+    1.008  4.988e+09 -> 5.027e+09  criterion/sweep_parallel/run_sweep_serial/16_configs
+
+===== any explicit 'gated'/'GATED' summary line? =====
+  ADVISORY (not gating) past threshold: criterion/control_buffer_read_under_contention/mutex/1: 52.36 -> 59.87 (+14.3%)

@@ -1,0 +1,41 @@
+# PROVENANCE: this file is a VERBATIM TRANSCRIPTION of the console output of the
+# first execution of EVIDENCE/exp002-d1-s4/gate/isolated-throughput.sh, which was
+# run without output redirection and so produced no capture file of its own.
+# It is transcribed, not captured. The second execution (run2-captured.txt) IS an
+# authentic capture and is the primary record; this transcription is retained
+# because it contains the two FAILING iterations that reproduce the required-leg
+# red, and discarding it would understate the evidence.
+#
+# Transcribed 2026-10-17, session EXP-002-D1 S4.
+
+# isolated characterization of the failing throughput assertion
+# date (UTC): 2026-10-17T21:52:12Z
+# git HEAD: 814b670c2aafa4b1e6b58e3f847613928c813e95   tracked changes: 0   untracked: 2
+# test: tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression
+# note: the test asserts a wall-clock ratio, so ambient host load is part of
+#       the measurement.  Host CPU is sampled before each iteration.
+
+== iteration 1   host cpu before: 12.2%
+   exit: 0   wall: 26s
+   summary: ======================== 1 passed, 2 warnings in 9.85s ========================
+
+== iteration 2   host cpu before: 57.7%
+   exit: 0   wall: 14s
+   summary: ======================== 1 passed, 2 warnings in 6.67s ========================
+
+== iteration 3   host cpu before: 97.1%
+   exit: 0   wall: 17s
+   summary: ======================== 1 passed, 2 warnings in 7.29s ========================
+
+== iteration 4   host cpu before: 99.7%
+   exit: 1   wall: 18s
+   summary: ======================== 1 failed, 2 warnings in 9.19s ========================
+   measured: Throughput ratio 2.13
+
+== iteration 5   host cpu before: 97.2%
+   exit: 1   wall: 18s
+   summary: ======================== 1 failed, 2 warnings in 8.23s ========================
+   measured: Throughput ratio 3.42
+
+# iterations: 5   passed: 3   failed: 2
+# finished 2026-10-17T21:54:23Z

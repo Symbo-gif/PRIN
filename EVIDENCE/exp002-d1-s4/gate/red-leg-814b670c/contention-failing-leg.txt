@@ -1,0 +1,17 @@
+source: C:\Users\there\prin-s4-scratch\full\samples.jsonl
+samples: 108  span 20:07:56 .. 21:44:01
+
+== whole-leg host contention ==
+  host cpu_percent : median 96.2  mean 83.4  max 99.9
+  samples >= 90%   : 79 / 108
+  samples >= 95%   : 65 / 108
+  pytest cpu-s/wall-s: median 0.483
+
+== samples bracketing the failure window 20:28:54 .. 20:29:07 ==
+  (no sample fell inside the window; showing nearest before/after)
+  20:28:52Z t=1270s host_cpu=97.4% avail_mb=10851 mem=66.5%
+      pytest: procs=2 cpu_s=306.0 threads=75
+      other cpu since last sample: System Idle Process=30.9s, System=27.4s, mc-fw-host.exe=22.0s, Devin.exe=20.0s, svchost.exe=10.7s
+  20:29:43Z t=1320s host_cpu=92.4% avail_mb=10821 mem=66.6%
+      pytest: procs=2 cpu_s=327.31 threads=75
+      other cpu since last sample: System Idle Process=57.5s, System=23.2s, Devin.exe=22.4s, mc-fw-host.exe=19.0s, java.exe=13.7s

@@ -1,0 +1,231 @@
+# Cold review — `git diff 5ba0129e..HEAD` (13 commits, `hotfix/exp002-d1-figure-parity`)
+
+Read-only. No shell command was run; everything below was established with `read_file`, `grep_search`, `glob` and `list_directory` against `C:\dev\PRIN` and the two supplied files. Where a claim needs command output to close, it is marked `UNVERIFIED`.
+
+---
+
+## Findings
+
+### 1. The 12× loosening of the notebook hang detector is calibrated to a host state that was never shown to be the state in which the finding occurred
+
+- **Severity:** medium
+- **Where:** `tests/test_notebooks.py:61`
+- **Quote:**
+  ```
+      "02_clevr_n_binding.ipynb": 10800,
+  ```
+- **Claim:** `EXP002D1-S2-F2` was raised because notebook 02 exceeded 900 s in the **S1 and S2** full-suite runs. Neither of those runs has any host-load measurement: `suite_sampler.py` is new in this range, and `EVIDENCE/exp002-d1-s1/` and `EVIDENCE/exp002-d1-s2/` contain no `*.jsonl` sampler output at all. S2's own finding text warns against the attribution this disposition adopts — "**S2's run does not support a purely load-induced attribution**: it was far less contended than S1's (2:03:35 vs 4:11:33, ~89 % idle at start, this session deliberately added no concurrent load)" (`DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:882`). The single measurement that sets the 10,800 s bound (3,484 s) was taken in an experiment run while the review session's own tooling saturated the host — the committed kernel-episode record attributes 8,799 CPU-seconds to `rg.exe` and 930 s to `Devin.exe` during notebook 02's episode (`EVIDENCE/exp002-d1-s3/f2/analysis-observed-run-kernels.txt`), and the `rg.exe` storm is recorded as 134 children of one `Devin.exe` process. Route (a) is sanctioned by S2 and by Testing Standards §7 item 2, and the trade-off is disclosed at audit:1281-1286; but the cheaper mitigation (reduce the contention the gate runs under) is recorded at audit:1441-1445 as "considered and not done", so the shipped suite's per-cell hang detector is permanently 12× looser on evidence from a session-created host state, while the two failures that motivated it remain unexplained. No committed run of the required gate at the new bounds exists (§S3.7 is the placeholder "*Appended after the last review round.*"), so the claim that this resolves F2 is not yet evidenced either.
+- **Reproduce:**
+  ```
+  rg -n "does not support a purely load-induced attribution" DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+  rg --files EVIDENCE/exp002-d1-s1 EVIDENCE/exp002-d1-s2 | rg -i "jsonl|samples"
+  rg -n "rg.exe=|Devin.exe=" EVIDENCE/exp002-d1-s3/f2/analysis-observed-run-kernels.txt
+  rg -n "Appended after the last review round" DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+  ```
+
+### 2. The Snyk evidence stops four commits short of HEAD, and the filter's "S3-changed first-party files" list omits the third changed file
+
+- **Severity:** medium
+- **Where:** `EVIDENCE/exp002-d1-s3/snyk_s3_filter.py:60`
+- **Quote:**
+  ```
+      "tests/test_publication_figure_arguments.py",
+  ```
+- **Claim:** `S3_CHANGED` (lines 58-61) lists two files, but the range changes three first-party files — `python/prin/reporting/figure_generation.py`, `tests/test_publication_figure_arguments.py` and `tests/test_notebooks.py` — so the "S3-changed first-party files" bucket structurally cannot report a finding in the third. Both committed scans predate it: the last one ended `2026-10-16T03:18:29Z` on "git HEAD 33923be5 + uncommitted edits" (`snyk-code-s3-after-review-fixes.txt:2,4`), while `tests/test_notebooks.py` was changed at `07:34:39Z` (`91f3327a`) and its 10,800 s bound is derived from a treatment run that only finished at `07:07:12Z` (`f2/contention-experiment/run.txt`), so that edit provably postdates the scan. Four commits landed after the scan (`0970c467`, `91f3327a`, `3a0e5e40`, `b2156918`), adding `contention_experiment.sh`, `f2_in_suite_vs_alone.py`, `paired_comparison.py`, `verify_manifest_runs.py`, `static_gate.sh` and `delta_reaudit.sh`. The audit's "**0 findings** in the two changed first-party files and in the S3-added instruments" (audit:1327-1328) and the bundle README's unqualified "The Snyk Code rescan reports no finding in any of them." (`EVIDENCE/exp002-d1-s3/README.md:27`) are therefore not evidenced at HEAD — unlike the ruff/mypy sentence directly above it, which *is* hedged as pending the closing gate. Whether any of those six instruments existed on disk at 03:18Z is `UNVERIFIED` (file write times are not in the diff); `paired_comparison.py` cannot have produced its committed output before `07:17:27Z`.
+- **Reproduce:**
+  ```
+  rg -n "S3_CHANGED" -A 5 EVIDENCE/exp002-d1-s3/snyk_s3_filter.py
+  rg -n "^# # started|^# scanned tree" EVIDENCE/exp002-d1-s3/snyk-code-s3-after-review-fixes.txt
+  git log --format="%h %ad %s" --date=iso-strict 33923be5..HEAD
+  git diff --stat 5ba0129e..HEAD -- python/ tests/
+  ```
+
+### 3. Two `rg.exe` process-count claims cite an artefact that cannot contain them and that ends before the period described
+
+- **Severity:** medium
+- **Where:** `EVIDENCE/exp002-d1-s3/f2/README.md:66`
+- **Quote:**
+  ```
+  generator ran 30 m 37 s, and the host stayed at ~100% with 87 → 29 → 64 `rg.exe`
+  processes for more than 28 minutes after it had exited
+  ([`analysis-contention-timeline.txt`](analysis-contention-timeline.txt)).
+  ```
+- **Claim:** The cited artefact cannot support this. `analysis-contention-timeline.txt` has 26 rows covering `06:08:06Z`–`06:41:55Z`, and the load generator's own record says it ended at `06:42:29Z` (`f2/contention-experiment/load/run.txt`), so the file stops 34 s *before* the exit it is cited for, let alone 28 minutes after. It also carries no process **counts** — `suite_sampler.py:_top_cpu` emits `{"name", "cpu_seconds"}` grouped by name, and the rows read `rg.exe=48`, `rg.exe=158`, i.e. CPU-seconds. The same applies to line 54, "`rg.exe` processes fell from 116 to 2": the only committed `rg.exe` count anywhere in the bundle is the single 04:37Z snapshot (`f2/rg-storm-snapshot-during-suite.txt:3`, 134), and `notebook_timing.py` — which produced `treatment.json`, the only record covering the post-load period — records no process names at all. The counts may well have been observed ad hoc; that no committed artefact contains them is verified, the observation itself is `UNVERIFIED`.
+- **Reproduce:**
+  ```
+  tail -8 EVIDENCE/exp002-d1-s3/f2/analysis-contention-timeline.txt
+  cat EVIDENCE/exp002-d1-s3/f2/contention-experiment/load/run.txt
+  rg -n "rg\.exe" EVIDENCE/exp002-d1-s3 --glob '!cold-review/**'
+  rg -n "top_other_cpu_since_last_sample|cpu_seconds" EVIDENCE/exp002-d1-s3/suite_sampler.py
+  ```
+
+### 4. A per-cell timeout is sized from whole-notebook wall durations
+
+- **Severity:** low
+- **Where:** `tests/test_notebooks.py:74`
+- **Quote:**
+  ```
+      "02_clevr_n_binding.ipynb": 3484.0,
+  ```
+- **Claim:** `NOTEBOOK_CELL_TIMEOUT_SECONDS` is passed as nbclient's per-cell `timeout=` (line 325), but every value in `RECORDED_CONTENDED_MAX_SECONDS` is a whole-notebook duration: pytest `--durations` test times for 01/03/04 and `notebook_timing.py`'s `wall_seconds` for 02. The bundle does record per-cell contended data for notebook 02 — its slowest cell at 1,925.97 s (`f2/analysis-paired-comparison.txt:13`) — which under the same stated rule (3× rounded up to a multiple of 900) gives 6,300 s, not 10,800 s. The direction is safe (over-provisioning cannot cause a spurious failure), but the documented rule "3 × the largest completed contended duration recorded for that notebook" does not say which duration it means, and the per-cell reading of it is the one the constant's own header asserts ("Per-notebook ``nbclient`` per-cell timeout").
+- **Reproduce:**
+  ```
+  rg -n "slowest cell" EVIDENCE/exp002-d1-s3/f2/analysis-paired-comparison.txt
+  rg -n "timeout=NOTEBOOK_CELL_TIMEOUT_SECONDS|per-cell timeout" tests/test_notebooks.py
+  ```
+
+### 5. "neither can move without the other" overstates a one-directional assertion
+
+- **Severity:** low
+- **Where:** `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1273`
+- **Quote:**
+  ```
+  Two fast tests pin each bound to its recorded worst case, so neither can move
+  without the other.
+  ```
+- **Claim:** The pinning test asserts only `bound >= BOUND_MARGIN * recorded` (`tests/test_notebooks.py:294`), so a bound can be *raised* arbitrarily — further weakening the hang detector that finding 1 is about — with no test failing and no requirement to record new evidence. Only lowering a bound, or recording a slower worst case, is caught. `f2/README.md:107-108` states the same guarantee correctly ("a bound cannot be lowered, or a slower worst case recorded, without the other moving"); the audit and the `91f3327a` commit message both state the stronger, false form.
+- **Reproduce:**
+  ```
+  rg -n "bound >= BOUND_MARGIN" tests/test_notebooks.py
+  rg -n "neither can move" DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+  rg -n "cannot be lowered" EVIDENCE/exp002-d1-s3/f2/README.md
+  ```
+
+### 6. Two committed verification records cannot be reproduced by the instruments committed beside them
+
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/immutability-before.txt:11`
+- **Quote:**
+  ```
+  ## I2 EVIDENCE/exp002-d1-s1/ (S1 evidence; only the README may change)
+  ```
+- **Claim:** The shipped `immutability.sh:33` prints a different I2 header ("…only the README may change, **and only by added lines**") and unconditionally prints either an `ENFORCED:` line or the `(informational: …)` line at `immutability.sh:45/47`; the committed record has neither, so it was produced by the pre-round-2 script and was not regenerated after the T2-8 fix. Same defect in `index-selfcheck-s1.txt:5-7`, which lacks the `nested READMEs used:` line that `index_selfcheck.py:134` prints unconditionally. The bundle README's "Regenerating" section presents these commands as reproducible, and `docstring-only-check.txt` *was* regenerated for exactly this reason (its header records the earlier wrong range), so the practice was applied inconsistently.
+- **Reproduce:**
+  ```
+  bash EVIDENCE/exp002-d1-s3/immutability.sh fd8854ed 5ba0129e
+  .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-d1-s1
+  ```
+  and compare with the two committed records.
+
+### 7. The F6 "failing test first" record cites a line that does not exist in the committed test
+
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/f6-test-red-before-fix.txt:18`
+- **Quote:**
+  ```
+  tests\test_publication_figure_arguments.py:191: in test_fig13_series_labels_follow_the_reference
+  ```
+- **Claim:** That assertion is at line **194** of the committed file (`tests/test_publication_figure_arguments.py:194`), so the red run was executed against a working copy that differs from the committed one by three lines above the assertion. The record's header declares only ` M tests/test_publication_figure_arguments.py` against HEAD `d53ab885`, which already contained the F5 docstring change (`2db18fc3`, net +3 lines) — three lines is exactly that delta, so the copy used for the red run appears to have carried the *pre*-F5 docstring. The substance of the record is unaffected (the same assertion, the same `'_child0' != 'Obj 0'` failure), but the exact composition of the working copy is `UNVERIFIED` because I cannot read the file at `d53ab885`. Contrast `f2/test-red-before-fix.txt:19`, whose `tests\test_notebooks.py:294` does match the committed file.
+- **Reproduce:**
+  ```
+  rg -n "assert \[c.get_label\(\) for c in ax.collections\]" tests/test_publication_figure_arguments.py
+  rg -n ":191:" EVIDENCE/exp002-d1-s3/f6-test-red-before-fix.txt
+  git show d53ab885:tests/test_publication_figure_arguments.py | rg -n "assert \[c.get_label"
+  ```
+
+### 8. `notebook_timing.py` still documents the bound this change set removed
+
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/notebook_timing.py:194`
+- **Quote:**
+  ```
+          timeout: nbclient per-cell timeout in seconds (the test uses 900).
+  ```
+- **Claim:** Contradicted by `tests/test_notebooks.py:59-64` at HEAD (2700 / 10800 / 1800 / 1800). The instrument's `--timeout` default is still `900` (line ~275) and the bundle README's "Regenerating" block invokes it with no `--timeout`, so following the documented command no longer reproduces the conditions of the test it claims to mirror ("Runs one shipped notebook the way `tests/test_notebooks.py` does"). The same commit (`91f3327a`) touched this file and changed the test.
+- **Reproduce:**
+  ```
+  rg -n "the test uses 900|--timeout\", type=int" EVIDENCE/exp002-d1-s3/notebook_timing.py
+  rg -n "NOTEBOOK_CELL_TIMEOUT_SECONDS = \{" -A 6 tests/test_notebooks.py
+  ```
+
+### 9. §S3.6 asserts verification results for two bundles that have no committed record, and cites a closing gate that is still a placeholder
+
+- **Severity:** low
+- **Where:** `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1407`
+- **Quote:**
+  ```
+  link resolving) reports **0 unindexed, 0 dangling** for `exp002-d1-s1` (after F4),
+  ```
+- **Claim:** The continuation (line 1408) extends the result to `exp002-d1-s2` and `exp002-d1-s3`, but the only committed output is `index-selfcheck-s1.txt`; there is no `index-selfcheck-s2.txt` or `-s3.txt` in the bundle. The same paragraph's "(now evidenced by the closing gate)" (line 1411) points at §S3.7, which at HEAD reads "*Appended after the last review round.*" and `static_gate.sh` has no committed output. Both statements are in the present perfect with no pending-qualifier, unlike the README's ruff/mypy sentence which explicitly defers to the closing gate. (I read `EVIDENCE/exp002-d1-s3/README.md`, `f2/README.md` and `cold-review/README.md` against their directories and found no obviously unindexed file, but I cannot execute the checker, so the 0/0 result itself is `UNVERIFIED`.)
+- **Reproduce:**
+  ```
+  rg --files EVIDENCE/exp002-d1-s3 | rg -i "index-selfcheck|static-gate|closing"
+  .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-d1-s2
+  .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-d1-s3
+  ```
+
+### 10. Experiment cleanup force-kills any host process whose command line mentions a test filename
+
+- **Severity:** low
+- **Where:** `EVIDENCE/exp002-d1-s3/contention_experiment.sh:67`
+- **Quote:**
+  ```
+    powershell.exe -NoProfile -Command "\$a = 'suite_run.sh contention' + '-load'; \$b = 'test_exp002_' + 'driver.py'; Get-CimInstance Win32_Process | Where-Object { \$_.CommandLine -like ('*' + \$a + '*') -or \$_.CommandLine -like ('*' + \$b + '*') } | ForEach-Object { taskkill /PID \$_.ProcessId /T /F | Out-Null }" > /dev/null 2>&1
+  ```
+- **Claim:** The match is host-wide by command-line substring, then `taskkill /T /F` on the whole tree. Any unrelated process that merely mentions `test_exp002_driver.py` — an editor, a language server, another reviewer's `rg` — is force-killed. The comment above it (line 65-66) shows the self-match hazard was considered and correctly defused by fragment assembly, but not the collateral-match hazard; the script already holds the load generator's own PID in `$LOAD` and could kill that tree instead. Testing Standards §7 item 5 requires that "any cleanup is restricted to the session-owned process tree — never a blanket kill"; this is not a blanket kill of all `python`, but it is not restricted to the session-owned tree either. `powershell.exe` is also resolved via `PATH`, against the "absolute executables" discipline §6.1 states and which the round-2 fixes applied to the Python instruments.
+- **Reproduce:**
+  ```
+  sed -n '60,70p' EVIDENCE/exp002-d1-s3/contention_experiment.sh
+  rg -n "session-owned process tree" DOCS/standards/Testing_Standards.md
+  ```
+
+### 11. The audit's own header still says S2 is pending, and the append-only rule S3 enforces makes it uncorrectable
+
+- **Severity:** low
+- **Where:** `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:14`
+- **Quote:**
+  ```
+  **Stage status:** S1 **complete** (2026-10-15 UTC); S2, S3, S4 pending.
+  ```
+- **Claim:** Contradicted by the same file's appended `## S2` and `## S3` sections and by the S3 brief, whose status line this change set *did* update to "IN PROGRESS (S2 complete; S3 started 2026-10-16 UTC …)". Because `immutability.sh` I3 enforces zero deleted lines on this file, the header can never be corrected in place, and neither the appended §S3.0 entry-state table nor §S3.9's deviation list notes the stale header. A reader taking the header at face value would misdate the whole document.
+- **Reproduce:**
+  ```
+  sed -n '14p' DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+  rg -n "^## S2|^## S3|^### S3\.0" DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+  git diff 5ba0129e..HEAD -- DOCS/sessions/contingencies/2026-10-14-exp002-d1-s3-correction-remediation.md
+  ```
+
+### 12. Two quantitative paraphrases in the new bound comment do not match the evidence they cite
+
+- **Severity:** nit
+- **Where:** `tests/test_notebooks.py:57`
+- **Quote:**
+  ```
+  #: 37-73 s, two orders of magnitude below), but no longer fail a leg that is
+  ```
+- **Claim:** Only notebook 02 is two orders of magnitude below its bound (10800/71.1 = 152×). The other three are 2700/73.3 = 37×, 1800/44.5 = 40× and 1800/37.0 = 49× — between one and two orders. Line 51's "the kernel receives a fifth to a third of one core" likewise understates the recorded range, which the cited bundle gives as 0.17–0.33 CPU-s per wall-second (`f2/README.md:50`, `f2/analysis-observed-run-kernels.txt`); 0.17 and 0.18 are below a fifth. Neither affects the conclusion.
+- **Reproduce:**
+  ```
+  python -c "print([round(b/a,1) for b,a in [(2700,73.3),(10800,71.1),(1800,44.5),(1800,37.0)]])"
+  rg -n "0.17–0.33|0\.17 " EVIDENCE/exp002-d1-s3/f2/README.md EVIDENCE/exp002-d1-s3/f2/analysis-observed-run-kernels.txt
+  ```
+
+### 13. "`HEAD~` (`5ba0129e`)" names two different revisions
+
+- **Severity:** nit
+- **Where:** `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1278`
+- **Quote:**
+  ```
+  incidentally, typing only; they are present at `HEAD~` (`5ba0129e`).
+  ```
+- **Claim:** `5ba0129e` is the range base, thirteen commits below HEAD (`b2156918`); `git rev-parse HEAD~` resolves to `3a0e5e40`, and at the commit that made the typing change (`91f3327a`) `5ba0129e` was `HEAD~10`. The substance — that the three bare-`dict` annotations pre-date S3 — is correct and visible in the diff (`-def _load(path: Path) -> dict:` / `-def _cells(document: dict, cell_type: str) -> list[dict]:`), but the revision citation is wrong and this document is the cycle's record of authority.
+- **Reproduce:**
+  ```
+  git rev-parse HEAD~; git rev-list --count 5ba0129e..HEAD
+  git diff 5ba0129e..HEAD -- tests/test_notebooks.py | rg -n "^-def _(load|cells)"
+  ```
+
+---
+
+## Checked, no finding
+
+- **Frozen / immutable artefacts.** The range touches nothing under `DOCS/experiments/EXP-002-…/`, `benchmarks/results/EXP-002/`, `.github/`, `DOCS/standards/`, `Cargo.toml`, `Cargo.lock` or `pyproject.toml`. No `SHA256SUMS*` bundle is touched: the six in the repo (`EVIDENCE/{0159,0160,0161,0162,0163,ea007}/verification/`) are untouched, and `EVIDENCE/exp002-d1-s1/` — whose README this range edits by a single added row — carries none, as `immutability-before.txt:26` records and the directory listing confirms. `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md` is a pure append (`@@ -1128,3 +1128,331 @@`, no `-` lines).
+- **Test weakening.** No `skip`, `skipif`, `xfail`, deselection, marker or config change anywhere in the range; no assertion removed or loosened; `pyproject.toml` and every `conftest.py` untouched. The only two test-file edits are the timeout constant plus two added fast tests, and one added fast test.
+- **F6 correctness.** `python/prin/reporting/figure_generation.py:960` restores `label=f"Obj {label}" if index < 5 else None` and matches the frozen reference exactly at `DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/utils/figure_generation.py:936` (`label=f"Obj {lbl}" if j < 5 else None`); the new test's `startswith("_")` form is robust to matplotlib's `_child<n>` counter.
+- **F7 correctness.** Every derived quantity the reworded docstring names is present in the module — `figure_generation.py:725-727` (`diff = pt["mean"] - sa["mean"]`, `diff ± 0.005`) and `:734-737` (error bars from stored CI limits) mirror the reference at its lines 687-705, which I read.
+- **Cross-checked numbers.** `6326 passed, 184 skipped … 9740.65s (2:42:20)`, the four in-suite durations (2974.97 / 678.94 / 382.10 / 367.30), the 102-sample 98–100 % window, the 2.8 → 0.01 CPU-s/s medians, the standalone 73.3 / 71.1 / 44.5 / 37.0 s, the recorded maxima 800.07 / 408.96 / 389.81, `499 passed … (0:30:37)`, the five `RUN-*` directories, the 172-entry manifest, `exp002_driver.py:1364`, `snyk_sarif_filter.py:142`, the `e0f59253` / `b41dfc13` digests, the 33-passed / 37-collected counts, and the S1/S2 notebook-02 failures (so the "censored" labels are right) all reconcile against the files that state them.
+- **Security of the instruments.** Each Python instrument's subprocess use is a fixed argv with an absolute executable and no shell; the caller-input surfaces are as the README describes (closed name sets, `[0-9a-f]{7,40}` revisions, `git ls-tree` membership before `git show REV:PATH`, the `[A-Za-z0-9][A-Za-z0-9_-]*` run label, stdin). The MEDIUM command-injection remediation is real, not a suppression: `TYPEPERF` is now a literal path and the first-scan record is retained. No secret material; committed `C:\Users\there\…` host paths match established practice in `EVIDENCE/exp002-d1-s2/`.
+
+---
+
+**Summary: 13 findings — 0 critical, 0 high, 3 medium, 8 low, 2 nit; 3 carry an `UNVERIFIED` element (findings 2, 3, 7 — and finding 9's 0/0 result, which I could not execute).**

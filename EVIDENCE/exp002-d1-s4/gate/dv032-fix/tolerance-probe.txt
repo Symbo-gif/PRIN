@@ -1,0 +1,37 @@
+
+===== condition: quiet =====
+  host cpu: 18.3%
+  rep 1: cpu_ratio 1.0000  wall_ratio 0.9528  inferences 3  errors 0
+  rep 2: cpu_ratio 1.0000  wall_ratio 1.0000  inferences 3  errors 0
+  rep 3: cpu_ratio 1.0000  wall_ratio 1.0999  inferences 3  errors 0
+  rep 4: cpu_ratio 1.0000  wall_ratio 1.0087  inferences 3  errors 0
+  rep 5: cpu_ratio 1.0000  wall_ratio 1.0326  inferences 3  errors 0
+  rep 6: cpu_ratio 1.0000  wall_ratio 0.9888  inferences 3  errors 0
+  rep 7: cpu_ratio 1.0000  wall_ratio 1.0035  inferences 3  errors 0
+  rep 8: cpu_ratio 0.8000  wall_ratio 0.7748  inferences 3  errors 0
+
+===== condition: loaded =====
+  host cpu: 100.0%
+  rep 1: cpu_ratio 1.0000  wall_ratio 1.0332  inferences 3  errors 0
+  rep 2: cpu_ratio 1.1429  wall_ratio 0.7691  inferences 3  errors 0
+  rep 3: cpu_ratio 1.0000  wall_ratio 0.7953  inferences 3  errors 0
+  rep 4: cpu_ratio 1.0000  wall_ratio 0.9041  inferences 3  errors 0
+  rep 5: cpu_ratio 1.0000  wall_ratio 1.0931  inferences 3  errors 0
+  rep 6: cpu_ratio 1.0000  wall_ratio 0.9737  inferences 3  errors 0
+  rep 7: cpu_ratio 1.0000  wall_ratio 0.9325  inferences 3  errors 0
+  rep 8: cpu_ratio 0.8750  wall_ratio 0.9434  inferences 3  errors 0
+
+
+===== distribution =====
+condition metric          min   median      max
+quiet    cpu          0.8000   1.0000   1.0000
+quiet    wall         0.7748   1.0017   1.0999
+loaded   cpu          0.8750   1.0000   1.1429
+loaded   wall         0.7691   0.9380   1.0931
+
+total daemon errors across all reps: 0
+worst cpu_ratio observed  : 1.1429
+worst wall_ratio observed : 1.0999
+
+The wall column is the CURRENT metric; the cpu column is the
+proposed one.  Compare their spread under load directly.

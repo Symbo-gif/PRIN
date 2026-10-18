@@ -1,0 +1,91 @@
+# Round 3 reproductions of the reviewers' claims. The file was produced at the reviewed commit, before any round 3 fix; sections for each claim name the reviewers who made it.
+# Round 3 reproductions, run by the caller at HEAD b2156918 before any round 3 fix, 2026-10-16 UTC. Output verbatim.
+
+##### D3-1 / agy-1 / agy-2: S3_CHANGED omits tests/test_notebooks.py; the Snyk records predate 91f3327a
+$ rg -n "test_notebooks" EVIDENCE/exp002-d1-s3/snyk_s3_filter.py
+(no match)
+$ git diff --name-only 5ba0129e..HEAD -- python/ tests/
+python/prin/reporting/figure_generation.py
+tests/test_notebooks.py
+tests/test_publication_figure_arguments.py
+$ git log -1 --format=%cI 91f3327a ; head -4 EVIDENCE/exp002-d1-s3/snyk-code-s3-after-review-fixes.txt | cut -c1-120
+2026-10-16T04:34:39-03:00
+2:# # started 2026-10-16T03:14:26Z # command: snyk code test . --severity-threshold=low --sarif-file-output=C:/Users/there/prin-s3-scratch/s
+4:# scanned tree: git HEAD 33923be5 + uncommitted edits to EVIDENCE/exp002-d1-s3/ (the instrument fixes and the cold-review records)
+$ rg -n "two changed first-party" DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+1327:- **S3's own code:** **0 findings** in the two changed first-party files and in the
+
+##### D3-2: 'host available memory never fell below 5.5 GB'
+$ rg -o "\"available_mb\": [0-9]+" f2/diagnostic-full-suite/samples.jsonl | sort -t: -k2 -n | head -2
+5476
+5650
+$ rg -n "5.5 GB" (tracked docs and tests)
+EVIDENCE/exp002-d1-s3/f2/README.md:51:  below **5.5 GB**, and hard-fault paging averaged **at most 26 pages/s**: not
+DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1246:   CPU-s per wall-second, host available memory never fell below 5.5 GB, and pagin
+
+##### D3-3: 'neither can move without the other' vs the single >= assertion
+$ rg -n "assert bound|BOUND_MARGIN" tests/test_notebooks.py
+80:BOUND_MARGIN = 3.0
+294:    assert bound >= BOUND_MARGIN * recorded, (
+$ rg -n "neither can move|without the other" DOCS/audits EVIDENCE/exp002-d1-s3 tests/test_notebooks.py
+EVIDENCE/exp002-d1-s3/f2/README.md:108:so a bound cannot be lowered, or a slower worst case recorded, without the other
+DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1273:Two fast tests pin each bound to its recorded worst case, so neither can move
+DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1274:without the other. They **fail against the old 900 s bounds (4 failed) and pass
+
+##### D3-4: launch_round.sh uses its argument as a path component unvalidated
+$ rg -n "D=\"\$R/\$1\"|=~" EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh
+4:D="$R/$1"
+
+##### D3-5: index-selfcheck-s1.txt lacks the 'nested READMEs used' line the shipped instrument prints
+$ rg -n "nested READMEs" EVIDENCE/exp002-d1-s3/index_selfcheck.py EVIDENCE/exp002-d1-s3/index-selfcheck-s1.txt
+EVIDENCE/exp002-d1-s3/index_selfcheck.py:134:    print(f"  nested READMEs used: {nested or 'none'}")
+
+##### D3-6: notebook_timing.py claims the same NotebookClient as the test; the test now uses per-notebook timeouts
+$ rg -n "timeout=" tests/test_notebooks.py ; rg -n "default=900|same ..timeout" EVIDENCE/exp002-d1-s3/notebook_timing.py
+325:        timeout=NOTEBOOK_CELL_TIMEOUT_SECONDS[name],
+15:It builds the same ``NotebookClient`` as the test (same ``timeout``,
+279:    parser.add_argument("--timeout", type=int, default=900)
+
+##### D3-7: contention_experiment.sh header names files it does not write to that directory
+$ rg -n "console.log|samples.jsonl|OUT=" EVIDENCE/exp002-d1-s3/contention_experiment.sh
+19:# ~/prin-s3-scratch/contention/ (control.json, treatment.json, console.log,
+20:# samples.jsonl, run.txt).
+25:OUT="$HOME/prin-s3-scratch/contention"
+
+##### D3-8: documented exit status 2 for usage errors vs SystemExit(str)
+$ python -I docstring_only_check.py --check zzz 2db18fc3 x.py ; echo rc=$?
+not a hexadecimal revision: 'zzz'
+rc=1
+$ python -I raw_byte_identity.py --before zzz ; echo rc=$?
+not a hexadecimal revision: 'zzz'
+rc=1
+
+##### D3-9: 'a fifth to a third of one core' vs kernel CPU/wall 0.17-0.33
+$ rg "fifth to a third" tests/test_notebooks.py
+51:#: Inside the full suite on the maintainer host the kernel receives a fifth to a
+
+##### Devin attempt-3 narration: the audit cites 'S3 brief section 6.x', but the repository's S3 brief is 27 lines with no such sections
+$ wc -l DOCS/sessions/contingencies/2026-10-14-exp002d1-s3*.md ; rg -c "^## " that file
+27 DOCS/sessions/contingencies/2026-10-14-exp002-d1-s3-correction-remediation.md
+11:## Expectation
+15:## Exit evidence
+21:## Rules specific to this correction
+$ rg -n "S3 brief" (tracked docs and instruments)
+DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1387:unchanged; the brief is stricter than the S3 brief's §6.2, which allows read-only
+EVIDENCE/exp002-d1-s3\delta_reaudit.sh:3:# passing parity tests (S3 brief section 7). Run from Git Bash at the repository root.
+EVIDENCE/exp002-d1-s3\cold-review\triage.md:3:Protocol (S3 brief §6.3): every reviewer claim is reproduced or measured before
+EVIDENCE/exp002-d1-s3\cold-review\triage.md:28:any reviewer to run commands. That is stricter than the S3 brief's section 6.2,
+EVIDENCE/exp002-d1-s3\snyk-code-s3.txt:4:# scanned tree: git HEAD 9583eb4d + uncommitted EVIDENCE/exp002-d1-s3/ and the S3 brief status edit
+EVIDENCE/exp002-d1-s3\cold-review\round2\triage-commands.txt:36:7dbfc546 docs: mark the S3 brief IN PROGRESS
+EVIDENCE/exp002-d1-s3\cold-review\round2\triage-commands-agy-fabrications.txt:41:7dbfc546 docs: mark the S3 brief IN PROGRESS
+EVIDENCE/exp002-d1-s3\README.md:60:| [`cold-review/README.md`](cold-review/README.md) | **The cold-review loop (S3 brief §6).** Index of the briefs, each revie
+EVIDENCE/exp002-d1-s3\cold-review\round2\qwen-stdout.txt:193:  four D4 findings committed before the D3 one. The same rule is restated in the S3 brief
+EVIDENCE/exp002-d1-s3\cold-review\round2\devin-stdout.txt:1:I'll start by reading the two provided files.Let me read the rest of the diff.I have the full diff. 
+EVIDENCE/exp002-d1-s3\cold-review\README.md:3:Index of the cold-review loop (S3 brief §6): three independent reviewers receive
+EVIDENCE/exp002-d1-s3\cold-review\round2\devin-export.md:978:            "content": "<file-view path=\"C:\\Users\\there\\prin-s3-scratch\\review\\s3-commits.txt
+EVIDENCE/exp002-d1-s3\cold-review\round2\devin-export.md:1137:            "content": "<file-view path=\"C:\\Users\\there\\prin-s3-scratch\\review\\s3.diff\" sta
+EVIDENCE/exp002-d1-s3\cold-review\round2\devin-export.md:2020:      "message": "The S3 brief mandates severity order D1→D4 — noted for the commit sequence c
+EVIDENCE/exp002-d1-s3\cold-review\round2\devin-export.md:2022:      "reasoning_content": "I'm reviewing the S3 brief's rules and the commit history. The commits
+EVIDENCE/exp002-d1-s3\cold-review\round2\devin-export.md:2401:      "reasoning_content": "I noticed the V2 filtered output in `f6-verification.txt` is cut off m
+EVIDENCE/exp002-d1-s3\cold-review\round1\devin-export.md:978:            "content": "Output from command in shell 7e21c2:\n7dbfc546 docs: mark the S3 brief IN P
+EVIDENCE/exp002-d1-s3\cold-review\round1\devin-export.md:1030:            "content": "Output from command in shell 53d25c:\n7dbfc546 docs: mark the S3 brief IN 

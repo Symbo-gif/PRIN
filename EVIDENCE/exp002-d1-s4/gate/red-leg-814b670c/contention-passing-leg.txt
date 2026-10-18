@@ -1,0 +1,13 @@
+source: C:\dev\PRIN\EVIDENCE\exp002-d1-s4\gate\full\samples.jsonl
+samples: 111  span 19:48:24 .. 21:33:54
+
+== whole-leg host contention ==
+  host cpu_percent : median 96.5  mean 85.6  max 99.9
+  samples >= 90%   : 84 / 111
+  samples >= 95%   : 72 / 111
+  pytest cpu-s/wall-s: median 0.422
+
+== samples bracketing the failure window 20:07:49 .. 20:07:49 ==
+  20:07:49Z t=1176s host_cpu=94.9% avail_mb=7991 mem=75.3%
+      pytest: procs=2 cpu_s=289.67 threads=76
+      other cpu since last sample: System Idle Process=28.1s, System=27.9s, Devin.exe=24.3s, mc-fw-host.exe=21.1s, svchost.exe=11.6s

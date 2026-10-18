@@ -1,0 +1,330 @@
+# EXP-002 D1 S3 - static gate
+# git HEAD: e844f54a06973a44d88bb011224a5885bfa67349   tracked changes: 0   untracked: 0
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0   ruff ruff 0.16.1   mypy 2.3.0 (compiled: yes)
+
+## L01 ruff check over every first-party root and evidence dir
+# command: .venv/Scripts/ruff.exe check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/ EVIDENCE/exp002-d1-s1/ EVIDENCE/exp002-d1-s2/ EVIDENCE/exp002-d1-s3/
+# started 2026-10-16T15:28:36Z
+All checks passed!
+# exit code: 0
+# ended 2026-10-16T15:28:37Z
+
+## L02 ruff format --check over the source roots
+# command: .venv/Scripts/ruff.exe format --check python/ tests/ benchmarks/ tools/ parity/ EVIDENCE/exp002-d1-s1/ EVIDENCE/exp002-d1-s2/ EVIDENCE/exp002-d1-s3/
+# started 2026-10-16T15:28:38Z
+369 files already formatted
+# exit code: 0
+# ended 2026-10-16T15:28:38Z
+
+## L03 ruff format --check DOCS/experiments (source-only include)
+# command: .venv/Scripts/ruff.exe format --check DOCS/experiments/ --config include = ['*.py', '*.pyi', '*.ipynb']
+# started 2026-10-16T15:28:39Z
+3 files already formatted
+# exit code: 0
+# ended 2026-10-16T15:28:40Z
+
+## L04 mypy python/prin --strict
+# command: .venv/Scripts/mypy.exe python/prin --strict
+# started 2026-10-16T15:28:41Z
+Success: no issues found in 62 source files
+# exit code: 0
+# ended 2026-10-16T15:28:43Z
+
+## L05 mypy DOCS/experiments/ --strict
+# command: .venv/Scripts/mypy.exe DOCS/experiments/ --strict
+# started 2026-10-16T15:28:44Z
+Success: no issues found in 3 source files
+# exit code: 0
+# ended 2026-10-16T15:28:46Z
+
+## L06 mypy --strict over every changed/new first-party file and the S1/S2/S3 instruments
+# command: .venv/Scripts/mypy.exe --strict python/prin/reporting/figure_generation.py tests/test_publication_figure_arguments.py tests/test_notebooks.py parity/test_parity_publication.py EVIDENCE/exp002-d1-s1/root_cause_decomposition.py EVIDENCE/exp002-d1-s2/artist_level_equivalence.py EVIDENCE/exp002-d1-s2/ast_spec_validation.py EVIDENCE/exp002-d1-s2/both_policies_post_fix.py EVIDENCE/exp002-d1-s2/changed_line_coverage.py EVIDENCE/exp002-d1-s2/decomposition_rerun_check.py EVIDENCE/exp002-d1-s2/fast_gate_divergence_coverage.py EVIDENCE/exp002-d1-s2/snyk_sarif_filter.py EVIDENCE/exp002-d1-s3/diag_nb_timeout.py EVIDENCE/exp002-d1-s3/docstring_only_check.py EVIDENCE/exp002-d1-s3/f2_in_suite_vs_alone.py EVIDENCE/exp002-d1-s3/index_selfcheck.py EVIDENCE/exp002-d1-s3/notebook_timing.py EVIDENCE/exp002-d1-s3/paired_comparison.py EVIDENCE/exp002-d1-s3/raw_byte_identity.py EVIDENCE/exp002-d1-s3/snyk_s3_filter.py EVIDENCE/exp002-d1-s3/suite_sampler.py EVIDENCE/exp002-d1-s3/verify_manifest_runs.py
+# started 2026-10-16T15:28:46Z
+Success: no issues found in 22 source files
+# exit code: 0
+# ended 2026-10-16T15:28:48Z
+
+## L07 interrogate (floor 95%)
+# command: .venv/Scripts/python.exe -m interrogate -c pyproject.toml python/prin
+# started 2026-10-16T15:28:49Z
+==================== Coverage for C:\dev\PRIN\python\prin\ ====================
+----------------------------------- Summary -----------------------------------
+| Name                                |   Total |   Miss |   Cover |   Cover% |
+|-------------------------------------|---------|--------|---------|----------|
+| __init__.py                         |       1 |      0 |       1 |     100% |
+| _compat.py                          |      14 |      0 |      14 |     100% |
+| _deprecation.py                     |       8 |      0 |       8 |     100% |
+| _ort.py                             |      13 |      0 |      13 |     100% |
+| _phase0.py                          |      12 |      0 |      12 |     100% |
+| _public_api.py                      |       1 |      0 |       1 |     100% |
+| _torch_compat.py                    |     106 |      5 |     101 |      95% |
+| adversarial_tools.py                |       5 |      0 |       5 |     100% |
+| daemon.py                           |      33 |      0 |      33 |     100% |
+| datasets.py                         |       5 |      0 |       5 |     100% |
+| dlpack.py                           |       4 |      0 |       4 |     100% |
+| dynamics.py                         |       1 |      0 |       1 |     100% |
+| kernels.py                          |      28 |      0 |      28 |     100% |
+| metrics.py                          |       3 |      0 |       3 |     100% |
+| simulation.py                       |      27 |      1 |      26 |      96% |
+| simulation_experiments.py           |       7 |      0 |       7 |     100% |
+| solvers.py                          |       8 |      0 |       8 |     100% |
+| subconscious_compat.py              |      40 |      0 |      40 |     100% |
+| temporal_metrics.py                 |      11 |      0 |      11 |     100% |
+| temporal_training.py                |      22 |      0 |      22 |     100% |
+| tensor.py                           |      23 |      0 |      23 |     100% |
+| topology.py                         |       3 |      0 |       3 |     100% |
+| train.py                            |       4 |      0 |       4 |     100% |
+| training_hooks.py                   |      37 |      1 |      36 |      97% |
+| y4q1_tools.py                       |      44 |      1 |      43 |      98% |
+| eval\__init__.py                    |       1 |      0 |       1 |     100% |
+| experiments\__init__.py             |       3 |      0 |       3 |     100% |
+| nn\__init__.py                      |      17 |      0 |      17 |     100% |
+| nn\_bridge.py                       |       5 |      0 |       5 |     100% |
+| nn\ablation.py                      |      29 |      0 |      29 |     100% |
+| nn\ablation_variants.py             |      33 |      0 |      33 |     100% |
+| nn\activations.py                   |       8 |      0 |       8 |     100% |
+| nn\allocation.py                    |      15 |      0 |      15 |     100% |
+| nn\attention.py                     |       7 |      0 |       7 |     100% |
+| nn\autoencoders.py                  |      26 |      0 |      26 |     100% |
+| nn\deferred_layers.py               |       1 |      0 |       1 |     100% |
+| nn\energy.py                        |      17 |      0 |      17 |     100% |
+| nn\hierarchical_layers.py           |      38 |      0 |      38 |     100% |
+| nn\hybrid.py                        |      14 |      0 |      14 |     100% |
+| nn\hybrid_compat.py                 |      24 |      0 |      24 |     100% |
+| nn\inhibition.py                    |       6 |      0 |       6 |     100% |
+| nn\inhibition_layers.py             |      23 |      0 |      23 |     100% |
+| nn\model.py                         |      15 |      0 |      15 |     100% |
+| nn\mot_evaluation.py                |      11 |      0 |      11 |     100% |
+| nn\optimizers.py                    |      33 |      0 |      33 |     100% |
+| nn\phase_tracker.py                 |      18 |      0 |      18 |     100% |
+| nn\slot_attention.py                |      20 |      0 |      20 |     100% |
+| nn\subconscious_model.py            |       1 |      0 |       1 |     100% |
+| nn\temporal_compat.py               |      14 |      0 |      14 |     100% |
+| parity\__init__.py                  |       1 |      0 |       1 |     100% |
+| parity\harness.py                   |      10 |      0 |      10 |     100% |
+| parity\loader.py                    |       9 |      0 |       9 |     100% |
+| parity\manifest.py                  |      15 |      0 |      15 |     100% |
+| parity\schema.py                    |      21 |      0 |      21 |     100% |
+| parity\strategies.py                |      13 |      0 |      13 |     100% |
+| reporting\__init__.py               |       1 |      0 |       1 |     100% |
+| reporting\_artifacts.py             |      15 |      7 |       8 |      53% |
+| reporting\benchmark_reporting.py    |      22 |      0 |      22 |     100% |
+| reporting\figure_generation.py      |      21 |      2 |      19 |      90% |
+| reporting\profiler.py               |      24 |      0 |      24 |     100% |
+| reporting\table_generation.py       |      20 |      7 |      13 |      65% |
+|-------------------------------------|---------|--------|---------|----------|
+| TOTAL                               |    1011 |     24 |     987 |    97.6% |
+--------------- RESULT: PASSED (minimum: 95.0%, actual: 97.6%) ----------------
+# exit code: 0
+# ended 2026-10-16T15:28:51Z
+
+## L08 bandit python/prin DOCS/experiments
+# command: .venv/Scripts/python.exe -m bandit -r python/prin DOCS/experiments -c pyproject.toml
+# started 2026-10-16T15:28:51Z
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	using config: pyproject.toml
+[main]	INFO	running on Python 3.14.0
+[manager]	WARNING	Test in comment: subprocess is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: use is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: is is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: confined is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: to is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: the is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: vswhere is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: exe is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: lookup is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: in is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: _find_msvc_cl is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: see is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: the is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: justification is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: there is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: constant is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: args is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: absolute is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: path is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: to is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: the is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: MS is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: signed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: vswhere is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: exe is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: existence is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: checked is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: above is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: constant is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: list is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: args is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: user is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: input is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: best is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: effort is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: daemon is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: control is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: a is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: failure is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: here is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: is is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: intentionally is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: swallowed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: so is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: training is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: continues is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: without is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: subconscious is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: control is not a test name or id, ignoring
+Working... ---------------------------------------- 100% 0:00:01
+Run started:2026-10-16 15:28:53.863568+00:00
+
+Test results:
+	No issues identified.
+
+Code scanned:
+	Total lines of code: 27882
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 5
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+Files skipped (0):
+# exit code: 0
+# ended 2026-10-16T15:28:54Z
+
+## L09 bandit over the S1/S2/S3 evidence dirs
+# command: .venv/Scripts/python.exe -m bandit -r EVIDENCE/exp002-d1-s1 EVIDENCE/exp002-d1-s2 EVIDENCE/exp002-d1-s3 -c pyproject.toml
+# started 2026-10-16T15:28:54Z
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	using config: pyproject.toml
+[main]	INFO	running on Python 3.14.0
+[tester]	WARNING	nosec encountered (B607), but no failed test on file EVIDENCE/exp002-d1-s1\root_cause_decomposition.py:410
+[tester]	WARNING	nosec encountered (B603), but no failed test on file EVIDENCE/exp002-d1-s1\root_cause_decomposition.py:410
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: argv is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: absolute is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: git is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: argv is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: argv is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: absolute is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: git is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: argv is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[tester]	WARNING	nosec encountered (B603), but no failed test on file EVIDENCE/exp002-d1-s3\index_selfcheck.py:77
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: argv is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: absolute is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: git is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: argv is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: argv is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: absolute is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: git is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: argv is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: argv is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: argv is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: user is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: input is not a test name or id, ignoring
+Run started:2026-10-16 15:28:56.041888+00:00
+
+Test results:
+	No issues identified.
+
+Code scanned:
+	Total lines of code: 3901
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 20
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+Files skipped (0):
+# exit code: 0
+# ended 2026-10-16T15:28:56Z
+
+## L10 check_global_session_registration.py
+# command: .venv/Scripts/python.exe tools/check_global_session_registration.py
+# started 2026-10-16T15:28:56Z
+Global-session registration check passed.
+  Checked 18 Executive Audit reports.
+# exit code: 0
+# ended 2026-10-16T15:28:58Z
+
+## L11 check_dv_register_gates.py
+# command: .venv/Scripts/python.exe tools/check_dv_register_gates.py
+# started 2026-10-16T15:28:58Z
+DV-register gate check passed.
+  Checked 47 DV register rows against 198 session-register entries.
+# exit code: 0
+# ended 2026-10-16T15:28:59Z
+
+## L12 check_skipif_probes.py
+# command: .venv/Scripts/python.exe tools/check_skipif_probes.py
+# started 2026-10-16T15:28:59Z
+check_skipif_probes: no registration-probe skipif guards
+# exit code: 0
+# ended 2026-10-16T15:29:01Z
+
+## L13 check_deviation_ledger.py 039 040 (report paths)
+# command: .venv/Scripts/python.exe tools/check_deviation_ledger.py DOCS/reports/039-project-state.md DOCS/reports/040-project-state.md
+# started 2026-10-16T15:29:01Z
+Ledger consistency check passed.
+  Compared 142 rows in DOCS\reports\039-project-state.md with 146 rows in DOCS\reports\040-project-state.md.
+# exit code: 0
+# ended 2026-10-16T15:30:01Z
+
+# overall: 0 (0 = every leg exited 0)

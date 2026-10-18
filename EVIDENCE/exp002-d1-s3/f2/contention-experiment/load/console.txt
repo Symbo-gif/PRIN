@@ -1,0 +1,39 @@
+06:08:37Z ============================= test session starts =============================
+06:08:37Z platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+06:08:37Z benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+06:08:37Z rootdir: C:\dev\PRIN
+06:08:37Z configfile: pyproject.toml
+06:08:37Z plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+06:08:37Z collected 499 items
+06:08:37Z 
+06:08:37Z tests\test_exp002_driver.py ............................................ [  8%]
+06:08:39Z ........................................................................ [ 23%]
+06:08:46Z ........................................................................ [ 37%]
+06:08:49Z ........................................................................ [ 52%]
+06:09:11Z ...............................................................          [ 64%]
+06:10:05Z tests\test_exp002_e4_analysis.py ....................................... [ 72%]
+06:17:37Z ........................................................................ [ 86%]
+06:39:06Z .................................................................        [100%]
+06:39:06Z 
+06:39:06Z ============================ slowest 20 durations =============================
+06:39:06Z 103.41s call     tests/test_exp002_e4_analysis.py::test_outputs_are_byte_identical_across_runs
+06:39:06Z 80.20s call     tests/test_exp002_e4_analysis.py::test_h1_frozen_contract_difference_refutes[rc11-frozen_contract_missing-names1]
+06:39:06Z 78.59s call     tests/test_exp002_e4_analysis.py::test_module_commit_is_recorded_when_the_module_is_tracked
+06:39:06Z 73.32s call     tests/test_exp002_e4_analysis.py::test_output_directory_behind_a_link_is_refused
+06:39:06Z 61.97s call     tests/test_exp002_e4_analysis.py::test_failed_write_leaves_no_temporary_file
+06:39:06Z 58.82s call     tests/test_exp002_e4_analysis.py::test_tampered_result_bytes_are_inadmissible
+06:39:06Z 58.76s call     tests/test_exp002_e4_analysis.py::test_linked_raw_root_aborts
+06:39:06Z 53.36s call     tests/test_exp002_e4_analysis.py::test_missing_record_file_is_inadmissible
+06:39:06Z 50.71s call     tests/test_exp002_e4_analysis.py::test_main_reports_verdicts_and_returns_zero
+06:39:06Z 49.40s call     tests/test_exp002_e4_analysis.py::test_ambient_git_overrides_are_ignored
+06:39:06Z 48.84s call     tests/test_exp002_e4_analysis.py::test_fast_path_is_not_taken_when_a_global_input_changes
+06:39:06Z 48.62s call     tests/test_exp002_e4_analysis.py::test_global_listing_failures_abort_cleanly[iterdir-EXP-002-raw record root]
+06:39:06Z 47.91s call     tests/test_exp002_e4_analysis.py::test_duplicate_key_in_a_record_is_inadmissible
+06:39:06Z 46.29s call     tests/test_exp002_e4_analysis.py::test_writes_only_the_registered_destinations
+06:39:06Z 44.33s call     tests/test_exp002_e4_analysis.py::test_h1_frozen_contract_difference_refutes[rc10-frozen_contract_extra-names0]
+06:39:06Z 44.10s call     tests/test_exp002_e4_analysis.py::test_frozen_contract_digest_mismatch_aborts
+06:39:06Z 42.86s call     tests/test_exp002_e4_analysis.py::test_symlinked_result_file_is_inadmissible
+06:39:06Z 40.86s call     tests/test_exp002_e4_analysis.py::test_non_regular_output_destination_is_refused
+06:39:06Z 40.80s call     tests/test_exp002_e4_analysis.py::test_extra_file_in_a_run_directory_is_inadmissible
+06:39:06Z 35.88s call     tests/test_exp002_e4_analysis.py::test_tampered_frozen_input_aborts
+06:39:06Z ====================== 499 passed in 1837.39s (0:30:37) =======================

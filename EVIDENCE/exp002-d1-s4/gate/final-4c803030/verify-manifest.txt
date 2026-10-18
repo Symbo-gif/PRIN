@@ -1,0 +1,34 @@
+# copied from /c/Users/there/prin-s4-scratch/final/verify-manifest.txt at 2026-10-18T04:44:21Z
+# verify_manifest over the five EXP-002 RUN-* directories and the frozen input manifest
+# date (UTC): 2026-10-18T04:37:26Z
+# git HEAD: 4c8030303a8f9a3427ace7788fbfff47066476ce   tracked changes: 0
+
+raw record root  : C:\dev\PRIN\benchmarks\results\EXP-002
+RUN-* directories: 5
+
+[PASS] RUN-20261012T212705Z-fae24c4-api-cpu
+       manifested records=2  entries: ['api.json', 'campaign-metadata.json']
+
+[PASS] RUN-20261012T213054Z-fae24c4-conclusions-cpu
+       manifested records=2  entries: ['campaign-metadata.json', 'conclusions.json']
+
+[PASS] RUN-20261012T213821Z-fae24c4-reproduction-reference-cpu
+       manifested records=2  entries: ['campaign-metadata.json', 'reproduction.json']
+
+[PASS] RUN-20261012T213936Z-fae24c4-reproduction-prin-cpu
+       manifested records=2  entries: ['campaign-metadata.json', 'reproduction.json']
+
+[PASS] RUN-20261012T214040Z-fae24c4-seedrep0-prin-cpu
+       manifested records=2  entries: ['campaign-metadata.json', 'reproduction.json']
+
+==========================================================================
+Frozen input manifest (paper/artefact_manifest.json) against the
+reference results root.
+==========================================================================
+INPUT_MANIFEST_SHA : 300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5
+recomputed sha256  : 300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5
+matches the pinned constant: True
+[PASS] verify_manifest(reference results, INPUT_MANIFEST): 172
+
+TOTAL FAILURES: 0
+# exit code: 0

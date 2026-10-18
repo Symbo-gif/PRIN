@@ -444,6 +444,60 @@ format mirrors the PRINet 3.0 `Codebase_Assessment_Report.md`.
   arithmetic, with the corpus shown to be the erroneous side to the campaign
   plan §10.4 item 3 standard), commits, the red → green transition on draft
   PR #24, and handoff. The S2 audit, S3 closure and S4 closure are pending.
+- [`2026-10-15-exp002-d1-correction-audit.md`](2026-10-15-exp002-d1-correction-audit.md) —
+  EXP-002 D1 correction cycle (H3 `REFUTED`, 18/39 files). It holds the **S1
+  implementation record**, the **S2 audit record** and the **S3 remediation
+  record**. S1: the
+  failing-test-first reproduction (18 failed, exactly the E3 set) and the root
+  cause, which is on the PRIN side — 34 drawing arguments dropped or re-encoded
+  by the WP-034 figure port, all bytes explained by controlled substitution on
+  the frozen reference, campaign plan §10.4 item 3 not invoked — plus the fix,
+  the red → green transition on draft PR #34, the local gate and the handoff.
+  **S2 (2026-10-15 UTC, verdict `PASS-WITH-FINDINGS`):** a read-only audit of
+  `ab9e4225..8fd0ecc9` that re-executed all five brief-specific items rather
+  than accepting them — the pre-fix gate red on exactly the 18 E3 files and all
+  9 argument tests; the decomposition reproducing field-for-field; **34/34**
+  divergence specifications validated statically against the frozen reference;
+  an artist-level comparison **14/14 EQUAL**, so no plotted value differs;
+  `verify_manifest` green on all five runs and the frozen E4 module reproducing
+  all seven outputs plus `report-manifest.json` byte-for-byte from a clean
+  worktree; and Snyk Code **0 findings** in the four changed files on **both**
+  the MCP route and — after the maintainer re-authenticated it — the CLI route
+  the brief named (Test Summary **0 HIGH / 0 MEDIUM / 77 LOW**, so the §6.2
+  "0 medium+" gate is met; the earlier blocked-CLI state is retained rather than
+  overwritten). Eight findings
+  (`EXP002D1-S2-F1`…`-F8`): one **D2** (the required full suite is red on a
+  pre-existing notebook cell timeout, reproduced in two consecutive sessions),
+  one **D3** (the two registered H3 policies now disagree about the verdict —
+  approved §5.4 39/39 equal vs §11.3 sensitivity 14/39 equal, all 25 residuals
+  classified as writer/host properties — which S4 must carry into the
+  `EXP-002-r1` E1/E2 registration), and six D4. `-F3` (the expired Snyk CLI) is
+  **RESOLVED** and `-F8` (two residual Snyk Code LOW `python/PT` findings in S2's
+  own instruments, remediated twice on the `PR23-F1` pattern) is **RATIFIED**
+  with a recorded §6.2 threat assessment, so **six findings remain for S3**.
+  **No D1, no systemic drift.** S2's commits stay **local**: the maintainer
+  delegated and then ratified the push call, and Development Workflow §3 plus
+  amendment #28 put the cycle's push point at S4 (§S2.13, §S2.14).
+  Evidence: [`EVIDENCE/exp002-d1-s2/`](../../EVIDENCE/exp002-d1-s2/README.md).
+  **S3 (2026-10-16 UTC, delta re-audit `CLEAN`):** `-F2` (D2) `FIXED` — the
+  notebook cell bounds are re-sized from measured contended durations (each
+  bound is 3× the recorded worst case, rounded up to 900 s, and a test ties the
+  two together in both directions) after a paired experiment showed the
+  slowdown to be CPU starvation by processes outside PRIN (notebook 02: 80.7 s
+  alone, 3,484 s beside only the `test_exp002_*` tests); `-F1` (D3) `ASSIGNED`
+  to S4 and `EXP-002-r1` with no amendment; `-F4`…`-F7` (D4) `FIXED`, F6 with
+  the restored fig13 label proved byte-immaterial on all 28 figure files; `-F8`
+  (D4) re-checked, with one further same-class `python/PT` LOW recorded for the
+  maintainer. The pre-fix reproduction (18 failed / 75 passed) and post-fix
+  pass (103 passed) were re-run, `verify_manifest` is 5/5 and the EXP-002 record
+  is untouched. Four cold-review rounds (Devin, Antigravity, Qwen) were triaged
+  by measurement; round 4, the cap, still returned CONFIRMED claims (none in the
+  correction, two medium in gate scripts), all fixed but not re-reviewed
+  (observation O-2). **The required full suite exited 1 in both of S3's runs on
+  two different single host-contention tests that pass alone (observation O-1,
+  carried to S4); the fast suite is a clean single pass.** Nothing pushed.
+  Evidence: [`EVIDENCE/exp002-d1-s3/`](../../EVIDENCE/exp002-d1-s3/README.md).
+  The S4 closure is pending.
 - [`PR023-multi-review-audit.md`](PR023-multi-review-audit.md) — External
   code review audit of PR #23 (EXP-001 E3–E5), 2026-09-23,
   `PASS-WITH-FINDINGS` → all findings remediated in the same round. Seven

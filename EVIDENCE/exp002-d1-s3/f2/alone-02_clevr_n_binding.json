@@ -1,0 +1,244 @@
+{
+ "label": "alone-baseline",
+ "notebook": "02_clevr_n_binding.ipynb",
+ "started_utc": "2026-10-16T01:38:28+00:00",
+ "per_cell_timeout_seconds": 900,
+ "sample_period_seconds": 5.0,
+ "outcome": "completed",
+ "error_outputs": [],
+ "wall_seconds": 71.1,
+ "kernel_cpu_seconds_last_sample": 434.66,
+ "kernel_cpu_over_wall": 6.11,
+ "kernel_peak_working_set_mb": 3208.7,
+ "host_cpu_percent_mean": 58.4,
+ "host_available_mb_min": 660,
+ "logical_cpus": 16,
+ "cells": [
+  {
+   "cell": 1,
+   "wall_seconds": 2.29
+  },
+  {
+   "cell": 3,
+   "wall_seconds": 9.14
+  },
+  {
+   "cell": 5,
+   "wall_seconds": 22.29
+  },
+  {
+   "cell": 7,
+   "wall_seconds": 33.19
+  },
+  {
+   "cell": 9,
+   "wall_seconds": 0.69
+  },
+  {
+   "cell": 11,
+   "wall_seconds": 0.35
+  },
+  {
+   "cell": 13,
+   "wall_seconds": 0.4
+  }
+ ],
+ "samples": [
+  {
+   "t_wall": 5.0,
+   "host_cpu_percent": 39.8,
+   "host_available_mb": 3155,
+   "host_memory_percent": 90.2,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 4.38,
+    "working_set_mb": 644.0,
+    "threads": 53,
+    "page_faults": 176437
+   }
+  },
+  {
+   "t_wall": 10.1,
+   "host_cpu_percent": 20.8,
+   "host_available_mb": 3396,
+   "host_memory_percent": 89.5,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 9.38,
+    "working_set_mb": 765.1,
+    "threads": 53,
+    "page_faults": 207507
+   }
+  },
+  {
+   "t_wall": 15.1,
+   "host_cpu_percent": 30.3,
+   "host_available_mb": 3124,
+   "host_memory_percent": 90.3,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 24.91,
+    "working_set_mb": 984.7,
+    "threads": 62,
+    "page_faults": 274907
+   }
+  },
+  {
+   "t_wall": 20.1,
+   "host_cpu_percent": 59.0,
+   "host_available_mb": 2996,
+   "host_memory_percent": 90.7,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 65.66,
+    "working_set_mb": 1199.8,
+    "threads": 62,
+    "page_faults": 341202
+   }
+  },
+  {
+   "t_wall": 25.2,
+   "host_cpu_percent": 56.7,
+   "host_available_mb": 2774,
+   "host_memory_percent": 91.4,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 106.39,
+    "working_set_mb": 1427.6,
+    "threads": 62,
+    "page_faults": 414491
+   }
+  },
+  {
+   "t_wall": 30.2,
+   "host_cpu_percent": 57.3,
+   "host_available_mb": 2575,
+   "host_memory_percent": 92.0,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 147.61,
+    "working_set_mb": 1609.3,
+    "threads": 61,
+    "page_faults": 461173
+   }
+  },
+  {
+   "t_wall": 35.2,
+   "host_cpu_percent": 54.9,
+   "host_available_mb": 2296,
+   "host_memory_percent": 92.9,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 185.64,
+    "working_set_mb": 1885.1,
+    "threads": 61,
+    "page_faults": 561908
+   }
+  },
+  {
+   "t_wall": 40.2,
+   "host_cpu_percent": 58.9,
+   "host_available_mb": 2217,
+   "host_memory_percent": 93.1,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 226.88,
+    "working_set_mb": 2052.3,
+    "threads": 61,
+    "page_faults": 604820
+   }
+  },
+  {
+   "t_wall": 45.3,
+   "host_cpu_percent": 89.7,
+   "host_available_mb": 1886,
+   "host_memory_percent": 94.2,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 258.84,
+    "working_set_mb": 2169.4,
+    "threads": 61,
+    "page_faults": 635082
+   }
+  },
+  {
+   "t_wall": 50.3,
+   "host_cpu_percent": 90.2,
+   "host_available_mb": 1577,
+   "host_memory_percent": 95.1,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 295.2,
+    "working_set_mb": 2304.3,
+    "threads": 61,
+    "page_faults": 669907
+   }
+  },
+  {
+   "t_wall": 55.4,
+   "host_cpu_percent": 78.2,
+   "host_available_mb": 1398,
+   "host_memory_percent": 95.7,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 330.83,
+    "working_set_mb": 2566.5,
+    "threads": 61,
+    "page_faults": 737590
+   }
+  },
+  {
+   "t_wall": 60.4,
+   "host_cpu_percent": 60.1,
+   "host_available_mb": 1204,
+   "host_memory_percent": 96.3,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 366.52,
+    "working_set_mb": 2844.4,
+    "threads": 58,
+    "page_faults": 868083
+   }
+  },
+  {
+   "t_wall": 65.4,
+   "host_cpu_percent": 68.0,
+   "host_available_mb": 660,
+   "host_memory_percent": 98.0,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 406.38,
+    "working_set_mb": 3043.2,
+    "threads": 58,
+    "page_faults": 919270
+   }
+  },
+  {
+   "t_wall": 70.5,
+   "host_cpu_percent": 53.9,
+   "host_available_mb": 818,
+   "host_memory_percent": 97.5,
+   "kernel": {
+    "present": true,
+    "processes": 2,
+    "cpu_seconds": 434.66,
+    "working_set_mb": 3208.7,
+    "threads": 2,
+    "page_faults": 969993
+   }
+  }
+ ]
+}

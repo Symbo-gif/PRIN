@@ -1,0 +1,70 @@
+# Verification of the platform-scoped digest tie on this host, including the two harness bugs found and fixed in the first attempt
+# copied from /c/Users/there/prin-s4-scratch/verify_fix2.txt at 2026-10-17T19:03:57Z
+
+# platform-scoped digest tie - verification (harness bugs 1 and 2 fixed)
+# date (UTC): 2026-10-17T18:50:47Z
+# git HEAD: 83bae4b1912c5cce6aa71ee228add986e0c54c08   tracked changes: 1
+# host platform: Windows-11-10.0.26300-SP0
+# record platform: Windows-11-10.0.26300-SP0
+# module sha256: f9657aa66f764cc906e6b0a603322d99de2e209eec7993c36326680fbf5de56b
+# PYTHONPATH: C:/Users/there/prin-s4-scratch
+# plugin resolvable: yes C:\Users\there\prin-s4-scratch\negctl.py
+
+===== V1 normal run on the authoring platform (must PASS, byte-exact) =====
+# started 2026-10-17T18:50:49Z
+parity\test_parity_publication.py ...................................... [ 40%]
+........................................................                 [100%]
+
+============================= 94 passed in 13.31s =============================
+# exit code: 0 (must be 0)
+# ended 2026-10-17T18:51:05Z
+
+===== V2 NEGCTL=bogus-platform (record's platform != this host) =====
+# started 2026-10-17T18:51:05Z
+  # NEGCTL active: bogus-platform
+parity\test_parity_publication.py ...................................... [ 40%]
+........................................................                 [100%]
+
+============================= 94 passed in 11.08s =============================
+# exit code: 0 (must be 0)
+# ended 2026-10-17T18:51:22Z
+  collected count (must equal V1's, so nothing was deselected):
+    collected 94 item
+
+===== V3 NEGCTL=corrupt-digest (must FAIL: the tie is still load-bearing) =====
+# started 2026-10-17T18:51:23Z
+  # NEGCTL active: corrupt-digest
+.                                                                        [100%]
+
+====================== 39 passed, 55 deselected in 7.11s ======================
+# exit code: 0 (must be 1 - a corrupted expectation must be caught)
+# ended 2026-10-17T18:51:36Z
+  V3 DID NOT FAIL: the byte-exact comparison would be vacuous
+
+===== V4 static gate over the changed file (statuses taken unpiped) =====
+# command: .venv/Scripts/ruff.exe check parity/test_parity_publication.py
+All checks passed!
+# exit code: 0
+# command: .venv/Scripts/ruff.exe format --check parity/test_parity_publication.py
+1 file already formatted
+# exit code: 0
+# command: .venv/Scripts/mypy.exe --strict parity/test_parity_publication.py
+Success: no issues found in 1 source file
+# exit code: 0
+# command: .venv/Scripts/python.exe -m bandit -r parity -c pyproject.toml
+  	Total lines of code: 0
+  	Total lines skipped (#nosec): 0
+  	Total issues (by severity):
+  		Low: 0
+  		Medium: 0
+  		High: 0
+# exit code: 0
+
+===== V5 the new mechanism test, run explicitly =====
+parity/test_parity_publication.py::test_digest_tie_is_scoped_by_the_records_own_platform PASSED [100%]
+
+====================== 1 passed, 93 deselected in 2.41s =======================
+# exit code: 0
+
+# overall: 1 (0 = V1 pass, V2 pass, V3 fail-as-required, V4 clean, V5 pass)
+# finished 2026-10-17T18:51:45Z   tracked changes: 1

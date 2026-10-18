@@ -1,0 +1,12 @@
+# copied from /c/Users/there/prin-s4-scratch/fast-isolated/run.txt at 2026-10-18T04:44:00Z
+label: fast-isolated
+git HEAD: 489f22708a49b474af01dffafb5b64514ea53846
+tracked changes vs HEAD: 0
+untracked files: 0
+host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64   Python 3.14.0   logical CPUs: 16
+pytest args: tests/ -m not slow and not gpu
+command: .venv/Scripts/python.exe -m pytest tests/ -m not slow and not gpu --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20
+started: 2026-10-18T02:35:51Z
+pytest exit status: 1
+ended: 2026-10-18T03:18:30Z
+git HEAD at end: 489f22708a49b474af01dffafb5b64514ea53846   tracked changes: 0   untracked files: 0

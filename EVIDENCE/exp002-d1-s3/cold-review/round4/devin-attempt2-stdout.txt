@@ -1,0 +1,82 @@
+I'll start by reading the review artifacts, then dig into the changed files and standards.Now the diff itself — 5921 lines, I'll read it in chunks.This diff is mostly evidence records. Let me get the list of changed files in the diff to navigate efficiently.The main code changes are in `tests/`, `python/`, and the `EVIDENCE/exp002-d1-s3/` instruments. Let me read the remaining instrument diffs.I've read the full diff. Now I'll verify claims against the working tree and the standards. Starting with the changed code files and key standards.The figure docstring claims check out against the code. Now the standards and registers.I'll stick to file tools only from here, per the review constraints.S1/S2 durations verify against the committed constants. Now the gate/final records and remaining registers.Let me verify the remaining record files and the s2 index count.One more check — the claimed "435 CPU-seconds" for notebook 02 vs the control record's 465.69.Let me check what legs the S1/S2 local gate ran for comparison.# Cold code review — PRIN, `5ba0129e..HEAD`
+
+Reviewed the full diff, the changed code and tests, all added evidence instruments, the audit and register updates, and the committed gate/evidence records they cite. The change set is well-evidenced: every quantitative claim I could cross-check (suite counts, notebook durations, host-load samples, SHA-256 values, coverage percentages, Snyk buckets, "N of M" statements) matched the committed records; no frozen artefact (`DOCS/experiments/EXP-002*`, `benchmarks/results/EXP-002/`, `.github/`, `Cargo.toml`, `Cargo.lock`, `pyproject.toml`) is touched, the correction audit is purely appended to, `EVIDENCE/exp002-d1-s1/` changed only by one README line, and no test was skipped, deselected, xfailed or had an assertion removed (the one bound change is a disclosed, evidence-sized, bidirectionally-tested timeout under Testing Standards §7 item 2). Findings below are all in the new S3 instruments/documentation, not the correction itself.
+
+1.
+**Severity:** medium
+**Where:** `EVIDENCE/exp002-d1-s3/delta_reaudit.sh:24` (guard at :34)
+**Quote:**
+```
+trap 'git restore -- "$MOD" 2>/dev/null' EXIT
+...
+[ "$(git status --porcelain --untracked-files=no | wc -l)" -eq 0 ] || { echo "tree is not clean; refusing to run"; exit 2; }
+```
+**Claim:** The `git restore -- "$MOD"` EXIT trap is registered before the dirty-tree guard, so on the "refusing to run" path the trap still fires and reverts uncommitted edits to `python/prin/reporting/figure_generation.py` — silently destroying exactly the working-tree state the guard exists to protect.
+**Reproduce:** `bash -c 'trap "echo trap-still-fires" EXIT; [ -z "" ] || { echo "tree is not clean; refusing to run"; exit 2; }'` prints `tree is not clean; refusing to run` then `trap-still-fires`, proving the EXIT trap executes on the refusal path; `sed -n '24,34p' EVIDENCE/exp002-d1-s3/delta_reaudit.sh` shows the trap's body is `git restore` of a source file.
+
+2.
+**Severity:** medium
+**Where:** `EVIDENCE/exp002-d1-s3/final_legs.sh:82-85`
+**Quote:**
+```
+  else
+    echo "# NO SARIF WRITTEN: this leg is BLOCKED, not clean."
+  fi; } > "$OUT/snyk-code-s3-final.txt" 2>&1
+grep -a 'filter exit code' "$OUT/snyk-code-s3-final.txt" | grep -qv ': 0 ' && overall=1
+```
+**Claim:** When `snyk code test` writes no SARIF (auth failure, scan failure ≥2), the record prints "this leg is BLOCKED, not clean" but `overall` is never set: the `grep 'filter exit code'` finds no line, so `&& overall=1` never fires and the script exits 0, contradicting the documented "blocked, never clean" rule (CLAUDE.md §6 item 5) and the script's own `0 = every leg exited 0` footer.
+**Reproduce:** `bash -c 'f=$(mktemp); printf "# NO SARIF WRITTEN: this leg is BLOCKED, not clean.\n" > "$f"; grep -a "filter exit code" "$f" | grep -qv ": 0 " && overall=1 || overall=0; echo "overall=$overall (should be 1)"'` prints `overall=0`.
+
+3.
+**Severity:** low
+**Where:** `EVIDENCE/exp002-d1-s3/closing_gate.sh:61-62` (and file end :87-89)
+**Quote:**
+```
+bash EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh gate-full tests/ parity/
+echo "full suite exit: $?" >> "$LEGS"
+```
+**Claim:** Unlike its siblings `static_gate.sh` and `final_legs.sh`, which aggregate an `overall` status, `closing_gate.sh` discards every `leg`/`suite` exit code and ends with `echo`, so it always exits 0 even if a cargo, sphinx, gitleaks or suite leg fails — a caller relying on the script's exit status gets no failure signal; only the record file is honest.
+**Reproduce:** `grep -cn 'overall' EVIDENCE/exp002-d1-s3/closing_gate.sh; tail -3 EVIDENCE/exp002-d1-s3/closing_gate.sh` — zero `overall` matches and the last statement is `echo`, so the script's exit status is always 0.
+
+4.
+**Severity:** low
+**Where:** `DOCS/audits/2026-10-15-exp002-d1-correction-audit.md:1637`
+**Quote:**
+```
+and counts; every CONFIRMED claim in rounds 1–3 was fixed and re-verified. Round 4 is
+recorded there too.
+```
+**Claim:** The verdict text asserts round 4 "is recorded" in §S3.5, but the §S3.5 row it points to is an empty placeholder (`| 4 | to be recorded | | | | | |` at line 1420), so the committed claim is not yet true; it presumably becomes true only when this review's record is appended.
+**Reproduce:** `sed -n '1415,1420p;1636,1638p' DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`.
+
+5.
+**Severity:** nit
+**Where:** `EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh:6`
+**Quote:**
+```
+D="$R/$1"
+```
+**Claim:** `$D` is never created (`mkdir -p "$D"` is absent), so on a fresh round name every `> "$D/…"` redirection fails and all three reviewers' stdout is silently lost while the script still waits and reports exits; line 8 also contains a stray space (`in the file $BRIEF_WIN .`).
+**Reproduce:** `grep -n 'mkdir' EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh` returns no matches; `bash EVIDENCE/exp002-d1-s3/cold-review/launch_round.sh probe` on a nonexistent round dir would emit `No such file or directory` for each redirect.
+
+6.
+**Severity:** nit
+**Where:** `EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh:23`
+**Quote:**
+```
+LABEL="${1:?usage: diagnostic_suite_run.sh <label> [--lift-notebook-timeout] <pytest args...>}"
+```
+**Claim:** A missing-label usage error exits with status 1 via `${1:?}`, while the script's own invalid-label guard on line 27 and every sibling instrument convention documented in the bundle (and fixed under triage item T3-17) use exit 2 for usage errors.
+**Reproduce:** `bash -c 'x="${1:?usage: x <label>}"'; echo "exit=$?"` prints `exit=1`; compare `grep -n 'exit 2' EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh`.
+
+7.
+**Severity:** nit
+**Where:** `EVIDENCE/exp002-d1-s3/final_legs.sh:26`
+**Quote:**
+```
+hdr() { echo "# $1"; echo "# date (UTC): $(stamp)"; echo "# git HEAD: $HEAD_SHA   tracked changes: 0"; echo; }
+```
+**Claim:** Each record header asserts `tracked changes: 0` as a literal rather than measuring it; the cleanliness check ran once at startup (line 20), so records written later in the run would still claim 0 even if a leg had left the tree dirty.
+**Reproduce:** `grep -n 'tracked changes' EVIDENCE/exp002-d1-s3/final_legs.sh` — the value is hardcoded in `hdr`, not computed per record.
+
+**Summary:** 0 critical, 0 high, 2 medium, 2 low, 3 nit — 0 findings marked UNVERIFIED.

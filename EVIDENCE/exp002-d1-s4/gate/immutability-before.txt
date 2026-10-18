@@ -1,0 +1,45 @@
+# copied from /c/Users/there/prin-s4-scratch/gate/immutability-before.txt at 2026-10-16T22:31:34Z
+# EXP-002 D1 S4 - immutability BEFORE the PSR/audit records were added
+# date (UTC): 2026-10-16T19:24:36Z
+# git HEAD: 157ce5bc27746a06e399344fd7b22174e0627662
+
+# EXP-002 D1 S4 - immutability
+range: 6b55c6baa7b6832a50ff57fdd1a919171e9fb5de..157ce5bc27746a06e399344fd7b22174e0627662   (HEAD now 157ce5bc27746a06e399344fd7b22174e0627662)
+# date (UTC): 2026-10-16T19:24:44Z
+
+## I1a the EXP-002 record: only report.md may change, and only by appended lines
+  changed files: DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md
+  changed files other than report.md: 0
+  added 2, deleted 0  DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/report.md
+  deleted lines in the EXP-002 record: 0 (must be 0)
+  the appended lines, verbatim, truncated to their first 90 characters:
+    +| 2 | 2026-10-16 | Post-issue status only — the `EXP-002-D1` correction cycle outcome a
+
+## I1b benchmarks/results/EXP-002/, .github/, Cargo.toml, Cargo.lock, pyproject.toml (must be empty)
+  (empty)
+
+## I2 EVIDENCE/exp002-d1-s1/, -s2/ and -s3/ must be unedited
+  EVIDENCE/exp002-d1-s1/: (empty)
+  EVIDENCE/exp002-d1-s2/: (empty)
+  EVIDENCE/exp002-d1-s3/: (empty)
+
+## I3 the correction audit is append-only (deleted lines must be 0)
+  deletions: 0
+
+## I4 the S4 brief's checklist and carried sections are byte-identical to the base
+  base section lines: 94   head section lines: 95
+  identical: NO
+    --- /tmp/tmp.mmO9V8oHLE/base.txt	2026-10-16 16:25:24.524287000 -0300
+    +++ /tmp/tmp.mmO9V8oHLE/head.txt	2026-10-16 16:25:36.530505500 -0300
+    @@ -92,3 +92,4 @@
+     and the records they write) and the comment change in `tests/test_notebooks.py`.
+     `closing_gate.sh` changed after the run it recorded and has not been re-run end to end
+     (correction audit §S3.9 items 11 and 12). Severity D4; S4's ledger should register it.
+    +
+  what the brief's diff does change (numstat, and every deleted line):
+    added 131, deleted 2
+    DELETED: -**Status:** OPEN — S3 complete (2026-10-16 UTC); S4 may start on maintainer instruction
+    DELETED: -**Blocked numbered session:** `0164` (EXP-003 E1), and every later campaign session (`0165`–`0194
+
+# exit code: 1
+(script exit: 1)

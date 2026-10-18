@@ -1,0 +1,3 @@
+Qwen round 1 termination record
+launched ~02:05:43Z with brief v1 on HEAD 7dbfc546; observations of node pid 8616: 02:16:30Z CPU 6.8s WS 147MB; 02:20:35Z CPU 7.6s WS 149MB; 02:30:19Z CPU 9.9s WS 150MB; stdout 0 bytes each time; no exit file.
+Terminated by the caller at 2026-10-16T02:30:32Z: session-owned process tree only (pid 36360 and 8616 and children), after >24 min without output. Recorded as UNAVAILABLE for round 1; NOT a pass.

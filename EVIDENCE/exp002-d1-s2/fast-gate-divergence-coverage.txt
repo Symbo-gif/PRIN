@@ -1,0 +1,45 @@
+# EXP-002 D1 S2 - fast-gate coverage of the 34 registered divergences
+# date (UTC): 2026-10-15T19:20:31Z
+# git HEAD: 8fd0ecc9949a607f2a7090fe39205f00bb0078c9
+# host: MINGW64_NT-10.0-26300 3.6.5-22c95533.x86_64 x86_64
+# python: Python 3.14.0
+# instrument: EVIDENCE/exp002-d1-s2/fast_gate_divergence_coverage.py
+# command: .venv/Scripts/python EVIDENCE/exp002-d1-s2/fast_gate_divergence_coverage.py 
+#
+test file      : C:\dev\PRIN\tests\test_publication_figure_arguments.py
+registry module: C:\dev\PRIN\EVIDENCE\exp002-d1-s1\root_cause_decomposition.py
+materiality    : C:\dev\PRIN\EVIDENCE\exp002-d1-s1\root-cause-decomposition-postfix.json
+
+registered divergences               : 34
+divergence IDs cited in the test file : 34
+
+registered but NOT cited by a fast-gate assertion: none
+cited but not present in the registry            : none
+
+byte-material divergences   : 26; cited: 26
+byte-immaterial divergences : 8; cited: 8
+  material not cited  : none
+  immaterial not cited: none
+
+Test functions and the divergence IDs each names:
+  test_fig5_marker_sizes                            4  D5.1, D5.2, D5.3, D5.4
+  test_fig7_accuracy_labels_bottom_aligned          1  D7.1
+  test_fig8_markers_drawn_above_grid                1  D8.1
+  test_fig9_curve_widths_legend_and_labels          3  D9.1, D9.2, D9.3
+  test_fig10_outcome_note_has_reference_box         1  D10.1
+  test_fig11_bars_labels_and_ratios                 6  D11.1, D11.2, D11.3, D11.4, D11.5, D11.6
+  test_fig12_reference_styling                     10  D12.1, D12.2, D12.3, D12.4, D12.5, D12.6, D12.7, D12.8, D12.9, D12.10
+  test_fig14_bar_transparency                       1  D14.1
+  test_fig15_marker_sizes_fit_and_legends           7  D15.1, D15.2, D15.3, D15.4, D15.5, D15.6, D15.7
+
+=== module docstring accuracy ===
+  docstring contains 'pin each byte-material argument' (whitespace-normalised): True
+  tests also pin byte-immaterial divergences            : True
+    ['D5.1', 'D5.3', 'D9.2', 'D11.4', 'D12.5', 'D12.7', 'D15.4', 'D15.7']
+  -> the docstring UNDERSTATES the tests: they pin all 34, not just
+     the 26 byte-material ones. Cosmetic; recorded as an observation.
+
+==========================================================================
+RESULT: fast-gate tests cite 34/34 registered divergences -> COMPLETE
+==========================================================================
+# exit code: 0

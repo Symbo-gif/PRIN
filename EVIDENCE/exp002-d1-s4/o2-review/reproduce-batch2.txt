@@ -1,0 +1,165 @@
+# EXP-002 D1 S4 - O-2 cold review, batch 2
+# date (UTC): 2026-10-16T18:03:55Z
+# git HEAD: 6b55c6baa7b6832a50ff57fdd1a919171e9fb5de
+# tracked changes at start: 0
+
+==================================================================
+## C6b b08dd574 (tests/test_notebooks.py) is comment-only: AST identity, resolved hex
+# started 2026-10-16T18:03:56Z
+  resolved b08dd574^ = 5eee91842adbb2ec0a44ba04072f212ca2077bdd
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check 5eee91842adbb2ec0a44ba04072f212ca2077bdd b08dd574 tests/test_notebooks.py
+tests/test_notebooks.py  5eee91842adbb2ec0a44ba04072f212ca2077bdd..b08dd574
+  ast identical outside the module docstring: True
+  module docstring changed                  : False
+# exit code: 0 (0 = AST identical outside the module docstring)
+  negative control - the same tool over a commit that DID change code (3bc12c7a's
+  parent..3bc12c7a on closing_gate.sh is shell, so use the S3 F6 label commit instead):
+  F6 commit = 2b8b7a554b0b60852955cd1c70e1e6295112cc52
+not a hexadecimal revision: '2b8b7a554b0b60852955cd1c70e1e6295112cc52^'
+# exit code: 2 (1 expected: F6 restored a real keyword argument, so the AST differs)
+
+==================================================================
+## C7b docstring_only_check.py positive control with resolved hex revisions
+# started 2026-10-16T18:03:57Z
+  resolved 3bc12c7a^ = b08dd5748fd45e4ee178b70926428aa7024718cc
+# command: .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/docstring_only_check.py --check b08dd5748fd45e4ee178b70926428aa7024718cc 3bc12c7a EVIDENCE/exp002-d1-s3/docstring_only_check.py
+EVIDENCE/exp002-d1-s3/docstring_only_check.py  b08dd5748fd45e4ee178b70926428aa7024718cc..3bc12c7a
+  ast identical outside the module docstring: True
+  module docstring changed                  : True
+# exit code: 0 (0 expected: round 4 changed only its docstring)
+  and the same for the two-round-4-changed Python-visible claim in the commit message:
+    numstat: 3	2	EVIDENCE/exp002-d1-s3/docstring_only_check.py
+
+==================================================================
+## C9b closing_gate.sh: a correct census of leg aggregation (C9's grep undercounted)
+# started 2026-10-16T18:03:58Z
+  every statement that runs a leg, with the statement that captures its status:
+    LINE 63: bash EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh gate-fast tests/ -m "not slow and not gpu"
+    LINE 64: rc=$?; echo "fast suite exit: $rc" >> "$LEGS"; [ "$rc" -eq 0 ] || overall=1
+    LINE 67: bash EVIDENCE/exp002-d1-s3/diagnostic_suite_run.sh gate-full tests/ parity/
+    LINE 68: rc=$?; echo "full suite exit: $rc" >> "$LEGS"; [ "$rc" -eq 0 ] || overall=1
+    LINE 73: leg "targeted coverage run (path form)" $PY -m pytest tests/test_publication_figure_arguments.py tests/test_publication_generation.py parity/test_parity_publication.py --cov=python/prin/reporting "--cov-report=json:$COV" --cov-report=term-missing --basetemp=.pytest_basetemp -p no:cacheprovider || overall=1
+    LINE 74: leg "changed-line coverage against the S3 base 5ba0129e" env PYTHONIOENCODING=utf-8 $PY EVIDENCE/exp002-d1-s2/changed_line_coverage.py "$COV" 5ba0129e python/prin/reporting/figure_generation.py || overall=1
+    LINE 75: leg "changed-line coverage against the cycle base fd8854ed" env PYTHONIOENCODING=utf-8 $PY EVIDENCE/exp002-d1-s2/changed_line_coverage.py "$COV" fd8854ed python/prin/reporting/figure_generation.py || overall=1
+    LINE 78: leg "cargo fmt --all -- --check" cargo fmt --all -- --check || overall=1
+    LINE 79: leg "cargo clippy --workspace --all-targets -- -D warnings" cargo clippy --workspace --all-targets -- -D warnings || overall=1
+    LINE 80: if ! leg "cargo test --workspace (attempt 1)" cargo test --workspace; then
+    LINE 82:   leg "cargo test --workspace (attempt 2)" cargo test --workspace || overall=1
+    LINE 87: leg "sphinx -W --keep-going -b html (from a deleted _build)" $PY -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html || overall=1
+    LINE 90: leg "gitleaks, full history" $GITLEAKS git . --no-banner || overall=1
+    LINE 91: leg "gitleaks, --staged" $GITLEAKS git . --staged --no-banner || overall=1
+
+  legs run by the script (diagnostic_suite_run x2, leg x9 incl. the cargo retry):
+    diagnostic_suite_run.sh invocations : 2
+    'leg "' invocations                 : 9
+    statements setting overall=1        : 11
+
+  is any leg's status dropped? List every leg line and the aggregation that covers it:
+    legs found              : 11
+    legs with aggregation   : 11
+    legs WITHOUT aggregation: 0
+      line  63  same/next-line aggregation
+      line  67  same/next-line aggregation
+      line  73  same/next-line aggregation
+      line  74  same/next-line aggregation
+      line  75  same/next-line aggregation
+      line  78  same/next-line aggregation
+      line  79  same/next-line aggregation
+      line  80  same/next-line aggregation
+      line  87  same/next-line aggregation
+      line  90  same/next-line aggregation
+      line  91  same/next-line aggregation
+    RESULT: every leg is aggregated
+# python exit code: 0
+
+==================================================================
+## C13 final_legs.sh round-4 fix: a Snyk leg that writes no SARIF gives exit 1
+# started 2026-10-16T18:03:58Z
+  the Snyk block is extracted VERBATIM from the committed script; only the legs
+  before it and the 'snyk' binary are stubbed, so the control flow under review
+  is the committed one.
+  --- the verbatim block under test:
+    # 5. Snyk Code CLI (authentication verified first: an expired token gives 401 and no SARIF)
+    { hdr "Snyk Code CLI"
+      echo "# snyk $(snyk --version)"; echo "# command: snyk whoami"; snyk whoami; rc=$?; echo "# exit code: $rc"
+      [ "$rc" -eq 0 ] || overall=1
+      SARIF="$(cygpath -m "${TEMP:-/tmp}")/prin-s3-final.sarif"
+      rm -f "$SARIF"
+      echo; echo "# command: snyk code test . --severity-threshold=low --sarif-file-output=$SARIF"
+      echo "# started $(stamp)"
+      snyk code test . --severity-threshold=low "--sarif-file-output=$SARIF" > "$OUT/snyk-console.txt" 2>&1
+      rc=$?; echo "# exit code: $rc (1 = findings reported, not a scan failure; 2 or more = the scan did not run)"
+      [ "$rc" -le 1 ] || overall=1
+      echo "# ended $(stamp)"
+      if [ -s "$SARIF" ]; then
+        echo "# SARIF sha256: $(sha256sum "$SARIF" | cut -d' ' -f1)  size: $(stat -c %s "$SARIF") bytes (kept outside the repository)"
+        echo; echo "## CLI Test Summary, verbatim"; sed -n '/Test Summary/,/Open issues/p' "$OUT/snyk-console.txt"
+        echo; echo "## Bucketed by snyk_s3_filter.py (SARIF on stdin)"
+        $PY -I EVIDENCE/exp002-d1-s3/snyk_s3_filter.py < "$SARIF"; rc=$?; echo "# filter exit code: $rc (0 = nothing above LOW in any git-known path)"
+        [ "$rc" -eq 0 ] || overall=1
+      else
+        echo "# NO SARIF WRITTEN: this leg is BLOCKED, not clean."
+        overall=1
+      fi; } > "$OUT/snyk-code-s3-final.txt" 2>&1
+    
+
+# command: PATH=<stub first> bash <harness>   (snyk writes NO SARIF)
+    harness overall: 1
+# exit code: 1 (expect 1 = BLOCKED, never 0)
+  the record it wrote:
+    # Snyk Code CLI
+    # date (UTC): 2026-10-16T18:04:00Z
+    # git HEAD: 6b55c6baa7b6832a50ff57fdd1a919171e9fb5de   tracked changes: 0
+    
+    # snyk 1.1306.2-stub
+    # command: snyk whoami
+    stub-account
+    # exit code: 0
+    
+    # command: snyk code test . --severity-threshold=low --sarif-file-output=C:/Users/there/AppData/Local/Temp/prin-s3-final.sarif
+    # started 2026-10-16T18:04:00Z
+    # exit code: 2 (1 = findings reported, not a scan failure; 2 or more = the scan did not run)
+    # ended 2026-10-16T18:04:00Z
+    # NO SARIF WRITTEN: this leg is BLOCKED, not clean.
+
+  --- positive control: a stub snyk that DOES write a SARIF
+# command: PATH=<stub first> bash <harness>   (snyk writes a valid empty SARIF)
+    harness overall: 0
+# exit code: 0 (expect 0)
+
+  --- negative control on whoami: an unauthenticated stub (401 class)
+# command: PATH=<stub first> bash <harness>   (whoami fails)
+    harness overall: 1
+# exit code: 1 (expect 1)
+
+==================================================================
+## C14 does 'overall=1' set inside '{ ...; } > file' reach the caller? (load-bearing for C13)
+# started 2026-10-16T18:04:05Z
+    bash semantics: { } is a group command, NOT a subshell, so assignments persist.
+    after a brace group with redirection, overall = 1
+    after a parenthesised subshell,        overall = 1
+# exit code: 1 (1 expected: the brace-group assignment propagated, the subshell's did not)
+
+==================================================================
+## C15 launch_round.sh always exits 0: is a reviewer failure captured anywhere?
+# started 2026-10-16T18:04:05Z
+  the script's last statement: 'wait'
+  per-reviewer exit codes are written by each subshell to <round>/<tool>.exit:
+    11:( devin --model swe-2-high -p --prompt-file "C:/Users/there/prin-s3-scratch/review/reviewer-brief.md" --permission-mode smart --export "C:/Users/there/prin-s3-scratch/review/$1/devin-export.md" > "$D/devin-stdout.txt" 2>&1; echo "exit=$?" > "$D/devin.exit" ) &
+    12:( agy --model gemini-3.8-flash-high --mode plan --output-format text -p "$POINTER" > "$D/agy-stdout.txt" 2>&1; echo "exit=$?" > "$D/agy.exit" ) &
+    13:( qwen.cmd -m qwen3.8-max-preview -o text -p "$POINTER" > "$D/qwen-stdout.txt" 2>&1; echo "exit=$?" > "$D/qwen.exit" ) &
+  what the committed round records actually hold (evidence that .exit is the channel used):
+    round1: 0 .exit files -> 
+    round2: 0 .exit files -> 
+    round3: 0 .exit files -> 
+    round4: 4 .exit files -> agy=exit=0 devin-attempt1=exit=0 devin-attempt2=exit=0 qwen=exit=0 
+  bash 'wait' with no operands returns 0 regardless of the jobs' statuses:
+    after two failing background jobs, $? = 0
+  so launch_round.sh's own status is NOT a pass/fail signal; the .exit files are.
+  Classification: pre-existing design property, unchanged by round 4, and the
+  per-reviewer statuses ARE captured. Not a defect in the fixes under review.
+
+==================================================================
+# batch 2 finished 2026-10-16T18:04:08Z
+# git HEAD at end: 6b55c6baa7b6832a50ff57fdd1a919171e9fb5de
+# tracked changes at end: ''

@@ -1,0 +1,325 @@
+# EXP-002 D1 S1 local gate (Plan amendment #48 local-validation regime)
+# commit: af894998958ede321045f73e6421ba4f29b370d5
+# tracked changes at start: 0
+# host: MINGW64_NT-10.0-26300 HP 3.6.5-22c95533.x86_64 2025-10-10 12:02 UTC x86_64 Msys
+# python: Python 3.14.0; rustc: rustc 1.99.0 (b940084d7 2026-09-28); cargo: cargo 1.99.0 (5f94df478 2026-08-27)
+# started: 2026-10-15T12:24:17Z
+# shell: Git Bash; 'C:\Program Files\Git\bin' prepended process-locally (AGENTS.md)
+
+## ruff-check
+$ .venv/Scripts/ruff check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/ EVIDENCE/exp002-d1-s1/
+# started 12:24:17Z, ended 12:24:17Z
+All checks passed!
+# exit code: 0
+
+## ruff-format
+$ .venv/Scripts/ruff format --check python/ tests/ benchmarks/ tools/ parity/ EVIDENCE/exp002-d1-s1/
+# started 12:24:17Z, ended 12:24:18Z
+334 files already formatted
+# exit code: 0
+
+## ruff-format-campaign
+$ .venv/Scripts/ruff format --check DOCS/experiments/ --config include = ['*.py', '*.pyi', '*.ipynb']
+# started 12:24:18Z, ended 12:24:18Z
+3 files already formatted
+# exit code: 0
+
+## mypy-prin
+$ .venv/Scripts/mypy python/prin --strict
+# started 12:24:18Z, ended 12:24:19Z
+Success: no issues found in 62 source files
+# exit code: 0
+
+## mypy-campaign
+$ .venv/Scripts/mypy DOCS/experiments/ --strict
+# started 12:24:19Z, ended 12:24:20Z
+Success: no issues found in 3 source files
+# exit code: 0
+
+## mypy-changed-tests-evidence
+$ .venv/Scripts/mypy --strict parity/test_parity_publication.py tests/test_publication_figure_arguments.py EVIDENCE/exp002-d1-s1/root_cause_decomposition.py
+# started 12:24:20Z, ended 12:24:21Z
+Success: no issues found in 3 source files
+# exit code: 0
+
+## interrogate
+$ .venv/Scripts/python -m interrogate -c pyproject.toml python/prin
+# started 12:24:21Z, ended 12:24:21Z
+==================== Coverage for C:\dev\PRIN\python\prin\ ====================
+----------------------------------- Summary -----------------------------------
+| Name                                |   Total |   Miss |   Cover |   Cover% |
+|-------------------------------------|---------|--------|---------|----------|
+| __init__.py                         |       1 |      0 |       1 |     100% |
+| _compat.py                          |      14 |      0 |      14 |     100% |
+| _deprecation.py                     |       8 |      0 |       8 |     100% |
+| _ort.py                             |      13 |      0 |      13 |     100% |
+| _phase0.py                          |      12 |      0 |      12 |     100% |
+| _public_api.py                      |       1 |      0 |       1 |     100% |
+| _torch_compat.py                    |     106 |      5 |     101 |      95% |
+| adversarial_tools.py                |       5 |      0 |       5 |     100% |
+| daemon.py                           |      33 |      0 |      33 |     100% |
+| datasets.py                         |       5 |      0 |       5 |     100% |
+| dlpack.py                           |       4 |      0 |       4 |     100% |
+| dynamics.py                         |       1 |      0 |       1 |     100% |
+| kernels.py                          |      28 |      0 |      28 |     100% |
+| metrics.py                          |       3 |      0 |       3 |     100% |
+| simulation.py                       |      27 |      1 |      26 |      96% |
+| simulation_experiments.py           |       7 |      0 |       7 |     100% |
+| solvers.py                          |       8 |      0 |       8 |     100% |
+| subconscious_compat.py              |      40 |      0 |      40 |     100% |
+| temporal_metrics.py                 |      11 |      0 |      11 |     100% |
+| temporal_training.py                |      22 |      0 |      22 |     100% |
+| tensor.py                           |      23 |      0 |      23 |     100% |
+| topology.py                         |       3 |      0 |       3 |     100% |
+| train.py                            |       4 |      0 |       4 |     100% |
+| training_hooks.py                   |      37 |      1 |      36 |      97% |
+| y4q1_tools.py                       |      44 |      1 |      43 |      98% |
+| eval\__init__.py                    |       1 |      0 |       1 |     100% |
+| experiments\__init__.py             |       3 |      0 |       3 |     100% |
+| nn\__init__.py                      |      17 |      0 |      17 |     100% |
+| nn\_bridge.py                       |       5 |      0 |       5 |     100% |
+| nn\ablation.py                      |      29 |      0 |      29 |     100% |
+| nn\ablation_variants.py             |      33 |      0 |      33 |     100% |
+| nn\activations.py                   |       8 |      0 |       8 |     100% |
+| nn\allocation.py                    |      15 |      0 |      15 |     100% |
+| nn\attention.py                     |       7 |      0 |       7 |     100% |
+| nn\autoencoders.py                  |      26 |      0 |      26 |     100% |
+| nn\deferred_layers.py               |       1 |      0 |       1 |     100% |
+| nn\energy.py                        |      17 |      0 |      17 |     100% |
+| nn\hierarchical_layers.py           |      38 |      0 |      38 |     100% |
+| nn\hybrid.py                        |      14 |      0 |      14 |     100% |
+| nn\hybrid_compat.py                 |      24 |      0 |      24 |     100% |
+| nn\inhibition.py                    |       6 |      0 |       6 |     100% |
+| nn\inhibition_layers.py             |      23 |      0 |      23 |     100% |
+| nn\model.py                         |      15 |      0 |      15 |     100% |
+| nn\mot_evaluation.py                |      11 |      0 |      11 |     100% |
+| nn\optimizers.py                    |      33 |      0 |      33 |     100% |
+| nn\phase_tracker.py                 |      18 |      0 |      18 |     100% |
+| nn\slot_attention.py                |      20 |      0 |      20 |     100% |
+| nn\subconscious_model.py            |       1 |      0 |       1 |     100% |
+| nn\temporal_compat.py               |      14 |      0 |      14 |     100% |
+| parity\__init__.py                  |       1 |      0 |       1 |     100% |
+| parity\harness.py                   |      10 |      0 |      10 |     100% |
+| parity\loader.py                    |       9 |      0 |       9 |     100% |
+| parity\manifest.py                  |      15 |      0 |      15 |     100% |
+| parity\schema.py                    |      21 |      0 |      21 |     100% |
+| parity\strategies.py                |      13 |      0 |      13 |     100% |
+| reporting\__init__.py               |       1 |      0 |       1 |     100% |
+| reporting\_artifacts.py             |      15 |      7 |       8 |      53% |
+| reporting\benchmark_reporting.py    |      22 |      0 |      22 |     100% |
+| reporting\figure_generation.py      |      21 |      2 |      19 |      90% |
+| reporting\profiler.py               |      24 |      0 |      24 |     100% |
+| reporting\table_generation.py       |      20 |      7 |      13 |      65% |
+|-------------------------------------|---------|--------|---------|----------|
+| TOTAL                               |    1011 |     24 |     987 |    97.6% |
+--------------- RESULT: PASSED (minimum: 95.0%, actual: 97.6%) ----------------
+# exit code: 0
+
+## bandit
+$ .venv/Scripts/python -m bandit -r python/prin DOCS/experiments -c pyproject.toml
+# started 12:24:21Z, ended 12:24:23Z
+# (last 12 lines of 84 — full log retained locally)
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+Files skipped (0):
+# exit code: 0
+
+## bandit-evidence
+$ .venv/Scripts/python -m bandit EVIDENCE/exp002-d1-s1/root_cause_decomposition.py
+# started 12:24:23Z, ended 12:24:23Z
+# (last 12 lines of 29 — full log retained locally)
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+Files skipped (0):
+# exit code: 0
+
+## check-deviation-ledger
+$ .venv/Scripts/python tools/check_deviation_ledger.py DOCS/reports/039-project-state.md DOCS/reports/040-project-state.md
+# started 12:24:23Z, ended 12:24:30Z
+Ledger consistency check passed.
+  Compared 142 rows in DOCS\reports\039-project-state.md with 146 rows in DOCS\reports\040-project-state.md.
+# exit code: 0
+
+## check-dv-register-gates
+$ .venv/Scripts/python tools/check_dv_register_gates.py
+# started 12:24:30Z, ended 12:24:30Z
+DV-register gate check passed.
+  Checked 47 DV register rows against 198 session-register entries.
+# exit code: 0
+
+## check-skipif-probes
+$ .venv/Scripts/python tools/check_skipif_probes.py
+# started 12:24:30Z, ended 12:24:30Z
+check_skipif_probes: no registration-probe skipif guards
+# exit code: 0
+
+## check-global-session-registration
+$ .venv/Scripts/python tools/check_global_session_registration.py
+# started 12:24:30Z, ended 12:24:31Z
+Global-session registration check passed.
+  Checked 18 Executive Audit reports.
+# exit code: 0
+
+## pytest-fast
+$ .venv/Scripts/python -m pytest tests/ -m not slow and not gpu -q -rfE --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20
+# started 12:24:31Z, ended 13:25:42Z
+# (last 25 lines of 239 — full log retained locally)
+  OPS: Operations Per Second, computed as 1 / Mean
+============================ slowest 20 durations =============================
+118.04s call     tests/test_reproduce.py::TestWriteNoFollow::test_repeated_writes_do_not_exhaust_file_descriptors
+116.16s call     tests/test_wp001_baseline.py::test_repository_inventory_is_deterministic_and_separates_archive
+97.55s call     tests/test_exp002_e4_analysis.py::test_h1_frozen_contract_difference_refutes[rc10-frozen_contract_extra-names0]
+77.03s call     tests/test_exp002_e4_analysis.py::test_ambient_git_overrides_are_ignored
+76.63s call     tests/test_exp002_e4_analysis.py::test_outputs_are_byte_identical_across_runs
+70.35s call     tests/test_exp002_e4_analysis.py::test_failed_write_leaves_no_temporary_file
+69.72s call     tests/test_exp002_e4_analysis.py::test_h1_frozen_contract_difference_refutes[rc11-frozen_contract_missing-names1]
+67.57s call     tests/test_exp002_e4_analysis.py::test_fast_path_is_not_taken_when_a_global_input_changes
+62.90s call     tests/test_migration_guide_consolidated.py::test_cli_render_and_check
+62.49s call     tests/test_exp002_e4_analysis.py::test_frozen_contract_digest_mismatch_aborts
+56.36s call     tests/test_exp002_e4_analysis.py::test_module_commit_is_recorded_when_the_module_is_tracked
+52.45s call     tests/test_exp002_e4_analysis.py::test_non_regular_output_destination_is_refused
+51.31s call     tests/test_exp002_e4_analysis.py::test_global_listing_failures_abort_cleanly[iterdir-EXP-002-raw record root]
+48.11s call     tests/test_exp002_e4_analysis.py::test_output_directory_behind_a_link_is_refused
+47.96s call     tests/test_exp002_e4_analysis.py::test_main_reports_verdicts_and_returns_zero
+46.47s call     tests/test_exp002_e4_analysis.py::test_missing_record_file_is_inadmissible
+46.18s call     tests/test_exp002_e4_analysis.py::test_h2_c02_stored_flag_disagreement_refutes
+43.88s call     tests/test_exp002_e4_analysis.py::test_manifest_and_pin_must_agree
+42.42s call     tests/test_exp002_e4_analysis.py::test_h1_missing_ownership_row_refutes
+41.62s call     tests/test_wp001_baseline.py::test_cli_emits_machine_readable_inventory
+=========================== short test summary info ===========================
+FAILED tests/test_exp002_e4_analysis.py::test_linked_raw_root_aborts - Permis...
+= 1 failed, 4037 passed, 178 skipped, 55 deselected, 59 warnings in 3643.77s (1:00:43) =
+# exit code: 1
+
+## pytest-full
+$ .venv/Scripts/python -m pytest tests/ parity/ -q -rfE --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20
+# started 13:25:52Z, ended 17:40:45Z
+# (last 25 lines of 767 — full log retained locally)
+============================ slowest 20 durations =============================
+1086.16s call     tests/test_acceptance_y2q1.py::TestInterleavedHybridPRINet::test_clevr6_no_nan
+1052.84s call     tests/test_notebooks.py::test_notebook_executes_end_to_end[02_clevr_n_binding.ipynb]
+639.63s call     tests/test_notebooks.py::test_notebook_executes_end_to_end[01_oscillosim_quickstart.ipynb]
+554.57s call     tests/test_acceptance_q2_remaining.py::TestGradientCheckpointing::test_checkpoint_vram_stays_bounded
+477.70s call     tests/test_acceptance_y2q1.py::TestInterleavedHybridPRINet::test_ablation_oscillatory_bias
+408.96s call     tests/test_notebooks.py::test_notebook_executes_end_to_end[03_custom_coupling.ipynb]
+389.81s call     tests/test_notebooks.py::test_notebook_executes_end_to_end[04_torch_bridge.ipynb]
+336.21s call     tests/test_train_bridge.py::TestTrainBridgeBenchmarks::test_resonance_layer_forward_backward_round_trip_latency_moderate
+170.74s call     tests/test_acceptance_y2q1.py::TestDiscreteDeltaThetaGamma::test_clevr6_convergence
+165.17s call     tests/test_exp002_e4_analysis.py::test_outputs_are_byte_identical_across_runs
+155.90s call     tests/test_wp001_baseline.py::test_repository_inventory_is_deterministic_and_separates_archive
+136.86s call     tests/test_acceptance_q2_remaining.py::TestFashionMNIST::test_bptt_training_loss_decreases
+133.46s call     tests/test_reproduce.py::TestWriteNoFollow::test_repeated_writes_do_not_exhaust_file_descriptors
+128.87s call     tests/test_exp002_e4_analysis.py::test_module_commit_is_recorded_when_the_module_is_tracked
+107.96s call     tests/test_exp002_e4_analysis.py::test_frozen_contract_digest_mismatch_aborts
+105.93s call     tests/test_exp002_e4_analysis.py::test_ambient_git_overrides_are_ignored
+105.42s call     tests/test_exp002_e4_analysis.py::test_h1_frozen_contract_difference_refutes[rc11-frozen_contract_missing-names1]
+95.26s call     tests/test_exp002_e4_analysis.py::test_h1_frozen_contract_difference_refutes[rc10-frozen_contract_extra-names0]
+92.00s call     tests/test_exp002_e4_analysis.py::test_fast_path_is_not_taken_when_a_global_input_changes
+86.49s call     tests/test_exp002_e4_analysis.py::test_symlinked_result_file_is_inadmissible
+=========================== short test summary info ===========================
+FAILED tests/test_notebooks.py::test_notebook_executes_end_to_end[02_clevr_n_binding.ipynb]
+FAILED tests/test_reproduce.py::TestWriteNoFollow::test_does_not_corrupt_a_hard_linked_sibling
+=== 2 failed, 6323 passed, 184 skipped, 61 warnings in 15093.11s (4:11:33) ====
+# exit code: 1
+
+## sphinx-clean-build
+$ .venv/Scripts/python -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
+# started 17:40:59Z, ended 17:47:55Z
+# (last 6 lines of 46 — full log retained locally)
+[01mwriting additional pages... [39;49;00msearch done
+[01mdumping search index in English (code: en)... [39;49;00mdone
+[01mdumping object inventory... [39;49;00mdone
+[01mbuild succeeded.[39;49;00m
+
+The HTML pages are in DOCS\sphinx\_build\html.
+# exit code: 0
+
+## cargo-fmt
+$ cargo fmt --all -- --check
+# started 17:47:59Z, ended 17:48:23Z
+# exit code: 0
+
+## cargo-clippy
+$ cargo clippy --workspace --all-targets -- -D warnings
+# started 17:48:26Z, ended 17:48:58Z
+# (last 6 lines of 5 — full log retained locally)
+   Compiling pyo3-ffi v0.29.0
+   Compiling pyo3 v0.29.0
+   Compiling numpy v0.29.0
+    Checking prin-py v1.0.0-rc1 (C:\dev\PRIN\crates\prin-py)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 27.16s
+# exit code: 0
+
+## gitleaks-history
+$ DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git . --redact --no-banner --no-color
+# started 17:48:59Z, ended 17:49:11Z
+2:49PM INF 737 commits scanned.
+2:49PM INF scanned ~94733131 bytes (94.73 MB) in 12s
+2:49PM INF no leaks found
+# exit code: 0
+
+## gitleaks-staged
+$ DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git . --staged --redact --no-banner --no-color
+# started 17:49:11Z, ended 17:49:12Z
+2:49PM INF 0 commits scanned.
+2:49PM INF scanned ~0 bytes (0) in 296ms
+2:49PM INF no leaks found
+# exit code: 0
+
+## exp002-record-immutability
+$ git diff --stat fd8854ed87a21e01f16e2f7128b431e74085a26e HEAD -- DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/ benchmarks/results/EXP-002/ .github/ pyproject.toml Cargo.toml Cargo.lock DOCS/sphinx/requirements.txt ci/
+# started 17:49:12Z, ended 17:49:12Z
+# exit code: 0
+
+# finished: 2026-10-15T17:49:12Z
+## isolated-rerun (Testing Standards §7 item 6 and AGENTS.md: the three failed tests, re-run alone, sequentially, same commit af894998, tracked changes: 0)
+$ .venv/Scripts/python -m pytest "tests/test_exp002_e4_analysis.py::test_linked_raw_root_aborts" -q -rfE --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+# started 17:49:29Z
+
+============================= 1 passed in 55.05s ==============================
+# exit code: 0 (ended 17:51:09Z)
+$ .venv/Scripts/python -m pytest "tests/test_reproduce.py::TestWriteNoFollow::test_does_not_corrupt_a_hard_linked_sibling" -q -rfE --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+# started 17:51:11Z
+
+============================= 1 passed in 26.53s ==============================
+# exit code: 0 (ended 17:52:21Z)
+$ .venv/Scripts/python -m pytest "tests/test_notebooks.py::test_notebook_executes_end_to_end[02_clevr_n_binding.ipynb]" -q -rfE --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -p no:cacheprovider
+# started 17:52:21Z
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== 1 passed, 1 warning in 231.92s (0:03:51) ===================
+# exit code: 0 (ended 17:56:34Z)
+
+## coverage-changed-module
+$ .venv/Scripts/python -m pytest tests/test_publication_figure_arguments.py tests/test_publication_generation.py parity/test_parity_publication.py -q --basetemp=.pytest_basetemp -p no:cacheprovider --cov=prin.reporting.figure_generation --cov-report=term-missing
+collected 0 items / 3 errors
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!
+============================== 3 errors in 0.65s ==============================
+# exit code: 2
+
+# The module-form --cov above failed at collection: 'ImportError: cannot load module more than once per process' (PyO3 extension imported twice, the known host coverage limitation; DV-033). Re-run with path-form source:
+$ .venv/Scripts/python -m pytest tests/test_publication_figure_arguments.py tests/test_publication_generation.py parity/test_parity_publication.py -q --basetemp=.pytest_basetemp -p no:cacheprovider --cov=python/prin/reporting --cov-report=term-missing
+Name                                           Stmts   Miss  Cover   Missing
+python\prin\reporting\figure_generation.py       340      2    99%   191, 196
+============================ 115 passed in 23.89s =============================
+# exit code: 0
+# figure_generation.py missed lines 191 and 196 are malformed-PNG branches of normalize_matplotlib_output, untouched by this change; every line changed by 10d84f2 is executed (changed-line coverage 100%). The TOTAL row covers the whole reporting package for this targeted run only and is not a project coverage figure.
+
+# gate record closed: 2026-10-15T17:58:12Z

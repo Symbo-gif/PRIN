@@ -1,0 +1,77 @@
+# Structural attribution: the failing test and its subject code are
+# byte-identical between the run that PASSED and the run that FAILED.
+# date (UTC): 2026-10-17T22:02:31Z
+
+== git rev-parse HEAD ==
+814b670c2aafa4b1e6b58e3f847613928c813e95
+
+== is 157ce5bc (the passing run) an ancestor of HEAD? ==
+YES
+
+== product + test code changed 157ce5bc..HEAD ==
+(empty means the daemon under test and the test itself are byte-identical)
+== end (empty above) ==
+
+== every file changed 157ce5bc..HEAD ==
+CHANGELOG.md
+DOCS/audits/2026-10-15-exp002-d1-correction-audit.md
+DOCS/reports/041-project-state.md
+EVIDENCE/README.md
+EVIDENCE/exp002-d1-s4/README.md
+EVIDENCE/exp002-d1-s4/collect_final.sh
+EVIDENCE/exp002-d1-s4/final_legs.sh
+EVIDENCE/exp002-d1-s4/gate/change-set.txt
+EVIDENCE/exp002-d1-s4/gate/fast/console.txt
+EVIDENCE/exp002-d1-s4/gate/fast/run.txt
+EVIDENCE/exp002-d1-s4/gate/fast/sampler-err.txt
+EVIDENCE/exp002-d1-s4/gate/fast/samples.jsonl
+EVIDENCE/exp002-d1-s4/gate/final/delta-reaudit.txt
+EVIDENCE/exp002-d1-s4/gate/final/gitleaks.txt
+EVIDENCE/exp002-d1-s4/gate/final/immutability-after.txt
+EVIDENCE/exp002-d1-s4/gate/final/index-selfcheck-s1.txt
+EVIDENCE/exp002-d1-s4/gate/final/index-selfcheck-s2.txt
+EVIDENCE/exp002-d1-s4/gate/final/index-selfcheck-s3.txt
+EVIDENCE/exp002-d1-s4/gate/final/index-selfcheck-s4.txt
+EVIDENCE/exp002-d1-s4/gate/final/pr-34.txt
+EVIDENCE/exp002-d1-s4/gate/final/snyk-code-s4-final.txt
+EVIDENCE/exp002-d1-s4/gate/final/snyk-console.txt
+EVIDENCE/exp002-d1-s4/gate/final/sphinx.txt
+EVIDENCE/exp002-d1-s4/gate/final/static-gate.txt
+EVIDENCE/exp002-d1-s4/gate/final/verify-manifest.txt
+EVIDENCE/exp002-d1-s4/gate/full/console.txt
+EVIDENCE/exp002-d1-s4/gate/full/run.txt
+EVIDENCE/exp002-d1-s4/gate/full/sampler-err.txt
+EVIDENCE/exp002-d1-s4/gate/full/samples.jsonl
+EVIDENCE/exp002-d1-s4/gate/immutability-before.txt
+EVIDENCE/exp002-d1-s4/gate/isolated-rerun.txt
+EVIDENCE/exp002-d1-s4/gate/long-legs.txt
+EVIDENCE/exp002-d1-s4/gate/workflows-after.txt
+EVIDENCE/exp002-d1-s4/gate/workflows-before.txt
+EVIDENCE/exp002-d1-s4/immutability.sh
+EVIDENCE/exp002-d1-s4/pr34-review/adjudication-evidence.txt
+EVIDENCE/exp002-d1-s4/pr34-review/adjudication.md
+EVIDENCE/exp002-d1-s4/pr34-review/bench-regression-rows.txt
+EVIDENCE/exp002-d1-s4/pr34-review/billing-lock-diagnosis.txt
+EVIDENCE/exp002-d1-s4/pr34-review/failure-identity-and-schema.txt
+EVIDENCE/exp002-d1-s4/pr34-review/fix-verification.sh
+EVIDENCE/exp002-d1-s4/pr34-review/fix-verification.txt
+EVIDENCE/exp002-d1-s4/pr34-review/hosted-inventory-final.txt
+EVIDENCE/exp002-d1-s4/pr34-review/hosted-run-triage.txt
+EVIDENCE/exp002-d1-s4/pr34-review/negative-controls.sh
+EVIDENCE/exp002-d1-s4/pr34-review/negative-controls.txt
+EVIDENCE/exp002-d1-s4/pr34-review/negctl.py
+EVIDENCE/exp002-d1-s4/pr34-review/parity-attempt2-failures.txt
+EVIDENCE/exp002-d1-s4/pr34-review/perplexity-review-verbatim.txt
+EVIDENCE/exp002-d1-s4/pr34-review/pre-decision-investigations.txt
+EVIDENCE/exp002-d1-s4/pr34-review/snyk-code-changed-file.txt
+parity/test_parity_publication.py
+
+== the failing assertion, verbatim from the red leg ==
+6738:21:42:59Z ================================== FAILURES ===================================
+6739-21:42:59Z ______________ TestIntegration.test_no_gpu_throughput_regression ______________
+6740-21:42:59Z tests\test_acceptance_subconscious.py:608: in test_no_gpu_throughput_regression
+6741-21:42:59Z     assert ratio < 1.30, f"Throughput ratio {ratio:.2f} > 1.30"
+6742-21:42:59Z E   AssertionError: Throughput ratio 22.07 > 1.30
+
+== the same test in the PASSING control run ==
+618:20:07:49Z tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression PASSED [  8%]

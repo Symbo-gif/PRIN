@@ -598,3 +598,142 @@ re-baseline gates before `0168`/`0173`), DV-037, and the EXP-004+ hardware
 gates carry forward as recorded. DV-040's re-audit gate at EXP-002 E4
 (session `0162`) was reached and discharged in-session: its row records the
 `exp002_e4_analysis.py` gate evidence and stays CLOSED.
+
+## `EXP-002-D1` S4 and the amendment-#52 hosted-check window — 2026-10-16 UTC
+
+Plan amendment #52 re-enables the seven check workflows (`rust`, `python`,
+`parity`, `repro`, `snyk`, `gpu`, `nightly`) on the maintainer's authority
+until the campaign's experimentation is complete (the close of session `0194`,
+or earlier on maintainer instruction), superseding amendment #48's
+"hosted checks disabled" rule and amendment #50's EXP-002-only window from
+2026-10-16. Like the amendment-#50 window before it, this **opens, closes and
+re-scopes no deferred-validation row**:
+
+- **DV-033** stays **OPEN**. A hosted `python.yml` codecov leg running again
+  is not the closure this row names; per-change coverage on the maintainer
+  host is unchanged, and amendment #52 is not the amendment #48 lift.
+- **DV-034** stays **OPEN**. Re-enabling `gpu.yml` does not remove the single
+  self-hosted `PRIN-GPU-Runner` dependency, and the ruleset 22150076
+  `required_status_checks` rule stays removed, so `gpu-cuda`/`gpu-wgpu` are
+  recorded evidence rather than a hard merge gate.
+- **DV-036** / `DV036-F5` and the other hosted or reference-host items stay
+  as recorded. Hosted `nightly.yml` runs are evidence for the exact SHA they
+  ran on; they close nothing unless a row's own acceptance text allows it,
+  and any such closure needs its own dated entry.
+- **DV-045** stays **OPEN**. Amendment #52 makes a red hosted `audit` job
+  visible again; per the S4 session's rules a red hosted check is triaged and
+  recorded, never waived, and no dependency, advisory ignore or audit
+  configuration is changed by this correction cycle (its approved scope is
+  bounded to the H3 correction).
+- **DV-046** stays **OPEN** and its "re-check on every `gpu-cuda` run while
+  hosted workflows remain enabled" gate is now live again from 2026-10-16.
+- **DV-047** stays **OPEN**; its re-audit gate (rebuild and record the new
+  `.pyd` SHA-256 before `EXP-002-r1`'s E3) is unchanged and is carried into
+  the `EXP-002-r1` authorization issued by this session.
+
+**No new DV row is opened by this session.** Observation O-1 (the required
+full suite not demonstrated green in one pass on the maintainer host) is
+carried in the PSR-041 deviation ledger rather than here: its closure
+evidence is a hosted full-suite run in this same session, not validation
+deferred to a future work package or phase, which is what this register
+consolidates. DV-032 is deliberately **not** widened to cover the Windows
+`WinError 5` rename class — DV-032 registers host-sensitive *timing ratios*,
+while the rename class is the `AGENTS.md`-documented pytest
+temporary-directory contention class. Should the hosted full-suite run at the
+PR #34 head commit not pass, O-1 remains OPEN and the next governed session
+should open a dated row here for it.
+
+**DV-032 observation (2026-10-17, `EXP-002-D1` S4 addendum §S4.13): the
+"PARTIALLY HARDENED" disposition is empirically refuted.** Test (1),
+`test_no_gpu_throughput_regression`, turned the **required local full-suite leg
+RED** at `814b670c` with `AssertionError: Throughput ratio 22.07 > 1.30`
+(`1 failed, 6331 passed, 184 skipped`). The row's recorded band — "measures
+~1.28–1.32 under load" — is wrong by more than an order of magnitude for the
+in-suite case. Measured, not inferred:
+
+- **Reproduced in isolation at the same commit, 2 failures in 5 iterations**
+  (ratios **2.13** at 99.7 % host CPU and **3.42** at 97.2 %), and **5 passes in
+  5** on a quiet host (11.9–24.1 %), where the test takes 4.1–4.3 s instead of
+  6.7–9.9 s. The WP-036G hardening (fixed work, warm-up, seven-sample medians)
+  therefore does **not** make the assertion robust; its quarantine was removed on
+  a claim now directly falsified.
+- **Not caused by the change set.** `git diff 157ce5bc..814b670c` over `python/`,
+  `rust/`, `crates/`, `Cargo.toml`, `Cargo.lock`, `pyproject.toml` **and
+  `tests/`** is empty, so the test and the `SubconsciousDaemon` it exercises are
+  byte-identical to the ancestor run that passed the same test at the same 8 %
+  position.
+- **Whole-leg contention does not explain it** and is not recorded as the cause
+  (Testing Standards §7 item 3): the passing control leg had a *higher* median
+  host CPU (96.5 % vs 96.2 %) and *worse* pytest CPU efficiency (0.422 vs 0.483
+  CPU-s/wall-s). The discriminating variable is *instantaneous* load during the
+  assertion's own ~13 s window, which a 93-minute median cannot resolve.
+
+**Consequence, and why this matters beyond the row:** because the quarantine was
+removed, this test sits in the **default required gate**, not only in
+`nightly.yml`. It is therefore able to — and did — block a session's closure. Its
+outcome at high load is a coin flip (3/5 measured), so re-running the required leg
+to obtain green would be rerun-until-green, prohibited by §7 item 6; the red leg
+is recorded as red.
+
+**Status unchanged: OPEN.** The owed fix path is unchanged and now **blocking**:
+"convert each to a seeded frame-count / `pytest-benchmark` case with an explicit
+tolerance". That is **S1-class code work** owing its own S2 audit, and was
+deliberately **not** performed inside the S4 documentation session. No test was
+skipped, xfailed, re-quarantined or edited and the `<1.30` tolerance is untouched
+(§7 items 6 and 8). Evidence:
+`EVIDENCE/exp002-d1-s4/gate/red-leg-814b670c/` (`FINDINGS.md`,
+`attribution.txt`, `contention-{failing,passing}-leg.txt`, `isolated/`);
+audit §S4.13. **Flagged for the maintainer's decision** — PR #34 was **not**
+merged on a red required gate.
+
+**DV-032 fix path LANDED for test (1) (2026-10-18, `EXP-002-D1` S4 addendum
+§S4.14, `EXP002D1-S4-F3` D2 FIXED, commit `67100a69`).** The maintainer chose
+"fix the test properly" over merging on a red gate or deferring. Test (1)
+`test_no_gpu_throughput_regression` no longer asserts a wall-clock ratio:
+
+- Overhead is measured with **`time.process_time()`**, which excludes time spent
+  waiting for other processes and so cannot be inflated by unrelated host load —
+  the mechanism behind the 22.07 / 2.13 / 3.42 measurements.
+- Sample size raised `n=1_000_000` (~60 ms) → `n=8_000_000` (~480 ms), because
+  the Windows process-time tick (~15.6 ms) made a 60 ms sample quantise to ratios
+  of 0.8000 / 0.8750 / 1.1429 (one tick ≈ 25 % of the ratio; at ~480 ms, ≈3 %).
+  This **lengthens** a sample; Testing Standards §7 item 6 forbids shortening one.
+- **Three deterministic, load-invariant assertions** carry the real signal:
+  `error_count == 0`, `dlq_size == 0`, `inference_count >= submitted`.
+- Bound **`_DAEMON_CPU_RATIO_LIMIT = 1.60`**, sized from the worst observed
+  normal-daemon ratio (**1.1429**), not inherited from the 1.30 it replaces
+  (§7 item 2).
+
+**Why the assertion could not simply be re-clocked:** measured, the daemon
+performs exactly **3** inferences (~1.5 ms each) inside a **~420 ms** window, so
+the maximum expressible effect was **~1.1 % against a 30 % allowance — ~27x below
+tolerance**. A metric probe over four candidate clocks (blocked wall, paired
+wall, `process_time`, `thread_time`) found **none** detected a deliberately
+CPU-hogging daemon. The fix therefore changed *what is measured*, not how it is
+timed.
+
+**Verified in both directions** (`gate/verify-dv032-fix.sh`): quiet 3/3 passed;
+**saturated host (100 % CPU) 3/3 passed** — the condition that broke the original;
+CPU-hog control **FAILED as required** (`ratio 2.03 > 1.6`); error control
+**FAILED as required** (`daemon reported 3 inference errors`); whole file **49
+passed**; `ruff check`/`format` rc=0. Normal-daemon ratio measured **1.03 quiet /
+1.02 saturated**.
+
+**Residual limitation, measured not asserted:** under saturation a single
+in-process hog is itself starved, so the ratio stays at **1.02** and the bound
+does not fire (quiet **2.00**). The ratio is a **gross-regression detector**; the
+deterministic assertions are what retain sensitivity under load. The sensitive
+quantitative comparison still belongs to the nightly benchmark gate, per this
+row's original disposition.
+
+**Status: test (1) FIXED — removed from this row's open scope. Tests (2)
+`test_deterministic_seed` and (3) `test_speed_vs_transformer` remain OPEN and
+UNCHANGED**, still under their dated nightly/benchmark-authoritative quarantine;
+neither is in the required gate, so neither can block a session's closure. They
+were deliberately not touched — widening scope to them was not authorized. Row
+stays **OPEN** until tests (2) and (3) are converted. Evidence:
+`EVIDENCE/exp002-d1-s4/gate/dv032-fix/`; audit §S4.14. **Flagged for retro-audit
+at the next S2-class audit**: this is the second code change made inside an S4
+documentation session (after `EXP002D1-S4-F2`), made under the maintainer's
+explicit in-session authorization.
+
