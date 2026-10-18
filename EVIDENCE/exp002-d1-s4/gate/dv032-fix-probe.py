@@ -61,13 +61,19 @@ class Load:
     """Spawn and reap one busy process per logical CPU."""
 
     def __init__(self) -> None:
+        """Create the holder; no process is started until :meth:`__enter__`."""
         self.procs: list[subprocess.Popen[bytes]] = []
 
-    def __enter__(self) -> "Load":
+    def __enter__(self) -> Load:
+        """Start one busy process per logical CPU and wait for the load to settle.
+
+        Returns:
+            This instance, so it can be used as a context manager.
+        """
         n = os.cpu_count() or 4
         for _ in range(n):
             self.procs.append(
-                subprocess.Popen(  # noqa: S603  # fixed argv, no shell
+                subprocess.Popen(  # fixed argv, no shell
                     [sys.executable, "-c", "while True:\n    pass"]
                 )
             )
@@ -75,6 +81,7 @@ class Load:
         return self
 
     def __exit__(self, *exc: object) -> None:
+        """Kill every spawned busy process and wait for it to be reaped."""
         for p in self.procs:
             p.kill()
         for p in self.procs:
@@ -84,6 +91,12 @@ class Load:
 
 
 def cpu_percent() -> float:
+    """Return whole-host CPU utilisation over a half-second sample.
+
+    Returns:
+        A percentage, or ``nan`` when ``psutil`` is unavailable, so a missing
+        sampler degrades the report instead of aborting the probe.
+    """
     try:
         import psutil
 
@@ -146,6 +159,11 @@ def measure(arm: str, model: Path, reps: int) -> dict[str, float]:
 
 
 def main() -> int:
+    """Compare candidate metrics under both host conditions and both daemon arms.
+
+    Returns:
+        The process exit status; always 0, since this instrument only reports.
+    """
     ap = argparse.ArgumentParser()
     ap.add_argument("--reps", type=int, default=SAMPLES)
     ap.add_argument("--loaded-only", action="store_true")
@@ -175,8 +193,10 @@ def main() -> int:
 
     metrics = ("wall_block", "wall_paired", "process", "thread")
     print("\n\n===== ratio table (1.00 = no measured overhead) =====")
-    print(f"{'condition':<10} {'metric':<12} {'idle arm':>10} {'heavy arm':>10} "
-          f"{'detects heavy?':>15}")
+    print(
+        f"{'condition':<10} {'metric':<12} {'idle arm':>10} {'heavy arm':>10} "
+        f"{'detects heavy?':>15}"
+    )
     for cond, arms in results.items():
         for m in metrics:
             idle, heavy = arms["idle"][m], arms["heavy"][m]

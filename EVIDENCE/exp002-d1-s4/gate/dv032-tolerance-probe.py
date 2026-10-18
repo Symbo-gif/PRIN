@@ -32,6 +32,14 @@ WORK_N = 1_000_000
 
 
 def dummy_work(n: int) -> float:
+    """Run the same CPU-bound workload the test under study uses.
+
+    Args:
+        n: Number of ``math.sin`` iterations.
+
+    Returns:
+        The accumulator, so the work cannot be optimised away.
+    """
     total = 0.0
     for i in range(n):
         total += math.sin(float(i))
@@ -39,10 +47,18 @@ def dummy_work(n: int) -> float:
 
 
 class Load:
+    """Spawn and reap one busy process per logical CPU, to saturate the host."""
+
     def __init__(self) -> None:
+        """Create the holder; no process is started until :meth:`__enter__`."""
         self.procs: list[subprocess.Popen[bytes]] = []
 
-    def __enter__(self) -> "Load":
+    def __enter__(self) -> Load:
+        """Start one busy process per logical CPU and wait for the load to settle.
+
+        Returns:
+            This instance, so it can be used as a context manager.
+        """
         for _ in range(os.cpu_count() or 4):
             self.procs.append(
                 subprocess.Popen([sys.executable, "-c", "while True:\n    pass"])
@@ -51,6 +67,7 @@ class Load:
         return self
 
     def __exit__(self, *exc: object) -> None:
+        """Kill every spawned busy process and wait for it to be reaped."""
         for p in self.procs:
             p.kill()
         for p in self.procs:
@@ -60,6 +77,12 @@ class Load:
 
 
 def cpu_percent() -> float:
+    """Return whole-host CPU utilisation over a half-second sample.
+
+    Returns:
+        A percentage, or ``nan`` when ``psutil`` is unavailable, so a missing
+        sampler degrades the report instead of aborting the probe.
+    """
     try:
         import psutil
 
@@ -114,6 +137,11 @@ def one_rep(model: Path) -> tuple[float, float, int, int]:
 
 
 def main() -> int:
+    """Report the cpu-ratio and wall-ratio distributions under both conditions.
+
+    Returns:
+        The process exit status; always 0, since this instrument only reports.
+    """
     ap = argparse.ArgumentParser()
     ap.add_argument("--reps", type=int, default=8)
     args = ap.parse_args()
@@ -134,16 +162,22 @@ def main() -> int:
                         c, w, inf, e = one_rep(model)
                         errs += e
                         rows.append((c, w))
-                        print(f"  rep {i + 1}: cpu_ratio {c:.4f}  wall_ratio {w:.4f}  "
-                              f"inferences {inf}  errors {e}", flush=True)
+                        print(
+                            f"  rep {i + 1}: cpu_ratio {c:.4f}  wall_ratio {w:.4f}  "
+                            f"inferences {inf}  errors {e}",
+                            flush=True,
+                        )
             else:
                 print(f"  host cpu: {cpu_percent():.1f}%", flush=True)
                 for i in range(args.reps):
                     c, w, inf, e = one_rep(model)
                     errs += e
                     rows.append((c, w))
-                    print(f"  rep {i + 1}: cpu_ratio {c:.4f}  wall_ratio {w:.4f}  "
-                          f"inferences {inf}  errors {e}", flush=True)
+                    print(
+                        f"  rep {i + 1}: cpu_ratio {c:.4f}  wall_ratio {w:.4f}  "
+                        f"inferences {inf}  errors {e}",
+                        flush=True,
+                    )
             out[cond] = rows
 
     print("\n\n===== distribution =====")
@@ -155,8 +189,12 @@ def main() -> int:
         ws = [r[1] for r in rows]
         worst_cpu = max(worst_cpu, max(cs))
         worst_wall = max(worst_wall, max(ws))
-        print(f"{cond:<8} {'cpu':<10} {min(cs):>8.4f} {median(cs):>8.4f} {max(cs):>8.4f}")
-        print(f"{cond:<8} {'wall':<10} {min(ws):>8.4f} {median(ws):>8.4f} {max(ws):>8.4f}")
+        print(
+            f"{cond:<8} {'cpu':<10} {min(cs):>8.4f} {median(cs):>8.4f} {max(cs):>8.4f}"
+        )
+        print(
+            f"{cond:<8} {'wall':<10} {min(ws):>8.4f} {median(ws):>8.4f} {max(ws):>8.4f}"
+        )
     print(f"\ntotal daemon errors across all reps: {errs}")
     print(f"worst cpu_ratio observed  : {worst_cpu:.4f}")
     print(f"worst wall_ratio observed : {worst_wall:.4f}")

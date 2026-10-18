@@ -31,10 +31,18 @@ REPS = 5
 
 
 class Load:
+    """Spawn and reap one busy process per logical CPU, to saturate the host."""
+
     def __init__(self) -> None:
+        """Create the holder; no process is started until :meth:`__enter__`."""
         self.procs: list[subprocess.Popen[bytes]] = []
 
-    def __enter__(self) -> "Load":
+    def __enter__(self) -> Load:
+        """Start one busy process per logical CPU and wait for the load to settle.
+
+        Returns:
+            This instance, so it can be used as a context manager.
+        """
         for _ in range(os.cpu_count() or 4):
             self.procs.append(
                 subprocess.Popen([sys.executable, "-c", "while True:\n    pass"])
@@ -43,6 +51,7 @@ class Load:
         return self
 
     def __exit__(self, *exc: object) -> None:
+        """Kill every spawned busy process and wait for it to be reaped."""
         for p in self.procs:
             p.kill()
         for p in self.procs:
@@ -52,6 +61,12 @@ class Load:
 
 
 def cpu_percent() -> float:
+    """Return whole-host CPU utilisation over a half-second sample.
+
+    Returns:
+        A percentage, or ``nan`` when ``psutil`` is unavailable, so a missing
+        sampler degrades the report instead of aborting the probe.
+    """
     try:
         import psutil
 
@@ -89,6 +104,11 @@ def measure_daemon_cpu(model: Path, reps: int) -> tuple[list[float], int, int]:
 
 
 def main() -> int:
+    """Measure the daemon's own CPU cost per inference, quiet then saturated.
+
+    Returns:
+        The process exit status; always 0, since this instrument only reports.
+    """
     from prin.subconscious_compat import SubconsciousController
 
     with tempfile.TemporaryDirectory() as td:
@@ -106,8 +126,10 @@ def main() -> int:
                 s, inf, err = measure_daemon_cpu(model, REPS)
             all_samples[cond] = s
             print(f"  inferences completed: {inf}   errors: {err}")
-            print(f"  daemon CPU ms per inference: "
-                  f"min {min(s):.4f}  median {median(s):.4f}  max {max(s):.4f}")
+            print(
+                f"  daemon CPU ms per inference: "
+                f"min {min(s):.4f}  median {median(s):.4f}  max {max(s):.4f}"
+            )
 
     quiet = all_samples["quiet"]
     loaded = all_samples["loaded"]

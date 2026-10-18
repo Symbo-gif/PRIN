@@ -27,6 +27,14 @@ WORK_N = 1_000_000
 
 
 def dummy_work(n: int) -> float:
+    """Run the same CPU-bound workload the test under study uses.
+
+    Args:
+        n: Number of ``math.sin`` iterations.
+
+    Returns:
+        The accumulator, so the work cannot be optimised away.
+    """
     total = 0.0
     for i in range(n):
         total += math.sin(float(i))
@@ -34,6 +42,11 @@ def dummy_work(n: int) -> float:
 
 
 def main() -> int:
+    """Report the daemon's real inference cost and what it does in the window.
+
+    Returns:
+        The process exit status; always 0, since this instrument only reports.
+    """
     from prin.subconscious_compat import (
         SubconsciousController,
         SubconsciousDaemon,
@@ -71,10 +84,13 @@ def main() -> int:
         print(f"inferences actually completed    : {n1 - n0}")
         print(f"errors after submits             : {daemon._errors}")
         if n1 > n0:
-            print(f"mean wall per submit+inference   : "
-                  f"{submit_wall / 200 * 1000:.3f} ms")
-            print(f"ratio of one inference to one "
-                  f"_dummy_work : {(submit_wall / 200) / work_cost:.4f}")
+            print(
+                f"mean wall per submit+inference   : {submit_wall / 200 * 1000:.3f} ms"
+            )
+            print(
+                f"ratio of one inference to one "
+                f"_dummy_work : {(submit_wall / 200) / work_cost:.4f}"
+            )
 
         # What the current test actually does: submit 3, then time 7 work units.
         daemon2 = SubconsciousDaemon(model, backend="cpu", interval=0.5, warmup=True)

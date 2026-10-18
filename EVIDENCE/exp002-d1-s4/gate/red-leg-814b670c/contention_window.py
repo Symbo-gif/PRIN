@@ -16,17 +16,35 @@ from pathlib import Path
 
 
 def hhmmss(stamp: str) -> str:
+    """Return the ``HH:MM:SS`` part of an ISO-8601 UTC timestamp.
+
+    Args:
+        stamp: A timestamp of the form ``YYYY-MM-DDTHH:MM:SS+00:00``.
+
+    Returns:
+        The eight-character clock part, so samples can be compared against a
+        window given on the command line as plain ``HH:MM:SS``.
+    """
     return stamp[11:19]
 
 
 def main(argv: list[str]) -> int:
+    """Report whole-leg contention and the samples bracketing a named window.
+
+    Args:
+        argv: ``<samples.jsonl> <start HH:MM:SS> <end HH:MM:SS>``.
+
+    Returns:
+        The process exit status; always 0, since this instrument only reports.
+    """
     path = Path(argv[0])
     lo, hi = argv[1], argv[2]
     rows = [json.loads(line) for line in path.read_text("utf-8").splitlines() if line]
     rows.sort(key=lambda r: r["utc"])
 
     print(f"source: {path}")
-    print(f"samples: {len(rows)}  span {hhmmss(rows[0]['utc'])} .. {hhmmss(rows[-1]['utc'])}")
+    first, last = hhmmss(rows[0]["utc"]), hhmmss(rows[-1]["utc"])
+    print(f"samples: {len(rows)}  span {first} .. {last}")
 
     cpu = [r["host"]["cpu_percent"] for r in rows]
     eff = [
@@ -36,8 +54,10 @@ def main(argv: list[str]) -> int:
     ]
     print()
     print("== whole-leg host contention ==")
-    print(f"  host cpu_percent : median {statistics.median(cpu):.1f}  "
-          f"mean {statistics.mean(cpu):.1f}  max {max(cpu):.1f}")
+    print(
+        f"  host cpu_percent : median {statistics.median(cpu):.1f}  "
+        f"mean {statistics.mean(cpu):.1f}  max {max(cpu):.1f}"
+    )
     print(f"  samples >= 90%   : {sum(1 for c in cpu if c >= 90.0)} / {len(cpu)}")
     print(f"  samples >= 95%   : {sum(1 for c in cpu if c >= 95.0)} / {len(cpu)}")
     if eff:
@@ -55,14 +75,20 @@ def main(argv: list[str]) -> int:
         h = r["host"]
         p = r.get("pytest") or {}
         k = r.get("kernels") or []
-        print(f"  {hhmmss(r['utc'])}Z t={r['t']:.0f}s "
-              f"host_cpu={h['cpu_percent']:.1f}% avail_mb={h['available_mb']:.0f} "
-              f"mem={h['memory_percent']:.1f}%")
-        print(f"      pytest: procs={p.get('processes')} "
-              f"cpu_s={p.get('cpu_seconds')} threads={p.get('threads')}")
+        print(
+            f"  {hhmmss(r['utc'])}Z t={r['t']:.0f}s "
+            f"host_cpu={h['cpu_percent']:.1f}% avail_mb={h['available_mb']:.0f} "
+            f"mem={h['memory_percent']:.1f}%"
+        )
+        print(
+            f"      pytest: procs={p.get('processes')} "
+            f"cpu_s={p.get('cpu_seconds')} threads={p.get('threads')}"
+        )
         if k:
-            print(f"      jupyter kernels live: {len(k)} "
-                  f"cpu_s={[round(x['cpu_seconds'], 1) for x in k]}")
+            print(
+                f"      jupyter kernels live: {len(k)} "
+                f"cpu_s={[round(x['cpu_seconds'], 1) for x in k]}"
+            )
         others = r.get("top_other_cpu_since_last_sample") or []
         top = ", ".join(f"{o['name']}={o['cpu_seconds']:.1f}s" for o in others[:5])
         print(f"      other cpu since last sample: {top}")

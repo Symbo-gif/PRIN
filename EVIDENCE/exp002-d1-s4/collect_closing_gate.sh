@@ -25,10 +25,27 @@ set -u
 cd "$(git rev-parse --show-toplevel)" || exit 2
 S="$HOME/prin-s4-scratch"
 D=EVIDENCE/exp002-d1-s4/gate
-SHA=$(git rev-parse --short HEAD)
-mkdir -p "$D/fast-$SHA" "$D/full-$SHA"
 stamp() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 copied=0; missing=0
+
+# Each leg ran on a DIFFERENT commit (fast/full at 67100a69, the isolation re-run
+# at the following documentation commit), so a directory named from the current
+# HEAD would mislabel them.  Take each leg's own commit from its run.txt, which
+# suite_run.sh writes, and fall back to the current HEAD only if that is absent.
+leg_sha() {  # leg_sha <scratch-leg-dir>
+  local f="$S/$1/run.txt" sha
+  if [ -f "$f" ]; then
+    sha=$(grep -m1 '^git HEAD: ' "$f" | cut -d' ' -f3 | cut -c1-8)
+    if [ -n "$sha" ]; then echo "$sha"; return 0; fi
+  fi
+  git rev-parse --short HEAD
+}
+
+FAST_SHA=$(leg_sha fast)
+FULL_SHA=$(leg_sha full)
+ISO_SHA=$(leg_sha fast-isolated)
+mkdir -p "$D/fast-$FAST_SHA" "$D/full-$FULL_SHA"
+echo "# leg commits: fast=$FAST_SHA  full=$FULL_SHA  fast-isolated=$ISO_SHA"
 
 take() {  # take <src> <dst>  - text record, provenance header prepended
   if [ -f "$1" ]; then
@@ -47,41 +64,43 @@ take_raw() {  # byte-for-byte, no header (structured records)
   fi
 }
 
-echo "# collecting the $SHA closing-gate records into $D  ($(stamp))"
+echo "# collecting the closing-gate records into $D  ($(stamp))"
 
 # --- the aggregated legs record --------------------------------------------
-take "$S/gate/legs.txt"        "$D/long-legs-$SHA.txt"
-take "$S/gate/change-set.txt"  "$D/change-set-$SHA.txt"
+take "$S/gate/legs.txt"        "$D/long-legs-$FAST_SHA.txt"
+take "$S/gate/change-set.txt"  "$D/change-set-$FAST_SHA.txt"
 
 # --- fast leg (exit 1 on the WinError 5 lock class) -------------------------
-take     "$S/fast/run.txt"       "$D/fast-$SHA/run.txt"
-take     "$S/fast/console.log"   "$D/fast-$SHA/console.txt"
-take_raw "$S/fast/samples.jsonl" "$D/fast-$SHA/samples.jsonl"
-take     "$S/fast/sampler.err"   "$D/fast-$SHA/sampler-err.txt"
+take     "$S/fast/run.txt"       "$D/fast-$FAST_SHA/run.txt"
+take     "$S/fast/console.log"   "$D/fast-$FAST_SHA/console.txt"
+take_raw "$S/fast/samples.jsonl" "$D/fast-$FAST_SHA/samples.jsonl"
+take     "$S/fast/sampler.err"   "$D/fast-$FAST_SHA/sampler-err.txt"
 
 # --- full leg ---------------------------------------------------------------
-take     "$S/full/run.txt"       "$D/full-$SHA/run.txt"
-take     "$S/full/console.log"   "$D/full-$SHA/console.txt"
-take_raw "$S/full/samples.jsonl" "$D/full-$SHA/samples.jsonl"
-take     "$S/full/sampler.err"   "$D/full-$SHA/sampler-err.txt"
+take     "$S/full/run.txt"       "$D/full-$FULL_SHA/run.txt"
+take     "$S/full/console.log"   "$D/full-$FULL_SHA/console.txt"
+take_raw "$S/full/samples.jsonl" "$D/full-$FULL_SHA/samples.jsonl"
+take     "$S/full/sampler.err"   "$D/full-$FULL_SHA/sampler-err.txt"
 
 # --- isolated fast re-run, if it has been performed -------------------------
 if [ -d "$S/fast-isolated" ]; then
-  mkdir -p "$D/fast-isolated-$SHA"
-  take     "$S/fast-isolated/run.txt"       "$D/fast-isolated-$SHA/run.txt"
-  take     "$S/fast-isolated/console.log"   "$D/fast-isolated-$SHA/console.txt"
-  take_raw "$S/fast-isolated/samples.jsonl" "$D/fast-isolated-$SHA/samples.jsonl"
-  take     "$S/fast-isolated/sampler.err"   "$D/fast-isolated-$SHA/sampler-err.txt"
+  mkdir -p "$D/fast-isolated-$ISO_SHA"
+  take     "$S/fast-isolated/run.txt"       "$D/fast-isolated-$ISO_SHA/run.txt"
+  take     "$S/fast-isolated/console.log"   "$D/fast-isolated-$ISO_SHA/console.txt"
+  take_raw "$S/fast-isolated/samples.jsonl" "$D/fast-isolated-$ISO_SHA/samples.jsonl"
+  take     "$S/fast-isolated/sampler.err"   "$D/fast-isolated-$ISO_SHA/sampler-err.txt"
+  take     "$S/isolated-fast-console.txt"   "$D/fast-isolated-$ISO_SHA/script-console.txt"
 else
   echo "  absent  $S/fast-isolated (isolation re-run not yet performed)"
 fi
 
 # --- cheap legs from final_legs.sh, if present ------------------------------
 if [ -d "$S/final" ]; then
-  mkdir -p "$D/final-$SHA"
+  FINAL_SHA=$(git rev-parse --short HEAD)
+  mkdir -p "$D/final-$FINAL_SHA"
   for f in "$S"/final/*; do
     [ -f "$f" ] || continue
-    take "$f" "$D/final-$SHA/$(basename "$f")"
+    take "$f" "$D/final-$FINAL_SHA/$(basename "$f")"
   done
 else
   echo "  absent  $S/final (cheap legs not yet run)"
