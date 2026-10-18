@@ -1,9 +1,11 @@
-# The pytest plugin (kept outside the repository at run time) that drives the four negative controls by patching item.module
+# The pytest plugin (kept outside the repository at run time) that drives the four
+# negative controls by patching item.module
 # copied from /c/Users/there/prin-s4-scratch/negctl.py at 2026-10-17T19:03:58Z
 
-"""Pytest plugin (kept OUTSIDE the repository) providing four negative controls that
-prove the platform-scoped digest tie in parity/test_parity_publication.py is not
-vacuous.
+"""Provide the four negative controls for the platform-scoped digest tie.
+
+The plugin is kept OUTSIDE the repository at run time. It proves the digest tie in
+``parity/test_parity_publication.py`` is not vacuous.
 
 Why the patch goes through `item.module`: `parity/` has no `__init__.py`, so pytest's
 prepend import mode loads the file as the top-level module `test_parity_publication`.
@@ -49,7 +51,7 @@ VALID = {
 _patched: set[int] = set()
 
 
-def _apply(gate) -> None:  # noqa: ANN001 - pytest plugin, module object
+def _apply(gate) -> None:
     """Patch the collected test module in place, once."""
     if id(gate) in _patched:
         return
@@ -64,7 +66,7 @@ def _apply(gate) -> None:  # noqa: ANN001 - pytest plugin, module object
     if MODE.startswith("bogus"):
         gate._e3_platform = lambda run: BOGUS  # type: ignore[method-assign]
 
-    def corrupted(run: str) -> dict:  # noqa: ANN202
+    def corrupted(run: str) -> dict:
         files = dict(original(run))
         if target not in files:
             raise AssertionError(
@@ -83,7 +85,7 @@ def _apply(gate) -> None:  # noqa: ANN001 - pytest plugin, module object
     )
 
 
-def pytest_runtest_setup(item) -> None:  # noqa: ANN001
+def pytest_runtest_setup(item) -> None:
     """Patch the module object pytest actually collected, before each test runs."""
     if not MODE:
         return
@@ -97,5 +99,7 @@ def pytest_configure() -> None:
     if not MODE:
         return
     if MODE not in VALID:
-        raise SystemExit(f"unknown NEGCTL mode {MODE!r}; expected one of {sorted(VALID)}")
+        raise SystemExit(
+            f"unknown NEGCTL mode {MODE!r}; expected one of {sorted(VALID)}"
+        )
     print(f"# NEGCTL selected: {MODE}")
