@@ -125,9 +125,20 @@ The new versioned driver is `benchmarks/campaign/exp002_r1_driver.py`. It pins
 and verifies the SHA-256 and byte size of `python/prin/_prin_core.pyd`, the
 corrected `python/prin/reporting/figure_generation.py`,
 `python/prin/reporting/table_generation.py`, `paper/artefact_manifest.json`, and
-the three `REFERENCE` files before admitting or closing any run. E2 records the
-reviewed source commit and any pre-execution amendments. E3 records its actual
-clean execution SHA `R` and the last pre-registration commit `F` at first `RUN-`
+the three `REFERENCE` files. Enforcement is live at both ends of a run: the
+admission gate verifies **all** governed-source pins before any collection,
+and the finalization step re-verifies all of them before a completed record
+is published, so a governed source mutated mid-collection aborts the run.
+Retrospective closure (`check_run_complete`) validates the *recorded*
+provenance claims against the registered constants instead — it does not
+re-read the live binary — so an E4/E5 analysis host is not required to hold
+the registered Windows artefact. The `_prin_core.pyd` pin is host-registered:
+it binds the rebuilt Windows x86_64 artefact on the governed E3 host, and on
+any other platform the imported extension is a platform build
+(`*.so`/`*.dylib`) whose governed resolution is covered by the admission
+environment check, not by requiring a `.pyd` path. E2 records the reviewed
+source commit and any pre-execution amendments. E3 records its actual clean
+execution SHA `R` and the last pre-registration commit `F` at first `RUN-`
 creation under `benchmarks/results/EXP-002-r1/`. Neither future SHA is
 fabricated here.
 
@@ -203,7 +214,10 @@ counterexample or turns an aborted record into a completed one.
 ### 4.2 Invalid-run abort criteria
 
 1. Missing E2 approval; wrong source/version; uncommitted source/protocol
-   changes; an import resolving outside the governed PRIN/reference source; or
+   changes; an import resolving outside the governed PRIN/reference source;
+   an unsafe interpreter environment (a site `.pth` directory entry or an
+   earlier `sys.path` resolution that can shadow the governed `prin`/`prinet`
+   sources — the DV-047 stale-`.pth` class); or
    `python/prin/_prin_core.pyd` byte size or SHA-256 differing from the pinned
    E1 build (`PRIN_CORE_PYD_BYTES`, `PRIN_CORE_PYD_SHA256`, DV-047 guard).
 2. Input or run-manifest failure, symlink/non-regular input, missing required
@@ -292,9 +306,15 @@ Use matched Python/Matplotlib/NumPy versions, Agg renderer, font files and
 font-cache state for both implementations. Log exact versions, font-file
 digests and the Matplotlib font-cache file digest before rendering; a change
 during generation aborts the run. The reference arm imports the frozen `prinet`
-publication modules, verifies their source paths/digests against
-`REFERENCE_PINS`, and calls only their figure/table generators with explicit
-snapshot and output paths under `DOCS/test_and_benchmark_results/EXP-002-r1/`.
+publication modules under a fail-closed bootstrap: it refuses to run if any
+`prinet` module is already loaded in the interpreter, verifies **every**
+`REFERENCE_PINS` source digest (including `src/prinet/__init__.py`) **before**
+import, prepends `REFERENCE/src` to `sys.path` only if it is not already
+present, and then requires `importlib.util.find_spec("prinet")` to resolve to
+the frozen `src/prinet/__init__.py` — never to an installed or otherwise
+shadowing `prinet`. It then verifies each imported generator's origin and
+calls only their figure/table generators with explicit snapshot and output
+paths under `DOCS/test_and_benchmark_results/EXP-002-r1/`.
 It never calls a reference benchmark/training entry point.
 
 The PRIN arm verifies the origin and SHA-256 digests of
@@ -387,17 +407,28 @@ roots from `EXP-002`:
 The committed driver `benchmarks/campaign/exp002_r1_driver.py` accepts
 `--mode`, `--run-dir`, `--operator`, `--source-sha`, `--seed-counter`, and
 `--seed-key`. It refuses execution while this document is `DRAFT`, checks
-committed approval/source identity, verifies `python/prin/_prin_core.pyd` byte
-size and SHA-256 (`PRIN_CORE_PYD_BYTES`, `PRIN_CORE_PYD_SHA256`), verifies a
+committed approval/source identity, verifies **all** governed-source pins at
+admission — `python/prin/_prin_core.pyd` byte size and SHA-256
+(`PRIN_CORE_PYD_BYTES`, `PRIN_CORE_PYD_SHA256`), both PRIN publication
+generators, and all three frozen `REFERENCE` sources — verifies a
 clean checkout (exempting only untracked files under
 `benchmarks/results/EXP-002-r1/` and the E3 operator `log.md`; any untracked or
 modified file under predecessor `benchmarks/results/EXP-002/` is **rejected**),
-explicitly rejects any path under `benchmarks/results/EXP-002/` or
-`DOCS/test_and_benchmark_results/EXP-002/`, reserves each new `RUN-` directory
+scans the governed import surface (`python/`, `benchmarks/`, `tools/`, and
+top level) for untracked `*.py`/`*.pth` shadow files **including ignored
+ones**, checks the interpreter environment for site-`.pth` or `sys.path`
+entries that could shadow `prin`/`prinet`, explicitly rejects any path under
+`benchmarks/results/EXP-002/` or `DOCS/test_and_benchmark_results/EXP-002/`
+with parent-traversal (`..`) components refused and confinement decided on
+resolved paths, reserves each new `RUN-` directory
 under `benchmarks/results/EXP-002-r1/` only after refusing a reused
 generated-output root, writes `campaign-metadata.json` (`exp_id="EXP-002-r1"`,
-`session="EXP-002-r1-E3"`), collects the selected leg, writes through
-`write_result`, and closes a per-run `manifest.json`.
+`session="EXP-002-r1-E3"`), collects the selected leg, re-verifies all
+governed-source pins and the prospective storage caps (result + manifest
+overhead) **before** publishing the completed record, writes through
+`write_result`, manifests a durable `abort.json` record for any failed run so
+a rejected run can never become admissible, and closes a per-run
+`manifest.json`.
 
 Run each row once, in a separate interpreter process, in the listed order:
 
@@ -532,7 +563,11 @@ limitation, never as a new H3/H4 observation.
 
 Both the per-root `EXP-002-r1` cap and the combined `EXP-002` + `EXP-002-r1`
 10 MiB cap are enforced mechanically at run closure by
-`exp002_r1_driver._storage_check`.
+`exp002_r1_driver._storage_check`, which runs twice: prospectively before a
+completed record is published (accounting for the pending result and manifest
+bytes, so an over-budget run aborts rather than publishing a `COMPLETED`
+result) and retrospectively inside `check_run_complete` on the manifested
+bytes.
 
 ## 10. Reporting commitments and E2 handoff
 
@@ -560,13 +595,17 @@ re-run report without altering `EXP-002`'s own `H3 REFUTED` verdict.
 3. **Namespace and evidence isolation (§5.5, §9; campaign plan amendment #10):**
    confirm the disjoint roots (`benchmarks/results/EXP-002-r1/`,
    `DOCS/test_and_benchmark_results/EXP-002-r1/`, `EVIDENCE/exp002-r1-e1/`..`e5/`),
-   the `r1-` run labels, the predecessor-path rejection guards in
-   `exp002_r1_driver.py`, and the combined 10 MiB (`EXP-002` + `EXP-002-r1`)
-   storage cap enforcement.
-4. **DV-047 closure and provenance pins (§1.1):** verify the rebuilt
+   the `r1-` run labels, the resolved-path predecessor rejection and `..`
+   traversal guards in `exp002_r1_driver.py`, the combined 10 MiB (`EXP-002` +
+   `EXP-002-r1`) storage cap enforcement (both the prospective pre-publication
+   check and the manifested closure check), and the durable `abort.json`
+   invalid-run records.
+4. **DV-047 closure and provenance pins (§1.1, §5.5):** verify the rebuilt
    `python/prin/_prin_core.pyd` (`9,290,240 B`, SHA-256 `37392d06…ee99e`), removal
-   of the stale `prin_core.pth`, and runtime enforcement in
-   `exp002_r1_driver.py`.
+   of the stale `prin_core.pth`, all-pin enforcement at admission and before
+   result publication, the fail-closed `prinet` reference bootstrap (preloaded
+   rejection, pre-import `REFERENCE_PINS` verification, `find_spec` origin
+   check), and the environment-shadowing scan in `exp002_r1_driver.py`.
 5. **Sample/seed plan and retained-bytes verification (§7, §8.2):** confirm the
    `n=1` deterministic-census exception, `(counter,key) = (0,2)`, and the
    retained-bytes-first verification order for E5.
@@ -637,10 +676,18 @@ Accordingly, by maintainer ratification before `EXP-002-r1` E1 (2026-10-20 UTC),
    verdict in `summary.json`, `reproduction-comparisons.csv`, and `report.md`,
    and classify every file that passes §5.4 but differs under §11.3. **Every
    such residual must belong to one of the two registered writer/host I/O
-   classes** (`pdf_info_keyset` for `.pdf` files whose §5.4 normalized bytes
-   are identical; `tex_crlf_line_terminator` for `.tex` files whose `CRLF`→`LF`
-   normalized bytes are identical), with **`0` unclassified residuals**. Any
-   unclassified residual refutes H3 (§4.1). When all residuals belong to the two
+   classes**, with **`0` unclassified residuals**:
+   `tex_crlf_line_terminator` for `.tex` files whose `CRLF`→`LF` normalized
+   bytes are identical, and `pdf_info_keyset` for `.pdf` files whose residual
+   is confined to `/Info` dictionary serialization. A `pdf_info_keyset`
+   classification is **never inferred from the two digest comparisons alone**:
+   §5.4/§11.3 digest disagreement does not by itself establish a differing
+   `/Info` key set (identical key sets can still serialize differently through
+   whitespace or ordering). E4 must inspect the actual `/Info` key sets and
+   residual byte structure and demonstrate that the residual consists solely
+   of `/Info` key-set membership, serialization whitespace, or entry ordering
+   differences; anything else is unclassified. Any unclassified residual
+   refutes H3 (§4.1). When all residuals belong to the two
    registered writer/host I/O classes (`0` unclassified) and §5.4 is `39/39`
    equal, H3's single verdict is **`CONFIRMED`**, and E5 reports the §11.3
    `14/39` count and 25-residual classification alongside it as a disclosed

@@ -100,7 +100,7 @@ Additional hosted corroboration recorded at entry:
 |---|---|
 | [`preregistration.md`](preregistration.md) | `DRAFT` (`Status: DRAFT`); outcome exposure disclosed in header, §1, and §11.2; §5.4 registered as primary H3 rule and §11.3 as non-gating writer-property diagnostic; isolated `EXP-002-r1` roots and DV-047 `.pyd` pin registered |
 | [`benchmarks/campaign/exp002_r1_driver.py`](../../../benchmarks/campaign/exp002_r1_driver.py) | Isolated E1 collection driver bound to `RAW_ROOT = benchmarks/results/EXP-002-r1`, `OUTPUT_ROOT = DOCS/test_and_benchmark_results/EXP-002-r1`, `EXP_ID = "EXP-002-r1"`, `SESSION_ID = "EXP-002-r1-E3"`, `r1-` mode labels, `_prin_core.pyd` and generator SHA-256 verification, predecessor `EXP-002` path rejection, and combined `EXP-002` + `EXP-002-r1` 10 MiB storage cap enforcement |
-| [`tests/test_exp002_r1_driver.py`](../../../tests/test_exp002_r1_driver.py) | 320 synthetic-fixture regression tests (`320 passed`, `99.60%` statement coverage on `exp002_r1_driver.py`, `751/754` statements), including `allowed_output_roots` admission tests, negative predecessor-path rejection tests, `_prin_core.pyd` and generator digest mismatch tests, and combined storage-cap tests |
+| [`tests/test_exp002_r1_driver.py`](../../../tests/test_exp002_r1_driver.py) | Synthetic-fixture regression suite — `320 passed`, `99.60%` statement coverage on `exp002_r1_driver.py` at the E1 head `62680946`; `343 passed, 1 skipped`, `98%` coverage after the §6 PR #36 remediation — including `allowed_output_roots` admission tests, negative predecessor-path/traversal rejection tests, pin enforcement tests, reference-bootstrap and environment-shadowing tests, abort-record tests, and combined storage-cap tests |
 | [`benchmarks/results/EXP-002-r1/README.md`](../../../benchmarks/results/EXP-002-r1/README.md) | Skeleton README for the isolated raw-artefact root (no `RUN-` directory exists) |
 | [`e2-review-packet.md`](e2-review-packet.md) | Decision and S4 retro-audit packet for `EXP-002-r1-E2` (`PREPARED FOR REVIEW — NOT APPROVED`) |
 | [`EVIDENCE/exp002-r1-e1/`](../../../EVIDENCE/exp002-r1-e1/README.md) | Isolated E1 verification evidence bundle with `SHA256SUMS.txt` |
@@ -120,13 +120,86 @@ Additional hosted corroboration recorded at entry:
    `0164` and `0165`–`0194` remain `BLOCKED` until `EXP-002-r1-E5` returns a
    non-reversal verdict verified and accepted by the maintainer.
 
-## 5. Verification summary (E1 local & security gate)
+## 5. Verification summary (E1 local & security gate, head `62680946`)
 
 Full command logs and digests are archived in
-[`EVIDENCE/exp002-r1-e1/`](../../../EVIDENCE/exp002-r1-e1/README.md):
+[`EVIDENCE/exp002-r1-e1/`](../../../EVIDENCE/exp002-r1-e1/README.md). The
+figures below are the E1-head (`62680946`) baseline; the **post-remediation**
+head-specific gate — including the full local `pytest tests/ parity/` run and
+the complete Rust gate — is recorded in §6 and
+[`EVIDENCE/exp002-r1-e1/verification-gate.txt`](../../../EVIDENCE/exp002-r1-e1/verification-gate.txt):
 
-- **Focused driver suite:** `.venv\Scripts\python.exe -m pytest tests/test_exp002_r1_driver.py --cov=benchmarks.campaign.exp002_r1_driver --cov-report=term-missing --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20` → **`320 passed`**, **`99.60%` coverage** (`751/754` statements; ≥95% gate met), exit `0`.
+- **Focused driver suite:** `.venv\Scripts\python.exe -m pytest tests/test_exp002_r1_driver.py --cov=benchmarks.campaign.exp002_r1_driver --cov-report=term-missing --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20` → **`320 passed`**, **`99.60%` coverage** (`751/754` statements; ≥95% gate met), exit `0` at `62680946`; post-remediation **`343 passed, 1 skipped`**, **`98%`** (`865` statements).
 - **Static & type gates:** `ruff check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/` → exit `0`; `ruff format --check` (both scopes) → exit `0`; `mypy python/prin --strict` and `mypy DOCS/experiments/ --strict` (plus `benchmarks/campaign/exp002_r1_driver.py` and `tests/test_exp002_r1_driver.py`) → exit `0`; `interrogate -c pyproject.toml python/prin` → `97.6%`, exit `0`.
 - **Security gates (Coding Standards §6):** `bandit -r python/prin DOCS/experiments -c pyproject.toml` → `0` issues, exit `0`; Snyk Code MCP (`snyk_code_scan`) on `benchmarks/campaign/exp002_r1_driver.py` and `tests/test_exp002_r1_driver.py` at threshold `low` → `0` issues (`issueCount: 0`); `cargo audit` → exit `0`; `pip-audit .` and `pip-audit -r DOCS/sphinx/requirements.txt` → `0` vulnerabilities, exit `0`; `gitleaks git . --no-banner` and `gitleaks git . --staged --no-banner` → `0` leaks, exit `0`.
 - **Governance & docs:** `check_dv_register_gates.py`, `check_global_session_registration.py`, `check_skipif_probes.py`, `wp001_baseline.py check`, and `pytest tests/test_campaign_quality_gates.py tests/test_wp001_baseline.py` → all exit `0`; clean Sphinx build (`-W --keep-going -b html` after removing `DOCS/sphinx/_build`) → `build succeeded`, `0` warnings, exit `0`.
 - **Predecessor immutability check:** `git diff 5677858c15d784d881b23d43dff5029d199b0a18 -- DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/ benchmarks/results/EXP-002/` is **empty** (`0` changed files), and `verify_manifest` passes on all 5 frozen `benchmarks/results/EXP-002/RUN-*` directories and the 172-record `paper/artefact_manifest.json`.
+
+## 6. PR #36 review remediation record (post-`62680946`)
+
+PR #36 hosted checks and multi-agent review (including the independent
+Perplexity Deep Research report, which validated the other reviewers'
+findings) identified the following E1 findings. All were remediated on
+`campaign/exp002-r1-e1` without altering any predecessor `EXP-002` artefact
+and without weakening the `_prin_core.pyd` production pin, the §5.4 primary H3
+policy, or the `DRAFT` preregistration status:
+
+1. **Host-specific live-binary test (F1).**
+   `test_real_prin_core_pyd_and_generator_pins_match_repository` unconditionally
+   invoked `_verify_prin_core_extension()`, which requires the registered
+   Windows E3 binary and therefore failed on hosted Ubuntu and hosted Windows
+   matrix jobs that build a different extension. Remediation split the test:
+   the generator-pin half runs portably, while the exact-binary assertion is
+   now an opt-in test gated to the registered E3 host (skipped by default;
+   `3 passed, 341 deselected` when explicitly selected on this governed host).
+   The production verifier `_verify_prin_core_extension()` remains strict.
+2. **Path traversal into immutable predecessor roots (F2).**
+   `Path.absolute()` does not collapse `..`, so lexical checks could admit
+   aliases resolving into `benchmarks/results/EXP-002/` or
+   `DOCS/test_and_benchmark_results/EXP-002/`. Remediation added
+   resolved-path confinement (`_reject_predecessor_path` resolves candidates,
+   rejects `..` components, and confines generated/snapshot paths to
+   `OUTPUT_ROOT`) while keeping unresolved `.absolute()` paths for
+   symlink-ancestor detection in `_reserve`/`check_run_complete` so symlinks
+   are still caught before resolution.
+3. **Over-budget runs could publish `COMPLETED` (F3).**
+   `_storage_check` now also runs **prospectively** before a completed record
+   is published (accounting for pending result + manifest bytes), so an
+   over-cap run aborts instead of publishing a valid-looking result. A
+   durable `abort.json` record is written for any failed/invalid run and
+   manifested with the rest of the run files (the manifest is append-only,
+   so it can never be removed). `check_run_complete` rejects any run whose
+   manifest inventory carries `abort.json` (and rejects an unmanifested
+   copy as an undeclared directory entry), so an aborted run can never
+   become admissible.
+4. **Reference-arm import provenance (F4).** The reference leg now refuses a
+   preloaded `prinet`, verifies **all** `REFERENCE_PINS` digests before import,
+   prepends `REFERENCE/src` to `sys.path`, and requires
+   `importlib.util.find_spec("prinet")` to resolve to the frozen
+   `src/prinet/__init__.py` before importing the generators.
+5. **Uniform pin enforcement (F5).** Admission and pre-publication
+   finalization now verify **all** governed-source pins (`_prin_core.pyd`,
+   both PRIN generators, and all three `REFERENCE` sources), not only the
+   native extension and selected generators.
+6. **Nested/environment shadowing (F6).** The untracked-shadowing git scan now
+   uses recursive pathspecs scoped to the governed import surface (including
+   ignored files), and `_environment_shadowing` inspects site `.pth` files and
+   `sys.path` entries that could shadow `prin`/`prinet`.
+7. **`pdf_info_keyset` diagnostic ambiguity (F7).** `preregistration.md`
+   §11.1 now states that the classification is never inferred from digest
+   comparisons alone; E4 must inspect actual `/Info` key sets and residual
+   byte structure.
+8. **`.gitattributes` stage-root coverage (CodeRabbit).** The `EXP-002-r1`
+   evidence linguist/text rule now covers all planned stage roots via
+   `EVIDENCE/exp002-r1-e*/**`, not only `exp002-r1-e1`.
+9. **Evidence/gate record (F8).** `EVIDENCE/exp002-r1-e1/verification-gate.txt`
+   was regenerated for the remediation head and distinguishes the
+   authoritative local gate from hosted checks (see §5 note and evidence
+   bundle).
+
+Remediated suite state: **`343 passed, 1 skipped`** (the skipped test is the
+opt-in registered-host binary pin; `3 passed` when explicitly selected),
+**98%** statement coverage on `exp002_r1_driver.py` (`865` statements, `17`
+missing). The preregistration contract in §5.5, §9, §10 items 3–4, and §11.1
+was amended to match the remediated driver semantics; `Status:` remains
+`DRAFT` pending E2 approval.

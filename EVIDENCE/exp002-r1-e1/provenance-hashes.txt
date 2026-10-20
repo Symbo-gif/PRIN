@@ -1,4 +1,8 @@
 # EXP-002-r1 E1 provenance hashes at baseline M = 5677858c15d784d881b23d43dff5029d199b0a18
+# Regenerated for the PR #36 remediation head (post-62680946): the 12 pinned
+# input/implementation/extension digests are unchanged; the E1 deliverable
+# digests below reflect the remediated bytes under review (including the
+# minimal Cargo.lock bump for RUSTSEC-2026-0381/0382, verification-gate.txt §5).
 # Format: <relative_path> | <bytes> | <sha256>
 
 paper/artefact_manifest.json | 28645 | 300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5
@@ -13,6 +17,10 @@ python/prin/reporting/_artifacts.py | 5834 | 845a398f7b849e2173cd81a6d673f289001
 DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/__init__.py | 11959 | ede92afc6771f2e29206534905e2820598ba841662a93d59f669f803a382f182
 DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/utils/figure_generation.py | 35239 | 575eca5a6436a25f957702091a6a0b5b7f3d77f1f496f9e6b423550cf79e1520
 DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/utils/table_generation.py | 26962 | 9ac382c487f7177465805a49686568b8ac323128cebeae342cca2b05814704cc
-DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/preregistration.md | 47502 | 66f9271ce8fd846654144311caea0f8b672687c204e9a990bc67135765da0cdb
-benchmarks/campaign/exp002_r1_driver.py | 60888 | c164f14bb4b11958e8e4230d558de428dd591b4f8f7ec1a9463ef17fc6bb673a
-tests/test_exp002_r1_driver.py | 125662 | a6946fc24438162fd5517929bd1ddff25f2c62f670838e011d95577b0faf0109
+DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/preregistration.md | 50885 | c0e5a77b4b7a9815dd452114329b899b337543a100735495b596a0bd3e82a523
+DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/e1-handoff.md | 15848 | 9f8926e784853668f6bbccc94f15efced384054f59eb3d91bbf5da2bd51a4d3d
+DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/e2-review-packet.md | 16950 | b65b3bc190118ba64723bd60161e2ffddc1fc5403de15b38622e9444073eb1c2
+benchmarks/campaign/exp002_r1_driver.py | 72355 | f122be9833ed49e70a2333c6c4e1a482fb2e5efaf06914d456b296e7bd218185
+tests/test_exp002_r1_driver.py | 144745 | 69afc0b3169add884b531a6d7b5752e623db7084986d62ac15057cf66174792c
+.gitattributes | 2087 | 5d9b122b9bcbbf457858613c4ca39672a76906cd16ed859b743ef2af2e4fdeaa
+Cargo.lock | 160894 | 9bfb353c5ed8dd4323577d99f72ec7e2ac5b963996ff72acdda0c8486f081a8b

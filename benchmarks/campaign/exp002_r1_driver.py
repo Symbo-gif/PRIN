@@ -16,10 +16,12 @@ import argparse
 import ast
 import hashlib
 import importlib
+import importlib.util
 import json
 import math
 import re
 import shutil
+import site
 import subprocess
 import sys
 import tempfile
@@ -162,8 +164,33 @@ RUN_CAP = 2 * 1024 * 1024
 RAW_CAP = 10 * 1024 * 1024
 COMBINED_EXP002_CAP = 10 * 1024 * 1024
 CPU_WALL_CAP = 12 * 60 * 60
+# Conservative upper bound on the manifest.json + abort.json bytes appended
+# after the prospective storage check, so the pre-publication cap decision
+# accounts for finalization overhead rather than only the run's current bytes.
+_FINALIZATION_ALLOWANCE = 4096
 API_SYMBOL_COUNT = 175
 CLAIM_CASE_COUNT = 62
+# Import-shadowing threat model for the admission scan: only paths that can
+# actually resolve to code the driver (or its imports) execute. Top-level
+# ``*.py``/``*.pth`` shadow sys.path[0] entries; files under ``python/``,
+# ``benchmarks/``, and ``tools/`` shadow the governed ``prin`` package, the
+# ``benchmarks._common`` helpers, and ``tools.reproduce`` respectively.
+# ``tools/code-intelligence`` is excluded: its hyphenated path component can
+# never name an importable module, and it deliberately carries ignored
+# fixture sources. The interpreter-level half of this threat model (site
+# ``.pth`` directory entries and effective ``prin``/``prinet`` resolution)
+# is covered by ``_environment_shadowing``.
+_SHADOW_PATHSPECS = (
+    ":(glob)*.py",
+    ":(glob)*.pth",
+    ":(glob)python/**/*.py",
+    ":(glob)python/**/*.pth",
+    ":(glob)benchmarks/**/*.py",
+    ":(glob)benchmarks/**/*.pth",
+    ":(glob)tools/**/*.py",
+    ":(glob)tools/**/*.pth",
+    ":(exclude)tools/code-intelligence",
+)
 # Registered Info entries removed (key and value) before PDF comparison.
 PDF_INFO_MASKED_KEYS = frozenset({b"CreationDate", b"ModDate", b"Creator", b"Producer"})
 _PDF_NAME = re.compile(rb"/[^\x00\t\n\x0c\r ()<>\[\]{}/%]+")
@@ -260,6 +287,23 @@ def _check_origin(module: ModuleType, expected: Path) -> None:
         raise DriverError(f"{module.__name__}: import is not the governed source")
 
 
+def _resolved_confinement_path(path: Path, role: str) -> Path:
+    """Resolve ``path`` for confinement checks, refusing parent traversal.
+
+    ``Path.absolute()`` preserves ``..`` components, so a lexical ancestry
+    check over ``OUTPUT_ROOT / ".." / "EXP-002" / "x"`` aliases into the
+    immutable predecessor tree. Confinement decisions therefore reject
+    parent-traversal components and compare fully resolved paths. This
+    helper is deliberately separate from the unresolved paths passed to
+    ``read_no_follow``/``write_no_follow``: resolved paths are only ever
+    used for comparison, never for I/O, so a symlink swapped in between
+    the check and the operation cannot be silently followed.
+    """
+    if ".." in path.parts:
+        raise DriverError(f"{role} contains parent-traversal components: {path}")
+    return path.resolve()
+
+
 def _no_symlink_ancestors(path: Path) -> None:
     for ancestor in (path.absolute(), *path.absolute().parents):
         if ancestor.is_symlink():
@@ -268,20 +312,29 @@ def _no_symlink_ancestors(path: Path) -> None:
 
 def _reject_predecessor_path(path: Path, role: str) -> None:
     """Refuse any path inside the immutable predecessor EXP-002 roots."""
-    candidate = path.absolute()
+    candidate = _resolved_confinement_path(path, role)
     for forbidden in (
-        PREDECESSOR_RAW_ROOT.absolute(),
-        PREDECESSOR_OUTPUT_ROOT.absolute(),
-        PREDECESSOR_RECORD_ROOT.absolute(),
+        PREDECESSOR_RAW_ROOT,
+        PREDECESSOR_OUTPUT_ROOT,
+        PREDECESSOR_RECORD_ROOT,
     ):
-        if candidate == forbidden or candidate.is_relative_to(forbidden):
+        resolved = forbidden.resolve()
+        if candidate == resolved or candidate.is_relative_to(resolved):
             raise DriverError(
                 f"{role} targets immutable predecessor EXP-002 root: {path}"
             )
 
 
 def _verify_prin_core_extension() -> dict[str, Any]:
-    """Verify that the imported ``prin._prin_core`` binary matches the DV-047 pin."""
+    """Verify that the imported ``prin._prin_core`` binary matches the DV-047 pin.
+
+    The pin binds the platform-specific compiled artefact registered on the
+    governed E3 host (Windows x86_64 ``.pyd``) to the imported module's exact
+    origin, byte size, and SHA-256. On other platforms the imported extension
+    is a platform build (``*.so``/``*.dylib``) in the active environment, so
+    this check is host-registered by design: governed module resolution is
+    additionally covered by :func:`_environment_shadowing` at admission.
+    """
     _check_origin(_prin_core, PRIN_CORE_PYD)
     payload = read_no_follow(PRIN_CORE_PYD, "compiled _prin_core.pyd extension")
     digest = _digest(payload)
@@ -605,6 +658,10 @@ def _collect_conclusions(documents: Mapping[str, dict[str, Any]]) -> dict[str, A
 
 def _snapshot(destination: Path) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     _reject_predecessor_path(destination, "input snapshot")
+    resolved = _resolved_confinement_path(destination, "input snapshot")
+    output_root = OUTPUT_ROOT.resolve()
+    if resolved == output_root or not resolved.is_relative_to(output_root):
+        raise DriverError("input snapshot is outside the registered output root")
     manifest_bytes = read_no_follow(INPUT_MANIFEST, "paper input manifest")
     if _digest(manifest_bytes) != INPUT_MANIFEST_SHA:
         raise DriverError("paper input manifest changed from the E1 baseline")
@@ -927,6 +984,13 @@ def _validate_png(payload: bytes) -> None:
 def normalized_bytes(payload: bytes, suffix: str) -> bytes:
     """Normalize only the registered publication metadata from captured bytes.
 
+    The normalized representation is a comparison-digest input, not a
+    regenerated valid document: PDF normalization rewrites the trailer and
+    footer offsets (``startxref 0``), so the result deliberately fails
+    ``_pdf_parts`` re-validation. The transform is one-way and deliberately
+    non-idempotent — ``normalized_bytes(normalized_bytes(x), ".pdf")``
+    raises ``DriverError``. Raw bytes remain the durability artefact.
+
     Args:
         payload: The same raw bytes used for the raw-size/digest observation.
         suffix: One of ``.tex``, ``.pdf`` or ``.png``.
@@ -1021,6 +1085,118 @@ def _verify_prin_generators() -> None:
             raise DriverError(f"PRIN publication generator digest changed: {relative}")
 
 
+def _verify_reference_sources() -> None:
+    """Verify every frozen ``prinet`` source pin before it may execute."""
+    for relative, pinned in REFERENCE_PINS.items():
+        if _digest(read_no_follow(REFERENCE / relative, "reference source")) != pinned:
+            raise DriverError(f"reference source digest changed: {relative}")
+
+
+def _verify_all_pins() -> dict[str, Any]:
+    """Re-verify every live governed-source pin registered for E3.
+
+    The pre-registration promises complete pin enforcement at admission and
+    finalization — not only inside the branch that happens to use each file —
+    so a governed source mutated mid-collection is caught before the run is
+    published. Retrospective closure (:func:`check_run_complete`) validates
+    the *recorded* provenance claims instead, so analysis hosts are not
+    required to hold the registered Windows binary.
+    """
+    extension = _verify_prin_core_extension()
+    _verify_prin_generators()
+    _verify_reference_sources()
+    return extension
+
+
+def _pth_directories() -> list[Path]:
+    """Return the active interpreter's ``.pth``-processed site directories."""
+    candidates: list[Path] = []
+    try:
+        candidates.extend(Path(entry) for entry in site.getsitepackages())
+    except AttributeError:
+        pass
+    try:
+        user_site = site.getusersitepackages()
+    except AttributeError:
+        user_site = None
+    if isinstance(user_site, str):
+        candidates.append(Path(user_site))
+    candidates.extend(
+        Path(entry)
+        for entry in sys.path
+        if entry and Path(entry).name in {"site-packages", "dist-packages"}
+    )
+    directories: list[Path] = []
+    for candidate in candidates:
+        resolved = candidate.resolve()
+        if resolved.is_dir() and resolved not in directories:
+            directories.append(resolved)
+    return directories
+
+
+def _environment_shadowing() -> list[str]:
+    """Detect interpreter paths that could shadow the governed sources.
+
+    Interpreter-level analogue of the repository shadowing scan: a site
+    ``.pth`` directory entry or an earlier ``sys.path`` resolution can place
+    a second ``prin``/``prinet`` ahead of the governed checkout — the DV-047
+    stale-``.pth`` defect class. ``import`` lines inside ``.pth`` files are
+    honoured site machinery and out of scope. Absent ``prinet`` is not a
+    problem (the reference leg bootstraps ``REFERENCE / "src"`` itself), but
+    any ``prinet`` that *does* resolve must resolve to the frozen reference.
+    """
+    problems: list[str] = []
+    governed = {
+        (ROOT / "python").resolve(),
+        (REFERENCE / "src").resolve(),
+    }
+    for directory in _pth_directories():
+        for pth in sorted(directory.glob("*.pth")):
+            try:
+                text = read_no_follow(pth, "site .pth").decode("utf-8")
+            except (OSError, ReproductionError, UnicodeDecodeError) as exc:
+                problems.append(f"site .pth {pth} cannot be assessed: {exc}")
+                continue
+            for raw_line in text.splitlines():
+                line = raw_line.strip()
+                if not line or line.startswith(("#", "import ")):
+                    continue
+                entry = Path(line)
+                resolved = (
+                    entry.resolve()
+                    if entry.is_absolute()
+                    else (directory / entry).resolve()
+                )
+                if resolved in governed or not resolved.is_dir():
+                    continue
+                if (resolved / "prin").is_dir() or (resolved / "prinet").is_dir():
+                    problems.append(
+                        f"site path entry {resolved} via {pth} can shadow the "
+                        "governed prin/prinet sources"
+                    )
+    for package, expected in (
+        ("prin", ROOT / "python/prin/__init__.py"),
+        ("prinet", REFERENCE / "src/prinet/__init__.py"),
+    ):
+        module = sys.modules.get(package)
+        if module is not None:
+            module_file = getattr(module, "__file__", None)
+            if module_file is None or Path(module_file).resolve() != expected.resolve():
+                problems.append(f"preloaded {package} is not the governed source")
+            continue
+        try:
+            spec = importlib.util.find_spec(package)
+        except (ImportError, AttributeError, ValueError):
+            spec = None
+        if spec is None or spec.origin is None:
+            if package == "prin":
+                problems.append("prin does not resolve at all")
+            continue
+        if Path(spec.origin).resolve() != expected.resolve():
+            problems.append(f"{package} resolves to a non-governed source")
+    return problems
+
+
 def collect_reproduction(
     implementation: str, snapshot: Path, output: Path
 ) -> dict[str, Any]:
@@ -1039,9 +1215,10 @@ def collect_reproduction(
     """
     _reject_predecessor_path(snapshot, "input snapshot")
     _reject_predecessor_path(output, "publication output")
-    if (
-        not output.absolute().is_relative_to(OUTPUT_ROOT.absolute())
-        or output.absolute() == OUTPUT_ROOT.absolute()
+    resolved_output = _resolved_confinement_path(output, "publication output")
+    output_root = OUTPUT_ROOT.resolve()
+    if resolved_output == output_root or not resolved_output.is_relative_to(
+        output_root
     ):
         raise DriverError("publication output is outside the registered output root")
     _no_symlink_ancestors(output)
@@ -1058,16 +1235,31 @@ def collect_reproduction(
             verify=True,
         )
     elif implementation == "reference":
+        reference_src = (REFERENCE / "src").resolve()
+        expected_init = reference_src / "prinet" / "__init__.py"
+        if any(name == "prinet" or name.startswith("prinet.") for name in sys.modules):
+            raise DriverError(
+                "frozen prinet package must not be preloaded before the reference leg"
+            )
+        _verify_reference_sources()
+        if str(reference_src) not in sys.path:
+            sys.path.insert(0, str(reference_src))
+        importlib.invalidate_caches()
+        try:
+            spec = importlib.util.find_spec("prinet")
+        except (ImportError, AttributeError, ValueError):
+            spec = None
+        if (
+            spec is None
+            or spec.origin is None
+            or Path(spec.origin).resolve() != expected_init
+        ):
+            raise DriverError("prinet does not resolve to the frozen reference source")
         modules = []
         for kind in ("figure", "table"):
             relative = f"src/prinet/utils/{kind}_generation.py"
             module = importlib.import_module(f"prinet.utils.{kind}_generation")
             _check_origin(module, REFERENCE / relative)
-            if (
-                _digest(read_no_follow(REFERENCE / relative, "reference generator"))
-                != REFERENCE_PINS[relative]
-            ):
-                raise DriverError("reference publication generator changed")
             modules.append(module)
         modules[0].generate_all_figures(snapshot, output / "figures")
         modules[1].generate_all_tables(snapshot, output / "tables")
@@ -1144,7 +1336,7 @@ def _approval_date(protocol_bytes: bytes) -> str:
 def _admission(source_sha: str) -> dict[str, Any]:
     protocol_bytes = read_no_follow(PROTOCOL, "pre-registration")
     approval_date = _approval_date(protocol_bytes)
-    extension = _verify_prin_core_extension()
+    extension = _verify_all_pins()
     if (
         not re.fullmatch(r"[0-9a-f]{40}", source_sha)
         or _git("rev-parse", "HEAD") != source_sha
@@ -1170,7 +1362,7 @@ def _admission(source_sha: str) -> dict[str, Any]:
         f":!{raw_relative}",
         f":!{log_relative}",
     )
-    shadowing = _git("ls-files", "--others", "--", ":(glob)*.py", ":(glob)*.pth")
+    shadowing = _git("ls-files", "--others", "--", *_SHADOW_PATHSPECS)
     source_untracked = [
         path
         for path in untracked.splitlines()
@@ -1180,6 +1372,11 @@ def _admission(source_sha: str) -> dict[str, Any]:
         raise DriverError("uncommitted source/protocol changes invalidate execution")
     if _git_bytes("show", f"HEAD:{protocol_relative}") != protocol_bytes:
         raise DriverError("working pre-registration differs from its committed bytes")
+    environment_problems = _environment_shadowing()
+    if environment_problems:
+        raise DriverError(
+            "import-shadowing environment is unsafe: " + "; ".join(environment_problems)
+        )
     return {
         "source_sha": source_sha,
         "preregistration_sha256": _digest(protocol_bytes),
@@ -1200,6 +1397,9 @@ def _utc_stamp(stamp: str) -> None:
 
 def _reserve(mode: str, run_dir: Path, source_sha: str) -> Path:
     _reject_predecessor_path(run_dir, "run directory")
+    # Direct-child equality on the unresolved absolute path is correct here:
+    # `..` was already rejected above, and resolving now would silently
+    # follow a symlinked RAW_ROOT before `_no_symlink_ancestors` can see it.
     run = run_dir.absolute()
     match = RUN_PATTERN.fullmatch(run.name)
     if (
@@ -1225,7 +1425,16 @@ def _reserve(mode: str, run_dir: Path, source_sha: str) -> Path:
     return run
 
 
-def _storage_check(run: Path) -> None:
+def _storage_check(run: Path, prospective_bytes: int = 0) -> None:
+    """Validate the run's tracked storage, including pending final bytes.
+
+    ``prospective_bytes`` accounts for the result/manifest bytes not yet on
+    disk when the check runs before publication: an over-budget run must be
+    rejected *before* its completed record is published, not only after the
+    fact. ``run`` is already inside ``RAW_ROOT``, so the pending bytes are
+    added exactly once.
+    """
+
     def size(root: Path) -> int:
         return sum(
             stat_size_and_hash_no_follow(path, "campaign storage")[0]
@@ -1234,10 +1443,10 @@ def _storage_check(run: Path) -> None:
         )
 
     try:
-        if size(run) > RUN_CAP:
+        if size(run) + prospective_bytes > RUN_CAP:
             raise DriverError("registered 2 MiB per-run cap exceeded")
         record_root = PROTOCOL.parent
-        r1_total = size(RAW_ROOT) + size(record_root)
+        r1_total = size(RAW_ROOT) + size(record_root) + prospective_bytes
         if r1_total > RAW_CAP:
             raise DriverError(
                 "registered EXP-002-r1 10 MiB tracked-storage cap exceeded"
@@ -1249,8 +1458,9 @@ def _storage_check(run: Path) -> None:
             raise DriverError(
                 "combined EXP-002 + EXP-002-r1 10 MiB tracked-storage cap exceeded"
             )
-        campaign_total = sum(
-            size(root) for root in RAW_ROOT.parent.glob("EXP-*") if root.is_dir()
+        campaign_total = (
+            sum(size(root) for root in RAW_ROOT.parent.glob("EXP-*") if root.is_dir())
+            + prospective_bytes
         )
     except (OSError, ReproductionError) as exc:
         raise DriverError(f"tracked storage cannot be measured: {exc}") from exc
@@ -1410,14 +1620,17 @@ def check_run_complete(run_dir: Path) -> None:
     result_name = (
         f"{mode}.json" if mode in {"api", "conclusions"} else "reproduction.json"
     )
-    if set(inventory) != {"campaign-metadata.json", result_name}:
+    declared = {"campaign-metadata.json", result_name}
+    if not declared <= set(inventory) <= declared | {"abort.json"}:
         raise DriverError("run inventory is not exactly the declared sidecar/result")
-    if {entry.name for entry in run_dir.iterdir()} != {
-        "campaign-metadata.json",
-        result_name,
-        "manifest.json",
+    if {entry.name for entry in run_dir.iterdir()} != set(inventory) | {
+        "manifest.json"
     }:
         raise DriverError("run inventory holds an undeclared directory entry")
+    if "abort.json" in inventory:
+        raise DriverError(
+            "run carries a manifested abort record and can never be admissible"
+        )
     if (
         metadata.get("exp_id") != EXP_ID
         or metadata.get("session") != SESSION_ID
@@ -1589,12 +1802,48 @@ def run_registered(
     payload["elapsed_seconds"] = time.monotonic() - started
     payload["started_at_utc"] = started_at
     payload["recorded_at_utc"] = datetime.now(UTC).isoformat()
+    if failed is None:
+        # Live pin re-verification and the prospective storage-cap check run
+        # before the completed record is published: a governed source mutated
+        # mid-collection or a run that would exceed a registered cap aborts
+        # here instead of leaving a manifested COMPLETED record.
+        try:
+            _verify_all_pins()
+            artefact = {"environment": environment, "config": config, **payload}
+            prospective = len(
+                json.dumps(
+                    artefact,
+                    indent=2,
+                    sort_keys=True,
+                    ensure_ascii=False,
+                ).encode("utf-8")
+            )
+            _storage_check(run, prospective + _FINALIZATION_ALLOWANCE)
+        except Exception as exc:
+            failed = exc
+            payload["status"] = "ABORTED"
+            payload["abort_reason"] = f"finalization: {type(exc).__name__}: {exc}"
     write_result(
         run / result_name,
         environment=environment,
         config=config,
         payload=payload,
     )
+    if failed is not None:
+        # The manifested abort record makes the rejected run durably
+        # inadmissible: manifest verification forbids removing it, and
+        # append-only writes forbid adding one to an accepted run.
+        write_json_exclusive(
+            run / "abort.json",
+            {
+                "exp_id": EXP_ID,
+                "session": SESSION_ID,
+                "run_id": run.name,
+                "abort_reason": payload["abort_reason"],
+                "recorded_at_utc": payload["recorded_at_utc"],
+            },
+            conflict_message="abort record already exists",
+        )
     append_manifest(run, run / "manifest.json")
     if failed is not None:
         raise DriverError(f"aborted run retained: {run}; {failed}") from failed

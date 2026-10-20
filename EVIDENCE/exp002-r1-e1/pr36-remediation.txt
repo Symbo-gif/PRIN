@@ -1,0 +1,100 @@
+# EXP-002-r1 E1 — PR #36 hosted-check triage and review remediation record
+# Branch: campaign/exp002-r1-e1
+# Remediated head under review: commit after 62680946 (see git log; this file
+# records the state of the remediation working tree before the commit).
+#
+# Hosted results are ADDITIONAL EVIDENCE (Plan amendment #52): they are
+# recorded verbatim below and establish behaviour only on the platforms that
+# actually ran. The local gate on the governed Windows host remains the
+# mandatory authoritative check (verification-gate.txt).
+
+## 1. Verbatim hosted check state on E1 head 62680946 (gh pr checks 36)
+
+Failing (all in the `python` workflow, run 39455484622):
+
+  test (ubuntu-latest, 3.11)   fail  8m46s   https://github.com/Symbo-gif/PRIN/actions/runs/39455484622/job/118741116285
+  test (ubuntu-latest, 3.12)   fail  9m15s   https://github.com/Symbo-gif/PRIN/actions/runs/39455484622/job/118741116107
+  test (ubuntu-latest, 3.13)   fail  7m54s   https://github.com/Symbo-gif/PRIN/actions/runs/39455484622/job/118741115571
+  test (windows-latest, 3.11)  fail 16m41s   https://github.com/Symbo-gif/PRIN/actions/runs/39455484622/job/118741115878
+  test (windows-latest, 3.12)  fail 15m0s    https://github.com/Symbo-gif/PRIN/actions/runs/39455484622/job/118741115677
+  test (windows-latest, 3.13)  fail 16m38s   https://github.com/Symbo-gif/PRIN/actions/runs/39455484622/job/118741115935
+
+Passing on the same head (selected): parity (run 39455484681), reproduce
+(run 39455484686), governance / lint / security / docs (run 39455484622),
+rust workflow jobs incl. audit / clippy / clippy-strict / fmt / bench-smoke /
+test-strict and macos/ubuntu/windows cargo test (run 39455484625), gpu-cuda +
+gpu-wgpu (run 39455484665), detect_corpus (run 39455484681), Secret Scan
+(runs 39455337806, 39455484635), Snyk Code (runs 39455337806, 39455484635),
+CodeRabbit and Devin Review. Sourcery review: skipping (no code languages in
+scope by its config).
+
+## 2. Failure triage (root cause)
+
+All six matrix jobs failed in tests/test_exp002_r1_driver.py:
+`test_real_prin_core_pyd_and_generator_pins_match_repository` invoked the
+production verifier `_verify_prin_core_extension()`, which requires the
+registered Windows E3 binary (9,290,240 B, SHA-256 37392d06...ee99e). Hosted
+Ubuntu builds a `*.so` and hosted Windows jobs build a fresh `*.pyd` whose
+bytes legitimately differ from the governed host's registered build, so the
+exact-binary assertion cannot hold anywhere except the registered E3 host.
+The pin itself is intentionally host-registered (DV-047); the defect was the
+test demanding it unconditionally on every platform.
+
+## 3. Multi-agent review findings remediated
+
+The Perplexity Deep Research report independently validated the other
+reviewers' findings. Eight findings were confirmed against current code and
+remediated:
+
+F1  Host-specific live binary test (the hosted failure above).
+    Fix: generator-pin assertions run portably; the exact-binary assertion is
+    an opt-in test skipped unless explicitly selected on the governed E3
+    host. `_verify_prin_core_extension()` is unchanged and remains strict.
+F2  `Path.absolute()` preserves `..`: lexical checks could admit traversal
+    aliases resolving into immutable predecessor roots.
+    Fix: `_resolved_confinement_path` rejects `..` components and resolves
+    for comparison; `_reject_predecessor_path`, `_snapshot`,
+    `collect_reproduction`, `_reserve`, `check_run_complete` enforce it.
+    Unresolved `.absolute()` paths are still used for symlink-ancestor
+    detection so symlinks are caught before resolution.
+F3  Storage-cap violations were only detected at closure, after COMPLETED
+    had been published and manifested.
+    Fix: prospective `_storage_check(run, prospective + _FINALIZATION_ALLOWANCE)`
+    runs before result publication; any failed run writes a durable
+    `abort.json` (manifested, append-only) that `check_run_complete` rejects,
+    so an aborted run can never become an admissible completed observation.
+F4  Reference arm could import an installed/shadowing `prinet` or fail with
+    ModuleNotFoundError; import preceded pin verification.
+    Fix: fail-closed bootstrap — reject preloaded `prinet`, verify all
+    REFERENCE_PINS pre-import, prepend `REFERENCE/src` to sys.path, require
+    `importlib.util.find_spec("prinet")` to resolve to the frozen
+    `src/prinet/__init__.py`.
+F5  Registered source pins were not uniformly enforced.
+    Fix: `_verify_all_pins()` (extension + both PRIN generators + all three
+    REFERENCE sources) runs at admission and again before result publication.
+F6  Shallow git pathspecs missed nested rogue `.py`/`.pth` files; no
+    environment shadowing check existed.
+    Fix: recursive `_SHADOW_PATHSPECS` scoped to the governed import surface
+    (untracked incl. ignored files) plus `_environment_shadowing()` covering
+    site `.pth` path entries and effective `prin`/`prinet` resolution.
+F7  `pdf_info_keyset` residuals could be misclassified from digest
+    differences alone (identical /Info key sets can serialize differently).
+    Fix: preregistration.md §11.1 now requires E4 to inspect actual /Info
+    key sets and residual byte structure; digest disagreement alone is
+    insufficient.
+F8  verification-gate.txt lacked a head-specific full local gate record and
+    .gitattributes covered only the e1 evidence root.
+    Fix: this bundle was regenerated for the remediation head (local gate
+    vs hosted checks distinguished); .gitattributes now covers
+    `EVIDENCE/exp002-r1-e*/**`.
+
+## 4. Remediated local verification (authoritative, this host)
+
+- pytest tests/test_exp002_r1_driver.py: 343 passed, 1 skipped (the skip is
+  the opt-in registered-host binary pin; 3 passed when explicitly selected
+  on this governed host); 98% statement coverage on exp002_r1_driver.py
+  (865 statements, 17 missing).
+- Full gate detail: see verification-gate.txt in this bundle.
+
+No E3 leg was executed; no RUN- directory exists; preregistration.md remains
+Status: DRAFT pending E2 approval.

@@ -18,15 +18,19 @@ from __future__ import annotations
 
 import hashlib
 import importlib
+import importlib.util
 import json
+import os
 import re
 import runpy
 import shutil
+import site
 import struct
 import subprocess
 import sys
 import tempfile
 import zlib
+from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -304,6 +308,19 @@ def _setup_synthetic_prin_core(
         mod.__file__ = str(path)
         monkeypatch.setattr(driver, attr, mod)
     monkeypatch.setattr(driver, "PRIN_PINS", pins)
+
+    reference_pins: dict[str, str] = {}
+    for relative in (
+        "src/prinet/__init__.py",
+        "src/prinet/utils/figure_generation.py",
+        "src/prinet/utils/table_generation.py",
+    ):
+        path = root / "reference" / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        body = f"# synthetic reference source {relative}\n".encode()
+        path.write_bytes(body)
+        reference_pins[relative] = _sha256(body)
+    monkeypatch.setattr(driver, "REFERENCE_PINS", reference_pins)
     return pyd_path, pins
 
 
@@ -350,6 +367,7 @@ def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     )
     monkeypatch.setattr(driver, "INPUT_MANIFEST", root / "manifest.json")
     monkeypatch.setattr(driver, "_git_bytes", _fake_git())
+    monkeypatch.setattr(driver, "_environment_shadowing", lambda: [])
     _setup_synthetic_prin_core(root, monkeypatch)
     driver.RAW_ROOT.mkdir(parents=True)
     driver.PREDECESSOR_RAW_ROOT.mkdir(parents=True)
@@ -540,7 +558,7 @@ def _fake_git(
     committed: bytes | None = None,
     commit: str = COMMIT,
     merge_base: str | None = None,
-) -> Any:
+) -> Callable[..., bytes]:
     """Fake ``_git_bytes``: raw stdout bytes, as the real helper returns."""
 
     def fake(*args: str) -> bytes:
@@ -625,12 +643,26 @@ class TestNamespaceIsolationAndRealPins:
         assert resolved_fig == out_r1 / "RUN-x" / "publication" / "figures"
         assert resolved_tab == out_r1 / "RUN-x" / "publication" / "tables"
 
-    def test_real_prin_core_pyd_and_generator_pins_match_repository(self) -> None:
-        """Verify live DV-047 ``_prin_core.pyd`` and generator pins."""
+    def test_real_generator_source_pins_match_repository(self) -> None:
+        """Verify the live PRIN generator pins (portable: no native binary)."""
+        driver._verify_prin_generators()
+        repo_root = Path(driver.__file__).resolve().parents[2]
+        for relative, pinned in driver.PRIN_PINS.items():
+            assert _sha256((repo_root / relative).read_bytes()) == pinned
+
+    @pytest.mark.skipif(
+        os.environ.get("PRIN_EXP002_R1_HOST_PIN") != "1",
+        reason=(
+            "registered-host live binary pin: only meaningful on the governed "
+            "E3 host (set PRIN_EXP002_R1_HOST_PIN=1); hosted CI builds its own "
+            "platform extension that must not match this pin"
+        ),
+    )
+    def test_live_prin_core_pyd_pin_matches_registered_build(self) -> None:
+        """Verify the live DV-047 ``_prin_core.pyd`` pin on the E3 host only."""
         ext = driver._verify_prin_core_extension()
         assert ext["prin_core_pyd_sha256"] == driver.PRIN_CORE_PYD_SHA256
         assert ext["prin_core_pyd_bytes"] == driver.PRIN_CORE_PYD_BYTES
-        driver._verify_prin_generators()
 
     def test_predecessor_paths_rejected_across_entry_points(
         self, admitted: Path
@@ -744,7 +776,7 @@ def api_env(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> ModuleType:
         f"legacy_{index:03d}" for index in range(170)
     ]
     reference_init = workspace / "reference" / "src" / "prinet" / "__init__.py"
-    reference_init.parent.mkdir(parents=True)
+    reference_init.parent.mkdir(parents=True, exist_ok=True)
     payload = ("__all__ = " + repr(legacy) + "\n").encode()
     reference_init.write_bytes(payload)
     pins = dict(driver.REFERENCE_PINS)
@@ -851,7 +883,7 @@ class TestLegacyNames:
     @pytest.fixture
     def pinned_source(self, workspace: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
         source = workspace / "reference" / "src" / "prinet" / "__init__.py"
-        source.parent.mkdir(parents=True)
+        source.parent.mkdir(parents=True, exist_ok=True)
 
         def pin(body: str) -> None:
             payload = body.encode()
@@ -1476,6 +1508,16 @@ def _reference_pins(reference: Path) -> dict[str, str]:
     return pins
 
 
+def _drop_prinet_modules(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unload every ``prinet`` module so the reference-leg guard is hermetic."""
+    for name in [
+        module_name
+        for module_name in sys.modules
+        if module_name == "prinet" or module_name.startswith("prinet.")
+    ]:
+        monkeypatch.delitem(sys.modules, name)
+
+
 class TestCollectReproduction:
     def _renderer(self, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
         renderer = {"matplotlib": "x", "backend": "Agg", "font_sha256": {}}
@@ -1537,6 +1579,8 @@ class TestCollectReproduction:
         self, workspace: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         _archived_tables(workspace)
+        _drop_prinet_modules(monkeypatch)
+        monkeypatch.setattr(sys, "path", list(sys.path))
         reference = workspace / "reference"
         modules = _fake_generator_modules(reference)
         monkeypatch.setattr(driver, "REFERENCE_PINS", _reference_pins(reference))
@@ -1634,11 +1678,11 @@ class TestCollectReproduction:
         self, workspace: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         self._renderer(monkeypatch)
+        _drop_prinet_modules(monkeypatch)
+        monkeypatch.setattr(sys, "path", list(sys.path))
         reference = workspace / "reference"
         modules = _fake_generator_modules(reference)
-        pins = _reference_pins(reference)
-        pins["src/prinet/utils/table_generation.py"] = "0" * 64
-        monkeypatch.setattr(driver, "REFERENCE_PINS", pins)
+        monkeypatch.setattr(driver, "REFERENCE_PINS", _reference_pins(reference))
         snapshot = workspace / "snapshot"
         snapshot.mkdir()
         output = driver.OUTPUT_ROOT / "out"
@@ -1650,8 +1694,76 @@ class TestCollectReproduction:
             driver.collect_reproduction("reference", snapshot, output)
 
         monkeypatch.setattr(importlib, "import_module", lambda name: modules[name])
-        with pytest.raises(driver.DriverError, match="generator changed"):
+        pins = _reference_pins(reference)
+        pins["src/prinet/utils/table_generation.py"] = "0" * 64
+        monkeypatch.setattr(driver, "REFERENCE_PINS", pins)
+        with pytest.raises(driver.DriverError, match="digest changed"):
             driver.collect_reproduction("reference", snapshot, output)
+
+    def test_reference_leg_rejects_preloaded_prinet(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._renderer(monkeypatch)
+        _drop_prinet_modules(monkeypatch)
+        reference = workspace / "reference"
+        _fake_generator_modules(reference)
+        monkeypatch.setattr(driver, "REFERENCE_PINS", _reference_pins(reference))
+        monkeypatch.setitem(sys.modules, "prinet", ModuleType("prinet"))
+        with pytest.raises(driver.DriverError, match="preloaded"):
+            driver.collect_reproduction(
+                "reference",
+                workspace / "snapshot",
+                driver.OUTPUT_ROOT / "out",
+            )
+
+    def test_reference_leg_rejects_foreign_resolution(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._renderer(monkeypatch)
+        _drop_prinet_modules(monkeypatch)
+        monkeypatch.setattr(sys, "path", list(sys.path))
+        reference = workspace / "reference"
+        _fake_generator_modules(reference)
+        monkeypatch.setattr(driver, "REFERENCE_PINS", _reference_pins(reference))
+        foreign_init = workspace / "foreign" / "prinet" / "__init__.py"
+        foreign_init.parent.mkdir(parents=True)
+        foreign_init.write_bytes(b"__all__ = []\n")
+        real_find_spec = importlib.util.find_spec
+
+        def fake_find_spec(name: str, *args: Any, **kwargs: Any) -> Any:
+            if name == "prinet":
+                return importlib.util.spec_from_file_location("prinet", foreign_init)
+            return real_find_spec(name, *args, **kwargs)
+
+        monkeypatch.setattr(importlib.util, "find_spec", fake_find_spec)
+        with pytest.raises(driver.DriverError, match="does not resolve"):
+            driver.collect_reproduction(
+                "reference",
+                workspace / "snapshot",
+                driver.OUTPUT_ROOT / "out",
+            )
+
+    def test_reference_leg_rejects_unresolvable_prinet(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._renderer(monkeypatch)
+        _drop_prinet_modules(monkeypatch)
+        monkeypatch.setattr(sys, "path", list(sys.path))
+        reference = workspace / "reference"
+        _fake_generator_modules(reference)
+        monkeypatch.setattr(driver, "REFERENCE_PINS", _reference_pins(reference))
+        real_find_spec = importlib.util.find_spec
+        monkeypatch.setattr(
+            importlib.util,
+            "find_spec",
+            lambda name, *a, **k: None if name == "prinet" else real_find_spec(name),
+        )
+        with pytest.raises(driver.DriverError, match="does not resolve"):
+            driver.collect_reproduction(
+                "reference",
+                workspace / "snapshot",
+                driver.OUTPUT_ROOT / "out",
+            )
 
     def test_missing_and_extra_outputs_are_retained(
         self, workspace: Path, monkeypatch: pytest.MonkeyPatch
@@ -2048,6 +2160,224 @@ class TestAdmission:
             with pytest.raises(driver.DriverError, match="seed pair"):
                 driver.run_registered(**call)
 
+    @pytest.mark.parametrize(
+        ("pins_attr", "relative", "match"),
+        [
+            (
+                "REFERENCE_PINS",
+                "src/prinet/__init__.py",
+                "reference source digest changed",
+            ),
+            (
+                "PRIN_PINS",
+                "python/prin/reporting/figure_generation.py",
+                "generator digest changed",
+            ),
+        ],
+        ids=["reference-source", "prin-generator"],
+    )
+    def test_admission_verifies_every_live_pin(
+        self,
+        workspace: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        pins_attr: str,
+        relative: str,
+        match: str,
+    ) -> None:
+        """Admission checks extension, PRIN generator, and reference pins."""
+        _protocol_file(workspace)
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git())
+        pins = dict(getattr(driver, pins_attr))
+        pins[relative] = "0" * 64
+        monkeypatch.setattr(driver, pins_attr, pins)
+        with pytest.raises(driver.DriverError, match=match):
+            driver.run_registered(
+                "api", driver.RAW_ROOT / _run_name("api"), "devin", SHA
+            )
+
+    def test_admission_rejects_shadowing_environment(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _protocol_file(workspace)
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git())
+        monkeypatch.setattr(
+            driver,
+            "_environment_shadowing",
+            lambda: ["stale prin_core.pth points elsewhere"],
+        )
+        with pytest.raises(driver.DriverError, match="import-shadowing"):
+            driver.run_registered(
+                "api", driver.RAW_ROOT / _run_name("api"), "devin", SHA
+            )
+
+    def test_shadow_pathspecs_cover_nested_import_surface(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The shadowing scan is driven by the scoped import-surface pathspecs."""
+        _protocol_file(workspace)
+        seen: list[tuple[str, ...]] = []
+
+        def recording_git(*args: str) -> bytes:
+            seen.append(args)
+            if (
+                args
+                and args[0] == "ls-files"
+                and any(arg.startswith(":(glob)") for arg in args)
+            ):
+                return b""
+            return _fake_git()(*args)
+
+        monkeypatch.setattr(driver, "_git_bytes", recording_git)
+        monkeypatch.setattr(
+            driver, "capture_environment", lambda **kw: _fake_environment()
+        )
+        monkeypatch.setattr(driver, "_snapshot", lambda dest: ({}, _fake_identity()))
+        monkeypatch.setattr(driver, "collect_api", lambda: _fake_observations("api"))
+        driver.run_registered("api", driver.RAW_ROOT / _run_name("api"), "devin", SHA)
+        (ls_files,) = [
+            call
+            for call in seen
+            if call[0] == "ls-files" and "--exclude-standard" not in call
+        ]
+        for spec in driver._SHADOW_PATHSPECS:
+            assert spec in ls_files
+        assert ":(exclude)tools/code-intelligence" in ls_files
+
+
+def _governed_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Bind ``prin``/``prinet`` resolution to the governed paths deterministically."""
+    fake_prin = ModuleType("prin")
+    fake_prin.__file__ = str(driver.ROOT / "python" / "prin" / "__init__.py")
+    monkeypatch.setitem(sys.modules, "prin", fake_prin)
+    _drop_prinet_modules(monkeypatch)
+    real_find_spec = importlib.util.find_spec
+    monkeypatch.setattr(
+        importlib.util,
+        "find_spec",
+        lambda name, *a, **k: (
+            importlib.util.spec_from_file_location(
+                "prinet", driver.REFERENCE / "src" / "prinet" / "__init__.py"
+            )
+            if name == "prinet"
+            else real_find_spec(name, *a, **k)
+        ),
+    )
+
+
+class TestEnvironmentShadowing:
+    """Direct tests for the interpreter-level shadowing check."""
+
+    def _site_dir(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+        site_dir = tmp_path / "site-packages"
+        site_dir.mkdir()
+        monkeypatch.setattr(site, "getsitepackages", lambda: [str(site_dir)])
+        monkeypatch.setattr(site, "getusersitepackages", lambda: str(tmp_path / "none"))
+        monkeypatch.setattr(sys, "path", [str(site_dir)])
+        _governed_env(monkeypatch)
+        return site_dir
+
+    def test_governed_entries_are_accepted(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        site_dir = self._site_dir(tmp_path, monkeypatch)
+        (site_dir / "prin.pth").write_text(str(driver.ROOT / "python") + "\n")
+        (site_dir / "ref.pth").write_text(str(driver.REFERENCE / "src") + "\n")
+        problems = driver._environment_shadowing()
+        assert problems == []
+
+    def test_stale_pth_pointing_at_foreign_prin_flagged(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        site_dir = self._site_dir(tmp_path, monkeypatch)
+        foreign = tmp_path / "other-checkout" / "python"
+        (foreign / "prin").mkdir(parents=True)
+        (site_dir / "prin_core.pth").write_text(str(foreign) + "\n")
+        problems = driver._environment_shadowing()
+        assert any("shadow" in problem for problem in problems)
+
+    def test_import_and_comment_pth_lines_skipped(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        site_dir = self._site_dir(tmp_path, monkeypatch)
+        (site_dir / "machinery.pth").write_text(
+            "# comment\nimport coverage; coverage.process_startup()\n"
+        )
+        problems = driver._environment_shadowing()
+        assert problems == []
+
+    def test_foreign_prinet_resolution_flagged(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._site_dir(tmp_path, monkeypatch)
+        foreign_init = tmp_path / "foreign" / "prinet" / "__init__.py"
+        foreign_init.parent.mkdir(parents=True)
+        foreign_init.write_bytes(b"__all__ = []\n")
+        real_find_spec = importlib.util.find_spec
+        monkeypatch.setattr(
+            importlib.util,
+            "find_spec",
+            lambda name, *a, **k: (
+                importlib.util.spec_from_file_location("prinet", foreign_init)
+                if name == "prinet"
+                else real_find_spec(name, *a, **k)
+            ),
+        )
+        problems = driver._environment_shadowing()
+        assert any("prinet" in problem for problem in problems)
+
+    def test_preloaded_foreign_prin_flagged(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        self._site_dir(tmp_path, monkeypatch)
+        fake_prin = ModuleType("prin")
+        fake_prin.__file__ = str(tmp_path / "foreign" / "prin" / "__init__.py")
+        monkeypatch.setitem(sys.modules, "prin", fake_prin)
+        problems = driver._environment_shadowing()
+        assert any("preloaded prin" in problem for problem in problems)
+
+
+class TestRealGitShadowScan:
+    """Pathspec semantics verified against a real git repository."""
+
+    def test_nested_ignored_shadow_files_are_matched(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        (repo / "python" / "prin").mkdir(parents=True)
+        (repo / "tools" / "pkg").mkdir(parents=True)
+        (repo / ".gitignore").write_text("ignored*\n", encoding="utf-8")
+        nested = repo / "python" / "prin" / "ignored_shadow.py"
+        nested.write_text("# ignored\n", encoding="utf-8")
+        root_pth = repo / "ignored_env.pth"
+        root_pth.write_text("x\n", encoding="utf-8")
+        (repo / "tools" / "pkg" / "ignored_helper.py").write_text(
+            "# ignored\n", encoding="utf-8"
+        )
+        subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+        found = subprocess.run(
+            ["git", "ls-files", "--others", "--", *driver._SHADOW_PATHSPECS],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.splitlines()
+        assert "python/prin/ignored_shadow.py" in found
+        assert "ignored_env.pth" in found
+        assert "tools/pkg/ignored_helper.py" in found
+
+    def test_unimportable_fixture_tree_is_excluded(self, tmp_path: Path) -> None:
+        repo = tmp_path / "repo"
+        fixture = repo / "tools" / "code-intelligence" / "tests" / "fixtures"
+        fixture.mkdir(parents=True)
+        (fixture / "ignored_fixture.py").write_text("# fixture\n", encoding="utf-8")
+        subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+        found = subprocess.run(
+            ["git", "ls-files", "--others", "--", *driver._SHADOW_PATHSPECS],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.splitlines()
+        assert found == []
+
 
 class TestReserve:
     def test_happy_path_creates_directory(self, workspace: Path) -> None:
@@ -2113,6 +2443,44 @@ class TestReserve:
         monkeypatch.setattr(driver, "RAW_ROOT", link)
         with pytest.raises(driver.DriverError, match="symlink ancestor"):
             driver._reserve("api", link / _run_name("api"), SHA)
+
+
+class TestTraversalConfinement:
+    """Resolved-path confinement at every writing boundary (PR #36 P2)."""
+
+    def test_predecessor_alias_via_parent_traversal_rejected(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(driver, "_render_environment", lambda: {"r": 1})
+        alias = driver.OUTPUT_ROOT / ".." / "EXP-002" / "fresh-publication"
+        with pytest.raises(driver.DriverError, match="parent-traversal"):
+            driver._reject_predecessor_path(alias, "publication output")
+        with pytest.raises(driver.DriverError, match="parent-traversal"):
+            driver._snapshot(alias)
+        with pytest.raises(driver.DriverError, match="parent-traversal"):
+            driver.collect_reproduction("prin", workspace / "snapshot", alias)
+        assert not (driver.PREDECESSOR_OUTPUT_ROOT / "fresh-publication").exists()
+
+    def test_traversal_within_output_root_rejected(
+        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(driver, "_render_environment", lambda: {"r": 1})
+        output = driver.OUTPUT_ROOT / "nested" / ".." / "publication"
+        with pytest.raises(driver.DriverError, match="parent-traversal"):
+            driver.collect_reproduction("prin", workspace / "snapshot", output)
+
+    def test_run_dir_traversal_alias_rejected(self, workspace: Path) -> None:
+        name = _run_name("api")
+        with pytest.raises(driver.DriverError, match="parent-traversal"):
+            driver._reserve("api", driver.RAW_ROOT / ".." / "EXP-002" / name, SHA)
+        with pytest.raises(driver.DriverError, match="parent-traversal"):
+            driver.check_run_complete(driver.RAW_ROOT / ".." / "EXP-002" / name)
+
+    def test_snapshot_outside_output_root_rejected(self, workspace: Path) -> None:
+        with pytest.raises(
+            driver.DriverError, match="outside the registered output root"
+        ):
+            driver._snapshot(workspace / "elsewhere" / "inputs")
 
 
 class TestRunRegistered:
@@ -2205,6 +2573,7 @@ class TestRunRegistered:
         assert "RuntimeError" in result["abort_reason"]
         assert (run_dir / "campaign-metadata.json").is_file()
         assert (run_dir / "manifest.json").is_file()
+        assert (run_dir / "abort.json").is_file()
         with pytest.raises(driver.DriverError):
             driver.check_run_complete(run_dir)
 
@@ -2232,6 +2601,52 @@ class TestRunRegistered:
         result = json.loads((run_dir / "api.json").read_text(encoding="utf-8"))
         assert result["status"] == "ABORTED"
         assert "CPU wall cap" in result["abort_reason"]
+
+    @pytest.mark.parametrize(
+        "cap",
+        ["RUN_CAP", "RAW_CAP", "COMBINED_EXP002_CAP"],
+        ids=["per-run-cap", "raw-cap", "combined-exp002-cap"],
+    )
+    def test_storage_cap_failure_leaves_manifested_abort_record(
+        self, admitted: Path, monkeypatch: pytest.MonkeyPatch, cap: str
+    ) -> None:
+        """Cap failures abort before publication and stay durably rejected."""
+        monkeypatch.setattr(driver, "_snapshot", lambda dest: ({}, _fake_identity()))
+        monkeypatch.setattr(driver, "collect_api", lambda: _fake_observations("api"))
+        monkeypatch.setattr(driver, cap, 1)
+        run_dir = driver.RAW_ROOT / _run_name("api")
+        with pytest.raises(driver.DriverError, match="aborted run retained"):
+            driver.run_registered("api", run_dir, "devin", SHA)
+        result = json.loads((run_dir / "api.json").read_text(encoding="utf-8"))
+        assert result["status"] == "ABORTED"
+        assert "cap exceeded" in result["abort_reason"]
+        assert (run_dir / "abort.json").is_file()
+        # The manifested abort record rejects the run unconditionally —
+        # restoring the cap cannot make the rejected record admissible.
+        with pytest.raises(driver.DriverError, match="abort record"):
+            driver.check_run_complete(run_dir)
+
+    def test_generator_mutation_during_collection_aborts(
+        self, admitted: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A governed source mutated mid-collection aborts at finalization."""
+        monkeypatch.setattr(driver, "_snapshot", lambda dest: ({}, _fake_identity()))
+        generator = admitted / "python" / "prin" / "reporting" / "figure_generation.py"
+
+        def mutate_then_collect() -> dict[str, Any]:
+            generator.write_bytes(b"# mutated mid-collection\n")
+            return _fake_observations("api")
+
+        monkeypatch.setattr(driver, "collect_api", mutate_then_collect)
+        run_dir = driver.RAW_ROOT / _run_name("api")
+        with pytest.raises(driver.DriverError, match="aborted run retained"):
+            driver.run_registered("api", run_dir, "devin", SHA)
+        result = json.loads((run_dir / "api.json").read_text(encoding="utf-8"))
+        assert result["status"] == "ABORTED"
+        assert "digest changed" in result["abort_reason"]
+        assert (run_dir / "abort.json").is_file()
+        with pytest.raises(driver.DriverError, match="abort record"):
+            driver.check_run_complete(run_dir)
 
     @_needs_symlink_support
     def test_output_root_symlink_ancestor_rejected(
@@ -2469,6 +2884,23 @@ class TestCheckRunComplete:
         (run / "api.json").write_text("[]", encoding="utf-8")
         _remanifest(run)
         with pytest.raises(driver.DriverError):
+            driver.check_run_complete(run)
+
+    def test_manifested_abort_record_rejected(self, workspace: Path) -> None:
+        """A manifested abort.json makes the run durably inadmissible."""
+        run = _write_valid_run()
+        (run / "abort.json").write_text(
+            json.dumps(
+                {
+                    "exp_id": "EXP-002-r1",
+                    "run_id": run.name,
+                    "abort_reason": "finalization: cap exceeded",
+                }
+            ),
+            encoding="utf-8",
+        )
+        _remanifest(run)
+        with pytest.raises(driver.DriverError, match="abort record"):
             driver.check_run_complete(run)
 
     @pytest.mark.parametrize(
@@ -3069,8 +3501,12 @@ class TestReservationAtomicity:
     def test_sidecar_failure_is_recorded_as_aborted(
         self, admitted: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        def refuse(*args: Any, **kwargs: Any) -> None:
-            raise OSError("sidecar write refused")
+        real_write = result_module.write_json_exclusive
+
+        def refuse(path: Path, *args: Any, **kwargs: Any) -> Any:
+            if Path(path).name == "campaign-metadata.json":
+                raise OSError("sidecar write refused")
+            return real_write(path, *args, **kwargs)
 
         monkeypatch.setattr(driver, "write_json_exclusive", refuse)
         run_dir = driver.RAW_ROOT / _run_name("api")
@@ -3079,6 +3515,7 @@ class TestReservationAtomicity:
         result = json.loads((run_dir / "api.json").read_text(encoding="utf-8"))
         assert result["status"] == "ABORTED"
         assert "sidecar write refused" in result["abort_reason"]
+        assert (run_dir / "abort.json").is_file()
         assert (run_dir / "manifest.json").is_file()
 
     def test_generated_root_creation_failure_is_recorded_as_aborted(

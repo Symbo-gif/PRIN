@@ -25,11 +25,11 @@ experiment leg has executed and no `RUN-` directory exists under
   (`9,290,240` bytes, SHA-256
   `37392d067efa3983e384c94f4ac2268c4fad2f5ea929c529b3db50bff4fee99e`).
 
-| Artefact / pinned input | Byte size | SHA-256 of reviewed E1 bytes |
+| Artefact / pinned input | Byte size | SHA-256 of reviewed bytes (post-remediation head) |
 |---|---:|---|
-| `DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/preregistration.md` | 47,502 | `66f9271ce8fd846654144311caea0f8b672687c204e9a990bc67135765da0cdb` |
-| `benchmarks/campaign/exp002_r1_driver.py` | 60,888 | `c164f14bb4b11958e8e4230d558de428dd591b4f8f7ec1a9463ef17fc6bb673a` |
-| `tests/test_exp002_r1_driver.py` | 125,662 | `a6946fc24438162fd5517929bd1ddff25f2c62f670838e011d95577b0faf0109` |
+| `DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/preregistration.md` | 50,885 | `c0e5a77b4b7a9815dd452114329b899b337543a100735495b596a0bd3e82a523` |
+| `benchmarks/campaign/exp002_r1_driver.py` | 72,355 | `f122be9833ed49e70a2333c6c4e1a482fb2e5efaf06914d456b296e7bd218185` |
+| `tests/test_exp002_r1_driver.py` | 144,745 | `69afc0b3169add884b531a6d7b5752e623db7084986d62ac15057cf66174792c` |
 | `python/prin/_prin_core.pyd` (DV-047 rebuilt binary) | 9,290,240 | `37392d067efa3983e384c94f4ac2268c4fad2f5ea929c529b3db50bff4fee99e` |
 | `python/prin/reporting/figure_generation.py` (EXP-002-D1 corrected port) | 41,869 | `e216fec4f45ab71cfc5ef1286701c920731df278120e0afa0d216515b4bb19a7` |
 | `python/prin/reporting/table_generation.py` | 29,173 | `1593f52d9a652842ee7d62163d9e6b397989e9c6489aa5cc43a8416b1083c8af` |
@@ -47,7 +47,12 @@ experiment leg has executed and no `RUN-` directory exists under
 
 ## 3. E1 verification summary
 
-- `tests/test_exp002_r1_driver.py`: **320 passed**, **99.60 %** coverage on `benchmarks/campaign/exp002_r1_driver.py` (`751/754` statements).
+- `tests/test_exp002_r1_driver.py`: **343 passed, 1 skipped** (the skip is the
+  opt-in registered-host `_prin_core.pyd` binary test, which passes `3/3` when
+  explicitly selected on the governed E3 host; see §5 item 1), **98 %**
+  coverage on `benchmarks/campaign/exp002_r1_driver.py` (`865` statements,
+  `17` missing). The pre-remediation baseline on `62680946` was `320 passed`,
+  `99.60 %` (`751/754` statements).
 - `ruff check`, `ruff format --check` (both scopes), `mypy --strict` (both scopes + new driver/tests), `interrogate` (`97.6 %`), `bandit` (`0` issues), Snyk Code MCP (`0` issues at `low` threshold on both new Python files), `cargo audit` (exit `0`), `pip-audit` (both manifests, `0` vulnerabilities), all four governance scripts, clean Sphinx `-W --keep-going` build (`0` warnings), and `gitleaks` (full history + `--staged`, `0` leaks) all exit `0`.
 - Full evidence bundle: [`EVIDENCE/exp002-r1-e1/`](../../../EVIDENCE/exp002-r1-e1/README.md).
 
@@ -121,3 +126,36 @@ verification checklist in `e2-review.md`:
      limitation in `dv032-sensitivity2.txt`.
   4. Record retro-audit verdict (`PASS` or findings) for `EXP002D1-S4-F3` (and
      the PR #35 follow-up) in `e2-review.md`.
+
+## 5. PR #36 multi-agent review remediation (post-`62680946`)
+
+Hosted CI and multi-agent review on PR #36 — including the independent
+Perplexity Deep Research report, which corroborated the other reviewers'
+findings — surfaced eight findings against the E1 head `62680946`. All were
+remediated on `campaign/exp002-r1-e1`; E2 should review the **remediation
+commit** as the protocol/driver under review. The registered contract in
+`preregistration.md` §5.5, §9, §10 items 3–4, and §11.1 was amended in lock-step
+with the driver changes; the table below is the review-oriented summary (full
+narrative in [`e1-handoff.md`](e1-handoff.md) §6).
+
+| # | Finding | Remediation in `exp002_r1_driver.py` / protocol | Regression coverage |
+|---|---|---|---|
+| 1 | Portable hosted CI cannot satisfy the registered Windows `_prin_core.pyd` pin; the live test failed on hosted Ubuntu and hosted Windows matrix jobs | Generator-pin checks run portably; the exact-binary assertion is now opt-in and skipped unless explicitly selected on the governed E3 host. `_verify_prin_core_extension()` itself stays strict — no pin was weakened | `3 passed` on governed host when selected; `1 skipped` in the portable suite |
+| 2 | `Path.absolute()` preserves `..`, allowing traversal aliases into immutable predecessor raw/output/record roots | Resolved-path confinement added: `_reject_predecessor_path` resolves candidates and rejects `..` components; generated/snapshot destinations are confined to `OUTPUT_ROOT`. Unresolved `.absolute()` paths are still used for symlink-ancestor detection in `_reserve`/`check_run_complete` so symlinks remain detectable before resolution | Traversal-alias negative tests for outputs, snapshots, and run paths |
+| 3 | A storage-cap breach was only detected at closure, after `COMPLETED` had been published and manifested | `_storage_check` now runs prospectively before result publication (pending result + manifest bytes) **and** retrospectively at `check_run_complete`; failed runs write a durable `abort.json` that `check_run_complete` rejects from the manifest inventory, so an aborted run can never become an admissible completed observation | Storage-cap and `abort.json`/`check_run_complete` tests |
+| 4 | Reference arm could import an installed/shadowing `prinet` or fail with `ModuleNotFoundError`; import happened before pin verification | Fail-closed bootstrap: reject a preloaded `prinet` in `sys.modules`, verify **all** `REFERENCE_PINS` digests pre-import, prepend `REFERENCE/src` to `sys.path`, and require `importlib.util.find_spec("prinet")` to resolve to the frozen `src/prinet/__init__.py` before importing generators | Reference-bootstrap tests incl. preloaded-module and wrong-origin negatives |
+| 5 | Source pins were registered but not uniformly enforced at admission/finalization | `_verify_all_pins` runs at admission and again immediately before result publication, covering `_prin_core.pyd`, both PRIN generators, and all three `REFERENCE` sources | Admission/finalization pin-mutation negative tests |
+| 6 | Shallow git pathspecs (`*.py`/`*.pth`) missed nested rogue files; no environment shadowing check existed | Recursive pathspecs scoped to the governed import surface (including ignored files) plus `_environment_shadowing` inspecting site `.pth` files and `sys.path` entries that could shadow `prin`/`prinet` | Nested-shadow and environment-shadow tests (incl. a real-git pathspec test) |
+| 7 | `pdf_info_keyset` residuals could be misclassified from digest differences alone (identical `/Info` key sets can serialize differently) | `preregistration.md` §11.1 amended: classification requires inspecting actual `/Info` key sets and residual byte structure at E4; digest disagreement alone is insufficient. `normalized_bytes` docstring notes canonical projections are digest inputs, not regenerable documents | Protocol clarification; E4 classification duty registered |
+| 8 | `EVIDENCE/exp002-r1-e1/verification-gate.txt` lacked a head-specific full local gate record; `.gitattributes` covered only `exp002-r1-e1` | Verification gate regenerated for the remediation head distinguishing authoritative local checks from hosted checks; `.gitattributes` now covers `EVIDENCE/exp002-r1-e*/**` for all stage roots | Evidence bundle re-hashed in `SHA256SUMS.txt` / `provenance-hashes.txt` |
+
+**E2 review additions:** in addition to §2 items 1–5, confirm (a) the
+opt-in live-pin test is the only host-specific gate and the production
+verifier is unchanged in strictness; (b) resolved-path confinement rejects
+traversal aliases while symlink detection still operates pre-resolution;
+(c) the prospective storage check plus durable `abort.json` means an invalid
+run can never be represented as a completed observation (aborted records are
+invalid observations, not refutations); (d) the reference bootstrap cannot
+resolve `prinet` to anything but the frozen `REFERENCE/src` tree; and (e)
+all-pin enforcement covers every registered source pin at admission and
+finalization.
