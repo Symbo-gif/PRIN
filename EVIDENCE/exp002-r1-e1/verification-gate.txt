@@ -1,0 +1,100 @@
+# EXP-002-r1 E1 local verification and security gate record (2026-10-20 UTC)
+# Branch: campaign/exp002-r1-e1
+# Base (M): 5677858c15d784d881b23d43dff5029d199b0a18
+
+## 1. Ruff lint and format checks
+$ .venv/Scripts/ruff.exe check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/
+All checks passed!
+EXIT_CODE=0
+
+$ .venv/Scripts/ruff.exe format --check python/ tests/ benchmarks/ tools/ parity/
+335 files already formatted
+EXIT_CODE=0
+
+$ .venv/Scripts/ruff.exe format --check DOCS/experiments/ --config "include = ['*.py', '*.pyi', '*.ipynb']"
+3 files already formatted
+EXIT_CODE=0
+
+## 2. Strict mypy type checks
+$ .venv/Scripts/mypy.exe python/prin --strict
+Success: no issues found in 62 source files
+EXIT_CODE=0
+
+$ .venv/Scripts/mypy.exe DOCS/experiments/ --strict
+Success: no issues found in 3 source files
+EXIT_CODE=0
+
+$ .venv/Scripts/mypy.exe benchmarks/campaign/exp002_r1_driver.py tests/test_exp002_r1_driver.py --strict
+Success: no issues found in 2 source files
+EXIT_CODE=0
+
+## 3. Interrogate docstring coverage and Bandit SAST
+$ .venv/Scripts/python.exe -m interrogate -c pyproject.toml python/prin
+RESULT: PASSED (minimum: 95.0%, actual: 97.6%)
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe -m bandit -r python/prin DOCS/experiments -c pyproject.toml
+Total lines of code: 27882
+Total issues (by severity): Low: 0, Medium: 0, High: 0
+EXIT_CODE=0
+
+## 4. Snyk Code MCP (Coding Standards §6)
+- Tool: mcp__snyk__snyk_code_scan (severity_threshold="low")
+- Target 1: C:\dev\PRIN\benchmarks\campaign\exp002_r1_driver.py -> {"success":true,"issueCount":0,"issues":null}
+- Target 2: C:\dev\PRIN\tests\test_exp002_r1_driver.py -> {"success":true,"issueCount":0,"issues":null}
+
+## 5. Native dependency audits
+$ cargo audit
+Scanning Cargo.lock for vulnerabilities (621 crate dependencies)
+warning: 3 allowed warnings found (RUSTSEC-2025-0141 bincode, RUSTSEC-2024-0436 paste, chacha20 yanked)
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe -m pip_audit .
+No known vulnerabilities found
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe -m pip_audit -r DOCS/sphinx/requirements.txt
+No known vulnerabilities found
+EXIT_CODE=0
+
+## 6. Governance checkers
+$ .venv/Scripts/python.exe tools/check_dv_register_gates.py
+DV-register gate check passed. Checked 47 DV register rows against 198 session-register entries.
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe tools/check_global_session_registration.py
+Global-session registration check passed. Checked 18 Executive Audit reports.
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe tools/check_skipif_probes.py
+check_skipif_probes: no registration-probe skipif guards
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe tools/wp001_baseline.py check
+WP-001 baseline validation passed.
+EXIT_CODE=0
+
+## 7. Clean Sphinx documentation build
+$ rm -rf DOCS/sphinx/_build && .venv/Scripts/python.exe -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
+build succeeded.
+The HTML pages are in DOCS\sphinx\_build\html.
+EXIT_CODE=0
+
+## 8. Secret scanning (pinned gitleaks 8.30.1)
+$ DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git . --no-banner
+790 commits scanned. scanned ~109375062 bytes (109.38 MB) in 4m32s. no leaks found
+EXIT_CODE=0
+
+$ DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git . --staged --no-banner
+0 commits scanned. no leaks found
+EXIT_CODE=0
+
+## 9. Driver test suite and coverage
+$ .venv/Scripts/python.exe -m pytest tests/test_exp002_r1_driver.py --cov=benchmarks.campaign.exp002_r1_driver --cov-report=term-missing --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20
+Name                                      Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------
+benchmarks\campaign\exp002_r1_driver.py     754      3    99%   602, 919, 1396
+-----------------------------------------------------------------------
+TOTAL                                       754      3    99%
+320 passed in 38.64s
+EXIT_CODE=0

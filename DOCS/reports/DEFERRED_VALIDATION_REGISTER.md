@@ -912,3 +912,47 @@ Prior lines above are retained unchanged (0 deleted lines):
     `tests/conftest.py`; `nightly.yml`'s Criterion/pytest-benchmark suite
     provides related bridge-performance regression coverage rather than
     executing `test_speed_vs_transformer`'s `<= 5.0×` Transformer assertion.
+
+## `EXP-002-r1` E1 entry verification, PR #35 merge corroboration, and DV-047 closure — 2026-10-20 UTC
+
+Appended at `EXP-002-r1` E1 (`campaign/exp002-r1-e1`, baseline
+`M = 5677858c15d784d881b23d43dff5029d199b0a18`). Prior lines above are retained
+unchanged (`0` deleted lines):
+
+- **PR #35 merge to `main` (`5677858c15d784d881b23d43dff5029d199b0a18`, merged 2026-10-20T10:05:42Z from `a570aa7f1f3cc30163d3a48e962fc1f058e55cdb`):**
+  - `.venv\Scripts\python.exe tools/check_ci_green.py 5677858c15d784d881b23d43dff5029d199b0a18`
+    exits **0** (`RESULT: all required workflows green`): `rust` (`39405463375`,
+    `green`), `python` (`39405463348`, `green`), `parity` (`39405463347`,
+    `green`), `repro` (`39405463356`, `green`), `snyk` (`39405463333`, `green`),
+    and `gpu` (`39405463413`, `green`). Scheduled `nightly.yml` also succeeded
+    in full (`full-suite` + `bench-regression`) on two consecutive runs
+    (`39203786555` on 2026-10-19 and `39373976832` on 2026-10-20).
+  - **DV-045 is CLOSED on `main`:** `cargo audit` exits `0` both locally and on
+    the `main` push `rust` workflow (`39405463375`).
+  - **DV-046 re-checked on `gpu` run `39405463413` (`5677858c`):** `gpu-cuda`
+    and `gpu-wgpu` both succeeded (`0` occurrences of
+    `flops::tests::measure_wall_time_calls_warmup_and_runs_exact_counts`).
+    DV-046 stays **OPEN** under its per-run re-check gate.
+- **DV-047 CLOSED (2026-10-20 UTC, `EXP-002-r1` E1):**
+  - Removed the stale `.venv/Lib/site-packages/prin_core.pth` (which pointed at
+    `C:\dev\PRIN-r1-amendment\python`), verified `.venv/Lib/site-packages/prin.pth`
+    points solely to `C:\dev\PRIN\python`, and rebuilt `python/prin/_prin_core.pyd`
+    from clean `main` at `5677858c15d784d881b23d43dff5029d199b0a18` using
+    `.venv\Scripts\python.exe -m maturin develop --release -m crates/prin-py/Cargo.toml`
+    (with the transient `prin_core.pth` removed after build so only `prin.pth`
+    and `__editable__.prinet-3.0.0.pth` remain in `.venv/Lib/site-packages/`).
+  - The rebuilt `python/prin/_prin_core.pyd` measures **`9,290,240` bytes** with
+    SHA-256 **`37392d067efa3983e384c94f4ac2268c4fad2f5ea929c529b3db50bff4fee99e`**
+    (replacing the stale 2026-09-28 binary
+    `64ea1a2cf38cdbe43fc029c55e791e244b771b2909360c3890ae6f9224b47349`),
+    resolving `prin.__file__ == "C:\\dev\\PRIN\\python\\prin\\__init__.py"`,
+    `prin._prin_core.__file__ == "C:\\dev\\PRIN\\python\\prin\\_prin_core.pyd"`,
+    and `prin.core_version() == "1.0.0-rc1"`.
+  - The new `_prin_core.pyd` SHA-256 and byte size are pinned and enforced at
+    runtime in `benchmarks/campaign/exp002_r1_driver.py` (`PRIN_CORE_PYD_SHA256`,
+    `PRIN_CORE_PYD_BYTES`) and recorded in
+    `DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/preregistration.md`
+    §1.1, discharging DV-047's re-audit gate before `EXP-002-r1` E3.
+- **Carried items unchanged:** DV-033, DV-034, DV-036 (`DV036-F5` at `0166`,
+  re-baseline gates before `0168`/`0173`), DV-037, DV-046, and the EXP-004+
+  hardware gates carry forward as recorded.

@@ -361,6 +361,15 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
   0159-prefixed Git-tracking lookup, plus controlled negative fixtures for
   changed bytes, omitted files, wrong case, malformed/duplicate/escaping
   paths and hashed-but-untracked logs).
+- `test_exp002_r1_driver.py` — 320 synthetic-fixture regression tests for the
+  isolated `EXP-002-r1` E1 collection driver
+  (`../benchmarks/campaign/exp002_r1_driver.py`, 2026-10-20): verifies
+  `allowed_output_roots` admission of `benchmarks/results/EXP-002-r1` and
+  `DOCS/test_and_benchmark_results/EXP-002-r1`, live and synthetic
+  `_prin_core.pyd` (DV-047) and PRIN figure/table generator digest guards,
+  explicit rejection of predecessor `EXP-002` paths across all entry points,
+  `r1-` label enforcement, and combined `EXP-002` + `EXP-002-r1` 10 MiB
+  tracked-storage caps.
 - Differential parity tests live in `../parity/`.
 - Rust unit/property tests live next to each crate (`cargo test`).
 

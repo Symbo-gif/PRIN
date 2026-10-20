@@ -1,0 +1,18 @@
+# EXP-002-r1 E1 provenance hashes at baseline M = 5677858c15d784d881b23d43dff5029d199b0a18
+# Format: <relative_path> | <bytes> | <sha256>
+
+paper/artefact_manifest.json | 28645 | 300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5
+python/prin/__init__.py | 11536 | cd43a8ff75422f8bfb5beca19f52c2cbfdcaddb330a358aad172aeb39c54c6bb
+python/prin/_public_api.py | 6141 | dd5745ababa809483b8d52198a096a1e9fa0de7e13e246245b13f47066853a6d
+python/prin/_deprecation.py | 3239 | 132e86e991669d0abe65d89b624227250bfd61e54c2f97cb814366a0012f4e9a
+python/prin/_prin_core.pyd | 9290240 | 37392d067efa3983e384c94f4ac2268c4fad2f5ea929c529b3db50bff4fee99e
+tools/reproduce.py | 50321 | 12333a02e18f29ff52c42b2d17d7ac6ef53d3756217f10a7b9a964f75150b5b9
+python/prin/reporting/figure_generation.py | 41869 | e216fec4f45ab71cfc5ef1286701c920731df278120e0afa0d216515b4bb19a7
+python/prin/reporting/table_generation.py | 29173 | 1593f52d9a652842ee7d62163d9e6b397989e9c6489aa5cc43a8416b1083c8af
+python/prin/reporting/_artifacts.py | 5834 | 845a398f7b849e2173cd81a6d673f28900114fec880561e812b9e7ef2217d90a
+DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/__init__.py | 11959 | ede92afc6771f2e29206534905e2820598ba841662a93d59f669f803a382f182
+DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/utils/figure_generation.py | 35239 | 575eca5a6436a25f957702091a6a0b5b7f3d77f1f496f9e6b423550cf79e1520
+DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/utils/table_generation.py | 26962 | 9ac382c487f7177465805a49686568b8ac323128cebeae342cca2b05814704cc
+DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/preregistration.md | 47502 | 66f9271ce8fd846654144311caea0f8b672687c204e9a990bc67135765da0cdb
+benchmarks/campaign/exp002_r1_driver.py | 60888 | c164f14bb4b11958e8e4230d558de428dd591b4f8f7ec1a9463ef17fc6bb673a
+tests/test_exp002_r1_driver.py | 125662 | a6946fc24438162fd5517929bd1ddff25f2c62f670838e011d95577b0faf0109
