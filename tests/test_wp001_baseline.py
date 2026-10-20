@@ -1144,7 +1144,7 @@ def test_secret_scan_is_blocking_and_covers_full_history() -> None:
 
     assert "pull-requests: read" in workflow
     assert "fetch-depth: 0" in secret_job
-    assert "gitleaks/gitleaks-action@v2" in secret_job
+    assert "gitleaks/gitleaks-action@v3" in secret_job
     assert "continue-on-error" not in secret_job
     assert "|| true" not in secret_job
     text = (ROOT / ".gitleaksignore").read_text(encoding="utf-8")
@@ -1161,6 +1161,34 @@ def test_secret_scan_is_blocking_and_covers_full_history() -> None:
     ]
     assert "# Approved 2026-08-06" in text
     assert "# Approved 2026-10-11 by MichaelMaillet" in text
+
+
+def test_workflows_use_node24_actions_and_pin_ubuntu_24_04() -> None:
+    deprecated_node20 = (
+        "actions/checkout@v4",
+        "actions/setup-python@v5",
+        "actions/setup-node@v4",
+        "actions/upload-artifact@v4",
+        "actions/download-artifact@v4",
+        "codecov/codecov-action@v4",
+        "gitleaks/gitleaks-action@v2",
+    )
+    workflows = sorted((ROOT / ".github/workflows").glob("*.yml"))
+    assert workflows
+    for path in workflows:
+        text = path.read_text(encoding="utf-8")
+        for action in deprecated_node20:
+            assert action not in text, f"{path.name} still uses Node-20 {action}"
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("#"):
+                continue
+            assert stripped != "runs-on: ubuntu-latest", (
+                f"{path.name} has unpinned 'runs-on: ubuntu-latest'"
+            )
+            assert stripped != "runner: ubuntu-latest", (
+                f"{path.name} has unpinned 'runner: ubuntu-latest'"
+            )
 
 
 def test_session_plan_validator_reports_metadata_and_link_drift(

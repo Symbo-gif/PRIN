@@ -737,3 +737,87 @@ at the next S2-class audit**: this is the second code change made inside an S4
 documentation session (after `EXP002D1-S4-F2`), made under the maintainer's
 explicit in-session authorization.
 
+## DV-045 lockfile remediation, Ubuntu-24.04/Node-24 migration, and PR #34 hosted corroboration — 2026-10-19 UTC
+
+PR #34 (`hotfix/exp002-d1-figure-parity`) merged to `main` at
+`305416fb0f85e690b12640b3f32fad48b55d9077` (2026-10-18T05:00Z). Per campaign
+plan §12 item 3, the merge-commit hosted results are recorded here:
+
+- **Push-triggered workflows at `305416fb0f85e690b12640b3f32fad48b55d9077`:**
+  `python` (`39099067876`, `success`), `parity` (`39099067955`, `success` —
+  confirming `EXP002D1-S4-F2` on Linux), `repro` (`39099067747`, `success`),
+  `snyk` (`39099067759`, `success`), `gpu` (`39099067681`, `success` — both
+  `gpu-cuda` and `gpu-wgpu` green), and `rust` (`39099067757`, `failure` — only
+  the `audit` job failed; all other 9 jobs `fmt`, `clippy`, `clippy-strict`,
+  `test-strict`, `docs`, `bench-smoke`, and the three OS `test` legs succeeded).
+- **Scheduled workflows at `305416fb0f85e690b12640b3f32fad48b55d9077`:**
+  - `nightly` `39099904764` (2026-10-18): `full-suite` (`117593861959`)
+    **`success`**, `bench-regression` (`117593862125`) `failure` on a single
+    +10.2 % row (`pytest/tests/test_train_bridge.py::TestTrainBridgeBenchmarks::test_resonance_layer_forward_backward_round_trip_latency_moderate`, `0.5403 -> 0.5954`).
+  - `gpu` `39102633508` (2026-10-18): **`success`** (`gpu-cuda` and `gpu-wgpu`
+    both green).
+  - `nightly` `39203786555` (2026-10-19): **`success` for the entire workflow** —
+    both `full-suite` (`117902112243`) and `bench-regression` (`117902112585`)
+    green. Both `nightly` `full-suite` runs on `305416fb` therefore passed,
+    supplying O-1's hosted corroboration without opening a new DV row.
+  - `gpu` `39207739900` (2026-10-19): `gpu-cuda` (`117914144615`) **`success`**,
+    `gpu-wgpu` (`117914144883`) `failure` with runner annotation *"The
+    self-hosted runner lost communication with the server"* (DV-024/DV-034
+    infrastructure class; `PRIN-GPU-Runner` verified back `online` and `idle`).
+    Because `tools/check_ci_green.py` inspects the newest run per workflow on
+    `main` regardless of `event`, it reports `gpu RED` from the scheduled run
+    `39207739900` even though the push-triggered `gpu` run `39099067681` and the
+    2026-10-18 scheduled run `39102633508` both succeeded.
+- **DV-046 re-checked on all three `gpu-cuda` runs on `305416fb`
+  (`39099067681`, `39102633508`, `39207739900`):** all three **`success`** (0
+  occurrences of `flops::tests::measure_wall_time_calls_warmup_and_runs_exact_counts`).
+  DV-046 stays **OPEN** under its per-run re-check gate.
+- **DV-045 lockfile update applied (`quinn-proto 0.11.16 -> 0.11.18`, `rustls 0.23.45 -> 0.23.46`), plus 3 newly-published `zip 1.1.4` advisories (`RUSTSEC-2026-0367`..`0369`) assessed:**
+  - `cargo update -p quinn-proto --precise 0.11.18` and
+    `cargo update -p rustls --precise 0.23.46` eliminate **all nine** DV-045
+    advisories (`RUSTSEC-2026-0338`..`0342` on `quinn-proto` and
+    `RUSTSEC-2026-0346`..`0349` on `rustls`).
+  - Between the PR #34 pre-merge check (`38976490096`, 2026-10-16T23:21Z) and
+    the merge push (`39099067757`, 2026-10-18T05:04Z), `RustSec/advisory-db`
+    commit `64f92cdc` (2026-10-16T23:27:42Z) published **three new advisories on
+    `zip 1.1.4`**: `RUSTSEC-2026-0367` (7.3 high, `GHSA-vv5m-jxxh-4627`, SUID/SGID
+    preservation in `ZipArchive::extract`), `RUSTSEC-2026-0368`
+    (`GHSA-4v9h-p7m9-rh26`, symlink escape in `ZipArchive::extract`), and
+    `RUSTSEC-2026-0369` (9.1 critical, `GHSA-4684-h2q9-2vcp`, Unix permissions
+    applied through symlinks in `ZipStreamReader::extract` /
+    `ZipArchive::extract`), all listing `patched = [">= 9.0.0"]`.
+  - **Coding Standards §6.2 threat assessment for `RUSTSEC-2026-0367`..`0369`:**
+    1. *Dependency path and reachability:* `zip 1.1.4` is present in `Cargo.lock`
+       solely through `burn-core 0.16.1`'s **disabled optional** dependency
+       `burn-candle 0.16.1` → `candle-core 0.8.4` → `zip = "^1.1.1"`. PRIN
+       declares `burn = { version = "0.16", default-features = false, features = ["std", "ndarray", "autodiff"] }`;
+       the `candle` feature is never enabled anywhere in the workspace. Both
+       `cargo tree -i zip --target all` and
+       `cargo tree -i burn-candle --target all` print `warning: nothing to print.`
+       — `zip` is **never compiled, linked, or reachable** in any PRIN crate,
+       binary, test, or Python extension, and PRIN never calls `ZipArchive::extract`
+       or `ZipStreamReader::extract`.
+    2. *Why no semver lockfile update resolves it:* `candle-core 0.8.4`
+       constrains `zip` to `^1.1.1` (`< 2.0.0`), whereas `patched = [">= 9.0.0"]`;
+       `cargo update -p burn --dry-run` and `cargo update -p candle-core --dry-run`
+       lock 0 packages.
+    3. *Compensating controls and governance:* Snyk Open Source (`snyk_sca_scan`),
+       `pip-audit`, and `cargo tree` confirm zero reachable vulnerable paths. Per
+       Coding Standards §6.2 and `CLAUDE.md`, no unapproved `--ignore` or
+       `.cargo/audit.toml` suppression is added unilaterally; the three
+       unreachable `zip` advisories are recorded here for maintainer ratification
+       of a dated third-party disposition (or an explicit narrow advisory-ID
+       exception) until `burn` upgrades or removes its optional `burn-candle`
+       dependency. **DV-045's original 9 advisories are FIXED in `Cargo.lock`;
+       DV-045 stays OPEN** pending maintainer ratification of the `zip 1.1.4`
+       disposition.
+- **Node-24 and `ubuntu-24.04` workflow migration landed (2026-10-19 deadline):**
+  all hosted Ubuntu jobs across `.github/workflows/{rust,python,parity,repro,snyk,nightly,release}.yml`
+  are pinned from `ubuntu-latest` to `ubuntu-24.04` (preserving matrix `os: ubuntu-latest`
+  keys so check-run context names `test (ubuntu-latest, …)` and `release.yml`'s
+  `_phase0.py` wheel-matrix contract are unchanged), and all Node-20 actions are
+  upgraded to Node-24-native majors (`actions/checkout@v6`,
+  `actions/setup-python@v6`, `actions/setup-node@v6` with `node-version: "24"`,
+  `actions/upload-artifact@v6`, `actions/download-artifact@v7`,
+  `codecov/codecov-action@v5`, `gitleaks/gitleaks-action@v3`), pinned by
+  `tests/test_wp001_baseline.py::test_workflows_use_node24_actions_and_pin_ubuntu_24_04`.

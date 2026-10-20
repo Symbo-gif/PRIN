@@ -269,7 +269,7 @@ def test_nightly_uses_fresh_same_job_reference_and_preserves_gate() -> None:
     ):
         assert f"--bench {name}" in measure
     assert "--benchmark-only" in measure
-    assert "uses: actions/upload-artifact@v4" in job
+    assert "uses: actions/upload-artifact@v6" in job
     assert "if: always()" in job
 
 

@@ -18,11 +18,11 @@ on:
 
 jobs:
   detect_corpus:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       has_cases: ${{ steps.detect.outputs.has_cases }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - id: detect
         run: echo "has_cases=${{ hashFiles('parity/**/*.py') != '' }}" >> "$GITHUB_OUTPUT"
 
@@ -33,10 +33,10 @@ jobs:
     # device" during maturin build. If this recurs, route to a self-hosted
     # Linux runner (e.g. WSL2 on the PRIN-GPU-Runner host with labels
     # [self-hosted, Linux, X64]) by changing runs-on below.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - uses: dtolnay/rust-toolchain@stable

@@ -77,3 +77,23 @@ run at `157ce5bc` reported `Total issues 97, Open 97 [ 0 HIGH 0 MEDIUM 97 LOW ]`
   exclusion. The three ratified `python/PT` LOW locations from `EXP002D1-S2-F8`
   and `EXP002D1-S2-F8-L3` are LOW and so are outside the medium+ gate; they remain
   visible to any `low`-threshold scan and are re-checked each cycle.
+
+## Dated correction (2026-10-19 UTC) — the `3410278c` retry completed (`98 LOW, 0 MEDIUM+`)
+
+The text in Leg 1 above is retained as written at `1b27647c`. Its statement that
+*"A retry of the same repo-wide invocation produced a 0-byte output file, so no
+error text was captured either time"* was a **premature observation recorded as
+settled fact** (Testing Standards §7 item 3):
+
+* The retry (`snyk code test . --severity-threshold=low > ~/prin-s4-scratch/snyk-repo-retry.txt 2>&1`)
+  was inspected before the backgrounded CLI process had finished flushing its
+  output, so the file read 0 bytes at the moment `snyk-6.2-gate-3410278c.txt`
+  was drafted.
+* The process subsequently completed at `2026-10-18T04:59Z` (00:59 local) and
+  wrote **37,968 bytes** to `~/prin-s4-scratch/snyk-repo-retry.txt`, now archived
+  verbatim at [`snyk-repo-retry-3410278c.txt`](snyk-repo-retry-3410278c.txt):
+  `Total issues: 98, Ignored issues: 0 [ 0 HIGH 0 MEDIUM 0 LOW ], Open issues: 98 [ 0 HIGH 0 MEDIUM 98 LOW ]`
+  (the 97 LOW findings from `157ce5bc` plus 1 duplicate LOW inside a gitignored
+  worktree; **0 HIGH, 0 MEDIUM**).
+* The §6.2 gate verdict (**MET**, 0 medium+ findings) is unchanged and further
+  corroborated by the completed CLI retry output.

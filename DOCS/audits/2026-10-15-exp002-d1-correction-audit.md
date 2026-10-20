@@ -3023,3 +3023,59 @@ Session `0164` remains **BLOCKED** — neither this merge nor the workflow
 enablement releases it; that requires a non-reversal `EXP-002-r1` E5 verified by
 the maintainer. EXP-002's H3 verdict remains **REFUTED** and nothing in this cycle
 changes it.
+
+### S4.16 Addendum — Post-merge record corrections, hosted corroboration, and retro-audit handoff (2026-10-19 UTC)
+
+Appended after PR #34 merged to `main` as `305416fb0f85e690b12640b3f32fad48b55d9077`.
+Nothing above is edited (`0` deleted lines).
+
+1. **Snyk retry record correction (§S4.15.4 / `gate/snyk-6.2-gate-3410278c.txt`).**
+   §S4.15.4 and `gate/snyk-6.2-gate-3410278c.txt` stated that a retry of the
+   repo-wide `snyk code test . --severity-threshold=low` invocation at `3410278c`
+   produced a 0-byte file. That was a **premature observation recorded as settled
+   fact** (Testing Standards §7 item 3): `~/prin-s4-scratch/snyk-repo-retry.txt`
+   was inspected while the backgrounded CLI process was still running. The retry
+   subsequently completed at `2026-10-18T04:59Z` (37,968 bytes) with
+   `Total issues: 98, Ignored issues: 0 [ 0 HIGH 0 MEDIUM 0 LOW ], Open issues: 98 [ 0 HIGH 0 MEDIUM 98 LOW ]`
+   (the 97 LOW findings from `157ce5bc` plus 1 duplicate LOW inside a gitignored
+   worktree; **0 HIGH, 0 MEDIUM**). The raw output is now archived at
+   [`EVIDENCE/exp002-d1-s4/gate/snyk-repo-retry-3410278c.txt`](../../EVIDENCE/exp002-d1-s4/gate/snyk-repo-retry-3410278c.txt)
+   and a dated correction is appended to `gate/snyk-6.2-gate-3410278c.txt`.
+2. **Superseded cheap-leg console logs archived (§S4.15.3).** Because
+   `final_legs.sh` wrote to the shared scratch directory `~/prin-s4-scratch/final/`,
+   each of the four cheap-leg runs (`489f2270`, `1b27647c`, `5745d1a4`, `4c803030`)
+   overwrote the previous run's per-leg files in `final/`, so only the fourth
+   run's per-leg files survived to be collected into `gate/final-4c803030/`.
+   The four outer aggregation console logs (`~/prin-s4-scratch/final-legs-console{,2,3,4}.txt`)
+   did survive on the host and are now archived at
+   [`gate/final-legs-console-1-489f2270.txt`](../../EVIDENCE/exp002-d1-s4/gate/final-legs-console-1-489f2270.txt),
+   [`gate/final-legs-console-2-1b27647c.txt`](../../EVIDENCE/exp002-d1-s4/gate/final-legs-console-2-1b27647c.txt),
+   [`gate/final-legs-console-3-5745d1a4.txt`](../../EVIDENCE/exp002-d1-s4/gate/final-legs-console-3-5745d1a4.txt),
+   and [`gate/final-legs-console-4-4c803030.txt`](../../EVIDENCE/exp002-d1-s4/gate/final-legs-console-4-4c803030.txt).
+3. **PR #34 merge SHA and hosted corroboration (`305416fb0f85e690b12640b3f32fad48b55d9077`, campaign plan §12 item 3).**
+   - Push-triggered runs at `305416fb0f85e690b12640b3f32fad48b55d9077`:
+     `python` (`39099067876`, `success`), `parity` (`39099067955`, `success` —
+     confirming `EXP002D1-S4-F2` on Linux), `repro` (`39099067747`, `success`),
+     `snyk` (`39099067759`, `success`), `gpu` (`39099067681`, `success` — both
+     `gpu-cuda` and `gpu-wgpu` green; DV-046 did not recur), and `rust`
+     (`39099067757`, `failure` — only `audit` failed on 9 DV-045 advisories plus
+     3 newly-published `zip 1.1.4` advisories `RUSTSEC-2026-0367`..`0369`; all
+     other 9 jobs green).
+   - Scheduled runs at `305416fb0f85e690b12640b3f32fad48b55d9077`:
+     `nightly` `39099904764` (2026-10-18: `full-suite` `117593861959` **success**,
+     `bench-regression` `117593862125` failure on one +10.2 % row
+     `test_resonance_layer_forward_backward_round_trip_latency_moderate`);
+     `gpu` `39102633508` (2026-10-18: **success**, both `gpu-cuda` and `gpu-wgpu`
+     green); `nightly` `39203786555` (2026-10-19: **success** across the entire
+     workflow — both `full-suite` `117902112243` and `bench-regression`
+     `117902112585` green); `gpu` `39207739900` (2026-10-19: `gpu-cuda`
+     `117914144615` **success**, `gpu-wgpu` `117914144883` failed on self-hosted
+     runner server-communication loss). Both `nightly` `full-suite` runs on
+     `305416fb` passed, discharging O-1's hosted corroboration.
+4. **Retro-audit scope queued for the next S2-class audit (Development Workflow §7).**
+   The two maintainer-authorized code changes made inside S4 —
+   `EXP002D1-S4-F2` (`814b670c`, `parity/test_parity_publication.py` platform-scoped
+   figure digest tie) and `EXP002D1-S4-F3` (`67100a69`,
+   `tests/test_acceptance_subconscious.py::test_no_gpu_throughput_regression`
+   process-CPU-time conversion) — remain flagged for independent retro-audit at
+   the next S2-class audit (`EXP-002-r1` E2 / next WP S2).

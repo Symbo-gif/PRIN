@@ -30,12 +30,12 @@ jobs:
           - os: ubuntu-latest
             target: x86_64
             manylinux: "2014"
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
             self_hosted: false
           - os: ubuntu-latest
             target: aarch64
             manylinux: "2014"
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
             self_hosted: false
           - os: macos-latest
             target: universal2-apple-darwin
@@ -43,7 +43,7 @@ jobs:
             self_hosted: false
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # WP038-F2 / DV-022: the GitHub-hosted ubuntu-latest image ships ~14 GB
       # free, and the smoke test below installs the wheel together with its
       # declared `torch>=2.0` dependency. Resolved from PyPI that drags the
@@ -112,30 +112,30 @@ jobs:
           $wheel = (Get-ChildItem dist\*.whl | Select-Object -First 1).FullName
           .smoke-venv\Scripts\python.exe -m pip install --no-cache-dir $wheel
           .smoke-venv\Scripts\python.exe -c "import prin; print(prin.core_version())"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.target }}
           path: dist
 
   sdist:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: PyO3/maturin-action@v1
         with:
           command: sdist
           args: -m crates/prin-py/Cargo.toml --out dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: sdist
           path: dist
 
   publish-pypi:
     needs: [wheels, sdist]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: release
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           path: dist
           merge-multiple: true
@@ -147,10 +147,10 @@ jobs:
 
   publish-crates:
     needs: [wheels]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - name: Publish crates to crates.io in dependency order
         env:
@@ -165,7 +165,7 @@ jobs:
           publish_or_skip() {
             local crate=$1
             echo "Publishing $crate v$WORKSPACE_VERSION..."
-            
+
             if OUTPUT=$(cargo publish -p "$crate" --no-verify 2>&1); then
               echo "✓ $crate v$WORKSPACE_VERSION published successfully"
             else
