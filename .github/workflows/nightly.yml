@@ -22,11 +22,11 @@ permissions:
 
 jobs:
   full-suite:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - uses: dtolnay/rust-toolchain@stable
@@ -62,7 +62,7 @@ jobs:
         run: cargo test --workspace --features strict-checks
 
   bench-regression:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # DV036-F4: four counterbalanced measurement passes (~21 min each) plus
     # two builds no longer fit the original 90-minute single-pass budget.
     timeout-minutes: 180
@@ -77,16 +77,16 @@ jobs:
       # directories, venv paths, and the environment each benchmark process
       # inherits have the same shape. The earlier nested `.nightly-reference`
       # layout gave identical binaries a reproducible one-sided delta.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           path: arms/candidate
           persist-credentials: false
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ env.REFERENCE_SHA }}
           path: arms/reference
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12.14"
       - uses: dtolnay/rust-toolchain@1.98.1
@@ -175,7 +175,7 @@ jobs:
             --threshold 0.10 2>&1 | tee "$EVIDENCE_DIR/comparison.txt"
       - name: Preserve benchmark evidence even on failure
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nightly-benchmarks-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ env.EVIDENCE_DIR }}

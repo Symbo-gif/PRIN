@@ -154,28 +154,77 @@ def _build_slot_tracker(seed: int = 42) -> "TemporalSlotAttentionMOT":
 
 
 def run_timed_session(
-    duration_minutes: float,
+    duration_minutes: float = 0.0,
     seed: int = 42,
     n_objects: int = 4,
     warmup_seconds: float = 30.0,
+    max_frames: int | None = None,
+    warmup_frames: int | None = None,
 ) -> dict[str, Any]:
-    """Run PhaseTracker + SlotAttention continuously for *duration_minutes*.
+    """Run PhaseTracker + SlotAttention continuously for a timed or fixed-frame session.
 
     During the session, metrics are sampled every ``SAMPLE_INTERVAL_FRAMES``
-    frames.  A warm-up period is run but excluded from reported metrics.
+    frames (plus any remaining tail frames at loop exit). A warm-up period is
+    run first and excluded from reported metrics.
+
+    Because measurement frame seeds continue from
+    ``seed * 10000 + warmup_frame_count``, callers requiring cross-run
+    determinism must supply **both** ``max_frames`` and ``warmup_frames`` so the
+    warm-up phase processes a fixed frame count independent of wall-clock speed.
 
     Args:
-        duration_minutes: Target session duration in minutes.
+        duration_minutes: Target session duration in minutes (must be >= 0, and
+            > 0 when ``max_frames`` is ``None``).
         seed: Random seed for reproducibility.
         n_objects: Number of tracked objects.
-        warmup_seconds: Seconds of warm-up before measurement starts.
+        warmup_seconds: Seconds of warm-up before measurement starts (must be
+            >= 0).
+        max_frames: Optional fixed measurement frame cap for deterministic
+            seeded runs (must be a positive integer; overrides
+            ``duration_minutes`` when set).
+        warmup_frames: Optional fixed warm-up frame cap for deterministic
+            seeded runs (must be a non-negative integer; overrides
+            ``warmup_seconds`` when set).
 
     Returns:
         Dict with per-interval and aggregate metrics for both trackers.
+
+    Raises:
+        ValueError: If frame caps or durations are negative, non-finite, or
+            invalid.
     """
+    if max_frames is not None and (
+        isinstance(max_frames, bool)
+        or not isinstance(max_frames, int)
+        or max_frames <= 0
+    ):
+        raise ValueError("max_frames must be a positive integer")
+    if warmup_frames is not None and (
+        isinstance(warmup_frames, bool)
+        or not isinstance(warmup_frames, int)
+        or warmup_frames < 0
+    ):
+        raise ValueError("warmup_frames must be a non-negative integer")
+    if (
+        isinstance(duration_minutes, bool)
+        or not isinstance(duration_minutes, (int, float))
+        or not math.isfinite(duration_minutes)
+        or duration_minutes < 0
+        or (max_frames is None and duration_minutes <= 0)
+    ):
+        raise ValueError(
+            "duration_minutes must be finite and >= 0 (> 0 when max_frames is None)"
+        )
+    if (
+        isinstance(warmup_seconds, bool)
+        or not isinstance(warmup_seconds, (int, float))
+        or not math.isfinite(warmup_seconds)
+        or warmup_seconds < 0
+    ):
+        raise ValueError("warmup_seconds must be a finite non-negative number")
+
     from prin.y4q1_tools import (
         binding_persistence,
-        coherence_decay_rate,
         order_parameter_series,
         phase_locking_value,
         phase_slip_rate,
@@ -189,12 +238,26 @@ def run_timed_session(
     sa = _build_slot_tracker(seed=seed)
 
     # ---- Warm-up phase ----
-    print(f"    Warm-up ({warmup_seconds:.0f}s) ...", end=" ", flush=True)
+    warmup_label = (
+        f"{warmup_frames} frames"
+        if warmup_frames is not None
+        else f"{warmup_seconds:.0f}s"
+    )
+    print(f"    Warm-up ({warmup_label}) ...", end=" ", flush=True)
     warmup_start = time.perf_counter()
     warmup_frame_count = 0
-    while time.perf_counter() - warmup_start < warmup_seconds:
+    while (
+        warmup_frame_count < warmup_frames
+        if warmup_frames is not None
+        else time.perf_counter() - warmup_start < warmup_seconds
+    ):
+        batch_frames = (
+            min(FRAMES_PER_BATCH, warmup_frames - warmup_frame_count)
+            if warmup_frames is not None
+            else FRAMES_PER_BATCH
+        )
         frames = _make_smooth_sequence(
-            FRAMES_PER_BATCH,
+            batch_frames,
             n_objects,
             det_dim,
             seed=frame_seed_offset + warmup_frame_count,
@@ -202,12 +265,17 @@ def run_timed_session(
         with torch.no_grad():
             pt.track_sequence(frames)
             sa.track_sequence(frames)
-        warmup_frame_count += FRAMES_PER_BATCH
+        warmup_frame_count += batch_frames
     print(f"done ({warmup_frame_count} frames)")
     _cleanup()
 
     # ---- Measurement phase ----
-    print(f"    Measuring ({duration_minutes:.0f}min) ...", flush=True)
+    measure_label = (
+        f"{max_frames} frames"
+        if max_frames is not None
+        else f"{duration_minutes:.0f}min"
+    )
+    print(f"    Measuring ({measure_label}) ...", flush=True)
 
     # Accumulators for interval-level metrics
     interval_data: list[dict[str, Any]] = []
@@ -226,19 +294,125 @@ def run_timed_session(
 
     frame_counter = warmup_frame_count  # continue seed offset
 
+    def _flush_interval() -> None:
+        """Finalize the current interval accumulators into ``interval_data``."""
+        nonlocal pt_phases_interval, pt_matches_interval, sa_matches_interval
+        nonlocal pt_sims_interval, sa_sims_interval, pt_rho_interval
+        nonlocal interval_frame_count, interval_wall_start
+
+        interval_wall_end = time.perf_counter()
+        interval_wall_sec = interval_wall_end - interval_wall_start
+        elapsed_total = interval_wall_end - session_start
+
+        entry: dict[str, Any] = {
+            "elapsed_seconds": round(elapsed_total, 2),
+            "interval_frames": interval_frame_count,
+            "interval_wall_sec": round(interval_wall_sec, 4),
+            "fps": round(interval_frame_count / max(interval_wall_sec, 1e-9), 2),
+            "gpu_memory_mb": round(_get_gpu_memory_mb(), 2),
+            "process_memory_mb": round(_get_process_memory_mb(), 2),
+            "partial_interval": interval_frame_count < SAMPLE_INTERVAL_FRAMES,
+        }
+
+        # PhaseTracker metrics (order_parameter_series, phase_slip_rate, and
+        # phase_locking_value all support T >= 1).
+        if len(pt_phases_interval) >= 1:
+            traj = torch.stack(pt_phases_interval)  # (T, N, n_osc)
+            opr = order_parameter_series(traj)
+            entry["pt_mean_r"] = round(opr["mean_r"], 6)
+            entry["pt_std_r"] = round(opr["std_r"], 6)
+
+            mean_phase = traj.mean(dim=-1) if traj.dim() == 3 else traj
+            psr = phase_slip_rate(mean_phase)
+            entry["pt_slip_fraction"] = round(psr["slip_fraction"], 6)
+
+            if mean_phase.shape[1] >= 2:
+                plv = phase_locking_value(mean_phase[:, 0], mean_phase[:, 1])
+                entry["pt_plv"] = round(plv["plv"], 6)
+
+        # IP for this interval
+        if pt_matches_interval:
+            pt_matched = sum(int((m >= 0).sum().item()) for m in pt_matches_interval)
+            pt_possible = sum(m.shape[0] for m in pt_matches_interval)
+            entry["pt_ip"] = round(pt_matched / max(pt_possible, 1), 6)
+
+        if sa_matches_interval:
+            sa_matched = sum(int((m >= 0).sum().item()) for m in sa_matches_interval)
+            sa_possible = sum(m.shape[0] for m in sa_matches_interval)
+            entry["sa_ip"] = round(sa_matched / max(sa_possible, 1), 6)
+
+        # Mean similarity
+        if pt_sims_interval:
+            entry["pt_mean_sim"] = round(
+                sum(pt_sims_interval) / len(pt_sims_interval), 6
+            )
+        if sa_sims_interval:
+            entry["sa_mean_sim"] = round(
+                sum(sa_sims_interval) / len(sa_sims_interval), 6
+            )
+        if pt_rho_interval:
+            entry["pt_mean_rho"] = round(sum(pt_rho_interval) / len(pt_rho_interval), 6)
+
+        # Binding persistence
+        if pt_matches_interval:
+            bp = binding_persistence(pt_matches_interval, n_objects)
+            entry["pt_bp"] = round(bp["mean_persistence"], 6)
+        if sa_matches_interval:
+            bp_sa = binding_persistence(sa_matches_interval, 6)
+            entry["sa_bp"] = round(bp_sa["mean_persistence"], 6)
+
+        interval_data.append(entry)
+
+        # Report progress (frame-based in fixed-frame mode so duration_minutes=0
+        # never divides by zero; time-based in timed mode).
+        if max_frames is not None:
+            pct = min(total_frames / max_frames * 100.0, 100.0)
+        elif duration_seconds > 0:
+            pct = min(elapsed_total / duration_seconds * 100.0, 100.0)
+        else:
+            pct = 100.0
+        pt_ip_str = f"{entry.get('pt_ip', 0):.3f}"
+        sa_ip_str = f"{entry.get('sa_ip', 0):.3f}"
+        print(
+            f"      [{pct:5.1f}%] {elapsed_total:7.1f}s  "
+            f"FPS={entry['fps']:7.1f}  "
+            f"PT_IP={pt_ip_str}  SA_IP={sa_ip_str}  "
+            f"GPU={entry['gpu_memory_mb']:.0f}MB",
+            flush=True,
+        )
+
+        # Reset interval accumulators
+        pt_phases_interval = []
+        pt_matches_interval = []
+        sa_matches_interval = []
+        pt_sims_interval = []
+        sa_sims_interval = []
+        pt_rho_interval = []
+        interval_frame_count = 0
+        interval_wall_start = time.perf_counter()
+
     while True:
         elapsed = time.perf_counter() - session_start
-        if elapsed >= duration_seconds:
+        if (
+            total_frames >= max_frames
+            if max_frames is not None
+            else elapsed >= duration_seconds
+        ):
             break
 
+        batch_frames = (
+            min(FRAMES_PER_BATCH, max_frames - total_frames)
+            if max_frames is not None
+            else FRAMES_PER_BATCH
+        )
         # Generate a batch of frames
         frames = _make_smooth_sequence(
-            FRAMES_PER_BATCH,
+            batch_frames,
             n_objects,
             det_dim,
             seed=frame_seed_offset + frame_counter,
         )
-        frame_counter += FRAMES_PER_BATCH
+        frame_counter += batch_frames
 
         with torch.no_grad():
             pt_result = pt.track_sequence(frames)
@@ -258,107 +432,17 @@ def run_timed_session(
         pt_sims_interval.extend(pt_result.get("per_frame_similarity", []))
         sa_sims_interval.extend(sa_result.get("per_frame_similarity", []))
         pt_rho_interval.extend(pt_result.get("per_frame_phase_correlation", []))
-        interval_frame_count += FRAMES_PER_BATCH
-        total_frames += FRAMES_PER_BATCH
+        interval_frame_count += batch_frames
+        total_frames += batch_frames
 
         # Check if we've accumulated enough for a sample interval
         if interval_frame_count >= SAMPLE_INTERVAL_FRAMES:
-            interval_wall_end = time.perf_counter()
-            interval_wall_sec = interval_wall_end - interval_wall_start
-            elapsed_total = interval_wall_end - session_start
+            _flush_interval()
 
-            entry: dict[str, Any] = {
-                "elapsed_seconds": round(elapsed_total, 2),
-                "interval_frames": interval_frame_count,
-                "interval_wall_sec": round(interval_wall_sec, 4),
-                "fps": round(interval_frame_count / max(interval_wall_sec, 1e-9), 2),
-                "gpu_memory_mb": round(_get_gpu_memory_mb(), 2),
-                "process_memory_mb": round(_get_process_memory_mb(), 2),
-            }
-
-            # PhaseTracker metrics
-            if len(pt_phases_interval) >= 2:
-                traj = torch.stack(pt_phases_interval)  # (T, N, n_osc)
-                if traj.dim() == 3:
-                    T, N, K = traj.shape
-                    traj_flat = traj.reshape(T, N * K)
-                else:
-                    traj_flat = traj
-
-                opr = order_parameter_series(traj)
-                entry["pt_mean_r"] = round(opr["mean_r"], 6)
-                entry["pt_std_r"] = round(opr["std_r"], 6)
-
-                # Phase slip rate
-                mean_phase = traj.mean(dim=-1) if traj.dim() == 3 else traj
-                psr = phase_slip_rate(mean_phase)
-                entry["pt_slip_fraction"] = round(psr["slip_fraction"], 6)
-
-                # PLV (first two objects if available)
-                if mean_phase.shape[1] >= 2:
-                    plv = phase_locking_value(mean_phase[:, 0], mean_phase[:, 1])
-                    entry["pt_plv"] = round(plv["plv"], 6)
-
-            # IP for this interval
-            if pt_matches_interval:
-                pt_matched = sum(
-                    int((m >= 0).sum().item()) for m in pt_matches_interval
-                )
-                pt_possible = sum(m.shape[0] for m in pt_matches_interval)
-                entry["pt_ip"] = round(pt_matched / max(pt_possible, 1), 6)
-
-            if sa_matches_interval:
-                sa_matched = sum(
-                    int((m >= 0).sum().item()) for m in sa_matches_interval
-                )
-                sa_possible = sum(m.shape[0] for m in sa_matches_interval)
-                entry["sa_ip"] = round(sa_matched / max(sa_possible, 1), 6)
-
-            # Mean similarity
-            if pt_sims_interval:
-                entry["pt_mean_sim"] = round(
-                    sum(pt_sims_interval) / len(pt_sims_interval), 6
-                )
-            if sa_sims_interval:
-                entry["sa_mean_sim"] = round(
-                    sum(sa_sims_interval) / len(sa_sims_interval), 6
-                )
-            if pt_rho_interval:
-                entry["pt_mean_rho"] = round(
-                    sum(pt_rho_interval) / len(pt_rho_interval), 6
-                )
-
-            # Binding persistence
-            if pt_matches_interval:
-                bp = binding_persistence(pt_matches_interval, n_objects)
-                entry["pt_bp"] = round(bp["mean_persistence"], 6)
-            if sa_matches_interval:
-                bp_sa = binding_persistence(sa_matches_interval, 6)
-                entry["sa_bp"] = round(bp_sa["mean_persistence"], 6)
-
-            interval_data.append(entry)
-
-            # Report progress
-            pct = min(elapsed_total / duration_seconds * 100, 100)
-            pt_ip_str = f"{entry.get('pt_ip', 0):.3f}"
-            sa_ip_str = f"{entry.get('sa_ip', 0):.3f}"
-            print(
-                f"      [{pct:5.1f}%] {elapsed_total:7.1f}s  "
-                f"FPS={entry['fps']:7.1f}  "
-                f"PT_IP={pt_ip_str}  SA_IP={sa_ip_str}  "
-                f"GPU={entry['gpu_memory_mb']:.0f}MB",
-                flush=True,
-            )
-
-            # Reset interval accumulators
-            pt_phases_interval = []
-            pt_matches_interval = []
-            sa_matches_interval = []
-            pt_sims_interval = []
-            sa_sims_interval = []
-            pt_rho_interval = []
-            interval_frame_count = 0
-            interval_wall_start = time.perf_counter()
+    # Flush any remaining processed tail frames when a fixed frame cap ends
+    # between SAMPLE_INTERVAL_FRAMES boundaries (or < SAMPLE_INTERVAL_FRAMES).
+    if max_frames is not None and interval_frame_count > 0:
+        _flush_interval()
 
     session_wall = time.perf_counter() - session_start
 
@@ -373,17 +457,41 @@ def run_timed_session(
     }
 
     if interval_data:
-        fps_list = [d["fps"] for d in interval_data]
-        gpu_mem_list = [d["gpu_memory_mb"] for d in interval_data]
-        pt_ip_list = [d.get("pt_ip", 0) for d in interval_data]
-        sa_ip_list = [d.get("sa_ip", 0) for d in interval_data]
-        pt_r_list = [d.get("pt_mean_r", 0) for d in interval_data]
-        pt_slip_list = [d.get("pt_slip_fraction", 0) for d in interval_data]
-
         import numpy as np
 
-        agg["mean_fps"] = round(float(np.mean(fps_list)), 2)
-        agg["std_fps"] = round(float(np.std(fps_list)), 2)
+        def _weighted_mean_and_std(
+            key: str, default: float | None = 0.0
+        ) -> tuple[float, float, list[float]]:
+            """Compute frame-weighted mean, population std, and interval values for ``key``."""
+            selected = [
+                (float(d[key]), float(d["interval_frames"]))
+                for d in interval_data
+                if key in d or default is not None
+                for d in [d if key in d else {**d, key: default}]
+            ]
+            if not selected:
+                return 0.0, 0.0, []
+            vals = np.array([v for v, _ in selected], dtype=float)
+            weights = np.array([w for _, w in selected], dtype=float)
+            mean_val = float(np.average(vals, weights=weights))
+            var_val = float(np.average((vals - mean_val) ** 2, weights=weights))
+            return mean_val, math.sqrt(max(var_val, 0.0)), [v for v, _ in selected]
+
+        fps_mean, fps_std, fps_list = _weighted_mean_and_std("fps")
+        gpu_mem_list = [d["gpu_memory_mb"] for d in interval_data]
+        # A 1-frame remainder batch has 0 frame-to-frame transitions and so
+        # emits no pt_ip/sa_ip; weight IP over intervals that measured transitions.
+        pt_ip_mean, pt_ip_std, pt_ip_list = _weighted_mean_and_std(
+            "pt_ip", default=None if any("pt_ip" in d for d in interval_data) else 0.0
+        )
+        sa_ip_mean, sa_ip_std, sa_ip_list = _weighted_mean_and_std(
+            "sa_ip", default=None if any("sa_ip" in d for d in interval_data) else 0.0
+        )
+        pt_r_mean, pt_r_std, pt_r_list = _weighted_mean_and_std("pt_mean_r")
+        pt_slip_mean, _, pt_slip_list = _weighted_mean_and_std("pt_slip_fraction")
+
+        agg["mean_fps"] = round(fps_mean, 2)
+        agg["std_fps"] = round(fps_std, 2)
         agg["fps_degradation_pct"] = (
             round(
                 ((fps_list[-1] - fps_list[0]) / max(abs(fps_list[0]), 1e-9)) * 100,
@@ -400,16 +508,18 @@ def run_timed_session(
             float(np.max(gpu_mem_list)) - gpu_mem_list[0], 2
         )
 
-        agg["pt_mean_ip"] = round(float(np.mean(pt_ip_list)), 6)
-        agg["pt_std_ip"] = round(float(np.std(pt_ip_list)), 6)
-        agg["sa_mean_ip"] = round(float(np.mean(sa_ip_list)), 6)
-        agg["sa_std_ip"] = round(float(np.std(sa_ip_list)), 6)
+        agg["pt_mean_ip"] = round(pt_ip_mean, 6)
+        agg["pt_std_ip"] = round(pt_ip_std, 6)
+        agg["sa_mean_ip"] = round(sa_ip_mean, 6)
+        agg["sa_std_ip"] = round(sa_ip_std, 6)
 
-        agg["pt_mean_order_param"] = round(float(np.mean(pt_r_list)), 6)
-        agg["pt_std_order_param"] = round(float(np.std(pt_r_list)), 6)
+        agg["pt_mean_order_param"] = round(pt_r_mean, 6)
+        agg["pt_std_order_param"] = round(pt_r_std, 6)
 
-        agg["pt_mean_slip_fraction"] = round(float(np.mean(pt_slip_list)), 6)
-        agg["pt_max_slip_fraction"] = round(float(np.max(pt_slip_list)), 6)
+        agg["pt_mean_slip_fraction"] = round(pt_slip_mean, 6)
+        agg["pt_max_slip_fraction"] = round(
+            float(np.max(pt_slip_list)) if pt_slip_list else 0.0, 6
+        )
 
         # Throughput trend
         if len(fps_list) >= 2:
@@ -424,6 +534,8 @@ def run_timed_session(
             agg["pt_ip_trend_slope"] = round(
                 float(np.polyfit(x, np.array(pt_ip_list), 1)[0]), 8
             )
+        if len(sa_ip_list) >= 2:
+            x = np.arange(len(sa_ip_list), dtype=float)
             agg["sa_ip_trend_slope"] = round(
                 float(np.polyfit(x, np.array(sa_ip_list), 1)[0]), 8
             )

@@ -737,3 +737,178 @@ at the next S2-class audit**: this is the second code change made inside an S4
 documentation session (after `EXP002D1-S4-F2`), made under the maintainer's
 explicit in-session authorization.
 
+## DV-045 lockfile remediation, Ubuntu-24.04/Node-24 migration, and PR #34 hosted corroboration — 2026-10-19 UTC
+
+PR #34 (`hotfix/exp002-d1-figure-parity`) merged to `main` at
+`305416fb0f85e690b12640b3f32fad48b55d9077` (2026-10-18T05:00Z). Per campaign
+plan §12 item 3, the merge-commit hosted results are recorded here:
+
+- **Push-triggered workflows at `305416fb0f85e690b12640b3f32fad48b55d9077`:**
+  `python` (`39099067876`, `success`), `parity` (`39099067955`, `success` —
+  confirming `EXP002D1-S4-F2` on Linux), `repro` (`39099067747`, `success`),
+  `snyk` (`39099067759`, `success`), `gpu` (`39099067681`, `success` — both
+  `gpu-cuda` and `gpu-wgpu` green), and `rust` (`39099067757`, `failure` — only
+  the `audit` job failed; all other 9 jobs `fmt`, `clippy`, `clippy-strict`,
+  `test-strict`, `docs`, `bench-smoke`, and the three OS `test` legs succeeded).
+- **Scheduled workflows at `305416fb0f85e690b12640b3f32fad48b55d9077`:**
+  - `nightly` `39099904764` (2026-10-18): `full-suite` (`117593861959`)
+    **`success`**, `bench-regression` (`117593862125`) `failure` on a single
+    +10.2 % row (`pytest/tests/test_train_bridge.py::TestTrainBridgeBenchmarks::test_resonance_layer_forward_backward_round_trip_latency_moderate`, `0.5403 -> 0.5954`).
+  - `gpu` `39102633508` (2026-10-18): **`success`** (`gpu-cuda` and `gpu-wgpu`
+    both green).
+  - `nightly` `39203786555` (2026-10-19): **`success` for the entire workflow** —
+    both `full-suite` (`117902112243`) and `bench-regression` (`117902112585`)
+    green. Both `nightly` `full-suite` runs on `305416fb` therefore passed,
+    supplying O-1's hosted corroboration without opening a new DV row.
+  - `gpu` `39207739900` (2026-10-19): `gpu-cuda` (`117914144615`) **`success`**,
+    `gpu-wgpu` (`117914144883`) `failure` with runner annotation *"The
+    self-hosted runner lost communication with the server"* (DV-024/DV-034
+    infrastructure class; `PRIN-GPU-Runner` verified back `online` and `idle`).
+    Because `tools/check_ci_green.py` inspects the newest run per workflow on
+    `main` regardless of `event`, it reports `gpu RED` from the scheduled run
+    `39207739900` even though the push-triggered `gpu` run `39099067681` and the
+    2026-10-18 scheduled run `39102633508` both succeeded.
+- **DV-046 re-checked on all three `gpu-cuda` runs on `305416fb`
+  (`39099067681`, `39102633508`, `39207739900`):** all three **`success`** (0
+  occurrences of `flops::tests::measure_wall_time_calls_warmup_and_runs_exact_counts`).
+  DV-046 stays **OPEN** under its per-run re-check gate.
+- **DV-045 lockfile update applied (`quinn-proto 0.11.16 -> 0.11.18`, `rustls 0.23.45 -> 0.23.46`), plus 3 newly-published `zip 1.1.4` advisories (`RUSTSEC-2026-0367`..`0369`) assessed:**
+  - `cargo update -p quinn-proto --precise 0.11.18` and
+    `cargo update -p rustls --precise 0.23.46` eliminate **all nine** DV-045
+    advisories (`RUSTSEC-2026-0338`..`0342` on `quinn-proto` and
+    `RUSTSEC-2026-0346`..`0349` on `rustls`).
+  - Between the PR #34 pre-merge check (`38976490096`, 2026-10-16T23:21Z) and
+    the merge push (`39099067757`, 2026-10-18T05:04Z), `RustSec/advisory-db`
+    commit `64f92cdc` (2026-10-16T23:27:42Z) published **three new advisories on
+    `zip 1.1.4`**: `RUSTSEC-2026-0367` (7.3 high, `GHSA-vv5m-jxxh-4627`, SUID/SGID
+    preservation in `ZipArchive::extract`), `RUSTSEC-2026-0368`
+    (`GHSA-4v9h-p7m9-rh26`, symlink escape in `ZipArchive::extract`), and
+    `RUSTSEC-2026-0369` (9.1 critical, `GHSA-4684-h2q9-2vcp`, Unix permissions
+    applied through symlinks in `ZipStreamReader::extract` /
+    `ZipArchive::extract`), all listing `patched = [">= 9.0.0"]`.
+  - **Coding Standards §6.2 threat assessment for `RUSTSEC-2026-0367`..`0369`:**
+    1. *Dependency path and reachability:* `zip 1.1.4` is present in `Cargo.lock`
+       solely through `burn-core 0.16.1`'s **disabled optional** dependency
+       `burn-candle 0.16.1` → `candle-core 0.8.4` → `zip = "^1.1.1"`. PRIN
+       declares `burn = { version = "0.16", default-features = false, features = ["std", "ndarray", "autodiff"] }`;
+       the `candle` feature is never enabled anywhere in the workspace. Both
+       `cargo tree -i zip --target all` and
+       `cargo tree -i burn-candle --target all` print `warning: nothing to print.`
+       — `zip` is **never compiled, linked, or reachable** in any PRIN crate,
+       binary, test, or Python extension, and PRIN never calls `ZipArchive::extract`
+       or `ZipStreamReader::extract`.
+    2. *Why no semver lockfile update resolves it:* `candle-core 0.8.4`
+       constrains `zip` to `^1.1.1` (`< 2.0.0`), whereas `patched = [">= 9.0.0"]`;
+       `cargo update -p burn --dry-run` and `cargo update -p candle-core --dry-run`
+       lock 0 packages.
+    3. *Compensating controls and governance:* Snyk Open Source (`snyk_sca_scan`),
+       `pip-audit`, and `cargo tree` confirm zero reachable vulnerable paths.
+       **Maintainer ratification (`MichaelMaillet`, 2026-10-19 UTC):** approved
+       the threat assessment above and authorized the narrowly-scoped, dated
+       `.cargo/audit.toml` `ignore = ["RUSTSEC-2026-0367", "RUSTSEC-2026-0368", "RUSTSEC-2026-0369"]`
+       (mechanically pinned to those exact three IDs by
+       `tests/test_wp001_baseline.py::test_cargo_audit_config_only_ignores_ratified_unreachable_zip_advisories`,
+       re-checked every cycle until `burn` upgrades or drops its optional
+       `burn-candle` dependency). `cargo audit` now exits **0** (with only the
+       three pre-accepted warnings DV-008 `paste`, DV-017 `bincode`, and DV-035
+       `chacha20` yanked). **DV-045 is CLOSED locally on `cargo audit` exit 0,
+       closing on `main` when the hotfix PR merges.**
+- **DV-032 tests (2) and (3) disposition landed (maintainer ratification, `MichaelMaillet`, 2026-10-19 UTC):**
+  - **Test (2) `tests/test_acceptance_y4q1_5.py::TestSessionRunnerSmoke::test_deterministic_seed` — FIXED and un-quarantined.**
+    `benchmarks/y4q1_5_benchmarks.py::run_timed_session` gained optional
+    `max_frames: int | None = None` and `warmup_frames: int | None = None`
+    parameters (defaulting to `None` so all timed callers are unchanged), and
+    `test_deterministic_seed` now runs two seeded invocations with
+    `max_frames=100, warmup_frames=20`, asserting `total_frames == 100`,
+    `n_intervals == 2`, the original `<= 0.5 * total_frames` check, and
+    `pytest.approx(..., rel=1e-6, abs=1e-6)` agreement across `pt_mean_ip`,
+    `sa_mean_ip`, `pt_mean_order_param`, and `pt_mean_slip_fraction`. Its
+    `_TIMING_NODES` quarantine in `tests/conftest.py` is removed, so it now runs
+    in the default required gate.
+  - **Test (3) `tests/test_acceptance_y2q1.py::TestDiscreteDeltaThetaGamma::test_speed_vs_transformer` — PERMANENT NIGHTLY-BENCHMARK DISPOSITION RATIFIED.**
+    Measured at `B=16, seq=1, D=128`: since `WP037-F1` (`ae291241`),
+    `DiscreteDeltaThetaGammaLayer.forward` synchronizes all 15 `f64` parameter
+    tensors across DLPack into Burn `Autodiff<NdArray<f64>>` on every call,
+    measuring **24.17 ms/iter** vs **0.43 ms/iter** for
+    `nn.TransformerEncoderLayer` (**60.2× wall-clock / 19.4× process-CPU** in the
+    `dev` profile used by `python.yml` and `nightly.yml` `full-suite` — the same
+    architectural small-shape bridge-dispatch class as Plan amendment #30 /
+    DV-021). Comparative timing for this bridge family is governed by
+    `nightly.yml`'s Criterion/pytest-benchmark suite (`resonance_layer_bridge_baseline`,
+    `phase_tracker_bridge_baseline`, `discrete_step_bench`); adding a new
+    `@pytest.mark.slow` benchmark node to `tests/` would break `nightly.yml`'s
+    fail-closed matched-benchmark set against fixed `REFERENCE_SHA` (`4590d611`).
+    `_RATIO_NODES` in `tests/conftest.py` is therefore retained as the permanent
+    ratified disposition for test (3).
+- **Node-24 and `ubuntu-24.04` workflow migration landed (2026-10-19 deadline):**
+  all hosted Ubuntu jobs across `.github/workflows/{rust,python,parity,repro,snyk,nightly,release}.yml`
+  are pinned from `ubuntu-latest` to `ubuntu-24.04` (preserving matrix `os: ubuntu-latest`
+  keys so check-run context names `test (ubuntu-latest, …)` and `release.yml`'s
+  `_phase0.py` wheel-matrix contract are unchanged), and all Node-20 actions are
+  upgraded to Node-24-native majors (`actions/checkout@v6`,
+  `actions/setup-python@v6`, `actions/setup-node@v6` with `node-version: "24"`,
+  `actions/upload-artifact@v6`, `actions/download-artifact@v7`,
+  `codecov/codecov-action@v5`, `gitleaks/gitleaks-action@v3`), pinned by
+  `tests/test_wp001_baseline.py::test_workflows_use_node24_actions_and_pin_ubuntu_24_04`.
+
+### PR #35 review remediation and record corrections — 2026-10-20 UTC
+
+Appended after multi-agent review of PR #35 (`33520b62`, including Perplexity
+Deep Research, SWE-2 High, Devin Review, Sourcery, Copilot, and CodeRabbit).
+Prior lines above are retained unchanged (0 deleted lines):
+
+- **F1–F3 (`benchmarks/y4q1_5_benchmarks.py::run_timed_session` fixed-frame correctness — FIXED):**
+  - *F1 (zero-duration crash):* when `max_frames` is set, progress reporting now
+    computes `pct = min(total_frames / max_frames * 100.0, 100.0)` instead of
+    dividing by `duration_seconds`, and `duration_minutes` defaults to `0.0`
+    with explicit validation for non-finite/negative durations and non-positive
+    or non-integer `max_frames`/`warmup_frames`.
+  - *F2 (batch-granularity overshoot):* both the warm-up and measurement loops
+    now bound each batch to `min(FRAMES_PER_BATCH, cap - count)` and advance
+    counters by the actual batch size, stopping at the exact requested
+    `warmup_frames` and `max_frames` for arbitrary positive integers (including
+    1-frame remainders).
+  - *F3 (partial tail-interval omission):* when `max_frames` is set and
+    `interval_frame_count > 0` at loop exit, the remaining tail frames are
+    flushed into `intervals` (marked `"partial_interval": True`), `pt_mean_r`,
+    `pt_slip_fraction`, and `pt_plv` are computed for `len(pt_phases_interval) >= 1`,
+    and aggregate interval means (`mean_fps`, `pt_mean_ip`, `sa_mean_ip`,
+    `pt_mean_order_param`, `pt_mean_slip_fraction`) are weighted by
+    `interval_frames` (with `pt_ip`/`sa_ip` weighted over intervals that
+    measured at least one frame-to-frame transition, so a 1-frame remainder
+    batch with 0 transitions never injects a synthetic `0.0`).
+- **F4 (`codecov/codecov-action@v5` transitive Node 20 action — FIXED):**
+  hosted job `118443116566` (`test (ubuntu-latest, 3.12)` in `python.yml` run
+  `39366076927`) emitted a deprecation warning for
+  `actions/github-script@60a0d830…` (`v7`, `runs.using: node20`) nested inside
+  `codecov/codecov-action@v5`. Upgraded to `codecov/codecov-action@v7`
+  (`v7.1.1`, whose nested `actions/github-script@ed597411…` is `v8.0.0`,
+  `runs.using: node24`), superseding the `codecov/codecov-action@v5` note above.
+- **F5 (fail-open workflow migration test — FIXED):**
+  `test_workflows_use_node24_actions_and_pin_ubuntu_24_04` now uses the
+  positive structural validator `_validate_workflow_node24_and_ubuntu_pins`
+  (requiring every `uses:` reference to belong to `_APPROVED_WORKFLOW_ACTIONS`,
+  every `actions/setup-node` step to set `node-version: "24"`, and every
+  Ubuntu `runs-on:` / `runner:` assignment — quoted or unquoted — to equal
+  `ubuntu-24.04`), backed by six parametrized negative mutation tests in
+  `test_workflow_migration_validator_rejects_regressions`.
+- **Distinct-seed control, reachability guard, and DV-032 test (3) wording corrections:**
+  - `test_deterministic_seed` drops the redundant `<= 0.5 * total_frames` check
+    and adds a third fixed-frame run at `seed=99`, asserting that at least one
+    deterministic aggregate metric differs from `seed=42`.
+  - `test_cargo_audit_config_only_ignores_ratified_unreachable_zip_advisories`
+    now also parses `Cargo.toml`, `crates/*/Cargo.toml`, and `Cargo.lock` to
+    verify fail-closed that `burn`'s `candle` feature is disabled and that no
+    workspace crate reaches `burn-candle`, `candle-core`, or `zip`.
+  - *DV-032 test (3) ratio arithmetic clarification:* in the bullet above,
+    **60.2× wall-clock** and **19.4× process-CPU** are the **7-sample medians**
+    from a 7-iteration paired probe (`wall_ratios = [59.245, 62.776, 55.927,
+    51.684, 66.206, 60.183, 63.529]`, median `60.183`; `cpu_ratios = [22.75,
+    19.444, 11.5, 21.0, 12.0, 10.562, 22.125]`, median `19.444`), whereas
+    **24.171 ms/iter** (`1208.56 ms / 50`) vs **0.433 ms/iter** (`21.66 ms / 50`)
+    was a separate single 50-iteration probe whose quotient is **55.80×**
+    (`24.17 / 0.43 = 56.21×` rounded). Also clarified that
+    `test_speed_vs_transformer` remains skipped under `_RATIO_NODES` in
+    `tests/conftest.py`; `nightly.yml`'s Criterion/pytest-benchmark suite
+    provides related bridge-performance regression coverage rather than
+    executing `test_speed_vs_transformer`'s `<= 5.0×` Transformer assertion.

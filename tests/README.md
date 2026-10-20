@@ -60,9 +60,14 @@ inputs are tests, never campaign observations.
 | **Total** | **498** | **489** | **9** | 7 `gpu` + 1 DV-030 `skip` + 1 psutil |
 
 WP-036G S1 removed DV-032's quarantine from
-`test_no_gpu_throughput_regression` after hardening it with fixed work, warm-up,
-and a seven-sample relative-median gate. The original `<1.30` acceptance limit
-is unchanged; three consecutive isolated runs passed on the maintainer host.
+`test_no_gpu_throughput_regression`, and `EXP-002-D1` S4 (`67100a69`,
+`EXP002D1-S4-F3`) converted its overhead measurement to `time.process_time()`
+with deterministic error/DLQ/inference-count assertions and an evidence-sized
+`_DAEMON_CPU_RATIO_LIMIT = 1.60` bound. On 2026-10-19 DV-032 test (2)
+(`test_acceptance_y4q1_5.py::TestSessionRunnerSmoke::test_deterministic_seed`)
+was converted to a seeded frame-count check (`max_frames=100, warmup_frames=20`)
+and its `_TIMING_NODES` quarantine removed; test (3) (`test_speed_vs_transformer`)
+retains its ratified nightly-benchmark quarantine (`_RATIO_NODES`).
 
 **Marker policy:** Tests that require a GPU carry both
 `@pytest.mark.skipif(not torch.cuda.is_available(), ...)` (the reference guard)
@@ -132,7 +137,7 @@ k-NN f32 dispatch (`DOCS/sphinx/parity_report.rst`).
 | `test_acceptance_y4q1_2.py` | 78 | 74 | 0 | 4 `slow` deselected |
 | `test_acceptance_y4q1_3.py` | 49 | 48 | 1 | 1 DV-031 `skip` (RNG-regime, parity_report.rst) |
 | `test_acceptance_y4q1_4.py` | 52 | 52 | 0 | — |
-| `test_acceptance_y4q1_5.py` | 60 | 60 | 0 | — |
+| `test_acceptance_y4q1_5.py` | 63 | 63 | 0 | — |
 | `test_acceptance_y4q1_7.py` | 84 | 84 | 0 | — |
 | `test_acceptance_y4q1_8.py` | 148 | 83 | 65 | 65 `skip` (reference: benchmark artefacts absent) |
 | `test_acceptance_y4q1_9.py` | 52 | 47 | 5 | 5 `skip` (reference: benchmark artefacts absent) |
@@ -186,12 +191,16 @@ pytest tests/ -v -m gpu -rs --basetemp=.pytest_basetemp
 
 ## Additional PRIN-specific suites (per the Testing Standards)
 
-- `test_wp001_baseline.py` — 55 fail-closed metadata, session-ledger,
+- `test_wp001_baseline.py` — 58 fail-closed metadata, session-ledger,
   traceability, CI, release-guard, security-control and repository-inventory
   test functions (the inventory lists git-visible files inside a work tree and
   walks the tree otherwise). Validates that
   `rust-toolchain.toml` includes `rustfmt` and `clippy`, optionally `llvm-tools`
-  for `cargo-llvm-cov`.
+  for `cargo-llvm-cov`, that `.github/workflows/*.yml` positively match the
+  approved Node-24 action allowlist, `node-version: "24"`, and `ubuntu-24.04`
+  pins (with negative mutation tests), and that `.cargo/audit.toml` ignores
+  only the maintainer-ratified unreachable `zip` advisories while `zip` remains
+  unreachable in `Cargo.toml`/`Cargo.lock`.
 - `test_dynamics_bindings.py` — 90 tests across 19 test classes covering the
   WP-011/WP-012 PyO3 bindings for dynamics and metrics: constants (4), Seed (6),
   OscillatorState (8), StateDerivatives (1), CouplingMode (5), Topology (3),

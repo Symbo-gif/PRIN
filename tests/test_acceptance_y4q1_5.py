@@ -587,16 +587,98 @@ class TestSessionRunnerSmoke:
             assert "elapsed_seconds" in interval
 
     def test_deterministic_seed(self) -> None:
-        """Same seed produces same frame count and similar metrics."""
+        """Same seed produces identical metrics and a distinct seed differs (DV-032)."""
         from benchmarks.y4q1_5_benchmarks import run_timed_session
 
-        r1 = run_timed_session(0.05, seed=42, warmup_seconds=1.0)
-        r2 = run_timed_session(0.05, seed=42, warmup_seconds=1.0)
-        # Frame counts may differ slightly due to timing, but should be close
-        assert (
-            abs(r1["aggregate"]["total_frames"] - r2["aggregate"]["total_frames"])
-            <= r1["aggregate"]["total_frames"] * 0.5
+        r1 = run_timed_session(
+            0.05, seed=42, warmup_seconds=1.0, max_frames=100, warmup_frames=20
         )
+        r2 = run_timed_session(
+            0.05, seed=42, warmup_seconds=1.0, max_frames=100, warmup_frames=20
+        )
+        r3 = run_timed_session(
+            0.05, seed=99, warmup_seconds=1.0, max_frames=100, warmup_frames=20
+        )
+        assert r1["aggregate"]["total_frames"] == 100
+        assert r2["aggregate"]["total_frames"] == 100
+        assert r3["aggregate"]["total_frames"] == 100
+        assert r1["aggregate"]["n_intervals"] == 2
+        assert r2["aggregate"]["n_intervals"] == 2
+        assert r3["aggregate"]["n_intervals"] == 2
+        keys = (
+            "pt_mean_ip",
+            "sa_mean_ip",
+            "pt_mean_order_param",
+            "pt_mean_slip_fraction",
+        )
+        for key in keys:
+            assert r1["aggregate"][key] == pytest.approx(
+                r2["aggregate"][key], rel=1e-6, abs=1e-6
+            )
+        assert any(
+            r1["aggregate"][key]
+            != pytest.approx(r3["aggregate"][key], rel=1e-6, abs=1e-6)
+            for key in keys
+        )
+
+    def test_zero_duration_fixed_frame_session_succeeds(self) -> None:
+        """Zero-duration fixed-frame sessions succeed without ZeroDivisionError."""
+        from benchmarks.y4q1_5_benchmarks import run_timed_session
+
+        result = run_timed_session(
+            0.0, seed=42, warmup_seconds=0.0, max_frames=50, warmup_frames=0
+        )
+        assert result["aggregate"]["total_frames"] == 50
+        assert result["aggregate"]["n_intervals"] == 1
+        assert result["intervals"][0]["interval_frames"] == 50
+        assert result["intervals"][0]["partial_interval"] is False
+
+    def test_non_multiple_and_short_frame_caps_preserve_tail_frames(self) -> None:
+        """Non-multiple and short frame caps stop at the cap and flush tail frames."""
+        from benchmarks.y4q1_5_benchmarks import run_timed_session
+
+        short = run_timed_session(
+            0.0, seed=42, warmup_seconds=0.0, max_frames=10, warmup_frames=5
+        )
+        assert short["aggregate"]["total_frames"] == 10
+        assert short["aggregate"]["n_intervals"] == 1
+        assert short["intervals"][0]["interval_frames"] == 10
+        assert short["intervals"][0]["partial_interval"] is True
+        assert "pt_mean_order_param" in short["aggregate"]
+        assert "pt_mean_ip" in short["aggregate"]
+
+        non_multiple = run_timed_session(
+            0.0, seed=42, warmup_seconds=0.0, max_frames=51, warmup_frames=11
+        )
+        assert non_multiple["aggregate"]["total_frames"] == 51
+        assert non_multiple["aggregate"]["n_intervals"] == 2
+        assert [d["interval_frames"] for d in non_multiple["intervals"]] == [50, 1]
+        assert [d["partial_interval"] for d in non_multiple["intervals"]] == [
+            False,
+            True,
+        ]
+        # 1-frame remainder has no frame-to-frame transition, so pt_mean_ip equals
+        # the 50-frame interval's pt_ip without a synthetic 0 dilution.
+        assert non_multiple["aggregate"]["pt_mean_ip"] == pytest.approx(
+            non_multiple["intervals"][0]["pt_ip"], rel=1e-6, abs=1e-6
+        )
+
+    def test_invalid_frame_caps_and_durations_raise_value_error(self) -> None:
+        """Invalid frame-cap and duration arguments raise ValueError."""
+        from benchmarks.y4q1_5_benchmarks import run_timed_session
+
+        with pytest.raises(ValueError, match="max_frames"):
+            run_timed_session(0.05, max_frames=0)
+        with pytest.raises(ValueError, match="max_frames"):
+            run_timed_session(0.05, max_frames=-10)
+        with pytest.raises(ValueError, match="max_frames"):
+            run_timed_session(0.05, max_frames=True)
+        with pytest.raises(ValueError, match="warmup_frames"):
+            run_timed_session(0.05, max_frames=10, warmup_frames=-1)
+        with pytest.raises(ValueError, match="duration_minutes"):
+            run_timed_session(0.0)
+        with pytest.raises(ValueError, match="warmup_seconds"):
+            run_timed_session(0.05, warmup_seconds=-1.0)
 
 
 # =====================================================================

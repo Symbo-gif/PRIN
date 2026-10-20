@@ -41,7 +41,7 @@ jobs:
   gpu-cuda:
     runs-on: [self-hosted, gpu]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # Rust is pre-installed on PRIN-GPU-Runner; dtolnay/rust-toolchain
       # requires WSL bash, unavailable on this self-hosted Windows runner
       # (same DV-024 root cause rust.yml/python.yml already skip this step
@@ -109,6 +109,6 @@ jobs:
     # CI matrix (amendment #12) to this self-hosted GPU runner.
     runs-on: [self-hosted, gpu]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Rust kernel-equivalence tests (wgpu)
         run: cargo test --workspace --features wgpu -- --test-threads=1

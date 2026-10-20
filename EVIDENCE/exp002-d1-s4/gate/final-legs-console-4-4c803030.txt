@@ -1,0 +1,12 @@
+# copied from /c/Users/there/prin-s4-scratch/final-legs-console4.txt at 2026-10-20T03:04:13Z (run 4 at 4c803030)
+AGGREGATION static gate: exit 0 -> PASS
+AGGREGATION sphinx: 1 marker(s), all the ok form -> PASS
+AGGREGATION gitleaks: 2 marker(s), all the ok form -> PASS
+AGGREGATION immutability: 1 marker(s), all the ok form -> PASS
+AGGREGATION verify-manifest: 1 marker(s), all the ok form -> PASS
+AGGREGATION delta re-audit: exit 0 -> PASS
+AGGREGATION index-selfcheck-s1: 1 marker(s), all the ok form -> PASS
+AGGREGATION index-selfcheck-s2: 1 marker(s), all the ok form -> PASS
+AGGREGATION index-selfcheck-s3: 1 marker(s), all the ok form -> PASS
+AGGREGATION snyk record: present and not BLOCKED -> PASS
+final legs overall: 0 (0 = every leg exited 0 and produced a usable record)

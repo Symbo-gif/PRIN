@@ -17,18 +17,18 @@ env:
 
 jobs:
   fmt:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
       - run: cargo fmt --all -- --check
 
   clippy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -36,9 +36,9 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
 
   clippy-strict:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -67,7 +67,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
             self_hosted: false
             cargo_jobs: default
           - os: windows-latest
@@ -78,13 +78,15 @@ jobs:
             runner: macos-latest
             self_hosted: false
             cargo_jobs: default
-    # Explicit name so the check-run context stays `test (<os>, <runner>)`
-    # regardless of the `self_hosted`/`cargo_jobs` matrix keys — that context
-    # string is a required `main` branch-ruleset check (ETCA-002 T-F7); letting
-    # the auto-generated name pick up extra keys too would rename the context
-    # and permanently block every future PR (the same class of deadlock T-F7
-    # hit with `parity`/`reproduce`'s path filters).
-    name: test (${{ matrix.os }}, ${{ matrix.runner }})
+    # Explicit name so the check-run context stays `test (<os>, <os>)`
+    # regardless of the `runner`/`self_hosted`/`cargo_jobs` matrix keys — that
+    # context string (`test (ubuntu-latest, ubuntu-latest)` etc.) is a required
+    # `main` branch-ruleset check (ETCA-002 T-F7), preserved while `runner` is
+    # pinned to `ubuntu-24.04` (avoiding the moving `ubuntu-latest` alias);
+    # letting the auto-generated name pick up extra keys too would rename the
+    # context and permanently block every future PR (the same class of deadlock
+    # T-F7 hit with `parity`/`reproduce`'s path filters).
+    name: test (${{ matrix.os }}, ${{ matrix.os }})
     runs-on: ${{ matrix.self_hosted && fromJson('["self-hosted","Windows","gpu"]') || matrix.runner }}
     # DV-016: bound worst case rather than risk the default 360-minute job
     # timeout silently burning Actions minutes. The self-hosted leg finishes
@@ -101,7 +103,7 @@ jobs:
     env:
       CARGO_BUILD_JOBS: ${{ matrix.cargo_jobs }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # dtolnay/rust-toolchain and Swatinem/rust-cache both need WSL bash,
       # unavailable on the self-hosted Windows runner (same DV-024 root cause
       # gpu.yml documents); Rust is already pre-installed there.
@@ -116,19 +118,19 @@ jobs:
         run: cargo test -p prin-sim --features cpu -- --test-threads=1
 
   test-strict:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace --features strict-checks
 
   docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       RUSTDOCFLAGS: "-D warnings"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Rustdoc gate (100% public-item docs, no warnings)
@@ -140,9 +142,9 @@ jobs:
         run: cargo doc -p prin-sim --no-deps --features cpu
 
   audit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo install cargo-audit --locked
       - run: cargo audit
@@ -153,9 +155,9 @@ jobs:
     # figures (PSR-016 §5: 8 physical / 16 SMT cores) — this job proves the
     # Criterion harness compiles and executes end-to-end (EA-003 finding
     # E-F9), it does not reproduce or gate on the documented speedup ratios.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo bench -p prin-sim --bench sweep_bench -- --test
