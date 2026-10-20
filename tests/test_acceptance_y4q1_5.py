@@ -587,16 +587,32 @@ class TestSessionRunnerSmoke:
             assert "elapsed_seconds" in interval
 
     def test_deterministic_seed(self) -> None:
-        """Same seed produces same frame count and similar metrics."""
+        """Same seed produces same frame count and deterministic metrics (DV-032)."""
         from benchmarks.y4q1_5_benchmarks import run_timed_session
 
-        r1 = run_timed_session(0.05, seed=42, warmup_seconds=1.0)
-        r2 = run_timed_session(0.05, seed=42, warmup_seconds=1.0)
-        # Frame counts may differ slightly due to timing, but should be close
+        r1 = run_timed_session(
+            0.05, seed=42, warmup_seconds=1.0, max_frames=100, warmup_frames=20
+        )
+        r2 = run_timed_session(
+            0.05, seed=42, warmup_seconds=1.0, max_frames=100, warmup_frames=20
+        )
+        assert r1["aggregate"]["total_frames"] == 100
+        assert r2["aggregate"]["total_frames"] == 100
+        assert r1["aggregate"]["n_intervals"] == 2
+        assert r2["aggregate"]["n_intervals"] == 2
         assert (
             abs(r1["aggregate"]["total_frames"] - r2["aggregate"]["total_frames"])
             <= r1["aggregate"]["total_frames"] * 0.5
         )
+        for key in (
+            "pt_mean_ip",
+            "sa_mean_ip",
+            "pt_mean_order_param",
+            "pt_mean_slip_fraction",
+        ):
+            assert r1["aggregate"][key] == pytest.approx(
+                r2["aggregate"][key], rel=1e-6, abs=1e-6
+            )
 
 
 # =====================================================================

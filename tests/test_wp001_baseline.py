@@ -1191,6 +1191,23 @@ def test_workflows_use_node24_actions_and_pin_ubuntu_24_04() -> None:
             )
 
 
+def test_cargo_audit_config_only_ignores_ratified_unreachable_zip_advisories() -> None:
+    import tomllib
+
+    audit_toml = ROOT / ".cargo/audit.toml"
+    assert audit_toml.is_file()
+    text = audit_toml.read_text(encoding="utf-8")
+    assert "# Approved 2026-10-19 by MichaelMaillet" in text
+    parsed = tomllib.loads(text)
+    assert set(parsed.keys()) == {"advisories"}
+    assert set(parsed["advisories"].keys()) == {"ignore"}
+    assert parsed["advisories"]["ignore"] == [
+        "RUSTSEC-2026-0367",
+        "RUSTSEC-2026-0368",
+        "RUSTSEC-2026-0369",
+    ]
+
+
 def test_session_plan_validator_reports_metadata_and_link_drift(
     tmp_path: Path,
 ) -> None:

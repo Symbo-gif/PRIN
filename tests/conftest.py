@@ -151,35 +151,18 @@ _RNG_NODES = frozenset(
     }
 )
 
-# --- Wall-clock-throughput timing flakes (ETCA-001 remediation) --------------
-# Surfaced once CI actually ran the ubuntu legs (T-F4/T-F5): tests that run
-# fixed wall-clock windows and compare frame counts / FPS between runs. On a
-# variable/loaded hosted runner a 3 s window can process 2.6x the frames of
-# another, tripping the "within 50%" assertion. Same class as DV-032; ported
-# verbatim from PRINet 3.0, not weakenable. Fix path = convert to a seeded
-# frame-count check or move under nightly.yml's bench job.
-_TIMING_SKIP = (
-    "DV-032 (ETCA-001 T-F4/T-F5): wall-clock-throughput timing flake — compares "
-    "frame counts across two fixed-duration sessions; host-timing-sensitive on "
-    "shared CI runners. Ported verbatim from PRINet 3.0; tracked in the "
-    "Deferred Validation Register."
-)
-_TIMING_NODES = frozenset(
-    {
-        "tests/test_acceptance_y4q1_5.py::TestSessionRunnerSmoke::test_deterministic_seed",
-    }
-)
-
 # --- Forward-pass wall-clock ratio flake (ETCA-002 T-F5) --------------------
 # `nightly.yml`'s `full-suite` job (the only gate that runs @pytest.mark.slow)
 # has been red since it began running on this: a hard `assert ratio <= 5.0` on
 # the DiscreteDTG-vs-Transformer forward-pass wall-clock ratio, measured 5.66x
-# on the shared ubuntu runner. Same DV-032 host-timing class as the two tests
-# above; ported verbatim from PRINet 3.0, not weakenable. Dated maintainer
-# quarantine (AskUserQuestion, 2026-09-02). Fix path = convert to a seeded
-# frame-count / pytest-benchmark bound under nightly.yml, or widen to a
-# defensible ratio with governance — tracked in the Deferred Validation
-# Register.
+# on the shared ubuntu runner (and 60.2x wall / 19.4x process-CPU after
+# WP037-F1's 15-parameter DLPack synchronization in dev profile; same small-shape
+# bridge-dispatch class as Plan amendment #30 / DV-021). Ported verbatim from
+# PRINet 3.0, not weakenable. Dated maintainer quarantine (2026-09-02,
+# re-ratified 2026-10-19: comparative timing stays under nightly.yml's
+# benchmark harness). Note: DV-032 test (2) `test_deterministic_seed` was
+# converted to a seeded frame-count check (`max_frames=100, warmup_frames=20`)
+# on 2026-10-19 and its `_TIMING_NODES` quarantine removed.
 _RATIO_SKIP = (
     "DV-032 (ETCA-002 T-F5): forward-pass wall-clock ratio flake — asserts "
     "DiscreteDTG is <=5x an equivalent Transformer layer, measures ~5.7x on "
@@ -203,8 +186,6 @@ def _reason_for(nodeid: str) -> str | None:
         return _WP038_SKIP
     if nodeid in _RNG_NODES:
         return _RNG_SKIP
-    if nodeid in _TIMING_NODES:
-        return _TIMING_SKIP
     if nodeid in _RATIO_NODES:
         return _RATIO_SKIP
     return None

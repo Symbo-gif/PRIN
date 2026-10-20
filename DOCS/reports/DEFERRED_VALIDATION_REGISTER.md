@@ -802,15 +802,44 @@ plan §12 item 3, the merge-commit hosted results are recorded here:
        `cargo update -p burn --dry-run` and `cargo update -p candle-core --dry-run`
        lock 0 packages.
     3. *Compensating controls and governance:* Snyk Open Source (`snyk_sca_scan`),
-       `pip-audit`, and `cargo tree` confirm zero reachable vulnerable paths. Per
-       Coding Standards §6.2 and `CLAUDE.md`, no unapproved `--ignore` or
-       `.cargo/audit.toml` suppression is added unilaterally; the three
-       unreachable `zip` advisories are recorded here for maintainer ratification
-       of a dated third-party disposition (or an explicit narrow advisory-ID
-       exception) until `burn` upgrades or removes its optional `burn-candle`
-       dependency. **DV-045's original 9 advisories are FIXED in `Cargo.lock`;
-       DV-045 stays OPEN** pending maintainer ratification of the `zip 1.1.4`
-       disposition.
+       `pip-audit`, and `cargo tree` confirm zero reachable vulnerable paths.
+       **Maintainer ratification (`MichaelMaillet`, 2026-10-19 UTC):** approved
+       the threat assessment above and authorized the narrowly-scoped, dated
+       `.cargo/audit.toml` `ignore = ["RUSTSEC-2026-0367", "RUSTSEC-2026-0368", "RUSTSEC-2026-0369"]`
+       (mechanically pinned to those exact three IDs by
+       `tests/test_wp001_baseline.py::test_cargo_audit_config_only_ignores_ratified_unreachable_zip_advisories`,
+       re-checked every cycle until `burn` upgrades or drops its optional
+       `burn-candle` dependency). `cargo audit` now exits **0** (with only the
+       three pre-accepted warnings DV-008 `paste`, DV-017 `bincode`, and DV-035
+       `chacha20` yanked). **DV-045 is CLOSED locally on `cargo audit` exit 0,
+       closing on `main` when the hotfix PR merges.**
+- **DV-032 tests (2) and (3) disposition landed (maintainer ratification, `MichaelMaillet`, 2026-10-19 UTC):**
+  - **Test (2) `tests/test_acceptance_y4q1_5.py::TestSessionRunnerSmoke::test_deterministic_seed` — FIXED and un-quarantined.**
+    `benchmarks/y4q1_5_benchmarks.py::run_timed_session` gained optional
+    `max_frames: int | None = None` and `warmup_frames: int | None = None`
+    parameters (defaulting to `None` so all timed callers are unchanged), and
+    `test_deterministic_seed` now runs two seeded invocations with
+    `max_frames=100, warmup_frames=20`, asserting `total_frames == 100`,
+    `n_intervals == 2`, the original `<= 0.5 * total_frames` check, and
+    `pytest.approx(..., rel=1e-6, abs=1e-6)` agreement across `pt_mean_ip`,
+    `sa_mean_ip`, `pt_mean_order_param`, and `pt_mean_slip_fraction`. Its
+    `_TIMING_NODES` quarantine in `tests/conftest.py` is removed, so it now runs
+    in the default required gate.
+  - **Test (3) `tests/test_acceptance_y2q1.py::TestDiscreteDeltaThetaGamma::test_speed_vs_transformer` — PERMANENT NIGHTLY-BENCHMARK DISPOSITION RATIFIED.**
+    Measured at `B=16, seq=1, D=128`: since `WP037-F1` (`ae291241`),
+    `DiscreteDeltaThetaGammaLayer.forward` synchronizes all 15 `f64` parameter
+    tensors across DLPack into Burn `Autodiff<NdArray<f64>>` on every call,
+    measuring **24.17 ms/iter** vs **0.43 ms/iter** for
+    `nn.TransformerEncoderLayer` (**60.2× wall-clock / 19.4× process-CPU** in the
+    `dev` profile used by `python.yml` and `nightly.yml` `full-suite` — the same
+    architectural small-shape bridge-dispatch class as Plan amendment #30 /
+    DV-021). Comparative timing for this bridge family is governed by
+    `nightly.yml`'s Criterion/pytest-benchmark suite (`resonance_layer_bridge_baseline`,
+    `phase_tracker_bridge_baseline`, `discrete_step_bench`); adding a new
+    `@pytest.mark.slow` benchmark node to `tests/` would break `nightly.yml`'s
+    fail-closed matched-benchmark set against fixed `REFERENCE_SHA` (`4590d611`).
+    `_RATIO_NODES` in `tests/conftest.py` is therefore retained as the permanent
+    ratified disposition for test (3).
 - **Node-24 and `ubuntu-24.04` workflow migration landed (2026-10-19 deadline):**
   all hosted Ubuntu jobs across `.github/workflows/{rust,python,parity,repro,snyk,nightly,release}.yml`
   are pinned from `ubuntu-latest` to `ubuntu-24.04` (preserving matrix `os: ubuntu-latest`

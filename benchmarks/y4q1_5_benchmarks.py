@@ -158,6 +158,8 @@ def run_timed_session(
     seed: int = 42,
     n_objects: int = 4,
     warmup_seconds: float = 30.0,
+    max_frames: int | None = None,
+    warmup_frames: int | None = None,
 ) -> dict[str, Any]:
     """Run PhaseTracker + SlotAttention continuously for *duration_minutes*.
 
@@ -169,6 +171,10 @@ def run_timed_session(
         seed: Random seed for reproducibility.
         n_objects: Number of tracked objects.
         warmup_seconds: Seconds of warm-up before measurement starts.
+        max_frames: Optional fixed measurement frame cap for deterministic
+            seeded tests (overrides ``duration_minutes`` when set).
+        warmup_frames: Optional fixed warm-up frame cap for deterministic
+            seeded tests (overrides ``warmup_seconds`` when set).
 
     Returns:
         Dict with per-interval and aggregate metrics for both trackers.
@@ -192,7 +198,11 @@ def run_timed_session(
     print(f"    Warm-up ({warmup_seconds:.0f}s) ...", end=" ", flush=True)
     warmup_start = time.perf_counter()
     warmup_frame_count = 0
-    while time.perf_counter() - warmup_start < warmup_seconds:
+    while (
+        warmup_frame_count < warmup_frames
+        if warmup_frames is not None
+        else time.perf_counter() - warmup_start < warmup_seconds
+    ):
         frames = _make_smooth_sequence(
             FRAMES_PER_BATCH,
             n_objects,
@@ -228,7 +238,11 @@ def run_timed_session(
 
     while True:
         elapsed = time.perf_counter() - session_start
-        if elapsed >= duration_seconds:
+        if (
+            total_frames >= max_frames
+            if max_frames is not None
+            else elapsed >= duration_seconds
+        ):
             break
 
         # Generate a batch of frames

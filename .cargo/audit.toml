@@ -1,0 +1,20 @@
+# Governed cargo-audit configuration (Coding Standards §6.2 / DV-045).
+#
+# Approved 2026-10-19 by MichaelMaillet:
+# `zip` 1.1.4 is present in `Cargo.lock` solely through `burn-core` 0.16.1's
+# disabled optional dependency `burn-candle` 0.16.1 -> `candle-core` 0.8.4 ->
+# `zip = "^1.1.1"`. PRIN enables only `burn` features `["std", "ndarray",
+# "autodiff"]`; both `cargo tree -i zip --target all` and
+# `cargo tree -i burn-candle --target all` report "nothing to print", so `zip`
+# is never compiled, linked, or reachable in any workspace target. No semver
+# upgrade reaches `patched = [">= 9.0.0"]` under `burn` 0.16.1.
+# Re-check every cycle and remove as soon as `burn` upgrades or drops its
+# optional `burn-candle` dependency. See `DOCS/reports/DEFERRED_VALIDATION_REGISTER.md`
+# (DV-045, 2026-10-19 UTC).
+
+[advisories]
+ignore = [
+    "RUSTSEC-2026-0367",
+    "RUSTSEC-2026-0368",
+    "RUSTSEC-2026-0369",
+]
