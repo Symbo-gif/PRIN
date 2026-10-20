@@ -850,3 +850,65 @@ plan §12 item 3, the merge-commit hosted results are recorded here:
   `actions/upload-artifact@v6`, `actions/download-artifact@v7`,
   `codecov/codecov-action@v5`, `gitleaks/gitleaks-action@v3`), pinned by
   `tests/test_wp001_baseline.py::test_workflows_use_node24_actions_and_pin_ubuntu_24_04`.
+
+### PR #35 review remediation and record corrections — 2026-10-20 UTC
+
+Appended after multi-agent review of PR #35 (`33520b62`, including Perplexity
+Deep Research, SWE-2 High, Devin Review, Sourcery, Copilot, and CodeRabbit).
+Prior lines above are retained unchanged (0 deleted lines):
+
+- **F1–F3 (`benchmarks/y4q1_5_benchmarks.py::run_timed_session` fixed-frame correctness — FIXED):**
+  - *F1 (zero-duration crash):* when `max_frames` is set, progress reporting now
+    computes `pct = min(total_frames / max_frames * 100.0, 100.0)` instead of
+    dividing by `duration_seconds`, and `duration_minutes` defaults to `0.0`
+    with explicit validation for non-finite/negative durations and non-positive
+    or non-integer `max_frames`/`warmup_frames`.
+  - *F2 (batch-granularity overshoot):* both the warm-up and measurement loops
+    now bound each batch to `min(FRAMES_PER_BATCH, cap - count)` and advance
+    counters by the actual batch size, stopping at the exact requested
+    `warmup_frames` and `max_frames` for arbitrary positive integers (including
+    1-frame remainders).
+  - *F3 (partial tail-interval omission):* when `max_frames` is set and
+    `interval_frame_count > 0` at loop exit, the remaining tail frames are
+    flushed into `intervals` (marked `"partial_interval": True`), `pt_mean_r`,
+    `pt_slip_fraction`, and `pt_plv` are computed for `len(pt_phases_interval) >= 1`,
+    and aggregate interval means (`mean_fps`, `pt_mean_ip`, `sa_mean_ip`,
+    `pt_mean_order_param`, `pt_mean_slip_fraction`) are weighted by
+    `interval_frames` (with `pt_ip`/`sa_ip` weighted over intervals that
+    measured at least one frame-to-frame transition, so a 1-frame remainder
+    batch with 0 transitions never injects a synthetic `0.0`).
+- **F4 (`codecov/codecov-action@v5` transitive Node 20 action — FIXED):**
+  hosted job `118443116566` (`test (ubuntu-latest, 3.12)` in `python.yml` run
+  `39366076927`) emitted a deprecation warning for
+  `actions/github-script@60a0d830…` (`v7`, `runs.using: node20`) nested inside
+  `codecov/codecov-action@v5`. Upgraded to `codecov/codecov-action@v7`
+  (`v7.1.1`, whose nested `actions/github-script@ed597411…` is `v8.0.0`,
+  `runs.using: node24`), superseding the `codecov/codecov-action@v5` note above.
+- **F5 (fail-open workflow migration test — FIXED):**
+  `test_workflows_use_node24_actions_and_pin_ubuntu_24_04` now uses the
+  positive structural validator `_validate_workflow_node24_and_ubuntu_pins`
+  (requiring every `uses:` reference to belong to `_APPROVED_WORKFLOW_ACTIONS`,
+  every `actions/setup-node` step to set `node-version: "24"`, and every
+  Ubuntu `runs-on:` / `runner:` assignment — quoted or unquoted — to equal
+  `ubuntu-24.04`), backed by six parametrized negative mutation tests in
+  `test_workflow_migration_validator_rejects_regressions`.
+- **Distinct-seed control, reachability guard, and DV-032 test (3) wording corrections:**
+  - `test_deterministic_seed` drops the redundant `<= 0.5 * total_frames` check
+    and adds a third fixed-frame run at `seed=99`, asserting that at least one
+    deterministic aggregate metric differs from `seed=42`.
+  - `test_cargo_audit_config_only_ignores_ratified_unreachable_zip_advisories`
+    now also parses `Cargo.toml`, `crates/*/Cargo.toml`, and `Cargo.lock` to
+    verify fail-closed that `burn`'s `candle` feature is disabled and that no
+    workspace crate reaches `burn-candle`, `candle-core`, or `zip`.
+  - *DV-032 test (3) ratio arithmetic clarification:* in the bullet above,
+    **60.2× wall-clock** and **19.4× process-CPU** are the **7-sample medians**
+    from a 7-iteration paired probe (`wall_ratios = [59.245, 62.776, 55.927,
+    51.684, 66.206, 60.183, 63.529]`, median `60.183`; `cpu_ratios = [22.75,
+    19.444, 11.5, 21.0, 12.0, 10.562, 22.125]`, median `19.444`), whereas
+    **24.171 ms/iter** (`1208.56 ms / 50`) vs **0.433 ms/iter** (`21.66 ms / 50`)
+    was a separate single 50-iteration probe whose quotient is **55.80×**
+    (`24.17 / 0.43 = 56.21×` rounded). Also clarified that
+    `test_speed_vs_transformer` remains skipped under `_RATIO_NODES` in
+    `tests/conftest.py`; `nightly.yml`'s Criterion/pytest-benchmark suite
+    provides related bridge-performance regression coverage rather than
+    executing `test_speed_vs_transformer`'s `<= 5.0×` Transformer assertion.

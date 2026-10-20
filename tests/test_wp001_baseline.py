@@ -1139,6 +1139,7 @@ def test_python_ci_builds_inside_explicit_virtual_environments() -> None:
 
 
 def test_secret_scan_is_blocking_and_covers_full_history() -> None:
+    """Verify snyk.yml secret-scan job runs blocking full-history gitleaks-action@v3."""
     workflow = (ROOT / ".github/workflows/snyk.yml").read_text(encoding="utf-8")
     secret_job = workflow.split("  secret-scan:\n", maxsplit=1)[1]
 
@@ -1163,35 +1164,182 @@ def test_secret_scan_is_blocking_and_covers_full_history() -> None:
     assert "# Approved 2026-10-11 by MichaelMaillet" in text
 
 
-def test_workflows_use_node24_actions_and_pin_ubuntu_24_04() -> None:
-    deprecated_node20 = (
-        "actions/checkout@v4",
-        "actions/setup-python@v5",
-        "actions/setup-node@v4",
-        "actions/upload-artifact@v4",
-        "actions/download-artifact@v4",
-        "codecov/codecov-action@v4",
-        "gitleaks/gitleaks-action@v2",
-    )
-    workflows = sorted((ROOT / ".github/workflows").glob("*.yml"))
-    assert workflows
+_APPROVED_WORKFLOW_ACTIONS = frozenset(
+    {
+        "actions/checkout@v6",
+        "actions/setup-python@v6",
+        "actions/setup-node@v6",
+        "actions/upload-artifact@v6",
+        "actions/download-artifact@v7",
+        "codecov/codecov-action@v7",
+        "gitleaks/gitleaks-action@v3",
+        "Swatinem/rust-cache@v2",
+        "PyO3/maturin-action@v1",
+        "dtolnay/rust-toolchain@stable",
+        "dtolnay/rust-toolchain@1.98.1",
+        "pypa/gh-action-pypi-publish@v1.14.2",
+    }
+)
+
+
+def _strip_yaml_scalar(raw: str) -> str:
+    """Strip inline YAML comments and surrounding quotes from a scalar token."""
+    value = raw.split("#", 1)[0].strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        return value[1:-1].strip()
+    return value
+
+
+def _validate_workflow_node24_and_ubuntu_pins(workflows_dir: Path) -> list[str]:
+    """Validate that workflows use approved Node-24 actions and pin ubuntu-24.04."""
+    workflows = sorted([*workflows_dir.glob("*.yml"), *workflows_dir.glob("*.yaml")])
+    if not workflows:
+        return ["no workflow files found"]
+    errors: list[str] = []
     for path in workflows:
-        text = path.read_text(encoding="utf-8")
-        for action in deprecated_node20:
-            assert action not in text, f"{path.name} still uses Node-20 {action}"
-        for line in text.splitlines():
+        lines = path.read_text(encoding="utf-8").splitlines()
+        in_setup_node = False
+        setup_node_indent = 0
+        setup_node_version: str | None = None
+        last_matrix_os: str | None = None
+        for line in lines:
             stripped = line.strip()
-            if stripped.startswith("#"):
+            if not stripped or stripped.startswith("#"):
                 continue
-            assert stripped != "runs-on: ubuntu-latest", (
-                f"{path.name} has unpinned 'runs-on: ubuntu-latest'"
+            indent = len(line) - len(line.lstrip(" "))
+            if in_setup_node and (
+                (indent <= setup_node_indent and stripped.startswith("- "))
+                or indent < setup_node_indent
+            ):
+                if setup_node_version != "24":
+                    errors.append(
+                        f"{path.name}: actions/setup-node must set "
+                        f"node-version to '24', got {setup_node_version!r}"
+                    )
+                in_setup_node = False
+                setup_node_version = None
+
+            uses_match = re.match(r"^(?:-\s+)?uses:\s*(.+)$", stripped)
+            if uses_match:
+                action = _strip_yaml_scalar(uses_match.group(1))
+                if action not in _APPROVED_WORKFLOW_ACTIONS:
+                    errors.append(
+                        f"{path.name}: unapproved or non-Node-24 action {action!r}"
+                    )
+                if action.startswith("actions/setup-node@"):
+                    in_setup_node = True
+                    setup_node_indent = indent
+                    setup_node_version = None
+                continue
+
+            if in_setup_node and stripped.startswith("node-version:"):
+                setup_node_version = _strip_yaml_scalar(stripped.split(":", 1)[1])
+                continue
+
+            os_match = re.match(r"^-\s+os:\s*(.+)$", stripped)
+            if os_match:
+                last_matrix_os = _strip_yaml_scalar(os_match.group(1))
+                continue
+
+            if stripped.startswith(("runs-on:", "runner:")):
+                key, raw_val = stripped.split(":", 1)
+                runner = _strip_yaml_scalar(raw_val)
+                if "matrix.os" in runner:
+                    errors.append(
+                        f"{path.name}: {key} must not reference matrix.os "
+                        f"directly ({runner!r})"
+                    )
+                elif runner.startswith("ubuntu-"):
+                    if runner != "ubuntu-24.04":
+                        errors.append(
+                            f"{path.name}: {key} uses {runner!r}; "
+                            "expected 'ubuntu-24.04'"
+                        )
+                elif (
+                    key == "runner"
+                    and last_matrix_os == "ubuntu-latest"
+                    and runner != "ubuntu-24.04"
+                ):
+                    errors.append(
+                        f"{path.name}: ubuntu-latest matrix leg maps runner "
+                        f"to {runner!r}; expected 'ubuntu-24.04'"
+                    )
+
+        if in_setup_node and setup_node_version != "24":
+            errors.append(
+                f"{path.name}: actions/setup-node must set "
+                f"node-version to '24', got {setup_node_version!r}"
             )
-            assert stripped != "runner: ubuntu-latest", (
-                f"{path.name} has unpinned 'runner: ubuntu-latest'"
-            )
+    return errors
+
+
+def test_workflows_use_node24_actions_and_pin_ubuntu_24_04() -> None:
+    """Verify workflows use approved Node-24 actions, Node 24, and ubuntu-24.04."""
+    assert _validate_workflow_node24_and_ubuntu_pins(ROOT / ".github/workflows") == []
+
+
+@pytest.mark.parametrize(
+    ("target_file", "old", "new", "expected_fragment"),
+    [
+        (
+            "rust.yml",
+            "uses: actions/checkout@v6",
+            "uses: actions/checkout@v3",
+            "unapproved or non-Node-24 action 'actions/checkout@v3'",
+        ),
+        (
+            "release.yml",
+            "uses: actions/download-artifact@v7",
+            "uses: actions/download-artifact@v5",
+            "unapproved or non-Node-24 action 'actions/download-artifact@v5'",
+        ),
+        (
+            "python.yml",
+            "uses: codecov/codecov-action@v7",
+            "uses: codecov/codecov-action@v5",
+            "unapproved or non-Node-24 action 'codecov/codecov-action@v5'",
+        ),
+        (
+            "snyk.yml",
+            'node-version: "24"',
+            'node-version: "22"',
+            "actions/setup-node must set node-version to '24'",
+        ),
+        (
+            "repro.yml",
+            "runs-on: ubuntu-24.04",
+            "runs-on: ubuntu-22.04",
+            "uses 'ubuntu-22.04'; expected 'ubuntu-24.04'",
+        ),
+        (
+            "repro.yml",
+            "runs-on: ubuntu-24.04",
+            'runs-on: "ubuntu-latest"',
+            "uses 'ubuntu-latest'; expected 'ubuntu-24.04'",
+        ),
+    ],
+)
+def test_workflow_migration_validator_rejects_regressions(
+    tmp_path: Path,
+    target_file: str,
+    old: str,
+    new: str,
+    expected_fragment: str,
+) -> None:
+    """Verify negative mutations of actions, Node version, and Ubuntu pins fail."""
+    workflows = tmp_path / "workflows"
+    shutil.copytree(ROOT / ".github/workflows", workflows)
+    target = workflows / target_file
+    original = target.read_text(encoding="utf-8")
+    assert old in original
+    target.write_text(original.replace(old, new, 1), encoding="utf-8")
+
+    errors = _validate_workflow_node24_and_ubuntu_pins(workflows)
+    assert any(expected_fragment in err for err in errors), errors
 
 
 def test_cargo_audit_config_only_ignores_ratified_unreachable_zip_advisories() -> None:
+    """Verify .cargo/audit.toml pins only the 3 zip IDs and zip stays unreachable."""
     import tomllib
 
     audit_toml = ROOT / ".cargo/audit.toml"
@@ -1206,6 +1354,40 @@ def test_cargo_audit_config_only_ignores_ratified_unreachable_zip_advisories() -
         "RUSTSEC-2026-0368",
         "RUSTSEC-2026-0369",
     ]
+
+    # Fail-closed reachability guard: if any workspace manifest enables
+    # burn's `candle` feature or depends on `burn-candle`/`candle-core`/`zip`,
+    # or if Cargo.lock's reverse-dependency chain to `zip` ever includes a
+    # workspace crate, the exception is invalidated immediately.
+    workspace_toml = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
+    burn_dep = workspace_toml["workspace"]["dependencies"]["burn"]
+    assert burn_dep.get("default-features") is False
+    assert burn_dep.get("features") == ["std", "ndarray", "autodiff"]
+
+    for crate_toml_path in sorted((ROOT / "crates").glob("*/Cargo.toml")):
+        crate_toml_text = crate_toml_path.read_text(encoding="utf-8")
+        for forbidden in ("burn-candle", "candle-core", "candle", "zip"):
+            assert forbidden not in crate_toml_text, (
+                f"{crate_toml_path} references {forbidden!r}"
+            )
+
+    lock_data = tomllib.loads((ROOT / "Cargo.lock").read_text(encoding="utf-8"))
+    packages = lock_data["package"]
+    dependents_of: dict[str, set[str]] = {}
+    for pkg in packages:
+        pkg_name = pkg["name"]
+        for raw_dep in pkg.get("dependencies", []):
+            dep_name = raw_dep.split()[0]
+            dependents_of.setdefault(dep_name, set()).add(pkg_name)
+
+    assert dependents_of.get("zip") == {"candle-core"}
+    assert dependents_of.get("candle-core") == {"burn-candle"}
+    assert dependents_of.get("burn-candle", set()) <= {"burn", "burn-core"}
+    assert not any(
+        name.startswith("prin-")
+        for target in ("zip", "candle-core", "burn-candle")
+        for name in dependents_of.get(target, set())
+    )
 
 
 def test_session_plan_validator_reports_metadata_and_link_drift(

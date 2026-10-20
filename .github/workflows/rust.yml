@@ -81,8 +81,8 @@ jobs:
     # Explicit name so the check-run context stays `test (<os>, <os>)`
     # regardless of the `runner`/`self_hosted`/`cargo_jobs` matrix keys — that
     # context string (`test (ubuntu-latest, ubuntu-latest)` etc.) is a required
-    # `main` branch-ruleset check (ETCA-002 T-F7), preserved when `runner` is
-    # pinned to `ubuntu-24.04` across the 2026-10-19 Ubuntu 26 migration;
+    # `main` branch-ruleset check (ETCA-002 T-F7), preserved while `runner` is
+    # pinned to `ubuntu-24.04` (avoiding the moving `ubuntu-latest` alias);
     # letting the auto-generated name pick up extra keys too would rename the
     # context and permanently block every future PR (the same class of deadlock
     # T-F7 hit with `parity`/`reproduce`'s path filters).
