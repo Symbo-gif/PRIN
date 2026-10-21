@@ -133,14 +133,15 @@ Retrospective closure (`check_run_complete`) validates the *recorded*
 provenance claims against the registered constants instead — it does not
 re-read the live binary — so an E4/E5 analysis host is not required to hold
 the registered Windows artefact. The `_prin_core.pyd` pin is host-registered:
-it binds the rebuilt Windows x86_64 artefact on the governed E3 host, and on
-any other platform the imported extension is a platform build
-(`*.so`/`*.dylib`) whose governed resolution is covered by the admission
-environment check, not by requiring a `.pyd` path. E2 records the reviewed
-source commit and any pre-execution amendments. E3 records its actual clean
-execution SHA `R` and the last pre-registration commit `F` at first `RUN-`
-creation under `benchmarks/results/EXP-002-r1/`. Neither future SHA is
-fabricated here.
+admission, the `prin` reproduction arm, and pre-publication finalization
+unconditionally require the exact `python/prin/_prin_core.pyd` origin, byte
+size, and SHA-256 on the governed Windows x86_64 E3 host, so registered E3
+execution can run only on that host, while retrospective closure
+(`check_run_complete`) and the default unit-test suite remain portable across
+non-Windows hosts. E2 records the reviewed source commit and any pre-execution
+amendments. E3 records its actual clean execution SHA `R` and the last
+pre-registration commit `F` at first `RUN-` creation under
+`benchmarks/results/EXP-002-r1/`. Neither future SHA is fabricated here.
 
 ## 2. Hypotheses (falsifiable, quantitative)
 
@@ -410,7 +411,8 @@ The committed driver `benchmarks/campaign/exp002_r1_driver.py` accepts
 committed approval/source identity, verifies **all** governed-source pins at
 admission — `python/prin/_prin_core.pyd` byte size and SHA-256
 (`PRIN_CORE_PYD_BYTES`, `PRIN_CORE_PYD_SHA256`), both PRIN publication
-generators, and all three frozen `REFERENCE` sources — verifies a
+generators, `paper/artefact_manifest.json` (`INPUT_MANIFEST_SHA`), and all
+three frozen `REFERENCE` sources — verifies a
 clean checkout (exempting only untracked files under
 `benchmarks/results/EXP-002-r1/` and the E3 operator `log.md`; any untracked or
 modified file under predecessor `benchmarks/results/EXP-002/` is **rejected**),

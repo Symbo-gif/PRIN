@@ -240,6 +240,7 @@ class DriverError(RuntimeError):
 
 
 def _git_bytes(*args: str) -> bytes:
+    """Execute a git command in ``ROOT`` and return raw stdout bytes."""
     executable = shutil.which("git")
     if executable is None:
         raise DriverError("git is unavailable; source identity cannot be established")
@@ -254,22 +255,26 @@ def _git_bytes(*args: str) -> bytes:
 
 
 def _git(*args: str) -> str:
+    """Execute a git command in ``ROOT`` and return stripped UTF-8 stdout."""
     return _git_bytes(*args).decode("utf-8").strip()
 
 
 def _mapping(value: object, context: str) -> dict[str, Any]:
+    """Validate that ``value`` is a string-keyed JSON object mapping."""
     if not isinstance(value, dict) or any(not isinstance(k, str) for k in value):
         raise DriverError(f"{context}: expected a JSON object")
     return cast("dict[str, Any]", value)
 
 
 def _list(value: object, context: str) -> list[Any]:
+    """Validate that ``value`` is a JSON array."""
     if not isinstance(value, list):
         raise DriverError(f"{context}: expected an array")
     return value
 
 
 def _number(value: object, context: str) -> float:
+    """Validate that ``value`` is a finite non-Boolean numeric value."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise DriverError(f"{context}: expected a finite number, not a Boolean")
     number = float(value)
@@ -279,10 +284,12 @@ def _number(value: object, context: str) -> float:
 
 
 def _digest(payload: bytes) -> str:
+    """Return the lowercase hexadecimal SHA-256 digest of ``payload``."""
     return hashlib.sha256(payload).hexdigest()
 
 
 def _check_origin(module: ModuleType, expected: Path) -> None:
+    """Verify that ``module.__file__`` resolves to the governed ``expected`` path."""
     if module.__file__ is None or Path(module.__file__).resolve() != expected.resolve():
         raise DriverError(f"{module.__name__}: import is not the governed source")
 
@@ -305,6 +312,7 @@ def _resolved_confinement_path(path: Path, role: str) -> Path:
 
 
 def _no_symlink_ancestors(path: Path) -> None:
+    """Reject ``path`` if it or any of its lexical ancestors is a symlink."""
     for ancestor in (path.absolute(), *path.absolute().parents):
         if ancestor.is_symlink():
             raise DriverError(f"output path has a symlink ancestor: {ancestor}")
@@ -328,12 +336,15 @@ def _reject_predecessor_path(path: Path, role: str) -> None:
 def _verify_prin_core_extension() -> dict[str, Any]:
     """Verify that the imported ``prin._prin_core`` binary matches the DV-047 pin.
 
-    The pin binds the platform-specific compiled artefact registered on the
-    governed E3 host (Windows x86_64 ``.pyd``) to the imported module's exact
-    origin, byte size, and SHA-256. On other platforms the imported extension
-    is a platform build (``*.so``/``*.dylib``) in the active environment, so
-    this check is host-registered by design: governed module resolution is
-    additionally covered by :func:`_environment_shadowing` at admission.
+    The pin binds the compiled artefact registered on the governed E3 host
+    (Windows x86_64 ``python/prin/_prin_core.pyd``) to the imported module's
+    exact origin, byte size, and SHA-256. Because admission, the ``prin``
+    reproduction arm, and pre-publication finalization unconditionally enforce
+    this pin, registered E3 execution can run only on that governed Windows
+    host. Retrospective closure (:func:`check_run_complete`) and the default
+    unit-test suite remain portable across non-Windows hosts; governed module
+    resolution is additionally covered by :func:`_environment_shadowing` at
+    admission.
     """
     _check_origin(_prin_core, PRIN_CORE_PYD)
     payload = read_no_follow(PRIN_CORE_PYD, "compiled _prin_core.pyd extension")
@@ -349,6 +360,7 @@ def _verify_prin_core_extension() -> dict[str, Any]:
 
 
 def _legacy_names() -> list[str]:
+    """Extract and validate the frozen 172-symbol ``__all__`` from ``REFERENCE``."""
     path = REFERENCE / "src/prinet/__init__.py"
     payload = read_no_follow(path, "reference API")
     if _digest(payload) != REFERENCE_PINS["src/prinet/__init__.py"]:
@@ -469,6 +481,7 @@ def collect_conclusions(documents: Mapping[str, dict[str, Any]]) -> dict[str, An
 
 
 def _collect_conclusions(documents: Mapping[str, dict[str, Any]]) -> dict[str, Any]:
+    """Evaluate all 62 registered H2 claim-comparator predicates over ``documents``."""
     cases: list[dict[str, Any]] = []
 
     def add(
@@ -483,6 +496,7 @@ def _collect_conclusions(documents: Mapping[str, dict[str, Any]]) -> dict[str, A
         expected: bool = True,
         right_path: str | None = None,
     ) -> None:
+        """Append one evaluated H2 comparator case record."""
         a = _number(left, f"{filename}:{left_path}")
         b = _number(right, f"{filename}:{right_path or 'registered threshold'}")
         cases.append(
@@ -502,6 +516,7 @@ def _collect_conclusions(documents: Mapping[str, dict[str, Any]]) -> dict[str, A
         )
 
     def document(index: int) -> dict[str, Any]:
+        """Return the validated JSON mapping for ``CONCLUSION_FILES[index]``."""
         name = CONCLUSION_FILES[index]
         if name not in documents:
             raise DriverError(f"required historical input missing: {name}")
@@ -657,14 +672,13 @@ def _collect_conclusions(documents: Mapping[str, dict[str, Any]]) -> dict[str, A
 
 
 def _snapshot(destination: Path) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+    """Verify and copy the 172 manifested paper input artefacts to ``destination``."""
     _reject_predecessor_path(destination, "input snapshot")
     resolved = _resolved_confinement_path(destination, "input snapshot")
     output_root = OUTPUT_ROOT.resolve()
     if resolved == output_root or not resolved.is_relative_to(output_root):
         raise DriverError("input snapshot is outside the registered output root")
-    manifest_bytes = read_no_follow(INPUT_MANIFEST, "paper input manifest")
-    if _digest(manifest_bytes) != INPUT_MANIFEST_SHA:
-        raise DriverError("paper input manifest changed from the E1 baseline")
+    _verify_input_manifest()
     records = verify_manifest(REFERENCE / "benchmarks/results", INPUT_MANIFEST)
     if len(records) != 172:
         raise DriverError("paper input manifest must contain exactly 172 records")
@@ -1046,6 +1060,7 @@ def sensitivity_bytes(payload: bytes, suffix: str) -> bytes:
 
 
 def _font_cache_state() -> dict[str, Any]:
+    """Capture the filename and SHA-256 digest of the active Matplotlib font cache."""
     cache = (
         Path(matplotlib.get_cachedir())
         / f"fontlist-v{font_manager.FontManager.__version__}.json"
@@ -1056,6 +1071,7 @@ def _font_cache_state() -> dict[str, Any]:
 
 
 def _render_environment() -> dict[str, Any]:
+    """Capture Matplotlib, NumPy, Pillow, FreeType, and bundled TTF font provenance."""
     fonts = Path(matplotlib.get_data_path()) / "fonts/ttf"
     return {
         "font_cache": _font_cache_state(),
@@ -1092,19 +1108,29 @@ def _verify_reference_sources() -> None:
             raise DriverError(f"reference source digest changed: {relative}")
 
 
+def _verify_input_manifest() -> bytes:
+    """Verify the frozen paper input manifest pin against ``INPUT_MANIFEST_SHA``."""
+    manifest_bytes = read_no_follow(INPUT_MANIFEST, "paper input manifest")
+    if _digest(manifest_bytes) != INPUT_MANIFEST_SHA:
+        raise DriverError("paper input manifest changed from the E1 baseline")
+    return manifest_bytes
+
+
 def _verify_all_pins() -> dict[str, Any]:
     """Re-verify every live governed-source pin registered for E3.
 
     The pre-registration promises complete pin enforcement at admission and
     finalization — not only inside the branch that happens to use each file —
-    so a governed source mutated mid-collection is caught before the run is
-    published. Retrospective closure (:func:`check_run_complete`) validates
-    the *recorded* provenance claims instead, so analysis hosts are not
-    required to hold the registered Windows binary.
+    so a governed source or the paper input manifest mutated mid-collection is
+    caught before the run is published. Retrospective closure
+    (:func:`check_run_complete`) validates the *recorded* provenance claims
+    instead, so analysis hosts are not required to hold the registered Windows
+    binary.
     """
     extension = _verify_prin_core_extension()
     _verify_prin_generators()
     _verify_reference_sources()
+    _verify_input_manifest()
     return extension
 
 
@@ -1334,6 +1360,7 @@ def _approval_date(protocol_bytes: bytes) -> str:
 
 
 def _admission(source_sha: str) -> dict[str, Any]:
+    """Validate pre-registration approval, live pins, clean git tree, and shadowing."""
     protocol_bytes = read_no_follow(PROTOCOL, "pre-registration")
     approval_date = _approval_date(protocol_bytes)
     extension = _verify_all_pins()
@@ -1389,6 +1416,7 @@ def _admission(source_sha: str) -> dict[str, Any]:
 
 
 def _utc_stamp(stamp: str) -> None:
+    """Validate that ``stamp`` parses as a compact ISO-8601 UTC timestamp."""
     try:
         datetime.strptime(stamp, "%Y%m%dT%H%M%SZ")
     except ValueError as exc:
@@ -1396,6 +1424,7 @@ def _utc_stamp(stamp: str) -> None:
 
 
 def _reserve(mode: str, run_dir: Path, source_sha: str) -> Path:
+    """Validate and atomically create the direct-child ``RUN-`` directory."""
     _reject_predecessor_path(run_dir, "run directory")
     # Direct-child equality on the unresolved absolute path is correct here:
     # `..` was already rejected above, and resolving now would silently
@@ -1436,6 +1465,7 @@ def _storage_check(run: Path, prospective_bytes: int = 0) -> None:
     """
 
     def size(root: Path) -> int:
+        """Sum byte sizes of all non-``__pycache__`` regular files under ``root``."""
         return sum(
             stat_size_and_hash_no_follow(path, "campaign storage")[0]
             for path in root.rglob("*")
@@ -1505,6 +1535,7 @@ def _check_provenance(identity: Mapping[str, Any], source_sha: str) -> None:
 
 
 def _string_list(value: object, context: str) -> list[str]:
+    """Validate that ``value`` is a JSON array of strings."""
     items = _list(value, context)
     if not all(isinstance(item, str) for item in items):
         raise DriverError(f"{context}: expected strings")
@@ -1601,6 +1632,7 @@ def check_run_complete(run_dir: Path) -> None:
     inventory = {record.path: record for record in records}
 
     def read(name: str) -> dict[str, Any]:
+        """Read and digest-verify manifested JSON file ``name`` from ``run_dir``."""
         record: ManifestRecord | None = inventory.get(name)
         if record is None:
             raise DriverError(f"required manifested file missing: {name}")

@@ -1,53 +1,53 @@
 # EXP-002-r1 E2 local verification and security gate record (2026-10-21 UTC)
 # Branch: campaign/exp002-r1-e2
 # Base (E1 PR #36 head): bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
-# Origin/main baseline: 5677858c15d784d881b23d43dff5029d199b0a18
+# Post-merge origin/main baseline (M_prime): 313a76f649d8e00f82959521eb7d5eaee2e409bd
 
 ## 1a. Ruff lint
-$ .venv/Scripts/ruff.exe check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/
-# start: 2026-10-21T01:16:12Z
+$ C:\dev\PRIN\.venv\Scripts\ruff.exe check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/
+# start: 2026-10-21T05:53:07Z
 All checks passed!
-# end: 2026-10-21T01:16:12Z
+# end: 2026-10-21T05:53:07Z
 EXIT_CODE=0
 
 ## 1b. Ruff format check (code)
-$ .venv/Scripts/ruff.exe format --check python/ tests/ benchmarks/ tools/ parity/
-# start: 2026-10-21T01:16:12Z
+$ C:\dev\PRIN\.venv\Scripts\ruff.exe format --check python/ tests/ benchmarks/ tools/ parity/
+# start: 2026-10-21T05:53:07Z
 335 files already formatted
-# end: 2026-10-21T01:16:12Z
+# end: 2026-10-21T05:53:07Z
 EXIT_CODE=0
 
 ## 1c. Ruff format check (DOCS/experiments)
-$ .venv/Scripts/ruff.exe format --check DOCS/experiments/ --config "include = ['*.py', '*.pyi', '*.ipynb']"
-# start: 2026-10-21T01:16:12Z
+$ C:\dev\PRIN\.venv\Scripts\ruff.exe format --check DOCS/experiments/ --config include = ['*.py', '*.pyi', '*.ipynb']
+# start: 2026-10-21T05:53:07Z
 3 files already formatted
-# end: 2026-10-21T01:16:13Z
+# end: 2026-10-21T05:53:07Z
 EXIT_CODE=0
 
 ## 2a. Mypy strict (python/prin)
-$ .venv/Scripts/mypy.exe python/prin --strict
-# start: 2026-10-21T01:16:13Z
+$ C:\dev\PRIN\.venv\Scripts\mypy.exe python/prin --strict
+# start: 2026-10-21T05:53:07Z
 Success: no issues found in 62 source files
-# end: 2026-10-21T01:16:16Z
+# end: 2026-10-21T05:53:09Z
 EXIT_CODE=0
 
 ## 2b. Mypy strict (DOCS/experiments)
-$ .venv/Scripts/mypy.exe DOCS/experiments/ --strict
-# start: 2026-10-21T01:16:16Z
+$ C:\dev\PRIN\.venv\Scripts\mypy.exe DOCS/experiments/ --strict
+# start: 2026-10-21T05:53:09Z
 Success: no issues found in 3 source files
-# end: 2026-10-21T01:16:18Z
+# end: 2026-10-21T05:53:11Z
 EXIT_CODE=0
 
 ## 2c. Mypy strict (exp002_r1_driver + tests)
-$ .venv/Scripts/mypy.exe benchmarks/campaign/exp002_r1_driver.py tests/test_exp002_r1_driver.py --strict
-# start: 2026-10-21T01:16:18Z
+$ C:\dev\PRIN\.venv\Scripts\mypy.exe benchmarks/campaign/exp002_r1_driver.py tests/test_exp002_r1_driver.py --strict
+# start: 2026-10-21T05:53:11Z
 Success: no issues found in 2 source files
-# end: 2026-10-21T01:16:20Z
+# end: 2026-10-21T05:53:13Z
 EXIT_CODE=0
 
-## 3a. Interrogate docstring coverage
-$ .venv/Scripts/python.exe -m interrogate -c pyproject.toml python/prin
-# start: 2026-10-21T01:16:20Z
+## 3a. Interrogate docstring coverage (python/prin)
+$ C:\dev\PRIN\.venv\Scripts\python.exe -m interrogate -c pyproject.toml python/prin
+# start: 2026-10-21T05:53:13Z
 ==================== Coverage for C:\dev\PRIN\python\prin\ ====================
 ----------------------------------- Summary -----------------------------------
 | Name                                |   Total |   Miss |   Cover |   Cover% |
@@ -116,12 +116,26 @@ $ .venv/Scripts/python.exe -m interrogate -c pyproject.toml python/prin
 |-------------------------------------|---------|--------|---------|----------|
 | TOTAL                               |    1011 |     24 |     987 |    97.6% |
 --------------- RESULT: PASSED (minimum: 95.0%, actual: 97.6%) ----------------
-# end: 2026-10-21T01:16:21Z
+# end: 2026-10-21T05:53:13Z
 EXIT_CODE=0
 
-## 3b. Bandit SAST (python/prin + DOCS/experiments)
-$ .venv/Scripts/python.exe -m bandit -r python/prin DOCS/experiments -c pyproject.toml -q
-# start: 2026-10-21T01:16:21Z
+## 3b. Interrogate docstring coverage (exp002_r1_driver.py)
+$ C:\dev\PRIN\.venv\Scripts\python.exe -m interrogate -c pyproject.toml benchmarks/campaign/exp002_r1_driver.py
+# start: 2026-10-21T05:53:13Z
+================ Coverage for C:\dev\PRIN\benchmarks\campaign\ ================
+----------------------------------- Summary -----------------------------------
+| Name                        |     Total |     Miss |     Cover |     Cover% |
+|-----------------------------|-----------|----------|-----------|------------|
+| exp002_r1_driver.py         |        49 |        0 |        49 |       100% |
+|-----------------------------|-----------|----------|-----------|------------|
+| TOTAL                       |        49 |        0 |        49 |     100.0% |
+--------------- RESULT: PASSED (minimum: 95.0%, actual: 100.0%) ---------------
+# end: 2026-10-21T05:53:14Z
+EXIT_CODE=0
+
+## 3c. Bandit SAST (python/prin + DOCS/experiments)
+$ C:\dev\PRIN\.venv\Scripts\python.exe -m bandit -r python/prin DOCS/experiments -c pyproject.toml -q
+# start: 2026-10-21T05:53:14Z
 [manager]	WARNING	Test in comment: subprocess is not a test name or id, ignoring
 [manager]	WARNING	Test in comment: use is not a test name or id, ignoring
 [manager]	WARNING	Test in comment: is is not a test name or id, ignoring
@@ -177,48 +191,48 @@ $ .venv/Scripts/python.exe -m bandit -r python/prin DOCS/experiments -c pyprojec
 [manager]	WARNING	Test in comment: without is not a test name or id, ignoring
 [manager]	WARNING	Test in comment: subconscious is not a test name or id, ignoring
 [manager]	WARNING	Test in comment: control is not a test name or id, ignoring
-# end: 2026-10-21T01:16:24Z
+# end: 2026-10-21T05:53:15Z
 EXIT_CODE=0
 
-## 3c. Bandit SAST (exp002_r1_driver + tests)
-$ .venv/Scripts/python.exe -m bandit -r benchmarks/campaign/exp002_r1_driver.py tests/test_exp002_r1_driver.py -c pyproject.toml -q
-# start: 2026-10-21T01:16:24Z
-# end: 2026-10-21T01:16:25Z
+## 3d. Bandit SAST (exp002_r1_driver + tests)
+$ C:\dev\PRIN\.venv\Scripts\python.exe -m bandit -r benchmarks/campaign/exp002_r1_driver.py tests/test_exp002_r1_driver.py -c pyproject.toml -q
+# start: 2026-10-21T05:53:15Z
+# end: 2026-10-21T05:53:16Z
 EXIT_CODE=0
 
 ## 4a. Governance: check_dv_register_gates.py
-$ .venv/Scripts/python.exe tools/check_dv_register_gates.py
-# start: 2026-10-21T01:16:25Z
+$ C:\dev\PRIN\.venv\Scripts\python.exe tools/check_dv_register_gates.py
+# start: 2026-10-21T05:53:16Z
 DV-register gate check passed.
   Checked 47 DV register rows against 198 session-register entries.
-# end: 2026-10-21T01:16:25Z
+# end: 2026-10-21T05:53:16Z
 EXIT_CODE=0
 
 ## 4b. Governance: check_global_session_registration.py
-$ .venv/Scripts/python.exe tools/check_global_session_registration.py
-# start: 2026-10-21T01:16:25Z
+$ C:\dev\PRIN\.venv\Scripts\python.exe tools/check_global_session_registration.py
+# start: 2026-10-21T05:53:16Z
 Global-session registration check passed.
   Checked 18 Executive Audit reports.
-# end: 2026-10-21T01:16:25Z
+# end: 2026-10-21T05:53:16Z
 EXIT_CODE=0
 
 ## 4c. Governance: check_skipif_probes.py
-$ .venv/Scripts/python.exe tools/check_skipif_probes.py
-# start: 2026-10-21T01:16:25Z
+$ C:\dev\PRIN\.venv\Scripts\python.exe tools/check_skipif_probes.py
+# start: 2026-10-21T05:53:16Z
 check_skipif_probes: no registration-probe skipif guards
-# end: 2026-10-21T01:16:26Z
+# end: 2026-10-21T05:53:16Z
 EXIT_CODE=0
 
 ## 4d. Governance: wp001_baseline.py check
-$ .venv/Scripts/python.exe tools/wp001_baseline.py check
-# start: 2026-10-21T01:16:26Z
+$ C:\dev\PRIN\.venv\Scripts\python.exe tools/wp001_baseline.py check
+# start: 2026-10-21T05:53:16Z
 WP-001 baseline validation passed.
-# end: 2026-10-21T01:16:27Z
+# end: 2026-10-21T05:53:16Z
 EXIT_CODE=0
 
 ## 5. Clean Sphinx HTML build (-W --keep-going)
-$ Remove-Item -Recurse -Force DOCS/sphinx/_build; .venv/Scripts/python.exe -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
-# start: 2026-10-21T01:16:27Z
+$ Remove-Item -Recurse -Force DOCS/sphinx/_build; C:\dev\PRIN\.venv\Scripts\python.exe -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
+# start: 2026-10-21T05:53:17Z
 [01mRunning Sphinx v9.1.0[39;49;00m
 [01mloading translations [en]... [39;49;00mdone
 [01mmaking output directory... [39;49;00mdone
@@ -387,51 +401,51 @@ Writing evaluated template result to C:\dev\PRIN\DOCS\sphinx\_build\html\_static
 [01mbuild succeeded.[39;49;00m
 
 The HTML pages are in DOCS\sphinx\_build\html.
-# end: 2026-10-21T01:16:55Z
+# end: 2026-10-21T05:53:41Z
 EXIT_CODE=0
 
 ## 6a. Secret scan (gitleaks git .)
-$ DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git . --no-banner
-# start: 2026-10-21T01:16:55Z
-[90m10:17PM[0m [32mINF[0m [1m792 commits scanned.[0m
-[90m10:17PM[0m [32mINF[0m [1mscanned ~109730821 bytes (109.73 MB) in 9.67s[0m
-[90m10:17PM[0m [32mINF[0m [1mno leaks found[0m
-# end: 2026-10-21T01:17:05Z
+$ DOCS\test_and_benchmark_results\ea007\full-gate\.tools\gitleaks\bin\gitleaks.exe git . --no-banner
+# start: 2026-10-21T05:53:41Z
+[90m2:53AM[0m [32mINF[0m [1m794 commits scanned.[0m
+[90m2:53AM[0m [32mINF[0m [1mscanned ~109980644 bytes (109.98 MB) in 10s[0m
+[90m2:53AM[0m [32mINF[0m [1mno leaks found[0m
+# end: 2026-10-21T05:53:52Z
 EXIT_CODE=0
 
 ## 6b. Secret scan (gitleaks dir EVIDENCE/exp002-r1-e2)
-$ DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe dir EVIDENCE/exp002-r1-e2 --no-banner
-# start: 2026-10-21T01:17:05Z
-[90m10:17PM[0m [32mINF[0m [1mscanned ~168295 bytes (168.29 KB) in 24.8ms[0m
-[90m10:17PM[0m [32mINF[0m [1mno leaks found[0m
-# end: 2026-10-21T01:17:05Z
+$ DOCS\test_and_benchmark_results\ea007\full-gate\.tools\gitleaks\bin\gitleaks.exe dir EVIDENCE/exp002-r1-e2 --no-banner
+# start: 2026-10-21T05:53:52Z
+[90m2:53AM[0m [32mINF[0m [1mscanned ~205357 bytes (205.36 KB) in 24.1ms[0m
+[90m2:53AM[0m [32mINF[0m [1mno leaks found[0m
+# end: 2026-10-21T05:53:52Z
 EXIT_CODE=0
 
 ## 6c. Secret scan (gitleaks dir DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity)
-$ DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe dir DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity --no-banner
-# start: 2026-10-21T01:17:05Z
-[90m10:17PM[0m [32mINF[0m [1mscanned ~145373 bytes (145.37 KB) in 32.1ms[0m
-[90m10:17PM[0m [32mINF[0m [1mno leaks found[0m
-# end: 2026-10-21T01:17:05Z
+$ DOCS\test_and_benchmark_results\ea007\full-gate\.tools\gitleaks\bin\gitleaks.exe dir DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity --no-banner
+# start: 2026-10-21T05:53:52Z
+[90m2:53AM[0m [32mINF[0m [1mscanned ~154297 bytes (154.30 KB) in 26.8ms[0m
+[90m2:53AM[0m [32mINF[0m [1mno leaks found[0m
+# end: 2026-10-21T05:53:52Z
 EXIT_CODE=0
 
 ## 7a. Evidence index self-check (exp002-r1-e1)
-$ .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-r1-e1
-# start: 2026-10-21T01:17:05Z
+$ C:\dev\PRIN\.venv\Scripts\python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-r1-e1
+# start: 2026-10-21T05:53:52Z
 bundle exp002-r1-e1: 7 files (README included)
   nested READMEs used: none
   unindexed files : none
   dangling links  : none
-# end: 2026-10-21T01:17:05Z
+# end: 2026-10-21T05:53:53Z
 EXIT_CODE=0
 
 ## 7b. Evidence index self-check (exp002-r1-e2)
-$ .venv/Scripts/python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-r1-e2
-# start: 2026-10-21T01:17:05Z
-bundle exp002-r1-e2: 22 files (README included)
+$ C:\dev\PRIN\.venv\Scripts\python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-r1-e2
+# start: 2026-10-21T05:53:53Z
+bundle exp002-r1-e2: 24 files (README included)
   nested READMEs used: none
   unindexed files : none
   dangling links  : none
-# end: 2026-10-21T01:17:06Z
+# end: 2026-10-21T05:53:53Z
 EXIT_CODE=0
 
