@@ -71,6 +71,12 @@ jobs:
       RUSTUP_TOOLCHAIN: 1.98.1
       PIP_CONSTRAINT: ${{ github.workspace }}/arms/candidate/ci/docs-constraints.txt
       EVIDENCE_DIR: ${{ github.workspace }}/benchmarks/results/nightly-${{ github.run_id }}-${{ github.run_attempt }}
+      # Stabilize glibc ptmalloc2 across multi-threaded 4 MiB tensor steps
+      # (ResonanceLayer moderate shape) and prevent OpenMP spin-wait contention.
+      MALLOC_ARENA_MAX: "1"
+      MALLOC_MMAP_THRESHOLD_: "67108864"
+      MALLOC_TRIM_THRESHOLD_: "-1"
+      OMP_WAIT_POLICY: PASSIVE
     steps:
       # DV036-F4: both arms are checked out as equal-length siblings
       # (`arms/reference`, `arms/candidate`) so working directories, target
@@ -120,6 +126,11 @@ jobs:
           source .venv/bin/activate
           python -m pip install --no-cache-dir --no-build-isolation -c ci/lint-constraints.txt -e ".[dev,onnx]"
           python -m pip freeze --all --exclude-editable > "$EVIDENCE_DIR/dependencies.txt"
+          cargo bench --no-run --locked --workspace \
+            --bench control_buffer --bench training_hooks \
+            --bench mean_field_rk4_bench --bench sparse_knn_bench \
+            --bench discrete_step_bench --bench sweep_bench \
+            --bench resonance_layer_bridge --bench phase_tracker_bridge
           deactivate
           cd ../reference
           python -m venv .venv
@@ -128,6 +139,11 @@ jobs:
           python -m pip install --no-cache-dir -r "$EVIDENCE_DIR/dependencies.txt"
           python -m pip install --no-cache-dir --no-deps --no-build-isolation -e .
           python -m pip freeze --all --exclude-editable > "$EVIDENCE_DIR/reference-dependencies.txt"
+          cargo bench --no-run --locked --workspace \
+            --bench control_buffer --bench training_hooks \
+            --bench mean_field_rk4_bench --bench sparse_knn_bench \
+            --bench discrete_step_bench --bench sweep_bench \
+            --bench resonance_layer_bridge --bench phase_tracker_bridge
           deactivate
           cmp "$EVIDENCE_DIR/dependencies.txt" "$EVIDENCE_DIR/reference-dependencies.txt"
       # Fixed historical source is remeasured on this runner; cached timings
@@ -153,7 +169,8 @@ jobs:
               --bench resonance_layer_bridge --bench phase_tracker_bridge \
               2>&1 | tee "$EVIDENCE_DIR/$run/criterion.log"
             python -m pytest tests/ -m slow -q \
-              --benchmark-only --benchmark-json="$EVIDENCE_DIR/$run/pytest-bench.json" \
+              --benchmark-only --benchmark-warmup=on --benchmark-disable-gc \
+              --benchmark-json="$EVIDENCE_DIR/$run/pytest-bench.json" \
               2>&1 | tee "$EVIDENCE_DIR/$run/pytest.log"
             date -u --iso-8601=seconds > "$EVIDENCE_DIR/$run/end.txt"
           )

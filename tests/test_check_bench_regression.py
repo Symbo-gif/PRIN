@@ -258,6 +258,12 @@ def test_nightly_uses_fresh_same_job_reference_and_preserves_gate() -> None:
         '-e ".[dev,onnx]"'
     )
     assert reference.index("source .venv/bin/activate") < reference.index("-e .")
+    assert 'MALLOC_ARENA_MAX: "1"' in job_env
+    assert 'MALLOC_MMAP_THRESHOLD_: "67108864"' in job_env
+    assert 'MALLOC_TRIM_THRESHOLD_: "-1"' in job_env
+    assert "OMP_WAIT_POLICY: PASSIVE" in job_env
+    assert "cargo bench --no-run --locked --workspace" in candidate
+    assert "cargo bench --no-run --locked --workspace" in reference
     for name in (
         "control_buffer",
         "training_hooks",
@@ -268,8 +274,12 @@ def test_nightly_uses_fresh_same_job_reference_and_preserves_gate() -> None:
         "resonance_layer_bridge",
         "phase_tracker_bridge",
     ):
+        assert f"--bench {name}" in candidate
+        assert f"--bench {name}" in reference
         assert f"--bench {name}" in measure
     assert "--benchmark-only" in measure
+    assert "--benchmark-warmup=on" in measure
+    assert "--benchmark-disable-gc" in measure
     assert "uses: actions/upload-artifact@v6" in job
     assert "if: always()" in job
 
