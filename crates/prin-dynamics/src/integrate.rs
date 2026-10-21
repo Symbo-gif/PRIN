@@ -86,6 +86,7 @@ pub enum GuardPolicy {
 
 impl GuardPolicy {
     /// Guard one stage or output amplitude.
+    #[inline]
     fn amplitude(self, amp: f64) -> f64 {
         match self {
             // `amp < 0.0` is false for NaN and -0.0, which torch's clamp keeps.
@@ -120,6 +121,7 @@ impl GuardPolicy {
     /// preserves the pre-correction diagnostic, which reached the same error
     /// through [`StateDerivatives::new`]. (Without `strict-checks`, values are
     /// clamped and repaired exactly as before the correction.)
+    #[inline]
     fn derivatives(self, buf: &mut [f64], source_guarded: bool) -> Result<(), StateError> {
         if source_guarded || self != Self::Bounded {
             return Ok(());
@@ -251,6 +253,7 @@ pub trait Integrator {
 }
 
 /// Validate that `dt` is finite and positive.
+#[inline]
 fn validate_dt(dt: f64) -> Result<(), IntegrateError> {
     if !dt.is_finite() || dt <= 0.0 {
         return Err(IntegrateError::InvalidTimestep { dt });
@@ -266,6 +269,7 @@ fn validate_dt(dt: f64) -> Result<(), IntegrateError> {
 /// base state: it is a fixed label, not an evolving quantity, and
 /// band-partitioned dynamics such as
 /// [`BandNetwork`](crate::bands::BandNetwork) require it on every stage state.
+#[inline]
 #[allow(clippy::too_many_arguments)]
 fn make_intermediate_state(
     base: &OscillatorState,
@@ -291,24 +295,29 @@ fn make_intermediate_state(
         freq_buf.push(base.frequency[i] + scale * dfrequency[i]);
     }
     OscillatorState {
-        phase: phase_buf.clone(),
-        amplitude: amp_buf.clone(),
-        frequency: freq_buf.clone(),
+        phase: std::mem::take(phase_buf),
+        amplitude: std::mem::take(amp_buf),
+        frequency: std::mem::take(freq_buf),
         freq_band: base.freq_band.clone(),
     }
 }
 
 /// Build the final (output) state from computed arrays, applying phase wrap and
 /// the `guard` amplitude clamp, and carrying `freq_band` from the base state.
+#[inline]
 fn make_final_state(
     base: &OscillatorState,
-    phase: Vec<f64>,
-    amplitude: Vec<f64>,
+    mut phase: Vec<f64>,
+    mut amplitude: Vec<f64>,
     frequency: Vec<f64>,
     guard: GuardPolicy,
 ) -> Result<OscillatorState, IntegrateError> {
-    let phase: Vec<f64> = phase.into_iter().map(wrap_phase).collect();
-    let amplitude: Vec<f64> = amplitude.into_iter().map(|a| guard.amplitude(a)).collect();
+    for p in &mut phase {
+        *p = wrap_phase(*p);
+    }
+    for a in &mut amplitude {
+        *a = guard.amplitude(*a);
+    }
     let state = OscillatorState {
         phase,
         amplitude,
@@ -325,6 +334,7 @@ fn make_final_state(
 /// `make_final_state`); non-finite phase or frequency values, and a `NaN`
 /// amplitude under [`GuardPolicy::NonNegative`], pass through and are only
 /// caught under `strict-checks`.
+#[inline]
 fn check_finite(state: &OscillatorState) -> Result<(), IntegrateError> {
     #[cfg(feature = "strict-checks")]
     {
@@ -546,6 +556,7 @@ impl RK4Integrator {
     }
 
     /// Flatten a [`StateDerivatives`] into a reusable `3N` buffer.
+    #[inline]
     fn flatten(&mut self, deriv: &StateDerivatives, n: usize) -> Result<(), StateError> {
         self.k1.clear();
         self.k1.reserve(3 * n);
@@ -578,69 +589,81 @@ impl Integrator for RK4Integrator {
         // k1 = f(y_n)
         let d1 = model.compute_derivatives(state)?;
         self.flatten(&d1, n)?;
-        let k1 = self.k1.clone();
 
         // k2 = f(y_n + h/2 · k1)
         let s2 = make_intermediate_state(
             state,
-            &k1[..n],
-            &k1[n..2 * n],
-            &k1[2 * n..],
+            &self.k1[..n],
+            &self.k1[n..2 * n],
+            &self.k1[2 * n..],
             half,
             self.guard,
             &mut self.phase_buf,
             &mut self.amp_buf,
             &mut self.freq_buf,
         );
-        let d2 = model.compute_derivatives(&s2)?;
+        let d2 = model.compute_derivatives(&s2);
+        self.phase_buf = s2.phase;
+        self.amp_buf = s2.amplitude;
+        self.freq_buf = s2.frequency;
+        let d2 = d2?;
         self.k2.clear();
         self.k2.reserve(3 * n);
         self.k2.extend_from_slice(&d2.dphase);
         self.k2.extend_from_slice(&d2.damplitude);
         self.k2.extend_from_slice(&d2.dfrequency);
         self.guard.derivatives(&mut self.k2, d2.is_guarded())?;
-        let k2 = self.k2.clone();
 
         // k3 = f(y_n + h/2 · k2)
         let s3 = make_intermediate_state(
             state,
-            &k2[..n],
-            &k2[n..2 * n],
-            &k2[2 * n..],
+            &self.k2[..n],
+            &self.k2[n..2 * n],
+            &self.k2[2 * n..],
             half,
             self.guard,
             &mut self.phase_buf,
             &mut self.amp_buf,
             &mut self.freq_buf,
         );
-        let d3 = model.compute_derivatives(&s3)?;
+        let d3 = model.compute_derivatives(&s3);
+        self.phase_buf = s3.phase;
+        self.amp_buf = s3.amplitude;
+        self.freq_buf = s3.frequency;
+        let d3 = d3?;
         self.k3.clear();
         self.k3.reserve(3 * n);
         self.k3.extend_from_slice(&d3.dphase);
         self.k3.extend_from_slice(&d3.damplitude);
         self.k3.extend_from_slice(&d3.dfrequency);
         self.guard.derivatives(&mut self.k3, d3.is_guarded())?;
-        let k3 = self.k3.clone();
 
         // k4 = f(y_n + h · k3)
         let s4 = make_intermediate_state(
             state,
-            &k3[..n],
-            &k3[n..2 * n],
-            &k3[2 * n..],
+            &self.k3[..n],
+            &self.k3[n..2 * n],
+            &self.k3[2 * n..],
             dt,
             self.guard,
             &mut self.phase_buf,
             &mut self.amp_buf,
             &mut self.freq_buf,
         );
-        let d4 = model.compute_derivatives(&s4)?;
+        let d4 = model.compute_derivatives(&s4);
+        self.phase_buf = s4.phase;
+        self.amp_buf = s4.amplitude;
+        self.freq_buf = s4.frequency;
+        let d4 = d4?;
         self.k4.clear();
         self.k4.reserve(3 * n);
         self.k4.extend_from_slice(&d4.dphase);
         self.k4.extend_from_slice(&d4.damplitude);
         self.k4.extend_from_slice(&d4.dfrequency);
         self.guard.derivatives(&mut self.k4, d4.is_guarded())?;
+        let k1 = &self.k1;
+        let k2 = &self.k2;
+        let k3 = &self.k3;
         let k4 = &self.k4;
 
         // y_{n+1} = y_n + h/6 · (k1 + 2k2 + 2k3 + k4)
