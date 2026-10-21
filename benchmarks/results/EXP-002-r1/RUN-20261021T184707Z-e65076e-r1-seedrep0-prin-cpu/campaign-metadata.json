@@ -1,0 +1,12 @@
+{
+  "artefacts": {
+    "reproduction.json": [
+      "H4"
+    ]
+  },
+  "exp_id": "EXP-002-r1",
+  "mode": "repeatability",
+  "operator": "MichaelMaillet",
+  "run_id": "RUN-20261021T184707Z-e65076e-r1-seedrep0-prin-cpu",
+  "session": "EXP-002-r1-E3"
+}

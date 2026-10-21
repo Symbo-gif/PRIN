@@ -1,0 +1,29 @@
+# EXP-002-r1 E3 Storage Audit Record
+
+Generated: 2026-10-21 UTC
+Host: Windows 11 x86_64 Reference Host
+Per-run storage limit: 2,097,152 bytes (2 MiB)
+Combined EXP-002-r1 raw storage limit: 10,485,760 bytes (10 MiB)
+
+## 1. Raw Artefact Directory Sizes (`benchmarks/results/EXP-002-r1/`)
+
+| Run ID | Mode | Files | Size (Bytes) | Size (KiB) | Budget Status | Abort Status |
+|---|---|---|---|---|---|---|
+| `RUN-20261021T183011Z-e65076e-r1-api-cpu` | api | 3 | 98,118 | 95.82 KiB | PASS (<= 2 MiB) | NO ABORT |
+| `RUN-20261021T183952Z-e65076e-r1-conclusions-cpu` | conclusions | 3 | 60,162 | 58.75 KiB | PASS (<= 2 MiB) | NO ABORT |
+| `RUN-20261021T184447Z-e65076e-r1-reproduction-reference-cpu` | reference | 3 | 60,551 | 59.13 KiB | PASS (<= 2 MiB) | NO ABORT |
+| `RUN-20261021T184600Z-e65076e-r1-reproduction-prin-cpu` | prin | 3 | 60,541 | 59.12 KiB | PASS (<= 2 MiB) | NO ABORT |
+| `RUN-20261021T184707Z-e65076e-r1-seedrep0-prin-cpu` | repeatability | 3 | 60,530 | 59.11 KiB | PASS (<= 2 MiB) | NO ABORT |
+
+**Combined raw storage:** 339,902 bytes (0.32 MiB) across 5 runs.  
+**Combined budget evaluation:** PASS (339,902 B <= 10,485,760 B limit; margin: 96.76% available).
+
+## 2. Retained Uncommitted Outputs (`DOCS/test_and_benchmark_results/EXP-002-r1/`)
+
+Per preregistration §8.2, reproduction arm publication outputs and captured inputs are retained in gitignored storage for downstream E4/E5 verification:
+
+| Run ID | Leg | Publication Files | Inputs Directory | Verification Status |
+|---|---|---|---|---|
+| `RUN-20261021T184447Z-e65076e-r1-reproduction-reference-cpu` | Reference Reproduction Arm | 39 files (14 PDF, 14 PNG, 11 TeX) | Present | PASS |
+| `RUN-20261021T184600Z-e65076e-r1-reproduction-prin-cpu` | PRIN Reproduction Arm | 39 files (14 PDF, 14 PNG, 11 TeX) | Present | PASS |
+| `RUN-20261021T184707Z-e65076e-r1-seedrep0-prin-cpu` | Repeatability PRIN Arm | 39 files (14 PDF, 14 PNG, 11 TeX) | Present | PASS |
