@@ -1,0 +1,191 @@
+# EXP-002-r1 E1 local verification and security gate record (2026-10-20 UTC)
+# Branch: campaign/exp002-r1-e1
+# Base (M): 5677858c15d784d881b23d43dff5029d199b0a18
+# Head under test: PR #36 remediation working tree (post-62680946), i.e. the
+#   tree subsequently committed and pushed as the remediation commit on
+#   campaign/exp002-r1-e1. See git log for the resulting SHA.
+#
+# EVIDENCE POLICY: every check below ran on the governed Windows x86_64 host
+# and is the mandatory AUTHORITATIVE local gate for this head. Hosted CI
+# results are additional evidence only (Plan amendment #52), are recorded
+# verbatim in pr36-remediation.txt, and never substitute for this record;
+# they establish behaviour only on the platforms that actually ran. A red
+# hosted check (the six `python`-workflow matrix failures on 62680946) was
+# triaged in pr36-remediation.txt §2 and remediated here — not waived,
+# hidden, or removed by editing a workflow.
+
+## 1. Ruff lint and format checks
+$ .venv/Scripts/ruff.exe check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/
+All checks passed!
+EXIT_CODE=0
+
+$ .venv/Scripts/ruff.exe format --check python/ tests/ benchmarks/ tools/ parity/
+335 files already formatted
+EXIT_CODE=0
+
+$ .venv/Scripts/ruff.exe format --check DOCS/experiments/ --config "include = ['*.py', '*.pyi', '*.ipynb']"
+3 files already formatted
+EXIT_CODE=0
+
+## 2. Strict mypy type checks
+$ .venv/Scripts/mypy.exe python/prin --strict
+Success: no issues found in 62 source files
+EXIT_CODE=0
+
+$ .venv/Scripts/mypy.exe DOCS/experiments/ --strict
+Success: no issues found in 3 source files
+EXIT_CODE=0
+
+$ .venv/Scripts/mypy.exe benchmarks/campaign/exp002_r1_driver.py tests/test_exp002_r1_driver.py --strict
+Success: no issues found in 2 source files
+EXIT_CODE=0
+
+## 3. Interrogate docstring coverage and Bandit SAST
+$ .venv/Scripts/python.exe -m interrogate -c pyproject.toml python/prin
+RESULT: PASSED (minimum: 95.0%, actual: 97.6%)
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe -m bandit -r python/prin DOCS/experiments -c pyproject.toml
+Total lines of code: 27882
+Total issues (by severity): Low: 0, Medium: 0, High: 0
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe -m bandit -r benchmarks/campaign/exp002_r1_driver.py tests/test_exp002_r1_driver.py -c pyproject.toml
+Total issues (by severity): Low: 0, Medium: 0, High: 0
+EXIT_CODE=0
+
+## 4. Snyk Code MCP (Coding Standards §6)
+- Tool: snyk_code_scan (severity_threshold="low")
+- Target 1: C:\dev\PRIN\benchmarks\campaign\exp002_r1_driver.py -> {"success":true,"issueCount":0,"issues":null}
+- Target 2: C:\dev\PRIN\tests\test_exp002_r1_driver.py -> {"success":true,"issueCount":0,"issues":null}
+
+## 5. Native dependency audits
+$ cargo audit
+Scanning Cargo.lock for vulnerabilities (621 crate dependencies)
+NOTE: two NEW transitive advisories published 2026-10-19/20 (after the E1
+gate and after the hosted `audit` run on 62680946 passed) were remediated
+with a minimal `cargo update -p rustls-webpki -p webpki-roots` lockfile bump
+(rustls-webpki 0.103.15 -> 0.103.16 for RUSTSEC-2026-0382; webpki-roots
+1.0.9 -> 1.0.10 for RUSTSEC-2026-0381; both enter via reqwest inside the
+tracel-llvm-bundler BUILD-dependency chain only). Re-scan:
+warning: 3 allowed warnings found (RUSTSEC-2025-0141 bincode, RUSTSEC-2024-0436 paste, chacha20 yanked)
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe -m pip_audit .
+No known vulnerabilities found
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe -m pip_audit -r DOCS/sphinx/requirements.txt
+No known vulnerabilities found
+EXIT_CODE=0
+
+$ snyk_sca_scan (MCP, all_projects=true, severity_threshold=low, command=C:\dev\PRIN\.venv\Scripts\python)
+issueCount=1: SNYK-JS-ZOD-20510278 (CVE-2023-54404, high) in zod 4.1.8 via
+C:\dev\PRIN\.kilo\package-lock.json — a committed editor/agent tooling
+manifest unrelated to this change's Rust/Python diff and not in the
+Cargo.lock dependency path. Pre-existing and non-attributable; recorded,
+not suppressed.
+
+## 6. Governance checkers
+$ .venv/Scripts/python.exe tools/check_dv_register_gates.py
+DV-register gate check passed. Checked 47 DV register rows against 198 session-register entries.
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe tools/check_global_session_registration.py
+Global-session registration check passed. Checked 18 Executive Audit reports.
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe tools/check_skipif_probes.py
+check_skipif_probes: no registration-probe skipif guards
+EXIT_CODE=0
+
+$ .venv/Scripts/python.exe tools/wp001_baseline.py check
+WP-001 baseline validation passed.
+EXIT_CODE=0
+
+## 7. Clean Sphinx documentation build
+$ rm -rf DOCS/sphinx/_build && .venv/Scripts/python.exe -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
+build succeeded.
+The HTML pages are in DOCS\sphinx\_build\html.
+EXIT_CODE=0
+
+## 8. Secret scanning (pinned gitleaks 8.30.1)
+$ DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git . --no-banner
+1791 commits scanned. scanned ~109665590 bytes (109.67 MB) in 1m3.3s. no leaks found
+EXIT_CODE=0
+
+$ DOCS/test_and_benchmark_results/ea007/full-gate/.tools/gitleaks/bin/gitleaks.exe git . --staged --no-banner
+0 commits scanned. no leaks found
+EXIT_CODE=0
+
+## 9. Driver test suite and coverage (head-specific)
+$ .venv/Scripts/python.exe -m pytest tests/test_exp002_r1_driver.py --cov=benchmarks.campaign.exp002_r1_driver --cov-report=term-missing --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -q
+Name                                      Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------
+benchmarks\campaign\exp002_r1_driver.py     865     17    98%   655, 976, 1116-1117, 1120-1121, 1157-1159, 1189-1190, 1192-1194, 1250-1251, 1606
+-----------------------------------------------------------------------
+TOTAL                                       865     17    98%
+343 passed, 1 skipped in 57.92s
+EXIT_CODE=0
+
+NOTE: the single skip is `test_live_prin_core_pyd_pin_matches_registered_build`,
+which is intentionally opt-in (`PRIN_EXP002_R1_HOST_PIN=1`) because the
+registered Windows E3 binary pin cannot hold on hosted CI platforms that
+build their own extension (the six hosted matrix failures on 62680946 —
+see pr36-remediation.txt). The production verifier is unchanged and strict.
+
+$ PRIN_EXP002_R1_HOST_PIN=1 .venv/Scripts/python.exe -m pytest tests/test_exp002_r1_driver.py -k "test_live_prin_core_pyd_pin or test_real_generator_source_pins or test_admission_verifies_every_live_pin" --basetemp=.pytest_basetemp -q
+3 passed, 341 deselected
+EXIT_CODE=0
+(opt-in registered-host pin verified on this governed host)
+
+## 10. Full local pytest gate (head-specific, authoritative)
+$ .venv/Scripts/python.exe -m pytest tests/ parity/ --cov=prin --cov-report=term-missing --basetemp=.pytest_basetemp -o faulthandler_timeout=300 --durations=20
+6667 passed, 204 skipped, 61 warnings in 3999.57s (1:06:39)
+coverage: TOTAL 7728 stmts, 408 missed, 95%
+EXIT_CODE=0
+
+One notebook test (02_clevr_n_binding.ipynb, 544s) exceeded the 300s
+faulthandler observation timer and PASSED on the same attempt; the dump was
+a stack observation, not a kill (Testing Standards §7 item 3).
+
+## 11. Rust gate (head-specific)
+$ cargo fmt --all -- --check
+EXIT_CODE=0
+
+$ cargo clippy --workspace --all-targets -- -D warnings
+Finished `dev` profile — no warnings
+EXIT_CODE=0
+
+$ cargo test --workspace
+All workspace unit/integration/doc-test suites passed (exit 0).
+NOTE: the first invocation hit a transient Windows linker lock
+(LNK1104: cannot open file '.../deps/_prin_core-*.exe') — the documented
+AV/file-handle contention in AGENTS.md; the isolated retry passed cleanly
+with no source change.
+EXIT_CODE=0
+
+$ cargo llvm-cov -p prin-kernels --features wgpu,cpu
+TOTAL 10153 regions, 85.10% region coverage (6 tests, all passed)
+EXIT_CODE=0
+
+$ cargo llvm-cov -p prin-dynamics
+TOTAL 17833 regions, 64.48% region coverage (6 tests, all passed)
+EXIT_CODE=0
+
+$ cargo llvm-cov -p prin-dynamics --features strict-checks
+TOTAL 17905 regions, 64.59% region coverage (6 tests, all passed)
+EXIT_CODE=0
+
+$ RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps
+Finished — generated docs for all workspace crates
+EXIT_CODE=0
+
+$ RUSTDOCFLAGS='-D warnings' cargo doc -p prin-sim --no-deps --features cpu
+Finished — generated C:\dev\PRIN\target\doc\prin_sim\index.html
+EXIT_CODE=0
+
+## 12. Predecessor immutability
+$ git diff 5677858c15d784d881b23d43dff5029d199b0a18 -- DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/ benchmarks/results/EXP-002/ DOCS/test_and_benchmark_results/EXP-002/
+(empty — zero changed files under any frozen predecessor EXP-002 root)
+EXIT_CODE=0

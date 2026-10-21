@@ -1,27 +1,35 @@
 # EXP-002-r1 — API, benchmark-result, and reproduction parity, re-run (track C1)
 
-**Status:** **AUTHORIZED — RECORD SKELETON ONLY. No E-stage has run.**
-Created by the `EXP-002-D1` S4 correction-documentation session
-(2026-10-16 UTC) under campaign plan §10.4 item 4. **No pre-registration
-exists yet, no `RUN-` directory exists, no driver has been authored or frozen,
-and no observation has been collected.** E1 may begin only when the maintainer
-declares the E1 session *and* the open decision in
-["Open decision this record must settle before E1"](#open-decision-this-record-must-settle-before-e1)
-below is approved.
+**Status:** **E1 PREPARED (2026-10-20 UTC, branch `campaign/exp002-r1-e1`, baseline `M = 5677858c15d784d881b23d43dff5029d199b0a18`) — DRAFT PROTOCOL AND ISOLATED DRIVER COMMITTED FOR E2 REVIEW. No E3 execution has run and no `RUN-` directory exists.**
+Created as a skeleton by `EXP-002-D1` S4 (2026-10-16 UTC) under campaign plan
+§10.4 item 4; E1 declared by the maintainer 2026-10-20 UTC after settling the
+pre-E1 open decisions below. [`preregistration.md`](preregistration.md) is
+`DRAFT`; [`benchmarks/campaign/exp002_r1_driver.py`](../../../benchmarks/campaign/exp002_r1_driver.py)
+refuses execution until `EXP-002-r1-E2` records scientific approval.
 
-**Drafting AI pair:** Qwen3.8-max (this skeleton). Every later E-stage document
-names its own drafting AI pair and records the maintainer's verification
-(campaign plan §12 item 7; Experimentation Standards §4).
+**Drafting AI pair:** Qwen3.8-max (S4 skeleton); Devin (`EXP-002-r1` E1 protocol,
+driver, tests, and handoff/review packet). Every later E-stage document names
+its own drafting AI pair and records the maintainer's verification (campaign
+plan §12 item 7; Experimentation Standards §4).
 
 **Predecessor:** [`EXP-002`](../EXP-002-api-benchmark-result-and-reproduction-parity/README.md)
 (E5 reported 2026-10-14 UTC, verified and accepted 2026-10-15 UTC; H1, H2, H4
 `CONFIRMED`; **H3 `REFUTED`**, campaign plan §10.4 **D1** raised).
 **Correction cycle:** [`DOCS/audits/2026-10-15-exp002-d1-correction-audit.md`](../../audits/2026-10-15-exp002-d1-correction-audit.md)
 (S1 complete, S2 `PASS-WITH-FINDINGS`, S3 delta re-audit `CLEAN`, S4 closure
-appended).
+appended, PR #34 merged at `305416fb0f85e690b12640b3f32fad48b55d9077`, PR #35
+merged at `5677858c15d784d881b23d43dff5029d199b0a18`).
 **Campaign plan row:** [`campaign-plan.md`](../campaign-plan.md) §2.1 EXP-002 / C1
 (this re-run inherits that row's reconciled targets; it is not a new registry
 entry and no session number changes).
+**Isolated raw-artefact root:** [`benchmarks/results/EXP-002-r1/`](../../../benchmarks/results/EXP-002-r1/README.md)
+(never `benchmarks/results/EXP-002/`).
+**Isolated generated-output root (gitignored):**
+`DOCS/test_and_benchmark_results/EXP-002-r1/` (never
+`DOCS/test_and_benchmark_results/EXP-002/`).
+**Isolated stage evidence root:**
+[`EVIDENCE/exp002-r1-e1/`](../../../EVIDENCE/exp002-r1-e1/README.md) (and
+`-e2`..`-e5` for subsequent stages).
 
 This is a **new experiment record** per campaign plan §10.4 item 4. The
 original `EXP-002` record is **immutable**: its verdicts, tolerances,
@@ -64,57 +72,48 @@ scientific difference:
 
 `EXP-002`'s own verdict is unchanged by any of this and stays `H3 REFUTED`.
 
-## Open decision this record must settle before E1
+## Maintainer-ratified pre-E1 decisions (2026-10-20 UTC)
 
-**This skeleton deliberately does not choose the deciding rule.** Carrying audit
-finding **`EXP002D1-S2-F1`** (D3, `ASSIGNED` by S3 to S4 and to this record;
-correction audit §S3.3), the choice belongs to r1's own pre-registration and
-review, and — because it determines what a `REFUTED`/`CONFIRMED` H3 means — it
-**requires the maintainer's approval before r1's E1 starts**. S4 records the
-question; it does not answer it.
+Before E1 began, the maintainer ratified the three governing decisions that the
+S4 skeleton held open:
 
-E1/E2 must register, deliberately rather than by inheritance:
-
-1. **Name the deciding rule.** State which comparison policy decides H3 and
-   what status the other has — for example §5.4 as the sole primary with §11.3
-   retained as a disclosed writer-property sensitivity, **or** a corrected
-   sensitivity policy that canonicalizes the two writer properties. S3 did not
-   choose; S4 does not choose.
-2. **Replace or restate the §11.3 item 1 clause.** `EXP-002`'s clause ("if the
-   two verdicts differ, E5 must state that H3's verdict depends on a comparison
-   amendment made after outcome exposure, and must not report either verdict
-   alone") was drafted for the pre-correction state, in which *both* policies
-   refuted. Under a corrected generator it would turn a writer property into a
-   policy-dependent verdict. r1 must say, **before any r1 data exist**, what a
-   disagreement between the two policies means.
-3. **Fix the choice before the first `RUN-` directory exists.** `EXP-002` froze
-   its protocol at its first `RUN-` creation in session `0161`
-   (2026-10-12T21:27:05Z); campaign plan §12 item 4 gives r1 the same freeze
-   semantics. The choice must be committed and approved before that point.
-4. **Disclose outcome exposure.** The choice is made with knowledge of
-   `EXP-002`'s results and of S1/S2's residual classification, exactly as
-   `EXP-002`'s own E1/E2 disclosed for its amendments. The disclosure belongs in
-   the pre-registration header and is repeated in E5.
-5. **Do not chase §11.3 equality by changing a writer.** PRIN's fixed PDF
-   metadata is what makes H4 (raw determinism) hold, so it must not be altered;
-   the frozen `prinet==3.0.0` reference must not be altered either.
-6. **Never edit `EXP-002`'s frozen `preregistration.md`.** Any change lives only
-   in this record.
-
-**No amendment is requested by this skeleton.** Campaign plan §10.4 item 4
-already requires a new pre-registration for the re-run, and that document is the
-governed place for this registration. If r1's E1 or E2 finds the choice cannot be
-made inside a pre-registration — for instance if §10.4 item 5's "not a reversal"
-test would itself need reinterpreting — that is an amendment matter: **draft it
-for maintainer approval, do not adopt it.**
+1. **Re-run (`-r1`/`-rN`) Namespace & Evidence Isolation Rule (campaign plan
+   §7.1, §10.4 item 4, §14.2 amendment #10):** `EXP-002-r1` uses completely
+   disjoint roots from `EXP-002` (`benchmarks/results/EXP-002-r1/`,
+   `DOCS/test_and_benchmark_results/EXP-002-r1/`, `EVIDENCE/exp002-r1-e1/`..`e5/`,
+   `exp002_r1_driver.py`, `test_exp002_r1_driver.py`, and at E4
+   `exp002_r1_e4_analysis.py`), with `exp_id="EXP-002-r1"`,
+   `session="EXP-002-r1-E3"`, and `r1-` run labels. Both the per-root
+   `EXP-002-r1` cap and the combined `EXP-002` + `EXP-002-r1` cap are bounded by
+   the existing 10 MiB allocation.
+2. **Resolution of `EXP002D1-S2-F1` ([`preregistration.md`](preregistration.md)
+   §4.1, §5.4, §11.1):** The approved **§5.4 comparison policy** (`CRLF`→`LF`
+   table canonicalization + 4-key PDF `/Info` removal and `xref`/`startxref`
+   pointer canonicalization + PNG critical-chunk normalization) is registered as
+   the **sole primary decision rule for H3**. The **§11.3 pre-exposure policy**
+   is retained as a **reported, non-gating writer-property diagnostic**,
+   replacing `EXP-002`'s §11.3 item 1 clause with the requirement that every
+   residual between §5.4 and §11.3 belong to one of the two registered
+   writer/host I/O classes (`pdf_info_keyset` or `tex_crlf_line_terminator`)
+   with `0` unclassified residuals. Outcome exposure is disclosed in the
+   pre-registration header, §1, and §11.2, and neither writer is altered.
+3. **DV-047 closure ([`DEFERRED_VALIDATION_REGISTER.md`](../../reports/DEFERRED_VALIDATION_REGISTER.md)):**
+   Removed the stale `.venv/Lib/site-packages/prin_core.pth` (which pointed at
+   `C:\dev\PRIN-r1-amendment\python`), rebuilt `python/prin/_prin_core.pyd` from
+   clean `main` (`5677858c15d784d881b23d43dff5029d199b0a18`) using
+   `maturin develop --release -m crates/prin-py/Cargo.toml` (`9,290,240` bytes,
+   SHA-256 `37392d067efa3983e384c94f4ac2268c4fad2f5ea929c529b3db50bff4fee99e`),
+   and pinned its SHA-256 and byte size in `exp002_r1_driver.py` and
+   `preregistration.md` §1.1.
 
 ## Rules inherited from the campaign plan
 
-- This experiment **does not reuse** `EXP-002`'s run IDs or artefacts (campaign
-  plan §10.4 item 4). Every raw artefact goes to a **new**
-  `RUN-<UTC>-<SHA>-<label>/` directory with its own per-run `manifest.json`
-  (§7.1–§7.3); `EXP-002`'s five existing `RUN-` directories are never appended
-  to, edited, or re-manifested.
+- This experiment **does not reuse** `EXP-002`'s run IDs, raw root, output root,
+  or artefacts (campaign plan §7.1, §10.4 item 4, amendment #10). Every raw
+  artefact goes to a **new** `RUN-<UTC>-<SHA>-r1-<label>/` directory under
+  `benchmarks/results/EXP-002-r1/` with its own per-run `manifest.json`
+  (§7.1–§7.3); `EXP-002`'s five existing `RUN-` directories under
+  `benchmarks/results/EXP-002/` are never appended to, edited, or re-manifested.
 - Hypotheses, expected results, and failure/abort conditions are committed
   **before** execution (Experimentation Standards §1.1–§1.2).
 - Pre-register against the **reconciled** targets in campaign plan §2.1 and cite
@@ -122,39 +121,26 @@ for maintainer approval, do not adopt it.**
   (figures 2–15; there was never a figure 1), giving the registered reproduction
   target of **14 figures × 2 formats + 11 tables = 39 generated files** against
   the 172-record `paper/artefact_manifest.json`. Hardware only from §5; seeds
-  per §6 (`seed_key = 2`, as `EXP-002` used — a new `seed_key` is an E1
-  decision that must be stated, not inherited silently); artefact layout per §7;
-  budget caps per §8; statistics per §9; abort/D1 rules per §10.
+  per §6 (`seed_key = 2`); artefact layout per §7; budget caps per §8;
+  statistics per §9; abort/D1 rules per §10.
 - One E-stage per session, no stage collapsing (§12 item 2); each stage commits
-  locally on its own `campaign/exp002-r1-<stage>` branch (§12 item 3); drivers
-  are authored in E1 with tests in tandem and Snyk Code, approved in E2, and
+  on its own `campaign/exp002-r1-<stage>` branch (§12 item 3); drivers are
+  authored in E1 with tests in tandem and Snyk Code, approved in E2, and
   **frozen at E3 start** (§12 item 1).
-- Exploratory analyses appear only under an "Exploratory" heading and never feed
-  a verdict (§12 item 5). Errata follow Experimentation Standards §4: erratum in
-  the experiment report **and** the Parity Report, plus a CHANGELOG line (§12
-  item 6).
 - Analysis scripts under `analysis/` carry **globally unique** file names
-  (prefix `exp002_r1_`): the record roots are sibling directories without
-  `__init__.py`, so `mypy DOCS/experiments/ --strict` aborts on a duplicate bare
-  module name (`tests/test_campaign_quality_gates.py` enforces this, PR32-F12).
-  `EXP-002`'s `exp002_e4_analysis.py` already occupies the `exp002_` prefix.
-- **Raw-artefact root is an E1 decision, not an inheritance.** The `EXP-001-r1`
-  precedent shared `benchmarks/results/EXP-001/` with the original record, new
-  runs being distinguishable by their own SHA and timestamp; campaign plan §7.1
-  also permits a distinct root. E1 must state which applies here and register
-  the §8 storage budget consequence (a shared root counts against `EXP-002`'s
-  existing allocation; a new root needs its own). Nothing is created by this
-  skeleton.
+  (prefix `exp002_r1_`, i.e. `analysis/exp002_r1_e4_analysis.py` at E4;
+  `tests/test_campaign_quality_gates.py`, PR32-F12).
 
-## Carried obligations that gate r1's stages
+## Carried obligations and E1 dispositions
 
-| Obligation | Source | Gate |
+| Obligation | Source | Status at E1 close |
 |---|---|---|
-| Rebuild `python/prin/_prin_core.pyd` and remove the stale `prin_core.pth`, recording the new `.pyd` SHA-256 in the driver, so a new observation does not record stale-binary provenance | **DV-047** (OPEN) | **before r1's E3 run** |
-| Settle the open decision above and register both H3 comparison policies deliberately | **`EXP002D1-S2-F1`** (D3, `ASSIGNED`) | **before r1's E1 starts** (maintainer approval) and frozen **before the first `RUN-`** |
-| `cargo audit` is red on 9 transitive advisories; a hosted `audit` job is visible again under amendment #52 and a red hosted check is triaged and recorded, never waived | **DV-045** (OPEN) | recorded at every stage's gate |
-| `gpu-cuda` intermittently fails `flops::tests::measure_wall_time_calls_warmup_and_runs_exact_counts`; re-check on every `gpu-cuda` run while hosted workflows are enabled | **DV-046** (OPEN) | each hosted `gpu-cuda` run |
-| The required full suite has not been demonstrated green in one pass on the maintainer host (Windows `WinError 5` rename in `.pytest_basetemp`; DV-032's host-timing ratio). Run the local gate with IDE and security tooling quiet where possible, record the actual exit status, and never describe a rerun-until-green as a pass | **O-1** (correction audit §S3.9 item 9; PSR-041 ledger) | every stage's local gate |
+| Rebuild `python/prin/_prin_core.pyd` and remove the stale `prin_core.pth`, recording the new `.pyd` SHA-256 in the driver | **DV-047** | **CLOSED at E1 (2026-10-20 UTC)** — rebuilt at `5677858c` (`9,290,240 B`, SHA-256 `37392d06…ee99e`), pinned and enforced in `exp002_r1_driver.py` |
+| Settle the H3 comparison-policy decision and register both policies deliberately | **`EXP002D1-S2-F1`** (D3) | **RATIFIED by maintainer & REGISTERED in `preregistration.md` (§4.1, §5.4, §11.1)** — subject to E2 review and frozen before the first `RUN-` |
+| `cargo audit` transitive advisories | **DV-045** | **CLOSED on `main` (`5677858c`, PR #35)** — `cargo audit` exits `0` locally and on hosted `rust` (`39405463375`) |
+| `gpu-cuda` intermittent `flops` test failure; re-check on every `gpu-cuda` run | **DV-046** (OPEN) | Re-checked on `gpu` run `39405463413` (`5677858c`): `gpu-cuda` and `gpu-wgpu` both `success` (`0` occurrences); stays OPEN for per-run check |
+| Local full-suite contention sensitivity and DV-032 conversion | **O-1 / DV-032** | O-1 corroborated by two consecutive green hosted `nightly.yml` runs (`39203786555`, `39373976832`); DV-032 tests (1) and (2) fixed in required gate, test (3) permanently dispositioned under `nightly.yml` |
+| Queued S2-class retro-audit of `EXP002D1-S4-F2` (`814b670c`) and `EXP002D1-S4-F3` (`67100a69`) | Correction audit §S4.16 item 4 | **QUEUED for `EXP-002-r1` E2** — checklist prepared in [`e2-review-packet.md`](e2-review-packet.md) §4 |
 
 ## Blocking condition — IN FORCE
 
@@ -163,30 +149,19 @@ Session **`0164`** (EXP-003 E1) and every later campaign session
 2–5 until this experiment's E5 verdict **is not a reversal** and is
 **verified and accepted by the maintainer**, or the maintainer records a Project
 Plan §8.3 amendment accepting a changed conclusion with full justification.
+E1 completion does **not** release `0164` or authorize E3 execution.
 
-**The `EXP-002-D1` S4 closure, the merge of PR #34, and the re-enabling of the
-hosted workflows under Plan amendment #52 do NOT release `0164`** (nor
-`0165`–`0194`). Neither does the creation of this record, nor any later E1, E2,
-E3 or E4 stage: §10.4 item 5 keys the release to E5's verdict and the
-maintainer's acceptance of it. The `EXP-001-r1` precedent is explicit that a
-correction merge, E1 completion, E2 approval, E3 execution and E4's clean exit
-each release nothing on their own.
+## Current artefacts
 
-**No r1 run is authorized by this skeleton**, and no experiment session may
-start from it. The maintainer declares each E-stage session in turn.
-
-## What this directory will hold
-
-| File | Created by | Frozen when |
+| File | Created by | State / Frozen when |
 |---|---|---|
-| `README.md` | **S4 (this file)** | Updated as the experiment progresses |
-| `preregistration.md` | E1 (from [`TEMPLATE_Preregistration.md`](../TEMPLATE_Preregistration.md)) | At the first `RUN-` creation (campaign plan §12 item 4); never edited after freeze |
-| `e1-handoff.md` | E1 | Entry and verification evidence record |
-| `e2-review.md` | E2 | Independent-review and maintainer-decision record |
-| `log.md` | E3 | Never edited after E3 close |
-| `analysis/` | E4 | Committed **before** adjudication (§7.4 item 2); never edited to change a verdict |
-| `analysis.md` | E4 | Never edited after E4 close; corrections are errata |
-| `report.md` | E5 | Never edited after issue; corrections are errata |
-| `report-manifest.json` | E4/E5 | SHA-256 of regenerated outputs plus every input run manifest |
-
-None of these except `README.md` exists yet.
+| `README.md` | S4 / updated at E1 (this file) | Updated as the experiment progresses |
+| [`preregistration.md`](preregistration.md) | E1 (`DRAFT`) | Frozen at the first `RUN-` creation in E3 (campaign plan §12 item 4); never edited after freeze |
+| [`e1-handoff.md`](e1-handoff.md) | E1 | Entry verification, DV-047 closure, and E1 local-gate evidence record |
+| [`e2-review-packet.md`](e2-review-packet.md) | E1 | Decision and S4 retro-audit packet for `EXP-002-r1-E2` (PREPARED FOR REVIEW — NOT APPROVED) |
+| `e2-review.md` | E2 (pending) | Independent-review, S4 retro-audit, and maintainer-decision record |
+| `log.md` | E3 (pending) | Never edited after E3 close |
+| `analysis/` | E4 (pending) | `analysis/exp002_r1_e4_analysis.py` committed **before** adjudication (§7.4 item 2) |
+| `analysis.md` | E4 (pending) | Never edited after E4 close; corrections are errata |
+| `report.md` | E5 (pending) | Never edited after issue; corrections are errata |
+| `report-manifest.json` | E4/E5 (pending) | SHA-256 of regenerated outputs plus every input run manifest |

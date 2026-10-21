@@ -34,3 +34,9 @@ EVIDENCE/0162/** -text whitespace=-trailing-space
 
 # Session-0163 (EXP-002 E5) report evidence is byte-exact; preserve SHA-256 inputs.
 EVIDENCE/0163/** -text whitespace=-trailing-space
+
+# EXP-002-r1 stage-isolated verification evidence is byte-exact; preserve SHA-256 inputs.
+# The wildcard covers every registered stage root (exp002-r1-e1 through e5) so
+# later-stage evidence cannot have CRLF bytes normalized by `text=auto eol=lf`
+# and silently diverge from its own SHA-256 manifest.
+EVIDENCE/exp002-r1-e*/** -text whitespace=-trailing-space

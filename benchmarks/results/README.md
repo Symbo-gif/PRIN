@@ -20,13 +20,17 @@ benchmarks/results/
 │       ├── campaign-metadata.json # campaign provenance sidecar
 │       ├── <category>_<name>.json # write_result envelope + legacy-compatible payload
 │       └── manifest.json          # per-run SHA-256 manifest (tools/reproduce.py)
+├── EXP-002-r1/                    # isolated raw-artefact root for EXP-002-r1 (campaign plan §7.1 amendment #10)
 └── y4q1_9_preregistration_hash.json
 ```
 
 Rules: every campaign execution uses its committed metadata-enriching driver to
 create a **new** `RUN-…` directory; direct campaign `benchrunner` use is
 prohibited (campaign plan §7.2). Re-runs and corrections get a new run ID, and
-each run closes with `tools.reproduce.append_manifest`/`verify_manifest`.
+from `EXP-002-r1` onward every `-r1`/`-rN` re-run uses its own disjoint
+`benchmarks/results/EXP-00n-rN/` directory so predecessor roots are never
+opened for writing (`EXP-001-r1` is grandfathered in `EXP-001/` with `-r1-`
+labels). Each run closes with `tools.reproduce.append_manifest`/`verify_manifest`.
 `write_result` atomically refuses to overwrite an existing artefact
 (`ArtefactExistsError`, DV-038 fix), so a repeated output path fails instead of
 replacing data. Tracked size cap 2 MiB per run, 64 MiB campaign-wide.

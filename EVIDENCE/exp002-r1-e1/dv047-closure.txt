@@ -1,0 +1,27 @@
+# DV-047 discharge record — EXP-002-r1 E1 (2026-10-20 UTC)
+# Baseline (M): 5677858c15d784d881b23d43dff5029d199b0a18
+
+## 1. Pre-rebuild state
+- Stale .venv/Lib/site-packages/prin_core.pth (31 bytes, 2026-09-29): C:\dev\PRIN-r1-amendment\python
+- .venv/Lib/site-packages/prin.pth (18 bytes): C:\dev\PRIN\python
+- Stale python/prin/_prin_core.pyd: 62,792,192 bytes, SHA-256 64ea1a2cf38cdbe43fc029c55e791e244b771b2909360c3890ae6f9224b47349
+
+## 2. Rebuild and cleanup commands
+$ rm -f .venv/Lib/site-packages/prin_core.pth
+$ .venv/Scripts/python.exe -m maturin develop --release -m crates/prin-py/Cargo.toml
+Finished `release` profile [optimized] target(s) in 6m 21s
+Installed prin-core-1.0.0rc1
+EXIT_CODE=0
+$ rm -f .venv/Lib/site-packages/prin_core.pth
+
+## 3. Post-rebuild verification
+- Remaining .pth files:
+  - .venv/Lib/site-packages/prin.pth -> C:\dev\PRIN\python
+  - .venv/Lib/site-packages/__editable__.prinet-3.0.0.pth -> C:\dev\PRIN\DOCS\archive and reference from PRINet 3.0\PRINet-3.0.0-main\src
+- Rebuilt python/prin/_prin_core.pyd:
+  - Byte size: 9290240
+  - SHA-256: 37392d067efa3983e384c94f4ac2268c4fad2f5ea929c529b3db50bff4fee99e
+  - prin.__file__: C:\dev\PRIN\python\prin\__init__.py
+  - prin._prin_core.__file__: C:\dev\PRIN\python\prin\_prin_core.pyd
+  - prin.core_version(): 1.0.0-rc1
+  - importlib.metadata.version('prin-core'): 1.0.0rc1

@@ -137,7 +137,17 @@ Campaign rules:
 - No HARKing (hypothesizing after results are known); no p-hacking (the
   sample plan fixes seeds and tests in advance).
 - Data/artefact immutability: raw JSON artefacts are append-only; corrections
-  happen by re-running with a new run ID.
+  happen by re-running with a new run ID. When a D1 correction cycle triggers a
+  campaign re-run (`EXP-00n-rN`, campaign plan §10.4 item 4), from `EXP-002-r1`
+  onward the re-run **must** use completely disjoint roots — its own record
+  directory (`DOCS/experiments/EXP-00n-rN-<slug>/`), its own raw-artefact
+  directory (`benchmarks/results/EXP-00n-rN/`), its own gitignored
+  generated-output directory (`DOCS/test_and_benchmark_results/EXP-00n-rN/`),
+  its own stage-labelled evidence directories (`EVIDENCE/exp00n-rN-e1/`..`e5/`),
+  and its own `exp00n_rN_` driver/test/analysis module prefix (`EXP-001-r1`'s
+  shared `benchmarks/results/EXP-001/` directory is grandfathered as a one-time
+  historical exception distinguished by `-r1-` run labels). Predecessor raw,
+  output, and evidence directories are never opened for writing by a re-run.
 - Authorship and AI assistance: reports state which analyses were drafted by
   the AI pair and verified by the maintainer.
 - Errata: if a published claim is later invalidated, an erratum is added to

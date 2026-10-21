@@ -232,12 +232,34 @@ release requires `EXP-002-r1`'s E5 verdict to be a non-reversal, verified and
 accepted by the maintainer, or a Project Plan §8.3 amendment accepting a changed
 conclusion with full justification.
 
+**`EXP-002-r1` E1 PREPARED — 2026-10-20 UTC (branch `campaign/exp002-r1-e1`,
+baseline `M = 5677858c15d784d881b23d43dff5029d199b0a18`).** Following the merge
+of PR #34 (`305416fb`) and PR #35 (`5677858c`, closing DV-045 and completing
+the Ubuntu-24.04/Node-24 workflow migration with 31/31 check runs green and two
+consecutive wholly green scheduled `nightly.yml` runs `39203786555` and
+`39373976832`), the maintainer authorized `EXP-002-r1` E1 and ratified three
+governing decisions: (1) the **Re-run (`-r1`/`-rN`) Namespace & Evidence
+Isolation Rule** (campaign plan §7.1, §10.4 item 4, amendment #10), binding
+`EXP-002-r1` to disjoint roots (`benchmarks/results/EXP-002-r1/`,
+`DOCS/test_and_benchmark_results/EXP-002-r1/`, `EVIDENCE/exp002-r1-e1/`..`e5/`)
+and `exp002_r1_` module basenames while grandfathering `EXP-001-r1`'s shared
+`benchmarks/results/EXP-001/` directory; (2) the **`EXP002D1-S2-F1` H3
+comparison-policy decision**, registering the approved §5.4 policy as the sole
+primary decision rule for H3 and retaining the §11.3 pre-exposure policy as a
+reported, non-gating writer-property diagnostic requiring 0 unclassified
+residuals (with outcome exposure disclosed); and (3) **DV-047 closure**
+(stale `.venv/Lib/site-packages/prin_core.pth` removed, `python/prin/_prin_core.pyd`
+rebuilt from clean `main` at `5677858c`, and its SHA-256 pinned in
+`benchmarks/campaign/exp002_r1_driver.py` and `preregistration.md` §1.1).
+`preregistration.md` remains `DRAFT`; no E3 execution or `RUN-` creation
+occurred at E1, and sessions `0164`–`0194` remain `BLOCKED`.
+
 ## Layout
 
 ```
 experiments/
 ├── campaign-plan.md              # Phase 7 campaign plan (E0, session 0153)
-└── EXP-NNN-<slug>/
+└── EXP-NNN[-rN]-<slug>/
     ├── README.md                 # skeleton: status, sessions, inherited rules (E0)
     ├── preregistration.md        # frozen at execution start (E1/E2)
     ├── log.md                    # execution log (E3)
@@ -248,7 +270,8 @@ experiments/
 ```
 
 Analysis scripts under `analysis/` must carry **globally unique file names**
-(prefix with the campaign id, e.g. `exp001_e4_analysis.py`). The record roots
+(prefix with the campaign id, e.g. `exp001_e4_analysis.py`,
+`exp002_r1_e4_analysis.py`). The record roots
 are sibling directories without `__init__.py`, so the `mypy DOCS/experiments/
 --strict` local/CI gate derives bare module names from file names and aborts
 with `Duplicate module named ...` (not a typing error) if two campaigns ship the
@@ -257,14 +280,21 @@ same basename; `--explicit-package-bases` does not help.
 
 Raw run artefacts live under `benchmarks/results/EXP-NNN/RUN-<UTC>-<SHA>-<label>/`
 (JSON, tracked, one per-run `manifest.json`; campaign plan §7); figures/tables
-regenerate from them via `prin.reporting`.
+regenerate from them via `prin.reporting`. Under the **Re-run (`-r1`/`-rN`)
+Namespace & Evidence Isolation Rule** (campaign plan §7.1, amendment #10), every
+re-run from `EXP-002-r1` onward uses its own disjoint raw-artefact directory
+(`benchmarks/results/EXP-NNN-rN/`), generated-output directory
+(`DOCS/test_and_benchmark_results/EXP-NNN-rN/`), stage-labelled evidence
+directories (`EVIDENCE/expNNN-rN-e1/`..`e5/`), and `expNNN_rN_` driver/test/analysis
+module prefix (`EXP-001-r1` is grandfathered in `benchmarks/results/EXP-001/`
+with `-r1-` run labels).
 
 | Experiment | Track | Record root |
 |---|---|---|
 | EXP-001 | C1 | [`EXP-001-golden-trajectory-numerical-parity/`](EXP-001-golden-trajectory-numerical-parity/README.md) |
 | EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **COMPLETE: E5 VERIFIED AND ACCEPTED 2026-09-29 UTC. All five hypotheses `CONFIRMED`, D1 not raised (non-reversal); 0159 and every experiment downstream of EXP-001, plus 0194, are RELEASED. E1–E5 PR authorized, not yet opened** *(dated correction, 2026-10-11: opened and merged as PR #28)* |
 | EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) — **E5 VERIFIED AND ACCEPTED 2026-10-15 UTC (reported 2026-10-14 UTC): H1, H2, H4 `CONFIRMED`; H3 `REFUTED` (`21/39` approved, `5/39` sensitivity) — campaign plan §10.4 D1 RAISED. Correction cycle `EXP-002-D1` CLOSED 2026-10-16 UTC (S1→S4); these verdicts are UNCHANGED and immutable — erratum 2 in `report.md` §15 points at the re-run. Session `0164` and downstream campaign sessions remain BLOCKED** |
-| EXP-002-r1 | C1 | [`EXP-002-r1-api-benchmark-result-and-reproduction-parity/`](EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md) — **AUTHORIZED 2026-10-16 UTC by `EXP-002-D1` S4; RECORD SKELETON ONLY. No E-stage has run, no pre-registration exists, no `RUN-` directory exists, and no run is authorized by the correction closure.** Carries `EXP002D1-S2-F1`: E1/E2 must register which H3 comparison policy decides and what the other's status is, before the first `RUN-`, with outcome exposure disclosed — **S4 did not choose that rule; it needs the maintainer's approval before E1 starts.** E3 is additionally gated by DV-047 (rebuild `_prin_core.pyd`). New run IDs only; never reuses `EXP-002`'s |
+| EXP-002-r1 | C1 | [`EXP-002-r1-api-benchmark-result-and-reproduction-parity/`](EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md) — **E1 PREPARED 2026-10-20 UTC (`campaign/exp002-r1-e1`, baseline `M = 5677858c`): DRAFT [`preregistration.md`](EXP-002-r1-api-benchmark-result-and-reproduction-parity/preregistration.md), [`exp002_r1_driver.py`](../../benchmarks/campaign/exp002_r1_driver.py), [`test_exp002_r1_driver.py`](../../tests/test_exp002_r1_driver.py), [`e1-handoff.md`](EXP-002-r1-api-benchmark-result-and-reproduction-parity/e1-handoff.md), and [`e2-review-packet.md`](EXP-002-r1-api-benchmark-result-and-reproduction-parity/e2-review-packet.md) committed for E2 review.** Uses disjoint roots (`benchmarks/results/EXP-002-r1/`, `DOCS/test_and_benchmark_results/EXP-002-r1/`, `EVIDENCE/exp002-r1-e1/`). `EXP002D1-S2-F1` settled by maintainer ratification (§5.4 primary H3 rule, §11.3 non-gating writer-property diagnostic, outcome exposure disclosed); **DV-047 CLOSED** at E1 (`_prin_core.pyd` rebuilt from `5677858c` and pinned). **No `RUN-` directory exists and no E3 leg has run; sessions `0164`–`0194` remain BLOCKED** |
 | EXP-003 | C2 | [`EXP-003-cpu-scaling-and-sweep-performance/`](EXP-003-cpu-scaling-and-sweep-performance/README.md) |
 | EXP-004 | C2 | [`EXP-004-gpu-kernels-and-torch-bridge-performance/`](EXP-004-gpu-kernels-and-torch-bridge-performance/README.md) |
 | EXP-005 | C3 | [`EXP-005-dynamics-chimera-and-capacity-replication/`](EXP-005-dynamics-chimera-and-capacity-replication/README.md) |
