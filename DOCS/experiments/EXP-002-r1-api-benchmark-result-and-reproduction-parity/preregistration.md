@@ -1,9 +1,9 @@
 # Pre-registration - EXP-002-r1: API, benchmark-result, and reproduction parity (re-run)
 
-**Status:** DRAFT
+**Status:** APPROVED
 **Authors:** MichaelMaillet (maintainer, session declaration and pre-E1 decision ratification); Devin (AI pair of record, drafting)
 **Date:** 2026-10-20 UTC
-**Maintainer approval:** NOT GRANTED (E1 DRAFT — scientific review and approval belong to `EXP-002-r1-E2`)
+**Maintainer approval:** MichaelMaillet, 2026-10-21 UTC
 **Outcome-exposure disclosure (Experimentation Standards §1.1, §4; `EXP002D1-S2-F1`):** This re-run protocol is drafted **after full exposure** to `EXP-002`'s E3–E5 outcomes (`H1 CONFIRMED`, `H2 CONFIRMED`, `H3 REFUTED` at `21/39` under §5.4 and `5/39` under §11.3, `H4 CONFIRMED`) and to `EXP-002-D1` S1–S4's root-cause decomposition and residual classification (`39/39` equal under §5.4 and `14/39` equal under §11.3 on the corrected generator, with all `25` sensitivity-policy residuals proven in `EVIDENCE/exp002-d1-s2/both-policies-post-fix.txt` to be writer/host I/O properties and `0` unclassified). This disclosure is repeated in §1, §10, and §11 below and must be repeated verbatim in the E5 report.
 **Code version:** `prin-core 1.0.0rc1` / Rust `1.0.0-rc1`
 **Source baseline (`M`):** `5677858c15d784d881b23d43dff5029d199b0a18` (`origin/main` after PR #34 `305416fb` and PR #35 `5677858c`; `tools/check_ci_green.py 5677858c15d784d881b23d43dff5029d199b0a18` exit 0, all 6 required workflows green)

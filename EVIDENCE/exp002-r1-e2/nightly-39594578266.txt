@@ -1,0 +1,29 @@
+Workflow: nightly.yml
+Run ID: 39594578266
+URL: https://github.com/Symbo-gif/PRIN/actions/runs/39594578266
+Head SHA: e030611890de0aba9fa3cbcb881b374a6a5f75e6
+Branch: campaign/exp002-r1-e2
+Event: workflow_dispatch
+Conclusion: success
+
+Jobs:
+1. bench-regression (ID 119203607675)
+   Duration: 1h 31m 41s
+   Conclusion: success
+   Gated benchmarks: 63 evaluated, 0 regressions, all passed (< 1.10x threshold)
+   Key regression checks:
+     - criterion/engine_step/step_parallel/16384: 0.586x (4.094e+06 -> 2.401e+06) [PASSED]
+     - criterion/engine_step/derivatives_parallel/16384: 0.518x (1.157e+06 -> 5.998e+05) [PASSED]
+     - criterion/resonance_layer_bridge_baseline/moderate_128osc_64dims_32batch: 1.014x (4.75e+08 -> 4.817e+08) [PASSED]
+     - pytest/tests/test_dlpack_bridge.py::TestDlpackBenchmarks::test_negate_round_trip_latency[float32]: passed
+
+2. full-suite (ID 119203607956)
+   Duration: 12m 24s
+   Conclusion: success
+   Steps:
+     - Build and install (CPU-only torch): success
+     - Full Python suite (including slow + parity): success
+     - Rust workspace tests (strict-checks): success
+
+Maintainer approval condition:
+   Preregistration approval condition met; maintainer granted scientific approval on 2026-10-21 UTC.
