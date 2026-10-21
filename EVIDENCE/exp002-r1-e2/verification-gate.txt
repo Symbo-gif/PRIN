@@ -1,0 +1,451 @@
+# EXP-002-r1 E2 local verification and security gate record (2026-10-21 UTC)
+# Branch: campaign/exp002-r1-e2
+# Base (E1 PR #36 head): bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# Post-merge origin/main baseline (M_prime): 313a76f649d8e00f82959521eb7d5eaee2e409bd
+
+## 1a. Ruff lint
+$ C:\dev\PRIN\.venv\Scripts\ruff.exe check python/ tests/ benchmarks/ tools/ parity/ DOCS/experiments/
+# start: 2026-10-21T05:53:07Z
+All checks passed!
+# end: 2026-10-21T05:53:07Z
+EXIT_CODE=0
+
+## 1b. Ruff format check (code)
+$ C:\dev\PRIN\.venv\Scripts\ruff.exe format --check python/ tests/ benchmarks/ tools/ parity/
+# start: 2026-10-21T05:53:07Z
+335 files already formatted
+# end: 2026-10-21T05:53:07Z
+EXIT_CODE=0
+
+## 1c. Ruff format check (DOCS/experiments)
+$ C:\dev\PRIN\.venv\Scripts\ruff.exe format --check DOCS/experiments/ --config include = ['*.py', '*.pyi', '*.ipynb']
+# start: 2026-10-21T05:53:07Z
+3 files already formatted
+# end: 2026-10-21T05:53:07Z
+EXIT_CODE=0
+
+## 2a. Mypy strict (python/prin)
+$ C:\dev\PRIN\.venv\Scripts\mypy.exe python/prin --strict
+# start: 2026-10-21T05:53:07Z
+Success: no issues found in 62 source files
+# end: 2026-10-21T05:53:09Z
+EXIT_CODE=0
+
+## 2b. Mypy strict (DOCS/experiments)
+$ C:\dev\PRIN\.venv\Scripts\mypy.exe DOCS/experiments/ --strict
+# start: 2026-10-21T05:53:09Z
+Success: no issues found in 3 source files
+# end: 2026-10-21T05:53:11Z
+EXIT_CODE=0
+
+## 2c. Mypy strict (exp002_r1_driver + tests)
+$ C:\dev\PRIN\.venv\Scripts\mypy.exe benchmarks/campaign/exp002_r1_driver.py tests/test_exp002_r1_driver.py --strict
+# start: 2026-10-21T05:53:11Z
+Success: no issues found in 2 source files
+# end: 2026-10-21T05:53:13Z
+EXIT_CODE=0
+
+## 3a. Interrogate docstring coverage (python/prin)
+$ C:\dev\PRIN\.venv\Scripts\python.exe -m interrogate -c pyproject.toml python/prin
+# start: 2026-10-21T05:53:13Z
+==================== Coverage for C:\dev\PRIN\python\prin\ ====================
+----------------------------------- Summary -----------------------------------
+| Name                                |   Total |   Miss |   Cover |   Cover% |
+|-------------------------------------|---------|--------|---------|----------|
+| __init__.py                         |       1 |      0 |       1 |     100% |
+| _compat.py                          |      14 |      0 |      14 |     100% |
+| _deprecation.py                     |       8 |      0 |       8 |     100% |
+| _ort.py                             |      13 |      0 |      13 |     100% |
+| _phase0.py                          |      12 |      0 |      12 |     100% |
+| _public_api.py                      |       1 |      0 |       1 |     100% |
+| _torch_compat.py                    |     106 |      5 |     101 |      95% |
+| adversarial_tools.py                |       5 |      0 |       5 |     100% |
+| daemon.py                           |      33 |      0 |      33 |     100% |
+| datasets.py                         |       5 |      0 |       5 |     100% |
+| dlpack.py                           |       4 |      0 |       4 |     100% |
+| dynamics.py                         |       1 |      0 |       1 |     100% |
+| kernels.py                          |      28 |      0 |      28 |     100% |
+| metrics.py                          |       3 |      0 |       3 |     100% |
+| simulation.py                       |      27 |      1 |      26 |      96% |
+| simulation_experiments.py           |       7 |      0 |       7 |     100% |
+| solvers.py                          |       8 |      0 |       8 |     100% |
+| subconscious_compat.py              |      40 |      0 |      40 |     100% |
+| temporal_metrics.py                 |      11 |      0 |      11 |     100% |
+| temporal_training.py                |      22 |      0 |      22 |     100% |
+| tensor.py                           |      23 |      0 |      23 |     100% |
+| topology.py                         |       3 |      0 |       3 |     100% |
+| train.py                            |       4 |      0 |       4 |     100% |
+| training_hooks.py                   |      37 |      1 |      36 |      97% |
+| y4q1_tools.py                       |      44 |      1 |      43 |      98% |
+| eval\__init__.py                    |       1 |      0 |       1 |     100% |
+| experiments\__init__.py             |       3 |      0 |       3 |     100% |
+| nn\__init__.py                      |      17 |      0 |      17 |     100% |
+| nn\_bridge.py                       |       5 |      0 |       5 |     100% |
+| nn\ablation.py                      |      29 |      0 |      29 |     100% |
+| nn\ablation_variants.py             |      33 |      0 |      33 |     100% |
+| nn\activations.py                   |       8 |      0 |       8 |     100% |
+| nn\allocation.py                    |      15 |      0 |      15 |     100% |
+| nn\attention.py                     |       7 |      0 |       7 |     100% |
+| nn\autoencoders.py                  |      26 |      0 |      26 |     100% |
+| nn\deferred_layers.py               |       1 |      0 |       1 |     100% |
+| nn\energy.py                        |      17 |      0 |      17 |     100% |
+| nn\hierarchical_layers.py           |      38 |      0 |      38 |     100% |
+| nn\hybrid.py                        |      14 |      0 |      14 |     100% |
+| nn\hybrid_compat.py                 |      24 |      0 |      24 |     100% |
+| nn\inhibition.py                    |       6 |      0 |       6 |     100% |
+| nn\inhibition_layers.py             |      23 |      0 |      23 |     100% |
+| nn\model.py                         |      15 |      0 |      15 |     100% |
+| nn\mot_evaluation.py                |      11 |      0 |      11 |     100% |
+| nn\optimizers.py                    |      33 |      0 |      33 |     100% |
+| nn\phase_tracker.py                 |      18 |      0 |      18 |     100% |
+| nn\slot_attention.py                |      20 |      0 |      20 |     100% |
+| nn\subconscious_model.py            |       1 |      0 |       1 |     100% |
+| nn\temporal_compat.py               |      14 |      0 |      14 |     100% |
+| parity\__init__.py                  |       1 |      0 |       1 |     100% |
+| parity\harness.py                   |      10 |      0 |      10 |     100% |
+| parity\loader.py                    |       9 |      0 |       9 |     100% |
+| parity\manifest.py                  |      15 |      0 |      15 |     100% |
+| parity\schema.py                    |      21 |      0 |      21 |     100% |
+| parity\strategies.py                |      13 |      0 |      13 |     100% |
+| reporting\__init__.py               |       1 |      0 |       1 |     100% |
+| reporting\_artifacts.py             |      15 |      7 |       8 |      53% |
+| reporting\benchmark_reporting.py    |      22 |      0 |      22 |     100% |
+| reporting\figure_generation.py      |      21 |      2 |      19 |      90% |
+| reporting\profiler.py               |      24 |      0 |      24 |     100% |
+| reporting\table_generation.py       |      20 |      7 |      13 |      65% |
+|-------------------------------------|---------|--------|---------|----------|
+| TOTAL                               |    1011 |     24 |     987 |    97.6% |
+--------------- RESULT: PASSED (minimum: 95.0%, actual: 97.6%) ----------------
+# end: 2026-10-21T05:53:13Z
+EXIT_CODE=0
+
+## 3b. Interrogate docstring coverage (exp002_r1_driver.py)
+$ C:\dev\PRIN\.venv\Scripts\python.exe -m interrogate -c pyproject.toml benchmarks/campaign/exp002_r1_driver.py
+# start: 2026-10-21T05:53:13Z
+================ Coverage for C:\dev\PRIN\benchmarks\campaign\ ================
+----------------------------------- Summary -----------------------------------
+| Name                        |     Total |     Miss |     Cover |     Cover% |
+|-----------------------------|-----------|----------|-----------|------------|
+| exp002_r1_driver.py         |        49 |        0 |        49 |       100% |
+|-----------------------------|-----------|----------|-----------|------------|
+| TOTAL                       |        49 |        0 |        49 |     100.0% |
+--------------- RESULT: PASSED (minimum: 95.0%, actual: 100.0%) ---------------
+# end: 2026-10-21T05:53:14Z
+EXIT_CODE=0
+
+## 3c. Bandit SAST (python/prin + DOCS/experiments)
+$ C:\dev\PRIN\.venv\Scripts\python.exe -m bandit -r python/prin DOCS/experiments -c pyproject.toml -q
+# start: 2026-10-21T05:53:14Z
+[manager]	WARNING	Test in comment: subprocess is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: use is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: is is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: confined is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: to is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: the is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: vswhere is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: exe is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: lookup is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: in is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: _find_msvc_cl is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: see is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: the is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: justification is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: there is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: constant is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: args is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: fixed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: absolute is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: path is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: to is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: the is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: MS is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: signed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: vswhere is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: exe is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: existence is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: checked is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: above is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: constant is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: list is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: args is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: shell is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: no is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: user is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: input is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: best is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: effort is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: daemon is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: control is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: a is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: failure is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: here is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: is is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: intentionally is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: swallowed is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: so is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: training is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: continues is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: without is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: subconscious is not a test name or id, ignoring
+[manager]	WARNING	Test in comment: control is not a test name or id, ignoring
+# end: 2026-10-21T05:53:15Z
+EXIT_CODE=0
+
+## 3d. Bandit SAST (exp002_r1_driver + tests)
+$ C:\dev\PRIN\.venv\Scripts\python.exe -m bandit -r benchmarks/campaign/exp002_r1_driver.py tests/test_exp002_r1_driver.py -c pyproject.toml -q
+# start: 2026-10-21T05:53:15Z
+# end: 2026-10-21T05:53:16Z
+EXIT_CODE=0
+
+## 4a. Governance: check_dv_register_gates.py
+$ C:\dev\PRIN\.venv\Scripts\python.exe tools/check_dv_register_gates.py
+# start: 2026-10-21T05:53:16Z
+DV-register gate check passed.
+  Checked 47 DV register rows against 198 session-register entries.
+# end: 2026-10-21T05:53:16Z
+EXIT_CODE=0
+
+## 4b. Governance: check_global_session_registration.py
+$ C:\dev\PRIN\.venv\Scripts\python.exe tools/check_global_session_registration.py
+# start: 2026-10-21T05:53:16Z
+Global-session registration check passed.
+  Checked 18 Executive Audit reports.
+# end: 2026-10-21T05:53:16Z
+EXIT_CODE=0
+
+## 4c. Governance: check_skipif_probes.py
+$ C:\dev\PRIN\.venv\Scripts\python.exe tools/check_skipif_probes.py
+# start: 2026-10-21T05:53:16Z
+check_skipif_probes: no registration-probe skipif guards
+# end: 2026-10-21T05:53:16Z
+EXIT_CODE=0
+
+## 4d. Governance: wp001_baseline.py check
+$ C:\dev\PRIN\.venv\Scripts\python.exe tools/wp001_baseline.py check
+# start: 2026-10-21T05:53:16Z
+WP-001 baseline validation passed.
+# end: 2026-10-21T05:53:16Z
+EXIT_CODE=0
+
+## 5. Clean Sphinx HTML build (-W --keep-going)
+$ Remove-Item -Recurse -Force DOCS/sphinx/_build; C:\dev\PRIN\.venv\Scripts\python.exe -m sphinx.cmd.build -W --keep-going -b html DOCS/sphinx DOCS/sphinx/_build/html
+# start: 2026-10-21T05:53:17Z
+[01mRunning Sphinx v9.1.0[39;49;00m
+[01mloading translations [en]... [39;49;00mdone
+[01mmaking output directory... [39;49;00mdone
+[autosummary] generating autosummary for: api\adversarial.rst, api\compat.rst, api\core.rst, api\daemon.rst, api\datasets.rst, api\dlpack.rst, api\dynamics.rst, api\eval.rst, api\experiment_tools.rst, api\experiments.rst, ..., changelog.rst, coupling_topologies.rst, getting_started.rst, index.rst, kernel_architecture.rst, migration_guide.rst, notebooks.rst, paper.rst, parity_report.rst, rust_api.rst
+loading intersphinx inventory 'python' from https://docs.python.org/3/objects.inv ...
+loading intersphinx inventory 'numpy' from https://numpy.org/doc/stable/objects.inv ...
+loading intersphinx inventory 'torch' from https://pytorch.org/docs/stable/objects.inv ...
+loading intersphinx inventory 'matplotlib' from https://matplotlib.org/stable/objects.inv ...
+intersphinx inventory has moved: https://pytorch.org/docs/stable/objects.inv -> https://docs.pytorch.org/docs/stable/objects.inv
+[01mmyst v5.1.0:[39;49;00m MdParserConfig(commonmark_only=False, gfm_only=False, enable_extensions=set(), disable_syntax=[], all_links_external=False, links_external_new_tab=False, url_schemes=('http', 'https', 'mailto', 'ftp'), ref_domains=None, fence_as_directive=set(), number_code_blocks=[], title_to_header=False, heading_anchors=0, heading_slug_func=None, html_meta={}, footnote_sort=True, footnote_transition=True, words_per_minute=200, substitutions={}, linkify_fuzzy_links=True, dmath_allow_labels=True, dmath_allow_space=True, dmath_allow_digits=True, dmath_double_inline=False, update_mathjax=True, mathjax_classes='tex2jax_process|mathjax_process|math|output_area', enable_checkboxes=False, strikethrough_single_tilde=False, colon_fence_exact_match=False, suppress_warnings=[], highlight_code_blocks=True)
+[01mbuilding [mo]: [39;49;00mtargets for 0 po files that are out of date
+[01mwriting output... [39;49;00m
+[01mbuilding [html]: [39;49;00mtargets for 35 source files that are out of date
+[01mupdating environment: [39;49;00m[new config] 35 added, 0 changed, 0 removed
+[2K[01mreading sources... [39;49;00m[  3%] [35mapi/adversarial[39;49;00m
+[2K[01mreading sources... [39;49;00m[  6%] [35mapi/compat[39;49;00m
+[2K[01mreading sources... [39;49;00m[  9%] [35mapi/core[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 11%] [35mapi/daemon[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 14%] [35mapi/datasets[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 17%] [35mapi/dlpack[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 20%] [35mapi/dynamics[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 23%] [35mapi/eval[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 26%] [35mapi/experiment_tools[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 29%] [35mapi/experiments[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 31%] [35mapi/kernels[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 34%] [35mapi/metrics[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 37%] [35mapi/nn[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 40%] [35mapi/parity[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 43%] [35mapi/reporting[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 46%] [35mapi/simulation[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 49%] [35mapi/solvers[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 51%] [35mapi/subconscious[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 54%] [35mapi/temporal[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 57%] [35mapi/tensor[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 60%] [35mapi/topology[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 63%] [35mapi/train[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 66%] [35mapi/utils[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 69%] [35marchitecture[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 71%] [35mcapacity_analysis[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 74%] [35mchangelog[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 77%] [35mcoupling_topologies[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 80%] [35mgetting_started[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 83%] [35mindex[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 86%] [35mkernel_architecture[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 89%] [35mmigration_guide[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 91%] [35mnotebooks[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 94%] [35mpaper[39;49;00m
+[2K[01mreading sources... [39;49;00m[ 97%] [35mparity_report[39;49;00m
+[2K[01mreading sources... [39;49;00m[100%] [35mrust_api[39;49;00m
+
+[01mlooking for now-outdated files... [39;49;00mnone found
+[01mpickling environment... [39;49;00mdone
+[01mchecking consistency... [39;49;00mC:\dev\PRIN\DOCS\sphinx\api\adversarial.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/adversarial
+C:\dev\PRIN\DOCS\sphinx\api\compat.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/compat
+C:\dev\PRIN\DOCS\sphinx\api\datasets.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/datasets
+C:\dev\PRIN\DOCS\sphinx\api\experiment_tools.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/experiment_tools
+C:\dev\PRIN\DOCS\sphinx\api\kernels.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/kernels
+C:\dev\PRIN\DOCS\sphinx\api\simulation.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/simulation
+C:\dev\PRIN\DOCS\sphinx\api\solvers.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/solvers
+C:\dev\PRIN\DOCS\sphinx\api\subconscious.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/subconscious
+C:\dev\PRIN\DOCS\sphinx\api\temporal.rst: document is referenced in multiple toctrees: ['api/utils', 'index'], selecting: index <- api/temporal
+done
+[01mpreparing documents... [39;49;00mdone
+[01mcopying assets... [39;49;00m
+[01mcopying static files... [39;49;00m
+Writing evaluated template result to C:\dev\PRIN\DOCS\sphinx\_build\html\_static\basic.css
+Writing evaluated template result to C:\dev\PRIN\DOCS\sphinx\_build\html\_static\documentation_options.js
+Writing evaluated template result to C:\dev\PRIN\DOCS\sphinx\_build\html\_static\language_data.js
+[01mcopying static files: [39;49;00mdone
+[01mcopying extra files... [39;49;00m
+[01mcopying extra files: [39;49;00mdone
+[01mcopying assets: [39;49;00mdone
+[2K[01mwriting output... [39;49;00m[  3%] [32mapi/adversarial[39;49;00m
+[2K[01mwriting output... [39;49;00m[  6%] [32mapi/compat[39;49;00m
+[2K[01mwriting output... [39;49;00m[  9%] [32mapi/core[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 11%] [32mapi/daemon[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 14%] [32mapi/datasets[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 17%] [32mapi/dlpack[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 20%] [32mapi/dynamics[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 23%] [32mapi/eval[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 26%] [32mapi/experiment_tools[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 29%] [32mapi/experiments[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 31%] [32mapi/kernels[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 34%] [32mapi/metrics[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 37%] [32mapi/nn[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 40%] [32mapi/parity[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 43%] [32mapi/reporting[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 46%] [32mapi/simulation[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 49%] [32mapi/solvers[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 51%] [32mapi/subconscious[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 54%] [32mapi/temporal[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 57%] [32mapi/tensor[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 60%] [32mapi/topology[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 63%] [32mapi/train[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 66%] [32mapi/utils[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 69%] [32marchitecture[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 71%] [32mcapacity_analysis[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 74%] [32mchangelog[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 77%] [32mcoupling_topologies[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 80%] [32mgetting_started[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 83%] [32mindex[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 86%] [32mkernel_architecture[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 89%] [32mmigration_guide[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 91%] [32mnotebooks[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 94%] [32mpaper[39;49;00m
+[2K[01mwriting output... [39;49;00m[ 97%] [32mparity_report[39;49;00m
+[2K[01mwriting output... [39;49;00m[100%] [32mrust_api[39;49;00m
+
+[01mgenerating indices... [39;49;00mgenindex py-modindex done
+[2K[01mhighlighting module code... [39;49;00m[  2%] [94mprin._compat[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[  4%] [94mprin._deprecation[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[  6%] [94mprin._prin_core[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[  8%] [94mprin._torch_compat[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 10%] [94mprin.adversarial_tools[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 12%] [94mprin.daemon[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 13%] [94mprin.datasets[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 15%] [94mprin.dlpack[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 17%] [94mprin.experiments[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 19%] [94mprin.kernels[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 21%] [94mprin.metrics[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 23%] [94mprin.nn[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 25%] [94mprin.nn._bridge[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 27%] [94mprin.nn.ablation[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 29%] [94mprin.nn.ablation_variants[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 31%] [94mprin.nn.activations[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 33%] [94mprin.nn.allocation[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 35%] [94mprin.nn.attention[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 37%] [94mprin.nn.autoencoders[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 38%] [94mprin.nn.energy[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 40%] [94mprin.nn.hierarchical_layers[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 42%] [94mprin.nn.hybrid[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 44%] [94mprin.nn.hybrid_compat[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 46%] [94mprin.nn.inhibition[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 48%] [94mprin.nn.inhibition_layers[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 50%] [94mprin.nn.model[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 52%] [94mprin.nn.mot_evaluation[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 54%] [94mprin.nn.optimizers[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 56%] [94mprin.nn.phase_tracker[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 58%] [94mprin.nn.slot_attention[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 60%] [94mprin.nn.temporal_compat[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 62%] [94mprin.parity.harness[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 63%] [94mprin.parity.loader[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 65%] [94mprin.parity.manifest[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 67%] [94mprin.parity.schema[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 69%] [94mprin.parity.strategies[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 71%] [94mprin.reporting._artifacts[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 73%] [94mprin.reporting.benchmark_reporting[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 75%] [94mprin.reporting.figure_generation[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 77%] [94mprin.reporting.profiler[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 79%] [94mprin.reporting.table_generation[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 81%] [94mprin.simulation[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 83%] [94mprin.simulation_experiments[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 85%] [94mprin.solvers[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 87%] [94mprin.subconscious_compat[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 88%] [94mprin.temporal_metrics[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 90%] [94mprin.temporal_training[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 92%] [94mprin.tensor[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 94%] [94mprin.topology[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 96%] [94mprin.train[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[ 98%] [94mprin.training_hooks[39;49;00m
+[2K[01mhighlighting module code... [39;49;00m[100%] [94mprin.y4q1_tools[39;49;00m
+
+[01mwriting additional pages... [39;49;00msearch done
+[01mdumping search index in English (code: en)... [39;49;00mdone
+[01mdumping object inventory... [39;49;00mdone
+[01mbuild succeeded.[39;49;00m
+
+The HTML pages are in DOCS\sphinx\_build\html.
+# end: 2026-10-21T05:53:41Z
+EXIT_CODE=0
+
+## 6a. Secret scan (gitleaks git .)
+$ DOCS\test_and_benchmark_results\ea007\full-gate\.tools\gitleaks\bin\gitleaks.exe git . --no-banner
+# start: 2026-10-21T05:53:41Z
+[90m2:53AM[0m [32mINF[0m [1m794 commits scanned.[0m
+[90m2:53AM[0m [32mINF[0m [1mscanned ~109980644 bytes (109.98 MB) in 10s[0m
+[90m2:53AM[0m [32mINF[0m [1mno leaks found[0m
+# end: 2026-10-21T05:53:52Z
+EXIT_CODE=0
+
+## 6b. Secret scan (gitleaks dir EVIDENCE/exp002-r1-e2)
+$ DOCS\test_and_benchmark_results\ea007\full-gate\.tools\gitleaks\bin\gitleaks.exe dir EVIDENCE/exp002-r1-e2 --no-banner
+# start: 2026-10-21T05:53:52Z
+[90m2:53AM[0m [32mINF[0m [1mscanned ~205357 bytes (205.36 KB) in 24.1ms[0m
+[90m2:53AM[0m [32mINF[0m [1mno leaks found[0m
+# end: 2026-10-21T05:53:52Z
+EXIT_CODE=0
+
+## 6c. Secret scan (gitleaks dir DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity)
+$ DOCS\test_and_benchmark_results\ea007\full-gate\.tools\gitleaks\bin\gitleaks.exe dir DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity --no-banner
+# start: 2026-10-21T05:53:52Z
+[90m2:53AM[0m [32mINF[0m [1mscanned ~154297 bytes (154.30 KB) in 26.8ms[0m
+[90m2:53AM[0m [32mINF[0m [1mno leaks found[0m
+# end: 2026-10-21T05:53:52Z
+EXIT_CODE=0
+
+## 7a. Evidence index self-check (exp002-r1-e1)
+$ C:\dev\PRIN\.venv\Scripts\python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-r1-e1
+# start: 2026-10-21T05:53:52Z
+bundle exp002-r1-e1: 7 files (README included)
+  nested READMEs used: none
+  unindexed files : none
+  dangling links  : none
+# end: 2026-10-21T05:53:53Z
+EXIT_CODE=0
+
+## 7b. Evidence index self-check (exp002-r1-e2)
+$ C:\dev\PRIN\.venv\Scripts\python.exe -I EVIDENCE/exp002-d1-s3/index_selfcheck.py exp002-r1-e2
+# start: 2026-10-21T05:53:53Z
+bundle exp002-r1-e2: 24 files (README included)
+  nested READMEs used: none
+  unindexed files : none
+  dangling links  : none
+# end: 2026-10-21T05:53:53Z
+EXIT_CODE=0
+

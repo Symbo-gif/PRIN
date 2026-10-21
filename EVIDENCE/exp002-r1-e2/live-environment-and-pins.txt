@@ -1,0 +1,11 @@
+# command: C:/dev/PRIN/.venv/Scripts/python.exe -c "import benchmarks.campaign.exp002_r1_driver as d; print('shadowing:', d._environment_shadowing()); print('pins:', d._verify_all_pins()); print('counts files/figs/tabs/api/claims:', len(d.EXPECTED_FILES), len(d.FIGURE_STEMS), len(d.TABLE_STEMS), d.API_SYMBOL_COUNT, d.CLAIM_CASE_COUNT); L=set(d._legacy_names()); print('legacy/overlap/expected:', len(L), len(L & d.PRIN_ADDITIONS), len(L | d.PRIN_ADDITIONS)); print('roots:', d.RAW_ROOT, d.OUTPUT_ROOT, d.EXP_ID, d.SESSION_ID)"
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# start: 2026-10-21T00:16:55Z
+shadowing: []
+pins: {'prin_core_pyd_sha256': '37392d067efa3983e384c94f4ac2268c4fad2f5ea929c529b3db50bff4fee99e', 'prin_core_pyd_bytes': 9290240}
+counts files/figs/tabs/api/claims: 39 14 11 175 62
+legacy/overlap/expected: 172 0 175
+roots: C:\dev\PRIN\benchmarks\results\EXP-002-r1 C:\dev\PRIN\DOCS\test_and_benchmark_results\EXP-002-r1 EXP-002-r1 EXP-002-r1-E3
+
+# end: 2026-10-21T00:16:58Z
+# exit code: 0

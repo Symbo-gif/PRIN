@@ -1,0 +1,56 @@
+# PR #37 review adjudication and remediation verification
+# Post-merge origin/main baseline M_prime: 313a76f649d8e00f82959521eb7d5eaee2e409bd
+# Docstring coverage in benchmarks/campaign/exp002_r1_driver.py: 47/47 (100.00%)
+
+## Post-remediation file sizes and SHA-256 digests
+DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/preregistration.md | 51063 | 4097ba9879606e28abd4badf7a4084f2b4bab665f3bb367f959b687e0802e1e2
+benchmarks/campaign/exp002_r1_driver.py | 74408 | 26f375d643004805bbed8dc4f5c148d01bb65282a927b941b7aacbecae9c0745
+tests/test_exp002_r1_driver.py | 147161 | da16a956f928f7101b7cafa80ab9c7cf7e0dfe760385b258de6835eb73d0e3fb
+DOCS/experiments/campaign-plan.md | 81915 | 2797b499341cd222d582834423f734565d3251ff51013bcccd5f2f31c22b4ce6
+
+## Post-remediation focused pytest + coverage
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 347 items
+
+tests\test_exp002_r1_driver.py ...s..................................... [ 11%]
+........................................................................ [ 32%]
+........................................................................ [ 53%]
+........................................................................ [ 74%]
+........................................................................ [ 94%]
+..................                                                       [100%]
+
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.14.0-final-0 _______________
+
+Name                                      Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------
+benchmarks\campaign\exp002_r1_driver.py     869     17    98%   670, 990, 1142-1143, 1146-1147, 1183-1185, 1215-1216, 1218-1220, 1276-1277, 1638
+-----------------------------------------------------------------------
+TOTAL                                       869     17    98%
+======================= 346 passed, 1 skipped in 34.02s =======================
+
+## Post-remediation host-pin + input-manifest pin tests (PRIN_EXP002_R1_HOST_PIN=1)
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 347 items / 340 deselected / 7 selected
+
+tests/test_exp002_r1_driver.py::TestNamespaceIsolationAndRealPins::test_real_generator_source_pins_match_repository PASSED [ 14%]
+tests/test_exp002_r1_driver.py::TestNamespaceIsolationAndRealPins::test_live_prin_core_pyd_pin_matches_registered_build PASSED [ 28%]
+tests/test_exp002_r1_driver.py::TestAdmission::test_admission_verifies_every_live_pin[reference-source] PASSED [ 42%]
+tests/test_exp002_r1_driver.py::TestAdmission::test_admission_verifies_every_live_pin[prin-generator] PASSED [ 57%]
+tests/test_exp002_r1_driver.py::TestAdmission::test_admission_verifies_input_manifest_pin PASSED [ 71%]
+tests/test_exp002_r1_driver.py::TestRunRegistered::test_input_manifest_mutation_during_collection_aborts[api] PASSED [ 85%]
+tests/test_exp002_r1_driver.py::TestRunRegistered::test_input_manifest_mutation_during_collection_aborts[conclusions] PASSED [100%]
+
+===================== 7 passed, 340 deselected in 27.80s ======================

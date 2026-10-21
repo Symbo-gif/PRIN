@@ -341,22 +341,19 @@ impl SparseCoupling {
             });
         }
 
-        // Each sin_cos() call yields both trig values at once, so a single
-        // dispatch pass computes (u, v) instead of two redundant passes.
-        let uv: Vec<(f64, f64)> = zip_map_dispatch(phases, amplitudes, |&p, &a| {
-            let (s, c) = p.sin_cos();
-            (a * s, a * c)
-        });
-        let (u, v): (Vec<f64>, Vec<f64>) = uv.into_iter().unzip();
+        // Compute (sin φ_i, cos φ_i) once per oscillator and reuse it for both
+        // the outgoing phasor (r_j sin φ_j, r_j cos φ_j) and the incoming phase
+        // rotation, avoiding a second transcendental pass over `phases`.
+        let sin_cos: Vec<(f64, f64)> = map_dispatch(phases, |&p| p.sin_cos());
+        let uv: Vec<(f64, f64)> =
+            zip_map_dispatch(&sin_cos, amplitudes, |&(s, c), &a| (a * s, a * c));
 
-        let a_vec = spmv(&self.matrix, &u);
-        let b_vec = spmv(&self.matrix, &v);
+        let ab = spmv_pair(&self.matrix, &uv);
 
-        let ab: Vec<(f64, f64)> = a_vec.into_iter().zip(b_vec).collect();
-        let sums: Vec<(f64, f64)> = zip_map_dispatch(phases, &ab, |&phi, &(a_val, b_val)| {
-            let (si, ci) = phi.sin_cos();
-            (ci * a_val - si * b_val, ci * b_val + si * a_val)
-        });
+        let sums: Vec<(f64, f64)> =
+            zip_map_dispatch(&sin_cos, &ab, |&(si, ci), &(a_val, b_val)| {
+                (ci * a_val - si * b_val, ci * b_val + si * a_val)
+            });
         let (sin_sum, cos_sum) = sums.into_iter().unzip();
         Ok((sin_sum, cos_sum))
     }
@@ -516,6 +513,19 @@ fn spmv(mat: &CsMat<f64>, x: &[f64]) -> Vec<f64> {
     let rows: Vec<_> = mat.outer_iterator().collect();
     map_dispatch(&rows, |row| {
         row.iter().fold(0.0_f64, |acc, (j, &val)| acc + val * x[j])
+    })
+}
+
+/// Paired sparse matrix–vector product `(A · u, A · v)` for a CSR matrix over
+/// interleaved `(u_j, v_j)` pairs in a single CSR traversal.
+fn spmv_pair(mat: &CsMat<f64>, uv: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    let rows: Vec<_> = mat.outer_iterator().collect();
+    map_dispatch(&rows, |row| {
+        row.iter()
+            .fold((0.0_f64, 0.0_f64), |(acc_a, acc_b), (j, &val)| {
+                let (uj, vj) = uv[j];
+                (acc_a + val * uj, acc_b + val * vj)
+            })
     })
 }
 

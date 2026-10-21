@@ -321,6 +321,11 @@ def _setup_synthetic_prin_core(
         path.write_bytes(body)
         reference_pins[relative] = _sha256(body)
     monkeypatch.setattr(driver, "REFERENCE_PINS", reference_pins)
+    manifest_path = root / "manifest.json"
+    manifest_body = b'{"synthetic": true}\n'
+    manifest_path.write_bytes(manifest_body)
+    monkeypatch.setattr(driver, "INPUT_MANIFEST", manifest_path)
+    monkeypatch.setattr(driver, "INPUT_MANIFEST_SHA", _sha256(manifest_body))
     return pyd_path, pins
 
 
@@ -365,7 +370,6 @@ def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         / "experiments"
         / "EXP-002-api-benchmark-result-and-reproduction-parity",
     )
-    monkeypatch.setattr(driver, "INPUT_MANIFEST", root / "manifest.json")
     monkeypatch.setattr(driver, "_git_bytes", _fake_git())
     monkeypatch.setattr(driver, "_environment_shadowing", lambda: [])
     _setup_synthetic_prin_core(root, monkeypatch)
@@ -644,8 +648,10 @@ class TestNamespaceIsolationAndRealPins:
         assert resolved_tab == out_r1 / "RUN-x" / "publication" / "tables"
 
     def test_real_generator_source_pins_match_repository(self) -> None:
-        """Verify the live PRIN generator pins (portable: no native binary)."""
+        """Verify the live PRIN generator and input-manifest pins (no native binary)."""
         driver._verify_prin_generators()
+        manifest_bytes = driver._verify_input_manifest()
+        assert _sha256(manifest_bytes) == driver.INPUT_MANIFEST_SHA
         repo_root = Path(driver.__file__).resolve().parents[2]
         for relative, pinned in driver.PRIN_PINS.items():
             assert _sha256((repo_root / relative).read_bytes()) == pinned
@@ -2195,6 +2201,20 @@ class TestAdmission:
                 "api", driver.RAW_ROOT / _run_name("api"), "devin", SHA
             )
 
+    def test_admission_verifies_input_manifest_pin(
+        self,
+        workspace: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Admission rejects a mutated paper input manifest before reservation."""
+        _protocol_file(workspace)
+        monkeypatch.setattr(driver, "_git_bytes", _fake_git())
+        driver.INPUT_MANIFEST.write_bytes(b'{"tampered": true}\n')
+        run_dir = driver.RAW_ROOT / _run_name("api")
+        with pytest.raises(driver.DriverError, match="paper input manifest changed"):
+            driver.run_registered("api", run_dir, "devin", SHA)
+        assert not run_dir.exists()
+
     def test_admission_rejects_shadowing_environment(
         self, workspace: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -2644,6 +2664,33 @@ class TestRunRegistered:
         result = json.loads((run_dir / "api.json").read_text(encoding="utf-8"))
         assert result["status"] == "ABORTED"
         assert "digest changed" in result["abort_reason"]
+        assert (run_dir / "abort.json").is_file()
+        with pytest.raises(driver.DriverError, match="abort record"):
+            driver.check_run_complete(run_dir)
+
+    @pytest.mark.parametrize("mode", ["api", "conclusions"])
+    def test_input_manifest_mutation_during_collection_aborts(
+        self, admitted: Path, monkeypatch: pytest.MonkeyPatch, mode: str
+    ) -> None:
+        """Mutating INPUT_MANIFEST mid-collection aborts finalization."""
+        monkeypatch.setattr(driver, "_snapshot", lambda dest: ({}, _fake_identity()))
+
+        def mutate_api() -> dict[str, Any]:
+            driver.INPUT_MANIFEST.write_bytes(b'{"mutated_mid_run": true}\n')
+            return _fake_observations("api")
+
+        def mutate_conclusions(_docs: object) -> dict[str, Any]:
+            driver.INPUT_MANIFEST.write_bytes(b'{"mutated_mid_run": true}\n')
+            return _fake_observations("conclusions")
+
+        monkeypatch.setattr(driver, "collect_api", mutate_api)
+        monkeypatch.setattr(driver, "collect_conclusions", mutate_conclusions)
+        run_dir = driver.RAW_ROOT / _run_name(mode)
+        with pytest.raises(driver.DriverError, match="aborted run retained"):
+            driver.run_registered(mode, run_dir, "devin", SHA)
+        result = json.loads((run_dir / RESULT_NAMES[mode]).read_text(encoding="utf-8"))
+        assert result["status"] == "ABORTED"
+        assert "paper input manifest changed" in result["abort_reason"]
         assert (run_dir / "abort.json").is_file()
         with pytest.raises(driver.DriverError, match="abort record"):
             driver.check_run_complete(run_dir)

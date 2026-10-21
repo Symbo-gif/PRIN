@@ -1,0 +1,975 @@
+# command: git --no-pager show --stat --format=fuller 67100a69 & git --no-pager show 67100a69 -- tests/test_acceptance_subconscious.py & git --no-pager show --stat --format=fuller 33520b62 & git --no-pager show --stat --format=fuller a570aa7f & git --no-pager diff 305416fb0f85e690b12640b3f32fad48b55d9077 5677858c15d784d881b23d43dff5029d199b0a18 -- benchmarks/y4q1_5_benchmarks.py tests/test_acceptance_y4q1_5.py tests/conftest.py
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# start: 2026-10-21T00:17:13Z
+commit 67100a698469307da52956698f504df5251e5b0b
+Author:     MichaelMaillet <michaelmaillet238@gmail.com>
+AuthorDate: Sat Oct 17 21:16:02 2026 -0300
+Commit:     MichaelMaillet <michaelmaillet238@gmail.com>
+CommitDate: Sat Oct 17 21:16:02 2026 -0300
+
+    fix(tests): measure daemon overhead in process CPU time, not wall time (DV-032)
+    
+    Closes EXP002D1-S4-F3 and implements the fix path DV-032 has carried since
+    2026-09-01: "convert each to a seeded frame-count / pytest-benchmark case with
+    an explicit tolerance".
+    
+    test_no_gpu_throughput_regression asserted
+    median(with_daemon)/median(baseline) < 1.30 over WALL-CLOCK timings. Two measured
+    facts made that unusable in a required gate:
+    
+      * It carried no signal. The daemon blocks on _state_queue.get and the test
+        submits only three states, so exactly 3 inferences (~1.5 ms each) run inside
+        a ~420 ms window: a maximum expressible effect of ~1.1% against a 30%
+        allowance, ~27x below tolerance.
+      * So it measured only host noise. At 814b670c it returned 22.07 in-suite and
+        2.13 / 3.42 in isolation at 97-99.7% host CPU, while passing 5/5 on a quiet
+        host. It turned a required gate leg red on a commit whose diff did not touch
+        it, and DV-032 documents its expected band as "~1.28-1.32 under load".
+    
+    Overhead is now measured with time.process_time(), which excludes time spent
+    waiting for other processes and so cannot be inflated by unrelated host load.
+    Samples grew from n=1_000_000 (~60 ms) to n=8_000_000 (~480 ms) because the
+    Windows process-time tick (~15.6 ms) made a 60 ms sample quantise to ratios of
+    0.8000 / 0.8750 / 1.1429 -- one tick moved the ratio ~25%. At ~480 ms a tick
+    moves it ~3%.
+    
+    Three deterministic assertions now carry the real signal and are load-invariant:
+    error_count == 0, dlq_size == 0, inference_count >= submitted. The drain waits
+    on every submitted state being HANDLED (inference_count + error_count), not on
+    the queue reading empty -- the queue is empty once the daemon dequeues an item,
+    before it finishes inferring it, so an emptiness-based drain observes the count
+    mid-flight and fails spuriously.
+    
+    Measured ratio, normal daemon: 1.03 quiet, 1.02 under a host saturated with one
+    busy process per logical CPU. The old metric under the same saturation produced
+    22.07 / 2.13 / 3.42. The bound is 1.60, sized from a worst observed normal-daemon
+    ratio of 1.1429 at the coarser resolution, not from the 1.30 it replaces.
+    
+    Non-vacuity proven in both directions: a CPU-hogging daemon gives ratio 2.00 and
+    FAILS the bound; an erroring daemon reports "daemon reported 3 inference errors"
+    and FAILS the deterministic counts. Whole file: 49 passed.
+    
+    Known limitation, measured and recorded rather than claimed away: under host
+    saturation a single in-process CPU hog is itself starved, so the ratio stays at
+    1.02 and the bound does not fire (quiet 2.00 vs loaded 1.02). The ratio is
+    therefore a gross-regression detector, and the deterministic assertions are what
+    retain sensitivity under load. DV-032 already assigns the sensitive quantitative
+    comparison to the nightly benchmark gate.
+    
+    Tolerance and assertion intent preserved; no test skipped or xfailed.
+
+ tests/test_acceptance_subconscious.py | 114 ++++++++++++++++++++++++++--------
+ 1 file changed, 89 insertions(+), 25 deletions(-)
+commit 67100a698469307da52956698f504df5251e5b0b
+Author: MichaelMaillet <michaelmaillet238@gmail.com>
+Date:   Sat Oct 17 21:16:02 2026 -0300
+
+    fix(tests): measure daemon overhead in process CPU time, not wall time (DV-032)
+    
+    Closes EXP002D1-S4-F3 and implements the fix path DV-032 has carried since
+    2026-09-01: "convert each to a seeded frame-count / pytest-benchmark case with
+    an explicit tolerance".
+    
+    test_no_gpu_throughput_regression asserted
+    median(with_daemon)/median(baseline) < 1.30 over WALL-CLOCK timings. Two measured
+    facts made that unusable in a required gate:
+    
+      * It carried no signal. The daemon blocks on _state_queue.get and the test
+        submits only three states, so exactly 3 inferences (~1.5 ms each) run inside
+        a ~420 ms window: a maximum expressible effect of ~1.1% against a 30%
+        allowance, ~27x below tolerance.
+      * So it measured only host noise. At 814b670c it returned 22.07 in-suite and
+        2.13 / 3.42 in isolation at 97-99.7% host CPU, while passing 5/5 on a quiet
+        host. It turned a required gate leg red on a commit whose diff did not touch
+        it, and DV-032 documents its expected band as "~1.28-1.32 under load".
+    
+    Overhead is now measured with time.process_time(), which excludes time spent
+    waiting for other processes and so cannot be inflated by unrelated host load.
+    Samples grew from n=1_000_000 (~60 ms) to n=8_000_000 (~480 ms) because the
+    Windows process-time tick (~15.6 ms) made a 60 ms sample quantise to ratios of
+    0.8000 / 0.8750 / 1.1429 -- one tick moved the ratio ~25%. At ~480 ms a tick
+    moves it ~3%.
+    
+    Three deterministic assertions now carry the real signal and are load-invariant:
+    error_count == 0, dlq_size == 0, inference_count >= submitted. The drain waits
+    on every submitted state being HANDLED (inference_count + error_count), not on
+    the queue reading empty -- the queue is empty once the daemon dequeues an item,
+    before it finishes inferring it, so an emptiness-based drain observes the count
+    mid-flight and fails spuriously.
+    
+    Measured ratio, normal daemon: 1.03 quiet, 1.02 under a host saturated with one
+    busy process per logical CPU. The old metric under the same saturation produced
+    22.07 / 2.13 / 3.42. The bound is 1.60, sized from a worst observed normal-daemon
+    ratio of 1.1429 at the coarser resolution, not from the 1.30 it replaces.
+    
+    Non-vacuity proven in both directions: a CPU-hogging daemon gives ratio 2.00 and
+    FAILS the bound; an erroring daemon reports "daemon reported 3 inference errors"
+    and FAILS the deterministic counts. Whole file: 49 passed.
+    
+    Known limitation, measured and recorded rather than claimed away: under host
+    saturation a single in-process CPU hog is itself starved, so the ratio stays at
+    1.02 and the bound does not fire (quiet 2.00 vs loaded 1.02). The ratio is
+    therefore a gross-regression detector, and the deterministic assertions are what
+    retain sensitivity under load. DV-032 already assigns the sensitive quantitative
+    comparison to the nightly benchmark gate.
+    
+    Tolerance and assertion intent preserved; no test skipped or xfailed.
+
+diff --git a/tests/test_acceptance_subconscious.py b/tests/test_acceptance_subconscious.py
+index ece8c772..aef95699 100644
+--- a/tests/test_acceptance_subconscious.py
++++ b/tests/test_acceptance_subconscious.py
+@@ -533,6 +533,23 @@ class TestCollectSystemState:
+ # ======================================================================
+ 
+ 
++#: Work per timing sample for :meth:`TestIntegration.test_no_gpu_throughput_regression`.
++#: Sized so the Windows process-time clock tick (~15.6 ms) is fine relative to
++#: each sample: at the previous ``n=1_000_000`` (~60 ms) a single tick moved the
++#: ratio by ~25 %, which is why measured ratios quantised to 0.8000 / 0.8750 /
++#: 1.1429. At ~480 ms the same tick moves it ~3 %.
++_DAEMON_WORK_N = 8_000_000
++
++#: Upper bound on the daemon's process-CPU-time overhead ratio. Sized from
++#: measurement (worst observed **1.1429** with a host saturated by one busy
++#: process per logical CPU), not from the 1.30 wall-clock allowance it replaces.
++#: This is a gross-regression detector — a daemon thread that busy-waits or runs
++#: a pathologically expensive loop lands far above it — not a sensitive one;
++#: DV-032 assigns the sensitive quantitative comparison to the nightly benchmark
++#: gate.
++_DAEMON_CPU_RATIO_LIMIT = 1.60
++
++
+ class TestIntegration:
+     """End-to-end integration tests."""
+ 
+@@ -573,39 +590,86 @@ class TestIntegration:
+         daemon.stop(timeout=5.0)
+ 
+     def test_no_gpu_throughput_regression(self, tmp_onnx: Path) -> None:
+-        """Daemon should not significantly affect CPU-bound work."""
++        """Daemon must serve its queue without erroring or hogging process CPU.
++
++        DV-032 / ``EXP002D1-S4-F3``. This previously asserted
++        ``median(with_daemon) / median(baseline) < 1.30`` over **wall-clock**
++        timings. Two measured facts made that assertion unusable in a required
++        gate:
++
++        * **It carried no signal.** The daemon blocks on ``_state_queue.get`` and
++          this test submits only three states, so exactly **3** inferences
++          (~1.5 ms each) run inside a **~420 ms** window — a maximum expressible
++          effect of ~1.1 % against a 30 % allowance, ~27x below tolerance.
++        * **So it measured only host noise.** At ``814b670c`` it returned
++          **22.07** in-suite and **2.13 / 3.42** in isolation at 97-99.7 % host
++          CPU while passing 5/5 on a quiet host, turning a required gate leg red
++          on a commit whose diff did not touch it.
++
++        Overhead is now measured in **process CPU time**, which excludes time
++        spent waiting for other processes and so cannot be inflated by unrelated
++        host load, over samples large enough that the platform clock tick is fine
++        relative to each one (see ``_DAEMON_WORK_N``). The deterministic
++        assertions carry the real signal; the ratio is a gross-regression
++        detector, and DV-032 assigns the sensitive quantitative comparison to the
++        nightly benchmark gate.
++        """
+         daemon = SubconsciousDaemon(tmp_onnx, backend="cpu", interval=0.5, warmup=True)
+ 
++        def sample_cpu() -> float:
++            start = time.process_time()
++            _dummy_work(n=_DAEMON_WORK_N)
++            return time.process_time() - start
++
+         # Baseline: compute without daemon
+-        _dummy_work(n=1_000_000)
+-        baseline_samples = []
+-        for _ in range(3):
+-            t0 = time.perf_counter()
+-            _dummy_work(n=1_000_000)
+-            baseline_samples.append(time.perf_counter() - t0)
++        _dummy_work(n=_DAEMON_WORK_N)
++        baseline_samples = [sample_cpu() for _ in range(3)]
+ 
+         # With daemon running
+         daemon.start()
+-        time.sleep(0.5)
+-        for _ in range(3):
+-            daemon.submit_state(SubconsciousState.default())
+-        _dummy_work(n=1_000_000)
+-        with_daemon_samples = []
+-        for _ in range(7):
+-            t0 = time.perf_counter()
+-            _dummy_work(n=1_000_000)
+-            with_daemon_samples.append(time.perf_counter() - t0)
+-
+-        daemon.stop(timeout=5.0)
+-        _dummy_work(n=1_000_000)
+-        for _ in range(4):
+-            t0 = time.perf_counter()
+-            _dummy_work(n=1_000_000)
+-            baseline_samples.append(time.perf_counter() - t0)
++        try:
++            time.sleep(0.5)
++            for _ in range(3):
++                daemon.submit_state(SubconsciousState.default())
++            _dummy_work(n=_DAEMON_WORK_N)
++            with_daemon_samples = [sample_cpu() for _ in range(7)]
++
++            # Drain on every submitted state being HANDLED, not on the queue
++            # reading empty: the queue is empty once the daemon dequeues an item,
++            # which is before it finishes inferring it, so an emptiness-based
++            # drain can observe inference_count mid-flight.  Counting errors too
++            # keeps this fast when an inference fails.  The target is reachable
++            # because submit_state only drops when its queue is full
++            # (maxsize=100) and three states are submitted.
++            submitted = 3
++            deadline = time.perf_counter() + 30.0
++            while (
++                daemon.inference_count + daemon.error_count < submitted
++                and time.perf_counter() < deadline
++            ):
++                time.sleep(0.01)
++            inferences = daemon.inference_count
++            errors = daemon.error_count
++            dlq = daemon.dlq_size
++        finally:
++            daemon.stop(timeout=5.0)
++
++        _dummy_work(n=_DAEMON_WORK_N)
++        baseline_samples.extend(sample_cpu() for _ in range(4))
++
++        # Deterministic: the daemon must have served every submitted state
++        # without error. A deadlocked, crashed or hung daemon fails here, which
++        # no timing ratio can report reliably.
++        assert errors == 0, f"daemon reported {errors} inference errors"
++        assert dlq == 0, f"daemon dead-lettered {dlq} states"
++        assert inferences >= submitted, (
++            f"daemon completed {inferences} inferences, want >= {submitted}"
++        )
+ 
+-        # Daemon should add < 30% overhead (generous margin for CI / background load)
+         ratio = median(with_daemon_samples) / max(median(baseline_samples), 1e-9)
+-        assert ratio < 1.30, f"Throughput ratio {ratio:.2f} > 1.30"
++        assert ratio < _DAEMON_CPU_RATIO_LIMIT, (
++            f"Daemon process-CPU overhead ratio {ratio:.2f} > {_DAEMON_CPU_RATIO_LIMIT}"
++        )
+ 
+ 
+ def _dummy_work(n: int) -> float:
+commit 33520b626b07be0e62dfc6a69dd321c8318103c2
+Author:     MichaelMaillet <michaelmaillet238@gmail.com>
+AuthorDate: Tue Oct 20 00:45:50 2026 -0300
+Commit:     MichaelMaillet <michaelmaillet238@gmail.com>
+CommitDate: Tue Oct 20 00:45:50 2026 -0300
+
+    fix(security,tests): add ratified .cargo/audit.toml for unreachable zip advisories and convert DV-032 test_deterministic_seed
+    
+    - Add .cargo/audit.toml ignoring only the three maintainer-ratified
+      unreachable zip 1.1.4 advisories (RUSTSEC-2026-0367, RUSTSEC-2026-0368,
+      RUSTSEC-2026-0369, present in Cargo.lock solely via burn-core 0.16.1's
+      disabled optional burn-candle feature; cargo tree -i zip --target all is
+      empty; no semver path to >=9.0.0 under burn 0.16.1), pinned by
+      test_cargo_audit_config_only_ignores_ratified_unreachable_zip_advisories
+      so cargo audit exits 0.
+    - Convert DV-032 test (2) (test_acceptance_y4q1_5.py::test_deterministic_seed)
+      to a seeded fixed-frame-count check (max_frames=100, warmup_frames=20) via
+      optional max_frames/warmup_frames parameters on run_timed_session, assert
+      exact frame/interval counts plus deterministic aggregate metrics, and
+      remove its _TIMING_NODES quarantine in tests/conftest.py.
+    - Record the ratified permanent nightly-benchmark disposition for DV-032
+      test (3) (test_speed_vs_transformer) and DV-045 closure in
+      DEFERRED_VALIDATION_REGISTER.md and tests/README.md.
+    
+    Generated with [Devin](https://devin.ai)
+    
+    Co-Authored-By: Devin <158243242+devin-ai-integration[bot]@users.noreply.github.com>
+
+ .cargo/audit.toml                            | 20 ++++++++++++
+ DOCS/reports/DEFERRED_VALIDATION_REGISTER.md | 47 ++++++++++++++++++++++------
+ benchmarks/y4q1_5_benchmarks.py              | 18 +++++++++--
+ tests/README.md                              | 17 +++++++---
+ tests/conftest.py                            | 35 +++++----------------
+ tests/test_acceptance_y4q1_5.py              | 24 +++++++++++---
+ tests/test_wp001_baseline.py                 | 17 ++++++++++
+ 7 files changed, 131 insertions(+), 47 deletions(-)
+commit a570aa7f1f3cc30163d3a48e962fc1f058e55cdb
+Author:     MichaelMaillet <michaelmaillet238@gmail.com>
+AuthorDate: Tue Oct 20 02:59:34 2026 -0300
+Commit:     MichaelMaillet <michaelmaillet238@gmail.com>
+CommitDate: Tue Oct 20 02:59:34 2026 -0300
+
+    fix(ci,tests,benchmarks): remediate PR #35 multi-agent review findings (F1-F5)
+    
+    - F1: compute frame-based progress in run_timed_session when max_frames is
+      set so duration_minutes=0 does not raise ZeroDivisionError, default
+      duration_minutes to 0.0, and validate frame-cap and duration inputs.
+    - F2: bound each warm-up and measurement batch to min(FRAMES_PER_BATCH,
+      cap - count) so non-multiple frame caps stop at the exact requested count
+      (including 1-frame remainders).
+    - F3: flush remaining tail frames into intervals at loop exit in fixed-frame
+      mode (marked partial_interval=True), support 1-frame PhaseTracker interval
+      summaries, and weight aggregate interval means by interval_frames (weighting
+      IP only over intervals that measured frame-to-frame transitions).
+    - F4: upgrade codecov/codecov-action from v5 to v7 in python.yml so its
+      nested actions/github-script step uses v8.0.0 (runs.using: node24) instead
+      of v7 (node20).
+    - F5: replace the workflow denylist check in test_wp001_baseline.py with a
+      positive structural validator (_validate_workflow_node24_and_ubuntu_pins)
+      and six parametrized negative mutation tests.
+    - Add a seed=99 distinct-seed control in test_deterministic_seed, remove the
+      redundant 50% frame-difference assertion, add a fail-closed Cargo.toml /
+      Cargo.lock zip-unreachability check, add docstrings to all touched test
+      functions, and append the 2026-10-20 record corrections to
+      DEFERRED_VALIDATION_REGISTER.md.
+    
+    Generated with [Devin](https://devin.ai)
+    
+    Co-Authored-By: Devin <158243242+devin-ai-integration[bot]@users.noreply.github.com>
+
+ .github/workflows/python.yml                 |   2 +-
+ .github/workflows/rust.yml                   |   4 +-
+ DOCS/reports/DEFERRED_VALIDATION_REGISTER.md |  62 +++++
+ benchmarks/y4q1_5_benchmarks.py              | 354 +++++++++++++++++----------
+ tests/README.md                              |  12 +-
+ tests/test_acceptance_y4q1_5.py              |  80 +++++-
+ tests/test_check_bench_regression.py         |   1 +
+ tests/test_wp001_baseline.py                 | 226 +++++++++++++++--
+ 8 files changed, 576 insertions(+), 165 deletions(-)
+diff --git a/benchmarks/y4q1_5_benchmarks.py b/benchmarks/y4q1_5_benchmarks.py
+index 912a2227..6d0f8314 100644
+--- a/benchmarks/y4q1_5_benchmarks.py
++++ b/benchmarks/y4q1_5_benchmarks.py
+@@ -154,28 +154,77 @@ def _build_slot_tracker(seed: int = 42) -> "TemporalSlotAttentionMOT":
+ 
+ 
+ def run_timed_session(
+-    duration_minutes: float,
++    duration_minutes: float = 0.0,
+     seed: int = 42,
+     n_objects: int = 4,
+     warmup_seconds: float = 30.0,
++    max_frames: int | None = None,
++    warmup_frames: int | None = None,
+ ) -> dict[str, Any]:
+-    """Run PhaseTracker + SlotAttention continuously for *duration_minutes*.
++    """Run PhaseTracker + SlotAttention continuously for a timed or fixed-frame session.
+ 
+     During the session, metrics are sampled every ``SAMPLE_INTERVAL_FRAMES``
+-    frames.  A warm-up period is run but excluded from reported metrics.
++    frames (plus any remaining tail frames at loop exit). A warm-up period is
++    run first and excluded from reported metrics.
++
++    Because measurement frame seeds continue from
++    ``seed * 10000 + warmup_frame_count``, callers requiring cross-run
++    determinism must supply **both** ``max_frames`` and ``warmup_frames`` so the
++    warm-up phase processes a fixed frame count independent of wall-clock speed.
+ 
+     Args:
+-        duration_minutes: Target session duration in minutes.
++        duration_minutes: Target session duration in minutes (must be >= 0, and
++            > 0 when ``max_frames`` is ``None``).
+         seed: Random seed for reproducibility.
+         n_objects: Number of tracked objects.
+-        warmup_seconds: Seconds of warm-up before measurement starts.
++        warmup_seconds: Seconds of warm-up before measurement starts (must be
++            >= 0).
++        max_frames: Optional fixed measurement frame cap for deterministic
++            seeded runs (must be a positive integer; overrides
++            ``duration_minutes`` when set).
++        warmup_frames: Optional fixed warm-up frame cap for deterministic
++            seeded runs (must be a non-negative integer; overrides
++            ``warmup_seconds`` when set).
+ 
+     Returns:
+         Dict with per-interval and aggregate metrics for both trackers.
++
++    Raises:
++        ValueError: If frame caps or durations are negative, non-finite, or
++            invalid.
+     """
++    if max_frames is not None and (
++        isinstance(max_frames, bool)
++        or not isinstance(max_frames, int)
++        or max_frames <= 0
++    ):
++        raise ValueError("max_frames must be a positive integer")
++    if warmup_frames is not None and (
++        isinstance(warmup_frames, bool)
++        or not isinstance(warmup_frames, int)
++        or warmup_frames < 0
++    ):
++        raise ValueError("warmup_frames must be a non-negative integer")
++    if (
++        isinstance(duration_minutes, bool)
++        or not isinstance(duration_minutes, (int, float))
++        or not math.isfinite(duration_minutes)
++        or duration_minutes < 0
++        or (max_frames is None and duration_minutes <= 0)
++    ):
++        raise ValueError(
++            "duration_minutes must be finite and >= 0 (> 0 when max_frames is None)"
++        )
++    if (
++        isinstance(warmup_seconds, bool)
++        or not isinstance(warmup_seconds, (int, float))
++        or not math.isfinite(warmup_seconds)
++        or warmup_seconds < 0
++    ):
++        raise ValueError("warmup_seconds must be a finite non-negative number")
++
+     from prin.y4q1_tools import (
+         binding_persistence,
+-        coherence_decay_rate,
+         order_parameter_series,
+         phase_locking_value,
+         phase_slip_rate,
+@@ -189,12 +238,26 @@ def run_timed_session(
+     sa = _build_slot_tracker(seed=seed)
+ 
+     # ---- Warm-up phase ----
+-    print(f"    Warm-up ({warmup_seconds:.0f}s) ...", end=" ", flush=True)
++    warmup_label = (
++        f"{warmup_frames} frames"
++        if warmup_frames is not None
++        else f"{warmup_seconds:.0f}s"
++    )
++    print(f"    Warm-up ({warmup_label}) ...", end=" ", flush=True)
+     warmup_start = time.perf_counter()
+     warmup_frame_count = 0
+-    while time.perf_counter() - warmup_start < warmup_seconds:
++    while (
++        warmup_frame_count < warmup_frames
++        if warmup_frames is not None
++        else time.perf_counter() - warmup_start < warmup_seconds
++    ):
++        batch_frames = (
++            min(FRAMES_PER_BATCH, warmup_frames - warmup_frame_count)
++            if warmup_frames is not None
++            else FRAMES_PER_BATCH
++        )
+         frames = _make_smooth_sequence(
+-            FRAMES_PER_BATCH,
++            batch_frames,
+             n_objects,
+             det_dim,
+             seed=frame_seed_offset + warmup_frame_count,
+@@ -202,12 +265,17 @@ def run_timed_session(
+         with torch.no_grad():
+             pt.track_sequence(frames)
+             sa.track_sequence(frames)
+-        warmup_frame_count += FRAMES_PER_BATCH
++        warmup_frame_count += batch_frames
+     print(f"done ({warmup_frame_count} frames)")
+     _cleanup()
+ 
+     # ---- Measurement phase ----
+-    print(f"    Measuring ({duration_minutes:.0f}min) ...", flush=True)
++    measure_label = (
++        f"{max_frames} frames"
++        if max_frames is not None
++        else f"{duration_minutes:.0f}min"
++    )
++    print(f"    Measuring ({measure_label}) ...", flush=True)
+ 
+     # Accumulators for interval-level metrics
+     interval_data: list[dict[str, Any]] = []
+@@ -226,19 +294,125 @@ def run_timed_session(
+ 
+     frame_counter = warmup_frame_count  # continue seed offset
+ 
++    def _flush_interval() -> None:
++        """Finalize the current interval accumulators into ``interval_data``."""
++        nonlocal pt_phases_interval, pt_matches_interval, sa_matches_interval
++        nonlocal pt_sims_interval, sa_sims_interval, pt_rho_interval
++        nonlocal interval_frame_count, interval_wall_start
++
++        interval_wall_end = time.perf_counter()
++        interval_wall_sec = interval_wall_end - interval_wall_start
++        elapsed_total = interval_wall_end - session_start
++
++        entry: dict[str, Any] = {
++            "elapsed_seconds": round(elapsed_total, 2),
++            "interval_frames": interval_frame_count,
++            "interval_wall_sec": round(interval_wall_sec, 4),
++            "fps": round(interval_frame_count / max(interval_wall_sec, 1e-9), 2),
++            "gpu_memory_mb": round(_get_gpu_memory_mb(), 2),
++            "process_memory_mb": round(_get_process_memory_mb(), 2),
++            "partial_interval": interval_frame_count < SAMPLE_INTERVAL_FRAMES,
++        }
++
++        # PhaseTracker metrics (order_parameter_series, phase_slip_rate, and
++        # phase_locking_value all support T >= 1).
++        if len(pt_phases_interval) >= 1:
++            traj = torch.stack(pt_phases_interval)  # (T, N, n_osc)
++            opr = order_parameter_series(traj)
++            entry["pt_mean_r"] = round(opr["mean_r"], 6)
++            entry["pt_std_r"] = round(opr["std_r"], 6)
++
++            mean_phase = traj.mean(dim=-1) if traj.dim() == 3 else traj
++            psr = phase_slip_rate(mean_phase)
++            entry["pt_slip_fraction"] = round(psr["slip_fraction"], 6)
++
++            if mean_phase.shape[1] >= 2:
++                plv = phase_locking_value(mean_phase[:, 0], mean_phase[:, 1])
++                entry["pt_plv"] = round(plv["plv"], 6)
++
++        # IP for this interval
++        if pt_matches_interval:
++            pt_matched = sum(int((m >= 0).sum().item()) for m in pt_matches_interval)
++            pt_possible = sum(m.shape[0] for m in pt_matches_interval)
++            entry["pt_ip"] = round(pt_matched / max(pt_possible, 1), 6)
++
++        if sa_matches_interval:
++            sa_matched = sum(int((m >= 0).sum().item()) for m in sa_matches_interval)
++            sa_possible = sum(m.shape[0] for m in sa_matches_interval)
++            entry["sa_ip"] = round(sa_matched / max(sa_possible, 1), 6)
++
++        # Mean similarity
++        if pt_sims_interval:
++            entry["pt_mean_sim"] = round(
++                sum(pt_sims_interval) / len(pt_sims_interval), 6
++            )
++        if sa_sims_interval:
++            entry["sa_mean_sim"] = round(
++                sum(sa_sims_interval) / len(sa_sims_interval), 6
++            )
++        if pt_rho_interval:
++            entry["pt_mean_rho"] = round(sum(pt_rho_interval) / len(pt_rho_interval), 6)
++
++        # Binding persistence
++        if pt_matches_interval:
++            bp = binding_persistence(pt_matches_interval, n_objects)
++            entry["pt_bp"] = round(bp["mean_persistence"], 6)
++        if sa_matches_interval:
++            bp_sa = binding_persistence(sa_matches_interval, 6)
++            entry["sa_bp"] = round(bp_sa["mean_persistence"], 6)
++
++        interval_data.append(entry)
++
++        # Report progress (frame-based in fixed-frame mode so duration_minutes=0
++        # never divides by zero; time-based in timed mode).
++        if max_frames is not None:
++            pct = min(total_frames / max_frames * 100.0, 100.0)
++        elif duration_seconds > 0:
++            pct = min(elapsed_total / duration_seconds * 100.0, 100.0)
++        else:
++            pct = 100.0
++        pt_ip_str = f"{entry.get('pt_ip', 0):.3f}"
++        sa_ip_str = f"{entry.get('sa_ip', 0):.3f}"
++        print(
++            f"      [{pct:5.1f}%] {elapsed_total:7.1f}s  "
++            f"FPS={entry['fps']:7.1f}  "
++            f"PT_IP={pt_ip_str}  SA_IP={sa_ip_str}  "
++            f"GPU={entry['gpu_memory_mb']:.0f}MB",
++            flush=True,
++        )
++
++        # Reset interval accumulators
++        pt_phases_interval = []
++        pt_matches_interval = []
++        sa_matches_interval = []
++        pt_sims_interval = []
++        sa_sims_interval = []
++        pt_rho_interval = []
++        interval_frame_count = 0
++        interval_wall_start = time.perf_counter()
++
+     while True:
+         elapsed = time.perf_counter() - session_start
+-        if elapsed >= duration_seconds:
++        if (
++            total_frames >= max_frames
++            if max_frames is not None
++            else elapsed >= duration_seconds
++        ):
+             break
+ 
++        batch_frames = (
++            min(FRAMES_PER_BATCH, max_frames - total_frames)
++            if max_frames is not None
++            else FRAMES_PER_BATCH
++        )
+         # Generate a batch of frames
+         frames = _make_smooth_sequence(
+-            FRAMES_PER_BATCH,
++            batch_frames,
+             n_objects,
+             det_dim,
+             seed=frame_seed_offset + frame_counter,
+         )
+-        frame_counter += FRAMES_PER_BATCH
++        frame_counter += batch_frames
+ 
+         with torch.no_grad():
+             pt_result = pt.track_sequence(frames)
+@@ -258,107 +432,17 @@ def run_timed_session(
+         pt_sims_interval.extend(pt_result.get("per_frame_similarity", []))
+         sa_sims_interval.extend(sa_result.get("per_frame_similarity", []))
+         pt_rho_interval.extend(pt_result.get("per_frame_phase_correlation", []))
+-        interval_frame_count += FRAMES_PER_BATCH
+-        total_frames += FRAMES_PER_BATCH
++        interval_frame_count += batch_frames
++        total_frames += batch_frames
+ 
+         # Check if we've accumulated enough for a sample interval
+         if interval_frame_count >= SAMPLE_INTERVAL_FRAMES:
+-            interval_wall_end = time.perf_counter()
+-            interval_wall_sec = interval_wall_end - interval_wall_start
+-            elapsed_total = interval_wall_end - session_start
+-
+-            entry: dict[str, Any] = {
+-                "elapsed_seconds": round(elapsed_total, 2),
+-                "interval_frames": interval_frame_count,
+-                "interval_wall_sec": round(interval_wall_sec, 4),
+-                "fps": round(interval_frame_count / max(interval_wall_sec, 1e-9), 2),
+-                "gpu_memory_mb": round(_get_gpu_memory_mb(), 2),
+-                "process_memory_mb": round(_get_process_memory_mb(), 2),
+-            }
++            _flush_interval()
+ 
+-            # PhaseTracker metrics
+-            if len(pt_phases_interval) >= 2:
+-                traj = torch.stack(pt_phases_interval)  # (T, N, n_osc)
+-                if traj.dim() == 3:
+-                    T, N, K = traj.shape
+-                    traj_flat = traj.reshape(T, N * K)
+-                else:
+-                    traj_flat = traj
+-
+-                opr = order_parameter_series(traj)
+-                entry["pt_mean_r"] = round(opr["mean_r"], 6)
+-                entry["pt_std_r"] = round(opr["std_r"], 6)
+-
+-                # Phase slip rate
+-                mean_phase = traj.mean(dim=-1) if traj.dim() == 3 else traj
+-                psr = phase_slip_rate(mean_phase)
+-                entry["pt_slip_fraction"] = round(psr["slip_fraction"], 6)
+-
+-                # PLV (first two objects if available)
+-                if mean_phase.shape[1] >= 2:
+-                    plv = phase_locking_value(mean_phase[:, 0], mean_phase[:, 1])
+-                    entry["pt_plv"] = round(plv["plv"], 6)
+-
+-            # IP for this interval
+-            if pt_matches_interval:
+-                pt_matched = sum(
+-                    int((m >= 0).sum().item()) for m in pt_matches_interval
+-                )
+-                pt_possible = sum(m.shape[0] for m in pt_matches_interval)
+-                entry["pt_ip"] = round(pt_matched / max(pt_possible, 1), 6)
+-
+-            if sa_matches_interval:
+-                sa_matched = sum(
+-                    int((m >= 0).sum().item()) for m in sa_matches_interval
+-                )
+-                sa_possible = sum(m.shape[0] for m in sa_matches_interval)
+-                entry["sa_ip"] = round(sa_matched / max(sa_possible, 1), 6)
+-
+-            # Mean similarity
+-            if pt_sims_interval:
+-                entry["pt_mean_sim"] = round(
+-                    sum(pt_sims_interval) / len(pt_sims_interval), 6
+-                )
+-            if sa_sims_interval:
+-                entry["sa_mean_sim"] = round(
+-                    sum(sa_sims_interval) / len(sa_sims_interval), 6
+-                )
+-            if pt_rho_interval:
+-                entry["pt_mean_rho"] = round(
+-                    sum(pt_rho_interval) / len(pt_rho_interval), 6
+-                )
+-
+-            # Binding persistence
+-            if pt_matches_interval:
+-                bp = binding_persistence(pt_matches_interval, n_objects)
+-                entry["pt_bp"] = round(bp["mean_persistence"], 6)
+-            if sa_matches_interval:
+-                bp_sa = binding_persistence(sa_matches_interval, 6)
+-                entry["sa_bp"] = round(bp_sa["mean_persistence"], 6)
+-
+-            interval_data.append(entry)
+-
+-            # Report progress
+-            pct = min(elapsed_total / duration_seconds * 100, 100)
+-            pt_ip_str = f"{entry.get('pt_ip', 0):.3f}"
+-            sa_ip_str = f"{entry.get('sa_ip', 0):.3f}"
+-            print(
+-                f"      [{pct:5.1f}%] {elapsed_total:7.1f}s  "
+-                f"FPS={entry['fps']:7.1f}  "
+-                f"PT_IP={pt_ip_str}  SA_IP={sa_ip_str}  "
+-                f"GPU={entry['gpu_memory_mb']:.0f}MB",
+-                flush=True,
+-            )
+-
+-            # Reset interval accumulators
+-            pt_phases_interval = []
+-            pt_matches_interval = []
+-            sa_matches_interval = []
+-            pt_sims_interval = []
+-            sa_sims_interval = []
+-            pt_rho_interval = []
+-            interval_frame_count = 0
+-            interval_wall_start = time.perf_counter()
++    # Flush any remaining processed tail frames when a fixed frame cap ends
++    # between SAMPLE_INTERVAL_FRAMES boundaries (or < SAMPLE_INTERVAL_FRAMES).
++    if max_frames is not None and interval_frame_count > 0:
++        _flush_interval()
+ 
+     session_wall = time.perf_counter() - session_start
+ 
+@@ -373,17 +457,41 @@ def run_timed_session(
+     }
+ 
+     if interval_data:
+-        fps_list = [d["fps"] for d in interval_data]
+-        gpu_mem_list = [d["gpu_memory_mb"] for d in interval_data]
+-        pt_ip_list = [d.get("pt_ip", 0) for d in interval_data]
+-        sa_ip_list = [d.get("sa_ip", 0) for d in interval_data]
+-        pt_r_list = [d.get("pt_mean_r", 0) for d in interval_data]
+-        pt_slip_list = [d.get("pt_slip_fraction", 0) for d in interval_data]
+-
+         import numpy as np
+ 
+-        agg["mean_fps"] = round(float(np.mean(fps_list)), 2)
+-        agg["std_fps"] = round(float(np.std(fps_list)), 2)
++        def _weighted_mean_and_std(
++            key: str, default: float | None = 0.0
++        ) -> tuple[float, float, list[float]]:
++            """Compute frame-weighted mean, population std, and interval values for ``key``."""
++            selected = [
++                (float(d[key]), float(d["interval_frames"]))
++                for d in interval_data
++                if key in d or default is not None
++                for d in [d if key in d else {**d, key: default}]
++            ]
++            if not selected:
++                return 0.0, 0.0, []
++            vals = np.array([v for v, _ in selected], dtype=float)
++            weights = np.array([w for _, w in selected], dtype=float)
++            mean_val = float(np.average(vals, weights=weights))
++            var_val = float(np.average((vals - mean_val) ** 2, weights=weights))
++            return mean_val, math.sqrt(max(var_val, 0.0)), [v for v, _ in selected]
++
++        fps_mean, fps_std, fps_list = _weighted_mean_and_std("fps")
++        gpu_mem_list = [d["gpu_memory_mb"] for d in interval_data]
++        # A 1-frame remainder batch has 0 frame-to-frame transitions and so
++        # emits no pt_ip/sa_ip; weight IP over intervals that measured transitions.
++        pt_ip_mean, pt_ip_std, pt_ip_list = _weighted_mean_and_std(
++            "pt_ip", default=None if any("pt_ip" in d for d in interval_data) else 0.0
++        )
++        sa_ip_mean, sa_ip_std, sa_ip_list = _weighted_mean_and_std(
++            "sa_ip", default=None if any("sa_ip" in d for d in interval_data) else 0.0
++        )
++        pt_r_mean, pt_r_std, pt_r_list = _weighted_mean_and_std("pt_mean_r")
++        pt_slip_mean, _, pt_slip_list = _weighted_mean_and_std("pt_slip_fraction")
++
++        agg["mean_fps"] = round(fps_mean, 2)
++        agg["std_fps"] = round(fps_std, 2)
+         agg["fps_degradation_pct"] = (
+             round(
+                 ((fps_list[-1] - fps_list[0]) / max(abs(fps_list[0]), 1e-9)) * 100,
+@@ -400,16 +508,18 @@ def run_timed_session(
+             float(np.max(gpu_mem_list)) - gpu_mem_list[0], 2
+         )
+ 
+-        agg["pt_mean_ip"] = round(float(np.mean(pt_ip_list)), 6)
+-        agg["pt_std_ip"] = round(float(np.std(pt_ip_list)), 6)
+-        agg["sa_mean_ip"] = round(float(np.mean(sa_ip_list)), 6)
+-        agg["sa_std_ip"] = round(float(np.std(sa_ip_list)), 6)
++        agg["pt_mean_ip"] = round(pt_ip_mean, 6)
++        agg["pt_std_ip"] = round(pt_ip_std, 6)
++        agg["sa_mean_ip"] = round(sa_ip_mean, 6)
++        agg["sa_std_ip"] = round(sa_ip_std, 6)
+ 
+-        agg["pt_mean_order_param"] = round(float(np.mean(pt_r_list)), 6)
+-        agg["pt_std_order_param"] = round(float(np.std(pt_r_list)), 6)
++        agg["pt_mean_order_param"] = round(pt_r_mean, 6)
++        agg["pt_std_order_param"] = round(pt_r_std, 6)
+ 
+-        agg["pt_mean_slip_fraction"] = round(float(np.mean(pt_slip_list)), 6)
+-        agg["pt_max_slip_fraction"] = round(float(np.max(pt_slip_list)), 6)
++        agg["pt_mean_slip_fraction"] = round(pt_slip_mean, 6)
++        agg["pt_max_slip_fraction"] = round(
++            float(np.max(pt_slip_list)) if pt_slip_list else 0.0, 6
++        )
+ 
+         # Throughput trend
+         if len(fps_list) >= 2:
+@@ -424,6 +534,8 @@ def run_timed_session(
+             agg["pt_ip_trend_slope"] = round(
+                 float(np.polyfit(x, np.array(pt_ip_list), 1)[0]), 8
+             )
++        if len(sa_ip_list) >= 2:
++            x = np.arange(len(sa_ip_list), dtype=float)
+             agg["sa_ip_trend_slope"] = round(
+                 float(np.polyfit(x, np.array(sa_ip_list), 1)[0]), 8
+             )
+diff --git a/tests/conftest.py b/tests/conftest.py
+index e3c52994..6b5152a8 100644
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -151,35 +151,18 @@ _RNG_NODES = frozenset(
+     }
+ )
+ 
+-# --- Wall-clock-throughput timing flakes (ETCA-001 remediation) --------------
+-# Surfaced once CI actually ran the ubuntu legs (T-F4/T-F5): tests that run
+-# fixed wall-clock windows and compare frame counts / FPS between runs. On a
+-# variable/loaded hosted runner a 3 s window can process 2.6x the frames of
+-# another, tripping the "within 50%" assertion. Same class as DV-032; ported
+-# verbatim from PRINet 3.0, not weakenable. Fix path = convert to a seeded
+-# frame-count check or move under nightly.yml's bench job.
+-_TIMING_SKIP = (
+-    "DV-032 (ETCA-001 T-F4/T-F5): wall-clock-throughput timing flake — compares "
+-    "frame counts across two fixed-duration sessions; host-timing-sensitive on "
+-    "shared CI runners. Ported verbatim from PRINet 3.0; tracked in the "
+-    "Deferred Validation Register."
+-)
+-_TIMING_NODES = frozenset(
+-    {
+-        "tests/test_acceptance_y4q1_5.py::TestSessionRunnerSmoke::test_deterministic_seed",
+-    }
+-)
+-
+ # --- Forward-pass wall-clock ratio flake (ETCA-002 T-F5) --------------------
+ # `nightly.yml`'s `full-suite` job (the only gate that runs @pytest.mark.slow)
+ # has been red since it began running on this: a hard `assert ratio <= 5.0` on
+ # the DiscreteDTG-vs-Transformer forward-pass wall-clock ratio, measured 5.66x
+-# on the shared ubuntu runner. Same DV-032 host-timing class as the two tests
+-# above; ported verbatim from PRINet 3.0, not weakenable. Dated maintainer
+-# quarantine (AskUserQuestion, 2026-09-02). Fix path = convert to a seeded
+-# frame-count / pytest-benchmark bound under nightly.yml, or widen to a
+-# defensible ratio with governance — tracked in the Deferred Validation
+-# Register.
++# on the shared ubuntu runner (and 60.2x wall / 19.4x process-CPU after
++# WP037-F1's 15-parameter DLPack synchronization in dev profile; same small-shape
++# bridge-dispatch class as Plan amendment #30 / DV-021). Ported verbatim from
++# PRINet 3.0, not weakenable. Dated maintainer quarantine (2026-09-02,
++# re-ratified 2026-10-19: comparative timing stays under nightly.yml's
++# benchmark harness). Note: DV-032 test (2) `test_deterministic_seed` was
++# converted to a seeded frame-count check (`max_frames=100, warmup_frames=20`)
++# on 2026-10-19 and its `_TIMING_NODES` quarantine removed.
+ _RATIO_SKIP = (
+     "DV-032 (ETCA-002 T-F5): forward-pass wall-clock ratio flake — asserts "
+     "DiscreteDTG is <=5x an equivalent Transformer layer, measures ~5.7x on "
+@@ -203,8 +186,6 @@ def _reason_for(nodeid: str) -> str | None:
+         return _WP038_SKIP
+     if nodeid in _RNG_NODES:
+         return _RNG_SKIP
+-    if nodeid in _TIMING_NODES:
+-        return _TIMING_SKIP
+     if nodeid in _RATIO_NODES:
+         return _RATIO_SKIP
+     return None
+diff --git a/tests/test_acceptance_y4q1_5.py b/tests/test_acceptance_y4q1_5.py
+index 5103f1b2..769bde9c 100644
+--- a/tests/test_acceptance_y4q1_5.py
++++ b/tests/test_acceptance_y4q1_5.py
+@@ -587,16 +587,98 @@ class TestSessionRunnerSmoke:
+             assert "elapsed_seconds" in interval
+ 
+     def test_deterministic_seed(self) -> None:
+-        """Same seed produces same frame count and similar metrics."""
++        """Same seed produces identical metrics and a distinct seed differs (DV-032)."""
+         from benchmarks.y4q1_5_benchmarks import run_timed_session
+ 
+-        r1 = run_timed_session(0.05, seed=42, warmup_seconds=1.0)
+-        r2 = run_timed_session(0.05, seed=42, warmup_seconds=1.0)
+-        # Frame counts may differ slightly due to timing, but should be close
+-        assert (
+-            abs(r1["aggregate"]["total_frames"] - r2["aggregate"]["total_frames"])
+-            <= r1["aggregate"]["total_frames"] * 0.5
++        r1 = run_timed_session(
++            0.05, seed=42, warmup_seconds=1.0, max_frames=100, warmup_frames=20
+         )
++        r2 = run_timed_session(
++            0.05, seed=42, warmup_seconds=1.0, max_frames=100, warmup_frames=20
++        )
++        r3 = run_timed_session(
++            0.05, seed=99, warmup_seconds=1.0, max_frames=100, warmup_frames=20
++        )
++        assert r1["aggregate"]["total_frames"] == 100
++        assert r2["aggregate"]["total_frames"] == 100
++        assert r3["aggregate"]["total_frames"] == 100
++        assert r1["aggregate"]["n_intervals"] == 2
++        assert r2["aggregate"]["n_intervals"] == 2
++        assert r3["aggregate"]["n_intervals"] == 2
++        keys = (
++            "pt_mean_ip",
++            "sa_mean_ip",
++            "pt_mean_order_param",
++            "pt_mean_slip_fraction",
++        )
++        for key in keys:
++            assert r1["aggregate"][key] == pytest.approx(
++                r2["aggregate"][key], rel=1e-6, abs=1e-6
++            )
++        assert any(
++            r1["aggregate"][key]
++            != pytest.approx(r3["aggregate"][key], rel=1e-6, abs=1e-6)
++            for key in keys
++        )
++
++    def test_zero_duration_fixed_frame_session_succeeds(self) -> None:
++        """Zero-duration fixed-frame sessions succeed without ZeroDivisionError."""
++        from benchmarks.y4q1_5_benchmarks import run_timed_session
++
++        result = run_timed_session(
++            0.0, seed=42, warmup_seconds=0.0, max_frames=50, warmup_frames=0
++        )
++        assert result["aggregate"]["total_frames"] == 50
++        assert result["aggregate"]["n_intervals"] == 1
++        assert result["intervals"][0]["interval_frames"] == 50
++        assert result["intervals"][0]["partial_interval"] is False
++
++    def test_non_multiple_and_short_frame_caps_preserve_tail_frames(self) -> None:
++        """Non-multiple and short frame caps stop at the cap and flush tail frames."""
++        from benchmarks.y4q1_5_benchmarks import run_timed_session
++
++        short = run_timed_session(
++            0.0, seed=42, warmup_seconds=0.0, max_frames=10, warmup_frames=5
++        )
++        assert short["aggregate"]["total_frames"] == 10
++        assert short["aggregate"]["n_intervals"] == 1
++        assert short["intervals"][0]["interval_frames"] == 10
++        assert short["intervals"][0]["partial_interval"] is True
++        assert "pt_mean_order_param" in short["aggregate"]
++        assert "pt_mean_ip" in short["aggregate"]
++
++        non_multiple = run_timed_session(
++            0.0, seed=42, warmup_seconds=0.0, max_frames=51, warmup_frames=11
++        )
++        assert non_multiple["aggregate"]["total_frames"] == 51
++        assert non_multiple["aggregate"]["n_intervals"] == 2
++        assert [d["interval_frames"] for d in non_multiple["intervals"]] == [50, 1]
++        assert [d["partial_interval"] for d in non_multiple["intervals"]] == [
++            False,
++            True,
++        ]
++        # 1-frame remainder has no frame-to-frame transition, so pt_mean_ip equals
++        # the 50-frame interval's pt_ip without a synthetic 0 dilution.
++        assert non_multiple["aggregate"]["pt_mean_ip"] == pytest.approx(
++            non_multiple["intervals"][0]["pt_ip"], rel=1e-6, abs=1e-6
++        )
++
++    def test_invalid_frame_caps_and_durations_raise_value_error(self) -> None:
++        """Invalid frame-cap and duration arguments raise ValueError."""
++        from benchmarks.y4q1_5_benchmarks import run_timed_session
++
++        with pytest.raises(ValueError, match="max_frames"):
++            run_timed_session(0.05, max_frames=0)
++        with pytest.raises(ValueError, match="max_frames"):
++            run_timed_session(0.05, max_frames=-10)
++        with pytest.raises(ValueError, match="max_frames"):
++            run_timed_session(0.05, max_frames=True)
++        with pytest.raises(ValueError, match="warmup_frames"):
++            run_timed_session(0.05, max_frames=10, warmup_frames=-1)
++        with pytest.raises(ValueError, match="duration_minutes"):
++            run_timed_session(0.0)
++        with pytest.raises(ValueError, match="warmup_seconds"):
++            run_timed_session(0.05, warmup_seconds=-1.0)
+ 
+ 
+ # =====================================================================
+
+# end: 2026-10-21T00:17:14Z
+# exit code: 0

@@ -1,0 +1,36 @@
+# command: C:/dev/PRIN/.venv/Scripts/python.exe -m pytest tests/test_acceptance_subconscious.py tests/test_acceptance_y4q1_5.py -k "test_no_gpu_throughput_regression or TestSessionRunnerSmoke" --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -v -rs
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# start: 2026-10-21T00:17:14Z
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 112 items / 104 deselected / 8 selected
+
+tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression PASSED [ 12%]
+tests/test_acceptance_y4q1_5.py::TestSessionRunnerSmoke::test_imports PASSED [ 25%]
+tests/test_acceptance_y4q1_5.py::TestSessionRunnerSmoke::test_micro_session PASSED [ 37%]
+tests/test_acceptance_y4q1_5.py::TestSessionRunnerSmoke::test_micro_session_has_metrics PASSED [ 50%]
+tests/test_acceptance_y4q1_5.py::TestSessionRunnerSmoke::test_deterministic_seed PASSED [ 62%]
+tests/test_acceptance_y4q1_5.py::TestSessionRunnerSmoke::test_zero_duration_fixed_frame_session_succeeds PASSED [ 75%]
+tests/test_acceptance_y4q1_5.py::TestSessionRunnerSmoke::test_non_multiple_and_short_frame_caps_preserve_tail_frames PASSED [ 87%]
+tests/test_acceptance_y4q1_5.py::TestSessionRunnerSmoke::test_invalid_frame_caps_and_durations_raise_value_error PASSED [100%]
+
+============================== warnings summary ===============================
+tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression
+  C:\dev\PRIN\python\prin\subconscious_compat.py:397: DeprecationWarning: You are using the legacy TorchScript-based ONNX export. Starting in PyTorch 2.9, the new torch.export-based ONNX exporter has become the default. Learn more about the new export logic: https://docs.pytorch.org/docs/stable/onnx_export.html. For exporting control flow: https://pytorch.org/tutorials/beginner/onnx/export_control_flow_model_to_onnx_tutorial.html
+    torch.onnx.export(
+
+tests/test_acceptance_subconscious.py::TestIntegration::test_no_gpu_throughput_regression
+  C:\dev\PRIN\.venv\Lib\site-packages\torch\onnx\_internal\torchscript_exporter\utils.py:218: DeprecationWarning: The feature will be removed. Please remove usage of this function
+    setup_onnx_logging(verbose) as log_ctx,
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============== 8 passed, 104 deselected, 2 warnings in 28.91s ================
+
+# end: 2026-10-21T00:17:45Z
+# exit code: 0

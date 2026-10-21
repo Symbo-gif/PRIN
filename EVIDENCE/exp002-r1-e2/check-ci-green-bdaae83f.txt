@@ -1,0 +1,14 @@
+# command: C:/dev/PRIN/.venv/Scripts/python.exe tools/check_ci_green.py bdaae83f2f384fba3c8d33013c40c6a2f4f011b5 --branch campaign/exp002-r1-e1 --limit 100
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# start: 2026-10-21T00:16:19Z
+CI-green check — branch 'campaign/exp002-r1-e1', commit bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+  rust       green     — run 39496143045
+  python     green     — run 39496143063
+  parity     green     — run 39496143042
+  repro      green     — run 39496143041
+  snyk       green     — run 39496143043
+  gpu        green     — run 39496143047
+RESULT: all required workflows green
+
+# end: 2026-10-21T00:16:21Z
+# exit code: 0

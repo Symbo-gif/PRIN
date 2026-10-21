@@ -1,0 +1,45 @@
+# command: git --no-pager log --oneline 5677858c15d784d881b23d43dff5029d199b0a18..HEAD & git --no-pager diff --stat 5677858c15d784d881b23d43dff5029d199b0a18 HEAD & git --no-pager diff --stat 62680946e6d5b7cab603b1fb8a3aff95dabf9675 HEAD
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# start: 2026-10-21T00:17:46Z
+bdaae83f fix(campaign,tests,docs): remediate PR #36 EXP-002-r1 E1 review findings
+62680946 feat(campaign,docs): codify re-run namespace isolation and prepare EXP-002-r1 E1 protocol and driver
+ .gitattributes                                     |    6 +
+ Cargo.lock                                         |    8 +-
+ .../README.md                                      |  203 +-
+ .../e1-handoff.md                                  |  205 ++
+ .../e2-review-packet.md                            |  161 +
+ .../preregistration.md                             |  723 ++++
+ DOCS/experiments/README.md                         |   38 +-
+ DOCS/experiments/campaign-plan.md                  |   41 +-
+ DOCS/reports/DEFERRED_VALIDATION_REGISTER.md       |   44 +
+ DOCS/standards/Experimentation_Standards.md        |   12 +-
+ EVIDENCE/exp002-r1-e1/README.md                    |   23 +
+ EVIDENCE/exp002-r1-e1/SHA256SUMS.txt               |    6 +
+ EVIDENCE/exp002-r1-e1/check-ci-green-5677858c.txt  |   10 +
+ EVIDENCE/exp002-r1-e1/dv047-closure.txt            |   27 +
+ EVIDENCE/exp002-r1-e1/pr36-remediation.txt         |  100 +
+ EVIDENCE/exp002-r1-e1/provenance-hashes.txt        |   26 +
+ EVIDENCE/exp002-r1-e1/verification-gate.txt        |  191 +
+ benchmarks/campaign/README.md                      |    1 +
+ benchmarks/campaign/exp002_r1_driver.py            | 1886 ++++++++++
+ benchmarks/results/EXP-002-r1/README.md            |   60 +
+ benchmarks/results/README.md                       |    6 +-
+ tests/README.md                                    |    9 +
+ tests/test_exp002_r1_driver.py                     | 3725 ++++++++++++++++++++
+ 23 files changed, 7386 insertions(+), 125 deletions(-)
+ .gitattributes                                     |   5 +-
+ Cargo.lock                                         |   8 +-
+ .../e1-handoff.md                                  |  81 +++-
+ .../e2-review-packet.md                            |  48 ++-
+ .../preregistration.md                             |  95 +++--
+ EVIDENCE/exp002-r1-e1/README.md                    |   3 +-
+ EVIDENCE/exp002-r1-e1/SHA256SUMS.txt               |  11 +-
+ EVIDENCE/exp002-r1-e1/pr36-remediation.txt         | 100 +++++
+ EVIDENCE/exp002-r1-e1/provenance-hashes.txt        |  44 +-
+ EVIDENCE/exp002-r1-e1/verification-gate.txt        | 105 ++++-
+ benchmarks/campaign/exp002_r1_driver.py            | 301 ++++++++++++--
+ tests/test_exp002_r1_driver.py                     | 461 ++++++++++++++++++++-
+ 12 files changed, 1155 insertions(+), 107 deletions(-)
+
+# end: 2026-10-21T00:17:46Z
+# exit code: 0

@@ -1,0 +1,18 @@
+# command: C:/dev/PRIN/.venv/Scripts/python.exe -m pytest parity/test_parity_publication.py --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -q -rs
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# start: 2026-10-21T00:16:58Z
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 94 items
+
+parity\test_parity_publication.py ...................................... [ 40%]
+........................................................                 [100%]
+
+============================= 94 passed in 12.60s =============================
+
+# end: 2026-10-21T00:17:13Z
+# exit code: 0

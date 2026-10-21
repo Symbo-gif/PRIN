@@ -1,0 +1,30 @@
+# command: C:/dev/PRIN/.venv/Scripts/python.exe -m pytest tests/test_exp002_r1_driver.py --cov=benchmarks.campaign.exp002_r1_driver --cov-report=term-missing --basetemp=.pytest_basetemp -o faulthandler_timeout=300 -q
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# start: 2026-10-21T00:16:34Z
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collected 344 items
+
+tests\test_exp002_r1_driver.py ...s..................................... [ 11%]
+........................................................................ [ 32%]
+........................................................................ [ 53%]
+........................................................................ [ 74%]
+........................................................................ [ 95%]
+...............                                                          [100%]
+
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.14.0-final-0 _______________
+
+Name                                      Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------
+benchmarks\campaign\exp002_r1_driver.py     865     17    98%   655, 976, 1116-1117, 1120-1121, 1157-1159, 1189-1190, 1192-1194, 1250-1251, 1606
+-----------------------------------------------------------------------
+TOTAL                                       865     17    98%
+======================= 343 passed, 1 skipped in 10.29s =======================
+
+# end: 2026-10-21T00:16:48Z
+# exit code: 0

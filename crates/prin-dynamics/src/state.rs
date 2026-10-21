@@ -282,6 +282,7 @@ impl OscillatorState {
 }
 
 /// Wrap a phase scalar to `[0, 2π)` using Euclidean remainder.
+#[inline]
 pub fn wrap_phase(phase: f64) -> f64 {
     phase.rem_euclid(TAU)
 }
@@ -355,6 +356,7 @@ pub fn clamp_finite(values: &[f64], limit: f64) -> Result<Vec<f64>, StateError> 
 /// Non-finite inputs are repaired to the nearest bound: `NaN` becomes
 /// `AMPLITUDE_MIN`; `+Inf` becomes `AMPLITUDE_MAX`; `-Inf` becomes
 /// `AMPLITUDE_MIN`.
+#[inline]
 pub fn clamp_amplitude(amp: f64) -> f64 {
     if amp.is_nan() {
         return AMPLITUDE_MIN;
@@ -373,6 +375,7 @@ pub fn clamp_amplitude(amp: f64) -> f64 {
 ///
 /// Non-finite inputs are repaired: `NaN` becomes `0.0`; `±Inf` becomes the
 /// corresponding signed clamp bound.
+#[inline]
 pub fn clamp_derivative(d: f64) -> f64 {
     if d.is_nan() {
         return 0.0;
@@ -409,6 +412,17 @@ pub fn guard_derivatives(derivatives: &[f64], name: &'static str) -> Result<Vec<
         .enumerate()
         .map(|(i, &d)| guard_derivative_value(d, i, name))
         .collect()
+}
+
+/// Validate and, if non-strict, repair a mutable slice of derivative values in place.
+fn guard_derivatives_in_place(
+    derivatives: &mut [f64],
+    name: &'static str,
+) -> Result<(), StateError> {
+    for (i, d) in derivatives.iter_mut().enumerate() {
+        *d = guard_derivative_value(*d, i, name)?;
+    }
+    Ok(())
 }
 
 /// Container for oscillator state time derivatives: `dphase/dt`, `damplitude/dt`, `dfrequency/dt`.
@@ -480,15 +494,15 @@ impl StateDerivatives {
     /// - `damplitude` or `dfrequency` does not match `dphase` length,
     /// - with `strict-checks` enabled, a value is non-finite or outside `[-1e4, 1e4]`.
     pub fn new(
-        dphase: Vec<f64>,
-        damplitude: Vec<f64>,
-        dfrequency: Vec<f64>,
+        mut dphase: Vec<f64>,
+        mut damplitude: Vec<f64>,
+        mut dfrequency: Vec<f64>,
     ) -> Result<Self, StateError> {
         validate_derivative_lengths(&dphase, &damplitude, &dfrequency)?;
 
-        let dphase = guard_derivatives(&dphase, "dphase")?;
-        let damplitude = guard_derivatives(&damplitude, "damplitude")?;
-        let dfrequency = guard_derivatives(&dfrequency, "dfrequency")?;
+        guard_derivatives_in_place(&mut dphase, "dphase")?;
+        guard_derivatives_in_place(&mut damplitude, "damplitude")?;
+        guard_derivatives_in_place(&mut dfrequency, "dfrequency")?;
 
         Ok(Self {
             dphase,
@@ -553,6 +567,7 @@ impl StateDerivatives {
     ///
     /// [`StateDerivatives::unclamped`] and a deserialized container report
     /// `false`, so those values are still guarded by the caller.
+    #[inline]
     pub fn is_guarded(&self) -> bool {
         self.guarded
     }
@@ -688,6 +703,7 @@ fn guard_amplitude_value(amp: f64, _index: usize, _name: &'static str) -> Result
 }
 
 #[cfg(feature = "strict-checks")]
+#[inline]
 pub(crate) fn guard_derivative_value(
     d: f64,
     index: usize,
@@ -713,6 +729,7 @@ pub(crate) fn guard_derivative_value(
 }
 
 #[cfg(not(feature = "strict-checks"))]
+#[inline]
 pub(crate) fn guard_derivative_value(
     d: f64,
     _index: usize,

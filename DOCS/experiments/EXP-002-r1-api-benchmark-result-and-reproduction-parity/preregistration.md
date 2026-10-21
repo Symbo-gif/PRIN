@@ -1,9 +1,9 @@
 # Pre-registration - EXP-002-r1: API, benchmark-result, and reproduction parity (re-run)
 
-**Status:** DRAFT
+**Status:** APPROVED
 **Authors:** MichaelMaillet (maintainer, session declaration and pre-E1 decision ratification); Devin (AI pair of record, drafting)
 **Date:** 2026-10-20 UTC
-**Maintainer approval:** NOT GRANTED (E1 DRAFT — scientific review and approval belong to `EXP-002-r1-E2`)
+**Maintainer approval:** MichaelMaillet, 2026-10-21 UTC
 **Outcome-exposure disclosure (Experimentation Standards §1.1, §4; `EXP002D1-S2-F1`):** This re-run protocol is drafted **after full exposure** to `EXP-002`'s E3–E5 outcomes (`H1 CONFIRMED`, `H2 CONFIRMED`, `H3 REFUTED` at `21/39` under §5.4 and `5/39` under §11.3, `H4 CONFIRMED`) and to `EXP-002-D1` S1–S4's root-cause decomposition and residual classification (`39/39` equal under §5.4 and `14/39` equal under §11.3 on the corrected generator, with all `25` sensitivity-policy residuals proven in `EVIDENCE/exp002-d1-s2/both-policies-post-fix.txt` to be writer/host I/O properties and `0` unclassified). This disclosure is repeated in §1, §10, and §11 below and must be repeated verbatim in the E5 report.
 **Code version:** `prin-core 1.0.0rc1` / Rust `1.0.0-rc1`
 **Source baseline (`M`):** `5677858c15d784d881b23d43dff5029d199b0a18` (`origin/main` after PR #34 `305416fb` and PR #35 `5677858c`; `tools/check_ci_green.py 5677858c15d784d881b23d43dff5029d199b0a18` exit 0, all 6 required workflows green)
@@ -133,14 +133,15 @@ Retrospective closure (`check_run_complete`) validates the *recorded*
 provenance claims against the registered constants instead — it does not
 re-read the live binary — so an E4/E5 analysis host is not required to hold
 the registered Windows artefact. The `_prin_core.pyd` pin is host-registered:
-it binds the rebuilt Windows x86_64 artefact on the governed E3 host, and on
-any other platform the imported extension is a platform build
-(`*.so`/`*.dylib`) whose governed resolution is covered by the admission
-environment check, not by requiring a `.pyd` path. E2 records the reviewed
-source commit and any pre-execution amendments. E3 records its actual clean
-execution SHA `R` and the last pre-registration commit `F` at first `RUN-`
-creation under `benchmarks/results/EXP-002-r1/`. Neither future SHA is
-fabricated here.
+admission, the `prin` reproduction arm, and pre-publication finalization
+unconditionally require the exact `python/prin/_prin_core.pyd` origin, byte
+size, and SHA-256 on the governed Windows x86_64 E3 host, so registered E3
+execution can run only on that host, while retrospective closure
+(`check_run_complete`) and the default unit-test suite remain portable across
+non-Windows hosts. E2 records the reviewed source commit and any pre-execution
+amendments. E3 records its actual clean execution SHA `R` and the last
+pre-registration commit `F` at first `RUN-` creation under
+`benchmarks/results/EXP-002-r1/`. Neither future SHA is fabricated here.
 
 ## 2. Hypotheses (falsifiable, quantitative)
 
@@ -410,7 +411,8 @@ The committed driver `benchmarks/campaign/exp002_r1_driver.py` accepts
 committed approval/source identity, verifies **all** governed-source pins at
 admission — `python/prin/_prin_core.pyd` byte size and SHA-256
 (`PRIN_CORE_PYD_BYTES`, `PRIN_CORE_PYD_SHA256`), both PRIN publication
-generators, and all three frozen `REFERENCE` sources — verifies a
+generators, `paper/artefact_manifest.json` (`INPUT_MANIFEST_SHA`), and all
+three frozen `REFERENCE` sources — verifies a
 clean checkout (exempting only untracked files under
 `benchmarks/results/EXP-002-r1/` and the E3 operator `log.md`; any untracked or
 modified file under predecessor `benchmarks/results/EXP-002/` is **rejected**),
