@@ -1,0 +1,65 @@
+# command: .venv/Scripts/python.exe -c <inspect .gitattributes, git check-attr, and git check-ignore>
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# start: 2026-10-21T00:59:50Z
+=== .gitattributes ===
+* text=auto eol=lf
+*.png binary
+*.onnx binary
+*.npz binary
+*.ipynb text eol=lf
+
+# Raw campaign evidence (campaign plan 7.3/7.4) is byte-exact: every run
+# directory carries a SHA-256 manifest of the bytes the driver wrote, and
+# tools/reproduce.py::verify_manifest fails closed on a changed size or
+# digest. Git's `text=auto eol=lf` normalization would rewrite CRLF to LF in
+# artefacts produced on Windows, so a clean checkout would read as "modified
+# and resized" against its own manifest. Disable EOL conversion here so the
+# committed blob is the bytes that were measured. `-text` (not `binary`)
+# keeps diffs visible, which 7.3 relies on as a further immutable record.
+# `whitespace=-trailing-space` stops `git diff --check` from reporting the
+# preserved CR of each CRLF line as trailing whitespace; the bytes are
+# deliberate evidence, not a style defect.
+benchmarks/results/** -text whitespace=-trailing-space
+
+# EA-007 raw verification evidence is byte-exact; preserve SHA-256 inputs.
+EVIDENCE/ea007/** -text whitespace=-trailing-space
+
+# Session-0159 local verification evidence is byte-exact; preserve SHA-256 inputs.
+EVIDENCE/0159/** -text whitespace=-trailing-space
+
+# Session-0160 (EXP-002 E2) review evidence is byte-exact; preserve SHA-256 inputs.
+EVIDENCE/0160/** -text whitespace=-trailing-space
+
+# Session-0161 (EXP-002 E3) execution evidence is byte-exact; preserve SHA-256 inputs.
+EVIDENCE/0161/** -text whitespace=-trailing-space
+
+# Session-0162 (EXP-002 E4) analysis evidence is byte-exact; preserve SHA-256 inputs.
+EVIDENCE/0162/** -text whitespace=-trailing-space
+
+# Session-0163 (EXP-002 E5) report evidence is byte-exact; preserve SHA-256 inputs.
+EVIDENCE/0163/** -text whitespace=-trailing-space
+
+# EXP-002-r1 stage-isolated verification evidence is byte-exact; preserve SHA-256 inputs.
+# The wildcard covers every registered stage root (exp002-r1-e1 through e5) so
+# later-stage evidence cannot have CRLF bytes normalized by `text=auto eol=lf`
+# and silently diverge from its own SHA-256 manifest.
+EVIDENCE/exp002-r1-e*/** -text whitespace=-trailing-space
+=== git check-attr -a ===
+EVIDENCE/exp002-r1-e1/README.md: text: unset
+EVIDENCE/exp002-r1-e1/README.md: eol: lf
+EVIDENCE/exp002-r1-e1/README.md: whitespace: -trailing-space
+EVIDENCE/exp002-r1-e2/README.md: text: unset
+EVIDENCE/exp002-r1-e2/README.md: eol: lf
+EVIDENCE/exp002-r1-e2/README.md: whitespace: -trailing-space
+EVIDENCE/exp002-r1-e5/README.md: text: unset
+EVIDENCE/exp002-r1-e5/README.md: eol: lf
+EVIDENCE/exp002-r1-e5/README.md: whitespace: -trailing-space
+benchmarks/results/EXP-002-r1/RUN-20261020T120000Z-aaaaaaa-r1-api-cpu/api.json: text: unset
+benchmarks/results/EXP-002-r1/RUN-20261020T120000Z-aaaaaaa-r1-api-cpu/api.json: eol: lf
+benchmarks/results/EXP-002-r1/RUN-20261020T120000Z-aaaaaaa-r1-api-cpu/api.json: whitespace: -trailing-space
+=== git check-ignore -v ===
+.gitignore:104:DOCS/test_and_benchmark_results/	DOCS/test_and_benchmark_results/EXP-002/RUN-x/publication/fig.pdf
+.gitignore:104:DOCS/test_and_benchmark_results/	DOCS/test_and_benchmark_results/EXP-002-r1/RUN-x/publication/fig.pdf
+.gitignore:104:DOCS/test_and_benchmark_results/	DOCS/test_and_benchmark_results/EXP-002-r1/analysis/summary.json
+# end: 2026-10-21T00:59:50Z
+# exit code: 0

@@ -1,0 +1,22 @@
+# command: set PRIN_EXP002_R1_HOST_PIN=1&& C:/dev/PRIN/.venv/Scripts/python.exe -m pytest tests/test_exp002_r1_driver.py -k "test_live_prin_core_pyd_pin_matches_registered_build or test_real_generator_source_pins_match_repository or test_admission_verifies_every_live_pin" -v --basetemp=.pytest_basetemp -o faulthandler_timeout=300
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# start: 2026-10-21T00:16:48Z
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\dev\PRIN\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\dev\PRIN
+configfile: pyproject.toml
+plugins: anyio-4.15.1, hypothesis-6.165.2, benchmark-5.2.3, cov-7.1.0
+collecting ... collected 344 items / 340 deselected / 4 selected
+
+tests/test_exp002_r1_driver.py::TestNamespaceIsolationAndRealPins::test_real_generator_source_pins_match_repository PASSED [ 25%]
+tests/test_exp002_r1_driver.py::TestNamespaceIsolationAndRealPins::test_live_prin_core_pyd_pin_matches_registered_build PASSED [ 50%]
+tests/test_exp002_r1_driver.py::TestAdmission::test_admission_verifies_every_live_pin[reference-source] PASSED [ 75%]
+tests/test_exp002_r1_driver.py::TestAdmission::test_admission_verifies_every_live_pin[prin-generator] PASSED [100%]
+
+====================== 4 passed, 340 deselected in 2.28s ======================
+
+# end: 2026-10-21T00:16:53Z
+# exit code: 0

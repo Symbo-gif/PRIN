@@ -1,0 +1,9 @@
+# command: git ls-remote origin refs/heads/main refs/heads/campaign/exp002-r1-e1 & gh pr view 36 --repo Symbo-gif/PRIN --json number,state,mergedAt,mergeCommit,headRefOid,headRefName,baseRefName,url
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# start: 2026-10-21T00:16:17Z
+bdaae83f2f384fba3c8d33013c40c6a2f4f011b5	refs/heads/campaign/exp002-r1-e1
+5677858c15d784d881b23d43dff5029d199b0a18	refs/heads/main
+{"baseRefName":"main","headRefName":"campaign/exp002-r1-e1","headRefOid":"bdaae83f2f384fba3c8d33013c40c6a2f4f011b5","mergeCommit":null,"mergedAt":null,"number":36,"state":"OPEN","url":"https://github.com/Symbo-gif/PRIN/pull/36"}
+
+# end: 2026-10-21T00:16:19Z
+# exit code: 0

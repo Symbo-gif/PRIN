@@ -1,0 +1,100 @@
+# command: git ls-files .kilo & git --no-pager log -3 --oneline -- .kilo/package-lock.json & git --no-pager diff --stat 5677858c15d784d881b23d43dff5029d199b0a18 HEAD -- .kilo & type .snyk
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# start: 2026-10-21T00:17:46Z
+.kilo/agents/data.md
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+exclude:
+  global:
+    - DOCS/archive and reference from PRINet 3.0/**
+# ignores vulnerabilities until expiry date; change duration by modifying expiry date
+ignore:
+  42730d25-f3e1-4fd0-865b-f41bc34f502e:
+    - '*':
+        reason: >-
+          EA-002 E-F4: operator-trusted CLI root in local audit tool; maintainer
+          approval 2026-08-08
+        expires: 2026-11-06T00:00:00.000Z
+        created: 2026-08-08T06:42:35.325Z
+  d9d38c5c-991a-4ebf-ad24-69336d50c8f6:
+    - '*':
+        reason: >-
+          EA-002 E-F4: operator-trusted CLI root in local audit tool; maintainer
+          approval 2026-08-08
+        expires: 2026-11-06T00:00:00.000Z
+        created: 2026-08-08T06:42:47.735Z
+  bd40dfa4-9142-4e3b-b7f2-4cca599cbd88:
+    - '*':
+        reason: >-
+          EA-002 E-F4: operator-trusted CLI root in local audit tool; maintainer
+          approval 2026-08-08
+        expires: 2026-11-06T00:00:00.000Z
+        created: 2026-08-08T06:42:50.801Z
+  SNYK-PYTHON-TORCH-10332643:
+    - '*':
+        reason: >-
+          EA-003 E-F7: torch has no fixed version for this advisory
+          (semver range [0,), fixedIn: []) so no upgrade or downgrade avoids
+          it; local-attack-vector only (CVSS AV:L) via torch.cuda.nccl.reduce,
+          which PRIN never calls (repo-wide grep across python/, tests/,
+          benchmarks/, tools/, parity/ confirms zero references); maintainer
+          approval 2026-08-14, recheck by 2026-11-14
+        expires: 2026-11-14T00:00:00.000Z
+        created: 2026-08-14T00:00:00.000Z
+  SNYK-PYTHON-TORCH-10337825:
+    - '*':
+        reason: >-
+          EA-003 E-F7: no fixed version exists (semver range [0,)); local
+          attack vector only via torch.cuda.memory.caching_allocator_delete,
+          which PRIN never calls (repo-wide grep confirms zero references);
+          maintainer approval 2026-08-14, recheck by 2026-11-14
+        expires: 2026-11-14T00:00:00.000Z
+        created: 2026-08-14T00:00:00.000Z
+  SNYK-PYTHON-TORCH-10337826:
+    - '*':
+        reason: >-
+          EA-003 E-F7: no fixed version exists (semver range [0,)); local
+          attack vector only via @torch.jit.script, which PRIN never uses
+          (repo-wide grep confirms zero references); maintainer approval
+          2026-08-14, recheck by 2026-11-14
+        expires: 2026-11-14T00:00:00.000Z
+        created: 2026-08-14T00:00:00.000Z
+  SNYK-PYTHON-TORCH-10337834:
+    - '*':
+        reason: >-
+          EA-003 E-F7: no fixed version exists (semver range [0,)); local
+          attack vector only via torch.jit.jit_module_from_flatbuffer, which
+          PRIN never calls (repo-wide grep confirms zero references);
+          maintainer approval 2026-08-14, recheck by 2026-11-14
+        expires: 2026-11-14T00:00:00.000Z
+        created: 2026-08-14T00:00:00.000Z
+  SNYK-PYTHON-TORCH-13052969:
+    - '*':
+        reason: >-
+          EA-003 E-F7: no fixed version exists (semver range [0,)); requires
+          torch.nan_to_num() chained with .long() on float("inf") in eager
+          mode, which PRIN never calls (repo-wide grep confirms zero
+          references to nan_to_num); maintainer approval 2026-08-14, recheck
+          by 2026-11-14
+        expires: 2026-11-14T00:00:00.000Z
+        created: 2026-08-14T00:00:00.000Z
+  SNYK-PYTHON-TORCH-15746467:
+    - '*':
+        reason: >-
+          EA-003 E-F7 (high severity): no fixed version exists (semver range
+          [0,)); vulnerability is in deserializing untrusted .pt2 files via
+          torch.export load handlers even under weights_only=True. PRIN never
+          calls torch.export.load or handles .pt2 files in python/, tests/,
+          benchmarks/, tools/, or parity/ (repo-wide grep reconfirmed
+          2026-09-15). Two post-approval acceptance/benchmark call sites use
+          ordinary torch.load(..., weights_only=True) on project-generated .pt
+          state-dict caches; that is a distinct API and artefact format from
+          the advisory's torch.export .pt2 handler. The vulnerable path remains
+          unreachable. Re-evaluate before this project adds torch.export.load
+          or .pt2 input. Maintainer approval 2026-08-14, recheck by 2026-11-14
+        expires: 2026-11-14T00:00:00.000Z
+        created: 2026-08-14T00:00:00.000Z
+version: v1.25.1
+patch: {}
+
+# end: 2026-10-21T00:17:47Z
+# exit code: 0

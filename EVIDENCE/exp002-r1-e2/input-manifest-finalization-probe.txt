@@ -1,0 +1,9 @@
+# command: .venv/Scripts/python.exe -c <synthetic mid-collection INPUT_MANIFEST mutation probe>
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+# start: 2026-10-21T01:01:17Z
+run_registered completed: RUN-20261020T120000Z-aaaaaaa-r1-api-cpu
+abort.json exists: False
+check_run_complete: ACCEPTED
+live manifest matches pin: False
+# end: 2026-10-21T01:01:19Z
+# exit code: 0

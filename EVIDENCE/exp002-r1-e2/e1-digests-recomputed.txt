@@ -1,0 +1,22 @@
+# independent recomputation of EVIDENCE/exp002-r1-e1/provenance-hashes.txt rows from current bytes
+# HEAD: bdaae83f2f384fba3c8d33013c40c6a2f4f011b5
+paper/artefact_manifest.json | 28645 | 300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5 | match=True
+python/prin/__init__.py | 11536 | cd43a8ff75422f8bfb5beca19f52c2cbfdcaddb330a358aad172aeb39c54c6bb | match=True
+python/prin/_public_api.py | 6141 | dd5745ababa809483b8d52198a096a1e9fa0de7e13e246245b13f47066853a6d | match=True
+python/prin/_deprecation.py | 3239 | 132e86e991669d0abe65d89b624227250bfd61e54c2f97cb814366a0012f4e9a | match=True
+python/prin/_prin_core.pyd | 9290240 | 37392d067efa3983e384c94f4ac2268c4fad2f5ea929c529b3db50bff4fee99e | match=True
+tools/reproduce.py | 50321 | 12333a02e18f29ff52c42b2d17d7ac6ef53d3756217f10a7b9a964f75150b5b9 | match=True
+python/prin/reporting/figure_generation.py | 41869 | e216fec4f45ab71cfc5ef1286701c920731df278120e0afa0d216515b4bb19a7 | match=True
+python/prin/reporting/table_generation.py | 29173 | 1593f52d9a652842ee7d62163d9e6b397989e9c6489aa5cc43a8416b1083c8af | match=True
+python/prin/reporting/_artifacts.py | 5834 | 845a398f7b849e2173cd81a6d673f28900114fec880561e812b9e7ef2217d90a | match=True
+DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/__init__.py | 11959 | ede92afc6771f2e29206534905e2820598ba841662a93d59f669f803a382f182 | match=True
+DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/utils/figure_generation.py | 35239 | 575eca5a6436a25f957702091a6a0b5b7f3d77f1f496f9e6b423550cf79e1520 | match=True
+DOCS/archive and reference from PRINet 3.0/PRINet-3.0.0-main/src/prinet/utils/table_generation.py | 26962 | 9ac382c487f7177465805a49686568b8ac323128cebeae342cca2b05814704cc | match=True
+DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/preregistration.md | 50885 | c0e5a77b4b7a9815dd452114329b899b337543a100735495b596a0bd3e82a523 | match=True
+DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/e1-handoff.md | 15848 | 9f8926e784853668f6bbccc94f15efced384054f59eb3d91bbf5da2bd51a4d3d | match=True
+DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/e2-review-packet.md | 16950 | b65b3bc190118ba64723bd60161e2ffddc1fc5403de15b38622e9444073eb1c2 | match=True
+benchmarks/campaign/exp002_r1_driver.py | 72355 | f122be9833ed49e70a2333c6c4e1a482fb2e5efaf06914d456b296e7bd218185 | match=True
+tests/test_exp002_r1_driver.py | 144745 | 69afc0b3169add884b531a6d7b5752e623db7084986d62ac15057cf66174792c | match=True
+.gitattributes | 2087 | 5d9b122b9bcbbf457858613c4ca39672a76906cd16ed859b743ef2af2e4fdeaa | match=True
+Cargo.lock | 160894 | 9bfb353c5ed8dd4323577d99f72ec7e2ac5b963996ff72acdda0c8486f081a8b | match=True
+ROWS=19 MISMATCHES=0
