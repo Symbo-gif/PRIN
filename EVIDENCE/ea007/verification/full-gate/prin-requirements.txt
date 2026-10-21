@@ -15,7 +15,7 @@ boolean-py==5.0
     # via license-expression
 cachecontrol==0.14.4
     # via pip-audit
-certifi==2026.7.22
+certifi==2026.10.19
     # via requests
 charset-normalizer==3.5.2
     # via requests
@@ -143,7 +143,7 @@ parso==0.8.7
     # via jedi
 pathspec==1.1.1
     # via mypy
-pillow==12.3.0
+pillow==13.0.0
     # via
     #   matplotlib
     #   torchvision
