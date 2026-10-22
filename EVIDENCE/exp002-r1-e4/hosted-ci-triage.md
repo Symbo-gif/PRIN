@@ -47,3 +47,9 @@ the red runs remain in history). `.gitleaks.toml` and all workflows are
 unchanged. The PR-event scan covers only `head^..head`, so the next run is
 expected to scan the remediation commit alone; the suppression is therefore
 recorded here rather than relied on to turn the check green.
+
+## Outcome (recorded 2026-10-22 UTC)
+
+First remediation commit `8fd314f` cleared `Secret Scan` (pull_request `39755531261`, push `39755525327`: success) but its edit of `.gitleaksignore` failed the exact-list guard `tests/test_wp001_baseline.py::test_secret_scan_is_blocking_and_covers_full_history` in all six `python` test jobs (run `39755530922`, conclusion failure, head `8fd314f`). That failure is recorded here too and was not waived. Commit `b273514` updated the guard to pin the two approved E4 fingerprints (the list is still pinned exactly).
+
+Final hosted results on head `b273514c` (all `success`): `python` `39766280804`, `rust` `39766280886`, `parity` `39766280789`, `repro` `39766280796`, `gpu` `39766280741`, `snyk` `39766280833` (Secret Scan and Snyk Code); push `snyk` `39766275183`. Superseded red runs: `39719901599`, `39719743625` (`1f0f1b9`) and `39755530922` (`8fd314f`). Links: `https://github.com/Symbo-gif/PRIN/actions/runs/<id>`.
