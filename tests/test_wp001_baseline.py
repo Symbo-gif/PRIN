@@ -1152,16 +1152,26 @@ def test_secret_scan_is_blocking_and_covers_full_history() -> None:
     ignored = [line for line in text.splitlines() if line and not line.startswith("#")]
     # Exactly the maintainer-approved exact fingerprints, each a noncredential
     # SHA-256 checksum, and nothing else: approved 2026-08-06 and, for the
-    # E1 entry evidence, 2026-10-11 (PR #33 review audit, PR33-F34).
+    # E1 entry evidence, 2026-10-11 (PR #33 review audit, PR33-F34) and, for the
+    # E4 analysis summary digests, 2026-10-22 (PR #40 hosted-CI triage,
+    # EVIDENCE/exp002-r1-e4/hosted-ci-triage.md).
+    e4_summary = (
+        "1f0f1b91594a9114d1f70625df0c8602c3b572bd:DOCS/experiments/"
+        "EXP-002-r1-api-benchmark-result-and-reproduction-parity/analysis/"
+        "summary.json:generic-api-key:"
+    )
     assert ignored == [
         "655521df49b0f2088190f244d98ef65043243bc8:DOCS/archive and reference "
         "from PRINet 3.0/PRINet-3.0.0-main/benchmarks/results/"
         "sha256_manifest.json:generic-api-key:68",
         "78590305e1c0a78d92153ef2a55a9e76aeb7af79:EVIDENCE/0159/"
         "entry-state.json:generic-api-key:87",
+        e4_summary + "270",
+        e4_summary + "271",
     ]
     assert "# Approved 2026-08-06" in text
     assert "# Approved 2026-10-11 by MichaelMaillet" in text
+    assert "# Approved 2026-10-22 by MichaelMaillet" in text
 
 
 _APPROVED_WORKFLOW_ACTIONS = frozenset(

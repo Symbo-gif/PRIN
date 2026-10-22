@@ -4,3 +4,12 @@
 # SHA-256 checksum of the frozen reference API source recorded as
 # `reference_api_sha256` in byte-frozen E1 entry evidence, not a credential.
 78590305e1c0a78d92153ef2a55a9e76aeb7af79:EVIDENCE/0159/entry-state.json:generic-api-key:87
+# Approved 2026-10-22 by MichaelMaillet (PR #40 hosted-CI triage, amendment #52
+# record EVIDENCE/exp002-r1-e4/hosted-ci-triage.md): the SHA-256 checksums of
+# `python/prin/_public_api.py` (`public_api_sha256`) and
+# `REFERENCE/src/prinet/__init__.py` (`reference_api_sha256`) recorded in the
+# E4 analysis `summary.json`, pinned in preregistration.md and
+# exp002_r1_e4_analysis.py; not credentials. Failed runs 39719901599 and
+# 39719743625 remain recorded verbatim.
+1f0f1b91594a9114d1f70625df0c8602c3b572bd:DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/analysis/summary.json:generic-api-key:270
+1f0f1b91594a9114d1f70625df0c8602c3b572bd:DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/analysis/summary.json:generic-api-key:271

@@ -1,0 +1,59 @@
+# EXP-002-r1 E4 Analysis Verification
+Timestamp: 2026-10-22T03:30:00Z
+Operator: MichaelMaillet
+AI Pair: Antigravity
+Execution Commit: c7c54d186ffb912070498f78e9931ebd4ff8f8e7
+
+## 1. Unit Test Suite (tests/test_exp002_r1_e4_analysis.py)
+Command: .venv\Scripts\python -m pytest tests/test_exp002_r1_e4_analysis.py --basetemp=.pytest_basetemp -o faulthandler_timeout=300
+Result: 176 passed in 3441.14s (0:57:21)
+Exit Code: 0
+
+## 2. Analysis Execution (exp002_r1_e4_analysis.py)
+Command: .venv\Scripts\python DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/analysis/exp002_r1_e4_analysis.py
+Result:
+H1: CONFIRMED
+H2: CONFIRMED
+H3: CONFIRMED
+H4: CONFIRMED
+H3_sensitivity_policy: REFUTED
+D1 flag: False
+Exit Code: 0
+
+## 3. Analysis Deliverables Digests (DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/analysis/)
+api-census.csv                18378 B   5656cb9b570889a911b35283b8a5cfdc55c5ec8e0f28ba35d34d8fec526e10c3
+conclusions-census.csv        10872 B   0c01c59c8e1f32ea3ad173dddde117ad9a94b187289328da760e1c906e0bba85
+reproduction-comparisons.csv  31250 B   925b40b4b13f6e76ec62eed08f65b400d13da66c446f54766963804781f5e532
+repeatability-comparisons.csv  7445 B   18f91d6bf46bc0006225ab2d78ceaa058362466faaea63de753ff50035653027
+summary.json                  12308 B   fcdb56250165f18d65c22d07f9caae1a9e0ff632f3dbcab0047046dabc9e01ad
+sensitivity-residuals.json    18525 B   884c0c6ce0344e8e4757c99e5555e24ddb314be62a89f8619ed9108644a4de06
+report-manifest.json          19209 B   6cd12f2d1bf0ed5f841d8e3945443a4fd16b689f7fd489f0435fd61baf8d9dc2
+
+## 4. Root Deliverable Manifest (DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/report-manifest.json)
+report-manifest.json          19209 B   6cd12f2d1bf0ed5f841d8e3945443a4fd16b689f7fd489f0435fd61baf8d9dc2
+
+## 5. Generated Test and Benchmark Analysis Mirror (DOCS/test_and_benchmark_results/EXP-002-r1/analysis/)
+summary.json                  12308 B   fcdb56250165f18d65c22d07f9caae1a9e0ff632f3dbcab0047046dabc9e01ad
+api-mapping.csv               18378 B   5656cb9b570889a911b35283b8a5cfdc55c5ec8e0f28ba35d34d8fec526e10c3
+conclusion-comparisons.csv    10872 B   0c01c59c8e1f32ea3ad173dddde117ad9a94b187289328da760e1c906e0bba85
+reproduction-comparisons.csv  31250 B   925b40b4b13f6e76ec62eed08f65b400d13da66c446f54766963804781f5e532
+error-distributions.json       2532 B   afd3d1454dabdd12e12b504300b07996a12553cc262a16f6748c38d7a3fffb1e
+expected-vs-observed.md        2938 B   1a27f264f02cd7e2bea0f1d6649ded3f797982d288b4ac870d358accd26bd4d7
+coverage-and-deferrals.md      2627 B   4e82524ff0fa8b20cc2dbc2a13b5202730b4d5d6c01a0e107ec100574fb74dad
+
+## 6. Sensitivity Residual Diagnostic Decomposition
+Total Publication Files: 39
+Files Equal under Approved §5.4 Policy: 39/39 (100.0%)
+Files Equal under Sensitivity §11.3 Policy: 14/39 (35.9%)
+Differing Files under Sensitivity Policy: 25
+  pdf_info_keyset residuals: 14 (100% of PDF residuals)
+  tex_crlf_line_terminator residuals: 11 (100% of TeX residuals)
+  unclassified residuals: 0 (0.0%)
+All 25 sensitivity residuals accounted for by registered writer/host I/O classes.
+
+## 7. DV-040 Quality Gates
+- Ruff check workspace: 0 errors (all checks passed)
+- Ruff format check workspace: 0 errors (336 files formatted)
+- Ruff format check DOCS/experiments: 0 errors (4 files formatted)
+- MyPy strict DOCS/experiments: 0 errors (4 files checked)
+- Bandit security scan: 0 issues (30,859 lines of code scanned)
