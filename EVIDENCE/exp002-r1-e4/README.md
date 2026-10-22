@@ -27,4 +27,5 @@ Verify this bundle with:
 | [`log.md`](log.md) | Full operator console execution log, entry verification, execution sequence, timestamps, and post-execution summaries |
 | [`analysis-verification.txt`](analysis-verification.txt) | Verification records confirming test suite results, deliverable digest verifications, and hypothesis verdicts |
 | [`predecessor-immutability.txt`](predecessor-immutability.txt) | Proof that `git diff HEAD` across all predecessor `EXP-002`, `0159`–`0163`, and `exp002-d1-s1`–`s4` roots is completely empty (0 diff bytes) |
+| [`hosted-ci-triage.md`](hosted-ci-triage.md) | Amendment #52 verbatim record of the failed hosted `Secret Scan` (runs `39719901599`, `39719743625`), false-positive triage, and the `.gitleaksignore` remediation |
 | [`SHA256SUMS.txt`](SHA256SUMS.txt) | SHA-256 digests of all evidence files in this directory |
