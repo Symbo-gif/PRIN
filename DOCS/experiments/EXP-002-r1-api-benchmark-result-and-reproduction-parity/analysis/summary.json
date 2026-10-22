@@ -1,0 +1,345 @@
+{
+  "aborted_runs": [],
+  "analysis_date_utc": "2026-10-21",
+  "analysis_module": {
+    "commit": null,
+    "matches_commit": false,
+    "path": "DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/analysis/exp002_r1_e4_analysis.py",
+    "sha256": "d7ea99b8c80fb40e8473286fa05afa317c9b6987bd5db659d34bbce8936265a8"
+  },
+  "d1_basis": "any primary verdict REFUTED (pre-registration section 4.3; campaign plan section 10.4)",
+  "d1_flag": false,
+  "d1_hypotheses": [],
+  "experiment": "EXP-002-r1",
+  "h3_policies_agree": false,
+  "h3_policy_note": "H3 is decided under the approved section 5.4 policy (primary, confirmatory per e2-review.md decision 9) and under the section 11.3 sensitivity policy. If they differ, H3's verdict depends on a comparison amendment made after outcome exposure and neither verdict may be reported alone.",
+  "h3_sensitivity_policy_refuted": true,
+  "hypotheses": {
+    "H1": {
+      "classification_api_symbols": {
+        "callable": 172,
+        "constant": 3,
+        "none": 0,
+        "unresolved": 0,
+        "unsupported": 0,
+        "unverifiable": 0
+      },
+      "counterexample_count": 0,
+      "denominator_api_symbols": 175,
+      "denominator_legacy_api_names": 172,
+      "duplicate_exports": [],
+      "failing_api_symbols": [],
+      "frozen_contract_extra": [],
+      "frozen_contract_missing": [],
+      "hypothesis": "H1",
+      "observed_export_list_entries": 175,
+      "owned_legacy_api_names": 172,
+      "removed_exports": [],
+      "resolved_api_symbols": 175,
+      "run_id": "RUN-20261021T183011Z-e65076e-r1-api-cpu",
+      "unexpected_exports": [],
+      "unowned_legacy_api_names": [],
+      "unverifiable_api_symbols": [],
+      "verdict": "CONFIRMED"
+    },
+    "H2": {
+      "agree_claim_comparator_records": 62,
+      "denominator_claim_comparator_records": 62,
+      "disagree_claim_comparator_records": 0,
+      "disagreeing_case_ids": [],
+      "families": {
+        "C01": {
+          "agree_claim_comparator_records": 5,
+          "denominator_claim_comparator_records": 5,
+          "disagree_claim_comparator_records": 0,
+          "missing_claim_comparator_records": 0,
+          "present_claim_comparator_records": 5
+        },
+        "C02": {
+          "agree_claim_comparator_records": 42,
+          "denominator_claim_comparator_records": 42,
+          "disagree_claim_comparator_records": 0,
+          "missing_claim_comparator_records": 0,
+          "present_claim_comparator_records": 42
+        },
+        "C03": {
+          "agree_claim_comparator_records": 4,
+          "denominator_claim_comparator_records": 4,
+          "disagree_claim_comparator_records": 0,
+          "missing_claim_comparator_records": 0,
+          "present_claim_comparator_records": 4
+        },
+        "C04": {
+          "agree_claim_comparator_records": 5,
+          "denominator_claim_comparator_records": 5,
+          "disagree_claim_comparator_records": 0,
+          "missing_claim_comparator_records": 0,
+          "present_claim_comparator_records": 5
+        },
+        "C05": {
+          "agree_claim_comparator_records": 6,
+          "denominator_claim_comparator_records": 6,
+          "disagree_claim_comparator_records": 0,
+          "missing_claim_comparator_records": 0,
+          "present_claim_comparator_records": 6
+        }
+      },
+      "hypothesis": "H2",
+      "run_id": "RUN-20261021T183952Z-e65076e-r1-conclusions-cpu",
+      "verdict": "CONFIRMED"
+    },
+    "H3": {
+      "by_format": {
+        "pdf": {
+          "denominator_generated_files": 14,
+          "differ_generated_files": 0,
+          "equal_generated_files": 14,
+          "missing_generated_files": 0
+        },
+        "png": {
+          "denominator_generated_files": 14,
+          "differ_generated_files": 0,
+          "equal_generated_files": 14,
+          "missing_generated_files": 0
+        },
+        "tex": {
+          "denominator_generated_files": 11,
+          "differ_generated_files": 0,
+          "equal_generated_files": 11,
+          "missing_generated_files": 0
+        }
+      },
+      "counterexample_count": 0,
+      "denominator_generated_files": 39,
+      "denominator_table_files_vs_archived": 11,
+      "differing_generated_files": [],
+      "equal_generated_files": 39,
+      "extra_in_prin": [],
+      "extra_in_reference": [],
+      "hypothesis": "H3",
+      "missing_in_prin": [],
+      "missing_in_reference": [],
+      "policy": "approved",
+      "prin_inventory_generated_files": 39,
+      "prin_run_id": "RUN-20261021T184600Z-e65076e-r1-reproduction-prin-cpu",
+      "reference_inventory_generated_files": 39,
+      "reference_run_id": "RUN-20261021T184447Z-e65076e-r1-reproduction-reference-cpu",
+      "reference_tables_inconsistent_with_archived": [],
+      "tables_differing_from_archived": [],
+      "tables_equal_to_archived": 11,
+      "verdict": "CONFIRMED"
+    },
+    "H3_sensitivity": {
+      "by_format": {
+        "pdf": {
+          "denominator_generated_files": 14,
+          "differ_generated_files": 14,
+          "equal_generated_files": 0,
+          "missing_generated_files": 0
+        },
+        "png": {
+          "denominator_generated_files": 14,
+          "differ_generated_files": 0,
+          "equal_generated_files": 14,
+          "missing_generated_files": 0
+        },
+        "tex": {
+          "denominator_generated_files": 11,
+          "differ_generated_files": 11,
+          "equal_generated_files": 0,
+          "missing_generated_files": 0
+        }
+      },
+      "counterexample_count": 25,
+      "denominator_generated_files": 39,
+      "denominator_table_files_vs_archived": 11,
+      "differing_generated_files": [
+        "figures/fig10_statistical_summary.pdf",
+        "figures/fig11_flops_scaling.pdf",
+        "figures/fig12_supercritical_regime.pdf",
+        "figures/fig13_representation_geometry.pdf",
+        "figures/fig14_gradient_flow.pdf",
+        "figures/fig15_noise_velocity.pdf",
+        "figures/fig2_clevr_n_capacity.pdf",
+        "figures/fig3_chimera_metrics.pdf",
+        "figures/fig4_chimera_k_alpha_heatmap.pdf",
+        "figures/fig5_mot_occlusion_comparison.pdf",
+        "figures/fig6_oscillosim_scaling.pdf",
+        "figures/fig7_ablation_results.pdf",
+        "figures/fig8_parameter_efficiency.pdf",
+        "figures/fig9_training_curves.pdf",
+        "tables/tab_ablation.tex",
+        "tables/tab_binding_params.tex",
+        "tables/tab_chimera.tex",
+        "tables/tab_efficiency.tex",
+        "tables/tab_geometry.tex",
+        "tables/tab_occlusion.tex",
+        "tables/tab_oscillosim.tex",
+        "tables/tab_param_efficiency.tex",
+        "tables/tab_statistical.tex",
+        "tables/tab_stress.tex",
+        "tables/tab_supercritical.tex"
+      ],
+      "equal_generated_files": 14,
+      "extra_in_prin": [],
+      "extra_in_reference": [],
+      "hypothesis": "H3",
+      "missing_in_prin": [],
+      "missing_in_reference": [],
+      "policy": "sensitivity",
+      "prin_inventory_generated_files": 39,
+      "prin_run_id": "RUN-20261021T184600Z-e65076e-r1-reproduction-prin-cpu",
+      "reference_inventory_generated_files": 39,
+      "reference_run_id": "RUN-20261021T184447Z-e65076e-r1-reproduction-reference-cpu",
+      "reference_tables_inconsistent_with_archived": [
+        "tables/tab_ablation.tex",
+        "tables/tab_binding_params.tex",
+        "tables/tab_chimera.tex",
+        "tables/tab_efficiency.tex",
+        "tables/tab_geometry.tex",
+        "tables/tab_occlusion.tex",
+        "tables/tab_oscillosim.tex",
+        "tables/tab_param_efficiency.tex",
+        "tables/tab_statistical.tex",
+        "tables/tab_stress.tex",
+        "tables/tab_supercritical.tex"
+      ],
+      "tables_differing_from_archived": [],
+      "tables_equal_to_archived": 11,
+      "verdict": "REFUTED"
+    },
+    "H4": {
+      "by_format": {
+        "pdf": {
+          "denominator_generated_files": 14,
+          "missing_generated_files": 0,
+          "raw_differ_generated_files": 0,
+          "raw_equal_generated_files": 14
+        },
+        "png": {
+          "denominator_generated_files": 14,
+          "missing_generated_files": 0,
+          "raw_differ_generated_files": 0,
+          "raw_equal_generated_files": 14
+        },
+        "tex": {
+          "denominator_generated_files": 11,
+          "missing_generated_files": 0,
+          "raw_differ_generated_files": 0,
+          "raw_equal_generated_files": 11
+        }
+      },
+      "counterexample_count": 0,
+      "denominator_generated_files": 39,
+      "hypothesis": "H4",
+      "only_in_prin": [],
+      "only_in_repeat": [],
+      "prin_inventory_generated_files": 39,
+      "prin_run_id": "RUN-20261021T184600Z-e65076e-r1-reproduction-prin-cpu",
+      "projection_equal": true,
+      "raw_differing_generated_files": [],
+      "raw_equal_generated_files": 39,
+      "repeat_inventory_generated_files": 39,
+      "repeat_run_id": "RUN-20261021T184707Z-e65076e-r1-seedrep0-prin-cpu",
+      "verdict": "CONFIRMED"
+    }
+  },
+  "inadmissible_runs": [],
+  "populations": {
+    "analysis_output_file_count": 7,
+    "api_symbol_count": 175,
+    "claim_comparator_record_count": 62,
+    "generated_figure_file_count": 28,
+    "generated_file_count": 39,
+    "generated_table_file_count": 11,
+    "legacy_api_name_count": 172,
+    "note": "The 39 generated publication files are separate from the 7 analysis outputs; they are never summed."
+  },
+  "provenance": {
+    "approval_date_utc": "2026-10-21",
+    "deprecation_sha256": "132e86e991669d0abe65d89b624227250bfd61e54c2f97cb814366a0012f4e9a",
+    "execution_commit": "e65076eb7ae97100d40ea32c60229dd40ed51033",
+    "freeze_commit": "10ac3c04f44a1f68869c94c1dfae1c1c1a189460",
+    "input_manifest_path": "paper/artefact_manifest.json",
+    "input_manifest_sha256": "300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5",
+    "input_record_count": 172,
+    "prin_core_pyd_bytes": 9290240,
+    "prin_core_pyd_sha256": "37392d067efa3983e384c94f4ac2268c4fad2f5ea929c529b3db50bff4fee99e",
+    "protocol_path": "DOCS/experiments/EXP-002-r1-api-benchmark-result-and-reproduction-parity/preregistration.md",
+    "protocol_sha256": "dc2cf8d8340b8385f510447f738d131ea45d2d805db201a6339eef4fa7a86483",
+    "public_api_sha256": "dd5745ababa809483b8d52198a096a1e9fa0de7e13e246245b13f47066853a6d",
+    "reference_api_sha256": "ede92afc6771f2e29206534905e2820598ba841662a93d59f669f803a382f182"
+  },
+  "runs": [
+    {
+      "admissible": true,
+      "hypotheses": [
+        "H1"
+      ],
+      "inadmissibility_reason": null,
+      "label": "r1-api-cpu",
+      "mode": "api",
+      "run_id": "RUN-20261021T183011Z-e65076e-r1-api-cpu",
+      "status": "COMPLETED"
+    },
+    {
+      "admissible": true,
+      "hypotheses": [
+        "H2"
+      ],
+      "inadmissibility_reason": null,
+      "label": "r1-conclusions-cpu",
+      "mode": "conclusions",
+      "run_id": "RUN-20261021T183952Z-e65076e-r1-conclusions-cpu",
+      "status": "COMPLETED"
+    },
+    {
+      "admissible": true,
+      "hypotheses": [
+        "H3"
+      ],
+      "inadmissibility_reason": null,
+      "label": "r1-reproduction-reference-cpu",
+      "mode": "reference",
+      "run_id": "RUN-20261021T184447Z-e65076e-r1-reproduction-reference-cpu",
+      "status": "COMPLETED"
+    },
+    {
+      "admissible": true,
+      "hypotheses": [
+        "H3",
+        "H4"
+      ],
+      "inadmissibility_reason": null,
+      "label": "r1-reproduction-prin-cpu",
+      "mode": "prin",
+      "run_id": "RUN-20261021T184600Z-e65076e-r1-reproduction-prin-cpu",
+      "status": "COMPLETED"
+    },
+    {
+      "admissible": true,
+      "hypotheses": [
+        "H4"
+      ],
+      "inadmissibility_reason": null,
+      "label": "r1-seedrep0-prin-cpu",
+      "mode": "repeatability",
+      "run_id": "RUN-20261021T184707Z-e65076e-r1-seedrep0-prin-cpu",
+      "status": "COMPLETED"
+    }
+  ],
+  "session": "EXP-002-r1-E4",
+  "stage": "E4",
+  "statistics": {
+    "confidence_intervals": "not applicable (deterministic census; pre-registration section 7)",
+    "effect_sizes": "not applicable (deterministic census; pre-registration section 7)",
+    "significance_tests": "none registered"
+  },
+  "verdicts": {
+    "H1": "CONFIRMED",
+    "H2": "CONFIRMED",
+    "H3": "CONFIRMED",
+    "H3_sensitivity_policy": "REFUTED",
+    "H4": "CONFIRMED"
+  }
+}
