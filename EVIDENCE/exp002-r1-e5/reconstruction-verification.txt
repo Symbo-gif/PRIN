@@ -1,0 +1,40 @@
+EXP-002-r1 E5 — Step 3: Clean-Checkout Reconstruction Verification
+Timestamp: 2026-10-22T14:38:00Z
+Operator: MichaelMaillet / AI pair Antigravity
+
+Reconstruction Target: DOCS/test_and_benchmark_results/EXP-002-r1/e5-reconstruction (gitignored)
+Environment Parameters:
+  Python: 3.14.0
+  Matplotlib: 3.11.1
+  NumPy: 2.5.1
+  Pillow: 12.3.0
+  FreeType: 2.14.3
+  Backend: Agg
+  Font cache: 146,692 bytes (SHA-256: 9c00441405ce72925562e017858a729b402612a203b0682b2e7fd79329c8f6bb)
+  40-font map SHA-256: 168e1aee710ca4496f65d7dc0689ed93257ed3e1ab3711dad4494940b51c8189
+
+1. PRIN Arm Reconstruction vs Manifested E3 PRIN Run:
+  - Files generated: 39/39
+  - Raw byte length and SHA-256 matches: 39/39 (14/14 PDF, 14/14 PNG, 11/11 TeX)
+  - Normalized §5.4 matches: 39/39
+  - Sensitivity §11.3 matches: 39/39
+  - Reconstructed publication listing hash: 0f99f95524fff7e4e0e885e18c19d57e3360801921ea78f244aa7d8ab65f60fe
+  - Determinism verification: Identical to E3 PRIN reproduction and E3 PRIN repeatability listings.
+
+2. Reference Arm Reconstruction vs Manifested E3 Reference Run:
+  - Files generated: 39/39
+  - Raw byte length and SHA-256 matches: 25/39 (0/14 PDF, 14/14 PNG, 11/11 TeX)
+  - Normalized §5.4 matches: 39/39
+  - Sensitivity §11.3 matches: 39/39
+  - Reconstructed publication listing hash: 9ee51086fa27083a2162da15e98587376c669e46a3c6d66e51bfd785e05d0e2e
+  - Disclosure: The 14 raw PDF figures differ in raw SHA-256 exclusively because the frozen prinet==3.0.0
+    generator does not pass a metadata dictionary, causing Matplotlib to emit the unpinned wall-clock
+    timestamp into /CreationDate and trailer /ID. Under both normalized (§5.4) and sensitivity (§11.3)
+    policies, all 14/14 reference PDFs match identically.
+
+3. Cross-Arm Comparison (Reconstructed Reference vs Reconstructed PRIN):
+  - Primary §5.4 comparison policy: 39/39 EQUAL (14/14 PDF, 14/14 PNG, 11/11 TeX)
+  - Diagnostic §11.3 sensitivity policy: 14/39 EQUAL (14/14 PNG equal, 14/14 PDF and 11/11 TeX differ)
+  - Residuals: 14 pdf_info_keyset, 11 tex_crlf_line_terminator, 0 unclassified.
+
+Step 3 verification result: PASS (protocol §8.2 reconstruction confirms expectations completely).
