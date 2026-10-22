@@ -1,6 +1,6 @@
 # EXP-002-r1 — API, benchmark-result, and reproduction parity, re-run (track C1)
 
-**Status:** **E1 PREPARED (2026-10-20 UTC, branch `campaign/exp002-r1-e1`, baseline `M = 5677858c15d784d881b23d43dff5029d199b0a18`) — DRAFT PROTOCOL AND ISOLATED DRIVER COMMITTED FOR E2 REVIEW. No E3 execution has run and no `RUN-` directory exists.**
+**Status:** **E5 REPORTED (2026-10-22 UTC, branch `campaign/exp002-r1-e5`) — NON-REVERSAL VERDICT (H1 CONFIRMED, H2 CONFIRMED, H3 CONFIRMED under approved §5.4 policy, H4 CONFIRMED; D1 = False). Stage complete; awaiting maintainer verification and acceptance.**
 Created as a skeleton by `EXP-002-D1` S4 (2026-10-16 UTC) under campaign plan
 §10.4 item 4; E1 declared by the maintainer 2026-10-20 UTC after settling the
 pre-E1 open decisions below. [`preregistration.md`](preregistration.md) is
@@ -155,13 +155,13 @@ E1 completion does **not** release `0164` or authorize E3 execution.
 
 | File | Created by | State / Frozen when |
 |---|---|---|
-| `README.md` | S4 / updated at E1 (this file) | Updated as the experiment progresses |
-| [`preregistration.md`](preregistration.md) | E1 (`DRAFT`) | Frozen at the first `RUN-` creation in E3 (campaign plan §12 item 4); never edited after freeze |
+| `README.md` | S4 / updated through E5 (this file) | Updated as the experiment progresses |
+| [`preregistration.md`](preregistration.md) | E1 / approved E2 | Frozen at `F = 10ac3c04f44a1f68869c94c1dfae1c1c1a189460` at first `RUN-` creation in E3 |
 | [`e1-handoff.md`](e1-handoff.md) | E1 | Entry verification, DV-047 closure, and E1 local-gate evidence record |
-| [`e2-review-packet.md`](e2-review-packet.md) | E1 | Decision and S4 retro-audit packet for `EXP-002-r1-E2` (PREPARED FOR REVIEW — NOT APPROVED) |
-| `e2-review.md` | E2 (pending) | Independent-review, S4 retro-audit, and maintainer-decision record |
-| `log.md` | E3 (pending) | Never edited after E3 close |
-| `analysis/` | E4 (pending) | `analysis/exp002_r1_e4_analysis.py` committed **before** adjudication (§7.4 item 2) |
-| `analysis.md` | E4 (pending) | Never edited after E4 close; corrections are errata |
-| `report.md` | E5 (pending) | Never edited after issue; corrections are errata |
-| `report-manifest.json` | E4/E5 (pending) | SHA-256 of regenerated outputs plus every input run manifest |
+| [`e2-review-packet.md`](e2-review-packet.md) | E1 | Decision and S4 retro-audit packet for `EXP-002-r1-E2` |
+| [`e2-review.md`](e2-review.md) | E2 | Independent review, S4 retro-audit, Lean 4 / Z3 proofs, and approval record |
+| [`log.md`](log.md) | E3 | Five registered runs executed; frozen at E3 close |
+| [`analysis/`](analysis/) | E4 | Committed analysis module [`analysis/exp002_r1_e4_analysis.py`](analysis/exp002_r1_e4_analysis.py) and deliverables |
+| [`analysis.md`](analysis.md) | E4 | E4 analysis record: all hypotheses confirmed, D1 flag not raised (`False`) |
+| [`report.md`](report.md) | E5 | Authoritative E5 report: non-reversal verdict, retained-bytes verification, clean-worktree regeneration, clean-checkout reconstruction |
+| [`report-manifest.json`](report-manifest.json) | E4 / verified E5 | SHA-256 manifest of regenerated outputs, input manifests, and publication files (`6cd12f2d…`) |

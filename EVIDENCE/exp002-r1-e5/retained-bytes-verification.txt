@@ -1,0 +1,68 @@
+EXP-002-r1 E5 — Step 1: Retained Bytes Verification
+Timestamp: 2026-10-22T14:26:00Z
+Operator: MichaelMaillet / AI pair Antigravity
+
+1. RETAINED INPUT SNAPSHOTS VERIFICATION (172/172 files per run)
+Comparator: paper/artefact_manifest.json (SHA-256: 300cdc094d2b7d27ac8b1e2556b2e6ed4dad3333f0038b45c8f87ea81612cce5)
+Total input size: 16,047,018 bytes per run
+
+Run: RUN-20261021T183011Z-e65076e-r1-api-cpu
+  Directory: DOCS/test_and_benchmark_results/EXP-002-r1/RUN-20261021T183011Z-e65076e-r1-api-cpu/inputs
+  Files matched: 172/172
+  Mismatches: 0
+  Listing SHA-256: f4c239d06461ef3933930eefb9a91c3e1e04083e2e078418ef61852277242fb9
+
+Run: RUN-20261021T183952Z-e65076e-r1-conclusions-cpu
+  Directory: DOCS/test_and_benchmark_results/EXP-002-r1/RUN-20261021T183952Z-e65076e-r1-conclusions-cpu/inputs
+  Files matched: 172/172
+  Mismatches: 0
+  Listing SHA-256: f4c239d06461ef3933930eefb9a91c3e1e04083e2e078418ef61852277242fb9
+
+Run: RUN-20261021T184447Z-e65076e-r1-reproduction-reference-cpu
+  Directory: DOCS/test_and_benchmark_results/EXP-002-r1/RUN-20261021T184447Z-e65076e-r1-reproduction-reference-cpu/inputs
+  Files matched: 172/172
+  Mismatches: 0
+  Listing SHA-256: f4c239d06461ef3933930eefb9a91c3e1e04083e2e078418ef61852277242fb9
+
+Run: RUN-20261021T184600Z-e65076e-r1-reproduction-prin-cpu
+  Directory: DOCS/test_and_benchmark_results/EXP-002-r1/RUN-20261021T184600Z-e65076e-r1-reproduction-prin-cpu/inputs
+  Files matched: 172/172
+  Mismatches: 0
+  Listing SHA-256: f4c239d06461ef3933930eefb9a91c3e1e04083e2e078418ef61852277242fb9
+
+Run: RUN-20261021T184707Z-e65076e-r1-seedrep0-prin-cpu
+  Directory: DOCS/test_and_benchmark_results/EXP-002-r1/RUN-20261021T184707Z-e65076e-r1-seedrep0-prin-cpu/inputs
+  Files matched: 172/172
+  Mismatches: 0
+  Listing SHA-256: f4c239d06461ef3933930eefb9a91c3e1e04083e2e078418ef61852277242fb9
+
+2. RETAINED PUBLICATION OUTPUTS VERIFICATION (39/39 files per publication leg)
+Comparators: Raw digests in reproduction.json of each manifested run
+
+Leg: r1-reproduction-reference-cpu
+  Directory: DOCS/test_and_benchmark_results/EXP-002-r1/RUN-20261021T184447Z-e65076e-r1-reproduction-reference-cpu/publication
+  Files matched: 39/39
+  Mismatches: 0
+  Total bytes: 1,501,980
+  Listing SHA-256: e38a1078d9ea2e17ddfd0d27af150581512aa402e125ee57e0c5bd0990e7bc5b
+  Match to E3 log listing hash: EXACT MATCH
+
+Leg: r1-reproduction-prin-cpu
+  Directory: DOCS/test_and_benchmark_results/EXP-002-r1/RUN-20261021T184600Z-e65076e-r1-reproduction-prin-cpu/publication
+  Files matched: 39/39
+  Mismatches: 0
+  Total bytes: 1,500,705
+  Listing SHA-256: 0f99f95524fff7e4e0e885e18c19d57e3360801921ea78f244aa7d8ab65f60fe
+  Match to E3 log listing hash: EXACT MATCH
+
+Leg: r1-seedrep0-prin-cpu
+  Directory: DOCS/test_and_benchmark_results/EXP-002-r1/RUN-20261021T184707Z-e65076e-r1-seedrep0-prin-cpu/publication
+  Files matched: 39/39
+  Mismatches: 0
+  Total bytes: 1,500,705
+  Listing SHA-256: 0f99f95524fff7e4e0e885e18c19d57e3360801921ea78f244aa7d8ab65f60fe
+  Match to E3 log listing hash: EXACT MATCH
+
+Determinism conclusion:
+PRIN reproduction and repeatability listings are byte-identical (0f99f95524fff7e4e0e885e18c19d57e3360801921ea78f244aa7d8ab65f60fe), confirming H4 determinism on disk.
+Step 1 verification result: PASS (all retained bytes verified intact and unmodified).

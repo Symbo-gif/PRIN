@@ -254,6 +254,45 @@ rebuilt from clean `main` at `5677858c`, and its SHA-256 pinned in
 `preregistration.md` remains `DRAFT`; no E3 execution or `RUN-` creation
 occurred at E1, and sessions `0164`–`0194` remain `BLOCKED`.
 
+**`EXP-002-r1` E2 APPROVED — 2026-10-21 UTC (branch `campaign/exp002-r1-e2`, PR #37).**
+Independent review, S4 retro-audit of `EXP002D1-S4-F2`/`F3`, and Lean 4 / Z3
+formal verification of comparison policies completed (`e2-review.md`). The
+maintainer ratified decisions 1–11, approved the protocol, and authorized E3
+execution. Pre-registration froze at `F = 10ac3c04f44a1f68869c94c1dfae1c1c1a189460`.
+
+**`EXP-002-r1` E3 EXECUTED — 2026-10-21 UTC (branch `campaign/exp002-r1-e3`, PR #38).**
+All five registered runs completed cleanly at source
+`R = e65076eb7ae97100d40ea32c60229dd40ed51033` through `exp002_r1_driver.py`:
+five immutable `RUN-` directories under `benchmarks/results/EXP-002-r1/`, 0
+aborts, 0 reruns, CPU wall time ~20 s. Retained publication and input roots
+captured under `DOCS/test_and_benchmark_results/EXP-002-r1/<run-id>/`. No verdicts
+were computed at E3; handoff passed to E4.
+
+**`EXP-002-r1` E4 ANALYSED — 2026-10-21 / 2026-10-22 UTC (branch `campaign/exp002-r1-e4`, PR #40).**
+The analysis module `analysis/exp002_r1_e4_analysis.py` and its 176 synthetic unit
+tests were committed and applied to the five E3 records: **H1 `CONFIRMED`**
+(`175/175` symbols, `172/172` owned), **H2 `CONFIRMED`** (`62/62` archival
+predicates preserved), **H3 `CONFIRMED`** under the primary §5.4 policy
+(`39/39` publication files equal), **H4 `CONFIRMED`** (`39/39` raw-byte
+identical determinism). The diagnostic §11.3 policy yielded `14/39` equal, with
+all 25 residuals classified (`14` `pdf_info_keyset`, `11`
+`tex_crlf_line_terminator`, `0` unclassified). Campaign plan §10.4 D1 flag was
+**NOT RAISED (`False`)**. All seven analysis outputs and `report-manifest.json`
+(`6cd12f2d…`) were generated and committed.
+
+**`EXP-002-r1` E5 REPORTED — 2026-10-22 UTC (branch `campaign/exp002-r1-e5`).**
+The [E5 report](EXP-002-r1-api-benchmark-result-and-reproduction-parity/report.md)
+issues all verdicts in full, confirms **non-reversal** (`H1 CONFIRMED`, `H2
+CONFIRMED`, `H3 CONFIRMED` [primary §5.4], `H4 CONFIRMED`, `D1 = False`), verifies
+retained bytes (`39/39` publication files and `172/172` inputs per run),
+regenerates all analysis deliverables byte-identically (`8/8`) in a clean
+detached worktree outside the repository, completes clean-checkout
+reconstruction (`39/39` PRIN raw files, `39/39` normalized/sensitivity digests),
+and appends Erratum 3 to predecessor `EXP-002/report.md` §15. **The campaign plan
+§10.4 item 5 exit condition is met, but release of session `0164` (EXP-003 E1) and
+downstream sessions `0165`–`0194` remains BLOCKED pending formal maintainer
+verification and acceptance of this report.**
+
 ## Layout
 
 ```
@@ -294,7 +333,7 @@ with `-r1-` run labels).
 | EXP-001 | C1 | [`EXP-001-golden-trajectory-numerical-parity/`](EXP-001-golden-trajectory-numerical-parity/README.md) |
 | EXP-001-r1 | C1 | [`EXP-001-r1-golden-trajectory-numerical-parity/`](EXP-001-r1-golden-trajectory-numerical-parity/README.md) — **COMPLETE: E5 VERIFIED AND ACCEPTED 2026-09-29 UTC. All five hypotheses `CONFIRMED`, D1 not raised (non-reversal); 0159 and every experiment downstream of EXP-001, plus 0194, are RELEASED. E1–E5 PR authorized, not yet opened** *(dated correction, 2026-10-11: opened and merged as PR #28)* |
 | EXP-002 | C1 | [`EXP-002-api-benchmark-result-and-reproduction-parity/`](EXP-002-api-benchmark-result-and-reproduction-parity/README.md) — **E5 VERIFIED AND ACCEPTED 2026-10-15 UTC (reported 2026-10-14 UTC): H1, H2, H4 `CONFIRMED`; H3 `REFUTED` (`21/39` approved, `5/39` sensitivity) — campaign plan §10.4 D1 RAISED. Correction cycle `EXP-002-D1` CLOSED 2026-10-16 UTC (S1→S4); these verdicts are UNCHANGED and immutable — erratum 2 in `report.md` §15 points at the re-run. Session `0164` and downstream campaign sessions remain BLOCKED** |
-| EXP-002-r1 | C1 | [`EXP-002-r1-api-benchmark-result-and-reproduction-parity/`](EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md) — **E1 PREPARED 2026-10-20 UTC (`campaign/exp002-r1-e1`, baseline `M = 5677858c`): DRAFT [`preregistration.md`](EXP-002-r1-api-benchmark-result-and-reproduction-parity/preregistration.md), [`exp002_r1_driver.py`](../../benchmarks/campaign/exp002_r1_driver.py), [`test_exp002_r1_driver.py`](../../tests/test_exp002_r1_driver.py), [`e1-handoff.md`](EXP-002-r1-api-benchmark-result-and-reproduction-parity/e1-handoff.md), and [`e2-review-packet.md`](EXP-002-r1-api-benchmark-result-and-reproduction-parity/e2-review-packet.md) committed for E2 review.** Uses disjoint roots (`benchmarks/results/EXP-002-r1/`, `DOCS/test_and_benchmark_results/EXP-002-r1/`, `EVIDENCE/exp002-r1-e1/`). `EXP002D1-S2-F1` settled by maintainer ratification (§5.4 primary H3 rule, §11.3 non-gating writer-property diagnostic, outcome exposure disclosed); **DV-047 CLOSED** at E1 (`_prin_core.pyd` rebuilt from `5677858c` and pinned). **No `RUN-` directory exists and no E3 leg has run; sessions `0164`–`0194` remain BLOCKED** |
+| EXP-002-r1 | C1 | [`EXP-002-r1-api-benchmark-result-and-reproduction-parity/`](EXP-002-r1-api-benchmark-result-and-reproduction-parity/README.md) — **E5 REPORTED 2026-10-22 UTC (`campaign/exp002-r1-e5`): NON-REVERSAL VERDICT (H1, H2, H3 [§5.4 primary], H4 `CONFIRMED`; D1 flag `False`; §11.3 diagnostic 25/25 residuals classified, 0 unclassified). Retained bytes verified (39/39, 172/172); clean-worktree regeneration 8/8 identical; clean-checkout reconstruction 39/39 matched. Erratum 3 added to EXP-002 report §15; Parity Report updated. Session `0164` and downstream sessions `0165`–`0194` remain BLOCKED pending maintainer verification and acceptance** |
 | EXP-003 | C2 | [`EXP-003-cpu-scaling-and-sweep-performance/`](EXP-003-cpu-scaling-and-sweep-performance/README.md) |
 | EXP-004 | C2 | [`EXP-004-gpu-kernels-and-torch-bridge-performance/`](EXP-004-gpu-kernels-and-torch-bridge-performance/README.md) |
 | EXP-005 | C3 | [`EXP-005-dynamics-chimera-and-capacity-replication/`](EXP-005-dynamics-chimera-and-capacity-replication/README.md) |
