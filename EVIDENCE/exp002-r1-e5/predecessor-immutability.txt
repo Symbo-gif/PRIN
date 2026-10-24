@@ -1,0 +1,38 @@
+EXP-002-r1 E5 — Predecessor Immutability Verification
+Timestamp: 2026-10-22T14:45:00Z
+Operator: MichaelMaillet / AI pair Antigravity
+
+1. Frozen Predecessor Evidence and Raw Roots:
+The following roots are strictly immutable:
+  - benchmarks/results/EXP-002/
+  - EVIDENCE/0159/
+  - EVIDENCE/0160/
+  - EVIDENCE/0161/
+  - EVIDENCE/0162/
+  - EVIDENCE/0163/
+  - EVIDENCE/exp002-d1-s1/
+  - EVIDENCE/exp002-d1-s2/
+  - EVIDENCE/exp002-d1-s3/
+  - EVIDENCE/exp002-d1-s4/
+  - EVIDENCE/exp002-r1-e1/
+  - EVIDENCE/exp002-r1-e2/
+  - EVIDENCE/exp002-r1-e3/
+  - EVIDENCE/exp002-r1-e4/
+
+Verification Command:
+  git diff fc0195a2 -- benchmarks/results/EXP-002/ EVIDENCE/0159/ EVIDENCE/0160/ EVIDENCE/0161/ EVIDENCE/0162/ EVIDENCE/0163/ EVIDENCE/exp002-d1-s1/ EVIDENCE/exp002-d1-s2/ EVIDENCE/exp002-d1-s3/ EVIDENCE/exp002-d1-s4/ EVIDENCE/exp002-r1-e1/ EVIDENCE/exp002-r1-e2/ EVIDENCE/exp002-r1-e3/ EVIDENCE/exp002-r1-e4/
+Output: (empty — 0 bytes diff, exit 0)
+
+2. Predecessor EXP-002 Experiment Record Root:
+Under the experiment rules, predecessor EXP-002 is immutable except for its single append-only dated erratum in report.md §15.
+
+Verification Command:
+  git diff fc0195a2 --stat -- DOCS/experiments/EXP-002-api-benchmark-result-and-reproduction-parity/
+Output:
+   .../EXP-002-api-benchmark-result-and-reproduction-parity/report.md       | 1 +
+   1 file changed, 1 insertion(+)
+
+Diff Inspection:
+  + | 3 | 2026-10-22 | Cross-reference to re-run EXP-002-r1 E5 completion and non-reversal verdict (§8.2, §8.3, §14, §15) | The re-run record [`EXP-002-r1`](../EXP-002-r1-api-benchmark-result-and-reproduction-parity/report.md) completed its E5 report stage (branch `campaign/exp002-r1-e5`). Following the EXP-002-D1 contingency cycle and code baseline freeze at `5677858c`, EXP-002-r1 independently executed fresh runs (`RUN-*-r1-*`), verified retained bytes and clean-worktree regeneration, and adjudicated all hypotheses: **H1 CONFIRMED** (`175/175` API symbols resolved, `172/172` legacy names owned), **H2 CONFIRMED** (`62/62` historical claim predicates preserved), **H3 CONFIRMED** under the maintainer-approved primary §5.4 comparison policy (`39/39` publication files equal; the diagnostic §11.3 writer-property policy yielded `14/39` with all `25` residuals classified into `14` `pdf_info_keyset` and `11` `tex_crlf_line_terminator` with `0` unclassified, confirming `EXP002D1-S2-F1`), and **H4 CONFIRMED** (`39/39` raw-byte identical). This yields a **non-reversal verdict** with no D1 flag (`D1 = False`), satisfying campaign plan §10.4 item 5. As required, this report's historical verdicts stand permanently immutable (`H3 REFUTED` in EXP-002 is not overwritten). Session `0164` (EXP-003 E1) and downstream sessions remain blocked pending formal maintainer verification and acceptance of the EXP-002-r1 E5 report. | EXP-002-r1 E5 (AI pair Antigravity) |
+
+Predecessor immutability result: PASS (all predecessor roots completely untouched; only Erratum 3 added to EXP-002 report.md §15).
